@@ -32,7 +32,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_amount_value;
   MP_QSTR_app_name;
   MP_QSTR_attach_timer_fn;
-  MP_QSTR_bootscreen;
   MP_QSTR_bounds;
   MP_QSTR_button;
   MP_QSTR_button_event;
@@ -94,6 +93,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_max_feerate;
   MP_QSTR_max_len;
   MP_QSTR_max_rounds;
+  MP_QSTR_message;
   MP_QSTR_min_count;
   MP_QSTR_multiple_pages_texts;
   MP_QSTR_notification;
@@ -105,6 +105,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_progress_event;
   MP_QSTR_prompt;
   MP_QSTR_qr_title;
+  MP_QSTR_remove_keepalive_callback;
+  MP_QSTR_render_empty_loader;
   MP_QSTR_request_bip39;
   MP_QSTR_request_complete_repaint;
   MP_QSTR_request_number;
@@ -114,6 +116,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_reverse;
   MP_QSTR_select_word;
   MP_QSTR_select_word_count;
+  MP_QSTR_set_keepalive_callback;
   MP_QSTR_share_words;
   MP_QSTR_show_address_details;
   MP_QSTR_show_checklist;

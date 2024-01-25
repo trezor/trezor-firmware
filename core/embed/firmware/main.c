@@ -77,6 +77,8 @@
 #include "optiga_transport.h"
 #include "secret.h"
 #endif
+#include "alloc_only.h"
+#include "rust_ui.h"
 #include "unit_variant.h"
 
 #ifdef SYSTEM_VIEW
@@ -115,8 +117,6 @@ int main(void) {
 #endif
 
   display_reinit();
-
-  screen_boot_full();
 
 #if !defined TREZOR_MODEL_1
   parse_boardloader_capabilities();
@@ -189,6 +189,9 @@ int main(void) {
   ensure(sectrue * (zkp_context_init() == 0), NULL);
 #endif
 
+  alloc_only_init(false);
+  boot_firmware();
+
   printf("CORE: Preparing stack\n");
   // Stack limit should be less than real stack size, so we have a chance
   // to recover from limit hit.
@@ -201,6 +204,7 @@ int main(void) {
 #endif
 
   // GC init
+  alloc_only_init(true);
   printf("CORE: Starting GC\n");
   gc_init(&_heap_start, &_heap_end);
 

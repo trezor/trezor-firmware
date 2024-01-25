@@ -1,11 +1,9 @@
 use crate::{
     strutil::hexlify,
-    trezorhal::io::io_touch_read,
     ui::{
-        component::{Component, Event, EventCtx, Label, Never},
-        constant::{screen, HEIGHT},
+        component::Label,
+        constant::HEIGHT,
         display::{self, Color, Font, Icon},
-        event::TouchEvent,
         geometry::Point,
         model_tt::{
             bootloader::{connect::Connect, welcome::Welcome},
@@ -22,110 +20,32 @@ use crate::{
                     TEXT_BOLD, TEXT_NORMAL, TEXT_WIPE_BOLD, TEXT_WIPE_NORMAL, WARNING40,
                     WELCOME_COLOR, X24,
                 },
-                BACKLIGHT_DIM, BACKLIGHT_NORMAL, FG, WHITE,
+                BACKLIGHT_NORMAL, FG, WHITE,
             },
         },
         util::{from_c_array, from_c_str},
     },
 };
 use heapless::String;
-use num_traits::ToPrimitive;
 
 mod connect;
 pub mod intro;
 pub mod menu;
 pub mod welcome;
 
-use crate::{trezorhal::secbool::secbool, ui::model_tt::theme::BLACK};
+use crate::{
+    trezorhal::secbool::secbool,
+    ui::{
+        layout::simplified::{fadein, fadeout, run, show},
+        model_tt::theme::BLACK,
+    },
+};
 use intro::Intro;
 use menu::Menu;
 
 pub type BootloaderString = String<128>;
 
 const RECONNECT_MESSAGE: &str = "PLEASE RECONNECT\nTHE DEVICE";
-
-pub trait ReturnToC {
-    fn return_to_c(self) -> u32;
-}
-
-impl ReturnToC for Never {
-    fn return_to_c(self) -> u32 {
-        unreachable!()
-    }
-}
-
-impl<T> ReturnToC for T
-where
-    T: ToPrimitive,
-{
-    fn return_to_c(self) -> u32 {
-        self.to_u32().unwrap()
-    }
-}
-
-fn fadein() {
-    display::fade_backlight_duration(BACKLIGHT_NORMAL, 150);
-}
-
-fn fadeout() {
-    display::fade_backlight_duration(BACKLIGHT_DIM, 150);
-}
-
-fn run<F>(frame: &mut F) -> u32
-where
-    F: Component,
-    F::Msg: ReturnToC,
-{
-    frame.place(constant::screen());
-    fadeout();
-    display::sync();
-    frame.paint();
-    display::refresh();
-    fadein();
-
-    loop {
-        let event = touch_eval();
-        if let Some(e) = event {
-            let mut ctx = EventCtx::new();
-            let msg = frame.event(&mut ctx, Event::Touch(e));
-
-            if let Some(message) = msg {
-                return message.return_to_c();
-            }
-            display::sync();
-            frame.paint();
-            display::refresh();
-        }
-    }
-}
-
-fn show<F>(frame: &mut F, fading: bool)
-where
-    F: Component,
-{
-    frame.place(screen());
-    if fading {
-        fadeout()
-    };
-    display::sync();
-    frame.paint();
-    display::refresh();
-    if fading {
-        fadein()
-    };
-}
-
-fn touch_eval() -> Option<TouchEvent> {
-    let event = io_touch_read();
-    if event == 0 {
-        return None;
-    }
-    let event_type = event >> 24;
-    let ex = ((event >> 12) & 0xFFF) as i16;
-    let ey = (event & 0xFFF) as i16;
-
-    TouchEvent::new(event_type, ex as _, ey as _).ok()
-}
 
 #[no_mangle]
 extern "C" fn screen_install_confirm(

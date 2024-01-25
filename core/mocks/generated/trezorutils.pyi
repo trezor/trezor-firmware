@@ -104,6 +104,27 @@ def bootloader_locked() -> bool | None:
     Returns True/False if the the bootloader is locked/unlocked and None if
     the feature is not supported.
     """
+
+
+# extmod/modtrezorutils/modtrezorutils.c
+def screenshot() -> bool:
+    """
+    Takes a screenshot and saves it
+    """
+
+
+# extmod/modtrezorutils/modtrezorutils.c
+def screenshot_clear() -> None:
+    """
+    Clears C buffers
+    """
+
+
+# extmod/modtrezorutils/modtrezorutils.c
+def screenshot_prepare(refresh_index: int, msg: str) -> None:
+    """
+    Prepares screenshot
+    """
 SCM_REVISION: bytes
 """Git commit hash of the firmware."""
 VERSION_MAJOR: int

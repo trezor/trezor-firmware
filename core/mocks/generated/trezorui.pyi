@@ -42,13 +42,3 @@ class Display:
         Sets backlight intensity to the value specified in val.
         Call without the val parameter to just perform the read of the value.
         """
-
-    def save(self, prefix: str) -> None:
-        """
-        Saves current display contents to PNG file with given prefix.
-        """
-
-    def clear_save(self) -> None:
-        """
-        Clears buffers in display saving.
-        """

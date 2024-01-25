@@ -377,6 +377,8 @@ SOURCE_UNIX = [
     'embed/trezorhal/unix/rng.c',
     'embed/trezorhal/unix/usb.c',
     'embed/trezorhal/unix/touch/touch.c',
+    'embed/trezorhal/unix/screenshot.c',
+    'embed/unix/alloc_only.c',
     'embed/unix/main.c',
     'embed/unix/main_main.c',
     'embed/unix/profile.c',
@@ -787,7 +789,7 @@ RUST_LIB = 'trezor_lib'
 RUST_LIBPATH = f'{RUST_LIBDIR}/lib{RUST_LIB}.a'
 
 def cargo_build():
-    features = ['micropython', 'protobuf', ui_layout_feature]
+    features = ['micropython', 'protobuf', 'emulator', ui_layout_feature]
     if BITCOIN_ONLY == '1':
         features.append('bitcoin_only')
     features.append('ui')

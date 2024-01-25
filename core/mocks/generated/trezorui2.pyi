@@ -432,7 +432,6 @@ def show_homescreen(
 def show_lockscreen(
     *,
     label: str | None,
-    bootscreen: bool,
     skip_first_paint: bool,
     coinjoin_authorized: bool = False,
 ) -> CANCELLED:
@@ -446,6 +445,23 @@ def confirm_firmware_update(
     fingerprint: str,
 ) -> None:
     """Ask whether to update firmware, optionally show fingerprint. Shared with bootloader."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def set_keepalive_callback(
+    callback: KeepaliveCallback,
+) -> None:
+   """Sets keepalive callback. """
+
+
+# rust/src/ui/model_tr/layout.rs
+def remove_keepalive_callback() -> None:
+   """Removes keepalive callback. """
+
+
+# rust/src/ui/model_tr/layout.rs
+def render_empty_loader(message:  str, description: str) -> None:
+   """Renders empty loader."""
 CONFIRMED: object
 CANCELLED: object
 INFO: object
@@ -883,7 +899,6 @@ def show_homescreen(
 def show_lockscreen(
     *,
     label: str | None,
-    bootscreen: bool,
     skip_first_paint: bool,
     coinjoin_authorized: bool = False,
 ) -> CANCELLED:
@@ -897,3 +912,20 @@ def confirm_firmware_update(
     fingerprint: str,
 ) -> None:
     """Ask whether to update firmware, optionally show fingerprint. Shared with bootloader."""
+
+
+# rust/src/ui/model_tt/layout.rs
+def set_keepalive_callback(
+    callback: KeepaliveCallback,
+) -> None:
+   """Sets keepalive callback. """
+
+
+# rust/src/ui/model_tt/layout.rs
+def remove_keepalive_callback() -> None:
+   """Removes keepalive callback. """
+
+
+# rust/src/ui/model_tt/layout.rs
+def render_empty_loader(message:  str, description: str) -> None:
+   """Renders empty loader."""

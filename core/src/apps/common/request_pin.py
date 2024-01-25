@@ -75,7 +75,7 @@ async def request_pin_and_sd_salt(
     return pin, salt
 
 
-def _set_last_unlock_time() -> None:
+def set_last_unlock_time() -> None:
     now = utime.ticks_ms()
     storage_cache.set_int(storage_cache.APP_COMMON_REQUEST_PIN_LAST_UNLOCK, now)
 
@@ -109,7 +109,7 @@ async def verify_user_pin(
 
     salt = await _request_sd_salt(raise_cancelled_on_unavailable=True)
     if config.unlock(pin, salt):
-        _set_last_unlock_time()
+        set_last_unlock_time()
         return
     elif not config.has_pin():
         raise RuntimeError
@@ -119,7 +119,7 @@ async def verify_user_pin(
             "Enter PIN", config.get_pin_rem(), allow_cancel, wrong_pin=True
         )
         if config.unlock(pin, salt):
-            _set_last_unlock_time()
+            set_last_unlock_time()
             return
 
     raise wire.PinInvalid

@@ -25,8 +25,11 @@ async def reset_device(msg: ResetDevice) -> Success:
     from trezor import config
     from trezor.crypto import bip39, random
     from trezor.messages import EntropyAck, EntropyRequest, Success
-    from trezor.pin import render_empty_loader
-    from trezor.ui.layouts import confirm_reset_device, prompt_backup
+    from trezor.ui.layouts import (
+        confirm_reset_device,
+        prompt_backup,
+        render_empty_loader,
+    )
     from trezor.wire.context import call
 
     from apps.common.request_pin import request_pin_confirm

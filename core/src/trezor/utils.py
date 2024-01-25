@@ -25,6 +25,14 @@ from trezorutils import (  # noqa: F401
     unit_btconly,
     unit_color,
 )
+
+if EMULATOR:
+    from trezorutils import (  # noqa: F401
+        screenshot,
+        screenshot_clear,
+        screenshot_prepare,
+    )
+
 from typing import TYPE_CHECKING
 
 # Will get replaced by "True" / "False" in the build process

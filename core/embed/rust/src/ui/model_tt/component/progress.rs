@@ -50,9 +50,13 @@ where
                 Paragraph::new(&theme::TEXT_NORMAL, description).centered(),
             )
             .into_child(),
-            description_pad: Pad::with_background(theme::BG),
+            description_pad: Pad::with_background(theme::BG).with_clear(),
             update_description,
         }
+    }
+
+    pub fn set_value(&mut self, value: u16) {
+        self.value = value;
     }
 }
 

@@ -5,6 +5,7 @@ use crate::{
         component::{text::common::TextBox, Child, Component, ComponentExt, Event, EventCtx},
         display::{Font, Icon},
         geometry::Rect,
+        model_tr::component::Frame,
     },
 };
 
@@ -284,6 +285,63 @@ where
         self.header_line.paint();
         self.pin_line.paint();
         self.choice_page.paint();
+    }
+}
+
+pub enum PinKeyboardMsg {
+    Confirmed,
+    Cancelled,
+}
+
+/// Component for entering a PIN.
+pub struct PinKeyboard<T: StringType + Clone> {
+    frame: Frame<PinEntry<T>, T>,
+}
+
+impl<T> PinKeyboard<T>
+where
+    T: StringType + Clone,
+{
+    pub fn new(
+        major_prompt: T,
+        minor_prompt: T,
+        _major_warning: Option<T>,
+        _allow_cancel: bool,
+    ) -> Self {
+        Self {
+            frame: Frame::new(major_prompt, PinEntry::new(minor_prompt, "".into()))
+                .with_title_centered(),
+        }
+    }
+
+    pub fn pin(&self) -> &str {
+        self.frame.inner().pin()
+    }
+}
+
+impl<T> Component for PinKeyboard<T>
+where
+    T: StringType + Clone,
+{
+    type Msg = PinKeyboardMsg;
+
+    fn place(&mut self, bounds: Rect) -> Rect {
+        self.frame.place(bounds)
+    }
+
+    fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        if let Some(k) = self.frame.event(ctx, event) {
+            match k {
+                CancelConfirmMsg::Confirmed => Some(PinKeyboardMsg::Confirmed),
+                CancelConfirmMsg::Cancelled => Some(PinKeyboardMsg::Cancelled),
+            }
+        } else {
+            None
+        }
+    }
+
+    fn paint(&mut self) {
+        self.frame.paint()
     }
 }
 

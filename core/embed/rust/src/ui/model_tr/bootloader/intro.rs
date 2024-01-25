@@ -1,17 +1,15 @@
 use crate::ui::{
     component::{Child, Component, Event, EventCtx, Label, Pad},
     geometry::{Alignment, Alignment2D, Rect},
+    layout::simplified::ReturnToC,
 };
 
-use super::{
-    super::{
-        component::{ButtonController, ButtonControllerMsg::Triggered, ButtonLayout, ButtonPos},
-        theme::{
-            bootloader::{BLD_BG, BLD_FG, TEXT_NORMAL},
-            BUTTON_HEIGHT, ICON_WARN_TITLE, TITLE_AREA_HEIGHT,
-        },
+use super::super::{
+    component::{ButtonController, ButtonControllerMsg::Triggered, ButtonLayout, ButtonPos},
+    theme::{
+        bootloader::{BLD_BG, BLD_FG, TEXT_NORMAL},
+        BUTTON_HEIGHT, ICON_WARN_TITLE, TITLE_AREA_HEIGHT,
     },
-    ReturnToC,
 };
 
 const LEFT_BUTTON_TEXT: &str = "INSTALL FW";

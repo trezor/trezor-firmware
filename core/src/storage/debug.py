@@ -4,9 +4,6 @@ if not __debug__:
     halt("Debugging is disabled")
 
 if __debug__:
-    save_screen = False
-    save_screen_directory = "."
-
     current_content_tokens: list[str] = [""] * 60
     current_content_tokens.clear()
 

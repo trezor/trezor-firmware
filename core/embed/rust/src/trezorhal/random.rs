@@ -1,5 +1,7 @@
+use super::ffi;
+
 pub fn uniform(n: u32) -> u32 {
-    unsafe { super::ffi::random_uniform(n) }
+    unsafe { ffi::random_uniform(n) }
 }
 
 pub fn shuffle<T>(slice: &mut [T]) {
@@ -47,4 +49,8 @@ mod tests {
             assert!(uniform_between_except(10, 12, 11) != 11);
         }
     }
+}
+
+pub fn bytes(buf: &mut [u8]) {
+    unsafe { ffi::random_buffer(buf.as_mut_ptr() as _, buf.len()) };
 }

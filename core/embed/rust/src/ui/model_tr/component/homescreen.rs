@@ -1,4 +1,5 @@
 use crate::{
+    micropython::buffer::StrBuffer,
     strutil::StringType,
     trezorhal::{display::ToifFormat, usb::usb_configured},
     ui::{
@@ -171,12 +172,12 @@ where
 
 pub struct Lockscreen<T>
 where
-    T: StringType,
+    T: AsRef<str>,
 {
     label: Child<Label<T>>,
-    instruction: Child<Label<T>>,
+    instruction: Child<Label<StrBuffer>>,
     /// Used for unlocking the device from lockscreen
-    invisible_buttons: Child<ButtonController<T>>,
+    invisible_buttons: Child<ButtonController<StrBuffer>>,
     /// Display coinjoin icon?
     coinjoin_icon: Option<Icon>,
     /// Screensaver mode (keep screen black)
@@ -185,7 +186,7 @@ where
 
 impl<T> Lockscreen<T>
 where
-    T: StringType + Clone,
+    T: AsRef<str>,
 {
     pub fn new(label: T, bootscreen: bool, coinjoin_authorized: bool) -> Self {
         // Buttons will not be visible, we only need all three of them to be present,
@@ -208,7 +209,7 @@ where
 
 impl<T> Component for Lockscreen<T>
 where
-    T: StringType + Clone,
+    T: AsRef<str>,
 {
     type Msg = ();
 
@@ -339,7 +340,7 @@ where
 #[cfg(feature = "ui_debug")]
 impl<T> crate::trace::Trace for Lockscreen<T>
 where
-    T: StringType,
+    T: AsRef<str>,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("Lockscreen");
