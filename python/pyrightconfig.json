@@ -4,7 +4,7 @@
         "tools",
         "helper-scripts"
     ],
-    "pythonVersion": "3.6",
+    "pythonVersion": "3.8",
     "typeCheckingMode": "basic",
     "reportMissingImports": false,
     "reportUntypedFunctionDecorator": true,

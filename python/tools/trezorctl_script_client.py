@@ -86,7 +86,7 @@ def get_address() -> str:
     args = """
         trezorctl --script get-address -n "m/49h/0h/0h/0/0"
     """.strip()
-    p = subprocess.Popen(  # type: ignore [No overloads for "__new__" match the provided arguments]
+    p = subprocess.Popen(
         args,
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
