@@ -1,5 +1,6 @@
 from typing import *
-from trezortranslate_keys import TR  # noqa: F401
+from trezortranslate_keys import TR as TR # noqa: F401
+
 """Translation object with attributes."""
 MAX_HEADER_LEN: int
 """Maximum length of the translations header."""

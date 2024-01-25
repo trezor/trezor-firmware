@@ -1,11 +1,15 @@
 use crate::{
-    error::Error, micropython::buffer::StrBuffer, time::Instant, translations::TR, ui::{
+    error::Error,
+    micropython::buffer::StrBuffer,
+    time::Instant,
+    translations::TR,
+    ui::{
         component::{paginated::PageMsg, Component, ComponentExt, Event, EventCtx, Pad, Paginate},
         constant,
         display::{self, Color},
         geometry::{Insets, Rect},
         util::animation_disabled,
-    }
+    },
 };
 
 use super::{

@@ -1640,18 +1640,8 @@ extern "C" fn new_confirm_firmware_update(
         .vertically_centered();
 
         let obj = LayoutObj::new(
-            Confirm::new(
-                theme::BG,
-                title,
-                message,
-                None,
-                TR::buttons__install,
-                false,
-            )
-            .with_info_screen(
-                TR::firmware_update__title_fingerprint,
-                fingerprint,
-            ),
+            Confirm::new(theme::BG, title, message, None, TR::buttons__install, false)
+                .with_info_screen(TR::firmware_update__title_fingerprint, fingerprint),
         )?;
         Ok(obj.into())
     };

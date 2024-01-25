@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Dict
 HERE = Path(__file__).parent
 CORE = HERE.parent.parent
 
-DIR = CORE / "embed" / "rust" / "src" / "ui" / "translations"
+DIR = CORE / "translations"
 
 MISSING_VALUE = "TODO:missing"
 

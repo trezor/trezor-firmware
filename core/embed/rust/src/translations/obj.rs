@@ -292,7 +292,7 @@ extern "C" fn verify(data: Obj) -> Obj {
 #[no_mangle]
 #[rustfmt::skip]
 pub static mp_module_trezortranslate: Module = obj_module! {
-    /// from trezortranslate_keys import TR  # noqa: F401
+    /// from trezortranslate_keys import TR as TR  # noqa: F401
     /// """Translation object with attributes."""
     Qstr::MP_QSTR_TR => TR_OBJ.as_obj(),
 
