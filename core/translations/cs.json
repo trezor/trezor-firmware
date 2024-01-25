@@ -1,5 +1,5 @@
 {
-  "font": {
+  "fonts": {
     "T2B1": {
       "1_FONT_NORMAL": "font_pixeloperator_regular_8_cs.json",
       "2_FONT_BOLD": "font_pixeloperator_bold_8_cs.json",
