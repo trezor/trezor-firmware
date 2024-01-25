@@ -205,12 +205,10 @@ def label(client: "TrezorClient", label: str) -> str:
 
 
 @cli.command()
-@click.argument(
-    "path_or_url",
-    help="File path or URL to a signed translations blob.",
-    required=False,
+@click.argument("path_or_url", required=False)
+@click.option(
+    "-r", "--remove", is_flag=True, default=False, help="Switch back to english."
 )
-@click.option("-r", "--remove", is_flag=True, default=False, help="Switch back to english.")
 @with_client
 def language(client: "TrezorClient", path_or_url: str | None, remove: bool) -> str:
     """Set new language with translations."""

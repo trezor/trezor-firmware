@@ -64,9 +64,10 @@ def main() -> None:
         )
         blob.proof = proof
         header = blob.header
+        model_str = header.model.value.decode("ascii")
         version_str = ".".join(str(v) for v in header.firmware_version[:3])
-        click.echo(f"Writing {header.language} for {header.model} v{version_str}")
-        filename = f"translation-{header.model}-{header.language}-{version_str}.bin"
+        click.echo(f"Writing {header.language} for {model_str} v{version_str}")
+        filename = f"translation-{model_str}-{header.language}-{version_str}.bin"
         (HERE / filename).write_bytes(blob.build())
 
 if __name__ == "__main__":
