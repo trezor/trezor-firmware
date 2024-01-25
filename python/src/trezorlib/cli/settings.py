@@ -16,11 +16,12 @@
 
 import io
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional, cast
+from typing import TYPE_CHECKING, BinaryIO, Optional, cast
 
 import click
+import requests
 
-from .. import device, messages, toif, translations
+from .. import device, messages, toif
 from . import AliasedGroup, ChoiceType, with_client
 
 if TYPE_CHECKING:
@@ -204,26 +205,31 @@ def label(client: "TrezorClient", label: str) -> str:
 
 
 @cli.command()
-@click.option("-f", "--file", type=str, help="Language JSON file with translations.")
-@click.option("-u", "--url", help="Link to already created and signed blob.")
-@click.option("-r", "--remove", is_flag=True, help="Switch back to english.")
+@click.argument(
+    "path_or_url",
+    help="File path or URL to a signed translations blob.",
+    required=False,
+)
+@click.option("-r", "--remove", is_flag=True, default=False, help="Switch back to english.")
 @with_client
-def language(client: "TrezorClient", file: str, url: str, remove: bool) -> str:
+def language(client: "TrezorClient", path_or_url: str | None, remove: bool) -> str:
     """Set new language with translations."""
-    if file and url:
-        raise click.ClickException("Please provide only one of -f or -u")
+    if remove != (path_or_url is None):
+        raise click.ClickException("Either provide a path or URL or use --remove")
 
     if remove:
         language_data = b""
     else:
-        if file:
-            model = client.features.model
-            assert model is not None
-            language_data = translations.blob_from_file(Path(file), model)
-        elif url:
-            language_data = translations.blob_from_url(url)
-        else:
-            raise click.ClickException("Please provide either -f or -u")
+        assert path_or_url is not None
+        try:
+            language_data = Path(path_or_url).read_bytes()
+        except Exception:
+            try:
+                language_data = requests.get(path_or_url).content
+            except Exception:
+                raise click.ClickException(
+                    f"Failed to load translations from {path_or_url}"
+                ) from None
     return device.change_language(client, language_data=language_data)
 
 
