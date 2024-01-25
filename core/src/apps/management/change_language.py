@@ -61,8 +61,9 @@ async def change_language(msg: ChangeLanguage) -> Success:
         header.change_language_title, header.change_language_prompt
     )
 
-    # Show indeterminate loader
-    progress(None, None, True)
+    # Initiate loader
+    loader = progress(None, None)
+    loader.report(0)
 
     # Loading all the data at once, so we can verify its fingerprint
     # If we saved it gradually to the storage and only checked the fingerprint at the end
@@ -75,10 +76,12 @@ async def change_language(msg: ChangeLanguage) -> Success:
 
     # Requesting the data in chunks and storing them in the blob
     # Also checking the hash of the data for consistency
-    data_left = data_length - len(header_data)
+    data_to_fetch = data_length - len(header_data)
+    data_left = data_to_fetch
     offset = len(header_data)
     while data_left > 0:
         data_chunk = await get_data_chunk(data_left, offset)
+        loader.report(len(blob) * 1000 // data_length)
         blob.extend(data_chunk)
         data_left -= len(data_chunk)
         offset += len(data_chunk)
@@ -93,6 +96,7 @@ async def change_language(msg: ChangeLanguage) -> Success:
     translations.erase()
     translations.write(blob, 0)
     translations.init()
+    loader.report(1000)
 
     return Success(message="Language changed")
 
