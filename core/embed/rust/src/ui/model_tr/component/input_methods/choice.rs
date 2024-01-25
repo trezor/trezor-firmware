@@ -1,10 +1,7 @@
-use crate::{
-    strutil::StringType,
-    ui::{
-        component::{Child, Component, Event, EventCtx, Pad},
-        geometry::{Insets, Offset, Rect},
-        util::animation_disabled,
-    },
+use crate::ui::{
+    component::{Child, Component, Event, EventCtx, Pad},
+    geometry::{Insets, Offset, Rect},
+    util::animation_disabled,
 };
 
 use super::super::{

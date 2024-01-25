@@ -16,7 +16,7 @@
 
 import io
 from pathlib import Path
-from typing import TYPE_CHECKING, BinaryIO, Optional, cast
+from typing import TYPE_CHECKING, Optional, cast
 
 import click
 import requests

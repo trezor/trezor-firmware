@@ -1,5 +1,5 @@
 use crate::{
-    strutil::{StringType, TString},
+    strutil::TString,
     time::{Duration, Instant},
     ui::{
         animation::Animation,

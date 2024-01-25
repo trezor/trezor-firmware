@@ -30,7 +30,7 @@ pub enum Error {
 #[macro_export]
 macro_rules! value_error {
     ($msg:expr) => {
-        crate::error::Error::ValueError(cstr_core::cstr!($msg))
+        $crate::error::Error::ValueError(cstr_core::cstr!($msg))
     };
 }
 

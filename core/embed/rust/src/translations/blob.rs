@@ -27,7 +27,7 @@ struct OffsetEntry {
     pub offset: u16,
 }
 
-pub(super) struct Table<'a> {
+pub struct Table<'a> {
     offsets: &'a [OffsetEntry],
     data: &'a [u8],
 }
@@ -105,7 +105,7 @@ impl<'a> Table<'a> {
     }
 }
 
-pub(super) struct Translations<'a> {
+pub struct Translations<'a> {
     pub header: TranslationsHeader<'a>,
     translations: &'a [u8],
     translations_offsets: &'a [u16],
@@ -181,8 +181,9 @@ impl<'a> Translations<'a> {
 
     /// Returns the translation at the given index.
     pub fn translation(&self, index: usize) -> Option<&str> {
-        if index >= self.translations_offsets.len() + 1 {
+        if index + 1 >= self.translations_offsets.len() {
             // The index is out of bounds.
+            // (The last entry is a sentinel, so the last valid index is len - 2)
             // May happen when new firmware is using older translations and the string
             // is not defined yet.
             // Fallback to english.
@@ -213,7 +214,7 @@ impl<'a> Translations<'a> {
     }
 }
 
-pub(super) struct TranslationsHeader<'a> {
+pub struct TranslationsHeader<'a> {
     /// Raw content of the header, for signature verification
     pub header_bytes: &'a [u8],
     /// Human readable language identifier (e.g. "cs" of "fr")

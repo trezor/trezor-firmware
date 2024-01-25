@@ -1,5 +1,4 @@
 use crate::{
-    micropython::buffer::StrBuffer,
     strutil::TString,
     ui::{
         component::{Child, Component, ComponentExt, Event, EventCtx, Label, Pad},
@@ -50,7 +49,7 @@ where
     ) -> Self {
         let button_text = button_text.into();
         let btn_layout =
-            Self::get_button_layout_general(false, button_text.clone(), false, two_btn_confirm);
+            Self::get_button_layout_general(false, button_text, false, two_btn_confirm);
         Self {
             bg: Pad::with_background(bg_color).with_clear(),
             bg_color,
@@ -85,7 +84,7 @@ where
     fn get_button_layout(&self) -> ButtonLayout {
         Self::get_button_layout_general(
             self.showing_info_screen,
-            self.button_text.clone(),
+            self.button_text,
             self.has_info_screen(),
             self.two_btn_confirm,
         )
@@ -208,7 +207,7 @@ where
     fn paint(&mut self) {
         self.bg.paint();
 
-        let display_top_left = |text: &TString<'static>| {
+        let display_top_left = |text: TString<'static>| {
             text.map(|t| {
                 display::text_top_left(Point::zero(), t, Font::BOLD, WHITE, self.bg_color)
             });
@@ -216,10 +215,12 @@ where
 
         // We are either on the info screen or on the "main" screen
         if self.showing_info_screen {
-            self.info_title.map(|title| display_top_left(&title));
+            if let Some(title) = self.info_title {
+                display_top_left(title);
+            }
             self.info_text.paint();
         } else {
-            display_top_left(&self.title);
+            display_top_left(self.title);
             self.message.paint();
             self.alert.paint();
         }

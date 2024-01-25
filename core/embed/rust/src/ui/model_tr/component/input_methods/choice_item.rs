@@ -1,5 +1,5 @@
 use crate::{
-    strutil::{ShortString, StringType},
+    strutil::ShortString,
     ui::{
         display::{self, rect_fill, rect_fill_corners, rect_outline_rounded, Font, Icon},
         geometry::{Alignment2D, Offset, Rect},

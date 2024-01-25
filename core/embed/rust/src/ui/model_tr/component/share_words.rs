@@ -109,7 +109,7 @@ where
             let baseline = self.area.top_left() + Offset::y(y_offset);
             let ordinal = build_string!(5, inttostr!(index as u8 + 1), ".");
             display_left(baseline + Offset::x(NUMBER_X_OFFSET), &ordinal, NUMBER_FONT);
-            display_left(baseline + Offset::x(WORD_X_OFFSET), &word, WORD_FONT);
+            display_left(baseline + Offset::x(WORD_X_OFFSET), word, WORD_FONT);
         }
     }
 }

@@ -48,7 +48,7 @@ use super::{
         AddressDetails, ButtonActions, ButtonDetails, ButtonLayout, ButtonPage, CancelConfirmMsg,
         CancelInfoConfirmMsg, CoinJoinProgress, ConfirmHomescreen, Flow, FlowPages, Frame,
         Homescreen, Lockscreen, NumberInput, Page, PassphraseEntry, PinEntry, Progress,
-        ScrollableContent, ScrollableFrame, ShareWords, ShowMore, SimpleChoice, WelcomeScreen,
+        ScrollableContent, ScrollableFrame, ShareWords, ShowMore, SimpleChoice,
         WordlistEntry, WordlistType,
     },
     constant, theme,
@@ -625,15 +625,15 @@ extern "C" fn new_confirm_output_address(n_args: usize, args: *const Obj, kwargs
                 if chunkify {
                     ops = ops.chunkify_text(None);
                 }
-                ops = ops.text_normal(address_label.clone()).newline();
+                ops = ops.text_normal(address_label).newline();
             }
             if chunkify {
                 // Chunkifying the address into smaller pieces when requested
                 ops = ops.chunkify_text(Some((theme::MONO_CHUNKS, 2)));
             }
-            ops = ops.text_mono(address.clone());
+            ops = ops.text_mono(address);
             let formatted = FormattedText::new(ops).vertically_centered();
-            Page::new(btn_layout, btn_actions, formatted).with_title(address_title.clone())
+            Page::new(btn_layout, btn_actions, formatted).with_title(address_title)
         };
         let pages = FlowPages::new(get_page, 1);
 
@@ -653,9 +653,9 @@ extern "C" fn new_confirm_output_amount(n_args: usize, args: *const Obj, kwargs:
             // AMOUNT + amount
             let btn_layout = ButtonLayout::up_arrow_none_text(TR::buttons__confirm.into());
             let btn_actions = ButtonActions::cancel_none_confirm();
-            let ops = OpTextLayout::new(theme::TEXT_MONO).text_mono(amount.clone());
+            let ops = OpTextLayout::new(theme::TEXT_MONO).text_mono(amount);
             let formatted = FormattedText::new(ops).vertically_centered();
-            Page::new(btn_layout, btn_actions, formatted).with_title(amount_title.clone())
+            Page::new(btn_layout, btn_actions, formatted).with_title(amount_title)
         };
         let pages = FlowPages::new(get_page, 1);
 
@@ -691,14 +691,14 @@ extern "C" fn new_confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Ma
                     let btn_actions = ButtonActions::cancel_confirm_next();
 
                     let ops = OpTextLayout::new(theme::TEXT_MONO)
-                        .text_bold(total_label.clone())
+                        .text_bold(total_label)
                         .newline()
-                        .text_mono(total_amount.clone())
+                        .text_mono(total_amount)
                         .newline()
                         .newline()
-                        .text_bold(fee_label.clone())
+                        .text_bold(fee_label)
                         .newline()
-                        .text_mono(fee_amount.clone());
+                        .text_mono(fee_amount);
 
                     let formatted = FormattedText::new(ops);
                     Page::new(btn_layout, btn_actions, formatted)
@@ -708,7 +708,7 @@ extern "C" fn new_confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Ma
                     let btn_layout = ButtonLayout::arrow_none_arrow();
                     let btn_actions = ButtonActions::prev_none_next();
 
-                    let fee_rate_amount = fee_rate_amount.clone().unwrap_or_default();
+                    let fee_rate_amount = fee_rate_amount.unwrap_or_default();
 
                     let ops = OpTextLayout::new(theme::TEXT_MONO)
                         .text_bold(tr_title_fee)
@@ -727,7 +727,7 @@ extern "C" fn new_confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Ma
                     let btn_layout = ButtonLayout::arrow_none_none();
                     let btn_actions = ButtonActions::prev_none_none();
 
-                    let account_label = account_label.clone().unwrap_or_default();
+                    let account_label = account_label.unwrap_or_default();
 
                     // TODO: include wallet info when available
 
@@ -778,15 +778,15 @@ extern "C" fn new_altcoin_tx_summary(n_args: usize, args: *const Obj, kwargs: *m
                     let btn_actions = ButtonActions::cancel_confirm_next();
 
                     let ops = OpTextLayout::new(theme::TEXT_MONO)
-                        .text_mono(amount_value.clone())
+                        .text_mono(amount_value)
                         .newline()
                         .newline_half()
-                        .text_bold(fee_title.clone())
+                        .text_bold(fee_title)
                         .newline()
-                        .text_mono(fee_value.clone());
+                        .text_mono(fee_value);
 
                     let formatted = FormattedText::new(ops);
-                    Page::new(btn_layout, btn_actions, formatted).with_title(amount_title.clone())
+                    Page::new(btn_layout, btn_actions, formatted).with_title(amount_title)
                 }
                 1 => {
                     // Other information
@@ -834,7 +834,7 @@ extern "C" fn new_confirm_address(n_args: usize, args: *const Obj, kwargs: *mut 
         let get_page = move |page_index| {
             assert!(page_index == 0);
 
-            let btn_layout = ButtonLayout::cancel_armed_info(verb.clone());
+            let btn_layout = ButtonLayout::cancel_armed_info(verb);
             let btn_actions = ButtonActions::cancel_confirm_info();
             let style = if chunkify {
                 // Chunkifying the address into smaller pieces when requested
@@ -842,9 +842,9 @@ extern "C" fn new_confirm_address(n_args: usize, args: *const Obj, kwargs: *mut 
             } else {
                 theme::TEXT_MONO_DATA
             };
-            let ops = OpTextLayout::new(style).text_mono(address.clone());
+            let ops = OpTextLayout::new(style).text_mono(address);
             let formatted = FormattedText::new(ops).vertically_centered();
-            Page::new(btn_layout, btn_actions, formatted).with_title(title.clone())
+            Page::new(btn_layout, btn_actions, formatted).with_title(title)
         };
         let pages = FlowPages::new(get_page, 1);
 
@@ -862,9 +862,9 @@ fn tutorial_screen(
     btn_layout: ButtonLayout,
     btn_actions: ButtonActions,
 ) -> Page<StrBuffer> {
-    let ops = OpTextLayout::<StrBuffer>::new(theme::TEXT_NORMAL).text_normal(text.into());
+    let ops = OpTextLayout::<StrBuffer>::new(theme::TEXT_NORMAL).text_normal(text);
     let formatted = FormattedText::new(ops).vertically_centered();
-    Page::new(btn_layout, btn_actions, formatted).with_title(title.into())
+    Page::new(btn_layout, btn_actions, formatted).with_title(title)
 }
 
 extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
@@ -1026,7 +1026,7 @@ extern "C" fn new_multiple_pages_texts(n_args: usize, args: *const Obj, kwargs: 
             let (btn_layout, btn_actions) = if page_count == 1 {
                 // There is only one page
                 (
-                    ButtonLayout::cancel_none_text(verb.clone()),
+                    ButtonLayout::cancel_none_text(verb),
                     ButtonActions::cancel_none_confirm(),
                 )
             } else if page_index == 0 {
@@ -1038,7 +1038,7 @@ extern "C" fn new_multiple_pages_texts(n_args: usize, args: *const Obj, kwargs: 
             } else if page_index == page_count - 1 {
                 // Last page
                 (
-                    ButtonLayout::up_arrow_none_text(verb.clone()),
+                    ButtonLayout::up_arrow_none_text(verb),
                     ButtonActions::prev_none_confirm(),
                 )
             } else {
@@ -1106,7 +1106,7 @@ extern "C" fn new_confirm_fido(n_args: usize, args: *const Obj, kwargs: *mut Map
 
             let ops = OpTextLayout::new(theme::TEXT_NORMAL)
                 .newline()
-                .text_normal(app_name.clone())
+                .text_normal(app_name)
                 .newline()
                 .text_bold(account);
             let formatted = FormattedText::new(ops);
@@ -1135,15 +1135,15 @@ extern "C" fn new_show_warning(n_args: usize, args: *const Obj, kwargs: *mut Map
         let get_page = move |page_index| {
             assert!(page_index == 0);
 
-            let btn_layout = ButtonLayout::none_armed_none(button.clone());
+            let btn_layout = ButtonLayout::none_armed_none(button);
             let btn_actions = ButtonActions::none_confirm_none();
             let mut ops = OpTextLayout::<StrBuffer>::new(theme::TEXT_NORMAL);
             ops = ops.alignment(geometry::Alignment::Center);
             if !warning.is_empty() {
-                ops = ops.text_bold(warning.clone()).newline().newline();
+                ops = ops.text_bold(warning).newline().newline();
             }
             if !description.is_empty() {
-                ops = ops.text_normal(description.clone());
+                ops = ops.text_normal(description);
             }
             let formatted = FormattedText::new(ops).vertically_centered();
             Page::new(btn_layout, btn_actions, formatted)
@@ -1206,7 +1206,7 @@ extern "C" fn new_show_mismatch(n_args: usize, args: *const Obj, kwargs: *mut Ma
             let btn_layout = ButtonLayout::arrow_none_text(TR::buttons__quit.into());
             let btn_actions = ButtonActions::cancel_none_confirm();
             let ops = OpTextLayout::<StrBuffer>::new(theme::TEXT_NORMAL)
-                .text_bold(title.clone())
+                .text_bold(title)
                 .newline()
                 .newline_half()
                 .text_normal(tr_contact_support_at)
@@ -1631,7 +1631,7 @@ extern "C" fn new_confirm_firmware_update(
         let description: StrBuffer = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
         let fingerprint: StrBuffer = kwargs.get(Qstr::MP_QSTR_fingerprint)?.try_into()?;
 
-        let title = TR::firmware_update__title.try_into()?;
+        let title = TR::firmware_update__title;
         let message = Label::left_aligned(description, theme::TEXT_NORMAL).vertically_centered();
         let fingerprint = Label::left_aligned(
             fingerprint,

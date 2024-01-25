@@ -146,20 +146,12 @@ impl Font {
 
     /// Supports UTF8 characters
     fn get_first_glyph_from_text(self, text: &str) -> Option<Glyph> {
-        if let Some(c) = text.chars().next() {
-            Some(self.get_glyph(c))
-        } else {
-            None
-        }
+        text.chars().next().map(|c| self.get_glyph(c))
     }
 
     /// Supports UTF8 characters
     fn get_last_glyph_from_text(self, text: &str) -> Option<Glyph> {
-        if let Some(c) = text.chars().next_back() {
-            Some(self.get_glyph(c))
-        } else {
-            None
-        }
+        text.chars().next_back().map(|c| self.get_glyph(c))
     }
 
     /// Width of the text that is visible.

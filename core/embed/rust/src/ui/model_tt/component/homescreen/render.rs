@@ -545,7 +545,7 @@ pub fn homescreen_blurred(data: &mut dyn HomescreenDecompressor, texts: &[Homesc
 
     let mut next_text_idx = 1;
     let mut text_info =
-        homescreen_position_text(unwrap!(texts.get(0)), &mut text_buffer, &mut icon_data);
+        homescreen_position_text(unwrap!(texts.first()), &mut text_buffer, &mut icon_data);
 
     let mcu_height = data.get_height();
     data.decompress();
@@ -675,7 +675,7 @@ pub fn homescreen(
         }
     } else {
         next_text_idx += 1;
-        homescreen_position_text(unwrap!(texts.get(0)), &mut text_buffer, &mut icon_data)
+        homescreen_position_text(unwrap!(texts.first()), &mut text_buffer, &mut icon_data)
     };
 
     set_window(screen());

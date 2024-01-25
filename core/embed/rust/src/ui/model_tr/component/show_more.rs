@@ -1,5 +1,5 @@
 use crate::{
-    strutil::{StringType, TString},
+    strutil::TString,
     ui::{
         component::{Child, Component, Event, EventCtx},
         geometry::{Insets, Rect},

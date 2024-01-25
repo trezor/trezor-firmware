@@ -2,7 +2,6 @@ use super::{
     theme, Button, ButtonDetails, ButtonLayout, ButtonPos, HoldToConfirm, HoldToConfirmMsg,
 };
 use crate::{
-    strutil::StringType,
     time::{Duration, Instant},
     ui::{
         component::{base::Event, Component, EventCtx, Pad, TimerToken},

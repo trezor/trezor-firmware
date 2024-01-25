@@ -1,5 +1,4 @@
 use crate::{
-    micropython::buffer::StrBuffer,
     strutil::TString,
     translations::TR,
     trezorhal::random,

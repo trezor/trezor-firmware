@@ -37,11 +37,11 @@ unsafe fn try_init<'a>() -> Result<Option<Translations<'a>>, Error> {
     let flash_data = unsafe { translations::get_blob() };
     // check if flash is empty
     // TODO perhaps we should check the full area?
-    if &flash_data[0..16] == &[super::blob::EMPTY_BYTE; 16] {
+    if flash_data[0..16] == [super::blob::EMPTY_BYTE; 16] {
         return Ok(None);
     }
     // try to parse the data
-    Translations::new(flash_data).map(|t| Some(t))
+    Translations::new(flash_data).map(Some)
 }
 
 pub fn init() {

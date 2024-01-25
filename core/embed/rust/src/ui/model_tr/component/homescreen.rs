@@ -89,7 +89,7 @@ where
                 .map_translated(|t| display_center(baseline, t, NOTIFICATION_FONT));
         } else if let Some((notification, _level)) = &self.notification {
             self.fill_notification_background();
-            display_center(baseline, &notification.as_ref(), NOTIFICATION_FONT);
+            display_center(baseline, notification.as_ref(), NOTIFICATION_FONT);
             // Painting warning icons in top corners when the text is short enough not to
             // collide with them
             let icon_width = NOTIFICATION_ICON.toif.width();

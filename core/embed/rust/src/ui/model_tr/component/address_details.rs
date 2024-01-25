@@ -47,7 +47,7 @@ impl AddressDetails {
                     &theme::TEXT_BOLD,
                     TR::address_details__account.try_into()?,
                 ));
-                para.add(Paragraph::new(&theme::TEXT_MONO, account.into()));
+                para.add(Paragraph::new(&theme::TEXT_MONO, account));
             }
             if let Some(path) = path {
                 para.add(Paragraph::new(
@@ -152,9 +152,9 @@ impl AddressDetails {
 
     fn fill_xpub_page(&mut self, ctx: &mut EventCtx) {
         let i = self.current_page - 2;
-        self.xpub_view.update_title(ctx, self.xpubs[i].0.clone());
+        self.xpub_view.update_title(ctx, self.xpubs[i].0);
         self.xpub_view.update_content(ctx, |p| {
-            p.inner_mut().update(self.xpubs[i].1.clone());
+            p.inner_mut().update(self.xpubs[i].1);
             p.change_page(0)
         });
     }
