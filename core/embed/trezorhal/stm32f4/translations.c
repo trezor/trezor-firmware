@@ -1,12 +1,17 @@
 #include "translations.h"
 #include <assert.h>
+#include <stdbool.h>
 #include <string.h>
 #include "common.h"
 #include "flash.h"
 #include "model.h"
 
-void translations_write(const uint8_t* data, uint32_t offset, uint32_t len) {
-  // TODO maybe return errors from here?
+bool translations_write(const uint8_t* data, uint32_t offset, uint32_t len) {
+  uint32_t size = translations_area_bytesize();
+  if (offset > size || size - offset < len) {
+    return false;
+  }
+
   ensure(flash_unlock_write(), "translations_write unlock");
   for (int i = 0; i < len; i++) {
     // TODO optimize by writing by (quad)words
@@ -14,6 +19,7 @@ void translations_write(const uint8_t* data, uint32_t offset, uint32_t len) {
            "translations_write write");
   }
   ensure(flash_lock_write(), "translations_write lock");
+  return true;
 }
 
 const uint8_t* translations_read(uint32_t* len, uint32_t offset) {
