@@ -20,7 +20,7 @@
 #        python3 pybridge.py
 # 7. Start Suite again, or use any other Trezor-compatible software.
 # 8. Output of pybridge goes to console and also to file `pybridge.log`
-from __future__ import annotations  # type: ignore [unknown import symbol]
+from __future__ import annotations
 
 from gevent import monkey
 
