@@ -1,4 +1,4 @@
-from common import *
+from common import *  # isort:skip
 
 from trezor import wire
 from trezor.crypto import bip32, bip39

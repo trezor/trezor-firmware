@@ -1,21 +1,18 @@
-from common import *
+from common import *  # isort:skip
 
 import typing as t
 import unittest
 
 from trezor import utils, wire
 
-
 if not utils.BITCOIN_ONLY:
 
-    from apps.ethereum import networks, tokens
-    from apps.ethereum.definitions import decode_definition, Definitions
     from ethereum_common import *
     from trezor.enums import EthereumDefinitionType
-    from trezor.messages import (
-        EthereumNetworkInfo,
-        EthereumTokenInfo,
-    )
+    from trezor.messages import EthereumNetworkInfo, EthereumTokenInfo
+
+    from apps.ethereum import networks, tokens
+    from apps.ethereum.definitions import Definitions, decode_definition
 
     TETHER_ADDRESS = b"\xda\xc1\x7f\x95\x8d\x2e\xe5\x23\xa2\x20\x62\x06\x99\x45\x97\xc1\x3d\x83\x1e\xc7"
 

@@ -1,13 +1,15 @@
-from common import *
+from common import *  # isort:skip
 
 from trezor.crypto import hashlib
 
-
 if not utils.BITCOIN_ONLY:
-    from trezor.messages import NEMAggregateModification
-    from trezor.messages import NEMCosignatoryModification
-    from trezor.messages import NEMSignTx
-    from trezor.messages import NEMTransactionCommon
+    from trezor.messages import (
+        NEMAggregateModification,
+        NEMCosignatoryModification,
+        NEMSignTx,
+        NEMTransactionCommon,
+    )
+
     from apps.nem.helpers import *
     from apps.nem.multisig import *
     from apps.nem.multisig.serialize import *

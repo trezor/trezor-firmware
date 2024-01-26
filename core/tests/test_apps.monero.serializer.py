@@ -1,13 +1,9 @@
-from common import *
+from common import *  # isort:skip
 
 from trezor import utils
 
-
 if not utils.BITCOIN_ONLY:
-    from apps.monero.xmr.serialize.int_serialize import (
-        dump_uvarint,
-        load_uvarint,
-    )
+    from apps.monero.xmr.serialize.int_serialize import dump_uvarint, load_uvarint
     from apps.monero.xmr.serialize.readwriter import MemoryReaderWriter
     from apps.monero.xmr.serialize_messages.base import ECPoint
     from apps.monero.xmr.serialize_messages.tx_prefix import TxinToKey

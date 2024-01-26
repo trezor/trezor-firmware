@@ -1,9 +1,9 @@
-from common import *
+from common import *  # isort:skip
 
 if not utils.BITCOIN_ONLY:
     from apps.cardano.helpers.utils import (
-        variable_length_encode,
         format_asset_fingerprint,
+        variable_length_encode,
     )
 
 

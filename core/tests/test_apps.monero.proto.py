@@ -1,11 +1,12 @@
-from common import *
+from common import *  # isort:skip
 
 if not utils.BITCOIN_ONLY:
-    from trezor.crypto import chacha20poly1305
-    from apps.monero.signing import offloading_keys
-    from apps.monero.signing import step_09_sign_input
-    from apps.monero.signing.state import State
     import ubinascii
+
+    from trezor.crypto import chacha20poly1305
+
+    from apps.monero.signing import offloading_keys, step_09_sign_input
+    from apps.monero.signing.state import State
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")

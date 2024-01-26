@@ -1,4 +1,4 @@
-from common import *
+from common import *  # isort:skip
 
 from apps.bitcoin.sign_tx.omni import is_valid, parse
 

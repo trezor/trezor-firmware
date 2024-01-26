@@ -1,4 +1,4 @@
-from common import H_, await_result, unittest
+from common import H_, await_result, unittest  # isort:skip
 
 import storage.cache
 from trezor import wire

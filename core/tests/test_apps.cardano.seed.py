@@ -1,12 +1,12 @@
-from common import *
+from common import *  # isort:skip
 
 from trezor.crypto import cardano
 
 from apps.common.paths import HARDENED
 
 if not utils.BITCOIN_ONLY:
-    from apps.cardano.seed import Keychain
     from apps.cardano.get_public_key import _get_public_key
+    from apps.cardano.seed import Keychain
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")

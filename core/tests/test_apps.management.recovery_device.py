@@ -1,7 +1,8 @@
-from common import *
+from common import *  # isort:skip
 
 import storage
 import storage.recovery
+from mock_storage import mock_storage
 from trezor.enums import BackupType
 
 from apps.management.recovery_device.recover import process_slip39
@@ -11,7 +12,6 @@ from apps.management.recovery_device.word_validity import (
     ThresholdReached,
     check,
 )
-from mock_storage import mock_storage
 
 MNEMONIC_SLIP39_BASIC_20_3of6 = [
     "extra extend academic bishop cricket bundle tofu goat apart victim enlarge program behavior permit course armed jerky faint language modern",

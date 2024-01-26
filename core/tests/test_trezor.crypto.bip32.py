@@ -1,7 +1,6 @@
-from common import *
+from common import *  # isort:skip
 
 from trezor.crypto import bip32
-
 
 SECP256K1_NAME = "secp256k1"
 HARDENED = 0x80000000

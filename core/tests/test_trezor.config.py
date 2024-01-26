@@ -1,8 +1,7 @@
-from common import *
+from common import *  # isort:skip
 
 from trezor import config
 from trezor.crypto import random
-
 
 PINAPP = 0x00
 PINKEY = 0x00

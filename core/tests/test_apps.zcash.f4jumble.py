@@ -1,4 +1,4 @@
-from common import *
+from common import *  # isort:skip
 
 from apps.zcash.f4jumble import f4jumble, f4unjumble
 

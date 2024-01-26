@@ -1,5 +1,6 @@
-from common import *
+from common import *  # isort:skip
 
+from mock_storage import mock_storage
 from storage import cache
 from trezor import wire
 from trezor.crypto import bip39
@@ -8,7 +9,6 @@ from trezor.enums import SafetyCheckLevel
 from apps.common import safety_checks
 from apps.common.keychain import Keychain, LRUCache, get_keychain, with_slip44_keychain
 from apps.common.paths import PATTERN_SEP5, PathSchema
-from mock_storage import mock_storage
 
 
 class TestKeychain(unittest.TestCase):

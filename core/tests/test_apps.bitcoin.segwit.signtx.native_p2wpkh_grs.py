@@ -1,4 +1,4 @@
-from common import *
+from common import *  # isort:skip
 
 from trezor.crypto import bip39
 from trezor.enums import AmountUnit, InputScriptType, OutputScriptType
@@ -123,7 +123,6 @@ class TestSignSegwitTxNativeP2WPKH_GRS(unittest.TestCase):
                 serialized=EMPTY_SERIALIZED,
             ),
             TxAckOutput(tx=TxAckOutputWrapper(output=out1)),
-
             helpers.UiConfirmOutput(out1, coin, AmountUnit.BITCOIN, 0, False),
             True,
             TxRequest(
@@ -132,7 +131,6 @@ class TestSignSegwitTxNativeP2WPKH_GRS(unittest.TestCase):
                 serialized=EMPTY_SERIALIZED,
             ),
             TxAckOutput(tx=TxAckOutputWrapper(output=out2)),
-
             helpers.UiConfirmOutput(out2, coin, AmountUnit.BITCOIN, 1, False),
             True,
             helpers.UiConfirmNonDefaultLocktime(tx.lock_time, lock_time_disabled=False),
@@ -334,7 +332,6 @@ class TestSignSegwitTxNativeP2WPKH_GRS(unittest.TestCase):
                 serialized=EMPTY_SERIALIZED,
             ),
             TxAckOutput(tx=TxAckOutputWrapper(output=out1)),
-
             helpers.UiConfirmOutput(out1, coin, AmountUnit.BITCOIN, 0, False),
             True,
             TxRequest(

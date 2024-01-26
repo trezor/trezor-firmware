@@ -1,7 +1,6 @@
-import utime
-
 import trezorio as io
 import trezorui as ui
+import utime
 
 usb_vcp = io.VCP(
     iface_num=0x00,

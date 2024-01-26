@@ -1,4 +1,4 @@
-from common import H_, unittest
+from common import H_, unittest  # isort:skip
 
 import storage.cache
 from trezor.enums import InputScriptType

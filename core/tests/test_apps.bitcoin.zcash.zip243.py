@@ -1,4 +1,4 @@
-from common import *
+from common import *  # isort:skip
 
 from trezor.enums import InputScriptType
 from trezor.messages import PrevOutput, SignTx, TxInput

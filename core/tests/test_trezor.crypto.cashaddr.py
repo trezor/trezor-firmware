@@ -1,4 +1,4 @@
-from common import *
+from common import *  # isort:skip
 
 # Copyright (c) 2017 Pieter Wuille
 # Copyright (c) 2018 Pavol Rusnak
@@ -25,7 +25,6 @@ from common import *
 """Reference tests for cashaddr adresses"""
 
 from trezor.crypto import base58, cashaddr
-
 
 VALID_CHECKSUM = [
     "prefix:x64nx6hz",
