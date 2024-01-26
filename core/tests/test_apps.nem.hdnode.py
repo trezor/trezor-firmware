@@ -1,7 +1,6 @@
-from common import *
+from common import *  # isort:skip
 
 from trezor.crypto import bip32
-
 
 if not utils.BITCOIN_ONLY:
     from apps.nem import CURVE

@@ -1,5 +1,4 @@
 import storage.common
-
 from mock import patch
 
 

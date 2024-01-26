@@ -1,4 +1,4 @@
-from common import *
+from common import *  # isort:skip
 
 from storage import cache
 from trezor import wire

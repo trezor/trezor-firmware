@@ -1,10 +1,9 @@
-from common import *
+from common import *  # isort:skip
 
 from trezor.ui import display
 
 
 class TestDisplay(unittest.TestCase):
-
     def test_refresh(self):
         display.refresh()
 

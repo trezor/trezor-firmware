@@ -1,4 +1,4 @@
-from common import *
+from common import *  # isort:skip
 
 if not utils.BITCOIN_ONLY:
     from apps.ripple.helpers import address_from_public_key

@@ -1,4 +1,4 @@
-from common import *
+from common import *  # isort:skip
 
 # Copyright (c) 2017, 2020 Pieter Wuille
 #

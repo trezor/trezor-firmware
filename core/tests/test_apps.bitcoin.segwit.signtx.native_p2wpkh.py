@@ -1,4 +1,4 @@
-from common import *
+from common import *  # isort:skip
 
 from trezor import wire
 from trezor.crypto import bip39
@@ -112,7 +112,6 @@ class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
                 serialized=EMPTY_SERIALIZED,
             ),
             TxAckOutput(tx=TxAckOutputWrapper(output=out1)),
-
             helpers.UiConfirmOutput(out1, coin, AmountUnit.BITCOIN, 0, False),
             True,
             TxRequest(
@@ -121,7 +120,6 @@ class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
                 serialized=EMPTY_SERIALIZED,
             ),
             TxAckOutput(tx=TxAckOutputWrapper(output=out2)),
-
             helpers.UiConfirmOutput(out2, coin, AmountUnit.BITCOIN, 1, False),
             True,
             helpers.UiConfirmTotal(
@@ -311,7 +309,6 @@ class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
                 serialized=EMPTY_SERIALIZED,
             ),
             TxAckOutput(tx=TxAckOutputWrapper(output=out1)),
-
             helpers.UiConfirmOutput(out1, coin, AmountUnit.BITCOIN, 0, False),
             True,
             TxRequest(

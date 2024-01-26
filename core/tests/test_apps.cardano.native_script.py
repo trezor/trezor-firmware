@@ -1,17 +1,16 @@
-from common import *
+from common import *  # isort:skip
 
 from trezor import wire
 from trezor.crypto import cardano
 from trezor.enums import CardanoNativeScriptType
 from trezor.messages import CardanoNativeScript
 
-
 if not utils.BITCOIN_ONLY:
-    from apps.cardano.seed import Keychain
     from apps.cardano.native_script import (
         get_native_script_hash,
         validate_native_script,
     )
+    from apps.cardano.seed import Keychain
 
 VALID_NATIVE_SCRIPTS = [
     # PUB_KEY

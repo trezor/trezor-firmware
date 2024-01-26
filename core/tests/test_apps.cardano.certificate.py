@@ -1,4 +1,4 @@
-from common import *
+from common import *  # isort:skip
 
 from trezor import wire
 from trezor.enums import CardanoCertificateType
@@ -8,7 +8,7 @@ from apps.common.paths import HARDENED
 
 if not utils.BITCOIN_ONLY:
     from apps.cardano import certificates
-    from apps.cardano.helpers import protocol_magics, network_ids
+    from apps.cardano.helpers import network_ids, protocol_magics
     from apps.cardano.helpers.account_path_check import AccountPathChecker
 
 

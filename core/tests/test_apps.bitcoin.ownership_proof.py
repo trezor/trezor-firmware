@@ -1,4 +1,4 @@
-from common import unhexlify, unittest
+from common import unhexlify, unittest  # isort:skip
 
 from trezor.crypto import bip39
 from trezor.enums import InputScriptType

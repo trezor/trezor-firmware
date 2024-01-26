@@ -1,4 +1,4 @@
-from common import *
+from common import *  # isort:skip
 
 from apps.cardano.helpers import bech32
 
