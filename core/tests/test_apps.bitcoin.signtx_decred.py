@@ -1,60 +1,63 @@
 from common import *  # isort:skip
 
-from trezor.crypto import bip39
-from trezor.enums import AmountUnit, OutputScriptType
-from trezor.enums.RequestType import TXFINISHED, TXINPUT, TXMETA, TXOUTPUT
-from trezor.messages import (
-    PrevInput,
-    PrevOutput,
-    PrevTx,
-    SignTx,
-    TxAckInput,
-    TxAckInputWrapper,
-    TxAckOutput,
-    TxAckOutputWrapper,
-    TxAckPrevInput,
-    TxAckPrevInputWrapper,
-    TxAckPrevMeta,
-    TxAckPrevOutput,
-    TxAckPrevOutputWrapper,
-    TxInput,
-    TxOutput,
-    TxRequest,
-    TxRequestDetailsType,
-    TxRequestSerializedType,
-)
-from trezor.utils import chunks
+if not utils.MODEL_IS_T2B1:
+    from trezor.crypto import bip39
+    from trezor.enums import AmountUnit, OutputScriptType
+    from trezor.enums.RequestType import TXFINISHED, TXINPUT, TXMETA, TXOUTPUT
+    from trezor.messages import (
+        PrevInput,
+        PrevOutput,
+        PrevTx,
+        SignTx,
+        TxAckInput,
+        TxAckInputWrapper,
+        TxAckOutput,
+        TxAckOutputWrapper,
+        TxAckPrevInput,
+        TxAckPrevInputWrapper,
+        TxAckPrevMeta,
+        TxAckPrevOutput,
+        TxAckPrevOutputWrapper,
+        TxInput,
+        TxOutput,
+        TxRequest,
+        TxRequestDetailsType,
+        TxRequestSerializedType,
+    )
+    from trezor.utils import chunks
 
-from apps.bitcoin.keychain import _get_schemas_for_coin
-from apps.bitcoin.sign_tx import decred, helpers
-from apps.common import coins
-from apps.common.keychain import Keychain
+    from apps.bitcoin.keychain import _get_schemas_for_coin
+    from apps.bitcoin.sign_tx import decred, helpers
+    from apps.common import coins
+    from apps.common.keychain import Keychain
 
-EMPTY_SERIALIZED = TxRequestSerializedType(serialized_tx=bytearray())
+    EMPTY_SERIALIZED = TxRequestSerializedType(serialized_tx=bytearray())
 
-coin_decred = coins.by_name("Decred Testnet")
+    coin_decred = coins.by_name("Decred Testnet")
 
-ptx1 = PrevTx(version=1, lock_time=0, inputs_count=1, outputs_count=2, extra_data_len=0)
-pinp1 = PrevInput(
-    script_sig=unhexlify(
-        "47304402207d127d59a44187952d9d0de94ad34a19dd9a84beb124fd8a3fb439c862544d3202206618f321385c30bda96fb01ce03f70a269d78a301c0b0c2e3e3689dfae3f4733012102ae1f6b51086bd753f072f94eb8ffe6806d3570c088a3ede46c678b6ea47d1675"
-    ),
-    prev_hash=unhexlify(
-        "21012b08c5077036460e8f75bbc57beb11d7bc30e7ad224ad5e67d15bd086500"
-    ),
-    prev_index=2,
-    sequence=0xFFFF_FFFF,
-)
-pout1 = PrevOutput(
-    script_pubkey=unhexlify("76a914e4111051ae0349ab5589cf2b7e125c6da694a1a188ac"),
-    amount=153_185_001,
-    decred_script_version=0,
-)
-pout2 = PrevOutput(
-    script_pubkey=unhexlify("76a914dc1a98d791735eb9a8715a2a219c23680edcedad88ac"),
-    amount=200_000_000,
-    decred_script_version=0,
-)
+    ptx1 = PrevTx(
+        version=1, lock_time=0, inputs_count=1, outputs_count=2, extra_data_len=0
+    )
+    pinp1 = PrevInput(
+        script_sig=unhexlify(
+            "47304402207d127d59a44187952d9d0de94ad34a19dd9a84beb124fd8a3fb439c862544d3202206618f321385c30bda96fb01ce03f70a269d78a301c0b0c2e3e3689dfae3f4733012102ae1f6b51086bd753f072f94eb8ffe6806d3570c088a3ede46c678b6ea47d1675"
+        ),
+        prev_hash=unhexlify(
+            "21012b08c5077036460e8f75bbc57beb11d7bc30e7ad224ad5e67d15bd086500"
+        ),
+        prev_index=2,
+        sequence=0xFFFF_FFFF,
+    )
+    pout1 = PrevOutput(
+        script_pubkey=unhexlify("76a914e4111051ae0349ab5589cf2b7e125c6da694a1a188ac"),
+        amount=153_185_001,
+        decred_script_version=0,
+    )
+    pout2 = PrevOutput(
+        script_pubkey=unhexlify("76a914dc1a98d791735eb9a8715a2a219c23680edcedad88ac"),
+        amount=200_000_000,
+        decred_script_version=0,
+    )
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
@@ -402,4 +405,5 @@ class TestSignTxDecred(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    if not utils.MODEL_IS_T2B1:
+        unittest.main()

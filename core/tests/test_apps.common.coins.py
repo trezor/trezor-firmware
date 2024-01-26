@@ -18,12 +18,17 @@ class TestCoins(unittest.TestCase):
     @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
     def test_altcoins(self):
         ref = [
-            ("NMC", "Namecoin", 52),
             ("LTC", "Litecoin", 48),
-            ("DASH", "Dash", 76),
             ("ZEC", "Zcash", 7352),
             ("TAZ", "Zcash Testnet", 7461),
         ]
+        if not utils.MODEL_IS_T2B1:
+            ref.extend(
+                [
+                    ("NMC", "Namecoin", 52),
+                    ("DASH", "Dash", 76),
+                ]
+            )
         for s, n, a in ref:
             c = coins.by_name(n)
             self.assertEqual(c.address_type, a)
