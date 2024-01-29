@@ -210,7 +210,7 @@ class Storage:
             raise RuntimeError("Storage locked and app is not public-writable")
 
     def _get_encrypted(self, key: int) -> bytes:
-        if not consts.is_app_protected(key):
+        if not consts.is_app_protected(key >> 8):
             raise RuntimeError("Only protected values are encrypted")
         sat = self.nc.get(consts.SAT_KEY)
         if sat is None:
