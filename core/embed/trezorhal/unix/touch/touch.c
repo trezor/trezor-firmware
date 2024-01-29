@@ -32,54 +32,82 @@ extern int sdl_display_res_x, sdl_display_res_y;
 extern int sdl_touch_offset_x, sdl_touch_offset_y;
 
 static bool _touch_detected = false;
+static int _touch_x = 0;
+static int _touch_y = 0;
+
+bool is_inside_display(int x, int y) {
+  return (x >= sdl_touch_offset_x && y >= sdl_touch_offset_y &&
+          x - sdl_touch_offset_x < sdl_display_res_x &&
+          y - sdl_touch_offset_y < sdl_display_res_y);
+}
 
 uint32_t touch_read(void) {
   emulator_poll_events();
   SDL_Event event;
   SDL_PumpEvents();
-  if (SDL_PollEvent(&event) > 0) {
+
+  int ev_x = 0;
+  int ev_y = 0;
+  int ev_type = 0;
+
+  while (SDL_PollEvent(&event) > 0) {
     switch (event.type) {
       case SDL_MOUSEBUTTONDOWN:
-      case SDL_MOUSEMOTION:
-      case SDL_MOUSEBUTTONUP: {
-        const int x = event.button.x - sdl_touch_offset_x;
-        const int y = event.button.y - sdl_touch_offset_y;
-        if (x < 0 || y < 0 || x >= sdl_display_res_x ||
-            y >= sdl_display_res_y) {
-          if (event.motion.state) {
-            const int clamp_x =
-                (x < 0)
-                    ? 0
-                    : ((x >= sdl_display_res_x) ? sdl_display_res_x - 1 : x);
-            const int clamp_y =
-                (y < 0)
-                    ? 0
-                    : ((y >= sdl_display_res_y) ? sdl_display_res_y - 1 : y);
-            return TOUCH_END | touch_pack_xy(clamp_x, clamp_y);
+        if (is_inside_display(event.button.x, event.button.y)) {
+          ev_x = event.button.x - sdl_touch_offset_x;
+          ev_y = event.button.y - sdl_touch_offset_y;
+          ev_type = TOUCH_START;
+        }
+
+        break;
+
+      case SDL_MOUSEBUTTONUP:
+        if (_touch_detected) {
+          if (is_inside_display(event.button.x, event.button.y)) {
+            ev_x = event.button.x - sdl_touch_offset_x;
+            ev_y = event.button.y - sdl_touch_offset_y;
           } else {
-            break;
+            // use last valid coordinates
+            ev_x = _touch_x;
+            ev_y = _touch_y;
+          }
+          ev_type = TOUCH_END;
+        }
+        break;
+
+      case SDL_MOUSEMOTION:
+        if (_touch_detected) {
+          if (is_inside_display(event.motion.x, event.motion.y)) {
+            ev_x = event.button.x - sdl_touch_offset_x;
+            ev_y = event.button.y - sdl_touch_offset_y;
+            ev_type = TOUCH_MOVE;
+          } else {
+            // use last valid coordinates and simulate TOUCH_END
+            ev_x = _touch_x;
+            ev_y = _touch_y;
+            ev_type = TOUCH_END;
           }
         }
-        switch (event.type) {
-          case SDL_MOUSEBUTTONDOWN:
-            _touch_detected = true;
-            return TOUCH_START | touch_pack_xy(x, y);
-          case SDL_MOUSEMOTION:
-            // remove other SDL_MOUSEMOTION events from queue
-            SDL_FlushEvent(SDL_MOUSEMOTION);
-            if (event.motion.state) {
-              return TOUCH_MOVE | touch_pack_xy(x, y);
-            }
-            break;
-          case SDL_MOUSEBUTTONUP:
-            _touch_detected = false;
-            return TOUCH_END | touch_pack_xy(x, y);
-        }
+        break;
+    }
+
+    if (ev_type != 0) {
+      _touch_x = ev_x;
+      _touch_y = ev_y;
+
+      if (ev_type == TOUCH_START) {
+        _touch_detected = true;
+        break;
+      }
+
+      if (ev_type == TOUCH_END) {
+        _touch_detected = false;
         break;
       }
     }
   }
-  return 0;
+
+  return ev_type | touch_pack_xy(ev_x, ev_y);
 }
 
 void touch_init(void) {}
