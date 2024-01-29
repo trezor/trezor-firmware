@@ -4,6 +4,7 @@ from enum import Enum
 from typing import TYPE_CHECKING
 
 from .. import buttons
+from .. import translations as TR
 
 if TYPE_CHECKING:
     from trezorlib.debuglink import DebugLink, LayoutContent
@@ -147,3 +148,7 @@ def _move_one_closer(
             return debug.press_left(wait=True)
         else:
             return debug.press_right(wait=True)
+
+
+def get_possible_btn_texts(path: str) -> str:
+    return "|".join(TR.translate(path))

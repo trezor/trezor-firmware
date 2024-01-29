@@ -79,8 +79,7 @@ where
         let erase_btn = Maybe::hidden(theme::BG, erase_btn).into_child();
 
         let cancel_btn = Button::with_icon(theme::ICON_CANCEL).styled(theme::button_cancel());
-        let cancel_btn =
-            Maybe::new(Pad::with_background(theme::BG), cancel_btn, allow_cancel).into_child();
+        let cancel_btn = Maybe::new(theme::BG, cancel_btn, allow_cancel).into_child();
 
         Self {
             allow_cancel,

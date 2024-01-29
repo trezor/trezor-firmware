@@ -16,6 +16,7 @@ use crate::{
         },
     },
 };
+use heapless::String;
 
 const MAX_LENGTH: usize = 8;
 
@@ -168,6 +169,23 @@ impl Bip39Input {
             options_num: None,
             suggested_word: None,
             button_suggestion: Button::empty(),
+        }
+    }
+
+    pub fn prefilled_word(word: &str) -> Self {
+        // Word may be empty string, fallback to normal input
+        if word.is_empty() {
+            return Self::new();
+        }
+
+        // Styling the input to reflect already filled word
+        Self {
+            button: Button::with_icon(theme::ICON_LIST_CHECK).styled(theme::button_pin_confirm()),
+            textbox: TextBox::new(String::from(word)),
+            multi_tap: MultiTapKeyboard::new(),
+            options_num: bip39::options_num(word),
+            suggested_word: bip39::complete_word(word),
+            button_suggestion: Button::empty().styled(theme::button_suggestion_confirm()),
         }
     }
 

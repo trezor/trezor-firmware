@@ -831,5 +831,6 @@
   "829": "words__warning",
   "830": "words__writable",
   "831": "words__yes",
-  "832": "reboot_to_bootloader__just_a_moment"
+  "832": "reboot_to_bootloader__just_a_moment",
+  "833": "inputs__previous"
 }

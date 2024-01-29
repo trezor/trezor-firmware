@@ -24,7 +24,12 @@ from trezorlib import device, exceptions
 
 from .. import buttons
 from .. import translations as TR
-from .common import go_back, go_next, navigate_to_action_and_press
+from .common import (
+    get_possible_btn_texts,
+    go_back,
+    go_next,
+    navigate_to_action_and_press,
+)
 
 if TYPE_CHECKING:
     from trezorlib.debuglink import DebugLink
@@ -42,14 +47,9 @@ PIN24 = "875163065288639289952973"
 PIN50 = "31415926535897932384626433832795028841971693993751"
 PIN60 = PIN50 + "9" * 10
 
-
-def _get_possible_btns(path: str) -> str:
-    return "|".join(TR.translate(path))
-
-
-DELETE = _get_possible_btns("inputs__delete")
-SHOW = _get_possible_btns("inputs__show")
-ENTER = _get_possible_btns("inputs__enter")
+DELETE = get_possible_btn_texts("inputs__delete")
+SHOW = get_possible_btn_texts("inputs__show")
+ENTER = get_possible_btn_texts("inputs__enter")
 
 
 TR_PIN_ACTIONS = [

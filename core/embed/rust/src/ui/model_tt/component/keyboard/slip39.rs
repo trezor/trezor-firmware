@@ -203,6 +203,61 @@ impl Slip39Input {
         }
     }
 
+    pub fn prefilled_word(word: &str) -> Self {
+        // Word may be empty string, fallback to normal input
+        if word.is_empty() {
+            return Self::new();
+        }
+
+        let (buff, input_mask, final_word) = Self::setup_from_prefilled_word(word);
+
+        Self {
+            // Button has the same style the whole time
+            button: Button::empty().styled(theme::button_pin_confirm()),
+            textbox: TextBox::new(buff),
+            multi_tap: MultiTapKeyboard::new(),
+            final_word,
+            input_mask,
+        }
+    }
+
+    fn setup_from_prefilled_word(
+        word: &str,
+    ) -> (String<MAX_LENGTH>, Slip39Mask, Option<&'static str>) {
+        let mut buff: String<MAX_LENGTH> = String::new();
+
+        // Gradually appending encoded key digits to the buffer and checking if
+        // have not already formed a final word.
+        for ch in word.chars() {
+            let mut index = 0;
+            for (i, key) in Self::keys().iter().enumerate() {
+                if key.contains(ch) {
+                    index = i;
+                    break;
+                }
+            }
+            buff.push(Self::key_digit(index))
+                .assert_if_debugging_ui("Text buffer is too small");
+
+            let sequence: Option<u16> = buff.parse().ok();
+            let input_mask = sequence
+                .and_then(slip39::word_completion_mask)
+                .map(Slip39Mask)
+                .unwrap_or_else(Slip39Mask::full);
+            let final_word = if input_mask.is_final() {
+                sequence.and_then(slip39::button_sequence_to_word)
+            } else {
+                None
+            };
+
+            // As soon as we have a final word, we can stop.
+            if final_word.is_some() {
+                return (buff, input_mask, final_word);
+            }
+        }
+        (buff, Slip39Mask::full(), None)
+    }
+
     /// Convert a key index into the key digit. This is what we push into the
     /// input buffer.
     ///

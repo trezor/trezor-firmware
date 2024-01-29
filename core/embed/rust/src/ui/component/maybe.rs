@@ -11,7 +11,8 @@ pub struct Maybe<T> {
 }
 
 impl<T> Maybe<T> {
-    pub fn new(pad: Pad, inner: T, visible: bool) -> Self {
+    pub fn new(bg_color: Color, inner: T, visible: bool) -> Self {
+        let pad = Pad::with_background(bg_color);
         Self {
             inner,
             visible,
@@ -19,12 +20,12 @@ impl<T> Maybe<T> {
         }
     }
 
-    pub fn visible(clear: Color, inner: T) -> Self {
-        Self::new(Pad::with_background(clear), inner, true)
+    pub fn visible(bg_color: Color, inner: T) -> Self {
+        Self::new(bg_color, inner, true)
     }
 
-    pub fn hidden(clear: Color, inner: T) -> Self {
-        Self::new(Pad::with_background(clear), inner, false)
+    pub fn hidden(bg_color: Color, inner: T) -> Self {
+        Self::new(bg_color, inner, false)
     }
 }
 

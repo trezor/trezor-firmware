@@ -337,6 +337,7 @@ class TR:
     inputs__cancel: str = "CANCEL"
     inputs__delete: str = "DELETE"
     inputs__enter: str = "ENTER"
+    inputs__previous: str = "PREVIOUS"
     inputs__return: str = "RETURN"
     inputs__show: str = "SHOW"
     inputs__space: str = "SPACE"

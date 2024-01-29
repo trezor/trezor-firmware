@@ -343,6 +343,7 @@
     "inputs__delete": "DELETE",
     "inputs__enter": "ENTER",
     "inputs__return": "RETURN",
+    "inputs__previous": "PREVIOUS",
     "inputs__show": "SHOW",
     "inputs__space": "SPACE",
     "joint__title": "JOINT TRANSACTION",

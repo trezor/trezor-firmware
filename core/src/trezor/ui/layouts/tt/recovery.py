@@ -32,12 +32,23 @@ async def request_word_count(dry_run: bool) -> int:
     return int(count)
 
 
-async def request_word(word_index: int, word_count: int, is_slip39: bool) -> str:
+async def request_word(
+    word_index: int, word_count: int, is_slip39: bool, prefill_word: str = ""
+) -> str:
     prompt = TR.recovery__type_word_x_of_y_template.format(word_index + 1, word_count)
+    can_go_back = word_index > 0
     if is_slip39:
-        keyboard = RustLayout(trezorui2.request_slip39(prompt=prompt))
+        keyboard = RustLayout(
+            trezorui2.request_slip39(
+                prompt=prompt, prefill_word=prefill_word, can_go_back=can_go_back
+            )
+        )
     else:
-        keyboard = RustLayout(trezorui2.request_bip39(prompt=prompt))
+        keyboard = RustLayout(
+            trezorui2.request_bip39(
+                prompt=prompt, prefill_word=prefill_word, can_go_back=can_go_back
+            )
+        )
 
     word: str = await ctx_wait(keyboard)
     return word
