@@ -23,13 +23,18 @@ from typing import TYPE_CHECKING, Generator, Iterator
 import pytest
 import xdist
 
-from trezorlib import debuglink, log, translations
+from trezorlib import debuglink, log
+from trezorlib._internal import translations
 from trezorlib.debuglink import TrezorClientDebugLink as Client
-from trezorlib.device import apply_settings, change_language
+from trezorlib.device import apply_settings
 from trezorlib.device import wipe as wipe_device
 from trezorlib.transport import enumerate_devices, get_transport
 
-from . import ui_tests
+# register rewrites before importing from local package
+# so that we see details of failed asserts from this module
+pytest.register_assert_rewrite("tests.common")
+
+from . import translations, ui_tests
 from .device_handler import BackgroundDeviceHandler
 from .emulators import EmulatorWrapper
 
@@ -43,14 +48,6 @@ if TYPE_CHECKING:
 
 HERE = Path(__file__).resolve().parent
 CORE = HERE.parent / "core"
-TRANSLATIONS = CORE / "embed" / "rust" / "src" / "ui" / "translations"
-
-CS_JSON = TRANSLATIONS / "cs.json"
-FR_JSON = TRANSLATIONS / "fr.json"
-
-
-# So that we see details of failed asserts from this module
-pytest.register_assert_rewrite("tests.common")
 
 
 def _emulator_wrapper_main_args() -> list[str]:
@@ -146,26 +143,8 @@ def _raw_client(request: pytest.FixtureRequest) -> Client:
     # Not doing it for T1
     if client.features.model != "1":
         lang = request.session.config.getoption("lang") or "en"
-        _set_language(client, lang)  # type: ignore
-
-    return client
-
-
-def _set_language(client: Client, lang: str) -> Client:
-    model = client.features.model or ""
-    if lang == "en":
-        with client:
-            change_language(client, language_data=b"")
-    elif lang == "cs":
-        change_language(
-            client, language_data=translations.blob_from_file(CS_JSON, model)
-        )
-    elif lang == "fr":
-        change_language(
-            client, language_data=translations.blob_from_file(FR_JSON, model)
-        )
-    else:
-        raise RuntimeError(f"Unknown language: {lang}")
+        assert isinstance(lang, str)
+        translations.set_language(client, lang)
 
     return client
 

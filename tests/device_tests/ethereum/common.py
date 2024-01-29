@@ -4,25 +4,9 @@ import io
 import typing as t
 from hashlib import sha256
 
-from trezorlib import cosi, definitions, messages, protobuf
+from trezorlib import definitions, messages, protobuf
 
-PRIVATE_KEYS_DEV = [byte * 32 for byte in (b"\xdd", b"\xde", b"\xdf")]
-
-
-def sign_with_privkeys(digest: bytes, privkeys: t.Sequence[bytes]) -> bytes:
-    """Locally produce a CoSi signature."""
-    pubkeys = [cosi.pubkey_from_privkey(sk) for sk in privkeys]
-    nonces = [cosi.get_nonce(sk, digest, i) for i, sk in enumerate(privkeys)]
-
-    global_pk = cosi.combine_keys(pubkeys)
-    global_R = cosi.combine_keys(R for _, R in nonces)
-
-    sigs = [
-        cosi.sign_with_privkey(digest, sk, global_pk, r, global_R)
-        for sk, (r, _) in zip(privkeys, nonces)
-    ]
-
-    return cosi.combine_sig(global_R, sigs)
+from ...common import sign_with_privkeys, PRIVATE_KEYS_DEV
 
 
 def make_network(
