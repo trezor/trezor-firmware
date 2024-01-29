@@ -30,7 +30,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_addr_mismatch__support_url;
   MP_QSTR_addr_mismatch__title;
   MP_QSTR_addr_mismatch__title_key_mismatch;
-  MP_QSTR_addr_mismatch__wrong_derication_path;
+  MP_QSTR_addr_mismatch__wrong_derivation_path;
   MP_QSTR_addr_mismatch__xpub_mismatch;
   MP_QSTR_address;
   MP_QSTR_address__address;
@@ -181,6 +181,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_cardano__confirm_signing_stake_pool;
   MP_QSTR_cardano__confirm_transaction;
   MP_QSTR_cardano__confirming_a_multisig_transaction;
+  MP_QSTR_cardano__confirming_a_plutus_transaction;
   MP_QSTR_cardano__confirming_pool_registration;
   MP_QSTR_cardano__confirming_transction;
   MP_QSTR_cardano__cost;
@@ -997,6 +998,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_word_count__title;
   MP_QSTR_words;
   MP_QSTR_words__account;
+  MP_QSTR_words__account_colon;
   MP_QSTR_words__address;
   MP_QSTR_words__amount;
   MP_QSTR_words__are_you_sure;

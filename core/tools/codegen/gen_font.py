@@ -34,6 +34,7 @@ MAX_GLYPH = ord("~")
 MODIFY_BEARING_X = [
     _normalize(c)
     for c in (
+        "Ä",
         "À",
         "Â",
         "Æ",

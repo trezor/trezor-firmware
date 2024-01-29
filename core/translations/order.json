@@ -5,7 +5,7 @@
   "3": "addr_mismatch__support_url",
   "4": "addr_mismatch__title",
   "5": "addr_mismatch__title_key_mismatch",
-  "6": "addr_mismatch__wrong_derication_path",
+  "6": "addr_mismatch__wrong_derivation_path",
   "7": "addr_mismatch__xpub_mismatch",
   "8": "address__address",
   "9": "address__public_key",
@@ -858,5 +858,7 @@
   "856": "words__address",
   "857": "words__confirm_fee",
   "858": "words__no",
-  "859": "words__yes"
+  "859": "words__yes",
+  "860": "words__account_colon",
+  "861": "cardano__confirming_a_plutus_transaction"
 }

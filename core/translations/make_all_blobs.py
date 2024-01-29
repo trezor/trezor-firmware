@@ -41,7 +41,7 @@ def main() -> None:
 
         for model in ALL_MODELS:
             try:
-                blob = translations.make_blob(HERE, lang, model)
+                blob = translations.blob_from_dir(HERE, lang, model)
                 all_blobs.append(blob)
             except Exception as e:
                 import traceback
@@ -57,7 +57,7 @@ def main() -> None:
     sigmask = 0b111
 
     for blob in all_blobs:
-        proof = translations.TranslationsProof(
+        proof = translations.Proof(
             merkle_proof=tree.get_proof(blob.header_bytes),
             signature=signature,
             sigmask=sigmask,
@@ -66,8 +66,8 @@ def main() -> None:
         header = blob.header
         model_str = header.model.value.decode("ascii")
         version_str = ".".join(str(v) for v in header.firmware_version[:3])
-        click.echo(f"Writing {header.language} for {model_str} v{version_str}")
         filename = f"translation-{model_str}-{header.language}-{version_str}.bin"
+        click.echo(f"Writing {header.language} for {model_str} v{version_str}: {filename}")
         (HERE / filename).write_bytes(blob.build())
 
 if __name__ == "__main__":

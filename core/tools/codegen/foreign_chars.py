@@ -68,7 +68,37 @@ french_chars = (
     "œ",
 )
 
+spanish_chars = (
+    "Á",
+    "É",
+    "Í",
+    "Ñ",
+    "Ó",
+    "Ú",
+    "Ü",
+    "á",
+    "é",
+    "í",
+    "ñ",
+    "ó",
+    "ú",
+    "ü",
+    "¿",
+)
+
+german_chars = (
+    "Ä",
+    "Ö",
+    "Ü",
+    "ß",
+    "ä",
+    "ö",
+    "ü",
+)
+
 all_languages = {
     "cs": czech_chars,
     "fr": french_chars,
+    "es": spanish_chars,
+    "de": german_chars,
 }
