@@ -1,5 +1,4 @@
-import sys
-from struct import pack
+from struct import pack, unpack
 
 from . import consts
 
@@ -213,12 +212,11 @@ class NorcowBitwise(Norcow):
         if offset >= consts.NORCOW_SECTOR_SIZE:
             raise ValueError("Norcow: no data on this offset")
 
-        key = self.sectors[self.active_sector][offset : offset + 2]
-        key = int.from_bytes(key, sys.byteorder)
+        key, length = unpack(
+            "<HH", self.sectors[self.active_sector][offset : offset + 4]
+        )
         if key == consts.NORCOW_KEY_FREE:
             raise ValueError("Norcow: no data on this offset")
-        length = self.sectors[self.active_sector][offset + 2 : offset + 4]
-        length = int.from_bytes(length, sys.byteorder)
         value = self.sectors[self.active_sector][offset + 4 : offset + 4 + length]
 
         return key, value
@@ -275,8 +273,9 @@ class NorcowBlockwise(Norcow):
                 return len(data)
         else:
             if key == 0:
-                old_key = self.sectors[self.active_sector][pos + 0 : pos + 2]
-                old_key = int.from_bytes(old_key, sys.byteorder)
+                old_key, _ = unpack(
+                    "<HH", self.sectors[self.active_sector][pos : pos + 4]
+                )
                 data = align_data(
                     pack("<HH", old_key, len(new_value)), self.block_size, b"\x00"
                 )
@@ -308,18 +307,15 @@ class NorcowBlockwise(Norcow):
         if offset >= consts.NORCOW_SECTOR_SIZE:
             raise ValueError("Norcow: no data on this offset")
 
-        length = self.sectors[self.active_sector][offset + 2 : offset + 4]
-        length = int.from_bytes(length, sys.byteorder)
+        key, length = unpack(
+            "<HH", self.sectors[self.active_sector][offset : offset + 4]
+        )
 
         if length <= self.small_item_size:
-            key = self.sectors[self.active_sector][offset : offset + 2]
-            key = int.from_bytes(key, sys.byteorder)
             if key == consts.NORCOW_KEY_FREE:
                 raise ValueError("Norcow: no data on this offset")
             value = self.sectors[self.active_sector][offset + 4 : offset + 4 + length]
         else:
-            key = self.sectors[self.active_sector][offset : offset + 2]
-            key = int.from_bytes(key, sys.byteorder)
             if key == consts.NORCOW_KEY_FREE:
                 raise ValueError("Norcow: no data on this offset")
             deleted = self.sectors[self.active_sector][
