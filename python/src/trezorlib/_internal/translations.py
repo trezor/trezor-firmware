@@ -16,9 +16,17 @@ from ..tools import EnumAdapter, TupleAdapter
 
 # All sections need to be aligned to 2 bytes for the offset tables using u16 to work properly
 ALIGNMENT = 2
+# "align end of struct" subcon. The builtin c.Aligned does not do the right thing,
+# because it assumes that the alignment is relative to the start of the subcon, not the
+# start of the whole struct.
+# TODO this spelling may or may not align in context of the stream as a whole (as
+# opposed to the containing struct). This is prooobably not a problem -- we want the
+# top-level alignment to always be ALIGNMENT anyway. But if someone were to use some
+# of the structs separately, they might get a surprise. Maybe. Didn't test this.
+ALIGN_SUBCON = c.Padding(
+    lambda ctx: (ALIGNMENT - (ctx._io.tell() % ALIGNMENT)) % ALIGNMENT
+)
 
-JsonTranslationData = t.Dict[str, t.Dict[str, str]]
-TranslatedStrings = t.Dict[str, str]
 JsonFontInfo = t.Dict[str, str]
 Order = t.Dict[int, str]
 
@@ -32,7 +40,7 @@ class JsonHeader(TypedDict):
 
 class JsonDef(TypedDict):
     header: JsonHeader
-    translations: JsonTranslationData
+    translations: dict[str, str]
     fonts: dict[str, JsonFontInfo]
 
 
@@ -54,7 +62,7 @@ def _version_to_tuple(version: str) -> tuple[int, int, int, int]:
     return (*items, 0)
 
 
-class TranslationsHeader(Struct):
+class Header(Struct):
     language: str
     model: Model
     firmware_version: tuple[int, int, int, int]
@@ -73,13 +81,13 @@ class TranslationsHeader(Struct):
         "data_hash" / c.Bytes(32),
         "change_language_title" / c.PascalString(c.Int8ul, "utf8"),
         "change_language_prompt" / c.PascalString(c.Int8ul, "utf8"),
-        c.Aligned(ALIGNMENT, c.Pass),
+        ALIGN_SUBCON,
         c.Terminated,
     )
     # fmt: on
 
 
-class TranslationsProof(Struct):
+class Proof(Struct):
     merkle_proof: list[bytes]
     sigmask: int
     signature: bytes
@@ -89,6 +97,7 @@ class TranslationsProof(Struct):
         "merkle_proof" / c.PrefixedArray(c.Int8ul, c.Bytes(32)),
         "sigmask" / c.Byte,
         "signature" / c.Bytes(64),
+        ALIGN_SUBCON,
         c.Terminated,
     )
     # fmt: on
@@ -105,7 +114,7 @@ class BlobTable(Struct):
         "_length" / c.Rebuild(c.Int16ul, c.len_(c.this.offsets) - 1),
         "offsets" / c.Array(c.this._length + 1, TupleAdapter(c.Int16ul, c.Int16ul)),
         "data" / c.GreedyBytes,
-        c.Aligned(ALIGNMENT, c.Pass),
+        ALIGN_SUBCON,
         c.Terminated,
     )
     # fmt: on
@@ -135,7 +144,7 @@ class BlobTable(Struct):
         return None
 
 
-class TranslationsData(Struct):
+class TranslatedStrings(Struct):
     offsets: list[int]
     strings: bytes
 
@@ -143,7 +152,8 @@ class TranslationsData(Struct):
     SUBCON = c.Struct(
         "_length" / c.Rebuild(c.Int16ul, c.len_(c.this.offsets) - 1),
         "offsets" / c.Array(c.this._length + 1, c.Int16ul),
-        "strings" / c.Aligned(ALIGNMENT, c.GreedyBytes),
+        "strings" / c.GreedyBytes,
+        ALIGN_SUBCON,
         c.Terminated,
     )
     # fmt: on
@@ -214,7 +224,7 @@ class FontsTable(BlobTable):
 # =========
 
 
-class TranslationsPayload(Struct):
+class Payload(Struct):
     translations_bytes: bytes
     fonts_bytes: bytes
 
@@ -230,7 +240,7 @@ class TranslationsPayload(Struct):
 class TranslationsBlob(Struct):
     header_bytes: bytes
     proof_bytes: bytes
-    payload: TranslationsPayload = subcon(TranslationsPayload)
+    payload: Payload = subcon(Payload)
 
     # fmt: off
     SUBCON = c.Struct(
@@ -248,7 +258,7 @@ class TranslationsBlob(Struct):
         "_start_offset" / c.Tell,
         "header_bytes" / c.Prefixed(c.Int16ul, c.GreedyBytes),
         "proof_bytes" / c.Prefixed(c.Int16ul, c.GreedyBytes),
-        "payload" / TranslationsPayload.SUBCON,
+        "payload" / Payload.SUBCON,
         "_end_offset" / c.Tell,
         c.Terminated,
 
@@ -258,60 +268,59 @@ class TranslationsBlob(Struct):
 
     @property
     def header(self):
-        return TranslationsHeader.parse(self.header_bytes)
+        return Header.parse(self.header_bytes)
 
     @property
     def proof(self):
-        return TranslationsProof.parse(self.proof_bytes)
+        return Proof.parse(self.proof_bytes)
 
     @proof.setter
-    def proof(self, proof: TranslationsProof):
+    def proof(self, proof: Proof):
         self.proof_bytes = proof.build()
 
     @property
     def translations(self):
-        return TranslationsData.parse(self.payload.translations_bytes)
+        return TranslatedStrings.parse(self.payload.translations_bytes)
 
     @property
     def fonts(self):
         return FontsTable.parse(self.payload.fonts_bytes)
 
-    def verify(self) -> None:
-        header = self.header
-        data = self.payload.build()
-
-        assert header.data_len == len(data)
-        assert header.data_hash == sha256(data).digest()
+    def build(self) -> bytes:
+        assert len(self.header_bytes) % ALIGNMENT == 0
+        assert len(self.proof_bytes) % ALIGNMENT == 0
+        assert len(self.payload.translations_bytes) % ALIGNMENT == 0
+        assert len(self.payload.fonts_bytes) % ALIGNMENT == 0
+        return super().build()
 
 
 # ====================
 
 
-def make_blob(dir: Path, lang: str, model: TrezorModel) -> TranslationsBlob:
-    lang_file = dir / f"{lang}.json"
-    fonts_dir = dir / "fonts"
+def order_from_json(json_order: dict[str, str]) -> Order:
+    return {int(k): v for k, v in json_order.items()}
 
-    lang_data: JsonDef = json.loads(lang_file.read_text())
+
+def blob_from_defs(
+    lang_data: JsonDef,
+    order: Order,
+    model: TrezorModel,
+    fonts_dir: Path,
+) -> TranslationsBlob:
     json_header: JsonHeader = lang_data["header"]
 
-    json_order = json.loads((dir / "order.json").read_text())
-    order: Order = {int(k): v for k, v in json_order.items()}
-
-    # flatten translations
-    translations_flattened = {
-        f"{section}__{key}": value
-        for section, section_data in lang_data["translations"].items()
-        for key, value in section_data.items()
-    }
     # order translations -- python dicts keep insertion order
     translations_ordered = [
-        translations_flattened.get(key, "") for _, key in sorted(order.items())
+        lang_data["translations"].get(key, "") for _, key in sorted(order.items())
     ]
 
-    translations = TranslationsData.from_items(translations_ordered)
+    translations = TranslatedStrings.from_items(translations_ordered)
 
     if model.internal_name not in lang_data["fonts"]:
-        raise ValueError(f"Model {model.internal_name} not found in {lang_file}")
+        raise ValueError(
+            f"Model {model.internal_name} not found in header for {json_header['language']} v{json_header['version']}"
+        )
+
     model_fonts = lang_data["fonts"][model.internal_name]
     fonts = FontsTable.from_dir(model_fonts, fonts_dir)
 
@@ -320,13 +329,13 @@ def make_blob(dir: Path, lang: str, model: TrezorModel) -> TranslationsBlob:
     fonts_bytes = fonts.build()
     assert len(fonts_bytes) % ALIGNMENT == 0
 
-    payload = TranslationsPayload(
+    payload = Payload(
         translations_bytes=translations_bytes,
         fonts_bytes=fonts_bytes,
     )
     data = payload.build()
 
-    header = TranslationsHeader(
+    header = Header(
         language=json_header["language"],
         model=Model.from_trezor_model(model),
         firmware_version=_version_to_tuple(json_header["version"]),
@@ -341,3 +350,12 @@ def make_blob(dir: Path, lang: str, model: TrezorModel) -> TranslationsBlob:
         proof_bytes=b"",
         payload=payload,
     )
+
+
+def blob_from_dir(dir: Path, lang: str, model: TrezorModel) -> TranslationsBlob:
+    lang_file = dir / f"{lang}.json"
+    fonts_dir = dir / "fonts"
+    json_order = json.loads((dir / "order.json").read_text())
+    lang_data = json.loads(lang_file.read_text())
+    order = order_from_json(json_order)
+    return blob_from_defs(lang_data, order, model, fonts_dir)
