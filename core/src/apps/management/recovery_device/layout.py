@@ -50,15 +50,35 @@ async def request_mnemonic(
 
     await button_request("mnemonic", code=ButtonRequestType.MnemonicInput)
 
-    words: list[str] = []
-    for i in range(word_count):
+    # Allowing to go back to previous words, therefore cannot use just loop over range(word_count)
+    words: list[str] = [""] * word_count
+    i = 0
+    while True:
+        # All the words have been entered
+        if i >= word_count:
+            break
+
+        # Prefilling the previously inputted word in case of going back
         word = await request_word(
-            i, word_count, is_slip39=backup_types.is_slip39_word_count(word_count)
+            i,
+            word_count,
+            is_slip39=backup_types.is_slip39_word_count(word_count),
+            prefill_word=words[i],
         )
-        words.append(word)
+
+        # User has decided to go back
+        if not word:
+            if i > 0:
+                i -= 1
+            continue
+
+        words[i] = word
+
+        i += 1
 
         try:
-            word_validity.check(backup_type, words)
+            non_empty_words = [word for word in words if word]
+            word_validity.check(backup_type, non_empty_words)
         except word_validity.AlreadyAdded:
             # show_share_already_added
             await show_recovery_warning(

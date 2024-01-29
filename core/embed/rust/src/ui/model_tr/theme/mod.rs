@@ -63,6 +63,7 @@ pub fn textstyle_number(num: i32) -> &'static TextStyle {
 include_icon!(ICON_ARM_LEFT, "model_tr/res/arm_left.toif"); // 10*6
 include_icon!(ICON_ARM_RIGHT, "model_tr/res/arm_right.toif"); // 10*6
 include_icon!(ICON_ARROW_LEFT, "model_tr/res/arrow_left.toif"); // 4*7
+include_icon!(ICON_ARROW_LEFT_BIG, "model_tr/res/arrow_left_big.toif"); // 8*7
 include_icon!(ICON_ARROW_RIGHT, "model_tr/res/arrow_right.toif"); // 4*7
 include_icon!(ICON_ARROW_RIGHT_FAT, "model_tr/res/arrow_right_fat.toif"); // 4*8
 include_icon!(

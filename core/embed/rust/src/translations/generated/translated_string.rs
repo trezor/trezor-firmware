@@ -843,6 +843,7 @@ pub enum TranslatedString {
     words__writable = 830,
     words__yes = 831,
     reboot_to_bootloader__just_a_moment = 832,
+    inputs__previous = 833,
 }
 
 impl TranslatedString {
@@ -1681,6 +1682,7 @@ impl TranslatedString {
             Self::words__writable => "Writable",
             Self::words__yes => "Yes",
             Self::reboot_to_bootloader__just_a_moment => "Just a moment...",
+            Self::inputs__previous => "PREVIOUS",
         }
     }
 
@@ -2520,6 +2522,7 @@ impl TranslatedString {
             Qstr::MP_QSTR_words__writable => Some(Self::words__writable),
             Qstr::MP_QSTR_words__yes => Some(Self::words__yes),
             Qstr::MP_QSTR_reboot_to_bootloader__just_a_moment => Some(Self::reboot_to_bootloader__just_a_moment),
+            Qstr::MP_QSTR_inputs__previous => Some(Self::inputs__previous),
             _ => None,
         }
     }

@@ -1347,9 +1347,19 @@ extern "C" fn new_request_passphrase(n_args: usize, args: *const Obj, kwargs: *m
 extern "C" fn new_request_bip39(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
         let prompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
+        let prefill_word: StrBuffer = kwargs.get(Qstr::MP_QSTR_prefill_word)?.try_into()?;
+        let can_go_back: bool = kwargs.get(Qstr::MP_QSTR_can_go_back)?.try_into()?;
 
         let obj = LayoutObj::new(
-            Frame::new(prompt, WordlistEntry::new(WordlistType::Bip39)).with_title_centered(),
+            Frame::new(
+                prompt,
+                WordlistEntry::prefilled_word(
+                    prefill_word.as_ref(),
+                    WordlistType::Bip39,
+                    can_go_back,
+                ),
+            )
+            .with_title_centered(),
         )?;
         Ok(obj.into())
     };
@@ -1359,9 +1369,19 @@ extern "C" fn new_request_bip39(n_args: usize, args: *const Obj, kwargs: *mut Ma
 extern "C" fn new_request_slip39(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
         let prompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
+        let prefill_word: StrBuffer = kwargs.get(Qstr::MP_QSTR_prefill_word)?.try_into()?;
+        let can_go_back: bool = kwargs.get(Qstr::MP_QSTR_can_go_back)?.try_into()?;
 
         let obj = LayoutObj::new(
-            Frame::new(prompt, WordlistEntry::new(WordlistType::Slip39)).with_title_centered(),
+            Frame::new(
+                prompt,
+                WordlistEntry::prefilled_word(
+                    prefill_word.as_ref(),
+                    WordlistType::Slip39,
+                    can_go_back,
+                ),
+            )
+            .with_title_centered(),
         )?;
         Ok(obj.into())
     };
@@ -1972,6 +1992,8 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// def request_bip39(
     ///     *,
     ///     prompt: str,
+    ///     prefill_word: str,
+    ///     can_go_back: bool,
     /// ) -> str:
     ///     """Get recovery word for BIP39."""
     Qstr::MP_QSTR_request_bip39 => obj_fn_kw!(0, new_request_bip39).as_obj(),
@@ -1979,6 +2001,8 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// def request_slip39(
     ///     *,
     ///     prompt: str,
+    ///     prefill_word: str,
+    ///     can_go_back: bool,
     /// ) -> str:
     ///    """SLIP39 word input keyboard."""
     Qstr::MP_QSTR_request_slip39 => obj_fn_kw!(0, new_request_slip39).as_obj(),

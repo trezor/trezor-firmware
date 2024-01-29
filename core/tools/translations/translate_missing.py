@@ -19,7 +19,7 @@ def translate_dict(
                 translated_text = translator.translate(
                     value, src=from_lang, dest=to_lang
                 ).text
-                new_dict[key] = translated_text + " (TODO)"
+                new_dict[key] = translated_text
             except Exception as e:
                 print(f"Error translating {value}: {e}")
                 new_dict[key] = MISSING_VALUE

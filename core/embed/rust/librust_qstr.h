@@ -143,6 +143,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_buttons__try_again;
   MP_QSTR_buttons__turn_off;
   MP_QSTR_buttons__turn_on;
+  MP_QSTR_can_go_back;
   MP_QSTR_cancel_arrow;
   MP_QSTR_cancel_cross;
   MP_QSTR_cardano__addr_base;
@@ -431,6 +432,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_inputs__cancel;
   MP_QSTR_inputs__delete;
   MP_QSTR_inputs__enter;
+  MP_QSTR_inputs__previous;
   MP_QSTR_inputs__return;
   MP_QSTR_inputs__show;
   MP_QSTR_inputs__space;
@@ -595,6 +597,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_plurals__transaction_of_x_operations;
   MP_QSTR_plurals__x_groups_needed;
   MP_QSTR_plurals__x_shares_needed;
+  MP_QSTR_prefill_word;
   MP_QSTR_progress__authenticity_check;
   MP_QSTR_progress__done;
   MP_QSTR_progress__loading_transaction;

@@ -308,6 +308,8 @@ def request_passphrase(
 def request_bip39(
     *,
     prompt: str,
+    prefill_word: str,
+    can_go_back: bool,
 ) -> str:
     """Get recovery word for BIP39."""
 
@@ -316,6 +318,8 @@ def request_bip39(
 def request_slip39(
     *,
     prompt: str,
+    prefill_word: str,
+    can_go_back: bool,
 ) -> str:
    """SLIP39 word input keyboard."""
 
@@ -756,6 +760,8 @@ def request_passphrase(
 def request_bip39(
     *,
     prompt: str,
+    prefill_word: str,
+    can_go_back: bool,
 ) -> str:
     """BIP39 word input keyboard."""
 
@@ -764,6 +770,8 @@ def request_bip39(
 def request_slip39(
     *,
     prompt: str,
+    prefill_word: str,
+    can_go_back: bool,
 ) -> str:
     """SLIP39 word input keyboard."""
 

@@ -68,3 +68,15 @@ def test_recovery_bip39(device_handler: "BackgroundDeviceHandler"):
         recovery.select_number_of_words(debug, num_of_words=12)
         recovery.enter_seed(debug, MNEMONIC12.split())
         recovery.finalize(debug)
+
+
+@pytest.mark.setup_client(uninitialized=True)
+def test_recovery_bip39_previous_word(device_handler: "BackgroundDeviceHandler"):
+    with prepare_recovery_and_evaluate(device_handler) as debug:
+        recovery.confirm_recovery(debug)
+
+        recovery.select_number_of_words(debug, num_of_words=12)
+        seed_words: list[str] = MNEMONIC12.split()
+        bad_indexes = {1: seed_words[-1], 7: seed_words[0]}
+        recovery.enter_seed_previous_correct(debug, seed_words, bad_indexes)
+        recovery.finalize(debug)

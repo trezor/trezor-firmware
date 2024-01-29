@@ -15,6 +15,7 @@ enum WordlistAction {
     Letter(char),
     Word(&'static str),
     Delete,
+    Previous,
 }
 
 const MAX_WORD_LENGTH: usize = 10;
@@ -47,6 +48,9 @@ struct ChoiceFactoryWordlist {
     offer_words: bool,
     /// We want to randomize the order in which we show the words
     word_random_order: Vec<usize, OFFER_WORDS_THRESHOLD>,
+    /// Whether the input is empty - and we should show PREVIOUS instead of
+    /// DELETE
+    empty_input: bool,
 }
 
 impl ChoiceFactoryWordlist {
@@ -72,6 +76,7 @@ impl ChoiceFactoryWordlist {
             wordlist,
             offer_words,
             word_random_order,
+            empty_input: prefix.is_empty(),
         }
     }
 }
@@ -93,17 +98,31 @@ impl ChoiceFactory for ChoiceFactoryWordlist {
         // Putting DELETE as the first option in both cases
         // (is a requirement for WORDS, doing it for LETTERS as well to unite it)
         if choice_index == DELETE_INDEX {
-            return (
-                TR::inputs__delete.map_translated(|t| {
-                    ChoiceItem::new(
-                        t,
-                        ButtonLayout::arrow_armed_arrow(TR::buttons__confirm.into()),
-                    )
-                    .with_icon(theme::ICON_DELETE)
-                    .with_middle_action_without_release()
-                }),
-                WordlistAction::Delete,
-            );
+            if self.empty_input {
+                return (
+                    TR::inputs__previous.map_translated(|t| {
+                        ChoiceItem::new(
+                            t,
+                            ButtonLayout::arrow_armed_arrow(TR::buttons__select.into()),
+                        )
+                        .with_icon(theme::ICON_DELETE)
+                        .with_middle_action_without_release()
+                    }),
+                    WordlistAction::Previous,
+                );
+            } else {
+                return (
+                    TR::inputs__delete.map_translated(|t| {
+                        ChoiceItem::new(
+                            t,
+                            ButtonLayout::arrow_armed_arrow(TR::buttons__select.into()),
+                        )
+                        .with_icon(theme::ICON_DELETE)
+                        .with_middle_action_without_release()
+                    }),
+                    WordlistAction::Delete,
+                );
+            }
         }
         if self.offer_words {
             // Taking a random (but always the same) word on this position
@@ -140,10 +159,12 @@ pub struct WordlistEntry {
     textbox: TextBox<MAX_WORD_LENGTH>,
     offer_words: bool,
     wordlist_type: WordlistType,
+    /// Whether going back is allowed (is not on the very first word).
+    can_go_back: bool,
 }
 
 impl WordlistEntry {
-    pub fn new(wordlist_type: WordlistType) -> Self {
+    pub fn new(wordlist_type: WordlistType, can_go_back: bool) -> Self {
         let choices = ChoiceFactoryWordlist::new(wordlist_type, "");
         let choices_count = <ChoiceFactoryWordlist as ChoiceFactory>::count(&choices);
         Self {
@@ -156,6 +177,27 @@ impl WordlistEntry {
             textbox: TextBox::empty(),
             offer_words: false,
             wordlist_type,
+            can_go_back,
+        }
+    }
+
+    pub fn prefilled_word(word: &str, wordlist_type: WordlistType, can_go_back: bool) -> Self {
+        // Word may be empty string, fallback to normal input
+        if word.is_empty() {
+            return Self::new(wordlist_type, can_go_back);
+        }
+
+        let choices = ChoiceFactoryWordlist::new(wordlist_type, word);
+        Self {
+            // Showing the chosen word at index 1
+            choice_page: ChoicePage::new(choices)
+                .with_incomplete(true)
+                .with_initial_page_counter(1),
+            chosen_letters: Child::new(ChangingTextLine::center_mono(String::from(word))),
+            textbox: TextBox::new(String::from(word)),
+            offer_words: false,
+            wordlist_type,
+            can_go_back,
         }
     }
 
@@ -238,6 +280,11 @@ impl Component for WordlistEntry {
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         if let Some((action, long_press)) = self.choice_page.event(ctx, event) {
             match action {
+                WordlistAction::Previous => {
+                    if self.can_go_back {
+                        return Some("");
+                    }
+                }
                 WordlistAction::Delete => {
                     // Deleting all when long-pressed
                     if long_press {
