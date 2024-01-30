@@ -42,7 +42,7 @@
 #define Y_POS_MSB (touch_data[5] & 0x0FU)
 #define Y_POS_LSB (touch_data[6])
 
-#define EVENT_OLD_TIMEOUT_MS 50
+#define EVENT_OLD_TIMEOUT_MS 2000
 #define EVENT_MISSING_TIMEOUT_MS 50
 
 static uint32_t touch_init_ticks = 0;
@@ -264,7 +264,12 @@ uint32_t touch_read(void) {
       touching = 1;
       return TOUCH_START | xy;
     } else if ((number_of_touch_points == 1) && (event_flag == EVENT_CONTACT)) {
-      return TOUCH_MOVE | xy;
+      if (touching) {
+        return TOUCH_MOVE | xy;
+      } else {
+        touching = 1;
+        return TOUCH_START | xy;
+      }
     } else if ((number_of_touch_points == 0) && (event_flag == EVENT_LIFT_UP)) {
       touching = 0;
       return TOUCH_END | xy;
