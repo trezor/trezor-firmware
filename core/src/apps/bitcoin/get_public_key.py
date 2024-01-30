@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from trezor.enums import InputScriptType
     from trezor.messages import GetPublicKey, PublicKey
     from trezor.protobuf import MessageType
 
@@ -96,8 +97,13 @@ async def get_public_key(
             account = coin.coin_shortcut
         else:
             account = f"{coin.coin_shortcut} {account_name}"
+        show_xpub = node_xpub
+        if script_type == InputScriptType.SPENDTAPROOT:
+            show_xpub = _xpub_descriptor(
+                node_xpub, address_n, script_type, node.fingerprint()
+            )
         await show_pubkey(
-            node_xpub,
+            show_xpub,
             "XPUB",
             account=account,
             path=path,
@@ -110,3 +116,23 @@ async def get_public_key(
         xpub=node_xpub,
         root_fingerprint=keychain.root_fingerprint(),
     )
+
+
+def _xpub_descriptor(
+    node_xpub: str,
+    address_n: list[int],
+    script_type: InputScriptType,
+    fingerprint: int,
+) -> str:
+    from trezor.enums import InputScriptType
+
+    from apps.common import paths
+
+    from .common import descriptor_checksum
+
+    if script_type != InputScriptType.SPENDTAPROOT:
+        raise ValueError("Unsupported script type.")
+    path = paths.address_n_to_str(address_n)
+    descriptor = f"tr([{fingerprint:08x}{path[1:]}]{node_xpub}/<0;1>/*)"
+    checksum = descriptor_checksum(descriptor)
+    return f"{descriptor}#{checksum}"

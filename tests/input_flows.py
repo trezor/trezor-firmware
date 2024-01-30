@@ -479,6 +479,7 @@ class InputFlowShowXpubQRCode(InputFlowBase):
         # Go through details and back
         self.debug.press_right(wait=True)
         self.debug.press_right(wait=True)
+        self.debug.press_right(wait=True)
         self.debug.press_left(wait=True)
         self.debug.press_left(wait=True)
         assert br.pages is not None
