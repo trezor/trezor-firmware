@@ -9,28 +9,6 @@ from typing import List, Sequence, Tuple
 # =========================== signing =========================
 
 
-def sign_with_privkeys(digest: bytes, privkeys: Sequence[bytes]) -> bytes:
-    """Locally produce a CoSi signature."""
-    pubkeys = [cosi.pubkey_from_privkey(sk) for sk in privkeys]
-    nonces = [cosi.get_nonce(sk, digest, i) for i, sk in enumerate(privkeys)]
-
-    global_pk = cosi.combine_keys(pubkeys)
-    global_R = cosi.combine_keys(R for r, R in nonces)
-
-    sigs = [
-        cosi.sign_with_privkey(digest, sk, global_pk, r, global_R)
-        for sk, (r, R) in zip(privkeys, nonces)
-    ]
-
-    signature = cosi.combine_sig(global_R, sigs)
-    try:
-        cosi.verify_combined(signature, digest, global_pk)
-    except Exception as e:
-        raise click.ClickException("Failed to produce valid signature.") from e
-
-    return signature
-
-
 def parse_privkey_args(privkey_data: List[str]) -> Tuple[int, List[bytes]]:
     privkeys = []
     sigmask = 0
@@ -182,7 +160,7 @@ def cli(
 
     if privkeys:
         echo("Signing with local private keys...", err=True)
-        signature = sign_with_privkeys(digest, privkeys)
+        signature = cosi.sign_with_privkeys(digest, privkeys)
 
     if insert_signature:
         echo("Inserting external signature...", err=True)
