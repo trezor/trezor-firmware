@@ -65,7 +65,9 @@ __IO DISP_MEM_TYPE *const DISPLAY_DATA_ADDRESS =
 #error Framebuffer only supported on STM32U5 for now
 #endif
 
+#ifndef BOARDLOADER
 #include "bg_copy.h"
+#endif
 
 #define DATA_TRANSFER(X) \
   DATA((X)&0xFF);        \
@@ -78,6 +80,10 @@ ALIGN_32BYTES(static uint16_t PhysFrameBuffer1[DISPLAY_RESX * DISPLAY_RESY]);
 
 __attribute__((
     section(".framebuffer_select"))) static uint32_t act_frame_buffer = 0;
+
+#ifndef BOARDLOADER
+static bool pending_fb_switch = false;
+#endif
 
 static uint16_t window_x0 = 0;
 static uint16_t window_y0 = 0;
@@ -247,11 +253,13 @@ int display_get_orientation(void) { return DISPLAY_ORIENTATION; }
 
 int display_backlight(int val) {
 #ifdef FRAMEBUFFER
+#ifndef BOARDLOADER
   // wait for DMA transfer to finish before changing backlight
   // so that we know that panel has current data
   if (backlight_pwm_get() != val && !is_mode_handler()) {
     bg_copy_wait();
   }
+#endif
 #endif
 
   return backlight_pwm_set(val);
@@ -515,6 +523,7 @@ void display_pixeldata(uint16_t c) {
 
 void display_sync(void) {}
 
+#ifndef BOARDLOADER
 void DISPLAY_TE_INTERRUPT_HANDLER(void) {
   HAL_NVIC_DisableIRQ(DISPLAY_TE_INTERRUPT_NUM);
 
@@ -529,52 +538,77 @@ void DISPLAY_TE_INTERRUPT_HANDLER(void) {
                               DISPLAY_RESX * DISPLAY_RESY * 2);
   }
 
+  pending_fb_switch = false;
   __HAL_GPIO_EXTI_CLEAR_FLAG(DISPLAY_TE_PIN);
 }
 
-void display_refresh(void) {
+static void wait_for_fb_switch(void) {
+  while (pending_fb_switch) {
+    __WFI();
+  }
   bg_copy_wait();
+}
+#endif
+
+static void copy_fb_to_display(uint16_t *fb) {
+  for (int i = 0; i < DISPLAY_RESX * DISPLAY_RESY; i++) {
+    // 2 bytes per pixel because we're using RGB 5-6-5 format
+    DATA_TRANSFER(fb[i]);
+  }
+}
+
+static void switch_fb_manually(void) {
+  // sync with the panel refresh
+  while (GPIO_PIN_SET == HAL_GPIO_ReadPin(DISPLAY_TE_PORT, DISPLAY_TE_PIN)) {
+  }
+  while (GPIO_PIN_RESET == HAL_GPIO_ReadPin(DISPLAY_TE_PORT, DISPLAY_TE_PIN)) {
+  }
+
+  if (act_frame_buffer == 0) {
+    act_frame_buffer = 1;
+    copy_fb_to_display(PhysFrameBuffer1);
+    memcpy(PhysFrameBuffer0, PhysFrameBuffer1, sizeof(PhysFrameBuffer1));
+
+  } else {
+    act_frame_buffer = 0;
+    copy_fb_to_display(PhysFrameBuffer0);
+    memcpy(PhysFrameBuffer1, PhysFrameBuffer0, sizeof(PhysFrameBuffer1));
+  }
+}
+
+#ifndef BOARDLOADER
+static void switch_fb_in_backround(void) {
+  if (act_frame_buffer == 0) {
+    act_frame_buffer = 1;
+
+    memcpy(PhysFrameBuffer0, PhysFrameBuffer1, sizeof(PhysFrameBuffer1));
+
+    pending_fb_switch = true;
+    __HAL_GPIO_EXTI_CLEAR_FLAG(DISPLAY_TE_PIN);
+    svc_enableIRQ(DISPLAY_TE_INTERRUPT_NUM);
+  } else {
+    act_frame_buffer = 0;
+    memcpy(PhysFrameBuffer1, PhysFrameBuffer0, sizeof(PhysFrameBuffer1));
+
+    pending_fb_switch = true;
+    __HAL_GPIO_EXTI_CLEAR_FLAG(DISPLAY_TE_PIN);
+    svc_enableIRQ(DISPLAY_TE_INTERRUPT_NUM);
+  }
+}
+#endif
+
+void display_refresh(void) {
+#ifndef BOARDLOADER
+  wait_for_fb_switch();
 
   if (is_mode_handler()) {
-    // sync with the panel refresh
-    while (GPIO_PIN_SET == HAL_GPIO_ReadPin(DISPLAY_TE_PORT, DISPLAY_TE_PIN)) {
-    }
-    while (GPIO_PIN_RESET ==
-           HAL_GPIO_ReadPin(DISPLAY_TE_PORT, DISPLAY_TE_PIN)) {
-    }
-
-    if (act_frame_buffer == 0) {
-      act_frame_buffer = 1;
-      for (int i = 0; i < DISPLAY_RESX * DISPLAY_RESY; i++) {
-        // 2 bytes per pixel because we're using RGB 5-6-5 format
-        DATA_TRANSFER(PhysFrameBuffer1[i]);
-      }
-      memcpy(PhysFrameBuffer0, PhysFrameBuffer1, sizeof(PhysFrameBuffer1));
-
-    } else {
-      act_frame_buffer = 0;
-      for (int i = 0; i < DISPLAY_RESX * DISPLAY_RESY; i++) {
-        // 2 bytes per pixel because we're using RGB 5-6-5 format
-        DATA_TRANSFER(PhysFrameBuffer0[i]);
-      }
-      memcpy(PhysFrameBuffer1, PhysFrameBuffer0, sizeof(PhysFrameBuffer1));
-    }
+    switch_fb_manually();
   } else {
-    if (act_frame_buffer == 0) {
-      act_frame_buffer = 1;
-
-      memcpy(PhysFrameBuffer0, PhysFrameBuffer1, sizeof(PhysFrameBuffer1));
-
-      __HAL_GPIO_EXTI_CLEAR_FLAG(DISPLAY_TE_PIN);
-      svc_enableIRQ(DISPLAY_TE_INTERRUPT_NUM);
-    } else {
-      act_frame_buffer = 0;
-      memcpy(PhysFrameBuffer1, PhysFrameBuffer0, sizeof(PhysFrameBuffer1));
-
-      __HAL_GPIO_EXTI_CLEAR_FLAG(DISPLAY_TE_PIN);
-      svc_enableIRQ(DISPLAY_TE_INTERRUPT_NUM);
-    }
+    switch_fb_in_backround();
   }
+#else
+  switch_fb_manually();
+#endif
 }
 
 void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1) {
@@ -646,7 +680,11 @@ void display_efficient_clear(void) {
   memzero(PhysFrameBuffer0, sizeof(PhysFrameBuffer0));
 }
 
-void display_finish_actions(void) { bg_copy_wait(); }
+void display_finish_actions(void) {
+#ifndef BOARDLOADER
+  bg_copy_wait();
+#endif
+}
 #else
 //  NOT FRAMEBUFFER
 
