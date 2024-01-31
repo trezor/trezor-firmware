@@ -2218,7 +2218,6 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class ApplySettings(protobuf.MessageType):
-        language: "str | None"
         label: "str | None"
         use_passphrase: "bool | None"
         homescreen: "bytes | None"
@@ -2232,7 +2231,6 @@ if TYPE_CHECKING:
         def __init__(
             self,
             *,
-            language: "str | None" = None,
             label: "str | None" = None,
             use_passphrase: "bool | None" = None,
             homescreen: "bytes | None" = None,
@@ -2469,7 +2467,6 @@ if TYPE_CHECKING:
         mnemonics: "list[str]"
         pin: "str | None"
         passphrase_protection: "bool | None"
-        language: "str"
         label: "str | None"
         skip_checksum: "bool | None"
         u2f_counter: "int | None"
@@ -2482,7 +2479,6 @@ if TYPE_CHECKING:
             mnemonics: "list[str] | None" = None,
             pin: "str | None" = None,
             passphrase_protection: "bool | None" = None,
-            language: "str | None" = None,
             label: "str | None" = None,
             skip_checksum: "bool | None" = None,
             u2f_counter: "int | None" = None,
@@ -2500,7 +2496,6 @@ if TYPE_CHECKING:
         strength: "int"
         passphrase_protection: "bool | None"
         pin_protection: "bool | None"
-        language: "str"
         label: "str | None"
         u2f_counter: "int | None"
         skip_backup: "bool | None"
@@ -2514,7 +2509,6 @@ if TYPE_CHECKING:
             strength: "int | None" = None,
             passphrase_protection: "bool | None" = None,
             pin_protection: "bool | None" = None,
-            language: "str | None" = None,
             label: "str | None" = None,
             u2f_counter: "int | None" = None,
             skip_backup: "bool | None" = None,
@@ -2557,7 +2551,6 @@ if TYPE_CHECKING:
         word_count: "int | None"
         passphrase_protection: "bool | None"
         pin_protection: "bool | None"
-        language: "str | None"
         label: "str | None"
         enforce_wordlist: "bool | None"
         type: "RecoveryDeviceType | None"
@@ -2570,7 +2563,6 @@ if TYPE_CHECKING:
             word_count: "int | None" = None,
             passphrase_protection: "bool | None" = None,
             pin_protection: "bool | None" = None,
-            language: "str | None" = None,
             label: "str | None" = None,
             enforce_wordlist: "bool | None" = None,
             type: "RecoveryDeviceType | None" = None,
