@@ -1,12 +1,49 @@
 # Trezor Storage
 
-The `storage` folder contains the implementation of Trezor's internal storage, which is common for both Legacy (Trezor One) and Core (Trezor T). This README also contains a detailed description of the cryptographic design.
+The `storage` folder contains the implementation of Trezor's internal storage, which is common for both Legacy (Trezor One) and Core (Trezor T and later models). This README also contains a detailed description of the cryptographic design.
+
+Due to differences of the underlying hardware, the storage uses two different format of stored data, referenced further as Bitwise and Blockwise
+
 
 All tests are located in the `tests` subdirectory, which also includes a Python implementation to run tests against this C production version and the Python one.
 
-## Summary
 
-The PIN is no longer stored in the flash storage. A new entry is added to the flash storage consisting of a 256-bit encrypted data encryption key (EDEK) followed by a 128-bit encrypted storage authentication key (ESAK) and a 64-bit PIN verification code (PVC). The PIN is used to decrypt the EDEK and ESAK and the PVC is used to verify that the correct PIN was used. The resulting data encryption key (DEK) is then used to encrypt/decrypt protected entries in the flash storage. We use Chacha20Poly1305 as defined in [RFC 7539](https://tools.ietf.org/html/rfc7539) to encrypt the EDEK and the protected entries. The storage authentication key (SAK) is used to authenticate the list of (APP, KEY) values for all protected entries that have been set in the storage. This prevents an attacker from erasing or adding entries to the storage.
+
+## Norcow data format
+
+### Bitwise flash
+
+All items are stored with single format:
+
+| Data           | KEY | APP | LEN | DATA |
+|----------------|-----|-----|-----|------|
+| Length (bytes) | 1   | 1   | 2   | LEN  |
+
+If any item is overwritten or deleted, the old entry is erased, i.e., DATA, APP, KEY are set to 0. LEN is kept for purposes of finding next item.
+
+
+### Blockwise flash (16 byte blocks)
+
+
+For optimization, we use two different formats for items, small items with up to 12 bytes of data,
+and larger items.
+
+Small items have the following format:
+
+| Data           | KEY | APP | LEN | DATA | PADDING  |
+|----------------|-----|-----|-----|------|----------|
+| Length (bytes) | 1   | 1   | 2   | LEN  | 12 - LEN |
+
+If any item is overwritten or deleted, the old entry is erased, i.e., DATA, APP, KEY and LEN are set to 0. When finding next item, we assume that zero LEN items means small item with 12 bytes of data.
+
+Larger items have the following format:
+
+| Data           | KEY | APP | LEN | PADDING | DATA | VALID FLAG | PADDING     |
+|----------------|-----|-----|-----|---------|------|------------|-------------|
+| Length (bytes) | 1   | 1   | 2   | 12      | LEN  | 1          | to 16 bytes |
+
+If any item is overwritten or deleted, the old entry is erased, i.e., DATA, are set to 0. LEN is kept for purposes of finding next item, and with it KEY and APP has to be kept too. To recognize data as deleted, the VALID FLAG is set to 0.
+
 
 ## Storage format
 
@@ -19,35 +56,37 @@ Entries fall into three categories:
 | Public    | 128 ≤ APP ≤ 191 | Always             | Only when unlocked |
 | Writable  | 192 ≤ APP ≤ 255 | Always             | Always             |
 
-The format of public and writable entries has remained unchanged, that is:
+The format of public and writable entries is trivial:
 
-| Data           | KEY | APP | LEN | DATA |
-|----------------|-----|-----|-----|------|
-| Length (bytes) | 1   | 1   | 2   | LEN  |
+| Data           | DATA |
+|----------------|------|
+| Length (bytes) | LEN  |
 
-Private values are used to store storage-specific information and cannot be directly accessed through the storage interface. Protected entries have the following new format:
+Private values are used to store storage-specific information and cannot be directly accessed through the storage interface. Protected entries have the following format:
 
-| Data           | KEY | APP | LEN | IV | TAG | ENCRDATA |
-|----------------|-----|-----|-----|----|-----|----------|
-| Length (bytes) | 1   | 1   | 2   | 12 | 16  | LEN - 28 |
-
-The LEN value thus indicates the total length of IV, TAG and ENCRDATA.
+| Data           | IV | ENCRDATA | TAG |
+|----------------|----|----------|-----|
+| Length (bytes) | 12 | LEN - 28 | 16  |
 
 The random salt (32 bits), EDEK (256 bits), ESAK (128 bits) and PVC (64 bits) is stored in a single entry under APP=0, KEY=2:
 
-| Data           | KEY | APP | LEN   | SALT | EDEK | ESAK | PVC |
-|----------------|-----|-----|-------|------|------|------|-----|
-| Length (bytes) | 1   | 1   | 2     | 4    | 32   | 16   | 8   |
-| Value          | 02  | 00  | 3C 00 |      |      |      |     |
+| Data           | SALT | EDEK | ESAK | PVC |
+|----------------|------|------|------|-----|
+| Length (bytes) | 4    | 32   | 16   | 8   |
 
 The storage authentication tag (128 bits) is stored in a single entry under APP=0, KEY=5:
 
-| Data           | KEY | APP | LEN   | TAG |
-|----------------|-----|-----|-------|-----|
-| Length (bytes) | 1   | 1   | 2     | 16  |
-| Value          | 05  | 00  | 20 00 |     |
+| Data           | TAG |
+|----------------|-----|
+| Length (bytes) | 16  |
 
-Furthermore, if any entry is overwritten, the old entry is erased, i.e., overwritten with 0. We are also using APP=0, KEY=0 as marker that the entry is erased (this was formerly used for the PIN entry, which is not needed anymore).
+
+Storage entries are stored as items in norcow flash. The format of the items is described in the section above.
+
+## PIN
+
+The PIN is not stored in the flash storage. An entry is added to the flash storage consisting of a 256-bit encrypted data encryption key (EDEK) followed by a 128-bit encrypted storage authentication key (ESAK) and a 64-bit PIN verification code (PVC). The PIN is used to decrypt the EDEK and ESAK and the PVC is used to verify that the correct PIN was used. The resulting data encryption key (DEK) is then used to encrypt/decrypt protected entries in the flash storage. We use Chacha20Poly1305 as defined in [RFC 7539](https://tools.ietf.org/html/rfc7539) to encrypt the EDEK and the protected entries. The storage authentication key (SAK) is used to authenticate the list of (APP, KEY) values for all protected entries that have been set in the storage. This prevents an attacker from erasing or adding entries to the storage.
+
 
 ## PIN verification and decryption of protected entries in flash storage
 
