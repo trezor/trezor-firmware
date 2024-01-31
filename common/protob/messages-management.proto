@@ -167,7 +167,7 @@ message EndSession {
  * @next Failure
  */
 message ApplySettings {
-    optional string language = 1;
+    optional string language = 1 [deprecated=true];
     optional string label = 2;
     optional bool use_passphrase = 3;
     optional bytes homescreen = 4;
@@ -361,7 +361,7 @@ message LoadDevice {
     repeated string mnemonics = 1;                          // seed encoded as mnemonic (12, 18 or 24 words for BIP39, 20 or 33 for SLIP39)
     optional string pin = 3;                                // set PIN protection
     optional bool passphrase_protection = 4;                // enable master node encryption using passphrase
-    optional string language = 5 [default='en-US'];         // device language (IETF BCP 47 language tag)
+    optional string language = 5 [deprecated=true];         // deprecated (use ChangeLanguage)
     optional string label = 6;                              // device label
     optional bool skip_checksum = 7;                        // do not test mnemonic for valid BIP-39 checksum
     optional uint32 u2f_counter = 8;                        // U2F counter
@@ -380,7 +380,7 @@ message ResetDevice {
     optional uint32 strength = 2 [default=256];             // strength of seed in bits
     optional bool passphrase_protection = 3;                // enable master node encryption using passphrase
     optional bool pin_protection = 4;                       // enable PIN protection
-    optional string language = 5 [default='en-US'];         // device language (IETF BCP 47 language tag)
+    optional string language = 5 [deprecated=true];         // deprecated (use ChangeLanguage)
     optional string label = 6;                              // device label
     optional uint32 u2f_counter = 7;                        // U2F counter
     optional bool skip_backup = 8;                          // postpone seed backup to BackupDevice workflow
@@ -421,7 +421,7 @@ message RecoveryDevice {
     optional uint32 word_count = 1;                     // number of words in BIP-39 mnemonic
     optional bool passphrase_protection = 2;            // enable master node encryption using passphrase
     optional bool pin_protection = 3;                   // enable PIN protection
-    optional string language = 4;                       // device language (IETF BCP 47 language tag)
+    optional string language = 4 [deprecated=true];     // deprecated (use ChangeLanguage)
     optional string label = 5;                          // device label
     optional bool enforce_wordlist = 6;                 // enforce BIP-39 wordlist during the process
     // 7 reserved for unused recovery method
