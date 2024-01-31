@@ -138,6 +138,22 @@ def sign_with_privkey(
     return Ed25519Signature(_ed25519.encodeint(S))
 
 
+def sign_with_privkeys(digest: bytes, privkeys: Sequence[bytes]) -> bytes:
+    """Locally produce a CoSi signature from a list of private keys."""
+    pubkeys = [pubkey_from_privkey(sk) for sk in privkeys]
+    nonces = [get_nonce(sk, digest, i) for i, sk in enumerate(privkeys)]
+
+    global_pk = combine_keys(pubkeys)
+    global_R = combine_keys(R for _, R in nonces)
+
+    sigs = [
+        sign_with_privkey(digest, sk, global_pk, r, global_R)
+        for sk, (r, _) in zip(privkeys, nonces)
+    ]
+
+    return combine_sig(global_R, sigs)
+
+
 # ====== Client functions ====== #
 
 
