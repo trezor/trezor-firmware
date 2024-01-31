@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import os
 import time
+import warnings
 from typing import TYPE_CHECKING, Callable, Optional
 
 from . import messages
@@ -47,9 +48,13 @@ def apply_settings(
     experimental_features: Optional[bool] = None,
     hide_passphrase_from_host: Optional[bool] = None,
 ) -> "MessageType":
+    if language is not None:
+        warnings.warn(
+            "language ignored. Use change_language() to set device language.",
+            DeprecationWarning,
+        )
     settings = messages.ApplySettings(
         label=label,
-        language=language,
         use_passphrase=use_passphrase,
         homescreen=homescreen,
         passphrase_always_on_device=passphrase_always_on_device,
@@ -150,12 +155,18 @@ def recover(
     passphrase_protection: bool = False,
     pin_protection: bool = True,
     label: Optional[str] = None,
-    language: str = "en-US",
+    language: Optional[str] = None,
     input_callback: Optional[Callable] = None,
     type: messages.RecoveryDeviceType = messages.RecoveryDeviceType.ScrambledWords,
     dry_run: bool = False,
     u2f_counter: Optional[int] = None,
 ) -> "MessageType":
+    if language is not None:
+        warnings.warn(
+            "language ignored. Use change_language() to set device language.",
+            DeprecationWarning,
+        )
+
     if client.features.model == "1" and input_callback is None:
         raise RuntimeError("Input callback required for Trezor One")
 
@@ -179,7 +190,6 @@ def recover(
         msg.passphrase_protection = passphrase_protection
         msg.pin_protection = pin_protection
         msg.label = label
-        msg.language = language
         msg.u2f_counter = u2f_counter
 
     res = client.call(msg)
@@ -205,12 +215,18 @@ def reset(
     passphrase_protection: bool = False,
     pin_protection: bool = True,
     label: Optional[str] = None,
-    language: str = "en-US",
+    language: Optional[str] = None,
     u2f_counter: int = 0,
     skip_backup: bool = False,
     no_backup: bool = False,
     backup_type: messages.BackupType = messages.BackupType.Bip39,
 ) -> "MessageType":
+    if language is not None:
+        warnings.warn(
+            "language ignored. Use change_language() to set device language.",
+            DeprecationWarning,
+        )
+
     if client.features.initialized:
         raise RuntimeError(
             "Device is initialized already. Call wipe_device() and try again."
@@ -228,7 +244,6 @@ def reset(
         strength=strength,
         passphrase_protection=bool(passphrase_protection),
         pin_protection=bool(pin_protection),
-        language=language,
         label=label,
         u2f_counter=u2f_counter,
         skip_backup=bool(skip_backup),
