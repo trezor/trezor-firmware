@@ -58,7 +58,7 @@ def generate(env):
                 rf"-e 's/utils\.UI_LAYOUT == \"TR\"/{layout_tr}/g'",
                 r"-e 's/if TYPE_CHECKING/if False/'",
                 r"-e 's/import typing/# \0/'",
-                r"-e '/from typing import (/,/^\s*)/ {s/^/# /}'",
+                r"-e '/from typing import (/,/^\s*)/ {s/^/# /; }'",
                 r"-e 's/from typing import/# \0/'",
             ]
         )
