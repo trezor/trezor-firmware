@@ -5,7 +5,9 @@ use crate::{
     ui::{
         component::{Component, Event, EventCtx, Never, Paginate},
         display::toif::Icon,
-        geometry::{Alignment, Alignment2D, Insets, LinearPlacement, Offset, Point, Rect},
+        geometry::{
+            Alignment, Alignment2D, Dimensions, Insets, LinearPlacement, Offset, Point, Rect,
+        },
     },
 };
 
@@ -50,7 +52,7 @@ pub struct Paragraphs<T> {
     area: Rect,
     placement: LinearPlacement,
     offset: PageOffset,
-    visible: Vec<TextLayout, MAX_LINES>,
+    visible: Vec<TextLayoutProxy, MAX_LINES>,
     source: T,
 }
 
@@ -103,7 +105,7 @@ where
         mut area: Rect,
         mut offset: PageOffset,
         source: &dyn ParagraphSource<StrType = S>,
-        visible: &mut Vec<TextLayout, MAX_LINES>,
+        visible: &mut Vec<TextLayoutProxy, MAX_LINES>,
     ) {
         visible.clear();
         let full_height = area.height();
@@ -135,7 +137,7 @@ where
     /// with corresponding string content. Should not get monomorphized.
     fn foreach_visible<'a, S: StringType>(
         source: &'a dyn ParagraphSource<StrType = S>,
-        visible: &'a [TextLayout],
+        visible: &'a [TextLayoutProxy],
         offset: PageOffset,
         func: &mut dyn FnMut(&TextLayout, &str),
     ) {
@@ -148,8 +150,9 @@ where
                 chr = 0;
                 continue;
             }
-            if let Some(layout) = vis_iter.next() {
-                func(layout, s.as_ref());
+            if let Some(layout_proxy) = vis_iter.next() {
+                let layout = layout_proxy.layout(source);
+                func(&layout, s.as_ref());
             } else {
                 break;
             }
@@ -330,6 +333,35 @@ impl<T> Paragraph<T> {
     }
 }
 
+struct TextLayoutProxy {
+    offset: PageOffset,
+    bounds: Rect,
+}
+
+impl TextLayoutProxy {
+    fn new(offset: PageOffset, bounds: Rect) -> Self {
+        Self { offset, bounds }
+    }
+
+    fn layout<S: StringType>(&self, source: &dyn ParagraphSource<StrType = S>) -> TextLayout {
+        let content = source.at(self.offset.par, self.offset.chr);
+        let mut layout = content.layout(self.bounds);
+        layout.continues_from_prev_page = self.offset.chr > 0;
+
+        layout
+    }
+}
+
+impl Dimensions for TextLayoutProxy {
+    fn fit(&mut self, area: Rect) {
+        self.bounds = area;
+    }
+
+    fn area(&self) -> Rect {
+        self.bounds
+    }
+}
+
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 struct PageOffset {
     /// Index of paragraph.
@@ -355,7 +387,7 @@ impl PageOffset {
         area: Rect,
         source: &dyn ParagraphSource<StrType = S>,
         full_height: i16,
-    ) -> (PageOffset, Option<Rect>, Option<TextLayout>) {
+    ) -> (PageOffset, Option<Rect>, Option<TextLayoutProxy>) {
         let paragraph = source.at(self.par, self.chr);
 
         // Skip empty paragraphs.
@@ -383,12 +415,11 @@ impl PageOffset {
 
         // Find out the dimensions of the paragraph at given char offset.
         let mut layout = paragraph.layout(area);
-        if self.chr > 0 {
-            layout.continues_from_prev_page = true;
-        }
+        layout.continues_from_prev_page = self.chr > 0;
         let fit = layout.fit_text(paragraph.content.as_ref());
         let (used, remaining_area) = area.split_top(fit.height());
-        layout.bounds = used;
+
+        let layout = TextLayoutProxy::new(self, used);
 
         let page_full: bool;
         match fit {
@@ -599,10 +630,18 @@ where
 
         let current_visible = self.current.saturating_sub(self.paragraphs.offset.par);
         for layout in self.paragraphs.visible.iter().take(current_visible) {
-            self.paint_icon(layout, self.icon_done, self.done_offset);
+            self.paint_icon(
+                &layout.layout(&self.paragraphs.source),
+                self.icon_done,
+                self.done_offset,
+            );
         }
         if let Some(layout) = self.paragraphs.visible.iter().nth(current_visible) {
-            self.paint_icon(layout, self.icon_current, self.current_offset);
+            self.paint_icon(
+                &layout.layout(&self.paragraphs.source),
+                self.icon_current,
+                self.current_offset,
+            );
         }
     }
 
