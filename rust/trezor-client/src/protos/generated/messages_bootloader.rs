@@ -724,14 +724,14 @@ impl ::protobuf::reflect::ProtobufValue for SelfTest {
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\x19messages-bootloader.proto\x12\x1dhw.trezor.messages.bootloader\x1a\
-    \x0emessages.proto\"'\n\rFirmwareErase\x12\x16\n\x06length\x18\x01\x20\
-    \x01(\rR\x06length\"A\n\x0fFirmwareRequest\x12\x16\n\x06offset\x18\x01\
-    \x20\x02(\rR\x06offset\x12\x16\n\x06length\x18\x02\x20\x02(\rR\x06length\
-    \">\n\x0eFirmwareUpload\x12\x18\n\x07payload\x18\x01\x20\x02(\x0cR\x07pa\
-    yload\x12\x12\n\x04hash\x18\x02\x20\x01(\x0cR\x04hash\"$\n\x08SelfTest\
-    \x12\x18\n\x07payload\x18\x01\x20\x01(\x0cR\x07payloadB>\n#com.satoshila\
-    bs.trezor.lib.protobufB\x17TrezorMessageBootloader\
+    \n\x19messages-bootloader.proto\x12\x1dhw.trezor.messages.bootloader\"'\
+    \n\rFirmwareErase\x12\x16\n\x06length\x18\x01\x20\x01(\rR\x06length\"A\n\
+    \x0fFirmwareRequest\x12\x16\n\x06offset\x18\x01\x20\x02(\rR\x06offset\
+    \x12\x16\n\x06length\x18\x02\x20\x02(\rR\x06length\">\n\x0eFirmwareUploa\
+    d\x12\x18\n\x07payload\x18\x01\x20\x02(\x0cR\x07payload\x12\x12\n\x04has\
+    h\x18\x02\x20\x01(\x0cR\x04hash\"$\n\x08SelfTest\x12\x18\n\x07payload\
+    \x18\x01\x20\x01(\x0cR\x07payloadB>\n#com.satoshilabs.trezor.lib.protobu\
+    fB\x17TrezorMessageBootloader\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -748,8 +748,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
     static file_descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::FileDescriptor> = ::protobuf::rt::Lazy::new();
     file_descriptor.get(|| {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
-            let mut deps = ::std::vec::Vec::with_capacity(1);
-            deps.push(super::messages::file_descriptor().clone());
+            let mut deps = ::std::vec::Vec::with_capacity(0);
             let mut messages = ::std::vec::Vec::with_capacity(4);
             messages.push(FirmwareErase::generated_message_descriptor_data());
             messages.push(FirmwareRequest::generated_message_descriptor_data());

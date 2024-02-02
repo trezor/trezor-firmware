@@ -1204,24 +1204,23 @@ pub mod web_authn_credentials {
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\x17messages-webauthn.proto\x12\x1bhw.trezor.messages.webauthn\x1a\x0e\
-    messages.proto\"!\n\x1fWebAuthnListResidentCredentials\"D\n\x1dWebAuthnA\
-    ddResidentCredential\x12#\n\rcredential_id\x18\x01\x20\x01(\x0cR\x0ccred\
-    entialId\"8\n\x20WebAuthnRemoveResidentCredential\x12\x14\n\x05index\x18\
-    \x01\x20\x01(\rR\x05index\"\xe9\x03\n\x13WebAuthnCredentials\x12e\n\x0bc\
-    redentials\x18\x01\x20\x03(\x0b2C.hw.trezor.messages.webauthn.WebAuthnCr\
-    edentials.WebAuthnCredentialR\x0bcredentials\x1a\xea\x02\n\x12WebAuthnCr\
-    edential\x12\x14\n\x05index\x18\x01\x20\x01(\rR\x05index\x12\x0e\n\x02id\
-    \x18\x02\x20\x01(\x0cR\x02id\x12\x13\n\x05rp_id\x18\x03\x20\x01(\tR\x04r\
-    pId\x12\x17\n\x07rp_name\x18\x04\x20\x01(\tR\x06rpName\x12\x17\n\x07user\
-    _id\x18\x05\x20\x01(\x0cR\x06userId\x12\x1b\n\tuser_name\x18\x06\x20\x01\
-    (\tR\x08userName\x12*\n\x11user_display_name\x18\x07\x20\x01(\tR\x0fuser\
-    DisplayName\x12#\n\rcreation_time\x18\x08\x20\x01(\rR\x0ccreationTime\
-    \x12\x1f\n\x0bhmac_secret\x18\t\x20\x01(\x08R\nhmacSecret\x12$\n\x0euse_\
-    sign_count\x18\n\x20\x01(\x08R\x0cuseSignCount\x12\x1c\n\talgorithm\x18\
-    \x0b\x20\x01(\x11R\talgorithm\x12\x14\n\x05curve\x18\x0c\x20\x01(\x11R\
-    \x05curveB<\n#com.satoshilabs.trezor.lib.protobufB\x15TrezorMessageWebAu\
-    thn\
+    \n\x17messages-webauthn.proto\x12\x1bhw.trezor.messages.webauthn\"!\n\
+    \x1fWebAuthnListResidentCredentials\"D\n\x1dWebAuthnAddResidentCredentia\
+    l\x12#\n\rcredential_id\x18\x01\x20\x01(\x0cR\x0ccredentialId\"8\n\x20We\
+    bAuthnRemoveResidentCredential\x12\x14\n\x05index\x18\x01\x20\x01(\rR\
+    \x05index\"\xe9\x03\n\x13WebAuthnCredentials\x12e\n\x0bcredentials\x18\
+    \x01\x20\x03(\x0b2C.hw.trezor.messages.webauthn.WebAuthnCredentials.WebA\
+    uthnCredentialR\x0bcredentials\x1a\xea\x02\n\x12WebAuthnCredential\x12\
+    \x14\n\x05index\x18\x01\x20\x01(\rR\x05index\x12\x0e\n\x02id\x18\x02\x20\
+    \x01(\x0cR\x02id\x12\x13\n\x05rp_id\x18\x03\x20\x01(\tR\x04rpId\x12\x17\
+    \n\x07rp_name\x18\x04\x20\x01(\tR\x06rpName\x12\x17\n\x07user_id\x18\x05\
+    \x20\x01(\x0cR\x06userId\x12\x1b\n\tuser_name\x18\x06\x20\x01(\tR\x08use\
+    rName\x12*\n\x11user_display_name\x18\x07\x20\x01(\tR\x0fuserDisplayName\
+    \x12#\n\rcreation_time\x18\x08\x20\x01(\rR\x0ccreationTime\x12\x1f\n\x0b\
+    hmac_secret\x18\t\x20\x01(\x08R\nhmacSecret\x12$\n\x0euse_sign_count\x18\
+    \n\x20\x01(\x08R\x0cuseSignCount\x12\x1c\n\talgorithm\x18\x0b\x20\x01(\
+    \x11R\talgorithm\x12\x14\n\x05curve\x18\x0c\x20\x01(\x11R\x05curveB<\n#c\
+    om.satoshilabs.trezor.lib.protobufB\x15TrezorMessageWebAuthn\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -1238,8 +1237,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
     static file_descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::FileDescriptor> = ::protobuf::rt::Lazy::new();
     file_descriptor.get(|| {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
-            let mut deps = ::std::vec::Vec::with_capacity(1);
-            deps.push(super::messages::file_descriptor().clone());
+            let mut deps = ::std::vec::Vec::with_capacity(0);
             let mut messages = ::std::vec::Vec::with_capacity(5);
             messages.push(WebAuthnListResidentCredentials::generated_message_descriptor_data());
             messages.push(WebAuthnAddResidentCredential::generated_message_descriptor_data());

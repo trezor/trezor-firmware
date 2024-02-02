@@ -1536,25 +1536,25 @@ impl ::protobuf::reflect::ProtobufValue for SolanaTxSignature {
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\x15messages-solana.proto\x12\x19hw.trezor.messages.solana\x1a\x15mess\
-    ages-common.proto\"T\n\x12SolanaGetPublicKey\x12\x1b\n\taddress_n\x18\
-    \x01\x20\x03(\rR\x08addressN\x12!\n\x0cshow_display\x18\x02\x20\x01(\x08\
-    R\x0bshowDisplay\"0\n\x0fSolanaPublicKey\x12\x1d\n\npublic_key\x18\x01\
-    \x20\x02(\x0cR\tpublicKey\"n\n\x10SolanaGetAddress\x12\x1b\n\taddress_n\
-    \x18\x01\x20\x03(\rR\x08addressN\x12!\n\x0cshow_display\x18\x02\x20\x01(\
-    \x08R\x0bshowDisplay\x12\x1a\n\x08chunkify\x18\x03\x20\x01(\x08R\x08chun\
-    kify\")\n\rSolanaAddress\x12\x18\n\x07address\x18\x01\x20\x02(\tR\x07add\
-    ress\"\xa6\x01\n\x18SolanaTxTokenAccountInfo\x12!\n\x0cbase_address\x18\
-    \x01\x20\x02(\tR\x0bbaseAddress\x12#\n\rtoken_program\x18\x02\x20\x02(\t\
-    R\x0ctokenProgram\x12\x1d\n\ntoken_mint\x18\x03\x20\x02(\tR\ttokenMint\
-    \x12#\n\rtoken_account\x18\x04\x20\x02(\tR\x0ctokenAccount\"\x7f\n\x16So\
-    lanaTxAdditionalInfo\x12e\n\x14token_accounts_infos\x18\x01\x20\x03(\x0b\
-    23.hw.trezor.messages.solana.SolanaTxTokenAccountInfoR\x12tokenAccountsI\
-    nfos\"\xac\x01\n\x0cSolanaSignTx\x12\x1b\n\taddress_n\x18\x01\x20\x03(\r\
-    R\x08addressN\x12#\n\rserialized_tx\x18\x02\x20\x02(\x0cR\x0cserializedT\
-    x\x12Z\n\x0fadditional_info\x18\x03\x20\x01(\x0b21.hw.trezor.messages.so\
-    lana.SolanaTxAdditionalInfoR\x0eadditionalInfo\"1\n\x11SolanaTxSignature\
-    \x12\x1c\n\tsignature\x18\x01\x20\x02(\x0cR\tsignature\
+    \n\x15messages-solana.proto\x12\x19hw.trezor.messages.solana\"T\n\x12Sol\
+    anaGetPublicKey\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12\
+    !\n\x0cshow_display\x18\x02\x20\x01(\x08R\x0bshowDisplay\"0\n\x0fSolanaP\
+    ublicKey\x12\x1d\n\npublic_key\x18\x01\x20\x02(\x0cR\tpublicKey\"n\n\x10\
+    SolanaGetAddress\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\
+    \x12!\n\x0cshow_display\x18\x02\x20\x01(\x08R\x0bshowDisplay\x12\x1a\n\
+    \x08chunkify\x18\x03\x20\x01(\x08R\x08chunkify\")\n\rSolanaAddress\x12\
+    \x18\n\x07address\x18\x01\x20\x02(\tR\x07address\"\xa6\x01\n\x18SolanaTx\
+    TokenAccountInfo\x12!\n\x0cbase_address\x18\x01\x20\x02(\tR\x0bbaseAddre\
+    ss\x12#\n\rtoken_program\x18\x02\x20\x02(\tR\x0ctokenProgram\x12\x1d\n\n\
+    token_mint\x18\x03\x20\x02(\tR\ttokenMint\x12#\n\rtoken_account\x18\x04\
+    \x20\x02(\tR\x0ctokenAccount\"\x7f\n\x16SolanaTxAdditionalInfo\x12e\n\
+    \x14token_accounts_infos\x18\x01\x20\x03(\x0b23.hw.trezor.messages.solan\
+    a.SolanaTxTokenAccountInfoR\x12tokenAccountsInfos\"\xac\x01\n\x0cSolanaS\
+    ignTx\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12#\n\rseria\
+    lized_tx\x18\x02\x20\x02(\x0cR\x0cserializedTx\x12Z\n\x0fadditional_info\
+    \x18\x03\x20\x01(\x0b21.hw.trezor.messages.solana.SolanaTxAdditionalInfo\
+    R\x0eadditionalInfo\"1\n\x11SolanaTxSignature\x12\x1c\n\tsignature\x18\
+    \x01\x20\x02(\x0cR\tsignature\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -1571,8 +1571,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
     static file_descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::FileDescriptor> = ::protobuf::rt::Lazy::new();
     file_descriptor.get(|| {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
-            let mut deps = ::std::vec::Vec::with_capacity(1);
-            deps.push(super::messages_common::file_descriptor().clone());
+            let mut deps = ::std::vec::Vec::with_capacity(0);
             let mut messages = ::std::vec::Vec::with_capacity(8);
             messages.push(SolanaGetPublicKey::generated_message_descriptor_data());
             messages.push(SolanaPublicKey::generated_message_descriptor_data());
