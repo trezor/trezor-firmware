@@ -402,6 +402,39 @@ message RecoveryDevice {
     }
 }
 
+/** 
+ * Request: Manage SD card backup. Operations are:
+ *  CHECK: get health status of the backup SD card (read-only operation)
+ *  REFRESH: request renewal of the backup SD card to prolong lifetime (write operation)
+ *  WIPE: request complete wipe of the backup SD card (write operation)
+ *  COPY: request duplication of the backup SD card to another SD card (read-write operation)
+ * @auxstart
+ * @next: SdCardBackupHealth
+ * @next: Success
+ */
+message SdCardBackupManage {
+    required SdCardBackupManageOperationType operation = 1;
+
+    enum SdCardBackupManageOperationType {
+        CHECK = 0;
+        REFRESH = 1;
+        WIPE = 2;
+        COPY = 3;
+    }
+}
+
+/** 
+ * Response: Health status of SD card backup.
+ * @auxend
+ */
+message SdCardBackupHealth {
+    required bool pt_is_mountable = 1;
+    required bool pt_has_correct_cap = 2;
+    required bool pt_readme_present = 3;
+    required bool pt_readme_content = 4;
+    required uint32 unalloc_seed_corrupt = 5;
+}
+
 /**
  * Response: Device is waiting for user to enter word of the mnemonic
  * Its position is shown only on device's internal display.

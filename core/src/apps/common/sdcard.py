@@ -169,6 +169,14 @@ def is_trz_card() -> bool:
 
 
 @with_sdcard
+def get_serial_num() -> int:
+    iosd = io.sdcard  # local_cache_attribute
+    if not iosd.is_present():
+        return 0
+    return iosd.get_serial_num()
+
+
+@with_sdcard
 async def show_sd_card_info() -> None:
     from trezor.ui.layouts import show_success
 

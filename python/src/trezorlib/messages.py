@@ -270,6 +270,8 @@ class MessageType(IntEnum):
     SolanaAddress = 903
     SolanaSignTx = 904
     SolanaTxSignature = 905
+    SdCardBackupManage = 1000
+    SdCardBackupHealth = 1001
 
 
 class FailureType(IntEnum):
@@ -486,6 +488,13 @@ class SdProtectOperationType(IntEnum):
 class RecoveryDeviceType(IntEnum):
     ScrambledWords = 0
     Matrix = 1
+
+
+class SdCardBackupManageOperationType(IntEnum):
+    CHECK = 0
+    REFRESH = 1
+    WIPE = 2
+    COPY = 3
 
 
 class WordRequestType(IntEnum):
@@ -3684,6 +3693,46 @@ class RecoveryDevice(protobuf.MessageType):
         self.type = type
         self.u2f_counter = u2f_counter
         self.dry_run = dry_run
+
+
+class SdCardBackupManage(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 1000
+    FIELDS = {
+        1: protobuf.Field("operation", "SdCardBackupManageOperationType", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        operation: "SdCardBackupManageOperationType",
+    ) -> None:
+        self.operation = operation
+
+
+class SdCardBackupHealth(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 1001
+    FIELDS = {
+        1: protobuf.Field("pt_is_mountable", "bool", repeated=False, required=True),
+        2: protobuf.Field("pt_has_correct_cap", "bool", repeated=False, required=True),
+        3: protobuf.Field("pt_readme_present", "bool", repeated=False, required=True),
+        4: protobuf.Field("pt_readme_content", "bool", repeated=False, required=True),
+        5: protobuf.Field("unalloc_seed_corrupt", "uint32", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        pt_is_mountable: "bool",
+        pt_has_correct_cap: "bool",
+        pt_readme_present: "bool",
+        pt_readme_content: "bool",
+        unalloc_seed_corrupt: "int",
+    ) -> None:
+        self.pt_is_mountable = pt_is_mountable
+        self.pt_has_correct_cap = pt_has_correct_cap
+        self.pt_readme_present = pt_readme_present
+        self.pt_readme_content = pt_readme_content
+        self.unalloc_seed_corrupt = unalloc_seed_corrupt
 
 
 class WordRequest(protobuf.MessageType):

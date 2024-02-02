@@ -95,6 +95,8 @@ DebugLinkEraseSdCard = 9005
 DebugLinkInsertSdCard = 9006
 DebugLinkWatchLayout = 9007
 DebugLinkResetDebugEvents = 9008
+SdCardBackupManage = 1000
+SdCardBackupHealth = 1001
 if not utils.BITCOIN_ONLY:
     SetU2FCounter = 63
     GetNextU2FCounter = 80

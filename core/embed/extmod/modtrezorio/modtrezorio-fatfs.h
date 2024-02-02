@@ -70,6 +70,9 @@ MP_DEFINE_EXCEPTION(NotMounted, FatFSError)
 /// class NoFilesystem(FatFSError):
 ///     pass
 MP_DEFINE_EXCEPTION(NoFilesystem, FatFSError)
+/// class FileNotFound(FatFSError):
+///     pass
+MP_DEFINE_EXCEPTION(FileNotFound, FatFSError)
 
 // to avoid collisions with POSIX errno values, we add 0xFF to FR_* error codes
 #define FATFS_ERROR_CODE(n) (n + 0xFF)
@@ -486,7 +489,11 @@ STATIC mp_obj_t mod_trezorio_fatfs_stat(mp_obj_t path) {
   FILINFO info = {0};
   FRESULT res = f_stat(_path.buf, &info);
   if (res != FR_OK) {
-    FATFS_RAISE(FatFSError, res);
+    if (res == FR_NO_FILE) {
+      FATFS_RAISE(FileNotFound, FR_NO_FILE)
+    } else {
+      FATFS_RAISE(FatFSError, res);
+    }
   }
   return filinfo_to_tuple(&info);
 }
@@ -633,6 +640,7 @@ STATIC const mp_rom_map_elem_t mod_trezorio_fatfs_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_FatFSError), MP_ROM_PTR(&mp_type_FatFSError)},
     {MP_ROM_QSTR(MP_QSTR_NotMounted), MP_ROM_PTR(&mp_type_NotMounted)},
     {MP_ROM_QSTR(MP_QSTR_NoFilesystem), MP_ROM_PTR(&mp_type_NoFilesystem)},
+    {MP_ROM_QSTR(MP_QSTR_FileNotFound), MP_ROM_PTR(&mp_type_FileNotFound)},
 
     {MP_ROM_QSTR(MP_QSTR_open), MP_ROM_PTR(&mod_trezorio_fatfs_open_obj)},
     {MP_ROM_QSTR(MP_QSTR_listdir), MP_ROM_PTR(&mod_trezorio_fatfs_listdir_obj)},

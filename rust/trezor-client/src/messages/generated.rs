@@ -247,6 +247,8 @@ trezor_message_impl! {
     SolanaAddress => MessageType_SolanaAddress,
     SolanaSignTx => MessageType_SolanaSignTx,
     SolanaTxSignature => MessageType_SolanaTxSignature,
+    SdCardBackupManage => MessageType_SdCardBackupManage,
+    SdCardBackupHealth => MessageType_SdCardBackupHealth,
 }
 
 #[cfg(feature = "stellar")]

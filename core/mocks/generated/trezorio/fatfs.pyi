@@ -39,6 +39,11 @@ class NoFilesystem(FatFSError):
 
 
 # extmod/modtrezorio/modtrezorio-fatfs.h
+class FileNotFound(FatFSError):
+    pass
+
+
+# extmod/modtrezorio/modtrezorio-fatfs.h
 class FatFSFile:
     """
     Class encapsulating file

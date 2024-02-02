@@ -373,4 +373,8 @@ enum MessageType {
     MessageType_SolanaAddress = 903 [(wire_out) = true];
     MessageType_SolanaSignTx = 904 [(wire_in) = true];
     MessageType_SolanaTxSignature = 905 [(wire_out) = true];
+
+    // SD card backup
+    MessageType_SdCardBackupManage = 1000 [(bitcoin_only) = true, (wire_in) = true];
+    MessageType_SdCardBackupHealth = 1001 [(bitcoin_only) = true, (wire_out) = true];
 }

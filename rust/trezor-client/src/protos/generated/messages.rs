@@ -510,6 +510,10 @@ pub enum MessageType {
     MessageType_SolanaSignTx = 904,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_SolanaTxSignature)
     MessageType_SolanaTxSignature = 905,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_SdCardBackupManage)
+    MessageType_SdCardBackupManage = 1000,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_SdCardBackupHealth)
+    MessageType_SdCardBackupHealth = 1001,
 }
 
 impl ::protobuf::Enum for MessageType {
@@ -762,6 +766,8 @@ impl ::protobuf::Enum for MessageType {
             903 => ::std::option::Option::Some(MessageType::MessageType_SolanaAddress),
             904 => ::std::option::Option::Some(MessageType::MessageType_SolanaSignTx),
             905 => ::std::option::Option::Some(MessageType::MessageType_SolanaTxSignature),
+            1000 => ::std::option::Option::Some(MessageType::MessageType_SdCardBackupManage),
+            1001 => ::std::option::Option::Some(MessageType::MessageType_SdCardBackupHealth),
             _ => ::std::option::Option::None
         }
     }
@@ -1009,6 +1015,8 @@ impl ::protobuf::Enum for MessageType {
             "MessageType_SolanaAddress" => ::std::option::Option::Some(MessageType::MessageType_SolanaAddress),
             "MessageType_SolanaSignTx" => ::std::option::Option::Some(MessageType::MessageType_SolanaSignTx),
             "MessageType_SolanaTxSignature" => ::std::option::Option::Some(MessageType::MessageType_SolanaTxSignature),
+            "MessageType_SdCardBackupManage" => ::std::option::Option::Some(MessageType::MessageType_SdCardBackupManage),
+            "MessageType_SdCardBackupHealth" => ::std::option::Option::Some(MessageType::MessageType_SdCardBackupHealth),
             _ => ::std::option::Option::None
         }
     }
@@ -1255,6 +1263,8 @@ impl ::protobuf::Enum for MessageType {
         MessageType::MessageType_SolanaAddress,
         MessageType::MessageType_SolanaSignTx,
         MessageType::MessageType_SolanaTxSignature,
+        MessageType::MessageType_SdCardBackupManage,
+        MessageType::MessageType_SdCardBackupHealth,
     ];
 }
 
@@ -1507,6 +1517,8 @@ impl ::protobuf::EnumFull for MessageType {
             MessageType::MessageType_SolanaAddress => 238,
             MessageType::MessageType_SolanaSignTx => 239,
             MessageType::MessageType_SolanaTxSignature => 240,
+            MessageType::MessageType_SdCardBackupManage => 241,
+            MessageType::MessageType_SdCardBackupHealth => 242,
         };
         Self::enum_descriptor().value_by_index(index)
     }
@@ -1556,7 +1568,7 @@ pub mod exts {
 
 static file_descriptor_proto_data: &'static [u8] = b"\
     \n\x0emessages.proto\x12\x12hw.trezor.messages\x1a\x20google/protobuf/de\
-    scriptor.proto*\xbdS\n\x0bMessageType\x12(\n\x16MessageType_Initialize\
+    scriptor.proto*\x9bT\n\x0bMessageType\x12(\n\x16MessageType_Initialize\
     \x10\0\x1a\x0c\x80\xa6\x1d\x01\xb0\xb5\x18\x01\x90\xb5\x18\x01\x12\x1e\n\
     \x10MessageType_Ping\x10\x01\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12\
     %\n\x13MessageType_Success\x10\x02\x1a\x0c\x80\xa6\x1d\x01\xa8\xb5\x18\
@@ -1828,30 +1840,32 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x07\x1a\x04\x90\xb5\x18\x01\x12$\n\x19MessageType_SolanaAddress\x10\x87\
     \x07\x1a\x04\x98\xb5\x18\x01\x12#\n\x18MessageType_SolanaSignTx\x10\x88\
     \x07\x1a\x04\x90\xb5\x18\x01\x12(\n\x1dMessageType_SolanaTxSignature\x10\
-    \x89\x07\x1a\x04\x98\xb5\x18\x01\x1a\x04\xc8\xf3\x18\x01\"\x04\x08Z\x10\
-    \\\"\x04\x08r\x10z\"\x06\x08\xdb\x01\x10\xdb\x01\"\x06\x08\xe0\x01\x10\
-    \xe0\x01\"\x06\x08\xac\x02\x10\xb0\x02\"\x06\x08\xb5\x02\x10\xb8\x02:<\n\
-    \x07wire_in\x18\xd2\x86\x03\x20\x01(\x08\x12!.google.protobuf.EnumValueO\
-    ptionsR\x06wireIn:>\n\x08wire_out\x18\xd3\x86\x03\x20\x01(\x08\x12!.goog\
-    le.protobuf.EnumValueOptionsR\x07wireOut:G\n\rwire_debug_in\x18\xd4\x86\
-    \x03\x20\x01(\x08\x12!.google.protobuf.EnumValueOptionsR\x0bwireDebugIn:\
-    I\n\x0ewire_debug_out\x18\xd5\x86\x03\x20\x01(\x08\x12!.google.protobuf.\
-    EnumValueOptionsR\x0cwireDebugOut:@\n\twire_tiny\x18\xd6\x86\x03\x20\x01\
-    (\x08\x12!.google.protobuf.EnumValueOptionsR\x08wireTiny:L\n\x0fwire_boo\
-    tloader\x18\xd7\x86\x03\x20\x01(\x08\x12!.google.protobuf.EnumValueOptio\
-    nsR\x0ewireBootloader:C\n\x0bwire_no_fsm\x18\xd8\x86\x03\x20\x01(\x08\
-    \x12!.google.protobuf.EnumValueOptionsR\twireNoFsm:F\n\x0cbitcoin_only\
-    \x18\xe0\xd4\x03\x20\x01(\x08\x12!.google.protobuf.EnumValueOptionsR\x0b\
-    bitcoinOnly:U\n\x17has_bitcoin_only_values\x18\xb9\x8e\x03\x20\x01(\x08\
-    \x12\x1c.google.protobuf.EnumOptionsR\x14hasBitcoinOnlyValues:T\n\x14exp\
-    erimental_message\x18\xa1\x96\x03\x20\x01(\x08\x12\x1f.google.protobuf.M\
-    essageOptionsR\x13experimentalMessage:>\n\twire_type\x18\xa2\x96\x03\x20\
-    \x01(\r\x12\x1f.google.protobuf.MessageOptionsR\x08wireType:N\n\x12exper\
-    imental_field\x18\x89\x9e\x03\x20\x01(\x08\x12\x1d.google.protobuf.Field\
-    OptionsR\x11experimentalField:U\n\x17include_in_bitcoin_only\x18\xe0\xd4\
-    \x03\x20\x01(\x08\x12\x1c.google.protobuf.FileOptionsR\x14includeInBitco\
-    inOnlyB8\n#com.satoshilabs.trezor.lib.protobufB\rTrezorMessage\x80\xa6\
-    \x1d\x01\
+    \x89\x07\x1a\x04\x98\xb5\x18\x01\x12-\n\x1eMessageType_SdCardBackupManag\
+    e\x10\xe8\x07\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12-\n\x1eMessageT\
+    ype_SdCardBackupHealth\x10\xe9\x07\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\
+    \x01\x1a\x04\xc8\xf3\x18\x01\"\x04\x08Z\x10\\\"\x04\x08r\x10z\"\x06\x08\
+    \xdb\x01\x10\xdb\x01\"\x06\x08\xe0\x01\x10\xe0\x01\"\x06\x08\xac\x02\x10\
+    \xb0\x02\"\x06\x08\xb5\x02\x10\xb8\x02:<\n\x07wire_in\x18\xd2\x86\x03\
+    \x20\x01(\x08\x12!.google.protobuf.EnumValueOptionsR\x06wireIn:>\n\x08wi\
+    re_out\x18\xd3\x86\x03\x20\x01(\x08\x12!.google.protobuf.EnumValueOption\
+    sR\x07wireOut:G\n\rwire_debug_in\x18\xd4\x86\x03\x20\x01(\x08\x12!.googl\
+    e.protobuf.EnumValueOptionsR\x0bwireDebugIn:I\n\x0ewire_debug_out\x18\
+    \xd5\x86\x03\x20\x01(\x08\x12!.google.protobuf.EnumValueOptionsR\x0cwire\
+    DebugOut:@\n\twire_tiny\x18\xd6\x86\x03\x20\x01(\x08\x12!.google.protobu\
+    f.EnumValueOptionsR\x08wireTiny:L\n\x0fwire_bootloader\x18\xd7\x86\x03\
+    \x20\x01(\x08\x12!.google.protobuf.EnumValueOptionsR\x0ewireBootloader:C\
+    \n\x0bwire_no_fsm\x18\xd8\x86\x03\x20\x01(\x08\x12!.google.protobuf.Enum\
+    ValueOptionsR\twireNoFsm:F\n\x0cbitcoin_only\x18\xe0\xd4\x03\x20\x01(\
+    \x08\x12!.google.protobuf.EnumValueOptionsR\x0bbitcoinOnly:U\n\x17has_bi\
+    tcoin_only_values\x18\xb9\x8e\x03\x20\x01(\x08\x12\x1c.google.protobuf.E\
+    numOptionsR\x14hasBitcoinOnlyValues:T\n\x14experimental_message\x18\xa1\
+    \x96\x03\x20\x01(\x08\x12\x1f.google.protobuf.MessageOptionsR\x13experim\
+    entalMessage:>\n\twire_type\x18\xa2\x96\x03\x20\x01(\r\x12\x1f.google.pr\
+    otobuf.MessageOptionsR\x08wireType:N\n\x12experimental_field\x18\x89\x9e\
+    \x03\x20\x01(\x08\x12\x1d.google.protobuf.FieldOptionsR\x11experimentalF\
+    ield:U\n\x17include_in_bitcoin_only\x18\xe0\xd4\x03\x20\x01(\x08\x12\x1c\
+    .google.protobuf.FileOptionsR\x14includeInBitcoinOnlyB8\n#com.satoshilab\
+    s.trezor.lib.protobufB\rTrezorMessage\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

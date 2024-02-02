@@ -154,7 +154,7 @@ async def _backup_mnemonic_or_share(
 
 
 async def sdcard_backup_seed(mnemonic_secret: bytes, backup_type: BackupType) -> None:
-    from storage.sd_seed_backup import is_backup_present, store_seed_on_sdcard
+    from storage.sd_seed_backup import is_backup_present_on_sdcard, store_seed_on_sdcard
     from trezor.ui.layouts import confirm_action, show_success
     from trezor.ui.layouts.sdcard_eject import make_user_eject_sdcard
 
@@ -168,7 +168,7 @@ async def sdcard_backup_seed(mnemonic_secret: bytes, backup_type: BackupType) ->
             action="This is not Trezor Card! Still continue?",
             verb="Continue",
         )
-    if is_backup_present():
+    if is_backup_present_on_sdcard():
         await confirm_action(
             "confirm_sdcard_backup_exists",
             "Backup present",

@@ -55,6 +55,7 @@ if TYPE_CHECKING:
     from trezor.enums import RecoveryDeviceType  # noqa: F401
     from trezor.enums import RequestType  # noqa: F401
     from trezor.enums import SafetyCheckLevel  # noqa: F401
+    from trezor.enums import SdCardBackupManageOperationType  # noqa: F401
     from trezor.enums import SdProtectOperationType  # noqa: F401
     from trezor.enums import StellarAssetType  # noqa: F401
     from trezor.enums import StellarMemoType  # noqa: F401
@@ -2535,6 +2536,42 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["RecoveryDevice"]:
+            return isinstance(msg, cls)
+
+    class SdCardBackupManage(protobuf.MessageType):
+        operation: "SdCardBackupManageOperationType"
+
+        def __init__(
+            self,
+            *,
+            operation: "SdCardBackupManageOperationType",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["SdCardBackupManage"]:
+            return isinstance(msg, cls)
+
+    class SdCardBackupHealth(protobuf.MessageType):
+        pt_is_mountable: "bool"
+        pt_has_correct_cap: "bool"
+        pt_readme_present: "bool"
+        pt_readme_content: "bool"
+        unalloc_seed_corrupt: "int"
+
+        def __init__(
+            self,
+            *,
+            pt_is_mountable: "bool",
+            pt_has_correct_cap: "bool",
+            pt_readme_present: "bool",
+            pt_readme_content: "bool",
+            unalloc_seed_corrupt: "int",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["SdCardBackupHealth"]:
             return isinstance(msg, cls)
 
     class WordRequest(protobuf.MessageType):

@@ -262,6 +262,8 @@ if TYPE_CHECKING:
         SolanaAddress = 903
         SolanaSignTx = 904
         SolanaTxSignature = 905
+        SdCardBackupManage = 1000
+        SdCardBackupHealth = 1001
 
     class FailureType(IntEnum):
         UnexpectedMessage = 1
@@ -453,6 +455,12 @@ if TYPE_CHECKING:
     class RecoveryDeviceType(IntEnum):
         ScrambledWords = 0
         Matrix = 1
+
+    class SdCardBackupManageOperationType(IntEnum):
+        CHECK = 0
+        REFRESH = 1
+        WIPE = 2
+        COPY = 3
 
     class WordRequestType(IntEnum):
         Plain = 0
