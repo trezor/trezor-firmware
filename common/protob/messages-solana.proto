@@ -1,8 +1,6 @@
 syntax = "proto2";
 package hw.trezor.messages.solana;
 
-import "messages-common.proto";
-
 /**
  * Request: Ask device for public key corresponding to address_n path
  * @start
