@@ -434,6 +434,7 @@ env.Replace(
     '-fsingle-precision-constant -fdata-sections -ffunction-sections '
     '-ffreestanding '
     '-fstack-protector-all '
+    '-flto=2 '
     +  env.get('ENV')["CPU_CCFLAGS"] + CCFLAGS_MOD,
     CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB',
     LINKFLAGS='-T embed/firmware/memory_${TREZOR_MODEL}%s.ld -Wl,--gc-sections  -Wl,--print-memory-usage -Wl,-Map=build/firmware/firmware.map -Wl,--warn-common' % LD_VARIANT,

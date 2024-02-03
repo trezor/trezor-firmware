@@ -102,6 +102,7 @@ env.Replace(
     '-fsingle-precision-constant -fdata-sections -ffunction-sections '
     '-ffreestanding '
     '-fstack-protector-all '
+    '-flto=2 '
     + env.get('ENV')["CPU_CCFLAGS"] + CCFLAGS_MOD,
     CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB',
     LINKFLAGS='-T embed/boardloader/memory.ld -Wl,--gc-sections -Wl,-Map=build/boardloader/boardloader.map -Wl,--warn-common  -Wl,--print-memory-usage',
