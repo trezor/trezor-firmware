@@ -103,7 +103,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        model: [T2T1]  # FIXME T2B1 https://github.com/trezor/trezor-firmware/issues/2724
+        model: [T2T1, T2B1]
         asan: ${{ fromJSON(github.event_name == 'schedule' && '["noasan", "asan"]' || '["noasan"]') }}
     env:
       TREZOR_MODEL: ${{ matrix.model == 'T2T1' && 'T' || 'R' }}
