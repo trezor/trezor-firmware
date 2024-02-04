@@ -123,8 +123,14 @@ jobs:
     needs: core_emu
     strategy:
       matrix:
-        model: [T2T1]  # FIXME: T2B1 https://github.com/trezor/trezor-firmware/issues/2724
+        model: [T2T1, T2B1]
         asan: ${{ fromJSON(github.event_name == 'schedule' && '["noasan", "asan"]' || '["noasan"]') }}
+        # T2B1 fails due to rust clippy error which is hard to reproduce, see discussion here:
+        # https://github.com/trezor/trezor-firmware/pull/2196
+        # The problem might be in conflicting versions of clippy, let's see if this helps:
+        # https://github.com/trezor/trezor-firmware/issues/3337
+        exclude:
+          - model: T2B1
     env:
       TREZOR_MODEL: ${{ matrix.model == 'T2T1' && 'T' || 'R' }}
       ADDRESS_SANITIZER: ${{ matrix.asan == 'asan' && '1' || '0' }}
@@ -146,7 +152,7 @@ jobs:
     needs: core_emu
     strategy:
       matrix:
-        model: [T2T1]  # FIXME: T2B1 https://github.com/trezor/trezor-firmware/issues/2724
+        model: [T2T1, T2B1]
     steps:
       - uses: actions/checkout@v4
         with:
