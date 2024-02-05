@@ -55,7 +55,10 @@ make vendor build_boardloader build_bootloader build_firmware
 
 ## Uploading
 
-Use `make upload` to upload the firmware to a production device. Do not forget to [enter bootloader](https://wiki.trezor.io/User_manual:Updating_the_Trezor_device_firmware) on the device beforehand.
+Use `make upload` to upload the firmware to a production device.
+
+* For TT: Do not forget to [enter bootloader](https://www.youtube.com/watch?v=3hes1H4qRbw) on the device beforehand.
+* For TS3: You will have to [unlock bootloader] (https://trezor.io/learn/a/unlocking-the-bootloader-on-trezor-safe-3) first. Make sure to read the link in completeness for potentially unwanted effects.
 
 ## Flashing
 

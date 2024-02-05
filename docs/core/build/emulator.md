@@ -96,5 +96,5 @@ Beware that this will significantly bloat the final binary
 and the firmware runtime memory limit HEAPSIZE may have to be increased.
 
 ```sh
-DEBUG_BUILD=1 make build_unix
+make build_unix_debug
 ```

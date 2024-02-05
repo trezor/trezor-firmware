@@ -10,21 +10,9 @@ Handles on-the-wire communication with a host computer. The communication is:
 
 This module:
 
-1. Provides API for registering messages. In other words binds what functions are invoked
-   when some particular message is received. See the `add` function.
-2. Runs workflows, also called `handlers`, to process the message.
-3. Creates and passes the `Context` object to the handlers. This provides an interface to
+1. Runs workflows, also called `handlers`, to process the message.
+2. Creates and passes the `Context` object to the handlers. This provides an interface to
    wait, read, write etc. on the wire.
-
-## `add` function
-
-The `add` function registers what function is invoked when some particular `message_type`
-is received. The following example binds the `apps.wallet.get_address` function with
-the `GetAddress` message:
-
-```python
-wire.add(MessageType.GetAddress, "apps.wallet", "get_address")
-```
 
 ## Session handler
 
