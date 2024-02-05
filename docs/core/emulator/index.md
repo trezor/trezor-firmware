@@ -61,13 +61,16 @@ To use the "all all all" seed defined in [SLIP-14](https://github.com/satoshilab
 
 ```sh
 ./emu.py --slip0014
+./emu.py -s
 ```
 
 ### Storage and Profiles
 
 Internal Trezor's storage is emulated and stored in the `/var/tmp/trezor.flash` file by
 default. Deleting this file is similar to calling _wipe device_. You can also find
-`/var/tmp/trezor.sdcard` for SD card.
+`/var/tmp/trezor.sdcard` for SD card. Starting the emulator with `-e` / `--erase` will
+delete the files beforehand.
+
 
 You can specify a different location for the storage and log files via the `-p` /
 `--profile` option:

@@ -14,7 +14,7 @@ We will implement a simple hello-world feature where Trezor gets some informatio
 
 As already mentioned, to get something useful from Trezor, writing device logic is not enough. We need to have a specific communication channel between the computer and Trezor, and also the computer needs to know how to speak to the device to trigger wanted action.
 
-### TLDR: [implementation in a single commit](https://github.com/trezor/trezor-firmware/commit/8a855b38e69bea64ba79ca704876cf4862a9ff79)
+### TLDR: [implementation in a single commit](https://github.com/trezor/trezor-firmware/commit/e1cbb8a97018ec3ea39e759bbdc9a5311f992dc5)
 
 ### 1. Communication part (protobuf)
 Communication between Trezor and the computer is handled by a protocol called `protobuf`. It allows for the creation of specific messages (containing clearly defined data) that will be exchanged. More details about this can be seen in [docs](../common/communication/index.md).
@@ -90,18 +90,16 @@ from trezor.messages import HelloWorldResponse
 from trezor.ui.layouts import confirm_text
 
 if TYPE_CHECKING:
-    from trezor.wire import Context
     from trezor.messages import HelloWorldRequest
 
 
-async def hello_world(ctx: Context, msg: HelloWorldRequest) -> HelloWorldResponse:
+async def hello_world(msg: HelloWorldRequest) -> HelloWorldResponse:
     text = _get_text_from_msg(msg)
     if msg.show_display:
         await confirm_text(
-            ctx,
             "confirm_hello_world",
-            title="Hello world",
-            data=text,
+            "Hello world",
+            text,
             description="Hello world example",
         )
     return HelloWorldResponse(text=text)
@@ -129,7 +127,7 @@ if msg_type == MessageType.HelloWorldRequest:
     return "apps.misc.hello_world"
 ```
 
-The above will make sure the `ctx` and `msg` (of type `HelloWorldRequest`) arguments will be supplied into the `hello_world` function we created.
+The above will make sure that the `msg` (of type `HelloWorldRequest`) will be supplied into the `hello_world` function we created.
 
 Lastly, running `make gen` in the root directory makes sure the new `misc/hello_world.py` module will be discovered. `core/src/all_modules.py` should be modified as a result.
 
@@ -339,6 +337,6 @@ Note the usage of `trezorlib.hello_world.say_hello`, which we defined earlier, s
 If we want to be fully compatible with `CI`, we need to create expected `UI-test` results. The most straightforward way to do it is to run `make test_emu_ui_record` in `core` directory.
 
 ## Conclusion
-All changes in one commit can be seen [here](https://github.com/trezor/trezor-firmware/commit/8a855b38e69bea64ba79ca704876cf4862a9ff79).
+All changes in one commit can be seen [here](https://github.com/trezor/trezor-firmware/commit/e1cbb8a97018ec3ea39e759bbdc9a5311f992dc5).
 
 Ideas for potentially useful Trezor features are welcome. Feel free to submit issues and open PRs, even if incomplete.
