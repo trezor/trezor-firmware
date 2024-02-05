@@ -1,10 +1,10 @@
-from ..src import pin_log, prng
+from ..src import pin_log_bitwise, prng
 
 
 def test_generate_guard_key():
     prng.random_reseed(0)
 
-    p = pin_log.PinLog(None)
+    p = pin_log_bitwise.PinLogBitwise(None)
 
     assert p._generate_guard_key() == 2267428717
     assert p._generate_guard_key() == 1653399972
