@@ -9,7 +9,7 @@ PY_FILES = $(shell find . -type f -name '*.py'   | sed 'sO^\./OO' | grep -f ./to
 C_FILES =  $(shell find . -type f -name '*.[ch]' | grep -f ./tools/style.c.include  | grep -v -f ./tools/style.c.exclude )
 
 
-style_check: pystyle_check ruststyle_check cstyle_check changelog_check yaml_check editor_check ## run all style checks
+style_check: pystyle_check ruststyle_check cstyle_check changelog_check yaml_check docs_summary_check editor_check ## run all style checks
 
 style: pystyle ruststyle cstyle ## apply all code styles (C+Rust+Py)
 
@@ -137,6 +137,10 @@ ci_docs: ## generate CI documentation
 
 ci_docs_check: ## check that generated CI documentation is up to date
 	./tools/generate_ci_docs.py --check
+
+docs_summary_check: ## check if there are unlinked documentation files
+	@echo [DOCS-SUMMARY-MARKDOWN-CHECK]
+	python3 tools/check_docs_summary.py
 
 vendorheader: ## generate vendor header
 	./core/embed/vendorheader/generate.sh --quiet
