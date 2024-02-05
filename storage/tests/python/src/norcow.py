@@ -1,6 +1,8 @@
 from struct import pack, unpack
 
 from . import consts
+from .pin_log_bitwise import PinLogBitwise
+from .pin_log_blockwise import PinLogBlockwise
 
 
 def align_int(i: int, align: int):
@@ -174,6 +176,9 @@ class NorcowBitwise(Norcow):
         self.item_prefix_len = 4
         self.lib_name = "libtrezor-storage.so"
 
+    def get_pin_log(self):
+        return PinLogBitwise(self)
+
     def get_lib_name(self):
         return self.lib_name
 
@@ -230,6 +235,9 @@ class NorcowBlockwise(Norcow):
         self.magic = consts.NORCOW_MAGIC_AND_VERSION + bytes([0x00] * 8)
         self.item_prefix_len = 4 * consts.WORD_SIZE + 1
         self.lib_name = "libtrezor-storage-qw.so"
+
+    def get_pin_log(self):
+        return PinLogBlockwise(self)
 
     def get_lib_name(self):
         return self.lib_name

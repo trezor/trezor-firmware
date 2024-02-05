@@ -2,7 +2,6 @@ import hashlib
 import sys
 
 from . import consts, crypto, helpers, prng
-from .pin_log import PinLog
 
 
 class Storage:
@@ -12,7 +11,7 @@ class Storage:
         self.dek = None
         self.sak = None
         self.nc = norcow_class()
-        self.pin_log = PinLog(self.nc)
+        self.pin_log = self.nc.get_pin_log()
 
     def init(self, hardware_salt: bytes = b""):
         """

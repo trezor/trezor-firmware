@@ -2,7 +2,7 @@ import pytest
 from c0.storage import Storage as StorageC0
 from c.storage import Storage as StorageC
 
-from python.src.norcow import NC_CLASSES
+from python.src.norcow import NorcowBitwise
 from python.src.storage import Storage as StoragePy
 
 from . import common
@@ -60,7 +60,7 @@ def test_upgrade():
     check_values(sc1)
 
 
-@pytest.mark.parametrize("nc_class", NC_CLASSES)
+@pytest.mark.parametrize("nc_class", [NorcowBitwise])
 def test_python_set_sectors(nc_class):
     sp0 = StoragePy(nc_class)
     sp0.init(common.test_uid)

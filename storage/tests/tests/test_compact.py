@@ -7,7 +7,7 @@ from . import common
 
 
 @pytest.mark.parametrize(
-    "nc_class,reserve", [(NorcowBlockwise, 1213), (NorcowBitwise, 600)]
+    "nc_class,reserve", [(NorcowBlockwise, 800), (NorcowBitwise, 600)]
 )
 def test_compact(nc_class, reserve):
     sc, sp = common.init(nc_class, unlock=True)

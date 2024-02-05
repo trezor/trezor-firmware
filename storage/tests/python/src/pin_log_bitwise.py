@@ -1,7 +1,31 @@
 from . import consts, helpers, prng
 
+# Length of items in the PIN entry log
+PIN_LOG_GUARD_KEY_SIZE = 4
 
-class PinLog:
+# Values used for the guard key integrity check.
+GUARD_KEY_MODULUS = 6311
+GUARD_KEY_REMAINDER = 15
+GUARD_KEY_RANDOM_MAX = (0xFFFFFFFF // GUARD_KEY_MODULUS) + 1
+
+# Length of both success log and entry log
+PIN_LOG_SIZE = 64
+
+# Used for in guard bits operations.
+LOW_MASK = 0x55555555
+
+# Log initialized to all FFs.
+ALL_FF_LOG = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+
+
+def expand_to_log_size(value: int) -> int:
+    result = 0
+    for i in range(0, PIN_LOG_SIZE, 4):
+        result = result | (value << i * 8)
+    return result
+
+
+class PinLogBitwise:
     def __init__(self, norcow):
         self.norcow = norcow
 
@@ -9,21 +33,21 @@ class PinLog:
         guard_key = self._generate_guard_key()
         guard_mask, guard = self.derive_guard_mask_and_value(guard_key)
 
-        pin_success_log = (~guard_mask & consts.ALL_FF_LOG) | guard
-        pin_entry_log = (~guard_mask & consts.ALL_FF_LOG) | guard
+        pin_success_log = (~guard_mask & ALL_FF_LOG) | guard
+        pin_entry_log = (~guard_mask & ALL_FF_LOG) | guard
         self._write_log(guard_key, pin_success_log, pin_entry_log)
 
     def derive_guard_mask_and_value(self, guard_key: int) -> (int, int):
         if guard_key > 0xFFFFFFFF:
             raise ValueError("Invalid guard key")
 
-        guard_mask = ((guard_key & consts.LOW_MASK) << 1) | (
-            (~guard_key & 0xFFFFFFFF) & consts.LOW_MASK
+        guard_mask = ((guard_key & LOW_MASK) << 1) | (
+            (~guard_key & 0xFFFFFFFF) & LOW_MASK
         )
-        guard = (((guard_key & consts.LOW_MASK) << 1) & guard_key) | (
-            ((~guard_key & 0xFFFFFFFF) & consts.LOW_MASK) & (guard_key >> 1)
+        guard = (((guard_key & LOW_MASK) << 1) & guard_key) | (
+            ((~guard_key & 0xFFFFFFFF) & LOW_MASK) & (guard_key >> 1)
         )
-        return helpers.expand_to_log_size(guard_mask), helpers.expand_to_log_size(guard)
+        return expand_to_log_size(guard_mask), expand_to_log_size(guard)
 
     def write_attempt(self):
         guard_key, pin_success_log, pin_entry_log = self._get_logs()
@@ -32,9 +56,7 @@ class PinLog:
 
         clean_pin_entry_log = self.remove_guard_bits(guard_mask, pin_entry_log)
         clean_pin_entry_log = clean_pin_entry_log >> 2  # set 11 to 00
-        pin_entry_log = (
-            clean_pin_entry_log & (~guard_mask & consts.ALL_FF_LOG)
-        ) | guard
+        pin_entry_log = (clean_pin_entry_log & (~guard_mask & ALL_FF_LOG)) | guard
 
         self._write_log(guard_key, pin_success_log, pin_entry_log)
 
@@ -60,15 +82,15 @@ class PinLog:
         with its neighbour value.
         Example: 0g0gg1 -> 000011
         """
-        log = log & (~guard_mask & consts.ALL_FF_LOG)
-        log = ((log >> 1) | log) & helpers.expand_to_log_size(consts.LOW_MASK)
+        log = log & (~guard_mask & ALL_FF_LOG)
+        log = ((log >> 1) | log) & expand_to_log_size(LOW_MASK)
         log = log | (log << 1)
         return log
 
     def _generate_guard_key(self) -> int:
         while True:
-            r = prng.random_uniform(consts.GUARD_KEY_RANDOM_MAX)
-            r = (r * consts.GUARD_KEY_MODULUS + consts.GUARD_KEY_REMAINDER) & 0xFFFFFFFF
+            r = prng.random_uniform(GUARD_KEY_RANDOM_MAX)
+            r = (r * GUARD_KEY_MODULUS + GUARD_KEY_REMAINDER) & 0xFFFFFFFF
             if self._check_guard_key(r):
                 return r
 
@@ -93,19 +115,18 @@ class PinLog:
             ((count & 0x0E0E0E0E) == 0x04040404)
             & (one_runs == 0)
             & (zero_runs == 0)
-            & (guard_key % consts.GUARD_KEY_MODULUS == consts.GUARD_KEY_REMAINDER)
+            & (guard_key % GUARD_KEY_MODULUS == GUARD_KEY_REMAINDER)
         )
 
     def _get_logs(self) -> (int, int, int):
         pin_log = self.norcow.get(consts.PIN_LOG_KEY)
-        guard_key = pin_log[: consts.PIN_LOG_GUARD_KEY_SIZE]
+        guard_key = pin_log[:PIN_LOG_GUARD_KEY_SIZE]
         guard_key = helpers.word_to_int(guard_key)
         guard_mask, guard = self.derive_guard_mask_and_value(guard_key)
-        pin_entry_log = pin_log[consts.PIN_LOG_GUARD_KEY_SIZE + consts.PIN_LOG_SIZE :]
+        pin_entry_log = pin_log[PIN_LOG_GUARD_KEY_SIZE + PIN_LOG_SIZE :]
         pin_entry_log = helpers.to_int_by_words(pin_entry_log)
         pin_success_log = pin_log[
-            consts.PIN_LOG_GUARD_KEY_SIZE : consts.PIN_LOG_GUARD_KEY_SIZE
-            + consts.PIN_LOG_SIZE
+            PIN_LOG_GUARD_KEY_SIZE : PIN_LOG_GUARD_KEY_SIZE + PIN_LOG_SIZE
         ]
         pin_success_log = helpers.to_int_by_words(pin_success_log)
 
@@ -114,8 +135,8 @@ class PinLog:
     def _write_log(self, guard_key: int, pin_success_log: int, pin_entry_log: int):
         pin_log = (
             helpers.int_to_word(guard_key)
-            + helpers.to_bytes_by_words(pin_success_log, consts.PIN_LOG_SIZE)
-            + helpers.to_bytes_by_words(pin_entry_log, consts.PIN_LOG_SIZE)
+            + helpers.to_bytes_by_words(pin_success_log, PIN_LOG_SIZE)
+            + helpers.to_bytes_by_words(pin_entry_log, PIN_LOG_SIZE)
         )
         if self.norcow.is_byte_access():
             try:

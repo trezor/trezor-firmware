@@ -3,13 +3,6 @@ import sys
 from . import consts
 
 
-def expand_to_log_size(value: int) -> int:
-    result = 0
-    for i in range(0, consts.PIN_LOG_SIZE, 4):
-        result = result | (value << i * 8)
-    return result
-
-
 def to_int_by_words(array: bytes) -> int:
     """
     Converts array of bytes into an int by reading word size
