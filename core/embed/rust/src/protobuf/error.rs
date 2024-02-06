@@ -10,6 +10,10 @@ pub const fn unknown_field_type() -> Error {
     value_error!("Unknown field type.")
 }
 
+pub const fn overflow() -> Error {
+    value_error!("Value larger than expected.")
+}
+
 pub fn missing_required_field(field: Qstr) -> Error {
     Error::ValueErrorParam(cstr!("Missing required field."), field.into())
 }

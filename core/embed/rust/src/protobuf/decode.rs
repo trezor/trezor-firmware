@@ -94,7 +94,7 @@ impl Decoder {
     ) -> Result<(), Error> {
         // Loop, trying to read the field key that contains the tag and primitive value
         // type. If we fail to read the key, we are at the end of the stream.
-        while let Ok(field_key) = stream.read_uvarint() {
+        while let Ok(field_key) = stream.read_uvarint_u32() {
             let field_tag = u8::try_from(field_key >> 3)?;
             let prim_type = u8::try_from(field_key & 7)?;
 
@@ -125,10 +125,10 @@ impl Decoder {
                     // Unknown field, skip it.
                     match prim_type {
                         defs::PRIMITIVE_TYPE_VARINT => {
-                            stream.read_uvarint()?;
+                            stream.read_uvarint_u64()?;
                         }
                         defs::PRIMITIVE_TYPE_LENGTH_DELIMITED => {
-                            let num = stream.read_uvarint()?;
+                            let num = stream.read_uvarint_u32()?;
                             let len = num.try_into()?;
                             stream.read(len)?;
                         }
@@ -162,10 +162,10 @@ impl Decoder {
                 // Field already has a value assigned, skip it.
                 match field.get_type().primitive_type() {
                     defs::PRIMITIVE_TYPE_VARINT => {
-                        stream.read_uvarint()?;
+                        stream.read_uvarint_u64()?;
                     }
                     defs::PRIMITIVE_TYPE_LENGTH_DELIMITED => {
-                        let num = stream.read_uvarint()?;
+                        let num = stream.read_uvarint_u32()?;
                         let len = num.try_into()?;
                         stream.read(len)?;
                     }
@@ -211,7 +211,7 @@ impl Decoder {
         if field.is_experimental() && !self.enable_experimental {
             return Err(error::experimental_not_enabled());
         }
-        let num = stream.read_uvarint()?;
+        let num = stream.read_uvarint_u64()?;
         match field.get_type() {
             FieldType::UVarInt => Ok(num.try_into()?),
             FieldType::SVarInt => {
@@ -289,17 +289,125 @@ impl<'a> InputStream<'a> {
         Ok(val)
     }
 
-    pub fn read_uvarint(&mut self) -> Result<u64, Error> {
-        let mut uint = 0;
+    pub fn read_uvarint_u32(&mut self) -> Result<u32, Error> {
+        let mut uint: u32 = 0;
         let mut shift = 0;
-        loop {
-            let byte = self.read_byte()?;
-            uint += (byte as u64 & 0x7F) << shift;
+        for byte_count in 1..=5 {
+            let byte: u32 = self.read_byte()? as u32;
+            let continue_decoding = byte & 0x80 != 0;
+            let payload = byte & 0x7F;
+            if byte_count == 5 {
+                // first 4 bytes are accepted as is (4 x 7 bits = 28 bits),
+                // then the 5th byte is only accepted it it is the final byte
+                // and contains no more than 4 useful bits! (4 x 7 bits + 4 bits = 32 bits)!
+                if continue_decoding || payload > 0xF {
+                    return Err(error::overflow());
+                }
+            }
+            uint += payload << shift;
             shift += 7;
-            if byte & 0x80 == 0 {
+            if !continue_decoding {
                 break;
             }
         }
         Ok(uint)
+    }
+
+    pub fn read_uvarint_u64(&mut self) -> Result<u64, Error> {
+        let mut uint: u64 = 0;
+        let mut shift = 0;
+        for byte_count in 1..=10 {
+            let byte: u64 = self.read_byte()? as u64;
+            let continue_decoding = byte & 0x80 != 0;
+            let payload = byte & 0x7F;
+            if byte_count == 10 {
+                if continue_decoding || payload > 1 {
+                    return Err(error::overflow());
+                }
+            }
+            uint += payload << shift;
+            shift += 7;
+            if !continue_decoding {
+                break;
+            }
+        }
+        Ok(uint)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn read_uvarint_32() {
+        // 1 byte...
+        let mut stream = InputStream::new(&[0b00000001]);
+        let result = stream.read_uvarint_u32();
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 1);
+
+        // 2 bytes...
+        let mut stream = InputStream::new(&[0b10010110, 0b00000001]);
+        let result = stream.read_uvarint_u32();
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 150);
+
+        // a 0 taking up 5 whole bytes...
+        let mut stream = InputStream::new(&[0b10000000, 0b10000000, 0b10000000, 0b10000000, 0b00000000]);
+        let result = stream.read_uvarint_u32();
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 0);
+
+        // 5 bytes, with only 4 bits used in the last byte... still OK!
+        let mut stream = InputStream::new(&[0b10000000, 0b10000000, 0b10000000, 0b10000000, 0b00001111]);
+        let result = stream.read_uvarint_u32();
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 0xF0000000);
+
+        // 5 bytes with more than 4 bits used in the last byte => overflow
+        let mut stream = InputStream::new(&[0b10000000, 0b10000000, 0b10000000, 0b10000000, 0b00010000]);
+        assert!(stream.read_uvarint_u32().is_err());
+
+        // 5+ bytes => overflow
+        let mut stream = InputStream::new(&[0b10000000, 0b10000000, 0b10000000, 0b10000000, 0b10000000]);
+        assert!(stream.read_uvarint_u32().is_err());
+    }
+
+    #[test]
+    fn read_uvarint_64() {
+        // 1 byte...
+        let mut stream = InputStream::new(&[0b00000001]);
+        let result = stream.read_uvarint_u64();
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 1);
+
+        // 2 bytes...
+        let mut stream = InputStream::new(&[0b10010110, 0b00000001]);
+        let result = stream.read_uvarint_u64();
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 150);
+
+        // 5 bytes, with more than 4 bits used in the last byte => works fine for u64!
+        let mut stream = InputStream::new(&[0b10000000, 0b10000000, 0b10000000, 0b10000000, 0b00010000]);
+        let result = stream.read_uvarint_u64();
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 0x100000000);
+
+        // 10 bytes with just a single bit in the last one
+        let mut stream = InputStream::new(&[0b10000000, 0b10000000, 0b10000000, 0b10000000, 0b10000000, 0b10000000, 0b10000000, 0b10000000, 0b10000000, 0b00000001]);
+        let result = stream.read_uvarint_u64();
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 0x8000000000000000);
+
+        // 10 bytes and the number is still not complete => too much ... even if so far all we got is zeroes!
+        let mut stream = InputStream::new(&[0b10000000, 0b10000000, 0b10000000, 0b10000000, 0b10000000, 0b10000000, 0b10000000, 0b10000000, 0b10000000, 0b10000000]);
+        let result = stream.read_uvarint_u64();
+        assert!(result.is_err());
+
+        // 10 bytes with more than a bit used in the last one => too much for u64!
+        let mut stream = InputStream::new(&[0b10000000, 0b10000000, 0b10000000, 0b10000000, 0b10000000, 0b10000000, 0b10000000, 0b10000000, 0b10000000, 0b00000010]);
+        let result = stream.read_uvarint_u64();
+        assert!(result.is_err());
     }
 }
