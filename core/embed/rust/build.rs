@@ -49,6 +49,8 @@ fn generate_qstr_bindings() {
     // Tell cargo to invalidate the built crate whenever the header changes.
     println!("cargo:rerun-if-changed=qstr.h");
 
+    let dest_file = PathBuf::from(out_path).join("qstr.rs");
+
     bindgen::Builder::default()
         .header("qstr.h")
         // Build the Qstr enum as a newtype so we can define method on it.
@@ -71,8 +73,17 @@ fn generate_qstr_bindings() {
         .parse_callbacks(Box::new(bindgen::CargoCallbacks))
         .generate()
         .expect("Unable to generate Rust QSTR bindings")
-        .write_to_file(PathBuf::from(out_path).join("qstr.rs"))
+        .write_to_file(&dest_file)
         .unwrap();
+
+    // rewrite the file to change internal representation of the qstr newtype
+    let qstr_generated = std::fs::read_to_string(&dest_file).unwrap();
+    let qstr_modified = qstr_generated.replace(
+        "pub struct Qstr(pub cty::c_uint);",
+        "pub struct Qstr(pub usize);",
+    );
+    assert_ne!(qstr_generated, qstr_modified, "Failed to rewrite type of Qstr in qstr.rs file.\nThis indicates that the generated file has changed. Please update the rewriting code.");
+    std::fs::write(&dest_file, qstr_modified).unwrap();
 }
 
 fn prepare_bindings() -> bindgen::Builder {
