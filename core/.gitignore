@@ -13,3 +13,4 @@ mypy_report
 tools/gdb_scripts/*.log
 /embed/ble_bootloader/jlink.jdebug.user
 /embed/ble_firmware/jlink.jdebug.user
+/embed/ble_zephyr_fw/cmake-build-debug/
