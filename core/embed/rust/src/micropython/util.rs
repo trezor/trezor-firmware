@@ -7,6 +7,7 @@ use super::{
     iter::IterBuf,
     map::{Map, MapElem},
     obj::Obj,
+    qstr::Qstr,
     runtime::{catch_exception, raise_exception},
 };
 use crate::error::Error;
@@ -89,6 +90,38 @@ pub fn new_tuple(args: &[Obj]) -> Result<Obj, Error> {
     // SAFETY: Safe.
     // EXCEPTION: Raises if allocation fails, does not return NULL.
     let obj = catch_exception(|| unsafe { ffi::mp_obj_new_tuple(args.len(), args.as_ptr()) })?;
+    Ok(obj)
+}
+
+/// Create a new "attrtuple", which is essentially a namedtuple / ad-hoc object.
+///
+/// It is recommended to use the attr_tuple! macro instead of this function:
+/// ```
+/// let obj = attr_tuple! {
+///     Qstr::MP_QSTR_language => header.language.try_into()?,
+///     Qstr::MP_QSTR_version => util::new_tuple(&version_objs)?,
+///     // ...
+/// }
+/// ```
+pub fn new_attrtuple(field_qstrs: &'static [Qstr], values: &[Obj]) -> Result<Obj, Error> {
+    if field_qstrs.len() != values.len() {
+        return Err(Error::TypeError);
+    }
+    // SAFETY:
+    // * `values` are copied into the tuple, but the `fields` array is stored as a
+    //   pointer in the last tuple item. Hence the requirement that `fields` is
+    //   'static. See objattrtuple.c:79
+    // * we cast `field_qstrs` to the required type `qstr`, which is internally
+    //   usize. (py/qstr.h:48). This is valid for as long as Qstr is
+    //   repr(transparent) and the only field is a usize. Check generated qstr.rs.
+    // EXCEPTION: Raises if allocation fails, does not return NULL.
+    let obj = catch_exception(|| unsafe {
+        ffi::mp_obj_new_attrtuple(
+            field_qstrs.as_ptr() as *const _,
+            values.len(),
+            values.as_ptr(),
+        )
+    })?;
     Ok(obj)
 }
 

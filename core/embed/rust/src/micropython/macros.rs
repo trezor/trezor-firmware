@@ -228,6 +228,39 @@ macro_rules! obj_module {
     });
 }
 
+macro_rules! attr_tuple {
+    (@append
+        fields: [$($fields:expr,)*],
+        values: [$($values:expr,)*],
+        rest: {
+            $field:expr => $val:expr,
+            $($rest:tt)*
+        }
+    ) => {
+        attr_tuple! {
+            @append
+            fields: [$($fields,)* $field,],
+            values: [$($values,)* $val,],
+            rest: {$($rest)*}
+        }
+    };
+    (@append
+        fields: [$($fields:expr,)*],
+        values: [$($values:expr,)*],
+        rest: {}
+    ) => {
+        $crate::micropython::util::new_attrtuple(&[$($fields,)*], &[$($values,)*])
+    };
+    // version without trailing comma
+    ($($key:expr => $val:expr),*) => ({
+        attr_tuple!(@append fields: [], values: [], rest: { $($key => $val,)* })
+    });
+    // version with trailing comma
+    ($($key:expr => $val:expr,)*) => ({
+        attr_tuple!(@append fields: [], values: [], rest: { $($key => $val,)* })
+    });
+}
+
 /// Print arbitrary amounts of slices into a terminal.
 /// Does not include a newline at the end.
 /// Does not do anything when not in debugging mode.
