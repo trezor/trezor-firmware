@@ -52,6 +52,16 @@ bool usb_connected_previously = true;
 #include "modtrezorio-sbu.h"
 #endif
 #ifdef USE_SD_CARD
+
+#include "py/runtime.h"
+
+static mp_obj_t ui_wait_callback = mp_const_none;
+
+static void wrapped_ui_wait_callback(uint32_t current) {
+  if (mp_obj_is_callable(ui_wait_callback)) {
+    mp_call_function_1_protected(ui_wait_callback, mp_obj_new_int(current));
+  }
+}
 #include "modtrezorio-fatfs.h"
 #include "modtrezorio-sdcard.h"
 #endif
