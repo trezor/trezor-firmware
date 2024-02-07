@@ -5,7 +5,7 @@ use crate::{
     strutil::hexlify,
     trezorhal::{io::io_touch_read, secbool::secbool},
     ui::{
-        component::{Component, Event, EventCtx, Label, Never},
+        component::{connect::Connect, Component, Event, EventCtx, Label, Never},
         constant::{screen, HEIGHT},
         display::{self, Color, Font, Icon},
         event::TouchEvent,
@@ -15,7 +15,7 @@ use crate::{
 };
 
 use super::{
-    bootloader::{connect::Connect, welcome::Welcome},
+    bootloader::welcome::Welcome,
     component::{
         bl_confirm::{Confirm, ConfirmTitle},
         Button, ResultScreen, WelcomeScreen,
@@ -35,7 +35,6 @@ use super::{
 use intro::Intro;
 use menu::Menu;
 
-mod connect;
 pub mod intro;
 pub mod menu;
 pub mod welcome;
