@@ -2,6 +2,7 @@
 
 pub mod base;
 pub mod border;
+pub mod connect;
 pub mod empty;
 pub mod image;
 pub mod label;
