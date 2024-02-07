@@ -7,6 +7,7 @@ from trezor.ui.layouts import confirm_action, show_error_and_raise
 if TYPE_CHECKING:
     from trezor.ui.layouts.common import ProgressLayout
 
+
 class SdCardUnavailable(wire.ProcessError):
     pass
 
