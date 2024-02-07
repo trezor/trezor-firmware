@@ -441,9 +441,10 @@ int bootloader_main(void) {
   optiga_hal_init();
 #endif
 
+  bool touch_available = false;
 #ifdef USE_TOUCH
   touch_power_on();
-  touch_init();
+  touch_available = touch_init();
 #endif
 
 #ifdef USE_BUTTON
@@ -486,7 +487,7 @@ int bootloader_main(void) {
   // anyway
   uint32_t touched = 0;
 #ifdef USE_TOUCH
-  if (firmware_present == sectrue && stay_in_bootloader != sectrue) {
+  if (touch_available && firmware_present == sectrue && stay_in_bootloader != sectrue) {
     for (int i = 0; i < 100; i++) {
       touched = touch_is_detected() | touch_read();
       if (touched) {

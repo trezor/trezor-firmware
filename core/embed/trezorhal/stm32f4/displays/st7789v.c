@@ -379,11 +379,11 @@ void display_sync(void) {
   if (id && (id != DISPLAY_ID_GC9307)) {
     // synchronize with the panel synchronization signal
     // in order to avoid visual tearing effects
-    while (GPIO_PIN_SET == HAL_GPIO_ReadPin(DISPLAY_TE_PORT, DISPLAY_TE_PIN)) {
-    }
-    while (GPIO_PIN_RESET ==
-           HAL_GPIO_ReadPin(DISPLAY_TE_PORT, DISPLAY_TE_PIN)) {
-    }
+//    while (GPIO_PIN_SET == HAL_GPIO_ReadPin(DISPLAY_TE_PORT, DISPLAY_TE_PIN)) {
+//    }
+//    while (GPIO_PIN_RESET ==
+//           HAL_GPIO_ReadPin(DISPLAY_TE_PORT, DISPLAY_TE_PIN)) {
+//    }
   }
 #endif
 }

@@ -7,7 +7,7 @@ use crate::ui::{
 use crate::ui::model_tt::{
     component::{ResultFooter, ResultStyle},
     constant::WIDTH,
-    theme::{FATAL_ERROR_COLOR, ICON_WARNING40, RESULT_FOOTER_START, RESULT_PADDING, WHITE},
+    theme::{FATAL_ERROR_COLOR, ICON_WARNING40, RESULT_PADDING, WHITE},
 };
 
 const ICON_TOP: i16 = 23;
@@ -48,7 +48,6 @@ impl<T: AsRef<str>> Component for ErrorScreen<'_, T> {
     type Msg = Never;
 
     fn place(&mut self, _bounds: Rect) -> Rect {
-        self.bg.place(screen());
 
         let title_area = Rect::new(
             Point::new(RESULT_PADDING, TITLE_AREA_START),
@@ -58,12 +57,13 @@ impl<T: AsRef<str>> Component for ErrorScreen<'_, T> {
 
         let message_area = Rect::new(
             Point::new(RESULT_PADDING, MESSAGE_AREA_START),
-            Point::new(WIDTH - RESULT_PADDING, RESULT_FOOTER_START),
+            Point::new(WIDTH - RESULT_PADDING, 240),
         );
         self.message.place(message_area);
+        self.bg.place(message_area);
 
-        let (_, bottom_area) = ResultFooter::<T>::split_bounds();
-        self.footer.place(bottom_area);
+        // let (_, bottom_area) = ResultFooter::<T>::split_bounds();
+        // self.footer.place(bottom_area);
 
         screen()
     }
@@ -84,6 +84,6 @@ impl<T: AsRef<str>> Component for ErrorScreen<'_, T> {
         );
         self.title.paint();
         self.message.paint();
-        self.footer.paint();
+        // self.footer.paint();
     }
 }

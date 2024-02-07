@@ -2,15 +2,16 @@
 #define _TOUCH_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #define TOUCH_START (1U << 24)
 #define TOUCH_MOVE (1U << 25)
 #define TOUCH_END (1U << 26)
 
-void touch_init(void);
+bool touch_init(void);
 void touch_power_on(void);
 void touch_power_off(void);
-void touch_sensitivity(uint8_t value);
+bool touch_sensitivity(uint8_t value);
 uint32_t touch_read(void);
 uint32_t touch_click(void);
 uint32_t touch_is_detected(void);
