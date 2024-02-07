@@ -64,6 +64,9 @@ z = zlib.compressobj(level=9, wbits=-10)
 zdata = z.compress(pixeldata) + z.flush()
 ```
 
-## Tools
+## TOIF tool
 
-* [toif_convert](https://github.com/trezor/trezor-firmware/blob/master/core/tools/toif_convert.py) - tool for converting PNGs into TOI format and back
+Tool for converting PNGs into TOI format and back, see the following links for more:
+
+* [README](https://github.com/trezor/trezor-firmware/blob/main/python/tools/toiftool/README.md)
+* [Code](https://github.com/trezor/trezor-firmware/blob/main/python/tools/toiftool/toiftool.py)
