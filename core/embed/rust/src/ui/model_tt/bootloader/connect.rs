@@ -7,13 +7,15 @@ use crate::ui::{
 };
 
 pub struct Connect {
+    fg: Color,
     bg: Pad,
     message: &'static str,
 }
 
 impl Connect {
-    pub fn new(message: &'static str, bg: Color) -> Self {
+    pub fn new(message: &'static str, fg: Color, bg: Color) -> Self {
         let mut instance = Self {
+            fg,
             bg: Pad::with_background(bg),
             message,
         };
