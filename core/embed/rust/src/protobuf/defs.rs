@@ -41,13 +41,14 @@ pub struct FieldDef {
 impl FieldDef {
     pub fn get_type(&self) -> FieldType {
         match self.ftype() {
-            0 => FieldType::UVarInt,
+            0 => FieldType::UVarInt64,
             1 => FieldType::SVarInt,
             2 => FieldType::Bool,
             3 => FieldType::Bytes,
             4 => FieldType::String,
             5 => FieldType::Enum(unsafe { get_enum(self.enum_or_msg_offset) }),
             6 => FieldType::Msg(unsafe { get_msg(self.enum_or_msg_offset) }),
+            7 => FieldType::UVarInt32,
             _ => unreachable!(),
         }
     }
@@ -74,13 +75,14 @@ impl FieldDef {
 }
 
 pub enum FieldType {
-    UVarInt,
+    UVarInt64,
     SVarInt,
     Bool,
     Bytes,
     String,
     Enum(EnumDef),
     Msg(MsgDef),
+    UVarInt32,    
 }
 
 pub const PRIMITIVE_TYPE_VARINT: u8 = 0;
@@ -89,7 +91,7 @@ pub const PRIMITIVE_TYPE_LENGTH_DELIMITED: u8 = 2;
 impl FieldType {
     pub fn primitive_type(&self) -> u8 {
         match self {
-            FieldType::UVarInt | FieldType::SVarInt | FieldType::Bool | FieldType::Enum(_) => {
+            FieldType::UVarInt32 | FieldType::UVarInt64 | FieldType::SVarInt | FieldType::Bool | FieldType::Enum(_) => {
                 PRIMITIVE_TYPE_VARINT
             }
             FieldType::Bytes | FieldType::String | FieldType::Msg(_) => {

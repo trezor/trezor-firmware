@@ -211,23 +211,33 @@ impl Decoder {
         if field.is_experimental() && !self.enable_experimental {
             return Err(error::experimental_not_enabled());
         }
-        let num = stream.read_uvarint_u64()?;
+
         match field.get_type() {
-            FieldType::UVarInt => Ok(num.try_into()?),
+            FieldType::UVarInt32 => {
+                let num = stream.read_uvarint_u32()?;
+                Ok(num.try_into()?)
+            }
+            FieldType::UVarInt64 => {
+                let num = stream.read_uvarint_u64()?;
+                Ok(num.try_into()?)
+            }
             FieldType::SVarInt => {
+                let num = stream.read_uvarint_u64()?;
                 let signed_int = zigzag::to_signed(num);
                 Ok(signed_int.try_into()?)
             }
             FieldType::Bool => {
-                let boolean = num != 0;
+                let boolean = stream.read_uvarint_u32()? != 0;
                 Ok(boolean.into())
             }
             FieldType::Bytes => {
+                let num = stream.read_uvarint_u64()?;
                 let buf_len = num.try_into()?;
                 let buf = stream.read(buf_len)?;
                 buf.try_into()
             }
             FieldType::String => {
+                let num = stream.read_uvarint_u64()?;
                 let buf_len = num.try_into()?;
                 let buf = stream.read(buf_len)?;
                 let unicode =
@@ -235,6 +245,7 @@ impl Decoder {
                 unicode.try_into()
             }
             FieldType::Enum(enum_type) => {
+                let num = stream.read_uvarint_u32()?;
                 let enum_val = num.try_into()?;
                 if enum_type.values.contains(&enum_val) {
                     Ok(enum_val.into())
@@ -243,6 +254,7 @@ impl Decoder {
                 }
             }
             FieldType::Msg(msg_type) => {
+                let num = stream.read_uvarint_u64()?;
                 let msg_len = num.try_into()?;
                 let sub_stream = &mut stream.read_stream(msg_len)?;
                 self.message_from_stream(sub_stream, &msg_type)
