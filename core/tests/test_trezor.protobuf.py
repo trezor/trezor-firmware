@@ -1,7 +1,12 @@
 from common import *
 
 from trezor import protobuf
-from trezor.messages import WebAuthnCredential, Failure, SignMessage, DebugLinkMemoryRead
+from trezor.messages import (
+    WebAuthnCredential,
+    Failure,
+    SignMessage,
+    DebugLinkMemoryRead,
+)
 
 
 def load_uvarint32(data: bytes) -> int:
@@ -49,7 +54,9 @@ def dump_message(msg: protobuf.MessageType) -> bytearray:
     return buffer
 
 
-def load_message(msg_type: Type[protobuf.MessageType], buffer: bytes) -> protobuf.MessageType:
+def load_message(
+    msg_type: Type[protobuf.MessageType], buffer: bytes
+) -> protobuf.MessageType:
     return protobuf.decode(buffer, msg_type, False)
 
 
@@ -69,6 +76,14 @@ class TestProtobuf(unittest.TestCase):
             self.assertEqual(load_uvarint(b"\x01"), 1)
             self.assertEqual(load_uvarint(b"\xff\x01"), 0xFF)
             self.assertEqual(load_uvarint(b"\xc0\xc4\x07"), 123456)
+
+        self.assertEqual(
+            load_uvarint64(b"\xff\xff\xff\xff\xff\xff\xff\xff\xff\x01"),
+            0xFFFF_FFFF_FFFF_FFFF,
+        )
+        with self.assertRaises(OverflowError):
+            i = load_uvarint64(b"\x80\x80\x80\x80\x80\x80\x80\x80\x80\x02")
+            print(hex(i))
 
     def test_validate_enum(self):
         # ok message:
@@ -108,7 +123,6 @@ class TestProtobuf(unittest.TestCase):
 
         self.assertEqual(nmsg.message, b"hello")
         self.assertEqual(nmsg.coin_name, "Bitcoin")
-
 
 
 if __name__ == "__main__":
