@@ -13,6 +13,8 @@ if TYPE_CHECKING:
         StellarClaimClaimableBalanceOp,
         StellarCreateAccountOp,
         StellarCreatePassiveSellOfferOp,
+        StellarLiquidityPoolDepositOp,
+        StellarLiquidityPoolWithdrawOp,
         StellarManageBuyOfferOp,
         StellarManageDataOp,
         StellarManageSellOfferOp,
@@ -37,6 +39,8 @@ if TYPE_CHECKING:
         | StellarPaymentOp
         | StellarSetOptionsOp
         | StellarClaimClaimableBalanceOp
+        | StellarLiquidityPoolDepositOp
+        | StellarLiquidityPoolWithdrawOp
     )
 
 
@@ -59,6 +63,8 @@ op_codes: dict[int, int] = {
     MessageType.StellarPaymentOp: 1,
     MessageType.StellarSetOptionsOp: 5,
     MessageType.StellarClaimClaimableBalanceOp: 15,
+    MessageType.StellarLiquidityPoolDepositOp: 22,
+    MessageType.StellarLiquidityPoolWithdrawOp: 23,
 }
 
 

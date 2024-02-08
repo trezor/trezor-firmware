@@ -280,6 +280,654 @@ impl ::protobuf::reflect::ProtobufValue for StellarAsset {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
+// @@protoc_insertion_point(message:hw.trezor.messages.stellar.StellarLiquidityPoolConstantProductParameters)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct StellarLiquidityPoolConstantProductParameters {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarLiquidityPoolConstantProductParameters.asset_a)
+    pub asset_a: ::protobuf::MessageField<StellarAsset>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarLiquidityPoolConstantProductParameters.asset_b)
+    pub asset_b: ::protobuf::MessageField<StellarAsset>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarLiquidityPoolConstantProductParameters.fee)
+    pub fee: ::std::option::Option<u32>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.stellar.StellarLiquidityPoolConstantProductParameters.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a StellarLiquidityPoolConstantProductParameters {
+    fn default() -> &'a StellarLiquidityPoolConstantProductParameters {
+        <StellarLiquidityPoolConstantProductParameters as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl StellarLiquidityPoolConstantProductParameters {
+    pub fn new() -> StellarLiquidityPoolConstantProductParameters {
+        ::std::default::Default::default()
+    }
+
+    // required uint32 fee = 4;
+
+    pub fn fee(&self) -> u32 {
+        self.fee.unwrap_or(0)
+    }
+
+    pub fn clear_fee(&mut self) {
+        self.fee = ::std::option::Option::None;
+    }
+
+    pub fn has_fee(&self) -> bool {
+        self.fee.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_fee(&mut self, v: u32) {
+        self.fee = ::std::option::Option::Some(v);
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(3);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, StellarAsset>(
+            "asset_a",
+            |m: &StellarLiquidityPoolConstantProductParameters| { &m.asset_a },
+            |m: &mut StellarLiquidityPoolConstantProductParameters| { &mut m.asset_a },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, StellarAsset>(
+            "asset_b",
+            |m: &StellarLiquidityPoolConstantProductParameters| { &m.asset_b },
+            |m: &mut StellarLiquidityPoolConstantProductParameters| { &mut m.asset_b },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "fee",
+            |m: &StellarLiquidityPoolConstantProductParameters| { &m.fee },
+            |m: &mut StellarLiquidityPoolConstantProductParameters| { &mut m.fee },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<StellarLiquidityPoolConstantProductParameters>(
+            "StellarLiquidityPoolConstantProductParameters",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for StellarLiquidityPoolConstantProductParameters {
+    const NAME: &'static str = "StellarLiquidityPoolConstantProductParameters";
+
+    fn is_initialized(&self) -> bool {
+        if self.asset_a.is_none() {
+            return false;
+        }
+        if self.asset_b.is_none() {
+            return false;
+        }
+        if self.fee.is_none() {
+            return false;
+        }
+        for v in &self.asset_a {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        for v in &self.asset_b {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                18 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.asset_a)?;
+                },
+                26 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.asset_b)?;
+                },
+                32 => {
+                    self.fee = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.asset_a.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
+        if let Some(v) = self.asset_b.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
+        if let Some(v) = self.fee {
+            my_size += ::protobuf::rt::uint32_size(4, v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.asset_a.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(2, v, os)?;
+        }
+        if let Some(v) = self.asset_b.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(3, v, os)?;
+        }
+        if let Some(v) = self.fee {
+            os.write_uint32(4, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> StellarLiquidityPoolConstantProductParameters {
+        StellarLiquidityPoolConstantProductParameters::new()
+    }
+
+    fn clear(&mut self) {
+        self.asset_a.clear();
+        self.asset_b.clear();
+        self.fee = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static StellarLiquidityPoolConstantProductParameters {
+        static instance: StellarLiquidityPoolConstantProductParameters = StellarLiquidityPoolConstantProductParameters {
+            asset_a: ::protobuf::MessageField::none(),
+            asset_b: ::protobuf::MessageField::none(),
+            fee: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for StellarLiquidityPoolConstantProductParameters {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("StellarLiquidityPoolConstantProductParameters").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for StellarLiquidityPoolConstantProductParameters {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for StellarLiquidityPoolConstantProductParameters {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.stellar.StellarLiquidityPoolParameters)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct StellarLiquidityPoolParameters {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarLiquidityPoolParameters.type)
+    pub type_: ::std::option::Option<::protobuf::EnumOrUnknown<StellarLiquidityPoolType>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarLiquidityPoolParameters.constant_product)
+    pub constant_product: ::protobuf::MessageField<StellarLiquidityPoolConstantProductParameters>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.stellar.StellarLiquidityPoolParameters.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a StellarLiquidityPoolParameters {
+    fn default() -> &'a StellarLiquidityPoolParameters {
+        <StellarLiquidityPoolParameters as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl StellarLiquidityPoolParameters {
+    pub fn new() -> StellarLiquidityPoolParameters {
+        ::std::default::Default::default()
+    }
+
+    // required .hw.trezor.messages.stellar.StellarLiquidityPoolType type = 1;
+
+    pub fn type_(&self) -> StellarLiquidityPoolType {
+        match self.type_ {
+            Some(e) => e.enum_value_or(StellarLiquidityPoolType::LIQUIDITY_POOL_CONSTANT_PRODUCT),
+            None => StellarLiquidityPoolType::LIQUIDITY_POOL_CONSTANT_PRODUCT,
+        }
+    }
+
+    pub fn clear_type_(&mut self) {
+        self.type_ = ::std::option::Option::None;
+    }
+
+    pub fn has_type(&self) -> bool {
+        self.type_.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_type(&mut self, v: StellarLiquidityPoolType) {
+        self.type_ = ::std::option::Option::Some(::protobuf::EnumOrUnknown::new(v));
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "type",
+            |m: &StellarLiquidityPoolParameters| { &m.type_ },
+            |m: &mut StellarLiquidityPoolParameters| { &mut m.type_ },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, StellarLiquidityPoolConstantProductParameters>(
+            "constant_product",
+            |m: &StellarLiquidityPoolParameters| { &m.constant_product },
+            |m: &mut StellarLiquidityPoolParameters| { &mut m.constant_product },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<StellarLiquidityPoolParameters>(
+            "StellarLiquidityPoolParameters",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for StellarLiquidityPoolParameters {
+    const NAME: &'static str = "StellarLiquidityPoolParameters";
+
+    fn is_initialized(&self) -> bool {
+        if self.type_.is_none() {
+            return false;
+        }
+        for v in &self.constant_product {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                8 => {
+                    self.type_ = ::std::option::Option::Some(is.read_enum_or_unknown()?);
+                },
+                18 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.constant_product)?;
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.type_ {
+            my_size += ::protobuf::rt::int32_size(1, v.value());
+        }
+        if let Some(v) = self.constant_product.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.type_ {
+            os.write_enum(1, ::protobuf::EnumOrUnknown::value(&v))?;
+        }
+        if let Some(v) = self.constant_product.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(2, v, os)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> StellarLiquidityPoolParameters {
+        StellarLiquidityPoolParameters::new()
+    }
+
+    fn clear(&mut self) {
+        self.type_ = ::std::option::Option::None;
+        self.constant_product.clear();
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static StellarLiquidityPoolParameters {
+        static instance: StellarLiquidityPoolParameters = StellarLiquidityPoolParameters {
+            type_: ::std::option::Option::None,
+            constant_product: ::protobuf::MessageField::none(),
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for StellarLiquidityPoolParameters {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("StellarLiquidityPoolParameters").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for StellarLiquidityPoolParameters {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for StellarLiquidityPoolParameters {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.stellar.StellarChangeTrustAsset)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct StellarChangeTrustAsset {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarChangeTrustAsset.type)
+    pub type_: ::std::option::Option<::protobuf::EnumOrUnknown<StellarAssetType>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarChangeTrustAsset.code)
+    pub code: ::std::option::Option<::std::string::String>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarChangeTrustAsset.issuer)
+    pub issuer: ::std::option::Option<::std::string::String>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarChangeTrustAsset.liquidity_pool)
+    pub liquidity_pool: ::protobuf::MessageField<StellarLiquidityPoolParameters>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.stellar.StellarChangeTrustAsset.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a StellarChangeTrustAsset {
+    fn default() -> &'a StellarChangeTrustAsset {
+        <StellarChangeTrustAsset as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl StellarChangeTrustAsset {
+    pub fn new() -> StellarChangeTrustAsset {
+        ::std::default::Default::default()
+    }
+
+    // required .hw.trezor.messages.stellar.StellarAssetType type = 1;
+
+    pub fn type_(&self) -> StellarAssetType {
+        match self.type_ {
+            Some(e) => e.enum_value_or(StellarAssetType::NATIVE),
+            None => StellarAssetType::NATIVE,
+        }
+    }
+
+    pub fn clear_type_(&mut self) {
+        self.type_ = ::std::option::Option::None;
+    }
+
+    pub fn has_type(&self) -> bool {
+        self.type_.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_type(&mut self, v: StellarAssetType) {
+        self.type_ = ::std::option::Option::Some(::protobuf::EnumOrUnknown::new(v));
+    }
+
+    // optional string code = 2;
+
+    pub fn code(&self) -> &str {
+        match self.code.as_ref() {
+            Some(v) => v,
+            None => "",
+        }
+    }
+
+    pub fn clear_code(&mut self) {
+        self.code = ::std::option::Option::None;
+    }
+
+    pub fn has_code(&self) -> bool {
+        self.code.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_code(&mut self, v: ::std::string::String) {
+        self.code = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_code(&mut self) -> &mut ::std::string::String {
+        if self.code.is_none() {
+            self.code = ::std::option::Option::Some(::std::string::String::new());
+        }
+        self.code.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_code(&mut self) -> ::std::string::String {
+        self.code.take().unwrap_or_else(|| ::std::string::String::new())
+    }
+
+    // optional string issuer = 3;
+
+    pub fn issuer(&self) -> &str {
+        match self.issuer.as_ref() {
+            Some(v) => v,
+            None => "",
+        }
+    }
+
+    pub fn clear_issuer(&mut self) {
+        self.issuer = ::std::option::Option::None;
+    }
+
+    pub fn has_issuer(&self) -> bool {
+        self.issuer.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_issuer(&mut self, v: ::std::string::String) {
+        self.issuer = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_issuer(&mut self) -> &mut ::std::string::String {
+        if self.issuer.is_none() {
+            self.issuer = ::std::option::Option::Some(::std::string::String::new());
+        }
+        self.issuer.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_issuer(&mut self) -> ::std::string::String {
+        self.issuer.take().unwrap_or_else(|| ::std::string::String::new())
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(4);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "type",
+            |m: &StellarChangeTrustAsset| { &m.type_ },
+            |m: &mut StellarChangeTrustAsset| { &mut m.type_ },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "code",
+            |m: &StellarChangeTrustAsset| { &m.code },
+            |m: &mut StellarChangeTrustAsset| { &mut m.code },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "issuer",
+            |m: &StellarChangeTrustAsset| { &m.issuer },
+            |m: &mut StellarChangeTrustAsset| { &mut m.issuer },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, StellarLiquidityPoolParameters>(
+            "liquidity_pool",
+            |m: &StellarChangeTrustAsset| { &m.liquidity_pool },
+            |m: &mut StellarChangeTrustAsset| { &mut m.liquidity_pool },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<StellarChangeTrustAsset>(
+            "StellarChangeTrustAsset",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for StellarChangeTrustAsset {
+    const NAME: &'static str = "StellarChangeTrustAsset";
+
+    fn is_initialized(&self) -> bool {
+        if self.type_.is_none() {
+            return false;
+        }
+        for v in &self.liquidity_pool {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                8 => {
+                    self.type_ = ::std::option::Option::Some(is.read_enum_or_unknown()?);
+                },
+                18 => {
+                    self.code = ::std::option::Option::Some(is.read_string()?);
+                },
+                26 => {
+                    self.issuer = ::std::option::Option::Some(is.read_string()?);
+                },
+                34 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.liquidity_pool)?;
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.type_ {
+            my_size += ::protobuf::rt::int32_size(1, v.value());
+        }
+        if let Some(v) = self.code.as_ref() {
+            my_size += ::protobuf::rt::string_size(2, &v);
+        }
+        if let Some(v) = self.issuer.as_ref() {
+            my_size += ::protobuf::rt::string_size(3, &v);
+        }
+        if let Some(v) = self.liquidity_pool.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.type_ {
+            os.write_enum(1, ::protobuf::EnumOrUnknown::value(&v))?;
+        }
+        if let Some(v) = self.code.as_ref() {
+            os.write_string(2, v)?;
+        }
+        if let Some(v) = self.issuer.as_ref() {
+            os.write_string(3, v)?;
+        }
+        if let Some(v) = self.liquidity_pool.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(4, v, os)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> StellarChangeTrustAsset {
+        StellarChangeTrustAsset::new()
+    }
+
+    fn clear(&mut self) {
+        self.type_ = ::std::option::Option::None;
+        self.code = ::std::option::Option::None;
+        self.issuer = ::std::option::Option::None;
+        self.liquidity_pool.clear();
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static StellarChangeTrustAsset {
+        static instance: StellarChangeTrustAsset = StellarChangeTrustAsset {
+            type_: ::std::option::Option::None,
+            code: ::std::option::Option::None,
+            issuer: ::std::option::Option::None,
+            liquidity_pool: ::protobuf::MessageField::none(),
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for StellarChangeTrustAsset {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("StellarChangeTrustAsset").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for StellarChangeTrustAsset {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for StellarChangeTrustAsset {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
 // @@protoc_insertion_point(message:hw.trezor.messages.stellar.StellarGetAddress)
 #[derive(PartialEq,Clone,Default,Debug)]
 pub struct StellarGetAddress {
@@ -4505,7 +5153,7 @@ pub struct StellarChangeTrustOp {
     // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarChangeTrustOp.source_account)
     pub source_account: ::std::option::Option<::std::string::String>,
     // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarChangeTrustOp.asset)
-    pub asset: ::protobuf::MessageField<StellarAsset>,
+    pub asset: ::protobuf::MessageField<StellarChangeTrustAsset>,
     // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarChangeTrustOp.limit)
     pub limit: ::std::option::Option<u64>,
     // special fields
@@ -4587,7 +5235,7 @@ impl StellarChangeTrustOp {
             |m: &StellarChangeTrustOp| { &m.source_account },
             |m: &mut StellarChangeTrustOp| { &mut m.source_account },
         ));
-        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, StellarAsset>(
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, StellarChangeTrustAsset>(
             "asset",
             |m: &StellarChangeTrustOp| { &m.asset },
             |m: &mut StellarChangeTrustOp| { &mut m.asset },
@@ -5972,6 +6620,796 @@ impl ::protobuf::reflect::ProtobufValue for StellarClaimClaimableBalanceOp {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
+// @@protoc_insertion_point(message:hw.trezor.messages.stellar.StellarLiquidityPoolDepositOp)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct StellarLiquidityPoolDepositOp {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarLiquidityPoolDepositOp.source_account)
+    pub source_account: ::std::option::Option<::std::string::String>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarLiquidityPoolDepositOp.liquidity_pool_id)
+    pub liquidity_pool_id: ::std::option::Option<::std::string::String>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarLiquidityPoolDepositOp.max_amount_a)
+    pub max_amount_a: ::std::option::Option<i64>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarLiquidityPoolDepositOp.max_amount_b)
+    pub max_amount_b: ::std::option::Option<i64>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarLiquidityPoolDepositOp.min_price_n)
+    pub min_price_n: ::std::option::Option<i64>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarLiquidityPoolDepositOp.min_price_d)
+    pub min_price_d: ::std::option::Option<i64>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarLiquidityPoolDepositOp.max_price_n)
+    pub max_price_n: ::std::option::Option<i64>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarLiquidityPoolDepositOp.max_price_d)
+    pub max_price_d: ::std::option::Option<i64>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.stellar.StellarLiquidityPoolDepositOp.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a StellarLiquidityPoolDepositOp {
+    fn default() -> &'a StellarLiquidityPoolDepositOp {
+        <StellarLiquidityPoolDepositOp as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl StellarLiquidityPoolDepositOp {
+    pub fn new() -> StellarLiquidityPoolDepositOp {
+        ::std::default::Default::default()
+    }
+
+    // optional string source_account = 1;
+
+    pub fn source_account(&self) -> &str {
+        match self.source_account.as_ref() {
+            Some(v) => v,
+            None => "",
+        }
+    }
+
+    pub fn clear_source_account(&mut self) {
+        self.source_account = ::std::option::Option::None;
+    }
+
+    pub fn has_source_account(&self) -> bool {
+        self.source_account.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_source_account(&mut self, v: ::std::string::String) {
+        self.source_account = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_source_account(&mut self) -> &mut ::std::string::String {
+        if self.source_account.is_none() {
+            self.source_account = ::std::option::Option::Some(::std::string::String::new());
+        }
+        self.source_account.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_source_account(&mut self) -> ::std::string::String {
+        self.source_account.take().unwrap_or_else(|| ::std::string::String::new())
+    }
+
+    // required string liquidity_pool_id = 2;
+
+    pub fn liquidity_pool_id(&self) -> &str {
+        match self.liquidity_pool_id.as_ref() {
+            Some(v) => v,
+            None => "",
+        }
+    }
+
+    pub fn clear_liquidity_pool_id(&mut self) {
+        self.liquidity_pool_id = ::std::option::Option::None;
+    }
+
+    pub fn has_liquidity_pool_id(&self) -> bool {
+        self.liquidity_pool_id.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_liquidity_pool_id(&mut self, v: ::std::string::String) {
+        self.liquidity_pool_id = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_liquidity_pool_id(&mut self) -> &mut ::std::string::String {
+        if self.liquidity_pool_id.is_none() {
+            self.liquidity_pool_id = ::std::option::Option::Some(::std::string::String::new());
+        }
+        self.liquidity_pool_id.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_liquidity_pool_id(&mut self) -> ::std::string::String {
+        self.liquidity_pool_id.take().unwrap_or_else(|| ::std::string::String::new())
+    }
+
+    // required sint64 max_amount_a = 3;
+
+    pub fn max_amount_a(&self) -> i64 {
+        self.max_amount_a.unwrap_or(0)
+    }
+
+    pub fn clear_max_amount_a(&mut self) {
+        self.max_amount_a = ::std::option::Option::None;
+    }
+
+    pub fn has_max_amount_a(&self) -> bool {
+        self.max_amount_a.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_max_amount_a(&mut self, v: i64) {
+        self.max_amount_a = ::std::option::Option::Some(v);
+    }
+
+    // required sint64 max_amount_b = 4;
+
+    pub fn max_amount_b(&self) -> i64 {
+        self.max_amount_b.unwrap_or(0)
+    }
+
+    pub fn clear_max_amount_b(&mut self) {
+        self.max_amount_b = ::std::option::Option::None;
+    }
+
+    pub fn has_max_amount_b(&self) -> bool {
+        self.max_amount_b.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_max_amount_b(&mut self, v: i64) {
+        self.max_amount_b = ::std::option::Option::Some(v);
+    }
+
+    // required sint64 min_price_n = 5;
+
+    pub fn min_price_n(&self) -> i64 {
+        self.min_price_n.unwrap_or(0)
+    }
+
+    pub fn clear_min_price_n(&mut self) {
+        self.min_price_n = ::std::option::Option::None;
+    }
+
+    pub fn has_min_price_n(&self) -> bool {
+        self.min_price_n.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_min_price_n(&mut self, v: i64) {
+        self.min_price_n = ::std::option::Option::Some(v);
+    }
+
+    // required sint64 min_price_d = 6;
+
+    pub fn min_price_d(&self) -> i64 {
+        self.min_price_d.unwrap_or(0)
+    }
+
+    pub fn clear_min_price_d(&mut self) {
+        self.min_price_d = ::std::option::Option::None;
+    }
+
+    pub fn has_min_price_d(&self) -> bool {
+        self.min_price_d.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_min_price_d(&mut self, v: i64) {
+        self.min_price_d = ::std::option::Option::Some(v);
+    }
+
+    // required sint64 max_price_n = 7;
+
+    pub fn max_price_n(&self) -> i64 {
+        self.max_price_n.unwrap_or(0)
+    }
+
+    pub fn clear_max_price_n(&mut self) {
+        self.max_price_n = ::std::option::Option::None;
+    }
+
+    pub fn has_max_price_n(&self) -> bool {
+        self.max_price_n.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_max_price_n(&mut self, v: i64) {
+        self.max_price_n = ::std::option::Option::Some(v);
+    }
+
+    // required sint64 max_price_d = 8;
+
+    pub fn max_price_d(&self) -> i64 {
+        self.max_price_d.unwrap_or(0)
+    }
+
+    pub fn clear_max_price_d(&mut self) {
+        self.max_price_d = ::std::option::Option::None;
+    }
+
+    pub fn has_max_price_d(&self) -> bool {
+        self.max_price_d.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_max_price_d(&mut self, v: i64) {
+        self.max_price_d = ::std::option::Option::Some(v);
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(8);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "source_account",
+            |m: &StellarLiquidityPoolDepositOp| { &m.source_account },
+            |m: &mut StellarLiquidityPoolDepositOp| { &mut m.source_account },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "liquidity_pool_id",
+            |m: &StellarLiquidityPoolDepositOp| { &m.liquidity_pool_id },
+            |m: &mut StellarLiquidityPoolDepositOp| { &mut m.liquidity_pool_id },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "max_amount_a",
+            |m: &StellarLiquidityPoolDepositOp| { &m.max_amount_a },
+            |m: &mut StellarLiquidityPoolDepositOp| { &mut m.max_amount_a },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "max_amount_b",
+            |m: &StellarLiquidityPoolDepositOp| { &m.max_amount_b },
+            |m: &mut StellarLiquidityPoolDepositOp| { &mut m.max_amount_b },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "min_price_n",
+            |m: &StellarLiquidityPoolDepositOp| { &m.min_price_n },
+            |m: &mut StellarLiquidityPoolDepositOp| { &mut m.min_price_n },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "min_price_d",
+            |m: &StellarLiquidityPoolDepositOp| { &m.min_price_d },
+            |m: &mut StellarLiquidityPoolDepositOp| { &mut m.min_price_d },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "max_price_n",
+            |m: &StellarLiquidityPoolDepositOp| { &m.max_price_n },
+            |m: &mut StellarLiquidityPoolDepositOp| { &mut m.max_price_n },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "max_price_d",
+            |m: &StellarLiquidityPoolDepositOp| { &m.max_price_d },
+            |m: &mut StellarLiquidityPoolDepositOp| { &mut m.max_price_d },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<StellarLiquidityPoolDepositOp>(
+            "StellarLiquidityPoolDepositOp",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for StellarLiquidityPoolDepositOp {
+    const NAME: &'static str = "StellarLiquidityPoolDepositOp";
+
+    fn is_initialized(&self) -> bool {
+        if self.liquidity_pool_id.is_none() {
+            return false;
+        }
+        if self.max_amount_a.is_none() {
+            return false;
+        }
+        if self.max_amount_b.is_none() {
+            return false;
+        }
+        if self.min_price_n.is_none() {
+            return false;
+        }
+        if self.min_price_d.is_none() {
+            return false;
+        }
+        if self.max_price_n.is_none() {
+            return false;
+        }
+        if self.max_price_d.is_none() {
+            return false;
+        }
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    self.source_account = ::std::option::Option::Some(is.read_string()?);
+                },
+                18 => {
+                    self.liquidity_pool_id = ::std::option::Option::Some(is.read_string()?);
+                },
+                24 => {
+                    self.max_amount_a = ::std::option::Option::Some(is.read_sint64()?);
+                },
+                32 => {
+                    self.max_amount_b = ::std::option::Option::Some(is.read_sint64()?);
+                },
+                40 => {
+                    self.min_price_n = ::std::option::Option::Some(is.read_sint64()?);
+                },
+                48 => {
+                    self.min_price_d = ::std::option::Option::Some(is.read_sint64()?);
+                },
+                56 => {
+                    self.max_price_n = ::std::option::Option::Some(is.read_sint64()?);
+                },
+                64 => {
+                    self.max_price_d = ::std::option::Option::Some(is.read_sint64()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.source_account.as_ref() {
+            my_size += ::protobuf::rt::string_size(1, &v);
+        }
+        if let Some(v) = self.liquidity_pool_id.as_ref() {
+            my_size += ::protobuf::rt::string_size(2, &v);
+        }
+        if let Some(v) = self.max_amount_a {
+            my_size += ::protobuf::rt::sint64_size(3, v);
+        }
+        if let Some(v) = self.max_amount_b {
+            my_size += ::protobuf::rt::sint64_size(4, v);
+        }
+        if let Some(v) = self.min_price_n {
+            my_size += ::protobuf::rt::sint64_size(5, v);
+        }
+        if let Some(v) = self.min_price_d {
+            my_size += ::protobuf::rt::sint64_size(6, v);
+        }
+        if let Some(v) = self.max_price_n {
+            my_size += ::protobuf::rt::sint64_size(7, v);
+        }
+        if let Some(v) = self.max_price_d {
+            my_size += ::protobuf::rt::sint64_size(8, v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.source_account.as_ref() {
+            os.write_string(1, v)?;
+        }
+        if let Some(v) = self.liquidity_pool_id.as_ref() {
+            os.write_string(2, v)?;
+        }
+        if let Some(v) = self.max_amount_a {
+            os.write_sint64(3, v)?;
+        }
+        if let Some(v) = self.max_amount_b {
+            os.write_sint64(4, v)?;
+        }
+        if let Some(v) = self.min_price_n {
+            os.write_sint64(5, v)?;
+        }
+        if let Some(v) = self.min_price_d {
+            os.write_sint64(6, v)?;
+        }
+        if let Some(v) = self.max_price_n {
+            os.write_sint64(7, v)?;
+        }
+        if let Some(v) = self.max_price_d {
+            os.write_sint64(8, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> StellarLiquidityPoolDepositOp {
+        StellarLiquidityPoolDepositOp::new()
+    }
+
+    fn clear(&mut self) {
+        self.source_account = ::std::option::Option::None;
+        self.liquidity_pool_id = ::std::option::Option::None;
+        self.max_amount_a = ::std::option::Option::None;
+        self.max_amount_b = ::std::option::Option::None;
+        self.min_price_n = ::std::option::Option::None;
+        self.min_price_d = ::std::option::Option::None;
+        self.max_price_n = ::std::option::Option::None;
+        self.max_price_d = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static StellarLiquidityPoolDepositOp {
+        static instance: StellarLiquidityPoolDepositOp = StellarLiquidityPoolDepositOp {
+            source_account: ::std::option::Option::None,
+            liquidity_pool_id: ::std::option::Option::None,
+            max_amount_a: ::std::option::Option::None,
+            max_amount_b: ::std::option::Option::None,
+            min_price_n: ::std::option::Option::None,
+            min_price_d: ::std::option::Option::None,
+            max_price_n: ::std::option::Option::None,
+            max_price_d: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for StellarLiquidityPoolDepositOp {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("StellarLiquidityPoolDepositOp").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for StellarLiquidityPoolDepositOp {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for StellarLiquidityPoolDepositOp {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.stellar.StellarLiquidityPoolWithdrawOp)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct StellarLiquidityPoolWithdrawOp {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarLiquidityPoolWithdrawOp.source_account)
+    pub source_account: ::std::option::Option<::std::string::String>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarLiquidityPoolWithdrawOp.liquidity_pool_id)
+    pub liquidity_pool_id: ::std::option::Option<::std::string::String>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarLiquidityPoolWithdrawOp.amount)
+    pub amount: ::std::option::Option<i64>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarLiquidityPoolWithdrawOp.min_amount_a)
+    pub min_amount_a: ::std::option::Option<i64>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarLiquidityPoolWithdrawOp.min_amount_b)
+    pub min_amount_b: ::std::option::Option<i64>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.stellar.StellarLiquidityPoolWithdrawOp.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a StellarLiquidityPoolWithdrawOp {
+    fn default() -> &'a StellarLiquidityPoolWithdrawOp {
+        <StellarLiquidityPoolWithdrawOp as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl StellarLiquidityPoolWithdrawOp {
+    pub fn new() -> StellarLiquidityPoolWithdrawOp {
+        ::std::default::Default::default()
+    }
+
+    // optional string source_account = 1;
+
+    pub fn source_account(&self) -> &str {
+        match self.source_account.as_ref() {
+            Some(v) => v,
+            None => "",
+        }
+    }
+
+    pub fn clear_source_account(&mut self) {
+        self.source_account = ::std::option::Option::None;
+    }
+
+    pub fn has_source_account(&self) -> bool {
+        self.source_account.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_source_account(&mut self, v: ::std::string::String) {
+        self.source_account = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_source_account(&mut self) -> &mut ::std::string::String {
+        if self.source_account.is_none() {
+            self.source_account = ::std::option::Option::Some(::std::string::String::new());
+        }
+        self.source_account.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_source_account(&mut self) -> ::std::string::String {
+        self.source_account.take().unwrap_or_else(|| ::std::string::String::new())
+    }
+
+    // required string liquidity_pool_id = 2;
+
+    pub fn liquidity_pool_id(&self) -> &str {
+        match self.liquidity_pool_id.as_ref() {
+            Some(v) => v,
+            None => "",
+        }
+    }
+
+    pub fn clear_liquidity_pool_id(&mut self) {
+        self.liquidity_pool_id = ::std::option::Option::None;
+    }
+
+    pub fn has_liquidity_pool_id(&self) -> bool {
+        self.liquidity_pool_id.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_liquidity_pool_id(&mut self, v: ::std::string::String) {
+        self.liquidity_pool_id = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_liquidity_pool_id(&mut self) -> &mut ::std::string::String {
+        if self.liquidity_pool_id.is_none() {
+            self.liquidity_pool_id = ::std::option::Option::Some(::std::string::String::new());
+        }
+        self.liquidity_pool_id.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_liquidity_pool_id(&mut self) -> ::std::string::String {
+        self.liquidity_pool_id.take().unwrap_or_else(|| ::std::string::String::new())
+    }
+
+    // required sint64 amount = 3;
+
+    pub fn amount(&self) -> i64 {
+        self.amount.unwrap_or(0)
+    }
+
+    pub fn clear_amount(&mut self) {
+        self.amount = ::std::option::Option::None;
+    }
+
+    pub fn has_amount(&self) -> bool {
+        self.amount.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_amount(&mut self, v: i64) {
+        self.amount = ::std::option::Option::Some(v);
+    }
+
+    // required sint64 min_amount_a = 4;
+
+    pub fn min_amount_a(&self) -> i64 {
+        self.min_amount_a.unwrap_or(0)
+    }
+
+    pub fn clear_min_amount_a(&mut self) {
+        self.min_amount_a = ::std::option::Option::None;
+    }
+
+    pub fn has_min_amount_a(&self) -> bool {
+        self.min_amount_a.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_min_amount_a(&mut self, v: i64) {
+        self.min_amount_a = ::std::option::Option::Some(v);
+    }
+
+    // required sint64 min_amount_b = 5;
+
+    pub fn min_amount_b(&self) -> i64 {
+        self.min_amount_b.unwrap_or(0)
+    }
+
+    pub fn clear_min_amount_b(&mut self) {
+        self.min_amount_b = ::std::option::Option::None;
+    }
+
+    pub fn has_min_amount_b(&self) -> bool {
+        self.min_amount_b.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_min_amount_b(&mut self, v: i64) {
+        self.min_amount_b = ::std::option::Option::Some(v);
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(5);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "source_account",
+            |m: &StellarLiquidityPoolWithdrawOp| { &m.source_account },
+            |m: &mut StellarLiquidityPoolWithdrawOp| { &mut m.source_account },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "liquidity_pool_id",
+            |m: &StellarLiquidityPoolWithdrawOp| { &m.liquidity_pool_id },
+            |m: &mut StellarLiquidityPoolWithdrawOp| { &mut m.liquidity_pool_id },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "amount",
+            |m: &StellarLiquidityPoolWithdrawOp| { &m.amount },
+            |m: &mut StellarLiquidityPoolWithdrawOp| { &mut m.amount },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "min_amount_a",
+            |m: &StellarLiquidityPoolWithdrawOp| { &m.min_amount_a },
+            |m: &mut StellarLiquidityPoolWithdrawOp| { &mut m.min_amount_a },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "min_amount_b",
+            |m: &StellarLiquidityPoolWithdrawOp| { &m.min_amount_b },
+            |m: &mut StellarLiquidityPoolWithdrawOp| { &mut m.min_amount_b },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<StellarLiquidityPoolWithdrawOp>(
+            "StellarLiquidityPoolWithdrawOp",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for StellarLiquidityPoolWithdrawOp {
+    const NAME: &'static str = "StellarLiquidityPoolWithdrawOp";
+
+    fn is_initialized(&self) -> bool {
+        if self.liquidity_pool_id.is_none() {
+            return false;
+        }
+        if self.amount.is_none() {
+            return false;
+        }
+        if self.min_amount_a.is_none() {
+            return false;
+        }
+        if self.min_amount_b.is_none() {
+            return false;
+        }
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    self.source_account = ::std::option::Option::Some(is.read_string()?);
+                },
+                18 => {
+                    self.liquidity_pool_id = ::std::option::Option::Some(is.read_string()?);
+                },
+                24 => {
+                    self.amount = ::std::option::Option::Some(is.read_sint64()?);
+                },
+                32 => {
+                    self.min_amount_a = ::std::option::Option::Some(is.read_sint64()?);
+                },
+                40 => {
+                    self.min_amount_b = ::std::option::Option::Some(is.read_sint64()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.source_account.as_ref() {
+            my_size += ::protobuf::rt::string_size(1, &v);
+        }
+        if let Some(v) = self.liquidity_pool_id.as_ref() {
+            my_size += ::protobuf::rt::string_size(2, &v);
+        }
+        if let Some(v) = self.amount {
+            my_size += ::protobuf::rt::sint64_size(3, v);
+        }
+        if let Some(v) = self.min_amount_a {
+            my_size += ::protobuf::rt::sint64_size(4, v);
+        }
+        if let Some(v) = self.min_amount_b {
+            my_size += ::protobuf::rt::sint64_size(5, v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.source_account.as_ref() {
+            os.write_string(1, v)?;
+        }
+        if let Some(v) = self.liquidity_pool_id.as_ref() {
+            os.write_string(2, v)?;
+        }
+        if let Some(v) = self.amount {
+            os.write_sint64(3, v)?;
+        }
+        if let Some(v) = self.min_amount_a {
+            os.write_sint64(4, v)?;
+        }
+        if let Some(v) = self.min_amount_b {
+            os.write_sint64(5, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> StellarLiquidityPoolWithdrawOp {
+        StellarLiquidityPoolWithdrawOp::new()
+    }
+
+    fn clear(&mut self) {
+        self.source_account = ::std::option::Option::None;
+        self.liquidity_pool_id = ::std::option::Option::None;
+        self.amount = ::std::option::Option::None;
+        self.min_amount_a = ::std::option::Option::None;
+        self.min_amount_b = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static StellarLiquidityPoolWithdrawOp {
+        static instance: StellarLiquidityPoolWithdrawOp = StellarLiquidityPoolWithdrawOp {
+            source_account: ::std::option::Option::None,
+            liquidity_pool_id: ::std::option::Option::None,
+            amount: ::std::option::Option::None,
+            min_amount_a: ::std::option::Option::None,
+            min_amount_b: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for StellarLiquidityPoolWithdrawOp {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("StellarLiquidityPoolWithdrawOp").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for StellarLiquidityPoolWithdrawOp {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for StellarLiquidityPoolWithdrawOp {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
 // @@protoc_insertion_point(message:hw.trezor.messages.stellar.StellarSignedTx)
 #[derive(PartialEq,Clone,Default,Debug)]
 pub struct StellarSignedTx {
@@ -6199,6 +7637,8 @@ pub enum StellarAssetType {
     ALPHANUM4 = 1,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.stellar.StellarAssetType.ALPHANUM12)
     ALPHANUM12 = 2,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.stellar.StellarAssetType.POOL_SHARE)
+    POOL_SHARE = 3,
 }
 
 impl ::protobuf::Enum for StellarAssetType {
@@ -6213,6 +7653,7 @@ impl ::protobuf::Enum for StellarAssetType {
             0 => ::std::option::Option::Some(StellarAssetType::NATIVE),
             1 => ::std::option::Option::Some(StellarAssetType::ALPHANUM4),
             2 => ::std::option::Option::Some(StellarAssetType::ALPHANUM12),
+            3 => ::std::option::Option::Some(StellarAssetType::POOL_SHARE),
             _ => ::std::option::Option::None
         }
     }
@@ -6222,6 +7663,7 @@ impl ::protobuf::Enum for StellarAssetType {
             "NATIVE" => ::std::option::Option::Some(StellarAssetType::NATIVE),
             "ALPHANUM4" => ::std::option::Option::Some(StellarAssetType::ALPHANUM4),
             "ALPHANUM12" => ::std::option::Option::Some(StellarAssetType::ALPHANUM12),
+            "POOL_SHARE" => ::std::option::Option::Some(StellarAssetType::POOL_SHARE),
             _ => ::std::option::Option::None
         }
     }
@@ -6230,6 +7672,7 @@ impl ::protobuf::Enum for StellarAssetType {
         StellarAssetType::NATIVE,
         StellarAssetType::ALPHANUM4,
         StellarAssetType::ALPHANUM12,
+        StellarAssetType::POOL_SHARE,
     ];
 }
 
@@ -6257,17 +7700,87 @@ impl StellarAssetType {
     }
 }
 
+#[derive(Clone,Copy,PartialEq,Eq,Debug,Hash)]
+// @@protoc_insertion_point(enum:hw.trezor.messages.stellar.StellarLiquidityPoolType)
+pub enum StellarLiquidityPoolType {
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.stellar.StellarLiquidityPoolType.LIQUIDITY_POOL_CONSTANT_PRODUCT)
+    LIQUIDITY_POOL_CONSTANT_PRODUCT = 0,
+}
+
+impl ::protobuf::Enum for StellarLiquidityPoolType {
+    const NAME: &'static str = "StellarLiquidityPoolType";
+
+    fn value(&self) -> i32 {
+        *self as i32
+    }
+
+    fn from_i32(value: i32) -> ::std::option::Option<StellarLiquidityPoolType> {
+        match value {
+            0 => ::std::option::Option::Some(StellarLiquidityPoolType::LIQUIDITY_POOL_CONSTANT_PRODUCT),
+            _ => ::std::option::Option::None
+        }
+    }
+
+    fn from_str(str: &str) -> ::std::option::Option<StellarLiquidityPoolType> {
+        match str {
+            "LIQUIDITY_POOL_CONSTANT_PRODUCT" => ::std::option::Option::Some(StellarLiquidityPoolType::LIQUIDITY_POOL_CONSTANT_PRODUCT),
+            _ => ::std::option::Option::None
+        }
+    }
+
+    const VALUES: &'static [StellarLiquidityPoolType] = &[
+        StellarLiquidityPoolType::LIQUIDITY_POOL_CONSTANT_PRODUCT,
+    ];
+}
+
+impl ::protobuf::EnumFull for StellarLiquidityPoolType {
+    fn enum_descriptor() -> ::protobuf::reflect::EnumDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::EnumDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().enum_by_package_relative_name("StellarLiquidityPoolType").unwrap()).clone()
+    }
+
+    fn descriptor(&self) -> ::protobuf::reflect::EnumValueDescriptor {
+        let index = *self as usize;
+        Self::enum_descriptor().value_by_index(index)
+    }
+}
+
+impl ::std::default::Default for StellarLiquidityPoolType {
+    fn default() -> Self {
+        StellarLiquidityPoolType::LIQUIDITY_POOL_CONSTANT_PRODUCT
+    }
+}
+
+impl StellarLiquidityPoolType {
+    fn generated_enum_descriptor_data() -> ::protobuf::reflect::GeneratedEnumDescriptorData {
+        ::protobuf::reflect::GeneratedEnumDescriptorData::new::<StellarLiquidityPoolType>("StellarLiquidityPoolType")
+    }
+}
+
 static file_descriptor_proto_data: &'static [u8] = b"\
     \n\x16messages-stellar.proto\x12\x1ahw.trezor.messages.stellar\"|\n\x0cS\
     tellarAsset\x12@\n\x04type\x18\x01\x20\x02(\x0e2,.hw.trezor.messages.ste\
     llar.StellarAssetTypeR\x04type\x12\x12\n\x04code\x18\x02\x20\x01(\tR\x04\
-    code\x12\x16\n\x06issuer\x18\x03\x20\x01(\tR\x06issuer\"o\n\x11StellarGe\
-    tAddress\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12!\n\x0c\
-    show_display\x18\x02\x20\x01(\x08R\x0bshowDisplay\x12\x1a\n\x08chunkify\
-    \x18\x03\x20\x01(\x08R\x08chunkify\"*\n\x0eStellarAddress\x12\x18\n\x07a\
-    ddress\x18\x01\x20\x02(\tR\x07address\"\xa6\x04\n\rStellarSignTx\x12\x1b\
-    \n\taddress_n\x18\x02\x20\x03(\rR\x08addressN\x12-\n\x12network_passphra\
-    se\x18\x03\x20\x02(\tR\x11networkPassphrase\x12%\n\x0esource_account\x18\
+    code\x12\x16\n\x06issuer\x18\x03\x20\x01(\tR\x06issuer\"\xc7\x01\n-Stell\
+    arLiquidityPoolConstantProductParameters\x12A\n\x07asset_a\x18\x02\x20\
+    \x02(\x0b2(.hw.trezor.messages.stellar.StellarAssetR\x06assetA\x12A\n\
+    \x07asset_b\x18\x03\x20\x02(\x0b2(.hw.trezor.messages.stellar.StellarAss\
+    etR\x06assetB\x12\x10\n\x03fee\x18\x04\x20\x02(\rR\x03fee\"\xe0\x01\n\
+    \x1eStellarLiquidityPoolParameters\x12H\n\x04type\x18\x01\x20\x02(\x0e24\
+    .hw.trezor.messages.stellar.StellarLiquidityPoolTypeR\x04type\x12t\n\x10\
+    constant_product\x18\x02\x20\x01(\x0b2I.hw.trezor.messages.stellar.Stell\
+    arLiquidityPoolConstantProductParametersR\x0fconstantProduct\"\xea\x01\n\
+    \x17StellarChangeTrustAsset\x12@\n\x04type\x18\x01\x20\x02(\x0e2,.hw.tre\
+    zor.messages.stellar.StellarAssetTypeR\x04type\x12\x12\n\x04code\x18\x02\
+    \x20\x01(\tR\x04code\x12\x16\n\x06issuer\x18\x03\x20\x01(\tR\x06issuer\
+    \x12a\n\x0eliquidity_pool\x18\x04\x20\x01(\x0b2:.hw.trezor.messages.stel\
+    lar.StellarLiquidityPoolParametersR\rliquidityPool\"o\n\x11StellarGetAdd\
+    ress\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12!\n\x0cshow\
+    _display\x18\x02\x20\x01(\x08R\x0bshowDisplay\x12\x1a\n\x08chunkify\x18\
+    \x03\x20\x01(\x08R\x08chunkify\"*\n\x0eStellarAddress\x12\x18\n\x07addre\
+    ss\x18\x01\x20\x02(\tR\x07address\"\xa6\x04\n\rStellarSignTx\x12\x1b\n\t\
+    address_n\x18\x02\x20\x03(\rR\x08addressN\x12-\n\x12network_passphrase\
+    \x18\x03\x20\x02(\tR\x11networkPassphrase\x12%\n\x0esource_account\x18\
     \x04\x20\x02(\tR\rsourceAccount\x12\x10\n\x03fee\x18\x05\x20\x02(\rR\x03\
     fee\x12'\n\x0fsequence_number\x18\x06\x20\x02(\x04R\x0esequenceNumber\
     \x12)\n\x10timebounds_start\x18\x08\x20\x02(\rR\x0ftimeboundsStart\x12%\
@@ -6336,29 +7849,43 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     .stellar.StellarSetOptionsOp.StellarSignerTypeR\nsignerType\x12\x1d\n\ns\
     igner_key\x18\x0b\x20\x01(\x0cR\tsignerKey\x12#\n\rsigner_weight\x18\x0c\
     \x20\x01(\rR\x0csignerWeight\"8\n\x11StellarSignerType\x12\x0b\n\x07ACCO\
-    UNT\x10\0\x12\x0c\n\x08PRE_AUTH\x10\x01\x12\x08\n\x04HASH\x10\x02\"\x93\
+    UNT\x10\0\x12\x0c\n\x08PRE_AUTH\x10\x01\x12\x08\n\x04HASH\x10\x02\"\x9e\
     \x01\n\x14StellarChangeTrustOp\x12%\n\x0esource_account\x18\x01\x20\x01(\
-    \tR\rsourceAccount\x12>\n\x05asset\x18\x02\x20\x02(\x0b2(.hw.trezor.mess\
-    ages.stellar.StellarAssetR\x05asset\x12\x14\n\x05limit\x18\x03\x20\x02(\
-    \x04R\x05limit\"\xf6\x01\n\x13StellarAllowTrustOp\x12%\n\x0esource_accou\
-    nt\x18\x01\x20\x01(\tR\rsourceAccount\x12'\n\x0ftrusted_account\x18\x02\
-    \x20\x02(\tR\x0etrustedAccount\x12K\n\nasset_type\x18\x03\x20\x02(\x0e2,\
-    .hw.trezor.messages.stellar.StellarAssetTypeR\tassetType\x12\x1d\n\nasse\
-    t_code\x18\x04\x20\x01(\tR\tassetCode\x12#\n\ris_authorized\x18\x05\x20\
-    \x02(\x08R\x0cisAuthorized\"o\n\x15StellarAccountMergeOp\x12%\n\x0esourc\
-    e_account\x18\x01\x20\x01(\tR\rsourceAccount\x12/\n\x13destination_accou\
-    nt\x18\x02\x20\x02(\tR\x12destinationAccount\"d\n\x13StellarManageDataOp\
-    \x12%\n\x0esource_account\x18\x01\x20\x01(\tR\rsourceAccount\x12\x10\n\
-    \x03key\x18\x02\x20\x02(\tR\x03key\x12\x14\n\x05value\x18\x03\x20\x01(\
-    \x0cR\x05value\"W\n\x15StellarBumpSequenceOp\x12%\n\x0esource_account\
-    \x18\x01\x20\x01(\tR\rsourceAccount\x12\x17\n\x07bump_to\x18\x02\x20\x02\
-    (\x04R\x06bumpTo\"f\n\x1eStellarClaimClaimableBalanceOp\x12%\n\x0esource\
-    _account\x18\x01\x20\x01(\tR\rsourceAccount\x12\x1d\n\nbalance_id\x18\
-    \x02\x20\x02(\x0cR\tbalanceId\"N\n\x0fStellarSignedTx\x12\x1d\n\npublic_\
-    key\x18\x01\x20\x02(\x0cR\tpublicKey\x12\x1c\n\tsignature\x18\x02\x20\
-    \x02(\x0cR\tsignature*=\n\x10StellarAssetType\x12\n\n\x06NATIVE\x10\0\
-    \x12\r\n\tALPHANUM4\x10\x01\x12\x0e\n\nALPHANUM12\x10\x02B;\n#com.satosh\
-    ilabs.trezor.lib.protobufB\x14TrezorMessageStellar\
+    \tR\rsourceAccount\x12I\n\x05asset\x18\x02\x20\x02(\x0b23.hw.trezor.mess\
+    ages.stellar.StellarChangeTrustAssetR\x05asset\x12\x14\n\x05limit\x18\
+    \x03\x20\x02(\x04R\x05limit\"\xf6\x01\n\x13StellarAllowTrustOp\x12%\n\
+    \x0esource_account\x18\x01\x20\x01(\tR\rsourceAccount\x12'\n\x0ftrusted_\
+    account\x18\x02\x20\x02(\tR\x0etrustedAccount\x12K\n\nasset_type\x18\x03\
+    \x20\x02(\x0e2,.hw.trezor.messages.stellar.StellarAssetTypeR\tassetType\
+    \x12\x1d\n\nasset_code\x18\x04\x20\x01(\tR\tassetCode\x12#\n\ris_authori\
+    zed\x18\x05\x20\x02(\x08R\x0cisAuthorized\"o\n\x15StellarAccountMergeOp\
+    \x12%\n\x0esource_account\x18\x01\x20\x01(\tR\rsourceAccount\x12/\n\x13d\
+    estination_account\x18\x02\x20\x02(\tR\x12destinationAccount\"d\n\x13Ste\
+    llarManageDataOp\x12%\n\x0esource_account\x18\x01\x20\x01(\tR\rsourceAcc\
+    ount\x12\x10\n\x03key\x18\x02\x20\x02(\tR\x03key\x12\x14\n\x05value\x18\
+    \x03\x20\x01(\x0cR\x05value\"W\n\x15StellarBumpSequenceOp\x12%\n\x0esour\
+    ce_account\x18\x01\x20\x01(\tR\rsourceAccount\x12\x17\n\x07bump_to\x18\
+    \x02\x20\x02(\x04R\x06bumpTo\"f\n\x1eStellarClaimClaimableBalanceOp\x12%\
+    \n\x0esource_account\x18\x01\x20\x01(\tR\rsourceAccount\x12\x1d\n\nbalan\
+    ce_id\x18\x02\x20\x02(\x0cR\tbalanceId\"\xb6\x02\n\x1dStellarLiquidityPo\
+    olDepositOp\x12%\n\x0esource_account\x18\x01\x20\x01(\tR\rsourceAccount\
+    \x12*\n\x11liquidity_pool_id\x18\x02\x20\x02(\tR\x0fliquidityPoolId\x12\
+    \x20\n\x0cmax_amount_a\x18\x03\x20\x02(\x12R\nmaxAmountA\x12\x20\n\x0cma\
+    x_amount_b\x18\x04\x20\x02(\x12R\nmaxAmountB\x12\x1e\n\x0bmin_price_n\
+    \x18\x05\x20\x02(\x12R\tminPriceN\x12\x1e\n\x0bmin_price_d\x18\x06\x20\
+    \x02(\x12R\tminPriceD\x12\x1e\n\x0bmax_price_n\x18\x07\x20\x02(\x12R\tma\
+    xPriceN\x12\x1e\n\x0bmax_price_d\x18\x08\x20\x02(\x12R\tmaxPriceD\"\xcf\
+    \x01\n\x1eStellarLiquidityPoolWithdrawOp\x12%\n\x0esource_account\x18\
+    \x01\x20\x01(\tR\rsourceAccount\x12*\n\x11liquidity_pool_id\x18\x02\x20\
+    \x02(\tR\x0fliquidityPoolId\x12\x16\n\x06amount\x18\x03\x20\x02(\x12R\
+    \x06amount\x12\x20\n\x0cmin_amount_a\x18\x04\x20\x02(\x12R\nminAmountA\
+    \x12\x20\n\x0cmin_amount_b\x18\x05\x20\x02(\x12R\nminAmountB\"N\n\x0fSte\
+    llarSignedTx\x12\x1d\n\npublic_key\x18\x01\x20\x02(\x0cR\tpublicKey\x12\
+    \x1c\n\tsignature\x18\x02\x20\x02(\x0cR\tsignature*M\n\x10StellarAssetTy\
+    pe\x12\n\n\x06NATIVE\x10\0\x12\r\n\tALPHANUM4\x10\x01\x12\x0e\n\nALPHANU\
+    M12\x10\x02\x12\x0e\n\nPOOL_SHARE\x10\x03*?\n\x18StellarLiquidityPoolTyp\
+    e\x12#\n\x1fLIQUIDITY_POOL_CONSTANT_PRODUCT\x10\0B;\n#com.satoshilabs.tr\
+    ezor.lib.protobufB\x14TrezorMessageStellar\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -6376,8 +7903,11 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
     file_descriptor.get(|| {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
             let mut deps = ::std::vec::Vec::with_capacity(0);
-            let mut messages = ::std::vec::Vec::with_capacity(20);
+            let mut messages = ::std::vec::Vec::with_capacity(25);
             messages.push(StellarAsset::generated_message_descriptor_data());
+            messages.push(StellarLiquidityPoolConstantProductParameters::generated_message_descriptor_data());
+            messages.push(StellarLiquidityPoolParameters::generated_message_descriptor_data());
+            messages.push(StellarChangeTrustAsset::generated_message_descriptor_data());
             messages.push(StellarGetAddress::generated_message_descriptor_data());
             messages.push(StellarAddress::generated_message_descriptor_data());
             messages.push(StellarSignTx::generated_message_descriptor_data());
@@ -6396,9 +7926,12 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             messages.push(StellarManageDataOp::generated_message_descriptor_data());
             messages.push(StellarBumpSequenceOp::generated_message_descriptor_data());
             messages.push(StellarClaimClaimableBalanceOp::generated_message_descriptor_data());
+            messages.push(StellarLiquidityPoolDepositOp::generated_message_descriptor_data());
+            messages.push(StellarLiquidityPoolWithdrawOp::generated_message_descriptor_data());
             messages.push(StellarSignedTx::generated_message_descriptor_data());
-            let mut enums = ::std::vec::Vec::with_capacity(3);
+            let mut enums = ::std::vec::Vec::with_capacity(4);
             enums.push(StellarAssetType::generated_enum_descriptor_data());
+            enums.push(StellarLiquidityPoolType::generated_enum_descriptor_data());
             enums.push(stellar_sign_tx::StellarMemoType::generated_enum_descriptor_data());
             enums.push(stellar_set_options_op::StellarSignerType::generated_enum_descriptor_data());
             ::protobuf::reflect::GeneratedFileDescriptor::new_generated(

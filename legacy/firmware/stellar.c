@@ -1106,7 +1106,7 @@ bool stellar_confirmChangeTrustOp(const StellarChangeTrustOp *msg) {
   }
 
   // Hash: asset
-  stellar_hashupdate_asset(&(msg->asset));
+  stellar_hashupdate_asset((const StellarAsset *)&(msg->asset));
   // limit
   stellar_hashupdate_uint64(msg->limit);
 
@@ -1735,6 +1735,10 @@ void stellar_hashupdate_address(const uint8_t *address_bytes) {
  * to be 4 bytes and not include the null at the end of the string
  */
 void stellar_hashupdate_asset(const StellarAsset *asset) {
+  if (asset->type == StellarAssetType_POOL_SHARE) {
+    stellar_signingFail(_("Stellar: invalid asset type"));
+    return;
+  }
   stellar_hashupdate_uint32(asset->type);
 
   // For non-native assets, validate issuer account and convert to bytes

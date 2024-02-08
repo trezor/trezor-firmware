@@ -174,6 +174,8 @@ class MessageType(IntEnum):
     StellarPathPaymentStrictSendOp = 223
     StellarClaimClaimableBalanceOp = 225
     StellarSignedTx = 230
+    StellarLiquidityPoolDepositOp = 233
+    StellarLiquidityPoolWithdrawOp = 234
     CardanoGetPublicKey = 305
     CardanoPublicKey = 306
     CardanoGetAddress = 307
@@ -564,6 +566,11 @@ class StellarAssetType(IntEnum):
     NATIVE = 0
     ALPHANUM4 = 1
     ALPHANUM12 = 2
+    POOL_SHARE = 3
+
+
+class StellarLiquidityPoolType(IntEnum):
+    LIQUIDITY_POOL_CONSTANT_PRODUCT = 0
 
 
 class StellarMemoType(IntEnum):
@@ -6808,6 +6815,66 @@ class StellarAsset(protobuf.MessageType):
         self.issuer = issuer
 
 
+class StellarLiquidityPoolConstantProductParameters(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        2: protobuf.Field("asset_a", "StellarAsset", repeated=False, required=True),
+        3: protobuf.Field("asset_b", "StellarAsset", repeated=False, required=True),
+        4: protobuf.Field("fee", "uint32", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        asset_a: "StellarAsset",
+        asset_b: "StellarAsset",
+        fee: "int",
+    ) -> None:
+        self.asset_a = asset_a
+        self.asset_b = asset_b
+        self.fee = fee
+
+
+class StellarLiquidityPoolParameters(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("type", "StellarLiquidityPoolType", repeated=False, required=True),
+        2: protobuf.Field("constant_product", "StellarLiquidityPoolConstantProductParameters", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        type: "StellarLiquidityPoolType",
+        constant_product: Optional["StellarLiquidityPoolConstantProductParameters"] = None,
+    ) -> None:
+        self.type = type
+        self.constant_product = constant_product
+
+
+class StellarChangeTrustAsset(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("type", "StellarAssetType", repeated=False, required=True),
+        2: protobuf.Field("code", "string", repeated=False, required=False, default=None),
+        3: protobuf.Field("issuer", "string", repeated=False, required=False, default=None),
+        4: protobuf.Field("liquidity_pool", "StellarLiquidityPoolParameters", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        type: "StellarAssetType",
+        code: Optional["str"] = None,
+        issuer: Optional["str"] = None,
+        liquidity_pool: Optional["StellarLiquidityPoolParameters"] = None,
+    ) -> None:
+        self.type = type
+        self.code = code
+        self.issuer = issuer
+        self.liquidity_pool = liquidity_pool
+
+
 class StellarGetAddress(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 207
     FIELDS = {
@@ -7144,14 +7211,14 @@ class StellarChangeTrustOp(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 216
     FIELDS = {
         1: protobuf.Field("source_account", "string", repeated=False, required=False, default=None),
-        2: protobuf.Field("asset", "StellarAsset", repeated=False, required=True),
+        2: protobuf.Field("asset", "StellarChangeTrustAsset", repeated=False, required=True),
         3: protobuf.Field("limit", "uint64", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        asset: "StellarAsset",
+        asset: "StellarChangeTrustAsset",
         limit: "int",
         source_account: Optional["str"] = None,
     ) -> None:
@@ -7254,6 +7321,67 @@ class StellarClaimClaimableBalanceOp(protobuf.MessageType):
         source_account: Optional["str"] = None,
     ) -> None:
         self.balance_id = balance_id
+        self.source_account = source_account
+
+
+class StellarLiquidityPoolDepositOp(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 233
+    FIELDS = {
+        1: protobuf.Field("source_account", "string", repeated=False, required=False, default=None),
+        2: protobuf.Field("liquidity_pool_id", "string", repeated=False, required=True),
+        3: protobuf.Field("max_amount_a", "sint64", repeated=False, required=True),
+        4: protobuf.Field("max_amount_b", "sint64", repeated=False, required=True),
+        5: protobuf.Field("min_price_n", "sint64", repeated=False, required=True),
+        6: protobuf.Field("min_price_d", "sint64", repeated=False, required=True),
+        7: protobuf.Field("max_price_n", "sint64", repeated=False, required=True),
+        8: protobuf.Field("max_price_d", "sint64", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        liquidity_pool_id: "str",
+        max_amount_a: "int",
+        max_amount_b: "int",
+        min_price_n: "int",
+        min_price_d: "int",
+        max_price_n: "int",
+        max_price_d: "int",
+        source_account: Optional["str"] = None,
+    ) -> None:
+        self.liquidity_pool_id = liquidity_pool_id
+        self.max_amount_a = max_amount_a
+        self.max_amount_b = max_amount_b
+        self.min_price_n = min_price_n
+        self.min_price_d = min_price_d
+        self.max_price_n = max_price_n
+        self.max_price_d = max_price_d
+        self.source_account = source_account
+
+
+class StellarLiquidityPoolWithdrawOp(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 234
+    FIELDS = {
+        1: protobuf.Field("source_account", "string", repeated=False, required=False, default=None),
+        2: protobuf.Field("liquidity_pool_id", "string", repeated=False, required=True),
+        3: protobuf.Field("amount", "sint64", repeated=False, required=True),
+        4: protobuf.Field("min_amount_a", "sint64", repeated=False, required=True),
+        5: protobuf.Field("min_amount_b", "sint64", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        liquidity_pool_id: "str",
+        amount: "int",
+        min_amount_a: "int",
+        min_amount_b: "int",
+        source_account: Optional["str"] = None,
+    ) -> None:
+        self.liquidity_pool_id = liquidity_pool_id
+        self.amount = amount
+        self.min_amount_a = min_amount_a
+        self.min_amount_b = min_amount_b
         self.source_account = source_account
 
 

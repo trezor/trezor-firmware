@@ -148,6 +148,8 @@ if not utils.BITCOIN_ONLY:
     StellarPathPaymentStrictSendOp = 223
     StellarClaimClaimableBalanceOp = 225
     StellarSignedTx = 230
+    StellarLiquidityPoolDepositOp = 233
+    StellarLiquidityPoolWithdrawOp = 234
     CardanoGetPublicKey = 305
     CardanoPublicKey = 306
     CardanoGetAddress = 307

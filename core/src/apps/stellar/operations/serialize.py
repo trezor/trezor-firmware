@@ -1,6 +1,8 @@
+import ubinascii
 from typing import TYPE_CHECKING
 
-from trezor.enums import StellarAssetType
+from trezor.enums import StellarAssetType, StellarLiquidityPoolType
+from trezor.messages import StellarAsset
 from trezor.wire import DataError, ProcessError
 
 from ..writers import (
@@ -16,12 +18,14 @@ if TYPE_CHECKING:
     from trezor.messages import (
         StellarAccountMergeOp,
         StellarAllowTrustOp,
-        StellarAsset,
         StellarBumpSequenceOp,
+        StellarChangeTrustAsset,
         StellarChangeTrustOp,
         StellarClaimClaimableBalanceOp,
         StellarCreateAccountOp,
         StellarCreatePassiveSellOfferOp,
+        StellarLiquidityPoolDepositOp,
+        StellarLiquidityPoolWithdrawOp,
         StellarManageBuyOfferOp,
         StellarManageDataOp,
         StellarManageSellOfferOp,
@@ -51,7 +55,7 @@ def write_bump_sequence_op(w: Writer, msg: StellarBumpSequenceOp) -> None:
 
 
 def write_change_trust_op(w: Writer, msg: StellarChangeTrustOp) -> None:
-    _write_asset(w, msg.asset)
+    _write_change_trust_asset(w, msg.asset)
     write_uint64(w, msg.limit)
 
 
@@ -187,6 +191,33 @@ def write_claim_claimable_balance_op(
     _write_claimable_balance_id(w, msg.balance_id)
 
 
+def write_liquidity_pool_deposit_op(
+    w: Writer, msg: StellarLiquidityPoolDepositOp
+) -> None:
+    liquidity_pool_id_bytes = ubinascii.unhexlify(msg.liquidity_pool_id)
+    if len(liquidity_pool_id_bytes) != 32:
+        raise DataError("Stellar: invalid liquidity pool id length")
+    write_bytes_fixed(w, liquidity_pool_id_bytes, 32)
+    write_uint64(w, msg.max_amount_a)
+    write_uint64(w, msg.max_amount_b)
+    write_uint32(w, msg.min_price_n)
+    write_uint32(w, msg.min_price_d)
+    write_uint32(w, msg.max_price_n)
+    write_uint32(w, msg.max_price_d)
+
+
+def write_liquidity_pool_withdraw_op(
+    w: Writer, msg: StellarLiquidityPoolWithdrawOp
+) -> None:
+    liquidity_pool_id_bytes = ubinascii.unhexlify(msg.liquidity_pool_id)
+    if len(liquidity_pool_id_bytes) != 32:
+        raise DataError("Stellar: invalid liquidity pool id length")
+    write_bytes_fixed(w, liquidity_pool_id_bytes, 32)
+    write_uint64(w, msg.amount)
+    write_uint64(w, msg.min_amount_a)
+    write_uint64(w, msg.min_amount_b)
+
+
 def write_account(w: Writer, source_account: str | None) -> None:
     if source_account is None:
         write_bool(w, False)
@@ -228,6 +259,26 @@ def _write_asset(w: Writer, asset: StellarAsset) -> None:
     write_uint32(w, asset.type)
     _write_asset_code(w, asset.type, asset.code)
     write_pubkey(w, asset.issuer)
+
+
+def _write_change_trust_asset(w: Writer, asset: StellarChangeTrustAsset) -> None:
+    if asset.type == StellarAssetType.POOL_SHARE:
+        assert asset.liquidity_pool is not None
+        if (
+            asset.liquidity_pool.type
+            != StellarLiquidityPoolType.LIQUIDITY_POOL_CONSTANT_PRODUCT
+        ):
+            raise DataError("Stellar: invalid liquidity pool type")
+        assert asset.liquidity_pool.constant_product is not None
+        write_uint32(w, asset.type)
+        write_uint32(w, asset.liquidity_pool.type)
+        _write_asset(w, asset.liquidity_pool.constant_product.asset_a)
+        _write_asset(w, asset.liquidity_pool.constant_product.asset_b)
+        write_uint32(w, asset.liquidity_pool.constant_product.fee)
+    else:
+        _write_asset(
+            w, StellarAsset(type=asset.type, code=asset.code, issuer=asset.issuer)
+        )
 
 
 def _write_claimable_balance_id(w: Writer, claimable_balance_id: bytes) -> None:

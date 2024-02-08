@@ -57,6 +57,7 @@ if TYPE_CHECKING:
     from trezor.enums import SafetyCheckLevel  # noqa: F401
     from trezor.enums import SdProtectOperationType  # noqa: F401
     from trezor.enums import StellarAssetType  # noqa: F401
+    from trezor.enums import StellarLiquidityPoolType  # noqa: F401
     from trezor.enums import StellarMemoType  # noqa: F401
     from trezor.enums import StellarSignerType  # noqa: F401
     from trezor.enums import TezosBallotType  # noqa: F401
@@ -5341,6 +5342,60 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["StellarAsset"]:
             return isinstance(msg, cls)
 
+    class StellarLiquidityPoolConstantProductParameters(protobuf.MessageType):
+        asset_a: "StellarAsset"
+        asset_b: "StellarAsset"
+        fee: "int"
+
+        def __init__(
+            self,
+            *,
+            asset_a: "StellarAsset",
+            asset_b: "StellarAsset",
+            fee: "int",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["StellarLiquidityPoolConstantProductParameters"]:
+            return isinstance(msg, cls)
+
+    class StellarLiquidityPoolParameters(protobuf.MessageType):
+        type: "StellarLiquidityPoolType"
+        constant_product: "StellarLiquidityPoolConstantProductParameters | None"
+
+        def __init__(
+            self,
+            *,
+            type: "StellarLiquidityPoolType",
+            constant_product: "StellarLiquidityPoolConstantProductParameters | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["StellarLiquidityPoolParameters"]:
+            return isinstance(msg, cls)
+
+    class StellarChangeTrustAsset(protobuf.MessageType):
+        type: "StellarAssetType"
+        code: "str | None"
+        issuer: "str | None"
+        liquidity_pool: "StellarLiquidityPoolParameters | None"
+
+        def __init__(
+            self,
+            *,
+            type: "StellarAssetType",
+            code: "str | None" = None,
+            issuer: "str | None" = None,
+            liquidity_pool: "StellarLiquidityPoolParameters | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["StellarChangeTrustAsset"]:
+            return isinstance(msg, cls)
+
     class StellarGetAddress(protobuf.MessageType):
         address_n: "list[int]"
         show_display: "bool | None"
@@ -5619,13 +5674,13 @@ if TYPE_CHECKING:
 
     class StellarChangeTrustOp(protobuf.MessageType):
         source_account: "str | None"
-        asset: "StellarAsset"
+        asset: "StellarChangeTrustAsset"
         limit: "int"
 
         def __init__(
             self,
             *,
-            asset: "StellarAsset",
+            asset: "StellarChangeTrustAsset",
             limit: "int",
             source_account: "str | None" = None,
         ) -> None:
@@ -5721,6 +5776,56 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["StellarClaimClaimableBalanceOp"]:
+            return isinstance(msg, cls)
+
+    class StellarLiquidityPoolDepositOp(protobuf.MessageType):
+        source_account: "str | None"
+        liquidity_pool_id: "str"
+        max_amount_a: "int"
+        max_amount_b: "int"
+        min_price_n: "int"
+        min_price_d: "int"
+        max_price_n: "int"
+        max_price_d: "int"
+
+        def __init__(
+            self,
+            *,
+            liquidity_pool_id: "str",
+            max_amount_a: "int",
+            max_amount_b: "int",
+            min_price_n: "int",
+            min_price_d: "int",
+            max_price_n: "int",
+            max_price_d: "int",
+            source_account: "str | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["StellarLiquidityPoolDepositOp"]:
+            return isinstance(msg, cls)
+
+    class StellarLiquidityPoolWithdrawOp(protobuf.MessageType):
+        source_account: "str | None"
+        liquidity_pool_id: "str"
+        amount: "int"
+        min_amount_a: "int"
+        min_amount_b: "int"
+
+        def __init__(
+            self,
+            *,
+            liquidity_pool_id: "str",
+            amount: "int",
+            min_amount_a: "int",
+            min_amount_b: "int",
+            source_account: "str | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["StellarLiquidityPoolWithdrawOp"]:
             return isinstance(msg, cls)
 
     class StellarSignedTx(protobuf.MessageType):

@@ -415,6 +415,8 @@ if not utils.BITCOIN_ONLY:
     import trezor.enums.NEMSupplyChangeType
     trezor.enums.StellarAssetType
     import trezor.enums.StellarAssetType
+    trezor.enums.StellarLiquidityPoolType
+    import trezor.enums.StellarLiquidityPoolType
     trezor.enums.StellarMemoType
     import trezor.enums.StellarMemoType
     trezor.enums.StellarSignerType
