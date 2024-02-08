@@ -30,7 +30,7 @@ extras_require = {
     "ethereum": ["rlp>=1.1.0 ; python_version<'3.7'", "web3>=5"],
     "qt-widgets": ["PyQt5"],
     "extra": ["Pillow"],
-    "stellar": ["stellar-sdk>=6"],
+    "stellar": ["stellar-sdk>=9"],
 }
 
 extras_require["full"] = sum(extras_require.values(), [])

@@ -14,8 +14,14 @@ async def sign_tx(msg: StellarSignTx, keychain: Keychain) -> StellarSignedTx:
 
     from trezor.crypto.curve import ed25519
     from trezor.crypto.hashlib import sha256
-    from trezor.enums import StellarMemoType
-    from trezor.messages import StellarSignedTx, StellarTxOpRequest
+    from trezor.enums import MessageType, StellarMemoType
+    from trezor.messages import (
+        StellarInvokeHostFunctionOp,
+        StellarSignedTx,
+        StellarTxExt,
+        StellarTxExtRequest,
+        StellarTxOpRequest,
+    )
     from trezor.wire import DataError, ProcessError
     from trezor.wire.context import call_any
 
@@ -98,16 +104,29 @@ async def sign_tx(msg: StellarSignTx, keychain: Keychain) -> StellarSignedTx:
     # ---------------------------------
     # OPERATION
     # ---------------------------------
+    is_soroban_tx = False
     writers.write_uint32(w, num_operations)
     for _ in range(num_operations):
         op = await call_any(StellarTxOpRequest(), *consts.op_codes.keys())
         await process_operation(w, op)  # type: ignore [Argument of type "MessageType" cannot be assigned to parameter "op" of type "StellarMessageType" in function "process_operation"]
-
+        if StellarInvokeHostFunctionOp.is_type_of(op):
+            is_soroban_tx = True
+    # ---------------------------------
+    # Transaction Ext
+    # ---------------------------------
+    if is_soroban_tx:
+        # v == 1
+        tx_ext = await call_any(StellarTxExtRequest(), MessageType.StellarTxExt)
+        if not StellarTxExt.is_type_of(tx_ext):
+            raise DataError("Stellar: Invalid transaction extension")
+    else:
+        # In order to maintain compatibility with the old version of JS SDK,
+        # if v == 0, we do not send StellarTxExtRequest.
+        tx_ext = StellarTxExt(v=0)
+    writers.write_tx_ext(w, tx_ext)
     # ---------------------------------
     # FINAL
     # ---------------------------------
-    # 4 null bytes representing a (currently unused) empty union
-    writers.write_uint32(w, 0)
     # final confirm
     await layout.require_confirm_final(msg.fee, num_operations)
 

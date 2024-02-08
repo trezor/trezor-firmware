@@ -1,12 +1,21 @@
 from typing import TYPE_CHECKING
 
-from trezor.enums import StellarAssetType
+from trezor.enums import (
+    StellarAssetType,
+    StellarHostFunctionType,
+    StellarSorobanCredentialsType,
+)
 from trezor.wire import DataError, ProcessError
 
 from ..writers import (
     write_bool,
     write_bytes_fixed,
+    write_int64,
+    write_invoke_contract_args,
     write_pubkey,
+    write_sc_address,
+    write_sc_val,
+    write_soroban_authorized_invocation,
     write_string,
     write_uint32,
     write_uint64,
@@ -22,6 +31,7 @@ if TYPE_CHECKING:
         StellarClaimClaimableBalanceOp,
         StellarCreateAccountOp,
         StellarCreatePassiveSellOfferOp,
+        StellarInvokeHostFunctionOp,
         StellarManageBuyOfferOp,
         StellarManageDataOp,
         StellarManageSellOfferOp,
@@ -29,6 +39,9 @@ if TYPE_CHECKING:
         StellarPathPaymentStrictSendOp,
         StellarPaymentOp,
         StellarSetOptionsOp,
+        StellarSorobanAddressCredentials,
+        StellarSorobanAuthorizationEntry,
+        StellarSorobanCredentials,
     )
     from trezor.utils import Writer
 
@@ -185,6 +198,52 @@ def write_claim_claimable_balance_op(
     w: Writer, msg: StellarClaimClaimableBalanceOp
 ) -> None:
     _write_claimable_balance_id(w, msg.balance_id)
+
+
+def write_invoke_host_function_op(w: Writer, msg: StellarInvokeHostFunctionOp) -> None:
+    # write host_function
+    if msg.function.type != StellarHostFunctionType.HOST_FUNCTION_TYPE_INVOKE_CONTRACT:
+        raise DataError(f"Stellar: unsupported host function type: {msg.function.type}")
+    write_uint32(w, msg.function.type)
+    assert msg.function.invoke_contract
+    write_invoke_contract_args(w, msg.function.invoke_contract)
+
+    # write auth
+    write_uint32(w, len(msg.auth))
+    for auth in msg.auth:
+        write_soroban_authorization_entry(w, auth)
+
+
+def write_soroban_address_credentials(
+    w: Writer, credentials: StellarSorobanAddressCredentials
+) -> None:
+    write_sc_address(w, credentials.address)
+    write_int64(w, credentials.nonce)
+    write_uint32(w, credentials.signature_expiration_ledger)
+    write_sc_val(w, credentials.signature)
+
+
+def write_soroban_credentials(
+    w: Writer, credentials: StellarSorobanCredentials
+) -> None:
+    write_uint32(w, credentials.type)
+    if (
+        credentials.type
+        == StellarSorobanCredentialsType.SOROBAN_CREDENTIALS_SOURCE_ACCOUNT
+    ):
+        pass  # nothing to write
+    elif credentials.type == StellarSorobanCredentialsType.SOROBAN_CREDENTIALS_ADDRESS:
+        assert credentials.address
+        write_soroban_address_credentials(w, credentials.address)
+    else:
+        raise DataError(f"Stellar: unsupported credentials type: {credentials}")
+
+
+def write_soroban_authorization_entry(
+    w: Writer, entry: StellarSorobanAuthorizationEntry
+) -> None:
+    write_soroban_credentials(w, entry.credentials)
+    write_soroban_authorized_invocation(w, entry.root_invocation)
 
 
 def write_account(w: Writer, source_account: str | None) -> None:

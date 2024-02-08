@@ -86,6 +86,8 @@ message StellarSignTx {
  * @next StellarAccountMergeOp
  * @next StellarManageDataOp
  * @next StellarBumpSequenceOp
+ * @next StellarClaimClaimableBalanceOp
+ * @next StellarInvokeHostFunctionOp
  */
 message StellarTxOpRequest {
 }
@@ -93,7 +95,7 @@ message StellarTxOpRequest {
 /**
  * Request: ask device to confirm this operation type
  * @next StellarTxOpRequest
- * @next StellarSignedTx
+ * @next StellarTxExtRequest
  */
 message StellarPaymentOp {
     optional string source_account = 1;         // (optional) source account address
@@ -105,7 +107,7 @@ message StellarPaymentOp {
 /**
  * Request: ask device to confirm this operation type
  * @next StellarTxOpRequest
- * @next StellarSignedTx
+ * @next StellarTxExtRequest
  */
 message StellarCreateAccountOp {
     optional string source_account = 1;     // (optional) source account address
@@ -116,7 +118,7 @@ message StellarCreateAccountOp {
 /**
  * Request: ask device to confirm this operation type
  * @next StellarTxOpRequest
- * @next StellarSignedTx
+ * @next StellarTxExtRequest
  */
 message StellarPathPaymentStrictReceiveOp {
     optional string source_account = 1;           // (optional) source address
@@ -131,7 +133,7 @@ message StellarPathPaymentStrictReceiveOp {
 /**
  * Request: ask device to confirm this operation type
  * @next StellarTxOpRequest
- * @next StellarSignedTx
+ * @next StellarTxExtRequest
  */
 message StellarPathPaymentStrictSendOp {
     optional string source_account = 1;           // (optional) source address
@@ -146,7 +148,7 @@ message StellarPathPaymentStrictSendOp {
 /**
  * Request: ask device to confirm this operation type
  * @next StellarTxOpRequest
- * @next StellarSignedTx
+ * @next StellarTxExtRequest
  */
 message StellarManageSellOfferOp {
     optional string source_account = 1;             // (optional) source account address
@@ -161,7 +163,7 @@ message StellarManageSellOfferOp {
 /**
  * Request: ask device to confirm this operation type
  * @next StellarTxOpRequest
- * @next StellarSignedTx
+ * @next StellarTxExtRequest
  */
 message StellarManageBuyOfferOp {
     optional string source_account = 1;             // (optional) source account address
@@ -176,7 +178,7 @@ message StellarManageBuyOfferOp {
 /**
  * Request: ask device to confirm this operation type
  * @next StellarTxOpRequest
- * @next StellarSignedTx
+ * @next StellarTxExtRequest
  */
 message StellarCreatePassiveSellOfferOp {
     optional string source_account = 1;             // (optional) source account address
@@ -190,7 +192,7 @@ message StellarCreatePassiveSellOfferOp {
 /**
  * Request: ask device to confirm this operation type
  * @next StellarTxOpRequest
- * @next StellarSignedTx
+ * @next StellarTxExtRequest
  */
 message StellarSetOptionsOp {
     optional string source_account = 1;                 // (optional) source account address
@@ -217,7 +219,7 @@ message StellarSetOptionsOp {
 /**
  * Request: ask device to confirm this operation type
  * @next StellarTxOpRequest
- * @next StellarSignedTx
+ * @next StellarTxExtRequest
  */
 message StellarChangeTrustOp {
     optional string source_account = 1;     // (optional) source account address
@@ -228,7 +230,7 @@ message StellarChangeTrustOp {
 /**
  * Request: ask device to confirm this operation type
  * @next StellarTxOpRequest
- * @next StellarSignedTx
+ * @next StellarTxExtRequest
  */
 message StellarAllowTrustOp {
     optional string source_account = 1;     // (optional) source account address
@@ -241,7 +243,7 @@ message StellarAllowTrustOp {
 /**
  * Request: ask device to confirm this operation type
  * @next StellarTxOpRequest
- * @next StellarSignedTx
+ * @next StellarTxExtRequest
  */
 message StellarAccountMergeOp {
     optional string source_account = 1;         // (optional) source account address
@@ -251,7 +253,7 @@ message StellarAccountMergeOp {
 /**
  * Request: ask device to confirm this operation type
  * @next StellarTxOpRequest
- * @next StellarSignedTx
+ * @next StellarTxExtRequest
  */
 message StellarManageDataOp {
     optional string source_account = 1; // (optional) source account address
@@ -262,7 +264,7 @@ message StellarManageDataOp {
 /**
  * Request: ask device to confirm this operation type
  * @next StellarTxOpRequest
- * @next StellarSignedTx
+ * @next StellarTxExtRequest
  */
 message StellarBumpSequenceOp {
     optional string source_account = 1; // (optional) source account address
@@ -272,7 +274,7 @@ message StellarBumpSequenceOp {
 /**
  * Request: ask device to confirm this operation type
  * @next StellarTxOpRequest
- * @next StellarSignedTx
+ * @next StellarTxExtRequest
  */
 message StellarClaimClaimableBalanceOp {
     optional string source_account = 1; // (optional) source account address
@@ -286,4 +288,224 @@ message StellarClaimClaimableBalanceOp {
 message StellarSignedTx {
     required bytes public_key = 1;  // public key for the private key used to sign data
     required bytes signature = 2;   // signature suitable for sending to the Stellar network
+}
+
+/**
+ * Describes a Stellar SCValue
+ * See https://github.com/stellar/stellar-xdr/blob/bb54e505f814386a3f45172e0b7e95b7badbe969/Stellar-contract.x#L214
+ * @embed
+ */
+message StellarSCVal {
+    required StellarSCValType type = 1;
+    optional bool b = 2; // SCV_VOID
+    reserved 3; // SCV_ERROR, not supported yet
+    optional uint32 u32 = 4; // SCV_U32
+    optional sint32 i32 = 5; // SCV_I32
+    optional uint64 u64 = 6; // SCV_U64
+    optional sint64 i64 = 7; // SCV_I64
+    optional uint64 timepoint = 8; // SCV_TIMEPOINT
+    optional uint64 duration = 9; // SCV_DURATION
+    optional StellarUInt128Parts u128 = 10; // SCV_U128
+    optional StellarInt128Parts i128 = 11; // SCV_I128
+    optional StellarUInt256Parts u256 = 12; // SCV_U256
+    optional StellarInt256Parts i256 = 13; // SCV_I256
+    optional bytes bytes = 14; // SCV_BYTES
+    optional string string = 15; // SCV_STRING, We do not allow sending binary data here, which is the same as how memo_text is handled, see: https://github.com/trezor/trezor-firmware/issues/610
+    optional string symbol = 16; // SCV_SYMBOL
+    repeated StellarSCVal vec = 17; // SCV_VEC
+    repeated StellarSCValMapEntry map = 18; // SCV_MAP
+    optional StellarSCAddress address = 19; // SCV_ADDRESS
+    reserved 20; // SCV_LEDGER_KEY_NONCE, not supported yet
+    reserved 21; // SCV_CONTRACT_INSTANCE, not supported yet
+
+    message StellarUInt128Parts {
+        required uint64 hi = 1;
+        required uint64 lo = 2;
+    }
+
+    message StellarInt128Parts {
+        required sint64 hi = 1;
+        required uint64 lo = 2;
+    }
+
+    message StellarUInt256Parts {
+        required uint64 hi_hi = 1;
+        required uint64 hi_lo = 2;
+        required uint64 lo_hi = 3;
+        required uint64 lo_lo = 4;
+    }
+
+    message StellarInt256Parts {
+        required sint64 hi_hi = 1;
+        required uint64 hi_lo = 2;
+        required uint64 lo_hi = 3;
+        required uint64 lo_lo = 4;
+    }
+
+    message StellarSCAddress {
+        required StellarSCAddressType type = 1;
+        required string address = 2; // stellar account address (G...) or contract address (C...), TODO: bytes?
+
+        enum StellarSCAddressType
+        {
+            SC_ADDRESS_TYPE_ACCOUNT = 0;
+            SC_ADDRESS_TYPE_CONTRACT = 1;
+        };
+    }
+
+    message StellarSCValMapEntry {
+        optional StellarSCVal key = 1;
+        optional StellarSCVal value = 2;
+    }
+
+    enum StellarSCValType {
+        SCV_BOOL = 0;
+        SCV_VOID = 1;
+        reserved 2; // SCV_ERROR, not supported yet
+        SCV_U32 = 3;
+        SCV_I32 = 4;
+        SCV_U64 = 5;
+        SCV_I64 = 6;
+        SCV_TIMEPOINT = 7;
+        SCV_DURATION = 8;
+        SCV_U128 = 9;
+        SCV_I128 = 10;
+        SCV_U256 = 11;
+        SCV_I256 = 12;
+        SCV_BYTES = 13;
+        SCV_STRING = 14;
+        SCV_SYMBOL = 15;
+        SCV_VEC = 16;
+        SCV_MAP = 17;
+        SCV_ADDRESS = 18;
+        reserved 19; // SCV_CONTRACT_INSTANCE, not supported yet
+        reserved 20; // SCV_LEDGER_KEY_NONCE, not supported yet
+        reserved 21; // SCV_LEDGER_KEY_CONTRACT_INSTANCE, not supported yet
+    }
+}
+
+/**
+ * https://github.com/stellar/stellar-xdr/blob/bb54e505f814386a3f45172e0b7e95b7badbe969/Stellar-transaction.x#L506
+ * @embed
+ */
+message StellarInvokeContractArgs {
+    required StellarSCVal.StellarSCAddress contract_address = 1;
+    required string function_name = 2;
+    repeated StellarSCVal args = 3;
+}
+
+/**
+ * https://github.com/stellar/stellar-xdr/blob/bb54e505f814386a3f45172e0b7e95b7badbe969/Stellar-transaction.x#L528
+ * @embed
+ */
+message StellarSorobanAuthorizedFunction {
+    required StellarSorobanAuthorizedFunctionType type = 1;
+    optional StellarInvokeContractArgs contract_fn = 2;
+
+    enum StellarSorobanAuthorizedFunctionType {
+        SOROBAN_AUTHORIZED_FUNCTION_TYPE_CONTRACT_FN = 0;
+        SOROBAN_AUTHORIZED_FUNCTION_TYPE_CREATE_CONTRACT_HOST_FN = 1; // Creating a contract can be done using any address without security issues, so we will not provide support for it at this time.
+    }
+}
+
+/**
+ * https://github.com/stellar/stellar-xdr/blob/bb54e505f814386a3f45172e0b7e95b7badbe969/Stellar-transaction.x#L536
+ * @embed
+ */
+message StellarSorobanAuthorizedInvocation {
+    required StellarSorobanAuthorizedFunction function = 1;
+    repeated StellarSorobanAuthorizedInvocation sub_invocations = 2;
+}
+
+/**
+ * https://github.com/stellar/stellar-xdr/blob/bb54e505f814386a3f45172e0b7e95b7badbe969/Stellar-transaction.x#L580
+ * @embed
+ */
+message StellarHostFunction {
+    required StellarHostFunctionType type = 1;
+    optional StellarInvokeContractArgs invoke_contract = 2;
+
+    enum StellarHostFunctionType
+    {
+        HOST_FUNCTION_TYPE_INVOKE_CONTRACT = 0; // We only support this type of host function at this time.
+        HOST_FUNCTION_TYPE_CREATE_CONTRACT = 1;
+        HOST_FUNCTION_TYPE_UPLOAD_CONTRACT_WASM = 2;
+    }
+}
+
+/**
+ * https://github.com/stellar/stellar-xdr/blob/bb54e505f814386a3f45172e0b7e95b7badbe969/Stellar-transaction.x#L542
+ * @embed
+ */
+message StellarSorobanAddressCredentials {
+    required StellarSCVal.StellarSCAddress address = 1;
+    required sint64 nonce = 2;
+    required uint32 signature_expiration_ledger = 3;
+    required StellarSCVal signature = 4;
+}
+
+/**
+ * https://github.com/stellar/stellar-xdr/blob/bb54e505f814386a3f45172e0b7e95b7badbe969/Stellar-transaction.x#L556
+ * @embed
+ */
+message StellarSorobanCredentials {
+    required StellarSorobanCredentialsType type = 1;
+    optional StellarSorobanAddressCredentials address = 2;
+
+    enum StellarSorobanCredentialsType
+    {
+        SOROBAN_CREDENTIALS_SOURCE_ACCOUNT = 0;
+        SOROBAN_CREDENTIALS_ADDRESS = 1;
+    };
+}
+
+/**
+ * https://github.com/stellar/stellar-xdr/blob/bb54e505f814386a3f45172e0b7e95b7badbe969/Stellar-transaction.x#L569
+ * @embed
+ */
+message StellarSorobanAuthorizationEntry {
+    required StellarSorobanCredentials credentials = 1;
+    required StellarSorobanAuthorizedInvocation root_invocation = 2;
+}
+
+/**
+ * Request: ask device to confirm this operation type
+ * @next StellarTxOpRequest
+ * @next StellarTxExtRequest
+ */
+message StellarInvokeHostFunctionOp {
+    optional string source_account = 1; // (optional) source account address
+    required StellarHostFunction function = 2;
+    repeated StellarSorobanAuthorizationEntry auth = 3;
+}
+
+/**
+ * Response: device is ready for client to send StellarTxExt
+ * @next StellarTxExt
+ */
+message StellarTxExtRequest {
+}
+
+/**
+ * Request: ask device to add extra data to the transaction
+ * @next StellarSignedTx
+ */
+message StellarTxExt {
+    // For soroban transactions, v = 1
+    required sint32 v = 1;
+    optional bytes soroban_data = 2; // (optional) soroban data, exists only if v == 1
+}
+
+/**
+ * Request: ask device to sign Stellar Soroban authorization
+ * https://github.com/stellar/stellar-xdr/blob/bb54e505f814386a3f45172e0b7e95b7badbe969/Stellar-transaction.x#L702-L710
+ * @start
+ * @next StellarSignedTx
+ */
+message StellarSignSorobanAuthorization {
+    repeated uint32 address_n = 1;  // BIP-32 path. For compatibility with other wallets, must be m/44'/148'/index'
+    required string network_passphrase = 2;  // passphrase for signing messages on the destination network
+    required sint64 nonce = 3;  // nonce for the authorization
+    required uint32 signature_expiration_ledger = 4;  // ledger number after which the signature expires
+    required StellarSorobanAuthorizedInvocation invocation = 5;  // the invocation to authorize
 }

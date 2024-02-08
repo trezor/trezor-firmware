@@ -1,16 +1,24 @@
 from typing import TYPE_CHECKING
 from ubinascii import hexlify
 
+from trezor import ui
+from trezor.enums import StellarHostFunctionType, StellarSorobanCredentialsType
 from trezor.ui.layouts import (
     confirm_address,
     confirm_amount,
     confirm_metadata,
     confirm_output,
     confirm_properties,
+    should_show_more,
 )
 from trezor.wire import DataError, ProcessError
 
-from ..layout import format_amount
+from ..layout import (
+    confirm_invoke_contract_args,
+    confirm_soroban_authorized_invocation,
+    format_amount,
+    limit_str,
+)
 
 if TYPE_CHECKING:
     from trezor.messages import (
@@ -22,6 +30,7 @@ if TYPE_CHECKING:
         StellarClaimClaimableBalanceOp,
         StellarCreateAccountOp,
         StellarCreatePassiveSellOfferOp,
+        StellarInvokeHostFunctionOp,
         StellarManageBuyOfferOp,
         StellarManageDataOp,
         StellarManageSellOfferOp,
@@ -29,6 +38,8 @@ if TYPE_CHECKING:
         StellarPathPaymentStrictSendOp,
         StellarPaymentOp,
         StellarSetOptionsOp,
+        StellarSorobanAuthorizationEntry,
+        StellarSorobanCredentials,
     )
 
 
@@ -333,3 +344,55 @@ async def confirm_asset_issuer(asset: StellarAsset) -> None:
         f"{asset.code} issuer:",
         "confirm_asset_issuer",
     )
+
+
+async def confirm_soroban_credentials(
+    parent_objects: list[str], credentials: StellarSorobanCredentials
+) -> None:
+    title = limit_str(".".join(parent_objects))
+
+    if (
+        credentials.type
+        == StellarSorobanCredentialsType.SOROBAN_CREDENTIALS_SOURCE_ACCOUNT
+    ):
+        await confirm_metadata(
+            "confirm_soroban_credentials",
+            title,
+            "Authorize using the source account",
+        )
+    elif credentials.type == StellarSorobanCredentialsType.SOROBAN_CREDENTIALS_ADDRESS:
+        assert credentials.address
+        await confirm_metadata(
+            "confirm_soroban_credentials",
+            title,
+            "Authorize using {}",
+            credentials.address.address.address,
+        )
+    else:
+        raise DataError(f"Stellar: unsupported credentials type: {credentials.type}")
+
+
+async def confirm_soroban_authorization_entry(
+    parent_objects: list[str], entry: StellarSorobanAuthorizationEntry
+) -> None:
+    await confirm_soroban_credentials(
+        parent_objects + ["credentials"], entry.credentials
+    )
+    await confirm_soroban_authorized_invocation(
+        parent_objects + ["root"], entry.root_invocation
+    )
+
+
+async def confirm_invoke_host_function_op(op: StellarInvokeHostFunctionOp) -> None:
+    if op.function.type != StellarHostFunctionType.HOST_FUNCTION_TYPE_INVOKE_CONTRACT:
+        raise DataError(f"Stellar: unsupported host function type: {op.function.type}")
+    assert op.function.invoke_contract
+    await confirm_invoke_contract_args(["invoke contract"], op.function.invoke_contract)
+    if await should_show_more(
+        "contract auth",
+        ((ui.NORMAL, f"auth contains {len(op.auth)} items"),),
+        "Show full auth",
+        "should_show_auth",
+    ):
+        for idx, auth in enumerate(op.auth):
+            await confirm_soroban_authorization_entry(["auth", str(idx)], auth)

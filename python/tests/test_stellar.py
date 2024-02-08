@@ -61,7 +61,8 @@ def make_default_tx(default_op: bool = False, **kwargs) -> TransactionBuilder:
 def test_simple():
     envelope = make_default_tx(default_op=True).build()
 
-    tx, operations = stellar.from_envelope(envelope)
+    tx, operations, ext = stellar.from_envelope(envelope)
+    assert ext == messages.StellarTxExt(v=0)
     assert tx.source_account == TX_SOURCE
     assert tx.fee == envelope.transaction.fee
     assert tx.sequence_number == SEQUENCE + 1
@@ -80,7 +81,8 @@ def test_memo_text():
         make_default_tx(default_op=True).add_text_memo(memo_text.encode()).build()
     )
 
-    tx, operations = stellar.from_envelope(envelope)
+    tx, operations, ext = stellar.from_envelope(envelope)
+    assert ext == messages.StellarTxExt(v=0)
     assert tx.memo_type == messages.StellarMemoType.TEXT
     assert tx.memo_text == memo_text
     assert tx.memo_id is None
@@ -91,7 +93,8 @@ def test_memo_id():
     memo_id = 123456789
     envelope = make_default_tx(default_op=True).add_id_memo(memo_id).build()
 
-    tx, operations = stellar.from_envelope(envelope)
+    tx, operations, ext = stellar.from_envelope(envelope)
+    assert ext == messages.StellarTxExt(v=0)
     assert tx.memo_type == messages.StellarMemoType.ID
     assert tx.memo_text is None
     assert tx.memo_id == memo_id
@@ -104,7 +107,8 @@ def test_memo_hash():
         make_default_tx(v1=False, default_op=True).add_hash_memo(memo_hash).build()
     )
 
-    tx, operations = stellar.from_envelope(envelope)
+    tx, operations, ext = stellar.from_envelope(envelope)
+    assert ext == messages.StellarTxExt(v=0)
     assert tx.memo_type == messages.StellarMemoType.HASH
     assert tx.memo_text is None
     assert tx.memo_id is None
@@ -119,7 +123,8 @@ def test_memo_return_hash():
         .build()
     )
 
-    tx, operations = stellar.from_envelope(envelope)
+    tx, operations, ext = stellar.from_envelope(envelope)
+    assert ext == messages.StellarTxExt(v=0)
     assert tx.memo_type == messages.StellarMemoType.RETURN
     assert tx.memo_text is None
     assert tx.memo_id is None
@@ -162,7 +167,8 @@ def test_multiple_operations():
         .build()
     )
 
-    tx, operations = stellar.from_envelope(envelope)
+    tx, operations, ext = stellar.from_envelope(envelope)
+    assert ext == messages.StellarTxExt(v=0)
     assert tx.source_account == TX_SOURCE
     assert tx.fee == envelope.transaction.fee
     assert tx.sequence_number == SEQUENCE + 1
@@ -200,7 +206,8 @@ def test_create_account():
         source=operation_source,
     ).build()
 
-    tx, operations = stellar.from_envelope(envelope)
+    tx, operations, ext = stellar.from_envelope(envelope)
+    assert ext == messages.StellarTxExt(v=0)
     assert len(operations) == 1
     assert isinstance(operations[0], messages.StellarCreateAccountOp)
     assert operations[0].source_account == operation_source
@@ -223,7 +230,8 @@ def test_payment_native_asset():
         source=operation_source,
     ).build()
 
-    tx, operations = stellar.from_envelope(envelope)
+    tx, operations, ext = stellar.from_envelope(envelope)
+    assert ext == messages.StellarTxExt(v=0)
     assert len(operations) == 1
     assert isinstance(operations[0], messages.StellarPaymentOp)
     assert operations[0].source_account == operation_source
@@ -249,7 +257,8 @@ def test_payment_alpha4_asset():
         source=operation_source,
     ).build()
 
-    tx, operations = stellar.from_envelope(envelope)
+    tx, operations, ext = stellar.from_envelope(envelope)
+    assert ext == messages.StellarTxExt(v=0)
     assert len(operations) == 1
     assert isinstance(operations[0], messages.StellarPaymentOp)
     assert operations[0].source_account == operation_source
@@ -275,7 +284,8 @@ def test_payment_alpha12_asset():
         source=operation_source,
     ).build()
 
-    tx, operations = stellar.from_envelope(envelope)
+    tx, operations, ext = stellar.from_envelope(envelope)
+    assert ext == messages.StellarTxExt(v=0)
     assert len(operations) == 1
     assert isinstance(operations[0], messages.StellarPaymentOp)
     assert operations[0].source_account == operation_source
@@ -313,7 +323,8 @@ def test_path_payment_strict_receive():
         source=operation_source,
     ).build()
 
-    tx, operations = stellar.from_envelope(envelope)
+    tx, operations, ext = stellar.from_envelope(envelope)
+    assert ext == messages.StellarTxExt(v=0)
     assert len(operations) == 1
 
     assert isinstance(operations[0], messages.StellarPathPaymentStrictReceiveOp)
@@ -352,7 +363,8 @@ def test_manage_sell_offer_new_offer():
         source=operation_source,
     ).build()
 
-    tx, operations = stellar.from_envelope(envelope)
+    tx, operations, ext = stellar.from_envelope(envelope)
+    assert ext == messages.StellarTxExt(v=0)
     assert len(operations) == 1
     assert isinstance(operations[0], messages.StellarManageSellOfferOp)
     assert operations[0].source_account == operation_source
@@ -386,7 +398,8 @@ def test_manage_sell_offer_update_offer():
         source=operation_source,
     ).build()
 
-    tx, operations = stellar.from_envelope(envelope)
+    tx, operations, ext = stellar.from_envelope(envelope)
+    assert ext == messages.StellarTxExt(v=0)
     assert len(operations) == 1
     assert isinstance(operations[0], messages.StellarManageSellOfferOp)
     assert operations[0].source_account == operation_source
@@ -418,7 +431,8 @@ def test_create_passive_sell_offer():
         source=operation_source,
     ).build()
 
-    tx, operations = stellar.from_envelope(envelope)
+    tx, operations, ext = stellar.from_envelope(envelope)
+    assert ext == messages.StellarTxExt(v=0)
     assert len(operations) == 1
     assert isinstance(operations[0], messages.StellarCreatePassiveSellOfferOp)
     assert operations[0].source_account == operation_source
@@ -458,7 +472,8 @@ def test_set_options():
         source=operation_source,
     ).build()
 
-    tx, operations = stellar.from_envelope(envelope)
+    tx, operations, ext = stellar.from_envelope(envelope)
+    assert ext == messages.StellarTxExt(v=0)
     assert len(operations) == 1
     assert isinstance(operations[0], messages.StellarSetOptionsOp)
     assert operations[0].source_account == operation_source
@@ -485,7 +500,8 @@ def test_set_options_ed25519_signer():
         account_id=signer, weight=weight, source=operation_source
     ).build()
 
-    tx, operations = stellar.from_envelope(envelope)
+    tx, operations, ext = stellar.from_envelope(envelope)
+    assert ext == messages.StellarTxExt(v=0)
     assert len(operations) == 1
     assert isinstance(operations[0], messages.StellarSetOptionsOp)
     assert operations[0].source_account == operation_source
@@ -514,7 +530,8 @@ def test_set_options_pre_auth_tx_signer():
         pre_auth_tx_hash=signer, weight=weight, source=operation_source
     ).build()
 
-    tx, operations = stellar.from_envelope(envelope)
+    tx, operations, ext = stellar.from_envelope(envelope)
+    assert ext == messages.StellarTxExt(v=0)
     assert len(operations) == 1
     assert isinstance(operations[0], messages.StellarSetOptionsOp)
     assert operations[0].signer_type == messages.StellarSignerType.PRE_AUTH
@@ -534,7 +551,8 @@ def test_set_options_hashx_signer():
         sha256_hash=signer, weight=weight, source=operation_source
     ).build()
 
-    tx, operations = stellar.from_envelope(envelope)
+    tx, operations, ext = stellar.from_envelope(envelope)
+    assert ext == messages.StellarTxExt(v=0)
     assert len(operations) == 1
     assert isinstance(operations[0], messages.StellarSetOptionsOp)
     assert operations[0].signer_type == messages.StellarSignerType.HASH
@@ -555,7 +573,8 @@ def test_change_trust():
         source=operation_source,
     ).build()
 
-    tx, operations = stellar.from_envelope(envelope)
+    tx, operations, ext = stellar.from_envelope(envelope)
+    assert ext == messages.StellarTxExt(v=0)
     assert len(operations) == 1
     assert isinstance(operations[0], messages.StellarChangeTrustOp)
     assert operations[0].source_account == operation_source
@@ -583,7 +602,8 @@ def test_allow_trust():
             source=operation_source,
         ).build()
 
-    tx, operations = stellar.from_envelope(envelope)
+    tx, operations, ext = stellar.from_envelope(envelope)
+    assert ext == messages.StellarTxExt(v=0)
     assert len(operations) == 1
     assert isinstance(operations[0], messages.StellarAllowTrustOp)
     assert operations[0].source_account == operation_source
@@ -602,7 +622,8 @@ def test_account_merge():
         destination=destination, source=operation_source
     ).build()
 
-    tx, operations = stellar.from_envelope(envelope)
+    tx, operations, ext = stellar.from_envelope(envelope)
+    assert ext == messages.StellarTxExt(v=0)
     assert len(operations) == 1
     assert isinstance(operations[0], messages.StellarAccountMergeOp)
     assert operations[0].source_account == operation_source
@@ -619,7 +640,8 @@ def test_manage_data():
         data_name=data_name, data_value=data_value, source=operation_source
     ).build()
 
-    tx, operations = stellar.from_envelope(envelope)
+    tx, operations, ext = stellar.from_envelope(envelope)
+    assert ext == messages.StellarTxExt(v=0)
     assert len(operations) == 1
     assert isinstance(operations[0], messages.StellarManageDataOp)
     assert operations[0].source_account == operation_source
@@ -637,7 +659,8 @@ def test_manage_data_remove_data_entity():
         data_name=data_name, data_value=data_value, source=operation_source
     ).build()
 
-    tx, operations = stellar.from_envelope(envelope)
+    tx, operations, ext = stellar.from_envelope(envelope)
+    assert ext == messages.StellarTxExt(v=0)
     assert len(operations) == 1
     assert isinstance(operations[0], messages.StellarManageDataOp)
     assert operations[0].source_account == operation_source
@@ -654,7 +677,8 @@ def test_bump_sequence():
         bump_to=bump_to, source=operation_source
     ).build()
 
-    tx, operations = stellar.from_envelope(envelope)
+    tx, operations, ext = stellar.from_envelope(envelope)
+    assert ext == messages.StellarTxExt(v=0)
     assert len(operations) == 1
     assert isinstance(operations[0], messages.StellarBumpSequenceOp)
     assert operations[0].source_account == operation_source
@@ -679,7 +703,8 @@ def test_manage_buy_offer_new_offer():
         source=operation_source,
     ).build()
 
-    tx, operations = stellar.from_envelope(envelope)
+    tx, operations, ext = stellar.from_envelope(envelope)
+    assert ext == messages.StellarTxExt(v=0)
     assert len(operations) == 1
     assert isinstance(operations[0], messages.StellarManageBuyOfferOp)
     assert operations[0].source_account == operation_source
@@ -713,7 +738,8 @@ def test_manage_buy_offer_update_offer():
         source=operation_source,
     ).build()
 
-    tx, operations = stellar.from_envelope(envelope)
+    tx, operations, ext = stellar.from_envelope(envelope)
+    assert ext == messages.StellarTxExt(v=0)
     assert len(operations) == 1
     assert isinstance(operations[0], messages.StellarManageBuyOfferOp)
     assert operations[0].source_account == operation_source
@@ -754,7 +780,8 @@ def test_path_payment_strict_send():
         source=operation_source,
     ).build()
 
-    tx, operations = stellar.from_envelope(envelope)
+    tx, operations, ext = stellar.from_envelope(envelope)
+    assert ext == messages.StellarTxExt(v=0)
     assert len(operations) == 1
 
     assert isinstance(operations[0], messages.StellarPathPaymentStrictSendOp)
@@ -937,7 +964,8 @@ def test_claim_claimable_balance():
         balance_id=balance_id, source=operation_source
     ).build()
 
-    tx, operations = stellar.from_envelope(envelope)
+    tx, operations, ext = stellar.from_envelope(envelope)
+    assert ext == messages.StellarTxExt(v=0)
     assert len(operations) == 1
     assert isinstance(operations[0], messages.StellarClaimClaimableBalanceOp)
     assert operations[0].source_account == operation_source
