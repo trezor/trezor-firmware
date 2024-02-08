@@ -34,7 +34,7 @@ if TREZOR_MODEL in ('1', 'R'):
     FONT_BOLD=None
     FONT_MONO='Font_PixelOperatorMono_Regular_8'
     FONT_BIG=None
-elif TREZOR_MODEL in ('T', ):
+elif TREZOR_MODEL in ('T', 'T3W1'):
     FONT_NORMAL='Font_Roboto_Regular_20'
     FONT_DEMIBOLD=None
     FONT_BOLD=None

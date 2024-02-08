@@ -65,9 +65,13 @@ if TYPE_CHECKING:
 EXPERIMENTAL_ENABLED = False
 
 
-def setup(iface: WireInterface, is_debug_session: bool = False) -> None:
+def setup(
+    iface: WireInterface,
+    is_debug_session: bool = False,
+    buffer: bytearray | None = None,
+) -> None:
     """Initialize the wire stack on passed USB interface."""
-    loop.schedule(handle_session(iface, codec_v1.SESSION_ID, is_debug_session))
+    loop.schedule(handle_session(iface, codec_v1.SESSION_ID, is_debug_session, buffer))
 
 
 def wrap_protobuf_load(
@@ -93,6 +97,7 @@ def wrap_protobuf_load(
 _PROTOBUF_BUFFER_SIZE = const(8192)
 
 WIRE_BUFFER = bytearray(_PROTOBUF_BUFFER_SIZE)
+WIRE_BUFFER_LOCK = context.BufferLock()
 
 if __debug__:
     PROTOBUF_BUFFER_SIZE_DEBUG = 1024
@@ -205,14 +210,20 @@ async def _handle_single_message(
 
 
 async def handle_session(
-    iface: WireInterface, session_id: int, is_debug_session: bool = False
+    iface: WireInterface,
+    session_id: int,
+    is_debug_session: bool = False,
+    buffer: bytearray | None = None,
 ) -> None:
-    if __debug__ and is_debug_session:
-        ctx_buffer = WIRE_BUFFER_DEBUG
-    else:
-        ctx_buffer = WIRE_BUFFER
+    buffer_lock = None
+    if buffer is None:
+        if __debug__ and is_debug_session:
+            buffer = WIRE_BUFFER_DEBUG
+        else:
+            buffer = WIRE_BUFFER
+            buffer_lock = WIRE_BUFFER_LOCK
 
-    ctx = context.Context(iface, session_id, ctx_buffer)
+    ctx = context.Context(iface, session_id, buffer, buffer_lock)
     next_msg: codec_v1.Message | None = None
 
     if __debug__ and is_debug_session:

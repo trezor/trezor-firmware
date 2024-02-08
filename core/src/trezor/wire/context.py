@@ -39,6 +39,27 @@ if TYPE_CHECKING:
     LoadedMessageType = TypeVar("LoadedMessageType", bound=protobuf.MessageType)
 
 
+class BufferLock:
+    def __init__(self) -> None:
+        self.in_use = False
+
+    def __enter__(self) -> None:
+        if self.in_use:
+            raise RuntimeError("wire buffer already used by another context")
+        self.in_use = True
+
+    def __exit__(self, exc_type: Any, value: Any, traceback: Any) -> None:
+        self.in_use = False
+
+
+class DummyLock:
+    def __enter__(self) -> None:
+        pass
+
+    def __exit__(self, exc_type: Any, value: Any, traceback: Any) -> None:
+        pass
+
+
 class UnexpectedMessage(Exception):
     """A message was received that is not part of the current workflow.
 
@@ -58,14 +79,18 @@ class Context:
     (i.e., wire, debug, single BT connection, etc.)
     """
 
-    def __init__(self, iface: WireInterface, sid: int, buffer: bytearray) -> None:
+    def __init__(
+        self, iface: WireInterface, sid: int, buffer: bytearray, buffer_lock: Any = None
+    ) -> None:
         self.iface = iface
         self.sid = sid
         self.buffer = buffer
+        self.buffer_lock = buffer_lock or DummyLock()
 
     def read_from_wire(self) -> Awaitable[codec_v1.Message]:
         """Read a whole message from the wire without parsing it."""
-        return codec_v1.read_message(self.iface, self.buffer)
+        with self.buffer_lock:
+            return codec_v1.read_message(self.iface, self.buffer)
 
     if TYPE_CHECKING:
 
@@ -147,13 +172,14 @@ class Context:
             # message is too big, we need to allocate a new buffer
             buffer = bytearray(msg_size)
 
-        msg_size = protobuf.encode(buffer, msg)
+        with self.buffer_lock:
+            msg_size = protobuf.encode(buffer, msg)
 
-        await codec_v1.write_message(
-            self.iface,
-            msg.MESSAGE_WIRE_TYPE,
-            memoryview(buffer)[:msg_size],
-        )
+            await codec_v1.write_message(
+                self.iface,
+                msg.MESSAGE_WIRE_TYPE,
+                memoryview(buffer)[:msg_size],
+            )
 
 
 CURRENT_CONTEXT: Context | None = None
@@ -235,7 +261,7 @@ def get_context() -> Context:
     return CURRENT_CONTEXT
 
 
-def with_context(ctx: Context, workflow: loop.Task) -> Generator:
+def with_context(ctx: Context | None, workflow: loop.Task) -> Generator:
     """Run a workflow in a particular context.
 
     Stores the context in a closure and installs it into the global variable every time

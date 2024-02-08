@@ -24,13 +24,21 @@
 #include "display.h"
 #include "embed/extmod/trezorobj.h"
 
+#ifdef USE_BLE
+#include "ble/int_comm_defs.h"
+#include "ble/state.h"
+#include "ble_hal.h"
+#endif
+
+#define BLE_EVENTS_IFACE (252)
 #define USB_DATA_IFACE (253)
 #define BUTTON_IFACE (254)
 #define TOUCH_IFACE (255)
+#define USB_RW_IFACE_MAX (15)  // 0-15 reserved for USB
+#define BLE_IFACE_INT (16)
+#define BLE_IFACE_EXT (17)
 #define POLL_READ (0x0000)
 #define POLL_WRITE (0x0100)
-
-extern bool usb_connected_previously;
 
 /// package: trezorio.__init__
 
@@ -145,35 +153,80 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
         }
       }
 #endif
-      else if (mode == POLL_READ) {
-        if (sectrue == usb_hid_can_read(iface)) {
-          uint8_t buf[64] = {0};
-          int len = usb_hid_read(iface, buf, sizeof(buf));
-          if (len > 0) {
-            ret->items[0] = MP_OBJ_NEW_SMALL_INT(i);
-            ret->items[1] = mp_obj_new_bytes(buf, len);
-            return mp_const_true;
+#ifdef USE_BLE
+      else if (iface == BLE_EVENTS_IFACE) {
+        ble_event_poll();
+        uint8_t connected = ble_connected();
+        if (connected != ble_connected_previously) {
+          ble_connected_previously = connected;
+          ret->items[0] = MP_OBJ_NEW_SMALL_INT(i);
+          ret->items[1] = connected ? mp_const_true : mp_const_false;
+          return mp_const_true;
+        }
+      }
+#endif
+      else if (iface <= USB_RW_IFACE_MAX) {
+        if (mode == POLL_READ) {
+          if (sectrue == usb_hid_can_read(iface)) {
+            uint8_t buf[64] = {0};
+            int len = usb_hid_read(iface, buf, sizeof(buf));
+            if (len > 0) {
+              ret->items[0] = MP_OBJ_NEW_SMALL_INT(i);
+              ret->items[1] = mp_obj_new_bytes(buf, len);
+              return mp_const_true;
+            }
+          } else if (sectrue == usb_webusb_can_read(iface)) {
+            uint8_t buf[64] = {0};
+            int len = usb_webusb_read(iface, buf, sizeof(buf));
+            if (len > 0) {
+              ret->items[0] = MP_OBJ_NEW_SMALL_INT(i);
+              ret->items[1] = mp_obj_new_bytes(buf, len);
+              return mp_const_true;
+            }
           }
-        } else if (sectrue == usb_webusb_can_read(iface)) {
-          uint8_t buf[64] = {0};
-          int len = usb_webusb_read(iface, buf, sizeof(buf));
-          if (len > 0) {
+        } else if (mode == POLL_WRITE) {
+          if (sectrue == usb_hid_can_write(iface)) {
             ret->items[0] = MP_OBJ_NEW_SMALL_INT(i);
-            ret->items[1] = mp_obj_new_bytes(buf, len);
+            ret->items[1] = mp_const_none;
+            return mp_const_true;
+          } else if (sectrue == usb_webusb_can_write(iface)) {
+            ret->items[0] = MP_OBJ_NEW_SMALL_INT(i);
+            ret->items[1] = mp_const_none;
             return mp_const_true;
           }
         }
-      } else if (mode == POLL_WRITE) {
-        if (sectrue == usb_hid_can_write(iface)) {
+      }
+#ifdef USE_BLE
+      else if (iface == BLE_IFACE_INT) {
+        if (mode == POLL_READ) {
+          uint8_t buf[64] = {0};
+          int len = ble_int_comm_receive(buf, sizeof(buf));
+          if (len > 0) {
+            ret->items[0] = MP_OBJ_NEW_SMALL_INT(i);
+            ret->items[1] = mp_obj_new_bytes(buf, len);
+            return mp_const_true;
+          }
+        } else if (mode == POLL_WRITE) {
           ret->items[0] = MP_OBJ_NEW_SMALL_INT(i);
           ret->items[1] = mp_const_none;
           return mp_const_true;
-        } else if (sectrue == usb_webusb_can_write(iface)) {
+        }
+      } else if (iface == BLE_IFACE_EXT) {
+        if (mode == POLL_READ) {
+          uint8_t buf[BLE_PACKET_SIZE] = {0};
+          int len = ble_ext_comm_receive(buf, sizeof(buf));
+          if (len > 0) {
+            ret->items[0] = MP_OBJ_NEW_SMALL_INT(i);
+            ret->items[1] = mp_obj_new_bytes(buf, len);
+            return mp_const_true;
+          }
+        } else if (mode == POLL_WRITE) {
           ret->items[0] = MP_OBJ_NEW_SMALL_INT(i);
           ret->items[1] = mp_const_none;
           return mp_const_true;
         }
       }
+#endif
     }
 
     if (mp_hal_ticks_ms() >= deadline) {

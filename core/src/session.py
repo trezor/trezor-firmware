@@ -25,6 +25,12 @@ wire.setup(usb.iface_wire)
 if __debug__:
     wire.setup(usb.iface_debug, is_debug_session=True)
 
+if utils.USE_BLE:
+    from apps.management import ble
+
+    ble.boot()
+
+
 loop.run()
 
 if __debug__:
