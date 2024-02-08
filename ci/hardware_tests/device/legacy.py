@@ -5,7 +5,7 @@ from .device import Device
 
 class TrezorOne(Device):
     def __init__(self, uhub_location, arduino_serial, device_port):
-        super().__init__(uhub_location, device_port)
+        super().__init__(uhub_location=uhub_location, device_port=device_port)
         self.serial = serial.Serial(arduino_serial, 9600)
 
     def touch(self, location, action):
@@ -41,7 +41,7 @@ class TrezorOne(Device):
             self.touch("right", "click")
             self.wait(5)
             self.touch("right", "click")
-        self.wait(10)
+        self.wait(15)
         return self.check_model("Trezor 1")
 
     def _enter_bootloader(self):

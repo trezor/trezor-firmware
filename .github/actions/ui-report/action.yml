@@ -34,7 +34,7 @@ runs:
       shell: sh
     - uses: actions/upload-artifact@v3
       with:
-        name: ui-records
+        name: ui-records-${{ github.job }}
         path: |
           # used by core_ui_master
           screens_${{ inputs.model }}-${{ github.job }}.tar

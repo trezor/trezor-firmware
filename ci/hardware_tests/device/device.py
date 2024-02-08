@@ -5,8 +5,9 @@ from subprocess import run
 
 
 class Device:
-    def __init__(self, uhub_location, device_port):
+    def __init__(self, *, uhub_location=None, hub_vendor=None, device_port=None):
         self.uhub_location = uhub_location
+        self.hub_vendor = hub_vendor
         self.device_port = device_port
 
     @staticmethod
@@ -35,11 +36,17 @@ class Device:
         self.power_off()
         self.power_on()
 
+    def _hub(self):
+        if self.hub_vendor:
+            return f"--vendor {self.hub_vendor}"
+        else:
+            return f"-l {self.uhub_location}"
+
     def power_on(self):
         self.now()
         self.log("[hardware/usb] Turning power on...")
         run(
-            f"uhubctl -l {self.uhub_location} -p {self.device_port} -a on",
+            f"uhubctl {self._hub()} -p {self.device_port} -a on",
             shell=True,
             check=True,
         )
@@ -49,7 +56,7 @@ class Device:
         self.now()
         self.log("[hardware/usb] Turning power off...")
         run(
-            f"uhubctl -l {self.uhub_location} -p {self.device_port} -r 100 -a off",
+            f"uhubctl {self._hub()} -p {self.device_port} -r 5 -a off",
             shell=True,
             check=True,
         )
