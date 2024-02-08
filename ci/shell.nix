@@ -137,7 +137,8 @@ stdenvNoCC.mkDerivation ({
     libiconv
   ] ++ lib.optionals hardwareTest [
     uhubctl
-    ffmpeg
+    tio
+    ffmpeg_5-full
     dejavu_fonts
   ] ++ lib.optionals devTools [
     shellcheck

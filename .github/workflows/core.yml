@@ -199,7 +199,7 @@ jobs:
         if: failure()
       - uses: actions/upload-artifact@v3
         with:
-          name: core-device-${{ matrix.model }}-${{ matrix.asan }}
+          name: core-device-${{ matrix.model }}-${{ matrix.coins }}-${{ matrix.asan }}
           path: tests/trezor.log
           retention-days: 7
         if: always()
@@ -211,7 +211,7 @@ jobs:
         if: ${{ failure() && env.ACTIONS_DO_UI_TEST == 'true' }}
       - uses: actions/upload-artifact@v3
         with:
-          name: core-coverage-${{ matrix.model }}
+          name: core-coverage-${{ matrix.model }}-${{ github.job }}
           # there will be more coverage files (one per core)
           path: core/src/.coverage.*
           retention-days: 7
@@ -257,7 +257,7 @@ jobs:
       - run: mv core/src/.coverage core/.coverage.test_click || true
       - uses: actions/upload-artifact@v3
         with:
-          name: core-coverage-${{ matrix.model }}
+          name: core-coverage-${{ matrix.model }}-${{ github.job }}
           path: core/.coverage.*
           retention-days: 7
 
@@ -321,7 +321,7 @@ jobs:
       - run: mv core/src/.coverage core/.coverage.test_persistence || true
       - uses: actions/upload-artifact@v3
         with:
-          name: core-coverage-${{ matrix.model }}
+          name: core-coverage-${{ matrix.model }}-${{ github.job }}
           path: core/.coverage.*
           retention-days: 7
 
@@ -468,7 +468,7 @@ jobs:
       - run: mv core/src/.coverage core/.coverage.test_emu_monero || true
       - uses: actions/upload-artifact@v3
         with:
-          name: core-coverage-${{ matrix.model }}
+          name: core-coverage-${{ matrix.model }}-${{ github.job }}
           path: core/.coverage.*
           retention-days: 7
 
@@ -505,7 +505,7 @@ jobs:
       - run: mv core/src/.coverage core/.coverage.test_emu_u2f || true
       - uses: actions/upload-artifact@v3
         with:
-          name: core-coverage-${{ matrix.model }}
+          name: core-coverage-${{ matrix.model }}-${{ github.job }}
           path: core/.coverage.*
           retention-days: 7
 
@@ -542,7 +542,7 @@ jobs:
       - run: mv core/src/.coverage core/.coverage.test_emu_fido2 || true
       - uses: actions/upload-artifact@v3
         with:
-          name: core-coverage-${{ matrix.model }}
+          name: core-coverage-${{ matrix.model }}-${{ github.job }}
           path: core/.coverage.*
           retention-days: 7
 
@@ -571,13 +571,14 @@ jobs:
           submodules: recursive
       - uses: actions/download-artifact@v3
         with:
-          name: core-coverage-${{ matrix.model }}
+          pattern: core-coverage-${{ matrix.model }}-*
           path: core
+          merge-multiple: true
       - uses: ./.github/actions/environment
       - run: nix-shell --run "poetry run make -C core coverage"
       - uses: actions/upload-artifact@v3
         with:
-          name: core-coverage-${{ matrix.model }}
+          name: core-coverage-report-${{ matrix.model }}
           path: core/htmlcov
           retention-days: 7
 
@@ -592,7 +593,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v3
         with:
-          name: ui-records
+          pattern: ui-records-*
+          merge-multiple: true
       - uses: ./.github/actions/environment
       - name: Configure aws credentials
         uses: aws-actions/configure-aws-credentials@v4

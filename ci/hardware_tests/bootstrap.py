@@ -1,24 +1,30 @@
 import os
 import sys
 
-from device.t1 import TrezorOne
-from device.tt import TrezorT
+from device.core import TrezorCore
+from device.legacy import TrezorOne
+
+# https://www.uugear.com/product/mega4-4-port-usb-3-ppps-hub-for-raspberry-pi-4b/
+# as long as every runner has this hub we don't have to configure a per-runner hub location
+HUB_VENDOR = "2109:2817"
 
 
 def main(model: str, file: str = None):
     t1 = TrezorOne(
-        os.environ["T1_UHUB_LOCATION"],
-        os.environ["T1_ARDUINO_SERIAL"],
-        os.environ["T1_UHUB_PORT"],
+        os.getenv("T1_UHUB_LOCATION"),
+        os.getenv("T1_ARDUINO_SERIAL"),
+        os.getenv("T1_UHUB_PORT"),
     )
-    tt = TrezorT(os.environ["TT_UHUB_LOCATION"], os.environ["TT_UHUB_PORT"])
+    tt = TrezorCore(hub_vendor=HUB_VENDOR, device_port=os.getenv("TT_UHUB_PORT"))
 
-    if model == "t1":
-        tt.power_off()
+    if model == "T1B1":
+        # tt.power_off()
         path = t1.update_firmware(file)
-    elif model == "tt":
-        t1.power_off()
-        path = tt.update_firmware(file)
+    elif model == "T2T1":
+        # t1.power_off()
+        path = tt.update_firmware(file, "Trezor T")
+    elif model == "T2B1":
+        path = tt.update_firmware(file, "Safe 3")
     else:
         raise ValueError("Unknown Trezor model.")
 

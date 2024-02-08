@@ -11,7 +11,7 @@ OUTPUTFILE=video_${COMMIT}_$(date +%s).mp4
 
 if [ "$ACTION" == "start" ]; then
   echo "[software/video] Starting record to $OUTPUTFILE"
-  ffmpeg -loglevel warning -f oss -f video4linux2 -i $INPUTDEVICE \
+  ffmpeg -loglevel warning -f oss -f v4l2 -i $INPUTDEVICE \
     -flush_packets 1 \
     -vf "drawtext=font=Dejavu Sans: \
     text='$COMMIT | %{localtime} | %{pts}': x=(w-tw)/2: y=h-(2*lh): fontcolor=white: box=1: boxcolor=0x00000000@1: fontsize=15" $OUTPUTFILE &

@@ -246,39 +246,6 @@ Also generates a report with the current situation
 ### [connect test core](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L773)
 
 ---
-## TEST-HW stage - [test-hw.yml](https://github.com/trezor/trezor-firmware/blob/master/ci/test-hw.yml)
-
-Consists of **5 jobs** below:
-
-### [hardware core regular device test](https://github.com/trezor/trezor-firmware/blob/master/ci/test-hw.yml#L25)
-[Device tests](../tests/device-tests.md) that run against an actual physical Trezor T.
-The device needs to have special bootloader, found in `core/embed/bootloader_ci`, that
-makes it possible to flash firmware without confirmation on the touchscreen.
-
-All hardware tests are run nightly on the `master` branch, as well as on push to branches
-with whitelisted prefix. If you want hardware tests ran on your branch, make sure its
-name starts with `hw/`.
-
-Currently it's not possible to run all regular TT tests without getting into
-a state where the micropython heap is too fragmented and allocations fail
-(often manifesting as a stuck test case). For that reason some tests are
-skipped.
-See also: https://github.com/trezor/trezor-firmware/issues/1371
-
-### [hardware core btconly device test](https://github.com/trezor/trezor-firmware/blob/master/ci/test-hw.yml#L54)
-Also device tests on physical Trezor T but with Bitcoin-only firmware.
-
-### [hardware core monero test](https://github.com/trezor/trezor-firmware/blob/master/ci/test-hw.yml#L83)
-
-### [hardware legacy regular device test](https://github.com/trezor/trezor-firmware/blob/master/ci/test-hw.yml#L113)
-[Device tests](../tests/device-tests.md) executed on physical Trezor 1.
-This works thanks to [tpmb](https://github.com/mmahut/tpmb), which is a small arduino
-device capable of pushing an actual buttons on the device.
-
-### [hardware legacy btconly device test](https://github.com/trezor/trezor-firmware/blob/master/ci/test-hw.yml#L137)
-Also device tests on physical Trezor 1 but with Bitcoin-only firmware.
-
----
 ## TEST-NONENGLISH stage - [test-nonenglish.yml](https://github.com/trezor/trezor-firmware/blob/master/ci/test-nonenglish.yml)
 Tests for non-english languages, that run only nightly
 - apart from that, they run also for every branch containing "translations" in its name
