@@ -1,5 +1,5 @@
-from storage.sd_salt import SD_CARD_HOT_SWAPPABLE
 from trezor import io, wire
+from trezor.sdcard import SD_CARD_HOT_SWAPPABLE, with_sdcard
 from trezor.ui.layouts import confirm_action, show_error_and_raise
 
 
@@ -86,7 +86,9 @@ async def confirm_retry_sd(
     )
 
 
-async def ensure_sdcard(ensure_filesystem: bool = True) -> None:
+async def ensure_sdcard(
+    ensure_filesystem: bool = True, for_sd_backup: bool = False
+) -> None:
     """Ensure a SD card is ready for use.
 
     This function runs the UI flow needed to ask the user to insert a SD card if there
@@ -95,6 +97,9 @@ async def ensure_sdcard(ensure_filesystem: bool = True) -> None:
     If `ensure_filesystem` is True (the default), it also tries to mount the SD card
     filesystem, and allows the user to format the card if a filesystem cannot be
     mounted.
+
+    In addition, if 'for_sd_backup' is True (False by default), the card is formatted
+    for SD backup feature.
     """
     from trezor import sdcard
 
@@ -103,26 +108,29 @@ async def ensure_sdcard(ensure_filesystem: bool = True) -> None:
 
     if not ensure_filesystem:
         return
+
     fatfs = io.fatfs  # local_cache_attribute
     while True:
         try:
-            try:
-                with sdcard.filesystem(mounted=False):
-                    fatfs.mount()
-            except fatfs.NoFilesystem:
-                # card not formatted. proceed out of the except clause
-                pass
-            else:
-                # no error when mounting
-                return
+            if not for_sd_backup:
+                # cards for backup must be formatted to keep the unallocated space after partition
+                try:
+                    with sdcard.filesystem(mounted=False):
+                        fatfs.mount()
+                except fatfs.NoFilesystem:
+                    # card not formatted. proceed out of the except clause
+                    pass
+                else:
+                    # no error when mounting
+                    return
 
             await _confirm_format_card()
 
             # Proceed to formatting. Failure is caught by the outside OSError handler
             with sdcard.filesystem(mounted=False):
-                fatfs.mkfs()
+                fatfs.mkfs(for_sd_backup)
                 fatfs.mount()
-                fatfs.setlabel("TREZOR")
+                fatfs.setlabel("BACKUP" if for_sd_backup else "TREZOR")
 
             # format and mount succeeded
             return
@@ -150,3 +158,28 @@ async def request_sd_salt() -> bytearray | None:
             # In either case, there is no good way to recover. If the user clicks Retry,
             # we will try again.
             await confirm_retry_sd()
+
+
+@with_sdcard
+def is_trz_card() -> bool:
+    iosd = io.sdcard  # local_cache_attribute
+    if not iosd.is_present():
+        return False
+    return iosd.get_manuf_id() == 39 and iosd.capacity() == 122_945_536
+
+
+@with_sdcard
+def get_serial_num() -> int:
+    iosd = io.sdcard  # local_cache_attribute
+    if not iosd.is_present():
+        return 0
+    return iosd.get_serial_num()
+
+
+@with_sdcard
+async def show_sd_card_info() -> None:
+    from trezor.ui.layouts import show_success
+
+    mid = io.sdcard.get_manuf_id()
+    cap = io.sdcard.capacity()
+    await show_success("TDL", f"Manuf ID: {mid}\nCapacity: {cap} [B]")

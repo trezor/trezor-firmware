@@ -25,6 +25,7 @@
 /// package: trezorio.sdcard
 
 /// BLOCK_SIZE: int  # size of SD card block
+/// BACKUP_BLOCK_START: int  # first sector for SD seed backup
 
 /// def is_present() -> bool:
 ///     """
@@ -78,7 +79,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_sdcard_capacity_obj,
 ///     """
 ///     Reads blocks starting with block_num from the SD card into buf.
 ///     Number of bytes read is length of buf rounded down to multiply of
-///     SDCARD_BLOCK_SIZE. Returns True if in case of success, False otherwise.
+///     SDCARD_BLOCK_SIZE.
 ///     """
 STATIC mp_obj_t mod_trezorio_sdcard_read(mp_obj_t block_num, mp_obj_t buf) {
   uint32_t block = trezor_obj_get_uint(block_num);
@@ -97,7 +98,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_sdcard_read_obj,
 ///     """
 ///     Writes blocks starting with block_num from buf to the SD card.
 ///     Number of bytes written is length of buf rounded down to multiply of
-///     SDCARD_BLOCK_SIZE. Returns True if in case of success, False otherwise.
+///     SDCARD_BLOCK_SIZE.
 ///     """
 STATIC mp_obj_t mod_trezorio_sdcard_write(mp_obj_t block_num, mp_obj_t buf) {
   uint32_t block = trezor_obj_get_uint(block_num);
@@ -112,6 +113,26 @@ STATIC mp_obj_t mod_trezorio_sdcard_write(mp_obj_t block_num, mp_obj_t buf) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_sdcard_write_obj,
                                  mod_trezorio_sdcard_write);
 
+/// def get_manuf_id() -> int:
+///     """
+///     Returns Manufacturer ID from the CID register data.
+///     """
+STATIC mp_obj_t mod_trezorio_sdcard_get_manuf_id() {
+  return mp_obj_new_int_from_ull(sdcard_get_manuf_id());
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_sdcard_get_manuf_id_obj,
+                                 mod_trezorio_sdcard_get_manuf_id);
+
+/// def get_serial_num() -> int:
+///     """
+///     Returns serial number from the CID register data.
+///     """
+STATIC mp_obj_t mod_trezorio_sdcard_get_serial_num() {
+  return mp_obj_new_int_from_ull(sdcard_get_serial_num());
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_sdcard_get_serial_num_obj,
+                                 mod_trezorio_sdcard_get_serial_num);
+
 STATIC const mp_rom_map_elem_t mod_trezorio_sdcard_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_sdcard)},
 
@@ -124,8 +145,14 @@ STATIC const mp_rom_map_elem_t mod_trezorio_sdcard_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_capacity),
      MP_ROM_PTR(&mod_trezorio_sdcard_capacity_obj)},
     {MP_ROM_QSTR(MP_QSTR_BLOCK_SIZE), MP_ROM_INT(SDCARD_BLOCK_SIZE)},
+    {MP_ROM_QSTR(MP_QSTR_BACKUP_BLOCK_START),
+     MP_ROM_INT(SDCARD_BACKUP_BLOCK_START)},
     {MP_ROM_QSTR(MP_QSTR_read), MP_ROM_PTR(&mod_trezorio_sdcard_read_obj)},
     {MP_ROM_QSTR(MP_QSTR_write), MP_ROM_PTR(&mod_trezorio_sdcard_write_obj)},
+    {MP_ROM_QSTR(MP_QSTR_get_manuf_id),
+     MP_ROM_PTR(&mod_trezorio_sdcard_get_manuf_id_obj)},
+    {MP_ROM_QSTR(MP_QSTR_get_serial_num),
+     MP_ROM_PTR(&mod_trezorio_sdcard_get_serial_num_obj)},
 };
 STATIC MP_DEFINE_CONST_DICT(mod_trezorio_sdcard_globals,
                             mod_trezorio_sdcard_globals_table);

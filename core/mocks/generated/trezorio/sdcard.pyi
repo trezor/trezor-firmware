@@ -1,5 +1,6 @@
 from typing import *
 BLOCK_SIZE: int  # size of SD card block
+BACKUP_BLOCK_START: int  # first sector for SD seed backup
 
 
 # extmod/modtrezorio/modtrezorio-sdcard.h
@@ -37,7 +38,7 @@ def read(block_num: int, buf: bytearray) -> None:
     """
     Reads blocks starting with block_num from the SD card into buf.
     Number of bytes read is length of buf rounded down to multiply of
-    SDCARD_BLOCK_SIZE. Returns True if in case of success, False otherwise.
+    SDCARD_BLOCK_SIZE.
     """
 
 
@@ -46,5 +47,19 @@ def write(block_num: int, buf: bytes) -> None:
     """
     Writes blocks starting with block_num from buf to the SD card.
     Number of bytes written is length of buf rounded down to multiply of
-    SDCARD_BLOCK_SIZE. Returns True if in case of success, False otherwise.
+    SDCARD_BLOCK_SIZE.
+    """
+
+
+# extmod/modtrezorio/modtrezorio-sdcard.h
+def get_manuf_id() -> int:
+    """
+    Returns Manufacturer ID from the CID register data.
+    """
+
+
+# extmod/modtrezorio/modtrezorio-sdcard.h
+def get_serial_num() -> int:
+    """
+    Returns serial number from the CID register data.
     """

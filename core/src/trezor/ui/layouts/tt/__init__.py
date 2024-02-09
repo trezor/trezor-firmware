@@ -11,6 +11,8 @@ from ..common import button_request, interact
 if TYPE_CHECKING:
     from typing import Any, Awaitable, Iterable, NoReturn, Sequence, TypeVar
 
+    from storage.sd_seed_backup import BackupMedium
+
     from ..common import ExceptionType, PropertyType
 
     T = TypeVar("T")
@@ -573,6 +575,74 @@ async def show_success(
             ButtonRequestType.Success,
         )
     )
+
+
+async def choose_backup_medium(
+    share_index: int | None = None, group_index: int | None = None
+) -> BackupMedium:
+    from storage.sd_seed_backup import BackupMedium
+
+    if share_index is None:
+        action = "Recovery seed"
+        description = "You can backup your wallet using either SD card or word list."
+    elif group_index is None:
+        action = f"Recovery share #{share_index + 1}"
+        description = "You can backup your share using either SD card or word list."
+    else:
+        action = f"Group {group_index + 1} - share {share_index + 1}"
+        description = "You can backup your share using either SD card or word list."
+    br_type = "choose_backup_medium"
+    br_code: ButtonRequestType = ButtonRequestType.ResetDevice
+    result = await interact(
+        RustLayout(
+            trezorui2.confirm_action(
+                title="Backup medium",  # TODO naming convention
+                action=action,
+                description=description,
+                verb="SD card",
+                verb_cancel="Words",
+            )
+        ),
+        br_type,
+        br_code,
+    )
+    if result is CONFIRMED:
+        return BackupMedium.SDCard
+    else:
+        return BackupMedium.Words
+
+
+async def choose_recovery_medium(
+    is_slip39: bool = False, dry_run: bool = False
+) -> BackupMedium:
+    from storage.sd_seed_backup import BackupMedium
+
+    action = ""
+
+    thing = "share" if is_slip39 else "wallet"
+    if dry_run:
+        description = f"You can check your {thing} using either SD card or word list."
+    else:
+        description = f"You can recover your {thing} using either SD card or word list."
+    br_type = "choose_recovery_medium"
+    br_code: ButtonRequestType = ButtonRequestType.ResetDevice
+    result = await interact(
+        RustLayout(
+            trezorui2.confirm_action(
+                title="Wallet recovery",
+                action=action,
+                description=description,
+                verb="SD card",
+                verb_cancel="Words",
+            )
+        ),
+        br_type,
+        br_code,
+    )
+    if result is CONFIRMED:
+        return BackupMedium.SDCard
+    else:
+        return BackupMedium.Words
 
 
 async def confirm_output(

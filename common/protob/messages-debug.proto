@@ -173,7 +173,6 @@ message DebugLinkFlashErase {
     optional uint32 sector = 1;
 }
 
-
 /**
  * Request: Erase the SD card
  * @start
@@ -185,6 +184,22 @@ message DebugLinkEraseSdCard {
                                // if false, it will be all 0xFF bytes.
 }
 
+/**
+ * Request: Insert SD card into device (emulator only)
+ * If serial_number is not supplied, the message is interpreted as a request for ejecting the card.
+ * @start
+ * @next Success
+ */
+message DebugLinkInsertSdCard {
+    optional uint32 serial_number = 1;  // mocked serial number of the card (range 1-16)
+    optional uint32 capacity_bytes = 2; // capacity of the mocked card in bytes
+    optional uint32 manuf_ID = 3;       // mocked manufacturer ID 
+    repeated DebugLinkSdCardDataBlock data_blocks = 4; // data written directly to individual memory blocks
+    message DebugLinkSdCardDataBlock {
+        required uint32 number = 1;
+        required bytes data = 2;
+    }
+}
 
 /**
  * Request: Start or stop tracking layout changes
@@ -195,7 +210,6 @@ message DebugLinkWatchLayout {
     optional bool watch = 1;  // if true, start watching layout.
                               // if false, stop.
 }
-
 
 /**
  * Request: Remove all the previous debug event state

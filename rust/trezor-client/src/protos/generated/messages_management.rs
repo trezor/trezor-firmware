@@ -7346,6 +7346,532 @@ pub mod recovery_device {
     }
 }
 
+// @@protoc_insertion_point(message:hw.trezor.messages.management.SdCardBackupManage)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct SdCardBackupManage {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.management.SdCardBackupManage.operation)
+    pub operation: ::std::option::Option<::protobuf::EnumOrUnknown<sd_card_backup_manage::SdCardBackupManageOperationType>>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.management.SdCardBackupManage.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a SdCardBackupManage {
+    fn default() -> &'a SdCardBackupManage {
+        <SdCardBackupManage as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl SdCardBackupManage {
+    pub fn new() -> SdCardBackupManage {
+        ::std::default::Default::default()
+    }
+
+    // required .hw.trezor.messages.management.SdCardBackupManage.SdCardBackupManageOperationType operation = 1;
+
+    pub fn operation(&self) -> sd_card_backup_manage::SdCardBackupManageOperationType {
+        match self.operation {
+            Some(e) => e.enum_value_or(sd_card_backup_manage::SdCardBackupManageOperationType::CHECK),
+            None => sd_card_backup_manage::SdCardBackupManageOperationType::CHECK,
+        }
+    }
+
+    pub fn clear_operation(&mut self) {
+        self.operation = ::std::option::Option::None;
+    }
+
+    pub fn has_operation(&self) -> bool {
+        self.operation.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_operation(&mut self, v: sd_card_backup_manage::SdCardBackupManageOperationType) {
+        self.operation = ::std::option::Option::Some(::protobuf::EnumOrUnknown::new(v));
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(1);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "operation",
+            |m: &SdCardBackupManage| { &m.operation },
+            |m: &mut SdCardBackupManage| { &mut m.operation },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<SdCardBackupManage>(
+            "SdCardBackupManage",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for SdCardBackupManage {
+    const NAME: &'static str = "SdCardBackupManage";
+
+    fn is_initialized(&self) -> bool {
+        if self.operation.is_none() {
+            return false;
+        }
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                8 => {
+                    self.operation = ::std::option::Option::Some(is.read_enum_or_unknown()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.operation {
+            my_size += ::protobuf::rt::int32_size(1, v.value());
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.operation {
+            os.write_enum(1, ::protobuf::EnumOrUnknown::value(&v))?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> SdCardBackupManage {
+        SdCardBackupManage::new()
+    }
+
+    fn clear(&mut self) {
+        self.operation = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static SdCardBackupManage {
+        static instance: SdCardBackupManage = SdCardBackupManage {
+            operation: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for SdCardBackupManage {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("SdCardBackupManage").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for SdCardBackupManage {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for SdCardBackupManage {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+/// Nested message and enums of message `SdCardBackupManage`
+pub mod sd_card_backup_manage {
+    #[derive(Clone,Copy,PartialEq,Eq,Debug,Hash)]
+    // @@protoc_insertion_point(enum:hw.trezor.messages.management.SdCardBackupManage.SdCardBackupManageOperationType)
+    pub enum SdCardBackupManageOperationType {
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.management.SdCardBackupManage.SdCardBackupManageOperationType.CHECK)
+        CHECK = 0,
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.management.SdCardBackupManage.SdCardBackupManageOperationType.REFRESH)
+        REFRESH = 1,
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.management.SdCardBackupManage.SdCardBackupManageOperationType.WIPE)
+        WIPE = 2,
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.management.SdCardBackupManage.SdCardBackupManageOperationType.COPY)
+        COPY = 3,
+    }
+
+    impl ::protobuf::Enum for SdCardBackupManageOperationType {
+        const NAME: &'static str = "SdCardBackupManageOperationType";
+
+        fn value(&self) -> i32 {
+            *self as i32
+        }
+
+        fn from_i32(value: i32) -> ::std::option::Option<SdCardBackupManageOperationType> {
+            match value {
+                0 => ::std::option::Option::Some(SdCardBackupManageOperationType::CHECK),
+                1 => ::std::option::Option::Some(SdCardBackupManageOperationType::REFRESH),
+                2 => ::std::option::Option::Some(SdCardBackupManageOperationType::WIPE),
+                3 => ::std::option::Option::Some(SdCardBackupManageOperationType::COPY),
+                _ => ::std::option::Option::None
+            }
+        }
+
+        fn from_str(str: &str) -> ::std::option::Option<SdCardBackupManageOperationType> {
+            match str {
+                "CHECK" => ::std::option::Option::Some(SdCardBackupManageOperationType::CHECK),
+                "REFRESH" => ::std::option::Option::Some(SdCardBackupManageOperationType::REFRESH),
+                "WIPE" => ::std::option::Option::Some(SdCardBackupManageOperationType::WIPE),
+                "COPY" => ::std::option::Option::Some(SdCardBackupManageOperationType::COPY),
+                _ => ::std::option::Option::None
+            }
+        }
+
+        const VALUES: &'static [SdCardBackupManageOperationType] = &[
+            SdCardBackupManageOperationType::CHECK,
+            SdCardBackupManageOperationType::REFRESH,
+            SdCardBackupManageOperationType::WIPE,
+            SdCardBackupManageOperationType::COPY,
+        ];
+    }
+
+    impl ::protobuf::EnumFull for SdCardBackupManageOperationType {
+        fn enum_descriptor() -> ::protobuf::reflect::EnumDescriptor {
+            static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::EnumDescriptor> = ::protobuf::rt::Lazy::new();
+            descriptor.get(|| super::file_descriptor().enum_by_package_relative_name("SdCardBackupManage.SdCardBackupManageOperationType").unwrap()).clone()
+        }
+
+        fn descriptor(&self) -> ::protobuf::reflect::EnumValueDescriptor {
+            let index = *self as usize;
+            Self::enum_descriptor().value_by_index(index)
+        }
+    }
+
+    impl ::std::default::Default for SdCardBackupManageOperationType {
+        fn default() -> Self {
+            SdCardBackupManageOperationType::CHECK
+        }
+    }
+
+    impl SdCardBackupManageOperationType {
+        pub(in super) fn generated_enum_descriptor_data() -> ::protobuf::reflect::GeneratedEnumDescriptorData {
+            ::protobuf::reflect::GeneratedEnumDescriptorData::new::<SdCardBackupManageOperationType>("SdCardBackupManage.SdCardBackupManageOperationType")
+        }
+    }
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.management.SdCardBackupHealth)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct SdCardBackupHealth {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.management.SdCardBackupHealth.pt_is_mountable)
+    pub pt_is_mountable: ::std::option::Option<bool>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.management.SdCardBackupHealth.pt_has_correct_cap)
+    pub pt_has_correct_cap: ::std::option::Option<bool>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.management.SdCardBackupHealth.pt_readme_present)
+    pub pt_readme_present: ::std::option::Option<bool>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.management.SdCardBackupHealth.pt_readme_content)
+    pub pt_readme_content: ::std::option::Option<bool>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.management.SdCardBackupHealth.unalloc_seed_corrupt)
+    pub unalloc_seed_corrupt: ::std::option::Option<u32>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.management.SdCardBackupHealth.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a SdCardBackupHealth {
+    fn default() -> &'a SdCardBackupHealth {
+        <SdCardBackupHealth as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl SdCardBackupHealth {
+    pub fn new() -> SdCardBackupHealth {
+        ::std::default::Default::default()
+    }
+
+    // required bool pt_is_mountable = 1;
+
+    pub fn pt_is_mountable(&self) -> bool {
+        self.pt_is_mountable.unwrap_or(false)
+    }
+
+    pub fn clear_pt_is_mountable(&mut self) {
+        self.pt_is_mountable = ::std::option::Option::None;
+    }
+
+    pub fn has_pt_is_mountable(&self) -> bool {
+        self.pt_is_mountable.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_pt_is_mountable(&mut self, v: bool) {
+        self.pt_is_mountable = ::std::option::Option::Some(v);
+    }
+
+    // required bool pt_has_correct_cap = 2;
+
+    pub fn pt_has_correct_cap(&self) -> bool {
+        self.pt_has_correct_cap.unwrap_or(false)
+    }
+
+    pub fn clear_pt_has_correct_cap(&mut self) {
+        self.pt_has_correct_cap = ::std::option::Option::None;
+    }
+
+    pub fn has_pt_has_correct_cap(&self) -> bool {
+        self.pt_has_correct_cap.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_pt_has_correct_cap(&mut self, v: bool) {
+        self.pt_has_correct_cap = ::std::option::Option::Some(v);
+    }
+
+    // required bool pt_readme_present = 3;
+
+    pub fn pt_readme_present(&self) -> bool {
+        self.pt_readme_present.unwrap_or(false)
+    }
+
+    pub fn clear_pt_readme_present(&mut self) {
+        self.pt_readme_present = ::std::option::Option::None;
+    }
+
+    pub fn has_pt_readme_present(&self) -> bool {
+        self.pt_readme_present.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_pt_readme_present(&mut self, v: bool) {
+        self.pt_readme_present = ::std::option::Option::Some(v);
+    }
+
+    // required bool pt_readme_content = 4;
+
+    pub fn pt_readme_content(&self) -> bool {
+        self.pt_readme_content.unwrap_or(false)
+    }
+
+    pub fn clear_pt_readme_content(&mut self) {
+        self.pt_readme_content = ::std::option::Option::None;
+    }
+
+    pub fn has_pt_readme_content(&self) -> bool {
+        self.pt_readme_content.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_pt_readme_content(&mut self, v: bool) {
+        self.pt_readme_content = ::std::option::Option::Some(v);
+    }
+
+    // required uint32 unalloc_seed_corrupt = 5;
+
+    pub fn unalloc_seed_corrupt(&self) -> u32 {
+        self.unalloc_seed_corrupt.unwrap_or(0)
+    }
+
+    pub fn clear_unalloc_seed_corrupt(&mut self) {
+        self.unalloc_seed_corrupt = ::std::option::Option::None;
+    }
+
+    pub fn has_unalloc_seed_corrupt(&self) -> bool {
+        self.unalloc_seed_corrupt.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_unalloc_seed_corrupt(&mut self, v: u32) {
+        self.unalloc_seed_corrupt = ::std::option::Option::Some(v);
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(5);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "pt_is_mountable",
+            |m: &SdCardBackupHealth| { &m.pt_is_mountable },
+            |m: &mut SdCardBackupHealth| { &mut m.pt_is_mountable },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "pt_has_correct_cap",
+            |m: &SdCardBackupHealth| { &m.pt_has_correct_cap },
+            |m: &mut SdCardBackupHealth| { &mut m.pt_has_correct_cap },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "pt_readme_present",
+            |m: &SdCardBackupHealth| { &m.pt_readme_present },
+            |m: &mut SdCardBackupHealth| { &mut m.pt_readme_present },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "pt_readme_content",
+            |m: &SdCardBackupHealth| { &m.pt_readme_content },
+            |m: &mut SdCardBackupHealth| { &mut m.pt_readme_content },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "unalloc_seed_corrupt",
+            |m: &SdCardBackupHealth| { &m.unalloc_seed_corrupt },
+            |m: &mut SdCardBackupHealth| { &mut m.unalloc_seed_corrupt },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<SdCardBackupHealth>(
+            "SdCardBackupHealth",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for SdCardBackupHealth {
+    const NAME: &'static str = "SdCardBackupHealth";
+
+    fn is_initialized(&self) -> bool {
+        if self.pt_is_mountable.is_none() {
+            return false;
+        }
+        if self.pt_has_correct_cap.is_none() {
+            return false;
+        }
+        if self.pt_readme_present.is_none() {
+            return false;
+        }
+        if self.pt_readme_content.is_none() {
+            return false;
+        }
+        if self.unalloc_seed_corrupt.is_none() {
+            return false;
+        }
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                8 => {
+                    self.pt_is_mountable = ::std::option::Option::Some(is.read_bool()?);
+                },
+                16 => {
+                    self.pt_has_correct_cap = ::std::option::Option::Some(is.read_bool()?);
+                },
+                24 => {
+                    self.pt_readme_present = ::std::option::Option::Some(is.read_bool()?);
+                },
+                32 => {
+                    self.pt_readme_content = ::std::option::Option::Some(is.read_bool()?);
+                },
+                40 => {
+                    self.unalloc_seed_corrupt = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.pt_is_mountable {
+            my_size += 1 + 1;
+        }
+        if let Some(v) = self.pt_has_correct_cap {
+            my_size += 1 + 1;
+        }
+        if let Some(v) = self.pt_readme_present {
+            my_size += 1 + 1;
+        }
+        if let Some(v) = self.pt_readme_content {
+            my_size += 1 + 1;
+        }
+        if let Some(v) = self.unalloc_seed_corrupt {
+            my_size += ::protobuf::rt::uint32_size(5, v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.pt_is_mountable {
+            os.write_bool(1, v)?;
+        }
+        if let Some(v) = self.pt_has_correct_cap {
+            os.write_bool(2, v)?;
+        }
+        if let Some(v) = self.pt_readme_present {
+            os.write_bool(3, v)?;
+        }
+        if let Some(v) = self.pt_readme_content {
+            os.write_bool(4, v)?;
+        }
+        if let Some(v) = self.unalloc_seed_corrupt {
+            os.write_uint32(5, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> SdCardBackupHealth {
+        SdCardBackupHealth::new()
+    }
+
+    fn clear(&mut self) {
+        self.pt_is_mountable = ::std::option::Option::None;
+        self.pt_has_correct_cap = ::std::option::Option::None;
+        self.pt_readme_present = ::std::option::Option::None;
+        self.pt_readme_content = ::std::option::Option::None;
+        self.unalloc_seed_corrupt = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static SdCardBackupHealth {
+        static instance: SdCardBackupHealth = SdCardBackupHealth {
+            pt_is_mountable: ::std::option::Option::None,
+            pt_has_correct_cap: ::std::option::Option::None,
+            pt_readme_present: ::std::option::Option::None,
+            pt_readme_content: ::std::option::Option::None,
+            unalloc_seed_corrupt: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for SdCardBackupHealth {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("SdCardBackupHealth").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for SdCardBackupHealth {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for SdCardBackupHealth {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
 // @@protoc_insertion_point(message:hw.trezor.messages.management.WordRequest)
 #[derive(PartialEq,Clone,Default,Debug)]
 pub struct WordRequest {
@@ -9818,32 +10344,42 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     anagement.RecoveryDevice.RecoveryDeviceTypeR\x04type\x12\x1f\n\x0bu2f_co\
     unter\x18\t\x20\x01(\rR\nu2fCounter\x12\x17\n\x07dry_run\x18\n\x20\x01(\
     \x08R\x06dryRun\"Z\n\x12RecoveryDeviceType\x12%\n!RecoveryDeviceType_Scr\
-    ambledWords\x10\0\x12\x1d\n\x19RecoveryDeviceType_Matrix\x10\x01\"\xc5\
-    \x01\n\x0bWordRequest\x12N\n\x04type\x18\x01\x20\x02(\x0e2:.hw.trezor.me\
-    ssages.management.WordRequest.WordRequestTypeR\x04type\"f\n\x0fWordReque\
-    stType\x12\x19\n\x15WordRequestType_Plain\x10\0\x12\x1b\n\x17WordRequest\
-    Type_Matrix9\x10\x01\x12\x1b\n\x17WordRequestType_Matrix6\x10\x02\"\x1d\
-    \n\x07WordAck\x12\x12\n\x04word\x18\x01\x20\x02(\tR\x04word\"0\n\rSetU2F\
-    Counter\x12\x1f\n\x0bu2f_counter\x18\x01\x20\x02(\rR\nu2fCounter\"\x13\n\
-    \x11GetNextU2FCounter\"1\n\x0eNextU2FCounter\x12\x1f\n\x0bu2f_counter\
-    \x18\x01\x20\x02(\rR\nu2fCounter\"\x11\n\x0fDoPreauthorized\"\x16\n\x14P\
-    reauthorizedRequest\"\x15\n\x13CancelAuthorization\"\xe5\x01\n\x12Reboot\
-    ToBootloader\x12o\n\x0cboot_command\x18\x01\x20\x01(\x0e2=.hw.trezor.mes\
-    sages.management.RebootToBootloader.BootCommand:\rSTOP_AND_WAITR\x0bboot\
-    Command\x12'\n\x0ffirmware_header\x18\x02\x20\x01(\x0cR\x0efirmwareHeade\
-    r\"5\n\x0bBootCommand\x12\x11\n\rSTOP_AND_WAIT\x10\0\x12\x13\n\x0fINSTAL\
-    L_UPGRADE\x10\x01\"\x10\n\x08GetNonce:\x04\x88\xb2\x19\x01\"#\n\x05Nonce\
-    \x12\x14\n\x05nonce\x18\x01\x20\x02(\x0cR\x05nonce:\x04\x88\xb2\x19\x01\
-    \";\n\nUnlockPath\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\
-    \x12\x10\n\x03mac\x18\x02\x20\x01(\x0cR\x03mac\"'\n\x13UnlockedPathReque\
-    st\x12\x10\n\x03mac\x18\x01\x20\x01(\x0cR\x03mac\"\x14\n\x12ShowDeviceTu\
-    torial\"\x12\n\x10UnlockBootloader*>\n\nBackupType\x12\t\n\x05Bip39\x10\
-    \0\x12\x10\n\x0cSlip39_Basic\x10\x01\x12\x13\n\x0fSlip39_Advanced\x10\
-    \x02*G\n\x10SafetyCheckLevel\x12\n\n\x06Strict\x10\0\x12\x10\n\x0cPrompt\
-    Always\x10\x01\x12\x15\n\x11PromptTemporarily\x10\x02*0\n\x10HomescreenF\
-    ormat\x12\x08\n\x04Toif\x10\x01\x12\x08\n\x04Jpeg\x10\x02\x12\x08\n\x04T\
-    oiG\x10\x03BB\n#com.satoshilabs.trezor.lib.protobufB\x17TrezorMessageMan\
-    agement\x80\xa6\x1d\x01\
+    ambledWords\x10\0\x12\x1d\n\x19RecoveryDeviceType_Matrix\x10\x01\"\xd4\
+    \x01\n\x12SdCardBackupManage\x12o\n\toperation\x18\x01\x20\x02(\x0e2Q.hw\
+    .trezor.messages.management.SdCardBackupManage.SdCardBackupManageOperati\
+    onTypeR\toperation\"M\n\x1fSdCardBackupManageOperationType\x12\t\n\x05CH\
+    ECK\x10\0\x12\x0b\n\x07REFRESH\x10\x01\x12\x08\n\x04WIPE\x10\x02\x12\x08\
+    \n\x04COPY\x10\x03\"\xf3\x01\n\x12SdCardBackupHealth\x12&\n\x0fpt_is_mou\
+    ntable\x18\x01\x20\x02(\x08R\rptIsMountable\x12+\n\x12pt_has_correct_cap\
+    \x18\x02\x20\x02(\x08R\x0fptHasCorrectCap\x12*\n\x11pt_readme_present\
+    \x18\x03\x20\x02(\x08R\x0fptReadmePresent\x12*\n\x11pt_readme_content\
+    \x18\x04\x20\x02(\x08R\x0fptReadmeContent\x120\n\x14unalloc_seed_corrupt\
+    \x18\x05\x20\x02(\rR\x12unallocSeedCorrupt\"\xc5\x01\n\x0bWordRequest\
+    \x12N\n\x04type\x18\x01\x20\x02(\x0e2:.hw.trezor.messages.management.Wor\
+    dRequest.WordRequestTypeR\x04type\"f\n\x0fWordRequestType\x12\x19\n\x15W\
+    ordRequestType_Plain\x10\0\x12\x1b\n\x17WordRequestType_Matrix9\x10\x01\
+    \x12\x1b\n\x17WordRequestType_Matrix6\x10\x02\"\x1d\n\x07WordAck\x12\x12\
+    \n\x04word\x18\x01\x20\x02(\tR\x04word\"0\n\rSetU2FCounter\x12\x1f\n\x0b\
+    u2f_counter\x18\x01\x20\x02(\rR\nu2fCounter\"\x13\n\x11GetNextU2FCounter\
+    \"1\n\x0eNextU2FCounter\x12\x1f\n\x0bu2f_counter\x18\x01\x20\x02(\rR\nu2\
+    fCounter\"\x11\n\x0fDoPreauthorized\"\x16\n\x14PreauthorizedRequest\"\
+    \x15\n\x13CancelAuthorization\"\xe5\x01\n\x12RebootToBootloader\x12o\n\
+    \x0cboot_command\x18\x01\x20\x01(\x0e2=.hw.trezor.messages.management.Re\
+    bootToBootloader.BootCommand:\rSTOP_AND_WAITR\x0bbootCommand\x12'\n\x0ff\
+    irmware_header\x18\x02\x20\x01(\x0cR\x0efirmwareHeader\"5\n\x0bBootComma\
+    nd\x12\x11\n\rSTOP_AND_WAIT\x10\0\x12\x13\n\x0fINSTALL_UPGRADE\x10\x01\"\
+    \x10\n\x08GetNonce:\x04\x88\xb2\x19\x01\"#\n\x05Nonce\x12\x14\n\x05nonce\
+    \x18\x01\x20\x02(\x0cR\x05nonce:\x04\x88\xb2\x19\x01\";\n\nUnlockPath\
+    \x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12\x10\n\x03mac\
+    \x18\x02\x20\x01(\x0cR\x03mac\"'\n\x13UnlockedPathRequest\x12\x10\n\x03m\
+    ac\x18\x01\x20\x01(\x0cR\x03mac\"\x14\n\x12ShowDeviceTutorial\"\x12\n\
+    \x10UnlockBootloader*>\n\nBackupType\x12\t\n\x05Bip39\x10\0\x12\x10\n\
+    \x0cSlip39_Basic\x10\x01\x12\x13\n\x0fSlip39_Advanced\x10\x02*G\n\x10Saf\
+    etyCheckLevel\x12\n\n\x06Strict\x10\0\x12\x10\n\x0cPromptAlways\x10\x01\
+    \x12\x15\n\x11PromptTemporarily\x10\x02*0\n\x10HomescreenFormat\x12\x08\
+    \n\x04Toif\x10\x01\x12\x08\n\x04Jpeg\x10\x02\x12\x08\n\x04ToiG\x10\x03BB\
+    \n#com.satoshilabs.trezor.lib.protobufB\x17TrezorMessageManagement\x80\
+    \xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -9862,7 +10398,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
             let mut deps = ::std::vec::Vec::with_capacity(1);
             deps.push(super::messages::file_descriptor().clone());
-            let mut messages = ::std::vec::Vec::with_capacity(41);
+            let mut messages = ::std::vec::Vec::with_capacity(43);
             messages.push(Initialize::generated_message_descriptor_data());
             messages.push(GetFeatures::generated_message_descriptor_data());
             messages.push(Features::generated_message_descriptor_data());
@@ -9889,6 +10425,8 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             messages.push(EntropyRequest::generated_message_descriptor_data());
             messages.push(EntropyAck::generated_message_descriptor_data());
             messages.push(RecoveryDevice::generated_message_descriptor_data());
+            messages.push(SdCardBackupManage::generated_message_descriptor_data());
+            messages.push(SdCardBackupHealth::generated_message_descriptor_data());
             messages.push(WordRequest::generated_message_descriptor_data());
             messages.push(WordAck::generated_message_descriptor_data());
             messages.push(SetU2FCounter::generated_message_descriptor_data());
@@ -9904,13 +10442,14 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             messages.push(UnlockedPathRequest::generated_message_descriptor_data());
             messages.push(ShowDeviceTutorial::generated_message_descriptor_data());
             messages.push(UnlockBootloader::generated_message_descriptor_data());
-            let mut enums = ::std::vec::Vec::with_capacity(8);
+            let mut enums = ::std::vec::Vec::with_capacity(9);
             enums.push(BackupType::generated_enum_descriptor_data());
             enums.push(SafetyCheckLevel::generated_enum_descriptor_data());
             enums.push(HomescreenFormat::generated_enum_descriptor_data());
             enums.push(features::Capability::generated_enum_descriptor_data());
             enums.push(sd_protect::SdProtectOperationType::generated_enum_descriptor_data());
             enums.push(recovery_device::RecoveryDeviceType::generated_enum_descriptor_data());
+            enums.push(sd_card_backup_manage::SdCardBackupManageOperationType::generated_enum_descriptor_data());
             enums.push(word_request::WordRequestType::generated_enum_descriptor_data());
             enums.push(reboot_to_bootloader::BootCommand::generated_enum_descriptor_data());
             ::protobuf::reflect::GeneratedFileDescriptor::new_generated(

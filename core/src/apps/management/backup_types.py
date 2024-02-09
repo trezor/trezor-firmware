@@ -22,7 +22,9 @@ def is_slip39_word_count(word_count: int) -> bool:
     raise RuntimeError
 
 
-def is_slip39_backup_type(backup_type: BackupType) -> bool:
+def is_slip39_backup_type(backup_type: BackupType | None) -> bool:
+    if backup_type is None:
+        return False
     return backup_type in (BackupType.Slip39_Basic, BackupType.Slip39_Advanced)
 
 

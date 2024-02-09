@@ -63,6 +63,8 @@ storage.resident_credentials
 import storage.resident_credentials
 storage.sd_salt
 import storage.sd_salt
+storage.sd_seed_backup
+import storage.sd_seed_backup
 trezor
 import trezor
 trezor.crypto
@@ -125,6 +127,8 @@ trezor.enums.RequestType
 import trezor.enums.RequestType
 trezor.enums.SafetyCheckLevel
 import trezor.enums.SafetyCheckLevel
+trezor.enums.SdCardBackupManageOperationType
+import trezor.enums.SdCardBackupManageOperationType
 trezor.enums.SdProtectOperationType
 import trezor.enums.SdProtectOperationType
 trezor.enums.WordRequestType
@@ -163,6 +167,8 @@ trezor.ui.layouts.recovery
 import trezor.ui.layouts.recovery
 trezor.ui.layouts.reset
 import trezor.ui.layouts.reset
+trezor.ui.layouts.sdcard_eject
+import trezor.ui.layouts.sdcard_eject
 trezor.ui.layouts.tr
 import trezor.ui.layouts.tr
 trezor.ui.layouts.tr.fido
@@ -187,6 +193,8 @@ trezor.ui.layouts.tt.recovery
 import trezor.ui.layouts.tt.recovery
 trezor.ui.layouts.tt.reset
 import trezor.ui.layouts.tt.reset
+trezor.ui.layouts.tt.sdcard_eject
+import trezor.ui.layouts.tt.sdcard_eject
 trezor.ui.style
 import trezor.ui.style
 trezor.utils
@@ -345,6 +353,8 @@ apps.management.reset_device
 import apps.management.reset_device
 apps.management.reset_device.layout
 import apps.management.reset_device.layout
+apps.management.sd_backup_manage
+import apps.management.sd_backup_manage
 apps.management.sd_protect
 import apps.management.sd_protect
 apps.management.set_u2f_counter

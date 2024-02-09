@@ -45,6 +45,7 @@ from . import (
     monero,
     nem,
     ripple,
+    sd_backup,
     settings,
     solana,
     stellar,
@@ -405,6 +406,7 @@ cli.add_command(cardano.cli)
 cli.add_command(cosi.cli)
 cli.add_command(crypto.cli)
 cli.add_command(device.cli)
+cli.add_command(sd_backup.cli)
 cli.add_command(eos.cli)
 cli.add_command(ethereum.cli)
 cli.add_command(fido.cli)

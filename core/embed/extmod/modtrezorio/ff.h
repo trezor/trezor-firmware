@@ -118,7 +118,7 @@ typedef struct {
 	BYTE pd;	/* Physical drive number */
 	BYTE pt;	/* Partition: 0:Auto detect, 1-4:Forced partition) */
 } PARTITION;
-extern PARTITION VolToPart[];	/* Volume - Partition mapping table */
+extern const PARTITION VolToPart[];	/* Volume - Partition mapping table */
 #endif
 
 #if FF_STR_VOLUME_ID

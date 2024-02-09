@@ -50,6 +50,9 @@
 
 // this is a fixed size and should not be changed
 #define SDCARD_BLOCK_SIZE (512)
+// fixed offset for SD seed backup:
+// MAX_FAT16 + overhead + start offset
+#define SDCARD_BACKUP_BLOCK_START (65525 + 552 + 63)
 
 void sdcard_init(void);
 secbool __wur sdcard_power_on(void);
@@ -60,5 +63,7 @@ secbool __wur sdcard_read_blocks(uint32_t *dest, uint32_t block_num,
                                  uint32_t num_blocks);
 secbool __wur sdcard_write_blocks(const uint32_t *src, uint32_t block_num,
                                   uint32_t num_blocks);
+uint64_t __wur sdcard_get_manuf_id(void);
+uint64_t __wur sdcard_get_serial_num(void);
 
 #endif

@@ -241,8 +241,8 @@
 
 
 /* Definitions of logical drive - physical location conversion */
-#define LD2PD(vol) (BYTE)(vol)	/* Each logical drive is associated with the same physical drive number */
-#define LD2PT(vol) 0			/* Auto partition search */
+#define LD2PD(vol) VolToPart[vol].pd	/* Get physical drive number */
+#define LD2PT(vol) VolToPart[vol].pt	/* Get partition number (0:auto search, 1..:forced partition number) */
 
 
 /* Definitions of sector size */
@@ -2967,7 +2967,7 @@ FRESULT f_mkdir (
 	FATFS *fs = NULL;
 	DIR dj = {0};
 	FFOBJID sobj = {0};
-  DWORD dcl = 0, pcl = 0, tm = 0;
+    DWORD dcl = 0, pcl = 0, tm = 0;
 	DEF_NAMBUF
 
 
@@ -3637,6 +3637,33 @@ FRESULT f_mkfs (
 
 
 
+
+/*-----------------------------------------------------------------------*/
+/* Create Partition Table on the Physical Drive                          */
+/*-----------------------------------------------------------------------*/
+
+FRESULT f_fdisk (
+	BYTE pdrv,			/* Physical drive number */
+	const LBA_t ptbl[],	/* Pointer to the size table for each partitions */
+	void* work			/* Pointer to the working buffer (null: use heap memory) */
+)
+{
+	BYTE *buf = (BYTE*)work;
+	DSTATUS stat = 0;
+	FRESULT res = 0;
+
+
+	/* Initialize the physical drive */
+	stat = disk_initialize(pdrv);
+	if (stat & STA_NOINIT) return FR_NOT_READY;
+	if (stat & STA_PROTECT) return FR_WRITE_PROTECTED;
+
+	if (!buf) return FR_NOT_ENOUGH_CORE;
+
+	res = create_partition(pdrv, ptbl, 0x07, buf);	/* Create partitions (system ID is temporary setting and determined by f_mkfs) */
+
+	LEAVE_MKFS(res);
+}
 
 #endif /* !FF_FS_READONLY && FF_USE_MKFS */
 

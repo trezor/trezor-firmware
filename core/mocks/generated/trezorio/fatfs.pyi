@@ -39,6 +39,11 @@ class NoFilesystem(FatFSError):
 
 
 # extmod/modtrezorio/modtrezorio-fatfs.h
+class FileNotFound(FatFSError):
+    pass
+
+
+# extmod/modtrezorio/modtrezorio-fatfs.h
 class FatFSFile:
     """
     Class encapsulating file
@@ -166,9 +171,18 @@ def is_mounted() -> bool:
 
 
 # extmod/modtrezorio/modtrezorio-fatfs.h
-def mkfs() -> None:
+def mkfs(for_sd_backup: bool=False) -> None:
     """
-    Create a FAT volume on the SD card,
+    Create a FAT volume on the SD card.
+    If for_sd_backup is True, the volume consumes only a portion of the
+    card. Otherwise, the volume is created over the whole card.
+    """
+
+
+# extmod/modtrezorio/modtrezorio-fatfs.h
+def get_capacity() -> int:
+    """
+    Get total filesystem size in bytes.
     """
 
 

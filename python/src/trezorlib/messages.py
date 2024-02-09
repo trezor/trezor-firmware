@@ -123,8 +123,9 @@ class MessageType(IntEnum):
     DebugLinkReseedRandom = 9002
     DebugLinkRecordScreen = 9003
     DebugLinkEraseSdCard = 9005
-    DebugLinkWatchLayout = 9006
-    DebugLinkResetDebugEvents = 9007
+    DebugLinkInsertSdCard = 9006
+    DebugLinkWatchLayout = 9007
+    DebugLinkResetDebugEvents = 9008
     EthereumGetPublicKey = 450
     EthereumPublicKey = 451
     EthereumGetAddress = 56
@@ -269,6 +270,8 @@ class MessageType(IntEnum):
     SolanaAddress = 903
     SolanaSignTx = 904
     SolanaTxSignature = 905
+    SdCardBackupManage = 1000
+    SdCardBackupHealth = 1001
 
 
 class FailureType(IntEnum):
@@ -485,6 +488,13 @@ class SdProtectOperationType(IntEnum):
 class RecoveryDeviceType(IntEnum):
     ScrambledWords = 0
     Matrix = 1
+
+
+class SdCardBackupManageOperationType(IntEnum):
+    CHECK = 0
+    REFRESH = 1
+    WIPE = 2
+    COPY = 3
 
 
 class WordRequestType(IntEnum):
@@ -3685,6 +3695,46 @@ class RecoveryDevice(protobuf.MessageType):
         self.dry_run = dry_run
 
 
+class SdCardBackupManage(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 1000
+    FIELDS = {
+        1: protobuf.Field("operation", "SdCardBackupManageOperationType", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        operation: "SdCardBackupManageOperationType",
+    ) -> None:
+        self.operation = operation
+
+
+class SdCardBackupHealth(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 1001
+    FIELDS = {
+        1: protobuf.Field("pt_is_mountable", "bool", repeated=False, required=True),
+        2: protobuf.Field("pt_has_correct_cap", "bool", repeated=False, required=True),
+        3: protobuf.Field("pt_readme_present", "bool", repeated=False, required=True),
+        4: protobuf.Field("pt_readme_content", "bool", repeated=False, required=True),
+        5: protobuf.Field("unalloc_seed_corrupt", "uint32", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        pt_is_mountable: "bool",
+        pt_has_correct_cap: "bool",
+        pt_readme_present: "bool",
+        pt_readme_content: "bool",
+        unalloc_seed_corrupt: "int",
+    ) -> None:
+        self.pt_is_mountable = pt_is_mountable
+        self.pt_has_correct_cap = pt_has_correct_cap
+        self.pt_readme_present = pt_readme_present
+        self.pt_readme_content = pt_readme_content
+        self.unalloc_seed_corrupt = unalloc_seed_corrupt
+
+
 class WordRequest(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 46
     FIELDS = {
@@ -4084,8 +4134,31 @@ class DebugLinkEraseSdCard(protobuf.MessageType):
         self.format = format
 
 
-class DebugLinkWatchLayout(protobuf.MessageType):
+class DebugLinkInsertSdCard(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 9006
+    FIELDS = {
+        1: protobuf.Field("serial_number", "uint32", repeated=False, required=False, default=None),
+        2: protobuf.Field("capacity_bytes", "uint32", repeated=False, required=False, default=None),
+        3: protobuf.Field("manuf_ID", "uint32", repeated=False, required=False, default=None),
+        4: protobuf.Field("data_blocks", "DebugLinkSdCardDataBlock", repeated=True, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        data_blocks: Optional[Sequence["DebugLinkSdCardDataBlock"]] = None,
+        serial_number: Optional["int"] = None,
+        capacity_bytes: Optional["int"] = None,
+        manuf_ID: Optional["int"] = None,
+    ) -> None:
+        self.data_blocks: Sequence["DebugLinkSdCardDataBlock"] = data_blocks if data_blocks is not None else []
+        self.serial_number = serial_number
+        self.capacity_bytes = capacity_bytes
+        self.manuf_ID = manuf_ID
+
+
+class DebugLinkWatchLayout(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9007
     FIELDS = {
         1: protobuf.Field("watch", "bool", repeated=False, required=False, default=None),
     }
@@ -4099,7 +4172,24 @@ class DebugLinkWatchLayout(protobuf.MessageType):
 
 
 class DebugLinkResetDebugEvents(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 9007
+    MESSAGE_WIRE_TYPE = 9008
+
+
+class DebugLinkSdCardDataBlock(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("number", "uint32", repeated=False, required=True),
+        2: protobuf.Field("data", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        number: "int",
+        data: "bytes",
+    ) -> None:
+        self.number = number
+        self.data = data
 
 
 class EosGetPublicKey(protobuf.MessageType):

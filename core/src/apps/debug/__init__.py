@@ -22,6 +22,7 @@ if __debug__:
             DebugLinkDecision,
             DebugLinkEraseSdCard,
             DebugLinkGetState,
+            DebugLinkInsertSdCard,
             DebugLinkRecordScreen,
             DebugLinkReseedRandom,
             DebugLinkResetDebugEvents,
@@ -240,19 +241,47 @@ if __debug__:
 
         try:
             sdcard.power_on()
+            # trash the whole card
+            assert sdcard.capacity() >= sdcard.BLOCK_SIZE
+            empty_block = bytes([0xFF] * sdcard.BLOCK_SIZE)
+            for i in range(sdcard.capacity() // sdcard.BLOCK_SIZE):
+                sdcard.write(i, empty_block)
+            # make filesystem
             if msg.format:
                 io.fatfs.mkfs()
-            else:
-                # trash first 1 MB of data to destroy the FAT filesystem
-                assert sdcard.capacity() >= 1024 * 1024
-                empty_block = bytes([0xFF] * sdcard.BLOCK_SIZE)
-                for i in range(1024 * 1024 // sdcard.BLOCK_SIZE):
-                    sdcard.write(i, empty_block)
-
         except OSError:
             raise wire.ProcessError("SD card operation failed")
         finally:
             sdcard.power_off()
+        return Success()
+
+    async def dispatch_DebugLinkInsertSdCard(msg: DebugLinkInsertSdCard) -> Success:
+        from trezor import io
+
+        sdcard_inserter = io.sdcard_inserter  # local_cache_attribute
+        sdcard = io.sdcard  # local_cache_attribute
+        if msg.serial_number is None:
+            sdcard_inserter.eject()
+        else:
+            sdcard_inserter.insert(
+                msg.serial_number,
+                capacity_bytes=msg.capacity_bytes,
+                manuf_id=msg.manuf_ID,
+            )
+            try:
+                sdcard.power_on()
+                for block in msg.data_blocks:
+                    assert len(block.data) <= sdcard.BLOCK_SIZE
+                    block_buffer = utils.empty_bytearray(sdcard.BLOCK_SIZE)
+                    block_buffer.extend(block.data)
+                    padding_len = sdcard.BLOCK_SIZE - len(block_buffer)
+                    block_buffer.extend(b"\x00" * padding_len)
+                    sdcard.write(block.number, block_buffer)
+            except OSError:
+                raise wire.ProcessError("SD card operation failed")
+            finally:
+                sdcard.power_off()
+
         return Success()
 
     def boot() -> None:
@@ -263,6 +292,7 @@ if __debug__:
         register(MessageType.DebugLinkReseedRandom, dispatch_DebugLinkReseedRandom)
         register(MessageType.DebugLinkRecordScreen, dispatch_DebugLinkRecordScreen)
         register(MessageType.DebugLinkEraseSdCard, dispatch_DebugLinkEraseSdCard)
+        register(MessageType.DebugLinkInsertSdCard, dispatch_DebugLinkInsertSdCard)
         register(MessageType.DebugLinkWatchLayout, dispatch_DebugLinkWatchLayout)
         register(
             MessageType.DebugLinkResetDebugEvents, dispatch_DebugLinkResetDebugEvents

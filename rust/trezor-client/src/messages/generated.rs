@@ -77,6 +77,7 @@ trezor_message_impl! {
     DebugLinkReseedRandom => MessageType_DebugLinkReseedRandom,
     DebugLinkRecordScreen => MessageType_DebugLinkRecordScreen,
     DebugLinkEraseSdCard => MessageType_DebugLinkEraseSdCard,
+    DebugLinkInsertSdCard => MessageType_DebugLinkInsertSdCard,
     DebugLinkWatchLayout => MessageType_DebugLinkWatchLayout,
     DebugLinkResetDebugEvents => MessageType_DebugLinkResetDebugEvents,
 }
@@ -246,6 +247,8 @@ trezor_message_impl! {
     SolanaAddress => MessageType_SolanaAddress,
     SolanaSignTx => MessageType_SolanaSignTx,
     SolanaTxSignature => MessageType_SolanaTxSignature,
+    SdCardBackupManage => MessageType_SdCardBackupManage,
+    SdCardBackupHealth => MessageType_SdCardBackupHealth,
 }
 
 #[cfg(feature = "stellar")]

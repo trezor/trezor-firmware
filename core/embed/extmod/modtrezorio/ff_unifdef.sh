@@ -15,7 +15,7 @@ unifdef \
     -DFF_FS_RPATH=0 \
     -DFF_VOLUMES=1 \
     -DFF_STR_VOLUME_ID=0 \
-    -DFF_MULTI_PARTITION=0 \
+    -DFF_MULTI_PARTITION=1 \
     -DFF_USE_TRIM=0 \
     -DFF_FS_NOFSINFO=0 \
     -DFF_FS_TINY=0 \
@@ -24,7 +24,6 @@ unifdef \
     -DFF_FS_LOCK=0 \
     -DFF_FS_REENTRANT=0 \
     -DFF_LBA64=0 \
-    -DFF_MULTI_PARTITION=0 \
     ff.c -o ff.c
 
 unifdef \

@@ -19,6 +19,7 @@
 
 #include "embed/extmod/trezorobj.h"
 #include "py/mperrno.h"
+#include "py/obj.h"
 #include "py/objstr.h"
 
 // clang-format off
@@ -69,6 +70,9 @@ MP_DEFINE_EXCEPTION(NotMounted, FatFSError)
 /// class NoFilesystem(FatFSError):
 ///     pass
 MP_DEFINE_EXCEPTION(NoFilesystem, FatFSError)
+/// class FileNotFound(FatFSError):
+///     pass
+MP_DEFINE_EXCEPTION(FileNotFound, FatFSError)
 
 // to avoid collisions with POSIX errno values, we add 0xFF to FR_* error codes
 #define FATFS_ERROR_CODE(n) (n + 0xFF)
@@ -86,6 +90,27 @@ MP_DEFINE_EXCEPTION(NoFilesystem, FatFSError)
       FATFS_RAISE(NotMounted, FR_NOT_READY); \
     }                                        \
   }
+
+// Define and initialize the VolToPart array
+// For more info, see: http://elm-chan.org/fsw/ff/doc/filename.html#vol
+// Assumption: Trezor always operate with only one Volume
+const PARTITION VolToPart[] = {
+    {0, 1}  // Logical Volume 0 => Physical Disk 0, Partition 1
+};
+
+// Helper function to create exactly one partition on a SD card.
+// param `pt_size` uses the same convention as `f_fdisk`, i.e. when the value is
+//  * <= 100, it specifies the partition size in percentage of the entire drive.
+//  * >100,   it specifies the number of sectors.
+// More info here: http://elm-chan.org/fsw/ff/doc/fdisk.html
+void make_partition(int pt_size) {
+  uint8_t working_buf[FF_MAX_SS] = {0};
+  LBA_t plist[] = {pt_size, 0};
+  FRESULT res = f_fdisk(0, plist, working_buf);
+  if (res != FR_OK) {
+    FATFS_RAISE(FatFSError, res);
+  }
+}
 
 DSTATUS disk_initialize(BYTE pdrv) { return disk_status(pdrv); }
 
@@ -464,7 +489,11 @@ STATIC mp_obj_t mod_trezorio_fatfs_stat(mp_obj_t path) {
   FILINFO info = {0};
   FRESULT res = f_stat(_path.buf, &info);
   if (res != FR_OK) {
-    FATFS_RAISE(FatFSError, res);
+    if (res == FR_NO_FILE) {
+      FATFS_RAISE(FileNotFound, FR_NO_FILE)
+    } else {
+      FATFS_RAISE(FatFSError, res);
+    }
   }
   return filinfo_to_tuple(&info);
 }
@@ -528,24 +557,61 @@ STATIC mp_obj_t mod_trezorio_fatfs_is_mounted() {
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_fatfs_is_mounted_obj,
                                  mod_trezorio_fatfs_is_mounted);
 
-/// def mkfs() -> None:
+/// def mkfs(for_sd_backup: bool=False) -> None:
 ///     """
-///     Create a FAT volume on the SD card,
+///     Create a FAT volume on the SD card.
+///     If for_sd_backup is True, the volume consumes only a portion of the
+///     card. Otherwise, the volume is created over the whole card.
 ///     """
-STATIC mp_obj_t mod_trezorio_fatfs_mkfs() {
+STATIC mp_obj_t mod_trezorio_fatfs_mkfs(size_t n_args, const mp_obj_t *args) {
   if (_fatfs_instance_is_mounted()) {
     FATFS_RAISE(FatFSError, FR_LOCKED);
   }
-  MKFS_PARM params = {FM_FAT32, 0, 0, 0, 0};
+
+  // create partition
+  if (n_args > 0 && args[0] == mp_const_true) {
+    // for SD card backup: make the smallest FAT32 partition and keep the rest
+    // unallocated. The size of the partition is set to MAX_FAT16 + overhead,
+    // i.e. 0xFFF5 + 552. FatFS library can create FAT32 as small as MAX_FAT16 +
+    // 550. However, in order to make Windows happy with the partition, we need
+    // to put two more clusters, otherwise Windows offer formatting.
+    const int n_clusters = 0xFFF5 + 552;
+    make_partition(n_clusters);
+  } else {
+    // for other use (SD salt): make the partition over the whole drive space.
+    make_partition(100);
+  }
+
+  // create FAT volume mapped to the created partition
+  MKFS_PARM params = {
+      .fmt = FM_FAT32, .n_fat = 0, .align = 0, .n_root = 0, .au_size = 0};
   uint8_t working_buf[FF_MAX_SS] = {0};
   FRESULT res = f_mkfs("", &params, working_buf, sizeof(working_buf));
   if (res != FR_OK) {
     FATFS_RAISE(FatFSError, res);
   }
+
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_fatfs_mkfs_obj,
-                                 mod_trezorio_fatfs_mkfs);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorio_fatfs_mkfs_obj, 0, 1,
+                                           mod_trezorio_fatfs_mkfs);
+
+/// def get_capacity() -> int:
+///     """
+///     Get total filesystem size in bytes.
+///     """
+STATIC mp_obj_t mod_trezorio_fatfs_get_capacity() {
+  FATFS_ONLY_MOUNTED;
+  // total number of clusters in the filesystem
+  DWORD total_clusters = fs_instance.n_fatent - 2;
+  // size of each cluster in bytes
+  DWORD cluster_size = fs_instance.csize * SDCARD_BLOCK_SIZE;
+  DWORD total_size = total_clusters * cluster_size;
+
+  return mp_obj_new_int_from_uint(total_size);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_fatfs_get_capacity_obj,
+                                 mod_trezorio_fatfs_get_capacity);
 
 /// def setlabel(label: str) -> None:
 ///     """
@@ -574,6 +640,7 @@ STATIC const mp_rom_map_elem_t mod_trezorio_fatfs_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_FatFSError), MP_ROM_PTR(&mp_type_FatFSError)},
     {MP_ROM_QSTR(MP_QSTR_NotMounted), MP_ROM_PTR(&mp_type_NotMounted)},
     {MP_ROM_QSTR(MP_QSTR_NoFilesystem), MP_ROM_PTR(&mp_type_NoFilesystem)},
+    {MP_ROM_QSTR(MP_QSTR_FileNotFound), MP_ROM_PTR(&mp_type_FileNotFound)},
 
     {MP_ROM_QSTR(MP_QSTR_open), MP_ROM_PTR(&mod_trezorio_fatfs_open_obj)},
     {MP_ROM_QSTR(MP_QSTR_listdir), MP_ROM_PTR(&mod_trezorio_fatfs_listdir_obj)},
@@ -586,6 +653,8 @@ STATIC const mp_rom_map_elem_t mod_trezorio_fatfs_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_is_mounted),
      MP_ROM_PTR(&mod_trezorio_fatfs_is_mounted_obj)},
     {MP_ROM_QSTR(MP_QSTR_mkfs), MP_ROM_PTR(&mod_trezorio_fatfs_mkfs_obj)},
+    {MP_ROM_QSTR(MP_QSTR_get_capacity),
+     MP_ROM_PTR(&mod_trezorio_fatfs_get_capacity_obj)},
     {MP_ROM_QSTR(MP_QSTR_setlabel),
      MP_ROM_PTR(&mod_trezorio_fatfs_setlabel_obj)},
 

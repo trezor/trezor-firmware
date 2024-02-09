@@ -25,6 +25,8 @@ if TYPE_CHECKING:
     P = ParamSpec("P")
     R = TypeVar("R")
 
+SD_CARD_HOT_SWAPPABLE = True
+
 
 class FilesystemWrapper:
     _INSTANCE: "FilesystemWrapper" | None = None
@@ -75,6 +77,14 @@ def filesystem(mounted: bool = True) -> FilesystemWrapper:
 def with_filesystem(func: Callable[P, R]) -> Callable[P, R]:
     def wrapped_func(*args: P.args, **kwargs: P.kwargs) -> R:
         with filesystem():
+            return func(*args, **kwargs)
+
+    return wrapped_func
+
+
+def with_sdcard(func: Callable[P, R]) -> Callable[P, R]:
+    def wrapped_func(*args: P.args, **kwargs: P.kwargs) -> R:
+        with filesystem(mounted=False):
             return func(*args, **kwargs)
 
     return wrapped_func

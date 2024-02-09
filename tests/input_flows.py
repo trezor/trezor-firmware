@@ -914,8 +914,13 @@ class InputFlowBip39Backup(InputFlowBase):
         self.mnemonic = None
 
     def input_flow_common(self) -> BRGeneratorType:
+
         # 1. Confirm Reset
         yield from click_through(self.debug, screens=1, code=B.ResetDevice)
+
+        # 2. Choose Words
+        yield
+        self.debug.press_no()
 
         # mnemonic phrases and rest
         self.mnemonic = yield from get_mnemonic_and_confirm_success(self.debug)
@@ -932,9 +937,44 @@ class InputFlowBip39ResetBackup(InputFlowBase):
         # 2. Backup your seed
         # 3. Confirm warning
         yield from click_through(self.debug, screens=3, code=B.ResetDevice)
+        # 4. Choose Words
+        yield
+        self.debug.press_no()
 
         # mnemonic phrases and rest
         self.mnemonic = yield from get_mnemonic_and_confirm_success(self.debug)
+
+
+class InputFlowBip39ResetBackupSdCard(InputFlowBase):
+    def __init__(self, client: Client):
+        super().__init__(client)
+
+    def input_flow_common(self) -> BRGeneratorType:
+
+        # 1. Confirm Reset
+        yield from click_through(self.debug, screens=3, code=B.ResetDevice)
+
+        # 2. Choose SD Card
+        yield
+        self.debug.press_yes()
+
+        # 3. Go through format screens
+        yield from click_through(self.debug, screens=2, code=B.Other)
+
+        # 4. Confirm backup done
+        br = yield
+        assert br.code == B.Success
+        self.debug.press_yes()
+
+        # 5. Eject SD card
+        yield
+        self.debug.eject_sd_card()
+        self.debug.wait_layout()
+
+        # 6. Confirm success
+        br = yield
+        assert br.code == B.Success
+        self.debug.press_yes()
 
 
 class InputFlowBip39ResetPIN(InputFlowBase):
@@ -1011,6 +1051,9 @@ def load_5_shares(
     mnemonics: list[str] = []
 
     for _ in range(5):
+        # Choose Words
+        yield
+        debug.press_no()
         # Phrase screen
         mnemonic = yield from read_and_confirm_mnemonic(debug)
         assert mnemonic is not None
@@ -1140,6 +1183,9 @@ def load_5_groups_5_shares(
 
     for _g in range(5):
         for _s in range(5):
+            # Choose Words
+            yield
+            debug.press_no()
             # Phrase screen
             mnemonic = yield from read_and_confirm_mnemonic(debug)
             assert mnemonic is not None
@@ -1149,6 +1195,54 @@ def load_5_groups_5_shares(
             debug.press_yes()
 
     return mnemonics
+
+
+class InputFlowSlip39BasicResetRecoverySdCard(InputFlowBase):
+    def __init__(self, client: Client, sdcard_numbers):
+        super().__init__(client)
+        self.sdcard_numbers = sdcard_numbers
+
+    def input_flow_tt(self) -> BRGeneratorType:
+        # 1. Confirm Reset
+        # 2. Backup your seed
+        # 3. Confirm warning
+        # 4. shares info
+        # 5. Set & Confirm number of shares
+        # 6. threshold info
+        # 7. Set & confirm threshold value
+        # 8. Confirm show seeds
+        yield from click_through(self.debug, screens=8, code=B.ResetDevice)
+
+        # Save 5 shares to 5 different SD cards
+        yield from load_5_shares_to_sdcards(self.debug, self.sdcard_numbers)
+
+        br = yield  # safety warning
+        assert br.code == B.Success
+        self.debug.press_yes()
+
+
+def load_5_shares_to_sdcards(debug: DebugLink, sdcard_numbers: list[int]) -> None:
+    for n in sdcard_numbers:
+        # Insert the card and erase (i.e. assume empty card)
+        debug.insert_sd_card(n)
+        debug.erase_sd_card(format=False)
+
+        # Choose SD card
+        yield
+        debug.press_yes()
+
+        # Go through format screens
+        yield from click_through(debug, screens=2, code=B.Other)
+
+        # Confirm continue
+        br = yield
+        assert br.code == B.Success
+        debug.press_yes()
+
+        # Eject the card
+        yield
+        debug.eject_sd_card()
+        debug.wait_layout()
 
 
 class InputFlowSlip39AdvancedBackup(InputFlowBase):
@@ -1325,8 +1419,27 @@ class InputFlowBip39Recovery(InputFlowBase):
         yield from self.REC.confirm_recovery()
         if self.pin is not None:
             yield from self.PIN.setup_new_pin(self.pin)
+        # Choose Words
+        yield
+        self.debug.press_no()
         yield from self.REC.setup_bip39_recovery(len(self.mnemonic))
         yield from self.REC.input_mnemonic(self.mnemonic)
+        yield from self.REC.success_wallet_recovered()
+
+
+class InputFlowBip39RecoverySdCard(InputFlowBase):
+    def __init__(self, client: Client, pin: str | None = None):
+        super().__init__(client)
+        self.pin = pin
+
+    def input_flow_common(self) -> BRGeneratorType:
+        self.debug.insert_sd_card(1)
+        yield from self.REC.confirm_recovery()
+        if self.pin is not None:
+            yield from self.PIN.setup_new_pin(self.pin)
+        # Choose "SD card"
+        yield
+        self.debug.press_yes()
         yield from self.REC.success_wallet_recovered()
 
 
@@ -1472,6 +1585,33 @@ class InputFlowSlip39BasicRecovery(InputFlowBase):
             yield from self.PIN.setup_new_pin(self.pin)
         yield from self.REC.setup_slip39_recovery(self.word_count)
         yield from self.REC.input_all_slip39_shares(self.shares)
+        yield from self.REC.success_wallet_recovered()
+
+
+class InputFlowSlip39BasicRecoverySdCard(InputFlowBase):
+    def __init__(
+        self, client: Client, sdcard_numbers: list[int], pin: str | None = None
+    ):
+        super().__init__(client)
+        self.sdcard_numbers = sdcard_numbers
+        self.pin = pin
+
+    def input_flow_common(self) -> BRGeneratorType:
+        yield from self.REC.confirm_recovery()
+        if self.pin is not None:
+            yield from self.PIN.setup_new_pin(self.pin)
+
+        # choose SD card
+        for n in self.sdcard_numbers:
+            self.debug.eject_sd_card()
+            self.debug.insert_sd_card(n)
+            # choose SD card
+            yield
+            self.debug.press_yes()
+            # enter next share
+            yield
+            self.debug.press_yes()
+
         yield from self.REC.success_wallet_recovered()
 
 
