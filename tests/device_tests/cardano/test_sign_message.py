@@ -50,4 +50,5 @@ def _transform_expected_result(result: dict) -> messages.CardanoSignMessageFinis
     return messages.CardanoSignMessageFinished(
         signature=bytes.fromhex(result["signature"]),
         address=bytes.fromhex(result["address"]),
+        pub_key=bytes.fromhex(result["pub_key"]),
     )

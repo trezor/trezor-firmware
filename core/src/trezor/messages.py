@@ -1841,12 +1841,14 @@ if TYPE_CHECKING:
     class CardanoSignMessageFinished(protobuf.MessageType):
         signature: "bytes"
         address: "bytes"
+        pub_key: "bytes"
 
         def __init__(
             self,
             *,
             signature: "bytes",
             address: "bytes",
+            pub_key: "bytes",
         ) -> None:
             pass
 
