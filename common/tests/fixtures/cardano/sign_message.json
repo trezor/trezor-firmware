@@ -14,7 +14,8 @@
       },
       "result": {
         "signature": "5ad6ba670e65353b2c1ad4053a1ed4a9348a73fe965ffa0afafa24bad06e3eb3e325d49029604c09bf665c3c43a750ec81a43b1f8b746b07e999b913b980d006",
-        "address": "d9553a4de9c7ad8532abdb1d0a7f425b8007d25c9f1edcf0b5f5c3ba"
+        "address": "d9553a4de9c7ad8532abdb1d0a7f425b8007d25c9f1edcf0b5f5c3ba",
+        "pub_key": "67e3d14e1e0db2a6ff68832994451f63d3e92a4ee85c3681d72634ccfe889f2c"
       }
     },
     {
@@ -34,7 +35,8 @@
       },
       "result": {
         "signature": "9efaff0b74c0beb2cadd727d8bafe13b31107235c5fc46c6c33e596e024d391c9fbe37072e43965add6ee0a4788562382031486b74fd59d636aa1ca3b1ddfe06",
-        "address": "0180f9e2c88e6c817008f3a812ed889b4a4da8e0bd103f86e7335422aa122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b4277"
+        "address": "0180f9e2c88e6c817008f3a812ed889b4a4da8e0bd103f86e7335422aa122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b4277",
+        "pub_key": "67e3d14e1e0db2a6ff68832994451f63d3e92a4ee85c3681d72634ccfe889f2c"
       }
     },
     {
@@ -47,10 +49,11 @@
       },
       "result": {
         "signature": "2c325e542fa78d76d916e50f50b85e770354a44e071f08fdb8ec5d0bcbf844cf70dcf5c87b7a51cd7f0269a59eec8d438c3c27eb42b971e7ccb7f864714c4b06",
-        "address": "d9553a4de9c7ad8532abdb1d0a7f425b8007d25c9f1edcf0b5f5c3ba"
+        "address": "d9553a4de9c7ad8532abdb1d0a7f425b8007d25c9f1edcf0b5f5c3ba",
+        "pub_key": "67e3d14e1e0db2a6ff68832994451f63d3e92a4ee85c3681d72634ccfe889f2c"
       }
     },
-        {
+    {
       "description": "Sign short ASCII payload",
       "parameters": {
         "signing_path": "m/1852'/1815'/4'/0/0",
@@ -60,10 +63,11 @@
       },
       "result": {
         "signature": "2201b8e7fa9ea919935e06ecc3e845433855066acaaf61cb8e624a2eb7139b73a9d126e7ee04548fff06ac933bd5419fc78c5aebee9b536cbee1481b52ec3e03",
-        "address": "d9553a4de9c7ad8532abdb1d0a7f425b8007d25c9f1edcf0b5f5c3ba"
+        "address": "d9553a4de9c7ad8532abdb1d0a7f425b8007d25c9f1edcf0b5f5c3ba",
+        "pub_key": "67e3d14e1e0db2a6ff68832994451f63d3e92a4ee85c3681d72634ccfe889f2c"
       }
     },
-            {
+    {
       "description": "Sign short ASCII payload rendered as hex",
       "parameters": {
         "signing_path": "m/1852'/1815'/4'/0/0",
@@ -73,7 +77,8 @@
       },
       "result": {
         "signature": "2201b8e7fa9ea919935e06ecc3e845433855066acaaf61cb8e624a2eb7139b73a9d126e7ee04548fff06ac933bd5419fc78c5aebee9b536cbee1481b52ec3e03",
-        "address": "d9553a4de9c7ad8532abdb1d0a7f425b8007d25c9f1edcf0b5f5c3ba"
+        "address": "d9553a4de9c7ad8532abdb1d0a7f425b8007d25c9f1edcf0b5f5c3ba",
+        "pub_key": "67e3d14e1e0db2a6ff68832994451f63d3e92a4ee85c3681d72634ccfe889f2c"
       }
     },
     {
@@ -86,7 +91,8 @@
       },
       "result": {
         "signature": "b09177a06cb2deba7ada89fec96fc4380e746f67c6b16a9ef9ae6b7cbbe941fdad8a8a573b809cd88db296b91b476c436033a29d86a63959e270047e47cd5d0d",
-        "address": "d9553a4de9c7ad8532abdb1d0a7f425b8007d25c9f1edcf0b5f5c3ba"
+        "address": "d9553a4de9c7ad8532abdb1d0a7f425b8007d25c9f1edcf0b5f5c3ba",
+        "pub_key": "67e3d14e1e0db2a6ff68832994451f63d3e92a4ee85c3681d72634ccfe889f2c"
       }
     },
     {
@@ -99,7 +105,8 @@
       },
       "result": {
         "signature": "a2503039a8ec620e05d9e4345339d61cd11480fbfcc75ea1a10789751a7c5f46ba06786eb1719da62db76c20313ad3445839b8117abac206cc4bd63ea623fc07",
-        "address": "d9553a4de9c7ad8532abdb1d0a7f425b8007d25c9f1edcf0b5f5c3ba"
+        "address": "d9553a4de9c7ad8532abdb1d0a7f425b8007d25c9f1edcf0b5f5c3ba",
+        "pub_key": "67e3d14e1e0db2a6ff68832994451f63d3e92a4ee85c3681d72634ccfe889f2c"
       }
     },
     {
@@ -112,7 +119,8 @@
       },
       "result": {
         "signature": "92331e75bb4c3208317ac422f2fc9d8b9b09d3f81cc487edaa7028d262553e5691532fb166a40e45eb2e4addd4280ff7e07bd4249e964d969e91555317b05f08",
-        "address": "d9553a4de9c7ad8532abdb1d0a7f425b8007d25c9f1edcf0b5f5c3ba"
+        "address": "d9553a4de9c7ad8532abdb1d0a7f425b8007d25c9f1edcf0b5f5c3ba",
+        "pub_key": "67e3d14e1e0db2a6ff68832994451f63d3e92a4ee85c3681d72634ccfe889f2c"
       }
     },
     {
@@ -127,7 +135,8 @@
       },
       "result": {
         "signature": "eb7e48bb2de912b24ea4e295cfbf338e95e2a2d9c5eb41d72ddd8ebf96ca6128696e91e65e20a755821781b8ea0b4aa7ffcfa6ab0c7da2c67ecaf33fcd596509",
-        "address": "d9553a4de9c7ad8532abdb1d0a7f425b8007d25c9f1edcf0b5f5c3ba"
+        "address": "d9553a4de9c7ad8532abdb1d0a7f425b8007d25c9f1edcf0b5f5c3ba",
+        "pub_key": "67e3d14e1e0db2a6ff68832994451f63d3e92a4ee85c3681d72634ccfe889f2c"
       }
     },
     {
@@ -142,7 +151,8 @@
       },
       "result": {
         "signature": "1cd79c511e58e0d00bc402c24631a982c0f596e13cad38447d4f31213d085b23b9990b45023450f5ab4d47987993af662702b07bfc8195feb80b2c9e1c1dc10f",
-        "address": "d9553a4de9c7ad8532abdb1d0a7f425b8007d25c9f1edcf0b5f5c3ba"
+        "address": "d9553a4de9c7ad8532abdb1d0a7f425b8007d25c9f1edcf0b5f5c3ba",
+        "pub_key": "67e3d14e1e0db2a6ff68832994451f63d3e92a4ee85c3681d72634ccfe889f2c"
       }
     }
   ]

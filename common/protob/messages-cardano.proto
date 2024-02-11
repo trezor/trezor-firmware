@@ -568,6 +568,7 @@ message CardanoMessageItemHostAck {
  * @end
  */
 message CardanoSignMessageFinished {
-    required bytes signature = 1;
-    required bytes address = 2;
+    required bytes signature = 1; // signature for structure containing payload and protected headers
+    required bytes address = 2;   // value of the address field in protected headers
+    required bytes pub_key = 3;   // public key given by signing path
 }

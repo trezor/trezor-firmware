@@ -2965,6 +2965,7 @@ class CardanoSignMessageFinished(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("signature", "bytes", repeated=False, required=True),
         2: protobuf.Field("address", "bytes", repeated=False, required=True),
+        3: protobuf.Field("pub_key", "bytes", repeated=False, required=True),
     }
 
     def __init__(
@@ -2972,9 +2973,11 @@ class CardanoSignMessageFinished(protobuf.MessageType):
         *,
         signature: "bytes",
         address: "bytes",
+        pub_key: "bytes",
     ) -> None:
         self.signature = signature
         self.address = address
+        self.pub_key = pub_key
 
 
 class CipherKeyValue(protobuf.MessageType):
