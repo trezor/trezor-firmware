@@ -36,7 +36,7 @@ def call_sign_message(
             client,
             payload=bytes.fromhex(parameters["payload"]),
             hash_payload=parameters["hash_payload"],
-            display_ascii=parameters["display_ascii"],
+            prefer_hex_display=parameters["prefer_hex_display"],
             signing_path=tools.parse_path(parameters["signing_path"]),
             address_parameters=cardano.parse_optional_address_parameters(
                 parameters.get("address_parameters")
