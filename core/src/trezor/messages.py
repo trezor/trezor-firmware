@@ -1790,7 +1790,7 @@ if TYPE_CHECKING:
         signing_path: "list[int]"
         payload_size: "int"
         hash_payload: "bool"
-        display_ascii: "bool"
+        prefer_hex_display: "bool"
         address_parameters: "CardanoAddressParametersType | None"
         derivation_type: "CardanoDerivationType"
 
@@ -1799,7 +1799,7 @@ if TYPE_CHECKING:
             *,
             payload_size: "int",
             hash_payload: "bool",
-            display_ascii: "bool",
+            prefer_hex_display: "bool",
             derivation_type: "CardanoDerivationType",
             signing_path: "list[int] | None" = None,
             protocol_magic: "int | None" = None,

@@ -2911,7 +2911,7 @@ class CardanoSignMessageInit(protobuf.MessageType):
         3: protobuf.Field("signing_path", "uint32", repeated=True, required=False, default=None),
         4: protobuf.Field("payload_size", "uint32", repeated=False, required=True),
         5: protobuf.Field("hash_payload", "bool", repeated=False, required=True),
-        6: protobuf.Field("display_ascii", "bool", repeated=False, required=True),
+        6: protobuf.Field("prefer_hex_display", "bool", repeated=False, required=True),
         7: protobuf.Field("address_parameters", "CardanoAddressParametersType", repeated=False, required=False, default=None),
         8: protobuf.Field("derivation_type", "CardanoDerivationType", repeated=False, required=True),
     }
@@ -2921,7 +2921,7 @@ class CardanoSignMessageInit(protobuf.MessageType):
         *,
         payload_size: "int",
         hash_payload: "bool",
-        display_ascii: "bool",
+        prefer_hex_display: "bool",
         derivation_type: "CardanoDerivationType",
         signing_path: Optional[Sequence["int"]] = None,
         protocol_magic: Optional["int"] = None,
@@ -2931,7 +2931,7 @@ class CardanoSignMessageInit(protobuf.MessageType):
         self.signing_path: Sequence["int"] = signing_path if signing_path is not None else []
         self.payload_size = payload_size
         self.hash_payload = hash_payload
-        self.display_ascii = display_ascii
+        self.prefer_hex_display = prefer_hex_display
         self.derivation_type = derivation_type
         self.protocol_magic = protocol_magic
         self.network_id = network_id
