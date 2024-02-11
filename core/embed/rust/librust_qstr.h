@@ -367,6 +367,14 @@ static void _librust_qstrs(void) {
   MP_QSTR_ethereum__show_full_message;
   MP_QSTR_ethereum__show_full_struct;
   MP_QSTR_ethereum__sign_eip712;
+  MP_QSTR_ethereum__staking_claim;
+  MP_QSTR_ethereum__staking_claim_address;
+  MP_QSTR_ethereum__staking_claim_intro;
+  MP_QSTR_ethereum__staking_stake;
+  MP_QSTR_ethereum__staking_stake_address;
+  MP_QSTR_ethereum__staking_stake_intro;
+  MP_QSTR_ethereum__staking_unstake;
+  MP_QSTR_ethereum__staking_unstake_intro;
   MP_QSTR_ethereum__title_confirm_data;
   MP_QSTR_ethereum__title_confirm_domain;
   MP_QSTR_ethereum__title_confirm_message;
@@ -898,6 +906,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_stellar__your_account;
   MP_QSTR_subprompt;
   MP_QSTR_subtitle;
+  MP_QSTR_text_mono;
   MP_QSTR_tezos__baker_address;
   MP_QSTR_tezos__balance;
   MP_QSTR_tezos__ballot;

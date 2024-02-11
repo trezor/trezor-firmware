@@ -463,6 +463,7 @@ struct ConfirmBlobParams {
     info_button: bool,
     hold: bool,
     chunkify: bool,
+    text_mono: bool,
 }
 
 impl ConfirmBlobParams {
@@ -485,6 +486,7 @@ impl ConfirmBlobParams {
             info_button: false,
             hold,
             chunkify: false,
+            text_mono: true,
         }
     }
 
@@ -508,6 +510,11 @@ impl ConfirmBlobParams {
         self
     }
 
+    fn with_text_mono(mut self, text_mono: bool) -> Self {
+        self.text_mono = text_mono;
+        self
+    }
+
     fn into_layout(self) -> Result<Obj, Error> {
         let paragraphs = ConfirmBlob {
             description: self.description.unwrap_or_else(StrBuffer::empty),
@@ -518,8 +525,10 @@ impl ConfirmBlobParams {
             data_font: if self.chunkify {
                 let data: StrBuffer = self.data.try_into()?;
                 theme::get_chunkified_text_style(data.len())
-            } else {
+            } else if self.text_mono {
                 &theme::TEXT_MONO
+            } else {
+                &theme::TEXT_NORMAL
             },
         }
         .into_paragraphs();
@@ -738,6 +747,7 @@ extern "C" fn new_show_info_with_cancel(n_args: usize, args: *const Obj, kwargs:
         let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let items: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
         let horizontal: bool = kwargs.get_or(Qstr::MP_QSTR_horizontal, false)?;
+        let chunkify: bool = kwargs.get_or(Qstr::MP_QSTR_chunkify, false)?;
 
         let mut paragraphs = ParagraphVecShort::new();
 
@@ -746,7 +756,14 @@ extern "C" fn new_show_info_with_cancel(n_args: usize, args: *const Obj, kwargs:
             let key: StrBuffer = key.try_into()?;
             let value: StrBuffer = value.try_into()?;
             paragraphs.add(Paragraph::new(&theme::TEXT_NORMAL, key).no_break());
-            paragraphs.add(Paragraph::new(&theme::TEXT_MONO, value));
+            if chunkify {
+                paragraphs.add(Paragraph::new(
+                    theme::get_chunkified_text_style(value.len()),
+                    value,
+                ));
+            } else {
+                paragraphs.add(Paragraph::new(&theme::TEXT_MONO, value));
+            }
         }
 
         let axis = match horizontal {
@@ -787,11 +804,13 @@ extern "C" fn new_confirm_value(n_args: usize, args: *const Obj, kwargs: *mut Ma
             .try_into_option()?;
         let hold: bool = kwargs.get_or(Qstr::MP_QSTR_hold, false)?;
         let chunkify: bool = kwargs.get_or(Qstr::MP_QSTR_chunkify, false)?;
+        let text_mono: bool = kwargs.get_or(Qstr::MP_QSTR_text_mono, true)?;
 
         ConfirmBlobParams::new(title, value, description, verb, verb_cancel, hold)
             .with_subtitle(subtitle)
             .with_info_button(info_button)
             .with_chunkify(chunkify)
+            .with_text_mono(text_mono)
             .into_layout()
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -1779,6 +1798,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     title: str,
     ///     items: Iterable[Tuple[str, str]],
     ///     horizontal: bool = False,
+    ///     chunkify: bool = False,
     /// ) -> object:
     ///     """Show metadata for outgoing transaction."""
     Qstr::MP_QSTR_show_info_with_cancel => obj_fn_kw!(0, new_show_info_with_cancel).as_obj(),
@@ -1794,6 +1814,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     info_button: bool = False,
     ///     hold: bool = False,
     ///     chunkify: bool = False,
+    ///     text_mono: bool = True,
     /// ) -> object:
     ///     """Confirm value. Merge of confirm_total and confirm_output."""
     Qstr::MP_QSTR_confirm_value => obj_fn_kw!(0, new_confirm_value).as_obj(),

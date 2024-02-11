@@ -1,0 +1,128 @@
+{
+    "setup": {
+        "mnemonic": "alcohol woman abuse must during monitor noble actual mixed trade anger aisle",
+        "passphrase": ""
+    },
+    "tests": [
+        {
+            "name": "stake_holesky",
+            "parameters": {
+                "comment": "Stake transaction - Holesky testnet",
+                "data": "3a29dbae0000000000000000000000000000000000000000000000000000000000000001",
+                "path": "m/44'/60'/0'/0/0",
+                "to_address": "0xAFA848357154a6a624686b348303EF9a13F63264",
+                "chain_id": 1,
+                "nonce": "0x0",
+                "gas_limit": "0x14",
+                "max_gas_fee": "0x14",
+                "max_priority_fee": "0x1",
+                "value": "0x16345785D8A0000"
+            },
+            "result": {
+                "sig_v": 0,
+                "sig_r": "77d68a17e2bcacccb791ca3d7e298588be0511a7d3c055abbb2030f54b56c6fa",
+                "sig_s": "567092e781fe1aedc458bdbc9ce4328398bf1d7d635787191881131c1afa7143"
+            }
+        },
+        {
+            "name": "stake_main",
+            "parameters": {
+                "comment": "Stake transaction - Mainnet",
+                "data": "3a29dbae0000000000000000000000000000000000000000000000000000000000000001",
+                "path": "m/44'/60'/0'/0/0",
+                "to_address": "0xD523794C879D9eC028960a231F866758e405bE34",
+                "chain_id": 1,
+                "nonce": "0x0",
+                "gas_limit": "0x14",
+                "max_gas_fee": "0x14",
+                "max_priority_fee": "0x1",
+                "value": "0x16345785D8A0000"
+            },
+            "result": {
+                "sig_v": 0,
+                "sig_r": "05a37bf477df7f256729ec8607aa20a6286c42a246b5deebaf6d54915c0f87e3",
+                "sig_s": "30ffe2e80119452403bbf238b02def90a120ade2e73ab60926060ed10562f5ed"
+            }
+        },
+        {
+            "name": "unstake_holesky",
+            "parameters": {
+                "comment": "Unstake transaction - Holesky testnet",
+                "data": "76ec871c000000000000000000000000000000000000000000000000016345785d8a000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001",
+                "path": "m/44'/60'/0'/0/0",
+                "to_address": "0xAFA848357154a6a624686b348303EF9a13F63264",
+                "chain_id": 1,
+                "nonce": "0x0",
+                "gas_limit": "0x14",
+                "max_gas_fee": "0x14",
+                "max_priority_fee": "0x1",
+                "value": "0x0"
+            },
+            "result": {
+                "sig_v": 0,
+                "sig_r": "9dfa73ea497785ffcb61598c554a57e46fce0a605c9ed06a4c8f265fccfd912e",
+                "sig_s": "45db0bd2189d4bc4828c859d28b907b3d47c4a35eef707052cde2f4fff4ef4fe"
+            }
+        },
+        {
+            "name": "unstake_main",
+            "parameters": {
+                "comment": "Unstake transaction - Mainnet",
+                "data": "76ec871c000000000000000000000000000000000000000000000000016345785d8a000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001",
+                "path": "m/44'/60'/0'/0/0",
+                "to_address": "0xD523794C879D9eC028960a231F866758e405bE34",
+                "chain_id": 1,
+                "nonce": "0x0",
+                "gas_limit": "0x14",
+                "max_gas_fee": "0x14",
+                "max_priority_fee": "0x1",
+                "value": "0x0"
+            },
+            "result": {
+                "sig_v": 0,
+                "sig_r": "15eb458e473c7f74abf99ba8833885e25435f913e77e5bc1259396942f6b9539",
+                "sig_s": "14ea7a1417cfab7bb2cdbd0750aa7929f02a30999b624dd2ae1029c6be9dc9d8"
+            }
+        },
+        {
+            "name": "claim_holesky",
+            "parameters": {
+                "comment": "Claim transaction - Holesky testnet",
+                "data": "33986ffa",
+                "path": "m/44'/60'/0'/0/0",
+                "to_address": "0x624087DD1904ab122A32878Ce9e933C7071F53B9",
+                "chain_id": 1,
+                "nonce": "0x0",
+                "gas_limit": "0x14",
+                "max_gas_fee": "0x14",
+                "max_priority_fee": "0x1",
+                "value": "0x0"
+            },
+            "result": {
+                "sig_v": 1,
+                "sig_r": "5abf2a99ac6431fce9e436234e2962502b1a67d4b582f90f4bc592e790f8fd7e",
+                "sig_s": "60b01cd76d40f089dc9464cb442c6bbac435f80a35b5a1ed128de7cb9718aa3a"
+            }
+        },
+        {
+            "name": "claim_mainnet",
+            "parameters": {
+                "comment": "Claim transaction - Mainnet",
+                "data": "33986ffa",
+                "path": "m/44'/60'/0'/0/0",
+                "to_address": "0x7a7f0b3c23C23a31cFcb0c44709be70d4D545c6e",
+                "chain_id": 1,
+                "nonce": "0x0",
+                "gas_limit": "0x14",
+                "max_gas_fee": "0x14",
+                "max_priority_fee": "0x1",
+                "value": "0x0"
+            },
+            "result": {
+                "sig_v": 0,
+                "sig_r": "7b3a09f1e0b28b2a25ddc3de02168fc20e9faada1d97181679dfb6f8383382da",
+                "sig_s": "6667dbb7b7b63d3e51df012a62dc6b01f13b60c7598b04aa499722cfb26864f3"
+            }
+        }
+    ]
+}

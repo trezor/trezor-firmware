@@ -1,13 +1,16 @@
 from typing import TYPE_CHECKING
 from ubinascii import hexlify
 
+from trezor import TR
+
 from . import networks
 
 if TYPE_CHECKING:
-    from trezor.messages import EthereumFieldType
+    from typing import Iterable
+
+    from trezor.messages import EthereumFieldType, EthereumTokenInfo
 
     from .networks import EthereumNetworkInfo
-
 
 RSKIP60_NETWORKS = (30, 31)
 
@@ -124,6 +127,72 @@ def decode_typed_data(data: bytes, type_name: str) -> str:
         return str(_from_bytes_bigendian_signed(data))
 
     raise ValueError  # Unsupported data type for direct field decoding
+
+
+def get_fee_items_regular(
+    gas_price: int, gas_limit: int, network: EthereumNetworkInfo
+) -> Iterable[tuple[str, str]]:
+    # regular
+    gas_limit_str = TR.ethereum__units_template.format(gas_limit)
+    gas_price_str = format_ethereum_amount(
+        gas_price, None, network, force_unit_gwei=True
+    )
+
+    return (
+        (TR.ethereum__gas_limit, gas_limit_str),
+        (TR.ethereum__gas_price, gas_price_str),
+    )
+
+
+def get_fee_items_eip1559(
+    max_gas_fee: int,
+    max_priority_fee: int,
+    gas_limit: int,
+    network: EthereumNetworkInfo,
+) -> Iterable[tuple[str, str]]:
+    # EIP-1559
+    gas_limit_str = TR.ethereum__units_template.format(gas_limit)
+    max_gas_fee_str = format_ethereum_amount(
+        max_gas_fee, None, network, force_unit_gwei=True
+    )
+    max_priority_fee_str = format_ethereum_amount(
+        max_priority_fee, None, network, force_unit_gwei=True
+    )
+
+    return (
+        (TR.ethereum__gas_limit, gas_limit_str),
+        (TR.ethereum__max_gas_price, max_gas_fee_str),
+        (TR.ethereum__priority_fee, max_priority_fee_str),
+    )
+
+
+def format_ethereum_amount(
+    value: int,
+    token: EthereumTokenInfo | None,
+    network: EthereumNetworkInfo,
+    force_unit_gwei: bool = False,
+) -> str:
+    from trezor.strings import format_amount
+
+    if token:
+        suffix = token.symbol
+        decimals = token.decimals
+    else:
+        suffix = network.symbol
+        decimals = 18
+
+    if force_unit_gwei:
+        assert token is None
+        assert decimals >= 9
+        decimals = decimals - 9
+        suffix = "Gwei"
+    elif decimals > 9 and value < 10 ** (decimals - 9):
+        # Don't want to display wei values for tokens with small decimal numbers
+        suffix = "Wei " + suffix
+        decimals = 0
+
+    amount = format_amount(value, decimals)
+    return f"{amount} {suffix}"
 
 
 def _from_bytes_bigendian_signed(b: bytes) -> int:

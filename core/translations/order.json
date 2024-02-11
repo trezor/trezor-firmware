@@ -832,5 +832,13 @@
   "830": "words__writable",
   "831": "words__yes",
   "832": "reboot_to_bootloader__just_a_moment",
-  "833": "inputs__previous"
+  "833": "inputs__previous",
+  "834": "ethereum__staking_claim",
+  "835": "ethereum__staking_claim_address",
+  "836": "ethereum__staking_claim_intro",
+  "837": "ethereum__staking_stake",
+  "838": "ethereum__staking_stake_address",
+  "839": "ethereum__staking_stake_intro",
+  "840": "ethereum__staking_unstake",
+  "841": "ethereum__staking_unstake_intro"
 }

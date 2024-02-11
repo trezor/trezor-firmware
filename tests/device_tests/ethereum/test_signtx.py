@@ -454,3 +454,74 @@ def test_signtx_data_pagination(client: Client, flow):
         client.watch_layout()
         client.set_input_flow(flow(client, cancel=True))
         _sign_tx_call()
+
+
+@pytest.mark.skip_t1("T1 does not support Everstake")
+@parametrize_using_common_fixtures("ethereum/sign_tx_staking.json")
+# TODO input flows to go into info screens - then also parametrizing chunkify might make sense
+# @pytest.mark.parametrize("chunkify", (True, False))
+def test_signtx_staking(client: Client, parameters: dict, result: dict):
+    with client:
+        sig_v, sig_r, sig_s = ethereum.sign_tx(
+            client,
+            n=parse_path(parameters["path"]),
+            nonce=int(parameters["nonce"], 16),
+            gas_price=int(parameters["gas_price"], 16),
+            gas_limit=int(parameters["gas_limit"], 16),
+            to=parameters["to_address"],
+            value=int(parameters["value"], 16),
+            data=bytes.fromhex(parameters["data"]),
+            chain_id=parameters["chain_id"],
+            tx_type=parameters["tx_type"],
+            definitions=None,
+            chunkify=False,
+        )
+    expected_v = 2 * parameters["chain_id"] + 35
+    assert sig_v in (expected_v, expected_v + 1)
+    assert sig_r.hex() == result["sig_r"]
+    assert sig_s.hex() == result["sig_s"]
+    assert sig_v == result["sig_v"]
+
+
+@pytest.mark.skip_t1("T1 does not support Everstake")
+@parametrize_using_common_fixtures("ethereum/sign_tx_staking_data_error.json")
+def test_signtx_staking_bad_inputs(client: Client, parameters: dict, result: dict):
+    # result not needed
+    with pytest.raises(TrezorFailure, match=r"DataError"):
+        ethereum.sign_tx(
+            client,
+            n=parse_path(parameters["path"]),
+            nonce=int(parameters["nonce"], 16),
+            gas_price=int(parameters["gas_price"], 16),
+            gas_limit=int(parameters["gas_limit"], 16),
+            to=parameters["to_address"],
+            value=int(parameters["value"], 16),
+            data=bytes.fromhex(parameters["data"]),
+            chain_id=parameters["chain_id"],
+            tx_type=parameters["tx_type"],
+            definitions=None,
+            chunkify=False,
+        )
+
+
+@pytest.mark.skip_t1("T1 does not support Everstake")
+@parametrize_using_common_fixtures("ethereum/sign_tx_staking_eip1559.json")
+def test_signtx_staking_eip1559(client: Client, parameters: dict, result: dict):
+    with client:
+        sig_v, sig_r, sig_s = ethereum.sign_tx_eip1559(
+            client,
+            n=parse_path(parameters["path"]),
+            nonce=int(parameters["nonce"], 16),
+            max_gas_fee=int(parameters["max_gas_fee"], 16),
+            max_priority_fee=int(parameters["max_priority_fee"], 16),
+            gas_limit=int(parameters["gas_limit"], 16),
+            to=parameters["to_address"],
+            value=int(parameters["value"], 16),
+            data=bytes.fromhex(parameters["data"]),
+            chain_id=parameters["chain_id"],
+            definitions=None,
+            chunkify=True,
+        )
+    assert sig_r.hex() == result["sig_r"]
+    assert sig_s.hex() == result["sig_s"]
+    assert sig_v == result["sig_v"]
