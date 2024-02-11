@@ -27,6 +27,7 @@ if TYPE_CHECKING:
     from trezor.enums import CardanoAddressType  # noqa: F401
     from trezor.enums import CardanoCVoteRegistrationFormat  # noqa: F401
     from trezor.enums import CardanoCertificateType  # noqa: F401
+    from trezor.enums import CardanoDRepType  # noqa: F401
     from trezor.enums import CardanoDerivationType  # noqa: F401
     from trezor.enums import CardanoNativeScriptHashDisplayFormat  # noqa: F401
     from trezor.enums import CardanoNativeScriptType  # noqa: F401
@@ -1390,6 +1391,7 @@ if TYPE_CHECKING:
         total_collateral: "int | None"
         reference_inputs_count: "int"
         chunkify: "bool | None"
+        tag_cbor_sets: "bool"
 
         def __init__(
             self,
@@ -1416,6 +1418,7 @@ if TYPE_CHECKING:
             total_collateral: "int | None" = None,
             reference_inputs_count: "int | None" = None,
             chunkify: "bool | None" = None,
+            tag_cbor_sets: "bool | None" = None,
         ) -> None:
             pass
 
@@ -1615,6 +1618,24 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["CardanoPoolParametersType"]:
             return isinstance(msg, cls)
 
+    class CardanoDRep(protobuf.MessageType):
+        type: "CardanoDRepType"
+        key_hash: "bytes | None"
+        script_hash: "bytes | None"
+
+        def __init__(
+            self,
+            *,
+            type: "CardanoDRepType",
+            key_hash: "bytes | None" = None,
+            script_hash: "bytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["CardanoDRep"]:
+            return isinstance(msg, cls)
+
     class CardanoTxCertificate(protobuf.MessageType):
         type: "CardanoCertificateType"
         path: "list[int]"
@@ -1622,6 +1643,8 @@ if TYPE_CHECKING:
         pool_parameters: "CardanoPoolParametersType | None"
         script_hash: "bytes | None"
         key_hash: "bytes | None"
+        deposit: "int | None"
+        drep: "CardanoDRep | None"
 
         def __init__(
             self,
@@ -1632,6 +1655,8 @@ if TYPE_CHECKING:
             pool_parameters: "CardanoPoolParametersType | None" = None,
             script_hash: "bytes | None" = None,
             key_hash: "bytes | None" = None,
+            deposit: "int | None" = None,
+            drep: "CardanoDRep | None" = None,
         ) -> None:
             pass
 

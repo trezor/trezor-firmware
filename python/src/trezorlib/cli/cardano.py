@@ -61,6 +61,7 @@ def cli() -> None:
 )
 @click.option("-i", "--include-network-id", is_flag=True)
 @click.option("-C", "chunkify", is_flag=True)
+@click.option("-T", "--tag-cbor-sets", is_flag=True)
 @with_client
 def sign_tx(
     client: "TrezorClient",
@@ -72,6 +73,7 @@ def sign_tx(
     derivation_type: messages.CardanoDerivationType,
     include_network_id: bool,
     chunkify: bool,
+    tag_cbor_sets: bool,
 ) -> cardano.SignTxResponse:
     """Sign Cardano transaction."""
     transaction = json.load(file)
@@ -146,6 +148,7 @@ def sign_tx(
         derivation_type=derivation_type,
         include_network_id=include_network_id,
         chunkify=chunkify,
+        tag_cbor_sets=tag_cbor_sets,
     )
 
     sign_tx_response["tx_hash"] = sign_tx_response["tx_hash"].hex()

@@ -37,7 +37,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid input"
@@ -76,7 +77,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid address"
@@ -115,7 +117,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid address"
@@ -154,7 +157,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid address"
@@ -193,7 +197,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid address"
@@ -232,7 +237,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid address"
@@ -271,7 +277,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Fee is out of range"
@@ -315,7 +322,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Total transaction amount is out of range!"
@@ -354,7 +362,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Output address network mismatch"
@@ -393,7 +402,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Output address network mismatch"
@@ -432,7 +442,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid address"
@@ -471,7 +482,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid address"
@@ -510,7 +522,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid network id/protocol magic combination!"
@@ -549,7 +562,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid network id/protocol magic combination!"
@@ -588,7 +602,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid address"
@@ -630,7 +645,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid output"
@@ -674,7 +690,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid certificate"
@@ -718,7 +735,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid certificate"
@@ -762,7 +780,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid certificate"
@@ -806,7 +825,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid certificate"
@@ -851,7 +871,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid certificate"
@@ -896,7 +917,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid certificate"
@@ -941,7 +963,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid certificate"
@@ -985,7 +1008,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid withdrawal"
@@ -1029,7 +1053,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid withdrawal"
@@ -1073,7 +1098,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid withdrawal"
@@ -1117,7 +1143,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid withdrawal"
@@ -1161,7 +1188,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid withdrawal"
@@ -1206,7 +1234,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid withdrawal"
@@ -1251,7 +1280,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid withdrawal"
@@ -1292,7 +1322,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid auxiliary data"
@@ -1341,7 +1372,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid address parameters"
@@ -1392,7 +1424,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid auxiliary data"
@@ -1449,7 +1482,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid auxiliary data"
@@ -1489,7 +1523,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid output datum hash"
@@ -1528,7 +1563,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid script data hash"
@@ -1573,7 +1609,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid tx signing request"
@@ -1615,7 +1652,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid tx signing request"
@@ -1654,7 +1692,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid tx signing request"
@@ -1698,7 +1737,8 @@
         ],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid tx signing request"
@@ -1739,7 +1779,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid output"
@@ -1781,7 +1822,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid output"
@@ -1826,7 +1868,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid change output path"
@@ -1871,7 +1914,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid change output staking path"
@@ -1916,7 +1960,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid address parameters"
@@ -1955,7 +2000,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid address"
@@ -1999,7 +2045,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid certificate path"
@@ -2043,7 +2090,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid certificate"
@@ -2097,7 +2145,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid token bundle in output"
@@ -2156,7 +2205,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid token bundle in output"
@@ -2209,7 +2259,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid mint token bundle"
@@ -2267,7 +2318,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid mint token bundle"
@@ -2325,7 +2377,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid token bundle in output"
@@ -2393,7 +2446,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid token bundle in output"
@@ -2450,7 +2504,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid mint token bundle"
@@ -2517,7 +2572,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid mint token bundle"
@@ -2560,7 +2616,8 @@
             "path": "m/1854'/1815'/0'/0/0"
           }
         ],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid witness request"
@@ -2603,7 +2660,8 @@
             "path": "m/1854'/1815'/0'/0/0"
           }
         ],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid witness request"
@@ -2644,7 +2702,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid address parameters"
@@ -2734,7 +2793,8 @@
             "path": "m/1854'/1815'/0'/0/0"
           }
         ],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid witness request"
@@ -2777,7 +2837,8 @@
             "path": "m/1855'/1815'/0'"
           }
         ],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid witness request"
@@ -2871,7 +2932,8 @@
             "path": "m/1855'/1815'/0'/0/0"
           }
         ],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid witness request"
@@ -2916,7 +2978,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid witness request"
@@ -2960,7 +3023,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid witness request"
@@ -3004,7 +3068,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid witness request"
@@ -3054,7 +3119,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid certificate"
@@ -3104,7 +3170,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid withdrawal"
@@ -3153,7 +3220,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid withdrawal"
@@ -3197,7 +3265,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid witness request"
@@ -3238,7 +3307,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid witness request"

@@ -43,7 +43,8 @@
         "reference_inputs": [],
         "signing_mode": "PLUTUS_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid collateral input"
@@ -89,7 +90,8 @@
         "reference_inputs": [],
         "signing_mode": "PLUTUS_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid address parameters"
@@ -138,7 +140,8 @@
         "reference_inputs": [],
         "signing_mode": "PLUTUS_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid required signer"
@@ -185,7 +188,8 @@
         "reference_inputs": [],
         "signing_mode": "PLUTUS_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid collateral return"
@@ -233,7 +237,8 @@
         "reference_inputs": [],
         "signing_mode": "PLUTUS_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid collateral return"
