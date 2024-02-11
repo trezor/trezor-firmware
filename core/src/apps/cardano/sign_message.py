@@ -102,7 +102,7 @@ async def _get_payload_hash_and_first_chunk(size: int) -> tuple[bytes, bytes]:
 
 
 async def _get_confirmed_payload(
-    size: int, is_signing_hash: bool, display_ascii: bool
+    size: int, is_signing_hash: bool, prefer_hex_display: bool
 ) -> bytes:
     from . import layout
 
@@ -113,7 +113,7 @@ async def _get_confirmed_payload(
         payload_first_chunk=first_chunk,
         payload_hash=hash,
         is_signing_hash=is_signing_hash,
-        display_ascii=display_ascii,
+        prefer_hex_display=prefer_hex_display,
     )
 
     return hash if is_signing_hash else first_chunk
@@ -162,7 +162,7 @@ async def sign_message(
     payload = await _get_confirmed_payload(
         size=msg.payload_size,
         is_signing_hash=msg.hash_payload,
-        display_ascii=msg.display_ascii,
+        prefer_hex_display=msg.prefer_hex_display,
     )
 
     address = await _get_confirmed_header_address(msg, keychain)

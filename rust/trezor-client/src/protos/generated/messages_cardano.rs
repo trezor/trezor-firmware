@@ -9207,8 +9207,8 @@ pub struct CardanoSignMessageInit {
     pub payload_size: ::std::option::Option<u32>,
     // @@protoc_insertion_point(field:hw.trezor.messages.cardano.CardanoSignMessageInit.hash_payload)
     pub hash_payload: ::std::option::Option<bool>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.cardano.CardanoSignMessageInit.display_ascii)
-    pub display_ascii: ::std::option::Option<bool>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.cardano.CardanoSignMessageInit.prefer_hex_display)
+    pub prefer_hex_display: ::std::option::Option<bool>,
     // @@protoc_insertion_point(field:hw.trezor.messages.cardano.CardanoSignMessageInit.address_parameters)
     pub address_parameters: ::protobuf::MessageField<CardanoAddressParametersType>,
     // @@protoc_insertion_point(field:hw.trezor.messages.cardano.CardanoSignMessageInit.derivation_type)
@@ -9305,23 +9305,23 @@ impl CardanoSignMessageInit {
         self.hash_payload = ::std::option::Option::Some(v);
     }
 
-    // required bool display_ascii = 6;
+    // required bool prefer_hex_display = 6;
 
-    pub fn display_ascii(&self) -> bool {
-        self.display_ascii.unwrap_or(false)
+    pub fn prefer_hex_display(&self) -> bool {
+        self.prefer_hex_display.unwrap_or(false)
     }
 
-    pub fn clear_display_ascii(&mut self) {
-        self.display_ascii = ::std::option::Option::None;
+    pub fn clear_prefer_hex_display(&mut self) {
+        self.prefer_hex_display = ::std::option::Option::None;
     }
 
-    pub fn has_display_ascii(&self) -> bool {
-        self.display_ascii.is_some()
+    pub fn has_prefer_hex_display(&self) -> bool {
+        self.prefer_hex_display.is_some()
     }
 
     // Param is passed by value, moved
-    pub fn set_display_ascii(&mut self, v: bool) {
-        self.display_ascii = ::std::option::Option::Some(v);
+    pub fn set_prefer_hex_display(&mut self, v: bool) {
+        self.prefer_hex_display = ::std::option::Option::Some(v);
     }
 
     // required .hw.trezor.messages.cardano.CardanoDerivationType derivation_type = 8;
@@ -9375,9 +9375,9 @@ impl CardanoSignMessageInit {
             |m: &mut CardanoSignMessageInit| { &mut m.hash_payload },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "display_ascii",
-            |m: &CardanoSignMessageInit| { &m.display_ascii },
-            |m: &mut CardanoSignMessageInit| { &mut m.display_ascii },
+            "prefer_hex_display",
+            |m: &CardanoSignMessageInit| { &m.prefer_hex_display },
+            |m: &mut CardanoSignMessageInit| { &mut m.prefer_hex_display },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, CardanoAddressParametersType>(
             "address_parameters",
@@ -9407,7 +9407,7 @@ impl ::protobuf::Message for CardanoSignMessageInit {
         if self.hash_payload.is_none() {
             return false;
         }
-        if self.display_ascii.is_none() {
+        if self.prefer_hex_display.is_none() {
             return false;
         }
         if self.derivation_type.is_none() {
@@ -9443,7 +9443,7 @@ impl ::protobuf::Message for CardanoSignMessageInit {
                     self.hash_payload = ::std::option::Option::Some(is.read_bool()?);
                 },
                 48 => {
-                    self.display_ascii = ::std::option::Option::Some(is.read_bool()?);
+                    self.prefer_hex_display = ::std::option::Option::Some(is.read_bool()?);
                 },
                 58 => {
                     ::protobuf::rt::read_singular_message_into_field(is, &mut self.address_parameters)?;
@@ -9478,7 +9478,7 @@ impl ::protobuf::Message for CardanoSignMessageInit {
         if let Some(v) = self.hash_payload {
             my_size += 1 + 1;
         }
-        if let Some(v) = self.display_ascii {
+        if let Some(v) = self.prefer_hex_display {
             my_size += 1 + 1;
         }
         if let Some(v) = self.address_parameters.as_ref() {
@@ -9509,7 +9509,7 @@ impl ::protobuf::Message for CardanoSignMessageInit {
         if let Some(v) = self.hash_payload {
             os.write_bool(5, v)?;
         }
-        if let Some(v) = self.display_ascii {
+        if let Some(v) = self.prefer_hex_display {
             os.write_bool(6, v)?;
         }
         if let Some(v) = self.address_parameters.as_ref() {
@@ -9540,7 +9540,7 @@ impl ::protobuf::Message for CardanoSignMessageInit {
         self.signing_path.clear();
         self.payload_size = ::std::option::Option::None;
         self.hash_payload = ::std::option::Option::None;
-        self.display_ascii = ::std::option::Option::None;
+        self.prefer_hex_display = ::std::option::Option::None;
         self.address_parameters.clear();
         self.derivation_type = ::std::option::Option::None;
         self.special_fields.clear();
@@ -9553,7 +9553,7 @@ impl ::protobuf::Message for CardanoSignMessageInit {
             signing_path: ::std::vec::Vec::new(),
             payload_size: ::std::option::Option::None,
             hash_payload: ::std::option::Option::None,
-            display_ascii: ::std::option::Option::None,
+            prefer_hex_display: ::std::option::Option::None,
             address_parameters: ::protobuf::MessageField::none(),
             derivation_type: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
@@ -11105,41 +11105,41 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x0cR\x06pubKey\x12\x1c\n\tsignature\x18\x03\x20\x02(\x0cR\tsignature\
     \x12\x1d\n\nchain_code\x18\x04\x20\x01(\x0cR\tchainCode\"\x12\n\x10Carda\
     noTxHostAck\",\n\x11CardanoTxBodyHash\x12\x17\n\x07tx_hash\x18\x01\x20\
-    \x02(\x0cR\x06txHash\"\x17\n\x15CardanoSignTxFinished\"\xb1\x03\n\x16Car\
+    \x02(\x0cR\x06txHash\"\x17\n\x15CardanoSignTxFinished\"\xba\x03\n\x16Car\
     danoSignMessageInit\x12%\n\x0eprotocol_magic\x18\x01\x20\x01(\rR\rprotoc\
     olMagic\x12\x1d\n\nnetwork_id\x18\x02\x20\x01(\rR\tnetworkId\x12!\n\x0cs\
     igning_path\x18\x03\x20\x03(\rR\x0bsigningPath\x12!\n\x0cpayload_size\
     \x18\x04\x20\x02(\rR\x0bpayloadSize\x12!\n\x0chash_payload\x18\x05\x20\
-    \x02(\x08R\x0bhashPayload\x12#\n\rdisplay_ascii\x18\x06\x20\x02(\x08R\
-    \x0cdisplayAscii\x12g\n\x12address_parameters\x18\x07\x20\x01(\x0b28.hw.\
-    trezor.messages.cardano.CardanoAddressParametersTypeR\x11addressParamete\
-    rs\x12Z\n\x0fderivation_type\x18\x08\x20\x02(\x0e21.hw.trezor.messages.c\
-    ardano.CardanoDerivationTypeR\x0ederivationType\"\x17\n\x15CardanoMessag\
-    eItemAck\"0\n\x1aCardanoMessagePayloadChunk\x12\x12\n\x04data\x18\x01\
-    \x20\x02(\x0cR\x04data\"\x1b\n\x19CardanoMessageItemHostAck\"T\n\x1aCard\
-    anoSignMessageFinished\x12\x1c\n\tsignature\x18\x01\x20\x02(\x0cR\tsigna\
-    ture\x12\x18\n\x07address\x18\x02\x20\x02(\x0cR\x07address*B\n\x15Cardan\
-    oDerivationType\x12\n\n\x06LEDGER\x10\0\x12\n\n\x06ICARUS\x10\x01\x12\
-    \x11\n\rICARUS_TREZOR\x10\x02*\xd2\x01\n\x12CardanoAddressType\x12\x08\n\
-    \x04BASE\x10\0\x12\x13\n\x0fBASE_SCRIPT_KEY\x10\x01\x12\x13\n\x0fBASE_KE\
-    Y_SCRIPT\x10\x02\x12\x16\n\x12BASE_SCRIPT_SCRIPT\x10\x03\x12\x0b\n\x07PO\
-    INTER\x10\x04\x12\x12\n\x0ePOINTER_SCRIPT\x10\x05\x12\x0e\n\nENTERPRISE\
-    \x10\x06\x12\x15\n\x11ENTERPRISE_SCRIPT\x10\x07\x12\t\n\x05BYRON\x10\x08\
-    \x12\n\n\x06REWARD\x10\x0e\x12\x11\n\rREWARD_SCRIPT\x10\x0f*o\n\x17Carda\
-    noNativeScriptType\x12\x0b\n\x07PUB_KEY\x10\0\x12\x07\n\x03ALL\x10\x01\
-    \x12\x07\n\x03ANY\x10\x02\x12\n\n\x06N_OF_K\x10\x03\x12\x12\n\x0eINVALID\
-    _BEFORE\x10\x04\x12\x15\n\x11INVALID_HEREAFTER\x10\x05*K\n$CardanoNative\
-    ScriptHashDisplayFormat\x12\x08\n\x04HIDE\x10\0\x12\n\n\x06BECH32\x10\
-    \x01\x12\r\n\tPOLICY_ID\x10\x02*G\n\"CardanoTxOutputSerializationFormat\
-    \x12\x10\n\x0cARRAY_LEGACY\x10\0\x12\x0f\n\x0bMAP_BABBAGE\x10\x01*}\n\
-    \x16CardanoCertificateType\x12\x16\n\x12STAKE_REGISTRATION\x10\0\x12\x18\
-    \n\x14STAKE_DEREGISTRATION\x10\x01\x12\x14\n\x10STAKE_DELEGATION\x10\x02\
-    \x12\x1b\n\x17STAKE_POOL_REGISTRATION\x10\x03*X\n\x14CardanoPoolRelayTyp\
-    e\x12\x12\n\x0eSINGLE_HOST_IP\x10\0\x12\x14\n\x10SINGLE_HOST_NAME\x10\
-    \x01\x12\x16\n\x12MULTIPLE_HOST_NAME\x10\x02*R\n$CardanoTxAuxiliaryDataS\
-    upplementType\x12\x08\n\x04NONE\x10\0\x12\x20\n\x1cCVOTE_REGISTRATION_SI\
-    GNATURE\x10\x01*6\n\x1eCardanoCVoteRegistrationFormat\x12\t\n\x05CIP15\
-    \x10\0\x12\t\n\x05CIP36\x10\x01*\x82\x01\n\x14CardanoTxSigningMode\x12\
+    \x02(\x08R\x0bhashPayload\x12,\n\x12prefer_hex_display\x18\x06\x20\x02(\
+    \x08R\x10preferHexDisplay\x12g\n\x12address_parameters\x18\x07\x20\x01(\
+    \x0b28.hw.trezor.messages.cardano.CardanoAddressParametersTypeR\x11addre\
+    ssParameters\x12Z\n\x0fderivation_type\x18\x08\x20\x02(\x0e21.hw.trezor.\
+    messages.cardano.CardanoDerivationTypeR\x0ederivationType\"\x17\n\x15Car\
+    danoMessageItemAck\"0\n\x1aCardanoMessagePayloadChunk\x12\x12\n\x04data\
+    \x18\x01\x20\x02(\x0cR\x04data\"\x1b\n\x19CardanoMessageItemHostAck\"T\n\
+    \x1aCardanoSignMessageFinished\x12\x1c\n\tsignature\x18\x01\x20\x02(\x0c\
+    R\tsignature\x12\x18\n\x07address\x18\x02\x20\x02(\x0cR\x07address*B\n\
+    \x15CardanoDerivationType\x12\n\n\x06LEDGER\x10\0\x12\n\n\x06ICARUS\x10\
+    \x01\x12\x11\n\rICARUS_TREZOR\x10\x02*\xd2\x01\n\x12CardanoAddressType\
+    \x12\x08\n\x04BASE\x10\0\x12\x13\n\x0fBASE_SCRIPT_KEY\x10\x01\x12\x13\n\
+    \x0fBASE_KEY_SCRIPT\x10\x02\x12\x16\n\x12BASE_SCRIPT_SCRIPT\x10\x03\x12\
+    \x0b\n\x07POINTER\x10\x04\x12\x12\n\x0ePOINTER_SCRIPT\x10\x05\x12\x0e\n\
+    \nENTERPRISE\x10\x06\x12\x15\n\x11ENTERPRISE_SCRIPT\x10\x07\x12\t\n\x05B\
+    YRON\x10\x08\x12\n\n\x06REWARD\x10\x0e\x12\x11\n\rREWARD_SCRIPT\x10\x0f*\
+    o\n\x17CardanoNativeScriptType\x12\x0b\n\x07PUB_KEY\x10\0\x12\x07\n\x03A\
+    LL\x10\x01\x12\x07\n\x03ANY\x10\x02\x12\n\n\x06N_OF_K\x10\x03\x12\x12\n\
+    \x0eINVALID_BEFORE\x10\x04\x12\x15\n\x11INVALID_HEREAFTER\x10\x05*K\n$Ca\
+    rdanoNativeScriptHashDisplayFormat\x12\x08\n\x04HIDE\x10\0\x12\n\n\x06BE\
+    CH32\x10\x01\x12\r\n\tPOLICY_ID\x10\x02*G\n\"CardanoTxOutputSerializatio\
+    nFormat\x12\x10\n\x0cARRAY_LEGACY\x10\0\x12\x0f\n\x0bMAP_BABBAGE\x10\x01\
+    *}\n\x16CardanoCertificateType\x12\x16\n\x12STAKE_REGISTRATION\x10\0\x12\
+    \x18\n\x14STAKE_DEREGISTRATION\x10\x01\x12\x14\n\x10STAKE_DELEGATION\x10\
+    \x02\x12\x1b\n\x17STAKE_POOL_REGISTRATION\x10\x03*X\n\x14CardanoPoolRela\
+    yType\x12\x12\n\x0eSINGLE_HOST_IP\x10\0\x12\x14\n\x10SINGLE_HOST_NAME\
+    \x10\x01\x12\x16\n\x12MULTIPLE_HOST_NAME\x10\x02*R\n$CardanoTxAuxiliaryD\
+    ataSupplementType\x12\x08\n\x04NONE\x10\0\x12\x20\n\x1cCVOTE_REGISTRATIO\
+    N_SIGNATURE\x10\x01*6\n\x1eCardanoCVoteRegistrationFormat\x12\t\n\x05CIP\
+    15\x10\0\x12\t\n\x05CIP36\x10\x01*\x82\x01\n\x14CardanoTxSigningMode\x12\
     \x18\n\x14ORDINARY_TRANSACTION\x10\0\x12\x1e\n\x1aPOOL_REGISTRATION_AS_O\
     WNER\x10\x01\x12\x18\n\x14MULTISIG_TRANSACTION\x10\x02\x12\x16\n\x12PLUT\
     US_TRANSACTION\x10\x03*>\n\x14CardanoTxWitnessType\x12\x11\n\rBYRON_WITN\
