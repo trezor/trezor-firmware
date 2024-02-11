@@ -538,7 +538,7 @@ message CardanoSignMessageInit {
     repeated uint32 signing_path = 3;                             // BIP-32-style path to derive the signing key from master node
     required uint32 payload_size = 4;                             // size of the payload to be signed
     required bool hash_payload = 5;                               // whether to hash the payload before signing
-    required bool display_ascii = 6;                              // decode payload as ASCII
+    required bool prefer_hex_display = 6;                         // whether to decode payload as hex even if valid ascii
     optional CardanoAddressParametersType address_parameters = 7;
     required CardanoDerivationType derivation_type = 8;
 }
