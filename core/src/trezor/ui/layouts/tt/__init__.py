@@ -859,6 +859,7 @@ def confirm_value(
     verb: str | None = None,
     subtitle: str | None = None,
     hold: bool = False,
+    value_text_mono: bool = True,
     info_items: Iterable[tuple[str, str]] | None = None,
 ) -> Awaitable[None]:
     """General confirmation dialog, used by many other confirm_* functions."""
@@ -948,7 +949,11 @@ async def confirm_total(
         info_items.append((TR.confirm_total__fee_rate, fee_rate_amount))
 
     await confirm_summary(
-        items, TR.words__title_summary, info_items, br_type=br_type, br_code=br_code
+        items,
+        TR.words__title_summary,
+        info_items=info_items,
+        br_type=br_type,
+        br_code=br_code,
     )
 
 
@@ -956,6 +961,7 @@ async def confirm_summary(
     items: Iterable[tuple[str, str]],
     title: str | None = None,
     info_items: Iterable[tuple[str, str]] | None = None,
+    info_title: str | None = None,
     br_type: str = "confirm_total",
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
 ) -> None:
@@ -971,7 +977,7 @@ async def confirm_summary(
     info_items = info_items or []
     info_layout = RustLayout(
         trezorui2.show_info_with_cancel(
-            title=TR.words__title_information,
+            title=info_title.upper() if info_title else TR.words__title_information,
             items=info_items,
         )
     )
@@ -1023,6 +1029,60 @@ async def confirm_ethereum_tx(
             break
         except ActionCancelled:
             continue
+
+
+async def confirm_ethereum_staking_tx(
+    title: str,
+    intro_question: str,
+    verb: str,
+    total_amount: str,
+    maximum_fee: str,
+    address: str,
+    address_title: str,
+    info_items: Iterable[tuple[str, str]] | None = None,
+    chunkify: bool = False,
+    br_type: str = "confirm_ethereum_staking_tx",
+    br_code: ButtonRequestType = ButtonRequestType.SignTx,
+) -> None:
+
+    # intro
+    # NOTE: this layout very similar to `confirm_value` with some adjustments
+    msg_layout = RustLayout(
+        trezorui2.confirm_value(
+            title=title,
+            value=intro_question,
+            description=None,
+            subtitle=None,
+            verb=verb,
+            info_button=True,
+            text_mono=False,
+        )
+    )
+    info_layout = RustLayout(
+        trezorui2.show_info_with_cancel(
+            title=address_title,
+            items=(("", address),),
+            chunkify=chunkify,
+        )
+    )
+    await raise_if_not_confirmed(with_info(msg_layout, info_layout, br_type, br_code))
+
+    # confirmation
+    if verb == TR.ethereum__staking_claim:
+        items = ((TR.send__maximum_fee, maximum_fee),)
+    else:
+        items = (
+            (TR.words__amount + ":", total_amount),
+            (TR.send__maximum_fee, maximum_fee),
+        )
+    await confirm_summary(
+        items,  # items
+        title=title,
+        info_title=TR.confirm_total__title_fee,
+        info_items=info_items,
+        br_type=br_type,
+        br_code=br_code,
+    )
 
 
 async def confirm_solana_tx(

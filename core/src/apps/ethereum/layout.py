@@ -4,12 +4,12 @@ from trezor import TR, ui
 from trezor.enums import ButtonRequestType
 from trezor.ui.layouts import (
     confirm_blob,
-    confirm_ethereum_tx,
+    confirm_ethereum_staking_tx,
     confirm_text,
     should_show_more,
 )
 
-from .helpers import address_from_bytes, decode_typed_data
+from .helpers import address_from_bytes, decode_typed_data, format_ethereum_amount
 
 if TYPE_CHECKING:
     from typing import Awaitable, Iterable
@@ -25,12 +25,14 @@ if TYPE_CHECKING:
 async def require_confirm_tx(
     to_bytes: bytes,
     value: int,
-    gas_price: int,
-    gas_limit: int,
+    maximum_fee: str,
+    fee_info_items: Iterable[tuple[str, str]],
     network: EthereumNetworkInfo,
     token: EthereumTokenInfo | None,
     chunkify: bool,
 ) -> None:
+    from trezor.ui.layouts import confirm_ethereum_tx
+
     if to_bytes:
         to_str = address_from_bytes(to_bytes, network)
     else:
@@ -38,56 +40,80 @@ async def require_confirm_tx(
         chunkify = False
 
     total_amount = format_ethereum_amount(value, token, network)
-    maximum_fee = format_ethereum_amount(gas_price * gas_limit, None, network)
-    gas_limit_str = TR.ethereum__units_template.format(gas_limit)
-    gas_price_str = format_ethereum_amount(
-        gas_price, None, network, force_unit_gwei=True
-    )
-
-    items = (
-        (TR.ethereum__gas_limit, gas_limit_str),
-        (TR.ethereum__gas_price, gas_price_str),
-    )
 
     await confirm_ethereum_tx(
-        to_str, total_amount, maximum_fee, items, chunkify=chunkify
+        to_str, total_amount, maximum_fee, fee_info_items, chunkify=chunkify
     )
 
 
-async def require_confirm_tx_eip1559(
-    to_bytes: bytes,
+async def require_confirm_stake(
+    addr_bytes: bytes,
     value: int,
-    max_gas_fee: int,
-    max_priority_fee: int,
-    gas_limit: int,
+    maximum_fee: str,
+    fee_info_items: Iterable[tuple[str, str]],
     network: EthereumNetworkInfo,
-    token: EthereumTokenInfo | None,
     chunkify: bool,
 ) -> None:
-    if to_bytes:
-        to_str = address_from_bytes(to_bytes, network)
-    else:
-        to_str = TR.ethereum__new_contract
-        chunkify = False
 
-    total_amount = format_ethereum_amount(value, token, network)
-    maximum_fee = format_ethereum_amount(max_gas_fee * gas_limit, None, network)
-    gas_limit_str = TR.ethereum__units_template.format(gas_limit)
-    max_gas_fee_str = format_ethereum_amount(
-        max_gas_fee, None, network, force_unit_gwei=True
-    )
-    max_priority_fee_str = format_ethereum_amount(
-        max_priority_fee, None, network, force_unit_gwei=True
-    )
-
-    items: tuple[tuple[str, str], ...] = (
-        (TR.ethereum__gas_limit, gas_limit_str),
-        (TR.ethereum__max_gas_price, max_gas_fee_str),
-        (TR.ethereum__priority_fee, max_priority_fee_str),
+    addr_str = address_from_bytes(addr_bytes, network)
+    total_amount = format_ethereum_amount(value, None, network)
+    await confirm_ethereum_staking_tx(
+        TR.ethereum__staking_stake,  # title
+        TR.ethereum__staking_stake_intro,  # intro_question
+        TR.ethereum__staking_stake,  # verb
+        total_amount,  # total_amount
+        maximum_fee,  # maximum_fee
+        addr_str,  # address
+        TR.ethereum__staking_stake_address,  # address_title
+        fee_info_items,  # info_items
+        chunkify=chunkify,
     )
 
-    await confirm_ethereum_tx(
-        to_str, total_amount, maximum_fee, items, chunkify=chunkify
+
+async def require_confirm_unstake(
+    addr_bytes: bytes,
+    value: int,
+    maximum_fee: str,
+    fee_info_items: Iterable[tuple[str, str]],
+    network: EthereumNetworkInfo,
+    chunkify: bool,
+) -> None:
+
+    addr_str = address_from_bytes(addr_bytes, network)
+    total_amount = format_ethereum_amount(value, None, network)
+
+    await confirm_ethereum_staking_tx(
+        TR.ethereum__staking_unstake,  # title
+        TR.ethereum__staking_unstake_intro,  # intro_question
+        TR.ethereum__staking_unstake,  # verb
+        total_amount,  # total_amount
+        maximum_fee,  # maximum_fee
+        addr_str,  # address
+        TR.ethereum__staking_stake_address,  # address_title
+        fee_info_items,  # info_items
+        chunkify=chunkify,
+    )
+
+
+async def require_confirm_claim(
+    addr_bytes: bytes,
+    maximum_fee: str,
+    fee_info_items: Iterable[tuple[str, str]],
+    network: EthereumNetworkInfo,
+    chunkify: bool,
+) -> None:
+
+    addr_str = address_from_bytes(addr_bytes, network)
+    await confirm_ethereum_staking_tx(
+        TR.ethereum__staking_claim,  # title
+        TR.ethereum__staking_claim_intro,  # intro_question
+        TR.ethereum__staking_claim,  # verb
+        "",  # total_amount
+        maximum_fee,  # maximum_fee
+        addr_str,  # address
+        TR.ethereum__staking_claim_address,  # address_title
+        fee_info_items,  # info_items
+        chunkify=chunkify,
     )
 
 
@@ -119,7 +145,7 @@ def require_confirm_address(address_bytes: bytes) -> Awaitable[None]:
     )
 
 
-def require_confirm_data(data: bytes, data_total: int) -> Awaitable[None]:
+def require_confirm_other_data(data: bytes, data_total: int) -> Awaitable[None]:
     return confirm_blob(
         "confirm_data",
         TR.ethereum__title_confirm_data,
@@ -256,35 +282,6 @@ async def confirm_typed_value(
             data,
             description,
         )
-
-
-def format_ethereum_amount(
-    value: int,
-    token: EthereumTokenInfo | None,
-    network: EthereumNetworkInfo,
-    force_unit_gwei: bool = False,
-) -> str:
-    from trezor.strings import format_amount
-
-    if token:
-        suffix = token.symbol
-        decimals = token.decimals
-    else:
-        suffix = network.symbol
-        decimals = 18
-
-    if force_unit_gwei:
-        assert token is None
-        assert decimals >= 9
-        decimals = decimals - 9
-        suffix = "Gwei"
-    elif decimals > 9 and value < 10 ** (decimals - 9):
-        # Don't want to display wei values for tokens with small decimal numbers
-        suffix = "Wei " + suffix
-        decimals = 0
-
-    amount = format_amount(value, decimals)
-    return f"{amount} {suffix}"
 
 
 def limit_str(s: str, limit: int = 16) -> str:

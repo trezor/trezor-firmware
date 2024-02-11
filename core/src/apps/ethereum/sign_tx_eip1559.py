@@ -42,8 +42,8 @@ async def sign_tx_eip1559(
 
     from apps.common import paths
 
-    from .layout import require_confirm_data, require_confirm_tx_eip1559
-    from .sign_tx import check_common_fields, handle_erc20, send_request_chunk
+    from .helpers import format_ethereum_amount, get_fee_items_eip1559
+    from .sign_tx import check_common_fields, confirm_tx_data, send_request_chunk
 
     gas_limit = msg.gas_limit  # local_cache_attribute
     data_total = msg.data_length  # local_cache_attribute
@@ -55,25 +55,23 @@ async def sign_tx_eip1559(
         raise wire.DataError("Fee overflow")
     check_common_fields(msg)
 
+    # have a user confirm signing
     await paths.validate_path(keychain, msg.address_n)
+    address_bytes = bytes_from_address(msg.to)
 
-    # Handle ERC20s
-    token, address_bytes, recipient, value = await handle_erc20(msg, defs)
-
-    if token is None and data_total > 0:
-        await require_confirm_data(msg.data_initial_chunk, data_total)
-
-    await require_confirm_tx_eip1559(
-        recipient,
-        value,
-        int.from_bytes(msg.max_gas_fee, "big"),
-        int.from_bytes(msg.max_priority_fee, "big"),
-        int.from_bytes(gas_limit, "big"),
+    max_gas_fee = int.from_bytes(msg.max_gas_fee, "big")
+    max_priority_fee = int.from_bytes(msg.max_priority_fee, "big")
+    gas_limit = int.from_bytes(msg.gas_limit, "big")
+    maximum_fee = format_ethereum_amount(max_gas_fee * gas_limit, None, defs.network)
+    fee_items = get_fee_items_eip1559(
+        max_gas_fee,
+        max_priority_fee,
+        gas_limit,
         defs.network,
-        token,
-        bool(msg.chunkify),
     )
+    await confirm_tx_data(msg, defs, address_bytes, maximum_fee, fee_items, data_total)
 
+    # transaction data confirmed, proceed with signing
     data = bytearray()
     data += msg.data_initial_chunk
     data_left = data_total - len(msg.data_initial_chunk)

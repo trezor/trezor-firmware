@@ -844,6 +844,14 @@ pub enum TranslatedString {
     words__yes = 831,
     reboot_to_bootloader__just_a_moment = 832,
     inputs__previous = 833,
+    ethereum__staking_claim = 834,
+    ethereum__staking_claim_address = 835,
+    ethereum__staking_claim_intro = 836,
+    ethereum__staking_stake = 837,
+    ethereum__staking_stake_address = 838,
+    ethereum__staking_stake_intro = 839,
+    ethereum__staking_unstake = 840,
+    ethereum__staking_unstake_intro = 841,
 }
 
 impl TranslatedString {
@@ -1683,6 +1691,14 @@ impl TranslatedString {
             Self::words__yes => "Yes",
             Self::reboot_to_bootloader__just_a_moment => "Just a moment...",
             Self::inputs__previous => "PREVIOUS",
+            Self::ethereum__staking_claim => "CLAIM",
+            Self::ethereum__staking_claim_address => "CLAIM ADDRESS",
+            Self::ethereum__staking_claim_intro => "Claim ETH from Everstake?",
+            Self::ethereum__staking_stake => "STAKE",
+            Self::ethereum__staking_stake_address => "STAKE ADDRESS",
+            Self::ethereum__staking_stake_intro => "Stake ETH on Everstake?",
+            Self::ethereum__staking_unstake => "UNSTAKE",
+            Self::ethereum__staking_unstake_intro => "Unstake ETH from Everstake?",
         }
     }
 
@@ -2523,6 +2539,14 @@ impl TranslatedString {
             Qstr::MP_QSTR_words__yes => Some(Self::words__yes),
             Qstr::MP_QSTR_reboot_to_bootloader__just_a_moment => Some(Self::reboot_to_bootloader__just_a_moment),
             Qstr::MP_QSTR_inputs__previous => Some(Self::inputs__previous),
+            Qstr::MP_QSTR_ethereum__staking_claim => Some(Self::ethereum__staking_claim),
+            Qstr::MP_QSTR_ethereum__staking_claim_address => Some(Self::ethereum__staking_claim_address),
+            Qstr::MP_QSTR_ethereum__staking_claim_intro => Some(Self::ethereum__staking_claim_intro),
+            Qstr::MP_QSTR_ethereum__staking_stake => Some(Self::ethereum__staking_stake),
+            Qstr::MP_QSTR_ethereum__staking_stake_address => Some(Self::ethereum__staking_stake_address),
+            Qstr::MP_QSTR_ethereum__staking_stake_intro => Some(Self::ethereum__staking_stake_intro),
+            Qstr::MP_QSTR_ethereum__staking_unstake => Some(Self::ethereum__staking_unstake),
+            Qstr::MP_QSTR_ethereum__staking_unstake_intro => Some(Self::ethereum__staking_unstake_intro),
             _ => None,
         }
     }

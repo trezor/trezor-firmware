@@ -2,13 +2,23 @@ from typing import TYPE_CHECKING
 
 from trezor.crypto import rlp
 from trezor.messages import EthereumTxRequest
+from trezor.utils import BufferReader
 from trezor.wire import DataError
+
+from apps.ethereum import staking_tx_constants as constants
 
 from .helpers import bytes_from_address
 from .keychain import with_keychain_from_chain_id
 
 if TYPE_CHECKING:
-    from trezor.messages import EthereumSignTx, EthereumTokenInfo, EthereumTxAck
+    from typing import Iterable
+
+    from trezor.messages import (
+        EthereumNetworkInfo,
+        EthereumSignTx,
+        EthereumTokenInfo,
+        EthereumTxAck,
+    )
 
     from apps.common.keychain import Keychain
 
@@ -33,7 +43,9 @@ async def sign_tx(
 
     from apps.common import paths
 
-    from .layout import require_confirm_data, require_confirm_tx
+    from .helpers import format_ethereum_amount, get_fee_items_regular
+
+    data_total = msg.data_length  # local_cache_attribute
 
     # check
     if msg.tx_type not in [1, 6, None]:
@@ -42,26 +54,20 @@ async def sign_tx(
         raise DataError("Fee overflow")
     check_common_fields(msg)
 
+    # have a user confirm signing
     await paths.validate_path(keychain, msg.address_n)
-
-    # Handle ERC20s
-    token, address_bytes, recipient, value = await handle_erc20(msg, defs)
-
-    data_total = msg.data_length  # local_cache_attribute
-
-    if token is None and data_total > 0:
-        await require_confirm_data(msg.data_initial_chunk, data_total)
-
-    await require_confirm_tx(
-        recipient,
-        value,
-        int.from_bytes(msg.gas_price, "big"),
-        int.from_bytes(msg.gas_limit, "big"),
+    address_bytes = bytes_from_address(msg.to)
+    gas_price = int.from_bytes(msg.gas_price, "big")
+    gas_limit = int.from_bytes(msg.gas_limit, "big")
+    maximum_fee = format_ethereum_amount(gas_price * gas_limit, None, defs.network)
+    fee_items = get_fee_items_regular(
+        gas_price,
+        gas_limit,
         defs.network,
-        token,
-        bool(msg.chunkify),
     )
+    await confirm_tx_data(msg, defs, address_bytes, maximum_fee, fee_items, data_total)
 
+    # sign
     data = bytearray()
     data += msg.data_initial_chunk
     data_left = data_total - len(msg.data_initial_chunk)
@@ -99,16 +105,89 @@ async def sign_tx(
     return result
 
 
-async def handle_erc20(
+async def confirm_tx_data(
+    msg: MsgInSignTx,
+    defs: Definitions,
+    address_bytes: bytes,
+    maximum_fee: str,
+    fee_items: Iterable[tuple[str, str]],
+    data_total_len: int,
+) -> None:
+    # function distinguishes between staking / smart contracts / regular transactions
+    from .layout import require_confirm_other_data, require_confirm_tx
+
+    if await handle_staking(msg, defs.network, address_bytes, maximum_fee, fee_items):
+        return
+
+    # Handle ERC-20, currently only 'transfer' function
+    token, recipient, value = await handle_erc20_transfer(msg, defs, address_bytes)
+
+    if token is None and data_total_len > 0:
+        await require_confirm_other_data(msg.data_initial_chunk, data_total_len)
+
+    await require_confirm_tx(
+        recipient,
+        value,
+        maximum_fee,
+        fee_items,
+        defs.network,
+        token,
+        bool(msg.chunkify),
+    )
+
+
+async def handle_staking(
+    msg: MsgInSignTx,
+    network: EthereumNetworkInfo,
+    address_bytes: bytes,
+    maximum_fee: str,
+    fee_items: Iterable[tuple[str, str]],
+) -> bool:
+
+    data_reader = BufferReader(msg.data_initial_chunk)
+    if data_reader.remaining_count() < constants.SC_FUNC_SIG_BYTES:
+        return False
+
+    func_sig = data_reader.read_memoryview(constants.SC_FUNC_SIG_BYTES)
+    if address_bytes in constants.ADDRESSES_POOL:
+        if func_sig == constants.SC_FUNC_SIG_STAKE:
+            await _handle_staking_tx_stake(
+                data_reader, msg, network, address_bytes, maximum_fee, fee_items
+            )
+            return True
+        if func_sig == constants.SC_FUNC_SIG_UNSTAKE:
+            await _handle_staking_tx_unstake(
+                data_reader, msg, network, address_bytes, maximum_fee, fee_items
+            )
+            return True
+
+    if address_bytes in constants.ADDRESSES_ACCOUNTING:
+        if func_sig == constants.SC_FUNC_SIG_CLAIM:
+            await _handle_staking_tx_claim(
+                data_reader,
+                address_bytes,
+                maximum_fee,
+                fee_items,
+                network,
+                bool(msg.chunkify),
+            )
+            return True
+
+    # data not corresponding to staking transaction
+    return False
+
+
+async def handle_erc20_transfer(
     msg: MsgInSignTx,
     definitions: Definitions,
-) -> tuple[EthereumTokenInfo | None, bytes, bytes, int]:
+    address_bytes: bytes,
+) -> tuple[EthereumTokenInfo | None, bytes, int]:
     from . import tokens
     from .layout import require_confirm_unknown_token
 
     data_initial_chunk = msg.data_initial_chunk  # local_cache_attribute
     token = None
-    address_bytes = recipient = bytes_from_address(msg.to)
+    recipient = address_bytes
     value = int.from_bytes(msg.value, "big")
     if (
         len(msg.to) in (40, 42)
@@ -125,7 +204,7 @@ async def handle_erc20(
         if token is tokens.UNKNOWN_TOKEN:
             await require_confirm_unknown_token(address_bytes)
 
-    return token, address_bytes, recipient, value
+    return token, recipient, value
 
 
 def _get_total_length(msg: EthereumSignTx, data_total: int) -> int:
@@ -208,3 +287,92 @@ def check_common_fields(msg: MsgInSignTx) -> None:
 
     if msg.chain_id == 0:
         raise DataError("Chain ID out of bounds")
+
+
+async def _handle_staking_tx_stake(
+    data_reader: BufferReader,
+    msg: MsgInSignTx,
+    network: EthereumNetworkInfo,
+    address_bytes: bytes,
+    maximum_fee: str,
+    fee_items: Iterable[tuple[str, str]],
+) -> None:
+    from .layout import require_confirm_stake
+
+    # stake args:
+    # - arg0: uint64, source (should be 1)
+    try:
+        source = int.from_bytes(
+            data_reader.read_memoryview(constants.SC_ARGUMENT_BYTES), "big"
+        )
+        if source != 1:
+            raise ValueError  # wrong value of 1st argument ('source' should be 1)
+        if data_reader.remaining_count() != 0:
+            raise ValueError  # wrong number of arguments for stake (should be 1)
+    except (ValueError, EOFError):
+        raise DataError("Invalid staking transaction call")
+
+    await require_confirm_stake(
+        address_bytes,
+        int.from_bytes(msg.value, "big"),
+        maximum_fee,
+        fee_items,
+        network,
+        bool(msg.chunkify),
+    )
+
+
+async def _handle_staking_tx_unstake(
+    data_reader: BufferReader,
+    msg: MsgInSignTx,
+    network: EthereumNetworkInfo,
+    address_bytes: bytes,
+    maximum_fee: str,
+    fee_items: Iterable[tuple[str, str]],
+) -> None:
+    from .layout import require_confirm_unstake
+
+    # unstake args:
+    # - arg0: uint256, value
+    # - arg1:  uint16, isAllowedInterchange (bool)
+    # - arg2: uint64, source, should be 1
+    try:
+        value = int.from_bytes(
+            data_reader.read_memoryview(constants.SC_ARGUMENT_BYTES), "big"
+        )
+        _ = data_reader.read_memoryview(constants.SC_ARGUMENT_BYTES)  # skip arg1
+        source = int.from_bytes(
+            data_reader.read_memoryview(constants.SC_ARGUMENT_BYTES), "big"
+        )
+        if source != 1:
+            raise ValueError  # wrong value of 3rd argument ('source' should be 1)
+        if data_reader.remaining_count() != 0:
+            raise ValueError  # wrong number of arguments for unstake (should be 3)
+    except (ValueError, EOFError):
+        raise DataError("Invalid staking transaction call")
+
+    await require_confirm_unstake(
+        address_bytes,
+        value,
+        maximum_fee,
+        fee_items,
+        network,
+        bool(msg.chunkify),
+    )
+
+
+async def _handle_staking_tx_claim(
+    data_reader: BufferReader,
+    staking_addr: bytes,
+    maximum_fee: str,
+    fee_items: Iterable[tuple[str, str]],
+    network: EthereumNetworkInfo,
+    chunkify: bool,
+) -> None:
+    from .layout import require_confirm_claim
+
+    # claim has no args
+    if data_reader.remaining_count() != 0:
+        raise DataError("Invalid staking transaction call")
+
+    await require_confirm_claim(staking_addr, maximum_fee, fee_items, network, chunkify)

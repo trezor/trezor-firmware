@@ -1023,7 +1023,7 @@ async def confirm_value(
                             title=info_title.upper(),
                             action=info_value,
                             description=description,
-                            verb=TR.buttons__back,
+                            verb="",
                             verb_cancel="<",
                             hold=False,
                             reverse=False,
@@ -1063,6 +1063,56 @@ async def confirm_total(
             ),
             br_type,
             br_code,
+        )
+    )
+
+
+async def confirm_ethereum_staking_tx(
+    title: str,
+    intro_question: str,
+    verb: str,
+    total_amount: str,
+    maximum_fee: str,
+    address: str,
+    address_title: str,
+    info_items: Iterable[tuple[str, str]],
+    br_type: str = "confirm_ethereum_staking_tx",
+    br_code: ButtonRequestType = ButtonRequestType.SignTx,
+    chunkify: bool = False,
+) -> None:
+
+    # intro
+    await confirm_value(
+        title,
+        intro_question,
+        "",
+        br_type,
+        br_code,
+        verb=verb,
+        info_items=((address_title, address),),
+    )
+
+    # confirmation
+    if verb == TR.ethereum__staking_claim:
+        amount_title = verb
+        amount_value = ""
+    else:
+        amount_title = TR.words__amount + ":"
+        amount_value = total_amount
+    await raise_if_not_confirmed(
+        interact(
+            RustLayout(
+                trezorui2.altcoin_tx_summary(
+                    amount_title=amount_title,
+                    amount_value=amount_value,
+                    fee_title=TR.send__maximum_fee,
+                    fee_value=maximum_fee,
+                    items=info_items,
+                    cancel_cross=True,
+                )
+            ),
+            br_type=br_type,
+            br_code=br_code,
         )
     )
 

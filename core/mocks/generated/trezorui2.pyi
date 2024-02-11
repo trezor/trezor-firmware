@@ -574,6 +574,7 @@ def show_info_with_cancel(
     title: str,
     items: Iterable[Tuple[str, str]],
     horizontal: bool = False,
+    chunkify: bool = False,
 ) -> object:
     """Show metadata for outgoing transaction."""
 
@@ -590,6 +591,7 @@ def confirm_value(
     info_button: bool = False,
     hold: bool = False,
     chunkify: bool = False,
+    text_mono: bool = True,
 ) -> object:
     """Confirm value. Merge of confirm_total and confirm_output."""
 
