@@ -9637,8 +9637,8 @@ pub struct CardanoSignMessageInit {
     pub payload_size: ::std::option::Option<u32>,
     // @@protoc_insertion_point(field:hw.trezor.messages.cardano.CardanoSignMessageInit.hash_payload)
     pub hash_payload: ::std::option::Option<bool>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.cardano.CardanoSignMessageInit.display_ascii)
-    pub display_ascii: ::std::option::Option<bool>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.cardano.CardanoSignMessageInit.prefer_hex_display)
+    pub prefer_hex_display: ::std::option::Option<bool>,
     // @@protoc_insertion_point(field:hw.trezor.messages.cardano.CardanoSignMessageInit.address_parameters)
     pub address_parameters: ::protobuf::MessageField<CardanoAddressParametersType>,
     // @@protoc_insertion_point(field:hw.trezor.messages.cardano.CardanoSignMessageInit.derivation_type)
@@ -9735,23 +9735,23 @@ impl CardanoSignMessageInit {
         self.hash_payload = ::std::option::Option::Some(v);
     }
 
-    // required bool display_ascii = 6;
+    // required bool prefer_hex_display = 6;
 
-    pub fn display_ascii(&self) -> bool {
-        self.display_ascii.unwrap_or(false)
+    pub fn prefer_hex_display(&self) -> bool {
+        self.prefer_hex_display.unwrap_or(false)
     }
 
-    pub fn clear_display_ascii(&mut self) {
-        self.display_ascii = ::std::option::Option::None;
+    pub fn clear_prefer_hex_display(&mut self) {
+        self.prefer_hex_display = ::std::option::Option::None;
     }
 
-    pub fn has_display_ascii(&self) -> bool {
-        self.display_ascii.is_some()
+    pub fn has_prefer_hex_display(&self) -> bool {
+        self.prefer_hex_display.is_some()
     }
 
     // Param is passed by value, moved
-    pub fn set_display_ascii(&mut self, v: bool) {
-        self.display_ascii = ::std::option::Option::Some(v);
+    pub fn set_prefer_hex_display(&mut self, v: bool) {
+        self.prefer_hex_display = ::std::option::Option::Some(v);
     }
 
     // required .hw.trezor.messages.cardano.CardanoDerivationType derivation_type = 8;
@@ -9805,9 +9805,9 @@ impl CardanoSignMessageInit {
             |m: &mut CardanoSignMessageInit| { &mut m.hash_payload },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "display_ascii",
-            |m: &CardanoSignMessageInit| { &m.display_ascii },
-            |m: &mut CardanoSignMessageInit| { &mut m.display_ascii },
+            "prefer_hex_display",
+            |m: &CardanoSignMessageInit| { &m.prefer_hex_display },
+            |m: &mut CardanoSignMessageInit| { &mut m.prefer_hex_display },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, CardanoAddressParametersType>(
             "address_parameters",
@@ -9837,7 +9837,7 @@ impl ::protobuf::Message for CardanoSignMessageInit {
         if self.hash_payload.is_none() {
             return false;
         }
-        if self.display_ascii.is_none() {
+        if self.prefer_hex_display.is_none() {
             return false;
         }
         if self.derivation_type.is_none() {
@@ -9873,7 +9873,7 @@ impl ::protobuf::Message for CardanoSignMessageInit {
                     self.hash_payload = ::std::option::Option::Some(is.read_bool()?);
                 },
                 48 => {
-                    self.display_ascii = ::std::option::Option::Some(is.read_bool()?);
+                    self.prefer_hex_display = ::std::option::Option::Some(is.read_bool()?);
                 },
                 58 => {
                     ::protobuf::rt::read_singular_message_into_field(is, &mut self.address_parameters)?;
@@ -9908,7 +9908,7 @@ impl ::protobuf::Message for CardanoSignMessageInit {
         if let Some(v) = self.hash_payload {
             my_size += 1 + 1;
         }
-        if let Some(v) = self.display_ascii {
+        if let Some(v) = self.prefer_hex_display {
             my_size += 1 + 1;
         }
         if let Some(v) = self.address_parameters.as_ref() {
@@ -9939,7 +9939,7 @@ impl ::protobuf::Message for CardanoSignMessageInit {
         if let Some(v) = self.hash_payload {
             os.write_bool(5, v)?;
         }
-        if let Some(v) = self.display_ascii {
+        if let Some(v) = self.prefer_hex_display {
             os.write_bool(6, v)?;
         }
         if let Some(v) = self.address_parameters.as_ref() {
@@ -9970,7 +9970,7 @@ impl ::protobuf::Message for CardanoSignMessageInit {
         self.signing_path.clear();
         self.payload_size = ::std::option::Option::None;
         self.hash_payload = ::std::option::Option::None;
-        self.display_ascii = ::std::option::Option::None;
+        self.prefer_hex_display = ::std::option::Option::None;
         self.address_parameters.clear();
         self.derivation_type = ::std::option::Option::None;
         self.special_fields.clear();
@@ -9983,7 +9983,7 @@ impl ::protobuf::Message for CardanoSignMessageInit {
             signing_path: ::std::vec::Vec::new(),
             payload_size: ::std::option::Option::None,
             hash_payload: ::std::option::Option::None,
-            display_ascii: ::std::option::Option::None,
+            prefer_hex_display: ::std::option::Option::None,
             address_parameters: ::protobuf::MessageField::none(),
             derivation_type: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
@@ -11639,21 +11639,21 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x03\x20\x02(\x0cR\tsignature\x12\x1d\n\nchain_code\x18\x04\x20\x01(\x0c\
     R\tchainCode\"\x12\n\x10CardanoTxHostAck\",\n\x11CardanoTxBodyHash\x12\
     \x17\n\x07tx_hash\x18\x01\x20\x02(\x0cR\x06txHash\"\x17\n\x15CardanoSign\
-    TxFinished\"\xb1\x03\n\x16CardanoSignMessageInit\x12%\n\x0eprotocol_magi\
+    TxFinished\"\xba\x03\n\x16CardanoSignMessageInit\x12%\n\x0eprotocol_magi\
     c\x18\x01\x20\x01(\rR\rprotocolMagic\x12\x1d\n\nnetwork_id\x18\x02\x20\
     \x01(\rR\tnetworkId\x12!\n\x0csigning_path\x18\x03\x20\x03(\rR\x0bsignin\
     gPath\x12!\n\x0cpayload_size\x18\x04\x20\x02(\rR\x0bpayloadSize\x12!\n\
-    \x0chash_payload\x18\x05\x20\x02(\x08R\x0bhashPayload\x12#\n\rdisplay_as\
-    cii\x18\x06\x20\x02(\x08R\x0cdisplayAscii\x12g\n\x12address_parameters\
-    \x18\x07\x20\x01(\x0b28.hw.trezor.messages.cardano.CardanoAddressParamet\
-    ersTypeR\x11addressParameters\x12Z\n\x0fderivation_type\x18\x08\x20\x02(\
-    \x0e21.hw.trezor.messages.cardano.CardanoDerivationTypeR\x0ederivationTy\
-    pe\"\x17\n\x15CardanoMessageItemAck\"0\n\x1aCardanoMessagePayloadChunk\
-    \x12\x12\n\x04data\x18\x01\x20\x02(\x0cR\x04data\"\x1b\n\x19CardanoMessa\
-    geItemHostAck\"T\n\x1aCardanoSignMessageFinished\x12\x1c\n\tsignature\
-    \x18\x01\x20\x02(\x0cR\tsignature\x12\x18\n\x07address\x18\x02\x20\x02(\
-    \x0cR\x07address*B\n\x15CardanoDerivationType\x12\n\n\x06LEDGER\x10\0\
-    \x12\n\n\x06ICARUS\x10\x01\x12\x11\n\rICARUS_TREZOR\x10\x02*\xd2\x01\n\
+    \x0chash_payload\x18\x05\x20\x02(\x08R\x0bhashPayload\x12,\n\x12prefer_h\
+    ex_display\x18\x06\x20\x02(\x08R\x10preferHexDisplay\x12g\n\x12address_p\
+    arameters\x18\x07\x20\x01(\x0b28.hw.trezor.messages.cardano.CardanoAddre\
+    ssParametersTypeR\x11addressParameters\x12Z\n\x0fderivation_type\x18\x08\
+    \x20\x02(\x0e21.hw.trezor.messages.cardano.CardanoDerivationTypeR\x0eder\
+    ivationType\"\x17\n\x15CardanoMessageItemAck\"0\n\x1aCardanoMessagePaylo\
+    adChunk\x12\x12\n\x04data\x18\x01\x20\x02(\x0cR\x04data\"\x1b\n\x19Carda\
+    noMessageItemHostAck\"T\n\x1aCardanoSignMessageFinished\x12\x1c\n\tsigna\
+    ture\x18\x01\x20\x02(\x0cR\tsignature\x12\x18\n\x07address\x18\x02\x20\
+    \x02(\x0cR\x07address*B\n\x15CardanoDerivationType\x12\n\n\x06LEDGER\x10\
+    \0\x12\n\n\x06ICARUS\x10\x01\x12\x11\n\rICARUS_TREZOR\x10\x02*\xd2\x01\n\
     \x12CardanoAddressType\x12\x08\n\x04BASE\x10\0\x12\x13\n\x0fBASE_SCRIPT_\
     KEY\x10\x01\x12\x13\n\x0fBASE_KEY_SCRIPT\x10\x02\x12\x16\n\x12BASE_SCRIP\
     T_SCRIPT\x10\x03\x12\x0b\n\x07POINTER\x10\x04\x12\x12\n\x0ePOINTER_SCRIP\

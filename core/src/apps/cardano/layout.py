@@ -11,7 +11,6 @@ from trezor.enums import (
 from trezor.strings import format_amount, format_amount_unit
 from trezor.ui import layouts
 from trezor.ui.layouts import confirm_metadata, confirm_properties
-from trezor.wire import ProcessError
 
 from apps.cardano.helpers.chunks import MAX_CHUNK_SIZE
 from apps.common.paths import address_n_to_str
@@ -328,7 +327,7 @@ async def confirm_message_payload(
     payload_hash: bytes,
     payload_size: int,
     is_signing_hash: bool,
-    display_ascii: bool,
+    prefer_hex_display: bool,
 ) -> None:
     props: list[PropertyType]
 
@@ -343,11 +342,7 @@ async def confirm_message_payload(
             first_chunk=payload_first_chunk,
             data_size=payload_size,
         )
-    elif display_ascii:
-        if not is_unambiguous_ascii(payload_first_chunk):
-            raise ProcessError(
-                "Payload cannot be decoded as ASCII or its decoding leads to a visually ambiguous string"
-            )
+    elif not prefer_hex_display and is_unambiguous_ascii(payload_first_chunk):
         props = _get_data_chunk_props(
             title="Message text",
             first_chunk=payload_first_chunk,
