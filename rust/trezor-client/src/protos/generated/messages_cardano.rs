@@ -10307,6 +10307,8 @@ pub struct CardanoSignMessageFinished {
     pub signature: ::std::option::Option<::std::vec::Vec<u8>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.cardano.CardanoSignMessageFinished.address)
     pub address: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.cardano.CardanoSignMessageFinished.pub_key)
+    pub pub_key: ::std::option::Option<::std::vec::Vec<u8>>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.cardano.CardanoSignMessageFinished.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -10395,8 +10397,44 @@ impl CardanoSignMessageFinished {
         self.address.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
+    // required bytes pub_key = 3;
+
+    pub fn pub_key(&self) -> &[u8] {
+        match self.pub_key.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_pub_key(&mut self) {
+        self.pub_key = ::std::option::Option::None;
+    }
+
+    pub fn has_pub_key(&self) -> bool {
+        self.pub_key.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_pub_key(&mut self, v: ::std::vec::Vec<u8>) {
+        self.pub_key = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_pub_key(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.pub_key.is_none() {
+            self.pub_key = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.pub_key.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_pub_key(&mut self) -> ::std::vec::Vec<u8> {
+        self.pub_key.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut fields = ::std::vec::Vec::with_capacity(3);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "signature",
@@ -10407,6 +10445,11 @@ impl CardanoSignMessageFinished {
             "address",
             |m: &CardanoSignMessageFinished| { &m.address },
             |m: &mut CardanoSignMessageFinished| { &mut m.address },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "pub_key",
+            |m: &CardanoSignMessageFinished| { &m.pub_key },
+            |m: &mut CardanoSignMessageFinished| { &mut m.pub_key },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<CardanoSignMessageFinished>(
             "CardanoSignMessageFinished",
@@ -10426,6 +10469,9 @@ impl ::protobuf::Message for CardanoSignMessageFinished {
         if self.address.is_none() {
             return false;
         }
+        if self.pub_key.is_none() {
+            return false;
+        }
         true
     }
 
@@ -10437,6 +10483,9 @@ impl ::protobuf::Message for CardanoSignMessageFinished {
                 },
                 18 => {
                     self.address = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                26 => {
+                    self.pub_key = ::std::option::Option::Some(is.read_bytes()?);
                 },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
@@ -10456,6 +10505,9 @@ impl ::protobuf::Message for CardanoSignMessageFinished {
         if let Some(v) = self.address.as_ref() {
             my_size += ::protobuf::rt::bytes_size(2, &v);
         }
+        if let Some(v) = self.pub_key.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(3, &v);
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -10467,6 +10519,9 @@ impl ::protobuf::Message for CardanoSignMessageFinished {
         }
         if let Some(v) = self.address.as_ref() {
             os.write_bytes(2, v)?;
+        }
+        if let Some(v) = self.pub_key.as_ref() {
+            os.write_bytes(3, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -10487,6 +10542,7 @@ impl ::protobuf::Message for CardanoSignMessageFinished {
     fn clear(&mut self) {
         self.signature = ::std::option::Option::None;
         self.address = ::std::option::Option::None;
+        self.pub_key = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -10494,6 +10550,7 @@ impl ::protobuf::Message for CardanoSignMessageFinished {
         static instance: CardanoSignMessageFinished = CardanoSignMessageFinished {
             signature: ::std::option::Option::None,
             address: ::std::option::Option::None,
+            pub_key: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -11570,39 +11627,40 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x0fderivation_type\x18\x08\x20\x02(\x0e21.hw.trezor.messages.cardano.Ca\
     rdanoDerivationTypeR\x0ederivationType\"\x17\n\x15CardanoMessageItemAck\
     \"0\n\x1aCardanoMessagePayloadChunk\x12\x12\n\x04data\x18\x01\x20\x02(\
-    \x0cR\x04data\"\x1b\n\x19CardanoMessageItemHostAck\"T\n\x1aCardanoSignMe\
+    \x0cR\x04data\"\x1b\n\x19CardanoMessageItemHostAck\"m\n\x1aCardanoSignMe\
     ssageFinished\x12\x1c\n\tsignature\x18\x01\x20\x02(\x0cR\tsignature\x12\
-    \x18\n\x07address\x18\x02\x20\x02(\x0cR\x07address*B\n\x15CardanoDerivat\
-    ionType\x12\n\n\x06LEDGER\x10\0\x12\n\n\x06ICARUS\x10\x01\x12\x11\n\rICA\
-    RUS_TREZOR\x10\x02*\xd2\x01\n\x12CardanoAddressType\x12\x08\n\x04BASE\
-    \x10\0\x12\x13\n\x0fBASE_SCRIPT_KEY\x10\x01\x12\x13\n\x0fBASE_KEY_SCRIPT\
-    \x10\x02\x12\x16\n\x12BASE_SCRIPT_SCRIPT\x10\x03\x12\x0b\n\x07POINTER\
-    \x10\x04\x12\x12\n\x0ePOINTER_SCRIPT\x10\x05\x12\x0e\n\nENTERPRISE\x10\
-    \x06\x12\x15\n\x11ENTERPRISE_SCRIPT\x10\x07\x12\t\n\x05BYRON\x10\x08\x12\
-    \n\n\x06REWARD\x10\x0e\x12\x11\n\rREWARD_SCRIPT\x10\x0f*o\n\x17CardanoNa\
-    tiveScriptType\x12\x0b\n\x07PUB_KEY\x10\0\x12\x07\n\x03ALL\x10\x01\x12\
-    \x07\n\x03ANY\x10\x02\x12\n\n\x06N_OF_K\x10\x03\x12\x12\n\x0eINVALID_BEF\
-    ORE\x10\x04\x12\x15\n\x11INVALID_HEREAFTER\x10\x05*K\n$CardanoNativeScri\
-    ptHashDisplayFormat\x12\x08\n\x04HIDE\x10\0\x12\n\n\x06BECH32\x10\x01\
-    \x12\r\n\tPOLICY_ID\x10\x02*G\n\"CardanoTxOutputSerializationFormat\x12\
-    \x10\n\x0cARRAY_LEGACY\x10\0\x12\x0f\n\x0bMAP_BABBAGE\x10\x01*\xd2\x01\n\
-    \x16CardanoCertificateType\x12\x16\n\x12STAKE_REGISTRATION\x10\0\x12\x18\
-    \n\x14STAKE_DEREGISTRATION\x10\x01\x12\x14\n\x10STAKE_DELEGATION\x10\x02\
-    \x12\x1b\n\x17STAKE_POOL_REGISTRATION\x10\x03\x12\x1d\n\x19STAKE_REGISTR\
-    ATION_CONWAY\x10\x07\x12\x1f\n\x1bSTAKE_DEREGISTRATION_CONWAY\x10\x08\
-    \x12\x13\n\x0fVOTE_DELEGATION\x10\t*P\n\x0fCardanoDRepType\x12\x0c\n\x08\
-    KEY_HASH\x10\0\x12\x0f\n\x0bSCRIPT_HASH\x10\x01\x12\x0b\n\x07ABSTAIN\x10\
-    \x02\x12\x11\n\rNO_CONFIDENCE\x10\x03*X\n\x14CardanoPoolRelayType\x12\
-    \x12\n\x0eSINGLE_HOST_IP\x10\0\x12\x14\n\x10SINGLE_HOST_NAME\x10\x01\x12\
-    \x16\n\x12MULTIPLE_HOST_NAME\x10\x02*R\n$CardanoTxAuxiliaryDataSupplemen\
-    tType\x12\x08\n\x04NONE\x10\0\x12\x20\n\x1cCVOTE_REGISTRATION_SIGNATURE\
-    \x10\x01*6\n\x1eCardanoCVoteRegistrationFormat\x12\t\n\x05CIP15\x10\0\
-    \x12\t\n\x05CIP36\x10\x01*\x82\x01\n\x14CardanoTxSigningMode\x12\x18\n\
-    \x14ORDINARY_TRANSACTION\x10\0\x12\x1e\n\x1aPOOL_REGISTRATION_AS_OWNER\
-    \x10\x01\x12\x18\n\x14MULTISIG_TRANSACTION\x10\x02\x12\x16\n\x12PLUTUS_T\
-    RANSACTION\x10\x03*>\n\x14CardanoTxWitnessType\x12\x11\n\rBYRON_WITNESS\
-    \x10\0\x12\x13\n\x0fSHELLEY_WITNESS\x10\x01B;\n#com.satoshilabs.trezor.l\
-    ib.protobufB\x14TrezorMessageCardano\
+    \x18\n\x07address\x18\x02\x20\x02(\x0cR\x07address\x12\x17\n\x07pub_key\
+    \x18\x03\x20\x02(\x0cR\x06pubKey*B\n\x15CardanoDerivationType\x12\n\n\
+    \x06LEDGER\x10\0\x12\n\n\x06ICARUS\x10\x01\x12\x11\n\rICARUS_TREZOR\x10\
+    \x02*\xd2\x01\n\x12CardanoAddressType\x12\x08\n\x04BASE\x10\0\x12\x13\n\
+    \x0fBASE_SCRIPT_KEY\x10\x01\x12\x13\n\x0fBASE_KEY_SCRIPT\x10\x02\x12\x16\
+    \n\x12BASE_SCRIPT_SCRIPT\x10\x03\x12\x0b\n\x07POINTER\x10\x04\x12\x12\n\
+    \x0ePOINTER_SCRIPT\x10\x05\x12\x0e\n\nENTERPRISE\x10\x06\x12\x15\n\x11EN\
+    TERPRISE_SCRIPT\x10\x07\x12\t\n\x05BYRON\x10\x08\x12\n\n\x06REWARD\x10\
+    \x0e\x12\x11\n\rREWARD_SCRIPT\x10\x0f*o\n\x17CardanoNativeScriptType\x12\
+    \x0b\n\x07PUB_KEY\x10\0\x12\x07\n\x03ALL\x10\x01\x12\x07\n\x03ANY\x10\
+    \x02\x12\n\n\x06N_OF_K\x10\x03\x12\x12\n\x0eINVALID_BEFORE\x10\x04\x12\
+    \x15\n\x11INVALID_HEREAFTER\x10\x05*K\n$CardanoNativeScriptHashDisplayFo\
+    rmat\x12\x08\n\x04HIDE\x10\0\x12\n\n\x06BECH32\x10\x01\x12\r\n\tPOLICY_I\
+    D\x10\x02*G\n\"CardanoTxOutputSerializationFormat\x12\x10\n\x0cARRAY_LEG\
+    ACY\x10\0\x12\x0f\n\x0bMAP_BABBAGE\x10\x01*\xd2\x01\n\x16CardanoCertific\
+    ateType\x12\x16\n\x12STAKE_REGISTRATION\x10\0\x12\x18\n\x14STAKE_DEREGIS\
+    TRATION\x10\x01\x12\x14\n\x10STAKE_DELEGATION\x10\x02\x12\x1b\n\x17STAKE\
+    _POOL_REGISTRATION\x10\x03\x12\x1d\n\x19STAKE_REGISTRATION_CONWAY\x10\
+    \x07\x12\x1f\n\x1bSTAKE_DEREGISTRATION_CONWAY\x10\x08\x12\x13\n\x0fVOTE_\
+    DELEGATION\x10\t*P\n\x0fCardanoDRepType\x12\x0c\n\x08KEY_HASH\x10\0\x12\
+    \x0f\n\x0bSCRIPT_HASH\x10\x01\x12\x0b\n\x07ABSTAIN\x10\x02\x12\x11\n\rNO\
+    _CONFIDENCE\x10\x03*X\n\x14CardanoPoolRelayType\x12\x12\n\x0eSINGLE_HOST\
+    _IP\x10\0\x12\x14\n\x10SINGLE_HOST_NAME\x10\x01\x12\x16\n\x12MULTIPLE_HO\
+    ST_NAME\x10\x02*R\n$CardanoTxAuxiliaryDataSupplementType\x12\x08\n\x04NO\
+    NE\x10\0\x12\x20\n\x1cCVOTE_REGISTRATION_SIGNATURE\x10\x01*6\n\x1eCardan\
+    oCVoteRegistrationFormat\x12\t\n\x05CIP15\x10\0\x12\t\n\x05CIP36\x10\x01\
+    *\x82\x01\n\x14CardanoTxSigningMode\x12\x18\n\x14ORDINARY_TRANSACTION\
+    \x10\0\x12\x1e\n\x1aPOOL_REGISTRATION_AS_OWNER\x10\x01\x12\x18\n\x14MULT\
+    ISIG_TRANSACTION\x10\x02\x12\x16\n\x12PLUTUS_TRANSACTION\x10\x03*>\n\x14\
+    CardanoTxWitnessType\x12\x11\n\rBYRON_WITNESS\x10\0\x12\x13\n\x0fSHELLEY\
+    _WITNESS\x10\x01B;\n#com.satoshilabs.trezor.lib.protobufB\x14TrezorMessa\
+    geCardano\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
