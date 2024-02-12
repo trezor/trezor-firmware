@@ -224,6 +224,11 @@ def language(
         language_data = b""
     else:
         assert path_or_url is not None
+        if path_or_url.endswith(".json"):
+            raise click.ClickException(
+                "Provided file is a JSON file, not a blob file.\n"
+                "Generate blobs by running `python core/translations/cli.py gen` in root."
+            )
         try:
             language_data = Path(path_or_url).read_bytes()
         except Exception:
