@@ -344,7 +344,7 @@ class TR:
     joint__title: str = "JOINT TRANSACTION"
     joint__to_the_total_amount: str = "To the total amount:"
     joint__you_are_contributing: str = "You are contributing:"
-    language__change_to: str = "Change language to {}?"
+    language__change_to_template: str = "Change language to {}?"
     language__changed: str = "Language changed successfully"
     language__progress: str = "Changing language"
     language__title: str = "LANGUAGE SETTINGS"

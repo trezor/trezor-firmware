@@ -166,7 +166,7 @@ async def _require_confirm_change_language(
     await confirm_action(
         "set_language",
         TR.language__title,
-        description=TR.language__change_to.format(lang),
+        description=TR.language__change_to_template.format(lang),
         verb="OK",  # going for an international word, so it does not need translations
         br_code=ButtonRequestType.ProtectCall,
     )
