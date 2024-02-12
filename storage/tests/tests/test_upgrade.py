@@ -1,5 +1,6 @@
 import pytest
 from c0.storage import Storage as StorageC0
+from c3.storage import Storage as StorageC3
 from c.storage import Storage as StorageC
 
 from python.src.norcow import NorcowBitwise
@@ -58,6 +59,21 @@ def test_upgrade():
     sc1.init(common.test_uid)
     assert sc1.get_pin_rem() == 6
     check_values(sc1)
+
+
+def test_upgrade_from_3():
+    sc3 = StorageC3("libtrezor-storage3.so")
+    sc3.init(common.test_uid)
+    assert sc3.unlock("")
+    set_values(sc3)
+    for _ in range(10):
+        assert not sc3.unlock("3")
+
+    sc = StorageC("libtrezor-storage.so")
+    sc._set_flash_buffer(sc3._get_flash_buffer())
+    sc.init(common.test_uid)
+    assert sc.get_pin_rem() == 6
+    check_values(sc)
 
 
 @pytest.mark.parametrize("nc_class", [NorcowBitwise])
