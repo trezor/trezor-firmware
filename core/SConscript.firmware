@@ -720,7 +720,7 @@ def cargo_build():
     features.append('ui')
     features.append('translations')
     if PYOPT == '0':
-        features.append('ui_debug')
+        features.append('debug')
 
     features.extend(FEATURES_AVAILABLE)
 
