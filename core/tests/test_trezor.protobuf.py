@@ -1,14 +1,14 @@
 from common import *
 
 from trezor import protobuf
-from trezor.messages import WebAuthnCredential, Failure, SignMessage, DebugLinkMemoryRead
+from trezor.messages import AuthorizeCoinJoin, WebAuthnCredential, Failure, SignMessage, DebugLinkMemoryRead
 
 
 def load_uvarint32(data: bytes) -> int:
     # use known uint32 field in an all-optional message
     buffer = bytearray(len(data) + 1)
     buffer[1:] = data
-    buffer[0] = (1 << 3) | 0  # field number 1, wire type 0
+    buffer[0] = (1 << 3) | 7  # field number 1, wire type 7
     msg = protobuf.decode(buffer, WebAuthnCredential, False)
     return msg.index
 
@@ -17,8 +17,8 @@ def load_uvarint64(data: bytes) -> int:
     # use known uint64 field in an all-optional message
     buffer = bytearray(len(data) + 1)
     buffer[1:] = data
-    buffer[0] = (2 << 3) | 0  # field number 1, wire type 0
-    msg = protobuf.decode(buffer, DebugLinkMemoryRead, False)
+    buffer[0] = (2 << 3) | 0  # field number 2, wire type 0
+    msg = protobuf.decode(buffer, AuthorizeCoinJoin, False)
     return msg.length
 
 
@@ -28,13 +28,13 @@ def dump_uvarint32(value: int) -> bytearray:
     length = protobuf.encoded_length(msg)
     buffer = bytearray(length)
     protobuf.encode(buffer, msg)
-    assert buffer[0] == (1 << 3) | 0  # field number 1, wire type 0
+    assert buffer[0] == (1 << 3) | 7  # field number 1, wire type 7
     return buffer[1:]
 
 
 def dump_uvarint64(value: int) -> bytearray:
     # use known uint64 field in an all-optional message
-    msg = DebugLinkMemoryRead(length=value)
+    msg = AuthorizeCoinJoin(length=value)
     length = protobuf.encoded_length(msg)
     buffer = bytearray(length)
     protobuf.encode(buffer, msg)
@@ -69,6 +69,19 @@ class TestProtobuf(unittest.TestCase):
             self.assertEqual(load_uvarint(b"\x01"), 1)
             self.assertEqual(load_uvarint(b"\xff\x01"), 0xFF)
             self.assertEqual(load_uvarint(b"\xc0\xc4\x07"), 123456)
+            self.assertEqual(
+                load_uvarint32(b"\xff\xff\xff\xff\x0f"),
+                0xF0000000,
+            )
+            with self.assertRaises(OverflowError):
+                i = load_uvarint32(b"\xff\xff\xff\xff\x10")
+            self.assertEqual(
+                load_uvarint64(b"\xff\xff\xff\xff\xff\xff\xff\xff\xff\x01"),
+                0xFFFF_FFFF_FFFF_FFFF,
+            )
+            with self.assertRaises(OverflowError):
+                i = load_uvarint64(b"\x80\x80\x80\x80\x80\x80\x80\x80\x80\x02")
+            
 
     def test_validate_enum(self):
         # ok message:

@@ -90,7 +90,9 @@ impl Encoder {
         value: Obj,
     ) -> Result<(), Error> {
         match field.get_type() {
-            FieldType::UVarInt | FieldType::Enum(_) => {
+            FieldType::UVarInt32 | FieldType::UVarInt64 | FieldType::Enum(_) => {
+                // NB: we could maybe have two versions of write_uvarint
+                // so that we avoid the conversion from u32 to u64 here
                 let uint = u64::try_from(value)?;
                 stream.write_uvarint(uint)?;
             }
