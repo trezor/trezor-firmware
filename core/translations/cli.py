@@ -223,7 +223,7 @@ def merkle_root() -> None:
             f"Merkle root mismatch!\n"
             f"Expected:                  {root.hex()}\n"
             f"Stored in signatures.json: {signature_file['current']['merkle_root']}\n"
-            "Run `make_all_blobs.py gen` to update the stored Merkle root."
+            "Run `cli.py gen` to update the stored Merkle root."
         )
 
     click.echo(root.hex())
