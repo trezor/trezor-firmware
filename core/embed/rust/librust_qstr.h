@@ -443,7 +443,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_joint__you_are_contributing;
   MP_QSTR_label;
   MP_QSTR_language;
-  MP_QSTR_language__change_to;
+  MP_QSTR_language__change_to_template;
   MP_QSTR_language__changed;
   MP_QSTR_language__progress;
   MP_QSTR_language__title;
