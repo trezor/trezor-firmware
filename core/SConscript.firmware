@@ -351,6 +351,7 @@ SOURCE_FIRMWARE = [
     'embed/firmware/mphalport.c',
     'embed/firmware/nlrthumb.c',
     'embed/firmware/startup.S',
+    'embed/firmware/prodtest_common.c',
 ]
 
 CPPDEFINES_MOD += ['USE_SVC_SHUTDOWN']

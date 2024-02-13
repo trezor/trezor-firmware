@@ -49,6 +49,7 @@
 #include "random_delays.h"
 #include "rust_ui.h"
 #include "sdcard.h"
+#include "prodtest_common.h"
 
 #include TREZOR_BOARD
 
@@ -89,6 +90,102 @@
 #ifdef USE_SECP256K1_ZKP
 #include "zkp_context.h"
 #endif
+
+
+#include "usb.h"
+
+secbool startswith(const char *s, const char *prefix) {
+  return sectrue * (0 == strncmp(s, prefix, strlen(prefix)));
+}
+
+static void vcp_intr(void) {
+  display_clear();
+  ensure(secfalse, "vcp_intr");
+}
+
+void vcp_readline(char *buf, size_t len) {
+  uint32_t ticks_start = hal_ticks_ms();
+  int received = 0;
+  for (;;) {
+    char c;
+    int r = usb_vcp_read(VCP_IFACE, (uint8_t*)&c, 1);
+
+    if (r<= 0) {
+      if (received == 0 && hal_ticks_ms() - ticks_start > 1) {
+        break;
+      }
+      continue;
+    }
+
+    received++;
+
+    if (c == '\r') {
+      vcp_puts("\r\n", 2);
+      break;
+    }
+    if (c < 32 || c > 126) {  // not printable
+      continue;
+    }
+    if (len > 1) {  // leave space for \0
+      *buf = c;
+      buf++;
+      len--;
+      vcp_puts(&c, 1);
+    }
+  }
+  if (len > 0) {
+    *buf = '\0';
+  }
+}
+
+static void usb_init_all(void) {
+  enum {
+      VCP_PACKET_LEN = 64,
+      VCP_BUFFER_LEN = 1024,
+  };
+
+  static const usb_dev_info_t dev_info = {
+          .device_class = 0xEF,     // Composite Device Class
+          .device_subclass = 0x02,  // Common Class
+          .device_protocol = 0x01,  // Interface Association Descriptor
+          .vendor_id = 0x1209,
+          .product_id = 0x53C1,
+          .release_num = 0x0400,
+          .manufacturer = "SatoshiLabs",
+          .product = "TREZOR",
+          .serial_number = "000000000000",
+          .interface = "TREZOR Interface",
+          .usb21_enabled = secfalse,
+          .usb21_landing = secfalse,
+  };
+
+  static uint8_t tx_packet[VCP_PACKET_LEN];
+  static uint8_t tx_buffer[VCP_BUFFER_LEN];
+  static uint8_t rx_packet[VCP_PACKET_LEN];
+  static uint8_t rx_buffer[VCP_BUFFER_LEN];
+
+  static const usb_vcp_info_t vcp_info = {
+          .tx_packet = tx_packet,
+          .tx_buffer = tx_buffer,
+          .rx_packet = rx_packet,
+          .rx_buffer = rx_buffer,
+          .tx_buffer_len = VCP_BUFFER_LEN,
+          .rx_buffer_len = VCP_BUFFER_LEN,
+          .rx_intr_fn = vcp_intr,
+          .rx_intr_byte = 3,  // Ctrl-C
+          .iface_num = VCP_IFACE,
+          .data_iface_num = 0x01,
+          .ep_cmd = 0x82,
+          .ep_in = 0x81,
+          .ep_out = 0x01,
+          .polling_interval = 10,
+          .max_packet_len = VCP_PACKET_LEN,
+  };
+
+  usb_init(&dev_info);
+  ensure(usb_vcp_add(&vcp_info), "usb_vcp_add");
+  usb_start();
+}
 
 
 bool check_cnt(const flash_area_t * area, int * cnt){
@@ -256,10 +353,12 @@ int main(void) {
   ensure(sectrue * (zkp_context_init() == 0), NULL);
 #endif
 
+  usb_init_all();
+
   sdcard_init();
 
 
-  int cnt_success;
+  int cnt_;
   int cnt_fail;
 
   if (!check_cnt(&STORAGE_AREAS[0], &cnt_success)) {
@@ -344,12 +443,46 @@ int main(void) {
 
     sdtest_update(cnt_success, cnt_fail);
 
-    uint32_t ticks_diff = hal_ticks_ms() - ticks;
 
-    int delay = 10000 - ticks_diff;
+    char line[2048];  // expecting hundreds of bytes represented as hexadecimal
+    // characters
 
-    if (delay > 0) {
-      hal_delay(delay);
+    for (;;) {
+
+      vcp_readline(line, sizeof(line));
+
+      if (startswith(line, "PING")) {
+        vcp_println("SUCCESS: %d, FAIL: %d", cnt_success, cnt_fail);
+
+      } else if (startswith(line, "RESET")) {
+        (void)!flash_area_erase(&STORAGE_AREAS[0], NULL);
+        (void)!flash_area_erase(&STORAGE_AREAS[1], NULL);
+        cnt_success = 0;
+        cnt_fail = 0;
+        sdtest_update(cnt_success, cnt_fail);
+        vcp_println("OK");
+      }else if (startswith(line, "STOP")) {
+        vcp_println("SUCCESS: %d, FAIL: %d", cnt_success, cnt_fail);
+        (void)!flash_area_erase(&STORAGE_AREAS[0], NULL);
+        (void)!flash_area_erase(&STORAGE_AREAS[1], NULL);
+        vcp_println("ERASED");
+        cnt_success = 0;
+        cnt_fail = 0;
+        sdtest_update(cnt_success, cnt_fail);
+        vcp_println("SUCCESS: %d, FAIL: %d", cnt_success, cnt_fail);
+        vcp_println("HALT");
+        for(;;);
+      }
+
+      uint32_t ticks_diff = hal_ticks_ms() - ticks;
+
+      int delay = 10000 - ticks_diff;
+
+      if (delay > 0) {
+        hal_delay(1);
+      } else {
+        break;
+      }
     }
   }
 
