@@ -5,7 +5,8 @@ from trezor.wire import ProcessError
 from trezor.wire.context import call as ctx_call
 
 from apps.cardano.helpers.chunks import MAX_CHUNK_SIZE, ChunkIterator
-from apps.cardano.helpers.paths import SCHEMA_PUBKEY
+from apps.cardano.helpers.credential import Credential
+from apps.cardano.helpers.paths import SCHEMA_MINT, SCHEMA_PUBKEY
 from apps.common import cbor
 
 from . import addresses, seed
@@ -24,12 +25,20 @@ _COSE_HEADER_ALGORITHM_KEY = const(1)
 _COSE_EDDSA_ALGORITHM_ID = const(-8)
 
 
-def _validate_message_signing_path(path: list[int]) -> None:
-    if not SCHEMA_PUBKEY.match(path):
+async def _validate_message_signing_path(
+    path: list[int], keychain: seed.Keychain
+) -> None:
+    from apps.common import paths
+
+    await paths.validate_path(keychain, path)
+
+    if not SCHEMA_PUBKEY.match(path) and not SCHEMA_MINT.match(path):
         raise ProcessError("Invalid signing path")
 
 
-def _validate_message_init(msg: CardanoSignMessageInit) -> None:
+async def _validate_message_init(
+    msg: CardanoSignMessageInit, keychain: seed.Keychain
+) -> None:
     if msg.address_parameters:
         if msg.network_id is None or msg.protocol_magic is None:
             raise ProcessError(
@@ -40,14 +49,26 @@ def _validate_message_init(msg: CardanoSignMessageInit) -> None:
     if msg.payload_size > MAX_CHUNK_SIZE and not msg.hash_payload:
         raise ProcessError("Payload too long to sign without hashing")
 
-    _validate_message_signing_path(msg.signing_path)
+    await _validate_message_signing_path(msg.signing_path, keychain)
 
 
-def _get_header_address(msg: CardanoSignMessageInit, keychain: seed.Keychain) -> bytes:
+async def _get_confirmed_header_address(
+    msg: CardanoSignMessageInit, keychain: seed.Keychain
+) -> bytes:
+    from . import layout
+
     if msg.address_parameters:
         assert (
             msg.protocol_magic is not None and msg.network_id is not None
         )  # _validate_message_init
+
+        await layout.show_message_header_credentials(
+            [
+                Credential.payment_credential(msg.address_parameters),
+                Credential.stake_credential(msg.address_parameters),
+            ]
+        )
+
         return addresses.derive_bytes(
             keychain, msg.address_parameters, msg.protocol_magic, msg.network_id
         )
@@ -134,19 +155,25 @@ async def sign_message(
 ) -> CardanoSignMessageFinished:
     from trezor.messages import CardanoSignMessageFinished
 
-    _validate_message_init(msg)
+    from . import layout
 
-    address = _get_header_address(msg, keychain)
+    await _validate_message_init(msg, keychain)
+
+    payload = await _get_confirmed_payload(
+        size=msg.payload_size,
+        is_signing_hash=msg.hash_payload,
+        display_ascii=msg.display_ascii,
+    )
+
+    address = await _get_confirmed_header_address(msg, keychain)
 
     headers: Headers = {
         _COSE_HEADER_ALGORITHM_KEY: _COSE_EDDSA_ALGORITHM_ID,
         _COSE_HEADER_ADDRESS_KEY: address,
     }
 
-    payload = await _get_confirmed_payload(
-        size=msg.payload_size,
-        is_signing_hash=msg.hash_payload,
-        display_ascii=msg.display_ascii,
+    await layout.confirm_message_path(
+        path=msg.signing_path, is_signing_hash=msg.hash_payload
     )
 
     signature = _sign_sig_structure(
