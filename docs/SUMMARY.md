@@ -18,6 +18,7 @@
     - [SLIP-39](core/misc/slip0039.md)
     - [Exceptions usage](core/misc/exceptions.md)
     - [Memory fragmentation management](core/misc/fragmentation.md)
+    - [Translation data format](core/misc/translations.md)
     - [DISC1](core/misc/disc1.md)
 - [Legacy](legacy/index.md)
     - [Firmware format](legacy/firmware-format.md)
