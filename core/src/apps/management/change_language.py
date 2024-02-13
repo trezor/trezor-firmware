@@ -70,7 +70,7 @@ async def do_change_language(
     header_data = await _get_data_chunk(data_length, 0)
     try:
         header = translations.TranslationsHeader(header_data)
-    except ValueError:
+    except (ValueError, EOFError):
         raise DataError("Invalid translations data")
 
     # Verifying header information
