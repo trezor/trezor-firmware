@@ -207,3 +207,98 @@ def test_translations_renders_on_screen(client: Client):
         language_data=build_and_sign_blob(czech_data_copy, client.model),
     )
     _check_ping_screen_texts(client, get_confirm("en"), get_confirm("cs"))
+
+
+def test_reject_update(client: Client):
+    assert client.features.language == "en-US"
+    lang = "cs"
+    language_data = build_and_sign_blob(lang, client.model)
+
+    def input_flow_reject():
+        yield
+        client.debug.press_no()
+
+    with pytest.raises(exceptions.Cancelled), client:
+        client.set_input_flow(input_flow_reject)
+        device.change_language(client, language_data)
+
+    assert client.features.language == "en-US"
+
+    _check_ping_screen_texts(client, get_confirm("en"), get_confirm("en"))
+
+
+def test_silent_update(client: Client):
+    assert client.features.language == "en-US"
+    lang = "cs"
+    language_data = build_and_sign_blob(lang, client.model)
+
+    def input_flow_confirm(language: str):
+        if language == "cs":
+            title = "NASTAVENÍ JAZYKA"
+            text = "Změnit jazyk na cs-CZ?"
+        else:
+            title = "LANGUAGE SETTINGS"
+            text = "Change language to cs-CZ?"
+
+        def input_flow():
+            yield
+            layout = client.debug.wait_layout()
+            assert layout.title() == title
+            assert layout.text_content() == text
+            client.debug.press_yes()
+
+            yield
+            layout = client.debug.wait_layout()
+            assert layout.text_content() == "Jazyk byl úspěšně změněn"
+            client.debug.press_yes()
+
+        return input_flow
+
+    def input_flow_silent():
+        yield
+        # It will never reach this - there is just loader on the screen
+        assert False
+
+    # Device is loaded with seed, language change is shown on the screen
+    with client:
+        client.watch_layout(True)
+        client.set_input_flow(input_flow_confirm("en"))
+        device.change_language(client, language_data)
+        assert client.features.language[:2] == lang
+
+    device.wipe(client)
+    assert client.features.language == "en-US"
+
+    # Device is empty, language is changed silently
+    with client:
+        client.watch_layout(True)
+        client.set_input_flow(input_flow_silent)
+        device.change_language(client, language_data)
+        assert client.features.language[:2] == lang
+
+    # Same language is set again, shown on screen
+    with client:
+        client.watch_layout(True)
+        client.set_input_flow(input_flow_confirm("cs"))
+        device.change_language(client, language_data)
+        assert client.features.language[:2] == lang
+
+    device.wipe(client)
+    assert client.features.language == "en-US"
+
+    debuglink.load_device(
+        client,
+        mnemonic=" ".join(["all"] * 12),
+        pin=None,
+        passphrase_protection=False,
+        label="test",
+    )
+
+    # Device is again loaded with seed, language change is shown on the screen
+    with client:
+        client.watch_layout(True)
+        client.set_input_flow(input_flow_confirm("en"))
+        device.change_language(client, language_data)
+        assert client.features.language[:2] == lang
+
+    _check_ping_screen_texts(client, get_confirm(lang), get_confirm(lang))
