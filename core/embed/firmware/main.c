@@ -251,6 +251,24 @@ void cnt_inc(const flash_area_t * area, uint32_t new_val) {
   (void)!flash_lock_write();
 }
 
+void write_fail(const flash_area_t * area, int test_idx) {
+  (void)!flash_unlock_write();
+
+  uint32_t byte_num = test_idx / 8;
+  uint32_t bit_num = test_idx % 8;
+
+  const uint8_t  * addr = flash_area_get_address(area, byte_num, 1);
+
+  uint8_t prev = *addr;
+
+  uint8_t new_val = prev & ~(1 << bit_num);
+
+  (void)!flash_area_write_byte(area, byte_num, new_val);
+
+  (void)!flash_lock_write();
+
+}
+
 
 // from util.s
 extern void shutdown_privileged(void);
@@ -358,15 +376,19 @@ int main(void) {
   sdcard_init();
 
 
-  int cnt_;
+  int cnt_success;
   int cnt_fail;
 
   if (!check_cnt(&STORAGE_AREAS[0], &cnt_success)) {
     (void)!flash_area_erase(&STORAGE_AREAS[0], NULL);
+    (void)!flash_area_erase(&STORAGE_AREAS[0], NULL);
+    (void)!flash_area_erase(&SECRET_AREA, NULL);
   }
 
   if (!check_cnt(&STORAGE_AREAS[1], &cnt_fail)) {
     (void)!flash_area_erase(&STORAGE_AREAS[1], NULL);
+    (void)!flash_area_erase(&STORAGE_AREAS[0], NULL);
+    (void)!flash_area_erase(&SECRET_AREA, NULL);
   }
 
 
@@ -376,6 +398,7 @@ int main(void) {
     if (r == 2) {
       (void)!flash_area_erase(&STORAGE_AREAS[0], NULL);
       (void)!flash_area_erase(&STORAGE_AREAS[1], NULL);
+      (void)!flash_area_erase(&SECRET_AREA, NULL);
       cnt_success = 0;
       cnt_fail = 0;
     }
@@ -437,6 +460,8 @@ int main(void) {
       cnt_success++;
       cnt_inc(&STORAGE_AREAS[0], cnt_success);
     } else {
+
+      write_fail(&SECRET_AREA, cnt_fail + cnt_success);
       cnt_fail++;
       cnt_inc(&STORAGE_AREAS[1], cnt_fail);
     }
@@ -457,6 +482,7 @@ int main(void) {
       } else if (startswith(line, "RESET")) {
         (void)!flash_area_erase(&STORAGE_AREAS[0], NULL);
         (void)!flash_area_erase(&STORAGE_AREAS[1], NULL);
+        (void)!flash_area_erase(&SECRET_AREA, NULL);
         cnt_success = 0;
         cnt_fail = 0;
         sdtest_update(cnt_success, cnt_fail);
@@ -465,6 +491,7 @@ int main(void) {
         vcp_println("SUCCESS: %d, FAIL: %d", cnt_success, cnt_fail);
         (void)!flash_area_erase(&STORAGE_AREAS[0], NULL);
         (void)!flash_area_erase(&STORAGE_AREAS[1], NULL);
+        (void)!flash_area_erase(&SECRET_AREA, NULL);
         vcp_println("ERASED");
         cnt_success = 0;
         cnt_fail = 0;
