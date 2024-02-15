@@ -21,7 +21,7 @@ jobs:
       - run: nix-shell --run "poetry run make -C crypto"
       - run: nix-shell --run "export ADDRESS_SANITIZER=0; poetry run make -C crypto_noasan"
       - run: mv crypto_noasan/tests/test_check crypto/tests/test_check_noasan
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: crypto-build
           path: |
@@ -47,7 +47,7 @@ jobs:
         with:
           nix_path: nixpkgs=channel:nixos-unstable
       - run: nix-shell --run "poetry install"
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: crypto-build
           path: crypto/tests

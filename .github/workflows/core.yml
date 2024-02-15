@@ -49,7 +49,7 @@ jobs:
       - run: nix-shell --run "poetry run make -C core build_firmware"
       - run: nix-shell --run "poetry run make -C core sizecheck"
         if: matrix.coins == 'universal' && matrix.type != 'debuglink'
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: core-firmware-${{ matrix.model }}-${{ matrix.coins }}-${{ matrix.type }}
           path: |
@@ -90,7 +90,7 @@ jobs:
       - run: nix-shell --run "poetry run make -C core build_bootloader_emu"
         if: matrix.coins == 'universal'
       - run: nix-shell --run "poetry run make -C core build_unix_frozen"
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: core-emu-${{ matrix.model }}-${{ matrix.coins }}-${{ matrix.type }}-${{ matrix.asan }}
           path: |
@@ -151,7 +151,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: core-emu-${{ matrix.model }}-universal-debuglink-noasan
           path: core/build
@@ -188,7 +188,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: core-emu-${{ matrix.model }}-${{ matrix.coins }}-debuglink-${{ matrix.asan }}
           path: core/build
@@ -197,7 +197,7 @@ jobs:
       - run: nix-shell --run "poetry run make -C core ${{ env.ACTIONS_DO_UI_TEST == 'true' && 'test_emu_ui_multicore' || 'test_emu' }}"
       - run: tail -n50 tests/trezor.log || true
         if: failure()
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: core-device-${{ matrix.model }}-${{ matrix.coins }}-${{ matrix.asan }}
           path: tests/trezor.log
@@ -209,9 +209,9 @@ jobs:
         if: ${{ always() && env.ACTIONS_DO_UI_TEST == 'true' }}
       - uses: ./.github/actions/ui-comment
         if: ${{ failure() && env.ACTIONS_DO_UI_TEST == 'true' }}
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
-          name: core-coverage-${{ matrix.model }}-${{ github.job }}
+          name: core-coverage-${{ matrix.model }}-${{ github.job }}-${{ strategy.job-index }}
           # there will be more coverage files (one per core)
           path: core/src/.coverage.*
           retention-days: 7
@@ -234,7 +234,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: core-emu-${{ matrix.model }}-universal-debuglink-${{ matrix.asan }}
           path: core/build
@@ -244,7 +244,7 @@ jobs:
         if: ${{ matrix.asan == 'noasan' }}
       - run: nix-shell --run "poetry run make -C core test_emu_click"
         if: ${{ matrix.asan == 'asan' }}
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: core-click-${{ matrix.model }}-${{ matrix.asan }}
           path: tests/trezor.log
@@ -255,9 +255,9 @@ jobs:
           model: ${{ matrix.model }}
         if: always()
       - run: mv core/src/.coverage core/.coverage.test_click || true
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
-          name: core-coverage-${{ matrix.model }}-${{ github.job }}
+          name: core-coverage-${{ matrix.model }}-${{ github.job }}-${{ strategy.job-index }}
           path: core/.coverage.*
           retention-days: 7
 
@@ -278,7 +278,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: core-emu-${{ matrix.model }}-universal-debuglink-${{ matrix.asan }}
           path: core/build
@@ -304,7 +304,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: core-emu-${{ matrix.model }}-universal-debuglink-${{ matrix.asan }}
           path: core/build
@@ -319,9 +319,9 @@ jobs:
           model: ${{ matrix.model }}
         if: always()
       - run: mv core/src/.coverage core/.coverage.test_persistence || true
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
-          name: core-coverage-${{ matrix.model }}-${{ github.job }}
+          name: core-coverage-${{ matrix.model }}-${{ github.job }}-${{ strategy.job-index }}
           path: core/.coverage.*
           retention-days: 7
 
@@ -338,7 +338,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: core-emu-${{ matrix.model }}-universal-debuglink-noasan
           path: core/build
@@ -347,7 +347,7 @@ jobs:
       - run: nix-shell --run "git clone --depth=1 https://github.com/bitcoin-core/HWI.git"
       # see python_test for explanation of _PYTHON_SYSCONFIGDATA_NAME
       - run: nix-shell --arg fullDeps true --run "unset _PYTHON_SYSCONFIGDATA_NAME && cd HWI && poetry install && poetry run ./test/test_trezor.py --model_t ../core/build/unix/trezor-emu-core bitcoind"
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: core-test-hwi-${{ matrix.model }}
           path: HWI/trezor-t-emulator.stdout
@@ -371,7 +371,7 @@ jobs:
       - run: nix-shell --run "poetry run make -C core test_emu"
       - run: nix-shell --run "mkdir core/prof/memperf-html"
       - run: nix-shell --run "poetry run core/tools/alloc.py --alloc-data=core/src/alloc_data.txt html core/prof/memperf-html"
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: core-memperf-${{ matrix.model }}
           path: |
@@ -395,7 +395,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: core-firmware-${{ matrix.model }}-universal-normal  # FIXME: s/normal/debuglink/
           path: core/build
@@ -418,13 +418,13 @@ jobs:
         with:
           submodules: recursive
           fetch-depth: 0
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: core-firmware-${{ matrix.model }}-universal-normal
           path: core/build
       - uses: ./.github/actions/environment
       - run: nix-shell --run "poetry run core/tools/size/compare_master.py core/build/firmware/firmware.elf -r firmware_elf_size_report.txt"
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: core-test-flash-size-${{ matrix.model }}
           path: firmware_elf_size_report.txt
@@ -446,7 +446,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: core-emu-${{ matrix.model }}-universal-debuglink-${{ matrix.asan }}
           path: core/build
@@ -457,7 +457,7 @@ jobs:
       # see python_test job for _PYTHON_SYSCONFIGDATA_NAME explanation
       - run: nix-shell --arg fullDeps true --run "unset _PYTHON_SYSCONFIGDATA_NAME && poetry install"
       - run: nix-shell --arg fullDeps true --run "unset _PYTHON_SYSCONFIGDATA_NAME && poetry run make -C core test_emu_monero"
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: core-test-monero-${{ matrix.model }}-${{ matrix.asan }}
           path: |
@@ -466,9 +466,9 @@ jobs:
           retention-days: 7
         if: always()
       - run: mv core/src/.coverage core/.coverage.test_emu_monero || true
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
-          name: core-coverage-${{ matrix.model }}-${{ github.job }}
+          name: core-coverage-${{ matrix.model }}-${{ github.job }}-${{ strategy.job-index }}
           path: core/.coverage.*
           retention-days: 7
 
@@ -488,7 +488,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: core-emu-${{ matrix.model }}-universal-debuglink-${{ matrix.asan }}
           path: core/build
@@ -496,16 +496,16 @@ jobs:
       - uses: ./.github/actions/environment
       - run: nix-shell --run "poetry run make -C tests/fido_tests/u2f-tests-hid"
       - run: nix-shell --run "poetry run make -C core test_emu_u2f"
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: core-test-u2f-${{ matrix.model }}-${{ matrix.asan }}
           path: tests/trezor.log
           retention-days: 7
         if: always()
       - run: mv core/src/.coverage core/.coverage.test_emu_u2f || true
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
-          name: core-coverage-${{ matrix.model }}-${{ github.job }}
+          name: core-coverage-${{ matrix.model }}-${{ github.job }}-${{ strategy.job-index }}
           path: core/.coverage.*
           retention-days: 7
 
@@ -525,14 +525,14 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: core-emu-${{ matrix.model }}-universal-debuglink-${{ matrix.asan }}
           path: core/build
       - run: chmod +x core/build/unix/trezor-emu-core*
       - uses: ./.github/actions/environment
       - run: nix-shell --run "poetry run make -C core test_emu_fido2"
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: core-test-fido2-${{ matrix.model }}-${{ matrix.asan }}
           path: |
@@ -540,9 +540,9 @@ jobs:
           retention-days: 7
         if: always()
       - run: mv core/src/.coverage core/.coverage.test_emu_fido2 || true
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
-          name: core-coverage-${{ matrix.model }}-${{ github.job }}
+          name: core-coverage-${{ matrix.model }}-${{ github.job }}-${{ strategy.job-index }}
           path: core/.coverage.*
           retention-days: 7
 
@@ -569,14 +569,14 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           pattern: core-coverage-${{ matrix.model }}-*
           path: core
           merge-multiple: true
       - uses: ./.github/actions/environment
       - run: nix-shell --run "poetry run make -C core coverage"
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: core-coverage-report-${{ matrix.model }}
           path: core/htmlcov
@@ -591,7 +591,7 @@ jobs:
       - core_device_test
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           pattern: ui-records-*
           merge-multiple: true
