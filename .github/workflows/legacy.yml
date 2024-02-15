@@ -34,7 +34,7 @@ jobs:
       - run: nix-shell --run "export PRODUCTION=0 && poetry run legacy/script/cibuild"
       - run: nix-shell --run "poetry run make -C legacy/demo"
         if: matrix.coins == 'universal' && matrix.type == 'normal'
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: legacy-firmware-${{ matrix.coins }}-${{ matrix.type }}
           path: legacy/firmware/firmware-*.bin
@@ -61,7 +61,7 @@ jobs:
           submodules: recursive
       - uses: ./.github/actions/environment
       - run: nix-shell --run "poetry run legacy/script/cibuild"
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: legacy-emu-${{ matrix.coins }}-${{ matrix.type }}-${{ matrix.asan }}
           path: legacy/firmware/*.elf
@@ -82,7 +82,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: legacy-emu-${{ matrix.coins }}-debuglink-${{ matrix.asan }}
           path: legacy/firmware
@@ -112,7 +112,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: legacy-emu-universal-debuglink-${{ matrix.asan }}
           path: legacy/firmware
@@ -133,7 +133,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: legacy-emu-universal-debuglink-noasan
           path: legacy/firmware
@@ -150,7 +150,7 @@ jobs:
       - legacy_device_test
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           pattern: ui-records-*
           merge-multiple: true

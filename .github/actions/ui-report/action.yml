@@ -32,9 +32,9 @@ runs:
         aws s3 sync ci/ui_test_records s3://data.trezor.io/dev/firmware/ui_tests
         # TODO: generate directory listing / autoindex
       shell: sh
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
-        name: ui-records-${{ github.job }}
+        name: ui-records-${{ github.job }}-${{ strategy.job-index }}
         path: |
           # used by core_ui_master
           screens_${{ inputs.model }}-${{ github.job }}.tar
