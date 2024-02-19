@@ -188,6 +188,17 @@ impl Sub<Point> for Point {
     }
 }
 
+impl core::ops::Neg for Point {
+    type Output = Point;
+
+    fn neg(self) -> Self::Output {
+        Point {
+            x: -self.x,
+            y: -self.y,
+        }
+    }
+}
+
 impl Lerp for Point {
     fn lerp(a: Self, b: Self, t: f32) -> Self {
         Point::new(i16::lerp(a.x, b.x, t), i16::lerp(a.y, b.y, t))
@@ -239,6 +250,10 @@ impl Rect {
             x1: p0.x + size.x,
             y1: p0.y + size.y,
         }
+    }
+
+    pub const fn from_size(size: Offset) -> Self {
+        Self::from_top_left_and_size(Point::zero(), size)
     }
 
     pub const fn from_top_right_and_size(p0: Point, size: Offset) -> Self {
@@ -327,6 +342,14 @@ impl Rect {
 
     pub const fn right_center(&self) -> Point {
         self.bottom_right().center(self.top_right())
+    }
+
+    /// Checks if the rectangle is empty.
+    ///
+    /// It is possible to custruct a rectangle with negative width or height.
+    /// All such rectangles are considered as empty.
+    pub const fn is_empty(&self) -> bool {
+        self.x0 >= self.x1 || self.y0 >= self.y1
     }
 
     /// Whether a `Point` is inside the `Rect`.
@@ -425,6 +448,15 @@ impl Rect {
         (left, center, right)
     }
 
+    /// Calculates the intersection of two rectangles.
+    ///
+    /// If the rectangles do not intersect, an "empty" rectangle is returned.
+    ///
+    /// The implementation may yield rectangles with negative width or height
+    /// if there's no intersection. Such rectangles are considered empty,
+    /// and subsequent operations like clamp, union, and translation
+    /// work correctly with them. However, it's important to be aware of this
+    /// behavior.
     pub const fn clamp(self, limit: Rect) -> Self {
         Self {
             x0: max(self.x0, limit.x0),
