@@ -271,6 +271,14 @@ impl<'i> Toif<'i> {
         Offset::new(self.width(), self.height())
     }
 
+    pub fn stride(&self) -> usize {
+        if self.is_grayscale() {
+            self.width() as usize / 2
+        } else {
+            self.width() as usize * 2
+        }
+    }
+
     pub fn zdata(&self) -> &'i [u8] {
         &self.data[TOIF_HEADER_LENGTH..]
     }
