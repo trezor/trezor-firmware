@@ -188,6 +188,17 @@ impl Sub<Point> for Point {
     }
 }
 
+impl core::ops::Neg for Point {
+    type Output = Point;
+
+    fn neg(self) -> Self::Output {
+        Point {
+            x: -self.x,
+            y: -self.y,
+        }
+    }
+}
+
 impl Lerp for Point {
     fn lerp(a: Self, b: Self, t: f32) -> Self {
         Point::new(i16::lerp(a.x, b.x, t), i16::lerp(a.y, b.y, t))
@@ -239,6 +250,10 @@ impl Rect {
             x1: p0.x + size.x,
             y1: p0.y + size.y,
         }
+    }
+
+    pub fn from_size(size: Offset) -> Self {
+        Self::from_top_left_and_size(Point::zero(), size)
     }
 
     pub const fn from_top_right_and_size(p0: Point, size: Offset) -> Self {
@@ -329,9 +344,24 @@ impl Rect {
         self.bottom_right().center(self.top_right())
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.x0 >= self.x1 || self.y0 >= self.y1
+    }
+
     /// Whether a `Point` is inside the `Rect`.
     pub const fn contains(&self, point: Point) -> bool {
         point.x >= self.x0 && point.x < self.x1 && point.y >= self.y0 && point.y < self.y1
+    }
+
+    pub fn has_intersection(&self, r: Rect) -> bool {
+        self.x0 < r.x1 && self.x1 > r.x0 && self.y0 < r.y1 && self.y1 > r.y0
+    }
+
+    pub fn intersect(&self, r: Rect) -> Rect {
+        Rect::new(
+            Point::new(core::cmp::max(self.x0, r.x0), core::cmp::max(self.y0, r.y0)),
+            Point::new(core::cmp::min(self.x1, r.x1), core::cmp::min(self.y1, r.y1)),
+        )
     }
 
     /// Create a bigger `Rect` that contains both `self` and `other`.
@@ -460,6 +490,20 @@ impl Rect {
             self.bottom_right() - Offset::uniform(1),
             self.bottom_left() - Offset::y(1),
         ]
+    }
+
+    /// Normalizes the rectangle coordinates.
+    ///
+    /// Returns a new `Rect` with potentially swapped left/right,
+    /// top/bottom coordinates, ensuring that `x0`, `y0` represents
+    /// the top-left corner and `x1`, `y1` represents the bottom-right corner.
+    pub fn normalize(&self) -> Self {
+        Rect {
+            x0: core::cmp::min(self.x0, self.x1),
+            y0: core::cmp::min(self.y0, self.y1),
+            x1: core::cmp::max(self.x0, self.x1),
+            y1: core::cmp::max(self.y0, self.y1),
+        }
     }
 }
 
