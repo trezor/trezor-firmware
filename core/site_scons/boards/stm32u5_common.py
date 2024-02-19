@@ -4,6 +4,7 @@ from __future__ import annotations
 def stm32u5_common_files(env, defines, sources, paths):
     defines += [
         ("STM32_HAL_H", '"<stm32u5xx.h>"'),
+        ("FLASH_BLOCK_WORDS", "4"),
     ]
 
     paths += [
@@ -82,8 +83,9 @@ def stm32u5_common_files(env, defines, sources, paths):
         "-I../../vendor/stm32cube-u5/Drivers/STM32U5xx_HAL_Driver/Inc;"
         "-I../../vendor/stm32cube-u5/Drivers/CMSIS/Device/ST/STM32U5xx/Include;"
         "-I../../vendor/stm32cube-u5/Drivers/CMSIS/Core/Include;"
-        "-DSTM32_HAL_H=<stm32u5xx.h>"
-        "-DSTM32U5"
+        "-DSTM32_HAL_H=<stm32u5xx.h>;"
+        "-DSTM32U5;"
+        "-DFLASH_BLOCK_WORDS=4"
     )
 
     env.get("ENV")["SUFFIX"] = "stm32u5"
