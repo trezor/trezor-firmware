@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "flash_common.h"
+#include "flash_area.h"
 
 #define COUNTER_TAIL_WORDS 2
 #define NORCOW_MAX_PREFIX_LEN (NORCOW_KEY_LEN + NORCOW_LEN_LEN)

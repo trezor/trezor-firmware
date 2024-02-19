@@ -84,7 +84,7 @@ const void *flash_area_get_address(const flash_area_t *area, uint32_t offset,
   return NULL;
 }
 
-#if defined FLASH_BYTE_ACCESS
+#if defined FLASH_BIT_ACCESS
 
 secbool flash_area_write_byte(const flash_area_t *area, uint32_t offset,
                               uint8_t data) {
@@ -106,20 +106,6 @@ secbool flash_area_write_word(const flash_area_t *area, uint32_t offset,
   return flash_write_word(sector, sector_offset, data);
 }
 
-secbool flash_area_write_quadword(const flash_area_t *area, uint32_t offset,
-                                  const uint32_t *data) {
-  if (offset % 16 != 0) {
-    return secfalse;
-  }
-  for (int i = 0; i < 4; i++) {
-    if (sectrue !=
-        flash_area_write_word(area, offset + i * sizeof(uint32_t), data[i])) {
-      return secfalse;
-    }
-  }
-  return sectrue;
-}
-
 secbool flash_area_write_burst(const flash_area_t *area, uint32_t offset,
                                const uint32_t *data) {
   if (offset % (8 * 16) != 0) {
@@ -134,7 +120,7 @@ secbool flash_area_write_burst(const flash_area_t *area, uint32_t offset,
   return sectrue;
 }
 
-#else  // not defined FLASH_BYTE_ACCESS
+#else  // not defined FLASH_BIT_ACCESS
 
 secbool flash_area_write_quadword(const flash_area_t *area, uint32_t offset,
                                   const uint32_t *data) {
@@ -156,7 +142,23 @@ secbool flash_area_write_burst(const flash_area_t *area, uint32_t offset,
   return flash_write_burst(sector, sector_offset, data);
 }
 
-#endif  // not defined FLASH_BYTE_ACCESS
+#endif  // not defined FLASH_BIT_ACCESS
+
+secbool flash_area_write_block(const flash_area_t *area, uint32_t offset,
+                               const flash_block_t block) {
+  if (!FLASH_IS_ALIGNED(offset)) {
+    return secfalse;
+  }
+
+  uint16_t sector;
+  uint32_t sector_offset;
+  if (sectrue != get_sector_and_offset(area, offset, &sector, &sector_offset)) {
+    return secfalse;
+  }
+
+  return flash_write_block(sector, sector_offset, block);
+}
+
 
 secbool flash_area_erase(const flash_area_t *area,
                          void (*progress)(int pos, int len)) {
