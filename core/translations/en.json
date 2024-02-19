@@ -1,9 +1,6 @@
 {
   "header": {
-    "change_language_prompt": "Change language to English?",
-    "change_language_title": "CHANGE LANGUAGE",
     "language": "en-US",
-    "progress_text": "Changing language",
     "version": "2.6.5"
   },
   "translations": {
