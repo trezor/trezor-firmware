@@ -41,6 +41,18 @@ i2c_instance_t i2c_defs[I2C_COUNT] = {
         .ResetBit = I2C_INSTANCE_1_RESET_BIT,
     },
 #endif
+#ifdef I2C_INSTANCE_2
+    {
+        .Instance = I2C_INSTANCE_2,
+        .SclPort = I2C_INSTANCE_2_SCL_PORT,
+        .SdaPort = I2C_INSTANCE_2_SDA_PORT,
+        .SclPin = I2C_INSTANCE_2_SCL_PIN,
+        .SdaPin = I2C_INSTANCE_2_SDA_PIN,
+        .PinAF = I2C_INSTANCE_2_PIN_AF,
+        .ResetReg = I2C_INSTANCE_2_RESET_REG,
+        .ResetBit = I2C_INSTANCE_2_RESET_BIT,
+    },
+#endif
 
 };
 
@@ -100,6 +112,13 @@ void i2c_init(void) {
   I2C_INSTANCE_1_SCL_CLK_EN();
   I2C_INSTANCE_1_SDA_CLK_EN();
   i2c_init_instance(1, &i2c_defs[1]);
+#endif
+
+#ifdef I2C_INSTANCE_2
+  I2C_INSTANCE_2_CLK_EN();
+  I2C_INSTANCE_2_SCL_CLK_EN();
+  I2C_INSTANCE_2_SDA_CLK_EN();
+  i2c_init_instance(2, &i2c_defs[2]);
 #endif
 }
 
