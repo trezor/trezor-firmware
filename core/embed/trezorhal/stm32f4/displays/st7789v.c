@@ -200,7 +200,7 @@ int display_orientation(int degrees) {
         lx154a2422_rotate(degrees, &DISPLAY_PADDING);
       }
 #else
-      DISPLAY_PANEL_ROTATE(degrees, &BUFFER_OFFSET);
+      DISPLAY_PANEL_ROTATE(degrees, &DISPLAY_PADDING);
 #endif
     }
   }
