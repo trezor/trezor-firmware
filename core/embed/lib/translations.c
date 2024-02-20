@@ -23,6 +23,7 @@ bool translations_write(const uint8_t* data, uint32_t offset, uint32_t len) {
 
   if (len % FLASH_BLOCK_SIZE) {
     flash_block_t block = {0};
+    memset(block, 0xFF, FLASH_BLOCK_SIZE);
     memcpy(block, data + (len / FLASH_BLOCK_SIZE) * FLASH_BLOCK_SIZE,
            len % FLASH_BLOCK_SIZE);
     ensure(flash_area_write_block(
