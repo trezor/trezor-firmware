@@ -197,6 +197,7 @@ SOURCE_MOD += [
     'embed/lib/fonts/fonts.c',
     'embed/lib/image.c',
     'embed/lib/terminal.c',
+    'embed/lib/translations.c',
     'embed/lib/unit_variant.c',
     'vendor/micropython/lib/uzlib/adler32.c',
     'vendor/micropython/lib/uzlib/crc32.c',
@@ -375,7 +376,6 @@ SOURCE_MICROPYTHON = [
 
 SOURCE_UNIX = [
     'embed/trezorhal/unix/boot_args.c',
-    'embed/trezorhal/unix/translations.c',
     'embed/trezorhal/unix/common.c',
     'embed/trezorhal/unix/display-unix.c',
     'embed/trezorhal/unix/flash.c',
