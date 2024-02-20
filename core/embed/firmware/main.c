@@ -47,8 +47,8 @@
 #include "model.h"
 #include "mpu.h"
 #include "random_delays.h"
-#include "secure_aes.h"
 #include "rust_ui.h"
+#include "secure_aes.h"
 
 #include TREZOR_BOARD
 
