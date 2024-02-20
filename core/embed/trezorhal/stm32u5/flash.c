@@ -560,3 +560,8 @@ secbool flash_otp_is_locked(uint8_t block) {
   }
   return secfalse;
 }
+
+secbool flash_write_block(uint16_t sector, uint32_t offset,
+                          const flash_block_t block) {
+  return flash_write_quadword(sector, offset, block);
+}
