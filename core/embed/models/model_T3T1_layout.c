@@ -65,6 +65,15 @@ const flash_area_t BHK_AREA = {
         },
 };
 
+const flash_area_t TRANSLATIONS_AREA = {
+    .num_subareas = 1,
+    .subarea[0] =
+        {
+            .first_sector = 248,
+            .num_sectors = 8,
+        },
+};
+
 const flash_area_t WIPE_AREA = {
     .num_subareas = 1,
     .subarea[0] =
