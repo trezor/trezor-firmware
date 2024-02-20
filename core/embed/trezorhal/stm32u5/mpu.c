@@ -135,8 +135,8 @@ static void mpu_set_attributes() {
   (FLASH_SIZE - (BOOTLOADER_SIZE + BOARDLOADER_SIZE + SECRET_SIZE))
 
 #define ASSETS_START (FIRMWARE_START + FIRMWARE_SIZE)
-#define ASSETS_SIZE                                                    \
-  (FLASH_SIZE - (FIRMWARE_START + BOOTLOADER_SIZE + BOARDLOADER_SIZE + \
+#define ASSETS_SIZE                                                   \
+  (FLASH_SIZE - (FIRMWARE_SIZE + BOOTLOADER_SIZE + BOARDLOADER_SIZE + \
                  SECRET_SIZE + STORAGE_SIZE))
 
 #ifdef STM32U585xx
