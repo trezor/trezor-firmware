@@ -17,7 +17,7 @@ static int pwm_period = 0;
 int backlight_pwm_set(int val) {
   if (BACKLIGHT != val && val >= 0 && val <= 255) {
     BACKLIGHT = val;
-    BACKLIGHT_PWM_TIM->CCR1 = pwm_period * val / 255;
+    BACKLIGHT_PWM_TIM->CCR1 = (pwm_period * val) / 255;
   }
   return BACKLIGHT;
 }
@@ -152,13 +152,14 @@ void backlight_pwm_reinit(void) {
   uint32_t prev_arr = BACKLIGHT_PWM_TIM->ARR;
   uint32_t prev_ccr1 = BACKLIGHT_PWM_TIM->BACKLIGHT_PWM_TIM_CCR;
 
-  uint8_t prev_val = (prev_ccr1 * 255) / prev_arr;
+  uint32_t prev_val = (prev_ccr1 * 255) / (prev_arr + 1);
+  prev_val = prev_val > 255 ? 255 : prev_val;
   BACKLIGHT = prev_val;
 
   pwm_period = LED_PWM_TIM_PERIOD;
   BACKLIGHT_PWM_TIM->CR1 |= TIM_CR1_ARPE;
   BACKLIGHT_PWM_TIM->CR2 |= TIM_CR2_CCPC;
-  BACKLIGHT_PWM_TIM->BACKLIGHT_PWM_TIM_CCR = pwm_period * prev_val / 255;
+  BACKLIGHT_PWM_TIM->BACKLIGHT_PWM_TIM_CCR = (pwm_period * prev_val) / 255;
   BACKLIGHT_PWM_TIM->ARR = LED_PWM_TIM_PERIOD - 1;
 }
 
@@ -171,7 +172,8 @@ void backlight_pwm_set_slow(void) {
   uint32_t prev_arr = BACKLIGHT_PWM_TIM->ARR;
   uint32_t prev_ccr1 = BACKLIGHT_PWM_TIM->CCR1;
 
-  uint8_t prev_val = (prev_ccr1 * 255) / prev_arr;
+  uint32_t prev_val = (prev_ccr1 * 255) / (prev_arr + 1);
+  prev_val = prev_val > 255 ? 255 : prev_val;
 
   pwm_period = LED_PWM_SLOW_TIM_PERIOD;
   BACKLIGHT_PWM_TIM->CR1 |= TIM_CR1_ARPE;
