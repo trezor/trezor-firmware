@@ -16,10 +16,10 @@ class TooLong:
     lines_en: list[str]
 
     def __str__(self) -> str:
-        return f"{self.key}: {self.value} --- {self.en} ({len(self.lines)} / {len(self.lines_en)})"
+        return f"{self.key} : {self.value} --- {self.en} ({len(self.lines)} / {len(self.lines_en)})"
 
 
-altcoins = [
+ALTCOINS = [
     "binance",
     "cardano",
     "ethereum",
@@ -32,19 +32,8 @@ altcoins = [
     "tezos",
 ]
 
-
-def get_value(key: str) -> str:
-    if "title" in key:
-        return "title,1"
-    if "button" in key:
-        return "button,1"
-    return "text,1"
-
-
-# rules = {k: get_value(k) for k in translation_content}
-# rules_file.write_text(json.dumps(rules, indent=2, sort_keys=True))
-
 SCREEN_TEXT_WIDTHS = {"TT": 240 - 12, "TS3": 128}
+MAX_BUTTON_WIDTH = {"TT": 162, "TS3": 88}
 
 FONT_MAPPING = {
     "TT": {
@@ -69,35 +58,15 @@ FONTS: dict[str, dict[str, dict[str, int]]] = json.loads(FONTS_FILE.read_text())
 
 
 def will_fit(text: str, type: str, device: str, lines: int) -> bool:
-    needed_lines = get_needed_lines(text, type, device)
-    return needed_lines <= lines
+    if type == "button":
+        return get_text_width(text, type, device) <= MAX_BUTTON_WIDTH[device]
+    else:
+        needed_lines = get_needed_lines(text, type, device)
+        return needed_lines <= lines
 
 
 def get_needed_lines(text: str, type: str, device: str) -> int:
     return len(assemble_lines(text, type, device))
-
-
-# def assemble_lines(text: str, type: str, device: str) -> list[str]:
-#     space_width = get_text_width(" ", type, device)
-#     words = text.split(" ")
-#     current_line_length = 0
-#     current_line = []
-#     assembled_lines: list[str] = []
-
-#     screen_width = SCREEN_TEXT_WIDTHS[device]
-
-#     for word in words:
-#         word_width = get_text_width(word, type, device)
-#         if current_line_length + word_width <= screen_width:
-#             current_line.append(word)
-#             current_line_length += word_width + space_width
-#         else:
-#             assembled_lines.append(" ".join(current_line))
-#             current_line = [word]
-#             current_line_length = word_width + space_width
-
-#     assembled_lines.append(" ".join(current_line))
-#     return assembled_lines
 
 
 def assemble_lines(text: str, type: str, device: str) -> list[str]:
@@ -176,10 +145,8 @@ def check(language: str) -> list[TooLong]:
 
     wrong: dict[str, TooLong] = {}
 
-    # new_rules: dict[str, str] = {}
-
     for k, v in list(translation_content.items())[:]:
-        if k.split("__")[0] in altcoins:
+        if k.split("__")[0] in ALTCOINS:
             continue
         if k.split("__")[0] == "plurals":
             continue
@@ -190,8 +157,6 @@ def check(language: str) -> list[TooLong]:
             continue
         type, lines = rule.split(",")
         lines = int(lines)
-
-        # most_needed_lines = 0
 
         for model in DEVICES:
             if model == "TT" and k.startswith("tutorial"):
@@ -235,6 +200,8 @@ def test() -> None:
             model,
             4,
         )
+        assert will_fit("HOLD TO CONFIRM", "button", model, 1)
+        assert will_fit("OK, I UNDERSTAND", "button", model, 1)
 
     assert will_fit("Choose level of details", "text", "TT", 1)
     test_fits_exactly(
