@@ -13,6 +13,7 @@ from boards import (
     trezor_r_v6,
     trezor_r_v10,
     trezor_t,
+    trezor_t3t1_revE,
     trezor_t3t1_v4,
 )
 
@@ -44,6 +45,7 @@ def configure_board(
     paths: list[str],
 ) -> list[str]:
     model_r_version = 10
+    model_t3t1_version = "E"
 
     if model in ("1",):
         return trezor_1.configure(env, features_wanted, defines, sources, paths)
@@ -60,7 +62,15 @@ def configure_board(
             return trezor_r_v10.configure(env, features_wanted, defines, sources, paths)
         raise Exception("Unknown model_r_version")
     elif model in ("T3T1",):
-        return trezor_t3t1_v4.configure(env, features_wanted, defines, sources, paths)
+        if model_t3t1_version == 4:
+            return trezor_t3t1_v4.configure(
+                env, features_wanted, defines, sources, paths
+            )
+        elif model_t3t1_version == "E":
+            return trezor_t3t1_revE.configure(
+                env, features_wanted, defines, sources, paths
+            )
+        raise Exception("Unknown model_t3t1_version")
     elif model in ("DISC1",):
         return discovery.configure(env, features_wanted, defines, sources, paths)
     elif model in ("DISC2",):
