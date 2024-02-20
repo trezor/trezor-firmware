@@ -86,7 +86,7 @@ class MessageType(IntEnum):
     FirmwareErase = 6
     FirmwareUpload = 7
     FirmwareRequest = 8
-    SelfTest = 32
+    ProdTestT1 = 32
     GetPublicKey = 11
     PublicKey = 12
     SignTx = 15
@@ -2137,7 +2137,7 @@ class FirmwareUpload(protobuf.MessageType):
         self.hash = hash
 
 
-class SelfTest(protobuf.MessageType):
+class ProdTestT1(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 32
     FIELDS = {
         1: protobuf.Field("payload", "bytes", repeated=False, required=False, default=None),

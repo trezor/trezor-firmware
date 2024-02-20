@@ -52,16 +52,6 @@ def cli() -> None:
 
 
 @cli.command()
-@with_client
-def self_test(client: "TrezorClient") -> str:
-    """Perform a factory self-test.
-
-    Only available on PRODTEST firmware.
-    """
-    return debuglink.self_test(client)
-
-
-@cli.command()
 @click.option(
     "-b",
     "--bootloader",

@@ -56,7 +56,7 @@ trezor_message_impl! {
     FirmwareErase => MessageType_FirmwareErase,
     FirmwareUpload => MessageType_FirmwareUpload,
     FirmwareRequest => MessageType_FirmwareRequest,
-    SelfTest => MessageType_SelfTest,
+    ProdTestT1 => MessageType_ProdTestT1,
     CipherKeyValue => MessageType_CipherKeyValue,
     CipheredKeyValue => MessageType_CipheredKeyValue,
     SignIdentity => MessageType_SignIdentity,

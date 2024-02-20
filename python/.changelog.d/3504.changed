@@ -1,0 +1,1 @@
+Renamed `trezorctl device self-test` command to `trezorctl device prodtest-t1`
