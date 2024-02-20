@@ -35,10 +35,10 @@ message FirmwareUpload {
 }
 
 /**
- * Request: Perform a device self-test
+ * Request: Perform a prodtest on T1
  * @next Success
  * @next Failure
  */
-message SelfTest {
-    optional bytes payload = 1; // payload to be used in self-test
+message ProdTestT1 {
+    optional bytes payload = 1; // payload to be used in prodtest
 }

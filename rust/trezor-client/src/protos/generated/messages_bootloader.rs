@@ -565,25 +565,25 @@ impl ::protobuf::reflect::ProtobufValue for FirmwareUpload {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
-// @@protoc_insertion_point(message:hw.trezor.messages.bootloader.SelfTest)
+// @@protoc_insertion_point(message:hw.trezor.messages.bootloader.ProdTestT1)
 #[derive(PartialEq,Clone,Default,Debug)]
-pub struct SelfTest {
+pub struct ProdTestT1 {
     // message fields
-    // @@protoc_insertion_point(field:hw.trezor.messages.bootloader.SelfTest.payload)
+    // @@protoc_insertion_point(field:hw.trezor.messages.bootloader.ProdTestT1.payload)
     pub payload: ::std::option::Option<::std::vec::Vec<u8>>,
     // special fields
-    // @@protoc_insertion_point(special_field:hw.trezor.messages.bootloader.SelfTest.special_fields)
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.bootloader.ProdTestT1.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
 }
 
-impl<'a> ::std::default::Default for &'a SelfTest {
-    fn default() -> &'a SelfTest {
-        <SelfTest as ::protobuf::Message>::default_instance()
+impl<'a> ::std::default::Default for &'a ProdTestT1 {
+    fn default() -> &'a ProdTestT1 {
+        <ProdTestT1 as ::protobuf::Message>::default_instance()
     }
 }
 
-impl SelfTest {
-    pub fn new() -> SelfTest {
+impl ProdTestT1 {
+    pub fn new() -> ProdTestT1 {
         ::std::default::Default::default()
     }
 
@@ -628,19 +628,19 @@ impl SelfTest {
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "payload",
-            |m: &SelfTest| { &m.payload },
-            |m: &mut SelfTest| { &mut m.payload },
+            |m: &ProdTestT1| { &m.payload },
+            |m: &mut ProdTestT1| { &mut m.payload },
         ));
-        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<SelfTest>(
-            "SelfTest",
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<ProdTestT1>(
+            "ProdTestT1",
             fields,
             oneofs,
         )
     }
 }
 
-impl ::protobuf::Message for SelfTest {
-    const NAME: &'static str = "SelfTest";
+impl ::protobuf::Message for ProdTestT1 {
+    const NAME: &'static str = "ProdTestT1";
 
     fn is_initialized(&self) -> bool {
         true
@@ -688,8 +688,8 @@ impl ::protobuf::Message for SelfTest {
         &mut self.special_fields
     }
 
-    fn new() -> SelfTest {
-        SelfTest::new()
+    fn new() -> ProdTestT1 {
+        ProdTestT1::new()
     }
 
     fn clear(&mut self) {
@@ -697,8 +697,8 @@ impl ::protobuf::Message for SelfTest {
         self.special_fields.clear();
     }
 
-    fn default_instance() -> &'static SelfTest {
-        static instance: SelfTest = SelfTest {
+    fn default_instance() -> &'static ProdTestT1 {
+        static instance: ProdTestT1 = ProdTestT1 {
             payload: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
@@ -706,20 +706,20 @@ impl ::protobuf::Message for SelfTest {
     }
 }
 
-impl ::protobuf::MessageFull for SelfTest {
+impl ::protobuf::MessageFull for ProdTestT1 {
     fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
         static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
-        descriptor.get(|| file_descriptor().message_by_package_relative_name("SelfTest").unwrap()).clone()
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("ProdTestT1").unwrap()).clone()
     }
 }
 
-impl ::std::fmt::Display for SelfTest {
+impl ::std::fmt::Display for ProdTestT1 {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::protobuf::text_format::fmt(self, f)
     }
 }
 
-impl ::protobuf::reflect::ProtobufValue for SelfTest {
+impl ::protobuf::reflect::ProtobufValue for ProdTestT1 {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
@@ -729,7 +729,7 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x0fFirmwareRequest\x12\x16\n\x06offset\x18\x01\x20\x02(\rR\x06offset\
     \x12\x16\n\x06length\x18\x02\x20\x02(\rR\x06length\">\n\x0eFirmwareUploa\
     d\x12\x18\n\x07payload\x18\x01\x20\x02(\x0cR\x07payload\x12\x12\n\x04has\
-    h\x18\x02\x20\x01(\x0cR\x04hash\"$\n\x08SelfTest\x12\x18\n\x07payload\
+    h\x18\x02\x20\x01(\x0cR\x04hash\"&\n\nProdTestT1\x12\x18\n\x07payload\
     \x18\x01\x20\x01(\x0cR\x07payloadB>\n#com.satoshilabs.trezor.lib.protobu\
     fB\x17TrezorMessageBootloader\
 ";
@@ -753,7 +753,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             messages.push(FirmwareErase::generated_message_descriptor_data());
             messages.push(FirmwareRequest::generated_message_descriptor_data());
             messages.push(FirmwareUpload::generated_message_descriptor_data());
-            messages.push(SelfTest::generated_message_descriptor_data());
+            messages.push(ProdTestT1::generated_message_descriptor_data());
             let mut enums = ::std::vec::Vec::with_capacity(0);
             ::protobuf::reflect::GeneratedFileDescriptor::new_generated(
                 file_descriptor_proto(),

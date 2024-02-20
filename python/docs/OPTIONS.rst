@@ -57,6 +57,7 @@ on one page here.
     ping               Send ping message.
     ripple             Ripple commands.
     set                Device settings.
+    solana             Solana commands.
     stellar            Stellar commands.
     tezos              Tezos commands.
     usb-reset          Perform USB reset on stuck devices.
@@ -211,10 +212,10 @@ Device management commands - setup, recover seed, wipe, etc.
     authenticate          Get information to verify the authenticity of the device.
     backup                Perform device seed backup.
     load                  Upload seed and custom configuration to the device.
+    prodtest-t1           Perform a prodtest on Model One.
     reboot-to-bootloader  Reboot device into bootloader mode.
     recover               Start safe recovery workflow.
     sd-protect            Secure the device with SD card protection.
-    self-test             Perform a factory self-test.
     set-busy              Show a "Do not disconnect" dialog.
     setup                 Perform device setup and generate new seed.
     tutorial              Show on-device tutorial.
@@ -409,10 +410,32 @@ Device settings.
     flags                  Set device flags.
     homescreen             Set new homescreen.
     label                  Set new device label.
+    language               Set new language with translations.
     passphrase             Enable, disable or configure passphrase protection.
     pin                    Set, change or remove PIN.
     safety-checks          Set safety check level.
     wipe-code              Set or remove the wipe code.
+
+Solana commands.
+~~~~~~~~~~~~~~~~
+
+.. code::
+
+  trezorctl solana --help
+
+.. code::
+
+  Usage: trezorctl solana [OPTIONS] COMMAND [ARGS]...
+
+    Solana commands.
+
+  Options:
+    --help  Show this message and exit.
+
+  Commands:
+    get-address     Get Solana address.
+    get-public-key  Get Solana public key.
+    sign-tx         Sign Solana transaction.
 
 Stellar commands.
 ~~~~~~~~~~~~~~~~~

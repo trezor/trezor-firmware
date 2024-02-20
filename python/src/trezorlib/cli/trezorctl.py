@@ -69,7 +69,7 @@ COMMAND_ALIASES = {
     "backup-device": device.backup,
     "sd-protect": device.sd_protect,
     "load-device": device.load,
-    "self-test": device.self_test,
+    "prodtest-t1": debug.prodtest_t1,
     "get-entropy": crypto.get_entropy,
     "encrypt-keyvalue": crypto.encrypt_keyvalue,
     "decrypt-keyvalue": crypto.decrypt_keyvalue,
