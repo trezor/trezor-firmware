@@ -30,7 +30,6 @@
 //    1. Non-uniform sector number on STM32F4
 //    2. Uniform page number on STM32U5
 
-
 #define FLASH_BLOCK_SIZE (sizeof(uint32_t) * FLASH_BLOCK_WORDS)
 
 typedef uint32_t flash_block_t[FLASH_BLOCK_WORDS];
@@ -44,7 +43,6 @@ typedef uint32_t flash_block_t[FLASH_BLOCK_WORDS];
 #else
 #error Unsupported number of FLASH_BLOCK_WORDS.
 #endif
-
 
 // Returns the size of the a continuous area of sectors
 // Returns 0 if any of the sectors is out of range
@@ -87,11 +85,9 @@ secbool __wur flash_write_burst(uint16_t sector, uint32_t offset,
 // Erases a single sector/page of flash memory
 secbool __wur flash_sector_erase(uint16_t sector);
 
-
 // Writes a block to specified 'offset' inside a flash 'sector'
 // Block represents a natural unit of the given flash memory
 secbool flash_write_block(uint16_t sector, uint32_t offset,
-const flash_block_t block);
-
+                          const flash_block_t block);
 
 #endif  // FLASH_LL_H

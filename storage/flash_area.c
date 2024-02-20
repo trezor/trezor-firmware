@@ -159,7 +159,6 @@ secbool flash_area_write_block(const flash_area_t *area, uint32_t offset,
   return flash_write_block(sector, sector_offset, block);
 }
 
-
 secbool flash_area_erase(const flash_area_t *area,
                          void (*progress)(int pos, int len)) {
   return flash_area_erase_bulk(area, 1, progress);

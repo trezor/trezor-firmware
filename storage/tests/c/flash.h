@@ -22,7 +22,7 @@
 
 #include <stdint.h>
 #include <stdlib.h>
-#include "secbool.h"
 #include "flash_ll.h"
+#include "secbool.h"
 
 #endif
