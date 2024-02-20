@@ -13,10 +13,22 @@ bool translations_write(const uint8_t* data, uint32_t offset, uint32_t len) {
   }
 
   ensure(flash_unlock_write(), "translations_write unlock");
-  for (int i = 0; i < len; i++) {
-    // TODO optimize by writing by (quad)words
-    ensure(flash_area_write_byte(&TRANSLATIONS_AREA, offset + i, data[i]),
+  for (int i = 0; i < (len / FLASH_BLOCK_SIZE); i++) {
+    // todo consider alignment
+    ensure(flash_area_write_block(&TRANSLATIONS_AREA,
+                                  offset + (i * FLASH_BLOCK_SIZE),
+                                  (const uint32_t*)&data[i * FLASH_BLOCK_SIZE]),
            "translations_write write");
+  }
+
+  if (len % FLASH_BLOCK_SIZE) {
+    flash_block_t block = {0};
+    memcpy(block, data + (len / FLASH_BLOCK_SIZE) * FLASH_BLOCK_SIZE,
+           len % FLASH_BLOCK_SIZE);
+    ensure(flash_area_write_block(
+               &TRANSLATIONS_AREA,
+               offset + (len / FLASH_BLOCK_SIZE) * FLASH_BLOCK_SIZE, block),
+           "translations_write write rest");
   }
   ensure(flash_lock_write(), "translations_write lock");
   return true;

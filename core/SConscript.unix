@@ -197,6 +197,7 @@ SOURCE_MOD += [
     'embed/lib/fonts/fonts.c',
     'embed/lib/image.c',
     'embed/lib/terminal.c',
+    'embed/lib/translations.c',
     'embed/lib/unit_variant.c',
     'vendor/micropython/lib/uzlib/adler32.c',
     'vendor/micropython/lib/uzlib/crc32.c',
