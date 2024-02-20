@@ -23,6 +23,7 @@
 #include "boot_internal.h"
 #include "common.h"
 #include "display.h"
+#include "display_utils.h"
 #include "flash.h"
 #include "image.h"
 #include "lowlevel.h"
