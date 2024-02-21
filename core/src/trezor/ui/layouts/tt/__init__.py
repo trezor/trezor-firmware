@@ -861,6 +861,8 @@ def confirm_value(
     hold: bool = False,
     value_text_mono: bool = True,
     info_items: Iterable[tuple[str, str]] | None = None,
+    info_title: str | None = None,
+    chunkify_info: bool = False,
 ) -> Awaitable[None]:
     """General confirmation dialog, used by many other confirm_* functions."""
 
@@ -873,8 +875,9 @@ def confirm_value(
     info_items = info_items or []
     info_layout = RustLayout(
         trezorui2.show_info_with_cancel(
-            title=TR.words__title_information,
+            title=info_title if info_title else TR.words__title_information,
             items=info_items,
+            chunkify=chunkify_info,
         )
     )
 
@@ -889,6 +892,7 @@ def confirm_value(
                     verb=verb,
                     hold=hold,
                     info_button=bool(info_items),
+                    text_mono=value_text_mono,
                 )
             ),
             info_layout,
@@ -1039,33 +1043,25 @@ async def confirm_ethereum_staking_tx(
     maximum_fee: str,
     address: str,
     address_title: str,
-    info_items: Iterable[tuple[str, str]] | None = None,
+    info_items: Iterable[tuple[str, str]],
     chunkify: bool = False,
     br_type: str = "confirm_ethereum_staking_tx",
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
 ) -> None:
 
     # intro
-    # NOTE: this layout very similar to `confirm_value` with some adjustments
-    msg_layout = RustLayout(
-        trezorui2.confirm_value(
-            title=title,
-            value=intro_question,
-            description=None,
-            subtitle=None,
-            verb=verb,
-            info_button=True,
-            text_mono=False,
-        )
+    await confirm_value(
+        title,
+        intro_question,
+        "",
+        br_type,
+        br_code,
+        verb=verb,
+        value_text_mono=False,
+        info_items=(("", address),),
+        info_title=address_title,
+        chunkify_info=chunkify,
     )
-    info_layout = RustLayout(
-        trezorui2.show_info_with_cancel(
-            title=address_title,
-            items=(("", address),),
-            chunkify=chunkify,
-        )
-    )
-    await raise_if_not_confirmed(with_info(msg_layout, info_layout, br_type, br_code))
 
     # confirmation
     if verb == TR.ethereum__staking_claim:
