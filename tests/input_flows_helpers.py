@@ -365,3 +365,81 @@ class EthereumFlow:
                     self.debug.press_left(wait=True)
                     self.debug.press_left(wait=True)
                 self.debug.press_middle()
+
+    def confirm_tx_staking(
+        self,
+        info: bool = False,
+    ) -> BRGeneratorType:
+        yield
+        TR.assert_equals_multiple(
+            self.debug.wait_layout().title(),
+            [
+                "ethereum__staking_stake",
+                "ethereum__staking_unstake",
+                "ethereum__staking_claim",
+            ],
+        )
+        TR.assert_equals_multiple(
+            self.debug.wait_layout().text_content(),
+            [
+                "ethereum__staking_stake_intro",
+                "ethereum__staking_unstake_intro",
+                "ethereum__staking_claim_intro",
+            ],
+        )
+        if self.debug.model == "T":
+            # confirm intro
+            if info:
+                self.debug.press_info(wait=True)
+                TR.assert_equals_multiple(
+                    self.debug.wait_layout().title(),
+                    [
+                        "ethereum__staking_stake_address",
+                        "ethereum__staking_claim_address",
+                    ],
+                )
+                self.debug.press_no(wait=True)
+            self.debug.press_yes()
+            yield
+
+            # confirm summary
+            if info:
+                self.debug.press_info(wait=True)
+                TR.assert_in(
+                    self.debug.wait_layout().text_content(), "ethereum__gas_limit"
+                )
+                TR.assert_in(
+                    self.debug.wait_layout().text_content(), "ethereum__gas_price"
+                )
+                self.debug.press_no(wait=True)
+            self.debug.press_yes()
+            yield
+        else:
+            # confirm intro
+            if info:
+                self.debug.press_right(wait=True)
+                TR.assert_equals_multiple(
+                    self.debug.wait_layout().title(),
+                    [
+                        "ethereum__staking_stake_address",
+                        "ethereum__staking_claim_address",
+                    ],
+                )
+                self.debug.press_left(wait=True)
+            self.debug.press_middle()
+            yield
+
+            # confirm summary
+            if info:
+                self.debug.press_right(wait=True)
+                TR.assert_in(
+                    self.debug.wait_layout().text_content(), "ethereum__gas_limit"
+                )
+                self.debug.press_right(wait=True)
+                TR.assert_in(
+                    self.debug.wait_layout().text_content(), "ethereum__gas_price"
+                )
+                self.debug.press_left(wait=True)
+                self.debug.press_left(wait=True)
+            self.debug.press_middle()
+            yield

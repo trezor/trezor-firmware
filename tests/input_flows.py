@@ -890,6 +890,14 @@ class InputFlowEthereumSignTxDataGoBack(InputFlowBase):
             yield from self.ETH.confirm_tx()
 
 
+class InputFlowEthereumSignTxStaking(InputFlowBase):
+    def __init__(self, client: Client):
+        super().__init__(client)
+
+    def input_flow_common(self) -> BRGeneratorType:
+        yield from self.ETH.confirm_tx_staking(info=True)
+
+
 def get_mnemonic_and_confirm_success(
     debug: DebugLink,
 ) -> Generator[None, "messages.ButtonRequest", str]:
