@@ -40,7 +40,7 @@ impl<'a> UzlibContext<'a> {
         ctx
     }
 
-    /// returns Ok(true) if DONE
+    /// Returns `Ok(true)` if all data was read.
     pub fn uncompress(&mut self, dest_buf: &mut [u8]) -> Result<bool, ()> {
         unsafe {
             self.uncomp.dest = dest_buf.as_mut_ptr();
@@ -54,5 +54,19 @@ impl<'a> UzlibContext<'a> {
                 _ => Err(()),
             }
         }
+    }
+
+    /// Skips a specified number of bytes (`nbytes`) in the uncompressed stream.
+    ///
+    /// Returns `Ok(true)` if all data was read.
+    pub fn skip(&mut self, nbytes: usize) -> Result<bool, ()> {
+        let mut result = false; // false => OK, true => DONE
+        let mut sink = [0u8; 256];
+        for i in (0..nbytes).step_by(sink.len()) {
+            let chunk_len = core::cmp::min(sink.len(), nbytes - i);
+            let chunk = &mut sink[0..chunk_len];
+            result = self.uncompress(chunk)?;
+        }
+        Ok(result)
     }
 }
