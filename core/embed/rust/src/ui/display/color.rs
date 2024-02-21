@@ -86,6 +86,20 @@ impl Color {
     pub const fn black() -> Self {
         Self::rgb(0, 0, 0)
     }
+
+    /// Blends the color of `self` with the color of `fg` using specified
+    /// `alpha` value (ranging from 0 to 255).
+    ///
+    /// If `alpha` equals 0, the background color (`self`) is used.
+    /// If `alpha` equals 255, the foreground color (`fg`) is used.
+    pub fn blend(self, fg: Color, alpha: u8) -> Color {
+        let fg_mul = alpha as u16;
+        let bg_mul = (255 - alpha) as u16;
+        let r = (fg.r() as u16) * fg_mul + (self.r() as u16) * bg_mul;
+        let g = (fg.g() as u16) * fg_mul + (self.g() as u16) * bg_mul;
+        let b = (fg.b() as u16) * fg_mul + (self.b() as u16) * bg_mul;
+        Color::rgb((r >> 8) as u8, (g >> 8) as u8, (b >> 8) as u8)
+    }
 }
 
 impl Lerp for Color {
