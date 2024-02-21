@@ -29,6 +29,7 @@ from ...input_flows import (
     InputFlowEthereumSignTxDataSkip,
     InputFlowEthereumSignTxGoBackFromSummary,
     InputFlowEthereumSignTxShowFeeInfo,
+    InputFlowEthereumSignTxStaking,
 )
 from .common import encode_network
 
@@ -458,29 +459,12 @@ def test_signtx_data_pagination(client: Client, flow):
 
 @pytest.mark.skip_t1("T1 does not support Everstake")
 @parametrize_using_common_fixtures("ethereum/sign_tx_staking.json")
-# TODO input flows to go into info screens - then also parametrizing chunkify might make sense
-# @pytest.mark.parametrize("chunkify", (True, False))
-def test_signtx_staking(client: Client, parameters: dict, result: dict):
-    with client:
-        sig_v, sig_r, sig_s = ethereum.sign_tx(
-            client,
-            n=parse_path(parameters["path"]),
-            nonce=int(parameters["nonce"], 16),
-            gas_price=int(parameters["gas_price"], 16),
-            gas_limit=int(parameters["gas_limit"], 16),
-            to=parameters["to_address"],
-            value=int(parameters["value"], 16),
-            data=bytes.fromhex(parameters["data"]),
-            chain_id=parameters["chain_id"],
-            tx_type=parameters["tx_type"],
-            definitions=None,
-            chunkify=False,
-        )
-    expected_v = 2 * parameters["chain_id"] + 35
-    assert sig_v in (expected_v, expected_v + 1)
-    assert sig_r.hex() == result["sig_r"]
-    assert sig_s.hex() == result["sig_s"]
-    assert sig_v == result["sig_v"]
+@pytest.mark.parametrize("chunkify", (True, False))
+def test_signtx_staking(client: Client, chunkify: bool, parameters: dict, result: dict):
+    input_flow = InputFlowEthereumSignTxStaking(client).get()
+    _do_test_signtx(
+        client, parameters, result, input_flow=input_flow, chunkify=chunkify
+    )
 
 
 @pytest.mark.skip_t1("T1 does not support Everstake")
