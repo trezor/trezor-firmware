@@ -962,6 +962,7 @@ async def confirm_value(
     verb: str | None = None,
     hold: bool = False,
     info_items: Iterable[tuple[str, str]] | None = None,
+    chunkify_info: bool = False,
 ) -> None:
     """General confirmation dialog, used by many other confirm_* functions."""
 
@@ -1019,14 +1020,15 @@ async def confirm_value(
                 info_title, info_value = info_items_list[0]
                 await ctx_wait(
                     RustLayout(
-                        trezorui2.confirm_action(
+                        trezorui2.confirm_blob(
                             title=info_title.upper(),
-                            action=info_value,
+                            data=info_value,
                             description=description,
+                            extra=None,
                             verb="",
                             verb_cancel="<",
                             hold=False,
-                            reverse=False,
+                            chunkify=chunkify_info,
                         )
                     )
                 )
@@ -1076,9 +1078,9 @@ async def confirm_ethereum_staking_tx(
     address: str,
     address_title: str,
     info_items: Iterable[tuple[str, str]],
+    chunkify: bool = False,
     br_type: str = "confirm_ethereum_staking_tx",
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
-    chunkify: bool = False,
 ) -> None:
 
     # intro
@@ -1090,6 +1092,7 @@ async def confirm_ethereum_staking_tx(
         br_code,
         verb=verb,
         info_items=((address_title, address),),
+        chunkify_info=chunkify,
     )
 
     # confirmation
