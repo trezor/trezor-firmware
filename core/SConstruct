@@ -9,5 +9,6 @@ SConscript('SConscript.bootloader_ci', variant_dir='build/bootloader_ci', duplic
 SConscript('SConscript.bootloader_emu', variant_dir='build/bootloader_emu', duplicate=False)
 SConscript('SConscript.firmware', variant_dir='build/firmware', duplicate=False)
 SConscript('SConscript.prodtest', variant_dir='build/prodtest', duplicate=False)
+SConscript('SConscript.prepare', variant_dir='build/prepare', duplicate=False)
 SConscript('SConscript.reflash', variant_dir='build/reflash', duplicate=False)
 SConscript('SConscript.unix', variant_dir='build/unix', duplicate=False)

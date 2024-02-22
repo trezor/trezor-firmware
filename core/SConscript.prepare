@@ -1,0 +1,144 @@
+# pylint: disable=E0602
+
+import os
+import tools
+
+TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
+CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
+
+if TREZOR_MODEL not in ('T3T1', ):
+    # skip prepare build
+    env = Environment()
+    def build_prepare(target,source,env):
+        print(f'Prepare: nothing to build for Model {TREZOR_MODEL}')
+    program_bin = env.Command(
+                 target='prepare.bin',
+                 source=None,
+                 action=build_prepare
+             )
+    Return()
+
+FEATURES_WANTED = []
+
+CCFLAGS_MOD = ''
+CPPPATH_MOD = []
+CPPDEFINES_MOD = ["PREPARE"]
+SOURCE_MOD = []
+CPPDEFINES_HAL = []
+SOURCE_HAL = []
+PATH_HAL = []
+
+CPPPATH_MOD += [
+    'vendor/trezor-crypto',
+    'vendor/trezor-storage',
+]
+
+CCFLAGS_MOD += '-Wno-sequence-point '
+
+
+env = Environment(ENV=os.environ,
+     CFLAGS='%s -DPRODUCTION=%s' % (ARGUMENTS.get('CFLAGS', ''), ARGUMENTS.get('PRODUCTION', '0')),
+     CONSTRAINTS=[],
+     CPPDEFINES_IMPLICIT=[]
+ )
+
+FEATURES_AVAILABLE = tools.configure_board(TREZOR_MODEL, FEATURES_WANTED, env, CPPDEFINES_HAL, SOURCE_HAL, PATH_HAL)
+
+FILE_SUFFIX= env.get('ENV')['SUFFIX']
+LINKER_SCRIPT_SUFFIX= env.get('ENV')['LINKER_SCRIPT']
+
+SOURCE_PREPARE = [
+    f"embed/prepare/startup_{FILE_SUFFIX}.s",
+    'embed/prepare/main.c',
+    'embed/lib/terminal.c',
+    'embed/lib/fonts/font_bitmap.c',
+    'embed/lib/mini_printf.c',
+]
+
+env.Replace(
+    CP='cp',
+    AS='arm-none-eabi-as',
+    AR='arm-none-eabi-ar',
+    CC='arm-none-eabi-gcc',
+    LINK='arm-none-eabi-gcc',
+    SIZE='arm-none-eabi-size',
+    STRIP='arm-none-eabi-strip',
+    OBJCOPY='arm-none-eabi-objcopy',
+    PYTHON='python',
+    MAKECMAKELISTS='$PYTHON tools/make_cmakelists.py',)
+
+env.Replace(
+    TREZOR_MODEL=TREZOR_MODEL, )
+
+env.Replace(
+    COPT=env.get('ENV').get('OPTIMIZE', '-Os'),
+    CCFLAGS='$COPT '
+    '-g3 '
+    '-nostdlib '
+    '-std=gnu11 -Wall -Werror -Wdouble-promotion -Wpointer-arith -Wno-missing-braces -fno-common '
+    '-fsingle-precision-constant -fdata-sections -ffunction-sections '
+    '-ffreestanding '
+    '-fstack-protector-all '
+    + env.get('ENV')["CPU_CCFLAGS"] + CCFLAGS_MOD,
+    CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB',
+    LINKFLAGS=f"-T embed/prepare/memory_{LINKER_SCRIPT_SUFFIX}.ld -Wl,--gc-sections -Wl,-Map=build/prepare/prepare.map -Wl,--warn-common  -Wl,--print-memory-usage",
+    CPPPATH=[
+        'embed/prepare',
+        'embed/lib',
+        'embed/models',
+        'embed/trezorhal',
+        'embed/extmod/modtrezorui',
+        'vendor/micropython/lib/cmsis/inc',
+    ] + CPPPATH_MOD + PATH_HAL,
+    CPPDEFINES=[
+        'PREPARE',
+        'TREZOR_MODEL_'+TREZOR_MODEL,
+        'USE_HAL_DRIVER',
+    ] + CPPDEFINES_MOD + CPPDEFINES_HAL,
+    ASFLAGS=env.get('ENV')['CPU_ASFLAGS'],
+    ASPPFLAGS='$CFLAGS $CCFLAGS',
+    )
+
+env.Replace(
+    ALLSOURCES=SOURCE_MOD + SOURCE_PREPARE + SOURCE_HAL,
+    ALLDEFS=tools.get_defs_for_cmake(env['CPPDEFINES'] + env['CPPDEFINES_IMPLICIT']))
+
+cmake_gen = env.Command(
+    target='CMakeLists.txt',
+    source='',
+    action='$MAKECMAKELISTS --sources $ALLSOURCES --dirs $CPPPATH --defs $ALLDEFS',
+)
+
+#
+# Program objects
+#
+
+obj_program = []
+obj_program += env.Object(source=SOURCE_MOD)
+obj_program += env.Object(source=SOURCE_PREPARE)
+obj_program += env.Object(source=SOURCE_HAL)
+
+program_elf = env.Command(
+    target='prepare.elf',
+    source=obj_program,
+    action=
+    '$LINK -o $TARGET $CCFLAGS $CFLAGS $LINKFLAGS $SOURCES -lc_nano -lgcc',
+)
+
+BINARY_NAME = f"build/prepare/prepare-{tools.get_model_identifier(TREZOR_MODEL)}"
+BINARY_NAME += "-" + tools.get_version('embed/prepare/version.h')
+BINARY_NAME += "-" + tools.get_git_revision_short_hash()
+BINARY_NAME += "-dirty" if tools.get_git_modified() else ""
+BINARY_NAME += ".bin"
+
+if CMAKELISTS != 0:
+    env.Depends(program_elf, cmake_gen)
+
+program_bin = env.Command(
+    target='prepare.bin',
+    source=program_elf,
+    action=[
+        '$OBJCOPY -O binary -j .vector_table -j .text -j .data -j .rodata -j .capabilities -j .sensitive $SOURCE $TARGET',
+        '$CP $TARGET ' + BINARY_NAME,
+    ],
+)
