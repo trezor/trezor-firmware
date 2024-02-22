@@ -188,6 +188,15 @@ CPPPATH_MOD += [
 ]
 SOURCE_MOD += [
     'embed/extmod/modtrezorui/modtrezorui.c',
+    'embed/gdc/gdc_color.c',
+    'embed/gdc/gdc_core.c',
+    'embed/gdc/gdc_mono8_ops.c',
+    'embed/gdc/gdc_rgb565.c',
+    'embed/gdc/gdc_rgb565_ops.c',
+    'embed/gdc/gdc_rgba8888.c',
+    'embed/gdc/gdc_text.c',
+    'embed/gdc/gdc_wnd565.c',
+    'embed/gdc/gdc_wnd565_ops.c',
     'embed/lib/buffers.c',
     'embed/lib/colors.c',
     'embed/lib/display_draw.c',
@@ -728,6 +737,11 @@ def cargo_build():
     features.append('translations')
     if PYOPT == '0':
         features.append('debug')
+        features.append('ui_debug')
+    if TREZOR_MODEL in ('T',):
+        features.append('ui_antialiasing')
+        features.append('ui_blurring')
+        features.append('ui_jpeg_decoder')
 
     features.extend(FEATURES_AVAILABLE)
 

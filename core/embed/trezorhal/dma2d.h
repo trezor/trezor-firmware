@@ -20,6 +20,8 @@
 #ifndef TREZORHAL_DMA2D_H
 #define TREZORHAL_DMA2D_H
 
+#include "../gdc/gdc_core.h"
+
 #include "common.h"
 
 void dma2d_init(void);
@@ -39,5 +41,13 @@ void dma2d_start_blend(uint8_t* overlay_addr, uint8_t* bg_addr,
                        uint8_t* out_addr, int32_t pixels);
 
 void dma2d_wait_for_transfer(void);
+
+void dma2d_wait(void);
+bool dma2d_rgb565_fill(const dma2d_params_t* dp);
+bool dma2d_rgb565_copy_mono4(const dma2d_params_t* dp);
+bool dma2d_rgb565_copy_rgb565(const dma2d_params_t* dp);
+bool dma2d_rgb565_blend_mono4(const dma2d_params_t* dp);
+
+bool dma2d_accessible(const void* ptr);
 
 #endif  // TREZORHAL_DMA2D_H

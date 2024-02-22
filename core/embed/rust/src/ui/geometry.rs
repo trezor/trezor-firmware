@@ -557,6 +557,7 @@ pub enum Alignment {
     End,
 }
 
+#[derive(Copy, Clone)]
 pub struct Alignment2D(pub Alignment, pub Alignment);
 
 impl Alignment2D {
