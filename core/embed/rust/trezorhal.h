@@ -1,4 +1,6 @@
 #include TREZOR_BOARD
+#include "../gdc/gdc.h"
+
 #include "buffers.h"
 #include "button.h"
 #include "common.h"

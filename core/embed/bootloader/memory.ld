@@ -68,4 +68,10 @@ SECTIONS {
     . = ALIGN(4);
   } >SRAM
 
+  .data_ccm : ALIGN(4) {
+    *(.no_dma_buffers*);
+    . = ALIGN(4);
+  } >CCMRAM
+
+
 }

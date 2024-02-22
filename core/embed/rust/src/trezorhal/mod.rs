@@ -2,11 +2,13 @@ pub mod bip39;
 #[macro_use]
 #[allow(unused_macros)]
 pub mod fatal_error;
+pub mod bitmap;
 #[cfg(feature = "ui")]
 pub mod display;
 #[cfg(feature = "dma2d")]
 pub mod dma2d;
 mod ffi;
+#[cfg(feature = "ui")]
 pub mod io;
 pub mod model;
 pub mod random;
