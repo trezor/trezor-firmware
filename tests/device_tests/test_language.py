@@ -177,15 +177,18 @@ def test_error_invalid_signature(client: Client):
 @pytest.mark.parametrize("lang", LANGUAGES)
 def test_full_language_change(client: Client, lang: str):
     assert client.features.language == "en-US"
+    assert client.features.language_version_matches is True
 
     # Setting selected language
     set_language(client, lang)
     assert client.features.language[:2] == lang
+    assert client.features.language_version_matches is True
     _check_ping_screen_texts(client, get_ping_title(lang), get_ping_button(lang))
 
     # Setting the default language via empty data
     set_language(client, "en")
     assert client.features.language == "en-US"
+    assert client.features.language_version_matches is True
     _check_ping_screen_texts(client, get_ping_title("en"), get_ping_button("en"))
 
 
