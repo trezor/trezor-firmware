@@ -43,6 +43,20 @@ def busy_expiry_ms() -> int:
     return expiry_ms if expiry_ms > 0 else 0
 
 
+def _language_version_matches() -> bool | None:
+    """
+    Whether translation blob version matches firmware version.
+    Returns None if there is no blob.
+    """
+    from trezor import translations
+
+    header = translations.TranslationsHeader.load_from_flash()
+    if header is None:
+        return True
+
+    return header.version == utils.VERSION
+
+
 def get_features() -> Features:
     import storage.recovery as storage_recovery
     from trezor import translations
@@ -58,6 +72,7 @@ def get_features() -> Features:
         vendor="trezor.io",
         fw_vendor=utils.firmware_vendor(),
         language=translations.get_language(),
+        language_version_matches=_language_version_matches(),
         major_version=v_major,
         minor_version=v_minor,
         patch_version=v_patch,
