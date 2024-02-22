@@ -190,6 +190,15 @@ CPPPATH_MOD += [
 ]
 SOURCE_MOD += [
     'embed/extmod/modtrezorui/modtrezorui.c',
+    'embed/gdc/gdc_color.c',
+    'embed/gdc/gdc_core.c',
+    'embed/gdc/gdc_mono8_ops.c',
+    'embed/gdc/gdc_rgb565.c',
+    'embed/gdc/gdc_rgb565_ops.c',
+    'embed/gdc/gdc_rgba8888.c',
+    'embed/gdc/gdc_text.c',
+    'embed/gdc/gdc_wnd565.c',
+    'embed/gdc/gdc_wnd565_ops.c',
     'embed/lib/buffers.c',
     'embed/lib/colors.c',
     'embed/lib/display_draw.c',
@@ -802,8 +811,10 @@ if ARGUMENTS.get('TREZOR_EMULATOR_DEBUGGABLE', '0') == '1':
     RUST_PROFILE = 'dev'
     RUST_LIBDIR = f'build/unix/rust/{TARGET}/debug'
 else:
-    RUST_PROFILE = 'release'
-    RUST_LIBDIR = f'build/unix/rust/{TARGET}/release'
+    RUST_PROFILE = 'dev'
+    RUST_LIBDIR = f'build/unix/rust/{TARGET}/debug'
+#    RUST_PROFILE = 'release'
+#    RUST_LIBDIR = f'build/unix/rust/{TARGET}/release'
 RUST_LIB = 'trezor_lib'
 RUST_LIBPATH = f'{RUST_LIBDIR}/lib{RUST_LIB}.a'
 
@@ -821,6 +832,9 @@ def cargo_build():
     if TREZOR_MODEL in ('T', 'T3T1'):
         features.append('touch')
         features.append('sd_card')
+        features.append('ui_antialiasing')
+        features.append('ui_blurring')
+        features.append('ui_jpeg_decoder')
     if TREZOR_MODEL in ('R', '1'):
         features.append('button')
 

@@ -1,6 +1,7 @@
 use crate::{
     trezorhal::display,
     ui::{
+        canvas::{Bitmap, BitmapFormat},
         constant,
         geometry::{Offset, Point, Rect},
     },
@@ -41,12 +42,12 @@ impl Glyph {
             let width = *data.offset(0) as i16;
             let height = *data.offset(1) as i16;
 
-            let data_bits = constant::FONT_BPP * width * height;
-
-            let data_bytes = if data_bits % 8 == 0 {
-                data_bits / 8
-            } else {
-                (data_bits / 8) + 1
+            let data_bytes = match constant::FONT_BPP {
+                1 => (width * height + 7) / 8, // packed bits
+                2 => (width * height + 3) / 4, // packed bits
+                4 => (width + 1) / 2 * height, // row aligned to bytes
+                8 => width * height,
+                _ => panic!(),
             };
 
             Glyph {
@@ -117,6 +118,28 @@ impl Glyph {
             4 => self.unpack_bpp4(a),
             8 => self.unpack_bpp8(a),
             _ => 0,
+        }
+    }
+
+    pub fn bitmap(&self) -> Bitmap<'static> {
+        match constant::FONT_BPP {
+            1 => unwrap!(Bitmap::new(
+                BitmapFormat::MONO1P,
+                None,
+                Offset::new(self.width, self.height),
+                None,
+                self.data,
+            )),
+            2 => panic!(),
+            4 => unwrap!(Bitmap::new(
+                BitmapFormat::MONO4,
+                None,
+                Offset::new(self.width, self.height),
+                None,
+                self.data,
+            )),
+            8 => panic!(),
+            _ => panic!(),
         }
     }
 }
@@ -224,6 +247,16 @@ impl Font {
 
     pub fn line_height(self) -> i16 {
         constant::LINE_SPACE + self.text_height()
+    }
+
+    // Returns x-coordinate of the text start (including left bearing)
+    pub fn horz_center(&self, start: i16, end: i16, text: &str) -> i16 {
+        (start + end - self.visible_text_width(text)) / 2 - self.start_x_bearing(text)
+    }
+
+    // Returns y-coordinate of the text baseline
+    pub fn vert_center(&self, start: i16, end: i16, text: &str) -> i16 {
+        (start + end + self.visible_text_height(text)) / 2
     }
 
     pub fn get_glyph(self, ch: char) -> Glyph {
