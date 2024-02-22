@@ -999,7 +999,7 @@ async def confirm_value(
                 trezorui2.confirm_with_info(
                     title=title.upper(),
                     items=((ui.NORMAL, value),),
-                    button=TR.buttons__confirm,
+                    button=verb or TR.buttons__confirm,
                     info_button=TR.buttons__info,
                 )
             )
