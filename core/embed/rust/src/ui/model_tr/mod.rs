@@ -3,6 +3,7 @@ pub mod bootloader;
 pub mod common_messages;
 pub mod component;
 pub mod constant;
+pub mod cshape;
 #[cfg(feature = "micropython")]
 pub mod layout;
 pub mod screens;

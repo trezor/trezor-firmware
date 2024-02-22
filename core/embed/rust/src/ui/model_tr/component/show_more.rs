@@ -3,6 +3,7 @@ use crate::{
     ui::{
         component::{Child, Component, Event, EventCtx},
         geometry::{Insets, Rect},
+        shape::Renderer,
     },
 };
 
@@ -76,6 +77,11 @@ where
     fn paint(&mut self) {
         self.content.paint();
         self.buttons.paint();
+    }
+
+    fn render(&mut self, target: &mut impl Renderer) {
+        self.content.render(target);
+        self.buttons.render(target);
     }
 }
 
