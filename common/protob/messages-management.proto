@@ -131,6 +131,7 @@ message Features {
     optional uint32 homescreen_width = 47;         // homescreen width in pixels
     optional uint32 homescreen_height = 48;         // homescreen height in pixels
     optional bool bootloader_locked = 49;       // bootloader is locked
+    optional bool language_version_matches = 50 [default=true];  // translation blob version matches firmware version
 }
 
 /**

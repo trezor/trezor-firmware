@@ -3213,6 +3213,7 @@ class Features(protobuf.MessageType):
         47: protobuf.Field("homescreen_width", "uint32", repeated=False, required=False, default=None),
         48: protobuf.Field("homescreen_height", "uint32", repeated=False, required=False, default=None),
         49: protobuf.Field("bootloader_locked", "bool", repeated=False, required=False, default=None),
+        50: protobuf.Field("language_version_matches", "bool", repeated=False, required=False, default=True),
     }
 
     def __init__(
@@ -3265,6 +3266,7 @@ class Features(protobuf.MessageType):
         homescreen_width: Optional["int"] = None,
         homescreen_height: Optional["int"] = None,
         bootloader_locked: Optional["bool"] = None,
+        language_version_matches: Optional["bool"] = True,
     ) -> None:
         self.capabilities: Sequence["Capability"] = capabilities if capabilities is not None else []
         self.major_version = major_version
@@ -3313,6 +3315,7 @@ class Features(protobuf.MessageType):
         self.homescreen_width = homescreen_width
         self.homescreen_height = homescreen_height
         self.bootloader_locked = bootloader_locked
+        self.language_version_matches = language_version_matches
 
 
 class LockDevice(protobuf.MessageType):
