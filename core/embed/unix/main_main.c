@@ -7,6 +7,10 @@
 
 #include "common.h"
 
+#include "display.h"  // TODO:just for testing, remove later !!!
+#include "rust_ui.h"  // TODO:just for testing, remove later !!!
+#include "touch.h"    // TODO:just for testing, remove later !!!
+
 MP_NOINLINE int main_(int argc, char **argv);
 
 int main(int argc, char **argv) {
@@ -15,6 +19,11 @@ int main(int argc, char **argv) {
 #ifdef USE_SECP256K1_ZKP
   ensure(sectrue * (zkp_context_init() == 0), NULL);
 #endif
+
+  display_refresh();
+  display_backlight(255);
+
+  drawlib_demo();  // TODO: !!! remove
 
 #if MICROPY_PY_THREAD
   mp_thread_init();

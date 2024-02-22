@@ -30,3 +30,9 @@ pub use model_t1 as model;
 pub use model_tr as model;
 #[cfg(feature = "model_tt")]
 pub use model_tt as model;
+
+#[cfg(feature = "model_tt")]
+pub mod drawlib_demo_t; // !!! REMOVE
+
+#[cfg(feature = "model_tr")]
+pub mod drawlib_demo_r; // !!! REMOVE

@@ -134,7 +134,7 @@ int main(void) {
 
   display_reinit();
 
-  screen_boot_full();
+  //screen_boot_full();
 
 #if !defined TREZOR_MODEL_1
   parse_boardloader_capabilities();
@@ -214,6 +214,10 @@ int main(void) {
 #ifdef USE_SECP256K1_ZKP
   ensure(sectrue * (zkp_context_init() == 0), NULL);
 #endif
+
+  drawlib_demo();  // TODO: !!! remove
+  while (1)
+    ;
 
   printf("CORE: Preparing stack\n");
   // Stack limit should be less than real stack size, so we have a chance
