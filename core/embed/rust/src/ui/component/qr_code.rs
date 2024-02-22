@@ -8,6 +8,8 @@ use crate::{
         constant,
         display::{pixeldata, pixeldata_dirty, rect_fill_rounded, set_window, Color},
         geometry::{Insets, Offset, Rect},
+        shape,
+        shape::Renderer,
     },
 };
 
@@ -139,6 +141,38 @@ impl Component for Qr {
 
         let area = Rect::from_center_and_size(self.area.center(), Offset::uniform(size * scale));
         Self::draw(&qr, area, self.border, scale);
+    }
+
+    fn render(&mut self, target: &mut impl Renderer) {
+        let mut outbuffer = [0u8; QR_MAX_VERSION.buffer_len()];
+        let mut tempbuffer = [0u8; QR_MAX_VERSION.buffer_len()];
+
+        let qr = QrCode::encode_text(
+            self.text.as_ref(),
+            &mut tempbuffer,
+            &mut outbuffer,
+            QrCodeEcc::Medium,
+            Version::MIN,
+            QR_MAX_VERSION,
+            None,
+            true,
+        );
+        let qr = unwrap!(qr);
+
+        let side = self.area.width().min(self.area.height());
+        let area = Rect::from_center_and_size(self.area.center(), Offset::uniform(side));
+
+        if self.border > 0 {
+            shape::Bar::new(area)
+                .with_bg(LIGHT)
+                .with_radius(CORNER_RADIUS as i16)
+                .render(target);
+        }
+
+        shape::QrImage::new(area.inset(Insets::uniform(self.border)), &qr)
+            .with_fg(LIGHT)
+            .with_bg(DARK)
+            .render(target);
     }
 
     #[cfg(feature = "ui_bounds")]

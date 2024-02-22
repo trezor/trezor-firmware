@@ -1,6 +1,7 @@
 mod render;
 
 use crate::{
+    micropython::gc::Gc,
     strutil::TString,
     time::{Duration, Instant},
     translations::TR,
@@ -9,9 +10,10 @@ use crate::{
         component::{Component, Event, EventCtx, Pad, TimerToken},
         display::{self, tjpgd::jpeg_info, toif::Icon, Color, Font},
         event::{TouchEvent, USBEvent},
-        geometry::{Offset, Point, Rect},
+        geometry::{Alignment, Alignment2D, Insets, Offset, Point, Rect},
         layout::util::get_user_custom_image,
         model_tt::{constant, theme::IMAGE_HOMESCREEN},
+        shape::{self, Renderer},
     },
 };
 
@@ -49,6 +51,7 @@ const LOADER_DURATION: Duration = Duration::from_millis(2000);
 pub struct Homescreen {
     label: TString<'static>,
     notification: Option<(TString<'static>, u8)>,
+    custom_image: Option<Gc<[u8]>>,
     hold_to_lock: bool,
     loader: Loader,
     pad: Pad,
@@ -69,6 +72,7 @@ impl Homescreen {
         Self {
             label,
             notification,
+            custom_image: get_user_custom_image().ok(),
             hold_to_lock,
             loader: Loader::with_lock_icon().with_durations(LOADER_DURATION, LOADER_DURATION / 3),
             pad: Pad::with_background(theme::BG),
@@ -117,6 +121,16 @@ impl Homescreen {
             )
         });
         self.loader.paint()
+    }
+
+    fn render_loader(&mut self, target: &mut impl Renderer) {
+        TR::progress__locking_device.map_translated(|t| {
+            shape::Text::new(TOP_CENTER + Offset::y(HOLD_Y), t)
+                .with_align(Alignment::Center)
+                .with_font(Font::NORMAL)
+                .with_fg(theme::FG);
+        });
+        self.loader.render(target)
     }
 
     pub fn set_paint_notification(&mut self) {
@@ -210,10 +224,9 @@ impl Component for Homescreen {
 
             let notification = self.get_notification();
 
-            let res = get_user_custom_image();
             let mut show_default = true;
 
-            if let Ok(data) = res {
+            if let Some(ref data) = self.custom_image {
                 if is_image_jpeg(data.as_ref()) {
                     let input = BufferInput(data.as_ref());
                     let mut pool = BufferJpegWork::get_cleared();
@@ -254,6 +267,82 @@ impl Component for Homescreen {
         }
     }
 
+    fn render(&mut self, target: &mut impl Renderer) {
+        self.pad.render(target);
+        if self.loader.is_animating() || self.loader.is_completely_grown(Instant::now()) {
+            self.render_loader(target);
+        } else {
+            let img_data = match self.custom_image {
+                Some(ref img) => IMAGE_HOMESCREEN, //img.as_ref(), !@# solve lifetime problem
+                None => IMAGE_HOMESCREEN,
+            };
+
+            if is_image_jpeg(img_data) {
+                shape::JpegImage::new(self.pad.area.center(), img_data)
+                    .with_align(Alignment2D::CENTER)
+                    .render(target);
+            } else if is_image_toif(img_data) {
+                shape::ToifImage::new(self.pad.area.center(), unwrap!(Toif::new(img_data)))
+                    .with_align(Alignment2D::CENTER)
+                    .render(target);
+            }
+
+            self.label.map(|t| {
+                let style = theme::TEXT_DEMIBOLD;
+                let pos = Point::new(self.pad.area.center().x, LABEL_Y);
+                shape::Text::new(pos, t)
+                    .with_align(Alignment::Center)
+                    .with_font(style.text_font)
+                    .with_fg(theme::FG)
+                    .render(target);
+            });
+
+            if let Some(notif) = self.get_notification() {
+                const NOTIFICATION_HEIGHT: i16 = 36;
+                const NOTIFICATION_BORDER: i16 = 6;
+                const TEXT_ICON_SPACE: i16 = 8;
+
+                let banner = self
+                    .pad
+                    .area
+                    .inset(Insets::sides(NOTIFICATION_BORDER))
+                    .with_height(NOTIFICATION_HEIGHT)
+                    .translate(Offset::y(NOTIFICATION_BORDER));
+
+                shape::Bar::new(banner)
+                    .with_radius(2)
+                    .with_bg(notif.color)
+                    .render(target);
+
+                let style = theme::TEXT_BOLD;
+
+                let text_width = notif.text.map(|t| style.text_font.text_width(t));
+                let text_height = style.text_font.max_height();
+                let icon_width = notif.icon.toif.width() + TEXT_ICON_SPACE;
+
+                let pt = Point::new(
+                    (banner.size().x - text_width + icon_width) / 2,
+                    (banner.size().y - text_height) / 2,
+                ) + banner.top_left().into();
+
+                notif.text.map(|t| {
+                    shape::Text::new(pt, t)
+                        .with_font(style.text_font)
+                        .with_baseline(false)
+                        .with_fg(style.text_color)
+                        .render(target);
+                });
+
+                let pt = pt + Offset::new(-TEXT_ICON_SPACE, style.text_font.text_baseline() / 2);
+
+                shape::ToifImage::new(pt, notif.icon.toif)
+                    .with_fg(style.text_color)
+                    .with_align(Alignment2D(Alignment::End, Alignment::Start))
+                    .render(target);
+            }
+        }
+    }
+
     #[cfg(feature = "ui_bounds")]
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         self.loader.bounds(sink);
@@ -271,6 +360,7 @@ impl crate::trace::Trace for Homescreen {
 
 pub struct Lockscreen {
     label: TString<'static>,
+    custom_image: Option<Gc<[u8]>>,
     bootscreen: bool,
     coinjoin_authorized: bool,
 }
@@ -279,6 +369,7 @@ impl Lockscreen {
     pub fn new(label: TString<'static>, bootscreen: bool, coinjoin_authorized: bool) -> Self {
         Lockscreen {
             label,
+            custom_image: get_user_custom_image().ok(),
             bootscreen,
             coinjoin_authorized,
         }
@@ -343,10 +434,9 @@ impl Component for Lockscreen {
             texts = &texts[1..];
         }
 
-        let res = get_user_custom_image();
         let mut show_default = true;
 
-        if let Ok(data) = res {
+        if let Some(ref data) = self.custom_image {
             if is_image_jpeg(data.as_ref()) {
                 let input = BufferInput(data.as_ref());
                 let mut pool = BufferJpegWork::get_cleared();
@@ -368,6 +458,101 @@ impl Component for Lockscreen {
             let mut pool = BufferJpegWork::get_cleared();
             let mut hs_img = HomescreenJpeg::new(input, pool.buffer.as_mut_slice());
             homescreen_blurred(&mut hs_img, texts);
+        }
+    }
+
+    fn render(&mut self, target: &mut impl Renderer) {
+        let img_data = match self.custom_image {
+            Some(ref img) => IMAGE_HOMESCREEN, //img.as_ref(), !@# solve lifetime problem
+            None => IMAGE_HOMESCREEN,
+        };
+
+        let center = constant::screen().center();
+
+        if is_image_jpeg(img_data) {
+            shape::JpegImage::new(center, img_data)
+                .with_align(Alignment2D::CENTER)
+                .with_blur(4)
+                .with_dim(130)
+                .render(target);
+        } else if is_image_toif(img_data) {
+            shape::ToifImage::new(center, unwrap!(Toif::new(img_data)))
+                .with_align(Alignment2D::CENTER)
+                //.with_blur(5)
+                .render(target);
+        }
+
+        let (locked, tap) = if self.bootscreen {
+            (
+                TR::lockscreen__title_not_connected,
+                TR::lockscreen__tap_to_connect,
+            )
+        } else {
+            (TR::lockscreen__title_locked, TR::lockscreen__tap_to_unlock)
+        };
+
+        let mut label_style = theme::TEXT_DEMIBOLD;
+        label_style.text_color = theme::GREY_LIGHT;
+
+        let mut texts: &[HomescreenText] = &[
+            HomescreenText {
+                text: "".into(),
+                style: theme::TEXT_NORMAL,
+                offset: Offset::new(2, COINJOIN_Y),
+                icon: Some(theme::ICON_COINJOIN),
+            },
+            HomescreenText {
+                text: locked.into(),
+                style: theme::TEXT_BOLD,
+                offset: Offset::y(LOCKED_Y),
+                icon: Some(theme::ICON_LOCK),
+            },
+            HomescreenText {
+                text: tap.into(),
+                style: theme::TEXT_NORMAL,
+                offset: Offset::y(TAP_Y),
+                icon: None,
+            },
+            HomescreenText {
+                text: self.label,
+                style: label_style,
+                offset: Offset::y(LABEL_Y),
+                icon: None,
+            },
+        ];
+
+        if !self.coinjoin_authorized {
+            texts = &texts[1..];
+        }
+
+        for item in texts.iter() {
+            const TEXT_ICON_SPACE: i16 = 2;
+
+            let text_width = item.text.map(|t| item.style.text_font.text_width(t));
+
+            let icon_width = match item.icon {
+                Some(icon) => icon.toif.width() + TEXT_ICON_SPACE,
+                None => 0,
+            };
+
+            let pt = Point::new(
+                (constant::screen().size().x - text_width + icon_width) / 2,
+                0,
+            ) + item.offset;
+
+            item.text.map(|t| {
+                shape::Text::new(pt, t)
+                    .with_font(item.style.text_font)
+                    .with_fg(item.style.text_color)
+                    .render(target);
+            });
+
+            if let Some(icon) = item.icon {
+                shape::ToifImage::new(pt - Offset::x(TEXT_ICON_SPACE), icon.toif)
+                    .with_align(Alignment2D::BOTTOM_RIGHT)
+                    .with_fg(item.style.text_color)
+                    .render(target);
+            }
         }
     }
 }

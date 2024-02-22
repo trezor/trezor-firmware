@@ -12,6 +12,7 @@ use crate::{
         constant,
         display::{self, Font, Icon, LOADER_MAX},
         geometry::Rect,
+        shape::Renderer,
         util::animation_disabled,
     },
 };
@@ -180,6 +181,29 @@ where
         }
         self.description_pad.paint();
         self.description.paint();
+    }
+
+    fn render(&mut self, target: &mut impl Renderer) {
+        self.title.render(target);
+        if self.indeterminate {
+            /*display::loader_indeterminate(
+                self.value,
+                self.loader_y_offset,
+                theme::FG,
+                theme::BG,
+                None,
+            );*/ // !@#
+        } else {
+            /*display::loader(
+                self.value,
+                self.loader_y_offset,
+                theme::FG,
+                theme::BG,
+                Some((self.icon, theme::FG)),
+            );*/ // !@#
+        }
+        self.description_pad.render(target);
+        self.description.render(target);
     }
 
     #[cfg(feature = "ui_bounds")]

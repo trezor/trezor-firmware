@@ -11,6 +11,7 @@ use crate::{
         },
         display::{self, Font},
         geometry::{Alignment, Insets, Rect},
+        shape::Renderer,
         util::animation_disabled,
     },
 };
@@ -129,6 +130,10 @@ where
                 Alignment::Center,
             );
         }
+    }
+
+    fn render(&mut self, target: &mut impl Renderer) {
+        // !@# TODO
     }
 }
 

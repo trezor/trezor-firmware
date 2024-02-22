@@ -7,6 +7,8 @@ use crate::ui::{
         swipe::{Swipe, SwipeDirection},
         theme, ScrollBar,
     },
+    shape,
+    shape::Renderer,
 };
 
 use super::CancelConfirmMsg;
@@ -182,6 +184,40 @@ where
         {
             self.account_name.set_text(current_account);
             self.account_name.paint();
+        }
+
+        if self.fade {
+            self.fade = false;
+            // Note that this is blocking and takes some time.
+            display::fade_backlight(theme::BACKLIGHT_NORMAL);
+        }
+    }
+
+    fn render(&mut self, target: &mut impl Renderer) {
+        self.icon.render(target);
+        self.controls.render(target);
+        self.app_name.render(target);
+
+        if self.scrollbar.page_count > 1 {
+            self.scrollbar.render(target);
+        }
+
+        let current_account = (self.get_account)(self.active_page());
+
+        // Erasing the old text content before writing the new one.
+        let account_name_area = self.account_name.area();
+        let real_area = account_name_area
+            .with_height(account_name_area.height() + self.account_name.font().text_baseline() + 1);
+        shape::Bar::new(real_area).with_bg(theme::BG).render(target);
+
+        // Account name is optional.
+        // Showing it only if it differs from app name.
+        // (Dummy requests usually have some text as both app_name and account_name.)
+        if !current_account.as_ref().is_empty()
+            && current_account.as_ref() != self.app_name.text().as_ref()
+        {
+            self.account_name.set_text(current_account);
+            self.account_name.render(target);
         }
 
         if self.fade {

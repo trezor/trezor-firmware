@@ -9,6 +9,7 @@ use crate::{
         constant::screen,
         display::toif::Icon,
         geometry::{Insets, LinearPlacement, Rect},
+        shape::Renderer,
     },
 };
 
@@ -159,6 +160,14 @@ where
         self.buttons.paint();
         self.headline.paint();
         self.result_anim.paint();
+    }
+
+    fn render(&mut self, target: &mut impl Renderer) {
+        self.pad.render(target);
+        self.text.render(target);
+        self.buttons.render(target);
+        self.headline.render(target);
+        self.result_anim.render(target);
     }
 }
 

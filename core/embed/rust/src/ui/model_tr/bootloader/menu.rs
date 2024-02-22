@@ -8,6 +8,7 @@ use crate::{
         display,
         display::{Font, Icon},
         geometry::{Alignment2D, Offset, Point, Rect},
+        shape::Renderer,
     },
 };
 
@@ -162,6 +163,11 @@ impl Component for Menu {
     fn paint(&mut self) {
         self.pad.paint();
         self.choice_page.paint();
+    }
+
+    fn render(&mut self, target: &mut impl Renderer) {
+        self.pad.render(target);
+        self.choice_page.render(target);
     }
 
     #[cfg(feature = "ui_bounds")]

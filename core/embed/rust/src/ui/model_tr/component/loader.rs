@@ -6,7 +6,9 @@ use crate::{
         component::{Child, Component, Event, EventCtx},
         constant,
         display::{self, Color, Font, LOADER_MAX},
-        geometry::{Offset, Rect},
+        geometry::{Offset, Point, Rect},
+        shape,
+        shape::Renderer,
         util::animation_disabled,
     },
 };
@@ -164,6 +166,32 @@ impl Loader {
             invert_from as i16,
         );
     }
+
+    pub fn render_loader(&mut self, target: &mut impl Renderer, style: &LoaderStyle, done: i32) {
+        // NOTE: need to calculate this in `i32`, it would overflow using `i16`
+        let invert_from = ((self.area.width() as i32 + 1) * done) / (display::LOADER_MAX as i32);
+
+        shape::Bar::new(self.area)
+            .with_radius(3)
+            .with_fg(style.fg_color)
+            .render(target);
+
+        self.get_text().map(|t| {
+            let text_width = style.font.text_width(t);
+            let text_height = style.font.text_max_height();
+
+            let pt = self.area.top_left() + Offset::new(
+                (self.area.width() - text_width) / 2,
+                (self.area.height() - text_height) / 2,
+            );
+
+            shape::Text::new(pt, t)
+                .with_baseline(false)
+                .with_font(style.font)
+                .with_fg(style.fg_color)
+                .render(target);
+        }); // !@# progress missing
+    }
 }
 
 impl Component for Loader {
@@ -220,6 +248,28 @@ impl Component for Loader {
                 self.paint_loader(self.styles.normal, done as i32);
             } else {
                 self.paint_loader(self.styles.normal, 0);
+            }
+        }
+    }
+
+    fn render(&mut self, target: &mut impl Renderer) {
+        // TODO: Consider passing the current instant along with the event -- that way,
+        // we could synchronize painting across the component tree. Also could be useful
+        // in automated tests.
+        // In practice, taking the current instant here is more precise in case some
+        // other component in the tree takes a long time to draw.
+        let now = Instant::now();
+
+        if let State::Initial = self.state {
+            self.render_loader(target, self.styles.normal, 0);
+        } else if let State::Grown = self.state {
+            self.render_loader(target, self.styles.normal, display::LOADER_MAX as i32);
+        } else {
+            let progress = self.progress(now);
+            if let Some(done) = progress {
+                self.render_loader(target, self.styles.normal, done as i32);
+            } else {
+                self.render_loader(target, self.styles.normal, 0);
             }
         }
     }
@@ -331,6 +381,10 @@ where
 
     fn paint(&mut self) {
         self.loader.paint();
+    }
+
+    fn render(&mut self, target: &mut impl Renderer) {
+        self.loader.render(target);
     }
 }
 

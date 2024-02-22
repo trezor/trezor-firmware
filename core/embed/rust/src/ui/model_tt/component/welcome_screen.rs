@@ -1,7 +1,10 @@
 use crate::ui::{
     component::{Component, Event, EventCtx, Never},
+    display::toif::Toif,
     geometry::{Alignment2D, Offset, Rect},
     model_tt::theme,
+    shape,
+    shape::Renderer,
 };
 #[cfg(feature = "bootloader")]
 use crate::ui::{display::Icon, model_tt::theme::bootloader::DEVICE_NAME};
@@ -66,6 +69,40 @@ impl Component for WelcomeScreen {
             theme::FG,
             theme::BG,
         );
+    }
+
+    fn render(&mut self, target: &mut impl Renderer) {
+        let logo = if self.empty_lock {
+            theme::ICON_LOGO_EMPTY
+        } else {
+            theme::ICON_LOGO
+        };
+        shape::ToifImage::new(
+            self.area.top_center() + Offset::y(ICON_TOP_MARGIN),
+            logo.toif,
+        )
+        .with_align(Alignment2D::TOP_CENTER)
+        .with_fg(theme::FG)
+        .with_bg(theme::BG)
+        .render(target);
+
+        #[cfg(not(feature = "bootloader"))]
+        shape::Text::new(
+            self.area.bottom_center() - Offset::y(TEXT_BOTTOM_MARGIN),
+            model::FULL_NAME,
+        )
+        .with_font(MODEL_NAME_FONT)
+        .with_fg(theme::FG)
+        .render(target);
+
+        #[cfg(feature = "bootloader")]
+        shape::ToifImage::new(
+            self.area.bottom_center() - Offset::y(TEXT_BOTTOM_MARGIN),
+            unwrap!(Toif::new(DEVICE_NAME)),
+        )
+        .with_align(Alignment2D::BOTTOM_CENTER)
+        .with_fg(theme::FG)
+        .render(target);
     }
 }
 
