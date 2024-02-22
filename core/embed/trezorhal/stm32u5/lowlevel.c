@@ -170,6 +170,18 @@ secbool flash_check_option_bytes(void) {
   return sectrue;
 }
 
+secbool flash_check_basic_option_bytes(void) {
+  flash_wait_and_clear_status_flags();
+
+  if ((FLASH->OPTR & FLASH_OPTR_TZEN) == 0) {
+    return secfalse;
+  }
+  if (FLASH->SECBOOTADD0R != FALSH_SECBOOTADD0R_VALUE) {
+    return secfalse;
+  }
+  return sectrue;
+}
+
 void flash_lock_option_bytes(void) {
   FLASH->NSCR |= FLASH_NSCR_OPTLOCK;  // lock the option bytes
 }
@@ -184,6 +196,37 @@ void flash_unlock_option_bytes(void) {
   FLASH->OPTKEYR = FLASH_OPTKEY2;
   while (FLASH->NSCR & FLASH_NSCR_OPTLOCK)
     ;  // wait until the flash option control register is unlocked
+}
+
+uint32_t flash_set_basic_option_bytes(void) {
+  if (flash_unlock_write() != sectrue) {
+    return 0;
+  }
+  flash_wait_and_clear_status_flags();
+  flash_unlock_option_bytes();
+  flash_wait_and_clear_status_flags();
+
+  FLASH->OPTR |= FLASH_OPTR_TZEN;
+
+  FLASH->SECBOOTADD0R = FALSH_SECBOOTADD0R_VALUE;
+
+  FLASH_WaitForLastOperation(HAL_MAX_DELAY);
+
+  FLASH->NSCR |= FLASH_NSCR_OPTSTRT;
+  uint32_t result =
+      flash_wait_and_clear_status_flags();  // wait until changes are committed
+
+  FLASH_WaitForLastOperation(HAL_MAX_DELAY);
+
+  FLASH->NSCR |= FLASH_NSCR_OBL_LAUNCH;  // begin committing changes to flash
+  result =
+      flash_wait_and_clear_status_flags();  // wait until changes are committed
+  flash_lock_option_bytes();
+
+  if (flash_lock_write() != sectrue) {
+    return 0;
+  }
+  return result;
 }
 
 uint32_t flash_set_option_bytes(void) {
@@ -237,6 +280,18 @@ uint32_t flash_set_option_bytes(void) {
 void check_oem_keys(void) {
   ensure(((FLASH->NSSR & FLASH_NSSR_OEM1LOCK) == 0) * sectrue, "OEM1 KEY SET");
   ensure(((FLASH->NSSR & FLASH_NSSR_OEM2LOCK) == 0) * sectrue, "OEM2 KEY SET");
+}
+
+secbool flash_configure_basic_option_bytes(void) {
+  if (sectrue == flash_check_basic_option_bytes()) {
+    return sectrue;  // we DID NOT have to change the option bytes
+  }
+
+  do {
+    flash_set_basic_option_bytes();
+
+  } while (sectrue != flash_check_basic_option_bytes());
+  return secfalse;  // notify that we DID have to change the option bytes
 }
 
 secbool flash_configure_option_bytes(void) {

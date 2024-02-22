@@ -17,19 +17,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __TREZORHAL_LOWLEVEL_H__
-#define __TREZORHAL_LOWLEVEL_H__
+#include TREZOR_BOARD
+#include "lowlevel.h"
 
-#include "secbool.h"
+int main(void) {
+  // need the systick timer running before many HAL operations.
+  // want the PVD enabled before flash operations too.
+  periph_init();
 
-secbool flash_check_option_bytes(void);
-void flash_lock_option_bytes(void);
-void flash_unlock_option_bytes(void);
-uint32_t flash_set_option_bytes(void);
-secbool flash_configure_basic_option_bytes(void);
-secbool flash_configure_option_bytes(void);
-void periph_init(void);
-secbool reset_flags_check(void);
-void reset_flags_reset(void);
+  if (sectrue != flash_configure_basic_option_bytes()) {
+    NVIC_SystemReset();
+    return 2;
+  }
 
-#endif  // __TREZORHAL_LOWLEVEL_H__
+  return 0;
+}

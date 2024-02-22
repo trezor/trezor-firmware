@@ -11,6 +11,7 @@ MAKE = make -j $(JOBS)
 SCONS = scons -Q -j $(JOBS)
 
 BUILD_DIR             = build
+PREPARE_BUILD_DIR = $(BUILD_DIR)/prepare
 BOARDLOADER_BUILD_DIR = $(BUILD_DIR)/boardloader
 BOOTLOADER_BUILD_DIR  = $(BUILD_DIR)/bootloader
 BOOTLOADER_CI_BUILD_DIR   = $(BUILD_DIR)/bootloader_ci
@@ -258,6 +259,10 @@ build: build_boardloader build_bootloader build_firmware build_prodtest build_un
 
 build_embed: build_boardloader build_bootloader build_firmware # build boardloader, bootloader, firmware
 
+build_prepare: ## build prepare
+	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" TREZOR_MODEL="$(TREZOR_MODEL)" \
+		CMAKELISTS="$(CMAKELISTS)" $(PREPARE_BUILD_DIR)/prepare.bin
+
 build_boardloader: ## build boardloader
 	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" TREZOR_MODEL="$(TREZOR_MODEL)" \
 		CMAKELISTS="$(CMAKELISTS)" $(BOARDLOADER_BUILD_DIR)/boardloader.bin
@@ -312,8 +317,11 @@ build_cross: ## build mpy-cross port
 
 ## clean commands:
 
-clean: clean_boardloader clean_bootloader clean_bootloader_emu clean_bootloader_ci clean_prodtest clean_reflash clean_firmware clean_unix clean_cross ## clean all
+clean: clean_prepare clean_boardloader clean_bootloader clean_bootloader_emu clean_bootloader_ci clean_prodtest clean_reflash clean_firmware clean_unix clean_cross ## clean all
 	rm -f ".sconsign.dblite"
+
+clean_prepare: ## clean prepare build
+	rm -rf $(PREPARE_BUILD_DIR)
 
 clean_boardloader: ## clean boardloader build
 	rm -rf $(BOARDLOADER_BUILD_DIR)
@@ -345,6 +353,9 @@ clean_cross: ## clean mpy-cross build
 ## flash commands:
 
 flash: flash_boardloader flash_bootloader flash_firmware ## flash everything using OpenOCD
+
+flash_prepare: $(PREPARE_BUILD_DIR)/prepare.bin ## flash prepare using OpenOCD
+	$(OPENOCD) -c "init; reset halt; flash write_image erase $< $(FLASH_START); exit"
 
 flash_boardloader: $(BOARDLOADER_BUILD_DIR)/boardloader.bin ## flash boardloader using OpenOCD
 	$(OPENOCD) -c "init; reset halt; flash write_image erase $< $(BOARDLOADER_START); exit"
