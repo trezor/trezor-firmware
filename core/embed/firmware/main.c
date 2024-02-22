@@ -243,6 +243,10 @@ int main(void) {
   ensure(sectrue * (zkp_context_init() == 0), NULL);
 #endif
 
+  drawlib_demo();  // TODO: !!! remove
+  while (1)
+    ;
+
   printf("CORE: Preparing stack\n");
   // Stack limit should be less than real stack size, so we have a chance
   // to recover from limit hit.

@@ -27,6 +27,12 @@ pub mod model_mercury;
 pub mod model_tr;
 #[cfg(feature = "model_tt")]
 pub mod model_tt;
-pub mod ui_features;
 
+pub mod ui_features;
 pub use ui_features::UIFeaturesCommon;
+
+#[cfg(feature = "model_tt")]
+pub mod drawlib_demo_t; // !!! REMOVE
+
+#[cfg(feature = "model_tr")]
+pub mod drawlib_demo_r; // !!! REMOVE
