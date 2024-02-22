@@ -81,6 +81,15 @@ CPPPATH_MOD += [
 
 SOURCE_MOD += [
     'embed/extmod/modtrezorcrypto/rand.c',
+    'embed/gdc/gdc_color.c',
+    'embed/gdc/gdc_core.c',
+    'embed/gdc/gdc_mono8_ops.c',
+    'embed/gdc/gdc_rgb565.c',
+    'embed/gdc/gdc_rgb565_ops.c',
+    'embed/gdc/gdc_rgba8888.c',
+    'embed/gdc/gdc_text.c',
+    'embed/gdc/gdc_wnd565.c',
+    'embed/gdc/gdc_wnd565_ops.c',
     'embed/lib/buffers.c',
     'embed/lib/colors.c',
     'embed/lib/display_draw.c',
@@ -219,6 +228,9 @@ def cargo_build():
     features.append("ui")
     features.append("bootloader")
     features.extend(FEATURES_AVAILABLE)
+
+    if TREZOR_MODEL in ('T',):
+        features.append('ui_antialiasing')
 
     cargo_opts = [
         f'--target={env.get("ENV")["RUST_TARGET"]}',
