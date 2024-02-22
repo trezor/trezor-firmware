@@ -2,6 +2,7 @@
 pub mod macros;
 
 pub mod animation;
+pub mod canvas;
 pub mod component;
 pub mod constant;
 pub mod display;
@@ -9,6 +10,7 @@ pub mod event;
 pub mod geometry;
 pub mod lerp;
 pub mod screens;
+pub mod shape;
 #[macro_use]
 pub mod util;
 

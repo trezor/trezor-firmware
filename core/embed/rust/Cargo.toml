@@ -18,6 +18,9 @@ framebuffer = []
 framebuffer32bit = []
 ui_debug = []
 ui_bounds = []
+ui_antialiasing = []
+ui_blurring = []
+ui_jpeg_decoder = []
 bootloader = []
 button = []
 touch = []
@@ -100,6 +103,15 @@ version = "0.3.3"
 version = "0.2.6"
 default-features = false
 features = ["nightly"]
+
+[dependencies.static-alloc]
+version = "0.2.4"
+
+[dependencies.without-alloc]
+version = "0.2.2"
+
+[dependencies.unsize]
+version = "1.1.0"
 
 # Build dependencies
 

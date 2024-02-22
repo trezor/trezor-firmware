@@ -73,4 +73,10 @@ SECTIONS {
     *(.boot_args*);
     . = ALIGN(8);
   } >BOOT_ARGS
+
+  .data_ccm : ALIGN(4) {
+    *(.no_dma_buffers*);
+    . = ALIGN(4);
+  } >CCMRAM
+
 }
