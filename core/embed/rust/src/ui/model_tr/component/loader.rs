@@ -6,7 +6,9 @@ use crate::{
         component::{Child, Component, Event, EventCtx},
         constant,
         display::{self, Color, Font, LOADER_MAX},
-        geometry::{Offset, Rect},
+        geometry::{Offset, Point, Rect},
+        shape,
+        shape::Renderer,
         util::animation_disabled,
     },
 };
@@ -164,6 +166,51 @@ impl Loader {
             invert_from as i16,
         );
     }
+
+    pub fn render_loader<'s>(
+        &'s self,
+        target: &mut impl Renderer<'s>,
+        style: &LoaderStyle,
+        done: i32,
+    ) {
+        let width = self.area.width();
+        // NOTE: need to calculate this in `i32`, it would overflow using `i16`
+        let split_point = (((width as i32 + 1) * done) / (display::LOADER_MAX as i32)) as i16;
+        let (r_left, r_right) = self.area.split_left(split_point);
+        let parts = [(r_left, true), (r_right, false)];
+        parts.map(|(r, invert)| {
+            target.in_clip(r, &|target| {
+                if invert {
+                    shape::Bar::new(self.area)
+                        .with_radius(3)
+                        .with_bg(style.fg_color)
+                        .render(target);
+                } else {
+                    shape::Bar::new(self.area)
+                        .with_radius(3)
+                        .with_fg(style.fg_color)
+                        .render(target);
+                }
+
+                let text_color = if invert {
+                    style.bg_color
+                } else {
+                    style.fg_color
+                };
+
+                self.get_text().map(|t| {
+                    let pt = Point::new(
+                        style.font.horz_center(self.area.x0, self.area.x1, t),
+                        style.font.vert_center(self.area.y0, self.area.y1, "A"),
+                    );
+                    shape::Text::new(pt, t)
+                        .with_font(style.font)
+                        .with_fg(text_color)
+                        .render(target);
+                });
+            });
+        });
+    }
 }
 
 impl Component for Loader {
@@ -220,6 +267,28 @@ impl Component for Loader {
                 self.paint_loader(self.styles.normal, done as i32);
             } else {
                 self.paint_loader(self.styles.normal, 0);
+            }
+        }
+    }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        // TODO: Consider passing the current instant along with the event -- that way,
+        // we could synchronize painting across the component tree. Also could be useful
+        // in automated tests.
+        // In practice, taking the current instant here is more precise in case some
+        // other component in the tree takes a long time to draw.
+        let now = Instant::now();
+
+        if let State::Initial = self.state {
+            self.render_loader(target, self.styles.normal, 0);
+        } else if let State::Grown = self.state {
+            self.render_loader(target, self.styles.normal, display::LOADER_MAX as i32);
+        } else {
+            let progress = self.progress(now);
+            if let Some(done) = progress {
+                self.render_loader(target, self.styles.normal, done as i32);
+            } else {
+                self.render_loader(target, self.styles.normal, 0);
             }
         }
     }
@@ -331,6 +400,10 @@ where
 
     fn paint(&mut self) {
         self.loader.paint();
+    }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        self.loader.render(target);
     }
 }
 

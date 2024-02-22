@@ -1,5 +1,8 @@
 use super::{Component, Event, EventCtx};
-use crate::ui::geometry::{Insets, Rect};
+use crate::ui::{
+    geometry::{Insets, Rect},
+    shape::Renderer,
+};
 
 pub struct Border<T> {
     border: Insets,
@@ -37,6 +40,10 @@ where
 
     fn paint(&mut self) {
         self.inner.paint()
+    }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        self.inner.render(target);
     }
 
     #[cfg(feature = "ui_bounds")]

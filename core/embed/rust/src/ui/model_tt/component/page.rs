@@ -8,6 +8,7 @@ use crate::{
         constant,
         display::{self, Color},
         geometry::{Insets, Rect},
+        shape::Renderer,
         util::animation_disabled,
     },
 };
@@ -16,6 +17,8 @@ use super::{
     theme, Button, ButtonContent, ButtonMsg, ButtonStyleSheet, Loader, LoaderMsg, ScrollBar, Swipe,
     SwipeDirection,
 };
+
+use core::cell::Cell;
 
 /// Allows pagination of inner component. Shows scroll bar, confirm & cancel
 /// buttons. Optionally handles hold-to-confirm with loader.
@@ -40,7 +43,7 @@ pub struct ButtonPage<T, U> {
     /// Whether to pass-through right swipe to parent component.
     swipe_right: bool,
     /// Fade to given backlight level on next paint().
-    fade: Option<u16>,
+    fade: Cell<Option<u16>>,
 }
 
 impl<T> ButtonPage<T, StrBuffer>
@@ -76,7 +79,7 @@ where
             cancel_from_any_page: false,
             swipe_left: false,
             swipe_right: false,
-            fade: None,
+            fade: Cell::new(None),
         }
     }
 
@@ -156,7 +159,7 @@ where
 
         // Swipe has dimmed the screen, so fade back to normal backlight after the next
         // paint.
-        self.fade = Some(theme::BACKLIGHT_NORMAL);
+        self.fade.set(Some(theme::BACKLIGHT_NORMAL));
     }
 
     fn is_cancel_visible(&self) -> bool {
@@ -405,6 +408,33 @@ where
             self.button_next.paint();
         } else {
             self.button_confirm.paint();
+        }
+        if let Some(val) = self.fade.take() {
+            // Note that this is blocking and takes some time.
+            display::fade_backlight(val);
+        }
+    }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        self.pad.render(target);
+        match &self.loader {
+            Some(l) if l.is_animating() => self.loader.render(target),
+            _ => {
+                self.content.render(target);
+                if self.scrollbar.has_pages() {
+                    self.scrollbar.render(target);
+                }
+            }
+        }
+        if self.button_cancel.is_some() && self.is_cancel_visible() {
+            self.button_cancel.render(target);
+        } else {
+            self.button_prev.render(target);
+        }
+        if self.scrollbar.has_next_page() {
+            self.button_next.render(target);
+        } else {
+            self.button_confirm.render(target);
         }
         if let Some(val) = self.fade.take() {
             // Note that this is blocking and takes some time.

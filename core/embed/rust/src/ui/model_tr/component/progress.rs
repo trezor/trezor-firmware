@@ -11,7 +11,10 @@ use crate::{
         },
         constant,
         display::{self, Font, Icon, LOADER_MAX},
-        geometry::Rect,
+        geometry::{Alignment2D, Offset, Rect},
+        model_tr::cshape,
+        shape,
+        shape::Renderer,
         util::animation_disabled,
     },
 };
@@ -180,6 +183,29 @@ where
         }
         self.description_pad.paint();
         self.description.paint();
+    }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        self.title.render(target);
+
+        let area = constant::screen();
+        let center = area.center() + Offset::y(self.loader_y_offset);
+
+        if self.indeterminate {
+            cshape::LoaderStarry::new(center, self.value)
+                .with_color(theme::FG)
+                .render(target);
+        } else {
+            cshape::LoaderCircular::new(center, self.value)
+                .with_color(theme::FG)
+                .render(target);
+            shape::ToifImage::new(center, self.icon.toif)
+                .with_align(Alignment2D::CENTER)
+                .with_fg(theme::FG)
+                .render(target);
+        }
+        self.description_pad.render(target);
+        self.description.render(target);
     }
 
     #[cfg(feature = "ui_bounds")]

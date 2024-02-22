@@ -6,6 +6,8 @@ use crate::{
         display::{self, Color, Font, Icon},
         geometry::{Alignment2D, Insets, Offset, Point, Rect},
         model_tt::theme::FG,
+        shape,
+        shape::Renderer,
     },
 };
 
@@ -90,6 +92,20 @@ impl<T: AsRef<str>> Component for ResultFooter<'_, T> {
         self.text.paint();
     }
 
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        // divider line
+        let bar = Rect::from_center_and_size(
+            Point::new(self.area.center().x, self.area.y0),
+            Offset::new(self.area.width(), 1),
+        );
+        shape::Bar::new(bar)
+            .with_fg(self.style.divider_color)
+            .render(target);
+
+        // footer text
+        self.text.render(target);
+    }
+
     fn event(&mut self, _ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {
         None
     }
@@ -163,5 +179,22 @@ impl<'a, T: StringType> Component for ResultScreen<'a, T> {
         );
         self.message.paint();
         self.footer.paint();
+    }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        self.bg.render(target);
+        self.footer_pad.render(target);
+
+        shape::ToifImage::new(
+            Point::new(screen().center().x, ICON_CENTER_Y),
+            self.icon.toif,
+        )
+        .with_align(Alignment2D::CENTER)
+        .with_fg(self.style.fg_color)
+        .with_bg(self.style.bg_color)
+        .render(target);
+
+        self.message.render(target);
+        self.footer.render(target);
     }
 }

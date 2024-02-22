@@ -3,6 +3,8 @@ use crate::ui::{
     constant::{screen, HEIGHT, WIDTH},
     display::{Color, Icon},
     geometry::{Alignment2D, Offset, Point, Rect},
+    shape,
+    shape::Renderer,
 };
 
 const MESSAGE_AREA_START: i16 = 24 + 11;
@@ -106,5 +108,18 @@ impl<'a> Component for ResultScreen<'a> {
 
         self.message_top.paint();
         self.message_bottom.paint();
+    }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        self.bg.render(target);
+        self.small_pad.render(target);
+
+        shape::ToifImage::new(screen().top_center() + Offset::y(ICON_TOP), self.icon.toif)
+            .with_align(Alignment2D::CENTER)
+            .with_fg(self.fg_color)
+            .render(target);
+
+        self.message_top.render(target);
+        self.message_bottom.render(target);
     }
 }

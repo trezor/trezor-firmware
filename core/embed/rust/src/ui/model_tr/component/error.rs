@@ -3,6 +3,9 @@ use crate::ui::{
     constant::{screen, WIDTH},
     display,
     geometry::{Alignment2D, Offset, Point, Rect},
+    model_tr::cshape,
+    shape,
+    shape::Renderer,
 };
 
 use super::super::{
@@ -94,5 +97,30 @@ impl<T: AsRef<str>> Component for ErrorScreen<T> {
         display::dotted_line(Point::new(0, DIVIDER_POSITION), WIDTH, FG, 3);
 
         self.footer.paint();
+    }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        self.bg.render(target);
+
+        if self.show_icons {
+            shape::ToifImage::new(screen().top_left(), theme::ICON_WARN_TITLE.toif)
+                .with_align(Alignment2D::TOP_LEFT)
+                .with_fg(FG)
+                .render(target);
+
+            shape::ToifImage::new(screen().top_right(), theme::ICON_WARN_TITLE.toif)
+                .with_align(Alignment2D::TOP_RIGHT)
+                .with_fg(FG)
+                .render(target);
+        }
+        self.title.render(target);
+        self.message.render(target);
+
+        cshape::HorizontalLine::new(Point::new(0, DIVIDER_POSITION), WIDTH)
+            .with_step(3)
+            .with_color(FG)
+            .render(target);
+
+        self.footer.render(target);
     }
 }

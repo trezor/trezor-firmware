@@ -24,6 +24,7 @@ pub fn jpeg(data: &[u8], pos: Point, scale: u8) {
     }
 }
 
+#[cfg(not(feature = "new_rendering"))]
 pub fn jpeg_info(data: &[u8]) -> Option<(Offset, i16)> {
     let mut buffer = BufferJpegWork::get_cleared();
     let pool = buffer.buffer.as_mut_slice();
@@ -37,6 +38,84 @@ pub fn jpeg_info(data: &[u8]) -> Option<(Offset, i16)> {
     } else {
         None
     };
+    result
+}
+
+#[cfg(feature = "new_rendering")]
+pub fn jpeg_info(data: &[u8]) -> Option<(Offset, i16)> {
+    const M_SOI: u16 = 0xFFD8;
+    const M_SOF0: u16 = 0xFFC0;
+    const M_DRI: u16 = 0xFFDD;
+    const M_RST0: u16 = 0xFFD0;
+    const M_RST7: u16 = 0xFFD7;
+    const M_SOS: u16 = 0xFFDA;
+    const M_EOI: u16 = 0xFFD9;
+
+    let mut result = None;
+    let mut ofs = 0;
+
+    let read_u16 = |ofs| -> Option<u16> {
+        if ofs + 1 < data.len() {
+            let result = Some(((data[ofs] as u16) << 8) + data[ofs + 1] as u16);
+            result
+        } else {
+            None
+        }
+    };
+
+    let read_u8 = |ofs| -> Option<u8> {
+        if ofs < data.len() {
+            let result = Some(data[ofs]);
+            result
+        } else {
+            None
+        }
+    };
+
+    while ofs < data.len() {
+        if read_u16(ofs)? == M_SOI {
+            break;
+        }
+        ofs += 1;
+    }
+
+    loop {
+        let marker = read_u16(ofs)?;
+
+        if (marker & 0xFF00) != 0xFF00 {
+            return None;
+        }
+
+        ofs += 2;
+
+        ofs += match marker {
+            M_SOI => 0,
+            M_SOF0 => {
+                let w = read_u16(ofs + 3)? as i16;
+                let h = read_u16(ofs + 5)? as i16;
+                // Number of components
+                let nc = read_u8(ofs + 7)?;
+                if (nc != 1) && (nc != 3) {
+                    return None;
+                }
+                // Sampling factor of the first component
+                let c1 = read_u8(ofs + 9)?;
+                if (c1 != 0x11) && (c1 != 0x21) & (c1 != 0x22) {
+                    return None;
+                };
+                let mcu_height = (8 * (c1 & 15)) as i16;
+                result = Some((Offset::new(w, h), mcu_height));
+
+                read_u16(ofs)?
+            }
+            M_DRI => 4,
+            M_EOI => return None,
+            M_RST0..=M_RST7 => 0,
+            M_SOS => break,
+            _ => read_u16(ofs)?,
+        } as usize;
+    }
+
     result
 }
 

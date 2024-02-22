@@ -11,11 +11,13 @@ use crate::{
         },
         display::{self, Font},
         event::TouchEvent,
-        geometry::{Alignment2D, Grid, Insets, Offset, Rect},
+        geometry::{Alignment, Alignment2D, Grid, Insets, Offset, Rect},
         model_tt::component::{
             button::{Button, ButtonContent, ButtonMsg, ButtonMsg::Clicked},
             theme,
         },
+        shape,
+        shape::Renderer,
     },
 };
 
@@ -267,6 +269,26 @@ where
         }
     }
 
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        self.erase_btn.render(target);
+        self.textbox_pad.render(target);
+        if self.textbox.inner().is_empty() {
+            if let Some(ref w) = self.major_warning {
+                w.render(target);
+            } else {
+                self.major_prompt.render(target);
+            }
+            self.minor_prompt.render(target);
+            self.cancel_btn.render(target);
+        } else {
+            self.textbox.render(target);
+        }
+        self.confirm_btn.render(target);
+        for btn in &self.digit_btns {
+            btn.render(target);
+        }
+    }
+
     #[cfg(feature = "ui_bounds")]
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         self.major_prompt.bounds(sink);
@@ -367,6 +389,27 @@ impl PinDots {
         }
     }
 
+    fn render_digits<'s>(&self, area: Rect, target: &mut impl Renderer<'s>) {
+        let center = area.center() + Offset::y(Font::MONO.text_height() / 2);
+        let right = center + Offset::x(Font::MONO.text_width("0") * (MAX_VISIBLE_DOTS as i16) / 2);
+        let digits = self.digits.len();
+
+        if digits <= MAX_VISIBLE_DOTS {
+            shape::Text::new(center, &self.digits)
+                .with_align(Alignment::Center)
+                .with_font(Font::MONO)
+                .with_fg(self.style.text_color)
+                .render(target);
+        } else {
+            let offset: usize = digits.saturating_sub(MAX_VISIBLE_DIGITS);
+            shape::Text::new(right, &self.digits[offset..])
+                .with_align(Alignment::End)
+                .with_font(Font::MONO)
+                .with_fg(self.style.text_color)
+                .render(target);
+        }
+    }
+
     fn paint_dots(&self, area: Rect) {
         let mut cursor = self.size().snap(area.center(), Alignment2D::CENTER);
 
@@ -410,6 +453,44 @@ impl PinDots {
             cursor.x += step;
         }
     }
+
+    fn render_dots<'s>(&self, area: Rect, target: &mut impl Renderer<'s>) {
+        let mut cursor = self.size().snap(area.center(), Alignment2D::CENTER);
+
+        let digits = self.digits.len();
+        let dots_visible = digits.min(MAX_VISIBLE_DOTS);
+        let step = Self::DOT + Self::PADDING;
+
+        // Jiggle when overflowed.
+        if digits > dots_visible && digits % 2 == 0 {
+            cursor.x += Self::TWITCH
+        }
+
+        // Small leftmost dot.
+        if digits > dots_visible + 1 {
+            shape::ToifImage::new(cursor - Offset::x(2 * step), theme::DOT_SMALL.toif)
+                .with_align(Alignment2D::TOP_LEFT)
+                .with_fg(self.style.text_color)
+                .render(target);
+        }
+
+        // Greyed out dot.
+        if digits > dots_visible {
+            shape::ToifImage::new(cursor - Offset::x(step), theme::DOT_ACTIVE.toif)
+                .with_align(Alignment2D::TOP_LEFT)
+                .with_fg(theme::GREY_LIGHT)
+                .render(target);
+        }
+
+        // Draw a dot for each PIN digit.
+        for _ in 0..dots_visible {
+            shape::ToifImage::new(cursor, theme::DOT_ACTIVE.toif)
+                .with_align(Alignment2D::TOP_LEFT)
+                .with_fg(self.style.text_color)
+                .render(target);
+            cursor.x += step;
+        }
+    }
 }
 
 impl Component for PinDots {
@@ -449,6 +530,16 @@ impl Component for PinDots {
             self.paint_digits(dot_area)
         } else {
             self.paint_dots(dot_area)
+        }
+    }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        let dot_area = self.area.inset(HEADER_PADDING);
+        self.pad.render(target);
+        if self.display_digits {
+            self.render_digits(dot_area, target)
+        } else {
+            self.render_dots(dot_area, target)
         }
     }
 

@@ -4,6 +4,8 @@ use crate::{
         component::{Child, Component, ComponentExt, Event, EventCtx, Label, Pad},
         display::{self, Color, Font},
         geometry::{Point, Rect},
+        shape,
+        shape::Renderer,
     },
 };
 
@@ -225,6 +227,32 @@ where
             self.alert.paint();
         }
         self.buttons.paint();
+    }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        self.bg.render(target);
+
+        let mut display_top_left = |text: TString<'static>| {
+            text.map(|t| {
+                shape::Text::new(Point::zero(), t)
+                    .with_font(Font::BOLD)
+                    .with_fg(WHITE)
+                    .render(target);
+            });
+        };
+
+        // We are either on the info screen or on the "main" screen
+        if self.showing_info_screen {
+            if let Some(title) = self.info_title {
+                display_top_left(title);
+            }
+            self.info_text.render(target);
+        } else {
+            display_top_left(self.title);
+            self.message.render(target);
+            self.alert.render(target);
+        }
+        self.buttons.render(target);
     }
 
     #[cfg(feature = "ui_bounds")]

@@ -4,6 +4,7 @@ use crate::{
     ui::{
         component::{Component, Event, EventCtx},
         geometry::Rect,
+        shape::Renderer,
     },
 };
 
@@ -114,6 +115,10 @@ impl Component for SimpleChoice {
 
     fn paint(&mut self) {
         self.choice_page.paint();
+    }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        self.choice_page.render(target);
     }
 }
 

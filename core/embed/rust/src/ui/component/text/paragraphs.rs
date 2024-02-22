@@ -8,6 +8,8 @@ use crate::{
         geometry::{
             Alignment, Alignment2D, Dimensions, Insets, LinearPlacement, Offset, Point, Rect,
         },
+        shape,
+        shape::Renderer,
     },
 };
 
@@ -184,6 +186,17 @@ where
             self.offset,
             &mut |layout, content| {
                 layout.render_text(content);
+            },
+        )
+    }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        Self::foreach_visible(
+            &self.source,
+            &self.visible,
+            self.offset,
+            &mut |layout, content| {
+                layout.render_text2(content, target);
             },
         )
     }
@@ -606,6 +619,19 @@ impl<T> Checklist<T> {
             layout.style.background_color,
         );
     }
+
+    fn render_icon<'s>(
+        &self,
+        layout: &TextLayout,
+        icon: Icon,
+        offset: Offset,
+        target: &mut impl Renderer<'s>,
+    ) {
+        let top_left = Point::new(self.area.x0, layout.bounds.y0);
+        shape::ToifImage::new(top_left + offset, icon.toif)
+            .with_fg(layout.style.text_color)
+            .render(target);
+    }
 }
 
 impl<T> Component for Checklist<T>
@@ -641,6 +667,28 @@ where
                 &layout.layout(&self.paragraphs.source),
                 self.icon_current,
                 self.current_offset,
+            );
+        }
+    }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        self.paragraphs.render(target);
+
+        let current_visible = self.current.saturating_sub(self.paragraphs.offset.par);
+        for layout in self.paragraphs.visible.iter().take(current_visible) {
+            self.render_icon(
+                &layout.layout(&self.paragraphs.source),
+                self.icon_done,
+                self.done_offset,
+                target,
+            );
+        }
+        if let Some(layout) = self.paragraphs.visible.iter().nth(current_visible) {
+            self.render_icon(
+                &layout.layout(&self.paragraphs.source),
+                self.icon_current,
+                self.current_offset,
+                target,
             );
         }
     }

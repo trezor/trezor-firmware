@@ -1,6 +1,8 @@
 use crate::ui::{
     display::{self, Color},
     geometry::Rect,
+    shape,
+    shape::Renderer,
 };
 
 pub struct Pad {
@@ -51,5 +53,11 @@ impl Pad {
 
             display::rect_fill(self.area, self.color);
         }
+    }
+
+    pub fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        shape::Bar::new(self.area)
+            .with_bg(self.color)
+            .render(target);
     }
 }

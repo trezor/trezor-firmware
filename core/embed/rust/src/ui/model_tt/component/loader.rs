@@ -4,10 +4,12 @@ use crate::{
     time::{Duration, Instant},
     ui::{
         animation::Animation,
+        canvas::algo::PI4,
         component::{Component, Event, EventCtx, Pad},
         display::{self, toif::Icon, Color},
-        geometry::{Offset, Rect},
+        geometry::{Alignment2D, Offset, Rect},
         model_tt::constant,
+        shape::{self, Renderer},
         util::animation_disabled,
     },
 };
@@ -204,6 +206,53 @@ impl Component for Loader {
                 style.background_color,
                 style.icon,
             );
+        }
+    }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        // TODO: Consider passing the current instant along with the event -- that way,
+        // we could synchronize painting across the component tree. Also could be useful
+        // in automated tests.
+        // In practice, taking the current instant here is more precise in case some
+        // other component in the tree takes a long time to draw.
+        let now = Instant::now();
+
+        if let Some(progress) = self.progress(now) {
+            let style = if progress < display::LOADER_MAX {
+                self.styles.normal
+            } else {
+                self.styles.active
+            };
+
+            self.pad.render(target);
+
+            let center = self.pad.area.center();
+
+            let inactive_color = Color::black().blend(style.loader_color, 85);
+
+            shape::Circle::new(center, constant::LOADER_OUTER)
+                .with_bg(inactive_color)
+                .render(target);
+
+            shape::Circle::new(center, constant::LOADER_OUTER)
+                .with_bg(style.loader_color)
+                .with_end_angle(((progress as i32 * PI4 as i32 * 8) / 1000) as i16)
+                .render(target);
+
+            shape::Circle::new(center, constant::LOADER_INNER + 2)
+                .with_bg(style.loader_color)
+                .render(target);
+
+            shape::Circle::new(center, constant::LOADER_INNER)
+                .with_bg(style.background_color)
+                .render(target);
+
+            if let Some((icon, color)) = style.icon {
+                shape::ToifImage::new(center, icon.toif)
+                    .with_align(Alignment2D::CENTER)
+                    .with_fg(color)
+                    .render(target);
+            }
         }
     }
 }

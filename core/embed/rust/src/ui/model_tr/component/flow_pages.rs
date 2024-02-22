@@ -3,6 +3,7 @@ use crate::{
     ui::{
         component::{base::Component, FormattedText, Paginate},
         geometry::Rect,
+        shape::Renderer,
     },
 };
 
@@ -130,6 +131,10 @@ where
 
     pub fn paint(&mut self) {
         self.formatted.paint();
+    }
+
+    pub fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        self.formatted.render(target);
     }
 
     pub fn place(&mut self, bounds: Rect) -> Rect {

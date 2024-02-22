@@ -4,6 +4,8 @@ use crate::{
         component::{text::common::TextEdit, Event, EventCtx, TimerToken},
         display::{self, Color, Font},
         geometry::{Offset, Point, Rect},
+        shape,
+        shape::Renderer,
     },
 };
 
@@ -125,5 +127,26 @@ pub fn paint_pending_marker(text_baseline: Point, text: &str, font: Font, color:
         let marker_rect =
             Rect::from_top_left_and_size(marker_origin, Offset::new(last_width + 1, 3));
         display::rect_fill(marker_rect, color);
+    }
+}
+
+/// Create a visible "underscoring" of the last letter of a text.
+pub fn render_pending_marker<'s>(
+    target: &mut impl Renderer<'s>,
+    text_baseline: Point,
+    text: &str,
+    font: Font,
+    color: Color,
+) {
+    // Measure the width of the last character of input.
+    if let Some(last) = text.chars().last() {
+        let width = font.text_width(text);
+        let last_width = font.char_width(last);
+        // Draw the marker 2px under the start of the baseline of the last character.
+        let marker_origin = text_baseline + Offset::new(width - last_width, 2);
+        // Draw the marker 1px longer than the last character, and 3px thick.
+        let marker_rect =
+            Rect::from_top_left_and_size(marker_origin, Offset::new(last_width + 1, 3));
+        shape::Bar::new(marker_rect).with_bg(color).render(target);
     }
 }

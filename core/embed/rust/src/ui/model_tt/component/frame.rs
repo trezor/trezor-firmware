@@ -6,6 +6,7 @@ use crate::ui::{
     display::Icon,
     geometry::{Alignment, Insets, Offset, Rect},
     model_tt::component::{Button, ButtonMsg, CancelInfoConfirmMsg},
+    shape::Renderer,
 };
 
 pub struct Frame<T, U> {
@@ -167,6 +168,13 @@ where
         self.subtitle.paint();
         self.button.paint();
         self.content.paint();
+    }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        self.title.render(target);
+        self.subtitle.render(target);
+        self.button.render(target);
+        self.content.render(target);
     }
 
     #[cfg(feature = "ui_bounds")]

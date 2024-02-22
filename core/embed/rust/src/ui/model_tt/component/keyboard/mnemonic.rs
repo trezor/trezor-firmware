@@ -5,6 +5,7 @@ use crate::ui::{
         component::{Button, ButtonMsg, Swipe, SwipeDirection},
         theme,
     },
+    shape::Renderer,
 };
 
 pub const MNEMONIC_KEY_COUNT: usize = 9;
@@ -179,6 +180,19 @@ where
         paint_overlapping(&mut [&mut self.prompt, &mut self.input, &mut self.back]);
         for btn in &mut self.keys {
             btn.paint();
+        }
+    }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        if self.input.inner().inner().is_empty() {
+            self.prompt.render(target);
+        } else {
+            self.input.render(target);
+            self.back.render(target);
+        }
+
+        for btn in &self.keys {
+            btn.render(target);
         }
     }
 

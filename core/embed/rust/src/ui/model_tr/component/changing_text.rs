@@ -2,6 +2,8 @@ use crate::ui::{
     component::{Component, Event, EventCtx, Never, Pad},
     display::Font,
     geometry::{Alignment, Point, Rect},
+    shape,
+    shape::Renderer,
     util::long_line_content_with_ellipsis,
 };
 
@@ -109,14 +111,37 @@ where
         common::display_left(baseline, &self.text, self.font);
     }
 
+    fn render_left<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        let baseline = Point::new(self.pad.area.x0, self.y_baseline());
+        shape::Text::new(baseline, &self.text.as_ref())
+            .with_font(self.font)
+            .render(target);
+    }
+
     fn paint_center(&self) {
         let baseline = Point::new(self.pad.area.bottom_center().x, self.y_baseline());
         common::display_center(baseline, &self.text, self.font);
     }
 
+    fn render_center<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        let baseline = Point::new(self.pad.area.bottom_center().x, self.y_baseline());
+        shape::Text::new(baseline, &self.text.as_ref())
+            .with_align(Alignment::Center)
+            .with_font(self.font)
+            .render(target);
+    }
+
     fn paint_right(&self) {
         let baseline = Point::new(self.pad.area.x1, self.y_baseline());
         common::display_right(baseline, &self.text, self.font);
+    }
+
+    fn render_right<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        let baseline = Point::new(self.pad.area.x1, self.y_baseline());
+        shape::Text::new(baseline, &self.text.as_ref())
+            .with_align(Alignment::End)
+            .with_font(self.font)
+            .render(target);
     }
 
     fn paint_long_content_with_ellipsis(&self) {
@@ -171,6 +196,22 @@ where
                     Alignment::Start => self.paint_left(),
                     Alignment::Center => self.paint_center(),
                     Alignment::End => self.paint_right(),
+                }
+            }
+        }
+    }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        self.pad.render(target);
+        if self.show_content {
+            // In the case text cannot fit, show ellipsis and its right part
+            if !self.text_fits_completely() {
+                self.paint_long_content_with_ellipsis();
+            } else {
+                match self.alignment {
+                    Alignment::Start => self.render_left(target),
+                    Alignment::Center => self.render_center(target),
+                    Alignment::End => self.render_right(target),
                 }
             }
         }

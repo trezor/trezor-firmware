@@ -1,6 +1,7 @@
 use crate::ui::{
     component::{Child, Component, Event, EventCtx, Pad},
     geometry::{Insets, Offset, Rect},
+    shape::Renderer,
     util::animation_disabled,
 };
 
@@ -14,11 +15,17 @@ pub trait Choice {
     // Only `paint_center` is required, the rest is optional
     // and therefore has a default implementation.
     fn paint_center(&self, area: Rect, inverse: bool);
+
+    fn render_center<'s>(&self, target: &mut impl Renderer<'s>, _area: Rect, _inverse: bool);
+
     fn width_center(&self) -> i16 {
         0
     }
 
     fn paint_side(&self, _area: Rect) {}
+
+    fn render_side<'s>(&self, _target: &mut impl Renderer<'s>, _area: Rect) {}
+
     fn width_side(&self) -> i16 {
         0
     }
@@ -248,6 +255,43 @@ where
         }
     }
 
+    /// Display current, previous and next choices according to
+    /// the current ChoiceItem.
+    fn render_choices<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        // Getting the row area for the choices - so that displaying
+        // items in the used font will show them in the middle vertically.
+        let area_height_half = self.pad.area.height() / 2;
+        let font_size_half = theme::FONT_CHOICE_ITEMS.visible_text_height("Ay") / 2;
+        let center_row_area = self
+            .pad
+            .area
+            .split_top(area_height_half)
+            .0
+            .outset(Insets::bottom(font_size_half));
+
+        // Drawing the current item in the middle.
+        self.show_current_choice2(target, center_row_area);
+
+        // Not drawing the rest when not wanted
+        if self.show_only_one_item {
+            return;
+        }
+
+        // Getting the remaining left and right areas.
+        let center_width = self.get_current_item().width_center();
+        let (left_area, _center_area, right_area) = center_row_area.split_center(center_width);
+
+        // Possibly drawing on the left side.
+        if self.has_previous_choice() || self.is_carousel {
+            self.show_left_choices2(target, left_area);
+        }
+
+        // Possibly drawing on the right side.
+        if self.has_next_choice() || self.is_carousel {
+            self.show_right_choices2(target, right_area);
+        }
+    }
+
     /// Setting current buttons, and clearing.
     fn update(&mut self, ctx: &mut EventCtx) {
         self.set_buttons(ctx);
@@ -296,6 +340,12 @@ where
             .paint_center(area, self.inverse_selected_item);
     }
 
+    /// Display the current choice in the middle.
+    fn show_current_choice2<'s>(&'s self, target: &mut impl Renderer<'s>, area: Rect) {
+        self.get_current_item()
+            .render_center(target, area, self.inverse_selected_item);
+    }
+
     /// Display all the choices fitting on the left side.
     /// Going as far as possible.
     fn show_left_choices(&self, area: Rect) {
@@ -338,6 +388,48 @@ where
         }
     }
 
+    /// Display all the choices fitting on the left side.
+    /// Going as far as possible.
+    fn show_left_choices2<'s>(&'s self, target: &mut impl Renderer<'s>, area: Rect) {
+        // NOTE: page index can get negative here, so having it as i16 instead of usize
+        let mut page_index = self.page_counter as i16 - 1;
+        let mut current_area = area.split_right(self.items_distance).0;
+        while current_area.width() > 0 {
+            // Breaking out of the loop if we exhausted left items
+            // and the carousel mode is not enabled.
+            if page_index < 0 {
+                if self.is_carousel {
+                    // Moving to the last page.
+                    page_index = self.last_page_index() as i16;
+                } else {
+                    break;
+                }
+            }
+
+            let (choice, _) = self.choices.get(page_index as usize);
+            let choice_width = choice.width_side();
+
+            if current_area.width() <= choice_width && !self.show_incomplete {
+                // early break for an item that will not fit the remaining space
+                break;
+            }
+
+            // We need to calculate the area explicitly because we want to allow it
+            // to exceed the bounds of the original area.
+            let choice_area = Rect::from_top_right_and_size(
+                current_area.top_right(),
+                Offset::new(choice_width, current_area.height()),
+            );
+            choice.render_side(target, choice_area);
+
+            // Updating loop variables.
+            current_area = current_area
+                .split_right(choice_width + self.items_distance)
+                .0;
+            page_index -= 1;
+        }
+    }
+
     /// Display all the choices fitting on the right side.
     /// Going as far as possible.
     fn show_right_choices(&self, area: Rect) {
@@ -370,6 +462,47 @@ where
                 Offset::new(choice_width, current_area.height()),
             );
             choice.paint_side(choice_area);
+
+            // Updating loop variables.
+            current_area = current_area
+                .split_left(choice_width + self.items_distance)
+                .1;
+            page_index += 1;
+        }
+    }
+
+    /// Display all the choices fitting on the right side.
+    /// Going as far as possible.
+    fn show_right_choices2<'s>(&'s self, target: &mut impl Renderer<'s>, area: Rect) {
+        let mut page_index = self.page_counter + 1;
+        let mut current_area = area.split_left(self.items_distance).1;
+        while current_area.width() > 0 {
+            // Breaking out of the loop if we exhausted right items
+            // and the carousel mode is not enabled.
+            if page_index > self.last_page_index() {
+                if self.is_carousel {
+                    // Moving to the first page.
+                    page_index = 0;
+                } else {
+                    break;
+                }
+            }
+
+            let (choice, _) = self.choices.get(page_index);
+            let choice_width = choice.width_side();
+
+            if current_area.width() <= choice_width && !self.show_incomplete {
+                // early break for an item that will not fit the remaining space
+                break;
+            }
+
+            // We need to calculate the area explicitly because we want to allow it
+            // to exceed the bounds of the original area.
+            let choice_area = Rect::from_top_left_and_size(
+                current_area.top_left(),
+                Offset::new(choice_width, current_area.height()),
+            );
+            choice.render_side(target, choice_area);
 
             // Updating loop variables.
             current_area = current_area
@@ -585,6 +718,12 @@ where
         self.pad.paint();
         self.buttons.paint();
         self.paint_choices();
+    }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        self.pad.render(target);
+        self.buttons.render(target);
+        self.render_choices(target);
     }
 }
 

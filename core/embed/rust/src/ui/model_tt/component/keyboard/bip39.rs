@@ -7,13 +7,15 @@ use crate::{
         model_tt::{
             component::{
                 keyboard::{
-                    common::{paint_pending_marker, MultiTapKeyboard},
+                    common::{paint_pending_marker, render_pending_marker, MultiTapKeyboard},
                     mnemonic::{MnemonicInput, MnemonicInputMsg, MNEMONIC_KEY_COUNT},
                 },
                 Button, ButtonContent, ButtonMsg,
             },
             theme,
         },
+        shape,
+        shape::Renderer,
     },
 };
 use heapless::String;
@@ -151,6 +153,51 @@ impl Component for Bip39Input {
                 style.text_color,
                 style.button_color,
             );
+        }
+    }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        let area = self.button.area();
+        let style = self.button.style();
+
+        // First, paint the button background.
+        self.button.render_background(target, style);
+
+        // Paint the entered content (the prefix of the suggested word).
+        let text = self.textbox.content();
+        let width = style.font.text_width(text);
+        // Content starts in the left-center point, offset by 16px to the right and 8px
+        // to the bottom.
+        let text_baseline = area.top_left().center(area.bottom_left()) + Offset::new(16, 8);
+        shape::Text::new(text_baseline, text)
+            .with_font(style.font)
+            .with_fg(style.text_color)
+            .render(target);
+
+        // Paint the rest of the suggested dictionary word.
+        if let Some(word) = self.suggested_word.and_then(|w| w.get(text.len()..)) {
+            let word_baseline = text_baseline + Offset::new(width, 0);
+            let style = self.button_suggestion.style();
+            shape::Text::new(word_baseline, word)
+                .with_font(style.font)
+                .with_fg(style.text_color)
+                .render(target);
+        }
+
+        // Paint the pending marker.
+        if self.multi_tap.pending_key().is_some() {
+            render_pending_marker(target, text_baseline, text, style.font, style.text_color);
+        }
+
+        // Paint the icon.
+        if let ButtonContent::Icon(icon) = self.button.content() {
+            // Icon is painted in the right-center point, of expected size 16x16 pixels, and
+            // 16px from the right edge.
+            let icon_center = area.top_right().center(area.bottom_right()) - Offset::new(16 + 8, 0);
+            shape::ToifImage::new(icon_center, icon.toif)
+                .with_align(Alignment2D::CENTER)
+                .with_fg(style.text_color)
+                .render(target);
         }
     }
 

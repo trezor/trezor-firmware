@@ -2,6 +2,7 @@ use crate::ui::{
     component::{Component, Event, EventCtx, Never},
     display::Font,
     geometry::{Alignment, Insets, Offset, Point, Rect},
+    shape::Renderer,
 };
 
 use super::{text::TextStyle, TextLayout};
@@ -117,6 +118,10 @@ where
 
     fn paint(&mut self) {
         self.layout.render_text(self.text.as_ref());
+    }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        self.layout.render_text2(self.text.as_ref(), target);
     }
 
     #[cfg(feature = "ui_bounds")]

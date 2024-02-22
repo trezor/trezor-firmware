@@ -9,6 +9,8 @@ use crate::{
         display::{self, toif::Icon, Color, Font},
         event::TouchEvent,
         geometry::{Alignment2D, Insets, Offset, Point, Rect},
+        shape,
+        shape::Renderer,
     },
 };
 
@@ -189,6 +191,18 @@ impl<T> Button<T> {
         }
     }
 
+    pub fn render_background<'s>(&self, target: &mut impl Renderer<'s>, style: &ButtonStyle) {
+        match &self.content {
+            ButtonContent::IconBlend(_, _, _) => {}
+            _ => shape::Bar::new(self.area)
+                .with_bg(style.button_color)
+                .with_fg(style.border_color)
+                .with_thickness(style.border_width)
+                .with_radius(style.border_radius as i16)
+                .render(target),
+        }
+    }
+
     pub fn paint_content(&self, style: &ButtonStyle)
     where
         T: AsRef<str>,
@@ -227,6 +241,47 @@ impl<T> Button<T> {
                 (*fg, *offset, style.text_color),
                 style.background_color,
             ),
+        }
+    }
+
+    pub fn render_content<'s>(&self, target: &mut impl Renderer<'s>, style: &ButtonStyle)
+    where
+        T: AsRef<str>,
+    {
+        match &self.content {
+            ButtonContent::Empty => {}
+            ButtonContent::Text(text) => {
+                let text = text.as_ref();
+                let width = style.font.text_width(text);
+                let height = style.font.text_height();
+                let start_of_baseline = self.area.center()
+                    + Offset::new(-width / 2, height / 2)
+                    + Offset::y(Self::BASELINE_OFFSET);
+                shape::Text::new(start_of_baseline, text)
+                    .with_font(style.font)
+                    .with_fg(style.text_color)
+                    .render(target);
+            }
+            ButtonContent::Icon(icon) => {
+                shape::ToifImage::new(self.area.center(), icon.toif)
+                    .with_align(Alignment2D::CENTER)
+                    .with_fg(style.text_color)
+                    .render(target);
+            }
+            ButtonContent::IconAndText(child) => {
+                child.paint(self.area, self.style(), Self::BASELINE_OFFSET);
+            }
+            ButtonContent::IconBlend(bg, fg, offset) => {
+                shape::Bar::new(self.area)
+                    .with_bg(style.background_color)
+                    .render(target);
+                shape::ToifImage::new(self.area.top_left(), bg.toif)
+                    .with_fg(style.button_color)
+                    .render(target);
+                shape::ToifImage::new(self.area.top_left() + *offset, fg.toif)
+                    .with_fg(style.text_color)
+                    .render(target);
+            }
         }
     }
 }
@@ -318,6 +373,12 @@ where
         let style = self.style();
         self.paint_background(style);
         self.paint_content(style);
+    }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        let style = self.style();
+        self.render_background(target, style);
+        self.render_content(target, style);
     }
 
     #[cfg(feature = "ui_bounds")]

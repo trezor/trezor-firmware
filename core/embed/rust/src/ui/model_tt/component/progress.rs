@@ -4,6 +4,7 @@ use crate::{
     error::Error,
     strutil::StringType,
     ui::{
+        canvas::algo::PI4,
         component::{
             base::ComponentExt,
             paginated::Paginate,
@@ -11,8 +12,10 @@ use crate::{
             Child, Component, Event, EventCtx, Label, Never, Pad,
         },
         display::{self, Font},
-        geometry::{Insets, Rect},
+        geometry::{Insets, Offset, Rect},
         model_tt::constant,
+        shape,
+        shape::Renderer,
         util::animation_disabled,
     },
 };
@@ -118,6 +121,47 @@ where
         }
         self.description_pad.paint();
         self.description.paint();
+    }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        self.title.render(target);
+
+        let center = constant::screen().center() + Offset::y(self.loader_y_offset);
+        let active_color = theme::FG;
+        let background_color = theme::BG;
+        let inactive_color = background_color.blend(active_color, 85);
+
+        let (start, end) = if self.indeterminate {
+            let start = (self.value as i16 - 100) % 1000;
+            let end = (self.value as i16 + 100) % 1000;
+            let start = ((start as i32 * 8 * PI4 as i32) / 1000) as i16;
+            let end = ((end as i32 * 8 * PI4 as i32) / 1000) as i16;
+            (start, end)
+        } else {
+            let end = ((self.value as i32 * 8 * PI4 as i32) / 1000) as i16;
+            (0, end)
+        };
+
+        shape::Circle::new(center, constant::LOADER_OUTER)
+            .with_bg(inactive_color)
+            .render(target);
+
+        shape::Circle::new(center, constant::LOADER_OUTER)
+            .with_bg(active_color)
+            .with_start_angle(start)
+            .with_end_angle(end)
+            .render(target);
+
+        shape::Circle::new(center, constant::LOADER_INNER + 2)
+            .with_bg(active_color)
+            .render(target);
+
+        shape::Circle::new(center, constant::LOADER_INNER)
+            .with_bg(background_color)
+            .render(target);
+
+        self.description_pad.render(target);
+        self.description.render(target);
     }
 
     #[cfg(feature = "ui_bounds")]

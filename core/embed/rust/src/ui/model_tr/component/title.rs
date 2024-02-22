@@ -4,7 +4,9 @@ use crate::{
     ui::{
         component::{Component, Event, EventCtx, Marquee, Never},
         display,
-        geometry::{Offset, Rect},
+        geometry::{Alignment, Offset, Rect},
+        shape,
+        shape::Renderer,
     },
 };
 
@@ -69,6 +71,16 @@ where
         );
     }
 
+    /// Display title/header at the top left of the given area.
+    pub fn render_header_left<'s>(target: &mut impl Renderer<'s>, title: &T, area: Rect) {
+        let text_height = theme::FONT_HEADER.text_height();
+        let title_baseline = area.top_left() + Offset::y(text_height - 1);
+        shape::Text::new(title_baseline, title.as_ref())
+            .with_font(theme::FONT_HEADER)
+            .with_fg(theme::FG)
+            .render(target);
+    }
+
     /// Display title/header centered at the top of the given area.
     pub fn paint_header_centered(title: &T, area: Rect) {
         let text_height = theme::FONT_HEADER.text_height();
@@ -80,6 +92,17 @@ where
             theme::FG,
             theme::BG,
         );
+    }
+
+    /// Display title/header centered at the top of the given area.
+    pub fn render_header_centered<'s>(target: &mut impl Renderer<'s>, title: &T, area: Rect) {
+        let text_height = theme::FONT_HEADER.text_height();
+        let title_baseline = area.top_center() + Offset::y(text_height - 1);
+        shape::Text::new(title_baseline, title.as_ref())
+            .with_align(Alignment::Center)
+            .with_font(theme::FONT_HEADER)
+            .with_fg(theme::FG)
+            .render(target);
     }
 }
 
@@ -114,6 +137,16 @@ where
             Self::paint_header_centered(&self.title, self.area);
         } else {
             Self::paint_header_left(&self.title, self.area);
+        }
+    }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        if self.needs_marquee {
+            self.marquee.render(target);
+        } else if self.centered {
+            Self::render_header_centered(target, &self.title, self.area);
+        } else {
+            Self::render_header_left(target, &self.title, self.area);
         }
     }
 }

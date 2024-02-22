@@ -6,11 +6,16 @@ use crate::{
     ui::{
         component::{
             base::Never,
-            text::util::{text_multiline, text_multiline_bottom},
+            text::util::{
+                text_multiline, text_multiline2, text_multiline_bottom, text_multiline_bottom2,
+            },
             Component, Event, EventCtx,
         },
         display::{self, Font},
-        geometry::{Alignment, Insets, Rect},
+        geometry::{Alignment, Insets, Offset, Rect},
+        model_tr::cshape,
+        shape,
+        shape::Renderer,
         util::animation_disabled,
     },
 };
@@ -121,6 +126,55 @@ where
         );
         if let Some(rest) = top_rest {
             text_multiline_bottom(
+                rest.inset(Insets::bottom(FOOTER_TEXT_MARGIN)),
+                self.text.as_ref().into(),
+                Font::NORMAL,
+                theme::FG,
+                theme::BG,
+                Alignment::Center,
+            );
+        }
+    }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        // TOP
+        let center = self.area.center() + Offset::y(self.loader_y_offset);
+
+        if self.indeterminate {
+            text_multiline2(
+                target,
+                self.area,
+                TR::coinjoin__title_progress.into(),
+                Font::BOLD,
+                theme::FG,
+                theme::BG,
+                Alignment::Center,
+            );
+            cshape::LoaderSmall::new(center, self.value)
+                .with_color(theme::FG)
+                .render(target);
+        } else {
+            cshape::LoaderCircular::new(center, self.value)
+                .with_color(theme::FG)
+                .render(target);
+            shape::ToifImage::new(center, theme::ICON_TICK_FAT.toif)
+                .with_fg(theme::FG)
+                .render(target);
+        }
+
+        // BOTTOM
+        let top_rest = text_multiline_bottom2(
+            target,
+            self.area,
+            TR::coinjoin__do_not_disconnect.into(),
+            Font::BOLD,
+            theme::FG,
+            theme::BG,
+            Alignment::Center,
+        );
+        if let Some(rest) = top_rest {
+            text_multiline_bottom2(
+                target,
                 rest.inset(Insets::bottom(FOOTER_TEXT_MARGIN)),
                 self.text.as_ref().into(),
                 Font::NORMAL,

@@ -4,6 +4,7 @@ use crate::{
     ui::{
         component::{text::common::TextBox, Child, Component, ComponentExt, Event, EventCtx},
         geometry::Rect,
+        shape::Renderer,
         util::char_to_string,
     },
 };
@@ -309,6 +310,11 @@ impl Component for WordlistEntry {
     fn paint(&mut self) {
         self.chosen_letters.paint();
         self.choice_page.paint();
+    }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        self.chosen_letters.render(target);
+        self.choice_page.render(target);
     }
 }
 

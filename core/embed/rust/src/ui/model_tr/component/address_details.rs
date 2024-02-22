@@ -10,6 +10,7 @@ use crate::{
             Child, Component, Event, EventCtx, Pad, Paginate, Qr,
         },
         geometry::Rect,
+        shape::Renderer,
     },
 };
 
@@ -253,6 +254,16 @@ impl Component for AddressDetails {
             0 => self.qr_code.paint(),
             1 => self.details_view.paint(),
             _ => self.xpub_view.paint(),
+        }
+    }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        self.pad.render(target);
+        self.buttons.render(target);
+        match self.current_page {
+            0 => self.qr_code.render(target),
+            1 => self.details_view.render(target),
+            _ => self.xpub_view.render(target),
         }
     }
 
