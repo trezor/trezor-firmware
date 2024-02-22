@@ -4,6 +4,8 @@ use crate::ui::{
     component::{image::Image, Component, Event, EventCtx, Never},
     display,
     geometry::{Alignment2D, Rect},
+    shape,
+    shape::Renderer,
 };
 
 pub struct Painter<F> {
@@ -37,6 +39,17 @@ where
 
     fn paint(&mut self) {
         (self.func)(self.area);
+    }
+
+    fn render(&mut self, target: &mut impl Renderer) {
+        let area = self.area;
+        shape::Bar::new(area)
+            .with_thickness(1)
+            .with_fg(display::Color::white())
+            .render(target);
+        shape::Text::new(area.top_left(), "Paint")
+            .with_baseline(false)
+            .render(target); // !@# replace
     }
 
     #[cfg(feature = "ui_bounds")]

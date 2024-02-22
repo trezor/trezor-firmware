@@ -5,6 +5,7 @@ use crate::{
         component::{Component, Event, EventCtx},
         event::ButtonEvent,
         geometry::Rect,
+        shape::Renderer,
     },
 };
 
@@ -121,6 +122,10 @@ impl Component for HoldToConfirm {
 
     fn paint(&mut self) {
         self.loader.paint();
+    }
+
+    fn render(&mut self, target: &mut impl Renderer) {
+        self.loader.render(target);
     }
 }
 

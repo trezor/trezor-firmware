@@ -8,6 +8,7 @@ use crate::{
         constant,
         display::{self, Color},
         geometry::{Insets, Rect},
+        shape::Renderer,
         util::animation_disabled,
     },
 };
@@ -405,6 +406,33 @@ where
             self.button_next.paint();
         } else {
             self.button_confirm.paint();
+        }
+        if let Some(val) = self.fade.take() {
+            // Note that this is blocking and takes some time.
+            display::fade_backlight(val);
+        }
+    }
+
+    fn render(&mut self, target: &mut impl Renderer) {
+        self.pad.render(target);
+        match &self.loader {
+            Some(l) if l.is_animating() => self.loader.render(target),
+            _ => {
+                self.content.render(target);
+                if self.scrollbar.has_pages() {
+                    self.scrollbar.render(target);
+                }
+            }
+        }
+        if self.button_cancel.is_some() && self.is_cancel_visible() {
+            self.button_cancel.render(target);
+        } else {
+            self.button_prev.render(target);
+        }
+        if self.scrollbar.has_next_page() {
+            self.button_next.render(target);
+        } else {
+            self.button_confirm.render(target);
         }
         if let Some(val) = self.fade.take() {
             // Note that this is blocking and takes some time.

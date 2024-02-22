@@ -6,6 +6,7 @@ use crate::{
         display,
         display::toif::Icon,
         geometry::Rect,
+        shape::Renderer,
     },
 };
 
@@ -89,6 +90,16 @@ impl ResultAnim {
             Some((self.icon, theme::FG)),
         );
     }
+
+    pub fn render_anim(&mut self, target: &mut impl Renderer, done: i16) {
+        /*display::rect_rounded2_partial(
+            self.area,
+            theme::FG,
+            theme::BG,
+            100 * done / 1000,
+            Some((self.icon, theme::FG)),
+        ); !@# */
+    }
 }
 
 impl Component for ResultAnim {
@@ -137,6 +148,28 @@ impl Component for ResultAnim {
                 self.paint_anim(done as i16);
             } else {
                 self.paint_anim(0);
+            }
+        }
+    }
+
+    fn render(&mut self, target: &mut impl Renderer) {
+        // TODO: Consider passing the current instant along with the event -- that way,
+        // we could synchronize painting across the component tree. Also could be useful
+        // in automated tests.
+        // In practice, taking the current instant here is more precise in case some
+        // other component in the tree takes a long time to draw.
+        let now = Instant::now();
+
+        if let State::Initial = self.state {
+            self.render_anim(target, 0);
+        } else if let State::Grown = self.state {
+            self.render_anim(target, display::LOADER_MAX as i16);
+        } else {
+            let progress = self.progress(now);
+            if let Some(done) = progress {
+                self.render_anim(target, done as i16);
+            } else {
+                self.render_anim(target, 0);
             }
         }
     }

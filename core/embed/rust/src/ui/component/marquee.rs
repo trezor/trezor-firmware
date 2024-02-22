@@ -5,7 +5,9 @@ use crate::{
         component::{Component, Event, EventCtx, Never, TimerToken},
         display,
         display::{Color, Font},
-        geometry::Rect,
+        geometry::{Point, Rect},
+        shape,
+        shape::Renderer,
         util::animation_disabled,
     },
 };
@@ -131,6 +133,16 @@ where
             self.bg,
         );
     }
+
+    pub fn render_anim(&mut self, target: &mut impl Renderer, offset: i16) {
+        target.in_window(self.area, &mut |target| {
+            shape::Text::new(Point::new(offset, 0), self.text.as_ref())
+                .with_baseline(false)
+                .with_font(self.font)
+                .with_fg(self.fg)
+                .render(target);
+        });
+    }
 }
 
 impl<T> Component for Marquee<T>
@@ -221,6 +233,30 @@ where
                     self.paint_anim(done);
                 } else {
                     self.paint_anim(0);
+                }
+            }
+        }
+    }
+
+    fn render(&mut self, target: &mut impl Renderer) {
+        let now = Instant::now();
+
+        match self.state {
+            State::Initial => {
+                self.render_anim(target, 0);
+            }
+            State::PauseRight => {
+                self.render_anim(target, self.min_offset);
+            }
+            State::PauseLeft => {
+                self.render_anim(target, self.max_offset);
+            }
+            _ => {
+                let progress = self.progress(now);
+                if let Some(done) = progress {
+                    self.render_anim(target, done);
+                } else {
+                    self.render_anim(target, 0);
                 }
             }
         }

@@ -1,6 +1,8 @@
 use crate::ui::{
     component::{Child, Component, Event, EventCtx, Label, Pad},
     geometry::{Alignment, Alignment2D, Rect},
+    shape,
+    shape::Renderer,
 };
 
 use super::{
@@ -101,6 +103,27 @@ impl<'a> Component for Intro<'a> {
         self.warn.paint();
         self.text.paint();
         self.buttons.paint();
+    }
+
+    fn render(&mut self, target: &mut impl Renderer) {
+        self.bg.render(target);
+        self.title.render(target);
+
+        let area = self.bg.area;
+
+        shape::ToifImage::new(area.top_left(), ICON_WARN_TITLE.toif)
+            .with_align(Alignment2D::TOP_LEFT)
+            .with_fg(BLD_FG)
+            .render(target);
+
+        shape::ToifImage::new(area.top_left(), ICON_WARN_TITLE.toif)
+            .with_align(Alignment2D::TOP_RIGHT)
+            .with_fg(BLD_FG)
+            .render(target);
+
+        self.warn.render(target);
+        self.text.render(target);
+        self.buttons.render(target);
     }
 
     #[cfg(feature = "ui_bounds")]

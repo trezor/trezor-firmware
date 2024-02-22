@@ -1,6 +1,7 @@
 use crate::ui::{
     component::{Child, Component, Event, EventCtx, Pad},
     geometry::{Insets, Offset, Rect},
+    shape::Renderer,
     util::animation_disabled,
 };
 
@@ -585,6 +586,12 @@ where
         self.pad.paint();
         self.buttons.paint();
         self.paint_choices();
+    }
+
+    fn render(&mut self, target: &mut impl Renderer) {
+        self.pad.render(target);
+        self.buttons.render(target);
+        // self.render_choices(target); !@#
     }
 }
 

@@ -2,6 +2,7 @@ use crate::ui::{
     component::{base::ComponentExt, Component, Event, EventCtx, Pad, PageMsg, Paginate},
     display::{self, Color},
     geometry::{Axis, Insets, Rect},
+    shape::Renderer,
 };
 
 use super::{theme, ScrollBar, Swipe, SwipeDirection};
@@ -157,6 +158,18 @@ where
         self.content.paint();
         if self.scrollbar.has_pages() {
             self.scrollbar.paint();
+        }
+        if let Some(val) = self.fade.take() {
+            // Note that this is blocking and takes some time.
+            display::fade_backlight(val);
+        }
+    }
+
+    fn render(&mut self, target: &mut impl Renderer) {
+        self.pad.render(target);
+        self.content.render(target);
+        if self.scrollbar.has_pages() {
+            self.scrollbar.render(target);
         }
         if let Some(val) = self.fade.take() {
             // Note that this is blocking and takes some time.

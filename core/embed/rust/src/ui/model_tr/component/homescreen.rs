@@ -13,8 +13,10 @@ use crate::{
             Font, Icon,
         },
         event::USBEvent,
-        geometry::{Alignment2D, Insets, Offset, Point, Rect},
+        geometry::{Alignment, Alignment2D, Insets, Offset, Point, Rect},
         layout::util::get_user_custom_image,
+        shape,
+        shape::Renderer,
     },
 };
 
@@ -46,6 +48,16 @@ fn paint_default_image() {
         theme::FG,
         theme::BG,
     );
+}
+
+fn render_default_image(target: &mut impl Renderer) {
+    shape::ToifImage::new(
+        TOP_CENTER + Offset::y(LOGO_ICON_TOP_MARGIN),
+        theme::ICON_LOGO.toif,
+    )
+    .with_align(Alignment2D::TOP_CENTER)
+    .with_fg(theme::FG)
+    .render(target);
 }
 
 enum CurrentScreen {
@@ -105,6 +117,22 @@ where
         }
     }
 
+    fn render_homescreen_image(&self, target: &mut impl Renderer) {
+        let homescreen_bytes = get_user_custom_image().ok();
+        let homescreen = homescreen_bytes
+            .as_ref()
+            .and_then(|data| Toif::new(data.as_ref()).ok())
+            .filter(check_homescreen_format);
+        if let Some(toif) = homescreen {
+            /*shape::ToifImage::new(TOP_CENTER, toif)
+            .with_align(Alignment2D::TOP_CENTER)
+            .with_fg(theme::FG)
+            .render(target);*/ // !@# lifetime problem
+        } else {
+            render_default_image(target);
+        }
+    }
+
     fn paint_notification(&self) {
         let baseline = TOP_CENTER + Offset::y(NOTIFICATION_FONT.line_height());
         if !usb_configured() {
@@ -136,6 +164,49 @@ where
         }
     }
 
+    fn render_notification(&self, target: &mut impl Renderer) {
+        let baseline = TOP_CENTER + Offset::y(NOTIFICATION_FONT.line_height());
+        if !usb_configured() {
+            shape::Bar::new(AREA.split_top(NOTIFICATION_HEIGHT).0)
+                .with_bg(theme::BG)
+                .render(target);
+
+            // TODO: fill warning icons here as well?
+            TR::homescreen__title_no_usb_connection.map_translated(|t| {
+                shape::Text::new(baseline, t)
+                    .with_align(Alignment::Center)
+                    .with_font(NOTIFICATION_FONT)
+                    .render(target)
+            });
+        } else if let Some((notification, _level)) = &self.notification {
+            shape::Bar::new(AREA.split_top(NOTIFICATION_HEIGHT).0)
+                .with_bg(theme::BG)
+                .render(target);
+
+            shape::Text::new(baseline, notification.as_ref())
+                .with_align(Alignment::Center)
+                .with_font(NOTIFICATION_FONT)
+                .render(target);
+
+            // Painting warning icons in top corners when the text is short enough not to
+            // collide with them
+            let icon_width = NOTIFICATION_ICON.toif.width();
+            let text_width = NOTIFICATION_FONT.text_width(notification.as_ref());
+            if AREA.width() >= text_width + (icon_width + 1) * 2 {
+                shape::ToifImage::new(AREA.top_left(), NOTIFICATION_ICON.toif)
+                    .with_align(Alignment2D::TOP_LEFT)
+                    .with_fg(theme::FG)
+                    .with_bg(theme::BG)
+                    .render(target);
+                shape::ToifImage::new(AREA.top_right(), NOTIFICATION_ICON.toif)
+                    .with_align(Alignment2D::TOP_RIGHT)
+                    .with_fg(theme::FG)
+                    .with_bg(theme::BG)
+                    .render(target);
+            }
+        }
+    }
+
     fn paint_label(&mut self) {
         // paint black background to place the label
         let mut outset = Insets::uniform(LABEL_OUTSET);
@@ -144,6 +215,19 @@ where
         outset.top -= 2;
         rect_fill(self.label.text_area().outset(outset), theme::BG);
         self.label.paint();
+    }
+
+    fn render_label(&mut self, target: &mut impl Renderer) {
+        // paint black background to place the label
+        let mut outset = Insets::uniform(LABEL_OUTSET);
+        // the margin at top is bigger (caused by text-height vs line-height?)
+        // compensate by shrinking the outset
+        outset.top -= 2;
+        shape::Bar::new(self.label.text_area().outset(outset))
+            .with_bg(theme::BG)
+            .render(target);
+
+        self.label.render(target);
     }
 
     /// So that notification is well visible even on homescreen image
@@ -236,6 +320,27 @@ where
             self.paint_label();
         }
     }
+
+    fn render(&mut self, target: &mut impl Renderer) {
+        // Redraw the whole screen when the screen changes (loader vs homescreen)
+        if self.show_loader {
+            if !matches!(self.current_screen, CurrentScreen::Loader) {
+                // display::clear(); !@# what's this??
+                self.current_screen = CurrentScreen::Loader;
+            }
+            self.loader.render(target);
+        } else {
+            if !matches!(self.current_screen, CurrentScreen::Homescreen) {
+                // display::clear(); !@# what's this??
+                self.current_screen = CurrentScreen::Homescreen;
+            }
+            // Painting the homescreen image first, as the notification and label
+            // should be "on top of it"
+            self.render_homescreen_image(target);
+            self.render_notification(target);
+            self.render_label(target);
+        }
+    }
 }
 
 pub struct Lockscreen<T>
@@ -320,6 +425,30 @@ where
             )
         }
     }
+
+    fn render(&mut self, target: &mut impl Renderer) {
+        if self.screensaver {
+            // keep screen blank
+            return;
+        }
+        shape::ToifImage::new(
+            TOP_CENTER + Offset::y(LOCK_ICON_TOP_MARGIN),
+            theme::ICON_LOCK.toif,
+        )
+        .with_align(Alignment2D::TOP_CENTER)
+        .with_fg(theme::FG)
+        .render(target);
+
+        self.instruction.render(target);
+        self.label.render(target);
+
+        if let Some(icon) = &self.coinjoin_icon {
+            shape::ToifImage::new(COINJOIN_CORNER, icon.toif)
+                .with_align(Alignment2D::TOP_RIGHT)
+                .with_fg(theme::FG)
+                .render(target);
+        }
+    }
 }
 
 pub struct ConfirmHomescreen<T, F>
@@ -388,6 +517,29 @@ where
         rect_fill(title_area, theme::BG);
         self.title.paint();
         self.buttons.paint();
+    }
+
+    fn render(&mut self, target: &mut impl Renderer) {
+        // Drawing the image full-screen first and then other things on top
+        let buffer = (self.buffer_func)();
+        if buffer.is_empty() {
+            render_default_image(target);
+        } else {
+            /*let toif_data = unwrap!(Toif::new(buffer));
+            shape::ToifImage::new(TOP_CENTER, toif_data)
+                .with_fg(theme::FG)
+                .render(target);*/ // !@# lifetime problem
+        };
+        // Need to make all the title background black, so the title text is well
+        // visible
+        let title_area = self.title.inner().area();
+
+        shape::Bar::new(title_area)
+            .with_bg(theme::BG)
+            .render(target);
+
+        self.title.render(target);
+        self.buttons.render(target);
     }
 }
 
