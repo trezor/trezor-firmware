@@ -824,6 +824,7 @@ def cargo_build():
         features.append('universal_fw')
     features.append('ui')
     features.append('translations')
+    features.append('new_rendering')
     if PYOPT == '0':
         features.append('debug')
     if DMA2D:
