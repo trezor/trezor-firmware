@@ -44,7 +44,9 @@ OPENOCD_INTERFACE ?= stlink
 OPENOCD_TRANSPORT ?= hla_swd
 
 ifeq ($(TREZOR_MODEL),$(filter $(TREZOR_MODEL),T R DISC1))
+MCU = STM32F4
 OPENOCD_TARGET = target/stm32f4x.cfg
+FLASH_START 		= 0x08000000
 BOARDLOADER_START   = 0x08000000
 BOARDLOADER_END     = 0x0800C000
 BOOTLOADER_START    = 0x08020000
@@ -73,7 +75,9 @@ STORAGE_2_SECTOR_START = 16
 STORAGE_2_SECTOR_END = 16
 
 else ifeq ($(TREZOR_MODEL),$(filter $(TREZOR_MODEL),T3T1))
+MCU = STM32U5
 OPENOCD_TARGET = target/stm32u5x.cfg
+FLASH_START 		= 0x0C000000
 BOARDLOADER_START   = 0x0C004000
 BOARDLOADER_END     = 0x0C010000
 BOOTLOADER_START    = 0x0C010000
@@ -96,7 +100,9 @@ STORAGE_1_SECTOR_END = 0x1F
 STORAGE_2_SECTOR_START = 0x20
 STORAGE_2_SECTOR_END = 0x27
 else ifeq ($(TREZOR_MODEL),$(filter $(TREZOR_MODEL),DISC2))
+MCU = STM32U5
 OPENOCD_TARGET = target/stm32u5x.cfg
+FLASH_START 		= 0x0C000000
 BOARDLOADER_START   = 0x0C004000
 BOARDLOADER_END     = 0x0C010000
 BOOTLOADER_START    = 0x0C010000
@@ -119,6 +125,7 @@ STORAGE_1_SECTOR_END = 0x1F
 STORAGE_2_SECTOR_START = 0x20
 STORAGE_2_SECTOR_END = 0x27
 else ifeq ($(TREZOR_MODEL), 1)
+MCU = STM32F2
 OPENOCD_TARGET = target/stm32f2x.cfg
 FIRMWARE_START   	= 0x08010000
 else
@@ -378,7 +385,7 @@ else
 endif
 
 flash_combine: $(PRODTEST_BUILD_DIR)/combined.bin ## flash combined using OpenOCD
-	$(OPENOCD) -c "init; reset halt; flash write_image erase $< $(BOARDLOADER_START); exit"
+	$(OPENOCD) -c "init; reset halt; flash write_image erase $< $(FLASH_START); exit"
 
 flash_erase: ## erase all sectors in flash bank 0
 	$(OPENOCD) -c "init; reset halt; flash info 0; flash erase_sector 0 0 last; flash erase_check 0; exit"
@@ -456,16 +463,37 @@ sizecheck: ## check sizes of binary files
 	test $(FIRMWARE_P2_MAXSIZE) -ge $(shell wc -c < $(FIRMWARE_BUILD_DIR)/firmware.bin.p2)
 	test $(FIRMWARE_MAXSIZE) -ge $(shell wc -c < $(FIRMWARE_BUILD_DIR)/firmware.bin)
 
+
+ifeq  ($(MCU),$(filter $(MCU),STM32F4))
 combine: ## combine boardloader + bootloader + prodtest into one combined image
 	./tools/combine_firmware \
-		$(BOARDLOADER_BUILD_DIR)/boardloader.bin \
-		$(BOOTLOADER_BUILD_DIR)/bootloader.bin \
-		$(PRODTEST_BUILD_DIR)/prodtest.bin \
 		$(PRODTEST_BUILD_DIR)/combined.bin \
-		$(BOARDLOADER_START) \
-		$(BOARDLOADER_END) \
-		$(BOOTLOADER_START) \
-		$(PRODTEST_START)
+		-b $(BOARDLOADER_BUILD_DIR)/boardloader.bin $(BOARDLOADER_START) \
+		-b $(BOOTLOADER_BUILD_DIR)/bootloader.bin $(BOOTLOADER_START) \
+		-b $(PRODTEST_BUILD_DIR)/prodtest.bin $(FIRMWARE_START)
+
+combine_fw: ## combine boardloader + bootloader + firmware into one combined image
+	./tools/combine_firmware \
+		$(PRODTEST_BUILD_DIR)/combined.bin \
+		-b $(BOARDLOADER_BUILD_DIR)/boardloader.bin $(BOARDLOADER_START) \
+		-b $(BOOTLOADER_BUILD_DIR)/bootloader.bin $(BOOTLOADER_START) \
+		-b $(FIRMWARE_BUILD_DIR)/firmware.bin.p1 $(FIRMWARE_START) \
+		-b $(FIRMWARE_BUILD_DIR)/firmware.bin.p2 $(FIRMWARE_P2_START)
+else ifeq ($(MCU),$(filter $(MCU),STM32U5))
+combine: ## combine boardloader + bootloader + prodtest into one combined image
+	./tools/combine_firmware \
+		$(PRODTEST_BUILD_DIR)/combined.bin \
+		-b $(BOARDLOADER_BUILD_DIR)/boardloader.bin $(BOARDLOADER_START) \
+		-b $(BOOTLOADER_BUILD_DIR)/bootloader.bin $(BOOTLOADER_START) \
+		-b $(PRODTEST_BUILD_DIR)/prodtest.bin $(FIRMWARE_START)
+
+combine_fw: ## combine boardloader + bootloader + firmware into one combined image
+	./tools/combine_firmware \
+		$(PRODTEST_BUILD_DIR)/combined.bin \
+		-b $(BOARDLOADER_BUILD_DIR)/boardloader.bin $(BOARDLOADER_START) \
+		-b $(BOOTLOADER_BUILD_DIR)/bootloader.bin $(BOOTLOADER_START) \
+		-b $(FIRMWARE_BUILD_DIR)/firmware.bin $(FIRMWARE_START)
+endif
 
 upload: ## upload firmware using trezorctl
 	trezorctl firmware_update -s -f $(FIRMWARE_BUILD_DIR)/firmware.bin

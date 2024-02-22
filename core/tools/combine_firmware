@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import datetime
 import io
-import sys
 from pathlib import Path
 
 import click
@@ -11,91 +10,38 @@ import click
 
 @click.command()
 @click.argument(
-    "boardloader",
-    type=click.Path(exists=True, dir_okay=False, readable=True, path_type=Path),
-)
-@click.argument(
-    "bootloader",
-    type=click.Path(exists=True, dir_okay=False, readable=True, path_type=Path),
-)
-@click.argument(
-    "firmware",
-    type=click.Path(exists=True, dir_okay=False, readable=True, path_type=Path),
-)
-@click.argument(
     "outfile",
     type=click.Path(dir_okay=False, writable=True, path_type=Path),
     required=False,
 )
-@click.argument(
-    "boardloader_start",
-    type=click.STRING,
-    required=False,
-    default="0x08000000",
-)
-@click.argument(
-    "boardloader_end",
-    type=click.STRING,
-    required=False,
-    default="0x0800C000",
-)
-@click.argument(
-    "bootloader_start",
-    type=click.STRING,
-    required=False,
-    default="0x08020000",
-)
-@click.argument(
-    "firmware_start",
-    type=click.STRING,
-    required=False,
-    default="0x08040000",
+@click.option(
+    "--bin",
+    "-b",
+    type=(click.Path(exists=True, dir_okay=False, readable=True, path_type=Path), str),
+    multiple=True,
 )
 def main(
-        boardloader: Path,
-        bootloader: Path,
-        firmware: Path,
+        bin: List[Tuple[Path, str]],
         outfile: Path | None,
-        boardloader_start: str,
-        boardloader_end: str,
-        bootloader_start: str,
-        firmware_start: str,
-) -> None:
-    boardloader_start = int(boardloader_start, 0)
-    boardloader_end = int(boardloader_end, 0)
-    bootloader_start = int(bootloader_start, 0)
-    firmware_start = int(firmware_start, 0)
 
+) -> None:
     if outfile is None:
         today = datetime.date.today().strftime(r"%Y-%m-%d")
         outfile = Path(f"combined-{today}.bin")
 
-    offset = boardloader_start
+    offset = int(bin[0][1], 0)
     out_bytes = io.BytesIO()
 
-    # write boardloader
-    offset += out_bytes.write(boardloader.read_bytes())
-    if offset > boardloader_end:
-        raise Exception("Boardloader too big")
+    for b in bin:
+        # zero-pad until next section:
+        offset += out_bytes.write(b"\x00" * (int(b[1], 0) - offset))
+        assert offset == int(b[1], 0)
 
-    # zero-pad until next section:
-    offset += out_bytes.write(b"\x00" * (bootloader_start - offset))
-    assert offset == bootloader_start
-
-    # write bootlaoder
-    offset += out_bytes.write(bootloader.read_bytes())
-    if offset > firmware_start:
-        raise Exception("Bootloader too big")
-
-    # zero-pad until next section:
-    offset += out_bytes.write(b"\x00" * (firmware_start - offset))
-    assert offset == firmware_start
-
-    # write firmware
-    offset += out_bytes.write(firmware.read_bytes())
+        # write binary
+        offset += out_bytes.write(b[0].read_bytes())
 
     # write out contents
-    click.echo(f"Writing {outfile} ({offset - boardloader_start} bytes)")
+    click.echo(f"Writing {outfile} ({offset - int(bin[0][1], 0)} bytes)")
     outfile.write_bytes(out_bytes.getvalue())
 
 
