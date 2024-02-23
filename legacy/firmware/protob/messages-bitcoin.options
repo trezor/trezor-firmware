@@ -3,6 +3,7 @@ GetPublicKey.ecdsa_curve_name                               max_size:32
 GetPublicKey.coin_name                                      max_size:21
 
 PublicKey.xpub                                              max_size:113
+PublicKey.descriptor                                        type:FT_IGNORE
 
 GetAddress.address_n                                        max_count:8
 GetAddress.coin_name                                        max_size:21

@@ -447,6 +447,7 @@ if TYPE_CHECKING:
         node: "HDNodeType"
         xpub: "str"
         root_fingerprint: "int | None"
+        descriptor: "str | None"
 
         def __init__(
             self,
@@ -454,6 +455,7 @@ if TYPE_CHECKING:
             node: "HDNodeType",
             xpub: "str",
             root_fingerprint: "int | None" = None,
+            descriptor: "str | None" = None,
         ) -> None:
             pass
 

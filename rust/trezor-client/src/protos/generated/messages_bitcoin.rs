@@ -768,6 +768,8 @@ pub struct PublicKey {
     pub xpub: ::std::option::Option<::std::string::String>,
     // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.PublicKey.root_fingerprint)
     pub root_fingerprint: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.PublicKey.descriptor)
+    pub descriptor: ::std::option::Option<::std::string::String>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.bitcoin.PublicKey.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -839,8 +841,44 @@ impl PublicKey {
         self.root_fingerprint = ::std::option::Option::Some(v);
     }
 
+    // optional string descriptor = 4;
+
+    pub fn descriptor(&self) -> &str {
+        match self.descriptor.as_ref() {
+            Some(v) => v,
+            None => "",
+        }
+    }
+
+    pub fn clear_descriptor(&mut self) {
+        self.descriptor = ::std::option::Option::None;
+    }
+
+    pub fn has_descriptor(&self) -> bool {
+        self.descriptor.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_descriptor(&mut self, v: ::std::string::String) {
+        self.descriptor = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_descriptor(&mut self) -> &mut ::std::string::String {
+        if self.descriptor.is_none() {
+            self.descriptor = ::std::option::Option::Some(::std::string::String::new());
+        }
+        self.descriptor.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_descriptor(&mut self) -> ::std::string::String {
+        self.descriptor.take().unwrap_or_else(|| ::std::string::String::new())
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(3);
+        let mut fields = ::std::vec::Vec::with_capacity(4);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, super::messages_common::HDNodeType>(
             "node",
@@ -856,6 +894,11 @@ impl PublicKey {
             "root_fingerprint",
             |m: &PublicKey| { &m.root_fingerprint },
             |m: &mut PublicKey| { &mut m.root_fingerprint },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "descriptor",
+            |m: &PublicKey| { &m.descriptor },
+            |m: &mut PublicKey| { &mut m.descriptor },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<PublicKey>(
             "PublicKey",
@@ -895,6 +938,9 @@ impl ::protobuf::Message for PublicKey {
                 24 => {
                     self.root_fingerprint = ::std::option::Option::Some(is.read_uint32()?);
                 },
+                34 => {
+                    self.descriptor = ::std::option::Option::Some(is.read_string()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -917,6 +963,9 @@ impl ::protobuf::Message for PublicKey {
         if let Some(v) = self.root_fingerprint {
             my_size += ::protobuf::rt::uint32_size(3, v);
         }
+        if let Some(v) = self.descriptor.as_ref() {
+            my_size += ::protobuf::rt::string_size(4, &v);
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -931,6 +980,9 @@ impl ::protobuf::Message for PublicKey {
         }
         if let Some(v) = self.root_fingerprint {
             os.write_uint32(3, v)?;
+        }
+        if let Some(v) = self.descriptor.as_ref() {
+            os.write_string(4, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -952,6 +1004,7 @@ impl ::protobuf::Message for PublicKey {
         self.node.clear();
         self.xpub = ::std::option::Option::None;
         self.root_fingerprint = ::std::option::Option::None;
+        self.descriptor = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -960,6 +1013,7 @@ impl ::protobuf::Message for PublicKey {
             node: ::protobuf::MessageField::none(),
             xpub: ::std::option::Option::None,
             root_fingerprint: ::std::option::Option::None,
+            descriptor: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -13312,42 +13366,43 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x0bshowDisplay\x12$\n\tcoin_name\x18\x04\x20\x01(\t:\x07BitcoinR\x08coi\
     nName\x12Z\n\x0bscript_type\x18\x05\x20\x01(\x0e2+.hw.trezor.messages.bi\
     tcoin.InputScriptType:\x0cSPENDADDRESSR\nscriptType\x12*\n\x11ignore_xpu\
-    b_magic\x18\x06\x20\x01(\x08R\x0fignoreXpubMagic\"\x85\x01\n\tPublicKey\
+    b_magic\x18\x06\x20\x01(\x08R\x0fignoreXpubMagic\"\xa5\x01\n\tPublicKey\
     \x129\n\x04node\x18\x01\x20\x02(\x0b2%.hw.trezor.messages.common.HDNodeT\
     ypeR\x04node\x12\x12\n\x04xpub\x18\x02\x20\x02(\tR\x04xpub\x12)\n\x10roo\
-    t_fingerprint\x18\x03\x20\x01(\rR\x0frootFingerprint\"\xe8\x02\n\nGetAdd\
-    ress\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12$\n\tcoin_n\
-    ame\x18\x02\x20\x01(\t:\x07BitcoinR\x08coinName\x12!\n\x0cshow_display\
-    \x18\x03\x20\x01(\x08R\x0bshowDisplay\x12P\n\x08multisig\x18\x04\x20\x01\
-    (\x0b24.hw.trezor.messages.bitcoin.MultisigRedeemScriptTypeR\x08multisig\
-    \x12Z\n\x0bscript_type\x18\x05\x20\x01(\x0e2+.hw.trezor.messages.bitcoin\
-    .InputScriptType:\x0cSPENDADDRESSR\nscriptType\x12*\n\x11ignore_xpub_mag\
-    ic\x18\x06\x20\x01(\x08R\x0fignoreXpubMagic\x12\x1a\n\x08chunkify\x18\
-    \x07\x20\x01(\x08R\x08chunkify\"5\n\x07Address\x12\x18\n\x07address\x18\
-    \x01\x20\x02(\tR\x07address\x12\x10\n\x03mac\x18\x02\x20\x01(\x0cR\x03ma\
-    c\"\x81\x02\n\x0eGetOwnershipId\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\
-    \x08addressN\x12$\n\tcoin_name\x18\x02\x20\x01(\t:\x07BitcoinR\x08coinNa\
-    me\x12P\n\x08multisig\x18\x03\x20\x01(\x0b24.hw.trezor.messages.bitcoin.\
-    MultisigRedeemScriptTypeR\x08multisig\x12Z\n\x0bscript_type\x18\x04\x20\
-    \x01(\x0e2+.hw.trezor.messages.bitcoin.InputScriptType:\x0cSPENDADDRESSR\
-    \nscriptType\"0\n\x0bOwnershipId\x12!\n\x0cownership_id\x18\x01\x20\x02(\
-    \x0cR\x0bownershipId\"\x88\x02\n\x0bSignMessage\x12\x1b\n\taddress_n\x18\
-    \x01\x20\x03(\rR\x08addressN\x12\x18\n\x07message\x18\x02\x20\x02(\x0cR\
-    \x07message\x12$\n\tcoin_name\x18\x03\x20\x01(\t:\x07BitcoinR\x08coinNam\
-    e\x12Z\n\x0bscript_type\x18\x04\x20\x01(\x0e2+.hw.trezor.messages.bitcoi\
-    n.InputScriptType:\x0cSPENDADDRESSR\nscriptType\x12$\n\x0eno_script_type\
-    \x18\x05\x20\x01(\x08R\x0cnoScriptType\x12\x1a\n\x08chunkify\x18\x06\x20\
-    \x01(\x08R\x08chunkify\"J\n\x10MessageSignature\x12\x18\n\x07address\x18\
-    \x01\x20\x02(\tR\x07address\x12\x1c\n\tsignature\x18\x02\x20\x02(\x0cR\t\
-    signature\"\xa3\x01\n\rVerifyMessage\x12\x18\n\x07address\x18\x01\x20\
-    \x02(\tR\x07address\x12\x1c\n\tsignature\x18\x02\x20\x02(\x0cR\tsignatur\
-    e\x12\x18\n\x07message\x18\x03\x20\x02(\x0cR\x07message\x12$\n\tcoin_nam\
-    e\x18\x04\x20\x01(\t:\x07BitcoinR\x08coinName\x12\x1a\n\x08chunkify\x18\
-    \x05\x20\x01(\x08R\x08chunkify\"\xd9\x06\n\x06SignTx\x12#\n\routputs_cou\
-    nt\x18\x01\x20\x02(\rR\x0coutputsCount\x12!\n\x0cinputs_count\x18\x02\
-    \x20\x02(\rR\x0binputsCount\x12$\n\tcoin_name\x18\x03\x20\x01(\t:\x07Bit\
-    coinR\x08coinName\x12\x1b\n\x07version\x18\x04\x20\x01(\r:\x011R\x07vers\
-    ion\x12\x1e\n\tlock_time\x18\x05\x20\x01(\r:\x010R\x08lockTime\x12\x16\n\
+    t_fingerprint\x18\x03\x20\x01(\rR\x0frootFingerprint\x12\x1e\n\ndescript\
+    or\x18\x04\x20\x01(\tR\ndescriptor\"\xe8\x02\n\nGetAddress\x12\x1b\n\tad\
+    dress_n\x18\x01\x20\x03(\rR\x08addressN\x12$\n\tcoin_name\x18\x02\x20\
+    \x01(\t:\x07BitcoinR\x08coinName\x12!\n\x0cshow_display\x18\x03\x20\x01(\
+    \x08R\x0bshowDisplay\x12P\n\x08multisig\x18\x04\x20\x01(\x0b24.hw.trezor\
+    .messages.bitcoin.MultisigRedeemScriptTypeR\x08multisig\x12Z\n\x0bscript\
+    _type\x18\x05\x20\x01(\x0e2+.hw.trezor.messages.bitcoin.InputScriptType:\
+    \x0cSPENDADDRESSR\nscriptType\x12*\n\x11ignore_xpub_magic\x18\x06\x20\
+    \x01(\x08R\x0fignoreXpubMagic\x12\x1a\n\x08chunkify\x18\x07\x20\x01(\x08\
+    R\x08chunkify\"5\n\x07Address\x12\x18\n\x07address\x18\x01\x20\x02(\tR\
+    \x07address\x12\x10\n\x03mac\x18\x02\x20\x01(\x0cR\x03mac\"\x81\x02\n\
+    \x0eGetOwnershipId\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\
+    \x12$\n\tcoin_name\x18\x02\x20\x01(\t:\x07BitcoinR\x08coinName\x12P\n\
+    \x08multisig\x18\x03\x20\x01(\x0b24.hw.trezor.messages.bitcoin.MultisigR\
+    edeemScriptTypeR\x08multisig\x12Z\n\x0bscript_type\x18\x04\x20\x01(\x0e2\
+    +.hw.trezor.messages.bitcoin.InputScriptType:\x0cSPENDADDRESSR\nscriptTy\
+    pe\"0\n\x0bOwnershipId\x12!\n\x0cownership_id\x18\x01\x20\x02(\x0cR\x0bo\
+    wnershipId\"\x88\x02\n\x0bSignMessage\x12\x1b\n\taddress_n\x18\x01\x20\
+    \x03(\rR\x08addressN\x12\x18\n\x07message\x18\x02\x20\x02(\x0cR\x07messa\
+    ge\x12$\n\tcoin_name\x18\x03\x20\x01(\t:\x07BitcoinR\x08coinName\x12Z\n\
+    \x0bscript_type\x18\x04\x20\x01(\x0e2+.hw.trezor.messages.bitcoin.InputS\
+    criptType:\x0cSPENDADDRESSR\nscriptType\x12$\n\x0eno_script_type\x18\x05\
+    \x20\x01(\x08R\x0cnoScriptType\x12\x1a\n\x08chunkify\x18\x06\x20\x01(\
+    \x08R\x08chunkify\"J\n\x10MessageSignature\x12\x18\n\x07address\x18\x01\
+    \x20\x02(\tR\x07address\x12\x1c\n\tsignature\x18\x02\x20\x02(\x0cR\tsign\
+    ature\"\xa3\x01\n\rVerifyMessage\x12\x18\n\x07address\x18\x01\x20\x02(\t\
+    R\x07address\x12\x1c\n\tsignature\x18\x02\x20\x02(\x0cR\tsignature\x12\
+    \x18\n\x07message\x18\x03\x20\x02(\x0cR\x07message\x12$\n\tcoin_name\x18\
+    \x04\x20\x01(\t:\x07BitcoinR\x08coinName\x12\x1a\n\x08chunkify\x18\x05\
+    \x20\x01(\x08R\x08chunkify\"\xd9\x06\n\x06SignTx\x12#\n\routputs_count\
+    \x18\x01\x20\x02(\rR\x0coutputsCount\x12!\n\x0cinputs_count\x18\x02\x20\
+    \x02(\rR\x0binputsCount\x12$\n\tcoin_name\x18\x03\x20\x01(\t:\x07Bitcoin\
+    R\x08coinName\x12\x1b\n\x07version\x18\x04\x20\x01(\r:\x011R\x07version\
+    \x12\x1e\n\tlock_time\x18\x05\x20\x01(\r:\x010R\x08lockTime\x12\x16\n\
     \x06expiry\x18\x06\x20\x01(\rR\x06expiry\x12&\n\x0coverwintered\x18\x07\
     \x20\x01(\x08R\x0coverwinteredB\x02\x18\x01\x12(\n\x10version_group_id\
     \x18\x08\x20\x01(\rR\x0eversionGroupId\x12\x1c\n\ttimestamp\x18\t\x20\
