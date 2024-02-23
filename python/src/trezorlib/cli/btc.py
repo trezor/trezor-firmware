@@ -294,17 +294,6 @@ def _get_descriptor(
         if purpose not in SCRIPT_TYPE_TO_BIP_PURPOSES[script_type]:
             raise ValueError("Invalid script type for account type")
 
-    if script_type == messages.InputScriptType.SPENDADDRESS:
-        fmt = "pkh({})"
-    elif script_type == messages.InputScriptType.SPENDP2SHWITNESS:
-        fmt = "sh(wpkh({}))"
-    elif script_type == messages.InputScriptType.SPENDWITNESS:
-        fmt = "wpkh({})"
-    elif script_type == messages.InputScriptType.SPENDTAPROOT:
-        fmt = "tr({})"
-    else:
-        raise ValueError("Unsupported script type")
-
     coin = coin or DEFAULT_COIN
     if coin == "Bitcoin":
         coin_type = 0
@@ -330,6 +319,21 @@ def _get_descriptor(
         ignore_xpub_magic=True,
         unlock_path=get_unlock_path(n),
     )
+
+    # Starting with core 2.6.5 the descriptor is included in the response.
+    if pub.descriptor is not None:
+        return pub.descriptor
+
+    if script_type == messages.InputScriptType.SPENDADDRESS:
+        fmt = "pkh({})"
+    elif script_type == messages.InputScriptType.SPENDP2SHWITNESS:
+        fmt = "sh(wpkh({}))"
+    elif script_type == messages.InputScriptType.SPENDWITNESS:
+        fmt = "wpkh({})"
+    elif script_type == messages.InputScriptType.SPENDTAPROOT:
+        fmt = "tr({})"
+    else:
+        raise ValueError("Unsupported script type")
 
     fingerprint = pub.root_fingerprint if pub.root_fingerprint is not None else 0
     descriptor = f"[{fingerprint:08x}{path[1:]}]{pub.xpub}/<0;1>/*"

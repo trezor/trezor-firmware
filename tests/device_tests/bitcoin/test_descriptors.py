@@ -16,9 +16,10 @@
 
 import pytest
 
-from trezorlib import messages
-from trezorlib.cli import btc
+from trezorlib import btc, messages, models
+from trezorlib.cli import btc as btc_cli
 from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.tools import H_
 
 from ...input_flows import InputFlowShowXpubQRCode
 
@@ -152,15 +153,47 @@ VECTORS_DESCRIPTORS = (  # coin, account, script_type, descriptors
 )
 
 
+def _address_n(purpose, coin, account, script_type):
+    res = [H_(purpose), H_(0) if coin == "Bitcoin" else H_(1), H_(account)]
+    if purpose == 10025 and script_type == messages.InputScriptType.SPENDTAPROOT:
+        res.append(H_(1))
+
+    return res
+
+
+@pytest.mark.skip_t1
 @pytest.mark.parametrize(
     "coin, account, purpose, script_type, descriptors", VECTORS_DESCRIPTORS
 )
 def test_descriptors(client: Client, coin, account, purpose, script_type, descriptors):
     with client:
-        if client.features.model != "1":
+        IF = InputFlowShowXpubQRCode(client)
+        client.set_input_flow(IF.get())
+
+        address_n = _address_n(purpose, coin, account, script_type)
+        res = btc.get_public_node(
+            client,
+            _address_n(purpose, coin, account, script_type),
+            show_display=True,
+            coin_name=coin,
+            script_type=script_type,
+            ignore_xpub_magic=True,
+            unlock_path=btc_cli.get_unlock_path(address_n),
+        )
+        assert res.descriptor == descriptors
+
+
+@pytest.mark.parametrize(
+    "coin, account, purpose, script_type, descriptors", VECTORS_DESCRIPTORS
+)
+def test_descriptors_trezorlib(
+    client: Client, coin, account, purpose, script_type, descriptors
+):
+    with client:
+        if client.model != models.T1B1:
             IF = InputFlowShowXpubQRCode(client)
             client.set_input_flow(IF.get())
-        res = btc._get_descriptor(
+        res = btc_cli._get_descriptor(
             client, coin, account, purpose, script_type, show_display=True
         )
         assert res == descriptors
