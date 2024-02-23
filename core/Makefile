@@ -43,95 +43,56 @@ OPENOCD_INTERFACE ?= stlink
 # OpenOCD transport default. Alternative: jtag
 OPENOCD_TRANSPORT ?= hla_swd
 
-ifeq ($(TREZOR_MODEL),$(filter $(TREZOR_MODEL),T R DISC1))
+ifeq ($(TREZOR_MODEL), 1)
+MCU = STM32F2
+LAYOUT_FILE = embed/models/model_T1B1.h
+OPENOCD_TARGET = target/stm32f2x.cfg
+else ifeq ($(TREZOR_MODEL),$(filter $(TREZOR_MODEL),T))
 MCU = STM32F4
+LAYOUT_FILE = embed/models/model_T2T1.h
 OPENOCD_TARGET = target/stm32f4x.cfg
-FLASH_START 		= 0x08000000
-BOARDLOADER_START   = 0x08000000
-BOARDLOADER_END     = 0x0800C000
-BOOTLOADER_START    = 0x08020000
-FIRMWARE_START   	= 0x08040000
-FIRMWARE_P2_START   = 0x08120000
-PRODTEST_START      = 0x08040000
-STORAGE_1_OFFSET	= 0x10000
-STORAGE_2_OFFSET	= 0x110000
-STORAGE_SIZE		= 0x10000
-BOARDLOADER_MAXSIZE = 49152
-BOOTLOADER_MAXSIZE  = 131072
-FIRMWARE_P1_MAXSIZE = 786432
-FIRMWARE_P2_MAXSIZE = 917504
-FIRMWARE_MAXSIZE    = 1703936
-BOARDLOADER_SECTOR_START = 0
-BOARDLOADER_SECTOR_END = 3
-BOOTLOADER_SECTOR_START = 5
-BOOTLOADER_SECTOR_END = 5
-FIRMWARE_SECTOR_START = 6
-FIRMWARE_SECTOR_END = 11
-FIRMWARE_P2_SECTOR_START = 17
-FIRMWARE_P2_SECTOR_END = 23
-STORAGE_1_SECTOR_START = 4
-STORAGE_1_SECTOR_END = 4
-STORAGE_2_SECTOR_START = 16
-STORAGE_2_SECTOR_END = 16
-
+else ifeq ($(TREZOR_MODEL),$(filter $(TREZOR_MODEL),R))
+MCU = STM32F4
+LAYOUT_FILE = embed/models/model_T2B1.h
+OPENOCD_TARGET = target/stm32f4x.cfg
 else ifeq ($(TREZOR_MODEL),$(filter $(TREZOR_MODEL),T3T1))
 MCU = STM32U5
 OPENOCD_TARGET = target/stm32u5x.cfg
-FLASH_START 		= 0x0C000000
-BOARDLOADER_START   = 0x0C004000
-BOARDLOADER_END     = 0x0C010000
-BOOTLOADER_START    = 0x0C010000
-FIRMWARE_START   	= 0x0C050000
-PRODTEST_START      = 0x0C050000
-STORAGE_1_OFFSET	= 0x30000
-STORAGE_2_OFFSET	= 0x50000
-STORAGE_SIZE		= 0x10000
-BOARDLOADER_MAXSIZE = 49152
-BOOTLOADER_MAXSIZE  = 131072
-FIRMWARE_MAXSIZE    = 1703936
-BOARDLOADER_SECTOR_START = 0x2
-BOARDLOADER_SECTOR_END = 0x7
-BOOTLOADER_SECTOR_START = 0x8
-BOOTLOADER_SECTOR_END = 0x17
-FIRMWARE_SECTOR_START = 0x28
-FIRMWARE_SECTOR_END = 0xF8
-STORAGE_1_SECTOR_START = 0x18
-STORAGE_1_SECTOR_END = 0x1F
-STORAGE_2_SECTOR_START = 0x20
-STORAGE_2_SECTOR_END = 0x27
+LAYOUT_FILE = embed/models/model_T3T1.h
+else ifeq ($(TREZOR_MODEL),$(filter $(TREZOR_MODEL),DISC1))
+MCU = STM32F4
+LAYOUT_FILE = embed/models/model_D001.h
 else ifeq ($(TREZOR_MODEL),$(filter $(TREZOR_MODEL),DISC2))
 MCU = STM32U5
+LAYOUT_FILE = embed/models/model_D002.h
 OPENOCD_TARGET = target/stm32u5x.cfg
-FLASH_START 		= 0x0C000000
-BOARDLOADER_START   = 0x0C004000
-BOARDLOADER_END     = 0x0C010000
-BOOTLOADER_START    = 0x0C010000
-FIRMWARE_START   	= 0x0C050000
-PRODTEST_START      = 0x0C050000
-STORAGE_1_OFFSET	= 0x30000
-STORAGE_2_OFFSET	= 0x50000
-STORAGE_SIZE		= 0x10000
-BOARDLOADER_MAXSIZE = 49152
-BOOTLOADER_MAXSIZE  = 131072
-FIRMWARE_MAXSIZE    = 3735552
-BOARDLOADER_SECTOR_START = 0x2
-BOARDLOADER_SECTOR_END = 0x7
-BOOTLOADER_SECTOR_START = 0x8
-BOOTLOADER_SECTOR_END = 0x17
-FIRMWARE_SECTOR_START = 0x28
-FIRMWARE_SECTOR_END = 0x1F8
-STORAGE_1_SECTOR_START = 0x18
-STORAGE_1_SECTOR_END = 0x1F
-STORAGE_2_SECTOR_START = 0x20
-STORAGE_2_SECTOR_END = 0x27
-else ifeq ($(TREZOR_MODEL), 1)
-MCU = STM32F2
-OPENOCD_TARGET = target/stm32f2x.cfg
-FIRMWARE_START   	= 0x08010000
 else
 $(error Unknown TREZOR_MODEL: $(TREZOR_MODEL))
 endif
 
+
+FLASH_START 		= $(shell python ./tools/layout_parser.py ${LAYOUT_FILE} FLASH_START)
+BOARDLOADER_START   = $(shell python ./tools/layout_parser.py ${LAYOUT_FILE} BOARDLOADER_START)
+BOOTLOADER_START    = $(shell python ./tools/layout_parser.py ${LAYOUT_FILE} BOOTLOADER_START)
+FIRMWARE_START   	= $(shell python ./tools/layout_parser.py ${LAYOUT_FILE} FIRMWARE_START)
+STORAGE_1_OFFSET	= $(shell python ./tools/layout_parser.py ${LAYOUT_FILE} STORAGE_1_OFFSET)
+STORAGE_2_OFFSET	= $(shell python ./tools/layout_parser.py ${LAYOUT_FILE} STORAGE_2_OFFSET)
+STORAGE_SIZE		= $(shell python ./tools/layout_parser.py ${LAYOUT_FILE} NORCOW_SECTOR_SIZE)
+BOARDLOADER_MAXSIZE = $(shell python ./tools/layout_parser.py ${LAYOUT_FILE} BOARDLOADER_IMAGE_MAXSIZE)
+BOOTLOADER_MAXSIZE  = $(shell python ./tools/layout_parser.py ${LAYOUT_FILE} BOOTLOADER_IMAGE_MAXSIZE)
+FIRMWARE_MAXSIZE    = $(shell python ./tools/layout_parser.py ${LAYOUT_FILE} FIRMWARE_IMAGE_MAXSIZE)
+BOARDLOADER_SECTOR_START = $(shell python ./tools/layout_parser.py ${LAYOUT_FILE} BOARDLOADER_SECTOR_START)
+BOARDLOADER_SECTOR_END = $(shell python ./tools/layout_parser.py ${LAYOUT_FILE} BOARDLOADER_SECTOR_END)
+BOOTLOADER_SECTOR_START = $(shell python ./tools/layout_parser.py ${LAYOUT_FILE} BOOTLOADER_SECTOR_START)
+BOOTLOADER_SECTOR_END = $(shell python ./tools/layout_parser.py ${LAYOUT_FILE} BOOTLOADER_SECTOR_END)
+FIRMWARE_SECTOR_START = $(shell python ./tools/layout_parser.py ${LAYOUT_FILE} FIRMWARE_SECTOR_START)
+FIRMWARE_SECTOR_END = $(shell python ./tools/layout_parser.py ${LAYOUT_FILE} FIRMWARE_SECTOR_END)
+FIRMWARE_P2_SECTOR_START = $(shell python ./tools/layout_parser.py ${LAYOUT_FILE} FIRMWARE_P2_SECTOR_START)
+FIRMWARE_P2_SECTOR_END = $(shell python ./tools/layout_parser.py ${LAYOUT_FILE} FIRMWARE_P2_SECTOR_END)
+STORAGE_1_SECTOR_START = $(shell python ./tools/layout_parser.py ${LAYOUT_FILE} STORAGE_1_SECTOR_START)
+STORAGE_1_SECTOR_END = $(shell python ./tools/layout_parser.py ${LAYOUT_FILE} STORAGE_1_SECTOR_END)
+STORAGE_2_SECTOR_START = $(shell python ./tools/layout_parser.py ${LAYOUT_FILE} STORAGE_2_SECTOR_START)
+STORAGE_2_SECTOR_END = $(shell python ./tools/layout_parser.py ${LAYOUT_FILE} STORAGE_2_SECTOR_END)
 
 OPENOCD = openocd -f interface/$(OPENOCD_INTERFACE).cfg -c "transport select $(OPENOCD_TRANSPORT)" -f $(OPENOCD_TARGET)
 
@@ -374,10 +335,10 @@ flash_bootloader_ci: $(BOOTLOADER_CI_BUILD_DIR)/bootloader.bin ## flash CI bootl
 	$(OPENOCD) -c "init; reset halt; flash write_image erase $< $(BOOTLOADER_START); exit"
 
 flash_prodtest: $(PRODTEST_BUILD_DIR)/prodtest.bin ## flash prodtest using OpenOCD
-	$(OPENOCD) -c "init; reset halt; flash write_image erase $< $(PRODTEST_START); exit"
+	$(OPENOCD) -c "init; reset halt; flash write_image erase $< $(FIRMWARE_START); exit"
 
 flash_firmware: $(FIRMWARE_BUILD_DIR)/firmware.bin ## flash firmware using OpenOCD
-ifdef FIRMWARE_P2_START
+ifeq ($(MCU),$(filter $(MCU),STM32F4))
 	$(OPENOCD) -c "init; reset halt; flash write_image erase $<.p1 $(FIRMWARE_START); flash write_image erase $<.p2 $(FIRMWARE_P2_START); exit"
 
 else
@@ -394,7 +355,7 @@ flash_erase_bootloader: ## erase bootloader
 	$(OPENOCD) -c "init; reset halt; flash info 0; flash erase_sector 0 $(BOOTLOADER_SECTOR_START) $(BOOTLOADER_SECTOR_END); exit"
 
 flash_erase_firmware: ## erase bootloader
-ifdef FIRMWARE_P2_START
+ifeq ($(MCU),$(filter $(MCU),STM32F4))
 	$(OPENOCD) -c "init; reset halt; flash info 0; flash erase_sector 0 $(FIRMWARE_SECTOR_START) $(FIRMWARE_SECTOR_END);  flash erase_sector 0 $(FIRMWARE_P2_SECTOR_START) $(FIRMWARE_P2_SECTOR_END); exit"
 
 else
@@ -463,36 +424,31 @@ sizecheck: ## check sizes of binary files
 	test $(FIRMWARE_P2_MAXSIZE) -ge $(shell wc -c < $(FIRMWARE_BUILD_DIR)/firmware.bin.p2)
 	test $(FIRMWARE_MAXSIZE) -ge $(shell wc -c < $(FIRMWARE_BUILD_DIR)/firmware.bin)
 
+combine: ## combine boardloader + bootloader + prodtest into one combined image
+	./tools/combine_firmware \
+		$(LAYOUT_FILE) \
+		$(PRODTEST_BUILD_DIR)/combined.bin \
+		-b BOARDLOADER $(BOARDLOADER_BUILD_DIR)/boardloader.bin \
+		-b BOOTLOADER $(BOOTLOADER_BUILD_DIR)/bootloader.bin \
+		-b FIRMWARE $(PRODTEST_BUILD_DIR)/prodtest.bin
 
 ifeq  ($(MCU),$(filter $(MCU),STM32F4))
-combine: ## combine boardloader + bootloader + prodtest into one combined image
-	./tools/combine_firmware \
-		$(PRODTEST_BUILD_DIR)/combined.bin \
-		-b $(BOARDLOADER_BUILD_DIR)/boardloader.bin $(BOARDLOADER_START) \
-		-b $(BOOTLOADER_BUILD_DIR)/bootloader.bin $(BOOTLOADER_START) \
-		-b $(PRODTEST_BUILD_DIR)/prodtest.bin $(FIRMWARE_START)
-
 combine_fw: ## combine boardloader + bootloader + firmware into one combined image
 	./tools/combine_firmware \
+		$(LAYOUT_FILE) \
 		$(PRODTEST_BUILD_DIR)/combined.bin \
-		-b $(BOARDLOADER_BUILD_DIR)/boardloader.bin $(BOARDLOADER_START) \
-		-b $(BOOTLOADER_BUILD_DIR)/bootloader.bin $(BOOTLOADER_START) \
-		-b $(FIRMWARE_BUILD_DIR)/firmware.bin.p1 $(FIRMWARE_START) \
-		-b $(FIRMWARE_BUILD_DIR)/firmware.bin.p2 $(FIRMWARE_P2_START)
+		-b BOARDLOADER $(BOARDLOADER_BUILD_DIR)/boardloader.bin \
+		-b BOOTLOADER $(BOOTLOADER_BUILD_DIR)/bootloader.bin \
+		-b FIRMWARE $(FIRMWARE_BUILD_DIR)/firmware.bin.p1 \
+		-b FIRMWARE_P2 $(FIRMWARE_BUILD_DIR)/firmware.bin.p2
 else ifeq ($(MCU),$(filter $(MCU),STM32U5))
-combine: ## combine boardloader + bootloader + prodtest into one combined image
-	./tools/combine_firmware \
-		$(PRODTEST_BUILD_DIR)/combined.bin \
-		-b $(BOARDLOADER_BUILD_DIR)/boardloader.bin $(BOARDLOADER_START) \
-		-b $(BOOTLOADER_BUILD_DIR)/bootloader.bin $(BOOTLOADER_START) \
-		-b $(PRODTEST_BUILD_DIR)/prodtest.bin $(FIRMWARE_START)
-
 combine_fw: ## combine boardloader + bootloader + firmware into one combined image
 	./tools/combine_firmware \
+		$(LAYOUT_FILE) \
 		$(PRODTEST_BUILD_DIR)/combined.bin \
-		-b $(BOARDLOADER_BUILD_DIR)/boardloader.bin $(BOARDLOADER_START) \
-		-b $(BOOTLOADER_BUILD_DIR)/bootloader.bin $(BOOTLOADER_START) \
-		-b $(FIRMWARE_BUILD_DIR)/firmware.bin $(FIRMWARE_START)
+		-b BOARDLOADER $(BOARDLOADER_BUILD_DIR)/boardloader.bin \
+		-b BOOTLOADER $(BOOTLOADER_BUILD_DIR)/bootloader.bin \
+		-b FIRMWARE $(FIRMWARE_BUILD_DIR)/firmware.bin
 endif
 
 upload: ## upload firmware using trezorctl
