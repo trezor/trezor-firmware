@@ -671,7 +671,7 @@ class TR:
     solana__associated_token_account: str = "Associated token account"
     solana__confirm_multisig: str = "Confirm multisig"
     solana__expected_fee: str = "Expected fee"
-    solana__instruction_accounts_template: str = "Instruction contains {} accounts and its data is {} bytes long."
+    solana__instruction_accounts_template: str = "Instruction to program {} contains {} accounts and its data is {} bytes long."
     solana__instruction_data: str = "Instruction data"
     solana__instruction_is_multisig: str = "The following instruction is a multisig instruction."
     solana__is_provided_via_lookup_table_template: str = "{} is provided via a lookup table."
