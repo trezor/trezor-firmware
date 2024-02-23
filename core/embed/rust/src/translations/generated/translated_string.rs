@@ -1524,7 +1524,7 @@ impl TranslatedString {
             Self::solana__associated_token_account => "Associated token account",
             Self::solana__confirm_multisig => "Confirm multisig",
             Self::solana__expected_fee => "Expected fee",
-            Self::solana__instruction_accounts_template => "Instruction contains {} accounts and its data is {} bytes long.",
+            Self::solana__instruction_accounts_template => "Instruction to program {} contains {} accounts and its data is {} bytes long.",
             Self::solana__instruction_data => "Instruction data",
             Self::solana__instruction_is_multisig => "The following instruction is a multisig instruction.",
             Self::solana__is_provided_via_lookup_table_template => "{} is provided via a lookup table.",
