@@ -2,7 +2,14 @@ name: Core
 
 on:
   pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize  # branch head update
+      - labeled
   workflow_dispatch:
+  schedule:
+    - cron: '15 23 * * *'  # every day @ 23:15
 
 permissions:
   id-token: write       # for fetching the OIDC token
@@ -19,6 +26,20 @@ env:
     |All            |[main](https://data.trezor.io/dev/firmware/master_diff/${{ github.run_id }}/index.html)([screens](https://data.trezor.io/dev/firmware/master_diff/${{ github.run_id }}/master_diff.html)) ||
 
 jobs:
+  param:
+    name: Determine pipeline parameters
+    runs-on: ubuntu-latest
+    outputs:
+      test_lang: ${{ steps.set_vars.outputs.test_lang }}
+      asan: ${{ steps.set_vars.outputs.asan }}
+    steps:
+      - id: set_vars
+        name: Set variables
+        run: |
+          echo test_lang=${{ github.event_name == 'pull_request' && github.event.action == 'labeled' && github.event.label.name == 'translations' && '[\"en\", \"cs\", \"fr\", \"de\", \"es\"]' || '[\"en\"]' }} >> $GITHUB_OUTPUT
+          echo asan=${{ github.event_name == 'schedule' && '[\"noasan\", \"asan\"]' || '[\"noasan\"]' }} >> $GITHUB_OUTPUT
+          cat $GITHUB_OUTPUT
+
   core_firmware:
     name: Build firmware
     runs-on: ubuntu-latest
@@ -70,6 +91,7 @@ jobs:
   core_emu:
     name: Build emu
     runs-on: ubuntu-latest
+    needs: param
     strategy:
       fail-fast: false
       matrix:
@@ -77,7 +99,7 @@ jobs:
         coins: [universal, btconly]
         # type: [normal, debuglink]
         type: [debuglink]
-        asan: ${{ fromJSON(github.event_name == 'schedule' && '["noasan", "asan"]' || '["noasan"]') }}
+        asan: ${{ fromJSON(needs.param.outputs.asan) }}
         exclude:
           - type: normal
             asan: asan
@@ -108,11 +130,12 @@ jobs:
   core_unit_python_test:
     name: Python unit tests
     runs-on: ubuntu-latest
+    needs: param
     strategy:
       fail-fast: false
       matrix:
         model: [T2T1, T2B1, T3T1]
-        asan: ${{ fromJSON(github.event_name == 'schedule' && '["noasan", "asan"]' || '["noasan"]') }}
+        asan: ${{ fromJSON(needs.param.outputs.asan) }}
     env:
       TREZOR_MODEL: ${{ matrix.model == 'T2T1' && 'T' || matrix.model == 'T2B1' && 'R' || matrix.model }}
       ADDRESS_SANITIZER: ${{ matrix.asan == 'asan' && '1' || '0' }}
@@ -128,12 +151,14 @@ jobs:
   core_unit_rust_test:
     name: Rust unit tests
     runs-on: ubuntu-latest
-    needs: core_emu
+    needs:
+      - param
+      - core_emu
     strategy:
       fail-fast: false
       matrix:
         model: [T2T1, T2B1]
-        asan: ${{ fromJSON(github.event_name == 'schedule' && '["noasan", "asan"]' || '["noasan"]') }}
+        asan: ${{ fromJSON(needs.param.outputs.asan) }}
         # T2B1 fails due to rust clippy error which is hard to reproduce, see discussion here:
         # https://github.com/trezor/trezor-firmware/pull/2196
         # The problem might be in conflicting versions of clippy, let's see if this helps:
@@ -182,13 +207,16 @@ jobs:
   core_device_test:
     name: Device tests
     runs-on: ubuntu-latest
-    needs: core_emu
+    needs:
+      - param
+      - core_emu
     strategy:
       fail-fast: false
       matrix:
         model: [T2T1, T2B1, T3T1]
         coins: [universal, btconly]
-        asan: ${{ fromJSON(github.event_name == 'schedule' && '["noasan", "asan"]' || '["noasan"]') }}
+        asan: ${{ fromJSON(needs.param.outputs.asan) }}
+        lang: ${{ fromJSON(needs.param.outputs.test_lang) }}
         # T2B1 fails due to https://github.com/trezor/trezor-firmware/issues/3280
         # remove after single global layout is implemented (or bug above fixed):
         exclude:
@@ -200,6 +228,7 @@ jobs:
       ADDRESS_SANITIZER: ${{ matrix.asan == 'asan' && '1' || '0' }}
       PYTEST_TIMEOUT: ${{ matrix.asan == 'asan' && 600 || 400 }}
       ACTIONS_DO_UI_TEST: ${{ matrix.coins == 'universal' && matrix.asan == 'noasan' }}
+      TEST_LANG: ${{ matrix.lang }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -215,7 +244,7 @@ jobs:
         if: failure()
       - uses: actions/upload-artifact@v4
         with:
-          name: core-device-${{ matrix.model }}-${{ matrix.coins }}-${{ matrix.asan }}
+          name: core-device-${{ matrix.model }}-${{ matrix.coins }}-${{ matrix.lang }}-${{ matrix.asan }}
           path: tests/trezor.log
           retention-days: 7
         if: always()
@@ -228,7 +257,7 @@ jobs:
         if: ${{ failure() && env.ACTIONS_DO_UI_TEST == 'true' }}
       - uses: actions/upload-artifact@v4
         with:
-          name: core-coverage-${{ matrix.model }}-${{ github.job }}-${{ strategy.job-index }}
+          name: core-coverage-${{ matrix.model }}-${{ matrix.lang }}-${{ github.job }}-${{ strategy.job-index }}
           # there will be more coverage files (one per core)
           path: core/src/.coverage.*
           retention-days: 7
@@ -238,16 +267,20 @@ jobs:
   core_click_test:
     name: Click tests
     runs-on: ubuntu-latest
-    needs: core_emu
+    needs:
+      - param
+      - core_emu
     strategy:
       fail-fast: false
       matrix:
         model: [T2T1, T2B1, T3T1]
-        asan: ${{ fromJSON(github.event_name == 'schedule' && '["noasan", "asan"]' || '["noasan"]') }}
+        asan: ${{ fromJSON(needs.param.outputs.asan) }}
+        lang: ${{ fromJSON(needs.param.outputs.test_lang) }}
     env:
       TREZOR_PROFILING: ${{ matrix.asan == 'noasan' && '1' || '0' }}
       # MULTICORE: 4  # more could interfere with other jobs
       PYTEST_TIMEOUT: 400
+      TEST_LANG: ${{ matrix.lang }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -264,7 +297,7 @@ jobs:
         if: ${{ matrix.asan == 'asan' }}
       - uses: actions/upload-artifact@v4
         with:
-          name: core-click-${{ matrix.model }}-${{ matrix.asan }}
+          name: core-click-${{ matrix.model }}-${{ matrix.lang }}-${{ matrix.asan }}
           path: tests/trezor.log
           retention-days: 7
         if: always()
@@ -285,14 +318,16 @@ jobs:
   core_upgrade_test:
     name: Upgrade tests
     runs-on: ubuntu-latest
-    needs: core_emu
+    needs:
+      - param
+      - core_emu
     strategy:
       fail-fast: false
       matrix:
         # FIXME: T2B1 https://github.com/trezor/trezor-firmware/issues/2724
         # FIXME: T3T1 https://github.com/trezor/trezor-firmware/issues/3595
         model: [T2T1]
-        asan: ${{ fromJSON(github.event_name == 'schedule' && '["noasan", "asan"]' || '["noasan"]') }}
+        asan: ${{ fromJSON(needs.param.outputs.asan) }}
     env:
       TREZOR_UPGRADE_TEST: core
       PYTEST_TIMEOUT: 400
@@ -314,12 +349,14 @@ jobs:
   core_persistence_test:
     name: Persistence tests
     runs-on: ubuntu-latest
-    needs: core_emu
+    needs:
+      - param
+      - core_emu
     strategy:
       fail-fast: false
       matrix:
-        model: [T2T1, T3T1]  # TODO T2B1 https://github.com/trezor/trezor-firmware/issues/2724 and T3T1
-        asan: ${{ fromJSON(github.event_name == 'schedule' && '["noasan", "asan"]' || '["noasan"]') }}
+        model: [T2T1, T3T1]  # TODO T2B1 https://github.com/trezor/trezor-firmware/issues/2724
+        asan: ${{ fromJSON(needs.param.outputs.asan) }}
     env:
       TREZOR_PROFILING: ${{ matrix.asan == 'noasan' && '1' || '0' }}
       PYTEST_TIMEOUT: 400
@@ -461,12 +498,14 @@ jobs:
   core_monero_test:
     name: Monero test
     runs-on: ubuntu-latest
-    needs: core_emu
+    needs:
+      - param
+      - core_emu
     strategy:
       fail-fast: false
       matrix:
         model: [T2T1, T2B1, T3T1]
-        asan: ${{ fromJSON(github.event_name == 'schedule' && '["noasan", "asan"]' || '["noasan"]') }}
+        asan: ${{ fromJSON(needs.param.outputs.asan) }}
     env:
       TREZOR_PROFILING: ${{ matrix.asan == 'noasan' && '1' || '0' }}
       PYTEST_TIMEOUT: 400
@@ -504,12 +543,14 @@ jobs:
   core_u2f_test:
     name: U2F test
     runs-on: ubuntu-latest
-    needs: core_emu
+    needs:
+      - param
+      - core_emu
     strategy:
       fail-fast: false
       matrix:
         model: [T2T1, T2B1, T3T1]
-        asan: ${{ fromJSON(github.event_name == 'schedule' && '["noasan", "asan"]' || '["noasan"]') }}
+        asan: ${{ fromJSON(needs.param.outputs.asan) }}
     env:
       TREZOR_PROFILING: ${{ matrix.asan == 'noasan' && '1' || '0' }}
       PYTEST_TIMEOUT: 400
@@ -542,12 +583,14 @@ jobs:
   core_fido2_test:
     name: FIDO2 test
     runs-on: ubuntu-latest
-    needs: core_emu
+    needs:
+      - param
+      - core_emu
     strategy:
       fail-fast: false
       matrix:
         model: [T2T1, T3T1]  # XXX T2B1 https://github.com/trezor/trezor-firmware/issues/2724
-        asan: ${{ fromJSON(github.event_name == 'schedule' && '["noasan", "asan"]' || '["noasan"]') }}
+        asan: ${{ fromJSON(needs.param.outputs.asan) }}
     env:
       TREZOR_PROFILING: ${{ matrix.asan == 'noasan' && '1' || '0' }}
       PYTEST_TIMEOUT: 400
