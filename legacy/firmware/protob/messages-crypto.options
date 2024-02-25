@@ -24,10 +24,3 @@ GetECDHSessionKey.ecdsa_curve_name      max_size:32
 
 ECDHSessionKey.session_key              max_size:65
 ECDHSessionKey.public_key               max_size:33
-
-# Unused messages.
-# TODO might delete as-well?
-CosiCommit                              skip_message:true
-CosiCommitment                          skip_message:true
-CosiSign                                skip_message:true
-CosiSignature                           skip_message:true
