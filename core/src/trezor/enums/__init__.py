@@ -102,10 +102,6 @@ if TYPE_CHECKING:
         SignedIdentity = 54
         GetECDHSessionKey = 61
         ECDHSessionKey = 62
-        CosiCommit = 71
-        CosiCommitment = 72
-        CosiSign = 73
-        CosiSignature = 74
         DebugLinkDecision = 100
         DebugLinkGetState = 101
         DebugLinkState = 102
