@@ -7,7 +7,7 @@
 static secbool bootloader_locked_set = secfalse;
 static secbool bootloader_locked = secfalse;
 
-static secbool verify_header(void) {
+secbool secret_verify_header(void) {
   uint8_t header[SECRET_HEADER_LEN] = {0};
 
   memcpy(header, flash_area_get_address(&SECRET_AREA, 0, SECRET_HEADER_LEN),
@@ -22,7 +22,7 @@ static secbool verify_header(void) {
 secbool secret_bootloader_locked(void) {
   if (bootloader_locked_set != sectrue) {
     // Set bootloader_locked.
-    verify_header();
+    secret_verify_header();
   }
 
   return bootloader_locked;
@@ -44,7 +44,7 @@ void secret_write(uint8_t* data, uint32_t offset, uint32_t len) {
 }
 
 secbool secret_read(uint8_t* data, uint32_t offset, uint32_t len) {
-  if (sectrue != verify_header()) {
+  if (sectrue != secret_verify_header()) {
     return secfalse;
   }
 

@@ -9,7 +9,7 @@
 static secbool bootloader_locked_set = secfalse;
 static secbool bootloader_locked = secfalse;
 
-static secbool verify_header(void) {
+secbool secret_verify_header(void) {
   uint8_t header[SECRET_HEADER_LEN] = {0};
 
   memcpy(header, flash_area_get_address(&SECRET_AREA, 0, SECRET_HEADER_LEN),
@@ -46,7 +46,7 @@ void secret_write(uint8_t *data, uint32_t offset, uint32_t len) {
 }
 
 secbool secret_read(uint8_t *data, uint32_t offset, uint32_t len) {
-  if (sectrue != verify_header()) {
+  if (sectrue != secret_verify_header()) {
     return secfalse;
   }
 
@@ -69,8 +69,29 @@ secbool secret_bhk_locked(void) {
          sectrue;
 }
 
+static secbool secret_present(uint32_t offset, uint32_t len) {
+  uint8_t *optiga_secret =
+      (uint8_t *)flash_area_get_address(&SECRET_AREA, offset, len);
+
+  int optiga_secret_empty_bytes = 0;
+
+  for (int i = 0; i < len; i++) {
+    if (optiga_secret[i] == 0xFF) {
+      optiga_secret_empty_bytes++;
+    }
+  }
+  return sectrue * (optiga_secret_empty_bytes != len);
+}
+
 void secret_bhk_provision(void) {
   uint32_t secret[SECRET_BHK_LEN / sizeof(uint32_t)] = {0};
+
+  ensure(secret_verify_header(), "secret sector not properly initialized");
+
+  if (sectrue != secret_present(SECRET_BHK_OFFSET, SECRET_BHK_LEN)) {
+    secret_bhk_regenerate();
+  }
+
   secbool ok =
       secret_read((uint8_t *)secret, SECRET_BHK_OFFSET, SECRET_BHK_LEN);
 
@@ -103,17 +124,7 @@ void secret_bhk_regenerate(void) {
 }
 
 secbool secret_optiga_present(void) {
-  uint8_t *optiga_secret = (uint8_t *)flash_area_get_address(
-      &SECRET_AREA, SECRET_OPTIGA_KEY_OFFSET, SECRET_OPTIGA_KEY_LEN);
-
-  int optiga_secret_empty_bytes = 0;
-
-  for (int i = 0; i < SECRET_OPTIGA_KEY_LEN; i++) {
-    if (optiga_secret[i] == 0xFF) {
-      optiga_secret_empty_bytes++;
-    }
-  }
-  return sectrue * (optiga_secret_empty_bytes != SECRET_OPTIGA_KEY_LEN);
+  return secret_present(SECRET_OPTIGA_KEY_OFFSET, SECRET_OPTIGA_KEY_LEN);
 }
 
 void secret_optiga_backup(void) {

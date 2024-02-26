@@ -21,6 +21,8 @@ secbool secret_read(uint8_t* data, uint32_t offset, uint32_t len);
 
 secbool secret_wiped(void);
 
+secbool secret_verify_header(void);
+
 void secret_erase(void);
 
 void secret_hide(void);
