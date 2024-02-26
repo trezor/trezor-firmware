@@ -22,7 +22,6 @@
 #include "lowlevel.h"
 #include "common.h"
 #include "flash.h"
-#include "flash_otp.h"
 #include "model.h"
 #include TREZOR_BOARD
 
@@ -49,6 +48,7 @@
 #endif
 
 #if defined STM32U5A9xx | defined STM32U5G9xx
+#define WRP_LOCKED_VALUE 0x7F00FF00
 #define WRP_DEFAULT_VALUE 0xFF00FFFF
 #define SEC_WM1R1_DEFAULT_VALUE 0xFF00FF00
 #define SEC_WM1R2_DEFAULT_VALUE 0x7F007F00
@@ -58,6 +58,7 @@
 #define SEC_AREA_2_PAGE_START 0xFF
 #define SEC_AREA_2_PAGE_END 0x00
 #elif defined STM32U585xx
+#define WRP_LOCKED_VALUE 0x7F80FF80
 #define WRP_DEFAULT_VALUE 0xFF80FFFF
 #define SEC_WM1R1_DEFAULT_VALUE 0xFF80FF80
 #define SEC_WM1R2_DEFAULT_VALUE 0x7F807F80
@@ -129,9 +130,8 @@ secbool flash_check_option_bytes(void) {
   }
 
 #if PRODUCTION
-  // TODO error this wont work, need to add default/reset values
-#error this wont work, need to add default/reset values
-  if (FLASH->WRP1AR != (WANT_WRP_PAGE_START | (WANT_WRP_PAGE_END << 16))) {
+  if (FLASH->WRP1AR !=
+      (WRP_LOCKED_VALUE | WANT_WRP_PAGE_START | (WANT_WRP_PAGE_END << 16))) {
     return secfalse;
   }
 #else
@@ -147,6 +147,19 @@ secbool flash_check_option_bytes(void) {
     return secfalse;
   }
   if (FLASH->WRP2BR != WRP_DEFAULT_VALUE) {
+    return secfalse;
+  }
+
+  if (FLASH->SECWM1R1 != FLASH_SECWM1R1_VALUE) {
+    return secfalse;
+  }
+  if (FLASH->SECWM1R2 != FLASH_SECWM1R2_VALUE) {
+    return secfalse;
+  }
+  if (FLASH->SECWM2R1 != FLASH_SECWM2R1_VALUE) {
+    return secfalse;
+  }
+  if (FLASH->SECWM2R2 != FLASH_SECWM2R2_VALUE) {
     return secfalse;
   }
 
@@ -177,18 +190,27 @@ uint32_t flash_set_option_bytes(void) {
   flash_unlock_option_bytes();
   flash_wait_and_clear_status_flags();
 
+  FLASH->SECBOOTADD0R = FALSH_SECBOOTADD0R_VALUE;
+
+  FLASH->SECWM1R1 = FLASH_SECWM1R1_VALUE;
+  FLASH->SECWM1R2 = FLASH_SECWM1R2_VALUE;
+
+  FLASH->SECWM2R1 = FLASH_SECWM2R1_VALUE;
+  FLASH->SECWM2R2 = FLASH_SECWM2R2_VALUE;
+
+#if PRODUCTION
+  FLASH->WRP1AR =
+      WRP_LOCKED_VALUE | WANT_WRP_PAGE_START | (WANT_WRP_PAGE_END << 16);
+#else
+  FLASH->WRP1AR = WRP_DEFAULT_VALUE;
+#endif
+  FLASH->WRP1BR = WRP_DEFAULT_VALUE;
+  FLASH->WRP2AR = WRP_DEFAULT_VALUE;
+  FLASH->WRP2BR = WRP_DEFAULT_VALUE;
+
   FLASH->OPTR =
       FLASH_OPTR_VALUE;  // WARNING: dev board safe unless you compile for
   // PRODUCTION or change this value!!!
-
-  FLASH->SECBOOTADD0R = FALSH_SECBOOTADD0R_VALUE;
-
-#if PRODUCTION
-  FLASH->WRP1AR = WANT_WRP_PAGE_START | (WANT_WRP_PAGE_END << 16);
-  FLASH->WRP1BR = 0xFF00FFFF;
-  FLASH->WRP2AR = 0xFF00FFFF;
-  FLASH->WRP2BR = 0xFF00FFFF;
-#endif
 
   FLASH_WaitForLastOperation(HAL_MAX_DELAY);
 
@@ -210,10 +232,8 @@ uint32_t flash_set_option_bytes(void) {
 }
 
 void check_oem_keys(void) {
-  ensure(((FLASH_S->NSSR & FLASH_NSSR_OEM1LOCK) == 0) * sectrue,
-         "OEM1 KEY SET");
-  ensure(((FLASH_S->NSSR & FLASH_NSSR_OEM2LOCK) == 0) * sectrue,
-         "OEM2 KEY SET");
+  ensure(((FLASH->NSSR & FLASH_NSSR_OEM1LOCK) == 0) * sectrue, "OEM1 KEY SET");
+  ensure(((FLASH->NSSR & FLASH_NSSR_OEM2LOCK) == 0) * sectrue, "OEM2 KEY SET");
 }
 
 secbool flash_configure_option_bytes(void) {
@@ -224,73 +244,6 @@ secbool flash_configure_option_bytes(void) {
   do {
     flash_set_option_bytes();
   } while (sectrue != flash_check_option_bytes());
-
-  check_oem_keys();
-
-  return secfalse;  // notify that we DID have to change the option bytes
-}
-
-secbool flash_check_sec_area_ob(void) {
-  flash_wait_and_clear_status_flags();
-  // check values stored in flash interface registers
-
-  if (FLASH->SECWM1R1 != FLASH_SECWM1R1_VALUE) {
-    return secfalse;
-  }
-  if (FLASH->SECWM1R2 != FLASH_SECWM1R2_VALUE) {
-    return secfalse;
-  }
-  if (FLASH->SECWM2R1 != FLASH_SECWM2R1_VALUE) {
-    return secfalse;
-  }
-  if (FLASH->SECWM2R2 != FLASH_SECWM2R2_VALUE) {
-    return secfalse;
-  }
-
-  return sectrue;
-}
-
-uint32_t flash_set_sec_area_ob(void) {
-  if (flash_unlock_write() != sectrue) {
-    return 0;
-  }
-  flash_wait_and_clear_status_flags();
-  flash_unlock_option_bytes();
-  flash_wait_and_clear_status_flags();
-
-  FLASH->SECWM1R1 = FLASH_SECWM1R1_VALUE;
-  FLASH->SECWM1R2 = FLASH_SECWM1R2_VALUE;
-
-  FLASH->SECWM2R1 = FLASH_SECWM2R1_VALUE;
-  FLASH->SECWM2R2 = FLASH_SECWM2R2_VALUE;
-
-  FLASH_WaitForLastOperation(HAL_MAX_DELAY);
-
-  FLASH->NSCR |= FLASH_NSCR_OPTSTRT;
-  uint32_t result =
-      flash_wait_and_clear_status_flags();  // wait until changes are committed
-
-  FLASH_WaitForLastOperation(HAL_MAX_DELAY);
-
-  FLASH->NSCR |= FLASH_NSCR_OBL_LAUNCH;  // begin committing changes to flash
-  result =
-      flash_wait_and_clear_status_flags();  // wait until changes are committed
-  flash_lock_option_bytes();
-
-  if (flash_lock_write() != sectrue) {
-    return 0;
-  }
-  return result;
-}
-
-secbool flash_configure_sec_area_ob(void) {
-  if (sectrue == flash_check_sec_area_ob()) {
-    return sectrue;  // we DID NOT have to change the option bytes
-  }
-
-  do {
-    flash_set_sec_area_ob();
-  } while (sectrue != flash_check_sec_area_ob());
 
   check_oem_keys();
 
