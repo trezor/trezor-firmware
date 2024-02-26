@@ -3,22 +3,35 @@
 #include <string.h>
 #include "common.h"
 #include "flash.h"
+#include "memzero.h"
 #include "model.h"
 #include "rng.h"
 
-static secbool bootloader_locked_set = secfalse;
 static secbool bootloader_locked = secfalse;
 
-static secbool verify_header(void) {
-  uint8_t header[SECRET_HEADER_LEN] = {0};
+secbool secret_verify_header(void) {
+  uint8_t header[sizeof(SECRET_HEADER_MAGIC)] = {0};
 
-  memcpy(header, flash_area_get_address(&SECRET_AREA, 0, SECRET_HEADER_LEN),
-         SECRET_HEADER_LEN);
+  memcpy(header,
+         flash_area_get_address(&SECRET_AREA, 0, sizeof(SECRET_HEADER_MAGIC)),
+         sizeof(SECRET_HEADER_MAGIC));
 
   bootloader_locked =
-      memcmp(header, SECRET_HEADER_MAGIC, 4) == 0 ? sectrue : secfalse;
-  bootloader_locked_set = sectrue;
+      memcmp(header, SECRET_HEADER_MAGIC, sizeof(SECRET_HEADER_MAGIC)) == 0
+          ? sectrue
+          : secfalse;
   return bootloader_locked;
+}
+
+secbool secret_ensure_initialized(void) {
+  if (sectrue != secret_verify_header()) {
+    ensure(flash_area_erase_bulk(STORAGE_AREAS, STORAGE_AREAS_COUNT, NULL),
+           "erase storage failed");
+    secret_erase();
+    secret_write_header();
+    return secfalse;
+  }
+  return sectrue;
 }
 
 secbool secret_bootloader_locked(void) {
@@ -46,7 +59,7 @@ void secret_write(uint8_t *data, uint32_t offset, uint32_t len) {
 }
 
 secbool secret_read(uint8_t *data, uint32_t offset, uint32_t len) {
-  if (sectrue != verify_header()) {
+  if (sectrue != secret_verify_header()) {
     return secfalse;
   }
 
@@ -69,8 +82,27 @@ secbool secret_bhk_locked(void) {
          sectrue;
 }
 
+static secbool secret_present(uint32_t offset, uint32_t len) {
+  uint8_t *optiga_secret =
+      (uint8_t *)flash_area_get_address(&SECRET_AREA, offset, len);
+
+  int optiga_secret_empty_bytes = 0;
+
+  for (int i = 0; i < len; i++) {
+    if (optiga_secret[i] == 0xFF) {
+      optiga_secret_empty_bytes++;
+    }
+  }
+  return sectrue * (optiga_secret_empty_bytes != len);
+}
+
 void secret_bhk_provision(void) {
   uint32_t secret[SECRET_BHK_LEN / sizeof(uint32_t)] = {0};
+
+  if (sectrue != secret_present(SECRET_BHK_OFFSET, SECRET_BHK_LEN)) {
+    secret_bhk_regenerate();
+  }
+
   secbool ok =
       secret_read((uint8_t *)secret, SECRET_BHK_OFFSET, SECRET_BHK_LEN);
 
@@ -86,6 +118,8 @@ void secret_bhk_provision(void) {
       reg1++;
     }
   }
+
+  memzero(secret, sizeof(secret));
 }
 
 void secret_bhk_regenerate(void) {
@@ -96,24 +130,16 @@ void secret_bhk_regenerate(void) {
     for (int j = 0; j < 4; j++) {
       val[j] = rng_get();
     }
-    ensure(flash_area_write_quadword(&BHK_AREA, i * 4 * sizeof(uint32_t), val),
-           "Failed regenerating BHK");
+    secbool res =
+        flash_area_write_quadword(&BHK_AREA, i * 4 * sizeof(uint32_t), val);
+    memzero(val, sizeof(val));
+    ensure(res, "Failed regenerating BHK");
   }
   ensure(flash_lock_write(), "Failed regenerating BHK");
 }
 
 secbool secret_optiga_present(void) {
-  uint8_t *optiga_secret = (uint8_t *)flash_area_get_address(
-      &SECRET_AREA, SECRET_OPTIGA_KEY_OFFSET, SECRET_OPTIGA_KEY_LEN);
-
-  int optiga_secret_empty_bytes = 0;
-
-  for (int i = 0; i < SECRET_OPTIGA_KEY_LEN; i++) {
-    if (optiga_secret[i] == 0xFF) {
-      optiga_secret_empty_bytes++;
-    }
-  }
-  return sectrue * (optiga_secret_empty_bytes != SECRET_OPTIGA_KEY_LEN);
+  return secret_present(SECRET_OPTIGA_KEY_OFFSET, SECRET_OPTIGA_KEY_LEN);
 }
 
 void secret_optiga_backup(void) {
@@ -133,6 +159,7 @@ void secret_optiga_backup(void) {
       reg1++;
     }
   }
+  memzero(secret, sizeof(secret));
 }
 
 secbool secret_optiga_extract(uint8_t *dest) {
