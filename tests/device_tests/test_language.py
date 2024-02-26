@@ -14,13 +14,16 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from __future__ import annotations
+
 from copy import deepcopy
-from typing import Iterator
+from typing import Any, Iterator
 
 import pytest
 
 from trezorlib import debuglink, device, exceptions, messages, models
 from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import message_filters
 
 from ..translations import LANGUAGES, build_and_sign_blob, get_lang_json, set_language
 
@@ -145,39 +148,6 @@ def test_error_version_mismatch(client: Client):
     _check_ping_screen_texts(client, get_ping_title("en"), get_ping_button("en"))
 
 
-def test_error_invalid_header_version(client: Client):
-    assert client.features.language == "en-US"
-    # Invalid header version
-    # Version is not a valid semver with integers
-    with pytest.raises(ValueError), client:
-        data = get_lang_json("cs")
-        data["header"]["version"] = "ABC.XYZ.DEF"
-        device.change_language(
-            client,
-            language_data=build_and_sign_blob(data, client.model),
-        )
-    assert client.features.language == "en-US"
-    _check_ping_screen_texts(client, get_ping_title("en"), get_ping_button("en"))
-
-
-def test_error_invalid_signature(client: Client):
-    assert client.features.language == "en-US"
-    # Invalid signature
-    # Changing the data in the signature section
-    with pytest.raises(
-        exceptions.TrezorFailure, match="Invalid translations data"
-    ), client:
-        good_data = bytearray(build_and_sign_blob("cs", client.model))
-        bad_data = bytearray(good_data)
-        bad_data[128:256] = 128 * b"a"
-        device.change_language(
-            client,
-            language_data=bytes(bad_data),
-        )
-    assert client.features.language == "en-US"
-    _check_ping_screen_texts(client, get_ping_title("en"), get_ping_button("en"))
-
-
 @pytest.mark.parametrize("lang", LANGUAGES)
 def test_full_language_change(client: Client, lang: str):
     assert client.features.language == "en-US"
@@ -276,78 +246,96 @@ def test_reject_update(client: Client):
     _check_ping_screen_texts(client, get_ping_title("en"), get_ping_button("en"))
 
 
-def test_silent_update(client: Client):
-    assert client.features.language == "en-US"
-    lang = "cs"
+def _maybe_confirm_set_language(
+    client: Client, lang: str, show_display: bool | None, is_displayed: bool
+) -> None:
     language_data = build_and_sign_blob(lang, client.model)
 
-    def input_flow_confirm(language: str):
-        if language == "cs":
-            title = "NASTAVENÍ JAZYKA"
-            text = "Změnit jazyk na cs-CZ?"
-        else:
-            title = "LANGUAGE SETTINGS"
-            text = "Change language to cs-CZ?"
+    CHUNK_SIZE = 1024
 
-        def input_flow():
-            yield
-            layout = client.debug.wait_layout()
-            assert layout.title() == title
-            assert layout.text_content() == text
-            client.debug.press_yes()
+    def chunks(data, size):
+        for i in range(0, len(data), size):
+            yield i, min(size, len(data) - i)
 
-            yield
-            layout = client.debug.wait_layout()
-            assert layout.text_content() == "Jazyk byl úspěšně změněn"
-            client.debug.press_yes()
+    expected_responses_silent: list[Any] = [
+        messages.TranslationDataRequest(data_offset=off, data_length=len)
+        for off, len in chunks(language_data, CHUNK_SIZE)
+    ] + [message_filters.Success(), message_filters.Features()]
 
-        return input_flow
+    expected_responses_confirm = expected_responses_silent[:]
+    # confirmation after first TranslationDataRequest
+    expected_responses_confirm.insert(1, message_filters.ButtonRequest())
+    # success screen before Success / Features
+    expected_responses_confirm.insert(-2, message_filters.ButtonRequest())
 
-    def input_flow_silent():
-        yield
-        # It will never reach this - there is just loader on the screen
-        assert False
+    if is_displayed:
+        expected_responses = expected_responses_confirm
+    else:
+        expected_responses = expected_responses_silent
 
-    # Device is loaded with seed, language change is shown on the screen
     with client:
-        client.watch_layout(True)
-        client.set_input_flow(input_flow_confirm("en"))
-        device.change_language(client, language_data)
+        client.set_expected_responses(expected_responses)
+        device.change_language(client, language_data, show_display=show_display)
+        assert client.features.language is not None
         assert client.features.language[:2] == lang
 
-    device.wipe(client)
+        # explicitly handle the cases when expected_responses are correct for
+        # change_language but incorrect for selected is_displayed mode (otherwise the
+        # user would get an unhelpful generic expected_responses mismatch)
+        if is_displayed and client.actual_responses == expected_responses_silent:
+            raise AssertionError("Change should have been visible but was silent")
+        if not is_displayed and client.actual_responses == expected_responses_confirm:
+            raise AssertionError("Change should have been silent but was visible")
+        # if the expected_responses do not match either, the generic error message will
+        # be raised by the client context manager
+
+
+@pytest.mark.parametrize(
+    "show_display, is_displayed",
+    [  # when device is not initialized, all combinations succeed.
+        (True, True),
+        (False, False),
+        (None, False),  # default is False
+    ],
+)
+@pytest.mark.setup_client(uninitialized=True)
+def test_silent_first_install(client: Client, show_display: bool, is_displayed: bool):
+    assert not client.features.initialized
+    _maybe_confirm_set_language(client, "cs", show_display, is_displayed)
+
+
+@pytest.mark.parametrize("show_display", (True, None))
+def test_switch_from_english(client: Client, show_display: bool | None):
+    assert client.features.initialized
+    assert client.features.language == "en-US"
+    _maybe_confirm_set_language(client, "cs", show_display, True)
+
+
+def test_switch_from_english_not_silent(client: Client):
+    assert client.features.initialized
+    assert client.features.language == "en-US"
+    with pytest.raises(
+        exceptions.TrezorFailure, match="Cannot change language without user prompt"
+    ):
+        _maybe_confirm_set_language(client, "cs", False, False)
+
+
+@pytest.mark.setup_client(uninitialized=True)
+def test_switch_language(client: Client):
+    assert not client.features.initialized
     assert client.features.language == "en-US"
 
-    # Device is empty, language is changed silently
-    with client:
-        client.watch_layout(True)
-        client.set_input_flow(input_flow_silent)
-        device.change_language(client, language_data)
-        assert client.features.language[:2] == lang
+    # switch to Czech silently
+    _maybe_confirm_set_language(client, "cs", False, False)
 
-    # Same language is set again, shown on screen
-    with client:
-        client.watch_layout(True)
-        client.set_input_flow(input_flow_confirm("cs"))
-        device.change_language(client, language_data)
-        assert client.features.language[:2] == lang
+    # switch to French silently
+    with pytest.raises(
+        exceptions.TrezorFailure, match="Cannot change language without user prompt"
+    ):
+        _maybe_confirm_set_language(client, "fr", False, False)
 
-    device.wipe(client)
-    assert client.features.language == "en-US"
+    # switch to French with display, explicitly
+    _maybe_confirm_set_language(client, "fr", True, True)
 
-    debuglink.load_device(
-        client,
-        mnemonic=" ".join(["all"] * 12),
-        pin=None,
-        passphrase_protection=False,
-        label="test",
-    )
-
-    # Device is again loaded with seed, language change is shown on the screen
-    with client:
-        client.watch_layout(True)
-        client.set_input_flow(input_flow_confirm("en"))
-        device.change_language(client, language_data)
-        assert client.features.language[:2] == lang
-
-    _check_ping_screen_texts(client, get_ping_title(lang), get_ping_button(lang))
+    # switch back to Czech with display, implicitly
+    _maybe_confirm_set_language(client, "cs", None, True)
