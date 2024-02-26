@@ -28,7 +28,8 @@
 
 #include "flash_ll.h"
 
-#define FLASH_BURST_LENGTH (4 * 8)
+#define FLASH_BURST_WORDS (4 * 8)
+#define FLASH_BURST_SIZE (FLASH_BURST_WORDS * sizeof(uint32_t))
 
 void flash_init(void);
 
