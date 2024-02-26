@@ -367,7 +367,13 @@ async def confirm_single(
     verb: str | None = None,
 ) -> None:
     description_param = description_param or ""
-    begin, _separator, end = description.partition("{}")
+
+    # Placeholders are coming from translations in form of {0}
+    template_str = "{0}"
+    if template_str not in description:
+        template_str = "{}"
+
+    begin, _separator, end = description.partition(template_str)
     await confirm_action(
         br_type,
         title,

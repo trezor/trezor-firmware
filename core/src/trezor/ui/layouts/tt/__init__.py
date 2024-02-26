@@ -288,7 +288,13 @@ async def confirm_single(
     if verb is not None:
         verb = verb.upper()
     description_param = description_param or ""
-    begin, _separator, end = description.partition("{}")
+
+    # Placeholders are coming from translations in form of {0}
+    template_str = "{0}"
+    if template_str not in description:
+        template_str = "{}"
+
+    begin, _separator, end = description.partition(template_str)
     await raise_if_not_confirmed(
         interact(
             RustLayout(
