@@ -411,20 +411,6 @@ int bootloader_main(void) {
   set_core_clock(CLOCK_180_MHZ);
 #endif
 
-#ifdef STM32U5
-  if (sectrue != flash_configure_sec_area_ob()) {
-#ifdef STM32U5
-    secret_bhk_regenerate();
-#endif
-
-    const secbool r =
-        flash_area_erase_bulk(STORAGE_AREAS, STORAGE_AREAS_COUNT, NULL);
-    (void)r;
-    __disable_irq();
-    HAL_NVIC_SystemReset();
-  }
-#endif
-
 #ifdef USE_HASH_PROCESSOR
   hash_processor_init();
 #endif
