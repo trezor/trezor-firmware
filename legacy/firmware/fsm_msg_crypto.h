@@ -17,10 +17,6 @@
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-static uint8_t cosi_nonce[32] = {0};
-static uint8_t cosi_commitment[32] = {0};
-static bool cosi_nonce_is_set = false;
-
 void fsm_msgCipherKeyValue(const CipherKeyValue *msg) {
   CHECK_INITIALIZED
 
@@ -237,104 +233,4 @@ void fsm_msgGetECDHSessionKey(const GetECDHSessionKey *msg) {
                     _("Error getting ECDH session key"));
   }
   layoutHome();
-}
-
-static bool fsm_checkCosiPath(uint32_t address_n_count,
-                              const uint32_t *address_n) {
-  // The path should typically match "m / 10018' / [0-9]'", but we allow
-  // any path from the SLIP-18 domain "m / 10018' / *".
-  if (address_n_count >= 1 && address_n[0] == PATH_HARDENED + 10018) {
-    return true;
-  }
-
-  if (config_getSafetyCheckLevel() == SafetyCheckLevel_Strict) {
-    fsm_sendFailure(FailureType_Failure_DataError, _("Forbidden key path"));
-    return false;
-  }
-
-  return fsm_layoutPathWarning();
-}
-
-void fsm_msgCosiCommit(const CosiCommit *msg) {
-  RESP_INIT(CosiCommitment);
-
-  CHECK_INITIALIZED
-
-  CHECK_PIN
-
-  if (!fsm_checkCosiPath(msg->address_n_count, msg->address_n)) {
-    layoutHome();
-    return;
-  }
-
-  const HDNode *node = fsm_getDerivedNode(ED25519_NAME, msg->address_n,
-                                          msg->address_n_count, NULL);
-  if (!node) return;
-
-  if (!cosi_nonce_is_set) {
-    ed25519_cosi_commit(cosi_nonce, cosi_commitment);
-    cosi_nonce_is_set = true;
-  }
-
-  resp->commitment.size = 32;
-  resp->pubkey.size = 32;
-
-  memcpy(resp->commitment.bytes, cosi_commitment, sizeof(cosi_commitment));
-  ed25519_publickey(node->private_key, resp->pubkey.bytes);
-
-  msg_write(MessageType_MessageType_CosiCommitment, resp);
-  layoutHome();
-}
-
-void fsm_msgCosiSign(const CosiSign *msg) {
-  RESP_INIT(CosiSignature);
-
-  CHECK_INITIALIZED
-
-  CHECK_PARAM(msg->global_commitment.size == 32,
-              _("Invalid global commitment"));
-  CHECK_PARAM(msg->global_pubkey.size == 32, _("Invalid global pubkey"));
-
-  if (!cosi_nonce_is_set) {
-    fsm_sendFailure(FailureType_Failure_ProcessError, _("CoSi nonce not set"));
-    layoutHome();
-    return;
-  }
-
-  if (!fsm_checkCosiPath(msg->address_n_count, msg->address_n)) {
-    layoutHome();
-    return;
-  }
-
-  CHECK_PIN
-
-  layoutCosiSign(msg->address_n, msg->address_n_count, msg->data.bytes,
-                 msg->data.size);
-  if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
-    fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
-    layoutHome();
-    return;
-  }
-
-  const HDNode *node = fsm_getDerivedNode(ED25519_NAME, msg->address_n,
-                                          msg->address_n_count, NULL);
-  if (!node) return;
-
-  resp->signature.size = 32;
-  cosi_nonce_is_set = false;
-
-  if (ed25519_cosi_sign(msg->data.bytes, msg->data.size, node->private_key,
-                        cosi_nonce, msg->global_commitment.bytes,
-                        msg->global_pubkey.bytes, resp->signature.bytes) == 0) {
-    msg_write(MessageType_MessageType_CosiSignature, resp);
-  } else {
-    fsm_sendFailure(FailureType_Failure_FirmwareError, NULL);
-  }
-  fsm_clearCosiNonce();
-  layoutHome();
-}
-
-void fsm_clearCosiNonce(void) {
-  cosi_nonce_is_set = false;
-  memzero(cosi_nonce, sizeof(cosi_nonce));
 }

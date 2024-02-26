@@ -5,19 +5,6 @@ CipherKeyValue.iv                       max_size:16
 
 CipheredKeyValue.value                  max_size:1024
 
-CosiCommit.address_n                    max_count:8
-CosiCommit.data                         type:FT_IGNORE
-
-CosiCommitment.commitment               max_size:32
-CosiCommitment.pubkey                   max_size:32
-
-CosiSign.address_n                      max_count:8
-CosiSign.data                           max_size:32
-CosiSign.global_commitment              max_size:32
-CosiSign.global_pubkey                  max_size:32
-
-CosiSignature.signature                 max_size:32
-
 SignIdentity.challenge_hidden           max_size:512
 SignIdentity.challenge_visual           max_size:256
 SignIdentity.ecdsa_curve_name           max_size:32

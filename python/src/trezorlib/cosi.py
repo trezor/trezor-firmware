@@ -14,17 +14,10 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-import warnings
 from functools import reduce
-from typing import TYPE_CHECKING, Iterable, Optional, Sequence, Tuple
+from typing import Iterable, Sequence, Tuple
 
-from . import _ed25519, messages
-from .tools import expect
-
-if TYPE_CHECKING:
-    from .client import TrezorClient
-    from .protobuf import MessageType
-    from .tools import Address
+from . import _ed25519
 
 # XXX, these could be NewType's, but that would infect users of the cosi module with these types as well.
 # Unsure if we want that.
@@ -111,7 +104,7 @@ def verify(
     if len(selected_keys) < sigs_required:
         raise _ed25519.SignatureMismatch("Insufficient number of signatures.")
     global_pk = combine_keys(selected_keys)
-    return verify_combined(signature, digest, global_pk)
+    verify_combined(signature, digest, global_pk)
 
 
 def pubkey_from_privkey(privkey: Ed25519PrivateKey) -> Ed25519PublicPoint:
@@ -152,38 +145,3 @@ def sign_with_privkeys(digest: bytes, privkeys: Sequence[bytes]) -> bytes:
     ]
 
     return combine_sig(global_R, sigs)
-
-
-# ====== Client functions ====== #
-
-
-@expect(messages.CosiCommitment)
-def commit(
-    client: "TrezorClient", n: "Address", data: Optional[bytes] = None
-) -> "MessageType":
-    if data is not None:
-        warnings.warn(
-            "'data' argument is deprecated",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-
-    return client.call(messages.CosiCommit(address_n=n))
-
-
-@expect(messages.CosiSignature)
-def sign(
-    client: "TrezorClient",
-    n: "Address",
-    data: bytes,
-    global_commitment: bytes,
-    global_pubkey: bytes,
-) -> "MessageType":
-    return client.call(
-        messages.CosiSign(
-            address_n=n,
-            data=data,
-            global_commitment=global_commitment,
-            global_pubkey=global_pubkey,
-        )
-    )
