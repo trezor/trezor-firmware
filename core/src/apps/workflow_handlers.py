@@ -85,10 +85,6 @@ def _find_message_handler_module(msg_type: int) -> str:
     # misc
     if msg_type == MessageType.GetEntropy:
         return "apps.misc.get_entropy"
-    if msg_type == MessageType.SignIdentity:
-        return "apps.misc.sign_identity"
-    if msg_type == MessageType.GetECDHSessionKey:
-        return "apps.misc.get_ecdh_session_key"
     if msg_type == MessageType.CipherKeyValue:
         return "apps.misc.cipher_key_value"
     if msg_type == MessageType.GetFirmwareHash:
@@ -109,6 +105,12 @@ def _find_message_handler_module(msg_type: int) -> str:
             return "apps.webauthn.add_resident_credential"
         if msg_type == MessageType.WebAuthnRemoveResidentCredential:
             return "apps.webauthn.remove_resident_credential"
+
+        # trezor-agent
+        if msg_type == MessageType.SignIdentity:
+            return "apps.agent.sign_identity"
+        if msg_type == MessageType.GetECDHSessionKey:
+            return "apps.agent.get_ecdh_session_key"
 
         # ethereum
         if msg_type == MessageType.EthereumGetAddress:

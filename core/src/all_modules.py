@@ -361,14 +361,10 @@ apps.misc.cipher_key_value
 import apps.misc.cipher_key_value
 apps.misc.cosi_commit
 import apps.misc.cosi_commit
-apps.misc.get_ecdh_session_key
-import apps.misc.get_ecdh_session_key
 apps.misc.get_entropy
 import apps.misc.get_entropy
 apps.misc.get_firmware_hash
 import apps.misc.get_firmware_hash
-apps.misc.sign_identity
-import apps.misc.sign_identity
 apps.workflow_handlers
 import apps.workflow_handlers
 
@@ -425,6 +421,12 @@ if not utils.BITCOIN_ONLY:
     import trezor.enums.TezosBallotType
     trezor.enums.TezosContractType
     import trezor.enums.TezosContractType
+    apps.agent
+    import apps.agent
+    apps.agent.get_ecdh_session_key
+    import apps.agent.get_ecdh_session_key
+    apps.agent.sign_identity
+    import apps.agent.sign_identity
     apps.binance
     import apps.binance
     apps.binance.get_address
