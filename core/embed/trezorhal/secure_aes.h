@@ -27,14 +27,12 @@
 // Initializes secure AES module
 secbool secure_aes_init(void);
 
-// Encrypts a block of data using AES-256 EBB and (DHUK xor BHK) key
+// Encrypts a block of data using AES-256 ECB and (DHUK xor BHK) key
 // Input and output must be aligned to 32 bits, size is in bytes
 secbool secure_aes_encrypt(uint32_t* input, size_t size, uint32_t* output);
 
 // Decrypts a block of data using AES-256 ECB and (DHUK xor BHK) key
 // Input and output must be aligned to 32 bits, size is in bytes
 secbool secure_aes_decrypt(uint32_t* input, size_t size, uint32_t* output);
-
-void secure_aes_test();
 
 #endif  // TREZOR_HAL_SECURE_AES_H

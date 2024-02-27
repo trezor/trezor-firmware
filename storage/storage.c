@@ -35,6 +35,9 @@
 #if USE_OPTIGA
 #include "optiga.h"
 #endif
+#ifdef USE_SAES_STORAGE
+#include "secure_aes.h"
+#endif
 
 // The APP namespace which is reserved for storage related values.
 #define APP_STORAGE 0x00
@@ -136,6 +139,16 @@ const uint8_t WIPE_CODE_EMPTY[] = {0, 0, 0, 0};
 
 // The uint32 representation of an empty wipe code used in storage version 2.
 #define V2_WIPE_CODE_EMPTY 0
+
+#ifdef USE_SAES_STORAGE
+// The length of data length record in encrypted records.
+#define LENGTH_OF_DATA_SIZE 2
+#define ALIGN_ENC(x) (((x) + 0xF) & ~0xF)
+#else
+#define LENGTH_OF_DATA_SIZE 0
+#define ALIGN_ENC(x) (x)
+#endif
+#define ALIGN_WORD(x) x __attribute__((aligned(sizeof(uint32_t))))
 
 // TODO: handle translation
 const char *const VERIFYING_PIN_MSG = "Verifying PIN";
@@ -1006,45 +1019,102 @@ static secbool storage_get_encrypted(const uint16_t key, void *val_dest,
                                      const uint16_t max_len, uint16_t *len) {
   const void *val_stored = NULL;
 
-  if (sectrue != auth_get(key, &val_stored, len)) {
+  uint16_t record_len = 0;
+
+  if (sectrue != auth_get(key, &val_stored, &record_len)) {
     return secfalse;
   }
 
-  if (*len < CHACHA20_IV_SIZE + POLY1305_TAG_SIZE) {
+  if (record_len < CHACHA20_IV_SIZE + POLY1305_TAG_SIZE + LENGTH_OF_DATA_SIZE) {
     handle_fault("ciphertext length check");
     return secfalse;
   }
-  *len -= CHACHA20_IV_SIZE + POLY1305_TAG_SIZE;
+  record_len -= CHACHA20_IV_SIZE + POLY1305_TAG_SIZE + LENGTH_OF_DATA_SIZE;
+
+#ifdef USE_SAES_STORAGE
+  uint16_t data_len_offset = record_len + CHACHA20_IV_SIZE + POLY1305_TAG_SIZE;
+  uint16_t data_len =
+      *(const uint16_t *)(((const uint8_t *)val_stored) + data_len_offset);
+
+#else
+  uint16_t data_len = record_len;
+#endif
+
+  *len = data_len;
 
   if (val_dest == NULL) {
     return sectrue;
   }
 
-  if (*len > max_len) {
+  if (data_len > max_len) {
     return secfalse;
   }
 
-  const uint8_t *iv = (const uint8_t *)val_stored;
+  const uint8_t *iv = ((const uint8_t *)val_stored);
   const uint8_t *tag_stored =
-      (const uint8_t *)val_stored + CHACHA20_IV_SIZE + *len;
+      (const uint8_t *)val_stored + CHACHA20_IV_SIZE + record_len;
   const uint8_t *ciphertext = (const uint8_t *)val_stored + CHACHA20_IV_SIZE;
   uint8_t tag_computed[POLY1305_TAG_SIZE] = {0};
   chacha20poly1305_ctx ctx = {0};
   rfc7539_init(&ctx, cached_dek, iv);
   rfc7539_auth(&ctx, (const uint8_t *)&key, sizeof(key));
-  chacha20poly1305_decrypt(&ctx, ciphertext, (uint8_t *)val_dest, *len);
-  rfc7539_finish(&ctx, sizeof(key), *len, tag_computed);
+  uint16_t inner_len = record_len;
+  uint8_t *dest_data = (uint8_t *)val_dest;
+
+  // Encrypted by ChaCha20
+  ALIGN_WORD(uint8_t buffer_inner[CHACHA20_BLOCK_SIZE]) = {0};
+  // Clear text
+  ALIGN_WORD(uint8_t buffer_outer[CHACHA20_BLOCK_SIZE]) = {0};
+
+#ifdef USE_SAES_STORAGE
+  // aliasing the ChaCha20 input data
+  const uint8_t *buffer_enc = buffer_inner;
+#else
+  const uint8_t *buffer_enc = ciphertext;
+#endif
+
+  uint16_t rest_len = data_len;
+
+  while (inner_len > CHACHA20_BLOCK_SIZE) {
+#ifdef USE_SAES_STORAGE
+    secure_aes_decrypt((uint32_t *)ciphertext, CHACHA20_BLOCK_SIZE,
+                       (uint32_t *)buffer_inner);
+#endif
+
+    uint16_t outer_data_len =
+        rest_len < CHACHA20_BLOCK_SIZE ? rest_len : CHACHA20_BLOCK_SIZE;
+    chacha20poly1305_decrypt(&ctx, buffer_enc, buffer_outer, outer_data_len);
+    memcpy(dest_data, buffer_outer, outer_data_len);
+    dest_data += outer_data_len;
+    rest_len -= outer_data_len;
+    buffer_enc += CHACHA20_BLOCK_SIZE;
+    inner_len -= CHACHA20_BLOCK_SIZE;
+  }
+
+#ifdef USE_SAES_STORAGE
+  secure_aes_decrypt((uint32_t *)ciphertext, inner_len,
+                     (uint32_t *)buffer_inner);
+#endif
+
+  chacha20poly1305_decrypt(&ctx, buffer_enc, buffer_outer, rest_len);
+  memcpy(dest_data, buffer_outer, rest_len);
+
+  rfc7539_finish(&ctx, sizeof(key), data_len, tag_computed);
   memzero(&ctx, sizeof(ctx));
 
   // Verify authentication tag.
   if (secequal(tag_computed, tag_stored, POLY1305_TAG_SIZE) != sectrue) {
     memzero(val_dest, max_len);
     memzero(tag_computed, sizeof(tag_computed));
+    memzero(buffer_outer, sizeof(buffer_outer));
+    memzero(buffer_inner, sizeof(buffer_inner));
     handle_fault("authentication tag check");
     return secfalse;
   }
 
   memzero(tag_computed, sizeof(tag_computed));
+  memzero(buffer_outer, sizeof(buffer_outer));
+  memzero(buffer_inner, sizeof(buffer_inner));
   return sectrue;
 }
 
@@ -1094,47 +1164,82 @@ secbool storage_get(const uint16_t key, void *val_dest, const uint16_t max_len,
  */
 static secbool storage_set_encrypted(const uint16_t key, const void *val,
                                      const uint16_t len) {
-  if (len > UINT16_MAX - CHACHA20_IV_SIZE - POLY1305_TAG_SIZE) {
+  if (ALIGN_ENC(len) >
+      UINT16_MAX - CHACHA20_IV_SIZE - POLY1305_TAG_SIZE - LENGTH_OF_DATA_SIZE) {
     return secfalse;
   }
 
   // Preallocate space on the flash storage.
   if (sectrue !=
-      auth_set(key, NULL, CHACHA20_IV_SIZE + POLY1305_TAG_SIZE + len)) {
+      auth_set(key, NULL,
+               CHACHA20_IV_SIZE + POLY1305_TAG_SIZE + ALIGN_ENC(len) +
+          LENGTH_OF_DATA_SIZE)) {
     return secfalse;
   }
 
-  // Write the IV to the flash.
-  uint8_t buffer[CHACHA20_BLOCK_SIZE] = {0};
-  random_buffer(buffer, CHACHA20_IV_SIZE);
+  // encrypted by ChaCha20
+  ALIGN_WORD(uint8_t buffer_outer[CHACHA20_BLOCK_SIZE]) = {0};
+  // encrypted by both ChaCha20 and AES
+  ALIGN_WORD(uint8_t buffer_inner[CHACHA20_BLOCK_SIZE]) = {0};
 
-  if (sectrue != norcow_update_bytes(key, buffer, CHACHA20_IV_SIZE)) {
+#ifdef USE_SAES_STORAGE
+  uint8_t *buffer_enc = buffer_inner;
+#else
+  uint8_t *buffer_enc = buffer_outer;
+#endif
+
+  // Write the IV to the flash.
+  random_buffer(buffer_outer, CHACHA20_IV_SIZE);
+  if (sectrue != norcow_update_bytes(key, buffer_outer, CHACHA20_IV_SIZE)) {
     return secfalse;
   }
   // Encrypt all blocks except for the last one.
   chacha20poly1305_ctx ctx = {0};
-  rfc7539_init(&ctx, cached_dek, buffer);
+  rfc7539_init(&ctx, cached_dek, buffer_outer);
   rfc7539_auth(&ctx, (const uint8_t *)&key, sizeof(key));
   size_t i = 0;
   for (i = 0; i + CHACHA20_BLOCK_SIZE < len; i += CHACHA20_BLOCK_SIZE) {
-    chacha20poly1305_encrypt(&ctx, ((const uint8_t *)val) + i, buffer,
+    chacha20poly1305_encrypt(&ctx, ((const uint8_t *)val) + i, buffer_outer,
                              CHACHA20_BLOCK_SIZE);
-    if (sectrue != norcow_update_bytes(key, buffer, CHACHA20_BLOCK_SIZE)) {
+
+#ifdef USE_SAES_STORAGE
+    secure_aes_encrypt((uint32_t *)buffer_outer, CHACHA20_BLOCK_SIZE,
+                       (uint32_t *)buffer_outer);
+#endif
+
+    if (sectrue != norcow_update_bytes(key, buffer_enc, CHACHA20_BLOCK_SIZE)) {
       memzero(&ctx, sizeof(ctx));
-      memzero(buffer, sizeof(buffer));
+      memzero(buffer_outer, sizeof(buffer_outer));
+      memzero(buffer_inner, sizeof(buffer_inner));
       return secfalse;
     }
   }
 
   // Encrypt final block and compute message authentication tag.
-  chacha20poly1305_encrypt(&ctx, ((const uint8_t *)val) + i, buffer, len - i);
-  secbool ret = norcow_update_bytes(key, buffer, len - i);
+  chacha20poly1305_encrypt(&ctx, ((const uint8_t *)val) + i, buffer_outer,
+                           len - i);
+#ifdef USE_SAES_STORAGE
+  secure_aes_encrypt((uint32_t *)buffer_outer, ALIGN_ENC(len - i),
+                     (uint32_t *)buffer_inner);
+#endif
+  secbool ret = norcow_update_bytes(key, buffer_enc, ALIGN_ENC(len - i));
   if (sectrue == ret) {
-    rfc7539_finish(&ctx, sizeof(key), len, buffer);
-    ret = norcow_update_bytes(key, buffer, POLY1305_TAG_SIZE);
+    rfc7539_finish(&ctx, sizeof(key), len, buffer_outer);
+    ret = norcow_update_bytes(key, buffer_outer, POLY1305_TAG_SIZE);
   }
+
+#ifdef USE_SAES_STORAGE
+  // Write data len to the flash.
+  uint16_t data_len = len;
+  if (sectrue !=
+      norcow_update_bytes(key, (uint8_t *)&data_len, sizeof(data_len))) {
+    return secfalse;
+  }
+#endif
+
   memzero(&ctx, sizeof(ctx));
-  memzero(buffer, sizeof(buffer));
+  memzero(buffer_outer, sizeof(buffer_outer));
+  memzero(buffer_inner, sizeof(buffer_inner));
   return ret;
 }
 

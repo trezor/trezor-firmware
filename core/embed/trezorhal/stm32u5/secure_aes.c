@@ -63,7 +63,7 @@ secbool secure_aes_encrypt(uint32_t* input, size_t size, uint32_t* output) {
   hcryp.Init.Algorithm = CRYP_AES_ECB;
   hcryp.Init.Header = NULL;
   hcryp.Init.HeaderSize = 0;
-  hcryp.Init.DataWidthUnit = CRYP_DATAWIDTHUNIT_WORD;
+  hcryp.Init.DataWidthUnit = CRYP_DATAWIDTHUNIT_BYTE;
   hcryp.Init.HeaderWidthUnit = CRYP_HEADERWIDTHUNIT_BYTE;
   hcryp.Init.KeyIVConfigSkip = CRYP_KEYIVCONFIG_ALWAYS;
   hcryp.Init.KeyMode = CRYP_KEYMODE_NORMAL;
