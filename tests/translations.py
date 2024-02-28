@@ -19,10 +19,10 @@ ORDER_FILE = TRANSLATIONS / "order.json"
 LANGUAGES = [file.stem for file in TRANSLATIONS.glob("??.json")]
 
 
-def build_and_sign_blob(
+def prepare_blob(
     lang_or_def: translations.JsonDef | Path | str,
     model: models.TrezorModel,
-) -> bytes:
+) -> translations.TranslationsBlob:
     order = translations.order_from_json(json.loads(ORDER_FILE.read_text()))
     if isinstance(lang_or_def, str):
         lang_or_def = get_lang_json(lang_or_def)
@@ -31,8 +31,10 @@ def build_and_sign_blob(
 
     # generate raw blob
     version = translations.version_from_json(lang_or_def["header"]["version"])
-    blob = translations.blob_from_defs(lang_or_def, order, model, version, FONTS_DIR)
+    return translations.blob_from_defs(lang_or_def, order, model, version, FONTS_DIR)
 
+
+def sign_blob(blob: translations.TranslationsBlob) -> bytes:
     # build 0-item Merkle proof
     digest = sha256(b"\x00" + blob.header_bytes).digest()
     signature = cosi.sign_with_privkeys(digest, common.PRIVATE_KEYS_DEV)
@@ -42,6 +44,14 @@ def build_and_sign_blob(
         signature=signature,
     )
     return blob.build()
+
+
+def build_and_sign_blob(
+    lang_or_def: translations.JsonDef | Path | str,
+    model: models.TrezorModel,
+) -> bytes:
+    blob = prepare_blob(lang_or_def, model)
+    return sign_blob(blob)
 
 
 def set_language(client: Client, lang: str):

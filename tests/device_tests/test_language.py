@@ -25,7 +25,14 @@ from trezorlib import debuglink, device, exceptions, messages, models
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.debuglink import message_filters
 
-from ..translations import LANGUAGES, build_and_sign_blob, get_lang_json, set_language
+from ..translations import (
+    LANGUAGES,
+    build_and_sign_blob,
+    get_lang_json,
+    prepare_blob,
+    set_language,
+    sign_blob,
+)
 
 pytestmark = pytest.mark.skip_t1b1
 
@@ -339,3 +346,21 @@ def test_switch_language(client: Client):
 
     # switch back to Czech with display, implicitly
     _maybe_confirm_set_language(client, "cs", None, True)
+
+
+def test_header_trailing_data(client: Client):
+    """Adding trailing data to _header_ section specifically must be accepted by
+    firmware, as long as the blob is otherwise valid and signed.
+
+    (this ensures forwards compatibility if we extend the header)
+    """
+    assert client.features.language == "en-US"
+    lang = "cs"
+    blob = prepare_blob(lang, client.model)
+    blob.header_bytes += b"trailing dataa"
+    assert len(blob.header_bytes) % 2 == 0, "Trailing data must keep the 2-alignment"
+    language_data = sign_blob(blob)
+
+    device.change_language(client, language_data)
+    assert client.features.language == "cs-CZ"
+    _check_ping_screen_texts(client, get_ping_title(lang), get_ping_button(lang))
