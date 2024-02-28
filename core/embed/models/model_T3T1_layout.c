@@ -8,7 +8,7 @@ const flash_area_t STORAGE_AREAS[STORAGE_AREAS_COUNT] = {
             {
                 .first_sector = STORAGE_1_SECTOR_START,
                 .num_sectors =
-                    STORAGE_1_SECTOR_START - STORAGE_1_SECTOR_START + 1,
+                    STORAGE_1_SECTOR_END - STORAGE_1_SECTOR_START + 1,
             },
     },
     {
@@ -17,7 +17,7 @@ const flash_area_t STORAGE_AREAS[STORAGE_AREAS_COUNT] = {
             {
                 .first_sector = STORAGE_2_SECTOR_START,
                 .num_sectors =
-                    STORAGE_2_SECTOR_START - STORAGE_2_SECTOR_START + 1,
+                    STORAGE_2_SECTOR_END - STORAGE_2_SECTOR_START + 1,
             },
     },
 };
