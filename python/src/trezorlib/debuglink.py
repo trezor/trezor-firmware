@@ -14,6 +14,8 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from __future__ import annotations
+
 import json
 import logging
 import re
@@ -428,6 +430,8 @@ class DebugLink:
             f"received message: {msg.__class__.__name__}",
             extra={"protobuf": msg},
         )
+        if isinstance(msg, messages.Failure):
+            raise TrezorFailure(msg)
         return msg
 
     def state(self) -> messages.DebugLinkState:
@@ -711,17 +715,33 @@ class DebugLink:
             self.t1_take_screenshots = False
 
     @expect(messages.DebugLinkMemory, field="memory", ret_type=bytes)
-    def memory_read(self, address: int, length: int) -> protobuf.MessageType:
-        return self._call(messages.DebugLinkMemoryRead(address=address, length=length))
+    def flash_read(
+        self, area: messages.FlashArea, offset: int = 0, length: int | None = None
+    ) -> protobuf.MessageType:
+        location = messages.FlashMemoryLocation(area=area, offset=offset)
+        return self._call(messages.DebugLinkFlashRead(location=location, length=length))
 
-    def memory_write(self, address: int, memory: bytes, flash: bool = False) -> None:
-        self._call(
-            messages.DebugLinkMemoryWrite(address=address, memory=memory, flash=flash),
-            nowait=True,
+    @expect(messages.DebugLinkMemory, field="hash", ret_type=bytes)
+    def flash_hash(
+        self, area: messages.FlashArea, offset: int = 0, length: int | None = None
+    ) -> protobuf.MessageType:
+        location = messages.FlashMemoryLocation(area=area, offset=offset)
+        return self._call(
+            messages.DebugLinkFlashRead(location=location, length=length, hashed=True)
         )
 
-    def flash_erase(self, sector: int) -> None:
-        self._call(messages.DebugLinkFlashErase(sector=sector), nowait=True)
+    def flash_erase(self, area: messages.FlashArea, offset: int) -> None:
+        location = messages.FlashMemoryLocation(area=area, offset=offset)
+        self._call(messages.DebugLinkFlashErase(location=location, whole_area=False))
+
+    def flash_erase_area(self, area: messages.FlashArea) -> None:
+        location = messages.FlashMemoryLocation(area=area, offset=0)
+        self._call(messages.DebugLinkFlashErase(location=location, whole_area=True))
+
+    def storage_hash(self) -> bytes:
+        storage_hash_a = self.flash_hash(messages.FlashArea.StorageA)
+        storage_hash_b = self.flash_hash(messages.FlashArea.StorageB)
+        return storage_hash_a + storage_hash_b
 
     @expect(messages.Success)
     def erase_sd_card(self, format: bool = True) -> messages.Success:

@@ -9,9 +9,9 @@ if __debug__:
     import trezorui2
     from storage import debug as storage
     from storage.debug import debug_events
-    from trezor import log, loop, utils, wire
-    from trezor.enums import MessageType
-    from trezor.messages import DebugLinkLayout, Success
+    from trezor import io, log, loop, utils, wire
+    from trezor.enums import FlashArea, MessageType
+    from trezor.messages import DebugLinkLayout, DebugLinkMemory, Success
     from trezor.ui import display
     from trezor.wire import context
 
@@ -21,6 +21,9 @@ if __debug__:
         from trezor.messages import (
             DebugLinkDecision,
             DebugLinkEraseSdCard,
+            DebugLinkFlashErase,
+            DebugLinkFlashRead,
+            DebugLinkFlashWrite,
             DebugLinkGetState,
             DebugLinkRecordScreen,
             DebugLinkReseedRandom,
@@ -241,8 +244,6 @@ if __debug__:
         return Success()
 
     async def dispatch_DebugLinkEraseSdCard(msg: DebugLinkEraseSdCard) -> Success:
-        from trezor import io
-
         sdcard = io.sdcard  # local_cache_attribute
 
         try:
@@ -262,6 +263,66 @@ if __debug__:
             sdcard.power_off()
         return Success()
 
+    def get_flash_area(area: FlashArea) -> io.FlashArea:
+        if area == FlashArea.Boardloader:
+            return io.flash_area.BOARDLOADER
+        if area == FlashArea.Bootloader:
+            return io.flash_area.BOOTLOADER
+        if area == FlashArea.Firmware:
+            return io.flash_area.FIRMWARE
+        if area == FlashArea.StorageA:
+            return io.flash_area.STORAGE_A
+        if area == FlashArea.StorageB:
+            return io.flash_area.STORAGE_B
+        if area == FlashArea.Translations:
+            return io.flash_area.TRANSLATIONS
+        raise ValueError
+
+    async def dispatch_DebugLinkFlashRead(msg: DebugLinkFlashRead) -> DebugLinkMemory:
+        try:
+            area = get_flash_area(msg.location.area)
+            if msg.length is not None:
+                length = msg.length
+            else:
+                length = area.size() - msg.location.offset
+            if msg.hashed:
+                return DebugLinkMemory(hash=area.hash(msg.location.offset, length))
+            else:
+                data = utils.empty_bytearray(length)
+                area.read(msg.location.offset, data)
+                return DebugLinkMemory(memory=data)
+        except Exception as e:
+            raise wire.ProcessError(e.args[0])
+
+    async def dispatch_DebugLinkFlashWrite(msg: DebugLinkFlashWrite) -> Success:
+        from trezor import translations
+
+        try:
+            translations.deinit()
+            area = get_flash_area(msg.location.area)
+            area.write(msg.location.offset, msg.memory)
+            return Success()
+        except Exception as e:
+            raise wire.ProcessError(e.args[0])
+        finally:
+            translations.init()
+
+    async def dispatch_DebugLinkFlashErase(msg: DebugLinkFlashErase) -> Success:
+        from trezor import translations
+
+        try:
+            translations.deinit()
+            area = get_flash_area(msg.location.area)
+            if msg.whole_area:
+                area.erase()
+            else:
+                area.erase_sector(msg.location.offset)
+            return Success()
+        except Exception as e:
+            raise wire.ProcessError(e.args[0])
+        finally:
+            translations.init()
+
     def boot() -> None:
         register = workflow_handlers.register  # local_cache_attribute
 
@@ -274,6 +335,9 @@ if __debug__:
         register(
             MessageType.DebugLinkResetDebugEvents, dispatch_DebugLinkResetDebugEvents
         )
+        register(MessageType.DebugLinkFlashRead, dispatch_DebugLinkFlashRead)
+        register(MessageType.DebugLinkFlashWrite, dispatch_DebugLinkFlashWrite)
+        register(MessageType.DebugLinkFlashErase, dispatch_DebugLinkFlashErase)
 
         loop.schedule(debuglink_decision_dispatcher())
         if storage.layout_watcher is not LAYOUT_WATCHER_NONE:

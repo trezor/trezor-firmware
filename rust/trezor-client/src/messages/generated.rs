@@ -75,13 +75,16 @@ trezor_message_impl! {
     DebugLinkMemoryRead => MessageType_DebugLinkMemoryRead,
     DebugLinkMemory => MessageType_DebugLinkMemory,
     DebugLinkMemoryWrite => MessageType_DebugLinkMemoryWrite,
-    DebugLinkFlashErase => MessageType_DebugLinkFlashErase,
+    DebugLinkFlashEraseLegacy => MessageType_DebugLinkFlashEraseLegacy,
     DebugLinkLayout => MessageType_DebugLinkLayout,
     DebugLinkReseedRandom => MessageType_DebugLinkReseedRandom,
     DebugLinkRecordScreen => MessageType_DebugLinkRecordScreen,
     DebugLinkEraseSdCard => MessageType_DebugLinkEraseSdCard,
     DebugLinkWatchLayout => MessageType_DebugLinkWatchLayout,
     DebugLinkResetDebugEvents => MessageType_DebugLinkResetDebugEvents,
+    DebugLinkFlashRead => MessageType_DebugLinkFlashRead,
+    DebugLinkFlashWrite => MessageType_DebugLinkFlashWrite,
+    DebugLinkFlashErase => MessageType_DebugLinkFlashErase,
 }
 
 #[cfg(feature = "binance")]

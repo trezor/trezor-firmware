@@ -121,13 +121,16 @@ class MessageType(IntEnum):
     DebugLinkMemoryRead = 110
     DebugLinkMemory = 111
     DebugLinkMemoryWrite = 112
-    DebugLinkFlashErase = 113
+    DebugLinkFlashEraseLegacy = 113
     DebugLinkLayout = 9001
     DebugLinkReseedRandom = 9002
     DebugLinkRecordScreen = 9003
     DebugLinkEraseSdCard = 9005
     DebugLinkWatchLayout = 9006
     DebugLinkResetDebugEvents = 9007
+    DebugLinkFlashRead = 9008
+    DebugLinkFlashWrite = 9009
+    DebugLinkFlashErase = 9010
     EthereumGetPublicKey = 450
     EthereumPublicKey = 451
     EthereumGetAddress = 56
@@ -519,6 +522,15 @@ class DebugPhysicalButton(IntEnum):
     LEFT_BTN = 0
     MIDDLE_BTN = 1
     RIGHT_BTN = 2
+
+
+class FlashArea(IntEnum):
+    Boardloader = 0
+    Bootloader = 1
+    StorageA = 2
+    StorageB = 3
+    Firmware = 4
+    Translations = 5
 
 
 class EthereumDefinitionType(IntEnum):
@@ -4066,6 +4078,23 @@ class DebugLinkLog(protobuf.MessageType):
         self.text = text
 
 
+class FlashMemoryLocation(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("area", "FlashArea", repeated=False, required=True),
+        2: protobuf.Field("offset", "uint32", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        area: "FlashArea",
+        offset: "int",
+    ) -> None:
+        self.area = area
+        self.offset = offset
+
+
 class DebugLinkMemoryRead(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 110
     FIELDS = {
@@ -4083,18 +4112,41 @@ class DebugLinkMemoryRead(protobuf.MessageType):
         self.length = length
 
 
+class DebugLinkFlashRead(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9008
+    FIELDS = {
+        1: protobuf.Field("location", "FlashMemoryLocation", repeated=False, required=True),
+        2: protobuf.Field("length", "uint32", repeated=False, required=False, default=None),
+        3: protobuf.Field("hashed", "bool", repeated=False, required=False, default=False),
+    }
+
+    def __init__(
+        self,
+        *,
+        location: "FlashMemoryLocation",
+        length: Optional["int"] = None,
+        hashed: Optional["bool"] = False,
+    ) -> None:
+        self.location = location
+        self.length = length
+        self.hashed = hashed
+
+
 class DebugLinkMemory(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 111
     FIELDS = {
         1: protobuf.Field("memory", "bytes", repeated=False, required=False, default=None),
+        2: protobuf.Field("hash", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
         memory: Optional["bytes"] = None,
+        hash: Optional["bytes"] = None,
     ) -> None:
         self.memory = memory
+        self.hash = hash
 
 
 class DebugLinkMemoryWrite(protobuf.MessageType):
@@ -4117,7 +4169,24 @@ class DebugLinkMemoryWrite(protobuf.MessageType):
         self.flash = flash
 
 
-class DebugLinkFlashErase(protobuf.MessageType):
+class DebugLinkFlashWrite(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9009
+    FIELDS = {
+        1: protobuf.Field("location", "FlashMemoryLocation", repeated=False, required=True),
+        2: protobuf.Field("memory", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        location: "FlashMemoryLocation",
+        memory: "bytes",
+    ) -> None:
+        self.location = location
+        self.memory = memory
+
+
+class DebugLinkFlashEraseLegacy(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 113
     FIELDS = {
         1: protobuf.Field("sector", "uint32", repeated=False, required=False, default=None),
@@ -4129,6 +4198,23 @@ class DebugLinkFlashErase(protobuf.MessageType):
         sector: Optional["int"] = None,
     ) -> None:
         self.sector = sector
+
+
+class DebugLinkFlashErase(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9010
+    FIELDS = {
+        1: protobuf.Field("location", "FlashMemoryLocation", repeated=False, required=True),
+        2: protobuf.Field("whole_area", "bool", repeated=False, required=False, default=False),
+    }
+
+    def __init__(
+        self,
+        *,
+        location: "FlashMemoryLocation",
+        whole_area: Optional["bool"] = False,
+    ) -> None:
+        self.location = location
+        self.whole_area = whole_area
 
 
 class DebugLinkEraseSdCard(protobuf.MessageType):

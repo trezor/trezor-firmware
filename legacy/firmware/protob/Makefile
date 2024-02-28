@@ -4,6 +4,7 @@ endif
 
 SKIPPED_MESSAGES := Binance Cardano DebugMonero Eos Monero Ontology Ripple SdProtect Tezos WebAuthn \
 	DebugLinkRecordScreen DebugLinkEraseSdCard DebugLinkWatchLayout \
+	DebugLinkFlashErase DebugLinkFlashRead DebugLinkFlashWrite \
 	DebugLinkLayout DebugLinkResetDebugEvents GetNonce \
 	TxAckInput TxAckOutput TxAckPrev TxAckPaymentRequest \
 	EthereumSignTypedData EthereumTypedDataStructRequest EthereumTypedDataStructAck \

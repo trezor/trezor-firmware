@@ -31,6 +31,56 @@ class FlashOTP:
         """
 
 
+# extmod/modtrezorio/modtrezorio-flash.h
+class FlashArea:
+    """
+    Area of the flash memory
+    """
+
+    def size(self) -> int:
+        """
+        Returns size of the flash area
+        """
+
+    def hash(
+        self,
+        offset: int,
+        length: int,
+        challenge: bytes | None = None,
+        callback: Callable[[int], None] | None = None,
+    ) -> bytes:
+        """
+        Computes a Blake2s hash of a segment of the flash area.
+        Offset and length must be aligned to 1024 bytes.
+        An optional challenge can be used as the Blake2s key.
+        The progress callback will be invoked every 16 kB with the current
+        position.
+        """
+    if __debug__:
+        def read(self, offset: int, data: bytearray) -> None:
+            """
+            Reads data from flash area. Will read exact length of data
+            bytearray. Offset and length of data must be aligned to 1024 bytes.
+            """
+    if __debug__:
+        def write(self, offset: int, data: bytes) -> None:
+            """
+            Writes data to flash area.
+            Offset and written data size must be a multiple of FLASH_BLOCK_SIZE,
+            that is, 4 bytes on F4 or 16 bytes on U5.
+            """
+    if __debug__:
+        def erase_sector(self, offset: int) -> None:
+            """
+            Erases a flash area sector starting at specified offset.
+            """
+    if __debug__:
+        def erase(self) -> None:
+            """
+            Erases the whole flash area.
+            """
+
+
 # extmod/modtrezorio/modtrezorio-hid.h
 class HID:
     """
@@ -190,7 +240,7 @@ class WebUSB:
         """
         Sends message using USB WebUSB (device) or UDP (emulator).
         """
-from . import fatfs, sdcard
+from . import fatfs, sdcard, flash_area
 POLL_READ: int  # wait until interface is readable and return read data
 POLL_WRITE: int  # wait until interface is writable
 TOUCH: int  # interface id of the touch events

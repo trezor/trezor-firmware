@@ -2360,6 +2360,283 @@ impl ::protobuf::reflect::ProtobufValue for DebugLinkLog {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
+// @@protoc_insertion_point(message:hw.trezor.messages.debug.FlashMemoryLocation)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct FlashMemoryLocation {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.debug.FlashMemoryLocation.area)
+    pub area: ::std::option::Option<::protobuf::EnumOrUnknown<flash_memory_location::FlashArea>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.debug.FlashMemoryLocation.offset)
+    pub offset: ::std::option::Option<u32>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.debug.FlashMemoryLocation.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a FlashMemoryLocation {
+    fn default() -> &'a FlashMemoryLocation {
+        <FlashMemoryLocation as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl FlashMemoryLocation {
+    pub fn new() -> FlashMemoryLocation {
+        ::std::default::Default::default()
+    }
+
+    // required .hw.trezor.messages.debug.FlashMemoryLocation.FlashArea area = 1;
+
+    pub fn area(&self) -> flash_memory_location::FlashArea {
+        match self.area {
+            Some(e) => e.enum_value_or(flash_memory_location::FlashArea::Boardloader),
+            None => flash_memory_location::FlashArea::Boardloader,
+        }
+    }
+
+    pub fn clear_area(&mut self) {
+        self.area = ::std::option::Option::None;
+    }
+
+    pub fn has_area(&self) -> bool {
+        self.area.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_area(&mut self, v: flash_memory_location::FlashArea) {
+        self.area = ::std::option::Option::Some(::protobuf::EnumOrUnknown::new(v));
+    }
+
+    // required uint32 offset = 2;
+
+    pub fn offset(&self) -> u32 {
+        self.offset.unwrap_or(0)
+    }
+
+    pub fn clear_offset(&mut self) {
+        self.offset = ::std::option::Option::None;
+    }
+
+    pub fn has_offset(&self) -> bool {
+        self.offset.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_offset(&mut self, v: u32) {
+        self.offset = ::std::option::Option::Some(v);
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "area",
+            |m: &FlashMemoryLocation| { &m.area },
+            |m: &mut FlashMemoryLocation| { &mut m.area },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "offset",
+            |m: &FlashMemoryLocation| { &m.offset },
+            |m: &mut FlashMemoryLocation| { &mut m.offset },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<FlashMemoryLocation>(
+            "FlashMemoryLocation",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for FlashMemoryLocation {
+    const NAME: &'static str = "FlashMemoryLocation";
+
+    fn is_initialized(&self) -> bool {
+        if self.area.is_none() {
+            return false;
+        }
+        if self.offset.is_none() {
+            return false;
+        }
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                8 => {
+                    self.area = ::std::option::Option::Some(is.read_enum_or_unknown()?);
+                },
+                16 => {
+                    self.offset = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.area {
+            my_size += ::protobuf::rt::int32_size(1, v.value());
+        }
+        if let Some(v) = self.offset {
+            my_size += ::protobuf::rt::uint32_size(2, v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.area {
+            os.write_enum(1, ::protobuf::EnumOrUnknown::value(&v))?;
+        }
+        if let Some(v) = self.offset {
+            os.write_uint32(2, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> FlashMemoryLocation {
+        FlashMemoryLocation::new()
+    }
+
+    fn clear(&mut self) {
+        self.area = ::std::option::Option::None;
+        self.offset = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static FlashMemoryLocation {
+        static instance: FlashMemoryLocation = FlashMemoryLocation {
+            area: ::std::option::Option::None,
+            offset: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for FlashMemoryLocation {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("FlashMemoryLocation").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for FlashMemoryLocation {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for FlashMemoryLocation {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+/// Nested message and enums of message `FlashMemoryLocation`
+pub mod flash_memory_location {
+    #[derive(Clone,Copy,PartialEq,Eq,Debug,Hash)]
+    // @@protoc_insertion_point(enum:hw.trezor.messages.debug.FlashMemoryLocation.FlashArea)
+    pub enum FlashArea {
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.debug.FlashMemoryLocation.FlashArea.Boardloader)
+        Boardloader = 0,
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.debug.FlashMemoryLocation.FlashArea.Bootloader)
+        Bootloader = 1,
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.debug.FlashMemoryLocation.FlashArea.StorageA)
+        StorageA = 2,
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.debug.FlashMemoryLocation.FlashArea.StorageB)
+        StorageB = 3,
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.debug.FlashMemoryLocation.FlashArea.Firmware)
+        Firmware = 4,
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.debug.FlashMemoryLocation.FlashArea.Secret)
+        Secret = 5,
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.debug.FlashMemoryLocation.FlashArea.Translations)
+        Translations = 6,
+    }
+
+    impl ::protobuf::Enum for FlashArea {
+        const NAME: &'static str = "FlashArea";
+
+        fn value(&self) -> i32 {
+            *self as i32
+        }
+
+        fn from_i32(value: i32) -> ::std::option::Option<FlashArea> {
+            match value {
+                0 => ::std::option::Option::Some(FlashArea::Boardloader),
+                1 => ::std::option::Option::Some(FlashArea::Bootloader),
+                2 => ::std::option::Option::Some(FlashArea::StorageA),
+                3 => ::std::option::Option::Some(FlashArea::StorageB),
+                4 => ::std::option::Option::Some(FlashArea::Firmware),
+                5 => ::std::option::Option::Some(FlashArea::Secret),
+                6 => ::std::option::Option::Some(FlashArea::Translations),
+                _ => ::std::option::Option::None
+            }
+        }
+
+        fn from_str(str: &str) -> ::std::option::Option<FlashArea> {
+            match str {
+                "Boardloader" => ::std::option::Option::Some(FlashArea::Boardloader),
+                "Bootloader" => ::std::option::Option::Some(FlashArea::Bootloader),
+                "StorageA" => ::std::option::Option::Some(FlashArea::StorageA),
+                "StorageB" => ::std::option::Option::Some(FlashArea::StorageB),
+                "Firmware" => ::std::option::Option::Some(FlashArea::Firmware),
+                "Secret" => ::std::option::Option::Some(FlashArea::Secret),
+                "Translations" => ::std::option::Option::Some(FlashArea::Translations),
+                _ => ::std::option::Option::None
+            }
+        }
+
+        const VALUES: &'static [FlashArea] = &[
+            FlashArea::Boardloader,
+            FlashArea::Bootloader,
+            FlashArea::StorageA,
+            FlashArea::StorageB,
+            FlashArea::Firmware,
+            FlashArea::Secret,
+            FlashArea::Translations,
+        ];
+    }
+
+    impl ::protobuf::EnumFull for FlashArea {
+        fn enum_descriptor() -> ::protobuf::reflect::EnumDescriptor {
+            static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::EnumDescriptor> = ::protobuf::rt::Lazy::new();
+            descriptor.get(|| super::file_descriptor().enum_by_package_relative_name("FlashMemoryLocation.FlashArea").unwrap()).clone()
+        }
+
+        fn descriptor(&self) -> ::protobuf::reflect::EnumValueDescriptor {
+            let index = *self as usize;
+            Self::enum_descriptor().value_by_index(index)
+        }
+    }
+
+    impl ::std::default::Default for FlashArea {
+        fn default() -> Self {
+            FlashArea::Boardloader
+        }
+    }
+
+    impl FlashArea {
+        pub(in super) fn generated_enum_descriptor_data() -> ::protobuf::reflect::GeneratedEnumDescriptorData {
+            ::protobuf::reflect::GeneratedEnumDescriptorData::new::<FlashArea>("FlashMemoryLocation.FlashArea")
+        }
+    }
+}
+
 // @@protoc_insertion_point(message:hw.trezor.messages.debug.DebugLinkMemoryRead)
 #[derive(PartialEq,Clone,Default,Debug)]
 pub struct DebugLinkMemoryRead {
@@ -2538,12 +2815,219 @@ impl ::protobuf::reflect::ProtobufValue for DebugLinkMemoryRead {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
+// @@protoc_insertion_point(message:hw.trezor.messages.debug.DebugLinkFlashRead)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct DebugLinkFlashRead {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkFlashRead.location)
+    pub location: ::protobuf::MessageField<FlashMemoryLocation>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkFlashRead.length)
+    pub length: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkFlashRead.hashed)
+    pub hashed: ::std::option::Option<bool>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.debug.DebugLinkFlashRead.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a DebugLinkFlashRead {
+    fn default() -> &'a DebugLinkFlashRead {
+        <DebugLinkFlashRead as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl DebugLinkFlashRead {
+    pub fn new() -> DebugLinkFlashRead {
+        ::std::default::Default::default()
+    }
+
+    // optional uint32 length = 2;
+
+    pub fn length(&self) -> u32 {
+        self.length.unwrap_or(0)
+    }
+
+    pub fn clear_length(&mut self) {
+        self.length = ::std::option::Option::None;
+    }
+
+    pub fn has_length(&self) -> bool {
+        self.length.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_length(&mut self, v: u32) {
+        self.length = ::std::option::Option::Some(v);
+    }
+
+    // optional bool hashed = 3;
+
+    pub fn hashed(&self) -> bool {
+        self.hashed.unwrap_or(false)
+    }
+
+    pub fn clear_hashed(&mut self) {
+        self.hashed = ::std::option::Option::None;
+    }
+
+    pub fn has_hashed(&self) -> bool {
+        self.hashed.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_hashed(&mut self, v: bool) {
+        self.hashed = ::std::option::Option::Some(v);
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(3);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, FlashMemoryLocation>(
+            "location",
+            |m: &DebugLinkFlashRead| { &m.location },
+            |m: &mut DebugLinkFlashRead| { &mut m.location },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "length",
+            |m: &DebugLinkFlashRead| { &m.length },
+            |m: &mut DebugLinkFlashRead| { &mut m.length },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "hashed",
+            |m: &DebugLinkFlashRead| { &m.hashed },
+            |m: &mut DebugLinkFlashRead| { &mut m.hashed },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<DebugLinkFlashRead>(
+            "DebugLinkFlashRead",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for DebugLinkFlashRead {
+    const NAME: &'static str = "DebugLinkFlashRead";
+
+    fn is_initialized(&self) -> bool {
+        if self.location.is_none() {
+            return false;
+        }
+        for v in &self.location {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.location)?;
+                },
+                16 => {
+                    self.length = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                24 => {
+                    self.hashed = ::std::option::Option::Some(is.read_bool()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.location.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
+        if let Some(v) = self.length {
+            my_size += ::protobuf::rt::uint32_size(2, v);
+        }
+        if let Some(v) = self.hashed {
+            my_size += 1 + 1;
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.location.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(1, v, os)?;
+        }
+        if let Some(v) = self.length {
+            os.write_uint32(2, v)?;
+        }
+        if let Some(v) = self.hashed {
+            os.write_bool(3, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> DebugLinkFlashRead {
+        DebugLinkFlashRead::new()
+    }
+
+    fn clear(&mut self) {
+        self.location.clear();
+        self.length = ::std::option::Option::None;
+        self.hashed = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static DebugLinkFlashRead {
+        static instance: DebugLinkFlashRead = DebugLinkFlashRead {
+            location: ::protobuf::MessageField::none(),
+            length: ::std::option::Option::None,
+            hashed: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for DebugLinkFlashRead {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("DebugLinkFlashRead").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for DebugLinkFlashRead {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for DebugLinkFlashRead {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
 // @@protoc_insertion_point(message:hw.trezor.messages.debug.DebugLinkMemory)
 #[derive(PartialEq,Clone,Default,Debug)]
 pub struct DebugLinkMemory {
     // message fields
     // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkMemory.memory)
     pub memory: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkMemory.hash)
+    pub hash: ::std::option::Option<::std::vec::Vec<u8>>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.debug.DebugLinkMemory.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -2596,13 +3080,54 @@ impl DebugLinkMemory {
         self.memory.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
+    // optional bytes hash = 2;
+
+    pub fn hash(&self) -> &[u8] {
+        match self.hash.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_hash(&mut self) {
+        self.hash = ::std::option::Option::None;
+    }
+
+    pub fn has_hash(&self) -> bool {
+        self.hash.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_hash(&mut self, v: ::std::vec::Vec<u8>) {
+        self.hash = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_hash(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.hash.is_none() {
+            self.hash = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.hash.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_hash(&mut self) -> ::std::vec::Vec<u8> {
+        self.hash.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(1);
+        let mut fields = ::std::vec::Vec::with_capacity(2);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "memory",
             |m: &DebugLinkMemory| { &m.memory },
             |m: &mut DebugLinkMemory| { &mut m.memory },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "hash",
+            |m: &DebugLinkMemory| { &m.hash },
+            |m: &mut DebugLinkMemory| { &mut m.hash },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<DebugLinkMemory>(
             "DebugLinkMemory",
@@ -2625,6 +3150,9 @@ impl ::protobuf::Message for DebugLinkMemory {
                 10 => {
                     self.memory = ::std::option::Option::Some(is.read_bytes()?);
                 },
+                18 => {
+                    self.hash = ::std::option::Option::Some(is.read_bytes()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -2640,6 +3168,9 @@ impl ::protobuf::Message for DebugLinkMemory {
         if let Some(v) = self.memory.as_ref() {
             my_size += ::protobuf::rt::bytes_size(1, &v);
         }
+        if let Some(v) = self.hash.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(2, &v);
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -2648,6 +3179,9 @@ impl ::protobuf::Message for DebugLinkMemory {
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
         if let Some(v) = self.memory.as_ref() {
             os.write_bytes(1, v)?;
+        }
+        if let Some(v) = self.hash.as_ref() {
+            os.write_bytes(2, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -2667,12 +3201,14 @@ impl ::protobuf::Message for DebugLinkMemory {
 
     fn clear(&mut self) {
         self.memory = ::std::option::Option::None;
+        self.hash = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
     fn default_instance() -> &'static DebugLinkMemory {
         static instance: DebugLinkMemory = DebugLinkMemory {
             memory: ::std::option::Option::None,
+            hash: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -2928,25 +3464,213 @@ impl ::protobuf::reflect::ProtobufValue for DebugLinkMemoryWrite {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
-// @@protoc_insertion_point(message:hw.trezor.messages.debug.DebugLinkFlashErase)
+// @@protoc_insertion_point(message:hw.trezor.messages.debug.DebugLinkFlashWrite)
 #[derive(PartialEq,Clone,Default,Debug)]
-pub struct DebugLinkFlashErase {
+pub struct DebugLinkFlashWrite {
     // message fields
-    // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkFlashErase.sector)
-    pub sector: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkFlashWrite.location)
+    pub location: ::protobuf::MessageField<FlashMemoryLocation>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkFlashWrite.memory)
+    pub memory: ::std::option::Option<::std::vec::Vec<u8>>,
     // special fields
-    // @@protoc_insertion_point(special_field:hw.trezor.messages.debug.DebugLinkFlashErase.special_fields)
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.debug.DebugLinkFlashWrite.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
 }
 
-impl<'a> ::std::default::Default for &'a DebugLinkFlashErase {
-    fn default() -> &'a DebugLinkFlashErase {
-        <DebugLinkFlashErase as ::protobuf::Message>::default_instance()
+impl<'a> ::std::default::Default for &'a DebugLinkFlashWrite {
+    fn default() -> &'a DebugLinkFlashWrite {
+        <DebugLinkFlashWrite as ::protobuf::Message>::default_instance()
     }
 }
 
-impl DebugLinkFlashErase {
-    pub fn new() -> DebugLinkFlashErase {
+impl DebugLinkFlashWrite {
+    pub fn new() -> DebugLinkFlashWrite {
+        ::std::default::Default::default()
+    }
+
+    // required bytes memory = 2;
+
+    pub fn memory(&self) -> &[u8] {
+        match self.memory.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_memory(&mut self) {
+        self.memory = ::std::option::Option::None;
+    }
+
+    pub fn has_memory(&self) -> bool {
+        self.memory.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_memory(&mut self, v: ::std::vec::Vec<u8>) {
+        self.memory = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_memory(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.memory.is_none() {
+            self.memory = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.memory.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_memory(&mut self) -> ::std::vec::Vec<u8> {
+        self.memory.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, FlashMemoryLocation>(
+            "location",
+            |m: &DebugLinkFlashWrite| { &m.location },
+            |m: &mut DebugLinkFlashWrite| { &mut m.location },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "memory",
+            |m: &DebugLinkFlashWrite| { &m.memory },
+            |m: &mut DebugLinkFlashWrite| { &mut m.memory },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<DebugLinkFlashWrite>(
+            "DebugLinkFlashWrite",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for DebugLinkFlashWrite {
+    const NAME: &'static str = "DebugLinkFlashWrite";
+
+    fn is_initialized(&self) -> bool {
+        if self.location.is_none() {
+            return false;
+        }
+        if self.memory.is_none() {
+            return false;
+        }
+        for v in &self.location {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.location)?;
+                },
+                18 => {
+                    self.memory = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.location.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
+        if let Some(v) = self.memory.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(2, &v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.location.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(1, v, os)?;
+        }
+        if let Some(v) = self.memory.as_ref() {
+            os.write_bytes(2, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> DebugLinkFlashWrite {
+        DebugLinkFlashWrite::new()
+    }
+
+    fn clear(&mut self) {
+        self.location.clear();
+        self.memory = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static DebugLinkFlashWrite {
+        static instance: DebugLinkFlashWrite = DebugLinkFlashWrite {
+            location: ::protobuf::MessageField::none(),
+            memory: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for DebugLinkFlashWrite {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("DebugLinkFlashWrite").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for DebugLinkFlashWrite {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for DebugLinkFlashWrite {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.debug.DebugLinkFlashEraseLegacy)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct DebugLinkFlashEraseLegacy {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkFlashEraseLegacy.sector)
+    pub sector: ::std::option::Option<u32>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.debug.DebugLinkFlashEraseLegacy.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a DebugLinkFlashEraseLegacy {
+    fn default() -> &'a DebugLinkFlashEraseLegacy {
+        <DebugLinkFlashEraseLegacy as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl DebugLinkFlashEraseLegacy {
+    pub fn new() -> DebugLinkFlashEraseLegacy {
         ::std::default::Default::default()
     }
 
@@ -2974,19 +3698,19 @@ impl DebugLinkFlashErase {
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "sector",
-            |m: &DebugLinkFlashErase| { &m.sector },
-            |m: &mut DebugLinkFlashErase| { &mut m.sector },
+            |m: &DebugLinkFlashEraseLegacy| { &m.sector },
+            |m: &mut DebugLinkFlashEraseLegacy| { &mut m.sector },
         ));
-        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<DebugLinkFlashErase>(
-            "DebugLinkFlashErase",
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<DebugLinkFlashEraseLegacy>(
+            "DebugLinkFlashEraseLegacy",
             fields,
             oneofs,
         )
     }
 }
 
-impl ::protobuf::Message for DebugLinkFlashErase {
-    const NAME: &'static str = "DebugLinkFlashErase";
+impl ::protobuf::Message for DebugLinkFlashEraseLegacy {
+    const NAME: &'static str = "DebugLinkFlashEraseLegacy";
 
     fn is_initialized(&self) -> bool {
         true
@@ -3034,8 +3758,8 @@ impl ::protobuf::Message for DebugLinkFlashErase {
         &mut self.special_fields
     }
 
-    fn new() -> DebugLinkFlashErase {
-        DebugLinkFlashErase::new()
+    fn new() -> DebugLinkFlashEraseLegacy {
+        DebugLinkFlashEraseLegacy::new()
     }
 
     fn clear(&mut self) {
@@ -3043,9 +3767,177 @@ impl ::protobuf::Message for DebugLinkFlashErase {
         self.special_fields.clear();
     }
 
+    fn default_instance() -> &'static DebugLinkFlashEraseLegacy {
+        static instance: DebugLinkFlashEraseLegacy = DebugLinkFlashEraseLegacy {
+            sector: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for DebugLinkFlashEraseLegacy {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("DebugLinkFlashEraseLegacy").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for DebugLinkFlashEraseLegacy {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for DebugLinkFlashEraseLegacy {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.debug.DebugLinkFlashErase)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct DebugLinkFlashErase {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkFlashErase.location)
+    pub location: ::protobuf::MessageField<FlashMemoryLocation>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkFlashErase.whole_area)
+    pub whole_area: ::std::option::Option<bool>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.debug.DebugLinkFlashErase.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a DebugLinkFlashErase {
+    fn default() -> &'a DebugLinkFlashErase {
+        <DebugLinkFlashErase as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl DebugLinkFlashErase {
+    pub fn new() -> DebugLinkFlashErase {
+        ::std::default::Default::default()
+    }
+
+    // optional bool whole_area = 2;
+
+    pub fn whole_area(&self) -> bool {
+        self.whole_area.unwrap_or(false)
+    }
+
+    pub fn clear_whole_area(&mut self) {
+        self.whole_area = ::std::option::Option::None;
+    }
+
+    pub fn has_whole_area(&self) -> bool {
+        self.whole_area.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_whole_area(&mut self, v: bool) {
+        self.whole_area = ::std::option::Option::Some(v);
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, FlashMemoryLocation>(
+            "location",
+            |m: &DebugLinkFlashErase| { &m.location },
+            |m: &mut DebugLinkFlashErase| { &mut m.location },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "whole_area",
+            |m: &DebugLinkFlashErase| { &m.whole_area },
+            |m: &mut DebugLinkFlashErase| { &mut m.whole_area },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<DebugLinkFlashErase>(
+            "DebugLinkFlashErase",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for DebugLinkFlashErase {
+    const NAME: &'static str = "DebugLinkFlashErase";
+
+    fn is_initialized(&self) -> bool {
+        if self.location.is_none() {
+            return false;
+        }
+        for v in &self.location {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.location)?;
+                },
+                16 => {
+                    self.whole_area = ::std::option::Option::Some(is.read_bool()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.location.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
+        if let Some(v) = self.whole_area {
+            my_size += 1 + 1;
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.location.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(1, v, os)?;
+        }
+        if let Some(v) = self.whole_area {
+            os.write_bool(2, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> DebugLinkFlashErase {
+        DebugLinkFlashErase::new()
+    }
+
+    fn clear(&mut self) {
+        self.location.clear();
+        self.whole_area = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
     fn default_instance() -> &'static DebugLinkFlashErase {
         static instance: DebugLinkFlashErase = DebugLinkFlashErase {
-            sector: ::std::option::Option::None,
+            location: ::protobuf::MessageField::none(),
+            whole_area: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -3492,14 +4384,30 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \n\x06tokens\x18\r\x20\x03(\tR\x06tokens\"\x0f\n\rDebugLinkStop\"P\n\x0c\
     DebugLinkLog\x12\x14\n\x05level\x18\x01\x20\x01(\rR\x05level\x12\x16\n\
     \x06bucket\x18\x02\x20\x01(\tR\x06bucket\x12\x12\n\x04text\x18\x03\x20\
-    \x01(\tR\x04text\"G\n\x13DebugLinkMemoryRead\x12\x18\n\x07address\x18\
-    \x01\x20\x01(\rR\x07address\x12\x16\n\x06length\x18\x02\x20\x01(\rR\x06l\
-    ength\")\n\x0fDebugLinkMemory\x12\x16\n\x06memory\x18\x01\x20\x01(\x0cR\
-    \x06memory\"^\n\x14DebugLinkMemoryWrite\x12\x18\n\x07address\x18\x01\x20\
-    \x01(\rR\x07address\x12\x16\n\x06memory\x18\x02\x20\x01(\x0cR\x06memory\
-    \x12\x14\n\x05flash\x18\x03\x20\x01(\x08R\x05flash\"-\n\x13DebugLinkFlas\
-    hErase\x12\x16\n\x06sector\x18\x01\x20\x01(\rR\x06sector\".\n\x14DebugLi\
-    nkEraseSdCard\x12\x16\n\x06format\x18\x01\x20\x01(\x08R\x06format\",\n\
+    \x01(\tR\x04text\"\xf0\x01\n\x13FlashMemoryLocation\x12K\n\x04area\x18\
+    \x01\x20\x02(\x0e27.hw.trezor.messages.debug.FlashMemoryLocation.FlashAr\
+    eaR\x04area\x12\x16\n\x06offset\x18\x02\x20\x02(\rR\x06offset\"t\n\tFlas\
+    hArea\x12\x0f\n\x0bBoardloader\x10\0\x12\x0e\n\nBootloader\x10\x01\x12\
+    \x0c\n\x08StorageA\x10\x02\x12\x0c\n\x08StorageB\x10\x03\x12\x0c\n\x08Fi\
+    rmware\x10\x04\x12\n\n\x06Secret\x10\x05\x12\x10\n\x0cTranslations\x10\
+    \x06\"K\n\x13DebugLinkMemoryRead\x12\x18\n\x07address\x18\x01\x20\x01(\r\
+    R\x07address\x12\x16\n\x06length\x18\x02\x20\x01(\rR\x06length:\x02\x18\
+    \x01\"\x96\x01\n\x12DebugLinkFlashRead\x12I\n\x08location\x18\x01\x20\
+    \x02(\x0b2-.hw.trezor.messages.debug.FlashMemoryLocationR\x08location\
+    \x12\x16\n\x06length\x18\x02\x20\x01(\rR\x06length\x12\x1d\n\x06hashed\
+    \x18\x03\x20\x01(\x08:\x05falseR\x06hashed\"=\n\x0fDebugLinkMemory\x12\
+    \x16\n\x06memory\x18\x01\x20\x01(\x0cR\x06memory\x12\x12\n\x04hash\x18\
+    \x02\x20\x01(\x0cR\x04hash\"b\n\x14DebugLinkMemoryWrite\x12\x18\n\x07add\
+    ress\x18\x01\x20\x01(\rR\x07address\x12\x16\n\x06memory\x18\x02\x20\x01(\
+    \x0cR\x06memory\x12\x14\n\x05flash\x18\x03\x20\x01(\x08R\x05flash:\x02\
+    \x18\x01\"x\n\x13DebugLinkFlashWrite\x12I\n\x08location\x18\x01\x20\x02(\
+    \x0b2-.hw.trezor.messages.debug.FlashMemoryLocationR\x08location\x12\x16\
+    \n\x06memory\x18\x02\x20\x02(\x0cR\x06memory\"7\n\x19DebugLinkFlashErase\
+    Legacy\x12\x16\n\x06sector\x18\x01\x20\x01(\rR\x06sector:\x02\x18\x01\"\
+    \x86\x01\n\x13DebugLinkFlashErase\x12I\n\x08location\x18\x01\x20\x02(\
+    \x0b2-.hw.trezor.messages.debug.FlashMemoryLocationR\x08location\x12$\n\
+    \nwhole_area\x18\x02\x20\x01(\x08:\x05falseR\twholeArea\".\n\x14DebugLin\
+    kEraseSdCard\x12\x16\n\x06format\x18\x01\x20\x01(\x08R\x06format\",\n\
     \x14DebugLinkWatchLayout\x12\x14\n\x05watch\x18\x01\x20\x01(\x08R\x05wat\
     ch\"\x1b\n\x19DebugLinkResetDebugEventsB=\n#com.satoshilabs.trezor.lib.p\
     rotobufB\x12TrezorMessageDebug\x80\xa6\x1d\x01\
@@ -3523,7 +4431,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             deps.push(super::messages::file_descriptor().clone());
             deps.push(super::messages_common::file_descriptor().clone());
             deps.push(super::messages_management::file_descriptor().clone());
-            let mut messages = ::std::vec::Vec::with_capacity(15);
+            let mut messages = ::std::vec::Vec::with_capacity(19);
             messages.push(DebugLinkDecision::generated_message_descriptor_data());
             messages.push(DebugLinkLayout::generated_message_descriptor_data());
             messages.push(DebugLinkReseedRandom::generated_message_descriptor_data());
@@ -3532,17 +4440,22 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             messages.push(DebugLinkState::generated_message_descriptor_data());
             messages.push(DebugLinkStop::generated_message_descriptor_data());
             messages.push(DebugLinkLog::generated_message_descriptor_data());
+            messages.push(FlashMemoryLocation::generated_message_descriptor_data());
             messages.push(DebugLinkMemoryRead::generated_message_descriptor_data());
+            messages.push(DebugLinkFlashRead::generated_message_descriptor_data());
             messages.push(DebugLinkMemory::generated_message_descriptor_data());
             messages.push(DebugLinkMemoryWrite::generated_message_descriptor_data());
+            messages.push(DebugLinkFlashWrite::generated_message_descriptor_data());
+            messages.push(DebugLinkFlashEraseLegacy::generated_message_descriptor_data());
             messages.push(DebugLinkFlashErase::generated_message_descriptor_data());
             messages.push(DebugLinkEraseSdCard::generated_message_descriptor_data());
             messages.push(DebugLinkWatchLayout::generated_message_descriptor_data());
             messages.push(DebugLinkResetDebugEvents::generated_message_descriptor_data());
-            let mut enums = ::std::vec::Vec::with_capacity(3);
+            let mut enums = ::std::vec::Vec::with_capacity(4);
             enums.push(debug_link_decision::DebugSwipeDirection::generated_enum_descriptor_data());
             enums.push(debug_link_decision::DebugButton::generated_enum_descriptor_data());
             enums.push(debug_link_decision::DebugPhysicalButton::generated_enum_descriptor_data());
+            enums.push(flash_memory_location::FlashArea::generated_enum_descriptor_data());
             ::protobuf::reflect::GeneratedFileDescriptor::new_generated(
                 file_descriptor_proto(),
                 deps,

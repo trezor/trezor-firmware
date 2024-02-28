@@ -113,13 +113,16 @@ if TYPE_CHECKING:
         DebugLinkMemoryRead = 110
         DebugLinkMemory = 111
         DebugLinkMemoryWrite = 112
-        DebugLinkFlashErase = 113
+        DebugLinkFlashEraseLegacy = 113
         DebugLinkLayout = 9001
         DebugLinkReseedRandom = 9002
         DebugLinkRecordScreen = 9003
         DebugLinkEraseSdCard = 9005
         DebugLinkWatchLayout = 9006
         DebugLinkResetDebugEvents = 9007
+        DebugLinkFlashRead = 9008
+        DebugLinkFlashWrite = 9009
+        DebugLinkFlashErase = 9010
         EthereumGetPublicKey = 450
         EthereumPublicKey = 451
         EthereumGetAddress = 56
@@ -481,6 +484,14 @@ if TYPE_CHECKING:
         LEFT_BTN = 0
         MIDDLE_BTN = 1
         RIGHT_BTN = 2
+
+    class FlashArea(IntEnum):
+        Boardloader = 0
+        Bootloader = 1
+        StorageA = 2
+        StorageB = 3
+        Firmware = 4
+        Translations = 5
 
     class EthereumDefinitionType(IntEnum):
         NETWORK = 0
