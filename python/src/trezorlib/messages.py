@@ -477,6 +477,7 @@ class Capability(IntEnum):
     ShamirGroups = 16
     PassphraseEntry = 17
     Solana = 18
+    Translations = 19
 
 
 class SdProtectOperationType(IntEnum):
