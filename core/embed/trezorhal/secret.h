@@ -23,6 +23,8 @@ secbool secret_wiped(void);
 
 secbool secret_verify_header(void);
 
+secbool secret_ensure_initialized(void);
+
 void secret_erase(void);
 
 void secret_hide(void);

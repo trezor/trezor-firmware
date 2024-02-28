@@ -68,13 +68,6 @@ static const uint8_t * const BOARDLOADER_KEYS[] = {
 
 #ifdef STM32U5
 void check_bootloader_version(uint8_t bld_version) {
-  if (sectrue != secret_verify_header()) {
-    ensure(flash_area_erase_bulk(STORAGE_AREAS, STORAGE_AREAS_COUNT, NULL),
-           "erase storage failed");
-    secret_erase();
-    secret_write_header();
-  }
-
   const uint8_t *counter_addr =
       flash_area_get_address(&SECRET_AREA, SECRET_MONOTONIC_COUNTER_OFFSET,
                              SECRET_MONOTONIC_COUNTER_LEN);
@@ -307,6 +300,7 @@ int main(void) {
          "invalid bootloader hash");
 
 #ifdef STM32U5
+  secret_ensure_initialized();
   check_bootloader_version(hdr->monotonic);
 #endif
 

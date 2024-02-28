@@ -21,6 +21,17 @@ secbool secret_verify_header(void) {
   return bootloader_locked;
 }
 
+secbool secret_ensure_initialized(void) {
+  if (sectrue != secret_verify_header()) {
+    ensure(flash_area_erase_bulk(STORAGE_AREAS, STORAGE_AREAS_COUNT, NULL),
+           "erase storage failed");
+    secret_erase();
+    secret_write_header();
+    return secfalse;
+  }
+  return sectrue;
+}
+
 secbool secret_bootloader_locked(void) {
 #ifdef FIRMWARE
   return TAMP->BKP8R != 0 * sectrue;
@@ -86,7 +97,7 @@ static secbool secret_present(uint32_t offset, uint32_t len) {
 void secret_bhk_provision(void) {
   uint32_t secret[SECRET_BHK_LEN / sizeof(uint32_t)] = {0};
 
-  ensure(secret_verify_header(), "secret sector not properly initialized");
+  ensure(secret_ensure_initialized(), "secret reinitialized");
 
   if (sectrue != secret_present(SECRET_BHK_OFFSET, SECRET_BHK_LEN)) {
     secret_bhk_regenerate();
