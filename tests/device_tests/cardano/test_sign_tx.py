@@ -151,9 +151,11 @@ def _transform_expected_result(result):
                 "type": witness["type"],
                 "pub_key": bytes.fromhex(witness["pub_key"]),
                 "signature": bytes.fromhex(witness["signature"]),
-                "chain_code": bytes.fromhex(witness["chain_code"])
-                if witness["chain_code"]
-                else None,
+                "chain_code": (
+                    bytes.fromhex(witness["chain_code"])
+                    if witness["chain_code"]
+                    else None
+                ),
             }
             for witness in result["witnesses"]
         ],

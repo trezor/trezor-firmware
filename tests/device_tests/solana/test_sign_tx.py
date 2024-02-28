@@ -51,21 +51,23 @@ def test_solana_sign_tx(client: Client, parameters, result):
         client,
         address_n=parse_path(parameters["address"]),
         serialized_tx=serialized_tx,
-        additional_info=messages.SolanaTxAdditionalInfo(
-            token_accounts_infos=[
-                messages.SolanaTxTokenAccountInfo(
-                    base_address=token_account["base_address"],
-                    token_program=token_account["token_program"],
-                    token_mint=token_account["token_mint"],
-                    token_account=token_account["token_account"],
-                )
-                for token_account in parameters["additional_info"][
-                    "token_accounts_infos"
+        additional_info=(
+            messages.SolanaTxAdditionalInfo(
+                token_accounts_infos=[
+                    messages.SolanaTxTokenAccountInfo(
+                        base_address=token_account["base_address"],
+                        token_program=token_account["token_program"],
+                        token_mint=token_account["token_mint"],
+                        token_account=token_account["token_account"],
+                    )
+                    for token_account in parameters["additional_info"][
+                        "token_accounts_infos"
+                    ]
                 ]
-            ]
-        )
-        if "additional_info" in parameters
-        else None,
+            )
+            if "additional_info" in parameters
+            else None
+        ),
     )
 
     assert actual_result.signature == bytes.fromhex(result["expected_signature"])

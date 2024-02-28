@@ -16,24 +16,20 @@ if TYPE_CHECKING:
     class Signer(Protocol):
         coin: CoinInfo
 
-        def create_hash_writer(self) -> HashWriter:
-            ...
+        def create_hash_writer(self) -> HashWriter: ...
 
-        def create_sig_hasher(self, tx: SignTx | PrevTx) -> SigHasher:
-            ...
+        def create_sig_hasher(self, tx: SignTx | PrevTx) -> SigHasher: ...
 
         def write_tx_header(
             self,
             w: writers.Writer,
             tx: SignTx | PrevTx,
             witness_marker: bool,
-        ) -> None:
-            ...
+        ) -> None: ...
 
         async def write_prev_tx_footer(
             self, w: writers.Writer, tx: PrevTx, prev_hash: bytes
-        ) -> None:
-            ...
+        ) -> None: ...
 
 
 # The chain id used for change.

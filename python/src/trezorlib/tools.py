@@ -244,15 +244,13 @@ def prepare_message_bytes(txt: AnyStr) -> bytes:
 @overload
 def expect(
     expected: "Type[MT]",
-) -> "Callable[[Callable[P, MessageType]], Callable[P, MT]]":
-    ...
+) -> "Callable[[Callable[P, MessageType]], Callable[P, MT]]": ...
 
 
 @overload
 def expect(
     expected: "Type[MT]", *, field: str, ret_type: "Type[R]"
-) -> "Callable[[Callable[P, MessageType]], Callable[P, R]]":
-    ...
+) -> "Callable[[Callable[P, MessageType]], Callable[P, R]]": ...
 
 
 def expect(

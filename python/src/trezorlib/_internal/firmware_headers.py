@@ -234,17 +234,14 @@ class SignableImageProto(Protocol):
 class CosiSignedImage(SignableImageProto, Protocol):
     DEV_KEYS: t.ClassVar[t.Sequence[bytes]] = []
 
-    def insert_signature(self, signature: bytes, sigmask: int) -> None:
-        ...
+    def insert_signature(self, signature: bytes, sigmask: int) -> None: ...
 
 
 @runtime_checkable
 class LegacySignedImage(SignableImageProto, Protocol):
-    def slots(self) -> t.Iterable[int]:
-        ...
+    def slots(self) -> t.Iterable[int]: ...
 
-    def insert_signature(self, slot: int, key_index: int, signature: bytes) -> None:
-        ...
+    def insert_signature(self, slot: int, key_index: int, signature: bytes) -> None: ...
 
     def public_keys(
         self, dev_keys: bool = False, signature_version: int = 3

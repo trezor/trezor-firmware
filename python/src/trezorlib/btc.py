@@ -66,11 +66,9 @@ if TYPE_CHECKING:
         vout: List[Vout]
 
     class TxCacheType(Protocol):
-        def __getitem__(self, __key: bytes) -> messages.TransactionType:
-            ...
+        def __getitem__(self, __key: bytes) -> messages.TransactionType: ...
 
-        def __contains__(self, __key: bytes) -> bool:
-            ...
+        def __contains__(self, __key: bytes) -> bool: ...
 
 
 def from_json(json_dict: "Transaction") -> messages.TransactionType:

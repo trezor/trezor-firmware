@@ -123,9 +123,11 @@ async def _confirm_manage_offer_op_common(
 
 async def _confirm_offer(
     title: str,
-    op: StellarCreatePassiveSellOfferOp
-    | StellarManageSellOfferOp
-    | StellarManageBuyOfferOp,
+    op: (
+        StellarCreatePassiveSellOfferOp
+        | StellarManageSellOfferOp
+        | StellarManageBuyOfferOp
+    ),
 ) -> None:
     from trezor.messages import StellarManageBuyOfferOp
 

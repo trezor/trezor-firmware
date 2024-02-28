@@ -16,14 +16,11 @@ if TYPE_CHECKING:
     T = TypeVar("T")
 
     class NodeProtocol(Protocol[paths.PathType]):
-        def derive_path(self, path: paths.PathType) -> None:
-            ...
+        def derive_path(self, path: paths.PathType) -> None: ...
 
-        def clone(self: T) -> T:
-            ...
+        def clone(self: T) -> T: ...
 
-        def __del__(self) -> None:
-            ...
+        def __del__(self) -> None: ...
 
     NodeType = TypeVar("NodeType", bound=NodeProtocol)
 
@@ -34,8 +31,7 @@ if TYPE_CHECKING:
     HandlerWithKeychain = Callable[[MsgIn, "Keychain"], Awaitable[MsgOut]]
 
     class Deletable(Protocol):
-        def __del__(self) -> None:
-            ...
+        def __del__(self) -> None: ...
 
 
 FORBIDDEN_KEY_PATH = DataError("Forbidden key path")

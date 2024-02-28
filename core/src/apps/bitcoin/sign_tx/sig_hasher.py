@@ -18,11 +18,9 @@ if TYPE_CHECKING:
     from ..common import SigHashType
 
     class SigHasher(Protocol):
-        def add_input(self, txi: TxInput, script_pubkey: bytes) -> None:
-            ...
+        def add_input(self, txi: TxInput, script_pubkey: bytes) -> None: ...
 
-        def add_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
-            ...
+        def add_output(self, txo: TxOutput, script_pubkey: bytes) -> None: ...
 
         def hash143(
             self,
@@ -32,23 +30,20 @@ if TYPE_CHECKING:
             tx: SignTx | PrevTx,
             coin: coininfo.CoinInfo,
             hash_type: int,
-        ) -> bytes:
-            ...
+        ) -> bytes: ...
 
         def hash341(
             self,
             i: int,
             tx: SignTx | PrevTx,
             sighash_type: SigHashType,
-        ) -> bytes:
-            ...
+        ) -> bytes: ...
 
         def hash_zip244(
             self,
             txi: TxInput | None,
             script_pubkey: bytes | None,
-        ) -> bytes:
-            ...
+        ) -> bytes: ...
 
 
 # BIP-0143 hash

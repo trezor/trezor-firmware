@@ -302,10 +302,10 @@ async def confirm_token_transfer(
         br_code=ButtonRequestType.ConfirmOutput,
         verb=TR.buttons__continue,
         info_items=(
-            (f"{TR.solana__associated_token_account}:", base58.encode(token_account)),
-        )
-        if token_account != destination_account
-        else None,
+            ((f"{TR.solana__associated_token_account}:", base58.encode(token_account)),)
+            if token_account != destination_account
+            else None
+        ),
     )
 
     await confirm_value(

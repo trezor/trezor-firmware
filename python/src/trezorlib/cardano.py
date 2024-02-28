@@ -592,12 +592,14 @@ def parse_auxiliary_data(
             staking_path=tools.parse_path(cvote_registration["staking_path"]),
             nonce=cvote_registration["nonce"],
             payment_address=cvote_registration.get("payment_address"),
-            payment_address_parameters=_parse_address_parameters(
-                cvote_registration["payment_address_parameters"],
-                str(AUXILIARY_DATA_MISSING_FIELDS_ERROR),
-            )
-            if "payment_address_parameters" in cvote_registration
-            else None,
+            payment_address_parameters=(
+                _parse_address_parameters(
+                    cvote_registration["payment_address_parameters"],
+                    str(AUXILIARY_DATA_MISSING_FIELDS_ERROR),
+                )
+                if "payment_address_parameters" in cvote_registration
+                else None
+            ),
             format=serialization_format,
             delegations=delegations,
             voting_purpose=voting_purpose,
@@ -915,9 +917,9 @@ def sign_tx(
             auxiliary_data_supplement.type
             != messages.CardanoTxAuxiliaryDataSupplementType.NONE
         ):
-            sign_tx_response[
-                "auxiliary_data_supplement"
-            ] = auxiliary_data_supplement.__dict__
+            sign_tx_response["auxiliary_data_supplement"] = (
+                auxiliary_data_supplement.__dict__
+            )
 
         response = client.call(messages.CardanoTxHostAck())
         if not isinstance(response, messages.CardanoTxItemAck):
