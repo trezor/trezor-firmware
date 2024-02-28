@@ -827,9 +827,11 @@ async def confirm_cvote_registration(
         props.append(
             (
                 TR.cardano__voting_purpose,
-                TR.cardano__catalyst
-                if voting_purpose == 0
-                else f"{voting_purpose} ({TR.cardano__other})",
+                (
+                    TR.cardano__catalyst
+                    if voting_purpose == 0
+                    else f"{voting_purpose} ({TR.cardano__other})"
+                ),
             )
         )
 
@@ -864,9 +866,11 @@ async def confirm_token_minting(policy_id: bytes, token: messages.CardanoToken) 
                 ),
             ),
             (
-                TR.cardano__amount_minted_decimals_unknown
-                if token.mint_amount >= 0
-                else TR.cardano__amount_burned_decimals_unknown,
+                (
+                    TR.cardano__amount_minted_decimals_unknown
+                    if token.mint_amount >= 0
+                    else TR.cardano__amount_burned_decimals_unknown
+                ),
                 format_amount(token.mint_amount, 0),
             ),
         ),

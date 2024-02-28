@@ -14,6 +14,7 @@ encrypted using the private spend key. Here the host sends it back
 in `MoneroGetTxKeyRequest.tx_enc_keys` to be decrypted and yet again encrypted
 using the view key, which the host possess.
 """
+
 from micropython import const
 from typing import TYPE_CHECKING
 

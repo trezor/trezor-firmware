@@ -323,7 +323,7 @@ def test_recursive():
 
     assert msg == retr
     assert retr.uvarint == 1
-    assert type(retr.recursivefield) == RecursiveMessage
+    assert type(retr.recursivefield) is RecursiveMessage
     assert retr.recursivefield.uvarint == 2
-    assert type(retr.recursivefield.recursivefield) == RecursiveMessage
+    assert type(retr.recursivefield.recursivefield) is RecursiveMessage
     assert retr.recursivefield.recursivefield.uvarint == 3

@@ -2,7 +2,6 @@
 Initializes a new transaction.
 """
 
-
 from typing import TYPE_CHECKING
 
 from apps.monero import signing

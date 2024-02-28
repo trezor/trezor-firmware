@@ -71,8 +71,7 @@ class DataCache:
     if TYPE_CHECKING:
 
         @overload
-        def get(self, key: int) -> bytes | None:
-            ...
+        def get(self, key: int) -> bytes | None: ...
 
         @overload
         def get(self, key: int, default: T) -> bytes | T:  # noqa: F811
@@ -254,8 +253,7 @@ def set_int(key: int, value: int) -> None:
 if TYPE_CHECKING:
 
     @overload
-    def get(key: int) -> bytes | None:
-        ...
+    def get(key: int) -> bytes | None: ...
 
     @overload
     def get(key: int, default: T) -> bytes | T:  # noqa: F811

@@ -510,11 +510,11 @@ class Signer:
 
         output_value_list.append(output.amount)
 
-        asset_groups_dict: HashBuilderDict[
-            bytes, HashBuilderDict[bytes, int]
-        ] = HashBuilderDict(
-            output.asset_groups_count,
-            ProcessError("Invalid token bundle in output"),
+        asset_groups_dict: HashBuilderDict[bytes, HashBuilderDict[bytes, int]] = (
+            HashBuilderDict(
+                output.asset_groups_count,
+                ProcessError("Invalid token bundle in output"),
+            )
         )
         with output_value_list.append(asset_groups_dict):
             await self._process_asset_groups(

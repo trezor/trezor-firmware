@@ -70,14 +70,14 @@ class Context:
     if TYPE_CHECKING:
 
         @overload
-        async def read(self, expected_types: Container[int]) -> protobuf.MessageType:
-            ...
+        async def read(
+            self, expected_types: Container[int]
+        ) -> protobuf.MessageType: ...
 
         @overload
         async def read(
             self, expected_types: Container[int], expected_type: type[LoadedMessageType]
-        ) -> LoadedMessageType:
-            ...
+        ) -> LoadedMessageType: ...
 
     async def read(
         self,

@@ -42,9 +42,9 @@ def make_token(
 def make_payload(
     data_type: messages.EthereumDefinitionType = messages.EthereumDefinitionType.NETWORK,
     timestamp: int = 0xFFFF_FFFF,
-    message: messages.EthereumNetworkInfo
-    | messages.EthereumTokenInfo
-    | bytes = make_network(),
+    message: (
+        messages.EthereumNetworkInfo | messages.EthereumTokenInfo | bytes
+    ) = make_network(),
 ) -> bytes:
     if isinstance(message, bytes):
         message_bytes = message

@@ -61,12 +61,14 @@ def test_cardano_get_address(client: Client, chunkify: bool, parameters, result)
             address_type=getattr(
                 CardanoAddressType, parameters["address_type"].upper()
             ),
-            address_n=parse_path(parameters.get("path"))
-            if "path" in parameters
-            else None,
-            address_n_staking=parse_path(parameters.get("staking_path"))
-            if "staking_path" in parameters
-            else None,
+            address_n=(
+                parse_path(parameters.get("path")) if "path" in parameters else None
+            ),
+            address_n_staking=(
+                parse_path(parameters.get("staking_path"))
+                if "staking_path" in parameters
+                else None
+            ),
             staking_key_hash=parse_optional_bytes(parameters.get("staking_key_hash")),
             block_index=parameters.get("block_index"),
             tx_index=parameters.get("tx_index"),

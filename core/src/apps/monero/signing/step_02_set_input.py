@@ -11,6 +11,7 @@ If number of inputs is small, in-memory mode is used = alpha, pseudo_outs are ke
 Otherwise pseudo_outs are offloaded with HMAC, alpha is offloaded encrypted under chacha_poly with
 key derived for exactly this purpose.
 """
+
 from typing import TYPE_CHECKING
 
 from apps.monero.xmr import crypto_helpers
