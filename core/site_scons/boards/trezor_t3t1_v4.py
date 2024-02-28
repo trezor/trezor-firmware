@@ -5,11 +5,11 @@ from .stm32u5_common import stm32u5_common_files
 
 
 def configure(
-    env: dict,
-    features_wanted: list[str],
-    defines: list[str | tuple[str, str]],
-    sources: list[str],
-    paths: list[str],
+        env: dict,
+        features_wanted: list[str],
+        defines: list[str | tuple[str, str]],
+        sources: list[str],
+        paths: list[str],
 ) -> list[str]:
     features_available: list[str] = []
     board = "trezor_t3t1_v4.h"
