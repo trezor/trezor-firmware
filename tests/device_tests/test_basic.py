@@ -14,7 +14,7 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-from trezorlib import device, messages
+from trezorlib import device, messages, models
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 
 
@@ -24,6 +24,12 @@ def test_features(client: Client):
     f0.session_id = client.session_id
     f1 = client.call(messages.Initialize(session_id=f0.session_id))
     assert f0 == f1
+
+
+def test_capabilities(client: Client):
+    assert (messages.Capability.Translations in client.features.capabilities) == (
+        client.model is not models.T1B1
+    )
 
 
 def test_ping(client: Client):

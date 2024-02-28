@@ -9,6 +9,7 @@ Crypto = 5
 Shamir = 15
 ShamirGroups = 16
 PassphraseEntry = 17
+Translations = 19
 if not utils.BITCOIN_ONLY:
     Bitcoin_like = 2
     Binance = 3

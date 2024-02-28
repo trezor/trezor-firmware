@@ -2453,6 +2453,8 @@ pub mod features {
         Capability_PassphraseEntry = 17,
         // @@protoc_insertion_point(enum_value:hw.trezor.messages.management.Features.Capability.Capability_Solana)
         Capability_Solana = 18,
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.management.Features.Capability.Capability_Translations)
+        Capability_Translations = 19,
     }
 
     impl ::protobuf::Enum for Capability {
@@ -2482,6 +2484,7 @@ pub mod features {
                 16 => ::std::option::Option::Some(Capability::Capability_ShamirGroups),
                 17 => ::std::option::Option::Some(Capability::Capability_PassphraseEntry),
                 18 => ::std::option::Option::Some(Capability::Capability_Solana),
+                19 => ::std::option::Option::Some(Capability::Capability_Translations),
                 _ => ::std::option::Option::None
             }
         }
@@ -2506,6 +2509,7 @@ pub mod features {
                 "Capability_ShamirGroups" => ::std::option::Option::Some(Capability::Capability_ShamirGroups),
                 "Capability_PassphraseEntry" => ::std::option::Option::Some(Capability::Capability_PassphraseEntry),
                 "Capability_Solana" => ::std::option::Option::Some(Capability::Capability_Solana),
+                "Capability_Translations" => ::std::option::Option::Some(Capability::Capability_Translations),
                 _ => ::std::option::Option::None
             }
         }
@@ -2529,6 +2533,7 @@ pub mod features {
             Capability::Capability_ShamirGroups,
             Capability::Capability_PassphraseEntry,
             Capability::Capability_Solana,
+            Capability::Capability_Translations,
         ];
     }
 
@@ -2558,6 +2563,7 @@ pub mod features {
                 Capability::Capability_ShamirGroups => 15,
                 Capability::Capability_PassphraseEntry => 16,
                 Capability::Capability_Solana => 17,
+                Capability::Capability_Translations => 18,
             };
             Self::enum_descriptor().value_by_index(index)
         }
@@ -10305,7 +10311,7 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x0emessages.proto\"\x80\x01\n\nInitialize\x12\x1d\n\nsession_id\x18\x01\
     \x20\x01(\x0cR\tsessionId\x12,\n\x10_skip_passphrase\x18\x02\x20\x01(\
     \x08R\x0eSkipPassphraseB\x02\x18\x01\x12%\n\x0ederive_cardano\x18\x03\
-    \x20\x01(\x08R\rderiveCardano\"\r\n\x0bGetFeatures\"\xb0\x13\n\x08Featur\
+    \x20\x01(\x08R\rderiveCardano\"\r\n\x0bGetFeatures\"\xd3\x13\n\x08Featur\
     es\x12\x16\n\x06vendor\x18\x01\x20\x01(\tR\x06vendor\x12#\n\rmajor_versi\
     on\x18\x02\x20\x02(\rR\x0cmajorVersion\x12#\n\rminor_version\x18\x03\x20\
     \x02(\rR\x0cminorVersion\x12#\n\rpatch_version\x18\x04\x20\x02(\rR\x0cpa\
@@ -10349,7 +10355,7 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     n_width\x18/\x20\x01(\rR\x0fhomescreenWidth\x12+\n\x11homescreen_height\
     \x180\x20\x01(\rR\x10homescreenHeight\x12+\n\x11bootloader_locked\x181\
     \x20\x01(\x08R\x10bootloaderLocked\x12>\n\x18language_version_matches\
-    \x182\x20\x01(\x08:\x04trueR\x16languageVersionMatches\"\xe1\x03\n\nCapa\
+    \x182\x20\x01(\x08:\x04trueR\x16languageVersionMatches\"\x84\x04\n\nCapa\
     bility\x12\x1c\n\x12Capability_Bitcoin\x10\x01\x1a\x04\x80\xa6\x1d\x01\
     \x12\x1b\n\x17Capability_Bitcoin_like\x10\x02\x12\x16\n\x12Capability_Bi\
     nance\x10\x03\x12\x16\n\x12Capability_Cardano\x10\x04\x12\x1b\n\x11Capab\
@@ -10361,18 +10367,19 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x10\r\x12\x12\n\x0eCapability_U2F\x10\x0e\x12\x1b\n\x11Capability_Shami\
     r\x10\x0f\x1a\x04\x80\xa6\x1d\x01\x12!\n\x17Capability_ShamirGroups\x10\
     \x10\x1a\x04\x80\xa6\x1d\x01\x12$\n\x1aCapability_PassphraseEntry\x10\
-    \x11\x1a\x04\x80\xa6\x1d\x01\x12\x15\n\x11Capability_Solana\x10\x12\x1a\
-    \x04\xc8\xf3\x18\x01\"\x0c\n\nLockDevice\"&\n\x07SetBusy\x12\x1b\n\texpi\
-    ry_ms\x18\x01\x20\x01(\rR\x08expiryMs\"\x0c\n\nEndSession\"\x9b\x04\n\rA\
-    pplySettings\x12\x1e\n\x08language\x18\x01\x20\x01(\tR\x08languageB\x02\
-    \x18\x01\x12\x14\n\x05label\x18\x02\x20\x01(\tR\x05label\x12%\n\x0euse_p\
-    assphrase\x18\x03\x20\x01(\x08R\rusePassphrase\x12\x1e\n\nhomescreen\x18\
-    \x04\x20\x01(\x0cR\nhomescreen\x120\n\x12_passphrase_source\x18\x05\x20\
-    \x01(\rR\x10PassphraseSourceB\x02\x18\x01\x12+\n\x12auto_lock_delay_ms\
-    \x18\x06\x20\x01(\rR\x0fautoLockDelayMs\x12)\n\x10display_rotation\x18\
-    \x07\x20\x01(\rR\x0fdisplayRotation\x12=\n\x1bpassphrase_always_on_devic\
-    e\x18\x08\x20\x01(\x08R\x18passphraseAlwaysOnDevice\x12T\n\rsafety_check\
-    s\x18\t\x20\x01(\x0e2/.hw.trezor.messages.management.SafetyCheckLevelR\
+    \x11\x1a\x04\x80\xa6\x1d\x01\x12\x15\n\x11Capability_Solana\x10\x12\x12!\
+    \n\x17Capability_Translations\x10\x13\x1a\x04\x80\xa6\x1d\x01\x1a\x04\
+    \xc8\xf3\x18\x01\"\x0c\n\nLockDevice\"&\n\x07SetBusy\x12\x1b\n\texpiry_m\
+    s\x18\x01\x20\x01(\rR\x08expiryMs\"\x0c\n\nEndSession\"\x9b\x04\n\rApply\
+    Settings\x12\x1e\n\x08language\x18\x01\x20\x01(\tR\x08languageB\x02\x18\
+    \x01\x12\x14\n\x05label\x18\x02\x20\x01(\tR\x05label\x12%\n\x0euse_passp\
+    hrase\x18\x03\x20\x01(\x08R\rusePassphrase\x12\x1e\n\nhomescreen\x18\x04\
+    \x20\x01(\x0cR\nhomescreen\x120\n\x12_passphrase_source\x18\x05\x20\x01(\
+    \rR\x10PassphraseSourceB\x02\x18\x01\x12+\n\x12auto_lock_delay_ms\x18\
+    \x06\x20\x01(\rR\x0fautoLockDelayMs\x12)\n\x10display_rotation\x18\x07\
+    \x20\x01(\rR\x0fdisplayRotation\x12=\n\x1bpassphrase_always_on_device\
+    \x18\x08\x20\x01(\x08R\x18passphraseAlwaysOnDevice\x12T\n\rsafety_checks\
+    \x18\t\x20\x01(\x0e2/.hw.trezor.messages.management.SafetyCheckLevelR\
     \x0csafetyChecks\x123\n\x15experimental_features\x18\n\x20\x01(\x08R\x14\
     experimentalFeatures\x129\n\x19hide_passphrase_from_host\x18\x0b\x20\x01\
     (\x08R\x16hidePassphraseFromHost\"T\n\x0eChangeLanguage\x12\x1f\n\x0bdat\
