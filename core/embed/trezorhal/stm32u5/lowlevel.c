@@ -48,7 +48,6 @@
 #endif
 
 #if defined STM32U5A9xx | defined STM32U5G9xx
-#define WRP_LOCKED_VALUE 0x7F00FF00
 #define WRP_DEFAULT_VALUE 0xFF00FFFF
 #define SEC_WM1R1_DEFAULT_VALUE 0xFF00FF00
 #define SEC_WM1R2_DEFAULT_VALUE 0x7F007F00
@@ -58,7 +57,6 @@
 #define SEC_AREA_2_PAGE_START 0xFF
 #define SEC_AREA_2_PAGE_END 0x00
 #elif defined STM32U585xx
-#define WRP_LOCKED_VALUE 0x7F80FF80
 #define WRP_DEFAULT_VALUE 0xFF80FFFF
 #define SEC_WM1R1_DEFAULT_VALUE 0xFF80FF80
 #define SEC_WM1R2_DEFAULT_VALUE 0x7F807F80
@@ -70,6 +68,13 @@
 #else
 #error Unknown MCU
 #endif
+
+#define WRP_LOCKED_VALUE                                       \
+  ((WRP_DEFAULT_VALUE &                                        \
+    ~(FLASH_WRP1AR_UNLOCK_Msk | FLASH_WRP1AR_WRP1A_PSTRT_Msk | \
+      FLASH_WRP1AR_WRP1A_PEND_Msk)) |                          \
+   (WANT_WRP_PAGE_START << FLASH_WRP1AR_WRP1A_PSTRT_Pos) |     \
+   (WANT_WRP_PAGE_END << FLASH_WRP1AR_WRP1A_PEND_Pos))
 
 #define FLASH_OPTR_VALUE                                                \
   (FLASH_OPTR_TZEN | FLASH_OPTR_PA15_PUPEN | FLASH_OPTR_nBOOT0 |        \
@@ -130,8 +135,7 @@ secbool flash_check_option_bytes(void) {
   }
 
 #if PRODUCTION
-  if (FLASH->WRP1AR !=
-      (WRP_LOCKED_VALUE | WANT_WRP_PAGE_START | (WANT_WRP_PAGE_END << 16))) {
+  if (FLASH->WRP1AR != WRP_LOCKED_VALUE) {
     return secfalse;
   }
 #else
@@ -199,8 +203,7 @@ uint32_t flash_set_option_bytes(void) {
   FLASH->SECWM2R2 = FLASH_SECWM2R2_VALUE;
 
 #if PRODUCTION
-  FLASH->WRP1AR =
-      WRP_LOCKED_VALUE | WANT_WRP_PAGE_START | (WANT_WRP_PAGE_END << 16);
+  FLASH->WRP1AR = WRP_LOCKED_VALUE;
 #else
   FLASH->WRP1AR = WRP_DEFAULT_VALUE;
 #endif
