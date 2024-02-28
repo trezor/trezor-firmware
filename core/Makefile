@@ -30,8 +30,8 @@ PRODUCTION ?= 0
 PYOPT      ?= 1
 BITCOIN_ONLY ?= 0
 BOOTLOADER_QA ?= 0
-BOOTLOADER_DEVEL ?= 0
-TREZOR_MODEL ?= T
+BOOTLOADER_DEVEL ?= 1
+TREZOR_MODEL ?= T3T1
 TREZOR_MEMPERF ?= 0
 ADDRESS_SANITIZER ?= 0
 CMAKELISTS ?= 0
@@ -426,6 +426,9 @@ sizecheck: ## check sizes of binary files
 	test $(FIRMWARE_P2_MAXSIZE) -ge $(shell wc -c < $(FIRMWARE_BUILD_DIR)/firmware.bin.p2)
 	test $(FIRMWARE_MAXSIZE) -ge $(shell wc -c < $(FIRMWARE_BUILD_DIR)/firmware.bin)
 
+
+
+ifeq  ($(MCU),$(filter $(MCU),STM32F4))
 combine: ## combine boardloader + bootloader + prodtest into one combined image
 	./tools/combine_firmware \
 		$(LAYOUT_FILE) \
@@ -433,8 +436,6 @@ combine: ## combine boardloader + bootloader + prodtest into one combined image
 		-b BOARDLOADER $(BOARDLOADER_BUILD_DIR)/boardloader.bin \
 		-b BOOTLOADER $(BOOTLOADER_BUILD_DIR)/bootloader.bin \
 		-b FIRMWARE $(PRODTEST_BUILD_DIR)/prodtest.bin
-
-ifeq  ($(MCU),$(filter $(MCU),STM32F4))
 combine_fw: ## combine boardloader + bootloader + firmware into one combined image
 	./tools/combine_firmware \
 		$(LAYOUT_FILE) \
@@ -444,10 +445,19 @@ combine_fw: ## combine boardloader + bootloader + firmware into one combined ima
 		-b FIRMWARE $(FIRMWARE_BUILD_DIR)/firmware.bin.p1 \
 		-b FIRMWARE_P2 $(FIRMWARE_BUILD_DIR)/firmware.bin.p2
 else ifeq ($(MCU),$(filter $(MCU),STM32U5))
+combine: ## combine boardloader + bootloader + prodtest into one combined image
+	./tools/combine_firmware \
+		$(LAYOUT_FILE) \
+		$(PRODTEST_BUILD_DIR)/combined.bin \
+		-b FLASH $(PREPARE_BUILD_DIR)/prepare.bin \
+		-b BOARDLOADER $(BOARDLOADER_BUILD_DIR)/boardloader.bin \
+		-b BOOTLOADER $(BOOTLOADER_BUILD_DIR)/bootloader.bin \
+		-b FIRMWARE $(PRODTEST_BUILD_DIR)/prodtest.bin
 combine_fw: ## combine boardloader + bootloader + firmware into one combined image
 	./tools/combine_firmware \
 		$(LAYOUT_FILE) \
 		$(PRODTEST_BUILD_DIR)/combined.bin \
+		-b FLASH $(PREPARE_BUILD_DIR)/prepare.bin \
 		-b BOARDLOADER $(BOARDLOADER_BUILD_DIR)/boardloader.bin \
 		-b BOOTLOADER $(BOOTLOADER_BUILD_DIR)/bootloader.bin \
 		-b FIRMWARE $(FIRMWARE_BUILD_DIR)/firmware.bin

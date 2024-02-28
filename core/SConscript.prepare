@@ -53,6 +53,7 @@ SOURCE_PREPARE = [
     'embed/lib/terminal.c',
     'embed/lib/fonts/font_bitmap.c',
     'embed/lib/mini_printf.c',
+    'vendor/trezor-crypto/memzero.c',
 ]
 
 env.Replace(
