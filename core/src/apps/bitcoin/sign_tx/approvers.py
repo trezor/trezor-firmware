@@ -248,9 +248,10 @@ class BasicApprover(Approver):
         if msg.amount is None:
             raise DataError("Missing payment request amount.")
 
-        result = await helpers.confirm_payment_request(msg, self.coin, self.amount_unit)
-        # When user wants to see more info, the result will be False.
-        self.show_payment_req_details = result is False
+        result = await helpers.should_show_payment_request_details(
+            msg, self.coin, self.amount_unit
+        )
+        self.show_payment_req_details = result is True
 
     async def approve_orig_txids(
         self, tx_info: TxInfo, orig_txs: list[OriginalTxInfo]
