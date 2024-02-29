@@ -22,6 +22,7 @@ LANGUAGES = [file.stem for file in TRANSLATIONS.glob("??.json")]
 def prepare_blob(
     lang_or_def: translations.JsonDef | Path | str,
     model: models.TrezorModel,
+    version: translations.VersionTuple | tuple[int, int, int] | None = None,
 ) -> translations.TranslationsBlob:
     order = translations.order_from_json(json.loads(ORDER_FILE.read_text()))
     if isinstance(lang_or_def, str):
@@ -30,7 +31,11 @@ def prepare_blob(
         lang_or_def = t.cast(translations.JsonDef, json.loads(lang_or_def.read_text()))
 
     # generate raw blob
-    version = translations.version_from_json(lang_or_def["header"]["version"])
+    if version is None:
+        version = translations.version_from_json(lang_or_def["header"]["version"])
+    elif len(version) == 3:
+        # version coming from client object does not have build item
+        version = *version, 0
     return translations.blob_from_defs(lang_or_def, order, model, version, FONTS_DIR)
 
 
@@ -48,9 +53,9 @@ def sign_blob(blob: translations.TranslationsBlob) -> bytes:
 
 def build_and_sign_blob(
     lang_or_def: translations.JsonDef | Path | str,
-    model: models.TrezorModel,
+    client: Client,
 ) -> bytes:
-    blob = prepare_blob(lang_or_def, model)
+    blob = prepare_blob(lang_or_def, client.model, client.version)
     return sign_blob(blob)
 
 
@@ -58,7 +63,7 @@ def set_language(client: Client, lang: str):
     if lang.startswith("en"):
         language_data = b""
     else:
-        language_data = build_and_sign_blob(lang, client.model)
+        language_data = build_and_sign_blob(lang, client)
     with client:
         device.change_language(client, language_data)  # type: ignore
 

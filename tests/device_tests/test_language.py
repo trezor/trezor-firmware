@@ -96,7 +96,7 @@ def test_error_invalid_data_length(client: Client):
     # Invalid data length
     # Sending more data than advertised in the header
     with pytest.raises(exceptions.TrezorFailure, match="Invalid data length"), client:
-        good_data = build_and_sign_blob("cs", client.model)
+        good_data = build_and_sign_blob("cs", client)
         bad_data = good_data + b"abcd"
         device.change_language(client, language_data=bad_data)
     assert client.features.language == "en-US"
@@ -110,7 +110,7 @@ def test_error_invalid_header_magic(client: Client):
     with pytest.raises(
         exceptions.TrezorFailure, match="Invalid translations data"
     ), client:
-        good_data = build_and_sign_blob("cs", client.model)
+        good_data = build_and_sign_blob("cs", client)
         bad_data = 4 * b"a" + good_data[4:]
         device.change_language(client, language_data=bad_data)
     assert client.features.language == "en-US"
@@ -124,7 +124,7 @@ def test_error_invalid_data_hash(client: Client):
     with pytest.raises(
         exceptions.TrezorFailure, match="Translation data verification failed"
     ), client:
-        good_data = build_and_sign_blob("cs", client.model)
+        good_data = build_and_sign_blob("cs", client)
         bad_data = good_data[:-8] + 8 * b"a"
         device.change_language(
             client,
@@ -141,11 +141,10 @@ def test_error_version_mismatch(client: Client):
     with pytest.raises(
         exceptions.TrezorFailure, match="Translations version mismatch"
     ), client:
-        data = get_lang_json("cs")
-        data["header"]["version"] = "3.5.4"
+        blob = prepare_blob("cs", client.model, (3, 5, 4, 0))
         device.change_language(
             client,
-            language_data=build_and_sign_blob(data, client.model),
+            language_data=sign_blob(blob),
         )
     assert client.features.language == "en-US"
     _check_ping_screen_texts(client, get_ping_title("en"), get_ping_button("en"))
@@ -217,7 +216,7 @@ def test_translations_renders_on_screen(client: Client):
     czech_data_copy["translations"]["words__confirm"] = new_czech_confirm
     device.change_language(
         client,
-        language_data=build_and_sign_blob(czech_data_copy, client.model),
+        language_data=build_and_sign_blob(czech_data_copy, client),
     )
     _check_ping_screen_texts(client, new_czech_confirm, get_ping_button("cs"))
 
@@ -226,7 +225,7 @@ def test_translations_renders_on_screen(client: Client):
     del czech_data_copy["translations"]["words__confirm"]
     device.change_language(
         client,
-        language_data=build_and_sign_blob(czech_data_copy, client.model),
+        language_data=build_and_sign_blob(czech_data_copy, client),
     )
     _check_ping_screen_texts(client, get_ping_title("en"), get_ping_button("cs"))
 
@@ -234,7 +233,7 @@ def test_translations_renders_on_screen(client: Client):
 def test_reject_update(client: Client):
     assert client.features.language == "en-US"
     lang = "cs"
-    language_data = build_and_sign_blob(lang, client.model)
+    language_data = build_and_sign_blob(lang, client)
 
     def input_flow_reject():
         yield
@@ -252,7 +251,7 @@ def test_reject_update(client: Client):
 def _maybe_confirm_set_language(
     client: Client, lang: str, show_display: bool | None, is_displayed: bool
 ) -> None:
-    language_data = build_and_sign_blob(lang, client.model)
+    language_data = build_and_sign_blob(lang, client)
 
     CHUNK_SIZE = 1024
 
@@ -352,7 +351,7 @@ def test_header_trailing_data(client: Client):
     """
     assert client.features.language == "en-US"
     lang = "cs"
-    blob = prepare_blob(lang, client.model)
+    blob = prepare_blob(lang, client.model, client.version)
     blob.header_bytes += b"trailing dataa"
     assert len(blob.header_bytes) % 2 == 0, "Trailing data must keep the 2-alignment"
     language_data = sign_blob(blob)
