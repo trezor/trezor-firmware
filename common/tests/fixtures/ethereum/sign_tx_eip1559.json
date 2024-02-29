@@ -62,26 +62,6 @@
             }
         },
         {
-            "name": "erc20",
-            "parameters": {
-                "comment": "Sending 291 Grzegorz Brzęczyszczykiewicz tokens to address 0x574bbb36871ba6b78e27f4b4dcfb76ea0091880b",
-                "data": "a9059cbb000000000000000000000000574bbb36871ba6b78e27f4b4dcfb76ea0091880b0000000000000000000000000000000000000000000000000000000000000123",
-                "path": "m/44'/60'/0'/0/1",
-                "to_address": "0xfc6b5d6af8a13258f7cbd0d39e11b35e01a32f93",
-                "chain_id": 1,
-                "nonce": "0x0",
-                "gas_limit": "0x14",
-                "max_gas_fee": "0x14",
-                "max_priority_fee": "0x1",
-                "value": "0x0"
-            },
-            "result": {
-                "sig_v": 1,
-                "sig_r": "e631b56bcc596844cb8686b2046e36cf33634aa396e7e1ea94a97aac02c18bda",
-                "sig_s": "399bff8752539176c4b2f1d5d2a8f6029f79841d28802149ab339a033ffe4c1f"
-            }
-        },
-        {
             "name": "large_chainid",
             "parameters": {
                 "comment": "Pirl chain id, doesn't support EIP1559 at this time, but chosen for large chain id",

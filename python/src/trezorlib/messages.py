@@ -4824,6 +4824,52 @@ class EthereumDefinitions(protobuf.MessageType):
         self.encoded_token = encoded_token
 
 
+class EthereumSmartContractDefinition(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("sig", "bytes", repeated=False, required=True),
+        2: protobuf.Field("name", "string", repeated=False, required=True),
+        3: protobuf.Field("inputs", "EthereumSmartContractArg", repeated=True, required=False, default=None),
+        4: protobuf.Field("is_transfer", "bool", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        sig: "bytes",
+        name: "str",
+        is_transfer: "bool",
+        inputs: Optional[Sequence["EthereumSmartContractArg"]] = None,
+    ) -> None:
+        self.inputs: Sequence["EthereumSmartContractArg"] = inputs if inputs is not None else []
+        self.sig = sig
+        self.name = name
+        self.is_transfer = is_transfer
+
+
+class EthereumSmartContractArg(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("name", "string", repeated=False, required=True),
+        2: protobuf.Field("type", "string", repeated=False, required=True),
+        3: protobuf.Field("internal_type", "string", repeated=False, required=True),
+        4: protobuf.Field("token_address_idx", "uint32", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        name: "str",
+        type: "str",
+        internal_type: "str",
+        token_address_idx: Optional["int"] = None,
+    ) -> None:
+        self.name = name
+        self.type = type
+        self.internal_type = internal_type
+        self.token_address_idx = token_address_idx
+
+
 class EthereumSignTypedData(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 464
     FIELDS = {

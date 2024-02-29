@@ -3573,6 +3573,46 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["EthereumDefinitions"]:
             return isinstance(msg, cls)
 
+    class EthereumSmartContractDefinition(protobuf.MessageType):
+        sig: "bytes"
+        name: "str"
+        inputs: "list[EthereumSmartContractArg]"
+        is_transfer: "bool"
+
+        def __init__(
+            self,
+            *,
+            sig: "bytes",
+            name: "str",
+            is_transfer: "bool",
+            inputs: "list[EthereumSmartContractArg] | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["EthereumSmartContractDefinition"]:
+            return isinstance(msg, cls)
+
+    class EthereumSmartContractArg(protobuf.MessageType):
+        name: "str"
+        type: "str"
+        internal_type: "str"
+        token_address_idx: "int | None"
+
+        def __init__(
+            self,
+            *,
+            name: "str",
+            type: "str",
+            internal_type: "str",
+            token_address_idx: "int | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["EthereumSmartContractArg"]:
+            return isinstance(msg, cls)
+
     class EthereumSignTypedData(protobuf.MessageType):
         address_n: "list[int]"
         primary_type: "str"

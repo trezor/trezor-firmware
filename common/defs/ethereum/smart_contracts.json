@@ -1,0 +1,70 @@
+[
+    {
+        "sig": "095ea7b3",
+        "name": "approve",
+        "inputs": [
+            {
+                "name": "Address",
+                "type": "address",
+                "internal_type": "address"
+            },
+            {
+                "name": "Amount",
+                "type": "uint256",
+                "internal_type": "int"
+            }
+        ],
+        "is_transfer": false
+    },
+    {
+        "sig": "70a08231",
+        "name": "balanceOf",
+        "inputs": [
+            {
+                "name": "Owner",
+                "type": "address",
+                "internal_type": "address"
+            }
+        ],
+        "is_transfer": false
+    },
+    {
+        "sig": "a9059cbb",
+        "name": "transfer",
+        "inputs": [
+            {
+                "name": "Recipient",
+                "type": "address",
+                "internal_type": "address"
+            },
+            {
+                "name": "Amount",
+                "type": "uint256",
+                "internal_type": "int"
+            }
+        ],
+        "is_transfer": true
+    },
+    {
+        "sig": "23b872dd",
+        "name": "transferFrom",
+        "inputs": [
+            {
+                "name": "From",
+                "type": "address",
+                "internal_type": "address"
+            },
+            {  
+                "name": "To",
+                "type": "address",
+                "internal_type": "address"
+            },
+            {
+                "name": "Value",
+                "type": "uint256",
+                "internal_type": "int"
+            }
+        ],
+        "is_transfer": true
+    }
+]

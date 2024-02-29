@@ -890,6 +890,600 @@ impl ::protobuf::reflect::ProtobufValue for EthereumDefinitions {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
+// @@protoc_insertion_point(message:hw.trezor.messages.ethereum_definitions.EthereumSmartContractDefinition)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct EthereumSmartContractDefinition {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.ethereum_definitions.EthereumSmartContractDefinition.sig)
+    pub sig: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ethereum_definitions.EthereumSmartContractDefinition.name)
+    pub name: ::std::option::Option<::std::string::String>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ethereum_definitions.EthereumSmartContractDefinition.inputs)
+    pub inputs: ::std::vec::Vec<EthereumSmartContractArg>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ethereum_definitions.EthereumSmartContractDefinition.is_transfer)
+    pub is_transfer: ::std::option::Option<bool>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.ethereum_definitions.EthereumSmartContractDefinition.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a EthereumSmartContractDefinition {
+    fn default() -> &'a EthereumSmartContractDefinition {
+        <EthereumSmartContractDefinition as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl EthereumSmartContractDefinition {
+    pub fn new() -> EthereumSmartContractDefinition {
+        ::std::default::Default::default()
+    }
+
+    // required bytes sig = 1;
+
+    pub fn sig(&self) -> &[u8] {
+        match self.sig.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_sig(&mut self) {
+        self.sig = ::std::option::Option::None;
+    }
+
+    pub fn has_sig(&self) -> bool {
+        self.sig.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_sig(&mut self, v: ::std::vec::Vec<u8>) {
+        self.sig = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_sig(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.sig.is_none() {
+            self.sig = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.sig.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_sig(&mut self) -> ::std::vec::Vec<u8> {
+        self.sig.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    // required string name = 2;
+
+    pub fn name(&self) -> &str {
+        match self.name.as_ref() {
+            Some(v) => v,
+            None => "",
+        }
+    }
+
+    pub fn clear_name(&mut self) {
+        self.name = ::std::option::Option::None;
+    }
+
+    pub fn has_name(&self) -> bool {
+        self.name.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_name(&mut self, v: ::std::string::String) {
+        self.name = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_name(&mut self) -> &mut ::std::string::String {
+        if self.name.is_none() {
+            self.name = ::std::option::Option::Some(::std::string::String::new());
+        }
+        self.name.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_name(&mut self) -> ::std::string::String {
+        self.name.take().unwrap_or_else(|| ::std::string::String::new())
+    }
+
+    // required bool is_transfer = 4;
+
+    pub fn is_transfer(&self) -> bool {
+        self.is_transfer.unwrap_or(false)
+    }
+
+    pub fn clear_is_transfer(&mut self) {
+        self.is_transfer = ::std::option::Option::None;
+    }
+
+    pub fn has_is_transfer(&self) -> bool {
+        self.is_transfer.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_is_transfer(&mut self, v: bool) {
+        self.is_transfer = ::std::option::Option::Some(v);
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(4);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "sig",
+            |m: &EthereumSmartContractDefinition| { &m.sig },
+            |m: &mut EthereumSmartContractDefinition| { &mut m.sig },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "name",
+            |m: &EthereumSmartContractDefinition| { &m.name },
+            |m: &mut EthereumSmartContractDefinition| { &mut m.name },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
+            "inputs",
+            |m: &EthereumSmartContractDefinition| { &m.inputs },
+            |m: &mut EthereumSmartContractDefinition| { &mut m.inputs },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "is_transfer",
+            |m: &EthereumSmartContractDefinition| { &m.is_transfer },
+            |m: &mut EthereumSmartContractDefinition| { &mut m.is_transfer },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<EthereumSmartContractDefinition>(
+            "EthereumSmartContractDefinition",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for EthereumSmartContractDefinition {
+    const NAME: &'static str = "EthereumSmartContractDefinition";
+
+    fn is_initialized(&self) -> bool {
+        if self.sig.is_none() {
+            return false;
+        }
+        if self.name.is_none() {
+            return false;
+        }
+        if self.is_transfer.is_none() {
+            return false;
+        }
+        for v in &self.inputs {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    self.sig = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                18 => {
+                    self.name = ::std::option::Option::Some(is.read_string()?);
+                },
+                26 => {
+                    self.inputs.push(is.read_message()?);
+                },
+                32 => {
+                    self.is_transfer = ::std::option::Option::Some(is.read_bool()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.sig.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(1, &v);
+        }
+        if let Some(v) = self.name.as_ref() {
+            my_size += ::protobuf::rt::string_size(2, &v);
+        }
+        for value in &self.inputs {
+            let len = value.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        };
+        if let Some(v) = self.is_transfer {
+            my_size += 1 + 1;
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.sig.as_ref() {
+            os.write_bytes(1, v)?;
+        }
+        if let Some(v) = self.name.as_ref() {
+            os.write_string(2, v)?;
+        }
+        for v in &self.inputs {
+            ::protobuf::rt::write_message_field_with_cached_size(3, v, os)?;
+        };
+        if let Some(v) = self.is_transfer {
+            os.write_bool(4, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> EthereumSmartContractDefinition {
+        EthereumSmartContractDefinition::new()
+    }
+
+    fn clear(&mut self) {
+        self.sig = ::std::option::Option::None;
+        self.name = ::std::option::Option::None;
+        self.inputs.clear();
+        self.is_transfer = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static EthereumSmartContractDefinition {
+        static instance: EthereumSmartContractDefinition = EthereumSmartContractDefinition {
+            sig: ::std::option::Option::None,
+            name: ::std::option::Option::None,
+            inputs: ::std::vec::Vec::new(),
+            is_transfer: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for EthereumSmartContractDefinition {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("EthereumSmartContractDefinition").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for EthereumSmartContractDefinition {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for EthereumSmartContractDefinition {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.ethereum_definitions.EthereumSmartContractArg)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct EthereumSmartContractArg {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.ethereum_definitions.EthereumSmartContractArg.name)
+    pub name: ::std::option::Option<::std::string::String>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ethereum_definitions.EthereumSmartContractArg.type)
+    pub type_: ::std::option::Option<::std::string::String>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ethereum_definitions.EthereumSmartContractArg.internal_type)
+    pub internal_type: ::std::option::Option<::std::string::String>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ethereum_definitions.EthereumSmartContractArg.token_address_idx)
+    pub token_address_idx: ::std::option::Option<u32>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.ethereum_definitions.EthereumSmartContractArg.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a EthereumSmartContractArg {
+    fn default() -> &'a EthereumSmartContractArg {
+        <EthereumSmartContractArg as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl EthereumSmartContractArg {
+    pub fn new() -> EthereumSmartContractArg {
+        ::std::default::Default::default()
+    }
+
+    // required string name = 1;
+
+    pub fn name(&self) -> &str {
+        match self.name.as_ref() {
+            Some(v) => v,
+            None => "",
+        }
+    }
+
+    pub fn clear_name(&mut self) {
+        self.name = ::std::option::Option::None;
+    }
+
+    pub fn has_name(&self) -> bool {
+        self.name.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_name(&mut self, v: ::std::string::String) {
+        self.name = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_name(&mut self) -> &mut ::std::string::String {
+        if self.name.is_none() {
+            self.name = ::std::option::Option::Some(::std::string::String::new());
+        }
+        self.name.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_name(&mut self) -> ::std::string::String {
+        self.name.take().unwrap_or_else(|| ::std::string::String::new())
+    }
+
+    // required string type = 2;
+
+    pub fn type_(&self) -> &str {
+        match self.type_.as_ref() {
+            Some(v) => v,
+            None => "",
+        }
+    }
+
+    pub fn clear_type_(&mut self) {
+        self.type_ = ::std::option::Option::None;
+    }
+
+    pub fn has_type(&self) -> bool {
+        self.type_.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_type(&mut self, v: ::std::string::String) {
+        self.type_ = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_type(&mut self) -> &mut ::std::string::String {
+        if self.type_.is_none() {
+            self.type_ = ::std::option::Option::Some(::std::string::String::new());
+        }
+        self.type_.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_type_(&mut self) -> ::std::string::String {
+        self.type_.take().unwrap_or_else(|| ::std::string::String::new())
+    }
+
+    // required string internal_type = 3;
+
+    pub fn internal_type(&self) -> &str {
+        match self.internal_type.as_ref() {
+            Some(v) => v,
+            None => "",
+        }
+    }
+
+    pub fn clear_internal_type(&mut self) {
+        self.internal_type = ::std::option::Option::None;
+    }
+
+    pub fn has_internal_type(&self) -> bool {
+        self.internal_type.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_internal_type(&mut self, v: ::std::string::String) {
+        self.internal_type = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_internal_type(&mut self) -> &mut ::std::string::String {
+        if self.internal_type.is_none() {
+            self.internal_type = ::std::option::Option::Some(::std::string::String::new());
+        }
+        self.internal_type.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_internal_type(&mut self) -> ::std::string::String {
+        self.internal_type.take().unwrap_or_else(|| ::std::string::String::new())
+    }
+
+    // optional uint32 token_address_idx = 4;
+
+    pub fn token_address_idx(&self) -> u32 {
+        self.token_address_idx.unwrap_or(0)
+    }
+
+    pub fn clear_token_address_idx(&mut self) {
+        self.token_address_idx = ::std::option::Option::None;
+    }
+
+    pub fn has_token_address_idx(&self) -> bool {
+        self.token_address_idx.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_token_address_idx(&mut self, v: u32) {
+        self.token_address_idx = ::std::option::Option::Some(v);
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(4);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "name",
+            |m: &EthereumSmartContractArg| { &m.name },
+            |m: &mut EthereumSmartContractArg| { &mut m.name },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "type",
+            |m: &EthereumSmartContractArg| { &m.type_ },
+            |m: &mut EthereumSmartContractArg| { &mut m.type_ },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "internal_type",
+            |m: &EthereumSmartContractArg| { &m.internal_type },
+            |m: &mut EthereumSmartContractArg| { &mut m.internal_type },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "token_address_idx",
+            |m: &EthereumSmartContractArg| { &m.token_address_idx },
+            |m: &mut EthereumSmartContractArg| { &mut m.token_address_idx },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<EthereumSmartContractArg>(
+            "EthereumSmartContractArg",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for EthereumSmartContractArg {
+    const NAME: &'static str = "EthereumSmartContractArg";
+
+    fn is_initialized(&self) -> bool {
+        if self.name.is_none() {
+            return false;
+        }
+        if self.type_.is_none() {
+            return false;
+        }
+        if self.internal_type.is_none() {
+            return false;
+        }
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    self.name = ::std::option::Option::Some(is.read_string()?);
+                },
+                18 => {
+                    self.type_ = ::std::option::Option::Some(is.read_string()?);
+                },
+                26 => {
+                    self.internal_type = ::std::option::Option::Some(is.read_string()?);
+                },
+                32 => {
+                    self.token_address_idx = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.name.as_ref() {
+            my_size += ::protobuf::rt::string_size(1, &v);
+        }
+        if let Some(v) = self.type_.as_ref() {
+            my_size += ::protobuf::rt::string_size(2, &v);
+        }
+        if let Some(v) = self.internal_type.as_ref() {
+            my_size += ::protobuf::rt::string_size(3, &v);
+        }
+        if let Some(v) = self.token_address_idx {
+            my_size += ::protobuf::rt::uint32_size(4, v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.name.as_ref() {
+            os.write_string(1, v)?;
+        }
+        if let Some(v) = self.type_.as_ref() {
+            os.write_string(2, v)?;
+        }
+        if let Some(v) = self.internal_type.as_ref() {
+            os.write_string(3, v)?;
+        }
+        if let Some(v) = self.token_address_idx {
+            os.write_uint32(4, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> EthereumSmartContractArg {
+        EthereumSmartContractArg::new()
+    }
+
+    fn clear(&mut self) {
+        self.name = ::std::option::Option::None;
+        self.type_ = ::std::option::Option::None;
+        self.internal_type = ::std::option::Option::None;
+        self.token_address_idx = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static EthereumSmartContractArg {
+        static instance: EthereumSmartContractArg = EthereumSmartContractArg {
+            name: ::std::option::Option::None,
+            type_: ::std::option::Option::None,
+            internal_type: ::std::option::Option::None,
+            token_address_idx: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for EthereumSmartContractArg {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("EthereumSmartContractArg").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for EthereumSmartContractArg {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for EthereumSmartContractArg {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
 #[derive(Clone,Copy,PartialEq,Eq,Debug,Hash)]
 // @@protoc_insertion_point(enum:hw.trezor.messages.ethereum_definitions.EthereumDefinitionType)
 pub enum EthereumDefinitionType {
@@ -963,7 +1557,15 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     bol\x12\x1a\n\x08decimals\x18\x04\x20\x02(\rR\x08decimals\x12\x12\n\x04n\
     ame\x18\x05\x20\x02(\tR\x04name\"c\n\x13EthereumDefinitions\x12'\n\x0fen\
     coded_network\x18\x01\x20\x01(\x0cR\x0eencodedNetwork\x12#\n\rencoded_to\
-    ken\x18\x02\x20\x01(\x0cR\x0cencodedToken*0\n\x16EthereumDefinitionType\
+    ken\x18\x02\x20\x01(\x0cR\x0cencodedToken\"\xc3\x01\n\x1fEthereumSmartCo\
+    ntractDefinition\x12\x10\n\x03sig\x18\x01\x20\x02(\x0cR\x03sig\x12\x12\n\
+    \x04name\x18\x02\x20\x02(\tR\x04name\x12Y\n\x06inputs\x18\x03\x20\x03(\
+    \x0b2A.hw.trezor.messages.ethereum_definitions.EthereumSmartContractArgR\
+    \x06inputs\x12\x1f\n\x0bis_transfer\x18\x04\x20\x02(\x08R\nisTransfer\"\
+    \x93\x01\n\x18EthereumSmartContractArg\x12\x12\n\x04name\x18\x01\x20\x02\
+    (\tR\x04name\x12\x12\n\x04type\x18\x02\x20\x02(\tR\x04type\x12#\n\rinter\
+    nal_type\x18\x03\x20\x02(\tR\x0cinternalType\x12*\n\x11token_address_idx\
+    \x18\x04\x20\x01(\rR\x0ftokenAddressIdx*0\n\x16EthereumDefinitionType\
     \x12\x0b\n\x07NETWORK\x10\0\x12\t\n\x05TOKEN\x10\x01BG\n#com.satoshilabs\
     .trezor.lib.protobufB\x20TrezorMessageEthereumDefinitions\
 ";
@@ -983,10 +1585,12 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
     file_descriptor.get(|| {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
             let mut deps = ::std::vec::Vec::with_capacity(0);
-            let mut messages = ::std::vec::Vec::with_capacity(3);
+            let mut messages = ::std::vec::Vec::with_capacity(5);
             messages.push(EthereumNetworkInfo::generated_message_descriptor_data());
             messages.push(EthereumTokenInfo::generated_message_descriptor_data());
             messages.push(EthereumDefinitions::generated_message_descriptor_data());
+            messages.push(EthereumSmartContractDefinition::generated_message_descriptor_data());
+            messages.push(EthereumSmartContractArg::generated_message_descriptor_data());
             let mut enums = ::std::vec::Vec::with_capacity(1);
             enums.push(EthereumDefinitionType::generated_enum_descriptor_data());
             ::protobuf::reflect::GeneratedFileDescriptor::new_generated(

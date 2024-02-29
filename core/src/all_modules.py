@@ -535,6 +535,8 @@ if not utils.BITCOIN_ONLY:
     import apps.ethereum.sign_tx_eip1559
     apps.ethereum.sign_typed_data
     import apps.ethereum.sign_typed_data
+    apps.ethereum.smart_contracts
+    import apps.ethereum.smart_contracts
     apps.ethereum.staking_tx_constants
     import apps.ethereum.staking_tx_constants
     apps.ethereum.tokens

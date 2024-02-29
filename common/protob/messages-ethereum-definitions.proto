@@ -58,3 +58,17 @@ message EthereumDefinitions {
     optional bytes encoded_network = 1; // encoded Ethereum network
     optional bytes encoded_token = 2;   // encoded Ethereum token
 }
+
+message EthereumSmartContractDefinition {
+    required bytes sig = 1; // method signature (first 4 bytes of Keccak-256 of the function signature)
+    required string name = 2; // method name 
+    repeated EthereumSmartContractArg inputs = 3; // method arguments definition
+    required bool is_transfer = 4; // flag whether data should be shown as regular transaction
+}
+
+message EthereumSmartContractArg {
+    required string name = 1;
+    required string type = 2;
+    required string internal_type = 3;
+    optional uint32 token_address_idx = 4;  // mapping of address for token defintion
+}

@@ -120,6 +120,8 @@ async def confirm_tx_data(
         return
 
     # Handle ERC-20, currently only 'transfer' function
+    if await handle_erc20(msg, defs, address_bytes):
+        return
     token, recipient, value = await handle_erc20_transfer(msg, defs, address_bytes)
 
     if token is None and data_total_len > 0:
@@ -175,6 +177,46 @@ async def handle_staking(
 
     # data not corresponding to staking transaction
     return False
+
+
+async def handle_erc20(
+    msg: MsgInSignTx,
+    definitions: Definitions,
+    address_bytes: bytes,
+) -> bool:
+    from .layout import require_confirm_erc20_sc
+    from .helpers import decode_typed_data
+    from . import smart_contracts
+
+    data_reader = BufferReader(msg.data_initial_chunk)
+    if data_reader.remaining_count() < constants.SC_FUNC_SIG_BYTES:
+        return False
+
+    sc_sig = data_reader.read(constants.SC_FUNC_SIG_BYTES)
+    # sc_def = constants.ERC20_FUNCTIONS_DEF.get(sc_sig, None)
+    sc_def = smart_contracts.erc20_func_by_sig(sc_sig)
+
+    if sc_def is None:
+        return False
+
+    try:
+        confirm_these_args = []
+        sc_name = sc_def.name
+        for i, input_def in enumerate(sc_def.inputs):
+            input_i_name = input_def.name
+            input_i_bytes = data_reader.read(constants.SC_ARGUMENT_BYTES)
+            input_i_type_str = decode_typed_data(input_i_bytes, input_def.internal_type)
+            confirm_these_args.append((input_i_name, input_i_type_str))
+        # for i, (arg_name, arg_type) in enumerate(sc_def["args"]):
+        #     argi_mv = data_reader.read_memoryview(constants.SC_ARGUMENT_BYTES)
+        #     argi_str = _resolve_type(argi_mv, arg_type)
+        #     confirm_these_args.append((arg_name, argi_str))
+        await require_confirm_erc20_sc(sc_name, confirm_these_args)
+        return True
+    except (ValueError, EOFError):
+        print("exception")
+        # fallback to confirm unknown data
+        return False
 
 
 async def handle_erc20_transfer(
@@ -334,7 +376,7 @@ async def _handle_staking_tx_unstake(
 
     # unstake args:
     # - arg0: uint256, value
-    # - arg1:  uint16, isAllowedInterchange (bool)
+    # - arg1: uint16, isAllowedInterchange (bool)
     # - arg2: uint64, source, should be 1
     try:
         value = int.from_bytes(

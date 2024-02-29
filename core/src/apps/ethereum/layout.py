@@ -132,6 +132,17 @@ def require_confirm_unknown_token(address_bytes: bytes) -> Awaitable[None]:
     )
 
 
+def require_confirm_erc20_sc(title: str, props: Iterable[tuple[str, str]]) -> Awaitable[None]:
+    from trezor.ui.layouts import confirm_properties
+
+    return confirm_properties(
+        "eth_confirm_sc",
+        title,
+        props,
+        br_code=ButtonRequestType.SignTx,
+    )
+
+
 def require_confirm_address(address_bytes: bytes) -> Awaitable[None]:
     from ubinascii import hexlify
 

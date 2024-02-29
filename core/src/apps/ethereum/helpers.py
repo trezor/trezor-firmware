@@ -111,7 +111,7 @@ def get_type_name(field: EthereumFieldType) -> str:
 
 
 def decode_typed_data(data: bytes, type_name: str) -> str:
-    """Used by sign_typed_data module to show data to user."""
+    """Used to show data to user."""
     if type_name.startswith("bytes"):
         return hexlify(data).decode()
     elif type_name == "string":
