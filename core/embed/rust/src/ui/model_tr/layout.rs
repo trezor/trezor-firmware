@@ -157,7 +157,7 @@ where
 
 impl ComponentMsgObj for NumberInput {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
-        msg.try_into()
+        (CONFIRMED.as_obj(), msg.try_into()?).try_into()
     }
 }
 

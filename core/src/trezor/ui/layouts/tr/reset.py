@@ -161,7 +161,15 @@ async def _prompt_number(
         ButtonRequestType.ResetDevice,
     )
 
-    return int(result)
+    if __debug__:
+        if isinstance(result, str):
+            # debuglink for TR sends a string representing the number
+            result = CONFIRMED, int(result)
+    status, value = result
+
+    assert status is CONFIRMED
+    assert isinstance(value, int)
+    return value
 
 
 async def slip39_prompt_threshold(
