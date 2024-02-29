@@ -18,8 +18,6 @@ from ..common import (
 from ..keychain import address_n_to_name
 
 if TYPE_CHECKING:
-    from typing import Any
-
     from trezor.enums import AmountUnit
     from trezor.messages import TxAckPaymentRequest, TxOutput
     from trezor.ui.layouts import LayoutType
@@ -152,11 +150,11 @@ async def confirm_decred_sstx_submission(
     )
 
 
-async def confirm_payment_request(
+async def should_show_payment_request_details(
     msg: TxAckPaymentRequest,
     coin: CoinInfo,
     amount_unit: AmountUnit,
-) -> Any:
+) -> bool:
     from trezor import wire
 
     memo_texts: list[str] = []
@@ -172,7 +170,7 @@ async def confirm_payment_request(
 
     assert msg.amount is not None
 
-    return await layouts.confirm_payment_request(
+    return await layouts.should_show_payment_request_details(
         msg.recipient_name,
         format_coin_amount(msg.amount, coin, amount_unit),
         memo_texts,

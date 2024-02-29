@@ -85,8 +85,8 @@ class UiConfirmPaymentRequest(UiConfirm):
         self.amount_unit = amount_unit
         self.coin = coin
 
-    def confirm_dialog(self) -> Awaitable[Any]:
-        return layout.confirm_payment_request(
+    def confirm_dialog(self) -> Awaitable[bool]:
+        return layout.should_show_payment_request_details(
             self.payment_req, self.coin, self.amount_unit
         )
 
@@ -249,7 +249,7 @@ def confirm_decred_sstx_submission(output: TxOutput, coin: CoinInfo, amount_unit
     return (yield UiConfirmDecredSSTXSubmission(output, coin, amount_unit))
 
 
-def confirm_payment_request(payment_req: TxAckPaymentRequest, coin: CoinInfo, amount_unit: AmountUnit) -> Awaitable[Any]:  # type: ignore [awaitable-is-generator]
+def should_show_payment_request_details(payment_req: TxAckPaymentRequest, coin: CoinInfo, amount_unit: AmountUnit) -> Awaitable[bool]:  # type: ignore [awaitable-is-generator]
     return (yield UiConfirmPaymentRequest(payment_req, coin, amount_unit))
 
 

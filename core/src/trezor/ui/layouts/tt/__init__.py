@@ -657,11 +657,16 @@ async def confirm_output(
             return
 
 
-async def confirm_payment_request(
+async def should_show_payment_request_details(
     recipient_name: str,
     amount: str,
     memos: list[str],
 ) -> bool:
+    """Return True if the user wants to show payment request details (they click a
+    special button) and False when the user wants to continue without showing details.
+
+    Raises ActionCancelled if the user cancels.
+    """
     result = await interact(
         RustLayout(
             trezorui2.confirm_with_info(
@@ -676,12 +681,10 @@ async def confirm_payment_request(
         ButtonRequestType.ConfirmOutput,
     )
 
-    # When user pressed INFO, returning False, which gets processed in higher function
-    # to differentiate it from CONFIRMED. Raising otherwise.
     if result is CONFIRMED:
-        return True
-    elif result is INFO:
         return False
+    elif result is INFO:
+        return True
     else:
         raise ActionCancelled
 
