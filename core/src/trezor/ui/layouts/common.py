@@ -6,9 +6,11 @@ from trezor.messages import ButtonAck, ButtonRequest
 from trezor.wire import context
 
 if TYPE_CHECKING:
-    from typing import Any, Awaitable, Protocol
+    from typing import Awaitable, Protocol, TypeVar
 
-    LayoutType = Awaitable[Any]
+    T = TypeVar("T")
+
+    LayoutType = Awaitable
     PropertyType = tuple[str | None, str | bytes | None]
     ExceptionType = BaseException | type[BaseException]
 
@@ -28,10 +30,10 @@ async def button_request(
 
 
 async def interact(
-    layout: LayoutType,
+    layout: LayoutType[T],
     br_type: str,
     br_code: ButtonRequestType = ButtonRequestType.Other,
-) -> Any:
+) -> T:
     pages = None
     if hasattr(layout, "page_count") and layout.page_count() > 1:  # type: ignore [Cannot access member "page_count" for type "LayoutType"]
         # We know for certain how many pages the layout will have

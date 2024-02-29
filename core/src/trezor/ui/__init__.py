@@ -5,6 +5,17 @@ from typing import TYPE_CHECKING, Any, Awaitable, Generator
 
 from trezor import loop, utils
 
+if TYPE_CHECKING:
+    from typing import Generic, TypeVar
+
+    from trezorui2 import UiResult  # noqa: F401
+
+    T = TypeVar("T")
+
+else:
+    Generic = [object]
+    T = 0
+
 # all rendering is done through a singleton of `Display`
 display = Display()
 
@@ -113,7 +124,7 @@ class Cancelled(Exception):
     """
 
 
-class Layout:
+class Layout(Generic[T]):
     """
     Abstract class.
 
@@ -123,7 +134,7 @@ class Layout:
     raised, usually from some of the child components.
     """
 
-    async def __iter__(self) -> Any:
+    async def __iter__(self) -> T:
         """
         Run the layout and wait until it completes.  Returns the result value.
         Usually not overridden.
@@ -155,8 +166,8 @@ class Layout:
 
     if TYPE_CHECKING:
 
-        def __await__(self) -> Generator:
-            return self.__iter__()  # type: ignore [Expression of type "Coroutine[Any, Any, Any]" cannot be assigned to return type "Generator[Unknown, Unknown, Unknown]"]
+        def __await__(self) -> Generator[Any, Any, T]:
+            return self.__iter__()  # type: ignore [Coroutine[Any, Any, T@Layout]" is incompatible with "Generator[Any, Any, T@Layout]"]
 
     else:
         __await__ = __iter__

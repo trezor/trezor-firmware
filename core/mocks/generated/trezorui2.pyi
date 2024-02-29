@@ -384,7 +384,6 @@ def confirm_recovery(
 def select_word_count(
     *,
     dry_run: bool,  # unused on TR
-) -> int | str:  # TR returns str
 ) -> LayoutObj[int | str]:
    """Select mnemonic word count from (12, 18, 20, 24, 33)."""
 
@@ -454,7 +453,7 @@ def confirm_firmware_update(
 
 
 # rust/src/ui/model_tr/layout.rs
-def show_wait_text(/, message: str) -> None:
+def show_wait_text(message: str, /) -> None:
     """Show single-line text in the middle of the screen."""
 from trezor import utils
 T = TypeVar("T")
@@ -972,5 +971,5 @@ def confirm_firmware_update(
 
 
 # rust/src/ui/model_tt/layout.rs
-def show_wait_text(/, message: str) -> LayoutObj[None]:
+def show_wait_text(message: str, /) -> LayoutObj[None]:
     """Show single-line text in the middle of the screen."""
