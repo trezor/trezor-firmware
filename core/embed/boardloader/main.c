@@ -67,7 +67,7 @@ static const uint8_t * const BOARDLOADER_KEYS[] = {
 };
 
 #ifdef STM32U5
-void check_bootloader_version(uint8_t bld_version) {
+uint8_t get_and_fill_bootloader_version(uint8_t bld_version) {
   const uint8_t *counter_addr =
       flash_area_get_address(&SECRET_AREA, SECRET_MONOTONIC_COUNTER_OFFSET,
                              SECRET_MONOTONIC_COUNTER_LEN);
@@ -92,8 +92,6 @@ void check_bootloader_version(uint8_t bld_version) {
     }
   }
 
-  ensure((bld_version >= counter) * sectrue, "BOOTLOADER DOWNGRADED");
-
   if (bld_version > counter) {
     for (int i = 0; i < bld_version; i++) {
       uint32_t data[4] = {0};
@@ -101,6 +99,8 @@ void check_bootloader_version(uint8_t bld_version) {
                    16);
     }
   }
+
+  return counter;
 }
 #endif
 
@@ -278,8 +278,13 @@ int main(void) {
   display_refresh();
 
 #ifdef STM32U5
+  const image_header *old_hdr = read_image_header(
+      (const uint8_t *)BOOTLOADER_START, BOOTLOADER_IMAGE_MAGIC,
+      flash_area_get_size(&BOOTLOADER_AREA));
   secret_ensure_initialized();
-  check_bootloader_version(hdr->monotonic);
+  if (old_hdr != NULL) {
+    get_and_fill_bootloader_version(old_hdr->monotonic);
+  }
 #endif
 
 #if defined USE_SD_CARD
@@ -303,6 +308,12 @@ int main(void) {
 
   ensure(check_image_contents(hdr, IMAGE_HEADER_SIZE, &BOOTLOADER_AREA),
          "invalid bootloader hash");
+
+#ifdef STM32U5
+  secret_ensure_initialized();
+  uint8_t bld_version = get_and_fill_bootloader_version(hdr->monotonic);
+  ensure((bld_version >= hdr->monotonic) * sectrue, "BOOTLOADER DOWNGRADED");
+#endif
 
   ensure_compatible_settings();
 
