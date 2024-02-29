@@ -56,6 +56,12 @@ def image_column(hash: str | None, cur_dir: Path, img_id: str | None = None) -> 
             i("missing")
 
 
+def diff_column() -> None:
+    """Put diff image into table as one cell."""
+    with td(bgcolor="white"):
+        a("Click to show")
+
+
 def _relative_path(cur_dir: Path, path_to: Path) -> str:
     """Find best relative path to refer to path_to from cur_dir."""
     cur_dir = cur_dir.resolve()
@@ -91,6 +97,7 @@ def diff_table(diff: Iterable[tuple[str | None, str | None]], cur_dir: Path) -> 
             background = "white"
         else:
             background = "red"
-        with tr(bgcolor=background):
+        with tr(bgcolor=background, onclick="createDiff(this)"):
             image_column(left, cur_dir)
             image_column(right, cur_dir)
+            diff_column()
