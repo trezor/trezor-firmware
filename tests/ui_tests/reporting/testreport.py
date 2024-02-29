@@ -7,7 +7,22 @@ from pathlib import Path
 
 import dominate
 import dominate.tags as t
-from dominate.tags import a, div, h1, h2, hr, i, p, span, strong, table, td, th, tr
+from dominate.tags import (
+    a,
+    div,
+    h1,
+    h2,
+    hr,
+    i,
+    p,
+    script,
+    span,
+    strong,
+    table,
+    td,
+    th,
+    tr,
+)
 from dominate.util import text
 
 from ..common import FixturesType, TestCase, TestResult
@@ -338,7 +353,13 @@ def failed(result: TestResult) -> Path:
     doc = document(
         title=result.test.id, actual_hash=result.actual_hash, model=result.test.model
     )
+    with doc.head:
+        script(
+            type="text/javascript", src="https://cdn.jsdelivr.net/npm/pixelmatch@5.3.0"
+        )
+
     with doc:
+
         _header(result.test.id, result.expected_hash, result.actual_hash)
 
         with div(id="markbox", _class="script-hidden"):
@@ -353,10 +374,11 @@ def failed(result: TestResult) -> Path:
                 strong("WARNING:")
                 text(" failed to download recorded fixtures. Is this a new test case?")
 
-        with table(border=1, width=600):
+        with table(border=1, width=600, onclick="createTableDiff(this)"):
             with tr():
                 th("Expected")
                 th("Actual")
+                th("Diff")
 
             html.diff_table(result.diff_lines(), TESTREPORT_PATH / "failed")
 

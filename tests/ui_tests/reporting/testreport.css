@@ -69,6 +69,12 @@ tr.bad a:visited {
     width: 256px;
 }
 
+.model-TR canvas {
+    image-rendering: pixelated;
+    width: 256px;
+}
+
+
 /* GIF styling */
 
 /* Style the input field */
