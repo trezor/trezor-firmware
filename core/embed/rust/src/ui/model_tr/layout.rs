@@ -2061,7 +2061,6 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// def select_word_count(
     ///     *,
     ///     dry_run: bool,  # unused on TR
-    /// ) -> int | str:  # TR returns str
     /// ) -> LayoutObj[int | str]:
     ///    """Select mnemonic word count from (12, 18, 20, 24, 33)."""
     Qstr::MP_QSTR_select_word_count => obj_fn_kw!(0, new_select_word_count).as_obj(),
@@ -2124,7 +2123,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     """Ask whether to update firmware, optionally show fingerprint. Shared with bootloader."""
     Qstr::MP_QSTR_confirm_firmware_update => obj_fn_kw!(0, new_confirm_firmware_update).as_obj(),
 
-    /// def show_wait_text(/, message: str) -> None:
+    /// def show_wait_text(message: str, /) -> None:
     ///     """Show single-line text in the middle of the screen."""
     Qstr::MP_QSTR_show_wait_text => obj_fn_1!(new_show_wait_text).as_obj(),
 };
