@@ -277,6 +277,11 @@ int main(void) {
   display_clear();
   display_refresh();
 
+#ifdef STM32U5
+  secret_ensure_initialized();
+  check_bootloader_version(hdr->monotonic);
+#endif
+
 #if defined USE_SD_CARD
   sdcard_init();
 
@@ -298,11 +303,6 @@ int main(void) {
 
   ensure(check_image_contents(hdr, IMAGE_HEADER_SIZE, &BOOTLOADER_AREA),
          "invalid bootloader hash");
-
-#ifdef STM32U5
-  secret_ensure_initialized();
-  check_bootloader_version(hdr->monotonic);
-#endif
 
   ensure_compatible_settings();
 
