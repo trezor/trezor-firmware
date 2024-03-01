@@ -314,31 +314,28 @@ impl Component for Homescreen {
                     .with_bg(notif.color)
                     .render(target);
 
-                let style = theme::TEXT_BOLD;
-
-                let text_width = notif.text.map(|t| style.text_font.text_width(t));
-                let text_height = style.text_font.max_height();
-                let icon_width = notif.icon.toif.width() + TEXT_ICON_SPACE;
-
-                let pt = Point::new(
-                    (banner.size().x - text_width + icon_width) / 2,
-                    (banner.size().y - text_height) / 2,
-                ) + banner.top_left().into();
-
                 notif.text.map(|t| {
-                    shape::Text::new(pt, t)
+                    let style = theme::TEXT_BOLD;
+                    let icon_width = notif.icon.toif.width() + TEXT_ICON_SPACE;
+                    let text_pos = Point::new(
+                        style
+                            .text_font
+                            .horz_center(banner.x0 + icon_width, banner.x1, t),
+                        style.text_font.vert_center(banner.y0, banner.y1, "A"),
+                    );
+
+                    shape::Text::new(text_pos, t)
                         .with_font(style.text_font)
-                        .with_baseline(false)
                         .with_fg(style.text_color)
                         .render(target);
+
+                    let icon_pos = Point::new(text_pos.x - icon_width, banner.center().y);
+
+                    shape::ToifImage::new(icon_pos, notif.icon.toif)
+                        .with_fg(style.text_color)
+                        .with_align(Alignment2D::CENTER_LEFT)
+                        .render(target);
                 });
-
-                let pt = pt + Offset::new(-TEXT_ICON_SPACE, style.text_font.text_baseline() / 2);
-
-                shape::ToifImage::new(pt, notif.icon.toif)
-                    .with_fg(style.text_color)
-                    .with_align(Alignment2D(Alignment::End, Alignment::Start))
-                    .render(target);
             }
         }
     }
@@ -526,33 +523,36 @@ impl Component for Lockscreen {
         }
 
         for item in texts.iter() {
-            const TEXT_ICON_SPACE: i16 = 2;
-
-            let text_width = item.text.map(|t| item.style.text_font.text_width(t));
-
-            let icon_width = match item.icon {
-                Some(icon) => icon.toif.width() + TEXT_ICON_SPACE,
-                None => 0,
-            };
-
-            let pt = Point::new(
-                (constant::screen().size().x - text_width + icon_width) / 2,
-                0,
-            ) + item.offset;
-
             item.text.map(|t| {
-                shape::Text::new(pt, t)
+                const TEXT_ICON_SPACE: i16 = 2;
+
+                let icon_width = match item.icon {
+                    Some(icon) => icon.toif.width() + TEXT_ICON_SPACE,
+                    None => 0,
+                };
+
+                let area = constant::screen();
+
+                let text_pos = Point::new(
+                    item.style
+                        .text_font
+                        .horz_center(area.x0 + icon_width, area.x1, t),
+                    0,
+                ) + item.offset;
+
+                shape::Text::new(text_pos, t)
                     .with_font(item.style.text_font)
                     .with_fg(item.style.text_color)
                     .render(target);
-            });
 
-            if let Some(icon) = item.icon {
-                shape::ToifImage::new(pt - Offset::x(TEXT_ICON_SPACE), icon.toif)
-                    .with_align(Alignment2D::BOTTOM_RIGHT)
-                    .with_fg(item.style.text_color)
-                    .render(target);
-            }
+                if let Some(icon) = item.icon {
+                    let icon_pos = Point::new(text_pos.x - icon_width, text_pos.y);
+                    shape::ToifImage::new(icon_pos, icon.toif)
+                        .with_align(Alignment2D::BOTTOM_LEFT)
+                        .with_fg(item.style.text_color)
+                        .render(target);
+                }
+            });
         }
     }
 }

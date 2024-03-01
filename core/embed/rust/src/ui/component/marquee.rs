@@ -3,11 +3,9 @@ use crate::{
     ui::{
         animation::Animation,
         component::{Component, Event, EventCtx, Never, TimerToken},
-        display,
-        display::{Color, Font},
-        geometry::{Point, Rect},
-        shape,
-        shape::Renderer,
+        display::{self, Color, Font},
+        geometry::{Offset, Rect},
+        shape::{self, Renderer},
         util::animation_disabled,
     },
 };
@@ -136,8 +134,9 @@ where
 
     pub fn render_anim(&mut self, target: &mut impl Renderer, offset: i16) {
         target.in_window(self.area, &mut |target| {
-            shape::Text::new(Point::new(offset, 0), self.text.as_ref())
-                .with_baseline(false)
+            let text_height = self.font.text_height();
+            let pos = self.area.top_left() + Offset::new(offset, text_height - 1);
+            shape::Text::new(pos, self.text.as_ref())
                 .with_font(self.font)
                 .with_fg(self.fg)
                 .render(target);

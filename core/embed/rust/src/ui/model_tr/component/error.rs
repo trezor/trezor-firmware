@@ -3,6 +3,7 @@ use crate::ui::{
     constant::{screen, WIDTH},
     display,
     geometry::{Alignment2D, Offset, Point, Rect},
+    model_tr::cshape,
     shape,
     shape::Renderer,
 };
@@ -115,8 +116,10 @@ impl<T: AsRef<str>> Component for ErrorScreen<T> {
         self.title.render(target);
         self.message.render(target);
 
-        // // divider line
-        // display::dotted_line(Point::new(0, DIVIDER_POSITION), WIDTH, FG, 3); // !@#
+        cshape::HorizontalLine::new(Point::new(0, DIVIDER_POSITION), WIDTH)
+            .with_step(3)
+            .with_color(FG)
+            .render(target);
 
         self.footer.render(target);
     }

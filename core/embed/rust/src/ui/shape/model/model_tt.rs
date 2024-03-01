@@ -29,7 +29,7 @@ where
             canvas.set_viewport(Viewport::new(clip));
         }
 
-        let mut target = ProgressiveRenderer::new(&mut canvas, bg_color, &cache, bump_a, 30);
+        let mut target = ProgressiveRenderer::new(&mut canvas, bg_color, &cache, bump_a, 45);
 
         func(&mut target);
 

@@ -159,17 +159,18 @@ impl Component for Qr {
         );
         let qr = unwrap!(qr);
 
-        let side = self.area.width().min(self.area.height());
-        let area = Rect::from_center_and_size(self.area.center(), Offset::uniform(side));
+        let scale = (self.area.width().min(self.area.height()) - self.border) / (qr.size() as i16);
+        let side = scale * qr.size() as i16;
+        let qr_area = Rect::from_center_and_size(self.area.center(), Offset::uniform(side));
 
         if self.border > 0 {
-            shape::Bar::new(area)
+            shape::Bar::new(qr_area.expand(self.border))
                 .with_bg(LIGHT)
-                .with_radius(CORNER_RADIUS as i16)
+                .with_radius(CORNER_RADIUS as i16 + 1) // !@# + 1 to fix difference on TR
                 .render(target);
         }
 
-        shape::QrImage::new(area.inset(Insets::uniform(self.border)), &qr)
+        shape::QrImage::new(qr_area, &qr)
             .with_fg(LIGHT)
             .with_bg(DARK)
             .render(target);

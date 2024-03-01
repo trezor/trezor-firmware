@@ -3,6 +3,8 @@ use crate::{
     ui::{
         display::{self, rect_fill, rect_fill_corners, rect_outline_rounded, Font, Icon},
         geometry::{Alignment2D, Offset, Rect},
+        shape,
+        shape::Renderer,
     },
 };
 
@@ -103,6 +105,27 @@ impl Choice for ChoiceItem {
         );
     }
 
+    /// Painting the item as the main choice in the middle.
+    /// Showing both the icon and text, if the icon is available.
+    fn render_center(&self, target: &mut impl Renderer, area: Rect, inverse: bool) {
+        let width = text_icon_width(Some(self.text.as_ref()), self.icon, self.font);
+        render_rounded_highlight(
+            target,
+            area,
+            Offset::new(width, self.font.text_height()),
+            inverse,
+        );
+        render_text_icon(
+            target,
+            area,
+            width,
+            Some(self.text.as_ref()),
+            self.icon,
+            self.font,
+            inverse,
+        );
+    }
+
     /// Getting the overall width in pixels when displayed in center.
     /// That means both the icon and text will be shown.
     fn width_center(&self) -> i16 {
@@ -119,6 +142,20 @@ impl Choice for ChoiceItem {
     fn paint_side(&self, area: Rect) {
         let width = text_icon_width(self.side_text(), self.icon, self.font);
         paint_text_icon(area, width, self.side_text(), self.icon, self.font, false);
+    }
+
+    /// Painting smaller version of the item on the side.
+    fn render_side(&self, target: &mut impl Renderer, area: Rect) {
+        let width = text_icon_width(self.side_text(), self.icon, self.font);
+        render_text_icon(
+            target,
+            area,
+            width,
+            self.side_text(),
+            self.icon,
+            self.font,
+            false,
+        );
     }
 
     /// Getting current button layout.
@@ -144,6 +181,32 @@ fn paint_rounded_highlight(area: Rect, size: Offset, inverse: bool) {
         rect_fill_corners(outline, theme::BG);
     } else {
         rect_outline_rounded(outline, theme::FG, theme::BG, 1);
+    }
+}
+
+fn render_rounded_highlight(target: &mut impl Renderer, area: Rect, size: Offset, inverse: bool) {
+    let bound = theme::BUTTON_OUTLINE;
+    let left_bottom = area.bottom_center() + Offset::new(-size.x / 2 - bound, bound + 1);
+    let x_size = size.x + 2 * bound;
+    let y_size = size.y + 2 * bound;
+    let outline_size = Offset::new(x_size, y_size);
+    let outline = Rect::from_bottom_left_and_size(left_bottom, outline_size);
+    if inverse {
+        shape::Bar::new(outline)
+            .with_radius(1)
+            .with_bg(theme::FG)
+            .render(target);
+    } else {
+        // Draw outline by drawing two rounded rectangles
+        shape::Bar::new(outline)
+            .with_radius(1)
+            .with_bg(theme::FG)
+            .render(target);
+
+        shape::Bar::new(outline.shrink(1))
+            .with_radius(1)
+            .with_bg(theme::BG)
+            .render(target);
     }
 }
 
@@ -187,6 +250,40 @@ fn paint_text_icon(
         // This is to center the text properly.
         baseline = baseline - Offset::x(font.start_x_bearing(text));
         display::text_left(baseline, text, font, fg_color, bg_color);
+    }
+}
+
+fn render_text_icon(
+    target: &mut impl Renderer,
+    area: Rect,
+    width: i16,
+    text: Option<&str>,
+    icon: Option<Icon>,
+    font: Font,
+    inverse: bool,
+) {
+    let fg_color = if inverse { theme::BG } else { theme::FG };
+
+    let mut baseline = area.bottom_center() - Offset::x(width / 2);
+    if let Some(icon) = icon {
+        let height_diff = font.text_height() - icon.toif.height();
+        let vertical_offset = Offset::y(-height_diff / 2);
+        shape::ToifImage::new(baseline + vertical_offset, icon.toif)
+            .with_align(Alignment2D::BOTTOM_LEFT)
+            .with_fg(fg_color)
+            .render(target);
+
+        baseline = baseline + Offset::x(icon.toif.width() + ICON_RIGHT_PADDING);
+    }
+
+    if let Some(text) = text {
+        // Possibly shifting the baseline left, when there is a text bearing.
+        // This is to center the text properly.
+        baseline = baseline - Offset::x(font.start_x_bearing(text));
+        shape::Text::new(baseline, text)
+            .with_font(font)
+            .with_fg(fg_color)
+            .render(target);
     }
 }
 

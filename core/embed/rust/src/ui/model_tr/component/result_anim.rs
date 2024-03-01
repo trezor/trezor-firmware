@@ -2,10 +2,11 @@ use crate::{
     time::{Duration, Instant},
     ui::{
         animation::Animation,
+        canvas::algo::PI4,
         component::{Component, Event, EventCtx},
-        display,
-        display::toif::Icon,
-        geometry::Rect,
+        display::{self, toif::Icon},
+        geometry::{Alignment2D, Rect},
+        shape,
         shape::Renderer,
     },
 };
@@ -92,6 +93,22 @@ impl ResultAnim {
     }
 
     pub fn render_anim(&mut self, target: &mut impl Renderer, done: i16) {
+        let center = self.area.center();
+
+        shape::Circle::new(center, 10)
+            .with_bg(theme::FG)
+            .with_end_angle(((done as i32 * PI4 as i32 * 8) / 1000) as i16)
+            .render(target);
+
+        shape::Circle::new(center, 8)
+            .with_bg(theme::BG)
+            .render(target);
+
+        shape::ToifImage::new(center, self.icon.toif)
+            .with_align(Alignment2D::CENTER)
+            .with_fg(theme::FG)
+            .render(target);
+
         /*display::rect_rounded2_partial(
             self.area,
             theme::FG,

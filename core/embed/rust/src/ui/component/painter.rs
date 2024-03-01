@@ -47,9 +47,7 @@ where
             .with_thickness(1)
             .with_fg(display::Color::white())
             .render(target);
-        shape::Text::new(area.top_left(), "Paint")
-            .with_baseline(false)
-            .render(target); // !@# replace
+        shape::Text::new(area.top_left(), "Paint").render(target); // !@# replace
     }
 
     #[cfg(feature = "ui_bounds")]

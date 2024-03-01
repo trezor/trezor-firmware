@@ -168,29 +168,43 @@ impl Loader {
     }
 
     pub fn render_loader(&mut self, target: &mut impl Renderer, style: &LoaderStyle, done: i32) {
+        let width = self.area.width();
         // NOTE: need to calculate this in `i32`, it would overflow using `i16`
-        let invert_from = ((self.area.width() as i32 + 1) * done) / (display::LOADER_MAX as i32);
+        let split_point = (((width as i32 + 1) * done) / (display::LOADER_MAX as i32)) as i16;
+        let (r_left, r_right) = self.area.split_left(split_point);
+        let parts = [(r_left, true), (r_right, false)];
+        parts.map(|(r, invert)| {
+            target.in_clip(r, &|target| {
+                if invert {
+                    shape::Bar::new(self.area)
+                        .with_radius(3)
+                        .with_bg(style.fg_color)
+                        .render(target);
+                } else {
+                    shape::Bar::new(self.area)
+                        .with_radius(3)
+                        .with_fg(style.fg_color)
+                        .render(target);
+                }
 
-        shape::Bar::new(self.area)
-            .with_radius(3)
-            .with_fg(style.fg_color)
-            .render(target);
+                let text_color = if invert {
+                    style.bg_color
+                } else {
+                    style.fg_color
+                };
 
-        self.get_text().map(|t| {
-            let text_width = style.font.text_width(t);
-            let text_height = style.font.text_max_height();
-
-            let pt = self.area.top_left() + Offset::new(
-                (self.area.width() - text_width) / 2,
-                (self.area.height() - text_height) / 2,
-            );
-
-            shape::Text::new(pt, t)
-                .with_baseline(false)
-                .with_font(style.font)
-                .with_fg(style.fg_color)
-                .render(target);
-        }); // !@# progress missing
+                self.get_text().map(|t| {
+                    let pt = Point::new(
+                        style.font.horz_center(self.area.x0, self.area.x1, t),
+                        style.font.vert_center(self.area.y0, self.area.y1, "A"),
+                    );
+                    shape::Text::new(pt, t)
+                        .with_font(style.font)
+                        .with_fg(text_color)
+                        .render(target);
+                });
+            });
+        });
     }
 }
 
