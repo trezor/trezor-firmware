@@ -45,7 +45,7 @@
 // sometimes
 #define JPEG_WORK_SIZE (3100 + 256 + (6 << 10) + 1000)
 
-#if defined BOOTLOADER
+#if defined BOOTLOADER || defined BOARDLOADER
 #define BUFFER_SECTION __attribute__((section(".buf")))
 #else
 #define BUFFER_SECTION

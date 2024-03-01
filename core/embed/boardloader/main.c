@@ -122,7 +122,7 @@ struct BoardCapabilities capablities
         .terminator_length = 0};
 
 // we use SRAM as SD card read buffer (because DMA can't access the CCMRAM)
-BUFFER_SECTION uint32_t sdcard_buf[IMAGE_HEADER_SIZE / sizeof(uint32_t)];
+BUFFER_SECTION uint32_t sdcard_buf[BOOTLOADER_IMAGE_MAXSIZE / sizeof(uint32_t)];
 
 #if defined USE_SD_CARD
 static uint32_t check_sdcard(void) {
@@ -138,8 +138,8 @@ static uint32_t check_sdcard(void) {
 
   memzero(sdcard_buf, IMAGE_HEADER_SIZE);
 
-  const secbool read_status =
-      sdcard_read_blocks(sdcard_buf, 0, IMAGE_HEADER_SIZE / SDCARD_BLOCK_SIZE);
+  const secbool read_status = sdcard_read_blocks(
+      sdcard_buf, 0, BOOTLOADER_IMAGE_MAXSIZE / SDCARD_BLOCK_SIZE);
 
   sdcard_power_off();
 
@@ -159,6 +159,12 @@ static uint32_t check_sdcard(void) {
     if (sectrue != check_image_header_sig(hdr, BOARDLOADER_KEY_M,
                                           BOARDLOADER_KEY_N,
                                           BOARDLOADER_KEYS)) {
+      return 0;
+    }
+
+    if (sectrue != (check_single_hash(
+                       hdr->hashes, ((const uint8_t *)sdcard_buf) + hdr->hdrlen,
+                       hdr->codelen))) {
       return 0;
     }
 
@@ -212,24 +218,15 @@ static secbool copy_sdcard(void) {
   // copy bootloader from SD card to Flash
   term_printf("copying new bootloader from SD card\n\n");
 
-  ensure(sdcard_power_on(), NULL);
-
-  memzero(sdcard_buf, SDCARD_BLOCK_SIZE);
-
-  for (int i = 0; i < (IMAGE_HEADER_SIZE + codelen) / SDCARD_BLOCK_SIZE; i++) {
-    ensure(sdcard_read_blocks(sdcard_buf, i, 1), NULL);
-    for (int j = 0;
-         j < SDCARD_BLOCK_SIZE / (FLASH_BURST_LENGTH * sizeof(uint32_t)); j++) {
-      ensure(
-          flash_area_write_burst(
-              &BOOTLOADER_AREA,
-              i * SDCARD_BLOCK_SIZE + j * FLASH_BURST_LENGTH * sizeof(uint32_t),
-              &sdcard_buf[j * FLASH_BURST_LENGTH]),
-          NULL);
-    }
+  for (int j = 0; j < (IMAGE_HEADER_SIZE + codelen) /
+                          (FLASH_BURST_LENGTH * sizeof(uint32_t));
+       j++) {
+    ensure(flash_area_write_burst(&BOOTLOADER_AREA,
+                                  j * FLASH_BURST_LENGTH * sizeof(uint32_t),
+                                  &sdcard_buf[j * FLASH_BURST_LENGTH]),
+           NULL);
   }
 
-  sdcard_power_off();
   ensure(flash_lock_write(), NULL);
 
   term_printf("\ndone\n\n");
