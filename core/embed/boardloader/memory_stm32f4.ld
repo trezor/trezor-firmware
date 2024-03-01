@@ -48,6 +48,11 @@ SECTIONS {
     . = ALIGN(4); /* make the section size a multiple of the word size */
   } >CCMRAM
 
+  .buf : ALIGN(4) {
+    *(.buf*);
+    . = ALIGN(4);
+  } >SRAM
+
   /* Hard-coded address for capabilities structure */
   .capabilities 0x0800BF00 : {KEEP(*(.capabilities_section))}
 
