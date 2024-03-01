@@ -106,7 +106,7 @@ void write_bootloader_min_version(uint8_t version) {
 }
 #endif
 
-struct BoardCapabilities capablities
+struct BoardCapabilities capabilities
     __attribute__((section(".capabilities_section"))) = {
         .header = CAPABILITIES_HEADER,
         .model_tag = TAG_MODEL_NAME,
