@@ -67,7 +67,7 @@ static const uint8_t * const BOARDLOADER_KEYS[] = {
 };
 
 #ifdef STM32U5
-uint8_t get_and_fill_bootloader_version(uint8_t bld_version) {
+uint8_t get_bootloader_min_version(void) {
   const uint8_t *counter_addr =
       flash_area_get_address(&SECRET_AREA, SECRET_MONOTONIC_COUNTER_OFFSET,
                              SECRET_MONOTONIC_COUNTER_LEN);
@@ -92,15 +92,17 @@ uint8_t get_and_fill_bootloader_version(uint8_t bld_version) {
     }
   }
 
-  if (bld_version > counter) {
-    for (int i = 0; i < bld_version; i++) {
+  return counter;
+}
+
+void write_bootloader_min_version(uint8_t version) {
+  if (version > get_bootloader_min_version()) {
+    for (int i = 0; i < version; i++) {
       uint32_t data[4] = {0};
       secret_write((uint8_t *)data, SECRET_MONOTONIC_COUNTER_OFFSET + i * 16,
                    16);
     }
   }
-
-  return counter;
 }
 #endif
 
@@ -159,6 +161,12 @@ static uint32_t check_sdcard(void) {
                                           BOARDLOADER_KEYS)) {
       return 0;
     }
+
+#ifdef STM32U5
+    if (hdr->monotonic < get_bootloader_min_version()) {
+      return 0;
+    }
+#endif
 
     return hdr->codelen;
   }
@@ -277,18 +285,25 @@ int main(void) {
   display_clear();
   display_refresh();
 
+#if defined USE_SD_CARD
+  sdcard_init();
+
 #ifdef STM32U5
+  secret_ensure_initialized();
+
   const image_header *old_hdr = read_image_header(
       (const uint8_t *)BOOTLOADER_START, BOOTLOADER_IMAGE_MAGIC,
       flash_area_get_size(&BOOTLOADER_AREA));
-  secret_ensure_initialized();
-  if (old_hdr != NULL) {
-    get_and_fill_bootloader_version(old_hdr->monotonic);
+
+  if ((old_hdr != NULL) &&
+      (sectrue == check_image_header_sig(old_hdr, BOARDLOADER_KEY_M,
+                                         BOARDLOADER_KEY_N,
+                                         BOARDLOADER_KEYS)) &&
+      (sectrue ==
+       check_image_contents(old_hdr, IMAGE_HEADER_SIZE, &BOOTLOADER_AREA))) {
+    write_bootloader_min_version(old_hdr->monotonic);
   }
 #endif
-
-#if defined USE_SD_CARD
-  sdcard_init();
 
   if (check_sdcard()) {
     return copy_sdcard() == sectrue ? 0 : 3;
@@ -310,9 +325,9 @@ int main(void) {
          "invalid bootloader hash");
 
 #ifdef STM32U5
-  secret_ensure_initialized();
-  uint8_t bld_version = get_and_fill_bootloader_version(hdr->monotonic);
+  uint8_t bld_version = get_bootloader_min_version();
   ensure((bld_version >= hdr->monotonic) * sectrue, "BOOTLOADER DOWNGRADED");
+  write_bootloader_min_version(hdr->monotonic);
 #endif
 
   ensure_compatible_settings();

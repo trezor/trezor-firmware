@@ -99,8 +99,6 @@ static secbool secret_present(uint32_t offset, uint32_t len) {
 void secret_bhk_provision(void) {
   uint32_t secret[SECRET_BHK_LEN / sizeof(uint32_t)] = {0};
 
-  ensure(secret_ensure_initialized(), "secret reinitialized");
-
   if (sectrue != secret_present(SECRET_BHK_OFFSET, SECRET_BHK_LEN)) {
     secret_bhk_regenerate();
   }
