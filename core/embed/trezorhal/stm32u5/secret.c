@@ -3,21 +3,23 @@
 #include <string.h>
 #include "common.h"
 #include "flash.h"
+#include "memzero.h"
 #include "model.h"
 #include "rng.h"
 
-static secbool bootloader_locked_set = secfalse;
 static secbool bootloader_locked = secfalse;
 
 secbool secret_verify_header(void) {
-  uint8_t header[SECRET_HEADER_LEN] = {0};
+  uint8_t header[sizeof(SECRET_HEADER_MAGIC)] = {0};
 
-  memcpy(header, flash_area_get_address(&SECRET_AREA, 0, SECRET_HEADER_LEN),
-         SECRET_HEADER_LEN);
+  memcpy(header,
+         flash_area_get_address(&SECRET_AREA, 0, sizeof(SECRET_HEADER_MAGIC)),
+         sizeof(SECRET_HEADER_MAGIC));
 
   bootloader_locked =
-      memcmp(header, SECRET_HEADER_MAGIC, 4) == 0 ? sectrue : secfalse;
-  bootloader_locked_set = sectrue;
+      memcmp(header, SECRET_HEADER_MAGIC, sizeof(SECRET_HEADER_MAGIC)) == 0
+          ? sectrue
+          : secfalse;
   return bootloader_locked;
 }
 
@@ -118,6 +120,8 @@ void secret_bhk_provision(void) {
       reg1++;
     }
   }
+
+  memzero(secret, sizeof(secret));
 }
 
 void secret_bhk_regenerate(void) {
@@ -128,8 +132,10 @@ void secret_bhk_regenerate(void) {
     for (int j = 0; j < 4; j++) {
       val[j] = rng_get();
     }
-    ensure(flash_area_write_quadword(&BHK_AREA, i * 4 * sizeof(uint32_t), val),
-           "Failed regenerating BHK");
+    secbool res =
+        flash_area_write_quadword(&BHK_AREA, i * 4 * sizeof(uint32_t), val);
+    memzero(val, sizeof(val));
+    ensure(res, "Failed regenerating BHK");
   }
   ensure(flash_lock_write(), "Failed regenerating BHK");
 }
@@ -155,6 +161,7 @@ void secret_optiga_backup(void) {
       reg1++;
     }
   }
+  memzero(secret, sizeof(secret));
 }
 
 secbool secret_optiga_extract(uint8_t *dest) {

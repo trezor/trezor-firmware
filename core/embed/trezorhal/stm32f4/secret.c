@@ -8,13 +8,16 @@ static secbool bootloader_locked_set = secfalse;
 static secbool bootloader_locked = secfalse;
 
 secbool secret_verify_header(void) {
-  uint8_t header[SECRET_HEADER_LEN] = {0};
+  uint8_t header[sizeof(SECRET_HEADER_MAGIC)] = {0};
 
-  memcpy(header, flash_area_get_address(&SECRET_AREA, 0, SECRET_HEADER_LEN),
-         SECRET_HEADER_LEN);
+  memcpy(header,
+         flash_area_get_address(&SECRET_AREA, 0, sizeof(SECRET_HEADER_MAGIC)),
+         sizeof(SECRET_HEADER_MAGIC));
 
   bootloader_locked =
-      memcmp(header, SECRET_HEADER_MAGIC, 4) == 0 ? sectrue : secfalse;
+      memcmp(header, SECRET_HEADER_MAGIC, sizeof(SECRET_HEADER_MAGIC)) == 0
+          ? sectrue
+          : secfalse;
   bootloader_locked_set = sectrue;
   return bootloader_locked;
 }
