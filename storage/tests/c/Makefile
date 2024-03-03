@@ -5,6 +5,7 @@ CFLAGS += -fPIC
 CFALGS += -fsanitize=address,undefined
 CFLAGS += -DTREZOR_MODEL_T
 CFLAGS += -DUSE_INSECURE_PRNG
+CFLAGS += -DCONFIDENTIAL
 
 LIBS =
 INC = -I ../../../crypto -I ../.. -I .

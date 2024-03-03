@@ -5,6 +5,7 @@ def stm32u5_common_files(env, defines, sources, paths):
     defines += [
         ("STM32_HAL_H", '"<stm32u5xx.h>"'),
         ("FLASH_BLOCK_WORDS", "4"),
+        ("CONFIDENTIAL", '\'__attribute__((section(".confidential")))\''),
     ]
 
     paths += [
@@ -89,6 +90,7 @@ def stm32u5_common_files(env, defines, sources, paths):
         "-DSTM32_HAL_H=<stm32u5xx.h>;"
         "-DSTM32U5;"
         "-DFLASH_BLOCK_WORDS=4;"
+        "-DCONFIDENTIAL;"
     )
 
     env.get("ENV")["SUFFIX"] = "stm32u5"

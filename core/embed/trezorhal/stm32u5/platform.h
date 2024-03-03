@@ -23,8 +23,6 @@
 #include STM32_HAL_H
 #include <stdint.h>
 
-#define SENSITIVE __attribute__((section(".sensitive")))
-
 typedef enum {
   CLOCK_160_MHZ = 0,
 } clock_settings_t;
