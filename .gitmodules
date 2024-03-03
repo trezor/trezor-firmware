@@ -21,3 +21,13 @@
 [submodule "vendor/fido2-tests"]
 	path = vendor/fido2-tests
 	url = https://github.com/trezor/fido2-tests.git
+[submodule "vendor/cmsis_device_u5"]
+	path = vendor/cmsis_device_u5
+	url = https://github.com/STMicroelectronics/cmsis_device_u5.git
+[submodule "vendor/cmsis_5"]
+	path = vendor/cmsis_5
+	url = https://github.com/ARM-software/CMSIS_5.git
+
+[submodule "vendor/stm32u5xx_hal_driver"]
+	path = vendor/stm32u5xx_hal_driver
+	url = https://github.com/trezor/stm32u5xx_hal_driver.git

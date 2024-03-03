@@ -1,7 +1,7 @@
 #ifndef LAYOUT_COMMON_H
 #define LAYOUT_COMMON_H
 
-#include "flash.h"
+#include "flash_area.h"
 
 // OTP blocks allocation
 #define FLASH_OTP_BLOCK_BATCH 0
@@ -15,6 +15,7 @@
 extern const flash_area_t STORAGE_AREAS[STORAGE_AREAS_COUNT];
 extern const flash_area_t BOARDLOADER_AREA;
 extern const flash_area_t SECRET_AREA;
+extern const flash_area_t BHK_AREA;
 extern const flash_area_t TRANSLATIONS_AREA;
 extern const flash_area_t BOOTLOADER_AREA;
 extern const flash_area_t FIRMWARE_AREA;

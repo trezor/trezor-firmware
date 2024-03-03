@@ -8,7 +8,7 @@ CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 PRODUCTION = ARGUMENTS.get('PRODUCTION', '0') == '1'
 BOOTLOADER_DEVEL = ARGUMENTS.get('BOOTLOADER_DEVEL', '0') == '1'
 
-if TREZOR_MODEL in ('DISC1', ):
+if TREZOR_MODEL in ('DISC1', 'DISC2'):
     # skip prodtest build
     env = Environment()
     def build_prodtest(target,source,env):
@@ -19,7 +19,7 @@ if TREZOR_MODEL in ('DISC1', ):
                  action=build_prodtest)
     Return()
 
-FEATURES_WANTED = ["input", "sbu", "sd_card", "rdb_led", "usb", "consumption_mask", "optiga"]
+FEATURES_WANTED = ["input", "sbu", "sd_card", "rdb_led", "usb", "consumption_mask", "optiga", "haptic"]
 
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
@@ -38,7 +38,7 @@ if TREZOR_MODEL in ('1', 'R'):
     FONT_BOLD='Font_PixelOperator_Bold_8'
     FONT_MONO=None
     FONT_BIG=None
-elif TREZOR_MODEL in ('T', ):
+elif TREZOR_MODEL in ('T', 'T3T1'):
     FONT_NORMAL=None
     FONT_DEMIBOLD=None
     FONT_BOLD='Font_Roboto_Bold_20'
@@ -71,6 +71,7 @@ SOURCE_MOD += [
     'vendor/trezor-crypto/secp256k1.c',
     'vendor/trezor-crypto/sha2.c',
     'vendor/trezor-crypto/tls_prf.c',
+    'vendor/trezor-storage/flash_area.c',
 ]
 
 # modtrezorui
@@ -91,20 +92,7 @@ SOURCE_MOD += [
     'vendor/micropython/lib/uzlib/adler32.c',
     'vendor/micropython/lib/uzlib/crc32.c',
     'vendor/micropython/lib/uzlib/tinflate.c',
-    'vendor/trezor-storage/flash_common.c',
 ]
-
-SOURCE_PRODTEST = [
-    'embed/prodtest/startup.s',
-    'embed/prodtest/header.S',
-    'embed/prodtest/main.c',
-    'embed/prodtest/prodtest_common.c',
-]
-
-if TREZOR_MODEL in ('R',):
-    SOURCE_PRODTEST += [
-        'embed/prodtest/optiga_prodtest.c',
-    ]
 
 # fonts
 tools.add_font('NORMAL', FONT_NORMAL, CPPDEFINES_MOD, SOURCE_MOD)
@@ -113,9 +101,28 @@ tools.add_font('DEMIBOLD', FONT_DEMIBOLD, CPPDEFINES_MOD, SOURCE_MOD)
 tools.add_font('MONO', FONT_MONO, CPPDEFINES_MOD, SOURCE_MOD)
 tools.add_font('BIG', FONT_BIG, CPPDEFINES_MOD, SOURCE_MOD)
 
-env = Environment(ENV=os.environ, CFLAGS='%s -DPRODUCTION=%s' % (ARGUMENTS.get('CFLAGS', ''), ARGUMENTS.get('PRODUCTION', '0')))
+env = Environment(
+    ENV=os.environ,
+    CFLAGS='%s -DPRODUCTION=%s' % (ARGUMENTS.get('CFLAGS', ''), ARGUMENTS.get('PRODUCTION', '0')),
+    CPPDEFINES_IMPLICIT=[])
 
 FEATURES_AVAILABLE = tools.configure_board(TREZOR_MODEL, FEATURES_WANTED, env, CPPDEFINES_HAL, SOURCE_HAL, PATH_HAL)
+
+FILE_SUFFIX= env.get('ENV')['SUFFIX']
+LINKER_SCRIPT_SUFFIX= env.get('ENV')['LINKER_SCRIPT']
+
+
+SOURCE_PRODTEST = [
+    f'embed/prodtest/startup_{FILE_SUFFIX}.s',
+    'embed/prodtest/header.S',
+    'embed/prodtest/main.c',
+    'embed/prodtest/prodtest_common.c',
+]
+
+if 'optiga' in FEATURES_AVAILABLE:
+    SOURCE_PRODTEST += [
+        'embed/prodtest/optiga_prodtest.c',
+    ]
 
 env.Replace(
     CP='cp',
@@ -143,14 +150,13 @@ env.Replace(
     '-fstack-protector-all '
     +  env.get('ENV')["CPU_CCFLAGS"] + CCFLAGS_MOD,
     CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB',
-    LINKFLAGS='-T embed/prodtest/memory.ld -Wl,--gc-sections -Wl,-Map=build/prodtest/prodtest.map -Wl,--warn-common',
+    LINKFLAGS=f'-T embed/prodtest/memory_{LINKER_SCRIPT_SUFFIX}.ld -Wl,--gc-sections -Wl,-Map=build/prodtest/prodtest.map -Wl,--warn-common',
     CPPPATH=[
         'embed/prodtest',
         'embed/lib',
         'embed/models',
         'embed/trezorhal',
         'embed/extmod/modtrezorui',
-        'vendor/micropython/lib/cmsis/inc',
     ] + CPPPATH_MOD + PATH_HAL,
     CPPDEFINES=[
         'TREZOR_PRODTEST',
@@ -169,7 +175,7 @@ env.Replace(
 
 env.Replace(
     ALLSOURCES=SOURCE_MOD + SOURCE_PRODTEST + SOURCE_HAL,
-    ALLDEFS=tools.get_defs_for_cmake(env['CPPDEFINES']))
+    ALLDEFS=tools.get_defs_for_cmake(env['CPPDEFINES'] + env['CPPDEFINES_IMPLICIT']))
 
 cmake_gen = env.Command(
     target='CMakeLists.txt',
@@ -226,7 +232,7 @@ program_bin = env.Command(
     target='prodtest.bin',
     source=program_elf,
     action=[
-        '$OBJCOPY -O binary -j .vendorheader -j .header -j .flash -j .data $SOURCE $TARGET',
+        '$OBJCOPY -O binary -j .vendorheader -j .header -j .flash -j .data -j .sensitive $SOURCE $TARGET',
         '$HEADERTOOL $TARGET ' + ('-D' if ARGUMENTS.get('PRODUCTION', '0') == '0' else ''),
         '$CP $TARGET ' + BINARY_NAME,
     ], )

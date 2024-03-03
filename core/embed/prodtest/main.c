@@ -27,7 +27,9 @@
 #include "common.h"
 #include "display.h"
 #include "display_utils.h"
+#include "fault_handlers.h"
 #include "flash.h"
+#include "flash_otp.h"
 #include "i2c.h"
 #include "model.h"
 #include "mpu.h"
@@ -46,13 +48,26 @@
 #include "optiga_transport.h"
 #endif
 
+#ifdef USE_HAPTIC
+#include "haptic.h"
+#endif
+
+#ifdef USE_HASH_PROCESSOR
+#include "hash_processor.h"
+#endif
+
 #include "memzero.h"
+
+#ifdef STM32U5
+#include "stm32u5xx_ll_utils.h"
+#else
 #include "stm32f4xx_ll_utils.h"
+#endif
 
 #ifdef TREZOR_MODEL_T
 #define MODEL_IDENTIFIER "TREZOR2-"
-#elif TREZOR_MODEL_R
-#define MODEL_IDENTIFIER "T2B1-"
+#else
+#define MODEL_IDENTIFIER MODEL_INTERNAL_NAME "-"
 #endif
 
 static secbool startswith(const char *s, const char *prefix) {
@@ -427,10 +442,10 @@ power_off:
 static void test_wipe(void) {
   // erase start of the firmware (metadata) -> invalidate FW
   ensure(flash_unlock_write(), NULL);
-  for (int i = 0; i < 1024 / sizeof(uint32_t); i++) {
-    ensure(
-        flash_area_write_word(&FIRMWARE_AREA, i * sizeof(uint32_t), 0x00000000),
-        NULL);
+  for (int i = 0; i < (1024 / FLASH_BLOCK_SIZE); i += FLASH_BLOCK_SIZE) {
+    flash_block_t data = {0};
+    ensure(flash_area_write_block(&FIRMWARE_AREA, i * FLASH_BLOCK_SIZE, data),
+           NULL);
   }
   ensure(flash_lock_write(), NULL);
   display_clear();
@@ -446,6 +461,24 @@ static void test_sbu(const char *args) {
   secbool sbu2 = sectrue * (args[1] == '1');
   sbu_set(sbu1, sbu2);
   vcp_println("OK");
+}
+#endif
+
+#ifdef USE_HAPTIC
+static void test_haptic(const char *args) {
+  int duration_ms = atoi(args);
+
+  if (duration_ms <= 0) {
+    vcp_println("ERROR HAPTIC DURATION");
+    return;
+  }
+
+  if (haptic_test(duration_ms)) {
+    vcp_println("OK");
+
+  } else {
+    vcp_println("ERROR HAPTIC");
+  }
 }
 #endif
 
@@ -546,6 +579,9 @@ int main(void) {
   display_reinit();
   display_orientation(0);
   random_delays_init();
+#ifdef USE_HASH_PROCESSOR
+  hash_processor_init();
+#endif
 #ifdef USE_SD_CARD
   sdcard_init();
 #endif
@@ -561,7 +597,12 @@ int main(void) {
 #ifdef USE_SBU
   sbu_init();
 #endif
+#ifdef USE_HAPTIC
+  haptic_init();
+#endif
   usb_init_all();
+
+  mpu_config_prodtest_initial();
 
 #ifdef USE_OPTIGA
   optiga_init();
@@ -570,13 +611,15 @@ int main(void) {
 #endif
 
   mpu_config_prodtest();
+  fault_handlers_init();
+
   drop_privileges();
 
   display_clear();
   draw_welcome_screen();
 
   char dom[32];
-  // format: TREZOR2-YYMMDD
+  // format: {MODEL_IDENTIFIER}-YYMMDD
   if (sectrue == flash_otp_read(FLASH_OTP_BLOCK_BATCH, 0, (uint8_t *)dom, 32) &&
       sectrue == startswith(dom, MODEL_IDENTIFIER) && dom[31] == 0) {
     display_qrcode(DISPLAY_RESX / 2, DISPLAY_RESY / 2, dom, 4);
@@ -624,6 +667,10 @@ int main(void) {
     } else if (startswith(line, "SBU ")) {
       test_sbu(line + 4);
 #endif
+#ifdef USE_HAPTIC
+    } else if (startswith(line, "HAPTIC ")) {
+      test_haptic(line + 7);
+#endif
 #ifdef USE_OPTIGA
     } else if (startswith(line, "OPTIGAID READ")) {
       optigaid_read();
@@ -669,5 +716,3 @@ int main(void) {
 
   return 0;
 }
-
-void HardFault_Handler(void) { error_shutdown("INTERNAL ERROR!", "(HF)"); }

@@ -253,6 +253,16 @@ STATIC mp_obj_t mod_trezorutils_unit_btconly(void) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_unit_btconly_obj,
                                  mod_trezorutils_unit_btconly);
 
+/// def sd_hotswap_enabled() -> bool:
+///     """
+///     Returns True if SD card hot swapping is enabled
+///     """
+STATIC mp_obj_t mod_trezorutils_sd_hotswap_enabled(void) {
+  return unit_variant_is_sd_hotswap_enabled() ? mp_const_true : mp_const_false;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_sd_hotswap_enabled_obj,
+                                 mod_trezorutils_sd_hotswap_enabled);
+
 /// def reboot_to_bootloader(
 ///     boot_command : int = 0,
 ///     boot_args : bytes | None = None,
@@ -286,7 +296,8 @@ STATIC mp_obj_t mod_trezorutils_reboot_to_bootloader(size_t n_args,
     mp_get_buffer_raise(args[1], &boot_args, MP_BUFFER_READ);
   }
 
-  svc_reboot_to_bootloader(boot_command, boot_args.buf, boot_args.len);
+  bootargs_set(boot_command, boot_args.buf, boot_args.len);
+  svc_reboot_to_bootloader();
 #endif
   return mp_const_none;
 }
@@ -414,6 +425,8 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
      MP_ROM_PTR(&mod_trezorutils_unit_color_obj)},
     {MP_ROM_QSTR(MP_QSTR_unit_btconly),
      MP_ROM_PTR(&mod_trezorutils_unit_btconly_obj)},
+    {MP_ROM_QSTR(MP_QSTR_sd_hotswap_enabled),
+     MP_ROM_PTR(&mod_trezorutils_sd_hotswap_enabled_obj)},
     // various built-in constants
     {MP_ROM_QSTR(MP_QSTR_SCM_REVISION),
      MP_ROM_PTR(&mod_trezorutils_revision_obj)},

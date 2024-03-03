@@ -7,10 +7,10 @@ import tools
 BITCOIN_ONLY = ARGUMENTS.get('BITCOIN_ONLY', '0')
 EVERYTHING = BITCOIN_ONLY != '1'
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
-DMA2D =  TREZOR_MODEL in ('T', )
+DMA2D =  TREZOR_MODEL in ('T', 'T3T1')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 
-if TREZOR_MODEL in ('DISC1', ):
+if TREZOR_MODEL in ('DISC1', 'DISC2'):
     # skip unix build
     env = Environment()
     def build_unix(target,source,env):
@@ -42,7 +42,7 @@ if TREZOR_MODEL in ('1', 'R'):
     FONT_BOLD='Font_PixelOperator_Bold_8'
     FONT_MONO='Font_PixelOperatorMono_Regular_8'
     FONT_BIG='Font_Unifont_Regular_16'
-elif TREZOR_MODEL in ('T', ):
+elif TREZOR_MODEL in ('T', 'T3T1'):
     FONT_NORMAL='Font_TTHoves_Regular_21'
     FONT_DEMIBOLD='Font_TTHoves_DemiBold_21'
     FONT_BOLD='Font_TTHoves_Bold_17'
@@ -59,7 +59,7 @@ SOURCE_MOD += [
     'vendor/trezor-storage/norcow.c',
     'vendor/trezor-storage/storage.c',
     'vendor/trezor-storage/storage_utils.c',
-    'vendor/trezor-storage/flash_common.c',
+    'vendor/trezor-storage/flash_area.c',
 ]
 
 # modtrezorcrypto
@@ -177,7 +177,7 @@ if FEATURE_FLAGS["SECP256K1_ZKP"]:
 SOURCE_MOD += [
     'embed/extmod/modtrezorio/modtrezorio.c',
 ]
-if TREZOR_MODEL in ('T',):
+if TREZOR_MODEL in ('T', 'T3T1'):
     SOURCE_MOD += [
         'embed/extmod/modtrezorio/ff.c',
         'embed/extmod/modtrezorio/ffunicode.c',
@@ -206,6 +206,7 @@ SOURCE_MOD += [
     'embed/lib/fonts/fonts.c',
     'embed/lib/image.c',
     'embed/lib/terminal.c',
+    'embed/lib/translations.c',
     'embed/lib/unit_variant.c',
     'vendor/micropython/lib/uzlib/adler32.c',
     'vendor/micropython/lib/uzlib/crc32.c',
@@ -383,10 +384,11 @@ SOURCE_MICROPYTHON = [
 ]
 
 SOURCE_UNIX = [
-    'embed/trezorhal/unix/translations.c',
+    'embed/trezorhal/unix/boot_args.c',
     'embed/trezorhal/unix/common.c',
     'embed/trezorhal/unix/display-unix.c',
     'embed/trezorhal/unix/flash.c',
+    'embed/trezorhal/unix/flash_otp.c',
     'embed/trezorhal/unix/random_delays.c',
     'embed/trezorhal/unix/rng.c',
     'embed/trezorhal/unix/usb.c',
@@ -400,7 +402,7 @@ SOURCE_UNIX = [
     'vendor/micropython/ports/unix/input.c',
     'vendor/micropython/ports/unix/unix_mphal.c',
 ]
-if TREZOR_MODEL in ('T', 'R'):
+if TREZOR_MODEL in ('T', 'R', 'T3T1'):
     SOURCE_UNIX += [
         'embed/trezorhal/unix/sbu.c',
     ]
@@ -437,7 +439,7 @@ else:
 env = Environment(ENV=os.environ, CFLAGS='%s -DPYOPT=%s -DBITCOIN_ONLY=%s %s' % (ARGUMENTS.get('CFLAGS', ''), PYOPT, BITCOIN_ONLY, STATIC))
 
 
-if TREZOR_MODEL in ('T',):
+if TREZOR_MODEL in ('T', 'T3T1'):
     UI_LAYOUT = 'UI_LAYOUT_TT'
     ui_layout_feature = 'model_tt'
 elif TREZOR_MODEL in ('1', 'R'):
@@ -504,8 +506,12 @@ env.Replace(
 
 if TREZOR_MODEL in ('T', 'R'):
     CPU_MODEL   = 'STM32F427xx'
+elif TREZOR_MODEL in ('T3T1', ):
+    CPU_MODEL   = 'STM32U585xx'
 elif TREZOR_MODEL in ('DISC1', ):
     CPU_MODEL   = 'STM32F429xx'
+elif TREZOR_MODEL in ('DISC2', ):
+    CPU_MODEL   = 'STM32U5A9xx'
 elif TREZOR_MODEL in ('1',):
     CPU_MODEL   = 'STM32F405xx'
 else:
@@ -817,7 +823,7 @@ def cargo_build():
     if DMA2D:
         features.append('dma2d')
 
-    if TREZOR_MODEL in ('T',):
+    if TREZOR_MODEL in ('T', 'T3T1'):
         features.append('touch')
         features.append('sd_card')
         features.append('ui_antialiasing')

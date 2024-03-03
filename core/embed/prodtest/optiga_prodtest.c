@@ -126,35 +126,40 @@ void pair_optiga(void) {
   // pairing procedure is determined by optiga_sec_chan_handshake(). Therefore
   // it is OK for some of the intermediate operations to fail.
 
-  // Enable writing the pairing secret to OPTIGA.
-  optiga_metadata metadata = {0};
-  metadata.change = OPTIGA_META_ACCESS_ALWAYS;
-  metadata.execute = OPTIGA_META_ACCESS_ALWAYS;
-  metadata.data_type = TYPE_PTFBIND;
-  set_metadata(OID_KEY_PAIRING, &metadata);  // Ignore result.
-
-  // Generate pairing secret.
   uint8_t secret[SECRET_OPTIGA_KEY_LEN] = {0};
-  optiga_result ret = optiga_get_random(secret, sizeof(secret));
-  if (OPTIGA_SUCCESS != ret) {
-    optiga_pairing_state = OPTIGA_PAIRING_ERR_RNG;
-    return;
-  }
+  optiga_result ret = OPTIGA_SUCCESS;
 
-  // Store pairing secret.
-  ret = optiga_set_data_object(OID_KEY_PAIRING, false, secret, sizeof(secret));
-  if (OPTIGA_SUCCESS == ret) {
-    secret_erase();
-    secret_write_header();
-    secret_write(secret, SECRET_OPTIGA_KEY_OFFSET, SECRET_OPTIGA_KEY_LEN);
-  }
+  if (secret_optiga_extract(secret) != sectrue) {
+    // Enable writing the pairing secret to OPTIGA.
+    optiga_metadata metadata = {0};
+    metadata.change = OPTIGA_META_ACCESS_ALWAYS;
+    metadata.execute = OPTIGA_META_ACCESS_ALWAYS;
+    metadata.data_type = TYPE_PTFBIND;
+    set_metadata(OID_KEY_PAIRING, &metadata);  // Ignore result.
 
-  // Verify whether the secret was stored correctly in flash and OPTIGA.
-  memzero(secret, sizeof(secret));
-  if (secret_read(secret, SECRET_OPTIGA_KEY_OFFSET, SECRET_OPTIGA_KEY_LEN) !=
-      sectrue) {
-    optiga_pairing_state = OPTIGA_PAIRING_ERR_READ;
-    return;
+    // Generate pairing secret.
+    ret = optiga_get_random(secret, sizeof(secret));
+    if (OPTIGA_SUCCESS != ret) {
+      optiga_pairing_state = OPTIGA_PAIRING_ERR_RNG;
+      return;
+    }
+
+    // Store pairing secret.
+    ret =
+        optiga_set_data_object(OID_KEY_PAIRING, false, secret, sizeof(secret));
+    if (OPTIGA_SUCCESS == ret) {
+      secret_erase();
+      secret_write_header();
+      secret_write(secret, SECRET_OPTIGA_KEY_OFFSET, SECRET_OPTIGA_KEY_LEN);
+    }
+
+    // Verify whether the secret was stored correctly in flash and OPTIGA.
+    memzero(secret, sizeof(secret));
+    if (secret_read(secret, SECRET_OPTIGA_KEY_OFFSET, SECRET_OPTIGA_KEY_LEN) !=
+        sectrue) {
+      optiga_pairing_state = OPTIGA_PAIRING_ERR_READ;
+      return;
+    }
   }
 
   ret = optiga_sec_chan_handshake(secret, sizeof(secret));

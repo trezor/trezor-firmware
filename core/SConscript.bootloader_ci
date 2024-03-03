@@ -6,7 +6,7 @@ import tools
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 
-if TREZOR_MODEL in ('1', 'DISC1'):
+if TREZOR_MODEL in ('1', 'DISC1', 'DISC2'):
     # skip bootloader_ci build
     env = Environment()
     def build_bootloader_ci(target,source,env):
@@ -34,7 +34,7 @@ if TREZOR_MODEL in ('1', 'R'):
     FONT_BOLD=None
     FONT_MONO='Font_PixelOperatorMono_Regular_8'
     FONT_BIG=None
-elif TREZOR_MODEL in ('T', ):
+elif TREZOR_MODEL in ('T', 'T3T1'):
     FONT_NORMAL='Font_Roboto_Regular_20'
     FONT_DEMIBOLD=None
     FONT_BOLD=None
@@ -66,7 +66,7 @@ SOURCE_MOD += [
     'vendor/trezor-crypto/memzero.c',
     'vendor/trezor-crypto/rand.c',
     'vendor/trezor-crypto/sha2.c',
-    'vendor/trezor-storage/flash_common.c',
+    'vendor/trezor-storage/flash_area.c',
 ]
 
 # modtrezorui
@@ -96,16 +96,6 @@ SOURCE_NANOPB = [
     'vendor/nanopb/pb_encode.c',
 ]
 
-SOURCE_BOOTLOADER = [
-    'embed/bootloader_ci/startup.s',
-    'embed/bootloader_ci/header.S',
-    'embed/bootloader_ci/bootui.c',
-    'embed/bootloader_ci/main.c',
-    'embed/bootloader_ci/messages.c',
-    'embed/bootloader_ci/protob/messages.pb.c',
-]
-
-
 # fonts
 tools.add_font('NORMAL', FONT_NORMAL, CPPDEFINES_MOD, SOURCE_MOD)
 tools.add_font('BOLD', FONT_BOLD, CPPDEFINES_MOD, SOURCE_MOD)
@@ -113,9 +103,24 @@ tools.add_font('DEMIBOLD', FONT_DEMIBOLD, CPPDEFINES_MOD, SOURCE_MOD)
 tools.add_font('MONO', FONT_MONO, CPPDEFINES_MOD, SOURCE_MOD)
 tools.add_font('BIG', FONT_BIG, CPPDEFINES_MOD, SOURCE_MOD)
 
-env = Environment(ENV=os.environ, CFLAGS='%s -DPRODUCTION=%s' % (ARGUMENTS.get('CFLAGS', ''), ARGUMENTS.get('PRODUCTION', '0')))
+env = Environment(
+    ENV=os.environ, CFLAGS='%s -DPRODUCTION=%s' % (ARGUMENTS.get('CFLAGS', ''), ARGUMENTS.get('PRODUCTION', '0')),
+    CPPDEFINES_IMPLICIT=[]
+    )
 
 FEATURES_AVAILABLE = tools.configure_board(TREZOR_MODEL, FEATURES_WANTED, env, CPPDEFINES_HAL, SOURCE_HAL, PATH_HAL)
+
+FILE_SUFFIX= env.get('ENV')['SUFFIX']
+LINKER_SCRIPT_SUFFIX= env.get('ENV')['LINKER_SCRIPT']
+
+SOURCE_BOOTLOADER = [
+    f'embed/bootloader_ci/startup_{FILE_SUFFIX}.s',
+    'embed/bootloader_ci/header.S',
+    'embed/bootloader_ci/bootui.c',
+    'embed/bootloader_ci/main.c',
+    'embed/bootloader_ci/messages.c',
+    'embed/bootloader_ci/protob/messages.pb.c',
+]
 
 env.Replace(
     CP='cp',
@@ -143,7 +148,7 @@ env.Replace(
     '-fstack-protector-all '
     +  env.get('ENV')["CPU_CCFLAGS"] + CCFLAGS_MOD,
     CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB',
-    LINKFLAGS='-T embed/bootloader_ci/memory.ld -Wl,--gc-sections -Wl,-Map=build/bootloader_ci/bootloader.map -Wl,--warn-common',
+    LINKFLAGS=f'-T embed/bootloader_ci/memory_{LINKER_SCRIPT_SUFFIX}.ld -Wl,--gc-sections -Wl,-Map=build/bootloader_ci/bootloader.map -Wl,--warn-common',
     CPPPATH=[
         'embed/bootloader_ci',
         'embed/bootloader_ci/nanopb',
@@ -152,7 +157,6 @@ env.Replace(
         'embed/models',
         'embed/trezorhal',
         'embed/extmod/modtrezorui',
-        'vendor/micropython/lib/cmsis/inc',
         'vendor/nanopb',
     ] + CPPPATH_MOD + PATH_HAL,
     CPPDEFINES=[
@@ -173,7 +177,7 @@ env.Replace(
 
 env.Replace(
     ALLSOURCES=SOURCE_MOD + SOURCE_BOOTLOADER + SOURCE_NANOPB + SOURCE_HAL,
-    ALLDEFS=tools.get_defs_for_cmake(env['CPPDEFINES']))
+    ALLDEFS=tools.get_defs_for_cmake(env['CPPDEFINES'] + env['CPPDEFINES_IMPLICIT']))
 
 cmake_gen = env.Command(
     target='CMakeLists.txt',
@@ -212,7 +216,7 @@ program_bin = env.Command(
     target='bootloader.bin',
     source=program_elf,
     action=[
-        '$OBJCOPY -O binary -j .header -j .flash -j .data $SOURCE $TARGET',
+        '$OBJCOPY -O binary -j .header -j .flash -j .data -j .sensitive $SOURCE $TARGET',
         '$HEADERTOOL $TARGET ' + ('-D' if ARGUMENTS.get('PRODUCTION', '0') == '0' else ''),
         '$CP $TARGET ' + BINARY_NAME,
     ], )

@@ -10,6 +10,7 @@ def stm32f4_common_files(env, defines, sources, paths):
 
     paths += [
         "embed/trezorhal/stm32f4",
+        "vendor/micropython/lib/cmsis/inc",
         "vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Inc",
         "vendor/micropython/lib/stm32lib/CMSIS/STM32F4xx/Include",
     ]
@@ -39,8 +40,11 @@ def stm32f4_common_files(env, defines, sources, paths):
 
     sources += [
         "embed/trezorhal/stm32f4/board_capabilities.c",
+        "embed/trezorhal/stm32f4/boot_args.c",
         "embed/trezorhal/stm32f4/common.c",
+        "embed/trezorhal/stm32f4/fault_handlers.c",
         "embed/trezorhal/stm32f4/flash.c",
+        "embed/trezorhal/stm32f4/flash_otp.c",
         "embed/trezorhal/stm32f4/lowlevel.c",
         "embed/trezorhal/stm32f4/mpu.c",
         "embed/trezorhal/stm32f4/platform.c",
@@ -49,7 +53,6 @@ def stm32f4_common_files(env, defines, sources, paths):
         "embed/trezorhal/stm32f4/random_delays.c",
         "embed/trezorhal/stm32f4/rng.c",
         "embed/trezorhal/stm32f4/vectortable.s",
-        "embed/trezorhal/stm32f4/translations.c",
     ]
 
     # boardloader needs separate assembler for some function unencumbered by various FW+bootloader hacks
@@ -68,7 +71,12 @@ def stm32f4_common_files(env, defines, sources, paths):
         "-I../trezorhal/stm32f4;"
         "-I../../vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Inc;"
         "-I../../vendor/micropython/lib/stm32lib/CMSIS/STM32F4xx/Include;"
+        "-I../../vendor/micropython/lib/cmsis/inc;"
         "-DSTM32_HAL_H=<stm32f4xx.h>;"
+        "-DSTM32F4;"
         "-DFLASH_BLOCK_WORDS=1;"
-        "-DFLASH_BIT_ACCESS=1"
+        "-DFLASH_BIT_ACCESS=1;"
     )
+
+    env.get("ENV")["SUFFIX"] = "stm32f4"
+    env.get("ENV")["LINKER_SCRIPT"] = "stm32f4"

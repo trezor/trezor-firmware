@@ -183,7 +183,7 @@ uint32_t I2cxTimeout =
 /**
  * @brief  I2Cx error treatment function
  */
-static void I2Cx_Error(void) { i2c_cycle(TOUCH_I2C_NUM); }
+static void I2Cx_Error(void) { i2c_cycle(TOUCH_I2C_INSTANCE); }
 
 /**
  * @brief  Writes a value in a register of the device through BUS.
@@ -194,7 +194,7 @@ static void I2Cx_Error(void) { i2c_cycle(TOUCH_I2C_NUM); }
 static void I2Cx_WriteData(uint8_t Addr, uint8_t Reg, uint8_t Value) {
   HAL_StatusTypeDef status = HAL_OK;
 
-  status = i2c_mem_write(TOUCH_I2C_NUM, Addr, (uint16_t)Reg,
+  status = i2c_mem_write(TOUCH_I2C_INSTANCE, Addr, (uint16_t)Reg,
                          I2C_MEMADD_SIZE_8BIT, &Value, 1, I2cxTimeout);
 
   /* Check the communication status */
@@ -215,7 +215,7 @@ static void I2Cx_WriteBuffer(uint8_t Addr, uint8_t Reg, uint8_t *pBuffer,
                              uint16_t Length) {
   HAL_StatusTypeDef status = HAL_OK;
 
-  status = i2c_mem_write(TOUCH_I2C_NUM, Addr, (uint16_t)Reg,
+  status = i2c_mem_write(TOUCH_I2C_INSTANCE, Addr, (uint16_t)Reg,
                          I2C_MEMADD_SIZE_8BIT, pBuffer, Length, I2cxTimeout);
 
   /* Check the communication status */
@@ -235,8 +235,8 @@ static uint8_t I2Cx_ReadData(uint8_t Addr, uint8_t Reg) {
   HAL_StatusTypeDef status = HAL_OK;
   uint8_t value = 0;
 
-  status = i2c_mem_read(TOUCH_I2C_NUM, Addr, Reg, I2C_MEMADD_SIZE_8BIT, &value,
-                        1, I2cxTimeout);
+  status = i2c_mem_read(TOUCH_I2C_INSTANCE, Addr, Reg, I2C_MEMADD_SIZE_8BIT,
+                        &value, 1, I2cxTimeout);
 
   /* Check the communication status */
   if (status != HAL_OK) {
@@ -258,7 +258,7 @@ static uint8_t I2Cx_ReadBuffer(uint8_t Addr, uint8_t Reg, uint8_t *pBuffer,
                                uint16_t Length) {
   HAL_StatusTypeDef status = HAL_OK;
 
-  status = i2c_mem_read(TOUCH_I2C_NUM, Addr, (uint16_t)Reg,
+  status = i2c_mem_read(TOUCH_I2C_INSTANCE, Addr, (uint16_t)Reg,
                         I2C_MEMADD_SIZE_8BIT, pBuffer, Length, I2cxTimeout);
 
   /* Check the communication status */
@@ -699,3 +699,5 @@ uint32_t touch_read(void) {
 
   return 0;
 }
+
+void touch_wait_until_ready(void) {}

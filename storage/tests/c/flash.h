@@ -22,15 +22,7 @@
 
 #include <stdint.h>
 #include <stdlib.h>
+#include "flash_ll.h"
 #include "secbool.h"
-
-#include "flash_common.h"
-#include "test_layout.h"
-
-uint32_t flash_sector_size(uint16_t sector);
-
-secbool flash_write_byte(uint16_t sector, uint32_t offset, uint8_t data);
-
-secbool flash_write_word(uint16_t sector, uint32_t offset, uint32_t data);
 
 #endif

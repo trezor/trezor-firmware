@@ -2,11 +2,12 @@
 #include <unistd.h>
 
 #include TREZOR_BOARD
-#include "boot_internal.h"
+#include "boot_args.h"
 #include "bootui.h"
 #include "common.h"
 #include "display.h"
 #include "flash.h"
+#include "flash_otp.h"
 #include "model.h"
 #include "rust_ui.h"
 #ifdef USE_OPTIGA
@@ -19,16 +20,12 @@
 
 uint8_t *FIRMWARE_START = 0;
 
-// Simulation of a boot command normally grabbed during reset processing
-boot_command_t g_boot_command = BOOT_COMMAND_NONE;
-// Simulation of a boot args normally sitting at the BOOT_ARGS region
-uint8_t g_boot_args[BOOT_ARGS_SIZE];
-
 void set_core_clock(int) {}
 
 int bootloader_main(void);
 
-bool sector_is_empty(const flash_area_t *area) {
+// assuming storage is single subarea
+bool storage_empty(const flash_area_t *area) {
   const uint8_t *storage = flash_area_get_address(area, 0, 0);
   size_t storage_size = flash_area_get_size(area);
   for (size_t i = 0; i < storage_size; i++) {
@@ -54,7 +51,7 @@ void usage(void) {
   printf("  -h  show this help\n");
 }
 
-bool load_firmware(const char *filename) {
+bool load_firmware(const char *filename, uint8_t *hash) {
   // read the first 6 kB of firmware file into a buffer
   FILE *file = fopen(filename, "rb");
   if (!file) {
@@ -86,7 +83,8 @@ bool load_firmware(const char *filename) {
   BLAKE2S_CTX ctx;
   blake2s_Init(&ctx, BLAKE2S_DIGEST_LENGTH);
   blake2s_Update(&ctx, buffer, vhdr.hdrlen + hdr->hdrlen);
-  blake2s_Final(&ctx, g_boot_args, BLAKE2S_DIGEST_LENGTH);
+  blake2s_Final(&ctx, hash, BLAKE2S_DIGEST_LENGTH);
+
   return true;
 }
 
@@ -114,10 +112,12 @@ __attribute__((noreturn)) void display_error_and_die(const char *message,
 
 __attribute__((noreturn)) int main(int argc, char **argv) {
   flash_init();
+  flash_otp_init();
+
   FIRMWARE_START = (uint8_t *)flash_area_get_address(&FIRMWARE_AREA, 0, 0);
 
   // simulate non-empty storage so that we know whether it was erased or not
-  if (sector_is_empty(&STORAGE_AREAS[0])) {
+  if (storage_empty(&STORAGE_AREAS[0])) {
     secbool ret = flash_area_write_word(&STORAGE_AREAS[0], 16, 0x12345678);
     (void)ret;
   }
@@ -130,7 +130,7 @@ __attribute__((noreturn)) int main(int argc, char **argv) {
   while ((opt = getopt(argc, argv, "hslec:b:f:")) != -1) {
     switch (opt) {
       case 's':
-        g_boot_command = BOOT_COMMAND_STOP_AND_WAIT;
+        bootargs_set(BOOT_COMMAND_STOP_AND_WAIT, NULL, 0);
         break;
       case 'e':
         display_error = true;
@@ -144,10 +144,11 @@ __attribute__((noreturn)) int main(int argc, char **argv) {
         bitcoin_only = atoi(optarg);
         break;
       case 'f':
-        g_boot_command = BOOT_COMMAND_INSTALL_UPGRADE;
-        if (!load_firmware(optarg)) {
+        uint8_t hash[BLAKE2S_DIGEST_LENGTH];
+        if (!load_firmware(optarg, hash)) {
           exit(1);
         }
+        bootargs_set(BOOT_COMMAND_INSTALL_UPGRADE, hash, sizeof(hash));
         break;
 #ifdef USE_OPTIGA
       case 'l':
@@ -197,7 +198,7 @@ void mpu_config_off(void) {}
 
 __attribute__((noreturn)) void jump_to(void *addr) {
   bool storage_is_erased =
-      sector_is_empty(&STORAGE_AREAS[0]) && sector_is_empty(&STORAGE_AREAS[1]);
+      storage_empty(&STORAGE_AREAS[0]) && storage_empty(&STORAGE_AREAS[1]);
 
   if (storage_is_erased) {
     printf("STORAGE WAS ERASED\n");

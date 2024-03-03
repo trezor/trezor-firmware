@@ -16,7 +16,7 @@ for arg in "$@"; do
     fi
 done
 
-MODELS=(T2T1 T2B1 D001)
+MODELS=(T2T1 T2B1 T3T1 D001 D002)
 
 for MODEL in ${MODELS[@]}; do
     cd $MODEL

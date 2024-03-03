@@ -22,50 +22,14 @@
 
 #include <stdint.h>
 #include <stdlib.h>
+
 #include "platform.h"
 #include "secbool.h"
 
-#define FLASH_OTP_NUM_BLOCKS 16
-#define FLASH_OTP_BLOCK_SIZE 32
+#include "flash_ll.h"
 
-/**
- * Flash driver interface is designed to abstract away differences between
- * various MCUs used in Trezor devices.
- *
- * Generally, flash memory is divided into sectors. On different MCUs, sectors
- * may have different sizes, and therefore, different number of sectors are used
- * for a given purpose. For example, on STM32F4, the sectors are relatively
- * large so we use single sector for Storage. On STM32U5, the sectors are
- * smaller, so we use multiple sectors for the Storage. Storage implementation
- * should not care about this, and should use flash_area_t interface to access
- * the flash memory.
- *
- * flash_area_t represents a location in flash memory. It may be contiguous, or
- * it may be composed of multiple non-contiguous subareas.
- *
- * flash_subarea_t represents a contiguous area in flash memory, specified by
- * first_sector and num_sectors.
- */
-
-#include "flash_common.h"
+#define FLASH_BURST_LENGTH (4 * 8)
 
 void flash_init(void);
-
-uint32_t flash_wait_and_clear_status_flags(void);
-
-// Erases the single sector in the designated flash area
-// The 'offset' parameter must indicate the relative sector offset within the
-// flash area If 'offset' is outside the bounds of the flash area,
-// 'bytes_erased' is set to 0 otherwise, 'bytes_erased' is set to the size of
-// the erased sector
-secbool flash_area_erase_partial(const flash_area_t *area, uint32_t offset,
-                                 uint32_t *bytes_erased);
-
-secbool __wur flash_otp_read(uint8_t block, uint8_t offset, uint8_t *data,
-                             uint8_t datalen);
-secbool __wur flash_otp_write(uint8_t block, uint8_t offset,
-                              const uint8_t *data, uint8_t datalen);
-secbool __wur flash_otp_lock(uint8_t block);
-secbool __wur flash_otp_is_locked(uint8_t block);
 
 #endif  // TREZORHAL_FLASH_H

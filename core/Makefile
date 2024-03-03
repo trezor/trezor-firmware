@@ -41,21 +41,91 @@ TEST_LANG ?= "en"
 OPENOCD_INTERFACE ?= stlink
 # OpenOCD transport default. Alternative: jtag
 OPENOCD_TRANSPORT ?= hla_swd
-OPENOCD = openocd -f interface/$(OPENOCD_INTERFACE).cfg -c "transport select $(OPENOCD_TRANSPORT)" -f target/stm32f4x.cfg
-OPENOCD_T1 = openocd -f interface/$(OPENOCD_INTERFACE).cfg -c "transport select $(OPENOCD_TRANSPORT)" -f target/stm32f2x.cfg
 
+ifeq ($(TREZOR_MODEL),$(filter $(TREZOR_MODEL),T R DISC1))
+OPENOCD_TARGET = target/stm32f4x.cfg
 BOARDLOADER_START   = 0x08000000
+BOARDLOADER_END     = 0x0800C000
 BOOTLOADER_START    = 0x08020000
-FIRMWARE_P1_START   = 0x08040000
+FIRMWARE_START   	= 0x08040000
 FIRMWARE_P2_START   = 0x08120000
 PRODTEST_START      = 0x08040000
-FIRMWARE_T1_START   = 0x08010000
-
+STORAGE_1_OFFSET	= 0x10000
+STORAGE_2_OFFSET	= 0x110000
+STORAGE_SIZE		= 0x10000
 BOARDLOADER_MAXSIZE = 49152
 BOOTLOADER_MAXSIZE  = 131072
 FIRMWARE_P1_MAXSIZE = 786432
 FIRMWARE_P2_MAXSIZE = 917504
 FIRMWARE_MAXSIZE    = 1703936
+BOARDLOADER_SECTOR_START = 0
+BOARDLOADER_SECTOR_END = 3
+BOOTLOADER_SECTOR_START = 5
+BOOTLOADER_SECTOR_END = 5
+FIRMWARE_SECTOR_START = 6
+FIRMWARE_SECTOR_END = 11
+FIRMWARE_P2_SECTOR_START = 17
+FIRMWARE_P2_SECTOR_END = 23
+STORAGE_1_SECTOR_START = 4
+STORAGE_1_SECTOR_END = 4
+STORAGE_2_SECTOR_START = 16
+STORAGE_2_SECTOR_END = 16
+
+else ifeq ($(TREZOR_MODEL),$(filter $(TREZOR_MODEL),T3T1))
+OPENOCD_TARGET = target/stm32u5x.cfg
+BOARDLOADER_START   = 0x0C004000
+BOARDLOADER_END     = 0x0C010000
+BOOTLOADER_START    = 0x0C010000
+FIRMWARE_START   	= 0x0C050000
+PRODTEST_START      = 0x0C050000
+STORAGE_1_OFFSET	= 0x30000
+STORAGE_2_OFFSET	= 0x50000
+STORAGE_SIZE		= 0x10000
+BOARDLOADER_MAXSIZE = 49152
+BOOTLOADER_MAXSIZE  = 131072
+FIRMWARE_MAXSIZE    = 1703936
+BOARDLOADER_SECTOR_START = 0x2
+BOARDLOADER_SECTOR_END = 0x7
+BOOTLOADER_SECTOR_START = 0x8
+BOOTLOADER_SECTOR_END = 0x17
+FIRMWARE_SECTOR_START = 0x28
+FIRMWARE_SECTOR_END = 0xF8
+STORAGE_1_SECTOR_START = 0x18
+STORAGE_1_SECTOR_END = 0x1F
+STORAGE_2_SECTOR_START = 0x20
+STORAGE_2_SECTOR_END = 0x27
+else ifeq ($(TREZOR_MODEL),$(filter $(TREZOR_MODEL),DISC2))
+OPENOCD_TARGET = target/stm32u5x.cfg
+BOARDLOADER_START   = 0x0C004000
+BOARDLOADER_END     = 0x0C010000
+BOOTLOADER_START    = 0x0C010000
+FIRMWARE_START   	= 0x0C050000
+PRODTEST_START      = 0x0C050000
+STORAGE_1_OFFSET	= 0x30000
+STORAGE_2_OFFSET	= 0x50000
+STORAGE_SIZE		= 0x10000
+BOARDLOADER_MAXSIZE = 49152
+BOOTLOADER_MAXSIZE  = 131072
+FIRMWARE_MAXSIZE    = 3735552
+BOARDLOADER_SECTOR_START = 0x2
+BOARDLOADER_SECTOR_END = 0x7
+BOOTLOADER_SECTOR_START = 0x8
+BOOTLOADER_SECTOR_END = 0x17
+FIRMWARE_SECTOR_START = 0x28
+FIRMWARE_SECTOR_END = 0x1F8
+STORAGE_1_SECTOR_START = 0x18
+STORAGE_1_SECTOR_END = 0x1F
+STORAGE_2_SECTOR_START = 0x20
+STORAGE_2_SECTOR_END = 0x27
+else ifeq ($(TREZOR_MODEL), 1)
+OPENOCD_TARGET = target/stm32f2x.cfg
+FIRMWARE_START   	= 0x08010000
+else
+$(error Unknown TREZOR_MODEL: $(TREZOR_MODEL))
+endif
+
+
+OPENOCD = openocd -f interface/$(OPENOCD_INTERFACE).cfg -c "transport select $(OPENOCD_TRANSPORT)" -f $(OPENOCD_TARGET)
 
 CFLAGS += -DSCM_REVISION='\"$(shell git rev-parse HEAD | sed 's:\(..\):\\x\1:g')\"'
 
@@ -289,10 +359,12 @@ flash_prodtest: $(PRODTEST_BUILD_DIR)/prodtest.bin ## flash prodtest using OpenO
 	$(OPENOCD) -c "init; reset halt; flash write_image erase $< $(PRODTEST_START); exit"
 
 flash_firmware: $(FIRMWARE_BUILD_DIR)/firmware.bin ## flash firmware using OpenOCD
-	$(OPENOCD) -c "init; reset halt; flash write_image erase $<.p1 $(FIRMWARE_P1_START); flash write_image erase $<.p2 $(FIRMWARE_P2_START); exit"
+ifdef FIRMWARE_P2_START
+	$(OPENOCD) -c "init; reset halt; flash write_image erase $<.p1 $(FIRMWARE_START); flash write_image erase $<.p2 $(FIRMWARE_P2_START); exit"
 
-flash_firmware_t1: $(FIRMWARE_BUILD_DIR)/firmware.bin ## flash T1 core port on T1 using OpenOCD
-	$(OPENOCD_T1) -c "init; reset halt; flash write_image erase $< $(FIRMWARE_T1_START); exit"
+else
+	$(OPENOCD) -c "init; reset halt; flash write_image erase $< $(FIRMWARE_START); exit"
+endif
 
 flash_combine: $(PRODTEST_BUILD_DIR)/combined.bin ## flash combined using OpenOCD
 	$(OPENOCD) -c "init; reset halt; flash write_image erase $< $(BOARDLOADER_START); exit"
@@ -300,11 +372,22 @@ flash_combine: $(PRODTEST_BUILD_DIR)/combined.bin ## flash combined using OpenOC
 flash_erase: ## erase all sectors in flash bank 0
 	$(OPENOCD) -c "init; reset halt; flash info 0; flash erase_sector 0 0 last; flash erase_check 0; exit"
 
+flash_erase_bootloader: ## erase bootloader
+	$(OPENOCD) -c "init; reset halt; flash info 0; flash erase_sector 0 $(BOOTLOADER_SECTOR_START) $(BOOTLOADER_SECTOR_END); exit"
+
+flash_erase_firmware: ## erase bootloader
+ifdef FIRMWARE_P2_START
+	$(OPENOCD) -c "init; reset halt; flash info 0; flash erase_sector 0 $(FIRMWARE_SECTOR_START) $(FIRMWARE_SECTOR_END);  flash erase_sector 0 $(FIRMWARE_P2_SECTOR_START) $(FIRMWARE_P2_SECTOR_END); exit"
+
+else
+	$(OPENOCD) -c "init; reset halt; flash info 0; flash erase_sector 0 $(FIRMWARE_SECTOR_START) $(FIRMWARE_SECTOR_END); exit"
+endif
+
 flash_read_storage: ## read storage sectors from flash
-	$(OPENOCD) -c "init; flash read_bank 0 storage1.data 0x10000 65536; flash read_bank 0 storage2.data 0x110000 65536; exit"
+	$(OPENOCD) -c "init; reset halt; flash read_bank 0 storage1.data $(STORAGE_1_OFFSET) $(STORAGE_SIZE); flash read_bank 0 storage2.data $(STORAGE_2_OFFSET) $(STORAGE_SIZE); exit"
 
 flash_erase_storage: ## erase storage sectors from flash
-	$(OPENOCD) -c "init; flash erase_sector 0 4 4; flash erase_sector 0 16 16; exit"
+	$(OPENOCD) -c "init; reset halt; flash erase_sector 0 $(STORAGE_1_SECTOR_START) $(STORAGE_1_SECTOR_END); flash erase_sector 0 $(STORAGE_2_SECTOR_START) $(STORAGE_2_SECTOR_END); exit"
 
 flash_bootloader_jlink: $(BOOTLOADER_BUILD_DIR)/bootloader.bin ## flash bootloader using JLink
 	JLinkExe -nogui 1 -commanderscript embed/bootloader/bootloader_flash.jlink
@@ -367,7 +450,11 @@ combine: ## combine boardloader + bootloader + prodtest into one combined image
 		$(BOARDLOADER_BUILD_DIR)/boardloader.bin \
 		$(BOOTLOADER_BUILD_DIR)/bootloader.bin \
 		$(PRODTEST_BUILD_DIR)/prodtest.bin \
-		$(PRODTEST_BUILD_DIR)/combined.bin
+		$(PRODTEST_BUILD_DIR)/combined.bin \
+		$(BOARDLOADER_START) \
+		$(BOARDLOADER_END) \
+		$(BOOTLOADER_START) \
+		$(PRODTEST_START)
 
 upload: ## upload firmware using trezorctl
 	trezorctl firmware_update -s -f $(FIRMWARE_BUILD_DIR)/firmware.bin

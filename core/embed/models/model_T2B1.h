@@ -19,10 +19,12 @@
   (const uint8_t *)"\x07\xc8\x51\x34\x94\x6b\xf8\x9f\xa1\x9b\xdc\x2c\x5e\x5f\xf9\xce\x01\x29\x65\x08\xee\x08\x63\xd0\xff\x6d\x63\x33\x1d\x1a\x25\x16",
 
 #define BOARDLOADER_START 0x08000000
+#define BOARD_CAPABILITIES_ADDR 0x0800BF00
 #define BOOTLOADER_START 0x08020000
 #define FIRMWARE_START 0x08040000
 
 #define IMAGE_CHUNK_SIZE (128 * 1024)
+#define IMAGE_HASH_BLAKE2S
 #define BOOTLOADER_IMAGE_MAXSIZE (128 * 1024 * 1)  // 128 KB
 #define FIRMWARE_IMAGE_MAXSIZE (128 * 1024 * 13)   // 1664 KB
 #define NORCOW_SECTOR_SIZE (64 * 1024)

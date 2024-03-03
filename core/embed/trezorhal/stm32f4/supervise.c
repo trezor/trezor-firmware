@@ -8,26 +8,16 @@
 
 #ifdef ARM_USER_MODE
 
-// Saves extra parameters for the bootloader
-static void _copy_boot_args(const void *args, size_t args_size) {
-  // symbols imported from the linker script
-  extern uint8_t boot_args_start;
-  extern uint8_t boot_args_end;
-
-  uint8_t *p = &boot_args_start;
-
-  if (args != NULL && args_size > 0) {
-    size_t max_size = &boot_args_end - &boot_args_start;
-    size_t copy_size = MIN(args_size, max_size);
-    memcpy(p, args, copy_size);
-    p += args_size;
-  }
-
-  if (p < &boot_args_end) {
-    memset(p, 0, &boot_args_end - p);
-  }
+#ifdef STM32U5
+extern uint32_t g_boot_command;
+__attribute__((noreturn)) static void _reboot_to_bootloader(
+    boot_command_t boot_command) {
+  g_boot_command = boot_command;
+  __disable_irq();
+  delete_secrets();
+  NVIC_SystemReset();
 }
-
+#else
 __attribute__((noreturn)) static void _reboot_to_bootloader(
     boot_command_t boot_command) {
   mpu_config_bootloader();
@@ -35,10 +25,10 @@ __attribute__((noreturn)) static void _reboot_to_bootloader(
   for (;;)
     ;
 }
+#endif
 
-void svc_reboot_to_bootloader(boot_command_t boot_command, const void *args,
-                              size_t args_size) {
-  _copy_boot_args(args, args_size);
+void svc_reboot_to_bootloader(void) {
+  boot_command_t boot_command = bootargs_get_command();
   if (is_mode_unprivileged() && !is_mode_handler()) {
     register uint32_t r0 __asm__("r0") = boot_command;
     __asm__ __volatile__("svc %0" ::"i"(SVC_REBOOT_TO_BOOTLOADER), "r"(r0)

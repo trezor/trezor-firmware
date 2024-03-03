@@ -20,7 +20,7 @@ if TREZOR_MODEL in ('1', ):
              )
     Return()
 
-FEATURES_WANTED = ["input", "rgb_led", "consumption_mask", "usb", "optiga"]
+FEATURES_WANTED = ["input", "rgb_led", "consumption_mask", "usb", "optiga", "dma2d"]
 
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
@@ -36,11 +36,11 @@ if TREZOR_MODEL in ('R', ):
     FONT_BOLD='Font_PixelOperator_Bold_8'
     FONT_MONO='Font_PixelOperator_Regular_8'
     FONT_BIG=None
-elif TREZOR_MODEL in ('T', 'DISC1'):
+elif TREZOR_MODEL in ('T', 'T3T1', 'DISC1', 'DISC2'):
     FONT_NORMAL='Font_TTHoves_Regular_21'
-    FONT_DEMIBOLD=None
+    FONT_DEMIBOLD='Font_TTHoves_Regular_21'
     FONT_BOLD='Font_TTHoves_Bold_17'
-    FONT_MONO=None
+    FONT_MONO='Font_TTHoves_Regular_21'
     FONT_BIG=None
 
 # modtrezorcrypto
@@ -71,6 +71,7 @@ SOURCE_MOD += [
     'vendor/trezor-crypto/memzero.c',
     'vendor/trezor-crypto/rand.c',
     'vendor/trezor-crypto/sha2.c',
+    'vendor/trezor-storage/flash_area.c',
 ]
 
 # modtrezorui
@@ -102,22 +103,12 @@ SOURCE_MOD += [
     'vendor/micropython/lib/uzlib/adler32.c',
     'vendor/micropython/lib/uzlib/crc32.c',
     'vendor/micropython/lib/uzlib/tinflate.c',
-    'vendor/trezor-storage/flash_common.c',
 ]
 
 SOURCE_NANOPB = [
     'vendor/nanopb/pb_common.c',
     'vendor/nanopb/pb_decode.c',
     'vendor/nanopb/pb_encode.c',
-]
-
-SOURCE_BOOTLOADER = [
-    'embed/bootloader/startup.s',
-    'embed/bootloader/header.S',
-    'embed/bootloader/bootui.c',
-    'embed/bootloader/main.c',
-    'embed/bootloader/messages.c',
-    'embed/bootloader/protob/messages.pb.c',
 ]
 
 # fonts
@@ -127,9 +118,26 @@ tools.add_font('DEMIBOLD', FONT_DEMIBOLD, CPPDEFINES_MOD, SOURCE_MOD)
 tools.add_font('MONO', FONT_MONO, CPPDEFINES_MOD, SOURCE_MOD)
 tools.add_font('BIG', FONT_BIG, CPPDEFINES_MOD, SOURCE_MOD)
 
-env = Environment(ENV=os.environ, CFLAGS=f"{ARGUMENTS.get('CFLAGS', '')} -DPRODUCTION={int(PRODUCTION)} -DBOOTLOADER_QA={int(BOOTLOADER_QA)}")
+env = Environment(
+    ENV=os.environ,
+    CFLAGS=f"{ARGUMENTS.get('CFLAGS', '')} -DPRODUCTION={int(PRODUCTION)} -DBOOTLOADER_QA={int(BOOTLOADER_QA)}",
+    CPPDEFINES_IMPLICIT=[]
+    )
 
 FEATURES_AVAILABLE = tools.configure_board(TREZOR_MODEL, FEATURES_WANTED, env, CPPDEFINES_HAL, SOURCE_HAL, PATH_HAL)
+
+FILE_SUFFIX= env.get('ENV')['SUFFIX']
+LINKER_SCRIPT_SUFFIX= env.get('ENV')['LINKER_SCRIPT']
+
+SOURCE_BOOTLOADER = [
+    f'embed/bootloader/startup_{FILE_SUFFIX}.s',
+    'embed/bootloader/header.S',
+    'embed/bootloader/bootui.c',
+    'embed/bootloader/main.c',
+    'embed/bootloader/messages.c',
+    'embed/bootloader/protob/messages.pb.c',
+]
+
 
 env.Replace(
     CP='cp',
@@ -157,7 +165,7 @@ env.Replace(
     '-fstack-protector-all '
     +  env.get('ENV')["CPU_CCFLAGS"] + CCFLAGS_MOD,
     CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB',
-    LINKFLAGS='-T embed/bootloader/memory.ld -Wl,--gc-sections -Wl,-Map=build/bootloader/bootloader.map -Wl,--warn-common -Wl,--print-memory-usage',
+    LINKFLAGS=f'-T embed/bootloader/memory_{LINKER_SCRIPT_SUFFIX}.ld -Wl,--gc-sections -Wl,-Map=build/bootloader/bootloader.map -Wl,--warn-common -Wl,--print-memory-usage',
     CPPPATH=[
         'embed/rust',
         'embed/bootloader',
@@ -167,7 +175,6 @@ env.Replace(
         'embed/models',
         'embed/trezorhal',
         'embed/extmod/modtrezorui',
-        'vendor/micropython/lib/cmsis/inc',
         'vendor/nanopb',
     ] + CPPPATH_MOD + PATH_HAL,
     CPPDEFINES=[
@@ -188,7 +195,7 @@ env.Replace(
 
 env.Replace(
     ALLSOURCES=SOURCE_MOD + SOURCE_BOOTLOADER + SOURCE_NANOPB + SOURCE_HAL,
-    ALLDEFS=tools.get_defs_for_cmake(env['CPPDEFINES'] + [f"PRODUCTION={int(PRODUCTION)}", f"BOOTLOADER_QA={int(BOOTLOADER_QA)}"]))
+    ALLDEFS=tools.get_defs_for_cmake(env['CPPDEFINES'] + env['CPPDEFINES_IMPLICIT'] + [f"PRODUCTION={int(PRODUCTION)}", f"BOOTLOADER_QA={int(BOOTLOADER_QA)}"]))
 
 cmake_gen = env.Command(
     target='CMakeLists.txt',
@@ -280,7 +287,7 @@ program_bin = env.Command(
     target='bootloader.bin',
     source=program_elf,
     action=[
-        '$OBJCOPY -O binary -j .header -j .flash -j .data $SOURCE $TARGET',
+        '$OBJCOPY -O binary -j .header -j .flash -j .data -j .sensitive $SOURCE $TARGET',
         '$HEADERTOOL $TARGET ' + ('-D' if not PRODUCTION else ''),
         '$CP $TARGET ' + BINARY_NAME,
     ], )

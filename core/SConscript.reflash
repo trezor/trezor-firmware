@@ -6,7 +6,7 @@ import tools
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 
-if TREZOR_MODEL in ('DISC1', ):
+if TREZOR_MODEL in ('DISC1', 'DISC2'):
     # skip reflash build
     env = Environment()
     def build_reflash(target,source,env):
@@ -33,7 +33,7 @@ if TREZOR_MODEL in ('1', 'R'):
     FONT_BOLD='Font_PixelOperator_Bold_8'
     FONT_MONO=None
     FONT_BIG=None
-elif TREZOR_MODEL in ('T', ):
+elif TREZOR_MODEL in ('T', 'T3T1'):
     FONT_NORMAL=None
     FONT_DEMIBOLD=None
     FONT_BOLD='Font_Roboto_Bold_20'
@@ -65,13 +65,7 @@ SOURCE_MOD += [
     'vendor/micropython/lib/uzlib/adler32.c',
     'vendor/micropython/lib/uzlib/crc32.c',
     'vendor/micropython/lib/uzlib/tinflate.c',
-    'vendor/trezor-storage/flash_common.c',
-]
-
-SOURCE_REFLASH = [
-    'embed/reflash/startup.s',
-    'embed/reflash/header.S',
-    'embed/reflash/main.c',
+    'vendor/trezor-storage/flash_area.c',
 ]
 
 # fonts
@@ -81,9 +75,23 @@ tools.add_font('DEMIBOLD', FONT_DEMIBOLD, CPPDEFINES_MOD, SOURCE_MOD)
 tools.add_font('MONO', FONT_MONO, CPPDEFINES_MOD, SOURCE_MOD)
 tools.add_font('BIG', FONT_BIG, CPPDEFINES_MOD, SOURCE_MOD)
 
-env = Environment(ENV=os.environ, CFLAGS='%s -DPRODUCTION=%s' % (ARGUMENTS.get('CFLAGS', ''), ARGUMENTS.get('PRODUCTION', '0')), CONSTRAINTS=["limited_util_s"])
+env = Environment(
+    ENV=os.environ,
+    CFLAGS='%s -DPRODUCTION=%s' % (ARGUMENTS.get('CFLAGS', ''), ARGUMENTS.get('PRODUCTION', '0')),
+    CONSTRAINTS=["limited_util_s"],
+    CPPDEFINES_IMPLICIT=[]
+    )
 
 FEATURES_AVAILABLE = tools.configure_board(TREZOR_MODEL, FEATURES_WANTED, env, CPPDEFINES_HAL, SOURCE_HAL, PATH_HAL)
+
+FILE_SUFFIX= env.get('ENV')['SUFFIX']
+LINKER_SCRIPT_SUFFIX= env.get('ENV')['LINKER_SCRIPT']
+
+SOURCE_REFLASH = [
+    f'embed/reflash/startup_{FILE_SUFFIX}.s',
+    'embed/reflash/header.S',
+    'embed/reflash/main.c',
+]
 
 env.Replace(
     CP='cp',
@@ -111,14 +119,13 @@ env.Replace(
     '-fstack-protector-all '
     +  env.get('ENV')["CPU_CCFLAGS"] + CCFLAGS_MOD,
     CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB',
-    LINKFLAGS='-T embed/reflash/memory.ld -Wl,--gc-sections -Wl,-Map=build/reflash/reflash.map -Wl,--warn-common',
+    LINKFLAGS=f'-T embed/reflash/memory_{LINKER_SCRIPT_SUFFIX}.ld -Wl,--gc-sections -Wl,-Map=build/reflash/reflash.map -Wl,--warn-common',
     CPPPATH=[
         'embed/reflash',
         'embed/lib',
         'embed/models',
         'embed/trezorhal',
         'embed/extmod/modtrezorui',
-        'vendor/micropython/lib/cmsis/inc',
     ] + CPPPATH_MOD + PATH_HAL,
     CPPDEFINES=[
         'TREZOR_MODEL_'+TREZOR_MODEL,
@@ -134,7 +141,7 @@ env.Replace(
 
 env.Replace(
     ALLSOURCES=SOURCE_MOD + SOURCE_REFLASH + SOURCE_HAL,
-    ALLDEFS=tools.get_defs_for_cmake(env['CPPDEFINES']))
+    ALLDEFS=tools.get_defs_for_cmake(env['CPPDEFINES'] + env['CPPDEFINES_IMPLICIT']))
 
 cmake_gen = env.Command(
     target='CMakeLists.txt',
@@ -183,7 +190,7 @@ program_bin = env.Command(
     target='reflash.bin',
     source=program_elf,
     action=[
-        '$OBJCOPY -O binary -j .vendorheader -j .header -j .flash -j .data $SOURCE $TARGET',
+        '$OBJCOPY -O binary -j .vendorheader -j .header -j .flash -j .data -j .sensitive $SOURCE $TARGET',
         '$HEADERTOOL $TARGET ' + ('-D' if ARGUMENTS.get('PRODUCTION', '0') == '0' else ''),
         '$CP $TARGET ' + BINARY_NAME,
     ], )

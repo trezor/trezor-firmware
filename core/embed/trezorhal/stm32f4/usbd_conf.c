@@ -83,6 +83,7 @@ void HAL_PCD_MspInit(PCD_HandleTypeDef *hpcd)
 {
   GPIO_InitTypeDef  GPIO_InitStruct;
 
+#ifdef USB_OTG_FS
   if(hpcd->Instance == USB_OTG_FS)
   {
     /* Configure USB FS GPIOs */
@@ -93,10 +94,14 @@ void HAL_PCD_MspInit(PCD_HandleTypeDef *hpcd)
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+#ifdef STM32U5
+    GPIO_InitStruct.Alternate = GPIO_AF10_USB;
+#else
     GPIO_InitStruct.Alternate = GPIO_AF10_OTG_FS;
+#endif
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-	/* Configure VBUS Pin */
+    /* Configure VBUS Pin */
 #if defined(MICROPY_HW_USB_VBUS_DETECT_PIN)
     // USB VBUS detect pin is always A9
     GPIO_InitStruct.Pin = GPIO_PIN_9;
@@ -118,15 +123,24 @@ void HAL_PCD_MspInit(PCD_HandleTypeDef *hpcd)
     /* Enable USB FS Clocks */
     __HAL_RCC_USB_OTG_FS_CLK_ENABLE();
 
+#ifdef STM32U5
+
+    /* Enable VDDUSB */
+    __HAL_RCC_PWR_CLK_ENABLE();
+    HAL_PWREx_EnableVddUSB();
+    __HAL_RCC_PWR_CLK_DISABLE();
+
+#endif
+
     /* Set USBFS Interrupt priority */
     svc_setpriority(OTG_FS_IRQn, IRQ_PRI_OTG_FS);
 
     /* Enable USBFS Interrupt */
     svc_enableIRQ(OTG_FS_IRQn);
   }
+#endif
 #if defined(USE_USB_HS)
-  else if(hpcd->Instance == USB_OTG_HS)
-  {
+  if (hpcd->Instance == USB_OTG_HS) {
 #if defined(USE_USB_HS_IN_FS)
 
     /* Configure USB FS GPIOs */
@@ -168,7 +182,53 @@ void HAL_PCD_MspInit(PCD_HandleTypeDef *hpcd)
     /* Enable USB HS Clocks */
     __USB_OTG_HS_CLK_ENABLE();
 
-#else // !USE_USB_HS_IN_FS
+#elif defined USE_USB_HS_INTERNAL_PHY && defined STM32U5
+
+    /* Configure DM and DP PINs */
+    __HAL_RCC_GPIOA_CLK_ENABLE();
+
+    GPIO_InitStruct.Pin       = (GPIO_PIN_11 | GPIO_PIN_12);
+    GPIO_InitStruct.Mode      = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull      = GPIO_NOPULL;
+    GPIO_InitStruct.Speed     = GPIO_SPEED_FREQ_HIGH;
+    GPIO_InitStruct.Alternate = GPIO_AF10_USB_HS;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+    RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
+
+    __HAL_RCC_SYSCFG_CLK_ENABLE();
+
+
+    /** Initializes the peripherals clock
+    */
+    PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USBPHY;
+    PeriphClkInit.UsbPhyClockSelection = RCC_USBPHYCLKSOURCE_HSE;
+    HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit);
+
+    /** Set the OTG PHY reference clock selection
+    */
+    HAL_SYSCFG_SetOTGPHYReferenceClockSelection(SYSCFG_OTG_HS_PHY_CLK_SELECT_1);
+
+    /* Peripheral clock enable */
+    __HAL_RCC_USB_OTG_HS_CLK_ENABLE();
+    __HAL_RCC_USBPHYC_CLK_ENABLE();
+
+    /* Enable VDDUSB */
+    __HAL_RCC_PWR_CLK_ENABLE();
+    HAL_PWREx_EnableVddUSB();
+
+    /*configure VOSR register of USB*/
+    HAL_PWREx_EnableUSBHSTranceiverSupply();
+    __HAL_RCC_PWR_CLK_DISABLE();
+
+
+    /*Configuring the SYSCFG registers OTG_HS PHY*/
+    /*OTG_HS PHY enable*/
+    HAL_SYSCFG_EnableOTGPHY(SYSCFG_OTG_HS_PHY_ENABLE);
+
+
+
+#else // !USE_USB_HS_IN_FS && !USE_USB_HS_INTERNAL_PHY
 
     /* Configure USB HS GPIOs */
     __HAL_RCC_GPIOA_CLK_ENABLE();
@@ -242,20 +302,22 @@ void HAL_PCD_MspInit(PCD_HandleTypeDef *hpcd)
   */
 void HAL_PCD_MspDeInit(PCD_HandleTypeDef *hpcd)
 {
+#ifdef USB_OTG_FS
   if(hpcd->Instance == USB_OTG_FS)
   {
     /* Disable USB FS Clocks */
     __HAL_RCC_USB_OTG_FS_CLK_DISABLE();
     __HAL_RCC_SYSCFG_CLK_DISABLE();
   }
-  #if defined(USE_USB_HS)
-  else if(hpcd->Instance == USB_OTG_HS)
+#endif
+#if defined(USE_USB_HS)
+  if(hpcd->Instance == USB_OTG_HS)
   {
     /* Disable USB FS Clocks */
     __HAL_RCC_USB_OTG_HS_CLK_DISABLE();
     __HAL_RCC_SYSCFG_CLK_DISABLE();
   }
-  #endif
+#endif
 }
 
 /*******************************************************************************
@@ -437,6 +499,44 @@ USBD_StatusTypeDef  USBD_LL_Init (USBD_HandleTypeDef *pdev)
     HAL_PCDEx_SetRxFiFo(&pcd_fs_handle, receive_fifo_zie);
     for (uint16_t i = 0; i < 4; i++) {
       HAL_PCDEx_SetTxFiFo(&pcd_fs_handle, i, transmit_fifo_size);
+    }
+  }
+#endif
+#if defined(USE_USB_HS) && !defined(USE_USB_HS_IN_FS) && defined STM32U5
+  // Trezor T uses the OTG_HS peripheral
+  if (pdev->id == USB_PHY_HS_ID) {
+    /* Set LL Driver parameters */
+          pcd_hs_handle.Instance = USB_OTG_HS;
+    pcd_hs_handle.Init.dev_endpoints = 6;
+    pcd_hs_handle.Init.use_dedicated_ep1 = 0;
+    pcd_hs_handle.Init.ep0_mps = 0x40;
+    pcd_hs_handle.Init.dma_enable = 0;
+    pcd_hs_handle.Init.low_power_enable = 0;
+    pcd_hs_handle.Init.phy_itface = USB_OTG_HS_EMBEDDED_PHY;
+    pcd_hs_handle.Init.Sof_enable = 1;
+    pcd_hs_handle.Init.speed = PCD_SPEED_HIGH;
+    // Trezor T hardware has PB13 connected to HS_VBUS
+    // but we leave vbus sensing disabled because
+    // we don't use it for anything. the device is a bus powered peripheral.
+    pcd_hs_handle.Init.vbus_sensing_enable = 0;
+    /* Link The driver to the stack */
+    pcd_hs_handle.pData = pdev;
+    pdev->pData = &pcd_hs_handle;
+    /* Initialize LL Driver */
+    HAL_PCD_Init(&pcd_hs_handle);
+    // the OTG_HS peripheral has a dedicated 4KiB data RAM from which we
+    // allocate an area for each transmit FIFO and the single shared receive FIFO.
+    // the configuration is in terms of 32-bit words, so we have 1024 32-bit words
+    // in this dedicated 4KiB data RAM to use. see section 35.10.1 and 34.11 in RM0090.
+    // the reference to section 34.11 is for the OTG_FS device, but the FIFO architecture
+    // diagram seems to apply similarly to the FIFO in the OTG_HS that we are using.
+    // USB packets that we deal with are 64 bytes in size which equates to 16 32-bit words.
+    // we size the transmit FIFO's equally and give the rest of the space to the receive FIFO.
+    const uint16_t transmit_fifo_size = 144; // 144 = 16 * 9 meaning that we give 9 packets of space for each transmit fifo
+    const uint16_t receive_fifo_zie = 160; // 160 = 1024 - 6 * 144 section 35.10.1 details what some of this is used for besides storing packets
+    HAL_PCDEx_SetRxFiFo(&pcd_hs_handle, receive_fifo_zie);
+    for (uint16_t i = 0; i < 6; i++) {
+      HAL_PCDEx_SetTxFiFo(&pcd_hs_handle, i, transmit_fifo_size);
     }
   }
 #endif
@@ -676,7 +776,11 @@ void  USBD_LL_Delay(uint32_t Delay)
   * @retval None
   */
 #if defined(USE_USB_FS)
+#ifdef STM32U5
+void OTG_HS_IRQHandler(void) {
+#else
 void OTG_FS_IRQHandler(void) {
+#endif
     SEGGER_SYSVIEW_RecordEnterISR();
     IRQ_ENTER(OTG_FS_IRQn);
     if (pcd_fs_handle.Instance) {
@@ -698,6 +802,7 @@ void OTG_HS_IRQHandler(void) {
 }
 #endif
 
+#ifndef STM32U5
 /**
   * @brief  This function handles USB OTG Common FS/HS Wakeup functions.
   * @param  *pcd_handle for FS or HS
@@ -762,6 +867,7 @@ void OTG_HS_WKUP_IRQHandler(void) {
     __HAL_USB_HS_EXTI_CLEAR_FLAG();
     IRQ_EXIT(OTG_HS_WKUP_IRQn);
 }
+#endif
 #endif
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

@@ -20,11 +20,15 @@
 #include <string.h>
 #include <sys/types.h>
 
-#include "boot_internal.h"
+#include "boot_args.h"
 #include "common.h"
 #include "display.h"
+#include "display_utils.h"
+#include "fault_handlers.h"
 #include "flash.h"
+#include "flash_otp.h"
 #include "image.h"
+#include "lowlevel.h"
 #include "messages.pb.h"
 #include "random_delays.h"
 #include "secbool.h"
@@ -51,6 +55,10 @@
 #ifdef USE_RGB_LED
 #include "rgb_led.h"
 #endif
+#ifdef USE_HASH_PROCESSOR
+#include "hash_processor.h"
+#endif
+
 #include "model.h"
 #include "usb.h"
 #include "version.h"
@@ -77,9 +85,10 @@ typedef enum {
   RETURN_TO_MENU = 0x55667788,
 } usb_result_t;
 
-volatile secbool dont_optimize_out_true = sectrue;
 void failed_jump_to_firmware(void);
-volatile void (*firmware_jump_fn)(void) = failed_jump_to_firmware;
+
+SENSITIVE volatile secbool dont_optimize_out_true = sectrue;
+SENSITIVE volatile void (*firmware_jump_fn)(void) = failed_jump_to_firmware;
 
 static void usb_init_all(secbool usb21_landing) {
   usb_dev_info_t dev_info = {
@@ -207,14 +216,13 @@ static usb_result_t bootloader_usb_loop(const vendor_header *const vhdr,
           hal_delay(1000);
           usb_stop();
           usb_deinit();
-          ui_screen_boot_empty(true);
           return CONTINUE_TO_FIRMWARE;
         }
         break;
       case MessageType_MessageType_GetFeatures:
         process_msg_GetFeatures(USB_IFACE_NUM, msg_size, buf, vhdr, hdr);
         break;
-#ifdef USE_OPTIGA
+#if defined USE_OPTIGA && !defined STM32U5
       case MessageType_MessageType_UnlockBootloader:
         response = ui_screen_unlock_bootloader_confirm();
         if (INPUT_CANCEL == response) {
@@ -258,7 +266,7 @@ static secbool check_vendor_header_lock(const vendor_header *const vhdr) {
 
 // protection against bootloader downgrade
 
-#if PRODUCTION
+#if PRODUCTION && !defined STM32U5
 
 static void check_bootloader_version(void) {
   uint8_t bits[FLASH_OTP_BLOCK_SIZE];
@@ -317,11 +325,32 @@ void real_jump_to_firmware(void) {
                               &FIRMWARE_AREA),
          "Firmware is corrupted");
 
+#ifdef STM32U5
+  secret_bhk_provision();
+  secret_bhk_lock();
 #ifdef USE_OPTIGA
+  if (sectrue == secret_optiga_present()) {
+    secret_optiga_backup();
+    secret_hide();
+  } else {
+    secret_optiga_hide();
+  }
+#else
+  secret_hide();
+#endif
+#endif
+
+#ifdef USE_OPTIGA
+#ifdef STM32U5
+  if ((vhdr.vtrust & VTRUST_SECRET) != 0) {
+    secret_optiga_hide();
+  }
+#else
   if (((vhdr.vtrust & VTRUST_SECRET) != 0) && (sectrue != secret_wiped())) {
     ui_screen_install_restricted();
     trezor_shutdown();
   }
+#endif
 #endif
 
   // if all VTRUST flags are unset = ultimate trust => skip the procedure
@@ -357,6 +386,18 @@ void real_jump_to_firmware(void) {
   jump_to(FIRMWARE_START + vhdr.hdrlen + IMAGE_HEADER_SIZE);
 }
 
+#ifdef STM32U5
+__attribute__((noreturn)) void jump_to_fw_through_reset(void) {
+  display_fade(display_backlight(-1), 0, 200);
+
+  __disable_irq();
+  delete_secrets();
+  NVIC_SystemReset();
+  for (;;)
+    ;
+}
+#endif
+
 #ifndef TREZOR_EMULATOR
 int main(void) {
 #else
@@ -365,7 +406,38 @@ int bootloader_main(void) {
   secbool stay_in_bootloader = secfalse;
 
   random_delays_init();
-  // display_init_seq();
+
+#if defined TREZOR_MODEL_T
+  set_core_clock(CLOCK_180_MHZ);
+#endif
+
+#ifdef STM32U5
+  if (sectrue != flash_configure_sec_area_ob()) {
+#ifdef STM32U5
+    secret_bhk_regenerate();
+#endif
+
+    const secbool r =
+        flash_area_erase_bulk(STORAGE_AREAS, STORAGE_AREAS_COUNT, NULL);
+    (void)r;
+    __disable_irq();
+    HAL_NVIC_SystemReset();
+  }
+#endif
+
+#ifdef USE_HASH_PROCESSOR
+  hash_processor_init();
+#endif
+
+#ifdef USE_I2C
+  i2c_init();
+#endif
+
+#ifdef USE_TOUCH
+  touch_power_on();
+  touch_init();
+#endif
+
 #ifdef USE_DMA2D
   dma2d_init();
 #endif
@@ -375,6 +447,8 @@ int bootloader_main(void) {
   ui_screen_boot_empty(false);
 
   mpu_config_bootloader();
+
+  fault_handlers_init();
 
 #ifdef TREZOR_EMULATOR
   // wait a bit so that the empty lock icon is visible
@@ -428,22 +502,8 @@ int bootloader_main(void) {
     firmware_present_backup = firmware_present;
   }
 
-#if defined TREZOR_MODEL_T
-  set_core_clock(CLOCK_180_MHZ);
-  display_set_little_endian();
-#endif
-
-#ifdef USE_I2C
-  i2c_init();
-#endif
-
 #ifdef USE_OPTIGA
   optiga_hal_init();
-#endif
-
-#ifdef USE_TOUCH
-  touch_power_on();
-  touch_init();
 #endif
 
 #ifdef USE_BUTTON
@@ -460,11 +520,12 @@ int bootloader_main(void) {
 
   unit_variant_init();
 
-#if PRODUCTION
+#if PRODUCTION && !defined STM32U5
+  // for STM32U5, this check is moved to boardloader
   check_bootloader_version();
 #endif
 
-  switch (g_boot_command) {
+  switch (bootargs_get_command()) {
     case BOOT_COMMAND_STOP_AND_WAIT:
       // firmare requested to stay in bootloader
       stay_in_bootloader = sectrue;
@@ -487,7 +548,8 @@ int bootloader_main(void) {
   uint32_t touched = 0;
 #ifdef USE_TOUCH
   if (firmware_present == sectrue && stay_in_bootloader != sectrue) {
-    for (int i = 0; i < 100; i++) {
+    touch_wait_until_ready();
+    for (int i = 0; i < 10; i++) {
       touched = touch_is_detected() | touch_read();
       if (touched) {
         break;
@@ -495,7 +557,7 @@ int bootloader_main(void) {
 #ifdef TREZOR_EMULATOR
       hal_delay(25);
 #else
-      hal_delay(1);
+      hal_delay_us(1000);
 #endif
     }
   }
@@ -529,6 +591,9 @@ int bootloader_main(void) {
     } else {
       screen = SCREEN_WELCOME;
 
+#ifdef STM32U5
+      secret_bhk_regenerate();
+#endif
       // erase storage
       ensure(flash_area_erase_bulk(STORAGE_AREAS, STORAGE_AREAS_COUNT, NULL),
              NULL);
@@ -583,7 +648,9 @@ int bootloader_main(void) {
             screen = SCREEN_INTRO;
           }
           if (ui_result == 0x11223344) {  // reboot
+#ifndef STM32U5
             ui_screen_boot_empty(true);
+#endif
             continue_to_firmware = firmware_present;
             continue_to_firmware_backup = firmware_present_backup;
           }
@@ -633,6 +700,10 @@ int bootloader_main(void) {
       if (continue_to_firmware != continue_to_firmware_backup) {
         // erase storage if we saw flips randomly flip, most likely due to
         // glitch
+
+#ifdef STM32U5
+        secret_bhk_regenerate();
+#endif
         ensure(flash_area_erase_bulk(STORAGE_AREAS, STORAGE_AREAS_COUNT, NULL),
                NULL);
       }
@@ -640,7 +711,12 @@ int bootloader_main(void) {
                  (continue_to_firmware == continue_to_firmware_backup),
              NULL);
       if (sectrue == continue_to_firmware) {
+#ifdef STM32U5
+        firmware_jump_fn = jump_to_fw_through_reset;
+#else
+        ui_screen_boot_empty(true);
         firmware_jump_fn = real_jump_to_firmware;
+#endif
         break;
       }
     }
@@ -648,13 +724,19 @@ int bootloader_main(void) {
 
   ensure(dont_optimize_out_true * (firmware_present == firmware_present_backup),
          NULL);
+
+#ifdef STM32U5
+  if (sectrue == firmware_present &&
+      firmware_jump_fn != jump_to_fw_through_reset) {
+    firmware_jump_fn = real_jump_to_firmware;
+  }
+#else
   if (sectrue == firmware_present) {
     firmware_jump_fn = real_jump_to_firmware;
   }
+#endif
 
   firmware_jump_fn();
 
   return 0;
 }
-
-void HardFault_Handler(void) { error_shutdown("INTERNAL ERROR", "(HF)"); }

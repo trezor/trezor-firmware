@@ -33,7 +33,7 @@ if TREZOR_MODEL in ('1', 'R'):
     FONT_BOLD='Font_PixelOperator_Bold_8'
     FONT_MONO='Font_PixelOperator_Regular_8'
     FONT_BIG=None
-elif TREZOR_MODEL in ('T', ):
+elif TREZOR_MODEL in ('T', 'T3T1', 'DISC2'):
     FONT_NORMAL='Font_TTHoves_Regular_21'
     FONT_DEMIBOLD=None
     FONT_BOLD='Font_TTHoves_Bold_17'
@@ -91,7 +91,7 @@ SOURCE_MOD += [
     'vendor/micropython/lib/uzlib/adler32.c',
     'vendor/micropython/lib/uzlib/crc32.c',
     'vendor/micropython/lib/uzlib/tinflate.c',
-    'vendor/trezor-storage/flash_common.c',
+    'vendor/trezor-storage/flash_area.c',
 ]
 
 if TREZOR_MODEL in ('1', ):
@@ -123,8 +123,11 @@ SOURCE_BOOTLOADER = [
 ]
 
 SOURCE_TREZORHAL = [
+    'embed/trezorhal/unix/boot_args.c',
     'embed/trezorhal/unix/display-unix.c',
+    'embed/trezorhal/unix/fault_handlers.c',
     'embed/trezorhal/unix/flash.c',
+    'embed/trezorhal/unix/flash_otp.c',
     'embed/trezorhal/unix/common.c',
     'embed/trezorhal/unix/touch/touch.c',
     'embed/trezorhal/unix/rng.c',
@@ -141,6 +144,8 @@ if TREZOR_MODEL in ('R', ):
 SOURCE_UNIX = [
     'embed/unix/profile.c',
 ]
+
+
 
 # fonts
 tools.add_font('NORMAL', FONT_NORMAL, CPPDEFINES_MOD, SOURCE_MOD)
@@ -168,8 +173,12 @@ env.Replace(
 
 if TREZOR_MODEL in ('T', 'R'):
     CPU_MODEL   = 'STM32F427xx'
+elif TREZOR_MODEL in ('T3T1', ):
+    CPU_MODEL   = 'STM32U585xx'
 elif TREZOR_MODEL in ('DISC1', ):
     CPU_MODEL   = 'STM32F429xx'
+elif TREZOR_MODEL in ('DISC2', ):
+    CPU_MODEL   = 'STM32U5A9xx'
 elif TREZOR_MODEL in ('1',):
     CPU_MODEL   = 'STM32F405xx'
 else:
@@ -258,7 +267,7 @@ def cargo_build():
     else:
         features = ["model_tt"]
 
-    if TREZOR_MODEL in ('T',):
+    if TREZOR_MODEL in ('T', 'T3T1'):
         features.append('touch')
         features.append('backlight')
     if TREZOR_MODEL in ('R', '1'):

@@ -33,6 +33,10 @@ void mpu_config_off(void) {
   HAL_MPU_Disable();
 }
 
+void mpu_config_boardloader(void) {
+  // nothing to be done
+}
+
 void mpu_config_bootloader(void) {
   // Disable MPU
   HAL_MPU_Disable();
@@ -99,6 +103,8 @@ void mpu_config_bootloader(void) {
   // Enable MPU
   HAL_MPU_Enable(LL_MPU_CTRL_HARDFAULT_NMI);
 }
+
+void mpu_config_firmware_initial(void) {}
 
 void mpu_config_firmware(void) {
   // Disable MPU
@@ -205,6 +211,8 @@ void mpu_config_firmware(void) {
   __asm__ volatile("dsb");
   __asm__ volatile("isb");
 }
+
+void mpu_config_prodtest_initial(void) {}
 
 void mpu_config_prodtest(void) {
   // Disable MPU

@@ -160,4 +160,7 @@ static inline void restore_irq_pri(uint32_t state) {
 #define IRQ_PRI_PENDSV          NVIC_EncodePriority(NVIC_PRIORITYGROUP_4, 15, 0)
 #define IRQ_PRI_RTC_WKUP        NVIC_EncodePriority(NVIC_PRIORITYGROUP_4, 15, 0)
 
+// !@# TAMPER interrupt priority should be probably much higher
+#define IRQ_PRI_TAMP            NVIC_EncodePriority(NVIC_PRIORITYGROUP_4, 15, 0)
+
 #endif // MICROPY_INCLUDED_STM32_IRQ_H

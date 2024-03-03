@@ -1,3 +1,5 @@
+#[cfg(feature = "haptic")]
+use crate::trezorhal::haptic::{play, HapticEffect};
 use crate::{
     time::Duration,
     ui::{
@@ -311,6 +313,8 @@ where
                     _ => {
                         // Touch started in our area, transform to `Pressed` state.
                         if touch_area.contains(pos) {
+                            #[cfg(feature = "haptic")]
+                            play(HapticEffect::ButtonPress);
                             self.set(ctx, State::Pressed);
                             if let Some(duration) = self.long_press {
                                 self.long_timer = Some(ctx.request_timer(duration));
@@ -353,6 +357,8 @@ where
                 if self.long_timer == Some(token) {
                     self.long_timer = None;
                     if matches!(self.state, State::Pressed) {
+                        #[cfg(feature = "haptic")]
+                        play(HapticEffect::ButtonPress);
                         self.set(ctx, State::Initial);
                         return Some(ButtonMsg::LongPressed);
                     }

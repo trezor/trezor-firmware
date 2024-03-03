@@ -24,16 +24,22 @@
 #include "common.h"
 #include "compiler_traits.h"
 #include "display.h"
+#include "fault_handlers.h"
 #include "flash.h"
 #include "image.h"
 #include "model.h"
+#include "mpu.h"
 #include "rng.h"
 #include "terminal.h"
+
 #ifdef USE_SD_CARD
 #include "sdcard.h"
 #endif
 #ifdef USE_SDRAM
 #include "sdram.h"
+#endif
+#ifdef USE_HASH_PROCESSOR
+#include "hash_processor.h"
 #endif
 
 #include "lowlevel.h"
@@ -41,6 +47,12 @@
 #include "version.h"
 
 #include "memzero.h"
+
+#ifdef STM32U5
+#include "secret.h"
+#include "tamper.h"
+#include "trustzone.h"
+#endif
 
 const uint8_t BOARDLOADER_KEY_M = 2;
 const uint8_t BOARDLOADER_KEY_N = 3;
@@ -53,6 +65,44 @@ static const uint8_t * const BOARDLOADER_KEYS[] = {
     MODEL_BOARDLOADER_KEYS
 #endif
 };
+
+#ifdef STM32U5
+void check_bootloader_version(uint8_t bld_version) {
+  const uint8_t *counter_addr =
+      flash_area_get_address(&SECRET_AREA, SECRET_MONOTONIC_COUNTER_OFFSET,
+                             SECRET_MONOTONIC_COUNTER_LEN);
+
+  ensure((counter_addr != NULL) * sectrue, "counter_addr is NULL");
+
+  int counter = 0;
+
+  for (int i = 0; i < SECRET_MONOTONIC_COUNTER_LEN / 16; i++) {
+    secbool not_cleared = sectrue;
+    for (int j = 0; j < 16; j++) {
+      if (counter_addr[i * 16 + j] != 0xFF) {
+        not_cleared = secfalse;
+        break;
+      }
+    }
+
+    if (not_cleared != sectrue) {
+      counter++;
+    } else {
+      break;
+    }
+  }
+
+  ensure((bld_version >= counter) * sectrue, "BOOTLOADER DOWNGRADED");
+
+  if (bld_version > counter) {
+    for (int i = 0; i < bld_version; i++) {
+      uint32_t data[4] = {0};
+      secret_write((uint8_t *)data, SECRET_MONOTONIC_COUNTER_OFFSET + i * 16,
+                   16);
+    }
+  }
+}
+#endif
 
 struct BoardCapabilities capablities
     __attribute__((section(".capabilities_section"))) = {
@@ -70,8 +120,7 @@ struct BoardCapabilities capablities
         .terminator_length = 0};
 
 // we use SRAM as SD card read buffer (because DMA can't access the CCMRAM)
-extern uint32_t sram_start[];
-#define sdcard_buf sram_start
+BUFFER_SECTION uint32_t sdcard_buf[IMAGE_HEADER_SIZE / sizeof(uint32_t)];
 
 #if defined USE_SD_CARD
 static uint32_t check_sdcard(void) {
@@ -161,11 +210,14 @@ static secbool copy_sdcard(void) {
 
   for (int i = 0; i < (IMAGE_HEADER_SIZE + codelen) / SDCARD_BLOCK_SIZE; i++) {
     ensure(sdcard_read_blocks(sdcard_buf, i, 1), NULL);
-    for (int j = 0; j < SDCARD_BLOCK_SIZE / sizeof(uint32_t); j++) {
-      ensure(flash_area_write_word(&BOOTLOADER_AREA,
-                                   i * SDCARD_BLOCK_SIZE + j * sizeof(uint32_t),
-                                   sdcard_buf[j]),
-             NULL);
+    for (int j = 0;
+         j < SDCARD_BLOCK_SIZE / (FLASH_BURST_LENGTH * sizeof(uint32_t)); j++) {
+      ensure(
+          flash_area_write_burst(
+              &BOOTLOADER_AREA,
+              i * SDCARD_BLOCK_SIZE + j * FLASH_BURST_LENGTH * sizeof(uint32_t),
+              &sdcard_buf[j * FLASH_BURST_LENGTH]),
+          NULL);
     }
   }
 
@@ -194,14 +246,36 @@ int main(void) {
     return 2;
   }
 
+#ifdef STM32U5
+  tamper_init();
+
+  if (sectrue == secret_bhk_locked()) {
+    delete_secrets();
+    NVIC_SystemReset();
+  }
+
+  trustzone_init_boardloader();
+#endif
+
+#ifdef STM32F4
   clear_otg_hs_memory();
+#endif
+
+  mpu_config_boardloader();
+
+  fault_handlers_init();
 
 #ifdef USE_SDRAM
   sdram_init();
 #endif
 
+#ifdef USE_HASH_PROCESSOR
+  hash_processor_init();
+#endif
+
   display_init();
   display_clear();
+  display_refresh();
 
 #if defined USE_SD_CARD
   sdcard_init();
@@ -225,8 +299,15 @@ int main(void) {
   ensure(check_image_contents(hdr, IMAGE_HEADER_SIZE, &BOOTLOADER_AREA),
          "invalid bootloader hash");
 
+#ifdef STM32U5
+  check_bootloader_version(hdr->monotonic);
+#endif
+
   ensure_compatible_settings();
 
+  mpu_config_off();
+
+  // g_boot_command is preserved on STM32U5
   jump_to(BOOTLOADER_START + IMAGE_HEADER_SIZE);
 
   return 0;

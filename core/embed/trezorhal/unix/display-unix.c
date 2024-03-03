@@ -345,3 +345,5 @@ void display_clear_save(void) {
 }
 
 uint8_t *display_get_wr_addr(void) { return (uint8_t *)DISPLAY_DATA_ADDRESS; }
+
+void display_finish_actions(void) {}

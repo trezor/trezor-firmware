@@ -21,7 +21,7 @@ FEATURE_FLAGS = {
     "SYSTEM_VIEW": False,
 }
 
-FEATURES_WANTED = ["input", "sbu", "sd_card", "rgb_led", "dma2d", "consumption_mask", "usb" ,"optiga"]
+FEATURES_WANTED = ["input", "sbu", "sd_card", "rgb_led", "dma2d", "consumption_mask", "usb" ,"optiga", "haptic"]
 if DISABLE_OPTIGA and PYOPT == '0':
     FEATURES_WANTED.remove("optiga")
 
@@ -41,7 +41,7 @@ if TREZOR_MODEL in ('1', 'R'):
     FONT_BOLD='Font_PixelOperator_Bold_8'
     FONT_MONO='Font_PixelOperatorMono_Regular_8'
     FONT_BIG='Font_Unifont_Regular_16'
-elif TREZOR_MODEL in ('T', 'DISC1'):
+elif TREZOR_MODEL in ('T', 'T3T1', 'DISC1', 'DISC2'):
     FONT_NORMAL='Font_TTHoves_Regular_21'
     FONT_DEMIBOLD='Font_TTHoves_DemiBold_21'
     FONT_BOLD='Font_TTHoves_Bold_17'
@@ -58,7 +58,7 @@ SOURCE_MOD += [
     'vendor/trezor-storage/norcow.c',
     'vendor/trezor-storage/storage.c',
     'vendor/trezor-storage/storage_utils.c',
-    'vendor/trezor-storage/flash_common.c',
+    'vendor/trezor-storage/flash_area.c',
 ]
 
 # modtrezorcrypto
@@ -206,6 +206,7 @@ SOURCE_MOD += [
     'embed/lib/image.c',
     'embed/lib/mini_printf.c',
     'embed/lib/terminal.c',
+    'embed/lib/translations.c',
     'embed/lib/unit_variant.c',
     'vendor/micropython/lib/uzlib/adler32.c',
     'vendor/micropython/lib/uzlib/crc32.c',
@@ -354,16 +355,6 @@ SOURCE_MICROPYTHON_SPEED = [
     'vendor/micropython/py/vm.c',
 ]
 
-SOURCE_FIRMWARE = [
-    'embed/firmware/bl_check.c',
-    'embed/firmware/delay.c',
-    'embed/firmware/header.S',
-    'embed/firmware/main.c',
-    'embed/firmware/mphalport.c',
-    'embed/firmware/nlrthumb.c',
-    'embed/firmware/startup.S',
-]
-
 CPPDEFINES_MOD += ['USE_SVC_SHUTDOWN']
 
 if FEATURE_FLAGS["RDI"]:
@@ -394,12 +385,28 @@ tools.add_font('BIG', FONT_BIG, CPPDEFINES_MOD, SOURCE_MOD)
 
 SOURCE_QSTR = SOURCE_MOD + SOURCE_MICROPYTHON + SOURCE_MICROPYTHON_SPEED
 
-env = Environment(ENV=os.environ, CFLAGS=f"{ARGUMENTS.get('CFLAGS', '')} -DPRODUCTION={int(PRODUCTION)} -DPYOPT={PYOPT} -DBOOTLOADER_QA={int(BOOTLOADER_QA)} -DBITCOIN_ONLY={BITCOIN_ONLY}")
+env = Environment(
+    ENV=os.environ,
+    CFLAGS=f"{ARGUMENTS.get('CFLAGS', '')} -DPRODUCTION={int(PRODUCTION)} -DPYOPT={PYOPT} -DBOOTLOADER_QA={int(BOOTLOADER_QA)} -DBITCOIN_ONLY={BITCOIN_ONLY}",
+    CPPDEFINES_IMPLICIT=[]
+    )
 
 FEATURES_AVAILABLE = tools.configure_board(TREZOR_MODEL, FEATURES_WANTED, env, CPPDEFINES_HAL, SOURCE_HAL, PATH_HAL)
 
+FILE_SUFFIX= env.get('ENV')['SUFFIX']
 
-if TREZOR_MODEL in ('T', 'DISC1'):
+SOURCE_FIRMWARE = [
+    'embed/firmware/bl_check.c',
+    'embed/firmware/delay.c',
+    'embed/firmware/header.S',
+    'embed/firmware/main.c',
+    'embed/firmware/mphalport.c',
+    'embed/firmware/nlrthumb.c',
+    f'embed/firmware/startup_{FILE_SUFFIX}.S',
+]
+
+
+if TREZOR_MODEL in ('T', 'T3T1', 'DISC1', 'DISC2'):
     UI_LAYOUT = 'UI_LAYOUT_TT'
     ui_layout_feature = 'model_tt'
 elif TREZOR_MODEL in ('1', 'R'):
@@ -457,7 +464,6 @@ env.Replace(
         'embed/trezorhal',
         'embed/extmod/modtrezorui',
         'vendor/micropython',
-        'vendor/micropython/lib/cmsis/inc',
     ] + CPPPATH_MOD + PATH_HAL,
     CPPDEFINES=[
         'FIRMWARE',
@@ -780,7 +786,7 @@ if FROZEN:
 
 env.Replace(
     ALLSOURCES=source_files,
-    ALLDEFS=tools.get_defs_for_cmake(env['CPPDEFINES'] + [f"PRODUCTION={int(PRODUCTION)}", f"BOOTLOADER_QA={int(BOOTLOADER_QA)}", f"PYOPT={PYOPT}", f"BITCOIN_ONLY={BITCOIN_ONLY}"]))
+    ALLDEFS=tools.get_defs_for_cmake(env['CPPDEFINES'] + env['CPPDEFINES_IMPLICIT'] + [f"PRODUCTION={int(PRODUCTION)}", f"BOOTLOADER_QA={int(BOOTLOADER_QA)}", f"PYOPT={PYOPT}", f"BITCOIN_ONLY={BITCOIN_ONLY}"]))
 
 
 cmake_gen = env.Command(
@@ -820,7 +826,7 @@ if TREZOR_MODEL not in ('1',):
             ' --rename-section .data=.vendorheader,alloc,load,readonly,contents'
             ' $SOURCE $TARGET', ))
 
-if TREZOR_MODEL not in ('DISC1', ):
+if TREZOR_MODEL not in ('DISC1', 'DISC2'):
     tools.embed_binary(
             obj_program,
             env,
@@ -852,23 +858,30 @@ BINARY_NAME += "-dirty" if tools.get_git_modified() else ""
 BINARY_NAME += ".bin"
 
 
-if TREZOR_MODEL in ('T', 'R', 'DISC1'):
+if TREZOR_MODEL in ('1'):
     action_bin=[
-        '$OBJCOPY -O binary -j .vendorheader -j .header -j .flash -j .data --pad-to 0x08100000 $SOURCE ${TARGET}.p1',
-        '$OBJCOPY -O binary -j .flash2 $SOURCE ${TARGET}.p2',
-        '$CAT ${TARGET}.p1 ${TARGET}.p2 > $TARGET',
-        '$HEADERTOOL -h $TARGET ' + ('-D' if not PRODUCTION else ''),
-        '$DD if=$TARGET of=${TARGET}.p1 skip=0 bs=128k count=6',
-        '$CP $TARGET ' + BINARY_NAME,
-    ]
-elif TREZOR_MODEL in ('1',):
-    action_bin=[
-        '$OBJCOPY -O binary -j .header -j .flash -j .data $SOURCE $TARGET',
+        '$OBJCOPY -O binary -j .header -j .flash -j .data -j .sensitive $SOURCE $TARGET',
         '../legacy/bootloader/firmware_sign.py -f $TARGET',
         '$CP $TARGET ' + BINARY_NAME,
     ]
 else:
-    raise ValueError('Unknown Trezor model')
+    if 'STM32F427xx' in CPPDEFINES_HAL or 'STM32F429xx' in CPPDEFINES_HAL:
+        action_bin=[
+            '$OBJCOPY -O binary -j .vendorheader -j .header -j .flash -j .data -j .sensitive --pad-to 0x08100000 $SOURCE ${TARGET}.p1',
+            '$OBJCOPY -O binary -j .flash2 $SOURCE ${TARGET}.p2',
+            '$CAT ${TARGET}.p1 ${TARGET}.p2 > $TARGET',
+            '$HEADERTOOL -h $TARGET ' + ('-D' if not PRODUCTION else ''),
+            '$DD if=$TARGET of=${TARGET}.p1 skip=0 bs=128k count=6',
+            '$CP $TARGET ' + BINARY_NAME,
+        ]
+    elif 'STM32U5A9xx' in CPPDEFINES_HAL or 'STM32U585xx' in CPPDEFINES_HAL:
+        action_bin=[
+            '$OBJCOPY -O binary -j .vendorheader -j .header -j .flash -j .data -j .sensitive $SOURCE ${TARGET}',
+            '$HEADERTOOL -h $TARGET ' + ('-D' if not PRODUCTION else ''),
+            '$CP $TARGET ' + BINARY_NAME,
+            ]
+    else:
+        raise Exception("Unknown MCU")
 
 program_bin = env.Command(
     target='firmware.bin',

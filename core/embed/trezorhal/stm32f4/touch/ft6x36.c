@@ -45,7 +45,11 @@
 #define EVENT_OLD_TIMEOUT_MS 2000
 #define EVENT_MISSING_TIMEOUT_MS 50
 
+static uint32_t touch_init_ticks = 0;
+
 static void touch_default_pin_state(void) {
+  GPIO_PinState state = HAL_GPIO_ReadPin(TOUCH_ON_PORT, TOUCH_ON_PIN);
+
   // set power off and other pins as per section 3.5 of FT6236 datasheet
   HAL_GPIO_WritePin(TOUCH_ON_PORT, TOUCH_ON_PIN,
                     GPIO_PIN_SET);  // CTP_ON (active low) i.e.- CTPM power
@@ -74,7 +78,11 @@ static void touch_default_pin_state(void) {
   // for these changes to take effect. a reset needs to be low for
   // a minimum of 5ms. also wait for power circuitry to stabilize (if it
   // changed).
-  HAL_Delay(100);  // 100ms (being conservative)
+  HAL_Delay(10);
+
+  if (state == GPIO_PIN_SET) {
+    HAL_Delay(90);  // add 90 ms for circuitry to stabilize (being conservative)
+  }
 }
 
 static void touch_active_pin_state(void) {
@@ -93,8 +101,10 @@ static void touch_active_pin_state(void) {
 
   HAL_GPIO_WritePin(TOUCH_RST_PORT, TOUCH_RST_PIN,
                     GPIO_PIN_SET);  // release CTPM reset
-  HAL_Delay(310);  // "Time of starting to report point after resetting" min is
-                   // 300ms, giving an extra 10ms
+
+  touch_init_ticks = hal_ticks_ms();
+
+  HAL_Delay(5);
 }
 
 void touch_set_mode(void) {
@@ -102,11 +112,12 @@ void touch_set_mode(void) {
   // generates a pulse when new data is available
   uint8_t touch_panel_config[] = {0xA4, 0x01};
   for (int i = 0; i < 3; i++) {
-    if (HAL_OK == i2c_transmit(TOUCH_I2C_NUM, TOUCH_ADDRESS, touch_panel_config,
-                               sizeof(touch_panel_config), 10)) {
+    if (HAL_OK == i2c_transmit(TOUCH_I2C_INSTANCE, TOUCH_ADDRESS,
+                               touch_panel_config, sizeof(touch_panel_config),
+                               10)) {
       return;
     }
-    i2c_cycle(TOUCH_I2C_NUM);
+    i2c_cycle(TOUCH_I2C_INSTANCE);
   }
 
   ensure(secfalse, "Touch screen panel was not loaded properly.");
@@ -117,8 +128,6 @@ void touch_power_on(void) {
 
   // turn on CTP circuitry
   touch_active_pin_state();
-
-  HAL_Delay(50);
 }
 
 void touch_power_off(void) {
@@ -142,16 +151,23 @@ void touch_init(void) {
   touch_sensitivity(TOUCH_SENSITIVITY);
 }
 
+void touch_wait_until_ready(void) {
+  // wait for the touch controller to be ready
+  while (hal_ticks_ms() - touch_init_ticks < 310) {
+    HAL_Delay(1);
+  }
+}
+
 void touch_sensitivity(uint8_t value) {
   // set panel threshold (TH_GROUP) - default value is 0x12
   uint8_t touch_panel_threshold[] = {0x80, value};
   for (int i = 0; i < 3; i++) {
-    if (HAL_OK == i2c_transmit(TOUCH_I2C_NUM, TOUCH_ADDRESS,
+    if (HAL_OK == i2c_transmit(TOUCH_I2C_INSTANCE, TOUCH_ADDRESS,
                                touch_panel_threshold,
                                sizeof(touch_panel_threshold), 10)) {
       return;
     }
-    i2c_cycle(TOUCH_I2C_NUM);
+    i2c_cycle(TOUCH_I2C_INSTANCE);
   }
 
   ensure(secfalse, "Touch screen panel was not loaded properly.");
@@ -217,14 +233,14 @@ uint32_t touch_read(void) {
   last_check_time = hal_ticks_ms();
 
   uint8_t outgoing[] = {0x00};  // start reading from address 0x00
-  int result =
-      i2c_transmit(TOUCH_I2C_NUM, TOUCH_ADDRESS, outgoing, sizeof(outgoing), 1);
+  int result = i2c_transmit(TOUCH_I2C_INSTANCE, TOUCH_ADDRESS, outgoing,
+                            sizeof(outgoing), 1);
   if (result != HAL_OK) {
-    if (result == HAL_BUSY) i2c_cycle(TOUCH_I2C_NUM);
+    if (result == HAL_BUSY) i2c_cycle(TOUCH_I2C_INSTANCE);
     return 0;
   }
 
-  if (HAL_OK != i2c_receive(TOUCH_I2C_NUM, TOUCH_ADDRESS, touch_data,
+  if (HAL_OK != i2c_receive(TOUCH_I2C_INSTANCE, TOUCH_ADDRESS, touch_data,
                             TOUCH_PACKET_SIZE, 1)) {
     return 0;  // read failure
   }

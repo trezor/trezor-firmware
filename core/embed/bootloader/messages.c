@@ -24,7 +24,7 @@
 #include <pb_encode.h>
 #include "messages.pb.h"
 
-#include "boot_internal.h"
+#include "boot_args.h"
 #include "common.h"
 #include "flash.h"
 #include "image.h"
@@ -598,16 +598,16 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
 
       secbool is_ilu = secfalse;  // interaction-less update
 
-      if (g_boot_command == BOOT_COMMAND_INSTALL_UPGRADE) {
-        BLAKE2S_CTX ctx;
-        uint8_t hash[BLAKE2S_DIGEST_LENGTH];
-        blake2s_Init(&ctx, BLAKE2S_DIGEST_LENGTH);
-        blake2s_Update(&ctx, CHUNK_BUFFER_PTR,
-                       vhdr.hdrlen + received_hdr->hdrlen);
-        blake2s_Final(&ctx, hash, BLAKE2S_DIGEST_LENGTH);
+      if (bootargs_get_command() == BOOT_COMMAND_INSTALL_UPGRADE) {
+        IMAGE_HASH_CTX ctx;
+        uint8_t hash[IMAGE_HASH_DIGEST_LENGTH];
+        IMAGE_HASH_INIT(&ctx);
+        IMAGE_HASH_UPDATE(&ctx, CHUNK_BUFFER_PTR,
+                          vhdr.hdrlen + received_hdr->hdrlen);
+        IMAGE_HASH_FINAL(&ctx, hash);
 
         // the firmware must be the same as confirmed by the user
-        if (memcmp(&g_boot_args[0], hash, sizeof(hash)) != 0) {
+        if (memcmp(bootargs_get_args()->hash, hash, sizeof(hash)) != 0) {
           MSG_SEND_INIT(Failure);
           MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
           MSG_SEND_ASSIGN_STRING(message, "Firmware mismatch");
@@ -637,7 +637,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
         is_ilu = sectrue;
       }
 
-#ifdef USE_OPTIGA
+#if defined USE_OPTIGA && !defined STM32U5
       if (sectrue != secret_wiped() && ((vhdr.vtrust & VTRUST_SECRET) != 0)) {
         MSG_SEND_INIT(Failure);
         MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
@@ -666,6 +666,9 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
 
       // if firmware is not upgrade, erase storage
       if (sectrue != should_keep_seed) {
+#ifdef STM32U5
+        secret_bhk_regenerate();
+#endif
         ensure(flash_area_erase_bulk(STORAGE_AREAS, STORAGE_AREAS_COUNT, NULL),
                NULL);
       }
@@ -834,7 +837,7 @@ void process_msg_unknown(uint8_t iface_num, uint32_t msg_size, uint8_t *buf) {
   MSG_SEND(Failure);
 }
 
-#ifdef USE_OPTIGA
+#if defined USE_OPTIGA && !defined STM32U5
 void process_msg_UnlockBootloader(uint8_t iface_num, uint32_t msg_size,
                                   uint8_t *buf) {
   secret_erase();

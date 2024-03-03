@@ -19,11 +19,15 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <string.h>
 #include TREZOR_BOARD
 #include "backlight_pwm.h"
 #include "display.h"
+#include "display_interface.h"
+#include "irq.h"
 #include "memzero.h"
 #include "st7789v.h"
+#include "supervise.h"
 #include STM32_HAL_H
 
 #ifdef TREZOR_MODEL_T
@@ -39,8 +43,11 @@
 // differencies in the resulting binaries.
 const volatile uint8_t DISPLAY_ST7789V_INVERT_COLORS = 1;
 
-// FSMC/FMC Bank 1 - NOR/PSRAM 1
-#define DISPLAY_MEMORY_BASE 0x60000000
+#ifndef FMC_BANK1
+#define FMC_BANK1 0x60000000U
+#endif
+
+#define DISPLAY_MEMORY_BASE FMC_BANK1
 #define DISPLAY_MEMORY_PIN 16
 #ifdef USE_DISP_I8080_16BIT_DW
 #define DISPLAY_ADDR_SHIFT 2
@@ -53,6 +60,42 @@ __IO DISP_MEM_TYPE *const DISPLAY_CMD_ADDRESS =
 __IO DISP_MEM_TYPE *const DISPLAY_DATA_ADDRESS =
     (__IO DISP_MEM_TYPE *const)((uint32_t)DISPLAY_MEMORY_BASE |
                                 (DISPLAY_ADDR_SHIFT << DISPLAY_MEMORY_PIN));
+
+#ifdef FRAMEBUFFER
+#ifndef STM32U5
+#error Framebuffer only supported on STM32U5 for now
+#endif
+
+#ifndef BOARDLOADER
+#include "bg_copy.h"
+#endif
+
+#define DATA_TRANSFER(X) \
+  DATA((X)&0xFF);        \
+  DATA((X) >> 8)
+
+__attribute__((section(".fb1")))
+ALIGN_32BYTES(static uint16_t PhysFrameBuffer0[DISPLAY_RESX * DISPLAY_RESY]);
+__attribute__((section(".fb2")))
+ALIGN_32BYTES(static uint16_t PhysFrameBuffer1[DISPLAY_RESX * DISPLAY_RESY]);
+
+__attribute__((
+    section(".framebuffer_select"))) static uint32_t act_frame_buffer = 0;
+
+#ifndef BOARDLOADER
+static bool pending_fb_switch = false;
+#endif
+
+static uint16_t window_x0 = 0;
+static uint16_t window_y0 = 0;
+static uint16_t window_x1 = 0;
+static uint16_t window_y1 = 0;
+static uint16_t cursor_x = 0;
+static uint16_t cursor_y = 0;
+
+#else
+#define DATA_TRANSFER(X) PIXELDATA(X)
+#endif
 
 // section "9.1.3 RDDID (04h): Read Display ID"
 // of ST7789V datasheet
@@ -68,8 +111,6 @@ __IO DISP_MEM_TYPE *const DISPLAY_DATA_ADDRESS =
 
 static int DISPLAY_ORIENTATION = -1;
 static display_padding_t DISPLAY_PADDING = {0};
-
-void display_pixeldata(uint16_t c) { PIXELDATA(c); }
 
 void display_pixeldata_dirty(void) {}
 
@@ -157,7 +198,7 @@ static void display_unsleep(void) {
   }
 }
 
-void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1) {
+void panel_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1) {
   x0 += DISPLAY_PADDING.x;
   x1 += DISPLAY_PADDING.x;
   y0 += DISPLAY_PADDING.y;
@@ -184,10 +225,14 @@ int display_orientation(int degrees) {
     if (degrees == 0 || degrees == 90 || degrees == 180 || degrees == 270) {
       DISPLAY_ORIENTATION = degrees;
 
-      display_set_window(0, 0, MAX_DISPLAY_RESX - 1, MAX_DISPLAY_RESY - 1);
+      panel_set_window(0, 0, MAX_DISPLAY_RESX - 1, MAX_DISPLAY_RESY - 1);
+#ifdef FRAMEBUFFER
+      memzero(PhysFrameBuffer1, sizeof(PhysFrameBuffer1));
+      memzero(PhysFrameBuffer0, sizeof(PhysFrameBuffer0));
+#endif
       for (uint32_t i = 0; i < MAX_DISPLAY_RESX * MAX_DISPLAY_RESY; i++) {
         // 2 bytes per pixel because we're using RGB 5-6-5 format
-        PIXELDATA(0x0000);
+        DATA_TRANSFER(0x0000);
       }
 #ifdef TREZOR_MODEL_T
       uint32_t id = display_identify();
@@ -197,8 +242,9 @@ int display_orientation(int degrees) {
         lx154a2422_rotate(degrees, &DISPLAY_PADDING);
       }
 #else
-      DISPLAY_PANEL_ROTATE(degrees, &BUFFER_OFFSET);
+      DISPLAY_PANEL_ROTATE(degrees, &DISPLAY_PADDING);
 #endif
+      panel_set_window(0, 0, DISPLAY_RESX - 1, DISPLAY_RESY - 1);
     }
   }
   return DISPLAY_ORIENTATION;
@@ -206,7 +252,19 @@ int display_orientation(int degrees) {
 
 int display_get_orientation(void) { return DISPLAY_ORIENTATION; }
 
-int display_backlight(int val) { return backlight_pwm_set(val); }
+int display_backlight(int val) {
+#ifdef FRAMEBUFFER
+#ifndef BOARDLOADER
+  // wait for DMA transfer to finish before changing backlight
+  // so that we know that panel has current data
+  if (backlight_pwm_get() != val && !is_mode_handler()) {
+    bg_copy_wait();
+  }
+#endif
+#endif
+
+  return backlight_pwm_set(val);
+}
 
 void display_init_seq(void) {
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_RESET);  // LCD_RST/PC14
@@ -260,7 +318,6 @@ void display_setup_fmc(void) {
       FMC_BURST_ACCESS_MODE_DISABLE;
   external_display_data_sram.Init.WaitSignalPolarity =
       FMC_WAIT_SIGNAL_POLARITY_LOW;
-  external_display_data_sram.Init.WrapMode = FMC_WRAP_MODE_DISABLE;
   external_display_data_sram.Init.WaitSignalActive = FMC_WAIT_TIMING_BEFORE_WS;
   external_display_data_sram.Init.WriteOperation = FMC_WRITE_OPERATION_ENABLE;
   external_display_data_sram.Init.WaitSignal = FMC_WAIT_SIGNAL_DISABLE;
@@ -284,6 +341,23 @@ void display_setup_fmc(void) {
 
   HAL_SRAM_Init(&external_display_data_sram, &normal_mode_timing, NULL);
 }
+
+#ifdef FRAMEBUFFER
+void display_setup_te_interrupt(void) {
+#ifdef DISPLAY_TE_PIN
+  EXTI_HandleTypeDef EXTI_Handle = {0};
+  EXTI_ConfigTypeDef EXTI_Config = {0};
+  EXTI_Config.GPIOSel = DISPLAY_TE_INTERRUPT_GPIOSEL;
+  EXTI_Config.Line = DISPLAY_TE_INTERRUPT_EXTI_LINE;
+  EXTI_Config.Mode = EXTI_MODE_INTERRUPT;
+  EXTI_Config.Trigger = EXTI_TRIGGER_RISING;
+  HAL_EXTI_SetConfigLine(&EXTI_Handle, &EXTI_Config);
+
+  // setup interrupt for tearing effect pin
+  HAL_NVIC_SetPriority(DISPLAY_TE_INTERRUPT_NUM, IRQ_PRI_DMA, 0);
+#endif
+}
+#endif
 
 void display_init(void) {
   // init peripherals
@@ -348,6 +422,12 @@ void display_init(void) {
   display_init_seq();
 
   display_set_little_endian();
+
+  panel_set_window(0, 0, DISPLAY_RESX - 1, DISPLAY_RESY - 1);
+
+#ifdef FRAMEBUFFER
+  display_setup_te_interrupt();
+#endif
 }
 
 void display_reinit(void) {
@@ -359,6 +439,7 @@ void display_reinit(void) {
   display_set_little_endian();
 
   DISPLAY_ORIENTATION = 0;
+  panel_set_window(0, 0, DISPLAY_RESX - 1, DISPLAY_RESY - 1);
 
   backlight_pwm_reinit();
 
@@ -371,24 +452,11 @@ void display_reinit(void) {
     lx154a2411_gamma();
   }
 #endif
-}
 
-void display_sync(void) {
-#ifdef DISPLAY_TE_PIN
-  uint32_t id = display_identify();
-  if (id && (id != DISPLAY_ID_GC9307)) {
-    // synchronize with the panel synchronization signal
-    // in order to avoid visual tearing effects
-    while (GPIO_PIN_SET == HAL_GPIO_ReadPin(DISPLAY_TE_PORT, DISPLAY_TE_PIN)) {
-    }
-    while (GPIO_PIN_RESET ==
-           HAL_GPIO_ReadPin(DISPLAY_TE_PORT, DISPLAY_TE_PIN)) {
-    }
-  }
+#ifdef FRAMEBUFFER
+  display_setup_te_interrupt();
 #endif
 }
-
-void display_refresh(void) {}
 
 void display_set_little_endian(void) {
   uint32_t id = display_identify();
@@ -428,8 +496,227 @@ const char *display_save(const char *prefix) { return NULL; }
 
 void display_clear_save(void) {}
 
+#ifdef FRAMEBUFFER
+
+void display_pixeldata(uint16_t c) {
+  uint16_t *address = 0;
+
+  if (act_frame_buffer == 0) {
+    address = PhysFrameBuffer1;
+  } else {
+    address = PhysFrameBuffer0;
+  }
+
+  /* Get the rectangle start address */
+  address += cursor_y * DISPLAY_RESX + cursor_x;
+
+  *address = c;
+
+  cursor_x++;
+  if (cursor_x > window_x1) {
+    cursor_x = window_x0;
+    cursor_y++;
+  }
+  if (cursor_y > window_y1) {
+    cursor_y = window_y0;
+  }
+}
+
+void display_sync(void) {}
+
+#ifndef BOARDLOADER
+void DISPLAY_TE_INTERRUPT_HANDLER(void) {
+  HAL_NVIC_DisableIRQ(DISPLAY_TE_INTERRUPT_NUM);
+
+  if (act_frame_buffer == 1) {
+    bg_copy_start_const_out_8((uint8_t *)PhysFrameBuffer1,
+                              (uint8_t *)DISPLAY_DATA_ADDRESS,
+                              DISPLAY_RESX * DISPLAY_RESY * 2);
+
+  } else {
+    bg_copy_start_const_out_8((uint8_t *)PhysFrameBuffer0,
+                              (uint8_t *)DISPLAY_DATA_ADDRESS,
+                              DISPLAY_RESX * DISPLAY_RESY * 2);
+  }
+
+  pending_fb_switch = false;
+  __HAL_GPIO_EXTI_CLEAR_FLAG(DISPLAY_TE_PIN);
+}
+
+static void wait_for_fb_switch(void) {
+  while (pending_fb_switch) {
+    __WFI();
+  }
+  bg_copy_wait();
+}
+#endif
+
+static void copy_fb_to_display(uint16_t *fb) {
+  for (int i = 0; i < DISPLAY_RESX * DISPLAY_RESY; i++) {
+    // 2 bytes per pixel because we're using RGB 5-6-5 format
+    DATA_TRANSFER(fb[i]);
+  }
+}
+
+static void switch_fb_manually(void) {
+  // sync with the panel refresh
+  while (GPIO_PIN_SET == HAL_GPIO_ReadPin(DISPLAY_TE_PORT, DISPLAY_TE_PIN)) {
+  }
+  while (GPIO_PIN_RESET == HAL_GPIO_ReadPin(DISPLAY_TE_PORT, DISPLAY_TE_PIN)) {
+  }
+
+  if (act_frame_buffer == 0) {
+    act_frame_buffer = 1;
+    copy_fb_to_display(PhysFrameBuffer1);
+    memcpy(PhysFrameBuffer0, PhysFrameBuffer1, sizeof(PhysFrameBuffer1));
+
+  } else {
+    act_frame_buffer = 0;
+    copy_fb_to_display(PhysFrameBuffer0);
+    memcpy(PhysFrameBuffer1, PhysFrameBuffer0, sizeof(PhysFrameBuffer1));
+  }
+}
+
+#ifndef BOARDLOADER
+static void switch_fb_in_backround(void) {
+  if (act_frame_buffer == 0) {
+    act_frame_buffer = 1;
+
+    memcpy(PhysFrameBuffer0, PhysFrameBuffer1, sizeof(PhysFrameBuffer1));
+
+    pending_fb_switch = true;
+    __HAL_GPIO_EXTI_CLEAR_FLAG(DISPLAY_TE_PIN);
+    svc_enableIRQ(DISPLAY_TE_INTERRUPT_NUM);
+  } else {
+    act_frame_buffer = 0;
+    memcpy(PhysFrameBuffer1, PhysFrameBuffer0, sizeof(PhysFrameBuffer1));
+
+    pending_fb_switch = true;
+    __HAL_GPIO_EXTI_CLEAR_FLAG(DISPLAY_TE_PIN);
+    svc_enableIRQ(DISPLAY_TE_INTERRUPT_NUM);
+  }
+}
+#endif
+
+void display_refresh(void) {
+#ifndef BOARDLOADER
+  wait_for_fb_switch();
+
+  if (is_mode_handler()) {
+    switch_fb_manually();
+  } else {
+    switch_fb_in_backround();
+  }
+#else
+  switch_fb_manually();
+#endif
+}
+
+void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1) {
+  window_x0 = x0;
+  window_y0 = y0;
+  window_x1 = x1;
+  window_y1 = y1;
+  cursor_x = x0;
+  cursor_y = y0;
+}
+
+uint8_t *display_get_wr_addr(void) {
+  uint32_t address = 0;
+
+  if (act_frame_buffer == 0) {
+    address = (uint32_t)PhysFrameBuffer1;
+  } else {
+    address = (uint32_t)PhysFrameBuffer0;
+  }
+
+  /* Get the rectangle start address */
+  address = (address + (2 * (cursor_y * DISPLAY_RESX + cursor_x)));
+
+  return (uint8_t *)address;
+}
+
+uint32_t *display_get_fb_addr(void) {
+  uint32_t address = 0;
+
+  if (act_frame_buffer == 0) {
+    address = (uint32_t)PhysFrameBuffer1;
+  } else {
+    address = (uint32_t)PhysFrameBuffer0;
+  }
+
+  return (uint32_t *)address;
+}
+uint16_t display_get_window_width(void) { return window_x1 - window_x0 + 1; }
+
+uint16_t display_get_window_height(void) { return window_y1 - window_y0 + 1; }
+
+void display_shift_window(uint16_t pixels) {
+  uint16_t w = display_get_window_width();
+  uint16_t h = display_get_window_height();
+
+  uint16_t line_rem = w - (cursor_x - window_x0);
+
+  if (pixels < line_rem) {
+    cursor_x += pixels;
+    return;
+  }
+
+  // start of next line
+  pixels = pixels - line_rem;
+  cursor_x = window_x0;
+  cursor_y++;
+
+  // add the rest of pixels
+  cursor_y = window_y0 + (((cursor_y - window_y0) + (pixels / w)) % h);
+  cursor_x += pixels % w;
+}
+
+uint16_t display_get_window_offset(void) {
+  return DISPLAY_RESX - display_get_window_width();
+}
+
+void display_efficient_clear(void) {
+  memzero(PhysFrameBuffer1, sizeof(PhysFrameBuffer1));
+  memzero(PhysFrameBuffer0, sizeof(PhysFrameBuffer0));
+}
+
+void display_finish_actions(void) {
+#ifndef BOARDLOADER
+  bg_copy_wait();
+#endif
+}
+#else
+//  NOT FRAMEBUFFER
+
+void display_pixeldata(uint16_t c) { PIXELDATA(c); }
+
+void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1) {
+  panel_set_window(x0, y0, x1, y1);
+}
+
+void display_sync(void) {
+#ifdef DISPLAY_TE_PIN
+  uint32_t id = display_identify();
+  if (id && (id != DISPLAY_ID_GC9307)) {
+    // synchronize with the panel synchronization signal
+    // in order to avoid visual tearing effects
+    while (GPIO_PIN_SET == HAL_GPIO_ReadPin(DISPLAY_TE_PORT, DISPLAY_TE_PIN))
+      ;
+    while (GPIO_PIN_RESET == HAL_GPIO_ReadPin(DISPLAY_TE_PORT, DISPLAY_TE_PIN))
+      ;
+  }
+#endif
+}
+
+void display_refresh(void) {}
+
 uint8_t *display_get_wr_addr(void) { return (uint8_t *)DISPLAY_DATA_ADDRESS; }
 
 uint16_t display_get_window_offset(void) { return 0; }
 
 void display_shift_window(uint16_t pixels) {}
+
+void display_finish_actions(void) {}
+
+#endif

@@ -41,6 +41,7 @@
 #include "common.h"
 #include "compiler_traits.h"
 #include "display.h"
+#include "fault_handlers.h"
 #include "flash.h"
 #include "image.h"
 #include "memzero.h"
@@ -48,6 +49,7 @@
 #include "mpu.h"
 #include "random_delays.h"
 #include "rust_ui.h"
+#include "secure_aes.h"
 
 #include TREZOR_BOARD
 
@@ -72,11 +74,18 @@
 #ifdef USE_SD_CARD
 #include "sdcard.h"
 #endif
+#ifdef USE_HASH_PROCESSOR
+#include "hash_processor.h"
+#endif
+
 #ifdef USE_OPTIGA
 #include "optiga_commands.h"
 #include "optiga_transport.h"
+#endif
+#if defined USE_OPTIGA | defined STM32U5
 #include "secret.h"
 #endif
+
 #include "unit_variant.h"
 
 #ifdef SYSTEM_VIEW
@@ -87,6 +96,9 @@
 #include "supervise.h"
 #ifdef USE_SECP256K1_ZKP
 #include "zkp_context.h"
+#endif
+#ifdef USE_HAPTIC
+#include "haptic.h"
 #endif
 
 // from util.s
@@ -99,15 +111,21 @@ int main(void) {
   rdi_start();
 #endif
 
+#ifdef STM32U5
+  check_oem_keys();
+#endif
+
   // reinitialize HAL for Trezor One
 #if defined TREZOR_MODEL_1
   HAL_Init();
 #endif
 
-  collect_hw_entropy();
-
 #ifdef SYSTEM_VIEW
   enable_systemview();
+#endif
+
+#ifdef USE_HASH_PROCESSOR
+  hash_processor_init();
 #endif
 
 #ifdef USE_DMA2D
@@ -125,9 +143,12 @@ int main(void) {
 
 #ifdef USE_OPTIGA
   uint8_t secret[SECRET_OPTIGA_KEY_LEN] = {0};
-  secbool secret_ok =
-      secret_read(secret, SECRET_OPTIGA_KEY_OFFSET, SECRET_OPTIGA_KEY_LEN);
+  secbool secret_ok = secret_optiga_extract(secret);
 #endif
+
+  mpu_config_firmware_initial();
+
+  collect_hw_entropy();
 
 #if PRODUCTION || BOOTLOADER_QA
   check_and_replace_bootloader();
@@ -139,13 +160,14 @@ int main(void) {
   // Init peripherals
   pendsv_init();
 
-#if !PRODUCTION
-  // enable BUS fault and USAGE fault handlers
-  SCB->SHCSR |= (SCB_SHCSR_USGFAULTENA_Msk | SCB_SHCSR_BUSFAULTENA_Msk);
-#endif
+  fault_handlers_init();
 
 #if defined TREZOR_MODEL_T
   set_core_clock(CLOCK_180_MHZ);
+#endif
+
+#ifdef STM32U5
+  secure_aes_init();
 #endif
 
 #ifdef USE_BUTTON
@@ -170,6 +192,10 @@ int main(void) {
 
 #ifdef USE_SD_CARD
   sdcard_init();
+#endif
+
+#ifdef USE_HAPTIC
+  haptic_init();
 #endif
 
 #ifdef USE_OPTIGA
@@ -230,25 +256,6 @@ int main(void) {
 void __attribute__((noreturn)) nlr_jump_fail(void *val) {
   error_shutdown("INTERNAL ERROR", "(UE)");
 }
-
-// interrupt handlers
-
-void NMI_Handler(void) {
-  // Clock Security System triggered NMI
-  if ((RCC->CIR & RCC_CIR_CSSF) != 0) {
-    error_shutdown("INTERNAL ERROR", "(CS)");
-  }
-}
-
-void HardFault_Handler(void) { error_shutdown("INTERNAL ERROR", "(HF)"); }
-
-void MemManage_Handler_MM(void) { error_shutdown("INTERNAL ERROR", "(MM)"); }
-
-void MemManage_Handler_SO(void) { error_shutdown("INTERNAL ERROR", "(SO)"); }
-
-void BusFault_Handler(void) { error_shutdown("INTERNAL ERROR", "(BF)"); }
-
-void UsageFault_Handler(void) { error_shutdown("INTERNAL ERROR", "(UF)"); }
 
 // MicroPython builtin stubs
 

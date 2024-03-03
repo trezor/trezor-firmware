@@ -8,6 +8,8 @@ pub mod display;
 #[cfg(feature = "dma2d")]
 pub mod dma2d;
 mod ffi;
+#[cfg(feature = "haptic")]
+pub mod haptic;
 #[cfg(feature = "ui")]
 pub mod io;
 pub mod model;

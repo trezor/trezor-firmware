@@ -40,6 +40,20 @@ _SERIALIZED_TX_BUFFER = empty_bytearray(_MAX_SERIALIZED_CHUNK_SIZE)
 
 
 class Bitcoin:
+    def init_signing(self) -> None:
+        # Next shown progress bar is already signing progress, but it isn't shown until approval from next dialog
+        progress.init_signing(
+            len(self.external),
+            len(self.segwit),
+            len(self.presigned),
+            self.taproot_only,
+            self.serialize,
+            self.coin,
+            self.tx_info.tx,
+            self.orig_txs,
+        )
+        self.signing = True
+
     async def signer(self) -> None:
         progress.init(
             self.tx_info.tx, is_coinjoin=isinstance(self.approver, CoinJoinApprover)
@@ -56,18 +70,13 @@ class Bitcoin:
         await self.step2_approve_outputs()
 
         # Check fee, approve lock_time and total.
-        await self.approver.approve_tx(self.tx_info, self.orig_txs)
+        await self.approver.approve_tx(self.tx_info, self.orig_txs, self)
 
-        progress.init_signing(
-            len(self.external),
-            len(self.segwit),
-            len(self.presigned),
-            self.taproot_only,
-            self.serialize,
-            self.coin,
-            self.tx_info.tx,
-            self.orig_txs,
-        )
+        # Make sure proper progress is shown, in case dialog was not required
+        if not self.signing:
+            self.init_signing()
+            progress.report_init()
+        progress.report()
 
         # Following steps can take a long time, make sure autolock doesn't kick in.
         # This is set to True again after workflow is finished in start_default().
@@ -128,6 +137,9 @@ class Bitcoin:
 
         # indicates whether all internal inputs are Taproot
         self.taproot_only = True
+
+        # indicates whether the transaction is being signed
+        self.signing = False
 
         # transaction and signature serialization
         _SERIALIZED_TX_BUFFER[:] = bytes()

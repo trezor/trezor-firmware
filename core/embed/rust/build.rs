@@ -123,7 +123,6 @@ fn prepare_bindings() -> bindgen::Builder {
         clang_args.push("-nostdinc");
         clang_args.push("-I../firmware");
         clang_args.push("-I../../build/firmware");
-        clang_args.push("-I../../vendor/micropython/lib/cmsis/inc");
         clang_args.push("-DUSE_HAL_DRIVER");
         bindings = bindings.clang_args(&clang_args);
 
@@ -423,7 +422,10 @@ fn generate_trezorhal_bindings() {
         // touch
         .allowlist_function("touch_read")
         // button
-        .allowlist_function("button_read");
+        .allowlist_function("button_read")
+        // haptic
+        .allowlist_type("haptic_effect_t")
+        .allowlist_function("haptic_play");
 
     // Write the bindings to a file in the OUR_DIR.
     bindings
@@ -466,7 +468,7 @@ fn generate_crypto_bindings() {
 
 fn is_firmware() -> bool {
     let target = env::var("TARGET").unwrap();
-    target.starts_with("thumbv7")
+    target.starts_with("thumbv7") || target.starts_with("thumbv8")
 }
 
 #[cfg(feature = "test")]

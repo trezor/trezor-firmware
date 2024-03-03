@@ -261,11 +261,10 @@ fn screen_progress(
         bg_color,
     );
     display::loader(progress, -20, fg_color, bg_color, icon);
+    display::refresh();
     if initialize {
         fadein();
     }
-
-    display::refresh();
 }
 
 #[no_mangle]

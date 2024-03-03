@@ -415,3 +415,5 @@ void display_shift_window(uint16_t pixels) {
 uint16_t display_get_window_offset(void) {
   return MAX_DISPLAY_RESX - display_get_window_width();
 }
+
+void display_finish_actions(void) {}
