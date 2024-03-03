@@ -23,8 +23,6 @@
 #include STM32_HAL_H
 #include <stdint.h>
 
-#define SENSITIVE __attribute__((section(".sensitive")))
-
 #define FLASH_QUADWORD_WORDS (4)
 #define FLASH_QUADWORD_SIZE (FLASH_QUADWORD_WORDS * sizeof(uint32_t))
 

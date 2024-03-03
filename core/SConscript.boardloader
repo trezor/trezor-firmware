@@ -168,7 +168,7 @@ program_bin = env.Command(
     target='boardloader.bin',
     source=program_elf,
     action=[
-        '$OBJCOPY -O binary -j .vector_table -j .text -j .data -j .rodata -j .capabilities -j .sensitive $SOURCE $TARGET',
+        '$OBJCOPY -O binary -j .vector_table -j .text -j .data -j .rodata -j .capabilities -j .confidential $SOURCE $TARGET',
         '$CP $TARGET ' + BINARY_NAME,
     ],
 )

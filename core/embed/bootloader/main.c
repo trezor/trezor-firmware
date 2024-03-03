@@ -87,8 +87,8 @@ typedef enum {
 
 void failed_jump_to_firmware(void);
 
-SENSITIVE volatile secbool dont_optimize_out_true = sectrue;
-SENSITIVE volatile void (*firmware_jump_fn)(void) = failed_jump_to_firmware;
+CONFIDENTIAL volatile secbool dont_optimize_out_true = sectrue;
+CONFIDENTIAL volatile void (*firmware_jump_fn)(void) = failed_jump_to_firmware;
 
 static void usb_init_all(secbool usb21_landing) {
   usb_dev_info_t dev_info = {

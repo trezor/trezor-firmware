@@ -190,7 +190,7 @@ program_bin = env.Command(
     target='reflash.bin',
     source=program_elf,
     action=[
-        '$OBJCOPY -O binary -j .vendorheader -j .header -j .flash -j .data -j .sensitive $SOURCE $TARGET',
+        '$OBJCOPY -O binary -j .vendorheader -j .header -j .flash -j .data -j .confidential $SOURCE $TARGET',
         '$HEADERTOOL $TARGET ' + ('-D' if ARGUMENTS.get('PRODUCTION', '0') == '0' else ''),
         '$CP $TARGET ' + BINARY_NAME,
     ], )

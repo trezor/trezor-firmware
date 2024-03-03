@@ -23,9 +23,9 @@ data_vma = ADDR(.data);
 data_size = SIZEOF(.data);
 
 /* used by the startup code to populate variables used by the C code */
-sensitive_lma = LOADADDR(.sensitive);
-sensitive_vma = ADDR(.sensitive);
-sensitive_size = SIZEOF(.sensitive);
+confidential_lma = LOADADDR(.confidential);
+confidential_vma = ADDR(.confidential);
+confidential_size = SIZEOF(.confidential);
 
 /* used by the startup code to wipe memory */
 sram1_start = ORIGIN(SRAM1);
@@ -45,7 +45,7 @@ sram6_end = ORIGIN(SRAM6) + LENGTH(SRAM6);
 boot_args_start = ORIGIN(BOOT_ARGS);
 boot_args_end = ORIGIN(BOOT_ARGS) + LENGTH(BOOT_ARGS);
 
-_codelen = SIZEOF(.flash) + SIZEOF(.data) + SIZEOF(.sensitive);
+_codelen = SIZEOF(.flash) + SIZEOF(.data) + SIZEOF(.confidential);
 _flash_start = ORIGIN(FLASH);
 _flash_end = ORIGIN(FLASH) + LENGTH(FLASH);
 _heap_start = ADDR(.heap);
@@ -82,6 +82,7 @@ SECTIONS {
   }
 
   .bss : ALIGN(4) {
+    *(.no_dma_buffers*);
     *(.bss*);
     . = ALIGN(4);
   } >SRAM1
@@ -95,8 +96,8 @@ SECTIONS {
     . = 16K; /* Overflow causes UsageFault */
   } >SRAM2
 
-  .sensitive : ALIGN(512) {
-    *(.sensitive*);
+  .confidential : ALIGN(512) {
+    *(.confidential*);
     . = ALIGN(512);
   } >SRAM2 AT>FLASH
 
