@@ -52,11 +52,11 @@
  */
 
 // Buffer for update bytes function, used to avoid writing partial blocks
-static flash_block_t norcow_write_buffer = {0};
+CONFIDENTIAL static flash_block_t norcow_write_buffer = {0};
 // Tracks how much data is in the buffer, not yet flashed
-static uint16_t norcow_write_buffer_filled = 0;
+CONFIDENTIAL static uint16_t norcow_write_buffer_filled = 0;
 // Key of the item being updated, -1 if no update is in progress
-static int32_t norcow_write_buffer_key = -1;
+CONFIDENTIAL static int32_t norcow_write_buffer_key = -1;
 
 /*
  * Writes data to given sector, starting from offset

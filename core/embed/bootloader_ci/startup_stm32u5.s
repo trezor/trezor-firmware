@@ -43,10 +43,10 @@ reset_handler:
   ldr r2, =data_size    // size in bytes
   bl memcpy
 
-  // copy sensitive data in from flash
-  ldr r0, =sensitive_vma     // dst addr
-  ldr r1, =sensitive_lma     // src addr
-  ldr r2, =sensitive_size    // size in bytes
+  // copy confidential data in from flash
+  ldr r0, =confidential_vma     // dst addr
+  ldr r1, =confidential_lma     // src addr
+  ldr r2, =confidential_size    // size in bytes
   bl memcpy
 
   // setup the stack protector (see build script "-fstack-protector-all") with an unpredictable value
