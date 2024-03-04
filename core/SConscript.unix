@@ -818,6 +818,7 @@ def cargo_build():
         features.append('bitcoin_only')
     features.append('ui')
     features.append('translations')
+    features.append('new_rendering')
     if PYOPT == '0':
         features.append('debug')
     if DMA2D:

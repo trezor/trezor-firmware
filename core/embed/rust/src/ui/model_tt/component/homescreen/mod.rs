@@ -558,7 +558,12 @@ impl Component for Lockscreen {
 }
 
 pub fn check_homescreen_format(buffer: &[u8]) -> bool {
-    is_image_jpeg(buffer) && jpeg_test(buffer)
+    #[cfg(not(feature = "new_rendering"))]
+    let result = is_image_jpeg(buffer) && jpeg_test(buffer);
+    #[cfg(feature = "new_rendering")]
+    let result = is_image_jpeg(buffer); // !@# TODO: test like if `new_rendering` is off
+
+    result
 }
 
 fn is_image_jpeg(buffer: &[u8]) -> bool {

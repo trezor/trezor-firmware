@@ -126,7 +126,9 @@ extern "C" fn display_image(
 ) {
     let data_slice = unsafe { core::slice::from_raw_parts(data, data_len as usize) };
     let image = Image::new(data_slice);
+    #[cfg(not(feature = "new_rendering"))]
     image.draw(Point::new(x, y), Alignment2D::TOP_LEFT);
+    // !@# TODO fix when new_redering is on
 }
 
 #[cfg(feature = "dma2d")]

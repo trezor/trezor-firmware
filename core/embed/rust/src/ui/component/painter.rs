@@ -75,7 +75,10 @@ pub fn jpeg_painter<'a>(
     scale: u8,
 ) -> Painter<impl FnMut(Rect)> {
     let off = Offset::new(size.x / (2 << scale), size.y / (2 << scale));
+    #[cfg(not(feature = "new_rendering"))]
     let f = move |area: Rect| display::tjpgd::jpeg(image(), area.center() - off, scale);
+    #[cfg(feature = "new_rendering")]
+    let f = move |area: Rect| {};
     Painter::new(f)
 }
 
