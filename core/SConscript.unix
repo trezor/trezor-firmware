@@ -8,6 +8,7 @@ BITCOIN_ONLY = ARGUMENTS.get('BITCOIN_ONLY', '0')
 EVERYTHING = BITCOIN_ONLY != '1'
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 DMA2D =  TREZOR_MODEL in ('T', 'T3T1')
+OPTIGA = TREZOR_MODEL in ('R', 'T3T1')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 
 if TREZOR_MODEL in ('DISC1', 'DISC2'):
@@ -76,8 +77,8 @@ CPPDEFINES_MOD += [
     ('USE_ETHEREUM', '1' if EVERYTHING else '0'),
     ('USE_MONERO', '1' if EVERYTHING else '0'),
     ('USE_CARDANO', '1' if EVERYTHING else '0'),
-    ('USE_NEM', '1' if (EVERYTHING and TREZOR_MODEL != "R") else '0'),
-    ('USE_EOS', '1' if (EVERYTHING and TREZOR_MODEL != "R") else '0'),
+    ('USE_NEM', '1' if (EVERYTHING and TREZOR_MODEL == "T") else '0'),
+    ('USE_EOS', '1' if (EVERYTHING and TREZOR_MODEL == "T") else '0'),
 ]
 SOURCE_MOD += [
     'embed/extmod/trezorobj.c',
@@ -215,6 +216,10 @@ elif TREZOR_MODEL in ('T', ):
 elif TREZOR_MODEL in ('R', ):
     SOURCE_MOD += [
         'embed/models/model_T2B1_layout.c',
+    ]
+elif TREZOR_MODEL in ('T3T1', ):
+    SOURCE_MOD += [
+        'embed/models/model_T3T1_layout.c',
     ]
 
 
@@ -398,7 +403,7 @@ if TREZOR_MODEL in ('T', 'R', 'T3T1'):
         'embed/trezorhal/unix/sbu.c',
     ]
 
-if TREZOR_MODEL == 'R':
+if OPTIGA:
     SOURCE_UNIX += [
         'embed/trezorhal/unix/optiga.c',
     ]
@@ -439,13 +444,14 @@ elif TREZOR_MODEL in ('1', 'R'):
 else:
     raise ValueError('Unknown Trezor model')
 
-if TREZOR_MODEL in ('T',):
+if TREZOR_MODEL in ('T', 'T3T1'):
     SDCARD = True
     SOURCE_UNIX += [
         'embed/trezorhal/unix/sdcard.c',
     ]
 else:
     SDCARD = False
+
 
 env.Tool('micropython')
 
@@ -696,7 +702,7 @@ if FROZEN:
             SOURCE_PY_DIR + 'apps/management/sd_protect.py',
         ] if not SDCARD else [] + [
             SOURCE_PY_DIR + 'apps/management/authenticate_device.py',
-        ] if TREZOR_MODEL not in ('R',) else [])
+        ] if not OPTIGA else [])
     )
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/management/*/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/misc/*.py'))
@@ -717,7 +723,7 @@ if FROZEN:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/cardano/*/*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/Cardano*.py'))
 
-        if TREZOR_MODEL != "R":
+        if TREZOR_MODEL == "T":
             SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/eos/*.py'))
             SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/eos/*/*.py'))
             SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/Eos*.py'))
@@ -731,7 +737,7 @@ if FROZEN:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/DebugMonero*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/Monero*.py'))
 
-        if TREZOR_MODEL != "R":
+        if TREZOR_MODEL == "T":
             SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/nem/*.py'))
             SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/nem/*/*.py'))
             SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/NEM*.py'))
@@ -754,7 +760,7 @@ if FROZEN:
 
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/webauthn/*.py'))
 
-        if TREZOR_MODEL != "R":
+        if TREZOR_MODEL == "T":
             SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/bitcoin/sign_tx/decred.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/bitcoin/sign_tx/bitcoinlike.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/bitcoin/sign_tx/zcash_v4.py'))
@@ -764,8 +770,8 @@ if FROZEN:
         source=SOURCE_PY,
         source_dir=SOURCE_PY_DIR,
         bitcoin_only=BITCOIN_ONLY,
-        backlight=TREZOR_MODEL in ('T',),
-        optiga=TREZOR_MODEL in ('R',),
+        backlight=TREZOR_MODEL in ('T', 'T3T1'),
+        optiga=OPTIGA,
         ui_layout=UI_LAYOUT,
         )
 
