@@ -106,6 +106,10 @@ elif TREZOR_MODEL in ('R', ):
     SOURCE_MOD += [
         'embed/models/model_T2B1_layout.c',
     ]
+elif TREZOR_MODEL in ('T3T1',):
+    SOURCE_MOD += [
+        'embed/models/model_T3T1_layout.c',
+    ]
 
 
 SOURCE_NANOPB = [
@@ -135,7 +139,7 @@ SOURCE_TREZORHAL = [
     'embed/trezorhal/unix/random_delays.c',
 ]
 
-if TREZOR_MODEL in ('R', ):
+if TREZOR_MODEL in ('R', 'T3T1'):
     SOURCE_TREZORHAL += [
         'embed/trezorhal/unix/secret.c',
         'embed/trezorhal/unix/optiga_hal.c',

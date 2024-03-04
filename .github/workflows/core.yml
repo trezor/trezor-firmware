@@ -22,8 +22,9 @@ jobs:
     name: Build firmware
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        model: [T2T1, T2B1]
+        model: [T2T1, T2B1]  # FIXME: add T3T1 after https://github.com/trezor/trezor-firmware/pull/3553 is fixed
         coins: [universal, btconly]
         type: ${{ fromJSON(github.event_name == 'schedule' && '["normal", "debuglink", "production"]' || '["normal", "debuglink"]') }}
         include:
@@ -31,7 +32,7 @@ jobs:
             coins: universal
             type: normal
     env:
-      TREZOR_MODEL: ${{ matrix.model == 'T2T1' && 'T' || 'R' }}
+      TREZOR_MODEL: ${{ matrix.model == 'T2T1' && 'T' || matrix.model == 'T2B1' && 'R' || matrix.model == 'D001' && 'DISC1' || matrix.model }}
       BITCOIN_ONLY: ${{ matrix.coins == 'universal' && '0' || '1' }}
       PYOPT: ${{ matrix.type == 'debuglink' && '0' || '1' }}
       PRODUCTION: ${{ matrix.type == 'production' && '1' || '0' }}
@@ -69,8 +70,9 @@ jobs:
     name: Build emu
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        model: [T2T1, T2B1]
+        model: [T2T1, T2B1, T3T1]
         coins: [universal, btconly]
         # type: [normal, debuglink]
         type: [debuglink]
@@ -79,7 +81,7 @@ jobs:
           - type: normal
             asan: asan
     env:
-      TREZOR_MODEL: ${{ matrix.model == 'T2T1' && 'T' || 'R' }}
+      TREZOR_MODEL: ${{ matrix.model == 'T2T1' && 'T' || matrix.model == 'T2B1' && 'R' || matrix.model }}
       BITCOIN_ONLY: ${{ matrix.coins == 'universal' && '0' || '1' }}
       PYOPT: ${{ matrix.type == 'debuglink' && '0' || '1' }}
       ADDRESS_SANITIZER: ${{ matrix.asan == 'asan' && '1' || '0' }}
@@ -92,7 +94,7 @@ jobs:
           submodules: recursive
       - uses: ./.github/actions/environment
       - run: nix-shell --run "poetry run make -C core build_bootloader_emu"
-        if: matrix.coins == 'universal'
+        if: matrix.coins == 'universal' && matrix.model != 'T3T1'  # FIXME T3T1 bootloader emulator
       - run: nix-shell --run "poetry run make -C core build_unix_frozen"
       - uses: actions/upload-artifact@v4
         with:
@@ -106,11 +108,12 @@ jobs:
     name: Python unit tests
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        model: [T2T1, T2B1]
+        model: [T2T1, T2B1, T3T1]
         asan: ${{ fromJSON(github.event_name == 'schedule' && '["noasan", "asan"]' || '["noasan"]') }}
     env:
-      TREZOR_MODEL: ${{ matrix.model == 'T2T1' && 'T' || 'R' }}
+      TREZOR_MODEL: ${{ matrix.model == 'T2T1' && 'T' || matrix.model == 'T2B1' && 'R' || matrix.model }}
       ADDRESS_SANITIZER: ${{ matrix.asan == 'asan' && '1' || '0' }}
       LSAN_OPTIONS: "suppressions=../../asan_suppressions.txt"
     steps:
@@ -126,6 +129,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: core_emu
     strategy:
+      fail-fast: false
       matrix:
         model: [T2T1, T2B1]
         asan: ${{ fromJSON(github.event_name == 'schedule' && '["noasan", "asan"]' || '["noasan"]') }}
@@ -136,7 +140,7 @@ jobs:
         exclude:
           - model: T2B1
     env:
-      TREZOR_MODEL: ${{ matrix.model == 'T2T1' && 'T' || 'R' }}
+      TREZOR_MODEL: ${{ matrix.model == 'T2T1' && 'T' || matrix.model == 'T2B1' && 'R' || matrix.model }}
       ADDRESS_SANITIZER: ${{ matrix.asan == 'asan' && '1' || '0' }}
       RUSTC_BOOTSTRAP: ${{ matrix.asan == 'asan' && '1' || '0' }}
       RUSTFLAGS: ${{ matrix.asan == 'asan' && '-Z sanitizer=address' || '' }}
@@ -155,6 +159,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: core_emu
     strategy:
+      fail-fast: false
       matrix:
         model: [T2T1, T2B1]
     steps:
@@ -180,7 +185,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        model: [T2T1, T2B1]
+        model: [T2T1, T2B1, T3T1]
         coins: [universal, btconly]
         asan: ${{ fromJSON(github.event_name == 'schedule' && '["noasan", "asan"]' || '["noasan"]') }}
         # T2B1 fails due to https://github.com/trezor/trezor-firmware/issues/3280
@@ -189,7 +194,7 @@ jobs:
           - model: T2B1
     env:
       TREZOR_PROFILING: ${{ matrix.asan == 'noasan' && '1' || '0' }}
-      TREZOR_MODEL: ${{ matrix.model == 'T2T1' && 'T' || 'R' }}
+      TREZOR_MODEL: ${{ matrix.model == 'T2T1' && 'T' || matrix.model == 'T2B1' && 'R' || matrix.model }}
       TREZOR_PYTEST_SKIP_ALTCOINS: ${{ matrix.coins == 'btconly' && '1' || '0' }}
       ADDRESS_SANITIZER: ${{ matrix.asan == 'asan' && '1' || '0' }}
       PYTEST_TIMEOUT: ${{ matrix.asan == 'asan' && 600 || 400 }}
@@ -234,8 +239,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: core_emu
     strategy:
+      fail-fast: false
       matrix:
-        model: [T2T1, T2B1]
+        model: [T2T1, T2B1, T3T1]
         asan: ${{ fromJSON(github.event_name == 'schedule' && '["noasan", "asan"]' || '["noasan"]') }}
     env:
       TREZOR_PROFILING: ${{ matrix.asan == 'noasan' && '1' || '0' }}
@@ -280,8 +286,11 @@ jobs:
     runs-on: ubuntu-latest
     needs: core_emu
     strategy:
+      fail-fast: false
       matrix:
-        model: [T2T1]  # FIXME: T2B1 https://github.com/trezor/trezor-firmware/issues/2724
+        # FIXME: T2B1 https://github.com/trezor/trezor-firmware/issues/2724
+        # FIXME: T3T1 https://github.com/trezor/trezor-firmware/issues/3595
+        model: [T2T1]
         asan: ${{ fromJSON(github.event_name == 'schedule' && '["noasan", "asan"]' || '["noasan"]') }}
     env:
       TREZOR_UPGRADE_TEST: core
@@ -306,8 +315,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: core_emu
     strategy:
+      fail-fast: false
       matrix:
-        model: [T2T1]  # TODO T2B1 https://github.com/trezor/trezor-firmware/issues/2724
+        model: [T2T1, T3T1]  # TODO T2B1 https://github.com/trezor/trezor-firmware/issues/2724 and T3T1
         asan: ${{ fromJSON(github.event_name == 'schedule' && '["noasan", "asan"]' || '["noasan"]') }}
     env:
       TREZOR_PROFILING: ${{ matrix.asan == 'noasan' && '1' || '0' }}
@@ -345,8 +355,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: core_emu
     strategy:
+      fail-fast: false
       matrix:
-        model: [T2T1]  # TODO T2B1
+        model: [T2T1, T2B1, T3T1]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -402,6 +413,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: core_firmware
     strategy:
+      fail-fast: false
       matrix:
         model: [T2T1, T2B1]
     steps:
@@ -424,6 +436,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: core_firmware
     strategy:
+      fail-fast: false
       matrix:
         model: [T2T1, T2B1]
     steps:
@@ -449,8 +462,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: core_emu
     strategy:
+      fail-fast: false
       matrix:
-        model: [T2T1, T2B1]
+        model: [T2T1, T2B1, T3T1]
         asan: ${{ fromJSON(github.event_name == 'schedule' && '["noasan", "asan"]' || '["noasan"]') }}
     env:
       TREZOR_PROFILING: ${{ matrix.asan == 'noasan' && '1' || '0' }}
@@ -491,8 +505,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: core_emu
     strategy:
+      fail-fast: false
       matrix:
-        model: [T2T1, T2B1]
+        model: [T2T1, T2B1, T3T1]
         asan: ${{ fromJSON(github.event_name == 'schedule' && '["noasan", "asan"]' || '["noasan"]') }}
     env:
       TREZOR_PROFILING: ${{ matrix.asan == 'noasan' && '1' || '0' }}
@@ -528,8 +543,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: core_emu
     strategy:
+      fail-fast: false
       matrix:
-        model: [T2T1]  # XXX T2B1 https://github.com/trezor/trezor-firmware/issues/2724
+        model: [T2T1, T3T1]  # XXX T2B1 https://github.com/trezor/trezor-firmware/issues/2724
         asan: ${{ fromJSON(github.event_name == 'schedule' && '["noasan", "asan"]' || '["noasan"]') }}
     env:
       TREZOR_PROFILING: ${{ matrix.asan == 'noasan' && '1' || '0' }}
@@ -570,8 +586,9 @@ jobs:
       - core_u2f_test
       - core_fido2_test
     strategy:
+      fail-fast: false
       matrix:
-        model: [T2T1, T2B1]
+        model: [T2T1, T2B1, T3T1]
         # T2B1 fails due to https://github.com/trezor/trezor-firmware/issues/3280
         # remove after single global layout is implemented (or bug above fixed):
         exclude:
