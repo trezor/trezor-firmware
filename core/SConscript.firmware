@@ -442,12 +442,15 @@ SOURCE_FIRMWARE = [
 ]
 
 
-if TREZOR_MODEL in ('T', 'T3T1', 'DISC1', 'DISC2'):
+if TREZOR_MODEL in ('T', 'DISC1', 'DISC2'):
     UI_LAYOUT = 'UI_LAYOUT_TT'
     ui_layout_feature = 'model_tt'
 elif TREZOR_MODEL in ('1', 'R'):
     UI_LAYOUT = 'UI_LAYOUT_TR'
     ui_layout_feature = 'model_tr'
+elif TREZOR_MODEL in ('T3T1',):
+    UI_LAYOUT = 'UI_LAYOUT_MERCURY'
+    ui_layout_feature = 'model_mercury'
 else:
     raise ValueError('Unknown Trezor model')
 
@@ -618,6 +621,12 @@ if FROZEN:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tr/*.py',
             exclude=[
                 SOURCE_PY_DIR + 'trezor/ui/layouts/tr/fido.py',
+            ] if not EVERYTHING else []
+        ))
+    elif UI_LAYOUT == 'UI_LAYOUT_MERCURY':
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/mercury/*.py',
+            exclude=[
+                SOURCE_PY_DIR + 'trezor/ui/layouts/mercury/fido.py',
             ] if not EVERYTHING else []
         ))
     else:
