@@ -1135,7 +1135,7 @@ static int32_t SITRONIX_Probe(uint32_t Instance) {
 #include <string.h>
 #include "touch.h"
 
-void touch_init(void) {
+secbool touch_init(void) {
   TS_Init_t TsInit;
 
   /* Initialize the TouchScreen */
@@ -1145,10 +1145,12 @@ void touch_init(void) {
   TsInit.Accuracy = 10;
 
   BSP_TS_Init(0, &TsInit);
+
+  return sectrue;
 }
 void touch_power_on(void) {}
 void touch_power_off(void) {}
-void touch_sensitivity(uint8_t value) {}
+secbool touch_sensitivity(uint8_t value) { return sectrue; }
 
 uint32_t touch_is_detected(void) { return sitronix_touching != 0; }
 
