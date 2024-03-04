@@ -22,6 +22,7 @@ from typing import Any, Iterator
 import pytest
 
 from trezorlib import debuglink, device, exceptions, messages, models
+from trezorlib._internal import translations
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.debuglink import message_filters
 
@@ -149,6 +150,27 @@ def test_error_version_mismatch(client: Client):
         device.change_language(
             client,
             language_data=sign_blob(blob),
+        )
+    assert client.features.language == "en-US"
+    _check_ping_screen_texts(client, get_ping_title("en"), get_ping_button("en"))
+
+
+def test_error_invalid_signature(client: Client):
+    assert client.features.language == "en-US"
+    # Invalid signature
+    # Changing the data in the signature section
+    with pytest.raises(
+        exceptions.TrezorFailure, match="Invalid translations data"
+    ), client:
+        blob = prepare_blob("cs", client.model, client.version)
+        blob.proof = translations.Proof(
+            merkle_proof=[],
+            sigmask=0b011,
+            signature=b"a" * 64,
+        )
+        device.change_language(
+            client,
+            language_data=blob.build(),
         )
     assert client.features.language == "en-US"
     _check_ping_screen_texts(client, get_ping_title("en"), get_ping_button("en"))
