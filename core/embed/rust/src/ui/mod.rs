@@ -15,6 +15,8 @@ pub mod util;
 
 pub mod layout;
 
+#[cfg(feature = "model_mercury")]
+pub mod model_mercury;
 #[cfg(feature = "model_tr")]
 pub mod model_tr;
 #[cfg(feature = "model_tt")]

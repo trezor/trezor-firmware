@@ -1,6 +1,8 @@
 //! Reexporting the `screens` module according to the
 //! current feature (Trezor model)
 
+#[cfg(feature = "model_mercury")]
+pub use super::model_mercury::screens::*;
 #[cfg(all(feature = "model_tr", not(feature = "model_tt")))]
 pub use super::model_tr::screens::*;
 #[cfg(feature = "model_tt")]
