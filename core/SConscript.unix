@@ -507,6 +507,7 @@ env = Environment(ENV=os.environ, CFLAGS='%s -DCONFIDENTIAL= -DPYOPT=%s -DBITCOI
 if TREZOR_MODEL in ('T', 'T3T1'):
     UI_LAYOUT = 'UI_LAYOUT_TT'
     ui_layout_feature = 'model_tt'
+# XXX TODO
 elif TREZOR_MODEL in ('1', 'R'):
     UI_LAYOUT = 'UI_LAYOUT_TR'
     ui_layout_feature = 'model_tr'
