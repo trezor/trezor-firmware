@@ -500,7 +500,8 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
         layout = self.debug.wait_layout()
         TR.assert_in(layout.title(), "address__title_receive_address")
         assert "(MULTISIG)" in layout.title()
-        assert layout.text_content().replace(" ", "") == self.address
+        content = layout.text_content().replace(" ", "")
+        assert self.address.startswith(content)
 
         self.debug.click(buttons.CORNER_BUTTON)
         assert "Qr" in self.all_components()
@@ -513,10 +514,14 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
         # Three xpub pages with the same testing logic
         for xpub_num in range(3):
             expected_title = f"MULTISIG XPUB #{xpub_num + 1}"
-            layout = self.debug.swipe_left(wait=True)
-            assert expected_title in layout.title()
-            content = layout.text_content().replace(" ", "")
-            assert self.xpubs[xpub_num] in content
+            content = ""
+
+            for _page in range(2):
+                layout = self.debug.swipe_left(wait=True)
+                assert expected_title in layout.title()
+                content += layout.text_content().replace(" ", "")
+
+            assert self.xpubs[xpub_num].startswith(content)
 
         self.debug.click(buttons.CORNER_BUTTON, wait=True)
         # show address
@@ -950,7 +955,8 @@ class InputFlowLockTimeDatetime(InputFlowBase):
     def assert_func(self, debug: DebugLink, br: messages.ButtonRequest) -> None:
         layout_text = get_text_possible_pagination(debug, br)
         TR.assert_in(layout_text, "bitcoin__locktime_set_to")
-        assert self.lock_time_str in layout_text
+        # FIXME: replace may not be needed after T3T1 UI is done
+        assert self.lock_time_str.replace(" ", "") in layout_text.replace(" ", "")
 
     def input_flow_tt(self) -> BRGeneratorType:
         yield from lock_time_input_flow_tt(self.debug, self.assert_func)

@@ -131,6 +131,7 @@ pub enum Font {
     MONO = 3,
     BIG = 4,
     DEMIBOLD = 5,
+    SUB = 6,
 }
 
 impl From<Font> for i32 {
