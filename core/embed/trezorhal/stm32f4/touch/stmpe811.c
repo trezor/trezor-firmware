@@ -470,7 +470,7 @@ void stmpe811_Reset() {
   IOE_Delay(2);
 }
 
-void touch_init(void) {
+secbool touch_init(void) {
   GPIO_InitTypeDef GPIO_InitStructure;
 
   __HAL_RCC_GPIOA_CLK_ENABLE();
@@ -486,9 +486,11 @@ void touch_init(void) {
   stmpe811_Reset();
   touch_set_mode();
   touch_sensitivity(0x06);
+
+  return sectrue;
 }
 
-void touch_sensitivity(uint8_t value) {
+secbool touch_sensitivity(uint8_t value) {
   // set panel threshold (TH_GROUP) - default value is 0x12
   //  uint8_t touch_panel_threshold[] = {0x80, value};
   //  ensure(sectrue *
@@ -496,6 +498,7 @@ void touch_sensitivity(uint8_t value) {
   //                         &I2c_handle, TOUCH_ADDRESS, touch_panel_threshold,
   //                         sizeof(touch_panel_threshold), 10)),
   //         NULL);
+  return sectrue;
 }
 
 uint32_t touch_is_detected(void) {

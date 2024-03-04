@@ -419,16 +419,28 @@ int bootloader_main(void) {
   i2c_init();
 #endif
 
-#ifdef USE_TOUCH
-  touch_power_on();
-  touch_init();
-#endif
+  display_reinit();
 
 #ifdef USE_DMA2D
   dma2d_init();
 #endif
 
-  display_reinit();
+  unit_variant_init();
+
+#ifdef USE_TOUCH
+  touch_power_on();
+#ifdef TREZOR_MODEL_T3T1
+  // on T3T1, tester needs to run without touch, so making an exception
+  // util unit variant is written in OTP
+  if (unit_variant_present()) {
+    ensure(touch_init(), "Touch screen panel was not loaded properly.");
+  } else {
+    touch_init();
+  }
+#else
+  ensure(touch_init(), "Touch screen panel was not loaded properly.");
+#endif
+#endif
 
 #ifdef STM32U5
   ensure(secret_ensure_initialized(), "secret reinitialized");
@@ -507,8 +519,6 @@ int bootloader_main(void) {
 #ifdef USE_RGB_LED
   rgb_led_init();
 #endif
-
-  unit_variant_init();
 
 #if PRODUCTION && !defined STM32U5
   // for STM32U5, this check is moved to boardloader
