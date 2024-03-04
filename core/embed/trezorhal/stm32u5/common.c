@@ -49,6 +49,8 @@ uint32_t systick_val_copy = 0;
 extern void shutdown_privileged(void);
 
 void __attribute__((noreturn)) trezor_shutdown(void) {
+  display_finish_actions();
+
   __HAL_RCC_SAES_CLK_DISABLE();
   // Erase all secrets
   TAMP->CR2 |= TAMP_CR2_BKERASE;

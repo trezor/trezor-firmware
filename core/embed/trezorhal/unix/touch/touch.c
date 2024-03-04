@@ -217,7 +217,7 @@ uint32_t touch_read(void) {
   return ev_type | touch_pack_xy(ev_x, ev_y);
 }
 
-void touch_init(void) {}
+secbool touch_init(void) { return sectrue; }
 void touch_power_on(void) {}
 void touch_wait_until_ready(void) {}
 

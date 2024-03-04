@@ -107,7 +107,7 @@ static void touch_active_pin_state(void) {
   HAL_Delay(5);
 }
 
-void touch_set_mode(void) {
+secbool touch_set_mode(void) {
   // set register 0xA4 G_MODE to interrupt trigger mode (0x01). basically, CTPM
   // generates a pulse when new data is available
   uint8_t touch_panel_config[] = {0xA4, 0x01};
@@ -115,12 +115,12 @@ void touch_set_mode(void) {
     if (HAL_OK == i2c_transmit(TOUCH_I2C_INSTANCE, TOUCH_ADDRESS,
                                touch_panel_config, sizeof(touch_panel_config),
                                10)) {
-      return;
+      return sectrue;
     }
     i2c_cycle(TOUCH_I2C_INSTANCE);
   }
 
-  ensure(secfalse, "Touch screen panel was not loaded properly.");
+  return secfalse;
 }
 
 void touch_power_on(void) {
@@ -136,7 +136,7 @@ void touch_power_off(void) {
   touch_default_pin_state();
 }
 
-void touch_init(void) {
+secbool touch_init(void) {
   GPIO_InitTypeDef GPIO_InitStructure;
 
   // PC4 capacitive touch panel module (CTPM) interrupt (INT) input
@@ -147,8 +147,10 @@ void touch_init(void) {
   HAL_GPIO_Init(TOUCH_INT_PORT, &GPIO_InitStructure);
   __HAL_GPIO_EXTI_CLEAR_FLAG(TOUCH_INT_PIN);
 
-  touch_set_mode();
-  touch_sensitivity(TOUCH_SENSITIVITY);
+  if (sectrue != touch_set_mode()) {
+    return secfalse;
+  }
+  return touch_sensitivity(TOUCH_SENSITIVITY);
 }
 
 void touch_wait_until_ready(void) {
@@ -158,19 +160,19 @@ void touch_wait_until_ready(void) {
   }
 }
 
-void touch_sensitivity(uint8_t value) {
+secbool touch_sensitivity(uint8_t value) {
   // set panel threshold (TH_GROUP) - default value is 0x12
   uint8_t touch_panel_threshold[] = {0x80, value};
   for (int i = 0; i < 3; i++) {
     if (HAL_OK == i2c_transmit(TOUCH_I2C_INSTANCE, TOUCH_ADDRESS,
                                touch_panel_threshold,
                                sizeof(touch_panel_threshold), 10)) {
-      return;
+      return sectrue;
     }
     i2c_cycle(TOUCH_I2C_INSTANCE);
   }
 
-  ensure(secfalse, "Touch screen panel was not loaded properly.");
+  return secfalse;
 }
 
 uint32_t touch_is_detected(void) {
