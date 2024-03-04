@@ -46,6 +46,7 @@ def generate(env):
         optiga = env["optiga"]
         layout_tt = env["ui_layout"] == "UI_LAYOUT_TT"
         layout_tr = env["ui_layout"] == "UI_LAYOUT_TR"
+        layout_mercury = env["ui_layout"] == "UI_LAYOUT_MERCURY"
         thp = env["thp"]
         interim = f"{target[:-4]}.i"  # replace .mpy with .i
         sed_scripts = [
@@ -54,6 +55,7 @@ def generate(env):
             rf"-e 's/utils\.USE_OPTIGA/{optiga}/g'",
             rf"-e 's/utils\.UI_LAYOUT == \"TT\"/{layout_tt}/g'",
             rf"-e 's/utils\.UI_LAYOUT == \"TR\"/{layout_tr}/g'",
+            rf"-e 's/utils\.UI_LAYOUT == \"MERCURY\"/{layout_mercury}/g'",
             rf"-e 's/utils\.USE_THP/{thp}/g'",
             r"-e 's/if TYPE_CHECKING/if False/'",
             r"-e 's/import typing/# \0/'",
