@@ -36,12 +36,21 @@ if TREZOR_MODEL in ('R', ):
     FONT_BOLD='Font_PixelOperator_Bold_8'
     FONT_MONO='Font_PixelOperator_Regular_8'
     FONT_BIG=None
-elif TREZOR_MODEL in ('T', 'T3T1', 'DISC1', 'DISC2'):
+    FONT_SUB=None
+elif TREZOR_MODEL in ('T', 'DISC1', 'DISC2'):
     FONT_NORMAL='Font_TTHoves_Regular_21'
     FONT_DEMIBOLD='Font_TTHoves_Regular_21'
     FONT_BOLD='Font_TTHoves_Bold_17'
     FONT_MONO='Font_TTHoves_Regular_21'
     FONT_BIG=None
+    FONT_SUB=None
+elif TREZOR_MODEL in ('T3T1',):
+    FONT_NORMAL='Font_TTSatoshi_Medium_21'
+    FONT_DEMIBOLD=None
+    FONT_BOLD=None
+    FONT_MONO='Font_RobotoMono_Medium_21'
+    FONT_BIG=None
+    FONT_SUB=None
 
 # modtrezorcrypto
 CCFLAGS_MOD += '-Wno-sequence-point '
@@ -117,6 +126,7 @@ tools.add_font('BOLD', FONT_BOLD, CPPDEFINES_MOD, SOURCE_MOD)
 tools.add_font('DEMIBOLD', FONT_DEMIBOLD, CPPDEFINES_MOD, SOURCE_MOD)
 tools.add_font('MONO', FONT_MONO, CPPDEFINES_MOD, SOURCE_MOD)
 tools.add_font('BIG', FONT_BIG, CPPDEFINES_MOD, SOURCE_MOD)
+tools.add_font('SUB', FONT_SUB, CPPDEFINES_MOD, SOURCE_MOD)
 
 env = Environment(
     ENV=os.environ,
