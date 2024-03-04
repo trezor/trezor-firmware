@@ -225,6 +225,10 @@ elif TREZOR_MODEL in ('R', ):
     SOURCE_MOD += [
         'embed/models/model_T2B1_layout.c',
     ]
+elif TREZOR_MODEL in ('T3T1', ):
+    SOURCE_MOD += [
+        'embed/models/model_T3T1_layout.c',
+    ]
 
 
 
@@ -407,7 +411,7 @@ if TREZOR_MODEL in ('T', 'R', 'T3T1'):
         'embed/trezorhal/unix/sbu.c',
     ]
 
-if TREZOR_MODEL == 'R':
+if TREZOR_MODEL in ('R', 'T3T1'):
     SOURCE_UNIX += [
         'embed/trezorhal/unix/optiga.c',
     ]
@@ -442,13 +446,14 @@ env = Environment(ENV=os.environ, CFLAGS='%s -DPYOPT=%s -DBITCOIN_ONLY=%s %s' % 
 if TREZOR_MODEL in ('T', 'T3T1'):
     UI_LAYOUT = 'UI_LAYOUT_TT'
     ui_layout_feature = 'model_tt'
+# XXX TODO
 elif TREZOR_MODEL in ('1', 'R'):
     UI_LAYOUT = 'UI_LAYOUT_TR'
     ui_layout_feature = 'model_tr'
 else:
     raise ValueError('Unknown Trezor model')
 
-if TREZOR_MODEL in ('T',):
+if TREZOR_MODEL in ('T', 'T3T1'):
     SDCARD = True
     SOURCE_UNIX += [
         'embed/trezorhal/unix/sdcard.c',
@@ -773,8 +778,8 @@ if FROZEN:
         source=SOURCE_PY,
         source_dir=SOURCE_PY_DIR,
         bitcoin_only=BITCOIN_ONLY,
-        backlight=TREZOR_MODEL in ('T',),
-        optiga=TREZOR_MODEL in ('R',),
+        backlight=TREZOR_MODEL in ('T', 'T3T1'),
+        optiga=TREZOR_MODEL in ('R', 'T3T1'),
         ui_layout=UI_LAYOUT,
         )
 

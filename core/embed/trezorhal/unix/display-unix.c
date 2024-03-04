@@ -64,6 +64,13 @@
 #define TOUCH_OFFSET_X 32
 #define TOUCH_OFFSET_Y 84
 
+#elif defined TREZOR_MODEL_T3T1
+
+#define WINDOW_WIDTH 400
+#define WINDOW_HEIGHT 600
+#define TOUCH_OFFSET_X 80
+#define TOUCH_OFFSET_Y 110
+
 #else
 #error Unknown Trezor model
 #endif
@@ -284,7 +291,7 @@ void display_refresh(void) {
 
 int display_orientation(int degrees) {
   if (degrees != DISPLAY_ORIENTATION) {
-#if defined TREZOR_MODEL_T
+#if defined TREZOR_MODEL_T || defined TREZOR_MODEL_T3T1
     if (degrees == 0 || degrees == 90 || degrees == 180 || degrees == 270) {
 #elif defined TREZOR_MODEL_1 || defined TREZOR_MODEL_R
     if (degrees == 0 || degrees == 180) {
