@@ -4,3 +4,5 @@ if utils.UI_LAYOUT == "TT":
     from .tt.progress import *  # noqa: F401,F403
 elif utils.UI_LAYOUT == "TR":
     from .tr.progress import *  # noqa: F401,F403
+elif utils.UI_LAYOUT == "MERCURY":
+    from .mercury.progress import *  # noqa: F401,F403
