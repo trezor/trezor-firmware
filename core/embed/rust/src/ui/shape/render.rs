@@ -42,7 +42,7 @@ pub trait Renderer {
     }
 
     fn in_clip(&mut self, r: Rect, inner: &dyn Fn(&mut Self)) {
-        let original = self.set_window(r);
+        let original = self.set_clip(r);
         inner(self);
         self.set_viewport(original);
     }

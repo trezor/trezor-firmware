@@ -1,7 +1,7 @@
 use crate::ui::{
     canvas::{BitmapView, Canvas},
     display::{Color, Font},
-    geometry::{Alignment, Alignment2D, Offset, Point, Rect},
+    geometry::{Alignment, Offset, Point, Rect},
 };
 
 use super::{DrawingCache, Renderer, Shape, ShapeClone};
@@ -20,8 +20,6 @@ pub struct Text<'a> {
     font: Font,
     // Horizontal alignment
     align: Alignment,
-    // Vertical alignment
-    baseline: bool,
 }
 
 impl<'a> Text<'a> {
@@ -34,7 +32,6 @@ impl<'a> Text<'a> {
             color: Color::white(),
             font: Font::NORMAL,
             align: Alignment::Start,
-            baseline: true,
         }
     }
 
@@ -50,29 +47,33 @@ impl<'a> Text<'a> {
         Self { align, ..self }
     }
 
-    pub fn with_baseline(self, baseline: bool) -> Self {
-        Self { baseline, ..self }
-    }
-
     pub fn render(self, renderer: &mut impl Renderer) {
         renderer.render_shape(self);
+    }
+
+    fn aligned_pos(&self) -> Point {
+        match self.align {
+            Alignment::Start => self.pos,
+            Alignment::Center => Point::new(
+                self.font.horz_center(self.pos.x, self.pos.x, self.text),
+                self.pos.y,
+            ),
+            Alignment::End => Point::new(self.pos.x - self.font.text_width(self.text), self.pos.y),
+        }
     }
 }
 
 impl<'a> Shape for Text<'a> {
     fn bounds(&self, _cache: &DrawingCache) -> Rect {
-        let w = self.font.text_width(self.text);
-        let h = self.font.text_max_height();
-        let ofs = if self.baseline {
-            Offset::y(self.font.text_max_height() - self.font.text_baseline())
-        } else {
-            Offset::zero()
-        };
-        let size = Offset::new(w, h);
-        Rect::from_top_left_and_size(
-            size.snap(self.pos, Alignment2D(self.align, Alignment::Start)) - ofs,
-            size,
-        )
+        let pos = self.aligned_pos();
+        let max_ascent = self.font.text_max_height() - self.font.text_baseline();
+        let max_descent = self.font.text_baseline();
+        Rect {
+            x0: pos.x,
+            y0: pos.y - max_ascent,
+            x1: pos.x + self.font.text_width(self.text),
+            y1: pos.y + max_descent,
+        }
     }
 
     fn cleanup(&mut self, _cache: &DrawingCache) {}

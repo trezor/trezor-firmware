@@ -93,7 +93,7 @@ impl Shape for Circle {
         };
 
         if self.start_angle.is_none() && self.end_angle.is_none() {
-            if self.thickness == 1 {
+            if th == 1 {
                 if let Some(color) = self.bg_color {
                     canvas.fill_circle(self.center, self.radius, color);
                 }
@@ -105,7 +105,9 @@ impl Shape for Circle {
                 }
             } else {
                 if let Some(color) = self.fg_color {
-                    canvas.fill_circle(self.center, self.radius, color);
+                    if th > 0 {
+                        canvas.fill_circle(self.center, self.radius, color);
+                    }
                 }
                 if let Some(color) = self.bg_color {
                     canvas.fill_circle(self.center, self.radius - th, color);
@@ -116,7 +118,9 @@ impl Shape for Circle {
             let end = self.end_angle.unwrap_or(360);
 
             if let Some(color) = self.fg_color {
-                canvas.fill_sector(self.center, self.radius, start, end, color);
+                if th > 0 {
+                    canvas.fill_sector(self.center, self.radius, start, end, color);
+                }
             }
             if let Some(color) = self.bg_color {
                 canvas.fill_sector(self.center, self.radius - th, start, end, color);

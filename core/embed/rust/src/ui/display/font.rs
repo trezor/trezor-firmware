@@ -239,6 +239,16 @@ impl Font {
         constant::LINE_SPACE + self.text_height()
     }
 
+    // Returns x-coordinate of the text start (including left bearing)
+    pub fn horz_center(&self, start: i16, end: i16, text: &str) -> i16 {
+        (start + end - self.visible_text_width(text)) / 2 - self.start_x_bearing(text)
+    }
+
+    // Returns y-coordinate of the text baseline
+    pub fn vert_center(&self, start: i16, end: i16, text: &str) -> i16 {
+        (start + end + self.visible_text_height(text)) / 2
+    }
+
     pub fn get_glyph(self, ch: char) -> Glyph {
         let gl_data = display::get_char_glyph(ch as u16, self.into());
 

@@ -565,6 +565,8 @@ impl Alignment2D {
     pub const TOP_RIGHT: Alignment2D = Alignment2D(Alignment::End, Alignment::Start);
     pub const TOP_CENTER: Alignment2D = Alignment2D(Alignment::Center, Alignment::Start);
     pub const CENTER: Alignment2D = Alignment2D(Alignment::Center, Alignment::Center);
+    pub const CENTER_LEFT: Alignment2D = Alignment2D(Alignment::Start, Alignment::Center);
+    pub const CENTER_RIGHT: Alignment2D = Alignment2D(Alignment::End, Alignment::Center);
     pub const BOTTOM_LEFT: Alignment2D = Alignment2D(Alignment::Start, Alignment::End);
     pub const BOTTOM_RIGHT: Alignment2D = Alignment2D(Alignment::End, Alignment::End);
     pub const BOTTOM_CENTER: Alignment2D = Alignment2D(Alignment::Center, Alignment::End);
