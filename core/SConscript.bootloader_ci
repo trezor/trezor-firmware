@@ -40,6 +40,13 @@ elif TREZOR_MODEL in ('T', 'T3T1'):
     FONT_BOLD=None
     FONT_MONO='Font_RobotoMono_Medium_20'
     FONT_BIG=None
+elif TREZOR_MODEL in ('T3T1', ):
+    FONT_NORMAL='Font_TTSatoshi_Medium_21'
+    FONT_DEMIBOLD=None
+    FONT_BOLD=None
+    FONT_MONO='Font_RobotoMono_Medium_21'
+    FONT_BIG=None
+    FONT_SUB=None
 
 # modtrezorcrypto
 CCFLAGS_MOD += '-Wno-sequence-point '

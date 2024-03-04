@@ -39,6 +39,13 @@ elif TREZOR_MODEL in ('T', 'T3T1'):
     FONT_BOLD='Font_Roboto_Bold_20'
     FONT_MONO=None
     FONT_BIG=None
+elif TREZOR_MODEL in ('T3T1', ):
+    FONT_NORMAL=None
+    FONT_DEMIBOLD=None
+    FONT_BOLD='Font_TTSatoshi_Medium_21'
+    FONT_MONO=None
+    FONT_BIG=None
+    FONT_SUB=None
 
 # modtrezorcrypto
 CPPPATH_MOD += [
