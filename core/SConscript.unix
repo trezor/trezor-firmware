@@ -49,7 +49,8 @@ if TREZOR_MODEL in ('1', 'R'):
     FONT_BIG='Font_Unifont_Regular_16'
     FONT_NORMAL_UPPER='Font_PixelOperator_Regular_8_upper'
     FONT_BOLD_UPPER='Font_PixelOperator_Bold_8_upper'
-elif TREZOR_MODEL in ('T', 'T3T1'):
+    FONT_SUB=None
+elif TREZOR_MODEL in ('T',):
     FONT_NORMAL='Font_TTHoves_Regular_21'
     FONT_DEMIBOLD='Font_TTHoves_DemiBold_21'
     FONT_BOLD=None
@@ -57,6 +58,16 @@ elif TREZOR_MODEL in ('T', 'T3T1'):
     FONT_BIG=None
     FONT_NORMAL_UPPER=None
     FONT_BOLD_UPPER='Font_TTHoves_Bold_17_upper'
+    FONT_SUB=None
+elif TREZOR_MODEL in ('T3T1',):
+    FONT_NORMAL='Font_TTSatoshi_DemiBold_21'
+    FONT_DEMIBOLD='Font_TTSatoshi_DemiBold_21'
+    FONT_BOLD='Font_TTSatoshi_DemiBold_21'
+    FONT_MONO='Font_RobotoMono_Medium_21'
+    FONT_BIG='Font_TTSatoshi_DemiBold_42'
+    FONT_NORMAL_UPPER=None
+    FONT_BOLD_UPPER=None
+    FONT_SUB='Font_TTSatoshi_DemiBold_18'
 
 # modtrezorconfig
 CPPPATH_MOD += [
@@ -492,6 +503,7 @@ tools.add_font('MONO', FONT_MONO, CPPDEFINES_MOD, SOURCE_MOD)
 tools.add_font('BIG', FONT_BIG, CPPDEFINES_MOD, SOURCE_MOD)
 tools.add_font('NORMAL_UPPER', FONT_NORMAL_UPPER, CPPDEFINES_MOD, SOURCE_MOD)
 tools.add_font('BOLD_UPPER', FONT_BOLD_UPPER, CPPDEFINES_MOD, SOURCE_MOD)
+tools.add_font('SUB', FONT_SUB, CPPDEFINES_MOD, SOURCE_MOD)
 
 
 SOURCE_QSTR = SOURCE_MOD + SOURCE_MICROPYTHON + SOURCE_UNIX

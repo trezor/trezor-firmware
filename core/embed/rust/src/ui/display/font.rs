@@ -155,6 +155,7 @@ pub enum Font {
     DEMIBOLD = 5,
     NORMAL_UPPER = 6,
     BOLD_UPPER = 7,
+    SUB = 8,
 }
 
 impl From<Font> for i32 {
