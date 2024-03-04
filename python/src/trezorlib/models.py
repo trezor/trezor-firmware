@@ -64,7 +64,7 @@ T2B1 = TrezorModel(
 )
 
 T3T1 = TrezorModel(
-    name="T3T1",
+    name="Safe 5",
     internal_name="T3T1",
     minimum_version=(2, 1, 0),
     vendors=VENDORS,
@@ -96,6 +96,7 @@ TREZOR_ONE = T1B1
 TREZOR_T = T2T1
 TREZOR_R = T2B1
 TREZOR_SAFE3 = T2B1
+TREZOR_SAFE5 = T3T1
 TREZOR_DISC1 = DISC1
 TREZOR_DISC2 = DISC2
 

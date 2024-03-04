@@ -48,6 +48,7 @@ MODEL_CHOICE = ChoiceType(
         "T1B1": models.T1B1,
         "T2T1": models.T2T1,
         "T2B1": models.T2B1,
+        "T3T1": models.T3T1,
         # aliases
         "1": models.T1B1,
         "one": models.T1B1,
@@ -55,6 +56,8 @@ MODEL_CHOICE = ChoiceType(
         "r": models.T2B1,
         "safe3": models.T2B1,
         "s3": models.T2B1,
+        "safe5": models.T3T1,
+        "s5": models.T3T1,
     },
     case_sensitive=False,
 )
