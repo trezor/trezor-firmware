@@ -157,6 +157,18 @@ trezor.ui.layouts.fido
 import trezor.ui.layouts.fido
 trezor.ui.layouts.homescreen
 import trezor.ui.layouts.homescreen
+trezor.ui.layouts.mercury
+import trezor.ui.layouts.mercury
+trezor.ui.layouts.mercury.fido
+import trezor.ui.layouts.mercury.fido
+trezor.ui.layouts.mercury.homescreen
+import trezor.ui.layouts.mercury.homescreen
+trezor.ui.layouts.mercury.progress
+import trezor.ui.layouts.mercury.progress
+trezor.ui.layouts.mercury.recovery
+import trezor.ui.layouts.mercury.recovery
+trezor.ui.layouts.mercury.reset
+import trezor.ui.layouts.mercury.reset
 trezor.ui.layouts.progress
 import trezor.ui.layouts.progress
 trezor.ui.layouts.recovery
