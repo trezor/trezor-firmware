@@ -51,6 +51,8 @@ jobs:
       - run: nix-shell --run "poetry run make -C core build_firmware"
       - run: nix-shell --run "poetry run make -C core sizecheck"
         if: matrix.coins == 'universal' && matrix.type != 'debuglink'
+      - run: nix-shell --run "poetry run ./tools/check-bitcoin-only core/build/firmware/firmware.bin"
+        if: matrix.coins == 'btconly' && matrix.type != 'debuglink'
       - uses: actions/upload-artifact@v4
         with:
           name: core-firmware-${{ matrix.model }}-${{ matrix.coins }}-${{ matrix.type }}

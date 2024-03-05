@@ -8,7 +8,7 @@ EXCEPTIONS+=( "omni" )  # OMNI is part of the bitcoin app
 EXCEPTIONS+=( "dash" )
 EXCEPTIONS+=( "confirm_ethereum_tx" "confirm_ethereum_staking_tx" )  # model-specific, so is in layout/__init__.py instead of ethereum/layout.py
 EXCEPTIONS+=( "__" )  # ignoring the translations blob (section__key delimiter)
-EXCEPTIONS+=( "{}" )  # ignoring the translations blob (template identifier)
+EXCEPTIONS+=( "{}" "{0}" )  # ignoring the translations blob (template identifier)
 
 GREP_ARGS=()
 for exception in "${EXCEPTIONS[@]}"; do
