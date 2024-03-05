@@ -13,11 +13,13 @@ use crate::{
         event::TouchEvent,
         geometry::{Alignment, Alignment2D, Grid, Insets, Offset, Rect},
         model_mercury::component::{
-            button::{Button, ButtonContent, ButtonMsg, ButtonMsg::Clicked},
+            button::{
+                Button, ButtonContent,
+                ButtonMsg::{self, Clicked},
+            },
             theme,
         },
-        shape,
-        shape::Renderer,
+        shape::{self, Renderer},
     },
 };
 
@@ -31,11 +33,11 @@ const MAX_VISIBLE_DOTS: usize = 14;
 const MAX_VISIBLE_DIGITS: usize = 16;
 const DIGIT_COUNT: usize = 10; // 0..10
 
-const HEADER_PADDING_SIDE: i16 = 5;
-const HEADER_PADDING_BOTTOM: i16 = 12;
+const HEADER_PADDING_SIDE: i16 = 2;
+const HEADER_PADDING_BOTTOM: i16 = 2;
 
 const HEADER_PADDING: Insets = Insets::new(
-    theme::borders().top,
+    0,
     HEADER_PADDING_SIDE,
     HEADER_PADDING_BOTTOM,
     HEADER_PADDING_SIDE,
@@ -60,8 +62,8 @@ where
     T: AsRef<str>,
 {
     // Label position fine-tuning.
-    const MAJOR_OFF: Offset = Offset::y(11);
-    const MINOR_OFF: Offset = Offset::y(11);
+    const MAJOR_OFF: Offset = Offset::y(0);
+    const MINOR_OFF: Offset = Offset::y(0);
 
     pub fn new(
         major_prompt: T,
@@ -70,17 +72,13 @@ where
         allow_cancel: bool,
     ) -> Self {
         // Control buttons.
-        let erase_btn = Button::with_icon_blend(
-            theme::IMAGE_BG_BACK_BTN,
-            theme::ICON_BACK,
-            Offset::new(30, 12),
-        )
-        .styled(theme::button_reset())
-        .with_long_press(theme::ERASE_HOLD_DURATION)
-        .initially_enabled(false);
+        let erase_btn = Button::with_icon(theme::ICON_DELETE)
+            .styled(theme::button_pin_erase())
+            .with_long_press(theme::ERASE_HOLD_DURATION)
+            .initially_enabled(false);
         let erase_btn = Maybe::hidden(theme::BG, erase_btn).into_child();
 
-        let cancel_btn = Button::with_icon(theme::ICON_CANCEL).styled(theme::button_cancel());
+        let cancel_btn = Button::with_icon(theme::ICON_CANCEL).styled(theme::button_pin_cancel());
         let cancel_btn = Maybe::new(theme::BG, cancel_btn, allow_cancel).into_child();
 
         Self {
@@ -96,7 +94,7 @@ where
             erase_btn,
             cancel_btn,
             confirm_btn: Button::with_icon(theme::ICON_CONFIRM)
-                .styled(theme::button_confirm())
+                .styled(theme::button_pin_confirm())
                 .initially_enabled(false)
                 .into_child(),
             digit_btns: Self::generate_digit_buttons(),
@@ -155,23 +153,16 @@ where
     type Msg = PinKeyboardMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        // Ignore the top padding for now, we need it to reliably register textbox touch
-        // events.
-        let borders_no_top = Insets {
-            top: 0,
-            ..theme::borders()
-        };
         // Prompts and PIN dots display.
-        let (header, keypad) = bounds
-            .inset(borders_no_top)
-            .split_bottom(4 * theme::PIN_BUTTON_HEIGHT + 3 * theme::BUTTON_SPACING);
+        let (header, keypad) =
+            bounds.split_bottom(4 * theme::PIN_BUTTON_HEIGHT + 3 * theme::PIN_BUTTON_SPACING);
         let prompt = header.inset(HEADER_PADDING);
         // the inset -3 is a workaround for long text in "re-enter wipe code"
         let major_area = prompt.translate(Self::MAJOR_OFF).inset(Insets::right(-3));
         let minor_area = prompt.translate(Self::MINOR_OFF);
 
         // Control buttons.
-        let grid = Grid::new(keypad, 4, 3).with_spacing(theme::BUTTON_SPACING);
+        let grid = Grid::new(keypad, 4, 3).with_spacing(theme::PIN_BUTTON_SPACING);
 
         // Prompts and PIN dots display.
         self.textbox_pad.place(header);
@@ -272,6 +263,7 @@ where
     fn render(&mut self, target: &mut impl Renderer) {
         self.erase_btn.render(target);
         self.textbox_pad.render(target);
+
         if self.textbox.inner().is_empty() {
             if let Some(ref mut w) = self.major_warning {
                 w.render(target);
@@ -283,7 +275,12 @@ where
         } else {
             self.textbox.render(target);
         }
-        self.confirm_btn.render(target);
+
+        // Painting the confirm only if there is already a pin
+        if !self.textbox.inner().is_empty() {
+            self.confirm_btn.render(target);
+        }
+
         for btn in &mut self.digit_btns {
             btn.render(target);
         }
@@ -390,13 +387,14 @@ impl PinDots {
     }
 
     fn render_digits(&self, area: Rect, target: &mut impl Renderer) {
+        let left = area.left_center() + Offset::y(Font::MONO.text_height() / 2);
         let center = area.center() + Offset::y(Font::MONO.text_height() / 2);
         let right = center + Offset::x(Font::MONO.text_width("0") * (MAX_VISIBLE_DOTS as i16) / 2);
         let digits = self.digits.len();
 
         if digits <= MAX_VISIBLE_DOTS {
-            shape::Text::new(center, &self.digits)
-                .with_align(Alignment::Center)
+            shape::Text::new(left, &self.digits)
+                .with_align(Alignment::Start)
                 .with_font(Font::MONO)
                 .with_fg(self.style.text_color)
                 .render(target);
@@ -456,7 +454,7 @@ impl PinDots {
 
     fn render_dots(&self, area: Rect, target: &mut impl Renderer) {
         // let mut cursor = self.size().snap(area.left_center(), Alignment2D::CENTER);
-        let cursor = area.bottom_left();
+        let mut cursor = area.bottom_left();
 
         let digits = self.digits.len();
         let dots_visible = digits.min(MAX_VISIBLE_DOTS);

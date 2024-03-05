@@ -43,6 +43,7 @@ pub const GREY_LIGHT: Color = Color::rgb(0x90, 0x90, 0x90); // secondary text
 pub const GREY_MEDIUM: Color = Color::rgb(0x4F, 0x4F, 0x4F); // button pressed
 pub const GREY_DARK: Color = Color::rgb(0x35, 0x35, 0x35); // button
 pub const VIOLET: Color = Color::rgb(0x95, 0x00, 0xCA);
+pub const PIN_BUTTON_COLOR: Color = Color::rgb(0x16, 0x1F, 0x24);
 
 pub const FATAL_ERROR_COLOR: Color = Color::rgb(0xE7, 0x0E, 0x0E);
 pub const FATAL_ERROR_HIGHLIGHT_COLOR: Color = Color::rgb(0xFF, 0x41, 0x41);
@@ -373,10 +374,10 @@ pub const fn button_pin() -> ButtonStyleSheet {
         normal: &ButtonStyle {
             font: Font::MONO,
             text_color: FG,
-            button_color: GREY_DARK,
+            button_color: PIN_BUTTON_COLOR,
             background_color: BG,
             border_color: BG,
-            border_radius: RADIUS,
+            border_radius: 0,
             border_width: 0,
         },
         active: &ButtonStyle {
@@ -385,7 +386,7 @@ pub const fn button_pin() -> ButtonStyleSheet {
             button_color: GREY_MEDIUM,
             background_color: BG,
             border_color: FG,
-            border_radius: RADIUS,
+            border_radius: 0,
             border_width: 0,
         },
         disabled: &ButtonStyle {
@@ -394,7 +395,71 @@ pub const fn button_pin() -> ButtonStyleSheet {
             button_color: BG, // so there is no "button" itself, just the text
             background_color: BG,
             border_color: BG,
-            border_radius: RADIUS,
+            border_radius: 0,
+            border_width: 0,
+        },
+    }
+}
+
+pub const fn button_pin_cancel() -> ButtonStyleSheet {
+    ButtonStyleSheet {
+        normal: &ButtonStyle {
+            font: Font::BOLD,
+            text_color: RED,
+            button_color: BG,
+            background_color: BG,
+            border_color: BG,
+            border_radius: 0,
+            border_width: 0,
+        },
+        active: &ButtonStyle {
+            font: Font::BOLD,
+            text_color: RED,
+            button_color: BG,
+            background_color: BG,
+            border_color: FG,
+            border_radius: 0,
+            border_width: 0,
+        },
+        disabled: &ButtonStyle {
+            font: Font::BOLD,
+            text_color: GREY_LIGHT,
+            button_color: BG,
+            background_color: BG,
+            border_color: BG,
+            border_radius: 0,
+            border_width: 0,
+        },
+    }
+}
+
+pub const fn button_pin_erase() -> ButtonStyleSheet {
+    ButtonStyleSheet {
+        normal: &ButtonStyle {
+            font: Font::BOLD,
+            text_color: GREY_LIGHT,
+            button_color: BG,
+            background_color: BG,
+            border_color: BG,
+            border_radius: 0,
+            border_width: 0,
+        },
+        active: &ButtonStyle {
+            font: Font::BOLD,
+            text_color: FG,
+            button_color: BG,
+            background_color: BG,
+            border_color: FG,
+            border_radius: 0,
+            border_width: 0,
+        },
+        disabled: &ButtonStyle {
+            font: Font::BOLD,
+            text_color: FG,
+            button_color: BG,
+            background_color: BG,
+            border_color: BG,
+            border_radius: 0,
             border_width: 0,
         },
     }
@@ -403,30 +468,30 @@ pub const fn button_pin() -> ButtonStyleSheet {
 pub const fn button_pin_confirm() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
-            font: Font::MONO,
-            text_color: FG,
-            button_color: GREEN,
+            font: Font::BOLD,
+            text_color: GREEN,
+            button_color: BG,
             background_color: BG,
             border_color: BG,
-            border_radius: RADIUS,
+            border_radius: 0,
             border_width: 0,
         },
         active: &ButtonStyle {
-            font: Font::MONO,
-            text_color: FG,
-            button_color: GREEN_DARK,
+            font: Font::BOLD,
+            text_color: GREEN,
+            button_color: BG,
             background_color: BG,
-            border_color: FG,
-            border_radius: RADIUS,
+            border_color: GREEN,
+            border_radius: 0,
             border_width: 0,
         },
         disabled: &ButtonStyle {
-            font: Font::MONO,
+            font: Font::BOLD,
             text_color: GREY_LIGHT,
-            button_color: GREY_DARK,
+            button_color: BG,
             background_color: BG,
             border_color: BG,
-            border_radius: RADIUS,
+            border_radius: 0,
             border_width: 0,
         },
     }
@@ -657,7 +722,8 @@ pub const RECOVERY_SPACING: i16 = 18;
 pub const CORNER_BUTTON_SIDE: i16 = 44;
 pub const CORNER_BUTTON_SPACING: i16 = BUTTON_SPACING;
 pub const INFO_BUTTON_HEIGHT: i16 = 44;
-pub const PIN_BUTTON_HEIGHT: i16 = 40;
+pub const PIN_BUTTON_HEIGHT: i16 = 52;
+pub const PIN_BUTTON_SPACING: i16 = 2;
 pub const MNEMONIC_BUTTON_HEIGHT: i16 = 52;
 pub const RESULT_PADDING: i16 = 6;
 pub const RESULT_FOOTER_START: i16 = 171;
