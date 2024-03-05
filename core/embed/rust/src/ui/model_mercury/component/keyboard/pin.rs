@@ -455,7 +455,8 @@ impl PinDots {
     }
 
     fn render_dots(&self, area: Rect, target: &mut impl Renderer) {
-        let mut cursor = self.size().snap(area.center(), Alignment2D::CENTER);
+        // let mut cursor = self.size().snap(area.left_center(), Alignment2D::CENTER);
+        let cursor = area.bottom_left();
 
         let digits = self.digits.len();
         let dots_visible = digits.min(MAX_VISIBLE_DOTS);
@@ -483,13 +484,23 @@ impl PinDots {
         }
 
         // Draw a dot for each PIN digit.
+        // for _ in 0..dots_visible {
+        //     shape::ToifImage::new(cursor, theme::DOT_ACTIVE.toif)
+        //         .with_align(Alignment2D::TOP_LEFT)
+        //         .with_fg(self.style.text_color)
+        //         .render(target);
+        //     cursor.x += step;
+        // }
+
+        let mut text: String<50> = String::new();
         for _ in 0..dots_visible {
-            shape::ToifImage::new(cursor, theme::DOT_ACTIVE.toif)
-                .with_align(Alignment2D::TOP_LEFT)
-                .with_fg(self.style.text_color)
-                .render(target);
-            cursor.x += step;
+            text.push_str("*");
         }
+        shape::Text::new(cursor, &text)
+            .with_align(Alignment::Start)
+            .with_font(Font::MONO)
+            .with_fg(self.style.text_color)
+            .render(target);
     }
 }
 
