@@ -1475,23 +1475,12 @@ extern "C" fn new_confirm_recovery(n_args: usize, args: *const Obj, kwargs: *mut
 
 extern "C" fn new_select_word_count(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let dry_run: bool = kwargs.get(Qstr::MP_QSTR_dry_run)?.try_into()?;
-        let title: StrBuffer = if dry_run {
-            TR::recovery__title_dry_run.try_into()?
-        } else {
-            TR::recovery__title.try_into()?
-        };
-
         let paragraphs = Paragraphs::new(Paragraph::<StrBuffer>::new(
             &theme::TEXT_DEMIBOLD,
             TR::recovery__select_num_of_words.try_into()?,
         ));
 
-        let obj = LayoutObj::new(Frame::left_aligned(
-            theme::label_title(),
-            title,
-            Dialog::new(paragraphs, SelectWordCount::new()),
-        ))?;
+        let obj = LayoutObj::new(Dialog::new(paragraphs, SelectWordCount::new()))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -2038,7 +2027,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
 
     /// def select_word_count(
     ///     *,
-    ///     dry_run: bool,
+    ///     dry_run: bool,  # unused in T3T1
     /// ) -> int | str:  # TT returns int
     ///     """Select mnemonic word count from (12, 18, 20, 24, 33)."""
     Qstr::MP_QSTR_select_word_count => obj_fn_kw!(0, new_select_word_count).as_obj(),

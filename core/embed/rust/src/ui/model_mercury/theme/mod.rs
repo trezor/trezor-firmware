@@ -714,6 +714,7 @@ pub const TEXT_CHECKLIST_DONE: TextStyle =
 
 pub const CONTENT_BORDER: i16 = 0;
 pub const BUTTON_HEIGHT: i16 = 50;
+pub const WORDCOUNT_BUTTON_HEIGHT: i16 = 60;
 pub const BUTTON_WIDTH: i16 = 56;
 pub const BUTTON_SPACING: i16 = 6;
 pub const KEYBOARD_SPACING: i16 = BUTTON_SPACING;
