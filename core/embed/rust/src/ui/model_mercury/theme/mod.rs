@@ -53,6 +53,9 @@ pub const RADIUS: u8 = 2;
 // Full-size QR code.
 pub const QR_SIDE_MAX: u32 = 140;
 
+// SPECIAL T3T1
+include_icon!(ICON_DELETE, "model_mercury/res/delete.toif");
+
 // UI icons (greyscale).
 // Button icons.
 include_icon!(ICON_CANCEL, "model_tt/res/x24.toif");
