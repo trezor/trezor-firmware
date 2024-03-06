@@ -24,17 +24,25 @@
 #include <stddef.h>
 #include <stdint.h>
 
+typedef enum {
+  SECURE_AES_KEY_DHUK,
+  SECURE_AES_KEY_BHK,
+  SECURE_AES_KEY_XORK,
+} secure_aes_keysel_t;
+
 // Initializes secure AES module
 secbool secure_aes_init(void);
 
-// Encrypts a block of data using AES-256 EBB and (DHUK xor BHK) key
-// Input and output must be aligned to 32 bits, size is in bytes
-secbool secure_aes_encrypt(uint32_t* input, size_t size, uint32_t* output);
+// Encrypts a block of data using AES-256 ECB and HW key (DHUK, BHK or XORK)
+// For optimal speed input and output should be aligned to 32 bits, size is in
+// bytes
+secbool secure_aes_ecb_encrypt_hw(const uint8_t* input, size_t size,
+                                  uint8_t* output, secure_aes_keysel_t key);
 
-// Decrypts a block of data using AES-256 ECB and (DHUK xor BHK) key
-// Input and output must be aligned to 32 bits, size is in bytes
-secbool secure_aes_decrypt(uint32_t* input, size_t size, uint32_t* output);
-
-void secure_aes_test();
+// Decrypts a block of data using AES-256 ECB and HW key (DHUK, BHK or XORK)
+// For optimal speed input and output should be aligned to 32 bits, size is in
+// bytes
+secbool secure_aes_ecb_decrypt_hw(const uint8_t* input, size_t size,
+                                  uint8_t* output, secure_aes_keysel_t key);
 
 #endif  // TREZOR_HAL_SECURE_AES_H
