@@ -15,7 +15,7 @@
 
 secbool secret_bootloader_locked(void);
 
-void secret_write(uint8_t* data, uint32_t offset, uint32_t len);
+void secret_write(const uint8_t* data, uint32_t offset, uint32_t len);
 
 secbool secret_read(uint8_t* data, uint32_t offset, uint32_t len);
 
@@ -31,11 +31,13 @@ void secret_hide(void);
 
 void secret_write_header(void);
 
+secbool secret_optiga_set(const uint8_t secret[SECRET_OPTIGA_KEY_LEN]);
+
+secbool secret_optiga_get(uint8_t dest[SECRET_OPTIGA_KEY_LEN]);
+
 void secret_optiga_backup(void);
 
 void secret_optiga_hide(void);
-
-secbool secret_optiga_extract(uint8_t* dest);
 
 void secret_bhk_lock(void);
 

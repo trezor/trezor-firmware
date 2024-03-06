@@ -6,6 +6,7 @@
 #include "memzero.h"
 #include "model.h"
 #include "rng.h"
+#include "secure_aes.h"
 
 static secbool bootloader_locked = secfalse;
 
@@ -48,7 +49,7 @@ void secret_write_header(void) {
   secret_write(header, 0, SECRET_HEADER_LEN);
 }
 
-void secret_write(uint8_t *data, uint32_t offset, uint32_t len) {
+void secret_write(const uint8_t *data, uint32_t offset, uint32_t len) {
   ensure(flash_unlock_write(), "secret write");
   for (int i = 0; i < len / 16; i++) {
     ensure(flash_area_write_quadword(&SECRET_AREA, offset + (i * 16),
@@ -142,6 +143,18 @@ secbool secret_optiga_present(void) {
   return secret_present(SECRET_OPTIGA_KEY_OFFSET, SECRET_OPTIGA_KEY_LEN);
 }
 
+secbool secret_optiga_set(const uint8_t secret[SECRET_OPTIGA_KEY_LEN]) {
+  uint8_t secret_enc[SECRET_OPTIGA_KEY_LEN] = {0};
+  if (sectrue != secure_aes_ecb_encrypt_hw(secret, sizeof(secret_enc),
+                                           secret_enc, SECURE_AES_KEY_DHUK)) {
+    return secfalse;
+  }
+  secret_write(secret_enc, SECRET_OPTIGA_KEY_OFFSET, SECRET_OPTIGA_KEY_LEN);
+  memzero(secret_enc, sizeof(secret_enc));
+  secret_optiga_backup();
+  return sectrue;
+}
+
 void secret_optiga_backup(void) {
   uint32_t secret[SECRET_OPTIGA_KEY_LEN / sizeof(uint32_t)] = {0};
   secbool ok = secret_read((uint8_t *)secret, SECRET_OPTIGA_KEY_OFFSET,
@@ -162,22 +175,28 @@ void secret_optiga_backup(void) {
   memzero(secret, sizeof(secret));
 }
 
-secbool secret_optiga_extract(uint8_t *dest) {
+secbool secret_optiga_get(uint8_t dest[SECRET_OPTIGA_KEY_LEN]) {
+  uint32_t secret[SECRET_OPTIGA_KEY_LEN / sizeof(uint32_t)] = {0};
+
   bool all_zero = true;
   volatile uint32_t *reg1 = &TAMP->BKP8R;
   for (int i = 0; i < 8; i++) {
-    uint32_t val = *reg1++;
+    secret[i] = reg1[i];
 
-    if (val != 0) {
+    if (secret[i] != 0) {
       all_zero = false;
-    }
-
-    for (int j = 0; j < 4; j++) {
-      dest[i * 4 + j] = (val >> (j * 8)) & 0xFF;
     }
   }
 
-  return all_zero ? secfalse : sectrue;
+  if (all_zero) {
+    return secfalse;
+  }
+
+  secbool res = secure_aes_ecb_decrypt_hw(
+      (uint8_t *)secret, SECRET_OPTIGA_KEY_LEN, dest, SECURE_AES_KEY_DHUK);
+
+  memzero(secret, sizeof(secret));
+  return res;
 }
 
 void secret_optiga_hide(void) {
