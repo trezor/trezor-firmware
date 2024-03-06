@@ -34,7 +34,7 @@ use crate::{
             },
             Border, Component, Empty, FormattedText, Label, Never, Qr, Timeout,
         },
-        display::tjpgd::jpeg_info,
+        display::{tjpgd::jpeg_info, Icon},
         geometry,
         layout::{
             obj::{ComponentMsgObj, LayoutObj},
@@ -52,7 +52,8 @@ use super::{
         FidoMsg, Frame, FrameMsg, Homescreen, HomescreenMsg, IconDialog, Lockscreen, MnemonicInput,
         MnemonicKeyboard, MnemonicKeyboardMsg, NumberInputDialog, NumberInputDialogMsg,
         PassphraseKeyboard, PassphraseKeyboardMsg, PinKeyboard, PinKeyboardMsg, Progress,
-        SelectWordCount, SelectWordCountMsg, SelectWordMsg, SimplePage, Slip39Input,
+        SelectWordCount, SelectWordCountMsg, SelectWordMsg, SimplePage, Slip39Input, VerticalMenu,
+        VerticalMenuChoiceMsg,
     },
     theme,
 };
@@ -96,6 +97,16 @@ impl TryFrom<SelectWordCountMsg> for Obj {
     fn try_from(value: SelectWordCountMsg) -> Result<Self, Self::Error> {
         match value {
             SelectWordCountMsg::Selected(i) => i.try_into(),
+        }
+    }
+}
+
+impl TryFrom<VerticalMenuChoiceMsg> for Obj {
+    type Error = Error;
+
+    fn try_from(value: VerticalMenuChoiceMsg) -> Result<Self, Self::Error> {
+        match value {
+            VerticalMenuChoiceMsg::Selected(i) => i.try_into(),
         }
     }
 }
@@ -191,6 +202,17 @@ where
         match msg {
             FrameMsg::Content(c) => self.inner().msg_try_into_obj(c),
             FrameMsg::Button(b) => b.try_into(),
+        }
+    }
+}
+
+impl<T> ComponentMsgObj for VerticalMenu<T>
+where
+    T: AsRef<str>,
+{
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        match msg {
+            VerticalMenuChoiceMsg::Selected(i) => i.try_into(),
         }
     }
 }
@@ -1310,11 +1332,32 @@ extern "C" fn new_select_word(n_args: usize, args: *const Obj, kwargs: *mut Map)
         let words_iterable: Obj = kwargs.get(Qstr::MP_QSTR_words)?;
         let words: [StrBuffer; 3] = util::iter_into_array(words_iterable)?;
 
-        let paragraphs = Paragraphs::new([Paragraph::new(&theme::TEXT_DEMIBOLD, description)]);
-        let obj = LayoutObj::new(Frame::left_aligned(
-            title,
-            Dialog::new(paragraphs, Button::select_word(words)),
-        ))?;
+        let content = VerticalMenu::select_word(words);
+        let frame_with_menu = Frame::left_aligned(title, content).with_subtitle(description);
+        let obj = LayoutObj::new(frame_with_menu)?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_show_tx_context_menu(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        // TODO: this is just POC
+        let title: StrBuffer = StrBuffer::from("");
+
+        let options: [StrBuffer; 3] = [
+            StrBuffer::from("Address QR code"),
+            StrBuffer::from("Fee information"),
+            StrBuffer::from("Cancel transaction"),
+        ];
+        let icons: [Icon; 3] = [
+            theme::ICON_QR_CODE,
+            theme::ICON_CHEVRON_RIGHT,
+            theme::ICON_CANCEL,
+        ];
+        let content = VerticalMenu::context_menu(options, icons);
+        let frame_with_menu = Frame::left_aligned(title, content).with_cancel_button();
+        let obj = LayoutObj::new(frame_with_menu)?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -1972,6 +2015,11 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     """Select mnemonic word from three possibilities - seed check after backup. The
     ///    iterable must be of exact size. Returns index in range `0..3`."""
     Qstr::MP_QSTR_select_word => obj_fn_kw!(0, new_select_word).as_obj(),
+
+    /// def show_tx_context_menu() -> int:
+    ///    """Show transaction context menu with the options for 1) Address QR code, 2) Fee
+    ///    information, 3) Cancel transaction"""
+    Qstr::MP_QSTR_show_tx_context_menu => obj_fn_kw!(0, new_show_tx_context_menu).as_obj(),
 
     /// def show_share_words(
     ///     *,

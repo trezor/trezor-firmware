@@ -226,7 +226,7 @@ impl Component for NumberInput {
         let mut buf = [0u8; 10];
         if let Some(text) = strutil::format_i64(self.value as i64, &mut buf) {
             let digit_font = Font::DEMIBOLD;
-            let y_offset = digit_font.text_height() / 2 + Button::<&str>::BASELINE_OFFSET;
+            let y_offset = digit_font.text_height() / 2 + Button::<&str>::BASELINE_OFFSET.y;
             display::rect_fill(self.area, theme::BG);
             display::text_center(
                 self.area.center() + Offset::y(y_offset),
@@ -245,7 +245,7 @@ impl Component for NumberInput {
 
         if let Some(text) = strutil::format_i64(self.value as i64, &mut buf) {
             let digit_font = Font::DEMIBOLD;
-            let y_offset = digit_font.text_height() / 2 + Button::<&str>::BASELINE_OFFSET;
+            let y_offset = digit_font.text_height() / 2 + Button::<&str>::BASELINE_OFFSET.y;
 
             shape::Bar::new(self.area).with_bg(theme::BG).render(target);
             shape::Text::new(self.area.center() + Offset::y(y_offset), text)

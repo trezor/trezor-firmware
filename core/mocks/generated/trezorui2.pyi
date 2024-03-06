@@ -1,7 +1,7 @@
 from typing import *
-CONFIRMED: UiResult
-CANCELLED: UiResult
-INFO: UiResult
+CONFIRMED: object
+CANCELLED: object
+INFO: object
 
 
 # rust/src/ui/model_mercury/layout.rs
@@ -334,6 +334,12 @@ def select_word(
 
 
 # rust/src/ui/model_mercury/layout.rs
+def show_tx_context_menu() -> int:
+   """Show transaction context menu with the options for 1) Address QR code, 2) Fee
+   information, 3) Cancel transaction"""
+
+
+# rust/src/ui/model_mercury/layout.rs
 def show_share_words(
     *,
     title: str,
@@ -461,9 +467,9 @@ def confirm_firmware_update(
 # rust/src/ui/model_mercury/layout.rs
 def show_wait_text(/, message: str) -> None:
     """Show single-line text in the middle of the screen."""
-CONFIRMED: object
-CANCELLED: object
-INFO: object
+CONFIRMED: UiResult
+CANCELLED: UiResult
+INFO: UiResult
 
 
 # rust/src/ui/model_tr/layout.rs
