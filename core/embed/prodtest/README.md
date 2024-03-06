@@ -150,13 +150,13 @@ OK
 
 ### SBU
 The `SBU` command allows you to set the states of SBU1 and SBU2 pins.
-It takes two input parameters, each representing the state of one pin (0 or 1), and sets the corresponding output pins accordingly.
+It takes one input parameter, representing the state of both pins (00, 01, 10 or 11), and sets the corresponding output pins accordingly.
 
 Example:
 ```
 // sets SBU1 <- 1, SBU2 <- 0
 
-SBU 1 0
+SBU 10
 OK
 ```
 
