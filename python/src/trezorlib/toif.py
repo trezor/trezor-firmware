@@ -215,8 +215,8 @@ def from_image(
         image = image.convert("L")
 
     if image.mode == "L":
-        if image.size[0] % 2 != 0:
-            raise ValueError("Only even-width grayscale images are supported")
+        # if image.size[0] % 2 != 0:
+        #    raise ValueError("Only even-width grayscale images are supported")
         if not legacy_format:
             toif_mode = ToifMode.grayscale_eh
             toif_data = _from_pil_grayscale(image.getdata(), right_hi=True)
