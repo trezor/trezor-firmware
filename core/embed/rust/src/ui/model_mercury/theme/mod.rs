@@ -202,12 +202,18 @@ pub const fn label_progress() -> TextStyle {
     TEXT_BOLD
 }
 
-pub const fn label_title() -> TextStyle {
-    TextStyle::new(Font::BOLD, GREY_LIGHT, BG, GREY_LIGHT, GREY_LIGHT)
+pub const fn label_title_main() -> TextStyle {
+    TextStyle::new(
+        Font::NORMAL,
+        GREY_EXTRA_LIGHT,
+        GREY_DARK,
+        GREY_LIGHT,
+        GREY_LIGHT,
+    )
 }
 
-pub const fn label_subtitle() -> TextStyle {
-    TextStyle::new(Font::MONO, GREY_LIGHT, BG, GREY_LIGHT, GREY_LIGHT)
+pub const fn label_title_sub() -> TextStyle {
+    TextStyle::new(Font::SUB, GREY, GREY_DARK, GREY_LIGHT, GREY_LIGHT)
 }
 
 pub const fn label_coinjoin_progress() -> TextStyle {
@@ -353,27 +359,27 @@ pub const fn button_moreinfo() -> ButtonStyleSheet {
             text_color: FG,
             button_color: BG,
             background_color: BG,
-            border_color: GREY_DARK,
-            border_radius: RADIUS,
-            border_width: 2,
+            border_color: BG,
+            border_radius: 0,
+            border_width: 1,
         },
         active: &ButtonStyle {
             font: Font::BOLD,
             text_color: FG,
             button_color: BG,
             background_color: BG,
-            border_color: GREY_MEDIUM,
-            border_radius: RADIUS,
-            border_width: 2,
+            border_color: GREY_DARK,
+            border_radius: 0,
+            border_width: 1,
         },
         disabled: &ButtonStyle {
             font: Font::BOLD,
             text_color: GREY_LIGHT,
             button_color: BG,
             background_color: BG,
-            border_color: GREY_DARK,
-            border_radius: RADIUS,
-            border_width: 2,
+            border_color: BG,
+            border_radius: 0,
+            border_width: 1,
         },
     }
 }
@@ -722,15 +728,15 @@ pub const fn button_bar<T>(inner: T) -> FixedHeightBar<T> {
 /// |     6    |
 /// +----------+
 pub const fn borders() -> Insets {
-    Insets::new(6, 6, 6, 6)
+    Insets::new(0, 0, 0, 0)
 }
 
 pub const fn borders_horizontal_scroll() -> Insets {
-    Insets::new(6, 6, 0, 6)
+    Insets::new(0, 0, 0, 0)
 }
 
 pub const fn borders_notification() -> Insets {
-    Insets::new(48, 6, 6, 6)
+    Insets::new(42, 0, 0, 0)
 }
 
 pub const RESULT_ERROR: ResultStyle =
