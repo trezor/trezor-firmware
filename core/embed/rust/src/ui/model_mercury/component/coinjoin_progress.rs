@@ -71,7 +71,6 @@ where
             value: 0,
             indeterminate,
             content: Frame::centered(
-                theme::label_title(),
                 TR::coinjoin__title_progress.try_into()?,
                 Split::bottom(RECTANGLE_HEIGHT, 0, Empty, inner),
             )
