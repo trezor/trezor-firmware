@@ -37,7 +37,7 @@ void secret_write_header(void) {
   secret_write(header, 0, SECRET_HEADER_LEN);
 }
 
-void secret_write(uint8_t* data, uint32_t offset, uint32_t len) {
+void secret_write(const uint8_t* data, uint32_t offset, uint32_t len) {
   ensure(flash_unlock_write(), "secret write");
   for (int i = 0; i < len; i++) {
     ensure(flash_area_write_byte(&SECRET_AREA, offset + i, data[i]),
@@ -76,6 +76,13 @@ void secret_erase(void) {
   ensure(flash_area_erase(&SECRET_AREA, NULL), "secret erase");
 }
 
-secbool secret_optiga_extract(uint8_t* dest) {
+secbool secret_optiga_set(const uint8_t secret[SECRET_OPTIGA_KEY_LEN]) {
+  secret_erase();
+  secret_write_header();
+  secret_write(secret, SECRET_OPTIGA_KEY_OFFSET, SECRET_OPTIGA_KEY_LEN);
+  return sectrue;
+}
+
+secbool secret_optiga_get(uint8_t dest[SECRET_OPTIGA_KEY_LEN]) {
   return secret_read(dest, SECRET_OPTIGA_KEY_OFFSET, SECRET_OPTIGA_KEY_LEN);
 }
