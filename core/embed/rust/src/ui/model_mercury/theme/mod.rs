@@ -30,18 +30,27 @@ pub const WHITE: Color = Color::rgb(0xFF, 0xFF, 0xFF);
 pub const BLACK: Color = Color::rgb(0, 0, 0);
 pub const FG: Color = WHITE; // Default foreground (text & icon) color.
 pub const BG: Color = BLACK; // Default background color.
+pub const GREY_EXTRA_DARK: Color = Color::rgb(0x16, 0x1F, 0x24);
+pub const GREY_DARK: Color = Color::rgb(0x46, 0x48, 0x4A);
+pub const GREY: Color = Color::rgb(0x8B, 0x8F, 0x93); // secondary text, subtitle, instructions
+pub const GREY_LIGHT: Color = Color::rgb(0xC7, 0xCD, 0xD3); // content
+pub const GREY_EXTRA_LIGHT: Color = Color::rgb(0xF0, 0xF0, 0xF0); // primary text, header
+pub const GREEN: Color = Color::rgb(0x08, 0x74, 0x48);
+pub const GREEN_LIGHT: Color = Color::rgb(0x0B, 0xA5, 0x67);
+pub const GREEN_LIME: Color = Color::rgb(0x9B, 0xE8, 0x87);
+pub const ORANGE_DIMMED: Color = Color::rgb(0x9E, 0x57, 0x42);
+pub const ORANGE_LIGHT: Color = Color::rgb(0xFF, 0x8D, 0x6A); // cancel button
+
+// TODO: delete colors below when ui-t3t1 done
 pub const RED: Color = Color::rgb(0xE7, 0x0E, 0x0E); // button
 pub const RED_DARK: Color = Color::rgb(0xAE, 0x09, 0x09); // button pressed
 pub const YELLOW: Color = Color::rgb(0xD9, 0x9E, 0x00); // button
 pub const YELLOW_DARK: Color = Color::rgb(0x7A, 0x58, 0x00); // button pressed
-pub const GREEN: Color = Color::rgb(0x00, 0xAA, 0x35); // button
 pub const GREEN_DARK: Color = Color::rgb(0x00, 0x55, 0x1D); // button pressed
 pub const BLUE: Color = Color::rgb(0x06, 0x1E, 0xAD); // button
 pub const BLUE_DARK: Color = Color::rgb(0x04, 0x10, 0x58); // button pressed
 pub const OFF_WHITE: Color = Color::rgb(0xDE, 0xDE, 0xDE); // very light grey
-pub const GREY_LIGHT: Color = Color::rgb(0x90, 0x90, 0x90); // secondary text
 pub const GREY_MEDIUM: Color = Color::rgb(0x4F, 0x4F, 0x4F); // button pressed
-pub const GREY_DARK: Color = Color::rgb(0x35, 0x35, 0x35); // button
 pub const VIOLET: Color = Color::rgb(0x95, 0x00, 0xCA);
 
 pub const FATAL_ERROR_COLOR: Color = Color::rgb(0xE7, 0x0E, 0x0E);
