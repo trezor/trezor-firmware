@@ -13,6 +13,8 @@ use crate::{
 
 use super::{Button, ButtonMsg, CancelInfoConfirmMsg};
 
+const TITLE_HEIGHT: i16 = 42;
+
 pub struct Frame<T> {
     border: Insets,
     title: Child<Label<'static>>,
@@ -31,14 +33,10 @@ impl<T> Frame<T>
 where
     T: Component,
 {
-    pub fn new(
-        style: TextStyle,
-        alignment: Alignment,
-        title: TString<'static>,
-        content: T,
-    ) -> Self {
+    pub fn new(alignment: Alignment, title: TString<'static>, content: T) -> Self {
+        let style: TextStyle = theme::label_title_main();
         Self {
-            title: Child::new(Label::new(title, alignment, style)),
+            title: Child::new(Label::new(title, alignment, style).vertically_centered()),
             subtitle: None,
             border: theme::borders(),
             button: None,
@@ -48,15 +46,15 @@ where
     }
 
     pub fn left_aligned(style: TextStyle, title: TString<'static>, content: T) -> Self {
-        Self::new(style, Alignment::Start, title, content)
+        Self::new(Alignment::Start, title, content)
     }
 
     pub fn right_aligned(style: TextStyle, title: TString<'static>, content: T) -> Self {
-        Self::new(style, Alignment::End, title, content)
+        Self::new(Alignment::End, title, content)
     }
 
     pub fn centered(style: TextStyle, title: TString<'static>, content: T) -> Self {
-        Self::new(style, Alignment::Center, title, content)
+        Self::new(Alignment::Center, title, content)
     }
 
     pub fn with_border(mut self, border: Insets) -> Self {
@@ -64,7 +62,9 @@ where
         self
     }
 
-    pub fn with_subtitle(mut self, style: TextStyle, subtitle: TString<'static>) -> Self {
+    pub fn with_subtitle(mut self, subtitle: TString<'static>) -> Self {
+        let style = theme::label_title_sub();
+        self.title = Child::new(self.title.into_inner().top_aligned());
         self.subtitle = Some(Child::new(Label::new(
             subtitle,
             self.title.inner().alignment(),
@@ -93,7 +93,7 @@ where
     }
 
     pub fn with_info_button(self) -> Self {
-        self.with_button(theme::ICON_CORNER_INFO, CancelInfoConfirmMsg::Info)
+        self.with_button(theme::ICON_MENU, CancelInfoConfirmMsg::Info)
     }
 
     pub fn inner(&self) -> &T {
@@ -126,38 +126,23 @@ where
     type Msg = FrameMsg<T::Msg>;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        const TITLE_SPACE: i16 = theme::BUTTON_SPACING;
+        let (mut header_area, content_area) = bounds.split_top(TITLE_HEIGHT);
+        let content_area = content_area.inset(Insets::right(TITLE_SPACE));
 
-        let bounds = bounds.inset(self.border);
-        // Allowing for little longer titles to fit in
-        const TITLE_EXTRA_SPACE: Insets = Insets::right(2);
         if let Some(b) = &mut self.button {
-            let button_side = theme::CORNER_BUTTON_SIDE;
-            let (header_area, button_area) = bounds.split_right(button_side);
-            let (button_area, _) = button_area.split_top(button_side);
+            let (rest, button_area) = header_area.split_right(TITLE_HEIGHT);
+            header_area = rest;
             b.place(button_area);
-            let title_area = self.title.place(header_area.outset(TITLE_EXTRA_SPACE));
-            let remaining = header_area.inset(Insets::top(title_area.height()));
-            let subtitle_area = self.subtitle.place(remaining);
-
-            let title_height = title_area.height() + subtitle_area.height();
-            let header_height = title_height.max(button_side);
-            if title_height < button_side {
-                self.title
-                    .place(title_area.translate(Offset::y((button_side - title_height) / 2)));
-                self.subtitle
-                    .place(subtitle_area.translate(Offset::y((button_side - title_height) / 2)));
-            }
-            let content_area = bounds.inset(Insets::top(header_height + TITLE_SPACE));
-            self.content.place(content_area);
-        } else {
-            let title_area = self.title.place(bounds.outset(TITLE_EXTRA_SPACE));
-            let remaining = bounds.inset(Insets::top(title_area.height()));
-            let subtitle_area = self.subtitle.place(remaining);
-            let remaining = remaining.inset(Insets::top(subtitle_area.height()));
-            let content_area = remaining.inset(Insets::top(TITLE_SPACE));
-            self.content.place(content_area);
         }
+
+        if self.subtitle.is_some() {
+            let title_area = self.title.place(header_area);
+            let remaining = header_area.inset(Insets::top(title_area.height()));
+            let _subtitle_area = self.subtitle.place(remaining);
+        } else {
+            self.title.place(header_area);
+        }
+        self.content.place(content_area);
         bounds
     }
 

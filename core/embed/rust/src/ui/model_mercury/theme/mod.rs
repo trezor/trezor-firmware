@@ -154,9 +154,9 @@ pub const fn button_moreinfo() -> ButtonStyleSheet {
             text_color: FG,
             button_color: BG,
             background_color: BG,
-            border_color: GREY_DARK,
-            border_radius: RADIUS,
-            border_width: 2,
+            border_color: BG,
+            border_radius: 0,
+            border_width: 1,
         },
         active: &ButtonStyle {
             font: Font::BOLD,
@@ -172,9 +172,9 @@ pub const fn button_moreinfo() -> ButtonStyleSheet {
             text_color: GREY_LIGHT,
             button_color: BG,
             background_color: BG,
-            border_color: GREY_DARK,
-            border_radius: RADIUS,
-            border_width: 2,
+            border_color: BG,
+            border_radius: 0,
+            border_width: 1,
         },
     }
 }
@@ -231,5 +231,5 @@ pub const RESULT_FOOTER_START: i16 = 171;
 /// |     6    |
 /// +----------+
 pub const fn borders() -> Insets {
-    Insets::new(6, 6, 6, 6)
+    Insets::new(0, 0, 0, 0)
 }
