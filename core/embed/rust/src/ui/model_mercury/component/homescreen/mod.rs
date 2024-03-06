@@ -22,7 +22,7 @@ use crate::{
     ui::{
         constant::HEIGHT,
         display::{
-            tjpgd::{jpeg_test, BufferInput},
+            tjpgd::BufferInput,
             toif::{Toif, ToifFormat},
         },
         model_mercury::component::homescreen::render::{
