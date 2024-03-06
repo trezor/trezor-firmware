@@ -10,7 +10,7 @@ use crate::ui::{
 
 const NUMBERS: [u32; 5] = [12, 18, 20, 24, 33];
 const LABELS: [&str; 5] = ["12", "18", "20", "24", "33"];
-const CELLS: [(usize, usize); 5] = [(0, 0), (0, 2), (0, 4), (1, 0), (1, 2)];
+const CELLS: [(usize, usize); 5] = [(0, 0), (0, 4), (1, 0), (1, 4), (2, 2)];
 
 pub struct SelectWordCount {
     button: [Button<&'static str>; NUMBERS.len()],
@@ -32,12 +32,13 @@ impl Component for SelectWordCount {
     type Msg = SelectWordCountMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        let (_, bounds) = bounds.split_bottom(2 * theme::BUTTON_HEIGHT + theme::BUTTON_SPACING);
-        let grid = Grid::new(bounds, 2, 6).with_spacing(theme::BUTTON_SPACING);
+        let (_, bounds) =
+            bounds.split_bottom(3 * theme::WORDCOUNT_BUTTON_HEIGHT + theme::PIN_BUTTON_SPACING);
+        let grid = Grid::new(bounds, 3, 8).with_spacing(theme::PIN_BUTTON_SPACING);
         for (btn, (x, y)) in self.button.iter_mut().zip(CELLS) {
             btn.place(grid.cells(GridCellSpan {
                 from: (x, y),
-                to: (x, y + 1),
+                to: (x, y + 3),
             }));
         }
         bounds

@@ -180,10 +180,11 @@ impl Loader {
             let text_width = style.font.text_width(t);
             let text_height = style.font.text_max_height();
 
-            let pt = self.area.top_left() + Offset::new(
-                (self.area.width() - text_width) / 2,
-                (self.area.height() - text_height) / 2,
-            );
+            let pt = self.area.top_left()
+                + Offset::new(
+                    (self.area.width() - text_width) / 2,
+                    (self.area.height() - text_height) / 2,
+                );
 
             shape::Text::new(pt, t)
                 .with_baseline(false)
