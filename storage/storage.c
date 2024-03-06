@@ -36,6 +36,10 @@
 #include "optiga.h"
 #endif
 
+#ifdef STM32U5
+#include "secure_aes.h"
+#endif
+
 // The APP namespace which is reserved for storage related values.
 #define APP_STORAGE 0x00
 
@@ -479,6 +483,7 @@ static void derive_kek(const uint8_t *pin, size_t pin_len,
   uint8_t salt[HARDWARE_SALT_SIZE + STORAGE_SALT_SIZE + EXTERNAL_SALT_SIZE] = {
       0};
   size_t salt_len = 0;
+  uint8_t kek_out[SHA256_DIGEST_LENGTH] = {0};
 
   memcpy(salt + salt_len, hardware_salt, HARDWARE_SALT_SIZE);
   salt_len += HARDWARE_SALT_SIZE;
@@ -497,7 +502,19 @@ static void derive_kek(const uint8_t *pin, size_t pin_len,
     pbkdf2_hmac_sha256_Update(&ctx, PIN_ITER_COUNT / 10);
     ui_progress(PIN_PBKDF2_MS / 10);
   }
-  pbkdf2_hmac_sha256_Final(&ctx, kek);
+  pbkdf2_hmac_sha256_Final(&ctx, kek_out);
+
+#ifdef STM32U5
+  uint8_t kek_saes[SHA256_DIGEST_LENGTH] = {0};
+  ensure(secure_aes_ecb_decrypt_hw(kek_out, SHA256_DIGEST_LENGTH, kek_saes,
+                                   SECURE_AES_KEY_XORK),
+         "secure_aes derive kek failed");
+  memcpy(kek, kek_saes, SHA256_DIGEST_LENGTH);
+  memzero(kek_saes, sizeof(kek_saes));
+#else
+  memcpy(kek, kek_out, SHA256_DIGEST_LENGTH);
+#endif
+  memzero(&kek_out, sizeof(kek_out));
 
   pbkdf2_hmac_sha256_Init(&ctx, pin, pin_len, salt, salt_len, 2);
   for (int i = 6; i <= 10; i++) {
@@ -581,7 +598,16 @@ static secbool __wur derive_kek_set(const uint8_t *pin, size_t pin_len,
   uint8_t optiga_secret[OPTIGA_PIN_SECRET_SIZE] = {0};
   uint8_t stretched_pin[OPTIGA_PIN_SECRET_SIZE] = {0};
   stretch_pin_optiga(pin, pin_len, storage_salt, ext_salt, stretched_pin);
+#ifdef STM32U5
+  uint8_t stretched_pin_saes[OPTIGA_PIN_SECRET_SIZE] = {0};
+  ensure(secure_aes_ecb_decrypt_hw(stretched_pin, OPTIGA_PIN_SECRET_SIZE,
+                                   stretched_pin_saes, SECURE_AES_KEY_XORK),
+         "secure_aes pin stretch failed");
+  int ret = optiga_pin_set(ui_progress, stretched_pin_saes, optiga_secret);
+  memzero(stretched_pin_saes, sizeof(stretched_pin_saes));
+#else
   int ret = optiga_pin_set(ui_progress, stretched_pin, optiga_secret);
+#endif
   memzero(stretched_pin, sizeof(stretched_pin));
   if (ret != OPTIGA_SUCCESS) {
     memzero(optiga_secret, sizeof(optiga_secret));
@@ -604,7 +630,16 @@ static secbool __wur derive_kek_unlock(const uint8_t *pin, size_t pin_len,
   uint8_t optiga_secret[OPTIGA_PIN_SECRET_SIZE] = {0};
   uint8_t stretched_pin[OPTIGA_PIN_SECRET_SIZE] = {0};
   stretch_pin_optiga(pin, pin_len, storage_salt, ext_salt, stretched_pin);
+#ifdef STM32U5
+  uint8_t stretched_pin_saes[OPTIGA_PIN_SECRET_SIZE] = {0};
+  ensure(secure_aes_ecb_decrypt_hw(stretched_pin, OPTIGA_PIN_SECRET_SIZE,
+                                   stretched_pin_saes, SECURE_AES_KEY_XORK),
+         "secure_aes pin stretch failed");
+  int ret = optiga_pin_verify(ui_progress, stretched_pin_saes, optiga_secret);
+  memzero(stretched_pin_saes, sizeof(stretched_pin_saes));
+#else
   int ret = optiga_pin_verify(ui_progress, stretched_pin, optiga_secret);
+#endif
   memzero(stretched_pin, sizeof(stretched_pin));
   if (ret != OPTIGA_SUCCESS) {
     memzero(optiga_secret, sizeof(optiga_secret));
