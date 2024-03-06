@@ -47,6 +47,43 @@ pub const FATAL_ERROR_HIGHLIGHT_COLOR: Color = Color::rgb(0xFF, 0x41, 0x41);
 pub const RADIUS: u8 = 2;
 
 // UI icons (greyscale).
+
+// 20x20
+include_icon!(
+    ICON_BULLET_CHECKMARK,
+    "model_mercury/res/bullet_checkmark20.toif"
+);
+include_icon!(ICON_PAGE_DOWN, "model_mercury/res/page_down20.toif");
+include_icon!(ICON_PAGE_UP, "model_mercury/res/page_up20.toif");
+
+// 24x24
+include_icon!(ICON_CANCEL, "model_mercury/res/cancel24.toif");
+include_icon!(ICON_CHEVRON_RIGHT, "model_mercury/res/chevron_right24.toif");
+include_icon!(ICON_DOWNLOAD, "model_mercury/res/download24.toif");
+include_icon!(
+    ICON_EXCLAMATION_MARK,
+    "model_mercury/res/exclamation_mark24.toif"
+);
+include_icon!(ICON_FIRE, "model_mercury/res/fire24.toif");
+include_icon!(ICON_QR_CODE, "model_mercury/res/qr_code24.toif");
+include_icon!(ICON_REBOOT, "model_mercury/res/reboot24.toif");
+
+// 30x30
+include_icon!(ICON_AUTOFILL, "model_mercury/res/autofill30.toif");
+include_icon!(ICON_CLOSE, "model_mercury/res/close30.toif");
+include_icon!(ICON_DELETE, "model_mercury/res/delete30.toif");
+include_icon!(ICON_MENU, "model_mercury/res/menu30.toif");
+include_icon!(
+    ICON_SIMPLE_CHECKMARK,
+    "model_mercury/res/simple_checkmark30.toif"
+);
+
+// 40x40
+include_icon!(ICON_MINUS, "model_mercury/res/minus40.toif");
+include_icon!(ICON_PLUS, "model_mercury/res/plus40.toif");
+
+// TODO remove TT icons:
+
 // Button icons.
 include_icon!(ICON_CANCEL, "model_mercury/res/x24.toif");
 include_icon!(ICON_CONFIRM, "model_mercury/res/check24.toif");
