@@ -57,7 +57,7 @@ pub const FATAL_ERROR_COLOR: Color = Color::rgb(0xE7, 0x0E, 0x0E);
 pub const FATAL_ERROR_HIGHLIGHT_COLOR: Color = Color::rgb(0xFF, 0x41, 0x41);
 
 // Commonly used corner radius (i.e. for buttons).
-pub const RADIUS: u8 = 2;
+pub const RADIUS: u8 = 0;
 
 // Full-size QR code.
 pub const QR_SIDE_MAX: u32 = 140;
@@ -416,6 +416,70 @@ pub const fn button_info() -> ButtonStyleSheet {
     }
 }
 
+pub const fn button_vertical_menu() -> ButtonStyleSheet {
+    ButtonStyleSheet {
+        normal: &ButtonStyle {
+            font: Font::NORMAL,
+            text_color: GREY_EXTRA_LIGHT,
+            button_color: BG,
+            background_color: BG,
+            border_color: BG,
+            border_radius: RADIUS,
+            border_width: 0,
+        },
+        // TODO: change when figma done
+        active: &ButtonStyle {
+            font: Font::NORMAL,
+            text_color: FG,
+            button_color: GREEN_LIME,
+            background_color: GREY_EXTRA_DARK,
+            border_color: GREEN_LIME,
+            border_radius: RADIUS,
+            border_width: 0,
+        },
+        disabled: &ButtonStyle {
+            font: Font::NORMAL,
+            text_color: GREY_LIGHT,
+            button_color: GREEN_LIME,
+            background_color: GREY_EXTRA_DARK,
+            border_color: GREEN_LIME,
+            border_radius: RADIUS,
+            border_width: 0,
+        },
+    }
+}
+
+pub const fn button_vertical_menu_orange() -> ButtonStyleSheet {
+    ButtonStyleSheet {
+        normal: &ButtonStyle {
+            font: Font::NORMAL,
+            text_color: ORANGE_LIGHT,
+            button_color: BG,
+            background_color: BG,
+            border_color: BG,
+            border_radius: RADIUS,
+            border_width: 0,
+        },
+        active: &ButtonStyle {
+            font: Font::NORMAL,
+            text_color: FG,
+            button_color: GREEN_LIME,
+            background_color: GREY_EXTRA_DARK,
+            border_color: GREEN_LIME,
+            border_radius: RADIUS,
+            border_width: 0,
+        },
+        disabled: &ButtonStyle {
+            font: Font::NORMAL,
+            text_color: GREY_LIGHT,
+            button_color: GREEN_LIME,
+            background_color: GREY_EXTRA_DARK,
+            border_color: GREEN_LIME,
+            border_radius: RADIUS,
+            border_width: 0,
+        },
+    }
+}
 pub const fn button_pin() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {

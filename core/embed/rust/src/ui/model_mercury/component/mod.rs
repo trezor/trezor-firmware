@@ -6,6 +6,7 @@ mod button;
 mod coinjoin_progress;
 mod dialog;
 mod fido;
+mod vertical_menu;
 #[rustfmt::skip]
 mod fido_icons;
 mod error;
@@ -57,6 +58,7 @@ pub use result::{ResultFooter, ResultScreen, ResultStyle};
 pub use scroll::ScrollBar;
 pub use simple_page::SimplePage;
 pub use swipe::{Swipe, SwipeDirection};
+pub use vertical_menu::{VerticalMenu, VerticalMenuChoiceMsg};
 pub use welcome_screen::WelcomeScreen;
 
 use super::theme;

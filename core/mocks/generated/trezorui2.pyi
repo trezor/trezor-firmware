@@ -390,6 +390,12 @@ def select_word(
 
 
 # rust/src/ui/model_mercury/layout.rs
+def show_tx_context_menu() -> LayoutObj[int]:
+   """Show transaction context menu with the options for 1) Address QR code, 2) Fee
+   information, 3) Cancel transaction"""
+
+
+# rust/src/ui/model_mercury/layout.rs
 def show_share_words(
     *,
     title: str,
