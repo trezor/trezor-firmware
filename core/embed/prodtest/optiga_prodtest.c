@@ -33,6 +33,12 @@
 #include "secret.h"
 #include "sha2.h"
 
+#include TREZOR_BOARD
+
+#ifdef STM32U5
+#include "secure_aes.h"
+#endif
+
 typedef enum {
   OPTIGA_PAIRING_UNPAIRED = 0,
   OPTIGA_PAIRING_PAIRED,
@@ -150,7 +156,15 @@ void pair_optiga(void) {
     if (OPTIGA_SUCCESS == ret) {
       secret_erase();
       secret_write_header();
+#ifdef STM32U5
+      uint8_t secret_enc[SECRET_OPTIGA_KEY_LEN] = {0};
+      secure_aes_ecb_encrypt_hw(secret, sizeof(secret), secret_enc,
+                                SECURE_AES_KEY_DHUK);
+      secret_write(secret_enc, SECRET_OPTIGA_KEY_OFFSET, SECRET_OPTIGA_KEY_LEN);
+      memzero(secret_enc, sizeof(secret_enc));
+#else
       secret_write(secret, SECRET_OPTIGA_KEY_OFFSET, SECRET_OPTIGA_KEY_LEN);
+#endif
     }
 
     // Verify whether the secret was stored correctly in flash and OPTIGA.
@@ -162,15 +176,23 @@ void pair_optiga(void) {
     }
   }
 
-  ret = optiga_sec_chan_handshake(secret, sizeof(secret));
+  uint8_t secret_dec[SECRET_OPTIGA_KEY_LEN] = {0};
+#ifdef STM32U5
+  secure_aes_ecb_decrypt_hw(secret, sizeof(secret), secret_dec,
+                            SECURE_AES_KEY_DHUK);
+#else
+  memcpy(secret_dec, secret, sizeof(secret_dec));
+#endif
+
+  ret = optiga_sec_chan_handshake(secret_dec, sizeof(secret_dec));
   memzero(secret, sizeof(secret));
+  memzero(secret_dec, sizeof(secret_dec));
   if (OPTIGA_SUCCESS != ret) {
     optiga_pairing_state = OPTIGA_PAIRING_ERR_HANDSHAKE;
     return;
   }
 
   optiga_pairing_state = OPTIGA_PAIRING_PAIRED;
-  return;
 }
 
 void optiga_lock(void) {
