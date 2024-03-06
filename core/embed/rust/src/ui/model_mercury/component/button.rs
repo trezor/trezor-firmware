@@ -32,10 +32,11 @@ pub struct Button {
     long_timer: Option<TimerToken>,
 }
 
-impl Button {
-    /// Offsets the baseline of the button text either up (negative) or down
-    /// (positive).
-    pub const BASELINE_OFFSET: i16 = -2;
+impl<T> Button<T> {
+    /// Offsets the baseline of the button text
+    /// -x/+x => left/right
+    /// -y/+y => up/down
+    pub const BASELINE_OFFSET: Offset = Offset::new(2, 6);
 
     pub const fn new(content: ButtonContent) -> Self {
         Self {
@@ -57,8 +58,8 @@ impl Button {
         Self::new(ButtonContent::Icon(icon))
     }
 
-    pub const fn with_icon_and_text(content: IconText) -> Self {
-        Self::new(ButtonContent::IconAndText(content))
+    pub const fn with_icon_and_text(content: IconText<T>) -> Self {
+        Self::new(ButtonContent::IconAndText::<T>(content))
     }
 
     pub const fn with_icon_blend(bg: Icon, fg: Icon, fg_offset: Offset) -> Self {
@@ -203,20 +204,15 @@ impl Button {
         match &self.content {
             ButtonContent::Empty => {}
             ButtonContent::Text(text) => {
-                let width = text.map(|c| style.font.text_width(c));
-                let height = style.font.text_height();
-                let start_of_baseline = self.area.center()
-                    + Offset::new(-width / 2, height / 2)
-                    + Offset::y(Self::BASELINE_OFFSET);
-                text.map(|text| {
-                    display::text_left(
-                        start_of_baseline,
-                        text,
-                        style.font,
-                        style.text_color,
-                        style.button_color,
-                    );
-                });
+                let text = text.as_ref();
+                let start_of_baseline = self.area.center() + Self::BASELINE_OFFSET;
+                display::text_left(
+                    start_of_baseline,
+                    text,
+                    style.font,
+                    style.text_color,
+                    style.button_color,
+                );
             }
             ButtonContent::Icon(icon) => {
                 icon.draw(
@@ -242,17 +238,12 @@ impl Button {
         match &self.content {
             ButtonContent::Empty => {}
             ButtonContent::Text(text) => {
-                let width = text.map(|c| style.font.text_width(c));
-                let height = style.font.text_height();
-                let start_of_baseline = self.area.center()
-                    + Offset::new(-width / 2, height / 2)
-                    + Offset::y(Self::BASELINE_OFFSET);
-                text.map(|text| {
-                    shape::Text::new(start_of_baseline, text)
-                        .with_font(style.font)
-                        .with_fg(style.text_color)
-                        .render(target);
-                });
+                let text = text.as_ref();
+                let start_of_baseline = self.area.left_center() + Self::BASELINE_OFFSET;
+                shape::Text::new(start_of_baseline, text)
+                    .with_font(style.font)
+                    .with_fg(style.text_color)
+                    .render(target);
             }
             ButtonContent::Icon(icon) => {
                 shape::ToifImage::new(self.area.center(), icon.toif)
@@ -261,7 +252,7 @@ impl Button {
                     .render(target);
             }
             ButtonContent::IconAndText(child) => {
-                child.render(target, self.area, self.style(), Self::BASELINE_OFFSET);
+                child.render(target, self.area, style, Self::BASELINE_OFFSET);
             }
             ButtonContent::IconBlend(bg, fg, offset) => {
                 shape::Bar::new(self.area)
@@ -385,7 +376,7 @@ impl crate::trace::Trace for Button {
             ButtonContent::Text(text) => t.string("text", *text),
             ButtonContent::Icon(_) => t.bool("icon", true),
             ButtonContent::IconAndText(content) => {
-                t.string("text", content.text.into());
+                t.string("text", content.text.as_ref().into());
                 t.bool("icon", true);
             }
             ButtonContent::IconBlend(_, _, _) => t.bool("icon", true),
@@ -406,7 +397,7 @@ pub enum ButtonContent {
     Empty,
     Text(TString<'static>),
     Icon(Icon),
-    IconAndText(IconText),
+    IconAndText(IconText<T>),
     IconBlend(Icon, Icon, Offset),
 }
 
@@ -428,6 +419,115 @@ pub struct ButtonStyle {
     pub border_width: i16,
 }
 
+impl<T> Button<T> {
+    pub fn cancel_confirm(
+        left: Button<T>,
+        right: Button<T>,
+        left_is_small: bool,
+    ) -> CancelConfirm<
+        T,
+        impl Fn(ButtonMsg) -> Option<CancelConfirmMsg>,
+        impl Fn(ButtonMsg) -> Option<CancelConfirmMsg>,
+    >
+    where
+        T: AsRef<str>,
+    {
+        let width = if left_is_small {
+            theme::BUTTON_WIDTH
+        } else {
+            0
+        };
+        theme::button_bar(Split::left(
+            width,
+            theme::BUTTON_SPACING,
+            left.map(|msg| {
+                (matches!(msg, ButtonMsg::Clicked)).then(|| CancelConfirmMsg::Cancelled)
+            }),
+            right.map(|msg| {
+                (matches!(msg, ButtonMsg::Clicked)).then(|| CancelConfirmMsg::Confirmed)
+            }),
+        ))
+    }
+
+    pub fn cancel_confirm_text(
+        left: Option<T>,
+        right: Option<T>,
+    ) -> CancelConfirm<
+        T,
+        impl Fn(ButtonMsg) -> Option<CancelConfirmMsg>,
+        impl Fn(ButtonMsg) -> Option<CancelConfirmMsg>,
+    >
+    where
+        T: AsRef<str>,
+    {
+        let left_is_small: bool;
+
+        let left = if let Some(verb) = left {
+            left_is_small = verb.as_ref().len() <= 4;
+            if verb.as_ref() == "^" {
+                Button::with_icon(theme::ICON_UP)
+            } else {
+                Button::with_text(verb)
+            }
+        } else {
+            left_is_small = right.is_some();
+            Button::with_icon(theme::ICON_CANCEL)
+        };
+        let right = if let Some(verb) = right {
+            Button::with_text(verb).styled(theme::button_confirm())
+        } else {
+            Button::with_icon(theme::ICON_CONFIRM).styled(theme::button_confirm())
+        };
+        Self::cancel_confirm(left, right, left_is_small)
+    }
+
+    pub fn cancel_info_confirm(
+        confirm: T,
+        info: T,
+    ) -> CancelInfoConfirm<
+        T,
+        impl Fn(ButtonMsg) -> Option<CancelInfoConfirmMsg>,
+        impl Fn(ButtonMsg) -> Option<CancelInfoConfirmMsg>,
+        impl Fn(ButtonMsg) -> Option<CancelInfoConfirmMsg>,
+    >
+    where
+        T: AsRef<str>,
+    {
+        let right = Button::with_text(confirm)
+            .styled(theme::button_confirm())
+            .map(|msg| {
+                (matches!(msg, ButtonMsg::Clicked)).then(|| CancelInfoConfirmMsg::Confirmed)
+            });
+        let top = Button::with_text(info)
+            .styled(theme::button_moreinfo())
+            .map(|msg| (matches!(msg, ButtonMsg::Clicked)).then(|| CancelInfoConfirmMsg::Info));
+        let left = Button::with_icon(theme::ICON_CANCEL).map(|msg| {
+            (matches!(msg, ButtonMsg::Clicked)).then(|| CancelInfoConfirmMsg::Cancelled)
+        });
+        let total_height = theme::BUTTON_HEIGHT + theme::BUTTON_SPACING + theme::INFO_BUTTON_HEIGHT;
+        FixedHeightBar::bottom(
+            Split::top(
+                theme::INFO_BUTTON_HEIGHT,
+                theme::BUTTON_SPACING,
+                top,
+                Split::left(theme::BUTTON_WIDTH, theme::BUTTON_SPACING, left, right),
+            ),
+            total_height,
+        )
+    }
+}
+
+pub enum CancelConfirmMsg {
+    Cancelled,
+    Confirmed,
+}
+
+type CancelInfoConfirm<T, F0, F1, F2> = FixedHeightBar<
+    Split<MsgMap<Button<T>, F0>, Split<MsgMap<Button<T>, F1>, MsgMap<Button<T>, F2>>>,
+>;
+
+type CancelConfirm<T, F0, F1> = FixedHeightBar<Split<MsgMap<Button<T>, F0>, MsgMap<Button<T>, F1>>>;
+
 #[derive(Clone, Copy)]
 pub enum CancelInfoConfirmMsg {
     Cancelled,
@@ -436,23 +536,25 @@ pub enum CancelInfoConfirmMsg {
 }
 
 #[derive(PartialEq, Eq)]
-pub struct IconText {
-    text: &'static str,
+pub struct IconText<T> {
+    text: T,
     icon: Icon,
 }
 
-impl IconText {
+impl<T> IconText<T>
+where
+    T: AsRef<str>,
+{
     const ICON_SPACE: i16 = 46;
     const ICON_MARGIN: i16 = 4;
     const TEXT_MARGIN: i16 = 6;
 
-    pub fn new(text: &'static str, icon: Icon) -> Self {
+    pub fn new(text: T, icon: Icon) -> Self {
         Self { text, icon }
     }
 
-    pub fn paint(&self, area: Rect, style: &ButtonStyle, baseline_offset: i16) {
-        let width = style.font.text_width(self.text);
-        let height = style.font.text_height();
+    pub fn paint(&self, area: Rect, style: &ButtonStyle, baseline_offset: Offset) {
+        let width = style.font.text_width(self.text.as_ref());
 
         let mut use_icon = false;
         let mut use_text = false;
@@ -461,8 +563,7 @@ impl IconText {
             area.top_left().x + ((Self::ICON_SPACE + Self::ICON_MARGIN) / 2),
             area.center().y,
         );
-        let mut text_pos =
-            area.center() + Offset::new(-width / 2, height / 2) + Offset::y(baseline_offset);
+        let mut text_pos = area.left_center() + baseline_offset;
 
         if area.width() > (Self::ICON_SPACE + Self::TEXT_MARGIN + width) {
             //display both icon and text
@@ -480,7 +581,7 @@ impl IconText {
         if use_text {
             display::text_left(
                 text_pos,
-                self.text,
+                self.text.as_ref(),
                 style.font,
                 style.text_color,
                 style.button_color,
@@ -496,16 +597,14 @@ impl IconText {
             );
         }
     }
-
     pub fn render<'s>(
-        &self,
+        & self,
         target: &mut impl Renderer<'s>,
         area: Rect,
         style: &ButtonStyle,
-        baseline_offset: i16,
+        baseline_offset: Offset,
     ) {
-        let width = style.font.text_width(self.text);
-        let height = style.font.text_height();
+        let width = style.font.text_width(self.text.as_ref());
 
         let mut use_icon = false;
         let mut use_text = false;
@@ -514,8 +613,7 @@ impl IconText {
             area.top_left().x + ((Self::ICON_SPACE + Self::ICON_MARGIN) / 2),
             area.center().y,
         );
-        let mut text_pos =
-            area.center() + Offset::new(-width / 2, height / 2) + Offset::y(baseline_offset);
+        let mut text_pos = area.left_center() + baseline_offset;
 
         if area.width() > (Self::ICON_SPACE + Self::TEXT_MARGIN + width) {
             //display both icon and text
@@ -531,12 +629,10 @@ impl IconText {
         }
 
         if use_text {
-            shape::Text::new(text_pos, self.text)
-                .with_font(style.font)
+            shape::Text::new(text_pos, self.text.as_ref())
                 .with_fg(style.text_color)
                 .render(target);
         }
-
         if use_icon {
             shape::ToifImage::new(icon_pos, self.icon.toif)
                 .with_align(Alignment2D::CENTER)
