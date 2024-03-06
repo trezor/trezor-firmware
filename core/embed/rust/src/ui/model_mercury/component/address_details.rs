@@ -60,21 +60,15 @@ where
         }
         let result = Self {
             qr_code: Frame::left_aligned(
-                theme::label_title(),
                 qr_title,
                 Qr::new(qr_address, case_sensitive)?.with_border(7),
             )
             .with_cancel_button()
             .with_border(theme::borders_horizontal_scroll()),
-            details: Frame::left_aligned(
-                theme::label_title(),
-                details_title,
-                para.into_paragraphs(),
-            )
-            .with_cancel_button()
-            .with_border(theme::borders_horizontal_scroll()),
+            details: Frame::left_aligned(details_title, para.into_paragraphs())
+                .with_cancel_button()
+                .with_border(theme::borders_horizontal_scroll()),
             xpub_view: Frame::left_aligned(
-                theme::label_title(),
                 " \n ".into(),
                 Paragraph::new(&theme::TEXT_MONO, "".into()).into_paragraphs(),
             )
