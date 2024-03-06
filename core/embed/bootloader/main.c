@@ -442,10 +442,6 @@ int bootloader_main(void) {
 #endif
 #endif
 
-#ifdef STM32U5
-  ensure(secret_ensure_initialized(), "secret reinitialized");
-#endif
-
   ui_screen_boot_empty(false);
 
   mpu_config_bootloader();

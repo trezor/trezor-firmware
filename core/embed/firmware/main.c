@@ -141,9 +141,13 @@ int main(void) {
 
   unit_variant_init();
 
+#ifdef STM32U5
+  secure_aes_init();
+#endif
+
 #ifdef USE_OPTIGA
   uint8_t secret[SECRET_OPTIGA_KEY_LEN] = {0};
-  secbool secret_ok = secret_optiga_extract(secret);
+  secbool secret_ok = secret_optiga_get(secret);
 #endif
 
   mpu_config_firmware_initial();
@@ -164,10 +168,6 @@ int main(void) {
 
 #if defined TREZOR_MODEL_T
   set_core_clock(CLOCK_180_MHZ);
-#endif
-
-#ifdef STM32U5
-  secure_aes_init();
 #endif
 
 #ifdef USE_BUTTON
