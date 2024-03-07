@@ -36,7 +36,7 @@ impl<'a> ZlibCacheSlot<'a> {
     }
 
     /// May be called with zdata == &[] to make the slot free
-    fn reset(&mut self, zdata: &'static [u8]) {
+    fn reset(&mut self, zdata: &'a [u8]) {
         // Drop the existing decompression context holding
         // a mutable reference to window buffer
         self.dc = None;
@@ -133,7 +133,7 @@ impl<'a> ZlibCache<'a> {
 
     pub fn uncompress(
         &mut self,
-        zdata: &'static [u8],
+        zdata: &'a [u8],
         offset: usize,
         dest_buf: &mut [u8],
     ) -> Result<bool, ()> {
@@ -155,7 +155,7 @@ impl<'a> ZlibCache<'a> {
 
     pub fn uncompress_toif(
         &mut self,
-        toif: Toif<'static>,
+        toif: Toif<'a>,
         from_row: i16,
         dest_buf: &mut [u8],
     ) -> Result<(), ()> {

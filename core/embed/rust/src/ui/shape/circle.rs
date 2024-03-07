@@ -64,12 +64,12 @@ impl Circle {
         }
     }
 
-    pub fn render(self, renderer: &mut impl Renderer) {
+    pub fn render<'s>(self, renderer: &mut impl Renderer<'s>) {
         renderer.render_shape(self);
     }
 }
 
-impl Shape for Circle {
+impl Shape<'_> for Circle {
     fn bounds(&self, _cache: &DrawingCache) -> Rect {
         let c = self.center;
         let r = self.radius;
@@ -129,8 +129,8 @@ impl Shape for Circle {
     }
 }
 
-impl ShapeClone for Circle {
-    fn clone_at_bump<'alloc, T>(self, bump: &'alloc T) -> Option<&'alloc mut dyn Shape>
+impl<'s> ShapeClone<'s> for Circle {
+    fn clone_at_bump<'alloc, T>(self, bump: &'alloc T) -> Option<&'alloc mut dyn Shape<'s>>
     where
         T: LocalAllocLeakExt<'alloc>,
     {

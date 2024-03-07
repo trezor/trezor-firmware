@@ -17,12 +17,12 @@ impl Blurring {
         Self { area, radius }
     }
 
-    pub fn render(self, renderer: &mut impl Renderer) {
+    pub fn render<'s>(self, renderer: &mut impl Renderer<'s>) {
         renderer.render_shape(self);
     }
 }
 
-impl Shape for Blurring {
+impl Shape<'_> for Blurring {
     fn bounds(&self, _cache: &DrawingCache) -> Rect {
         self.area
     }
@@ -34,8 +34,8 @@ impl Shape for Blurring {
     }
 }
 
-impl ShapeClone for Blurring {
-    fn clone_at_bump<'alloc, T>(self, bump: &'alloc T) -> Option<&'alloc mut dyn Shape>
+impl<'s> ShapeClone<'s> for Blurring {
+    fn clone_at_bump<'alloc, T>(self, bump: &'alloc T) -> Option<&'alloc mut dyn Shape<'s>>
     where
         T: LocalAllocLeakExt<'alloc>,
     {

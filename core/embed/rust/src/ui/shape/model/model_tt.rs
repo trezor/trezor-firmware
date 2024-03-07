@@ -9,9 +9,9 @@ use crate::trezorhal::bitmap::{BitmapView, Dma2d};
 
 use static_alloc::Bump;
 
-pub fn render_on_display<F>(clip: Option<Rect>, bg_color: Option<Color>, mut func: F)
+pub fn render_on_display<'a, F>(clip: Option<Rect>, bg_color: Option<Color>, func: F)
 where
-    F: FnMut(&mut ProgressiveRenderer<Bump<[u8; 40 * 1024]>, DisplayModelT>),
+    F: FnOnce(&mut ProgressiveRenderer<'_, 'a, Bump<[u8; 40 * 1024]>, DisplayModelT>),
 {
     #[link_section = ".no_dma_buffers"]
     static mut BUMP_A: Bump<[u8; 40 * 1024]> = Bump::uninit();
@@ -22,6 +22,9 @@ where
     let bump_a = unsafe { &mut *core::ptr::addr_of_mut!(BUMP_A) };
     let bump_b = unsafe { &mut *core::ptr::addr_of_mut!(BUMP_B) };
     {
+        bump_a.reset();
+        bump_b.reset();
+
         let cache = DrawingCache::new(bump_a, bump_b);
         let mut canvas = DisplayModelT::acquire().unwrap();
 
@@ -35,8 +38,6 @@ where
 
         target.render(16);
     }
-    bump_a.reset();
-    bump_b.reset();
 }
 
 pub struct DisplayModelT {

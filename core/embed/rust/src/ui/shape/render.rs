@@ -14,7 +14,7 @@ use without_alloc::{alloc::LocalAllocLeakExt, FixedVec};
 /// All renders must implement Renderer trait
 /// Renderers can immediately use the draw() method of the passed shape or
 /// may store it (using the boxed() method) and draw it later
-pub trait Renderer {
+pub trait Renderer<'a> {
     fn viewport(&self) -> Viewport;
 
     fn set_viewport(&mut self, viewport: Viewport);
@@ -33,7 +33,7 @@ pub trait Renderer {
 
     fn render_shape<S>(&mut self, shape: S)
     where
-        S: Shape + ShapeClone;
+        S: Shape<'a> + ShapeClone<'a>;
 
     fn in_window(&mut self, r: Rect, inner: &dyn Fn(&mut Self)) {
         let original = self.set_window(r);
@@ -60,13 +60,13 @@ pub trait Renderer {
 // ==========================================================================
 
 /// A simple implementation of a Renderer that draws directly onto the CanvasEx
-pub struct DirectRenderer<'a, 'alloc: 'a, C>
+pub struct DirectRenderer<'a, 'alloc, C>
 where
     C: Canvas,
 {
     /// Target canvas
     canvas: &'a mut C,
-    /// Drawing che (decompression cache, scratch-pad memory)
+    /// Drawing cache (decompression context, scratch-pad memory)
     cache: &'a DrawingCache<'alloc>,
 }
 
@@ -91,7 +91,7 @@ where
     }
 }
 
-impl<'a, 'alloc, C> Renderer for DirectRenderer<'a, 'alloc, C>
+impl<'a, 'alloc, C> Renderer<'alloc> for DirectRenderer<'a, 'alloc, C>
 where
     C: Canvas,
 {
@@ -105,7 +105,7 @@ where
 
     fn render_shape<S>(&mut self, mut shape: S)
     where
-        S: Shape + ShapeClone,
+        S: Shape<'alloc> + ShapeClone<'alloc>,
     {
         if self.canvas.viewport().contains(shape.bounds(self.cache)) {
             shape.draw(self.canvas, self.cache);
@@ -119,13 +119,14 @@ where
 // ==========================================================================
 
 struct ShapeHolder<'a> {
-    shape: &'a mut dyn Shape,
+    shape: &'a mut dyn Shape<'a>,
     viewport: Viewport,
 }
 
 /// A more advanced Renderer implementation that supports deferred rendering.
-pub struct ProgressiveRenderer<'a, 'alloc, T: LocalAllocLeakExt<'alloc>, C>
+pub struct ProgressiveRenderer<'a, 'alloc, T, C>
 where
+    T: LocalAllocLeakExt<'alloc>,
     C: BasicCanvas,
 {
     /// Target canvas
@@ -138,7 +139,7 @@ where
     viewport: Viewport,
     // Default background color
     bg_color: Option<Color>,
-    /// Drawing cache (decompression cache, scratch-pad memory)
+    /// Drawing cache (decompression context, scratch-pad memory)
     cache: &'a DrawingCache<'alloc>,
 }
 
@@ -218,7 +219,7 @@ where
     }
 }
 
-impl<'a, 'alloc, T, C> Renderer for ProgressiveRenderer<'a, 'alloc, T, C>
+impl<'a, 'alloc, T, C> Renderer<'alloc> for ProgressiveRenderer<'a, 'alloc, T, C>
 where
     T: LocalAllocLeakExt<'alloc>,
     C: BasicCanvas,
@@ -233,7 +234,7 @@ where
 
     fn render_shape<S>(&mut self, shape: S)
     where
-        S: Shape + ShapeClone,
+        S: Shape<'alloc> + ShapeClone<'alloc>,
     {
         // Is the shape visible?
         if self.viewport.contains(shape.bounds(self.cache)) {

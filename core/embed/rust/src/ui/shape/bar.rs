@@ -51,12 +51,12 @@ impl Bar {
         Self { thickness, ..self }
     }
 
-    pub fn render(self, renderer: &mut impl Renderer) {
+    pub fn render<'s>(self, renderer: &mut impl Renderer<'s>) {
         renderer.render_shape(self);
     }
 }
 
-impl Shape for Bar {
+impl Shape<'_> for Bar {
     fn bounds(&self, _cache: &DrawingCache) -> Rect {
         self.area
     }
@@ -110,8 +110,8 @@ impl Shape for Bar {
     }
 }
 
-impl ShapeClone for Bar {
-    fn clone_at_bump<'alloc, T>(self, bump: &'alloc T) -> Option<&'alloc mut dyn Shape>
+impl<'s> ShapeClone<'s> for Bar {
+    fn clone_at_bump<'alloc, T>(self, bump: &'alloc T) -> Option<&'alloc mut dyn Shape<'s>>
     where
         T: LocalAllocLeakExt<'alloc>,
     {
