@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 import trezorui2
-from trezor import TR, io, loop, ui
+from trezor import TR, io, loop, ui, utils
 from trezor.enums import ButtonRequestType
 from trezor.wire import ActionCancelled
 from trezor.wire.context import wait as ctx_wait
@@ -1079,128 +1079,128 @@ def confirm_total(
     )
 
 
-async def confirm_ethereum_staking_tx(
-    title: str,
-    intro_question: str,
-    verb: str,
-    total_amount: str,
-    maximum_fee: str,
-    address: str,
-    address_title: str,
-    info_items: Iterable[tuple[str, str]],
-    chunkify: bool = False,
-    br_type: str = "confirm_ethereum_staking_tx",
-    br_code: ButtonRequestType = ButtonRequestType.SignTx,
-) -> None:
-    # intro
-    await confirm_value(
-        title,
-        intro_question,
-        "",
-        br_type,
-        br_code,
-        verb=verb,
-        info_items=((address_title, address),),
-        chunkify_info=chunkify,
-    )
+if not utils.BITCOIN_ONLY:
 
-    # confirmation
-    if verb == TR.ethereum__staking_claim:
-        amount_title = verb
-        amount_value = ""
-    else:
-        amount_title = TR.words__amount + ":"
-        amount_value = total_amount
-    await raise_if_not_confirmed(
-        interact(
-            RustLayout(
-                trezorui2.altcoin_tx_summary(
-                    amount_title=amount_title,
-                    amount_value=amount_value,
-                    fee_title=TR.send__maximum_fee,
-                    fee_value=maximum_fee,
-                    items=info_items,
-                    cancel_cross=True,
-                )
-            ),
-            br_type=br_type,
-            br_code=br_code,
-        )
-    )
-
-
-def confirm_solana_tx(
-    amount: str,
-    fee: str,
-    items: Iterable[tuple[str, str]],
-    amount_title: str | None = None,
-    fee_title: str | None = None,
-    br_type: str = "confirm_solana_tx",
-    br_code: ButtonRequestType = ButtonRequestType.SignTx,
-) -> Awaitable[None]:
-    amount_title = (
-        amount_title if amount_title is not None else f"{TR.words__amount}:"
-    )  # def_arg
-    fee_title = fee_title or TR.words__fee  # def_arg
-    return raise_if_not_confirmed(
-        interact(
-            RustLayout(
-                trezorui2.altcoin_tx_summary(
-                    amount_title=amount_title,
-                    amount_value=amount,
-                    fee_title=fee_title,
-                    fee_value=fee,
-                    items=items,
-                    cancel_cross=True,
-                )
-            ),
-            br_type=br_type,
-            br_code=br_code,
-        )
-    )
-
-
-async def confirm_ethereum_tx(
-    recipient: str,
-    total_amount: str,
-    maximum_fee: str,
-    items: Iterable[tuple[str, str]],
-    br_type: str = "confirm_ethereum_tx",
-    br_code: ButtonRequestType = ButtonRequestType.SignTx,
-    chunkify: bool = False,
-) -> None:
-    summary_layout = RustLayout(
-        trezorui2.altcoin_tx_summary(
-            amount_title=f"{TR.words__amount}:",
-            amount_value=total_amount,
-            fee_title=TR.send__maximum_fee,
-            fee_value=maximum_fee,
-            items=items,
-        )
-    )
-
-    while True:
-        # Allowing going back and forth between recipient and summary/details
-        await confirm_blob(
+    async def confirm_ethereum_staking_tx(
+        title: str,
+        intro_question: str,
+        verb: str,
+        total_amount: str,
+        maximum_fee: str,
+        address: str,
+        address_title: str,
+        info_items: Iterable[tuple[str, str]],
+        chunkify: bool = False,
+        br_type: str = "confirm_ethereum_staking_tx",
+        br_code: ButtonRequestType = ButtonRequestType.SignTx,
+    ) -> None:
+        # intro
+        await confirm_value(
+            title,
+            intro_question,
+            "",
             br_type,
-            TR.words__recipient,
-            recipient,
-            verb=TR.buttons__continue,
-            chunkify=chunkify,
+            br_code,
+            verb=verb,
+            info_items=((address_title, address),),
+            chunkify_info=chunkify,
         )
 
-        try:
-            summary_layout.request_complete_repaint()
-            await raise_if_not_confirmed(
-                interact(
-                    summary_layout,
-                    br_type,
-                    br_code,
-                )
+        # confirmation
+        if verb == TR.ethereum__staking_claim:
+            amount_title = verb
+            amount_value = ""
+        else:
+            amount_title = TR.words__amount + ":"
+            amount_value = total_amount
+        await raise_if_not_confirmed(
+            interact(
+                RustLayout(
+                    trezorui2.altcoin_tx_summary(
+                        amount_title=amount_title,
+                        amount_value=amount_value,
+                        fee_title=TR.send__maximum_fee,
+                        fee_value=maximum_fee,
+                        items=info_items,
+                        cancel_cross=True,
+                    )
+                ),
+                br_type=br_type,
+                br_code=br_code,
             )
-            break
-        except ActionCancelled:
-            continue
+        )
+
+    def confirm_solana_tx(
+        amount: str,
+        fee: str,
+        items: Iterable[tuple[str, str]],
+        amount_title: str | None = None,
+        fee_title: str | None = None,
+        br_type: str = "confirm_solana_tx",
+        br_code: ButtonRequestType = ButtonRequestType.SignTx,
+    ) -> Awaitable[None]:
+        amount_title = (
+            amount_title if amount_title is not None else f"{TR.words__amount}:"
+        )  # def_arg
+        fee_title = fee_title or TR.words__fee  # def_arg
+        return raise_if_not_confirmed(
+            interact(
+                RustLayout(
+                    trezorui2.altcoin_tx_summary(
+                        amount_title=amount_title,
+                        amount_value=amount,
+                        fee_title=fee_title,
+                        fee_value=fee,
+                        items=items,
+                        cancel_cross=True,
+                    )
+                ),
+                br_type=br_type,
+                br_code=br_code,
+            )
+        )
+
+    async def confirm_ethereum_tx(
+        recipient: str,
+        total_amount: str,
+        maximum_fee: str,
+        items: Iterable[tuple[str, str]],
+        br_type: str = "confirm_ethereum_tx",
+        br_code: ButtonRequestType = ButtonRequestType.SignTx,
+        chunkify: bool = False,
+    ) -> None:
+        summary_layout = RustLayout(
+            trezorui2.altcoin_tx_summary(
+                amount_title=f"{TR.words__amount}:",
+                amount_value=total_amount,
+                fee_title=TR.send__maximum_fee,
+                fee_value=maximum_fee,
+                items=items,
+            )
+        )
+
+        while True:
+            # Allowing going back and forth between recipient and summary/details
+            await confirm_blob(
+                br_type,
+                TR.words__recipient,
+                recipient,
+                verb=TR.buttons__continue,
+                chunkify=chunkify,
+            )
+
+            try:
+                summary_layout.request_complete_repaint()
+                await raise_if_not_confirmed(
+                    interact(
+                        summary_layout,
+                        br_type,
+                        br_code,
+                    )
+                )
+                break
+            except ActionCancelled:
+                continue
 
 
 def confirm_joint_total(spending_amount: str, total_amount: str) -> Awaitable[None]:
