@@ -13,6 +13,21 @@ from typing import Union, Set
 
 RUST_SRC = THIS_FILE.parent / "src"
 
+ALTCOIN_PREFIXES = (
+    "binance",
+    "cardano",
+    "eos",
+    "ethereum",
+    "fido",
+    "monero",
+    "nem",
+    "ripple",
+    "solana",
+    "stellar",
+    "tezos",
+    "u2f",
+)
+
 def find_unique_patterns_in_dir(directory: Union[str, Path], pattern: str) -> Set[str]:
     command = f"grep -ro '{pattern}' {directory}"
     result = subprocess.run(command, stdout=subprocess.PIPE, text=True, shell=True)
@@ -21,10 +36,24 @@ def find_unique_patterns_in_dir(directory: Union[str, Path], pattern: str) -> Se
 
 pattern = r"\bMP_QSTR_\w*"
 qstrings = find_unique_patterns_in_dir(RUST_SRC, pattern)
+
+qstrings_universal = set()
+for prefix in ALTCOIN_PREFIXES:
+    mp_prefix = f"MP_QSTR_{prefix}__"
+    qstrings_universal |= {qstr for qstr in qstrings if qstr.startswith(mp_prefix)}
+
+qstrings_btconly = qstrings - qstrings_universal
+
 # sort result alphabetically
-qstrings_sorted = sorted(qstrings)
+qstrings_btconly_sorted = sorted(qstrings_btconly)
+qstrings_universal_sorted = sorted(qstrings_universal)
 %>\
-% for qstr in qstrings_sorted:
+% for qstr in qstrings_btconly_sorted:
   ${qstr};
 % endfor
+#if !BITCOIN_ONLY
+% for qstr in qstrings_universal_sorted:
+  ${qstr};
+% endfor
+#endif
 }
