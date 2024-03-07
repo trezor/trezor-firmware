@@ -209,15 +209,55 @@ pub const fn loader_lock_icon() -> LoaderStyleSheet {
     }
 }
 
-pub const TEXT_NORMAL: TextStyle = TextStyle::new(Font::NORMAL, FG, BG, GREY_LIGHT, GREY_LIGHT);
-pub const TEXT_DEMIBOLD: TextStyle = TextStyle::new(Font::DEMIBOLD, FG, BG, GREY_LIGHT, GREY_LIGHT);
-pub const TEXT_BOLD: TextStyle = TextStyle::new(Font::BOLD, FG, BG, GREY_LIGHT, GREY_LIGHT);
-pub const TEXT_MONO: TextStyle = TextStyle::new(Font::MONO, FG, BG, GREY_LIGHT, GREY_LIGHT)
+pub const TEXT_SUPER: TextStyle = TextStyle::new(Font::BIG, GREY_EXTRA_LIGHT, BG, GREY, GREY);
+pub const TEXT_MAIN: TextStyle = TextStyle::new(Font::NORMAL, GREY_EXTRA_LIGHT, BG, GREY, GREY);
+pub const TEXT_SUB: TextStyle = TextStyle::new(Font::SUB, GREY, BG, GREY, GREY);
+pub const TEXT_MONO: TextStyle = TextStyle::new(Font::MONO, GREY_EXTRA_LIGHT, BG, GREY, GREY)
     .with_line_breaking(LineBreaking::BreakWordsNoHyphen)
     .with_page_breaking(PageBreaking::CutAndInsertEllipsisBoth)
     .with_ellipsis_icon(ICON_PAGE_NEXT, 0)
     .with_prev_page_icon(ICON_PAGE_PREV, 0);
 
+// TODO: remove TextStyles below when ui-t3t1 done
+pub const TEXT_NORMAL: TextStyle = TextStyle::new(Font::NORMAL, FG, BG, GREY_LIGHT, GREY_LIGHT);
+pub const TEXT_DEMIBOLD: TextStyle = TextStyle::new(Font::DEMIBOLD, FG, BG, GREY_LIGHT, GREY_LIGHT);
+pub const TEXT_BOLD: TextStyle = TextStyle::new(Font::BOLD, FG, BG, GREY_LIGHT, GREY_LIGHT);
+
+/// Decide the text style of chunkified text according to its length.
+pub fn get_chunkified_text_style(character_length: usize) -> &'static TextStyle {
+    // Longer addresses have smaller x_offset so they fit even with scrollbar
+    // (as they will be shown on more than one page)
+    const FITS_ON_ONE_PAGE: usize = 16 * 4;
+    if character_length <= FITS_ON_ONE_PAGE {
+        &TEXT_MONO_ADDRESS_CHUNKS
+    } else {
+        &TEXT_MONO_ADDRESS_CHUNKS_SMALLER_X_OFFSET
+    }
+}
+
+/// Convert Python-side numeric id to a `TextStyle`.
+pub fn textstyle_number(num: i32) -> &'static TextStyle {
+    let font = Font::from_i32(-num);
+    match font {
+        Some(Font::DEMIBOLD) => &TEXT_DEMIBOLD,
+        Some(Font::BOLD) => &TEXT_BOLD,
+        Some(Font::MONO) => &TEXT_MONO,
+        _ => &TEXT_NORMAL,
+    }
+}
+
+pub const TEXT_NORMAL_OFF_WHITE: TextStyle =
+    TextStyle::new(Font::NORMAL, OFF_WHITE, BG, GREY_LIGHT, GREY_LIGHT);
+pub const TEXT_CHECKLIST_DEFAULT: TextStyle =
+    TextStyle::new(Font::NORMAL, GREY_LIGHT, BG, GREY_LIGHT, GREY_LIGHT);
+pub const TEXT_CHECKLIST_SELECTED: TextStyle =
+    TextStyle::new(Font::NORMAL, FG, BG, GREY_LIGHT, GREY_LIGHT);
+pub const TEXT_CHECKLIST_DONE: TextStyle =
+    TextStyle::new(Font::NORMAL, GREEN_DARK, BG, GREY_LIGHT, GREY_LIGHT);
+
+pub const CONTENT_BORDER: i16 = 0;
+pub const BUTTON_HEIGHT: i16 = 50;
+pub const BUTTON_WIDTH: i16 = 56;
 pub const BUTTON_SPACING: i16 = 6;
 pub const CORNER_BUTTON_SIDE: i16 = 44;
 pub const RESULT_PADDING: i16 = 6;
