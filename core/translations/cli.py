@@ -22,10 +22,8 @@ PRIVATE_KEYS_DEV = [byte * 32 for byte in (b"\xdd", b"\xde", b"\xdf")]
 PUBLIC_KEYS_PROD = [
     bytes.fromhex(key)
     for key in (
-        # TODO add production public keys
-        "aabbccdd" * 8,
-        "11223344" * 8,
-        "55667788" * 8,
+        "62cea8257b0bca15b33a76405a79c4881eb20ee82346813181a50291d6caec67",
+        "594ef09e51139372e528c6c5b8742ee1806f9114caeaeedb04be6a98e1ce3020",
     )
 ]
 
