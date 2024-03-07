@@ -216,7 +216,6 @@ def cargo_build():
         features = ["model_tr"]
     else:
         features = ["model_tt"]
-    features.append("bitcoin_only")
     features.append("ui")
     features.append("bootloader")
     features.extend(FEATURES_AVAILABLE)

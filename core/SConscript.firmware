@@ -722,8 +722,8 @@ def cargo_build():
         profile = ''
 
     features = ['micropython', 'protobuf', ui_layout_feature]
-    if BITCOIN_ONLY == '1':
-        features.append('bitcoin_only')
+    if EVERYTHING:
+        features.append('universal_fw')
     features.append('ui')
     features.append('translations')
     if PYOPT == '0':

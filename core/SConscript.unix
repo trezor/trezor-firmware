@@ -803,8 +803,8 @@ RUST_LIBPATH = f'{RUST_LIBDIR}/lib{RUST_LIB}.a'
 
 def cargo_build():
     features = ['micropython', 'protobuf', ui_layout_feature]
-    if BITCOIN_ONLY == '1':
-        features.append('bitcoin_only')
+    if EVERYTHING:
+        features.append('universal_fw')
     features.append('ui')
     features.append('translations')
     if PYOPT == '0':
