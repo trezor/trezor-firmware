@@ -328,6 +328,7 @@ void display_setup_fmc(void) {
       FMC_CONTINUOUS_CLOCK_SYNC_ONLY;
   external_display_data_sram.Init.PageSize = FMC_PAGE_SIZE_NONE;
 
+#ifdef STM32F4
   // reference RM0090 section 37.5 Table 259, 37.5.4, Mode 1 SRAM, and 37.5.6
   FMC_NORSRAM_TimingTypeDef normal_mode_timing = {0};
   normal_mode_timing.AddressSetupTime = 5;
@@ -339,6 +340,34 @@ void display_setup_fmc(void) {
   normal_mode_timing.AccessMode = FMC_ACCESS_MODE_A;
 
   HAL_SRAM_Init(&external_display_data_sram, &normal_mode_timing, NULL);
+
+#else
+  external_display_data_sram.Init.ExtendedMode = FMC_EXTENDED_MODE_ENABLE;
+
+  FMC_NORSRAM_TimingTypeDef normal_mode_timing = {0};
+  normal_mode_timing.AddressSetupTime = 15;
+  normal_mode_timing.AddressHoldTime = 1;  // don't care
+  normal_mode_timing.DataSetupTime = 11;
+  normal_mode_timing.BusTurnAroundDuration = 0;  // don't care
+  normal_mode_timing.CLKDivision = 2;            // don't care
+  normal_mode_timing.DataLatency = 2;            // don't care
+  normal_mode_timing.DataHoldTime = 0;
+  normal_mode_timing.AccessMode = FMC_ACCESS_MODE_A;
+
+  FMC_NORSRAM_TimingTypeDef ext_mode_timing = {0};
+  ext_mode_timing.AddressSetupTime = 4;
+  ext_mode_timing.AddressHoldTime = 1;  // don't care
+  ext_mode_timing.DataSetupTime = 5;
+  ext_mode_timing.BusTurnAroundDuration = 0;  // don't care
+  ext_mode_timing.CLKDivision = 2;            // don't care
+  ext_mode_timing.DataLatency = 2;            // don't care
+  ext_mode_timing.DataHoldTime = 3;
+  ext_mode_timing.AccessMode = FMC_ACCESS_MODE_A;
+
+  HAL_SRAM_Init(&external_display_data_sram, &normal_mode_timing,
+                &ext_mode_timing);
+
+#endif
 }
 
 #ifdef FRAMEBUFFER
@@ -368,12 +397,18 @@ void display_init(void) {
 
   backlight_pwm_init();
 
+#ifdef STM32F4
+#define DISPLAY_GPIO_SPEED GPIO_SPEED_FREQ_VERY_HIGH
+#else
+#define DISPLAY_GPIO_SPEED GPIO_SPEED_FREQ_LOW
+#endif
+
   GPIO_InitTypeDef GPIO_InitStructure;
 
   // LCD_RST/PC14
   GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStructure.Pull = GPIO_NOPULL;
-  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStructure.Speed = DISPLAY_GPIO_SPEED;
   GPIO_InitStructure.Alternate = 0;
   GPIO_InitStructure.Pin = GPIO_PIN_14;
   // default to keeping display in reset
@@ -384,7 +419,7 @@ void display_init(void) {
   // LCD_FMARK (tearing effect)
   GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
   GPIO_InitStructure.Pull = GPIO_NOPULL;
-  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  GPIO_InitStructure.Speed = DISPLAY_GPIO_SPEED;
   GPIO_InitStructure.Alternate = 0;
   GPIO_InitStructure.Pin = DISPLAY_TE_PIN;
   HAL_GPIO_Init(DISPLAY_TE_PORT, &GPIO_InitStructure);
@@ -392,7 +427,7 @@ void display_init(void) {
 
   GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;
   GPIO_InitStructure.Pull = GPIO_NOPULL;
-  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  GPIO_InitStructure.Speed = DISPLAY_GPIO_SPEED;
   GPIO_InitStructure.Alternate = GPIO_AF12_FMC;
   //                       LCD_CS/PD7   LCD_RS/PD11   LCD_RD/PD4   LCD_WR/PD5
   GPIO_InitStructure.Pin = GPIO_PIN_7 | GPIO_PIN_11 | GPIO_PIN_4 | GPIO_PIN_5;
