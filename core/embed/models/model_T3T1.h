@@ -3,7 +3,7 @@
 
 #include "sizedefs.h"
 
-#define MODEL_NAME "T3T1"
+#define MODEL_NAME "Safe 5"
 #define MODEL_FULL_NAME "Trezor Safe 5"
 #define MODEL_INTERNAL_NAME "T3T1"
 #define MODEL_INTERNAL_NAME_TOKEN T3T1
