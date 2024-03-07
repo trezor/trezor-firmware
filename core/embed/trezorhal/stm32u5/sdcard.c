@@ -121,7 +121,7 @@ static inline void sdcard_active_pin_state(void) {
   // configure SD GPIO
   GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;
   GPIO_InitStructure.Pull = GPIO_PULLUP;
-  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_MEDIUM;
   GPIO_InitStructure.Alternate = GPIO_AF12_SDMMC1;
   GPIO_InitStructure.Pin =
       GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10 | GPIO_PIN_11 | GPIO_PIN_12;
