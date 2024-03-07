@@ -47,7 +47,7 @@ impl<'a> Text<'a> {
         Self { align, ..self }
     }
 
-    pub fn render(self, renderer: &mut impl Renderer) {
+    pub fn render<'r>(self, renderer: &mut impl Renderer<'r>) {
         renderer.render_shape(self);
     }
 
@@ -63,7 +63,7 @@ impl<'a> Text<'a> {
     }
 }
 
-impl<'a> Shape for Text<'a> {
+impl<'a> Shape<'_> for Text<'a> {
     fn bounds(&self, _cache: &DrawingCache) -> Rect {
         let pos = self.aligned_pos();
         let max_ascent = self.font.text_max_height() - self.font.text_baseline();
@@ -105,8 +105,8 @@ impl<'a> Shape for Text<'a> {
     }
 }
 
-impl<'a> ShapeClone for Text<'a> {
-    fn clone_at_bump<'alloc, T>(self, bump: &'alloc T) -> Option<&'alloc mut dyn Shape>
+impl<'a, 's> ShapeClone<'s> for Text<'a> {
+    fn clone_at_bump<'alloc, T>(self, bump: &'alloc T) -> Option<&'alloc mut dyn Shape<'s>>
     where
         T: LocalAllocLeakExt<'alloc>,
     {

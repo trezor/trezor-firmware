@@ -9,21 +9,21 @@ use super::{DrawingCache, Renderer, Shape, ShapeClone};
 use without_alloc::alloc::LocalAllocLeakExt;
 
 /// A shape for rendering compressed TOIF images.
-pub struct ToifImage {
+pub struct ToifImage<'a> {
     /// Image position
     pos: Point,
     // Image position alignment
     align: Alignment2D,
     // Image data
-    toif: Toif<'static>,
+    toif: Toif<'a>,
     // Foreground color
     fg_color: Color,
     // Optional background color
     bg_color: Option<Color>,
 }
 
-impl ToifImage {
-    pub fn new(pos: Point, toif: Toif<'static>) -> Self {
+impl<'a> ToifImage<'a> {
+    pub fn new(pos: Point, toif: Toif<'a>) -> Self {
         Self {
             pos,
             align: Alignment2D::TOP_LEFT,
@@ -48,11 +48,11 @@ impl ToifImage {
         }
     }
 
-    pub fn render(self, renderer: &mut impl Renderer) {
+    pub fn render(self, renderer: &mut impl Renderer<'a>) {
         renderer.render_shape(self);
     }
 
-    fn draw_grayscale(&self, canvas: &mut dyn Canvas, cache: &DrawingCache) {
+    fn draw_grayscale(&self, canvas: &mut dyn Canvas, cache: &DrawingCache<'a>) {
         // TODO: introduce new viewport/shape function for this calculation
         let bounds = self.bounds(cache);
         let viewport = canvas.viewport();
@@ -100,7 +100,7 @@ impl ToifImage {
         }
     }
 
-    fn draw_rgb(&self, canvas: &mut dyn Canvas, cache: &DrawingCache) {
+    fn draw_rgb(&self, canvas: &mut dyn Canvas, cache: &DrawingCache<'a>) {
         // TODO: introduce new viewport/shape function for this calculation
         let bounds = self.bounds(cache);
         let viewport = canvas.viewport();
@@ -145,17 +145,17 @@ impl ToifImage {
     }
 }
 
-impl Shape for ToifImage {
-    fn bounds(&self, _cache: &DrawingCache) -> Rect {
+impl<'a> Shape<'a> for ToifImage<'a> {
+    fn bounds(&self, _cache: &DrawingCache<'a>) -> Rect {
         let size = Offset::new(self.toif.width(), self.toif.height());
         Rect::from_top_left_and_size(size.snap(self.pos, self.align), size)
     }
 
-    fn cleanup(&mut self, _cache: &DrawingCache) {
+    fn cleanup(&mut self, _cache: &DrawingCache<'a>) {
         // TODO: inform the cache that we won't use the zlib slot anymore
     }
 
-    fn draw(&mut self, canvas: &mut dyn Canvas, cache: &DrawingCache) {
+    fn draw(&mut self, canvas: &mut dyn Canvas, cache: &DrawingCache<'a>) {
         if self.toif.is_grayscale() {
             self.draw_grayscale(canvas, cache);
         } else {
@@ -164,8 +164,8 @@ impl Shape for ToifImage {
     }
 }
 
-impl ShapeClone for ToifImage {
-    fn clone_at_bump<'alloc, T>(self, bump: &'alloc T) -> Option<&'alloc mut dyn Shape>
+impl<'a> ShapeClone<'a> for ToifImage<'a> {
+    fn clone_at_bump<'alloc, T>(self, bump: &'alloc T) -> Option<&'alloc mut dyn Shape<'a>>
     where
         T: LocalAllocLeakExt<'alloc>,
     {

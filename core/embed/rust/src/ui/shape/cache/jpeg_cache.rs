@@ -160,7 +160,7 @@ impl<'a> JpegCacheSlot<'a> {
         }
 
         let decoder = unwrap!(self.decoder.as_mut()); // should never fail
-        let input = unwrap!(self.input.as_mut()); // shoud never fail
+        let input = unwrap!(self.input.as_mut()); // should never fail
         let mut output = JpegFnOutput::new(output);
 
         match decoder.decomp2(input, &mut output) {

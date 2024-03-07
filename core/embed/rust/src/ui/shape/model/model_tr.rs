@@ -8,9 +8,9 @@ use crate::ui::{
 
 use static_alloc::Bump;
 
-pub fn render_on_display<F>(clip: Option<Rect>, bg_color: Option<Color>, mut func: F)
+pub fn render_on_display<'a, F>(clip: Option<Rect>, bg_color: Option<Color>, func: F)
 where
-    F: FnMut(&mut DirectRenderer<Mono8Canvas>),
+    F: FnOnce(&mut DirectRenderer<'_, 'a, Mono8Canvas<'a>>),
 {
     // TODO: do not use constants 128 & 64 directly
 
@@ -22,6 +22,8 @@ where
 
     let bump = unsafe { &mut *core::ptr::addr_of_mut!(BUMP) };
     {
+        bump.reset();
+
         let cache = DrawingCache::new(bump, bump);
         let mut canvas = unwrap!(Mono8Canvas::new(Offset::new(128, 64), None, fb));
 
@@ -35,7 +37,6 @@ where
 
         refresh_display(&canvas);
     }
-    bump.reset();
 }
 
 fn refresh_display(canvas: &Mono8Canvas) {

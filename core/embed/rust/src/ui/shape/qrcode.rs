@@ -83,7 +83,7 @@ impl QrImage {
         }
     }
 
-    pub fn render(self, renderer: &mut impl Renderer) {
+    pub fn render<'s>(self, renderer: &mut impl Renderer<'s>) {
         renderer.render_shape(self);
     }
 
@@ -107,7 +107,7 @@ impl QrImage {
     }
 }
 
-impl Shape for QrImage {
+impl Shape<'_> for QrImage {
     fn bounds(&self, _cache: &DrawingCache) -> Rect {
         self.area
     }
@@ -157,8 +157,8 @@ impl Shape for QrImage {
     }
 }
 
-impl ShapeClone for QrImage {
-    fn clone_at_bump<'alloc, T>(self, bump: &'alloc T) -> Option<&'alloc mut dyn Shape>
+impl<'s> ShapeClone<'s> for QrImage {
+    fn clone_at_bump<'alloc, T>(self, bump: &'alloc T) -> Option<&'alloc mut dyn Shape<'s>>
     where
         T: LocalAllocLeakExt<'alloc>,
     {

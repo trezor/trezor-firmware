@@ -8,13 +8,13 @@ use super::{DrawingCache, Renderer, Shape, ShapeClone};
 use without_alloc::alloc::LocalAllocLeakExt;
 
 /// A shape for rendering compressed JPEG images.
-pub struct JpegImage {
+pub struct JpegImage<'a> {
     /// Image position
     pos: Point,
     // Image position alignment
     align: Alignment2D,
     /// JPEG data
-    jpeg: &'static [u8],
+    jpeg: &'a [u8],
     /// Scale factor (default 0)
     scale: u8,
     /// Blurring radius or 0 if no blurring required (default 0)
@@ -26,8 +26,8 @@ pub struct JpegImage {
     blur_tag: Option<u32>,
 }
 
-impl JpegImage {
-    pub fn new(pos: Point, jpeg: &'static [u8]) -> Self {
+impl<'a> JpegImage<'a> {
+    pub fn new(pos: Point, jpeg: &'a [u8]) -> Self {
         JpegImage {
             pos,
             align: Alignment2D::TOP_LEFT,
@@ -59,18 +59,18 @@ impl JpegImage {
         Self { dim, ..self }
     }
 
-    pub fn render(self, renderer: &mut impl Renderer) {
+    pub fn render(self, renderer: &mut impl Renderer<'a>) {
         renderer.render_shape(self);
     }
 }
 
-impl Shape for JpegImage {
-    fn bounds(&self, cache: &DrawingCache) -> Rect {
+impl<'a> Shape<'a> for JpegImage<'a> {
+    fn bounds(&self, cache: &DrawingCache<'a>) -> Rect {
         let size = unwrap!(cache.jpeg().get_size(self.jpeg, self.scale), "Invalid JPEG");
         Rect::from_top_left_and_size(size.snap(self.pos, self.align), size)
     }
 
-    fn cleanup(&mut self, _cache: &DrawingCache) {
+    fn cleanup(&mut self, _cache: &DrawingCache<'a>) {
         self.blur_tag = None;
     }
 
@@ -78,7 +78,7 @@ impl Shape for JpegImage {
     // Faster implementation suitable for DirectRenderer without blurring support
     // (but is terribly slow on ProgressiveRenderer if slices are not aligned
     //  to JPEG MCUs )
-    fn draw(&mut self, canvas: &mut dyn RgbCanvasEx, cache: &DrawingCache) {
+    fn draw(&mut self, canvas: &mut dyn RgbCanvasEx, cache: &DrawingCache<'a>) {
         let bounds = self.bounds(cache);
         let clip = canvas.viewport().relative_clip(bounds).clip;
 
@@ -103,7 +103,7 @@ impl Shape for JpegImage {
     }*/
 
     // This is a little bit slower implementation suitable for ProgressiveRenderer
-    fn draw(&mut self, canvas: &mut dyn Canvas, cache: &DrawingCache) {
+    fn draw(&mut self, canvas: &mut dyn Canvas, cache: &DrawingCache<'a>) {
         let bounds = self.bounds(cache);
         let clip = canvas.viewport().relative_clip(bounds).clip;
 
@@ -188,8 +188,8 @@ impl Shape for JpegImage {
     }
 }
 
-impl ShapeClone for JpegImage {
-    fn clone_at_bump<'alloc, T>(self, bump: &'alloc T) -> Option<&'alloc mut dyn Shape>
+impl<'a> ShapeClone<'a> for JpegImage<'a> {
+    fn clone_at_bump<'alloc, T>(self, bump: &'alloc T) -> Option<&'alloc mut dyn Shape<'a>>
     where
         T: LocalAllocLeakExt<'alloc>,
     {
