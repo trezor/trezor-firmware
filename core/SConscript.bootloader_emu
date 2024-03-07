@@ -273,7 +273,6 @@ def cargo_build():
     if TREZOR_MODEL in ('R', '1'):
         features.append('button')
 
-    features.append("bitcoin_only")
     features.append("ui")
     features.append("bootloader")
 

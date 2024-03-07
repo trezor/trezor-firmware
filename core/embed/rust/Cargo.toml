@@ -7,7 +7,6 @@ build = "build.rs"
 
 [features]
 default = ["model_tt"]
-bitcoin_only = []
 crypto = ["zeroize"]
 model_tt = ["jpeg"]
 model_tr = []
@@ -49,7 +48,9 @@ test = [
     "backlight",
     "optiga",
     "translations",
+    "universal_fw",
 ]
+universal_fw = []
 
 [lib]
 crate-type = ["staticlib"]
