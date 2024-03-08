@@ -97,7 +97,7 @@ where
         btn_actions: ButtonActions,
         formatted: FormattedText<T>,
     ) -> Self {
-        Self {
+        let mut page = Self {
             formatted,
             btn_layout,
             btn_actions,
@@ -105,7 +105,9 @@ where
             page_count: 1,
             title: None,
             slim_arrows: false,
-        }
+        };
+        page.change_page(page.current_page);
+        page
     }
 }
 
@@ -127,7 +129,6 @@ where
     }
 
     pub fn paint(&mut self) {
-        self.change_page(self.current_page);
         self.formatted.paint();
     }
 
@@ -193,10 +194,12 @@ where
 
     pub fn go_to_prev_page(&mut self) {
         self.current_page -= 1;
+        self.change_page(self.current_page);
     }
 
     pub fn go_to_next_page(&mut self) {
         self.current_page += 1;
+        self.change_page(self.current_page);
     }
 
     pub fn get_current_page(&self) -> usize {

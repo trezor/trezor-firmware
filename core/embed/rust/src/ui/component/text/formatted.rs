@@ -11,9 +11,11 @@ use super::{
     op::OpTextLayout,
 };
 
+use core::cell::RefCell;
+
 #[derive(Clone)]
 pub struct FormattedText<T: StringType + Clone> {
-    op_layout: OpTextLayout<T>,
+    op_layout: RefCell<OpTextLayout<T>>,
     vertical: Alignment,
     char_offset: usize,
     y_offset: i16,
@@ -22,7 +24,7 @@ pub struct FormattedText<T: StringType + Clone> {
 impl<T: StringType + Clone> FormattedText<T> {
     pub fn new(op_layout: OpTextLayout<T>) -> Self {
         Self {
-            op_layout,
+            op_layout: RefCell::new(op_layout),
             vertical: Alignment::Start,
             char_offset: 0,
             y_offset: 0,
@@ -34,13 +36,14 @@ impl<T: StringType + Clone> FormattedText<T> {
         self
     }
 
-    fn layout_content(&mut self, sink: &mut dyn LayoutSink) -> LayoutFit {
+    fn layout_content(&self, sink: &mut dyn LayoutSink) -> LayoutFit {
         self.op_layout
+            .borrow_mut()
             .layout_ops(self.char_offset, Offset::y(self.y_offset), sink)
     }
 
     fn align_vertically(&mut self, content_height: i16) {
-        let bounds_height = self.op_layout.layout.bounds.height();
+        let bounds_height = self.op_layout.borrow().layout.bounds.height();
         if content_height >= bounds_height {
             self.y_offset = 0;
             return;
@@ -122,7 +125,7 @@ impl<T: StringType + Clone> Component for FormattedText<T> {
     type Msg = Never;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        self.op_layout.place(bounds);
+        self.op_layout.borrow_mut().place(bounds);
         let height = self.layout_content(&mut TextNoOp).height();
         self.align_vertically(height);
         bounds
@@ -138,7 +141,7 @@ impl<T: StringType + Clone> Component for FormattedText<T> {
 
     #[cfg(feature = "ui_bounds")]
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
-        sink(self.op_layout.layout.bounds)
+        sink(self.op_layout.borrow().layout.bounds)
     }
 }
 
@@ -153,6 +156,7 @@ impl<T: StringType + Clone> FormattedText<T> {
         // TODO: how to solve it "properly", without the `clone`?
         // (changing `trace` to `&mut self` had some other isses...)
         self.op_layout
+            .borrow()
             .clone()
             .layout_content(self.char_offset, sink)
     }
