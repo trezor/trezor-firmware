@@ -56,7 +56,7 @@ impl<'a, T: StringType + Clone + 'a> OpTextLayout<T> {
     /// Perform some operations defined on `Op` for a list of those `Op`s
     /// - e.g. changing the color, changing the font or rendering the text.
     pub fn layout_ops(
-        &mut self,
+        &self,
         skip_bytes: usize,
         offset: Offset,
         sink: &mut dyn LayoutSink,
@@ -65,25 +65,26 @@ impl<'a, T: StringType + Clone + 'a> OpTextLayout<T> {
         let cursor = &mut (self.layout.initial_cursor() + offset);
         let init_cursor = *cursor;
         let mut total_processed_chars = 0;
+        let mut layout = self.layout;
 
         // Do something when it was not skipped
         for op in Self::filter_skipped_ops(self.ops.iter(), skip_bytes) {
             match op {
                 // Changing color
                 Op::Color(color) => {
-                    self.layout.style.text_color = color;
+                    layout.style.text_color = color;
                 }
                 // Changing font
                 Op::Font(font) => {
-                    self.layout.style.text_font = font;
+                    layout.style.text_font = font;
                 }
                 // Changing line/text alignment
                 Op::Alignment(line_alignment) => {
-                    self.layout.align = line_alignment;
+                    layout.align = line_alignment;
                 }
                 // Changing line breaking
                 Op::LineBreaking(line_breaking) => {
-                    self.layout.style.line_breaking = line_breaking;
+                    layout.style.line_breaking = line_breaking;
                 }
                 // Moving the cursor
                 Op::CursorOffset(offset) => {
@@ -91,10 +92,10 @@ impl<'a, T: StringType + Clone + 'a> OpTextLayout<T> {
                     cursor.y += offset.y;
                 }
                 Op::Chunkify(chunks) => {
-                    self.layout.style.chunks = chunks;
+                    layout.style.chunks = chunks;
                 }
                 Op::LineSpacing(line_spacing) => {
-                    self.layout.style.line_spacing = line_spacing;
+                    layout.style.line_spacing = line_spacing;
                 }
                 // Moving to the next page
                 Op::NextPage => {
@@ -103,7 +104,7 @@ impl<'a, T: StringType + Clone + 'a> OpTextLayout<T> {
                     total_processed_chars += PROCESSED_CHARS_ONE;
                     return LayoutFit::OutOfBounds {
                         processed_chars: total_processed_chars,
-                        height: self.layout.layout_height(init_cursor, *cursor),
+                        height: layout.layout_height(init_cursor, *cursor),
                     };
                 }
                 // Drawing text
@@ -113,9 +114,9 @@ impl<'a, T: StringType + Clone + 'a> OpTextLayout<T> {
 
                     // Inserting the ellipsis at the very beginning of the text if needed
                     // (just for incomplete texts that were separated)
-                    self.layout.continues_from_prev_page = continued;
+                    layout.continues_from_prev_page = continued;
 
-                    let fit = self.layout.layout_text(text.as_ref(), cursor, sink);
+                    let fit = layout.layout_text(text.as_ref(), cursor, sink);
 
                     match fit {
                         LayoutFit::Fitting {
@@ -130,7 +131,7 @@ impl<'a, T: StringType + Clone + 'a> OpTextLayout<T> {
 
                             return LayoutFit::OutOfBounds {
                                 processed_chars: total_processed_chars,
-                                height: self.layout.layout_height(init_cursor, *cursor),
+                                height: layout.layout_height(init_cursor, *cursor),
                             };
                         }
                     }
@@ -140,7 +141,7 @@ impl<'a, T: StringType + Clone + 'a> OpTextLayout<T> {
 
         LayoutFit::Fitting {
             processed_chars: total_processed_chars,
-            height: self.layout.layout_height(init_cursor, *cursor),
+            height: layout.layout_height(init_cursor, *cursor),
         }
     }
 

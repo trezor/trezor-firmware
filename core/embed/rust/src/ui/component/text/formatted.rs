@@ -34,7 +34,7 @@ impl<T: StringType + Clone> FormattedText<T> {
         self
     }
 
-    fn layout_content(&mut self, sink: &mut dyn LayoutSink) -> LayoutFit {
+    pub(crate) fn layout_content(&self, sink: &mut dyn LayoutSink) -> LayoutFit {
         self.op_layout
             .layout_ops(self.char_offset, Offset::y(self.y_offset), sink)
     }
@@ -145,20 +145,6 @@ impl<T: StringType + Clone> Component for FormattedText<T> {
 // DEBUG-ONLY SECTION BELOW
 
 #[cfg(feature = "ui_debug")]
-impl<T: StringType + Clone> FormattedText<T> {
-    /// Is the same as layout_content, but does not use `&mut self`
-    /// to be compatible with `trace`.
-    /// Therefore it has to do the `clone` of `op_layout`.
-    pub fn layout_content_debug(&self, sink: &mut dyn LayoutSink) -> LayoutFit {
-        // TODO: how to solve it "properly", without the `clone`?
-        // (changing `trace` to `&mut self` had some other isses...)
-        self.op_layout
-            .clone()
-            .layout_content(self.char_offset, sink)
-    }
-}
-
-#[cfg(feature = "ui_debug")]
 impl<T: StringType + Clone> crate::trace::Trace for FormattedText<T> {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         use crate::ui::component::text::layout::trace::TraceSink;
@@ -166,7 +152,7 @@ impl<T: StringType + Clone> crate::trace::Trace for FormattedText<T> {
         let fit: Cell<Option<LayoutFit>> = Cell::new(None);
         t.component("FormattedText");
         t.in_list("text", &|l| {
-            let result = self.layout_content_debug(&mut TraceSink(l));
+            let result = self.layout_content(&mut TraceSink(l));
             fit.set(Some(result));
         });
         t.bool("fits", matches!(fit.get(), Some(LayoutFit::Fitting { .. })));

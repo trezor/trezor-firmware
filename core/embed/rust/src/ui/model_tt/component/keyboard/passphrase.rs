@@ -13,6 +13,8 @@ use crate::ui::{
     util::long_line_content_with_ellipsis,
 };
 
+use core::cell::Cell;
+
 pub enum PassphraseKeyboardMsg {
     Confirmed,
     Cancelled,
@@ -25,7 +27,7 @@ pub struct PassphraseKeyboard {
     confirm: Child<Button<&'static str>>,
     keys: [Child<Button<&'static str>>; KEY_COUNT],
     scrollbar: ScrollBar,
-    fade: bool,
+    fade: Cell<bool>,
 }
 
 const STARTING_PAGE: usize = 1;
@@ -63,7 +65,7 @@ impl PassphraseKeyboard {
                 Child::new(Button::new(Self::key_content(text)).styled(theme::button_pin()))
             }),
             scrollbar: ScrollBar::horizontal(),
-            fade: false,
+            fade: Cell::new(false),
         }
     }
 
@@ -99,7 +101,7 @@ impl PassphraseKeyboard {
         // Update buttons.
         self.replace_button_content(ctx, key_page);
         // Reset backlight to normal level on next paint.
-        self.fade = true;
+        self.fade.set(true);
         // So that swipe does not visually enable the input buttons when max length
         // reached
         self.update_input_btns_state(ctx);
@@ -288,8 +290,7 @@ impl Component for PassphraseKeyboard {
         for btn in &mut self.keys {
             btn.paint();
         }
-        if self.fade {
-            self.fade = false;
+        if self.fade.take() {
             // Note that this is blocking and takes some time.
             display::fade_backlight(theme::BACKLIGHT_NORMAL);
         }

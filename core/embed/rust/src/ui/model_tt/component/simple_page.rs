@@ -5,6 +5,7 @@ use crate::ui::{
 };
 
 use super::{theme, ScrollBar, Swipe, SwipeDirection};
+use core::cell::Cell;
 
 const SCROLLBAR_HEIGHT: i16 = 18;
 const SCROLLBAR_BORDER: i16 = 4;
@@ -16,7 +17,7 @@ pub struct SimplePage<T> {
     scrollbar: ScrollBar,
     axis: Axis,
     swipe_right_to_go_back: bool,
-    fade: Option<u16>,
+    fade: Cell<Option<u16>>,
 }
 
 impl<T> SimplePage<T>
@@ -32,7 +33,7 @@ where
             scrollbar: ScrollBar::new(axis),
             axis,
             swipe_right_to_go_back: false,
-            fade: None,
+            fade: Cell::new(None),
         }
     }
 
@@ -79,7 +80,7 @@ where
 
         // Swipe has dimmed the screen, so fade back to normal backlight after the next
         // paint.
-        self.fade = Some(theme::BACKLIGHT_NORMAL);
+        self.fade.set(Some(theme::BACKLIGHT_NORMAL));
     }
 
     fn is_horizontal(&self) -> bool {
