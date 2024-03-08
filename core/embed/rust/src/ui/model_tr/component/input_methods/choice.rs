@@ -294,11 +294,6 @@ where
     fn show_current_choice(&mut self, area: Rect) {
         self.get_current_item()
             .paint_center(area, self.inverse_selected_item);
-
-        // Color inversion is just one-time thing.
-        if self.inverse_selected_item {
-            self.inverse_selected_item = false;
-        }
     }
 
     /// Display all the choices fitting on the left side.
@@ -491,6 +486,11 @@ where
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        // Cancel highlighting of the current choice.
+        // The Highlighting is started by pressing the middle button and
+        // canceled immediately when any other event is processed
+        self.inverse_selected_item = false;
+
         // Possible animation movement when setting (randomizing) the page counter.
         if let Some(animation_direction) = self.animation_event(ctx, event) {
             match animation_direction {
