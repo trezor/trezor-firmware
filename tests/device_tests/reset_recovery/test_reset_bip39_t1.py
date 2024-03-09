@@ -23,7 +23,7 @@ from trezorlib.tools import parse_path
 
 from ...common import EXTERNAL_ENTROPY, generate_entropy
 
-pytestmark = [pytest.mark.skip_t2, pytest.mark.skip_tr]
+pytestmark = [pytest.mark.skip_t2, pytest.mark.skip_tr, pytest.mark.skip_t3t1]
 
 
 def reset_device(client: Client, strength: int):

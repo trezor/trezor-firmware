@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 
 from shamir_mnemonic import shamir  # type: ignore
 
-from trezorlib import messages
+from trezorlib import messages, models
 
 from .. import buttons
 from .. import translations as TR
@@ -17,17 +17,17 @@ def confirm_new_wallet(debug: "DebugLink") -> None:
         debug.read_layout().title(),
         ["reset__title_create_wallet", "reset__title_create_wallet_shamir"],
     )
-    if debug.model == "T":
+    if debug.model in (models.T2T1, models.T3T1):
         debug.click(buttons.OK, wait=True)
-    elif debug.model == "Safe 3":
+    elif debug.model in (models.T2B1,):
         debug.press_right(wait=True)
         debug.press_right(wait=True)
 
 
 def confirm_read(debug: "DebugLink", middle_r: bool = False) -> None:
-    if debug.model == "T":
+    if debug.model in (models.T2T1, models.T3T1):
         debug.click(buttons.OK, wait=True)
-    elif debug.model == "Safe 3":
+    elif debug.model in (models.T2B1,):
         page_count = debug.read_layout().page_count()
         if page_count > 1:
             for _ in range(page_count - 1):
@@ -39,12 +39,12 @@ def confirm_read(debug: "DebugLink", middle_r: bool = False) -> None:
 
 
 def set_selection(debug: "DebugLink", button: tuple[int, int], diff: int) -> None:
-    if debug.model == "T":
+    if debug.model in (models.T2T1, models.T3T1):
         assert "NumberInputDialog" in debug.read_layout().all_components()
         for _ in range(diff):
             debug.click(button)
         debug.click(buttons.OK, wait=True)
-    elif debug.model == "Safe 3":
+    elif debug.model in (models.T2B1,):
         layout = debug.read_layout()
         if layout.title() in TR.translate(
             "reset__title_number_of_shares"
@@ -66,7 +66,7 @@ def read_words(
 ) -> list[str]:
     words: list[str] = []
 
-    if debug.model == "Safe 3":
+    if debug.model in (models.T2B1,):
         debug.press_right(wait=True)
 
     # Swiping through all the pages and loading the words
@@ -75,14 +75,14 @@ def read_words(
         words.extend(layout.seed_words())
         layout = debug.swipe_up(wait=True)
         assert layout is not None
-    if debug.model == "T":
+    if debug.model in (models.T2T1, models.T3T1):
         words.extend(layout.seed_words())
 
     # There is hold-to-confirm button
     if do_htc:
-        if debug.model == "T":
+        if debug.model in (models.T2T1, models.T3T1):
             debug.click_hold(buttons.OK, hold_ms=1500)
-        elif debug.model == "Safe 3":
+        elif debug.model in (models.T2B1,):
             debug.press_right_htc(1200)
     else:
         # It would take a very long time to test 16-of-16 with doing 1500 ms HTC after
@@ -94,7 +94,7 @@ def read_words(
 
 def confirm_words(debug: "DebugLink", words: list[str]) -> None:
     layout = debug.wait_layout()
-    if debug.model == "T":
+    if debug.model in (models.T2T1, models.T3T1):
         TR.assert_template(layout.text_content(), "reset__select_word_x_of_y_template")
         for _ in range(3):
             # "Select word 3 of 20"
@@ -109,7 +109,7 @@ def confirm_words(debug: "DebugLink", words: list[str]) -> None:
             wanted_word = words[word_pos - 1].lower()
             button_pos = btn_texts.index(wanted_word)
             layout = debug.click(buttons.RESET_WORD_CHECK[button_pos], wait=True)
-    elif debug.model == "Safe 3":
+    elif debug.model in (models.T2B1,):
         TR.assert_in(layout.text_content(), "reset__select_correct_word")
         layout = debug.press_right(wait=True)
         for _ in range(3):

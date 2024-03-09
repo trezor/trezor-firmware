@@ -18,7 +18,7 @@ import random
 
 import pytest
 
-from trezorlib import device, exceptions, messages
+from trezorlib import device, exceptions, messages, models
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.messages import FailureType, SafetyCheckLevel
@@ -316,6 +316,7 @@ def test_passphrase_always_on_device(client: Client):
 
 @pytest.mark.skip_t2
 @pytest.mark.skip_tr
+@pytest.mark.skip_t3t1
 @pytest.mark.setup_client(passphrase="")
 def test_passphrase_on_device_not_possible_on_t1(client: Client):
     # This setting makes no sense on T1.
@@ -401,12 +402,14 @@ def test_hide_passphrase_from_host(client: Client):
                 client.debug.wait_layout().text_content(),
                 "passphrase__access_hidden_wallet",
             )
-            if client.debug.model == "T":
+            if client.model in (models.T2T1, models.T3T1):
                 client.debug.press_yes()
-            elif client.debug.model == "Safe 3":
+            elif client.model is models.T2B1:
                 client.debug.press_right()
                 client.debug.press_right()
                 client.debug.press_yes()
+            else:
+                raise KeyError
 
         client.watch_layout()
         client.set_input_flow(input_flow)

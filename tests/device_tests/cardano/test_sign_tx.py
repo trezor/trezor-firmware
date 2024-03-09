@@ -16,7 +16,7 @@
 
 import pytest
 
-from trezorlib import cardano, device, messages
+from trezorlib import cardano, device, messages, models
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 
@@ -33,11 +33,13 @@ def show_details_input_flow(client: Client):
     yield
     client.debug.wait_layout()
     # Clicking for model T, pressing right for model R
-    if client.features.model == "T":
+    if client.model in (models.T2T1, models.T3T1):
         SHOW_ALL_BUTTON_POSITION = (143, 167)
         client.debug.click(SHOW_ALL_BUTTON_POSITION)
-    elif client.features.model == "Safe 3":
+    elif client.model is models.T2B1:
         client.debug.press_yes()
+    else:
+        raise NotImplementedError
     # reset ui flow to continue "automatically"
     client.ui.input_flow = None
     yield

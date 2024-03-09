@@ -36,7 +36,7 @@ if TYPE_CHECKING:
     from ..device_handler import BackgroundDeviceHandler
 
 
-pytestmark = [pytest.mark.skip_t1, pytest.mark.skip_t2]
+pytestmark = [pytest.mark.skip_t1, pytest.mark.skip_t2, pytest.mark.skip_t3t1]
 
 # Testing the maximum length is really 50
 # TODO: show some UI message when length reaches 50?

@@ -27,7 +27,11 @@ from ..translations import LANGUAGES, build_and_sign_blob, get_lang_json, set_la
 pytestmark = pytest.mark.skip_t1
 
 
-MAX_DATA_LENGTH = {models.T2T1: 48 * 1024, models.T2B1: 32 * 1024}
+MAX_DATA_LENGTH = {
+    models.T2T1: 48 * 1024,
+    models.T2B1: 32 * 1024,
+    models.T3T1: 256 * 1024,
+}
 
 
 def get_ping_button(lang: str) -> str:
@@ -59,7 +63,7 @@ def _check_ping_screen_texts(client: Client, title: str, right_button: str) -> N
         client.debug.press_yes()
 
     # TT does not have a right button text (but a green OK tick)
-    if client.features.model == "T":
+    if client.model in (models.T2T1, models.T3T1):
         right_button = "-"
 
     with client:

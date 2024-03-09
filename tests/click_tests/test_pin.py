@@ -20,7 +20,7 @@ from typing import TYPE_CHECKING, Generator
 
 import pytest
 
-from trezorlib import device, exceptions
+from trezorlib import device, exceptions, models
 
 from .. import buttons
 from .. import translations as TR
@@ -96,9 +96,9 @@ def prepare(
         # Set new PIN
         device_handler.run(device.change_pin)  # type: ignore
         TR.assert_in(debug.wait_layout().text_content(), "pin__turn_on")
-        if debug.model == "T":
+        if debug.model in (models.T2T1, models.T3T1):
             go_next(debug)
-        elif debug.model == "Safe 3":
+        elif debug.model in (models.T2B1,):
             go_next(debug, wait=True)
             go_next(debug, wait=True)
             go_next(debug, wait=True)
@@ -117,7 +117,7 @@ def prepare(
             _input_see_confirm(debug, old_pin)
         TR.assert_in(debug.wait_layout().text_content(), "wipe_code__turn_on")
         go_next(debug, wait=True)
-        if debug.model == "Safe 3":
+        if debug.model in (models.T2B1,):
             go_next(debug, wait=True)
             go_next(debug, wait=True)
             go_next(debug, wait=True)
@@ -141,13 +141,13 @@ def _input_pin(debug: "DebugLink", pin: str, check: bool = False) -> None:
     if check:
         before = debug.read_layout().pin()
 
-    if debug.model == "T":
+    if debug.model in (models.T2T1, models.T3T1):
         digits_order = debug.read_layout().tt_pin_digits_order()
         for digit in pin:
             digit_index = digits_order.index(digit)
             coords = buttons.pin_passphrase_index(digit_index)
             debug.click(coords, wait=True)
-    elif debug.model == "Safe 3":
+    elif debug.model in (models.T2B1,):
         for digit in pin:
             navigate_to_action_and_press(debug, digit, TR_PIN_ACTIONS)
 
@@ -158,9 +158,9 @@ def _input_pin(debug: "DebugLink", pin: str, check: bool = False) -> None:
 
 def _see_pin(debug: "DebugLink") -> None:
     """Navigate to "SHOW" and press it"""
-    if debug.model == "T":
+    if debug.model in (models.T2T1, models.T3T1):
         debug.click(buttons.TOP_ROW, wait=True)
-    elif debug.model == "Safe 3":
+    elif debug.model in (models.T2B1,):
         navigate_to_action_and_press(debug, SHOW, TR_PIN_ACTIONS)
 
 
@@ -170,9 +170,9 @@ def _delete_pin(debug: "DebugLink", digits_to_delete: int, check: bool = True) -
         before = debug.read_layout().pin()
 
     for _ in range(digits_to_delete):
-        if debug.model == "T":
+        if debug.model in (models.T2T1, models.T3T1):
             debug.click(buttons.pin_passphrase_grid(9), wait=True)
-        elif debug.model == "Safe 3":
+        elif debug.model in (models.T2B1,):
             navigate_to_action_and_press(debug, DELETE, TR_PIN_ACTIONS)
 
     if check:
@@ -182,9 +182,9 @@ def _delete_pin(debug: "DebugLink", digits_to_delete: int, check: bool = True) -
 
 def _delete_all(debug: "DebugLink", check: bool = True) -> None:
     """Navigate to "DELETE" and hold it until all digits are deleted"""
-    if debug.model == "T":
+    if debug.model in (models.T2T1, models.T3T1):
         debug.click_hold(buttons.pin_passphrase_grid(9), hold_ms=1500)
-    elif debug.model == "Safe 3":
+    elif debug.model in (models.T2B1,):
         navigate_to_action_and_press(debug, DELETE, TR_PIN_ACTIONS, hold_ms=1000)
 
     if check:
@@ -201,9 +201,9 @@ def _cancel_pin(debug: "DebugLink") -> None:
 
 def _confirm_pin(debug: "DebugLink") -> None:
     """Navigate to "ENTER" and press it"""
-    if debug.model == "T":
+    if debug.model in (models.T2T1, models.T3T1):
         debug.click(buttons.pin_passphrase_grid(11), wait=True)
-    elif debug.model == "Safe 3":
+    elif debug.model in (models.T2B1,):
         navigate_to_action_and_press(debug, ENTER, TR_PIN_ACTIONS)
 
 
@@ -216,7 +216,7 @@ def _input_see_confirm(debug: "DebugLink", pin: str) -> None:
 def _enter_two_times(debug: "DebugLink", pin1: str, pin2: str) -> None:
     _input_see_confirm(debug, pin1)
 
-    if debug.model == "Safe 3":
+    if debug.model in (models.T2B1,):
         # Please re-enter
         go_next(debug, wait=True)
 
@@ -306,10 +306,10 @@ def test_pin_setup(device_handler: "BackgroundDeviceHandler"):
 def test_pin_setup_mismatch(device_handler: "BackgroundDeviceHandler"):
     with PIN_CANCELLED, prepare(device_handler, Situation.PIN_SETUP) as debug:
         _enter_two_times(debug, "1", "2")
-        if debug.model == "T":
+        if debug.model in (models.T2T1, models.T3T1):
             go_next(debug)
             _cancel_pin(debug)
-        elif debug.model == "Safe 3":
+        elif debug.model in (models.T2B1,):
             debug.press_middle()
             debug.press_no()
 

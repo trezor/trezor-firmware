@@ -319,5 +319,5 @@ class TestNemHDNode(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    if not utils.MODEL_IS_T2B1:
+    if utils.INTERNAL_MODEL == "T2T1":
         unittest.main()

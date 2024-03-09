@@ -52,6 +52,7 @@ VECTORS = (  # path, script_type, address
 
 @pytest.mark.skip_t2
 @pytest.mark.skip_tr
+@pytest.mark.skip_t3t1
 @pytest.mark.parametrize("path, script_type, address", VECTORS)
 def test_show_t1(
     client: Client, path: str, script_type: messages.InputScriptType, address: str

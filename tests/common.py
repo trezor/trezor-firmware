@@ -23,7 +23,7 @@ from unittest import mock
 
 import pytest
 
-from trezorlib import btc, messages, tools
+from trezorlib import btc, messages, models, tools
 
 if TYPE_CHECKING:
     from _pytest.mark.structures import MarkDecorator
@@ -89,12 +89,14 @@ def parametrize_using_common_fixtures(*paths: str) -> "MarkDecorator":
             skip_models = test.get("skip_models", [])
             skip_marks = []
             for skip_model in skip_models:
-                if skip_model == "t1":
+                if skip_model in ("t1", "t1b1"):
                     skip_marks.append(pytest.mark.skip_t1)
-                if skip_model == "t2":
+                if skip_model in ("t2", "t2t1"):
                     skip_marks.append(pytest.mark.skip_t2)
-                if skip_model == "tr":
+                if skip_model in ("tr", "t2b1"):
                     skip_marks.append(pytest.mark.skip_tr)
+                if skip_model == "t3t1":
+                    skip_marks.append(pytest.mark.skip_t3t1)
 
             tests.append(
                 pytest.param(
@@ -173,10 +175,12 @@ def read_and_confirm_mnemonic(
     debug: "DebugLink", choose_wrong: bool = False
 ) -> Generator[None, "ButtonRequest", Optional[str]]:
     # TODO: these are very similar, reuse some code
-    if debug.model == "T":
+    if debug.model is models.T2T1:
         mnemonic = yield from read_and_confirm_mnemonic_tt(debug, choose_wrong)
-    elif debug.model == "Safe 3":
+    elif debug.model is models.T2B1:
         mnemonic = yield from read_and_confirm_mnemonic_tr(debug, choose_wrong)
+    elif debug.model is models.T3T1:
+        mnemonic = yield from read_and_confirm_mnemonic_tt(debug, choose_wrong)
     else:
         raise ValueError(f"Unknown model: {debug.model}")
 
@@ -316,3 +320,7 @@ def swipe_till_the_end(debug: "DebugLink", br: messages.ButtonRequest) -> None:
     if br.pages is not None:
         for _ in range(br.pages - 1):
             debug.swipe_up()
+
+
+def is_core(client: "Client") -> bool:
+    return client.model in (models.T2T1, models.T2B1, models.T3T1)

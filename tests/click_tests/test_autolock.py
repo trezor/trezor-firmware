@@ -20,7 +20,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from trezorlib import btc, device, exceptions, messages
+from trezorlib import btc, device, exceptions, messages, models
 from trezorlib.protobuf import MessageType
 from trezorlib.tools import parse_path
 
@@ -102,12 +102,12 @@ def test_autolock_interrupts_signing(device_handler: "BackgroundDeviceHandler"):
         in debug.wait_layout().text_content().replace(" ", "")
     )
 
-    if debug.model == "T":
+    if debug.model in (models.T2T1, models.T3T1):
         debug.click(buttons.OK, wait=True)
         layout = debug.click(buttons.OK, wait=True)
         TR.assert_in(layout.text_content(), "send__total_amount")
         assert "0.0039 BTC" in layout.text_content()
-    elif debug.model == "Safe 3":
+    elif debug.model in (models.T2B1,):
         debug.press_right(wait=True)
         layout = debug.press_right(wait=True)
         TR.assert_in(layout.text_content(), "send__total_amount")
@@ -149,12 +149,12 @@ def test_autolock_does_not_interrupt_signing(device_handler: "BackgroundDeviceHa
         in debug.wait_layout().text_content().replace(" ", "")
     )
 
-    if debug.model == "T":
+    if debug.model in (models.T2T1, models.T3T1):
         debug.click(buttons.OK, wait=True)
         layout = debug.click(buttons.OK, wait=True)
         TR.assert_in(layout.text_content(), "send__total_amount")
         assert "0.0039 BTC" in layout.text_content()
-    elif debug.model == "Safe 3":
+    elif debug.model in (models.T2B1,):
         debug.press_right(wait=True)
         layout = debug.press_right(wait=True)
         TR.assert_in(layout.text_content(), "send__total_amount")
@@ -168,9 +168,9 @@ def test_autolock_does_not_interrupt_signing(device_handler: "BackgroundDeviceHa
     with device_handler.client:
         device_handler.client.set_filter(messages.TxAck, sleepy_filter)
         # confirm transaction
-        if debug.model == "T":
+        if debug.model in (models.T2T1, models.T3T1):
             debug.click(buttons.OK)
-        elif debug.model == "Safe 3":
+        elif debug.model in (models.T2B1,):
             debug.press_middle()
 
         signatures, tx = device_handler.result()
@@ -190,17 +190,17 @@ def test_autolock_passphrase_keyboard(device_handler: "BackgroundDeviceHandler")
 
     assert "PassphraseKeyboard" in debug.wait_layout().all_components()
 
-    if debug.model == "Safe 3":
+    if debug.model in (models.T2B1,):
         # Going into the selected character category
         debug.press_middle()
 
     # enter passphrase - slowly
     # keep clicking for long enough to trigger the autolock if it incorrectly ignored key presses
     for _ in range(math.ceil(11 / 1.5)):
-        if debug.model == "T":
+        if debug.model in (models.T2T1, models.T3T1):
             # click at "j"
             debug.click(CENTER_BUTTON)
-        elif debug.model == "Safe 3":
+        elif debug.model in (models.T2B1,):
             # just go right
             # NOTE: because of passphrase randomization it would be a pain to input
             # a specific passphrase, which is not in scope for this test.
@@ -208,9 +208,9 @@ def test_autolock_passphrase_keyboard(device_handler: "BackgroundDeviceHandler")
         time.sleep(1.5)
 
     # Send the passphrase to the client (TT has it clicked already, TR needs to input it)
-    if debug.model == "T":
+    if debug.model in (models.T2T1, models.T3T1):
         debug.click(buttons.OK, wait=True)
-    elif debug.model == "Safe 3":
+    elif debug.model in (models.T2B1,):
         debug.input("j" * 8, wait=True)
 
     # address corresponding to "jjjjjjjj" passphrase
@@ -227,16 +227,16 @@ def test_autolock_interrupts_passphrase(device_handler: "BackgroundDeviceHandler
 
     assert "PassphraseKeyboard" in debug.wait_layout().all_components()
 
-    if debug.model == "Safe 3":
+    if debug.model in (models.T2B1,):
         # Going into the selected character category
         debug.press_middle()
 
     # enter passphrase - slowly
     # autolock must activate even if we pressed some buttons
     for _ in range(math.ceil(6 / 1.5)):
-        if debug.model == "T":
+        if debug.model in (models.T2T1, models.T3T1):
             debug.click(CENTER_BUTTON)
-        elif debug.model == "Safe 3":
+        elif debug.model in (models.T2B1,):
             debug.press_middle()
         time.sleep(1.5)
 
@@ -267,7 +267,7 @@ def test_dryrun_locks_at_number_of_words(device_handler: "BackgroundDeviceHandle
     layout = unlock_dry_run(debug)
     TR.assert_in(debug.wait_layout().text_content(), "recovery__num_of_words")
 
-    if debug.model == "Safe 3":
+    if debug.model in (models.T2B1,):
         debug.press_right(wait=True)
 
     # wait for autolock to trigger
@@ -300,10 +300,10 @@ def test_dryrun_locks_at_word_entry(device_handler: "BackgroundDeviceHandler"):
     # select 20 words
     recovery.select_number_of_words(debug, 20)
 
-    if debug.model == "T":
+    if debug.model in (models.T2T1, models.T3T1):
         layout = debug.click(buttons.OK, wait=True)
         assert layout.main_component() == "MnemonicKeyboard"
-    elif debug.model == "Safe 3":
+    elif debug.model in (models.T2B1,):
         layout = debug.press_right(wait=True)
         assert "MnemonicKeyboard" in layout.all_components()
 
@@ -326,7 +326,7 @@ def test_dryrun_enter_word_slowly(device_handler: "BackgroundDeviceHandler"):
     # select 20 words
     recovery.select_number_of_words(debug, 20)
 
-    if debug.model == "T":
+    if debug.model in (models.T2T1, models.T3T1):
         layout = debug.click(buttons.OK, wait=True)
         assert layout.main_component() == "MnemonicKeyboard"
 
@@ -337,7 +337,7 @@ def test_dryrun_enter_word_slowly(device_handler: "BackgroundDeviceHandler"):
         layout = debug.click(buttons.CONFIRM_WORD, wait=True)
         # should not have locked, even though we took 9 seconds to type each letter
         assert layout.main_component() == "MnemonicKeyboard"
-    elif debug.model == "Safe 3":
+    elif debug.model in (models.T2B1,):
         layout = debug.press_right(wait=True)
         assert "MnemonicKeyboard" in layout.all_components()
 

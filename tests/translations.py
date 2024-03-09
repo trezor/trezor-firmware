@@ -113,6 +113,18 @@ def assert_in(text: str, path: str, template: t.Iterable[t.Any] = ()) -> None:
     assert False, f"{text} not found in {texts}"
 
 
+def assert_in_multiple(
+    text: str, paths: list[str], template: t.Iterable[t.Any] = ()
+) -> None:
+    texts: list[str] = []
+    for path in paths:
+        texts += _resolve_path_to_texts(path, template)
+    for tt in texts:
+        if tt in text.lower():
+            return
+    assert False, f"{text} not found in {texts}"
+
+
 def assert_startswith(text: str, path: str, template: t.Iterable[t.Any] = ()) -> None:
     texts = _resolve_path_to_texts(path, template)
     for tt in texts:

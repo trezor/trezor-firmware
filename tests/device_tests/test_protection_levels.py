@@ -21,7 +21,7 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
-from ..common import MNEMONIC12, WITH_MOCK_URANDOM, get_test_address
+from ..common import MNEMONIC12, WITH_MOCK_URANDOM, get_test_address, is_core
 from ..tx_cache import TxCache
 from .bitcoin.signtx import (
     request_finished,
@@ -112,6 +112,7 @@ def test_apply_settings(client: Client):
 
 @pytest.mark.skip_t2
 @pytest.mark.skip_tr
+@pytest.mark.skip_t3t1
 def test_change_pin_t1(client: Client):
     _assert_protection(client)
     with client:
@@ -212,6 +213,7 @@ def test_wipe_device(client: Client):
 @pytest.mark.setup_client(uninitialized=True)
 @pytest.mark.skip_t2
 @pytest.mark.skip_tr
+@pytest.mark.skip_t3t1
 def test_reset_device(client: Client):
     assert client.features.pin_protection is False
     assert client.features.passphrase_protection is False
@@ -241,6 +243,7 @@ def test_reset_device(client: Client):
 @pytest.mark.setup_client(uninitialized=True)
 @pytest.mark.skip_t2
 @pytest.mark.skip_tr
+@pytest.mark.skip_t3t1
 def test_recovery_device(client: Client):
     assert client.features.pin_protection is False
     assert client.features.passphrase_protection is False
@@ -294,6 +297,7 @@ def test_sign_message(client: Client):
 
 @pytest.mark.skip_t2
 @pytest.mark.skip_tr
+@pytest.mark.skip_t3t1
 def test_verify_message_t1(client: Client):
     _assert_protection(client)
     with client:
@@ -359,7 +363,6 @@ def test_signtx(client: Client):
 
     _assert_protection(client)
     with client:
-        is_core = client.features.model in ("T", "Safe 3")
         client.use_pin_sequence([PIN4])
         client.set_expected_responses(
             [
@@ -368,7 +371,7 @@ def test_signtx(client: Client):
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core, messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(TXHASH_50f6f1),
