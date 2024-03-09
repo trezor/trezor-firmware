@@ -21,6 +21,7 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import H_, parse_path
 
+from ...common import is_core
 from ...tx_cache import TxCache
 from .signtx import (
     assert_tx_matches,
@@ -79,13 +80,12 @@ def test_send_p2tr(client: Client, chunkify: bool):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     with client:
-        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core, messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_output(0),
@@ -134,14 +134,13 @@ def test_send_two_with_change(client: Client):
         amount=6_800 + 13_000 - 200 - 15_000,
     )
     with client:
-        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
                 request_input(1),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core, messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
                 request_output(1),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
@@ -224,8 +223,6 @@ def test_send_mixed(client: Client):
     )
 
     with client:
-        is_core = client.features.model in ("T", "Safe 3")
-        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 # process inputs
@@ -236,19 +233,19 @@ def test_send_mixed(client: Client):
                 # approve outputs
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core, messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
                 request_output(1),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core, messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
                 request_output(2),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core, messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
                 request_output(3),
                 messages.ButtonRequest(code=B.ConfirmOutput),
                 request_output(4),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core, messages.ButtonRequest(code=B.ConfirmOutput)),
-                (is_core, messages.ButtonRequest(code=B.SignTx)),
+                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(client), messages.ButtonRequest(code=B.SignTx)),
                 messages.ButtonRequest(code=B.SignTx),
                 # verify inputs
                 request_input(0),
@@ -358,8 +355,6 @@ def test_attack_script_type(client: Client):
         return msg
 
     with client:
-        is_core = client.features.model in ("T", "Safe 3")
-        is_core = client.features.model in ("T", "Safe 3")
         client.set_filter(messages.TxAck, attack_processor)
         client.set_expected_responses(
             [
@@ -367,8 +362,8 @@ def test_attack_script_type(client: Client):
                 request_input(1),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core, messages.ButtonRequest(code=B.ConfirmOutput)),
-                (is_core, messages.ButtonRequest(code=B.SignTx)),
+                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(client), messages.ButtonRequest(code=B.SignTx)),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_input(1),

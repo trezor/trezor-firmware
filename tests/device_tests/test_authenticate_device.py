@@ -16,6 +16,7 @@ ROOT_PUBLIC_KEY = bytes.fromhex(
 )
 
 
+@pytest.mark.skip_t3t1  # FIXME https://github.com/trezor/trezor-firmware/issues/3596
 @pytest.mark.parametrize(
     "challenge",
     (

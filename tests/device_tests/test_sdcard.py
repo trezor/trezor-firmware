@@ -113,7 +113,10 @@ def test_sd_protect_unlock(client: Client):
         client.debug.input("1234")
 
         yield  # SD card problem
-        TR.assert_in(layout().text_content(), "sd_card__unplug_and_insert_correct")
+        TR.assert_in_multiple(
+            layout().text_content(),
+            ["sd_card__unplug_and_insert_correct", "sd_card__insert_correct_card"],
+        )
         client.debug.press_no()  # close
 
     with client, pytest.raises(TrezorFailure) as e:

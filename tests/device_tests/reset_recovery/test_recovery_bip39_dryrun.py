@@ -82,6 +82,7 @@ def test_seed_mismatch(client: Client):
 
 @pytest.mark.skip_t2
 @pytest.mark.skip_tr
+@pytest.mark.skip_t3t1
 def test_invalid_seed_t1(client: Client):
     with pytest.raises(exceptions.TrezorFailure, match="Invalid seed"):
         do_recover(client, ["stick"] * 12)

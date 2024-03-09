@@ -16,7 +16,7 @@
 
 import pytest
 
-from trezorlib import ethereum, exceptions, messages
+from trezorlib import ethereum, exceptions, messages, models
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.debuglink import message_filters
 from trezorlib.exceptions import TrezorFailure
@@ -208,7 +208,7 @@ def test_data_streaming(client: Client):
     checked in vectorized function above.
     """
     with client:
-        is_t1 = client.features.model == "1"
+        is_t1 = client.model is models.T1B1
         client.set_expected_responses(
             [
                 messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),

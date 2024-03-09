@@ -23,6 +23,7 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import Cancelled, TrezorFailure
 from trezorlib.tools import H_, parse_path
 
+from ...common import is_core
 from ...input_flows import (
     InputFlowLockTimeBlockHeight,
     InputFlowLockTimeDatetime,
@@ -127,13 +128,12 @@ def test_one_one_fee(client: Client):
     )
 
     with client:
-        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core, messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(TXHASH_0dac36),
@@ -181,13 +181,12 @@ def test_testnet_one_two_fee(client: Client):
     )
 
     with client:
-        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core, messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
                 request_output(1),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
@@ -232,13 +231,12 @@ def test_testnet_fee_high_warning(client: Client):
     )
 
     with client:
-        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core, messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.FeeOverThreshold),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
@@ -285,14 +283,13 @@ def test_one_two_fee(client: Client):
     )
 
     with client:
-        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 request_output(1),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core, messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(TXHASH_50f6f1),
@@ -348,16 +345,15 @@ def test_one_three_fee(client: Client, chunkify: bool):
     )
 
     with client:
-        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core, messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
                 request_output(1),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core, messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
                 request_output(2),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
@@ -420,7 +416,6 @@ def test_two_two(client: Client):
     )
 
     with client:
-        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
@@ -428,7 +423,7 @@ def test_two_two(client: Client):
                 request_output(0),
                 request_output(1),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core, messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(TXHASH_ac4ca0),
@@ -565,13 +560,12 @@ def test_lots_of_change(client: Client):
     request_change_outputs = [request_output(i + 1) for i in range(cnt)]
 
     with client:
-        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core, messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
             ]
             + request_change_outputs
             + [
@@ -617,13 +611,12 @@ def test_fee_high_warning(client: Client):
     )
 
     with client:
-        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core, messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.FeeOverThreshold),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
@@ -706,13 +699,12 @@ def test_not_enough_funds(client: Client):
     )
 
     with client:
-        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core, messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.Failure(code=messages.FailureType.NotEnoughFunds),
             ]
         )
@@ -737,13 +729,12 @@ def test_p2sh(client: Client):
     )
 
     with client:
-        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core, messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(TXHASH_58d56a),
@@ -825,7 +816,6 @@ def test_attack_change_outputs(client: Client):
 
     # Test if the transaction can be signed normally
     with client:
-        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
@@ -833,7 +823,7 @@ def test_attack_change_outputs(client: Client):
                 request_output(0),
                 request_output(1),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core, messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(TXHASH_ac4ca0),
@@ -993,14 +983,13 @@ def test_attack_change_input_address(client: Client):
 
     # Now run the attack, must trigger the exception
     with client:
-        is_core = client.features.model in ("T", "Safe 3")
         client.set_filter(messages.TxAck, attack_processor)
         client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core, messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
                 request_output(1),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
@@ -1045,13 +1034,12 @@ def test_spend_coinbase(client: Client):
     )
 
     with client:
-        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core, messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(FAKE_TXHASH_005f6f),
@@ -1104,13 +1092,12 @@ def test_two_changes(client: Client):
     )
 
     with client:
-        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core, messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
                 request_output(1),
                 request_output(2),
                 messages.ButtonRequest(code=B.SignTx),
@@ -1164,13 +1151,12 @@ def test_change_on_main_chain_allowed(client: Client):
     )
 
     with client:
-        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core, messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
                 request_output(1),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
@@ -1429,13 +1415,12 @@ def test_lock_time(client: Client, lock_time: int, sequence: int):
     )
 
     with client:
-        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core, messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),

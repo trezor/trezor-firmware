@@ -20,6 +20,7 @@ from trezorlib import btc, messages
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.tools import parse_path
 
+from ...common import is_core
 from ...tx_cache import TxCache
 from .signtx import (
     request_extra_data,
@@ -57,13 +58,12 @@ def test_send_dash(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     with client:
-        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core, messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(inp1.prev_hash),
@@ -105,14 +105,13 @@ def test_send_dash_dip2_input(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     with client:
-        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 request_output(1),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core, messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(inp1.prev_hash),

@@ -21,7 +21,7 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
-from ...common import MNEMONIC12
+from ...common import MNEMONIC12, is_core
 from ...tx_cache import TxCache
 from .signtx import (
     assert_tx_matches,
@@ -83,12 +83,11 @@ def test_2_of_3(client: Client, chunkify: bool):
     )
 
     # Expected responses are the same for both two signings
-    is_core = client.features.model in ("T", "Safe 3")
     expected_responses = [
         request_input(0),
         request_output(0),
         messages.ButtonRequest(code=B.ConfirmOutput),
-        (is_core, messages.ButtonRequest(code=B.ConfirmOutput)),
+        (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
         messages.ButtonRequest(code=B.SignTx),
         request_input(0),
         request_meta(TXHASH_6b07c1),

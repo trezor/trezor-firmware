@@ -22,6 +22,7 @@ from trezorlib.exceptions import TrezorFailure
 from trezorlib.messages import SafetyCheckLevel
 from trezorlib.tools import parse_path
 
+from ...common import is_core
 from ...tx_cache import TxCache
 from .signtx import (
     assert_tx_matches,
@@ -216,20 +217,19 @@ def test_p2wpkh_in_p2sh_presigned(client: Client):
     )
 
     with client:
-        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
                 request_input(1),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core, messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
                 request_output(1),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core, messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
                 request_output(2),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core, messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(TXHASH_20912f),
@@ -268,20 +268,19 @@ def test_p2wpkh_in_p2sh_presigned(client: Client):
     # Test corrupted script hash in scriptsig.
     inp1.script_sig[10] ^= 1
     with client:
-        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
                 request_input(1),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core, messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
                 request_output(1),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core, messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
                 request_output(2),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core, messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(TXHASH_20912f),
@@ -401,14 +400,13 @@ def test_p2wsh_external_presigned(client: Client):
     )
 
     with client:
-        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
                 request_input(1),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core, messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(TXHASH_ec16dc),
@@ -447,14 +445,13 @@ def test_p2wsh_external_presigned(client: Client):
     # Test corrupted signature in witness.
     inp2.witness[10] ^= 1
     with client:
-        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
                 request_input(1),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core, messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(TXHASH_ec16dc),
@@ -513,14 +510,13 @@ def test_p2tr_external_presigned(client: Client):
         script_type=messages.OutputScriptType.PAYTOTAPROOT,
     )
     with client:
-        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
                 request_input(1),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core, messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
                 request_output(1),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(1),
@@ -546,14 +542,13 @@ def test_p2tr_external_presigned(client: Client):
     # Test corrupted signature in witness.
     inp2.witness[10] ^= 1
     with client:
-        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
                 request_input(1),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core, messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
                 request_output(1),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(1),
@@ -617,17 +612,16 @@ def test_p2wpkh_with_proof(client: Client):
 
     with client:
         is_t1 = client.features.model == "1"
-        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
                 request_input(1),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core, messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
                 request_output(1),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core, messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(TXHASH_e5b7e2),
@@ -711,14 +705,13 @@ def test_p2tr_with_proof(client: Client):
 
     with client:
         is_t1 = client.features.model == "1"
-        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
                 request_input(1),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core, messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_input(1),

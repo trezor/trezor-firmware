@@ -21,6 +21,7 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
+from ...common import is_core
 from ..bitcoin.signtx import request_finished, request_input, request_output
 
 B = messages.ButtonRequestType
@@ -95,13 +96,12 @@ def test_spend_v4_input(client: Client):
     )
 
     with client:
-        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core, messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_output(0),
@@ -144,13 +144,12 @@ def test_send_to_multisig(client: Client):
     )
 
     with client:
-        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core, messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_output(0),
@@ -192,13 +191,12 @@ def test_spend_v5_input(client: Client):
     )
 
     with client:
-        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core, messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_output(0),
@@ -246,13 +244,12 @@ def test_one_two(client: Client):
     )
 
     with client:
-        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core, messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
                 request_output(1),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
@@ -305,13 +302,12 @@ def test_unified_address(client: Client):
     )
 
     with client:
-        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core, messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
                 request_output(1),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
@@ -370,14 +366,13 @@ def test_external_presigned(client: Client):
     )
 
     with client:
-        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
                 request_input(1),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core, messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(1),
                 request_input(0),
@@ -483,12 +478,11 @@ def test_spend_multisig(client: Client):
     )
 
     # Expected responses are the same for both two signings
-    is_core = client.features.model in ("T", "Safe 3")
     expected_responses = [
         request_input(0),
         request_output(0),
         messages.ButtonRequest(code=B.ConfirmOutput),
-        (is_core, messages.ButtonRequest(code=B.ConfirmOutput)),
+        (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
         messages.ButtonRequest(code=B.SignTx),
         request_input(0),
         request_output(0),

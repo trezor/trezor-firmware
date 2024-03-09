@@ -21,6 +21,7 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
+from ...common import is_core
 from ...tx_cache import TxCache
 from .signtx import (
     request_finished,
@@ -115,8 +116,6 @@ def test_p2pkh_fee_bump(client: Client):
         orig_index=1,
     )
 
-    is_core = client.features.model in ("T", "Safe 3")
-
     with client:
         client.set_expected_responses(
             [
@@ -133,7 +132,7 @@ def test_p2pkh_fee_bump(client: Client):
                 request_meta(TXHASH_beafc7),
                 request_input(0, TXHASH_beafc7),
                 request_output(0, TXHASH_beafc7),
-                (is_core, request_orig_input(0, TXHASH_50f6f1)),
+                (is_core(client), request_orig_input(0, TXHASH_50f6f1)),
                 request_orig_input(0, TXHASH_50f6f1),
                 request_orig_output(0, TXHASH_50f6f1),
                 request_orig_output(1, TXHASH_50f6f1),

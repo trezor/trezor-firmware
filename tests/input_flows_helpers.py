@@ -1,4 +1,4 @@
-from trezorlib import messages
+from trezorlib import messages, models
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 
 from . import translations as TR
@@ -18,7 +18,7 @@ class PinFlow:
         yield  # Enter PIN
         assert "PinKeyboard" in self.debug.wait_layout().all_components()
         self.debug.input(pin)
-        if self.debug.model == "Safe 3":
+        if self.client.model is models.T2B1:
             yield  # Reenter PIN
             TR.assert_in(
                 self.debug.wait_layout().text_content(), "pin__reenter_to_confirm"
@@ -40,7 +40,7 @@ class BackupFlow:
     def confirm_new_wallet(self) -> BRGeneratorType:
         yield
         TR.assert_in(self.debug.wait_layout().text_content(), "reset__by_continuing")
-        if self.debug.model == "Safe 3":
+        if self.client.model is models.T2B1:
             self.debug.press_right()
         self.debug.press_yes()
 
@@ -56,7 +56,7 @@ class RecoveryFlow:
     def confirm_recovery(self) -> BRGeneratorType:
         yield
         TR.assert_in(self._text_content(), "reset__by_continuing")
-        if self.debug.model == "Safe 3":
+        if self.client.model is models.T2B1:
             self.debug.press_right()
         self.debug.press_yes()
 
@@ -66,13 +66,13 @@ class RecoveryFlow:
         self.debug.press_yes()
 
     def setup_slip39_recovery(self, num_words: int) -> BRGeneratorType:
-        if self.debug.model == "Safe 3":
+        if self.client.model is models.T2B1:
             yield from self.tr_recovery_homescreen()
         yield from self.input_number_of_words(num_words)
         yield from self.enter_any_share()
 
     def setup_bip39_recovery(self, num_words: int) -> BRGeneratorType:
-        if self.debug.model == "Safe 3":
+        if self.client.model is models.T2B1:
             yield from self.tr_recovery_homescreen()
         yield from self.input_number_of_words(num_words)
         yield from self.enter_your_backup()
@@ -89,7 +89,7 @@ class RecoveryFlow:
             title in self.debug.wait_layout().title().lower()
             for title in TR.translate("recovery__title_dry_run", lower=True)
         )
-        if self.debug.model == "Safe 3" and not is_dry_run:
+        if self.client.model is models.T2B1 and not is_dry_run:
             # Normal recovery has extra info (not dry run)
             self.debug.press_right(wait=True)
             self.debug.press_right(wait=True)
@@ -102,7 +102,7 @@ class RecoveryFlow:
             title in self.debug.wait_layout().title().lower()
             for title in TR.translate("recovery__title_dry_run", lower=True)
         )
-        if self.debug.model == "Safe 3" and not is_dry_run:
+        if self.client.model is models.T2B1 and not is_dry_run:
             # Normal recovery has extra info (not dry run)
             self.debug.press_right(wait=True)
             self.debug.press_right(wait=True)
@@ -110,7 +110,7 @@ class RecoveryFlow:
 
     def abort_recovery(self, confirm: bool) -> BRGeneratorType:
         yield
-        if self.debug.model == "Safe 3":
+        if self.client.model is models.T2B1:
             TR.assert_in(self._text_content(), "recovery__num_of_words")
         else:
             TR.assert_in(self._text_content(), "recovery__enter_any_share")
@@ -118,7 +118,7 @@ class RecoveryFlow:
 
         yield
         TR.assert_in(self._text_content(), "recovery__wanna_cancel_recovery")
-        if self.debug.model == "Safe 3":
+        if self.client.model is models.T2B1:
             self.debug.press_right()
         if confirm:
             self.debug.press_yes()
@@ -128,7 +128,7 @@ class RecoveryFlow:
     def input_number_of_words(self, num_words: int) -> BRGeneratorType:
         br = yield
         assert br.code == B.MnemonicWordCount
-        if self.debug.model == "Safe 3":
+        if self.client.model is models.T2B1:
             TR.assert_in(self.debug.wait_layout().title(), "word_count__title")
         else:
             TR.assert_in(self._text_content(), "recovery__num_of_words")
@@ -180,7 +180,7 @@ class RecoveryFlow:
         assert br.code == B.Success
         text = get_text_possible_pagination(self.debug, br)
         # TODO: make sure the translations fit on one page
-        if self.client.debug.model != "T":
+        if self.client.model not in (models.T2T1, models.T3T1):
             TR.assert_in(text, "recovery__dry_run_bip39_valid_match")
         self.debug.press_yes()
 
@@ -189,7 +189,7 @@ class RecoveryFlow:
         assert br.code == B.Success
         text = get_text_possible_pagination(self.debug, br)
         # TODO: make sure the translations fit on one page
-        if self.client.debug.model != "T":
+        if self.client.model not in (models.T2T1, models.T3T1):
             TR.assert_in(text, "recovery__dry_run_slip39_valid_match")
         self.debug.press_yes()
 
@@ -198,7 +198,7 @@ class RecoveryFlow:
         assert br.code == B.Warning
         text = get_text_possible_pagination(self.debug, br)
         # TODO: make sure the translations fit on one page on TT
-        if self.client.debug.model != "T":
+        if self.client.model not in (models.T2T1, models.T3T1):
             TR.assert_in(text, "recovery__dry_run_slip39_valid_mismatch")
         self.debug.press_yes()
 
@@ -207,7 +207,7 @@ class RecoveryFlow:
         assert br.code == B.Warning
         text = get_text_possible_pagination(self.debug, br)
         # TODO: make sure the translations fit on one page
-        if self.client.debug.model != "T":
+        if self.client.model not in (models.T2T1, models.T3T1):
             TR.assert_in(text, "recovery__dry_run_bip39_valid_mismatch")
         self.debug.press_yes()
 
@@ -240,7 +240,7 @@ class RecoveryFlow:
             if index < len(shares) - 1:
                 if has_groups:
                     yield from self.success_share_group_entered()
-                if self.debug.model == "T" and click_info:
+                if self.client.model in (models.T2T1, models.T3T1) and click_info:
                     yield from self.tt_click_info()
                 yield from self.success_more_shares_needed()
 
@@ -292,7 +292,7 @@ class EthereumFlow:
         )
         assert br.pages is not None
         assert br.pages > 2
-        if self.debug.model == "T":
+        if self.client.model in (models.T2T1, models.T3T1):
             self.debug.swipe_up(wait=True)
             self.debug.swipe_up(wait=True)
             self.debug.click(self.GO_BACK)
@@ -312,7 +312,7 @@ class EthereumFlow:
         yield
         TR.assert_equals(self.debug.wait_layout().title(), "words__recipient")
 
-        if self.debug.model == "T":
+        if self.client.model in (models.T2T1, models.T3T1):
             if cancel:
                 self.debug.press_no()
             else:
@@ -387,7 +387,7 @@ class EthereumFlow:
                 "ethereum__staking_claim_intro",
             ],
         )
-        if self.debug.model == "T":
+        if self.client.model in (models.T2T1, models.T3T1):
             # confirm intro
             if info:
                 self.debug.press_info(wait=True)

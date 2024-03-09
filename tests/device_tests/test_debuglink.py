@@ -26,6 +26,7 @@ from ..common import MNEMONIC12
 
 @pytest.mark.skip_t2
 @pytest.mark.skip_tr
+@pytest.mark.skip_t3t1
 def test_layout(client: Client):
     layout = client.debug.state().layout
     assert len(layout) == 1024
@@ -33,6 +34,7 @@ def test_layout(client: Client):
 
 @pytest.mark.skip_t2
 @pytest.mark.skip_tr
+@pytest.mark.skip_t3t1
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
 def test_mnemonic(client: Client):
     client.ensure_unlocked()
@@ -42,6 +44,7 @@ def test_mnemonic(client: Client):
 
 @pytest.mark.skip_t2
 @pytest.mark.skip_tr
+@pytest.mark.skip_t3t1
 @pytest.mark.setup_client(mnemonic=MNEMONIC12, pin="1234", passphrase="")
 def test_pin(client: Client):
     resp = client.call_raw(messages.GetAddress(address_n=parse_path("m/44'/0'/0'/0/0")))
