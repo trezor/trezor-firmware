@@ -23,7 +23,7 @@ from typing import TYPE_CHECKING, Generator, Iterator
 import pytest
 import xdist
 
-from trezorlib import debuglink, log
+from trezorlib import debuglink, log, models
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.device import apply_settings
 from trezorlib.device import wipe as wipe_device
@@ -207,6 +207,11 @@ def client(
         and _raw_client.features.model == "Safe 3"
     ):
         pytest.skip("Test excluded on Trezor R")
+    if (
+        request.node.get_closest_marker("skip_t3t1")
+        and _raw_client.model is models.T3T1
+    ):
+        pytest.skip("Test excluded on Trezor T3T1")
 
     sd_marker = request.node.get_closest_marker("sd_card")
     if sd_marker and not _raw_client.features.sd_card_present:
@@ -390,6 +395,7 @@ def pytest_configure(config: "Config") -> None:
     config.addinivalue_line("markers", "skip_t1: skip the test on Trezor One")
     config.addinivalue_line("markers", "skip_t2: skip the test on Trezor T")
     config.addinivalue_line("markers", "skip_tr: skip the test on Trezor R")
+    config.addinivalue_line("markers", "skip_t3t1: skip the test on Trezor T3T1")
     config.addinivalue_line(
         "markers", "experimental: enable experimental features on Trezor"
     )

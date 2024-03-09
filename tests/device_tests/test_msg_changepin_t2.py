@@ -16,7 +16,7 @@
 
 import pytest
 
-from trezorlib import btc, device, messages
+from trezorlib import btc, device, messages, models
 from trezorlib.client import MAX_PIN_LENGTH, PASSPHRASE_TEST_PATH
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import Cancelled, TrezorFailure
@@ -62,10 +62,14 @@ def test_set_pin(client: Client):
 
     # Let's set new PIN
     with client:
-        br_amount = 4 if client.debug.model == "T" else 6
+        br_count = {
+            models.T2T1: 4,
+            models.T2B1: 6,
+            models.T3T1: 4,
+        }[client.model]
         client.use_pin_sequence([PIN_MAX, PIN_MAX])
         client.set_expected_responses(
-            [messages.ButtonRequest] * br_amount + [messages.Success, messages.Features]
+            [messages.ButtonRequest] * br_count + [messages.Success, messages.Features]
         )
         device.change_pin(client)
 
@@ -84,9 +88,13 @@ def test_change_pin(client: Client):
     # Let's change PIN
     with client:
         client.use_pin_sequence([PIN4, PIN_MAX, PIN_MAX])
-        br_amount = 5 if client.debug.model == "T" else 6
+        br_count = {
+            models.T2T1: 5,
+            models.T2B1: 6,
+            models.T3T1: 5,
+        }[client.model]
         client.set_expected_responses(
-            [messages.ButtonRequest] * br_amount + [messages.Success, messages.Features]
+            [messages.ButtonRequest] * br_count + [messages.Success, messages.Features]
         )
         device.change_pin(client)
 

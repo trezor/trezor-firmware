@@ -170,14 +170,14 @@ if __debug__:
         # Incrementing the counter for last events so we know what to await
         debug_events.last_event += 1
 
-        # TT click on specific coordinates, with possible hold
+        # Touchscreen devices click on specific coordinates, with possible hold
         if (
             x is not None
             and y is not None
             and utils.INTERNAL_MODEL in ("T2T1", "T3T1", "D001")
         ):
             click_chan.publish((debug_events.last_event, x, y, msg.hold_ms))
-        # TR press specific button
+        # Button devices press specific button
         elif msg.physical_button is not None and utils.INTERNAL_MODEL in ("T2B1",):
             button_chan.publish(
                 (debug_events.last_event, msg.physical_button, msg.hold_ms)

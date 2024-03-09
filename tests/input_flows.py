@@ -14,7 +14,7 @@ from __future__ import annotations
 import time
 from typing import Callable, Generator
 
-from trezorlib import messages
+from trezorlib import messages, models
 from trezorlib.debuglink import DebugLink, LayoutContent
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.debuglink import multipage_content
@@ -44,8 +44,8 @@ class InputFlowBase:
         self.BAK = BackupFlow(self.client)
         self.ETH = EthereumFlow(self.client)
 
-    def model(self) -> str | None:
-        return self.client.features.model
+    def model(self) -> str | models.TrezorModel:
+        return self.client.model
 
     def get(self) -> Callable[[], BRGeneratorType]:
         self.client.watch_layout(True)
@@ -53,10 +53,12 @@ class InputFlowBase:
         # There could be one common input flow for all models
         if hasattr(self, "input_flow_common"):
             return getattr(self, "input_flow_common")
-        elif self.model() == "T":
+        elif self.model() is models.T2T1:
             return self.input_flow_tt
-        elif self.model() == "Safe 3":
+        elif self.model() is models.T2B1:
             return self.input_flow_tr
+        elif self.model() is models.T3T1:
+            return self.input_flow_t3t1
         else:
             raise ValueError("Unknown model")
 
@@ -66,6 +68,10 @@ class InputFlowBase:
 
     def input_flow_tr(self) -> BRGeneratorType:
         """Special for TR"""
+        raise NotImplementedError
+
+    def input_flow_t3t1(self) -> BRGeneratorType:
+        """Special for T3T1"""
         raise NotImplementedError
 
     def text_content(self) -> str:
@@ -91,7 +97,7 @@ class InputFlowSetupDevicePINWIpeCode(InputFlowBase):
         yield  # do you want to set/change the wipe code?
         self.debug.press_yes()
 
-        if self.debug.model == "Safe 3":
+        if self.model() is models.T2B1:
             yield from swipe_if_necessary(self.debug)  # wipe code info
             self.debug.press_yes()
 
@@ -120,7 +126,7 @@ class InputFlowNewCodeMismatch(InputFlowBase):
         yield  # do you want to set/change the pin/wipe code?
         self.debug.press_yes()
 
-        if self.debug.model == "Safe 3":
+        if self.model() is models.T2B1:
             yield from swipe_if_necessary(self.debug)  # code info
             self.debug.press_yes()
 
@@ -247,12 +253,51 @@ class InputFlowSignMessagePagination(InputFlowBase):
         yield
         self.debug.press_yes()
 
+    def input_flow_t3t1(self) -> BRGeneratorType:
+        # collect screen contents into `message_read`.
+        # Using a helper debuglink function to assemble the final text.
+        layouts: list[LayoutContent] = []
+
+        br = yield  # confirm address
+        self.debug.wait_layout()
+        self.debug.press_yes()
+
+        br = yield
+        assert br.pages is not None
+        for i in range(br.pages):
+            layout = self.debug.wait_layout()
+            layouts.append(layout)
+
+            if i < br.pages - 1:
+                self.debug.swipe_up()
+
+        self.message_read = multipage_content(layouts)
+
+        self.debug.press_yes()
+
 
 class InputFlowSignMessageInfo(InputFlowBase):
     def __init__(self, client: Client):
         super().__init__(client)
 
     def input_flow_tt(self) -> BRGeneratorType:
+        yield
+        # show address/message info
+        self.debug.click(buttons.CORNER_BUTTON, wait=True)
+        self.debug.click(buttons.CORNER_BUTTON, wait=True)
+        self.debug.press_no(wait=True)
+        self.debug.synchronize_at("IconDialog")
+        # address mismatch?
+        self.debug.press_no()
+        yield
+        self.debug.press_yes()
+        yield
+        self.debug.press_no()
+        yield
+        self.debug.press_no(wait=True)
+        self.debug.press_yes(wait=True)
+
+    def input_flow_t3t1(self) -> BRGeneratorType:
         yield
         # show address/message info
         self.debug.click(buttons.CORNER_BUTTON, wait=True)
@@ -309,6 +354,20 @@ class InputFlowShowAddressQRCode(InputFlowBase):
             self.debug.press_right()
         self.debug.press_middle()
 
+    def input_flow_t3t1(self) -> BRGeneratorType:
+        yield
+        self.debug.click(buttons.CORNER_BUTTON, wait=True)
+        # synchronize; TODO get rid of this once we have single-global-layout
+        self.debug.synchronize_at("SimplePage")
+
+        self.debug.swipe_left(wait=True)
+        self.debug.swipe_right(wait=True)
+        self.debug.swipe_left(wait=True)
+        self.debug.click(buttons.CORNER_BUTTON, wait=True)
+        self.debug.press_no(wait=True)
+        self.debug.press_no(wait=True)
+        self.debug.press_yes()
+
 
 class InputFlowShowAddressQRCodeCancel(InputFlowBase):
     def __init__(self, client: Client):
@@ -339,6 +398,17 @@ class InputFlowShowAddressQRCodeCancel(InputFlowBase):
         # Clicking right twice, as some languages can have two pages
         self.debug.press_right()
         self.debug.press_right()
+
+    def input_flow_t3t1(self) -> BRGeneratorType:
+        yield
+        self.debug.click(buttons.CORNER_BUTTON, wait=True)
+        # synchronize; TODO get rid of this once we have single-global-layout
+        self.debug.synchronize_at("SimplePage")
+
+        self.debug.swipe_left(wait=True)
+        self.debug.click(buttons.CORNER_BUTTON, wait=True)
+        self.debug.press_no(wait=True)
+        self.debug.press_yes()
 
 
 class InputFlowShowMultisigXPUBs(InputFlowBase):
@@ -422,6 +492,40 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
         # show address
         self.debug.press_middle()
 
+    def input_flow_t3t1(self) -> BRGeneratorType:
+        yield  # multisig address warning
+        self.debug.press_yes()
+
+        yield  # show address
+        layout = self.debug.wait_layout()
+        TR.assert_in(layout.title(), "address__title_receive_address")
+        assert "(MULTISIG)" in layout.title()
+        assert layout.text_content().replace(" ", "") == self.address
+
+        self.debug.click(buttons.CORNER_BUTTON)
+        assert "Qr" in self.all_components()
+
+        layout = self.debug.swipe_left(wait=True)
+        # address details
+        assert "Multisig 2 of 3" in layout.screen_content()
+        TR.assert_in(layout.screen_content(), "address_details__derivation_path")
+
+        # Three xpub pages with the same testing logic
+        for xpub_num in range(3):
+            expected_title = f"MULTISIG XPUB #{xpub_num + 1}"
+            layout = self.debug.swipe_left(wait=True)
+            assert expected_title in layout.title()
+            content = layout.text_content().replace(" ", "")
+            assert self.xpubs[xpub_num] in content
+
+        self.debug.click(buttons.CORNER_BUTTON, wait=True)
+        # show address
+        self.debug.press_no(wait=True)
+        # address mismatch
+        self.debug.press_no(wait=True)
+        # show address
+        self.debug.press_yes()
+
 
 class InputFlowShowXpubQRCode(InputFlowBase):
     def __init__(self, client: Client, passphrase: bool = False):
@@ -482,6 +586,33 @@ class InputFlowShowXpubQRCode(InputFlowBase):
         # Confirm
         self.debug.press_middle()
 
+    def input_flow_t3t1(self) -> BRGeneratorType:
+        if self.passphrase:
+            yield
+            self.debug.press_yes()
+            yield
+            self.debug.press_yes()
+
+        br = yield
+        layout = self.debug.wait_layout()
+        if "coinjoin" in layout.title().lower() or br.code == B.UnknownDerivationPath:
+            self.debug.press_yes()
+            br = yield
+
+        self.debug.click(buttons.CORNER_BUTTON, wait=True)
+        # synchronize; TODO get rid of this once we have single-global-layout
+        self.debug.synchronize_at("SimplePage")
+
+        self.debug.swipe_left(wait=True)
+        self.debug.swipe_right(wait=True)
+        self.debug.swipe_left(wait=True)
+        self.debug.click(buttons.CORNER_BUTTON, wait=True)
+        self.debug.press_no(wait=True)
+        self.debug.press_no(wait=True)
+        for _ in range(br.pages - 1):
+            self.debug.swipe_up(wait=True)
+        self.debug.press_yes()
+
 
 class InputFlowPaymentRequestDetails(InputFlowBase):
     def __init__(self, client: Client, outputs: list[messages.TxOutputType]):
@@ -489,6 +620,30 @@ class InputFlowPaymentRequestDetails(InputFlowBase):
         self.outputs = outputs
 
     def input_flow_tt(self) -> BRGeneratorType:
+        yield  # request to see details
+        self.debug.wait_layout()
+        self.debug.press_info()
+
+        yield  # confirm first output
+        assert self.outputs[0].address[:16] in self.text_content()  # type: ignore
+        self.debug.press_yes()
+        yield  # confirm first output
+        self.debug.wait_layout()
+        self.debug.press_yes()
+
+        yield  # confirm second output
+        assert self.outputs[1].address[:16] in self.text_content()  # type: ignore
+        self.debug.press_yes()
+        yield  # confirm second output
+        self.debug.wait_layout()
+        self.debug.press_yes()
+
+        yield  # confirm transaction
+        self.debug.press_yes()
+        yield  # confirm transaction
+        self.debug.press_yes()
+
+    def input_flow_t3t1(self) -> BRGeneratorType:
         yield  # request to see details
         self.debug.wait_layout()
         self.debug.press_info()
@@ -607,6 +762,11 @@ class InputFlowSignTxInformation(InputFlowBase):
         self.assert_content(content, "confirm_total__title_sending_from")
         self.debug.press_yes()
 
+    def input_flow_t3t1(self) -> BRGeneratorType:
+        content = yield from sign_tx_go_to_info(self.client)
+        self.assert_content(content, "confirm_total__sending_from_account")
+        self.debug.press_yes()
+
 
 class InputFlowSignTxInformationMixed(InputFlowBase):
     def __init__(self, client: Client):
@@ -636,6 +796,15 @@ class InputFlowSignTxInformationMixed(InputFlowBase):
         self.assert_content(content, "confirm_total__title_sending_from")
         self.debug.press_yes()
 
+    def input_flow_t3t1(self) -> BRGeneratorType:
+        # multiple accounts warning
+        yield
+        self.debug.press_yes()
+
+        content = yield from sign_tx_go_to_info(self.client)
+        self.assert_content(content, "confirm_total__sending_from_account")
+        self.debug.press_yes()
+
 
 class InputFlowSignTxInformationCancel(InputFlowBase):
     def __init__(self, client: Client):
@@ -648,6 +817,10 @@ class InputFlowSignTxInformationCancel(InputFlowBase):
     def input_flow_tr(self) -> BRGeneratorType:
         yield from sign_tx_go_to_info_tr(self.client)
         self.debug.press_left()
+
+    def input_flow_t3t1(self) -> BRGeneratorType:
+        yield from sign_tx_go_to_info(self.client)
+        self.debug.press_no()
 
 
 class InputFlowSignTxInformationReplacement(InputFlowBase):
@@ -684,6 +857,23 @@ class InputFlowSignTxInformationReplacement(InputFlowBase):
         self.debug.press_right()
         self.debug.press_right()
         yield
+
+    def input_flow_t3t1(self) -> BRGeneratorType:
+        yield  # confirm txid
+        self.debug.press_yes()
+        yield  # confirm address
+        self.debug.press_yes()
+        # go back to address
+        self.debug.press_no()
+        # confirm address
+        self.debug.press_yes()
+        yield  # confirm amount
+        self.debug.press_yes()
+
+        yield  # transaction summary, press info
+        self.debug.click(buttons.CORNER_BUTTON, wait=True)
+        self.debug.click(buttons.CORNER_BUTTON, wait=True)
+        self.debug.press_yes()
 
 
 def lock_time_input_flow_tt(
@@ -746,6 +936,11 @@ class InputFlowLockTimeBlockHeight(InputFlowBase):
     def input_flow_tr(self) -> BRGeneratorType:
         yield from lock_time_input_flow_tr(self.debug, self.assert_func)
 
+    def input_flow_t3t1(self) -> BRGeneratorType:
+        yield from lock_time_input_flow_tt(
+            self.debug, self.assert_func, double_confirm=True
+        )
+
 
 class InputFlowLockTimeDatetime(InputFlowBase):
     def __init__(self, client: Client, lock_time_str: str):
@@ -763,6 +958,9 @@ class InputFlowLockTimeDatetime(InputFlowBase):
     def input_flow_tr(self) -> BRGeneratorType:
         yield from lock_time_input_flow_tr(self.debug, self.assert_func)
 
+    def input_flow_t3t1(self) -> BRGeneratorType:
+        yield from lock_time_input_flow_tt(self.debug, self.assert_func)
+
 
 class InputFlowEIP712ShowMore(InputFlowBase):
     SHOW_MORE = (143, 167)
@@ -773,9 +971,9 @@ class InputFlowEIP712ShowMore(InputFlowBase):
 
     def _confirm_show_more(self) -> None:
         """Model-specific, either clicks a screen or presses a button."""
-        if self.model() == "T":
+        if self.model() in (models.T2T1, models.T3T1):
             self.debug.click(self.SHOW_MORE)
-        elif self.model() == "Safe 3":
+        elif self.model() is models.T2B1:
             self.debug.press_right()
 
     def input_flow_common(self) -> BRGeneratorType:
@@ -1087,6 +1285,31 @@ class InputFlowSlip39BasicBackup(InputFlowBase):
         assert br.code == B.Success
         self.debug.press_yes()
 
+    def input_flow_t3t1(self) -> BRGeneratorType:
+        yield  # 1. Checklist
+        self.debug.press_yes()
+        if self.click_info:
+            yield from click_info_button_tt(self.debug)
+        yield  # 2. Number of shares (5)
+        self.debug.press_yes()
+        yield  # 3. Checklist
+        self.debug.press_yes()
+        if self.click_info:
+            yield from click_info_button_tt(self.debug)
+        yield  # 4. Threshold (3)
+        self.debug.press_yes()
+        yield  # 5. Checklist
+        self.debug.press_yes()
+        yield  # 6. Confirm show seeds
+        self.debug.press_yes()
+
+        # Mnemonic phrases
+        self.mnemonics = yield from load_5_shares(self.debug)
+
+        br = yield  # Confirm backup
+        assert br.code == B.Success
+        self.debug.press_yes()
+
 
 class InputFlowSlip39BasicResetRecovery(InputFlowBase):
     def __init__(self, client: Client):
@@ -1137,6 +1360,24 @@ class InputFlowSlip39BasicResetRecovery(InputFlowBase):
         self.mnemonics = yield from load_5_shares(self.debug)
 
         br = yield  # Confirm backup
+        assert br.code == B.Success
+        self.debug.press_yes()
+
+    def input_flow_t3t1(self) -> BRGeneratorType:
+        # 1. Confirm Reset
+        # 2. Backup your seed
+        # 3. Confirm warning
+        # 4. shares info
+        # 5. Set & Confirm number of shares
+        # 6. threshold info
+        # 7. Set & confirm threshold value
+        # 8. Confirm show seeds
+        yield from click_through(self.debug, screens=8, code=B.ResetDevice)
+
+        # Mnemonic phrases
+        self.mnemonics = yield from load_5_shares(self.debug)
+
+        br = yield  # safety warning
         assert br.code == B.Success
         self.debug.press_yes()
 
@@ -1229,6 +1470,40 @@ class InputFlowSlip39AdvancedBackup(InputFlowBase):
         assert br.code == B.Success
         self.debug.press_yes()
 
+    def input_flow_t3t1(self) -> BRGeneratorType:
+        yield  # 1. Checklist
+        self.debug.press_yes()
+        if self.click_info:
+            yield from click_info_button_tt(self.debug)
+        yield  # 2. Set and confirm group count
+        self.debug.press_yes()
+        yield  # 3. Checklist
+        self.debug.press_yes()
+        if self.click_info:
+            yield from click_info_button_tt(self.debug)
+        yield  # 4. Set and confirm group threshold
+        self.debug.press_yes()
+        yield  # 5. Checklist
+        self.debug.press_yes()
+        for _ in range(5):  # for each of 5 groups
+            if self.click_info:
+                yield from click_info_button_tt(self.debug)
+            yield  # Set & Confirm number of shares
+            self.debug.press_yes()
+            if self.click_info:
+                yield from click_info_button_tt(self.debug)
+            yield  # Set & confirm share threshold value
+            self.debug.press_yes()
+        yield  # Confirm show seeds
+        self.debug.press_yes()
+
+        # Mnemonic phrases - show & confirm shares for all groups
+        self.mnemonics = yield from load_5_groups_5_shares(self.debug)
+
+        br = yield  # Confirm backup
+        assert br.code == B.Success
+        self.debug.press_yes()
+
 
 class InputFlowSlip39AdvancedResetRecovery(InputFlowBase):
     def __init__(self, client: Client, click_info: bool):
@@ -1283,6 +1558,27 @@ class InputFlowSlip39AdvancedResetRecovery(InputFlowBase):
             self.debug.input("3")
         yield  # Confirm show seeds
         self.debug.press_yes()
+
+        # Mnemonic phrases - show & confirm shares for all groups
+        self.mnemonics = yield from load_5_groups_5_shares(self.debug)
+
+        br = yield  # safety warning
+        assert br.code == B.Success
+        self.debug.press_yes()
+
+    def input_flow_t3t1(self) -> BRGeneratorType:
+        # 1. Confirm Reset
+        # 2. Backup your seed
+        # 3. Confirm warning
+        # 4. shares info
+        # 5. Set & Confirm number of groups
+        # 6. threshold info
+        # 7. Set & confirm group threshold value
+        # 8-17: for each of 5 groups:
+        #   1. Set & Confirm number of shares
+        #   2. Set & confirm share threshold value
+        # 18. Confirm show seeds
+        yield from click_through(self.debug, screens=18, code=B.ResetDevice)
 
         # Mnemonic phrases - show & confirm shares for all groups
         self.mnemonics = yield from load_5_groups_5_shares(self.debug)
@@ -1377,7 +1673,7 @@ class InputFlowSlip39AdvancedRecoveryAbort(InputFlowBase):
 
     def input_flow_common(self) -> BRGeneratorType:
         yield from self.REC.confirm_recovery()
-        if self.debug.model == "T":
+        if self.model() in (models.T2T1, models.T3T1):
             yield from self.REC.input_number_of_words(20)
         yield from self.REC.abort_recovery(True)
 
@@ -1390,7 +1686,7 @@ class InputFlowSlip39AdvancedRecoveryNoAbort(InputFlowBase):
 
     def input_flow_common(self) -> BRGeneratorType:
         yield from self.REC.confirm_recovery()
-        if self.debug.model == "T":
+        if self.model() in (models.T2T1, models.T3T1):
             yield from self.REC.input_number_of_words(self.word_count)
             yield from self.REC.abort_recovery(False)
         else:
@@ -1489,7 +1785,7 @@ class InputFlowSlip39BasicRecoveryAbort(InputFlowBase):
 
     def input_flow_common(self) -> BRGeneratorType:
         yield from self.REC.confirm_recovery()
-        if self.debug.model == "T":
+        if self.model() in (models.T2T1, models.T3T1):
             yield from self.REC.input_number_of_words(20)
         yield from self.REC.abort_recovery(True)
 
@@ -1503,7 +1799,7 @@ class InputFlowSlip39BasicRecoveryNoAbort(InputFlowBase):
     def input_flow_common(self) -> BRGeneratorType:
         yield from self.REC.confirm_recovery()
 
-        if self.debug.model == "T":
+        if self.model() in (models.T2T1, models.T3T1):
             yield from self.REC.input_number_of_words(self.word_count)
             yield from self.REC.abort_recovery(False)
         else:
@@ -1605,11 +1901,11 @@ class InputFlowResetSkipBackup(InputFlowBase):
         yield  # Skip Backup
         info_path = (
             "backup__new_wallet_created"
-            if self.debug.model == "Safe 3"
+            if self.model() is models.T2B1
             else "backup__new_wallet_successfully_created"
         )
         TR.assert_in(self.text_content(), info_path)
-        if self.debug.model == "Safe 3":
+        if self.model() is models.T2B1:
             self.debug.press_right()
         self.debug.press_no()
         yield  # Confirm skip backup

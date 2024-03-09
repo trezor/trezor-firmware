@@ -46,6 +46,7 @@ def test_slip25_disallowed(client: Client):
 
 @pytest.mark.skip_t2
 @pytest.mark.skip_tr
+@pytest.mark.skip_t3t1
 def test_legacy_restrictions(client: Client):
     path = parse_path("m/46'")
     with pytest.raises(TrezorFailure, match="Invalid path for EthereumGetPublicKey"):

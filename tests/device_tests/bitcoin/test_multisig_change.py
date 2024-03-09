@@ -21,7 +21,7 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.tools import H_, parse_path
 
 from ... import bip32
-from ...common import MNEMONIC12
+from ...common import MNEMONIC12, is_core
 from ...tx_cache import TxCache
 from .signtx import request_finished, request_input, request_meta, request_output
 
@@ -145,7 +145,6 @@ def _responses(
     change: int = 0,
     foreign: bool = False,
 ):
-    is_core = client.features.model in ("T", "Safe 3")
     resp = [
         request_input(0),
         request_input(1),
@@ -154,7 +153,7 @@ def _responses(
 
     if change != 1:
         resp.append(messages.ButtonRequest(code=B.ConfirmOutput))
-        if is_core:
+        if is_core(client):
             resp.append(messages.ButtonRequest(code=B.ConfirmOutput))
     elif foreign:
         resp.append(messages.ButtonRequest(code=B.UnknownDerivationPath))
@@ -163,7 +162,7 @@ def _responses(
 
     if change != 2:
         resp.append(messages.ButtonRequest(code=B.ConfirmOutput))
-        if is_core:
+        if is_core(client):
             resp.append(messages.ButtonRequest(code=B.ConfirmOutput))
     elif foreign:
         resp.append(messages.ButtonRequest(code=B.UnknownDerivationPath))

@@ -44,7 +44,7 @@ from typing import (
 from mnemonic import Mnemonic
 from typing_extensions import Literal
 
-from . import mapping, messages, protobuf
+from . import mapping, messages, models, protobuf
 from .client import TrezorClient
 from .exceptions import TrezorFailure
 from .log import DUMP_BYTES
@@ -368,7 +368,7 @@ class DebugLink:
         self.mapping = mapping.DEFAULT_MAPPING
 
         # To be set by TrezorClientDebugLink (is not known during creation time)
-        self.model: Optional[str] = None
+        self.model: Optional[models.TrezorModel] = None
         self.version: Tuple[int, int, int] = (0, 0, 0)
 
         # Where screenshots are being saved
@@ -452,7 +452,7 @@ class DebugLink:
 
     def reset_debug_events(self) -> None:
         # Only supported on TT and above certain version
-        if self.model in ("T", "Safe 3") and not self.legacy_debug:
+        if (self.model is not models.T1B1) and not self.legacy_debug:
             return self._call(messages.DebugLinkResetDebugEvents())
         return None
 
@@ -691,7 +691,7 @@ class DebugLink:
     ) -> None:
         self.screenshot_recording_dir = directory
         # Different recording logic between core and legacy
-        if self.model in ("T", "Safe 3"):
+        if self.model is not models.T1B1:
             self._call(
                 messages.DebugLinkRecordScreen(
                     target_directory=directory, refresh_index=refresh_index
@@ -705,7 +705,7 @@ class DebugLink:
     def stop_recording(self) -> None:
         self.screenshot_recording_dir = None
         # Different recording logic between TT and T1
-        if self.model in ("T", "Safe 3"):
+        if self.model is not models.T1B1:
             self._call(messages.DebugLinkRecordScreen(target_directory=None))
         else:
             self.t1_take_screenshots = False
@@ -732,7 +732,7 @@ class DebugLink:
 
         TT handles them differently, see debuglink.start_recording.
         """
-        if self.model == "1" and self.t1_take_screenshots:
+        if self.model is models.T1B1 and self.t1_take_screenshots:
             self.save_screenshot_for_t1()
 
     def save_screenshot_for_t1(self) -> None:
@@ -962,7 +962,7 @@ class TrezorClientDebugLink(TrezorClient):
 
         # So that we can choose right screenshotting logic (T1 vs TT)
         # and know the supported debug capabilities
-        self.debug.model = self.features.model
+        self.debug.model = self.model
         self.debug.version = self.version
 
     def reset_debug_features(self) -> None:

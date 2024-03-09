@@ -27,7 +27,7 @@ PIN = "1234"
 
 def _assert_busy(client: Client, should_be_busy: bool, screen: str = "Homescreen"):
     assert client.features.busy is should_be_busy
-    if client.debug.model in ("T", "Safe 3"):
+    if client.model in (models.T2T1, models.T2B1, models.T3T1):
         if should_be_busy:
             assert "CoinJoinProgress" in client.debug.read_layout().all_components()
         else:

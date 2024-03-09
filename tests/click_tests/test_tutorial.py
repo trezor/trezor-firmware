@@ -30,8 +30,8 @@ if TYPE_CHECKING:
     from ..device_handler import BackgroundDeviceHandler
 
 
-# TR-only
-pytestmark = [pytest.mark.skip_t1, pytest.mark.skip_t2]
+# T2B1-only
+pytestmark = [pytest.mark.skip_t1, pytest.mark.skip_t2, pytest.mark.skip_t3t1]
 
 
 @contextmanager

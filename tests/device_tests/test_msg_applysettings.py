@@ -135,6 +135,7 @@ def test_apply_settings_passphrase_on_device(client: Client):
 
 @pytest.mark.skip_t1
 @pytest.mark.skip_t2
+@pytest.mark.skip_t3t1
 def test_apply_homescreen_tr_toif_good(client: Client):
     with client:
         _set_expected_responses(client)
@@ -147,6 +148,7 @@ def test_apply_homescreen_tr_toif_good(client: Client):
 
 @pytest.mark.skip_t1
 @pytest.mark.skip_t2
+@pytest.mark.skip_t3t1
 @pytest.mark.setup_client(pin=None)  # so that "PIN NOT SET" is shown in the header
 def test_apply_homescreen_tr_toif_with_notification(client: Client):
     with client:
@@ -156,6 +158,7 @@ def test_apply_homescreen_tr_toif_with_notification(client: Client):
 
 @pytest.mark.skip_t1
 @pytest.mark.skip_t2
+@pytest.mark.skip_t3t1
 def test_apply_homescreen_tr_toif_with_long_label(client: Client):
     with client:
         _set_expected_responses(client)
@@ -172,6 +175,7 @@ def test_apply_homescreen_tr_toif_with_long_label(client: Client):
 
 @pytest.mark.skip_t1
 @pytest.mark.skip_t2
+@pytest.mark.skip_t3t1
 def test_apply_homescreen_tr_toif_wrong_size(client: Client):
     # 64x64 img
     img = b"TOIG@\x00@\x009\x02\x00\x00}R\xdb\x81$A\x08\"\x03\xf3\xcf\xd2\x0c<\x01-{\xefc\xe6\xd5\xbbU\xa2\x08T\xd6\xcfw\xf4\xe7\xc7\xb7X\xf1\xe3\x1bl\xf0\xf7\x1b\xf8\x1f\xcf\xe7}\xe1\x83\xcf|>\x8d%\x14\xa5\xb3\xe9p5\xa1;~4:\xcd\xe0&\x11\x1d\xe9\xf6\xa1\x1fw\xf54\x95eWx\xda\xd0u\x91\x86\xb8\xbc\xdf\xdc\x008f\x15\xc6\xf6\x7f\xf0T\xb8\xc1\xa3\xc5_A\xc0G\x930\xe7\xdc=\xd5\xa7\xc1\xbcI\x16\xb8s\x9c&\xaa\x06\xc1}\x8b\x19\x9d'c\xc3\xe3^\xc3m\xb6n\xb0(\x16\xf6\xdeg\xb3\x96:i\xe5\x9c\x02\x93\x9fF\x9f-\xa7\"w\xf3X\x9f\x87\x08\x84\"v,\xab!9:<j+\xcb\xf3_\xc7\xd6^<\xce\xc1\xb8!\xec\x8f/\xb1\xc1\x8f\xbd\xcc\x06\x90\x0e\x98)[\xdb\x15\x99\xaf\xf2~\x8e\xd0\xdb\xcd\xfd\x90\x12\xb6\xdd\xc3\xdd|\x96$\x01P\x86H\xbc\xc0}\xa2\x08\xe5\x82\x06\xd2\xeb\x07[\r\xe4\xdeP\xf4\x86;\xa5\x14c\x12\xe3\xb16x\xad\xc7\x1d\x02\xef\x86<\xc6\x95\xd3/\xc4 \xa1\xf5V\xe2\t\xb2\x8a\xd6`\xf2\xcf\xb7\xd6\x07\xdf8X\xa7\x18\x03\x96\x82\xa4 \xeb.*kP\xceu\x9d~}H\xe9\xb8\x04<4\xff\xf8\xcf\xf6\xa0\xf2\xfcM\xe3/?k\xff\x18\x1d\xb1\xee\xc5\xf5\x1f\x01\x14\x03;\x1bU\x1f~\xcf\xb3\xf7w\xe5\nMfd/\xb93\x9fq\x9bQ\xb7'\xbfvq\x1d\xce\r\xbaDo\x90\xbc\xc5:?;\x84y\x8a\x1e\xad\xe9\xb7\x14\x10~\x9b@\xf8\x82\xdc\x89\xe7\xf0\xe0k4o\x9a\xa0\xc4\xb9\xba\xc56\x01i\x85EO'e6\xb7\x15\xb4G\x05\xe1\xe7%\xd3&\x93\x91\xc9CTQ\xeb\xcc\xd0\xd7E9\xa9JK\xcc\x00\x95(\xdc.\xd2#7:Yo}y_*\x1a\xae6)\x97\x9d\xc0\x80vl\x02\\M\xfe\xc9sW\xa8\xfbD\x99\xb8\xb0:\xbc\x80\xfd\xef\xd3\x94\xbe\x18j9z\x12S\xa1\xec$\x1c\xe3\xd1\xd0\xf4\xdd\xbfI\xf1rBj\x0f\x1cz\x1d\xf7\xa5tR\xb3\xfc\xa4\xd0\xfah\xc3Mj\xbe\x14r\x9d\x84z\xd2\x7f\x13\xb4w\xce\xa0\xaeW\xa4\x18\x0b\xe4\x8f\xe6\xc3\xbeQ\x93\xb0L<J\xe3g9\xb5W#f\xd1\x0b\x96|\xd6z1;\x85\x7f\xe3\xe6[\x02A\xdc\xa4\x02\x1b\x91\x88\x7f"
@@ -182,6 +186,7 @@ def test_apply_homescreen_tr_toif_wrong_size(client: Client):
 
 @pytest.mark.skip_t1
 @pytest.mark.skip_t2
+@pytest.mark.skip_t3t1
 def test_apply_homescreen_tr_upload_jpeg_fail(client: Client):
     with open(HERE / "test_bg.jpg", "rb") as f:
         img = f.read()
@@ -192,6 +197,7 @@ def test_apply_homescreen_tr_upload_jpeg_fail(client: Client):
 
 @pytest.mark.skip_t1
 @pytest.mark.skip_t2
+@pytest.mark.skip_t3t1
 def test_apply_homescreen_tr_upload_t1_fail(client: Client):
     with pytest.raises(exceptions.TrezorFailure), client:
         _set_expected_responses(client)
@@ -327,6 +333,7 @@ def test_apply_homescreen_jpeg_wrong_size(client: Client):
 
 @pytest.mark.skip_t2
 @pytest.mark.skip_tr
+@pytest.mark.skip_t3t1
 def test_apply_homescreen(client: Client):
     with client:
         _set_expected_responses(client)

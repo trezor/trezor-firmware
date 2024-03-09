@@ -363,7 +363,7 @@ def test_signmessage_pagination(client: Client, message: str):
 
     # We cannot differentiate between a newline and space in the message read from Trezor.
     # TODO: do the check also for model R
-    if client.features.model == "T":
+    if client.model in (models.T2T1, models.T3T1):
         message_read = IF.message_read.replace(" ", "").replace("...", "")
         signed_message = message.replace("\n", "").replace(" ", "")
         assert signed_message in message_read
