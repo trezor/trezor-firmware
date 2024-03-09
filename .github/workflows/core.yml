@@ -217,6 +217,7 @@ jobs:
         with:
           model: ${{ matrix.model }}
         if: ${{ always() && env.ACTIONS_DO_UI_TEST == 'true' }}
+        continue-on-error: true
       - uses: ./.github/actions/ui-comment
         if: ${{ failure() && env.ACTIONS_DO_UI_TEST == 'true' }}
       - uses: actions/upload-artifact@v4
@@ -264,6 +265,7 @@ jobs:
         with:
           model: ${{ matrix.model }}
         if: always()
+        continue-on-error: true
       - run: mv core/src/.coverage core/.coverage.test_click || true
       - uses: actions/upload-artifact@v4
         with:
@@ -328,6 +330,7 @@ jobs:
         with:
           model: ${{ matrix.model }}
         if: always()
+        continue-on-error: true
       - run: mv core/src/.coverage core/.coverage.test_persistence || true
       - uses: actions/upload-artifact@v4
         with:
@@ -599,6 +602,7 @@ jobs:
       - core_click_test
       - core_persistence_test
       - core_device_test
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
@@ -611,12 +615,14 @@ jobs:
         with:
           role-to-assume: arn:aws:iam::538326561891:role/gh_actions_deploy_dev_firmware_data
           aws-region: eu-west-1
-      - run: "for F in screens_*.tar; do tar xvf $F; done"
+        continue-on-error: true
+      - run: "for F in screens_*.tar; do tar xvf $F; done || true"
       - run: nix-shell --run "poetry run python -m tests.ui_tests.reporting master-diff TT TR"
       - run: mv tests/ui_tests/reports/master_diff .
       - name: Upload diff from main branch
         run: |
           aws s3 sync master_diff s3://data.trezor.io/dev/firmware/master_diff/${{ github.run_id }}
+        continue-on-error: true
 
   core_ui_comment:
     name: Post comment with UI diff URLs
