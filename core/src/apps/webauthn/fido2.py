@@ -985,7 +985,7 @@ class DialogManager:
 
     def reset_timeout(self) -> None:
         if self.state is not None:
-            self.deadline = utime.ticks_ms() + self.state.timeout_ms()
+            self.deadline = utime.ticks_add(utime.ticks_ms(), self.state.timeout_ms())
 
     def reset(self) -> None:
         if self.workflow is not None:
@@ -1002,7 +1002,7 @@ class DialogManager:
         )
 
     def is_busy(self) -> bool:
-        if utime.ticks_ms() >= self.deadline:
+        if utime.ticks_diff(utime.ticks_ms(), self.deadline) >= 0:
             self.reset()
 
         if not self._workflow_is_running():
@@ -1015,7 +1015,10 @@ class DialogManager:
         return True
 
     def set_state(self, state: State) -> bool:
-        if self.state == state and utime.ticks_ms() < self.deadline:
+        if (
+            self.state == state
+            and utime.ticks_diff(utime.ticks_ms(), self.deadline) < 0
+        ):
             self.reset_timeout()
             return True
 
@@ -1036,7 +1039,7 @@ class DialogManager:
         try:
             if not state:
                 return
-            while utime.ticks_ms() < self.deadline:
+            while utime.ticks_diff(utime.ticks_ms(), self.deadline) < 0:
                 if state.keepalive_status() != _KEEPALIVE_STATUS_NONE:
                     cmd = cmd_keepalive(state.cid, state.keepalive_status())
                     await send_cmd(cmd, self.iface)
