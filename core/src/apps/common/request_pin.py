@@ -97,7 +97,7 @@ async def verify_user_pin(
     if (
         cache_time_ms
         and last_unlock
-        and utime.ticks_ms() - last_unlock <= cache_time_ms
+        and utime.ticks_diff(utime.ticks_ms(), last_unlock) <= cache_time_ms
         and config.is_unlocked()
     ):
         return
