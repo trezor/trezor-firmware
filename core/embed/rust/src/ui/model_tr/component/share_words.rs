@@ -15,7 +15,7 @@ use heapless::{String, Vec};
 use super::{common::display_left, scrollbar::SCROLLBAR_SPACE, theme, ScrollBar};
 
 const WORDS_PER_PAGE: usize = 3;
-const EXTRA_LINE_HEIGHT: i16 = 2;
+const EXTRA_LINE_HEIGHT: i16 = -2;
 const NUMBER_X_OFFSET: i16 = 0;
 const WORD_X_OFFSET: i16 = 25;
 const NUMBER_FONT: Font = Font::DEMIBOLD;
