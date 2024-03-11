@@ -39,8 +39,6 @@ mod homescreen;
 #[cfg(feature = "translations")]
 mod page;
 mod progress;
-mod result_anim;
-mod result_popup;
 mod scrollbar;
 #[cfg(feature = "translations")]
 mod share_words;
@@ -69,8 +67,6 @@ pub use input_methods::{
 #[cfg(feature = "translations")]
 pub use page::ButtonPage;
 pub use progress::Progress;
-pub use result_anim::{ResultAnim, ResultAnimMsg};
-pub use result_popup::{ResultPopup, ResultPopupMsg};
 pub use scrollbar::ScrollBar;
 #[cfg(feature = "translations")]
 pub use share_words::ShareWords;
