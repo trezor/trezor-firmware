@@ -106,11 +106,11 @@ the following marker:
 This marker must be registered in `REGISTERED_MARKERS` file in `tests` folder.
 
 Tests can be run only for specific models - it is done by disallowing the tests for the other models.
-`@pytest.mark.skip_t1`
-`@pytest.mark.skip_t2`
-`@pytest.mark.skip_tr`
+`@pytest.mark.skip_t1b1`
+`@pytest.mark.skip_t2t1`
+`@pytest.mark.skip_t2b1`
 `@pytest.mark.skip_t3t1`
-are valid markers to skip current test for T1, TT and TR respectively.
+are valid markers to skip current test for Model 1, Model T, Safe 3, and T3T1 respectively.
 
 [pytest-random-order]: https://pypi.org/project/pytest-random-order/
 

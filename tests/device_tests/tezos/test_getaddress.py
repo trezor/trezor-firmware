@@ -25,7 +25,7 @@ from ...input_flows import InputFlowShowAddressQRCode
 pytestmark = [
     pytest.mark.altcoin,
     pytest.mark.tezos,
-    pytest.mark.skip_t1,
+    pytest.mark.skip_t1b1,
 ]
 
 TEST_VECTORS = [

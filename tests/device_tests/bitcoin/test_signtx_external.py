@@ -16,7 +16,7 @@
 
 import pytest
 
-from trezorlib import btc, device, messages
+from trezorlib import btc, device, messages, models
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.messages import SafetyCheckLevel
@@ -81,7 +81,7 @@ TXHASH_1010b2 = bytes.fromhex(
 )
 
 
-@pytest.mark.skip_t1
+@pytest.mark.skip_t1b1
 def test_p2pkh_presigned(client: Client):
     inp1 = messages.TxInputType(
         # mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q
@@ -178,7 +178,7 @@ def test_p2pkh_presigned(client: Client):
         )
 
 
-@pytest.mark.skip_t1
+@pytest.mark.skip_t1b1
 def test_p2wpkh_in_p2sh_presigned(client: Client):
     inp1 = messages.TxInputType(
         # 2N1LGaGg836mqSQqiuUBLfcyGBhyZbremDX
@@ -301,7 +301,7 @@ def test_p2wpkh_in_p2sh_presigned(client: Client):
             )
 
 
-@pytest.mark.skip_t1
+@pytest.mark.skip_t1b1
 def test_p2wpkh_presigned(client: Client):
     inp1 = messages.TxInputType(
         # tb1qkvwu9g3k2pdxewfqr7syz89r3gj557l3uuf9r9
@@ -366,7 +366,7 @@ def test_p2wpkh_presigned(client: Client):
         )
 
 
-@pytest.mark.skip_t1
+@pytest.mark.skip_t1b1
 def test_p2wsh_external_presigned(client: Client):
     inp1 = messages.TxInputType(
         address_n=parse_path("m/84h/1h/0h/0/0"),
@@ -474,7 +474,7 @@ def test_p2wsh_external_presigned(client: Client):
             )
 
 
-@pytest.mark.skip_t1
+@pytest.mark.skip_t1b1
 def test_p2tr_external_presigned(client: Client):
     inp1 = messages.TxInputType(
         # tb1p8tvmvsvhsee73rhym86wt435qrqm92psfsyhy6a3n5gw455znnpqm8wald
@@ -566,13 +566,13 @@ def test_p2tr_external_presigned(client: Client):
             )
 
 
-@pytest.mark.skip_t1
+@pytest.mark.skip_t1b1
 def test_p2pkh_with_proof(client: Client):
     # TODO
     pass
 
 
-@pytest.mark.skip_t1
+@pytest.mark.skip_t1b1
 def test_p2wpkh_in_p2sh_with_proof(client: Client):
     # TODO
     pass
@@ -611,7 +611,7 @@ def test_p2wpkh_with_proof(client: Client):
     )
 
     with client:
-        is_t1 = client.features.model == "1"
+        is_t1 = client.model is models.T1B1
         client.set_expected_responses(
             [
                 request_input(0),
@@ -704,7 +704,7 @@ def test_p2tr_with_proof(client: Client):
     )
 
     with client:
-        is_t1 = client.features.model == "1"
+        is_t1 = client.model is models.T1B1
         client.set_expected_responses(
             [
                 request_input(0),

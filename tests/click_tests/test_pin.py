@@ -37,7 +37,7 @@ if TYPE_CHECKING:
     from ..device_handler import BackgroundDeviceHandler
 
 
-pytestmark = pytest.mark.skip_t1
+pytestmark = pytest.mark.skip_t1b1
 
 PIN_CANCELLED = pytest.raises(exceptions.TrezorFailure, match="PIN entry cancelled")
 PIN_INVALID = pytest.raises(exceptions.TrezorFailure, match="PIN invalid")
@@ -285,7 +285,7 @@ def test_pin_incorrect(device_handler: "BackgroundDeviceHandler"):
         _input_see_confirm(debug, PIN4)
 
 
-@pytest.mark.skip_tr("TODO: will we support cancelling on TR?")
+@pytest.mark.skip_t2b1("TODO: will we support cancelling on T2B1?")
 @pytest.mark.setup_client(pin=PIN4)
 def test_pin_cancel(device_handler: "BackgroundDeviceHandler"):
     with PIN_CANCELLED, prepare(device_handler) as debug:

@@ -109,7 +109,7 @@ def test_cosi_sign3(client: Client):
     cosi.verify_combined(signature, DIGEST, global_pk)
 
 
-@pytest.mark.skip_t1
+@pytest.mark.skip_t1b1
 def test_cosi_different_key(client: Client):
     with pytest.raises(TrezorFailure):
         commit = cosi.commit(client, parse_path("m/10018h/0h"))
@@ -135,7 +135,7 @@ def test_cosi_different_key(client: Client):
         (b"T2B1", 3),
     ),
 )
-@pytest.mark.skip_t1
+@pytest.mark.skip_t1b1
 def test_slip26_paths(client: Client, model: bytes, image_type: int):
     slip26_model = int.from_bytes(model, "little")
     path = Address([H_(10026), H_(slip26_model), H_(image_type), H_(0)])

@@ -18,7 +18,7 @@ from pathlib import Path
 
 import pytest
 
-from trezorlib import btc, device, exceptions, messages, misc
+from trezorlib import btc, device, exceptions, messages, misc, models
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.tools import parse_path
 
@@ -50,7 +50,7 @@ TR_HOMESCREEN = b"TOIG\x80\x00@\x00\x0c\x04\x00\x00\xa5RY\x96\xdc0\x08\xe4\x06\x
 
 def _set_expected_responses(client: Client):
     client.use_pin_sequence([PIN4])
-    if client.features.model == "1":
+    if client.model is models.T1B1:
         client.set_expected_responses(EXPECTED_RESPONSES_PIN_T1)
     else:
         client.set_expected_responses(EXPECTED_RESPONSES_PIN_TT)
@@ -66,7 +66,7 @@ def test_apply_settings(client: Client):
     assert client.features.label == "new label"
 
 
-@pytest.mark.skip_t1
+@pytest.mark.skip_t1b1
 def test_apply_settings_rotation(client: Client):
     assert client.features.display_rotation is None
 
@@ -99,7 +99,7 @@ def test_apply_settings_passphrase(client: Client):
 
 
 @pytest.mark.setup_client(passphrase=False)
-@pytest.mark.skip_t1
+@pytest.mark.skip_t1b1
 def test_apply_settings_passphrase_on_device(client: Client):
     # enable passphrase
     with client:
@@ -133,8 +133,8 @@ def test_apply_settings_passphrase_on_device(client: Client):
     assert client.features.passphrase_always_on_device is False
 
 
-@pytest.mark.skip_t1
-@pytest.mark.skip_t2
+@pytest.mark.skip_t1b1
+@pytest.mark.skip_t2t1
 @pytest.mark.skip_t3t1
 def test_apply_homescreen_tr_toif_good(client: Client):
     with client:
@@ -146,8 +146,8 @@ def test_apply_homescreen_tr_toif_good(client: Client):
         device.apply_settings(client, homescreen=b"")
 
 
-@pytest.mark.skip_t1
-@pytest.mark.skip_t2
+@pytest.mark.skip_t1b1
+@pytest.mark.skip_t2t1
 @pytest.mark.skip_t3t1
 @pytest.mark.setup_client(pin=None)  # so that "PIN NOT SET" is shown in the header
 def test_apply_homescreen_tr_toif_with_notification(client: Client):
@@ -156,8 +156,8 @@ def test_apply_homescreen_tr_toif_with_notification(client: Client):
         device.apply_settings(client, homescreen=TR_HOMESCREEN)
 
 
-@pytest.mark.skip_t1
-@pytest.mark.skip_t2
+@pytest.mark.skip_t1b1
+@pytest.mark.skip_t2t1
 @pytest.mark.skip_t3t1
 def test_apply_homescreen_tr_toif_with_long_label(client: Client):
     with client:
@@ -173,8 +173,8 @@ def test_apply_homescreen_tr_toif_with_long_label(client: Client):
         device.apply_settings(client, label="My even longer label")
 
 
-@pytest.mark.skip_t1
-@pytest.mark.skip_t2
+@pytest.mark.skip_t1b1
+@pytest.mark.skip_t2t1
 @pytest.mark.skip_t3t1
 def test_apply_homescreen_tr_toif_wrong_size(client: Client):
     # 64x64 img
@@ -184,8 +184,8 @@ def test_apply_homescreen_tr_toif_wrong_size(client: Client):
         device.apply_settings(client, homescreen=img)
 
 
-@pytest.mark.skip_t1
-@pytest.mark.skip_t2
+@pytest.mark.skip_t1b1
+@pytest.mark.skip_t2t1
 @pytest.mark.skip_t3t1
 def test_apply_homescreen_tr_upload_jpeg_fail(client: Client):
     with open(HERE / "test_bg.jpg", "rb") as f:
@@ -195,8 +195,8 @@ def test_apply_homescreen_tr_upload_jpeg_fail(client: Client):
             device.apply_settings(client, homescreen=img)
 
 
-@pytest.mark.skip_t1
-@pytest.mark.skip_t2
+@pytest.mark.skip_t1b1
+@pytest.mark.skip_t2t1
 @pytest.mark.skip_t3t1
 def test_apply_homescreen_tr_upload_t1_fail(client: Client):
     with pytest.raises(exceptions.TrezorFailure), client:
@@ -204,8 +204,8 @@ def test_apply_homescreen_tr_upload_t1_fail(client: Client):
         device.apply_settings(client, homescreen=T1_HOMESCREEN)
 
 
-@pytest.mark.skip_t1
-@pytest.mark.skip_tr
+@pytest.mark.skip_t1b1
+@pytest.mark.skip_t2b1
 def test_apply_homescreen_toif(client: Client):
     img = b"TOIf\x90\x00\x90\x00~\x00\x00\x00\xed\xd2\xcb\r\x83@\x10D\xc1^.\xde#!\xac31\x99\x10\x8aC%\x14~\x16\x92Y9\x02WI3\x01<\xf5cI2d\x1es(\xe1[\xdbn\xba\xca\xe8s7\xa4\xd5\xd4\xb3\x13\xbdw\xf6:\xf3\xd1\xe7%\xc7]\xdd_\xb3\x9e\x9f\x9e\x9fN\xed\xaaE\xef\xdc\xcf$D\xa7\xa4X\r\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xf0OV"
 
@@ -214,8 +214,8 @@ def test_apply_homescreen_toif(client: Client):
         device.apply_settings(client, homescreen=img)
 
 
-@pytest.mark.skip_t1
-@pytest.mark.skip_tr
+@pytest.mark.skip_t1b1
+@pytest.mark.skip_t2b1
 def test_apply_homescreen_jpeg(client: Client):
     with open(HERE / "test_bg.jpg", "rb") as f:
         img = f.read()
@@ -227,8 +227,8 @@ def test_apply_homescreen_jpeg(client: Client):
             device.apply_settings(client, homescreen=b"")
 
 
-@pytest.mark.skip_t1
-@pytest.mark.skip_tr
+@pytest.mark.skip_t1b1
+@pytest.mark.skip_t2b1
 def test_apply_homescreen_jpeg_progressive(client: Client):
     img = (
         b"\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x01\x01,\x01,"
@@ -284,8 +284,8 @@ def test_apply_homescreen_jpeg_progressive(client: Client):
         device.apply_settings(client, homescreen=img)
 
 
-@pytest.mark.skip_t1
-@pytest.mark.skip_tr
+@pytest.mark.skip_t1b1
+@pytest.mark.skip_t2b1
 def test_apply_homescreen_jpeg_wrong_size(client: Client):
     img = (
         b"\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x01\x01,\x01,"
@@ -331,8 +331,8 @@ def test_apply_homescreen_jpeg_wrong_size(client: Client):
         device.apply_settings(client, homescreen=img)
 
 
-@pytest.mark.skip_t2
-@pytest.mark.skip_tr
+@pytest.mark.skip_t2t1
+@pytest.mark.skip_t2b1
 @pytest.mark.skip_t3t1
 def test_apply_homescreen(client: Client):
     with client:
@@ -351,7 +351,7 @@ def test_safety_checks(client: Client):
         client.set_expected_responses([messages.Failure])
         get_bad_address()
 
-    if client.features.model != "1":
+    if client.model is not models.T1B1:
         with client:
             client.set_expected_responses(EXPECTED_RESPONSES_NOPIN)
             device.apply_settings(
@@ -391,7 +391,7 @@ def test_safety_checks(client: Client):
         get_bad_address()
 
 
-@pytest.mark.skip_t1
+@pytest.mark.skip_t1b1
 def test_experimental_features(client: Client):
     def experimental_call():
         misc.get_nonce(client)

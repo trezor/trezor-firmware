@@ -16,7 +16,7 @@
 
 import pytest
 
-from trezorlib import cardano, messages
+from trezorlib import cardano, messages, models
 from trezorlib.btc import get_public_node
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
@@ -32,7 +32,7 @@ PIN4 = "1234"
 
 @pytest.mark.setup_client(pin=PIN4, passphrase="")
 def test_clear_session(client: Client):
-    is_t1 = client.features.model == "1"
+    is_t1 = client.model is models.T1B1
     init_responses = [
         messages.PinMatrixRequest if is_t1 else messages.ButtonRequest,
         messages.PassphraseRequest,
@@ -159,7 +159,7 @@ def test_session_recycling(client: Client):
 
 @pytest.mark.altcoin
 @pytest.mark.cardano
-@pytest.mark.skip_t1
+@pytest.mark.skip_t1b1
 def test_derive_cardano_empty_session(client: Client):
     # start new session
     client.init_device(new_session=True)
@@ -178,7 +178,7 @@ def test_derive_cardano_empty_session(client: Client):
 
 @pytest.mark.altcoin
 @pytest.mark.cardano
-@pytest.mark.skip_t1
+@pytest.mark.skip_t1b1
 def test_derive_cardano_running_session(client: Client):
     # start new session
     client.init_device(new_session=True)

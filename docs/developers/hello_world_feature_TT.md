@@ -308,7 +308,7 @@ VECTORS = (  # name, amount, show_display
 )
 
 
-@pytest.mark.skip_t1
+@pytest.mark.skip_t1b1
 @pytest.mark.parametrize("name, amount, show_display", VECTORS)
 def test_hello_world(
     client: Client, name: str, amount: Optional[int], show_display: bool
@@ -325,7 +325,7 @@ def test_hello_world(
 
 Unlike in unit tests, [pytest](https://docs.pytest.org) is used as the test framework, which is more suitable for bigger and more complex test suites.
 
-As the functionality is developed only for `TT`, to not break the `CI`, we want to skip this test's execution for model `T1`, by adding `@pytest.mark.skip_t1` decorator.
+As the functionality is developed only for `TT`, to not break the `CI`, we want to skip this test's execution for model `T1`, by adding `@pytest.mark.skip_t1b1` decorator.
 
 We are also using the `@pytest.mark.parametrize` decorator, which is an efficient way of testing multiple inputs into the same test case.
 

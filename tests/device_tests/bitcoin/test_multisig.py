@@ -16,7 +16,7 @@
 
 import pytest
 
-from trezorlib import btc, messages
+from trezorlib import btc, messages, models
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
@@ -238,7 +238,7 @@ def test_missing_pubkey(client: Client):
     with pytest.raises(TrezorFailure) as exc:
         btc.sign_tx(client, "Bitcoin", [inp1], [out1], prev_txes=TX_API)
 
-    if client.features.model == "1":
+    if client.model is models.T1B1:
         assert exc.value.message.endswith("Failed to derive scriptPubKey")
     else:
         assert exc.value.message.endswith("Pubkey not found in multisig script")

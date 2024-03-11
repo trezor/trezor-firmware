@@ -18,7 +18,7 @@ import time
 
 import pytest
 
-from trezorlib import btc, device
+from trezorlib import btc, device, models
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.tools import parse_path
 
