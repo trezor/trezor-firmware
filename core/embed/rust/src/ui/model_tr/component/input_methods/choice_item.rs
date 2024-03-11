@@ -92,7 +92,11 @@ impl Choice for ChoiceItem {
     /// Showing both the icon and text, if the icon is available.
     fn paint_center(&self, area: Rect, inverse: bool) {
         let width = text_icon_width(Some(self.text.as_ref()), self.icon, self.font);
-        paint_rounded_highlight(area, Offset::new(width, self.font.text_height()), inverse);
+        paint_rounded_highlight(
+            area,
+            Offset::new(width, self.font.visible_text_height("Ay")),
+            inverse,
+        );
         paint_text_icon(
             area,
             width,
@@ -171,7 +175,7 @@ fn paint_text_icon(
 
     let mut baseline = area.bottom_center() - Offset::x(width / 2);
     if let Some(icon) = icon {
-        let height_diff = font.text_height() - icon.toif.height();
+        let height_diff = font.visible_text_height("Ay") - icon.toif.height();
         let vertical_offset = Offset::y(-height_diff / 2);
         icon.draw(
             baseline + vertical_offset,

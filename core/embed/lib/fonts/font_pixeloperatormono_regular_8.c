@@ -72,7 +72,7 @@
 /* \ */ static const uint8_t Font_PixelOperatorMono_Regular_8_glyph_92[] = { 3, 7, 7, 1, 7, 145, 36, 72 };
 /* ] */ static const uint8_t Font_PixelOperatorMono_Regular_8_glyph_93[] = { 3, 7, 7, 0, 7, 228, 146, 120 };
 /* ^ */ static const uint8_t Font_PixelOperatorMono_Regular_8_glyph_94[] = { 5, 3, 7, 0, 7, 34, 162 };
-/* _ */ static const uint8_t Font_PixelOperatorMono_Regular_8_glyph_95[] = { 8, 1, 7, 0, 0, 255, 0 };
+/* _ */ static const uint8_t Font_PixelOperatorMono_Regular_8_glyph_95[] = { 7, 1, 7, 0, 0, 254, 0 };
 /* ` */ static const uint8_t Font_PixelOperatorMono_Regular_8_glyph_96[] = { 2, 2, 7, 1, 7, 144 };
 /* a */ static const uint8_t Font_PixelOperatorMono_Regular_8_glyph_97[] = { 5, 5, 7, 0, 5, 112, 95, 23, 128 };
 /* b */ static const uint8_t Font_PixelOperatorMono_Regular_8_glyph_98[] = { 5, 7, 7, 0, 7, 132, 61, 24, 199, 192 };

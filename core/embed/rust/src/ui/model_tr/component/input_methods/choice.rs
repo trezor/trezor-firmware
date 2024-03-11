@@ -217,7 +217,7 @@ where
         // Getting the row area for the choices - so that displaying
         // items in the used font will show them in the middle vertically.
         let area_height_half = self.pad.area.height() / 2;
-        let font_size_half = theme::FONT_CHOICE_ITEMS.text_height() / 2;
+        let font_size_half = theme::FONT_CHOICE_ITEMS.visible_text_height("Ay") / 2;
         let center_row_area = self
             .pad
             .area
