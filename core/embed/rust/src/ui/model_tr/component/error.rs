@@ -99,7 +99,7 @@ impl<T: AsRef<str>> Component for ErrorScreen<T> {
         self.footer.paint();
     }
 
-    fn render(&mut self, target: &mut impl Renderer) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.bg.render(target);
 
         if self.show_icons {

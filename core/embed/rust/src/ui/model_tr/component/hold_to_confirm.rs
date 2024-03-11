@@ -124,7 +124,7 @@ impl Component for HoldToConfirm {
         self.loader.paint();
     }
 
-    fn render(&mut self, target: &mut impl Renderer) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.loader.render(target);
     }
 }

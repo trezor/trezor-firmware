@@ -79,7 +79,7 @@ where
         self.buttons.paint();
     }
 
-    fn render(&mut self, target: &mut impl Renderer) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.content.render(target);
         self.buttons.render(target);
     }

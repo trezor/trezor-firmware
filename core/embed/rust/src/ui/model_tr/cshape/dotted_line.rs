@@ -44,13 +44,13 @@ impl HorizontalLine {
         Self { step, ..self }
     }
 
-    pub fn render(self, renderer: &mut impl Renderer) {
+    pub fn render<'s>(self, renderer: &mut impl Renderer<'s>) {
         renderer.render_shape(self);
     }
 }
 
-impl Shape for HorizontalLine {
-    fn bounds(&self, _cache: &DrawingCache) -> Rect {
+impl<'s> Shape<'s> for HorizontalLine {
+    fn bounds(&self, _cache: &DrawingCache<'s>) -> Rect {
         let size = Offset::new(self.length, self.thickness as i16);
         Rect::from_top_left_and_size(self.pos, size)
     }
@@ -77,8 +77,8 @@ impl Shape for HorizontalLine {
     }
 }
 
-impl ShapeClone for HorizontalLine {
-    fn clone_at_bump<'alloc, T>(self, bump: &'alloc T) -> Option<&'alloc mut dyn Shape>
+impl<'s> ShapeClone<'s> for HorizontalLine {
+    fn clone_at_bump<'alloc, T>(self, bump: &'alloc T) -> Option<&'alloc mut dyn Shape<'s>>
     where
         T: LocalAllocLeakExt<'alloc>,
     {

@@ -73,7 +73,7 @@ impl Choice for MenuChoice {
         );
     }
 
-    fn render_center(&self, target: &mut impl Renderer, _area: Rect, _inverse: bool) {
+    fn render_center<'s>(&self, target: &mut impl Renderer<'s>, _area: Rect, _inverse: bool) {
         // Icon on top and two lines of text below
         shape::ToifImage::new(SCREEN_CENTER + Offset::y(-20), self.icon.toif)
             .with_align(Alignment2D::CENTER)
@@ -186,7 +186,7 @@ impl Component for Menu {
         self.choice_page.paint();
     }
 
-    fn render(&mut self, target: &mut impl Renderer) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.pad.render(target);
         self.choice_page.render(target);
     }

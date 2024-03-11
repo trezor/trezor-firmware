@@ -185,7 +185,7 @@ where
         self.description.paint();
     }
 
-    fn render(&mut self, target: &mut impl Renderer) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.title.render(target);
 
         let area = constant::screen();

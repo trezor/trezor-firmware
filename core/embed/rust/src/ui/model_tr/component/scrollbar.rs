@@ -108,7 +108,7 @@ impl ScrollBar {
     /// Create a (seemingly circular) dot given its top left point.
     /// Make it full when it is active, otherwise paint just the perimeter and
     /// leave center empty.
-    fn render_dot(&self, target: &mut impl Renderer, dot_type: &DotType, top_right: Point) {
+    fn render_dot<'s>(&self, target: &mut impl Renderer<'s>, dot_type: &DotType, top_right: Point) {
         let full_square =
             Rect::from_top_right_and_size(top_right, Offset::uniform(Self::MAX_DOT_SIZE));
 
@@ -234,7 +234,7 @@ impl ScrollBar {
         }
     }
 
-    fn render_horizontal(&mut self, target: &mut impl Renderer) {
+    fn render_horizontal<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let mut top_right = self.pad.area.top_right();
         for dot in self.get_drawable_dots().iter().rev() {
             self.render_dot(target, dot, top_right);
@@ -274,7 +274,7 @@ impl Component for ScrollBar {
     }
 
     /// Displaying one dot for each page.
-    fn render(&mut self, target: &mut impl Renderer) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         // Not showing the scrollbar dot when there is only one page
         if self.page_count <= 1 {
             return;

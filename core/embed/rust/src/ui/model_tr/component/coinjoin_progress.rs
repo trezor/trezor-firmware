@@ -136,7 +136,7 @@ where
         }
     }
 
-    fn render(&mut self, target: &mut impl Renderer) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         // TOP
         let center = self.area.center() + Offset::y(self.loader_y_offset);
 

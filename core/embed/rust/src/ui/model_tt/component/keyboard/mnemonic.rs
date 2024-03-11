@@ -183,12 +183,12 @@ where
         }
     }
 
-    fn render(&mut self, target: &mut impl Renderer) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.prompt.render(target);
         self.input.render(target);
         self.back.render(target);
 
-        for btn in &mut self.keys {
+        for btn in &self.keys {
             btn.render(target);
         }
     }

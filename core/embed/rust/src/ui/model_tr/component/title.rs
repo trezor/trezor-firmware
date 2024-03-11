@@ -72,7 +72,7 @@ where
     }
 
     /// Display title/header at the top left of the given area.
-    pub fn render_header_left(target: &mut impl Renderer, title: &T, area: Rect) {
+    pub fn render_header_left<'s>(target: &mut impl Renderer<'s>, title: &T, area: Rect) {
         let text_height = theme::FONT_HEADER.text_height();
         let title_baseline = area.top_left() + Offset::y(text_height - 1);
         shape::Text::new(title_baseline, title.as_ref())
@@ -95,7 +95,7 @@ where
     }
 
     /// Display title/header centered at the top of the given area.
-    pub fn render_header_centered(target: &mut impl Renderer, title: &T, area: Rect) {
+    pub fn render_header_centered<'s>(target: &mut impl Renderer<'s>, title: &T, area: Rect) {
         let text_height = theme::FONT_HEADER.text_height();
         let title_baseline = area.top_center() + Offset::y(text_height - 1);
         shape::Text::new(title_baseline, title.as_ref())
@@ -140,7 +140,7 @@ where
         }
     }
 
-    fn render(&mut self, target: &mut impl Renderer) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         if self.needs_marquee {
             self.marquee.render(target);
         } else if self.centered {

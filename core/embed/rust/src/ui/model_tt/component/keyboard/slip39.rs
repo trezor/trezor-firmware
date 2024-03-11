@@ -187,7 +187,7 @@ impl Component for Slip39Input {
         }
     }
 
-    fn render(&mut self, target: &mut impl Renderer) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let area = self.button.area();
         let style = self.button.style();
 

@@ -60,7 +60,7 @@ impl Component for Welcome {
         );
     }
 
-    fn render(&mut self, target: &mut impl Renderer) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.bg.render(target);
 
         let top_center = self.bg.area.top_center();

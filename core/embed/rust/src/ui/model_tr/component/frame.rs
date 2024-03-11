@@ -85,7 +85,7 @@ where
         self.content.paint();
     }
 
-    fn render(&mut self, target: &mut impl Renderer) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.title.render(target);
         self.content.render(target);
     }
@@ -211,7 +211,7 @@ where
         self.content.paint();
     }
 
-    fn render(&mut self, target: &mut impl Renderer) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.title.render(target);
         self.scrollbar.render(target);
         self.content.render(target);

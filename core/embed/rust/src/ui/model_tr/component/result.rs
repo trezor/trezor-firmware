@@ -110,7 +110,7 @@ impl<'a> Component for ResultScreen<'a> {
         self.message_bottom.paint();
     }
 
-    fn render(&mut self, target: &mut impl Renderer) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.bg.render(target);
         self.small_pad.render(target);
 

@@ -257,7 +257,7 @@ impl Component for AddressDetails {
         }
     }
 
-    fn render(&mut self, target: &mut impl Renderer) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.pad.render(target);
         self.buttons.render(target);
         match self.current_page {

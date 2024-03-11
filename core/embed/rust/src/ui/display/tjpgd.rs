@@ -14,7 +14,6 @@ use crate::{
     },
 };
 
-#[cfg(not(feature = "new_rendering"))]
 pub fn jpeg(data: &[u8], pos: Point, scale: u8) {
     let mut buffer = BufferJpegWork::get_cleared();
     let pool = buffer.buffer.as_mut_slice();

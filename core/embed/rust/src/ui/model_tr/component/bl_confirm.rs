@@ -229,8 +229,8 @@ where
         self.buttons.paint();
     }
 
-    fn render(&mut self, target: &mut impl Renderer) {
-        self.bg.paint();
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        self.bg.render(target);
 
         let mut display_top_left = |text: TString<'static>| {
             text.map(|t| {

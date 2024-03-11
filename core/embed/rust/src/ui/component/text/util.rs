@@ -45,8 +45,8 @@ pub fn text_multiline(
 ///
 /// If it fits, returns the rest of the area.
 /// If it does not fit, returns `None`.
-pub fn text_multiline2(
-    target: &mut impl Renderer,
+pub fn text_multiline2<'s>(
+    target: &mut impl Renderer<'s>,
     area: Rect,
     text: TString<'_>,
     font: Font,
@@ -97,8 +97,8 @@ pub fn text_multiline_bottom(
 
 /// Same as `text_multiline` above, but aligns the text to the bottom of the
 /// area.
-pub fn text_multiline_bottom2(
-    target: &mut impl Renderer,
+pub fn text_multiline_bottom2<'s>(
+    target: &mut impl Renderer<'s>,
     area: Rect,
     text: TString<'_>,
     font: Font,

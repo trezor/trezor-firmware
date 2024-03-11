@@ -191,7 +191,7 @@ impl<T> Button<T> {
         }
     }
 
-    pub fn render_background(&self, target: &mut impl Renderer, style: &ButtonStyle) {
+    pub fn render_background<'s>(&self, target: &mut impl Renderer<'s>, style: &ButtonStyle) {
         match &self.content {
             ButtonContent::IconBlend(_, _, _) => {}
             _ => shape::Bar::new(self.area)
@@ -244,7 +244,7 @@ impl<T> Button<T> {
         }
     }
 
-    pub fn render_content(&self, target: &mut impl Renderer, style: &ButtonStyle)
+    pub fn render_content<'s>(&self, target: &mut impl Renderer<'s>, style: &ButtonStyle)
     where
         T: AsRef<str>,
     {
@@ -375,7 +375,7 @@ where
         self.paint_content(style);
     }
 
-    fn render(&mut self, target: &mut impl Renderer) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let style = self.style();
         self.render_background(target, style);
         self.render_content(target, style);

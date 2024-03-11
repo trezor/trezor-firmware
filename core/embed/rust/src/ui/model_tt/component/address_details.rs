@@ -188,7 +188,7 @@ where
         }
     }
 
-    fn render(&mut self, target: &mut impl Renderer) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         match self.current_page {
             0 => self.qr_code.render(target),
             1 => self.details.render(target),
