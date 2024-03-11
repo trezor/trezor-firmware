@@ -238,8 +238,12 @@ impl TextLayout {
     }
 
     /// Draw as much text as possible on the current screen.
-    pub fn render_text2(&self, text: &str, target: &mut impl Renderer) -> LayoutFit {
-        self.layout_text(text, &mut self.initial_cursor(), &mut TextRenderer2(target))
+    pub fn render_text2<'s>(&self, text: &str, target: &mut impl Renderer<'s>) -> LayoutFit {
+        self.layout_text(
+            text,
+            &mut self.initial_cursor(),
+            &mut TextRenderer2::new(target),
+        )
     }
 
     /// Loop through the `text` and try to fit it on the current screen,
@@ -537,13 +541,22 @@ impl LayoutSink for TextRenderer {
     }
 }
 
-pub struct TextRenderer2<'a, R>(pub &'a mut R)
+pub struct TextRenderer2<'a, 's, R>(pub &'a mut R, core::marker::PhantomData<&'s ()>)
 where
-    R: Renderer;
+    R: Renderer<'s>;
 
-impl<'a, R> LayoutSink for TextRenderer2<'a, R>
+impl<'a, 's, R> TextRenderer2<'a, 's, R>
 where
-    R: Renderer,
+    R: Renderer<'s>,
+{
+    pub fn new(target: &'a mut R) -> Self {
+        Self(target, core::marker::PhantomData)
+    }
+}
+
+impl<'a, 's, R> LayoutSink for TextRenderer2<'a, 's, R>
+where
+    R: Renderer<'s>,
 {
     fn text(&mut self, cursor: Point, layout: &TextLayout, text: &str) {
         shape::Text::new(cursor, text)

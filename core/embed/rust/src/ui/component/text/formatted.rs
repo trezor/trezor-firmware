@@ -140,8 +140,8 @@ impl<T: StringType + Clone> Component for FormattedText<T> {
         self.layout_content(&mut TextRenderer);
     }
 
-    fn render(&mut self, target: &mut impl Renderer) {
-        self.layout_content(&mut TextRenderer2(target));
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        self.layout_content(&mut TextRenderer2::new(target));
     }
 
     #[cfg(feature = "ui_bounds")]

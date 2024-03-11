@@ -133,8 +133,7 @@ where
         self.formatted.paint();
     }
 
-    pub fn render(&mut self, target: &mut impl Renderer) {
-        self.change_page(self.current_page);
+    pub fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.formatted.render(target);
     }
 

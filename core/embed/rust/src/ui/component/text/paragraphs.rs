@@ -190,7 +190,7 @@ where
         )
     }
 
-    fn render(&mut self, target: &mut impl Renderer) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         Self::foreach_visible(
             &self.source,
             &self.visible,
@@ -620,12 +620,12 @@ impl<T> Checklist<T> {
         );
     }
 
-    fn render_icon(
+    fn render_icon<'s>(
         &self,
         layout: &TextLayout,
         icon: Icon,
         offset: Offset,
-        target: &mut impl Renderer,
+        target: &mut impl Renderer<'s>,
     ) {
         let top_left = Point::new(self.area.x0, layout.bounds.y0);
         shape::ToifImage::new(top_left + offset, icon.toif)
@@ -671,7 +671,7 @@ where
         }
     }
 
-    fn render(&mut self, target: &mut impl Renderer) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.paragraphs.render(target);
 
         let current_visible = self.current.saturating_sub(self.paragraphs.offset.par);

@@ -41,7 +41,7 @@ where
         (self.func)(self.area);
     }
 
-    fn render(&mut self, target: &mut impl Renderer) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let area = self.area;
         shape::Bar::new(area)
             .with_thickness(1)

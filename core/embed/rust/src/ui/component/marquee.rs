@@ -132,7 +132,7 @@ where
         );
     }
 
-    pub fn render_anim(&mut self, target: &mut impl Renderer, offset: i16) {
+    pub fn render_anim<'s>(&'s self, target: &mut impl Renderer<'s>, offset: i16) {
         target.in_window(self.area, &mut |target| {
             let text_height = self.font.text_height();
             let pos = self.area.top_left() + Offset::new(offset, text_height - 1);
@@ -237,7 +237,7 @@ where
         }
     }
 
-    fn render(&mut self, target: &mut impl Renderer) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let now = Instant::now();
 
         match self.state {

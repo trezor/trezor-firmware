@@ -269,11 +269,11 @@ where
         }
     }
 
-    fn render(&mut self, target: &mut impl Renderer) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.erase_btn.render(target);
         self.textbox_pad.render(target);
         if self.textbox.inner().is_empty() {
-            if let Some(ref mut w) = self.major_warning {
+            if let Some(ref w) = self.major_warning {
                 w.render(target);
             } else {
                 self.major_prompt.render(target);
@@ -284,7 +284,7 @@ where
             self.textbox.render(target);
         }
         self.confirm_btn.render(target);
-        for btn in &mut self.digit_btns {
+        for btn in &self.digit_btns {
             btn.render(target);
         }
     }
@@ -389,7 +389,7 @@ impl PinDots {
         }
     }
 
-    fn render_digits(&self, area: Rect, target: &mut impl Renderer) {
+    fn render_digits<'s>(&self, area: Rect, target: &mut impl Renderer<'s>) {
         let center = area.center() + Offset::y(Font::MONO.text_height() / 2);
         let right = center + Offset::x(Font::MONO.text_width("0") * (MAX_VISIBLE_DOTS as i16) / 2);
         let digits = self.digits.len();
@@ -454,7 +454,7 @@ impl PinDots {
         }
     }
 
-    fn render_dots(&self, area: Rect, target: &mut impl Renderer) {
+    fn render_dots<'s>(&self, area: Rect, target: &mut impl Renderer<'s>) {
         let mut cursor = self.size().snap(area.center(), Alignment2D::CENTER);
 
         let digits = self.digits.len();
@@ -533,7 +533,7 @@ impl Component for PinDots {
         }
     }
 
-    fn render(&mut self, target: &mut impl Renderer) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let dot_area = self.area.inset(HEADER_PADDING);
         self.pad.render(target);
         if self.display_digits {

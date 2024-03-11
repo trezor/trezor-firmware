@@ -42,7 +42,7 @@ where
         self.inner.paint()
     }
 
-    fn render(&mut self, target: &mut impl Renderer) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.inner.render(target);
     }
 

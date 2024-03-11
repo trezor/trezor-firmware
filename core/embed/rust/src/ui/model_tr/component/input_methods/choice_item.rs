@@ -111,12 +111,12 @@ impl Choice for ChoiceItem {
 
     /// Painting the item as the main choice in the middle.
     /// Showing both the icon and text, if the icon is available.
-    fn render_center(&self, target: &mut impl Renderer, area: Rect, inverse: bool) {
+    fn render_center<'s>(&self, target: &mut impl Renderer<'s>, area: Rect, inverse: bool) {
         let width = text_icon_width(Some(self.text.as_ref()), self.icon, self.font);
         render_rounded_highlight(
             target,
             area,
-            Offset::new(width, self.font.text_height()),
+            Offset::new(width, self.font.visible_text_height("Ay")),
             inverse,
         );
         render_text_icon(
@@ -149,7 +149,7 @@ impl Choice for ChoiceItem {
     }
 
     /// Painting smaller version of the item on the side.
-    fn render_side(&self, target: &mut impl Renderer, area: Rect) {
+    fn render_side<'s>(&self, target: &mut impl Renderer<'s>, area: Rect) {
         let width = text_icon_width(self.side_text(), self.icon, self.font);
         render_text_icon(
             target,
@@ -188,7 +188,12 @@ fn paint_rounded_highlight(area: Rect, size: Offset, inverse: bool) {
     }
 }
 
-fn render_rounded_highlight(target: &mut impl Renderer, area: Rect, size: Offset, inverse: bool) {
+fn render_rounded_highlight<'s>(
+    target: &mut impl Renderer<'s>,
+    area: Rect,
+    size: Offset,
+    inverse: bool,
+) {
     let bound = theme::BUTTON_OUTLINE;
     let left_bottom = area.bottom_center() + Offset::new(-size.x / 2 - bound, bound + 1);
     let x_size = size.x + 2 * bound;
@@ -257,8 +262,8 @@ fn paint_text_icon(
     }
 }
 
-fn render_text_icon(
-    target: &mut impl Renderer,
+fn render_text_icon<'s>(
+    target: &mut impl Renderer<'s>,
     area: Rect,
     width: i16,
     text: Option<&str>,
@@ -270,7 +275,7 @@ fn render_text_icon(
 
     let mut baseline = area.bottom_center() - Offset::x(width / 2);
     if let Some(icon) = icon {
-        let height_diff = font.text_height() - icon.toif.height();
+        let height_diff = font.visible_text_height("Ay") - icon.toif.height();
         let vertical_offset = Offset::y(-height_diff / 2);
         shape::ToifImage::new(baseline + vertical_offset, icon.toif)
             .with_align(Alignment2D::BOTTOM_LEFT)

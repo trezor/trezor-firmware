@@ -48,12 +48,12 @@ impl LoaderSmall {
         Self { color, ..self }
     }
 
-    pub fn render(self, renderer: &mut impl Renderer) {
+    pub fn render<'s>(self, renderer: &mut impl Renderer<'s>) {
         renderer.render_shape(self);
     }
 }
 
-impl Shape for LoaderSmall {
+impl Shape<'_> for LoaderSmall {
     fn bounds(&self, _cache: &DrawingCache) -> Rect {
         Rect::from_top_left_and_size(self.pos, Offset::uniform(1)).expand(RADIUS + 1)
     }
@@ -78,7 +78,7 @@ impl Shape for LoaderSmall {
     }
 }
 
-impl ShapeClone for LoaderSmall {
+impl ShapeClone<'_> for LoaderSmall {
     fn clone_at_bump<'alloc, T>(self, bump: &'alloc T) -> Option<&'alloc mut dyn Shape>
     where
         T: LocalAllocLeakExt<'alloc>,

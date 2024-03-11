@@ -236,11 +236,11 @@ where
         }
     }
 
-    fn render(&mut self, target: &mut impl Renderer) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.bg.render(target);
         self.content_pad.render(target);
 
-        if let Some(info) = self.info.as_mut() {
+        if let Some(info) = self.info.as_ref() {
             if self.show_info {
                 info.close_button.render(target);
                 info.title.render(target);
@@ -259,7 +259,7 @@ where
         self.alert.render(target);
         self.left_button.render(target);
         self.right_button.render(target);
-        match &mut self.title {
+        match &self.title {
             ConfirmTitle::Text(label) => label.render(target),
             ConfirmTitle::Icon(icon) => {
                 shape::ToifImage::new(Point::new(screen().center().x, ICON_TOP), icon.toif)

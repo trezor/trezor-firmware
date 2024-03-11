@@ -16,7 +16,7 @@ pub trait Choice {
     // and therefore has a default implementation.
     fn paint_center(&self, area: Rect, inverse: bool);
 
-    fn render_center(&self, target: &mut impl Renderer, _area: Rect, _inverse: bool);
+    fn render_center<'s>(&self, target: &mut impl Renderer<'s>, _area: Rect, _inverse: bool);
 
     fn width_center(&self) -> i16 {
         0
@@ -24,7 +24,7 @@ pub trait Choice {
 
     fn paint_side(&self, _area: Rect) {}
 
-    fn render_side(&self, _target: &mut impl Renderer, _area: Rect) {}
+    fn render_side<'s>(&self, _target: &mut impl Renderer<'s>, _area: Rect) {}
 
     fn width_side(&self) -> i16 {
         0
@@ -257,11 +257,11 @@ where
 
     /// Display current, previous and next choices according to
     /// the current ChoiceItem.
-    fn render_choices(&mut self, target: &mut impl Renderer) {
+    fn render_choices<'s>(&'s self, target: &mut impl Renderer<'s>) {
         // Getting the row area for the choices - so that displaying
         // items in the used font will show them in the middle vertically.
         let area_height_half = self.pad.area.height() / 2;
-        let font_size_half = theme::FONT_CHOICE_ITEMS.text_height() / 2;
+        let font_size_half = theme::FONT_CHOICE_ITEMS.visible_text_height("Ay") / 2;
         let center_row_area = self
             .pad
             .area
@@ -341,14 +341,9 @@ where
     }
 
     /// Display the current choice in the middle.
-    fn show_current_choice2(&mut self, target: &mut impl Renderer, area: Rect) {
+    fn show_current_choice2<'s>(&'s self, target: &mut impl Renderer<'s>, area: Rect) {
         self.get_current_item()
             .render_center(target, area, self.inverse_selected_item);
-
-        // Color inversion is just one-time thing.
-        if self.inverse_selected_item {
-            self.inverse_selected_item = false;
-        }
     }
 
     /// Display all the choices fitting on the left side.
@@ -395,7 +390,7 @@ where
 
     /// Display all the choices fitting on the left side.
     /// Going as far as possible.
-    fn show_left_choices2(&self, target: &mut impl Renderer, area: Rect) {
+    fn show_left_choices2<'s>(&'s self, target: &mut impl Renderer<'s>, area: Rect) {
         // NOTE: page index can get negative here, so having it as i16 instead of usize
         let mut page_index = self.page_counter as i16 - 1;
         let mut current_area = area.split_right(self.items_distance).0;
@@ -478,7 +473,7 @@ where
 
     /// Display all the choices fitting on the right side.
     /// Going as far as possible.
-    fn show_right_choices2(&self, target: &mut impl Renderer, area: Rect) {
+    fn show_right_choices2<'s>(&'s self, target: &mut impl Renderer<'s>, area: Rect) {
         let mut page_index = self.page_counter + 1;
         let mut current_area = area.split_left(self.items_distance).1;
         while current_area.width() > 0 {
@@ -624,7 +619,6 @@ where
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-
         // Cancel highlighting of the current choice.
         // The Highlighting is started by pressing the middle button and
         // canceled immediately when any other event is processed
@@ -728,7 +722,7 @@ where
         self.paint_choices();
     }
 
-    fn render(&mut self, target: &mut impl Renderer) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.pad.render(target);
         self.buttons.render(target);
         self.render_choices(target);

@@ -77,13 +77,13 @@ impl LoaderCircular {
         Rect::from_top_left_and_size(pt, Offset::uniform(self.scale))
     }
 
-    pub fn render(self, renderer: &mut impl Renderer) {
+    pub fn render<'s>(self, renderer: &mut impl Renderer<'s>) {
         renderer.render_shape(self);
     }
 }
 
-impl Shape for LoaderCircular {
-    fn bounds(&self, _cache: &DrawingCache) -> Rect {
+impl<'s> Shape<'s> for LoaderCircular {
+    fn bounds(&self, _cache: &DrawingCache<'s>) -> Rect {
         let cells = self.cells();
 
         if cells.is_empty() {
@@ -106,7 +106,7 @@ impl Shape for LoaderCircular {
     }
 }
 
-impl ShapeClone for LoaderCircular {
+impl ShapeClone<'_> for LoaderCircular {
     fn clone_at_bump<'alloc, T>(self, bump: &'alloc T) -> Option<&'alloc mut dyn Shape>
     where
         T: LocalAllocLeakExt<'alloc>,

@@ -298,16 +298,15 @@ impl Component for PassphraseKeyboard {
         }
     }
 
-    fn render(&mut self, target: &mut impl Renderer) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.input.render(target);
         self.scrollbar.render(target);
         self.confirm.render(target);
         self.back.render(target);
-        for btn in &mut self.keys {
+        for btn in &self.keys {
             btn.render(target);
         }
-        if self.fade {
-            self.fade = false;
+        if self.fade.take() {
             // Note that this is blocking and takes some time.
             display::fade_backlight(theme::BACKLIGHT_NORMAL);
         }
@@ -393,7 +392,7 @@ impl Component for Input {
         }
     }
 
-    fn render(&mut self, target: &mut impl Renderer) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let style = theme::label_keyboard();
 
         let text_baseline = self.area.top_left() + Offset::y(style.text_font.text_height())

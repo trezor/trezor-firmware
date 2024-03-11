@@ -167,7 +167,12 @@ impl Loader {
         );
     }
 
-    pub fn render_loader(&mut self, target: &mut impl Renderer, style: &LoaderStyle, done: i32) {
+    pub fn render_loader<'s>(
+        &'s self,
+        target: &mut impl Renderer<'s>,
+        style: &LoaderStyle,
+        done: i32,
+    ) {
         let width = self.area.width();
         // NOTE: need to calculate this in `i32`, it would overflow using `i16`
         let split_point = (((width as i32 + 1) * done) / (display::LOADER_MAX as i32)) as i16;
@@ -266,7 +271,7 @@ impl Component for Loader {
         }
     }
 
-    fn render(&mut self, target: &mut impl Renderer) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         // TODO: Consider passing the current instant along with the event -- that way,
         // we could synchronize painting across the component tree. Also could be useful
         // in automated tests.
@@ -397,7 +402,7 @@ where
         self.loader.paint();
     }
 
-    fn render(&mut self, target: &mut impl Renderer) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.loader.render(target);
     }
 }

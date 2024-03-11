@@ -268,7 +268,7 @@ impl Component for Button {
         }
     }
 
-    fn render(&mut self, target: &mut impl Renderer) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let style = self.style();
         let fg_color = style.text_color;
         let bg_color = fg_color.negate();
