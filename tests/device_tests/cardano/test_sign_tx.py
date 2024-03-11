@@ -25,14 +25,14 @@ from ...common import parametrize_using_common_fixtures
 pytestmark = [
     pytest.mark.altcoin,
     pytest.mark.cardano,
-    pytest.mark.skip_t1,
+    pytest.mark.skip_t1b1,
 ]
 
 
 def show_details_input_flow(client: Client):
     yield
     client.debug.wait_layout()
-    # Clicking for model T, pressing right for model R
+    # Touch screen click vs pressing right for T2B1
     if client.model in (models.T2T1, models.T3T1):
         SHOW_ALL_BUTTON_POSITION = (143, 167)
         client.debug.click(SHOW_ALL_BUTTON_POSITION)

@@ -24,7 +24,7 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 
 from ..translations import LANGUAGES, build_and_sign_blob, get_lang_json, set_language
 
-pytestmark = pytest.mark.skip_t1
+pytestmark = pytest.mark.skip_t1b1
 
 
 MAX_DATA_LENGTH = {

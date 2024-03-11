@@ -241,7 +241,7 @@ def test_session_enable_passphrase(client: Client):
     assert _get_xpub(client, passphrase="A") == XPUB_PASSPHRASES["A"]
 
 
-@pytest.mark.skip_t1
+@pytest.mark.skip_t1b1
 @pytest.mark.setup_client(passphrase=True)
 def test_passphrase_on_device(client: Client):
     _init_session(client)
@@ -280,7 +280,7 @@ def test_passphrase_on_device(client: Client):
     assert response.xpub == XPUB_PASSPHRASES["A"]
 
 
-@pytest.mark.skip_t1
+@pytest.mark.skip_t1b1
 @pytest.mark.setup_client(passphrase=True)
 def test_passphrase_always_on_device(client: Client):
     # Let's start the communication by calling Initialize.
@@ -314,8 +314,8 @@ def test_passphrase_always_on_device(client: Client):
     assert response.xpub == XPUB_PASSPHRASES["A"]
 
 
-@pytest.mark.skip_t2
-@pytest.mark.skip_tr
+@pytest.mark.skip_t2t1
+@pytest.mark.skip_t2b1
 @pytest.mark.skip_t3t1
 @pytest.mark.setup_client(passphrase="")
 def test_passphrase_on_device_not_possible_on_t1(client: Client):
@@ -380,7 +380,7 @@ def test_passphrase_length(client: Client):
     call(passphrase="A" * 49 + "š", expected_result=False)
 
 
-@pytest.mark.skip_t1
+@pytest.mark.skip_t1b1
 @pytest.mark.setup_client(passphrase=True)
 def test_hide_passphrase_from_host(client: Client):
     # Without safety checks, turning it on fails
@@ -480,7 +480,7 @@ def _get_xpub_cardano(client: Client, passphrase):
     return response.xpub
 
 
-@pytest.mark.skip_t1
+@pytest.mark.skip_t1b1
 @pytest.mark.altcoin
 @pytest.mark.setup_client(passphrase=True)
 def test_cardano_passphrase(client: Client):

@@ -90,11 +90,11 @@ def parametrize_using_common_fixtures(*paths: str) -> "MarkDecorator":
             skip_marks = []
             for skip_model in skip_models:
                 if skip_model in ("t1", "t1b1"):
-                    skip_marks.append(pytest.mark.skip_t1)
+                    skip_marks.append(pytest.mark.skip_t1b1)
                 if skip_model in ("t2", "t2t1"):
-                    skip_marks.append(pytest.mark.skip_t2)
+                    skip_marks.append(pytest.mark.skip_t2t1)
                 if skip_model in ("tr", "t2b1"):
-                    skip_marks.append(pytest.mark.skip_tr)
+                    skip_marks.append(pytest.mark.skip_t2b1)
                 if skip_model == "t3t1":
                     skip_marks.append(pytest.mark.skip_t3t1)
 

@@ -28,7 +28,7 @@ WIPE_CODE4 = "4321"
 WIPE_CODE6 = "456789"
 WIPE_CODE_MAX = "".join(chr((i % 10) + ord("0")) for i in range(MAX_PIN_LENGTH))
 
-pytestmark = pytest.mark.skip_t1
+pytestmark = pytest.mark.skip_t1b1
 
 
 def _check_wipe_code(client: Client, pin: str, wipe_code: str):

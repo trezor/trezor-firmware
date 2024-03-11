@@ -16,7 +16,7 @@
 
 import pytest
 
-from trezorlib import btc, messages
+from trezorlib import btc, messages, models
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import H_, parse_path
@@ -293,7 +293,7 @@ def test_send_mixed(client: Client):
                 request_input(0),
                 request_input(1),
                 request_input(2),
-                (client.features.model == "1", request_input(3)),
+                (client.model is models.T1B1, request_input(3)),
                 request_finished(),
             ]
         )

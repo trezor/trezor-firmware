@@ -18,7 +18,7 @@ from typing import Any
 
 import pytest
 
-from trezorlib import device, exceptions, messages
+from trezorlib import device, exceptions, messages, models
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 
 from ...common import MNEMONIC12
@@ -60,7 +60,7 @@ def do_recover_core(client: Client, mnemonic: list[str], mismatch: bool = False)
 
 
 def do_recover(client: Client, mnemonic: list[str], mismatch: bool = False):
-    if client.features.model == "1":
+    if client.model is models.T1B1:
         return do_recover_legacy(client, mnemonic)
     else:
         return do_recover_core(client, mnemonic, mismatch)
@@ -80,15 +80,15 @@ def test_seed_mismatch(client: Client):
         do_recover(client, ["all"] * 12, mismatch=True)
 
 
-@pytest.mark.skip_t2
-@pytest.mark.skip_tr
+@pytest.mark.skip_t2t1
+@pytest.mark.skip_t2b1
 @pytest.mark.skip_t3t1
 def test_invalid_seed_t1(client: Client):
     with pytest.raises(exceptions.TrezorFailure, match="Invalid seed"):
         do_recover(client, ["stick"] * 12)
 
 
-@pytest.mark.skip_t1
+@pytest.mark.skip_t1b1
 def test_invalid_seed_core(client: Client):
     with client:
         client.watch_layout()

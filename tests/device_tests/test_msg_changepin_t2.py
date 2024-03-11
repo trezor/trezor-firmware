@@ -31,7 +31,7 @@ PIN4 = "1234"
 PIN60 = "789456" * 10
 PIN_MAX = "".join(chr((i % 10) + ord("0")) for i in range(MAX_PIN_LENGTH))
 
-pytestmark = pytest.mark.skip_t1
+pytestmark = pytest.mark.skip_t1b1
 
 
 def _check_pin(client: Client, pin: str):

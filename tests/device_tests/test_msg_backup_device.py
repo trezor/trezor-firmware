@@ -18,7 +18,7 @@
 import pytest
 import shamir_mnemonic as shamir
 
-from trezorlib import device, messages
+from trezorlib import device, messages, models
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 
@@ -34,7 +34,7 @@ from ..input_flows import (
 )
 
 
-@pytest.mark.skip_t1  # TODO we want this for t1 too
+@pytest.mark.skip_t1b1  # TODO we want this for t1 too
 @pytest.mark.setup_client(needs_backup=True, mnemonic=MNEMONIC12)
 def test_backup_bip39(client: Client):
     assert client.features.needs_backup is True
@@ -53,14 +53,14 @@ def test_backup_bip39(client: Client):
     assert client.features.backup_type is messages.BackupType.Bip39
 
 
-@pytest.mark.skip_t1
+@pytest.mark.skip_t1b1
 @pytest.mark.setup_client(needs_backup=True, mnemonic=MNEMONIC_SLIP39_BASIC_20_3of6)
 @pytest.mark.parametrize(
     "click_info", [True, False], ids=["click_info", "no_click_info"]
 )
 def test_backup_slip39_basic(client: Client, click_info: bool):
-    if click_info and client.features.model == "Safe 3":
-        pytest.skip("click_info not implemented on TR")
+    if click_info and client.model is models.T2B1:
+        pytest.skip("click_info not implemented on T2B1")
 
     assert client.features.needs_backup is True
 
@@ -81,14 +81,14 @@ def test_backup_slip39_basic(client: Client, click_info: bool):
     assert expected_ms == actual_ms
 
 
-@pytest.mark.skip_t1
+@pytest.mark.skip_t1b1
 @pytest.mark.setup_client(needs_backup=True, mnemonic=MNEMONIC_SLIP39_ADVANCED_20)
 @pytest.mark.parametrize(
     "click_info", [True, False], ids=["click_info", "no_click_info"]
 )
 def test_backup_slip39_advanced(client: Client, click_info: bool):
-    if click_info and client.features.model == "Safe 3":
-        pytest.skip("click_info not implemented on TR")
+    if click_info and client.model is models.T2B1:
+        pytest.skip("click_info not implemented on T2B1")
 
     assert client.features.needs_backup is True
 

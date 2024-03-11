@@ -140,7 +140,7 @@ def _raw_client(request: pytest.FixtureRequest) -> Client:
 
     # Setting the appropriate language
     # Not doing it for T1
-    if client.features.model != "1":
+    if client.model is not models.T1B1:
         lang = request.session.config.getoption("lang") or "en"
         assert isinstance(lang, str)
         translations.set_language(client, lang)
@@ -179,8 +179,8 @@ def client(
 
     Every test function that requires a client instance will get it from here.
     If we can't connect to a debuggable device, the test will fail.
-    If 'skip_t2' is used and TT is connected, the test is skipped. Vice versa with T1
-    and 'skip_t1'. Same with TR.
+    If 'skip_t2t1' is used and TT is connected, the test is skipped. Vice versa with T1
+    and 'skip_t1b1'. Same with T2B1, T3T1.
 
     The client instance is wiped and preconfigured with "all all all..." mnemonic, no
     password and no pin. It is possible to customize this with the `setup_client`
@@ -198,15 +198,21 @@ def client(
 
     @pytest.mark.experimental
     """
-    if request.node.get_closest_marker("skip_t2") and _raw_client.features.model == "T":
+    if (
+        request.node.get_closest_marker("skip_t2t1")
+        and _raw_client.model is models.T2T1
+    ):
         pytest.skip("Test excluded on Trezor T")
-    if request.node.get_closest_marker("skip_t1") and _raw_client.features.model == "1":
+    if (
+        request.node.get_closest_marker("skip_t1b1")
+        and _raw_client.model is models.T1B1
+    ):
         pytest.skip("Test excluded on Trezor 1")
     if (
-        request.node.get_closest_marker("skip_tr")
-        and _raw_client.features.model == "Safe 3"
+        request.node.get_closest_marker("skip_t2b1")
+        and _raw_client.model is models.T2B1
     ):
-        pytest.skip("Test excluded on Trezor R")
+        pytest.skip("Test excluded on Trezor T2B1")
     if (
         request.node.get_closest_marker("skip_t3t1")
         and _raw_client.model is models.T3T1
@@ -245,7 +251,7 @@ def client(
     wipe_device(_raw_client)
 
     # Load language again, as it got erased in wipe
-    if _raw_client.features.model != "1":
+    if _raw_client.model is not models.T1B1:
         lang = request.session.config.getoption("lang") or "en"
         assert isinstance(lang, str)
         if lang != "en":
@@ -392,9 +398,9 @@ def pytest_configure(config: "Config") -> None:
     Registers known markers, enables verbose output if requested.
     """
     # register known markers
-    config.addinivalue_line("markers", "skip_t1: skip the test on Trezor One")
-    config.addinivalue_line("markers", "skip_t2: skip the test on Trezor T")
-    config.addinivalue_line("markers", "skip_tr: skip the test on Trezor R")
+    config.addinivalue_line("markers", "skip_t1b1: skip the test on Trezor One")
+    config.addinivalue_line("markers", "skip_t2t1: skip the test on Trezor T")
+    config.addinivalue_line("markers", "skip_t2b1: skip the test on Trezor T2B1")
     config.addinivalue_line("markers", "skip_t3t1: skip the test on Trezor T3T1")
     config.addinivalue_line(
         "markers", "experimental: enable experimental features on Trezor"
@@ -419,7 +425,8 @@ def pytest_runtest_setup(item: pytest.Item) -> None:
     both T1 and TT.
     """
     if all(
-        item.get_closest_marker(marker) for marker in ("skip_t1", "skip_t2", "skip_tr")
+        item.get_closest_marker(marker)
+        for marker in ("skip_t1b1", "skip_t2t1", "skip_t2b1")
     ):
         raise RuntimeError("Don't skip tests for all trezor models!")
 

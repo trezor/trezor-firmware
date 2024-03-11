@@ -9,7 +9,7 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 
 from ..common import compact_size
 
-pytestmark = [pytest.mark.skip_t1, pytest.mark.skip_t2]
+pytestmark = [pytest.mark.skip_t1b1, pytest.mark.skip_t2t1]
 
 ROOT_PUBLIC_KEY = bytes.fromhex(
     "047f77368dea2d4d61e989f474a56723c3212dacf8a808d8795595ef38441427c4389bc454f02089d7f08b873005e4c28d432468997871c0bf286fd3861e21e96a"
