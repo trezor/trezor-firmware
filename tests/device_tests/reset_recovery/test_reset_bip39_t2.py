@@ -17,7 +17,7 @@
 import pytest
 from mnemonic import Mnemonic
 
-from trezorlib import device, messages
+from trezorlib import device, messages, models
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 
@@ -28,7 +28,7 @@ from ...input_flows import (
     InputFlowBip39ResetPIN,
 )
 
-pytestmark = [pytest.mark.skip_t1]
+pytestmark = [pytest.mark.skip_t1b1]
 
 
 def reset_device(client: Client, strength: int):
@@ -164,7 +164,7 @@ def test_failed_pin(client: Client):
     ret = client.call_raw(messages.ButtonAck())
 
     # Re-enter PIN for TR
-    if client.debug.model == "Safe 3":
+    if client.model is models.T2B1:
         assert isinstance(ret, messages.ButtonRequest)
         client.debug.press_yes()
         ret = client.call_raw(messages.ButtonAck())

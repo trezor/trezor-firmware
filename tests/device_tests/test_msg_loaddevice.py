@@ -16,7 +16,7 @@
 
 import pytest
 
-from trezorlib import debuglink, device
+from trezorlib import debuglink, device, models
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.messages import BackupType
 
@@ -59,7 +59,7 @@ def test_load_device_2(client: Client):
     state = client.debug.state()
     assert state.mnemonic_secret == MNEMONIC12.encode()
 
-    if client.features.model == "1":
+    if client.model is models.T1B1:
         # we do not send PIN in DebugLinkState in Core
         assert state.pin == "1234"
     assert state.passphrase_protection is True
@@ -68,7 +68,7 @@ def test_load_device_2(client: Client):
     assert address == "mx77VZjTVixVsU7nCtAKHnGFdsyNCnsWWw"
 
 
-@pytest.mark.skip_t1
+@pytest.mark.skip_t1b1
 def test_load_device_slip39_basic(client: Client):
     debuglink.load_device(
         client,
@@ -80,7 +80,7 @@ def test_load_device_slip39_basic(client: Client):
     assert client.features.backup_type == BackupType.Slip39_Basic
 
 
-@pytest.mark.skip_t1
+@pytest.mark.skip_t1b1
 def test_load_device_slip39_advanced(client: Client):
     debuglink.load_device(
         client,

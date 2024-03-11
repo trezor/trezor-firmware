@@ -31,7 +31,7 @@ if TYPE_CHECKING:
 
 
 # T2B1-only
-pytestmark = [pytest.mark.skip_t1, pytest.mark.skip_t2, pytest.mark.skip_t3t1]
+pytestmark = [pytest.mark.skip_t1b1, pytest.mark.skip_t2t1, pytest.mark.skip_t3t1]
 
 
 @contextmanager

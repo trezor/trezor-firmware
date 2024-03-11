@@ -18,7 +18,7 @@ import time
 
 import pytest
 
-from trezorlib import device, messages
+from trezorlib import device, messages, models
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 
@@ -32,7 +32,7 @@ pytestmark = pytest.mark.setup_client(pin=PIN4)
 def pin_request(client: Client):
     return (
         messages.PinMatrixRequest
-        if client.features.model == "1"
+        if client.model is models.T1B1
         else messages.ButtonRequest
     )
 
@@ -111,7 +111,7 @@ def test_apply_auto_lock_delay_out_of_range(client: Client, seconds):
             device.apply_settings(client, auto_lock_delay_ms=delay)
 
 
-@pytest.mark.skip_t1
+@pytest.mark.skip_t1b1
 def test_autolock_cancels_ui(client: Client):
     set_autolock_delay(client, 10 * 1000)
 

@@ -26,7 +26,7 @@ from ...input_flows import InputFlowEIP712Cancel, InputFlowEIP712ShowMore
 pytestmark = [pytest.mark.altcoin, pytest.mark.ethereum]
 
 
-@pytest.mark.skip_t1
+@pytest.mark.skip_t1b1
 @parametrize_using_common_fixtures("ethereum/sign_typed_data.json")
 def test_ethereum_sign_typed_data(client: Client, parameters, result):
     with client:
@@ -41,8 +41,8 @@ def test_ethereum_sign_typed_data(client: Client, parameters, result):
         assert f"0x{ret.signature.hex()}" == result["sig"]
 
 
-@pytest.mark.skip_t2
-@pytest.mark.skip_tr
+@pytest.mark.skip_t2t1
+@pytest.mark.skip_t2b1
 @pytest.mark.skip_t3t1
 @parametrize_using_common_fixtures("ethereum/sign_typed_data.json")
 def test_ethereum_sign_typed_data_blind(client: Client, parameters, result):
@@ -97,7 +97,7 @@ DATA = {
 }
 
 
-@pytest.mark.skip_t1
+@pytest.mark.skip_t1b1
 def test_ethereum_sign_typed_data_show_more_button(client: Client):
     with client:
         client.watch_layout()
@@ -111,7 +111,7 @@ def test_ethereum_sign_typed_data_show_more_button(client: Client):
         )
 
 
-@pytest.mark.skip_t1
+@pytest.mark.skip_t1b1
 def test_ethereum_sign_typed_data_cancel(client: Client):
     with client, pytest.raises(exceptions.Cancelled):
         client.watch_layout()

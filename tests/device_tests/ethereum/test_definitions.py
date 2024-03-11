@@ -197,10 +197,10 @@ MethodType = Callable[[Client, int, "bytes | None"], None]
 METHODS = (
     _call_getaddress,
     _call_signmessage,
-    pytest.param(_call_sign_typed_data, marks=pytest.mark.skip_t1),
+    pytest.param(_call_sign_typed_data, marks=pytest.mark.skip_t1b1),
     pytest.param(
         _call_sign_typed_data_hash,
-        marks=[pytest.mark.skip_t2, pytest.mark.skip_tr, pytest.mark.skip_t3t1],
+        marks=[pytest.mark.skip_t2t1, pytest.mark.skip_t2b1, pytest.mark.skip_t3t1],
     ),
 )
 

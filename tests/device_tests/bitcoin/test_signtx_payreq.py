@@ -18,7 +18,7 @@ from collections import namedtuple
 
 import pytest
 
-from trezorlib import btc, messages, misc
+from trezorlib import btc, messages, misc, models
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
@@ -33,15 +33,15 @@ PREV_HASH, PREV_TX = forge_prevtx([(INPUT_ADDRESS, 12_300_000)], network="testne
 PREV_TXES = {PREV_HASH: PREV_TX}
 
 
-pytestmark = [pytest.mark.skip_t1, pytest.mark.experimental]
+pytestmark = [pytest.mark.skip_t1b1, pytest.mark.experimental]
 
 
-def case(id, *args, altcoin: bool = False, skip_tr: bool = False):
+def case(id, *args, altcoin: bool = False, skip_t2b1: bool = False):
     marks = []
     if altcoin:
         marks.append(pytest.mark.altcoin)
-    if skip_tr:
-        marks.append(pytest.mark.skip_tr)
+    if skip_t2b1:
+        marks.append(pytest.mark.skip_t2b1)
     return pytest.param(*args, id=id, marks=marks)
 
 
@@ -114,13 +114,13 @@ SERIALIZED_TX = "01000000000101e29305e85821ea86f2bca1fcfe45e7cb0c8de87b612479ee6
             "out0",
             (PaymentRequestParams([0], memos1, get_nonce=True),),
             altcoin=True,
-            skip_tr=True,
+            skip_t2b1=True,
         ),
         case(
             "out1",
             (PaymentRequestParams([1], memos2, get_nonce=True),),
             altcoin=True,
-            skip_tr=True,
+            skip_t2b1=True,
         ),
         case("out2", (PaymentRequestParams([2], [], get_nonce=True),)),
         case(
@@ -184,8 +184,8 @@ def test_payment_request(client: Client, payment_request_params):
 
 
 def test_payment_request_details(client: Client):
-    if client.features.model == "Safe 3":
-        pytest.skip("Details not implemented on TR")
+    if client.model is models.T2B1:
+        pytest.skip("Details not implemented on T2B1")
 
     # Test that payment request details are shown when requested.
     outputs[0].payment_req_index = 0
@@ -275,7 +275,7 @@ def test_payment_req_wrong_mac_refund(client: Client):
 
 
 @pytest.mark.altcoin
-@pytest.mark.skip_tr
+@pytest.mark.skip_t2b1
 def test_payment_req_wrong_mac_purchase(client: Client):
     # Test wrong MAC in payment request memo.
     memo = CoinPurchaseMemo(

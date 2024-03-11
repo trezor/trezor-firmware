@@ -16,7 +16,7 @@
 
 import pytest
 
-from trezorlib import btc, messages
+from trezorlib import btc, messages, models
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import H_, parse_path
@@ -417,7 +417,7 @@ def test_attack_mixed_inputs(client: Client):
         request_finished(),
     ]
 
-    if client.features.model == "1":
+    if client.model is models.T1B1:
         # T1 asks for first input for witness again
         expected_responses.insert(-2, request_input(0))
 
@@ -436,7 +436,7 @@ def test_attack_mixed_inputs(client: Client):
     # In Phase 1 make the user confirm a lower value of the segwit input.
     inp2.amount = FAKE_AMOUNT
 
-    if client.features.model == "1":
+    if client.model is models.T1B1:
         # T1 fails as soon as it encounters the fake amount.
         expected_responses = (
             expected_responses[:4] + expected_responses[5:15] + [messages.Failure()]

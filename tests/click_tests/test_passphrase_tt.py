@@ -30,7 +30,7 @@ if TYPE_CHECKING:
     from ..device_handler import BackgroundDeviceHandler
 
 
-pytestmark = [pytest.mark.skip_t1, pytest.mark.skip_tr]
+pytestmark = [pytest.mark.skip_t1b1, pytest.mark.skip_t2b1]
 
 # TODO: it is not possible to cancel the passphrase entry on TT
 # NOTE: the prompt (underscoring) is not there when a space is entered

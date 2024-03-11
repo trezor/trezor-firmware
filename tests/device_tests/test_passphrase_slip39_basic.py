@@ -22,7 +22,7 @@ from ..common import MNEMONIC_SLIP39_BASIC_20_3of6, get_test_address
 
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC_SLIP39_BASIC_20_3of6, passphrase="TREZOR")
-@pytest.mark.skip_t1
+@pytest.mark.skip_t1b1
 def test_3of6_passphrase(client: Client):
     """
     BIP32 Root Key for passphrase TREZOR:
@@ -41,7 +41,7 @@ def test_3of6_passphrase(client: Client):
     ),
     passphrase="TREZOR",
 )
-@pytest.mark.skip_t1
+@pytest.mark.skip_t1b1
 def test_2of5_passphrase(client: Client):
     """
     BIP32 Root Key for passphrase TREZOR:

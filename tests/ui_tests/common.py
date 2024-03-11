@@ -234,17 +234,17 @@ class TestCase:
 
     @classmethod
     def build(cls, client: Client, request: pytest.FixtureRequest) -> Self:
-        # FIXME
-        if client.model is models.T2B1:
-            model_name = "R"
-        else:
-            model_name = client.model.name
+        model_name = {
+            models.T1B1: "T1",
+            models.T2T1: "TT",
+            models.T2B1: "TR",
+        }.get(client.model, client.model.internal_name)
         name, group = _get_test_name_and_group(request.node.nodeid)
         full_language = client.features.language
         assert full_language
         language = full_language[:2]
         return cls(
-            model=f"T{model_name}",
+            model=model_name,
             name=name,
             group=group,
             language=language,
