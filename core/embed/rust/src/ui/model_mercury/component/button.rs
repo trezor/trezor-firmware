@@ -535,44 +535,6 @@ impl<T> Button<T> {
             total_height,
         )
     }
-
-    // TODO: delete when ui-t3t1
-    pub fn select_word(
-        words: [T; 3],
-    ) -> CancelInfoConfirm<
-        T,
-        impl Fn(ButtonMsg) -> Option<SelectWordMsg>,
-        impl Fn(ButtonMsg) -> Option<SelectWordMsg>,
-        impl Fn(ButtonMsg) -> Option<SelectWordMsg>,
-    >
-    where
-        T: AsRef<str>,
-    {
-        let btn = move |i, word| {
-            Button::with_text(word)
-                .styled(theme::button_vertical_menu())
-                .map(move |msg| {
-                    (matches!(msg, ButtonMsg::Clicked)).then(|| SelectWordMsg::Selected(i))
-                })
-        };
-
-        let [top, middle, bottom] = words;
-        let total_height = 3 * theme::BUTTON_HEIGHT + 2 * theme::BUTTON_SPACING;
-        FixedHeightBar::bottom(
-            Split::top(
-                theme::BUTTON_HEIGHT,
-                theme::BUTTON_SPACING,
-                btn(0, top),
-                Split::top(
-                    theme::BUTTON_HEIGHT,
-                    theme::BUTTON_SPACING,
-                    btn(1, middle),
-                    btn(2, bottom),
-                ),
-            ),
-            total_height,
-        )
-    }
 }
 
 pub enum CancelConfirmMsg {

@@ -5,7 +5,7 @@ use crate::ui::{
     component::{base::Component, Event, EventCtx},
     display::Icon,
     geometry::Rect,
-    model_mercury::component::button::{Button, IconText},
+    model_mercury::component::button::{Button, ButtonMsg, IconText},
     shape::{Bar, Renderer},
 };
 
@@ -13,20 +13,29 @@ pub enum VerticalMenuChoiceMsg {
     Selected(usize),
 }
 
-type VerticalMenuButtons<T> = Vec<Button<T>, 3>;
+/// Number of buttons.
+/// Presently, VerticalMenu holds only fixed number of buttons.
+/// TODO: for scrollable menu, the implementation must change.
+const N_ITEMS: usize = 3;
 
-/// fixed height of each menu button
+/// Number of visual separators between buttons.
+const N_SEPS: usize = N_ITEMS - 1;
+
+/// Fixed height of each menu button.
 const MENU_BUTTON_HEIGHT: i16 = 64;
-/// fixed height of a bar separating buttons
-const MENU_SEPARATOR_HEIGHT: i16 = 2;
+
+/// Fixed height of a separator.
+const MENU_SEP_HEIGHT: i16 = 2;
+
+type VerticalMenuButtons<T> = Vec<Button<T>, N_ITEMS>;
+type AreasForSeparators = Vec<Rect, N_SEPS>;
 
 pub struct VerticalMenu<T> {
     area: Rect,
+    /// buttons placed vertically from top to bottom
     buttons: VerticalMenuButtons<T>,
-    /// area for a separator between 1st and 2nd button
-    area_sep1: Rect,
-    /// area for a separator between 2nd and 3rd button
-    area_sep2: Rect,
+    /// areas for visual separators between buttons
+    areas_sep: AreasForSeparators,
 }
 
 impl<T> VerticalMenu<T>
@@ -37,8 +46,7 @@ where
         Self {
             area: Rect::zero(),
             buttons,
-            area_sep1: Rect::zero(),
-            area_sep2: Rect::zero(),
+            areas_sep: AreasForSeparators::new(),
         }
     }
     pub fn select_word(words: [T; 3]) -> Self {
@@ -82,33 +90,32 @@ where
     fn place(&mut self, bounds: Rect) -> Rect {
         // VerticalMenu is supposed to be used in Frame, the remaining space is just
         // enought to fit 3 buttons separated by thin bars
-        let height_bounds_expected = 3 * MENU_BUTTON_HEIGHT + 2 * MENU_SEPARATOR_HEIGHT;
+        let height_bounds_expected = 3 * MENU_BUTTON_HEIGHT + 2 * MENU_SEP_HEIGHT;
         assert!(bounds.height() == height_bounds_expected);
 
         self.area = bounds;
-        let (area_button0, rest) = bounds.split_top(MENU_BUTTON_HEIGHT);
-        self.buttons[0].place(area_button0);
-        let (area_sep1, rest) = rest.split_top(MENU_SEPARATOR_HEIGHT);
-        self.area_sep1 = area_sep1;
-        let (area_button1, rest) = rest.split_top(MENU_BUTTON_HEIGHT);
-        self.buttons[1].place(area_button1);
-        let (area_sep2, rest) = rest.split_top(MENU_SEPARATOR_HEIGHT);
-        self.area_sep2 = area_sep2;
-        let (area_button2, _) = rest.split_top(MENU_BUTTON_HEIGHT);
-        self.buttons[2].place(area_button2);
+        let mut remaining = bounds;
+        for i in 0..N_ITEMS {
+            let (area_button, new_remaining) = remaining.split_top(MENU_BUTTON_HEIGHT);
+            self.buttons[i].place(area_button);
+            remaining = new_remaining;
+            if i < N_SEPS {
+                let (area_sep, new_remaining) = remaining.split_top(MENU_SEP_HEIGHT);
+                self.areas_sep.push(area_sep);
+                remaining = new_remaining;
+            }
+        }
+
         self.area
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        if let Some(btnMsg) = self.buttons[0].event(ctx, event) {
-            Some(VerticalMenuChoiceMsg::Selected(0))
-        } else if let Some(btnMsg) = self.buttons[1].event(ctx, event) {
-            Some(VerticalMenuChoiceMsg::Selected(1))
-        } else if let Some(btnMsg) = self.buttons[2].event(ctx, event) {
-            Some(VerticalMenuChoiceMsg::Selected(2))
-        } else {
-            None
+        for (i, button) in self.buttons.iter_mut().enumerate() {
+            if let Some(ButtonMsg::Clicked) = button.event(ctx, event) {
+                return Some(VerticalMenuChoiceMsg::Selected(i));
+            }
         }
+        None
     }
 
     fn paint(&mut self) {
@@ -117,17 +124,15 @@ where
 
     fn render(&mut self, target: &mut impl Renderer) {
         // render buttons separated by thin bars
-        self.buttons[0].render(target);
-        Bar::new(self.area_sep1)
-            .with_thickness(MENU_SEPARATOR_HEIGHT)
-            .with_fg(theme::GREY_EXTRA_DARK)
-            .render(target);
-        self.buttons[1].render(target);
-        Bar::new(self.area_sep2)
-            .with_thickness(MENU_SEPARATOR_HEIGHT)
-            .with_fg(theme::GREY_EXTRA_DARK)
-            .render(target);
-        self.buttons[2].render(target);
+        for button in self.buttons.iter_mut() {
+            button.render(target);
+        }
+        for area in self.areas_sep.iter() {
+            Bar::new(*area)
+                .with_thickness(MENU_SEP_HEIGHT)
+                .with_fg(theme::GREY_EXTRA_DARK)
+                .render(target);
+        }
     }
 
     #[cfg(feature = "ui_bounds")]
