@@ -25,7 +25,7 @@ use super::{
 
 const AREA: Rect = constant::screen();
 const TOP_CENTER: Point = AREA.top_center();
-const LABEL_Y: i16 = constant::HEIGHT - 15;
+const LABEL_Y: i16 = constant::HEIGHT - 18;
 const LABEL_AREA: Rect = AREA.split_top(LABEL_Y).1;
 const LOCKED_INSTRUCTION_Y: i16 = 27;
 const LOCKED_INSTRUCTION_AREA: Rect = AREA.split_top(LOCKED_INSTRUCTION_Y).1;
@@ -141,7 +141,7 @@ where
         let mut outset = Insets::uniform(LABEL_OUTSET);
         // the margin at top is bigger (caused by text-height vs line-height?)
         // compensate by shrinking the outset
-        outset.top -= 2;
+        outset.top -= 5;
         rect_fill(self.label.text_area().outset(outset), theme::BG);
         self.label.paint();
     }

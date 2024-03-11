@@ -178,6 +178,16 @@ impl Font {
         self.text_width(text) - first_char_bearing - last_char_bearing
     }
 
+    pub fn visible_text_height(&self, text: &str) -> i16 {
+        let (mut ascent, mut descent) = (0, 0);
+        for c in text.chars() {
+            let glyph = self.get_glyph(c);
+            ascent = ascent.max(glyph.bearing_y);
+            descent = descent.max(glyph.height - glyph.bearing_y);
+        }
+        ascent + descent
+    }
+
     /// Returning the x-bearing (offset) of the first character.
     /// Useful to enforce that the text is positioned correctly (e.g. centered).
     pub fn start_x_bearing(self, text: &str) -> i16 {
