@@ -32,6 +32,8 @@ use render::{
     homescreen, homescreen_blurred, HomescreenNotification, HomescreenText,
     HOMESCREEN_IMAGE_HEIGHT, HOMESCREEN_IMAGE_WIDTH,
 };
+use crate::ui::constant::screen;
+use crate::ui::model_tt::theme::WHITE;
 
 use super::{theme, Loader, LoaderMsg};
 
@@ -198,59 +200,7 @@ impl Component for Homescreen {
         if self.loader.is_animating() || self.loader.is_completely_grown(Instant::now()) {
             self.paint_loader();
         } else {
-            let mut label_style = theme::TEXT_DEMIBOLD;
-            label_style.text_color = theme::FG;
-
-            let text = HomescreenText {
-                text: self.label,
-                style: label_style,
-                offset: Offset::y(LABEL_Y),
-                icon: None,
-            };
-
-            let notification = self.get_notification();
-
-            let res = get_user_custom_image();
-            let mut show_default = true;
-
-            if let Ok(data) = res {
-                if is_image_jpeg(data.as_ref()) {
-                    let mut input = BufferInput(data.as_ref());
-                    let mut pool = BufferJpegWork::get_cleared();
-                    let mut hs_img = HomescreenJpeg::new(&mut input, pool.buffer.as_mut_slice());
-                    homescreen(
-                        &mut hs_img,
-                        &[text],
-                        notification,
-                        self.paint_notification_only,
-                    );
-                    show_default = false;
-                } else if is_image_toif(data.as_ref()) {
-                    let input = unwrap!(Toif::new(data.as_ref()));
-                    let mut window = [0; UZLIB_WINDOW_SIZE];
-                    let mut hs_img =
-                        HomescreenToif::new(input.decompression_context(Some(&mut window)));
-                    homescreen(
-                        &mut hs_img,
-                        &[text],
-                        notification,
-                        self.paint_notification_only,
-                    );
-                    show_default = false;
-                }
-            }
-
-            if show_default {
-                let mut input = BufferInput(IMAGE_HOMESCREEN);
-                let mut pool = BufferJpegWork::get_cleared();
-                let mut hs_img = HomescreenJpeg::new(&mut input, pool.buffer.as_mut_slice());
-                homescreen(
-                    &mut hs_img,
-                    &[text],
-                    notification,
-                    self.paint_notification_only,
-                );
-            }
+            display::rect_fill(screen(), WHITE);
         }
     }
 
