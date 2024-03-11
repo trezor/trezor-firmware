@@ -76,7 +76,6 @@ where
 
     pub fn text_area(&self) -> Rect {
         // XXX only works on single-line labels
-        assert!(self.layout.bounds.height() <= self.font().text_max_height());
         let available_width = self.layout.bounds.width();
         let width = self.font().text_width(self.text.as_ref());
         let height = self.font().text_height();
