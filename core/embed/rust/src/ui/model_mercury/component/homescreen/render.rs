@@ -504,12 +504,12 @@ impl BlurringContext {
     fn vertical_avg(&mut self) {
         let lines = &mut self.mem.buffer[0..DECOMP_LINES];
         for i in 0..HOMESCREEN_IMAGE_WIDTH as usize {
-            self.totals.buffer[RED_IDX][i] +=
-                lines[self.add_idx][RED_IDX][i] - lines[self.rem_idx][RED_IDX][i];
-            self.totals.buffer[GREEN_IDX][i] +=
-                lines[self.add_idx][GREEN_IDX][i] - lines[self.rem_idx][GREEN_IDX][i];
-            self.totals.buffer[BLUE_IDX][i] +=
-                lines[self.add_idx][BLUE_IDX][i] - lines[self.rem_idx][BLUE_IDX][i];
+            self.totals.buffer[RED_IDX][i] += lines[self.add_idx][RED_IDX][i];
+            self.totals.buffer[GREEN_IDX][i] += lines[self.add_idx][GREEN_IDX][i];
+            self.totals.buffer[BLUE_IDX][i] += lines[self.add_idx][BLUE_IDX][i];
+            self.totals.buffer[RED_IDX][i] -= lines[self.rem_idx][RED_IDX][i];
+            self.totals.buffer[GREEN_IDX][i] -= lines[self.rem_idx][GREEN_IDX][i];
+            self.totals.buffer[BLUE_IDX][i] -= lines[self.rem_idx][BLUE_IDX][i];
         }
     }
 
