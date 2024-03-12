@@ -1,4 +1,5 @@
 use crate::{
+    micropython::{buffer::get_buffer, gc::Gc, obj::Obj},
     strutil::TString,
     translations::TR,
     trezorhal::usb::usb_configured,
