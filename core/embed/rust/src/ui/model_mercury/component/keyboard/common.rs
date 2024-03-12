@@ -131,8 +131,8 @@ pub fn paint_pending_marker(text_baseline: Point, text: &str, font: Font, color:
 }
 
 /// Create a visible "underscoring" of the last letter of a text.
-pub fn render_pending_marker(
-    target: &mut impl Renderer,
+pub fn render_pending_marker<'s>(
+    target: &mut impl Renderer<'s>,
     text_baseline: Point,
     text: &str,
     font: Font,
