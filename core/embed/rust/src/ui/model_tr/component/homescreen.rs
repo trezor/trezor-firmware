@@ -528,6 +528,7 @@ where
         } else {
             let toif_data = unwrap!(Toif::new(image_data));
             shape::ToifImage::new(TOP_CENTER, toif_data)
+                .with_align(Alignment2D::TOP_CENTER)
                 .with_fg(theme::FG)
                 .render(target);
         };

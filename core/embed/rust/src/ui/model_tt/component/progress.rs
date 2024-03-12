@@ -132,8 +132,8 @@ where
         let inactive_color = background_color.blend(active_color, 85);
 
         let (start, end) = if self.indeterminate {
-            let start = (self.value - 100) % 1000;
-            let end = (self.value + 100) % 1000;
+            let start = (self.value as i16 - 100) % 1000;
+            let end = (self.value as i16 + 100) % 1000;
             let start = ((start as i32 * 8 * PI4 as i32) / 1000) as i16;
             let end = ((end as i32 * 8 * PI4 as i32) / 1000) as i16;
             (start, end)

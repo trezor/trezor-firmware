@@ -1,4 +1,3 @@
-use cty::int16_t;
 use trezor_tjpgdec::{BlackHoleOutput, JpegOutput};
 pub use trezor_tjpgdec::{BufferInput, Error, JDEC};
 

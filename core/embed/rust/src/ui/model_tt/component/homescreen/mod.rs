@@ -22,7 +22,7 @@ use crate::{
     ui::{
         constant::HEIGHT,
         display::{
-            tjpgd::{jpeg_test, BufferInput},
+            tjpgd::BufferInput,
             toif::{Toif, ToifFormat},
         },
         model_tt::component::homescreen::render::{
@@ -288,6 +288,13 @@ impl Component for Homescreen {
             }
 
             self.label.map(|t| {
+                let r = Rect::new(Point::new(6, 198), Point::new(234, 233));
+                shape::Bar::new(r)
+                    .with_bg(Color::black())
+                    .with_alpha(89)
+                    .with_radius(3)
+                    .render(target);
+
                 let style = theme::TEXT_DEMIBOLD;
                 let pos = Point::new(self.pad.area.center().x, LABEL_Y);
                 shape::Text::new(pos, t)
@@ -470,7 +477,7 @@ impl Component for Lockscreen {
             shape::JpegImage::new(center, img_data)
                 .with_align(Alignment2D::CENTER)
                 .with_blur(4)
-                .with_dim(130)
+                .with_dim(140)
                 .render(target);
         } else if is_image_toif(img_data) {
             shape::ToifImage::new(center, unwrap!(Toif::new(img_data)))
@@ -559,7 +566,7 @@ impl Component for Lockscreen {
 
 pub fn check_homescreen_format(buffer: &[u8]) -> bool {
     #[cfg(not(feature = "new_rendering"))]
-    let result = is_image_jpeg(buffer) && jpeg_test(buffer);
+    let result = is_image_jpeg(buffer) && crate::ui::display::tjpgd::jpeg_test(buffer);
     #[cfg(feature = "new_rendering")]
     let result = is_image_jpeg(buffer); // !@# TODO: test like if `new_rendering` is off
 

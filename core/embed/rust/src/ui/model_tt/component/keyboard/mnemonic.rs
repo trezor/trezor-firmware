@@ -184,9 +184,12 @@ where
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        self.prompt.render(target);
-        self.input.render(target);
-        self.back.render(target);
+        if self.input.inner().inner().is_empty() {
+            self.prompt.render(target);
+        } else {
+            self.input.render(target);
+            self.back.render(target);
+        }
 
         for btn in &self.keys {
             btn.render(target);
