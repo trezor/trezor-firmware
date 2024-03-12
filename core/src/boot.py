@@ -28,7 +28,9 @@ def enforce_welcome_screen_duration() -> None:
     # Not wasting the time in emulator debug builds (debugging and development)
     if __debug__ and utils.EMULATOR:
         return
-    while utime.ticks_ms() - welcome_screen_start_ms < _WELCOME_SCREEN_MS:
+    while (
+        utime.ticks_diff(utime.ticks_ms(), welcome_screen_start_ms) < _WELCOME_SCREEN_MS
+    ):
         utime.sleep_ms(100)
 
 
