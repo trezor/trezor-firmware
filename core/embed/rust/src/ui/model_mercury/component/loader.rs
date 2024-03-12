@@ -209,7 +209,7 @@ impl Component for Loader {
         }
     }
 
-    fn render(&mut self, target: &mut impl Renderer) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         // TODO: Consider passing the current instant along with the event -- that way,
         // we could synchronize painting across the component tree. Also could be useful
         // in automated tests.
@@ -250,7 +250,7 @@ impl Component for Loader {
             if let Some((icon, color)) = style.icon {
                 shape::ToifImage::new(center, icon.toif)
                     .with_align(Alignment2D::CENTER)
-                    .with_bg(color)
+                    .with_fg(color)
                     .render(target);
             }
         }
