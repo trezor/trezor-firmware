@@ -161,5 +161,5 @@ impl Component for Swipe {
 
     fn paint(&mut self) {}
 
-    fn render(&mut self, _target: &mut impl Renderer) {}
+    fn render<'s>(&'s self, _target: &mut impl Renderer<'s>) {}
 }

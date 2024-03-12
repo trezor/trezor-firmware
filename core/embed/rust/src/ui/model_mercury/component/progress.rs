@@ -123,7 +123,7 @@ where
         self.description.paint();
     }
 
-    fn render(&mut self, target: &mut impl Renderer) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.title.render(target);
 
         let center = constant::screen().center() + Offset::y(self.loader_y_offset);
