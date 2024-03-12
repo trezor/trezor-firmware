@@ -21,8 +21,8 @@ use crate::{
             base::ComponentExt,
             connect::Connect,
             image::BlendedImage,
+            jpeg::{ImageBuffer, Jpeg},
             paginated::{PageMsg, Paginate},
-            painter,
             placed::GridPlaced,
             text::{
                 op::OpTextLayout,
@@ -211,10 +211,7 @@ where
     }
 }
 
-impl<F> ComponentMsgObj for painter::Painter<F>
-where
-    F: FnMut(geometry::Rect),
-{
+impl ComponentMsgObj for Jpeg {
     fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
         unreachable!()
     }
@@ -648,26 +645,18 @@ extern "C" fn new_confirm_properties(n_args: usize, args: *const Obj, kwargs: *m
 extern "C" fn new_confirm_homescreen(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
-        let data: Obj = kwargs.get(Qstr::MP_QSTR_image)?;
+        let image: Obj = kwargs.get(Qstr::MP_QSTR_image)?;
 
-        // Layout needs to hold the Obj to play nice with GC. Obj is resolved to &[u8]
-        // in every paint pass.
-        let buffer_func = move || {
-            // SAFETY: We expect no existing mutable reference. Resulting reference is
-            //         discarded before returning to micropython.
-            let buffer = unsafe { unwrap!(get_buffer(data)) };
-            // Incoming data may be empty, meaning we should display default homescreen
-            // image.
-            if buffer.is_empty() {
-                theme::IMAGE_HOMESCREEN
-            } else {
-                buffer
-            }
-        };
+        let mut jpeg = unwrap!(ImageBuffer::from_object(image));
 
-        let size = match jpeg_info(buffer_func()) {
-            Some(info) => info.0,
-            _ => return Err(value_error!("Invalid image.")),
+        if jpeg.is_empty() {
+            // Incoming data may be empty, meaning we should
+            // display default homescreen image.
+            jpeg = ImageBuffer::from_slice(theme::IMAGE_HOMESCREEN);
+        }
+
+        if let None = jpeg_info(jpeg.data()) {
+            return Err(value_error!("Invalid image."));
         };
 
         let tr_change: StrBuffer = TR::buttons__change.try_into()?;
@@ -675,7 +664,7 @@ extern "C" fn new_confirm_homescreen(n_args: usize, args: *const Obj, kwargs: *m
         let obj = LayoutObj::new(Frame::centered(
             theme::label_title(),
             title,
-            Dialog::new(painter::jpeg_painter(buffer_func, size, 1), buttons),
+            Dialog::new(Jpeg::new(jpeg, 1), buttons),
         ))?;
         Ok(obj.into())
     };
