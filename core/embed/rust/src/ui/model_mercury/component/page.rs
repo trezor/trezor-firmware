@@ -18,6 +18,8 @@ use super::{
     SwipeDirection,
 };
 
+use core::cell::Cell;
+
 /// Allows pagination of inner component. Shows scroll bar, confirm & cancel
 /// buttons. Optionally handles hold-to-confirm with loader.
 pub struct ButtonPage<T, U> {
@@ -41,7 +43,7 @@ pub struct ButtonPage<T, U> {
     /// Whether to pass-through right swipe to parent component.
     swipe_right: bool,
     /// Fade to given backlight level on next paint().
-    fade: Option<u16>,
+    fade: Cell<Option<u16>>,
 }
 
 impl<T> ButtonPage<T, StrBuffer>
@@ -77,7 +79,7 @@ where
             cancel_from_any_page: false,
             swipe_left: false,
             swipe_right: false,
-            fade: None,
+            fade: Cell::new(None),
         }
     }
 
@@ -157,7 +159,7 @@ where
 
         // Swipe has dimmed the screen, so fade back to normal backlight after the next
         // paint.
-        self.fade = Some(theme::BACKLIGHT_NORMAL);
+        self.fade.set(Some(theme::BACKLIGHT_NORMAL));
     }
 
     fn is_cancel_visible(&self) -> bool {
@@ -413,7 +415,7 @@ where
         }
     }
 
-    fn render(&mut self, target: &mut impl Renderer) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.pad.render(target);
         match &self.loader {
             Some(l) if l.is_animating() => self.loader.render(target),
