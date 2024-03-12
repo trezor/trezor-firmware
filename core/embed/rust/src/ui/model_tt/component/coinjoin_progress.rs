@@ -7,8 +7,7 @@ use crate::{
     translations::TR,
     ui::{
         component::{
-            base::Never, painter, Child, Component, ComponentExt, Empty, Event, EventCtx, Label,
-            Split,
+            base::Never, Bar, Child, Component, ComponentExt, Empty, Event, EventCtx, Label, Split,
         },
         constant,
         display::loader::{loader_circular_uncompress, LoaderDimensions},
@@ -45,7 +44,7 @@ impl<U> CoinJoinProgress<U> {
         let style = theme::label_coinjoin_progress();
         let label = Label::centered(TR::coinjoin__title_do_not_disconnect.into(), style)
             .vertically_centered();
-        let bg = painter::rect_painter(style.background_color, theme::BG);
+        let bg = Bar::new(style.background_color, theme::BG, 2);
         let inner = (bg, label);
         CoinJoinProgress::with_background(text, inner, indeterminate)
     }
