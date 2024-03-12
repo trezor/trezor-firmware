@@ -32,7 +32,7 @@ bool dma2d_accessible(const void* ptr) {
   // TODO:: valid only for STM32F42x
   const void* ccm_start = (const void*)0x10000000;
   const void* ccm_end = (const void*)0x1000FFFF;
-  return !(ptr >= ccm_start || ptr <= ccm_end);
+  return !(ptr >= ccm_start && ptr <= ccm_end);
 }
 
 void dma2d_wait(void) {
@@ -43,15 +43,28 @@ void dma2d_wait(void) {
 bool dma2d_rgb565_fill(const dma2d_params_t* dp) {
   dma2d_wait();
 
-  dma2d_handle.Init.ColorMode = DMA2D_OUTPUT_RGB565;
-  dma2d_handle.Init.Mode = DMA2D_R2M;
-  dma2d_handle.Init.OutputOffset =
-      dp->dst_stride / sizeof(uint16_t) - dp->width;
-  HAL_DMA2D_Init(&dma2d_handle);
+  if (dp->src_alpha == 255) {
+    dma2d_handle.Init.ColorMode = DMA2D_OUTPUT_RGB565;
+    dma2d_handle.Init.Mode = DMA2D_R2M;
+    dma2d_handle.Init.OutputOffset =
+        dp->dst_stride / sizeof(uint16_t) - dp->width;
+    HAL_DMA2D_Init(&dma2d_handle);
 
-  HAL_DMA2D_Start(&dma2d_handle, gdc_color_to_color32(dp->src_fg),
-                  (uint32_t)dp->dst_row + dp->dst_x * sizeof(uint16_t),
-                  dp->width, dp->height);
+    HAL_DMA2D_Start(&dma2d_handle, gdc_color_to_color32(dp->src_fg),
+                    (uint32_t)dp->dst_row + dp->dst_x * sizeof(uint16_t),
+                    dp->width, dp->height);
+  } else {
+    // STM32F4 can not accelerate blending with the fixed color
+    uint16_t* dst_ptr = (uint16_t*)dp->dst_row + dp->dst_x;
+    uint16_t height = dp->height;
+    uint8_t alpha = dp->src_alpha;
+    while (height-- > 0) {
+      for (int x = 0; x < dp->width; x++) {
+        dst_ptr[x] = gdc_color16_blend_a8(dp->src_fg, dst_ptr[x], alpha);
+      }
+      dst_ptr += dp->dst_stride / sizeof(*dst_ptr);
+    }
+  }
 
   return true;
 }

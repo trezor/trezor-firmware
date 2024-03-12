@@ -34,13 +34,23 @@ bool rgb565_fill(const dma2d_params_t* dp) {
     uint16_t* dst_ptr = (uint16_t*)dp->dst_row + dp->dst_x;
     uint16_t height = dp->height;
 
-    while (height-- > 0) {
-      for (int x = 0; x < dp->width; x++) {
-        dst_ptr[x] = dp->src_fg;
+    if (dp->src_alpha == 255) {
+      while (height-- > 0) {
+        for (int x = 0; x < dp->width; x++) {
+          dst_ptr[x] = dp->src_fg;
+        }
+        dst_ptr += dp->dst_stride / sizeof(*dst_ptr);
       }
-      dst_ptr += dp->dst_stride / sizeof(*dst_ptr);
     }
-
+    else {
+      uint8_t alpha = dp->src_alpha;
+      while (height-- > 0) {
+        for (int x = 0; x < dp->width; x++) {
+          dst_ptr[x] = gdc_color16_blend_a8(dp->src_fg, dst_ptr[x], alpha);
+        }
+        dst_ptr += dp->dst_stride / sizeof(*dst_ptr);
+      }
+    }
     return true;
   }
 }

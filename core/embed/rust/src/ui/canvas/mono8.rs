@@ -48,9 +48,9 @@ impl<'a> BasicCanvas for Mono8Canvas<'a> {
         self.bitmap.size()
     }
 
-    fn fill_rect(&mut self, r: Rect, color: Color) {
+    fn fill_rect(&mut self, r: Rect, color: Color, alpha: u8) {
         let r = r.translate(self.viewport.origin);
-        self.bitmap.mono8_fill(r, self.viewport.clip, color);
+        self.bitmap.mono8_fill(r, self.viewport.clip, color, alpha);
     }
 
     fn draw_bitmap(&mut self, r: Rect, bitmap: BitmapView) {

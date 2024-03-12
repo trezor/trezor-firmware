@@ -58,17 +58,17 @@ impl LoaderStarry {
 
     fn draw_large_star(&self, canvas: &mut dyn Canvas, offset: Offset) {
         let r = Rect::from_center_and_size(self.pos + offset, Offset::uniform(STAR_LARGE));
-        canvas.fill_round_rect(r, 2, self.color);
+        canvas.fill_round_rect(r, 2, self.color, 255);
     }
 
     fn draw_medium_star(&self, canvas: &mut dyn Canvas, offset: Offset) {
         let r = Rect::from_center_and_size(self.pos + offset, Offset::uniform(STAR_MEDIUM));
-        canvas.fill_round_rect(r, 1, self.color);
+        canvas.fill_round_rect(r, 1, self.color, 255);
     }
 
     fn draw_small_star(&self, canvas: &mut dyn Canvas, offset: Offset) {
         let r = Rect::from_center_and_size(self.pos + offset, Offset::uniform(STAR_SMALL));
-        canvas.fill_rect(r, self.color);
+        canvas.fill_rect(r, self.color, 255);
     }
 }
 

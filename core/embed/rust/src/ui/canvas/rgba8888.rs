@@ -48,9 +48,10 @@ impl<'a> BasicCanvas for Rgba8888Canvas<'a> {
         self.viewport = viewport.absolute_clip(self.bounds());
     }
 
-    fn fill_rect(&mut self, r: Rect, color: Color) {
+    fn fill_rect(&mut self, r: Rect, color: Color, alpha: u8) {
         let r = r.translate(self.viewport.origin);
-        self.bitmap.rgba8888_fill(r, self.viewport.clip, color);
+        self.bitmap
+            .rgba8888_fill(r, self.viewport.clip, color, alpha);
     }
 
     fn draw_bitmap(&mut self, r: Rect, bitmap: BitmapView) {

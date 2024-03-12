@@ -62,7 +62,7 @@ impl<'s> Shape<'s> for HorizontalLine {
             // Solid line
             let size = Offset::new(self.length, self.thickness as i16);
             let r = Rect::from_top_left_and_size(self.pos, size);
-            canvas.fill_rect(r, self.color);
+            canvas.fill_rect(r, self.color, 255);
         } else {
             // Dotted line
             let thickness = self.thickness as i16;
@@ -71,7 +71,7 @@ impl<'s> Shape<'s> for HorizontalLine {
                     self.pos + Offset::x(x),
                     Offset::uniform(thickness),
                 );
-                canvas.fill_rect(r, self.color);
+                canvas.fill_rect(r, self.color, 255);
             }
         }
     }

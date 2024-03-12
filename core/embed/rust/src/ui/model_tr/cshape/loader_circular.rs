@@ -101,7 +101,7 @@ impl<'s> Shape<'s> for LoaderCircular {
 
     fn draw(&mut self, canvas: &mut dyn Canvas, _cache: &DrawingCache) {
         for c in self.cells().iter() {
-            canvas.fill_rect(self.cell_rect(*c), self.color);
+            canvas.fill_rect(self.cell_rect(*c), self.color, 255);
         }
     }
 }

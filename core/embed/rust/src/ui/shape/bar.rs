@@ -16,6 +16,8 @@ pub struct Bar {
     thickness: i16,
     /// Corner radius (default 0)
     radius: i16,
+    /// Alpha (default 255)
+    alpha: u8,
 }
 
 impl Bar {
@@ -26,6 +28,7 @@ impl Bar {
             bg_color: None,
             thickness: 1,
             radius: 0,
+            alpha: 255,
         }
     }
 
@@ -49,6 +52,10 @@ impl Bar {
 
     pub fn with_thickness(self, thickness: i16) -> Self {
         Self { thickness, ..self }
+    }
+
+    pub fn with_alpha(self, alpha: u8) -> Self {
+        Self { alpha, ..self }
     }
 
     pub fn render<'s>(self, renderer: &mut impl Renderer<'s>) {
@@ -80,22 +87,22 @@ impl Shape<'_> for Bar {
                 // outline
                 if th > 0 {
                     let r = self.area;
-                    canvas.fill_rect(Rect { y1: r.y0 + th, ..r }, fg_color);
-                    canvas.fill_rect(Rect { x1: r.x0 + th, ..r }, fg_color);
-                    canvas.fill_rect(Rect { x0: r.x1 - th, ..r }, fg_color);
-                    canvas.fill_rect(Rect { y0: r.y1 - th, ..r }, fg_color);
+                    canvas.fill_rect(Rect { y1: r.y0 + th, ..r }, fg_color, self.alpha);
+                    canvas.fill_rect(Rect { x1: r.x0 + th, ..r }, fg_color, self.alpha);
+                    canvas.fill_rect(Rect { x0: r.x1 - th, ..r }, fg_color, self.alpha);
+                    canvas.fill_rect(Rect { y0: r.y1 - th, ..r }, fg_color, self.alpha);
                 }
             }
             if let Some(bg_color) = self.bg_color {
                 // background
                 let bg_r = self.area.shrink(th);
-                canvas.fill_rect(bg_r, bg_color);
+                canvas.fill_rect(bg_r, bg_color, self.alpha);
             }
         } else {
             if let Some(fg_color) = self.fg_color {
                 if th > 0 {
                     if self.bg_color.is_some() {
-                        canvas.fill_round_rect(self.area, self.radius, fg_color);
+                        canvas.fill_round_rect(self.area, self.radius, fg_color, self.alpha);
                     } else {
                         #[cfg(not(feature = "ui_antialiasing"))]
                         canvas.draw_round_rect(self.area, self.radius, fg_color);
@@ -104,7 +111,7 @@ impl Shape<'_> for Bar {
             }
             if let Some(bg_color) = self.bg_color {
                 let bg_r = self.area.shrink(th);
-                canvas.fill_round_rect(bg_r, self.radius, bg_color);
+                canvas.fill_round_rect(bg_r, self.radius, bg_color, self.alpha);
             }
         }
     }

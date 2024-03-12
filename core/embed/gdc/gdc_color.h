@@ -133,6 +133,31 @@ static inline gdc_color16_t gdc_color16_blend_a4(gdc_color16_t fg,
 
 // Blends foreground and background colors with 4-bit alpha
 //
+// Returns a color in 16-bit format
+//
+// If alpha is 0, the function returns the background color
+// If alpha is 15, the function returns the foreground color
+static inline gdc_color16_t gdc_color16_blend_a8(gdc_color16_t fg,
+                                                 gdc_color16_t bg,
+                                                 uint8_t alpha) {
+  uint16_t fg_r = (fg & 0xF800) >> 11;
+  uint16_t bg_r = (bg & 0xF800) >> 11;
+
+  uint16_t r = (fg_r * alpha + (bg_r * (255 - alpha))) / 255;
+
+  uint16_t fg_g = (fg & 0x07E0) >> 5;
+  uint16_t bg_g = (bg & 0x07E0) >> 5;
+  uint16_t g = (fg_g * alpha + (bg_g * (255 - alpha))) / 255;
+
+  uint16_t fg_b = (fg & 0x001F) >> 0;
+  uint16_t bg_b = (bg & 0x001F) >> 0;
+  uint16_t b = (fg_b * alpha + (bg_b * (255 - alpha))) / 255;
+
+  return (r << 11) | (g << 5) | b;
+}
+
+// Blends foreground and background colors with 4-bit alpha
+//
 // Returns a color in 32-bit format
 //
 // If alpha is 0, the function returns the background color
@@ -187,6 +212,31 @@ static inline gdc_color16_t gdc_color16_blend_a4(gdc_color32_t fg,
 
   return gdc_color16_rgb(r, g, b)
 }
+
+// Blends foreground and background colors with 8-bit alpha
+//
+// Returns a color in 16-bit format
+//
+// If alpha is 0, the function returns the background color
+// If alpha is 255, the function returns the foreground color
+static inline gdc_color16_t gdc_color16_blend_a8(gdc_color32_t fg,
+                                                 gdc_color32_t bg,
+                                                 uint8_t alpha) {
+  uint16_t fg_r = (fg & 0x00FF0000) >> 16;
+  uint16_t bg_r = (bg & 0x00FF0000) >> 16;
+  uint16_t r = (fg_r * alpha + (bg_r * (255 - alpha))) / 255;
+
+  uint16_t fg_g = (fg & 0x0000FF00) >> 8;
+  uint16_t bg_g = (bg & 0x0000FF00) >> 8;
+  uint16_t g = (fg_g * alpha + (bg_g * (255 - alpha))) / 255;
+
+  uint16_t fg_b = (fg & 0x000000FF) >> 0;
+  uint16_t bg_b = (bg & 0x000000FF) >> 0;
+  uint16_t b = (fg_b * alpha + (bg_b * (255 - alpha))) / 255;
+
+  return gdc_color16_rgb(r, g, b)
+}
+
 
 // Blends foreground and background colors with 4-bit alpha
 //

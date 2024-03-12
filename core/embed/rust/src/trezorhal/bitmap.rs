@@ -214,8 +214,8 @@ impl<'a> Bitmap<'a> {
     /// Fills a rectangle with the specified color.
     ///
     /// The function is aplicable only on bitmaps with RGB565 format.
-    pub fn rgb565_fill(&mut self, r: Rect, clip: Rect, color: Color) {
-        if let Some(dma2d) = Dma2d::new_fill(r, clip, color) {
+    pub fn rgb565_fill(&mut self, r: Rect, clip: Rect, color: Color, alpha: u8) {
+        if let Some(dma2d) = Dma2d::new_fill(r, clip, color, alpha) {
             let dma2d = dma2d.with_dst(self);
             unsafe {
                 ffi::rgb565_fill(&dma2d);
@@ -266,8 +266,8 @@ impl<'a> Bitmap<'a> {
     /// Fills a rectangle with the specified color.
     ///
     /// The function is aplicable only on bitmaps with RGBA888 format.
-    pub fn rgba8888_fill(&mut self, r: Rect, clip: Rect, color: Color) {
-        if let Some(dma2d) = Dma2d::new_fill(r, clip, color) {
+    pub fn rgba8888_fill(&mut self, r: Rect, clip: Rect, color: Color, alpha: u8) {
+        if let Some(dma2d) = Dma2d::new_fill(r, clip, color, alpha) {
             let dma2d = dma2d.with_dst(self);
             unsafe {
                 ffi::rgba8888_fill(&dma2d);
@@ -317,8 +317,8 @@ impl<'a> Bitmap<'a> {
     /// Fills a rectangle with the specified color.
     ///
     /// The function is aplicable only on bitmaps with RGB565 format.
-    pub fn mono8_fill(&mut self, r: Rect, clip: Rect, color: Color) {
-        if let Some(dma2d) = Dma2d::new_fill(r, clip, color) {
+    pub fn mono8_fill(&mut self, r: Rect, clip: Rect, color: Color, alpha: u8) {
+        if let Some(dma2d) = Dma2d::new_fill(r, clip, color, alpha) {
             let dma2d = dma2d.with_dst(self);
             unsafe {
                 ffi::mono8_fill(&dma2d);
@@ -457,10 +457,15 @@ impl<'a> BitmapView<'a> {
 pub type Dma2d = ffi::dma2d_params_t;
 
 impl Dma2d {
-    pub fn new_fill(r: Rect, clip: Rect, color: Color) -> Option<Self> {
+    pub fn new_fill(r: Rect, clip: Rect, color: Color, alpha: u8) -> Option<Self> {
         let r = r.intersect(clip);
         if !r.is_empty() {
-            Some(Self::default().with_rect(r).with_fg(color))
+            Some(
+                Self::default()
+                    .with_rect(r)
+                    .with_fg(color)
+                    .with_alpha(alpha),
+            )
         } else {
             None
         }
@@ -532,6 +537,7 @@ impl Dma2d {
             src_stride: 0,
             src_x: 0,
             src_y: 0,
+            src_alpha: 255,
         }
     }
 
@@ -573,11 +579,18 @@ impl Dma2d {
             ..self
         }
     }
+
+    fn with_alpha(self, alpha: u8) -> Self {
+        Self {
+            src_alpha: alpha,
+            ..self
+        }
+    }
 }
 
 impl Dma2d {
     pub fn wnd565_fill(r: Rect, clip: Rect, color: Color) {
-        if let Some(dma2d) = Dma2d::new_fill(r, clip, color) {
+        if let Some(dma2d) = Dma2d::new_fill(r, clip, color, 255) {
             unsafe { ffi::wnd565_fill(&dma2d) };
         }
     }

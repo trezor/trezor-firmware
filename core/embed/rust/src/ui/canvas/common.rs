@@ -58,11 +58,11 @@ pub trait BasicCanvas {
     }
 
     /// Draws a filled rectangle with the specified color.
-    fn fill_rect(&mut self, r: Rect, color: Color);
+    fn fill_rect(&mut self, r: Rect, color: Color, alpha: u8);
 
     /// Fills the canvas background with the specified color.
     fn fill_background(&mut self, color: Color) {
-        self.fill_rect(self.viewport().clip, color);
+        self.fill_rect(self.viewport().clip, color, 255);
     }
 
     /// Draws a bitmap of bitmap into to the rectangle.
@@ -76,10 +76,11 @@ pub trait Canvas: BasicCanvas {
     /// Draw a pixel at specified coordinates.
     fn draw_pixel(&mut self, pt: Point, color: Color);
 
-    /// Draws a single pixel and blends its color with the background
-    /// If alpha == 255, the (foreground) pixel color is used
-    /// If 0 < alpha << 255, pixel and backround colors are blended
-    /// If alpha == 0, the background color is used
+    /// Draws a single pixel and blends its color with the background.
+    ///
+    /// - If alpha == 255, the (foreground) pixel color is used.
+    /// - If 0 < alpha << 255, pixel and backround colors are blended.
+    /// - If alpha == 0, the background color is used.
     fn blend_pixel(&mut self, pt: Point, color: Color, alpha: u8);
 
     /// Blends a bitmap with the canvas background
@@ -111,7 +112,7 @@ pub trait Canvas: BasicCanvas {
                 let pt_l = Point::new(r.x0 + radius - p.u, r.y0 + radius - p.v);
                 let pt_r = Point::new(r.x1 - radius + p.u - 1, r.y0 + radius - p.v);
                 if p.v == radius && p.last {
-                    self.fill_rect(Rect::new(pt_l, pt_r.onright().under()), color);
+                    self.fill_rect(Rect::new(pt_l, pt_r.onright().under()), color, 255);
                 } else {
                     self.draw_pixel(pt_l, color);
                     self.draw_pixel(pt_r, color);
@@ -126,7 +127,7 @@ pub trait Canvas: BasicCanvas {
         };
 
         if self.viewport().contains(b) {
-            for p in circle_points(radius) {
+            for p in circle_points(radius).take_while(|p| p.u < p.v) {
                 let pt_l = Point::new(r.x0 + radius - p.v, r.y0 + radius - p.u);
                 let pt_r = Point::new(r.x1 - radius + p.v - 1, r.y0 + radius - p.u);
                 self.draw_pixel(pt_l, color);
@@ -142,6 +143,7 @@ pub trait Canvas: BasicCanvas {
                 y1: r.y1 - radius - 1,
             },
             color,
+            255,
         );
 
         self.fill_rect(
@@ -152,6 +154,7 @@ pub trait Canvas: BasicCanvas {
                 y1: r.y1 - radius - 1,
             },
             color,
+            255,
         );
 
         let b = Rect {
@@ -161,7 +164,7 @@ pub trait Canvas: BasicCanvas {
         };
 
         if self.viewport().contains(b) {
-            for p in circle_points(radius) {
+            for p in circle_points(radius).take_while(|p| p.u < p.v) {
                 let pt_l = Point::new(r.x0 + radius - p.v, r.y1 - radius - 1 + p.u);
                 let pt_r = Point::new(r.x1 - radius + p.v - 1, r.y1 - radius - 1 + p.u);
                 self.draw_pixel(pt_l, color);
@@ -180,7 +183,7 @@ pub trait Canvas: BasicCanvas {
                 let pt_r = Point::new(r.x1 - radius + p.u - 1, r.y1 - radius - 1 + p.v);
 
                 if p.v == radius && p.last {
-                    self.fill_rect(Rect::new(pt_l, pt_r.onright().under()), color);
+                    self.fill_rect(Rect::new(pt_l, pt_r.onright().under()), color, 255);
                 } else {
                     self.draw_pixel(pt_l, color);
                     self.draw_pixel(pt_r, color);
@@ -191,7 +194,7 @@ pub trait Canvas: BasicCanvas {
 
     /// Draws filled rectangle with rounded corners.
     #[cfg(not(feature = "ui_antialiasing"))]
-    fn fill_round_rect(&mut self, r: Rect, radius: i16, color: Color) {
+    fn fill_round_rect(&mut self, r: Rect, radius: i16, color: Color, alpha: u8) {
         let split = unwrap!(circle_points(radius).last()).v;
 
         let b = Rect {
@@ -204,7 +207,7 @@ pub trait Canvas: BasicCanvas {
                 if p.last {
                     let pt_l = Point::new(r.x0 + radius - p.u, r.y0 + radius - p.v);
                     let pt_r = Point::new(r.x1 - radius + p.u - 1, r.y0 + radius - p.v);
-                    self.fill_rect(Rect::new(pt_l, pt_r.onright().under()), color);
+                    self.fill_rect(Rect::new(pt_l, pt_r.onright().under()), color, alpha);
                 }
             }
         }
@@ -216,10 +219,10 @@ pub trait Canvas: BasicCanvas {
         };
 
         if self.viewport().contains(b) {
-            for p in circle_points(radius) {
+            for p in circle_points(radius).take_while(|p| p.u < p.v) {
                 let pt_l = Point::new(r.x0 + radius - p.v, r.y0 + radius - p.u);
                 let pt_r = Point::new(r.x1 - radius + p.v - 1, r.y0 + radius - p.u);
-                self.fill_rect(Rect::new(pt_l, pt_r.onright().under()), color);
+                self.fill_rect(Rect::new(pt_l, pt_r.onright().under()), color, alpha);
             }
         }
 
@@ -231,6 +234,7 @@ pub trait Canvas: BasicCanvas {
                 y1: r.y1 - radius - 1,
             },
             color,
+            alpha,
         );
 
         let b = Rect {
@@ -240,10 +244,10 @@ pub trait Canvas: BasicCanvas {
         };
 
         if self.viewport().contains(b) {
-            for p in circle_points(radius) {
+            for p in circle_points(radius).take_while(|p| p.u < p.v) {
                 let pt_l = Point::new(r.x0 + radius - p.v, r.y1 - radius - 1 + p.u);
                 let pt_r = Point::new(r.x1 - radius + p.v - 1, r.y1 - radius - 1 + p.u);
-                self.fill_rect(Rect::new(pt_l, pt_r.onright().under()), color);
+                self.fill_rect(Rect::new(pt_l, pt_r.onright().under()), color, alpha);
             }
         }
 
@@ -257,7 +261,7 @@ pub trait Canvas: BasicCanvas {
                 if p.last {
                     let pt_l = Point::new(r.x0 + radius - p.u, r.y1 - radius - 1 + p.v);
                     let pt_r = Point::new(r.x1 - radius + p.u - 1, r.y1 - radius - 1 + p.v);
-                    self.fill_rect(Rect::new(pt_l, pt_r.onright().under()), color);
+                    self.fill_rect(Rect::new(pt_l, pt_r.onright().under()), color, alpha);
                 }
             }
         }
@@ -265,7 +269,7 @@ pub trait Canvas: BasicCanvas {
 
     /// Draws filled rectangle with antialiased rounded corners.
     #[cfg(feature = "ui_antialiasing")]
-    fn fill_round_rect(&mut self, r: Rect, radius: i16, color: Color) {
+    fn fill_round_rect(&mut self, r: Rect, radius: i16, color: Color, alpha: u8) {
         let split = unwrap!(circle_points(radius).last()).v;
 
         let b = Rect {
@@ -273,16 +277,18 @@ pub trait Canvas: BasicCanvas {
             ..r
         };
 
+        let alpha_mul = |a: u8| -> u8 { ((a as u16 * alpha as u16) / 255) as u8 };
+
         if self.viewport().contains(b) {
             for p in circle_points(radius) {
                 let pt_l = Point::new(r.x0 + radius - p.u, r.y0 + radius - p.v);
                 let pt_r = Point::new(r.x1 - radius + p.u - 1, r.y0 + radius - p.v);
-                self.blend_pixel(pt_l, color, p.frac);
-                self.blend_pixel(pt_r, color, p.frac);
+                self.blend_pixel(pt_l, color, alpha_mul(p.frac));
+                self.blend_pixel(pt_r, color, alpha_mul(p.frac));
 
                 if p.first {
                     let inner = Rect::new(pt_l.onright(), pt_r.under());
-                    self.fill_rect(inner, color);
+                    self.fill_rect(inner, color, alpha);
                 }
             }
         }
@@ -294,14 +300,14 @@ pub trait Canvas: BasicCanvas {
         };
 
         if self.viewport().contains(b) {
-            for p in circle_points(radius) {
+            for p in circle_points(radius).take_while(|p| p.u < p.v) {
                 let pt_l = Point::new(r.x0 + radius - p.v, r.y0 + radius - p.u);
                 let pt_r = Point::new(r.x1 - radius + p.v - 1, r.y0 + radius - p.u);
-                self.blend_pixel(pt_l, color, p.frac);
-                self.blend_pixel(pt_r, color, p.frac);
+                self.blend_pixel(pt_l, color, alpha_mul(p.frac));
+                self.blend_pixel(pt_r, color, alpha_mul(p.frac));
 
                 let inner = Rect::new(pt_l.onright(), pt_r.under());
-                self.fill_rect(inner, color);
+                self.fill_rect(inner, color, alpha);
             }
         }
 
@@ -313,6 +319,7 @@ pub trait Canvas: BasicCanvas {
                 y1: r.y1 - radius - 1,
             },
             color,
+            alpha,
         );
 
         let b = Rect {
@@ -322,14 +329,14 @@ pub trait Canvas: BasicCanvas {
         };
 
         if self.viewport().contains(b) {
-            for p in circle_points(radius) {
+            for p in circle_points(radius).take_while(|p| p.u < p.v) {
                 let pt_l = Point::new(r.x0 + radius - p.v, r.y1 - radius - 1 + p.u);
                 let pt_r = Point::new(r.x1 - radius + p.v - 1, r.y1 - radius - 1 + p.u);
-                self.blend_pixel(pt_l, color, p.frac);
-                self.blend_pixel(pt_r, color, p.frac);
+                self.blend_pixel(pt_l, color, alpha_mul(p.frac));
+                self.blend_pixel(pt_r, color, alpha_mul(p.frac));
 
                 let b = Rect::new(pt_l.onright(), pt_r.under());
-                self.fill_rect(b, color);
+                self.fill_rect(b, color, alpha);
             }
         }
 
@@ -341,13 +348,13 @@ pub trait Canvas: BasicCanvas {
         if self.viewport().contains(b) {
             for p in circle_points(radius) {
                 let pt_l = Point::new(r.x0 + radius - p.u, r.y1 - radius - 1 + p.v);
-                self.blend_pixel(pt_l, color, p.frac);
+                self.blend_pixel(pt_l, color, alpha_mul(p.frac));
                 let pt_r = Point::new(r.x1 - radius + p.u - 1, r.y1 - radius - 1 + p.v);
-                self.blend_pixel(pt_r, color, p.frac);
+                self.blend_pixel(pt_r, color, alpha_mul(p.frac));
 
                 if p.first {
                     let b = Rect::new(pt_l.onright(), pt_r.under());
-                    self.fill_rect(b, color);
+                    self.fill_rect(b, color, alpha);
                 }
             }
         }
@@ -378,7 +385,7 @@ pub trait Canvas: BasicCanvas {
         );
 
         if self.viewport().contains(r) {
-            for p in circle_points(radius) {
+            for p in circle_points(radius).take_while(|p| p.u < p.v) {
                 let pt_l = Point::new(center.x - p.v, center.y - p.u);
                 let pt_r = Point::new(center.x + p.v, center.y - p.u);
                 self.draw_pixel(pt_l, color);
@@ -387,12 +394,12 @@ pub trait Canvas: BasicCanvas {
         }
 
         let r = Rect::new(
-            Point::new(center.x - radius, center.y),
+            Point::new(center.x - radius, center.y + 1),
             Point::new(center.x + radius + 1, center.y + split + 1),
         );
 
         if self.viewport().contains(r) {
-            for p in circle_points(radius) {
+            for p in circle_points(radius).skip(1).take_while(|p| p.u < p.v) {
                 let pt_l = Point::new(center.x - p.v, center.y + p.u);
                 let pt_r = Point::new(center.x + p.v, center.y + p.u);
                 self.draw_pixel(pt_l, color);
@@ -442,7 +449,7 @@ pub trait Canvas: BasicCanvas {
         );
 
         if self.viewport().contains(r) {
-            for p in circle_points(radius) {
+            for p in circle_points(radius).take_while(|p| p.u < p.v) {
                 let pt_l = Point::new(center.x - p.v, center.y - p.u);
                 self.blend_pixel(pt_l, color, p.frac);
                 self.blend_pixel(pt_l.onright(), color, 255 - p.frac);
@@ -453,12 +460,12 @@ pub trait Canvas: BasicCanvas {
         }
 
         let r = Rect::new(
-            Point::new(center.x - radius, center.y),
+            Point::new(center.x - radius, center.y + 1),
             Point::new(center.x + radius + 1, center.y + split + 1),
         );
 
         if self.viewport().contains(r) {
-            for p in circle_points(radius) {
+            for p in circle_points(radius).skip(1).take_while(|p| p.u < p.v) {
                 let pt_l = Point::new(center.x - p.v, center.y + p.u);
                 self.blend_pixel(pt_l, color, p.frac);
                 self.blend_pixel(pt_l.onright(), color, 255 - p.frac);
@@ -489,6 +496,7 @@ pub trait Canvas: BasicCanvas {
     #[cfg(not(feature = "ui_antialiasing"))]
     fn fill_circle(&mut self, center: Point, radius: i16, color: Color) {
         let split = unwrap!(circle_points(radius).last()).v;
+        let alpha = 255;
 
         let r = Rect::new(
             Point::new(center.x - radius, center.y - radius),
@@ -500,7 +508,7 @@ pub trait Canvas: BasicCanvas {
                 if p.last {
                     let pt_l = Point::new(center.x - p.u, center.y - p.v);
                     let pt_r = Point::new(center.x + p.u, center.y - p.v);
-                    self.fill_rect(Rect::new(pt_l, pt_r.onright().under()), color);
+                    self.fill_rect(Rect::new(pt_l, pt_r.onright().under()), color, alpha);
                 }
             }
         }
@@ -511,23 +519,23 @@ pub trait Canvas: BasicCanvas {
         );
 
         if self.viewport().contains(r) {
-            for p in circle_points(radius) {
+            for p in circle_points(radius).take_while(|p| p.u < p.v) {
                 let pt_l = Point::new(center.x - p.v, center.y - p.u);
                 let pt_r = Point::new(center.x + p.v, center.y - p.u);
-                self.fill_rect(Rect::new(pt_l, pt_r.onright().under()), color);
+                self.fill_rect(Rect::new(pt_l, pt_r.onright().under()), color, alpha);
             }
         }
 
         let r = Rect::new(
-            Point::new(center.x - radius, center.y),
+            Point::new(center.x - radius, center.y + 1),
             Point::new(center.x + radius + 1, center.y + split + 1),
         );
 
         if self.viewport().contains(r) {
-            for p in circle_points(radius) {
+            for p in circle_points(radius).skip(1).take_while(|p| p.u < p.v) {
                 let pt_l = Point::new(center.x - p.v, center.y + p.u);
                 let pt_r = Point::new(center.x + p.v, center.y + p.u);
-                self.fill_rect(Rect::new(pt_l, pt_r.onright().under()), color);
+                self.fill_rect(Rect::new(pt_l, pt_r.onright().under()), color, alpha);
             }
         }
 
@@ -541,7 +549,7 @@ pub trait Canvas: BasicCanvas {
                 if p.last {
                     let pt_l = Point::new(center.x - p.u, center.y + p.v);
                     let pt_r = Point::new(center.x + p.u, center.y + p.v);
-                    self.fill_rect(Rect::new(pt_l, pt_r.onright().under()), color);
+                    self.fill_rect(Rect::new(pt_l, pt_r.onright().under()), color, alpha);
                 }
             }
         }
@@ -553,6 +561,9 @@ pub trait Canvas: BasicCanvas {
     fn fill_circle(&mut self, center: Point, radius: i16, color: Color) {
         let split = unwrap!(circle_points(radius).last()).v;
 
+        let alpha = 255;
+        let alpha_mul = |a: u8| -> u8 { ((a as u16 * alpha as u16) / 255) as u8 };
+
         let r = Rect::new(
             Point::new(center.x - radius, center.y - radius),
             Point::new(center.x + radius + 1, center.y - split + 1),
@@ -562,12 +573,14 @@ pub trait Canvas: BasicCanvas {
             for p in circle_points(radius) {
                 let pt_l = Point::new(center.x - p.u, center.y - p.v);
                 let pt_r = Point::new(center.x + p.u, center.y - p.v);
-                self.blend_pixel(pt_l, color, p.frac);
-                self.blend_pixel(pt_r, color, p.frac);
+                self.blend_pixel(pt_l, color, alpha_mul(p.frac));
+                if pt_l != pt_r {
+                    self.blend_pixel(pt_r, color, alpha_mul(p.frac));
+                }
 
                 if p.first {
                     let r = Rect::new(pt_l.onright(), pt_r.under());
-                    self.fill_rect(r, color);
+                    self.fill_rect(r, color, alpha);
                 }
             }
         }
@@ -578,31 +591,31 @@ pub trait Canvas: BasicCanvas {
         );
 
         if self.viewport().contains(r) {
-            for p in circle_points(radius) {
+            for p in circle_points(radius).take_while(|p| p.u < p.v) {
                 let pt_l = Point::new(center.x - p.v, center.y - p.u);
                 let pt_r = Point::new(center.x + p.v, center.y - p.u);
-                self.blend_pixel(pt_l, color, p.frac);
-                self.blend_pixel(pt_r, color, p.frac);
+                self.blend_pixel(pt_l, color, alpha_mul(p.frac));
+                self.blend_pixel(pt_r, color, alpha_mul(p.frac));
 
                 let r = Rect::new(pt_l.onright(), pt_r.under());
-                self.fill_rect(r, color);
+                self.fill_rect(r, color, alpha);
             }
         }
 
         let r = Rect::new(
-            Point::new(center.x - radius, center.y),
+            Point::new(center.x - radius, center.y + 1),
             Point::new(center.x + radius + 1, center.y + split + 1),
         );
 
         if self.viewport().contains(r) {
-            for p in circle_points(radius) {
+            for p in circle_points(radius).skip(1).take_while(|p| p.u < p.v) {
                 let pt_l = Point::new(center.x - p.v, center.y + p.u);
                 let pt_r = Point::new(center.x + p.v, center.y + p.u);
-                self.blend_pixel(pt_l, color, p.frac);
-                self.blend_pixel(pt_r, color, p.frac);
+                self.blend_pixel(pt_l, color, alpha_mul(p.frac));
+                self.blend_pixel(pt_r, color, alpha_mul(p.frac));
 
                 let r = Rect::new(pt_l.onright(), pt_r.under());
-                self.fill_rect(r, color);
+                self.fill_rect(r, color, alpha);
             }
         }
 
@@ -615,12 +628,14 @@ pub trait Canvas: BasicCanvas {
             for p in circle_points(radius) {
                 let pt_l = Point::new(center.x - p.u, center.y + p.v);
                 let pt_r = Point::new(center.x + p.u, center.y + p.v);
-                self.blend_pixel(pt_l, color, p.frac);
-                self.blend_pixel(pt_r, color, p.frac);
+                if pt_l != pt_r {
+                    self.blend_pixel(pt_l, color, alpha_mul(p.frac));
+                }
+                self.blend_pixel(pt_r, color, alpha_mul(p.frac));
 
                 if p.first {
                     let r = Rect::new(pt_l.onright(), pt_r.under());
-                    self.fill_rect(r, color);
+                    self.fill_rect(r, color, alpha);
                 }
             }
         }
@@ -635,8 +650,11 @@ pub trait Canvas: BasicCanvas {
         mut end: i16,
         color: Color,
     ) {
-        start = start.clamp(0, PI4 * 8);
-        end = end.clamp(0, PI4 * 8);
+        start = (PI4 * 8 + start % (PI4 * 8)) % (PI4 * 8);
+        end = (PI4 * 8 + end % (PI4 * 8)) % (PI4 * 8);
+
+        let alpha = 255;
+        let alpha_mul = |a: u8| -> u8 { ((a as u16 * alpha as u16) / 255) as u8 };
 
         if start != end {
             // The algorithm fills everything except the middle point ;-)
@@ -663,24 +681,24 @@ pub trait Canvas: BasicCanvas {
             // The function is special for each octant using 4 different axes of symmetry
             let filler = &mut |p1: Option<Point>, p1_frac, p2: Point, p2_frac| {
                 let p2: Point = center + p2.rot(octant).into();
-                self.blend_pixel(p2, color, p2_frac);
+                self.blend_pixel(p2, color, alpha_mul(p2_frac));
                 if let Some(p1) = p1 {
                     let p1: Point = center + p1.rot(octant).into();
                     let ofs = Point::new(-1, 0).rot(octant);
-                    self.blend_pixel(p1 + ofs.into(), color, p1_frac);
+                    self.blend_pixel(p1 + ofs.into(), color, alpha_mul(p1_frac));
                     if ofs.x + ofs.y < 0 {
                         if ofs.x != 0 {
-                            self.fill_rect(Rect::new(p1, p2.under()), color);
+                            self.fill_rect(Rect::new(p1, p2.under()), color, alpha);
                         } else {
-                            self.fill_rect(Rect::new(p1, p2.onright()), color);
+                            self.fill_rect(Rect::new(p1, p2.onright()), color, alpha);
                         }
                     } else {
                         let p1 = p1 + ofs.into();
                         let p2 = p2 + ofs.into();
                         if ofs.x != 0 {
-                            self.fill_rect(Rect::new(p2, p1.under()), color);
+                            self.fill_rect(Rect::new(p2, p1.under()), color, alpha);
                         } else {
-                            self.fill_rect(Rect::new(p2, p1.onright()), color);
+                            self.fill_rect(Rect::new(p2, p1.onright()), color, alpha);
                         }
                     }
                 }
@@ -723,7 +741,7 @@ pub trait Canvas: BasicCanvas {
                     fill_octant(radius, 0, sin(PI4), filler);
                 } else {
                     // Partial fill
-                    if end < angle + PI4 {
+                    if (end > angle) && (end < angle + PI4) {
                         // Fill up to `end`
                         fill_octant(radius, sin(corr(0)), sin(corr(end - angle)), filler);
                     }
@@ -756,12 +774,19 @@ fn fill_octant(
     // Intersection of the p1 line and the circle
     let p1_start = unwrap!(iter.next());
 
-    for _ in 1..(u2 - u1) {
-        iter.next();
-    }
-
     // Intersection of the p1 line and the circle
-    let p2_start = iter.next().unwrap_or(p1_start);
+    let mut p2_start = p1_start;
+
+    loop {
+        if let Some(p) = iter.next() {
+            if p.u > u2 {
+                break;
+            }
+            p2_start = p;
+        } else {
+            break;
+        }
+    }
 
     // Flag if we draw section up to 45degs
     let join_flag = iter.next().is_none();

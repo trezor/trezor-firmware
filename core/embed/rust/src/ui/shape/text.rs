@@ -20,6 +20,8 @@ pub struct Text<'a> {
     font: Font,
     // Horizontal alignment
     align: Alignment,
+    // Final bounds calculated when rendered
+    bounds: Rect,
 }
 
 impl<'a> Text<'a> {
@@ -32,6 +34,7 @@ impl<'a> Text<'a> {
             color: Color::white(),
             font: Font::NORMAL,
             align: Alignment::Start,
+            bounds: Rect::zero(),
         }
     }
 
@@ -47,7 +50,8 @@ impl<'a> Text<'a> {
         Self { align, ..self }
     }
 
-    pub fn render<'r>(self, renderer: &mut impl Renderer<'r>) {
+    pub fn render<'r>(mut self, renderer: &mut impl Renderer<'r>) {
+        self.bounds = self.calc_bounds();
         renderer.render_shape(self);
     }
 
@@ -61,27 +65,29 @@ impl<'a> Text<'a> {
             Alignment::End => Point::new(self.pos.x - self.font.text_width(self.text), self.pos.y),
         }
     }
+
+    fn calc_bounds(&self) -> Rect {
+        let pos = self.aligned_pos();
+        let (ascent, descent) = self.font.visible_text_height_ex(self.text);
+        Rect {
+            x0: pos.x,
+            y0: pos.y - ascent,
+            x1: pos.x + self.font.text_width(self.text),
+            y1: pos.y + descent,
+        }
+    }
 }
 
 impl<'a> Shape<'_> for Text<'a> {
     fn bounds(&self, _cache: &DrawingCache) -> Rect {
-        let pos = self.aligned_pos();
-        let max_ascent = self.font.text_max_height() - self.font.text_baseline();
-        let max_descent = self.font.text_baseline();
-        Rect {
-            x0: pos.x,
-            y0: pos.y - max_ascent,
-            x1: pos.x + self.font.text_width(self.text),
-            y1: pos.y + max_descent,
-        }
+        self.bounds
     }
 
     fn cleanup(&mut self, _cache: &DrawingCache) {}
 
     fn draw(&mut self, canvas: &mut dyn Canvas, cache: &DrawingCache) {
-        let max_height = self.font.max_height();
-        let baseline = self.font.text_baseline();
         let mut r = self.bounds(cache);
+        let max_ascent = self.pos.y - r.y0;
 
         // TODO: optimize  text clipping, use canvas.viewport()
 
@@ -96,7 +102,7 @@ impl<'a> Shape<'_> for Text<'a> {
                 .with_fg(self.color)
                 .with_offset(Offset::new(
                     -glyph.bearing_x,
-                    -(max_height - baseline - glyph.bearing_y),
+                    -(max_ascent - glyph.bearing_y),
                 ));
 
             canvas.blend_bitmap(r, glyph_view);
@@ -113,5 +119,17 @@ impl<'a, 's> ShapeClone<'s> for Text<'a> {
         let clone = bump.alloc_t::<Text>()?;
         let text = bump.copy_str(self.text)?;
         Some(clone.uninit.init(Text { text, ..self }))
+    }
+}
+
+impl Font {
+    fn visible_text_height_ex(&self, text: &str) -> (i16, i16) {
+        let (mut ascent, mut descent) = (0, 0);
+        for c in text.chars() {
+            let glyph = self.get_glyph(c);
+            ascent = ascent.max(glyph.bearing_y);
+            descent = descent.max(glyph.height - glyph.bearing_y);
+        }
+        (ascent, descent)
     }
 }

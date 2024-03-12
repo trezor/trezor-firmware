@@ -36,14 +36,15 @@ typedef struct {
   uint16_t dst_stride;
 
   // Source bitmap
-  // Used for copying and blending, but src_fg color
-  // is also used for fill operation
+  // Used for copying and blending, but src_fg & src_alpha
+  // fields are also used for fill operation
   void* src_row;
   uint16_t src_x;
   uint16_t src_y;
   uint16_t src_stride;
   gdc_color_t src_fg;
   gdc_color_t src_bg;
+  uint8_t src_alpha;
 
 } dma2d_params_t;
 

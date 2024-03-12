@@ -75,6 +75,7 @@ bool gdc_fill_rect(gdc_t* gdc, gdc_rect_t rect, gdc_color_t color) {
 
         // Source bitmap
         .src_fg = color,
+        .src_alpha = 255,
     };
 
     gdc_wait_for_pending_ops(gdc);
@@ -116,6 +117,7 @@ bool gdc_draw_bitmap(gdc_t* gdc, gdc_rect_t rect, const gdc_bitmap_ref_t* src) {
         .src_stride = src->bitmap->stride,
         .src_fg = src->fg_color,
         .src_bg = src->bg_color,
+        .src_alpha = 255,
     };
 
     gdc_wait_for_pending_ops(gdc);
@@ -167,6 +169,7 @@ bool gdc_draw_blended(gdc_t* gdc, gdc_rect_t rect,
         .src_y = clip.src_y,
         .src_stride = src->bitmap->stride,
         .src_fg = src->fg_color,
+        .src_alpha = 255,
     };
 
     gdc_wait_for_pending_ops(gdc);
