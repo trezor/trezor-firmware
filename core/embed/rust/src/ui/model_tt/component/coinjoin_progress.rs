@@ -8,8 +8,7 @@ use crate::{
     ui::{
         canvas::algo::PI4,
         component::{
-            base::Never, painter, Child, Component, ComponentExt, Empty, Event, EventCtx, Label,
-            Split,
+            base::Never, Bar, Child, Component, ComponentExt, Empty, Event, EventCtx, Label, Split,
         },
         constant,
         display::loader::{loader_circular_uncompress, LoaderDimensions},
@@ -55,7 +54,7 @@ where
             style,
         )
         .vertically_centered();
-        let bg = painter::rect_painter(style.background_color, theme::BG);
+        let bg = Bar::new(style.background_color, theme::BG, 2);
         let inner = (bg, label);
         CoinJoinProgress::with_background(text, inner, indeterminate)
     }
