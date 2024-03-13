@@ -18,7 +18,9 @@
  */
 
 #include "flash_area.h"
+#include <stdbool.h>
 #include <stddef.h>
+#include <string.h>
 
 uint32_t flash_area_get_size(const flash_area_t *area) {
   uint32_t size = 0;
@@ -120,6 +122,7 @@ secbool flash_area_write_quadword(const flash_area_t *area, uint32_t offset,
 
 #endif  // not defined FLASH_BIT_ACCESS
 
+#ifdef FLASH_BURST_SIZE
 secbool flash_area_write_burst(const flash_area_t *area, uint32_t offset,
                                const uint32_t *data) {
   uint16_t sector;
@@ -129,6 +132,7 @@ secbool flash_area_write_burst(const flash_area_t *area, uint32_t offset,
   }
   return flash_write_burst(sector, sector_offset, data);
 }
+#endif
 
 secbool flash_area_write_block(const flash_area_t *area, uint32_t offset,
                                const flash_block_t block) {
@@ -143,6 +147,81 @@ secbool flash_area_write_block(const flash_area_t *area, uint32_t offset,
   }
 
   return flash_write_block(sector, sector_offset, block);
+}
+
+secbool __wur flash_area_write_data(const flash_area_t *area, uint32_t offset,
+                                    const void *data, uint32_t size) {
+  return flash_area_write_data_padded(area, offset, data, size, 0, size);
+}
+
+secbool __wur flash_area_write_data_padded(const flash_area_t *area,
+                                           uint32_t offset, const void *data,
+                                           uint32_t data_size, uint8_t padding,
+                                           uint32_t total_size) {
+  if (offset % FLASH_BLOCK_SIZE) {
+    return secfalse;
+  }
+  if (total_size % FLASH_BLOCK_SIZE) {
+    return secfalse;
+  }
+  if (data_size > total_size) {
+    return secfalse;
+  }
+  if (offset + total_size > flash_area_get_size(area)) {
+    return secfalse;
+  }
+
+  const uint32_t *data32 = (const uint32_t *)data;
+
+  while (total_size > 0) {
+#ifdef FLASH_BURST_SIZE
+    if ((offset % FLASH_BURST_SIZE) == 0 &&
+        (offset + FLASH_BURST_SIZE) <= total_size) {
+      if (data_size >= FLASH_BURST_SIZE) {
+        if (flash_area_write_burst(area, offset, data32) != sectrue) {
+          return secfalse;
+        }
+        data_size -= FLASH_BURST_SIZE;
+        data32 += FLASH_BURST_WORDS;
+      } else {
+        uint32_t burst[FLASH_BURST_WORDS];
+        memset(burst, padding, sizeof(burst));
+        if (data_size > 0) {
+          memcpy(burst, data32, data_size);
+          data_size = 0;
+        }
+        if (flash_area_write_burst(area, offset, burst) != sectrue) {
+          return secfalse;
+        }
+      }
+      offset += FLASH_BURST_SIZE;
+      total_size -= FLASH_BURST_SIZE;
+    } else
+#endif
+    {
+      if (data_size >= FLASH_BLOCK_SIZE) {
+        if (flash_area_write_block(area, offset, data32) != sectrue) {
+          return secfalse;
+        }
+        data_size -= FLASH_BLOCK_SIZE;
+        data32 += FLASH_BLOCK_WORDS;
+      } else {
+        uint32_t block[FLASH_BLOCK_WORDS];
+        memset(block, padding, sizeof(block));
+        if (data_size > 0) {
+          memcpy(block, data32, data_size);
+          data_size = 0;
+        }
+        if (flash_area_write_block(area, offset, block) != sectrue) {
+          return secfalse;
+        }
+      }
+      offset += FLASH_BLOCK_SIZE;
+      total_size -= FLASH_BLOCK_SIZE;
+    }
+  }
+
+  return sectrue;
 }
 
 secbool flash_area_erase(const flash_area_t *area,

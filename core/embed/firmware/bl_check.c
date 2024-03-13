@@ -217,27 +217,20 @@ void check_and_replace_bootloader(void) {
 
   do {
     uint32_t *p = decomp_out;
-    uint32_t last_whole_word_addr = (((uint32_t)decomp.dest) & ~0x7F);
-    while ((uint32_t)p < last_whole_word_addr) {
-      ensure(flash_area_write_burst(&BOOTLOADER_AREA, offset, p), NULL);
-      p += FLASH_BURST_WORDS;
-      offset += FLASH_BURST_WORDS * sizeof(uint32_t);
-    }
-    if ((uint8_t *)p < decomp.dest) {
-      // last few bytes in case of unaligned data
-      uint32_t d[FLASH_BURST_WORDS] = {0};
-      memcpy(&d, p, (uint32_t)decomp.dest - (uint32_t)p);
-      ensure(flash_area_write_burst(&BOOTLOADER_AREA, offset, d), NULL);
-      offset += FLASH_BURST_WORDS * sizeof(uint32_t);
-    }
+    uint32_t size = decomp.dest - (uint8_t *)decomp_out;
+    uint32_t size_padded = FLASH_ALIGN(size);
+    ensure(flash_area_write_data_padded(&BOOTLOADER_AREA, offset, p, size, 0,
+                                        size_padded),
+           NULL);
+    offset += size_padded;
     decomp.dest = (uint8_t *)decomp_out;
   } while (uzlib_uncompress(&decomp) >= 0);
 
-  uint32_t d[FLASH_BURST_WORDS] = {0};
-  // fill the rest of the bootloader area with 0x00
-  while (offset < bl_len) {
-    ensure(flash_area_write_burst(&BOOTLOADER_AREA, offset, d), NULL);
-    offset += FLASH_BURST_WORDS * sizeof(uint32_t);
+  if (offset < bl_len) {
+    // fill the rest of the bootloader area with 0x00
+    ensure(flash_area_write_data_padded(&BOOTLOADER_AREA, offset, NULL, 0, 0,
+                                        bl_len - offset),
+           NULL);
   }
 
   ensure(flash_lock_write(), NULL);
