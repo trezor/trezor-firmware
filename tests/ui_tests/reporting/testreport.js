@@ -183,12 +183,9 @@ function getImageData(image) {
 }
 
 
-function createTableDiff(table) {
-    // Process all rows in the table\
-    // (if the row doesn't contain two images, it's skipped)
-    table.querySelectorAll("tr").forEach((row) => {
-        createRowDiff(row);
-    });
+function imageLoaded(img) {
+    let row = img.closest("tr");
+    createRowDiff(row);
 }
 
 function createRowDiff(row) {

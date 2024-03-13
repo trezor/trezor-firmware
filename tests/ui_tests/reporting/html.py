@@ -59,7 +59,7 @@ def image_column(hash: str | None, cur_dir: Path, img_id: str | None = None) -> 
 def diff_column() -> None:
     """Put diff image into table as one cell."""
     with td(bgcolor="white"):
-        a("Click to show")
+        a("N/A")
 
 
 def _relative_path(cur_dir: Path, path_to: Path) -> str:
@@ -88,6 +88,7 @@ def image_link(
         src=_relative_path(cur_dir, path),
         title=title,
         loading="lazy",
+        onload="imageLoaded(this)",
     )
 
 

@@ -246,11 +246,16 @@ def differing_screens() -> None:
 
     model = recent_ui_failures[0].test.model if recent_ui_failures else None
     doc = document(title="Differing screens", model=model)
+    with doc.head:
+        script(
+            type="text/javascript", src="https://cdn.jsdelivr.net/npm/pixelmatch@5.3.0"
+        )
     with doc:
         with table(border=1, width=600):
             with tr():
                 th("Expected")
                 th("Actual")
+                th("Diff")
                 th("Testcase (link)")
 
             for ui_failure in recent_ui_failures:
@@ -260,6 +265,7 @@ def differing_screens() -> None:
                         with tr(bgcolor="red"):
                             html.image_column(recorded, TESTREPORT_PATH)
                             html.image_column(actual, TESTREPORT_PATH)
+                            html.diff_column()
                             with td():
                                 with a(href=f"failed/{ui_failure.test.id}.html"):
                                     i(ui_failure.test.id)
@@ -374,7 +380,7 @@ def failed(result: TestResult) -> Path:
                 strong("WARNING:")
                 text(" failed to download recorded fixtures. Is this a new test case?")
 
-        with table(border=1, width=600, onclick="createTableDiff(this)"):
+        with table(border=1, width=600):
             with tr():
                 th("Expected")
                 th("Actual")
