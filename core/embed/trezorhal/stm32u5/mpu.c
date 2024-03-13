@@ -150,6 +150,8 @@ static void mpu_set_attributes(void) {
 #define GRAPHICS_SIZE SIZE_16M
 #endif
 
+#define OTP_AND_ID_SIZE 0x800
+
 void mpu_config_boardloader(void) {
   HAL_MPU_Disable();
   mpu_set_attributes();
@@ -246,7 +248,7 @@ void mpu_config_prodtest(void) {
   SET_REGION( 3, SRAM1_BASE,               SRAM_SIZE,          SRAM,        YES,   YES ); // SRAM1/2/3/5
   SET_REGION( 4, GRAPHICS_START,           GRAPHICS_SIZE,      SRAM,        YES,   YES ); // Frame buffer or display interface
   SET_REGION( 5, PERIPH_BASE_NS,           SIZE_512M,          PERIPHERAL,  YES,   YES ); // Peripherals
-  SET_REGION( 6, FLASH_OTP_BASE,           FLASH_OTP_SIZE,     FLASH_DATA,  YES,   YES ); // OTP
+  SET_REGION( 6, FLASH_OTP_BASE,           OTP_AND_ID_SIZE,    FLASH_DATA,  YES,   YES ); // OTP + device ID
   SET_REGION( 7, SRAM4_BASE,               SIZE_16K,           SRAM,        YES,   YES ); // SRAM4
   // clang-format on
   HAL_MPU_Enable(LL_MPU_CTRL_HARDFAULT_NMI);
