@@ -3,7 +3,7 @@ from typing import Any
 
 import dominate
 import dominate.tags as t
-from dominate.tags import a, h1, hr, i, p, table, td, th, tr
+from dominate.tags import a, h1, hr, i, p, script, table, td, th, tr
 
 from ..common import (
     UI_TESTS_DIR,
@@ -179,17 +179,23 @@ def _differing_screens_report(
         model = ""
 
     doc = document(title="Master differing screens", model=model)
+    with doc.head:
+        script(
+            type="text/javascript", src="https://cdn.jsdelivr.net/npm/pixelmatch@5.3.0"
+        )
     with doc:
         with table(border=1, width=600):
             with tr():
                 th("Expected")
                 th("Actual")
+                th("Diff")
                 th("Testcase (link)")
 
             for (master, current), testcase in unique_differing_screens.items():
                 with tr(bgcolor="red"):
                     html.image_column(master, base_dir)
                     html.image_column(current, base_dir)
+                    html.diff_column()
                     with td():
                         with a(href=f"diff/{testcase}.html"):
                             i(testcase)
