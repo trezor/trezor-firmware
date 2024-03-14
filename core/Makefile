@@ -74,6 +74,7 @@ FLASH_START 		= $(shell python ./tools/layout_parser.py ${LAYOUT_FILE} FLASH_STA
 BOARDLOADER_START   = $(shell python ./tools/layout_parser.py ${LAYOUT_FILE} BOARDLOADER_START)
 BOOTLOADER_START    = $(shell python ./tools/layout_parser.py ${LAYOUT_FILE} BOOTLOADER_START)
 FIRMWARE_START   	= $(shell python ./tools/layout_parser.py ${LAYOUT_FILE} FIRMWARE_START)
+FIRMWARE_P2_START   = $(shell python ./tools/layout_parser.py ${LAYOUT_FILE} FIRMWARE_P2_START)
 STORAGE_1_OFFSET	= $(shell python ./tools/layout_parser.py ${LAYOUT_FILE} STORAGE_1_OFFSET)
 STORAGE_2_OFFSET	= $(shell python ./tools/layout_parser.py ${LAYOUT_FILE} STORAGE_2_OFFSET)
 STORAGE_SIZE		= $(shell python ./tools/layout_parser.py ${LAYOUT_FILE} NORCOW_SECTOR_SIZE)
