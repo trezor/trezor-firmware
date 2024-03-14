@@ -4,6 +4,10 @@ inputs:
   model:
     description: 'Internal model name'
     required: true
+  status:
+    description: 'Either "success" or "failure"'
+    required: false
+    default: "failure"
 runs:
   using: composite
   steps:
@@ -22,6 +26,12 @@ runs:
         mv tests/trezor.log $OUTDIR || true
         diff -u tests/ui_tests/fixtures.json tests/ui_tests/fixtures.suggestion.json || true
         tar -cf screens_$MODELJOB.tar tests/ui_tests/screens || true
+
+        if [ "${{ inputs.status }}" = "success" ]; then
+          cp .github/actions/ui-report/success.png $OUTDIR/status.png
+        else
+          cp .github/actions/ui-report/failure.png $OUTDIR/status.png
+        fi
       shell: sh
     - name: Upload report
       run: |
