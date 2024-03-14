@@ -136,6 +136,14 @@ class Storage:
             raise RuntimeError("Failed to find key in storage.")
         return value
 
+    def get_slice(self, key: int, offset: int, max_len: int) -> bytes:
+        value = self.get(key)
+        if offset + max_len > len(value):
+            end = len(value)
+        else:
+            end = offset + max_len
+        return value[offset:end]
+
     def set(self, key: int, val: bytes) -> bool:
         app = key >> 8
         self._check_lock(app)

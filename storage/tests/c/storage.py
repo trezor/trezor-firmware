@@ -74,6 +74,20 @@ class Storage:
             raise RuntimeError("Failed to get value from storage.")
         return s.raw
 
+    def get_slice(self, key: int, offset: int, len: int) -> bytes:
+        val_len = c.c_uint16()
+        slice_len = c.c_uint16()
+        if sectrue != self.lib.storage_get(c.c_uint16(key), None, 0, c.byref(val_len)):
+            raise RuntimeError("Failed to find key in storage.")
+        if len > val_len.value - offset > 0:
+            len = val_len.value - offset
+        s = c.create_string_buffer(len)
+        if sectrue != self.lib.storage_get_slice(
+            c.c_uint16(key), offset, s, len, c.byref(val_len), c.byref(slice_len)
+        ):
+            raise RuntimeError("Failed to get value from storage.")
+        return s.raw
+
     def set(self, key: int, val: bytes) -> None:
         if sectrue != self.lib.storage_set(c.c_uint16(key), val, c.c_uint16(len(val))):
             raise RuntimeError("Failed to set value in storage.")
