@@ -8,15 +8,13 @@ use crate::{
         display,
         display::{Font, Icon},
         geometry::{Alignment2D, Offset, Point, Rect},
+        layout::simplified::ReturnToC,
     },
 };
 
-use super::{
-    super::{
-        component::{ButtonLayout, Choice, ChoiceFactory, ChoicePage},
-        theme::bootloader::{BLD_BG, BLD_FG, ICON_EXIT, ICON_REDO, ICON_TRASH},
-    },
-    ReturnToC,
+use super::super::{
+    component::{ButtonLayout, Choice, ChoiceFactory, ChoicePage},
+    theme::bootloader::{BLD_BG, BLD_FG, ICON_EXIT, ICON_REDO, ICON_TRASH},
 };
 
 #[repr(u32)]
