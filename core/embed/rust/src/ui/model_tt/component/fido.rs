@@ -62,7 +62,18 @@ where
         page_swipe.allow_right = scrollbar.has_previous_page();
         page_swipe.allow_left = scrollbar.has_next_page();
 
-        let current_account = get_account(scrollbar.active_page);
+        // NOTE: This is an ugly hotfix for the erroneous behavior of
+        // TextLayout used in the account_name Label. In this
+        // particular case, TextLayout calculates the wrong height of
+        // fitted text that's higher than the TextLayout bound itself.
+        //
+        // The following two lines should be swapped when the problem with
+        // TextLayout is fixed.
+        //
+        // See also, continuation of this hotfix in the place() function.
+
+        // let current_account = get_account(scrollbar.active_page);
+        let current_account = "".into();
 
         Self {
             app_name: Label::centered(app_name, theme::TEXT_DEMIBOLD),
@@ -146,6 +157,11 @@ where
 
         self.app_name.place(app_name_area);
         self.account_name.place(account_name_area);
+
+        // NOTE: This is a hotfix used due to the erroneous behavior of TextLayout.
+        // This line should be removed when the problem with TextLayout is fixed.
+        // See also the code for FidoConfirm::new().
+        self.account_name.set_text((self.get_account)(self.scrollbar.active_page));
 
         bounds
     }
