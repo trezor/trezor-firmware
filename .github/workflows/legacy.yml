@@ -11,7 +11,7 @@ permissions:
 
 env:
   PULL_COMMENT: |
-    |legacy UI changes|[device test](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T1B1-legacy_device_test/index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T1B1-legacy_device_test/differing_screens.html)) [main](https://data.trezor.io/dev/firmware/master_diff/${{ github.run_id }}/)([screens](https://data.trezor.io/dev/firmware/master_diff/${{ github.run_id }}/master_diff.html))|
+    |legacy UI changes|<img src="https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T2B1-legacy_device_test/status.png" width="24" height="24" />[device test](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T1B1-legacy_device_test/index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T1B1-legacy_device_test/differing_screens.html)) <img src="https://data.trezor.io/dev/firmware/master_diff/${{ github.run_id }}/status.png" width="24" height="24" />[main](https://data.trezor.io/dev/firmware/master_diff/${{ github.run_id }}/)([screens](https://data.trezor.io/dev/firmware/master_diff/${{ github.run_id }}/master_diff.html))|
     |-----------------|-----|
 
 jobs:
@@ -97,6 +97,7 @@ jobs:
       - uses: ./.github/actions/ui-report
         with:
           model: T1B1
+          status: ${{ job.status }}
         continue-on-error: true
         if: ${{ always() && matrix.coins == 'universal' }}
       - uses: ./.github/actions/ui-comment
@@ -167,7 +168,13 @@ jobs:
         continue-on-error: true
       - run: "for F in screens_*.tar; do tar xvf $F; done || true"
       - run: nix-shell --run "poetry run python -m tests.ui_tests.reporting master-diff T1"
-      - run: mv tests/ui_tests/reports/master_diff .
+      - run: |
+          mv tests/ui_tests/reports/master_diff .
+          if [ "${{ job.status }}" = "success" ]; then
+            cp core/assets/check24.png $OUTDIR/status.png
+          else
+            cp core/assets/x24.png $OUTDIR/status.png
+          fi
       - name: Upload main branch diff
         run: |
           aws s3 sync master_diff s3://data.trezor.io/dev/firmware/master_diff/${{ github.run_id }}

@@ -12365,7 +12365,7 @@
 "TT_en_bitcoin-test_authorize_coinjoin.py::test_wrong_account_type": "4ec28178d68afd83019583d2f70dfc1a66a42f946a801d6a9d210ecb7d700951",
 "TT_en_bitcoin-test_authorize_coinjoin.py::test_wrong_coordinator": "4ec28178d68afd83019583d2f70dfc1a66a42f946a801d6a9d210ecb7d700951",
 "TT_en_bitcoin-test_bcash.py::test_attack_change_input": "5a2732a973bf39bb25bd06180cfdfbc7fe494015c07df9461d15e189851b811d",
-"TT_en_bitcoin-test_bcash.py::test_send_bch_change": "5a2732a973bf39bb25bd06180cfdfbc7fe494015c07df9461d15e189851b811d",
+"TT_en_bitcoin-test_bcash.py::test_send_bch_change": "5a2732a973bf39bb25bd06180cfdfbc7fe494015c07df9461d15e189851b811a",
 "TT_en_bitcoin-test_bcash.py::test_send_bch_external_presigned": "0ebad19508c4746198a6728449e4ac0d1cfdf169db907e4ff1acf1ef7f37a400",
 "TT_en_bitcoin-test_bcash.py::test_send_bch_multisig_change": "4e9225e760a416bdef0b2eb1ac07489a7fc216b6a682f4edfd0a99dc7a0364c3",
 "TT_en_bitcoin-test_bcash.py::test_send_bch_multisig_wrongchange": "3350934f73adc12375536ecc125f42631d0f17f37d5a72c3a6a1a062e9e9e565",
