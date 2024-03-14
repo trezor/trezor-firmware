@@ -137,6 +137,8 @@ class Storage:
         return value
 
     def get_slice(self, key: int, offset: int, max_len: int) -> bytes:
+        if not consts.is_app_public(key >> 8):
+            raise RuntimeError("Only public values can be read by slices")
         value = self.get(key)
         if offset + max_len > len(value):
             end = len(value)

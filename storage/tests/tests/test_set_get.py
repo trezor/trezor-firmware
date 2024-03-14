@@ -298,16 +298,8 @@ def test_streaming(nc_class):
     ]
 
     for s in (sc, sp):
-
         for data in test_data:
-
-            s.set(0x0101, data)
             s.set(0x8102, data)
-
-            for j in range(1, len(data)):
-                for i in range(0, len(data), j):
-                    assert s.get_slice(0x0101, i, j) == data[i : i + j]
-
             for j in range(1, len(data)):
                 for i in range(0, len(data), j):
                     assert s.get_slice(0x8102, i, j) == data[i : i + j]
