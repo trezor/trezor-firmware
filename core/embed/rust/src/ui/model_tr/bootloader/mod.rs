@@ -2,17 +2,14 @@ use heapless::String;
 
 use crate::{
     strutil::hexlify,
-    trezorhal::{io::io_button_read, secbool::secbool},
+    trezorhal::secbool::secbool,
     ui::{
-        component::{
-            connect::Connect, Component, Event, EventCtx, Label, LineBreaking::BreakWordsNoHyphen,
-            Never,
-        },
+        component::{connect::Connect, Label, LineBreaking::BreakWordsNoHyphen},
         constant,
         constant::{HEIGHT, SCREEN},
         display::{self, Color, Font, Icon},
-        event::ButtonEvent,
         geometry::{Alignment2D, Offset, Point, Rect},
+        layout::simplified::{run, show, ReturnToC},
         util::{from_c_array, from_c_str},
     },
 };
@@ -38,80 +35,10 @@ use welcome::Welcome;
 
 pub type BootloaderString = String<128>;
 
-pub trait ReturnToC {
-    fn return_to_c(self) -> u32;
-}
-
-impl ReturnToC for Never {
-    fn return_to_c(self) -> u32 {
-        unreachable!()
-    }
-}
-
-impl ReturnToC for () {
-    fn return_to_c(self) -> u32 {
-        0
-    }
-}
-
 impl ReturnToC for ConfirmMsg {
     fn return_to_c(self) -> u32 {
         self as u32
     }
-}
-
-fn button_eval() -> Option<ButtonEvent> {
-    let event = io_button_read();
-    if event == 0 {
-        return None;
-    }
-
-    let event_type = event >> 24;
-    let event_btn = event & 0xFFFFFF;
-
-    let event = ButtonEvent::new(event_type, event_btn);
-
-    if let Ok(event) = event {
-        return Some(event);
-    }
-    None
-}
-
-fn run<F>(frame: &mut F) -> u32
-where
-    F: Component,
-    F::Msg: ReturnToC,
-{
-    frame.place(SCREEN);
-    frame.paint();
-    display::refresh();
-
-    while button_eval().is_some() {}
-
-    loop {
-        let event = button_eval();
-        if let Some(e) = event {
-            let mut ctx = EventCtx::new();
-            let msg = frame.event(&mut ctx, Event::Button(e));
-
-            if let Some(message) = msg {
-                return message.return_to_c();
-            }
-
-            frame.paint();
-            display::refresh();
-        }
-    }
-}
-
-fn show<F>(frame: &mut F)
-where
-    F: Component,
-{
-    frame.place(SCREEN);
-    display::sync();
-    frame.paint();
-    display::refresh();
 }
 
 #[no_mangle]
@@ -193,7 +120,7 @@ extern "C" fn screen_unlock_bootloader_success() {
         Label::centered("Please reconnect the\ndevice", TEXT_NORMAL).vertically_centered();
 
     let mut frame = ResultScreen::new(BLD_FG, BLD_BG, ICON_SPINNER, title, content, true);
-    show(&mut frame);
+    show(&mut frame, false);
 }
 
 #[no_mangle]
@@ -299,7 +226,7 @@ extern "C" fn screen_wipe_progress(progress: u16, initialize: bool) {
 #[no_mangle]
 extern "C" fn screen_connect(_initial_setup: bool) {
     let mut frame = Connect::new("Waiting for host...", BLD_FG, BLD_BG);
-    show(&mut frame);
+    show(&mut frame, false);
 }
 
 #[no_mangle]
@@ -310,7 +237,7 @@ extern "C" fn screen_wipe_success() {
         Label::centered("Please reconnect\nthe device", TEXT_NORMAL).vertically_centered();
 
     let mut frame = ResultScreen::new(BLD_FG, BLD_BG, ICON_SPINNER, title, content, true);
-    show(&mut frame);
+    show(&mut frame, false);
 }
 
 #[no_mangle]
@@ -321,7 +248,7 @@ extern "C" fn screen_wipe_fail() {
         Label::centered("Please reconnect\nthe device", TEXT_NORMAL).vertically_centered();
 
     let mut frame = ResultScreen::new(BLD_FG, BLD_BG, ICON_ALERT, title, content, true);
-    show(&mut frame);
+    show(&mut frame, false);
 }
 
 #[no_mangle]
@@ -329,7 +256,7 @@ extern "C" fn screen_boot_empty(_fading: bool) {
     display::rect_fill(SCREEN, BLD_BG);
 
     let mut frame = WelcomeScreen::new(true);
-    show(&mut frame);
+    show(&mut frame, false);
 }
 
 #[no_mangle]
@@ -340,7 +267,7 @@ extern "C" fn screen_install_fail() {
         Label::centered("Please reconnect\nthe device", TEXT_NORMAL).vertically_centered();
 
     let mut frame = ResultScreen::new(BLD_FG, BLD_BG, ICON_ALERT, title, content, true);
-    show(&mut frame);
+    show(&mut frame, false);
 }
 
 #[no_mangle]
@@ -365,13 +292,13 @@ extern "C" fn screen_install_success(
     let content = Label::centered(reboot_msg.as_str(), TEXT_NORMAL).vertically_centered();
 
     let mut frame = ResultScreen::new(BLD_FG, BLD_BG, ICON_SPINNER, title, content, complete_draw);
-    show(&mut frame);
+    show(&mut frame, false);
 }
 
 #[no_mangle]
 extern "C" fn screen_welcome() {
     let mut frame = Welcome::new();
-    show(&mut frame);
+    show(&mut frame, false);
 }
 
 #[no_mangle]
