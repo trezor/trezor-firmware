@@ -32,12 +32,12 @@
 #include "storage.h"
 
 static secbool wrapped_ui_wait_callback(uint32_t wait, uint32_t progress,
-                                        const char *message) {
+                                        enum storage_ui_message_t message) {
   if (mp_obj_is_callable(MP_STATE_VM(trezorconfig_ui_wait_callback))) {
     mp_obj_t args[3] = {0};
     args[0] = mp_obj_new_int(wait);
     args[1] = mp_obj_new_int(progress);
-    args[2] = mp_obj_new_str(message, strlen(message));
+    args[2] = mp_obj_new_int(message);
     if (mp_call_function_n_kw(MP_STATE_VM(trezorconfig_ui_wait_callback), 3, 0,
                               args) == mp_const_true) {
       return sectrue;
@@ -47,7 +47,8 @@ static secbool wrapped_ui_wait_callback(uint32_t wait, uint32_t progress,
 }
 
 /// def init(
-///    ui_wait_callback: Callable[[int, int, str], bool] | None = None
+///    ui_wait_callback: Callable[[int, int, StorageMessage], bool] | None =
+///    None
 /// ) -> None:
 ///     """
 ///     Initializes the storage.  Must be called before any other method is
@@ -409,6 +410,21 @@ STATIC mp_obj_t mod_trezorconfig_wipe(void) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorconfig_wipe_obj,
                                  mod_trezorconfig_wipe);
 
+/// from enum import IntEnum
+/// class StorageMessage(IntEnum):
+///     NO_MSG = 0
+///     VERIFYING_PIN_MSG = 1
+///     PROCESSING_MSG = 2
+///     STARTING_MSG = 3
+///     WRONG_PIN_MSG = 4
+STATIC const qstr mod_trezorconfig_StorageMessage_fields[] = {
+    MP_QSTR_NO_MSG, MP_QSTR_VERIFYING_PIN_MSG, MP_QSTR_PROCESSING_MSG,
+    MP_QSTR_STARTING_MSG, MP_QSTR_WRONG_PIN_MSG};
+STATIC MP_DEFINE_ATTRTUPLE(
+    mod_trezorconfig_StorageMessage_obj, mod_trezorconfig_StorageMessage_fields,
+    (sizeof(mod_trezorconfig_StorageMessage_fields) / sizeof(qstr)),
+    MP_ROM_INT(0), MP_ROM_INT(1), MP_ROM_INT(2), MP_ROM_INT(3), MP_ROM_INT(4));
+
 STATIC const mp_rom_map_elem_t mp_module_trezorconfig_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_trezorconfig)},
     {MP_ROM_QSTR(MP_QSTR_init), MP_ROM_PTR(&mod_trezorconfig_init_obj)},
@@ -437,6 +453,8 @@ STATIC const mp_rom_map_elem_t mp_module_trezorconfig_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_next_counter),
      MP_ROM_PTR(&mod_trezorconfig_next_counter_obj)},
     {MP_ROM_QSTR(MP_QSTR_wipe), MP_ROM_PTR(&mod_trezorconfig_wipe_obj)},
+    {MP_ROM_QSTR(MP_QSTR_StorageMessage),
+     MP_ROM_PTR(&mod_trezorconfig_StorageMessage_obj)},
 };
 STATIC MP_DEFINE_CONST_DICT(mp_module_trezorconfig_globals,
                             mp_module_trezorconfig_globals_table);
