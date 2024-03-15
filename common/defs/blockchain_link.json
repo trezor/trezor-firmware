@@ -131,7 +131,7 @@
   "bitcoin:SYS": {
     "type": "blockbook",
     "url": [
-      "https://blockbook.elint.services"
+      "https://blockbook.syscoin.org"
     ]
   },
   "bitcoin:TEST": {
