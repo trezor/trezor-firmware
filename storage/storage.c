@@ -137,18 +137,12 @@ const uint8_t WIPE_CODE_EMPTY[] = {0, 0, 0, 0};
 // The uint32 representation of an empty wipe code used in storage version 2.
 #define V2_WIPE_CODE_EMPTY 0
 
-// TODO: handle translation
-const char *const VERIFYING_PIN_MSG = "Verifying PIN";
-const char *const PROCESSING_MSG = "Processing";
-const char *const STARTING_MSG = "Starting up";
-const char *const WRONG_PIN_MSG = "Wrong PIN";
-
 static secbool initialized = secfalse;
 static secbool unlocked = secfalse;
 static PIN_UI_WAIT_CALLBACK ui_callback = NULL;
 static uint32_t ui_total = 0;
 static uint32_t ui_rem = 0;
-static const char *ui_message = NULL;
+static enum storage_ui_message_t ui_message = NO_MSG;
 static uint8_t cached_keys[KEYS_SIZE] = {0};
 static uint8_t *const cached_dek = cached_keys;
 static uint8_t *const cached_sak = cached_keys + DEK_SIZE;
@@ -986,7 +980,7 @@ secbool storage_unlock(const uint8_t *pin, size_t pin_len,
   ui_total = PIN_DERIVE_MS;
   ui_rem = ui_total;
   if (pin_len == 0) {
-    if (ui_message == NULL) {
+    if (ui_message == NO_MSG) {
       ui_message = STARTING_MSG;
     } else {
       ui_message = PROCESSING_MSG;
