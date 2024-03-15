@@ -6,7 +6,10 @@ use crate::ui::{
     shape::Renderer,
 };
 #[cfg(feature = "bootloader")]
-use crate::ui::{display::{Icon, toif::Toif}, model_tt::theme::bootloader::DEVICE_NAME};
+use crate::ui::{
+    display::{toif::Toif, Icon},
+    model_tt::theme::bootloader::DEVICE_NAME,
+};
 
 const TEXT_BOTTOM_MARGIN: i16 = 24; // matching the homescreen label margin
 const ICON_TOP_MARGIN: i16 = 48;

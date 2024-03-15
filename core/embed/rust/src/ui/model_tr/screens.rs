@@ -1,8 +1,6 @@
 #[cfg(feature = "micropython")]
 use crate::micropython::buffer::StrBuffer;
-use crate::ui::{
-    component::base::Component, constant::screen, model_tr::component::WelcomeScreen,
-};
+use crate::ui::{component::base::Component, constant::screen, model_tr::component::WelcomeScreen};
 
 #[cfg(not(feature = "new_rendering"))]
 use crate::ui::display;

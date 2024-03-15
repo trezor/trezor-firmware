@@ -1,5 +1,7 @@
-use crate::error::Error;
-use crate::micropython::{buffer::get_buffer, obj::Obj};
+use crate::{
+    error::Error,
+    micropython::{buffer::get_buffer, obj::Obj},
+};
 
 use crate::ui::{
     component::{Component, Event, EventCtx, Never},

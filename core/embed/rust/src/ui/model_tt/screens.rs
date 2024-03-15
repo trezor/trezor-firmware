@@ -14,7 +14,6 @@ use crate::ui::display;
 #[cfg(feature = "new_rendering")]
 use crate::ui::{display::Color, shape::render_on_display};
 
-
 #[cfg(not(feature = "micropython"))]
 // SAFETY: Actually safe but see below
 unsafe fn get_str(text: &str) -> &str {

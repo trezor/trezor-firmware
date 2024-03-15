@@ -4,7 +4,6 @@ use crate::{
     time::{Duration, Instant},
     ui::{
         animation::Animation,
-        canvas::algo::PI4,
         component::{Component, Event, EventCtx, Pad},
         display::{self, toif::Icon, Color},
         geometry::{Alignment2D, Offset, Rect},
@@ -236,7 +235,7 @@ impl Component for Loader {
 
             shape::Circle::new(center, constant::LOADER_OUTER)
                 .with_bg(style.loader_color)
-                .with_end_angle(((progress as i32 * PI4 as i32 * 8) / 1000) as i16)
+                .with_end_angle(((progress as i32 * shape::PI4 as i32 * 8) / 1000) as i16)
                 .render(target);
 
             shape::Circle::new(center, constant::LOADER_INNER + 2)
