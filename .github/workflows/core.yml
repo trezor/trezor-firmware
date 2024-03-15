@@ -159,12 +159,6 @@ jobs:
       matrix:
         model: [T2T1, T2B1]
         asan: ${{ fromJSON(needs.param.outputs.asan) }}
-        # T2B1 fails due to rust clippy error which is hard to reproduce, see discussion here:
-        # https://github.com/trezor/trezor-firmware/pull/2196
-        # The problem might be in conflicting versions of clippy, let's see if this helps:
-        # https://github.com/trezor/trezor-firmware/issues/3337
-        exclude:
-          - model: T2B1
     env:
       TREZOR_MODEL: ${{ matrix.model == 'T2T1' && 'T' || matrix.model == 'T2B1' && 'R' || matrix.model }}
       ADDRESS_SANITIZER: ${{ matrix.asan == 'asan' && '1' || '0' }}

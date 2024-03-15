@@ -51,7 +51,7 @@ pub const HOMESCREEN_IMAGE_HEIGHT: i16 = HEIGHT;
 pub const HOMESCREEN_TOIF_SIZE: i16 = 144;
 pub const HOMESCREEN_TOIF_Y_OFFSET: i16 = 27;
 pub const HOMESCREEN_TOIF_X_OFFSET: usize =
-    ((WIDTH.saturating_sub(HOMESCREEN_TOIF_SIZE)) / 2) as usize;
+    ((WIDTH as usize).saturating_sub(HOMESCREEN_TOIF_SIZE as usize)) / 2;
 
 const HOMESCREEN_MAX_ICON_SIZE: i16 = 20;
 const NOTIFICATION_HEIGHT: i16 = 36;
