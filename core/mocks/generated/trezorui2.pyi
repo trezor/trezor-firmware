@@ -399,9 +399,9 @@ def show_group_share_success(
 # rust/src/ui/model_tr/layout.rs
 def show_progress(
     *,
-    title: str,
+    description: str,
     indeterminate: bool = False,
-    description: str = "",
+    title: str | None = None,
 ) -> LayoutObj[UiResult]:
    """Show progress loader. Please note that the number of lines reserved on screen for
    description is determined at construction time. If you want multiline descriptions
@@ -917,9 +917,9 @@ def show_remaining_shares(
 # rust/src/ui/model_tt/layout.rs
 def show_progress(
     *,
-    title: str,
+    description: str,
     indeterminate: bool = False,
-    description: str = "",
+    title: str | None = None,
 ) -> LayoutObj[UiResult]:
     """Show progress loader. Please note that the number of lines reserved on screen for
    description is determined at construction time. If you want multiline descriptions
