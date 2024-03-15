@@ -3,7 +3,8 @@ from typing import *
 
 # extmod/modtrezorconfig/modtrezorconfig.c
 def init(
-   ui_wait_callback: Callable[[int, int, str], bool] | None = None
+   ui_wait_callback: Callable[[int, int, StorageMessage], bool] | None =
+   None
 ) -> None:
     """
     Initializes the storage.  Must be called before any other method is
@@ -141,3 +142,13 @@ def wipe() -> None:
     """
     Erases the whole config. Use with caution!
     """
+from enum import IntEnum
+
+
+# extmod/modtrezorconfig/modtrezorconfig.c
+class StorageMessage(IntEnum):
+    NO_MSG = 0
+    VERIFYING_PIN_MSG = 1
+    PROCESSING_MSG = 2
+    STARTING_MSG = 3
+    WRONG_PIN_MSG = 4
