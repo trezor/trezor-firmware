@@ -6,7 +6,7 @@ pub mod border;
 pub mod connect;
 pub mod empty;
 pub mod image;
-#[cfg(feature = "jpeg")]
+#[cfg(all(feature = "jpeg", feature = "micropython"))]
 pub mod jpeg;
 pub mod label;
 pub mod map;
@@ -23,7 +23,7 @@ pub use bar::Bar;
 pub use base::{Child, Component, ComponentExt, Event, EventCtx, Never, Root, TimerToken};
 pub use border::Border;
 pub use empty::Empty;
-#[cfg(feature = "jpeg")]
+#[cfg(all(feature = "jpeg", feature = "micropython"))]
 pub use jpeg::Jpeg;
 pub use label::Label;
 pub use map::MsgMap;

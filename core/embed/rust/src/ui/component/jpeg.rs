@@ -1,5 +1,4 @@
 use crate::error::Error;
-#[cfg(feature = "jpeg")]
 use crate::micropython::{buffer::get_buffer, obj::Obj};
 
 use crate::ui::{
