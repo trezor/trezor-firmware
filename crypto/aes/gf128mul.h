@@ -116,7 +116,7 @@ Issue Date: 11/01/2011
 #  define NEED_UINT_64T
 #endif
 
-#include "brg_types.h"
+#include "mode_hdr.h"
 
 /* Choose the Galois Field representation to use (see above) */
 #if 0
@@ -141,7 +141,7 @@ Issue Date: 11/01/2011
 #if 0
 #  define TABLES_8K
 #endif
-#if 1
+#if 0
 #  define TABLES_4K
 #endif
 #if 0

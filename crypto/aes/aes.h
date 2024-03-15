@@ -27,7 +27,6 @@ Issue Date: 02/08/2018
 #include <stdlib.h>
 #include <stdint.h>
 
-#define VOID_RETURN         void
 #define INT_RETURN          int
 #define ALIGN_OFFSET(x,n)   (((intptr_t)(x)) & ((n) - 1))
 #define ALIGN_FLOOR(x,n)    ((uint8_t*)(x) - ( ((intptr_t)(x)) & ((n) - 1)))

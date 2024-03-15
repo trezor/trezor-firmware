@@ -29,7 +29,7 @@ Issue Date: 30/03/2011
    a bug in the fast buffer operations on big endian systems.
 */
 
-#include "gcm.h"
+#include "aesgcm.h"
 #include "mode_hdr.h"
 
 /*  This GCM implementation needs a Galois Field multiplier for GF(2^128).
@@ -176,7 +176,7 @@ ret_type gcm_init_message(                  /* initialise a new message     */
             xor_block_aligned(ctx->ctr_val, ctx->ctr_val, iv);
             n_pos -= BLOCK_SIZE;
             iv += BLOCK_SIZE;
-            gf_mul_hh((gf_t*)ctx->ctr_val, ctx);
+            gf_mul_hh(ctx->ctr_val, ctx);
         }
 
         if(n_pos)
@@ -184,12 +184,12 @@ ret_type gcm_init_message(                  /* initialise a new message     */
             p = UI8_PTR(ctx->ctr_val);
             while(n_pos-- > 0)
                 *p++ ^= *iv++;
-            gf_mul_hh((gf_t*)ctx->ctr_val, ctx);
+            gf_mul_hh(ctx->ctr_val, ctx);
         }
         n_pos = (iv_len << 3);
         for(i = BLOCK_SIZE - 1; n_pos; --i, n_pos >>= 8)
             UI8_PTR(ctx->ctr_val)[i] ^= (unsigned char)n_pos;
-        gf_mul_hh((gf_t*)ctx->ctr_val, ctx);
+        gf_mul_hh(ctx->ctr_val, ctx);
     }
 
     ctx->y0_val = *UI32_PTR(UI8_PTR(ctx->ctr_val) + CTR_POS);
@@ -210,7 +210,7 @@ ret_type gcm_auth_header(                   /* authenticate the header      */
         return RETURN_GOOD;
 
     if(ctx->hdr_cnt && b_pos == 0)
-        gf_mul_hh((gf_t*)ctx->hdr_ghv, ctx);
+        gf_mul_hh(ctx->hdr_ghv, ctx);
 
     if(!((hdr - (UI8_PTR(ctx->hdr_ghv) + b_pos)) & BUF_ADRMASK))
     {
@@ -225,7 +225,7 @@ ret_type gcm_auth_header(                   /* authenticate the header      */
 
         while(cnt + BLOCK_SIZE <= hdr_len)
         {
-            gf_mul_hh((gf_t*)ctx->hdr_ghv, ctx);
+            gf_mul_hh(ctx->hdr_ghv, ctx);
             xor_block_aligned(ctx->hdr_ghv, ctx->hdr_ghv, hdr + cnt);
             cnt += BLOCK_SIZE;
         }
@@ -237,7 +237,7 @@ ret_type gcm_auth_header(                   /* authenticate the header      */
 
         while(cnt + BLOCK_SIZE <= hdr_len)
         {
-            gf_mul_hh((gf_t*)ctx->hdr_ghv, ctx);
+            gf_mul_hh(ctx->hdr_ghv, ctx);
             xor_block(ctx->hdr_ghv, ctx->hdr_ghv, hdr + cnt);
             cnt += BLOCK_SIZE;
         }
@@ -247,7 +247,7 @@ ret_type gcm_auth_header(                   /* authenticate the header      */
     {
         if(b_pos == BLOCK_SIZE)
         {
-            gf_mul_hh((gf_t*)ctx->hdr_ghv, ctx);
+            gf_mul_hh(ctx->hdr_ghv, ctx);
             b_pos = 0;
         }
         UI8_PTR(ctx->hdr_ghv)[b_pos++] ^= hdr[cnt++];
@@ -267,7 +267,7 @@ ret_type gcm_auth_data(                     /* authenticate ciphertext data */
         return RETURN_GOOD;
 
     if(ctx->txt_acnt && b_pos == 0)
-        gf_mul_hh((gf_t*)ctx->txt_ghv, ctx);
+        gf_mul_hh(ctx->txt_ghv, ctx);
 
     if(!((data - (UI8_PTR(ctx->txt_ghv) + b_pos)) & BUF_ADRMASK))
     {
@@ -282,7 +282,7 @@ ret_type gcm_auth_data(                     /* authenticate ciphertext data */
 
         while(cnt + BLOCK_SIZE <= data_len)
         {
-            gf_mul_hh((gf_t*)ctx->txt_ghv, ctx);
+            gf_mul_hh(ctx->txt_ghv, ctx);
             xor_block_aligned(ctx->txt_ghv, ctx->txt_ghv, data + cnt);
             cnt += BLOCK_SIZE;
         }
@@ -294,7 +294,7 @@ ret_type gcm_auth_data(                     /* authenticate ciphertext data */
 
         while(cnt + BLOCK_SIZE <= data_len)
         {
-            gf_mul_hh((gf_t*)ctx->txt_ghv, ctx);
+            gf_mul_hh(ctx->txt_ghv, ctx);
             xor_block(ctx->txt_ghv, ctx->txt_ghv, data + cnt);
             cnt += BLOCK_SIZE;
         }
@@ -304,7 +304,7 @@ ret_type gcm_auth_data(                     /* authenticate ciphertext data */
     {
         if(b_pos == BLOCK_SIZE)
         {
-            gf_mul_hh((gf_t*)ctx->txt_ghv, ctx);
+            gf_mul_hh(ctx->txt_ghv, ctx);
             b_pos = 0;
         }
         UI8_PTR(ctx->txt_ghv)[b_pos++] ^= data[cnt++];
@@ -385,8 +385,8 @@ ret_type gcm_compute_tag(                   /* compute authentication tag   */
     if(ctx->txt_acnt != ctx->txt_ccnt && ctx->txt_ccnt > 0)
         return RETURN_ERROR;
 
-    gf_mul_hh((gf_t*)ctx->hdr_ghv, ctx);
-    gf_mul_hh((gf_t*)ctx->txt_ghv, ctx);
+    gf_mul_hh(ctx->hdr_ghv, ctx);
+    gf_mul_hh(ctx->txt_ghv, ctx);
 
     if(ctx->hdr_cnt)
     {
@@ -424,7 +424,7 @@ ret_type gcm_compute_tag(                   /* compute authentication tag   */
                 convert_representation(tbuf, tbuf, GF_REPRESENTATION);
 #           endif
                 if(i & ln)
-                    gf_mul_hh((gf_t*)tbuf, ctx);
+                    gf_mul_hh(tbuf, ctx);
                 i >>= 1;
             }
 #           if defined(  GF_REPRESENTATION )
@@ -466,7 +466,7 @@ ret_type gcm_compute_tag(                   /* compute authentication tag   */
     }
 #endif
 
-    gf_mul_hh((gf_t*)ctx->hdr_ghv, ctx);
+    gf_mul_hh(ctx->hdr_ghv, ctx);
 
     memcpy(ctx->enc_ctr, ctx->ctr_val, BLOCK_SIZE);
     *UI32_PTR(UI8_PTR(ctx->enc_ctr) + CTR_POS) = ctx->y0_val;
