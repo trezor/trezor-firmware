@@ -1,7 +1,9 @@
 from typing import TYPE_CHECKING
 
+from . import config
+
 if TYPE_CHECKING:
-    from typing import Any
+    from typing import Any, Container
 
     from trezor.ui.layouts.common import ProgressLayout
 
@@ -11,13 +13,15 @@ _progress_layout: ProgressLayout | None = None
 _started_with_empty_loader = False
 keepalive_callback: Any = None
 
-_ignore_loader_messages: tuple[str, ...] = ()
+_ignore_loader_messages: Container[config.StorageMessage] = ()
 
 
 def ignore_nonpin_loader_messages() -> None:
     global _ignore_loader_messages
-    # TODO: handle translation of those (in C)
-    _ignore_loader_messages = ("Processing", "Starting up")
+    _ignore_loader_messages = (
+        config.StorageMessage.PROCESSING_MSG,
+        config.StorageMessage.STARTING_MSG,
+    )
 
 
 def allow_all_loader_messages() -> None:
@@ -25,7 +29,7 @@ def allow_all_loader_messages() -> None:
     _ignore_loader_messages = ()
 
 
-def render_empty_loader(message: str, description: str) -> None:
+def render_empty_loader(message: config.StorageMessage, description: str = "") -> None:
     """Render empty loader to prevent the screen appear to be frozen."""
     from trezor.ui.layouts.progress import pin_progress
 
@@ -38,7 +42,9 @@ def render_empty_loader(message: str, description: str) -> None:
     _started_with_empty_loader = True
 
 
-def show_pin_timeout(seconds: int, progress: int, message: str) -> bool:
+def show_pin_timeout(
+    seconds: int, progress: int, message: config.StorageMessage
+) -> bool:
     from trezor import TR
     from trezor.ui.layouts.progress import pin_progress
 
