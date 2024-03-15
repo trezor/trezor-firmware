@@ -50,6 +50,10 @@ int font_height(int font) {
     case FONT_BIG:
       return FONT_BIG_HEIGHT;
 #endif
+#ifdef TREZOR_FONT_SUB_ENABLE
+    case FONT_SUB:
+      return FONT_SUB_HEIGHT;
+#endif
   }
   return 0;
 }
@@ -76,6 +80,10 @@ int font_max_height(int font) {
     case FONT_BIG:
       return FONT_BIG_MAX_HEIGHT;
 #endif
+#ifdef TREZOR_FONT_SUB_ENABLE
+    case FONT_SUB:
+      return FONT_SUB_MAX_HEIGHT;
+#endif
   }
   return 0;
 }
@@ -101,6 +109,10 @@ int font_baseline(int font) {
 #ifdef TREZOR_FONT_BIG_ENABLE
     case FONT_BIG:
       return FONT_BIG_BASELINE;
+#endif
+#ifdef TREZOR_FONT_SUB_ENABLE
+    case FONT_SUB:
+      return FONT_SUB_BASELINE;
 #endif
   }
   return 0;
@@ -200,6 +212,10 @@ const uint8_t *font_nonprintable_glyph(int font) {
     case FONT_BIG:
       return NONPRINTABLE_GLYPH(FONT_BIG_DATA);
 #endif
+#ifdef TREZOR_FONT_SUB_ENABLE
+    case FONT_SUB:
+      return NONPRINTABLE_GLYPH(FONT_SUB_DATA);
+#endif
     default:
       return NULL;
   }
@@ -240,6 +256,10 @@ const uint8_t *font_get_glyph(int font, uint16_t c) {
 #ifdef TREZOR_FONT_BIG_ENABLE
       case FONT_BIG:
         return FONT_BIG_DATA[c - ' '];
+#endif
+#ifdef TREZOR_FONT_SUB_ENABLE
+      case FONT_SUB:
+        return FONT_SUB_DATA[c - ' '];
 #endif
     }
     return 0;

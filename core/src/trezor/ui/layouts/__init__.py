@@ -8,5 +8,7 @@ if utils.UI_LAYOUT == "TR":
     from .tr import *  # noqa: F401,F403
 elif utils.UI_LAYOUT == "TT":
     from .tt import *  # noqa: F401,F403
+elif utils.UI_LAYOUT == "MERCURY":
+    from .mercury import *  # noqa: F401,F403
 else:
     raise ValueError("Unknown layout")

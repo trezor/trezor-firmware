@@ -371,6 +371,7 @@ def test_signmessage_pagination(client: Client, message: str):
 
 @pytest.mark.skip_t1b1
 @pytest.mark.skip_t2b1(reason="Different screen size")
+@pytest.mark.skip_t3t1(reason="Different fonts")
 def test_signmessage_pagination_trailing_newline(client: Client):
     message = "THIS\nMUST\nNOT\nBE\nPAGINATED\n"
     # The trailing newline must not cause a new paginated screen to appear.
