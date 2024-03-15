@@ -51,7 +51,12 @@ This header file is an INTERNAL file which supports mode implementation
 #  define NEED_UINT_64T
 #endif
 
-#include "brg_types.h"
+#include <stdint.h>
+#define UI_TYPE(size)               uint##size##_t
+#define UNIT_TYPEDEF(x,size)        typedef UI_TYPE(size) x
+#define BUFR_TYPEDEF(x,size,bsize)  typedef UI_TYPE(size) x[bsize / (size >> 3)]
+#define UNIT_CAST(x,size)           ((UI_TYPE(size) )(x))
+#define UPTR_CAST(x,size)           ((UI_TYPE(size)*)(x))
 
 /*  Use of inlines is preferred but code blocks can also be expanded inline
     using 'defines'.  But the latter approach will typically generate a LOT
