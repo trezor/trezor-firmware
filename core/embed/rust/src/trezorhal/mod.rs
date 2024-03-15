@@ -2,11 +2,11 @@ pub mod bip39;
 #[macro_use]
 #[allow(unused_macros)]
 pub mod fatal_error;
-pub mod bitmap;
 #[cfg(feature = "ui")]
 pub mod display;
 #[cfg(feature = "dma2d")]
 pub mod dma2d;
+pub mod dma2d_new;
 mod ffi;
 #[cfg(feature = "haptic")]
 pub mod haptic;

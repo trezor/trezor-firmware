@@ -3,12 +3,13 @@ use crate::ui::{
     geometry::{Offset, Point, Rect},
 };
 
-use super::{BitmapView, Viewport};
+use super::super::{
+    algo::{circle_points, line_points, sin_i16, PI4},
+    BitmapView, Viewport,
+};
 
 #[cfg(feature = "ui_blurring")]
 use crate::ui::shape::DrawingCache;
-
-use super::super::algo::{circle_points, line_points, sin_i16, PI4};
 
 pub trait BasicCanvas {
     /// Returns dimensions of the canvas in pixels.

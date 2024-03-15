@@ -3,10 +3,13 @@ use crate::ui::{
     geometry::{Offset, Point, Rect},
 };
 
-#[cfg(feature = "ui_blurring")]
-use crate::ui::shape::DrawingCache;
+use super::{
+    super::{Bitmap, BitmapFormat, BitmapView},
+    BasicCanvas, Canvas, Viewport,
+};
 
-use super::{BasicCanvas, Bitmap, BitmapFormat, BitmapView, Canvas, Viewport};
+#[cfg(feature = "ui_blurring")]
+use super::super::DrawingCache;
 
 /// A struct representing 8-bit monochromatic canvas
 pub struct Mono8Canvas<'a> {

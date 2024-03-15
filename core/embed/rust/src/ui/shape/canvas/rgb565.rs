@@ -3,10 +3,13 @@ use crate::ui::{
     geometry::{Offset, Point, Rect},
 };
 
-use super::{BasicCanvas, Bitmap, BitmapFormat, BitmapView, Canvas, Viewport};
+use super::{
+    super::{Bitmap, BitmapFormat, BitmapView},
+    BasicCanvas, Canvas, Viewport,
+};
 
 #[cfg(feature = "ui_blurring")]
-use crate::ui::shape::DrawingCache;
+use super::super::DrawingCache;
 
 /// A struct representing 16-bit (RGB565) color canvas
 pub struct Rgb565Canvas<'a> {

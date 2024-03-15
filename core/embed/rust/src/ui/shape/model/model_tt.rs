@@ -1,10 +1,13 @@
+use crate::trezorhal::dma2d_new::Dma2d;
+
 use crate::ui::{
     display::Color,
     geometry::{Offset, Rect},
-    shape::{BasicCanvas, DrawingCache, ProgressiveRenderer, Viewport},
 };
 
-use crate::trezorhal::bitmap::{BitmapView, Dma2d};
+use super::super::{
+    BasicCanvas, BitmapFormat, BitmapView, DrawingCache, ProgressiveRenderer, Viewport,
+};
 
 use static_alloc::Bump;
 
@@ -67,11 +70,19 @@ impl BasicCanvas for DisplayModelT {
 
     fn fill_rect(&mut self, r: Rect, color: Color, _alpha: u8) {
         let r = r.translate(self.viewport.origin);
-        Dma2d::wnd565_fill(r, self.viewport.clip, color);
+        if let Some(dma2d) = Dma2d::new_fill(r, self.viewport.clip, color, 255) {
+            unsafe { dma2d.wnd565_fill() };
+        }
     }
 
     fn draw_bitmap(&mut self, r: Rect, bitmap: BitmapView) {
         let r = r.translate(self.viewport.origin);
-        Dma2d::wnd565_copy(r, self.viewport.clip, &bitmap);
+        if let Some(dma2d) = Dma2d::new_copy(r, self.viewport.clip, &bitmap) {
+            match bitmap.format() {
+                BitmapFormat::RGB565 => unsafe { dma2d.wnd565_copy_rgb565() },
+                _ => panic!("Unsupported DMA operation"),
+            }
+            bitmap.bitmap.mark_dma_pending();
+        }
     }
 }
