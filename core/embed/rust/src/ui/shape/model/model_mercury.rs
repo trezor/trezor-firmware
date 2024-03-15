@@ -66,7 +66,7 @@ impl BasicCanvas for DisplayModelMercury {
         self.size
     }
 
-    fn fill_rect(&mut self, r: Rect, color: Color) {
+    fn fill_rect(&mut self, r: Rect, color: Color, _alpha: u8) {
         let r = r.translate(self.viewport.origin);
         Dma2d::wnd565_fill(r, self.viewport.clip, color);
     }
