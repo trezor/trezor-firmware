@@ -107,16 +107,16 @@ mocks_check: ## check validity of mock python headers
 	flake8 core/mocks/generated
 
 templates: icons ## rebuild coin lists from definitions in common
-	./core/tools/build_templates
+	make -C core templates
 
 templates_check: ## check that coin lists are up to date
-	./core/tools/build_templates --check
+	make -C core templates_check
 
 solana_templates: ## rebuild Solana instruction template file
-	./core/tools/build_solana_templates
+	make -C core solana_templates
 
 solana_templates_check: ## check that Solana instruction template file is up to date
-	./core/tools/build_solana_templates --check
+	make -C core solana_templates_check
 
 icons: ## generate FIDO service icons
 	python3 core/tools/build_icons.py
