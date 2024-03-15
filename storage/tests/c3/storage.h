@@ -53,8 +53,16 @@ extern const uint8_t *PIN_EMPTY;
 #define STORAGE_SALT_SIZE 4
 #endif
 
+enum storage_ui_message_t {
+  NO_MSG = 0,
+  VERIFYING_PIN_MSG,
+  PROCESSING_MSG,
+  STARTING_MSG,
+  WRONG_PIN_MSG,
+};
+
 typedef secbool (*PIN_UI_WAIT_CALLBACK)(uint32_t wait, uint32_t progress,
-                                        const char *message);
+                                        enum storage_ui_message_t message);
 
 void storage_init(PIN_UI_WAIT_CALLBACK callback, const uint8_t *salt,
                   const uint16_t salt_len);
