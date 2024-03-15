@@ -1,4 +1,3 @@
-pub mod algo;
 mod common;
 mod mono8;
 mod rgb565;

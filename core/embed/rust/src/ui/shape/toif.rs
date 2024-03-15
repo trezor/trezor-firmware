@@ -1,10 +1,9 @@
 use crate::ui::{
-    canvas::{Bitmap, BitmapFormat, Canvas},
     display::{toif::Toif, Color},
     geometry::{Alignment2D, Offset, Point, Rect},
 };
 
-use super::{DrawingCache, Renderer, Shape, ShapeClone};
+use super::{Bitmap, BitmapFormat, Canvas, DrawingCache, Renderer, Shape, ShapeClone};
 
 use without_alloc::alloc::LocalAllocLeakExt;
 

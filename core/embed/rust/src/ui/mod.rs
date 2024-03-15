@@ -2,7 +2,6 @@
 pub mod macros;
 
 pub mod animation;
-pub mod canvas;
 pub mod component;
 pub mod constant;
 pub mod display;

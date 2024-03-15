@@ -1,9 +1,9 @@
 use crate::ui::{
-    canvas::{BasicCanvas, Canvas, Rgb565Canvas, Viewport},
     display::Color,
     geometry::{Offset, Point, Rect},
-    shape::{DrawingCache, Shape, ShapeClone},
 };
+
+use super::{BasicCanvas, Canvas, DrawingCache, Rgb565Canvas, Shape, ShapeClone, Viewport};
 
 use without_alloc::{alloc::LocalAllocLeakExt, FixedVec};
 

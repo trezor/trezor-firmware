@@ -8,7 +8,7 @@ use super::{BitmapView, Viewport};
 #[cfg(feature = "ui_blurring")]
 use crate::ui::shape::DrawingCache;
 
-use super::algo::{circle_points, line_points, sin_i16, PI4};
+use super::super::algo::{circle_points, line_points, sin_i16, PI4};
 
 pub trait BasicCanvas {
     /// Returns dimensions of the canvas in pixels.

@@ -1,9 +1,8 @@
 use crate::ui::{
-    canvas::{BasicCanvas, Canvas, Mono8Canvas, Viewport},
     display,
     display::Color,
     geometry::{Offset, Rect},
-    shape::{DirectRenderer, DrawingCache},
+    shape::{BasicCanvas, Canvas, DirectRenderer, DrawingCache, Mono8Canvas, Viewport},
 };
 
 use static_alloc::Bump;

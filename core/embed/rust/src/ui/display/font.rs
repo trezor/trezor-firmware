@@ -1,9 +1,9 @@
 use crate::{
     trezorhal::display,
     ui::{
-        canvas::{Bitmap, BitmapFormat},
         constant,
         geometry::{Offset, Point, Rect},
+        shape::{Bitmap, BitmapFormat},
     },
 };
 use core::slice;

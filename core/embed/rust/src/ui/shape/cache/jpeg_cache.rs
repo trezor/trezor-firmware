@@ -1,7 +1,7 @@
 use crate::ui::{
-    canvas::{BasicCanvas, Bitmap, BitmapFormat, BitmapView, Canvas, Rgb565Canvas},
     display::tjpgd,
     geometry::{Offset, Point, Rect},
+    shape::{BasicCanvas, Bitmap, BitmapFormat, BitmapView, Canvas, Rgb565Canvas},
 };
 
 use core::cell::UnsafeCell;

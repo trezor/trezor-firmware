@@ -1,6 +1,6 @@
-use crate::ui::{canvas::Canvas, geometry::Rect};
+use crate::ui::geometry::Rect;
 
-use super::{DrawingCache, Renderer, Shape, ShapeClone};
+use super::{Canvas, DrawingCache, Renderer, Shape, ShapeClone};
 
 use without_alloc::alloc::LocalAllocLeakExt;
 

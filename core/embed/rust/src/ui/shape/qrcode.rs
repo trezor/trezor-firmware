@@ -1,12 +1,13 @@
 use crate::ui::{
-    canvas::{algo::line_points, Bitmap, BitmapFormat, Canvas},
     display::Color,
     geometry::{Offset, Rect},
 };
 
 use qrcodegen::QrCode;
 
-use super::{DrawingCache, Renderer, Shape, ShapeClone};
+use super::{
+    algo::line_points, Bitmap, BitmapFormat, Canvas, DrawingCache, Renderer, Shape, ShapeClone,
+};
 
 use without_alloc::alloc::LocalAllocLeakExt;
 

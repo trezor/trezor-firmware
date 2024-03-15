@@ -1,8 +1,7 @@
 use crate::ui::{
-    canvas::{BasicCanvas, Viewport},
     display::Color,
     geometry::{Offset, Rect},
-    shape::{DrawingCache, ProgressiveRenderer},
+    shape::{BasicCanvas, DrawingCache, ProgressiveRenderer, Viewport},
 };
 
 use crate::trezorhal::bitmap::{BitmapView, Dma2d};
