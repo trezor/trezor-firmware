@@ -840,5 +840,9 @@
   "838": "ethereum__staking_stake_address",
   "839": "ethereum__staking_stake_intro",
   "840": "ethereum__staking_unstake",
-  "841": "ethereum__staking_unstake_intro"
+  "841": "ethereum__staking_unstake_intro",
+  "842": "storage_msg__processing",
+  "843": "storage_msg__starting",
+  "844": "storage_msg__verifying_pin",
+  "845": "storage_msg__wrong_pin"
 }

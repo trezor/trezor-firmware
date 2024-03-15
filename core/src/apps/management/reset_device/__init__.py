@@ -44,7 +44,7 @@ async def reset_device(msg: ResetDevice) -> Success:
     await confirm_reset_device(title)
 
     # Rendering empty loader so users do not feel a freezing screen
-    render_empty_loader(TR.progress__processing, "")
+    render_empty_loader(config.StorageMessage.PROCESSING_MSG)
 
     # wipe storage to make sure the device is in a clear state
     storage.reset()

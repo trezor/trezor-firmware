@@ -538,6 +538,10 @@ static void _librust_qstrs(void) {
   MP_QSTR_sign_message__verify_address;
   MP_QSTR_skip_first_paint;
   MP_QSTR_spending_amount;
+  MP_QSTR_storage_msg__processing;
+  MP_QSTR_storage_msg__starting;
+  MP_QSTR_storage_msg__verifying_pin;
+  MP_QSTR_storage_msg__wrong_pin;
   MP_QSTR_subprompt;
   MP_QSTR_subtitle;
   MP_QSTR_text_mono;
