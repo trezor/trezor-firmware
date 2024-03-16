@@ -22,6 +22,7 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 from ...common import MNEMONIC12
 
 
+@pytest.mark.altcoin
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
 def test_sign(client: Client):
     hidden = bytes.fromhex(
