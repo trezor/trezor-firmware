@@ -1,0 +1,1 @@
+trezorctl: support for human-friendly TS3 device authenticity check (requires separate installation of `cryptography` library).
