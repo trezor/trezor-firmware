@@ -32,7 +32,7 @@ impl TranslatedString {
     }
 
     pub const fn as_tstring(self) -> TString<'static> {
-        TString::Translation(self)
+        TString::from_translation(self)
     }
 }
 
