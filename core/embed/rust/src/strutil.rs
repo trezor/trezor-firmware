@@ -93,13 +93,20 @@ pub enum TString<'a> {
     #[cfg(feature = "micropython")]
     Allocated(StrBuffer),
     #[cfg(feature = "translations")]
-    Translation(TR),
+    Translation {
+        tr: TR,
+        offset: u16,
+    },
     Str(&'a str),
 }
 
 impl TString<'_> {
+    pub fn len(&self) -> usize {
+        self.map(|s| s.len())
+    }
+
     pub fn is_empty(&self) -> bool {
-        self.map(|s| s.is_empty())
+        self.len() == 0
     }
 
     pub fn map<F, T>(&self, fun: F) -> T
@@ -111,7 +118,7 @@ impl TString<'_> {
             #[cfg(feature = "micropython")]
             Self::Allocated(buf) => fun(buf.as_ref()),
             #[cfg(feature = "translations")]
-            Self::Translation(tr) => tr.map_translated(fun),
+            Self::Translation { tr, offset } => tr.map_translated(|s| fun(&s[*offset as usize..])),
             Self::Str(s) => fun(s),
         }
     }
@@ -120,7 +127,7 @@ impl TString<'_> {
 impl TString<'static> {
     #[cfg(feature = "translations")]
     pub const fn from_translation(tr: TR) -> Self {
-        Self::Translation(tr)
+        Self::Translation { tr, offset: 0 }
     }
 
     #[cfg(feature = "micropython")]
@@ -174,5 +181,32 @@ impl<'a> TryFrom<TString<'a>> for Obj {
 
     fn try_from(s: TString<'a>) -> Result<Self, Self::Error> {
         s.map(|t| t.try_into())
+    }
+}
+
+impl<'a, 'b> PartialEq<TString<'a>> for TString<'b> {
+    fn eq(&self, other: &TString<'a>) -> bool {
+        self.map(|s| other.map(|o| s == o))
+    }
+}
+
+impl Eq for TString<'_> {}
+
+impl SkipPrefix for TString<'_> {
+    fn skip_prefix(&self, skip_bytes: usize) -> Self {
+        self.map(|s| {
+            assert!(skip_bytes <= s.len());
+            assert!(s.is_char_boundary(skip_bytes));
+        });
+        match self {
+            #[cfg(feature = "micropython")]
+            Self::Allocated(s) => Self::Allocated(s.skip_prefix(skip_bytes)),
+            #[cfg(feature = "translations")]
+            Self::Translation { tr, offset } => Self::Translation {
+                tr: *tr,
+                offset: offset + skip_bytes as u16,
+            },
+            Self::Str(s) => Self::Str(&s[skip_bytes..]),
+        }
     }
 }
