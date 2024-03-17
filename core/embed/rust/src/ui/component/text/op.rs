@@ -1,5 +1,5 @@
 use crate::{
-    strutil::StringType,
+    strutil::TString,
     ui::{
         display::{Color, Font},
         geometry::{Alignment, Offset, Rect},
@@ -26,12 +26,12 @@ const PROCESSED_CHARS_ONE: usize = 1;
 
 #[derive(Clone)]
 /// Extension of TextLayout, allowing for Op-based operations
-pub struct OpTextLayout<T: StringType + Clone> {
+pub struct OpTextLayout<'a> {
     pub layout: TextLayout,
-    ops: Vec<Op<T>, MAX_OPS>,
+    ops: Vec<Op<'a>, MAX_OPS>,
 }
 
-impl<'a, T: StringType + Clone + 'a> OpTextLayout<T> {
+impl<'a> OpTextLayout<'a> {
     pub fn new(style: TextStyle) -> Self {
         Self {
             layout: TextLayout::new(style),
@@ -115,7 +115,7 @@ impl<'a, T: StringType + Clone + 'a> OpTextLayout<T> {
                     // (just for incomplete texts that were separated)
                     self.layout.continues_from_prev_page = continued;
 
-                    let fit = self.layout.layout_text(text.as_ref(), cursor, sink);
+                    let fit = text.map(|t| self.layout.layout_text(t, cursor, sink));
 
                     match fit {
                         LayoutFit::Fitting {
@@ -147,9 +147,12 @@ impl<'a, T: StringType + Clone + 'a> OpTextLayout<T> {
     /// Gets rid of all action-Ops that are before the `skip_bytes` threshold.
     /// (Not removing the style changes, e.g. Font or Color, because they need
     /// to be correctly set for future Text operations.)
-    fn filter_skipped_ops<'b, I>(ops_iter: I, skip_bytes: usize) -> impl Iterator<Item = Op<T>> + 'b
+    fn filter_skipped_ops<'b, I>(
+        ops_iter: I,
+        skip_bytes: usize,
+    ) -> impl Iterator<Item = Op<'a>> + 'b
     where
-        I: Iterator<Item = &'b Op<T>> + 'b,
+        I: Iterator<Item = &'b Op<'a>> + 'b,
         'a: 'b,
     {
         let mut skipped = 0;
@@ -157,7 +160,7 @@ impl<'a, T: StringType + Clone + 'a> OpTextLayout<T> {
             match op {
                 Op::Text(text, _continued) if skipped < skip_bytes => {
                     let skip_text_bytes_if_fits_partially = skip_bytes - skipped;
-                    skipped = skipped.saturating_add(text.as_ref().len());
+                    skipped = skipped.saturating_add(text.map(str::len));
                     if skipped > skip_bytes {
                         // Fits partially
                         // Skipping some bytes at the beginning, leaving rest
@@ -186,15 +189,15 @@ impl<'a, T: StringType + Clone + 'a> OpTextLayout<T> {
 }
 
 // Op-adding operations
-impl<T: StringType + Clone> OpTextLayout<T> {
-    pub fn with_new_item(mut self, item: Op<T>) -> Self {
+impl<'a> OpTextLayout<'a> {
+    pub fn with_new_item(mut self, item: Op<'a>) -> Self {
         self.ops
             .push(item)
             .assert_if_debugging_ui("Could not push to self.ops - increase MAX_OPS.");
         self
     }
 
-    pub fn text(self, text: T) -> Self {
+    pub fn text(self, text: TString<'a>) -> Self {
         self.with_new_item(Op::Text(text, false))
     }
 
@@ -236,21 +239,21 @@ impl<T: StringType + Clone> OpTextLayout<T> {
 }
 
 // Op-adding aggregation operations
-impl<T: StringType + Clone> OpTextLayout<T> {
-    pub fn text_normal(self, text: T) -> Self {
-        self.font(Font::NORMAL).text(text)
+impl<'a> OpTextLayout<'a> {
+    pub fn text_normal(self, text: impl Into<TString<'a>>) -> Self {
+        self.font(Font::NORMAL).text(text.into())
     }
 
-    pub fn text_mono(self, text: T) -> Self {
-        self.font(Font::MONO).text(text)
+    pub fn text_mono(self, text: impl Into<TString<'a>>) -> Self {
+        self.font(Font::MONO).text(text.into())
     }
 
-    pub fn text_bold(self, text: T) -> Self {
-        self.font(Font::BOLD).text(text)
+    pub fn text_bold(self, text: impl Into<TString<'a>>) -> Self {
+        self.font(Font::BOLD).text(text.into())
     }
 
-    pub fn text_demibold(self, text: T) -> Self {
-        self.font(Font::DEMIBOLD).text(text)
+    pub fn text_demibold(self, text: impl Into<TString<'a>>) -> Self {
+        self.font(Font::DEMIBOLD).text(text.into())
     }
 
     pub fn chunkify_text(self, chunks: Option<(Chunks, i16)>) -> Self {
@@ -263,11 +266,11 @@ impl<T: StringType + Clone> OpTextLayout<T> {
 }
 
 #[derive(Clone)]
-pub enum Op<T: StringType> {
+pub enum Op<'a> {
     /// Render text with current color and font.
     /// Bool signifies whether this is a split Text Op continued from previous
     /// page. If true, a leading ellipsis will be rendered.
-    Text(T, bool),
+    Text(TString<'a>, bool),
     /// Set current text color.
     Color(Color),
     /// Set currently used font.

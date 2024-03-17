@@ -274,7 +274,7 @@ where
 
     pub fn start(&mut self, ctx: &mut EventCtx) {
         self.start_time = Some(Instant::now());
-        self.loader.event(ctx, Event::Progress(0, ""));
+        self.loader.event(ctx, Event::Progress(0, "".into()));
         self.loader.mutate(ctx, |ctx, loader| {
             loader.request_paint(ctx);
         });
@@ -318,7 +318,7 @@ where
                 let percentage = self.percentage(now);
                 let new_loader_value = (percentage * LOADER_MAX as u32) / 100;
                 self.loader
-                    .event(ctx, Event::Progress(new_loader_value as u16, ""));
+                    .event(ctx, Event::Progress(new_loader_value as u16, "".into()));
                 // Returning only after the loader was fully painted
                 if percentage >= 100 {
                     return Some(LoaderMsg::GrownCompletely);

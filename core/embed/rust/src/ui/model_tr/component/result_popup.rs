@@ -1,5 +1,5 @@
 use crate::{
-    strutil::StringType,
+    strutil::TString,
     time::Instant,
     ui::{
         component::{
@@ -21,15 +21,12 @@ pub enum ResultPopupMsg {
     Confirmed,
 }
 
-pub struct ResultPopup<T>
-where
-    T: StringType,
-{
+pub struct ResultPopup {
     area: Rect,
     pad: Pad,
     result_anim: Child<ResultAnim>,
     headline: Option<Label<&'static str>>,
-    text: Child<Paragraphs<Paragraph<T>>>,
+    text: Child<Paragraphs<Paragraph<'static>>>,
     buttons: Option<Child<ButtonController>>,
     autoclose: bool,
 }
@@ -40,13 +37,10 @@ const ANIM_POS: i16 = 32;
 const ANIM_POS_ADJ_HEADLINE: i16 = 10;
 const ANIM_POS_ADJ_BUTTON: i16 = 6;
 
-impl<T> ResultPopup<T>
-where
-    T: StringType + Clone,
-{
+impl ResultPopup {
     pub fn new(
         icon: Icon,
-        text: T,
+        text: impl Into<TString<'static>>,
         headline: Option<&'static str>,
         button_text: Option<&'static str>,
     ) -> Self {
@@ -89,10 +83,7 @@ where
     }
 }
 
-impl<T> Component for ResultPopup<T>
-where
-    T: StringType + Clone,
-{
+impl Component for ResultPopup {
     type Msg = ResultPopupMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -165,10 +156,7 @@ where
 // DEBUG-ONLY SECTION BELOW
 
 #[cfg(feature = "ui_debug")]
-impl<T> crate::trace::Trace for ResultPopup<T>
-where
-    T: StringType + Clone,
-{
+impl crate::trace::Trace for ResultPopup {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("ResultPopup");
         t.child("text", &self.text);

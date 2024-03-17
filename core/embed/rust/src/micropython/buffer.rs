@@ -1,10 +1,6 @@
 use core::{convert::TryFrom, ops::Deref, ptr, slice, str};
 
-use crate::{
-    error::Error,
-    micropython::obj::Obj,
-    strutil::{hexlify, SkipPrefix},
-};
+use crate::{error::Error, micropython::obj::Obj, strutil::hexlify};
 
 use super::ffi;
 
@@ -93,10 +89,8 @@ impl StrBuffer {
             unsafe { slice::from_raw_parts(self.ptr.add(self.off.into()), self.len.into()) }
         }
     }
-}
 
-impl SkipPrefix for StrBuffer {
-    fn skip_prefix(&self, skip_bytes: usize) -> Self {
+    pub fn skip_prefix(&self, skip_bytes: usize) -> Self {
         let off: u16 = unwrap!(skip_bytes.try_into());
         assert!(off <= self.len);
         assert!(self.as_ref().is_char_boundary(skip_bytes));
