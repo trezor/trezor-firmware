@@ -20,8 +20,8 @@ const MAX_XPUBS: usize = 16;
 
 pub struct AddressDetails<T> {
     qr_code: Frame<Qr, T>,
-    details: Frame<Paragraphs<ParagraphVecShort<StrBuffer>>, T>,
-    xpub_view: Frame<Paragraphs<Paragraph<T>>, T>,
+    details: Frame<Paragraphs<ParagraphVecShort<'static>>, T>,
+    xpub_view: Frame<Paragraphs<Paragraph<'static>>, T>,
     xpubs: Vec<(T, T), MAX_XPUBS>,
     xpub_page_count: Vec<u8, MAX_XPUBS>,
     current_page: usize,
@@ -46,14 +46,14 @@ where
         if let Some(a) = account {
             para.add(Paragraph::new(
                 &theme::TEXT_NORMAL,
-                TR::words__account_colon.try_into()?,
+                TR::words__account_colon,
             ));
             para.add(Paragraph::new(&theme::TEXT_MONO, a));
         }
         if let Some(p) = path {
             para.add(Paragraph::new(
                 &theme::TEXT_NORMAL,
-                TR::address_details__derivation_path.try_into()?,
+                TR::address_details__derivation_path,
             ));
             para.add(Paragraph::new(&theme::TEXT_MONO, p));
         }
@@ -75,7 +75,7 @@ where
             xpub_view: Frame::left_aligned(
                 theme::label_title(),
                 " \n ".into(),
-                Paragraph::new(&theme::TEXT_MONO, "".into()).into_paragraphs(),
+                Paragraph::new(&theme::TEXT_MONO, "").into_paragraphs(),
             )
             .with_cancel_button()
             .with_border(theme::borders_horizontal_scroll()),

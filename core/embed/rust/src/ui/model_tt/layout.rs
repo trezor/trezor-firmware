@@ -128,9 +128,8 @@ where
     }
 }
 
-impl<T, U> ComponentMsgObj for IconDialog<T, U>
+impl<U> ComponentMsgObj for IconDialog<U>
 where
-    T: StringType,
     U: Component,
     <U as Component>::Msg: TryInto<Obj, Error = Error>,
 {
@@ -223,27 +222,24 @@ where
 // Clippy/compiler complains about conflicting implementations
 // TODO move the common impls to a common module
 #[cfg(not(feature = "clippy"))]
-impl<T> ComponentMsgObj for Paragraphs<T>
+impl<'a, T> ComponentMsgObj for Paragraphs<T>
 where
-    T: ParagraphSource,
+    T: ParagraphSource<'a>,
 {
     fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
         unreachable!()
     }
 }
 
-impl<T> ComponentMsgObj for FormattedText<T>
-where
-    T: StringType + Clone,
-{
+impl ComponentMsgObj for FormattedText {
     fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
         unreachable!()
     }
 }
 
-impl<T> ComponentMsgObj for Checklist<T>
+impl<'a, T> ComponentMsgObj for Checklist<T>
 where
-    T: ParagraphSource,
+    T: ParagraphSource<'a>,
 {
     fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
         unreachable!()
@@ -298,10 +294,9 @@ impl ComponentMsgObj for Lockscreen {
     }
 }
 
-impl<T, S> ComponentMsgObj for (GridPlaced<Paragraphs<T>>, GridPlaced<FormattedText<S>>)
+impl<'a, T> ComponentMsgObj for (GridPlaced<Paragraphs<T>>, GridPlaced<FormattedText>)
 where
-    T: ParagraphSource,
-    S: StringType + Clone,
+    T: ParagraphSource<'a>,
 {
     fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
         unreachable!()
@@ -429,7 +424,7 @@ extern "C" fn new_confirm_emphasized(n_args: usize, args: *const Obj, kwargs: *m
         let mut ops = OpTextLayout::new(theme::TEXT_NORMAL);
         for item in IterBuf::new().try_iterate(items)? {
             if item.is_str() {
-                ops = ops.text_normal(item.try_into()?)
+                ops = ops.text_normal(StrBuffer::try_from(item)?)
             } else {
                 let [emphasis, text]: [Obj; 2] = util::iter_into_array(item)?;
                 let text: StrBuffer = text.try_into()?;
@@ -688,11 +683,10 @@ extern "C" fn new_confirm_reset_device(n_args: usize, args: *const Obj, kwargs: 
         let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let button: StrBuffer = kwargs.get(Qstr::MP_QSTR_button)?.try_into()?;
 
-        let par_array: [Paragraph<StrBuffer>; 3] = [
-            Paragraph::new(&theme::TEXT_NORMAL, TR::reset__by_continuing.try_into()?)
-                .with_bottom_padding(17), // simulating a carriage return
-            Paragraph::new(&theme::TEXT_NORMAL, TR::reset__more_info_at.try_into()?),
-            Paragraph::new(&theme::TEXT_DEMIBOLD, TR::reset__tos_link.try_into()?),
+        let par_array: [Paragraph<'static>; 3] = [
+            Paragraph::new(&theme::TEXT_NORMAL, TR::reset__by_continuing).with_bottom_padding(17), /* simulating a carriage return */
+            Paragraph::new(&theme::TEXT_NORMAL, TR::reset__more_info_at),
+            Paragraph::new(&theme::TEXT_DEMIBOLD, TR::reset__tos_link),
         ];
         let paragraphs = Paragraphs::new(par_array);
         let buttons = Button::cancel_confirm(
@@ -855,18 +849,15 @@ extern "C" fn new_confirm_modify_output(n_args: usize, args: *const Obj, kwargs:
         let amount_new: StrBuffer = kwargs.get(Qstr::MP_QSTR_amount_new)?.try_into()?;
 
         let description = if sign < 0 {
-            TR::modify_amount__decrease_amount.try_into()?
+            TR::modify_amount__decrease_amount
         } else {
-            TR::modify_amount__increase_amount.try_into()?
+            TR::modify_amount__increase_amount
         };
 
         let paragraphs = Paragraphs::new([
             Paragraph::new(&theme::TEXT_NORMAL, description),
             Paragraph::new(&theme::TEXT_MONO, amount_change),
-            Paragraph::new(
-                &theme::TEXT_NORMAL,
-                TR::modify_amount__new_amount.try_into()?,
-            ),
+            Paragraph::new(&theme::TEXT_NORMAL, TR::modify_amount__new_amount),
             Paragraph::new(&theme::TEXT_MONO, amount_new),
         ]);
 
@@ -891,19 +882,19 @@ extern "C" fn new_confirm_modify_fee(n_args: usize, args: *const Obj, kwargs: *m
 
         let (description, change, total_label) = match sign {
             s if s < 0 => (
-                TR::modify_fee__decrease_fee.try_into()?,
+                TR::modify_fee__decrease_fee,
                 user_fee_change,
-                TR::modify_fee__new_transaction_fee.try_into()?,
+                TR::modify_fee__new_transaction_fee,
             ),
             s if s > 0 => (
-                TR::modify_fee__increase_fee.try_into()?,
+                TR::modify_fee__increase_fee,
                 user_fee_change,
-                TR::modify_fee__new_transaction_fee.try_into()?,
+                TR::modify_fee__new_transaction_fee,
             ),
             _ => (
-                TR::modify_fee__no_change.try_into()?,
+                TR::modify_fee__no_change,
                 StrBuffer::empty(),
-                TR::modify_fee__transaction_fee.try_into()?,
+                TR::modify_fee__transaction_fee,
             ),
         };
 
@@ -1240,12 +1231,9 @@ extern "C" fn new_confirm_coinjoin(n_args: usize, args: *const Obj, kwargs: *mut
         let max_feerate: StrBuffer = kwargs.get(Qstr::MP_QSTR_max_feerate)?.try_into()?;
 
         let paragraphs = Paragraphs::new([
-            Paragraph::new(&theme::TEXT_NORMAL, TR::coinjoin__max_rounds.try_into()?),
+            Paragraph::new(&theme::TEXT_NORMAL, TR::coinjoin__max_rounds),
             Paragraph::new(&theme::TEXT_MONO, max_rounds),
-            Paragraph::new(
-                &theme::TEXT_NORMAL,
-                TR::coinjoin__max_mining_fee.try_into()?,
-            ),
+            Paragraph::new(&theme::TEXT_NORMAL, TR::coinjoin__max_mining_fee),
             Paragraph::new(&theme::TEXT_MONO, max_feerate),
         ]);
 
@@ -1482,9 +1470,9 @@ extern "C" fn new_select_word_count(n_args: usize, args: *const Obj, kwargs: *mu
             TR::recovery__title.try_into()?
         };
 
-        let paragraphs = Paragraphs::new(Paragraph::<StrBuffer>::new(
+        let paragraphs = Paragraphs::new(Paragraph::new(
             &theme::TEXT_DEMIBOLD,
-            TR::recovery__select_num_of_words.try_into()?,
+            TR::recovery__select_num_of_words,
         ));
 
         let obj = LayoutObj::new(Frame::left_aligned(
@@ -1562,12 +1550,7 @@ extern "C" fn new_show_progress(n_args: usize, args: *const Obj, kwargs: *mut Ma
 
         // Description updates are received as &str and we need to provide a way to
         // convert them to StrBuffer.
-        let obj = LayoutObj::new(Progress::new(
-            title,
-            indeterminate,
-            description,
-            StrBuffer::alloc,
-        ))?;
+        let obj = LayoutObj::new(Progress::new(title, indeterminate, description.into()))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }

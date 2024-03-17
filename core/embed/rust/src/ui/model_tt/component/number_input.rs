@@ -29,7 +29,7 @@ where
     area: Rect,
     description_func: F,
     input: Child<NumberInput>,
-    paragraphs: Child<Paragraphs<Paragraph<T>>>,
+    paragraphs: Child<Paragraphs<Paragraph<'static>>>,
     paragraphs_pad: Pad,
     info_button: Child<Button<StrBuffer>>,
     confirm_button: Child<Button<StrBuffer>>,
