@@ -485,28 +485,19 @@ impl PageLayout {
 
 #[cfg(test)]
 mod tests {
-    use serde_json;
-
     use crate::{
-        strutil::SkipPrefix,
         trace::tests::trace,
         ui::{
             component::text::paragraphs::{Paragraph, Paragraphs},
             event::TouchEvent,
             geometry::Point,
-            model_tt::{constant, theme},
+            model_tt::constant,
         },
     };
 
     use super::*;
 
     const SCREEN: Rect = constant::screen().inset(theme::borders());
-
-    impl SkipPrefix for &str {
-        fn skip_prefix(&self, chars: usize) -> Self {
-            &self[chars..]
-        }
-    }
 
     fn swipe(component: &mut impl Component, points: &[(i16, i16)]) {
         let last = points.len().saturating_sub(1);
@@ -538,7 +529,7 @@ mod tests {
     #[test]
     fn paragraphs_empty() {
         let mut page = ButtonPage::<_, &'static str>::new(
-            Paragraphs::<[Paragraph<&'static str>; 0]>::new([]),
+            Paragraphs::<[Paragraph<'static>; 0]>::new([]),
             theme::BG,
         );
         page.place(SCREEN);

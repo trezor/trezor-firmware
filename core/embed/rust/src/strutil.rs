@@ -9,38 +9,18 @@ use crate::micropython::{buffer::StrBuffer, obj::Obj};
 #[cfg(feature = "translations")]
 use crate::translations::TR;
 
-/// Trait for slicing off string prefix by a specified number of bytes.
-/// See `StringType` for deeper explanation.
-pub trait SkipPrefix {
-    fn skip_prefix(&self, bytes: usize) -> Self;
-}
-
-// XXX only implemented in bootloader, as we don't want &str to satisfy
-// StringType in the main firmware. This is because we want to avoid duplication
-// of every StringType-parametrized component.
-#[cfg(feature = "bootloader")]
-impl SkipPrefix for &str {
-    fn skip_prefix(&self, chars: usize) -> Self {
-        &self[chars..]
-    }
-}
-
-/// Trait for internal representation of strings.
-/// Exists so that we can support `StrBuffer` as well as `&str` in the UI
-/// components. Implies the following operations:
-/// - dereference into a short-lived `&str` reference (AsRef<str>)
-/// - create a new string by skipping some number of bytes (SkipPrefix) - used
-///   when rendering continuations of long strings
+/// Trait for internal representation of strings. This is a legacy crutch before
+/// we fully transition to `TString`. For now, it allows some manner of
+/// compatibility between `&str` and `StrBuffer`. Implies the following
+/// operations:
+/// - dereference into a short-lived `&str` reference (AsRef<str>) (probably not
+///   strictly necessary anymore)
 /// - create a new string from a string literal (From<&'static str>)
-pub trait StringType:
-    AsRef<str> + From<&'static str> + Into<TString<'static>> + SkipPrefix
-{
-}
+/// - infallibly convert into a `TString` (Into<TString<'static>>), which is
+///   then used for other operations.
+pub trait StringType: AsRef<str> + From<&'static str> + Into<TString<'static>> {}
 
-impl<T> StringType for T where
-    T: AsRef<str> + From<&'static str> + Into<TString<'static>> + SkipPrefix
-{
-}
+impl<T> StringType for T where T: AsRef<str> + From<&'static str> + Into<TString<'static>> {}
 
 /// Unified-length String type, long enough for most simple use-cases.
 pub type ShortString = String<50>;
@@ -122,6 +102,23 @@ impl TString<'_> {
             Self::Str(s) => fun(s),
         }
     }
+
+    pub fn skip_prefix(&self, skip_bytes: usize) -> Self {
+        self.map(|s| {
+            assert!(skip_bytes <= s.len());
+            assert!(s.is_char_boundary(skip_bytes));
+        });
+        match self {
+            #[cfg(feature = "micropython")]
+            Self::Allocated(s) => Self::Allocated(s.skip_prefix(skip_bytes)),
+            #[cfg(feature = "translations")]
+            Self::Translation { tr, offset } => Self::Translation {
+                tr: *tr,
+                offset: offset + skip_bytes as u16,
+            },
+            Self::Str(s) => Self::Str(&s[skip_bytes..]),
+        }
+    }
 }
 
 impl TString<'static> {
@@ -191,22 +188,3 @@ impl<'a, 'b> PartialEq<TString<'a>> for TString<'b> {
 }
 
 impl Eq for TString<'_> {}
-
-impl SkipPrefix for TString<'_> {
-    fn skip_prefix(&self, skip_bytes: usize) -> Self {
-        self.map(|s| {
-            assert!(skip_bytes <= s.len());
-            assert!(s.is_char_boundary(skip_bytes));
-        });
-        match self {
-            #[cfg(feature = "micropython")]
-            Self::Allocated(s) => Self::Allocated(s.skip_prefix(skip_bytes)),
-            #[cfg(feature = "translations")]
-            Self::Translation { tr, offset } => Self::Translation {
-                tr: *tr,
-                offset: offset + skip_bytes as u16,
-            },
-            Self::Str(s) => Self::Str(&s[skip_bytes..]),
-        }
-    }
-}
