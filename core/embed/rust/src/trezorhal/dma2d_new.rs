@@ -142,7 +142,10 @@ impl Dma2d {
     }
 
     pub fn wait_for_transfer() {
-        unsafe { ffi::dma2d_wait_for_transfer() }
+        #[cfg(feature = "dma2d")]
+        unsafe {
+            ffi::dma2d_wait_for_transfer()
+        }
     }
 
     pub unsafe fn rgb565_fill(&self) {
@@ -201,11 +204,13 @@ impl Dma2d {
         unsafe { ffi::mono8_blend_mono4(self) };
     }
 
-    pub unsafe fn wnd565_fill(&self) {
-        unsafe { ffi::wnd565_fill(self) };
+    #[cfg(feature = "new_rendering")]
+    pub unsafe fn display_fill(&self) {
+        unsafe { ffi::display_fill(self) };
     }
 
-    pub unsafe fn wnd565_copy_rgb565(&self) {
-        unsafe { ffi::wnd565_copy_rgb565(self) };
+    #[cfg(feature = "new_rendering")]
+    pub unsafe fn display_copy_rgb565(&self) {
+        unsafe { ffi::display_copy_rgb565(self) };
     }
 }

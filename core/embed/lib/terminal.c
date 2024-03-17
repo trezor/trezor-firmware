@@ -77,6 +77,9 @@ void term_print(const char *text, int textlen) {
     }
   }
 
+#ifdef NEW_RENDERING
+  // TODO !@#
+#else
   // render buffer to display
   display_set_window(0, 0, DISPLAY_RESX - 1, DISPLAY_RESY - 1);
   for (int i = 0; i < DISPLAY_RESX * DISPLAY_RESY; i++) {
@@ -105,6 +108,7 @@ void term_print(const char *text, int textlen) {
   }
   display_pixeldata_dirty();
   display_refresh();
+#endif
 }
 
 #ifdef TREZOR_EMULATOR

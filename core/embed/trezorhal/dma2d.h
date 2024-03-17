@@ -20,9 +20,11 @@
 #ifndef TREZORHAL_DMA2D_H
 #define TREZORHAL_DMA2D_H
 
-#include "../gdc/gdc_core.h"
-
+#include <stdbool.h>
+#include <stdint.h>
 #include "common.h"
+
+#include "gl_dma2d.h"
 
 void dma2d_init(void);
 

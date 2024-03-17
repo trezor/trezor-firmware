@@ -13,11 +13,11 @@ pub use ffi::{
 
 #[cfg(all(feature = "framebuffer", not(feature = "framebuffer32bit")))]
 #[derive(Copy, Clone)]
-pub struct FrameBuffer(*mut u16);
+pub struct FrameBuffer(pub *mut u16);
 
 #[cfg(all(feature = "framebuffer", feature = "framebuffer32bit"))]
 #[derive(Copy, Clone)]
-pub struct FrameBuffer(*mut u32);
+pub struct FrameBuffer(pub *mut u32);
 
 pub fn backlight(val: i32) -> i32 {
     unsafe { ffi::display_backlight(val) }
@@ -99,6 +99,7 @@ pub fn get_fb_addr() -> FrameBuffer {
 #[inline(always)]
 #[cfg(all(not(feature = "framebuffer"), feature = "disp_i8080_8bit_dw"))]
 pub fn pixeldata(c: u16) {
+    #[cfg(not(feature = "new_rendering"))]
     unsafe {
         ffi::DISPLAY_DATA_ADDRESS.write_volatile((c & 0xff) as u8);
         ffi::DISPLAY_DATA_ADDRESS.write_volatile((c >> 8) as u8);
@@ -177,4 +178,9 @@ pub fn clear() {
     unsafe {
         ffi::display_clear();
     }
+}
+
+#[cfg(feature = "xframebuffer")]
+pub fn get_frame_addr() -> *mut cty::c_void {
+    unsafe { ffi::display_get_frame_addr() }
 }

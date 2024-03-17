@@ -20,10 +20,18 @@
 #ifndef TREZORHAL_DISPLAY_H
 #define TREZORHAL_DISPLAY_H
 
+#if NEW_RENDERING
+#include <xdisplay.h>
+#else
+
 #include <stdint.h>
 #include "common.h"
 #include "display_draw.h"
 #include TREZOR_BOARD
+
+#ifdef DISPLAY_LEGACY_HEADER
+#include DISPLAY_LEGACY_HEADER
+#endif
 
 #ifndef DISPLAY_FRAMEBUFFER_OFFSET_Y
 #define DISPLAY_FRAMEBUFFER_OFFSET_Y 0
@@ -69,4 +77,5 @@ uint8_t *display_get_wr_addr(void);
 void display_shift_window(uint16_t pixels);
 uint16_t display_get_window_offset(void);
 
+#endif  // NEW_RENDERING
 #endif  // TREZORHAL_DISPLAY_H

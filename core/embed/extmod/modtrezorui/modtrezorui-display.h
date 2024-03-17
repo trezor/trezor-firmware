@@ -18,6 +18,8 @@
  */
 
 #include "display.h"
+#include "display_draw.h"
+#include "fonts/fonts.h"
 
 /// class Display:
 ///     """

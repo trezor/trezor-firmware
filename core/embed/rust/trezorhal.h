@@ -1,13 +1,14 @@
 #include TREZOR_BOARD
-#include "../gdc/gdc.h"
 
 #include "buffers.h"
 #include "button.h"
 #include "common.h"
 #include "display.h"
+#include "display_draw.h"
 #include "dma2d.h"
 #include "flash.h"
 #include "fonts/fonts.h"
+#include "gl_dma2d.h"
 #include "haptic.h"
 #include "model.h"
 #include "rgb_led.h"

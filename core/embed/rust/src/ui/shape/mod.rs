@@ -7,9 +7,9 @@ mod blur;
 mod cache;
 mod canvas;
 mod circle;
+mod display;
 #[cfg(feature = "ui_jpeg_decoder")]
 mod jpeg;
-mod model;
 mod qrcode;
 mod render;
 mod text;
@@ -24,9 +24,9 @@ pub use blur::Blurring;
 pub use cache::drawing_cache::DrawingCache;
 pub use canvas::{BasicCanvas, Canvas, Mono8Canvas, Rgb565Canvas, Rgba8888Canvas, Viewport};
 pub use circle::Circle;
+pub use display::render_on_display;
 #[cfg(feature = "ui_jpeg_decoder")]
 pub use jpeg::JpegImage;
-pub use model::render_on_display;
 pub use qrcode::QrImage;
 pub use render::{DirectRenderer, ProgressiveRenderer, Renderer};
 pub use text::Text;

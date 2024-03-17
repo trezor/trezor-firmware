@@ -224,7 +224,11 @@ void collect_hw_entropy(void) {
 void ensure_compatible_settings(void) {
   display_finish_actions();
 #ifdef TREZOR_MODEL_T
+#ifdef NEW_RENDERING
+  display_set_compatible_settings();
+#else
   display_set_big_endian();
+#endif
   display_orientation(0);
   set_core_clock(CLOCK_168_MHZ);
   backlight_pwm_set_slow();
