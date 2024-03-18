@@ -84,6 +84,7 @@ CFLAGS += -DUSE_NEM=1
 CFLAGS += -DUSE_CARDANO=1
 CFLAGS += -DUSE_INSECURE_PRNG=1
 CFLAGS += -DAES_128
+CFLAGS += -DAES_192
 CFLAGS += -DAES_VAR
 CFLAGS += $(shell pkg-config --cflags openssl)
 
