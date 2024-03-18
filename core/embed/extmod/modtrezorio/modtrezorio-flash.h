@@ -241,7 +241,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorio_FlashArea_hash_obj, 3,
 ///         Reads data from flash area. Will read exact length of data
 ///         bytearray. Offset and length of data must be aligned to 1024 bytes.
 ///         """
-#if DEBUG
+#if PYOPT == 0
 STATIC mp_obj_t mod_trezorio_FlashArea_read(mp_obj_t obj_self,
                                             mp_obj_t obj_offset,
                                             mp_obj_t obj_data) {
@@ -262,12 +262,12 @@ STATIC mp_obj_t mod_trezorio_FlashArea_read(mp_obj_t obj_self,
   uint32_t chunks = data.len / FLASH_READ_CHUNK_SIZE;
   for (int i = 0; i < chunks; i++) {
     const uint32_t current_offset = offset + i * FLASH_READ_CHUNK_SIZE;
-    const void *data = flash_area_get_address(&FIRMWARE_AREA, current_offset,
+    const void *flash_data = flash_area_get_address(&FIRMWARE_AREA, current_offset,
                                               FLASH_READ_CHUNK_SIZE);
-    if (data == NULL) {
+    if (flash_data == NULL) {
       mp_raise_msg(&mp_type_RuntimeError, "Failed to read flash.");
     }
-    memcpy(data.buf + i * FLASH_READ_CHUNK_SIZE, data, FLASH_READ_CHUNK_SIZE);
+    memcpy(data.buf + i * FLASH_READ_CHUNK_SIZE, flash_data, FLASH_READ_CHUNK_SIZE);
   }
   return mp_const_none;
 }
@@ -353,12 +353,12 @@ STATIC mp_obj_t mod_trezorio_FlashArea_erase(mp_obj_t obj_self) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_FlashArea_erase_obj,
                                  mod_trezorio_FlashArea_erase);
 
-#endif  // DEBUG
+#endif  // PYOPT == 0
 
 STATIC const mp_rom_map_elem_t mod_trezorio_FlashArea_locals_dict_table[] = {
     {MP_ROM_QSTR(MP_QSTR_size), MP_ROM_PTR(&mod_trezorio_FlashArea_size_obj)},
     {MP_ROM_QSTR(MP_QSTR_hash), MP_ROM_PTR(&mod_trezorio_FlashArea_hash_obj)},
-#if DEBUG
+#if PYOPT == 0
     {MP_ROM_QSTR(MP_QSTR_read), MP_ROM_PTR(&mod_trezorio_FlashArea_read_obj)},
     {MP_ROM_QSTR(MP_QSTR_write), MP_ROM_PTR(&mod_trezorio_FlashArea_write_obj)},
     {MP_ROM_QSTR(MP_QSTR_erase_sector),
@@ -396,7 +396,7 @@ FLASH_AREA(BOARDLOADER, BOARDLOADER_AREA)
 FLASH_AREA(BOOTLOADER, BOOTLOADER_AREA)
 FLASH_AREA(FIRMWARE, FIRMWARE_AREA)
 FLASH_AREA(TRANSLATIONS, TRANSLATIONS_AREA)
-#if DEBUG
+#if PYOPT == 0
 FLASH_AREA(STORAGE_A, STORAGE_AREAS[0])
 FLASH_AREA(STORAGE_B, STORAGE_AREAS[1])
 #endif
@@ -410,7 +410,7 @@ STATIC const mp_rom_map_elem_t mod_trezorio_flash_area_globals_table[] = {
     MP_ROM_FLASH_AREA(BOOTLOADER),
     MP_ROM_FLASH_AREA(FIRMWARE),
     MP_ROM_FLASH_AREA(TRANSLATIONS),
-#if DEBUG
+#if PYOPT == 0
     MP_ROM_FLASH_AREA(STORAGE_A),
     MP_ROM_FLASH_AREA(STORAGE_B),
 #endif
