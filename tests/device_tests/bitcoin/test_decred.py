@@ -43,11 +43,11 @@ FAKE_TXHASH_9ac7d2 = bytes.fromhex(
 FAKE_TXHASH_48f5b8 = bytes.fromhex(
     "48f5b85f8b1cf796d0d07388ced491f154e2d26b0615529d2d6ba9c170542df3"
 )
-FAKE_TXHASH_f8e2f2 = bytes.fromhex(
-    "f8e2f2b4eab772f6e3743cba92db341f64b84d9c16ae375c7690fbf0bf02fc7b"
+FAKE_TXHASH_8b6890 = bytes.fromhex(
+    "8b6890c10a3764fe6f378bc5b7e438148df176e9be1dde704ce866361149e254"
 )
-FAKE_TXHASH_51bc9c = bytes.fromhex(
-    "51bc9c71f10a81eef3caedb5333062eb4b1f70998adf02916fe98fdc04c572e8"
+FAKE_TXHASH_1f00fc = bytes.fromhex(
+    "1f00fc54530d7c4877f5032e91b6c507f6a1531861dede2ab134e5c0b5dfe8c8"
 )
 
 pytestmark = [
@@ -174,7 +174,7 @@ def test_spend_from_stake_generation_and_revocation_decred(client: Client):
 
     inp1 = messages.TxInputType(
         address_n=parse_path("m/44h/1h/0h/0/0"),
-        prev_hash=FAKE_TXHASH_f8e2f2,
+        prev_hash=FAKE_TXHASH_8b6890,
         prev_index=2,
         amount=200_000_000,
         script_type=messages.InputScriptType.SPENDADDRESS,
@@ -184,7 +184,7 @@ def test_spend_from_stake_generation_and_revocation_decred(client: Client):
 
     inp2 = messages.TxInputType(
         address_n=parse_path("m/44h/1h/0h/0/0"),
-        prev_hash=FAKE_TXHASH_51bc9c,
+        prev_hash=FAKE_TXHASH_1f00fc,
         prev_index=0,
         amount=200_000_000,
         script_type=messages.InputScriptType.SPENDADDRESS,
@@ -208,16 +208,16 @@ def test_spend_from_stake_generation_and_revocation_decred(client: Client):
                 (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
-                request_meta(FAKE_TXHASH_f8e2f2),
-                request_input(0, FAKE_TXHASH_f8e2f2),
-                request_input(1, FAKE_TXHASH_f8e2f2),
-                request_output(0, FAKE_TXHASH_f8e2f2),
-                request_output(1, FAKE_TXHASH_f8e2f2),
-                request_output(2, FAKE_TXHASH_f8e2f2),
+                request_meta(FAKE_TXHASH_8b6890),
+                request_input(0, FAKE_TXHASH_8b6890),
+                request_input(1, FAKE_TXHASH_8b6890),
+                request_output(0, FAKE_TXHASH_8b6890),
+                request_output(1, FAKE_TXHASH_8b6890),
+                request_output(2, FAKE_TXHASH_8b6890),
                 request_input(1),
-                request_meta(FAKE_TXHASH_51bc9c),
-                request_input(0, FAKE_TXHASH_51bc9c),
-                request_output(0, FAKE_TXHASH_51bc9c),
+                request_meta(FAKE_TXHASH_1f00fc),
+                request_input(0, FAKE_TXHASH_1f00fc),
+                request_output(0, FAKE_TXHASH_1f00fc),
                 request_input(0),
                 request_input(1),
                 request_finished(),
@@ -229,7 +229,7 @@ def test_spend_from_stake_generation_and_revocation_decred(client: Client):
 
     assert (
         serialized_tx.hex()
-        == "01000000027bfc02bff0fb90765c37ae169c4db8641f34db92ba3c74e3f672b7eab4f2e2f80200000001ffffffffe872c504dc8fe96f9102df8a99701f4beb623033b5edcaf3ee810af1719cbc510000000001ffffffff0160fdd5170000000000001976a914819d291a2f7fbf770e784bfd78b5ce92c58e95ea88ac00000000000000000200c2eb0b0000000000000000ffffffff6b483045022100f74f652a073bdaf2197ede47b4df0d90609bbfd0dc8a94199d36ebb1429de09b022040366292a8812135ec7572a94eb6e969fa1fa97a52c03f08a337f20bc4fb71de0121030e669acac1f280d1ddf441cd2ba5e97417bf2689e4bbec86df4f831bf9f7ffd000c2eb0b0000000000000000ffffffff6b483045022100ca385c05a008239c038e107989bbc30eec1ecd5a66e4973265eb21df034c77a9022070c3dceb24b39cb6e9f8c973572b955b37a4754e9caa704cdd37113c46e2b2970121030e669acac1f280d1ddf441cd2ba5e97417bf2689e4bbec86df4f831bf9f7ffd0"
+        == "010000000254e249113666e84c70de1dbee976f18d1438e4b7c58b376ffe64370ac190688b0200000001ffffffffc8e8dfb5c0e534b12adede611853a1f607c5b6912e03f577487c0d5354fc001f0000000001ffffffff0160fdd5170000000000001976a914819d291a2f7fbf770e784bfd78b5ce92c58e95ea88ac00000000000000000200c2eb0b0000000000000000ffffffff6b483045022100bdcb877c97d72db74eca06fefa21a7f7b00afcd5d916fce2155ed7df1ca5546102201e1f9efd7d652b449474c2c70171bfc4535544927bed62021f7334447d1ea4740121030e669acac1f280d1ddf441cd2ba5e97417bf2689e4bbec86df4f831bf9f7ffd000c2eb0b0000000000000000ffffffff6a473044022030c5743c442bd696d19dcf73d54e95526e726de965c2e2b4b9fd70248eaae21d02201305a3bcc2bb0e33122277763990e3b48f317d61264a68d190fb8acfc004cc640121030e669acac1f280d1ddf441cd2ba5e97417bf2689e4bbec86df4f831bf9f7ffd0"
     )
 
 
