@@ -114,8 +114,6 @@ def generate_all_blobs(rewrite_version: bool) -> list[translations.TranslationsB
     common_version = None
 
     all_languages = [lang_file.stem for lang_file in HERE.glob("??.json")]
-    # TEMP: not generating czech blob - it is not final
-    all_languages.remove("cs")
     all_blobs: list[translations.TranslationsBlob] = []
     for lang in all_languages:
         if lang == "en":
