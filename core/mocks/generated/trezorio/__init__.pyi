@@ -53,8 +53,8 @@ class FlashArea:
         Computes a Blake2s hash of a segment of the flash area.
         Offset and length must be aligned to 1024 bytes.
         An optional challenge can be used as the Blake2s key.
-        The progress callback will be invoked every 16 kB with the current
-        position.
+        The progress callback will be invoked every 16 kB with the number of
+        bytes processed so far.
         """
     if __debug__:
         def read(self, offset: int, data: bytearray) -> None:

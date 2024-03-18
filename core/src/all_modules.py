@@ -101,6 +101,8 @@ trezor.enums.Capability
 import trezor.enums.Capability
 trezor.enums.DebugButton
 import trezor.enums.DebugButton
+trezor.enums.DebugFlashArea
+import trezor.enums.DebugFlashArea
 trezor.enums.DebugPhysicalButton
 import trezor.enums.DebugPhysicalButton
 trezor.enums.DebugSwipeDirection
@@ -109,8 +111,6 @@ trezor.enums.DecredStakingSpendType
 import trezor.enums.DecredStakingSpendType
 trezor.enums.FailureType
 import trezor.enums.FailureType
-trezor.enums.FlashArea
-import trezor.enums.FlashArea
 trezor.enums.HomescreenFormat
 import trezor.enums.HomescreenFormat
 trezor.enums.InputScriptType

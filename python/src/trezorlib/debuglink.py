@@ -716,31 +716,31 @@ class DebugLink:
 
     @expect(messages.DebugLinkMemory, field="memory", ret_type=bytes)
     def flash_read(
-        self, area: messages.FlashArea, offset: int = 0, length: int | None = None
+        self, area: messages.DebugFlashArea, offset: int = 0, length: int | None = None
     ) -> protobuf.MessageType:
-        location = messages.FlashMemoryLocation(area=area, offset=offset)
+        location = messages.DebugFlashMemoryLocation(area=area, offset=offset)
         return self._call(messages.DebugLinkFlashRead(location=location, length=length))
 
     @expect(messages.DebugLinkMemory, field="hash", ret_type=bytes)
     def flash_hash(
-        self, area: messages.FlashArea, offset: int = 0, length: int | None = None
+        self, area: messages.DebugFlashArea, offset: int = 0, length: int | None = None
     ) -> protobuf.MessageType:
-        location = messages.FlashMemoryLocation(area=area, offset=offset)
+        location = messages.DebugFlashMemoryLocation(area=area, offset=offset)
         return self._call(
             messages.DebugLinkFlashRead(location=location, length=length, hashed=True)
         )
 
-    def flash_erase(self, area: messages.FlashArea, offset: int) -> None:
-        location = messages.FlashMemoryLocation(area=area, offset=offset)
+    def flash_erase(self, area: messages.DebugFlashArea, offset: int) -> None:
+        location = messages.DebugFlashMemoryLocation(area=area, offset=offset)
         self._call(messages.DebugLinkFlashErase(location=location, whole_area=False))
 
-    def flash_erase_area(self, area: messages.FlashArea) -> None:
-        location = messages.FlashMemoryLocation(area=area, offset=0)
+    def flash_erase_area(self, area: messages.DebugFlashArea) -> None:
+        location = messages.DebugFlashMemoryLocation(area=area, offset=0)
         self._call(messages.DebugLinkFlashErase(location=location, whole_area=True))
 
     def storage_hash(self) -> bytes:
-        storage_hash_a = self.flash_hash(messages.FlashArea.StorageA)
-        storage_hash_b = self.flash_hash(messages.FlashArea.StorageB)
+        storage_hash_a = self.flash_hash(messages.DebugFlashArea.StorageA)
+        storage_hash_b = self.flash_hash(messages.DebugFlashArea.StorageB)
         return storage_hash_a + storage_hash_b
 
     @expect(messages.Success)

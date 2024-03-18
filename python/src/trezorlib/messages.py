@@ -524,7 +524,7 @@ class DebugPhysicalButton(IntEnum):
     RIGHT_BTN = 2
 
 
-class FlashArea(IntEnum):
+class DebugFlashArea(IntEnum):
     Boardloader = 0
     Bootloader = 1
     StorageA = 2
@@ -4078,17 +4078,17 @@ class DebugLinkLog(protobuf.MessageType):
         self.text = text
 
 
-class FlashMemoryLocation(protobuf.MessageType):
+class DebugFlashMemoryLocation(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("area", "FlashArea", repeated=False, required=True),
+        1: protobuf.Field("area", "DebugFlashArea", repeated=False, required=True),
         2: protobuf.Field("offset", "uint32", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        area: "FlashArea",
+        area: "DebugFlashArea",
         offset: "int",
     ) -> None:
         self.area = area
@@ -4115,7 +4115,7 @@ class DebugLinkMemoryRead(protobuf.MessageType):
 class DebugLinkFlashRead(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 9008
     FIELDS = {
-        1: protobuf.Field("location", "FlashMemoryLocation", repeated=False, required=True),
+        1: protobuf.Field("location", "DebugFlashMemoryLocation", repeated=False, required=True),
         2: protobuf.Field("length", "uint32", repeated=False, required=False, default=None),
         3: protobuf.Field("hashed", "bool", repeated=False, required=False, default=False),
     }
@@ -4123,7 +4123,7 @@ class DebugLinkFlashRead(protobuf.MessageType):
     def __init__(
         self,
         *,
-        location: "FlashMemoryLocation",
+        location: "DebugFlashMemoryLocation",
         length: Optional["int"] = None,
         hashed: Optional["bool"] = False,
     ) -> None:
@@ -4172,14 +4172,14 @@ class DebugLinkMemoryWrite(protobuf.MessageType):
 class DebugLinkFlashWrite(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 9009
     FIELDS = {
-        1: protobuf.Field("location", "FlashMemoryLocation", repeated=False, required=True),
+        1: protobuf.Field("location", "DebugFlashMemoryLocation", repeated=False, required=True),
         2: protobuf.Field("memory", "bytes", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        location: "FlashMemoryLocation",
+        location: "DebugFlashMemoryLocation",
         memory: "bytes",
     ) -> None:
         self.location = location
@@ -4203,14 +4203,14 @@ class DebugLinkFlashEraseLegacy(protobuf.MessageType):
 class DebugLinkFlashErase(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 9010
     FIELDS = {
-        1: protobuf.Field("location", "FlashMemoryLocation", repeated=False, required=True),
+        1: protobuf.Field("location", "DebugFlashMemoryLocation", repeated=False, required=True),
         2: protobuf.Field("whole_area", "bool", repeated=False, required=False, default=False),
     }
 
     def __init__(
         self,
         *,
-        location: "FlashMemoryLocation",
+        location: "DebugFlashMemoryLocation",
         whole_area: Optional["bool"] = False,
     ) -> None:
         self.location = location

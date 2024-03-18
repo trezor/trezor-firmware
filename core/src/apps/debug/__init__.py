@@ -10,7 +10,7 @@ if __debug__:
     from storage import debug as storage
     from storage.debug import debug_events
     from trezor import io, log, loop, utils, wire
-    from trezor.enums import FlashArea, MessageType
+    from trezor.enums import DebugFlashArea, MessageType
     from trezor.messages import DebugLinkLayout, DebugLinkMemory, Success
     from trezor.ui import display
     from trezor.wire import context
@@ -263,18 +263,18 @@ if __debug__:
             sdcard.power_off()
         return Success()
 
-    def get_flash_area(area: FlashArea) -> io.FlashArea:
-        if area == FlashArea.Boardloader:
+    def get_flash_area(area: DebugFlashArea) -> io.FlashArea:
+        if area == DebugFlashArea.Boardloader:
             return io.flash_area.BOARDLOADER
-        if area == FlashArea.Bootloader:
+        if area == DebugFlashArea.Bootloader:
             return io.flash_area.BOOTLOADER
-        if area == FlashArea.Firmware:
+        if area == DebugFlashArea.Firmware:
             return io.flash_area.FIRMWARE
-        if area == FlashArea.StorageA:
+        if area == DebugFlashArea.StorageA:
             return io.flash_area.STORAGE_A
-        if area == FlashArea.StorageB:
+        if area == DebugFlashArea.StorageB:
             return io.flash_area.STORAGE_B
-        if area == FlashArea.Translations:
+        if area == DebugFlashArea.Translations:
             return io.flash_area.TRANSLATIONS
         raise ValueError
 

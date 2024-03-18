@@ -485,7 +485,7 @@ if TYPE_CHECKING:
         MIDDLE_BTN = 1
         RIGHT_BTN = 2
 
-    class FlashArea(IntEnum):
+    class DebugFlashArea(IntEnum):
         Boardloader = 0
         Bootloader = 1
         StorageA = 2

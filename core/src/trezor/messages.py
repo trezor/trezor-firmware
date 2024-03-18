@@ -36,13 +36,13 @@ if TYPE_CHECKING:
     from trezor.enums import CardanoTxSigningMode  # noqa: F401
     from trezor.enums import CardanoTxWitnessType  # noqa: F401
     from trezor.enums import DebugButton  # noqa: F401
+    from trezor.enums import DebugFlashArea  # noqa: F401
     from trezor.enums import DebugPhysicalButton  # noqa: F401
     from trezor.enums import DebugSwipeDirection  # noqa: F401
     from trezor.enums import DecredStakingSpendType  # noqa: F401
     from trezor.enums import EthereumDataType  # noqa: F401
     from trezor.enums import EthereumDefinitionType  # noqa: F401
     from trezor.enums import FailureType  # noqa: F401
-    from trezor.enums import FlashArea  # noqa: F401
     from trezor.enums import HomescreenFormat  # noqa: F401
     from trezor.enums import InputScriptType  # noqa: F401
     from trezor.enums import MessageType  # noqa: F401
@@ -2892,31 +2892,31 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["DebugLinkLog"]:
             return isinstance(msg, cls)
 
-    class FlashMemoryLocation(protobuf.MessageType):
-        area: "FlashArea"
+    class DebugFlashMemoryLocation(protobuf.MessageType):
+        area: "DebugFlashArea"
         offset: "int"
 
         def __init__(
             self,
             *,
-            area: "FlashArea",
+            area: "DebugFlashArea",
             offset: "int",
         ) -> None:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["FlashMemoryLocation"]:
+        def is_type_of(cls, msg: Any) -> TypeGuard["DebugFlashMemoryLocation"]:
             return isinstance(msg, cls)
 
     class DebugLinkFlashRead(protobuf.MessageType):
-        location: "FlashMemoryLocation"
+        location: "DebugFlashMemoryLocation"
         length: "int | None"
         hashed: "bool"
 
         def __init__(
             self,
             *,
-            location: "FlashMemoryLocation",
+            location: "DebugFlashMemoryLocation",
             length: "int | None" = None,
             hashed: "bool | None" = None,
         ) -> None:
@@ -2943,13 +2943,13 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class DebugLinkFlashWrite(protobuf.MessageType):
-        location: "FlashMemoryLocation"
+        location: "DebugFlashMemoryLocation"
         memory: "bytes"
 
         def __init__(
             self,
             *,
-            location: "FlashMemoryLocation",
+            location: "DebugFlashMemoryLocation",
             memory: "bytes",
         ) -> None:
             pass
@@ -2959,13 +2959,13 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class DebugLinkFlashErase(protobuf.MessageType):
-        location: "FlashMemoryLocation"
+        location: "DebugFlashMemoryLocation"
         whole_area: "bool"
 
         def __init__(
             self,
             *,
-            location: "FlashMemoryLocation",
+            location: "DebugFlashMemoryLocation",
             whole_area: "bool | None" = None,
         ) -> None:
             pass

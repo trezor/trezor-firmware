@@ -135,13 +135,13 @@ message DebugLinkLog {
  * Location in the flash memory.enum
  * @embed
  */
-message FlashMemoryLocation {
+message DebugFlashMemoryLocation {
     /// Selector of the area
-    required FlashArea area = 1;
+    required DebugFlashArea area = 1;
     /// Offset from area start
     required uint32 offset = 2;
 
-    enum FlashArea {
+    enum DebugFlashArea {
         Boardloader = 0;
         Bootloader = 1;
         StorageA = 2;
@@ -170,7 +170,7 @@ message DebugLinkMemoryRead {
  */
  message DebugLinkFlashRead {
     /// Flash memory location
-    required FlashMemoryLocation location = 1;
+    required DebugFlashMemoryLocation location = 1;
     /// Length of the memory to read. If unspecified, the whole area is read.
     optional uint32 length = 2;
     /// If true, only the hash of the memory contents will be returned.
@@ -211,7 +211,7 @@ message DebugLinkMemoryWrite {
  */
  message DebugLinkFlashWrite {
     /// Flash memory location
-    required FlashMemoryLocation location = 1;
+    required DebugFlashMemoryLocation location = 1;
     /// Contents of the memory to flash.
     required bytes memory = 2;
 }
@@ -238,7 +238,7 @@ message DebugLinkFlashEraseLegacy {
  */
  message DebugLinkFlashErase {
     /// Flash memory location
-    required FlashMemoryLocation location = 1;
+    required DebugFlashMemoryLocation location = 1;
     /// Erase whole area or just the sector at the given offset.
     /// If the offset is not a start of a sector, error is returned.
     optional bool whole_area = 2 [default = false];
