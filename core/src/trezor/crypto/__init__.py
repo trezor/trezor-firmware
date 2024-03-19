@@ -9,6 +9,11 @@ from trezorcrypto import (  # noqa: F401
     random,
 )
 
+try:
+    from trezorcrypto import aesgcm  # noqa: F401
+except Exception:
+    pass
+
 from trezor import utils
 
 if not utils.BITCOIN_ONLY:

@@ -33,6 +33,45 @@ class aes:
         """
 
 
+# extmod/modtrezorcrypto/modtrezorcrypto-aesgcm.h
+class aesgcm:
+    """
+    AES-GCM context.
+    """
+
+    def __init__(self, key: bytes, iv: bytes) -> None:
+        """
+        Initialize the AES-GCM context for encryption or decryption.
+        """
+
+    def reset(self, iv: bytes) -> None:
+        """
+        Reset the IV for encryption or decryption.
+        """
+
+    def encrypt(self, data: bytes) -> bytes:
+        """
+        Encrypt data chunk.
+        """
+
+    def decrypt(self, data: bytes) -> bytes:
+        """
+        Decrypt data chunk.
+        """
+
+    def auth(self, data: bytes) -> None:
+        """
+        Include authenticated data chunk in the GCM authentication tag. This can
+        be called repeatedly to add authenticated data at any point before
+        finish().
+        """
+
+    def finish(self) -> bytes:
+        """
+        Compute GCM authentication tag.
+        """
+
+
 # extmod/modtrezorcrypto/modtrezorcrypto-blake256.h
 class blake256:
     """
