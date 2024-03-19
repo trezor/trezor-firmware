@@ -3,6 +3,7 @@ use core::mem;
 use heapless::Vec;
 
 use crate::{
+    strutil::TString,
     time::Duration,
     ui::{
         component::{maybe::PaintOverlapping, MsgMap},
@@ -415,7 +416,7 @@ where
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]
-pub enum Event<'a> {
+pub enum Event {
     #[cfg(feature = "button")]
     Button(ButtonEvent),
     #[cfg(feature = "touch")]
@@ -425,7 +426,7 @@ pub enum Event<'a> {
     /// token (another timer has to be requested).
     Timer(TimerToken),
     /// Advance progress bar. Progress screens only.
-    Progress(u16, &'a str),
+    Progress(u16, TString<'static>),
     /// Component has been attached to component tree. This event is sent once
     /// before any other events.
     Attach,

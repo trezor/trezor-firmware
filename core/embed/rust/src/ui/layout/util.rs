@@ -8,7 +8,6 @@ use crate::{
         util::{iter_into_array, try_or_raise},
     },
     storage::{get_avatar_len, load_avatar},
-    strutil::SkipPrefix,
     ui::{
         component::text::{
             paragraphs::{Paragraph, ParagraphSource},
@@ -62,10 +61,8 @@ pub struct ConfirmBlob {
     pub data_font: &'static TextStyle,
 }
 
-impl ParagraphSource for ConfirmBlob {
-    type StrType = StrBuffer;
-
-    fn at(&self, index: usize, offset: usize) -> Paragraph<Self::StrType> {
+impl ParagraphSource<'static> for ConfirmBlob {
+    fn at(&self, index: usize, offset: usize) -> Paragraph<'static> {
         match index {
             0 => Paragraph::new(self.description_font, self.description.skip_prefix(offset)),
             1 => Paragraph::new(self.extra_font, self.extra.skip_prefix(offset)),
@@ -102,10 +99,8 @@ impl PropsList {
     }
 }
 
-impl ParagraphSource for PropsList {
-    type StrType = StrBuffer;
-
-    fn at(&self, index: usize, offset: usize) -> Paragraph<Self::StrType> {
+impl ParagraphSource<'static> for PropsList {
+    fn at(&self, index: usize, offset: usize) -> Paragraph<'static> {
         let block = move || {
             let entry = self.items.get(index / 2)?;
             let [key, value, value_is_mono]: [Obj; 3] = iter_into_array(entry)?;

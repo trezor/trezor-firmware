@@ -1,7 +1,6 @@
 use core::mem;
 
 use crate::{
-    error::Error,
     strutil::StringType,
     ui::{
         component::{
@@ -22,9 +21,6 @@ const BOTTOM_DESCRIPTION_MARGIN: i16 = 10;
 const LOADER_Y_OFFSET_TITLE: i16 = -10;
 const LOADER_Y_OFFSET_NO_TITLE: i16 = -20;
 
-// Clippy was complaining about `very complex type used`
-type UpdateDescriptionFn<T, Error> = fn(&str) -> Result<T, Error>;
-
 pub struct Progress<T>
 where
     T: StringType,
@@ -33,9 +29,8 @@ where
     value: u16,
     loader_y_offset: i16,
     indeterminate: bool,
-    description: Child<Paragraphs<Paragraph<T>>>,
+    description: Child<Paragraphs<Paragraph<'static>>>,
     description_pad: Pad,
-    update_description: Option<UpdateDescriptionFn<T, Error>>,
     icon: Icon,
 }
 
@@ -55,21 +50,12 @@ where
                 Paragraph::new(&theme::TEXT_NORMAL, description).centered(),
             )),
             description_pad: Pad::with_background(theme::BG),
-            update_description: None,
             icon: theme::ICON_TICK_FAT,
         }
     }
 
     pub fn with_title(mut self, title: T) -> Self {
         self.title = Some(Child::new(Label::centered(title, theme::TEXT_BOLD)));
-        self
-    }
-
-    pub fn with_update_description(
-        mut self,
-        update_description: UpdateDescriptionFn<T, Error>,
-    ) -> Self {
-        self.update_description = Some(update_description);
         self
     }
 
@@ -105,10 +91,7 @@ where
             .inner()
             .inner()
             .content()
-            .as_ref()
-            .chars()
-            .filter(|c| *c == '\n')
-            .count() as i16;
+            .map(|t| t.chars().filter(|c| *c == '\n').count() as i16);
 
         let no_title_case = (Rect::zero(), Self::AREA, LOADER_Y_OFFSET_NO_TITLE);
         let (title, rest, loader_y_offset) = if let Some(self_title) = &self.title {
@@ -140,21 +123,16 @@ where
             if mem::replace(&mut self.value, new_value) != new_value {
                 self.request_paint(ctx);
             }
-            if let Some(update_description) = self.update_description {
-                self.description.mutate(ctx, |ctx, para| {
-                    // NOTE: not doing any change for empty new descriptions
-                    // (currently, there is no use-case for deleting the description)
-                    if !new_description.is_empty()
-                        && para.inner_mut().content().as_ref() != new_description
-                    {
-                        let new_description = unwrap!((update_description)(new_description));
-                        para.inner_mut().update(new_description);
-                        para.change_page(0); // Recompute bounding box.
-                        ctx.request_paint();
-                        self.description_pad.clear();
-                    }
-                });
-            }
+            self.description.mutate(ctx, |ctx, para| {
+                // NOTE: not doing any change for empty new descriptions
+                // (currently, there is no use-case for deleting the description)
+                if !new_description.is_empty() && para.inner_mut().content() != &new_description {
+                    para.inner_mut().update(new_description);
+                    para.change_page(0); // Recompute bounding box.
+                    ctx.request_paint();
+                    self.description_pad.clear();
+                }
+            });
         }
         None
     }

@@ -78,7 +78,7 @@ pub struct Page<T>
 where
     T: StringType + Clone,
 {
-    formatted: FormattedText<T>,
+    formatted: FormattedText,
     btn_layout: ButtonLayout,
     btn_actions: ButtonActions,
     current_page: usize,
@@ -95,7 +95,7 @@ where
     pub fn new(
         btn_layout: ButtonLayout,
         btn_actions: ButtonActions,
-        formatted: FormattedText<T>,
+        formatted: FormattedText,
     ) -> Self {
         Self {
             formatted,

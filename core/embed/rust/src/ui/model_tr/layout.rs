@@ -77,9 +77,9 @@ where
     }
 }
 
-impl<T> ComponentMsgObj for Paragraphs<T>
+impl<'a, T> ComponentMsgObj for Paragraphs<T>
 where
-    T: ParagraphSource,
+    T: ParagraphSource<'a>,
 {
     fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
         unreachable!()
@@ -442,12 +442,12 @@ extern "C" fn new_confirm_reset_device(n_args: usize, args: *const Obj, kwargs: 
         let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let button: TString<'static> = kwargs.get(Qstr::MP_QSTR_button)?.try_into()?;
 
-        let ops = OpTextLayout::<StrBuffer>::new(theme::TEXT_NORMAL)
-            .text_normal(TR::reset__by_continuing.try_into()?)
+        let ops = OpTextLayout::new(theme::TEXT_NORMAL)
+            .text_normal(TR::reset__by_continuing)
             .next_page()
-            .text_normal(TR::reset__more_info_at.try_into()?)
+            .text_normal(TR::reset__more_info_at)
             .newline()
-            .text_bold(TR::reset__tos_link.try_into()?);
+            .text_bold(TR::reset__tos_link);
         let formatted = FormattedText::new(ops).vertically_centered();
 
         content_in_button_page(title, formatted, button, Some("".into()), false)
@@ -459,27 +459,24 @@ extern "C" fn new_confirm_backup(n_args: usize, args: *const Obj, kwargs: *mut M
     let block = move |_args: &[Obj], _kwargs: &Map| {
         // cached allocated translations that get_page can reuse
         let tr_title_success: StrBuffer = TR::words__title_success.try_into()?;
-        let tr_new_wallet_created: StrBuffer = TR::backup__new_wallet_created.try_into()?;
-        let tr_it_should_be_backed_up_now: StrBuffer =
-            TR::backup__it_should_be_backed_up_now.try_into()?;
         let tr_title_backup_wallet: StrBuffer = TR::backup__title_backup_wallet.try_into()?;
-        let tr_recover_anytime: StrBuffer = TR::backup__recover_anytime.try_into()?;
 
         let get_page = move |page_index| match page_index {
             0 => {
                 let btn_layout = ButtonLayout::text_none_arrow_wide(TR::buttons__skip.into());
                 let btn_actions = ButtonActions::cancel_none_next();
                 let ops = OpTextLayout::new(theme::TEXT_NORMAL)
-                    .text_normal(tr_new_wallet_created)
+                    .text_normal(TR::backup__new_wallet_created)
                     .newline()
-                    .text_normal(tr_it_should_be_backed_up_now);
+                    .text_normal(TR::backup__it_should_be_backed_up_now);
                 let formatted = FormattedText::new(ops).vertically_centered();
                 Page::new(btn_layout, btn_actions, formatted).with_title(tr_title_success)
             }
             1 => {
                 let btn_layout = ButtonLayout::up_arrow_none_text(TR::buttons__back_up.into());
                 let btn_actions = ButtonActions::prev_none_confirm();
-                let ops = OpTextLayout::new(theme::TEXT_NORMAL).text_normal(tr_recover_anytime);
+                let ops =
+                    OpTextLayout::new(theme::TEXT_NORMAL).text_normal(TR::backup__recover_anytime);
                 let formatted = FormattedText::new(ops).vertically_centered();
                 Page::<StrBuffer>::new(btn_layout, btn_actions, formatted)
                     .with_title(tr_title_backup_wallet)
@@ -550,15 +547,9 @@ extern "C" fn new_confirm_joint_total(n_args: usize, args: *const Obj, kwargs: *
         let total_amount: StrBuffer = kwargs.get(Qstr::MP_QSTR_total_amount)?.try_into()?;
 
         let paragraphs = Paragraphs::new([
-            Paragraph::new(
-                &theme::TEXT_BOLD,
-                TR::joint__you_are_contributing.try_into()?,
-            ),
+            Paragraph::new(&theme::TEXT_BOLD, TR::joint__you_are_contributing),
             Paragraph::new(&theme::TEXT_MONO, spending_amount),
-            Paragraph::new(
-                &theme::TEXT_BOLD,
-                TR::joint__to_the_total_amount.try_into()?,
-            ),
+            Paragraph::new(&theme::TEXT_BOLD, TR::joint__to_the_total_amount),
             Paragraph::new(&theme::TEXT_MONO, total_amount),
         ]);
 
@@ -586,9 +577,9 @@ extern "C" fn new_confirm_modify_output(n_args: usize, args: *const Obj, kwargs:
         };
 
         let paragraphs = Paragraphs::new([
-            Paragraph::new(&theme::TEXT_NORMAL, description.try_into()?),
+            Paragraph::new(&theme::TEXT_NORMAL, description),
             Paragraph::new(&theme::TEXT_MONO, amount_change).break_after(),
-            Paragraph::new(&theme::TEXT_BOLD, TR::modify_amount__new_amount.try_into()?),
+            Paragraph::new(&theme::TEXT_BOLD, TR::modify_amount__new_amount),
             Paragraph::new(&theme::TEXT_MONO, amount_new),
         ]);
 
@@ -677,12 +668,6 @@ extern "C" fn new_confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Ma
         let total_label: StrBuffer = kwargs.get(Qstr::MP_QSTR_total_label)?.try_into()?;
         let fee_label: StrBuffer = kwargs.get(Qstr::MP_QSTR_fee_label)?.try_into()?;
 
-        // cached allocated translated strings that get_page can reuse
-        let tr_title_fee = TR::confirm_total__title_fee.try_into()?;
-        let tr_fee_rate = TR::confirm_total__fee_rate.try_into()?;
-        let tr_title_sending_from = TR::confirm_total__title_sending_from.try_into()?;
-        let tr_account = TR::words__account_colon.try_into()?;
-
         let get_page = move |page_index| {
             match page_index {
                 0 => {
@@ -701,7 +686,7 @@ extern "C" fn new_confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Ma
                         .text_mono(fee_amount);
 
                     let formatted = FormattedText::new(ops);
-                    Page::new(btn_layout, btn_actions, formatted)
+                    Page::<StrBuffer>::new(btn_layout, btn_actions, formatted)
                 }
                 1 => {
                     // Fee rate info
@@ -711,11 +696,11 @@ extern "C" fn new_confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Ma
                     let fee_rate_amount = fee_rate_amount.unwrap_or_default();
 
                     let ops = OpTextLayout::new(theme::TEXT_MONO)
-                        .text_bold(tr_title_fee)
+                        .text_bold(TR::confirm_total__title_fee)
                         .newline()
                         .newline()
                         .newline_half()
-                        .text_bold(tr_fee_rate)
+                        .text_bold(TR::confirm_total__fee_rate)
                         .newline()
                         .text_mono(fee_rate_amount);
 
@@ -732,11 +717,11 @@ extern "C" fn new_confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Ma
                     // TODO: include wallet info when available
 
                     let ops = OpTextLayout::new(theme::TEXT_MONO)
-                        .text_bold(tr_title_sending_from)
+                        .text_bold(TR::confirm_total__title_sending_from)
                         .newline()
                         .newline()
                         .newline_half()
-                        .text_bold(tr_account)
+                        .text_bold(TR::words__account_colon)
                         .newline()
                         .text_mono(account_label);
 
@@ -802,9 +787,9 @@ extern "C" fn new_altcoin_tx_summary(n_args: usize, args: *const Obj, kwargs: *m
                             ops = ops.next_page();
                         }
                         ops = ops
-                            .text_bold(unwrap!(key.try_into()))
+                            .text_bold(unwrap!(TString::try_from(key)))
                             .newline()
-                            .text_mono(unwrap!(value.try_into()));
+                            .text_mono(unwrap!(TString::try_from(value)));
                     }
 
                     let formatted = FormattedText::new(ops).vertically_centered();
@@ -858,11 +843,11 @@ extern "C" fn new_confirm_address(n_args: usize, args: *const Obj, kwargs: *mut 
 /// (title, text, btn_layout, btn_actions, text_y_offset)
 fn tutorial_screen(
     title: StrBuffer,
-    text: StrBuffer,
+    text: TR,
     btn_layout: ButtonLayout,
     btn_actions: ButtonActions,
 ) -> Page<StrBuffer> {
-    let ops = OpTextLayout::<StrBuffer>::new(theme::TEXT_NORMAL).text_normal(text);
+    let ops = OpTextLayout::new(theme::TEXT_NORMAL).text_normal(text);
     let formatted = FormattedText::new(ops).vertically_centered();
     Page::new(btn_layout, btn_actions, formatted).with_title(title)
 }
@@ -873,19 +858,12 @@ extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj
 
         // cached allocated translated strings that get_page can reuse
         let tr_title_hello: StrBuffer = TR::tutorial__title_hello.try_into()?;
-        let tr_welcome_press_right: StrBuffer = TR::tutorial__welcome_press_right.try_into()?;
-        let tr_use_trezor: StrBuffer = TR::tutorial__use_trezor.try_into()?;
         let tr_hold_to_confirm: StrBuffer = TR::buttons__hold_to_confirm.try_into()?;
-        let tr_press_and_hold: StrBuffer = TR::tutorial__press_and_hold.try_into()?;
         let tr_title_screen_scroll: StrBuffer = TR::tutorial__title_screen_scroll.try_into()?;
-        let tr_scroll_down: StrBuffer = TR::tutorial__scroll_down.try_into()?;
         let tr_confirm: StrBuffer = TR::buttons__confirm.try_into()?;
-        let tr_middle_click: StrBuffer = TR::tutorial__middle_click.try_into()?;
         let tr_title_tutorial_complete: StrBuffer =
             TR::tutorial__title_tutorial_complete.try_into()?;
-        let tr_ready_to_use: StrBuffer = TR::tutorial__ready_to_use.try_into()?;
         let tr_title_skip: StrBuffer = TR::tutorial__title_skip.try_into()?;
-        let tr_sure_you_want_skip: StrBuffer = TR::tutorial__sure_you_want_skip.try_into()?;
 
         let get_page = move |page_index| {
             // Lazy-loaded list of screens to show, with custom content,
@@ -897,37 +875,37 @@ extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj
                 // title, text, btn_layout, btn_actions
                 0 => tutorial_screen(
                     tr_title_hello,
-                    tr_welcome_press_right,
+                    TR::tutorial__welcome_press_right,
                     ButtonLayout::cancel_none_arrow(),
                     ButtonActions::last_none_next(),
                 ),
                 1 => tutorial_screen(
                     "".into(),
-                    tr_use_trezor,
+                    TR::tutorial__use_trezor,
                     ButtonLayout::arrow_none_arrow(),
                     ButtonActions::prev_none_next(),
                 ),
                 2 => tutorial_screen(
                     tr_hold_to_confirm,
-                    tr_press_and_hold,
+                    TR::tutorial__press_and_hold,
                     ButtonLayout::arrow_none_htc(TR::buttons__hold_to_confirm.into()),
                     ButtonActions::prev_none_next(),
                 ),
                 3 => tutorial_screen(
                     tr_title_screen_scroll,
-                    tr_scroll_down,
+                    TR::tutorial__scroll_down,
                     ButtonLayout::arrow_none_text(TR::buttons__continue.into()),
                     ButtonActions::prev_none_next(),
                 ),
                 4 => tutorial_screen(
                     tr_confirm,
-                    tr_middle_click,
+                    TR::tutorial__middle_click,
                     ButtonLayout::none_armed_none(TR::buttons__confirm.into()),
                     ButtonActions::none_next_none(),
                 ),
                 5 => tutorial_screen(
                     tr_title_tutorial_complete,
-                    tr_ready_to_use,
+                    TR::tutorial__ready_to_use,
                     ButtonLayout::text_none_text(
                         TR::buttons__again.into(),
                         TR::buttons__continue.into(),
@@ -936,7 +914,7 @@ extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj
                 ),
                 6 => tutorial_screen(
                     tr_title_skip,
-                    tr_sure_you_want_skip,
+                    TR::tutorial__sure_you_want_skip,
                     ButtonLayout::arrow_none_text(TR::buttons__skip.into()),
                     ButtonActions::beginning_none_cancel(),
                 ),
@@ -976,23 +954,14 @@ extern "C" fn new_confirm_modify_fee(n_args: usize, args: *const Obj, kwargs: *m
 
         let mut paragraphs_vec = ParagraphVecShort::new();
         paragraphs_vec
-            .add(Paragraph::new(&theme::TEXT_BOLD, description.try_into()?))
+            .add(Paragraph::new(&theme::TEXT_BOLD, description))
             .add(Paragraph::new(&theme::TEXT_MONO, change))
-            .add(
-                Paragraph::new(
-                    &theme::TEXT_BOLD,
-                    TR::modify_fee__transaction_fee.try_into()?,
-                )
-                .no_break(),
-            )
+            .add(Paragraph::new(&theme::TEXT_BOLD, TR::modify_fee__transaction_fee).no_break())
             .add(Paragraph::new(&theme::TEXT_MONO, total_fee_new));
 
         if let Some(fee_rate_amount) = fee_rate_amount {
             paragraphs_vec
-                .add(
-                    Paragraph::new(&theme::TEXT_BOLD, TR::modify_fee__fee_rate.try_into()?)
-                        .no_break(),
-                )
+                .add(Paragraph::new(&theme::TEXT_BOLD, TR::modify_fee__fee_rate).no_break())
                 .add(Paragraph::new(&theme::TEXT_MONO, fee_rate_amount));
         }
 
@@ -1010,7 +979,7 @@ extern "C" fn new_confirm_modify_fee(n_args: usize, args: *const Obj, kwargs: *m
 extern "C" fn new_multiple_pages_texts(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
-        let verb: TString<'static> = kwargs.get(Qstr::MP_QSTR_verb)?.try_into()?;
+        let verb: TString = kwargs.get(Qstr::MP_QSTR_verb)?.try_into()?;
         let items: Gc<List> = kwargs.get(Qstr::MP_QSTR_items)?.try_into()?;
 
         // Cache the page count so that we can move `items` into the closure.
@@ -1021,7 +990,7 @@ extern "C" fn new_multiple_pages_texts(n_args: usize, args: *const Obj, kwargs: 
         // the need of any allocation here in Rust.
         let get_page = move |page_index| {
             let item_obj = unwrap!(items.get(page_index));
-            let text = unwrap!(item_obj.try_into());
+            let text = unwrap!(TString::try_from(item_obj));
 
             let (btn_layout, btn_actions) = if page_count == 1 {
                 // There is only one page
@@ -1052,7 +1021,7 @@ extern "C" fn new_multiple_pages_texts(n_args: usize, args: *const Obj, kwargs: 
             let ops = OpTextLayout::new(theme::TEXT_NORMAL).text_normal(text);
             let formatted = FormattedText::new(ops).vertically_centered();
 
-            Page::new(btn_layout, btn_actions, formatted)
+            Page::<StrBuffer>::new(btn_layout, btn_actions, formatted)
         };
 
         let pages = FlowPages::new(get_page, page_count);
@@ -1076,7 +1045,7 @@ extern "C" fn new_confirm_fido(n_args: usize, args: *const Obj, kwargs: *mut Map
         // the need of any allocation here in Rust.
         let get_page = move |page_index| {
             let account_obj = unwrap!(accounts.get(page_index));
-            let account = account_obj.try_into().unwrap_or_else(|_| "".into());
+            let account = TString::try_from(account_obj).unwrap_or_else(|_| TString::empty());
 
             let (btn_layout, btn_actions) = if page_count == 1 {
                 // There is only one page
@@ -1111,7 +1080,7 @@ extern "C" fn new_confirm_fido(n_args: usize, args: *const Obj, kwargs: *mut Map
                 .text_bold(account);
             let formatted = FormattedText::new(ops);
 
-            Page::new(btn_layout, btn_actions, formatted)
+            Page::<StrBuffer>::new(btn_layout, btn_actions, formatted)
         };
 
         let pages = FlowPages::new(get_page, page_count);
@@ -1137,7 +1106,7 @@ extern "C" fn new_show_warning(n_args: usize, args: *const Obj, kwargs: *mut Map
 
             let btn_layout = ButtonLayout::none_armed_none(button);
             let btn_actions = ButtonActions::none_confirm_none();
-            let mut ops = OpTextLayout::<StrBuffer>::new(theme::TEXT_NORMAL);
+            let mut ops = OpTextLayout::new(theme::TEXT_NORMAL);
             ops = ops.alignment(geometry::Alignment::Center);
             if !warning.is_empty() {
                 ops = ops.text_bold(warning).newline();
@@ -1146,7 +1115,7 @@ extern "C" fn new_show_warning(n_args: usize, args: *const Obj, kwargs: *mut Map
                 ops = ops.text_normal(description);
             }
             let formatted = FormattedText::new(ops).vertically_centered();
-            Page::new(btn_layout, btn_actions, formatted)
+            Page::<StrBuffer>::new(btn_layout, btn_actions, formatted)
         };
         let pages = FlowPages::new(get_page, 1);
         let obj = LayoutObj::new(Flow::new(pages))?;
@@ -1207,24 +1176,20 @@ extern "C" fn new_show_mismatch(n_args: usize, args: *const Obj, kwargs: *mut Ma
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
 
-        // cached allocated translated strings that get_page can reuse
-        let tr_contact_support_at = TR::addr_mismatch__contact_support_at.try_into()?;
-        let tr_support_url = TR::addr_mismatch__support_url.try_into()?;
-
         let get_page = move |page_index| {
             assert!(page_index == 0);
 
             let btn_layout = ButtonLayout::arrow_none_text(TR::buttons__quit.into());
             let btn_actions = ButtonActions::cancel_none_confirm();
-            let ops = OpTextLayout::<StrBuffer>::new(theme::TEXT_NORMAL)
+            let ops = OpTextLayout::new(theme::TEXT_NORMAL)
                 .text_bold(title)
                 .newline()
                 .newline_half()
-                .text_normal(tr_contact_support_at)
+                .text_normal(TR::addr_mismatch__contact_support_at)
                 .newline()
-                .text_bold(tr_support_url);
+                .text_bold(TR::addr_mismatch__support_url);
             let formatted = FormattedText::new(ops);
-            Page::new(btn_layout, btn_actions, formatted)
+            Page::<StrBuffer>::new(btn_layout, btn_actions, formatted)
         };
         let pages = FlowPages::new(get_page, 1);
 
@@ -1258,7 +1223,7 @@ extern "C" fn new_confirm_with_info(n_args: usize, args: *const Obj, kwargs: *mu
 
         let obj = LayoutObj::new(Frame::new(
             title,
-            ShowMore::<Paragraphs<ParagraphVecShort<StrBuffer>>>::new(
+            ShowMore::<Paragraphs<ParagraphVecShort>>::new(
                 paragraphs.into_paragraphs(),
                 verb_cancel,
                 button,
@@ -1302,10 +1267,9 @@ extern "C" fn new_confirm_coinjoin(n_args: usize, args: *const Obj, kwargs: *mut
 
         // Decreasing bottom padding between paragraphs to fit one screen
         let paragraphs = Paragraphs::new([
-            Paragraph::new(&theme::TEXT_BOLD, TR::coinjoin__max_rounds.try_into()?)
-                .with_bottom_padding(2),
+            Paragraph::new(&theme::TEXT_BOLD, TR::coinjoin__max_rounds).with_bottom_padding(2),
             Paragraph::new(&theme::TEXT_MONO, max_rounds),
-            Paragraph::new(&theme::TEXT_BOLD, TR::coinjoin__max_mining_fee.try_into()?)
+            Paragraph::new(&theme::TEXT_BOLD, TR::coinjoin__max_mining_fee)
                 .with_bottom_padding(2)
                 .no_break(),
             Paragraph::new(&theme::TEXT_MONO, max_feerate).with_bottom_padding(2),
@@ -1498,11 +1462,11 @@ extern "C" fn new_confirm_recovery(n_args: usize, args: *const Obj, kwargs: *mut
             paragraphs
                 .add(Paragraph::new(
                     &theme::TEXT_NORMAL,
-                    TR::recovery__only_first_n_letters.try_into()?,
+                    TR::recovery__only_first_n_letters,
                 ))
                 .add(Paragraph::new(
                     &theme::TEXT_NORMAL,
-                    TR::recovery__cursor_will_change.try_into()?,
+                    TR::recovery__cursor_will_change,
                 ));
         }
 
@@ -1578,11 +1542,7 @@ extern "C" fn new_show_progress(n_args: usize, args: *const Obj, kwargs: *mut Ma
 
         // Description updates are received as &str and we need to provide a way to
         // convert them to StrBuffer.
-        let obj = LayoutObj::new(
-            Progress::new(indeterminate, description)
-                .with_title(title)
-                .with_update_description(StrBuffer::alloc),
-        )?;
+        let obj = LayoutObj::new(Progress::new(indeterminate, description).with_title(title))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }

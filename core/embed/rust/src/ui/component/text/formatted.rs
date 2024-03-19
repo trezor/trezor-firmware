@@ -1,9 +1,6 @@
-use crate::{
-    strutil::StringType,
-    ui::{
-        component::{Component, Event, EventCtx, Never, Paginate},
-        geometry::{Alignment, Offset, Rect},
-    },
+use crate::ui::{
+    component::{Component, Event, EventCtx, Never, Paginate},
+    geometry::{Alignment, Offset, Rect},
 };
 
 use super::{
@@ -12,15 +9,15 @@ use super::{
 };
 
 #[derive(Clone)]
-pub struct FormattedText<T: StringType + Clone> {
-    op_layout: OpTextLayout<T>,
+pub struct FormattedText {
+    op_layout: OpTextLayout<'static>,
     vertical: Alignment,
     char_offset: usize,
     y_offset: i16,
 }
 
-impl<T: StringType + Clone> FormattedText<T> {
-    pub fn new(op_layout: OpTextLayout<T>) -> Self {
+impl FormattedText {
+    pub fn new(op_layout: OpTextLayout<'static>) -> Self {
         Self {
             op_layout,
             vertical: Alignment::Start,
@@ -54,7 +51,7 @@ impl<T: StringType + Clone> FormattedText<T> {
 }
 
 // Pagination
-impl<T: StringType + Clone> Paginate for FormattedText<T> {
+impl Paginate for FormattedText {
     fn page_count(&mut self) -> usize {
         let mut page_count = 1; // There's always at least one page.
 
@@ -118,7 +115,7 @@ impl<T: StringType + Clone> Paginate for FormattedText<T> {
     }
 }
 
-impl<T: StringType + Clone> Component for FormattedText<T> {
+impl Component for FormattedText {
     type Msg = Never;
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -145,7 +142,7 @@ impl<T: StringType + Clone> Component for FormattedText<T> {
 // DEBUG-ONLY SECTION BELOW
 
 #[cfg(feature = "ui_debug")]
-impl<T: StringType + Clone> FormattedText<T> {
+impl FormattedText {
     /// Is the same as layout_content, but does not use `&mut self`
     /// to be compatible with `trace`.
     /// Therefore it has to do the `clone` of `op_layout`.
@@ -159,7 +156,7 @@ impl<T: StringType + Clone> FormattedText<T> {
 }
 
 #[cfg(feature = "ui_debug")]
-impl<T: StringType + Clone> crate::trace::Trace for FormattedText<T> {
+impl crate::trace::Trace for FormattedText {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         use crate::ui::component::text::layout::trace::TraceSink;
         use core::cell::Cell;

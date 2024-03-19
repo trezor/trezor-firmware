@@ -389,7 +389,7 @@ extern "C" fn ui_layout_progress_event(n_args: usize, args: *const Obj) -> Obj {
         let this: Gc<LayoutObj> = args[0].try_into()?;
         let value: u16 = args[1].try_into()?;
         let description: StrBuffer = args[2].try_into()?;
-        let msg = this.obj_event(Event::Progress(value, description.as_ref()))?;
+        let msg = this.obj_event(Event::Progress(value, description.into()))?;
         Ok(msg)
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, &Map::EMPTY, block) }

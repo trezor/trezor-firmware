@@ -1,5 +1,5 @@
 use crate::{
-    strutil::StringType,
+    strutil::TString,
     ui::{
         component::{
             image::BlendedImage,
@@ -91,18 +91,17 @@ where
     }
 }
 
-pub struct IconDialog<T, U> {
+pub struct IconDialog<U> {
     image: Child<BlendedImage>,
-    paragraphs: Paragraphs<ParagraphVecShort<T>>,
+    paragraphs: Paragraphs<ParagraphVecShort<'static>>,
     controls: Child<U>,
 }
 
-impl<T, U> IconDialog<T, U>
+impl<U> IconDialog<U>
 where
-    T: StringType,
     U: Component,
 {
-    pub fn new(icon: BlendedImage, title: T, controls: U) -> Self {
+    pub fn new(icon: BlendedImage, title: impl Into<TString<'static>>, controls: U) -> Self {
         Self {
             image: Child::new(icon),
             paragraphs: Paragraphs::new(ParagraphVecShort::from_iter([Paragraph::new(
@@ -119,26 +118,26 @@ where
         }
     }
 
-    pub fn with_paragraph(mut self, para: Paragraph<T>) -> Self {
-        if !para.content().as_ref().is_empty() {
+    pub fn with_paragraph(mut self, para: Paragraph<'static>) -> Self {
+        if !para.content().is_empty() {
             self.paragraphs.inner_mut().add(para);
         }
         self
     }
 
-    pub fn with_text(self, style: &'static TextStyle, text: T) -> Self {
+    pub fn with_text(self, style: &'static TextStyle, text: impl Into<TString<'static>>) -> Self {
         self.with_paragraph(Paragraph::new(style, text).centered())
     }
 
-    pub fn with_description(self, description: T) -> Self {
+    pub fn with_description(self, description: impl Into<TString<'static>>) -> Self {
         self.with_text(&theme::TEXT_NORMAL_OFF_WHITE, description)
     }
 
-    pub fn with_value(self, value: T) -> Self {
+    pub fn with_value(self, value: impl Into<TString<'static>>) -> Self {
         self.with_text(&theme::TEXT_MONO, value)
     }
 
-    pub fn new_shares(lines: [T; 4], controls: U) -> Self {
+    pub fn new_shares(lines: [impl Into<TString<'static>>; 4], controls: U) -> Self {
         let [l0, l1, l2, l3] = lines;
         Self {
             image: Child::new(BlendedImage::new(
@@ -165,9 +164,8 @@ where
     pub const VALUE_SPACE: i16 = 5;
 }
 
-impl<T, U> Component for IconDialog<T, U>
+impl<U> Component for IconDialog<U>
 where
-    T: StringType,
     U: Component,
 {
     type Msg = DialogMsg<Never, U::Msg>;
@@ -207,9 +205,8 @@ where
 }
 
 #[cfg(feature = "ui_debug")]
-impl<T, U> crate::trace::Trace for IconDialog<T, U>
+impl<U> crate::trace::Trace for IconDialog<U>
 where
-    T: StringType,
     U: crate::trace::Trace,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {

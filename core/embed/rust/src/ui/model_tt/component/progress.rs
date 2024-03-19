@@ -1,8 +1,7 @@
 use core::mem;
 
 use crate::{
-    error::Error,
-    strutil::StringType,
+    strutil::{StringType, TString},
     ui::{
         component::{
             base::ComponentExt,
@@ -24,9 +23,8 @@ pub struct Progress<T> {
     value: u16,
     loader_y_offset: i16,
     indeterminate: bool,
-    description: Child<Paragraphs<Paragraph<T>>>,
+    description: Child<Paragraphs<Paragraph<'static>>>,
     description_pad: Pad,
-    update_description: fn(&str) -> Result<T, Error>,
 }
 
 impl<T> Progress<T>
@@ -35,12 +33,7 @@ where
 {
     const AREA: Rect = constant::screen().inset(theme::borders());
 
-    pub fn new(
-        title: T,
-        indeterminate: bool,
-        description: T,
-        update_description: fn(&str) -> Result<T, Error>,
-    ) -> Self {
+    pub fn new(title: T, indeterminate: bool, description: TString<'static>) -> Self {
         Self {
             title: Label::centered(title, theme::label_progress()).into_child(),
             value: 0,
@@ -51,7 +44,6 @@ where
             )
             .into_child(),
             description_pad: Pad::with_background(theme::BG),
-            update_description,
         }
     }
 }
@@ -68,10 +60,7 @@ where
             .inner()
             .inner()
             .content()
-            .as_ref()
-            .chars()
-            .filter(|c| *c == '\n')
-            .count() as i16;
+            .map(|t| t.chars().filter(|c| *c == '\n').count() as i16);
         let (title, rest) = Self::AREA.split_top(self.title.inner().max_size().y);
         let (loader, description) =
             rest.split_bottom(Font::NORMAL.line_height() * description_lines);
@@ -90,8 +79,7 @@ where
                     ctx.request_paint();
                 }
                 self.description.mutate(ctx, |ctx, para| {
-                    if para.inner_mut().content().as_ref() != new_description {
-                        let new_description = unwrap!((self.update_description)(new_description));
+                    if para.inner_mut().content() != &new_description {
                         para.inner_mut().update(new_description);
                         para.change_page(0); // Recompute bounding box.
                         ctx.request_paint();

@@ -22,8 +22,8 @@ const QR_BORDER: i16 = 3;
 
 pub struct AddressDetails {
     qr_code: Qr,
-    details_view: Paragraphs<ParagraphVecShort<StrBuffer>>,
-    xpub_view: Frame<Paragraphs<Paragraph<StrBuffer>>, StrBuffer>,
+    details_view: Paragraphs<ParagraphVecShort<'static>>,
+    xpub_view: Frame<Paragraphs<Paragraph<'static>>, StrBuffer>,
     xpubs: Vec<(StrBuffer, StrBuffer), MAX_XPUBS>,
     current_page: usize,
     current_subpage: usize,
@@ -43,16 +43,13 @@ impl AddressDetails {
         let details_view = {
             let mut para = ParagraphVecShort::new();
             if let Some(account) = account {
-                para.add(Paragraph::new(
-                    &theme::TEXT_BOLD,
-                    TR::words__account_colon.try_into()?,
-                ));
+                para.add(Paragraph::new(&theme::TEXT_BOLD, TR::words__account_colon));
                 para.add(Paragraph::new(&theme::TEXT_MONO, account));
             }
             if let Some(path) = path {
                 para.add(Paragraph::new(
                     &theme::TEXT_BOLD,
-                    TR::address_details__derivation_path.try_into()?,
+                    TR::address_details__derivation_path,
                 ));
                 para.add(Paragraph::new(&theme::TEXT_MONO, path));
             }
@@ -60,7 +57,7 @@ impl AddressDetails {
         };
         let xpub_view = Frame::new(
             "".into(),
-            Paragraph::new(&theme::TEXT_MONO_DATA, "".into()).into_paragraphs(),
+            Paragraph::new(&theme::TEXT_MONO_DATA, "").into_paragraphs(),
         );
 
         let result = Self {
