@@ -76,8 +76,10 @@ async def sign_tx(
 async def confirm_instructions(
     signer_path: list[int], signer_public_key: bytes, transaction: Transaction
 ) -> None:
-    instructions_count = len(transaction.instructions)
-    for instruction_index, instruction in enumerate(transaction.instructions, 1):
+
+    visible_instructions = transaction.get_visible_instructions()
+    instructions_count = len(visible_instructions)
+    for instruction_index, instruction in enumerate(visible_instructions, 1):
         if not instruction.is_program_supported:
             from .layout import confirm_unsupported_program_confirm
 

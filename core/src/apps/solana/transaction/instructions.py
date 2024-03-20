@@ -890,6 +890,7 @@ def get_instruction(
                 True,
                 True,
                 False,
+                False,
                 None,
             )
         if instruction_id == SYSTEM_PROGRAM_ID_INS_ASSIGN:
@@ -933,6 +934,7 @@ def get_instruction(
                 "System Program: Assign",
                 True,
                 True,
+                False,
                 False,
                 None,
             )
@@ -989,6 +991,7 @@ def get_instruction(
                 "System Program: Transfer",
                 True,
                 True,
+                False,
                 False,
                 None,
             )
@@ -1079,6 +1082,7 @@ def get_instruction(
                 True,
                 True,
                 False,
+                False,
                 None,
             )
         if instruction_id == SYSTEM_PROGRAM_ID_INS_ADVANCE_NONCE_ACCOUNT:
@@ -1124,6 +1128,7 @@ def get_instruction(
                 "System Program: Advance Nonce Account",
                 True,
                 True,
+                False,
                 False,
                 None,
             )
@@ -1203,6 +1208,7 @@ def get_instruction(
                 True,
                 True,
                 False,
+                False,
                 None,
             )
         if instruction_id == SYSTEM_PROGRAM_ID_INS_INITIALIZE_NONCE_ACCOUNT:
@@ -1256,6 +1262,7 @@ def get_instruction(
                 "System Program: Initialize Nonce Account",
                 True,
                 True,
+                False,
                 False,
                 None,
             )
@@ -1313,6 +1320,7 @@ def get_instruction(
                 True,
                 True,
                 False,
+                False,
                 None,
             )
         if instruction_id == SYSTEM_PROGRAM_ID_INS_ALLOCATE:
@@ -1356,6 +1364,7 @@ def get_instruction(
                 "System Program: Allocate",
                 True,
                 True,
+                False,
                 False,
                 None,
             )
@@ -1427,6 +1436,7 @@ def get_instruction(
                 True,
                 True,
                 False,
+                False,
                 None,
             )
         if instruction_id == SYSTEM_PROGRAM_ID_INS_ASSIGN_WITH_SEED:
@@ -1489,6 +1499,7 @@ def get_instruction(
                 "System Program: Assign With Seed",
                 True,
                 True,
+                False,
                 False,
                 None,
             )
@@ -1565,6 +1576,7 @@ def get_instruction(
                 True,
                 True,
                 False,
+                False,
                 None,
             )
         if instruction_id == SYSTEM_PROGRAM_ID_INS_UPGRADE_NONCE_ACCOUNT:
@@ -1594,6 +1606,7 @@ def get_instruction(
                 True,
                 True,
                 False,
+                False,
                 None,
             )
         return Instruction(
@@ -1606,6 +1619,7 @@ def get_instruction(
             [],
             "System Program",
             True,
+            False,
             False,
             False,
         )
@@ -1713,6 +1727,7 @@ def get_instruction(
                 True,
                 True,
                 False,
+                False,
                 None,
             )
         if instruction_id == STAKE_PROGRAM_ID_INS_AUTHORIZE:
@@ -1800,6 +1815,7 @@ def get_instruction(
                 True,
                 True,
                 False,
+                False,
                 None,
             )
         if instruction_id == STAKE_PROGRAM_ID_INS_DELEGATE_STAKE:
@@ -1868,6 +1884,7 @@ def get_instruction(
                 True,
                 True,
                 False,
+                False,
                 None,
             )
         if instruction_id == STAKE_PROGRAM_ID_INS_SPLIT:
@@ -1935,6 +1952,7 @@ def get_instruction(
                 "Stake Program: Split",
                 True,
                 True,
+                False,
                 False,
                 None,
             )
@@ -2019,6 +2037,7 @@ def get_instruction(
                 True,
                 True,
                 False,
+                False,
                 None,
             )
         if instruction_id == STAKE_PROGRAM_ID_INS_DEACTIVATE:
@@ -2064,6 +2083,7 @@ def get_instruction(
                 "Stake Program: Deactivate",
                 True,
                 True,
+                False,
                 False,
                 None,
             )
@@ -2149,6 +2169,7 @@ def get_instruction(
                 True,
                 True,
                 False,
+                False,
                 None,
             )
         if instruction_id == STAKE_PROGRAM_ID_INS_MERGE:
@@ -2211,6 +2232,7 @@ def get_instruction(
                 "Stake Program: Merge",
                 True,
                 True,
+                False,
                 False,
                 None,
             )
@@ -2313,6 +2335,7 @@ def get_instruction(
                 True,
                 True,
                 False,
+                False,
                 None,
             )
         if instruction_id == STAKE_PROGRAM_ID_INS_INITIALIZE_CHECKED:
@@ -2370,6 +2393,7 @@ def get_instruction(
                 "Stake Program: Initialize Checked",
                 True,
                 True,
+                False,
                 False,
                 None,
             )
@@ -2455,6 +2479,7 @@ def get_instruction(
                 "Stake Program: Authorize Checked",
                 True,
                 True,
+                False,
                 False,
                 None,
             )
@@ -2555,6 +2580,7 @@ def get_instruction(
                 True,
                 True,
                 False,
+                False,
                 None,
             )
         if instruction_id == STAKE_PROGRAM_ID_INS_SET_LOCKUP_CHECKED:
@@ -2637,6 +2663,7 @@ def get_instruction(
                 True,
                 True,
                 False,
+                False,
                 None,
             )
         return Instruction(
@@ -2649,6 +2676,7 @@ def get_instruction(
             [],
             "Stake Program",
             True,
+            False,
             False,
             False,
         )
@@ -2682,6 +2710,7 @@ def get_instruction(
                 True,
                 True,
                 False,
+                False,
                 None,
             )
         if instruction_id == COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_LIMIT:
@@ -2710,6 +2739,7 @@ def get_instruction(
                     ),
                 ],
                 "Compute Budget Program: Set Compute Unit Limit",
+                True,
                 True,
                 True,
                 False,
@@ -2743,6 +2773,7 @@ def get_instruction(
                 "Compute Budget Program: Set Compute Unit Price",
                 True,
                 True,
+                True,
                 False,
                 None,
             )
@@ -2756,6 +2787,7 @@ def get_instruction(
             [],
             "Compute Budget Program",
             True,
+            False,
             False,
             False,
         )
@@ -2816,6 +2848,7 @@ def get_instruction(
                 True,
                 True,
                 False,
+                False,
                 None,
             )
         if instruction_id == TOKEN_PROGRAM_ID_INS_INITIALIZE_MULTISIG:
@@ -2869,6 +2902,7 @@ def get_instruction(
                 "Token Program: Initialize Multisig",
                 True,
                 True,
+                False,
                 True,
                 None,
             )
@@ -2937,6 +2971,7 @@ def get_instruction(
                 "Token Program: Transfer",
                 True,
                 True,
+                False,
                 True,
                 "Warning: Instruction is deprecated. Token decimals unknown.",
             )
@@ -2998,6 +3033,7 @@ def get_instruction(
                 "Token Program: Approve",
                 True,
                 True,
+                False,
                 True,
                 "Warning: Instruction is deprecated. Token decimals unknown.",
             )
@@ -3039,6 +3075,7 @@ def get_instruction(
                 "Token Program: Revoke",
                 True,
                 True,
+                False,
                 True,
                 None,
             )
@@ -3109,6 +3146,7 @@ def get_instruction(
                 "Token Program: Set Authority",
                 True,
                 True,
+                False,
                 True,
                 None,
             )
@@ -3170,6 +3208,7 @@ def get_instruction(
                 "Token Program: Mint To",
                 True,
                 True,
+                False,
                 True,
                 "Warning: Instruction is deprecated. Token decimals unknown.",
             )
@@ -3231,6 +3270,7 @@ def get_instruction(
                 "Token Program: Burn",
                 True,
                 True,
+                False,
                 True,
                 "Warning: Instruction is deprecated. Token decimals unknown.",
             )
@@ -3284,6 +3324,7 @@ def get_instruction(
                 "Token Program: Close Account",
                 True,
                 True,
+                False,
                 True,
                 None,
             )
@@ -3330,6 +3371,7 @@ def get_instruction(
                 "Token Program: Freeze Account",
                 True,
                 True,
+                False,
                 True,
                 None,
             )
@@ -3376,6 +3418,7 @@ def get_instruction(
                 "Token Program: Thaw Account",
                 True,
                 True,
+                False,
                 True,
                 None,
             )
@@ -3463,6 +3506,7 @@ def get_instruction(
                 "Token Program: Transfer Checked",
                 True,
                 True,
+                False,
                 True,
                 None,
             )
@@ -3550,6 +3594,7 @@ def get_instruction(
                 "Token Program: Approve Checked",
                 True,
                 True,
+                False,
                 True,
                 None,
             )
@@ -3625,6 +3670,7 @@ def get_instruction(
                 "Token Program: Mint to Checked",
                 True,
                 True,
+                False,
                 True,
                 None,
             )
@@ -3700,6 +3746,7 @@ def get_instruction(
                 "Token Program: Burn Checked",
                 True,
                 True,
+                False,
                 True,
                 None,
             )
@@ -3762,6 +3809,7 @@ def get_instruction(
                 True,
                 True,
                 False,
+                False,
                 None,
             )
         if instruction_id == TOKEN_PROGRAM_ID_INS_SYNC_NATIVE:
@@ -3790,6 +3838,7 @@ def get_instruction(
                 "Token Program: Sync Native",
                 True,
                 True,
+                False,
                 False,
                 None,
             )
@@ -3847,6 +3896,7 @@ def get_instruction(
                 True,
                 True,
                 False,
+                False,
                 None,
             )
         if instruction_id == TOKEN_PROGRAM_ID_INS_INITIALIZE_IMMUTABLE_OWNER:
@@ -3876,6 +3926,7 @@ def get_instruction(
                 True,
                 True,
                 False,
+                False,
                 None,
             )
         return Instruction(
@@ -3888,6 +3939,7 @@ def get_instruction(
             [],
             "Token Program",
             True,
+            False,
             False,
             False,
         )
@@ -3948,6 +4000,7 @@ def get_instruction(
                 True,
                 True,
                 False,
+                False,
                 None,
             )
         if instruction_id == TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_MULTISIG:
@@ -4001,6 +4054,7 @@ def get_instruction(
                 "Token 2022 Program: Initialize Multisig",
                 True,
                 True,
+                False,
                 True,
                 None,
             )
@@ -4069,6 +4123,7 @@ def get_instruction(
                 "Token 2022 Program: Transfer",
                 True,
                 True,
+                False,
                 True,
                 "Warning: Instruction is deprecated. Token decimals unknown.",
             )
@@ -4130,6 +4185,7 @@ def get_instruction(
                 "Token 2022 Program: Approve",
                 True,
                 True,
+                False,
                 True,
                 "Warning: Instruction is deprecated. Token decimals unknown.",
             )
@@ -4171,6 +4227,7 @@ def get_instruction(
                 "Token 2022 Program: Revoke",
                 True,
                 True,
+                False,
                 True,
                 None,
             )
@@ -4241,6 +4298,7 @@ def get_instruction(
                 "Token 2022 Program: Set Authority",
                 True,
                 True,
+                False,
                 True,
                 None,
             )
@@ -4302,6 +4360,7 @@ def get_instruction(
                 "Token 2022 Program: Mint to",
                 True,
                 True,
+                False,
                 True,
                 "Warning: Instruction is deprecated. Token decimals unknown.",
             )
@@ -4363,6 +4422,7 @@ def get_instruction(
                 "Token 2022 Program: Burn",
                 True,
                 True,
+                False,
                 True,
                 "Warning: Instruction is deprecated. Token decimals unknown.",
             )
@@ -4416,6 +4476,7 @@ def get_instruction(
                 "Token 2022 Program: Close Account",
                 True,
                 True,
+                False,
                 True,
                 None,
             )
@@ -4462,6 +4523,7 @@ def get_instruction(
                 "Token 2022 Program: Freeze Account",
                 True,
                 True,
+                False,
                 True,
                 None,
             )
@@ -4508,6 +4570,7 @@ def get_instruction(
                 "Token 2022 Program: Thaw Account",
                 True,
                 True,
+                False,
                 True,
                 None,
             )
@@ -4595,6 +4658,7 @@ def get_instruction(
                 "Token 2022 Program: Transfer Checked",
                 True,
                 True,
+                False,
                 True,
                 None,
             )
@@ -4682,6 +4746,7 @@ def get_instruction(
                 "Token 2022 Program: Approve Checked",
                 True,
                 True,
+                False,
                 True,
                 None,
             )
@@ -4757,6 +4822,7 @@ def get_instruction(
                 "Token 2022 Program: Mint to Checked",
                 True,
                 True,
+                False,
                 True,
                 None,
             )
@@ -4832,6 +4898,7 @@ def get_instruction(
                 "Token 2022 Program: Burn Checked",
                 True,
                 True,
+                False,
                 True,
                 None,
             )
@@ -4894,6 +4961,7 @@ def get_instruction(
                 True,
                 True,
                 False,
+                False,
                 None,
             )
         if instruction_id == TOKEN_2022_PROGRAM_ID_INS_SYNC_NATIVE:
@@ -4922,6 +4990,7 @@ def get_instruction(
                 "Token 2022 Program: Sync Native",
                 True,
                 True,
+                False,
                 False,
                 None,
             )
@@ -4979,6 +5048,7 @@ def get_instruction(
                 True,
                 True,
                 False,
+                False,
                 None,
             )
         if instruction_id == TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_IMMUTABLE_OWNER:
@@ -5008,6 +5078,7 @@ def get_instruction(
                 True,
                 True,
                 False,
+                False,
                 None,
             )
         return Instruction(
@@ -5020,6 +5091,7 @@ def get_instruction(
             [],
             "Token 2022 Program",
             True,
+            False,
             False,
             False,
         )
@@ -5097,6 +5169,7 @@ def get_instruction(
                 True,
                 True,
                 False,
+                False,
                 None,
             )
         if instruction_id == ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE_IDEMPOTENT:
@@ -5172,6 +5245,7 @@ def get_instruction(
                 True,
                 True,
                 False,
+                False,
                 None,
             )
         if instruction_id == ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_RECOVER_NESTED:
@@ -5245,6 +5319,7 @@ def get_instruction(
                 True,
                 True,
                 False,
+                False,
                 None,
             )
         return Instruction(
@@ -5257,6 +5332,7 @@ def get_instruction(
             [],
             "Associated Token Account Program",
             True,
+            False,
             False,
             False,
         )
@@ -5303,6 +5379,7 @@ def get_instruction(
                 True,
                 True,
                 False,
+                False,
                 None,
             )
         return Instruction(
@@ -5315,6 +5392,7 @@ def get_instruction(
             [],
             "Memo Program",
             True,
+            False,
             False,
             False,
         )
@@ -5361,6 +5439,7 @@ def get_instruction(
                 True,
                 True,
                 False,
+                False,
                 None,
             )
         return Instruction(
@@ -5375,6 +5454,7 @@ def get_instruction(
             True,
             False,
             False,
+            False,
         )
     return Instruction(
         instruction_data,
@@ -5385,6 +5465,7 @@ def get_instruction(
         [],
         [],
         "Unsupported program",
+        False,
         False,
         False,
         False,

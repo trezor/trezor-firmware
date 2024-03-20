@@ -130,7 +130,6 @@ def ${type["format"]}(_: Instruction, value: int) -> str:
 None\
 % endif
 </%def>\
-
 <%
     # Make sure that all required parameters are present in the instruction.
     for program in programs["programs"]:
@@ -190,6 +189,7 @@ def get_instruction(
                 "${program["name"]}: ${instruction["name"]}",
                 True,
                 True,
+                ${instruction.get("is_ui_hidden", False)},
                 ${instruction["is_multisig"]},
                 ${getOptionalString(instruction, "is_deprecated_warning")},
             )
@@ -205,6 +205,7 @@ def get_instruction(
             "${program["name"]}",
             True,
             False,
+            False,
             False
         )
 % endif
@@ -218,6 +219,7 @@ def get_instruction(
         [],
         [],
         "Unsupported program",
+        False,
         False,
         False,
         False

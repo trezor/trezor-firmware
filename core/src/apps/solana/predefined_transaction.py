@@ -122,14 +122,13 @@ async def try_confirm_token_transfer_transaction(
     from .layout import confirm_token_transfer
     from .token_account import try_get_token_account_base_address
 
+    visible_instructions = transaction.get_visible_instructions()
     if not is_predefined_token_transfer(
-        transaction.instructions,
+        visible_instructions,
     ):
         return False
 
-    transfer_token_instructions = get_token_transfer_instructions(
-        transaction.instructions
-    )
+    transfer_token_instructions = get_token_transfer_instructions(visible_instructions)
 
     # in is_predefined_token_transfer we made sure that these values are the same
     # for all the transfer token instructions
@@ -178,7 +177,7 @@ async def try_confirm_predefined_transaction(
     from .layout import confirm_system_transfer
     from .transaction.instructions import SystemProgramTransferInstruction
 
-    instructions = transaction.instructions
+    instructions = transaction.get_visible_instructions()
     instructions_count = len(instructions)
 
     for instruction in instructions:
