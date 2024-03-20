@@ -43,17 +43,6 @@ def halt(msg: str | None = None) -> None:
 
 
 # extmod/modtrezorutils/modtrezorutils.c
-def firmware_hash(
-    challenge: bytes | None = None,
-    callback: Callable[[int, int], None] | None = None,
-) -> bytes:
-    """
-    Computes the Blake2s hash of the firmware with an optional challenge as
-    the key.
-    """
-
-
-# extmod/modtrezorutils/modtrezorutils.c
 def firmware_vendor() -> str:
     """
     Returns the firmware vendor string from the vendor header.

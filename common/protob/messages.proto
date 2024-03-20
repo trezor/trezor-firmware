@@ -179,16 +179,19 @@ enum MessageType {
     MessageType_DebugLinkState = 102 [(bitcoin_only) = true, (wire_debug_out) = true];
     MessageType_DebugLinkStop = 103 [(bitcoin_only) = true, (wire_debug_in) = true];
     MessageType_DebugLinkLog = 104 [(bitcoin_only) = true, (wire_debug_out) = true];
-    MessageType_DebugLinkMemoryRead = 110 [(bitcoin_only) = true, (wire_debug_in) = true];
+    MessageType_DebugLinkMemoryRead = 110 [(bitcoin_only) = true, (wire_debug_in) = true, deprecated = true];
     MessageType_DebugLinkMemory = 111 [(bitcoin_only) = true, (wire_debug_out) = true];
-    MessageType_DebugLinkMemoryWrite = 112 [(bitcoin_only) = true, (wire_debug_in) = true];
-    MessageType_DebugLinkFlashErase = 113 [(bitcoin_only) = true, (wire_debug_in) = true];
+    MessageType_DebugLinkMemoryWrite = 112 [(bitcoin_only) = true, (wire_debug_in) = true, deprecated = true];
+    MessageType_DebugLinkFlashEraseLegacy = 113 [(bitcoin_only) = true, (wire_debug_in) = true, deprecated = true];
     MessageType_DebugLinkLayout = 9001 [(bitcoin_only) = true, (wire_debug_out) = true];
     MessageType_DebugLinkReseedRandom = 9002 [(bitcoin_only) = true, (wire_debug_in) = true];
     MessageType_DebugLinkRecordScreen = 9003 [(bitcoin_only) = true, (wire_debug_in) = true];
     MessageType_DebugLinkEraseSdCard = 9005 [(bitcoin_only) = true, (wire_debug_in) = true];
     MessageType_DebugLinkWatchLayout = 9006 [(bitcoin_only) = true, (wire_debug_in) = true];
     MessageType_DebugLinkResetDebugEvents = 9007 [(bitcoin_only) = true, (wire_debug_in) = true];
+    MessageType_DebugLinkFlashRead = 9008 [(bitcoin_only) = true, (wire_debug_in) = true];
+    MessageType_DebugLinkFlashWrite = 9009 [(bitcoin_only) = true, (wire_debug_in) = true];
+    MessageType_DebugLinkFlashErase = 9010 [(bitcoin_only) = true, (wire_debug_in) = true];
 
     // Ethereum
     MessageType_EthereumGetPublicKey = 450 [(wire_in) = true];

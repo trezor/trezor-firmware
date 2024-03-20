@@ -15,6 +15,7 @@ DebugLinkLog.bucket                     max_size:33
 DebugLinkLog.text                       max_size:256
 
 DebugLinkMemory.memory                  max_size:1024
+DebugLinkMemory.hash                    max_size:32
 DebugLinkMemoryWrite.memory             max_size:1024
 
 # Unused messages.

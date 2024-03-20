@@ -94,7 +94,7 @@ void fsm_msgDebugLinkMemoryWrite(const DebugLinkMemoryWrite *msg) {
   }
 }
 
-void fsm_msgDebugLinkFlashErase(const DebugLinkFlashErase *msg) {
+void fsm_msgDebugLinkFlashEraseLegacy(const DebugLinkFlashEraseLegacy *msg) {
   svc_flash_unlock();
   svc_flash_erase_sector(msg->sector);
   uint32_t dummy = svc_flash_lock();
