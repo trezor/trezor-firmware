@@ -107,7 +107,7 @@ void haptic_init(void) {
   set_reg(DRV2625_REG_OL_LRA_PERIOD_LO, ACTUATOR_LRA_PERIOD & 0xFF);
   set_reg(DRV2625_REG_OL_LRA_PERIOD_HI, ACTUATOR_LRA_PERIOD >> 8);
 
-  GPIO_InitTypeDef GPIO_InitStructure;
+  GPIO_InitTypeDef GPIO_InitStructure = {0};
   GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;
   GPIO_InitStructure.Pull = GPIO_PULLDOWN;
   GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
@@ -115,7 +115,7 @@ void haptic_init(void) {
   GPIO_InitStructure.Alternate = GPIO_AF14_TIM16;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStructure);
 
-  TIM_HandleTypeDef TIM_Handle;
+  TIM_HandleTypeDef TIM_Handle = {0};
   __HAL_RCC_TIM16_CLK_ENABLE();
   TIM_Handle.State = HAL_TIM_STATE_RESET;
   TIM_Handle.Instance = TIM16;
@@ -126,7 +126,7 @@ void haptic_init(void) {
   TIM_Handle.Init.RepetitionCounter = 0;
   HAL_TIM_PWM_Init(&TIM_Handle);
 
-  TIM_OC_InitTypeDef TIM_OC_InitStructure;
+  TIM_OC_InitTypeDef TIM_OC_InitStructure = {0};
   TIM_OC_InitStructure.OCMode = TIM_OCMODE_PWM2;
   TIM_OC_InitStructure.OCPolarity = TIM_OCPOLARITY_HIGH;
   TIM_OC_InitStructure.Pulse = 1;
