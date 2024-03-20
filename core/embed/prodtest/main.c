@@ -59,6 +59,7 @@
 #include "memzero.h"
 
 #ifdef STM32U5
+#include "secure_aes.h"
 #include "stm32u5xx_ll_utils.h"
 #else
 #include "stm32f4xx_ll_utils.h"
@@ -579,6 +580,9 @@ int main(void) {
   display_reinit();
   display_orientation(0);
   random_delays_init();
+#ifdef STM32U5
+  secure_aes_init();
+#endif
 #ifdef USE_HASH_PROCESSOR
   hash_processor_init();
 #endif

@@ -6,6 +6,7 @@
 #include "memzero.h"
 #include "model.h"
 #include "rng.h"
+#include "secure_aes.h"
 
 static secbool bootloader_locked = secfalse;
 
@@ -163,6 +164,9 @@ void secret_optiga_backup(void) {
 }
 
 secbool secret_optiga_extract(uint8_t *dest) {
+  uint8_t secret[SECRET_OPTIGA_KEY_LEN] = {0};
+  uint8_t *secret_ptr = (uint8_t *)secret;
+
   bool all_zero = true;
   volatile uint32_t *reg1 = &TAMP->BKP8R;
   for (int i = 0; i < 8; i++) {
@@ -173,11 +177,19 @@ secbool secret_optiga_extract(uint8_t *dest) {
     }
 
     for (int j = 0; j < 4; j++) {
-      dest[i * 4 + j] = (val >> (j * 8)) & 0xFF;
+      secret_ptr[i * 4 + j] = (val >> (j * 8)) & 0xFF;
     }
   }
 
-  return all_zero ? secfalse : sectrue;
+  if (all_zero) {
+    return secfalse;
+  }
+
+  secbool res = secure_aes_ecb_decrypt_hw(secret, SECRET_OPTIGA_KEY_LEN, dest,
+                                          SECURE_AES_KEY_DHUK);
+
+  memzero(secret, sizeof(secret));
+  return res;
 }
 
 void secret_optiga_hide(void) {
