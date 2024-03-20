@@ -30,6 +30,7 @@ def create_mock_instruction(
         ui_name="",
         is_program_supported=True,
         is_instruction_supported=True,
+        is_ui_hidden=False,
         supports_multisig=False,
         is_deprecated_warning=None,
     )

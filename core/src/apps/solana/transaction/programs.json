@@ -1315,6 +1315,7 @@
         {
           "id": 2,
           "name": "Set Compute Unit Limit",
+          "is_ui_hidden": true,
           "is_multisig": false,
           "parameters": [
             {
@@ -1334,6 +1335,7 @@
         {
           "id": 3,
           "name": "Set Compute Unit Price",
+          "is_ui_hidden": true,
           "is_multisig": false,
           "parameters": [
             {

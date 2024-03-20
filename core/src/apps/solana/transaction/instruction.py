@@ -30,6 +30,7 @@ class Instruction:
 
     is_program_supported: bool
     is_instruction_supported: bool
+    is_ui_hidden: bool
     instruction_data: InstructionData
     accounts: list[Account]
 
@@ -88,6 +89,7 @@ class Instruction:
         ui_name: str,
         is_program_supported: bool = True,
         is_instruction_supported: bool = True,
+        is_ui_hidden: bool = False,
         supports_multisig: bool = False,
         is_deprecated_warning: str | None = None,
     ) -> None:
@@ -101,6 +103,7 @@ class Instruction:
 
         self.ui_properties = ui_properties
 
+        self.is_ui_hidden = is_ui_hidden
         self.is_program_supported = is_program_supported
         self.is_instruction_supported = is_instruction_supported
 
