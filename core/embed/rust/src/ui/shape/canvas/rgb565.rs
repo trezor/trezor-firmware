@@ -94,9 +94,7 @@ impl<'a> Canvas for Rgb565Canvas<'a> {
 
     #[cfg(feature = "ui_blurring")]
     fn blur_rect(&mut self, r: Rect, radius: usize, cache: &DrawingCache) {
-        let clip = r
-            .translate(self.viewport.origin)
-            .intersect(self.viewport.clip);
+        let clip = r.translate(self.viewport.origin).clamp(self.viewport.clip);
 
         let ofs = radius as i16;
 

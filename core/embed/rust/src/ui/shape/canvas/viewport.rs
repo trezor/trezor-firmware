@@ -56,7 +56,7 @@ impl Viewport {
     /// Checks if the viewport intersects with the specified rectangle
     /// given in relative coordinates.
     pub fn contains(&self, r: Rect) -> bool {
-        r.translate(self.origin).has_intersection(self.clip)
+        !r.translate(self.origin).clamp(self.clip).is_empty()
     }
 
     pub fn translate(self, offset: Offset) -> Self {
@@ -77,7 +77,7 @@ impl Viewport {
     /// remains unchanged.
     pub fn absolute_clip(self, r: Rect) -> Self {
         Self {
-            clip: r.intersect(self.clip),
+            clip: r.clamp(self.clip),
             ..self
         }
     }
@@ -87,7 +87,7 @@ impl Viewport {
     /// remains unchanged.
     pub fn relative_clip(self, r: Rect) -> Self {
         Self {
-            clip: r.translate(self.origin).intersect(self.clip),
+            clip: r.translate(self.origin).clamp(self.clip),
             ..self
         }
     }
@@ -96,7 +96,7 @@ impl Viewport {
     /// given in relative coordinates. The origin of the new viewport
     /// is set to the top-left corner of the rectangle.
     pub fn relative_window(&self, r: Rect) -> Self {
-        let clip = r.translate(self.origin).intersect(self.clip);
+        let clip = r.translate(self.origin).clamp(self.clip);
         let origin = self.origin + (clip.top_left() - self.clip.top_left());
         Self { clip, origin }
     }

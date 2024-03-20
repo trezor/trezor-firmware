@@ -57,7 +57,7 @@ impl<'a> ToifImage<'a> {
         let viewport = canvas.viewport();
         let mut clip = self
             .bounds(cache)
-            .intersect(viewport.clip.translate(-viewport.origin))
+            .clamp(viewport.clip.translate(-viewport.origin))
             .translate((-bounds.top_left()).into());
 
         let buff = &mut unwrap!(cache.image_buff(), "No image buffer");
@@ -105,7 +105,7 @@ impl<'a> ToifImage<'a> {
         let viewport = canvas.viewport();
         let mut clip = self
             .bounds(cache)
-            .intersect(viewport.clip.translate(-viewport.origin))
+            .clamp(viewport.clip.translate(-viewport.origin))
             .translate((-bounds.top_left()).into());
 
         let buff = &mut unwrap!(cache.image_buff(), "No image buffer");

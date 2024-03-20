@@ -826,6 +826,22 @@ fn fill_octant(
     }
 }
 
+impl Rect {
+    /// Normalizes the rectangle coordinates.
+    ///
+    /// Returns a new `Rect` with potentially swapped left/right,
+    /// top/bottom coordinates, ensuring that `x0`, `y0` represents
+    /// the top-left corner and `x1`, `y1` represents the bottom-right corner.
+    pub fn normalize(&self) -> Self {
+        Rect {
+            x0: core::cmp::min(self.x0, self.x1),
+            y0: core::cmp::min(self.y0, self.y1),
+            x1: core::cmp::max(self.x0, self.x1),
+            y1: core::cmp::max(self.y0, self.y1),
+        }
+    }
+}
+
 impl Point {
     fn onleft(self) -> Self {
         Self {

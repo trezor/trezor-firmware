@@ -30,7 +30,7 @@ impl Default for Dma2d {
 
 impl Dma2d {
     pub fn new_fill(r: Rect, clip: Rect, color: Color, alpha: u8) -> Option<Self> {
-        let r = r.intersect(clip);
+        let r = r.clamp(clip);
         if !r.is_empty() {
             Some(
                 Self::default()
@@ -59,7 +59,7 @@ impl Dma2d {
         }
 
         // Clip with the canvas viewport
-        let mut r = r_dst.intersect(clip);
+        let mut r = r_dst.clamp(clip);
 
         // Clip with the bitmap top-left
         if r.x0 > r_dst.x0 {
