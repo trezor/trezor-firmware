@@ -3,7 +3,7 @@
 ENTRY(reset_handler)
 
 MEMORY {
-  FLASH  (rx)  : ORIGIN = 0x0C050000, LENGTH = 3648K
+  FLASH  (rx)  : ORIGIN = 0x0C050000, LENGTH = 1664K
   SRAM1  (wal) : ORIGIN = 0x30000000, LENGTH =  192K - 0x100
   BOOT_ARGS  (wal) : ORIGIN = 0x3002FF00, LENGTH =  0x100
   SRAM2  (wal) : ORIGIN = 0x30030000, LENGTH =  64K
@@ -23,9 +23,9 @@ data_vma = ADDR(.data);
 data_size = SIZEOF(.data);
 
 /* used by the startup code to populate variables used by the C code */
-sensitive_lma = LOADADDR(.sensitive);
-sensitive_vma = ADDR(.sensitive);
-sensitive_size = SIZEOF(.sensitive);
+confidential_lma = LOADADDR(.confidential);
+confidential_vma = ADDR(.confidential);
+confidential_size = SIZEOF(.confidential);
 
 /* used by the startup code to wipe memory */
 sram1_start = ORIGIN(SRAM1);
@@ -44,7 +44,8 @@ sram6_end = ORIGIN(SRAM6) + LENGTH(SRAM6);
 /* reserve 256 bytes for bootloader arguments */
 boot_args_start = ORIGIN(BOOT_ARGS);
 boot_args_end = ORIGIN(BOOT_ARGS) + LENGTH(BOOT_ARGS);
-_codelen = SIZEOF(.flash) + SIZEOF(.data) + SIZEOF(.sensitive);
+
+_codelen = SIZEOF(.flash) + SIZEOF(.data) + SIZEOF(.confidential);
 _flash_start = ORIGIN(FLASH);
 _flash_end = ORIGIN(FLASH) + LENGTH(FLASH);
 _heap_start = ADDR(.heap);
@@ -99,8 +100,8 @@ SECTIONS {
     . = 16K; /* Overflow causes UsageFault */
   } >SRAM2
 
-  .sensitive : ALIGN(512) {
-    *(.sensitive*);
+  .confidential : ALIGN(512) {
+    *(.confidential*);
     . = ALIGN(512);
   } >SRAM2 AT>FLASH
 

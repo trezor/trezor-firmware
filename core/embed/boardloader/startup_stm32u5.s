@@ -23,7 +23,7 @@ reset_handler:
   bl rng_read
   mov r4, r0            // save TRNG output in r4
 
-  // wipe memory to remove any possible vestiges of sensitive data
+  // wipe memory to remove any possible vestiges of confidential data
 
 
 fill_ram:
@@ -88,10 +88,10 @@ clear_ram:
   ldr r2, =data_size    // size in bytes
   bl memcpy
 
-  // copy sensitive data in from flash
-  ldr r0, =sensitive_vma     // dst addr
-  ldr r1, =sensitive_lma     // src addr
-  ldr r2, =sensitive_size    // size in bytes
+  // copy confidential data in from flash
+  ldr r0, =confidential_vma     // dst addr
+  ldr r1, =confidential_lma     // src addr
+  ldr r2, =confidential_size    // size in bytes
   bl memcpy
 
   // setup the stack protector (see build script "-fstack-protector-all") with an unpredictable value

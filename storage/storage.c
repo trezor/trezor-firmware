@@ -143,18 +143,18 @@ const char *const PROCESSING_MSG = "Processing";
 const char *const STARTING_MSG = "Starting up";
 const char *const WRONG_PIN_MSG = "Wrong PIN";
 
-static secbool initialized = secfalse;
-static secbool unlocked = secfalse;
+CONFIDENTIAL static secbool initialized = secfalse;
+CONFIDENTIAL static secbool unlocked = secfalse;
 static PIN_UI_WAIT_CALLBACK ui_callback = NULL;
 static uint32_t ui_total = 0;
 static uint32_t ui_rem = 0;
 static const char *ui_message = NULL;
-static uint8_t cached_keys[KEYS_SIZE] = {0};
-static uint8_t *const cached_dek = cached_keys;
-static uint8_t *const cached_sak = cached_keys + DEK_SIZE;
-static uint8_t authentication_sum[SHA256_DIGEST_LENGTH] = {0};
-static uint8_t hardware_salt[HARDWARE_SALT_SIZE] = {0};
-static uint32_t norcow_active_version = 0;
+CONFIDENTIAL static uint8_t cached_keys[KEYS_SIZE] = {0};
+CONFIDENTIAL static uint8_t *const cached_dek = cached_keys;
+CONFIDENTIAL static uint8_t *const cached_sak = cached_keys + DEK_SIZE;
+CONFIDENTIAL static uint8_t authentication_sum[SHA256_DIGEST_LENGTH] = {0};
+CONFIDENTIAL static uint8_t hardware_salt[HARDWARE_SALT_SIZE] = {0};
+CONFIDENTIAL static uint32_t norcow_active_version = 0;
 static const uint8_t TRUE_BYTE = 0x01;
 static const uint8_t FALSE_BYTE = 0x00;
 static const uint32_t TRUE_WORD = 0xC35A69A5;
@@ -1342,7 +1342,7 @@ void storage_wipe(void) {
 
 static void __handle_fault(const char *msg, const char *file, int line,
                            const char *func) {
-  static secbool in_progress = secfalse;
+  CONFIDENTIAL static secbool in_progress = secfalse;
 
   // If fault handling is already in progress, then we are probably facing a
   // fault injection attack, so wipe.
@@ -1426,7 +1426,7 @@ static uint32_t pin_to_int(const uint8_t *pin, size_t pin_len) {
 // Legacy conversion of wipe code from the uint32 scheme that was used prior to
 // storage version 3.
 static char *int_to_wipe_code(uint32_t val) {
-  static char wipe_code[V0_MAX_PIN_LEN + 1] = {0};
+  CONFIDENTIAL static char wipe_code[V0_MAX_PIN_LEN + 1] = {0};
   size_t pos = sizeof(wipe_code) - 1;
   wipe_code[pos] = '\0';
 

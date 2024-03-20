@@ -432,7 +432,7 @@ if PYOPT == '0' or not FROZEN:
 else:
     STATIC=""
 
-env = Environment(ENV=os.environ, CFLAGS='%s -DPYOPT=%s -DBITCOIN_ONLY=%s %s' % (ARGUMENTS.get('CFLAGS', ''), PYOPT, BITCOIN_ONLY, STATIC))
+env = Environment(ENV=os.environ, CFLAGS='%s -DCONFIDENTIAL= -DPYOPT=%s -DBITCOIN_ONLY=%s %s' % (ARGUMENTS.get('CFLAGS', ''), PYOPT, BITCOIN_ONLY, STATIC))
 
 
 if TREZOR_MODEL in ('T', 'T3T1'):

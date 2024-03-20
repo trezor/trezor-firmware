@@ -846,14 +846,14 @@ BINARY_NAME += ".bin"
 
 if TREZOR_MODEL in ('1'):
     action_bin=[
-        '$OBJCOPY -O binary -j .header -j .flash -j .data -j .sensitive $SOURCE $TARGET',
+        '$OBJCOPY -O binary -j .header -j .flash -j .data -j .confidential $SOURCE $TARGET',
         '../legacy/bootloader/firmware_sign.py -f $TARGET',
         '$CP $TARGET ' + BINARY_NAME,
     ]
 else:
     if 'STM32F427xx' in CPPDEFINES_HAL or 'STM32F429xx' in CPPDEFINES_HAL:
         action_bin=[
-            '$OBJCOPY -O binary -j .vendorheader -j .header -j .flash -j .data -j .sensitive --pad-to 0x08100000 $SOURCE ${TARGET}.p1',
+            '$OBJCOPY -O binary -j .vendorheader -j .header -j .flash -j .data -j .confidential --pad-to 0x08100000 $SOURCE ${TARGET}.p1',
             '$OBJCOPY -O binary -j .flash2 $SOURCE ${TARGET}.p2',
             '$CAT ${TARGET}.p1 ${TARGET}.p2 > $TARGET',
             '$HEADERTOOL -h $TARGET ' + ('-D' if not PRODUCTION else ''),
@@ -862,7 +862,7 @@ else:
         ]
     elif 'STM32U5A9xx' in CPPDEFINES_HAL or 'STM32U585xx' in CPPDEFINES_HAL:
         action_bin=[
-            '$OBJCOPY -O binary -j .vendorheader -j .header -j .flash -j .data -j .sensitive $SOURCE ${TARGET}',
+            '$OBJCOPY -O binary -j .vendorheader -j .header -j .flash -j .data -j .confidential $SOURCE ${TARGET}',
             '$HEADERTOOL -h $TARGET ' + ('-D' if not PRODUCTION else ''),
             '$CP $TARGET ' + BINARY_NAME,
             ]
