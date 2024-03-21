@@ -26,9 +26,6 @@
 #include "memory.h"
 #include "supervise.h"
 
-#define FLASH_BURST_WORDS (4 * 8)
-#define FLASH_BURST_SIZE (FLASH_BURST_WORDS * sizeof(uint32_t))
-
 #define STORAGE_AREAS_COUNT 2
 
 static const uint32_t FLASH_SECTOR_TABLE[FLASH_SECTOR_COUNT + 1] = {
@@ -158,20 +155,6 @@ secbool flash_write_word(uint16_t sector, uint32_t offset, uint32_t data) {
     return secfalse;
   }
 
-  return sectrue;
-}
-
-secbool flash_write_burst(uint16_t sector, uint32_t offset,
-                          const uint32_t *data) {
-  if ((offset % FLASH_BURST_SIZE) != 0) {
-    return secfalse;
-  }
-  for (int i = 0; i < FLASH_BURST_WORDS; i++) {
-    if (sectrue !=
-        flash_write_word(sector, offset + i * sizeof(uint32_t), data[i])) {
-      return secfalse;
-    }
-  }
   return sectrue;
 }
 

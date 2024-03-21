@@ -25,6 +25,12 @@
 
 #define SENSITIVE __attribute__((section(".sensitive")))
 
+#define FLASH_QUADWORD_WORDS (4)
+#define FLASH_QUADWORD_SIZE (FLASH_QUADWORD_WORDS * sizeof(uint32_t))
+
+#define FLASH_BURST_WORDS (8 * FLASH_QUADWORD_WORDS)
+#define FLASH_BURST_SIZE (FLASH_BURST_WORDS * sizeof(uint32_t))
+
 typedef enum {
   CLOCK_160_MHZ = 0,
 } clock_settings_t;

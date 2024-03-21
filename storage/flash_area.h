@@ -76,6 +76,23 @@ secbool __wur flash_area_write_burst(const flash_area_t *area, uint32_t offset,
 secbool __wur flash_area_write_block(const flash_area_t *area, uint32_t offset,
                                      const flash_block_t block);
 
+// Writes data to specified 'offset' inside a flash area
+// Data is written in efficient way, using the smallest possible number of
+// flash operations on the given architecture.
+// Data and its size must be aligned to size of one flash block
+secbool __wur flash_area_write_data(const flash_area_t *area, uint32_t offset,
+                                    const void *data, uint32_t size);
+
+// Writes data to specified 'offset' inside a flash area
+// Data is written in efficient way, using the smallest possible number of
+// flash operations on the given architecture.
+// Data and total size must be aligned to size of one flash block
+// The difference between data_size and total_size is padded with 'padding'
+secbool __wur flash_area_write_data_padded(const flash_area_t *area,
+                                           uint32_t offset, const void *data,
+                                           uint32_t data_size, uint8_t padding,
+                                           uint32_t total_size);
+
 secbool __wur flash_area_erase(const flash_area_t *area,
                                void (*progress)(int pos, int len));
 secbool __wur flash_area_erase_bulk(const flash_area_t *area, int count,

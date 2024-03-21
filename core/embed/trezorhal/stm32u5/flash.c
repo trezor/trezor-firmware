@@ -130,22 +130,22 @@ secbool flash_sector_erase(uint16_t sector) {
 secbool flash_write_quadword(uint16_t sector, uint32_t offset,
                              const uint32_t *data) {
   uint32_t address =
-      (uint32_t)flash_get_address(sector, offset, 4 * sizeof(uint32_t));
+      (uint32_t)flash_get_address(sector, offset, FLASH_QUADWORD_SIZE);
   if (address == 0) {
     return secfalse;
   }
-  if (offset % (4 * sizeof(uint32_t))) {  // we write only at 16-byte boundary
+  if (offset % FLASH_QUADWORD_SIZE) {  // we write only at 16-byte boundary
     return secfalse;
   }
 
-  for (int i = 0; i < 4; i++) {
+  for (int i = 0; i < FLASH_QUADWORD_WORDS; i++) {
     if (data[i] != (data[i] & *((const uint32_t *)address + i))) {
       return secfalse;
     }
   }
 
   secbool all_match = sectrue;
-  for (int i = 0; i < 4; i++) {
+  for (int i = 0; i < FLASH_QUADWORD_WORDS; i++) {
     if (data[i] != *((const uint32_t *)address + i)) {
       all_match = secfalse;
       break;
@@ -160,7 +160,7 @@ secbool flash_write_quadword(uint16_t sector, uint32_t offset,
     return secfalse;
   }
 
-  for (int i = 0; i < 4; i++) {
+  for (int i = 0; i < FLASH_QUADWORD_WORDS; i++) {
     if (data[i] != *((const uint32_t *)address + i)) {
       return secfalse;
     }
@@ -175,7 +175,7 @@ secbool flash_write_burst(uint16_t sector, uint32_t offset,
   if (address == 0) {
     return secfalse;
   }
-  if (offset % FLASH_BURST_SIZE) {
+  if (offset % FLASH_BURST_SIZE) {  // we write only at 128-byte boundary
     return secfalse;
   }
 
