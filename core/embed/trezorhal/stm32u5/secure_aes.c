@@ -40,14 +40,14 @@ secbool secure_aes_init(void) {
 }
 
 static void secure_aes_load_bhk(void) {
-  TAMP->BKP7R;
-  TAMP->BKP6R;
-  TAMP->BKP5R;
-  TAMP->BKP4R;
-  TAMP->BKP3R;
-  TAMP->BKP2R;
-  TAMP->BKP1R;
   TAMP->BKP0R;
+  TAMP->BKP1R;
+  TAMP->BKP2R;
+  TAMP->BKP3R;
+  TAMP->BKP4R;
+  TAMP->BKP5R;
+  TAMP->BKP6R;
+  TAMP->BKP7R;
 }
 
 secbool secure_aes_encrypt(uint32_t* input, size_t size, uint32_t* output) {
