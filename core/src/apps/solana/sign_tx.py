@@ -133,7 +133,7 @@ def calculate_fee(transaction: Transaction) -> int:
     unit_limit = SOLANA_COMPUTE_UNIT_LIMIT
     is_unit_limit_set = False
 
-    for instruction in transaction.instructions[:3]:
+    for instruction in transaction.instructions:
         if instruction.program_id == COMPUTE_BUDGET_PROGRAM_ID:
             if (
                 instruction.instruction_id
