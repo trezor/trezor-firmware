@@ -60,11 +60,6 @@ else:
     refresh = display.refresh
 
 
-# in both debug and production, emulator needs to draw the screen explicitly
-if utils.EMULATOR or utils.INTERNAL_MODEL == "T2B1" or utils.INTERNAL_MODEL == "T3B1":
-    loop.after_step_hook = refresh
-
-
 async def _alert(count: int) -> None:
     short_sleep = loop.sleep(20)
     long_sleep = loop.sleep(80)
