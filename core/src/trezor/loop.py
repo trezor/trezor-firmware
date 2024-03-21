@@ -20,9 +20,6 @@ if TYPE_CHECKING:
     AwaitableTask = Task | Awaitable
     Finalizer = Callable[[Task, Any], None]
 
-# function to call after every task step
-after_step_hook: Callable[[], None] | None = None
-
 # tasks scheduled for execution in the future
 _queue = utimeq.utimeq(64)
 
@@ -176,8 +173,6 @@ def _step(task: Task, value: Any) -> None:
         else:
             if __debug__:
                 log.error(__name__, "unknown syscall: %s", result)
-        if after_step_hook:
-            after_step_hook()
 
 
 class Syscall:

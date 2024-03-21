@@ -47,12 +47,6 @@ if __debug__:
 else:
     refresh = display.refresh  # type: ignore [obscured-by-same-name]
 
-
-# in both debug and production, emulator needs to draw the screen explicitly
-if utils.EMULATOR or utils.INTERNAL_MODEL in ("T1B1", "T2B1"):
-    loop.after_step_hook = refresh
-
-
 # import style later to avoid circular dep
 from trezor.ui import style  # isort:skip
 
