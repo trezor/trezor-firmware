@@ -10,7 +10,7 @@ image: registry.gitlab.com/satoshilabs/trezor/trezor-firmware/trezor-firmware-en
     paths:
       - .venv/
 
-##START_DEVICE_TESTS
+## START_DEVICE_TESTS
 core device test czech:
   stage: test
   <<: *gitlab_caching
@@ -300,9 +300,9 @@ core device R test spanish:
       junit: tests/junit.xml
 
 
-##END_DEVICE_TESTS
+## END_DEVICE_TESTS
 
-##START_CLICK_TESTS
+## START_CLICK_TESTS
 core click test czech:
   stage: test
   <<: *gitlab_caching
@@ -584,4 +584,4 @@ core click R test spanish:
     when: always
 
 
-##END_CLICK_TESTS
+## END_CLICK_TESTS

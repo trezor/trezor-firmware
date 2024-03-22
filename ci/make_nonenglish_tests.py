@@ -145,8 +145,8 @@ def get_all_tests_text(func: Callable[[str, str], str]) -> str:
 
 def fill_device_tests() -> None:
     replacement = Replacement(
-        start=r"##START_DEVICE_TESTS",
-        end=r"##END_DEVICE_TESTS",
+        start=r"## START_DEVICE_TESTS",
+        end=r"## END_DEVICE_TESTS",
         replacement=get_all_tests_text(get_device_test),
     )
     replace_content_between_markers(TEST_FILE, [replacement])
@@ -154,8 +154,8 @@ def fill_device_tests() -> None:
 
 def fill_click_tests() -> None:
     replacement = Replacement(
-        start=r"##START_CLICK_TESTS",
-        end=r"##END_CLICK_TESTS",
+        start=r"## START_CLICK_TESTS",
+        end=r"## END_CLICK_TESTS",
         replacement=get_all_tests_text(get_click_test),
     )
     replace_content_between_markers(TEST_FILE, [replacement])
