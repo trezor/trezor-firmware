@@ -36,7 +36,7 @@ jobs:
       - id: set_vars
         name: Set variables
         run: |
-          echo test_lang=${{ github.event_name == 'pull_request' && github.event.action == 'labeled' && github.event.label.name == 'translations' && '[\"en\", \"cs\", \"fr\", \"de\", \"es\"]' || '[\"en\"]' }} >> $GITHUB_OUTPUT
+          echo test_lang=${{ github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'translations') && '[\"en\", \"cs\", \"fr\", \"de\", \"es\"]' || '[\"en\"]' }} >> $GITHUB_OUTPUT
           echo asan=${{ github.event_name == 'schedule' && '[\"noasan\", \"asan\"]' || '[\"noasan\"]' }} >> $GITHUB_OUTPUT
           cat $GITHUB_OUTPUT
 
