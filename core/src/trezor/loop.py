@@ -93,6 +93,9 @@ def close(task: Task) -> None:
     """
     for iface in _paused:  # pylint: disable=consider-using-dict-items
         _paused[iface].discard(task)
+    for iface in _paused:  # pylint: disable=consider-using-dict-items
+        if not _paused[iface]:
+            del _paused[iface]
     _queue.discard(task)
     task.close()
     finalize(task, GeneratorExit())
