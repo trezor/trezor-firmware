@@ -113,6 +113,8 @@ async def confirm_instructions(
 
 
 def calculate_fee(transaction: Transaction) -> int:
+    import math
+
     from .constants import SOLANA_BASE_FEE_LAMPORTS, SOLANA_COMPUTE_UNIT_LIMIT
     from .transaction.instructions import (
         COMPUTE_BUDGET_PROGRAM_ID,
@@ -150,4 +152,4 @@ def calculate_fee(transaction: Transaction) -> int:
                 unit_price = instruction.lamports
                 is_unit_price_set = True
 
-    return int(base_fee + unit_price * unit_limit / 1000000)
+    return int(base_fee + math.ceil(unit_price * unit_limit / 1000000))
