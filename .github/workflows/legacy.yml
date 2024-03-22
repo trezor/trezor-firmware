@@ -11,7 +11,7 @@ permissions:
 
 env:
   PULL_COMMENT: |
-    |legacy UI changes|<img src="https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T1B1-legacy_device_test/status.png" width="20px" height="20px" /> [device test](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T1B1-legacy_device_test/index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T1B1-legacy_device_test/differing_screens.html)) <img src="https://data.trezor.io/dev/firmware/master_diff/${{ github.run_id }}/status.png" width="20px" height="20px" /> [main](https://data.trezor.io/dev/firmware/master_diff/${{ github.run_id }}/)([screens](https://data.trezor.io/dev/firmware/master_diff/${{ github.run_id }}/master_diff.html))|
+    |legacy UI changes|<img src="https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T1B1-en-legacy_device_test/status.png" width="20px" height="20px" /> [device test](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T1B1-en-legacy_device_test/index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T1B1-en-legacy_device_test/differing_screens.html)) <img src="https://data.trezor.io/dev/firmware/master_diff/${{ github.run_id }}/status.png" width="20px" height="20px" /> [main](https://data.trezor.io/dev/firmware/master_diff/${{ github.run_id }}/)([screens](https://data.trezor.io/dev/firmware/master_diff/${{ github.run_id }}/master_diff.html))|
     |-----------------|-----|
 
 jobs:
@@ -97,6 +97,7 @@ jobs:
       - uses: ./.github/actions/ui-report
         with:
           model: T1B1
+          lang: en
           status: ${{ job.status }}
         continue-on-error: true
         if: ${{ always() && matrix.coins == 'universal' }}
