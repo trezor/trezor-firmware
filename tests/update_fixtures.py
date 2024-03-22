@@ -8,7 +8,6 @@ from typing import Iterable
 
 import click
 
-from gitlab import UI_JOB_NAMES, get_branch_ui_fixtures_results, get_jobs_of_interest
 from ui_tests import update_fixtures
 from ui_tests.common import FIXTURES_FILE, get_current_fixtures
 
@@ -36,23 +35,28 @@ def _get_current_git_branch() -> str:
 
 
 @cli.command()
+@click.option(
+    "-g",
+    "--github",
+    is_flag=True,
+    help="Fetch from GitHub Actions instead of GitLab CI",
+)
 @click.option("-b", "--branch", help="Branch name")
 @click.option(
     "-o",
     "--only-jobs",
-    type=click.Choice(UI_JOB_NAMES),
     help="Job names which to process",
     multiple=True,
 )
 @click.option(
     "-e",
     "--exclude-jobs",
-    type=click.Choice(UI_JOB_NAMES),
     help="Not take these jobs",
     multiple=True,
 )
 @click.option("-r", "--remove-missing", is_flag=True, help="Remove missing tests")
 def ci(
+    github: bool,
     branch: str | None,
     only_jobs: Iterable[str] | None,
     exclude_jobs: Iterable[str] | None,
@@ -73,8 +77,15 @@ def ci(
     if exclude_jobs:
         print(f"Exclude jobs: {exclude_jobs}")
 
-    jobs_of_interest = get_jobs_of_interest(only_jobs, exclude_jobs)
-    ui_results = get_branch_ui_fixtures_results(branch, jobs_of_interest)
+    if github:
+        from github import get_branch_ui_fixtures_results
+
+        ui_results = get_branch_ui_fixtures_results(branch, only_jobs, exclude_jobs)
+    else:
+        from gitlab import get_branch_ui_fixtures_results, get_jobs_of_interest
+
+        jobs_of_interest = get_jobs_of_interest(only_jobs, exclude_jobs)
+        ui_results = get_branch_ui_fixtures_results(branch, jobs_of_interest)
 
     current_fixtures = get_current_fixtures()
 
