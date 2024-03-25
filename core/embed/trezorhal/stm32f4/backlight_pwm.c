@@ -29,7 +29,7 @@ void backlight_pwm_init(void) {
   BACKLIGHT_PWM_PORT_CLK_EN();
   BACKLIGHT_PWM_TIM_CLK_EN();
 
-  GPIO_InitTypeDef GPIO_InitStructure;
+  GPIO_InitTypeDef GPIO_InitStructure = {0};
 
   // LCD_PWM (backlight control)
   GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;
