@@ -403,7 +403,7 @@ void display_init(void) {
 #define DISPLAY_GPIO_SPEED GPIO_SPEED_FREQ_LOW
 #endif
 
-  GPIO_InitTypeDef GPIO_InitStructure;
+  GPIO_InitTypeDef GPIO_InitStructure = {0};
 
   // LCD_RST/PC14
   GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;

@@ -161,7 +161,7 @@ void display_init(void) {
   OLED_SPI_MOSI_CLK_ENA();
   OLED_SPI_CLK_ENA();
 
-  GPIO_InitTypeDef GPIO_InitStructure;
+  GPIO_InitTypeDef GPIO_InitStructure = {0};
 
   // set GPIO for OLED display
   GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;

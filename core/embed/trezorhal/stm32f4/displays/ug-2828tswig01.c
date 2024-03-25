@@ -277,7 +277,7 @@ void display_init(void) {
   __HAL_RCC_GPIOE_CLK_ENABLE();
   __HAL_RCC_FMC_CLK_ENABLE();
 
-  GPIO_InitTypeDef GPIO_InitStructure;
+  GPIO_InitTypeDef GPIO_InitStructure = {0};
 
   // LCD_RST/PC14
   GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;

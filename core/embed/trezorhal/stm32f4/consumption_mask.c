@@ -42,7 +42,7 @@ void consumption_mask_init(void) {
   consumption_mask_randomize();
 
   __HAL_RCC_GPIOC_CLK_ENABLE();
-  GPIO_InitTypeDef GPIO_InitStructure;
+  GPIO_InitTypeDef GPIO_InitStructure = {0};
   GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;
   GPIO_InitStructure.Pull = GPIO_PULLUP;
   GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_HIGH;
@@ -51,7 +51,7 @@ void consumption_mask_init(void) {
   HAL_GPIO_Init(GPIOC, &GPIO_InitStructure);
 
   __HAL_RCC_TIM8_CLK_ENABLE();
-  TIM_HandleTypeDef TIM8_Handle;
+  TIM_HandleTypeDef TIM8_Handle = {0};
   TIM8_Handle.State = HAL_TIM_STATE_RESET;
   TIM8_Handle.Instance = TIM8;
   TIM8_Handle.Init.Period = TIMER_PERIOD;
@@ -61,7 +61,7 @@ void consumption_mask_init(void) {
   TIM8_Handle.Init.RepetitionCounter = 0;
   HAL_TIM_PWM_Init(&TIM8_Handle);
 
-  TIM_OC_InitTypeDef TIM_OC_InitStructure;
+  TIM_OC_InitTypeDef TIM_OC_InitStructure = {0};
   TIM_OC_InitStructure.Pulse = 0;
   TIM_OC_InitStructure.OCMode = TIM_OCMODE_PWM1;
   TIM_OC_InitStructure.OCPolarity = TIM_OCPOLARITY_LOW;

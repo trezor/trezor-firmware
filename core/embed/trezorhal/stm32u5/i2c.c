@@ -72,7 +72,7 @@ void i2c_init_instance(uint16_t idx, i2c_instance_t *instance) {
     return;
   }
 
-  GPIO_InitTypeDef GPIO_InitStructure;
+  GPIO_InitTypeDef GPIO_InitStructure = {0};
 
   // configure CTP I2C SCL and SDA GPIO lines
   GPIO_InitStructure.Mode = GPIO_MODE_AF_OD;
