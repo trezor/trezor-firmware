@@ -139,6 +139,7 @@ def call_sign_tx(client: Client, parameters, input_flow=None, chunkify: bool = F
             additional_witness_requests=additional_witness_requests,
             include_network_id=parameters["include_network_id"],
             chunkify=chunkify,
+            tag_cbor_sets=parameters["tag_cbor_sets"],
         )
 
 

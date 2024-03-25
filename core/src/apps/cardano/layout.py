@@ -5,6 +5,7 @@ from trezor.enums import (
     ButtonRequestType,
     CardanoAddressType,
     CardanoCertificateType,
+    CardanoDRepType,
     CardanoNativeScriptType,
 )
 from trezor.strings import format_amount
@@ -58,9 +59,12 @@ SCRIPT_TYPE_NAMES = {
 
 CERTIFICATE_TYPE_NAMES = {
     CardanoCertificateType.STAKE_REGISTRATION: TR.cardano__stake_registration,
+    CardanoCertificateType.STAKE_REGISTRATION_CONWAY: TR.cardano__stake_registration,
     CardanoCertificateType.STAKE_DEREGISTRATION: TR.cardano__stake_deregistration,
+    CardanoCertificateType.STAKE_DEREGISTRATION_CONWAY: TR.cardano__stake_registration,
     CardanoCertificateType.STAKE_DELEGATION: TR.cardano__stake_delegation,
     CardanoCertificateType.STAKE_POOL_REGISTRATION: TR.cardano__stake_pool_registration,
+    CardanoCertificateType.VOTE_DELEGATION: TR.cardano__vote_delegation,
 }
 
 BRT_Other = ButtonRequestType.Other  # global_import_cache
@@ -552,7 +556,9 @@ async def confirm_tx(
     )
 
 
-async def confirm_certificate(certificate: messages.CardanoTxCertificate) -> None:
+async def confirm_certificate(
+    certificate: messages.CardanoTxCertificate, network_id: int
+) -> None:
     # stake pool registration requires custom confirmation logic not covered
     # in this call
     assert certificate.type != CardanoCertificateType.STAKE_POOL_REGISTRATION
@@ -763,6 +769,28 @@ def _format_stake_credential(
             TR.cardano__for_script,
             bech32.encode(bech32.HRP_SCRIPT_HASH, script_hash),
         )
+    else:
+        # should be unreachable unless there's a bug in validation
+        raise ValueError
+
+
+def _format_drep(drep: messages.CardanoDRep) -> tuple[str, str]:
+    if drep.type == CardanoDRepType.KEY_HASH:
+        assert drep.key_hash is not None  # validate_drep
+        return (
+            TR.cardano__delegating_to_key_hash,
+            bech32.encode(bech32.HRP_DREP_KEY_HASH, drep.key_hash),
+        )
+    elif drep.type == CardanoDRepType.SCRIPT_HASH:
+        assert drep.script_hash is not None  # validate_drep
+        return (
+            TR.cardano__delegating_to_script_hash,
+            bech32.encode(bech32.HRP_DREP_SCRIPT_HASH, drep.script_hash),
+        )
+    elif drep.type == CardanoDRepType.ABSTAIN:
+        return (TR.cardano__delegating_to, TR.cardano__delegating_always_abstain)
+    elif drep.type == CardanoDRepType.NO_CONFIDENCE:
+        return (TR.cardano__delegating_to, TR.cardano__delegating_always_no_confidence)
     else:
         # should be unreachable unless there's a bug in validation
         raise ValueError

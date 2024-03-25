@@ -42,7 +42,8 @@
         "reference_inputs": [],
         "signing_mode": "PLUTUS_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "tx_hash": "598dc85bc03cc682ee7ce8b4db798d836a0840429cae7fc62fe388e727a669a2",
@@ -107,7 +108,8 @@
         "reference_inputs": [],
         "signing_mode": "PLUTUS_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "tx_hash": "ff4a515636b38ed2b2b37f64501f75f04a25d05349b5b84c07f319b6f86372f4",
@@ -134,6 +136,95 @@
             "type": 1,
             "pub_key": "b75258e4f61eb7b313d8554c2fe10673cf214ca2d762bfd53ec3b7846e2ee872",
             "signature": "46084ff13573185716863a71e565cfd16edb677db6ae01e64db0490cd05098bd66b8d75187a06c867c183b78bfdf7478e34be2ee46bf262e07b834d091dd0009",
+            "chain_code": null
+          }
+        ]
+      }
+    },
+    {
+      "description": "Plutus transaction with required signers, reference input and 258-tagged sets",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "validity_interval_start": null,
+        "certificates": [],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "prev_hash": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
+            "amount": "1"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": "d593fd793c377ac50a3169bb8378ffc257c944da31aa8f355dfa5a4f6ff89e02",
+        "collateral_inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
+            "prev_index": 0
+          }
+        ],
+        "required_signers": [
+          {
+            "key_path": "m/1852'/1815'/0'/0/1"
+          },
+          {
+            "key_path": "m/1854'/1815'/0'/0/0"
+          },
+          {
+            "key_path": "m/1855'/1815'/0'"
+          },
+          {
+            "key_hash": "3a7f09d3df4cf66a7399c2b05bfa234d5a29560c311fc5db4c490711"
+          }
+        ],
+        "collateral_return": null,
+        "total_collateral": null,
+        "reference_inputs": [
+          {
+            "prev_hash": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
+            "prev_index": 0
+          }
+        ],
+        "signing_mode": "PLUTUS_TRANSACTION",
+        "additional_witness_requests": [],
+        "include_network_id": false,
+        "tag_cbor_sets": true
+      },
+      "result": {
+        "tx_hash": "9cb88fd25d43f4e8140be00dd9538c59b0e8fe1f3186890421d8820cf33e6be7",
+        "witnesses": [
+          {
+            "type": 1,
+            "pub_key": "5d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c1",
+            "signature": "5f9426495c0fe515a2f933cb43a2d3f4de32b5102e32ce8d71e1d3718fda2b6a91c6845f9d612787096813c8be7aea4bc140c1288ac24f6bedf9d6c105ff7c05",
+            "chain_code": null
+          },
+          {
+            "type": 1,
+            "pub_key": "36a8ef21d5b98fdf23a27325cf643deaac35e912c835e35037f23d1061ae5b16",
+            "signature": "a2251fc5daa777643db0c12becf35b8d75d14743888beb7f48da0a5c2428bfade90926b4df6f70a9d967b26d6a09208e6278d210fbfc84a5a01ad7d0fd04d90e",
+            "chain_code": null
+          },
+          {
+            "type": 1,
+            "pub_key": "b10be5c0d11ad8292bbe69e220ca0cfbe154610b3041a8e72f9d515c226ab3b1",
+            "signature": "0a457eca4d1dac83f9f794f07215e625d4af4db361ce303f8744efc609714f4f075805e0ad81c9127bd0d8ad5f22a21b6d166c2d9cab2c8309d90c493956ca07",
+            "chain_code": null
+          },
+          {
+            "type": 1,
+            "pub_key": "b75258e4f61eb7b313d8554c2fe10673cf214ca2d762bfd53ec3b7846e2ee872",
+            "signature": "f60e26cb4152179ebe9af3beae7c54abe04d4d195efe5cebde1d007084dcce3c664fc43629da524ae33ba9fe40bba8a8f36964845c196fafc182459ad8f7f60e",
             "chain_code": null
           }
         ]
@@ -187,7 +278,8 @@
             "path": "m/1855'/1815'/0'"
           }
         ],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "tx_hash": "598dc85bc03cc682ee7ce8b4db798d836a0840429cae7fc62fe388e727a669a2",
@@ -255,7 +347,8 @@
         "reference_inputs": [],
         "signing_mode": "PLUTUS_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "tx_hash": "3fbf931170d2ed6df95a35572d850b40bab4b350763872cb9110f93e9ce8668b",
@@ -316,7 +409,8 @@
         "reference_inputs": [],
         "signing_mode": "PLUTUS_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "tx_hash": "08bd557131d89c5008cf79f7bdf9c47d27ad7c00b3a1a19dfecedd7c1f7508d8",
@@ -439,7 +533,8 @@
             "path": "m/1855'/1815'/0'"
           }
         ],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "tx_hash": "f1ff85026488d1ea60950d9d1819ee00a012560074cd60435f2510e917d86a7f",
@@ -512,7 +607,8 @@
         "reference_inputs": [],
         "signing_mode": "PLUTUS_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "tx_hash": "0c4a8ec4a0e6718d81a391d09bbc7d48e14f879c94b7e48a35092ef532ebf597",
@@ -587,7 +683,8 @@
         "reference_inputs": [],
         "signing_mode": "PLUTUS_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "tx_hash": "53d7a7ee887178a08ac70ff2088f8bfbafc7b6bcd5a54e79a686b013455d5e25",
@@ -663,7 +760,8 @@
         "reference_inputs": [],
         "signing_mode": "PLUTUS_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "tx_hash": "c55ef20e0c8da066bab5221a5c010c32d90905753b0257576e34d7e639f65c9d",
@@ -744,7 +842,8 @@
         "reference_inputs": [],
         "signing_mode": "PLUTUS_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "tx_hash": "b3ccc29173719973363988763826eb853cb314df8dde07fcf82dab9961d47c25",
@@ -825,7 +924,8 @@
         "reference_inputs": [],
         "signing_mode": "PLUTUS_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "tx_hash": "717e9b63b08fda304bf7625d5df4149200b28b740db9b66082961a1d2f938ccd",
@@ -912,7 +1012,8 @@
         "reference_inputs": [],
         "signing_mode": "PLUTUS_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "tx_hash": "baabb4e6dced60de330a089590ea38b7bbe505bbf9c785ef88078242f0ea9860",
@@ -981,7 +1082,8 @@
         "reference_inputs": [],
         "signing_mode": "PLUTUS_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "tx_hash": "bb4d26c40c67d23ca74bb2e4ad28f586567b99907b86c0337fb7d8f4cde90100",
@@ -1035,7 +1137,8 @@
         "reference_inputs": [],
         "signing_mode": "PLUTUS_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "tx_hash": "5581fb7a99b8e0ebaf552a5d7157cebb37c9624602d78d86337dfbf838fb2e13",
@@ -1089,7 +1192,8 @@
         "reference_inputs": [],
         "signing_mode": "PLUTUS_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "tx_hash": "e5beff2153154ab3dba4ff5c638f40ae8c1594c67aee3310bd19997f5013e47b",
@@ -1143,7 +1247,8 @@
         "reference_inputs": [],
         "signing_mode": "PLUTUS_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "tx_hash": "2399f1743e4074d3e18a742898c3e4d5eac66a7284a949ddcd1eac004498720f",
@@ -1197,7 +1302,8 @@
         "reference_inputs": [],
         "signing_mode": "PLUTUS_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "tx_hash": "8c131e38f378d141deb05d4bf2eb2d13bb75d6363dd470a1f524ba027eff566a",
@@ -1263,7 +1369,8 @@
         "reference_inputs": [],
         "signing_mode": "PLUTUS_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "tx_hash": "6c5ccc9f6ec1b0b25ccb81ae533b9d46e545af4b745f7e287c967f13a152d537",
@@ -1331,7 +1438,8 @@
         "reference_inputs": [],
         "signing_mode": "PLUTUS_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "tx_hash": "c95a6f99f5763d89926b44b8a0f7fa12f14ee3978c120e42c581a3f47638d490",
@@ -1383,7 +1491,8 @@
         "reference_inputs": [],
         "signing_mode": "PLUTUS_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "tx_hash": "3a2a702ed7a907323a7f6ef7bf5d5ad4685bd1a605a0594e535b93597a33b574",
@@ -1449,7 +1558,8 @@
         "reference_inputs": [],
         "signing_mode": "PLUTUS_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "tx_hash": "6852e7285d0a187f692bdb2ea93451f96952303c54168d5bd7c428a78d0fac07",
@@ -1517,7 +1627,8 @@
         "reference_inputs": [],
         "signing_mode": "PLUTUS_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "tx_hash": "1bef5859c3e23fad63141b61e03aa45537c5ec10ad7c4780a4ed198c17bee165",
@@ -1574,7 +1685,8 @@
         ],
         "signing_mode": "PLUTUS_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "tx_hash": "98657251d3014dfd98e1eab94bf0a7f6252968d683df9bc8585bf431b4c72a51",

@@ -1234,6 +1234,16 @@ pub enum TranslatedString {
     ethereum__staking_unstake = 840,  // "UNSTAKE"
     #[cfg(feature = "universal_fw")]
     ethereum__staking_unstake_intro = 841,  // "Unstake ETH from Everstake?"
+    #[cfg(feature = "universal_fw")]
+    cardano__delegating_always_abstain = 842,  // "Always Abstain"
+    #[cfg(feature = "universal_fw")]
+    cardano__delegating_always_no_confidence = 843,  // "Always No Confidence"
+    #[cfg(feature = "universal_fw")]
+    cardano__delegating_to_key_hash = 844,  // "Delegating to key hash:"
+    #[cfg(feature = "universal_fw")]
+    cardano__delegating_to_script_hash = 845,  // "Delegating to script hash:"
+    #[cfg(feature = "universal_fw")]
+    cardano__vote_delegation = 846,  // "Vote delegation"
 }
 
 impl TranslatedString {
@@ -2463,6 +2473,16 @@ impl TranslatedString {
             Self::ethereum__staking_unstake => "UNSTAKE",
             #[cfg(feature = "universal_fw")]
             Self::ethereum__staking_unstake_intro => "Unstake ETH from Everstake?",
+            #[cfg(feature = "universal_fw")]
+            Self::cardano__delegating_always_abstain => "Always Abstain",
+            #[cfg(feature = "universal_fw")]
+            Self::cardano__delegating_always_no_confidence => "Always No Confidence",
+            #[cfg(feature = "universal_fw")]
+            Self::cardano__delegating_to_key_hash => "Delegating to key hash:",
+            #[cfg(feature = "universal_fw")]
+            Self::cardano__delegating_to_script_hash => "Delegating to script hash:",
+            #[cfg(feature = "universal_fw")]
+            Self::cardano__vote_delegation => "Vote delegation",
         }
     }
 
@@ -3693,6 +3713,16 @@ impl TranslatedString {
             Qstr::MP_QSTR_ethereum__staking_unstake => Some(Self::ethereum__staking_unstake),
             #[cfg(feature = "universal_fw")]
             Qstr::MP_QSTR_ethereum__staking_unstake_intro => Some(Self::ethereum__staking_unstake_intro),
+            #[cfg(feature = "universal_fw")]
+            Qstr::MP_QSTR_cardano__delegating_always_abstain => Some(Self::cardano__delegating_always_abstain),
+            #[cfg(feature = "universal_fw")]
+            Qstr::MP_QSTR_cardano__delegating_always_no_confidence => Some(Self::cardano__delegating_always_no_confidence),
+            #[cfg(feature = "universal_fw")]
+            Qstr::MP_QSTR_cardano__delegating_to_key_hash => Some(Self::cardano__delegating_to_key_hash),
+            #[cfg(feature = "universal_fw")]
+            Qstr::MP_QSTR_cardano__delegating_to_script_hash => Some(Self::cardano__delegating_to_script_hash),
+            #[cfg(feature = "universal_fw")]
+            Qstr::MP_QSTR_cardano__vote_delegation => Some(Self::cardano__vote_delegation),
             _ => None,
         }
     }

@@ -5,6 +5,7 @@ from apps.common.cbor import (
     OrderedMap,
     Tagged,
     create_array_header,
+    create_tagged_set_header,
     create_embedded_cbor_bytes_header,
     create_map_header,
     decode,
@@ -29,6 +30,38 @@ class TestCardanoCbor(unittest.TestCase):
 
         with self.assertRaises(NotImplementedError):
             create_array_header(2**64)
+
+    def test_create_tagged_set_header(self):
+        test_vectors = [
+            (0, "d9010280"),
+            (23, "d9010297"),
+            ((2**8) - 1, "d9010298ff"),
+            ((2**16) - 1, "d9010299ffff"),
+            ((2**32) - 1, "d901029affffffff"),
+            ((2**64) - 1, "d901029bffffffffffffffff"),
+        ]
+        for val, header_hex in test_vectors:
+            header = unhexlify(header_hex)
+            self.assertEqual(create_tagged_set_header(val), header)
+
+        with self.assertRaises(NotImplementedError):
+            create_tagged_set_header(2**64)
+
+    def test_create_tagged_set_header(self):
+        test_vectors = [
+            (0, "d9010280"),
+            (23, "d9010297"),
+            ((2**8) - 1, "d9010298ff"),
+            ((2**16) - 1, "d9010299ffff"),
+            ((2**32) - 1, "d901029affffffff"),
+            ((2**64) - 1, "d901029bffffffffffffffff"),
+        ]
+        for val, header_hex in test_vectors:
+            header = unhexlify(header_hex)
+            self.assertEqual(create_tagged_set_header(val), header)
+
+        with self.assertRaises(NotImplementedError):
+            create_tagged_set_header(2**64)
 
     def test_create_map_header(self):
         test_vectors = [

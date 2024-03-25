@@ -840,5 +840,10 @@
   "838": "ethereum__staking_stake_address",
   "839": "ethereum__staking_stake_intro",
   "840": "ethereum__staking_unstake",
-  "841": "ethereum__staking_unstake_intro"
+  "841": "ethereum__staking_unstake_intro",
+  "842": "cardano__delegating_always_abstain",
+  "843": "cardano__delegating_always_no_confidence",
+  "844": "cardano__delegating_to_key_hash",
+  "845": "cardano__delegating_to_script_hash",
+  "846": "cardano__vote_delegation"
 }

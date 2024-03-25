@@ -388,6 +388,15 @@ if TYPE_CHECKING:
         STAKE_DEREGISTRATION = 1
         STAKE_DELEGATION = 2
         STAKE_POOL_REGISTRATION = 3
+        STAKE_REGISTRATION_CONWAY = 7
+        STAKE_DEREGISTRATION_CONWAY = 8
+        VOTE_DELEGATION = 9
+
+    class CardanoDRepType(IntEnum):
+        KEY_HASH = 0
+        SCRIPT_HASH = 1
+        ABSTAIN = 2
+        NO_CONFIDENCE = 3
 
     class CardanoPoolRelayType(IntEnum):
         SINGLE_HOST_IP = 0

@@ -684,7 +684,11 @@ static void _librust_qstrs(void) {
   MP_QSTR_cardano__cost;
   MP_QSTR_cardano__credential_mismatch;
   MP_QSTR_cardano__datum_hash;
+  MP_QSTR_cardano__delegating_always_abstain;
+  MP_QSTR_cardano__delegating_always_no_confidence;
   MP_QSTR_cardano__delegating_to;
+  MP_QSTR_cardano__delegating_to_key_hash;
+  MP_QSTR_cardano__delegating_to_script_hash;
   MP_QSTR_cardano__for_account_and_index_template;
   MP_QSTR_cardano__for_account_template;
   MP_QSTR_cardano__for_key_hash;
@@ -754,6 +758,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_cardano__unusual_path;
   MP_QSTR_cardano__valid_since;
   MP_QSTR_cardano__verify_script;
+  MP_QSTR_cardano__vote_delegation;
   MP_QSTR_cardano__vote_key_registration;
   MP_QSTR_cardano__vote_public_key;
   MP_QSTR_cardano__voting_purpose;
