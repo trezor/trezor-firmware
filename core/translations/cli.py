@@ -31,16 +31,22 @@ VERSION_H = HERE.parent / "embed" / "firmware" / "version.h"
 SIGNATURES_JSON = HERE / "signatures.json"
 
 
-class SignatureInfo(t.TypedDict):
+class SignedInfo(t.TypedDict):
     merkle_root: str
-    signature: str | None
+    signature: str
+    datetime: str
+    commit: str
+
+
+class UnsignedInfo(t.TypedDict):
+    merkle_root: str
     datetime: str
     commit: str
 
 
 class SignatureFile(t.TypedDict):
-    current: SignatureInfo
-    history: list[SignatureInfo]
+    current: UnsignedInfo
+    history: list[SignedInfo]
 
 
 def _version_from_version_h() -> translations.VersionTuple:
@@ -63,19 +69,20 @@ def _version_from_version_h() -> translations.VersionTuple:
     )
 
 
-def make_signature_info(merkle_root: bytes, signature: bytes | None) -> SignatureInfo:
+def make_tree_info(merkle_root: bytes) -> UnsignedInfo:
     now = datetime.datetime.utcnow()
     commit = (
         subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=HERE)
         .decode("ascii")
         .strip()
     )
-    return SignatureInfo(
-        merkle_root=merkle_root.hex(),
-        signature=signature.hex() if signature is not None else None,
-        datetime=now.isoformat(),
-        commit=commit,
+    return UnsignedInfo(
+        merkle_root=merkle_root.hex(), datetime=now.isoformat(), commit=commit
     )
+
+
+def sign_info(info: UnsignedInfo, signature: bytes) -> SignedInfo:
+    return SignedInfo(signature=signature.hex(), **info)
 
 
 def update_merkle_root(signature_file: SignatureFile, merkle_root: bytes) -> bool:
@@ -89,16 +96,9 @@ def update_merkle_root(signature_file: SignatureFile, merkle_root: bytes) -> boo
         # Merkle root is already up to date
         return False
 
-    if current["signature"] is None:
-        # current content is not signed. just overwrite with a new one
-        signature_file["current"] = make_signature_info(merkle_root, None)
-        SIGNATURES_JSON.write_text(json.dumps(signature_file, indent=2))
-        return True
-
-    # move current to history
-    signature_file["history"].insert(0, current)
-    # create new current
-    signature_file["current"] = make_signature_info(merkle_root, None)
+    # overwrite with a new one
+    signature_file["current"] = make_tree_info(merkle_root)
+    SIGNATURES_JSON.write_text(json.dumps(signature_file, indent=2))
     return True
 
 
@@ -188,7 +188,8 @@ def cli() -> None:
 
 
 @cli.command()
-def gen() -> None:
+@click.option("--signed", is_flag=True, help="Generate signed blobs.")
+def gen(signed: bool | None) -> None:
     """Generate all language blobs for all models.
 
     The generated blobs will be signed with the development keys.
@@ -196,11 +197,25 @@ def gen() -> None:
     all_blobs = generate_all_blobs(rewrite_version=True)
     tree = merkle_tree.MerkleTree(b.header_bytes for b in all_blobs)
     root = tree.get_root_hash()
+
+    signature_file: SignatureFile = json.loads(SIGNATURES_JSON.read_text())
+
+    if signed:
+        for entry in signature_file["history"]:
+            if entry["merkle_root"] == root.hex():
+                signature_hex = entry["signature"]
+                signature_bytes = bytes.fromhex(signature_hex)
+                sigmask, signature = signature_bytes[0], signature_bytes[1:]
+                build_all_blobs(all_blobs, tree, sigmask, signature, production=True)
+                return
+        else:
+            raise click.ClickException(
+                "No matching signature found in signatures.json. Run `cli.py sign` first."
+            )
+        
     signature = cosi.sign_with_privkeys(root, PRIVATE_KEYS_DEV)
     sigmask = 0b111
     build_all_blobs(all_blobs, tree, sigmask, signature)
-
-    signature_file = json.loads(SIGNATURES_JSON.read_text())
     if update_merkle_root(signature_file, root):
         SIGNATURES_JSON.write_text(json.dumps(signature_file, indent=2) + "\n")
         click.echo("Updated signatures.json")
@@ -228,13 +243,10 @@ def merkle_root() -> None:
 
 
 @cli.command()
-@click.argument("signature_hex", required=False)
-@click.option("--force", is_flag=True)
-def sign(signature_hex: str | None, force: bool) -> None:
-    """Insert a signature into language blobs.
-
-    If signature_hex is not provided, the signature will be located in signatures.json.
-    """
+@click.argument("signature_hex")
+@click.option("--force", is_flag=True, help="Write even if the signature is invalid.")
+def sign(signature_hex: str, force: bool | None) -> None:
+    """Insert a signature into language blobs."""
     all_blobs = generate_all_blobs(rewrite_version=False)
     tree = merkle_tree.MerkleTree(b.header_bytes for b in all_blobs)
     root = tree.get_root_hash()
@@ -247,23 +259,10 @@ def sign(signature_hex: str | None, force: bool) -> None:
             f"Stored in signatures.json: {signature_file['current']['merkle_root']}"
         )
 
-    if signature_hex is None:
-        if signature_file["current"]["signature"] is None:
-            raise click.ClickException("Please provide a signature.")
-        signature_hex = signature_file["current"]["signature"]
-    elif (
-        not force
-        and signature_file["current"]["signature"] is not None
-        and signature_file["current"]["signature"] != signature_hex
-    ):
-        raise click.ClickException(
-            "A different signature is already present in signatures.json\n"
-            "Use --force to overwrite it."
-        )
-    else:
-        # Update signature file data. It will be written only if the signature verifies.
-        signature_file["current"]["signature"] = signature_hex
-        signature_file["current"]["datetime"] = datetime.datetime.utcnow().isoformat()
+    # Update signature file data. It will be written only if the signature verifies.
+    tree_info = make_tree_info(root)
+    signed_info = sign_info(tree_info, bytes.fromhex(signature_hex))
+    signature_file["history"].insert(0, signed_info)
 
     signature_bytes = bytes.fromhex(signature_hex)
     sigmask, signature = signature_bytes[0], signature_bytes[1:]
