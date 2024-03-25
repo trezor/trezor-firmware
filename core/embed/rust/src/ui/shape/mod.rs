@@ -12,6 +12,7 @@ mod display;
 mod jpeg;
 mod qrcode;
 mod render;
+mod corner_highlight;
 mod text;
 mod toif;
 
@@ -29,5 +30,7 @@ pub use display::render_on_display;
 pub use jpeg::JpegImage;
 pub use qrcode::QrImage;
 pub use render::{DirectRenderer, ProgressiveRenderer, Renderer};
+pub use corner_highlight::CornerHighlight;
 pub use text::Text;
 pub use toif::ToifImage;
+
