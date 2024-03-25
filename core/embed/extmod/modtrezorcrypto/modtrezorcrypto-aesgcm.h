@@ -48,17 +48,17 @@ STATIC mp_obj_t mod_trezorcrypto_AesGcm_make_new(const mp_obj_type_t *type,
                                                  size_t n_args, size_t n_kw,
                                                  const mp_obj_t *args) {
   mp_arg_check_num(n_args, n_kw, 2, 2, false);
-  mp_obj_AesGcm_t *o = m_new_obj_with_finaliser(mp_obj_AesGcm_t);
-  o->base.type = type;
-  o->state = STATE_INIT;
   mp_buffer_info_t key = {0}, iv = {0};
   mp_get_buffer_raise(args[0], &key, MP_BUFFER_READ);
   mp_get_buffer_raise(args[1], &iv, MP_BUFFER_READ);
   if (key.len != 16 && key.len != 24 && key.len != 32) {
-    m_del_obj(mp_obj_AesGcm_t, o);
     mp_raise_ValueError(
         "Invalid length of key (has to be 128, 192 or 256 bits)");
   }
+
+  mp_obj_AesGcm_t *o = m_new_obj_with_finaliser(mp_obj_AesGcm_t);
+  o->base.type = type;
+  o->state = STATE_INIT;
   if (gcm_init_and_key(key.buf, key.len, &(o->ctx)) != RETURN_GOOD ||
       gcm_init_message(iv.buf, iv.len, &(o->ctx)) != RETURN_GOOD) {
     m_del_obj(mp_obj_AesGcm_t, o);
