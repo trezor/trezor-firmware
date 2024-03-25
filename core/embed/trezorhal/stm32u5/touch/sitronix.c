@@ -812,7 +812,7 @@ int32_t BSP_TS_EnableIT(uint32_t Instance) {
   /* Prevent unused argument(s) compilation warning */
   UNUSED(Instance);
 
-  GPIO_InitTypeDef gpio_init_structure;
+  GPIO_InitTypeDef gpio_init_structure = {0};
 
   __HAL_RCC_GPIOE_CLK_ENABLE();
 

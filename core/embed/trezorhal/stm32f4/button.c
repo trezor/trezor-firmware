@@ -8,7 +8,7 @@ void button_init(void) {
   BTN_LEFT_CLK_ENA();
   BTN_RIGHT_CLK_ENA();
 
-  GPIO_InitTypeDef GPIO_InitStructure;
+  GPIO_InitTypeDef GPIO_InitStructure = {0};
 
   GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
   GPIO_InitStructure.Pull = GPIO_PULLUP;

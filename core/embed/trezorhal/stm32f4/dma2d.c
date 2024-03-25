@@ -54,7 +54,7 @@ static void dma2d_init_clut(uint16_t fg, uint16_t bg, dma2d_layer_t layer) {
     table[i] = interpolate_rgb888_color(fg32, bg32, i);
   }
 
-  DMA2D_CLUTCfgTypeDef clut;
+  DMA2D_CLUTCfgTypeDef clut = {0};
   clut.CLUTColorMode = DMA2D_CCM_ARGB8888;
   clut.Size = 0xf;
   clut.pCLUT = 0;  // loading directly

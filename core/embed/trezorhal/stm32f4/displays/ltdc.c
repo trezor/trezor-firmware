@@ -79,7 +79,7 @@ static void display_unsleep(void) {}
  * @param  FB_Address: the layer frame buffer.
  */
 void BSP_LCD_LayerDefaultInit(uint16_t LayerIndex, uint32_t FB_Address) {
-  LTDC_LayerCfgTypeDef Layercfg;
+  LTDC_LayerCfgTypeDef Layercfg = {0};
 
   /* Layer Init */
   Layercfg.WindowX0 = 0;
@@ -222,7 +222,7 @@ int display_backlight(int val) {
 void display_init_seq(void) { display_unsleep(); }
 
 void display_init(void) {
-  GPIO_InitTypeDef GPIO_InitStructure;
+  GPIO_InitTypeDef GPIO_InitStructure = {0};
 
   /* Enable the LTDC and DMA2D Clock */
   __HAL_RCC_LTDC_CLK_ENABLE();

@@ -77,7 +77,7 @@ static inline void sdcard_default_pin_state(void) {
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_12, GPIO_PIN_RESET);  // SD_CLK/PC12
   HAL_GPIO_WritePin(GPIOD, GPIO_PIN_2, GPIO_PIN_RESET);   // SD_CMD/PD2
 
-  GPIO_InitTypeDef GPIO_InitStructure;
+  GPIO_InitTypeDef GPIO_InitStructure = {0};
 
   // configure the SD card circuitry on/off pin
   GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
@@ -109,7 +109,7 @@ static inline void sdcard_active_pin_state(void) {
                     GPIO_PIN_RESET);  // SD_ON/PC0
   HAL_Delay(10);  // we need to wait until the circuit fully kicks-in
 
-  GPIO_InitTypeDef GPIO_InitStructure;
+  GPIO_InitTypeDef GPIO_InitStructure = {0};
 
   // configure SD GPIO
   GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;
@@ -220,7 +220,7 @@ uint64_t sdcard_get_capacity_in_bytes(void) {
   if (sd_handle.Instance == NULL) {
     return 0;
   }
-  HAL_SD_CardInfoTypeDef cardinfo;
+  HAL_SD_CardInfoTypeDef cardinfo = {0};
   HAL_SD_GetCardInfo(&sd_handle, &cardinfo);
   return (uint64_t)cardinfo.LogBlockNbr * (uint64_t)cardinfo.LogBlockSize;
 }
@@ -319,8 +319,7 @@ secbool sdcard_read_blocks(uint32_t *dest, uint32_t block_num,
   // because STMHAL tries to access its error code in SD_DMAError()
   // even though it shouldn't :-/
   // this will get removed eventually when we update to new STMHAL
-  DMA_HandleTypeDef dummy_dma;
-  memset(&dummy_dma, 0, sizeof(dummy_dma));
+  DMA_HandleTypeDef dummy_dma = {0};
   sd_handle.hdmatx = &dummy_dma;
 
   svc_enableIRQ(DMA2_Stream3_IRQn);
@@ -381,8 +380,7 @@ secbool sdcard_write_blocks(const uint32_t *src, uint32_t block_num,
   // because HAL tries to access its error code in SD_DMAError()
   // even though it shouldn't :-/
   // this will get removed eventually when we update to new STMHAL
-  DMA_HandleTypeDef dummy_dma;
-  memset(&dummy_dma, 0, sizeof(dummy_dma));
+  DMA_HandleTypeDef dummy_dma = {0};
   sd_handle.hdmarx = &dummy_dma;
 
   svc_enableIRQ(DMA2_Stream3_IRQn);

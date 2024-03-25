@@ -279,7 +279,7 @@ static void ili9341_Write(uint16_t Value) {
 }
 
 void ili9341_spi_init(void) {
-  GPIO_InitTypeDef GPIO_InitStructure;
+  GPIO_InitTypeDef GPIO_InitStructure = {0};
 
   /* Configure NCS in Output Push-Pull mode */
   LCD_WRX_GPIO_CLK_ENABLE();
