@@ -220,6 +220,8 @@ if __debug__:
 
     async def dispatch_DebugLinkRecordScreen(msg: DebugLinkRecordScreen) -> Success:
         if msg.target_directory:
+            from trezor import ui
+
             # In case emulator is restarted but we still want to record screenshots
             # into the same directory as before, we need to increment the refresh index,
             # so that the screenshots are not overwritten.
@@ -227,6 +229,7 @@ if __debug__:
             REFRESH_INDEX = msg.refresh_index
             storage.save_screen_directory = msg.target_directory
             storage.save_screen = True
+            ui.refresh()
         else:
             storage.save_screen = False
             display.clear_save()  # clear C buffers

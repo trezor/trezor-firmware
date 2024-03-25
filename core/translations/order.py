@@ -1,5 +1,6 @@
 from __future__ import annotations
 import json
+import os
 
 from pathlib import Path
 
@@ -29,6 +30,8 @@ def generate_new_order() -> None:
             old_order[new_index] = item
 
         output_file.write_text(json.dumps(old_order, indent=2) + "\n")
+        stat = language_file.stat()
+        os.utime(output_file, ns=(stat.st_atime_ns, stat.st_mtime_ns))
     else:
         print("No new items found.")
 

@@ -367,6 +367,12 @@ if FEATURE_FLAGS["SYSTEM_VIEW"]:
     CPPDEFINES_MOD += ['SYSTEM_VIEW']
     CCFLAGS_MOD += '-DSYSTEM_VIEW '
 
+TRANSLATION_DATA = [
+    "translations/en.json",
+    "translations/order.json",
+]
+
+
 # fonts
 tools.add_font('NORMAL', FONT_NORMAL, CPPDEFINES_MOD, SOURCE_MOD)
 tools.add_font('BOLD', FONT_BOLD, CPPDEFINES_MOD, SOURCE_MOD)
@@ -749,6 +755,7 @@ rust = env.Command(
     source='',
     action=cargo_build(), )
 env.Depends(rust, protobuf_blobs)
+env.Depends(rust, TRANSLATION_DATA)
 
 env.Append(LINKFLAGS=f' -L{RUST_LIBDIR}')
 env.Append(LINKFLAGS=f' -l{RUST_LIB}')
