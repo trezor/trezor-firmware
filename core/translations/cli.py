@@ -11,6 +11,7 @@ import click
 
 from trezorlib import cosi, models, merkle_tree
 from trezorlib._internal import translations
+from trezorlib._internal.translations import VersionTuple
 
 HERE = Path(__file__).parent.resolve()
 LOG = logging.getLogger(__name__)
@@ -36,6 +37,7 @@ class SignedInfo(t.TypedDict):
     signature: str
     datetime: str
     commit: str
+    version: str
 
 
 class UnsignedInfo(t.TypedDict):
@@ -49,7 +51,7 @@ class SignatureFile(t.TypedDict):
     history: list[SignedInfo]
 
 
-def _version_from_version_h() -> translations.VersionTuple:
+def _version_from_version_h() -> VersionTuple:
     defines: t.Dict[str, int] = {}
     with open(VERSION_H) as f:
         for line in f:
@@ -69,6 +71,10 @@ def _version_from_version_h() -> translations.VersionTuple:
     )
 
 
+def _version_str(version: VersionTuple) -> str:
+    return ".".join(str(v) for v in version)
+
+
 def make_tree_info(merkle_root: bytes) -> UnsignedInfo:
     now = datetime.datetime.utcnow()
     commit = (
@@ -81,8 +87,10 @@ def make_tree_info(merkle_root: bytes) -> UnsignedInfo:
     )
 
 
-def sign_info(info: UnsignedInfo, signature: bytes) -> SignedInfo:
-    return SignedInfo(signature=signature.hex(), **info)
+def sign_info(
+    info: UnsignedInfo, signature: bytes, version: VersionTuple
+) -> SignedInfo:
+    return SignedInfo(signature=signature.hex(), version=_version_str(version), **info)
 
 
 def update_merkle_root(signature_file: SignatureFile, merkle_root: bytes) -> bool:
@@ -102,58 +110,92 @@ def update_merkle_root(signature_file: SignatureFile, merkle_root: bytes) -> boo
     return True
 
 
-def generate_all_blobs(rewrite_version: bool) -> list[translations.TranslationsBlob]:
-    order = translations.order_from_json(json.loads((HERE / "order.json").read_text()))
-    fonts_dir = HERE / "fonts"
+class TranslationsDir:
+    def __init__(self, path: Path = HERE):
+        self.path = path
+        self.order = translations.order_from_json(
+            json.loads((self.path / "order.json").read_text())
+        )
 
-    current_version = _version_from_version_h()
-    current_version_str = ".".join(str(v) for v in current_version)
+    @property
+    def fonts_dir(self) -> Path:
+        return self.path / "fonts"
 
-    common_version = None
+    def _lang_path(self, lang: str) -> Path:
+        return self.path / f"{lang}.json"
 
-    all_languages = [lang_file.stem for lang_file in HERE.glob("??.json")]
-    all_blobs: list[translations.TranslationsBlob] = []
-    for lang in all_languages:
-        if lang == "en":
-            continue
+    def load_lang(self, lang: str) -> translations.JsonDef:
+        return json.loads(self._lang_path(lang).read_text())
 
-        for model in ALL_MODELS:
-            try:
-                blob_json = json.loads((HERE / f"{lang}.json").read_text())
-                blob_version = translations.version_from_json(
-                    blob_json["header"]["version"]
-                )
-                if rewrite_version:
-                    version = current_version
-                    if blob_version != current_version:
-                        blob_json["header"]["version"] = current_version_str
-                        (HERE / f"{lang}.json").write_text(
-                            json.dumps(blob_json, indent=2) + "\n"
-                        )
+    def save_lang(self, lang: str, data: translations.JsonDef) -> None:
+        self._lang_path(lang).write_text(json.dumps(data, indent=2) + "\n")
 
-                else:
-                    version = blob_version
-                    if common_version is None:
-                        common_version = version
-                    elif blob_version != common_version:
-                        raise ValueError(
-                            f"Language {lang} has version {version} but expected {common_version}"
-                        )
+    def all_languages(self) -> t.Iterable[str]:
+        return (lang_file.stem for lang_file in self.path.glob("??.json"))
 
-                blob = translations.blob_from_defs(
-                    blob_json, order, model, version, fonts_dir
-                )
-                all_blobs.append(blob)
-            except Exception as e:
-                import traceback
+    def generate_single_blob(
+        self,
+        lang: str,
+        model: models.TrezorModel,
+        version: VersionTuple | None,
+        write_version: bool = False,
+    ) -> translations.TranslationsBlob:
+        blob_json = self.load_lang(lang)
+        blob_version = translations.version_from_json(blob_json["header"]["version"])
 
-                traceback.print_exc()
-                LOG.warning(f"Failed to build {lang} for {model.internal_name}: {e}")
+        if version is None:
+            version = blob_version
+
+        if write_version and blob_version != version:
+            blob_json["header"]["version"] = _version_str(version)
+            self.save_lang(lang, blob_json)
+
+        return translations.blob_from_defs(
+            blob_json, self.order, model, version, self.fonts_dir
+        )
+
+    def generate_all_blobs(
+        self,
+        version: VersionTuple | t.Literal["auto"] | t.Literal["json"],
+    ) -> list[translations.TranslationsBlob]:
+        current_version = _version_from_version_h()
+        common_version = None
+
+        if version == "auto":
+            used_version = current_version
+        elif version == "json":
+            used_version = None
+        else:
+            used_version = version
+
+        all_blobs: list[translations.TranslationsBlob] = []
+        for lang in self.all_languages():
+            if lang == "en":
                 continue
 
-            LOG.info(f"Built {lang} for {model.internal_name}")
+            for model in ALL_MODELS:
+                try:
+                    blob = self.generate_single_blob(lang, model, used_version)
+                    blob_version = blob.header.firmware_version
+                    if common_version is None:
+                        common_version = blob_version
+                    elif blob_version != common_version:
+                        raise ValueError(
+                            f"Language {lang} has version {blob_version} but expected {common_version}"
+                        )
+                    all_blobs.append(blob)
+                except Exception as e:
+                    import traceback
 
-    return all_blobs
+                    traceback.print_exc()
+                    LOG.warning(
+                        f"Failed to build {lang} for {model.internal_name}: {e}"
+                    )
+                    continue
+
+                LOG.info(f"Built {lang} for {model.internal_name}")
+
+        return all_blobs
 
 
 def build_all_blobs(
@@ -189,12 +231,21 @@ def cli() -> None:
 
 @cli.command()
 @click.option("--signed", is_flag=True, help="Generate signed blobs.")
-def gen(signed: bool | None) -> None:
+@click.option(
+    "--version", "version_str", help="Set the blob version independent of JSON data."
+)
+def gen(signed: bool | None, version_str: str | None) -> None:
     """Generate all language blobs for all models.
 
     The generated blobs will be signed with the development keys.
     """
-    all_blobs = generate_all_blobs(rewrite_version=True)
+    if version_str is not None:
+        version = translations.version_from_json(version_str)
+    else:
+        version = "auto"
+
+    tdir = TranslationsDir()
+    all_blobs = tdir.generate_all_blobs(version)
     tree = merkle_tree.MerkleTree(b.header_bytes for b in all_blobs)
     root = tree.get_root_hash()
 
@@ -212,11 +263,14 @@ def gen(signed: bool | None) -> None:
             raise click.ClickException(
                 "No matching signature found in signatures.json. Run `cli.py sign` first."
             )
-        
+
     signature = cosi.sign_with_privkeys(root, PRIVATE_KEYS_DEV)
     sigmask = 0b111
     build_all_blobs(all_blobs, tree, sigmask, signature)
-    if update_merkle_root(signature_file, root):
+
+    if version_str is not None:
+        click.echo("Skipping Merkle root update because of explicit version.")
+    elif update_merkle_root(signature_file, root):
         SIGNATURES_JSON.write_text(json.dumps(signature_file, indent=2) + "\n")
         click.echo("Updated signatures.json")
     else:
@@ -224,12 +278,27 @@ def gen(signed: bool | None) -> None:
 
 
 @cli.command()
-def merkle_root() -> None:
+@click.option(
+    "--version", "version_str", help="Set the blob version independent of JSON data."
+)
+def merkle_root(version_str: str | None) -> None:
     """Print the Merkle root of all language blobs."""
-    all_blobs = generate_all_blobs(rewrite_version=False)
+    if version_str is None:
+        version = "json"
+    else:
+        version = translations.version_from_json(version_str)
+
+    tdir = TranslationsDir()
+    all_blobs = tdir.generate_all_blobs(version)
     tree = merkle_tree.MerkleTree(b.header_bytes for b in all_blobs)
     root = tree.get_root_hash()
 
+    if version_str is not None:
+        # short-circuit: just print the Merkle root
+        click.echo(root.hex())
+        return
+
+    # we are using in-tree version. check in-tree merkle root
     signature_file: SignatureFile = json.loads(SIGNATURES_JSON.read_text())
     if signature_file["current"]["merkle_root"] != root.hex():
         raise click.ClickException(
@@ -245,23 +314,37 @@ def merkle_root() -> None:
 @cli.command()
 @click.argument("signature_hex")
 @click.option("--force", is_flag=True, help="Write even if the signature is invalid.")
-def sign(signature_hex: str, force: bool | None) -> None:
+@click.option(
+    "--version", "version_str", help="Set the blob version independent of JSON data."
+)
+def sign(signature_hex: str, force: bool | None, version_str: str | None) -> None:
     """Insert a signature into language blobs."""
-    all_blobs = generate_all_blobs(rewrite_version=False)
+    if version_str is None:
+        version = "json"
+    else:
+        version = translations.version_from_json(version_str)
+
+    tdir = TranslationsDir()
+    all_blobs = tdir.generate_all_blobs(version)
     tree = merkle_tree.MerkleTree(b.header_bytes for b in all_blobs)
     root = tree.get_root_hash()
 
+    blob_version = all_blobs[0].header.firmware_version
     signature_file: SignatureFile = json.loads(SIGNATURES_JSON.read_text())
-    if signature_file["current"]["merkle_root"] != root.hex():
-        raise click.ClickException(
-            f"Merkle root mismatch!\n"
-            f"Expected:                  {root.hex()}\n"
-            f"Stored in signatures.json: {signature_file['current']['merkle_root']}"
-        )
+
+    if version_str is None:
+        # we are using in-tree version. check in-tree merkle root
+        if signature_file["current"]["merkle_root"] != root.hex():
+            raise click.ClickException(
+                f"Merkle root mismatch!\n"
+                f"Expected:                  {root.hex()}\n"
+                f"Stored in signatures.json: {signature_file['current']['merkle_root']}"
+            )
+    # else, proceed with the calculated Merkle root
 
     # Update signature file data. It will be written only if the signature verifies.
     tree_info = make_tree_info(root)
-    signed_info = sign_info(tree_info, bytes.fromhex(signature_hex))
+    signed_info = sign_info(tree_info, bytes.fromhex(signature_hex), blob_version)
     signature_file["history"].insert(0, signed_info)
 
     signature_bytes = bytes.fromhex(signature_hex)
