@@ -529,19 +529,15 @@ AES_RETURN aes_xi(decrypt_key256)(const unsigned char *key, aes_decrypt_ctx cx[1
 
 #endif
 
+#if defined( AES_VAR )
+
 AES_RETURN aes_encrypt_key(const unsigned char *key, int key_len, aes_encrypt_ctx cx[1])
 {
 	switch(key_len)
 	{
-#if defined( AES_128 ) || defined( AES_VAR)
 	case 16: case 128: return aes_encrypt_key128(key, cx);
-#endif
-#if defined( AES_192 ) || defined( AES_VAR)
 	case 24: case 192: return aes_encrypt_key192(key, cx);
-#endif
-#if defined( AES_256 ) || defined( AES_VAR)
 	case 32: case 256: return aes_encrypt_key256(key, cx);
-#endif
 	default: return EXIT_FAILURE;
 	}
 }
@@ -550,18 +546,14 @@ AES_RETURN aes_decrypt_key(const unsigned char *key, int key_len, aes_decrypt_ct
 {
 	switch(key_len)
 	{
-#if defined( AES_128 ) || defined( AES_VAR)
 	case 16: case 128: return aes_decrypt_key128(key, cx);
-#endif
-#if defined( AES_192 ) || defined( AES_VAR)
 	case 24: case 192: return aes_decrypt_key192(key, cx);
-#endif
-#if defined( AES_256 ) || defined( AES_VAR)
 	case 32: case 256: return aes_decrypt_key256(key, cx);
-#endif
 	default: return EXIT_FAILURE;
 	}
 }
+
+#endif
 
 #if defined(__cplusplus)
 }

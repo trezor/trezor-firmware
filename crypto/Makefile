@@ -85,6 +85,7 @@ CFLAGS += -DUSE_CARDANO=1
 CFLAGS += -DUSE_INSECURE_PRNG=1
 CFLAGS += -DAES_128
 CFLAGS += -DAES_192
+CFLAGS += -DAES_VAR
 CFLAGS += $(shell pkg-config --cflags openssl)
 
 # disable certain optimizations and features when small footprint is required
@@ -158,7 +159,7 @@ tests/test_openssl: tests/test_openssl.o $(OBJS)
 	$(CC) $(CFLAGS) tests/test_openssl.o $(OBJS) $(TESTSSLLIBS) -o tests/test_openssl
 
 tests/libtrezor-crypto.so: $(SRCS) secp256k1-zkp.o precomputed_ecmult.o precomputed_ecmult_gen.o
-	$(CC) $(CFLAGS) -DAES_128 -DAES_192 -fPIC -shared $(SRCS) secp256k1-zkp.o precomputed_ecmult.o precomputed_ecmult_gen.o -o tests/libtrezor-crypto.so
+	$(CC) $(CFLAGS) -fPIC -shared $(SRCS) secp256k1-zkp.o precomputed_ecmult.o precomputed_ecmult_gen.o -o tests/libtrezor-crypto.so
 
 tools: tools/xpubaddrgen tools/mktable tools/bip39bruteforce
 
