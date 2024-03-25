@@ -182,6 +182,7 @@ if FEATURE_FLAGS["SECP256K1_ZKP"]:
 if FEATURE_FLAGS["AES_GCM"]:
     CPPDEFINES_MOD += [
         'USE_AES_GCM',
+        'AES_VAR',
     ]
     SOURCE_MOD += [
         'vendor/trezor-crypto/aes/gf128mul.c',

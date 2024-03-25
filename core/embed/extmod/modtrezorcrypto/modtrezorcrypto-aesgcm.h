@@ -36,6 +36,7 @@ typedef struct _mp_obj_AesGcm_t {
     STATE_ENCRYPTING,
     STATE_DECRYPTING,
     STATE_FINISHED,
+    STATE_FAILED,
   } state;
 } mp_obj_AesGcm_t;
 
@@ -54,11 +55,13 @@ STATIC mp_obj_t mod_trezorcrypto_AesGcm_make_new(const mp_obj_type_t *type,
   mp_get_buffer_raise(args[0], &key, MP_BUFFER_READ);
   mp_get_buffer_raise(args[1], &iv, MP_BUFFER_READ);
   if (key.len != 16 && key.len != 24 && key.len != 32) {
+    m_del_obj(mp_obj_AesGcm_t, o);
     mp_raise_ValueError(
         "Invalid length of key (has to be 128, 192 or 256 bits)");
   }
   if (gcm_init_and_key(key.buf, key.len, &(o->ctx)) != RETURN_GOOD ||
       gcm_init_message(iv.buf, iv.len, &(o->ctx)) != RETURN_GOOD) {
+    m_del_obj(mp_obj_AesGcm_t, o);
     mp_raise_type(&mp_type_RuntimeError);
   }
   return MP_OBJ_FROM_PTR(o);
@@ -73,10 +76,11 @@ STATIC mp_obj_t mod_trezorcrypto_AesGcm_reset(mp_obj_t self, mp_obj_t iv) {
   mp_buffer_info_t in = {0};
   mp_get_buffer_raise(iv, &in, MP_BUFFER_READ);
   if (gcm_init_message(in.buf, in.len, &(o->ctx)) != RETURN_GOOD) {
+    o->state = STATE_FAILED;
     mp_raise_type(&mp_type_RuntimeError);
   }
   o->state = STATE_INIT;
-  return MP_OBJ_FROM_PTR(o);
+  return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_AesGcm_reset_obj,
                                  mod_trezorcrypto_AesGcm_reset);
@@ -98,6 +102,7 @@ STATIC mp_obj_t mod_trezorcrypto_AesGcm_encrypt(mp_obj_t self, mp_obj_t data) {
   memcpy(vstr.buf, in.buf, in.len);
   if (gcm_encrypt((unsigned char *)vstr.buf, in.len, &(o->ctx)) !=
       RETURN_GOOD) {
+    o->state = STATE_FAILED;
     mp_raise_type(&mp_type_RuntimeError);
   }
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
@@ -122,6 +127,7 @@ STATIC mp_obj_t mod_trezorcrypto_AesGcm_decrypt(mp_obj_t self, mp_obj_t data) {
   memcpy(vstr.buf, in.buf, in.len);
   if (gcm_decrypt((unsigned char *)vstr.buf, in.len, &(o->ctx)) !=
       RETURN_GOOD) {
+    o->state = STATE_FAILED;
     mp_raise_type(&mp_type_RuntimeError);
   }
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
@@ -144,6 +150,7 @@ STATIC mp_obj_t mod_trezorcrypto_AesGcm_auth(mp_obj_t self, mp_obj_t data) {
   mp_buffer_info_t in = {0};
   mp_get_buffer_raise(data, &in, MP_BUFFER_READ);
   if (gcm_auth_header(in.buf, in.len, &(o->ctx)) != RETURN_GOOD) {
+    o->state = STATE_FAILED;
     mp_raise_type(&mp_type_RuntimeError);
   }
   return mp_const_none;
@@ -166,6 +173,7 @@ STATIC mp_obj_t mod_trezorcrypto_AesGcm_finish(mp_obj_t self) {
   vstr_init_len(&tag, 16);
   if (gcm_compute_tag((unsigned char *)tag.buf, tag.len, &(o->ctx)) !=
       RETURN_GOOD) {
+    o->state = STATE_FAILED;
     mp_raise_type(&mp_type_RuntimeError);
   }
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &tag);
