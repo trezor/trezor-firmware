@@ -121,15 +121,3 @@ impl<'a, 's> ShapeClone<'s> for Text<'a> {
         Some(clone.uninit.init(Text { text, ..self }))
     }
 }
-
-impl Font {
-    fn visible_text_height_ex(&self, text: &str) -> (i16, i16) {
-        let (mut ascent, mut descent) = (0, 0);
-        for c in text.chars() {
-            let glyph = self.get_glyph(c);
-            ascent = ascent.max(glyph.bearing_y);
-            descent = descent.max(glyph.height - glyph.bearing_y);
-        }
-        (ascent, descent)
-    }
-}

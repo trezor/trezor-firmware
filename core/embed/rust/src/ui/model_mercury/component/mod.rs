@@ -6,6 +6,7 @@ mod button;
 mod coinjoin_progress;
 mod dialog;
 mod fido;
+mod instructions;
 mod vertical_menu;
 #[rustfmt::skip]
 mod fido_icons;
@@ -40,6 +41,7 @@ pub use fido::{FidoConfirm, FidoMsg};
 pub use frame::{Frame, FrameMsg};
 #[cfg(feature = "micropython")]
 pub use homescreen::{check_homescreen_format, Homescreen, HomescreenMsg, Lockscreen};
+pub use instructions::Instructions;
 pub use keyboard::{
     bip39::Bip39Input,
     mnemonic::{MnemonicInput, MnemonicKeyboard, MnemonicKeyboardMsg},

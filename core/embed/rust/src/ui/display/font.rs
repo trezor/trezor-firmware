@@ -293,6 +293,16 @@ impl Font {
 
         text.len() // it fits in its entirety
     }
+
+    pub fn visible_text_height_ex(&self, text: &str) -> (i16, i16) {
+        let (mut ascent, mut descent) = (0, 0);
+        for c in text.chars() {
+            let glyph = self.get_glyph(c);
+            ascent = ascent.max(glyph.bearing_y);
+            descent = descent.max(glyph.height - glyph.bearing_y);
+        }
+        (ascent, descent)
+    }
 }
 
 pub trait GlyphMetrics {
