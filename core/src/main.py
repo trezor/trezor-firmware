@@ -15,7 +15,7 @@ utils.presize_module("trezor", 30)
 
 # storage imports storage.common, storage.cache and storage.device.
 # These import trezor, trezor.config (which is a C module), trezor.utils, and each other.
-import storage
+import storage # noqa: E402
 # we will need space for 12 items in the storage module
 utils.presize_module("storage", 12)
 
@@ -30,11 +30,11 @@ if __debug__:
 # trezor.pin imports trezor.utils
 # We need it as an always-active module because trezor.pin.show_pin_timeout is used
 # as a UI callback for storage, which can be invoked at any time
-import trezor.pin  # noqa: F401
+import trezor.pin  # noqa: F401, E402
 
 # === Prepare the USB interfaces first. Do not connect to the host yet.
 # usb imports trezor.utils and trezor.io which is a C module
-import usb
+import usb # noqa:E402
 
 # create an unimport manager that will be reused in the main loop
 unimport_manager = utils.unimport()
@@ -45,7 +45,7 @@ with unimport_manager:
     del boot
 
 # start the USB
-import storage.device
+import storage.device # noqa:E402
 
 usb.bus.open(storage.device.get_device_id())
 
