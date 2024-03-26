@@ -307,8 +307,7 @@ def _decode_iface(cached_iface: bytes) -> WireInterface:
             raise RuntimeError("There is no valid USB WireInterface")
         return iface
     if __debug__ and cached_iface == _MOCK_INTERFACE_HID:
-        # TODO"Not implemented, should return MockHID WireInterface
-        return None
+        raise NotImplementedError("Should return MockHID WireInterface")
     # TODO implement bluetooth interface
     raise Exception("Unknown WireInterface")
 
