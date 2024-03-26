@@ -57,8 +57,6 @@ STATIC mp_obj_t mod_trezorcrypto_Hmac_make_new(const mp_obj_type_t *type,
                                                size_t n_args, size_t n_kw,
                                                const mp_obj_t *args) {
   mp_arg_check_num(n_args, n_kw, 2, 3, false);
-  mp_obj_Hmac_t *o = m_new_obj_with_finaliser(mp_obj_Hmac_t);
-  o->base.type = type;
 
   mp_buffer_info_t key = {0};
   mp_get_buffer_raise(args[1], &key, MP_BUFFER_READ);
@@ -67,12 +65,15 @@ STATIC mp_obj_t mod_trezorcrypto_Hmac_make_new(const mp_obj_type_t *type,
     key.buf = "";
   }
 
+  mp_obj_Hmac_t *o = m_new_obj_with_finaliser(mp_obj_Hmac_t);
+  o->base.type = type;
   o->hashtype = trezor_obj_get_uint(args[0]);
   if (o->hashtype == SHA256) {
     hmac_sha256_Init(&(o->ctx256), key.buf, key.len);
   } else if (o->hashtype == SHA512) {
     hmac_sha512_Init(&(o->ctx512), key.buf, key.len);
   } else {
+    m_del_obj(mp_obj_Hmac_t, o);
     mp_raise_ValueError("Invalid hashtype");
   }
   // constructor called with message as third parameter

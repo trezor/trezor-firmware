@@ -43,9 +43,6 @@ STATIC mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_make_new(
     const mp_obj_type_t *type, size_t n_args, size_t n_kw,
     const mp_obj_t *args) {
   mp_arg_check_num(n_args, n_kw, 2, 2, false);
-  mp_obj_ChaCha20Poly1305_t *o =
-      m_new_obj_with_finaliser(mp_obj_ChaCha20Poly1305_t);
-  o->base.type = type;
   mp_buffer_info_t key = {0}, nonce = {0};
   mp_get_buffer_raise(args[0], &key, MP_BUFFER_READ);
   mp_get_buffer_raise(args[1], &nonce, MP_BUFFER_READ);
@@ -55,7 +52,10 @@ STATIC mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_make_new(
   if (nonce.len != 12) {
     mp_raise_ValueError("Invalid length of nonce");
   }
+  mp_obj_ChaCha20Poly1305_t *o =
+      m_new_obj_with_finaliser(mp_obj_ChaCha20Poly1305_t);
   rfc7539_init(&(o->ctx), key.buf, nonce.buf);
+  o->base.type = type;
   o->alen = 0;
   o->plen = 0;
   return MP_OBJ_FROM_PTR(o);
