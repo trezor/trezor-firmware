@@ -9,9 +9,9 @@ from .protocol_common import MessageWithId
 from .thp import ChannelState, ack_handler, checksum, thp_messages
 from .thp import thp_session as THP
 from .thp.channel_context import (
+    _CONT_DATA_OFFSET,
     _INIT_DATA_OFFSET,
     _MAX_PAYLOAD_LEN,
-    _REPORT_CONT_DATA_OFFSET,
     _REPORT_LENGTH,
     ChannelContext,
     load_cached_channels,
@@ -237,7 +237,7 @@ async def _buffer_received_data(
             continue
 
         # buffer the continuation data
-        nread += utils.memcpy(payload, nread, report, _REPORT_CONT_DATA_OFFSET)
+        nread += utils.memcpy(payload, nread, report, _CONT_DATA_OFFSET)
 
 
 async def write_message_with_sync_control(
@@ -314,7 +314,7 @@ async def write_to_wire(
         header.pack_to_cont_buffer(report)
 
     while nwritten < payload_length:
-        nwritten += utils.memcpy(report, _REPORT_CONT_DATA_OFFSET, payload, nwritten)
+        nwritten += utils.memcpy(report, _CONT_DATA_OFFSET, payload, nwritten)
         await _write_report(loop_write, iface, report)
 
 
