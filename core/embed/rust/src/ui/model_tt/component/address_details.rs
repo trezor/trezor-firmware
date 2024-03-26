@@ -19,9 +19,9 @@ use super::{theme, Frame, FrameMsg};
 const MAX_XPUBS: usize = 16;
 
 pub struct AddressDetails<T> {
-    qr_code: Frame<Qr, T>,
-    details: Frame<Paragraphs<ParagraphVecShort<'static>>, T>,
-    xpub_view: Frame<Paragraphs<Paragraph<'static>>, T>,
+    qr_code: Frame<Qr>,
+    details: Frame<Paragraphs<ParagraphVecShort<'static>>>,
+    xpub_view: Frame<Paragraphs<Paragraph<'static>>>,
     xpubs: Vec<(T, T), MAX_XPUBS>,
     xpub_page_count: Vec<u8, MAX_XPUBS>,
     current_page: usize,
@@ -60,14 +60,14 @@ where
         let result = Self {
             qr_code: Frame::left_aligned(
                 theme::label_title(),
-                qr_title,
+                qr_title.into(),
                 Qr::new(qr_address, case_sensitive)?.with_border(7),
             )
             .with_cancel_button()
             .with_border(theme::borders_horizontal_scroll()),
             details: Frame::left_aligned(
                 theme::label_title(),
-                details_title,
+                details_title.into(),
                 para.into_paragraphs(),
             )
             .with_cancel_button()
@@ -101,7 +101,7 @@ where
         // repaint after page change so we can use a dummy context here.
         let mut dummy_ctx = EventCtx::new();
         self.xpub_view
-            .update_title(&mut dummy_ctx, self.xpubs[i].0.clone());
+            .update_title(&mut dummy_ctx, self.xpubs[i].0.clone().into());
         self.xpub_view.update_content(&mut dummy_ctx, |p| {
             p.inner_mut().update(self.xpubs[i].1.clone());
             let npages = p.page_count();

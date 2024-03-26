@@ -1,4 +1,5 @@
 use crate::{
+    strutil::TString,
     time::{Duration, Instant},
     ui::{
         animation::Animation,
@@ -21,13 +22,13 @@ enum State {
     PauseRight,
 }
 
-pub struct Marquee<T> {
+pub struct Marquee {
     area: Rect,
     pause_token: Option<TimerToken>,
     min_offset: i16,
     max_offset: i16,
     state: State,
-    text: T,
+    text: TString<'static>,
     font: Font,
     fg: Color,
     bg: Color,
@@ -35,11 +36,8 @@ pub struct Marquee<T> {
     pause: Duration,
 }
 
-impl<T> Marquee<T>
-where
-    T: AsRef<str>,
-{
-    pub fn new(text: T, font: Font, fg: Color, bg: Color) -> Self {
+impl Marquee {
+    pub fn new(text: TString<'static>, font: Font, fg: Color, bg: Color) -> Self {
         Self {
             area: Rect::zero(),
             pause_token: None,
@@ -55,7 +53,7 @@ where
         }
     }
 
-    pub fn set_text(&mut self, text: T) {
+    pub fn set_text(&mut self, text: TString<'static>) {
         self.text = text;
     }
 
@@ -66,7 +64,7 @@ where
         }
 
         if let State::Initial = self.state {
-            let text_width = self.font.text_width(self.text.as_ref());
+            let text_width = self.font.text_width(self.text.map(|t| t));
             let max_offset = self.area.width() - text_width;
 
             self.min_offset = 0;
@@ -124,7 +122,7 @@ where
     pub fn paint_anim(&mut self, offset: i16) {
         display::marquee(
             self.area,
-            self.text.as_ref(),
+            self.text.map(|t| t),
             offset,
             self.font,
             self.fg,
@@ -133,10 +131,7 @@ where
     }
 }
 
-impl<T> Component for Marquee<T>
-where
-    T: AsRef<str>,
-{
+impl Component for Marquee {
     type Msg = Never;
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -228,12 +223,9 @@ where
 }
 
 #[cfg(feature = "ui_debug")]
-impl<T> crate::trace::Trace for Marquee<T>
-where
-    T: AsRef<str>,
-{
+impl crate::trace::Trace for Marquee {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("Marquee");
-        t.string("text", self.text.as_ref().into());
+        t.string("text", self.text.into());
     }
 }

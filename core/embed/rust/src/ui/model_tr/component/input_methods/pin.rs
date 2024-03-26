@@ -1,5 +1,5 @@
 use crate::{
-    strutil::{StringType, TString},
+    strutil::TString,
     translations::TR,
     trezorhal::random,
     ui::{
@@ -129,12 +129,12 @@ impl ChoiceFactory for ChoiceFactoryPIN {
 }
 
 /// Component for entering a PIN.
-pub struct PinEntry<T: StringType + Clone> {
+pub struct PinEntry<'a> {
     choice_page: ChoicePage<ChoiceFactoryPIN, PinAction>,
     header_line: Child<ChangingTextLine<String<MAX_PIN_LENGTH>>>,
     pin_line: Child<ChangingTextLine<String<MAX_PIN_LENGTH>>>,
-    prompt: T,
-    subprompt: T,
+    prompt: TString<'a>,
+    subprompt: TString<'a>,
     /// Whether we already show the "real" prompt (not the warning).
     showing_real_prompt: bool,
     show_real_pin: bool,
@@ -142,26 +142,23 @@ pub struct PinEntry<T: StringType + Clone> {
     textbox: TextBox<MAX_PIN_LENGTH>,
 }
 
-impl<T> PinEntry<T>
-where
-    T: StringType + Clone,
-{
-    pub fn new(prompt: T, subprompt: T) -> Self {
+impl<'a> PinEntry<'a> {
+    pub fn new(prompt: TString<'a>, subprompt: TString<'a>) -> Self {
         // When subprompt is not empty, it means that the user has entered bad PIN
         // before. In this case we show the warning together with the subprompt
         // at the beginning. (WRONG PIN will be replaced by real prompt after
         // any button click.)
-        let show_subprompt = !subprompt.as_ref().is_empty();
+        let show_subprompt = !subprompt.is_empty();
         let (showing_real_prompt, header_line_content, pin_line_content) = if show_subprompt {
             (
                 false,
                 TR::pin__title_wrong_pin.map_translated(|t| String::from(t)),
-                String::from(subprompt.as_ref()),
+                String::from(subprompt.map(|t| t)),
             )
         } else {
             (
                 true,
-                String::from(prompt.as_ref()),
+                String::from(prompt.map(|t| t)),
                 String::from(EMPTY_PIN_STR),
             )
         };
@@ -201,10 +198,10 @@ where
     /// Many possibilities, according to the PIN state.
     fn update_pin_line(&mut self, ctx: &mut EventCtx) {
         let mut used_font = Font::BOLD;
-        let pin_line_text = if self.is_empty() && !self.subprompt.as_ref().is_empty() {
+        let pin_line_text = if self.is_empty() && !self.subprompt.is_empty() {
             // Showing the subprompt in NORMAL font
             used_font = Font::NORMAL;
-            String::from(self.subprompt.as_ref())
+            String::from(self.subprompt.map(|t| t))
         } else if self.is_empty() {
             String::from(EMPTY_PIN_STR)
         } else if self.show_real_pin {
@@ -234,7 +231,7 @@ where
     /// Showing the real prompt instead of WRONG PIN
     fn show_prompt(&mut self, ctx: &mut EventCtx) {
         self.header_line.mutate(ctx, |ctx, header_line| {
-            header_line.update_text(String::from(self.prompt.as_ref()));
+            header_line.update_text(String::from(self.prompt.map(|t| t)));
             header_line.request_complete_repaint(ctx);
         });
     }
@@ -252,10 +249,7 @@ where
     }
 }
 
-impl<T> Component for PinEntry<T>
-where
-    T: StringType + Clone,
-{
+impl Component for PinEntry<'_> {
     type Msg = CancelConfirmMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -334,13 +328,10 @@ where
 // DEBUG-ONLY SECTION BELOW
 
 #[cfg(feature = "ui_debug")]
-impl<T> crate::trace::Trace for PinEntry<T>
-where
-    T: StringType + Clone,
-{
+impl crate::trace::Trace for PinEntry<'_> {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("PinKeyboard");
-        t.string("subprompt", self.subprompt.as_ref().into());
+        t.string("subprompt", self.subprompt.into());
         t.string("pin", self.textbox.content().into());
         t.child("choice_page", &self.choice_page);
     }

@@ -1,5 +1,5 @@
 use crate::{
-    strutil::StringType,
+    strutil::TString,
     ui::{
         component::{Child, Component, ComponentExt, Event, EventCtx, Pad, Paginate},
         geometry::Rect,
@@ -11,17 +11,16 @@ use super::{
     ButtonControllerMsg, ButtonLayout, ButtonPos, CancelInfoConfirmMsg, FlowPages, Page, ScrollBar,
 };
 
-pub struct Flow<F, T>
+pub struct Flow<F>
 where
-    F: Fn(usize) -> Page<T>,
-    T: StringType + Clone,
+    F: Fn(usize) -> Page,
 {
     /// Function to get pages from
-    pages: FlowPages<F, T>,
+    pages: FlowPages<F>,
     /// Instance of the current Page
-    current_page: Page<T>,
+    current_page: Page,
     /// Title being shown at the top in bold
-    title: Option<Title<T>>,
+    title: Option<Title>,
     scrollbar: Child<ScrollBar>,
     content_area: Rect,
     title_area: Rect,
@@ -35,12 +34,11 @@ where
     ignore_second_button_ms: Option<u32>,
 }
 
-impl<F, T> Flow<F, T>
+impl<F> Flow<F>
 where
-    F: Fn(usize) -> Page<T>,
-    T: StringType + Clone,
+    F: Fn(usize) -> Page,
 {
-    pub fn new(pages: FlowPages<F, T>) -> Self {
+    pub fn new(pages: FlowPages<F>) -> Self {
         let current_page = pages.get(0);
         let title = current_page.title().map(Title::new);
         Self {
@@ -64,7 +62,7 @@ where
 
     /// Adding a common title to all pages. The title will not be colliding
     /// with the page content, as the content will be offset.
-    pub fn with_common_title(mut self, title: T) -> Self {
+    pub fn with_common_title(mut self, title: TString<'static>) -> Self {
         self.title = Some(Title::new(title));
         self
     }
@@ -196,10 +194,9 @@ where
     }
 }
 
-impl<F, T> Component for Flow<F, T>
+impl<F> Component for Flow<F>
 where
-    F: Fn(usize) -> Page<T>,
-    T: StringType + Clone,
+    F: Fn(usize) -> Page,
 {
     type Msg = CancelInfoConfirmMsg;
 
@@ -313,10 +310,9 @@ where
 // DEBUG-ONLY SECTION BELOW
 
 #[cfg(feature = "ui_debug")]
-impl<F, T> crate::trace::Trace for Flow<F, T>
+impl<F> crate::trace::Trace for Flow<F>
 where
-    F: Fn(usize) -> Page<T>,
-    T: StringType + Clone,
+    F: Fn(usize) -> Page,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("Flow");

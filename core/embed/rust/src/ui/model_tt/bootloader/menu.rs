@@ -29,10 +29,10 @@ pub enum MenuMsg {
 
 pub struct Menu {
     bg: Pad,
-    title: Child<Label<&'static str>>,
-    close: Child<Button<&'static str>>,
-    reboot: Child<Button<&'static str>>,
-    reset: Child<Button<&'static str>>,
+    title: Child<Label<'static>>,
+    close: Child<Button>,
+    reboot: Child<Button>,
+    reset: Child<Button>,
 }
 
 impl Menu {
@@ -43,7 +43,7 @@ impl Menu {
         let mut instance = Self {
             bg: Pad::with_background(BLD_BG),
             title: Child::new(
-                Label::left_aligned("BOOTLOADER", text_title(BLD_BG)).vertically_centered(),
+                Label::left_aligned("BOOTLOADER".into(), text_title(BLD_BG)).vertically_centered(),
             ),
             close: Child::new(
                 Button::with_icon(Icon::new(X32))

@@ -1,6 +1,7 @@
 #[cfg(feature = "haptic")]
 use crate::trezorhal::haptic::{play, HapticEffect};
 use crate::{
+    strutil::TString,
     time::Duration,
     ui::{
         component::{
@@ -21,22 +22,22 @@ pub enum ButtonMsg {
     LongPressed,
 }
 
-pub struct Button<T> {
+pub struct Button {
     area: Rect,
     touch_expand: Option<Insets>,
-    content: ButtonContent<T>,
+    content: ButtonContent,
     styles: ButtonStyleSheet,
     state: State,
     long_press: Option<Duration>,
     long_timer: Option<TimerToken>,
 }
 
-impl<T> Button<T> {
+impl Button {
     /// Offsets the baseline of the button text either up (negative) or down
     /// (positive).
     pub const BASELINE_OFFSET: i16 = -2;
 
-    pub const fn new(content: ButtonContent<T>) -> Self {
+    pub const fn new(content: ButtonContent) -> Self {
         Self {
             content,
             area: Rect::zero(),
@@ -48,7 +49,7 @@ impl<T> Button<T> {
         }
     }
 
-    pub const fn with_text(text: T) -> Self {
+    pub const fn with_text(text: TString<'static>) -> Self {
         Self::new(ButtonContent::Text(text))
     }
 
@@ -117,17 +118,14 @@ impl<T> Button<T> {
         matches!(self.state, State::Disabled)
     }
 
-    pub fn set_content(&mut self, ctx: &mut EventCtx, content: ButtonContent<T>)
-    where
-        T: PartialEq,
-    {
+    pub fn set_content(&mut self, ctx: &mut EventCtx, content: ButtonContent) {
         if self.content != content {
             self.content = content;
             ctx.request_paint();
         }
     }
 
-    pub fn content(&self) -> &ButtonContent<T> {
+    pub fn content(&self) -> &ButtonContent {
         &self.content
     }
 
@@ -189,22 +187,19 @@ impl<T> Button<T> {
         }
     }
 
-    pub fn paint_content(&self, style: &ButtonStyle)
-    where
-        T: AsRef<str>,
-    {
+    pub fn paint_content(&self, style: &ButtonStyle) {
         match &self.content {
             ButtonContent::Empty => {}
             ButtonContent::Text(text) => {
-                let text = text.as_ref();
-                let width = style.font.text_width(text);
+                let text = text;
+                let width = style.font.text_width(text.map(|c| c));
                 let height = style.font.text_height();
                 let start_of_baseline = self.area.center()
                     + Offset::new(-width / 2, height / 2)
                     + Offset::y(Self::BASELINE_OFFSET);
                 display::text_left(
                     start_of_baseline,
-                    text,
+                    text.into(),
                     style.font,
                     style.text_color,
                     style.button_color,
@@ -231,10 +226,7 @@ impl<T> Button<T> {
     }
 }
 
-impl<T> Component for Button<T>
-where
-    T: AsRef<str>,
-{
+impl Component for Button {
     type Msg = ButtonMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -327,15 +319,12 @@ where
 }
 
 #[cfg(feature = "ui_debug")]
-impl<T> crate::trace::Trace for Button<T>
-where
-    T: AsRef<str>,
-{
+impl crate::trace::Trace for Button {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("Button");
         match &self.content {
             ButtonContent::Empty => {}
-            ButtonContent::Text(text) => t.string("text", text.as_ref().into()),
+            ButtonContent::Text(text) => t.string("text", *text),
             ButtonContent::Icon(_) => t.bool("icon", true),
             ButtonContent::IconAndText(content) => {
                 t.string("text", content.text.into());
@@ -355,9 +344,9 @@ enum State {
 }
 
 #[derive(PartialEq, Eq)]
-pub enum ButtonContent<T> {
+pub enum ButtonContent {
     Empty,
-    Text(T),
+    Text(TString<'static>),
     Icon(Icon),
     IconAndText(IconText),
     IconBlend(Icon, Icon, Offset),
@@ -381,19 +370,15 @@ pub struct ButtonStyle {
     pub border_width: i16,
 }
 
-impl<T> Button<T> {
+impl Button {
     pub fn cancel_confirm(
-        left: Button<T>,
-        right: Button<T>,
+        left: Button,
+        right: Button,
         left_is_small: bool,
     ) -> CancelConfirm<
-        T,
         impl Fn(ButtonMsg) -> Option<CancelConfirmMsg>,
         impl Fn(ButtonMsg) -> Option<CancelConfirmMsg>,
-    >
-    where
-        T: AsRef<str>,
-    {
+    > {
         let width = if left_is_small {
             theme::BUTTON_WIDTH
         } else {
@@ -412,21 +397,17 @@ impl<T> Button<T> {
     }
 
     pub fn cancel_confirm_text(
-        left: Option<T>,
-        right: Option<T>,
+        left: Option<TString<'static>>,
+        right: Option<TString<'static>>,
     ) -> CancelConfirm<
-        T,
         impl Fn(ButtonMsg) -> Option<CancelConfirmMsg>,
         impl Fn(ButtonMsg) -> Option<CancelConfirmMsg>,
-    >
-    where
-        T: AsRef<str>,
-    {
+    > {
         let left_is_small: bool;
 
         let left = if let Some(verb) = left {
-            left_is_small = verb.as_ref().len() <= 4;
-            if verb.as_ref() == "^" {
+            left_is_small = verb.len() <= 4;
+            if verb == "^".into() {
                 Button::with_icon(theme::ICON_UP)
             } else {
                 Button::with_text(verb)
@@ -444,17 +425,13 @@ impl<T> Button<T> {
     }
 
     pub fn cancel_info_confirm(
-        confirm: T,
-        info: T,
+        confirm: TString<'static>,
+        info: TString<'static>,
     ) -> CancelInfoConfirm<
-        T,
         impl Fn(ButtonMsg) -> Option<CancelInfoConfirmMsg>,
         impl Fn(ButtonMsg) -> Option<CancelInfoConfirmMsg>,
         impl Fn(ButtonMsg) -> Option<CancelInfoConfirmMsg>,
-    >
-    where
-        T: AsRef<str>,
-    {
+    > {
         let right = Button::with_text(confirm)
             .styled(theme::button_confirm())
             .map(|msg| {
@@ -479,16 +456,12 @@ impl<T> Button<T> {
     }
 
     pub fn select_word(
-        words: [T; 3],
+        words: [TString<'static>; 3],
     ) -> CancelInfoConfirm<
-        T,
         impl Fn(ButtonMsg) -> Option<SelectWordMsg>,
         impl Fn(ButtonMsg) -> Option<SelectWordMsg>,
         impl Fn(ButtonMsg) -> Option<SelectWordMsg>,
-    >
-    where
-        T: AsRef<str>,
-    {
+    > {
         let btn = move |i, word| {
             Button::with_text(word)
                 .styled(theme::button_pin())
@@ -521,11 +494,10 @@ pub enum CancelConfirmMsg {
     Confirmed,
 }
 
-type CancelInfoConfirm<T, F0, F1, F2> = FixedHeightBar<
-    Split<MsgMap<Button<T>, F0>, Split<MsgMap<Button<T>, F1>, MsgMap<Button<T>, F2>>>,
->;
+type CancelInfoConfirm<F0, F1, F2> =
+    FixedHeightBar<Split<MsgMap<Button, F0>, Split<MsgMap<Button, F1>, MsgMap<Button, F2>>>>;
 
-type CancelConfirm<T, F0, F1> = FixedHeightBar<Split<MsgMap<Button<T>, F0>, MsgMap<Button<T>, F1>>>;
+type CancelConfirm<F0, F1> = FixedHeightBar<Split<MsgMap<Button, F0>, MsgMap<Button, F1>>>;
 
 #[derive(Clone, Copy)]
 pub enum CancelInfoConfirmMsg {

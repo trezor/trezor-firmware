@@ -11,9 +11,11 @@ use crate::ui::{
 };
 
 #[cfg(not(feature = "micropython"))]
+use crate::strutil::TString;
 // SAFETY: Actually safe but see below
-unsafe fn get_str(text: &str) -> &str {
-    text
+#[cfg(not(feature = "micropython"))]
+unsafe fn get_str(text: &str) -> TString {
+    TString::Str(text)
 }
 #[cfg(feature = "micropython")]
 // SAFETY: The caller is responsible for ensuring that the StrBuffer does not
@@ -29,7 +31,7 @@ pub fn screen_fatal_error(title: &str, msg: &str, footer: &str) {
     let msg = unsafe { get_str(msg) };
     let footer = unsafe { get_str(footer) };
 
-    let mut frame = ErrorScreen::new(title, msg, footer);
+    let mut frame = ErrorScreen::new(title.into(), msg.into(), footer.into());
     frame.place(constant::screen());
     frame.paint();
 }

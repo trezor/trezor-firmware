@@ -7,6 +7,7 @@ mod public_keys;
 mod translated_string;
 
 pub use blob::MAX_HEADER_LEN;
+pub use flash::{get, init};
 pub use translated_string::TranslatedString as TR;
 pub const DEFAULT_LANGUAGE: &str = "en-US";
 

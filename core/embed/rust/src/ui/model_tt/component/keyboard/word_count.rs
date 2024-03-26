@@ -12,7 +12,7 @@ const LABELS: [&str; 5] = ["12", "18", "20", "24", "33"];
 const CELLS: [(usize, usize); 5] = [(0, 0), (0, 2), (0, 4), (1, 0), (1, 2)];
 
 pub struct SelectWordCount {
-    button: [Button<&'static str>; NUMBERS.len()],
+    button: [Button; NUMBERS.len()],
 }
 
 pub enum SelectWordCountMsg {
@@ -22,7 +22,7 @@ pub enum SelectWordCountMsg {
 impl SelectWordCount {
     pub fn new() -> Self {
         SelectWordCount {
-            button: LABELS.map(|t| Button::with_text(t).styled(theme::button_pin())),
+            button: LABELS.map(|t| Button::with_text(t.into()).styled(theme::button_pin())),
         }
     }
 }
