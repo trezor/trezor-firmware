@@ -1,7 +1,5 @@
 use crate::{
-    error::Error,
-    micropython::buffer::StrBuffer,
-    strutil::StringType,
+    strutil::TString,
     translations::TR,
     trezorhal::usb::usb_configured,
     ui::{
@@ -54,29 +52,27 @@ enum CurrentScreen {
     Loader,
 }
 
-pub struct Homescreen<T>
-where
-    T: StringType,
-{
+pub struct Homescreen {
     // TODO label should be a Child in theory, but the homescreen image is not, so it is
     // always painted, so we need to always paint the label too
-    label: Label<T>,
-    notification: Option<(T, u8)>,
+    label: Label<'static>,
+    notification: Option<(TString<'static>, u8)>,
     /// Used for HTC functionality to lock device from homescreen
     invisible_buttons: Child<ButtonController>,
     /// Holds the loader component
-    loader: Option<Child<ProgressLoader<T>>>,
+    loader: Option<Child<ProgressLoader>>,
     /// Whether to show the loader or not
     show_loader: bool,
     /// Which screen is currently shown
     current_screen: CurrentScreen,
 }
 
-impl<T> Homescreen<T>
-where
-    T: StringType + Clone,
-{
-    pub fn new(label: T, notification: Option<(T, u8)>, loader_description: Option<T>) -> Self {
+impl Homescreen {
+    pub fn new(
+        label: TString<'static>,
+        notification: Option<(TString<'static>, u8)>,
+        loader_description: Option<TString<'static>>,
+    ) -> Self {
         // Buttons will not be visible, we only need both left and right to be existing
         // so we can get the events from them.
         let invisible_btn_layout = ButtonLayout::text_none_text("".into(), "".into());
@@ -114,11 +110,11 @@ where
                 .map_translated(|t| display_center(baseline, t, NOTIFICATION_FONT));
         } else if let Some((notification, _level)) = &self.notification {
             self.fill_notification_background();
-            display_center(baseline, notification.as_ref(), NOTIFICATION_FONT);
+            notification.map(|c| display_center(baseline, c, NOTIFICATION_FONT));
             // Painting warning icons in top corners when the text is short enough not to
             // collide with them
             let icon_width = NOTIFICATION_ICON.toif.width();
-            let text_width = NOTIFICATION_FONT.text_width(notification.as_ref());
+            let text_width = notification.map(|c| NOTIFICATION_FONT.text_width(c));
             if AREA.width() >= text_width + (icon_width + 1) * 2 {
                 NOTIFICATION_ICON.draw(
                     AREA.top_left(),
@@ -169,10 +165,7 @@ where
     }
 }
 
-impl<T> Component for Homescreen<T>
-where
-    T: StringType + Clone,
-{
+impl Component for Homescreen {
     type Msg = ();
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -238,12 +231,9 @@ where
     }
 }
 
-pub struct Lockscreen<T>
-where
-    T: StringType,
-{
-    label: Child<Label<T>>,
-    instruction: Child<Label<StrBuffer>>,
+pub struct Lockscreen<'a> {
+    label: Child<Label<'a>>,
+    instruction: Child<Label<'static>>,
     /// Used for unlocking the device from lockscreen
     invisible_buttons: Child<ButtonController>,
     /// Display coinjoin icon?
@@ -252,11 +242,8 @@ where
     screensaver: bool,
 }
 
-impl<T> Lockscreen<T>
-where
-    T: StringType + Clone,
-{
-    pub fn new(label: T, bootscreen: bool, coinjoin_authorized: bool) -> Result<Self, Error> {
+impl<'a> Lockscreen<'a> {
+    pub fn new(label: TString<'a>, bootscreen: bool, coinjoin_authorized: bool) -> Self {
         // Buttons will not be visible, we only need all three of them to be present,
         // so that even middle-click triggers the event.
         let invisible_btn_layout = ButtonLayout::arrow_armed_arrow("".into());
@@ -265,23 +252,17 @@ where
         } else {
             TR::homescreen__click_to_unlock
         };
-        Ok(Lockscreen {
+        Self {
             label: Child::new(Label::centered(label, theme::TEXT_BIG)),
-            instruction: Child::new(Label::centered(
-                instruction_str.try_into()?,
-                theme::TEXT_NORMAL,
-            )),
+            instruction: Child::new(Label::centered(instruction_str.into(), theme::TEXT_NORMAL)),
             invisible_buttons: Child::new(ButtonController::new(invisible_btn_layout)),
             coinjoin_icon: coinjoin_authorized.then_some(theme::ICON_COINJOIN),
             screensaver: !bootscreen,
-        })
+        }
     }
 }
 
-impl<T> Component for Lockscreen<T>
-where
-    T: StringType + Clone,
-{
+impl Component for Lockscreen<'_> {
     type Msg = ();
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -322,20 +303,14 @@ where
     }
 }
 
-pub struct ConfirmHomescreen<T, F>
-where
-    T: StringType,
-{
-    title: Child<Label<T>>,
+pub struct ConfirmHomescreen<F> {
+    title: Child<Label<'static>>,
     buffer_func: F,
     buttons: Child<ButtonController>,
 }
 
-impl<T, F> ConfirmHomescreen<T, F>
-where
-    T: StringType + Clone,
-{
-    pub fn new(title: T, buffer_func: F) -> Self {
+impl<F> ConfirmHomescreen<F> {
+    pub fn new(title: TString<'static>, buffer_func: F) -> Self {
         let btn_layout = ButtonLayout::cancel_none_text(TR::buttons__change.into());
         ConfirmHomescreen {
             title: Child::new(Label::centered(title, theme::TEXT_BOLD)),
@@ -345,9 +320,8 @@ where
     }
 }
 
-impl<'a, T, F> Component for ConfirmHomescreen<T, F>
+impl<'a, F> Component for ConfirmHomescreen<F>
 where
-    T: StringType + Clone,
     F: Fn() -> &'a [u8],
 {
     type Msg = CancelConfirmMsg;
@@ -398,10 +372,7 @@ pub fn check_homescreen_format(toif: &Toif) -> bool {
 // DEBUG-ONLY SECTION BELOW
 
 #[cfg(feature = "ui_debug")]
-impl<T> crate::trace::Trace for Homescreen<T>
-where
-    T: StringType,
-{
+impl crate::trace::Trace for Homescreen {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("Homescreen");
         t.child("label", &self.label);
@@ -409,10 +380,7 @@ where
 }
 
 #[cfg(feature = "ui_debug")]
-impl<T> crate::trace::Trace for Lockscreen<T>
-where
-    T: StringType,
-{
+impl crate::trace::Trace for Lockscreen<'_> {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("Lockscreen");
         t.child("label", &self.label);
@@ -420,10 +388,7 @@ where
 }
 
 #[cfg(feature = "ui_debug")]
-impl<T, F> crate::trace::Trace for ConfirmHomescreen<T, F>
-where
-    T: StringType,
-{
+impl<F> crate::trace::Trace for ConfirmHomescreen<F> {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("ConfirmHomescreen");
         t.child("title", &self.title);

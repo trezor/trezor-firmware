@@ -2,6 +2,7 @@ use core::mem;
 use heapless::String;
 
 use crate::{
+    strutil::TString,
     time::Duration,
     trezorhal::random,
     ui::{
@@ -39,32 +40,29 @@ const HEADER_PADDING: Insets = Insets::new(
     HEADER_PADDING_SIDE,
 );
 
-pub struct PinKeyboard<T> {
+pub struct PinKeyboard<'a> {
     allow_cancel: bool,
-    major_prompt: Child<Label<T>>,
-    minor_prompt: Child<Label<T>>,
-    major_warning: Option<Child<Label<T>>>,
+    major_prompt: Child<Label<'a>>,
+    minor_prompt: Child<Label<'a>>,
+    major_warning: Option<Child<Label<'a>>>,
     textbox: Child<PinDots>,
     textbox_pad: Pad,
-    erase_btn: Child<Maybe<Button<&'static str>>>,
-    cancel_btn: Child<Maybe<Button<&'static str>>>,
-    confirm_btn: Child<Button<&'static str>>,
-    digit_btns: [Child<Button<&'static str>>; DIGIT_COUNT],
+    erase_btn: Child<Maybe<Button>>,
+    cancel_btn: Child<Maybe<Button>>,
+    confirm_btn: Child<Button>,
+    digit_btns: [Child<Button>; DIGIT_COUNT],
     warning_timer: Option<TimerToken>,
 }
 
-impl<T> PinKeyboard<T>
-where
-    T: AsRef<str>,
-{
+impl<'a> PinKeyboard<'a> {
     // Label position fine-tuning.
     const MAJOR_OFF: Offset = Offset::y(11);
     const MINOR_OFF: Offset = Offset::y(11);
 
     pub fn new(
-        major_prompt: T,
-        minor_prompt: T,
-        major_warning: Option<T>,
+        major_prompt: TString<'a>,
+        minor_prompt: TString<'a>,
+        major_warning: Option<TString<'a>>,
         allow_cancel: bool,
     ) -> Self {
         // Control buttons.
@@ -102,12 +100,12 @@ where
         }
     }
 
-    fn generate_digit_buttons() -> [Child<Button<&'static str>>; DIGIT_COUNT] {
+    fn generate_digit_buttons() -> [Child<Button>; DIGIT_COUNT] {
         // Generate a random sequence of digits from 0 to 9.
         let mut digits = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
         random::shuffle(&mut digits);
         digits
-            .map(Button::with_text)
+            .map(|c| Button::with_text(c.into()))
             .map(|b| b.styled(theme::button_pin()))
             .map(Child::new)
     }
@@ -146,10 +144,7 @@ where
     }
 }
 
-impl<T> Component for PinKeyboard<T>
-where
-    T: AsRef<str>,
-{
+impl Component for PinKeyboard<'_> {
     type Msg = PinKeyboardMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -238,7 +233,9 @@ where
         for btn in &mut self.digit_btns {
             if let Some(Clicked) = btn.event(ctx, event) {
                 if let ButtonContent::Text(text) = btn.inner().content() {
-                    self.textbox.mutate(ctx, |ctx, t| t.push(ctx, text));
+                    text.map(|text| {
+                        self.textbox.mutate(ctx, |ctx, t| t.push(ctx, text));
+                    });
                     self.pin_modified(ctx);
                     return None;
                 }
@@ -460,18 +457,18 @@ impl Component for PinDots {
 }
 
 #[cfg(feature = "ui_debug")]
-impl<T> crate::trace::Trace for PinKeyboard<T>
-where
-    T: AsRef<str>,
-{
+impl crate::trace::Trace for PinKeyboard<'_> {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("PinKeyboard");
         // So that debuglink knows the locations of the buttons
         let mut digits_order: String<10> = String::new();
         for btn in self.digit_btns.iter() {
             let btn_content = btn.inner().content();
+
             if let ButtonContent::Text(text) = btn_content {
-                unwrap!(digits_order.push_str(text));
+                text.map(|text| {
+                    unwrap!(digits_order.push_str(text));
+                });
             }
         }
         t.string("digits_order", digits_order.as_str().into());

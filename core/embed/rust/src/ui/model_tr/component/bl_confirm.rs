@@ -20,14 +20,14 @@ pub enum ConfirmMsg {
     Confirm = 2,
 }
 
-pub struct Confirm<U> {
+pub struct Confirm<'a> {
     bg: Pad,
     bg_color: Color,
-    title: TString<'static>,
-    message: Child<Label<U>>,
-    alert: Option<Label<U>>,
-    info_title: Option<TString<'static>>,
-    info_text: Option<Label<U>>,
+    title: TString<'a>,
+    message: Child<Label<'a>>,
+    alert: Option<Label<'a>>,
+    info_title: Option<TString<'a>>,
+    info_text: Option<Label<'a>>,
     button_text: TString<'static>,
     buttons: ButtonController,
     /// Whether we are on the info screen (optional extra screen)
@@ -35,25 +35,21 @@ pub struct Confirm<U> {
     two_btn_confirm: bool,
 }
 
-impl<U> Confirm<U>
-where
-    U: AsRef<str>,
-{
-    pub fn new<T: Into<TString<'static>>>(
+impl<'a> Confirm<'a> {
+    pub fn new(
         bg_color: Color,
-        title: T,
-        message: Label<U>,
-        alert: Option<Label<U>>,
-        button_text: T,
+        title: TString<'a>,
+        message: Label<'a>,
+        alert: Option<Label<'a>>,
+        button_text: TString<'static>,
         two_btn_confirm: bool,
     ) -> Self {
-        let button_text = button_text.into();
         let btn_layout =
             Self::get_button_layout_general(false, button_text, false, two_btn_confirm);
         Self {
             bg: Pad::with_background(bg_color).with_clear(),
             bg_color,
-            title: title.into(),
+            title,
             message: Child::new(message),
             alert,
             info_title: None,
@@ -66,12 +62,8 @@ where
     }
 
     /// Adding optional info screen
-    pub fn with_info_screen<T: Into<TString<'static>>>(
-        mut self,
-        info_title: T,
-        info_text: Label<U>,
-    ) -> Self {
-        self.info_title = Some(info_title.into());
+    pub fn with_info_screen(mut self, info_title: TString<'a>, info_text: Label<'a>) -> Self {
+        self.info_title = Some(info_title);
         self.info_text = Some(info_text);
         self.buttons = ButtonController::new(self.get_button_layout());
         self
@@ -125,10 +117,7 @@ where
     }
 }
 
-impl<U> Component for Confirm<U>
-where
-    U: AsRef<str>,
-{
+impl Component for Confirm<'_> {
     type Msg = ConfirmMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -207,7 +196,7 @@ where
     fn paint(&mut self) {
         self.bg.paint();
 
-        let display_top_left = |text: TString<'static>| {
+        let display_top_left = |text: TString| {
             text.map(|t| {
                 display::text_top_left(Point::zero(), t, Font::BOLD, WHITE, self.bg_color)
             });
@@ -234,10 +223,7 @@ where
 }
 
 #[cfg(feature = "ui_debug")]
-impl<U> crate::trace::Trace for Confirm<U>
-where
-    U: AsRef<str>,
-{
+impl crate::trace::Trace for Confirm<'_> {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("BlConfirm");
     }

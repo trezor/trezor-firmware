@@ -1,5 +1,5 @@
 use crate::{
-    strutil::StringType,
+    strutil::TString,
     time::Instant,
     ui::{
         component::{Component, Event, EventCtx, Marquee, Never},
@@ -10,24 +10,18 @@ use crate::{
 
 use super::super::theme;
 
-pub struct Title<T>
-where
-    T: StringType,
-{
+pub struct Title {
     area: Rect,
-    title: T,
-    marquee: Marquee<T>,
+    title: TString<'static>,
+    marquee: Marquee,
     needs_marquee: bool,
     centered: bool,
 }
 
-impl<T> Title<T>
-where
-    T: StringType + Clone,
-{
-    pub fn new(title: T) -> Self {
+impl Title {
+    pub fn new(title: TString<'static>) -> Self {
         Self {
-            title: title.clone(),
+            title,
             marquee: Marquee::new(title, theme::FONT_HEADER, theme::FG, theme::BG),
             needs_marquee: false,
             area: Rect::zero(),
@@ -40,14 +34,14 @@ where
         self
     }
 
-    pub fn get_text(&self) -> &str {
-        self.title.as_ref()
+    pub fn get_text(&self) -> TString {
+        self.title
     }
 
-    pub fn set_text(&mut self, ctx: &mut EventCtx, new_text: T) {
-        self.title = new_text.clone();
-        self.marquee.set_text(new_text.clone());
-        let text_width = theme::FONT_HEADER.text_width(new_text.as_ref());
+    pub fn set_text(&mut self, ctx: &mut EventCtx, new_text: TString<'static>) {
+        self.title = new_text;
+        self.marquee.set_text(new_text);
+        let text_width = new_text.map(|s| theme::FONT_HEADER.text_width(s));
         self.needs_marquee = text_width > self.area.width();
         // Resetting the marquee to the beginning and starting it when necessary.
         self.marquee.reset();
@@ -57,42 +51,31 @@ where
     }
 
     /// Display title/header at the top left of the given area.
-    pub fn paint_header_left(title: &T, area: Rect) {
+    pub fn paint_header_left(title: &TString<'static>, area: Rect) {
         let text_height = theme::FONT_HEADER.text_height();
         let title_baseline = area.top_left() + Offset::y(text_height - 1);
-        display::text_left(
-            title_baseline,
-            title.as_ref(),
-            theme::FONT_HEADER,
-            theme::FG,
-            theme::BG,
-        );
+        title.map(|s| {
+            display::text_left(title_baseline, s, theme::FONT_HEADER, theme::FG, theme::BG)
+        });
     }
 
     /// Display title/header centered at the top of the given area.
-    pub fn paint_header_centered(title: &T, area: Rect) {
+    pub fn paint_header_centered(title: &TString<'static>, area: Rect) {
         let text_height = theme::FONT_HEADER.text_height();
         let title_baseline = area.top_center() + Offset::y(text_height - 1);
-        display::text_center(
-            title_baseline,
-            title.as_ref(),
-            theme::FONT_HEADER,
-            theme::FG,
-            theme::BG,
-        );
+        title.map(|s| {
+            display::text_center(title_baseline, s, theme::FONT_HEADER, theme::FG, theme::BG)
+        });
     }
 }
 
-impl<T> Component for Title<T>
-where
-    T: StringType + Clone,
-{
+impl Component for Title {
     type Msg = Never;
 
     fn place(&mut self, bounds: Rect) -> Rect {
         self.area = bounds;
         self.marquee.place(bounds);
-        let width = theme::FONT_HEADER.text_width(self.title.as_ref());
+        let width = self.title.map(|s| theme::FONT_HEADER.text_width(s));
         self.needs_marquee = width > self.area.width();
         bounds
     }
@@ -121,12 +104,9 @@ where
 // DEBUG-ONLY SECTION BELOW
 
 #[cfg(feature = "ui_debug")]
-impl<T> crate::trace::Trace for Title<T>
-where
-    T: StringType + Clone,
-{
+impl crate::trace::Trace for Title {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("Title");
-        t.string("text", self.title.as_ref().into());
+        t.string("text", self.title);
     }
 }

@@ -99,10 +99,9 @@ where
     }
 }
 
-impl<F, T> ComponentMsgObj for Flow<F, T>
+impl<F> ComponentMsgObj for Flow<F>
 where
-    F: Fn(usize) -> Page<T>,
-    T: StringType + Clone,
+    F: Fn(usize) -> Page,
 {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
@@ -119,10 +118,7 @@ where
     }
 }
 
-impl<T> ComponentMsgObj for PinEntry<T>
-where
-    T: StringType + Clone,
-{
+impl ComponentMsgObj for PinEntry<'_> {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
             CancelConfirmMsg::Confirmed => self.pin().try_into(),
@@ -187,56 +183,44 @@ impl ComponentMsgObj for PassphraseEntry {
     }
 }
 
-impl<T, U> ComponentMsgObj for Frame<T, U>
+impl<T> ComponentMsgObj for Frame<T>
 where
     T: ComponentMsgObj,
-    U: StringType + Clone,
 {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         self.inner().msg_try_into_obj(msg)
     }
 }
 
-impl<T, U> ComponentMsgObj for ScrollableFrame<T, U>
+impl<T> ComponentMsgObj for ScrollableFrame<T>
 where
     T: ComponentMsgObj + ScrollableContent,
-    U: StringType + Clone,
 {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         self.inner().msg_try_into_obj(msg)
     }
 }
 
-impl<T> ComponentMsgObj for Progress<T>
-where
-    T: StringType,
-{
+impl ComponentMsgObj for Progress {
     fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
         unreachable!()
     }
 }
 
-impl<T> ComponentMsgObj for Homescreen<T>
-where
-    T: StringType + Clone,
-{
+impl ComponentMsgObj for Homescreen {
     fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
         Ok(CANCELLED.as_obj())
     }
 }
 
-impl<T> ComponentMsgObj for Lockscreen<T>
-where
-    T: StringType + Clone,
-{
+impl<'a> ComponentMsgObj for Lockscreen<'a> {
     fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
         Ok(CANCELLED.as_obj())
     }
 }
 
-impl<'a, T, F> ComponentMsgObj for ConfirmHomescreen<T, F>
+impl<'a, F> ComponentMsgObj for ConfirmHomescreen<F>
 where
-    T: StringType + Clone,
     F: Fn() -> &'a [u8],
 {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
@@ -247,10 +231,7 @@ where
     }
 }
 
-impl<U> ComponentMsgObj for super::component::bl_confirm::Confirm<U>
-where
-    U: AsRef<str>,
-{
+impl ComponentMsgObj for super::component::bl_confirm::Confirm<'_> {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
             super::component::bl_confirm::ConfirmMsg::Cancel => Ok(CANCELLED.as_obj()),
@@ -290,7 +271,7 @@ fn content_in_button_page<T: Component + Paginate + MaybeTrace + 'static>(
 
     let mut frame = ScrollableFrame::new(content);
     if !title.as_ref().is_empty() {
-        frame = frame.with_title(title);
+        frame = frame.with_title(title.into());
     }
     let obj = LayoutObj::new(frame)?;
 
@@ -430,7 +411,7 @@ extern "C" fn new_confirm_homescreen(n_args: usize, args: *const Obj, kwargs: *m
         //         discarded before returning to micropython.
         let buffer_func = move || unsafe { unwrap!(get_buffer(data)) };
 
-        let obj = LayoutObj::new(ConfirmHomescreen::new(title, buffer_func))?;
+        let obj = LayoutObj::new(ConfirmHomescreen::new(title.into(), buffer_func))?;
         Ok(obj.into())
     };
 
@@ -457,10 +438,6 @@ extern "C" fn new_confirm_reset_device(n_args: usize, args: *const Obj, kwargs: 
 
 extern "C" fn new_confirm_backup(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], _kwargs: &Map| {
-        // cached allocated translations that get_page can reuse
-        let tr_title_success: StrBuffer = TR::words__title_success.try_into()?;
-        let tr_title_backup_wallet: StrBuffer = TR::backup__title_backup_wallet.try_into()?;
-
         let get_page = move |page_index| match page_index {
             0 => {
                 let btn_layout = ButtonLayout::text_none_arrow_wide(TR::buttons__skip.into());
@@ -470,7 +447,8 @@ extern "C" fn new_confirm_backup(n_args: usize, args: *const Obj, kwargs: *mut M
                     .newline()
                     .text_normal(TR::backup__it_should_be_backed_up_now);
                 let formatted = FormattedText::new(ops).vertically_centered();
-                Page::new(btn_layout, btn_actions, formatted).with_title(tr_title_success)
+                Page::new(btn_layout, btn_actions, formatted)
+                    .with_title(TR::words__title_success.into())
             }
             1 => {
                 let btn_layout = ButtonLayout::up_arrow_none_text(TR::buttons__back_up.into());
@@ -478,8 +456,8 @@ extern "C" fn new_confirm_backup(n_args: usize, args: *const Obj, kwargs: *mut M
                 let ops =
                     OpTextLayout::new(theme::TEXT_NORMAL).text_normal(TR::backup__recover_anytime);
                 let formatted = FormattedText::new(ops).vertically_centered();
-                Page::<StrBuffer>::new(btn_layout, btn_actions, formatted)
-                    .with_title(tr_title_backup_wallet)
+                Page::new(btn_layout, btn_actions, formatted)
+                    .with_title(TR::backup__title_backup_wallet.into())
             }
             _ => unreachable!(),
         };
@@ -624,7 +602,7 @@ extern "C" fn new_confirm_output_address(n_args: usize, args: *const Obj, kwargs
             }
             ops = ops.text_mono(address);
             let formatted = FormattedText::new(ops).vertically_centered();
-            Page::new(btn_layout, btn_actions, formatted).with_title(address_title)
+            Page::new(btn_layout, btn_actions, formatted).with_title(address_title.into())
         };
         let pages = FlowPages::new(get_page, 1);
 
@@ -646,7 +624,7 @@ extern "C" fn new_confirm_output_amount(n_args: usize, args: *const Obj, kwargs:
             let btn_actions = ButtonActions::cancel_none_confirm();
             let ops = OpTextLayout::new(theme::TEXT_MONO).text_mono(amount);
             let formatted = FormattedText::new(ops).vertically_centered();
-            Page::new(btn_layout, btn_actions, formatted).with_title(amount_title)
+            Page::new(btn_layout, btn_actions, formatted).with_title(amount_title.into())
         };
         let pages = FlowPages::new(get_page, 1);
 
@@ -686,7 +664,7 @@ extern "C" fn new_confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Ma
                         .text_mono(fee_amount);
 
                     let formatted = FormattedText::new(ops);
-                    Page::<StrBuffer>::new(btn_layout, btn_actions, formatted)
+                    Page::new(btn_layout, btn_actions, formatted)
                 }
                 1 => {
                     // Fee rate info
@@ -748,9 +726,6 @@ extern "C" fn new_altcoin_tx_summary(n_args: usize, args: *const Obj, kwargs: *m
         let cancel_cross: bool = kwargs.get_or(Qstr::MP_QSTR_cancel_cross, false)?;
         let items: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
 
-        // cached allocated translated strings that get_page can reuse
-        let tr_title_fee = TR::confirm_total__title_fee.try_into()?;
-
         let get_page = move |page_index| {
             match page_index {
                 0 => {
@@ -771,7 +746,7 @@ extern "C" fn new_altcoin_tx_summary(n_args: usize, args: *const Obj, kwargs: *m
                         .text_mono(fee_value);
 
                     let formatted = FormattedText::new(ops);
-                    Page::new(btn_layout, btn_actions, formatted).with_title(amount_title)
+                    Page::new(btn_layout, btn_actions, formatted).with_title(amount_title.into())
                 }
                 1 => {
                     // Other information
@@ -794,7 +769,7 @@ extern "C" fn new_altcoin_tx_summary(n_args: usize, args: *const Obj, kwargs: *m
 
                     let formatted = FormattedText::new(ops).vertically_centered();
                     Page::new(btn_layout, btn_actions, formatted)
-                        .with_title(tr_title_fee)
+                        .with_title(TR::confirm_total__title_fee.into())
                         .with_slim_arrows()
                 }
                 _ => unreachable!(),
@@ -829,7 +804,7 @@ extern "C" fn new_confirm_address(n_args: usize, args: *const Obj, kwargs: *mut 
             };
             let ops = OpTextLayout::new(style).text_mono(address);
             let formatted = FormattedText::new(ops).vertically_centered();
-            Page::new(btn_layout, btn_actions, formatted).with_title(title)
+            Page::new(btn_layout, btn_actions, formatted).with_title(title.into())
         };
         let pages = FlowPages::new(get_page, 1);
 
@@ -842,11 +817,11 @@ extern "C" fn new_confirm_address(n_args: usize, args: *const Obj, kwargs: *mut 
 /// General pattern of most tutorial screens.
 /// (title, text, btn_layout, btn_actions, text_y_offset)
 fn tutorial_screen(
-    title: StrBuffer,
+    title: TString<'static>,
     text: TR,
     btn_layout: ButtonLayout,
     btn_actions: ButtonActions,
-) -> Page<StrBuffer> {
+) -> Page {
     let ops = OpTextLayout::new(theme::TEXT_NORMAL).text_normal(text);
     let formatted = FormattedText::new(ops).vertically_centered();
     Page::new(btn_layout, btn_actions, formatted).with_title(title)
@@ -855,15 +830,6 @@ fn tutorial_screen(
 extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], _kwargs: &Map| {
         const PAGE_COUNT: usize = 7;
-
-        // cached allocated translated strings that get_page can reuse
-        let tr_title_hello: StrBuffer = TR::tutorial__title_hello.try_into()?;
-        let tr_hold_to_confirm: StrBuffer = TR::buttons__hold_to_confirm.try_into()?;
-        let tr_title_screen_scroll: StrBuffer = TR::tutorial__title_screen_scroll.try_into()?;
-        let tr_confirm: StrBuffer = TR::buttons__confirm.try_into()?;
-        let tr_title_tutorial_complete: StrBuffer =
-            TR::tutorial__title_tutorial_complete.try_into()?;
-        let tr_title_skip: StrBuffer = TR::tutorial__title_skip.try_into()?;
 
         let get_page = move |page_index| {
             // Lazy-loaded list of screens to show, with custom content,
@@ -874,7 +840,7 @@ extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj
             match page_index {
                 // title, text, btn_layout, btn_actions
                 0 => tutorial_screen(
-                    tr_title_hello,
+                    TR::tutorial__title_hello.into(),
                     TR::tutorial__welcome_press_right,
                     ButtonLayout::cancel_none_arrow(),
                     ButtonActions::last_none_next(),
@@ -886,25 +852,25 @@ extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj
                     ButtonActions::prev_none_next(),
                 ),
                 2 => tutorial_screen(
-                    tr_hold_to_confirm,
+                    TR::buttons__hold_to_confirm.into(),
                     TR::tutorial__press_and_hold,
                     ButtonLayout::arrow_none_htc(TR::buttons__hold_to_confirm.into()),
                     ButtonActions::prev_none_next(),
                 ),
                 3 => tutorial_screen(
-                    tr_title_screen_scroll,
+                    TR::tutorial__title_screen_scroll.into(),
                     TR::tutorial__scroll_down,
                     ButtonLayout::arrow_none_text(TR::buttons__continue.into()),
                     ButtonActions::prev_none_next(),
                 ),
                 4 => tutorial_screen(
-                    tr_confirm,
+                    TR::buttons__confirm.into(),
                     TR::tutorial__middle_click,
                     ButtonLayout::none_armed_none(TR::buttons__confirm.into()),
                     ButtonActions::none_next_none(),
                 ),
                 5 => tutorial_screen(
-                    tr_title_tutorial_complete,
+                    TR::tutorial__title_tutorial_complete.into(),
                     TR::tutorial__ready_to_use,
                     ButtonLayout::text_none_text(
                         TR::buttons__again.into(),
@@ -913,7 +879,7 @@ extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj
                     ButtonActions::beginning_none_confirm(),
                 ),
                 6 => tutorial_screen(
-                    tr_title_skip,
+                    TR::tutorial__title_skip.into(),
                     TR::tutorial__sure_you_want_skip,
                     ButtonLayout::arrow_none_text(TR::buttons__skip.into()),
                     ButtonActions::beginning_none_cancel(),
@@ -1021,11 +987,11 @@ extern "C" fn new_multiple_pages_texts(n_args: usize, args: *const Obj, kwargs: 
             let ops = OpTextLayout::new(theme::TEXT_NORMAL).text_normal(text);
             let formatted = FormattedText::new(ops).vertically_centered();
 
-            Page::<StrBuffer>::new(btn_layout, btn_actions, formatted)
+            Page::new(btn_layout, btn_actions, formatted)
         };
 
         let pages = FlowPages::new(get_page, page_count);
-        let obj = LayoutObj::new(Flow::new(pages).with_common_title(title))?;
+        let obj = LayoutObj::new(Flow::new(pages).with_common_title(title.into()))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -1080,14 +1046,14 @@ extern "C" fn new_confirm_fido(n_args: usize, args: *const Obj, kwargs: *mut Map
                 .text_bold(account);
             let formatted = FormattedText::new(ops);
 
-            Page::<StrBuffer>::new(btn_layout, btn_actions, formatted)
+            Page::new(btn_layout, btn_actions, formatted)
         };
 
         let pages = FlowPages::new(get_page, page_count);
         // Returning the page index in case of confirmation.
         let obj = LayoutObj::new(
             Flow::new(pages)
-                .with_common_title(title)
+                .with_common_title(title.into())
                 .with_return_confirmed_index(),
         )?;
         Ok(obj.into())
@@ -1115,7 +1081,7 @@ extern "C" fn new_show_warning(n_args: usize, args: *const Obj, kwargs: *mut Map
                 ops = ops.text_normal(description);
             }
             let formatted = FormattedText::new(ops).vertically_centered();
-            Page::<StrBuffer>::new(btn_layout, btn_actions, formatted)
+            Page::new(btn_layout, btn_actions, formatted)
         };
         let pages = FlowPages::new(get_page, 1);
         let obj = LayoutObj::new(Flow::new(pages))?;
@@ -1132,7 +1098,7 @@ extern "C" fn new_show_info(n_args: usize, args: *const Obj, kwargs: *mut Map) -
         let time_ms: u32 = kwargs.get_or(Qstr::MP_QSTR_time_ms, 0)?;
 
         let content = Frame::new(
-            title,
+            title.into(),
             Paragraphs::new([Paragraph::new(&theme::TEXT_NORMAL, description)]),
         );
         let obj = if time_ms == 0 {
@@ -1189,7 +1155,7 @@ extern "C" fn new_show_mismatch(n_args: usize, args: *const Obj, kwargs: *mut Ma
                 .newline()
                 .text_bold(TR::addr_mismatch__support_url);
             let formatted = FormattedText::new(ops);
-            Page::<StrBuffer>::new(btn_layout, btn_actions, formatted)
+            Page::new(btn_layout, btn_actions, formatted)
         };
         let pages = FlowPages::new(get_page, 1);
 
@@ -1222,7 +1188,7 @@ extern "C" fn new_confirm_with_info(n_args: usize, args: *const Obj, kwargs: *mu
         }
 
         let obj = LayoutObj::new(Frame::new(
-            title,
+            title.into(),
             ShowMore::<Paragraphs<ParagraphVecShort>>::new(
                 paragraphs.into_paragraphs(),
                 verb_cancel,
@@ -1291,7 +1257,7 @@ extern "C" fn new_request_pin(n_args: usize, args: *const Obj, kwargs: *mut Map)
         let prompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
         let subprompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_subprompt)?.try_into()?;
 
-        let obj = LayoutObj::new(PinEntry::new(prompt, subprompt))?;
+        let obj = LayoutObj::new(PinEntry::new(prompt.into(), subprompt.into()))?;
 
         Ok(obj.into())
     };
@@ -1302,7 +1268,9 @@ extern "C" fn new_request_passphrase(n_args: usize, args: *const Obj, kwargs: *m
     let block = |_args: &[Obj], kwargs: &Map| {
         let prompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
 
-        let obj = LayoutObj::new(Frame::new(prompt, PassphraseEntry::new()).with_title_centered())?;
+        let obj = LayoutObj::new(
+            Frame::new(prompt.into(), PassphraseEntry::new()).with_title_centered(),
+        )?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -1310,13 +1278,13 @@ extern "C" fn new_request_passphrase(n_args: usize, args: *const Obj, kwargs: *m
 
 extern "C" fn new_request_bip39(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
-        let prompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
+        let prompt: TString = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
         let prefill_word: StrBuffer = kwargs.get(Qstr::MP_QSTR_prefill_word)?.try_into()?;
         let can_go_back: bool = kwargs.get(Qstr::MP_QSTR_can_go_back)?.try_into()?;
 
         let obj = LayoutObj::new(
             Frame::new(
-                prompt,
+                prompt.into(),
                 WordlistEntry::prefilled_word(
                     prefill_word.as_ref(),
                     WordlistType::Bip39,
@@ -1338,7 +1306,7 @@ extern "C" fn new_request_slip39(n_args: usize, args: *const Obj, kwargs: *mut M
 
         let obj = LayoutObj::new(
             Frame::new(
-                prompt,
+                prompt.into(),
                 WordlistEntry::prefilled_word(
                     prefill_word.as_ref(),
                     WordlistType::Slip39,
@@ -1363,7 +1331,7 @@ extern "C" fn new_select_word(n_args: usize, args: *const Obj, kwargs: *mut Map)
         // Returning the index of the selected word, not the word itself
         let obj = LayoutObj::new(
             Frame::new(
-                description,
+                description.into(),
                 SimpleChoice::new(words, false)
                     .with_show_incomplete()
                     .with_return_index(),
@@ -1402,7 +1370,8 @@ extern "C" fn new_request_number(n_args: usize, args: *const Obj, kwargs: *mut M
         let count: u32 = kwargs.get(Qstr::MP_QSTR_count)?.try_into()?;
 
         let obj = LayoutObj::new(
-            Frame::new(title, NumberInput::new(min_count, max_count, count)).with_title_centered(),
+            Frame::new(title.into(), NumberInput::new(min_count, max_count, count))
+                .with_title_centered(),
         )?;
         Ok(obj.into())
     };
@@ -1497,7 +1466,7 @@ extern "C" fn new_select_word_count(n_args: usize, args: *const Obj, kwargs: *mu
             .collect();
 
         let obj = LayoutObj::new(
-            Frame::new(title, SimpleChoice::new(choices, false)).with_title_centered(),
+            Frame::new(title.into(), SimpleChoice::new(choices, false)).with_title_centered(),
         )?;
         Ok(obj.into())
     };
@@ -1542,9 +1511,9 @@ extern "C" fn new_show_progress(n_args: usize, args: *const Obj, kwargs: *mut Ma
             .and_then(Obj::try_into_option)
             .unwrap_or(None);
 
-        let mut progress = Progress::new(indeterminate, description);
+        let mut progress = Progress::new(indeterminate, description.into());
         if let Some(title) = title {
-            progress = progress.with_title(title);
+            progress = progress.with_title(title.into());
         };
 
         // Description updates are received as &str and we need to provide a way to
@@ -1590,9 +1559,13 @@ extern "C" fn new_show_homescreen(n_args: usize, args: *const Obj, kwargs: *mut 
         let skip_first_paint: bool = kwargs.get(Qstr::MP_QSTR_skip_first_paint)?.try_into()?;
         let hold: bool = kwargs.get(Qstr::MP_QSTR_hold)?.try_into()?;
 
-        let notification = notification.map(|w| (w, notification_level));
+        let notification = notification.map(|w| (w.into(), notification_level));
         let loader_description = hold.then_some("Locking the device...".into());
-        let obj = LayoutObj::new(Homescreen::new(label, notification, loader_description))?;
+        let obj = LayoutObj::new(Homescreen::new(
+            label.into(),
+            notification,
+            loader_description,
+        ))?;
         if skip_first_paint {
             obj.skip_first_paint();
         }
@@ -1611,7 +1584,11 @@ extern "C" fn new_show_lockscreen(n_args: usize, args: *const Obj, kwargs: *mut 
         let coinjoin_authorized: bool = kwargs.get_or(Qstr::MP_QSTR_coinjoin_authorized, false)?;
         let skip_first_paint: bool = kwargs.get(Qstr::MP_QSTR_skip_first_paint)?.try_into()?;
 
-        let obj = LayoutObj::new(Lockscreen::new(label, bootscreen, coinjoin_authorized)?)?;
+        let obj = LayoutObj::new(Lockscreen::new(
+            label.into(),
+            bootscreen,
+            coinjoin_authorized,
+        ))?;
         if skip_first_paint {
             obj.skip_first_paint();
         }
@@ -1631,16 +1608,27 @@ extern "C" fn new_confirm_firmware_update(
         let fingerprint: StrBuffer = kwargs.get(Qstr::MP_QSTR_fingerprint)?.try_into()?;
 
         let title = TR::firmware_update__title;
-        let message = Label::left_aligned(description, theme::TEXT_NORMAL).vertically_centered();
+        let message =
+            Label::left_aligned(description.into(), theme::TEXT_NORMAL).vertically_centered();
         let fingerprint = Label::left_aligned(
-            fingerprint,
+            fingerprint.into(),
             theme::TEXT_NORMAL.with_line_breaking(LineBreaking::BreakWordsNoHyphen),
         )
         .vertically_centered();
 
         let obj = LayoutObj::new(
-            Confirm::new(theme::BG, title, message, None, TR::buttons__install, false)
-                .with_info_screen(TR::firmware_update__title_fingerprint, fingerprint),
+            Confirm::new(
+                theme::BG,
+                title.into(),
+                message,
+                None,
+                TR::buttons__install.as_tstring(),
+                false,
+            )
+            .with_info_screen(
+                TR::firmware_update__title_fingerprint.as_tstring(),
+                fingerprint,
+            ),
         )?;
         Ok(obj.into())
     };

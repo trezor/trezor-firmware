@@ -23,7 +23,7 @@ const QR_BORDER: i16 = 3;
 pub struct AddressDetails {
     qr_code: Qr,
     details_view: Paragraphs<ParagraphVecShort<'static>>,
-    xpub_view: Frame<Paragraphs<Paragraph<'static>>, StrBuffer>,
+    xpub_view: Frame<Paragraphs<Paragraph<'static>>>,
     xpubs: Vec<(StrBuffer, StrBuffer), MAX_XPUBS>,
     current_page: usize,
     current_subpage: usize,
@@ -149,7 +149,7 @@ impl AddressDetails {
 
     fn fill_xpub_page(&mut self, ctx: &mut EventCtx) {
         let i = self.current_page - 2;
-        self.xpub_view.update_title(ctx, self.xpubs[i].0);
+        self.xpub_view.update_title(ctx, self.xpubs[i].0.into());
         self.xpub_view.update_content(ctx, |p| {
             p.inner_mut().update(self.xpubs[i].1);
             p.change_page(0)
