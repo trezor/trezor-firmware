@@ -52,8 +52,8 @@ async def read_message(iface: WireInterface, buffer: utils.BufferType) -> Messag
 
 
 def set_buffer(buffer):
+    global _BUFFER
     _BUFFER = buffer
-    print(_BUFFER)  # TODO remove
 
 
 async def thp_main_loop(iface: WireInterface, is_debug_session=False):
