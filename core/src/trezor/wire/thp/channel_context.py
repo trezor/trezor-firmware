@@ -267,22 +267,6 @@ def _encode_iface(iface: WireInterface) -> bytes:
     raise Exception("Unknown WireInterface")
 
 
-def _is_ctrl_byte_continuation(ctrl_byte: int) -> bool:
-    return ctrl_byte & 0x80 == CONTINUATION_PACKET
-
-
-def _is_ctrl_byte_encrypted_transport(ctrl_byte: int) -> bool:
-    return ctrl_byte & 0xEF == ENCRYPTED_TRANSPORT
-
-
-def _is_ctrl_byte_handshake_init(ctrl_byte: int) -> bool:
-    return ctrl_byte & 0xEF == HANDSHAKE_INIT
-
-
-def _is_ctrl_byte_ack(ctrl_byte: int) -> bool:
-    return ctrl_byte & 0xEF == ACK_MESSAGE
-
-
 def _get_buffer_for_payload(
     payload_length: int, existing_buffer: utils.BufferType, max_length=_MAX_PAYLOAD_LEN
 ) -> utils.BufferType:
@@ -299,3 +283,19 @@ def _get_buffer_for_payload(
 
     # reuse a part of the supplied buffer
     return memoryview(existing_buffer)[:payload_length]
+
+
+def _is_ctrl_byte_continuation(ctrl_byte: int) -> bool:
+    return ctrl_byte & 0x80 == CONTINUATION_PACKET
+
+
+def _is_ctrl_byte_encrypted_transport(ctrl_byte: int) -> bool:
+    return ctrl_byte & 0xEF == ENCRYPTED_TRANSPORT
+
+
+def _is_ctrl_byte_handshake_init(ctrl_byte: int) -> bool:
+    return ctrl_byte & 0xEF == HANDSHAKE_INIT
+
+
+def _is_ctrl_byte_ack(ctrl_byte: int) -> bool:
+    return ctrl_byte & 0xEF == ACK_MESSAGE
