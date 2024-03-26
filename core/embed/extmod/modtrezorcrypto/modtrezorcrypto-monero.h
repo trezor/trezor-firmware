@@ -160,6 +160,7 @@ STATIC mp_obj_t mod_trezorcrypto_monero_ge25519_make_new(
   } else if (n_args == 1 && MP_OBJ_IS_STR_OR_BYTES(args[0])) {
     mp_unpack_ge25519(&o->p, args[0], 0);
   } else {
+    m_del_obj(mp_obj_ge25519_t, o);
     mp_raise_ValueError("Invalid ge25519 constructor");
   }
 
@@ -202,6 +203,7 @@ STATIC mp_obj_t mod_trezorcrypto_monero_bignum256modm_make_new(
     uint64_t v = trezor_obj_get_uint64(args[0]);
     set256_modm(o->p, v);
   } else {
+    m_del_obj(mp_obj_bignum256modm_t, o);
     mp_raise_ValueError("Invalid scalar constructor");
   }
 
