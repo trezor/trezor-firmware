@@ -225,12 +225,6 @@ translations_check: ## check that translations are up to date
 	# spits out error if the stored merkle root is not up to date
 	python ./translations/cli.py merkle-root > /dev/null
 
-solana_templates: ## rebuild Solana instruction template file
-	./tools/build_solana_templates
-
-solana_templates_check: ## check that Solana instruction template file is up to date
-	./tools/build_solana_templates --check
-
 ## build commands:
 
 build: build_boardloader build_bootloader build_firmware build_prodtest build_unix ## build all

@@ -113,10 +113,10 @@ templates_check: ## check that coin lists are up to date
 	make -C core templates_check
 
 solana_templates: ## rebuild Solana instruction template file
-	make -C core solana_templates
+	python tools/build_solana_templates.py
 
 solana_templates_check: ## check that Solana instruction template file is up to date
-	make -C core solana_templates_check
+	python tools/build_solana_templates.py --check
 
 icons: ## generate FIDO service icons
 	python3 core/tools/build_icons.py
