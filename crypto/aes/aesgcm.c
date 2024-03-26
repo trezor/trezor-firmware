@@ -129,7 +129,7 @@ ret_type gcm_init_and_key(                  /* initialise mode and set key  */
 void gf_mul_hh(gf_t a, gcm_ctx ctx[1])
 {
 #if defined( GF_REPRESENTATION ) || !defined( NO_TABLES )
-    gf_t    scr;
+    gf_t    scr = {0};
 #endif
 #if defined(  GF_REPRESENTATION )
     convert_representation(a, a, GF_REPRESENTATION);
@@ -161,8 +161,8 @@ ret_type gcm_init_message(                  /* initialise a new message     */
             const unsigned char iv[],       /* the initialisation vector    */
             unsigned long iv_len,           /* and its length in bytes      */
             gcm_ctx ctx[1])                 /* the mode context             */
-{   uint32_t i, n_pos = 0;
-    uint8_t *p;
+{   uint32_t i = 0, n_pos = 0;
+    uint8_t *p = NULL;
 
     memset(ctx->ctr_val, 0, BLOCK_SIZE);
     if(iv_len == CTR_POS)
@@ -379,8 +379,8 @@ ret_type gcm_compute_tag(                   /* compute authentication tag   */
             unsigned char tag[],            /* the buffer for the tag       */
             unsigned long tag_len,          /* and its length in bytes      */
             gcm_ctx ctx[1])                 /* the mode context             */
-{   uint32_t i, ln;
-    gf_t tbuf;
+{   uint32_t i = 0, ln = 0;
+    gf_t tbuf = {0};
 
     if(ctx->txt_acnt != ctx->txt_ccnt && ctx->txt_ccnt > 0)
         return RETURN_ERROR;
@@ -532,8 +532,8 @@ ret_type gcm_decrypt_message(               /* decrypt an entire message    */
             const unsigned char tag[],      /* the buffer for the tag       */
             unsigned long tag_len,          /* and its length in bytes      */
             gcm_ctx ctx[1])                 /* the mode context             */
-{   uint8_t local_tag[BLOCK_SIZE];
-    ret_type rr;
+{   uint8_t local_tag[BLOCK_SIZE] = {0};
+    ret_type rr = 0;
 
     gcm_init_message(iv, iv_len, ctx);
     gcm_auth_header(hdr, hdr_len, ctx);

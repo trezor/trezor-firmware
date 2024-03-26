@@ -37,9 +37,9 @@ extern "C"
 #define so(y,x,c)   word_out(y, c, s(x,c))
 
 #if defined(ARRAYS)
-#define locals(y,x)     x[4],y[4]
+#define locals(y,x)     x[4] = {0}, y[4] = {0}
 #else
-#define locals(y,x)     x##0,x##1,x##2,x##3,y##0,y##1,y##2,y##3
+#define locals(y,x)     x##0=0,x##1=0,x##2=0,x##3=0,y##0=0,y##1=0,y##2=0,y##3=0
 #endif
 
 #define l_copy(y, x)    s(y,0) = s(x,0); s(y,1) = s(x,1); \
@@ -138,7 +138,7 @@ AES_RETURN aes_xi(encrypt)(const unsigned char *in, unsigned char *out, const ae
 #else
 
 #if (ENC_UNROLL == PARTIAL)
-    {   uint32_t    rnd;
+    {   uint32_t    rnd = 0;
         for(rnd = 0; rnd < (cx->inf.b[0] >> 5) - 1; ++rnd)
         {
             kp += N_COLS;
@@ -149,7 +149,7 @@ AES_RETURN aes_xi(encrypt)(const unsigned char *in, unsigned char *out, const ae
         kp += N_COLS;
         round(fwd_rnd,  b1, b0, kp);
 #else
-    {   uint32_t    rnd;
+    {   uint32_t    rnd = 0;
         for(rnd = 0; rnd < (cx->inf.b[0] >> 4) - 1; ++rnd)
         {
             kp += N_COLS;
@@ -272,7 +272,7 @@ AES_RETURN aes_xi(decrypt)(const unsigned char *in, unsigned char *out, const ae
 #else
 
 #if (DEC_UNROLL == PARTIAL)
-    {   uint32_t    rnd;
+    {   uint32_t    rnd = 0;
         for(rnd = 0; rnd < (cx->inf.b[0] >> 5) - 1; ++rnd)
         {
             kp = rnd_key(1);
@@ -283,7 +283,7 @@ AES_RETURN aes_xi(decrypt)(const unsigned char *in, unsigned char *out, const ae
         kp = rnd_key(1);
         round(inv_rnd, b1, b0, kp);
 #else
-    {   uint32_t    rnd;
+    {   uint32_t    rnd = 0;
         for(rnd = 0; rnd < (cx->inf.b[0] >> 4) - 1; ++rnd)
         {
             kp = rnd_key(1);
