@@ -1,5 +1,5 @@
-from micropython import const
-from typing import TYPE_CHECKING
+from micropython import const  # pyright: ignore[reportMissingModuleSource]
+from typing import TYPE_CHECKING  # pyright: ignore[reportShadowedImports]
 
 from storage.cache_common import InvalidSessionError
 from trezor import log, loop, protobuf, utils, workflow
@@ -14,8 +14,14 @@ from trezor.wire.errors import *  # isort:skip # noqa: F401,F403
 
 
 if TYPE_CHECKING:
-    from trezorio import WireInterface
-    from typing import Any, Callable, Container, Coroutine, TypeVar
+    from trezorio import WireInterface  # pyright: ignore[reportMissingImports]
+    from typing import (  # pyright: ignore[reportShadowedImports]
+        Any,
+        Callable,
+        Container,
+        Coroutine,
+        TypeVar,
+    )
 
     Msg = TypeVar("Msg", bound=protobuf.MessageType)
     HandlerTask = Coroutine[Any, Any, protobuf.MessageType]

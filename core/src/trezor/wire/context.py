@@ -13,7 +13,7 @@ function, which will silently ignore the call if no context is available. Useful
 for ButtonRequests. Of course, `context.wait()` transparently works in such situations.
 """
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING  # pyright: ignore[reportShadowedImports]
 
 import trezor.wire.protocol as protocol
 from trezor import log, loop, protobuf
@@ -21,8 +21,8 @@ from trezor import log, loop, protobuf
 from .protocol_common import Context, MessageWithId
 
 if TYPE_CHECKING:
-    from trezorio import WireInterface
-    from typing import (
+    from trezorio import WireInterface  # pyright: ignore[reportMissingImports]
+    from typing import (  # pyright: ignore[reportShadowedImports]
         Any,
         Awaitable,
         Callable,

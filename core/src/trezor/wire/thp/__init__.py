@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING  # pyright: ignore[reportShadowedImports]
 
 if TYPE_CHECKING:
     from enum import IntEnum
@@ -17,6 +17,10 @@ class ChannelState(IntEnum):
     TP4 = 7
     TP5 = 8
     ENCRYPTED_TRANSPORT = 9
+
+
+class SessionState(IntEnum):
+    UNALLOCATED = 0
 
 
 class WireInterfaceType(IntEnum):

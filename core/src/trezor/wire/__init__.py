@@ -23,8 +23,8 @@ reads the message's header. When the message type is known the first handler is 
 
 """
 
-from micropython import const
-from typing import TYPE_CHECKING
+from micropython import const  # pyright: ignore[reportMissingModuleSource]
+from typing import TYPE_CHECKING  # pyright: ignore[reportShadowedImports]
 
 from storage.cache_common import InvalidSessionError
 from trezor import log, loop, protobuf, utils
@@ -39,8 +39,14 @@ from trezor.wire.errors import *  # isort:skip # noqa: F401,F403
 
 
 if TYPE_CHECKING:
-    from trezorio import WireInterface
-    from typing import Any, Callable, Container, Coroutine, TypeVar
+    from trezorio import WireInterface  # pyright: ignore[reportMissingImports]
+    from typing import (  # pyright: ignore[reportShadowedImports]
+        Any,
+        Callable,
+        Container,
+        Coroutine,
+        TypeVar,
+    )
 
     Msg = TypeVar("Msg", bound=protobuf.MessageType)
     HandlerTask = Coroutine[Any, Any, protobuf.MessageType]
@@ -53,10 +59,11 @@ EXPERIMENTAL_ENABLED = False
 
 
 def setup(iface: WireInterface, is_debug_session: bool = False) -> None:
-    """Initialize the wire stack on passed USB interface."""
-    loop.schedule(
-        handle_session(iface, codec_v1.SESSION_ID.to_bytes(4, "big"), is_debug_session)
-    )
+    """Initialize the wire stack on passed WireInterface."""
+    if utils.USE_THP:
+        loop.schedule(handle_thp_session(iface, is_debug_session))
+    else:
+        loop.schedule(handle_session(iface, codec_v1.SESSION_ID, is_debug_session))
 
 
 def wrap_protobuf_load(
@@ -128,13 +135,13 @@ async def handle_thp_session(iface: WireInterface, is_debug_session: bool = Fals
 
 
 async def handle_session(
-    iface: WireInterface, session_id: bytes, is_debug_session: bool = False
+    iface: WireInterface, codec_session_id: int, is_debug_session: bool = False
 ) -> None:
     if __debug__ and is_debug_session:
         ctx_buffer = WIRE_BUFFER_DEBUG
     else:
         ctx_buffer = WIRE_BUFFER
-
+    session_id = codec_session_id.to_bytes(4, "big")
     ctx = context.CodecContext(iface, ctx_buffer, session_id)
     next_msg: protocol_common.MessageWithId | None = None
 

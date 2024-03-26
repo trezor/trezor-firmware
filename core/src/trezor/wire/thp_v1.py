@@ -1,16 +1,24 @@
-import ustruct
-from micropython import const
-from typing import TYPE_CHECKING
+import ustruct  # pyright: ignore[reportMissingModuleSource]
+from micropython import const  # pyright: ignore[reportMissingModuleSource]
+from typing import TYPE_CHECKING  # pyright: ignore[reportShadowedImports]
 
 from storage.cache_thp import BROADCAST_CHANNEL_ID, SessionThpCache
 from trezor import io, log, loop, utils
 
 from .protocol_common import MessageWithId
-from .thp import ack_handler, checksum, thp_messages
+from .thp import ChannelState, ack_handler, checksum, thp_messages
 from .thp import thp_session as THP
-from .thp.channel_context import ChannelContext, load_cached_channels
+from .thp.channel_context import (
+    _INIT_DATA_OFFSET,
+    _MAX_PAYLOAD_LEN,
+    _REPORT_CONT_DATA_OFFSET,
+    _REPORT_LENGTH,
+    ChannelContext,
+    load_cached_channels,
+)
 from .thp.checksum import CHECKSUM_LENGTH
 from .thp.thp_messages import (
+    CODEC_V1,
     CONTINUATION_PACKET,
     ENCRYPTED_TRANSPORT,
     InitHeader,
@@ -19,18 +27,13 @@ from .thp.thp_messages import (
 from .thp.thp_session import SessionState, ThpError
 
 if TYPE_CHECKING:
-    from trezorio import WireInterface
+    from trezorio import WireInterface  # pyright: ignore[reportMissingImports]
 
-_MAX_PAYLOAD_LEN = const(60000)
 _MAX_CID_REQ_PAYLOAD_LENGTH = const(12)  # TODO set to reasonable value
 _CHANNEL_ALLOCATION_REQ = 0x40
 _ACK_MESSAGE = 0x20
-_HANDSHAKE_INIT = 0x00
 _PLAINTEXT = 0x01
 
-_REPORT_LENGTH = const(64)
-_REPORT_INIT_DATA_OFFSET = const(5)
-_REPORT_CONT_DATA_OFFSET = const(3)
 
 _BUFFER: bytearray
 _BUFFER_LOCK = None
@@ -63,6 +66,12 @@ async def thp_main_loop(iface: WireInterface, is_debug_session=False):
         packet = await read
         ctrl_byte, cid = ustruct.unpack(">BH", packet)
 
+        if ctrl_byte == CODEC_V1:
+            pass
+            # TODO add handling of (unsupported) codec_v1 packets
+            # possibly ignore continuation packets, i.e. if the
+            # following bytes are not "##"", do not respond
+
         if cid == BROADCAST_CHANNEL_ID:
             # TODO handle exceptions, try-catch?
             await _handle_broadcast(iface, ctrl_byte, packet)
@@ -72,10 +81,10 @@ async def thp_main_loop(iface: WireInterface, is_debug_session=False):
             channel = _CHANNEL_CONTEXTS[cid]
             if channel is None:
                 raise ThpError("Invalid state of a channel")
-            # TODO if the channelContext interface is not None and is different from
-            # the one used in the transmission of the packet, raise an exception
-            # TODO add current wire interface to channelContext if its iface is None
-            if channel.get_management_session_state != SessionState.UNALLOCATED:
+            if channel.iface is not iface:
+                raise ThpError("Channel has different WireInterface")
+
+            if channel.get_channel_state() != ChannelState.UNALLOCATED:
                 await channel.receive_packet(packet)
                 continue
 
@@ -204,7 +213,7 @@ async def _buffer_received_data(
     payload: utils.BufferType, header: InitHeader, iface, report
 ) -> None | InterruptingInitPacket:
     # buffer the initial data
-    nread = utils.memcpy(payload, 0, report, _REPORT_INIT_DATA_OFFSET)
+    nread = utils.memcpy(payload, 0, report, _INIT_DATA_OFFSET)
     while nread < header.length:
         # wait for continuation report
         report = await _get_loop_wait_read(iface)
@@ -297,7 +306,7 @@ async def write_to_wire(
     header.pack_to_buffer(report)
 
     # write initial report
-    nwritten = utils.memcpy(report, _REPORT_INIT_DATA_OFFSET, payload, 0)
+    nwritten = utils.memcpy(report, _INIT_DATA_OFFSET, payload, 0)
     await _write_report(loop_write, iface, report)
 
     # if we have more data to write, use continuation reports for it
@@ -332,13 +341,13 @@ async def _handle_broadcast(
     if not checksum.is_valid(payload[-4:], header.to_bytes() + payload[:-4]):
         raise ThpError("Checksum is not valid")
 
-    deprecated_channel_id = _get_new_channel_id()  # TODO remove
-    THP.create_new_unauthenticated_session(iface, deprecated_channel_id)  # TODO remove
     new_context: ChannelContext = ChannelContext.create_new_channel(iface)
     cid = int.from_bytes(new_context.channel_id, "big")
     _CHANNEL_CONTEXTS[cid] = new_context
 
-    response_data = thp_messages.get_channel_allocation_response(nonce, cid)
+    response_data = thp_messages.get_channel_allocation_response(
+        nonce, new_context.channel_id
+    )
     response_header = InitHeader.get_channel_allocation_response_header(
         len(response_data) + CHECKSUM_LENGTH,
     )
@@ -387,10 +396,6 @@ async def _handle_unexpected_sync_bit(
 
     # TODO handle cancelation messages and messages on allocated channels without synchronization
     # (some such messages might be handled in the classical "allocated" way, if the sync bit is right)
-
-
-def _get_new_channel_id() -> int:
-    return THP.get_next_channel_id()
 
 
 def _is_ctrl_byte_continuation(ctrl_byte) -> bool:

@@ -19,10 +19,11 @@ _MAX_UNAUTHENTICATED_SESSIONS_COUNT = const(5)  # TODO remove
 _CHANNEL_STATE_LENGTH = const(1)
 _WIRE_INTERFACE_LENGTH = const(1)
 _SESSION_STATE_LENGTH = const(1)
-_CHANNEL_ID_LENGTH = const(4)
-_SESSION_ID_LENGTH = const(4)
+_CHANNEL_ID_LENGTH = const(2)
+_SESSION_ID_LENGTH = const(1)
 BROADCAST_CHANNEL_ID = const(65535)
-
+KEY_LENGTH = const(32)
+TAG_LENGTH = const(16)
 _UNALLOCATED_STATE = const(0)
 
 
@@ -40,10 +41,14 @@ class ConnectionCache(DataCache):
 
 class ChannelCache(ConnectionCache):
     def __init__(self) -> None:
-        self.enc_key = 0  # TODO change
-        self.dec_key = 1  # TODO change
+        self.host_ephemeral_pubkey = bytearray(KEY_LENGTH)
+        self.enc_key = bytearray(KEY_LENGTH)
+        self.dec_key = bytearray(KEY_LENGTH)
         self.state = bytearray(_CHANNEL_STATE_LENGTH)
         self.iface = bytearray(1)  # TODO add decoding
+        self.sync = 0x80  # can_send_bit | sync_receive_bit | sync_send_bit | rfu(5)
+        self.session_id_counter = 0x01
+        self.fields = ()
         super().__init__()
 
     def clear(self) -> None:
@@ -135,13 +140,20 @@ def get_new_unauthenticated_channel(iface: bytes) -> ChannelCache:
     new_cid = get_next_channel_id()
     index = _get_next_unauthenticated_channel_index()
 
+    # clear sessions from replaced channel
+    if _get_channel_state(_CHANNELS[index]) != _UNALLOCATED_STATE:
+        old_cid = _CHANNELS[index].channel_id
+        for session in _SESSIONS:
+            if session.channel_id == old_cid:
+                session.clear()
+
     _CHANNELS[index] = ChannelCache()
     _CHANNELS[index].channel_id[:] = new_cid
     _CHANNELS[index].last_usage = _get_usage_counter_and_increment()
-    _CHANNELS[index].state = bytearray(
+    _CHANNELS[index].state[:] = bytearray(
         _UNALLOCATED_STATE.to_bytes(_CHANNEL_STATE_LENGTH, "big")
     )
-    _CHANNELS[index].iface = bytearray(iface)
+    _CHANNELS[index].iface[:] = bytearray(iface)
     return _CHANNELS[index]
 
 
@@ -151,6 +163,38 @@ def get_all_allocated_channels() -> list[ChannelCache]:
         if _get_channel_state(channel) != _UNALLOCATED_STATE:
             _list.append(channel)
     return _list
+
+
+def get_all_allocated_sessions() -> list[SessionThpCache]:
+    _list: list[SessionThpCache] = []
+    for session in _SESSIONS:
+        if _get_session_state(session) != _UNALLOCATED_STATE:
+            _list.append(session)
+    return _list
+
+
+def set_channel_host_ephemeral_key(channel: ChannelCache, key: bytearray) -> None:
+    if len(key) != KEY_LENGTH:
+        raise Exception("Invalid key length")
+    channel.host_ephemeral_pubkey = key
+
+
+def get_new_session(channel: ChannelCache):
+
+    new_sid = get_next_session_id(channel)
+    index = _get_next_session_index()
+
+    _SESSIONS[index] = SessionThpCache()
+    _SESSIONS[index].channel_id[:] = channel.channel_id
+    _SESSIONS[index].session_id[:] = new_sid
+    _SESSIONS[index].last_usage = _get_usage_counter_and_increment()
+    channel.last_usage = (
+        _get_usage_counter_and_increment()
+    )  # increment also use of the channel so it does not get replaced
+    _SESSIONS[index].state[:] = bytearray(
+        _UNALLOCATED_STATE.to_bytes(_SESSION_STATE_LENGTH, "big")
+    )
+    return _SESSIONS[index]
 
 
 def _get_usage_counter() -> int:
@@ -171,9 +215,23 @@ def _get_next_unauthenticated_channel_index() -> int:
     return get_least_recently_used_item(_CHANNELS, max_count=_MAX_CHANNELS_COUNT)
 
 
+def _get_next_session_index() -> int:
+    idx = _get_unallocated_session_index()
+    if idx is not None:
+        return idx
+    return get_least_recently_used_item(_SESSIONS, _MAX_SESSIONS_COUNT)
+
+
 def _get_unallocated_channel_index() -> int | None:
     for i in range(_MAX_CHANNELS_COUNT):
         if _get_channel_state(_CHANNELS[i]) is _UNALLOCATED_STATE:
+            return i
+    return None
+
+
+def _get_unallocated_session_index() -> int | None:
+    for i in range(_MAX_SESSIONS_COUNT):
+        if (_SESSIONS[i]) is _UNALLOCATED_STATE:
             return i
     return None
 
@@ -182,6 +240,12 @@ def _get_channel_state(channel: ChannelCache) -> int:
     if channel is None:
         return _UNALLOCATED_STATE
     return int.from_bytes(channel.state, "big")
+
+
+def _get_session_state(session: SessionThpCache) -> int:
+    if session is None:
+        return _UNALLOCATED_STATE
+    return int.from_bytes(session.state, "big")
 
 
 def get_active_session_id() -> bytearray | None:
@@ -200,9 +264,6 @@ def get_active_session() -> SessionThpCache | None:
     return _UNAUTHENTICATED_SESSIONS[_active_session_idx]
 
 
-_session_usage_counter = 0
-
-
 def get_next_channel_id() -> bytes:
     global cid_counter
     while True:
@@ -212,6 +273,25 @@ def get_next_channel_id() -> bytes:
         if _is_cid_unique():
             break
     return cid_counter.to_bytes(_CHANNEL_ID_LENGTH, "big")
+
+
+def get_next_session_id(channel: ChannelCache) -> bytes:
+    while not _is_session_id_unique(channel):
+        if channel.session_id_counter >= 255:
+            channel.session_id_counter = 1
+        else:
+            channel.session_id_counter += 1
+    new_sid = channel.session_id_counter
+    channel.session_id_counter += 1
+    return new_sid.to_bytes(_SESSION_ID_LENGTH, "big")
+
+
+def _is_session_id_unique(channel: ChannelCache) -> bool:
+    for session in _SESSIONS:
+        if session.channel_id == channel.channel_id:
+            if session.session_id == channel.session_id_counter:
+                return False
+    return True
 
 
 def _is_cid_unique() -> bool:
@@ -226,8 +306,10 @@ def _get_cid(session: SessionThpCache) -> int:
 
 
 def create_new_unauthenticated_session(session_id: bytes) -> SessionThpCache:
-    if len(session_id) != 4:
-        raise ValueError("session_id must be 4 bytes long.")
+    if len(session_id) != _SESSION_ID_LENGTH:
+        raise ValueError(
+            "session_id must be X bytes long, where X=", _SESSION_ID_LENGTH
+        )
     global _active_session_idx
     global _is_active_session_authenticated
     global _next_unauthenicated_session_index
@@ -302,7 +384,10 @@ def start_session(session_id: bytes | None) -> bytes:  # TODO incomplete
                 _active_session_idx = index
                 _is_active_session_authenticated = False
                 return session_id
-    new_session_id = b"\x00\x00" + get_next_channel_id()
+
+    channel = get_new_unauthenticated_channel(b"\x00")
+
+    new_session_id = get_next_session_id(channel)
 
     new_session = create_new_unauthenticated_session(new_session_id)
 

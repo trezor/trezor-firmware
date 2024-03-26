@@ -1,12 +1,12 @@
-import ustruct
-from micropython import const
-from typing import TYPE_CHECKING
+import ustruct  # pyright: ignore[reportMissingModuleSource]
+from micropython import const  # pyright: ignore[reportMissingModuleSource]
+from typing import TYPE_CHECKING  # pyright: ignore[reportShadowedImports]
 
 from trezor import io, loop, utils
 from trezor.wire.protocol_common import MessageWithId, WireError
 
 if TYPE_CHECKING:
-    from trezorio import WireInterface
+    from trezorio import WireInterface  # pyright: ignore[reportMissingImports]
 
 _REP_LEN = const(64)
 

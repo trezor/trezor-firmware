@@ -1,9 +1,9 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING  # pyright: ignore[reportShadowedImports]
 
 from trezor import protobuf
 
 if TYPE_CHECKING:
-    from trezorio import WireInterface
+    from trezorio import WireInterface  # pyright: ignore[reportMissingImports]
 
 
 class Message:
@@ -41,13 +41,13 @@ class MessageWithId(MessageWithType):
         super().__init__(message_type, message_data)
 
 
-class WireError(Exception):
-    pass
-
-
 class Context:
     def __init__(self, iface: WireInterface, channel_id: bytes) -> None:
         self.iface: WireInterface = iface
         self.channel_id: bytes = channel_id
 
     async def write(self, msg: protobuf.MessageType) -> None: ...
+
+
+class WireError(Exception):
+    pass

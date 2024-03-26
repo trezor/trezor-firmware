@@ -1,11 +1,14 @@
-import ustruct
+import ustruct  # pyright:ignore[reportMissingModuleSource]
 
 from storage.cache_thp import BROADCAST_CHANNEL_ID
 
 from ..protocol_common import Message
 
+CODEC_V1 = 0x3F
 CONTINUATION_PACKET = 0x80
 ENCRYPTED_TRANSPORT = 0x02
+HANDSHAKE_INIT = 0x00
+ACK_MESSAGE = 0x20
 _ERROR = 0x41
 _CHANNEL_ALLOCATION_RES = 0x40
 
@@ -63,9 +66,9 @@ def get_device_properties() -> Message:
     return Message(_ENCODED_PROTOBUF_DEVICE_PROPERTIES)
 
 
-def get_channel_allocation_response(nonce: bytes, new_cid: int) -> bytes:
+def get_channel_allocation_response(nonce: bytes, new_cid: bytes) -> bytes:
     props_msg = get_device_properties()
-    return ustruct.pack(">8sH", nonce, new_cid) + props_msg.to_bytes()
+    return nonce + new_cid + props_msg.to_bytes()
 
 
 def get_error_unallocated_channel() -> bytes:

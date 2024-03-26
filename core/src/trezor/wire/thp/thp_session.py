@@ -1,13 +1,13 @@
-import ustruct
-from typing import TYPE_CHECKING
+import ustruct  # pyright:ignore[reportMissingModuleSource]
+from typing import TYPE_CHECKING  # pyright:ignore[reportShadowedImports]
 
 from storage import cache_thp as storage_thp_cache
-from storage.cache_thp import SessionThpCache
+from storage.cache_thp import ChannelCache, SessionThpCache
 from trezor.wire.protocol_common import WireError
 
 if TYPE_CHECKING:
     from enum import IntEnum
-    from trezorio import WireInterface
+    from trezorio import WireInterface  # pyright:ignore[reportMissingImports]
 else:
     IntEnum = object
 
@@ -62,40 +62,40 @@ def get_cid(session: SessionThpCache) -> int:
     return storage_thp_cache._get_cid(session)
 
 
-def get_next_channel_id() -> int:  # deprecated TODO remove
-    return int.from_bytes(storage_thp_cache.get_next_channel_id(), "big")
+def sync_can_send_message(cache: SessionThpCache | ChannelCache) -> bool:
+    return cache.sync & 0x80 == 0x80
 
 
-def sync_can_send_message(session: SessionThpCache) -> bool:
-    return session.sync & 0x80 == 0x80
+def sync_get_receive_expected_bit(cache: SessionThpCache | ChannelCache) -> int:
+    return (cache.sync & 0x40) >> 6
 
 
-def sync_get_receive_expected_bit(session: SessionThpCache) -> int:
-    return (session.sync & 0x40) >> 6
+def sync_get_send_bit(cache: SessionThpCache | ChannelCache) -> int:
+    return (cache.sync & 0x20) >> 5
 
 
-def sync_get_send_bit(session: SessionThpCache) -> int:
-    return (session.sync & 0x20) >> 5
-
-
-def sync_set_can_send_message(session: SessionThpCache, can_send: bool) -> None:
-    session.sync &= 0x7F
+def sync_set_can_send_message(
+    cache: SessionThpCache | ChannelCache, can_send: bool
+) -> None:
+    cache.sync &= 0x7F
     if can_send:
-        session.sync |= 0x80
+        cache.sync |= 0x80
 
 
-def sync_set_receive_expected_bit(session: SessionThpCache, bit: int) -> None:
+def sync_set_receive_expected_bit(
+    cache: SessionThpCache | ChannelCache, bit: int
+) -> None:
     if bit not in (0, 1):
         raise ThpError("Unexpected receive sync bit")
 
     # set second bit to "bit" value
-    session.sync &= 0xBF
+    cache.sync &= 0xBF
     if bit:
-        session.sync |= 0x40
+        cache.sync |= 0x40
 
 
-def sync_set_send_bit_to_opposite(session: SessionThpCache) -> None:
-    _sync_set_send_bit(session=session, bit=1 - sync_get_send_bit(session))
+def sync_set_send_bit_to_opposite(cache: SessionThpCache | ChannelCache) -> None:
+    _sync_set_send_bit(cache=cache, bit=1 - sync_get_send_bit(cache))
 
 
 def is_active_session(session: SessionThpCache):
@@ -126,13 +126,13 @@ def _get_unauthenticated_session_or_none(session_id) -> SessionThpCache | None:
     return None
 
 
-def _sync_set_send_bit(session: SessionThpCache, bit: int) -> None:
+def _sync_set_send_bit(cache: SessionThpCache | ChannelCache, bit: int) -> None:
     if bit not in (0, 1):
         raise ThpError("Unexpected send sync bit")
 
     # set third bit to "bit" value
-    session.sync &= 0xDF
-    session.sync |= 0x20
+    cache.sync &= 0xDF
+    cache.sync |= 0x20
 
 
 def _decode_session_state(state: bytearray) -> int:
