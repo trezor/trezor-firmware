@@ -219,8 +219,6 @@ trezor.wire.thp.channel_context
 import trezor.wire.thp.channel_context
 trezor.wire.thp.checksum
 import trezor.wire.thp.checksum
-trezor.wire.thp.packet_handlers
-import trezor.wire.thp.packet_handlers
 trezor.wire.thp.session_context
 import trezor.wire.thp.session_context
 trezor.wire.thp.thp_messages
