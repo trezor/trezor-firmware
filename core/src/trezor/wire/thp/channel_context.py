@@ -105,7 +105,7 @@ class ChannelContext(Context):
             # TODO use small buffer
 
         # TODO for now, we create a new big buffer every time. It should be changed
-        self.buffer = _get_buffer_for_payload(payload_length, self.buffer)
+        self.buffer = _get_buffer_for_payload(payload_length, packet)
 
         await self._buffer_packet_data(self.buffer, packet, 0)
 
