@@ -40,11 +40,8 @@ impl<U> CoinJoinProgress<U> {
         indeterminate: bool,
     ) -> Result<CoinJoinProgress<impl Component<Msg = Never> + MaybeTrace>, Error> {
         let style = theme::label_coinjoin_progress();
-        let label = Label::centered(
-            TryInto::<TString>::try_into(TR::coinjoin__title_do_not_disconnect)?,
-            style,
-        )
-        .vertically_centered();
+        let label = Label::centered(TR::coinjoin__title_do_not_disconnect.into(), style)
+            .vertically_centered();
         let bg = painter::rect_painter(style.background_color, theme::BG);
         let inner = (bg, label);
         CoinJoinProgress::with_background(text, inner, indeterminate)
@@ -65,7 +62,7 @@ where
             indeterminate,
             content: Frame::centered(
                 theme::label_title(),
-                TR::coinjoin__title_progress.try_into()?,
+                TR::coinjoin__title_progress.into(),
                 Split::bottom(RECTANGLE_HEIGHT, 0, Empty, inner),
             )
             .into_child(),

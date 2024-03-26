@@ -191,7 +191,6 @@ impl Button {
         match &self.content {
             ButtonContent::Empty => {}
             ButtonContent::Text(text) => {
-                let text = text;
                 let width = style.font.text_width(text.map(|c| c));
                 let height = style.font.text_height();
                 let start_of_baseline = self.area.center()

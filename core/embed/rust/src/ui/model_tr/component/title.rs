@@ -21,7 +21,7 @@ pub struct Title {
 impl Title {
     pub fn new(title: TString<'static>) -> Self {
         Self {
-            title: title.clone(),
+            title,
             marquee: Marquee::new(title, theme::FONT_HEADER, theme::FG, theme::BG),
             needs_marquee: false,
             area: Rect::zero(),
@@ -35,13 +35,13 @@ impl Title {
     }
 
     pub fn get_text(&self) -> &str {
-        self.title.map(|s| s.as_ref())
+        self.title.map(|s| s)
     }
 
     pub fn set_text(&mut self, ctx: &mut EventCtx, new_text: TString<'static>) {
-        self.title = new_text.clone();
-        self.marquee.set_text(new_text.clone());
-        let text_width = theme::FONT_HEADER.text_width(new_text.map(|s| s.as_ref()));
+        self.title = new_text;
+        self.marquee.set_text(new_text);
+        let text_width = theme::FONT_HEADER.text_width(new_text.map(|s| s));
         self.needs_marquee = text_width > self.area.width();
         // Resetting the marquee to the beginning and starting it when necessary.
         self.marquee.reset();
@@ -56,7 +56,7 @@ impl Title {
         let title_baseline = area.top_left() + Offset::y(text_height - 1);
         display::text_left(
             title_baseline,
-            title.map(|s| s.as_ref()),
+            title.map(|s| s),
             theme::FONT_HEADER,
             theme::FG,
             theme::BG,
@@ -69,7 +69,7 @@ impl Title {
         let title_baseline = area.top_center() + Offset::y(text_height - 1);
         display::text_center(
             title_baseline,
-            title.map(|s| s.as_ref()),
+            title.map(|s| s),
             theme::FONT_HEADER,
             theme::FG,
             theme::BG,
@@ -83,7 +83,7 @@ impl Component for Title {
     fn place(&mut self, bounds: Rect) -> Rect {
         self.area = bounds;
         self.marquee.place(bounds);
-        let width = theme::FONT_HEADER.text_width(self.title.map(|s| s.as_ref()));
+        let width = theme::FONT_HEADER.text_width(self.title.map(|s| s));
         self.needs_marquee = width > self.area.width();
         bounds
     }

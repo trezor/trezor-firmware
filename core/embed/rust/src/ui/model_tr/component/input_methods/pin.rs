@@ -152,7 +152,7 @@ impl<'a> PinEntry<'a> {
         let (showing_real_prompt, header_line_content, pin_line_content) = if show_subprompt {
             (
                 false,
-                TR::pin__title_wrong_pin.map_translated(|t| String::from(t)),
+                TR::pin__title_wrong_pin.map_translated(String::from),
                 String::from(subprompt.map(|t| t)),
             )
         } else {
@@ -331,7 +331,7 @@ impl Component for PinEntry<'_> {
 impl crate::trace::Trace for PinEntry<'_> {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("PinKeyboard");
-        t.string("subprompt", self.subprompt.into());
+        t.string("subprompt", self.subprompt);
         t.string("pin", self.textbox.content().into());
         t.child("choice_page", &self.choice_page);
     }

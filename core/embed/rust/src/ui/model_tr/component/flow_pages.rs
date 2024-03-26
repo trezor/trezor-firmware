@@ -169,7 +169,7 @@ impl Page {
     }
 
     pub fn title(&self) -> Option<TString<'static>> {
-        self.title.clone()
+        self.title
     }
 
     pub fn has_prev_page(&self) -> bool {

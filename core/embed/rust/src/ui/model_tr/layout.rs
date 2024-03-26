@@ -730,7 +730,7 @@ extern "C" fn new_altcoin_tx_summary(n_args: usize, args: *const Obj, kwargs: *m
         let items: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
 
         // cached allocated translated strings that get_page can reuse
-        let tr_title_fee = TR::confirm_total__title_fee.try_into()?;
+        let tr_title_fee = TR::confirm_total__title_fee.into();
 
         let get_page = move |page_index| {
             match page_index {
@@ -1637,7 +1637,7 @@ extern "C" fn new_confirm_firmware_update(
             )
             .with_info_screen(
                 TR::firmware_update__title_fingerprint.as_tstring(),
-                fingerprint.into(),
+                fingerprint,
             ),
         )?;
         Ok(obj.into())

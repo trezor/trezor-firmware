@@ -623,7 +623,7 @@ extern "C" fn new_confirm_properties(n_args: usize, args: *const Obj, kwargs: *m
             ButtonPage::new(paragraphs.into_paragraphs(), theme::BG).with_hold()?
         } else {
             ButtonPage::new(paragraphs.into_paragraphs(), theme::BG)
-                .with_cancel_confirm(None, Some(TR::buttons__confirm.try_into()?))
+                .with_cancel_confirm(None, Some(TR::buttons__confirm.into()))
         };
         let obj = LayoutObj::new(Frame::left_aligned(
             theme::label_title(),
@@ -861,7 +861,7 @@ extern "C" fn new_confirm_modify_output(n_args: usize, args: *const Obj, kwargs:
             theme::label_title(),
             tr_title.into(),
             ButtonPage::<_>::new(paragraphs, theme::BG)
-                .with_cancel_confirm(Some("^".into()), Some(TR::buttons__continue.try_into()?)),
+                .with_cancel_confirm(Some("^".into()), Some(TR::buttons__continue.into())),
         ))?;
         Ok(obj.into())
     };
@@ -1018,7 +1018,7 @@ extern "C" fn new_confirm_fido(n_args: usize, args: *const Obj, kwargs: *mut Map
 
         let controls = Button::cancel_confirm(
             Button::with_icon(theme::ICON_CANCEL),
-            Button::with_text(TR::buttons__confirm.try_into()?).styled(theme::button_confirm()),
+            Button::with_text(TR::buttons__confirm.into()).styled(theme::button_confirm()),
             true,
         );
 
@@ -1253,7 +1253,7 @@ extern "C" fn new_request_pin(n_args: usize, args: *const Obj, kwargs: *mut Map)
         let allow_cancel: bool = kwargs.get_or(Qstr::MP_QSTR_allow_cancel, true)?;
         let warning: bool = kwargs.get_or(Qstr::MP_QSTR_wrong_pin, false)?;
         let warning = if warning {
-            Some(TR::pin__wrong_pin.try_into()?)
+            Some(TR::pin__wrong_pin.into())
         } else {
             None
         };
@@ -1447,8 +1447,8 @@ extern "C" fn new_confirm_recovery(n_args: usize, args: *const Obj, kwargs: *mut
                 Dialog::new(
                     paragraphs,
                     Button::cancel_info_confirm(
-                        TR::buttons__continue.try_into()?,
-                        TR::buttons__more_info.try_into()?,
+                        TR::buttons__continue.into(),
+                        TR::buttons__more_info.into(),
                     ),
                 ),
             ))?
@@ -1500,13 +1500,12 @@ extern "C" fn new_show_group_share_success(
         let lines_iterable: Obj = kwargs.get(Qstr::MP_QSTR_lines)?;
         let lines: [StrBuffer; 4] = util::iter_into_array(lines_iterable)?;
 
-        let obj =
-            LayoutObj::new(IconDialog::new_shares(
-                lines,
-                theme::button_bar(Button::with_text(TR::buttons__continue.try_into()?).map(
-                    |msg| (matches!(msg, ButtonMsg::Clicked)).then(|| CancelConfirmMsg::Confirmed),
-                )),
-            ))?;
+        let obj = LayoutObj::new(IconDialog::new_shares(
+            lines,
+            theme::button_bar(Button::with_text(TR::buttons__continue.into()).map(|msg| {
+                (matches!(msg, ButtonMsg::Clicked)).then(|| CancelConfirmMsg::Confirmed)
+            })),
+        ))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -1529,7 +1528,7 @@ extern "C" fn new_show_remaining_shares(n_args: usize, args: *const Obj, kwargs:
             theme::label_title(),
             tr_title.into(),
             ButtonPage::<_>::new(paragraphs.into_paragraphs(), theme::BG)
-                .with_cancel_confirm(None, Some(TR::buttons__continue.try_into()?))
+                .with_cancel_confirm(None, Some(TR::buttons__continue.into()))
                 .with_confirm_style(theme::button_default())
                 .without_cancel(),
         ))?;
@@ -1638,18 +1637,16 @@ extern "C" fn new_confirm_firmware_update(
         let description: StrBuffer = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
         let fingerprint: StrBuffer = kwargs.get(Qstr::MP_QSTR_fingerprint)?.try_into()?;
 
-        let title_str = TR::firmware_update__title.try_into()?;
+        let title_str = TR::firmware_update__title.into();
         let title = Label::left_aligned(title_str, theme::TEXT_BOLD).vertically_centered();
         let msg = Label::left_aligned(description.into(), theme::TEXT_NORMAL);
 
-        let left =
-            Button::with_text(TR::buttons__cancel.try_into()?).styled(theme::button_default());
-        let right =
-            Button::with_text(TR::buttons__install.try_into()?).styled(theme::button_confirm());
+        let left = Button::with_text(TR::buttons__cancel.into()).styled(theme::button_default());
+        let right = Button::with_text(TR::buttons__install.into()).styled(theme::button_confirm());
 
         let obj = LayoutObj::new(
             Confirm::new(theme::BG, left, right, ConfirmTitle::Text(title), msg).with_info(
-                TR::firmware_update__title_fingerprint.try_into()?,
+                TR::firmware_update__title_fingerprint.into(),
                 fingerprint.into(),
                 theme::button_moreinfo(),
             ),
@@ -2186,8 +2183,11 @@ mod tests {
 
     #[test]
     fn trace_example_layout() {
-        let buttons =
-            Button::cancel_confirm(Button::with_text("Left"), Button::with_text("Right"), false);
+        let buttons = Button::cancel_confirm(
+            Button::with_text("Left".into()),
+            Button::with_text("Right".into()),
+            false,
+        );
 
         let ops = OpTextLayout::new(theme::TEXT_NORMAL)
             .text_normal("Testing text layout, with some text, and some more text. And ")

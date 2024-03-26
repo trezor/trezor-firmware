@@ -226,6 +226,6 @@ impl Component for Marquee {
 impl crate::trace::Trace for Marquee {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("Marquee");
-        t.string("text", self.text.into());
+        t.string("text", self.text);
     }
 }

@@ -76,8 +76,8 @@ impl Homescreen {
         // Buttons will not be visible, we only need both left and right to be existing
         // so we can get the events from them.
         let invisible_btn_layout = ButtonLayout::text_none_text("".into(), "".into());
-        let loader = loader_description
-            .map(|desc| Child::new(ProgressLoader::new(desc.into(), HOLD_TO_LOCK_MS)));
+        let loader =
+            loader_description.map(|desc| Child::new(ProgressLoader::new(desc, HOLD_TO_LOCK_MS)));
         Self {
             label: Label::centered(label, theme::TEXT_BIG),
             notification,

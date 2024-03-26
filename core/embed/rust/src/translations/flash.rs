@@ -64,16 +64,18 @@ pub fn init() {
     }
 }
 
-// SAFETY: Invalidates all references coming from the flash-based blob.
-// In other words, none should exist when this function is called.
+/// # Safety
+/// Invalidates all references coming from the flash-based blob.
+/// In other words, none should exist when this function is called.
 pub unsafe fn deinit() {
     // SAFETY: Given the above, we can safely clear the cached object.
     unsafe { TRANSLATIONS_ON_FLASH = None };
 }
 
-// SAFETY: Gives out a reference to a TranslationsBlob which can be invalidated
-// by calling `erase()`. The caller must not store this reference, nor any that
-// come from it, beyond the lifetime of the current function.
+/// # Safety
+/// Gives out a reference to a TranslationsBlob which can be invalidated
+/// by calling `erase()`. The caller must not store this reference, nor any that
+/// come from it, beyond the lifetime of the current function.
 pub unsafe fn get<'a>() -> Option<&'a Translations<'a>> {
     // SAFETY: We are in a single-threaded environment.
     unsafe { TRANSLATIONS_ON_FLASH.as_ref() }
