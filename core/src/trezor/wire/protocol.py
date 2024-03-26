@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING  # pyright: ignore[reportShadowedImports]
 
 from trezor import utils
-from trezor.wire import codec_v1, thp_v1
+from trezor.wire import codec_v1
 from trezor.wire.protocol_common import MessageWithId
 
 if TYPE_CHECKING:
@@ -10,13 +10,12 @@ if TYPE_CHECKING:
 
 async def read_message(iface: WireInterface, buffer: utils.BufferType) -> MessageWithId:
     if utils.USE_THP:
-        return await thp_v1.read_message(iface, buffer)
+        raise Exception("THP protocol should be used instead")
     return await codec_v1.read_message(iface, buffer)
 
 
 async def write_message(iface: WireInterface, message: MessageWithId) -> None:
     if utils.USE_THP:
-        await thp_v1.write_message_with_sync_control(iface, message)
-        return
+        raise Exception("THP protocol should be used instead")
     await codec_v1.write_message(iface, message.type, message.data)
     return

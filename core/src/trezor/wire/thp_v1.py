@@ -9,18 +9,18 @@ from .protocol_common import MessageWithId
 from .thp import ChannelState, ack_handler, checksum, thp_messages
 from .thp import thp_session as THP
 from .thp.channel_context import (
-    _MAX_PAYLOAD_LEN,
-    _REPORT_LENGTH,
+    CONT_DATA_OFFSET,
+    INIT_DATA_OFFSET,
+    MAX_PAYLOAD_LEN,
+    REPORT_LENGTH,
     ChannelContext,
     load_cached_channels,
 )
 from .thp.checksum import CHECKSUM_LENGTH
 from .thp.thp_messages import (
     CODEC_V1,
-    CONT_DATA_OFFSET,
     CONTINUATION_PACKET,
     ENCRYPTED_TRANSPORT,
-    INIT_DATA_OFFSET,
     InitHeader,
     InterruptingInitPacket,
 )
@@ -192,7 +192,7 @@ def _get_loop_wait_read(iface: WireInterface):
 
 
 def _get_buffer_for_payload(
-    payload_length: int, existing_buffer: utils.BufferType, max_length=_MAX_PAYLOAD_LEN
+    payload_length: int, existing_buffer: utils.BufferType, max_length=MAX_PAYLOAD_LEN
 ) -> utils.BufferType:
     if payload_length > max_length:
         raise ThpError("Message too large")
@@ -201,7 +201,7 @@ def _get_buffer_for_payload(
         try:
             payload: utils.BufferType = bytearray(payload_length)
         except MemoryError:
-            payload = bytearray(_REPORT_LENGTH)
+            payload = bytearray(REPORT_LENGTH)
             raise ThpError("Message too large")
         return payload
 
@@ -302,7 +302,7 @@ async def write_to_wire(
     payload_length = len(payload)
 
     # prepare the report buffer with header data
-    report = bytearray(_REPORT_LENGTH)
+    report = bytearray(REPORT_LENGTH)
     header.pack_to_buffer(report)
 
     # write initial report

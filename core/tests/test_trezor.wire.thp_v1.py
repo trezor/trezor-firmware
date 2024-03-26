@@ -322,7 +322,7 @@ class TestWireTrezorHostProtocolV1(unittest.TestCase):
 
         # ensure that a message this big won't fit into memory
         # Note: this control is changed, because THP has only 2 byte length field
-        self.assertTrue(message_size > thp_v1._MAX_PAYLOAD_LEN)
+        self.assertTrue(message_size > thp_v1.MAX_PAYLOAD_LEN)
         # self.assertRaises(MemoryError, bytearray, message_size)
         header = make_header(PLAINTEXT_1, COMMON_CID, message_size)
         packet = header + MESSAGE_TYPE_BYTES + (b"\x00" * INIT_MESSAGE_DATA_LENGTH)

@@ -13,11 +13,9 @@ from . import thp_session as THP
 from .checksum import CHECKSUM_LENGTH
 from .thp_messages import (
     ACK_MESSAGE,
-    CONT_DATA_OFFSET,
     CONTINUATION_PACKET,
     ENCRYPTED_TRANSPORT,
     HANDSHAKE_INIT,
-    INIT_DATA_OFFSET,
 )
 from .thp_session import ThpError
 
@@ -30,8 +28,12 @@ _MOCK_INTERFACE_HID = b"\x00"
 
 _PUBKEY_LENGTH = const(32)
 
-_REPORT_LENGTH = const(64)
-_MAX_PAYLOAD_LEN = const(60000)
+INIT_DATA_OFFSET = const(5)
+CONT_DATA_OFFSET = const(3)
+
+
+REPORT_LENGTH = const(64)
+MAX_PAYLOAD_LEN = const(60000)
 
 
 class ChannelContext(Context):
@@ -267,7 +269,7 @@ def _encode_iface(iface: WireInterface) -> bytes:
 
 
 def _get_buffer_for_payload(
-    payload_length: int, existing_buffer: utils.BufferType, max_length=_MAX_PAYLOAD_LEN
+    payload_length: int, existing_buffer: utils.BufferType, max_length=MAX_PAYLOAD_LEN
 ) -> utils.BufferType:
     if payload_length > max_length:
         raise ThpError("Message too large")
@@ -276,7 +278,7 @@ def _get_buffer_for_payload(
         try:
             payload: utils.BufferType = bytearray(payload_length)
         except MemoryError:
-            payload = bytearray(_REPORT_LENGTH)
+            payload = bytearray(REPORT_LENGTH)
             raise ThpError("Message too large")
         return payload
 
