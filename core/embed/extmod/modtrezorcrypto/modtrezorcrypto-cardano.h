@@ -113,6 +113,7 @@ STATIC mp_obj_t mod_trezorcrypto_from_secret(mp_obj_t secret) {
   o->base.type = &mod_trezorcrypto_HDNode_type;
   const int res = hdnode_from_secret_cardano(bufinfo.buf, &o->hdnode);
   if (res != 1) {
+    m_del_obj(mp_obj_HDNode_t, o);
     mp_raise_msg(&mp_type_RuntimeError,
                  "Unexpected failure in constructing Cardano node.");
   }
