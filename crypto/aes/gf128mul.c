@@ -52,9 +52,9 @@ Issue Date: 20/12/2007
 /* A slow field multiplier */
 
 void gf_mul(gf_t a, const gf_t b)
-{   gf_t p[8];
-    uint8_t *q, ch;
-    int i;
+{   gf_t p[8] = {0};
+    uint8_t *q = NULL, ch = 0;
+    int i = 0;
 
     copy_block_aligned(p[0], a);
     for(i = 0; i < 7; ++i)
@@ -103,7 +103,7 @@ void gf_mul(gf_t a, const gf_t b)
 */
 
 void init_64k_table(const gf_t g, gf_t64k_t t)
-{   int i = 0, j, k;
+{   int i = 0, j = 0, k = 0;
 
     /*
     depending on the representation we have to process bits
@@ -189,7 +189,7 @@ void gf_mul_64k(gf_t a, const  gf_t64k_t t, gf_t r)
 #else
 
 void gf_mul_64k(gf_t a, const  gf_t64k_t t, gf_t r)
-{   int i;
+{   int i = 0;
     uint8_t *ap = (uint8_t*)a;
     memset(r, 0, GF_BYTE_LEN);
     for(i = 15; i >= 0; --i)
@@ -216,7 +216,7 @@ void gf_mul_64k(gf_t a, const  gf_t64k_t t, gf_t r)
     in total.
 */
 void init_8k_table(const gf_t g, gf_t8k_t t)
-{   int i = 0, j, k;
+{   int i = 0, j = 0, k = 0;
 
     /*  do the low 4-bit nibble first - t[0][16] - and note
         that the unit multiplier sits at 0x01 - t[0][1] in
@@ -293,7 +293,7 @@ void gf_mul_8k(gf_t a, const gf_t8k_t t, gf_t r)
 #else
 
 void gf_mul_8k(gf_t a, const gf_t8k_t t, gf_t r)
-{   int i;
+{   int i = 0;
     uint8_t *ap = (uint8_t*)a;
     memset(r, 0, GF_BYTE_LEN);
     for(i = 15; i >= 0; --i)
@@ -330,7 +330,7 @@ void gf_mul_8k(gf_t a, const gf_t8k_t t, gf_t r)
 */
 
 void init_4k_table(const gf_t g, gf_t4k_t t)
-{   int j, k;
+{   int j = 0, k = 0;
 
     memset(t[0], 0, GF_BYTE_LEN);
 
@@ -407,7 +407,7 @@ void gf_mul_4k(gf_t a, const gf_t4k_t t, gf_t r)
 */
 
 void init_256_table(const gf_t g, gf_t256_t t)
-{   int j, k;
+{   int j = 0, k = 0;
 
     memset(t[0], 0, GF_BYTE_LEN);
 
@@ -456,7 +456,7 @@ void gf_mul_256(gf_t a, const gf_t256_t t, gf_t r)
 #else
 
 void gf_mul_256(gf_t a, const gf_t256_t t, gf_t r)
-{   int i;
+{   int i = 0;
     uint8_t *ap = (uint8_t*)a;
     memset(r, 0, GF_BYTE_LEN);
     for(i = 15; i >= 0; --i)

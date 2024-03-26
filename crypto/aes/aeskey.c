@@ -80,7 +80,7 @@ extern "C"
 }
 
 AES_RETURN aes_xi(encrypt_key128)(const unsigned char *key, aes_encrypt_ctx cx[1])
-{   uint32_t    ss[4];
+{   uint32_t    ss[4] = {0};
 
     cx->ks[0] = ss[0] = word_in(key, 0);
     cx->ks[1] = ss[1] = word_in(key, 1);
@@ -94,7 +94,7 @@ AES_RETURN aes_xi(encrypt_key128)(const unsigned char *key, aes_encrypt_ctx cx[1
     ke4(cx->ks, 6);  ke4(cx->ks, 7);
     ke4(cx->ks, 8);
 #else
-    {   uint32_t i;
+    {   uint32_t i = 0;
         for(i = 0; i < 9; ++i)
             ke4(cx->ks, i);
     }
@@ -128,7 +128,7 @@ AES_RETURN aes_xi(encrypt_key128)(const unsigned char *key, aes_encrypt_ctx cx[1
 }
 
 AES_RETURN aes_xi(encrypt_key192)(const unsigned char *key, aes_encrypt_ctx cx[1])
-{   uint32_t    ss[6];
+{   uint32_t    ss[6] = {0};
 
 	cx->ks[0] = ss[0] = word_in(key, 0);
     cx->ks[1] = ss[1] = word_in(key, 1);
@@ -143,7 +143,7 @@ AES_RETURN aes_xi(encrypt_key192)(const unsigned char *key, aes_encrypt_ctx cx[1
     ke6(cx->ks, 4);  ke6(cx->ks, 5);
     ke6(cx->ks, 6);
 #else
-    {   uint32_t i;
+    {   uint32_t i = 0;
         for(i = 0; i < 7; ++i)
             ke6(cx->ks, i);
     }
@@ -179,7 +179,7 @@ AES_RETURN aes_xi(encrypt_key192)(const unsigned char *key, aes_encrypt_ctx cx[1
 }
 
 AES_RETURN aes_xi(encrypt_key256)(const unsigned char *key, aes_encrypt_ctx cx[1])
-{   uint32_t    ss[8];
+{   uint32_t    ss[8] = {0};
 
     cx->ks[0] = ss[0] = word_in(key, 0);
     cx->ks[1] = ss[1] = word_in(key, 1);
@@ -195,7 +195,7 @@ AES_RETURN aes_xi(encrypt_key256)(const unsigned char *key, aes_encrypt_ctx cx[1
     ke8(cx->ks, 2); ke8(cx->ks, 3);
     ke8(cx->ks, 4); ke8(cx->ks, 5);
 #else
-    {   uint32_t i;
+    {   uint32_t i = 0;
         for(i = 0; i < 6; ++i)
             ke8(cx->ks,  i);
     }
@@ -302,7 +302,7 @@ AES_RETURN aes_xi(encrypt_key256)(const unsigned char *key, aes_encrypt_ctx cx[1
 #endif
 
 AES_RETURN aes_xi(decrypt_key128)(const unsigned char *key, aes_decrypt_ctx cx[1])
-{   uint32_t    ss[5];
+{   uint32_t    ss[5] = {0};
 #if defined( d_vars )
         d_vars;
 #endif
@@ -319,7 +319,7 @@ AES_RETURN aes_xi(decrypt_key128)(const unsigned char *key, aes_decrypt_ctx cx[1
      kd4(cx->ks, 6);  kd4(cx->ks, 7);
      kd4(cx->ks, 8);  kdl4(cx->ks, 9);
 #else
-    {   uint32_t i;
+    {   uint32_t i = 0;
         for(i = 0; i < 10; ++i)
             k4e(cx->ks, i);
 #if !(DEC_ROUND == NO_TABLES)
@@ -382,7 +382,7 @@ AES_RETURN aes_xi(decrypt_key128)(const unsigned char *key, aes_decrypt_ctx cx[1
 }
 
 AES_RETURN aes_xi(decrypt_key192)(const unsigned char *key, aes_decrypt_ctx cx[1])
-{   uint32_t    ss[7];
+{   uint32_t    ss[7] = {0};
 #if defined( d_vars )
         d_vars;
 #endif
@@ -404,7 +404,7 @@ AES_RETURN aes_xi(decrypt_key192)(const unsigned char *key, aes_decrypt_ctx cx[1
 #else
     cx->ks[v(48,(4))] = ss[4] = word_in(key, 4);
     cx->ks[v(48,(5))] = ss[5] = word_in(key, 5);
-    {   uint32_t i;
+    {   uint32_t i = 0;
 
         for(i = 0; i < 7; ++i)
             k6e(cx->ks, i);
@@ -476,7 +476,7 @@ AES_RETURN aes_xi(decrypt_key192)(const unsigned char *key, aes_decrypt_ctx cx[1
 }
 
 AES_RETURN aes_xi(decrypt_key256)(const unsigned char *key, aes_decrypt_ctx cx[1])
-{   uint32_t    ss[9];
+{   uint32_t    ss[9] = {0};
 #if defined( d_vars )
         d_vars;
 #endif
@@ -504,7 +504,7 @@ AES_RETURN aes_xi(decrypt_key256)(const unsigned char *key, aes_decrypt_ctx cx[1
     cx->ks[v(56,(5))] = ss[5] = word_in(key, 5);
     cx->ks[v(56,(6))] = ss[6] = word_in(key, 6);
     cx->ks[v(56,(7))] = ss[7] = word_in(key, 7);
-    {   uint32_t i;
+    {   uint32_t i = 0;
 
         for(i = 0; i < 6; ++i)
             k8e(cx->ks,  i);

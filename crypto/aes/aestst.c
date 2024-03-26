@@ -57,7 +57,7 @@ void out_state(long s0, long s1, long s2, long s3)
 }
 
 void oblk(char m[], unsigned char v[], unsigned long n)
-{   unsigned long i;
+{   unsigned long i = 0;
 
     printf("\n%s", m);
 
@@ -117,9 +117,9 @@ void cycles(volatile uint64_t *rtn)
 }
 
 int main(void)
-{   unsigned char   out[32], ret[32], err = 0;
-    f_ectx          alge[1];
-    f_dctx          algd[1];
+{   unsigned char   out[32] = {0}, ret[32] = {0}, err = 0;
+    f_ectx          alge[1] = {0};
+    f_dctx          algd[1] = {0};
 
     aes_init();
 
