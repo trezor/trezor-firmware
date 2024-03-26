@@ -17,9 +17,9 @@ from .thp.channel_context import (
 from .thp.checksum import CHECKSUM_LENGTH
 from .thp.thp_messages import (
     CODEC_V1,
+    CONT_DATA_OFFSET,
     CONTINUATION_PACKET,
     ENCRYPTED_TRANSPORT,
-    CONT_DATA_OFFSET,
     INIT_DATA_OFFSET,
     InitHeader,
     InterruptingInitPacket,
