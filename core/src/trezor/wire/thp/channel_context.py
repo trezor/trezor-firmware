@@ -64,6 +64,9 @@ class ChannelContext(Context):
     def set_channel_state(self, state: ChannelState) -> None:
         self.channel_cache.state = bytearray(state.value.to_bytes(1, "big"))
 
+    def set_buffer(self, buffer: utils.BufferType) -> None:
+        self.buffer = buffer
+
     # CALLED BY THP_MAIN_LOOP
 
     async def receive_packet(self, packet: utils.BufferType):
@@ -239,11 +242,13 @@ class ChannelContext(Context):
         return THP.sync_get_send_bit(self.channel_cache) != sync_bit
 
 
-def load_cached_channels() -> dict[int, ChannelContext]:  # TODO
+def load_cached_channels(buffer: utils.BufferType) -> dict[int, ChannelContext]:  # TODO
     channels: dict[int, ChannelContext] = {}
     cached_channels = cache_thp.get_all_allocated_channels()
     for c in cached_channels:
         channels[int.from_bytes(c.channel_id, "big")] = ChannelContext(c)
+    for c in channels.values():
+        c.set_buffer(buffer)
     return channels
 
 
