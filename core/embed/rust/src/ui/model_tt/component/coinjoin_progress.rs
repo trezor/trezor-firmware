@@ -3,7 +3,7 @@ use core::mem;
 use crate::{
     error::Error,
     maybe_trace::MaybeTrace,
-    micropython::buffer::StrBuffer,
+    strutil::TString,
     translations::TR,
     ui::{
         component::{
@@ -25,50 +25,44 @@ const LOADER_INNER: i16 = 28;
 const LOADER_OFFSET: i16 = -34;
 const LOADER_SPEED: u16 = 5;
 
-pub struct CoinJoinProgress<T, U> {
+pub struct CoinJoinProgress<U> {
     value: u16,
     indeterminate: bool,
-    content: Child<Frame<Split<Empty, U>, StrBuffer>>,
+    content: Child<Frame<Split<Empty, U>>>,
     // Label is not a child since circular loader paints large black rectangle which overlaps it.
     // To work around this, draw label every time loader is drawn.
-    label: Label<T>,
+    label: Label<'static>,
 }
 
-impl<T, U> CoinJoinProgress<T, U>
-where
-    T: AsRef<str>,
-{
+impl<U> CoinJoinProgress<U> {
     pub fn new(
-        text: T,
+        text: TString<'static>,
         indeterminate: bool,
-    ) -> Result<CoinJoinProgress<T, impl Component<Msg = Never> + MaybeTrace>, Error>
-    where
-        T: AsRef<str>,
-    {
+    ) -> Result<CoinJoinProgress<impl Component<Msg = Never> + MaybeTrace>, Error> {
         let style = theme::label_coinjoin_progress();
-        let label = Label::centered(
-            TryInto::<StrBuffer>::try_into(TR::coinjoin__title_do_not_disconnect)?,
-            style,
-        )
-        .vertically_centered();
+        let label = Label::centered(TR::coinjoin__title_do_not_disconnect.into(), style)
+            .vertically_centered();
         let bg = painter::rect_painter(style.background_color, theme::BG);
         let inner = (bg, label);
         CoinJoinProgress::with_background(text, inner, indeterminate)
     }
 }
 
-impl<T, U> CoinJoinProgress<T, U>
+impl<U> CoinJoinProgress<U>
 where
-    T: AsRef<str>,
     U: Component<Msg = Never>,
 {
-    pub fn with_background(text: T, inner: U, indeterminate: bool) -> Result<Self, Error> {
+    pub fn with_background(
+        text: TString<'static>,
+        inner: U,
+        indeterminate: bool,
+    ) -> Result<Self, Error> {
         Ok(Self {
             value: 0,
             indeterminate,
             content: Frame::centered(
                 theme::label_title(),
-                TR::coinjoin__title_progress.try_into()?,
+                TR::coinjoin__title_progress.into(),
                 Split::bottom(RECTANGLE_HEIGHT, 0, Empty, inner),
             )
             .into_child(),
@@ -77,9 +71,8 @@ where
     }
 }
 
-impl<T, U> Component for CoinJoinProgress<T, U>
+impl<U> Component for CoinJoinProgress<U>
 where
-    T: AsRef<str>,
     U: Component<Msg = Never>,
 {
     type Msg = Never;
@@ -132,9 +125,8 @@ where
 }
 
 #[cfg(feature = "ui_debug")]
-impl<T, U> crate::trace::Trace for CoinJoinProgress<T, U>
+impl<U> crate::trace::Trace for CoinJoinProgress<U>
 where
-    T: AsRef<str>,
     U: Component + crate::trace::Trace,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {

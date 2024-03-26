@@ -126,9 +126,10 @@ impl UIFeaturesBootloader for ModelTRFeatures {
             unwrap!(reboot_msg.push_str("Reconnect the device"));
         }
 
-        let title = Label::centered("Firmware installed", TEXT_BOLD).vertically_centered();
+        let title = Label::centered("Firmware installed".into(), TEXT_BOLD).vertically_centered();
 
-        let content = Label::centered(reboot_msg.as_str(), TEXT_NORMAL).vertically_centered();
+        let content =
+            Label::centered(reboot_msg.as_str().into(), TEXT_NORMAL).vertically_centered();
 
         let mut frame =
             ResultScreen::new(BLD_FG, BLD_BG, ICON_SPINNER, title, content, complete_draw);
@@ -136,10 +137,10 @@ impl UIFeaturesBootloader for ModelTRFeatures {
     }
 
     fn screen_install_fail() {
-        let title = Label::centered("Install failed", TEXT_BOLD).vertically_centered();
+        let title = Label::centered("Install failed".into(), TEXT_BOLD).vertically_centered();
 
-        let content =
-            Label::centered("Please reconnect\nthe device", TEXT_NORMAL).vertically_centered();
+        let content = Label::centered("Please reconnect\nthe device".into(), TEXT_NORMAL)
+            .vertically_centered();
 
         let mut frame = ResultScreen::new(BLD_FG, BLD_BG, ICON_ALERT, title, content, true);
         show(&mut frame, false);
@@ -169,44 +170,68 @@ impl UIFeaturesBootloader for ModelTRFeatures {
             "DOWNGRADE FW"
         };
 
-        let message = Label::left_aligned(version_str.as_str(), TEXT_NORMAL).vertically_centered();
+        let message =
+            Label::left_aligned(version_str.as_str().into(), TEXT_NORMAL).vertically_centered();
         let fingerprint = Label::left_aligned(
-            fingerprint,
+            fingerprint.into(),
             TEXT_NORMAL.with_line_breaking(BreakWordsNoHyphen),
         )
         .vertically_centered();
 
-        let alert =
-            (!should_keep_seed).then_some(Label::left_aligned("Seed will be erased!", TEXT_NORMAL));
+        let alert = (!should_keep_seed).then_some(Label::left_aligned(
+            "Seed will be erased!".into(),
+            TEXT_NORMAL,
+        ));
 
-        let mut frame = Confirm::new(BLD_BG, title_str, message, alert, "INSTALL", false)
-            .with_info_screen("FW FINGERPRINT", fingerprint);
+        let mut frame = Confirm::new(
+            BLD_BG,
+            title_str.into(),
+            message,
+            alert,
+            "INSTALL".into(),
+            false,
+        )
+        .with_info_screen("FW FINGERPRINT".into(), fingerprint);
         run(&mut frame)
     }
 
     fn screen_wipe_confirm() -> u32 {
-        let message = Label::left_aligned("Seed and firmware will be erased!", TEXT_NORMAL)
+        let message = Label::left_aligned("Seed and firmware will be erased!".into(), TEXT_NORMAL)
             .vertically_centered();
 
-        let mut frame = Confirm::new(BLD_BG, "FACTORY RESET", message, None, "RESET", false);
+        let mut frame = Confirm::new(
+            BLD_BG,
+            "FACTORY RESET".into(),
+            message,
+            None,
+            "RESET".into(),
+            false,
+        );
 
         run(&mut frame)
     }
 
     fn screen_unlock_bootloader_confirm() -> u32 {
-        let message =
-            Label::left_aligned("This action cannot be undone!", TEXT_NORMAL).vertically_centered();
+        let message = Label::left_aligned("This action cannot be undone!".into(), TEXT_NORMAL)
+            .vertically_centered();
 
-        let mut frame = Confirm::new(BLD_BG, "UNLOCK BOOTLOADER?", message, None, "UNLOCK", true);
+        let mut frame = Confirm::new(
+            BLD_BG,
+            "UNLOCK BOOTLOADER?".into(),
+            message,
+            None,
+            "UNLOCK".into(),
+            true,
+        );
 
         run(&mut frame)
     }
 
     fn screen_unlock_bootloader_success() {
-        let title = Label::centered("Bootloader unlocked", TEXT_BOLD).vertically_centered();
+        let title = Label::centered("Bootloader unlocked".into(), TEXT_BOLD).vertically_centered();
 
-        let content =
-            Label::centered("Please reconnect the\ndevice", TEXT_NORMAL).vertically_centered();
+        let content = Label::centered("Please reconnect the\ndevice".into(), TEXT_NORMAL)
+            .vertically_centered();
 
         let mut frame = ResultScreen::new(BLD_FG, BLD_BG, ICON_SPINNER, title, content, true);
         show(&mut frame, false);
@@ -227,7 +252,11 @@ impl UIFeaturesBootloader for ModelTRFeatures {
         unwrap!(version_str.push_str("\nby "));
         unwrap!(version_str.push_str(vendor));
 
-        let mut frame = Intro::new(title_str.as_str(), version_str.as_str(), fw_ok);
+        let mut frame = Intro::new(
+            title_str.as_str().into(),
+            version_str.as_str().into(),
+            fw_ok,
+        );
         run(&mut frame)
     }
 
@@ -268,20 +297,20 @@ impl UIFeaturesBootloader for ModelTRFeatures {
     }
 
     fn screen_wipe_success() {
-        let title = Label::centered("Trezor Reset", TEXT_BOLD).vertically_centered();
+        let title = Label::centered("Trezor Reset".into(), TEXT_BOLD).vertically_centered();
 
-        let content =
-            Label::centered("Please reconnect\nthe device", TEXT_NORMAL).vertically_centered();
+        let content = Label::centered("Please reconnect\nthe device".into(), TEXT_NORMAL)
+            .vertically_centered();
 
         let mut frame = ResultScreen::new(BLD_FG, BLD_BG, ICON_SPINNER, title, content, true);
         show(&mut frame, false);
     }
 
     fn screen_wipe_fail() {
-        let title = Label::centered("Reset failed", TEXT_BOLD).vertically_centered();
+        let title = Label::centered("Reset failed".into(), TEXT_BOLD).vertically_centered();
 
-        let content =
-            Label::centered("Please reconnect\nthe device", TEXT_NORMAL).vertically_centered();
+        let content = Label::centered("Please reconnect\nthe device".into(), TEXT_NORMAL)
+            .vertically_centered();
 
         let mut frame = ResultScreen::new(BLD_FG, BLD_BG, ICON_ALERT, title, content, true);
         show(&mut frame, false);

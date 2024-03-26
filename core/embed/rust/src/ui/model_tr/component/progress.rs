@@ -1,7 +1,7 @@
 use core::mem;
 
 use crate::{
-    strutil::StringType,
+    strutil::TString,
     ui::{
         component::{
             paginated::Paginate,
@@ -21,11 +21,8 @@ const BOTTOM_DESCRIPTION_MARGIN: i16 = 10;
 const LOADER_Y_OFFSET_TITLE: i16 = -10;
 const LOADER_Y_OFFSET_NO_TITLE: i16 = -20;
 
-pub struct Progress<T>
-where
-    T: StringType,
-{
-    title: Option<Child<Label<T>>>,
+pub struct Progress {
+    title: Option<Child<Label<'static>>>,
     value: u16,
     loader_y_offset: i16,
     indeterminate: bool,
@@ -34,13 +31,10 @@ where
     icon: Icon,
 }
 
-impl<T> Progress<T>
-where
-    T: StringType,
-{
+impl Progress {
     const AREA: Rect = constant::screen();
 
-    pub fn new(indeterminate: bool, description: T) -> Self {
+    pub fn new(indeterminate: bool, description: TString<'static>) -> Self {
         Self {
             title: None,
             value: 0,
@@ -54,7 +48,7 @@ where
         }
     }
 
-    pub fn with_title(mut self, title: T) -> Self {
+    pub fn with_title(mut self, title: TString<'static>) -> Self {
         self.title = Some(Child::new(Label::centered(title, theme::TEXT_BOLD)));
         self
     }
@@ -79,10 +73,7 @@ where
     }
 }
 
-impl<T> Component for Progress<T>
-where
-    T: StringType,
-{
+impl Component for Progress {
     type Msg = Never;
 
     fn place(&mut self, _bounds: Rect) -> Rect {
@@ -95,7 +86,7 @@ where
 
         let no_title_case = (Rect::zero(), Self::AREA, LOADER_Y_OFFSET_NO_TITLE);
         let (title, rest, loader_y_offset) = if let Some(self_title) = &self.title {
-            if !self_title.inner().text().as_ref().is_empty() {
+            if !self_title.inner().text().is_empty() {
                 let (title, rest) = Self::AREA.split_top(self_title.inner().max_size().y);
                 (title, rest, LOADER_Y_OFFSET_TITLE)
             } else {
@@ -171,10 +162,7 @@ where
 // DEBUG-ONLY SECTION BELOW
 
 #[cfg(feature = "ui_debug")]
-impl<T> crate::trace::Trace for Progress<T>
-where
-    T: StringType,
-{
+impl crate::trace::Trace for Progress {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("Progress");
     }

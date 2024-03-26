@@ -1,5 +1,5 @@
 use crate::{
-    strutil::StringType,
+    strutil::TString,
     ui::{
         component::{base::Component, FormattedText, Paginate},
         geometry::Rect,
@@ -21,10 +21,9 @@ const MAX_OPS_PER_PAGE: usize = 15;
 /// have theoretically unlimited number of pages without triggering SO.
 /// (Currently only the current page is stored on stack - in
 /// `Flow::current_page`.)
-pub struct FlowPages<F, T>
+pub struct FlowPages<F>
 where
-    T: StringType + Clone,
-    F: Fn(usize) -> Page<T>,
+    F: Fn(usize) -> Page,
 {
     /// Function/closure that will return appropriate page on demand.
     get_page: F,
@@ -32,10 +31,9 @@ where
     page_count: usize,
 }
 
-impl<F, T> FlowPages<F, T>
+impl<F> FlowPages<F>
 where
-    F: Fn(usize) -> Page<T>,
-    T: StringType + Clone,
+    F: Fn(usize) -> Page,
 {
     pub fn new(get_page: F, page_count: usize) -> Self {
         Self {
@@ -45,7 +43,7 @@ where
     }
 
     /// Returns a page on demand on a specified index.
-    pub fn get(&self, page_index: usize) -> Page<T> {
+    pub fn get(&self, page_index: usize) -> Page {
         (self.get_page)(page_index)
     }
 
@@ -74,24 +72,18 @@ where
 }
 
 #[derive(Clone)]
-pub struct Page<T>
-where
-    T: StringType + Clone,
-{
+pub struct Page {
     formatted: FormattedText,
     btn_layout: ButtonLayout,
     btn_actions: ButtonActions,
     current_page: usize,
     page_count: usize,
-    title: Option<T>,
+    title: Option<TString<'static>>,
     slim_arrows: bool,
 }
 
 // For `layout.rs`
-impl<T> Page<T>
-where
-    T: StringType + Clone,
-{
+impl Page {
     pub fn new(
         btn_layout: ButtonLayout,
         btn_actions: ButtonActions,
@@ -112,12 +104,9 @@ where
 }
 
 // For `flow.rs`
-impl<T> Page<T>
-where
-    T: StringType + Clone,
-{
+impl Page {
     /// Adding title.
-    pub fn with_title(mut self, title: T) -> Self {
+    pub fn with_title(mut self, title: TString<'static>) -> Self {
         self.title = Some(title);
         self
     }
@@ -180,8 +169,8 @@ where
         self.btn_actions
     }
 
-    pub fn title(&self) -> Option<T> {
-        self.title.clone()
+    pub fn title(&self) -> Option<TString<'static>> {
+        self.title
     }
 
     pub fn has_prev_page(&self) -> bool {
@@ -208,10 +197,7 @@ where
 }
 
 // Pagination
-impl<T> Paginate for Page<T>
-where
-    T: StringType + Clone,
-{
+impl Paginate for Page {
     fn page_count(&mut self) -> usize {
         self.formatted.page_count()
     }
@@ -227,10 +213,7 @@ where
 use crate::ui::component::text::layout::LayoutFit;
 
 #[cfg(feature = "ui_debug")]
-impl<T> crate::trace::Trace for Page<T>
-where
-    T: StringType + Clone,
-{
+impl crate::trace::Trace for Page {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         use crate::ui::component::text::layout::trace::TraceSink;
         use core::cell::Cell;
@@ -238,7 +221,7 @@ where
         t.component("Page");
         if let Some(title) = &self.title {
             // Not calling it "title" as that is already traced by FlowPage
-            t.string("page_title", title.as_ref().into());
+            t.string("page_title", *title);
         }
         t.int("active_page", self.current_page as i64);
         t.int("page_count", self.page_count as i64);

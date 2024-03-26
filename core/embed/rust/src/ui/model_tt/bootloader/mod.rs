@@ -74,8 +74,8 @@ impl ModelTTFeatures {
         let mut frame = ResultScreen::new(
             &RESULT_FW_INSTALL,
             Icon::new(CHECK40),
-            "Firmware installed\nsuccessfully",
-            Label::centered(msg, RESULT_FW_INSTALL.title_style()).vertically_centered(),
+            "Firmware installed\nsuccessfully".into(),
+            Label::centered(msg.into(), RESULT_FW_INSTALL.title_style()).vertically_centered(),
             complete_draw,
         );
         show(&mut frame, complete_draw);
@@ -85,8 +85,8 @@ impl ModelTTFeatures {
         let mut frame = ResultScreen::new(
             &RESULT_INITIAL,
             Icon::new(CHECK40),
-            "Firmware installed\nsuccessfully",
-            Label::centered(msg, RESULT_INITIAL.title_style()).vertically_centered(),
+            "Firmware installed\nsuccessfully".into(),
+            Label::centered(msg.into(), RESULT_INITIAL.title_style()).vertically_centered(),
             complete_draw,
         );
         show(&mut frame, complete_draw);
@@ -133,8 +133,8 @@ impl UIFeaturesBootloader for ModelTTFeatures {
         let mut frame = ResultScreen::new(
             &RESULT_FW_INSTALL,
             Icon::new(WARNING40),
-            "Firmware installation was not successful",
-            Label::centered(RECONNECT_MESSAGE, RESULT_FW_INSTALL.title_style())
+            "Firmware installation was not successful".into(),
+            Label::centered(RECONNECT_MESSAGE.into(), RESULT_FW_INSTALL.title_style())
                 .vertically_centered(),
             true,
         );
@@ -164,14 +164,16 @@ impl UIFeaturesBootloader for ModelTTFeatures {
         } else {
             "DOWNGRADE FW"
         };
-        let title = Label::left_aligned(title_str, TEXT_BOLD).vertically_centered();
-        let msg = Label::left_aligned(version_str.as_ref(), TEXT_NORMAL);
-        let alert =
-            (!should_keep_seed).then_some(Label::left_aligned("SEED WILL BE ERASED!", TEXT_BOLD));
+        let title = Label::left_aligned(title_str.into(), TEXT_BOLD).vertically_centered();
+        let msg = Label::left_aligned(version_str.as_str().into(), TEXT_NORMAL);
+        let alert = (!should_keep_seed).then_some(Label::left_aligned(
+            "SEED WILL BE ERASED!".into(),
+            TEXT_BOLD,
+        ));
 
         let (left, right) = if should_keep_seed {
-            let l = Button::with_text("CANCEL").styled(button_bld());
-            let r = Button::with_text("INSTALL").styled(button_confirm());
+            let l = Button::with_text("CANCEL".into()).styled(button_bld());
+            let r = Button::with_text("INSTALL".into()).styled(button_confirm());
             (l, r)
         } else {
             let l = Button::with_icon(Icon::new(X24)).styled(button_bld());
@@ -180,7 +182,11 @@ impl UIFeaturesBootloader for ModelTTFeatures {
         };
 
         let mut frame = Confirm::new(BLD_BG, left, right, ConfirmTitle::Text(title), msg)
-            .with_info("FW FINGERPRINT", fingerprint, button_bld_menu());
+            .with_info(
+                "FW FINGERPRINT".into(),
+                fingerprint.into(),
+                button_bld_menu(),
+            );
 
         if let Some(alert) = alert {
             frame = frame.with_alert(alert);
@@ -193,13 +199,13 @@ impl UIFeaturesBootloader for ModelTTFeatures {
         let icon = Icon::new(FIRE40);
 
         let msg = Label::centered(
-            "Are you sure you want to factory reset the device?",
+            "Are you sure you want to factory reset the device?".into(),
             TEXT_WIPE_NORMAL,
         );
-        let alert = Label::centered("SEED AND FIRMWARE\nWILL BE ERASED!", TEXT_WIPE_BOLD);
+        let alert = Label::centered("SEED AND FIRMWARE\nWILL BE ERASED!".into(), TEXT_WIPE_BOLD);
 
-        let right = Button::with_text("RESET").styled(button_wipe_confirm());
-        let left = Button::with_text("CANCEL").styled(button_wipe_cancel());
+        let right = Button::with_text("RESET".into()).styled(button_wipe_confirm());
+        let left = Button::with_text("CANCEL".into()).styled(button_wipe_cancel());
 
         let mut frame = Confirm::new(BLD_WIPE_COLOR, left, right, ConfirmTitle::Icon(icon), msg)
             .with_alert(alert);
@@ -230,7 +236,11 @@ impl UIFeaturesBootloader for ModelTTFeatures {
         unwrap!(version_str.push_str("\nby "));
         unwrap!(version_str.push_str(vendor));
 
-        let mut frame = Intro::new(title_str.as_str(), version_str.as_str(), fw_ok);
+        let mut frame = Intro::new(
+            title_str.as_str().into(),
+            version_str.as_str().into(),
+            fw_ok,
+        );
 
         run(&mut frame)
     }
@@ -288,8 +298,9 @@ impl UIFeaturesBootloader for ModelTTFeatures {
         let mut frame = ResultScreen::new(
             &RESULT_WIPE,
             Icon::new(CHECK40),
-            "Trezor reset\nsuccessfully",
-            Label::centered(RECONNECT_MESSAGE, RESULT_WIPE.title_style()).vertically_centered(),
+            "Trezor reset\nsuccessfully".into(),
+            Label::centered(RECONNECT_MESSAGE.into(), RESULT_WIPE.title_style())
+                .vertically_centered(),
             true,
         );
         show(&mut frame, true);
@@ -299,8 +310,9 @@ impl UIFeaturesBootloader for ModelTTFeatures {
         let mut frame = ResultScreen::new(
             &RESULT_WIPE,
             Icon::new(WARNING40),
-            "Trezor reset was\nnot successful",
-            Label::centered(RECONNECT_MESSAGE, RESULT_WIPE.title_style()).vertically_centered(),
+            "Trezor reset was\nnot successful".into(),
+            Label::centered(RECONNECT_MESSAGE.into(), RESULT_WIPE.title_style())
+                .vertically_centered(),
             true,
         );
         show(&mut frame, true);

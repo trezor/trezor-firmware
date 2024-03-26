@@ -1,16 +1,19 @@
-use crate::ui::{
-    component::{
-        base::ComponentExt, text::common::TextBox, Child, Component, Event, EventCtx, Never,
+use crate::{
+    strutil::TString,
+    ui::{
+        component::{
+            base::ComponentExt, text::common::TextBox, Child, Component, Event, EventCtx, Never,
+        },
+        display,
+        geometry::{Grid, Offset, Rect},
+        model_tt::component::{
+            button::{Button, ButtonContent, ButtonMsg},
+            keyboard::common::{paint_pending_marker, MultiTapKeyboard},
+            swipe::{Swipe, SwipeDirection},
+            theme, ScrollBar,
+        },
+        util::long_line_content_with_ellipsis,
     },
-    display,
-    geometry::{Grid, Offset, Rect},
-    model_tt::component::{
-        button::{Button, ButtonContent, ButtonMsg},
-        keyboard::common::{paint_pending_marker, MultiTapKeyboard},
-        swipe::{Swipe, SwipeDirection},
-        theme, ScrollBar,
-    },
-    util::long_line_content_with_ellipsis,
 };
 
 use core::cell::Cell;
@@ -23,9 +26,9 @@ pub enum PassphraseKeyboardMsg {
 pub struct PassphraseKeyboard {
     page_swipe: Swipe,
     input: Child<Input>,
-    back: Child<Button<&'static str>>,
-    confirm: Child<Button<&'static str>>,
-    keys: [Child<Button<&'static str>>; KEY_COUNT],
+    back: Child<Button>,
+    confirm: Child<Button>,
+    keys: [Child<Button>; KEY_COUNT],
     scrollbar: ScrollBar,
     fade: Cell<bool>,
 }
@@ -69,20 +72,20 @@ impl PassphraseKeyboard {
         }
     }
 
-    fn key_text(content: &ButtonContent<&'static str>) -> &'static str {
+    fn key_text(content: &ButtonContent) -> TString<'static> {
         match content {
-            ButtonContent::Text(text) => text,
-            ButtonContent::Icon(_) => " ",
-            ButtonContent::IconAndText(_) => " ",
-            ButtonContent::Empty => "",
-            ButtonContent::IconBlend(_, _, _) => "",
+            ButtonContent::Text(text) => *text,
+            ButtonContent::Icon(_) => " ".into(),
+            ButtonContent::IconAndText(_) => " ".into(),
+            ButtonContent::Empty => "".into(),
+            ButtonContent::IconBlend(_, _, _) => "".into(),
         }
     }
 
-    fn key_content(text: &'static str) -> ButtonContent<&'static str> {
+    fn key_content(text: &'static str) -> ButtonContent {
         match text {
             " " => ButtonContent::Icon(theme::ICON_SPACE),
-            t => ButtonContent::Text(t),
+            t => ButtonContent::Text(t.into()),
         }
     }
 
@@ -272,7 +275,7 @@ impl Component for PassphraseKeyboard {
                 // character in textbox. If not, let's just append the first character.
                 let text = Self::key_text(btn.inner().content());
                 self.input.mutate(ctx, |ctx, i| {
-                    let edit = i.multi_tap.click_key(ctx, key, text);
+                    let edit = text.map(|c| i.multi_tap.click_key(ctx, key, c));
                     i.textbox.apply(ctx, edit);
                 });
                 self.after_edit(ctx);
