@@ -15,6 +15,7 @@
 #include "advertising.h"
 #include "int_comm.h"
 #include "pb_comm.h"
+#include "oob.h"
 
 #define CON_STATUS_LED DK_LED2
 
@@ -146,11 +147,16 @@ void auth_cancel(struct bt_conn *conn)
 }
 
 
+
 void pairing_complete(struct bt_conn *conn, bool bonded)
 {
   char addr[BT_ADDR_LE_STR_LEN];
 
   bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
+
+  oob_signal();
+  bt_le_oob_set_sc_flag(false);
+  bt_le_oob_set_legacy_flag(false);
 
   if (bonded) {
     advertising_setup_wl();
@@ -165,6 +171,10 @@ void pairing_failed(struct bt_conn *conn, enum bt_security_err reason)
   char addr[BT_ADDR_LE_STR_LEN];
 
   bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
+
+  oob_signal();
+  bt_le_oob_set_sc_flag(false);
+  bt_le_oob_set_legacy_flag(false);
 
   LOG_INF("Pairing failed conn: %s, reason %d", addr, reason);
 }

@@ -15,9 +15,11 @@ target_sources(app PRIVATE
     src/main.c
     src/connection.c
     src/advertising.c
+    src/events.c
     src/uart.c
     src/spi.c
     src/int_comm.c
+    src/oob.c
     src/pb_comm.c
     src/trz_nus.c
     src/protob/messages.pb.c

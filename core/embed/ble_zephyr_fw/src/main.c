@@ -20,6 +20,7 @@
 #include <zephyr/bluetooth/uuid.h>
 #include <zephyr/bluetooth/gatt.h>
 #include <zephyr/bluetooth/hci.h>
+#include <zephyr/bluetooth/conn.h>
 
 
 #include <dk_buttons_and_leds.h>
@@ -35,6 +36,8 @@
 #include "pb_comm.h"
 #include "advertising.h"
 #include "trz_nus.h"
+#include "oob.h"
+#include "events.h"
 
 #define LOG_MODULE_NAME fw
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);
@@ -48,14 +51,10 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 #define FW_RUNNING_SIG DK_LED3
 
 
-#define KEY_PASSKEY_ACCEPT DK_BTN1_MSK
-#define KEY_PASSKEY_REJECT DK_BTN2_MSK
-
 static K_SEM_DEFINE(ble_init_ok, 0, 1);
 static K_SEM_DEFINE(led_init_ok, 0, 1);
 
-
-
+#define AUTH_SC_FLAG 0x08
 
 
 static void security_changed(struct bt_conn *conn, bt_security_t level,
@@ -79,10 +78,23 @@ BT_CONN_CB_DEFINE(conn_callbacks) = {
 	.security_changed = security_changed,
 };
 
+//static enum bt_security_err pairing_accept(struct bt_conn *conn,
+//                                           const struct bt_conn_pairing_feat *const feat)
+//{
+//  if (feat->oob_data_flag && (!(feat->auth_req & AUTH_SC_FLAG))) {
+//    bt_le_oob_set_legacy_flag(true);
+//  }
+//
+//  return BT_SECURITY_ERR_SUCCESS;
+//
+//}
+
 
 static struct bt_conn_auth_cb conn_auth_callbacks = {
+//  .pairing_accept = pairing_accept,
 	.passkey_display = auth_passkey_display,
 	.passkey_confirm = auth_passkey_confirm,
+  .oob_data_request = auth_oob_data_request,
 	.cancel = auth_cancel,
 };
 
@@ -194,15 +206,23 @@ int main(void)
 
   bt_set_name("TrezorGAP");
 
+  events_init();
   advertising_init();
   int_comm_start();
   pb_comm_start();
   dk_set_led(FW_RUNNING_SIG, 1);
   send_status_event();
 
+  oob_init();
+
   k_sem_give(&led_init_ok);
 
 	for (;;) {
+    printk("Event occurred\n");
+
+    events_poll();
+
+    oob_process();
     int_comm_thread();
 	}
 }
@@ -239,7 +259,6 @@ void led_thread(void)
 
 K_THREAD_DEFINE(ble_write_thread_id, STACKSIZE, ble_write_thread, NULL, NULL,
         NULL, PRIORITY, 0, 0);
-
 
 K_THREAD_DEFINE(led_thread_id, STACKSIZE, led_thread, NULL, NULL,
         NULL, PRIORITY, 0, 0);

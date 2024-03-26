@@ -13,6 +13,7 @@
 #include "connection.h"
 #include "advertising.h"
 #include "pb_comm.h"
+#include "events.h"
 
 #define LOG_MODULE_NAME fw_int_comm
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);
@@ -111,16 +112,22 @@ void int_comm_start(void)
 void int_comm_thread(void)
 {
   /* Don't go any further until BLE is initialized */
-  k_sem_take(&int_comm_ok, K_FOREVER);
+//  k_sem_take(&int_comm_ok, K_FOREVER);
 
-  for (;;) {
-    /* Wait indefinitely for data to process */
-    uart_data_t *buf = uart_get_data_int();
+//  for (;;) {
 
-    process_command(buf->data, buf->len);
+    if (events_get(INT_COMM_EVENT_NUM)->state == K_POLL_STATE_SIGNALED) {
 
-    k_free(buf);
-  }
+      uart_data_t *buf = uart_get_data_int();
+      process_command(buf->data, buf->len);
+      k_free(buf);
+
+      k_poll_signal_reset(events_get(INT_COMM_EVENT_NUM)->signal);
+      events_get(INT_COMM_EVENT_NUM)->state = K_POLL_STATE_NOT_READY;
+    }
+
+
+//  }
 }
 
 //K_THREAD_DEFINE(int_comm_thread_id, CONFIG_BT_NUS_THREAD_STACK_SIZE, int_comm_thread, NULL, NULL,

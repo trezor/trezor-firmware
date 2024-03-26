@@ -9,6 +9,7 @@
 
 #include "int_comm.h"
 #include "connection.h"
+#include "oob.h"
 
 
 #define LOG_MODULE_NAME fw_int_advertising
@@ -89,6 +90,10 @@ void advertising_start(bool wl){
   }
   advertising = true;
   advertising_wl = wl;
+
+
+  oob_fetch_addr();
+
   send_status_event();
 }
 

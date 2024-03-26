@@ -13,6 +13,7 @@
 #include "uart.h"
 #include "int_comm.h"
 #include "int_comm_defs.h"
+#include "events.h"
 
 #define LOG_MODULE_NAME fw_uart
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);
@@ -26,6 +27,9 @@ static K_FIFO_DEFINE(fifo_uart_tx_data);
 static K_FIFO_DEFINE(fifo_uart_rx_data);
 static K_FIFO_DEFINE(fifo_uart_rx_data_int);
 static K_FIFO_DEFINE(fifo_uart_rx_data_pb);
+
+
+static struct k_poll_signal fifo_uart_rx_data_int_signal;
 
 
 static void uart_cb(const struct device *dev, struct uart_event *evt, void *user_data)
@@ -199,6 +203,7 @@ static void uart_cb(const struct device *dev, struct uart_event *evt, void *user
         }
         else  if (rx_msg_type == INTERNAL_EVENT) {
           k_fifo_put(&fifo_uart_rx_data_int, buf);
+          k_poll_signal_raise(&fifo_uart_rx_data_int_signal, 0);
         }
         else {
           k_fifo_put(&fifo_uart_rx_data_pb, buf);
@@ -238,9 +243,16 @@ int uart_init(void)
   int err;
   uart_data_t *rx;
 
+
+
   if (!device_is_ready(uart)) {
     return -ENODEV;
   }
+
+  k_poll_signal_init(&fifo_uart_rx_data_int_signal);
+  k_poll_event_init(events_get(INT_COMM_EVENT_NUM),
+                    K_POLL_TYPE_SIGNAL, K_POLL_MODE_NOTIFY_ONLY,
+                    &fifo_uart_rx_data_int_signal);
 
   struct uart_config cfg = {
           .baudrate = 1000000,
@@ -291,7 +303,7 @@ uart_data_t *uart_get_data_ext(void)
 
 uart_data_t *uart_get_data_int(void)
 {
-  return k_fifo_get(&fifo_uart_rx_data_int, K_FOREVER);
+  return k_fifo_get(&fifo_uart_rx_data_int, K_NO_WAIT);
 }
 
 uart_data_t *uart_get_data_pb(void)
