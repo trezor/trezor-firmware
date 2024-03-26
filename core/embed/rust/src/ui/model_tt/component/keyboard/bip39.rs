@@ -21,9 +21,9 @@ use heapless::String;
 const MAX_LENGTH: usize = 8;
 
 pub struct Bip39Input {
-    button: Button<&'static str>,
+    button: Button,
     // used only to keep track of suggestion text color
-    button_suggestion: Button<&'static str>,
+    button_suggestion: Button,
     textbox: TextBox<MAX_LENGTH>,
     multi_tap: MultiTapKeyboard,
     options_num: Option<usize>,
@@ -263,7 +263,7 @@ impl Bip39Input {
             // Disabled button.
             self.button.disable(ctx);
             self.button.set_stylesheet(ctx, theme::button_pin());
-            self.button.set_content(ctx, ButtonContent::Text(""));
+            self.button.set_content(ctx, ButtonContent::Text("".into()));
         }
     }
 }

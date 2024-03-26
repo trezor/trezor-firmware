@@ -1,7 +1,7 @@
 use core::mem;
 
 use crate::{
-    strutil::{StringType, TString},
+    strutil::TString,
     ui::{
         component::{
             base::ComponentExt,
@@ -18,8 +18,8 @@ use crate::{
 
 use super::theme;
 
-pub struct Progress<T> {
-    title: Child<Label<T>>,
+pub struct Progress {
+    title: Child<Label<'static>>,
     value: u16,
     loader_y_offset: i16,
     indeterminate: bool,
@@ -27,13 +27,14 @@ pub struct Progress<T> {
     description_pad: Pad,
 }
 
-impl<T> Progress<T>
-where
-    T: StringType,
-{
+impl Progress {
     const AREA: Rect = constant::screen().inset(theme::borders());
 
-    pub fn new(title: T, indeterminate: bool, description: TString<'static>) -> Self {
+    pub fn new(
+        title: TString<'static>,
+        indeterminate: bool,
+        description: TString<'static>,
+    ) -> Self {
         Self {
             title: Label::centered(title, theme::label_progress()).into_child(),
             value: 0,
@@ -48,10 +49,7 @@ where
     }
 }
 
-impl<T> Component for Progress<T>
-where
-    T: StringType,
-{
+impl Component for Progress {
     type Msg = Never;
 
     fn place(&mut self, _bounds: Rect) -> Rect {
@@ -117,10 +115,7 @@ where
 }
 
 #[cfg(feature = "ui_debug")]
-impl<T> crate::trace::Trace for Progress<T>
-where
-    T: StringType,
-{
+impl crate::trace::Trace for Progress {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("Progress");
     }

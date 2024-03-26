@@ -1,5 +1,5 @@
 use crate::{
-    strutil::StringType,
+    strutil::TString,
     ui::{
         component::{Child, Component, ComponentExt, Event, EventCtx, Paginate},
         geometry::{Insets, Rect},
@@ -9,21 +9,19 @@ use crate::{
 use super::{super::constant, scrollbar::SCROLLBAR_SPACE, theme, title::Title, ScrollBar};
 
 /// Component for holding another component and displaying a title.
-pub struct Frame<T, U>
+pub struct Frame<T>
 where
     T: Component,
-    U: StringType,
 {
-    title: Title<U>,
+    title: Title,
     content: Child<T>,
 }
 
-impl<T, U> Frame<T, U>
+impl<T> Frame<T>
 where
     T: Component,
-    U: StringType + Clone,
 {
-    pub fn new(title: U, content: T) -> Self {
+    pub fn new(title: TString<'static>, content: T) -> Self {
         Self {
             title: Title::new(title),
             content: Child::new(content),
@@ -40,7 +38,7 @@ where
         self.content.inner()
     }
 
-    pub fn update_title(&mut self, ctx: &mut EventCtx, new_title: U) {
+    pub fn update_title(&mut self, ctx: &mut EventCtx, new_title: TString<'static>) {
         self.title.set_text(ctx, new_title);
     }
 
@@ -56,10 +54,9 @@ where
     }
 }
 
-impl<T, U> Component for Frame<T, U>
+impl<T> Component for Frame<T>
 where
     T: Component,
-    U: StringType + Clone,
 {
     type Msg = T::Msg;
 
@@ -85,10 +82,9 @@ where
     }
 }
 
-impl<T, U> Paginate for Frame<T, U>
+impl<T> Paginate for Frame<T>
 where
     T: Component + Paginate,
-    U: StringType + Clone,
 {
     fn page_count(&mut self) -> usize {
         self.content.page_count()
@@ -106,20 +102,18 @@ pub trait ScrollableContent {
 
 /// Component for holding another component and displaying a title.
 /// Also is allocating space for a scrollbar.
-pub struct ScrollableFrame<T, U>
+pub struct ScrollableFrame<T>
 where
     T: Component + ScrollableContent,
-    U: StringType + Clone,
 {
-    title: Option<Child<Title<U>>>,
+    title: Option<Child<Title>>,
     scrollbar: ScrollBar,
     content: Child<T>,
 }
 
-impl<T, U> ScrollableFrame<T, U>
+impl<T> ScrollableFrame<T>
 where
     T: Component + ScrollableContent,
-    U: StringType + Clone,
 {
     pub fn new(content: T) -> Self {
         Self {
@@ -133,16 +127,15 @@ where
         self.content.inner()
     }
 
-    pub fn with_title(mut self, title: U) -> Self {
+    pub fn with_title(mut self, title: TString<'static>) -> Self {
         self.title = Some(Child::new(Title::new(title)));
         self
     }
 }
 
-impl<T, U> Component for ScrollableFrame<T, U>
+impl<T> Component for ScrollableFrame<T>
 where
     T: Component + ScrollableContent,
-    U: StringType + Clone,
 {
     type Msg = T::Msg;
 
@@ -209,10 +202,9 @@ where
 // DEBUG-ONLY SECTION BELOW
 
 #[cfg(feature = "ui_debug")]
-impl<T, U> crate::trace::Trace for Frame<T, U>
+impl<T> crate::trace::Trace for Frame<T>
 where
     T: crate::trace::Trace + Component,
-    U: StringType + Clone,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("Frame");
@@ -222,10 +214,9 @@ where
 }
 
 #[cfg(feature = "ui_debug")]
-impl<T, U> crate::trace::Trace for ScrollableFrame<T, U>
+impl<T> crate::trace::Trace for ScrollableFrame<T>
 where
     T: crate::trace::Trace + Component + ScrollableContent,
-    U: StringType + Clone,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("ScrollableFrame");

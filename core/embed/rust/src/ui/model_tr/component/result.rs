@@ -17,8 +17,8 @@ pub struct ResultScreen<'a> {
     fg_color: Color,
     bg_color: Color,
     icon: Icon,
-    message_top: Child<Label<&'static str>>,
-    message_bottom: Child<Label<&'a str>>,
+    message_top: Child<Label<'static>>,
+    message_bottom: Child<Label<'a>>,
 }
 
 impl<'a> ResultScreen<'a> {
@@ -26,8 +26,8 @@ impl<'a> ResultScreen<'a> {
         fg_color: Color,
         bg_color: Color,
         icon: Icon,
-        title: Label<&'static str>,
-        content: Label<&'a str>,
+        title: Label<'static>,
+        content: Label<'a>,
         complete_draw: bool,
     ) -> Self {
         let mut instance = Self {
@@ -49,7 +49,7 @@ impl<'a> ResultScreen<'a> {
     }
 }
 
-impl<'a> Component for ResultScreen<'a> {
+impl Component for ResultScreen<'_> {
     type Msg = Never;
 
     fn place(&mut self, bounds: Rect) -> Rect {

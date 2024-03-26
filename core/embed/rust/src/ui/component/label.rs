@@ -1,22 +1,22 @@
-use crate::ui::{
-    component::{Component, Event, EventCtx, Never},
-    display::Font,
-    geometry::{Alignment, Insets, Offset, Point, Rect},
+use crate::{
+    strutil::TString,
+    ui::{
+        component::{Component, Event, EventCtx, Never},
+        display::Font,
+        geometry::{Alignment, Insets, Offset, Point, Rect},
+    },
 };
 
 use super::{text::TextStyle, TextLayout};
 
-pub struct Label<T> {
-    text: T,
+pub struct Label<'a> {
+    text: TString<'a>,
     layout: TextLayout,
     vertical: Alignment,
 }
 
-impl<T> Label<T>
-where
-    T: AsRef<str>,
-{
-    pub fn new(text: T, align: Alignment, style: TextStyle) -> Self {
+impl<'a> Label<'a> {
+    pub fn new(text: TString<'a>, align: Alignment, style: TextStyle) -> Self {
         Self {
             text,
             layout: TextLayout::new(style).with_align(align),
@@ -24,15 +24,15 @@ where
         }
     }
 
-    pub fn left_aligned(text: T, style: TextStyle) -> Self {
+    pub fn left_aligned(text: TString<'a>, style: TextStyle) -> Self {
         Self::new(text, Alignment::Start, style)
     }
 
-    pub fn right_aligned(text: T, style: TextStyle) -> Self {
+    pub fn right_aligned(text: TString<'a>, style: TextStyle) -> Self {
         Self::new(text, Alignment::End, style)
     }
 
-    pub fn centered(text: T, style: TextStyle) -> Self {
+    pub fn centered(text: TString<'a>, style: TextStyle) -> Self {
         Self::new(text, Alignment::Center, style)
     }
 
@@ -41,11 +41,11 @@ where
         self
     }
 
-    pub fn text(&self) -> &T {
+    pub fn text(&self) -> &TString<'a> {
         &self.text
     }
 
-    pub fn set_text(&mut self, text: T) {
+    pub fn set_text(&mut self, text: TString<'a>) {
         self.text = text;
     }
 
@@ -63,14 +63,17 @@ where
 
     pub fn max_size(&self) -> Offset {
         let font = self.font();
-        Offset::new(font.text_width(self.text.as_ref()), font.text_max_height())
+        Offset::new(
+            font.text_width(self.text.map(|c| c)),
+            font.text_max_height(),
+        )
     }
 
     pub fn text_height(&self, width: i16) -> i16 {
         let bounds = Rect::from_top_left_and_size(Point::zero(), Offset::new(width, i16::MAX));
         self.layout
             .with_bounds(bounds)
-            .fit_text(self.text.as_ref())
+            .fit_text(self.text.map(|c| c))
             .height()
     }
 
@@ -78,7 +81,7 @@ where
         // XXX only works on single-line labels
         assert!(self.layout.bounds.height() <= self.font().text_max_height());
         let available_width = self.layout.bounds.width();
-        let width = self.font().text_width(self.text.as_ref());
+        let width = self.font().text_width(self.text.map(|c| c));
         let height = self.font().text_height();
         let cursor = self.layout.initial_cursor();
         let baseline = match self.alignment() {
@@ -90,17 +93,14 @@ where
     }
 }
 
-impl<T> Component for Label<T>
-where
-    T: AsRef<str>,
-{
+impl Component for Label<'_> {
     type Msg = Never;
 
     fn place(&mut self, bounds: Rect) -> Rect {
         let height = self
             .layout
             .with_bounds(bounds)
-            .fit_text(self.text.as_ref())
+            .fit_text(self.text.map(|c| c))
             .height();
         let diff = bounds.height() - height;
         let insets = match self.vertical {
@@ -117,7 +117,7 @@ where
     }
 
     fn paint(&mut self) {
-        self.layout.render_text(self.text.as_ref());
+        self.layout.render_text(self.text.map(|c| c));
     }
 
     #[cfg(feature = "ui_bounds")]
@@ -127,12 +127,9 @@ where
 }
 
 #[cfg(feature = "ui_debug")]
-impl<T> crate::trace::Trace for Label<T>
-where
-    T: AsRef<str>,
-{
+impl crate::trace::Trace for Label<'_> {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("Label");
-        t.string("text", self.text.as_ref().into());
+        t.string("text", self.text.map(|c| c).into());
     }
 }

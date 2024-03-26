@@ -78,7 +78,7 @@ pub enum TString<'a> {
     Str(&'a str),
 }
 
-impl TString<'_> {
+impl<'a> TString<'a> {
     pub fn len(&self) -> usize {
         self.map(|s| s.len())
     }
@@ -87,10 +87,10 @@ impl TString<'_> {
         self.len() == 0
     }
 
-    pub fn map<F, T>(&self, fun: F) -> T
+    pub fn map<F, T>(&'a self, fun: F) -> T
     where
-        F: for<'a> FnOnce(&'a str) -> T,
-        T: 'static,
+        F: FnOnce(&'a str) -> T,
+        T: 'a,
     {
         match self {
             #[cfg(feature = "micropython")]
@@ -144,6 +144,12 @@ impl<'a> TString<'a> {
 impl<'a> From<&'a str> for TString<'a> {
     fn from(s: &'a str) -> Self {
         Self::Str(s)
+    }
+}
+
+impl<'a> From<&'a TString<'a>> for &'a str {
+    fn from(s: &'a TString<'a>) -> &'a str {
+        s.map(|s| s)
     }
 }
 

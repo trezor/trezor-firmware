@@ -1,11 +1,14 @@
-use crate::ui::{
-    component::{image::Image, Child, Component, Event, EventCtx, Label},
-    display,
-    geometry::{Insets, Rect},
-    model_tt::component::{
-        fido_icons::get_fido_icon_data,
-        swipe::{Swipe, SwipeDirection},
-        theme, ScrollBar,
+use crate::{
+    strutil::TString,
+    ui::{
+        component::{image::Image, Child, Component, Event, EventCtx, Label},
+        display,
+        geometry::{Insets, Rect},
+        model_tt::component::{
+            fido_icons::get_fido_icon_data,
+            swipe::{Swipe, SwipeDirection},
+            theme, ScrollBar,
+        },
     },
 };
 
@@ -22,10 +25,10 @@ pub enum FidoMsg {
     Cancelled,
 }
 
-pub struct FidoConfirm<F: Fn(usize) -> T, T, U> {
+pub struct FidoConfirm<F: Fn(usize) -> TString<'static>, U> {
     page_swipe: Swipe,
-    app_name: Label<T>,
-    account_name: Label<T>,
+    app_name: Label<'static>,
+    account_name: Label<'static>,
     icon: Child<Image>,
     /// Function/closure that will return appropriate page on demand.
     get_account: F,
@@ -34,20 +37,19 @@ pub struct FidoConfirm<F: Fn(usize) -> T, T, U> {
     controls: U,
 }
 
-impl<F, T, U> FidoConfirm<F, T, U>
+impl<F, U> FidoConfirm<F, U>
 where
-    F: Fn(usize) -> T,
-    T: AsRef<str> + From<&'static str>,
+    F: Fn(usize) -> TString<'static>,
     U: Component<Msg = CancelConfirmMsg>,
 {
     pub fn new(
-        app_name: T,
+        app_name: TString<'static>,
         get_account: F,
         page_count: usize,
-        icon_name: Option<T>,
+        icon_name: Option<TString<'static>>,
         controls: U,
     ) -> Self {
-        let icon_data = get_fido_icon_data(icon_name.as_ref());
+        let icon_data = get_fido_icon_data(icon_name);
 
         // Preparing scrollbar and setting its page-count.
         let mut scrollbar = ScrollBar::horizontal();
@@ -99,10 +101,9 @@ where
     }
 }
 
-impl<F, T, U> Component for FidoConfirm<F, T, U>
+impl<F, U> Component for FidoConfirm<F, U>
 where
-    F: Fn(usize) -> T,
-    T: AsRef<str> + From<&'static str>,
+    F: Fn(usize) -> TString<'static>,
     U: Component<Msg = CancelConfirmMsg>,
 {
     type Msg = FidoMsg;
@@ -177,8 +178,8 @@ where
         // Account name is optional.
         // Showing it only if it differs from app name.
         // (Dummy requests usually have some text as both app_name and account_name.)
-        if !current_account.as_ref().is_empty()
-            && current_account.as_ref() != self.app_name.text().as_ref()
+        if !current_account.map(|c| c).is_empty()
+            && current_account.map(|c| c) != self.app_name.text().map(|c| c)
         {
             self.account_name.set_text(current_account);
             self.account_name.paint();
@@ -200,9 +201,9 @@ where
 }
 
 #[cfg(feature = "ui_debug")]
-impl<F, T, U> crate::trace::Trace for FidoConfirm<F, T, U>
+impl<F, T> crate::trace::Trace for FidoConfirm<F, T>
 where
-    F: Fn(usize) -> T,
+    F: Fn(usize) -> TString<'static>,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("FidoConfirm");

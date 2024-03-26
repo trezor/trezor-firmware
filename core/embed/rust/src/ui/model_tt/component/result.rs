@@ -1,5 +1,5 @@
 use crate::{
-    strutil::StringType,
+    strutil::TString,
     ui::{
         component::{text::TextStyle, Child, Component, Event, EventCtx, Label, Never, Pad},
         constant::screen,
@@ -41,14 +41,14 @@ impl ResultStyle {
     }
 }
 
-pub struct ResultFooter<'a, T> {
+pub struct ResultFooter<'a> {
     style: &'a ResultStyle,
-    text: Label<T>,
+    text: Label<'a>,
     area: Rect,
 }
 
-impl<'a, T: AsRef<str>> ResultFooter<'a, T> {
-    pub fn new(text: Label<T>, style: &'a ResultStyle) -> Self {
+impl<'a> ResultFooter<'a> {
+    pub fn new(text: Label<'a>, style: &'a ResultStyle) -> Self {
         Self {
             style,
             text,
@@ -69,13 +69,17 @@ impl<'a, T: AsRef<str>> ResultFooter<'a, T> {
     }
 }
 
-impl<T: AsRef<str>> Component for ResultFooter<'_, T> {
+impl Component for ResultFooter<'_> {
     type Msg = Never;
 
     fn place(&mut self, bounds: Rect) -> Rect {
         self.area = bounds;
         self.text.place(bounds);
         bounds
+    }
+
+    fn event(&mut self, _ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {
+        None
     }
 
     fn paint(&mut self) {
@@ -89,27 +93,23 @@ impl<T: AsRef<str>> Component for ResultFooter<'_, T> {
         // footer text
         self.text.paint();
     }
-
-    fn event(&mut self, _ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {
-        None
-    }
 }
 
-pub struct ResultScreen<'a, T> {
+pub struct ResultScreen<'a> {
     bg: Pad,
     footer_pad: Pad,
     style: &'a ResultStyle,
     icon: Icon,
-    message: Child<Label<T>>,
-    footer: Child<ResultFooter<'a, &'a str>>,
+    message: Child<Label<'a>>,
+    footer: Child<ResultFooter<'a>>,
 }
 
-impl<'a, T: StringType> ResultScreen<'a, T> {
+impl<'a> ResultScreen<'a> {
     pub fn new(
         style: &'a ResultStyle,
         icon: Icon,
-        message: T,
-        footer: Label<&'a str>,
+        message: TString<'a>,
+        footer: Label<'a>,
         complete_draw: bool,
     ) -> Self {
         let mut instance = Self {
@@ -130,13 +130,13 @@ impl<'a, T: StringType> ResultScreen<'a, T> {
     }
 }
 
-impl<'a, T: StringType> Component for ResultScreen<'a, T> {
+impl<'a> Component for ResultScreen<'a> {
     type Msg = Never;
 
     fn place(&mut self, _bounds: Rect) -> Rect {
         self.bg.place(screen());
 
-        let (main_area, footer_area) = ResultFooter::<&'a str>::split_bounds();
+        let (main_area, footer_area) = ResultFooter::<'a>::split_bounds();
 
         self.footer_pad.place(footer_area);
         self.footer.place(footer_area);

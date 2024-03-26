@@ -1,7 +1,10 @@
-use crate::ui::{
-    component::{Child, Component, Event, EventCtx, Label, Pad},
-    geometry::{Alignment, Alignment2D, Rect},
-    layout::simplified::ReturnToC,
+use crate::{
+    strutil::TString,
+    ui::{
+        component::{Child, Component, Event, EventCtx, Label, Pad},
+        geometry::{Alignment, Alignment2D, Rect},
+        layout::simplified::ReturnToC,
+    },
 };
 
 use super::super::{
@@ -29,14 +32,14 @@ impl ReturnToC for IntroMsg {
 
 pub struct Intro<'a> {
     bg: Pad,
-    title: Child<Label<&'a str>>,
+    title: Child<Label<'a>>,
     buttons: Child<ButtonController>,
-    text: Child<Label<&'a str>>,
-    warn: Option<Child<Label<&'a str>>>,
+    text: Child<Label<'a>>,
+    warn: Option<Child<Label<'a>>>,
 }
 
 impl<'a> Intro<'a> {
-    pub fn new(title: &'a str, content: &'a str, fw_ok: bool) -> Self {
+    pub fn new(title: TString<'a>, content: TString<'a>, fw_ok: bool) -> Self {
         Self {
             bg: Pad::with_background(BLD_BG).with_clear(),
             title: Child::new(Label::centered(title, TEXT_NORMAL).vertically_centered()),
@@ -46,7 +49,7 @@ impl<'a> Intro<'a> {
             ))),
             text: Child::new(Label::left_aligned(content, TEXT_NORMAL).vertically_centered()),
             warn: (!fw_ok).then_some(Child::new(
-                Label::new("FIRMWARE CORRUPTED", Alignment::Start, TEXT_NORMAL)
+                Label::new("FIRMWARE CORRUPTED".into(), Alignment::Start, TEXT_NORMAL)
                     .vertically_centered(),
             )),
         }

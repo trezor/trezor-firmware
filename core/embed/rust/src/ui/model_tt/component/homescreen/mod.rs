@@ -269,14 +269,14 @@ impl crate::trace::Trace for Homescreen {
     }
 }
 
-pub struct Lockscreen {
-    label: TString<'static>,
+pub struct Lockscreen<'a> {
+    label: TString<'a>,
     bootscreen: bool,
     coinjoin_authorized: bool,
 }
 
-impl Lockscreen {
-    pub fn new(label: TString<'static>, bootscreen: bool, coinjoin_authorized: bool) -> Self {
+impl<'a> Lockscreen<'a> {
+    pub fn new(label: TString<'a>, bootscreen: bool, coinjoin_authorized: bool) -> Self {
         Lockscreen {
             label,
             bootscreen,
@@ -285,7 +285,7 @@ impl Lockscreen {
     }
 }
 
-impl Component for Lockscreen {
+impl Component for Lockscreen<'_> {
     type Msg = HomescreenMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -401,7 +401,7 @@ fn is_image_toif(buffer: &[u8]) -> bool {
 }
 
 #[cfg(feature = "ui_debug")]
-impl crate::trace::Trace for Lockscreen {
+impl crate::trace::Trace for Lockscreen<'_> {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("Lockscreen");
     }

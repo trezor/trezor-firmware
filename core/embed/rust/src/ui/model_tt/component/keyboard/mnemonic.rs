@@ -1,9 +1,12 @@
-use crate::ui::{
-    component::{maybe::paint_overlapping, Child, Component, Event, EventCtx, Label, Maybe},
-    geometry::{Alignment2D, Grid, Offset, Rect},
-    model_tt::{
-        component::{Button, ButtonMsg, Swipe, SwipeDirection},
-        theme,
+use crate::{
+    strutil::TString,
+    ui::{
+        component::{maybe::paint_overlapping, Child, Component, Event, EventCtx, Label, Maybe},
+        geometry::{Alignment2D, Grid, Offset, Rect},
+        model_tt::{
+            component::{Button, ButtonMsg, Swipe, SwipeDirection},
+            theme,
+        },
     },
 };
 
@@ -14,27 +17,26 @@ pub enum MnemonicKeyboardMsg {
     Previous,
 }
 
-pub struct MnemonicKeyboard<T, U> {
+pub struct MnemonicKeyboard<T> {
     /// Initial prompt, displayed on empty input.
-    prompt: Child<Maybe<Label<U>>>,
+    prompt: Child<Maybe<Label<'static>>>,
     /// Backspace button.
-    back: Child<Maybe<Button<&'static str>>>,
+    back: Child<Maybe<Button>>,
     /// Input area, acting as the auto-complete and confirm button.
     input: Child<Maybe<T>>,
     /// Key buttons.
-    keys: [Child<Button<&'static str>>; MNEMONIC_KEY_COUNT],
+    keys: [Child<Button>; MNEMONIC_KEY_COUNT],
     /// Swipe controller - allowing for going to the previous word.
     swipe: Swipe,
     /// Whether going back is allowed (is not on the very first word).
     can_go_back: bool,
 }
 
-impl<T, U> MnemonicKeyboard<T, U>
+impl<T> MnemonicKeyboard<T>
 where
     T: MnemonicInput,
-    U: AsRef<str>,
 {
-    pub fn new(input: T, prompt: U, can_go_back: bool) -> Self {
+    pub fn new(input: T, prompt: TString<'static>, can_go_back: bool) -> Self {
         // Input might be already pre-filled
         let prompt_visible = input.is_empty();
 
@@ -57,7 +59,7 @@ where
             )),
             input: Child::new(Maybe::new(theme::BG, input, !prompt_visible)),
             keys: T::keys()
-                .map(|t| Button::with_text(t).styled(theme::button_pin()))
+                .map(|t| Button::with_text(t.into()).styled(theme::button_pin()))
                 .map(Child::new),
             swipe: Swipe::new().right(),
             can_go_back,
@@ -99,10 +101,9 @@ where
     }
 }
 
-impl<T, U> Component for MnemonicKeyboard<T, U>
+impl<T> Component for MnemonicKeyboard<T>
 where
     T: MnemonicInput,
-    U: AsRef<str>,
 {
     type Msg = MnemonicKeyboardMsg;
 
@@ -210,10 +211,9 @@ pub enum MnemonicInputMsg {
 }
 
 #[cfg(feature = "ui_debug")]
-impl<T, U> crate::trace::Trace for MnemonicKeyboard<T, U>
+impl<T> crate::trace::Trace for MnemonicKeyboard<T>
 where
     T: MnemonicInput + crate::trace::Trace,
-    U: AsRef<str>,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("MnemonicKeyboard");

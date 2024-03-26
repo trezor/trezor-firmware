@@ -1,5 +1,5 @@
 use crate::{
-    strutil::{StringType, TString},
+    strutil::TString,
     time::{Duration, Instant},
     ui::{
         animation::Animation,
@@ -247,22 +247,16 @@ impl LoaderStyleSheet {
     }
 }
 
-pub struct ProgressLoader<T>
-where
-    T: StringType,
-{
-    loader: Child<Progress<T>>,
+pub struct ProgressLoader {
+    loader: Child<Progress>,
     duration_ms: u32,
     start_time: Option<Instant>,
 }
 
-impl<T> ProgressLoader<T>
-where
-    T: StringType + Clone,
-{
+impl ProgressLoader {
     const LOADER_FRAMES_DEFAULT: u32 = 20;
 
-    pub fn new(loader_description: T, duration_ms: u32) -> Self {
+    pub fn new(loader_description: TString<'static>, duration_ms: u32) -> Self {
         Self {
             loader: Child::new(
                 Progress::new(false, loader_description).with_icon(theme::ICON_LOCK_SMALL),
@@ -300,10 +294,7 @@ where
     }
 }
 
-impl<T> Component for ProgressLoader<T>
-where
-    T: StringType + Clone,
-{
+impl Component for ProgressLoader {
     type Msg = LoaderMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {

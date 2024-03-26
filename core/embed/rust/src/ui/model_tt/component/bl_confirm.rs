@@ -1,18 +1,22 @@
-use crate::ui::{
-    component::{Child, Component, ComponentExt, Event, EventCtx, Label, Pad},
-    constant,
-    constant::screen,
-    display::{Color, Icon},
-    geometry::{Alignment2D, Insets, Offset, Point, Rect},
-    model_tt::{
-        component::{Button, ButtonMsg::Clicked, ButtonStyleSheet},
-        constant::WIDTH,
-        theme::{
-            bootloader::{
-                text_fingerprint, text_title, BUTTON_AREA_START, BUTTON_HEIGHT, CONTENT_PADDING,
-                CORNER_BUTTON_AREA, CORNER_BUTTON_TOUCH_EXPANSION, INFO32, TITLE_AREA, X32,
+use crate::{
+    strutil::TString,
+    ui::{
+        component::{Child, Component, ComponentExt, Event, EventCtx, Label, Pad},
+        constant,
+        constant::screen,
+        display::{Color, Icon},
+        geometry::{Alignment2D, Insets, Offset, Point, Rect},
+        model_tt::{
+            component::{Button, ButtonMsg::Clicked, ButtonStyleSheet},
+            constant::WIDTH,
+            theme::{
+                bootloader::{
+                    text_fingerprint, text_title, BUTTON_AREA_START, BUTTON_HEIGHT,
+                    CONTENT_PADDING, CORNER_BUTTON_AREA, CORNER_BUTTON_TOUCH_EXPANSION, INFO32,
+                    TITLE_AREA, X32,
+                },
+                WHITE,
             },
-            WHITE,
         },
     },
 };
@@ -31,41 +35,38 @@ pub enum ConfirmMsg {
     Confirm = 2,
 }
 
-pub enum ConfirmTitle<T> {
-    Text(Label<T>),
+pub enum ConfirmTitle {
+    Text(Label<'static>),
     Icon(Icon),
 }
 
-pub struct ConfirmInfo<T> {
-    pub title: Child<Label<T>>,
-    pub text: Child<Label<T>>,
-    pub info_button: Child<Button<&'static str>>,
-    pub close_button: Child<Button<&'static str>>,
+pub struct ConfirmInfo<'a> {
+    pub title: Child<Label<'a>>,
+    pub text: Child<Label<'a>>,
+    pub info_button: Child<Button>,
+    pub close_button: Child<Button>,
 }
 
-pub struct Confirm<T> {
+pub struct Confirm<'a> {
     bg: Pad,
     content_pad: Pad,
     bg_color: Color,
-    title: ConfirmTitle<T>,
-    message: Child<Label<T>>,
-    alert: Option<Child<Label<T>>>,
-    left_button: Child<Button<T>>,
-    right_button: Child<Button<T>>,
-    info: Option<ConfirmInfo<T>>,
+    title: ConfirmTitle,
+    message: Child<Label<'a>>,
+    alert: Option<Child<Label<'static>>>,
+    left_button: Child<Button>,
+    right_button: Child<Button>,
+    info: Option<ConfirmInfo<'a>>,
     show_info: bool,
 }
 
-impl<T> Confirm<T>
-where
-    T: AsRef<str>,
-{
+impl<'a> Confirm<'a> {
     pub fn new(
         bg_color: Color,
-        left_button: Button<T>,
-        right_button: Button<T>,
-        title: ConfirmTitle<T>,
-        message: Label<T>,
+        left_button: Button,
+        right_button: Button,
+        title: ConfirmTitle,
+        message: Label<'a>,
     ) -> Self {
         Self {
             bg: Pad::with_background(bg_color).with_clear(),
@@ -81,12 +82,17 @@ where
         }
     }
 
-    pub fn with_alert(mut self, alert: Label<T>) -> Self {
+    pub fn with_alert(mut self, alert: Label<'static>) -> Self {
         self.alert = Some(Child::new(alert.vertically_centered()));
         self
     }
 
-    pub fn with_info(mut self, title: T, text: T, menu_button: ButtonStyleSheet) -> Self {
+    pub fn with_info(
+        mut self,
+        title: TString<'a>,
+        text: TString<'a>,
+        menu_button: ButtonStyleSheet,
+    ) -> Self {
         self.info = Some(ConfirmInfo {
             title: Child::new(
                 Label::left_aligned(title, text_title(self.bg_color)).vertically_centered(),
@@ -109,10 +115,7 @@ where
     }
 }
 
-impl<T> Component for Confirm<T>
-where
-    T: AsRef<str>,
-{
+impl Component for Confirm<'_> {
     type Msg = ConfirmMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -242,10 +245,7 @@ where
 }
 
 #[cfg(feature = "ui_debug")]
-impl<T> crate::trace::Trace for Confirm<T>
-where
-    T: AsRef<str>,
-{
+impl crate::trace::Trace for Confirm<'_> {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("BlConfirm");
     }
