@@ -183,7 +183,7 @@ class Field:
 
 class _MessageTypeMeta(type):
     def __init__(cls, name: str, bases: tuple, d: dict) -> None:
-        super().__init__(name, bases, d)  # type: ignore [Expected 1 positional argument]
+        super().__init__(name, bases, d)
         if name != "MessageType":
             cls.__init__ = MessageType.__init__  # type: ignore ["__init__" is obscured by a declaration of the same name;;Cannot assign member "__init__" for type "_MessageTypeMeta"]
 
