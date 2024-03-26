@@ -13,18 +13,17 @@ from . import thp_session as THP
 from .checksum import CHECKSUM_LENGTH
 from .thp_messages import (
     ACK_MESSAGE,
+    CONT_DATA_OFFSET,
     CONTINUATION_PACKET,
     ENCRYPTED_TRANSPORT,
     HANDSHAKE_INIT,
+    INIT_DATA_OFFSET,
 )
 from .thp_session import ThpError
 
 if TYPE_CHECKING:
     from trezorio import WireInterface  # type:ignore
 
-
-_INIT_DATA_OFFSET = const(5)
-_CONT_DATA_OFFSET = const(3)
 
 _WIRE_INTERFACE_USB = b"\x01"
 _MOCK_INTERFACE_HID = b"\x00"
@@ -108,11 +107,11 @@ class ChannelContext(Context):
     async def _handle_cont_packet(self, packet):
         if not self.is_cont_packet_expected:
             return  # Continuation packet is not expected, ignoring
-        await self._buffer_packet_data(self.buffer, packet, _CONT_DATA_OFFSET)
+        await self._buffer_packet_data(self.buffer, packet, CONT_DATA_OFFSET)
 
     async def _handle_completed_message(self):
         ctrl_byte, _, payload_length = ustruct.unpack(">BHH", self.buffer)
-        msg_len = payload_length + _INIT_DATA_OFFSET
+        msg_len = payload_length + INIT_DATA_OFFSET
         if not checksum.is_valid(
             checksum=self.buffer[msg_len - CHECKSUM_LENGTH : msg_len],
             data=self.buffer[: msg_len - CHECKSUM_LENGTH],
@@ -137,7 +136,7 @@ class ChannelContext(Context):
                     "Message received is not a valid handshake init request!"
                 )
             host_ephemeral_key = bytearray(
-                self.buffer[_INIT_DATA_OFFSET : msg_len - CHECKSUM_LENGTH]
+                self.buffer[INIT_DATA_OFFSET : msg_len - CHECKSUM_LENGTH]
             )
             cache_thp.set_channel_host_ephemeral_key(
                 self.channel_cache, host_ephemeral_key
@@ -155,7 +154,7 @@ class ChannelContext(Context):
         if state is ChannelState.ENCRYPTED_TRANSPORT:
             self._decrypt_buffer()
             session_id, message_type = ustruct.unpack(
-                ">BH", self.buffer[_INIT_DATA_OFFSET:]
+                ">BH", self.buffer[INIT_DATA_OFFSET:]
             )
             if session_id not in self.sessions:
                 raise Exception("Unalloacted session")
@@ -166,15 +165,15 @@ class ChannelContext(Context):
 
             await self.sessions[session_id].receive_message(
                 message_type,
-                self.buffer[_INIT_DATA_OFFSET + 3 : msg_len - CHECKSUM_LENGTH],
+                self.buffer[INIT_DATA_OFFSET + 3 : msg_len - CHECKSUM_LENGTH],
             )
 
         if state is ChannelState.TH2:
             host_encrypted_static_pubkey = self.buffer[
-                _INIT_DATA_OFFSET : _INIT_DATA_OFFSET + KEY_LENGTH + TAG_LENGTH
+                INIT_DATA_OFFSET : INIT_DATA_OFFSET + KEY_LENGTH + TAG_LENGTH
             ]
             handshake_completion_request_noise_payload = self.buffer[
-                _INIT_DATA_OFFSET + KEY_LENGTH + TAG_LENGTH : msg_len - CHECKSUM_LENGTH
+                INIT_DATA_OFFSET + KEY_LENGTH + TAG_LENGTH : msg_len - CHECKSUM_LENGTH
             ]
             print(
                 host_encrypted_static_pubkey,

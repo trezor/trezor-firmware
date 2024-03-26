@@ -9,8 +9,6 @@ from .protocol_common import MessageWithId
 from .thp import ChannelState, ack_handler, checksum, thp_messages
 from .thp import thp_session as THP
 from .thp.channel_context import (
-    _CONT_DATA_OFFSET,
-    _INIT_DATA_OFFSET,
     _MAX_PAYLOAD_LEN,
     _REPORT_LENGTH,
     ChannelContext,
@@ -21,6 +19,8 @@ from .thp.thp_messages import (
     CODEC_V1,
     CONTINUATION_PACKET,
     ENCRYPTED_TRANSPORT,
+    CONT_DATA_OFFSET,
+    INIT_DATA_OFFSET,
     InitHeader,
     InterruptingInitPacket,
 )
@@ -213,7 +213,7 @@ async def _buffer_received_data(
     payload: utils.BufferType, header: InitHeader, iface, report
 ) -> None | InterruptingInitPacket:
     # buffer the initial data
-    nread = utils.memcpy(payload, 0, report, _INIT_DATA_OFFSET)
+    nread = utils.memcpy(payload, 0, report, INIT_DATA_OFFSET)
     while nread < header.length:
         # wait for continuation report
         report = await _get_loop_wait_read(iface)
@@ -237,7 +237,7 @@ async def _buffer_received_data(
             continue
 
         # buffer the continuation data
-        nread += utils.memcpy(payload, nread, report, _CONT_DATA_OFFSET)
+        nread += utils.memcpy(payload, nread, report, CONT_DATA_OFFSET)
 
 
 async def write_message_with_sync_control(
@@ -306,7 +306,7 @@ async def write_to_wire(
     header.pack_to_buffer(report)
 
     # write initial report
-    nwritten = utils.memcpy(report, _INIT_DATA_OFFSET, payload, 0)
+    nwritten = utils.memcpy(report, INIT_DATA_OFFSET, payload, 0)
     await _write_report(loop_write, iface, report)
 
     # if we have more data to write, use continuation reports for it
@@ -314,7 +314,7 @@ async def write_to_wire(
         header.pack_to_cont_buffer(report)
 
     while nwritten < payload_length:
-        nwritten += utils.memcpy(report, _CONT_DATA_OFFSET, payload, nwritten)
+        nwritten += utils.memcpy(report, CONT_DATA_OFFSET, payload, nwritten)
         await _write_report(loop_write, iface, report)
 
 

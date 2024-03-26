@@ -1,4 +1,5 @@
 import ustruct  # pyright:ignore[reportMissingModuleSource]
+from micropython import const
 
 from storage.cache_thp import BROADCAST_CHANNEL_ID
 
@@ -11,6 +12,8 @@ HANDSHAKE_INIT = 0x00
 ACK_MESSAGE = 0x20
 _ERROR = 0x41
 _CHANNEL_ALLOCATION_RES = 0x40
+INIT_DATA_OFFSET = const(5)
+CONT_DATA_OFFSET = const(3)
 
 
 class InitHeader:
