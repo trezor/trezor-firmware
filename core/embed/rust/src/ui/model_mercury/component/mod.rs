@@ -12,6 +12,10 @@ mod error;
 mod frame;
 mod loader;
 mod result;
+mod scroll;
+mod share_words;
+mod simple_page;
+mod swipe;
 mod welcome_screen;
 
 pub use button::{
@@ -33,6 +37,7 @@ pub use keyboard::{
 pub use loader::{Loader, LoaderMsg, LoaderStyle, LoaderStyleSheet};
 pub use result::{ResultFooter, ResultScreen, ResultStyle};
 pub use scroll::ScrollBar;
+pub use share_words::ShareWords;
 pub use simple_page::SimplePage;
 pub use swipe::{Swipe, SwipeDirection};
 pub use vertical_menu::{VerticalMenu, VerticalMenuChoiceMsg};

@@ -1,4 +1,5 @@
 use core::{cmp::Ordering, convert::TryInto};
+use heapless::Vec;
 
 use crate::{
     error::Error,
@@ -52,8 +53,8 @@ use super::{
         FidoMsg, Frame, FrameMsg, Homescreen, HomescreenMsg, IconDialog, Lockscreen, MnemonicInput,
         MnemonicKeyboard, MnemonicKeyboardMsg, NumberInputDialog, NumberInputDialogMsg,
         PassphraseKeyboard, PassphraseKeyboardMsg, PinKeyboard, PinKeyboardMsg, Progress,
-        SelectWordCount, SelectWordCountMsg, SelectWordMsg, SimplePage, Slip39Input, VerticalMenu,
-        VerticalMenuChoiceMsg,
+        SelectWordCount, SelectWordCountMsg, SelectWordMsg, ShareWords, SimplePage, Slip39Input,
+        VerticalMenu, VerticalMenuChoiceMsg,
     },
     theme,
 };
@@ -202,6 +203,15 @@ where
         match msg {
             FrameMsg::Content(c) => self.inner().msg_try_into_obj(c),
             FrameMsg::Button(b) => b.try_into(),
+        }
+    }
+}
+
+impl ComponentMsgObj for ShareWords<'_> {
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        match msg {
+            PageMsg::Confirmed => Ok(CONFIRMED.as_obj()),
+            _ => Err(Error::TypeError),
         }
     }
 }
@@ -1350,20 +1360,12 @@ extern "C" fn new_show_tx_context_menu(n_args: usize, args: *const Obj, kwargs: 
 extern "C" fn new_show_share_words(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
-        let pages: Obj = kwargs.get(Qstr::MP_QSTR_pages)?;
+        let share_words_obj: Obj = kwargs.get(Qstr::MP_QSTR_pages)?;
+        let share_words_vec: Vec<TString, 33> = util::iter_into_vec(share_words_obj)?;
 
-        let mut paragraphs = ParagraphVecLong::new();
-        for page in IterBuf::new().try_iterate(pages)? {
-            let text: StrBuffer = page.try_into()?;
-            paragraphs.add(Paragraph::new(&theme::TEXT_MONO, text).break_after());
-        }
-
-        let obj = LayoutObj::new(Frame::left_aligned(
-            title,
-            ButtonPage::<_, StrBuffer>::new(paragraphs.into_paragraphs(), theme::BG)
-                .with_hold()?
-                .without_cancel(),
-        ))?;
+        let share_words = ShareWords::new(share_words_vec);
+        let frame_with_share_words = Frame::left_aligned(title, share_words).with_info_button();
+        let obj = LayoutObj::new(frame_with_share_words)?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -2081,7 +2083,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     title: str,
     ///     pages: Iterable[str],
     /// ) -> LayoutObj[UiResult]:
-    ///     """Show mnemonic for backup. Expects the words pre-divided into individual pages."""
+    ///     """Show mnemonic for backup."""
     Qstr::MP_QSTR_show_share_words => obj_fn_kw!(0, new_show_share_words).as_obj(),
 
     /// def request_number(
