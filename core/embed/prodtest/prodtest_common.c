@@ -45,7 +45,7 @@ void vcp_println(const char *fmt, ...) {
   vcp_puts("\r\n", 2);
 }
 
-void vcp_println_hex(uint8_t *data, uint16_t len) {
+void vcp_println_hex(const uint8_t *data, uint16_t len) {
   for (int i = 0; i < len; i++) {
     vcp_print("%02X", data[i]);
   }

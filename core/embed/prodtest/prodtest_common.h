@@ -28,7 +28,7 @@ enum { VCP_IFACE = 0x00 };
 void vcp_puts(const char *s, size_t len);
 void vcp_print(const char *fmt, ...);
 void vcp_println(const char *fmt, ...);
-void vcp_println_hex(uint8_t *data, uint16_t len);
+void vcp_println_hex(const uint8_t *data, uint16_t len);
 int get_from_hex(uint8_t *buf, uint16_t buf_len, const char *hex);
 
 #endif

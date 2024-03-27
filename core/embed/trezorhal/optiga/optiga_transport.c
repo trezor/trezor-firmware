@@ -134,11 +134,11 @@ static uint8_t sec_chan_buffer[OPTIGA_MAX_APDU_SIZE + SEC_CHAN_OVERHEAD_SIZE] =
     {0};
 static size_t sec_chan_size = 0;
 
-#ifdef NDEBUG
+#if PRODUCTION
 #define OPTIGA_LOG(prefix, data, data_size)
 #else
 static optiga_log_hex_t log_hex = NULL;
-void optiga_set_log_hex(optiga_log_hex_t f) { log_hex = f; }
+void optiga_transport_set_log_hex(optiga_log_hex_t f) { log_hex = f; }
 #define OPTIGA_LOG(prefix, data, data_size)                                  \
   if (log_hex != NULL) {                                                     \
     static uint8_t prev_data[4];                                             \
@@ -184,7 +184,7 @@ optiga_result optiga_init(void) {
 }
 
 static optiga_result optiga_i2c_write(const uint8_t *data, uint16_t data_size) {
-  OPTIGA_LOG(">>> ", data, data_size)
+  OPTIGA_LOG(">>>", data, data_size)
 
   for (int try_count = 0; try_count <= I2C_MAX_RETRY_COUNT; ++try_count) {
     if (try_count != 0) {
@@ -205,7 +205,7 @@ static optiga_result optiga_i2c_read(uint8_t *buffer, uint16_t buffer_size) {
     HAL_Delay(1);
     if (HAL_OK == i2c_receive(OPTIGA_I2C_INSTANCE, OPTIGA_ADDRESS, buffer,
                               buffer_size, I2C_TIMEOUT)) {
-      OPTIGA_LOG("<<< ", buffer, buffer_size)
+      OPTIGA_LOG("<<<", buffer, buffer_size)
       return OPTIGA_SUCCESS;
     }
   }

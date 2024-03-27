@@ -58,10 +58,10 @@ static const uint8_t COUNTER_RESET[] = {0, 0, 0, 0, 0, 0, 0, PIN_MAX_TRIES};
 // 100000 / PIN_STRETCH_ITERATIONS unlock operations.
 static const uint8_t STRETCH_COUNTER_INIT[] = {0, 0, 0, 0, 0, 0x09, 0x27, 0xC0};
 
-static const optiga_metadata_item TYPE_AUTOREF = {
-    (const uint8_t[]){OPTIGA_DATA_TYPE_AUTOREF}, 1};
-static const optiga_metadata_item TYPE_PRESSEC = {
-    (const uint8_t[]){OPTIGA_DATA_TYPE_PRESSEC}, 1};
+static const optiga_metadata_item TYPE_AUTOREF =
+    OPTIGA_META_VALUE(OPTIGA_DATA_TYPE_AUTOREF);
+static const optiga_metadata_item TYPE_PRESSEC =
+    OPTIGA_META_VALUE(OPTIGA_DATA_TYPE_PRESSEC);
 static const optiga_metadata_item ACCESS_STRETCHED_PIN =
     OPTIGA_ACCESS_CONDITION(OPTIGA_ACCESS_COND_AUTO, OID_STRETCHED_PIN);
 static const optiga_metadata_item ACCESS_PIN_SECRET =
@@ -215,7 +215,8 @@ bool optiga_set_metadata(uint16_t oid, const optiga_metadata *metadata) {
     }
   }
 
-  // If the metadata aren't locked, then lock them.
+#if PRODUCTION
+  // If the metadata aren't locked, then lock them in production builds.
   optiga_metadata metadata_locked = {0};
   metadata_locked.lcso = OPTIGA_META_LCS_OPERATIONAL;
   if (!optiga_compare_metadata(&metadata_locked, &metadata_stored)) {
@@ -231,6 +232,7 @@ bool optiga_set_metadata(uint16_t oid, const optiga_metadata *metadata) {
       return false;
     }
   }
+#endif
 
   return true;
 }
