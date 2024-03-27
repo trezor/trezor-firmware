@@ -2,7 +2,6 @@ use crate::{
     strutil::TString,
     ui::{
         component::{text::TextStyle, Component, Event, EventCtx, Never},
-        constant::WIDTH,
         geometry::{Alignment, Offset, Rect},
         model_mercury::theme,
         shape::{Renderer, Text},
@@ -10,9 +9,9 @@ use crate::{
 };
 
 /// Component showing a task instruction (e.g. "Swipe up") and optionally task
-/// description (e.g. "Confirm transaction") to a user. The component
-/// is typically placed at the bottom of the screen. The height of the provided
-/// area must be 18px (only instruction) or 37px (both description and
+/// description (e.g. "Confirm transaction") to a user. A host of this component
+/// is responsible of providing the exact area considering also the spacing. The
+/// height must be 18px (only instruction) or 37px (both description and
 /// instruction). The content and style of both description and instruction is
 /// configurable separatedly.
 pub struct Footer<'a> {
@@ -26,7 +25,7 @@ pub struct Footer<'a> {
 impl<'a> Footer<'a> {
     /// height of the component with only instruction [px]
     pub const HEIGHT_SIMPLE: i16 = 18;
-    /// height for component with both description and instruction [px]
+    /// height of the component with both description and instruction [px]
     pub const HEIGHT_DEFAULT: i16 = 37;
 
     pub fn new<T: Into<TString<'a>>>(instruction: T) -> Self {
