@@ -1,14 +1,10 @@
 import ustruct  # pyright:ignore[reportMissingModuleSource]
-from typing import TYPE_CHECKING  # pyright: ignore[reportShadowedImports]
 
 from storage.cache_thp import BROADCAST_CHANNEL_ID
 from trezor import protobuf
 
 from .. import message_handler
 from ..protocol_common import Message
-
-if TYPE_CHECKING:
-    from typing import TypeVar  # pyright: ignore[reportShadowedImports]
 
 CODEC_V1 = 0x3F
 CONTINUATION_PACKET = 0x80
@@ -17,8 +13,6 @@ HANDSHAKE_INIT = 0x00
 ACK_MESSAGE = 0x20
 _ERROR = 0x41
 _CHANNEL_ALLOCATION_RES = 0x40
-
-LoadedMessageType = TypeVar("LoadedMessageType", bound=protobuf.MessageType)
 
 
 class InitHeader:
