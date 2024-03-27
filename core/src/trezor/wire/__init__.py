@@ -132,6 +132,7 @@ async def handle_thp_session(iface: WireInterface, is_debug_session: bool = Fals
             # loop.clear() above.
             if __debug__:
                 log.exception(__name__, exc)
+            print("Exception raised:", exc)
 
 
 async def handle_session(

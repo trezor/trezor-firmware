@@ -1,8 +1,14 @@
 import ustruct  # pyright:ignore[reportMissingModuleSource]
+from typing import TYPE_CHECKING  # pyright: ignore[reportShadowedImports]
 
 from storage.cache_thp import BROADCAST_CHANNEL_ID
+from trezor import protobuf
 
+from .. import message_handler
 from ..protocol_common import Message
+
+if TYPE_CHECKING:
+    from typing import TypeVar  # pyright: ignore[reportShadowedImports]
 
 CODEC_V1 = 0x3F
 CONTINUATION_PACKET = 0x80
@@ -11,6 +17,8 @@ HANDSHAKE_INIT = 0x00
 ACK_MESSAGE = 0x20
 _ERROR = 0x41
 _CHANNEL_ALLOCATION_RES = 0x40
+
+LoadedMessageType = TypeVar("LoadedMessageType", bound=protobuf.MessageType)
 
 
 class InitHeader:
@@ -73,3 +81,12 @@ def get_channel_allocation_response(nonce: bytes, new_cid: bytes) -> bytes:
 
 def get_error_unallocated_channel() -> bytes:
     return _ERROR_UNALLOCATED_SESSION
+
+
+def get_handshake_init_response() -> bytes:
+    return b"\x00"  # TODO implement
+
+
+def decode_message(buffer: bytes, msg_type: int) -> protobuf.MessageType:
+    expected_type = protobuf.type_for_wire(msg_type)
+    return message_handler.wrap_protobuf_load(buffer, expected_type)

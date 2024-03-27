@@ -54,6 +54,7 @@ async def read_message(iface: WireInterface, buffer: utils.BufferType) -> Messag
 def set_buffer(buffer):
     global _BUFFER
     _BUFFER = buffer
+    print("setbuffer,", type(_BUFFER))
 
 
 async def thp_main_loop(iface: WireInterface, is_debug_session=False):
@@ -64,6 +65,7 @@ async def thp_main_loop(iface: WireInterface, is_debug_session=False):
     read = loop.wait(iface.iface_num() | io.POLL_READ)
 
     while True:
+        print("main loop")
         packet = await read
         ctrl_byte, cid = ustruct.unpack(">BH", packet)
 
@@ -86,6 +88,7 @@ async def thp_main_loop(iface: WireInterface, is_debug_session=False):
                 raise ThpError("Channel has different WireInterface")
 
             if channel.get_channel_state() != ChannelState.UNALLOCATED:
+                print("packet type in loop:", type(packet))
                 await channel.receive_packet(packet)
                 continue
 
@@ -330,6 +333,7 @@ async def _write_report(write, iface: WireInterface, report: bytearray) -> None:
 async def _handle_broadcast(
     iface: WireInterface, ctrl_byte, packet
 ) -> MessageWithId | None:
+    global _BUFFER
     if ctrl_byte != _CHANNEL_ALLOCATION_REQ:
         raise ThpError("Unexpected ctrl_byte in broadcast channel packet")
     if __debug__:
@@ -342,7 +346,7 @@ async def _handle_broadcast(
     if not checksum.is_valid(payload[-4:], header.to_bytes() + payload[:-4]):
         raise ThpError("Checksum is not valid")
 
-    new_context: ChannelContext = ChannelContext.create_new_channel(iface)
+    new_context: ChannelContext = ChannelContext.create_new_channel(iface, _BUFFER)
     cid = int.from_bytes(new_context.channel_id, "big")
     _CHANNEL_CONTEXTS[cid] = new_context
 
