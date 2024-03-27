@@ -402,12 +402,17 @@ static void test_sd(void) {
   static uint32_t buf1[BLOCK_SIZE / sizeof(uint32_t)];
   static uint32_t buf2[BLOCK_SIZE / sizeof(uint32_t)];
 
+#ifndef TREZOR_MODEL_T3T1
   if (sectrue != sdcard_is_present()) {
     vcp_println("ERROR NOCARD");
     return;
   }
+#endif
 
-  ensure(sdcard_power_on(), NULL);
+  if (sectrue != sdcard_power_on_unchecked()) {
+    vcp_println("ERROR POWER ON");
+    return;
+  }
   if (sectrue != sdcard_read_blocks(buf1, 0, BLOCK_SIZE / SDCARD_BLOCK_SIZE)) {
     vcp_println("ERROR sdcard_read_blocks (0)");
     goto power_off;

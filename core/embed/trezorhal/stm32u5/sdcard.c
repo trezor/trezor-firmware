@@ -152,10 +152,7 @@ void HAL_SD_MspDeInit(SD_HandleTypeDef *hsd) {
   }
 }
 
-secbool sdcard_power_on(void) {
-  if (sectrue != sdcard_is_present()) {
-    return secfalse;
-  }
+secbool sdcard_power_on_unchecked(void) {
   if (sd_handle.Instance) {
     return sectrue;
   }
@@ -201,6 +198,14 @@ secbool sdcard_power_on(void) {
 error:
   sdcard_power_off();
   return secfalse;
+}
+
+secbool sdcard_power_on(void) {
+  if (sectrue != sdcard_is_present()) {
+    return secfalse;
+  }
+
+  return sdcard_power_on_unchecked();
 }
 
 void sdcard_power_off(void) {
