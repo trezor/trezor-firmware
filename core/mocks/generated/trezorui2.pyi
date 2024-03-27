@@ -399,9 +399,9 @@ def show_tx_context_menu() -> LayoutObj[int]:
 def show_share_words(
     *,
     title: str,
-    pages: Iterable[str],
+    share_words: Iterable[str],
 ) -> LayoutObj[UiResult]:
-    """Show mnemonic for backup. Expects the words pre-divided into individual pages."""
+    """Show mnemonic for backup."""
 
 
 # rust/src/ui/model_mercury/layout.rs
