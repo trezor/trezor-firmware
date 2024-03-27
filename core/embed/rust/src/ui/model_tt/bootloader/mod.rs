@@ -5,9 +5,9 @@ use crate::{
     trezorhal::secbool::secbool,
     ui::{
         component::{connect::Connect, Label},
-        constant::HEIGHT,
         display::{self, Color, Font, Icon},
-        geometry::Point,
+        geometry::{Point, Rect},
+        layout::simplified::{run, show, SimplifiedFeatures as _},
         util::{from_c_array, from_c_str},
     },
 };
@@ -18,7 +18,6 @@ use super::{
         bl_confirm::{Confirm, ConfirmTitle},
         Button, ResultScreen, WelcomeScreen,
     },
-    constant,
     theme::{
         bootloader::{
             button_bld, button_bld_menu, button_confirm, button_wipe_cancel, button_wipe_confirm,
@@ -28,9 +27,9 @@ use super::{
         },
         BACKLIGHT_NORMAL, BLACK, FG, WHITE,
     },
+    ModelTTFeatures,
 };
 
-use crate::ui::layout::simplified::{fadein, fadeout, run, show};
 use intro::Intro;
 use menu::Menu;
 
@@ -41,6 +40,8 @@ pub mod welcome;
 pub type BootloaderString = String<128>;
 
 const RECONNECT_MESSAGE: &str = "PLEASE RECONNECT\nTHE DEVICE";
+
+const SCREEN: Rect = ModelTTFeatures::SCREEN;
 
 #[no_mangle]
 extern "C" fn screen_install_confirm(
@@ -165,12 +166,12 @@ fn screen_progress(
     icon: Option<(Icon, Color)>,
 ) {
     if initialize {
-        fadeout();
-        display::rect_fill(constant::screen(), bg_color);
+        ModelTTFeatures::fadeout();
+        display::rect_fill(SCREEN, bg_color);
     }
 
     display::text_center(
-        Point::new(constant::WIDTH / 2, HEIGHT - 45),
+        Point::new(SCREEN.width() / 2, SCREEN.height() - 45),
         text,
         Font::NORMAL,
         fg_color,
@@ -179,7 +180,7 @@ fn screen_progress(
     display::loader(progress, -20, fg_color, bg_color, icon);
     display::refresh();
     if initialize {
-        fadein();
+        ModelTTFeatures::fadein();
     }
 }
 
@@ -244,16 +245,16 @@ extern "C" fn screen_wipe_fail() {
 #[no_mangle]
 extern "C" fn screen_boot_empty(fading: bool) {
     if fading {
-        fadeout();
+        ModelTTFeatures::fadeout();
     }
 
-    display::rect_fill(constant::screen(), BLACK);
+    display::rect_fill(SCREEN, BLACK);
 
     let mut frame = WelcomeScreen::new(true);
     show(&mut frame, false);
 
     if fading {
-        fadein();
+        ModelTTFeatures::fadein();
     } else {
         display::set_backlight(BACKLIGHT_NORMAL);
     }
@@ -328,7 +329,7 @@ extern "C" fn screen_welcome() {
 #[no_mangle]
 extern "C" fn bld_continue_label(bg_color: cty::uint16_t) {
     display::text_center(
-        Point::new(constant::WIDTH / 2, HEIGHT - 5),
+        Point::new(SCREEN.width() / 2, SCREEN.height() - 5),
         "click to continue ...",
         Font::NORMAL,
         WHITE,
