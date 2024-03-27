@@ -96,7 +96,7 @@ impl Shape<'_> for CornerHighlight {
         )
     }
 
-    fn draw(&mut self, canvas: &mut dyn Canvas, cache: &DrawingCache<'_>) {
+    fn draw(&mut self, canvas: &mut dyn Canvas, _cache: &DrawingCache<'_>) {
         let align: Alignment2D = self.corner.into();
 
         // base circle
@@ -150,7 +150,7 @@ impl Shape<'_> for CornerHighlight {
         });
     }
 
-    fn cleanup(&mut self, cache: &super::DrawingCache<'_>) {}
+    fn cleanup(&mut self, _cache: &super::DrawingCache<'_>) {}
 }
 
 impl<'s> ShapeClone<'s> for CornerHighlight {

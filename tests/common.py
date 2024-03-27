@@ -174,24 +174,9 @@ def click_through(
 def read_and_confirm_mnemonic(
     debug: "DebugLink", choose_wrong: bool = False
 ) -> Generator[None, "ButtonRequest", Optional[str]]:
-    # TODO: these are very similar, reuse some code
-    if debug.model is models.T2T1:
-        mnemonic = yield from read_and_confirm_mnemonic_tt(debug, choose_wrong)
-    elif debug.model is models.T2B1:
-        mnemonic = yield from read_and_confirm_mnemonic_tr(debug, choose_wrong)
-    elif debug.model is models.T3T1:
-        mnemonic = yield from read_and_confirm_mnemonic_tt(debug, choose_wrong)
-    else:
-        raise ValueError(f"Unknown model: {debug.model}")
-
-    return mnemonic
-
-
-def read_and_confirm_mnemonic_tt(
-    debug: "DebugLink", choose_wrong: bool = False
-) -> Generator[None, "ButtonRequest", Optional[str]]:
-    """Read a given number of mnemonic words from Trezor T screen and correctly
-    answer confirmation questions. Return the full mnemonic.
+    """Read a given number of mnemonic words from the screen and answer
+    confirmation questions.
+    Return the full mnemonic or None if `choose_wrong` is True.
 
     For use in an input flow function.
     Example:
@@ -201,6 +186,23 @@ def read_and_confirm_mnemonic_tt(
 
         mnemonic = yield from read_and_confirm_mnemonic(client.debug)
     """
+    if debug.model is models.T2T1:
+        mnemonic = yield from read_mnemonic_from_screen_tt(debug)
+    elif debug.model is models.T2B1:
+        mnemonic = yield from read_mnemonic_from_screen_tr(debug)
+    elif debug.model is models.T3T1:
+        mnemonic = yield from read_mnemonic_from_screen_mercury(debug)
+    else:
+        raise ValueError(f"Unknown model: {debug.model}")
+
+    if not check_share(debug, mnemonic, choose_wrong):
+        return None
+    return " ".join(mnemonic)
+
+
+def read_mnemonic_from_screen_tt(
+    debug: "DebugLink",
+) -> Generator[None, "ButtonRequest", list[str]]:
     mnemonic: list[str] = []
     br = yield
     assert br.pages is not None
@@ -215,27 +217,12 @@ def read_and_confirm_mnemonic_tt(
             debug.swipe_up()
 
     debug.press_yes()
-
-    # check share
-    for _ in range(3):
-        # Word position is the first number in the text
-        word_pos_match = re.search(r"\d+", debug.wait_layout().text_content())
-        assert word_pos_match is not None
-        word_pos = int(word_pos_match.group(0))
-
-        index = word_pos - 1
-        if choose_wrong:
-            debug.input(mnemonic[(index + 1) % len(mnemonic)])
-            return None
-        else:
-            debug.input(mnemonic[index])
-
-    return " ".join(mnemonic)
+    return mnemonic
 
 
-def read_and_confirm_mnemonic_tr(
-    debug: "DebugLink", choose_wrong: bool = False
-) -> Generator[None, "ButtonRequest", Optional[str]]:
+def read_mnemonic_from_screen_tr(
+    debug: "DebugLink",
+) -> Generator[None, "ButtonRequest", list[str]]:
     mnemonic: list[str] = []
     yield  # write down all 12 words in order
     debug.press_yes()
@@ -250,20 +237,47 @@ def read_and_confirm_mnemonic_tr(
 
     yield  # Select correct words...
     debug.press_right()
+    return mnemonic
 
-    # check share
+
+def read_mnemonic_from_screen_mercury(
+    debug: "DebugLink",
+) -> Generator[None, "ButtonRequest", list[str]]:
+    mnemonic: list[str] = []
+    br = yield
+    assert br.pages is not None
+
+    debug.wait_layout()
+
+    for i in range(br.pages):
+        words = debug.wait_layout().seed_words()
+        mnemonic.extend(words)
+        debug.swipe_up()
+
+    return mnemonic
+
+
+def check_share(
+    debug: "DebugLink", mnemonic: list[str], choose_wrong: bool = False
+) -> bool:
+    """
+    Given the mnemonic word list, proceed with the backup check:
+    three rounds of `Select word X of Y` choices.
+    """
     for _ in range(3):
-        word_pos_match = re.search(r"\d+", debug.wait_layout().title())
+        # Word position is the first number in the text
+        word_pos_match = re.search(r"\d+", debug.wait_layout().text_content())
         assert word_pos_match is not None
         word_pos = int(word_pos_match.group(0))
+
         index = word_pos - 1
         if choose_wrong:
             debug.input(mnemonic[(index + 1) % len(mnemonic)])
-            return None
+            return False
         else:
             debug.input(mnemonic[index])
 
-    return " ".join(mnemonic)
+    return True
 
 
 def click_info_button_tt(debug: "DebugLink"):

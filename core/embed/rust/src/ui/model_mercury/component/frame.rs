@@ -127,8 +127,9 @@ where
 
     fn place(&mut self, bounds: Rect) -> Rect {
         let (mut header_area, content_area) = bounds.split_top(TITLE_HEIGHT);
-        let content_area = content_area.inset(Insets::top(TITLE_SPACE));
+        let content_area = content_area.inset(Insets::top(SPACING));
 
+        header_area = header_area.inset(Insets::sides(SPACING));
         if let Some(b) = &mut self.button {
             let (rest, button_area) = header_area.split_right(TITLE_HEIGHT);
             header_area = rest;
