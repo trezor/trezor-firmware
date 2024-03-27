@@ -45,8 +45,8 @@ const flash_area_t FIRMWARE_AREA = {
     .num_subareas = 1,
     .subarea[0] =
         {
-            .first_sector = FIRMWARE_SECTOR_START.num_sectors =
-                FIRMWARE_SECTOR_END - FIRMWARE_SECTOR_START + 1,
+            .first_sector = FIRMWARE_SECTOR_START,
+            .num_sectors = FIRMWARE_SECTOR_END - FIRMWARE_SECTOR_START + 1,
         },
 };
 

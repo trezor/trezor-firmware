@@ -1,6 +1,8 @@
 #ifndef MODELS_MODEL_DISC2_H_
 #define MODELS_MODEL_DISC2_H_
 
+#include "sizedefs.h"
+
 #define MODEL_NAME "T"
 #define MODEL_FULL_NAME "Trezor Model T"
 #define MODEL_INTERNAL_NAME "D002"
