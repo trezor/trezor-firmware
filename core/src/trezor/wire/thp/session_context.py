@@ -18,12 +18,10 @@ class SessionContext(Context):
         super().__init__(channel_context.iface, channel_context.channel_id)
         self.channel_context = channel_context
         self.session_cache = session_cache
-        self.session_id = session_cache.session_id
+        self.session_id = int.from_bytes(session_cache.session_id, "big")
 
     async def write(self, msg: protobuf.MessageType) -> None:
-        return await self.channel_context.write(
-            msg, int.from_bytes(self.session_id, "big")
-        )
+        return await self.channel_context.write(msg, self.session_id)
 
     @classmethod
     def create_new_session(cls, channel_context: ChannelContext) -> "SessionContext":

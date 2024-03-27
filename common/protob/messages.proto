@@ -375,4 +375,15 @@ enum MessageType {
     MessageType_SolanaAddress = 903 [(wire_out) = true];
     MessageType_SolanaSignTx = 904 [(wire_in) = true];
     MessageType_SolanaTxSignature = 905 [(wire_out) = true];
+
+    // THP
+    MessageType_StartPairingRequest = 1000 [(bitcoin_only) = true, (wire_in) = true];
+    MessageType_StartPairingResponse = 1001 [(bitcoin_only) = true, (wire_out) = true];    
+    MessageType_CredentialRequest = 1002 [(bitcoin_only) = true, (wire_in) = true];
+    MessageType_CredentialResponse = 1003 [(bitcoin_only) = true, (wire_out) = true];    
+    MessageType_EndRequest = 1004 [(bitcoin_only) = true, (wire_in) = true];
+    MessageType_EndResponse = 1005 [(bitcoin_only) = true, (wire_out) = true];
+    MessageType_CreateNewSession = 1006[(bitcoin_only)=true,(wire_in)=true];
+    MessageType_NewSession = 1007[(bitcoin_only)=true,(wire_out)=true];
+
 }

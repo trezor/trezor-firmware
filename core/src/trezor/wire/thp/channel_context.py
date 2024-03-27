@@ -7,7 +7,8 @@ import usb
 from storage import cache_thp
 from storage.cache_thp import KEY_LENGTH, TAG_LENGTH, ChannelCache
 from trezor import loop, protobuf, utils
-from trezor.wire.thp import thp_messages
+from trezor.messages import CreateNewSession
+from trezor.wire import message_handler
 
 from ..protocol_common import Context
 from . import ChannelState, SessionState, checksum
@@ -22,7 +23,7 @@ from .thp_messages import (
 from .thp_session import ThpError
 
 if TYPE_CHECKING:
-    from trezorio import WireInterface  # type:ignore
+    from trezorio import WireInterface  # pyright:ignore[reportMissingImports]
 
 
 _WIRE_INTERFACE_USB = b"\x01"
@@ -182,6 +183,7 @@ class ChannelContext(Context):
             # TODO ignore message
             self._todo_clear_buffer()
             return
+
         if state is ChannelState.ENCRYPTED_TRANSPORT:
             self._decrypt_buffer()
             session_id, message_type = ustruct.unpack(
@@ -189,13 +191,23 @@ class ChannelContext(Context):
             )
             if session_id == 0:
                 try:
-                    message = thp_messages.decode_message(
-                        self.buffer[INIT_DATA_OFFSET + 3 :], message_type
-                    )
-                    print(message)
-                except Exception as e:
-                    print(e)
+                    buf = self.buffer[INIT_DATA_OFFSET + 3 : msg_len - CHECKSUM_LENGTH]
 
+                    expected_type = protobuf.type_for_wire(message_type)
+                    message = message_handler.wrap_protobuf_load(buf, expected_type)
+                    print(message)
+                    # ------------------------------------------------TYPE ERROR------------------------------------------------
+                    session_message: CreateNewSession = message
+                    print("passphrase:", session_message.passphrase)
+                    # await thp_messages.handle_CreateNewSession(message)
+                    if session_message.passphrase is not None:
+                        self.create_new_session(session_message.passphrase)
+                    else:
+                        self.create_new_session()
+                except Exception as e:
+                    print("Proč??")
+                    print(e)
+                return
                 # TODO not finished
 
             if session_id not in self.sessions:
@@ -255,8 +267,13 @@ class ChannelContext(Context):
         self,
         passphrase="",
     ) -> None:  # TODO change it to output session data
-        pass
-        # create a new session with this passphrase
+        print("create new session")
+        from trezor.wire.thp.session_context import SessionContext
+
+        session = SessionContext.create_new_session(self)
+        print("help")
+        self.sessions[session.session_id] = session
+        print("new session created. Session id:", session.session_id)
 
     # OTHER
 

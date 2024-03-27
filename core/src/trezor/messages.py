@@ -372,6 +372,22 @@ if TYPE_CHECKING:
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["PassphraseAck"]:
             return isinstance(msg, cls)
+        
+    class CreateNewSession(protobuf.MessageType):
+        passphrase: "str | None"
+        on_device: "bool | None"
+
+        def __init__(
+            self,
+            *,
+            passphrase: "str | None" = None,
+            on_device: "bool | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["CreateNewSession"]:
+            return isinstance(msg, cls)
 
     class HDNodeType(protobuf.MessageType):
         depth: "int"

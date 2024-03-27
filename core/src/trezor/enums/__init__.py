@@ -264,6 +264,7 @@ if TYPE_CHECKING:
         SolanaAddress = 903
         SolanaSignTx = 904
         SolanaTxSignature = 905
+        CreateNewSession = 1006
 
     class FailureType(IntEnum):
         UnexpectedMessage = 1

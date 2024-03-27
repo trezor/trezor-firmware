@@ -2,6 +2,7 @@ import ustruct  # pyright:ignore[reportMissingModuleSource]
 
 from storage.cache_thp import BROADCAST_CHANNEL_ID
 from trezor import protobuf
+from trezor.messages import CreateNewSession
 
 from .. import message_handler
 from ..protocol_common import Message
@@ -82,5 +83,14 @@ def get_handshake_init_response() -> bytes:
 
 
 def decode_message(buffer: bytes, msg_type: int) -> protobuf.MessageType:
+    print("decode message")
     expected_type = protobuf.type_for_wire(msg_type)
-    return message_handler.wrap_protobuf_load(buffer, expected_type)
+    x = message_handler.wrap_protobuf_load(buffer, expected_type)
+    print("result decoded", x)
+    return x
+
+
+async def handle_CreateNewSession(msg: CreateNewSession) -> None:
+    print(msg.passphrase)
+    print(msg.on_device)
+    pass
