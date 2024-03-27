@@ -18,30 +18,6 @@ if TYPE_CHECKING:
 CONFIRMED = trezorui2.CONFIRMED  # global_import_cache
 
 
-def _split_share_into_pages(share_words: Sequence[str], per_page: int = 4) -> list[str]:
-    pages: list[str] = []
-    current = ""
-    fill = 2
-
-    for i, word in enumerate(share_words):
-        if i % per_page == 0:
-            if i != 0:
-                pages.append(current)
-            current = ""
-
-            # Align numbers to the right.
-            lastnum = i + per_page + 1
-            fill = 1 if lastnum < 10 else 2
-        else:
-            current += "\n"
-        current += f"{i + 1:>{fill}}. {word}"
-
-    if current:
-        pages.append(current)
-
-    return pages
-
-
 async def show_share_words(
     share_words: Sequence[str],
     share_index: int | None = None,
@@ -56,13 +32,11 @@ async def show_share_words(
             group_index + 1, share_index + 1
         )
 
-    pages = _split_share_into_pages(share_words)
-
     result = await interact(
         RustLayout(
             trezorui2.show_share_words(
                 title=title,
-                pages=pages,
+                pages=share_words,
             ),
         ),
         "backup_words",
@@ -80,11 +54,11 @@ async def select_word(
     group_index: int | None = None,
 ) -> str:
     if share_index is None:
-        title: str = TR.reset__check_seed_title
+        description: str = TR.reset__check_seed_title
     elif group_index is None:
-        title = TR.reset__check_share_title_template.format(share_index + 1)
+        description: str = TR.reset__check_share_title_template.format(share_index + 1)
     else:
-        title = TR.reset__check_group_share_title_template.format(
+        description: str = TR.reset__check_group_share_title_template.format(
             group_index + 1, share_index + 1
         )
 
@@ -98,10 +72,10 @@ async def select_word(
     result = await ctx_wait(
         RustLayout(
             trezorui2.select_word(
-                title=title,
-                description=TR.reset__select_word_x_of_y_template.format(
+                title=TR.reset__select_word_x_of_y_template.format(
                     checked_index + 1, count
                 ),
+                description=description,
                 words=(words[0], words[1], words[2]),
             )
         )
