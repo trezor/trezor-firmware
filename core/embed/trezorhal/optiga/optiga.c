@@ -58,10 +58,10 @@ static const uint8_t COUNTER_RESET[] = {0, 0, 0, 0, 0, 0, 0, PIN_MAX_TRIES};
 // 100000 / PIN_STRETCH_ITERATIONS unlock operations.
 static const uint8_t STRETCH_COUNTER_INIT[] = {0, 0, 0, 0, 0, 0x09, 0x27, 0xC0};
 
-static const optiga_metadata_item TYPE_AUTOREF = {
-    (const uint8_t[]){OPTIGA_DATA_TYPE_AUTOREF}, 1};
-static const optiga_metadata_item TYPE_PRESSEC = {
-    (const uint8_t[]){OPTIGA_DATA_TYPE_PRESSEC}, 1};
+static const optiga_metadata_item TYPE_AUTOREF =
+    OPTIGA_META_VALUE(OPTIGA_DATA_TYPE_AUTOREF);
+static const optiga_metadata_item TYPE_PRESSEC =
+    OPTIGA_META_VALUE(OPTIGA_DATA_TYPE_PRESSEC);
 static const optiga_metadata_item ACCESS_STRETCHED_PIN =
     OPTIGA_ACCESS_CONDITION(OPTIGA_ACCESS_COND_AUTO, OID_STRETCHED_PIN);
 static const optiga_metadata_item ACCESS_PIN_SECRET =
@@ -215,7 +215,8 @@ bool optiga_set_metadata(uint16_t oid, const optiga_metadata *metadata) {
     }
   }
 
-  // If the metadata aren't locked, then lock them.
+#if PRODUCTION
+  // If the metadata aren't locked, then lock them in production builds.
   optiga_metadata metadata_locked = {0};
   metadata_locked.lcso = OPTIGA_META_LCS_OPERATIONAL;
   if (!optiga_compare_metadata(&metadata_locked, &metadata_stored)) {
@@ -231,6 +232,7 @@ bool optiga_set_metadata(uint16_t oid, const optiga_metadata *metadata) {
       return false;
     }
   }
+#endif
 
   return true;
 }
@@ -510,14 +512,14 @@ int optiga_pin_set(OPTIGA_UI_PROGRESS ui_progress,
                                sizeof(stretched_pin));
   memzero(stretched_pin, sizeof(stretched_pin));
   if (res != OPTIGA_SUCCESS) {
-    optiga_clear_auto_state(OID_PIN_SECRET);
+    (void)optiga_clear_auto_state(OID_PIN_SECRET);
     return res;
   }
 
   // Initialize the PIN counter.
   res = optiga_set_data_object(OID_PIN_COUNTER, false, COUNTER_RESET,
                                sizeof(COUNTER_RESET));
-  optiga_clear_auto_state(OID_PIN_SECRET);
+  (void)optiga_clear_auto_state(OID_PIN_SECRET);
   if (res != OPTIGA_SUCCESS) {
     return res;
   }
@@ -588,7 +590,7 @@ int optiga_pin_verify(OPTIGA_UI_PROGRESS ui_progress,
   size_t size = 0;
   res = optiga_get_data_object(OID_PIN_SECRET, false, out_secret,
                                OPTIGA_PIN_SECRET_SIZE, &size);
-  optiga_clear_auto_state(OID_STRETCHED_PIN);
+  (void)optiga_clear_auto_state(OID_STRETCHED_PIN);
   if (res != OPTIGA_SUCCESS) {
     return res;
   }
@@ -609,7 +611,7 @@ int optiga_pin_verify(OPTIGA_UI_PROGRESS ui_progress,
   // Reset the PIN counter.
   res = optiga_set_data_object(OID_PIN_COUNTER, false, COUNTER_RESET,
                                sizeof(COUNTER_RESET));
-  optiga_clear_auto_state(OID_PIN_SECRET);
+  (void)optiga_clear_auto_state(OID_PIN_SECRET);
   if (res != OPTIGA_SUCCESS) {
     return res;
   }
@@ -663,4 +665,33 @@ int optiga_pin_fails_increase(uint32_t count) {
   }
 
   return optiga_count_data_object(OID_PIN_COUNTER, count);
+}
+
+bool optiga_pin_wipe(void) {
+  bool ret = true;
+
+  if (optiga_pin_init_stretch() != OPTIGA_SUCCESS) {
+    ret = false;
+  }
+
+  // Wipe the master secret / PIN counter reset key.
+  const uint8_t empty[] = {0};
+  if (optiga_set_data_object(OID_PIN_SECRET, false, empty, sizeof(empty)) !=
+      OPTIGA_SUCCESS) {
+    ret = false;
+  }
+
+  // Authorise using OID_PIN_SECRET so that we can wipe OID_STRETCHED_PIN.
+  if (optiga_set_auto_state(OPTIGA_OID_SESSION_CTX, OID_PIN_SECRET, empty,
+                            sizeof(empty)) != OPTIGA_SUCCESS) {
+    ret = false;
+  }
+
+  // Wipe the stretched PIN.
+  if (optiga_set_data_object(OID_STRETCHED_PIN, false, empty, sizeof(empty)) !=
+      OPTIGA_SUCCESS) {
+    ret = false;
+  }
+
+  return ret;
 }
