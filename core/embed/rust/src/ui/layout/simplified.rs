@@ -8,13 +8,22 @@ use crate::ui::event::ButtonEvent;
 use crate::ui::event::TouchEvent;
 use crate::ui::{
     component::{Component, Event, EventCtx, Never},
-    constant::SCREEN,
     display,
+    geometry::Rect,
 };
 use num_traits::ToPrimitive;
 
-#[cfg(feature = "backlight")]
-use crate::ui::model::theme::{BACKLIGHT_DIM, BACKLIGHT_NORMAL};
+pub trait SimplifiedFeatures {
+    fn fadein() {}
+    fn fadeout() {}
+
+    const SCREEN: Rect;
+}
+
+#[cfg(all(feature = "model_tr", not(feature = "model_tt")))]
+pub type ModelFeatures = crate::ui::model_tr::ModelTRFeatures;
+#[cfg(feature = "model_tt")]
+pub type ModelFeatures = crate::ui::model_tt::ModelTTFeatures;
 
 pub trait ReturnToC {
     fn return_to_c(self) -> u32;
@@ -65,27 +74,17 @@ fn touch_eval() -> Option<TouchEvent> {
     TouchEvent::new(event_type, ex as _, ey as _).ok()
 }
 
-pub fn fadein() {
-    #[cfg(feature = "backlight")]
-    display::fade_backlight_duration(BACKLIGHT_NORMAL, 150);
-}
-
-pub fn fadeout() {
-    #[cfg(feature = "backlight")]
-    display::fade_backlight_duration(BACKLIGHT_DIM, 150);
-}
-
 pub fn run<F>(frame: &mut F) -> u32
 where
     F: Component,
     F::Msg: ReturnToC,
 {
-    frame.place(SCREEN);
-    fadeout();
+    frame.place(ModelFeatures::SCREEN);
+    ModelFeatures::fadeout();
     display::sync();
     frame.paint();
     display::refresh();
-    fadein();
+    ModelFeatures::fadein();
 
     #[cfg(feature = "button")]
     while button_eval().is_some() {}
@@ -116,14 +115,14 @@ pub fn show<F>(frame: &mut F, fading: bool)
 where
     F: Component,
 {
-    frame.place(SCREEN);
+    frame.place(ModelFeatures::SCREEN);
     if fading {
-        fadeout()
+        ModelFeatures::fadeout()
     };
     display::sync();
     frame.paint();
     display::refresh();
     if fading {
-        fadein()
+        ModelFeatures::fadein()
     };
 }
