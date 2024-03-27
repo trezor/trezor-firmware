@@ -47,7 +47,7 @@ class ChannelCache(ConnectionCache):
         self.state = bytearray(_CHANNEL_STATE_LENGTH)
         self.iface = bytearray(1)  # TODO add decoding
         self.sync = 0x80  # can_send_bit | sync_receive_bit | sync_send_bit | rfu(5)
-        self.session_id_counter = 0x01
+        self.session_id_counter = 0x00
         self.fields = ()
         super().__init__()
 
@@ -276,13 +276,14 @@ def get_next_channel_id() -> bytes:
 
 
 def get_next_session_id(channel: ChannelCache) -> bytes:
-    while not _is_session_id_unique(channel):
+    while True:
         if channel.session_id_counter >= 255:
             channel.session_id_counter = 1
         else:
             channel.session_id_counter += 1
+        if _is_session_id_unique(channel):
+            break
     new_sid = channel.session_id_counter
-    channel.session_id_counter += 1
     return new_sid.to_bytes(_SESSION_ID_LENGTH, "big")
 
 
