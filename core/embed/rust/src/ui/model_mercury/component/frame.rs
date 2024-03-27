@@ -1,5 +1,6 @@
 use super::theme;
 use crate::ui::{
+    constant::SPACING,
     component::{
         base::ComponentExt, label::Label, text::TextStyle, Child, Component, Event, EventCtx,
     },
@@ -10,7 +11,6 @@ use crate::ui::{
 };
 
 const TITLE_HEIGHT: i16 = 42;
-const TITLE_SPACE: i16 = 2;
 
 pub struct Frame<T, U> {
     border: Insets,
@@ -126,8 +126,9 @@ where
 
     fn place(&mut self, bounds: Rect) -> Rect {
         let (mut header_area, content_area) = bounds.split_top(TITLE_HEIGHT);
-        let content_area = content_area.inset(Insets::top(TITLE_SPACE));
+        let content_area = content_area.inset(Insets::top(SPACING));
 
+        header_area = header_area.inset(Insets::sides(SPACING));
         if let Some(b) = &mut self.button {
             let (rest, button_area) = header_area.split_right(TITLE_HEIGHT);
             header_area = rest;
