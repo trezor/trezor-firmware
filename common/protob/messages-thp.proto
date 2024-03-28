@@ -8,9 +8,9 @@ option java_outer_classname = "TrezorMessageThp";
 
 
 /**
-* Numeric identifiers of pairing methods.
-* @embed
-*/
+ * Numeric identifiers of pairing methods.
+ * @embed
+ */
 enum ThpPairingMethod {
     PairingMethod_NoMethod = 1; // Trust without MITM protection.
     PairingMethod_CodeEntry = 2; // User types code diplayed on Trezor into the host application.
@@ -19,8 +19,8 @@ enum ThpPairingMethod {
 }
 
 /**
-* @embed
-*/
+ * @embed
+ */
 message ThpDeviceProperties {
     optional string internal_model = 1;         // Internal model name e.g. "T2B1".
     optional uint32 model_variant = 2;          // Encodes the device properties such as color.
@@ -30,8 +30,8 @@ message ThpDeviceProperties {
 }
 
 /**
-* @embed
-*/
+ * @embed
+ */
 message ThpHandshakeCompletionReqNoisePayload {
     optional bytes host_pairing_credential = 1; // Host's pairing credential
     repeated ThpPairingMethod pairing_methods = 2; // The pairing methods chosen by the host
