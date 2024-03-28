@@ -25,33 +25,33 @@
 /// of protobuf runtime.
 const _PROTOBUF_VERSION_CHECK: () = ::protobuf::VERSION_3_3_0;
 
-// @@protoc_insertion_point(message:hw.trezor.messages.thp.DeviceProperties)
+// @@protoc_insertion_point(message:hw.trezor.messages.thp.ThpDeviceProperties)
 #[derive(PartialEq,Clone,Default,Debug)]
-pub struct DeviceProperties {
+pub struct ThpDeviceProperties {
     // message fields
-    // @@protoc_insertion_point(field:hw.trezor.messages.thp.DeviceProperties.internal_model)
+    // @@protoc_insertion_point(field:hw.trezor.messages.thp.ThpDeviceProperties.internal_model)
     pub internal_model: ::std::option::Option<::std::string::String>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.thp.DeviceProperties.model_variant)
+    // @@protoc_insertion_point(field:hw.trezor.messages.thp.ThpDeviceProperties.model_variant)
     pub model_variant: ::std::option::Option<u32>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.thp.DeviceProperties.bootloader_mode)
+    // @@protoc_insertion_point(field:hw.trezor.messages.thp.ThpDeviceProperties.bootloader_mode)
     pub bootloader_mode: ::std::option::Option<bool>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.thp.DeviceProperties.protocol_version)
+    // @@protoc_insertion_point(field:hw.trezor.messages.thp.ThpDeviceProperties.protocol_version)
     pub protocol_version: ::std::option::Option<u32>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.thp.DeviceProperties.pairing_methods)
-    pub pairing_methods: ::std::vec::Vec<::protobuf::EnumOrUnknown<PairingMethod>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.thp.ThpDeviceProperties.pairing_methods)
+    pub pairing_methods: ::std::vec::Vec<::protobuf::EnumOrUnknown<ThpPairingMethod>>,
     // special fields
-    // @@protoc_insertion_point(special_field:hw.trezor.messages.thp.DeviceProperties.special_fields)
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.thp.ThpDeviceProperties.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
 }
 
-impl<'a> ::std::default::Default for &'a DeviceProperties {
-    fn default() -> &'a DeviceProperties {
-        <DeviceProperties as ::protobuf::Message>::default_instance()
+impl<'a> ::std::default::Default for &'a ThpDeviceProperties {
+    fn default() -> &'a ThpDeviceProperties {
+        <ThpDeviceProperties as ::protobuf::Message>::default_instance()
     }
 }
 
-impl DeviceProperties {
-    pub fn new() -> DeviceProperties {
+impl ThpDeviceProperties {
+    pub fn new() -> ThpDeviceProperties {
         ::std::default::Default::default()
     }
 
@@ -153,39 +153,39 @@ impl DeviceProperties {
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "internal_model",
-            |m: &DeviceProperties| { &m.internal_model },
-            |m: &mut DeviceProperties| { &mut m.internal_model },
+            |m: &ThpDeviceProperties| { &m.internal_model },
+            |m: &mut ThpDeviceProperties| { &mut m.internal_model },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "model_variant",
-            |m: &DeviceProperties| { &m.model_variant },
-            |m: &mut DeviceProperties| { &mut m.model_variant },
+            |m: &ThpDeviceProperties| { &m.model_variant },
+            |m: &mut ThpDeviceProperties| { &mut m.model_variant },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "bootloader_mode",
-            |m: &DeviceProperties| { &m.bootloader_mode },
-            |m: &mut DeviceProperties| { &mut m.bootloader_mode },
+            |m: &ThpDeviceProperties| { &m.bootloader_mode },
+            |m: &mut ThpDeviceProperties| { &mut m.bootloader_mode },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "protocol_version",
-            |m: &DeviceProperties| { &m.protocol_version },
-            |m: &mut DeviceProperties| { &mut m.protocol_version },
+            |m: &ThpDeviceProperties| { &m.protocol_version },
+            |m: &mut ThpDeviceProperties| { &mut m.protocol_version },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
             "pairing_methods",
-            |m: &DeviceProperties| { &m.pairing_methods },
-            |m: &mut DeviceProperties| { &mut m.pairing_methods },
+            |m: &ThpDeviceProperties| { &m.pairing_methods },
+            |m: &mut ThpDeviceProperties| { &mut m.pairing_methods },
         ));
-        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<DeviceProperties>(
-            "DeviceProperties",
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<ThpDeviceProperties>(
+            "ThpDeviceProperties",
             fields,
             oneofs,
         )
     }
 }
 
-impl ::protobuf::Message for DeviceProperties {
-    const NAME: &'static str = "DeviceProperties";
+impl ::protobuf::Message for ThpDeviceProperties {
+    const NAME: &'static str = "ThpDeviceProperties";
 
     fn is_initialized(&self) -> bool {
         true
@@ -272,8 +272,8 @@ impl ::protobuf::Message for DeviceProperties {
         &mut self.special_fields
     }
 
-    fn new() -> DeviceProperties {
-        DeviceProperties::new()
+    fn new() -> ThpDeviceProperties {
+        ThpDeviceProperties::new()
     }
 
     fn clear(&mut self) {
@@ -285,8 +285,8 @@ impl ::protobuf::Message for DeviceProperties {
         self.special_fields.clear();
     }
 
-    fn default_instance() -> &'static DeviceProperties {
-        static instance: DeviceProperties = DeviceProperties {
+    fn default_instance() -> &'static ThpDeviceProperties {
+        static instance: ThpDeviceProperties = ThpDeviceProperties {
             internal_model: ::std::option::Option::None,
             model_variant: ::std::option::Option::None,
             bootloader_mode: ::std::option::Option::None,
@@ -298,44 +298,44 @@ impl ::protobuf::Message for DeviceProperties {
     }
 }
 
-impl ::protobuf::MessageFull for DeviceProperties {
+impl ::protobuf::MessageFull for ThpDeviceProperties {
     fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
         static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
-        descriptor.get(|| file_descriptor().message_by_package_relative_name("DeviceProperties").unwrap()).clone()
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("ThpDeviceProperties").unwrap()).clone()
     }
 }
 
-impl ::std::fmt::Display for DeviceProperties {
+impl ::std::fmt::Display for ThpDeviceProperties {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::protobuf::text_format::fmt(self, f)
     }
 }
 
-impl ::protobuf::reflect::ProtobufValue for DeviceProperties {
+impl ::protobuf::reflect::ProtobufValue for ThpDeviceProperties {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
-// @@protoc_insertion_point(message:hw.trezor.messages.thp.HandshakeCompletionReqNoisePayload)
+// @@protoc_insertion_point(message:hw.trezor.messages.thp.ThpHandshakeCompletionReqNoisePayload)
 #[derive(PartialEq,Clone,Default,Debug)]
-pub struct HandshakeCompletionReqNoisePayload {
+pub struct ThpHandshakeCompletionReqNoisePayload {
     // message fields
-    // @@protoc_insertion_point(field:hw.trezor.messages.thp.HandshakeCompletionReqNoisePayload.host_pairing_credential)
+    // @@protoc_insertion_point(field:hw.trezor.messages.thp.ThpHandshakeCompletionReqNoisePayload.host_pairing_credential)
     pub host_pairing_credential: ::std::option::Option<::std::vec::Vec<u8>>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.thp.HandshakeCompletionReqNoisePayload.pairing_methods)
-    pub pairing_methods: ::std::vec::Vec<::protobuf::EnumOrUnknown<PairingMethod>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.thp.ThpHandshakeCompletionReqNoisePayload.pairing_methods)
+    pub pairing_methods: ::std::vec::Vec<::protobuf::EnumOrUnknown<ThpPairingMethod>>,
     // special fields
-    // @@protoc_insertion_point(special_field:hw.trezor.messages.thp.HandshakeCompletionReqNoisePayload.special_fields)
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.thp.ThpHandshakeCompletionReqNoisePayload.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
 }
 
-impl<'a> ::std::default::Default for &'a HandshakeCompletionReqNoisePayload {
-    fn default() -> &'a HandshakeCompletionReqNoisePayload {
-        <HandshakeCompletionReqNoisePayload as ::protobuf::Message>::default_instance()
+impl<'a> ::std::default::Default for &'a ThpHandshakeCompletionReqNoisePayload {
+    fn default() -> &'a ThpHandshakeCompletionReqNoisePayload {
+        <ThpHandshakeCompletionReqNoisePayload as ::protobuf::Message>::default_instance()
     }
 }
 
-impl HandshakeCompletionReqNoisePayload {
-    pub fn new() -> HandshakeCompletionReqNoisePayload {
+impl ThpHandshakeCompletionReqNoisePayload {
+    pub fn new() -> ThpHandshakeCompletionReqNoisePayload {
         ::std::default::Default::default()
     }
 
@@ -380,24 +380,24 @@ impl HandshakeCompletionReqNoisePayload {
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "host_pairing_credential",
-            |m: &HandshakeCompletionReqNoisePayload| { &m.host_pairing_credential },
-            |m: &mut HandshakeCompletionReqNoisePayload| { &mut m.host_pairing_credential },
+            |m: &ThpHandshakeCompletionReqNoisePayload| { &m.host_pairing_credential },
+            |m: &mut ThpHandshakeCompletionReqNoisePayload| { &mut m.host_pairing_credential },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
             "pairing_methods",
-            |m: &HandshakeCompletionReqNoisePayload| { &m.pairing_methods },
-            |m: &mut HandshakeCompletionReqNoisePayload| { &mut m.pairing_methods },
+            |m: &ThpHandshakeCompletionReqNoisePayload| { &m.pairing_methods },
+            |m: &mut ThpHandshakeCompletionReqNoisePayload| { &mut m.pairing_methods },
         ));
-        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<HandshakeCompletionReqNoisePayload>(
-            "HandshakeCompletionReqNoisePayload",
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<ThpHandshakeCompletionReqNoisePayload>(
+            "ThpHandshakeCompletionReqNoisePayload",
             fields,
             oneofs,
         )
     }
 }
 
-impl ::protobuf::Message for HandshakeCompletionReqNoisePayload {
-    const NAME: &'static str = "HandshakeCompletionReqNoisePayload";
+impl ::protobuf::Message for ThpHandshakeCompletionReqNoisePayload {
+    const NAME: &'static str = "ThpHandshakeCompletionReqNoisePayload";
 
     fn is_initialized(&self) -> bool {
         true
@@ -457,8 +457,8 @@ impl ::protobuf::Message for HandshakeCompletionReqNoisePayload {
         &mut self.special_fields
     }
 
-    fn new() -> HandshakeCompletionReqNoisePayload {
-        HandshakeCompletionReqNoisePayload::new()
+    fn new() -> ThpHandshakeCompletionReqNoisePayload {
+        ThpHandshakeCompletionReqNoisePayload::new()
     }
 
     fn clear(&mut self) {
@@ -467,8 +467,8 @@ impl ::protobuf::Message for HandshakeCompletionReqNoisePayload {
         self.special_fields.clear();
     }
 
-    fn default_instance() -> &'static HandshakeCompletionReqNoisePayload {
-        static instance: HandshakeCompletionReqNoisePayload = HandshakeCompletionReqNoisePayload {
+    fn default_instance() -> &'static ThpHandshakeCompletionReqNoisePayload {
+        static instance: ThpHandshakeCompletionReqNoisePayload = ThpHandshakeCompletionReqNoisePayload {
             host_pairing_credential: ::std::option::Option::None,
             pairing_methods: ::std::vec::Vec::new(),
             special_fields: ::protobuf::SpecialFields::new(),
@@ -477,44 +477,44 @@ impl ::protobuf::Message for HandshakeCompletionReqNoisePayload {
     }
 }
 
-impl ::protobuf::MessageFull for HandshakeCompletionReqNoisePayload {
+impl ::protobuf::MessageFull for ThpHandshakeCompletionReqNoisePayload {
     fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
         static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
-        descriptor.get(|| file_descriptor().message_by_package_relative_name("HandshakeCompletionReqNoisePayload").unwrap()).clone()
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("ThpHandshakeCompletionReqNoisePayload").unwrap()).clone()
     }
 }
 
-impl ::std::fmt::Display for HandshakeCompletionReqNoisePayload {
+impl ::std::fmt::Display for ThpHandshakeCompletionReqNoisePayload {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::protobuf::text_format::fmt(self, f)
     }
 }
 
-impl ::protobuf::reflect::ProtobufValue for HandshakeCompletionReqNoisePayload {
+impl ::protobuf::reflect::ProtobufValue for ThpHandshakeCompletionReqNoisePayload {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
-// @@protoc_insertion_point(message:hw.trezor.messages.thp.CreateNewSession)
+// @@protoc_insertion_point(message:hw.trezor.messages.thp.ThpCreateNewSession)
 #[derive(PartialEq,Clone,Default,Debug)]
-pub struct CreateNewSession {
+pub struct ThpCreateNewSession {
     // message fields
-    // @@protoc_insertion_point(field:hw.trezor.messages.thp.CreateNewSession.passphrase)
+    // @@protoc_insertion_point(field:hw.trezor.messages.thp.ThpCreateNewSession.passphrase)
     pub passphrase: ::std::option::Option<::std::string::String>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.thp.CreateNewSession.on_device)
+    // @@protoc_insertion_point(field:hw.trezor.messages.thp.ThpCreateNewSession.on_device)
     pub on_device: ::std::option::Option<bool>,
     // special fields
-    // @@protoc_insertion_point(special_field:hw.trezor.messages.thp.CreateNewSession.special_fields)
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.thp.ThpCreateNewSession.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
 }
 
-impl<'a> ::std::default::Default for &'a CreateNewSession {
-    fn default() -> &'a CreateNewSession {
-        <CreateNewSession as ::protobuf::Message>::default_instance()
+impl<'a> ::std::default::Default for &'a ThpCreateNewSession {
+    fn default() -> &'a ThpCreateNewSession {
+        <ThpCreateNewSession as ::protobuf::Message>::default_instance()
     }
 }
 
-impl CreateNewSession {
-    pub fn new() -> CreateNewSession {
+impl ThpCreateNewSession {
+    pub fn new() -> ThpCreateNewSession {
         ::std::default::Default::default()
     }
 
@@ -578,24 +578,24 @@ impl CreateNewSession {
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "passphrase",
-            |m: &CreateNewSession| { &m.passphrase },
-            |m: &mut CreateNewSession| { &mut m.passphrase },
+            |m: &ThpCreateNewSession| { &m.passphrase },
+            |m: &mut ThpCreateNewSession| { &mut m.passphrase },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "on_device",
-            |m: &CreateNewSession| { &m.on_device },
-            |m: &mut CreateNewSession| { &mut m.on_device },
+            |m: &ThpCreateNewSession| { &m.on_device },
+            |m: &mut ThpCreateNewSession| { &mut m.on_device },
         ));
-        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<CreateNewSession>(
-            "CreateNewSession",
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<ThpCreateNewSession>(
+            "ThpCreateNewSession",
             fields,
             oneofs,
         )
     }
 }
 
-impl ::protobuf::Message for CreateNewSession {
-    const NAME: &'static str = "CreateNewSession";
+impl ::protobuf::Message for ThpCreateNewSession {
+    const NAME: &'static str = "ThpCreateNewSession";
 
     fn is_initialized(&self) -> bool {
         true
@@ -652,8 +652,8 @@ impl ::protobuf::Message for CreateNewSession {
         &mut self.special_fields
     }
 
-    fn new() -> CreateNewSession {
-        CreateNewSession::new()
+    fn new() -> ThpCreateNewSession {
+        ThpCreateNewSession::new()
     }
 
     fn clear(&mut self) {
@@ -662,8 +662,8 @@ impl ::protobuf::Message for CreateNewSession {
         self.special_fields.clear();
     }
 
-    fn default_instance() -> &'static CreateNewSession {
-        static instance: CreateNewSession = CreateNewSession {
+    fn default_instance() -> &'static ThpCreateNewSession {
+        static instance: ThpCreateNewSession = ThpCreateNewSession {
             passphrase: ::std::option::Option::None,
             on_device: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
@@ -672,42 +672,42 @@ impl ::protobuf::Message for CreateNewSession {
     }
 }
 
-impl ::protobuf::MessageFull for CreateNewSession {
+impl ::protobuf::MessageFull for ThpCreateNewSession {
     fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
         static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
-        descriptor.get(|| file_descriptor().message_by_package_relative_name("CreateNewSession").unwrap()).clone()
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("ThpCreateNewSession").unwrap()).clone()
     }
 }
 
-impl ::std::fmt::Display for CreateNewSession {
+impl ::std::fmt::Display for ThpCreateNewSession {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::protobuf::text_format::fmt(self, f)
     }
 }
 
-impl ::protobuf::reflect::ProtobufValue for CreateNewSession {
+impl ::protobuf::reflect::ProtobufValue for ThpCreateNewSession {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
-// @@protoc_insertion_point(message:hw.trezor.messages.thp.NewSession)
+// @@protoc_insertion_point(message:hw.trezor.messages.thp.ThpNewSession)
 #[derive(PartialEq,Clone,Default,Debug)]
-pub struct NewSession {
+pub struct ThpNewSession {
     // message fields
-    // @@protoc_insertion_point(field:hw.trezor.messages.thp.NewSession.new_session_id)
+    // @@protoc_insertion_point(field:hw.trezor.messages.thp.ThpNewSession.new_session_id)
     pub new_session_id: ::std::option::Option<u32>,
     // special fields
-    // @@protoc_insertion_point(special_field:hw.trezor.messages.thp.NewSession.special_fields)
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.thp.ThpNewSession.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
 }
 
-impl<'a> ::std::default::Default for &'a NewSession {
-    fn default() -> &'a NewSession {
-        <NewSession as ::protobuf::Message>::default_instance()
+impl<'a> ::std::default::Default for &'a ThpNewSession {
+    fn default() -> &'a ThpNewSession {
+        <ThpNewSession as ::protobuf::Message>::default_instance()
     }
 }
 
-impl NewSession {
-    pub fn new() -> NewSession {
+impl ThpNewSession {
+    pub fn new() -> ThpNewSession {
         ::std::default::Default::default()
     }
 
@@ -735,19 +735,19 @@ impl NewSession {
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "new_session_id",
-            |m: &NewSession| { &m.new_session_id },
-            |m: &mut NewSession| { &mut m.new_session_id },
+            |m: &ThpNewSession| { &m.new_session_id },
+            |m: &mut ThpNewSession| { &mut m.new_session_id },
         ));
-        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<NewSession>(
-            "NewSession",
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<ThpNewSession>(
+            "ThpNewSession",
             fields,
             oneofs,
         )
     }
 }
 
-impl ::protobuf::Message for NewSession {
-    const NAME: &'static str = "NewSession";
+impl ::protobuf::Message for ThpNewSession {
+    const NAME: &'static str = "ThpNewSession";
 
     fn is_initialized(&self) -> bool {
         true
@@ -795,8 +795,8 @@ impl ::protobuf::Message for NewSession {
         &mut self.special_fields
     }
 
-    fn new() -> NewSession {
-        NewSession::new()
+    fn new() -> ThpNewSession {
+        ThpNewSession::new()
     }
 
     fn clear(&mut self) {
@@ -804,8 +804,8 @@ impl ::protobuf::Message for NewSession {
         self.special_fields.clear();
     }
 
-    fn default_instance() -> &'static NewSession {
-        static instance: NewSession = NewSession {
+    fn default_instance() -> &'static ThpNewSession {
+        static instance: ThpNewSession = ThpNewSession {
             new_session_id: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
@@ -813,119 +813,119 @@ impl ::protobuf::Message for NewSession {
     }
 }
 
-impl ::protobuf::MessageFull for NewSession {
+impl ::protobuf::MessageFull for ThpNewSession {
     fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
         static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
-        descriptor.get(|| file_descriptor().message_by_package_relative_name("NewSession").unwrap()).clone()
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("ThpNewSession").unwrap()).clone()
     }
 }
 
-impl ::std::fmt::Display for NewSession {
+impl ::std::fmt::Display for ThpNewSession {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::protobuf::text_format::fmt(self, f)
     }
 }
 
-impl ::protobuf::reflect::ProtobufValue for NewSession {
+impl ::protobuf::reflect::ProtobufValue for ThpNewSession {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
 #[derive(Clone,Copy,PartialEq,Eq,Debug,Hash)]
-// @@protoc_insertion_point(enum:hw.trezor.messages.thp.PairingMethod)
-pub enum PairingMethod {
-    // @@protoc_insertion_point(enum_value:hw.trezor.messages.thp.PairingMethod.PairingMethod_NoMethod)
+// @@protoc_insertion_point(enum:hw.trezor.messages.thp.ThpPairingMethod)
+pub enum ThpPairingMethod {
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.thp.ThpPairingMethod.PairingMethod_NoMethod)
     PairingMethod_NoMethod = 1,
-    // @@protoc_insertion_point(enum_value:hw.trezor.messages.thp.PairingMethod.PairingMethod_CodeEntry)
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.thp.ThpPairingMethod.PairingMethod_CodeEntry)
     PairingMethod_CodeEntry = 2,
-    // @@protoc_insertion_point(enum_value:hw.trezor.messages.thp.PairingMethod.PairingMethod_QrCode)
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.thp.ThpPairingMethod.PairingMethod_QrCode)
     PairingMethod_QrCode = 3,
-    // @@protoc_insertion_point(enum_value:hw.trezor.messages.thp.PairingMethod.PairingMethod_NFC_Unidirectional)
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.thp.ThpPairingMethod.PairingMethod_NFC_Unidirectional)
     PairingMethod_NFC_Unidirectional = 4,
 }
 
-impl ::protobuf::Enum for PairingMethod {
-    const NAME: &'static str = "PairingMethod";
+impl ::protobuf::Enum for ThpPairingMethod {
+    const NAME: &'static str = "ThpPairingMethod";
 
     fn value(&self) -> i32 {
         *self as i32
     }
 
-    fn from_i32(value: i32) -> ::std::option::Option<PairingMethod> {
+    fn from_i32(value: i32) -> ::std::option::Option<ThpPairingMethod> {
         match value {
-            1 => ::std::option::Option::Some(PairingMethod::PairingMethod_NoMethod),
-            2 => ::std::option::Option::Some(PairingMethod::PairingMethod_CodeEntry),
-            3 => ::std::option::Option::Some(PairingMethod::PairingMethod_QrCode),
-            4 => ::std::option::Option::Some(PairingMethod::PairingMethod_NFC_Unidirectional),
+            1 => ::std::option::Option::Some(ThpPairingMethod::PairingMethod_NoMethod),
+            2 => ::std::option::Option::Some(ThpPairingMethod::PairingMethod_CodeEntry),
+            3 => ::std::option::Option::Some(ThpPairingMethod::PairingMethod_QrCode),
+            4 => ::std::option::Option::Some(ThpPairingMethod::PairingMethod_NFC_Unidirectional),
             _ => ::std::option::Option::None
         }
     }
 
-    fn from_str(str: &str) -> ::std::option::Option<PairingMethod> {
+    fn from_str(str: &str) -> ::std::option::Option<ThpPairingMethod> {
         match str {
-            "PairingMethod_NoMethod" => ::std::option::Option::Some(PairingMethod::PairingMethod_NoMethod),
-            "PairingMethod_CodeEntry" => ::std::option::Option::Some(PairingMethod::PairingMethod_CodeEntry),
-            "PairingMethod_QrCode" => ::std::option::Option::Some(PairingMethod::PairingMethod_QrCode),
-            "PairingMethod_NFC_Unidirectional" => ::std::option::Option::Some(PairingMethod::PairingMethod_NFC_Unidirectional),
+            "PairingMethod_NoMethod" => ::std::option::Option::Some(ThpPairingMethod::PairingMethod_NoMethod),
+            "PairingMethod_CodeEntry" => ::std::option::Option::Some(ThpPairingMethod::PairingMethod_CodeEntry),
+            "PairingMethod_QrCode" => ::std::option::Option::Some(ThpPairingMethod::PairingMethod_QrCode),
+            "PairingMethod_NFC_Unidirectional" => ::std::option::Option::Some(ThpPairingMethod::PairingMethod_NFC_Unidirectional),
             _ => ::std::option::Option::None
         }
     }
 
-    const VALUES: &'static [PairingMethod] = &[
-        PairingMethod::PairingMethod_NoMethod,
-        PairingMethod::PairingMethod_CodeEntry,
-        PairingMethod::PairingMethod_QrCode,
-        PairingMethod::PairingMethod_NFC_Unidirectional,
+    const VALUES: &'static [ThpPairingMethod] = &[
+        ThpPairingMethod::PairingMethod_NoMethod,
+        ThpPairingMethod::PairingMethod_CodeEntry,
+        ThpPairingMethod::PairingMethod_QrCode,
+        ThpPairingMethod::PairingMethod_NFC_Unidirectional,
     ];
 }
 
-impl ::protobuf::EnumFull for PairingMethod {
+impl ::protobuf::EnumFull for ThpPairingMethod {
     fn enum_descriptor() -> ::protobuf::reflect::EnumDescriptor {
         static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::EnumDescriptor> = ::protobuf::rt::Lazy::new();
-        descriptor.get(|| file_descriptor().enum_by_package_relative_name("PairingMethod").unwrap()).clone()
+        descriptor.get(|| file_descriptor().enum_by_package_relative_name("ThpPairingMethod").unwrap()).clone()
     }
 
     fn descriptor(&self) -> ::protobuf::reflect::EnumValueDescriptor {
         let index = match self {
-            PairingMethod::PairingMethod_NoMethod => 0,
-            PairingMethod::PairingMethod_CodeEntry => 1,
-            PairingMethod::PairingMethod_QrCode => 2,
-            PairingMethod::PairingMethod_NFC_Unidirectional => 3,
+            ThpPairingMethod::PairingMethod_NoMethod => 0,
+            ThpPairingMethod::PairingMethod_CodeEntry => 1,
+            ThpPairingMethod::PairingMethod_QrCode => 2,
+            ThpPairingMethod::PairingMethod_NFC_Unidirectional => 3,
         };
         Self::enum_descriptor().value_by_index(index)
     }
 }
 
 // Note, `Default` is implemented although default value is not 0
-impl ::std::default::Default for PairingMethod {
+impl ::std::default::Default for ThpPairingMethod {
     fn default() -> Self {
-        PairingMethod::PairingMethod_NoMethod
+        ThpPairingMethod::PairingMethod_NoMethod
     }
 }
 
-impl PairingMethod {
+impl ThpPairingMethod {
     fn generated_enum_descriptor_data() -> ::protobuf::reflect::GeneratedEnumDescriptorData {
-        ::protobuf::reflect::GeneratedEnumDescriptorData::new::<PairingMethod>("PairingMethod")
+        ::protobuf::reflect::GeneratedEnumDescriptorData::new::<ThpPairingMethod>("ThpPairingMethod")
     }
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\x12messages-thp.proto\x12\x16hw.trezor.messages.thp\"\x82\x02\n\x10De\
-    viceProperties\x12%\n\x0einternal_model\x18\x01\x20\x01(\tR\rinternalMod\
-    el\x12#\n\rmodel_variant\x18\x02\x20\x01(\rR\x0cmodelVariant\x12'\n\x0fb\
-    ootloader_mode\x18\x03\x20\x01(\x08R\x0ebootloaderMode\x12)\n\x10protoco\
-    l_version\x18\x04\x20\x01(\rR\x0fprotocolVersion\x12N\n\x0fpairing_metho\
-    ds\x18\x05\x20\x03(\x0e2%.hw.trezor.messages.thp.PairingMethodR\x0epairi\
-    ngMethods\"\xac\x01\n\"HandshakeCompletionReqNoisePayload\x126\n\x17host\
-    _pairing_credential\x18\x01\x20\x01(\x0cR\x15hostPairingCredential\x12N\
-    \n\x0fpairing_methods\x18\x02\x20\x03(\x0e2%.hw.trezor.messages.thp.Pair\
-    ingMethodR\x0epairingMethods\"O\n\x10CreateNewSession\x12\x1e\n\npassphr\
-    ase\x18\x01\x20\x01(\tR\npassphrase\x12\x1b\n\ton_device\x18\x02\x20\x01\
-    (\x08R\x08onDevice\"2\n\nNewSession\x12$\n\x0enew_session_id\x18\x01\x20\
-    \x01(\rR\x0cnewSessionId*\x88\x01\n\rPairingMethod\x12\x1a\n\x16PairingM\
-    ethod_NoMethod\x10\x01\x12\x1b\n\x17PairingMethod_CodeEntry\x10\x02\x12\
-    \x18\n\x14PairingMethod_QrCode\x10\x03\x12$\n\x20PairingMethod_NFC_Unidi\
-    rectional\x10\x04B7\n#com.satoshilabs.trezor.lib.protobufB\x10TrezorMess\
-    ageThp\
+    \n\x12messages-thp.proto\x12\x16hw.trezor.messages.thp\"\x88\x02\n\x13Th\
+    pDeviceProperties\x12%\n\x0einternal_model\x18\x01\x20\x01(\tR\rinternal\
+    Model\x12#\n\rmodel_variant\x18\x02\x20\x01(\rR\x0cmodelVariant\x12'\n\
+    \x0fbootloader_mode\x18\x03\x20\x01(\x08R\x0ebootloaderMode\x12)\n\x10pr\
+    otocol_version\x18\x04\x20\x01(\rR\x0fprotocolVersion\x12Q\n\x0fpairing_\
+    methods\x18\x05\x20\x03(\x0e2(.hw.trezor.messages.thp.ThpPairingMethodR\
+    \x0epairingMethods\"\xb2\x01\n%ThpHandshakeCompletionReqNoisePayload\x12\
+    6\n\x17host_pairing_credential\x18\x01\x20\x01(\x0cR\x15hostPairingCrede\
+    ntial\x12Q\n\x0fpairing_methods\x18\x02\x20\x03(\x0e2(.hw.trezor.message\
+    s.thp.ThpPairingMethodR\x0epairingMethods\"R\n\x13ThpCreateNewSession\
+    \x12\x1e\n\npassphrase\x18\x01\x20\x01(\tR\npassphrase\x12\x1b\n\ton_dev\
+    ice\x18\x02\x20\x01(\x08R\x08onDevice\"5\n\rThpNewSession\x12$\n\x0enew_\
+    session_id\x18\x01\x20\x01(\rR\x0cnewSessionId*\x8b\x01\n\x10ThpPairingM\
+    ethod\x12\x1a\n\x16PairingMethod_NoMethod\x10\x01\x12\x1b\n\x17PairingMe\
+    thod_CodeEntry\x10\x02\x12\x18\n\x14PairingMethod_QrCode\x10\x03\x12$\n\
+    \x20PairingMethod_NFC_Unidirectional\x10\x04B7\n#com.satoshilabs.trezor.\
+    lib.protobufB\x10TrezorMessageThp\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -944,12 +944,12 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
             let mut deps = ::std::vec::Vec::with_capacity(0);
             let mut messages = ::std::vec::Vec::with_capacity(4);
-            messages.push(DeviceProperties::generated_message_descriptor_data());
-            messages.push(HandshakeCompletionReqNoisePayload::generated_message_descriptor_data());
-            messages.push(CreateNewSession::generated_message_descriptor_data());
-            messages.push(NewSession::generated_message_descriptor_data());
+            messages.push(ThpDeviceProperties::generated_message_descriptor_data());
+            messages.push(ThpHandshakeCompletionReqNoisePayload::generated_message_descriptor_data());
+            messages.push(ThpCreateNewSession::generated_message_descriptor_data());
+            messages.push(ThpNewSession::generated_message_descriptor_data());
             let mut enums = ::std::vec::Vec::with_capacity(1);
-            enums.push(PairingMethod::generated_enum_descriptor_data());
+            enums.push(ThpPairingMethod::generated_enum_descriptor_data());
             ::protobuf::reflect::GeneratedFileDescriptor::new_generated(
                 file_descriptor_proto(),
                 deps,

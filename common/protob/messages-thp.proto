@@ -8,31 +8,31 @@ option java_outer_classname = "TrezorMessageThp";
 
 
 // Numeric identifiers of pairing methods.
-enum PairingMethod {
+enum ThpPairingMethod {
     PairingMethod_NoMethod = 1; // Trust without MITM protection.
     PairingMethod_CodeEntry = 2; // User types code diplayed on Trezor into the host application.
     PairingMethod_QrCode = 3; // User scans code displayed on Trezor into host application.
     PairingMethod_NFC_Unidirectional = 4; // Trezor transmits an authentication key to the host device via NFC.
 }
 
-message DeviceProperties {
+message ThpDeviceProperties {
     optional string internal_model = 1;         // Internal model name e.g. "T2B1".
     optional uint32 model_variant = 2;          // Encodes the device properties such as color.
     optional bool bootloader_mode = 3;          // Indicates whether the device is in bootloader or firmware mode.
     optional uint32 protocol_version = 4;       // The communication protocol version supported by the firmware.
-    repeated PairingMethod pairing_methods = 5; // The pairing methods supported by the Trezor.
+    repeated ThpPairingMethod pairing_methods = 5; // The pairing methods supported by the Trezor.
 }
 
-message HandshakeCompletionReqNoisePayload {
+message ThpHandshakeCompletionReqNoisePayload {
     optional bytes host_pairing_credential = 1; // Host's pairing credential
-    repeated PairingMethod pairing_methods = 2; // The pairing methods chosen by the host
+    repeated ThpPairingMethod pairing_methods = 2; // The pairing methods chosen by the host
 }
 
-message CreateNewSession{
+message ThpCreateNewSession{
     optional string passphrase = 1;
     optional bool on_device = 2;                // user wants to enter passphrase on the device
 }
 
-message NewSession{
+message ThpNewSession{
     optional uint32 new_session_id = 1;
 }

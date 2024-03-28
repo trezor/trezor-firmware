@@ -51,7 +51,6 @@ if TYPE_CHECKING:
     from trezor.enums import NEMMosaicLevy  # noqa: F401
     from trezor.enums import NEMSupplyChangeType  # noqa: F401
     from trezor.enums import OutputScriptType  # noqa: F401
-    from trezor.enums import PairingMethod  # noqa: F401
     from trezor.enums import PinMatrixRequestType  # noqa: F401
     from trezor.enums import RecoveryDeviceType  # noqa: F401
     from trezor.enums import RequestType  # noqa: F401
@@ -62,6 +61,7 @@ if TYPE_CHECKING:
     from trezor.enums import StellarSignerType  # noqa: F401
     from trezor.enums import TezosBallotType  # noqa: F401
     from trezor.enums import TezosContractType  # noqa: F401
+    from trezor.enums import ThpPairingMethod  # noqa: F401
     from trezor.enums import WordRequestType  # noqa: F401
 
     class BinanceGetAddress(protobuf.MessageType):
@@ -6096,17 +6096,17 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["TezosManagerTransfer"]:
             return isinstance(msg, cls)
 
-    class DeviceProperties(protobuf.MessageType):
+    class ThpDeviceProperties(protobuf.MessageType):
         internal_model: "str | None"
         model_variant: "int | None"
         bootloader_mode: "bool | None"
         protocol_version: "int | None"
-        pairing_methods: "list[PairingMethod]"
+        pairing_methods: "list[ThpPairingMethod]"
 
         def __init__(
             self,
             *,
-            pairing_methods: "list[PairingMethod] | None" = None,
+            pairing_methods: "list[ThpPairingMethod] | None" = None,
             internal_model: "str | None" = None,
             model_variant: "int | None" = None,
             bootloader_mode: "bool | None" = None,
@@ -6115,26 +6115,26 @@ if TYPE_CHECKING:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["DeviceProperties"]:
+        def is_type_of(cls, msg: Any) -> TypeGuard["ThpDeviceProperties"]:
             return isinstance(msg, cls)
 
-    class HandshakeCompletionReqNoisePayload(protobuf.MessageType):
+    class ThpHandshakeCompletionReqNoisePayload(protobuf.MessageType):
         host_pairing_credential: "bytes | None"
-        pairing_methods: "list[PairingMethod]"
+        pairing_methods: "list[ThpPairingMethod]"
 
         def __init__(
             self,
             *,
-            pairing_methods: "list[PairingMethod] | None" = None,
+            pairing_methods: "list[ThpPairingMethod] | None" = None,
             host_pairing_credential: "bytes | None" = None,
         ) -> None:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["HandshakeCompletionReqNoisePayload"]:
+        def is_type_of(cls, msg: Any) -> TypeGuard["ThpHandshakeCompletionReqNoisePayload"]:
             return isinstance(msg, cls)
 
-    class CreateNewSession(protobuf.MessageType):
+    class ThpCreateNewSession(protobuf.MessageType):
         passphrase: "str | None"
         on_device: "bool | None"
 
@@ -6147,10 +6147,10 @@ if TYPE_CHECKING:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["CreateNewSession"]:
+        def is_type_of(cls, msg: Any) -> TypeGuard["ThpCreateNewSession"]:
             return isinstance(msg, cls)
 
-    class NewSession(protobuf.MessageType):
+    class ThpNewSession(protobuf.MessageType):
         new_session_id: "int | None"
 
         def __init__(
@@ -6161,7 +6161,7 @@ if TYPE_CHECKING:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["NewSession"]:
+        def is_type_of(cls, msg: Any) -> TypeGuard["ThpNewSession"]:
             return isinstance(msg, cls)
 
     class WebAuthnListResidentCredentials(protobuf.MessageType):

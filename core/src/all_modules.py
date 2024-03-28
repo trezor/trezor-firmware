@@ -123,8 +123,6 @@ trezor.enums.MessageType
 import trezor.enums.MessageType
 trezor.enums.OutputScriptType
 import trezor.enums.OutputScriptType
-trezor.enums.PairingMethod
-import trezor.enums.PairingMethod
 trezor.enums.PinMatrixRequestType
 import trezor.enums.PinMatrixRequestType
 trezor.enums.RecoveryDeviceType
@@ -135,6 +133,8 @@ trezor.enums.SafetyCheckLevel
 import trezor.enums.SafetyCheckLevel
 trezor.enums.SdProtectOperationType
 import trezor.enums.SdProtectOperationType
+trezor.enums.ThpPairingMethod
+import trezor.enums.ThpPairingMethod
 trezor.enums.WordRequestType
 import trezor.enums.WordRequestType
 trezor.enums

@@ -7,7 +7,7 @@ import usb
 from storage import cache_thp
 from storage.cache_thp import KEY_LENGTH, TAG_LENGTH, ChannelCache
 from trezor import loop, protobuf, utils
-from trezor.messages import CreateNewSession
+from trezor.messages import ThpCreateNewSession
 from trezor.wire import message_handler
 
 from ..protocol_common import Context
@@ -197,7 +197,7 @@ class ChannelContext(Context):
                     message = message_handler.wrap_protobuf_load(buf, expected_type)
                     print(message)
                     # ------------------------------------------------TYPE ERROR------------------------------------------------
-                    session_message: CreateNewSession = message
+                    session_message: ThpCreateNewSession = message
                     print("passphrase:", session_message.passphrase)
                     # await thp_messages.handle_CreateNewSession(message)
                     if session_message.passphrase is not None:

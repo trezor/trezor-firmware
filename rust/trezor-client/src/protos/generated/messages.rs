@@ -514,22 +514,22 @@ pub enum MessageType {
     MessageType_SolanaSignTx = 904,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_SolanaTxSignature)
     MessageType_SolanaTxSignature = 905,
-    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_StartPairingRequest)
-    MessageType_StartPairingRequest = 1000,
-    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_StartPairingResponse)
-    MessageType_StartPairingResponse = 1001,
-    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_CredentialRequest)
-    MessageType_CredentialRequest = 1002,
-    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_CredentialResponse)
-    MessageType_CredentialResponse = 1003,
-    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_EndRequest)
-    MessageType_EndRequest = 1004,
-    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_EndResponse)
-    MessageType_EndResponse = 1005,
-    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_CreateNewSession)
-    MessageType_CreateNewSession = 1006,
-    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_NewSession)
-    MessageType_NewSession = 1007,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_ThpStartPairingRequest)
+    MessageType_ThpStartPairingRequest = 1000,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_ThpStartPairingResponse)
+    MessageType_ThpStartPairingResponse = 1001,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_ThpCredentialRequest)
+    MessageType_ThpCredentialRequest = 1002,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_ThpCredentialResponse)
+    MessageType_ThpCredentialResponse = 1003,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_ThpEndRequest)
+    MessageType_ThpEndRequest = 1004,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_ThpEndResponse)
+    MessageType_ThpEndResponse = 1005,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_ThpCreateNewSession)
+    MessageType_ThpCreateNewSession = 1006,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_ThpNewSession)
+    MessageType_ThpNewSession = 1007,
 }
 
 impl ::protobuf::Enum for MessageType {
@@ -784,14 +784,14 @@ impl ::protobuf::Enum for MessageType {
             903 => ::std::option::Option::Some(MessageType::MessageType_SolanaAddress),
             904 => ::std::option::Option::Some(MessageType::MessageType_SolanaSignTx),
             905 => ::std::option::Option::Some(MessageType::MessageType_SolanaTxSignature),
-            1000 => ::std::option::Option::Some(MessageType::MessageType_StartPairingRequest),
-            1001 => ::std::option::Option::Some(MessageType::MessageType_StartPairingResponse),
-            1002 => ::std::option::Option::Some(MessageType::MessageType_CredentialRequest),
-            1003 => ::std::option::Option::Some(MessageType::MessageType_CredentialResponse),
-            1004 => ::std::option::Option::Some(MessageType::MessageType_EndRequest),
-            1005 => ::std::option::Option::Some(MessageType::MessageType_EndResponse),
-            1006 => ::std::option::Option::Some(MessageType::MessageType_CreateNewSession),
-            1007 => ::std::option::Option::Some(MessageType::MessageType_NewSession),
+            1000 => ::std::option::Option::Some(MessageType::MessageType_ThpStartPairingRequest),
+            1001 => ::std::option::Option::Some(MessageType::MessageType_ThpStartPairingResponse),
+            1002 => ::std::option::Option::Some(MessageType::MessageType_ThpCredentialRequest),
+            1003 => ::std::option::Option::Some(MessageType::MessageType_ThpCredentialResponse),
+            1004 => ::std::option::Option::Some(MessageType::MessageType_ThpEndRequest),
+            1005 => ::std::option::Option::Some(MessageType::MessageType_ThpEndResponse),
+            1006 => ::std::option::Option::Some(MessageType::MessageType_ThpCreateNewSession),
+            1007 => ::std::option::Option::Some(MessageType::MessageType_ThpNewSession),
             _ => ::std::option::Option::None
         }
     }
@@ -1041,14 +1041,14 @@ impl ::protobuf::Enum for MessageType {
             "MessageType_SolanaAddress" => ::std::option::Option::Some(MessageType::MessageType_SolanaAddress),
             "MessageType_SolanaSignTx" => ::std::option::Option::Some(MessageType::MessageType_SolanaSignTx),
             "MessageType_SolanaTxSignature" => ::std::option::Option::Some(MessageType::MessageType_SolanaTxSignature),
-            "MessageType_StartPairingRequest" => ::std::option::Option::Some(MessageType::MessageType_StartPairingRequest),
-            "MessageType_StartPairingResponse" => ::std::option::Option::Some(MessageType::MessageType_StartPairingResponse),
-            "MessageType_CredentialRequest" => ::std::option::Option::Some(MessageType::MessageType_CredentialRequest),
-            "MessageType_CredentialResponse" => ::std::option::Option::Some(MessageType::MessageType_CredentialResponse),
-            "MessageType_EndRequest" => ::std::option::Option::Some(MessageType::MessageType_EndRequest),
-            "MessageType_EndResponse" => ::std::option::Option::Some(MessageType::MessageType_EndResponse),
-            "MessageType_CreateNewSession" => ::std::option::Option::Some(MessageType::MessageType_CreateNewSession),
-            "MessageType_NewSession" => ::std::option::Option::Some(MessageType::MessageType_NewSession),
+            "MessageType_ThpStartPairingRequest" => ::std::option::Option::Some(MessageType::MessageType_ThpStartPairingRequest),
+            "MessageType_ThpStartPairingResponse" => ::std::option::Option::Some(MessageType::MessageType_ThpStartPairingResponse),
+            "MessageType_ThpCredentialRequest" => ::std::option::Option::Some(MessageType::MessageType_ThpCredentialRequest),
+            "MessageType_ThpCredentialResponse" => ::std::option::Option::Some(MessageType::MessageType_ThpCredentialResponse),
+            "MessageType_ThpEndRequest" => ::std::option::Option::Some(MessageType::MessageType_ThpEndRequest),
+            "MessageType_ThpEndResponse" => ::std::option::Option::Some(MessageType::MessageType_ThpEndResponse),
+            "MessageType_ThpCreateNewSession" => ::std::option::Option::Some(MessageType::MessageType_ThpCreateNewSession),
+            "MessageType_ThpNewSession" => ::std::option::Option::Some(MessageType::MessageType_ThpNewSession),
             _ => ::std::option::Option::None
         }
     }
@@ -1297,14 +1297,14 @@ impl ::protobuf::Enum for MessageType {
         MessageType::MessageType_SolanaAddress,
         MessageType::MessageType_SolanaSignTx,
         MessageType::MessageType_SolanaTxSignature,
-        MessageType::MessageType_StartPairingRequest,
-        MessageType::MessageType_StartPairingResponse,
-        MessageType::MessageType_CredentialRequest,
-        MessageType::MessageType_CredentialResponse,
-        MessageType::MessageType_EndRequest,
-        MessageType::MessageType_EndResponse,
-        MessageType::MessageType_CreateNewSession,
-        MessageType::MessageType_NewSession,
+        MessageType::MessageType_ThpStartPairingRequest,
+        MessageType::MessageType_ThpStartPairingResponse,
+        MessageType::MessageType_ThpCredentialRequest,
+        MessageType::MessageType_ThpCredentialResponse,
+        MessageType::MessageType_ThpEndRequest,
+        MessageType::MessageType_ThpEndResponse,
+        MessageType::MessageType_ThpCreateNewSession,
+        MessageType::MessageType_ThpNewSession,
     ];
 }
 
@@ -1559,14 +1559,14 @@ impl ::protobuf::EnumFull for MessageType {
             MessageType::MessageType_SolanaAddress => 240,
             MessageType::MessageType_SolanaSignTx => 241,
             MessageType::MessageType_SolanaTxSignature => 242,
-            MessageType::MessageType_StartPairingRequest => 243,
-            MessageType::MessageType_StartPairingResponse => 244,
-            MessageType::MessageType_CredentialRequest => 245,
-            MessageType::MessageType_CredentialResponse => 246,
-            MessageType::MessageType_EndRequest => 247,
-            MessageType::MessageType_EndResponse => 248,
-            MessageType::MessageType_CreateNewSession => 249,
-            MessageType::MessageType_NewSession => 250,
+            MessageType::MessageType_ThpStartPairingRequest => 243,
+            MessageType::MessageType_ThpStartPairingResponse => 244,
+            MessageType::MessageType_ThpCredentialRequest => 245,
+            MessageType::MessageType_ThpCredentialResponse => 246,
+            MessageType::MessageType_ThpEndRequest => 247,
+            MessageType::MessageType_ThpEndResponse => 248,
+            MessageType::MessageType_ThpCreateNewSession => 249,
+            MessageType::MessageType_ThpNewSession => 250,
         };
         Self::enum_descriptor().value_by_index(index)
     }
@@ -1616,7 +1616,7 @@ pub mod exts {
 
 static file_descriptor_proto_data: &'static [u8] = b"\
     \n\x0emessages.proto\x12\x12hw.trezor.messages\x1a\x20google/protobuf/de\
-    scriptor.proto*\xfbV\n\x0bMessageType\x12(\n\x16MessageType_Initialize\
+    scriptor.proto*\x93W\n\x0bMessageType\x12(\n\x16MessageType_Initialize\
     \x10\0\x1a\x0c\x80\xa6\x1d\x01\xb0\xb5\x18\x01\x90\xb5\x18\x01\x12\x1e\n\
     \x10MessageType_Ping\x10\x01\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12\
     %\n\x13MessageType_Success\x10\x02\x1a\x0c\x80\xa6\x1d\x01\xa8\xb5\x18\
@@ -1891,40 +1891,40 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x07\x1a\x04\x90\xb5\x18\x01\x12$\n\x19MessageType_SolanaAddress\x10\x87\
     \x07\x1a\x04\x98\xb5\x18\x01\x12#\n\x18MessageType_SolanaSignTx\x10\x88\
     \x07\x1a\x04\x90\xb5\x18\x01\x12(\n\x1dMessageType_SolanaTxSignature\x10\
-    \x89\x07\x1a\x04\x98\xb5\x18\x01\x12.\n\x1fMessageType_StartPairingReque\
-    st\x10\xe8\x07\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12/\n\x20Message\
-    Type_StartPairingResponse\x10\xe9\x07\x1a\x08\x80\xa6\x1d\x01\x98\xb5\
-    \x18\x01\x12,\n\x1dMessageType_CredentialRequest\x10\xea\x07\x1a\x08\x80\
-    \xa6\x1d\x01\x90\xb5\x18\x01\x12-\n\x1eMessageType_CredentialResponse\
-    \x10\xeb\x07\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\x12%\n\x16MessageTy\
-    pe_EndRequest\x10\xec\x07\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12&\n\
-    \x17MessageType_EndResponse\x10\xed\x07\x1a\x08\x80\xa6\x1d\x01\x98\xb5\
-    \x18\x01\x12+\n\x1cMessageType_CreateNewSession\x10\xee\x07\x1a\x08\x80\
-    \xa6\x1d\x01\x90\xb5\x18\x01\x12%\n\x16MessageType_NewSession\x10\xef\
-    \x07\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\x1a\x04\xc8\xf3\x18\x01\"\
-    \x04\x08Z\x10\\\"\x04\x08r\x10z\"\x06\x08\xdb\x01\x10\xdb\x01\"\x06\x08\
-    \xe0\x01\x10\xe0\x01\"\x06\x08\xac\x02\x10\xb0\x02\"\x06\x08\xb5\x02\x10\
-    \xb8\x02:<\n\x07wire_in\x18\xd2\x86\x03\x20\x01(\x08\x12!.google.protobu\
-    f.EnumValueOptionsR\x06wireIn:>\n\x08wire_out\x18\xd3\x86\x03\x20\x01(\
-    \x08\x12!.google.protobuf.EnumValueOptionsR\x07wireOut:G\n\rwire_debug_i\
-    n\x18\xd4\x86\x03\x20\x01(\x08\x12!.google.protobuf.EnumValueOptionsR\
-    \x0bwireDebugIn:I\n\x0ewire_debug_out\x18\xd5\x86\x03\x20\x01(\x08\x12!.\
-    google.protobuf.EnumValueOptionsR\x0cwireDebugOut:@\n\twire_tiny\x18\xd6\
-    \x86\x03\x20\x01(\x08\x12!.google.protobuf.EnumValueOptionsR\x08wireTiny\
-    :L\n\x0fwire_bootloader\x18\xd7\x86\x03\x20\x01(\x08\x12!.google.protobu\
-    f.EnumValueOptionsR\x0ewireBootloader:C\n\x0bwire_no_fsm\x18\xd8\x86\x03\
-    \x20\x01(\x08\x12!.google.protobuf.EnumValueOptionsR\twireNoFsm:F\n\x0cb\
-    itcoin_only\x18\xe0\xd4\x03\x20\x01(\x08\x12!.google.protobuf.EnumValueO\
-    ptionsR\x0bbitcoinOnly:U\n\x17has_bitcoin_only_values\x18\xb9\x8e\x03\
-    \x20\x01(\x08\x12\x1c.google.protobuf.EnumOptionsR\x14hasBitcoinOnlyValu\
-    es:T\n\x14experimental_message\x18\xa1\x96\x03\x20\x01(\x08\x12\x1f.goog\
-    le.protobuf.MessageOptionsR\x13experimentalMessage:>\n\twire_type\x18\
-    \xa2\x96\x03\x20\x01(\r\x12\x1f.google.protobuf.MessageOptionsR\x08wireT\
-    ype:N\n\x12experimental_field\x18\x89\x9e\x03\x20\x01(\x08\x12\x1d.googl\
-    e.protobuf.FieldOptionsR\x11experimentalField:U\n\x17include_in_bitcoin_\
-    only\x18\xe0\xd4\x03\x20\x01(\x08\x12\x1c.google.protobuf.FileOptionsR\
-    \x14includeInBitcoinOnlyB8\n#com.satoshilabs.trezor.lib.protobufB\rTrezo\
-    rMessage\x80\xa6\x1d\x01\
+    \x89\x07\x1a\x04\x98\xb5\x18\x01\x121\n\"MessageType_ThpStartPairingRequ\
+    est\x10\xe8\x07\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x122\n#MessageTy\
+    pe_ThpStartPairingResponse\x10\xe9\x07\x1a\x08\x80\xa6\x1d\x01\x98\xb5\
+    \x18\x01\x12/\n\x20MessageType_ThpCredentialRequest\x10\xea\x07\x1a\x08\
+    \x80\xa6\x1d\x01\x90\xb5\x18\x01\x120\n!MessageType_ThpCredentialRespons\
+    e\x10\xeb\x07\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\x12(\n\x19MessageT\
+    ype_ThpEndRequest\x10\xec\x07\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\
+    \x12)\n\x1aMessageType_ThpEndResponse\x10\xed\x07\x1a\x08\x80\xa6\x1d\
+    \x01\x98\xb5\x18\x01\x12.\n\x1fMessageType_ThpCreateNewSession\x10\xee\
+    \x07\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12(\n\x19MessageType_ThpNe\
+    wSession\x10\xef\x07\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\x1a\x04\xc8\
+    \xf3\x18\x01\"\x04\x08Z\x10\\\"\x04\x08r\x10z\"\x06\x08\xdb\x01\x10\xdb\
+    \x01\"\x06\x08\xe0\x01\x10\xe0\x01\"\x06\x08\xac\x02\x10\xb0\x02\"\x06\
+    \x08\xb5\x02\x10\xb8\x02:<\n\x07wire_in\x18\xd2\x86\x03\x20\x01(\x08\x12\
+    !.google.protobuf.EnumValueOptionsR\x06wireIn:>\n\x08wire_out\x18\xd3\
+    \x86\x03\x20\x01(\x08\x12!.google.protobuf.EnumValueOptionsR\x07wireOut:\
+    G\n\rwire_debug_in\x18\xd4\x86\x03\x20\x01(\x08\x12!.google.protobuf.Enu\
+    mValueOptionsR\x0bwireDebugIn:I\n\x0ewire_debug_out\x18\xd5\x86\x03\x20\
+    \x01(\x08\x12!.google.protobuf.EnumValueOptionsR\x0cwireDebugOut:@\n\twi\
+    re_tiny\x18\xd6\x86\x03\x20\x01(\x08\x12!.google.protobuf.EnumValueOptio\
+    nsR\x08wireTiny:L\n\x0fwire_bootloader\x18\xd7\x86\x03\x20\x01(\x08\x12!\
+    .google.protobuf.EnumValueOptionsR\x0ewireBootloader:C\n\x0bwire_no_fsm\
+    \x18\xd8\x86\x03\x20\x01(\x08\x12!.google.protobuf.EnumValueOptionsR\twi\
+    reNoFsm:F\n\x0cbitcoin_only\x18\xe0\xd4\x03\x20\x01(\x08\x12!.google.pro\
+    tobuf.EnumValueOptionsR\x0bbitcoinOnly:U\n\x17has_bitcoin_only_values\
+    \x18\xb9\x8e\x03\x20\x01(\x08\x12\x1c.google.protobuf.EnumOptionsR\x14ha\
+    sBitcoinOnlyValues:T\n\x14experimental_message\x18\xa1\x96\x03\x20\x01(\
+    \x08\x12\x1f.google.protobuf.MessageOptionsR\x13experimentalMessage:>\n\
+    \twire_type\x18\xa2\x96\x03\x20\x01(\r\x12\x1f.google.protobuf.MessageOp\
+    tionsR\x08wireType:N\n\x12experimental_field\x18\x89\x9e\x03\x20\x01(\
+    \x08\x12\x1d.google.protobuf.FieldOptionsR\x11experimentalField:U\n\x17i\
+    nclude_in_bitcoin_only\x18\xe0\xd4\x03\x20\x01(\x08\x12\x1c.google.proto\
+    buf.FileOptionsR\x14includeInBitcoinOnlyB8\n#com.satoshilabs.trezor.lib.\
+    protobufB\rTrezorMessage\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
