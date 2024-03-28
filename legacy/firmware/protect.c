@@ -150,7 +150,7 @@ const char *requestPin(PinMatrixRequestType type, const char *text) {
 }
 
 secbool protectPinUiCallback(uint32_t wait, uint32_t progress,
-                             const char *message) {
+                             enum storage_ui_message_t message) {
   // Convert wait to secstr string.
   char secstrbuf[] = _("________0 seconds");
   char *secstr = secstrbuf + 9;
@@ -165,7 +165,27 @@ secbool protectPinUiCallback(uint32_t wait, uint32_t progress,
     secstrbuf[16] = 0;
   }
   oledClear();
-  oledDrawStringCenter(OLED_WIDTH / 2, 0 * 9, message, FONT_STANDARD);
+
+  const char *message_str = NULL;
+  switch (message) {
+    case VERIFYING_PIN_MSG:
+      message_str = _("Verifying PIN");
+      break;
+    case PROCESSING_MSG:
+      message_str = _("Processing");
+      break;
+    case STARTING_MSG:
+      message_str = _("Starting up");
+      break;
+    case WRONG_PIN_MSG:
+      message_str = _("Wrong PIN");
+      break;
+    default:
+      message_str = _("");
+      break;
+  }
+
+  oledDrawStringCenter(OLED_WIDTH / 2, 0 * 9, message_str, FONT_STANDARD);
   oledDrawStringCenter(OLED_WIDTH / 2, 2 * 9, _("Please wait"), FONT_STANDARD);
   oledDrawStringCenter(OLED_WIDTH / 2, 3 * 9, secstr, FONT_STANDARD);
   oledDrawStringCenter(OLED_WIDTH / 2, 4 * 9, _("to continue ..."),

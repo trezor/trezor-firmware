@@ -3,7 +3,8 @@
 use super::ffi;
 use crate::error::Error;
 use core::ptr;
-use cstr_core::CStr;
+
+use num_traits::FromPrimitive;
 
 /// Result of PIN delay callback.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -14,13 +15,23 @@ pub enum PinCallbackResult {
     Abort,
 }
 
+#[derive(Copy, Clone, Debug, PartialEq, Eq, FromPrimitive)]
+pub enum PinCallbackMessage {
+    None,
+    VerifyingPIN,
+    Processing,
+    Starting,
+    WrongPIN,
+}
+
 /// PIN delay callback function type.
 /// The storage layer will call this function while the PIN timeout is in
 /// progress. This is useful for showing UI progress bar.
 /// `wait` is the total number of seconds waiting.
 /// `progress` is a value between 0 and 1000, where 1000 indicates 100%.
 /// `message` is a message to show to the user.
-pub type PinDelayCallback = fn(wait: u32, progress: u32, message: &str) -> PinCallbackResult;
+pub type PinDelayCallback =
+    fn(wait: u32, progress: u32, message: PinCallbackMessage) -> PinCallbackResult;
 
 pub type ExternalSalt = [u8; ffi::EXTERNAL_SALT_SIZE as usize];
 
@@ -31,12 +42,17 @@ static mut PIN_UI_CALLBACK: Option<PinDelayCallback> = None;
 unsafe extern "C" fn callback_wrapper(
     wait: u32,
     progress: u32,
-    message: *const cty::c_char,
+    message: ffi::storage_ui_message_t,
 ) -> ffi::secbool {
-    let message = unsafe { CStr::from_ptr(message as _) };
     let result = unsafe {
         PIN_UI_CALLBACK
-            .map(|c| c(wait, progress, message.to_str().unwrap_or("")))
+            .map(|c| {
+                c(
+                    wait,
+                    progress,
+                    PinCallbackMessage::from_u32(message).unwrap_or(PinCallbackMessage::None),
+                )
+            })
             .unwrap_or(PinCallbackResult::Continue)
     };
     if matches!(result, PinCallbackResult::Abort) {
@@ -266,7 +282,7 @@ mod tests {
 
     static mut PIN_CALLBACK_CALLED: bool = false;
 
-    fn pin_callback(_wait: u32, _progress: u32, _message: &str) -> PinCallbackResult {
+    fn pin_callback(_wait: u32, _progress: u32, _message: PinCallbackMessage) -> PinCallbackResult {
         unsafe {
             PIN_CALLBACK_CALLED = true;
         }

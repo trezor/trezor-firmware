@@ -34,7 +34,7 @@ async def authenticate_device(msg: AuthenticateDevice) -> AuthenticityProof:
     write_compact_size(h, len(msg.challenge))
     h.extend(msg.challenge)
 
-    spinner = progress("", description=TR.progress__authenticity_check)
+    spinner = progress(TR.progress__authenticity_check)
     spinner.report(0)
 
     try:

@@ -1547,10 +1547,18 @@ extern "C" fn new_show_remaining_shares(n_args: usize, args: *const Obj, kwargs:
 
 extern "C" fn new_show_progress(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let description: StrBuffer = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
         let indeterminate: bool = kwargs.get_or(Qstr::MP_QSTR_indeterminate, false)?;
-        let description: StrBuffer =
-            kwargs.get_or(Qstr::MP_QSTR_description, StrBuffer::empty())?;
+        let title: Option<StrBuffer> = kwargs
+            .get(Qstr::MP_QSTR_title)
+            .and_then(Obj::try_into_option)
+            .unwrap_or(None);
+
+        let (title, description) = if let Some(title) = title {
+            (title, description)
+        } else {
+            (description, StrBuffer::empty())
+        };
 
         // Description updates are received as &str and we need to provide a way to
         // convert them to StrBuffer.
@@ -2130,9 +2138,9 @@ pub static mp_module_trezorui2: Module = obj_module! {
 
     /// def show_progress(
     ///     *,
-    ///     title: str,
+    ///     description: str,
     ///     indeterminate: bool = False,
-    ///     description: str = "",
+    ///     title: str | None = None,
     /// ) -> LayoutObj[UiResult]:
     ///     """Show progress loader. Please note that the number of lines reserved on screen for
     ///    description is determined at construction time. If you want multiline descriptions

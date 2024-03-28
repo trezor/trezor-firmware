@@ -1234,6 +1234,10 @@ pub enum TranslatedString {
     ethereum__staking_unstake = 840,  // "UNSTAKE"
     #[cfg(feature = "universal_fw")]
     ethereum__staking_unstake_intro = 841,  // "Unstake ETH from Everstake?"
+    storage_msg__processing = 842,  // "PROCESSING"
+    storage_msg__starting = 843,  // "STARTING UP"
+    storage_msg__verifying_pin = 844,  // "VERIFYING PIN"
+    storage_msg__wrong_pin = 845,  // "WRONG PIN"
 }
 
 impl TranslatedString {
@@ -2463,6 +2467,10 @@ impl TranslatedString {
             Self::ethereum__staking_unstake => "UNSTAKE",
             #[cfg(feature = "universal_fw")]
             Self::ethereum__staking_unstake_intro => "Unstake ETH from Everstake?",
+            Self::storage_msg__processing => "PROCESSING",
+            Self::storage_msg__starting => "STARTING UP",
+            Self::storage_msg__verifying_pin => "VERIFYING PIN",
+            Self::storage_msg__wrong_pin => "WRONG PIN",
         }
     }
 
@@ -3693,6 +3701,10 @@ impl TranslatedString {
             Qstr::MP_QSTR_ethereum__staking_unstake => Some(Self::ethereum__staking_unstake),
             #[cfg(feature = "universal_fw")]
             Qstr::MP_QSTR_ethereum__staking_unstake_intro => Some(Self::ethereum__staking_unstake_intro),
+            Qstr::MP_QSTR_storage_msg__processing => Some(Self::storage_msg__processing),
+            Qstr::MP_QSTR_storage_msg__starting => Some(Self::storage_msg__starting),
+            Qstr::MP_QSTR_storage_msg__verifying_pin => Some(Self::storage_msg__verifying_pin),
+            Qstr::MP_QSTR_storage_msg__wrong_pin => Some(Self::storage_msg__wrong_pin),
             _ => None,
         }
     }
