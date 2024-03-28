@@ -5,7 +5,7 @@ mod ffi {
     }
 }
 
-use crate::ui::screens::screen_fatal_error;
+use crate::ui::ui_features::{ModelUI, UIFeaturesCommon};
 
 fn shutdown() -> ! {
     unsafe { ffi::trezor_shutdown() }
@@ -13,13 +13,13 @@ fn shutdown() -> ! {
 
 #[cfg(feature = "bootloader")]
 pub fn __fatal_error(_expr: &str, _msg: &str, _file: &str, _line: u32, _func: &str) -> ! {
-    screen_fatal_error("BL.rs", "BL.rs", "PLEASE VISIT\nTREZOR.IO/RSOD");
+    ModelUI::screen_fatal_error("BL.rs", "BL.rs", "PLEASE VISIT\nTREZOR.IO/RSOD");
     shutdown()
 }
 
 #[cfg(not(feature = "bootloader"))]
 pub fn __fatal_error(_expr: &str, msg: &str, _file: &str, _line: u32, _func: &str) -> ! {
-    screen_fatal_error("INTERNAL_ERROR", msg, "PLEASE VISIT\nTREZOR.IO/RSOD");
+    ModelUI::screen_fatal_error("INTERNAL_ERROR", msg, "PLEASE VISIT\nTREZOR.IO/RSOD");
     shutdown()
 }
 
