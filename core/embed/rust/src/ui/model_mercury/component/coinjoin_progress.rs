@@ -6,7 +6,6 @@ use crate::{
     micropython::buffer::StrBuffer,
     translations::TR,
     ui::{
-        canvas::algo::PI4,
         component::{
             base::Never, Bar, Child, Component, ComponentExt, Empty, Event, EventCtx, Label, Split,
         },
@@ -142,8 +141,8 @@ where
 
         let start = (self.value as i32 - 100) % 1000;
         let end = (self.value as i32 + 100) % 1000;
-        let start = ((start * 8 * PI4 as i32) / 1000) as i16;
-        let end = ((end * 8 * PI4 as i32) / 1000) as i16;
+        let start = ((start * 8 * shape::PI4 as i32) / 1000) as i16;
+        let end = ((end * 8 * shape::PI4 as i32) / 1000) as i16;
 
         shape::Circle::new(center, LOADER_OUTER)
             .with_bg(inactive_color)
