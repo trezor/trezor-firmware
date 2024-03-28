@@ -25,7 +25,7 @@ cd $(dirname $0)
 declare -i num_of_tests=${#tests[@]}
 
 for test_case in ${tests[@]}; do
-    echo ${MICROPYTHON} 
+    echo ${MICROPYTHON}
     echo ${test_case}
     echo
     if $MICROPYTHON $test_case; then
