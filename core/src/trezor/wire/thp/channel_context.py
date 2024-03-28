@@ -197,11 +197,11 @@ class ChannelContext(Context):
                     message = message_handler.wrap_protobuf_load(buf, expected_type)
                     print(message)
                     # ------------------------------------------------TYPE ERROR------------------------------------------------
-                    session_message: ThpCreateNewSession = message
-                    print("passphrase:", session_message.passphrase)
+                    assert isinstance(message, ThpCreateNewSession)
+                    print("passphrase:", message.passphrase)
                     # await thp_messages.handle_CreateNewSession(message)
-                    if session_message.passphrase is not None:
-                        self.create_new_session(session_message.passphrase)
+                    if message.passphrase is not None:
+                        self.create_new_session(message.passphrase)
                     else:
                         self.create_new_session()
                 except Exception as e:

@@ -2,7 +2,7 @@ import ustruct  # pyright:ignore[reportMissingModuleSource]
 
 from storage.cache_thp import BROADCAST_CHANNEL_ID
 from trezor import protobuf
-from trezor.messages import CreateNewSession
+from trezor.messages import ThpCreateNewSession
 
 from .. import message_handler
 from ..protocol_common import Message
@@ -90,7 +90,7 @@ def decode_message(buffer: bytes, msg_type: int) -> protobuf.MessageType:
     return x
 
 
-async def handle_CreateNewSession(msg: CreateNewSession) -> None:
+async def handle_CreateNewSession(msg: ThpCreateNewSession) -> None:
     print(msg.passphrase)
     print(msg.on_device)
     pass
