@@ -57,7 +57,9 @@ uint32_t SystemCoreClock = DEFAULT_FREQ * 1000000U;
 #elif defined HSE_8MHZ
 #define PLLN_COEF 2U
 #else
-#error Unsupported HSE frequency
+// no HSE available, use 16MHz HSI
+#define HSI_ONLY
+#define PLLN_COEF 1U
 #endif
 
 // assuming HSE 16 MHz
@@ -115,12 +117,21 @@ void SystemInit(void) {
   while (HAL_IS_BIT_CLR(PWR->SVMSR, PWR_SVMSR_ACTVOSRDY))
     ;
 
+#ifndef HSI_ONLY
   __HAL_RCC_HSE_CONFIG(RCC_HSE_ON);
   while (READ_BIT(RCC->CR, RCC_CR_HSERDY) == 0U)
     ;
-
   __HAL_RCC_PLL_CONFIG(RCC_PLLSOURCE_HSE, RCC_PLLMBOOST_DIV1, DEFAULT_PLLM,
                        DEFAULT_PLLN, DEFAULT_PLLP, DEFAULT_PLLQ, DEFAULT_PLLR);
+#else
+  RCC->CR |= RCC_CR_HSION;
+  // wait until the HSI is on
+  while ((RCC->CR & RCC_CR_HSION) != RCC_CR_HSION)
+    ;
+
+  __HAL_RCC_PLL_CONFIG(RCC_PLLSOURCE_HSI, RCC_PLLMBOOST_DIV1, DEFAULT_PLLM,
+                       DEFAULT_PLLN, DEFAULT_PLLP, DEFAULT_PLLQ, DEFAULT_PLLR);
+#endif
 
   __HAL_RCC_PLL_FRACN_DISABLE();
 
@@ -170,15 +181,17 @@ void SystemInit(void) {
   // this will be overriden by static initialization
   SystemCoreClock = DEFAULT_FREQ * 1000000U;
 
-  // enable clock security system, HSE clock, and main PLL
+#ifndef HSI_ONLY
+  // enable clock security system
   RCC->CR |= RCC_CR_CSSON;
 
   // turn off the HSI as it is now unused (it will be turned on again
   // automatically if a clock security failure occurs)
   RCC->CR &= ~RCC_CR_HSION;
-  // wait until ths HSI is off
+  // wait until the HSI is off
   while ((RCC->CR & RCC_CR_HSION) == RCC_CR_HSION)
     ;
+#endif
 
   // TODO turn off MSI?
 
