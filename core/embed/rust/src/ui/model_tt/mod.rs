@@ -1,4 +1,4 @@
-use super::{geometry::Rect, layout::simplified::SimplifiedFeatures};
+use super::{geometry::Rect, UIFeaturesCommon};
 
 #[cfg(feature = "bootloader")]
 pub mod bootloader;
@@ -8,11 +8,11 @@ pub mod theme;
 
 #[cfg(feature = "micropython")]
 pub mod layout;
-pub mod screens;
+mod screens;
 
-pub struct ModelTTFeatures {}
+pub struct ModelTTFeatures;
 
-impl SimplifiedFeatures for ModelTTFeatures {
+impl UIFeaturesCommon for ModelTTFeatures {
     fn fadein() {
         #[cfg(feature = "backlight")]
         crate::ui::display::fade_backlight_duration(theme::BACKLIGHT_NORMAL, 150);
@@ -24,4 +24,12 @@ impl SimplifiedFeatures for ModelTTFeatures {
     }
 
     const SCREEN: Rect = constant::SCREEN;
+
+    fn screen_fatal_error(title: &str, msg: &str, footer: &str) {
+        screens::screen_fatal_error(title, msg, footer);
+    }
+
+    fn screen_boot_full() {
+        screens::screen_boot_full();
+    }
 }

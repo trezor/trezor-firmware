@@ -9,21 +9,10 @@ use crate::ui::event::TouchEvent;
 use crate::ui::{
     component::{Component, Event, EventCtx, Never},
     display,
-    geometry::Rect,
+    ui_features::ModelUI,
+    UIFeaturesCommon,
 };
 use num_traits::ToPrimitive;
-
-pub trait SimplifiedFeatures {
-    fn fadein() {}
-    fn fadeout() {}
-
-    const SCREEN: Rect;
-}
-
-#[cfg(all(feature = "model_tr", not(feature = "model_tt")))]
-pub type ModelFeatures = crate::ui::model_tr::ModelTRFeatures;
-#[cfg(feature = "model_tt")]
-pub type ModelFeatures = crate::ui::model_tt::ModelTTFeatures;
 
 pub trait ReturnToC {
     fn return_to_c(self) -> u32;
@@ -79,12 +68,12 @@ where
     F: Component,
     F::Msg: ReturnToC,
 {
-    frame.place(ModelFeatures::SCREEN);
-    ModelFeatures::fadeout();
+    frame.place(ModelUI::SCREEN);
+    ModelUI::fadeout();
     display::sync();
     frame.paint();
     display::refresh();
-    ModelFeatures::fadein();
+    ModelUI::fadein();
 
     #[cfg(feature = "button")]
     while button_eval().is_some() {}
@@ -115,14 +104,14 @@ pub fn show<F>(frame: &mut F, fading: bool)
 where
     F: Component,
 {
-    frame.place(ModelFeatures::SCREEN);
+    frame.place(ModelUI::SCREEN);
     if fading {
-        ModelFeatures::fadeout()
+        ModelUI::fadeout()
     };
     display::sync();
     frame.paint();
     display::refresh();
     if fading {
-        ModelFeatures::fadein()
+        ModelUI::fadein()
     };
 }

@@ -1,4 +1,4 @@
-use super::{geometry::Rect, layout::simplified::SimplifiedFeatures};
+use super::{geometry::Rect, UIFeaturesCommon};
 
 #[cfg(feature = "bootloader")]
 pub mod bootloader;
@@ -7,11 +7,19 @@ pub mod component;
 pub mod constant;
 #[cfg(feature = "micropython")]
 pub mod layout;
-pub mod screens;
+mod screens;
 pub mod theme;
 
 pub struct ModelTRFeatures {}
 
-impl SimplifiedFeatures for ModelTRFeatures {
+impl UIFeaturesCommon for ModelTRFeatures {
     const SCREEN: Rect = constant::SCREEN;
+
+    fn screen_fatal_error(title: &str, msg: &str, footer: &str) {
+        screens::screen_fatal_error(title, msg, footer);
+    }
+
+    fn screen_boot_full() {
+        screens::screen_boot_full();
+    }
 }
