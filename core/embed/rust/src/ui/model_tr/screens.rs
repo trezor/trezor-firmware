@@ -30,8 +30,7 @@ pub fn screen_fatal_error(title: &str, msg: &str, footer: &str) {
     frame.paint();
 }
 
-#[no_mangle]
-extern "C" fn screen_boot_full() {
+pub fn screen_boot_full() {
     let mut frame = WelcomeScreen::new(false);
     frame.place(screen());
     display::sync();

@@ -1,7 +1,6 @@
 use heapless::String;
 
 use crate::{
-    strutil::hexlify,
     trezorhal::secbool::secbool,
     ui::{
         component::{connect::Connect, Label, LineBreaking::BreakWordsNoHyphen},
@@ -10,7 +9,6 @@ use crate::{
         display::{self, Color, Font, Icon},
         geometry::{Alignment2D, Offset, Point, Rect},
         layout::simplified::{run, show, ReturnToC},
-        util::{from_c_array, from_c_str},
     },
 };
 
@@ -29,6 +27,7 @@ mod intro;
 mod menu;
 mod welcome;
 
+use crate::ui::ui_features::UIFeaturesBootloader;
 use intro::Intro;
 use menu::Menu;
 use welcome::Welcome;
@@ -41,31 +40,19 @@ impl ReturnToC for ConfirmMsg {
     }
 }
 
-#[no_mangle]
-extern "C" fn screen_install_confirm(
-    vendor_str: *const cty::c_char,
-    vendor_str_len: u8,
-    version: *const cty::c_char,
-    fingerprint: *const cty::uint8_t,
+fn screen_install_confirm(
+    vendor_str: &str,
+    version: &str,
+    fingerprint: &str,
     should_keep_seed: bool,
     is_newvendor: bool,
-    version_cmp: cty::c_int,
+    version_cmp: i32,
 ) -> u32 {
-    let text = unwrap!(unsafe { from_c_array(vendor_str, vendor_str_len as usize) });
-    let version = unwrap!(unsafe { from_c_str(version) });
-
-    let mut fingerprint_buffer: [u8; 64] = [0; 64];
-    let fingerprint_str = unsafe {
-        let fingerprint_slice = core::slice::from_raw_parts(fingerprint, 32);
-        hexlify(fingerprint_slice, &mut fingerprint_buffer);
-        core::str::from_utf8_unchecked(fingerprint_buffer.as_ref())
-    };
-
     let mut version_str: BootloaderString = String::new();
     unwrap!(version_str.push_str("Firmware version "));
     unwrap!(version_str.push_str(version));
     unwrap!(version_str.push_str("\nby "));
-    unwrap!(version_str.push_str(text));
+    unwrap!(version_str.push_str(vendor_str));
 
     let title_str = if is_newvendor {
         "CHANGE FW VENDOR"
@@ -79,7 +66,7 @@ extern "C" fn screen_install_confirm(
 
     let message = Label::left_aligned(version_str.as_str(), TEXT_NORMAL).vertically_centered();
     let fingerprint = Label::left_aligned(
-        fingerprint_str,
+        fingerprint,
         TEXT_NORMAL.with_line_breaking(BreakWordsNoHyphen),
     )
     .vertically_centered();
@@ -92,8 +79,7 @@ extern "C" fn screen_install_confirm(
     run(&mut frame)
 }
 
-#[no_mangle]
-extern "C" fn screen_wipe_confirm() -> u32 {
+fn screen_wipe_confirm() -> u32 {
     let message =
         Label::left_aligned("Seed and firmware will be erased!", TEXT_NORMAL).vertically_centered();
 
@@ -102,8 +88,7 @@ extern "C" fn screen_wipe_confirm() -> u32 {
     run(&mut frame)
 }
 
-#[no_mangle]
-extern "C" fn screen_unlock_bootloader_confirm() -> u32 {
+fn screen_unlock_bootloader_confirm() -> u32 {
     let message =
         Label::left_aligned("This action cannot be undone!", TEXT_NORMAL).vertically_centered();
 
@@ -112,8 +97,7 @@ extern "C" fn screen_unlock_bootloader_confirm() -> u32 {
     run(&mut frame)
 }
 
-#[no_mangle]
-extern "C" fn screen_unlock_bootloader_success() {
+fn screen_unlock_bootloader_success() {
     let title = Label::centered("Bootloader unlocked", TEXT_BOLD).vertically_centered();
 
     let content =
@@ -123,23 +107,11 @@ extern "C" fn screen_unlock_bootloader_success() {
     show(&mut frame, false);
 }
 
-#[no_mangle]
-extern "C" fn screen_menu(firmware_present: secbool) -> u32 {
+fn screen_menu(firmware_present: secbool) -> u32 {
     run(&mut Menu::new(firmware_present))
 }
 
-#[no_mangle]
-extern "C" fn screen_intro(
-    bld_version: *const cty::c_char,
-    vendor_str: *const cty::c_char,
-    vendor_str_len: u8,
-    version: *const cty::c_char,
-    fw_ok: bool,
-) -> u32 {
-    let vendor = unwrap!(unsafe { from_c_array(vendor_str, vendor_str_len as usize) });
-    let version = unwrap!(unsafe { from_c_str(version) });
-    let bld_version = unwrap!(unsafe { from_c_str(bld_version) });
-
+fn screen_intro(bld_version: &str, vendor: &str, version: &str, fw_ok: bool) -> u32 {
     let mut title_str: BootloaderString = String::new();
     unwrap!(title_str.push_str("BOOTLOADER "));
     unwrap!(title_str.push_str(bld_version));
@@ -197,8 +169,7 @@ fn screen_progress(
     display::refresh();
 }
 
-#[no_mangle]
-extern "C" fn screen_install_progress(progress: u16, initialize: bool, _initial_setup: bool) {
+fn screen_install_progress(progress: u16, initialize: bool) {
     screen_progress(
         "Installing",
         "firmware",
@@ -210,8 +181,7 @@ extern "C" fn screen_install_progress(progress: u16, initialize: bool, _initial_
     );
 }
 
-#[no_mangle]
-extern "C" fn screen_wipe_progress(progress: u16, initialize: bool) {
+fn screen_wipe_progress(progress: u16, initialize: bool) {
     screen_progress(
         "Resetting",
         "Trezor",
@@ -223,14 +193,12 @@ extern "C" fn screen_wipe_progress(progress: u16, initialize: bool) {
     );
 }
 
-#[no_mangle]
-extern "C" fn screen_connect(_initial_setup: bool) {
+fn screen_connect() {
     let mut frame = Connect::new("Waiting for host...", BLD_FG, BLD_BG);
     show(&mut frame, false);
 }
 
-#[no_mangle]
-extern "C" fn screen_wipe_success() {
+fn screen_wipe_success() {
     let title = Label::centered("Trezor Reset", TEXT_BOLD).vertically_centered();
 
     let content =
@@ -240,8 +208,7 @@ extern "C" fn screen_wipe_success() {
     show(&mut frame, false);
 }
 
-#[no_mangle]
-extern "C" fn screen_wipe_fail() {
+fn screen_wipe_fail() {
     let title = Label::centered("Reset failed", TEXT_BOLD).vertically_centered();
 
     let content =
@@ -251,16 +218,14 @@ extern "C" fn screen_wipe_fail() {
     show(&mut frame, false);
 }
 
-#[no_mangle]
-extern "C" fn screen_boot_empty(_fading: bool) {
+fn screen_boot_empty(_fading: bool) {
     display::rect_fill(SCREEN, BLD_BG);
 
     let mut frame = WelcomeScreen::new(true);
     show(&mut frame, false);
 }
 
-#[no_mangle]
-extern "C" fn screen_install_fail() {
+fn screen_install_fail() {
     let title = Label::centered("Install failed", TEXT_BOLD).vertically_centered();
 
     let content =
@@ -270,12 +235,7 @@ extern "C" fn screen_install_fail() {
     show(&mut frame, false);
 }
 
-#[no_mangle]
-extern "C" fn screen_install_success(
-    restart_seconds: u8,
-    _initial_setup: bool,
-    complete_draw: bool,
-) {
+fn screen_install_success(restart_seconds: u8, _initial_setup: bool, complete_draw: bool) {
     let mut reboot_msg = BootloaderString::new();
 
     if restart_seconds >= 1 {
@@ -295,31 +255,107 @@ extern "C" fn screen_install_success(
     show(&mut frame, false);
 }
 
-#[no_mangle]
-extern "C" fn screen_welcome() {
-    let mut frame = Welcome::new();
-    show(&mut frame, false);
-}
-
-#[no_mangle]
-extern "C" fn bld_continue_label(bg_color: cty::uint16_t) {
+fn bld_continue_label(bg_color: Color) {
     display::text_center(
         Point::new(constant::WIDTH / 2, HEIGHT - 2),
         "CONTINUE",
         Font::NORMAL,
         WHITE,
-        Color::from_u16(bg_color),
+        bg_color,
     );
     ICON_ARM_LEFT.draw(
         Point::new(constant::WIDTH / 2 - 36, HEIGHT - 6),
         Alignment2D::TOP_LEFT,
         WHITE,
-        Color::from_u16(bg_color),
+        bg_color,
     );
     ICON_ARM_RIGHT.draw(
         Point::new(constant::WIDTH / 2 + 25, HEIGHT - 6),
         Alignment2D::TOP_LEFT,
         WHITE,
-        Color::from_u16(bg_color),
+        bg_color,
     );
+}
+
+pub struct ModelTRUIFeaturesBootloader {}
+
+impl UIFeaturesBootloader for ModelTRUIFeaturesBootloader {
+    fn screen_welcome() {
+        let mut frame = Welcome::new();
+        show(&mut frame, true);
+    }
+
+    fn bld_continue_label(bg_color: Color) {
+        bld_continue_label(bg_color);
+    }
+
+    fn screen_install_success(restart_seconds: u8, initial_setup: bool, complete_draw: bool) {
+        screen_install_success(restart_seconds, initial_setup, complete_draw);
+    }
+
+    fn screen_install_fail() {
+        screen_install_fail();
+    }
+
+    fn screen_install_confirm(
+        vendor_str: &str,
+        version: &str,
+        fingerprint: &str,
+        should_keep_seed: bool,
+        is_newvendor: bool,
+        version_cmp: i32,
+    ) -> u32 {
+        screen_install_confirm(
+            vendor_str,
+            version,
+            fingerprint,
+            should_keep_seed,
+            is_newvendor,
+            version_cmp,
+        )
+    }
+
+    fn screen_wipe_confirm() -> u32 {
+        screen_wipe_confirm()
+    }
+
+    fn screen_unlock_bootloader_confirm() -> u32 {
+        screen_unlock_bootloader_confirm()
+    }
+
+    fn screen_unlock_bootloader_success() {
+        screen_unlock_bootloader_success();
+    }
+
+    fn screen_menu(firmware_present: secbool) -> u32 {
+        screen_menu(firmware_present)
+    }
+
+    fn screen_intro(bld_version: &str, vendor_str: &str, version: &str, fw_ok: bool) -> u32 {
+        screen_intro(bld_version, vendor_str, version, fw_ok)
+    }
+
+    fn screen_boot_empty(fading: bool) {
+        screen_boot_empty(fading);
+    }
+
+    fn screen_wipe_progress(progress: u16, initialize: bool) {
+        screen_wipe_progress(progress, initialize);
+    }
+
+    fn screen_install_progress(progress: u16, initialize: bool, _initial_setup: bool) {
+        screen_install_progress(progress, initialize);
+    }
+
+    fn screen_connect(_initial_setup: bool) {
+        screen_connect();
+    }
+
+    fn screen_wipe_success() {
+        screen_wipe_success();
+    }
+
+    fn screen_wipe_fail() {
+        screen_wipe_fail();
+    }
 }
