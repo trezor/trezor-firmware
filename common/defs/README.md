@@ -78,11 +78,6 @@ Duplicate keys are not allowed and coins that would result in duplicate keys can
 added to the dataset.
 
 
-
-## Wallet URLs
-
-If you want to add a **wallet link**, modify the file [`wallets.json`](wallets.json).
-
 # Support Information
 
 We keep track of support status of each built-in coin over our devices. That is
