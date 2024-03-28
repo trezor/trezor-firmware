@@ -97,6 +97,14 @@ DebugLinkRecordScreen = 9003
 DebugLinkEraseSdCard = 9005
 DebugLinkWatchLayout = 9006
 DebugLinkResetDebugEvents = 9007
+StartPairingRequest = 1000
+StartPairingResponse = 1001
+CredentialRequest = 1002
+CredentialResponse = 1003
+EndRequest = 1004
+EndResponse = 1005
+CreateNewSession = 1006
+NewSession = 1007
 if not utils.BITCOIN_ONLY:
     SetU2FCounter = 63
     GetNextU2FCounter = 80

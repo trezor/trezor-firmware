@@ -264,7 +264,14 @@ if TYPE_CHECKING:
         SolanaAddress = 903
         SolanaSignTx = 904
         SolanaTxSignature = 905
+        StartPairingRequest = 1000
+        StartPairingResponse = 1001
+        CredentialRequest = 1002
+        CredentialResponse = 1003
+        EndRequest = 1004
+        EndResponse = 1005
         CreateNewSession = 1006
+        NewSession = 1007
 
     class FailureType(IntEnum):
         UnexpectedMessage = 1
@@ -544,3 +551,9 @@ if TYPE_CHECKING:
         Yay = 0
         Nay = 1
         Pass = 2
+
+    class PairingMethod(IntEnum):
+        NoMethod = 1
+        CodeEntry = 2
+        QrCode = 3
+        NFC_Unidirectional = 4

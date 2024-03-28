@@ -51,6 +51,7 @@ if TYPE_CHECKING:
     from trezor.enums import NEMMosaicLevy  # noqa: F401
     from trezor.enums import NEMSupplyChangeType  # noqa: F401
     from trezor.enums import OutputScriptType  # noqa: F401
+    from trezor.enums import PairingMethod  # noqa: F401
     from trezor.enums import PinMatrixRequestType  # noqa: F401
     from trezor.enums import RecoveryDeviceType  # noqa: F401
     from trezor.enums import RequestType  # noqa: F401
@@ -371,22 +372,6 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["PassphraseAck"]:
-            return isinstance(msg, cls)
-        
-    class CreateNewSession(protobuf.MessageType):
-        passphrase: "str | None"
-        on_device: "bool | None"
-
-        def __init__(
-            self,
-            *,
-            passphrase: "str | None" = None,
-            on_device: "bool | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["CreateNewSession"]:
             return isinstance(msg, cls)
 
     class HDNodeType(protobuf.MessageType):
@@ -6109,6 +6094,74 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["TezosManagerTransfer"]:
+            return isinstance(msg, cls)
+
+    class DeviceProperties(protobuf.MessageType):
+        internal_model: "str | None"
+        model_variant: "int | None"
+        bootloader_mode: "bool | None"
+        protocol_version: "int | None"
+        pairing_methods: "list[PairingMethod]"
+
+        def __init__(
+            self,
+            *,
+            pairing_methods: "list[PairingMethod] | None" = None,
+            internal_model: "str | None" = None,
+            model_variant: "int | None" = None,
+            bootloader_mode: "bool | None" = None,
+            protocol_version: "int | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["DeviceProperties"]:
+            return isinstance(msg, cls)
+
+    class HandshakeCompletionReqNoisePayload(protobuf.MessageType):
+        host_pairing_credential: "bytes | None"
+        pairing_methods: "list[PairingMethod]"
+
+        def __init__(
+            self,
+            *,
+            pairing_methods: "list[PairingMethod] | None" = None,
+            host_pairing_credential: "bytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["HandshakeCompletionReqNoisePayload"]:
+            return isinstance(msg, cls)
+
+    class CreateNewSession(protobuf.MessageType):
+        passphrase: "str | None"
+        on_device: "bool | None"
+
+        def __init__(
+            self,
+            *,
+            passphrase: "str | None" = None,
+            on_device: "bool | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["CreateNewSession"]:
+            return isinstance(msg, cls)
+
+    class NewSession(protobuf.MessageType):
+        new_session_id: "int | None"
+
+        def __init__(
+            self,
+            *,
+            new_session_id: "int | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["NewSession"]:
             return isinstance(msg, cls)
 
     class WebAuthnListResidentCredentials(protobuf.MessageType):

@@ -272,6 +272,14 @@ class MessageType(IntEnum):
     SolanaAddress = 903
     SolanaSignTx = 904
     SolanaTxSignature = 905
+    StartPairingRequest = 1000
+    StartPairingResponse = 1001
+    CredentialRequest = 1002
+    CredentialResponse = 1003
+    EndRequest = 1004
+    EndResponse = 1005
+    CreateNewSession = 1006
+    NewSession = 1007
 
 
 class FailureType(IntEnum):
@@ -593,6 +601,13 @@ class TezosBallotType(IntEnum):
     Yay = 0
     Nay = 1
     Pass = 2
+
+
+class PairingMethod(IntEnum):
+    NoMethod = 1
+    CodeEntry = 2
+    QrCode = 3
+    NFC_Unidirectional = 4
 
 
 class BinanceGetAddress(protobuf.MessageType):
@@ -7696,6 +7711,80 @@ class TezosManagerTransfer(protobuf.MessageType):
     ) -> None:
         self.destination = destination
         self.amount = amount
+
+
+class DeviceProperties(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("internal_model", "string", repeated=False, required=False, default=None),
+        2: protobuf.Field("model_variant", "uint32", repeated=False, required=False, default=None),
+        3: protobuf.Field("bootloader_mode", "bool", repeated=False, required=False, default=None),
+        4: protobuf.Field("protocol_version", "uint32", repeated=False, required=False, default=None),
+        5: protobuf.Field("pairing_methods", "PairingMethod", repeated=True, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        pairing_methods: Optional[Sequence["PairingMethod"]] = None,
+        internal_model: Optional["str"] = None,
+        model_variant: Optional["int"] = None,
+        bootloader_mode: Optional["bool"] = None,
+        protocol_version: Optional["int"] = None,
+    ) -> None:
+        self.pairing_methods: Sequence["PairingMethod"] = pairing_methods if pairing_methods is not None else []
+        self.internal_model = internal_model
+        self.model_variant = model_variant
+        self.bootloader_mode = bootloader_mode
+        self.protocol_version = protocol_version
+
+
+class HandshakeCompletionReqNoisePayload(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("host_pairing_credential", "bytes", repeated=False, required=False, default=None),
+        2: protobuf.Field("pairing_methods", "PairingMethod", repeated=True, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        pairing_methods: Optional[Sequence["PairingMethod"]] = None,
+        host_pairing_credential: Optional["bytes"] = None,
+    ) -> None:
+        self.pairing_methods: Sequence["PairingMethod"] = pairing_methods if pairing_methods is not None else []
+        self.host_pairing_credential = host_pairing_credential
+
+
+class CreateNewSession(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 1006
+    FIELDS = {
+        1: protobuf.Field("passphrase", "string", repeated=False, required=False, default=None),
+        2: protobuf.Field("on_device", "bool", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        passphrase: Optional["str"] = None,
+        on_device: Optional["bool"] = None,
+    ) -> None:
+        self.passphrase = passphrase
+        self.on_device = on_device
+
+
+class NewSession(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 1007
+    FIELDS = {
+        1: protobuf.Field("new_session_id", "uint32", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        new_session_id: Optional["int"] = None,
+    ) -> None:
+        self.new_session_id = new_session_id
 
 
 class WebAuthnListResidentCredentials(protobuf.MessageType):

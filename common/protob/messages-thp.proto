@@ -9,7 +9,7 @@ option java_outer_classname = "TrezorMessageThp";
 
 // Numeric identifiers of pairing methods.
 enum PairingMethod {
-    PairingMethod_None = 1; // Trust without MITM protection.
+    PairingMethod_NoMethod = 1; // Trust without MITM protection.
     PairingMethod_CodeEntry = 2; // User types code diplayed on Trezor into the host application.
     PairingMethod_QrCode = 3; // User scans code displayed on Trezor into host application.
     PairingMethod_NFC_Unidirectional = 4; // Trezor transmits an authentication key to the host device via NFC.
