@@ -559,7 +559,7 @@ impl Component for Lockscreen {
 
 pub fn check_homescreen_format(buffer: &[u8]) -> bool {
     #[cfg(not(feature = "new_rendering"))]
-    let result = is_image_jpeg(buffer) && jpeg_test(buffer);
+    let result = is_image_jpeg(buffer) && crate::ui::display::tjpgd::jpeg_test(buffer);
     #[cfg(feature = "new_rendering")]
     let result = is_image_jpeg(buffer); // !@# TODO: test like if `new_rendering` is off
 
