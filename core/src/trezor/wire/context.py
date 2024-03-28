@@ -42,7 +42,7 @@ if TYPE_CHECKING:
     T = TypeVar("T")
 
 
-class UnexpectedMessage(Exception):
+class UnexpectedMessageWithId(Exception):
     """A message was received that is not part of the current workflow.
 
     Utility exception to inform the session handler that the current workflow
@@ -118,7 +118,7 @@ class CodecContext(Context):
         # If we got a message with unexpected type, raise the message via
         # `UnexpectedMessageError` and let the session handler deal with it.
         if msg.type not in expected_types:
-            raise UnexpectedMessage(msg)
+            raise UnexpectedMessageWithId(msg)
 
         # TODO check that the message has the expected session_id. If not, raise UnexpectedMessageError
         # (and maybe update ctx.session_id - depends on expected behaviour)

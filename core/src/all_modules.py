@@ -217,8 +217,8 @@ trezor.wire.thp
 import trezor.wire.thp
 trezor.wire.thp.ack_handler
 import trezor.wire.thp.ack_handler
-trezor.wire.thp.channel_context
-import trezor.wire.thp.channel_context
+trezor.wire.thp.channel
+import trezor.wire.thp.channel
 trezor.wire.thp.checksum
 import trezor.wire.thp.checksum
 trezor.wire.thp.session_context

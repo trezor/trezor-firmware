@@ -8,12 +8,12 @@ from trezor import io, log, loop, utils
 from .protocol_common import MessageWithId
 from .thp import ChannelState, ack_handler, checksum, thp_messages
 from .thp import thp_session as THP
-from .thp.channel_context import (
+from .thp.channel import (
     CONT_DATA_OFFSET,
     INIT_DATA_OFFSET,
     MAX_PAYLOAD_LEN,
     REPORT_LENGTH,
-    ChannelContext,
+    Channel,
     load_cached_channels,
 )
 from .thp.checksum import CHECKSUM_LENGTH
@@ -38,7 +38,7 @@ _PLAINTEXT = 0x01
 _BUFFER: bytearray
 _BUFFER_LOCK = None
 
-_CHANNEL_CONTEXTS: dict[int, ChannelContext] = {}
+_CHANNEL_CONTEXTS: dict[int, Channel] = {}
 
 
 async def read_message(iface: WireInterface, buffer: utils.BufferType) -> MessageWithId:
@@ -346,7 +346,7 @@ async def _handle_broadcast(
     if not checksum.is_valid(payload[-4:], header.to_bytes() + payload[:-4]):
         raise ThpError("Checksum is not valid")
 
-    new_context: ChannelContext = ChannelContext.create_new_channel(iface, _BUFFER)
+    new_context: Channel = Channel.create_new_channel(iface, _BUFFER)
     cid = int.from_bytes(new_context.channel_id, "big")
     _CHANNEL_CONTEXTS[cid] = new_context
 

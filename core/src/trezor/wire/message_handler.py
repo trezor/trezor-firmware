@@ -137,7 +137,7 @@ async def handle_single_message(
             # results of the handler.
             res_msg = await task
 
-    except context.UnexpectedMessage as exc:
+    except context.UnexpectedMessageWithId as exc:
         # Workflow was trying to read a message from the wire, and
         # something unexpected came in.  See Context.read() for
         # example, which expects some particular message and raises
