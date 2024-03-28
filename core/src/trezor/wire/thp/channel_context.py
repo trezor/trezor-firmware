@@ -263,6 +263,8 @@ class ChannelContext(Context):
         pass
         # TODO protocol.write(self.iface, self.channel_id, session_id, msg)
 
+    # OTHER
+
     def create_new_session(
         self,
         passphrase="",
@@ -274,8 +276,6 @@ class ChannelContext(Context):
         print("help")
         self.sessions[session.session_id] = session
         print("new session created. Session id:", session.session_id)
-
-    # OTHER
 
     def _todo_clear_buffer(self):
         # TODO Buffer clearing not implemented
