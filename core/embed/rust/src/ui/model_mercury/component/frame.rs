@@ -12,6 +12,7 @@ use crate::ui::{
 const TITLE_HEIGHT: i16 = 42;
 const TITLE_SPACE: i16 = 2;
 
+#[derive(Clone)]
 pub struct Frame<T, U> {
     border: Insets,
     title: Child<Label<U>>,
@@ -107,10 +108,10 @@ where
 
     pub fn update_content<F, R>(&mut self, ctx: &mut EventCtx, update_fn: F) -> R
     where
-        F: Fn(&mut T) -> R,
+        F: Fn(&mut EventCtx, &mut T) -> R,
     {
         self.content.mutate(ctx, |ctx, c| {
-            let res = update_fn(c);
+            let res = update_fn(ctx, c);
             c.request_complete_repaint(ctx);
             res
         })
@@ -163,7 +164,7 @@ where
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.title.render(target);
-        self.subtitle.render(target);
+        // self.subtitle.render(target); // FIXME crashes!
         self.button.render(target);
         self.content.render(target);
     }
@@ -193,5 +194,19 @@ where
         if let Some(button) = &self.button {
             t.child("button", button);
         }
+    }
+}
+
+impl<T, U> crate::ui::flow::Swipable for Frame<T, U>
+where
+    T: Component + crate::ui::flow::Swipable,
+    U: AsRef<str>,
+{
+    fn can_swipe(&self, direction: crate::ui::flow::SwipeDirection) -> bool {
+        self.inner().can_swipe(direction)
+    }
+
+    fn swiped(&mut self, ctx: &mut EventCtx, direction: crate::ui::flow::SwipeDirection) {
+        self.update_content(ctx, |ctx, inner| inner.swiped(ctx, direction))
     }
 }

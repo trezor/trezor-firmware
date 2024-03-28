@@ -71,6 +71,11 @@ def check_homescreen_format(data: bytes) -> bool:
 
 
 # rust/src/ui/model_mercury/layout.rs
+def flow_get_address() -> LayoutObj[UiResult]:
+    """Get address / receive funds."
+
+
+# rust/src/ui/model_mercury/layout.rs
 def confirm_action(
     *,
     title: str,

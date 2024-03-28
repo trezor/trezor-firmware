@@ -30,6 +30,7 @@ const MENU_SEP_HEIGHT: i16 = 2;
 type VerticalMenuButtons<T> = Vec<Button<T>, N_ITEMS>;
 type AreasForSeparators = Vec<Rect, N_SEPS>;
 
+#[derive(Clone)]
 pub struct VerticalMenu<T> {
     area: Rect,
     /// buttons placed vertically from top to bottom
@@ -154,3 +155,5 @@ where
         });
     }
 }
+
+impl<T> crate::ui::flow::Swipable for VerticalMenu<T> {}

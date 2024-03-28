@@ -240,9 +240,9 @@ async def handle_EndSession(msg: EndSession) -> Success:
 async def handle_Ping(msg: Ping) -> Success:
     if msg.button_protection:
         from trezor.enums import ButtonRequestType as B
-        from trezor.ui.layouts import confirm_action
+        from trezor.ui.layouts.mercury import flow_demo
 
-        await confirm_action("ping", TR.words__confirm, "ping", br_code=B.ProtectCall)
+        await flow_demo()
     return Success(message=msg.message)
 
 

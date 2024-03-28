@@ -7,6 +7,7 @@ use crate::ui::{
 
 use super::{text::TextStyle, TextLayout};
 
+#[derive(Clone)]
 pub struct Label<T> {
     text: T,
     layout: TextLayout,

@@ -97,6 +97,7 @@ where
     }
 }
 
+#[derive(Clone)]
 pub struct IconDialog<T, U> {
     image: Child<BlendedImage>,
     paragraphs: Paragraphs<ParagraphVecShort<T>>,
@@ -231,3 +232,5 @@ where
         t.child("controls", &self.controls);
     }
 }
+
+impl<T, U> crate::ui::flow::Swipable for IconDialog<T, U> {}

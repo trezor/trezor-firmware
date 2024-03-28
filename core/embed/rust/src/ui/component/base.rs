@@ -73,6 +73,7 @@ pub trait Component {
 /// dirty flag for it. Any mutation of `T` has to happen through the `mutate`
 /// accessor, `T` can then request a paint call to be scheduled later by calling
 /// `EventCtx::request_paint` in its `event` pass.
+#[derive(Clone)]
 pub struct Child<T> {
     component: T,
     marked_for_paint: bool,

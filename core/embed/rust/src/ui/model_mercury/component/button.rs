@@ -23,6 +23,7 @@ pub enum ButtonMsg {
     LongPressed,
 }
 
+#[derive(Clone)]
 pub struct Button<T> {
     area: Rect,
     touch_expand: Option<Insets>,
@@ -400,7 +401,7 @@ where
     }
 }
 
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq, Eq, Clone)]
 enum State {
     Initial,
     Pressed,
@@ -408,7 +409,7 @@ enum State {
     Disabled,
 }
 
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq, Eq, Clone)]
 pub enum ButtonContent<T> {
     Empty,
     Text(T),
@@ -533,6 +534,7 @@ impl<T> Button<T> {
     }
 }
 
+#[derive(Copy, Clone)]
 pub enum CancelConfirmMsg {
     Cancelled,
     Confirmed,
@@ -555,7 +557,7 @@ pub enum SelectWordMsg {
     Selected(usize),
 }
 
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq, Eq, Clone)]
 pub struct IconText<T> {
     text: T,
     icon: Icon,
@@ -618,7 +620,7 @@ where
         }
     }
     pub fn render<'s>(
-        & self,
+        &self,
         target: &mut impl Renderer<'s>,
         area: Rect,
         style: &ButtonStyle,

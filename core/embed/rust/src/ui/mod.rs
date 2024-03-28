@@ -6,6 +6,8 @@ pub mod component;
 pub mod constant;
 pub mod display;
 pub mod event;
+#[cfg(feature = "micropython")]
+pub mod flow;
 pub mod geometry;
 pub mod lerp;
 pub mod screens;
@@ -23,12 +25,19 @@ pub mod model_tr;
 pub mod model_tt;
 
 #[cfg(all(
-    feature = "model_t1",
+    feature = "model_mercury",
+    not(feature = "model_t1"),
     not(feature = "model_tr"),
     not(feature = "model_tt")
 ))]
+pub use model_mercury as model;
+#[cfg(all(
+    feature = "model_t1",
+    not(feature = "model_tr"),
+    not(feature = "model_tt"),
+))]
 pub use model_t1 as model;
-#[cfg(all(feature = "model_tr", not(feature = "model_tt")))]
+#[cfg(all(feature = "model_tr", not(feature = "model_tt"),))]
 pub use model_tr as model;
 #[cfg(feature = "model_tt")]
 pub use model_tt as model;

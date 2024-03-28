@@ -97,7 +97,7 @@ where
         let mut dummy_ctx = EventCtx::new();
         self.xpub_view
             .update_title(&mut dummy_ctx, self.xpubs[i].0.clone());
-        self.xpub_view.update_content(&mut dummy_ctx, |p| {
+        self.xpub_view.update_content(&mut dummy_ctx, |_ctx, p| {
             p.inner_mut().update(self.xpubs[i].1.clone());
             let npages = p.page_count();
             p.change_page(page);
