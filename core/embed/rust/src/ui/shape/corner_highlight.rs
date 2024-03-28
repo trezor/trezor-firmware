@@ -1,9 +1,9 @@
 use crate::ui::{
-    canvas::Canvas,
     display::Color,
     geometry::{Alignment2D, Offset, Point, Rect},
-    shape::{DrawingCache, Renderer, Shape, ShapeClone},
+    shape::{Canvas, DrawingCache, Renderer, Shape, ShapeClone},
 };
+
 use without_alloc::alloc::LocalAllocLeakExt;
 
 #[derive(Clone, Copy)]
