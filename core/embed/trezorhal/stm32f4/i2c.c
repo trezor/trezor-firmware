@@ -46,7 +46,7 @@ void i2c_init_instance(uint16_t idx, i2c_instance_t *instance) {
     return;
   }
 
-  GPIO_InitTypeDef GPIO_InitStructure;
+  GPIO_InitTypeDef GPIO_InitStructure = {0};
 
   // configure CTP I2C SCL and SDA GPIO lines
   GPIO_InitStructure.Mode = GPIO_MODE_AF_OD;
@@ -120,7 +120,7 @@ void i2c_cycle(uint16_t idx) {
   i2c_deinit(idx);
 
   // 2. Configure SCL/SDA as GPIO OUTPUT Open Drain
-  GPIO_InitTypeDef GPIO_InitStructure;
+  GPIO_InitTypeDef GPIO_InitStructure = {0};
   GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_OD;
   GPIO_InitStructure.Pull = GPIO_NOPULL;
   GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;

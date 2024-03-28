@@ -60,7 +60,7 @@ static SD_HandleTypeDef sd_handle = {0};
 
 // this function is inspired by functions in stm32f4xx_ll_sdmmc.c
 uint32_t SDMMC_CmdSetClrCardDetect(SDMMC_TypeDef *SDMMCx, uint32_t Argument) {
-  SDMMC_CmdInitTypeDef sdmmc_cmdinit;
+  SDMMC_CmdInitTypeDef sdmmc_cmdinit = {0};
   uint32_t errorstate = SDMMC_ERROR_NONE;
 
   sdmmc_cmdinit.Argument = (uint32_t)Argument;
@@ -85,7 +85,7 @@ static inline void sdcard_default_pin_state(void) {
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_12, GPIO_PIN_RESET);  // SD_CLK/PC12
   HAL_GPIO_WritePin(GPIOD, GPIO_PIN_2, GPIO_PIN_RESET);   // SD_CMD/PD2
 
-  GPIO_InitTypeDef GPIO_InitStructure;
+  GPIO_InitTypeDef GPIO_InitStructure = {0};
 
   // configure the SD card circuitry on/off pin
   GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
@@ -116,7 +116,7 @@ static inline void sdcard_active_pin_state(void) {
   HAL_GPIO_WritePin(SD_ENABLE_PORT, SD_ENABLE_PIN, GPIO_PIN_RESET);
   HAL_Delay(10);  // we need to wait until the circuit fully kicks-in
 
-  GPIO_InitTypeDef GPIO_InitStructure;
+  GPIO_InitTypeDef GPIO_InitStructure = {0};
 
   // configure SD GPIO
   GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;
@@ -223,7 +223,7 @@ uint64_t sdcard_get_capacity_in_bytes(void) {
   if (sd_handle.Instance == NULL) {
     return 0;
   }
-  HAL_SD_CardInfoTypeDef cardinfo;
+  HAL_SD_CardInfoTypeDef cardinfo = {0};
   HAL_SD_GetCardInfo(&sd_handle, &cardinfo);
   return (uint64_t)cardinfo.LogBlockNbr * (uint64_t)cardinfo.LogBlockSize;
 }

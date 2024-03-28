@@ -290,7 +290,7 @@ void BSP_SDRAM_DMA_IRQHandler(void) { HAL_DMA_IRQHandler(SdramHandle.hdma); }
  */
 void BSP_SDRAM_MspInit(SDRAM_HandleTypeDef *hsdram, void *Params) {
   static DMA_HandleTypeDef dmaHandle;
-  GPIO_InitTypeDef GPIO_InitStructure;
+  GPIO_InitTypeDef GPIO_InitStructure = {0};
 
   if (hsdram != (SDRAM_HandleTypeDef *)NULL) {
     /* Enable FMC clock */

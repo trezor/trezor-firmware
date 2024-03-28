@@ -160,7 +160,7 @@ void periph_init(void) {
   // this detector will be active regardless of the
   // flash option byte BOR setting.
   __HAL_RCC_PWR_CLK_ENABLE();
-  PWR_PVDTypeDef pvd_config;
+  PWR_PVDTypeDef pvd_config = {0};
   pvd_config.PVDLevel = PWR_PVDLEVEL_5;
   pvd_config.Mode = PWR_PVD_MODE_IT_RISING_FALLING;
   HAL_PWR_ConfigPVD(&pvd_config);

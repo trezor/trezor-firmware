@@ -22,7 +22,7 @@
 #include "sbu.h"
 
 void sbu_init(void) {
-  GPIO_InitTypeDef GPIO_InitStructure;
+  GPIO_InitTypeDef GPIO_InitStructure = {0};
 
   // SBU1/PA2 SBU2/PA3
   GPIO_InitStructure.Pin = GPIO_PIN_2 | GPIO_PIN_3;

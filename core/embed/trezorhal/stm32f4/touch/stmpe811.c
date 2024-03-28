@@ -324,7 +324,7 @@ static void touch_active_pin_state(void) {
   //  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_RESET);  // CTP_ON/PB10
   //  HAL_Delay(10);  // we need to wait until the circuit fully kicks-in
 
-  GPIO_InitTypeDef GPIO_InitStructure;
+  GPIO_InitTypeDef GPIO_InitStructure = {0};
 
   // PC4 capacitive touch panel module (CTPM) interrupt (INT) input
   GPIO_InitStructure.Mode = GPIO_MODE_IT_FALLING;
@@ -471,7 +471,7 @@ void stmpe811_Reset() {
 }
 
 secbool touch_init(void) {
-  GPIO_InitTypeDef GPIO_InitStructure;
+  GPIO_InitTypeDef GPIO_InitStructure = {0};
 
   __HAL_RCC_GPIOA_CLK_ENABLE();
 

@@ -62,7 +62,7 @@ static void touch_default_pin_state(void) {
                                       // held in reset until released
 
   // set above pins to OUTPUT / NOPULL
-  GPIO_InitTypeDef GPIO_InitStructure;
+  GPIO_InitTypeDef GPIO_InitStructure = {0};
 
   GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStructure.Pull = GPIO_NOPULL;
@@ -89,7 +89,7 @@ static void touch_active_pin_state(void) {
   HAL_GPIO_WritePin(TOUCH_ON_PORT, TOUCH_ON_PIN, GPIO_PIN_RESET);  // CTP_ON
   HAL_Delay(10);  // we need to wait until the circuit fully kicks-in
 
-  GPIO_InitTypeDef GPIO_InitStructure;
+  GPIO_InitTypeDef GPIO_InitStructure = {0};
 
   // capacitive touch panel module (CTPM) interrupt (INT) input
   GPIO_InitStructure.Mode = GPIO_MODE_IT_RISING;
@@ -137,7 +137,7 @@ void touch_power_off(void) {
 }
 
 secbool touch_init(void) {
-  GPIO_InitTypeDef GPIO_InitStructure;
+  GPIO_InitTypeDef GPIO_InitStructure = {0};
 
   // PC4 capacitive touch panel module (CTPM) interrupt (INT) input
   GPIO_InitStructure.Mode = GPIO_MODE_IT_RISING;
