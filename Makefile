@@ -65,7 +65,7 @@ yaml_check: ## check yaml formatting
 	yamllint .
 
 editor_check: ## check editorconfig formatting
-	editorconfig-checker -exclude '.*\.(so|dat|toif|der)'
+	editorconfig-checker -exclude '.*\.(so|dat|toif|der)|^crypto/aes/'
 
 cstyle_check: ## run code style check on low-level C code
 	clang-format --version

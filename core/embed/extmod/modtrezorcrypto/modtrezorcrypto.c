@@ -39,6 +39,9 @@ static void wrapped_ui_wait_callback(uint32_t current, uint32_t total) {
 }
 
 #include "modtrezorcrypto-aes.h"
+#ifdef USE_AES_GCM
+#include "modtrezorcrypto-aesgcm.h"
+#endif
 #include "modtrezorcrypto-bech32.h"
 #include "modtrezorcrypto-bip32.h"
 #ifdef USE_SECP256K1_ZKP
@@ -78,6 +81,9 @@ static void wrapped_ui_wait_callback(uint32_t current, uint32_t total) {
 STATIC const mp_rom_map_elem_t mp_module_trezorcrypto_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_trezorcrypto)},
     {MP_ROM_QSTR(MP_QSTR_aes), MP_ROM_PTR(&mod_trezorcrypto_AES_type)},
+#if USE_AES_GCM
+    {MP_ROM_QSTR(MP_QSTR_aesgcm), MP_ROM_PTR(&mod_trezorcrypto_AesGcm_type)},
+#endif
     {MP_ROM_QSTR(MP_QSTR_bech32), MP_ROM_PTR(&mod_trezorcrypto_bech32_module)},
     {MP_ROM_QSTR(MP_QSTR_bip32), MP_ROM_PTR(&mod_trezorcrypto_bip32_module)},
     {MP_ROM_QSTR(MP_QSTR_bip39), MP_ROM_PTR(&mod_trezorcrypto_bip39_module)},

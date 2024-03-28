@@ -98,6 +98,7 @@ STATIC mp_obj_t mod_trezorcrypto_Blake2s_make_new(const mp_obj_type_t *type,
   }
 
   if (res < 0) {
+    m_del_obj(mp_obj_Blake2s_t, o);
     mp_raise_ValueError("Invalid Blake2s parameters");
   }
 

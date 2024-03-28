@@ -19,6 +19,7 @@ FEATURE_FLAGS = {
     "RDI": True,
     "SECP256K1_ZKP": True,  # required for trezor.crypto.curve.bip340 (BIP340/Taproot)
     "SYSTEM_VIEW": False,
+    "AES_GCM": False,
 }
 
 FEATURES_WANTED = ["input", "sbu", "sd_card", "rgb_led", "dma2d", "consumption_mask", "usb" ,"optiga", "haptic"]
@@ -175,6 +176,17 @@ if FEATURE_FLAGS["SECP256K1_ZKP"]:
         'vendor/trezor-crypto/zkp_context.c',
         'vendor/trezor-crypto/zkp_ecdsa.c',
         'vendor/trezor-crypto/zkp_bip340.c',
+    ]
+
+# AES-GCM
+if FEATURE_FLAGS["AES_GCM"]:
+    CPPDEFINES_MOD += [
+        'USE_AES_GCM',
+        'AES_VAR',
+    ]
+    SOURCE_MOD += [
+        'vendor/trezor-crypto/aes/gf128mul.c',
+        'vendor/trezor-crypto/aes/aesgcm.c',
     ]
 
 # modtrezorio

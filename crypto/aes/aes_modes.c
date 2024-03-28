@@ -107,7 +107,7 @@ aligned_array(unsigned long, dec_hybrid_table, 12, 16) = NEH_DEC_HYBRID_DATA;
 /* test the code for detecting and setting pointer alignment */
 
 AES_RETURN aes_test_alignment_detection(unsigned int n)	/* 4 <= n <= 16 */
-{	uint8_t	p[16];
+{	uint8_t	p[16] = {0};
     uint32_t i = 0, count_eq = 0, count_neq = 0;
 
     if(n < 4 || n > 16)
@@ -357,7 +357,7 @@ AES_RETURN aes_cbc_encrypt(const unsigned char *ibuf, unsigned char *obuf,
 
 AES_RETURN aes_cbc_decrypt(const unsigned char *ibuf, unsigned char *obuf,
                     int len, unsigned char *iv, const aes_decrypt_ctx ctx[1])
-{   unsigned char tmp[AES_BLOCK_SIZE];
+{   unsigned char tmp[AES_BLOCK_SIZE] = {0};
     int nb = len >> AES_BLOCK_SIZE_P2;
 
     if(len & (AES_BLOCK_SIZE - 1))
@@ -456,7 +456,7 @@ AES_RETURN aes_cbc_decrypt(const unsigned char *ibuf, unsigned char *obuf,
 
 AES_RETURN aes_cfb_encrypt(const unsigned char *ibuf, unsigned char *obuf,
                     int len, unsigned char *iv, aes_encrypt_ctx ctx[1])
-{   int cnt = 0, b_pos = (int)ctx->inf.b[2], nb;
+{   int cnt = 0, b_pos = (int)ctx->inf.b[2], nb = 0;
 
     if(b_pos)           /* complete any partial block   */
     {
@@ -474,7 +474,7 @@ AES_RETURN aes_cfb_encrypt(const unsigned char *ibuf, unsigned char *obuf,
 #if defined( USE_VIA_ACE_IF_PRESENT )
 
         if(ctx->inf.b[1] == 0xff)
-        {   int m;
+        {   int m = 0;
             uint8_t *ksp = (uint8_t*)(ctx->ks), *ivp = iv;
             aligned_auto(uint8_t, liv, AES_BLOCK_SIZE, 16);
             via_cwd(cwd, hybrid, enc, 2 * ctx->inf.b[0] - 192);
@@ -581,10 +581,10 @@ AES_RETURN aes_cfb_encrypt(const unsigned char *ibuf, unsigned char *obuf,
 
 AES_RETURN aes_cfb_decrypt(const unsigned char *ibuf, unsigned char *obuf,
                     int len, unsigned char *iv, aes_encrypt_ctx ctx[1])
-{   int cnt = 0, b_pos = (int)ctx->inf.b[2], nb;
+{   int cnt = 0, b_pos = (int)ctx->inf.b[2], nb = 0;
 
     if(b_pos)           /* complete any partial block   */
-    {   uint8_t t;
+    {   uint8_t t = 0;
 
         while(b_pos < AES_BLOCK_SIZE && cnt < len)
         {
@@ -602,7 +602,7 @@ AES_RETURN aes_cfb_decrypt(const unsigned char *ibuf, unsigned char *obuf,
 #if defined( USE_VIA_ACE_IF_PRESENT )
 
         if(ctx->inf.b[1] == 0xff)
-        {   int m;
+        {   int m = 0;
             uint8_t *ksp = (uint8_t*)(ctx->ks), *ivp = iv;
             aligned_auto(uint8_t, liv, AES_BLOCK_SIZE, 16);
             via_cwd(cwd, hybrid, dec, 2 * ctx->inf.b[0] - 192);
@@ -655,7 +655,7 @@ AES_RETURN aes_cfb_decrypt(const unsigned char *ibuf, unsigned char *obuf,
 # ifdef FAST_BUFFER_OPERATIONS
         if(!ALIGN_OFFSET( ibuf, 4 ) && !ALIGN_OFFSET( obuf, 4 ) &&!ALIGN_OFFSET( iv, 4 ))
             while(cnt + AES_BLOCK_SIZE <= len)
-            {   uint32_t t;
+            {   uint32_t t = 0;
 
                 assert(b_pos == 0);
                 if(aes_encrypt(iv, iv, ctx) != EXIT_SUCCESS)
@@ -671,7 +671,7 @@ AES_RETURN aes_cfb_decrypt(const unsigned char *ibuf, unsigned char *obuf,
         else
 # endif
             while(cnt + AES_BLOCK_SIZE <= len)
-            {   uint8_t t;
+            {   uint8_t t = 0;
 
                 assert(b_pos == 0);
                 if(aes_encrypt(iv, iv, ctx) != EXIT_SUCCESS)
@@ -700,7 +700,7 @@ AES_RETURN aes_cfb_decrypt(const unsigned char *ibuf, unsigned char *obuf,
     }
 
     while(cnt < len)
-    {   uint8_t t;
+    {   uint8_t t = 0;
 
         if(!b_pos && aes_encrypt(iv, iv, ctx) != EXIT_SUCCESS)
             return EXIT_FAILURE;
@@ -722,7 +722,7 @@ AES_RETURN aes_cfb_decrypt(const unsigned char *ibuf, unsigned char *obuf,
 
 AES_RETURN aes_ofb_crypt(const unsigned char *ibuf, unsigned char *obuf,
                     int len, unsigned char *iv, aes_encrypt_ctx ctx[1])
-{   int cnt = 0, b_pos = (int)ctx->inf.b[2], nb;
+{   int cnt = 0, b_pos = (int)ctx->inf.b[2], nb = 0;
 
     if(b_pos)           /* complete any partial block   */
     {
@@ -740,7 +740,7 @@ AES_RETURN aes_ofb_crypt(const unsigned char *ibuf, unsigned char *obuf,
 #if defined( USE_VIA_ACE_IF_PRESENT )
 
         if(ctx->inf.b[1] == 0xff)
-        {   int m;
+        {   int m = 0;
             uint8_t *ksp = (uint8_t*)(ctx->ks), *ivp = iv;
             aligned_auto(uint8_t, liv, AES_BLOCK_SIZE, 16);
             via_cwd(cwd, hybrid, enc, 2 * ctx->inf.b[0] - 192);
@@ -849,7 +849,7 @@ AES_RETURN aes_ofb_crypt(const unsigned char *ibuf, unsigned char *obuf,
 
 AES_RETURN aes_ctr_crypt(const unsigned char *ibuf, unsigned char *obuf,
             int len, unsigned char *cbuf, cbuf_inc ctr_inc, aes_encrypt_ctx ctx[1])
-{   unsigned char   *ip;
+{   unsigned char   *ip = NULL;
     int             i = 0, blen = 0, b_pos = (int)(ctx->inf.b[2]);
 
 #if defined( USE_VIA_ACE_IF_PRESENT )
