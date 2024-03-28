@@ -1,14 +1,12 @@
 use heapless::String;
 
 use crate::{
-    strutil::hexlify,
     trezorhal::secbool::secbool,
     ui::{
         component::{connect::Connect, Label},
         display::{self, Color, Font, Icon},
         geometry::{Point, Rect},
-        layout::simplified::{run, show, SimplifiedFeatures as _},
-        util::{from_c_array, from_c_str},
+        layout::simplified::{run, show},
     },
 };
 
@@ -27,9 +25,10 @@ use super::{
         },
         BACKLIGHT_NORMAL, BLACK, FG, WHITE,
     },
-    ModelTTFeatures,
+    ModelTTUIFeaturesCommon,
 };
 
+use crate::ui::{ui_features::UIFeaturesBootloader, UIFeaturesCommon};
 use intro::Intro;
 use menu::Menu;
 
@@ -41,33 +40,21 @@ pub type BootloaderString = String<128>;
 
 const RECONNECT_MESSAGE: &str = "PLEASE RECONNECT\nTHE DEVICE";
 
-const SCREEN: Rect = ModelTTFeatures::SCREEN;
+const SCREEN: Rect = ModelTTUIFeaturesCommon::SCREEN;
 
-#[no_mangle]
-extern "C" fn screen_install_confirm(
-    vendor_str: *const cty::c_char,
-    vendor_str_len: u8,
-    version: *const cty::c_char,
-    fingerprint: *const cty::uint8_t,
+fn screen_install_confirm(
+    vendor: &str,
+    version: &str,
+    fingerprint: &str,
     should_keep_seed: bool,
     is_newvendor: bool,
     version_cmp: cty::c_int,
 ) -> u32 {
-    let text = unwrap!(unsafe { from_c_array(vendor_str, vendor_str_len as usize) });
-    let version = unwrap!(unsafe { from_c_str(version) });
-
-    let mut fingerprint_buffer: [u8; 64] = [0; 64];
-    let fingerprint_str = unsafe {
-        let fingerprint_slice = core::slice::from_raw_parts(fingerprint, 32);
-        hexlify(fingerprint_slice, &mut fingerprint_buffer);
-        core::str::from_utf8_unchecked(fingerprint_buffer.as_ref())
-    };
-
     let mut version_str: BootloaderString = String::new();
     unwrap!(version_str.push_str("Firmware version "));
     unwrap!(version_str.push_str(version));
     unwrap!(version_str.push_str("\nby "));
-    unwrap!(version_str.push_str(text));
+    unwrap!(version_str.push_str(vendor));
 
     let title_str = if is_newvendor {
         "CHANGE FW\nVENDOR"
@@ -95,7 +82,7 @@ extern "C" fn screen_install_confirm(
 
     let mut frame = Confirm::new(BLD_BG, left, right, ConfirmTitle::Text(title), msg).with_info(
         "FW FINGERPRINT",
-        fingerprint_str,
+        fingerprint,
         button_bld_menu(),
     );
 
@@ -106,8 +93,7 @@ extern "C" fn screen_install_confirm(
     run(&mut frame)
 }
 
-#[no_mangle]
-extern "C" fn screen_wipe_confirm() -> u32 {
+fn screen_wipe_confirm() -> u32 {
     let icon = Icon::new(FIRE40);
 
     let msg = Label::centered(
@@ -125,23 +111,11 @@ extern "C" fn screen_wipe_confirm() -> u32 {
     run(&mut frame)
 }
 
-#[no_mangle]
-extern "C" fn screen_menu(firmware_present: secbool) -> u32 {
+fn screen_menu(firmware_present: secbool) -> u32 {
     run(&mut Menu::new(firmware_present))
 }
 
-#[no_mangle]
-extern "C" fn screen_intro(
-    bld_version: *const cty::c_char,
-    vendor_str: *const cty::c_char,
-    vendor_str_len: u8,
-    version: *const cty::c_char,
-    fw_ok: bool,
-) -> u32 {
-    let vendor = unwrap!(unsafe { from_c_array(vendor_str, vendor_str_len as usize) });
-    let version = unwrap!(unsafe { from_c_str(version) });
-    let bld_version = unwrap!(unsafe { from_c_str(bld_version) });
-
+fn screen_intro(bld_version: &str, vendor: &str, version: &str, fw_ok: bool) -> u32 {
     let mut title_str: BootloaderString = String::new();
     unwrap!(title_str.push_str("BOOTLOADER "));
     unwrap!(title_str.push_str(bld_version));
@@ -166,7 +140,7 @@ fn screen_progress(
     icon: Option<(Icon, Color)>,
 ) {
     if initialize {
-        ModelTTFeatures::fadeout();
+        ModelTTUIFeaturesCommon::fadeout();
         display::rect_fill(SCREEN, bg_color);
     }
 
@@ -180,12 +154,11 @@ fn screen_progress(
     display::loader(progress, -20, fg_color, bg_color, icon);
     display::refresh();
     if initialize {
-        ModelTTFeatures::fadein();
+        ModelTTUIFeaturesCommon::fadein();
     }
 }
 
-#[no_mangle]
-extern "C" fn screen_install_progress(progress: u16, initialize: bool, initial_setup: bool) {
+fn screen_install_progress(progress: u16, initialize: bool, initial_setup: bool) {
     let bg_color = if initial_setup { WELCOME_COLOR } else { BLD_BG };
     let fg_color = if initial_setup { FG } else { BLD_FG };
 
@@ -199,8 +172,7 @@ extern "C" fn screen_install_progress(progress: u16, initialize: bool, initial_s
     )
 }
 
-#[no_mangle]
-extern "C" fn screen_wipe_progress(progress: u16, initialize: bool) {
+fn screen_wipe_progress(progress: u16, initialize: bool) {
     screen_progress(
         "Resetting Trezor",
         progress,
@@ -211,15 +183,13 @@ extern "C" fn screen_wipe_progress(progress: u16, initialize: bool) {
     )
 }
 
-#[no_mangle]
-extern "C" fn screen_connect(initial_setup: bool) {
+fn screen_connect(initial_setup: bool) {
     let bg = if initial_setup { WELCOME_COLOR } else { BLD_BG };
     let mut frame = Connect::new("Waiting for host...", BLD_TITLE_COLOR, bg);
     show(&mut frame, true);
 }
 
-#[no_mangle]
-extern "C" fn screen_wipe_success() {
+fn screen_wipe_success() {
     let mut frame = ResultScreen::new(
         &RESULT_WIPE,
         Icon::new(CHECK40),
@@ -230,8 +200,7 @@ extern "C" fn screen_wipe_success() {
     show(&mut frame, true);
 }
 
-#[no_mangle]
-extern "C" fn screen_wipe_fail() {
+fn screen_wipe_fail() {
     let mut frame = ResultScreen::new(
         &RESULT_WIPE,
         Icon::new(WARNING40),
@@ -242,10 +211,9 @@ extern "C" fn screen_wipe_fail() {
     show(&mut frame, true);
 }
 
-#[no_mangle]
-extern "C" fn screen_boot_empty(fading: bool) {
+fn screen_boot_empty(fading: bool) {
     if fading {
-        ModelTTFeatures::fadeout();
+        ModelTTUIFeaturesCommon::fadeout();
     }
 
     display::rect_fill(SCREEN, BLACK);
@@ -254,15 +222,14 @@ extern "C" fn screen_boot_empty(fading: bool) {
     show(&mut frame, false);
 
     if fading {
-        ModelTTFeatures::fadein();
+        ModelTTUIFeaturesCommon::fadein();
     } else {
         display::set_backlight(BACKLIGHT_NORMAL);
     }
     display::refresh();
 }
 
-#[no_mangle]
-extern "C" fn screen_install_fail() {
+fn screen_install_fail() {
     let mut frame = ResultScreen::new(
         &RESULT_FW_INSTALL,
         Icon::new(WARNING40),
@@ -295,12 +262,7 @@ fn screen_install_success_initial(msg: &str, complete_draw: bool) {
     show(&mut frame, complete_draw);
 }
 
-#[no_mangle]
-extern "C" fn screen_install_success(
-    restart_seconds: u8,
-    initial_setup: bool,
-    complete_draw: bool,
-) {
+fn screen_install_success(restart_seconds: u8, initial_setup: bool, complete_draw: bool) {
     let mut reboot_msg = BootloaderString::new();
 
     if restart_seconds >= 1 {
@@ -320,19 +282,93 @@ extern "C" fn screen_install_success(
     display::refresh();
 }
 
-#[no_mangle]
-extern "C" fn screen_welcome() {
-    let mut frame = Welcome::new();
-    show(&mut frame, true);
-}
-
-#[no_mangle]
-extern "C" fn bld_continue_label(bg_color: cty::uint16_t) {
+fn bld_continue_label(bg_color: Color) {
     display::text_center(
         Point::new(SCREEN.width() / 2, SCREEN.height() - 5),
         "click to continue ...",
         Font::NORMAL,
         WHITE,
-        Color::from_u16(bg_color),
+        bg_color,
     );
+}
+
+pub struct ModelTTUIFeaturesBootloader {}
+
+impl UIFeaturesBootloader for ModelTTUIFeaturesBootloader {
+    fn screen_welcome() {
+        let mut frame = Welcome::new();
+        show(&mut frame, true);
+    }
+
+    fn bld_continue_label(bg_color: Color) {
+        bld_continue_label(bg_color);
+    }
+
+    fn screen_install_success(restart_seconds: u8, initial_setup: bool, complete_draw: bool) {
+        screen_install_success(restart_seconds, initial_setup, complete_draw);
+    }
+
+    fn screen_install_fail() {
+        screen_install_fail();
+    }
+
+    fn screen_install_confirm(
+        vendor_str: &str,
+        version: &str,
+        fingerprint: &str,
+        should_keep_seed: bool,
+        is_newvendor: bool,
+        version_cmp: i32,
+    ) -> u32 {
+        screen_install_confirm(
+            vendor_str,
+            version,
+            fingerprint,
+            should_keep_seed,
+            is_newvendor,
+            version_cmp,
+        )
+    }
+
+    fn screen_wipe_confirm() -> u32 {
+        screen_wipe_confirm()
+    }
+
+    fn screen_unlock_bootloader_confirm() -> u32 {
+        0
+    }
+
+    fn screen_unlock_bootloader_success() {}
+
+    fn screen_menu(firmware_present: secbool) -> u32 {
+        screen_menu(firmware_present)
+    }
+
+    fn screen_intro(bld_version: &str, vendor_str: &str, version: &str, fw_ok: bool) -> u32 {
+        screen_intro(bld_version, vendor_str, version, fw_ok)
+    }
+
+    fn screen_boot_empty(fading: bool) {
+        screen_boot_empty(fading)
+    }
+
+    fn screen_wipe_progress(progress: u16, initialize: bool) {
+        screen_wipe_progress(progress, initialize)
+    }
+
+    fn screen_install_progress(progress: u16, initialize: bool, initial_setup: bool) {
+        screen_install_progress(progress, initialize, initial_setup)
+    }
+
+    fn screen_connect(initial_setup: bool) {
+        screen_connect(initial_setup)
+    }
+
+    fn screen_wipe_success() {
+        screen_wipe_success()
+    }
+
+    fn screen_wipe_fail() {
+        screen_wipe_fail()
+    }
 }

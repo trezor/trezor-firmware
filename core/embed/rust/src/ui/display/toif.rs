@@ -117,18 +117,6 @@ pub fn render_toif(toif: &Toif, center: Point, fg_color: Color, bg_color: Color)
     pixeldata_dirty();
 }
 
-#[no_mangle]
-extern "C" fn display_image(
-    x: cty::int16_t,
-    y: cty::int16_t,
-    data: *const cty::uint8_t,
-    data_len: cty::uint32_t,
-) {
-    let data_slice = unsafe { core::slice::from_raw_parts(data, data_len as usize) };
-    let image = Image::new(data_slice);
-    image.draw(Point::new(x, y), Alignment2D::TOP_LEFT);
-}
-
 #[cfg(feature = "dma2d")]
 pub fn image(image: &Image, center: Point) {
     let r = Rect::from_center_and_size(center, image.toif.size());
@@ -301,25 +289,6 @@ impl<'i> Toif<'i> {
         let r = Rect::snap(baseline, self.size(), alignment);
         render_toif(self, r.center(), fg_color, bg_color);
     }
-}
-
-#[no_mangle]
-extern "C" fn display_icon(
-    x: cty::int16_t,
-    y: cty::int16_t,
-    data: *const cty::uint8_t,
-    data_len: cty::uint32_t,
-    fg_color: cty::uint16_t,
-    bg_color: cty::uint16_t,
-) {
-    let data_slice = unsafe { core::slice::from_raw_parts(data, data_len as usize) };
-    let icon = Icon::new(data_slice);
-    icon.draw(
-        Point::new(x, y),
-        Alignment2D::TOP_LEFT,
-        Color::from_u16(fg_color),
-        Color::from_u16(bg_color),
-    );
 }
 
 #[derive(PartialEq, Eq, Clone, Copy)]
