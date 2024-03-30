@@ -6,13 +6,13 @@ mod blur;
 mod cache;
 mod canvas;
 mod circle;
+mod corner_highlight;
 mod display;
 #[cfg(feature = "ui_jpeg_decoder")]
 mod jpeg;
 mod qrcode;
 mod rawimage;
 mod render;
-mod corner_highlight;
 mod text;
 mod toif;
 mod utils;
@@ -27,13 +27,13 @@ pub use canvas::{
     BasicCanvas, Canvas, CanvasBuilder, Mono8Canvas, Rgb565Canvas, Rgba8888Canvas, Viewport,
 };
 pub use circle::Circle;
+pub use corner_highlight::CornerHighlight;
 pub use display::{render_on_canvas, render_on_display};
 #[cfg(feature = "ui_jpeg_decoder")]
 pub use jpeg::JpegImage;
 pub use qrcode::QrImage;
 pub use rawimage::RawImage;
 pub use render::{DirectRenderer, ProgressiveRenderer, Renderer};
-pub use corner_highlight::CornerHighlight;
 pub use text::Text;
 pub use toif::ToifImage;
 #[cfg(feature = "model_mercury")]
