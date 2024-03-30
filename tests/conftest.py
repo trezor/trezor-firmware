@@ -18,10 +18,11 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import TYPE_CHECKING, Generator, Iterator
+from typing import TYPE_CHECKING, Callable, Generator, Iterator
 
 import pytest
 import xdist
+from _pytest.reports import TestReport
 
 from trezorlib import debuglink, log, models
 from trezorlib.debuglink import TrezorClientDebugLink as Client
@@ -444,6 +445,20 @@ def pytest_runtest_makereport(item: pytest.Item, call) -> Generator:
     outcome = yield
     rep = outcome.get_result()
     setattr(item, f"rep_{rep.when}", rep)
+
+
+@pytest.hookimpl(tryfirst=True)
+def pytest_report_teststatus(
+    report: TestReport, config: Config
+) -> tuple[str, str, tuple[str, dict[str, bool]]] | None:
+    if report.passed:
+        for prop, _ in report.user_properties:
+            if prop == "ui_failed":
+                return "ui_failed", "U", ("UI-FAILED", {"red": True})
+            if prop == "ui_missing":
+                return "ui_missing", "M", ("UI-MISSING", {"yellow": True})
+    # else use default handling
+    return None
 
 
 @pytest.fixture
