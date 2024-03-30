@@ -1,6 +1,7 @@
 #[cfg(feature = "haptic")]
 use crate::trezorhal::haptic::{play, HapticEffect};
 use crate::{
+    strutil::TString,
     time::Duration,
     ui::{
         component::{
@@ -23,23 +24,23 @@ pub enum ButtonMsg {
     LongPressed,
 }
 
-pub struct Button<T> {
+pub struct Button {
     area: Rect,
     touch_expand: Option<Insets>,
-    content: ButtonContent<T>,
+    content: ButtonContent,
     styles: ButtonStyleSheet,
     state: State,
     long_press: Option<Duration>,
     long_timer: Option<TimerToken>,
 }
 
-impl<T> Button<T> {
+impl Button {
     /// Offsets the baseline of the button text
     /// -x/+x => left/right
     /// -y/+y => up/down
     pub const BASELINE_OFFSET: Offset = Offset::new(2, 6);
 
-    pub const fn new(content: ButtonContent<T>) -> Self {
+    pub const fn new(content: ButtonContent) -> Self {
         Self {
             content,
             area: Rect::zero(),
@@ -51,7 +52,7 @@ impl<T> Button<T> {
         }
     }
 
-    pub const fn with_text(text: T) -> Self {
+    pub const fn with_text(text: TString<'static>) -> Self {
         Self::new(ButtonContent::Text(text))
     }
 
@@ -59,8 +60,8 @@ impl<T> Button<T> {
         Self::new(ButtonContent::Icon(icon))
     }
 
-    pub const fn with_icon_and_text(content: IconText<T>) -> Self {
-        Self::new(ButtonContent::IconAndText::<T>(content))
+    pub const fn with_icon_and_text(content: IconText) -> Self {
+        Self::new(ButtonContent::IconAndText(content))
     }
 
     pub const fn with_icon_blend(bg: Icon, fg: Icon, fg_offset: Offset) -> Self {
@@ -120,17 +121,14 @@ impl<T> Button<T> {
         matches!(self.state, State::Disabled)
     }
 
-    pub fn set_content(&mut self, ctx: &mut EventCtx, content: ButtonContent<T>)
-    where
-        T: PartialEq,
-    {
+    pub fn set_content(&mut self, ctx: &mut EventCtx, content: ButtonContent) {
         if self.content != content {
             self.content = content;
             ctx.request_paint();
         }
     }
 
-    pub fn content(&self) -> &ButtonContent<T> {
+    pub fn content(&self) -> &ButtonContent {
         &self.content
     }
 
@@ -204,18 +202,14 @@ impl<T> Button<T> {
         }
     }
 
-    pub fn paint_content(&self, style: &ButtonStyle)
-    where
-        T: AsRef<str>,
-    {
+    pub fn paint_content(&self, style: &ButtonStyle) {
         match &self.content {
             ButtonContent::Empty => {}
             ButtonContent::Text(text) => {
-                let text = text.as_ref();
                 let start_of_baseline = self.area.center() + Self::BASELINE_OFFSET;
                 display::text_left(
                     start_of_baseline,
-                    text,
+                    text.into(),
                     style.font,
                     style.text_color,
                     style.button_color,
@@ -241,16 +235,12 @@ impl<T> Button<T> {
         }
     }
 
-    pub fn render_content<'s>(&self, target: &mut impl Renderer<'s>, style: &ButtonStyle)
-    where
-        T: AsRef<str>,
-    {
+    pub fn render_content<'s>(&self, target: &mut impl Renderer<'s>, style: &ButtonStyle) {
         match &self.content {
             ButtonContent::Empty => {}
             ButtonContent::Text(text) => {
-                let text = text.as_ref();
                 let start_of_baseline = self.area.left_center() + Self::BASELINE_OFFSET;
-                shape::Text::new(start_of_baseline, text)
+                shape::Text::new(start_of_baseline, text.into())
                     .with_font(style.font)
                     .with_fg(style.text_color)
                     .render(target);
@@ -279,10 +269,7 @@ impl<T> Button<T> {
     }
 }
 
-impl<T> Component for Button<T>
-where
-    T: AsRef<str>,
-{
+impl Component for Button {
     type Msg = ButtonMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -381,18 +368,15 @@ where
 }
 
 #[cfg(feature = "ui_debug")]
-impl<T> crate::trace::Trace for Button<T>
-where
-    T: AsRef<str>,
-{
+impl crate::trace::Trace for Button {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("Button");
         match &self.content {
             ButtonContent::Empty => {}
-            ButtonContent::Text(text) => t.string("text", text.as_ref().into()),
+            ButtonContent::Text(text) => t.string("text", *text),
             ButtonContent::Icon(_) => t.bool("icon", true),
             ButtonContent::IconAndText(content) => {
-                t.string("text", content.text.as_ref().into());
+                t.string("text", content.text);
                 t.bool("icon", true);
             }
             ButtonContent::IconBlend(_, _, _) => t.bool("icon", true),
@@ -409,11 +393,11 @@ enum State {
 }
 
 #[derive(PartialEq, Eq)]
-pub enum ButtonContent<T> {
+pub enum ButtonContent {
     Empty,
-    Text(T),
+    Text(TString<'static>),
     Icon(Icon),
-    IconAndText(IconText<T>),
+    IconAndText(IconText),
     IconBlend(Icon, Icon, Offset),
 }
 
@@ -435,19 +419,15 @@ pub struct ButtonStyle {
     pub border_width: i16,
 }
 
-impl<T> Button<T> {
+impl Button {
     pub fn cancel_confirm(
-        left: Button<T>,
-        right: Button<T>,
+        left: Button,
+        right: Button,
         left_is_small: bool,
     ) -> CancelConfirm<
-        T,
         impl Fn(ButtonMsg) -> Option<CancelConfirmMsg>,
         impl Fn(ButtonMsg) -> Option<CancelConfirmMsg>,
-    >
-    where
-        T: AsRef<str>,
-    {
+    > {
         let width = if left_is_small {
             theme::BUTTON_WIDTH
         } else {
@@ -466,21 +446,17 @@ impl<T> Button<T> {
     }
 
     pub fn cancel_confirm_text(
-        left: Option<T>,
-        right: Option<T>,
+        left: Option<TString<'static>>,
+        right: Option<TString<'static>>,
     ) -> CancelConfirm<
-        T,
         impl Fn(ButtonMsg) -> Option<CancelConfirmMsg>,
         impl Fn(ButtonMsg) -> Option<CancelConfirmMsg>,
-    >
-    where
-        T: AsRef<str>,
-    {
+    > {
         let left_is_small: bool;
 
         let left = if let Some(verb) = left {
-            left_is_small = verb.as_ref().len() <= 4;
-            if verb.as_ref() == "^" {
+            left_is_small = verb.len() <= 4;
+            if verb == "^".into() {
                 Button::with_icon(theme::ICON_UP)
             } else {
                 Button::with_text(verb)
@@ -498,17 +474,13 @@ impl<T> Button<T> {
     }
 
     pub fn cancel_info_confirm(
-        confirm: T,
-        info: T,
+        confirm: TString<'static>,
+        info: TString<'static>,
     ) -> CancelInfoConfirm<
-        T,
         impl Fn(ButtonMsg) -> Option<CancelInfoConfirmMsg>,
         impl Fn(ButtonMsg) -> Option<CancelInfoConfirmMsg>,
         impl Fn(ButtonMsg) -> Option<CancelInfoConfirmMsg>,
-    >
-    where
-        T: AsRef<str>,
-    {
+    > {
         let right = Button::with_text(confirm)
             .styled(theme::button_confirm())
             .map(|msg| {
@@ -538,11 +510,10 @@ pub enum CancelConfirmMsg {
     Confirmed,
 }
 
-type CancelInfoConfirm<T, F0, F1, F2> = FixedHeightBar<
-    Split<MsgMap<Button<T>, F0>, Split<MsgMap<Button<T>, F1>, MsgMap<Button<T>, F2>>>,
->;
+type CancelInfoConfirm<F0, F1, F2> =
+    FixedHeightBar<Split<MsgMap<Button, F0>, Split<MsgMap<Button, F1>, MsgMap<Button, F2>>>>;
 
-type CancelConfirm<T, F0, F1> = FixedHeightBar<Split<MsgMap<Button<T>, F0>, MsgMap<Button<T>, F1>>>;
+type CancelConfirm<F0, F1> = FixedHeightBar<Split<MsgMap<Button, F0>, MsgMap<Button, F1>>>;
 
 #[derive(Clone, Copy)]
 pub enum CancelInfoConfirmMsg {
@@ -556,25 +527,22 @@ pub enum SelectWordMsg {
 }
 
 #[derive(PartialEq, Eq)]
-pub struct IconText<T> {
-    text: T,
+pub struct IconText {
+    text: TString<'static>,
     icon: Icon,
 }
 
-impl<T> IconText<T>
-where
-    T: AsRef<str>,
-{
+impl IconText {
     const ICON_SPACE: i16 = 46;
     const ICON_MARGIN: i16 = 4;
     const TEXT_MARGIN: i16 = 6;
 
-    pub fn new(text: T, icon: Icon) -> Self {
+    pub fn new(text: TString<'static>, icon: Icon) -> Self {
         Self { text, icon }
     }
 
     pub fn paint(&self, area: Rect, style: &ButtonStyle, baseline_offset: Offset) {
-        let width = style.font.text_width(self.text.as_ref());
+        let width = style.font.text_width(self.text.map(|c| c));
 
         let mut use_icon = false;
         let mut use_text = false;
@@ -601,7 +569,8 @@ where
         if use_text {
             display::text_left(
                 text_pos,
-                self.text.as_ref(),
+                // self.text.into(), // TODO: why doesn't it work?
+                self.text.map(|s| s),
                 style.font,
                 style.text_color,
                 style.button_color,
@@ -618,13 +587,13 @@ where
         }
     }
     pub fn render<'s>(
-        & self,
+        &self,
         target: &mut impl Renderer<'s>,
         area: Rect,
         style: &ButtonStyle,
         baseline_offset: Offset,
     ) {
-        let width = style.font.text_width(self.text.as_ref());
+        let width = style.font.text_width(self.text.map(|c| c));
 
         let mut use_icon = false;
         let mut use_text = false;
@@ -649,7 +618,7 @@ where
         }
 
         if use_text {
-            shape::Text::new(text_pos, self.text.as_ref())
+            shape::Text::new(text_pos, self.text.map(|s| s))
                 .with_fg(style.text_color)
                 .render(target);
         }

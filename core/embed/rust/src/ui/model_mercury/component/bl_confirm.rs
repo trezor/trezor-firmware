@@ -41,8 +41,8 @@ pub enum ConfirmTitle<T> {
 pub struct ConfirmInfo<T> {
     pub title: Child<Label<T>>,
     pub text: Child<Label<T>>,
-    pub info_button: Child<Button<&'static str>>,
-    pub close_button: Child<Button<&'static str>>,
+    pub info_button: Child<Button>,
+    pub close_button: Child<Button>,
 }
 
 pub struct Confirm<T> {
@@ -52,8 +52,8 @@ pub struct Confirm<T> {
     title: ConfirmTitle<T>,
     message: Child<Label<T>>,
     alert: Option<Child<Label<T>>>,
-    left_button: Child<Button<T>>,
-    right_button: Child<Button<T>>,
+    left_button: Child<Button>,
+    right_button: Child<Button>,
     info: Option<ConfirmInfo<T>>,
     show_info: bool,
 }
@@ -64,8 +64,8 @@ where
 {
     pub fn new(
         bg_color: Color,
-        left_button: Button<T>,
-        right_button: Button<T>,
+        left_button: Button,
+        right_button: Button,
         title: ConfirmTitle<T>,
         message: Label<T>,
     ) -> Self {

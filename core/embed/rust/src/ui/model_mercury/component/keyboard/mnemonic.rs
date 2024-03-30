@@ -19,11 +19,11 @@ pub struct MnemonicKeyboard<T, U> {
     /// Initial prompt, displayed on empty input.
     prompt: Child<Maybe<Label<U>>>,
     /// Backspace button.
-    back: Child<Maybe<Button<&'static str>>>,
+    back: Child<Maybe<Button>>,
     /// Input area, acting as the auto-complete and confirm button.
     input: Child<Maybe<T>>,
     /// Key buttons.
-    keys: [Child<Button<&'static str>>; MNEMONIC_KEY_COUNT],
+    keys: [Child<Button>; MNEMONIC_KEY_COUNT],
     /// Swipe controller - allowing for going to the previous word.
     swipe: Swipe,
     /// Whether going back is allowed (is not on the very first word).
@@ -58,7 +58,7 @@ where
             )),
             input: Child::new(Maybe::new(theme::BG, input, !prompt_visible)),
             keys: T::keys()
-                .map(|t| Button::with_text(t).styled(theme::button_pin()))
+                .map(|t| Button::with_text(t.into()).styled(theme::button_pin()))
                 .map(Child::new),
             swipe: Swipe::new().right(),
             can_go_back,

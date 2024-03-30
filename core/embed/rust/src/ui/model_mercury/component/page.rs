@@ -1,6 +1,6 @@
 use crate::{
     error::Error,
-    micropython::buffer::StrBuffer,
+    strutil::TString,
     time::Instant,
     translations::TR,
     ui::{
@@ -22,7 +22,7 @@ use core::cell::Cell;
 
 /// Allows pagination of inner component. Shows scroll bar, confirm & cancel
 /// buttons. Optionally handles hold-to-confirm with loader.
-pub struct ButtonPage<T, U> {
+pub struct ButtonPage<T> {
     /// Inner component.
     content: T,
     /// Cleared when page changes.
@@ -32,10 +32,10 @@ pub struct ButtonPage<T, U> {
     scrollbar: ScrollBar,
     /// Hold-to-confirm mode whenever this is `Some(loader)`.
     loader: Option<Loader>,
-    button_cancel: Option<Button<U>>,
-    button_confirm: Button<U>,
-    button_prev: Button<&'static str>,
-    button_next: Button<&'static str>,
+    button_cancel: Option<Button>,
+    button_confirm: Button,
+    button_prev: Button,
+    button_next: Button,
     /// Show cancel button instead of back button.
     cancel_from_any_page: bool,
     /// Whether to pass-through left swipe to parent component.
@@ -46,24 +46,23 @@ pub struct ButtonPage<T, U> {
     fade: Cell<Option<u16>>,
 }
 
-impl<T> ButtonPage<T, StrBuffer>
+impl<T> ButtonPage<T>
 where
     T: Paginate,
     T: Component,
 {
     pub fn with_hold(mut self) -> Result<Self, Error> {
-        self.button_confirm = Button::with_text(TR::buttons__hold_to_confirm.try_into()?)
-            .styled(theme::button_confirm());
+        self.button_confirm =
+            Button::with_text(TR::buttons__hold_to_confirm.into()).styled(theme::button_confirm());
         self.loader = Some(Loader::new());
         Ok(self)
     }
 }
 
-impl<T, U> ButtonPage<T, U>
+impl<T> ButtonPage<T>
 where
     T: Paginate,
     T: Component,
-    U: AsRef<str> + From<&'static str>,
 {
     pub fn new(content: T, background: Color) -> Self {
         Self {
@@ -88,9 +87,13 @@ where
         self
     }
 
-    pub fn with_cancel_confirm(mut self, left: Option<U>, right: Option<U>) -> Self {
+    pub fn with_cancel_confirm(
+        mut self,
+        left: Option<TString<'static>>,
+        right: Option<TString<'static>>,
+    ) -> Self {
         let cancel = match left {
-            Some(verb) => match verb.as_ref() {
+            Some(verb) => match verb.map(|s| s) {
                 "^" => Button::with_icon(theme::ICON_UP),
                 "<" => Button::with_icon(theme::ICON_BACK),
                 _ => Button::with_text(verb),
@@ -285,11 +288,10 @@ enum HandleResult<T> {
     Continue,
 }
 
-impl<T, U> Component for ButtonPage<T, U>
+impl<T> Component for ButtonPage<T>
 where
     T: Paginate,
     T: Component,
-    U: AsRef<str> + From<&'static str>,
 {
     type Msg = PageMsg<T::Msg>;
 
@@ -297,7 +299,7 @@ where
         let small_left_button = match (&self.button_cancel, &self.button_confirm) {
             (None, _) => true,
             (Some(cancel), confirm) => match (cancel.content(), confirm.content()) {
-                (ButtonContent::Text(t), _) => t.as_ref().len() <= 4,
+                (ButtonContent::Text(t), _) => t.len() <= 4,
                 (ButtonContent::Icon(_), ButtonContent::Icon(_)) => false,
                 _ => true,
             },
@@ -455,7 +457,7 @@ where
 }
 
 #[cfg(feature = "ui_debug")]
-impl<T, U> crate::trace::Trace for ButtonPage<T, U>
+impl<T> crate::trace::Trace for ButtonPage<T>
 where
     T: crate::trace::Trace,
 {
@@ -567,7 +569,7 @@ mod tests {
 
     #[test]
     fn paragraphs_empty() {
-        let mut page = ButtonPage::<_, &'static str>::new(
+        let mut page = ButtonPage::<_>::new(
             Paragraphs::<[Paragraph<&'static str>; 0]>::new([]),
             theme::BG,
         );
@@ -593,7 +595,7 @@ mod tests {
 
     #[test]
     fn paragraphs_single() {
-        let mut page = ButtonPage::<_, &'static str>::new(
+        let mut page = ButtonPage::<_>::new(
             Paragraphs::new([
                 Paragraph::new(
                     &theme::TEXT_NORMAL,
@@ -631,7 +633,7 @@ mod tests {
 
     #[test]
     fn paragraphs_one_long() {
-        let mut page = ButtonPage::<_, &'static str>::new(
+        let mut page = ButtonPage::<_>::new(
             Paragraphs::new(
                 Paragraph::new(
                     &theme::TEXT_BOLD,
@@ -689,7 +691,7 @@ mod tests {
 
     #[test]
     fn paragraphs_three_long() {
-        let mut page = ButtonPage::<_, &'static str>::new(
+        let mut page = ButtonPage::<_>::new(
             Paragraphs::new([
                 Paragraph::new(
                     &theme::TEXT_BOLD,
@@ -789,7 +791,7 @@ mod tests {
 
     #[test]
     fn paragraphs_hard_break() {
-        let mut page = ButtonPage::<_, &'static str>::new(
+        let mut page = ButtonPage::<_>::new(
             Paragraphs::new([
                 Paragraph::new(&theme::TEXT_NORMAL, "Short one.").break_after(),
                 Paragraph::new(&theme::TEXT_NORMAL, "Short two.").break_after(),

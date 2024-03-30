@@ -97,15 +97,19 @@ pub enum TString<'a> {
     Str(&'a str),
 }
 
-impl TString<'_> {
-    pub fn is_empty(&self) -> bool {
-        self.map(|s| s.is_empty())
+impl<'a> TString<'a> {
+    pub fn len(&self) -> usize {
+        self.map(|s| s.len())
     }
 
-    pub fn map<F, T>(&self, fun: F) -> T
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
+    pub fn map<F, T>(&'a self, fun: F) -> T
     where
-        F: for<'a> FnOnce(&'a str) -> T,
-        T: 'static,
+        F: FnOnce(&'a str) -> T,
+        T: 'a,
     {
         match self {
             #[cfg(feature = "micropython")]
@@ -145,6 +149,12 @@ impl<'a> From<&'a str> for TString<'a> {
     }
 }
 
+impl<'a> From<&'a TString<'a>> for &'a str {
+    fn from(s: &'a TString<'a>) -> &'a str {
+        s.map(|s| s)
+    }
+}
+
 #[cfg(feature = "translations")]
 impl From<TR> for TString<'static> {
     fn from(tr: TR) -> Self {
@@ -176,3 +186,11 @@ impl<'a> TryFrom<TString<'a>> for Obj {
         s.map(|t| t.try_into())
     }
 }
+
+impl<'a, 'b> PartialEq<TString<'a>> for TString<'b> {
+    fn eq(&self, other: &TString<'a>) -> bool {
+        self.map(|s| other.map(|o| s == o))
+    }
+}
+
+impl Eq for TString<'_> {}

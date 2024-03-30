@@ -48,10 +48,10 @@ pub struct PinKeyboard<T> {
     major_warning: Option<Child<Label<T>>>,
     textbox: Child<PinDots>,
     textbox_pad: Pad,
-    erase_btn: Child<Maybe<Button<&'static str>>>,
-    cancel_btn: Child<Maybe<Button<&'static str>>>,
-    confirm_btn: Child<Button<&'static str>>,
-    digit_btns: [Child<Button<&'static str>>; DIGIT_COUNT],
+    erase_btn: Child<Maybe<Button>>,
+    cancel_btn: Child<Maybe<Button>>,
+    confirm_btn: Child<Button>,
+    digit_btns: [Child<Button>; DIGIT_COUNT],
     warning_timer: Option<TimerToken>,
 }
 
@@ -104,12 +104,12 @@ where
         }
     }
 
-    fn generate_digit_buttons() -> [Child<Button<&'static str>>; DIGIT_COUNT] {
+    fn generate_digit_buttons() -> [Child<Button>; DIGIT_COUNT] {
         // Generate a random sequence of digits from 0 to 9.
         let mut digits = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
         random::shuffle(&mut digits);
         digits
-            .map(Button::with_text)
+            .map(|c| Button::with_text(c.into()))
             .map(|b| b.styled(theme::button_pin()))
             .map(Child::new)
     }
@@ -240,7 +240,7 @@ where
         for btn in &mut self.digit_btns {
             if let Some(Clicked) = btn.event(ctx, event) {
                 if let ButtonContent::Text(text) = btn.inner().content() {
-                    self.textbox.mutate(ctx, |ctx, t| t.push(ctx, text));
+                    self.textbox.mutate(ctx, |ctx, t| t.push(ctx, text.into()));
                     self.pin_modified(ctx);
                     return None;
                 }
@@ -562,7 +562,7 @@ where
         for btn in self.digit_btns.iter() {
             let btn_content = btn.inner().content();
             if let ButtonContent::Text(text) = btn_content {
-                unwrap!(digits_order.push_str(text));
+                unwrap!(digits_order.push_str(text.into()));
             }
         }
         t.string("digits_order", digits_order.as_str().into());

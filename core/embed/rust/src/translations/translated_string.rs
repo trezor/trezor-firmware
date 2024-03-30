@@ -10,10 +10,9 @@ impl TranslatedString {
             .unwrap_or(self.untranslated())
     }
 
-    pub fn map_translated<F, T>(self, fun: F) -> T
+    pub fn map_translated<'a, F, T>(self, fun: F) -> T
     where
-        F: for<'a> FnOnce(&'a str) -> T,
-        T: 'static,
+        F: FnOnce(&'a str) -> T,
     {
         // SAFETY: The bound on F _somehow_ ensures that the reference cannot escape
         // the closure. (I don't understand how, but it does), see soundness test below.

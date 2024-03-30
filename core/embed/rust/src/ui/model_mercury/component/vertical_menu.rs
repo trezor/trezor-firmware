@@ -1,12 +1,16 @@
 use heapless::Vec;
 
 use super::theme;
-use crate::ui::{
-    component::{base::Component, Event, EventCtx},
-    display::Icon,
-    geometry::Rect,
-    model_mercury::component::button::{Button, ButtonMsg, IconText},
-    shape::{Bar, Renderer},
+use crate::{
+    micropython::buffer::StrBuffer,
+    strutil::TString,
+    ui::{
+        component::{base::Component, Event, EventCtx},
+        display::Icon,
+        geometry::Rect,
+        model_mercury::component::button::{Button, ButtonMsg, IconText},
+        shape::{Bar, Renderer},
+    },
 };
 
 pub enum VerticalMenuChoiceMsg {
@@ -27,38 +31,35 @@ const MENU_BUTTON_HEIGHT: i16 = 64;
 /// Fixed height of a separator.
 const MENU_SEP_HEIGHT: i16 = 2;
 
-type VerticalMenuButtons<T> = Vec<Button<T>, N_ITEMS>;
+type VerticalMenuButtons = Vec<Button, N_ITEMS>;
 type AreasForSeparators = Vec<Rect, N_SEPS>;
 
-pub struct VerticalMenu<T> {
+pub struct VerticalMenu {
     area: Rect,
     /// buttons placed vertically from top to bottom
-    buttons: VerticalMenuButtons<T>,
+    buttons: VerticalMenuButtons,
     /// areas for visual separators between buttons
     areas_sep: AreasForSeparators,
 }
 
-impl<T> VerticalMenu<T>
-where
-    T: AsRef<str>,
-{
-    fn new(buttons: VerticalMenuButtons<T>) -> Self {
+impl VerticalMenu {
+    fn new(buttons: VerticalMenuButtons) -> Self {
         Self {
             area: Rect::zero(),
             buttons,
             areas_sep: AreasForSeparators::new(),
         }
     }
-    pub fn select_word(words: [T; 3]) -> Self {
+    pub fn select_word(words: [StrBuffer; 3]) -> Self {
         let mut buttons_vec = VerticalMenuButtons::new();
         for word in words {
-            let button = Button::with_text(word).styled(theme::button_vertical_menu());
+            let button = Button::with_text(word.into()).styled(theme::button_vertical_menu());
             unwrap!(buttons_vec.push(button));
         }
         Self::new(buttons_vec)
     }
 
-    pub fn context_menu(options: [(T, Icon); 3]) -> Self {
+    pub fn context_menu(options: [(TString<'static>, Icon); 3]) -> Self {
         // TODO: this is just POC
         let mut buttons_vec = VerticalMenuButtons::new();
         for opt in options {
@@ -79,10 +80,7 @@ where
     }
 }
 
-impl<T> Component for VerticalMenu<T>
-where
-    T: AsRef<str>,
-{
+impl Component for VerticalMenu {
     type Msg = VerticalMenuChoiceMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -141,10 +139,7 @@ where
 }
 
 #[cfg(feature = "ui_debug")]
-impl<T> crate::trace::Trace for VerticalMenu<T>
-where
-    T: AsRef<str>,
-{
+impl crate::trace::Trace for VerticalMenu {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("VerticalMenu");
         t.in_list("buttons", &|button_list| {

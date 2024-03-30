@@ -16,7 +16,7 @@ pub struct Frame<T, U> {
     border: Insets,
     title: Child<Label<U>>,
     subtitle: Option<Child<Label<U>>>,
-    button: Option<Child<Button<&'static str>>>,
+    button: Option<Child<Button>>,
     button_msg: CancelInfoConfirmMsg,
     content: Child<T>,
 }
