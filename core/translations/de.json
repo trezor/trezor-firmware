@@ -523,7 +523,6 @@
     "progress__locking_device": "Das Gerät sperren...",
     "progress__one_second_left": "1 Sekunde verbleibend",
     "progress__please_wait": "BITTE WARTEN",
-    "progress__processing": "VERARBEITUNG",
     "progress__refreshing": "Wird aktualisiert...",
     "progress__signing_transaction": "Transakt. wird signiert",
     "progress__syncing": "Wird synchronisiert...",

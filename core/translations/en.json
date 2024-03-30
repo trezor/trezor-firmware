@@ -500,7 +500,6 @@
     "progress__locking_device": "Locking the device...",
     "progress__one_second_left": "1 second left",
     "progress__please_wait": "PLEASE WAIT",
-    "progress__processing": "PROCESSING",
     "progress__refreshing": "Refreshing...",
     "progress__signing_transaction": "Signing transaction...",
     "progress__syncing": "Syncing...",

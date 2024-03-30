@@ -523,7 +523,6 @@
     "progress__locking_device": "Bloq. el dispositivo...",
     "progress__one_second_left": "Queda 1 segundo",
     "progress__please_wait": "ESPERA",
-    "progress__processing": "PROCESANDO",
     "progress__refreshing": "Actualizando...",
     "progress__signing_transaction": "Firmando transacción...",
     "progress__syncing": "Sincronizando...",

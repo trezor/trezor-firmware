@@ -498,7 +498,6 @@ class TR:
     progress__locking_device: str = "Locking the device..."
     progress__one_second_left: str = "1 second left"
     progress__please_wait: str = "PLEASE WAIT"
-    progress__processing: str = "PROCESSING"
     progress__refreshing: str = "Refreshing..."
     progress__signing_transaction: str = "Signing transaction..."
     progress__syncing: str = "Syncing..."

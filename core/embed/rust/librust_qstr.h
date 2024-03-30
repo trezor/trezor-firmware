@@ -329,7 +329,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_progress__locking_device;
   MP_QSTR_progress__one_second_left;
   MP_QSTR_progress__please_wait;
-  MP_QSTR_progress__processing;
   MP_QSTR_progress__refreshing;
   MP_QSTR_progress__signing_transaction;
   MP_QSTR_progress__syncing;
