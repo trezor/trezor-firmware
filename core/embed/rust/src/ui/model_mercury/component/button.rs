@@ -618,7 +618,7 @@ where
         }
     }
     pub fn render<'s>(
-        & self,
+        &self,
         target: &mut impl Renderer<'s>,
         area: Rect,
         style: &ButtonStyle,
