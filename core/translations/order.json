@@ -486,7 +486,7 @@
   "484": "progress__locking_device",
   "485": "progress__one_second_left",
   "486": "progress__please_wait",
-  "487": "progress__processing",
+  "487": "storage_msg__processing",
   "488": "progress__refreshing",
   "489": "progress__signing_transaction",
   "490": "progress__syncing",
@@ -841,8 +841,7 @@
   "839": "ethereum__staking_stake_intro",
   "840": "ethereum__staking_unstake",
   "841": "ethereum__staking_unstake_intro",
-  "842": "storage_msg__processing",
-  "843": "storage_msg__starting",
-  "844": "storage_msg__verifying_pin",
-  "845": "storage_msg__wrong_pin"
+  "842": "storage_msg__starting",
+  "843": "storage_msg__verifying_pin",
+  "844": "storage_msg__wrong_pin"
 }
