@@ -950,7 +950,7 @@ class InputFlowLockTimeDatetime(InputFlowBase):
     def assert_func(self, debug: DebugLink, br: messages.ButtonRequest) -> None:
         layout_text = get_text_possible_pagination(debug, br)
         TR.assert_in(layout_text, "bitcoin__locktime_set_to")
-        assert self.lock_time_str.replace(' ', '') in layout_text.replace(' ', '')
+        assert self.lock_time_str.replace(" ", "") in layout_text.replace(" ", "")
 
     def input_flow_tt(self) -> BRGeneratorType:
         yield from lock_time_input_flow_tt(self.debug, self.assert_func)
