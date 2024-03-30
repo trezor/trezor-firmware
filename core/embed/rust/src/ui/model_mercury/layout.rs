@@ -1336,10 +1336,7 @@ extern "C" fn new_show_tx_context_menu(n_args: usize, args: *const Obj, kwargs: 
 
         let options: [(StrBuffer, Icon); 3] = [
             (StrBuffer::from("Address QR code"), theme::ICON_QR_CODE),
-            (
-                StrBuffer::from("Fee info"),
-                theme::ICON_CHEVRON_RIGHT,
-            ),
+            (StrBuffer::from("Fee info"), theme::ICON_CHEVRON_RIGHT),
             (StrBuffer::from("Cancel transaction"), theme::ICON_CANCEL),
         ];
         let content = VerticalMenu::context_menu(options);
