@@ -75,7 +75,6 @@ where
         // let current_account = get_account(scrollbar.active_page);
         let current_account = "".into();
 
-
         Self {
             app_name: Label::centered(app_name, theme::TEXT_DEMIBOLD),
             account_name: Label::centered(current_account, theme::TEXT_DEMIBOLD),
@@ -162,7 +161,8 @@ where
         // NOTE: This is a hotfix used due to the erroneous behavior of TextLayout.
         // This line should be removed when the problem with TextLayout is fixed.
         // See also the code for FidoConfirm::new().
-        self.account_name.set_text((self.get_account)(self.scrollbar.active_page));
+        self.account_name
+            .set_text((self.get_account)(self.scrollbar.active_page));
 
         bounds
     }
