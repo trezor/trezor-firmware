@@ -294,9 +294,11 @@ int zkp_bip340_tweak_private_key(const uint8_t *internal_private_key,
   }
 
   secp256k1_keypair keypair = {0};
-  if (secp256k1_keypair_create(context_writable, &keypair,
-                               internal_private_key) != 1) {
-    result = -1;
+  if (result == 0) {
+    if (secp256k1_keypair_create(context_writable, &keypair,
+                                 internal_private_key) != 1) {
+      result = -1;
+    }
   }
 
   if (context_writable) {
