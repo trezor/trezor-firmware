@@ -71,7 +71,10 @@ int zkp_context_init(void) {
     return 1;
   }
 
-  secp256k1_context_writable_randomize(context);
+  if (secp256k1_context_writable_randomize(context) != 0) {
+    zkp_context_destroy();
+    return 1;
+  }
 
   atomic_flag_clear(&locked);
 
