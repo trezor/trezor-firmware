@@ -44,10 +44,8 @@ optiga_result optiga_resync(void);
 optiga_result optiga_soft_reset(void);
 optiga_result optiga_set_data_reg_len(size_t size);
 
-#ifndef NDEBUG
-typedef void (*optiga_log_hex_t)(const char *prefix, const uint8_t *data,
-                                 size_t data_size);
-void optiga_set_log_hex(optiga_log_hex_t f);
+#if !PRODUCTION
+void optiga_transport_set_log_hex(optiga_log_hex_t f);
 #endif
 
 #endif

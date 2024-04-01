@@ -18,6 +18,7 @@
  */
 
 #include <assert.h>
+#include <stdbool.h>
 #include <string.h>
 
 #include "chacha20poly1305/rfc7539.h"
@@ -82,17 +83,10 @@ const uint32_t V0_PIN_EMPTY = 1;
 #define MAX_WIPE_CODE_LEN 50
 
 // The total number of iterations to use in PBKDF2.
-#define PIN_ITER_COUNT 20000
+#define PBKDF2_ITER_COUNT 20000
 
-// The number of milliseconds required to execute PBKDF2.
-#define PIN_PBKDF2_MS 1280
-
-// The number of milliseconds required to derive the KEK and KEIV.
-#if USE_OPTIGA
-#define PIN_DERIVE_MS (PIN_PBKDF2_MS + OPTIGA_PIN_DERIVE_MS)
-#else
-#define PIN_DERIVE_MS PIN_PBKDF2_MS
-#endif
+// The number of PBKDF2 iterations that can be computed in one second.
+#define PBKDF2_ITER_PER_SEC 15625
 
 // The length of the hashed hardware salt in bytes.
 #define HARDWARE_SALT_SIZE SHA256_DIGEST_LENGTH
@@ -166,6 +160,27 @@ static secbool storage_set_encrypted(const uint16_t key, const void *val,
                                      const uint16_t len);
 static secbool storage_get_encrypted(const uint16_t key, void *val_dest,
                                      const uint16_t max_len, uint16_t *len);
+static secbool decrypt_dek(const uint8_t *pin, size_t pin_len,
+                           const uint8_t *ext_salt, int pbkdf2_iterations);
+
+// The number of milliseconds required to compute PBKDF2.
+static int pbkdf2_ms(int pbkdf2_iterations) {
+  return 1000 * pbkdf2_iterations / PBKDF2_ITER_PER_SEC;
+}
+
+// The number of milliseconds required to derive the KEK and KEIV.
+static int pin_derive_ms(bool pin_valid, int pbkdf2_iterations) {
+  (void)pin_valid;
+  int time_ms = pbkdf2_ms(pbkdf2_iterations);
+#if USE_OPTIGA
+  if (pin_valid) {
+    time_ms += OPTIGA_PIN_DERIVE_MS;
+  } else {
+    time_ms += OPTIGA_PIN_DERIVE_INVALID_MS;
+  }
+#endif
+  return time_ms;
+}
 
 #include "flash.h"
 #ifdef FLASH_BIT_ACCESS
@@ -465,10 +480,36 @@ static secbool ui_progress(uint32_t elapsed_ms) {
   }
 }
 
+static void pbkdf2_update_progressive(PBKDF2_HMAC_SHA256_CTX *ctx,
+                                      int total_iters) {
+  // Total number of milliseconds.
+  const int total_ms = pbkdf2_ms(total_iters);
+
+  // Number of milliseconds and iterations per progress step.
+  int step_ms = 128;
+  int step_iters = PBKDF2_ITER_PER_SEC * step_ms / 1000;
+
+  int current_ms = 0;
+  int current_iters = 0;
+  while (current_iters < total_iters) {
+    if (total_iters - current_iters < step_iters) {
+      step_iters = total_iters - current_iters;
+    }
+    pbkdf2_hmac_sha256_Update(ctx, step_iters);
+    current_iters += step_iters;
+
+    if (total_ms - current_ms < step_ms) {
+      step_ms = total_ms - current_ms;
+    }
+    ui_progress(step_ms);
+    current_ms += step_ms;
+  }
+}
+
 #if !USE_OPTIGA
 static void derive_kek(const uint8_t *pin, size_t pin_len,
                        const uint8_t *storage_salt, const uint8_t *ext_salt,
-                       uint8_t kek[SHA256_DIGEST_LENGTH],
+                       int pbkdf2_iterations, uint8_t kek[SHA256_DIGEST_LENGTH],
                        uint8_t keiv[SHA256_DIGEST_LENGTH]) {
   uint8_t salt[HARDWARE_SALT_SIZE + STORAGE_SALT_SIZE + EXTERNAL_SALT_SIZE] = {
       0};
@@ -487,17 +528,11 @@ static void derive_kek(const uint8_t *pin, size_t pin_len,
 
   PBKDF2_HMAC_SHA256_CTX ctx = {0};
   pbkdf2_hmac_sha256_Init(&ctx, pin, pin_len, salt, salt_len, 1);
-  for (int i = 1; i <= 5; i++) {
-    pbkdf2_hmac_sha256_Update(&ctx, PIN_ITER_COUNT / 10);
-    ui_progress(PIN_PBKDF2_MS / 10);
-  }
+  pbkdf2_update_progressive(&ctx, pbkdf2_iterations / 2);
   pbkdf2_hmac_sha256_Final(&ctx, kek);
 
   pbkdf2_hmac_sha256_Init(&ctx, pin, pin_len, salt, salt_len, 2);
-  for (int i = 6; i <= 10; i++) {
-    pbkdf2_hmac_sha256_Update(&ctx, PIN_ITER_COUNT / 10);
-    ui_progress(PIN_PBKDF2_MS / 10);
-  }
+  pbkdf2_update_progressive(&ctx, pbkdf2_iterations / 2);
   pbkdf2_hmac_sha256_Final(&ctx, keiv);
 
   memzero(&ctx, sizeof(PBKDF2_HMAC_SHA256_CTX));
@@ -508,7 +543,7 @@ static void derive_kek(const uint8_t *pin, size_t pin_len,
 #if USE_OPTIGA
 static void stretch_pin_optiga(const uint8_t *pin, size_t pin_len,
                                const uint8_t storage_salt[STORAGE_SALT_SIZE],
-                               const uint8_t *ext_salt,
+                               const uint8_t *ext_salt, int pbkdf2_iterations,
                                uint8_t stretched_pin[OPTIGA_PIN_SECRET_SIZE]) {
   // Combining the PIN with the storage salt aims to ensure that if the
   // MCU-Optiga communication is compromised, then a user with a low-entropy PIN
@@ -536,11 +571,7 @@ static void stretch_pin_optiga(const uint8_t *pin, size_t pin_len,
   PBKDF2_HMAC_SHA256_CTX ctx = {0};
   pbkdf2_hmac_sha256_Init(&ctx, pin, pin_len, salt, salt_len, 1);
   memzero(&salt, sizeof(salt));
-
-  for (int i = 1; i <= 10; i++) {
-    pbkdf2_hmac_sha256_Update(&ctx, PIN_ITER_COUNT / 10);
-    ui_progress(PIN_PBKDF2_MS / 10);
-  }
+  pbkdf2_update_progressive(&ctx, pbkdf2_iterations);
   pbkdf2_hmac_sha256_Final(&ctx, stretched_pin);
 
   memzero(&ctx, sizeof(ctx));
@@ -569,13 +600,26 @@ static void derive_kek_optiga(
 static secbool __wur derive_kek_set(const uint8_t *pin, size_t pin_len,
                                     const uint8_t *storage_salt,
                                     const uint8_t *ext_salt,
+                                    int pbkdf2_iterations,
                                     uint8_t kek[SHA256_DIGEST_LENGTH],
                                     uint8_t keiv[SHA256_DIGEST_LENGTH]) {
 #if USE_OPTIGA
   uint8_t optiga_secret[OPTIGA_PIN_SECRET_SIZE] = {0};
   uint8_t stretched_pin[OPTIGA_PIN_SECRET_SIZE] = {0};
-  stretch_pin_optiga(pin, pin_len, storage_salt, ext_salt, stretched_pin);
-  int ret = optiga_pin_set(ui_progress, stretched_pin, optiga_secret);
+  stretch_pin_optiga(pin, pin_len, storage_salt, ext_salt, pbkdf2_iterations,
+                     stretched_pin);
+  int ret = OPTIGA_SUCCESS;
+#if !PYOPT
+  // Skip usage of Optiga for empty PIN in debug builds to avoid excessive wear
+  // of Optiga counters.
+  if (pin_len == PIN_EMPTY_LEN) {
+    memcpy(optiga_secret, stretched_pin, sizeof(stretched_pin));
+    ui_progress(OPTIGA_PIN_DERIVE_MS);
+  } else
+#endif
+  {
+    ret = optiga_pin_set(ui_progress, stretched_pin, optiga_secret);
+  }
   memzero(stretched_pin, sizeof(stretched_pin));
   if (ret != OPTIGA_SUCCESS) {
     memzero(optiga_secret, sizeof(optiga_secret));
@@ -584,7 +628,8 @@ static secbool __wur derive_kek_set(const uint8_t *pin, size_t pin_len,
   derive_kek_optiga(optiga_secret, kek, keiv);
   memzero(optiga_secret, sizeof(optiga_secret));
 #else
-  derive_kek(pin, pin_len, storage_salt, ext_salt, kek, keiv);
+  derive_kek(pin, pin_len, storage_salt, ext_salt, pbkdf2_iterations, kek,
+             keiv);
 #endif
   return sectrue;
 }
@@ -592,13 +637,26 @@ static secbool __wur derive_kek_set(const uint8_t *pin, size_t pin_len,
 static secbool __wur derive_kek_unlock(const uint8_t *pin, size_t pin_len,
                                        const uint8_t *storage_salt,
                                        const uint8_t *ext_salt,
+                                       int pbkdf2_iterations,
                                        uint8_t kek[SHA256_DIGEST_LENGTH],
                                        uint8_t keiv[SHA256_DIGEST_LENGTH]) {
 #if USE_OPTIGA
   uint8_t optiga_secret[OPTIGA_PIN_SECRET_SIZE] = {0};
   uint8_t stretched_pin[OPTIGA_PIN_SECRET_SIZE] = {0};
-  stretch_pin_optiga(pin, pin_len, storage_salt, ext_salt, stretched_pin);
-  int ret = optiga_pin_verify(ui_progress, stretched_pin, optiga_secret);
+  stretch_pin_optiga(pin, pin_len, storage_salt, ext_salt, pbkdf2_iterations,
+                     stretched_pin);
+  int ret = OPTIGA_SUCCESS;
+#if !PYOPT
+  // Skip usage of Optiga for empty PIN in debug builds to avoid excessive wear
+  // of Optiga counters.
+  if (pin_len == PIN_EMPTY_LEN) {
+    memcpy(optiga_secret, stretched_pin, sizeof(stretched_pin));
+    ui_progress(OPTIGA_PIN_DERIVE_MS);
+  } else
+#endif
+  {
+    ret = optiga_pin_verify(ui_progress, stretched_pin, optiga_secret);
+  }
   memzero(stretched_pin, sizeof(stretched_pin));
   if (ret != OPTIGA_SUCCESS) {
     memzero(optiga_secret, sizeof(optiga_secret));
@@ -614,13 +672,14 @@ static secbool __wur derive_kek_unlock(const uint8_t *pin, size_t pin_len,
   derive_kek_optiga(optiga_secret, kek, keiv);
   memzero(optiga_secret, sizeof(optiga_secret));
 #else
-  derive_kek(pin, pin_len, storage_salt, ext_salt, kek, keiv);
+  derive_kek(pin, pin_len, storage_salt, ext_salt, pbkdf2_iterations, kek,
+             keiv);
 #endif
   return sectrue;
 }
 
 static secbool set_pin(const uint8_t *pin, size_t pin_len,
-                       const uint8_t *ext_salt) {
+                       const uint8_t *ext_salt, int pbkdf2_iterations) {
   // Encrypt the cached keys using the new PIN and set the new PVC.
   uint8_t buffer[STORAGE_SALT_SIZE + KEYS_SIZE + POLY1305_TAG_SIZE] = {0};
   uint8_t *rand_salt = buffer;
@@ -632,7 +691,8 @@ static secbool set_pin(const uint8_t *pin, size_t pin_len,
   chacha20poly1305_ctx ctx = {0};
   random_buffer(rand_salt, STORAGE_SALT_SIZE);
   ui_progress(0);
-  ensure(derive_kek_set(pin, pin_len, rand_salt, ext_salt, kek, keiv),
+  ensure(derive_kek_set(pin, pin_len, rand_salt, ext_salt, pbkdf2_iterations,
+                        kek, keiv),
          "derive_kek_set failed");
   rfc7539_init(&ctx, kek, keiv);
   memzero(kek, sizeof(kek));
@@ -688,10 +748,32 @@ static void init_wiped_storage(void) {
   ensure(set_wipe_code(WIPE_CODE_EMPTY, WIPE_CODE_EMPTY_LEN),
          "set_wipe_code failed");
 
-  ui_total = PIN_DERIVE_MS;
+  ui_total = pin_derive_ms(true, PBKDF2_ITER_COUNT);
   ui_rem = ui_total;
   ui_message = PROCESSING_MSG;
-  ensure(set_pin(PIN_EMPTY, PIN_EMPTY_LEN, NULL), "init_pin failed");
+
+#if PYOPT
+  // Health check to make sure that an invalid PIN does not unlock and the valid
+  // PIN does. Skip in debug builds to avoid excessive wear of Optiga counters.
+  ui_total += 2 * pin_derive_ms(true, 2) + pin_derive_ms(false, 2);
+  ui_rem = ui_total;
+  const uint8_t PIN_TEST_GOOD[] = {0x01};
+  const uint8_t PIN_TEST_BAD[] = {0x02};
+  if (set_pin(PIN_TEST_GOOD, sizeof(PIN_TEST_GOOD), NULL, 2) != sectrue) {
+    norcow_wipe();
+    ensure(secfalse, "pin_health_check_0 failed");
+  }
+  if (decrypt_dek(PIN_TEST_BAD, sizeof(PIN_TEST_BAD), NULL, 2) != secfalse) {
+    norcow_wipe();
+    ensure(secfalse, "pin_health_check_1 failed");
+  }
+  if (decrypt_dek(PIN_TEST_GOOD, sizeof(PIN_TEST_GOOD), NULL, 2) != sectrue) {
+    norcow_wipe();
+    ensure(secfalse, "pin_health_check_2 failed");
+  }
+#endif
+  ensure(set_pin(PIN_EMPTY, PIN_EMPTY_LEN, NULL, PBKDF2_ITER_COUNT),
+         "init_pin failed");
 }
 
 void storage_init(PIN_UI_WAIT_CALLBACK callback, const uint8_t *salt,
@@ -726,6 +808,36 @@ secbool storage_pin_fails_increase(void) {
     return secfalse;
   }
   return pin_fails_increase();
+}
+
+static secbool pin_get_fails_sync(uint32_t *ctr) {
+  uint32_t ctr_mcu = 0;
+  if (sectrue != pin_get_fails(&ctr_mcu)) {
+    return secfalse;
+  }
+
+#if USE_OPTIGA
+  // Synchronize counters in case they diverged.
+  uint32_t ctr_optiga = 0;
+  ensure(
+      optiga_pin_get_fails(&ctr_optiga) == OPTIGA_SUCCESS ? sectrue : secfalse,
+      "optiga_pin_get_fails failed");
+
+  while (ctr_mcu < ctr_optiga) {
+    storage_pin_fails_increase();
+    ctr_mcu++;
+  }
+
+  if (ctr_optiga < ctr_mcu) {
+    ensure(optiga_pin_fails_increase(ctr_mcu - ctr_optiga) == OPTIGA_SUCCESS
+               ? sectrue
+               : secfalse,
+           "optiga_pin_fails_increase failed");
+  }
+#endif
+
+  *ctr = ctr_mcu;
+  return sectrue;
 }
 
 secbool storage_is_unlocked(void) {
@@ -806,7 +918,10 @@ secbool check_storage_version(void) {
   return sectrue;
 }
 
-static secbool decrypt_dek(const uint8_t *kek, const uint8_t *keiv) {
+static secbool decrypt_dek(const uint8_t *pin, size_t pin_len,
+                           const uint8_t *ext_salt, int pbkdf2_iterations) {
+  // Read the random salt from EDEK_PVC_KEY and use it to derive the KEK and
+  // KEIV from the PIN.
   const void *buffer = NULL;
   uint16_t len = 0;
   if (sectrue != initialized ||
@@ -816,11 +931,21 @@ static secbool decrypt_dek(const uint8_t *kek, const uint8_t *keiv) {
     return secfalse;
   }
 
+  const uint8_t *rand_salt = (const uint8_t *)buffer;
   const uint8_t *ekeys = (const uint8_t *)buffer + STORAGE_SALT_SIZE;
   const uint32_t *pvc = (const uint32_t *)buffer +
                         (STORAGE_SALT_SIZE + KEYS_SIZE) / sizeof(uint32_t);
   _Static_assert(((STORAGE_SALT_SIZE + KEYS_SIZE) & 3) == 0, "PVC unaligned");
   _Static_assert((PVC_SIZE & 3) == 0, "PVC size unaligned");
+
+  uint8_t kek[SHA256_DIGEST_LENGTH] = {0};
+  uint8_t keiv[SHA256_DIGEST_LENGTH] = {0};
+  if (sectrue != derive_kek_unlock(pin, pin_len, rand_salt, ext_salt,
+                                   pbkdf2_iterations, kek, keiv)) {
+    memzero(kek, sizeof(kek));
+    memzero(keiv, sizeof(keiv));
+    return secfalse;
+  }
 
   uint8_t keys[KEYS_SIZE] = {0};
   uint8_t tag[POLY1305_TAG_SIZE] __attribute__((aligned(sizeof(uint32_t))));
@@ -831,6 +956,8 @@ static secbool decrypt_dek(const uint8_t *kek, const uint8_t *keiv) {
   rfc7539_init(&ctx, kek, keiv);
   chacha20poly1305_decrypt(&ctx, ekeys, keys, KEYS_SIZE);
   rfc7539_finish(&ctx, 0, KEYS_SIZE, tag);
+  memzero(kek, sizeof(kek));
+  memzero(keiv, sizeof(keiv));
   memzero(&ctx, sizeof(ctx));
   wait_random();
   if (secequal32(tag, pvc, PVC_SIZE) != sectrue) {
@@ -861,8 +988,8 @@ static secbool unlock(const uint8_t *pin, size_t pin_len,
   // storage_upgrade_unlocked().
   uint32_t legacy_pin = 0;
   if (get_lock_version() <= 2) {
-    ui_total += PIN_DERIVE_MS;
-    ui_rem += PIN_DERIVE_MS;
+    ui_total += pin_derive_ms(true, PBKDF2_ITER_COUNT);
+    ui_rem += pin_derive_ms(true, PBKDF2_ITER_COUNT);
     legacy_pin = pin_to_int(pin, pin_len);
     unlock_pin = (const uint8_t *)&legacy_pin;
     unlock_pin_len = sizeof(legacy_pin);
@@ -871,9 +998,11 @@ static secbool unlock(const uint8_t *pin, size_t pin_len,
   // Now we can check for wipe code.
   ensure_not_wipe_code(unlock_pin, unlock_pin_len);
 
-  // Get the pin failure counter
+  // Get the pin failure counter. To ensure correct exponential backoff,
+  // synchronize counters in case they diverged. However, we are unaware of any
+  // way how the Optiga counter could be ahead of the MCU counter.
   uint32_t ctr = 0;
-  if (sectrue != pin_get_fails(&ctr)) {
+  if (sectrue != pin_get_fails_sync(&ctr)) {
     memzero(&legacy_pin, sizeof(legacy_pin));
     return secfalse;
   }
@@ -913,25 +1042,9 @@ static secbool unlock(const uint8_t *pin, size_t pin_len,
     return secfalse;
   }
 
-  // Read the random salt from EDEK_PVC_KEY and use it to derive the KEK and
-  // KEIV from the PIN.
-  const void *rand_salt = NULL;
-  uint16_t len = 0;
-  if (sectrue != initialized ||
-      sectrue != norcow_get(EDEK_PVC_KEY, &rand_salt, &len) ||
-      len != STORAGE_SALT_SIZE + KEYS_SIZE + PVC_SIZE) {
-    memzero(&legacy_pin, sizeof(legacy_pin));
-    handle_fault("no EDEK");
-    return secfalse;
-  }
-  uint8_t kek[SHA256_DIGEST_LENGTH] = {0};
-  uint8_t keiv[SHA256_DIGEST_LENGTH] = {0};
-
   // Check whether the entered PIN is correct.
-  if (sectrue != derive_kek_unlock(unlock_pin, unlock_pin_len,
-                                   (const uint8_t *)rand_salt, ext_salt, kek,
-                                   keiv) ||
-      sectrue != decrypt_dek(kek, keiv)) {
+  if (sectrue !=
+      decrypt_dek(unlock_pin, unlock_pin_len, ext_salt, PBKDF2_ITER_COUNT)) {
     memzero(&legacy_pin, sizeof(legacy_pin));
     // Wipe storage if too many failures
     wait_random();
@@ -952,8 +1065,6 @@ static secbool unlock(const uint8_t *pin, size_t pin_len,
     return secfalse;
   }
   memzero(&legacy_pin, sizeof(legacy_pin));
-  memzero(kek, sizeof(kek));
-  memzero(keiv, sizeof(keiv));
 
   // Check for storage upgrades that need to be performed after unlocking and
   // check that the authenticated version number matches the unauthenticated
@@ -977,7 +1088,7 @@ secbool storage_unlock(const uint8_t *pin, size_t pin_len,
     return secfalse;
   }
 
-  ui_total = PIN_DERIVE_MS;
+  ui_total = pin_derive_ms(true, PBKDF2_ITER_COUNT);
   ui_rem = ui_total;
   if (pin_len == 0) {
     if (ui_message == NO_MSG) {
@@ -1229,32 +1340,12 @@ uint32_t storage_get_pin_rem(void) {
     return 0;
   }
 
-  uint32_t ctr_mcu = 0;
-  if (sectrue != pin_get_fails(&ctr_mcu)) {
+  uint32_t ctr = 0;
+  if (sectrue != pin_get_fails_sync(&ctr)) {
     return 0;
   }
 
-#if USE_OPTIGA
-  // Synchronize counters in case they diverged.
-  uint32_t ctr_optiga = 0;
-  ensure(
-      optiga_pin_get_fails(&ctr_optiga) == OPTIGA_SUCCESS ? sectrue : secfalse,
-      "optiga_pin_get_fails failed");
-
-  while (ctr_mcu < ctr_optiga) {
-    storage_pin_fails_increase();
-    ctr_mcu++;
-  }
-
-  if (ctr_optiga < ctr_mcu) {
-    ensure(optiga_pin_fails_increase(ctr_mcu - ctr_optiga) == OPTIGA_SUCCESS
-               ? sectrue
-               : secfalse,
-           "optiga_pin_fails_increase failed");
-  }
-#endif
-
-  return PIN_MAX_TRIES - ctr_mcu;
+  return PIN_MAX_TRIES - ctr;
 }
 
 secbool storage_change_pin(const uint8_t *oldpin, size_t oldpin_len,
@@ -1265,7 +1356,7 @@ secbool storage_change_pin(const uint8_t *oldpin, size_t oldpin_len,
     return secfalse;
   }
 
-  ui_total = 2 * PIN_DERIVE_MS;
+  ui_total = 2 * pin_derive_ms(true, PBKDF2_ITER_COUNT);
   ui_rem = ui_total;
   ui_message =
       (oldpin_len != 0 && newpin_len == 0) ? VERIFYING_PIN_MSG : PROCESSING_MSG;
@@ -1279,7 +1370,7 @@ secbool storage_change_pin(const uint8_t *oldpin, size_t oldpin_len,
     return secfalse;
   }
 
-  return set_pin(newpin, newpin_len, new_ext_salt);
+  return set_pin(newpin, newpin_len, new_ext_salt, PBKDF2_ITER_COUNT);
 }
 
 void storage_ensure_not_wipe_code(const uint8_t *pin, size_t pin_len) {
@@ -1314,7 +1405,7 @@ secbool storage_change_wipe_code(const uint8_t *pin, size_t pin_len,
     return secfalse;
   }
 
-  ui_total = PIN_DERIVE_MS;
+  ui_total = pin_derive_ms(true, PBKDF2_ITER_COUNT);
   ui_rem = ui_total;
   ui_message =
       (pin_len != 0 && wipe_code_len == 0) ? VERIFYING_PIN_MSG : PROCESSING_MSG;
@@ -1473,14 +1564,15 @@ static secbool storage_upgrade(void) {
     }
 
     // Set EDEK_PVC_KEY and PIN_NOT_SET_KEY.
-    ui_total = PIN_DERIVE_MS;
+    ui_total = pin_derive_ms(true, PBKDF2_ITER_COUNT);
     ui_rem = ui_total;
     ui_message = PROCESSING_MSG;
     secbool found = norcow_get(V0_PIN_KEY, &val, &len);
     if (sectrue == found && *(const uint32_t *)val != V0_PIN_EMPTY) {
-      set_pin((const uint8_t *)val, len, NULL);
+      set_pin((const uint8_t *)val, len, NULL, PBKDF2_ITER_COUNT);
     } else {
-      set_pin((const uint8_t *)&V0_PIN_EMPTY, sizeof(V0_PIN_EMPTY), NULL);
+      set_pin((const uint8_t *)&V0_PIN_EMPTY, sizeof(V0_PIN_EMPTY), NULL,
+              PBKDF2_ITER_COUNT);
       ret = norcow_set(PIN_NOT_SET_KEY, &TRUE_BYTE, sizeof(TRUE_BYTE));
     }
 
@@ -1597,7 +1689,7 @@ static secbool storage_upgrade_unlocked(const uint8_t *pin, size_t pin_len,
   if (version <= 2) {
     // Upgrade EDEK_PVC_KEY from the old uint32 PIN scheme to the new
     // variable-length PIN scheme.
-    if (sectrue != set_pin(pin, pin_len, ext_salt)) {
+    if (sectrue != set_pin(pin, pin_len, ext_salt, PBKDF2_ITER_COUNT)) {
       return secfalse;
     }
   }

@@ -176,3 +176,5 @@ int optiga_pin_get_fails(uint32_t *ctr) {
 }
 
 int optiga_pin_fails_increase(uint32_t count) { return OPTIGA_SUCCESS; }
+
+bool optiga_pin_wipe(void) { return true; }
