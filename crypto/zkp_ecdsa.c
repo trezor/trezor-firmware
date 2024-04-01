@@ -365,8 +365,10 @@ int zkp_ecdsa_verify_digest(const ecdsa_curve *curve,
   }
 
   if (result == 0) {
-    secp256k1_ecdsa_signature_normalize(context_read_only, &signature,
-                                        &signature);
+    (void)secp256k1_ecdsa_signature_normalize(
+        context_read_only, &signature,
+        &signature);  // The return value inidicates whether the signature was
+                      // already normalized
 
     if (secp256k1_ecdsa_verify(context_read_only, &signature, digest,
                                &public_key) != 1) {
