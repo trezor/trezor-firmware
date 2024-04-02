@@ -77,6 +77,7 @@ debug = 2
 
 [dependencies]
 qrcodegen = { version = "1.8.0", path = "../../vendor/QR-Code-generator/rust-no-heap" }
+spin = { version = "0.9.8", features = ["rwlock"], default-features = false }
 trezor-tjpgdec = { version = "0.1.0", path = "../../../rust/trezor-tjpgdec" }
 zeroize = { version = "1.7.0", default-features = false, optional = true }
 
