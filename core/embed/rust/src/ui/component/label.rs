@@ -63,25 +63,22 @@ impl<'a> Label<'a> {
 
     pub fn max_size(&self) -> Offset {
         let font = self.font();
-        Offset::new(
-            font.text_width(self.text.map(|c| c)),
-            font.text_max_height(),
-        )
+        let width = self.text.map(|c| font.text_width(c));
+        Offset::new(width, font.text_max_height())
     }
 
     pub fn text_height(&self, width: i16) -> i16 {
         let bounds = Rect::from_top_left_and_size(Point::zero(), Offset::new(width, i16::MAX));
-        self.layout
-            .with_bounds(bounds)
-            .fit_text(self.text.map(|c| c))
-            .height()
+
+        self.text
+            .map(|c| self.layout.with_bounds(bounds).fit_text(c).height())
     }
 
     pub fn text_area(&self) -> Rect {
         // XXX only works on single-line labels
         assert!(self.layout.bounds.height() <= self.font().text_max_height());
         let available_width = self.layout.bounds.width();
-        let width = self.font().text_width(self.text.map(|c| c));
+        let width = self.text.map(|c| self.font().text_width(c));
         let height = self.font().text_height();
         let cursor = self.layout.initial_cursor();
         let baseline = match self.alignment() {
@@ -98,10 +95,8 @@ impl Component for Label<'_> {
 
     fn place(&mut self, bounds: Rect) -> Rect {
         let height = self
-            .layout
-            .with_bounds(bounds)
-            .fit_text(self.text.map(|c| c))
-            .height();
+            .text
+            .map(|c| self.layout.with_bounds(bounds).fit_text(c).height());
         let diff = bounds.height() - height;
         let insets = match self.vertical {
             Alignment::Start => Insets::bottom(diff),
@@ -117,7 +112,7 @@ impl Component for Label<'_> {
     }
 
     fn paint(&mut self) {
-        self.layout.render_text(self.text.map(|c| c));
+        self.text.map(|c| self.layout.render_text(c));
     }
 
     #[cfg(feature = "ui_bounds")]
@@ -130,6 +125,6 @@ impl Component for Label<'_> {
 impl crate::trace::Trace for Label<'_> {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("Label");
-        t.string("text", self.text.map(|c| c).into());
+        t.string("text", self.text);
     }
 }

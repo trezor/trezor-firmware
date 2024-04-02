@@ -178,9 +178,7 @@ where
         // Account name is optional.
         // Showing it only if it differs from app name.
         // (Dummy requests usually have some text as both app_name and account_name.)
-        if !current_account.map(|c| c).is_empty()
-            && current_account.map(|c| c) != self.app_name.text().map(|c| c)
-        {
+        if current_account.map(|c| !c.is_empty() && self.app_name.text().map(|t| t != c)) {
             self.account_name.set_text(current_account);
             self.account_name.paint();
         }

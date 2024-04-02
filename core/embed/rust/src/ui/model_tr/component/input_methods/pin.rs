@@ -152,13 +152,15 @@ impl<'a> PinEntry<'a> {
         let (showing_real_prompt, header_line_content, pin_line_content) = if show_subprompt {
             (
                 false,
-                TR::pin__title_wrong_pin.map_translated(String::from),
-                String::from(subprompt.map(|t| t)),
+                TR::pin__title_wrong_pin
+                    .as_tstring()
+                    .map(|t| String::from(t)),
+                subprompt.map(|t| String::from(t)),
             )
         } else {
             (
                 true,
-                String::from(prompt.map(|t| t)),
+                prompt.map(|t| String::from(t)),
                 String::from(EMPTY_PIN_STR),
             )
         };
@@ -201,7 +203,7 @@ impl<'a> PinEntry<'a> {
         let pin_line_text = if self.is_empty() && !self.subprompt.is_empty() {
             // Showing the subprompt in NORMAL font
             used_font = Font::NORMAL;
-            String::from(self.subprompt.map(|t| t))
+            self.subprompt.map(|t| String::from(t))
         } else if self.is_empty() {
             String::from(EMPTY_PIN_STR)
         } else if self.show_real_pin {
@@ -231,7 +233,8 @@ impl<'a> PinEntry<'a> {
     /// Showing the real prompt instead of WRONG PIN
     fn show_prompt(&mut self, ctx: &mut EventCtx) {
         self.header_line.mutate(ctx, |ctx, header_line| {
-            header_line.update_text(String::from(self.prompt.map(|t| t)));
+            self.prompt
+                .map(|t| header_line.update_text(String::from(t)));
             header_line.request_complete_repaint(ctx);
         });
     }

@@ -90,11 +90,11 @@ where
         right: Option<TString<'static>>,
     ) -> Self {
         let cancel = match left {
-            Some(verb) => match verb.map(|s| s) {
+            Some(verb) => verb.map(|s| match s {
                 "^" => Button::with_icon(theme::ICON_UP),
                 "<" => Button::with_icon(theme::ICON_BACK),
                 _ => Button::with_text(verb),
-            },
+            }),
             _ => Button::with_icon(theme::ICON_CANCEL),
         };
         let confirm = match right {

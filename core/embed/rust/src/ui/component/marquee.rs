@@ -64,7 +64,7 @@ impl Marquee {
         }
 
         if let State::Initial = self.state {
-            let text_width = self.font.text_width(self.text.map(|t| t));
+            let text_width = self.text.map(|t| self.font.text_width(t));
             let max_offset = self.area.width() - text_width;
 
             self.min_offset = 0;
@@ -120,14 +120,8 @@ impl Marquee {
     }
 
     pub fn paint_anim(&mut self, offset: i16) {
-        display::marquee(
-            self.area,
-            self.text.map(|t| t),
-            offset,
-            self.font,
-            self.fg,
-            self.bg,
-        );
+        self.text
+            .map(|t| display::marquee(self.area, t, offset, self.font, self.fg, self.bg));
     }
 }
 

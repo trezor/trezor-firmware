@@ -191,18 +191,20 @@ impl Button {
         match &self.content {
             ButtonContent::Empty => {}
             ButtonContent::Text(text) => {
-                let width = style.font.text_width(text.map(|c| c));
+                let width = text.map(|c| style.font.text_width(c));
                 let height = style.font.text_height();
                 let start_of_baseline = self.area.center()
                     + Offset::new(-width / 2, height / 2)
                     + Offset::y(Self::BASELINE_OFFSET);
-                display::text_left(
-                    start_of_baseline,
-                    text.into(),
-                    style.font,
-                    style.text_color,
-                    style.button_color,
-                );
+                text.map(|text| {
+                    display::text_left(
+                        start_of_baseline,
+                        text,
+                        style.font,
+                        style.text_color,
+                        style.button_color,
+                    );
+                });
             }
             ButtonContent::Icon(icon) => {
                 icon.draw(

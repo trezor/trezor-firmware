@@ -110,11 +110,11 @@ impl Homescreen {
                 .map_translated(|t| display_center(baseline, t, NOTIFICATION_FONT));
         } else if let Some((notification, _level)) = &self.notification {
             self.fill_notification_background();
-            display_center(baseline, notification.map(|c| c), NOTIFICATION_FONT);
+            notification.map(|c| display_center(baseline, c, NOTIFICATION_FONT));
             // Painting warning icons in top corners when the text is short enough not to
             // collide with them
             let icon_width = NOTIFICATION_ICON.toif.width();
-            let text_width = NOTIFICATION_FONT.text_width(notification.map(|c| c));
+            let text_width = notification.map(|c| NOTIFICATION_FONT.text_width(c));
             if AREA.width() >= text_width + (icon_width + 1) * 2 {
                 NOTIFICATION_ICON.draw(
                     AREA.top_left(),

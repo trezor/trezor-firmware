@@ -44,7 +44,7 @@ const ICON_WEBAUTHN: &[u8] = include_res!("model_tt/res/fido/icon_webauthn.toif"
 /// supplied.
 pub fn get_fido_icon_data(icon_name: Option<TString<'static>>) -> &'static [u8] {
     if let Some(icon_name) = icon_name {
-        match icon_name.map(|c| c) {
+        icon_name.map(|c| match c {
             "apple" => ICON_APPLE,
             "aws" => ICON_AWS,
             "binance" => ICON_BINANCE,
@@ -76,7 +76,7 @@ pub fn get_fido_icon_data(icon_name: Option<TString<'static>>) -> &'static [u8] 
             "stripe" => ICON_STRIPE,
             "tutanota" => ICON_TUTANOTA,
             _ => ICON_WEBAUTHN,
-        }
+        })
     } else {
         ICON_WEBAUTHN
     }

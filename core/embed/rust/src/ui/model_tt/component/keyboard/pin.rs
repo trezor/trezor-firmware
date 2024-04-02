@@ -233,7 +233,9 @@ impl Component for PinKeyboard<'_> {
         for btn in &mut self.digit_btns {
             if let Some(Clicked) = btn.event(ctx, event) {
                 if let ButtonContent::Text(text) = btn.inner().content() {
-                    self.textbox.mutate(ctx, |ctx, t| t.push(ctx, text.into()));
+                    text.map(|text| {
+                        self.textbox.mutate(ctx, |ctx, t| t.push(ctx, text));
+                    });
                     self.pin_modified(ctx);
                     return None;
                 }
@@ -462,8 +464,11 @@ impl crate::trace::Trace for PinKeyboard<'_> {
         let mut digits_order: String<10> = String::new();
         for btn in self.digit_btns.iter() {
             let btn_content = btn.inner().content();
+
             if let ButtonContent::Text(text) = btn_content {
-                unwrap!(digits_order.push_str(text.into()));
+                text.map(|text| {
+                    unwrap!(digits_order.push_str(text));
+                });
             }
         }
         t.string("digits_order", digits_order.as_str().into());

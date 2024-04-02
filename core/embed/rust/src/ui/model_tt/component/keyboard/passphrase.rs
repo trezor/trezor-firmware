@@ -273,7 +273,7 @@ impl Component for PassphraseKeyboard {
                 // character in textbox. If not, let's just append the first character.
                 let text = Self::key_text(btn.inner().content());
                 self.input.mutate(ctx, |ctx, i| {
-                    let edit = i.multi_tap.click_key(ctx, key, text.map(|c| c));
+                    let edit = text.map(|c| i.multi_tap.click_key(ctx, key, c));
                     i.textbox.apply(ctx, edit);
                 });
                 self.after_edit(ctx);
