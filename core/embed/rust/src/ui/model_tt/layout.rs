@@ -660,8 +660,7 @@ extern "C" fn new_confirm_homescreen(n_args: usize, args: *const Obj, kwargs: *m
             _ => return Err(value_error!("Invalid image.")),
         };
 
-        let tr_change: StrBuffer = TR::buttons__change.try_into()?;
-        let buttons = Button::cancel_confirm_text(None, Some(tr_change.into()));
+        let buttons = Button::cancel_confirm_text(None, Some(TR::buttons__change.into()));
         let obj = LayoutObj::new(Frame::centered(
             theme::label_title(),
             title.into(),
