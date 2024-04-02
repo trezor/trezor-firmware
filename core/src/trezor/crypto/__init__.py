@@ -4,7 +4,6 @@ from trezorcrypto import (  # noqa: F401
     bip39,
     chacha20poly1305,
     crc,
-    elligator2,
     hmac,
     pbkdf2,
     random,
@@ -22,3 +21,6 @@ if not utils.BITCOIN_ONLY:
 
 if utils.USE_OPTIGA:
     from trezorcrypto import optiga  # noqa: F401
+
+if utils.USE_THP:
+    from trezorcrypto import elligator2  # noqa: F401

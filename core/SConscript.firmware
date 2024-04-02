@@ -13,6 +13,7 @@ TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 PYOPT = ARGUMENTS.get('PYOPT', '1')
 DISABLE_OPTIGA = ARGUMENTS.get('DISABLE_OPTIGA', '0') == '1'
+THP = ARGUMENTS.get('THP', '0') == '1' # Trezor-Host Protocol
 
 
 FEATURE_FLAGS = {
@@ -121,7 +122,6 @@ SOURCE_MOD += [
     'vendor/trezor-crypto/ed25519-donna/ed25519-sha3.c',
     'vendor/trezor-crypto/ed25519-donna/ed25519.c',
     'vendor/trezor-crypto/ed25519-donna/modm-donna-32bit.c',
-    'vendor/trezor-crypto/elligator2.c',
     'vendor/trezor-crypto/groestl.c',
     'vendor/trezor-crypto/hasher.c',
     'vendor/trezor-crypto/hmac.c',
@@ -389,6 +389,11 @@ TRANSLATION_DATA = [
     "translations/order.json",
 ]
 
+if THP:
+    CPPDEFINES_MOD += ['USE_THP']
+    SOURCE_MOD += [
+        'vendor/trezor-crypto/elligator2.c',
+    ]
 
 # fonts
 tools.add_font('NORMAL', FONT_NORMAL, CPPDEFINES_MOD, SOURCE_MOD)
@@ -713,6 +718,7 @@ if FROZEN:
         backlight='backlight' in FEATURES_AVAILABLE,
         optiga='optiga' in FEATURES_AVAILABLE,
         ui_layout=UI_LAYOUT,
+        thp=THP,
         )
 
     source_mpyc = env.FrozenCFile(

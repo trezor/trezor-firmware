@@ -1,10 +1,13 @@
 from common import *
 
-from trezor.crypto import elligator2
+if utils.USE_THP:
+    from trezor.crypto import elligator2
 
 
+@unittest.skipUnless(utils.USE_THP, "only needed for THP")
 class TestCryptoElligator2(unittest.TestCase):
     def test_map_to_curve25519(self):
+
         # https://elligator.org/vectors/curve25519_direct.vec
         vectors = [
             ("0000000000000000000000000000000000000000000000000000000000000000",

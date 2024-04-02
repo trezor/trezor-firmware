@@ -10,6 +10,7 @@ TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 DMA2D =  TREZOR_MODEL in ('T', 'T3T1')
 OPTIGA = TREZOR_MODEL in ('R', 'T3T1')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
+THP = ARGUMENTS.get('THP', '0') == '1' # Trezor-Host Protocol
 
 if TREZOR_MODEL in ('DISC1', 'DISC2'):
     # skip unix build
@@ -122,7 +123,6 @@ SOURCE_MOD += [
     'vendor/trezor-crypto/ed25519-donna/ed25519-sha3.c',
     'vendor/trezor-crypto/ed25519-donna/ed25519.c',
     'vendor/trezor-crypto/ed25519-donna/modm-donna-32bit.c',
-    'vendor/trezor-crypto/elligator2.c',
     'vendor/trezor-crypto/groestl.c',
     'vendor/trezor-crypto/hasher.c',
     'vendor/trezor-crypto/hmac.c',
@@ -189,6 +189,12 @@ if FEATURE_FLAGS["AES_GCM"]:
     SOURCE_MOD += [
         'vendor/trezor-crypto/aes/gf128mul.c',
         'vendor/trezor-crypto/aes/aesgcm.c',
+    ]
+
+if THP:
+    CPPDEFINES_MOD += ['USE_THP']
+    SOURCE_MOD += [
+        'vendor/trezor-crypto/elligator2.c',
     ]
 
 # modtrezorio
@@ -799,6 +805,7 @@ if FROZEN:
         backlight=TREZOR_MODEL in ('T', 'T3T1'),
         optiga=OPTIGA,
         ui_layout=UI_LAYOUT,
+        thp=THP,
         )
 
     source_mpyc = env.FrozenCFile(
