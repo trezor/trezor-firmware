@@ -278,7 +278,10 @@ class TrezorClient(Generic[UI]):
             if model is None:
                 model = models.by_name(features.model or "1")
             if model is None:
-                raise RuntimeError("Unsupported Trezor model")
+                raise RuntimeError(
+                    "Unsupported Trezor model"
+                    f" (internal_model: {features.internal_model}, model: {features.model})"
+                )
             self.model = model
 
         if features.vendor not in self.model.vendors:
