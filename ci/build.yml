@@ -346,6 +346,11 @@ core unix frozen R debug build arm:
   stage: build
   <<: *gitlab_caching
   needs: []
+  only:
+    - main
+    - tags
+    - /^release\//
+    - /^secfix\//
   variables:
     PYOPT: "0"
     TREZOR_MODEL: "R"
@@ -364,6 +369,11 @@ core unix frozen T3T1 debug build arm:
   stage: build
   <<: *gitlab_caching
   needs: []
+  only:
+    - main
+    - tags
+    - /^release\//
+    - /^secfix\//
   variables:
     PYOPT: "0"
     TREZOR_MODEL: "T3T1"
