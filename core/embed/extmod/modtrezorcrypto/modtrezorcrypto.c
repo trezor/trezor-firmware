@@ -55,7 +55,9 @@ static void wrapped_ui_wait_callback(uint32_t current, uint32_t total) {
 #include "modtrezorcrypto-crc.h"
 #include "modtrezorcrypto-curve25519.h"
 #include "modtrezorcrypto-ed25519.h"
+#if USE_THP
 #include "modtrezorcrypto-elligator2.h"
+#endif
 #include "modtrezorcrypto-groestl.h"
 #include "modtrezorcrypto-hmac.h"
 #include "modtrezorcrypto-nist256p1.h"
@@ -103,8 +105,10 @@ STATIC const mp_rom_map_elem_t mp_module_trezorcrypto_globals_table[] = {
      MP_ROM_PTR(&mod_trezorcrypto_curve25519_module)},
     {MP_ROM_QSTR(MP_QSTR_ed25519),
      MP_ROM_PTR(&mod_trezorcrypto_ed25519_module)},
+#if USE_THP
     {MP_ROM_QSTR(MP_QSTR_elligator2),
      MP_ROM_PTR(&mod_trezorcrypto_elligator2_module)},
+#endif
 #if !BITCOIN_ONLY
     {MP_ROM_QSTR(MP_QSTR_monero), MP_ROM_PTR(&mod_trezorcrypto_monero_module)},
 #endif

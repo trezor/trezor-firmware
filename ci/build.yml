@@ -197,6 +197,8 @@ core unix regular build:
   stage: build
   <<: *gitlab_caching
   needs: []
+  variables:
+    THP: "1"
   script:
     - $NIX_SHELL --run "poetry run make -C core build_unix"
   artifacts:

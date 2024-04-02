@@ -434,6 +434,8 @@ STATIC mp_obj_tuple_t mod_trezorutils_version_obj = {
 /// """Whether the firmware is Bitcoin-only."""
 /// UI_LAYOUT: str
 /// """UI layout identifier ("tt" for model T, "tr" for models One and R)."""
+/// USE_THP: bool
+/// """Whether the firmware supports Trezor-Host Protocol (version 3)."""
 
 STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_trezorutils)},
@@ -496,6 +498,11 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_BITCOIN_ONLY), mp_const_true},
 #else
     {MP_ROM_QSTR(MP_QSTR_BITCOIN_ONLY), mp_const_false},
+#endif
+#ifdef USE_THP
+    {MP_ROM_QSTR(MP_QSTR_USE_THP), mp_const_true},
+#else
+    {MP_ROM_QSTR(MP_QSTR_USE_THP), mp_const_false},
 #endif
 #ifdef UI_LAYOUT_TT
     {MP_ROM_QSTR(MP_QSTR_UI_LAYOUT), MP_ROM_QSTR(MP_QSTR_TT)},
