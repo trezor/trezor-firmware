@@ -1,28 +1,44 @@
+use spin::{RwLock, RwLockReadGuard};
+
 use crate::{error::Error, trezorhal::translations};
 
 use super::blob::Translations;
 
-static mut TRANSLATIONS_ON_FLASH: Option<Translations> = None;
+static TRANSLATIONS_ON_FLASH: RwLock<Option<Translations>> = RwLock::new(None);
 
+/// Erase translations blob from flash.
+///
+/// The blob must be deinitialized via `deinit()` before calling this function.
 pub fn erase() -> Result<(), Error> {
-    // SAFETY: Looking is safe (in a single threaded environment).
-    if unsafe { TRANSLATIONS_ON_FLASH.is_some() } {
-        return Err(value_error!("Translations blob already set"));
-    }
+    // Write-lock is not necessary but it hints that nobody should call `erase()`
+    // while others are looking.
+    let blob = unwrap!(TRANSLATIONS_ON_FLASH.try_write());
+    {
+        if blob.is_some() {
+            return Err(value_error!("Translations blob already set"));
+        }
 
-    // SAFETY: The blob is not set, so there are no references to it.
-    unsafe { translations::erase() };
+        // SAFETY: The blob is not set, so there are no references to it.
+        unsafe { translations::erase() };
+    }
     Ok(())
 }
 
+/// Write translations blob to flash.
+///
+/// The blob must be deinitialized via `deinit()` before calling this function.
 pub fn write(data: &[u8], offset: usize) -> Result<(), Error> {
-    // SAFETY: Looking is safe (in a single threaded environment).
-    if unsafe { TRANSLATIONS_ON_FLASH.is_some() } {
-        return Err(value_error!("Translations blob already set"));
-    }
+    // Write-lock is not necessary but it hints that nobody should call `erase()`
+    // while others are looking.
+    let blob = unwrap!(TRANSLATIONS_ON_FLASH.try_write());
+    let result = {
+        if blob.is_some() {
+            return Err(value_error!("Translations blob already set"));
+        }
 
-    // SAFETY: The blob is not set, so there are no references to it.
-    let result = unsafe { translations::write(data, offset) };
+        // SAFETY: The blob is not set, so there are no references to it.
+        unsafe { translations::write(data, offset) }
+    };
     if result {
         Ok(())
     } else {
@@ -32,6 +48,9 @@ pub fn write(data: &[u8], offset: usize) -> Result<(), Error> {
 
 /// Load translations from flash, validate, and cache references to lookup
 /// tables.
+///
+/// # Safety
+/// Result depends on flash contents, see `translations::get_blob()`.
 unsafe fn try_init<'a>() -> Result<Option<Translations<'a>>, Error> {
     // load from flash
     let flash_data = unsafe { translations::get_blob() };
@@ -44,37 +63,58 @@ unsafe fn try_init<'a>() -> Result<Option<Translations<'a>>, Error> {
     Translations::new(flash_data).map(Some)
 }
 
+/// Initialize translations subsystem with current data from flash
+///
+/// Will erase any data from the translations section if the blob is invalid. At
+/// end, either the blob is available via `get()`, or there is a None value.
+///
+/// Does nothing if the data is already loaded. Call `deinit()` first to force
+/// reload.
 pub fn init() {
-    // unsafe block because every individual operation here is unsafe
-    unsafe {
-        // SAFETY: it is OK to look
-        if TRANSLATIONS_ON_FLASH.is_some() {
-            return;
-        }
-        // SAFETY: try_init unconditionally loads the translations from flash.
-        // No other reference exists (TRANSLATIONS_ON_FLASH is None) so this is safe.
-        match try_init() {
-            // SAFETY: We are in a single-threaded environment so setting is OK.
-            // (note that from this point on a reference to flash data is held)
-            Ok(Some(t)) => TRANSLATIONS_ON_FLASH = Some(t),
-            Ok(None) => {}
-            // SAFETY: No reference to flash data exists so it is OK to erase it.
-            Err(_) => translations::erase(),
-        }
+    let blob = unwrap!(TRANSLATIONS_ON_FLASH.try_upgradeable_read());
+    if blob.is_some() {
+        return;
+    }
+
+    let mut blob = blob.upgrade();
+    // SAFETY: try_init unconditionally loads the translations from flash.
+    // No other reference exists (TRANSLATIONS_ON_FLASH is None) so this is safe.
+    match unsafe { try_init() } {
+        Ok(Some(t)) => *blob = Some(t),
+        Ok(None) => {}
+        // SAFETY: No reference to flash data exists so it is OK to erase it.
+        Err(_) => unsafe { translations::erase() },
     }
 }
 
-// SAFETY: Invalidates all references coming from the flash-based blob.
-// In other words, none should exist when this function is called.
-pub unsafe fn deinit() {
-    // SAFETY: Given the above, we can safely clear the cached object.
-    unsafe { TRANSLATIONS_ON_FLASH = None };
+/// Deinitialize translations subsystem.
+///
+/// If the blob is locked by a reader, `deinit()` will return an error.
+pub fn deinit() -> Result<(), Error> {
+    let Some(mut blob) = TRANSLATIONS_ON_FLASH.try_write() else {
+        return Err(value_error!("Translations are in use."));
+    };
+    *blob = None;
+    Ok(())
 }
 
-// SAFETY: Gives out a reference to a TranslationsBlob which can be invalidated
-// by calling `erase()`. The caller must not store this reference, nor any that
-// come from it, beyond the lifetime of the current function.
-pub unsafe fn get<'a>() -> Option<&'a Translations<'a>> {
-    // SAFETY: We are in a single-threaded environment.
-    unsafe { TRANSLATIONS_ON_FLASH.as_ref() }
+/// Get a reference to the translations blob.
+///
+/// # Safety
+///
+/// This function relies on `Translations` to Do The Right Thing™ by only
+/// returning references whose lifetime is tied to the lifetime _of the
+/// reference_, as opposed to the underlying data.
+///
+/// Due to us placing the `Translations` blob in a `static` variable, the
+/// lifetime of its data must be `'static`. The true lifetime, however, is
+/// "between init() and deinit()".
+///
+/// So instead we tie all references to the lifetime of the returned
+/// `RwLockReadGuard`, through making sure that `Translations` only ever returns
+/// references that live as long as the reference giving them out.
+pub fn get() -> Result<RwLockReadGuard<'static, Option<Translations<'static>>>, Error> {
+    TRANSLATIONS_ON_FLASH
+        .try_read()
+        .ok_or_else(|| value_error!("Translations are in use."))
 }

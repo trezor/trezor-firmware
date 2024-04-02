@@ -21,9 +21,8 @@ impl TryFrom<TranslatedString> for StrBuffer {
     type Error = Error;
 
     fn try_from(value: TranslatedString) -> Result<Self, Self::Error> {
-        // SAFETY: The translated string is copied into a new memory. Reference to flash
-        // data is discarded at the end of this function.
-        let translated = value.translate(unsafe { super::flash::get() });
+        let blob = super::flash::get()?;
+        let translated = value.translate(blob.as_ref());
         StrBuffer::alloc(translated)
         // TODO fall back to English (which is static and can be converted
         // infallibly) if the allocation fails?
@@ -31,10 +30,9 @@ impl TryFrom<TranslatedString> for StrBuffer {
 }
 
 fn translate(translation: TranslatedString) -> Result<Obj, Error> {
-    // SAFETY: TryFrom<&str> for Obj allocates a copy of the passed in string.
-    // The reference to flash data is discarded at the end of this function.
-    let stored_translations = unsafe { super::flash::get() };
-    translation.translate(stored_translations).try_into()
+    translation
+        .translate(super::flash::get()?.as_ref())
+        .try_into()
 }
 
 // SAFETY: Caller is supposed to be MicroPython, or copy MicroPython contracts
@@ -99,12 +97,9 @@ pub unsafe extern "C" fn translations_header_new(
 }
 
 pub extern "C" fn translations_header_from_flash(_cls_in: Obj) -> Obj {
-    let block = || {
-        // SAFETY: reference is discarded at the end of this function.
-        match unsafe { super::flash::get() } {
-            Some(translations) => make_translations_header(&translations.header),
-            None => Ok(Obj::const_none()),
-        }
+    let block = || match super::flash::get()?.as_ref() {
+        Some(translations) => make_translations_header(translations.header()),
+        None => Ok(Obj::const_none()),
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -126,8 +121,8 @@ extern "C" fn area_bytesize() -> Obj {
 
 extern "C" fn get_language() -> Obj {
     let block = || {
-        // SAFETY: reference is discarded at the end of the block
-        let lang_name = unsafe { super::flash::get() }.map(|t| t.header.language);
+        let blob = super::flash::get()?;
+        let lang_name = blob.as_ref().map(|t| t.header().language);
         lang_name.unwrap_or(super::DEFAULT_LANGUAGE).try_into()
     };
     unsafe { util::try_or_raise(block) }
@@ -142,10 +137,11 @@ extern "C" fn init() -> Obj {
 }
 
 extern "C" fn deinit() -> Obj {
-    // SAFETY: Safe by itself. Any unsafety stems from some other piece of code
-    // not upholding the safety parameters.
-    unsafe { super::flash::deinit() };
-    Obj::const_none()
+    let block = || {
+        super::flash::deinit()?;
+        Ok(Obj::const_none())
+    };
+    unsafe { util::try_or_raise(block) }
 }
 
 extern "C" fn erase() -> Obj {

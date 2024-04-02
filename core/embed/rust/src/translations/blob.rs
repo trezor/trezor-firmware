@@ -122,7 +122,7 @@ impl<'a> Table<'a> {
 }
 
 pub struct Translations<'a> {
-    pub header: TranslationsHeader<'a>,
+    header: TranslationsHeader<'a>,
     translations: &'a [u8],
     translations_offsets: &'a [u16],
     fonts: Table<'a>,
@@ -196,7 +196,15 @@ impl<'a> Translations<'a> {
     }
 
     /// Returns the translation at the given index.
-    pub fn translation(&self, index: usize) -> Option<&str> {
+    ///
+    /// SAFETY: Do not mess with the lifetimes in this signature.
+    ///
+    /// The lifetimes are a useful lie that bind the lifetime of the returned
+    /// string not to the underlying data, but to the _reference_ to the
+    /// translations object. This is to facilitate safe interface to
+    /// flash-based translations. See docs for `flash::get` for details.
+    #[allow(clippy::needless_lifetimes)]
+    pub fn translation<'b>(&'b self, index: usize) -> Option<&'b str> {
         if index + 1 >= self.translations_offsets.len() {
             // The index is out of bounds.
             // (The last entry is a sentinel, so the last valid index is len - 2)
@@ -223,10 +231,32 @@ impl<'a> Translations<'a> {
         str::from_utf8(string).ok()
     }
 
-    pub fn font(&'a self, index: u16) -> Option<Table<'a>> {
+    /// Returns the font table at the given index.
+    ///
+    /// SAFETY: Do not mess with the lifetimes in this signature.
+    ///
+    /// The lifetimes are a useful lie that bind the lifetime of the returned
+    /// string not to the underlying data, but to the _reference_ to the
+    /// translations object. This is to facilitate safe interface to
+    /// flash-based translations. See docs for `flash::get` for details.
+    #[allow(clippy::needless_lifetimes)]
+    pub fn font<'b>(&'b self, index: u16) -> Option<Table<'b>> {
         self.fonts
             .get(index)
             .and_then(|data| Table::new(InputStream::new(data)).ok())
+    }
+
+    /// Returns the header of the translations blob.
+    ///
+    /// SAFETY: Do not mess with the lifetimes in this signature.
+    ///
+    /// The lifetimes are a useful lie that bind the lifetime of the returned
+    /// string not to the underlying data, but to the _reference_ to the
+    /// translations object. This is to facilitate safe interface to
+    /// flash-based translations. See docs for `flash::get` for details.
+    #[allow(clippy::needless_lifetimes)]
+    pub fn header<'b>(&'b self) -> &'b TranslationsHeader<'b> {
+        &self.header
     }
 }
 

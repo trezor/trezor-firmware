@@ -22,7 +22,10 @@ pub unsafe extern "C" fn get_utf8_glyph(codepoint: cty::uint16_t, font: cty::c_i
     // SAFETY: Reference is discarded at the end of the function.
     // We do return a _pointer_ to the same memory location, but the pointer is
     // always valid.
-    let Some(tr) = (unsafe { flash::get() }) else {
+    let Ok(translations) = flash::get() else {
+        return core::ptr::null();
+    };
+    let Some(tr) = translations.as_ref() else {
         return core::ptr::null();
     };
     if let Some(glyph) = tr.font(font_abs).and_then(|t| t.get(codepoint)) {
