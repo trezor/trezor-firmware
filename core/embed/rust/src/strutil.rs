@@ -102,10 +102,17 @@ impl TString<'_> {
         self.map(|s| s.is_empty())
     }
 
+    /// Maps the string to a value using a closure.
+    ///
+    /// # Safety
+    ///
+    /// The properties of this function are bounded by the properties of
+    /// `TranslatedString::map_translated`. The reference to the string is
+    /// guaranteed to be valid throughout the closure, but must not escape
+    /// it. The `for<'a>` bound on the closure's argument ensures this.
     pub fn map<F, T>(&self, fun: F) -> T
     where
         F: for<'a> FnOnce(&'a str) -> T,
-        T: 'static,
     {
         match self {
             #[cfg(feature = "micropython")]
