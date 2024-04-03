@@ -403,14 +403,17 @@ static void test_sd(void) {
   static uint32_t buf1[BLOCK_SIZE / sizeof(uint32_t)];
   static uint32_t buf2[BLOCK_SIZE / sizeof(uint32_t)];
 
+  bool low_speed = false;
 #ifndef TREZOR_MODEL_T3T1
   if (sectrue != sdcard_is_present()) {
     vcp_println("ERROR NOCARD");
     return;
   }
+#else
+  low_speed = true;
 #endif
 
-  if (sectrue != sdcard_power_on_unchecked()) {
+  if (sectrue != sdcard_power_on_unchecked(low_speed)) {
     vcp_println("ERROR POWER ON");
     return;
   }
