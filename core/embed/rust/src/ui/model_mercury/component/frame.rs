@@ -164,7 +164,7 @@ where
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.title.render(target);
-        // self.subtitle.render(target); // FIXME crashes!
+        self.subtitle.render(target);
         self.button.render(target);
         self.content.render(target);
     }
