@@ -1112,9 +1112,6 @@ int tc_ecdsa_verify_digest(const ecdsa_curve *curve, const uint8_t *pub_key,
     bn_inverse(&s, &curve->order);       // s = s^-1
     bn_multiply(&s, &z, &curve->order);  // z = z * s  [u1 = z * s^-1 mod n]
     bn_mod(&z, &curve->order);
-  }
-
-  if (result == 0) {
     bn_multiply(&r, &s, &curve->order);  // s = r * s  [u2 = r * s^-1 mod n]
     bn_mod(&s, &curve->order);
     scalar_multiply(curve, &z, &res);       // res = z * G    [= u1 * G]
