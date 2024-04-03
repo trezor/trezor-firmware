@@ -152,7 +152,7 @@ void HAL_SD_MspDeInit(SD_HandleTypeDef *hsd) {
   }
 }
 
-secbool sdcard_power_on_unchecked(void) {
+secbool sdcard_power_on_unchecked(bool low_speed) {
   if (sd_handle.Instance) {
     return sectrue;
   }
@@ -166,7 +166,7 @@ secbool sdcard_power_on_unchecked(void) {
   sd_handle.Init.ClockPowerSave = SDMMC_CLOCK_POWER_SAVE_ENABLE;
   sd_handle.Init.BusWide = SDMMC_BUS_WIDE_1B;
   sd_handle.Init.HardwareFlowControl = SDMMC_HARDWARE_FLOW_CONTROL_DISABLE;
-  sd_handle.Init.ClockDiv = 0;
+  sd_handle.Init.ClockDiv = low_speed ? 1 : 0;
 
   // init the SD interface, with retry if it's not ready yet
   for (int retry = 10; HAL_SD_Init(&sd_handle) != HAL_OK; retry--) {
@@ -205,7 +205,7 @@ secbool sdcard_power_on(void) {
     return secfalse;
   }
 
-  return sdcard_power_on_unchecked();
+  return sdcard_power_on_unchecked(false);
 }
 
 void sdcard_power_off(void) {
