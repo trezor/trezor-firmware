@@ -3,6 +3,8 @@ name: Legacy
 on:
   pull_request:
   workflow_dispatch:
+  schedule:
+    - cron: '35 22 * * *'  # every day @ 22:35
 
 permissions:
   id-token: write       # for fetching the OIDC token
@@ -63,10 +65,13 @@ jobs:
           submodules: recursive
       - uses: ./.github/actions/environment
       - run: nix-shell --run "poetry run legacy/script/cibuild"
+      - run: cp legacy/firmware/trezor.elf legacy/firmware/trezor-emu-legacy-T1B1-${{ matrix.coins }}
       - uses: actions/upload-artifact@v4
         with:
           name: legacy-emu-${{ matrix.coins }}-${{ matrix.type }}-${{ matrix.asan }}
-          path: legacy/firmware/*.elf
+          path: |
+            legacy/firmware/*.elf
+            legacy/firmware/trezor-emu-legacy*
           retention-days: 7
 
   legacy_device_test:
@@ -195,3 +200,24 @@ jobs:
         id: check-fixtures-changed
       - uses: ./.github/actions/ui-comment
         if: ${{ steps.check-fixtures-changed.outputs.FIXTURES_CHANGED == '1' }}
+
+  core_upload_emu:
+    name: Upload emulator binaries
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    needs: legacy_emu
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: legacy-emu*debuglink-noasan
+          merge-multiple: true
+      - name: Configure aws credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::538326561891:role/gh_actions_deploy_dev_firmware_data
+          aws-region: eu-west-1
+        continue-on-error: true
+      - run: |
+          mkdir emulators
+          cp trezor-emu-legacy* emulators
+          aws s3 sync emulators s3://data.trezor.io/dev/firmware/emu-nightly
