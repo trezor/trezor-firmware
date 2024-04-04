@@ -93,3 +93,12 @@ const flash_area_t ALL_WIPE_AREA = {
             .num_sectors = 21,
         },
 };
+
+const flash_area_t SECRET_AREA = {
+    .num_subareas = 1,
+    .subarea[0] =
+        {
+            .first_sector = 0,
+            .num_sectors = 0,
+        },
+};

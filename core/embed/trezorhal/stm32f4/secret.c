@@ -1,21 +1,27 @@
 #include "secret.h"
 #include <string.h>
 #include "common.h"
+#include "display.h"
 #include "flash.h"
 #include "model.h"
+
+#ifdef FANCY_FATAL_ERROR
+#include "rust_ui.h"
+#endif
 
 static secbool bootloader_locked_set = secfalse;
 static secbool bootloader_locked = secfalse;
 
 secbool secret_verify_header(void) {
-  uint8_t header[sizeof(SECRET_HEADER_MAGIC)] = {0};
+  uint8_t* addr = (uint8_t*)flash_area_get_address(&SECRET_AREA, 0,
+                                                   sizeof(SECRET_HEADER_MAGIC));
 
-  memcpy(header,
-         flash_area_get_address(&SECRET_AREA, 0, sizeof(SECRET_HEADER_MAGIC)),
-         sizeof(SECRET_HEADER_MAGIC));
+  if (addr == NULL) {
+    return secfalse;
+  }
 
   bootloader_locked =
-      memcmp(header, SECRET_HEADER_MAGIC, sizeof(SECRET_HEADER_MAGIC)) == 0
+      memcmp(addr, SECRET_HEADER_MAGIC, sizeof(SECRET_HEADER_MAGIC)) == 0
           ? sectrue
           : secfalse;
   bootloader_locked_set = sectrue;
@@ -51,20 +57,25 @@ secbool secret_read(uint8_t* data, uint32_t offset, uint32_t len) {
     return secfalse;
   }
 
-  memcpy(data, flash_area_get_address(&SECRET_AREA, offset, len), len);
+  uint8_t* addr = (uint8_t*)flash_area_get_address(&SECRET_AREA, offset, len);
+
+  if (addr == NULL) {
+    return secfalse;
+  }
+
+  memcpy(data, addr, len);
 
   return sectrue;
 }
 
 secbool secret_wiped(void) {
-  flash_area_get_address(&SECRET_AREA, 0, 1);
-
-  flash_area_get_size(&SECRET_AREA);
-
   uint32_t size = flash_area_get_size(&SECRET_AREA);
 
   for (int i = 0; i < size; i += 4) {
     uint32_t* addr = (uint32_t*)flash_area_get_address(&SECRET_AREA, i, 4);
+    if (addr == NULL) {
+      return secfalse;
+    }
     if (*addr != 0xFFFFFFFF) {
       return secfalse;
     }
@@ -85,4 +96,25 @@ secbool secret_optiga_set(const uint8_t secret[SECRET_OPTIGA_KEY_LEN]) {
 
 secbool secret_optiga_get(uint8_t dest[SECRET_OPTIGA_KEY_LEN]) {
   return secret_read(dest, SECRET_OPTIGA_KEY_OFFSET, SECRET_OPTIGA_KEY_LEN);
+}
+
+void secret_show_install_restricted_screen(void) {
+#ifdef FANCY_FATAL_ERROR
+  display_clear();
+  screen_fatal_error_rust(
+      "INSTALL RESTRICTED",
+      "Installation of custom firmware is currently restricted.",
+      "Please visit\ntrezor.io/bootloader");
+
+  display_refresh();
+#endif
+}
+
+void secret_prepare_fw(secbool allow_run_with_secret, secbool _trust_all) {
+#ifdef USE_OPTIGA
+  if (sectrue != allow_run_with_secret && sectrue != secret_wiped()) {
+    secret_show_install_restricted_screen();
+    trezor_shutdown();
+  }
+#endif
 }

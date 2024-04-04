@@ -6,6 +6,8 @@
     "version": [0, 2],
     "sig_m": 2,
     "trust": {
+        "_reserved": 0,
+        "_dont_provide_secret": false,
         "allow_run_with_secret": true,
         "show_vendor_string": false,
         "require_user_click": false,

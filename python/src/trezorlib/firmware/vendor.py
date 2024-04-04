@@ -47,6 +47,7 @@ def _transform_vendor_trust(data: bytes) -> bytes:
 
 
 class VendorTrust(Struct):
+    _dont_provide_secret: bool
     allow_run_with_secret: bool
     show_vendor_string: bool
     require_user_click: bool
@@ -57,7 +58,9 @@ class VendorTrust(Struct):
 
     SUBCON = c.Transformed(
         c.BitStruct(
-            "_reserved" / c.Default(c.BitsInteger(8), 0),
+            "_reserved" / c.Default(c.BitsInteger(7), 0b1111111),
+            "_dont_provide_secret"
+            / c.Default(c.Flag, lambda this: not this.allow_run_with_secret),
             "allow_run_with_secret" / c.Flag,
             "show_vendor_string" / c.Flag,
             "require_user_click" / c.Flag,

@@ -193,7 +193,7 @@ static usb_result_t bootloader_usb_loop(const vendor_header *const vhdr,
         r = process_msg_FirmwareUpload(USB_IFACE_NUM, msg_size, buf);
         if (r < 0 && r != UPLOAD_ERR_USER_ABORT) {  // error, but not user abort
           if (r == UPLOAD_ERR_BOOTLOADER_LOCKED) {
-            ui_screen_install_restricted();
+            secret_show_install_restricted_screen();
           } else {
             ui_screen_fail();
           }
@@ -325,33 +325,9 @@ void real_jump_to_firmware(void) {
                               &FIRMWARE_AREA),
          "Firmware is corrupted");
 
-#ifdef STM32U5
-  secret_bhk_provision();
-  secret_bhk_lock();
-#ifdef USE_OPTIGA
-  if (sectrue == secret_optiga_present()) {
-    secret_optiga_backup();
-    secret_hide();
-  } else {
-    secret_optiga_hide();
-  }
-#else
-  secret_hide();
-#endif
-#endif
-
-#ifdef USE_OPTIGA
-#ifdef STM32U5
-  if ((vhdr.vtrust & VTRUST_SECRET) != 0) {
-    secret_optiga_hide();
-  }
-#else
-  if (((vhdr.vtrust & VTRUST_SECRET) != 0) && (sectrue != secret_wiped())) {
-    ui_screen_install_restricted();
-    trezor_shutdown();
-  }
-#endif
-#endif
+  secret_prepare_fw(
+      ((vhdr.vtrust & VTRUST_SECRET) == VTRUST_SECRET_ALLOW) * sectrue,
+      ((vhdr.vtrust & VTRUST_ALL) == VTRUST_ALL) * sectrue);
 
   // if all VTRUST flags are unset = ultimate trust => skip the procedure
   if ((vhdr.vtrust & VTRUST_ALL) != VTRUST_ALL) {

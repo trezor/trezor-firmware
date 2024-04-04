@@ -58,8 +58,14 @@ typedef struct {
 #define VTRUST_RED 0x0010
 #define VTRUST_CLICK 0x0020
 #define VTRUST_STRING 0x0040
-#define VTRUST_SECRET \
-  0x0080  // inverse logic, if set, don't allow to run with secret present
+
+// Two bits for historical reasons. On T2B1, only the lower bit was used with
+// inverted logic (due to late inclusion of the secret handling during
+// development process). On T3T1, we decided to remedy the situation by
+// including the upper bit as well.
+#define VTRUST_SECRET 0x0180
+#define VTRUST_SECRET_ALLOW 0x0100
+
 #define VTRUST_ALL (VTRUST_WAIT | VTRUST_RED | VTRUST_CLICK | VTRUST_STRING)
 
 typedef struct {
