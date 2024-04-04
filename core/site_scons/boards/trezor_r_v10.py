@@ -70,7 +70,6 @@ def configure(
         sources += ["embed/trezorhal/optiga/optiga.c"]
         sources += ["embed/trezorhal/optiga/optiga_commands.c"]
         sources += ["embed/trezorhal/optiga/optiga_transport.c"]
-        sources += ["embed/trezorhal/stm32f4/secret.c"]
         sources += ["vendor/trezor-crypto/hash_to_curve.c"]
         features_available.append("optiga")
 

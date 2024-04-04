@@ -258,11 +258,6 @@ int main(void) {
 #ifdef STM32U5
   tamper_init();
 
-  if (sectrue == secret_bhk_locked()) {
-    delete_secrets();
-    NVIC_SystemReset();
-  }
-
   trustzone_init_boardloader();
 
   secret_ensure_initialized();

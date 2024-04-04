@@ -36,9 +36,6 @@ secbool secret_ensure_initialized(void);
 // Erases the entire secret storage
 void secret_erase(void);
 
-// Disables access to the secret storage until next reset
-void secret_hide(void);
-
 // Writes the secret header to the secret storage
 void secret_write_header(void);
 
@@ -55,30 +52,15 @@ secbool secret_optiga_set(const uint8_t secret[SECRET_OPTIGA_KEY_LEN]);
 // was made unavailable by calling secret_optiga_hide
 secbool secret_optiga_get(uint8_t dest[SECRET_OPTIGA_KEY_LEN]);
 
-// Backs up the optiga pairing secret from the secret storage to the backup
-// register
-void secret_optiga_backup(void);
-
-// Deletes the optiga pairing secret from the register
-void secret_optiga_hide(void);
-
-// Locks the BHK register. Once locked, the BHK register can't be accessed by
-// the software. BHK is made available to the SAES peripheral
-void secret_bhk_lock(void);
-
-// Verifies that access to the register has been disabled
-secbool secret_bhk_locked(void);
-
 // Regenerates the BHK and writes it to the secret storage
 void secret_bhk_regenerate(void);
 
-// Provision the secret BHK from the secret storage to the BHK register
-// which makes the BHK usable for encryption by the firmware, without having
-// read access to it.
-void secret_bhk_provision(void);
+// Prepares the secret storage for running the firmware
+// Provisions secrets/keys to the firmware, depending on the trust level
+// Disables access to the secret storage until next reset, if possible
+// This function is called by the bootloader before starting the firmware
+void secret_prepare_fw(secbool allow_run_with_secret, secbool trust_all);
 
-// Checks that the optiga pairing secret is present in the secret storage.
-// This functions only works when software has access to the secret storage,
-// i.e. in bootloader. Access to secret storage is restricted by calling
-// secret_hide.
-secbool secret_optiga_present(void);
+// Shows a screen informing the user that installation of custom firmware is
+// currently restricted
+void secret_show_install_restricted_screen(void);
