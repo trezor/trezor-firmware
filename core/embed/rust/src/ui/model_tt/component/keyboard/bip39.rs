@@ -181,7 +181,7 @@ impl Bip39Input {
         // Styling the input to reflect already filled word
         Self {
             button: Button::with_icon(theme::ICON_LIST_CHECK).styled(theme::button_pin_confirm()),
-            textbox: TextBox::new(String::from(word)),
+            textbox: TextBox::new(unwrap!(String::try_from(word))),
             multi_tap: MultiTapKeyboard::new(),
             options_num: bip39::options_num(word),
             suggested_word: bip39::complete_word(word),

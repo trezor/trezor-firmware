@@ -148,7 +148,7 @@ pub fn long_line_content_with_ellipsis(
     available_width: i16,
 ) -> ShortString {
     if text_font.text_width(text) <= available_width {
-        String::from(text) // whole text can fit
+        unwrap!(String::try_from(text)) // whole text can fit
     } else {
         // Text is longer, showing its right end with ellipsis at the beginning.
         // Finding out how many additional text characters will fit in,

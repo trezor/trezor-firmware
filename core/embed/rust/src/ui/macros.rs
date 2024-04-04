@@ -20,6 +20,6 @@ macro_rules! build_string {
 #[allow(unused_macros)] // not used in TT UI
 macro_rules! inttostr {
     ($int:expr) => {{
-        heapless::String::<10>::from($int).as_str()
+        unwrap!(heapless::String::<10>::try_from($int)).as_str()
     }};
 }
