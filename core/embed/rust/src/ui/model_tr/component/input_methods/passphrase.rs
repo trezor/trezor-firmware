@@ -292,9 +292,9 @@ impl PassphraseEntry {
 
     fn update_passphrase_dots(&mut self, ctx: &mut EventCtx) {
         let text_to_show = if self.show_plain_passphrase {
-            String::from(self.passphrase())
+            unwrap!(String::try_from(self.passphrase()))
         } else if self.is_empty() {
-            String::from("")
+            unwrap!(String::try_from(""))
         } else {
             // Showing asterisks and possibly the last digit.
             let mut dots: String<MAX_PASSPHRASE_LENGTH> = String::new();

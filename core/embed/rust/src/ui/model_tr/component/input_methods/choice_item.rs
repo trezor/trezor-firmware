@@ -25,7 +25,7 @@ pub struct ChoiceItem {
 impl ChoiceItem {
     pub fn new<U: AsRef<str>>(text: U, btn_layout: ButtonLayout) -> Self {
         Self {
-            text: String::from(text.as_ref()),
+            text: unwrap!(String::try_from(text.as_ref())),
             icon: None,
             btn_layout,
             font: theme::FONT_CHOICE_ITEMS,

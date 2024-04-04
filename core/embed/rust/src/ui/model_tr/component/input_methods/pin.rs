@@ -155,14 +155,14 @@ where
         let (showing_real_prompt, header_line_content, pin_line_content) = if show_subprompt {
             (
                 false,
-                TR::pin__title_wrong_pin.map_translated(|t| String::from(t)),
-                String::from(subprompt.as_ref()),
+                TR::pin__title_wrong_pin.map_translated(|t| unwrap!(String::try_from(t))),
+                unwrap!(String::try_from(subprompt.as_ref())),
             )
         } else {
             (
                 true,
-                String::from(prompt.as_ref()),
-                String::from(EMPTY_PIN_STR),
+                unwrap!(String::try_from(prompt.as_ref())),
+                unwrap!(String::try_from(EMPTY_PIN_STR)),
             )
         };
 
@@ -204,11 +204,11 @@ where
         let pin_line_text = if self.is_empty() && !self.subprompt.as_ref().is_empty() {
             // Showing the subprompt in NORMAL font
             used_font = Font::NORMAL;
-            String::from(self.subprompt.as_ref())
+            unwrap!(String::try_from(self.subprompt.as_ref()))
         } else if self.is_empty() {
-            String::from(EMPTY_PIN_STR)
+            unwrap!(String::try_from(EMPTY_PIN_STR))
         } else if self.show_real_pin {
-            String::from(self.pin())
+            unwrap!(String::try_from(self.pin()))
         } else {
             // Showing asterisks and possibly the last digit.
             let mut dots: String<MAX_PIN_LENGTH> = String::new();
@@ -234,7 +234,7 @@ where
     /// Showing the real prompt instead of WRONG PIN
     fn show_prompt(&mut self, ctx: &mut EventCtx) {
         self.header_line.mutate(ctx, |ctx, header_line| {
-            header_line.update_text(String::from(self.prompt.as_ref()));
+            header_line.update_text(unwrap!(String::try_from(self.prompt.as_ref())));
             header_line.request_complete_repaint(ctx);
         });
     }

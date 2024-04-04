@@ -173,7 +173,9 @@ impl WordlistEntry {
                 .with_incomplete(true)
                 .with_carousel(true)
                 .with_initial_page_counter(get_random_position(choices_count)),
-            chosen_letters: Child::new(ChangingTextLine::center_mono(String::from(PROMPT))),
+            chosen_letters: Child::new(ChangingTextLine::center_mono(unwrap!(String::try_from(
+                PROMPT
+            )))),
             textbox: TextBox::empty(),
             offer_words: false,
             wordlist_type,
@@ -193,8 +195,10 @@ impl WordlistEntry {
             choice_page: ChoicePage::new(choices)
                 .with_incomplete(true)
                 .with_initial_page_counter(1),
-            chosen_letters: Child::new(ChangingTextLine::center_mono(String::from(word))),
-            textbox: TextBox::new(String::from(word)),
+            chosen_letters: Child::new(ChangingTextLine::center_mono(unwrap!(String::try_from(
+                word
+            )))),
+            textbox: TextBox::new(unwrap!(String::try_from(word))),
             offer_words: false,
             wordlist_type,
             can_go_back,
