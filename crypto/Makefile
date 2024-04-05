@@ -59,6 +59,10 @@ CFLAGS   += $(OPTFLAGS) \
             -Wno-missing-braces \
             -Werror
 
+ifneq ($(FUZZER),1) # This can be removed once the fuzzer machine uses at least clang 16
+	CFLAGS += -ftrivial-auto-var-init=zero
+endif
+
 ZKP_CFLAGS = \
 	-DECMULT_GEN_PREC_BITS=4 \
 	-DECMULT_WINDOW_SIZE=8 \
