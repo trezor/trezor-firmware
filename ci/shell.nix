@@ -120,7 +120,7 @@ stdenvNoCC.mkDerivation ({
     moreutils
   ] ++ lib.optionals (!stdenv.isDarwin) [
     autoPatchelfHook
-    gcc11
+    gcc12
     procps
     valgrind
   ] ++ lib.optionals (stdenv.isDarwin) [
