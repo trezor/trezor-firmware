@@ -1,6 +1,6 @@
 use crate::{
     error::Error,
-    strutil::{self, StringType},
+    strutil::{self, TString},
     translations::TR,
     ui::{
         component::{
@@ -21,9 +21,9 @@ pub enum NumberInputDialogMsg {
     InfoRequested,
 }
 
-pub struct NumberInputDialog<T, F>
+pub struct NumberInputDialog<F>
 where
-    F: Fn(u32) -> T,
+    F: Fn(u32) -> TString<'static>,
 {
     area: Rect,
     description_func: F,
@@ -34,10 +34,9 @@ where
     confirm_button: Child<Button>,
 }
 
-impl<T, F> NumberInputDialog<T, F>
+impl<F> NumberInputDialog<F>
 where
-    F: Fn(u32) -> T,
-    T: StringType,
+    F: Fn(u32) -> TString<'static>,
 {
     pub fn new(min: u32, max: u32, init_value: u32, description_func: F) -> Result<Self, Error> {
         let text = description_func(init_value);
@@ -71,10 +70,9 @@ where
     }
 }
 
-impl<T, F> Component for NumberInputDialog<T, F>
+impl<F> Component for NumberInputDialog<F>
 where
-    T: StringType,
-    F: Fn(u32) -> T,
+    F: Fn(u32) -> TString<'static>,
 {
     type Msg = NumberInputDialogMsg;
 
@@ -133,10 +131,9 @@ where
 }
 
 #[cfg(feature = "ui_debug")]
-impl<T, F> crate::trace::Trace for NumberInputDialog<T, F>
+impl<F> crate::trace::Trace for NumberInputDialog<F>
 where
-    T: StringType,
-    F: Fn(u32) -> T,
+    F: Fn(u32) -> TString<'static>,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("NumberInputDialog");

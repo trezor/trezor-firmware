@@ -2,8 +2,7 @@ use heapless::Vec;
 
 use crate::{
     error::Error,
-    micropython::buffer::StrBuffer,
-    strutil::StringType,
+    strutil::TString,
     translations::TR,
     ui::{
         component::{
@@ -18,30 +17,24 @@ use super::{theme, Frame, FrameMsg};
 
 const MAX_XPUBS: usize = 16;
 
-pub struct AddressDetails<T> {
+pub struct AddressDetails {
     qr_code: Frame<Qr>,
     details: Frame<Paragraphs<ParagraphVecShort<'static>>>,
     xpub_view: Frame<Paragraphs<Paragraph<'static>>>,
-    xpubs: Vec<(T, T), MAX_XPUBS>,
+    xpubs: Vec<(TString<'static>, TString<'static>), MAX_XPUBS>,
     xpub_page_count: Vec<u8, MAX_XPUBS>,
     current_page: usize,
 }
 
-impl<T> AddressDetails<T>
-where
-    T: StringType,
-{
+impl AddressDetails {
     pub fn new(
-        qr_title: T,
-        qr_address: T,
+        qr_title: TString<'static>,
+        qr_address: TString<'static>,
         case_sensitive: bool,
-        details_title: T,
-        account: Option<StrBuffer>,
-        path: Option<StrBuffer>,
-    ) -> Result<Self, Error>
-    where
-        T: From<&'static str>,
-    {
+        details_title: TString<'static>,
+        account: Option<TString<'static>>,
+        path: Option<TString<'static>>,
+    ) -> Result<Self, Error> {
         let mut para = ParagraphVecShort::new();
         if let Some(a) = account {
             para.add(Paragraph::new(
@@ -60,14 +53,16 @@ where
         let result = Self {
             qr_code: Frame::left_aligned(
                 theme::label_title(),
-                qr_title.into(),
-                Qr::new(qr_address, case_sensitive)?.with_border(7),
+                qr_title,
+                qr_address
+                    .map(|s| Qr::new(s, case_sensitive))?
+                    .with_border(7),
             )
             .with_cancel_button()
             .with_border(theme::borders_horizontal_scroll()),
             details: Frame::left_aligned(
                 theme::label_title(),
-                details_title.into(),
+                details_title,
                 para.into_paragraphs(),
             )
             .with_cancel_button()
@@ -86,24 +81,24 @@ where
         Ok(result)
     }
 
-    pub fn add_xpub(&mut self, title: T, xpub: T) -> Result<(), Error> {
+    pub fn add_xpub(
+        &mut self,
+        title: TString<'static>,
+        xpub: TString<'static>,
+    ) -> Result<(), Error> {
         self.xpubs
             .push((title, xpub))
             .map_err(|_| Error::OutOfRange)
     }
 
-    fn switch_xpub(&mut self, i: usize, page: usize) -> usize
-    where
-        T: Clone,
-    {
+    fn switch_xpub(&mut self, i: usize, page: usize) -> usize {
         // Context is needed for updating child so that it can request repaint. In this
         // case the parent component that handles paging always requests complete
         // repaint after page change so we can use a dummy context here.
         let mut dummy_ctx = EventCtx::new();
-        self.xpub_view
-            .update_title(&mut dummy_ctx, self.xpubs[i].0.clone().into());
+        self.xpub_view.update_title(&mut dummy_ctx, self.xpubs[i].0);
         self.xpub_view.update_content(&mut dummy_ctx, |p| {
-            p.inner_mut().update(self.xpubs[i].1.clone());
+            p.inner_mut().update(self.xpubs[i].1);
             let npages = p.page_count();
             p.change_page(page);
             npages
@@ -128,10 +123,7 @@ where
     }
 }
 
-impl<T> Paginate for AddressDetails<T>
-where
-    T: StringType + Clone,
-{
+impl Paginate for AddressDetails {
     fn page_count(&mut self) -> usize {
         let total_xpub_pages: u8 = self.xpub_page_count.iter().copied().sum();
         2usize.saturating_add(total_xpub_pages.into())
@@ -147,10 +139,7 @@ where
     }
 }
 
-impl<T> Component for AddressDetails<T>
-where
-    T: StringType + Clone,
-{
+impl Component for AddressDetails {
     type Msg = ();
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -198,10 +187,7 @@ where
 }
 
 #[cfg(feature = "ui_debug")]
-impl<T> crate::trace::Trace for AddressDetails<T>
-where
-    T: StringType,
-{
+impl crate::trace::Trace for AddressDetails {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("AddressDetails");
         match self.current_page {
