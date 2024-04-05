@@ -2,7 +2,7 @@ use heapless::Vec;
 
 use crate::{
     error::Error,
-    micropython::buffer::StrBuffer,
+    strutil::TString,
     translations::TR,
     ui::{
         component::{
@@ -24,7 +24,7 @@ pub struct AddressDetails {
     qr_code: Qr,
     details_view: Paragraphs<ParagraphVecShort<'static>>,
     xpub_view: Frame<Paragraphs<Paragraph<'static>>>,
-    xpubs: Vec<(StrBuffer, StrBuffer), MAX_XPUBS>,
+    xpubs: Vec<(TString<'static>, TString<'static>), MAX_XPUBS>,
     current_page: usize,
     current_subpage: usize,
     area: Rect,
@@ -34,12 +34,14 @@ pub struct AddressDetails {
 
 impl AddressDetails {
     pub fn new(
-        qr_address: StrBuffer,
+        qr_address: TString<'static>,
         case_sensitive: bool,
-        account: Option<StrBuffer>,
-        path: Option<StrBuffer>,
+        account: Option<TString<'static>>,
+        path: Option<TString<'static>>,
     ) -> Result<Self, Error> {
-        let qr_code = Qr::new(qr_address, case_sensitive)?.with_border(QR_BORDER);
+        let qr_code = qr_address
+            .map(|s| Qr::new(s, case_sensitive))?
+            .with_border(QR_BORDER);
         let details_view = {
             let mut para = ParagraphVecShort::new();
             if let Some(account) = account {
@@ -74,7 +76,11 @@ impl AddressDetails {
         Ok(result)
     }
 
-    pub fn add_xpub(&mut self, title: StrBuffer, xpub: StrBuffer) -> Result<(), Error> {
+    pub fn add_xpub(
+        &mut self,
+        title: TString<'static>,
+        xpub: TString<'static>,
+    ) -> Result<(), Error> {
         self.xpubs
             .push((title, xpub))
             .map_err(|_| Error::OutOfRange)
@@ -149,7 +155,7 @@ impl AddressDetails {
 
     fn fill_xpub_page(&mut self, ctx: &mut EventCtx) {
         let i = self.current_page - 2;
-        self.xpub_view.update_title(ctx, self.xpubs[i].0.into());
+        self.xpub_view.update_title(ctx, self.xpubs[i].0);
         self.xpub_view.update_content(ctx, |p| {
             p.inner_mut().update(self.xpubs[i].1);
             p.change_page(0)

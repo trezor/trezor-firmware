@@ -16,7 +16,7 @@ use crate::{
         qstr::Qstr,
         util,
     },
-    strutil::{StringType, TString},
+    strutil::TString,
     translations::TR,
     trezorhal::model,
     ui::{
@@ -142,10 +142,7 @@ impl ComponentMsgObj for AddressDetails {
     }
 }
 
-impl<T> ComponentMsgObj for CoinJoinProgress<T>
-where
-    T: StringType,
-{
+impl ComponentMsgObj for CoinJoinProgress {
     fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
         unreachable!();
     }
@@ -242,10 +239,10 @@ impl ComponentMsgObj for super::component::bl_confirm::Confirm<'_> {
 
 /// Function to create and call a `ButtonPage` dialog based on paginable content
 /// (e.g. `Paragraphs` or `FormattedText`).
-/// Has optional title (supply empty `StrBuffer` for that) and hold-to-confirm
+/// Has optional title (supply empty `TString` for that) and hold-to-confirm
 /// functionality.
 fn content_in_button_page<T: Component + Paginate + MaybeTrace + 'static>(
-    title: StrBuffer,
+    title: TString<'static>,
     content: T,
     verb: TString<'static>,
     verb_cancel: Option<TString<'static>>,
@@ -270,8 +267,8 @@ fn content_in_button_page<T: Component + Paginate + MaybeTrace + 'static>(
         .with_confirm_btn(confirm_btn);
 
     let mut frame = ScrollableFrame::new(content);
-    if !title.as_ref().is_empty() {
-        frame = frame.with_title(title.into());
+    if !title.is_empty() {
+        frame = frame.with_title(title);
     }
     let obj = LayoutObj::new(frame)?;
 
@@ -280,9 +277,9 @@ fn content_in_button_page<T: Component + Paginate + MaybeTrace + 'static>(
 
 extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
-        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
-        let action: Option<StrBuffer> = kwargs.get(Qstr::MP_QSTR_action)?.try_into_option()?;
-        let description: Option<StrBuffer> =
+        let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let action: Option<TString> = kwargs.get(Qstr::MP_QSTR_action)?.try_into_option()?;
+        let description: Option<TString> =
             kwargs.get(Qstr::MP_QSTR_description)?.try_into_option()?;
         let verb: TString<'static> =
             kwargs.get_or(Qstr::MP_QSTR_verb, TR::buttons__confirm.into())?;
@@ -294,8 +291,8 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
         let hold: bool = kwargs.get_or(Qstr::MP_QSTR_hold, false)?;
 
         let paragraphs = {
-            let action = action.unwrap_or_default();
-            let description = description.unwrap_or_default();
+            let action = action.unwrap_or("".into());
+            let description = description.unwrap_or("".into());
             let mut paragraphs = ParagraphVecShort::new();
             if !reverse {
                 paragraphs
@@ -316,11 +313,11 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
 
 extern "C" fn new_confirm_blob(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let data: Obj = kwargs.get(Qstr::MP_QSTR_data)?;
-        let description: Option<StrBuffer> =
+        let description: Option<TString> =
             kwargs.get(Qstr::MP_QSTR_description)?.try_into_option()?;
-        let extra: Option<StrBuffer> = kwargs.get(Qstr::MP_QSTR_extra)?.try_into_option()?;
+        let extra: Option<TString> = kwargs.get(Qstr::MP_QSTR_extra)?.try_into_option()?;
         let verb: TString<'static> =
             kwargs.get_or(Qstr::MP_QSTR_verb, TR::buttons__confirm.into())?;
         let verb_cancel: Option<TString<'static>> = kwargs
@@ -338,8 +335,8 @@ extern "C" fn new_confirm_blob(n_args: usize, args: *const Obj, kwargs: *mut Map
         };
 
         let paragraphs = ConfirmBlob {
-            description: description.unwrap_or_else(StrBuffer::empty),
-            extra: extra.unwrap_or_else(StrBuffer::empty),
+            description: description.unwrap_or("".into()),
+            extra: extra.unwrap_or("".into()),
             data: data.try_into()?,
             description_font: &theme::TEXT_BOLD,
             extra_font: &theme::TEXT_NORMAL,
@@ -354,7 +351,7 @@ extern "C" fn new_confirm_blob(n_args: usize, args: *const Obj, kwargs: *mut Map
 
 extern "C" fn new_confirm_properties(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let hold: bool = kwargs.get_or(Qstr::MP_QSTR_hold, false)?;
         let items: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
 
@@ -362,8 +359,8 @@ extern "C" fn new_confirm_properties(n_args: usize, args: *const Obj, kwargs: *m
 
         for para in IterBuf::new().try_iterate(items)? {
             let [key, value, is_data]: [Obj; 3] = util::iter_into_array(para)?;
-            let key = key.try_into_option::<StrBuffer>()?;
-            let value = value.try_into_option::<StrBuffer>()?;
+            let key = key.try_into_option::<TString>()?;
+            let value = value.try_into_option::<TString>()?;
             let is_data: bool = is_data.try_into()?;
 
             if let Some(key) = key {
@@ -402,7 +399,7 @@ extern "C" fn new_confirm_properties(n_args: usize, args: *const Obj, kwargs: *m
 
 extern "C" fn new_confirm_homescreen(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let data: Obj = kwargs.get(Qstr::MP_QSTR_image)?;
 
         // Layout needs to hold the Obj to play nice with GC. Obj is resolved to &[u8]
@@ -411,7 +408,7 @@ extern "C" fn new_confirm_homescreen(n_args: usize, args: *const Obj, kwargs: *m
         //         discarded before returning to micropython.
         let buffer_func = move || unsafe { unwrap!(get_buffer(data)) };
 
-        let obj = LayoutObj::new(ConfirmHomescreen::new(title.into(), buffer_func))?;
+        let obj = LayoutObj::new(ConfirmHomescreen::new(title, buffer_func))?;
         Ok(obj.into())
     };
 
@@ -420,7 +417,7 @@ extern "C" fn new_confirm_homescreen(n_args: usize, args: *const Obj, kwargs: *m
 
 extern "C" fn new_confirm_reset_device(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let button: TString<'static> = kwargs.get(Qstr::MP_QSTR_button)?.try_into()?;
 
         let ops = OpTextLayout::new(theme::TEXT_NORMAL)
@@ -471,17 +468,17 @@ extern "C" fn new_confirm_backup(n_args: usize, args: *const Obj, kwargs: *mut M
 
 extern "C" fn new_show_address_details(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let address: StrBuffer = kwargs.get(Qstr::MP_QSTR_address)?.try_into()?;
+        let address: TString = kwargs.get(Qstr::MP_QSTR_address)?.try_into()?;
         let case_sensitive: bool = kwargs.get(Qstr::MP_QSTR_case_sensitive)?.try_into()?;
-        let account: Option<StrBuffer> = kwargs.get(Qstr::MP_QSTR_account)?.try_into_option()?;
-        let path: Option<StrBuffer> = kwargs.get(Qstr::MP_QSTR_path)?.try_into_option()?;
+        let account: Option<TString> = kwargs.get(Qstr::MP_QSTR_account)?.try_into_option()?;
+        let path: Option<TString> = kwargs.get(Qstr::MP_QSTR_path)?.try_into_option()?;
 
         let xpubs: Obj = kwargs.get(Qstr::MP_QSTR_xpubs)?;
 
         let mut ad = AddressDetails::new(address, case_sensitive, account, path)?;
 
         for i in IterBuf::new().try_iterate(xpubs)? {
-            let [xtitle, text]: [StrBuffer; 2] = util::iter_into_array(i)?;
+            let [xtitle, text]: [TString; 2] = util::iter_into_array(i)?;
             ad.add_xpub(xtitle, text)?;
         }
 
@@ -493,9 +490,9 @@ extern "C" fn new_show_address_details(n_args: usize, args: *const Obj, kwargs: 
 
 extern "C" fn new_confirm_value(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
-        let description: StrBuffer = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
-        let value: StrBuffer = kwargs.get(Qstr::MP_QSTR_value)?.try_into()?;
+        let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let description: TString = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
+        let value: TString = kwargs.get(Qstr::MP_QSTR_value)?.try_into()?;
 
         let verb: Option<TString<'static>> = kwargs
             .get(Qstr::MP_QSTR_verb)
@@ -521,8 +518,8 @@ extern "C" fn new_confirm_value(n_args: usize, args: *const Obj, kwargs: *mut Ma
 
 extern "C" fn new_confirm_joint_total(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let spending_amount: StrBuffer = kwargs.get(Qstr::MP_QSTR_spending_amount)?.try_into()?;
-        let total_amount: StrBuffer = kwargs.get(Qstr::MP_QSTR_total_amount)?.try_into()?;
+        let spending_amount: TString = kwargs.get(Qstr::MP_QSTR_spending_amount)?.try_into()?;
+        let total_amount: TString = kwargs.get(Qstr::MP_QSTR_total_amount)?.try_into()?;
 
         let paragraphs = Paragraphs::new([
             Paragraph::new(&theme::TEXT_BOLD, TR::joint__you_are_contributing),
@@ -545,8 +542,8 @@ extern "C" fn new_confirm_joint_total(n_args: usize, args: *const Obj, kwargs: *
 extern "C" fn new_confirm_modify_output(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let sign: i32 = kwargs.get(Qstr::MP_QSTR_sign)?.try_into()?;
-        let amount_change: StrBuffer = kwargs.get(Qstr::MP_QSTR_amount_change)?.try_into()?;
-        let amount_new: StrBuffer = kwargs.get(Qstr::MP_QSTR_amount_new)?.try_into()?;
+        let amount_change: TString = kwargs.get(Qstr::MP_QSTR_amount_change)?.try_into()?;
+        let amount_new: TString = kwargs.get(Qstr::MP_QSTR_amount_new)?.try_into()?;
 
         let description = if sign < 0 {
             TR::modify_amount__decrease_amount
@@ -574,9 +571,9 @@ extern "C" fn new_confirm_modify_output(n_args: usize, args: *const Obj, kwargs:
 
 extern "C" fn new_confirm_output_address(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
-        let address: StrBuffer = kwargs.get(Qstr::MP_QSTR_address)?.try_into()?;
-        let address_label: StrBuffer = kwargs.get(Qstr::MP_QSTR_address_label)?.try_into()?;
-        let address_title: StrBuffer = kwargs.get(Qstr::MP_QSTR_address_title)?.try_into()?;
+        let address: TString = kwargs.get(Qstr::MP_QSTR_address)?.try_into()?;
+        let address_label: TString = kwargs.get(Qstr::MP_QSTR_address_label)?.try_into()?;
+        let address_title: TString = kwargs.get(Qstr::MP_QSTR_address_title)?.try_into()?;
         let chunkify: bool = kwargs.get_or(Qstr::MP_QSTR_chunkify, false)?;
 
         let get_page = move |page_index| {
@@ -602,7 +599,7 @@ extern "C" fn new_confirm_output_address(n_args: usize, args: *const Obj, kwargs
             }
             ops = ops.text_mono(address);
             let formatted = FormattedText::new(ops).vertically_centered();
-            Page::new(btn_layout, btn_actions, formatted).with_title(address_title.into())
+            Page::new(btn_layout, btn_actions, formatted).with_title(address_title)
         };
         let pages = FlowPages::new(get_page, 1);
 
@@ -614,8 +611,8 @@ extern "C" fn new_confirm_output_address(n_args: usize, args: *const Obj, kwargs
 
 extern "C" fn new_confirm_output_amount(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
-        let amount: StrBuffer = kwargs.get(Qstr::MP_QSTR_amount)?.try_into()?;
-        let amount_title: StrBuffer = kwargs.get(Qstr::MP_QSTR_amount_title)?.try_into()?;
+        let amount: TString = kwargs.get(Qstr::MP_QSTR_amount)?.try_into()?;
+        let amount_title: TString = kwargs.get(Qstr::MP_QSTR_amount_title)?.try_into()?;
 
         let get_page = move |page_index| {
             assert!(page_index == 0);
@@ -624,7 +621,7 @@ extern "C" fn new_confirm_output_amount(n_args: usize, args: *const Obj, kwargs:
             let btn_actions = ButtonActions::cancel_none_confirm();
             let ops = OpTextLayout::new(theme::TEXT_MONO).text_mono(amount);
             let formatted = FormattedText::new(ops).vertically_centered();
-            Page::new(btn_layout, btn_actions, formatted).with_title(amount_title.into())
+            Page::new(btn_layout, btn_actions, formatted).with_title(amount_title)
         };
         let pages = FlowPages::new(get_page, 1);
 
@@ -636,15 +633,15 @@ extern "C" fn new_confirm_output_amount(n_args: usize, args: *const Obj, kwargs:
 
 extern "C" fn new_confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
-        let total_amount: StrBuffer = kwargs.get(Qstr::MP_QSTR_total_amount)?.try_into()?;
-        let fee_amount: StrBuffer = kwargs.get(Qstr::MP_QSTR_fee_amount)?.try_into()?;
-        let fee_rate_amount: Option<StrBuffer> = kwargs
+        let total_amount: TString = kwargs.get(Qstr::MP_QSTR_total_amount)?.try_into()?;
+        let fee_amount: TString = kwargs.get(Qstr::MP_QSTR_fee_amount)?.try_into()?;
+        let fee_rate_amount: Option<TString> = kwargs
             .get(Qstr::MP_QSTR_fee_rate_amount)?
             .try_into_option()?;
-        let account_label: Option<StrBuffer> =
+        let account_label: Option<TString> =
             kwargs.get(Qstr::MP_QSTR_account_label)?.try_into_option()?;
-        let total_label: StrBuffer = kwargs.get(Qstr::MP_QSTR_total_label)?.try_into()?;
-        let fee_label: StrBuffer = kwargs.get(Qstr::MP_QSTR_fee_label)?.try_into()?;
+        let total_label: TString = kwargs.get(Qstr::MP_QSTR_total_label)?.try_into()?;
+        let fee_label: TString = kwargs.get(Qstr::MP_QSTR_fee_label)?.try_into()?;
 
         let get_page = move |page_index| {
             match page_index {
@@ -671,7 +668,7 @@ extern "C" fn new_confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Ma
                     let btn_layout = ButtonLayout::arrow_none_arrow();
                     let btn_actions = ButtonActions::prev_none_next();
 
-                    let fee_rate_amount = fee_rate_amount.unwrap_or_default();
+                    let fee_rate_amount = fee_rate_amount.unwrap_or("".into());
 
                     let ops = OpTextLayout::new(theme::TEXT_MONO)
                         .text_bold(TR::confirm_total__title_fee)
@@ -690,7 +687,7 @@ extern "C" fn new_confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Ma
                     let btn_layout = ButtonLayout::arrow_none_none();
                     let btn_actions = ButtonActions::prev_none_none();
 
-                    let account_label = account_label.unwrap_or_default();
+                    let account_label = account_label.unwrap_or("".into());
 
                     // TODO: include wallet info when available
 
@@ -719,10 +716,10 @@ extern "C" fn new_confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Ma
 
 extern "C" fn new_altcoin_tx_summary(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
-        let amount_title: StrBuffer = kwargs.get(Qstr::MP_QSTR_amount_title)?.try_into()?;
-        let amount_value: StrBuffer = kwargs.get(Qstr::MP_QSTR_amount_value)?.try_into()?;
-        let fee_title: StrBuffer = kwargs.get(Qstr::MP_QSTR_fee_title)?.try_into()?;
-        let fee_value: StrBuffer = kwargs.get(Qstr::MP_QSTR_fee_value)?.try_into()?;
+        let amount_title: TString = kwargs.get(Qstr::MP_QSTR_amount_title)?.try_into()?;
+        let amount_value: TString = kwargs.get(Qstr::MP_QSTR_amount_value)?.try_into()?;
+        let fee_title: TString = kwargs.get(Qstr::MP_QSTR_fee_title)?.try_into()?;
+        let fee_value: TString = kwargs.get(Qstr::MP_QSTR_fee_value)?.try_into()?;
         let cancel_cross: bool = kwargs.get_or(Qstr::MP_QSTR_cancel_cross, false)?;
         let items: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
 
@@ -746,7 +743,7 @@ extern "C" fn new_altcoin_tx_summary(n_args: usize, args: *const Obj, kwargs: *m
                         .text_mono(fee_value);
 
                     let formatted = FormattedText::new(ops);
-                    Page::new(btn_layout, btn_actions, formatted).with_title(amount_title.into())
+                    Page::new(btn_layout, btn_actions, formatted).with_title(amount_title)
                 }
                 1 => {
                     // Other information
@@ -785,8 +782,8 @@ extern "C" fn new_altcoin_tx_summary(n_args: usize, args: *const Obj, kwargs: *m
 
 extern "C" fn new_confirm_address(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
-        let address: StrBuffer = kwargs.get(Qstr::MP_QSTR_data)?.try_into()?;
+        let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let address: TString = kwargs.get(Qstr::MP_QSTR_data)?.try_into()?;
         let verb: TString<'static> =
             kwargs.get_or(Qstr::MP_QSTR_verb, TR::buttons__confirm.into())?;
         let chunkify: bool = kwargs.get_or(Qstr::MP_QSTR_chunkify, false)?;
@@ -804,7 +801,7 @@ extern "C" fn new_confirm_address(n_args: usize, args: *const Obj, kwargs: *mut 
             };
             let ops = OpTextLayout::new(style).text_mono(address);
             let formatted = FormattedText::new(ops).vertically_centered();
-            Page::new(btn_layout, btn_actions, formatted).with_title(title.into())
+            Page::new(btn_layout, btn_actions, formatted).with_title(title)
         };
         let pages = FlowPages::new(get_page, 1);
 
@@ -906,16 +903,16 @@ extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj
 extern "C" fn new_confirm_modify_fee(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let sign: i32 = kwargs.get(Qstr::MP_QSTR_sign)?.try_into()?;
-        let user_fee_change: StrBuffer = kwargs.get(Qstr::MP_QSTR_user_fee_change)?.try_into()?;
-        let total_fee_new: StrBuffer = kwargs.get(Qstr::MP_QSTR_total_fee_new)?.try_into()?;
-        let fee_rate_amount: Option<StrBuffer> = kwargs
+        let user_fee_change: TString = kwargs.get(Qstr::MP_QSTR_user_fee_change)?.try_into()?;
+        let total_fee_new: TString = kwargs.get(Qstr::MP_QSTR_total_fee_new)?.try_into()?;
+        let fee_rate_amount: Option<TString> = kwargs
             .get(Qstr::MP_QSTR_fee_rate_amount)?
             .try_into_option()?;
 
         let (description, change) = match sign {
             s if s < 0 => (TR::modify_fee__decrease_fee, user_fee_change),
             s if s > 0 => (TR::modify_fee__increase_fee, user_fee_change),
-            _ => (TR::modify_fee__no_change, StrBuffer::empty()),
+            _ => (TR::modify_fee__no_change, "".into()),
         };
 
         let mut paragraphs_vec = ParagraphVecShort::new();
@@ -944,7 +941,7 @@ extern "C" fn new_confirm_modify_fee(n_args: usize, args: *const Obj, kwargs: *m
 
 extern "C" fn new_multiple_pages_texts(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let verb: TString = kwargs.get(Qstr::MP_QSTR_verb)?.try_into()?;
         let items: Gc<List> = kwargs.get(Qstr::MP_QSTR_items)?.try_into()?;
 
@@ -991,7 +988,7 @@ extern "C" fn new_multiple_pages_texts(n_args: usize, args: *const Obj, kwargs: 
         };
 
         let pages = FlowPages::new(get_page, page_count);
-        let obj = LayoutObj::new(Flow::new(pages).with_common_title(title.into()))?;
+        let obj = LayoutObj::new(Flow::new(pages).with_common_title(title))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -999,8 +996,8 @@ extern "C" fn new_multiple_pages_texts(n_args: usize, args: *const Obj, kwargs: 
 
 extern "C" fn new_confirm_fido(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
-        let app_name: StrBuffer = kwargs.get(Qstr::MP_QSTR_app_name)?.try_into()?;
+        let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let app_name: TString = kwargs.get(Qstr::MP_QSTR_app_name)?.try_into()?;
         let accounts: Gc<List> = kwargs.get(Qstr::MP_QSTR_accounts)?.try_into()?;
 
         // Cache the page count so that we can move `accounts` into the closure.
@@ -1053,7 +1050,7 @@ extern "C" fn new_confirm_fido(n_args: usize, args: *const Obj, kwargs: *mut Map
         // Returning the page index in case of confirmation.
         let obj = LayoutObj::new(
             Flow::new(pages)
-                .with_common_title(title.into())
+                .with_common_title(title)
                 .with_return_confirmed_index(),
         )?;
         Ok(obj.into())
@@ -1064,8 +1061,8 @@ extern "C" fn new_confirm_fido(n_args: usize, args: *const Obj, kwargs: *mut Map
 extern "C" fn new_show_warning(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let button: TString<'static> = kwargs.get(Qstr::MP_QSTR_button)?.try_into()?;
-        let warning: StrBuffer = kwargs.get(Qstr::MP_QSTR_warning)?.try_into()?;
-        let description: StrBuffer = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
+        let warning: TString = kwargs.get(Qstr::MP_QSTR_warning)?.try_into()?;
+        let description: TString = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
 
         let get_page = move |page_index| {
             assert!(page_index == 0);
@@ -1092,13 +1089,12 @@ extern "C" fn new_show_warning(n_args: usize, args: *const Obj, kwargs: *mut Map
 
 extern "C" fn new_show_info(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
-        let description: StrBuffer =
-            kwargs.get_or(Qstr::MP_QSTR_description, StrBuffer::empty())?;
+        let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let description: TString = kwargs.get_or(Qstr::MP_QSTR_description, "".into())?;
         let time_ms: u32 = kwargs.get_or(Qstr::MP_QSTR_time_ms, 0)?;
 
         let content = Frame::new(
-            title.into(),
+            title,
             Paragraphs::new([Paragraph::new(&theme::TEXT_NORMAL, description)]),
         );
         let obj = if time_ms == 0 {
@@ -1118,7 +1114,7 @@ extern "C" fn new_show_info(n_args: usize, args: *const Obj, kwargs: *mut Map) -
 
 extern "C" fn new_show_passphrase() -> Obj {
     let block = move || {
-        let text: StrBuffer = TR::passphrase__please_enter.try_into()?;
+        let text: TString = TR::passphrase__please_enter.try_into()?;
         let paragraph = Paragraph::new(&theme::TEXT_NORMAL, text).centered();
         let content = Paragraphs::new([paragraph]);
         let obj = LayoutObj::new(content)?;
@@ -1129,7 +1125,7 @@ extern "C" fn new_show_passphrase() -> Obj {
 
 extern "C" fn new_show_waiting_text(message: Obj) -> Obj {
     let block = || {
-        let text: StrBuffer = message.try_into()?;
+        let text: TString = message.try_into()?;
         let paragraph = Paragraph::new(&theme::TEXT_NORMAL, text).centered();
         let content = Paragraphs::new([paragraph]);
         let obj = LayoutObj::new(content)?;
@@ -1140,7 +1136,7 @@ extern "C" fn new_show_waiting_text(message: Obj) -> Obj {
 
 extern "C" fn new_show_mismatch(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
 
         let get_page = move |page_index| {
             assert!(page_index == 0);
@@ -1167,7 +1163,7 @@ extern "C" fn new_show_mismatch(n_args: usize, args: *const Obj, kwargs: *mut Ma
 
 extern "C" fn new_confirm_with_info(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let button: TString<'static> = kwargs.get(Qstr::MP_QSTR_button)?.try_into()?;
         let verb_cancel: Option<TString<'static>> = kwargs
             .get(Qstr::MP_QSTR_verb_cancel)
@@ -1180,7 +1176,7 @@ extern "C" fn new_confirm_with_info(n_args: usize, args: *const Obj, kwargs: *mu
         for para in IterBuf::new().try_iterate(items)? {
             let [font, text]: [Obj; 2] = util::iter_into_array(para)?;
             let style: &TextStyle = theme::textstyle_number(font.try_into()?);
-            let text: StrBuffer = text.try_into()?;
+            let text: TString = text.try_into()?;
             paragraphs.add(Paragraph::new(style, text));
             if paragraphs.is_full() {
                 break;
@@ -1188,7 +1184,7 @@ extern "C" fn new_confirm_with_info(n_args: usize, args: *const Obj, kwargs: *mu
         }
 
         let obj = LayoutObj::new(Frame::new(
-            title.into(),
+            title,
             ShowMore::<Paragraphs<ParagraphVecShort>>::new(
                 paragraphs.into_paragraphs(),
                 verb_cancel,
@@ -1202,7 +1198,7 @@ extern "C" fn new_confirm_with_info(n_args: usize, args: *const Obj, kwargs: *mu
 
 extern "C" fn new_confirm_more(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let button: TString<'static> = kwargs.get(Qstr::MP_QSTR_button)?.try_into()?;
         let items: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
 
@@ -1211,7 +1207,7 @@ extern "C" fn new_confirm_more(n_args: usize, args: *const Obj, kwargs: *mut Map
         for para in IterBuf::new().try_iterate(items)? {
             let [font, text]: [Obj; 2] = util::iter_into_array(para)?;
             let style: &TextStyle = theme::textstyle_number(font.try_into()?);
-            let text: StrBuffer = text.try_into()?;
+            let text: TString = text.try_into()?;
             paragraphs.add(Paragraph::new(style, text));
         }
 
@@ -1228,8 +1224,8 @@ extern "C" fn new_confirm_more(n_args: usize, args: *const Obj, kwargs: *mut Map
 
 extern "C" fn new_confirm_coinjoin(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let max_rounds: StrBuffer = kwargs.get(Qstr::MP_QSTR_max_rounds)?.try_into()?;
-        let max_feerate: StrBuffer = kwargs.get(Qstr::MP_QSTR_max_feerate)?.try_into()?;
+        let max_rounds: TString = kwargs.get(Qstr::MP_QSTR_max_rounds)?.try_into()?;
+        let max_feerate: TString = kwargs.get(Qstr::MP_QSTR_max_feerate)?.try_into()?;
 
         // Decreasing bottom padding between paragraphs to fit one screen
         let paragraphs = Paragraphs::new([
@@ -1254,10 +1250,10 @@ extern "C" fn new_confirm_coinjoin(n_args: usize, args: *const Obj, kwargs: *mut
 
 extern "C" fn new_request_pin(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
-        let prompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
-        let subprompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_subprompt)?.try_into()?;
+        let prompt: TString = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
+        let subprompt: TString = kwargs.get(Qstr::MP_QSTR_subprompt)?.try_into()?;
 
-        let obj = LayoutObj::new(PinEntry::new(prompt.into(), subprompt.into()))?;
+        let obj = LayoutObj::new(PinEntry::new(prompt, subprompt))?;
 
         Ok(obj.into())
     };
@@ -1266,11 +1262,9 @@ extern "C" fn new_request_pin(n_args: usize, args: *const Obj, kwargs: *mut Map)
 
 extern "C" fn new_request_passphrase(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
-        let prompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
+        let prompt: TString = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
 
-        let obj = LayoutObj::new(
-            Frame::new(prompt.into(), PassphraseEntry::new()).with_title_centered(),
-        )?;
+        let obj = LayoutObj::new(Frame::new(prompt, PassphraseEntry::new()).with_title_centered())?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -1279,17 +1273,14 @@ extern "C" fn new_request_passphrase(n_args: usize, args: *const Obj, kwargs: *m
 extern "C" fn new_request_bip39(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
         let prompt: TString = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
-        let prefill_word: StrBuffer = kwargs.get(Qstr::MP_QSTR_prefill_word)?.try_into()?;
+        let prefill_word: TString = kwargs.get(Qstr::MP_QSTR_prefill_word)?.try_into()?;
         let can_go_back: bool = kwargs.get(Qstr::MP_QSTR_can_go_back)?.try_into()?;
 
         let obj = LayoutObj::new(
             Frame::new(
-                prompt.into(),
-                WordlistEntry::prefilled_word(
-                    prefill_word.as_ref(),
-                    WordlistType::Bip39,
-                    can_go_back,
-                ),
+                prompt,
+                prefill_word
+                    .map(|s| WordlistEntry::prefilled_word(s, WordlistType::Bip39, can_go_back)),
             )
             .with_title_centered(),
         )?;
@@ -1300,18 +1291,15 @@ extern "C" fn new_request_bip39(n_args: usize, args: *const Obj, kwargs: *mut Ma
 
 extern "C" fn new_request_slip39(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
-        let prompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
-        let prefill_word: StrBuffer = kwargs.get(Qstr::MP_QSTR_prefill_word)?.try_into()?;
+        let prompt: TString = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
+        let prefill_word: TString = kwargs.get(Qstr::MP_QSTR_prefill_word)?.try_into()?;
         let can_go_back: bool = kwargs.get(Qstr::MP_QSTR_can_go_back)?.try_into()?;
 
         let obj = LayoutObj::new(
             Frame::new(
-                prompt.into(),
-                WordlistEntry::prefilled_word(
-                    prefill_word.as_ref(),
-                    WordlistType::Slip39,
-                    can_go_back,
-                ),
+                prompt,
+                prefill_word
+                    .map(|s| WordlistEntry::prefilled_word(s, WordlistType::Slip39, can_go_back)),
             )
             .with_title_centered(),
         )?;
@@ -1323,7 +1311,7 @@ extern "C" fn new_request_slip39(n_args: usize, args: *const Obj, kwargs: *mut M
 extern "C" fn new_select_word(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
         // we ignore passed in `title` and use `description` in its place
-        let description: StrBuffer = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
+        let description: TString = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
         let words_iterable: Obj = kwargs.get(Qstr::MP_QSTR_words)?;
         // There are only 3 words, but SimpleChoice requires 5 elements
         let words: Vec<TString<'static>, 5> = util::iter_into_vec(words_iterable)?;
@@ -1331,7 +1319,7 @@ extern "C" fn new_select_word(n_args: usize, args: *const Obj, kwargs: *mut Map)
         // Returning the index of the selected word, not the word itself
         let obj = LayoutObj::new(
             Frame::new(
-                description.into(),
+                description,
                 SimpleChoice::new(words, false)
                     .with_show_incomplete()
                     .with_return_index(),
@@ -1364,14 +1352,13 @@ extern "C" fn new_show_share_words(n_args: usize, args: *const Obj, kwargs: *mut
 
 extern "C" fn new_request_number(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let min_count: u32 = kwargs.get(Qstr::MP_QSTR_min_count)?.try_into()?;
         let max_count: u32 = kwargs.get(Qstr::MP_QSTR_max_count)?.try_into()?;
         let count: u32 = kwargs.get(Qstr::MP_QSTR_count)?.try_into()?;
 
         let obj = LayoutObj::new(
-            Frame::new(title.into(), NumberInput::new(min_count, max_count, count))
-                .with_title_centered(),
+            Frame::new(title, NumberInput::new(min_count, max_count, count)).with_title_centered(),
         )?;
         Ok(obj.into())
     };
@@ -1391,7 +1378,7 @@ extern "C" fn new_show_checklist(n_args: usize, args: *const Obj, kwargs: *mut M
                 Ordering::Equal => &theme::TEXT_BOLD,
                 Ordering::Greater => &theme::TEXT_NORMAL,
             };
-            let text: StrBuffer = item.try_into()?;
+            let text: TString = item.try_into()?;
             paragraphs.add(Paragraph::new(style, text));
         }
 
@@ -1420,7 +1407,7 @@ extern "C" fn new_show_checklist(n_args: usize, args: *const Obj, kwargs: *mut M
 
 extern "C" fn new_confirm_recovery(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let description: StrBuffer = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
+        let description: TString = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
         let button: TString<'static> = kwargs.get(Qstr::MP_QSTR_button)?.try_into()?;
         let dry_run: bool = kwargs.get(Qstr::MP_QSTR_dry_run)?.try_into()?;
         let show_info: bool = kwargs.get(Qstr::MP_QSTR_show_info)?.try_into()?;
@@ -1458,7 +1445,7 @@ extern "C" fn new_confirm_recovery(n_args: usize, args: *const Obj, kwargs: *mut
 
 extern "C" fn new_select_word_count(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], _kwargs: &Map| {
-        let title: StrBuffer = TR::word_count__title.try_into()?;
+        let title: TString = TR::word_count__title.try_into()?;
 
         let choices: Vec<TString<'static>, 5> = ["12", "18", "20", "24", "33"]
             .map(|num| num.into())
@@ -1466,7 +1453,7 @@ extern "C" fn new_select_word_count(n_args: usize, args: *const Obj, kwargs: *mu
             .collect();
 
         let obj = LayoutObj::new(
-            Frame::new(title.into(), SimpleChoice::new(choices, false)).with_title_centered(),
+            Frame::new(title, SimpleChoice::new(choices, false)).with_title_centered(),
         )?;
         Ok(obj.into())
     };
@@ -1480,7 +1467,7 @@ extern "C" fn new_show_group_share_success(
 ) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let lines_iterable: Obj = kwargs.get(Qstr::MP_QSTR_lines)?;
-        let lines: [StrBuffer; 4] = util::iter_into_array(lines_iterable)?;
+        let lines: [TString; 4] = util::iter_into_array(lines_iterable)?;
 
         let [l0, l1, l2, l3] = lines;
 
@@ -1504,20 +1491,18 @@ extern "C" fn new_show_group_share_success(
 
 extern "C" fn new_show_progress(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let description: StrBuffer = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
+        let description: TString = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
         let indeterminate: bool = kwargs.get_or(Qstr::MP_QSTR_indeterminate, false)?;
-        let title: Option<StrBuffer> = kwargs
+        let title: Option<TString> = kwargs
             .get(Qstr::MP_QSTR_title)
             .and_then(Obj::try_into_option)
             .unwrap_or(None);
 
-        let mut progress = Progress::new(indeterminate, description.into());
+        let mut progress = Progress::new(indeterminate, description);
         if let Some(title) = title {
-            progress = progress.with_title(title.into());
+            progress = progress.with_title(title);
         };
 
-        // Description updates are received as &str and we need to provide a way to
-        // convert them to StrBuffer.
         let obj = LayoutObj::new(progress)?;
         Ok(obj.into())
     };
@@ -1526,7 +1511,7 @@ extern "C" fn new_show_progress(n_args: usize, args: *const Obj, kwargs: *mut Ma
 
 extern "C" fn new_show_progress_coinjoin(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let indeterminate: bool = kwargs.get_or(Qstr::MP_QSTR_indeterminate, false)?;
         let time_ms: u32 = kwargs.get_or(Qstr::MP_QSTR_time_ms, 0)?;
         let skip_first_paint: bool = kwargs.get_or(Qstr::MP_QSTR_skip_first_paint, false)?;
@@ -1549,23 +1534,19 @@ extern "C" fn new_show_progress_coinjoin(n_args: usize, args: *const Obj, kwargs
 }
 extern "C" fn new_show_homescreen(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let label: StrBuffer = kwargs
+        let label: TString = kwargs
             .get(Qstr::MP_QSTR_label)?
             .try_into_option()?
             .unwrap_or_else(|| model::FULL_NAME.into());
-        let notification: Option<StrBuffer> =
+        let notification: Option<TString> =
             kwargs.get(Qstr::MP_QSTR_notification)?.try_into_option()?;
         let notification_level: u8 = kwargs.get_or(Qstr::MP_QSTR_notification_level, 0)?;
         let skip_first_paint: bool = kwargs.get(Qstr::MP_QSTR_skip_first_paint)?.try_into()?;
         let hold: bool = kwargs.get(Qstr::MP_QSTR_hold)?.try_into()?;
 
-        let notification = notification.map(|w| (w.into(), notification_level));
+        let notification = notification.map(|w| (w, notification_level));
         let loader_description = hold.then_some("Locking the device...".into());
-        let obj = LayoutObj::new(Homescreen::new(
-            label.into(),
-            notification,
-            loader_description,
-        ))?;
+        let obj = LayoutObj::new(Homescreen::new(label, notification, loader_description))?;
         if skip_first_paint {
             obj.skip_first_paint();
         }
@@ -1576,7 +1557,7 @@ extern "C" fn new_show_homescreen(n_args: usize, args: *const Obj, kwargs: *mut 
 
 extern "C" fn new_show_lockscreen(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let label: StrBuffer = kwargs
+        let label: TString = kwargs
             .get(Qstr::MP_QSTR_label)?
             .try_into_option()?
             .unwrap_or_else(|| model::FULL_NAME.into());
@@ -1584,11 +1565,7 @@ extern "C" fn new_show_lockscreen(n_args: usize, args: *const Obj, kwargs: *mut 
         let coinjoin_authorized: bool = kwargs.get_or(Qstr::MP_QSTR_coinjoin_authorized, false)?;
         let skip_first_paint: bool = kwargs.get(Qstr::MP_QSTR_skip_first_paint)?.try_into()?;
 
-        let obj = LayoutObj::new(Lockscreen::new(
-            label.into(),
-            bootscreen,
-            coinjoin_authorized,
-        ))?;
+        let obj = LayoutObj::new(Lockscreen::new(label, bootscreen, coinjoin_authorized))?;
         if skip_first_paint {
             obj.skip_first_paint();
         }
@@ -1604,14 +1581,13 @@ extern "C" fn new_confirm_firmware_update(
 ) -> Obj {
     use super::component::bl_confirm::Confirm;
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let description: StrBuffer = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
-        let fingerprint: StrBuffer = kwargs.get(Qstr::MP_QSTR_fingerprint)?.try_into()?;
+        let description: TString = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
+        let fingerprint: TString = kwargs.get(Qstr::MP_QSTR_fingerprint)?.try_into()?;
 
         let title = TR::firmware_update__title;
-        let message =
-            Label::left_aligned(description.into(), theme::TEXT_NORMAL).vertically_centered();
+        let message = Label::left_aligned(description, theme::TEXT_NORMAL).vertically_centered();
         let fingerprint = Label::left_aligned(
-            fingerprint.into(),
+            fingerprint,
             theme::TEXT_NORMAL.with_line_breaking(LineBreaking::BreakWordsNoHyphen),
         )
         .vertically_centered();

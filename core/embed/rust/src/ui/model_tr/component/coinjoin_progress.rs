@@ -1,7 +1,7 @@
 use core::mem;
 
 use crate::{
-    strutil::StringType,
+    strutil::TString,
     translations::TR,
     ui::{
         component::{
@@ -21,19 +21,16 @@ const FOOTER_TEXT_MARGIN: i16 = 8;
 const LOADER_OFFSET: i16 = -15;
 const LOADER_SPEED: u16 = 10;
 
-pub struct CoinJoinProgress<T> {
+pub struct CoinJoinProgress {
     value: u16,
     loader_y_offset: i16,
-    text: T,
+    text: TString<'static>,
     area: Rect,
     indeterminate: bool,
 }
 
-impl<T> CoinJoinProgress<T>
-where
-    T: StringType,
-{
-    pub fn new(text: T, indeterminate: bool) -> Self {
+impl CoinJoinProgress {
+    pub fn new(text: TString<'static>, indeterminate: bool) -> Self {
         Self {
             value: 0,
             loader_y_offset: LOADER_OFFSET,
@@ -44,10 +41,7 @@ where
     }
 }
 
-impl<T> Component for CoinJoinProgress<T>
-where
-    T: StringType,
-{
+impl Component for CoinJoinProgress {
     type Msg = Never;
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -122,7 +116,7 @@ where
         if let Some(rest) = top_rest {
             text_multiline_bottom(
                 rest.inset(Insets::bottom(FOOTER_TEXT_MARGIN)),
-                self.text.as_ref().into(),
+                self.text,
                 Font::NORMAL,
                 theme::FG,
                 theme::BG,
@@ -133,14 +127,11 @@ where
 }
 
 #[cfg(feature = "ui_debug")]
-impl<T> crate::trace::Trace for CoinJoinProgress<T>
-where
-    T: StringType,
-{
+impl crate::trace::Trace for CoinJoinProgress {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("CoinJoinProgress");
         t.string("header", TR::coinjoin__title_progress.into());
-        t.string("text", self.text.as_ref().into());
+        t.string("text", self.text);
         t.string("footer", TR::coinjoin__do_not_disconnect.into());
     }
 }

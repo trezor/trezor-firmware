@@ -8,6 +8,7 @@ use crate::{
         util::{iter_into_array, try_or_raise},
     },
     storage::{get_avatar_len, load_avatar},
+    strutil::TString,
     ui::{
         component::text::{
             paragraphs::{Paragraph, ParagraphSource},
@@ -24,16 +25,17 @@ use crate::{
 pub const MAX_HEX_CHARS_ON_SCREEN: usize = 256;
 
 pub enum StrOrBytes {
-    Str(StrBuffer),
+    Str(TString<'static>),
     Bytes(Obj),
 }
 
 impl StrOrBytes {
-    pub fn as_str_offset(&self, offset: usize) -> StrBuffer {
+    pub fn as_str_offset(&self, offset: usize) -> TString<'static> {
         match self {
             StrOrBytes::Str(x) => x.skip_prefix(offset),
             StrOrBytes::Bytes(x) => hexlify_bytes(*x, offset, MAX_HEX_CHARS_ON_SCREEN)
-                .unwrap_or_else(|_| StrBuffer::from("ERROR")),
+                .unwrap_or_else(|_| StrBuffer::from("ERROR"))
+                .into(),
         }
     }
 }
@@ -53,8 +55,8 @@ impl TryFrom<Obj> for StrOrBytes {
 }
 
 pub struct ConfirmBlob {
-    pub description: StrBuffer,
-    pub extra: StrBuffer,
+    pub description: TString<'static>,
+    pub extra: TString<'static>,
     pub data: StrOrBytes,
     pub description_font: &'static TextStyle,
     pub extra_font: &'static TextStyle,
