@@ -274,6 +274,8 @@ def cargo_build():
         features = ["model_t1"]
     elif TREZOR_MODEL in ("R",):
         features = ["model_tr"]
+    elif TREZOR_MODEL in ("T3T1",):
+        features = ["model_mercury"]
     else:
         features = ["model_tt"]
 
