@@ -56,6 +56,13 @@ pub trait UIFeaturesBootloader {
     fn screen_wipe_fail();
 }
 
+#[cfg(all(
+    feature = "model_mercury",
+    not(feature = "model_tr"),
+    not(feature = "model_tt")
+))]
+pub type ModelUI = crate::ui::model_mercury::ModelMercuryFeatures;
+
 #[cfg(all(feature = "model_tr", not(feature = "model_tt")))]
 pub type ModelUI = crate::ui::model_tr::ModelTRFeatures;
 
