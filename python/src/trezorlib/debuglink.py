@@ -67,8 +67,7 @@ if TYPE_CHECKING:
             self,
             hold_ms: Optional[int] = None,
             wait: Optional[bool] = None,
-        ) -> "LayoutContent":
-            ...
+        ) -> "LayoutContent": ...
 
 
 EXPECTED_RESPONSES_CONTEXT_LINES = 3
