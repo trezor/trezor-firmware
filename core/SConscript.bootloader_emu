@@ -20,7 +20,7 @@ if TREZOR_MODEL in ('1', 'DISC1'):
              )
     Return()
 
-FEATURES_WANTED = ["input", "rgb_led"]
+FEATURES_WANTED = ["input", "rgb_led", "dma2d"]
 
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
@@ -91,6 +91,7 @@ SOURCE_MOD += [
     'embed/lib/colors.c',
     'embed/lib/display_utils.c',
     'embed/lib/display.c',
+    'embed/lib/dma2d_emul.c',
     'embed/lib/fonts/font_bitmap.c',
     'embed/lib/fonts/fonts.c',
     'embed/lib/image.c',
@@ -286,6 +287,7 @@ def cargo_build():
     if TREZOR_MODEL in ('T', 'T3T1'):
         features.append('touch')
         features.append('backlight')
+        features.append('dma2d')
     if TREZOR_MODEL in ('R', '1'):
         features.append('button')
 
