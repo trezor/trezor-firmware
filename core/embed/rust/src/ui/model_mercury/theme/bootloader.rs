@@ -64,13 +64,10 @@ pub const FIRE40: &[u8] = include_res!("model_mercury/res/fire40.toif");
 pub const REFRESH24: &[u8] = include_res!("model_mercury/res/refresh24.toif");
 pub const MENU32: &[u8] = include_res!("model_mercury/res/menu32.toif");
 pub const INFO32: &[u8] = include_res!("model_mercury/res/info32.toif");
-pub const DOWNLOAD32: &[u8] = include_res!("model_mercury/res/download32.toif");
+pub const DOWNLOAD24: &[u8] = include_res!("model_mercury/res/download24.toif");
 pub const WARNING40: &[u8] = include_res!("model_mercury/res/warning40.toif");
 pub const CHECK24: &[u8] = include_res!("model_mercury/res/check24.toif");
 pub const CHECK40: &[u8] = include_res!("model_mercury/res/check40.toif");
-
-pub const DEVICE_NAME: &[u8] = include_res!("model_mercury/res/device_name_T.toif");
-pub const START_URL: &[u8] = include_res!("model_mercury/res/start.toif");
 
 pub fn button_confirm() -> ButtonStyleSheet {
     ButtonStyleSheet {

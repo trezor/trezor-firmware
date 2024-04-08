@@ -1,14 +1,14 @@
 use crate::ui::{
     component::{Component, Event, EventCtx, Never, Pad},
     constant::screen,
-    display::{self, Font, Icon},
-    geometry::{Alignment2D, Offset, Rect},
+    display::{self, Font},
+    geometry::{Offset, Point, Rect},
 };
 
-use super::super::theme::{
-    bootloader::{START_URL, WELCOME_COLOR},
-    BLACK, GREY_MEDIUM, WHITE,
-};
+use super::super::theme::{BLACK, GREY, WHITE};
+
+const TEXT_ORIGIN: Point = Point::new(0, 105);
+const STRIDE: i16 = 22;
 
 pub struct Welcome {
     bg: Pad,
@@ -17,7 +17,7 @@ pub struct Welcome {
 impl Welcome {
     pub fn new() -> Self {
         Self {
-            bg: Pad::with_background(WELCOME_COLOR).with_clear(),
+            bg: Pad::with_background(BLACK).with_clear(),
         }
     }
 }
@@ -35,24 +35,28 @@ impl Component for Welcome {
     }
 
     fn paint(&mut self) {
+        let at_width = Font::NORMAL.text_width("at ");
+
         self.bg.paint();
-        display::text_center(
-            screen().top_center() + Offset::y(102),
-            "Get started with",
+        display::text_left(TEXT_ORIGIN, "Get started", Font::NORMAL, GREY, BLACK);
+        display::text_left(
+            TEXT_ORIGIN + Offset::y(STRIDE),
+            "with your Trezor",
             Font::NORMAL,
-            GREY_MEDIUM,
+            GREY,
             BLACK,
         );
-        display::text_center(
-            screen().top_center() + Offset::y(126),
-            "your Trezor at",
+        display::text_left(
+            TEXT_ORIGIN + Offset::y(2 * STRIDE),
+            "at",
             Font::NORMAL,
-            GREY_MEDIUM,
+            GREY,
             BLACK,
         );
-        Icon::new(START_URL).draw(
-            screen().top_center() + Offset::y(135),
-            Alignment2D::TOP_CENTER,
+        display::text_left(
+            TEXT_ORIGIN + Offset::new(at_width, 2 * STRIDE),
+            "trezor.io/start",
+            Font::NORMAL,
             WHITE,
             BLACK,
         );
