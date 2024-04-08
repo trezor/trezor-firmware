@@ -45,6 +45,10 @@ STATIC mp_obj_t mod_trezorcrypto_bech32_decode(size_t n_args,
     mp_raise_ValueError(NULL);
   }
 
+  if (bech.len < 8) {
+    mp_raise_ValueError(NULL);
+  }
+
   uint8_t data[bech.len - 8];
   char hrp[BECH32_MAX_HRP_LEN + 1] = {0};
   size_t data_len = 0;
