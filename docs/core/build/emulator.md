@@ -78,7 +78,8 @@ requires libclang for generating MicroPython FFI.
 Run the build with:
 
 ```sh
-make build_unix
+make build_unix                     # default
+make build_unix TREZOR_MODEL=R      # different model
 ```
 
 ## Run
