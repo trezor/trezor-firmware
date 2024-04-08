@@ -60,7 +60,7 @@ impl ModelMercuryFeatures {
             Point::new(SCREEN.width() / 2, SCREEN.height() - 45),
             text,
             Font::NORMAL,
-            fg_color,
+            BLD_FG,
             bg_color,
         );
         display::loader(progress, -20, fg_color, bg_color, icon);
@@ -276,7 +276,16 @@ impl UIFeaturesBootloader for ModelMercuryFeatures {
 
     fn screen_install_progress(progress: u16, initialize: bool, initial_setup: bool) {
         let bg_color = if initial_setup { WELCOME_COLOR } else { BLD_BG };
-        let fg_color = if initial_setup { FG } else { BLD_FG };
+        let fg_color = if initial_setup {
+            Color::rgb(0x0B, 0xA5, 0x67)
+        } else {
+            BLD_FG
+        };
+        let icon_color = if initial_setup {
+            Color::rgb(0x8B, 0x8B, 0x93)
+        } else {
+            BLD_FG
+        };
 
         ModelMercuryFeatures::screen_progress(
             "Installing firmware",
@@ -284,7 +293,7 @@ impl UIFeaturesBootloader for ModelMercuryFeatures {
             initialize,
             fg_color,
             bg_color,
-            Some((Icon::new(DOWNLOAD32), fg_color)),
+            Some((Icon::new(DOWNLOAD32), icon_color)),
         )
     }
 
