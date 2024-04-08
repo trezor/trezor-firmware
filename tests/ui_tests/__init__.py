@@ -5,6 +5,7 @@ from contextlib import contextmanager
 from typing import Callable, Generator
 
 import pytest
+from _pytest.nodes import Node
 from _pytest.outcomes import Failed
 
 from trezorlib.debuglink import TrezorClientDebugLink as Client
@@ -23,23 +24,13 @@ def _process_recorded(result: TestResult) -> None:
     testreport.recorded(result)
 
 
-def _process_tested(result: TestResult) -> None:
+def _process_tested(result: TestResult, item: Node) -> None:
     if result.expected_hash is None:
-        file_path = testreport.missing(result)
-        pytest.fail(
-            f"Hash of {result.test.id} not found in fixtures.json\n"
-            f"Expected:  {result.expected_hash}\n"
-            f"Actual:    {result.actual_hash}\n"
-            f"Diff file: {file_path}"
-        )
+        testreport.missing(result)
+        item.user_properties.append(("ui_missing", None))
     elif result.actual_hash != result.expected_hash:
-        file_path = testreport.failed(result)
-        pytest.fail(
-            f"Hash of {result.test.id} differs\n"
-            f"Expected:  {result.expected_hash}\n"
-            f"Actual:    {result.actual_hash}\n"
-            f"Diff file: {file_path}"
-        )
+        testreport.failed(result)
+        item.user_properties.append(("ui_failed", None))
     else:
         testreport.passed(result)
 
@@ -83,7 +74,7 @@ def screen_recording(
     if test_ui == "record":
         _process_recorded(result)
     else:
-        _process_tested(result)
+        _process_tested(result, request.node)
 
 
 def setup(main_runner: bool) -> None:
@@ -156,6 +147,9 @@ def terminal_summary(
 
     if normal_exit:
         println("-------- UI tests summary: --------")
+        for result in TestResult.recent_results():
+            if result.passed and not result.ui_passed:
+                println(f"UI_FAILED: {result.test.id} ({result.actual_hash})")
         println("Run ./tests/show_results.py to open test summary")
         println("")
 
@@ -176,15 +170,16 @@ def sessionfinish(
 
     testreport.generate_reports(record_text_layout, do_master_diff)
 
+    recents = list(TestResult.recent_results())
+
     if test_ui == "test":
-        common.write_fixtures_only_new_results(
-            TestResult.recent_results(),
-            dest=FIXTURES_RESULTS_FILE,
-        )
+        common.write_fixtures_only_new_results(recents, dest=FIXTURES_RESULTS_FILE)
+        if any(t.passed and not t.ui_passed for t in recents):
+            return pytest.ExitCode.TESTS_FAILED
 
     if test_ui == "test" and check_missing and list_missing():
         common.write_fixtures_complete(
-            TestResult.recent_results(),
+            recents,
             remove_missing=True,
             dest=FIXTURES_SUGGESTION_FILE,
         )

@@ -47,6 +47,8 @@ def generate(env):
         optiga = env["optiga"]
         layout_tt = env["ui_layout"] == "UI_LAYOUT_TT"
         layout_tr = env["ui_layout"] == "UI_LAYOUT_TR"
+        touch = env["use_touch"]
+        button = env["use_button"]
         interim = f"{target[:-4]}.i"  # replace .mpy with .i
         sed_scripts = " ".join(
             [
@@ -56,6 +58,8 @@ def generate(env):
                 rf"-e 's/utils\.USE_OPTIGA/{optiga}/g'",
                 rf"-e 's/utils\.UI_LAYOUT == \"TT\"/{layout_tt}/g'",
                 rf"-e 's/utils\.UI_LAYOUT == \"TR\"/{layout_tr}/g'",
+                rf"-e 's/utils\.USE_BUTTON/{button}/g'",
+                rf"-e 's/utils\.USE_TOUCH/{touch}/g'",
                 r"-e 's/if TYPE_CHECKING/if False/'",
                 r"-e 's/import typing/# \0/'",
                 r"-e '/from typing import (/,/^\s*)/ {s/^/# /; }'",

@@ -104,79 +104,118 @@ struct LayoutObjInner {
     page_count: u16,
 }
 
-impl LayoutObj {
-    /// Create a new `LayoutObj`, wrapping a root component.
-    pub fn new(root: impl ComponentMsgObj + MaybeTrace + 'static) -> Result<Gc<Self>, Error> {
+impl LayoutObjInner {
+    pub fn new(root: impl ComponentMsgObj + MaybeTrace + 'static) -> Result<Self, Error> {
         // Let's wrap the root component into a `Root` to maintain the top-level
         // invalidation logic.
-        let wrapped_root = Root::new(root);
+        let mut wrapped_root = Root::new(root);
+
+        // Do a layout pass on the new component.
+        let page_count = Self::place_and_count_pages(&mut wrapped_root);
+
         // SAFETY: We are coercing GC-allocated sized ptr into an unsized one.
         let root =
             unsafe { Gc::from_raw(Gc::into_raw(Gc::new(wrapped_root)?) as *mut dyn ObjComponent) };
 
-        Gc::new(Self {
-            base: Self::obj_type().as_base(),
-            inner: RefCell::new(LayoutObjInner {
-                root,
-                event_ctx: EventCtx::new(),
-                timer_fn: Obj::const_none(),
-                page_count: 1,
-            }),
+        Ok(Self {
+            root,
+            event_ctx: EventCtx::new(),
+            timer_fn: Obj::const_none(),
+            page_count,
         })
     }
 
-    pub fn skip_first_paint(&self) {
-        let mut inner = self.inner.borrow_mut();
+    /// Prepare a component for rendering.
+    ///
+    /// Runs a place pass and sends a RequestPaint message to the component
+    /// hierarchy. Returns the number of pages.
+    fn place_and_count_pages(root: &mut impl Component) -> u16 {
+        // Place the layout component for the first time.
+        root.place(constant::screen());
+        // Clear the event context
+        let mut event_ctx = EventCtx::new();
+        // Request a paint pass -- should also update page count.
+        let msg = root.event(&mut event_ctx, Event::RequestPaint);
 
-        // SAFETY: `inner.root` is unique because of the `inner.borrow_mut()`.
-        unsafe { Gc::as_mut(&mut inner.root) }.obj_skip_paint();
+        // Check that the paint pass did not cause anything.
+        #[cfg(feature = "ui_debug")]
+        {
+            assert!(msg.is_none());
+            assert!(!event_ctx.needs_place_before_next_event_or_paint());
+            assert!(event_ctx.pop_timer().is_none());
+        }
+
+        event_ctx.page_count().unwrap_or(1) as u16
     }
 
-    /// Timer callback is expected to be a callable object of the following
-    /// form: `def timer(token: int, deadline_in_ms: int)`.
-    fn obj_set_timer_fn(&self, timer_fn: Obj) {
-        self.inner.borrow_mut().timer_fn = timer_fn;
+    /// Access the root component.
+    pub fn obj_component(&mut self) -> &mut dyn ObjComponent {
+        // SAFETY: `self.root` is unique because we are borrowed mutably.
+        unsafe { Gc::as_mut(&mut self.root) }
     }
 
     /// Run an event pass over the component tree. After the traversal, any
     /// pending timers are drained into `self.timer_callback`. Returns `Err`
     /// in case the timer callback raises or one of the components returns
     /// an error, `Ok` with the message otherwise.
-    fn obj_event(&self, event: Event) -> Result<Obj, Error> {
-        let inner = &mut *self.inner.borrow_mut();
-
-        // Place the root component on the screen in case it was previously requested.
-        if inner.event_ctx.needs_place_before_next_event_or_paint() {
-            // SAFETY: `inner.root` is unique because of the `inner.borrow_mut()`.
-            unsafe { Gc::as_mut(&mut inner.root) }.obj_place(constant::screen());
-        }
-
+    pub fn obj_event(&mut self, event: Event) -> Result<Obj, Error> {
         // Clear the leftover flags from the previous event pass.
-        inner.event_ctx.clear();
+        self.event_ctx.clear();
 
         // Send the event down the component tree. Bail out in case of failure.
-        // SAFETY: `inner.root` is unique because of the `inner.borrow_mut()`.
-        let msg = unsafe { Gc::as_mut(&mut inner.root) }.obj_event(&mut inner.event_ctx, event)?;
+        // SAFETY: `self.root` is unique because we are borrowed mutably.
+        // (cannot use self.obj_component() because it would borrow self twice)
+        let msg = unsafe { Gc::as_mut(&mut self.root) }.obj_event(&mut self.event_ctx, event)?;
+
+        // If placement was requested, run a place pass.
+        if self.event_ctx.needs_place_before_next_event_or_paint() {
+            self.obj_component().obj_place(constant::screen());
+        }
 
         // All concerning `Child` wrappers should have already marked themselves for
         // painting by now, and we're prepared for a paint pass.
 
         // Drain any pending timers into the callback.
-        while let Some((token, deadline)) = inner.event_ctx.pop_timer() {
+        while let Some((token, duration)) = self.event_ctx.pop_timer() {
             let token = token.try_into();
-            let deadline = deadline.try_into();
-            if let (Ok(token), Ok(deadline)) = (token, deadline) {
-                inner.timer_fn.call_with_n_args(&[token, deadline])?;
+            let duration = duration.try_into();
+            if let (Ok(token), Ok(duration)) = (token, duration) {
+                self.timer_fn.call_with_n_args(&[token, duration])?;
             } else {
-                // Failed to convert token or deadline into `Obj`, skip.
+                // Failed to convert token or duration into `Obj`, skip.
             }
         }
 
-        if let Some(count) = inner.event_ctx.page_count() {
-            inner.page_count = count as u16;
+        // Update page count.
+        if let Some(count) = self.event_ctx.page_count() {
+            self.page_count = count as u16;
         }
 
         Ok(msg)
+    }
+}
+
+impl LayoutObj {
+    /// Create a new `LayoutObj`, wrapping a root component.
+    pub fn new(root: impl ComponentMsgObj + MaybeTrace + 'static) -> Result<Gc<Self>, Error> {
+        Gc::new(Self {
+            base: Self::obj_type().as_base(),
+            inner: RefCell::new(LayoutObjInner::new(root)?),
+        })
+    }
+
+    pub fn skip_first_paint(&self) {
+        self.inner.borrow_mut().obj_component().obj_skip_paint();
+    }
+
+    /// Timer callback is expected to be a callable object of the following
+    /// form: `def timer(token: int, duration_ms: int)`.
+    fn obj_set_timer_fn(&self, timer_fn: Obj) {
+        self.inner.borrow_mut().timer_fn = timer_fn;
+    }
+
+    fn obj_event(&self, event: Event) -> Result<Obj, Error> {
+        self.inner.borrow_mut().obj_event(event)
     }
 
     fn obj_request_clear(&self) {
@@ -187,19 +226,11 @@ impl LayoutObj {
 
     /// Run a paint pass over the component tree. Returns true if any component
     /// actually requested painting since last invocation of the function.
-    fn obj_paint_if_requested(&self) -> bool {
-        let mut inner = self.inner.borrow_mut();
-
-        // Place the root component on the screen in case it was previously requested.
-        if inner.event_ctx.needs_place_before_next_event_or_paint() {
-            // SAFETY: `inner.root` is unique because of the `inner.borrow_mut()`.
-            unsafe { Gc::as_mut(&mut inner.root) }.obj_place(constant::screen());
-        }
-
+    fn obj_paint(&self) -> bool {
+        // Wait for display sync signal before starting paint.
         sync();
-
-        // SAFETY: `inner.root` is unique because of the `inner.borrow_mut()`.
-        unsafe { Gc::as_mut(&mut inner.root) }.obj_paint()
+        // Paint.
+        self.inner.borrow_mut().obj_component().obj_paint()
     }
 
     /// Run a tracing pass over the component tree. Passed `callback` is called
@@ -421,7 +452,7 @@ extern "C" fn ui_layout_timer(this: Obj, token: Obj) -> Obj {
 extern "C" fn ui_layout_paint(this: Obj) -> Obj {
     let block = || {
         let this: Gc<LayoutObj> = this.try_into()?;
-        let painted = this.obj_paint_if_requested().into();
+        let painted = this.obj_paint().into();
         Ok(painted)
     };
     unsafe { util::try_or_raise(block) }

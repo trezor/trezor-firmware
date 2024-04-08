@@ -12,7 +12,7 @@ from apps.common.authorization import is_set_any_session
 
 
 async def busyscreen() -> None:
-    await Busyscreen(busy_expiry_ms())
+    await Busyscreen(busy_expiry_ms()).get_result()
 
 
 async def homescreen() -> None:
@@ -47,7 +47,7 @@ async def homescreen() -> None:
         notification=notification,
         notification_is_error=notification_is_error,
         hold_to_lock=config.has_pin(),
-    )
+    ).get_result()
     lock_device()
 
 
@@ -61,7 +61,7 @@ async def _lockscreen(screensaver: bool = False) -> None:
         await Lockscreen(
             label=storage.device.get_label(),
             coinjoin_authorized=is_set_any_session(MessageType.AuthorizeCoinJoin),
-        )
+        ).get_result()
     # Otherwise proceed directly to unlock() call. If the device is already unlocked,
     # it should be a no-op storage-wise, but it resets the internal configuration
     # to an unlocked state.

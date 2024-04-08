@@ -3,14 +3,11 @@ from typing import TYPE_CHECKING
 import trezorui2
 from trezor import TR
 from trezor.enums import ButtonRequestType
-from trezor.wire import ActionCancelled
-from trezor.wire.context import wait as ctx_wait
 
-from ..common import interact
-from . import RustLayout, raise_if_not_confirmed
+from ..common import interact, raise_if_not_confirmed
 
 if TYPE_CHECKING:
-    from typing import Callable, Sequence
+    from typing import Awaitable, Callable, Sequence
 
     from trezor.enums import BackupType
 
@@ -42,11 +39,11 @@ def _split_share_into_pages(share_words: Sequence[str], per_page: int = 4) -> li
     return pages
 
 
-async def show_share_words(
+def show_share_words(
     share_words: Sequence[str],
     share_index: int | None = None,
     group_index: int | None = None,
-) -> None:
+) -> Awaitable[None]:
     if share_index is None:
         title = TR.reset__recovery_seed_title
     elif group_index is None:
@@ -58,18 +55,14 @@ async def show_share_words(
 
     pages = _split_share_into_pages(share_words)
 
-    result = await interact(
-        RustLayout(
-            trezorui2.show_share_words(
-                title=title,
-                pages=pages,
-            ),
+    return raise_if_not_confirmed(
+        trezorui2.show_share_words(
+            title=title,
+            pages=pages,
         ),
         "backup_words",
         ButtonRequestType.ResetDevice,
     )
-    if result != CONFIRMED:
-        raise ActionCancelled
 
 
 async def select_word(
@@ -95,16 +88,15 @@ async def select_word(
     while len(words) < 3:
         words.append(words[-1])
 
-    result = await ctx_wait(
-        RustLayout(
-            trezorui2.select_word(
-                title=title,
-                description=TR.reset__select_word_x_of_y_template.format(
-                    checked_index + 1, count
-                ),
-                words=(words[0], words[1], words[2]),
-            )
-        )
+    result = await interact(
+        trezorui2.select_word(
+            title=title,
+            description=TR.reset__select_word_x_of_y_template.format(
+                checked_index + 1, count
+            ),
+            words=(words[0], words[1], words[2]),
+        ),
+        None,
     )
     if __debug__ and isinstance(result, str):
         return result
@@ -112,7 +104,7 @@ async def select_word(
     return words[result]
 
 
-async def slip39_show_checklist(step: int, backup_type: BackupType) -> None:
+def slip39_show_checklist(step: int, backup_type: BackupType) -> Awaitable[None]:
     from trezor.enums import BackupType
 
     assert backup_type in (BackupType.Slip39_Basic, BackupType.Slip39_Advanced)
@@ -131,20 +123,16 @@ async def slip39_show_checklist(step: int, backup_type: BackupType) -> None:
         )
     )
 
-    result = await interact(
-        RustLayout(
-            trezorui2.show_checklist(
-                title=TR.reset__slip39_checklist_title,
-                button=TR.buttons__continue,
-                active=step,
-                items=items,
-            )
+    return raise_if_not_confirmed(
+        trezorui2.show_checklist(
+            title=TR.reset__slip39_checklist_title,
+            button=TR.buttons__continue,
+            active=step,
+            items=items,
         ),
         "slip39_checklist",
         ButtonRequestType.ResetDevice,
     )
-    if result != CONFIRMED:
-        raise ActionCancelled
 
 
 async def _prompt_number(
@@ -156,14 +144,12 @@ async def _prompt_number(
     max_count: int,
     br_name: str,
 ) -> int:
-    num_input = RustLayout(
-        trezorui2.request_number(
-            title=title.upper(),
-            description=description,
-            count=count,
-            min_count=min_count,
-            max_count=max_count,
-        )
+    num_input = trezorui2.request_number(
+        title=title.upper(),
+        description=description,
+        count=count,
+        min_count=min_count,
+        max_count=max_count,
     )
 
     while True:
@@ -171,33 +157,33 @@ async def _prompt_number(
             num_input,
             br_name,
             ButtonRequestType.ResetDevice,
+            raise_on_cancel=None,
         )
         if __debug__:
             if not isinstance(result, tuple):
                 # DebugLink currently can't send number of shares and it doesn't
                 # change the counter either so just use the initial value.
-                result = (result, count)
+                result = result, count
         status, value = result
 
         if status == CONFIRMED:
             assert isinstance(value, int)
             return value
 
-        await ctx_wait(
-            RustLayout(
-                trezorui2.show_simple(
-                    title=None,
-                    description=info(value),
-                    button=TR.buttons__ok_i_understand,
-                )
-            )
+        await interact(
+            trezorui2.show_simple(
+                title=None,
+                description=info(value),
+                button=TR.buttons__ok_i_understand,
+            ),
+            None,
+            raise_on_cancel=None,
         )
-        num_input.request_complete_repaint()
 
 
-async def slip39_prompt_threshold(
+def slip39_prompt_threshold(
     num_of_shares: int, group_id: int | None = None
-) -> int:
+) -> Awaitable[int]:
     count = num_of_shares // 2 + 1
     # min value of share threshold is 2 unless the number of shares is 1
     # number of shares 1 is possible in advanced slip39
@@ -240,7 +226,7 @@ async def slip39_prompt_threshold(
             text += " " + TR.reset__to_form_group_template.format(group_id + 1)
         return text
 
-    return await _prompt_number(
+    return _prompt_number(
         TR.reset__title_set_threshold,
         description,
         info,
@@ -251,7 +237,7 @@ async def slip39_prompt_threshold(
     )
 
 
-async def slip39_prompt_number_of_shares(group_id: int | None = None) -> int:
+def slip39_prompt_number_of_shares(group_id: int | None = None) -> Awaitable[int]:
     count = 5
     min_count = 1
     max_count = 16
@@ -272,7 +258,7 @@ async def slip39_prompt_number_of_shares(group_id: int | None = None) -> int:
     else:
         info = TR.reset__num_of_shares_advanced_info_template.format(group_id + 1)
 
-    return await _prompt_number(
+    return _prompt_number(
         TR.reset__title_set_number_of_shares,
         description,
         lambda i: info,
@@ -283,14 +269,14 @@ async def slip39_prompt_number_of_shares(group_id: int | None = None) -> int:
     )
 
 
-async def slip39_advanced_prompt_number_of_groups() -> int:
+def slip39_advanced_prompt_number_of_groups() -> Awaitable[int]:
     count = 5
     min_count = 2
     max_count = 16
     description = TR.reset__group_description
     info = TR.reset__group_info
 
-    return await _prompt_number(
+    return _prompt_number(
         TR.reset__title_set_number_of_groups,
         lambda i: description,
         lambda i: info,
@@ -301,14 +287,14 @@ async def slip39_advanced_prompt_number_of_groups() -> int:
     )
 
 
-async def slip39_advanced_prompt_group_threshold(num_of_groups: int) -> int:
+def slip39_advanced_prompt_group_threshold(num_of_groups: int) -> Awaitable[int]:
     count = num_of_groups // 2 + 1
     min_count = 1
     max_count = num_of_groups
     description = TR.reset__required_number_of_groups
     info = TR.reset__advanced_group_threshold_info
 
-    return await _prompt_number(
+    return _prompt_number(
         TR.reset__title_set_group_threshold,
         lambda i: description,
         lambda i: info,
@@ -319,51 +305,44 @@ async def slip39_advanced_prompt_group_threshold(num_of_groups: int) -> int:
     )
 
 
-async def show_warning_backup(slip39: bool) -> None:
-    result = await interact(
-        RustLayout(
-            trezorui2.show_info(
-                title=TR.reset__never_make_digital_copy,
-                button=TR.buttons__ok_i_understand,
-                allow_cancel=False,
-            )
+def show_warning_backup(slip39: bool) -> Awaitable[trezorui2.UiResult]:
+    return interact(
+        trezorui2.show_info(
+            title=TR.reset__never_make_digital_copy,
+            button=TR.buttons__ok_i_understand,
+            allow_cancel=False,
         ),
         "backup_warning",
         ButtonRequestType.ResetDevice,
     )
-    if result != CONFIRMED:
-        raise ActionCancelled
 
 
-async def show_success_backup() -> None:
+def show_success_backup() -> Awaitable[None]:
     from . import show_success
 
-    await show_success(
+    return show_success(
         "success_backup",
         TR.reset__use_your_backup,
         TR.reset__your_backup_is_done,
     )
 
 
-async def show_reset_warning(
+def show_reset_warning(
     br_type: str,
     content: str,
     subheader: str | None = None,
     button: str | None = None,
     br_code: ButtonRequestType = ButtonRequestType.Warning,
-) -> None:
+) -> Awaitable[trezorui2.UiResult]:
     button = button or TR.buttons__try_again  # def_arg
-    await raise_if_not_confirmed(
-        interact(
-            RustLayout(
-                trezorui2.show_warning(
-                    title=subheader or "",
-                    description=content,
-                    button=button.upper(),
-                    allow_cancel=False,
-                )
-            ),
-            br_type,
-            br_code,
-        )
+
+    return interact(
+        trezorui2.show_warning(
+            title=subheader or "",
+            description=content,
+            button=button.upper(),
+            allow_cancel=False,
+        ),
+        br_type,
+        br_code,
     )

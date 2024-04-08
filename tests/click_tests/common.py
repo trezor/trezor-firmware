@@ -45,26 +45,24 @@ def get_char_category(char: str) -> PassphraseCategory:
     return PassphraseCategory.SPECIAL
 
 
-def go_next(debug: "DebugLink", wait: bool = False) -> "LayoutContent" | None:
+def go_next(debug: "DebugLink") -> "LayoutContent":
     if debug.model in (models.T2T1, models.T3T1):
-        return debug.click(buttons.OK, wait=wait)  # type: ignore
+        return debug.click(buttons.OK)
     elif debug.model in (models.T2B1,):
-        return debug.press_right(wait=wait)  # type: ignore
+        return debug.press_right()
     else:
         raise RuntimeError("Unknown model")
 
 
-def go_back(
-    debug: "DebugLink", wait: bool = False, r_middle: bool = False
-) -> "LayoutContent" | None:
+def go_back(debug: "DebugLink", r_middle: bool = False) -> "LayoutContent":
     if debug.model in (models.T2T1, models.T3T1):
-        return debug.click(buttons.CANCEL, wait=wait)  # type: ignore
+        return debug.click(buttons.CANCEL)
     elif debug.model in (models.T2B1,):
 
         if r_middle:
-            return debug.press_middle(wait=wait)  # type: ignore
+            return debug.press_middle()
         else:
-            return debug.press_left(wait=wait)  # type: ignore
+            return debug.press_left()
     else:
         raise RuntimeError("Unknown model")
 
@@ -105,10 +103,7 @@ def navigate_to_action_and_press(
         )
 
     # Press or hold
-    if hold_ms:
-        debug.press_middle_htc(1000)
-    else:
-        debug.press_middle(wait=True)
+    debug.press_middle(hold_ms=hold_ms)
 
 
 def _get_action_index(wanted_action: str, all_actions: list[str]) -> int:
@@ -140,17 +135,17 @@ def _move_one_closer(
     if not is_carousel:
         # Simply move according to the index in a closed list
         if index_diff > 0:
-            return debug.press_right(wait=True)
+            return debug.press_right()
         else:
-            return debug.press_left(wait=True)
+            return debug.press_left()
     else:
         # Carousel can move in a circle - over the edges
         # Always move the shortest way
         action_half = len(all_actions) // 2
         if index_diff > action_half or -action_half < index_diff < 0:
-            return debug.press_left(wait=True)
+            return debug.press_left()
         else:
-            return debug.press_right(wait=True)
+            return debug.press_right()
 
 
 def get_possible_btn_texts(path: str) -> str:

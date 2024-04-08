@@ -1,25 +1,16 @@
 from typing import TYPE_CHECKING
 
 import trezorui2
-from trezor import TR, io, loop, ui, utils
+from trezor import TR, ui, utils
 from trezor.enums import ButtonRequestType
 from trezor.wire import ActionCancelled
-from trezor.wire.context import wait as ctx_wait
 
-from ..common import button_request, interact
+from ..common import interact, raise_if_not_confirmed
 
 if TYPE_CHECKING:
-    from typing import Any, Awaitable, Iterable, NoReturn, Sequence, TypeVar
+    from typing import Any, Awaitable, Iterable, NoReturn, Sequence
 
     from ..common import ExceptionType, PropertyType
-
-    T = TypeVar("T")
-
-    LayoutParentType = ui.Layout[T]
-
-else:
-    LayoutParentType = [ui.Layout]
-    T = 0
 
 
 BR_TYPE_OTHER = ButtonRequestType.Other  # global_import_cache
@@ -35,196 +26,9 @@ if __debug__:
     trezorui2.disable_animation(bool(DISABLE_ANIMATION))
 
 
-class RustLayout(LayoutParentType[T]):
-    BACKLIGHT_LEVEL = ui.style.BACKLIGHT_NORMAL
-
-    # pylint: disable=super-init-not-called
-    def __init__(self, layout: trezorui2.LayoutObj[T]):
-        self.layout = layout
-        self.timer = loop.Timer()
-        self.layout.attach_timer_fn(self.set_timer)
-
-    def set_timer(self, token: int, deadline: int) -> None:
-        self.timer.schedule(deadline, token)
-
-    def request_complete_repaint(self) -> None:
-        msg = self.layout.request_complete_repaint()
-        assert msg is None
-
-    def _paint(self) -> None:
-        import storage.cache as storage_cache
-
-        painted = self.layout.paint()
-
-        ui.refresh()
-        if storage_cache.homescreen_shown is not None and painted:
-            storage_cache.homescreen_shown = None
-
-    if __debug__:
-
-        def create_tasks(self) -> tuple[loop.AwaitableTask, ...]:
-            return (
-                self.handle_timers(),
-                self.handle_input_and_rendering(),
-                self.handle_swipe(),
-                self.handle_click_signal(),
-                self.handle_result_signal(),
-            )
-
-        async def handle_result_signal(self) -> None:
-            """Enables sending arbitrary input - ui.Result.
-
-            Waits for `result_signal` and carries it out.
-            """
-            from storage import debug as debug_storage
-
-            from apps.debug import result_signal
-
-            while True:
-                event_id, result = await result_signal()
-                debug_storage.new_layout_event_id = event_id
-                raise ui.Result(result)
-
-        def read_content_into(self, content_store: list[str]) -> None:
-            """Reads all the strings/tokens received from Rust into given list."""
-
-            def callback(*args: Any) -> None:
-                for arg in args:
-                    content_store.append(str(arg))
-
-            content_store.clear()
-            self.layout.trace(callback)
-
-        async def handle_swipe(self):
-            from trezor.enums import DebugSwipeDirection
-
-            from apps.debug import notify_layout_change, swipe_signal
-
-            while True:
-                event_id, direction = await swipe_signal()
-                orig_x = orig_y = 120
-                off_x, off_y = {
-                    DebugSwipeDirection.UP: (0, -30),
-                    DebugSwipeDirection.DOWN: (0, 30),
-                    DebugSwipeDirection.LEFT: (-30, 0),
-                    DebugSwipeDirection.RIGHT: (30, 0),
-                }[direction]
-
-                for event, x, y in (
-                    (io.TOUCH_START, orig_x, orig_y),
-                    (io.TOUCH_MOVE, orig_x + 1 * off_x, orig_y + 1 * off_y),
-                    (io.TOUCH_END, orig_x + 2 * off_x, orig_y + 2 * off_y),
-                ):
-                    msg = self.layout.touch_event(event, x, y)
-                    self._paint()
-                    if msg is not None:
-                        raise ui.Result(msg)
-
-                notify_layout_change(self, event_id)
-
-        async def _click(
-            self,
-            event_id: int | None,
-            x: int,
-            y: int,
-            hold_ms: int | None,
-        ) -> Any:
-            from storage import debug as debug_storage
-            from trezor import workflow
-
-            from apps.debug import notify_layout_change
-
-            self.layout.touch_event(io.TOUCH_START, x, y)
-            self._paint()
-            if hold_ms is not None:
-                await loop.sleep(hold_ms)
-            msg = self.layout.touch_event(io.TOUCH_END, x, y)
-
-            if msg is not None:
-                debug_storage.new_layout_event_id = event_id
-                raise ui.Result(msg)
-
-            # So that these presses will keep trezor awake
-            # (it will not be locked after auto_lock_delay_ms)
-            workflow.idle_timer.touch()
-
-            self._paint()
-            notify_layout_change(self, event_id)
-
-        async def handle_click_signal(self) -> None:
-            """Enables clicking somewhere on the screen.
-
-            Waits for `click_signal` and carries it out.
-            """
-            from apps.debug import click_signal
-
-            while True:
-                event_id, x, y, hold_ms = await click_signal()
-                await self._click(event_id, x, y, hold_ms)
-
-    else:
-
-        def create_tasks(self) -> tuple[loop.AwaitableTask, ...]:
-            return self.handle_timers(), self.handle_input_and_rendering()
-
-    def _first_paint(self) -> None:
-        ui.backlight_fade(ui.style.BACKLIGHT_NONE)
-        self._paint()
-
-        if __debug__ and self.should_notify_layout_change:
-            from storage import debug as debug_storage
-
-            from apps.debug import notify_layout_change
-
-            # notify about change and do not notify again until next await.
-            # (handle_rendering might be called multiple times in a single await,
-            # because of the endless loop in __iter__)
-            self.should_notify_layout_change = False
-
-            # Possibly there is an event ID that caused the layout change,
-            # so notifying with this ID.
-            event_id = None
-            if debug_storage.new_layout_event_id is not None:
-                event_id = debug_storage.new_layout_event_id
-                debug_storage.new_layout_event_id = None
-
-            notify_layout_change(self, event_id)
-
-        # Turn the brightness on again.
-        ui.backlight_fade(self.BACKLIGHT_LEVEL)
-
-    def handle_input_and_rendering(self) -> loop.Task:  # type: ignore [awaitable-is-generator]
-        from trezor import workflow
-
-        touch = loop.wait(io.TOUCH)
-        self._first_paint()
-        while True:
-            # Using `yield` instead of `await` to avoid allocations.
-            event, x, y = yield touch
-            workflow.idle_timer.touch()
-            msg = None
-            if event in (io.TOUCH_START, io.TOUCH_MOVE, io.TOUCH_END):
-                msg = self.layout.touch_event(event, x, y)
-            if msg is not None:
-                raise ui.Result(msg)
-            self._paint()
-
-    def handle_timers(self) -> loop.Task:  # type: ignore [awaitable-is-generator]
-        while True:
-            # Using `yield` instead of `await` to avoid allocations.
-            token = yield self.timer
-            msg = self.layout.timer(token)
-            if msg is not None:
-                raise ui.Result(msg)
-            self._paint()
-
-    def page_count(self) -> int:
-        return self.layout.page_count()
-
-
 def draw_simple(layout: trezorui2.LayoutObj[Any]) -> None:
     # Simple drawing not supported for layouts that set timers.
-    def dummy_set_timer(token: int, deadline: int) -> None:
+    def dummy_set_timer(token: int, duration: int) -> None:
         raise RuntimeError
 
     layout.attach_timer_fn(dummy_set_timer)
@@ -232,14 +36,6 @@ def draw_simple(layout: trezorui2.LayoutObj[Any]) -> None:
     layout.paint()
     ui.refresh()
     ui.backlight_fade(ui.style.BACKLIGHT_NORMAL)
-
-
-async def raise_if_not_confirmed(
-    a: Awaitable[ui.UiResult], exc: Any = ActionCancelled
-) -> None:
-    result = await a
-    if result is not CONFIRMED:
-        raise exc
 
 
 def confirm_action(
@@ -265,22 +61,18 @@ def confirm_action(
         description = description.format(description_param)
 
     return raise_if_not_confirmed(
-        interact(
-            RustLayout(
-                trezorui2.confirm_action(
-                    title=title.upper(),
-                    action=action,
-                    description=description,
-                    verb=verb,
-                    verb_cancel=verb_cancel,
-                    hold=hold,
-                    hold_danger=hold_danger,
-                    reverse=reverse,
-                )
-            ),
-            br_type,
-            br_code,
+        trezorui2.confirm_action(
+            title=title.upper(),
+            action=action,
+            description=description,
+            verb=verb,
+            verb_cancel=verb_cancel,
+            hold=hold,
+            hold_danger=hold_danger,
+            reverse=reverse,
         ),
+        br_type,
+        br_code,
         exc,
     )
 
@@ -298,22 +90,17 @@ def confirm_single(
 
     # Placeholders are coming from translations in form of {0}
     template_str = "{0}"
-    if template_str not in description:
-        template_str = "{}"
+    assert template_str in description
 
     begin, _separator, end = description.partition(template_str)
     return raise_if_not_confirmed(
-        interact(
-            RustLayout(
-                trezorui2.confirm_emphasized(
-                    title=title.upper(),
-                    items=(begin, (True, description_param), end),
-                    verb=verb,
-                )
-            ),
-            br_type,
-            ButtonRequestType.ProtectCall,
-        )
+        trezorui2.confirm_emphasized(
+            title=title.upper(),
+            items=(begin, (True, description_param), end),
+            verb=verb,
+        ),
+        br_type,
+        ButtonRequestType.ProtectCall,
     )
 
 
@@ -324,53 +111,42 @@ def confirm_reset_device(title: str, recovery: bool = False) -> Awaitable[None]:
         button = TR.reset__button_create
 
     return raise_if_not_confirmed(
-        interact(
-            RustLayout(
-                trezorui2.confirm_reset_device(
-                    title=title.upper(),
-                    button=button,
-                )
-            ),
-            "recover_device" if recovery else "setup_device",
-            (
-                ButtonRequestType.ProtectCall
-                if recovery
-                else ButtonRequestType.ResetDevice
-            ),
-        )
+        trezorui2.confirm_reset_device(
+            title=title.upper(),
+            button=button,
+        ),
+        "recover_device" if recovery else "setup_device",
+        ButtonRequestType.ProtectCall if recovery else ButtonRequestType.ResetDevice,
     )
 
 
-# TODO cleanup @ redesign
 async def prompt_backup() -> bool:
     result = await interact(
-        RustLayout(
-            trezorui2.confirm_action(
-                title=TR.words__title_success,
-                action=TR.backup__new_wallet_successfully_created,
-                description=TR.backup__it_should_be_backed_up,
-                verb=TR.buttons__back_up,
-                verb_cancel=TR.buttons__skip,
-            )
+        trezorui2.confirm_action(
+            title=TR.words__title_success,
+            action=TR.backup__new_wallet_successfully_created,
+            description=TR.backup__it_should_be_backed_up,
+            verb=TR.buttons__back_up,
+            verb_cancel=TR.buttons__skip,
         ),
         "backup_device",
         ButtonRequestType.ResetDevice,
+        raise_on_cancel=None,
     )
     if result is CONFIRMED:
         return True
 
     result = await interact(
-        RustLayout(
-            trezorui2.confirm_action(
-                title=TR.words__warning.upper(),
-                action=TR.backup__want_to_skip,
-                description=TR.backup__can_back_up_anytime,
-                verb=TR.buttons__back_up,
-                verb_cancel=TR.buttons__skip,
-            )
+        trezorui2.confirm_action(
+            title=TR.words__warning.upper(),
+            action=TR.backup__want_to_skip,
+            description=TR.backup__can_back_up_anytime,
+            verb=TR.buttons__back_up,
+            verb_cancel=TR.buttons__skip,
         ),
         "backup_device",
         ButtonRequestType.ResetDevice,
+        raise_on_cancel=None,
     )
     return result is CONFIRMED
 
@@ -382,33 +158,25 @@ def confirm_path_warning(path: str, path_type: str | None = None) -> Awaitable[N
         else f"{TR.words__unknown} {path_type.lower()}."
     )
     return raise_if_not_confirmed(
-        interact(
-            RustLayout(
-                trezorui2.show_warning(
-                    title=title,
-                    value=path,
-                    description=TR.words__continue_anyway,
-                    button=TR.buttons__continue,
-                )
-            ),
-            "path_warning",
-            br_code=ButtonRequestType.UnknownDerivationPath,
-        )
+        trezorui2.show_warning(
+            title=title,
+            value=path,
+            description=TR.words__continue_anyway,
+            button=TR.buttons__continue,
+        ),
+        "path_warning",
+        br_code=ButtonRequestType.UnknownDerivationPath,
     )
 
 
 def confirm_homescreen(image: bytes) -> Awaitable[None]:
     return raise_if_not_confirmed(
-        interact(
-            RustLayout(
-                trezorui2.confirm_homescreen(
-                    title=TR.homescreen__title_set,
-                    image=image,
-                )
-            ),
-            "set_homesreen",
-            ButtonRequestType.ProtectCall,
-        )
+        trezorui2.confirm_homescreen(
+            title=TR.homescreen__title_set,
+            image=image,
+        ),
+        "set_homesreen",
+        ButtonRequestType.ProtectCall,
     )
 
 
@@ -440,26 +208,21 @@ async def show_address(
     elif details_title is None:
         details_title = title
 
-    layout = RustLayout(
-        trezorui2.confirm_address(
-            title=title,
-            data=address,
-            description=network or "",
-            extra=None,
-            chunkify=chunkify,
-        )
-    )
-
     while True:
-        if send_button_request:
-            send_button_request = False
-            await button_request(
-                br_type,
-                br_code,
-                pages=layout.page_count(),
-            )
-        layout.request_complete_repaint()
-        result = await ctx_wait(layout)
+        result = await interact(
+            trezorui2.confirm_address(
+                title=title,
+                data=address,
+                description=network or "",
+                extra=None,
+                chunkify=chunkify,
+            ),
+            br_type if send_button_request else None,
+            br_code,
+            raise_on_cancel=None,
+        )
+
+        send_button_request = False
 
         # User pressed right button.
         if result is CONFIRMED:
@@ -477,24 +240,26 @@ async def show_address(
                 )
                 return result
 
-            result = await ctx_wait(
-                RustLayout(
-                    trezorui2.show_address_details(
-                        qr_title=title,
-                        address=address if address_qr is None else address_qr,
-                        case_sensitive=case_sensitive,
-                        details_title=details_title,
-                        account=account,
-                        path=path,
-                        xpubs=[(xpub_title(i), xpub) for i, xpub in enumerate(xpubs)],
-                    )
-                )
+            result = await interact(
+                trezorui2.show_address_details(
+                    qr_title=title,
+                    address=address if address_qr is None else address_qr,
+                    case_sensitive=case_sensitive,
+                    details_title=details_title,
+                    account=account,
+                    path=path,
+                    xpubs=[(xpub_title(i), xpub) for i, xpub in enumerate(xpubs)],
+                ),
+                None,
+                raise_on_cancel=None,
             )
             assert result is CANCELLED
 
         else:
-            result = await ctx_wait(
-                RustLayout(trezorui2.show_mismatch(title=mismatch_title))
+            result = await interact(
+                trezorui2.show_mismatch(title=mismatch_title),
+                None,
+                raise_on_cancel=None,
             )
             assert result in (CONFIRMED, CANCELLED)
             # Right button aborts action, left goes back to showing address.
@@ -534,17 +299,17 @@ async def show_error_and_raise(
 ) -> NoReturn:
     button = button or TR.buttons__try_again  # def_arg
     await interact(
-        RustLayout(
-            trezorui2.show_error(
-                title=subheader or "",
-                description=content,
-                button=button.upper(),
-                allow_cancel=False,
-            )
+        trezorui2.show_error(
+            title=subheader or "",
+            description=content,
+            button=button.upper(),
+            allow_cancel=False,
         ),
         br_type,
         BR_TYPE_OTHER,
+        raise_on_cancel=None,
     )
+    # always raise regardless of result
     raise exc
 
 
@@ -557,17 +322,13 @@ def show_warning(
 ) -> Awaitable[None]:
     button = button or TR.buttons__continue  # def_arg
     return raise_if_not_confirmed(
-        interact(
-            RustLayout(
-                trezorui2.show_warning(
-                    title=content,
-                    description=subheader or "",
-                    button=button.upper(),
-                )
-            ),
-            br_type,
-            br_code,
-        )
+        trezorui2.show_warning(
+            title=content,
+            description=subheader or "",
+            button=button.upper(),
+        ),
+        br_type,
+        br_code,
     )
 
 
@@ -579,18 +340,14 @@ def show_success(
 ) -> Awaitable[None]:
     button = button or TR.buttons__continue  # def_arg
     return raise_if_not_confirmed(
-        interact(
-            RustLayout(
-                trezorui2.show_success(
-                    title=content,
-                    description=subheader or "",
-                    button=button.upper(),
-                    allow_cancel=False,
-                )
-            ),
-            br_type,
-            ButtonRequestType.Success,
-        )
+        trezorui2.show_success(
+            title=content,
+            description=subheader or "",
+            button=button.upper(),
+            allow_cancel=False,
+        ),
+        br_type,
+        ButtonRequestType.Success,
     )
 
 
@@ -618,27 +375,24 @@ async def confirm_output(
         recipient_title = TR.send__title_sending_to
 
     while True:
-        result = await interact(
-            RustLayout(
-                trezorui2.confirm_value(
-                    title=recipient_title.upper(),
-                    subtitle=address_label,
-                    description=None,
-                    value=address,
-                    verb=TR.buttons__continue,
-                    hold=False,
-                    info_button=False,
-                    chunkify=chunkify,
-                )
+        # if the user cancels here, raise ActionCancelled (by default)
+        await interact(
+            trezorui2.confirm_value(
+                title=recipient_title.upper(),
+                subtitle=address_label,
+                description=None,
+                value=address,
+                verb=TR.buttons__continue,
+                hold=False,
+                info_button=False,
+                chunkify=chunkify,
             ),
             "confirm_output",
             br_code,
         )
-        if result is not CONFIRMED:
-            raise ActionCancelled
 
-        result = await interact(
-            RustLayout(
+        try:
+            await interact(
                 trezorui2.confirm_value(
                     title=amount_title.upper(),
                     subtitle=None,
@@ -648,12 +402,14 @@ async def confirm_output(
                     verb_cancel="^",
                     hold=hold,
                     info_button=False,
-                )
-            ),
-            "confirm_output",
-            br_code,
-        )
-        if result is CONFIRMED:
+                ),
+                "confirm_output",
+                br_code,
+            )
+        except ActionCancelled:
+            # if the user cancels here, go back to confirm_value
+            continue
+        else:
             return
 
 
@@ -668,14 +424,12 @@ async def should_show_payment_request_details(
     Raises ActionCancelled if the user cancels.
     """
     result = await interact(
-        RustLayout(
-            trezorui2.confirm_with_info(
-                title=TR.send__title_sending,
-                items=[(ui.NORMAL, f"{amount} to\n{recipient_name}")]
-                + [(ui.NORMAL, memo) for memo in memos],
-                button=TR.buttons__confirm,
-                info_button=TR.buttons__details,
-            )
+        trezorui2.confirm_with_info(
+            title=TR.send__title_sending,
+            items=[(ui.NORMAL, f"{amount} to\n{recipient_name}")]
+            + [(ui.NORMAL, memo) for memo in memos],
+            button=TR.buttons__confirm,
+            info_button=TR.buttons__details,
         ),
         "confirm_payment_request",
         ButtonRequestType.ConfirmOutput,
@@ -707,13 +461,11 @@ async def should_show_more(
         confirm = TR.buttons__confirm
 
     result = await interact(
-        RustLayout(
-            trezorui2.confirm_with_info(
-                title=title.upper(),
-                items=para,
-                button=confirm.upper(),
-                info_button=button_text.upper(),
-            )
+        trezorui2.confirm_with_info(
+            title=title.upper(),
+            items=para,
+            button=confirm.upper(),
+            info_button=button_text.upper(),
         ),
         br_type,
         br_code,
@@ -724,7 +476,6 @@ async def should_show_more(
     elif result is INFO:
         return True
     else:
-        assert result is CANCELLED
         raise ActionCancelled
 
 
@@ -735,12 +486,17 @@ async def _confirm_ask_pagination(
     description: str,
     br_code: ButtonRequestType,
 ) -> None:
-    paginated: ui.Layout | None = None
     # TODO: make should_show_more/confirm_more accept bytes directly
-    if isinstance(data, bytes):
+    if isinstance(data, (bytes, bytearray, memoryview)):
         from ubinascii import hexlify
 
         data = hexlify(data).decode()
+
+    confirm_more_layout = trezorui2.confirm_more(
+        title=title,
+        button=TR.buttons__close,
+        items=[(ui.MONO, data)],
+    )
     while True:
         if not await should_show_more(
             title,
@@ -750,19 +506,7 @@ async def _confirm_ask_pagination(
         ):
             return
 
-        if paginated is None:
-            paginated = RustLayout(
-                trezorui2.confirm_more(
-                    title=title,
-                    button=TR.buttons__close,
-                    items=[(ui.MONO, data)],
-                )
-            )
-        else:
-            paginated.request_complete_repaint()
-
-        result = await interact(paginated, br_type, br_code)
-        assert result in (CONFIRMED, CANCELLED)
+        await interact(confirm_more_layout, br_type, br_code, raise_on_cancel=None)
 
     assert False
 
@@ -781,17 +525,16 @@ def confirm_blob(
 ) -> Awaitable[None]:
     verb = verb or TR.buttons__confirm  # def_arg
     title = title.upper()
-    layout = RustLayout(
-        trezorui2.confirm_blob(
-            title=title,
-            description=description,
-            data=data,
-            extra=None,
-            hold=hold,
-            verb=verb,
-            verb_cancel=verb_cancel,
-            chunkify=chunkify,
-        )
+    description = description or ""
+    layout = trezorui2.confirm_blob(
+        title=title,
+        description=description,
+        data=data,
+        extra=None,
+        hold=hold,
+        verb=verb,
+        verb_cancel=verb_cancel,
+        chunkify=chunkify,
     )
 
     if ask_pagination and layout.page_count() > 1:
@@ -799,13 +542,7 @@ def confirm_blob(
         return _confirm_ask_pagination(br_type, title, data, description or "", br_code)
 
     else:
-        return raise_if_not_confirmed(
-            interact(
-                layout,
-                br_type,
-                br_code,
-            )
-        )
+        return raise_if_not_confirmed(layout, br_type, br_code)
 
 
 def confirm_address(
@@ -878,38 +615,32 @@ def confirm_value(
     """General confirmation dialog, used by many other confirm_* functions."""
 
     if not verb and not hold:
-        raise ValueError("Either verb or hold=True must be set")
+        raise ValueError  # Either verb or hold=True must be set
 
     if verb:
         verb = verb.upper()
 
     info_items = info_items or []
-    info_layout = RustLayout(
-        trezorui2.show_info_with_cancel(
-            title=info_title if info_title else TR.words__title_information,
-            items=info_items,
-            chunkify=chunkify_info,
-        )
+    info_layout = trezorui2.show_info_with_cancel(
+        title=info_title if info_title else TR.words__title_information,
+        items=info_items,
+        chunkify=chunkify_info,
     )
 
-    return raise_if_not_confirmed(
-        with_info(
-            RustLayout(
-                trezorui2.confirm_value(
-                    title=title.upper(),
-                    subtitle=subtitle,
-                    description=description,
-                    value=value,
-                    verb=verb,
-                    hold=hold,
-                    info_button=bool(info_items),
-                    text_mono=value_text_mono,
-                )
-            ),
-            info_layout,
-            br_type,
-            br_code,
-        )
+    return with_info(
+        trezorui2.confirm_value(
+            title=title.upper(),
+            subtitle=subtitle,
+            description=description,
+            value=value,
+            verb=verb,
+            hold=hold,
+            info_button=bool(info_items),
+            text_mono=value_text_mono,
+        ),
+        info_layout,
+        br_type,
+        br_code,
     )
 
 
@@ -924,17 +655,13 @@ def confirm_properties(
     items = [(prop[0], prop[1], isinstance(prop[1], bytes)) for prop in props]
 
     return raise_if_not_confirmed(
-        interact(
-            RustLayout(
-                trezorui2.confirm_properties(
-                    title=title.upper(),
-                    items=items,
-                    hold=hold,
-                )
-            ),
-            br_type,
-            br_code,
-        )
+        trezorui2.confirm_properties(
+            title=title.upper(),
+            items=items,
+            hold=hold,
+        ),
+        br_type,
+        br_code,
     )
 
 
@@ -982,23 +709,17 @@ def confirm_summary(
 ) -> Awaitable[None]:
     title = title or TR.words__title_summary  # def_arg
 
-    total_layout = RustLayout(
-        trezorui2.confirm_total(
-            title=title.upper(),
-            items=items,
-            info_button=bool(info_items),
-        )
+    total_layout = trezorui2.confirm_total(
+        title=title.upper(),
+        items=items,
+        info_button=bool(info_items),
     )
     info_items = info_items or []
-    info_layout = RustLayout(
-        trezorui2.show_info_with_cancel(
-            title=info_title.upper() if info_title else TR.words__title_information,
-            items=info_items,
-        )
+    info_layout = trezorui2.show_info_with_cancel(
+        title=info_title.upper() if info_title else TR.words__title_information,
+        items=info_items,
     )
-    return raise_if_not_confirmed(
-        with_info(total_layout, info_layout, br_type, br_code)
-    )
+    return with_info(total_layout, info_layout, br_type, br_code)
 
 
 if not utils.BITCOIN_ONLY:
@@ -1012,22 +733,18 @@ if not utils.BITCOIN_ONLY:
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
         chunkify: bool = False,
     ) -> None:
-        total_layout = RustLayout(
-            trezorui2.confirm_total(
-                title=TR.words__title_summary,
-                items=[
-                    (f"{TR.words__amount}:", total_amount),
-                    (TR.send__maximum_fee, maximum_fee),
-                ],
-                info_button=True,
-                cancel_arrow=True,
-            )
+        total_layout = trezorui2.confirm_total(
+            title=TR.words__title_summary,
+            items=[
+                (f"{TR.words__amount}:", total_amount),
+                (TR.send__maximum_fee, maximum_fee),
+            ],
+            info_button=True,
+            cancel_arrow=True,
         )
-        info_layout = RustLayout(
-            trezorui2.show_info_with_cancel(
-                title=TR.confirm_total__title_fee,
-                items=items,
-            )
+        info_layout = trezorui2.show_info_with_cancel(
+            title=TR.confirm_total__title_fee,
+            items=items,
         )
 
         while True:
@@ -1041,13 +758,11 @@ if not utils.BITCOIN_ONLY:
             )
 
             try:
-                total_layout.request_complete_repaint()
-                await raise_if_not_confirmed(
-                    with_info(total_layout, info_layout, br_type, br_code)
-                )
-                break
+                await with_info(total_layout, info_layout, br_type, br_code)
             except ActionCancelled:
                 continue
+            else:
+                break
 
     async def confirm_ethereum_staking_tx(
         title: str,
@@ -1116,19 +831,15 @@ if not utils.BITCOIN_ONLY:
 
 def confirm_joint_total(spending_amount: str, total_amount: str) -> Awaitable[None]:
     return raise_if_not_confirmed(
-        interact(
-            RustLayout(
-                trezorui2.confirm_total(
-                    title=TR.send__title_joint_transaction,
-                    items=[
-                        (TR.send__you_are_contributing, spending_amount),
-                        (TR.send__to_the_total_amount, total_amount),
-                    ],
-                )
-            ),
-            "confirm_joint_total",
-            ButtonRequestType.SignTx,
-        )
+        trezorui2.confirm_total(
+            title=TR.send__title_joint_transaction,
+            items=[
+                (TR.send__you_are_contributing, spending_amount),
+                (TR.send__to_the_total_amount, total_amount),
+            ],
+        ),
+        "confirm_joint_total",
+        ButtonRequestType.SignTx,
     )
 
 
@@ -1171,68 +882,62 @@ async def confirm_modify_output(
     amount_change: str,
     amount_new: str,
 ) -> None:
-    address_layout = RustLayout(
-        trezorui2.confirm_blob(
-            title=TR.modify_amount__title,
-            data=address,
-            verb=TR.buttons__continue,
-            verb_cancel=None,
-            description=f"{TR.words__address}:",
-            extra=None,
-        )
-    )
-    modify_layout = RustLayout(
-        trezorui2.confirm_modify_output(
-            sign=sign,
-            amount_change=amount_change,
-            amount_new=amount_new,
-        )
-    )
-
     send_button_request = True
     while True:
-        if send_button_request:
-            await button_request(
-                "modify_output",
-                ButtonRequestType.ConfirmOutput,
-                address_layout.page_count(),
-            )
-        address_layout.request_complete_repaint()
-        await raise_if_not_confirmed(ctx_wait(address_layout))
+        # if the user cancels here, raise ActionCancelled (by default)
+        await interact(
+            trezorui2.confirm_blob(
+                title="MODIFY AMOUNT",
+                data=address,
+                verb="CONTINUE",
+                verb_cancel=None,
+                description="Address:",
+                extra=None,
+            ),
+            "modify_output" if send_button_request else None,
+            ButtonRequestType.ConfirmOutput,
+        )
 
-        if send_button_request:
+        try:
+            await interact(
+                trezorui2.confirm_modify_output(
+                    sign=sign,
+                    amount_change=amount_change,
+                    amount_new=amount_new,
+                ),
+                "modify_output" if send_button_request else None,
+                ButtonRequestType.ConfirmOutput,
+            )
+        except ActionCancelled:
+            # if the user cancels here, go back to confirm_blob
             send_button_request = False
-            await button_request(
-                "modify_output",
-                ButtonRequestType.ConfirmOutput,
-                modify_layout.page_count(),
-            )
-        modify_layout.request_complete_repaint()
-        result = await ctx_wait(modify_layout)
-
-        if result is CONFIRMED:
-            break
+            continue
+        else:
+            return
 
 
 async def with_info(
-    main_layout: RustLayout[T],
-    info_layout: RustLayout[Any],
+    main_layout: ui.LayoutObj[ui.UiResult],
+    info_layout: ui.LayoutObj[Any],
     br_type: str,
     br_code: ButtonRequestType,
-) -> T:
-    await button_request(br_type, br_code, pages=main_layout.page_count())
+) -> None:
+    send_button_request = True
 
     while True:
-        result = await ctx_wait(main_layout)
+        result = await interact(
+            main_layout, br_type if send_button_request else None, br_code
+        )
+        # raises on cancel
+        send_button_request = False
 
-        if result is INFO:
-            info_layout.request_complete_repaint()
-            result = await ctx_wait(info_layout)
-            assert result is CANCELLED
-            main_layout.request_complete_repaint()
+        if result is CONFIRMED:
+            return
+        elif result is INFO:
+            await interact(info_layout, None, raise_on_cancel=None)
             continue
         else:
-            return result
+            raise RuntimeError  # unexpected result
 
 
 def confirm_modify_fee(
@@ -1242,41 +947,31 @@ def confirm_modify_fee(
     total_fee_new: str,
     fee_rate_amount: str | None = None,
 ) -> Awaitable[None]:
-    fee_layout = RustLayout(
-        trezorui2.confirm_modify_fee(
-            title=title.upper(),
-            sign=sign,
-            user_fee_change=user_fee_change,
-            total_fee_new=total_fee_new,
-            fee_rate_amount=fee_rate_amount,
-        )
+    fee_layout = trezorui2.confirm_modify_fee(
+        title=title.upper(),
+        sign=sign,
+        user_fee_change=user_fee_change,
+        total_fee_new=total_fee_new,
+        fee_rate_amount=fee_rate_amount,
     )
     items: list[tuple[str, str]] = []
     if fee_rate_amount:
         items.append((TR.bitcoin__new_fee_rate, fee_rate_amount))
-    info_layout = RustLayout(
-        trezorui2.show_info_with_cancel(
-            title=TR.confirm_total__title_fee,
-            items=items,
-        )
+    info_layout = trezorui2.show_info_with_cancel(
+        title=TR.confirm_total__title_fee,
+        items=items,
     )
-    return raise_if_not_confirmed(
-        with_info(fee_layout, info_layout, "modify_fee", ButtonRequestType.SignTx)
-    )
+    return with_info(fee_layout, info_layout, "modify_fee", ButtonRequestType.SignTx)
 
 
 def confirm_coinjoin(max_rounds: int, max_fee_per_vbyte: str) -> Awaitable[None]:
     return raise_if_not_confirmed(
-        interact(
-            RustLayout(
-                trezorui2.confirm_coinjoin(
-                    max_rounds=str(max_rounds),
-                    max_feerate=max_fee_per_vbyte,
-                )
-            ),
-            "coinjoin_final",
-            BR_TYPE_OTHER,
-        )
+        trezorui2.confirm_coinjoin(
+            max_rounds=str(max_rounds),
+            max_feerate=max_fee_per_vbyte,
+        ),
+        "coinjoin_final",
+        BR_TYPE_OTHER,
     )
 
 
@@ -1308,15 +1003,13 @@ async def confirm_signverify(
         address_title = TR.sign_message__confirm_address
         br_type = "sign_message"
 
-    address_layout = RustLayout(
-        trezorui2.confirm_address(
-            title=address_title,
-            data=address,
-            description="",
-            verb=TR.buttons__continue,
-            extra=None,
-            chunkify=chunkify,
-        )
+    address_layout = trezorui2.confirm_address(
+        title=address_title,
+        data=address,
+        description="",
+        verb=TR.buttons__continue,
+        extra=None,
+        chunkify=chunkify,
     )
 
     items: list[tuple[str, str]] = []
@@ -1331,50 +1024,45 @@ async def confirm_signverify(
         )
     )
 
-    info_layout = RustLayout(
-        trezorui2.show_info_with_cancel(
-            title=TR.words__title_information,
-            items=items,
-            horizontal=True,
-        )
+    info_layout = trezorui2.show_info_with_cancel(
+        title=TR.words__title_information,
+        items=items,
+        horizontal=True,
     )
 
-    message_layout = RustLayout(
-        trezorui2.confirm_blob(
-            title=TR.sign_message__confirm_message,
-            description=None,
-            data=message,
-            extra=None,
-            hold=not verify,
-            verb=TR.buttons__confirm if verify else None,
-        )
+    message_layout = trezorui2.confirm_blob(
+        title=TR.sign_message__confirm_message,
+        description=None,
+        data=message,
+        extra=None,
+        hold=not verify,
+        verb=TR.buttons__confirm if verify else None,
     )
 
     while True:
-        result = await with_info(
-            address_layout, info_layout, br_type, br_code=BR_TYPE_OTHER
-        )
-        if result is not CONFIRMED:
-            result = await ctx_wait(
-                RustLayout(trezorui2.show_mismatch(title=TR.addr_mismatch__mismatch))
+        try:
+            await with_info(address_layout, info_layout, br_type, br_code=BR_TYPE_OTHER)
+        except ActionCancelled:
+            result = await interact(
+                trezorui2.show_mismatch(title=TR.addr_mismatch__mismatch),
+                None,
+                raise_on_cancel=None,
             )
             assert result in (CONFIRMED, CANCELLED)
             # Right button aborts action, left goes back to showing address.
             if result is CONFIRMED:
                 raise ActionCancelled
             else:
-                address_layout.request_complete_repaint()
                 continue
 
-        message_layout.request_complete_repaint()
-        result = await interact(message_layout, br_type, BR_TYPE_OTHER)
+        result = await interact(
+            message_layout, br_type, BR_TYPE_OTHER, raise_on_cancel=None
+        )
         if result is CONFIRMED:
             break
 
-        address_layout.request_complete_repaint()
 
-
-def show_error_popup(
+def error_popup(
     title: str,
     description: str,
     subtitle: str | None = None,
@@ -1382,22 +1070,20 @@ def show_error_popup(
     *,
     button: str = "",
     timeout_ms: int = 0,
-) -> Awaitable[None]:
+) -> ui.LayoutObj[None]:
     if not button and not timeout_ms:
         raise ValueError("Either button or timeout_ms must be set")
 
     if subtitle:
         title += f"\n{subtitle}"
-    layout = RustLayout(
-        trezorui2.show_error(
-            title=title,
-            description=description.format(description_param),
-            button=button,
-            time_ms=timeout_ms,
-            allow_cancel=False,
-        )
+    layout = trezorui2.show_error(
+        title=title,
+        description=description.format(description_param),
+        button=button,
+        time_ms=timeout_ms,
+        allow_cancel=False,
     )
-    return layout  # type: ignore [Expression of type "RustLayout[UiResult]" cannot be assigned to return type "Awaitable[None]"]
+    return layout  # type: ignore [Expression of type "LayoutObj[UiResult]" cannot be assigned to return type "LayoutObj[None]"]
 
 
 def request_passphrase_on_host() -> None:
@@ -1415,17 +1101,11 @@ def show_wait_text(message: str) -> None:
 
 async def request_passphrase_on_device(max_len: int) -> str:
     result = await interact(
-        RustLayout(
-            trezorui2.request_passphrase(
-                prompt=TR.passphrase__title_enter, max_len=max_len
-            )
-        ),
+        trezorui2.request_passphrase(prompt="Enter passphrase", max_len=max_len),
         "passphrase_device",
         ButtonRequestType.PassphraseEntry,
+        raise_on_cancel=ActionCancelled("Passphrase entry cancelled"),
     )
-    if result is CANCELLED:
-        raise ActionCancelled("Passphrase entry cancelled")
-
     assert isinstance(result, str)
     return result
 
@@ -1446,19 +1126,16 @@ async def request_pin_on_device(
         subprompt = f"{attempts_remaining} {TR.pin__tries_left}"
 
     result = await interact(
-        RustLayout(
-            trezorui2.request_pin(
-                prompt=prompt,
-                subprompt=subprompt,
-                allow_cancel=allow_cancel,
-                wrong_pin=wrong_pin,
-            )
+        trezorui2.request_pin(
+            prompt=prompt,
+            subprompt=subprompt,
+            allow_cancel=allow_cancel,
+            wrong_pin=wrong_pin,
         ),
         "pin_device",
         ButtonRequestType.PinEntry,
+        raise_on_cancel=PinCancelled,
     )
-    if result is CANCELLED:
-        raise PinCancelled
     assert isinstance(result, str)
     return result
 
@@ -1468,23 +1145,31 @@ async def confirm_reenter_pin(is_wipe_code: bool = False) -> None:
     pass
 
 
-async def pin_mismatch_popup(is_wipe_code: bool = False) -> None:
-    await button_request("pin_mismatch", code=BR_TYPE_OTHER)
+def pin_mismatch_popup(is_wipe_code: bool = False) -> Awaitable[None]:
     title = TR.wipe_code__wipe_code_mismatch if is_wipe_code else TR.pin__pin_mismatch
     description = TR.wipe_code__mismatch if is_wipe_code else TR.pin__mismatch
-    return await show_error_popup(
-        title,
-        description,
-        button=TR.buttons__try_again,
+    return interact(
+        error_popup(
+            title,
+            description,
+            button=TR.buttons__try_again,
+        ),
+        "pin_mismatch",
+        BR_TYPE_OTHER,
+        raise_on_cancel=None,
     )
 
 
-async def wipe_code_same_as_pin_popup() -> None:
-    await button_request("wipe_code_same_as_pin", code=BR_TYPE_OTHER)
-    return await show_error_popup(
-        TR.wipe_code__invalid,
-        TR.wipe_code__diff_from_pin,
-        button=TR.buttons__try_again,
+def wipe_code_same_as_pin_popup() -> Awaitable[None]:
+    return interact(
+        error_popup(
+            TR.wipe_code__invalid,
+            TR.wipe_code__diff_from_pin,
+            button=TR.buttons__try_again,
+        ),
+        "wipe_code_same_as_pin",
+        BR_TYPE_OTHER,
+        raise_on_cancel=None,
     )
 
 
@@ -1496,32 +1181,24 @@ def confirm_set_new_pin(
     br_code: ButtonRequestType = BR_TYPE_OTHER,
 ) -> Awaitable[None]:
     return raise_if_not_confirmed(
-        interact(
-            RustLayout(
-                trezorui2.confirm_emphasized(
-                    title=title.upper(),
-                    items=(
-                        (True, description + "\n\n"),
-                        information,
-                    ),
-                    verb=TR.buttons__turn_on,
-                )
+        trezorui2.confirm_emphasized(
+            title=title.upper(),
+            items=(
+                (True, description + "\n\n"),
+                information,
             ),
-            br_type,
-            br_code,
-        )
+            verb=TR.buttons__turn_on,
+        ),
+        br_type,
+        br_code,
     )
 
 
 def confirm_firmware_update(description: str, fingerprint: str) -> Awaitable[None]:
     return raise_if_not_confirmed(
-        interact(
-            RustLayout(
-                trezorui2.confirm_firmware_update(
-                    description=description, fingerprint=fingerprint
-                )
-            ),
-            "firmware_update",
-            BR_TYPE_OTHER,
-        )
+        trezorui2.confirm_firmware_update(
+            description=description, fingerprint=fingerprint
+        ),
+        "firmware_update",
+        BR_TYPE_OTHER,
     )

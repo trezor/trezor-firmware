@@ -95,37 +95,35 @@ def prepare(
     elif situation == Situation.PIN_SETUP:
         # Set new PIN
         device_handler.run(device.change_pin)  # type: ignore
-        TR.assert_in(debug.wait_layout().text_content(), "pin__turn_on")
+        TR.assert_in(debug.read_layout().text_content(), "pin__turn_on")
         if debug.model in (models.T2T1, models.T3T1):
             go_next(debug)
         elif debug.model in (models.T2B1,):
-            go_next(debug, wait=True)
-            go_next(debug, wait=True)
-            go_next(debug, wait=True)
-            go_next(debug, wait=True)
+            go_next(debug)
+            go_next(debug)
+            go_next(debug)
+            go_next(debug)
     elif situation == Situation.PIN_CHANGE:
         # Change PIN
         device_handler.run(device.change_pin)  # type: ignore
         _input_see_confirm(debug, old_pin)
-        TR.assert_in(debug.wait_layout().text_content(), "pin__change")
-        go_next(debug, wait=True)
+        TR.assert_in(debug.read_layout().text_content(), "pin__change")
+        go_next(debug)
         _input_see_confirm(debug, old_pin)
     elif situation == Situation.WIPE_CODE_SETUP:
         # Set wipe code
         device_handler.run(device.change_wipe_code)  # type: ignore
         if old_pin:
             _input_see_confirm(debug, old_pin)
-        TR.assert_in(debug.wait_layout().text_content(), "wipe_code__turn_on")
-        go_next(debug, wait=True)
+        TR.assert_in(debug.read_layout().text_content(), "wipe_code__turn_on")
+        go_next(debug)
         if debug.model in (models.T2B1,):
-            go_next(debug, wait=True)
-            go_next(debug, wait=True)
-            go_next(debug, wait=True)
+            go_next(debug)
+            go_next(debug)
+            go_next(debug)
         if old_pin:
-            debug.wait_layout()
             _input_see_confirm(debug, old_pin)
 
-    debug.wait_layout()
     _assert_pin_entry(debug)
     yield debug
     go_next(debug)
@@ -146,7 +144,7 @@ def _input_pin(debug: "DebugLink", pin: str, check: bool = False) -> None:
         for digit in pin:
             digit_index = digits_order.index(digit)
             coords = buttons.pin_passphrase_index(digit_index)
-            debug.click(coords, wait=True)
+            debug.click(coords)
     elif debug.model in (models.T2B1,):
         for digit in pin:
             navigate_to_action_and_press(debug, digit, TR_PIN_ACTIONS)
@@ -159,7 +157,7 @@ def _input_pin(debug: "DebugLink", pin: str, check: bool = False) -> None:
 def _see_pin(debug: "DebugLink") -> None:
     """Navigate to "SHOW" and press it"""
     if debug.model in (models.T2T1, models.T3T1):
-        debug.click(buttons.TOP_ROW, wait=True)
+        debug.click(buttons.TOP_ROW)
     elif debug.model in (models.T2B1,):
         navigate_to_action_and_press(debug, SHOW, TR_PIN_ACTIONS)
 
@@ -171,7 +169,7 @@ def _delete_pin(debug: "DebugLink", digits_to_delete: int, check: bool = True) -
 
     for _ in range(digits_to_delete):
         if debug.model in (models.T2T1, models.T3T1):
-            debug.click(buttons.pin_passphrase_grid(9), wait=True)
+            debug.click(buttons.pin_passphrase_grid(9))
         elif debug.model in (models.T2B1,):
             navigate_to_action_and_press(debug, DELETE, TR_PIN_ACTIONS)
 
@@ -183,7 +181,7 @@ def _delete_pin(debug: "DebugLink", digits_to_delete: int, check: bool = True) -
 def _delete_all(debug: "DebugLink", check: bool = True) -> None:
     """Navigate to "DELETE" and hold it until all digits are deleted"""
     if debug.model in (models.T2T1, models.T3T1):
-        debug.click_hold(buttons.pin_passphrase_grid(9), hold_ms=1500)
+        debug.click(buttons.pin_passphrase_grid(9), hold_ms=1500)
     elif debug.model in (models.T2B1,):
         navigate_to_action_and_press(debug, DELETE, TR_PIN_ACTIONS, hold_ms=1000)
 
@@ -202,7 +200,7 @@ def _cancel_pin(debug: "DebugLink") -> None:
 def _confirm_pin(debug: "DebugLink") -> None:
     """Navigate to "ENTER" and press it"""
     if debug.model in (models.T2T1, models.T3T1):
-        debug.click(buttons.pin_passphrase_grid(11), wait=True)
+        debug.click(buttons.pin_passphrase_grid(11))
     elif debug.model in (models.T2B1,):
         navigate_to_action_and_press(debug, ENTER, TR_PIN_ACTIONS)
 
@@ -218,7 +216,7 @@ def _enter_two_times(debug: "DebugLink", pin1: str, pin2: str) -> None:
 
     if debug.model in (models.T2B1,):
         # Please re-enter
-        go_next(debug, wait=True)
+        go_next(debug)
 
     _input_see_confirm(debug, pin2)
 
@@ -342,7 +340,7 @@ def test_wipe_code_same_as_pin(device_handler: "BackgroundDeviceHandler"):
     with prepare(device_handler, Situation.WIPE_CODE_SETUP, old_pin="1") as debug:
         _input_see_confirm(debug, "1")
         # Try again
-        go_next(debug, wait=True)
+        go_next(debug)
         _enter_two_times(debug, "2", "2")
 
 

@@ -1,42 +1,60 @@
 from typing import TYPE_CHECKING
 
-from trezor import log, workflow
+import trezorui2
+from trezor import log, ui, workflow
 from trezor.enums import ButtonRequestType
 from trezor.messages import ButtonAck, ButtonRequest
-from trezor.wire import context
+from trezor.wire import ActionCancelled, context
 
 if TYPE_CHECKING:
-    from typing import Awaitable, Protocol, TypeVar
+    from typing import Awaitable, Callable, TypeVar
 
-    T = TypeVar("T")
-
-    LayoutType = Awaitable
     PropertyType = tuple[str | None, str | bytes | None]
     ExceptionType = BaseException | type[BaseException]
 
-    class ProgressLayout(Protocol):
-        def report(self, value: int, description: str | None = None) -> None: ...
+    InfoFunc = Callable[[], Awaitable[None]]
+
+    T = TypeVar("T")
 
 
-async def button_request(
+async def _button_request(
     br_type: str,
     code: ButtonRequestType = ButtonRequestType.Other,
-    pages: int | None = None,
+    pages: int = 0,
 ) -> None:
+    workflow.close_others()
     if __debug__:
         log.debug(__name__, "ButtonRequest.type=%s", br_type)
-    workflow.close_others()
-    await context.maybe_call(ButtonRequest(code=code, pages=pages), ButtonAck)
+    await context.maybe_call(ButtonRequest(code=code, pages=pages or None), ButtonAck)
 
 
 async def interact(
-    layout: LayoutType[T],
-    br_type: str,
+    layout_obj: ui.LayoutObj[T],
+    br_type: str | None,
     br_code: ButtonRequestType = ButtonRequestType.Other,
+    raise_on_cancel: ExceptionType | None = ActionCancelled,
 ) -> T:
-    pages = None
-    if hasattr(layout, "page_count") and layout.page_count() > 1:  # type: ignore [Cannot access member "page_count" for type "LayoutType"]
-        # We know for certain how many pages the layout will have
-        pages = layout.page_count()  # type: ignore [Cannot access member "page_count" for type "LayoutType"]
-    await button_request(br_type, br_code, pages)
-    return await context.wait(layout)
+    # shut down other workflows to prevent them from interfering with the current one
+    workflow.close_others()
+    # start the layout
+    layout = ui.Layout(layout_obj)
+    layout.start()
+    # send the button request
+    if br_type is not None:
+        await _button_request(br_type, br_code, layout_obj.page_count())
+    # wait for the layout result
+    result = await context.wait(layout.get_result())
+    # raise an exception if the user cancelled the action
+    if raise_on_cancel is not None and result is trezorui2.CANCELLED:
+        raise raise_on_cancel
+    return result
+
+
+def raise_if_not_confirmed(
+    layout_obj: ui.LayoutObj[ui.UiResult],
+    br_type: str | None,
+    br_code: ButtonRequestType = ButtonRequestType.Other,
+    exc: ExceptionType = ActionCancelled,
+) -> Awaitable[None]:
+    action = interact(layout_obj, br_type, br_code, exc)
+    return action  # type: ignore [Type cannot be assigned to type "None"]

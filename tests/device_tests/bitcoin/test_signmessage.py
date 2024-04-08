@@ -380,8 +380,8 @@ def test_signmessage_pagination_trailing_newline(client: Client):
             [
                 # expect address confirmation
                 message_filters.ButtonRequest(code=messages.ButtonRequestType.Other),
-                # expect a ButtonRequest that does not have pagination set
-                message_filters.ButtonRequest(pages=None),
+                # expect a ButtonRequest for a single-page screen
+                message_filters.ButtonRequest(pages=1),
                 messages.MessageSignature,
             ]
         )

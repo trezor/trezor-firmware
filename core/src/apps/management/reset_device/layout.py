@@ -135,7 +135,7 @@ async def _show_confirmation_success(
             )
             text = TR.reset__continue_with_next_share
 
-    return await show_success("success_recovery", text, subheader)
+    await show_success("success_recovery", text, subheader)
 
 
 async def _show_confirmation_failure() -> None:

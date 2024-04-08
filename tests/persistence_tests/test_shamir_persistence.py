@@ -42,9 +42,9 @@ def test_abort(core_emulator: Emulator):
 
     device_handler.run(device.recover, pin_protection=False)
 
-    assert debug.wait_layout().title() == "RECOVER WALLET"
+    assert debug.read_layout().title() == "RECOVER WALLET"
 
-    layout = debug.click(buttons.OK, wait=True)
+    layout = debug.click(buttons.OK)
     assert "number of words" in layout.text_content()
 
     debug = _restart(device_handler, core_emulator)
@@ -55,14 +55,14 @@ def test_abort(core_emulator: Emulator):
     # no waiting for layout because layout doesn't change
     assert "number of words" in debug.read_layout().text_content()
     # clicking at 24 in word choice (the same coords as CANCEL)
-    layout = debug.click(buttons.CANCEL, wait=True)
+    layout = debug.click(buttons.CANCEL)
 
     # Cancelling the backup
     assert "Enter your backup" in debug.read_layout().text_content()
-    layout = debug.click(buttons.CANCEL, wait=True)
+    layout = debug.click(buttons.CANCEL)
 
     assert layout.title() in ("ABORT RECOVERY", "CANCEL RECOVERY")
-    layout = debug.click(buttons.OK, wait=True)
+    layout = debug.click(buttons.OK)
 
     assert layout.main_component() == "Homescreen"
     features = device_handler.features()
@@ -89,7 +89,7 @@ def test_recovery_single_reset(core_emulator: Emulator):
     assert features.recovery_mode is True
 
     # we need to enter the number of words again, that's a feature
-    recovery.select_number_of_words(debug, wait=False)
+    recovery.select_number_of_words(debug)
     recovery.enter_shares(debug, MNEMONIC_SLIP39_BASIC_20_3of6)
     recovery.finalize(debug)
 
@@ -126,7 +126,7 @@ def test_recovery_on_old_wallet(core_emulator: Emulator):
     assert features.recovery_mode is True
 
     # enter number of words
-    recovery.select_number_of_words(debug, wait=False)
+    recovery.select_number_of_words(debug)
 
     first_share = MNEMONIC_SLIP39_BASIC_20_3of6[0]
     words = first_share.split(" ")
@@ -134,11 +134,11 @@ def test_recovery_on_old_wallet(core_emulator: Emulator):
     # start entering first share
     assert "Enter any share" in debug.read_layout().text_content()
     debug.press_yes()
-    assert debug.wait_layout().main_component() == "MnemonicKeyboard"
+    assert debug.read_layout().main_component() == "MnemonicKeyboard"
 
     # enter first word
     debug.input(words[0])
-    layout = debug.wait_layout()
+    layout = debug.read_layout()
 
     # while keyboard is open, hit the device with Initialize/GetFeatures
     device_handler.client.init_device()
@@ -148,7 +148,7 @@ def test_recovery_on_old_wallet(core_emulator: Emulator):
     for word in words[1:]:
         assert layout.main_component() == "MnemonicKeyboard"
         debug.input(word)
-        layout = debug.wait_layout()
+        layout = debug.read_layout()
 
     # check that we entered the first share successfully
     assert "1 of 3 shares entered" in layout.text_content()
@@ -202,7 +202,7 @@ def test_recovery_multiple_resets(core_emulator: Emulator):
     assert features.recovery_mode is True
 
     # enter the number of words again, that's a feature!
-    recovery.select_number_of_words(debug, wait=False)
+    recovery.select_number_of_words(debug)
 
     # enter shares and restart after each one
     enter_shares_with_restarts(debug)

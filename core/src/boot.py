@@ -51,7 +51,7 @@ async def bootscreen() -> None:
                 enforce_welcome_screen_duration()
                 ui.backlight_fade(ui.style.BACKLIGHT_DIM)
                 ui.display.orientation(storage.device.get_rotation())
-                await lockscreen
+                await lockscreen.get_result()
                 await verify_user_pin()
                 storage.init_unlocked()
                 allow_all_loader_messages()

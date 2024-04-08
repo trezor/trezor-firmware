@@ -13,9 +13,10 @@ from trezor.ui.layouts.recovery import (  # noqa: F401
 from .. import backup_types
 
 if TYPE_CHECKING:
-    from typing import Callable
+    from typing import Awaitable, Callable
 
     from trezor.enums import BackupType
+    from trezor.ui.layouts.common import InfoFunc
 
 
 async def _confirm_abort(dry_run: bool = False) -> None:
@@ -43,12 +44,11 @@ async def _confirm_abort(dry_run: bool = False) -> None:
 async def request_mnemonic(
     word_count: int, backup_type: BackupType | None
 ) -> str | None:
-    from trezor.ui.layouts.common import button_request
     from trezor.ui.layouts.recovery import request_word
 
     from . import word_validity
 
-    await button_request("mnemonic", code=ButtonRequestType.MnemonicInput)
+    send_button_request = True
 
     # Allowing to go back to previous words, therefore cannot use just loop over range(word_count)
     words: list[str] = [""] * word_count
@@ -63,8 +63,10 @@ async def request_mnemonic(
             i,
             word_count,
             is_slip39=backup_types.is_slip39_word_count(word_count),
+            send_button_request=send_button_request,
             prefill_word=words[i],
         )
+        send_button_request = False
 
         # User has decided to go back
         if not word:
@@ -140,11 +142,52 @@ async def show_invalid_mnemonic(word_count: int) -> None:
         )
 
 
+def enter_share(
+    word_count: int | None = None,
+    entered_remaining: tuple[int, int] | None = None,
+    info_func: Callable | None = None,
+) -> Awaitable[None]:
+    from trezor import strings
+
+    show_instructions = False
+
+    if word_count is not None:
+        # First-time entry. Show instructions and word count.
+        text = TR.recovery__enter_any_share
+        subtext = TR.recovery__word_count_template.format(word_count)
+        show_instructions = True
+
+    elif entered_remaining is not None:
+        # Basic Shamir. There is only one group, we report entered/remaining count.
+        entered, remaining = entered_remaining
+        total = entered + remaining
+        text = TR.recovery__x_of_y_entered_template.format(entered, total)
+        subtext = strings.format_plural(
+            TR.recovery__x_more_shares_needed_template_plural,
+            remaining,
+            TR.plurals__x_shares_needed,
+        )
+
+    else:
+        # SuperShamir. We cannot easily show entered/remaining across groups,
+        # the caller provided an info_func that has the details.
+        text = TR.recovery__more_shares_needed
+        subtext = None
+
+    return homescreen_dialog(
+        TR.buttons__enter_share,
+        text,
+        subtext,
+        info_func,
+        show_instructions,
+    )
+
+
 async def homescreen_dialog(
     button_label: str,
     text: str,
     subtext: str | None = None,
-    info_func: Callable | None = None,
+    info_func: InfoFunc | None = None,
     show_info: bool = False,
 ) -> None:
     import storage.recovery as storage_recovery

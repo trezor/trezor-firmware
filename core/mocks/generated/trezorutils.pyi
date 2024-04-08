@@ -121,6 +121,10 @@ USE_BACKLIGHT: bool
 """Whether the hardware supports backlight brightness control."""
 USE_OPTIGA: bool
 """Whether the hardware supports Optiga secure element."""
+USE_TOUCH: bool
+"""Whether the hardware supports touch screen."""
+USE_BUTTON: bool
+"""Whether the hardware supports two-button input."""
 MODEL: str
 """Model name."""
 MODEL_FULL_NAME: str

@@ -22,6 +22,7 @@ from typing import TYPE_CHECKING, Generator, Iterator
 
 import pytest
 import xdist
+from _pytest.reports import TestReport
 
 from trezorlib import debuglink, log, models
 from trezorlib.debuglink import TrezorClientDebugLink as Client
@@ -47,6 +48,11 @@ if TYPE_CHECKING:
 
 HERE = Path(__file__).resolve().parent
 CORE = HERE.parent / "core"
+
+# So that we see details of failed asserts from this module
+pytest.register_assert_rewrite("tests.common")
+pytest.register_assert_rewrite("tests.input_flows")
+pytest.register_assert_rewrite("tests.input_flows_helpers")
 
 
 def _emulator_wrapper_main_args() -> list[str]:
@@ -137,13 +143,6 @@ def _raw_client(request: pytest.FixtureRequest) -> Client:
             client = _client_from_path(request, path, interact)
         else:
             client = _find_client(request, interact)
-
-    # Setting the appropriate language
-    # Not doing it for T1
-    if client.model is not models.T1B1:
-        lang = request.session.config.getoption("lang") or "en"
-        assert isinstance(lang, str)
-        translations.set_language(client, lang)
 
     return client
 
@@ -444,6 +443,20 @@ def pytest_runtest_makereport(item: pytest.Item, call) -> Generator:
     outcome = yield
     rep = outcome.get_result()
     setattr(item, f"rep_{rep.when}", rep)
+
+
+@pytest.hookimpl(tryfirst=True)
+def pytest_report_teststatus(
+    report: TestReport, config: Config
+) -> tuple[str, str, tuple[str, dict[str, bool]]] | None:
+    if report.passed:
+        for prop, _ in report.user_properties:
+            if prop == "ui_failed":
+                return "ui_failed", "U", ("UI-FAILED", {"red": True})
+            if prop == "ui_missing":
+                return "ui_missing", "M", ("UI-MISSING", {"yellow": True})
+    # else use default handling
+    return None
 
 
 @pytest.fixture

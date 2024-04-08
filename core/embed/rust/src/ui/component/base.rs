@@ -140,7 +140,7 @@ where
             // Handle the internal invalidation event here, so components don't have to. We
             // still pass it inside, so the event propagates correctly to all components in
             // the sub-tree.
-            if let Event::RequestPaint = event {
+            if matches!(event, Event::RequestPaint | Event::Attach) {
                 ctx.request_paint();
             }
             c.event(ctx, event)
@@ -427,8 +427,9 @@ pub enum Event {
     Timer(TimerToken),
     /// Advance progress bar. Progress screens only.
     Progress(u16, TString<'static>),
-    /// Component has been attached to component tree. This event is sent once
-    /// before any other events.
+    /// Component has been attached to component tree, all children should
+    /// prepare for painting and/or start their timers.
+    /// This event is sent once before any other events.
     Attach,
     /// Internally-handled event to inform all `Child` wrappers in a sub-tree to
     /// get scheduled for painting.
@@ -466,7 +467,7 @@ impl EventCtx {
     pub const ANIM_FRAME_TIMER: TimerToken = TimerToken(1);
 
     /// How long into the future we should schedule the animation frame timer.
-    const ANIM_FRAME_DEADLINE: Duration = Duration::from_millis(18);
+    const ANIM_FRAME_DURATION: Duration = Duration::from_millis(18);
 
     // 0 == `TimerToken::INVALID`,
     // 1 == `Self::ANIM_FRAME_TIMER`.
@@ -479,9 +480,8 @@ impl EventCtx {
         Self {
             timers: Vec::new(),
             next_token: Self::STARTING_TIMER_TOKEN,
-            place_requested: true, // We need to perform a place pass in the beginning.
-            paint_requested: false, /* We also need to paint, but this is supplemented by
-                                    * `Child::marked_for_paint` being true. */
+            place_requested: false,
+            paint_requested: false,
             anim_frame_scheduled: false,
             page_count: None,
             root_repaint_requested: false,
@@ -508,10 +508,10 @@ impl EventCtx {
         self.paint_requested = true;
     }
 
-    /// Request a timer event to be delivered after `deadline` elapses.
-    pub fn request_timer(&mut self, deadline: Duration) -> TimerToken {
+    /// Request a timer event to be delivered after `duration` elapses.
+    pub fn request_timer(&mut self, duration: Duration) -> TimerToken {
         let token = self.next_timer_token();
-        self.register_timer(token, deadline);
+        self.register_timer(token, duration);
         token
     }
 
@@ -519,7 +519,7 @@ impl EventCtx {
     pub fn request_anim_frame(&mut self) {
         if !self.anim_frame_scheduled {
             self.anim_frame_scheduled = true;
-            self.register_timer(Self::ANIM_FRAME_TIMER, Self::ANIM_FRAME_DEADLINE);
+            self.register_timer(Self::ANIM_FRAME_TIMER, Self::ANIM_FRAME_DURATION);
         }
     }
 
@@ -553,8 +553,8 @@ impl EventCtx {
         self.root_repaint_requested = false;
     }
 
-    fn register_timer(&mut self, token: TimerToken, deadline: Duration) {
-        if self.timers.push((token, deadline)).is_err() {
+    fn register_timer(&mut self, token: TimerToken, duration: Duration) {
+        if self.timers.push((token, duration)).is_err() {
             // The timer queue is full, this would be a development error in the layout
             // layer. Let's panic in the debug env.
             #[cfg(feature = "ui_debug")]

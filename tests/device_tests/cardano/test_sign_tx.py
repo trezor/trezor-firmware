@@ -31,7 +31,7 @@ pytestmark = [
 
 def show_details_input_flow(client: Client):
     yield
-    client.debug.wait_layout()
+    client.debug.read_layout()
     # Touch screen click vs pressing right for T2B1
     if client.model in (models.T2T1, models.T3T1):
         SHOW_ALL_BUTTON_POSITION = (143, 167)

@@ -70,7 +70,7 @@ def prepare_passphrase_dialogue(
 ) -> Generator["DebugLink", None, None]:
     debug = device_handler.debuglink()
     device_handler.run(get_test_address)  # type: ignore
-    assert debug.wait_layout().main_component() == "PassphraseKeyboard"
+    assert debug.read_layout().main_component() == "PassphraseKeyboard"
 
     # Resetting the category as it could have been changed by previous tests
     global TT_CATEGORY
@@ -96,10 +96,10 @@ def go_to_category(debug: "DebugLink", category: PassphraseCategory) -> None:
     target_index = TT_CATEGORIES.index(category)
     if target_index > current_index:
         for _ in range(target_index - current_index):
-            debug.swipe_left(wait=True)
+            debug.swipe_left()
     else:
         for _ in range(current_index - target_index):
-            debug.swipe_right(wait=True)
+            debug.swipe_right()
     TT_CATEGORY = category  # type: ignore
     # Category changed, reset coordinates
     TT_COORDS_PREV = (0, 0)  # type: ignore
@@ -125,7 +125,7 @@ def press_char(debug: "DebugLink", char: str) -> None:
         time.sleep(1.1)
     TT_COORDS_PREV = coords  # type: ignore
     for _ in range(amount):
-        debug.click(coords, wait=True)
+        debug.click(coords)
 
 
 def input_passphrase(debug: "DebugLink", passphrase: str, check: bool = True) -> None:
@@ -142,13 +142,13 @@ def input_passphrase(debug: "DebugLink", passphrase: str, check: bool = True) ->
 def enter_passphrase(debug: "DebugLink") -> None:
     """Enter a passphrase"""
     coords = buttons.pin_passphrase_grid(11)
-    debug.click(coords, wait=True)
+    debug.click(coords)
 
 
 def delete_char(debug: "DebugLink") -> None:
     """Deletes the last char"""
     coords = buttons.pin_passphrase_grid(9)
-    debug.click(coords, wait=True)
+    debug.click(coords)
 
 
 VECTORS = (  # passphrase, address
@@ -185,7 +185,6 @@ def test_passphrase_delete(device_handler: "BackgroundDeviceHandler"):
 
         for _ in range(4):
             delete_char(debug)
-        debug.wait_layout()
 
         input_passphrase(debug, CommonPass.SHORT[8 - 4 :])
         enter_passphrase(debug)
@@ -215,7 +214,6 @@ def test_passphrase_loop_all_characters(device_handler: "BackgroundDeviceHandler
             PassphraseCategory.SPECIAL,
         ):
             go_to_category(debug, category)
-        debug.wait_layout()
 
         enter_passphrase(debug)
         coords = buttons.pin_passphrase_grid(11)

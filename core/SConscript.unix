@@ -7,8 +7,6 @@ import tools
 BITCOIN_ONLY = ARGUMENTS.get('BITCOIN_ONLY', '0')
 EVERYTHING = BITCOIN_ONLY != '1'
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
-DMA2D =  TREZOR_MODEL in ('T', 'T3T1')
-OPTIGA = TREZOR_MODEL in ('R', 'T3T1')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 
 if TREZOR_MODEL in ('DISC1', 'DISC2'):
@@ -26,6 +24,15 @@ FEATURE_FLAGS = {
     "SECP256K1_ZKP": True,  # required for trezor.crypto.curve.bip340 (BIP340/Taproot)
     "AES_GCM": True,
 }
+
+if TREZOR_MODEL in ('1', ):
+    FEATURES_AVAILABLE = ['button']
+elif TREZOR_MODEL in ('R', ):
+    FEATURES_AVAILABLE = ['button', 'sbu', 'optiga']
+elif TREZOR_MODEL in ('T', ):
+    FEATURES_AVAILABLE = ['touch', 'sbu', 'sd_card', 'dma2d', 'backlight']
+elif TREZOR_MODEL in ('T3T1', ):
+    FEATURES_AVAILABLE = ['touch', 'sbu', 'sd_card', 'dma2d', 'backlight', 'optiga']
 
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
@@ -190,7 +197,7 @@ if FEATURE_FLAGS["AES_GCM"]:
 SOURCE_MOD += [
     'embed/extmod/modtrezorio/modtrezorio.c',
 ]
-if TREZOR_MODEL in ('T', 'T3T1'):
+if 'sd_card' in FEATURES_AVAILABLE:
     SOURCE_MOD += [
         'embed/extmod/modtrezorio/ff.c',
         'embed/extmod/modtrezorio/ffunicode.c',
@@ -410,17 +417,26 @@ SOURCE_UNIX = [
     'vendor/micropython/ports/unix/input.c',
     'vendor/micropython/ports/unix/unix_mphal.c',
 ]
-if TREZOR_MODEL in ('T', 'R', 'T3T1'):
+
+if 'sbu' in FEATURES_AVAILABLE:
     SOURCE_UNIX += [
         'embed/trezorhal/unix/sbu.c',
     ]
 
-if OPTIGA:
+if 'sd_card' in FEATURES_AVAILABLE:
+    SOURCE_UNIX += [
+        'embed/trezorhal/unix/sdcard.c',
+    ]
+
+if 'optiga' in FEATURES_AVAILABLE:
+    CPPDEFINES_MOD += [
+        ('USE_OPTIGA', '1'),
+    ]
     SOURCE_UNIX += [
         'embed/trezorhal/unix/optiga.c',
     ]
 
-if DMA2D:
+if 'dma2d' in FEATURES_AVAILABLE:
     CPPDEFINES_MOD += [
         'USE_DMA2D',
     ]
@@ -461,15 +477,6 @@ elif TREZOR_MODEL in ('1', 'R'):
     ui_layout_feature = 'model_tr'
 else:
     raise ValueError('Unknown Trezor model')
-
-if TREZOR_MODEL in ('T', 'T3T1'):
-    SDCARD = True
-    SOURCE_UNIX += [
-        'embed/trezorhal/unix/sdcard.c',
-    ]
-else:
-    SDCARD = False
-
 
 env.Tool('micropython')
 
@@ -655,7 +662,7 @@ if FROZEN:
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/*.py',
         exclude=[
             SOURCE_PY_DIR + 'trezor/sdcard.py',
-        ] if not SDCARD else []
+        ] if 'sd_card' not in FEATURES_AVAILABLE else []
     ))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/crypto/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/*.py'))
@@ -686,7 +693,7 @@ if FROZEN:
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'storage/*.py',
         exclude=[
             SOURCE_PY_DIR + 'storage/sd_salt.py',
-        ] if not SDCARD else []
+        ] if 'sd_card' not in FEATURES_AVAILABLE else []
     ))
 
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/messages/__init__.py'))
@@ -711,16 +718,16 @@ if FROZEN:
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/common/*.py',
         exclude=[
             SOURCE_PY_DIR + 'apps/common/sdcard.py',
-        ] if not SDCARD else []
+        ] if 'sd_card' not in FEATURES_AVAILABLE else []
     ))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/debug/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/homescreen/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/management/*.py',
         exclude=[
             SOURCE_PY_DIR + 'apps/management/sd_protect.py',
-        ] if not SDCARD else [] + [
+        ] if 'sd_card' not in FEATURES_AVAILABLE else [] + [
             SOURCE_PY_DIR + 'apps/management/authenticate_device.py',
-        ] if not OPTIGA else [])
+        ] if 'optiga' not in FEATURES_AVAILABLE else [])
     )
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/management/*/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/misc/*.py'))
@@ -788,10 +795,12 @@ if FROZEN:
         source=SOURCE_PY,
         source_dir=SOURCE_PY_DIR,
         bitcoin_only=BITCOIN_ONLY,
-        backlight=TREZOR_MODEL in ('T', 'T3T1'),
-        optiga=OPTIGA,
+        backlight='backlight' in FEATURES_AVAILABLE,
+        optiga='optiga' in FEATURES_AVAILABLE,
+        use_button='button' in FEATURES_AVAILABLE,
+        use_touch='touch' in FEATURES_AVAILABLE,
         ui_layout=UI_LAYOUT,
-        )
+    )
 
     source_mpyc = env.FrozenCFile(
         target='frozen_mpy.c', source=source_mpy, qstr_header=qstr_preprocessed)
@@ -833,14 +842,8 @@ def cargo_build():
     features.append('translations')
     if PYOPT == '0':
         features.append('debug')
-    if DMA2D:
-        features.append('dma2d')
 
-    if TREZOR_MODEL in ('T', 'T3T1'):
-        features.append('touch')
-        features.append('sd_card')
-    if TREZOR_MODEL in ('R', '1'):
-        features.append('button')
+    features.extend(FEATURES_AVAILABLE)
 
     env.get('ENV')['TREZOR_MODEL'] = TREZOR_MODEL
 

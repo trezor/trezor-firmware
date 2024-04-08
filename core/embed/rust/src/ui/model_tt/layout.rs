@@ -1648,7 +1648,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///         """Attach a timer setter function.
     ///
     ///         The layout object can call the timer setter with two arguments,
-    ///         `token` and `deadline`. When `deadline` is reached, the layout object
+    ///         `token` and `duration`. When `duration` elapses, the layout object
     ///         expects a callback to `self.timer(token)`.
     ///         """
     ///
@@ -1670,7 +1670,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///         """Callback for the timer set by `attach_timer_fn`.
     ///
     ///         This function should be called by the executor after the corresponding
-    ///         deadline is reached.
+    ///         duration elapses.
     ///         """
     ///
     ///     def paint(self) -> bool:
@@ -2054,6 +2054,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     button: str,
     ///     dry_run: bool,
     ///     info_button: bool = False,
+    ///     show_instructions: bool = False,  # unused on TT
     /// ) -> LayoutObj[UiResult]:
     ///     """Device recovery homescreen."""
     Qstr::MP_QSTR_confirm_recovery => obj_fn_kw!(0, new_confirm_recovery).as_obj(),

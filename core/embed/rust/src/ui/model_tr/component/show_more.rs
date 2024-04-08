@@ -1,7 +1,7 @@
 use crate::{
     strutil::TString,
     ui::{
-        component::{Child, Component, Event, EventCtx},
+        component::{Child, Component, Event, EventCtx, Never},
         geometry::{Insets, Rect},
     },
 };
@@ -42,7 +42,7 @@ where
 
 impl<T> Component for ShowMore<T>
 where
-    T: Component,
+    T: Component<Msg = Never>,
 {
     type Msg = CancelInfoConfirmMsg;
 
@@ -55,6 +55,7 @@ where
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        self.content.event(ctx, event);
         let button_event = self.buttons.event(ctx, event);
 
         if let Some(ButtonControllerMsg::Triggered(pos, _)) = button_event {

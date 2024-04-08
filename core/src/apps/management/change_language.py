@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from typing import Callable
 
     from trezor.messages import ChangeLanguage, Success
-    from trezor.ui.layouts.common import ProgressLayout
+    from trezor.ui import ProgressLayout
 
 _CHUNK_SIZE = const(1024)
 
