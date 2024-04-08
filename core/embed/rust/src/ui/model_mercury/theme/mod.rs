@@ -17,19 +17,16 @@ pub const WHITE: Color = Color::rgb(0xFF, 0xFF, 0xFF);
 pub const BLACK: Color = Color::rgb(0, 0, 0);
 pub const FG: Color = WHITE; // Default foreground (text & icon) color.
 pub const BG: Color = BLACK; // Default background color.
-pub const RED: Color = Color::rgb(0xE7, 0x0E, 0x0E); // button
-pub const RED_DARK: Color = Color::rgb(0xAE, 0x09, 0x09); // button pressed
-pub const YELLOW: Color = Color::rgb(0xD9, 0x9E, 0x00); // button
-pub const YELLOW_DARK: Color = Color::rgb(0x7A, 0x58, 0x00); // button pressed
-pub const GREEN: Color = Color::rgb(0x00, 0xAA, 0x35); // button
-pub const GREEN_DARK: Color = Color::rgb(0x00, 0x55, 0x1D); // button pressed
-pub const BLUE: Color = Color::rgb(0x06, 0x1E, 0xAD); // button
-pub const BLUE_DARK: Color = Color::rgb(0x04, 0x10, 0x58); // button pressed
-pub const OFF_WHITE: Color = Color::rgb(0xDE, 0xDE, 0xDE); // very light grey
-pub const GREY_LIGHT: Color = Color::rgb(0x90, 0x90, 0x90); // secondary text
-pub const GREY_MEDIUM: Color = Color::rgb(0x4F, 0x4F, 0x4F); // button pressed
-pub const GREY_DARK: Color = Color::rgb(0x35, 0x35, 0x35); // button
-pub const VIOLET: Color = Color::rgb(0x95, 0x00, 0xCA);
+pub const GREY_EXTRA_DARK: Color = Color::rgb(0x16, 0x1F, 0x24);
+pub const GREY_DARK: Color = Color::rgb(0x46, 0x48, 0x4A);
+pub const GREY: Color = Color::rgb(0x8B, 0x8F, 0x93); // secondary text, subtitle, instructions
+pub const GREY_LIGHT: Color = Color::rgb(0xC7, 0xCD, 0xD3); // content
+pub const GREY_EXTRA_LIGHT: Color = Color::rgb(0xF0, 0xF0, 0xF0); // primary text, header
+pub const GREEN: Color = Color::rgb(0x08, 0x74, 0x48);
+pub const GREEN_LIGHT: Color = Color::rgb(0x0B, 0xA5, 0x67);
+pub const GREEN_LIME: Color = Color::rgb(0x9B, 0xE8, 0x87);
+pub const ORANGE_DIMMED: Color = Color::rgb(0x9E, 0x57, 0x42);
+pub const ORANGE_LIGHT: Color = Color::rgb(0xFF, 0x8D, 0x6A); // cancel button
 
 pub const FATAL_ERROR_COLOR: Color = Color::rgb(0xE7, 0x0E, 0x0E);
 pub const FATAL_ERROR_HIGHLIGHT_COLOR: Color = Color::rgb(0xFF, 0x41, 0x41);
@@ -59,16 +56,15 @@ include_icon!(ICON_PAGE_NEXT, "model_mercury/res/page-next.toif");
 include_icon!(ICON_PAGE_PREV, "model_mercury/res/page-prev.toif");
 
 // Large, three-color icons.
-pub const WARN_COLOR: Color = YELLOW;
-pub const INFO_COLOR: Color = BLUE;
+pub const WARN_COLOR: Color = ORANGE_LIGHT;
+pub const INFO_COLOR: Color = GREY_LIGHT;
 pub const SUCCESS_COLOR: Color = GREEN;
-pub const ERROR_COLOR: Color = RED;
+pub const ERROR_COLOR: Color = ORANGE_DIMMED;
 include_icon!(IMAGE_FG_SUCCESS, "model_mercury/res/fg-check48.toif");
 include_icon!(IMAGE_BG_CIRCLE, "model_mercury/res/circle48.toif");
 
 // Welcome screen.
 include_icon!(ICON_LOGO, "model_mercury/res/lock_full.toif");
-include_icon!(ICON_LOGO_EMPTY, "model_mercury/res/lock_empty.toif");
 
 pub const fn button_default() -> ButtonStyleSheet {
     ButtonStyleSheet {
@@ -84,7 +80,7 @@ pub const fn button_default() -> ButtonStyleSheet {
         active: &ButtonStyle {
             font: Font::BOLD,
             text_color: FG,
-            button_color: GREY_MEDIUM,
+            button_color: GREY,
             background_color: BG,
             border_color: FG,
             border_radius: RADIUS,
@@ -118,7 +114,7 @@ pub const fn button_moreinfo() -> ButtonStyleSheet {
             text_color: FG,
             button_color: BG,
             background_color: BG,
-            border_color: GREY_MEDIUM,
+            border_color: GREY,
             border_radius: RADIUS,
             border_width: 2,
         },

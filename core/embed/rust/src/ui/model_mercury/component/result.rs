@@ -54,7 +54,9 @@ impl<'a> ResultFooter<'a> {
             area: Rect::zero(),
         }
     }
+}
 
+impl ResultFooter<'_> {
     pub const fn split_bounds() -> (Rect, Rect) {
         let main_area = Rect::new(
             Point::new(RESULT_PADDING, 0),
@@ -135,7 +137,7 @@ impl<'a> Component for ResultScreen<'a> {
     fn place(&mut self, _bounds: Rect) -> Rect {
         self.bg.place(screen());
 
-        let (main_area, footer_area) = ResultFooter::<'a>::split_bounds();
+        let (main_area, footer_area) = ResultFooter::split_bounds();
 
         self.footer_pad.place(footer_area);
         self.footer.place(footer_area);
