@@ -5,7 +5,7 @@ use crate::{
     ui::{
         component::{connect::Connect, Label},
         display::{self, Color, Font, Icon},
-        geometry::{Point, Rect},
+        geometry::{Offset, Point, Rect},
         layout::simplified::{run, show},
     },
 };
@@ -19,11 +19,11 @@ use super::{
     theme::{
         bootloader::{
             button_bld, button_bld_menu, button_confirm, button_wipe_cancel, button_wipe_confirm,
-            BLD_BG, BLD_FG, BLD_TITLE_COLOR, BLD_WIPE_COLOR, CHECK24, CHECK40, DOWNLOAD32, FIRE32,
-            FIRE40, RESULT_FW_INSTALL, RESULT_INITIAL, RESULT_WIPE, TEXT_BOLD, TEXT_NORMAL,
-            TEXT_WIPE_BOLD, TEXT_WIPE_NORMAL, WARNING40, WELCOME_COLOR, X24,
+            BLD_BG, BLD_FG, BLD_TITLE_COLOR, BLD_WIPE_COLOR, CHECK24, CHECK40, DOWNLOAD24, FIRE32,
+            FIRE40, RESULT_FW_INSTALL, RESULT_WIPE, TEXT_BOLD, TEXT_NORMAL, TEXT_WIPE_BOLD,
+            TEXT_WIPE_NORMAL, WARNING40, WELCOME_COLOR, X24,
         },
-        BACKLIGHT_NORMAL, BLACK, FG, WHITE,
+        BACKLIGHT_NORMAL, BLACK, GREEN_LIGHT, GREY, WHITE,
     },
     ModelMercuryFeatures,
 };
@@ -41,6 +41,7 @@ pub type BootloaderString = String<128>;
 const RECONNECT_MESSAGE: &str = "PLEASE RECONNECT\nTHE DEVICE";
 
 const SCREEN: Rect = ModelMercuryFeatures::SCREEN;
+const PROGRESS_TEXT_ORIGIN: Point = Point::new(2, 28);
 
 impl ModelMercuryFeatures {
     fn screen_progress(
@@ -50,46 +51,31 @@ impl ModelMercuryFeatures {
         fg_color: Color,
         bg_color: Color,
         icon: Option<(Icon, Color)>,
+        center_text: Option<&str>,
     ) {
+        let loader_offset: i16 = 19;
+        let center_text_offset: i16 = 10;
+
         if initialize {
-            ModelMercuryFeatures::fadeout();
+            Self::fadeout();
             display::rect_fill(SCREEN, bg_color);
         }
 
-        display::text_center(
-            Point::new(SCREEN.width() / 2, SCREEN.height() - 45),
-            text,
-            Font::NORMAL,
-            BLD_FG,
-            bg_color,
-        );
-        display::loader(progress, -20, fg_color, bg_color, icon);
+        display::text_left(PROGRESS_TEXT_ORIGIN, text, Font::NORMAL, BLD_FG, bg_color);
+        display::loader(progress, 19, fg_color, bg_color, icon);
+        if let Some(center_text) = center_text {
+            display::text_center(
+                SCREEN.center() + Offset::y(loader_offset + center_text_offset),
+                center_text,
+                Font::NORMAL,
+                GREY,
+                bg_color,
+            );
+        }
         display::refresh();
         if initialize {
-            ModelMercuryFeatures::fadein();
+            Self::fadein();
         }
-    }
-
-    fn screen_install_success_bld(msg: &str, complete_draw: bool) {
-        let mut frame = ResultScreen::new(
-            &RESULT_FW_INSTALL,
-            Icon::new(CHECK40),
-            "Firmware installed\nsuccessfully".into(),
-            Label::centered(msg.into(), RESULT_FW_INSTALL.title_style()).vertically_centered(),
-            complete_draw,
-        );
-        show(&mut frame, complete_draw);
-    }
-
-    fn screen_install_success_initial(msg: &str, complete_draw: bool) {
-        let mut frame = ResultScreen::new(
-            &RESULT_INITIAL,
-            Icon::new(CHECK40),
-            "Firmware installed\nsuccessfully".into(),
-            Label::centered(msg.into(), RESULT_INITIAL.title_style()).vertically_centered(),
-            complete_draw,
-        );
-        show(&mut frame, complete_draw);
     }
 }
 
@@ -112,20 +98,36 @@ impl UIFeaturesBootloader for ModelMercuryFeatures {
     fn screen_install_success(restart_seconds: u8, initial_setup: bool, complete_draw: bool) {
         let mut reboot_msg = BootloaderString::new();
 
+        let bg_color = if initial_setup { WELCOME_COLOR } else { BLD_BG };
+        let fg_color = if initial_setup { GREEN_LIGHT } else { BLD_FG };
+
         if restart_seconds >= 1 {
-            unwrap!(reboot_msg.push_str("RESTARTING IN "));
             // in practice, restart_seconds is 5 or less so this is fine
             let seconds_char = b'0' + restart_seconds % 10;
             unwrap!(reboot_msg.push(seconds_char as char));
+            let progress = (5 - (restart_seconds as u16)).clamp(0, 5) * 200;
+
+            Self::screen_progress(
+                "Restarting device",
+                progress,
+                complete_draw,
+                fg_color,
+                bg_color,
+                None,
+                Some(reboot_msg.as_str()),
+            );
         } else {
-            unwrap!(reboot_msg.push_str(RECONNECT_MESSAGE));
+            Self::screen_progress(
+                "Firmware installed",
+                1000,
+                complete_draw,
+                fg_color,
+                bg_color,
+                Some((Icon::new(CHECK24), BLD_FG)),
+                None,
+            );
         }
 
-        if initial_setup {
-            ModelMercuryFeatures::screen_install_success_initial(reboot_msg.as_str(), complete_draw)
-        } else {
-            ModelMercuryFeatures::screen_install_success_bld(reboot_msg.as_str(), complete_draw)
-        }
         display::refresh();
     }
 
@@ -247,16 +249,16 @@ impl UIFeaturesBootloader for ModelMercuryFeatures {
 
     fn screen_boot_empty(fading: bool) {
         if fading {
-            ModelMercuryFeatures::fadeout();
+            Self::fadeout();
         }
 
         display::rect_fill(SCREEN, BLACK);
 
-        let mut frame = WelcomeScreen::new(true);
+        let mut frame = WelcomeScreen::new();
         show(&mut frame, false);
 
         if fading {
-            ModelMercuryFeatures::fadein();
+            Self::fadein();
         } else {
             display::set_backlight(BACKLIGHT_NORMAL);
         }
@@ -264,36 +266,30 @@ impl UIFeaturesBootloader for ModelMercuryFeatures {
     }
 
     fn screen_wipe_progress(progress: u16, initialize: bool) {
-        ModelMercuryFeatures::screen_progress(
+        Self::screen_progress(
             "Resetting Trezor",
             progress,
             initialize,
             BLD_FG,
             BLD_WIPE_COLOR,
             Some((Icon::new(FIRE32), BLD_FG)),
+            None,
         )
     }
 
     fn screen_install_progress(progress: u16, initialize: bool, initial_setup: bool) {
         let bg_color = if initial_setup { WELCOME_COLOR } else { BLD_BG };
-        let fg_color = if initial_setup {
-            Color::rgb(0x0B, 0xA5, 0x67)
-        } else {
-            BLD_FG
-        };
-        let icon_color = if initial_setup {
-            Color::rgb(0x8B, 0x8B, 0x93)
-        } else {
-            BLD_FG
-        };
+        let fg_color = if initial_setup { GREEN_LIGHT } else { BLD_FG };
+        let icon_color = BLD_FG;
 
-        ModelMercuryFeatures::screen_progress(
+        Self::screen_progress(
             "Installing firmware",
             progress,
             initialize,
             fg_color,
             bg_color,
-            Some((Icon::new(DOWNLOAD32), icon_color)),
+            Some((Icon::new(DOWNLOAD24), icon_color)),
+            None,
         )
     }
 

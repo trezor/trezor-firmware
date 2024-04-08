@@ -12,7 +12,7 @@ pub fn screen_fatal_error(title: &str, msg: &str, footer: &str) {
 }
 
 pub fn screen_boot_full() {
-    let mut frame = WelcomeScreen::new(false);
+    let mut frame = WelcomeScreen::new();
     frame.place(screen());
     display::sync();
     frame.paint();
