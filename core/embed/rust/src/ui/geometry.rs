@@ -154,6 +154,7 @@ impl Lerp for Offset {
 /// A point in 2D space defined by the the `x` and `y` coordinate. Relative
 /// coordinates, vectors, and offsets are represented by the `Offset` type.
 #[derive(Copy, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 pub struct Point {
     pub x: i16,
     pub y: i16,

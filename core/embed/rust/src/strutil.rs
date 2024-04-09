@@ -195,3 +195,43 @@ impl<'a, 'b> PartialEq<TString<'a>> for TString<'b> {
 }
 
 impl Eq for TString<'_> {}
+
+impl ufmt::uDisplay for TString<'_> {
+    fn fmt<W>(&self, f: &mut ufmt::Formatter<'_, W>) -> Result<(), W::Error>
+    where
+        W: ufmt::uWrite + ?Sized,
+    {
+        self.map(|s| f.write_str(s))
+    }
+}
+
+#[cfg(feature = "debug")]
+impl ufmt::uDebug for TString<'_> {
+    fn fmt<W>(&self, f: &mut ufmt::Formatter<'_, W>) -> Result<(), W::Error>
+    where
+        W: ufmt::uWrite + ?Sized,
+    {
+        match self {
+            #[cfg(feature = "micropython")]
+            TString::Allocated(buf) => {
+                f.write_str("Allocated(")?;
+                buf.fmt(f)?;
+                f.write_str(")")?;
+            }
+            #[cfg(feature = "translations")]
+            TString::Translation { tr, offset } => {
+                f.write_str("Translation(")?;
+                tr.fmt(f)?;
+                f.write_str(", ")?;
+                offset.fmt(f)?;
+                f.write_str(")")?;
+            }
+            TString::Str(s) => {
+                f.write_str("Str(")?;
+                f.write_str(s)?;
+                f.write_str(")")?;
+            }
+        }
+        Ok(())
+    }
+}
