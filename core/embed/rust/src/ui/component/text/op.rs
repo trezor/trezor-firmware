@@ -253,6 +253,10 @@ impl<'a> OpTextLayout<'a> {
         self.font(Font::BOLD).text(text.into())
     }
 
+    pub fn text_bold_upper(self, text: impl Into<TString<'a>>) -> Self {
+        self.font(Font::BOLD_UPPER).text(text.into())
+    }
+
     pub fn text_demibold(self, text: impl Into<TString<'a>>) -> Self {
         self.font(Font::DEMIBOLD).text(text.into())
     }

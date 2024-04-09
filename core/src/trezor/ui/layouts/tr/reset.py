@@ -88,7 +88,7 @@ async def select_word(
     while len(words) < 3:
         words.append(words[-1])
 
-    word_ordinal = format_ordinal(checked_index + 1).upper()
+    word_ordinal = format_ordinal(checked_index + 1)
     result = await wait(
         RustLayout(
             trezorui2.select_word(
@@ -148,7 +148,7 @@ async def _prompt_number(
 ) -> int:
     num_input = RustLayout(
         trezorui2.request_number(
-            title=title.upper(),
+            title=title,
             count=count,
             min_count=min_count,
             max_count=max_count,
@@ -292,6 +292,6 @@ async def show_reset_warning(
         br_type,
         subheader or "",
         content,
-        button.upper(),
+        button,
         br_code=br_code,
     )

@@ -2158,7 +2158,7 @@ mod tests {
 
         let ops = OpTextLayout::new(theme::TEXT_NORMAL)
             .text_normal("Testing text layout, with some text, and some more text. And ")
-            .text_bold("parameters!");
+            .text_bold_upper("parameters!");
         let formatted = FormattedText::new(ops);
         let mut layout = Dialog::new(formatted, buttons);
         layout.place(SCREEN);
@@ -2168,7 +2168,7 @@ mod tests {
             "content": {
                 "component": "FormattedText",
                 "text": ["Testing text layout, with", "\n", "some text, and some", "\n",
-                "more text. And ", "paramet", "-", "\n", "ers!"],
+                "more text. And ", "parame", "-", "\n", "ters!"],
                 "fits": true,
             },
             "controls": {

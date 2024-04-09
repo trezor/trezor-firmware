@@ -94,7 +94,7 @@ async def continue_recovery(
         trezorui2.confirm_recovery(
             title="",
             description=text,
-            button=button_label.upper(),
+            button=button_label,
             info_button=False,
             dry_run=dry_run,
             show_info=show_info,  # type: ignore [No parameter named "show_info"]

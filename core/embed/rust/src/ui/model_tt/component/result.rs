@@ -37,7 +37,7 @@ impl ResultStyle {
     }
 
     pub const fn title_style(&self) -> TextStyle {
-        TextStyle::new(Font::BOLD, self.fg_color, self.bg_color, FG, FG)
+        TextStyle::new(Font::BOLD_UPPER, self.fg_color, self.bg_color, FG, FG)
     }
 }
 
