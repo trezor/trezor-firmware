@@ -10,9 +10,6 @@ use crate::ui::{
     ui_features::{ModelUI, UIFeaturesCommon},
 };
 
-#[cfg(feature = "debug")]
-use crate::dbg_println;
-
 fn shutdown() -> ! {
     unsafe { ffi::trezor_shutdown() }
 }
@@ -72,28 +69,4 @@ impl<T, E> UnwrapOrFatalError<T> for Result<T, E> {
             Err(_) => __fatal_error(msg, file, line),
         }
     }
-}
-
-macro_rules! unwrap {
-    ($e:expr, $msg:expr) => {{
-        use crate::trezorhal::fatal_error::UnwrapOrFatalError;
-        $e.unwrap_or_fatal_error($msg, file!(), line!())
-    }};
-    ($expr:expr) => {
-        unwrap!($expr, "unwrap failed")
-    };
-}
-
-macro_rules! ensure {
-    ($what:expr, $error:expr) => {
-        if !($what) {
-            crate::trezorhal::fatal_error::__fatal_error($error, file!(), line!());
-        }
-    };
-}
-
-macro_rules! fatal_error {
-    ($msg:expr) => {{
-        crate::trezorhal::fatal_error::__fatal_error($msg, file!(), line!());
-    }};
 }

@@ -20,7 +20,7 @@ use super::ffi;
 /// The `off` field represents offset from the `ptr` and allows us to do
 /// substring slices while keeping the head pointer as required by GC.
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Copy, Clone)]
 pub struct StrBuffer {
     ptr: *const u8,
     len: u16,
@@ -162,6 +162,19 @@ impl From<&'static str> for StrBuffer {
         // SAFETY: Safe for &'static strs.
         // Do not try to do it with arbitrary &'a str.
         unsafe { Self::from_ptr_and_len(val.as_ptr(), val.len()) }
+    }
+}
+
+#[cfg(feature = "debug")]
+impl ufmt::uDebug for StrBuffer {
+    fn fmt<W>(&self, f: &mut ufmt::Formatter<'_, W>) -> Result<(), W::Error>
+    where
+        W: ufmt::uWrite + ?Sized,
+    {
+        f.write_str("StrBuffer(")?;
+        f.write_str(self.as_ref())?;
+        f.write_str(")")?;
+        Ok(())
     }
 }
 

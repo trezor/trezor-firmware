@@ -469,6 +469,7 @@ where
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 pub enum AttachType {
     Initial,
     #[cfg(feature = "touch")]
@@ -476,6 +477,7 @@ pub enum AttachType {
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 pub enum Event {
     #[cfg(feature = "button")]
     Button(ButtonEvent),
@@ -499,6 +501,7 @@ pub enum Event {
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 pub struct TimerToken(u32);
 
 impl TimerToken {

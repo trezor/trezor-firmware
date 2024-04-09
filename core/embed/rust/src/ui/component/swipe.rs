@@ -6,6 +6,7 @@ use crate::ui::{
 };
 
 #[derive(Copy, Clone, Eq, PartialEq)]
+#[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 pub enum SwipeDirection {
     Up,
     Down,
