@@ -92,8 +92,12 @@ bool stellar_signingInit(const StellarSignTx *msg) {
   memcpy(&(stellar_activeTx.address_n), &(msg->address_n),
          sizeof(stellar_activeTx.address_n));
 
-  // Hash: public key
-  stellar_hashupdate_address(node->public_key + 1);
+  uint8_t source_bytes[STELLAR_KEY_SIZE] = {0};
+  if (!stellar_getAddressBytes(msg->source_account, source_bytes)) {
+    return false;
+  }
+  // Hash: source account
+  stellar_hashupdate_address(source_bytes);
 
   // Hash: fee
   stellar_hashupdate_uint32(msg->fee);
@@ -1813,8 +1817,32 @@ void stellar_layoutTransactionSummary(const StellarSignTx *msg) {
     return;
   }
 
-  // Reset lines for displaying memo
+  // Reset lines for displaying memo (or source account)
   memzero(str_lines, sizeof(str_lines));
+
+  uint8_t source_bytes[STELLAR_KEY_SIZE] = {0};
+  if (!stellar_getAddressBytes(msg->source_account, source_bytes)) {
+    stellar_signingFail(_("Invalid source account address"));
+    return;
+  }
+
+  // When the signing_pubkey is different from the source account, display the
+  // source account.
+  if (memcmp(source_bytes, stellar_activeTx.signing_pubkey, STELLAR_KEY_SIZE) !=
+      0) {
+    const char **str_source_rows = stellar_lineBreakAddress(source_bytes);
+
+    stellar_layoutTransactionDialog(_("Tx source account OK?"), NULL,
+                                    str_source_rows[0], str_source_rows[1],
+                                    str_source_rows[2]);
+    if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+      stellar_signingFail(_("User canceled"));
+      return;
+    }
+
+    // Reset lines for displaying memo
+    memzero(str_lines, sizeof(str_lines));
+  }
 
   switch (msg->memo_type) {
     case StellarMemoType_NONE:
