@@ -868,7 +868,10 @@ async def _confirm_ask_pagination(
                 trezorui2.confirm_more(
                     title=title,
                     button=TR.buttons__go_back,
-                    items=[(ui.BOLD, f"Size: {len(data)} bytes"), (ui.MONO, data)],
+                    items=[
+                        (ui.BOLD_UPPER, f"Size: {len(data)} bytes"),
+                        (ui.MONO, data),
+                    ],
                 )
             )
         else:
