@@ -122,15 +122,18 @@ impl Glyph {
 }
 
 /// Font constants. Keep in sync with FONT_ definitions in
-/// `extmod/modtrezorui/fonts/fonts.h`.
+/// `core/embed/lib/fonts/fonts.h`.
 #[derive(Copy, Clone, PartialEq, Eq, FromPrimitive)]
 #[repr(u8)]
+#[allow(non_camel_case_types)]
 pub enum Font {
     NORMAL = 1,
     BOLD = 2,
     MONO = 3,
     BIG = 4,
     DEMIBOLD = 5,
+    NORMAL_UPPER = 6,
+    BOLD_UPPER = 7,
 }
 
 impl From<Font> for i32 {
