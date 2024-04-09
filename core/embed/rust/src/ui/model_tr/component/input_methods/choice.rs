@@ -425,24 +425,32 @@ where
     }
 
     /// Go to the choice visually on the left.
-    fn move_left(&mut self, ctx: &mut EventCtx) {
+    fn move_left(&mut self, ctx: &mut EventCtx) -> bool {
         if self.has_previous_choice() {
             self.decrease_page_counter();
             self.update(ctx);
+            true
         } else if self.is_carousel {
             self.page_counter_to_max();
             self.update(ctx);
+            true
+        } else {
+            false
         }
     }
 
     /// Go to the choice visually on the right.
-    fn move_right(&mut self, ctx: &mut EventCtx) {
+    fn move_right(&mut self, ctx: &mut EventCtx) -> bool {
         if self.has_next_choice() {
             self.increase_page_counter();
             self.update(ctx);
+            true
         } else if self.is_carousel {
             self.page_counter_to_zero();
             self.update(ctx);
+            true
+        } else {
+            false
         }
     }
 
@@ -496,8 +504,8 @@ where
             match animation_direction {
                 ButtonPos::Left => self.move_left(ctx),
                 ButtonPos::Right => self.move_right(ctx),
-                _ => {}
-            }
+                _ => false,
+            };
             return None;
         }
 
@@ -508,10 +516,13 @@ where
 
         // Possible automatic movement when user is holding left or right button.
         if let Some(auto_move_direction) = self.holding_mover.event(ctx, event) {
-            match auto_move_direction {
+            let moved = match auto_move_direction {
                 ButtonPos::Left => self.move_left(ctx),
                 ButtonPos::Right => self.move_right(ctx),
-                _ => {}
+                _ => false,
+            };
+            if !moved {
+                self.holding_mover.stop_moving();
             }
             return None;
         }
@@ -535,8 +546,14 @@ where
             }
         } else if let Some(ButtonControllerMsg::Pressed(pos)) = button_event {
             // Starting the movement when left/right button is pressed.
-            if matches!(pos, ButtonPos::Left | ButtonPos::Right) {
-                self.holding_mover.start_moving(ctx, pos);
+            match pos {
+                ButtonPos::Left if self.has_previous_choice() || self.is_carousel => {
+                    self.holding_mover.start_moving(ctx, ButtonPos::Left);
+                }
+                ButtonPos::Right if self.has_next_choice() || self.is_carousel => {
+                    self.holding_mover.start_moving(ctx, ButtonPos::Right);
+                }
+                _ => {}
             }
         }
 
