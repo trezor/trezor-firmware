@@ -83,7 +83,7 @@ impl Component for CoinJoinProgress {
             text_multiline(
                 self.area,
                 TR::coinjoin__title_progress.into(),
-                Font::BOLD,
+                Font::BOLD_UPPER,
                 theme::FG,
                 theme::BG,
                 Alignment::Center,

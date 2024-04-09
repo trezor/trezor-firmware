@@ -44,7 +44,7 @@ where
     }
 
     pub fn center_bold(text: T) -> Self {
-        Self::new(text, Font::BOLD, Alignment::Center)
+        Self::new(text, Font::BOLD_UPPER, Alignment::Center)
     }
 
     /// Not showing ellipsis at the beginning of longer texts.

@@ -671,7 +671,7 @@ extern "C" fn new_confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Ma
                     let fee_rate_amount = fee_rate_amount.unwrap_or("".into());
 
                     let ops = OpTextLayout::new(theme::TEXT_MONO)
-                        .text_bold(TR::confirm_total__title_fee)
+                        .text_bold_upper(TR::confirm_total__title_fee)
                         .newline()
                         .newline()
                         .newline_half()
@@ -692,7 +692,7 @@ extern "C" fn new_confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Ma
                     // TODO: include wallet info when available
 
                     let ops = OpTextLayout::new(theme::TEXT_MONO)
-                        .text_bold(TR::confirm_total__title_sending_from)
+                        .text_bold_upper(TR::confirm_total__title_sending_from)
                         .newline()
                         .newline()
                         .newline_half()
@@ -1072,7 +1072,7 @@ extern "C" fn new_show_warning(n_args: usize, args: *const Obj, kwargs: *mut Map
             let mut ops = OpTextLayout::new(theme::TEXT_NORMAL);
             ops = ops.alignment(geometry::Alignment::Center);
             if !warning.is_empty() {
-                ops = ops.text_bold(warning).newline();
+                ops = ops.text_bold_upper(warning).newline();
             }
             if !description.is_empty() {
                 ops = ops.text_normal(description);
@@ -1144,7 +1144,7 @@ extern "C" fn new_show_mismatch(n_args: usize, args: *const Obj, kwargs: *mut Ma
             let btn_layout = ButtonLayout::arrow_none_text(TR::buttons__quit.into());
             let btn_actions = ButtonActions::cancel_none_confirm();
             let ops = OpTextLayout::new(theme::TEXT_NORMAL)
-                .text_bold(title)
+                .text_bold_upper(title)
                 .newline()
                 .newline_half()
                 .text_normal(TR::addr_mismatch__contact_support_at)

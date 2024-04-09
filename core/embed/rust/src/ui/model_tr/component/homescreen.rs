@@ -31,7 +31,7 @@ const LOGO_ICON_TOP_MARGIN: i16 = 12;
 const LOCK_ICON_TOP_MARGIN: i16 = 12;
 const NOTIFICATION_HEIGHT: i16 = 12;
 const LABEL_OUTSET: i16 = 3;
-const NOTIFICATION_FONT: Font = Font::NORMAL;
+const NOTIFICATION_FONT: Font = Font::NORMAL_UPPER;
 const NOTIFICATION_ICON: Icon = theme::ICON_WARNING;
 const COINJOIN_CORNER: Point = AREA.top_right().ofs(Offset::new(-2, 2));
 
@@ -313,7 +313,7 @@ impl<F> ConfirmHomescreen<F> {
     pub fn new(title: TString<'static>, buffer_func: F) -> Self {
         let btn_layout = ButtonLayout::cancel_none_text(TR::buttons__change.into());
         ConfirmHomescreen {
-            title: Child::new(Label::centered(title, theme::TEXT_BOLD)),
+            title: Child::new(Label::centered(title, theme::TEXT_BOLD_UPPER)),
             buffer_func,
             buttons: Child::new(ButtonController::new(btn_layout)),
         }

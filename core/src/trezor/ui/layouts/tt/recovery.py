@@ -132,7 +132,7 @@ async def continue_recovery(
         trezorui2.confirm_recovery(
             title=text,
             description=description,
-            button=button_label.upper(),
+            button=button_label,
             info_button=info_func is not None,
             dry_run=dry_run,
         )
@@ -161,7 +161,7 @@ async def show_recovery_warning(
                 trezorui2.show_warning(
                     title=content,
                     description=subheader or "",
-                    button=button.upper(),
+                    button=button,
                     allow_cancel=False,
                 )
             ),

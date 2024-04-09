@@ -58,13 +58,6 @@ def progress(
     if description is None:
         description = TR.progress__please_wait  # def_arg
 
-    if title is not None:
-        title = title.upper()
-    elif not utils.MODEL_IS_T2B1:
-        # on TT, uppercase the description which ends up on top of the screen
-        # when no title is set
-        description = description.upper()
-
     return RustProgress(
         layout=trezorui2.show_progress(
             description=description,

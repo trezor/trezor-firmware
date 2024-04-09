@@ -49,7 +49,7 @@ impl Progress {
     }
 
     pub fn with_title(mut self, title: TString<'static>) -> Self {
-        self.title = Some(Child::new(Label::centered(title, theme::TEXT_BOLD)));
+        self.title = Some(Child::new(Label::centered(title, theme::TEXT_BOLD_UPPER)));
         self
     }
 

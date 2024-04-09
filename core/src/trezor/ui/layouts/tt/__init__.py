@@ -256,11 +256,6 @@ def confirm_action(
     exc: ExceptionType = ActionCancelled,
     br_code: ButtonRequestType = BR_TYPE_OTHER,
 ) -> Awaitable[None]:
-    if verb is not None:
-        verb = verb.upper()
-    if verb_cancel is not None:
-        verb_cancel = verb_cancel.upper()
-
     if description is not None and description_param is not None:
         description = description.format(description_param)
 
@@ -268,7 +263,7 @@ def confirm_action(
         interact(
             RustLayout(
                 trezorui2.confirm_action(
-                    title=title.upper(),
+                    title=title,
                     action=action,
                     description=description,
                     verb=verb,
@@ -292,8 +287,6 @@ def confirm_single(
     description_param: str | None = None,
     verb: str | None = None,
 ) -> Awaitable[None]:
-    if verb is not None:
-        verb = verb.upper()
     description_param = description_param or ""
 
     # Placeholders are coming from translations in form of {0}
@@ -306,7 +299,7 @@ def confirm_single(
         interact(
             RustLayout(
                 trezorui2.confirm_emphasized(
-                    title=title.upper(),
+                    title=title,
                     items=(begin, (True, description_param), end),
                     verb=verb,
                 )
@@ -327,7 +320,7 @@ def confirm_reset_device(title: str, recovery: bool = False) -> Awaitable[None]:
         interact(
             RustLayout(
                 trezorui2.confirm_reset_device(
-                    title=title.upper(),
+                    title=title,
                     button=button,
                 )
             ),
@@ -362,7 +355,7 @@ async def prompt_backup() -> bool:
     result = await interact(
         RustLayout(
             trezorui2.confirm_action(
-                title=TR.words__warning.upper(),
+                title=TR.words__warning,
                 action=TR.backup__want_to_skip,
                 description=TR.backup__can_back_up_anytime,
                 verb=TR.buttons__back_up,
@@ -515,7 +508,7 @@ def show_pubkey(
     mismatch_title = mismatch_title or TR.addr_mismatch__key_mismatch  # def_arg
     return show_address(
         address=pubkey,
-        title=title.upper(),
+        title=title,
         account=account,
         path=path,
         br_type=br_type,
@@ -538,7 +531,7 @@ async def show_error_and_raise(
             trezorui2.show_error(
                 title=subheader or "",
                 description=content,
-                button=button.upper(),
+                button=button,
                 allow_cancel=False,
             )
         ),
@@ -562,7 +555,7 @@ def show_warning(
                 trezorui2.show_warning(
                     title=content,
                     description=subheader or "",
-                    button=button.upper(),
+                    button=button,
                 )
             ),
             br_type,
@@ -584,7 +577,7 @@ def show_success(
                 trezorui2.show_success(
                     title=content,
                     description=subheader or "",
-                    button=button.upper(),
+                    button=button,
                     allow_cancel=False,
                 )
             ),
@@ -605,7 +598,7 @@ async def confirm_output(
     chunkify: bool = False,
 ) -> None:
     if title is not None:
-        # TODO: handle translation
+        # TODO: handle translation:
         if title.upper().startswith("CONFIRM "):
             title = title[len("CONFIRM ") :]
         amount_title = title
@@ -621,7 +614,7 @@ async def confirm_output(
         result = await interact(
             RustLayout(
                 trezorui2.confirm_value(
-                    title=recipient_title.upper(),
+                    title=recipient_title,
                     subtitle=address_label,
                     description=None,
                     value=address,
@@ -640,7 +633,7 @@ async def confirm_output(
         result = await interact(
             RustLayout(
                 trezorui2.confirm_value(
-                    title=amount_title.upper(),
+                    title=amount_title,
                     subtitle=None,
                     description=None,
                     value=amount,
@@ -709,10 +702,10 @@ async def should_show_more(
     result = await interact(
         RustLayout(
             trezorui2.confirm_with_info(
-                title=title.upper(),
+                title=title,
                 items=para,
-                button=confirm.upper(),
-                info_button=button_text.upper(),
+                button=confirm,
+                info_button=button_text,
             )
         ),
         br_type,
@@ -780,7 +773,6 @@ def confirm_blob(
     chunkify: bool = False,
 ) -> Awaitable[None]:
     verb = verb or TR.buttons__confirm  # def_arg
-    title = title.upper()
     layout = RustLayout(
         trezorui2.confirm_blob(
             title=title,
@@ -880,9 +872,6 @@ def confirm_value(
     if not verb and not hold:
         raise ValueError("Either verb or hold=True must be set")
 
-    if verb:
-        verb = verb.upper()
-
     info_items = info_items or []
     info_layout = RustLayout(
         trezorui2.show_info_with_cancel(
@@ -896,7 +885,7 @@ def confirm_value(
         with_info(
             RustLayout(
                 trezorui2.confirm_value(
-                    title=title.upper(),
+                    title=title,
                     subtitle=subtitle,
                     description=description,
                     value=value,
@@ -927,7 +916,7 @@ def confirm_properties(
         interact(
             RustLayout(
                 trezorui2.confirm_properties(
-                    title=title.upper(),
+                    title=title,
                     items=items,
                     hold=hold,
                 )
@@ -984,7 +973,7 @@ def confirm_summary(
 
     total_layout = RustLayout(
         trezorui2.confirm_total(
-            title=title.upper(),
+            title=title,
             items=items,
             info_button=bool(info_items),
         )
@@ -992,7 +981,7 @@ def confirm_summary(
     info_items = info_items or []
     info_layout = RustLayout(
         trezorui2.show_info_with_cancel(
-            title=info_title.upper() if info_title else TR.words__title_information,
+            title=info_title if info_title else TR.words__title_information,
             items=info_items,
         )
     )
@@ -1034,7 +1023,7 @@ if not utils.BITCOIN_ONLY:
             # Allowing going back and forth between recipient and summary/details
             await confirm_blob(
                 br_type,
-                TR.words__recipient.upper(),
+                TR.words__recipient,
                 recipient,
                 verb=TR.buttons__continue,
                 chunkify=chunkify,
@@ -1144,11 +1133,11 @@ def confirm_metadata(
     verb = verb or TR.buttons__continue  # def_arg
     return confirm_action(
         br_type,
-        title=title.upper(),
+        title=title,
         action="",
         description=content,
         description_param=param,
-        verb=verb.upper(),
+        verb=verb,
         hold=hold,
         br_code=br_code,
     )
@@ -1157,7 +1146,7 @@ def confirm_metadata(
 def confirm_replacement(title: str, txid: str) -> Awaitable[None]:
     return confirm_blob(
         "confirm_replacement",
-        title.upper(),
+        title,
         txid,
         TR.send__transaction_id,
         TR.buttons__continue,
@@ -1244,7 +1233,7 @@ def confirm_modify_fee(
 ) -> Awaitable[None]:
     fee_layout = RustLayout(
         trezorui2.confirm_modify_fee(
-            title=title.upper(),
+            title=title,
             sign=sign,
             user_fee_change=user_fee_change,
             total_fee_new=total_fee_new,
@@ -1499,7 +1488,7 @@ def confirm_set_new_pin(
         interact(
             RustLayout(
                 trezorui2.confirm_emphasized(
-                    title=title.upper(),
+                    title=title,
                     items=(
                         (True, description + "\n\n"),
                         information,

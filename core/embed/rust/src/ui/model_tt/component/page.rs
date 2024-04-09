@@ -561,7 +561,7 @@ mod tests {
                 ),
                 Paragraph::new(
                     &theme::TEXT_BOLD,
-                    "Second, bold, paragraph should also fit on the screen whole I think.",
+                    "Second, bold, paragraph should also fit.",
                 ),
             ]),
             theme::BG,
@@ -576,7 +576,7 @@ mod tests {
                 "component": "Paragraphs",
                 "paragraphs": [
                     ["This is the first", "\n", "paragraph and it should", "\n", "fit on the screen", "\n", "entirely."],
-                    ["Second, bold, paragraph", "\n", "should also fit on the", "\n", "screen whole I think."],
+                    ["Second, bold,", "\n", "paragraph should", "\n", "also fit."],
                 ],
             },
             "hold": false,
@@ -594,7 +594,7 @@ mod tests {
         let mut page = ButtonPage::new(
             Paragraphs::new(
                 Paragraph::new(
-                    &theme::TEXT_BOLD,
+                    &theme::TEXT_NORMAL,
                     "This is somewhat long paragraph that goes on and on and on and on and on and will definitely not fit on just a single screen. You have to swipe a bit to see all the text it contains I guess. There's just so much letters in it.",
                 )
             ),
@@ -611,18 +611,18 @@ mod tests {
                 "paragraphs": [
                     [
                         "This is somewhat long", "\n",
-                        "paragraph that goes on", "\n",
-                        "and on and on and on and", "\n",
-                        "on and will definitely not", "\n",
-                        "fit on just a single", "\n",
-                        "screen. You have to", "\n",
-                        "swipe a bit to see all the", "\n",
-                        "text it contains I guess.", "...",
+                        "paragraph that goes", "\n",
+                        "on and on and on and", "\n",
+                        "on and on and will", "\n",
+                        "definitely not fit on", "\n",
+                        "just a single screen.", "\n",
+                        "You have to swipe a", "..."
                     ],
                 ],
             },
             "hold": false,
         });
+
         let second_page = serde_json::json!({
             "component": "ButtonPage",
             "active_page": 1,
@@ -630,7 +630,12 @@ mod tests {
             "content": {
                 "component": "Paragraphs",
                 "paragraphs": [
-                    ["There's just so much", "\n", "letters in it."],
+                    [
+                        "bit to see all the text it", "\n",
+                        "contains I guess.", "\n",
+                        "There's just so much", "\n",
+                        "letters in it."
+                    ],
                 ],
             },
             "hold": false,
@@ -676,20 +681,21 @@ mod tests {
                 "component": "Paragraphs",
                 "paragraphs": [
                     [
-                        "This paragraph is using a", "\n",
-                        "bold font. It doesn't need", "\n",
-                        "to be all that long.",
+                        "This paragraph is", "\n",
+                        "using a bold font. It", "\n",
+                        "doesn't need to be all", "\n",
+                        "that long.",
                     ],
                     [
                         "And this one is u", "\n",
                         "sing MONO. Monosp", "\n",
-                        "ace is nice for n", "\n",
-                        "umbers, they", "...",
+                        "ace is nice f", "...",
                     ],
                 ],
             },
             "hold": false,
         });
+
         let second_page = serde_json::json!({
             "component": "ButtonPage",
             "active_page": 1,
@@ -698,20 +704,19 @@ mod tests {
                 "component": "Paragraphs",
                 "paragraphs": [
                     [
-                        "...", "have the same", "\n",
+                        "...", "or numbers, t", "\n",
+                        "hey have the same", "\n",
                         "width and can be", "\n",
                         "scanned quickly.", "\n",
                         "Even if they span", "\n",
                         "several pages or", "\n",
                         "something.",
                     ],
-                    [
-                        "Let's add another one", "...",
-                    ],
                 ],
             },
             "hold": false,
         });
+
         let third_page = serde_json::json!({
             "component": "ButtonPage",
             "active_page": 2,
@@ -720,10 +725,13 @@ mod tests {
                 "component": "Paragraphs",
                 "paragraphs": [
                     [
-                        "for a good measure. This", "\n",
-                        "one should overflow all", "\n",
-                        "the way to the third page", "\n",
-                        "with a bit of luck.",
+                        "Let's add another", "\n",
+                        "one for a good", "\n",
+                        "measure. This one", "\n",
+                        "should overflow all", "\n",
+                        "the way to the third", "\n",
+                        "page with a bit of", "\n",
+                        "luck.",
                     ],
                 ],
             },

@@ -158,7 +158,7 @@ async def _prompt_number(
 ) -> int:
     num_input = RustLayout(
         trezorui2.request_number(
-            title=title.upper(),
+            title=title,
             description=description,
             count=count,
             min_count=min_count,
@@ -359,7 +359,7 @@ async def show_reset_warning(
                 trezorui2.show_warning(
                     title=subheader or "",
                     description=content,
-                    button=button.upper(),
+                    button=button,
                     allow_cancel=False,
                 )
             ),
