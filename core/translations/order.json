@@ -860,5 +860,6 @@
   "858": "address_details__derivation_path",
   "859": "instructions__continue_in_app",
   "860": "words__cancel_and_exit",
-  "861": "address__confirmed"
+  "861": "address__confirmed",
+  "862": "reset__title_shamir_backup"
 }
