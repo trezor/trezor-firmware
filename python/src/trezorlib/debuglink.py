@@ -424,9 +424,16 @@ class DebugLink:
             f"received type {msg_type} ({len(msg_bytes)} bytes): {msg_bytes.hex()}",
         )
         msg = self.mapping.decode(ret_type, ret_bytes)
+
+        # Collapse tokens to make log use less lines.
+        msg_for_log = msg
+        if isinstance(msg, (messages.DebugLinkState, messages.DebugLinkLayout)):
+            msg_for_log = deepcopy(msg)
+            msg_for_log.tokens = ["".join(msg_for_log.tokens)]
+
         LOG.debug(
-            f"received message: {msg.__class__.__name__}",
-            extra={"protobuf": msg},
+            f"received message: {msg_for_log.__class__.__name__}",
+            extra={"protobuf": msg_for_log},
         )
         return msg
 
