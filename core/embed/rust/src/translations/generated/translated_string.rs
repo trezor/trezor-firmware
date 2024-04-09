@@ -6,7 +6,8 @@
 #[cfg(feature = "micropython")]
 use crate::micropython::qstr::Qstr;
 
-#[derive(Debug, Copy, Clone, FromPrimitive, PartialEq, Eq)]
+#[derive(Copy, Clone, FromPrimitive, PartialEq, Eq)]
+#[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 #[repr(u16)]
 #[allow(non_camel_case_types)]
 pub enum TranslatedString {

@@ -261,15 +261,35 @@ macro_rules! attr_tuple {
     });
 }
 
+// from https://docs.rs/ufmt/latest/ufmt/
+// like `std::format!` it returns a `std::String` but uses `uwrite!` instead of
+// `write!`
+macro_rules! uformat {
+    // IMPORTANT use `tt` fragments instead of `expr` fragments (i.e. `$($exprs:expr),*`)
+    ($len:expr, $($tt:tt)*) => {{
+        let mut s = heapless::String::<$len>::new();
+        match ufmt::uwrite!(&mut s, $($tt)*) {
+            Ok(_) => Ok(s),
+            Err(e) => Err(e),
+        }
+    }};
+}
+
 /// Print arbitrary amounts of slices into a terminal.
 /// Does not include a newline at the end.
 /// Does not do anything when not in debugging mode.
 #[allow(unused_macros)] // Should be used only for debugging purposes
 macro_rules! print {
-    ($($string:expr),+) => {
+    ($($tt:tt)*) => {
         #[cfg(feature = "debug")]
         {
-            $(crate::micropython::print::print($string);)+
+            match uformat!(256, $($tt)*) {
+                Ok(u) => crate::micropython::print::print(&u),
+                Err(e) => {
+                    crate::micropython::print::print("Error: ");
+                    crate::micropython::print::print(&unwrap!(uformat!(256, "{:?}", e)));
+                }
+            };
         }
     }
 }
@@ -279,8 +299,9 @@ macro_rules! print {
 /// Does not do anything when not in debugging mode.
 #[allow(unused_macros)] // Should be used only for debugging purposes
 macro_rules! println {
-    ($($string:expr),+) => {
+    ($($tt:tt)*) => {
         // Just delegating to print! and adding a newline
-        print!($($string),+, "\n");
+        print!($($tt)*);
+        print!("\n");
     }
 }
