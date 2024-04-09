@@ -87,11 +87,6 @@ impl Button {
         self.content = ButtonContent::Text(text);
     }
 
-    /// Changing the style of the button.
-    pub fn set_style(&mut self, styles: ButtonStyleSheet) {
-        self.styles = styles;
-    }
-
     // Setting the visual state of the button.
     fn set(&mut self, ctx: &mut EventCtx, state: State) {
         if self.state != state {
@@ -295,6 +290,7 @@ pub struct ButtonStyle {
 
 impl ButtonStyleSheet {
     pub fn new(
+        font: Font,
         normal_color: Color,
         active_color: Color,
         with_outline: bool,
@@ -304,7 +300,7 @@ impl ButtonStyleSheet {
     ) -> Self {
         Self {
             normal: ButtonStyle {
-                font: theme::FONT_BUTTON,
+                font,
                 text_color: normal_color,
                 with_outline,
                 with_arms,
@@ -312,7 +308,7 @@ impl ButtonStyleSheet {
                 offset,
             },
             active: ButtonStyle {
-                font: theme::FONT_BUTTON,
+                font,
                 text_color: active_color,
                 with_outline,
                 with_arms,
@@ -324,12 +320,14 @@ impl ButtonStyleSheet {
 
     // White text in normal mode.
     pub fn default(
+        font: Font,
         with_outline: bool,
         with_arms: bool,
         fixed_width: Option<i16>,
         offset: Offset,
     ) -> Self {
         Self::new(
+            font,
             theme::FG,
             theme::BG,
             with_outline,
@@ -344,6 +342,7 @@ impl ButtonStyleSheet {
 #[derive(Clone)]
 pub struct ButtonDetails {
     pub content: ButtonContent,
+    font: Font,
     pub duration: Option<Duration>,
     with_outline: bool,
     with_arms: bool,
@@ -357,6 +356,7 @@ impl ButtonDetails {
     pub fn text(text: TString<'static>) -> Self {
         Self {
             content: ButtonContent::Text(text),
+            font: Font::NORMAL_UPPER,
             duration: None,
             with_outline: true,
             with_arms: false,
@@ -370,6 +370,7 @@ impl ButtonDetails {
     pub fn icon(icon: Icon) -> Self {
         Self {
             content: ButtonContent::Icon(icon),
+            font: Font::NORMAL_UPPER,
             duration: None,
             with_outline: false,
             with_arms: false,
@@ -469,9 +470,16 @@ impl ButtonDetails {
         self
     }
 
+    /// Specifying the font of the button.
+    pub fn with_font(mut self, font: Font) -> Self {
+        self.font = font;
+        self
+    }
+
     /// Button style that should be applied.
     pub fn style(&self) -> ButtonStyleSheet {
         ButtonStyleSheet::default(
+            self.font,
             self.with_outline,
             self.with_arms,
             self.fixed_width,
@@ -539,7 +547,11 @@ impl ButtonLayout {
         Self::new(
             Some(ButtonDetails::from_text_possible_icon(left)),
             Some(ButtonDetails::armed_text(middle)),
-            Some(ButtonDetails::text("i".into()).with_fixed_width(theme::BUTTON_ICON_WIDTH)),
+            Some(
+                ButtonDetails::text("i".into())
+                    .with_fixed_width(theme::BUTTON_ICON_WIDTH)
+                    .with_font(Font::NORMAL),
+            ),
         )
     }
 
@@ -548,7 +560,11 @@ impl ButtonLayout {
         Self::new(
             Some(ButtonDetails::cancel_icon()),
             Some(ButtonDetails::armed_text(middle)),
-            Some(ButtonDetails::text("i".into()).with_fixed_width(theme::BUTTON_ICON_WIDTH)),
+            Some(
+                ButtonDetails::text("i".into())
+                    .with_fixed_width(theme::BUTTON_ICON_WIDTH)
+                    .with_font(Font::NORMAL),
+            ),
         )
     }
 
@@ -665,7 +681,11 @@ impl ButtonLayout {
         Self::new(
             Some(ButtonDetails::up_arrow_icon()),
             Some(ButtonDetails::armed_text(text)),
-            Some(ButtonDetails::text("i".into()).with_fixed_width(theme::BUTTON_ICON_WIDTH)),
+            Some(
+                ButtonDetails::text("i".into())
+                    .with_fixed_width(theme::BUTTON_ICON_WIDTH)
+                    .with_font(Font::NORMAL),
+            ),
         )
     }
 
