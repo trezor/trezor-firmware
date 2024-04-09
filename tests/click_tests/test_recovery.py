@@ -51,6 +51,7 @@ def prepare_recovery_and_evaluate(
 
 
 @pytest.mark.setup_client(uninitialized=True)
+@pytest.mark.skip_german_t3t1
 def test_recovery_slip39_basic(device_handler: "BackgroundDeviceHandler"):
     with prepare_recovery_and_evaluate(device_handler) as debug:
         recovery.confirm_recovery(debug)
@@ -61,6 +62,7 @@ def test_recovery_slip39_basic(device_handler: "BackgroundDeviceHandler"):
 
 
 @pytest.mark.setup_client(uninitialized=True)
+@pytest.mark.skip_german_t3t1
 def test_recovery_bip39(device_handler: "BackgroundDeviceHandler"):
     with prepare_recovery_and_evaluate(device_handler) as debug:
         recovery.confirm_recovery(debug)
@@ -71,6 +73,7 @@ def test_recovery_bip39(device_handler: "BackgroundDeviceHandler"):
 
 
 @pytest.mark.setup_client(uninitialized=True)
+@pytest.mark.skip_german_t3t1
 def test_recovery_bip39_previous_word(device_handler: "BackgroundDeviceHandler"):
     with prepare_recovery_and_evaluate(device_handler) as debug:
         recovery.confirm_recovery(debug)

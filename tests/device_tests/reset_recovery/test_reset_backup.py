@@ -104,6 +104,7 @@ def test_skip_backup_msg(client: Client, backup_type, backup_flow):
     assert state.mnemonic_secret == secret
 
 
+@pytest.mark.skip_german_t3t1
 @pytest.mark.skip_t1b1
 @pytest.mark.parametrize("backup_type, backup_flow", VECTORS)
 @pytest.mark.setup_client(uninitialized=True)

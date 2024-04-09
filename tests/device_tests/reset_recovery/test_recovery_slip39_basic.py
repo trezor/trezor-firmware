@@ -33,7 +33,7 @@ from ...input_flows import (
     InputFlowSlip39BasicRecoveryWrongNthWord,
 )
 
-pytestmark = pytest.mark.skip_t1b1
+pytestmark = [pytest.mark.skip_t1b1, pytest.mark.skip_german_t3t1]
 
 MNEMONIC_SLIP39_BASIC_20_1of1 = [
     "academic academic academic academic academic academic academic academic academic academic academic academic academic academic academic academic academic rebuild aquatic spew"

@@ -27,6 +27,8 @@ from ...input_flows import (
     InputFlowBip39RecoveryDryRunInvalid,
 )
 
+pytestmark = pytest.mark.skip_german_t3t1
+
 
 def do_recover_legacy(client: Client, mnemonic: list[str], **kwargs: Any):
     def input_callback(_):

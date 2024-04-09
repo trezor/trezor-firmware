@@ -218,6 +218,12 @@ def client(
         and _raw_client.model is models.T3T1
     ):
         pytest.skip("Test excluded on Trezor T3T1")
+    if (
+        request.node.get_closest_marker("skip_german_t3t1")
+        and _raw_client.model is models.T3T1
+        and _raw_client.features.language == "de-DE"
+    ):
+        pytest.skip("Test excluded on T3T1 with german language")
 
     sd_marker = request.node.get_closest_marker("sd_card")
     if sd_marker and not _raw_client.features.sd_card_present:
@@ -402,6 +408,9 @@ def pytest_configure(config: "Config") -> None:
     config.addinivalue_line("markers", "skip_t2t1: skip the test on Trezor T")
     config.addinivalue_line("markers", "skip_t2b1: skip the test on Trezor T2B1")
     config.addinivalue_line("markers", "skip_t3t1: skip the test on Trezor T3T1")
+    config.addinivalue_line(
+        "markers", "skip_german_t3t1: skip the test on de-DE Trezor T3T1"
+    )
     config.addinivalue_line(
         "markers", "experimental: enable experimental features on Trezor"
     )

@@ -115,12 +115,16 @@ def prepare(
         device_handler.run(device.change_wipe_code)  # type: ignore
         if old_pin:
             _input_see_confirm(debug, old_pin)
-        TR.assert_in(debug.wait_layout().text_content(), "wipe_code__turn_on")
+        layout = debug.wait_layout()
+        TR.assert_in(layout.text_content(), "wipe_code__turn_on")
         go_next(debug, wait=True)
         if debug.model in (models.T2B1,):
             go_next(debug, wait=True)
             go_next(debug, wait=True)
             go_next(debug, wait=True)
+        elif layout.page_count() > 1:
+            for _ in range(layout.page_count() - 1):
+                go_next(debug, wait=True)
         if old_pin:
             debug.wait_layout()
             _input_see_confirm(debug, old_pin)

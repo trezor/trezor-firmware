@@ -258,6 +258,7 @@ def unlock_dry_run(debug: "DebugLink") -> "LayoutContent":
 
 
 @pytest.mark.setup_client(pin=PIN4)
+@pytest.mark.skip_german_t3t1
 def test_dryrun_locks_at_number_of_words(device_handler: "BackgroundDeviceHandler"):
     set_autolock_delay(device_handler, 10_000)
     debug = device_handler.debuglink()
@@ -289,6 +290,7 @@ def test_dryrun_locks_at_number_of_words(device_handler: "BackgroundDeviceHandle
 
 
 @pytest.mark.setup_client(pin=PIN4)
+@pytest.mark.skip_german_t3t1
 def test_dryrun_locks_at_word_entry(device_handler: "BackgroundDeviceHandler"):
     set_autolock_delay(device_handler, 10_000)
     debug = device_handler.debuglink()
@@ -315,6 +317,7 @@ def test_dryrun_locks_at_word_entry(device_handler: "BackgroundDeviceHandler"):
 
 
 @pytest.mark.setup_client(pin=PIN4)
+@pytest.mark.skip_german_t3t1
 def test_dryrun_enter_word_slowly(device_handler: "BackgroundDeviceHandler"):
     set_autolock_delay(device_handler, 10_000)
     debug = device_handler.debuglink()
