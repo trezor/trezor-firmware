@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# script used to generate /embed/extmod/modtrezorui/font_*_*.c
+# script used to generate core/embed/lib/fonts/font_*_*.c
 
 from __future__ import annotations
 
@@ -167,12 +167,12 @@ class Glyph:
                 advance += -bearingX
                 bearingX = 0
             else:
-                raise ValueError("Negative bearingX for character '%s'" % c)
+                raise ValueError(f"Negative bearingX for character '{c}'")
         bearingY = metrics.horiBearingY // 64
         assert advance >= 0 and advance <= 255
         assert bearingX >= 0 and bearingX <= 255
         if bearingY < 0:  # HACK
-            print("normalizing bearingY %d for '%s'" % (bearingY, c))
+            print(f"normalizing bearingY {bearingY} for '{c}'")
             bearingY = 0
         assert bearingY >= 0 and bearingY <= 255
         buf = list(bitmap.buffer)
@@ -184,9 +184,7 @@ class Glyph:
             width -= remove_left
             assert advance > remove_left
             advance -= remove_left
-            print(
-                'Glyph "%c": removed %d pixel columns from the left' % (c, remove_left)
-            )
+            print(f'Glyph "{c}": removed {remove_left} pixel columns from the left')
 
         return Glyph(
             char=c,
@@ -202,17 +200,7 @@ class Glyph:
 
     def print_metrics(self) -> None:
         print(
-            'Loaded glyph "%c" ... %d x %d @ %d grays (%d bytes, metrics: %d, %d, %d)'
-            % (
-                self.char,
-                self.width,
-                self.rows,
-                self.num_grays,
-                len(self.buf),
-                self.advance,
-                self.bearingX,
-                self.bearingY,
-            )
+            f'Loaded glyph "{self.char}" ... {self.width} x {self.rows} @ {self.num_grays} grays ({len(self.buf)} bytes, metrics: {self.advance}, {self.bearingX}, {self.bearingY})'
         )
 
     def process_byte(self, b: int) -> int:
@@ -222,7 +210,11 @@ class Glyph:
             return b
 
     def get_definition_line(
-        self, name_style_size: str, bpp: int, i: int | str, static: bool = True
+        self,
+        name_style_size: str,
+        bpp: int,
+        i: int | str,
+        static: bool = True,
     ) -> str:
         numbers = ", ".join(str(n) for n in self.to_bytes(bpp))
         comment = f"/* {self.char} */"
@@ -260,17 +252,25 @@ class FaceProcessor:
         bpp: int = 4,
         shaveX: int = 0,
         ext: str = "ttf",
+        gen_normal: bool = True,  # generate font with all the letters
+        gen_upper: bool = False,  # generate font with only upper-cased letters
     ):
-        print("Processing ... %s %s %s" % (name, style, size))
+        if gen_normal is False and gen_upper is False:
+            raise ValueError(
+                "At least one must be selected from normal glyphs or only uppercased glyphs."
+            )
+        print(f"Processing ... {name} {style} {size}")
         self.name = name
         self.style = style
         self.size = size
         self.bpp = bpp
         self.shaveX = shaveX
         self.ext = ext
+        self.gen_normal = gen_normal
+        self.gen_upper = gen_upper
         self.face = freetype.Face(str(FONTS_DIR / f"{name}-{style}.{ext}"))
         self.face.set_pixel_sizes(0, size)  # type: ignore
-        self.fontname = "%s_%s_%d" % (name.lower(), style.lower(), size)
+        self.fontname = f"{name.lower()}_{style.lower()}_{size}"
         self.font_ymin = 0
         self.font_ymax = 0
 
@@ -288,7 +288,10 @@ class FaceProcessor:
 
     def write_files(self) -> None:
         self.write_c_files()
-        self.write_foreign_json()
+        if self.gen_normal:
+            self.write_foreign_json(upper_cased=False)
+        if self.gen_upper:
+            self.write_foreign_json(upper_cased=True)
         if WRITE_WIDTHS:
             self.write_char_widths_files()
 
@@ -296,17 +299,25 @@ class FaceProcessor:
         self._write_c_file()
         self._write_h_file()
 
-    def write_foreign_json(self) -> None:
+    def write_foreign_json(self, upper_cased=False) -> None:
         for lang, language_chars in all_languages.items():
             fontdata = {}
             for item in language_chars:
                 c = _normalize(item)
+                map_from = c
+                if c.islower() and upper_cased and c != "ß":
+                    # FIXME not sure how to properly handle the german "ß"
+                    c = c.upper()
                 assert len(c) == 1
+                assert len(map_from) == 1
                 self._load_char(c)
                 glyph = Glyph.from_face(self.face, c, self.shaveX)
                 glyph.print_metrics()
-                fontdata[c] = glyph.to_bytes(self.bpp).hex()
-            file = JSON_FONTS_DEST / f"font_{self.fontname}_{lang}.json"
+                fontdata[map_from] = glyph.to_bytes(self.bpp).hex()
+            file = (
+                JSON_FONTS_DEST
+                / f"font_{self.fontname}{'_upper' if upper_cased else ''}_{lang}.json"
+            )
             json_content = json.dumps(fontdata, indent=2, ensure_ascii=False)
             file.write_text(json_content + "\n")
 
@@ -317,6 +328,8 @@ class FaceProcessor:
         # "normal" ASCII characters
         for i in range(MIN_GLYPH, MAX_GLYPH + 1):
             c = chr(i)
+            if c.islower() and not self.gen_normal:
+                c = c.upper()
             chars.add(c)
         # foreign language data
         for _lang, lang_chars in all_languages.items():
@@ -341,23 +354,45 @@ class FaceProcessor:
     def _write_c_file_content(self, f: TextIO) -> None:
         # Write "normal" ASCII characters
         for i in range(MIN_GLYPH, MAX_GLYPH + 1):
-            c = chr(i)
-            self._write_char_definition(f, c, i)
+            if chr(i).islower() and not self.gen_normal:
+                continue
+            self._write_char_definition(f, chr(i), i)
 
-        # Write non-printable character
-        f.write("\n")
-        nonprintable = self._get_nonprintable_definition_line()
-        f.write(nonprintable)
+        # Write nonprintable glyph
+        if self.gen_normal:
+            f.write("\n")
+            nonprintable = self._get_nonprintable_definition_line()
+            f.write(nonprintable)
+        if self.gen_upper:
+            f.write("\n")
+            nonprintable = self._get_nonprintable_definition_line(upper=True)
+            f.write(nonprintable)
 
         # Write array of all glyphs
-        f.write("\n")
-        f.write(
-            "const uint8_t * const Font_%s[%d + 1 - %d] = {\n"
-            % (self._name_style_size, MAX_GLYPH, MIN_GLYPH)
-        )
-        for i in range(MIN_GLYPH, MAX_GLYPH + 1):
-            f.write("    Font_%s_glyph_%d,\n" % (self._name_style_size, i))
-        f.write("};\n")
+        if self.gen_normal:
+            f.write("\n")
+            f.write(
+                f"const uint8_t * const Font_{self._name_style_size}[{MAX_GLYPH} + 1 - {MIN_GLYPH}] = {{\n"
+            )
+            for i in range(MIN_GLYPH, MAX_GLYPH + 1):
+                f.write(f"    Font_{self._name_style_size}_glyph_{i},\n")
+            f.write("};\n")
+
+        # Write array of all glyphs for _upper version
+        if self.gen_upper:
+            f.write("\n")
+            f.write(
+                f"const uint8_t * const Font_{self._name_style_size}_upper[{MAX_GLYPH} + 1 - {MIN_GLYPH}] = {{\n"
+            )
+            for i in range(MIN_GLYPH, MAX_GLYPH + 1):
+                comment = ""
+                if chr(i).islower():
+                    c_from = chr(i)
+                    c_to = c_from.upper()
+                    i = ord(c_to)
+                    comment = f"  // {c_from} -> {c_to}"
+                f.write(f"    Font_{self._name_style_size}_glyph_{i},{comment}\n")
+            f.write("};\n")
 
     def _write_char_definition(self, f: TextIO, c: str, i: int) -> None:
         self._load_char(c)
@@ -373,49 +408,68 @@ class FaceProcessor:
         self.font_ymax = max(self.font_ymax, yMax)
 
     def _write_c_file_header(self, f: TextIO) -> None:
+        f.write("// This file is generated by core/tools/codegen/gen_font.py\n\n")
         f.write("#include <stdint.h>\n\n")
         f.write("// clang-format off\n\n")
         f.write("// - the first two bytes are width and height of the glyph\n")
         f.write(
             "// - the third, fourth and fifth bytes are advance, bearingX and bearingY of the horizontal metrics of the glyph\n"
         )
-        f.write("// - the rest is packed %d-bit glyph data\n\n" % self.bpp)
+        f.write(f"// - the rest is packed {self.bpp}-bit glyph data\n\n")
 
-    def _get_nonprintable_definition_line(self) -> str:
+    def _get_nonprintable_definition_line(self, upper: bool = False) -> str:
         c = "?"
         self._load_char(c)
         glyph = Glyph.from_face(self.face, c, self.shaveX, inverse_colors=True)
-        return glyph.get_definition_line(
-            self._name_style_size, self.bpp, "nonprintable", static=False
-        )
+        if upper:
+            return glyph.get_definition_line(
+                f"{self._name_style_size}_upper", self.bpp, "nonprintable", static=False
+            )
+        else:
+            return glyph.get_definition_line(
+                self._name_style_size, self.bpp, "nonprintable", static=False
+            )
 
     def _load_char(self, c: str) -> None:
         self.face.load_char(c, freetype.FT_LOAD_RENDER | freetype.FT_LOAD_TARGET_NORMAL)  # type: ignore
 
     def _write_h_file(self) -> None:
         with open(OUT_DIR / self._h_file_name, "wt") as f:
+            f.write("// This file is generated by core/tools/codegen/gen_font.py\n\n")
             f.write("#include <stdint.h>\n\n")
-            f.write("#if TREZOR_FONT_BPP != %d\n" % self.bpp)
-            f.write("#error Wrong TREZOR_FONT_BPP (expected %d)\n" % self.bpp)
+            f.write(f"#if TREZOR_FONT_BPP != {self.bpp}\n")
+            f.write(f"#error Wrong TREZOR_FONT_BPP (expected {self.bpp})\n")
             f.write("#endif\n")
-
-            f.write("#define Font_%s_HEIGHT %d\n" % (self._name_style_size, self.size))
-            f.write(
-                "#define Font_%s_MAX_HEIGHT %d\n"
-                % (self._name_style_size, self.font_ymax - self.font_ymin)
-            )
-            f.write(
-                "#define Font_%s_BASELINE %d\n"
-                % (self._name_style_size, -self.font_ymin)
-            )
-            f.write(
-                "extern const uint8_t* const Font_%s[%d + 1 - %d];\n"
-                % (self._name_style_size, MAX_GLYPH, MIN_GLYPH)
-            )
-            f.write(
-                "extern const uint8_t Font_%s_glyph_nonprintable[];\n"
-                % (self._name_style_size)
-            )
+            if self.gen_normal:
+                f.write(f"#define Font_{self._name_style_size}_HEIGHT {self.size}\n")
+                f.write(
+                    f"#define Font_{self._name_style_size}_MAX_HEIGHT {self.font_ymax - self.font_ymin}\n"
+                )
+                f.write(
+                    f"#define Font_{self._name_style_size}_BASELINE {-self.font_ymin}\n"
+                )
+                f.write(
+                    f"extern const uint8_t* const Font_{self._name_style_size}[{MAX_GLYPH} + 1 - {MIN_GLYPH}];\n"
+                )
+                f.write(
+                    f"extern const uint8_t Font_{self._name_style_size}_glyph_nonprintable[];\n"
+                )
+            if self.gen_upper:
+                f.write(
+                    f"#define Font_{self._name_style_size}_upper_HEIGHT {self.size}\n"
+                )
+                f.write(
+                    f"#define Font_{self._name_style_size}_upper_MAX_HEIGHT {self.font_ymax - self.font_ymin}\n"
+                )
+                f.write(
+                    f"#define Font_{self._name_style_size}_upper_BASELINE {-self.font_ymin}\n"
+                )
+                f.write(
+                    f"extern const uint8_t* const Font_{self._name_style_size}_upper[{MAX_GLYPH} + 1 - {MIN_GLYPH}];\n"
+                )
+                f.write(
+                    f"extern const uint8_t Font_{self._name_style_size}_upper_glyph_nonprintable[];\n"
+                )
 
 
 if __name__ == "__main__":
@@ -427,12 +481,29 @@ if __name__ == "__main__":
 
     FaceProcessor("TTHoves", "Regular", 21, ext="otf").write_files()
     FaceProcessor("TTHoves", "DemiBold", 21, ext="otf").write_files()
-    FaceProcessor("TTHoves", "Bold", 17, ext="otf").write_files()
+    FaceProcessor(
+        "TTHoves", "Bold", 17, ext="otf", gen_normal=False, gen_upper=True
+    ).write_files()
     FaceProcessor("RobotoMono", "Medium", 20).write_files()
 
-    FaceProcessor("PixelOperator", "Regular", 8, bpp=1, shaveX=1).write_files()
-
-    FaceProcessor("PixelOperator", "Bold", 8, bpp=1, shaveX=1).write_files()
+    FaceProcessor(
+        "PixelOperator",
+        "Regular",
+        8,
+        bpp=1,
+        shaveX=1,
+        gen_normal=True,
+        gen_upper=True,
+    ).write_files()
+    FaceProcessor(
+        "PixelOperator",
+        "Bold",
+        8,
+        bpp=1,
+        shaveX=1,
+        gen_normal=True,
+        gen_upper=True,
+    ).write_files()
     FaceProcessor("PixelOperatorMono", "Regular", 8, bpp=1, shaveX=1).write_files()
 
     # For model R
