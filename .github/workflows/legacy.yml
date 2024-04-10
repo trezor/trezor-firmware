@@ -133,7 +133,6 @@ jobs:
 
   legacy_hwi_test:
     name: HWI test
-    if: false  # XXX currently failing
     continue-on-error: true
     runs-on: ubuntu-latest
     needs: legacy_emu
