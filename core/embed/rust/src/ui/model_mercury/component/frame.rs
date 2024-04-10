@@ -79,7 +79,6 @@ impl HorizontalSwipe {
     }
 }
 
-#[derive(Clone)]
 pub struct Frame<T> {
     bounds: Rect,
     content: T,

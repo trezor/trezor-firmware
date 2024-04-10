@@ -221,9 +221,15 @@ impl Component for PassphraseKeyboard {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        if self.input.inner().multi_tap.is_timeout_event(event) {
-            self.input
-                .mutate(ctx, |ctx, i| i.multi_tap.clear_pending_state(ctx));
+        let multitap_timeout = self.input.mutate(ctx, |ctx, i| {
+            if i.multi_tap.timeout_event(event) {
+                i.multi_tap.clear_pending_state(ctx);
+                true
+            } else {
+                false
+            }
+        });
+        if multitap_timeout {
             return None;
         }
         if let Some(swipe) = self.page_swipe.event(ctx, event) {

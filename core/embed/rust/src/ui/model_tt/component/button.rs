@@ -5,13 +5,12 @@ use crate::{
     time::Duration,
     ui::{
         component::{
-            Component, ComponentExt, Event, EventCtx, FixedHeightBar, MsgMap, Split, TimerToken,
+            Component, ComponentExt, Event, EventCtx, FixedHeightBar, MsgMap, Split, Timer,
         },
         display::{self, toif::Icon, Color, Font},
         event::TouchEvent,
         geometry::{Alignment2D, Insets, Offset, Point, Rect},
-        shape,
-        shape::Renderer,
+        shape::{self, Renderer},
     },
 };
 
@@ -31,7 +30,7 @@ pub struct Button {
     styles: ButtonStyleSheet,
     state: State,
     long_press: Option<Duration>,
-    long_timer: Option<TimerToken>,
+    long_timer: Timer,
     haptics: bool,
 }
 
@@ -48,7 +47,7 @@ impl Button {
             styles: theme::button_default(),
             state: State::Initial,
             long_press: None,
-            long_timer: None,
+            long_timer: Timer::new(),
             haptics: true,
         }
     }
@@ -317,7 +316,7 @@ impl Component for Button {
                             }
                             self.set(ctx, State::Pressed);
                             if let Some(duration) = self.long_press {
-                                self.long_timer = Some(ctx.request_timer(duration));
+                                self.long_timer.start(ctx, duration)
                             }
                             return Some(ButtonMsg::Pressed);
                         }
@@ -349,21 +348,18 @@ impl Component for Button {
                     _ => {
                         // Touch finished outside our area.
                         self.set(ctx, State::Initial);
-                        self.long_timer = None;
+                        self.long_timer.stop();
                     }
                 }
             }
-            Event::Timer(token) => {
-                if self.long_timer == Some(token) {
-                    self.long_timer = None;
-                    if matches!(self.state, State::Pressed) {
-                        #[cfg(feature = "haptic")]
-                        if self.haptics {
-                            haptic::play(HapticEffect::ButtonPress);
-                        }
-                        self.set(ctx, State::Initial);
-                        return Some(ButtonMsg::LongPressed);
+            Event::Timer(_) if self.long_timer.expire(event) => {
+                if matches!(self.state, State::Pressed) {
+                    #[cfg(feature = "haptic")]
+                    if self.haptics {
+                        haptic::play(HapticEffect::ButtonPress);
                     }
+                    self.set(ctx, State::Initial);
+                    return Some(ButtonMsg::LongPressed);
                 }
             }
             _ => {}
