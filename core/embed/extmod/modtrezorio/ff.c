@@ -418,8 +418,6 @@
 #define MKCVTBL(hd, cp) MERGE_2STR(hd, cp)
 
 
-
-
 /*--------------------------------------------------------------------------
 
    Module Private Work Area
@@ -3262,12 +3260,9 @@ FRESULT f_setlabel (
 }
 
 
-
-
-
-
-
-
+static inline int progress_section(int start, int size, int current, int first) {
+	return start + size - (current ? ((current * size) / first) : 0);
+}
 
 
 #if !FF_FS_READONLY && FF_USE_MKFS
@@ -3346,17 +3341,25 @@ FRESULT f_mkfs (
 	const TCHAR* path,		/* Logical drive number */
 	const MKFS_PARM* opt,	/* Format options */
 	void* work,				/* Pointer to working buffer (null: use len bytes of heap memory) */
-	UINT len				/* Size of working buffer [byte] */
+	UINT len,				/* Size of working buffer [byte] */
+	void (*progress_callback)(uint32_t current /* 0-1000 */) /* Callback used to report progress (NULL: no progress reporting) */
 )
 {
 	static const WORD cst[] = {1, 4, 16, 64, 256, 512, 0};	/* Cluster size boundary for FAT volume (4Ks unit) */
 	static const WORD cst32[] = {1, 2, 4, 8, 16, 32, 0};	/* Cluster size boundary for FAT32 volume (128Ks unit) */
 	static const MKFS_PARM defopt = {FM_ANY, 0, 0, 0, 0};	/* Default parameter */
+	static const WORD p_initial = 0;
+	static const WORD p_fat_area_before = 10;
+	static const WORD p_fat_area_sz = 790;
+	static const WORD p_root_dir_before = p_fat_area_before + p_fat_area_sz;
+	static const WORD p_root_dir_sz = 100;
+	static const WORD p_final = 1000;
+	static const WORD p_num_calls = 10;     /* Limit of number of calls to report progress in each loop */
 	BYTE fsopt = 0, fsty = 0, sys = 0, pdrv = 0, ipart = 0;
 	BYTE *buf = NULL;
 	BYTE *pte = NULL;
 	WORD ss = 0;	/* Sector size */
-	DWORD sz_buf = 0, sz_blk = 0, n_clst = 0, pau = 0, nsect = 0, n = 0, vsn = 0;
+	DWORD sz_buf = 0, sz_blk = 0, n_clst = 0, pau = 0, nsect = 0, nsect0 = 0, n = 0, vsn = 0;
 	LBA_t sz_vol, b_vol, b_fat, b_data;		/* Size of volume, Base LBA of volume, fat, data */
 	LBA_t sect = 0, lba[2] = {0};
 	DWORD sz_rsv, sz_fat, sz_dir, sz_au;	/* Size of reserved, fat, dir, data, cluster */
@@ -3364,7 +3367,11 @@ FRESULT f_mkfs (
 	int vol = 0;
 	DSTATUS ds = 0;
 	FRESULT res = 0;
+	DWORD iter, progress_steps;
 
+	if (progress_callback) {
+		progress_callback(p_initial);
+	}
 
 	/* Check mounted drive and clear work area */
 	vol = get_ldnumber(&path);					/* Get target logical drive */
@@ -3570,6 +3577,10 @@ FRESULT f_mkfs (
 			disk_write(pdrv, buf, b_vol + 1, 1);		/* Write original FSINFO (VBR + 1) */
 		}
 
+		if (progress_callback) {
+			progress_callback(p_fat_area_before);
+		}
+
 		/* Initialize FAT area */
 		memset(buf, 0, sz_buf * ss);
 		sect = b_fat;		/* FAT start sector */
@@ -3581,22 +3592,44 @@ FRESULT f_mkfs (
 			} else {
 				st_dword(buf + 0, (fsty == FS_FAT12) ? 0xFFFFF8 : 0xFFFFFFF8);	/* FAT[0] and FAT[1] */
 			}
-			nsect = sz_fat;		/* Number of FAT sectors */
+			nsect0 = nsect = sz_fat;		/* Number of FAT sectors */
+			progress_steps = nsect / sz_buf / p_num_calls;
+			iter = 0;
 			do {	/* Fill FAT sectors */
 				n = (nsect > sz_buf) ? sz_buf : nsect;
 				if (disk_write(pdrv, buf, sect, (UINT)n) != RES_OK) LEAVE_MKFS(FR_DISK_ERR);
 				memset(buf, 0, ss);	/* Rest of FAT all are cleared */
 				sect += n; nsect -= n;
+				iter++;
+
+				if (progress_callback && progress_steps && iter % progress_steps == 0) {
+					progress_callback(progress_section(p_fat_area_before, p_fat_area_sz, nsect, nsect0));
+				}
 			} while (nsect);
 		}
 
+		if (progress_callback) {
+			progress_callback(p_root_dir_before);
+		}
+
 		/* Initialize root directory (fill with zero) */
-		nsect = (fsty == FS_FAT32) ? pau : sz_dir;	/* Number of root directory sectors */
+		nsect0 = nsect = (fsty == FS_FAT32) ? pau : sz_dir;	/* Number of root directory sectors */
+		progress_steps = nsect / sz_buf / p_num_calls;
+		iter = 0;
 		do {
 			n = (nsect > sz_buf) ? sz_buf : nsect;
 			if (disk_write(pdrv, buf, sect, (UINT)n) != RES_OK) LEAVE_MKFS(FR_DISK_ERR);
 			sect += n; nsect -= n;
+			iter++;
+
+			if (progress_callback && progress_steps && iter % progress_steps == 0) {
+				progress_callback(progress_section(p_root_dir_before, p_root_dir_sz, nsect, nsect0));
+			}
 		} while (nsect);
+	}
+
+	if (progress_callback) {
+		progress_callback(p_root_dir_before + p_root_dir_sz);
 	}
 
 	/* A FAT volume has been created here */
@@ -3631,6 +3664,10 @@ FRESULT f_mkfs (
 	}
 
 	if (disk_ioctl(pdrv, CTRL_SYNC, 0) != RES_OK) LEAVE_MKFS(FR_DISK_ERR);
+
+	if (progress_callback) {
+		progress_callback(p_final);
+	}
 
 	LEAVE_MKFS(FR_OK);
 }

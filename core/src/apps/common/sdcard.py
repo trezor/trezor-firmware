@@ -1,6 +1,11 @@
-from trezor import TR, io, wire
+from typing import TYPE_CHECKING
+
+from trezor import TR, io, utils, wire
 from trezor.ui.layouts import confirm_action, show_error_and_raise
 from trezor.utils import sd_hotswap_enabled
+
+if TYPE_CHECKING:
+    from trezor.ui.layouts.common import ProgressLayout
 
 
 class SdCardUnavailable(wire.ProcessError):
@@ -120,9 +125,11 @@ async def ensure_sdcard(ensure_filesystem: bool = True) -> None:
 
             # Proceed to formatting. Failure is caught by the outside OSError handler
             with sdcard.filesystem(mounted=False):
-                fatfs.mkfs()
+                _start_progress()
+                fatfs.mkfs(_render_progress)
                 fatfs.mount()
                 fatfs.setlabel("TREZOR")
+                _finish_progress()
 
             # format and mount succeeded
             return
@@ -150,3 +157,30 @@ async def request_sd_salt() -> bytearray | None:
             # In either case, there is no good way to recover. If the user clicks Retry,
             # we will try again.
             await confirm_retry_sd()
+
+
+_progress_obj: ProgressLayout | None = None
+
+
+def _start_progress() -> None:
+    from trezor import workflow
+    from trezor.ui.layouts.progress import progress
+
+    global _progress_obj
+
+    if not utils.DISABLE_ANIMATION:
+        # Because we are drawing to the screen manually, without a layout, we
+        # should make sure that no other layout is running.
+        workflow.close_others()
+        _progress_obj = progress()
+
+
+def _render_progress(progress: int) -> None:
+    global _progress_obj
+    if _progress_obj is not None:
+        _progress_obj.report(progress)
+
+
+def _finish_progress() -> None:
+    global _progress_obj
+    _progress_obj = None
