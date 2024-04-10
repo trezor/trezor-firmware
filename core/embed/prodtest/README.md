@@ -118,6 +118,16 @@ Example:
 SENS 12
 ```
 
+### TOUCH VERSION
+Allows you to read the version of the touch screen controller, if its supported by the device.
+The command returns `OK` followed by the version number.
+
+Example:
+```
+TOUCH VERSION
+OK 167
+```
+
 ### PWM
 The `PWM` command sets the display backlight using PWM (Pulse Width Modulation).
 This command takes one input parameter, a decimal value between 0 to 255, and adjusts the PWM output to control the display LED backlight.
@@ -203,6 +213,15 @@ The `VARIANT` command allows you to write up to 32 decimal values (representing 
 Example (to write 8 bytes into OTP memory):
 ```
 VARIANT 128 64 100 1 2 3 0 0
+```
+
+### VARIANT READ
+The `VARIANT READ` command allows you to read 32 bytes of stored variant data (representing device variant options), each ranging from 0 to 255, and delimited by spaces.
+
+Example:
+```
+VARIANT READ
+OK 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255
 ```
 
 ### WIPE

@@ -275,3 +275,21 @@ uint32_t touch_read(void) {
 
   return 0;
 }
+
+uint8_t touch_get_version(void) {
+  uint8_t version = 0;
+  uint8_t outgoing[] = {0xA6};  // start reading from address 0xA6
+  int result = i2c_transmit(TOUCH_I2C_INSTANCE, TOUCH_ADDRESS, outgoing,
+                            sizeof(outgoing), 1);
+  if (result != HAL_OK) {
+    if (result == HAL_BUSY) i2c_cycle(TOUCH_I2C_INSTANCE);
+    return 0;
+  }
+
+  if (HAL_OK != i2c_receive(TOUCH_I2C_INSTANCE, TOUCH_ADDRESS, &version,
+                            sizeof(version), 1)) {
+    return 0;  // read failure
+  }
+
+  return version;
+}

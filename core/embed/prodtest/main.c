@@ -387,6 +387,11 @@ static void test_sensitivity(const char *args) {
 
   touch_power_off();
 }
+
+static void touch_version(void) {
+  uint8_t version = touch_get_version();
+  vcp_println("OK %d", version);
+}
 #endif
 
 static void test_pwm(const char *args) {
@@ -521,6 +526,21 @@ static void test_otp_write(const char *args) {
          NULL);
   ensure(flash_otp_lock(FLASH_OTP_BLOCK_BATCH), NULL);
   vcp_println("OK");
+}
+
+static void test_otp_read_device_variant() {
+  uint8_t data[32] = {0};
+  if (sectrue !=
+      flash_otp_read(FLASH_OTP_BLOCK_DEVICE_VARIANT, 0, data, sizeof(data))) {
+    vcp_println("ERROR");
+    return;
+  }
+
+  vcp_print("OK ");
+  for (int i = 0; i < sizeof(data); i++) {
+    vcp_print("%d ", data[i]);
+  }
+  vcp_println("");
 }
 
 static void test_otp_write_device_variant(const char *args) {
@@ -663,11 +683,15 @@ int main(void) {
       test_button(line + 7);
 #endif
 #ifdef USE_TOUCH
+    } else if (startswith(line, "TOUCH VERSION")) {
+      touch_version();
+
     } else if (startswith(line, "TOUCH ")) {
       test_touch(line + 6);
 
     } else if (startswith(line, "SENS ")) {
       test_sensitivity(line + 5);
+
 #endif
     } else if (startswith(line, "PWM ")) {
       test_pwm(line + 4);
@@ -714,6 +738,9 @@ int main(void) {
 
     } else if (startswith(line, "OTP WRITE ")) {
       test_otp_write(line + 10);
+
+    } else if (startswith(line, "VARIANT READ")) {
+      test_otp_read_device_variant();
 
     } else if (startswith(line, "VARIANT ")) {
       test_otp_write_device_variant(line + 8);
