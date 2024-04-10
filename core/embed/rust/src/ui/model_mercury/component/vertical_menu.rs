@@ -167,7 +167,6 @@ impl AttachAnimation {
     }
 }
 
-#[derive(Clone)]
 pub struct VerticalMenu {
     /// buttons placed vertically from top to bottom
     buttons: VerticalMenuButtons,
