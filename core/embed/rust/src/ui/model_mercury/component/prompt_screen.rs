@@ -11,7 +11,6 @@ use super::{super::theme, BinarySelection, ButtonContent, HoldToConfirm, TapToCo
 ///     - Tap to confirm
 ///     - Hold to confirm
 ///     - Yes/No selection
-#[derive(Clone)]
 pub enum PromptScreen {
     Tap(TapToConfirm),
     Hold(HoldToConfirm),
