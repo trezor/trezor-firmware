@@ -8,7 +8,7 @@ use crate::{
         component::{
             base::{AttachType, ComponentExt},
             text::TextStyle,
-            Component, Event, EventCtx, Label, Never, Pad, TimerToken,
+            Component, Event, EventCtx, Label, Never, Pad, Timer,
         },
         display::Font,
         event::TouchEvent,
@@ -256,7 +256,7 @@ pub struct PinKeyboard<'a> {
     cancel_btn: Button,
     confirm_btn: Button,
     digit_btns: [(Button, usize); DIGIT_COUNT],
-    warning_timer: Option<TimerToken>,
+    warning_timer: Timer,
     attach_animation: AttachAnimation,
     close_animation: CloseAnimation,
     close_confirm: bool,
@@ -295,7 +295,7 @@ impl<'a> PinKeyboard<'a> {
                 .styled(theme::button_pin_confirm())
                 .initially_enabled(false),
             digit_btns: Self::generate_digit_buttons(),
-            warning_timer: None,
+            warning_timer: Timer::new(),
             attach_animation: AttachAnimation::default(),
             close_animation: CloseAnimation::default(),
             close_confirm: false,
@@ -417,10 +417,10 @@ impl Component for PinKeyboard<'_> {
         match event {
             // Set up timer to switch off warning prompt.
             Event::Attach(_) if self.major_warning.is_some() => {
-                self.warning_timer = Some(ctx.request_timer(Duration::from_secs(2)));
+                self.warning_timer.start(ctx, Duration::from_secs(2));
             }
             // Hide warning, show major prompt.
-            Event::Timer(token) if Some(token) == self.warning_timer => {
+            Event::Timer(_) if self.warning_timer.expire(event) => {
                 self.major_warning = None;
                 self.minor_prompt.request_complete_repaint(ctx);
                 ctx.request_paint();

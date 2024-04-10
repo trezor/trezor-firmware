@@ -1,7 +1,7 @@
 use crate::{
     time::Duration,
     ui::{
-        component::{text::common::TextEdit, Event, EventCtx, TimerToken},
+        component::{text::common::TextEdit, Event, EventCtx, Timer},
         display::{self, Color, Font},
         geometry::{Offset, Point, Rect},
         shape,
@@ -24,7 +24,16 @@ struct Pending {
     /// one).
     press: usize,
     /// Timer for clearing the pending state.
-    timer: TimerToken,
+    timer: Timer,
+}
+
+impl Pending {
+    /// Create a new pending state for a key.
+    fn start(ctx: &mut EventCtx, key: usize, press: usize, timeout: Duration) -> Self {
+        let mut timer = Timer::new();
+        timer.start(ctx, timeout);
+        Self { key, press, timer }
+    }
 }
 
 impl MultiTapKeyboard {
@@ -46,15 +55,10 @@ impl MultiTapKeyboard {
         self.pending.as_ref().map(|p| p.press)
     }
 
-    /// Return the token for the currently pending timer.
-    pub fn pending_timer(&self) -> Option<TimerToken> {
-        self.pending.as_ref().map(|p| p.timer)
-    }
-
     /// Returns `true` if `event` is an `Event::Timer` for the currently pending
     /// timer.
-    pub fn is_timeout_event(&self, event: Event) -> bool {
-        matches!((event, self.pending_timer()), (Event::Timer(t), Some(pt)) if pt == t)
+    pub fn timeout_event(&mut self, event: Event) -> bool {
+        self.pending.as_mut().map_or(false, |t| t.timer.expire(event))
     }
 
     /// Reset to the empty state. Takes `EventCtx` to request a paint pass (to
@@ -95,11 +99,7 @@ impl MultiTapKeyboard {
         // transition only happens as a result of an append op, so the painting should
         // be requested by handling the `TextEdit`.
         self.pending = if key_text.len() > 1 {
-            Some(Pending {
-                key,
-                press,
-                timer: ctx.request_timer(self.timeout),
-            })
+            Some(Pending::start(ctx, key, press, self.timeout))
         } else {
             None
         };

@@ -360,11 +360,13 @@ class Layout(Generic[T]):
             # do not schedule another animation frame if one is already scheduled
             return
 
-        assert token not in self.timers
-        task = timer_task()
-        self.timers[token] = task
+        task = self.timers.get(token)
+        if task is None:
+            task = timer_task()
+            self.timers[token] = task
+
         deadline = utime.ticks_add(utime.ticks_ms(), duration_ms)
-        loop.schedule(task, deadline=deadline)
+        loop.schedule(task, deadline=deadline, reschedule=True)
 
     def _emit_message(self, msg: Any) -> None:
         """Process a message coming out of the Rust layout. Set is as a result and shut

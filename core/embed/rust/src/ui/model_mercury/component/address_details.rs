@@ -21,7 +21,6 @@ use super::{theme, Frame, FrameMsg};
 
 const MAX_XPUBS: usize = 16;
 
-#[derive(Clone)]
 pub struct AddressDetails {
     details: Frame<Paragraphs<ParagraphVecShort<'static>>>,
     xpub_view: Frame<Paragraphs<Paragraph<'static>>>,
