@@ -52,7 +52,7 @@ impl ModelTTFeatures {
         icon: Option<(Icon, Color)>,
     ) {
         if initialize {
-            ModelTTFeatures::fadeout();
+            Self::fadeout();
             display::rect_fill(SCREEN, bg_color);
         }
 
@@ -66,7 +66,7 @@ impl ModelTTFeatures {
         display::loader(progress, -20, fg_color, bg_color, icon);
         display::refresh();
         if initialize {
-            ModelTTFeatures::fadein();
+            Self::fadein();
         }
     }
 
@@ -122,9 +122,9 @@ impl UIFeaturesBootloader for ModelTTFeatures {
         }
 
         if initial_setup {
-            ModelTTFeatures::screen_install_success_initial(reboot_msg.as_str(), complete_draw)
+            Self::screen_install_success_initial(reboot_msg.as_str(), complete_draw)
         } else {
-            ModelTTFeatures::screen_install_success_bld(reboot_msg.as_str(), complete_draw)
+            Self::screen_install_success_bld(reboot_msg.as_str(), complete_draw)
         }
         display::refresh();
     }
@@ -247,7 +247,7 @@ impl UIFeaturesBootloader for ModelTTFeatures {
 
     fn screen_boot_stage_1(fading: bool) {
         if fading {
-            ModelTTFeatures::fadeout();
+            Self::fadeout();
         }
 
         display::rect_fill(SCREEN, BLACK);
@@ -256,7 +256,7 @@ impl UIFeaturesBootloader for ModelTTFeatures {
         show(&mut frame, false);
 
         if fading {
-            ModelTTFeatures::fadein();
+            Self::fadein();
         } else {
             display::set_backlight(BACKLIGHT_NORMAL);
         }
@@ -264,7 +264,7 @@ impl UIFeaturesBootloader for ModelTTFeatures {
     }
 
     fn screen_wipe_progress(progress: u16, initialize: bool) {
-        ModelTTFeatures::screen_progress(
+        Self::screen_progress(
             "Resetting Trezor",
             progress,
             initialize,
@@ -278,7 +278,7 @@ impl UIFeaturesBootloader for ModelTTFeatures {
         let bg_color = if initial_setup { WELCOME_COLOR } else { BLD_BG };
         let fg_color = if initial_setup { FG } else { BLD_FG };
 
-        ModelTTFeatures::screen_progress(
+        Self::screen_progress(
             "Installing firmware",
             progress,
             initialize,
