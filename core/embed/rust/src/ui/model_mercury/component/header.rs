@@ -59,7 +59,7 @@ impl AttachAnimation {
 }
 
 const BUTTON_EXPAND_BORDER: i16 = 32;
-#[derive(Clone)]
+
 pub struct Header {
     area: Rect,
     title: Label<'static>,
