@@ -64,7 +64,7 @@ def image_to_t1(filename: Path) -> bytes:
             f"Image is not 128x64, but {image.size}. Do you want to resize it automatically?",
             default=True,
         ):
-            image = image.resize(T1_TR_IMAGE_SIZE, Image.ANTIALIAS)
+            image = image.resize(T1_TR_IMAGE_SIZE, Image.Resampling.LANCZOS)
         else:
             raise click.ClickException("Wrong size of the image - should be 128x64")
 
@@ -99,7 +99,7 @@ def image_to_toif(filename: Path, width: int, height: int, greyscale: bool) -> b
             f"Image is not {width}x{height}, but {image.size[0]}x{image.size[1]}. Do you want to resize it automatically?",
             default=True,
         ):
-            image = image.resize((width, height), Image.ANTIALIAS)
+            image = image.resize((width, height), Image.Resampling.LANCZOS)
         else:
             raise click.ClickException(
                 f"Wrong size of image - should be {width}x{height}"
@@ -137,7 +137,7 @@ def image_to_jpeg(filename: Path, width: int, height: int) -> bytes:
             f"Image is not {width}x{height}, but {image.size[0]}x{image.size[1]}. Do you want to resize it automatically?",
             default=True,
         ):
-            image = image.resize((width, height), Image.ANTIALIAS)
+            image = image.resize((width, height), Image.Resampling.LANCZOS)
         else:
             raise click.ClickException(
                 f"Wrong size of image - should be {width}x{height}"
