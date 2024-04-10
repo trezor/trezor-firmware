@@ -1336,10 +1336,7 @@ extern "C" fn new_show_tx_context_menu(n_args: usize, args: *const Obj, kwargs: 
 
         let options: [(StrBuffer, Icon); 3] = [
             (StrBuffer::from("Address QR code"), theme::ICON_QR_CODE),
-            (
-                StrBuffer::from("Fee info"),
-                theme::ICON_CHEVRON_RIGHT,
-            ),
+            (StrBuffer::from("Fee info"), theme::ICON_CHEVRON_RIGHT),
             (StrBuffer::from("Cancel transaction"), theme::ICON_CANCEL),
         ];
         let content = VerticalMenu::context_menu(options);
@@ -2197,7 +2194,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     Qstr::MP_QSTR_show_wait_text => obj_fn_1!(new_show_wait_text).as_obj(),
 
     /// def flow_get_address() -> LayoutObj[UiResult]:
-    ///     """Get address / receive funds."
+    ///     """Get address / receive funds."""
     Qstr::MP_QSTR_flow_get_address => obj_fn_kw!(0, flow::get_address::new_get_address).as_obj(),
 };
 

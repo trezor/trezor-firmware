@@ -18,7 +18,7 @@ const ANIMATION_DURATION: Duration = Duration::from_millis(333);
 /// If a swipe is detected:
 /// - currently active component is asked to handle the event,
 /// - if it can't then FlowState::handle_swipe is consulted.
-pub struct Flow<Q, S> {
+pub struct SwipeFlow<Q, S> {
     /// Current state.
     state: Q,
     /// FlowStore with all screens/components.
@@ -37,7 +37,7 @@ struct Transition<Q> {
     direction: SwipeDirection,
 }
 
-impl<Q: FlowState, S: FlowStore> Flow<Q, S> {
+impl<Q: FlowState, S: FlowStore> SwipeFlow<Q, S> {
     pub fn new(init: Q, store: S) -> Result<Self, error::Error> {
         Ok(Self {
             state: init,
@@ -126,7 +126,7 @@ impl<Q: FlowState, S: FlowStore> Flow<Q, S> {
     }
 }
 
-impl<Q: FlowState, S: FlowStore> Component for Flow<Q, S> {
+impl<Q: FlowState, S: FlowStore> Component for SwipeFlow<Q, S> {
     type Msg = FlowMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -178,14 +178,14 @@ impl<Q: FlowState, S: FlowStore> Component for Flow<Q, S> {
 }
 
 #[cfg(feature = "ui_debug")]
-impl<Q: FlowState, S: FlowStore> crate::trace::Trace for Flow<Q, S> {
+impl<Q: FlowState, S: FlowStore> crate::trace::Trace for SwipeFlow<Q, S> {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         self.store.trace(self.state.index(), t)
     }
 }
 
 #[cfg(feature = "micropython")]
-impl<Q: FlowState, S: FlowStore> crate::ui::layout::obj::ComponentMsgObj for Flow<Q, S> {
+impl<Q: FlowState, S: FlowStore> crate::ui::layout::obj::ComponentMsgObj for SwipeFlow<Q, S> {
     fn msg_try_into_obj(
         &self,
         msg: Self::Msg,

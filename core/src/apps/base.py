@@ -239,7 +239,6 @@ async def handle_EndSession(msg: EndSession) -> Success:
 
 async def handle_Ping(msg: Ping) -> Success:
     if msg.button_protection:
-        from trezor.enums import ButtonRequestType as B
         from trezor.ui.layouts.mercury import flow_demo
 
         await flow_demo()

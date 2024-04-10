@@ -7,7 +7,7 @@ use crate::{
             Qr, Timeout,
         },
         flow::{
-            base::Decision, flow_store, Flow, FlowMsg, FlowState, FlowStore, SwipeDirection,
+            base::Decision, flow_store, FlowMsg, FlowState, FlowStore, SwipeDirection, SwipeFlow,
             SwipePage,
         },
     },
@@ -103,8 +103,7 @@ pub extern "C" fn new_get_address(n_args: usize, args: *const Obj, kwargs: *mut 
 }
 
 impl GetAddress {
-    fn new(args: &[Obj], kwargs: &Map) -> Result<Obj, error::Error> {
-        // Result<Flow<GetAddress, impl FlowStore>, error::Error> {
+    fn new(_args: &[Obj], _kwargs: &Map) -> Result<Obj, error::Error> {
         let store = flow_store()
             .add(
                 Frame::left_aligned(
@@ -179,7 +178,7 @@ impl GetAddress {
                 ),
                 |_| Some(FlowMsg::Confirmed),
             )?;
-        let res = Flow::new(GetAddress::Address, store)?;
+        let res = SwipeFlow::new(GetAddress::Address, store)?;
         Ok(LayoutObj::new(res)?.into())
     }
 }
