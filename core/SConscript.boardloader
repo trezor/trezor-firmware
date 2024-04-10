@@ -24,6 +24,7 @@ CCFLAGS_MOD = ''
 CPPPATH_MOD = []
 CPPDEFINES_MOD = ["BOARDLOADER"]
 SOURCE_MOD = []
+SOURCE_MOD_CRYPTO = []
 CPPDEFINES_HAL = []
 SOURCE_HAL = []
 PATH_HAL = []
@@ -41,6 +42,9 @@ CPPDEFINES_MOD += [
     'ED25519_NO_PRECOMP',
 ]
 SOURCE_MOD += [
+    'vendor/trezor-storage/flash_area.c',
+]
+SOURCE_MOD_CRYPTO += [
     'vendor/trezor-crypto/blake2s.c',
     'vendor/trezor-crypto/ed25519-donna/curve25519-donna-32bit.c',
     'vendor/trezor-crypto/ed25519-donna/curve25519-donna-helpers.c',
@@ -50,7 +54,6 @@ SOURCE_MOD += [
     'vendor/trezor-crypto/ed25519-donna/modm-donna-32bit.c',
     'vendor/trezor-crypto/memzero.c',
     'vendor/trezor-crypto/sha2.c',
-    'vendor/trezor-storage/flash_area.c',
 ]
 
 # modtrezorui
@@ -130,7 +133,7 @@ env.Replace(
     )
 
 env.Replace(
-    ALLSOURCES=SOURCE_MOD + SOURCE_BOARDLOADER + SOURCE_HAL,
+    ALLSOURCES=SOURCE_MOD + SOURCE_MOD_CRYPTO + SOURCE_BOARDLOADER + SOURCE_HAL,
     ALLDEFS=tools.get_defs_for_cmake(env['CPPDEFINES'] + env['CPPDEFINES_IMPLICIT']))
 
 cmake_gen = env.Command(
@@ -145,6 +148,7 @@ cmake_gen = env.Command(
 
 obj_program = []
 obj_program += env.Object(source=SOURCE_MOD)
+obj_program += env.Object(source=SOURCE_MOD_CRYPTO)
 obj_program += env.Object(source=SOURCE_BOARDLOADER)
 obj_program += env.Object(source=SOURCE_HAL)
 
