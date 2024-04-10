@@ -10,7 +10,7 @@ pub trait UIFeaturesCommon {
 
     fn screen_fatal_error(title: &str, msg: &str, footer: &str);
 
-    fn screen_boot_full();
+    fn screen_boot_stage_2();
 }
 
 #[cfg(feature = "bootloader")]
@@ -42,7 +42,7 @@ pub trait UIFeaturesBootloader {
 
     fn screen_intro(bld_version: &str, vendor: &str, version: &str, fw_ok: bool) -> u32;
 
-    fn screen_boot_empty(fading: bool);
+    fn screen_boot_stage_1(fading: bool);
 
     fn screen_wipe_progress(progress: u16, initialize: bool);
 

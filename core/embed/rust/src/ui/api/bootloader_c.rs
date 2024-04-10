@@ -97,8 +97,8 @@ extern "C" fn screen_intro(
 }
 
 #[no_mangle]
-extern "C" fn screen_boot_empty(fading: bool) {
-    ModelUI::screen_boot_empty(fading)
+extern "C" fn screen_boot_stage_1(fading: bool) {
+    ModelUI::screen_boot_stage_1(fading)
 }
 
 #[no_mangle]

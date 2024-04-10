@@ -20,7 +20,7 @@ uint32_t screen_install_success(uint8_t restart_seconds, bool initial_setup,
                                 bool complete_draw);
 uint32_t screen_install_fail(void);
 void screen_welcome(void);
-void screen_boot_empty(bool fading);
+void screen_boot_stage_1(bool fading);
 uint32_t screen_unlock_bootloader_confirm(void);
 void screen_unlock_bootloader_success(void);
 void bld_continue_label(uint16_t bg_color);

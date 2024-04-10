@@ -134,7 +134,7 @@ int main(void) {
 
   display_reinit();
 
-  screen_boot_full();
+  screen_boot_stage_2();
 
 #if !defined TREZOR_MODEL_1
   parse_boardloader_capabilities();

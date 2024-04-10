@@ -247,7 +247,7 @@ impl UIFeaturesBootloader for ModelMercuryFeatures {
         run(&mut frame)
     }
 
-    fn screen_boot_empty(fading: bool) {
+    fn screen_boot_stage_1(fading: bool) {
         if fading {
             Self::fadeout();
         }

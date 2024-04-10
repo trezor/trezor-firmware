@@ -245,7 +245,7 @@ impl UIFeaturesBootloader for ModelTTFeatures {
         run(&mut frame)
     }
 
-    fn screen_boot_empty(fading: bool) {
+    fn screen_boot_stage_1(fading: bool) {
         if fading {
             ModelTTFeatures::fadeout();
         }

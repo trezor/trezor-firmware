@@ -29,7 +29,7 @@ impl UIFeaturesCommon for ModelTTFeatures {
         screens::screen_fatal_error(title, msg, footer);
     }
 
-    fn screen_boot_full() {
-        screens::screen_boot_full();
+    fn screen_boot_stage_2() {
+        screens::screen_boot_stage_2();
     }
 }
