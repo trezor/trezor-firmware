@@ -1216,3 +1216,5 @@ uint32_t touch_read(void) {
 }
 
 void touch_wait_until_ready(void) {}
+
+uint8_t touch_get_version(void) { return 0; }

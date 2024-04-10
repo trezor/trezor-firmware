@@ -225,6 +225,8 @@ uint32_t touch_is_detected(void) {
   return input_state == MOUSE_DOWN_INSIDE || is_button_swipe_initiated();
 }
 
+uint8_t touch_get_version(void) { return 0; }
+
 #endif
 
 #ifdef USE_BUTTON
