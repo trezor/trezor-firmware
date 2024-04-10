@@ -4,12 +4,11 @@ use crate::{
     strutil::TString,
     time::Duration,
     ui::{
-        component::{Component, Event, EventCtx, TimerToken},
+        component::{Component, Event, EventCtx, Timer},
         display::{self, toif::Icon, Color, Font},
         event::TouchEvent,
         geometry::{Alignment, Alignment2D, Insets, Offset, Point, Rect},
-        shape,
-        shape::Renderer,
+        shape::{self, Renderer},
         util::split_two_lines,
     },
 };
@@ -23,7 +22,6 @@ pub enum ButtonMsg {
     LongPressed,
 }
 
-#[derive(Clone)]
 pub struct Button {
     area: Rect,
     touch_expand: Option<Insets>,
@@ -33,7 +31,7 @@ pub struct Button {
     radius: Option<u8>,
     state: State,
     long_press: Option<Duration>,
-    long_timer: Option<TimerToken>,
+    long_timer: Timer,
     haptic: bool,
 }
 
@@ -53,7 +51,7 @@ impl Button {
             radius: None,
             state: State::Initial,
             long_press: None,
-            long_timer: None,
+            long_timer: Timer::new(),
             haptic: true,
         }
     }
@@ -312,7 +310,7 @@ impl Component for Button {
                             }
                             self.set(ctx, State::Pressed);
                             if let Some(duration) = self.long_press {
-                                self.long_timer = Some(ctx.request_timer(duration));
+                                self.long_timer.start(ctx, duration);
                             }
                             return Some(ButtonMsg::Pressed);
                         }
@@ -344,13 +342,13 @@ impl Component for Button {
                     State::Pressed => {
                         // Touch finished outside our area.
                         self.set(ctx, State::Initial);
-                        self.long_timer = None;
+                        self.long_timer.stop();
                         return Some(ButtonMsg::Released);
                     }
                     _ => {
                         // Touch finished outside our area.
                         self.set(ctx, State::Initial);
-                        self.long_timer = None;
+                        self.long_timer.stop();
                     }
                 }
             }
@@ -363,28 +361,25 @@ impl Component for Button {
                     State::Pressed => {
                         // Touch aborted
                         self.set(ctx, State::Initial);
-                        self.long_timer = None;
+                        self.long_timer.stop();
                         return Some(ButtonMsg::Released);
                     }
                     _ => {
                         // Irrelevant touch abort
                         self.set(ctx, State::Initial);
-                        self.long_timer = None;
+                        self.long_timer.stop();
                     }
                 }
             }
 
-            Event::Timer(token) => {
-                if self.long_timer == Some(token) {
-                    self.long_timer = None;
-                    if matches!(self.state, State::Pressed) {
-                        #[cfg(feature = "haptic")]
-                        if self.haptic {
-                            play(HapticEffect::ButtonPress);
-                        }
-                        self.set(ctx, State::Initial);
-                        return Some(ButtonMsg::LongPressed);
+            Event::Timer(_) if self.long_timer.expire(event) => {
+                if matches!(self.state, State::Pressed) {
+                    #[cfg(feature = "haptic")]
+                    if self.haptic {
+                        play(HapticEffect::ButtonPress);
                     }
+                    self.set(ctx, State::Initial);
+                    return Some(ButtonMsg::LongPressed);
                 }
             }
             _ => {}
