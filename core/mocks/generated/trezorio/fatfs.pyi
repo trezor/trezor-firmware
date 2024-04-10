@@ -166,7 +166,7 @@ def is_mounted() -> bool:
 
 
 # extmod/modtrezorio/modtrezorio-fatfs.h
-def mkfs() -> None:
+def mkfs(callback: Callable[[int], None] | None = None) -> None:
     """
     Create a FAT volume on the SD card,
     """
