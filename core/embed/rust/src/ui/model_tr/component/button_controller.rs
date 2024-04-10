@@ -394,6 +394,13 @@ impl Component for ButtonController {
         // State machine for the ButtonController
         // We are matching event with `Event::Button` for a button action
         // and `Event::Timer` for getting the expiration of HTC.
+
+        if let Some(ignore_btn_delay) = &mut self.ignore_btn_delay {
+            // Filter out opposite buttons after some delay
+            if ignore_btn_delay.filter_event(event) {
+                return None;
+            }
+        }
         match event {
             Event::Button(button_event) => {
                 let (new_state, event) = match self.state {
@@ -404,9 +411,6 @@ impl Component for ButtonController {
                             // ↓ _ | _ ↓
                             // Initial button press will set the timer for second button,
                             // and after some delay, it will become un-clickable
-                            if let Some(ignore_btn_delay) = &mut self.ignore_btn_delay {
-                                ignore_btn_delay.handle_button_press(ctx, which);
-                            }
                             (
                                 ButtonState::OneDown(which),
                                 match which {
@@ -432,33 +436,16 @@ impl Component for ButtonController {
                         // ▲ * | * ▲
                         ButtonEvent::ButtonReleased(b) if b == which_down => match which_down {
                             // ▲ *
-                            // Trigger the button and make the second one clickable in all cases
                             PhysicalButton::Left => {
-                                if let Some(ignore_btn_delay) = &mut self.ignore_btn_delay {
-                                    ignore_btn_delay.make_button_clickable(ButtonPos::Right);
-                                }
-                                // _ _
                                 (ButtonState::Nothing, self.left_btn.maybe_trigger(ctx))
                             }
                             // * ▲
                             PhysicalButton::Right => {
-                                if let Some(ignore_btn_delay) = &mut self.ignore_btn_delay {
-                                    ignore_btn_delay.make_button_clickable(ButtonPos::Left);
-                                }
-                                // _ _
                                 (ButtonState::Nothing, self.right_btn.maybe_trigger(ctx))
                             }
                         },
                         // * ▼ | ▼ *
                         ButtonEvent::ButtonPressed(b) if b != which_down => {
-                            // Buttons may be non-clickable (caused by long-holding the other
-                            // button)
-                            if let Some(ignore_btn_delay) = &self.ignore_btn_delay {
-                                if ignore_btn_delay.ignore_button(b) {
-                                    return None;
-                                }
-                            }
-                            // ↓ ↓
                             if self.handle_middle_button {
                                 self.got_pressed(ctx, ButtonPos::Middle);
                                 self.middle_hold_started(ctx);
@@ -505,10 +492,7 @@ impl Component for ButtonController {
                         ButtonEvent::ButtonReleased(b) if b != which_up => {
                             // _ _
                             // Both buttons need to be clickable now
-                            if let Some(ignore_btn_delay) = &mut self.ignore_btn_delay {
-                                ignore_btn_delay.make_button_clickable(ButtonPos::Left);
-                                ignore_btn_delay.make_button_clickable(ButtonPos::Right);
-                            }
+                            self.ignore_btn_delay.as_mut().map(IgnoreButtonDelay::reset);
                             if self.handle_middle_button {
                                 (ButtonState::Nothing, self.middle_btn.maybe_trigger(ctx))
                             } else {
@@ -556,9 +540,6 @@ impl Component for ButtonController {
             }
             // Timer - handle clickable properties and HoldToConfirm expiration
             Event::Timer(token) => {
-                if let Some(ignore_btn_delay) = &mut self.ignore_btn_delay {
-                    ignore_btn_delay.handle_timer_token(token);
-                }
                 if let Some(pos) = self.handle_long_press_timer_token(token) {
                     return Some(ButtonControllerMsg::LongPressed(pos));
                 }
@@ -589,82 +570,110 @@ impl Component for ButtonController {
     }
 }
 
+#[derive(Copy, Clone)]
+enum IgnoreButtonDelayState {
+    // All buttons are clickable.
+    Unlocked,
+    // Button was pressed down at a given time.
+    ButtonDown(PhysicalButton, Instant),
+    // Button is locked, events for all other buttons are ignored.
+    ButtonLocked(PhysicalButton),
+}
+
 /// When one button is pressed, the other one becomes un-clickable after some
 /// small time period. This is to prevent accidental clicks when user is holding
 /// the button to automatically move through items.
 struct IgnoreButtonDelay {
     /// How big is the delay after the button is inactive
     delay: Duration,
-    /// Whether left button is currently clickable
-    left_clickable: bool,
-    /// Whether right button is currently clickable
-    right_clickable: bool,
-    /// Timer for setting the left_clickable
-    left_clickable_timer: Option<TimerToken>,
-    /// Timer for setting the right_clickable
-    right_clickable_timer: Option<TimerToken>,
+    /// Lock state
+    state: IgnoreButtonDelayState,
+    /// State of an ignored button that was pressed down while another button
+    /// was locked. We need to filter out its release event even after the
+    /// lock expires, otherwise a spurious Up event with no corresponding
+    /// Down event will escape.
+    ignored_button_needs_release: Option<PhysicalButton>,
 }
 
 impl IgnoreButtonDelay {
     pub fn new(delay_ms: u32) -> Self {
         Self {
             delay: Duration::from_millis(delay_ms),
-            left_clickable: true,
-            right_clickable: true,
-            left_clickable_timer: None,
-            right_clickable_timer: None,
+            state: IgnoreButtonDelayState::Unlocked,
+            ignored_button_needs_release: None,
         }
     }
 
-    pub fn make_button_clickable(&mut self, pos: ButtonPos) {
-        match pos {
-            ButtonPos::Left => {
-                self.left_clickable = true;
-                self.left_clickable_timer = None;
+    /// Filter a ButtonPressed event.
+    fn filter_pressed(&mut self, button: PhysicalButton) -> bool {
+        match self.state {
+            IgnoreButtonDelayState::Unlocked => {
+                // A new button was pressed. Register ButtonDown, do not filter.
+                self.state = IgnoreButtonDelayState::ButtonDown(button, Instant::now());
+                false
             }
-            ButtonPos::Right => {
-                self.right_clickable = true;
-                self.right_clickable_timer = None;
+            IgnoreButtonDelayState::ButtonDown(b, ..) if b != button => {
+                // A different button was pressed before locking the first one.
+                // Unlock, do not filter.
+                self.state = IgnoreButtonDelayState::Unlocked;
+                false
             }
-            ButtonPos::Middle => {}
+            IgnoreButtonDelayState::ButtonLocked(b) if b != button => {
+                // A button is already locked, and another button was pressed.
+                // Track that this new button needs release, and filter the event.
+                self.ignored_button_needs_release = Some(button);
+                true
+            }
+            // Allow all other events.
+            _ => false,
         }
     }
 
-    pub fn handle_button_press(&mut self, ctx: &mut EventCtx, button: PhysicalButton) {
-        if matches!(button, PhysicalButton::Left) {
-            self.right_clickable_timer = Some(ctx.request_timer(self.delay));
-        }
-        if matches!(button, PhysicalButton::Right) {
-            self.left_clickable_timer = Some(ctx.request_timer(self.delay));
-        }
-    }
-
-    pub fn ignore_button(&self, button: PhysicalButton) -> bool {
-        if matches!(button, PhysicalButton::Left) && !self.left_clickable {
+    /// Filter a ButtonReleased event.
+    fn filter_released(&mut self, button: PhysicalButton) -> bool {
+        if matches!(self.ignored_button_needs_release, Some(b) if b == button) {
+            // Regardless of lock state, the ignored button that was previously pressed
+            // is now released. Clear the needs_release state and filter the event.
+            self.ignored_button_needs_release = None;
             return true;
         }
-        if matches!(button, PhysicalButton::Right) && !self.right_clickable {
-            return true;
-        }
+        match self.state {
+            IgnoreButtonDelayState::ButtonDown(b, ..) if b == button => {
+                // The button which was down was released. Unlock.
+                self.state = IgnoreButtonDelayState::Unlocked;
+            }
+            IgnoreButtonDelayState::ButtonLocked(b) if b == button => {
+                // The locked button was released. Unlock.
+                self.state = IgnoreButtonDelayState::Unlocked;
+            }
+            _ => {}
+        };
         false
     }
 
-    pub fn handle_timer_token(&mut self, token: TimerToken) {
-        if self.left_clickable_timer == Some(token) {
-            self.left_clickable = false;
-            self.left_clickable_timer = None;
+    /// Filter an incoming event
+    ///
+    /// If the return value is `true`, the event is filtered and should not be
+    /// processed further. Otherwise, the event should be processed as usual.
+    pub fn filter_event(&mut self, event: Event) -> bool {
+        // resolve delay elapsed event first
+        if let IgnoreButtonDelayState::ButtonDown(button, last_ms) = self.state {
+            let elapsed = Instant::now().saturating_duration_since(last_ms);
+            if elapsed >= self.delay {
+                self.state = IgnoreButtonDelayState::ButtonLocked(button);
+            }
         }
-        if self.right_clickable_timer == Some(token) {
-            self.right_clickable = false;
-            self.right_clickable_timer = None;
+
+        match event {
+            Event::Button(ButtonEvent::ButtonPressed(button)) => self.filter_pressed(button),
+            Event::Button(ButtonEvent::ButtonReleased(button)) => self.filter_released(button),
+            _ => false,
         }
     }
 
     pub fn reset(&mut self) {
-        self.left_clickable = true;
-        self.right_clickable = true;
-        self.left_clickable_timer = None;
-        self.right_clickable_timer = None;
+        self.state = IgnoreButtonDelayState::Unlocked;
+        self.ignored_button_needs_release = None;
     }
 }
 
