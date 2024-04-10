@@ -24,8 +24,8 @@ extern "C" fn screen_fatal_error_rust(
 }
 
 #[no_mangle]
-extern "C" fn screen_boot_full() {
-    ModelUI::screen_boot_full();
+extern "C" fn screen_boot_stage_2() {
+    ModelUI::screen_boot_stage_2();
 }
 
 #[no_mangle]

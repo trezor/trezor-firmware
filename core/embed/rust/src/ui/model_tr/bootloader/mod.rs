@@ -260,7 +260,7 @@ impl UIFeaturesBootloader for ModelTRFeatures {
         run(&mut frame)
     }
 
-    fn screen_boot_empty(_fading: bool) {
+    fn screen_boot_stage_1(_fading: bool) {
         display::rect_fill(SCREEN, BLD_BG);
 
         let mut frame = WelcomeScreen::new(true);
