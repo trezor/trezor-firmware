@@ -268,7 +268,7 @@ impl UIFeaturesBootloader for ModelTRFeatures {
     }
 
     fn screen_wipe_progress(progress: u16, initialize: bool) {
-        ModelTRFeatures::screen_progress(
+        Self::screen_progress(
             "Resetting",
             "Trezor",
             progress,
@@ -280,7 +280,7 @@ impl UIFeaturesBootloader for ModelTRFeatures {
     }
 
     fn screen_install_progress(progress: u16, initialize: bool, _initial_setup: bool) {
-        ModelTRFeatures::screen_progress(
+        Self::screen_progress(
             "Installing",
             "firmware",
             progress,
