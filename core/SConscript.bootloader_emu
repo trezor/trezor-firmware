@@ -26,6 +26,7 @@ CCFLAGS_MOD = ''
 CPPPATH_MOD = []
 CPPDEFINES_MOD = []
 SOURCE_MOD = []
+SOURCE_MOD_CRYPTO = []
 
 if TREZOR_MODEL in ('1', 'R'):
     FONT_NORMAL='Font_PixelOperator_Regular_8'
@@ -66,7 +67,7 @@ CPPDEFINES_MOD += [
     'TREZOR_UI2',
     'FANCY_FATAL_ERROR'
 ]
-SOURCE_MOD += [
+SOURCE_MOD_CRYPTO += [
     'vendor/trezor-crypto/blake2s.c',
     'vendor/trezor-crypto/chacha_drbg.c',
     'vendor/trezor-crypto/chacha20poly1305/chacha_merged.c',
@@ -254,7 +255,7 @@ except OSError:
 
 
 env.Replace(
-    ALLSOURCES=SOURCE_MOD + SOURCE_BOOTLOADER + SOURCE_NANOPB + SOURCE_TREZORHAL + SOURCE_UNIX,
+    ALLSOURCES=SOURCE_MOD + SOURCE_MOD_CRYPTO + SOURCE_BOOTLOADER + SOURCE_NANOPB + SOURCE_TREZORHAL + SOURCE_UNIX,
     ALLDEFS=tools.get_defs_for_cmake(env['CPPDEFINES']))
 
 cmake_gen = env.Command(
@@ -328,6 +329,7 @@ env.Append(LINKFLAGS='-lm')
 
 obj_program = []
 obj_program += env.Object(source=SOURCE_MOD)
+obj_program += env.Object(source=SOURCE_MOD_CRYPTO)
 obj_program += env.Object(source=SOURCE_BOOTLOADER)
 obj_program += env.Object(source=SOURCE_NANOPB)
 obj_program += env.Object(source=SOURCE_TREZORHAL)

@@ -28,6 +28,7 @@ CPPDEFINES_MOD = [
     'USE_INSECURE_PRNG',
 ]
 SOURCE_MOD = []
+SOURCE_MOD_CRYPTO = []
 CPPDEFINES_HAL = []
 SOURCE_HAL = []
 PATH_HAL = []
@@ -55,6 +56,9 @@ CPPPATH_MOD += [
     'vendor/trezor-storage',
 ]
 SOURCE_MOD += [
+    'vendor/trezor-storage/flash_area.c',
+]
+SOURCE_MOD_CRYPTO += [
     'vendor/trezor-crypto/aes/aes_modes.c',
     'vendor/trezor-crypto/aes/aesccm.c',
     'vendor/trezor-crypto/aes/aescrypt.c',
@@ -75,7 +79,6 @@ SOURCE_MOD += [
     'vendor/trezor-crypto/secp256k1.c',
     'vendor/trezor-crypto/sha2.c',
     'vendor/trezor-crypto/tls_prf.c',
-    'vendor/trezor-storage/flash_area.c',
 ]
 
 # modtrezorui
@@ -180,7 +183,7 @@ env.Replace(
 
 
 env.Replace(
-    ALLSOURCES=SOURCE_MOD + SOURCE_PRODTEST + SOURCE_HAL,
+    ALLSOURCES=SOURCE_MOD + SOURCE_MOD_CRYPTO + SOURCE_PRODTEST + SOURCE_HAL,
     ALLDEFS=tools.get_defs_for_cmake(env['CPPDEFINES'] + env['CPPDEFINES_IMPLICIT']))
 
 cmake_gen = env.Command(
@@ -196,6 +199,7 @@ cmake_gen = env.Command(
 
 obj_program = []
 obj_program.extend(env.Object(source=SOURCE_MOD))
+obj_program.extend(env.Object(source=SOURCE_MOD_CRYPTO))
 obj_program.extend(env.Object(source=SOURCE_PRODTEST))
 obj_program.extend(env.Object(source=SOURCE_HAL))
 

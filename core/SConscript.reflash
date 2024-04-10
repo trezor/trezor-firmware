@@ -23,6 +23,7 @@ CCFLAGS_MOD = ''
 CPPPATH_MOD = []
 CPPDEFINES_MOD = []
 SOURCE_MOD = []
+SOURCE_MOD_CRYPTO = []
 CPPDEFINES_HAL = []
 SOURCE_HAL = []
 PATH_HAL = []
@@ -49,7 +50,7 @@ CPPPATH_MOD += [
     'vendor/trezor-crypto',
     'vendor/trezor-storage',
 ]
-SOURCE_MOD += [
+SOURCE_MOD_CRYPTO += [
     'vendor/trezor-crypto/memzero.c',
 ]
 
@@ -146,7 +147,7 @@ env.Replace(
 )
 
 env.Replace(
-    ALLSOURCES=SOURCE_MOD + SOURCE_REFLASH + SOURCE_HAL,
+    ALLSOURCES=SOURCE_MOD + SOURCE_MOD_CRYPTO + SOURCE_REFLASH + SOURCE_HAL,
     ALLDEFS=tools.get_defs_for_cmake(env['CPPDEFINES'] + env['CPPDEFINES_IMPLICIT']))
 
 cmake_gen = env.Command(
@@ -161,6 +162,7 @@ cmake_gen = env.Command(
 
 obj_program = []
 obj_program += env.Object(source=SOURCE_MOD)
+obj_program += env.Object(source=SOURCE_MOD_CRYPTO)
 obj_program += env.Object(source=SOURCE_REFLASH)
 obj_program += env.Object(source=SOURCE_HAL)
 

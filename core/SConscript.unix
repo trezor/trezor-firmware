@@ -33,6 +33,7 @@ CPPDEFINES_MOD = []
 SOURCE_MOD = [
     'vendor/micropython/extmod/vfs_posix_file.c',
 ]
+SOURCE_MOD_CRYPTO = []
 
 PYOPT = ARGUMENTS.get('PYOPT', '1')
 FROZEN = ARGUMENTS.get('TREZOR_EMULATOR_FROZEN', 0)
@@ -89,6 +90,8 @@ SOURCE_MOD += [
     'embed/extmod/trezorobj.c',
     'embed/extmod/modtrezorcrypto/crc.c',
     'embed/extmod/modtrezorcrypto/modtrezorcrypto.c',
+]
+SOURCE_MOD_CRYPTO += [
     'vendor/trezor-crypto/address.c',
     'vendor/trezor-crypto/aes/aes_modes.c',
     'vendor/trezor-crypto/aes/aescrypt.c',
@@ -142,7 +145,7 @@ SOURCE_MOD += [
     'vendor/trezor-crypto/slip39_english.c',
 ]
 if EVERYTHING:
-    SOURCE_MOD += [
+    SOURCE_MOD_CRYPTO += [
         'vendor/trezor-crypto/cardano.c',
         'vendor/trezor-crypto/monero/base58.c',
         'vendor/trezor-crypto/monero/serialize.c',
@@ -173,7 +176,7 @@ if FEATURE_FLAGS["SECP256K1_ZKP"]:
         'vendor/secp256k1-zkp/src/precomputed_ecmult.c',
         'vendor/secp256k1-zkp/src/precomputed_ecmult_gen.c',
     ]
-    SOURCE_MOD += [
+    SOURCE_MOD_CRYPTO += [
         'vendor/trezor-crypto/zkp_context.c',
         'vendor/trezor-crypto/zkp_ecdsa.c',
         'vendor/trezor-crypto/zkp_bip340.c',
@@ -185,7 +188,7 @@ if FEATURE_FLAGS["AES_GCM"]:
         'USE_AES_GCM',
         'AES_VAR',
     ]
-    SOURCE_MOD += [
+    SOURCE_MOD_CRYPTO += [
         'vendor/trezor-crypto/aes/gf128mul.c',
         'vendor/trezor-crypto/aes/aesgcm.c',
     ]
@@ -811,8 +814,9 @@ if FROZEN:
 #
 
 obj_program = []
-source_files = SOURCE_MOD + SOURCE_MICROPYTHON + SOURCE_UNIX
+source_files = SOURCE_MOD + SOURCE_MOD_CRYPTO + SOURCE_MICROPYTHON + SOURCE_UNIX
 obj_program.extend(env.Object(source=SOURCE_MOD))
+obj_program.extend(env.Object(source=SOURCE_MOD_CRYPTO))
 if FEATURE_FLAGS["SECP256K1_ZKP"]:
     obj_program.extend(env.Object(source=SOURCE_MOD_SECP256K1_ZKP, CCFLAGS='$CCFLAGS -Wno-unused-function'))
     source_files.extend(SOURCE_MOD_SECP256K1_ZKP)
