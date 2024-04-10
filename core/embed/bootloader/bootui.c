@@ -248,7 +248,7 @@ void ui_screen_done(uint8_t restart_seconds, secbool full_redraw) {
   screen_install_success(restart_seconds, initial_setup, full_redraw);
 }
 
-void ui_screen_boot_empty(bool fading) { screen_boot_empty(fading); }
+void ui_screen_boot_stage_1(bool fading) { screen_boot_stage_1(fading); }
 
 // error UI
 void ui_screen_fail(void) { screen_install_fail(); }

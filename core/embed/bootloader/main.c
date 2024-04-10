@@ -350,7 +350,7 @@ void real_jump_to_firmware(void) {
       ui_screen_boot_click();
     }
 
-    ui_screen_boot_empty(false);
+    ui_screen_boot_stage_1(false);
   }
 
   ensure_compatible_settings();
@@ -418,7 +418,7 @@ int bootloader_main(void) {
 #endif
 #endif
 
-  ui_screen_boot_empty(false);
+  ui_screen_boot_stage_1(false);
 
   mpu_config_bootloader();
 
@@ -621,7 +621,7 @@ int bootloader_main(void) {
           }
           if (ui_result == 0x11223344) {  // reboot
 #ifndef STM32U5
-            ui_screen_boot_empty(true);
+            ui_screen_boot_stage_1(true);
 #endif
             continue_to_firmware = firmware_present;
             continue_to_firmware_backup = firmware_present_backup;
@@ -686,7 +686,7 @@ int bootloader_main(void) {
 #ifdef STM32U5
         firmware_jump_fn = jump_to_fw_through_reset;
 #else
-        ui_screen_boot_empty(true);
+        ui_screen_boot_stage_1(true);
         firmware_jump_fn = real_jump_to_firmware;
 #endif
         break;

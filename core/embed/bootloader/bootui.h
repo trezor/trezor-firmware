@@ -67,7 +67,7 @@ void ui_fadein(void);
 void ui_fadeout(void);
 void ui_set_initial_setup(bool initial);
 
-void ui_screen_boot_empty(bool fading);
+void ui_screen_boot_stage_1(bool fading);
 
 #ifdef USE_OPTIGA
 uint32_t ui_screen_unlock_bootloader_confirm(void);
