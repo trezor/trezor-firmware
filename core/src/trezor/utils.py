@@ -23,6 +23,7 @@ from trezorutils import (  # noqa: F401
     sd_hotswap_enabled,
     unit_btconly,
     unit_color,
+    unit_packaging,
 )
 from typing import TYPE_CHECKING
 

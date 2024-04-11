@@ -75,6 +75,13 @@ def unit_btconly() -> bool | None:
 
 
 # extmod/modtrezorutils/modtrezorutils.c
+def unit_packaging() -> int | None:
+    """
+    Returns the packaging version of the unit.
+    """
+
+
+# extmod/modtrezorutils/modtrezorutils.c
 def sd_hotswap_enabled() -> bool:
     """
     Returns True if SD card hot swapping is enabled
