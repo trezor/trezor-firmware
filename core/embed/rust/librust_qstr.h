@@ -203,6 +203,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_fingerprint;
   MP_QSTR_firmware_update__title;
   MP_QSTR_firmware_update__title_fingerprint;
+  MP_QSTR_flow_get_address;
   MP_QSTR_get_language;
   MP_QSTR_hold;
   MP_QSTR_hold_danger;

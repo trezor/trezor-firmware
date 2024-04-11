@@ -22,6 +22,7 @@ pub enum ButtonMsg {
     LongPressed,
 }
 
+#[derive(Clone)]
 pub struct Button {
     area: Rect,
     touch_expand: Option<Insets>,
@@ -386,7 +387,7 @@ impl crate::trace::Trace for Button {
     }
 }
 
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq, Eq, Clone)]
 enum State {
     Initial,
     Pressed,
@@ -394,7 +395,7 @@ enum State {
     Disabled,
 }
 
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq, Eq, Clone)]
 pub enum ButtonContent {
     Empty,
     Text(TString<'static>),
@@ -510,6 +511,7 @@ impl Button {
     }
 }
 
+#[derive(Copy, Clone)]
 pub enum CancelConfirmMsg {
     Cancelled,
     Confirmed,
