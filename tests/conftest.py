@@ -286,6 +286,7 @@ def client(
     _raw_client.reset_debug_features()
     _raw_client.open()
     try:
+        _raw_client.sync_responses()
         _raw_client.init_device()
     except Exception:
         request.session.shouldstop = "Failed to communicate with Trezor"
