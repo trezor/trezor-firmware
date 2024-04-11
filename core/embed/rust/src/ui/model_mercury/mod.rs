@@ -6,7 +6,10 @@ pub mod component;
 pub mod constant;
 pub mod theme;
 
-mod screens;
+pub mod flow;
+#[cfg(feature = "micropython")]
+pub mod layout;
+pub mod screens;
 
 pub struct ModelMercuryFeatures;
 
