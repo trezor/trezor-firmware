@@ -59,4 +59,8 @@ impl<T> Animation<T> {
             panic!("offset is too large");
         }
     }
+
+    pub fn finished(&self, now: Instant) -> bool {
+        self.elapsed(now) >= self.duration
+    }
 }
