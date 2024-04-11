@@ -134,6 +134,12 @@ impl From<Point> for Offset {
     }
 }
 
+impl Lerp for Offset {
+    fn lerp(a: Self, b: Self, t: f32) -> Self {
+        Offset::new(i16::lerp(a.x, b.x, t), i16::lerp(a.y, b.y, t))
+    }
+}
+
 /// A point in 2D space defined by the the `x` and `y` coordinate. Relative
 /// coordinates, vectors, and offsets are represented by the `Offset` type.
 #[derive(Copy, Clone, PartialEq, Eq)]
