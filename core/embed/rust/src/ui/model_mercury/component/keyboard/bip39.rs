@@ -23,9 +23,9 @@ use heapless::String;
 const MAX_LENGTH: usize = 8;
 
 pub struct Bip39Input {
-    button: Button<&'static str>,
+    button: Button<>,
     // used only to keep track of suggestion text color
-    button_suggestion: Button<&'static str>,
+    button_suggestion: Button<>,
     textbox: TextBox<MAX_LENGTH>,
     multi_tap: MultiTapKeyboard,
     options_num: Option<usize>,
@@ -228,7 +228,7 @@ impl Bip39Input {
         // Styling the input to reflect already filled word
         Self {
             button: Button::with_icon(theme::ICON_LIST_CHECK).styled(theme::button_pin_confirm()),
-            textbox: TextBox::new(String::from(word)),
+            textbox: TextBox::new(unwrap!(String::try_from(word))),
             multi_tap: MultiTapKeyboard::new(),
             options_num: bip39::options_num(word),
             suggested_word: bip39::complete_word(word),
@@ -310,7 +310,7 @@ impl Bip39Input {
             // Disabled button.
             self.button.disable(ctx);
             self.button.set_stylesheet(ctx, theme::button_pin());
-            self.button.set_content(ctx, ButtonContent::Text(""));
+            self.button.set_content(ctx, ButtonContent::Text("".into()));
         }
     }
 }
