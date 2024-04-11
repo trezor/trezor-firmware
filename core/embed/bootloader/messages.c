@@ -673,13 +673,20 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
 #endif
 
       uint32_t response = INPUT_CANCEL;
-      if (sectrue == is_new || sectrue == is_ilu) {
+      if (((vhdr.vtrust & VTRUST_NO_WARNING) == VTRUST_NO_WARNING) &&
+          (sectrue == is_new || sectrue == is_ilu)) {
         // new installation or interaction less updated - auto confirm
+        // only allowed for full-trust images
         response = INPUT_CONFIRM;
       } else {
-        int version_cmp = version_compare(hdr.version, current_hdr->version);
-        response = ui_screen_install_confirm(&vhdr, &hdr, should_keep_seed,
-                                             is_newvendor, version_cmp);
+        if (sectrue != is_new) {
+          int version_cmp = version_compare(hdr.version, current_hdr->version);
+          response = ui_screen_install_confirm(
+              &vhdr, &hdr, should_keep_seed, is_newvendor, is_new, version_cmp);
+        } else {
+          response = ui_screen_install_confirm(&vhdr, &hdr, sectrue,
+                                               is_newvendor, is_new, 0);
+        }
       }
 
       if (INPUT_CANCEL == response) {

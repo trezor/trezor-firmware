@@ -249,14 +249,17 @@ uint32_t ui_screen_menu(secbool firmware_present) {
 uint32_t ui_screen_install_confirm(const vendor_header *const vhdr,
                                    const image_header *const hdr,
                                    secbool should_keep_seed,
-                                   secbool is_newvendor, int version_cmp) {
+                                   secbool is_newvendor, secbool is_newinstall,
+                                   int version_cmp) {
   uint8_t fingerprint[32];
   char ver_str[64];
   get_image_fingerprint(hdr, fingerprint);
   format_ver("%d.%d.%d", hdr->version, ver_str, sizeof(ver_str));
   return screen_install_confirm(vhdr->vstr, vhdr->vstr_len, ver_str,
                                 fingerprint, should_keep_seed == sectrue,
-                                is_newvendor == sectrue, version_cmp);
+
+                                is_newvendor == sectrue,
+                                is_newinstall == sectrue, version_cmp);
 }
 
 void ui_screen_install_start() {
