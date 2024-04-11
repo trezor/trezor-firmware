@@ -62,8 +62,8 @@ def test_busy_state(client: Client):
     assert client.features.unlocked is True
 
 
-@pytest.mark.flaky(max_runs=5)
-def test_busy_expiry(client: Client):
+@pytest.mark.models("core")
+def test_busy_expiry_core(client: Client):
     WAIT_TIME_MS = 1500
     TOLERANCE = 1000
 
@@ -81,6 +81,27 @@ def test_busy_expiry(client: Client):
     # Check that the busy dialog was shown for at least WAIT_TIME_MS.
     duration = (end - start) * 1000
     assert WAIT_TIME_MS <= duration <= WAIT_TIME_MS + TOLERANCE
+
+    # Check that the device is no longer busy.
+    # Also needs to come back to Homescreen (for UI tests).
+    client.refresh_features()
+    _assert_busy(client, False)
+
+
+@pytest.mark.flaky(max_runs=5)
+@pytest.mark.models("legacy")
+def test_busy_expiry_legacy(client: Client):
+    _assert_busy(client, False)
+    # Show the busy dialog.
+    device.set_busy(client, expiry_ms=1500)
+    _assert_busy(client, True)
+
+    # Hasn't expired yet.
+    time.sleep(0.1)
+    _assert_busy(client, True)
+
+    # Wait for it to expire. Add some tolerance to account for CI/hardware slowness.
+    time.sleep(4.0)
 
     # Check that the device is no longer busy.
     # Also needs to come back to Homescreen (for UI tests).

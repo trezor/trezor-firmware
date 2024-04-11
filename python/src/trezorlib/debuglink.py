@@ -648,7 +648,7 @@ class DebugLink:
             wait_type = DebugWaitType.IMMEDIATE
         else:
             wait_type = self.input_wait_type
-        return self.snapshot(wait_type)
+        return self._snapshot_core(wait_type)
 
     press_yes = _make_input_func(button=messages.DebugButton.YES)
     """Confirm current layout. See `_decision` for more details."""
@@ -691,10 +691,14 @@ class DebugLink:
             messages.DebugLinkDecision(x=x, y=y, hold_ms=hold_ms), wait
         )
 
-    def snapshot(
+    def _snapshot_core(
         self, wait_type: DebugWaitType = DebugWaitType.IMMEDIATE
     ) -> LayoutContent:
         """Save text and image content of the screen to relevant directories."""
+        # skip the snapshot if we are on T1
+        if self.model is models.T1B1:
+            return LayoutContent([])
+
         # take the snapshot
         state = self.state(wait_type)
         layout = LayoutContent(state.tokens)
@@ -702,8 +706,6 @@ class DebugLink:
         if state.tokens and self.layout_dirty:
             # save it, unless we already did or unless it's empty
             self.save_debug_screen(layout.visible_screen())
-            if state.layout is not None:
-                self.save_screenshot(state.layout)
             self.layout_dirty = False
 
         # return the layout
@@ -772,7 +774,16 @@ class DebugLink:
     def erase_sd_card(self, format: bool = True) -> messages.Success:
         return self._call(messages.DebugLinkEraseSdCard(format=format))
 
-    def save_screenshot(self, data: bytes) -> None:
+    def snapshot_legacy(self) -> None:
+        """Snapshot the current state of the device."""
+        if self.model is not models.T1B1:
+            return
+
+        state = self.state()
+        if state.layout is not None:
+            self._save_screenshot_t1(state.layout)
+
+    def _save_screenshot_t1(self, data: bytes) -> None:
         if self.t1_screenshot_directory is None:
             return
 
@@ -857,7 +868,7 @@ class DebugUI:
                 self.debuglink.press_yes()
 
     def button_request(self, br: messages.ButtonRequest) -> None:
-        self.debuglink.snapshot()
+        self.debuglink.snapshot_legacy()
 
         if self.input_flow is None:
             self._default_input_flow(br)
@@ -871,7 +882,7 @@ class DebugUI:
                 self.input_flow = self.INPUT_FLOW_DONE
 
     def get_pin(self, code: Optional["PinMatrixRequestType"] = None) -> str:
-        self.debuglink.snapshot()
+        self.debuglink.snapshot_legacy()
 
         if self.pins is None:
             raise RuntimeError("PIN requested but no sequence was configured")
@@ -882,7 +893,7 @@ class DebugUI:
             raise AssertionError("PIN sequence ended prematurely")
 
     def get_passphrase(self, available_on_device: bool) -> str:
-        self.debuglink.snapshot()
+        self.debuglink.snapshot_legacy()
         return self.passphrase
 
 
@@ -1273,6 +1284,29 @@ class TrezorClientDebugLink(TrezorClient):
                 output.append("Actually received:")
                 output.append(textwrap.indent(protobuf.format_message(act), "    "))
                 raise AssertionError("\n".join(output))
+
+    def sync_responses(self) -> None:
+        """Synchronize Trezor device receiving with caller.
+
+        When a failed test does not read out the response, the next caller will write
+        a request, but read the previous response -- while the device had already sent
+        and placed into queue the new response.
+
+        This function will call `Ping` and read responses until it locates a `Success`
+        with the expected text. This means that we are reading up-to-date responses.
+        """
+        import secrets
+
+        # Start by canceling whatever is on screen. This will work to cancel T1 PIN
+        # prompt, which is in TINY mode and does not respond to `Ping`.
+        # go to super() to avoid message filtering
+        super()._raw_write(messages.Cancel())
+
+        message = "SYNC" + secrets.token_hex(8)
+        super()._raw_write(messages.Ping(message=message))
+        resp = None
+        while resp != messages.Success(message=message):
+            resp = super()._raw_read()
 
     def mnemonic_callback(self, _) -> str:
         word, pos = self.debug.read_recovery_word()
