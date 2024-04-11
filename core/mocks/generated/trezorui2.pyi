@@ -523,6 +523,11 @@ def confirm_firmware_update(
 # rust/src/ui/model_mercury/layout.rs
 def show_wait_text(message: str, /) -> LayoutObj[None]:
     """Show single-line text in the middle of the screen."""
+
+
+# rust/src/ui/model_mercury/layout.rs
+def flow_get_address() -> LayoutObj[UiResult]:
+    """Get address / receive funds."""
 CONFIRMED: UiResult
 CANCELLED: UiResult
 INFO: UiResult
