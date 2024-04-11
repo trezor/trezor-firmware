@@ -53,6 +53,7 @@ uint32_t systick_val_copy = 0;
 extern void shutdown_privileged(void);
 
 void __attribute__((noreturn)) trezor_shutdown(void) {
+  display_finish_actions();
 #ifdef USE_SVC_SHUTDOWN
   svc_shutdown();
 #else
@@ -69,9 +70,7 @@ error_uni(const char *label, const char *msg, const char *footer) {
   display_orientation(0);
 
 #ifdef FANCY_FATAL_ERROR
-
   screen_fatal_error_rust(label, msg, "PLEASE VISIT\nTREZOR.IO/RSOD");
-  display_refresh();
 #else
   term_set_color(COLOR_WHITE, COLOR_FATAL_ERROR);
   if (label) {
@@ -85,7 +84,6 @@ error_uni(const char *label, const char *msg, const char *footer) {
   }
 #endif
   display_backlight(255);
-  display_refresh();
   trezor_shutdown();
 }
 
@@ -100,7 +98,6 @@ __fatal_error(const char *expr, const char *msg, const char *file, int line,
   mini_snprintf(buf, sizeof(buf), "%s: %d", file, line);
   screen_fatal_error_rust("INTERNAL ERROR", msg != NULL ? msg : buf,
                           "PLEASE VISIT\nTREZOR.IO/RSOD");
-  display_refresh();
 #else
   term_set_color(COLOR_WHITE, COLOR_FATAL_ERROR);
   term_printf("\nINTERNAL ERROR:\n");
@@ -133,7 +130,6 @@ error_shutdown(const char *label, const char *msg) {
 #ifdef FANCY_FATAL_ERROR
 
   screen_fatal_error_rust(label, msg, "PLEASE VISIT\nTREZOR.IO/RSOD");
-  display_refresh();
 #else
   term_set_color(COLOR_WHITE, COLOR_FATAL_ERROR);
   if (label) {

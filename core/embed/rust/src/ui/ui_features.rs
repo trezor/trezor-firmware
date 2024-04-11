@@ -5,6 +5,7 @@ use crate::{trezorhal::secbool::secbool, ui::display::Color};
 pub trait UIFeaturesCommon {
     fn fadein() {}
     fn fadeout() {}
+    fn backlight_on() {}
 
     const SCREEN: Rect;
 
