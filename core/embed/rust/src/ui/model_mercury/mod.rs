@@ -21,6 +21,11 @@ impl UIFeaturesCommon for ModelMercuryFeatures {
         crate::ui::display::fade_backlight_duration(theme::BACKLIGHT_DIM, 150);
     }
 
+    fn backlight_on() {
+        #[cfg(feature = "backlight")]
+        crate::ui::display::set_backlight(theme::BACKLIGHT_NORMAL);
+    }
+
     const SCREEN: Rect = constant::SCREEN;
 
     fn screen_fatal_error(title: &str, msg: &str, footer: &str) {

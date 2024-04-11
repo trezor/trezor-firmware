@@ -9,6 +9,7 @@ pub fn screen_fatal_error(title: &str, msg: &str, footer: &str) {
     let mut frame = ErrorScreen::new(title.into(), msg.into(), footer.into());
     frame.place(constant::screen());
     frame.paint();
+    display::refresh();
 }
 
 pub fn screen_boot_stage_2() {
