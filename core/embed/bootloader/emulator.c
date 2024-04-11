@@ -100,7 +100,6 @@ __attribute__((noreturn)) void display_error_and_die(const char *message,
   display_init();
   display_backlight(180);
   screen_fatal_error_rust(title, message, footer);
-  display_refresh();
 #if USE_TOUCH
   printf("Click screen to exit.\n");
 #elif USE_BUTTON
@@ -210,7 +209,6 @@ __attribute__((noreturn)) void jump_to(void *addr) {
                             "STORAGE WAS RETAINED");
   }
   display_backlight(180);
-  display_refresh();
   hal_delay(3000);
   exit(0);
 }

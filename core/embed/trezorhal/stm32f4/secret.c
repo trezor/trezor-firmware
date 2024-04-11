@@ -105,8 +105,6 @@ void secret_show_install_restricted_screen(void) {
       "INSTALL RESTRICTED",
       "Installation of custom firmware is currently restricted.",
       "Please visit\ntrezor.io/bootloader");
-
-  display_refresh();
 #endif
 }
 

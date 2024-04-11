@@ -14,12 +14,14 @@ fn shutdown() -> ! {
 #[cfg(feature = "bootloader")]
 pub fn __fatal_error(_expr: &str, _msg: &str, _file: &str, _line: u32, _func: &str) -> ! {
     ModelUI::screen_fatal_error("BL.rs", "BL.rs", "PLEASE VISIT\nTREZOR.IO/RSOD");
+    ModelUI::backlight_on();
     shutdown()
 }
 
 #[cfg(not(feature = "bootloader"))]
 pub fn __fatal_error(_expr: &str, msg: &str, _file: &str, _line: u32, _func: &str) -> ! {
     ModelUI::screen_fatal_error("INTERNAL_ERROR", msg, "PLEASE VISIT\nTREZOR.IO/RSOD");
+    ModelUI::backlight_on();
     shutdown()
 }
 
