@@ -47,6 +47,7 @@ pub trait ParagraphSource<'a> {
     }
 }
 
+#[derive(Clone)]
 pub struct Paragraphs<T> {
     area: Rect,
     placement: LinearPlacement,
@@ -335,6 +336,7 @@ impl<'a> Paragraph<'a> {
     }
 }
 
+#[derive(Clone)]
 struct TextLayoutProxy {
     offset: PageOffset,
     bounds: Rect,

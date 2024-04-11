@@ -56,7 +56,7 @@ use super::{
         SelectWordCount, SelectWordCountMsg, SelectWordMsg, ShareWords, SimplePage, Slip39Input,
         VerticalMenu, VerticalMenuChoiceMsg,
     },
-    theme,
+    flow, theme,
 };
 
 impl TryFrom<CancelConfirmMsg> for Obj {
@@ -2152,6 +2152,10 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// def show_wait_text(message: str, /) -> LayoutObj[None]:
     ///     """Show single-line text in the middle of the screen."""
     Qstr::MP_QSTR_show_wait_text => obj_fn_1!(new_show_wait_text).as_obj(),
+
+    /// def flow_get_address() -> LayoutObj[UiResult]:
+    ///     """Get address / receive funds."""
+    Qstr::MP_QSTR_flow_get_address => obj_fn_kw!(0, flow::get_address::new_get_address).as_obj(),
 };
 
 #[cfg(test)]
