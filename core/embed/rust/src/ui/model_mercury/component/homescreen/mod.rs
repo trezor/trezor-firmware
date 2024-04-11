@@ -288,6 +288,13 @@ impl Component for Homescreen {
             }
 
             self.label.map(|t| {
+                let r = Rect::new(Point::new(6, 198), Point::new(234, 233));
+                shape::Bar::new(r)
+                    .with_bg(Color::black())
+                    .with_alpha(89)
+                    .with_radius(3)
+                    .render(target);
+
                 let style = theme::TEXT_DEMIBOLD;
                 let pos = Point::new(self.pad.area.center().x, LABEL_Y);
                 shape::Text::new(pos, t)
@@ -355,15 +362,15 @@ impl crate::trace::Trace for Homescreen {
     }
 }
 
-pub struct Lockscreen {
-    label: TString<'static>,
+pub struct Lockscreen<'a> {
+    label: TString<'a>,
     custom_image: Option<Gc<[u8]>>,
     bootscreen: bool,
     coinjoin_authorized: bool,
 }
 
-impl Lockscreen {
-    pub fn new(label: TString<'static>, bootscreen: bool, coinjoin_authorized: bool) -> Self {
+impl<'a> Lockscreen<'a> {
+    pub fn new(label: TString<'a>, bootscreen: bool, coinjoin_authorized: bool) -> Self {
         Lockscreen {
             label,
             custom_image: get_user_custom_image().ok(),
@@ -373,7 +380,7 @@ impl Lockscreen {
     }
 }
 
-impl Component for Lockscreen {
+impl Component for Lockscreen<'_> {
     type Msg = HomescreenMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -470,7 +477,7 @@ impl Component for Lockscreen {
             shape::JpegImage::new(center, img_data)
                 .with_align(Alignment2D::CENTER)
                 .with_blur(4)
-                .with_dim(130)
+                .with_dim(140)
                 .render(target);
         } else if is_image_toif(img_data) {
             shape::ToifImage::new(center, unwrap!(Toif::new(img_data)))
@@ -591,7 +598,7 @@ fn is_image_toif(buffer: &[u8]) -> bool {
 }
 
 #[cfg(feature = "ui_debug")]
-impl crate::trace::Trace for Lockscreen {
+impl crate::trace::Trace for Lockscreen<'_> {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("Lockscreen");
     }

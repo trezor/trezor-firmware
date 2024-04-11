@@ -3,6 +3,9 @@
 //! do not edit manually!
 
 
+use crate::strutil::TString;
+
+
 const ICON_APPLE: &[u8] = include_res!("model_mercury/res/fido/icon_apple.toif");
 const ICON_AWS: &[u8] = include_res!("model_mercury/res/fido/icon_aws.toif");
 const ICON_BINANCE: &[u8] = include_res!("model_mercury/res/fido/icon_binance.toif");
@@ -39,9 +42,9 @@ const ICON_WEBAUTHN: &[u8] = include_res!("model_mercury/res/fido/icon_webauthn.
 /// Translates icon name into its data.
 /// Returns default `ICON_WEBAUTHN` when the icon is not found or name not
 /// supplied.
-pub fn get_fido_icon_data<T: AsRef<str>>(icon_name: Option<T>) -> &'static [u8] {
+pub fn get_fido_icon_data(icon_name: Option<TString<'static>>) -> &'static [u8] {
     if let Some(icon_name) = icon_name {
-        match icon_name.as_ref() {
+        icon_name.map(|c| match c {
             "apple" => ICON_APPLE,
             "aws" => ICON_AWS,
             "binance" => ICON_BINANCE,
@@ -73,7 +76,7 @@ pub fn get_fido_icon_data<T: AsRef<str>>(icon_name: Option<T>) -> &'static [u8] 
             "stripe" => ICON_STRIPE,
             "tutanota" => ICON_TUTANOTA,
             _ => ICON_WEBAUTHN,
-        }
+        })
     } else {
         ICON_WEBAUTHN
     }

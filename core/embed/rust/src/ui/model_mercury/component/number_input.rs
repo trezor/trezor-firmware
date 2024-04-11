@@ -1,7 +1,6 @@
 use crate::{
     error::Error,
-    micropython::buffer::StrBuffer,
-    strutil::{self, StringType},
+    strutil::{self, StringType, TString},
     translations::TR,
     ui::{
         component::{
@@ -23,23 +22,22 @@ pub enum NumberInputDialogMsg {
     InfoRequested,
 }
 
-pub struct NumberInputDialog<T, F>
+pub struct NumberInputDialog<F>
 where
-    F: Fn(u32) -> T,
+    F: Fn(u32) -> TString<'static>,
 {
     area: Rect,
     description_func: F,
     input: Child<NumberInput>,
-    paragraphs: Child<Paragraphs<Paragraph<T>>>,
+    paragraphs: Child<Paragraphs<Paragraph<'static>>>,
     paragraphs_pad: Pad,
-    info_button: Child<Button<StrBuffer>>,
-    confirm_button: Child<Button<StrBuffer>>,
+    info_button: Child<Button>,
+    confirm_button: Child<Button>,
 }
 
-impl<T, F> NumberInputDialog<T, F>
+impl<F> NumberInputDialog<F>
 where
-    F: Fn(u32) -> T,
-    T: StringType,
+    F: Fn(u32) -> TString<'static>,
 {
     pub fn new(min: u32, max: u32, init_value: u32, description_func: F) -> Result<Self, Error> {
         let text = description_func(init_value);
@@ -49,8 +47,8 @@ where
             input: NumberInput::new(min, max, init_value).into_child(),
             paragraphs: Paragraphs::new(Paragraph::new(&theme::TEXT_NORMAL, text)).into_child(),
             paragraphs_pad: Pad::with_background(theme::BG),
-            info_button: Button::with_text(TR::buttons__info.try_into()?).into_child(),
-            confirm_button: Button::with_text(TR::buttons__continue.try_into()?)
+            info_button: Button::with_text(TR::buttons__info.into()).into_child(),
+            confirm_button: Button::with_text(TR::buttons__continue.into())
                 .styled(theme::button_confirm())
                 .into_child(),
         })
@@ -73,10 +71,9 @@ where
     }
 }
 
-impl<T, F> Component for NumberInputDialog<T, F>
+impl<F> Component for NumberInputDialog<F>
 where
-    T: StringType,
-    F: Fn(u32) -> T,
+    F: Fn(u32) -> TString<'static>,
 {
     type Msg = NumberInputDialogMsg;
 
@@ -143,10 +140,9 @@ where
 }
 
 #[cfg(feature = "ui_debug")]
-impl<T, F> crate::trace::Trace for NumberInputDialog<T, F>
+impl<F> crate::trace::Trace for NumberInputDialog<F>
 where
-    T: StringType,
-    F: Fn(u32) -> T,
+    F: Fn(u32) -> TString<'static>,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("NumberInputDialog");
@@ -163,8 +159,8 @@ pub enum NumberInputMsg {
 
 pub struct NumberInput {
     area: Rect,
-    dec: Child<Button<&'static str>>,
-    inc: Child<Button<&'static str>>,
+    dec: Child<Button>,
+    inc: Child<Button>,
     min: u32,
     max: u32,
     value: u32,
@@ -172,10 +168,10 @@ pub struct NumberInput {
 
 impl NumberInput {
     pub fn new(min: u32, max: u32, value: u32) -> Self {
-        let dec = Button::with_text("-")
+        let dec = Button::with_text("-".into())
             .styled(theme::button_counter())
             .into_child();
-        let inc = Button::with_text("+")
+        let inc = Button::with_text("+".into())
             .styled(theme::button_counter())
             .into_child();
         let value = value.clamp(min, max);
@@ -226,7 +222,7 @@ impl Component for NumberInput {
         let mut buf = [0u8; 10];
         if let Some(text) = strutil::format_i64(self.value as i64, &mut buf) {
             let digit_font = Font::DEMIBOLD;
-            let y_offset = digit_font.text_height() / 2 + Button::<&str>::BASELINE_OFFSET.y;
+            let y_offset = digit_font.text_height() / 2 + Button::BASELINE_OFFSET.y;
             display::rect_fill(self.area, theme::BG);
             display::text_center(
                 self.area.center() + Offset::y(y_offset),
@@ -245,7 +241,7 @@ impl Component for NumberInput {
 
         if let Some(text) = strutil::format_i64(self.value as i64, &mut buf) {
             let digit_font = Font::DEMIBOLD;
-            let y_offset = digit_font.text_height() / 2 + Button::<&str>::BASELINE_OFFSET.y;
+            let y_offset = digit_font.text_height() / 2 + Button::BASELINE_OFFSET.y;
 
             shape::Bar::new(self.area).with_bg(theme::BG).render(target);
             shape::Text::new(self.area.center() + Offset::y(y_offset), text)

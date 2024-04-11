@@ -96,7 +96,6 @@ impl Component for ResultFooter<'_> {
         // footer text
         self.text.paint();
     }
-
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         // divider line
         let bar = Rect::from_center_and_size(
