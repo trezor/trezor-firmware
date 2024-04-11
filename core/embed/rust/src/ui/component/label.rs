@@ -10,6 +10,7 @@ use crate::{
 
 use super::{text::TextStyle, TextLayout};
 
+#[derive(Clone)]
 pub struct Label<'a> {
     text: TString<'a>,
     layout: TextLayout,
