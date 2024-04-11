@@ -6,6 +6,7 @@
 #include TREZOR_BOARD
 
 static uint8_t unit_variant_color = 0;
+static uint8_t unit_variant_packaging = 0;
 static bool unit_variant_btconly = false;
 static bool unit_variant_ok = false;
 
@@ -14,6 +15,7 @@ static int16_t unit_variant_build_year = -1;
 static void unit_variant_0x01(const uint8_t *data) {
   unit_variant_color = data[1];
   unit_variant_btconly = data[2] == 1;
+  unit_variant_packaging = data[3];
   unit_variant_ok = true;
 }
 
@@ -68,6 +70,8 @@ void unit_variant_init(void) {
 }
 
 uint8_t unit_variant_get_color(void) { return unit_variant_color; }
+
+uint8_t unit_variant_get_packaging(void) { return unit_variant_packaging; }
 
 bool unit_variant_get_btconly(void) { return unit_variant_btconly; }
 

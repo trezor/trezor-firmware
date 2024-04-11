@@ -314,6 +314,7 @@ static void send_msg_features(uint8_t iface_num,
   }
   if (unit_variant_present()) {
     MSG_SEND_ASSIGN_VALUE(unit_color, unit_variant_get_color());
+    MSG_SEND_ASSIGN_VALUE(unit_packaging, unit_variant_get_packaging());
     MSG_SEND_ASSIGN_VALUE(unit_btconly, unit_variant_get_btconly());
   }
 

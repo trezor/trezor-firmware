@@ -88,6 +88,7 @@ def get_features() -> Features:
         homescreen_height=HEIGHT,
         unit_color=utils.unit_color(),
         unit_btconly=utils.unit_btconly(),
+        unit_packaging=utils.unit_packaging(),
         bootloader_locked=utils.bootloader_locked(),
     )
 
