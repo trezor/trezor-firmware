@@ -278,6 +278,17 @@ async def confirm_action(
     )
 
 
+async def flow_demo() -> None:
+    await raise_if_not_confirmed(
+        interact(
+            RustLayout(trezorui2.flow_get_address()),
+            "get_address",
+            BR_TYPE_OTHER,
+        ),
+        ActionCancelled,
+    )
+
+
 async def confirm_single(
     br_type: str,
     title: str,
