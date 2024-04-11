@@ -7049,6 +7049,11 @@ impl ::protobuf::reflect::ProtobufValue for ResetDevice {
 // @@protoc_insertion_point(message:hw.trezor.messages.management.BackupDevice)
 #[derive(PartialEq,Clone,Default,Debug)]
 pub struct BackupDevice {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.management.BackupDevice.group_threshold)
+    pub group_threshold: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.management.BackupDevice.groups)
+    pub groups: ::std::vec::Vec<backup_device::Slip39Group>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.management.BackupDevice.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -7065,9 +7070,38 @@ impl BackupDevice {
         ::std::default::Default::default()
     }
 
+    // optional uint32 group_threshold = 1;
+
+    pub fn group_threshold(&self) -> u32 {
+        self.group_threshold.unwrap_or(0)
+    }
+
+    pub fn clear_group_threshold(&mut self) {
+        self.group_threshold = ::std::option::Option::None;
+    }
+
+    pub fn has_group_threshold(&self) -> bool {
+        self.group_threshold.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_group_threshold(&mut self, v: u32) {
+        self.group_threshold = ::std::option::Option::Some(v);
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(0);
+        let mut fields = ::std::vec::Vec::with_capacity(2);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "group_threshold",
+            |m: &BackupDevice| { &m.group_threshold },
+            |m: &mut BackupDevice| { &mut m.group_threshold },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
+            "groups",
+            |m: &BackupDevice| { &m.groups },
+            |m: &mut BackupDevice| { &mut m.groups },
+        ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<BackupDevice>(
             "BackupDevice",
             fields,
@@ -7080,12 +7114,23 @@ impl ::protobuf::Message for BackupDevice {
     const NAME: &'static str = "BackupDevice";
 
     fn is_initialized(&self) -> bool {
+        for v in &self.groups {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
         true
     }
 
     fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
         while let Some(tag) = is.read_raw_tag_or_eof()? {
             match tag {
+                8 => {
+                    self.group_threshold = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                18 => {
+                    self.groups.push(is.read_message()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -7098,12 +7143,25 @@ impl ::protobuf::Message for BackupDevice {
     #[allow(unused_variables)]
     fn compute_size(&self) -> u64 {
         let mut my_size = 0;
+        if let Some(v) = self.group_threshold {
+            my_size += ::protobuf::rt::uint32_size(1, v);
+        }
+        for value in &self.groups {
+            let len = value.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        };
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
     }
 
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.group_threshold {
+            os.write_uint32(1, v)?;
+        }
+        for v in &self.groups {
+            ::protobuf::rt::write_message_field_with_cached_size(2, v, os)?;
+        };
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
     }
@@ -7121,11 +7179,15 @@ impl ::protobuf::Message for BackupDevice {
     }
 
     fn clear(&mut self) {
+        self.group_threshold = ::std::option::Option::None;
+        self.groups.clear();
         self.special_fields.clear();
     }
 
     fn default_instance() -> &'static BackupDevice {
         static instance: BackupDevice = BackupDevice {
+            group_threshold: ::std::option::Option::None,
+            groups: ::std::vec::Vec::new(),
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -7147,6 +7209,193 @@ impl ::std::fmt::Display for BackupDevice {
 
 impl ::protobuf::reflect::ProtobufValue for BackupDevice {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+/// Nested message and enums of message `BackupDevice`
+pub mod backup_device {
+    // @@protoc_insertion_point(message:hw.trezor.messages.management.BackupDevice.Slip39Group)
+    #[derive(PartialEq,Clone,Default,Debug)]
+    pub struct Slip39Group {
+        // message fields
+        // @@protoc_insertion_point(field:hw.trezor.messages.management.BackupDevice.Slip39Group.member_threshold)
+        pub member_threshold: ::std::option::Option<u32>,
+        // @@protoc_insertion_point(field:hw.trezor.messages.management.BackupDevice.Slip39Group.member_count)
+        pub member_count: ::std::option::Option<u32>,
+        // special fields
+        // @@protoc_insertion_point(special_field:hw.trezor.messages.management.BackupDevice.Slip39Group.special_fields)
+        pub special_fields: ::protobuf::SpecialFields,
+    }
+
+    impl<'a> ::std::default::Default for &'a Slip39Group {
+        fn default() -> &'a Slip39Group {
+            <Slip39Group as ::protobuf::Message>::default_instance()
+        }
+    }
+
+    impl Slip39Group {
+        pub fn new() -> Slip39Group {
+            ::std::default::Default::default()
+        }
+
+        // required uint32 member_threshold = 1;
+
+        pub fn member_threshold(&self) -> u32 {
+            self.member_threshold.unwrap_or(0)
+        }
+
+        pub fn clear_member_threshold(&mut self) {
+            self.member_threshold = ::std::option::Option::None;
+        }
+
+        pub fn has_member_threshold(&self) -> bool {
+            self.member_threshold.is_some()
+        }
+
+        // Param is passed by value, moved
+        pub fn set_member_threshold(&mut self, v: u32) {
+            self.member_threshold = ::std::option::Option::Some(v);
+        }
+
+        // required uint32 member_count = 2;
+
+        pub fn member_count(&self) -> u32 {
+            self.member_count.unwrap_or(0)
+        }
+
+        pub fn clear_member_count(&mut self) {
+            self.member_count = ::std::option::Option::None;
+        }
+
+        pub fn has_member_count(&self) -> bool {
+            self.member_count.is_some()
+        }
+
+        // Param is passed by value, moved
+        pub fn set_member_count(&mut self, v: u32) {
+            self.member_count = ::std::option::Option::Some(v);
+        }
+
+        pub(in super) fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+            let mut fields = ::std::vec::Vec::with_capacity(2);
+            let mut oneofs = ::std::vec::Vec::with_capacity(0);
+            fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+                "member_threshold",
+                |m: &Slip39Group| { &m.member_threshold },
+                |m: &mut Slip39Group| { &mut m.member_threshold },
+            ));
+            fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+                "member_count",
+                |m: &Slip39Group| { &m.member_count },
+                |m: &mut Slip39Group| { &mut m.member_count },
+            ));
+            ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<Slip39Group>(
+                "BackupDevice.Slip39Group",
+                fields,
+                oneofs,
+            )
+        }
+    }
+
+    impl ::protobuf::Message for Slip39Group {
+        const NAME: &'static str = "Slip39Group";
+
+        fn is_initialized(&self) -> bool {
+            if self.member_threshold.is_none() {
+                return false;
+            }
+            if self.member_count.is_none() {
+                return false;
+            }
+            true
+        }
+
+        fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+            while let Some(tag) = is.read_raw_tag_or_eof()? {
+                match tag {
+                    8 => {
+                        self.member_threshold = ::std::option::Option::Some(is.read_uint32()?);
+                    },
+                    16 => {
+                        self.member_count = ::std::option::Option::Some(is.read_uint32()?);
+                    },
+                    tag => {
+                        ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                    },
+                };
+            }
+            ::std::result::Result::Ok(())
+        }
+
+        // Compute sizes of nested messages
+        #[allow(unused_variables)]
+        fn compute_size(&self) -> u64 {
+            let mut my_size = 0;
+            if let Some(v) = self.member_threshold {
+                my_size += ::protobuf::rt::uint32_size(1, v);
+            }
+            if let Some(v) = self.member_count {
+                my_size += ::protobuf::rt::uint32_size(2, v);
+            }
+            my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+            self.special_fields.cached_size().set(my_size as u32);
+            my_size
+        }
+
+        fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+            if let Some(v) = self.member_threshold {
+                os.write_uint32(1, v)?;
+            }
+            if let Some(v) = self.member_count {
+                os.write_uint32(2, v)?;
+            }
+            os.write_unknown_fields(self.special_fields.unknown_fields())?;
+            ::std::result::Result::Ok(())
+        }
+
+        fn special_fields(&self) -> &::protobuf::SpecialFields {
+            &self.special_fields
+        }
+
+        fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+            &mut self.special_fields
+        }
+
+        fn new() -> Slip39Group {
+            Slip39Group::new()
+        }
+
+        fn clear(&mut self) {
+            self.member_threshold = ::std::option::Option::None;
+            self.member_count = ::std::option::Option::None;
+            self.special_fields.clear();
+        }
+
+        fn default_instance() -> &'static Slip39Group {
+            static instance: Slip39Group = Slip39Group {
+                member_threshold: ::std::option::Option::None,
+                member_count: ::std::option::Option::None,
+                special_fields: ::protobuf::SpecialFields::new(),
+            };
+            &instance
+        }
+    }
+
+    impl ::protobuf::MessageFull for Slip39Group {
+        fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+            static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+            descriptor.get(|| super::file_descriptor().message_by_package_relative_name("BackupDevice.Slip39Group").unwrap()).clone()
+        }
+    }
+
+    impl ::std::fmt::Display for Slip39Group {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::protobuf::text_format::fmt(self, f)
+        }
+    }
+
+    impl ::protobuf::reflect::ProtobufValue for Slip39Group {
+        type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+    }
 }
 
 // @@protoc_insertion_point(message:hw.trezor.messages.management.EntropyRequest)
@@ -10458,45 +10707,50 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \n\x0bu2f_counter\x18\x07\x20\x01(\rR\nu2fCounter\x12\x1f\n\x0bskip_back\
     up\x18\x08\x20\x01(\x08R\nskipBackup\x12\x1b\n\tno_backup\x18\t\x20\x01(\
     \x08R\x08noBackup\x12Q\n\x0bbackup_type\x18\n\x20\x01(\x0e2).hw.trezor.m\
-    essages.management.BackupType:\x05Bip39R\nbackupType\"\x0e\n\x0cBackupDe\
-    vice\"\x10\n\x0eEntropyRequest\"&\n\nEntropyAck\x12\x18\n\x07entropy\x18\
-    \x01\x20\x02(\x0cR\x07entropy\"\xd8\x03\n\x0eRecoveryDevice\x12\x1d\n\nw\
-    ord_count\x18\x01\x20\x01(\rR\twordCount\x123\n\x15passphrase_protection\
-    \x18\x02\x20\x01(\x08R\x14passphraseProtection\x12%\n\x0epin_protection\
-    \x18\x03\x20\x01(\x08R\rpinProtection\x12\x1e\n\x08language\x18\x04\x20\
-    \x01(\tR\x08languageB\x02\x18\x01\x12\x14\n\x05label\x18\x05\x20\x01(\tR\
-    \x05label\x12)\n\x10enforce_wordlist\x18\x06\x20\x01(\x08R\x0fenforceWor\
-    dlist\x12T\n\x04type\x18\x08\x20\x01(\x0e2@.hw.trezor.messages.managemen\
-    t.RecoveryDevice.RecoveryDeviceTypeR\x04type\x12\x1f\n\x0bu2f_counter\
-    \x18\t\x20\x01(\rR\nu2fCounter\x12\x17\n\x07dry_run\x18\n\x20\x01(\x08R\
-    \x06dryRun\"Z\n\x12RecoveryDeviceType\x12%\n!RecoveryDeviceType_Scramble\
-    dWords\x10\0\x12\x1d\n\x19RecoveryDeviceType_Matrix\x10\x01\"\xc5\x01\n\
-    \x0bWordRequest\x12N\n\x04type\x18\x01\x20\x02(\x0e2:.hw.trezor.messages\
-    .management.WordRequest.WordRequestTypeR\x04type\"f\n\x0fWordRequestType\
-    \x12\x19\n\x15WordRequestType_Plain\x10\0\x12\x1b\n\x17WordRequestType_M\
-    atrix9\x10\x01\x12\x1b\n\x17WordRequestType_Matrix6\x10\x02\"\x1d\n\x07W\
-    ordAck\x12\x12\n\x04word\x18\x01\x20\x02(\tR\x04word\"0\n\rSetU2FCounter\
-    \x12\x1f\n\x0bu2f_counter\x18\x01\x20\x02(\rR\nu2fCounter\"\x13\n\x11Get\
-    NextU2FCounter\"1\n\x0eNextU2FCounter\x12\x1f\n\x0bu2f_counter\x18\x01\
-    \x20\x02(\rR\nu2fCounter\"\x11\n\x0fDoPreauthorized\"\x16\n\x14Preauthor\
-    izedRequest\"\x15\n\x13CancelAuthorization\"\x9a\x02\n\x12RebootToBootlo\
-    ader\x12o\n\x0cboot_command\x18\x01\x20\x01(\x0e2=.hw.trezor.messages.ma\
-    nagement.RebootToBootloader.BootCommand:\rSTOP_AND_WAITR\x0bbootCommand\
-    \x12'\n\x0ffirmware_header\x18\x02\x20\x01(\x0cR\x0efirmwareHeader\x123\
-    \n\x14language_data_length\x18\x03\x20\x01(\r:\x010R\x12languageDataLeng\
-    th\"5\n\x0bBootCommand\x12\x11\n\rSTOP_AND_WAIT\x10\0\x12\x13\n\x0fINSTA\
-    LL_UPGRADE\x10\x01\"\x10\n\x08GetNonce:\x04\x88\xb2\x19\x01\"#\n\x05Nonc\
-    e\x12\x14\n\x05nonce\x18\x01\x20\x02(\x0cR\x05nonce:\x04\x88\xb2\x19\x01\
-    \";\n\nUnlockPath\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\
-    \x12\x10\n\x03mac\x18\x02\x20\x01(\x0cR\x03mac\"'\n\x13UnlockedPathReque\
-    st\x12\x10\n\x03mac\x18\x01\x20\x01(\x0cR\x03mac\"\x14\n\x12ShowDeviceTu\
-    torial\"\x12\n\x10UnlockBootloader*>\n\nBackupType\x12\t\n\x05Bip39\x10\
-    \0\x12\x10\n\x0cSlip39_Basic\x10\x01\x12\x13\n\x0fSlip39_Advanced\x10\
-    \x02*G\n\x10SafetyCheckLevel\x12\n\n\x06Strict\x10\0\x12\x10\n\x0cPrompt\
-    Always\x10\x01\x12\x15\n\x11PromptTemporarily\x10\x02*0\n\x10HomescreenF\
-    ormat\x12\x08\n\x04Toif\x10\x01\x12\x08\n\x04Jpeg\x10\x02\x12\x08\n\x04T\
-    oiG\x10\x03BB\n#com.satoshilabs.trezor.lib.protobufB\x17TrezorMessageMan\
-    agement\x80\xa6\x1d\x01\
+    essages.management.BackupType:\x05Bip39R\nbackupType\"\xe5\x01\n\x0cBack\
+    upDevice\x12'\n\x0fgroup_threshold\x18\x01\x20\x01(\rR\x0egroupThreshold\
+    \x12O\n\x06groups\x18\x02\x20\x03(\x0b27.hw.trezor.messages.management.B\
+    ackupDevice.Slip39GroupR\x06groups\x1a[\n\x0bSlip39Group\x12)\n\x10membe\
+    r_threshold\x18\x01\x20\x02(\rR\x0fmemberThreshold\x12!\n\x0cmember_coun\
+    t\x18\x02\x20\x02(\rR\x0bmemberCount\"\x10\n\x0eEntropyRequest\"&\n\nEnt\
+    ropyAck\x12\x18\n\x07entropy\x18\x01\x20\x02(\x0cR\x07entropy\"\xd8\x03\
+    \n\x0eRecoveryDevice\x12\x1d\n\nword_count\x18\x01\x20\x01(\rR\twordCoun\
+    t\x123\n\x15passphrase_protection\x18\x02\x20\x01(\x08R\x14passphrasePro\
+    tection\x12%\n\x0epin_protection\x18\x03\x20\x01(\x08R\rpinProtection\
+    \x12\x1e\n\x08language\x18\x04\x20\x01(\tR\x08languageB\x02\x18\x01\x12\
+    \x14\n\x05label\x18\x05\x20\x01(\tR\x05label\x12)\n\x10enforce_wordlist\
+    \x18\x06\x20\x01(\x08R\x0fenforceWordlist\x12T\n\x04type\x18\x08\x20\x01\
+    (\x0e2@.hw.trezor.messages.management.RecoveryDevice.RecoveryDeviceTypeR\
+    \x04type\x12\x1f\n\x0bu2f_counter\x18\t\x20\x01(\rR\nu2fCounter\x12\x17\
+    \n\x07dry_run\x18\n\x20\x01(\x08R\x06dryRun\"Z\n\x12RecoveryDeviceType\
+    \x12%\n!RecoveryDeviceType_ScrambledWords\x10\0\x12\x1d\n\x19RecoveryDev\
+    iceType_Matrix\x10\x01\"\xc5\x01\n\x0bWordRequest\x12N\n\x04type\x18\x01\
+    \x20\x02(\x0e2:.hw.trezor.messages.management.WordRequest.WordRequestTyp\
+    eR\x04type\"f\n\x0fWordRequestType\x12\x19\n\x15WordRequestType_Plain\
+    \x10\0\x12\x1b\n\x17WordRequestType_Matrix9\x10\x01\x12\x1b\n\x17WordReq\
+    uestType_Matrix6\x10\x02\"\x1d\n\x07WordAck\x12\x12\n\x04word\x18\x01\
+    \x20\x02(\tR\x04word\"0\n\rSetU2FCounter\x12\x1f\n\x0bu2f_counter\x18\
+    \x01\x20\x02(\rR\nu2fCounter\"\x13\n\x11GetNextU2FCounter\"1\n\x0eNextU2\
+    FCounter\x12\x1f\n\x0bu2f_counter\x18\x01\x20\x02(\rR\nu2fCounter\"\x11\
+    \n\x0fDoPreauthorized\"\x16\n\x14PreauthorizedRequest\"\x15\n\x13CancelA\
+    uthorization\"\x9a\x02\n\x12RebootToBootloader\x12o\n\x0cboot_command\
+    \x18\x01\x20\x01(\x0e2=.hw.trezor.messages.management.RebootToBootloader\
+    .BootCommand:\rSTOP_AND_WAITR\x0bbootCommand\x12'\n\x0ffirmware_header\
+    \x18\x02\x20\x01(\x0cR\x0efirmwareHeader\x123\n\x14language_data_length\
+    \x18\x03\x20\x01(\r:\x010R\x12languageDataLength\"5\n\x0bBootCommand\x12\
+    \x11\n\rSTOP_AND_WAIT\x10\0\x12\x13\n\x0fINSTALL_UPGRADE\x10\x01\"\x10\n\
+    \x08GetNonce:\x04\x88\xb2\x19\x01\"#\n\x05Nonce\x12\x14\n\x05nonce\x18\
+    \x01\x20\x02(\x0cR\x05nonce:\x04\x88\xb2\x19\x01\";\n\nUnlockPath\x12\
+    \x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12\x10\n\x03mac\x18\
+    \x02\x20\x01(\x0cR\x03mac\"'\n\x13UnlockedPathRequest\x12\x10\n\x03mac\
+    \x18\x01\x20\x01(\x0cR\x03mac\"\x14\n\x12ShowDeviceTutorial\"\x12\n\x10U\
+    nlockBootloader*>\n\nBackupType\x12\t\n\x05Bip39\x10\0\x12\x10\n\x0cSlip\
+    39_Basic\x10\x01\x12\x13\n\x0fSlip39_Advanced\x10\x02*G\n\x10SafetyCheck\
+    Level\x12\n\n\x06Strict\x10\0\x12\x10\n\x0cPromptAlways\x10\x01\x12\x15\
+    \n\x11PromptTemporarily\x10\x02*0\n\x10HomescreenFormat\x12\x08\n\x04Toi\
+    f\x10\x01\x12\x08\n\x04Jpeg\x10\x02\x12\x08\n\x04ToiG\x10\x03BB\n#com.sa\
+    toshilabs.trezor.lib.protobufB\x17TrezorMessageManagement\x80\xa6\x1d\
+    \x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -10515,7 +10769,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
             let mut deps = ::std::vec::Vec::with_capacity(1);
             deps.push(super::messages::file_descriptor().clone());
-            let mut messages = ::std::vec::Vec::with_capacity(44);
+            let mut messages = ::std::vec::Vec::with_capacity(45);
             messages.push(Initialize::generated_message_descriptor_data());
             messages.push(GetFeatures::generated_message_descriptor_data());
             messages.push(Features::generated_message_descriptor_data());
@@ -10560,6 +10814,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             messages.push(UnlockedPathRequest::generated_message_descriptor_data());
             messages.push(ShowDeviceTutorial::generated_message_descriptor_data());
             messages.push(UnlockBootloader::generated_message_descriptor_data());
+            messages.push(backup_device::Slip39Group::generated_message_descriptor_data());
             let mut enums = ::std::vec::Vec::with_capacity(8);
             enums.push(BackupType::generated_enum_descriptor_data());
             enums.push(SafetyCheckLevel::generated_enum_descriptor_data());

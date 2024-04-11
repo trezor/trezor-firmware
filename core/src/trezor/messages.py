@@ -2528,6 +2528,16 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class BackupDevice(protobuf.MessageType):
+        group_threshold: "int | None"
+        groups: "list[Slip39Group]"
+
+        def __init__(
+            self,
+            *,
+            groups: "list[Slip39Group] | None" = None,
+            group_threshold: "int | None" = None,
+        ) -> None:
+            pass
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["BackupDevice"]:
@@ -2739,6 +2749,22 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["UnlockBootloader"]:
+            return isinstance(msg, cls)
+
+    class Slip39Group(protobuf.MessageType):
+        member_threshold: "int"
+        member_count: "int"
+
+        def __init__(
+            self,
+            *,
+            member_threshold: "int",
+            member_count: "int",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["Slip39Group"]:
             return isinstance(msg, cls)
 
     class DebugLinkDecision(protobuf.MessageType):

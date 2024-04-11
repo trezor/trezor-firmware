@@ -16,7 +16,7 @@
 
 import secrets
 import sys
-from typing import TYPE_CHECKING, Optional, Sequence
+from typing import TYPE_CHECKING, Optional, Sequence, Tuple
 
 import click
 
@@ -237,10 +237,17 @@ def setup(
 
 
 @cli.command()
+@click.option("-t", "--group-threshold", type=int)
+@click.option("-g", "--group", "groups", type=(int, int), multiple=True, metavar="T N")
 @with_client
-def backup(client: "TrezorClient") -> str:
+def backup(
+    client: "TrezorClient",
+    group_threshold: Optional[int] = None,
+    groups: Sequence[Tuple[int, int]] = (),
+) -> str:
     """Perform device seed backup."""
-    return device.backup(client)
+
+    return device.backup(client, group_threshold, groups)
 
 
 @cli.command()

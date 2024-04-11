@@ -397,6 +397,12 @@ message ResetDevice {
  * @next Success
  */
 message BackupDevice {
+    optional uint32 group_threshold = 1;
+    message Slip39Group {
+        required uint32 member_threshold = 1;
+        required uint32 member_count = 2;
+    }
+    repeated Slip39Group groups = 2;
 }
 
 /**

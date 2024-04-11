@@ -25,12 +25,15 @@ from trezorlib.exceptions import TrezorFailure
 from ..common import (
     MNEMONIC12,
     MNEMONIC_SLIP39_ADVANCED_20,
+    MNEMONIC_SLIP39_CUSTOM_SECRET,
     MNEMONIC_SLIP39_BASIC_20_3of6,
+    MNEMONIC_SLIP39_CUSTOM_1of1,
 )
 from ..input_flows import (
     InputFlowBip39Backup,
     InputFlowSlip39AdvancedBackup,
     InputFlowSlip39BasicBackup,
+    InputFlowSlip39CustomBackup,
 )
 
 
@@ -109,6 +112,36 @@ def test_backup_slip39_advanced(client: Client, click_info: bool):
         IF.mnemonics[:3] + IF.mnemonics[5:8] + IF.mnemonics[10:13]
     )
     assert expected_ms == actual_ms
+
+
+@pytest.mark.skip_t1b1
+@pytest.mark.setup_client(needs_backup=True, mnemonic=MNEMONIC_SLIP39_CUSTOM_1of1[0])
+@pytest.mark.parametrize(
+    "share_threshold,share_count",
+    [(1, 1), (2, 2), (3, 5)],
+    ids=["1_of_1", "2_of_2", "3_of_5"],
+)
+def test_backup_slip39_custom(client: Client, share_threshold, share_count):
+    assert client.features.needs_backup is True
+
+    with client:
+        IF = InputFlowSlip39CustomBackup(client, share_count)
+        client.set_input_flow(IF.get())
+        device.backup(
+            client, group_threshold=1, groups=[(share_threshold, share_count)]
+        )
+
+    client.init_device()
+    assert client.features.initialized is True
+    assert client.features.needs_backup is False
+    assert client.features.unfinished_backup is False
+    assert client.features.no_backup is False
+
+    assert len(IF.mnemonics) == share_count
+    assert (
+        shamir.combine_mnemonics(IF.mnemonics[-share_threshold:]).hex()
+        == MNEMONIC_SLIP39_CUSTOM_SECRET
+    )
 
 
 # we only test this with bip39 because the code path is always the same

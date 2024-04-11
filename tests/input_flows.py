@@ -1211,12 +1211,13 @@ class InputFlowBip39ResetFailedCheck(InputFlowBase):
         self.debug.press_yes()
 
 
-def load_5_shares(
+def load_N_shares(
     debug: DebugLink,
+    n: int,
 ) -> Generator[None, "messages.ButtonRequest", list[str]]:
     mnemonics: list[str] = []
 
-    for _ in range(5):
+    for _ in range(n):
         # Phrase screen
         mnemonic = yield from read_and_confirm_mnemonic(debug)
         assert mnemonic is not None
@@ -1254,7 +1255,7 @@ class InputFlowSlip39BasicBackup(InputFlowBase):
         self.debug.press_yes()
 
         # Mnemonic phrases
-        self.mnemonics = yield from load_5_shares(self.debug)
+        self.mnemonics = yield from load_N_shares(self.debug, 5)
 
         br = yield  # Confirm backup
         assert br.code == B.Success
@@ -1279,7 +1280,7 @@ class InputFlowSlip39BasicBackup(InputFlowBase):
         self.debug.press_yes()
 
         # Mnemonic phrases
-        self.mnemonics = yield from load_5_shares(self.debug)
+        self.mnemonics = yield from load_N_shares(self.debug, 5)
 
         br = yield  # Confirm backup
         assert br.code == B.Success
@@ -1304,7 +1305,7 @@ class InputFlowSlip39BasicBackup(InputFlowBase):
         self.debug.press_yes()
 
         # Mnemonic phrases
-        self.mnemonics = yield from load_5_shares(self.debug)
+        self.mnemonics = yield from load_N_shares(self.debug, 5)
 
         br = yield  # Confirm backup
         assert br.code == B.Success
@@ -1328,7 +1329,7 @@ class InputFlowSlip39BasicResetRecovery(InputFlowBase):
         yield from click_through(self.debug, screens=8, code=B.ResetDevice)
 
         # Mnemonic phrases
-        self.mnemonics = yield from load_5_shares(self.debug)
+        self.mnemonics = yield from load_N_shares(self.debug, 5)
 
         br = yield  # safety warning
         assert br.code == B.Success
@@ -1357,7 +1358,7 @@ class InputFlowSlip39BasicResetRecovery(InputFlowBase):
         self.debug.press_yes()
 
         # Mnemonic phrases
-        self.mnemonics = yield from load_5_shares(self.debug)
+        self.mnemonics = yield from load_N_shares(self.debug, 5)
 
         br = yield  # Confirm backup
         assert br.code == B.Success
@@ -1375,9 +1376,55 @@ class InputFlowSlip39BasicResetRecovery(InputFlowBase):
         yield from click_through(self.debug, screens=8, code=B.ResetDevice)
 
         # Mnemonic phrases
-        self.mnemonics = yield from load_5_shares(self.debug)
+        self.mnemonics = yield from load_N_shares(self.debug, 5)
 
         br = yield  # safety warning
+        assert br.code == B.Success
+        self.debug.press_yes()
+
+
+class InputFlowSlip39CustomBackup(InputFlowBase):
+    def __init__(self, client: Client, share_count: int):
+        super().__init__(client)
+        self.mnemonics: list[str] = []
+        self.share_count = share_count
+
+    def input_flow_tt(self) -> BRGeneratorType:
+        yield  # Checklist
+        self.debug.press_yes()
+        yield  # Confirm show seeds
+        self.debug.press_yes()
+
+        # Mnemonic phrases
+        self.mnemonics = yield from load_N_shares(self.debug, self.share_count)
+
+        br = yield  # Confirm backup
+        assert br.code == B.Success
+        self.debug.press_yes()
+
+    def input_flow_tr(self) -> BRGeneratorType:
+        yield  # Checklist
+        self.debug.press_yes()
+        yield  # Confirm show seeds
+        self.debug.press_yes()
+
+        # Mnemonic phrases
+        self.mnemonics = yield from load_N_shares(self.debug, self.share_count)
+
+        br = yield  # Confirm backup
+        assert br.code == B.Success
+        self.debug.press_yes()
+
+    def input_flow_t3t1(self) -> BRGeneratorType:
+        yield  # Checklist
+        self.debug.press_yes()
+        yield  # Confirm show seeds
+        self.debug.press_yes()
+
+        # Mnemonic phrases
+        self.mnemonics = yield from load_N_shares(self.debug, self.share_count)
+
+        br = yield  # Confirm backup
         assert br.code == B.Success
         self.debug.press_yes()
 
