@@ -6,6 +6,8 @@ pub mod component;
 pub mod constant;
 pub mod display;
 pub mod event;
+#[cfg(all(feature = "micropython", feature = "model_mercury"))]
+pub mod flow;
 pub mod geometry;
 pub mod lerp;
 pub mod shape;
