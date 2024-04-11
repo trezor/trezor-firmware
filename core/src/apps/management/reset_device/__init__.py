@@ -1,9 +1,11 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Sequence
 
 import storage
 import storage.device as storage_device
+from trezor import TR
 from trezor.crypto import slip39
 from trezor.enums import BackupType
+from trezor.ui.layouts import confirm_action
 from trezor.wire import ProcessError
 
 from . import layout
@@ -111,31 +113,19 @@ async def reset_device(msg: ResetDevice) -> Success:
 
 
 async def _backup_slip39_basic(encrypted_master_secret: bytes) -> None:
+    group_threshold = 1
+
     # get number of shares
     await layout.slip39_show_checklist(0, BAK_T_SLIP39_BASIC)
-    shares_count = await layout.slip39_prompt_number_of_shares()
+    share_count = await layout.slip39_prompt_number_of_shares()
 
     # get threshold
     await layout.slip39_show_checklist(1, BAK_T_SLIP39_BASIC)
-    threshold = await layout.slip39_prompt_threshold(shares_count)
+    share_threshold = await layout.slip39_prompt_threshold(share_count)
 
-    identifier = storage_device.get_slip39_identifier()
-    iteration_exponent = storage_device.get_slip39_iteration_exponent()
-    if identifier is None or iteration_exponent is None:
-        raise ValueError
-
-    # generate the mnemonics
-    mnemonics = slip39.split_ems(
-        1,  # Single Group threshold
-        [(threshold, shares_count)],  # Single Group threshold/count
-        identifier,
-        iteration_exponent,
-        encrypted_master_secret,
-    )[0]
-
-    # show and confirm individual shares
-    await layout.slip39_show_checklist(2, BAK_T_SLIP39_BASIC)
-    await layout.slip39_basic_show_and_confirm_shares(mnemonics)
+    await backup_slip39_custom(
+        encrypted_master_secret, group_threshold, ((share_threshold, share_count),)
+    )
 
 
 async def _backup_slip39_advanced(encrypted_master_secret: bytes) -> None:
@@ -155,6 +145,40 @@ async def _backup_slip39_advanced(encrypted_master_secret: bytes) -> None:
         share_threshold = await layout.slip39_prompt_threshold(share_count, i)
         groups.append((share_threshold, share_count))
 
+    await backup_slip39_custom(encrypted_master_secret, group_threshold, groups)
+
+
+async def backup_slip39_custom(
+    encrypted_master_secret: bytes,
+    group_threshold: int,
+    groups: Sequence[tuple[int, int]],
+) -> None:
+    mnemonics = await _get_slip39_mnemonics(encrypted_master_secret, group_threshold, groups)
+
+    # show and confirm individual shares
+    if len(groups) == 1 and groups[0][0] == 1 and groups[0][1] == 1:
+        # for a single 1-of-1 group, we use the same layouts as for BIP39
+        await layout.show_and_confirm_mnemonic(mnemonics[0][0])
+    else:
+        await confirm_action(
+            "warning_shamir_backup",
+            TR.reset__title_shamir_backup,
+            description=TR.reset__create_x_of_y_shamir_backup_template.format(
+                groups[0][0], groups[0][1]
+            ),
+            verb=TR.buttons__continue,
+        )
+        if len(groups) == 1:
+            await layout.slip39_basic_show_and_confirm_shares(mnemonics[0])
+        else:
+            await layout.slip39_advanced_show_and_confirm_shares(mnemonics)
+
+
+async def _get_slip39_mnemonics(
+    encrypted_master_secret: bytes,
+    group_threshold: int,
+    groups: Sequence[tuple[int, int]],
+):
     identifier = storage_device.get_slip39_identifier()
     iteration_exponent = storage_device.get_slip39_iteration_exponent()
     if identifier is None or iteration_exponent is None:
@@ -170,7 +194,11 @@ async def _backup_slip39_advanced(encrypted_master_secret: bytes) -> None:
     )
 
     # show and confirm individual shares
-    await layout.slip39_advanced_show_and_confirm_shares(mnemonics)
+    if len(groups) == 1:
+        await layout.slip39_show_checklist(2, BAK_T_SLIP39_BASIC)
+        await layout.slip39_basic_show_and_confirm_shares(mnemonics[0])
+    else:
+        await layout.slip39_advanced_show_and_confirm_shares(mnemonics)
 
 
 def _validate_reset_device(msg: ResetDevice) -> None:
@@ -184,7 +212,7 @@ def _validate_reset_device(msg: ResetDevice) -> None:
         BAK_T_SLIP39_BASIC,
         BAK_T_SLIP39_ADVANCED,
     ):
-        raise ProcessError("Backup type not implemented.")
+        raise ProcessError("Backup type not implemented")
     if backup_types.is_slip39_backup_type(backup_type):
         if msg.strength not in (128, 256):
             raise ProcessError("Invalid strength (has to be 128 or 256 bits)")

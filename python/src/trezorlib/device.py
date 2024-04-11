@@ -19,7 +19,7 @@ from __future__ import annotations
 import os
 import time
 import warnings
-from typing import TYPE_CHECKING, Callable, Optional
+from typing import TYPE_CHECKING, Callable, Iterable, Optional
 
 from . import messages
 from .exceptions import Cancelled, TrezorException
@@ -264,8 +264,20 @@ def reset(
 
 @expect(messages.Success, field="message", ret_type=str)
 @session
-def backup(client: "TrezorClient") -> "MessageType":
-    ret = client.call(messages.BackupDevice())
+def backup(
+    client: "TrezorClient",
+    group_threshold: Optional[int] = None,
+    groups: Iterable[tuple[int, int]] = (),
+) -> "MessageType":
+    ret = client.call(
+        messages.BackupDevice(
+            group_threshold=group_threshold,
+            groups=[
+                messages.Slip39Group(member_threshold=t, member_count=c)
+                for t, c in groups
+            ],
+        )
+    )
     client.refresh_features()
     return ret
 

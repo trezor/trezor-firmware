@@ -38,6 +38,13 @@ def confirm_read(debug: "DebugLink", middle_r: bool = False) -> None:
             debug.press_right(wait=True)
 
 
+def cancel_backup(debug: "DebugLink", middle_r: bool = False) -> None:
+    if debug.model in (models.T2T1, models.T3T1):
+        debug.click(buttons.CANCEL, wait=True)
+    elif debug.model in (models.T2B1,):
+        debug.press_left(wait=True)
+
+
 def set_selection(debug: "DebugLink", button: tuple[int, int], diff: int) -> None:
     if debug.model in (models.T2T1, models.T3T1):
         assert "NumberInputDialog" in debug.read_layout().all_components()

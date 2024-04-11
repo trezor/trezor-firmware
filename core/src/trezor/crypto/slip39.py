@@ -38,7 +38,7 @@ from trezor.crypto import random
 from trezor.errors import MnemonicError
 
 if TYPE_CHECKING:
-    from typing import Callable, Iterable
+    from typing import Callable, Collection, Iterable
 
     Indices = tuple[int, ...]
     MnemonicGroups = dict[int, tuple[int, set[tuple[int, bytes]]]]
@@ -174,7 +174,9 @@ def generate_random_identifier() -> int:
 
 def split_ems(
     group_threshold: int,  # The number of groups required to reconstruct the master secret.
-    groups: list[tuple[int, int]],  # A list of (member_threshold, member_count).
+    groups: Collection[
+        tuple[int, int]
+    ],  # A collection of (member_threshold, member_count).
     identifier: int,
     iteration_exponent: int,
     encrypted_master_secret: bytes,  # The encrypted master secret to split.

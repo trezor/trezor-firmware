@@ -3688,6 +3688,19 @@ class ResetDevice(protobuf.MessageType):
 
 class BackupDevice(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 34
+    FIELDS = {
+        1: protobuf.Field("group_threshold", "uint32", repeated=False, required=False, default=None),
+        2: protobuf.Field("groups", "Slip39Group", repeated=True, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        groups: Optional[Sequence["Slip39Group"]] = None,
+        group_threshold: Optional["int"] = None,
+    ) -> None:
+        self.groups: Sequence["Slip39Group"] = groups if groups is not None else []
+        self.group_threshold = group_threshold
 
 
 class EntropyRequest(protobuf.MessageType):
@@ -3893,6 +3906,23 @@ class ShowDeviceTutorial(protobuf.MessageType):
 
 class UnlockBootloader(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 96
+
+
+class Slip39Group(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("member_threshold", "uint32", repeated=False, required=True),
+        2: protobuf.Field("member_count", "uint32", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        member_threshold: "int",
+        member_count: "int",
+    ) -> None:
+        self.member_threshold = member_threshold
+        self.member_count = member_count
 
 
 class DebugLinkDecision(protobuf.MessageType):
