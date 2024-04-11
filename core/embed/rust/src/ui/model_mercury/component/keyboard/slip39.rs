@@ -30,7 +30,7 @@ use crate::{
 const MAX_LENGTH: usize = 8;
 
 pub struct Slip39Input {
-    button: Button<&'static str>,
+    button: Button,
     textbox: TextBox<MAX_LENGTH>,
     multi_tap: MultiTapKeyboard,
     final_word: Option<&'static str>,
@@ -360,7 +360,7 @@ impl Slip39Input {
         } else {
             // Disabled button.
             self.button.disable(ctx);
-            self.button.set_content(ctx, ButtonContent::Text(""));
+            self.button.set_content(ctx, ButtonContent::Text("".into()));
         }
     }
 
