@@ -7,6 +7,7 @@
 void unit_variant_init(void);
 bool unit_variant_present(void);
 uint8_t unit_variant_get_color(void);
+uint8_t unit_variant_get_packaging(void);
 bool unit_variant_get_btconly(void);
 
 bool unit_variant_is_sd_hotswap_enabled(void);
