@@ -17,7 +17,7 @@ use crate::{
     },
     time::Duration,
     ui::{
-        component::{Component, Event, EventCtx, Never, Root, TimerToken},
+        component::{base::TimerToken, Component, Event, EventCtx, Never, Root},
         constant,
         display::sync,
         geometry::Rect,

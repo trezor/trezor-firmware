@@ -8,7 +8,7 @@ use crate::{
     ui::{
         component::{
             base::ComponentExt, text::TextStyle, Child, Component, Event, EventCtx, Label, Maybe,
-            Never, Pad, TimerToken,
+            Never, Pad, Timer,
         },
         display::{self, Font},
         event::TouchEvent,
@@ -51,7 +51,7 @@ pub struct PinKeyboard<'a> {
     cancel_btn: Child<Maybe<Button>>,
     confirm_btn: Child<Button>,
     digit_btns: [Child<Button>; DIGIT_COUNT],
-    warning_timer: Option<TimerToken>,
+    warning_timer: Timer,
 }
 
 impl<'a> PinKeyboard<'a> {
@@ -96,7 +96,7 @@ impl<'a> PinKeyboard<'a> {
                 .initially_enabled(false)
                 .into_child(),
             digit_btns: Self::generate_digit_buttons(),
-            warning_timer: None,
+            warning_timer: Timer::new(),
         }
     }
 
@@ -198,10 +198,10 @@ impl Component for PinKeyboard<'_> {
         match event {
             // Set up timer to switch off warning prompt.
             Event::Attach if self.major_warning.is_some() => {
-                self.warning_timer = Some(ctx.request_timer(Duration::from_secs(2)));
+                self.warning_timer.start(ctx, Duration::from_secs(2));
             }
             // Hide warning, show major prompt.
-            Event::Timer(token) if Some(token) == self.warning_timer => {
+            Event::Timer(_) if self.warning_timer.is_expired(event) => {
                 self.major_warning = None;
                 self.textbox_pad.clear();
                 self.minor_prompt.request_complete_repaint(ctx);

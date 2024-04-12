@@ -51,12 +51,6 @@ if __debug__:
 else:
     refresh = display.refresh  # type: ignore [obscured-by-same-name]
 
-
-# in both debug and production, emulator needs to draw the screen explicitly
-if utils.EMULATOR or utils.INTERNAL_MODEL in ("T1B1", "T2B1"):
-    loop.after_step_hook = refresh
-
-
 # import style later to avoid circular dep
 from trezor.ui import style  # isort:skip
 
@@ -293,11 +287,13 @@ class Layout(Generic[T]):
             # do not schedule another animation frame if one is already scheduled
             return
 
-        assert token not in self.timers
-        task = timer_task()
-        self.timers[token] = task
+        task = self.timers.get(token)
+        if task is None:
+            task = timer_task()
+            self.timers[token] = task
+
         deadline = utime.ticks_add(utime.ticks_ms(), duration)
-        loop.schedule(task, deadline=deadline)
+        loop.schedule(task, deadline=deadline, reschedule=True)
 
     def _emit_message(self, msg: Any) -> None:
         """Process a message coming out of the Rust layout. Set is as a result and shut
@@ -338,6 +334,7 @@ class Layout(Generic[T]):
                 msg = event_call(*event)
                 self._emit_message(msg)
                 self.layout.paint()
+                refresh()
         except Shutdown:
             return
         finally:

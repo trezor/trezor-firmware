@@ -17,7 +17,7 @@ pub mod qr_code;
 pub mod text;
 pub mod timeout;
 
-pub use base::{Child, Component, ComponentExt, Event, EventCtx, Never, Root, TimerToken};
+pub use base::{Child, Component, ComponentExt, Event, EventCtx, Never, Root, Timer};
 pub use border::Border;
 pub use empty::Empty;
 pub use label::Label;

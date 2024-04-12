@@ -452,6 +452,42 @@ impl TimerToken {
     }
 }
 
+#[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
+pub struct Timer(Option<TimerToken>);
+
+impl Timer {
+    /// Create a new timer.
+    pub const fn new() -> Self {
+        Self(None)
+    }
+
+    /// Start this timer for a given duration.
+    ///
+    /// Requests the internal timer token to be scheduled to `duration` from
+    /// now. If the timer was already running, its token is rescheduled.
+    pub fn start(&mut self, ctx: &mut EventCtx, duration: Duration) {
+        let token = self.0.get_or_insert_with(|| ctx.next_timer_token());
+        ctx.register_timer(*token, duration);
+    }
+
+    /// Stop the timer.
+    ///
+    /// Does not affect scheduling, only clears the internal timer token. This
+    /// means that _some_ scheduled task might keep running, but this timer
+    /// will not trigger when that task expires.
+    pub fn stop(&mut self) {
+        self.0 = None;
+    }
+
+    /// Check if the timer has expired.
+    ///
+    /// Returns `true` if the given event is a timer event and the token matches
+    /// the internal token of this timer.
+    pub fn is_expired(&self, event: Event) -> bool {
+        matches!(event, Event::Timer(token) if self.0 == Some(token))
+    }
+}
+
 pub struct EventCtx {
     timers: Vec<(TimerToken, Duration), { Self::MAX_TIMERS }>,
     next_token: u32,
@@ -508,19 +544,16 @@ impl EventCtx {
         self.paint_requested = true;
     }
 
-    /// Request a timer event to be delivered after `duration` elapses.
-    pub fn request_timer(&mut self, duration: Duration) -> TimerToken {
-        let token = self.next_timer_token();
-        self.register_timer(token, duration);
-        token
-    }
-
     /// Request an animation frame timer to fire as soon as possible.
     pub fn request_anim_frame(&mut self) {
         if !self.anim_frame_scheduled {
             self.anim_frame_scheduled = true;
             self.register_timer(Self::ANIM_FRAME_TIMER, Self::ANIM_FRAME_DURATION);
         }
+    }
+
+    pub fn is_anim_frame(event: Event) -> bool {
+        matches!(event, Event::Timer(token) if token == Self::ANIM_FRAME_TIMER)
     }
 
     pub fn request_repaint_root(&mut self) {
