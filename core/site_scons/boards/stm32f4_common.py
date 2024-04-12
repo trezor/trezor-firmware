@@ -69,17 +69,5 @@ def stm32f4_common_files(env, defines, sources, paths):
             "embed/trezorhal/stm32f4/util.s",
         ]
 
-    env.get("ENV")["RUST_INCLUDES"] = (
-        "-I../trezorhal/stm32f4;"
-        "-I../../vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Inc;"
-        "-I../../vendor/micropython/lib/stm32lib/CMSIS/STM32F4xx/Include;"
-        "-I../../vendor/micropython/lib/cmsis/inc;"
-        "-DSTM32_HAL_H=<stm32f4xx.h>;"
-        "-DSTM32F4;"
-        "-DFLASH_BLOCK_WORDS=1;"
-        "-DFLASH_BIT_ACCESS=1;"
-        "-DCONFIDENTIAL;"
-    )
-
     env.get("ENV")["SUFFIX"] = "stm32f4"
     env.get("ENV")["LINKER_SCRIPT"] = "stm32f4"

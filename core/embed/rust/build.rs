@@ -14,39 +14,12 @@ fn main() {
     link_core_objects();
 }
 
-fn mcu_type() -> String {
-    match env::var("MCU_TYPE") {
-        Ok(mcu) => mcu,
-        Err(_) => String::from("STM32F427xx"),
-    }
-}
-
-fn model() -> String {
-    match env::var("TREZOR_MODEL") {
-        Ok(model) => model,
-        Err(_) => String::from("T"),
-    }
-}
-
 // fn block_words() -> String {
 //     match env::var("FLASH_BLOCK_WORDS") {
 //         Ok(model) => model,
 //         Err(_) => panic!("FLASH_BLOCK_WORDS not set")
 //     }
 // }
-
-fn board() -> String {
-    if !is_firmware() {
-        return String::from("boards/board-unix.h");
-    }
-
-    match env::var("TREZOR_BOARD") {
-        Ok(board) => {
-            format!("boards/{}", board)
-        }
-        Err(_) => String::from("boards/trezor_t.h"),
-    }
-}
 
 /// Generates Rust module that exports QSTR constants used in firmware.
 #[cfg(feature = "micropython")]
@@ -96,35 +69,19 @@ fn generate_qstr_bindings() {
 fn prepare_bindings() -> bindgen::Builder {
     let mut bindings = bindgen::Builder::default();
 
-    // Common include paths and defines
-    bindings = bindings.clang_args([
-        "-I../../../crypto",
-        "-I../../../storage",
-        "-I../../vendor/micropython",
-        "-I../../vendor/micropython/lib/uzlib",
-        "-I../lib",
-        "-I../trezorhal",
-        "-I../models",
-        format!("-D{}", mcu_type()).as_str(),
-        format!("-DTREZOR_MODEL_{}", model()).as_str(),
-        format!("-DTREZOR_BOARD=\"{}\"", board()).as_str(),
-    ]);
+    let mut clang_args: Vec<&str> = Vec::new();
+    let includes = env::var("BINDGEN_MACROS").unwrap();
+    let args = includes.split(',');
+
+    for arg in args {
+        clang_args.push(arg);
+    }
 
     // Pass in correct include paths and defines.
     if is_firmware() {
-        let mut clang_args: Vec<&str> = Vec::new();
-
-        let includes = env::var("RUST_INCLUDES").unwrap();
-        let args = includes.split(';');
-
-        for arg in args {
-            clang_args.push(arg);
-        }
         clang_args.push("-nostdinc");
-        clang_args.push("-I../firmware");
+
         clang_args.push("-I../../build/firmware");
-        clang_args.push("-DUSE_HAL_DRIVER");
-        bindings = bindings.clang_args(&clang_args);
 
         // Append gcc-arm-none-eabi's include paths.
         let cc_output = Command::new("arm-none-eabi-gcc")
@@ -147,16 +104,10 @@ fn prepare_bindings() -> bindgen::Builder {
 
         bindings = bindings.clang_args(include_args);
     } else {
-        bindings = bindings.clang_args(&[
-            "-I../unix",
-            "-I../trezorhal/unix",
-            "-I../../build/unix",
-            "-I../../vendor/micropython/ports/unix",
-            "-DTREZOR_EMULATOR",
-            "-DFLASH_BIT_ACCESS=1",
-            "-DFLASH_BLOCK_WORDS=1",
-        ]);
+        clang_args.push("-I../../build/unix");
     }
+
+    bindings = bindings.clang_args(&clang_args);
 
     bindings
         // Customize the standard types.

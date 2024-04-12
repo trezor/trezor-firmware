@@ -82,15 +82,4 @@ def stm32u5_common_files(env, defines, sources, paths):
             "embed/trezorhal/stm32u5/util.s",
         ]
 
-    env.get("ENV")["RUST_INCLUDES"] = (
-        "-I../trezorhal/stm32u5;"
-        "-I../../vendor/stm32u5xx_hal_driver/Inc;"
-        "-I../../vendor/cmsis_device_u5/Include;"
-        "-I../../vendor/cmsis_5/CMSIS/Core/Include;"
-        "-DSTM32_HAL_H=<stm32u5xx.h>;"
-        "-DSTM32U5;"
-        "-DFLASH_BLOCK_WORDS=4;"
-        "-DCONFIDENTIAL;"
-    )
-
     env.get("ENV")["SUFFIX"] = "stm32u5"

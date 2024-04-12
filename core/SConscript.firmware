@@ -452,6 +452,17 @@ if TREZOR_MODEL in ('1',):
 else:
     LD_VARIANT  = ''
 
+ALLPATHS = [
+        '.',
+        'embed/rust',
+        'embed/firmware',
+        'embed/lib',
+        'embed/models',
+        'embed/trezorhal',
+        'embed/extmod/modtrezorui',
+        'vendor/micropython',
+    ] + CPPPATH_MOD + PATH_HAL
+
 env.Replace(
     COPT=env.get('ENV').get('OPTIMIZE', '-Os'),
     CCFLAGS='$COPT '
@@ -464,16 +475,7 @@ env.Replace(
     +  env.get('ENV')["CPU_CCFLAGS"] + CCFLAGS_MOD,
     CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB',
     LINKFLAGS='-T embed/firmware/memory_${TREZOR_MODEL}%s.ld -Wl,--gc-sections  -Wl,--print-memory-usage -Wl,-Map=build/firmware/firmware.map -Wl,--warn-common' % LD_VARIANT,
-    CPPPATH=[
-        '.',
-        'embed/rust',
-        'embed/firmware',
-        'embed/lib',
-        'embed/models',
-        'embed/trezorhal',
-        'embed/extmod/modtrezorui',
-        'vendor/micropython',
-    ] + CPPPATH_MOD + PATH_HAL,
+    CPPPATH=ALLPATHS,
     CPPDEFINES=[
         'FIRMWARE',
         'TREZOR_MODEL_'+TREZOR_MODEL,
@@ -711,6 +713,35 @@ if FROZEN:
 
     env.Depends(source_mpyc, qstr_generated)
 
+
+#
+# Program objects
+#
+
+source_files = SOURCE_MOD + SOURCE_FIRMWARE + SOURCE_MICROPYTHON + SOURCE_MICROPYTHON_SPEED + SOURCE_HAL
+obj_program = []
+obj_program.extend(env.Object(source=SOURCE_MOD))
+if FEATURE_FLAGS["SECP256K1_ZKP"]:
+    obj_program.extend(env.Object(source=SOURCE_MOD_SECP256K1_ZKP, CCFLAGS='$CCFLAGS -Wno-unused-function'))
+    source_files.extend(SOURCE_MOD_SECP256K1_ZKP)
+obj_program.extend(env.Object(source=SOURCE_FIRMWARE))
+obj_program.extend(env.Object(source=SOURCE_MICROPYTHON))
+obj_program.extend(env.Object(source=SOURCE_MICROPYTHON_SPEED, COPT='-O3'))
+obj_program.extend(env.Object(source=SOURCE_HAL))
+if FROZEN:
+    obj_program.extend(env.Object(source=source_mpyc))
+
+env.Replace(
+    ALLSOURCES=source_files,
+    ALLDEFS=tools.get_defs_for_cmake(env['CPPDEFINES'] + env['CPPDEFINES_IMPLICIT'] + [f"PRODUCTION={int(PRODUCTION)}", f"BOOTLOADER_QA={int(BOOTLOADER_QA)}", f"PYOPT={PYOPT}", f"BITCOIN_ONLY={BITCOIN_ONLY}"]))
+
+
+cmake_gen = env.Command(
+    target='CMakeLists.txt',
+    source='',
+    action='$MAKECMAKELISTS --sources $ALLSOURCES --dirs $CPPPATH --defs $ALLDEFS',
+)
+
 #
 # Rust library
 #
@@ -749,6 +780,8 @@ def cargo_build():
 
     features.extend(FEATURES_AVAILABLE)
 
+    env.get("ENV")["BINDGEN_MACROS"] = tools.get_bindgen_defines(env.get("ALLDEFS"), ALLPATHS)
+
     cargo_opts = [
         f'--target={env.get("ENV")["RUST_TARGET"]}',
         f'--target-dir=../../build/firmware/rust',
@@ -771,34 +804,6 @@ env.Depends(rust, TRANSLATION_DATA)
 
 env.Append(LINKFLAGS=f' -L{RUST_LIBDIR}')
 env.Append(LINKFLAGS=f' -l{RUST_LIB}')
-
-#
-# Program objects
-#
-
-source_files = SOURCE_MOD + SOURCE_FIRMWARE + SOURCE_MICROPYTHON + SOURCE_MICROPYTHON_SPEED + SOURCE_HAL
-obj_program = []
-obj_program.extend(env.Object(source=SOURCE_MOD))
-if FEATURE_FLAGS["SECP256K1_ZKP"]:
-    obj_program.extend(env.Object(source=SOURCE_MOD_SECP256K1_ZKP, CCFLAGS='$CCFLAGS -Wno-unused-function'))
-    source_files.extend(SOURCE_MOD_SECP256K1_ZKP)
-obj_program.extend(env.Object(source=SOURCE_FIRMWARE))
-obj_program.extend(env.Object(source=SOURCE_MICROPYTHON))
-obj_program.extend(env.Object(source=SOURCE_MICROPYTHON_SPEED, COPT='-O3'))
-obj_program.extend(env.Object(source=SOURCE_HAL))
-if FROZEN:
-    obj_program.extend(env.Object(source=source_mpyc))
-
-env.Replace(
-    ALLSOURCES=source_files,
-    ALLDEFS=tools.get_defs_for_cmake(env['CPPDEFINES'] + env['CPPDEFINES_IMPLICIT'] + [f"PRODUCTION={int(PRODUCTION)}", f"BOOTLOADER_QA={int(BOOTLOADER_QA)}", f"PYOPT={PYOPT}", f"BITCOIN_ONLY={BITCOIN_ONLY}"]))
-
-
-cmake_gen = env.Command(
-    target='CMakeLists.txt',
-    source='',
-    action='$MAKECMAKELISTS --sources $ALLSOURCES --dirs $CPPPATH --defs $ALLDEFS',
-)
 
 
 MODEL_IDENTIFIER = tools.get_model_identifier(TREZOR_MODEL)

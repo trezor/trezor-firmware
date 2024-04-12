@@ -112,8 +112,4 @@ def configure(
     defs = env.get("CPPDEFINES_IMPLICIT")
     defs += ["__ARM_FEATURE_CMSE=3"]
 
-    rust_defs = env.get("ENV")["RUST_INCLUDES"]
-    rust_defs += "-DFRAMEBUFFER;"
-    env.get("ENV")["RUST_INCLUDES"] = rust_defs
-
     return features_available

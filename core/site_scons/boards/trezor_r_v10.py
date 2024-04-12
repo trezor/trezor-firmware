@@ -73,7 +73,4 @@ def configure(
         sources += ["vendor/trezor-crypto/hash_to_curve.c"]
         features_available.append("optiga")
 
-    env.get("ENV")["TREZOR_BOARD"] = board
-    env.get("ENV")["MCU_TYPE"] = mcu
-
     return features_available
