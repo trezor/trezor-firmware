@@ -1,9 +1,9 @@
 {
-    "header_len": 4608,
+    "header_len": 1024,
     "text": "UNSAFE, DO NOT USE!",
     "hw_model": "T3T1",
     "expiry": 0,
-    "version": [0, 1],
+    "version": [0, 0],
     "sig_m": 2,
     "trust": {
         "allow_run_with_secret": false,
