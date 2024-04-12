@@ -1,0 +1,20 @@
+{
+    "header_len": 1024,
+    "text": "UNSAFE, FACTORY TEST ONLY",
+    "hw_model": "T3T1",
+    "expiry": 0,
+    "version": [0, 0],
+    "sig_m": 2,
+    "trust": {
+        "allow_run_with_secret": true,
+        "show_vendor_string": false,
+        "require_user_click": false,
+        "red_background": false,
+        "delay": 0
+    },
+    "pubkeys": [
+        "6ba03ad7bee679ae076c6e6e494592836b1a75acde87dc545e74587db3c07257",
+        "9a9cbaf7b859bb4ff98838611039d62d5a7e8e5dd3ab524828e9e1c7fe08b810",
+        "de1f7bf0d13d90f7a2576f1c9f6ec06f2fcfac138ed19eb4ad2fc69f52da513f"
+    ]
+}
