@@ -1,0 +1,20 @@
+{
+    "header_len": 1024,
+    "text": "Trezor Bitcoin-only",
+    "hw_model": "T3T1",
+    "expiry": 0,
+    "version": [0, 0],
+    "sig_m": 2,
+    "trust": {
+        "allow_run_with_secret": true,
+        "show_vendor_string": false,
+        "require_user_click": false,
+        "red_background": false,
+        "delay": 0
+    },
+    "pubkeys": [
+        "38d9a87fd9f131367542c9f727308d4ffed4d035a087ae8afc5f1525ec49593b",
+        "d90a422bfcc31e5ca199dfb8aa2f0580b71b361956efd69e4a1554c75af495dc",
+        "ab822cacb5003da6c5ea71858feaa19000e2024f02bd237fdee732dee01c9bde"
+    ]
+}
