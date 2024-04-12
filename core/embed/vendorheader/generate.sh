@@ -23,8 +23,7 @@ for MODEL in ${MODELS[@]}; do
     echo "Generating vendor headers for $MODEL"
     # construct all vendor headers
     for fn in *.json; do
-        name=$(echo $fn | sed 's/vendor_\(.*\)\.json/\1/')
-        $BUILDVH $QUIET $CHECK vendor_${name}.json vendor_${name}.toif vendorheader_${name}_unsigned.bin
+        $BUILDVH $QUIET $CHECK $fn
     done
 
     TMPDIR=$(mktemp -d)
