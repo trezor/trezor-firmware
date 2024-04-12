@@ -105,15 +105,9 @@ def configure(
         sources += ["vendor/trezor-crypto/hash_to_curve.c"]
         features_available.append("optiga")
 
-    env.get("ENV")["TREZOR_BOARD"] = board
-    env.get("ENV")["MCU_TYPE"] = mcu
     env.get("ENV")["LINKER_SCRIPT"] = linker_script
 
     defs = env.get("CPPDEFINES_IMPLICIT")
     defs += ["__ARM_FEATURE_CMSE=3"]
-
-    rust_defs = env.get("ENV")["RUST_INCLUDES"]
-    rust_defs += "-DFRAMEBUFFER;"
-    env.get("ENV")["RUST_INCLUDES"] = rust_defs
 
     return features_available

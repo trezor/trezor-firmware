@@ -151,6 +151,18 @@ env.Replace(
 env.Replace(
     TREZOR_MODEL=TREZOR_MODEL, )
 
+ALLPATHS = [
+        'embed/rust',
+        'embed/bootloader',
+        'embed/bootloader/nanopb',
+        'embed/bootloader/protob',
+        'embed/lib',
+        'embed/models',
+        'embed/trezorhal',
+        'embed/extmod/modtrezorui',
+        'vendor/nanopb',
+    ] + CPPPATH_MOD + PATH_HAL
+
 env.Replace(
     COPT=env.get('ENV').get('OPTIMIZE', '-Os'),
     CCFLAGS='$COPT '
@@ -163,17 +175,7 @@ env.Replace(
     +  env.get('ENV')["CPU_CCFLAGS"] + CCFLAGS_MOD,
     CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB',
     LINKFLAGS=f'-T embed/bootloader/memory_{LINKER_SCRIPT_SUFFIX}.ld -Wl,--gc-sections -Wl,-Map=build/bootloader/bootloader.map -Wl,--warn-common -Wl,--print-memory-usage',
-    CPPPATH=[
-        'embed/rust',
-        'embed/bootloader',
-        'embed/bootloader/nanopb',
-        'embed/bootloader/protob',
-        'embed/lib',
-        'embed/models',
-        'embed/trezorhal',
-        'embed/extmod/modtrezorui',
-        'vendor/nanopb',
-    ] + CPPPATH_MOD + PATH_HAL,
+    CPPPATH=ALLPATHS,
     CPPDEFINES=[
         'BOOTLOADER',
         'TREZOR_MODEL_'+TREZOR_MODEL,
@@ -227,6 +229,8 @@ def cargo_build():
     features.append("ui")
     features.append("bootloader")
     features.extend(FEATURES_AVAILABLE)
+
+    env.get("ENV")["BINDGEN_MACROS"] = tools.get_bindgen_defines(env.get("ALLDEFS"), ALLPATHS)
 
     cargo_opts = [
         f'--target={env.get("ENV")["RUST_TARGET"]}',

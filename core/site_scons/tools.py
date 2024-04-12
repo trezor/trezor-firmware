@@ -148,6 +148,20 @@ def _compress(data: bytes) -> bytes:
     return z.compress(data) + z.flush()
 
 
+def get_bindgen_defines(
+    defines: list[str | tuple[str, str]], paths: list[str]
+) -> tuple(str, str):
+    rest_defs = []
+    for d in defines:
+        rest_defs.append(
+            f"-D{d}".replace('"<', "<").replace('>"', ">").replace('\\"', '"')
+        )
+    for d in paths:
+        rest_defs.append(f"-I../../{d}")
+
+    return ",".join(rest_defs)
+
+
 def embed_binary(obj_program, env, section, target_, file):
     _in = f"embedded_{section}.bin.deflated"
 

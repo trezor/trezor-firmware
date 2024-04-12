@@ -42,6 +42,8 @@ OPENOCD_INTERFACE ?= stlink
 # OpenOCD transport default. Alternative: jtag
 OPENOCD_TRANSPORT ?= hla_swd
 
+BINDGEN_MACROS_COMMON=-I../unix,-I../trezorhal/unix,-I../../build/unix,-I../../vendor/micropython/ports/unix,-I../../../crypto,-I../../../storage,-I../../vendor/micropython,-I../../vendor/micropython/lib/uzlib,-I../lib,-I../trezorhal,-I../trezorhal/unix,-I../models,-DTREZOR_EMULATOR,-DTREZOR_BOARD="boards/board-unix.h",
+
 ifeq ($(TREZOR_MODEL), 1)
 MCU = STM32F2
 LAYOUT_FILE = embed/models/model_T1B1.h
@@ -50,10 +52,14 @@ else ifeq ($(TREZOR_MODEL),$(filter $(TREZOR_MODEL),T))
 MCU = STM32F4
 LAYOUT_FILE = embed/models/model_T2T1.h
 OPENOCD_TARGET = target/stm32f4x.cfg
+BINDGEN_MACROS_MODEL = -DSTM32F427,-DTREZOR_MODEL_T,-DFLASH_BIT_ACCESS=1,-DFLASH_BLOCK_WORDS=1,
+MODEL_FEATURE = model_tt
 else ifeq ($(TREZOR_MODEL),$(filter $(TREZOR_MODEL),R))
 MCU = STM32F4
 LAYOUT_FILE = embed/models/model_T2B1.h
 OPENOCD_TARGET = target/stm32f4x.cfg
+BINDGEN_MACROS_MODEL =-DSTM32F427,-DTREZOR_MODEL_R,-DFLASH_BIT_ACCESS=1,-DFLASH_BLOCK_WORDS=1,
+MODEL_FEATURE = model_tr
 else ifeq ($(TREZOR_MODEL),$(filter $(TREZOR_MODEL),T3T1))
 MCU = STM32U5
 OPENOCD_TARGET = target/stm32u5x.cfg
@@ -137,9 +143,10 @@ emu: ## run emulator
 test: ## run unit tests
 	cd tests ; ./run_tests.sh $(TESTOPTS)
 
+test_rust: export BINDGEN_MACROS=$(BINDGEN_MACROS_COMMON)$(BINDGEN_MACROS_MODEL)
 test_rust: ## run rs unit tests
 	cd embed/rust ; cargo test $(TESTOPTS) --target=$(RUST_TARGET) \
-		--no-default-features --features model_t$(shell echo $(TREZOR_MODEL) | tr "TR" "tr"),test \
+		--no-default-features --features $(MODEL_FEATURE),test \
 		-- --test-threads=1 --nocapture
 
 test_emu: ## run selected device tests from python-trezor
@@ -206,8 +213,9 @@ typecheck: pyright
 pyright:
 	python ../tools/pyright_tool.py
 
+clippy: export BINDGEN_MACROS:=$(BINDGEN_MACROS_COMMON)$(BINDGEN_MACROS_MODEL)
 clippy:
-	cd embed/rust ; cargo clippy --all-features --target=$(RUST_TARGET)
+	cd embed/rust ; cargo clippy $(TESTOPTS) --all-features --target=$(RUST_TARGET)
 
 ## code generation:
 

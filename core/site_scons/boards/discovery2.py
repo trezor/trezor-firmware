@@ -90,8 +90,6 @@ def configure(
     features_available.append("framebuffer")
     features_available.append("framebuffer32bit")
 
-    env.get("ENV")["TREZOR_BOARD"] = board
-    env.get("ENV")["MCU_TYPE"] = mcu
     env.get("ENV")["LINKER_SCRIPT"] = linker_script
 
     defs = env.get("CPPDEFINES_IMPLICIT")

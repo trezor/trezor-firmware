@@ -198,6 +198,19 @@ else:
 MODEL_IDENTIFIER = tools.get_model_identifier(TREZOR_MODEL)
 MODEL_AS_NUMBER = str(boards.get_hw_model_as_number(MODEL_IDENTIFIER))
 
+ALLPATHS = ['embed/rust',
+           'embed/bootloader',
+           'embed/bootloader/nanopb',
+           'embed/bootloader/protob',
+           'embed/lib',
+           'embed/models',
+           'embed/trezorhal',
+           'embed/trezorhal/unix',
+           'embed/unix',
+           'embed/extmod/modtrezorui',
+           'vendor/nanopb',
+       ] + CPPPATH_MOD,
+
 env.Replace(
     COPT=env.get('ENV').get('OPTIMIZE', '-Os'),
     CCFLAGS='$COPT '
@@ -208,19 +221,7 @@ env.Replace(
     '-ffreestanding '
     '-fstack-protector-all '
     + CCFLAGS_MOD,
-    CPPPATH=[
-        'embed/rust',
-        'embed/bootloader',
-        'embed/bootloader/nanopb',
-        'embed/bootloader/protob',
-        'embed/lib',
-        'embed/models',
-        'embed/trezorhal',
-        'embed/trezorhal/unix',
-        'embed/unix',
-        'embed/extmod/modtrezorui',
-        'vendor/nanopb',
-    ] + CPPPATH_MOD,
+    CPPPATH=ALLPATHS,
     CPPDEFINES=[
         'BOOTLOADER',
         'TREZOR_EMULATOR',
@@ -289,6 +290,8 @@ def cargo_build():
 
     features.append("ui")
     features.append("bootloader")
+
+    env.get("ENV")["BINDGEN_MACROS"] = tools.get_bindgen_defines(env.get("ALLDEFS"), ALLPATHS)
 
     cargo_opts = [
         f'--target={RUST_TARGET}',

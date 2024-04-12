@@ -92,7 +92,4 @@ def configure(
         ]
         features_available.append("dma2d")
 
-    env.get("ENV")["TREZOR_BOARD"] = board
-    env.get("ENV")["MCU_TYPE"] = mcu
-
     return features_available
