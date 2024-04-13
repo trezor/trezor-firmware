@@ -575,6 +575,26 @@ void sec_read(void) {
   vcp_println_hex(&sec, sizeof(sec));
 }
 
+extern uint8_t optiga_debug_log[4 * 256];
+extern size_t optiga_debug_log_pos;
+extern int optiga_debug_ctr;
+extern uint8_t optiga_debug_sec;
+void sec_get(void) {
+  vcp_print("DEBUG %d", optiga_debug_ctr);
+  int i = optiga_debug_ctr * 4 > sizeof(optiga_debug_log) ? optiga_debug_log_pos : 0;
+  do {
+    vcp_print(" %02x%02x%02x%02x", optiga_debug_log[i], optiga_debug_log[i+1], optiga_debug_log[i+2], optiga_debug_log[i+3]);
+    i = (i + 4) % sizeof(optiga_debug_log);
+  } while (i != optiga_debug_log_pos);
+  vcp_puts("\r\n", 2);
+}
+
+void sec_check(void) {
+  if (optiga_debug_sec > 0x80) {
+    sec_get();
+  }  
+}
+
 // clang-format off
 static const uint8_t ECDSA_WITH_SHA256[] = {
   0x30, 0x0a, // a sequence of 10 bytes

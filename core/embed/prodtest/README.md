@@ -208,11 +208,26 @@ OK
 ```
 
 ### VARIANT
-The `VARIANT` command allows you to write up to 32 decimal values (representing device variant options), each ranging from 0 to 255, and delimited by spaces, into the OTP memory.
+The `VARIANT` command allows you to write up to 31 decimal values (representing device variant options), each ranging from 0 to 255, and delimited by spaces, into the OTP memory. The sequence of values written to OTP memory is prefixed by one byte representing the format version, which is `1`. The meaning of the device variant options is interpreted as follows:
 
-Example (to write 8 bytes into OTP memory):
+`VARIANT <unit_color> <unit_btconly> <unit_packaging>`
+
+`unit_color` | Color
+-----------------------------
+1            | Cosmic Black
+2            | Stellar Silver
+3            | Solar Gold
+4            | Galactic Rose
+5            | Bitcoin Orange
+
+`unit_btconly` | Edition
+-----------------------------
+0              | Standard
+1              | Bitcoin-only
+
+Example (to write 1 3 0 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 into OTP memory):
 ```
-VARIANT 128 64 100 1 2 3 0 0
+VARIANT 3 0 2
 ```
 
 ### VARIANT READ
@@ -221,7 +236,7 @@ The `VARIANT READ` command allows you to read 32 bytes of stored variant data (r
 Example:
 ```
 VARIANT READ
-OK 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255
+OK 1 3 0 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 ```
 
 ### WIPE

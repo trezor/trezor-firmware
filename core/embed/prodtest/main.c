@@ -730,6 +730,10 @@ int main(void) {
       check_locked();
     } else if (startswith(line, "SEC READ")) {
       sec_read();
+    } else if (startswith(line, "L")) {
+      sec_get();
+    } else if (startswith(line, "P")) {
+      pair_optiga();
 
 #endif
 
@@ -751,6 +755,7 @@ int main(void) {
     } else {
       vcp_println("UNKNOWN");
     }
+    sec_check();
   }
 
   return 0;

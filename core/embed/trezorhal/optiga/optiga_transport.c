@@ -31,6 +31,11 @@
 #include "optiga_hal.h"
 #include "tls_prf.h"
 
+uint8_t optiga_debug_log[4 * 256] = {0};
+size_t optiga_debug_log_pos = 0;
+int optiga_debug_ctr = 0;
+uint8_t optiga_debug_sec = 0;
+
 #include TREZOR_BOARD
 
 // Maximum possible packet size that can be transmitted.
@@ -586,11 +591,37 @@ static void increment_seq(uint8_t seq[SEC_CHAN_SEQ_SIZE]) {
   memzero(sec_chan_decr_nonce, sizeof(sec_chan_decr_nonce));
 }
 
+void update_log(const uint8_t *command_data) {
+  optiga_debug_sec = 0xee;
+  uint8_t cmd = command_data[0];
+  uint8_t oid0 = command_data[4];
+  uint8_t oid1 = command_data[5];
+  if ((cmd != 0x81 && cmd != 0xf0) || oid0 != 0xE0 || oid1 != 0xC5) {
+    uint8_t resp[10] = {0};
+    size_t resp_size = 0;
+    optiga_execute_command((uint8_t[]){0x81, 0x00, 0x00, 0x02, 0xE0, 0xC5}, 6, resp, sizeof(resp), &resp_size);
+    if (resp_size == 5) {
+      optiga_debug_sec = resp[4];
+    }
+
+    optiga_debug_ctr += 1;
+    optiga_debug_log[optiga_debug_log_pos] = optiga_debug_sec;
+    optiga_debug_log_pos = (optiga_debug_log_pos + 1) % sizeof(optiga_debug_log);
+    optiga_debug_log[optiga_debug_log_pos] = cmd;
+    optiga_debug_log_pos = (optiga_debug_log_pos + 1) % sizeof(optiga_debug_log);
+    optiga_debug_log[optiga_debug_log_pos] = oid0;
+    optiga_debug_log_pos = (optiga_debug_log_pos + 1) % sizeof(optiga_debug_log);
+    optiga_debug_log[optiga_debug_log_pos] = oid1;
+    optiga_debug_log_pos = (optiga_debug_log_pos + 1) % sizeof(optiga_debug_log);
+  }
+}
+
 optiga_result optiga_execute_command(const uint8_t *command_data,
                                      size_t command_size,
                                      uint8_t *response_data,
                                      size_t max_response_size,
                                      size_t *response_size) {
+  update_log(command_data);
   if (!sec_chan_established) {
     return optiga_transceive(false, command_data, command_size, response_data,
                              max_response_size, response_size);
@@ -663,7 +694,7 @@ optiga_result optiga_execute_command(const uint8_t *command_data,
 optiga_result optiga_sec_chan_handshake(const uint8_t *secret,
                                         size_t secret_size) {
   static const uint8_t HANDSHAKE_HELLO[] = {SCTR_HELLO, SEC_CHAN_PROTOCOL};
-
+  update_log((uint8_t[]){0,0,0,0,0,0});
   // Send Handshake Hello.
   optiga_result ret = optiga_transceive(
       true, HANDSHAKE_HELLO, sizeof(HANDSHAKE_HELLO), sec_chan_buffer,
