@@ -7,12 +7,15 @@ import tools, models
 BITCOIN_ONLY = ARGUMENTS.get('BITCOIN_ONLY', '0')
 EVERYTHING = BITCOIN_ONLY != '1'
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
-DMA2D =  TREZOR_MODEL in ('T', 'T3T1')
-OPTIGA = TREZOR_MODEL in ('R', 'T3T1')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 HW_REVISION ='emulator'
 THP = ARGUMENTS.get('THP', '0') == '1' # Trezor-Host Protocol
 NEW_RENDERING = ARGUMENTS.get('NEW_RENDERING', '1') == '1'
+
+
+FEATURES_WANTED = ["input", "sd_card", "dma2d", "optiga", "sbu"]
+if NEW_RENDERING:
+    FEATURES_WANTED.append("new_rendering")
 
 if TREZOR_MODEL in ('DISC1', 'DISC2'):
     # skip unix build
@@ -32,6 +35,8 @@ FEATURE_FLAGS = {
 
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
+CPPDEFINES_HAL = []
+PATH_HAL = []
 CPPDEFINES_MOD = []
 SOURCE_MOD = [
     'vendor/micropython/extmod/vfs_posix_file.c',
@@ -206,11 +211,6 @@ if THP:
 SOURCE_MOD += [
     'embed/extmod/modtrezorio/modtrezorio.c',
 ]
-if TREZOR_MODEL in ('T', 'T3T1'):
-    SOURCE_MOD += [
-        'embed/extmod/modtrezorio/ff.c',
-        'embed/extmod/modtrezorio/ffunicode.c',
-    ]
 
 # modtrezorui
 CPPPATH_MOD += [
@@ -245,26 +245,6 @@ else:
         'embed/lib/display_draw.c',
     ]
 
-
-if TREZOR_MODEL in ('1', ):
-    SOURCE_MOD += [
-        'embed/models/model_T1B1_layout.c',
-    ]
-elif TREZOR_MODEL in ('T', ):
-    SOURCE_MOD += [
-        'embed/models/model_T2T1_layout.c',
-    ]
-elif TREZOR_MODEL in ('R', ):
-    SOURCE_MOD += [
-        'embed/models/model_T2B1_layout.c',
-    ]
-elif TREZOR_MODEL in ('T3T1', ):
-    SOURCE_MOD += [
-        'embed/models/model_T3T1_layout.c',
-    ]
-
-
-
 CPPDEFINES_MOD += [
     'TREZOR_UI2',
     'TRANSLATIONS',
@@ -281,14 +261,6 @@ if RASPI:
 
 if NEW_RENDERING:
     CPPDEFINES_MOD += ['NEW_RENDERING']
-    if TREZOR_MODEL in ('T',):
-        CPPDEFINES_MOD += ['DISPLAY_RGB565']
-    elif TREZOR_MODEL in ('R', '1',):
-        CPPDEFINES_MOD += ['XFRAMEBUFFER', 'DISPLAY_MONO']
-    elif TREZOR_MODEL in ('T3T1',):
-        CPPDEFINES_MOD += ['XFRAMEBUFFER', 'DISPLAY_RGB565']
-
-
 
 # modtrezorutils
 SOURCE_MOD += [
@@ -453,31 +425,12 @@ SOURCE_UNIX = [
 if NEW_RENDERING:
     SOURCE_MOD += [
         'embed/trezorhal/unix/display_driver.c',
-        'embed/trezorhal/unix/dma2d_bitblt.c',
         'embed/trezorhal/xdisplay_legacy.c',
     ]
 else:
     SOURCE_MOD += [
         'embed/trezorhal/unix/display-unix.c',
-        'embed/lib/dma2d_emul.c',
     ]
-
-
-if TREZOR_MODEL in ('T', 'R', 'T3T1'):
-    SOURCE_UNIX += [
-        'embed/trezorhal/unix/sbu.c',
-    ]
-
-if OPTIGA:
-    SOURCE_UNIX += [
-        'embed/trezorhal/unix/optiga.c',
-    ]
-
-if DMA2D:
-    CPPDEFINES_MOD += [
-        'USE_DMA2D',
-    ]
-
 
 TRANSLATION_DATA = [
     "translations/en.json",
@@ -504,6 +457,7 @@ else:
 
 env = Environment(ENV=os.environ, CFLAGS='%s -DCONFIDENTIAL= -DPYOPT=%s -DBITCOIN_ONLY=%s %s' % (ARGUMENTS.get('CFLAGS', ''), PYOPT, BITCOIN_ONLY, STATIC))
 
+FEATURES_AVAILABLE = models.configure_board(TREZOR_MODEL, HW_REVISION, FEATURES_WANTED, env, CPPDEFINES_HAL, SOURCE_UNIX, PATH_HAL)
 
 if TREZOR_MODEL in ('T', 'T3T1'):
     UI_LAYOUT = 'UI_LAYOUT_TT'
@@ -514,13 +468,16 @@ elif TREZOR_MODEL in ('1', 'R'):
 else:
     raise ValueError('Unknown Trezor model')
 
-if TREZOR_MODEL in ('T', 'T3T1'):
+
+if 'sd_card' in FEATURES_AVAILABLE:
     SDCARD = True
-    SOURCE_UNIX += [
-        'embed/trezorhal/unix/sdcard.c',
-    ]
 else:
     SDCARD = False
+
+if 'optiga' in FEATURES_AVAILABLE:
+    OPTIGA = True
+else:
+    OPTIGA = False
 
 
 env.Tool('micropython')
@@ -571,19 +528,6 @@ if ARGUMENTS.get('TREZOR_MEMPERF', '0') == '1':
 env.Replace(
     TREZOR_MODEL=TREZOR_MODEL, )
 
-if TREZOR_MODEL in ('T', 'R'):
-    CPU_MODEL   = 'STM32F427xx'
-elif TREZOR_MODEL in ('T3T1', ):
-    CPU_MODEL   = 'STM32U585xx'
-elif TREZOR_MODEL in ('DISC1', ):
-    CPU_MODEL   = 'STM32F429xx'
-elif TREZOR_MODEL in ('DISC2', ):
-    CPU_MODEL   = 'STM32U5A9xx'
-elif TREZOR_MODEL in ('1',):
-    CPU_MODEL   = 'STM32F405xx'
-else:
-    raise ValueError('Unknown Trezor model')
-
 ALLPATHS=['.',
          'embed/rust',
          'embed/lib',
@@ -595,7 +539,7 @@ ALLPATHS=['.',
          'vendor/micropython',
          'vendor/micropython/ports/unix',
          'vendor/micropython/lib/mp-readline',
-     ] + CPPPATH_MOD
+     ] + CPPPATH_MOD + PATH_HAL
 
 env.Replace(
     CCFLAGS='$COPT '
@@ -606,16 +550,11 @@ env.Replace(
     LIBS=['m'],
     CPPPATH=ALLPATHS,
     CPPDEFINES=[
-        CPU_MODEL,
         'TREZOR_EMULATOR',
         'TREZOR_MODEL_'+TREZOR_MODEL,
-        'TREZOR_BOARD=\\"boards/board-unix.h\\"',
-        ('FLASH_BIT_ACCESS', '1'),
-        ('FLASH_BLOCK_WORDS', '1'),
-        'MCU_TYPE='+CPU_MODEL,
         ('MP_CONFIGFILE', '\\"embed/unix/mpconfigport.h\\"'),
         UI_LAYOUT,
-    ] + CPPDEFINES_MOD,
+    ] + CPPDEFINES_MOD + CPPDEFINES_HAL,
     ASPPFLAGS='$CFLAGS $CCFLAGS', )
 
 try:
@@ -841,7 +780,7 @@ if FROZEN:
         source=SOURCE_PY,
         source_dir=SOURCE_PY_DIR,
         bitcoin_only=BITCOIN_ONLY,
-        backlight=TREZOR_MODEL in ('T', 'T3T1'),
+        backlight='backlight' in FEATURES_AVAILABLE,
         optiga=OPTIGA,
         ui_layout=UI_LAYOUT,
         thp=THP,
@@ -917,27 +856,16 @@ def cargo_build():
 
     if PYOPT == '0':
         features.append('debug')
-    if DMA2D:
-        features.append('dma2d')
+
+    features.extend(FEATURES_AVAILABLE)
 
     if TREZOR_MODEL in ('T', 'T3T1'):
-        features.append('touch')
-        features.append('sd_card')
         features.append('ui_blurring')
         features.append('ui_jpeg_decoder')
-    if TREZOR_MODEL in ('R', '1'):
-        features.append('button')
+
 
     if NEW_RENDERING:
         features.append('new_rendering')
-        if TREZOR_MODEL in ('T',):
-            features.append('display_rgb565')
-        elif TREZOR_MODEL in ('R', '1',):
-            features.append('display_mono')
-            features.append('xframebuffer')
-        elif TREZOR_MODEL in ('T3T1',):
-            features.append('display_rgb565')
-            features.append('xframebuffer')
 
     env.get('ENV')['TREZOR_MODEL'] = TREZOR_MODEL
 

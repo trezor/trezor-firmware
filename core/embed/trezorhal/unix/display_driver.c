@@ -19,6 +19,8 @@
 
 #define _GNU_SOURCE
 
+#include TREZOR_BOARD
+
 #include <xdisplay.h>
 
 #include <SDL.h>
@@ -28,45 +30,6 @@
 #include "profile.h"
 
 #define EMULATOR_BORDER 16
-
-#if defined TREZOR_MODEL_T
-
-#ifdef TREZOR_EMULATOR_RASPI
-#define WINDOW_WIDTH 480
-#define WINDOW_HEIGHT 320
-#define TOUCH_OFFSET_X 110
-#define TOUCH_OFFSET_Y 40
-#else
-#define WINDOW_WIDTH 400
-#define WINDOW_HEIGHT 600
-#define TOUCH_OFFSET_X 80
-#define TOUCH_OFFSET_Y 110
-#endif
-
-#elif defined TREZOR_MODEL_1
-
-#define WINDOW_WIDTH 200
-#define WINDOW_HEIGHT 340
-#define TOUCH_OFFSET_X 36
-#define TOUCH_OFFSET_Y 92
-
-#elif defined TREZOR_MODEL_R
-
-#define WINDOW_WIDTH 193
-#define WINDOW_HEIGHT 339
-#define TOUCH_OFFSET_X 32
-#define TOUCH_OFFSET_Y 84
-
-#elif defined TREZOR_MODEL_T3T1
-
-#define WINDOW_WIDTH 400
-#define WINDOW_HEIGHT 600
-#define TOUCH_OFFSET_X 80
-#define TOUCH_OFFSET_Y 110
-
-#else
-#error Unknown Trezor model
-#endif
 
 typedef struct {
   // Current display orientation (0 or 180)
@@ -167,27 +130,12 @@ void display_init(void) {
   SDL_PumpEvents();
   SDL_SetWindowSize(drv->window, WINDOW_WIDTH, WINDOW_HEIGHT);
 #endif
-#ifdef TREZOR_EMULATOR_RASPI
-#include "background_raspi.h"
+#include BACKGROUND_FILE
+#define CONCAT_LEN_HELPER(name) name##_len
+#define CONCAT_LEN(name) CONCAT_LEN_HELPER(name)
   drv->background = IMG_LoadTexture_RW(
       drv->renderer,
-      SDL_RWFromMem(background_raspi_jpg, background_raspi_jpg_len), 0);
-#else
-#if defined TREZOR_MODEL_T
-#include "background_T.h"
-  drv->background = IMG_LoadTexture_RW(
-      drv->renderer, SDL_RWFromMem(background_T_jpg, background_T_jpg_len), 0);
-#elif defined TREZOR_MODEL_1
-#include "background_1.h"
-  drv->background = IMG_LoadTexture_RW(
-      drv->renderer, SDL_RWFromMem(background_1_jpg, background_1_jpg_len), 0);
-#elif defined TREZOR_MODEL_R
-#include "background_T2B1.h"
-  drv->background = IMG_LoadTexture_RW(
-      drv->renderer,
-      SDL_RWFromMem(background_T2B1_png, background_T2B1_png_len), 0);
-#endif
-#endif
+      SDL_RWFromMem(BACKGROUND_NAME, CONCAT_LEN(BACKGROUND_NAME)), 0);
   if (drv->background) {
     SDL_SetTextureBlendMode(drv->background, SDL_BLENDMODE_NONE);
     sdl_touch_offset_x = TOUCH_OFFSET_X;
@@ -198,8 +146,8 @@ void display_init(void) {
     sdl_touch_offset_x = EMULATOR_BORDER;
     sdl_touch_offset_y = EMULATOR_BORDER;
   }
-#if defined TREZOR_MODEL_1 || defined TREZOR_MODEL_R
-  // T1 and TR do not have backlight capabilities in hardware, so
+#if !USE_BACKLIGHT
+  // some models do not have backlight capabilities in hardware, so
   // setting its value here for emulator to avoid
   // calling any `set_backlight` functions
   drv->backlight_level = 255;
@@ -225,7 +173,7 @@ void display_finish_actions(void) {
 int display_set_backlight(int level) {
   display_driver_t *drv = &g_display_driver;
 
-#if defined TREZOR_MODEL_1 || defined TREZOR_MODEL_R
+#if !USE_BACKLIGHT
   level = 255;
 #endif
 
@@ -245,12 +193,12 @@ int display_get_backlight(void) {
 int display_set_orientation(int angle) {
   display_driver_t *drv = &g_display_driver;
   if (angle != drv->orientation_angle) {
-#if defined TREZOR_MODEL_T || defined TREZOR_MODEL_T3T1
+#if defined ORIENTATION_NSEW
     if (angle == 0 || angle == 90 || angle == 180 || angle == 270) {
-#elif defined TREZOR_MODEL_1 || defined TREZOR_MODEL_R
+#elif defined ORIENTATION_NS
     if (angle == 0 || angle == 180) {
 #else
-#error Unknown Trezor model
+    if (angle == 0) {
 #endif
       drv->orientation_angle = angle;
       display_refresh();
