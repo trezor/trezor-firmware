@@ -176,6 +176,9 @@ void SystemInit(void) {
     ;
 #endif
 
+  // enable power supply for GPIOG 2 to 15
+  PWR->SVMCR |= PWR_SVMCR_IO2SV;
+
   __HAL_RCC_PWR_CLK_DISABLE();
 
   // this will be overriden by static initialization

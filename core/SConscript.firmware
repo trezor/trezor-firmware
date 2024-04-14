@@ -42,7 +42,7 @@ PATH_HAL = []
 
 FROZEN = True
 
-if TREZOR_MODEL in ('1', 'R'):
+if TREZOR_MODEL in ('1', 'R', 'T3B1'):
     FONT_NORMAL='Font_PixelOperator_Regular_8'
     FONT_DEMIBOLD='Font_Unifont_Bold_16'
     FONT_BOLD='Font_PixelOperator_Bold_8'
@@ -464,7 +464,7 @@ SOURCE_FIRMWARE = [
 if TREZOR_MODEL in ('T', 'DISC1', 'DISC2'):
     UI_LAYOUT = 'UI_LAYOUT_TT'
     ui_layout_feature = 'model_tt'
-elif TREZOR_MODEL in ('1', 'R'):
+elif TREZOR_MODEL in ('1', 'R', 'T3B1'):
     UI_LAYOUT = 'UI_LAYOUT_TR'
     ui_layout_feature = 'model_tr'
 elif TREZOR_MODEL in ('T3T1',):
