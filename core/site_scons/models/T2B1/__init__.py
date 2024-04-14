@@ -2,10 +2,7 @@ from __future__ import annotations
 
 from typing import Optional
 
-from .trezor_r_v3 import configure as configure_r3
-from .trezor_r_v4 import configure as configure_r4
-from .trezor_r_v6 import configure as configure_r6
-from .trezor_r_v10 import configure as configure_r10
+from . import emulator, trezor_r_v3, trezor_r_v4, trezor_r_v6, trezor_r_v10
 
 
 def configure_board(
@@ -16,14 +13,21 @@ def configure_board(
     sources: list[str],
     paths: list[str],
 ):
-    if revision is None:
-        revision = 10
-    if revision == 3:
-        return configure_r3(env, features_wanted, defines, sources, paths)
-    elif revision == 4:
-        return configure_r4(env, features_wanted, defines, sources, paths)
-    elif revision == 6:
-        return configure_r6(env, features_wanted, defines, sources, paths)
-    elif revision == 10:
-        return configure_r10(env, features_wanted, defines, sources, paths)
+    # Set default revision if None
+    revision = revision or 10
+
+    # Mapping of revisions to their respective configurations
+    revision_map = {
+        "emulator": emulator,
+        3: trezor_r_v3,
+        4: trezor_r_v4,
+        6: trezor_r_v6,
+        10: trezor_r_v10,
+    }
+
+    module = revision_map.get(revision)
+
+    if module:
+        return module.configure(env, features_wanted, defines, sources, paths)
+
     raise Exception("Unknown model_r_version")

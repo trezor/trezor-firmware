@@ -28,7 +28,6 @@ const DEFAULT_BINDGEN_MACROS_COMMON: &[&str] = &[
     "-I../trezorhal/unix",
     "-I../models",
     "-DTREZOR_EMULATOR",
-    "-DTREZOR_BOARD=\"boards/board-unix.h\"",
 ];
 
 #[cfg(feature = "model_tt")]
@@ -37,6 +36,7 @@ const DEFAULT_BINDGEN_MACROS_T2T1: &[&str] = &[
     "-DTREZOR_MODEL_T",
     "-DFLASH_BIT_ACCESS=1",
     "-DFLASH_BLOCK_WORDS=1",
+    "-DTREZOR_BOARD=\"T2T1/boards/t2t1-unix.h\"",
 ];
 #[cfg(not(feature = "model_tt"))]
 const DEFAULT_BINDGEN_MACROS_T2T1: &[&str] = &[];
@@ -47,6 +47,7 @@ const DEFAULT_BINDGEN_MACROS_T2B1: &[&str] = &[
     "-DTREZOR_MODEL_R",
     "-DFLASH_BIT_ACCESS=1",
     "-DFLASH_BLOCK_WORDS=1",
+    "-DTREZOR_BOARD=\"T2B1/boards/t2b1-unix.h\"",
 ];
 #[cfg(not(feature = "model_tr"))]
 const DEFAULT_BINDGEN_MACROS_T2B1: &[&str] = &[];

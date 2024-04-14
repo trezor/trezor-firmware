@@ -7,7 +7,6 @@ TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 HW_REVISION = 'emulator'
 NEW_RENDERING = ARGUMENTS.get('NEW_RENDERING', '1') == '1'
-DMA2D = False
 
 if TREZOR_MODEL in ('1', 'DISC1'):
     # skip bootloader build
@@ -21,13 +20,15 @@ if TREZOR_MODEL in ('1', 'DISC1'):
              )
     Return()
 
-FEATURES_WANTED = ["input", "rgb_led", "dma2d"]
+FEATURES_WANTED = ["input", "rgb_led", "dma2d", "optiga_hal"]
 
 if NEW_RENDERING:
     FEATURES_WANTED.append("new_rendering")
 
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
+CPPDEFINES_HAL = []
+PATH_HAL = []
 CPPDEFINES_MOD = []
 SOURCE_MOD = []
 SOURCE_MOD_CRYPTO = []
@@ -116,38 +117,13 @@ SOURCE_MOD += [
 
 if NEW_RENDERING:
     CPPDEFINES_MOD += ['NEW_RENDERING']
-    if TREZOR_MODEL in ('T',):
-        CPPDEFINES_MOD += ['DISPLAY_RGB565']
-    elif TREZOR_MODEL in ('R', '1',):
-        CPPDEFINES_MOD += ['XFRAMEBUFFER', 'DISPLAY_MONO']
-    elif TREZOR_MODEL in ('T3T1',):
-        CPPDEFINES_MOD += ['XFRAMEBUFFER', 'DISPLAY_RGB565']
     SOURCE_MOD += [
         'embed/lib/gfx_draw.c',
     ]
 else:
     SOURCE_MOD += [
         'embed/lib/display_draw.c',
-        'embed/lib/dma2d_emul.c',
 ]
-
-if TREZOR_MODEL in ('1', ):
-    SOURCE_MOD += [
-        'embed/models/model_T1B1_layout.c',
-    ]
-elif TREZOR_MODEL in ('T', ):
-    SOURCE_MOD += [
-        'embed/models/model_T2T1_layout.c',
-    ]
-elif TREZOR_MODEL in ('R', ):
-    SOURCE_MOD += [
-        'embed/models/model_T2B1_layout.c',
-    ]
-elif TREZOR_MODEL in ('T3T1',):
-    SOURCE_MOD += [
-        'embed/models/model_T3T1_layout.c',
-    ]
-
 
 SOURCE_NANOPB = [
     'vendor/nanopb/pb_common.c',
@@ -187,11 +163,6 @@ else:
         'embed/trezorhal/unix/display-unix.c',
     ]
 
-if TREZOR_MODEL in ('R', 'T3T1'):
-    SOURCE_TREZORHAL += [
-        'embed/trezorhal/unix/optiga_hal.c',
-    ]
-
 SOURCE_UNIX = [
     'embed/unix/profile.c',
 ]
@@ -209,6 +180,8 @@ tools.add_font('BOLD_UPPER', FONT_BOLD_UPPER, CPPDEFINES_MOD, SOURCE_MOD)
 
 env = Environment(ENV=os.environ, CFLAGS='%s -DCONFIDENTIAL= -DPRODUCTION=%s' % (ARGUMENTS.get('CFLAGS', ''), ARGUMENTS.get('PRODUCTION', '0')))
 
+FEATURES_AVAILABLE = models.configure_board(TREZOR_MODEL, HW_REVISION, FEATURES_WANTED, env, CPPDEFINES_HAL, SOURCE_UNIX, PATH_HAL)
+
 env.Replace(
     CP='cp',
     AS='as',
@@ -220,22 +193,6 @@ env.Replace(
     OBJCOPY='objcopy',
     PYTHON='python',
     MAKECMAKELISTS='$PYTHON tools/make_cmakelists.py', )
-
-env.Replace(
-    TREZOR_MODEL=TREZOR_MODEL, )
-
-if TREZOR_MODEL in ('T', 'R'):
-    CPU_MODEL   = 'STM32F427xx'
-elif TREZOR_MODEL in ('T3T1', ):
-    CPU_MODEL   = 'STM32U585xx'
-elif TREZOR_MODEL in ('DISC1', ):
-    CPU_MODEL   = 'STM32F429xx'
-elif TREZOR_MODEL in ('DISC2', ):
-    CPU_MODEL   = 'STM32U5A9xx'
-elif TREZOR_MODEL in ('1',):
-    CPU_MODEL   = 'STM32F405xx'
-else:
-    raise ValueError('Unknown Trezor model')
 
 MODEL_IDENTIFIER = models.get_model_identifier(TREZOR_MODEL)
 MODEL_AS_NUMBER = str(models.get_hw_model_as_number(MODEL_IDENTIFIER))
@@ -251,7 +208,7 @@ ALLPATHS = ['embed/rust',
            'embed/unix',
            'embed/extmod/modtrezorui',
            'vendor/nanopb',
-       ] + CPPPATH_MOD
+       ] + CPPPATH_MOD + PATH_HAL
 
 env.Replace(
     COPT=env.get('ENV').get('OPTIMIZE', '-Os'),
@@ -267,18 +224,11 @@ env.Replace(
     CPPDEFINES=[
         'BOOTLOADER',
         'TREZOR_EMULATOR',
-        CPU_MODEL,
-        'HW_MODEL=' + MODEL_AS_NUMBER,
-        'HW_REVISION=' + ('10' if TREZOR_MODEL in ('R',) else '0'),
         'TREZOR_MODEL_'+TREZOR_MODEL,
-        'TREZOR_BOARD=\\"boards/board-unix.h\\"',
-        ('FLASH_BIT_ACCESS', '1'),
-        ('FLASH_BLOCK_WORDS', '1'),
-        'MCU_TYPE='+CPU_MODEL,
         'PB_FIELD_16BIT',
         'PB_ENCODE_ARRAYS_UNPACKED',
         'PB_VALIDATE_UTF8',
-    ] + CPPDEFINES_MOD,
+    ] + CPPDEFINES_MOD + CPPDEFINES_HAL,
     ASPPFLAGS='$CFLAGS $CCFLAGS', )
 
 try:
@@ -326,24 +276,10 @@ def cargo_build():
 
     if NEW_RENDERING:
         features.append('new_rendering')
-        if TREZOR_MODEL in ('T',):
-            features.append('display_rgb565')
-        elif TREZOR_MODEL in ('R', '1',):
-            features.append('display_mono')
-            features.append('xframebuffer')
-        elif TREZOR_MODEL in ('T3T1',):
-            features.append('display_rgb565')
-            features.append('xframebuffer')
-
-    if TREZOR_MODEL in ('T', 'T3T1'):
-        features.append('touch')
-        features.append('backlight')
-        features.append('dma2d')
-    if TREZOR_MODEL in ('R', '1'):
-        features.append('button')
 
     features.append("ui")
     features.append("bootloader")
+    features.extend(FEATURES_AVAILABLE)
 
 
     cargo_opts = [
