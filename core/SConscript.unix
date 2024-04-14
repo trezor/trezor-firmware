@@ -2,7 +2,7 @@
 # fmt: off
 
 import os
-import tools
+import tools, models
 
 BITCOIN_ONLY = ARGUMENTS.get('BITCOIN_ONLY', '0')
 EVERYTHING = BITCOIN_ONLY != '1'
@@ -10,6 +10,7 @@ TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 DMA2D =  TREZOR_MODEL in ('T', 'T3T1')
 OPTIGA = TREZOR_MODEL in ('R', 'T3T1')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
+HW_REVISION ='emulator'
 THP = ARGUMENTS.get('THP', '0') == '1' # Trezor-Host Protocol
 NEW_RENDERING = ARGUMENTS.get('NEW_RENDERING', '1') == '1'
 

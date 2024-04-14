@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from . import get_hw_model_as_number
-from .stm32u5_common import stm32u5_common_files
+from .. import get_hw_model_as_number
+from ..stm32u5_common import stm32u5_common_files
 
 
 def configure(
@@ -12,7 +12,7 @@ def configure(
     paths: list[str],
 ) -> list[str]:
     features_available: list[str] = []
-    board = "trezor_t3t1_revE.h"
+    board = "trezor_t3t1_v4.h"
     display = "st7789v.c"
     hw_model = get_hw_model_as_number("T3T1")
     hw_revision = 0
@@ -45,6 +45,7 @@ def configure(
     sources += [
         "embed/models/model_T3T1_layout.c",
     ]
+    sources += [f"embed/trezorhal/stm32u5/displays/{display}"]
 
     if "new_rendering" in features_wanted:
         sources += ["embed/trezorhal/xdisplay_legacy.c"]
@@ -55,6 +56,7 @@ def configure(
         sources += [
             "embed/trezorhal/stm32u5/xdisplay/st-7789/panels/lx154a2422.c",
         ]
+
     else:
         sources += [f"embed/trezorhal/stm32u5/displays/{display}"]
         sources += [
@@ -123,8 +125,6 @@ def configure(
         sources += ["vendor/trezor-crypto/hash_to_curve.c"]
         features_available.append("optiga")
 
-    env.get("ENV")["TREZOR_BOARD"] = board
-    env.get("ENV")["MCU_TYPE"] = mcu
     env.get("ENV")["LINKER_SCRIPT"] = linker_script
 
     defs = env.get("CPPDEFINES_IMPLICIT")

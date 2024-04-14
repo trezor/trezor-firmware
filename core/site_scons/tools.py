@@ -4,19 +4,6 @@ import subprocess
 import zlib
 from pathlib import Path
 
-from boards import (
-    discovery,
-    discovery2,
-    trezor_1,
-    trezor_r_v3,
-    trezor_r_v4,
-    trezor_r_v6,
-    trezor_r_v10,
-    trezor_t,
-    trezor_t3t1_revE,
-    trezor_t3t1_v4,
-)
-
 HERE = Path(__file__).parent.resolve()
 
 # go up from site_scons to core/
@@ -35,65 +22,6 @@ def add_font(
         sourcefile = "embed/lib/fonts/" + font_filename + ".c"
         if sourcefile not in sources:
             sources.append(sourcefile)
-
-
-def configure_board(
-    model: str,
-    features_wanted: list[str],
-    env: dict,  # type: ignore
-    defines: list[str | tuple[str, str]],
-    sources: list[str],
-    paths: list[str],
-) -> list[str]:
-    model_r_version = 10
-    model_t3t1_version = "E"
-
-    if model in ("1",):
-        return trezor_1.configure(env, features_wanted, defines, sources, paths)
-    elif model in ("T",):
-        return trezor_t.configure(env, features_wanted, defines, sources, paths)
-    elif model in ("R",):
-        if model_r_version == 3:
-            return trezor_r_v3.configure(env, features_wanted, defines, sources, paths)
-        elif model_r_version == 4:
-            return trezor_r_v4.configure(env, features_wanted, defines, sources, paths)
-        elif model_r_version == 6:
-            return trezor_r_v6.configure(env, features_wanted, defines, sources, paths)
-        elif model_r_version == 10:
-            return trezor_r_v10.configure(env, features_wanted, defines, sources, paths)
-        raise Exception("Unknown model_r_version")
-    elif model in ("T3T1",):
-        if model_t3t1_version == 4:
-            return trezor_t3t1_v4.configure(
-                env, features_wanted, defines, sources, paths
-            )
-        elif model_t3t1_version == "E":
-            return trezor_t3t1_revE.configure(
-                env, features_wanted, defines, sources, paths
-            )
-        raise Exception("Unknown model_t3t1_version")
-    elif model in ("DISC1",):
-        return discovery.configure(env, features_wanted, defines, sources, paths)
-    elif model in ("DISC2",):
-        return discovery2.configure(env, features_wanted, defines, sources, paths)
-    raise Exception("Unknown model")
-
-
-def get_model_identifier(model: str) -> str:
-    if model == "1":
-        return "T1B1"
-    elif model == "T":
-        return "T2T1"
-    elif model == "R":
-        return "T2B1"
-    elif model == "T3T1":
-        return "T3T1"
-    elif model == "DISC1":
-        return "D001"
-    elif model == "DISC2":
-        return "D002"
-    else:
-        raise Exception("Unknown model")
 
 
 def get_version(file: str) -> str:

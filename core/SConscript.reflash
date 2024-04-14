@@ -1,10 +1,11 @@
 # pylint: disable=E0602
 
 import os
-import tools
+import tools, models
 
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
+HW_REVISION = ARGUMENTS.get('HW_REVISION', None)
 
 if TREZOR_MODEL in ('DISC1', 'DISC2'):
     # skip reflash build
@@ -89,7 +90,7 @@ env = Environment(
     CPPDEFINES_IMPLICIT=[]
     )
 
-FEATURES_AVAILABLE = tools.configure_board(TREZOR_MODEL, FEATURES_WANTED, env, CPPDEFINES_HAL, SOURCE_HAL, PATH_HAL)
+FEATURES_AVAILABLE = models.configure_board(TREZOR_MODEL, HW_REVISION, FEATURES_WANTED, env, CPPDEFINES_HAL, SOURCE_HAL, PATH_HAL)
 
 FILE_SUFFIX= env.get('ENV')['SUFFIX']
 LINKER_SCRIPT_SUFFIX= env.get('ENV')['LINKER_SCRIPT']
@@ -166,7 +167,7 @@ obj_program += env.Object(source=SOURCE_MOD_CRYPTO, CCFLAGS='$CCFLAGS -ftrivial-
 obj_program += env.Object(source=SOURCE_REFLASH)
 obj_program += env.Object(source=SOURCE_HAL)
 
-MODEL_IDENTIFIER = tools.get_model_identifier(TREZOR_MODEL)
+MODEL_IDENTIFIER = models.get_model_identifier(TREZOR_MODEL)
 
 VENDORHEADER = f'embed/vendorheader/{MODEL_IDENTIFIER}/vendorheader_' + ('unsafe_signed_dev.bin' if ARGUMENTS.get('PRODUCTION', '0') == '0' else 'satoshilabs_signed_prod.bin')
 
@@ -185,7 +186,7 @@ program_elf = env.Command(
     '$LINK -o $TARGET $CCFLAGS $CFLAGS $LINKFLAGS $SOURCES -lc_nano -lgcc',
 )
 
-BINARY_NAME = f"build/reflash/reflash-{tools.get_model_identifier(TREZOR_MODEL)}"
+BINARY_NAME = f"build/reflash/reflash-{models.get_model_identifier(TREZOR_MODEL)}"
 BINARY_NAME += "-" + tools.get_version('embed/reflash/version.h')
 BINARY_NAME += "-" + tools.get_git_revision_short_hash()
 BINARY_NAME += "-dirty" if tools.get_git_modified() else ""

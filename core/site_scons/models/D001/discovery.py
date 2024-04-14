@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from . import get_hw_model_as_number
-from .stm32f4_common import stm32f4_common_files
+from .. import get_hw_model_as_number
+from ..stm32f4_common import stm32f4_common_files
 
 
 def configure(

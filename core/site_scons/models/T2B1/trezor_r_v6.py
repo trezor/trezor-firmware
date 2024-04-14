@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from . import get_hw_model_as_number
-from .stm32f4_common import stm32f4_common_files
+from .. import get_hw_model_as_number
+from ..stm32f4_common import stm32f4_common_files
 
 
 def configure(
@@ -13,8 +13,8 @@ def configure(
 ) -> list[str]:
     features_available: list[str] = []
     hw_model = get_hw_model_as_number("T2B1")
-    hw_revision = 10
-    board = "trezor_r_v10.h"
+    hw_revision = 6
+    board = "trezor_r_v6.h"
     display = "vg-2864ksweg01.c"
 
     if "new_rendering" in features_wanted:
@@ -48,8 +48,6 @@ def configure(
     else:
         sources += [f"embed/trezorhal/stm32f4/displays/{display}"]
 
-    sources += ["embed/trezorhal/stm32f4/i2c.c"]
-
     if "input" in features_wanted:
         sources += ["embed/trezorhal/stm32f4/button.c"]
         features_available.append("button")
@@ -58,11 +56,6 @@ def configure(
         sources += ["embed/trezorhal/stm32f4/sbu.c"]
         features_available.append("sbu")
 
-    if "consumption_mask" in features_wanted:
-        sources += ["embed/trezorhal/stm32f4/consumption_mask.c"]
-        sources += [
-            "vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.c"
-        ]
     if "usb" in features_wanted:
         sources += [
             "embed/trezorhal/stm32f4/usb.c",
@@ -73,14 +66,5 @@ def configure(
             "vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_usb.c",
         ]
         features_available.append("usb")
-
-    if "optiga" in features_wanted:
-        defines += ["USE_OPTIGA=1"]
-        sources += ["embed/trezorhal/stm32f4/optiga_hal.c"]
-        sources += ["embed/trezorhal/optiga/optiga.c"]
-        sources += ["embed/trezorhal/optiga/optiga_commands.c"]
-        sources += ["embed/trezorhal/optiga/optiga_transport.c"]
-        sources += ["vendor/trezor-crypto/hash_to_curve.c"]
-        features_available.append("optiga")
 
     return features_available
