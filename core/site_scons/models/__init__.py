@@ -32,9 +32,11 @@ def get_model_identifier(model: str) -> str:
         return "T2B1"
     elif model == "T3T1":
         return "T3T1"
+    elif model == "T3B1":
+        return "T3B1"
     elif model == "DISC1":
         return "D001"
     elif model == "DISC2":
         return "D002"
     else:
-        raise Exception("Unknown model")
+        return model

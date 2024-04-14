@@ -39,7 +39,7 @@
 #define FLASH_SECTOR_COUNT 24
 #elif defined TREZOR_MODEL_1
 #define FLASH_SECTOR_COUNT 12
-#elif defined TREZOR_MODEL_T3T1
+#elif defined TREZOR_MODEL_T3T1 || defined TREZOR_MODEL_T3B1
 #define FLASH_SECTOR_COUNT 256
 #else
 #error Unknown MCU
@@ -86,7 +86,7 @@ static uint32_t FLASH_SECTOR_TABLE[FLASH_SECTOR_COUNT + 1] = {
     [10] = 0x080C0000,  // - 0x080DFFFF | 128 KiB
     [11] = 0x080E0000,  // - 0x080FFFFF | 128 KiB
     [12] = 0x08100000,  // last element - not a valid sector
-#elif defined TREZOR_MODEL_T3T1
+#elif defined TREZOR_MODEL_T3T1 || defined TREZOR_MODEL_T3B1
     [0] = 0x08000000,  // - 0x08001FFF |   8 KiB
                        // rest is initialized in flash_init
 #else
@@ -105,7 +105,7 @@ static void flash_exit(void) {
 void flash_init(void) {
   if (FLASH_BUFFER) return;
 
-#if defined TREZOR_MODEL_T3T1
+#if defined TREZOR_MODEL_T3T1 || defined TREZOR_MODEL_T3B1
   for (size_t i = 0; i < FLASH_SECTOR_COUNT; i++) {
     FLASH_SECTOR_TABLE[i + 1] =
         FLASH_SECTOR_TABLE[i] + 0x2000;  // 8KiB size sectors

@@ -63,6 +63,11 @@ MCU = STM32U5
 OPENOCD_TARGET = target/stm32u5x.cfg
 LAYOUT_FILE = embed/models/T3T1/model_T3T1.h
 MODEL_FEATURE = model_mercury
+else ifeq ($(TREZOR_MODEL),$(filter $(TREZOR_MODEL),T3B1))
+MCU = STM32U5
+OPENOCD_TARGET = target/stm32u5x.cfg
+LAYOUT_FILE = embed/models/T3B1/model_T3B1.h
+MODEL_FEATURE = model_tr
 else ifeq ($(TREZOR_MODEL),$(filter $(TREZOR_MODEL),DISC1))
 MCU = STM32F4
 LAYOUT_FILE = embed/models/D001/model_D001.h
