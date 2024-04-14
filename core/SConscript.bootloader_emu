@@ -1,11 +1,11 @@
 # pylint: disable=E0602
 
 import os
-import tools
-import boards
+import tools, models
 
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
+HW_REVISION = 'emulator'
 NEW_RENDERING = ARGUMENTS.get('NEW_RENDERING', '1') == '1'
 DMA2D = False
 
@@ -237,8 +237,8 @@ elif TREZOR_MODEL in ('1',):
 else:
     raise ValueError('Unknown Trezor model')
 
-MODEL_IDENTIFIER = tools.get_model_identifier(TREZOR_MODEL)
-MODEL_AS_NUMBER = str(boards.get_hw_model_as_number(MODEL_IDENTIFIER))
+MODEL_IDENTIFIER = models.get_model_identifier(TREZOR_MODEL)
+MODEL_AS_NUMBER = str(models.get_hw_model_as_number(MODEL_IDENTIFIER))
 
 ALLPATHS = ['embed/rust',
            'embed/bootloader',
