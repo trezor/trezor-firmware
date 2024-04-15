@@ -12,7 +12,7 @@ def configure(
     paths: list[str],
 ) -> list[str]:
     features_available: list[str] = []
-    board = "trezor_1.h"
+    board = "T1B1/boards/trezor_1.h"
     display = "vg-2864ksweg01.c"
     hw_model = get_hw_model_as_number("T1B1")
     hw_revision = 0
@@ -28,11 +28,11 @@ def configure(
     env.get("ENV")["RUST_TARGET"] = "thumbv7m-none-eabi"
 
     defines += [mcu]
-    defines += [f'TREZOR_BOARD=\\"boards/{board}\\"']
+    defines += [f'TREZOR_BOARD=\\"{board}\\"']
     defines += [f"HW_MODEL={hw_model}"]
     defines += [f"HW_REVISION={hw_revision}"]
     sources += [
-        "embed/models/model_T1B1_layout.c",
+        "embed/models/T1B1/model_T1B1_layout.c",
     ]
     sources += [f"embed/trezorhal/stm32f4/displays/{display}"]
 

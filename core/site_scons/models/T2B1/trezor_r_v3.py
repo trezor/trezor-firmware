@@ -14,7 +14,7 @@ def configure(
     features_available: list[str] = []
     hw_model = get_hw_model_as_number("T2B1")
     hw_revision = 3
-    board = "trezor_r_v3.h"
+    board = "T2B1/boards/trezor_r_v3.h"
     display = "ug-2828tswig01.c"
 
     if "new_rendering" in features_wanted:
@@ -35,11 +35,11 @@ def configure(
     env.get("ENV")["RUST_TARGET"] = "thumbv7em-none-eabihf"
 
     defines += [mcu]
-    defines += [f'TREZOR_BOARD=\\"boards/{board}\\"']
+    defines += [f'TREZOR_BOARD=\\"{board}\\"']
     defines += [f"HW_MODEL={hw_model}"]
     defines += [f"HW_REVISION={hw_revision}"]
     sources += [
-        "embed/models/model_T2B1_layout.c",
+        "embed/models/T2B1/model_T2B1_layout.c",
     ]
 
     if "new_rendering" in features_wanted:

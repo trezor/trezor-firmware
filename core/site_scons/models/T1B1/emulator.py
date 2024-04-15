@@ -12,7 +12,7 @@ def configure(
 ) -> list[str]:
 
     features_available: list[str] = []
-    board = "t1b1-unix.h"
+    board = "T1B1/boards/t1b1-unix.h"
     hw_model = get_hw_model_as_number("T1B1")
     hw_revision = 0
     mcu = "STM32F405xx"
@@ -23,7 +23,7 @@ def configure(
         features_available.append("display_mono")
 
     defines += [mcu]
-    defines += [f'TREZOR_BOARD=\\"boards/{board}\\"']
+    defines += [f'TREZOR_BOARD=\\"{board}\\"']
     defines += [f"HW_MODEL={hw_model}"]
     defines += [f"HW_REVISION={hw_revision}"]
     defines += [f"MCU_TYPE={mcu}"]
@@ -33,6 +33,6 @@ def configure(
     if "input" in features_wanted:
         features_available.append("button")
 
-    sources += ["embed/models/model_T1B1_layout.c"]
+    sources += ["embed/models/T1B1/model_T1B1_layout.c"]
 
     return features_available

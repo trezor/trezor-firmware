@@ -21,7 +21,7 @@
 
 #define ORIENTATION_NSEW 1
 
-#define BACKGROUND_FILE "background_T.h"
-#define BACKGROUND_NAME background_T_jpg
+#define BACKGROUND_FILE "T3T1/background_T3T1.h"
+#define BACKGROUND_NAME background_T3T1_jpg
 
 #endif  // BOARDS_T3T1_UNIX_H

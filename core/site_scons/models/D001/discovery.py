@@ -12,7 +12,7 @@ def configure(
     paths: list[str],
 ) -> list[str]:
     features_available: list[str] = []
-    board = "stm32f429i-disc1.h"
+    board = "D001/boards/stm32f429i-disc1.h"
     display = "ltdc.c"
     hw_model = get_hw_model_as_number("D001")
     hw_revision = 0
@@ -30,11 +30,11 @@ def configure(
     env.get("ENV")["RUST_TARGET"] = "thumbv7em-none-eabihf"
 
     defines += [mcu]
-    defines += [f'TREZOR_BOARD=\\"boards/{board}\\"']
+    defines += [f'TREZOR_BOARD=\\"{board}\\"']
     defines += [f"HW_MODEL={hw_model}"]
     defines += [f"HW_REVISION={hw_revision}"]
     sources += [
-        "embed/models/model_D001_layout.c",
+        "embed/models/D001/model_D001_layout.c",
     ]
 
     if "new_rendering" in features_wanted:
