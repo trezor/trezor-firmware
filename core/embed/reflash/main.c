@@ -32,6 +32,7 @@
 #include "sbu.h"
 #include "sdcard.h"
 #include "secbool.h"
+#include "terminal.h"
 #include "touch.h"
 
 #ifdef USE_HASH_PROCESSOR
@@ -56,8 +57,7 @@ static void flash_from_sdcard(const flash_area_t* area, uint32_t source,
     ensure(sdcard_read_blocks(buf, i + source / SDCARD_BLOCK_SIZE, 1),
            "sdcard_read_blocks");
 
-    for (uint32_t j = 0; j < SDCARD_BLOCK_SIZE / FLASH_BLOCK_SIZE)
-      ; j++) {
+    for (uint32_t j = 0; j < SDCARD_BLOCK_SIZE / FLASH_BLOCK_SIZE; j++) {
       ensure(flash_area_write_block(
                  area, i * SDCARD_BLOCK_SIZE + j * FLASH_BLOCK_SIZE,
                  &buf[j * FLASH_BLOCK_WORDS]),
