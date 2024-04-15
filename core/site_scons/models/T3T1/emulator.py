@@ -12,7 +12,7 @@ def configure(
 ) -> list[str]:
 
     features_available: list[str] = []
-    board = "t3t1-unix.h"
+    board = "T3T1/boards/t3t1-unix.h"
     hw_model = get_hw_model_as_number("T3T1")
     hw_revision = 0
     mcu = "STM32FU585xx"
@@ -23,7 +23,7 @@ def configure(
         features_available.append("display_rgb565")
 
     defines += [mcu]
-    defines += [f'TREZOR_BOARD=\\"boards/{board}\\"']
+    defines += [f'TREZOR_BOARD=\\"{board}\\"']
     defines += [f"HW_MODEL={hw_model}"]
     defines += [f"HW_REVISION={hw_revision}"]
     defines += [f"MCU_TYPE={mcu}"]
@@ -63,6 +63,6 @@ def configure(
 
     features_available.append("backlight")
 
-    sources += ["embed/models/model_T3T1_layout.c"]
+    sources += ["embed/models/T3T1/model_T3T1_layout.c"]
 
     return features_available

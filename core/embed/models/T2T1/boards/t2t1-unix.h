@@ -31,7 +31,7 @@
 #define TOUCH_OFFSET_X 80
 #define TOUCH_OFFSET_Y 110
 
-#define BACKGROUND_FILE "background_T.h"
+#define BACKGROUND_FILE "T2T1/background_T.h"
 #define BACKGROUND_NAME background_T_jpg
 
 #endif

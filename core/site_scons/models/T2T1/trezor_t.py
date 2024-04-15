@@ -12,7 +12,7 @@ def configure(
     paths: list[str],
 ) -> list[str]:
     features_available: list[str] = []
-    board = "trezor_t.h"
+    board = "T2T1/boards/trezor_t.h"
     display = "st7789v.c"
     hw_model = get_hw_model_as_number("T2T1")
     hw_revision = 0
@@ -34,11 +34,11 @@ def configure(
     env.get("ENV")["RUST_TARGET"] = "thumbv7em-none-eabihf"
 
     defines += [mcu]
-    defines += [f'TREZOR_BOARD=\\"boards/{board}\\"']
+    defines += [f'TREZOR_BOARD=\\"{board}\\"']
     defines += [f"HW_MODEL={hw_model}"]
     defines += [f"HW_REVISION={hw_revision}"]
     sources += [
-        "embed/models/model_T2T1_layout.c",
+        "embed/models/T2T1/model_T2T1_layout.c",
     ]
     if "new_rendering" in features_wanted:
         sources += ["embed/trezorhal/xdisplay_legacy.c"]

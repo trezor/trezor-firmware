@@ -12,7 +12,7 @@ def configure(
     paths: list[str],
 ) -> list[str]:
     features_available: list[str] = []
-    board = "stm32u5a9j-dk.h"
+    board = "D002/boards/stm32u5a9j-dk.h"
     display = "dsi.c"
     hw_model = get_hw_model_as_number("D002")
     hw_revision = 0
@@ -32,7 +32,7 @@ def configure(
 
     defines += [mcu]
     defines += [
-        f'TREZOR_BOARD=\\"boards/{board}\\"',
+        f'TREZOR_BOARD=\\"{board}\\"',
     ]
     defines += [
         f"HW_MODEL={hw_model}",
@@ -41,7 +41,7 @@ def configure(
         f"HW_REVISION={hw_revision}",
     ]
     sources += [
-        "embed/models/model_D002_layout.c",
+        "embed/models/D002/model_D002_layout.c",
     ]
 
     if "new_rendering" in features_wanted:

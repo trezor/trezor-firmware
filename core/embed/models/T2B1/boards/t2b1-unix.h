@@ -18,7 +18,7 @@
 
 #define ORIENTATION_NS 1
 
-#define BACKGROUND_FILE "background_T2B1.h"
-#define BACKGROUND_NAME background_T2B1_jpg
+#define BACKGROUND_FILE "T2B1/background_T2B1.h"
+#define BACKGROUND_NAME background_T2B1_png
 
 #endif  // BOARDS_T2B1_UNIX_H

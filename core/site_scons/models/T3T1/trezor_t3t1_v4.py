@@ -12,7 +12,7 @@ def configure(
     paths: list[str],
 ) -> list[str]:
     features_available: list[str] = []
-    board = "trezor_t3t1_v4.h"
+    board = "T3T1/boards/trezor_t3t1_v4.h"
     display = "st7789v.c"
     hw_model = get_hw_model_as_number("T3T1")
     hw_revision = 0
@@ -39,11 +39,11 @@ def configure(
     env.get("ENV")["RUST_TARGET"] = "thumbv8m.main-none-eabihf"
 
     defines += [mcu]
-    defines += [f'TREZOR_BOARD=\\"boards/{board}\\"']
+    defines += [f'TREZOR_BOARD=\\"{board}\\"']
     defines += [f"HW_MODEL={hw_model}"]
     defines += [f"HW_REVISION={hw_revision}"]
     sources += [
-        "embed/models/model_T3T1_layout.c",
+        "embed/models/T3T1/model_T3T1_layout.c",
     ]
     sources += [f"embed/trezorhal/stm32u5/displays/{display}"]
 
