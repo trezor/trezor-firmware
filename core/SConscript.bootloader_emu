@@ -329,7 +329,7 @@ env.Append(LINKFLAGS='-lm')
 
 obj_program = []
 obj_program += env.Object(source=SOURCE_MOD)
-obj_program += env.Object(source=SOURCE_MOD_CRYPTO)
+obj_program += env.Object(source=SOURCE_MOD_CRYPTO, CCFLAGS='$CCFLAGS -ftrivial-auto-var-init=zero')
 obj_program += env.Object(source=SOURCE_BOOTLOADER)
 obj_program += env.Object(source=SOURCE_NANOPB)
 obj_program += env.Object(source=SOURCE_TREZORHAL)

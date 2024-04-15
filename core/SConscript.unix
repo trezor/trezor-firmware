@@ -824,7 +824,7 @@ if FROZEN:
 obj_program = []
 source_files = SOURCE_MOD + SOURCE_MOD_CRYPTO + SOURCE_MICROPYTHON + SOURCE_UNIX
 obj_program.extend(env.Object(source=SOURCE_MOD))
-obj_program.extend(env.Object(source=SOURCE_MOD_CRYPTO))
+obj_program.extend(env.Object(source=SOURCE_MOD_CRYPTO, CCFLAGS='$CCFLAGS -ftrivial-auto-var-init=zero'))
 if FEATURE_FLAGS["SECP256K1_ZKP"]:
     obj_program.extend(env.Object(source=SOURCE_MOD_SECP256K1_ZKP, CCFLAGS='$CCFLAGS -Wno-unused-function'))
     source_files.extend(SOURCE_MOD_SECP256K1_ZKP)
