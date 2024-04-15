@@ -189,6 +189,8 @@ else
 CFLAGS += -DDEBUG_T1_SIGNATURES=0
 endif
 
+../vendor/trezor-crypto/%.o: CFLAGS += -ftrivial-auto-var-init=zero
+
 all: $(NAME).bin
 
 openocd:
