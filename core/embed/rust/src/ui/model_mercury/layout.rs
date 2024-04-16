@@ -663,28 +663,6 @@ extern "C" fn new_confirm_homescreen(n_args: usize, args: *const Obj, kwargs: *m
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
-extern "C" fn new_confirm_reset_device(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
-    let block = move |_args: &[Obj], kwargs: &Map| {
-        let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
-        let button: TString = kwargs.get(Qstr::MP_QSTR_button)?.try_into()?;
-
-        let par_array: [Paragraph<'static>; 3] = [
-            Paragraph::new(&theme::TEXT_NORMAL, TR::reset__by_continuing).with_bottom_padding(17), /* simulating a carriage return */
-            Paragraph::new(&theme::TEXT_NORMAL, TR::reset__more_info_at),
-            Paragraph::new(&theme::TEXT_DEMIBOLD, TR::reset__tos_link),
-        ];
-        let paragraphs = Paragraphs::new(par_array);
-        let buttons = Button::cancel_confirm(
-            Button::with_icon(theme::ICON_CANCEL),
-            Button::with_text(button).styled(theme::button_confirm()),
-            true,
-        );
-        let obj = LayoutObj::new(Frame::left_aligned(title, Dialog::new(paragraphs, buttons)))?;
-        Ok(obj.into())
-    };
-    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
-}
-
 extern "C" fn new_show_address_details(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let qr_title: TString = kwargs.get(Qstr::MP_QSTR_qr_title)?.try_into()?;
@@ -1292,12 +1270,11 @@ extern "C" fn new_show_tx_context_menu(n_args: usize, args: *const Obj, kwargs: 
     let block = move |_args: &[Obj], _kwargs: &Map| {
         // TODO: this is just POC
         let title: TString = "".into();
-
-        let options: [(&'static str, Icon); 3] = [
+        let options = unwrap!(Vec::from_slice(&[
             ("Address QR code", theme::ICON_QR_CODE),
             ("Fee info", theme::ICON_CHEVRON_RIGHT),
             ("Cancel transaction", theme::ICON_CANCEL),
-        ];
+        ]));
         let content = VerticalMenu::context_menu(options);
         let frame_with_menu = Frame::left_aligned(title, content).with_cancel_button();
         let obj = LayoutObj::new(frame_with_menu)?;
@@ -1801,7 +1778,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     button: str,
     /// ) -> LayoutObj[UiResult]:
     ///     """Confirm TOS before device setup."""
-    Qstr::MP_QSTR_confirm_reset_device => obj_fn_kw!(0, new_confirm_reset_device).as_obj(),
+    Qstr::MP_QSTR_confirm_reset_device => obj_fn_kw!(0, flow::confirm_reset_device::new_confirm_reset_device).as_obj(),
 
     /// def show_address_details(
     ///     *,
