@@ -66,7 +66,7 @@ where
     }
 
     pub fn with_subtitle(mut self, subtitle: TString<'static>) -> Self {
-        let style = theme::TEXT_SUB;
+        let style = theme::TEXT_SUB_GREY_LIGHT;
         self.title = Child::new(self.title.into_inner().top_aligned());
         self.subtitle = Some(Child::new(Label::new(
             subtitle,

@@ -349,6 +349,7 @@ class TR:
     inputs__return: str = "RETURN"
     inputs__show: str = "SHOW"
     inputs__space: str = "SPACE"
+    instructions__swipe_up: str = "Swipe up"
     joint__title: str = "JOINT TRANSACTION"
     joint__to_the_total_amount: str = "To the total amount:"
     joint__you_are_contributing: str = "You are contributing:"
