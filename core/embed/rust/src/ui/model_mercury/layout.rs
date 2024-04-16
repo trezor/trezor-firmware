@@ -53,8 +53,8 @@ use super::{
         FidoMsg, Frame, FrameMsg, Homescreen, HomescreenMsg, IconDialog, Lockscreen, MnemonicInput,
         MnemonicKeyboard, MnemonicKeyboardMsg, NumberInputDialog, NumberInputDialogMsg,
         PassphraseKeyboard, PassphraseKeyboardMsg, PinKeyboard, PinKeyboardMsg, Progress,
-        SelectWordCount, SelectWordCountMsg, SelectWordMsg, ShareWords, SimplePage, Slip39Input,
-        VerticalMenu, VerticalMenuChoiceMsg,
+        SelectWordCount, SelectWordCountMsg, ShareWords, SimplePage, Slip39Input, VerticalMenu,
+        VerticalMenuChoiceMsg,
     },
     flow, theme,
 };
@@ -78,16 +78,6 @@ impl TryFrom<CancelInfoConfirmMsg> for Obj {
             CancelInfoConfirmMsg::Cancelled => Ok(CANCELLED.as_obj()),
             CancelInfoConfirmMsg::Info => Ok(INFO.as_obj()),
             CancelInfoConfirmMsg::Confirmed => Ok(CONFIRMED.as_obj()),
-        }
-    }
-}
-
-impl TryFrom<SelectWordMsg> for Obj {
-    type Error = Error;
-
-    fn try_from(value: SelectWordMsg) -> Result<Self, Self::Error> {
-        match value {
-            SelectWordMsg::Selected(i) => i.try_into(),
         }
     }
 }
@@ -1213,10 +1203,7 @@ extern "C" fn new_confirm_coinjoin(n_args: usize, args: *const Obj, kwargs: *mut
         let paragraphs = Paragraphs::new([
             Paragraph::new(&theme::TEXT_NORMAL, TR::coinjoin__max_rounds),
             Paragraph::new(&theme::TEXT_MONO, max_rounds),
-            Paragraph::new(
-                &theme::TEXT_NORMAL,
-                TR::coinjoin__max_mining_fee,
-            ),
+            Paragraph::new(&theme::TEXT_NORMAL, TR::coinjoin__max_mining_fee),
             Paragraph::new(&theme::TEXT_MONO, max_feerate),
         ]);
 
