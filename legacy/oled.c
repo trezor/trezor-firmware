@@ -177,9 +177,9 @@ void oledInit() {
 /*
  * Clears the display buffer (sets all pixels to black)
  */
-void oledClear() { memzero(_oledbuffer, sizeof(_oledbuffer)); }
+void oledClear(void) { memzero(_oledbuffer, sizeof(_oledbuffer)); }
 
-void oledInvertDebugLink() {
+void oledInvertDebugLink(void) {
 #if DEBUG_LINK
   oledInvertPixel(OLED_WIDTH - 5, 0);
   oledInvertPixel(OLED_WIDTH - 4, 0);
@@ -229,7 +229,7 @@ void oledRefresh() {
 }
 #endif
 
-const uint8_t *oledGetBuffer() { return _oledbuffer; }
+const uint8_t *oledGetBuffer(void) { return _oledbuffer; }
 
 void oledSetBuffer(uint8_t *buf) {
   memcpy(_oledbuffer, buf, sizeof(_oledbuffer));

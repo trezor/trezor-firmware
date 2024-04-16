@@ -96,7 +96,7 @@ void hal_delay(uint32_t ms) {
 #endif
 }
 
-void drbg_init() {
+void drbg_init(void) {
   uint8_t entropy[48] = {0};
   random_buffer(entropy, sizeof(entropy));
   hmac_drbg_init(&drbg_ctx, entropy, sizeof(entropy), NULL, 0);
