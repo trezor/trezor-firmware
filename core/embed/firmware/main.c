@@ -111,10 +111,6 @@ int main(void) {
   rdi_start();
 #endif
 
-#ifdef STM32U5
-  check_oem_keys();
-#endif
-
   // reinitialize HAL for Trezor One
 #if defined TREZOR_MODEL_1
   HAL_Init();
@@ -133,6 +129,10 @@ int main(void) {
 #endif
 
   display_reinit();
+
+#ifdef STM32U5
+  check_oem_keys();
+#endif
 
   screen_boot_stage_2();
 
