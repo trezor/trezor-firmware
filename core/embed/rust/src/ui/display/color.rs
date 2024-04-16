@@ -98,7 +98,7 @@ impl Color {
         let r = (fg.r() as u16) * fg_mul + (self.r() as u16) * bg_mul;
         let g = (fg.g() as u16) * fg_mul + (self.g() as u16) * bg_mul;
         let b = (fg.b() as u16) * fg_mul + (self.b() as u16) * bg_mul;
-        Color::rgb((r >> 8) as u8, (g >> 8) as u8, (b >> 8) as u8)
+        Color::rgb((r / 255) as u8, (g / 255) as u8, (b / 255) as u8)
     }
 }
 
