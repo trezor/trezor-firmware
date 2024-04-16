@@ -11,7 +11,7 @@ use crate::{
     },
 };
 
-use super::{constant::SPACING, Button, ButtonMsg, CancelInfoConfirmMsg};
+use super::{constant::SPACING, Button, ButtonMsg, CancelInfoConfirmMsg, Footer};
 
 const TITLE_HEIGHT: i16 = 42;
 
@@ -23,6 +23,7 @@ pub struct Frame<T> {
     button: Option<Child<Button>>,
     button_msg: CancelInfoConfirmMsg,
     content: Child<T>,
+    footer: Option<Footer<'static>>,
 }
 
 pub enum FrameMsg<T> {
@@ -43,6 +44,7 @@ where
             button: None,
             button_msg: CancelInfoConfirmMsg::Cancelled,
             content: Child::new(content),
+            footer: None,
         }
     }
 
@@ -97,6 +99,19 @@ where
         self.with_button(theme::ICON_MENU, CancelInfoConfirmMsg::Info)
     }
 
+    pub fn with_footer(
+        mut self,
+        instruction: TString<'static>,
+        description: Option<TString<'static>>,
+    ) -> Self {
+        let mut footer = Footer::new(instruction);
+        if let Some(description_text) = description {
+            footer = footer.with_description(description_text);
+        }
+        self.footer = Some(footer);
+        self
+    }
+
     pub fn inner(&self) -> &T {
         self.content.inner()
     }
@@ -127,10 +142,10 @@ where
     type Msg = FrameMsg<T::Msg>;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        let (mut header_area, content_area) = bounds.split_top(TITLE_HEIGHT);
-        let content_area = content_area.inset(Insets::top(SPACING));
-
+        let (mut header_area, mut content_area) = bounds.split_top(TITLE_HEIGHT);
+        content_area = content_area.inset(Insets::top(SPACING));
         header_area = header_area.inset(Insets::sides(SPACING));
+
         if let Some(b) = &mut self.button {
             let (rest, button_area) = header_area.split_right(TITLE_HEIGHT);
             header_area = rest;
@@ -143,6 +158,15 @@ where
             let _subtitle_area = self.subtitle.place(remaining);
         } else {
             self.title.place(header_area);
+        }
+
+        if let Some(footer) = &mut self.footer {
+            // FIXME: spacer at the bottom might be applied also for usage without footer
+            // but not for VerticalMenu
+            content_area = content_area.inset(Insets::bottom(SPACING));
+            let (remaining, footer_area) = content_area.split_bottom(footer.height());
+            footer.place(footer_area);
+            content_area = remaining;
         }
         self.content.place(content_area);
         bounds
@@ -162,12 +186,14 @@ where
         self.subtitle.paint();
         self.button.paint();
         self.content.paint();
+        self.footer.paint();
     }
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.title.render(target);
         self.subtitle.render(target);
         self.button.render(target);
         self.content.render(target);
+        self.footer.render(target);
     }
 
     #[cfg(feature = "ui_bounds")]
@@ -176,6 +202,7 @@ where
         self.subtitle.bounds(sink);
         self.button.bounds(sink);
         self.content.bounds(sink);
+        self.footer.bounds(sink);
     }
 }
 
@@ -193,6 +220,9 @@ where
         }
         if let Some(button) = &self.button {
             t.child("button", button);
+        }
+        if let Some(footer) = &self.footer {
+            t.child("footer", footer);
         }
     }
 }
