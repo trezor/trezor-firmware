@@ -4,7 +4,9 @@ use crate::{
     strutil::TString,
     time::Duration,
     ui::{
-        component::{Component, Event, EventCtx, TimerToken},
+        component::{
+            Component, ComponentExt, Event, EventCtx, FixedHeightBar, MsgMap, Split, TimerToken,
+        },
         display::{self, toif::Icon, Color, Font},
         event::TouchEvent,
         geometry::{Alignment2D, Insets, Offset, Point, Rect},
@@ -255,7 +257,7 @@ impl Button {
                     .render(target);
             }
             ButtonContent::IconAndText(child) => {
-                child.render(target, self.area, style, Self::BASELINE_OFFSET);
+                child.render(target, self.area, self.style(), Self::BASELINE_OFFSET);
             }
             ButtonContent::IconBlend(bg, fg, offset) => {
                 shape::Bar::new(self.area)
@@ -430,8 +432,7 @@ impl Button {
     ) -> CancelConfirm<
         impl Fn(ButtonMsg) -> Option<CancelConfirmMsg>,
         impl Fn(ButtonMsg) -> Option<CancelConfirmMsg>,
-    >
-    {
+    > {
         let width = if left_is_small {
             theme::BUTTON_WIDTH
         } else {
@@ -455,8 +456,7 @@ impl Button {
     ) -> CancelConfirm<
         impl Fn(ButtonMsg) -> Option<CancelConfirmMsg>,
         impl Fn(ButtonMsg) -> Option<CancelConfirmMsg>,
-    >
-    {
+    > {
         let left_is_small: bool;
 
         let left = if let Some(verb) = left {
@@ -485,8 +485,7 @@ impl Button {
         impl Fn(ButtonMsg) -> Option<CancelInfoConfirmMsg>,
         impl Fn(ButtonMsg) -> Option<CancelInfoConfirmMsg>,
         impl Fn(ButtonMsg) -> Option<CancelInfoConfirmMsg>,
-    >
-    {
+    > {
         let right = Button::with_text(confirm)
             .styled(theme::button_confirm())
             .map(|msg| {
@@ -529,7 +528,7 @@ pub enum CancelInfoConfirmMsg {
     Confirmed,
 }
 
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq, Eq, Clone)]
 pub struct IconText {
     text: &'static str,
     icon: Icon,
@@ -555,8 +554,7 @@ impl IconText {
             area.top_left().x + ((Self::ICON_SPACE + Self::ICON_MARGIN) / 2),
             area.center().y,
         );
-        let mut text_pos =
-            area.center() + Offset::new(-width / 2, height / 2) + baseline_offset;
+        let mut text_pos = area.center() + Offset::new(-width / 2, height / 2) + baseline_offset;
 
         if area.width() > (Self::ICON_SPACE + Self::TEXT_MARGIN + width) {
             //display both icon and text
@@ -623,9 +621,11 @@ impl IconText {
 
         if use_text {
             shape::Text::new(text_pos, self.text)
+                .with_font(style.font)
                 .with_fg(style.text_color)
                 .render(target);
         }
+
         if use_icon {
             shape::ToifImage::new(icon_pos, self.icon.toif)
                 .with_align(Alignment2D::CENTER)
