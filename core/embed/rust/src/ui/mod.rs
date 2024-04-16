@@ -8,6 +8,7 @@ pub mod display;
 pub mod event;
 pub mod geometry;
 pub mod lerp;
+pub mod shape;
 #[macro_use]
 pub mod util;
 
