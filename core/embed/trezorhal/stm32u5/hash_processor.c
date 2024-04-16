@@ -117,16 +117,11 @@ void hash_processor_sha256_update(hash_sha265_context_t *ctx,
 
 void hash_processor_sha256_final(hash_sha265_context_t *ctx, uint8_t *output) {
   uint32_t tmp_out[SHA256_DIGEST_LENGTH / sizeof(uint32_t)] = {0};
-
-  if (ctx->length > 0) {
-    memzero(ctx->buffer + ctx->length, HASH_SHA256_BUFFER_SIZE - ctx->length);
-    HAL_HASHEx_SHA256_Accmlt_End(&hhash, (uint8_t *)ctx->buffer, ctx->length,
-                                 (uint8_t *)tmp_out, 1000);
-    ctx->length = 0;
-    memzero(ctx->buffer, HASH_SHA256_BUFFER_SIZE);
-  } else {
-    HASH->STR |= HASH_STR_DCAL;
-    HAL_HASHEx_SHA256_Finish(&hhash, (uint8_t *)tmp_out, 1000);
-  }
+  memzero(ctx->buffer + ctx->length, HASH_SHA256_BUFFER_SIZE - ctx->length);
+  HAL_HASHEx_SHA256_Accmlt_End(&hhash, (uint8_t *)ctx->buffer, ctx->length,
+                               (uint8_t *)tmp_out, 1000);
+  ctx->length = 0;
+  memzero(ctx->buffer, HASH_SHA256_BUFFER_SIZE);
   memcpy(output, tmp_out, SHA256_DIGEST_LENGTH);
+  memzero(tmp_out, sizeof(tmp_out));
 }
