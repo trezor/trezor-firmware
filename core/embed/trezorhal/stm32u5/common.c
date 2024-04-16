@@ -200,7 +200,7 @@ void collect_hw_entropy(void) {
 // this function resets settings changed in one layer (bootloader/firmware),
 // which might be incompatible with the other layers older versions,
 // where this setting might be unknown
-void ensure_compatible_settings(void) { display_finish_actions(); }
+void ensure_compatible_settings(void) {}
 
 void show_wipe_code_screen(void) {
   error_uni("WIPE CODE ENTERED", "All data has been erased from the device",
