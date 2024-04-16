@@ -351,6 +351,7 @@
     "inputs__previous": "PREVIOUS",
     "inputs__show": "SHOW",
     "inputs__space": "SPACE",
+    "instructions__swipe_up": "Swipe up",
     "joint__title": "JOINT TRANSACTION",
     "joint__to_the_total_amount": "To the total amount:",
     "joint__you_are_contributing": "You are contributing:",

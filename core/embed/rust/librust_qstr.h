@@ -231,6 +231,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_inputs__return;
   MP_QSTR_inputs__show;
   MP_QSTR_inputs__space;
+  MP_QSTR_instructions__swipe_up;
   MP_QSTR_is_type_of;
   MP_QSTR_items;
   MP_QSTR_joint__title;

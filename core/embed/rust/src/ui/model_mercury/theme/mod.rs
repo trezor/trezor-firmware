@@ -707,8 +707,12 @@ pub const fn loader_lock_icon() -> LoaderStyleSheet {
 }
 
 pub const TEXT_SUPER: TextStyle = TextStyle::new(Font::BIG, GREY_EXTRA_LIGHT, BG, GREY, GREY);
-pub const TEXT_MAIN: TextStyle = TextStyle::new(Font::NORMAL, GREY_EXTRA_LIGHT, BG, GREY, GREY);
-pub const TEXT_SUB: TextStyle = TextStyle::new(Font::SUB, GREY, BG, GREY, GREY);
+pub const TEXT_MAIN_GREY_EXTRA_LIGHT: TextStyle =
+    TextStyle::new(Font::NORMAL, GREY_EXTRA_LIGHT, BG, GREY, GREY);
+pub const TEXT_MAIN_GREY_LIGHT: TextStyle =
+    TextStyle::new(Font::NORMAL, GREY_LIGHT, BG, GREY, GREY);
+pub const TEXT_SUB_GREY_LIGHT: TextStyle = TextStyle::new(Font::SUB, GREY_LIGHT, BG, GREY, GREY);
+pub const TEXT_SUB_GREY: TextStyle = TextStyle::new(Font::SUB, GREY, BG, GREY, GREY);
 pub const TEXT_MONO: TextStyle = TextStyle::new(Font::MONO, GREY_EXTRA_LIGHT, BG, GREY, GREY)
     .with_line_breaking(LineBreaking::BreakWordsNoHyphen)
     .with_page_breaking(PageBreaking::CutAndInsertEllipsisBoth)

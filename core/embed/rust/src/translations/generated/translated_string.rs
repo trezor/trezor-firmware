@@ -1237,6 +1237,7 @@ pub enum TranslatedString {
     storage_msg__starting = 842,  // "STARTING UP"
     storage_msg__verifying_pin = 843,  // "VERIFYING PIN"
     storage_msg__wrong_pin = 844,  // "WRONG PIN"
+    instructions__swipe_up = 845,  // "Swipe up"
 }
 
 impl TranslatedString {
@@ -2469,6 +2470,7 @@ impl TranslatedString {
             Self::storage_msg__starting => "STARTING UP",
             Self::storage_msg__verifying_pin => "VERIFYING PIN",
             Self::storage_msg__wrong_pin => "WRONG PIN",
+            Self::instructions__swipe_up => "Swipe up",
         }
     }
 
@@ -3702,6 +3704,7 @@ impl TranslatedString {
             Qstr::MP_QSTR_storage_msg__starting => Some(Self::storage_msg__starting),
             Qstr::MP_QSTR_storage_msg__verifying_pin => Some(Self::storage_msg__verifying_pin),
             Qstr::MP_QSTR_storage_msg__wrong_pin => Some(Self::storage_msg__wrong_pin),
+            Qstr::MP_QSTR_instructions__swipe_up => Some(Self::instructions__swipe_up),
             _ => None,
         }
     }
