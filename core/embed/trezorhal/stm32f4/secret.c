@@ -1,7 +1,7 @@
 #include "secret.h"
 #include <string.h>
 #include "common.h"
-#include "display.h"
+#include "display_draw.h"
 #include "flash.h"
 #include "model.h"
 

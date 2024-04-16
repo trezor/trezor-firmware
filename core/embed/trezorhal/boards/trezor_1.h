@@ -5,7 +5,8 @@
 
 #define USE_BUTTON 1
 
-#include "displays/vg-2864ksweg01.h"
+#define DISPLAY_RESX 128
+#define DISPLAY_RESY 64
 
 #define BTN_LEFT_PIN GPIO_PIN_5
 #define BTN_LEFT_PORT GPIOC

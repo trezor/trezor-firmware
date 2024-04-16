@@ -87,6 +87,11 @@ SECTIONS {
     . = ALIGN(4);
   } >SRAM
 
+  .buf : ALIGN(4) {
+    *(.buf*);
+    . = ALIGN(4);
+  } >SRAM
+
   .heap : ALIGN(4) {
     . = 37K; /* this acts as a build time assertion that at least this much memory is available for heap use */
     . = ABSOLUTE(sram_end); /* this explicitly sets the end of the heap */

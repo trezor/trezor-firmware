@@ -110,6 +110,7 @@ __attribute__((noreturn)) void display_error_and_die(const char *message,
 }
 
 __attribute__((noreturn)) int main(int argc, char **argv) {
+  display_init();
   flash_init();
   flash_otp_init();
 
@@ -186,10 +187,6 @@ __attribute__((noreturn)) int main(int argc, char **argv) {
   hal_delay(3000);
   jump_to(NULL);
 }
-
-void display_set_little_endian(void) {}
-
-void display_reinit(void) {}
 
 void mpu_config_bootloader(void) {}
 

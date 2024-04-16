@@ -72,7 +72,6 @@
 #include "emulator.h"
 #else
 #include "compiler_traits.h"
-#include "mini_printf.h"
 #include "mpu.h"
 #include "platform.h"
 #endif

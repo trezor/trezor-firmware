@@ -3,9 +3,6 @@
 
 #define HSE_8MHZ
 
-#define DISPLAY_RESX 240
-#define DISPLAY_RESY 240
-
 #define USE_SD_CARD 1
 #define USE_I2C 1
 #define USE_TOUCH 1
@@ -14,12 +11,14 @@
 #define USE_BACKLIGHT 1
 #define USE_DISP_I8080_8BIT_DW 1
 
-#include "displays/panels/lx154a2422.h"
-#include "displays/st7789v.h"
+#define DISPLAY_RESX 240
+#define DISPLAY_RESY 240
+#define DISPLAY_COLOR_MODE DMA2D_OUTPUT_RGB565
+#define DISPLAY_LEGACY_HEADER "displays/st7789v.h"
+
 #define DISPLAY_IDENTIFY 1
 #define DISPLAY_TE_PORT GPIOD
 #define DISPLAY_TE_PIN GPIO_PIN_12
-#define TRANSFORM_TOUCH_COORDS lx154a2422_transform_touch_coords
 
 #define BACKLIGHT_PWM_FREQ 10000
 #define BACKLIGHT_PWM_TIM TIM1

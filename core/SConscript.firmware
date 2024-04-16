@@ -14,6 +14,7 @@ CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 PYOPT = ARGUMENTS.get('PYOPT', '1')
 DISABLE_OPTIGA = ARGUMENTS.get('DISABLE_OPTIGA', '0') == '1'
 THP = ARGUMENTS.get('THP', '0') == '1' # Trezor-Host Protocol
+NEW_RENDERING = ARGUMENTS.get('NEW_RENDERING', '1') == '1'
 
 
 FEATURE_FLAGS = {
@@ -26,6 +27,8 @@ FEATURE_FLAGS = {
 FEATURES_WANTED = ["input", "sbu", "sd_card", "rgb_led", "dma2d", "consumption_mask", "usb" ,"optiga", "haptic"]
 if DISABLE_OPTIGA and PYOPT == '0':
     FEATURES_WANTED.remove("optiga")
+if NEW_RENDERING:
+    FEATURES_WANTED.append("new_rendering")
 
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
@@ -211,9 +214,12 @@ SOURCE_MOD += [
     'embed/lib/buffers.c',
     'embed/lib/colors.c',
     'embed/lib/display_utils.c',
-    'embed/lib/display.c',
     'embed/lib/fonts/font_bitmap.c',
     'embed/lib/fonts/fonts.c',
+    'embed/lib/gfx_color.c',
+    'embed/lib/gfx_bitblt_rgb565.c',
+    'embed/lib/gfx_bitblt_rgba8888.c',
+    'embed/lib/gfx_bitblt_mono8.c',
     'embed/lib/image.c',
     'embed/lib/mini_printf.c',
     'embed/lib/terminal.c',
@@ -223,6 +229,17 @@ SOURCE_MOD += [
     'vendor/micropython/lib/uzlib/crc32.c',
     'vendor/micropython/lib/uzlib/tinflate.c',
 ]
+
+if NEW_RENDERING:
+    CPPDEFINES_MOD += ['NEW_RENDERING']
+    SOURCE_MOD += [
+        'embed/lib/gfx_draw.c',
+    ]
+else:
+    SOURCE_MOD += [
+        'embed/lib/display_draw.c',
+    ]
+
 
 CPPDEFINES_MOD += [
     'TREZOR_UI2',
@@ -792,8 +809,16 @@ def cargo_build():
         features.append('universal_fw')
     features.append('ui')
     features.append('translations')
+
+    if NEW_RENDERING:
+        features.append('new_rendering')
+
     if PYOPT == '0':
         features.append('debug')
+        features.append('ui_debug')
+    if TREZOR_MODEL in ('T', 'T3T1', 'DISC1', 'DISC2'):
+        features.append('ui_blurring')
+        features.append('ui_jpeg_decoder')
 
     features.extend(FEATURES_AVAILABLE)
 

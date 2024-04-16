@@ -19,7 +19,7 @@
 
 #include <stdint.h>
 #include TREZOR_BOARD
-#include "display_interface.h"
+#include "display.h"
 #include "memzero.h"
 #include STM32_HAL_H
 
@@ -46,12 +46,12 @@ uint8_t *const DISPLAY_DATA_ADDRESS = 0;
 uint16_t cursor_x = 0;
 uint16_t cursor_y = 0;
 uint16_t window_x0 = 0;
-uint16_t window_y0 = MAX_DISPLAY_RESX - 1;
+uint16_t window_y0 = DISPLAY_RESX - 1;
 uint16_t window_x1 = 0;
-uint16_t window_y1 = MAX_DISPLAY_RESY - 1;
+uint16_t window_y1 = DISPLAY_RESY - 1;
 
 void display_pixeldata(uint16_t c) {
-  ((uint16_t *)LCD_FRAME_BUFFER)[(cursor_y * MAX_DISPLAY_RESX) + cursor_x] = c;
+  ((uint16_t *)LCD_FRAME_BUFFER)[(cursor_y * DISPLAY_RESX) + cursor_x] = c;
 
   cursor_x++;
 
@@ -83,9 +83,9 @@ void BSP_LCD_LayerDefaultInit(uint16_t LayerIndex, uint32_t FB_Address) {
 
   /* Layer Init */
   Layercfg.WindowX0 = 0;
-  Layercfg.WindowX1 = MAX_DISPLAY_RESX;
+  Layercfg.WindowX1 = DISPLAY_RESX;
   Layercfg.WindowY0 = 0;
-  Layercfg.WindowY1 = MAX_DISPLAY_RESY;
+  Layercfg.WindowY1 = DISPLAY_RESY;
   Layercfg.PixelFormat = LTDC_PIXEL_FORMAT_RGB565;
   Layercfg.FBStartAdress = FB_Address;
   Layercfg.Alpha = 255;
@@ -95,8 +95,8 @@ void BSP_LCD_LayerDefaultInit(uint16_t LayerIndex, uint32_t FB_Address) {
   Layercfg.Backcolor.Red = 0;
   Layercfg.BlendingFactor1 = LTDC_BLENDING_FACTOR1_PAxCA;
   Layercfg.BlendingFactor2 = LTDC_BLENDING_FACTOR2_PAxCA;
-  Layercfg.ImageWidth = MAX_DISPLAY_RESX;
-  Layercfg.ImageHeight = MAX_DISPLAY_RESY;
+  Layercfg.ImageWidth = DISPLAY_RESX;
+  Layercfg.ImageHeight = DISPLAY_RESY;
 
   HAL_LTDC_ConfigLayer(&LtdcHandler, &Layercfg, LayerIndex);
 
@@ -380,7 +380,7 @@ void display_efficient_clear(void) {
 uint8_t *display_get_wr_addr(void) {
   uint32_t address = LCD_FRAME_BUFFER;
   /* Get the rectangle start address */
-  address = (address + (2 * ((cursor_y)*MAX_DISPLAY_RESX + (cursor_x))));
+  address = (address + (2 * ((cursor_y)*DISPLAY_RESX + (cursor_x))));
 
   return (uint8_t *)address;
 }
@@ -413,7 +413,7 @@ void display_shift_window(uint16_t pixels) {
 }
 
 uint16_t display_get_window_offset(void) {
-  return MAX_DISPLAY_RESX - display_get_window_width();
+  return DISPLAY_RESX - display_get_window_width();
 }
 
 void display_finish_actions(void) {}
