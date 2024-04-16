@@ -260,8 +260,8 @@ uint32_t touch_read(void) {
                              // first touch) (tested with FT6206)
   const uint32_t event_flag = touch_data[3] & 0xC0;
   if (touch_data[1] == GESTURE_NO_GESTURE) {
-    xy = TRANSFORM_TOUCH_COORDS((X_POS_MSB << 8) | X_POS_LSB,
-                                (Y_POS_MSB << 8) | Y_POS_LSB);
+    xy = touch_pack_xy((X_POS_MSB << 8) | X_POS_LSB,
+                       (Y_POS_MSB << 8) | Y_POS_LSB);
     if ((number_of_touch_points == 1) && (event_flag == EVENT_PRESS_DOWN)) {
       touching = 1;
       return TOUCH_START | xy;

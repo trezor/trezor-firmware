@@ -43,9 +43,18 @@ def configure(
     sources += [
         "embed/models/model_D002_layout.c",
     ]
-    sources += [
-        f"embed/trezorhal/stm32u5/displays/{display}",
-    ]
+
+    if "new_rendering" in features_wanted:
+        sources += [
+            "embed/trezorhal/xdisplay_legacy.c",
+            "embed/trezorhal/stm32u5/display/stm32u5a9j-dk/display_driver.c",
+            "embed/trezorhal/stm32u5/display/stm32u5a9j-dk/display_fb.c",
+            "embed/trezorhal/stm32u5/display/stm32u5a9j-dk/display_ltdc_dsi.c",
+        ]
+    else:
+        sources += [
+            f"embed/trezorhal/stm32u5/displays/{display}",
+        ]
 
     if "input" in features_wanted:
         sources += [
@@ -85,10 +94,16 @@ def configure(
     defines += ["USE_DMA2D", "FRAMEBUFFER", "FRAMEBUFFER32BIT"]
     sources += [
         "embed/trezorhal/stm32u5/dma2d.c",
+        "embed/trezorhal/stm32u5/dma2d_bitblt.c",
     ]
     features_available.append("dma2d")
     features_available.append("framebuffer")
     features_available.append("framebuffer32bit")
+
+    if "new_rendering" in features_wanted:
+        defines += ["XFRAMEBUFFER"]
+        features_available.append("xframebuffer")
+        features_available.append("display_rgba8888")
 
     env.get("ENV")["TREZOR_BOARD"] = board
     env.get("ENV")["MCU_TYPE"] = mcu
@@ -96,5 +111,11 @@ def configure(
 
     defs = env.get("CPPDEFINES_IMPLICIT")
     defs += ["__ARM_FEATURE_CMSE=3"]
+
+    rust_defs = env.get("ENV")["RUST_INCLUDES"]
+    rust_defs += "-DFRAMEBUFFER;"
+    if "new_rendering" in features_wanted:
+        rust_defs += "-DXFRAMEBUFFER;"
+    env.get("ENV")["RUST_INCLUDES"] = rust_defs
 
     return features_available

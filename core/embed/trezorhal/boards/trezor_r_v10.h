@@ -8,7 +8,9 @@
 #define USE_I2C 1
 #define USE_CONSUMPTION_MASK 1
 
-#include "displays/vg-2864ksweg01.h"
+#define DISPLAY_RESX 128
+#define DISPLAY_RESY 64
+#define DISPLAY_LEGACY_HEADER "displays/vg-2864ksweg01.h"
 
 #define BTN_LEFT_PIN GPIO_PIN_10
 #define BTN_LEFT_PORT GPIOC

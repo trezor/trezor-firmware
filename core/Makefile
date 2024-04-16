@@ -233,18 +233,20 @@ build_embed: build_boardloader build_bootloader build_firmware # build boardload
 
 build_boardloader: ## build boardloader
 	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" TREZOR_MODEL="$(TREZOR_MODEL)" \
-		CMAKELISTS="$(CMAKELISTS)" $(BOARDLOADER_BUILD_DIR)/boardloader.bin
+		CMAKELISTS="$(CMAKELISTS)" NEW_RENDERING="$(NEW_RENDERING)" $(BOARDLOADER_BUILD_DIR)/boardloader.bin
 
 build_bootloader: ## build bootloader
 	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" TREZOR_MODEL="$(TREZOR_MODEL)" \
-		CMAKELISTS="$(CMAKELISTS)" BOOTLOADER_QA="$(BOOTLOADER_QA)" BOOTLOADER_DEVEL="$(BOOTLOADER_DEVEL)" $(BOOTLOADER_BUILD_DIR)/bootloader.bin
+		CMAKELISTS="$(CMAKELISTS)" BOOTLOADER_QA="$(BOOTLOADER_QA)" BOOTLOADER_DEVEL="$(BOOTLOADER_DEVEL)" \
+		NEW_RENDERING="$(NEW_RENDERING)" $(BOOTLOADER_BUILD_DIR)/bootloader.bin
 
 build_bootloader_ci: ## build CI device testing bootloader
 	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" TREZOR_MODEL="$(TREZOR_MODEL)" \
 		CMAKELISTS="$(CMAKELISTS)" $(BOOTLOADER_CI_BUILD_DIR)/bootloader.bin
 
 build_bootloader_emu: ## build the unix bootloader emulator
-	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" TREZOR_MODEL="$(TREZOR_MODEL)" CMAKELISTS="$(CMAKELISTS)" $(BOOTLOADER_EMU_BUILD_DIR)/bootloader.elf
+	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" TREZOR_MODEL="$(TREZOR_MODEL)" \
+	CMAKELISTS="$(CMAKELISTS)" NEW_RENDERING="$(NEW_RENDERING)" $(BOOTLOADER_EMU_BUILD_DIR)/bootloader.elf
 
 build_prodtest: ## build production test firmware
 	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" TREZOR_MODEL="$(TREZOR_MODEL)" \
@@ -252,7 +254,7 @@ build_prodtest: ## build production test firmware
 
 build_reflash: ## build reflash firmware + reflash image
 	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" TREZOR_MODEL="$(TREZOR_MODEL)" \
-		CMAKELISTS="$(CMAKELISTS)" $(REFLASH_BUILD_DIR)/reflash.bin
+		CMAKELISTS="$(CMAKELISTS)" NEW_RENDERING="$(NEW_RENDERING)" $(REFLASH_BUILD_DIR)/reflash.bin
 	dd if=build/boardloader/boardloader.bin of=$(REFLASH_BUILD_DIR)/sdimage.bin bs=1 seek=0
 	dd if=build/bootloader/bootloader.bin of=$(REFLASH_BUILD_DIR)/sdimage.bin bs=1 seek=49152
 
@@ -261,24 +263,26 @@ build_firmware: templates build_cross ## build firmware with frozen modules
 		TREZOR_MODEL="$(TREZOR_MODEL)" CMAKELISTS="$(CMAKELISTS)" \
 		PYOPT="$(PYOPT)" BITCOIN_ONLY="$(BITCOIN_ONLY)" \
 		BOOTLOADER_QA="$(BOOTLOADER_QA)" BOOTLOADER_DEVEL="$(BOOTLOADER_DEVEL)" \
-		DISABLE_OPTIGA="$(DISABLE_OPTIGA)" \
+		DISABLE_OPTIGA="$(DISABLE_OPTIGA)" NEW_RENDERING="$(NEW_RENDERING)"\
 		$(FIRMWARE_BUILD_DIR)/firmware.bin
 
 build_unix: templates ## build unix port
 	$(SCONS) CFLAGS="$(CFLAGS)" $(UNIX_BUILD_DIR)/trezor-emu-core $(UNIX_PORT_OPTS) \
 		TREZOR_MODEL="$(TREZOR_MODEL)" CMAKELISTS="$(CMAKELISTS)" \
-		PYOPT="0" BITCOIN_ONLY="$(BITCOIN_ONLY)" TREZOR_EMULATOR_ASAN="$(ADDRESS_SANITIZER)"
+		PYOPT="0" BITCOIN_ONLY="$(BITCOIN_ONLY)" TREZOR_EMULATOR_ASAN="$(ADDRESS_SANITIZER)" \
+		NEW_RENDERING="$(NEW_RENDERING)"
 
 build_unix_frozen: templates build_cross ## build unix port with frozen modules
 	$(SCONS) CFLAGS="$(CFLAGS)" $(UNIX_BUILD_DIR)/trezor-emu-core $(UNIX_PORT_OPTS) \
 		TREZOR_MODEL="$(TREZOR_MODEL)" CMAKELISTS="$(CMAKELISTS)" \
 		PYOPT="$(PYOPT)" BITCOIN_ONLY="$(BITCOIN_ONLY)" TREZOR_EMULATOR_ASAN="$(ADDRESS_SANITIZER)" \
-		TREZOR_MEMPERF="$(TREZOR_MEMPERF)" TREZOR_EMULATOR_FROZEN=1
+		TREZOR_MEMPERF="$(TREZOR_MEMPERF)" TREZOR_EMULATOR_FROZEN=1 NEW_RENDERING="$(NEW_RENDERING)"
 
 build_unix_debug: templates ## build unix port
 	$(SCONS) --max-drift=1 CFLAGS="$(CFLAGS)" $(UNIX_BUILD_DIR)/trezor-emu-core $(UNIX_PORT_OPTS) \
 		TREZOR_MODEL="$(TREZOR_MODEL)" CMAKELISTS="$(CMAKELISTS)" \
-		BITCOIN_ONLY="$(BITCOIN_ONLY)" TREZOR_EMULATOR_ASAN=1 TREZOR_EMULATOR_DEBUGGABLE=1
+		BITCOIN_ONLY="$(BITCOIN_ONLY)" TREZOR_EMULATOR_ASAN=1 TREZOR_EMULATOR_DEBUGGABLE=1 \
+		NEW_RENDERING="$(NEW_RENDERING)"
 
 build_cross: ## build mpy-cross port
 	$(MAKE) -C vendor/micropython/mpy-cross $(CROSS_PORT_OPTS)

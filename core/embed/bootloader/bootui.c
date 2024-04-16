@@ -23,6 +23,7 @@
 
 #include "bootui.h"
 #include "display.h"
+#include "display_draw.h"
 #include "display_utils.h"
 #ifdef TREZOR_EMULATOR
 #include "emulator.h"

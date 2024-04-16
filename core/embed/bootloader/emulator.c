@@ -187,10 +187,6 @@ __attribute__((noreturn)) int main(int argc, char **argv) {
   jump_to(NULL);
 }
 
-void display_set_little_endian(void) {}
-
-void display_reinit(void) {}
-
 void mpu_config_bootloader(void) {}
 
 void mpu_config_off(void) {}

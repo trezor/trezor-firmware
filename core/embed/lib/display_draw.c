@@ -19,7 +19,7 @@
 
 #define _GNU_SOURCE
 
-#include "display.h"
+#include "display_draw.h"
 #include "buffers.h"
 #include "common.h"
 
@@ -34,7 +34,7 @@
 
 #include "memzero.h"
 
-#include "display_interface.h"
+#include "display.h"
 
 static struct { int x, y; } DISPLAY_OFFSET;
 
@@ -61,8 +61,8 @@ void display_clear(void) {
   // set MADCTL first so that we can set the window correctly next
   display_orientation(0);
   // address the complete frame memory
-  display_set_window(0, 0, MAX_DISPLAY_RESX - 1, MAX_DISPLAY_RESY - 1);
-  for (uint32_t i = 0; i < MAX_DISPLAY_RESX * MAX_DISPLAY_RESY; i++) {
+  display_set_window(0, 0, DISPLAY_RESX - 1, DISPLAY_RESY - 1);
+  for (uint32_t i = 0; i < DISPLAY_RESX * DISPLAY_RESY; i++) {
     // 2 bytes per pixel because we're using RGB 5-6-5 format
     PIXELDATA(0x0000);
   }

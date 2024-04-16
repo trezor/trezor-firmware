@@ -7,6 +7,7 @@ TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 BOOTLOADER_QA = ARGUMENTS.get('BOOTLOADER_QA', '0') == '1'
 PRODUCTION = 0 if BOOTLOADER_QA else ARGUMENTS.get('PRODUCTION', '0') == '1'
+NEW_RENDERING = ARGUMENTS.get('NEW_RENDERING', '1') == '1'
 
 if TREZOR_MODEL in ('1', ):
     # skip bootloader build
@@ -21,6 +22,9 @@ if TREZOR_MODEL in ('1', ):
     Return()
 
 FEATURES_WANTED = ["input", "rgb_led", "consumption_mask", "usb", "optiga", "dma2d"]
+
+if NEW_RENDERING:
+    FEATURES_WANTED.append("new_rendering")
 
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
@@ -90,9 +94,12 @@ SOURCE_MOD += [
     'embed/lib/buffers.c',
     'embed/lib/colors.c',
     'embed/lib/display_utils.c',
-    'embed/lib/display.c',
     'embed/lib/fonts/font_bitmap.c',
     'embed/lib/fonts/fonts.c',
+    'embed/lib/gl_color.c',
+    'embed/lib/gl_bitblt_mono8.c',
+    'embed/lib/gl_bitblt_rgb565.c',
+    'embed/lib/gl_bitblt_rgba8888.c',
     'embed/lib/image.c',
     'embed/lib/mini_printf.c',
     'embed/lib/terminal.c',
@@ -101,6 +108,17 @@ SOURCE_MOD += [
     'vendor/micropython/lib/uzlib/crc32.c',
     'vendor/micropython/lib/uzlib/tinflate.c',
 ]
+
+if NEW_RENDERING:
+    CPPDEFINES_MOD += ['NEW_RENDERING']
+    SOURCE_MOD += [
+        'embed/lib/gl_draw.c',
+    ]
+else:
+    SOURCE_MOD += [
+        'embed/lib/display_draw.c',
+    ]
+
 
 SOURCE_NANOPB = [
     'vendor/nanopb/pb_common.c',
@@ -227,6 +245,12 @@ def cargo_build():
     features.append("ui")
     features.append("bootloader")
     features.extend(FEATURES_AVAILABLE)
+
+    if NEW_RENDERING:
+        features.append('new_rendering')
+
+    if TREZOR_MODEL in ('T',):
+        features.append('ui_antialiasing')
 
     cargo_opts = [
         f'--target={env.get("ENV")["RUST_TARGET"]}',

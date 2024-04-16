@@ -11,7 +11,11 @@
 //#define USE_DISP_I8080_8BIT_DW 1
 #define USE_HASH_PROCESSOR 1
 
-#include "displays/dsi.h"
+#define DISPLAY_RESX 240
+#define DISPLAY_RESY 240
+
+#define DISPLAY_COLOR_MODE DMA2D_OUTPUT_ARGB8888
+#define DISPLAY_LEGACY_HEADER "displays/dsi.h"
 
 #define I2C_COUNT 1
 #define I2C_INSTANCE_0 I2C5
