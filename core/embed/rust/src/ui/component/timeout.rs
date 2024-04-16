@@ -3,6 +3,7 @@ use crate::{
     ui::{
         component::{Component, Event, EventCtx, TimerToken},
         geometry::Rect,
+        shape::Renderer,
     },
 };
 
@@ -44,6 +45,8 @@ impl Component for Timeout {
     }
 
     fn paint(&mut self) {}
+
+    fn render<'s>(&'s self, _target: &mut impl Renderer<'s>) {}
 }
 
 #[cfg(feature = "ui_debug")]

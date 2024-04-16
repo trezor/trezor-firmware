@@ -5,6 +5,7 @@ use crate::{
         constant::{screen, WIDTH},
         display::Icon,
         geometry::{Insets, Point, Rect},
+        shape::Renderer,
     },
 };
 
@@ -106,6 +107,14 @@ impl Component for Menu {
         self.close.paint();
         self.reboot.paint();
         self.reset.paint();
+    }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        self.bg.render(target);
+        self.title.render(target);
+        self.close.render(target);
+        self.reboot.render(target);
+        self.reset.render(target);
     }
 
     #[cfg(feature = "ui_bounds")]

@@ -4,9 +4,9 @@ use crate::{
     ui::{
         animation::Animation,
         component::{Component, Event, EventCtx, Never, TimerToken},
-        display,
-        display::{Color, Font},
-        geometry::Rect,
+        display::{self, Color, Font},
+        geometry::{Offset, Rect},
+        shape::{self, Renderer},
         util::animation_disabled,
     },
 };
@@ -123,6 +123,19 @@ impl Marquee {
         self.text
             .map(|t| display::marquee(self.area, t, offset, self.font, self.fg, self.bg));
     }
+
+    pub fn render_anim<'s>(&'s self, target: &mut impl Renderer<'s>, offset: i16) {
+        target.in_window(self.area, &|target| {
+            let text_height = self.font.text_height();
+            let pos = self.area.top_left() + Offset::new(offset, text_height - 1);
+            self.text.map(|t| {
+                shape::Text::new(pos, t)
+                    .with_font(self.font)
+                    .with_fg(self.fg)
+                    .render(target);
+            });
+        });
+    }
 }
 
 impl Component for Marquee {
@@ -210,6 +223,30 @@ impl Component for Marquee {
                     self.paint_anim(done);
                 } else {
                     self.paint_anim(0);
+                }
+            }
+        }
+    }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        let now = Instant::now();
+
+        match self.state {
+            State::Initial => {
+                self.render_anim(target, 0);
+            }
+            State::PauseRight => {
+                self.render_anim(target, self.min_offset);
+            }
+            State::PauseLeft => {
+                self.render_anim(target, self.max_offset);
+            }
+            _ => {
+                let progress = self.progress(now);
+                if let Some(done) = progress {
+                    self.render_anim(target, done);
+                } else {
+                    self.render_anim(target, 0);
                 }
             }
         }

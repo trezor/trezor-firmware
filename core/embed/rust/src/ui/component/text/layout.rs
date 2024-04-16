@@ -2,6 +2,8 @@ use crate::ui::{
     display,
     display::{toif::Icon, Color, Font, GlyphMetrics},
     geometry::{Alignment, Alignment2D, Dimensions, Offset, Point, Rect},
+    shape,
+    shape::Renderer,
 };
 
 const ELLIPSIS: &str = "...";
@@ -233,6 +235,15 @@ impl TextLayout {
     /// Draw as much text as possible on the current screen.
     pub fn render_text(&self, text: &str) -> LayoutFit {
         self.layout_text(text, &mut self.initial_cursor(), &mut TextRenderer)
+    }
+
+    /// Draw as much text as possible on the current screen.
+    pub fn render_text2<'s>(&self, text: &str, target: &mut impl Renderer<'s>) -> LayoutFit {
+        self.layout_text(
+            text,
+            &mut self.initial_cursor(),
+            &mut TextRenderer2::new(target),
+        )
     }
 
     /// Loop through the `text` and try to fit it on the current screen,
@@ -526,6 +537,67 @@ impl LayoutSink for TextRenderer {
                 layout.style.ellipsis_color,
                 layout.style.background_color,
             );
+        }
+    }
+}
+
+pub struct TextRenderer2<'a, 's, R>(pub &'a mut R, core::marker::PhantomData<&'s ()>)
+where
+    R: Renderer<'s>;
+
+impl<'a, 's, R> TextRenderer2<'a, 's, R>
+where
+    R: Renderer<'s>,
+{
+    pub fn new(target: &'a mut R) -> Self {
+        Self(target, core::marker::PhantomData)
+    }
+}
+
+impl<'a, 's, R> LayoutSink for TextRenderer2<'a, 's, R>
+where
+    R: Renderer<'s>,
+{
+    fn text(&mut self, cursor: Point, layout: &TextLayout, text: &str) {
+        shape::Text::new(cursor, text)
+            .with_font(layout.style.text_font)
+            .with_fg(layout.style.text_color)
+            .render(self.0);
+    }
+
+    fn hyphen(&mut self, cursor: Point, layout: &TextLayout) {
+        shape::Text::new(cursor, "-")
+            .with_font(layout.style.text_font)
+            .with_fg(layout.style.hyphen_color)
+            .render(self.0);
+    }
+
+    fn ellipsis(&mut self, cursor: Point, layout: &TextLayout) {
+        if let Some((icon, margin)) = layout.style.ellipsis_icon {
+            let bottom_left = cursor + Offset::x(margin);
+            shape::ToifImage::new(bottom_left, icon.toif)
+                .with_align(Alignment2D::BOTTOM_LEFT)
+                .with_fg(layout.style.ellipsis_color)
+                .render(self.0);
+        } else {
+            shape::Text::new(cursor, ELLIPSIS)
+                .with_font(layout.style.text_font)
+                .with_fg(layout.style.ellipsis_color)
+                .render(self.0);
+        }
+    }
+
+    fn prev_page_ellipsis(&mut self, cursor: Point, layout: &TextLayout) {
+        if let Some((icon, _margin)) = layout.style.prev_page_ellipsis_icon {
+            shape::ToifImage::new(cursor, icon.toif)
+                .with_align(Alignment2D::BOTTOM_LEFT)
+                .with_fg(layout.style.ellipsis_color)
+                .render(self.0);
+        } else {
+            shape::Text::new(cursor, ELLIPSIS)
+                .with_font(layout.style.text_font)
+                .with_fg(layout.style.ellipsis_color)
+                .render(self.0);
         }
     }
 }

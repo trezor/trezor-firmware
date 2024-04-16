@@ -110,6 +110,7 @@ __attribute__((noreturn)) void display_error_and_die(const char *message,
 }
 
 __attribute__((noreturn)) int main(int argc, char **argv) {
+  display_init();
   flash_init();
   flash_otp_init();
 

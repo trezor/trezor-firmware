@@ -5,6 +5,7 @@ use crate::{
         constant::screen,
         display::Icon,
         geometry::{Alignment, Insets, Point, Rect},
+        shape::Renderer,
     },
 };
 
@@ -104,6 +105,15 @@ impl<'a> Component for Intro<'a> {
         self.warn.paint();
         self.host.paint();
         self.menu.paint();
+    }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        self.bg.render(target);
+        self.title.render(target);
+        self.text.render(target);
+        self.warn.render(target);
+        self.host.render(target);
+        self.menu.render(target);
     }
 
     #[cfg(feature = "ui_bounds")]

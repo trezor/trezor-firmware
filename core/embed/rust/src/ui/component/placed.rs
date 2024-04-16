@@ -1,6 +1,7 @@
 use crate::ui::{
     component::{Component, Event, EventCtx},
     geometry::{Alignment, Alignment2D, Axis, Grid, GridCellSpan, Insets, Offset, Rect},
+    shape::Renderer,
 };
 
 pub struct GridPlaced<T> {
@@ -63,6 +64,10 @@ where
     fn paint(&mut self) {
         self.inner.paint()
     }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        self.inner.render(target);
+    }
 }
 
 #[cfg(feature = "ui_debug")]
@@ -105,6 +110,10 @@ where
 
     fn paint(&mut self) {
         self.inner.paint()
+    }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        self.inner.render(target);
     }
 }
 
@@ -177,6 +186,10 @@ where
 
     fn paint(&mut self) {
         self.inner.paint()
+    }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        self.inner.render(target);
     }
 }
 
@@ -268,6 +281,11 @@ where
     fn paint(&mut self) {
         self.first.paint();
         self.second.paint();
+    }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        self.first.render(target);
+        self.second.render(target);
     }
 }
 

@@ -5,6 +5,7 @@ use crate::ui::{
         component::button::{Button, ButtonMsg},
         theme,
     },
+    shape::Renderer,
 };
 
 const NUMBERS: [u32; 5] = [12, 18, 20, 24, 33];
@@ -54,6 +55,12 @@ impl Component for SelectWordCount {
     fn paint(&mut self) {
         for btn in self.button.iter_mut() {
             btn.paint()
+        }
+    }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        for btn in self.button.iter() {
+            btn.render(target)
         }
     }
 

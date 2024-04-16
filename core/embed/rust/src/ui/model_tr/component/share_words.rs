@@ -3,10 +3,13 @@ use crate::{
     translations::TR,
     ui::{
         component::{
-            text::util::text_multiline, Child, Component, Event, EventCtx, Never, Paginate,
+            text::util::{text_multiline, text_multiline2},
+            Child, Component, Event, EventCtx, Never, Paginate,
         },
         display::Font,
         geometry::{Alignment, Offset, Rect},
+        shape,
+        shape::Renderer,
     },
 };
 
@@ -95,6 +98,20 @@ where
         );
     }
 
+    /// Display the final page with user confirmation.
+    fn render_final_page<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        let final_text = self.get_final_text();
+        text_multiline2(
+            target,
+            self.area.split_top(INFO_TOP_OFFSET).1,
+            final_text.as_str().into(),
+            Font::NORMAL,
+            theme::FG,
+            theme::BG,
+            Alignment::Start,
+        );
+    }
+
     /// Display current set of recovery words.
     fn paint_words(&mut self) {
         let mut y_offset = 0;
@@ -110,6 +127,32 @@ where
             let ordinal = build_string!(5, inttostr!(index as u8 + 1), ".");
             display_left(baseline + Offset::x(NUMBER_X_OFFSET), &ordinal, NUMBER_FONT);
             display_left(baseline + Offset::x(WORD_X_OFFSET), word, WORD_FONT);
+        }
+    }
+
+    /// Display current set of recovery words.
+    fn render_words<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        let mut y_offset = 0;
+        // Showing the word index and the words itself
+        for i in 0..WORDS_PER_PAGE {
+            y_offset += NUMBER_FONT.line_height() + EXTRA_LINE_HEIGHT;
+            let index = self.word_index() + i;
+            if index >= self.share_words.len() {
+                break;
+            }
+            let word = &self.share_words[index];
+            let baseline = self.area.top_left() + Offset::y(y_offset);
+            let ordinal = build_string!(5, inttostr!(index as u8 + 1), ".");
+
+            shape::Text::new(baseline + Offset::x(NUMBER_X_OFFSET), &ordinal)
+                .with_font(NUMBER_FONT)
+                .with_fg(theme::FG)
+                .render(target);
+
+            shape::Text::new(baseline + Offset::x(WORD_X_OFFSET), word.as_ref())
+                .with_font(WORD_FONT)
+                .with_fg(theme::FG)
+                .render(target);
         }
     }
 }
@@ -145,6 +188,17 @@ where
             self.paint_final_page();
         } else {
             self.paint_words();
+        }
+    }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        // Showing scrollbar in all cases
+        // Individual pages are responsible for not colliding with it
+        self.scrollbar.render(target);
+        if self.is_final_page() {
+            self.render_final_page(target);
+        } else {
+            self.render_words(target);
         }
     }
 }

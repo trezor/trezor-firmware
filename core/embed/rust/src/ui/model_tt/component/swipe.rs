@@ -3,6 +3,7 @@ use crate::ui::{
     display,
     event::TouchEvent,
     geometry::{Point, Rect},
+    shape::Renderer,
 };
 
 use super::theme;
@@ -159,4 +160,6 @@ impl Component for Swipe {
     }
 
     fn paint(&mut self) {}
+
+    fn render<'s>(&'s self, _target: &mut impl Renderer<'s>) {}
 }

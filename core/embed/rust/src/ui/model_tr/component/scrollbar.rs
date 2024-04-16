@@ -2,6 +2,8 @@ use crate::ui::{
     component::{Component, Event, EventCtx, Never, Pad, Paginate},
     display,
     geometry::{Offset, Point, Rect},
+    shape,
+    shape::Renderer,
 };
 
 use super::super::theme;
@@ -100,6 +102,35 @@ impl ScrollBar {
                 // FG - painting the small square
                 display::rect_fill(full_square.shrink(2), theme::FG)
             }
+        }
+    }
+
+    /// Create a (seemingly circular) dot given its top left point.
+    /// Make it full when it is active, otherwise paint just the perimeter and
+    /// leave center empty.
+    fn render_dot<'s>(&self, target: &mut impl Renderer<'s>, dot_type: &DotType, top_right: Point) {
+        let full_square =
+            Rect::from_top_right_and_size(top_right, Offset::uniform(Self::MAX_DOT_SIZE));
+
+        match dot_type {
+            DotType::BigFull => shape::Bar::new(full_square)
+                .with_radius(2)
+                .with_bg(theme::FG)
+                .render(target),
+
+            DotType::Big => shape::Bar::new(full_square)
+                .with_radius(2)
+                .with_fg(theme::FG)
+                .render(target),
+
+            DotType::Middle => shape::Bar::new(full_square.shrink(1))
+                .with_radius(1)
+                .with_fg(theme::FG)
+                .render(target),
+
+            DotType::Small => shape::Bar::new(full_square.shrink(2))
+                .with_bg(theme::FG)
+                .render(target),
         }
     }
 
@@ -202,6 +233,14 @@ impl ScrollBar {
             top_right.x -= Self::DOTS_INTERVAL;
         }
     }
+
+    fn render_horizontal<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        let mut top_right = self.pad.area.top_right();
+        for dot in self.get_drawable_dots().iter().rev() {
+            self.render_dot(target, dot, top_right);
+            top_right.x -= Self::DOTS_INTERVAL;
+        }
+    }
 }
 
 impl Component for ScrollBar {
@@ -232,6 +271,17 @@ impl Component for ScrollBar {
         self.pad.clear();
         self.pad.paint();
         self.paint_horizontal();
+    }
+
+    /// Displaying one dot for each page.
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        // Not showing the scrollbar dot when there is only one page
+        if self.page_count <= 1 {
+            return;
+        }
+
+        self.pad.render(target);
+        self.render_horizontal(target);
     }
 }
 

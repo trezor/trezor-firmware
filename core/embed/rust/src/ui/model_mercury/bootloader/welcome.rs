@@ -3,6 +3,8 @@ use crate::ui::{
     constant::screen,
     display::{self, Font},
     geometry::{Offset, Point, Rect},
+    shape,
+    shape::Renderer,
 };
 
 use super::super::theme::{BLACK, GREY, WHITE};
@@ -60,5 +62,34 @@ impl Component for Welcome {
             WHITE,
             BLACK,
         );
+    }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        self.bg.render(target);
+
+        shape::Text::new(TEXT_ORIGIN, "Get started")
+            .with_font(Font::NORMAL)
+            .with_fg(GREY)
+            .render(target);
+
+        shape::Text::new(TEXT_ORIGIN + Offset::y(STRIDE), "with your Trezor")
+            .with_font(Font::NORMAL)
+            .with_fg(GREY)
+            .render(target);
+
+        shape::Text::new(TEXT_ORIGIN + Offset::y(2 * STRIDE), "at")
+            .with_font(Font::NORMAL)
+            .with_fg(GREY)
+            .render(target);
+
+        let at_width = Font::NORMAL.text_width("at ");
+
+        shape::Text::new(
+            TEXT_ORIGIN + Offset::new(at_width, 2 * STRIDE),
+            "trezor.io/start",
+        )
+        .with_font(Font::NORMAL)
+        .with_fg(WHITE)
+        .render(target);
     }
 }
