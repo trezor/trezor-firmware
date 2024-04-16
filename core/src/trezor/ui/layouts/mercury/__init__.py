@@ -322,17 +322,12 @@ async def confirm_single(
 
 
 async def confirm_reset_device(title: str, recovery: bool = False) -> None:
-    if recovery:
-        button = TR.reset__button_recover
-    else:
-        button = TR.reset__button_create
-
     await raise_if_not_confirmed(
         interact(
             RustLayout(
                 trezorui2.confirm_reset_device(
-                    title=title.upper(),
-                    button=button,
+                    title=title,
+                    button="",  # not used
                 )
             ),
             "recover_device" if recovery else "setup_device",
