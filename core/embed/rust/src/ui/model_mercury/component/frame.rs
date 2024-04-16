@@ -6,12 +6,12 @@ use crate::{
             base::ComponentExt, label::Label, text::TextStyle, Child, Component, Event, EventCtx,
         },
         display::Icon,
-        geometry::{Alignment, Insets, Offset, Rect},
+        geometry::{Alignment, Insets, Rect},
         shape::Renderer,
     },
 };
 
-use super::{Button, ButtonMsg, CancelInfoConfirmMsg};
+use super::{constant::SPACING, Button, ButtonMsg, CancelInfoConfirmMsg};
 
 const TITLE_HEIGHT: i16 = 42;
 
@@ -46,15 +46,15 @@ where
         }
     }
 
-    pub fn left_aligned(style: TextStyle, title: TString<'static>, content: T) -> Self {
+    pub fn left_aligned(title: TString<'static>, content: T) -> Self {
         Self::new(Alignment::Start, title, content)
     }
 
-    pub fn right_aligned(style: TextStyle, title: TString<'static>, content: T) -> Self {
+    pub fn right_aligned(title: TString<'static>, content: T) -> Self {
         Self::new(Alignment::End, title, content)
     }
 
-    pub fn centered(style: TextStyle, title: TString<'static>, content: T) -> Self {
+    pub fn centered(title: TString<'static>, content: T) -> Self {
         Self::new(Alignment::Center, title, content)
     }
 
