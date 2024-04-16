@@ -22,7 +22,7 @@
 #include <string.h>
 #include TREZOR_BOARD
 #include "backlight_pwm.h"
-#include "display_interface.h"
+#include "display.h"
 #include "irq.h"
 #include "memzero.h"
 #include "st7789v.h"
@@ -34,6 +34,8 @@
 #include "displays/panels/lx154a2411.h"
 #include "displays/panels/lx154a2422.h"
 #include "displays/panels/tf15411a.h"
+#else
+#include "displays/panels/lx154a2422.h"
 #endif
 
 // using const volatile instead of #define results in binaries that change
@@ -241,7 +243,7 @@ int display_orientation(int degrees) {
         lx154a2422_rotate(degrees, &DISPLAY_PADDING);
       }
 #else
-      DISPLAY_PANEL_ROTATE(degrees, &DISPLAY_PADDING);
+      lx154a2422_rotate(degrees, &DISPLAY_PADDING);
 #endif
       panel_set_window(0, 0, DISPLAY_RESX - 1, DISPLAY_RESY - 1);
     }
@@ -292,7 +294,7 @@ void display_init_seq(void) {
     _154a_init_seq();
   }
 #else
-  DISPLAY_PANEL_INIT_SEQ();
+  lx154a2422_init_seq();
 #endif
 
   display_unsleep();

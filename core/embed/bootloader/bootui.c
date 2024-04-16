@@ -22,8 +22,11 @@
 #include TREZOR_BOARD
 
 #include "bootui.h"
+#include "colors.h"
 #include "display.h"
+#include "display_draw.h"
 #include "display_utils.h"
+#include "fonts/fonts.h"
 #ifdef TREZOR_EMULATOR
 #include "emulator.h"
 #else

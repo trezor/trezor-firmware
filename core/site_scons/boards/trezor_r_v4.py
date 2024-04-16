@@ -17,6 +17,11 @@ def configure(
     board = "trezor_r_v4.h"
     display = "vg-2864ksweg01.c"
 
+    if "new_rendering" in features_wanted:
+        defines += ["XFRAMEBUFFER"]
+        features_available.append("xframebuffer")
+        features_available.append("display_mono")
+
     mcu = "STM32F427xx"
 
     stm32f4_common_files(env, defines, sources, paths)
@@ -36,7 +41,12 @@ def configure(
     sources += [
         "embed/models/model_T2B1_layout.c",
     ]
-    sources += [f"embed/trezorhal/stm32f4/displays/{display}"]
+
+    if "new_rendering" in features_wanted:
+        sources += ["embed/trezorhal/xdisplay_legacy.c"]
+        sources += ["embed/trezorhal/stm32f4/xdisplay/vg-2864/display_driver.c"]
+    else:
+        sources += [f"embed/trezorhal/stm32f4/displays/{display}"]
 
     if "input" in features_wanted:
         sources += ["embed/trezorhal/stm32f4/button.c"]

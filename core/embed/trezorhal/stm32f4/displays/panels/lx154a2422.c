@@ -1,5 +1,5 @@
 
-#include "display_interface.h"
+#include "display.h"
 #include "displays/st7789v.h"
 #include "touch.h"
 

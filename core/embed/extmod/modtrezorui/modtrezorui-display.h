@@ -18,6 +18,8 @@
  */
 
 #include "display.h"
+#include "display_draw.h"
+#include "fonts/fonts.h"
 
 /// class Display:
 ///     """
@@ -128,11 +130,13 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_backlight_obj,
 ///     Saves current display contents to PNG file with given prefix.
 ///     """
 STATIC mp_obj_t mod_trezorui_Display_save(mp_obj_t self, mp_obj_t prefix) {
+#ifdef TREZOR_EMULATOR
   mp_buffer_info_t pfx = {0};
   mp_get_buffer_raise(prefix, &pfx, MP_BUFFER_READ);
   if (pfx.len > 0) {
     display_save(pfx.buf);
   }
+#endif
   return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorui_Display_save_obj,
@@ -143,7 +147,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorui_Display_save_obj,
 ///     Clears buffers in display saving.
 ///     """
 STATIC mp_obj_t mod_trezorui_Display_clear_save(mp_obj_t self) {
+#ifdef TREZOR_EMULATOR
   display_clear_save();
+#endif
   return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorui_Display_clear_save_obj,

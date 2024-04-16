@@ -6,7 +6,9 @@
 #define USE_BUTTON 1
 #define USE_SBU 1
 
-#include "displays/ug-2828tswig01.h"
+#define DISPLAY_RESX 128
+#define DISPLAY_RESY 128
+#define DISPLAY_LEGACY_HEADER "displays/ug-2828tswig01.h"
 
 #define BTN_LEFT_PIN GPIO_PIN_0
 #define BTN_LEFT_PORT GPIOA

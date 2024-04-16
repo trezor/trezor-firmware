@@ -21,9 +21,11 @@
 
 #include TREZOR_BOARD
 #include "board_capabilities.h"
+#include "buffers.h"
 #include "common.h"
 #include "compiler_traits.h"
 #include "display.h"
+#include "display_draw.h"
 #include "fault_handlers.h"
 #include "flash.h"
 #include "image.h"

@@ -22,6 +22,7 @@
 
 #include "common.h"
 #include "display.h"
+#include "display_draw.h"
 #include "flash.h"
 #include "flash_otp.h"
 #include "image.h"

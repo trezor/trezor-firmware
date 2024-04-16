@@ -17,8 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __DISPLAY_H__
-#define __DISPLAY_H__
+#ifndef __DISPLAY_DRAW_H__
+#define __DISPLAY_DRAW_H__
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -27,7 +27,6 @@
 #include "buffers.h"
 #include "colors.h"
 #include TREZOR_BOARD
-#include "display_interface.h"
 #include "fonts/fonts.h"
 
 // provided by common
