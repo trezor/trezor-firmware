@@ -538,7 +538,7 @@ void fsm_msgSetU2FCounter(const SetU2FCounter *msg) {
   layoutHome();
 }
 
-void fsm_msgGetNextU2FCounter() {
+void fsm_msgGetNextU2FCounter(void) {
   CHECK_PIN
 
   layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,

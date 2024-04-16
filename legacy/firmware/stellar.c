@@ -1349,7 +1349,7 @@ void stellar_fillSignedTx(StellarSignedTx *resp) {
   resp->signature.size = sizeof(signature);
 }
 
-bool stellar_allOperationsConfirmed() {
+bool stellar_allOperationsConfirmed(void) {
   return stellar_activeTx.confirmed_operations ==
          stellar_activeTx.num_operations;
 }

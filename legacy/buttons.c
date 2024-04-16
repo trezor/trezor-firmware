@@ -25,7 +25,7 @@ struct buttonState button;
 uint16_t buttonRead(void) { return gpio_port_read(BTN_PORT); }
 #endif
 
-void buttonUpdate() {
+void buttonUpdate(void) {
   static uint16_t last_state = BTN_PIN_YES | BTN_PIN_NO;
 
   uint16_t state = buttonRead();

@@ -979,7 +979,7 @@ void config_setU2FCounter(uint32_t u2fcounter) {
   storage_set_counter(KEY_U2F_COUNTER, u2fcounter);
 }
 
-uint32_t config_getAutoLockDelayMs() {
+uint32_t config_getAutoLockDelayMs(void) {
   if (sectrue == autoLockDelayMsCached) {
     return autoLockDelayMs;
   }
