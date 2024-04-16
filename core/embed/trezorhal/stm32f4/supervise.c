@@ -4,6 +4,7 @@
 
 #include "../mpu.h"
 #include "common.h"
+#include "display.h"
 #include "supervise.h"
 
 #ifdef ARM_USER_MODE
@@ -28,6 +29,7 @@ __attribute__((noreturn)) static void _reboot_to_bootloader(
 #endif
 
 void svc_reboot_to_bootloader(void) {
+  display_finish_actions();
   boot_command_t boot_command = bootargs_get_command();
   if (is_mode_unprivileged() && !is_mode_handler()) {
     register uint32_t r0 __asm__("r0") = boot_command;
@@ -67,8 +69,12 @@ void SVC_C_Handler(uint32_t *stack) {
       __asm__ volatile("msr control, %0" ::"r"(0x0));
       __asm__ volatile("isb");
 
+      // The input stack[0] argument comes from R0 saved when SVC was called
+      // from svc_reboot_to_bootloader. The __asm__ directive expects address as
+      // argument, hence the & in front of it, otherwise it would try
+      // to dereference the value and fault
       __asm__ volatile(
-          "mov r0, %[boot_command]" ::[boot_command] "r"(stack[0]));
+          "mov r0, %[boot_command]" ::[boot_command] "r"(&stack[0]));
 
       // See stack layout in
       // https://developer.arm.com/documentation/ka004005/latest We are changing

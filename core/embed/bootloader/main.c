@@ -353,6 +353,7 @@ void real_jump_to_firmware(void) {
     ui_screen_boot_stage_1(false);
   }
 
+  display_finish_actions();
   ensure_compatible_settings();
 
   // mpu_config_firmware();
@@ -364,6 +365,7 @@ void real_jump_to_firmware(void) {
 
 #ifdef STM32U5
 __attribute__((noreturn)) void jump_to_fw_through_reset(void) {
+  display_finish_actions();
   display_fade(display_backlight(-1), 0, 200);
 
   __disable_irq();
