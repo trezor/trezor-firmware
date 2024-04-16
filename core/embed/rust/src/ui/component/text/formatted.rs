@@ -1,10 +1,11 @@
 use crate::ui::{
     component::{Component, Event, EventCtx, Never, Paginate},
     geometry::{Alignment, Offset, Rect},
+    shape::Renderer,
 };
 
 use super::{
-    layout::{LayoutFit, LayoutSink, TextNoOp, TextRenderer},
+    layout::{LayoutFit, LayoutSink, TextNoOp, TextRenderer, TextRenderer2},
     op::OpTextLayout,
 };
 
@@ -131,6 +132,10 @@ impl Component for FormattedText {
 
     fn paint(&mut self) {
         self.layout_content(&mut TextRenderer);
+    }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        self.layout_content(&mut TextRenderer2::new(target));
     }
 
     #[cfg(feature = "ui_bounds")]

@@ -3,7 +3,8 @@ use crate::{
     ui::{
         component::{Component, Event, EventCtx, Never, Pad},
         display::{self, Color, Font},
-        geometry::{Offset, Rect},
+        geometry::{Alignment, Offset, Rect},
+        shape::{self, Renderer},
     },
 };
 
@@ -53,6 +54,20 @@ impl Component for Connect {
                 self.fg,
                 self.bg.color,
             )
+        });
+    }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        let font = Font::NORMAL;
+
+        self.bg.render(target);
+
+        self.message.map(|t| {
+            shape::Text::new(self.bg.area.center() + Offset::y(font.text_height() / 2), t)
+                .with_fg(self.fg)
+                .with_font(font)
+                .with_align(Alignment::Center)
+                .render(target);
         });
     }
 }

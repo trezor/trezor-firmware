@@ -1,11 +1,13 @@
 //! Reexporting the `screens` module according to the
 //! current feature (Trezor model)
 
+use crate::ui::ui_features::{ModelUI, UIFeaturesCommon};
+
+#[cfg(not(feature = "new_rendering"))]
 use crate::ui::{
     component::image::Image,
     display::{Color, Icon},
     geometry::{Alignment2D, Point},
-    ui_features::{ModelUI, UIFeaturesCommon},
 };
 
 use crate::ui::util::from_c_str;
@@ -29,6 +31,7 @@ extern "C" fn screen_boot_stage_2() {
 }
 
 #[no_mangle]
+#[cfg(not(feature = "new_rendering"))]
 extern "C" fn display_icon(
     x: cty::int16_t,
     y: cty::int16_t,
@@ -48,6 +51,7 @@ extern "C" fn display_icon(
 }
 
 #[no_mangle]
+#[cfg(not(feature = "new_rendering"))]
 extern "C" fn display_image(
     x: cty::int16_t,
     y: cty::int16_t,

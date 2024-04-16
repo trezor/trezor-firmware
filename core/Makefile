@@ -248,6 +248,11 @@ build_bootloader_emu: ## build the unix bootloader emulator
 	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" TREZOR_MODEL="$(TREZOR_MODEL)" \
 	CMAKELISTS="$(CMAKELISTS)" NEW_RENDERING="$(NEW_RENDERING)" $(BOOTLOADER_EMU_BUILD_DIR)/bootloader.elf
 
+build_bootloader_emu_debug: ## build the unix bootloader emulator
+	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" TREZOR_MODEL="$(TREZOR_MODEL)" \
+	CMAKELISTS="$(CMAKELISTS)" NEW_RENDERING="$(NEW_RENDERING)" TREZOR_EMULATOR_DEBUGGABLE=1 \
+	$(BOOTLOADER_EMU_BUILD_DIR)/bootloader.elf
+
 build_prodtest: ## build production test firmware
 	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" TREZOR_MODEL="$(TREZOR_MODEL)" \
 		CMAKELISTS="$(CMAKELISTS)" BOOTLOADER_DEVEL="$(BOOTLOADER_DEVEL)" $(PRODTEST_BUILD_DIR)/prodtest.bin

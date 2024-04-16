@@ -869,6 +869,7 @@ def cargo_build():
         features.append('universal_fw')
     features.append('ui')
     features.append('translations')
+
     if PYOPT == '0':
         features.append('debug')
     if DMA2D:
@@ -882,7 +883,6 @@ def cargo_build():
         features.append('ui_jpeg_decoder')
     if TREZOR_MODEL in ('R', '1'):
         features.append('button')
-
 
     if NEW_RENDERING:
         features.append('new_rendering')

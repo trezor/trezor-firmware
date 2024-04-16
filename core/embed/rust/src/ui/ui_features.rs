@@ -54,6 +54,15 @@ pub trait UIFeaturesBootloader {
     fn screen_wipe_success();
 
     fn screen_wipe_fail();
+
+    #[cfg(feature = "new_rendering")]
+    fn screen_boot(
+        warning: bool,
+        vendor_str: Option<&str>,
+        version: u32,
+        vendor_img: &[u8],
+        wait: i32,
+    );
 }
 
 #[cfg(all(

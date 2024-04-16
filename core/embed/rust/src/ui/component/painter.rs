@@ -4,6 +4,8 @@ use crate::ui::{
     component::{image::Image, Component, Event, EventCtx, Never},
     display,
     geometry::{Alignment2D, Rect},
+    shape,
+    shape::Renderer,
 };
 
 pub struct Painter<F> {
@@ -39,6 +41,15 @@ where
         (self.func)(self.area);
     }
 
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        let area = self.area;
+        shape::Bar::new(area)
+            .with_thickness(1)
+            .with_fg(display::Color::white())
+            .render(target);
+        shape::Text::new(area.top_left(), "Paint").render(target); // !@# replace
+    }
+
     #[cfg(feature = "ui_bounds")]
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         sink(self.area)
@@ -64,7 +75,10 @@ pub fn jpeg_painter<'a>(
     scale: u8,
 ) -> Painter<impl FnMut(Rect)> {
     let off = Offset::new(size.x / (2 << scale), size.y / (2 << scale));
+    #[cfg(not(feature = "new_rendering"))]
     let f = move |area: Rect| display::tjpgd::jpeg(image(), area.center() - off, scale);
+    #[cfg(feature = "new_rendering")]
+    let f = move |area: Rect| {};
     Painter::new(f)
 }
 

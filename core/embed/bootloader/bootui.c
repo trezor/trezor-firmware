@@ -22,8 +22,11 @@
 #include TREZOR_BOARD
 
 #include "bootui.h"
+#include "colors.h"
 #include "display.h"
+#include "display_draw.h"
 #include "display_utils.h"
+#include "fonts/fonts.h"
 #ifdef TREZOR_EMULATOR
 #include "emulator.h"
 #else
@@ -69,13 +72,17 @@ static void format_ver(const char *format, uint32_t version, char *buffer,
 
 // boot UI
 
+#ifndef NEW_RENDERING
 static uint16_t boot_background;
+#endif
+
 static bool initial_setup = true;
 
 void ui_set_initial_setup(bool initial) { initial_setup = initial; }
 
-void ui_screen_boot(const vendor_header *const vhdr,
-                    const image_header *const hdr) {
+#ifndef NEW_RENDERING
+static void ui_screen_boot_old(const vendor_header *const vhdr,
+                               const image_header *const hdr) {
   const int show_string = ((vhdr->vtrust & VTRUST_STRING) == 0);
   if ((vhdr->vtrust & VTRUST_RED) == 0) {
     boot_background = COLOR_BL_FAIL;
@@ -127,9 +134,11 @@ void ui_screen_boot(const vendor_header *const vhdr,
   display_pixeldata_dirty();
   display_refresh();
 }
+#endif
 
-void ui_screen_boot_wait(int wait_seconds) {
-  char wait_str[16];
+#ifndef NEW_RENDERING
+static void ui_screen_boot_wait(int wait_seconds) {
+  char wait_str[32];
   mini_snprintf(wait_str, sizeof(wait_str), "starting in %d s", wait_seconds);
   display_bar(0, BOOT_WAIT_Y_TOP, DISPLAY_RESX, BOOT_WAIT_HEIGHT,
               boot_background);
@@ -138,6 +147,7 @@ void ui_screen_boot_wait(int wait_seconds) {
   display_pixeldata_dirty();
   display_refresh();
 }
+#endif
 
 #if defined USE_TOUCH
 #include "touch.h"
@@ -179,7 +189,8 @@ void ui_click(void) {
 #error "No input method defined"
 #endif
 
-void ui_screen_boot_click(void) {
+#ifndef NEW_RENDERING
+static void ui_screen_boot_click(void) {
   display_bar(0, BOOT_WAIT_Y_TOP, DISPLAY_RESX, BOOT_WAIT_HEIGHT,
               boot_background);
   bld_continue_label(boot_background);
@@ -187,6 +198,33 @@ void ui_screen_boot_click(void) {
   display_refresh();
   ui_click();
 }
+#endif
+
+#ifdef NEW_RENDERING
+void ui_screen_boot(const vendor_header *const vhdr,
+                    const image_header *const hdr, int wait) {
+  bool show_string = ((vhdr->vtrust & VTRUST_STRING) == 0);
+  const char *vendor_str = show_string ? vhdr->vstr : NULL;
+  const size_t vendor_str_len = show_string ? vhdr->vstr_len : 0;
+  bool red_screen = ((vhdr->vtrust & VTRUST_RED) == 0);
+  uint32_t vimg_len = *(uint32_t *)(vhdr->vimg + 8);
+
+  screen_boot(red_screen, vendor_str, vendor_str_len, hdr->version, vhdr->vimg,
+              vimg_len, wait);
+}
+#else  // NEW_RENDERING
+
+void ui_screen_boot(const vendor_header *const vhdr,
+                    const image_header *const hdr, int wait) {
+  if (wait == 0) {
+    ui_screen_boot_old(vhdr, hdr);
+  } else if (wait > 0) {
+    ui_screen_boot_wait(wait);
+  } else {
+    ui_screen_boot_click();
+  }
+}
+#endif
 
 // welcome UI
 

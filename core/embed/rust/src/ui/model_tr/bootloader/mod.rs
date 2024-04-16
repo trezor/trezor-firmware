@@ -7,7 +7,7 @@ use crate::{
         constant,
         constant::{HEIGHT, SCREEN},
         display::{self, Color, Font, Icon},
-        geometry::{Alignment2D, Offset, Point, Rect},
+        geometry::{Alignment2D, Offset, Point},
         layout::simplified::{run, show, ReturnToC},
     },
 };
@@ -23,6 +23,18 @@ use super::{
     },
     ModelTRFeatures,
 };
+
+#[cfg(not(feature = "new_rendering"))]
+use crate::ui::geometry::Rect;
+
+#[cfg(feature = "new_rendering")]
+use crate::ui::{
+    display::toif::Toif, geometry::Alignment, model_tr::cshape, shape, shape::render_on_display,
+    util::version_split,
+};
+
+#[cfg(feature = "new_rendering")]
+use ufmt::uwrite;
 
 mod intro;
 mod menu;
@@ -42,6 +54,7 @@ impl ReturnToC for ConfirmMsg {
 }
 
 impl ModelTRFeatures {
+    #[cfg(not(feature = "new_rendering"))]
     fn screen_progress(
         text: &str,
         text2: &str,
@@ -81,6 +94,50 @@ impl ModelTRFeatures {
             fg_color,
             bg_color,
         );
+
+        display::refresh();
+    }
+
+    #[cfg(feature = "new_rendering")]
+    fn screen_progress(
+        text: &str,
+        text2: &str,
+        progress: u16,
+        _initialize: bool,
+        fg_color: Color,
+        bg_color: Color,
+        icon: Option<(Icon, Color)>,
+    ) {
+        let progress = if progress < 20 { 20 } else { progress };
+
+        display::sync();
+
+        render_on_display(None, Some(bg_color), |target| {
+            let center = SCREEN.top_center() + Offset::y(12);
+
+            cshape::LoaderCircular::new(center, progress)
+                .with_color(fg_color)
+                .render(target);
+
+            if let Some((icon, color)) = icon {
+                shape::ToifImage::new(center, icon.toif)
+                    .with_align(Alignment2D::CENTER)
+                    .with_fg(color)
+                    .render(target);
+            }
+
+            shape::Text::new(SCREEN.center() + Offset::y(8), text)
+                .with_align(Alignment::Center)
+                .with_font(Font::BOLD)
+                .with_fg(fg_color)
+                .render(target);
+
+            shape::Text::new(SCREEN.center() + Offset::y(20), text2)
+                .with_align(Alignment::Center)
+                .with_font(Font::BOLD)
+                .with_fg(fg_color)
+                .render(target);
+        });
 
         display::refresh();
     }
@@ -261,6 +318,7 @@ impl UIFeaturesBootloader for ModelTRFeatures {
     }
 
     fn screen_boot_stage_1(_fading: bool) {
+        #[cfg(not(feature = "new_rendering"))]
         display::rect_fill(SCREEN, BLD_BG);
 
         let mut frame = WelcomeScreen::new(true);
@@ -314,5 +372,94 @@ impl UIFeaturesBootloader for ModelTRFeatures {
 
         let mut frame = ResultScreen::new(BLD_FG, BLD_BG, ICON_ALERT, title, content, true);
         show(&mut frame, false);
+    }
+
+    #[cfg(feature = "new_rendering")]
+    fn screen_boot(
+        _warning: bool,
+        vendor_str: Option<&str>,
+        version: u32,
+        vendor_img: &[u8],
+        wait: i32,
+    ) {
+        display::sync();
+
+        render_on_display(None, Some(BLD_BG), |target| {
+            // Draw vendor image if it's valid and has size of 24x24
+            if let Ok(toif) = Toif::new(vendor_img) {
+                if (toif.width() == 24) && (toif.height() == 24) {
+                    let pos = Point::new((constant::WIDTH - 22) / 2, 0);
+                    shape::ToifImage::new(pos, toif)
+                        .with_align(Alignment2D::TOP_CENTER)
+                        .with_fg(BLD_FG)
+                        .render(target);
+                }
+            }
+
+            // Draw vendor string if present
+            if let Some(text) = vendor_str {
+                let pos = Point::new(constant::WIDTH / 2, 36);
+                shape::Text::new(pos, text)
+                    .with_align(Alignment::Center)
+                    .with_font(Font::NORMAL)
+                    .with_fg(BLD_FG) //COLOR_BL_BG
+                    .render(target);
+
+                let pos = Point::new(constant::WIDTH / 2, 46);
+
+                let mut version_text: BootloaderString = String::new();
+                let ver_nums = version_split(version);
+                unwrap!(uwrite!(
+                    version_text,
+                    "{}.{}.{}",
+                    ver_nums[0],
+                    ver_nums[1],
+                    ver_nums[2]
+                ));
+
+                shape::Text::new(pos, version_text.as_str())
+                    .with_align(Alignment::Center)
+                    .with_font(Font::NORMAL)
+                    .with_fg(BLD_FG)
+                    .render(target);
+            }
+
+            // Draw a message
+            match wait.cmp(&0) {
+                core::cmp::Ordering::Equal => {}
+                core::cmp::Ordering::Greater => {
+                    let mut text: BootloaderString = String::new();
+                    unwrap!(uwrite!(text, "starting in {} s", wait));
+
+                    let pos = Point::new(constant::WIDTH / 2, HEIGHT - 5);
+                    shape::Text::new(pos, text.as_str())
+                        .with_align(Alignment::Center)
+                        .with_font(Font::NORMAL)
+                        .with_fg(BLD_FG)
+                        .render(target);
+                }
+                core::cmp::Ordering::Less => {
+                    let pos = Point::new(constant::WIDTH / 2, HEIGHT - 2);
+                    shape::Text::new(pos, "CONTINUE")
+                        .with_align(Alignment::Center)
+                        .with_fg(BLD_FG)
+                        .render(target);
+
+                    let pos = Point::new(constant::WIDTH / 2 - 36, HEIGHT - 6);
+                    shape::ToifImage::new(pos, ICON_ARM_LEFT.toif)
+                        .with_align(Alignment2D::TOP_LEFT)
+                        .with_fg(BLD_FG)
+                        .render(target);
+
+                    let pos = Point::new(constant::WIDTH / 2 + 25, HEIGHT - 6);
+                    shape::ToifImage::new(pos, ICON_ARM_RIGHT.toif)
+                        .with_align(Alignment2D::TOP_LEFT)
+                        .with_fg(BLD_FG)
+                        .render(target);
+                }
+            }
+        });
+
+        display::refresh();
     }
 }

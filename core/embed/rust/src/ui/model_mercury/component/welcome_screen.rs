@@ -1,7 +1,10 @@
 use crate::ui::{
     component::{Component, Event, EventCtx, Never},
     display,
-    geometry::{Alignment2D, Offset, Rect},
+    display::font::Font,
+    geometry::{Alignment, Alignment2D, Offset, Rect},
+    shape,
+    shape::Renderer,
 };
 
 use super::theme;
@@ -49,6 +52,26 @@ impl Component for WelcomeScreen {
             theme::FG,
             theme::BG,
         );
+    }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        shape::ToifImage::new(
+            self.area.top_center() + Offset::y(ICON_TOP_MARGIN),
+            theme::ICON_LOGO.toif,
+        )
+        .with_align(Alignment2D::TOP_CENTER)
+        .with_fg(theme::FG)
+        .with_bg(theme::BG)
+        .render(target);
+
+        shape::Text::new(
+            self.area.bottom_center() - Offset::y(TEXT_BOTTOM_MARGIN),
+            "Trezor Safe 5",
+        )
+        .with_align(Alignment::Center)
+        .with_font(Font::NORMAL)
+        .with_fg(theme::FG)
+        .render(target);
     }
 }
 

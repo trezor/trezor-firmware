@@ -23,12 +23,31 @@ use super::{
             FIRE40, RESULT_FW_INSTALL, RESULT_WIPE, TEXT_BOLD, TEXT_NORMAL, TEXT_WIPE_BOLD,
             TEXT_WIPE_NORMAL, WARNING40, WELCOME_COLOR, X24,
         },
-        BACKLIGHT_NORMAL, BLACK, GREEN_LIGHT, GREY, WHITE,
+        BACKLIGHT_NORMAL, GREEN_LIGHT, GREY,
     },
     ModelMercuryFeatures,
 };
 
 use crate::ui::{ui_features::UIFeaturesBootloader, UIFeaturesCommon};
+
+#[cfg(not(feature = "new_rendering"))]
+use super::theme::BLACK;
+
+#[cfg(feature = "new_rendering")]
+use crate::ui::{
+    constant,
+    display::toif::Toif,
+    geometry::{Alignment, Alignment2D},
+    shape,
+    shape::render_on_display,
+    util::version_split,
+};
+
+#[cfg(feature = "new_rendering")]
+use ufmt::uwrite;
+
+#[cfg(feature = "new_rendering")]
+use super::theme::bootloader::BLD_WARN_COLOR;
 use intro::Intro;
 use menu::Menu;
 
@@ -44,6 +63,7 @@ const SCREEN: Rect = ModelMercuryFeatures::SCREEN;
 const PROGRESS_TEXT_ORIGIN: Point = Point::new(2, 28);
 
 impl ModelMercuryFeatures {
+    #[cfg(not(feature = "new_rendering"))]
     fn screen_progress(
         text: &str,
         progress: u16,
@@ -77,6 +97,70 @@ impl ModelMercuryFeatures {
             Self::fadein();
         }
     }
+
+    #[cfg(feature = "new_rendering")]
+    fn screen_progress(
+        text: &str,
+        progress: u16,
+        initialize: bool,
+        fg_color: Color,
+        bg_color: Color,
+        icon: Option<(Icon, Color)>,
+        center_text: Option<&str>,
+    ) {
+        if initialize {
+            Self::fadeout();
+        }
+        display::sync();
+
+        render_on_display(None, Some(bg_color), |target| {
+            shape::Text::new(PROGRESS_TEXT_ORIGIN, text)
+                .with_font(Font::NORMAL)
+                .with_fg(BLD_FG)
+                .render(target);
+
+            let loader_offset: i16 = 19;
+            let center_text_offset: i16 = 10;
+            let center = SCREEN.center() + Offset::y(-loader_offset);
+            let inactive_color = bg_color.blend(fg_color, 85);
+
+            shape::Circle::new(center, constant::LOADER_OUTER)
+                .with_bg(inactive_color)
+                .render(target);
+
+            shape::Circle::new(center, constant::LOADER_OUTER)
+                .with_bg(fg_color)
+                .with_end_angle(((progress as i32 * shape::PI4 as i32 * 8) / 1000) as i16)
+                .render(target);
+
+            shape::Circle::new(center, constant::LOADER_INNER)
+                .with_bg(bg_color)
+                .render(target);
+
+            if let Some((icon, color)) = icon {
+                shape::ToifImage::new(center, icon.toif)
+                    .with_align(Alignment2D::CENTER)
+                    .with_fg(color)
+                    .render(target);
+            }
+
+            if let Some(center_text) = center_text {
+                shape::Text::new(
+                    SCREEN.center() + Offset::y(loader_offset + center_text_offset),
+                    center_text,
+                )
+                .with_align(Alignment::Center)
+                .with_font(Font::NORMAL)
+                .with_fg(GREY)
+                .render(target);
+            }
+        });
+
+        display::refresh();
+        if initialize {
+            Self::fadein();
+        }
+    }
 }
 
 impl UIFeaturesBootloader for ModelMercuryFeatures {
@@ -90,7 +174,7 @@ impl UIFeaturesBootloader for ModelMercuryFeatures {
             Point::new(SCREEN.width() / 2, SCREEN.height() - 5),
             "click to continue ...",
             Font::NORMAL,
-            WHITE,
+            BLD_FG,
             bg_color,
         );
     }
@@ -127,8 +211,6 @@ impl UIFeaturesBootloader for ModelMercuryFeatures {
                 None,
             );
         }
-
-        display::refresh();
     }
 
     fn screen_install_fail() {
@@ -252,6 +334,7 @@ impl UIFeaturesBootloader for ModelMercuryFeatures {
             Self::fadeout();
         }
 
+        #[cfg(not(feature = "new_rendering"))]
         display::rect_fill(SCREEN, BLACK);
 
         let mut frame = WelcomeScreen::new();
@@ -262,7 +345,6 @@ impl UIFeaturesBootloader for ModelMercuryFeatures {
         } else {
             display::set_backlight(BACKLIGHT_NORMAL);
         }
-        display::refresh();
     }
 
     fn screen_wipe_progress(progress: u16, initialize: bool) {
@@ -321,5 +403,91 @@ impl UIFeaturesBootloader for ModelMercuryFeatures {
             true,
         );
         show(&mut frame, true);
+    }
+
+    #[cfg(feature = "new_rendering")]
+    fn screen_boot(
+        warning: bool,
+        vendor_str: Option<&str>,
+        version: u32,
+        vendor_img: &[u8],
+        wait: i32,
+    ) {
+        let bg_color = if warning { BLD_WARN_COLOR } else { BLD_BG };
+
+        display::sync();
+
+        render_on_display(None, Some(bg_color), |target| {
+            // Draw vendor image if it's valid and has size of 120x120
+            if let Ok(toif) = Toif::new(vendor_img) {
+                if (toif.width() == 120) && (toif.height() == 120) {
+                    // Image position depends on the vendor string presence
+                    let pos = if vendor_str.is_some() {
+                        Point::new(SCREEN.width() / 2, 30)
+                    } else {
+                        Point::new(SCREEN.width() / 2, 60)
+                    };
+
+                    shape::ToifImage::new(pos, toif)
+                        .with_align(Alignment2D::TOP_CENTER)
+                        .with_fg(BLD_FG)
+                        .render(target);
+                }
+            }
+
+            // Draw vendor string if present
+            if let Some(text) = vendor_str {
+                let pos = Point::new(SCREEN.width() / 2, SCREEN.height() - 5 - 50);
+                shape::Text::new(pos, text)
+                    .with_align(Alignment::Center)
+                    .with_font(Font::NORMAL)
+                    .with_fg(BLD_FG) //COLOR_BL_BG
+                    .render(target);
+
+                let pos = Point::new(SCREEN.width() / 2, SCREEN.height() - 5 - 25);
+
+                let mut version_text: BootloaderString = String::new();
+                let ver_nums = version_split(version);
+                unwrap!(uwrite!(
+                    version_text,
+                    "{}.{}.{}",
+                    ver_nums[0],
+                    ver_nums[1],
+                    ver_nums[2]
+                ));
+
+                shape::Text::new(pos, version_text.as_str())
+                    .with_align(Alignment::Center)
+                    .with_font(Font::NORMAL)
+                    .with_fg(BLD_FG)
+                    .render(target);
+            }
+
+            // Draw a message
+            match wait.cmp(&0) {
+                core::cmp::Ordering::Equal => {}
+                core::cmp::Ordering::Greater => {
+                    let mut text: BootloaderString = String::new();
+                    unwrap!(uwrite!(text, "starting in {} s", wait));
+
+                    let pos = Point::new(SCREEN.width() / 2, SCREEN.height() - 5);
+                    shape::Text::new(pos, text.as_str())
+                        .with_align(Alignment::Center)
+                        .with_font(Font::NORMAL)
+                        .with_fg(BLD_FG)
+                        .render(target);
+                }
+                core::cmp::Ordering::Less => {
+                    let pos = Point::new(SCREEN.width() / 2, SCREEN.height() - 5);
+                    shape::Text::new(pos, "click to continue ...")
+                        .with_align(Alignment::Center)
+                        .with_font(Font::NORMAL)
+                        .with_fg(BLD_FG)
+                        .render(target);
+                }
+            }
+        });
+
+        display::refresh();
     }
 }

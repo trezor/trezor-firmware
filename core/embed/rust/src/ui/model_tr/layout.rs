@@ -216,10 +216,7 @@ impl<'a> ComponentMsgObj for Lockscreen<'a> {
     }
 }
 
-impl<'a, F> ComponentMsgObj for ConfirmHomescreen<F>
-where
-    F: Fn() -> &'a [u8],
-{
+impl ComponentMsgObj for ConfirmHomescreen {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
             CancelConfirmMsg::Confirmed => Ok(CONFIRMED.as_obj()),
@@ -400,15 +397,8 @@ extern "C" fn new_confirm_properties(n_args: usize, args: *const Obj, kwargs: *m
 extern "C" fn new_confirm_homescreen(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
-        let data: Obj = kwargs.get(Qstr::MP_QSTR_image)?;
-
-        // Layout needs to hold the Obj to play nice with GC. Obj is resolved to &[u8]
-        // in every paint pass.
-        // SAFETY: We expect no existing mutable reference. Resulting reference is
-        //         discarded before returning to micropython.
-        let buffer_func = move || unsafe { unwrap!(get_buffer(data)) };
-
-        let obj = LayoutObj::new(ConfirmHomescreen::new(title, buffer_func))?;
+        let image: Obj = kwargs.get(Qstr::MP_QSTR_image)?;
+        let obj = LayoutObj::new(ConfirmHomescreen::new(title, image))?;
         Ok(obj.into())
     };
 

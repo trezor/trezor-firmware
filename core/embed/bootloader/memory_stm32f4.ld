@@ -67,6 +67,8 @@ SECTIONS {
   .buf : ALIGN(4) {
     *(.buf*);
     . = ALIGN(4);
+    *(.no_dma_buffers*);
+    . = ALIGN(4);
   } >SRAM
 
   .boot_args : ALIGN(8) {

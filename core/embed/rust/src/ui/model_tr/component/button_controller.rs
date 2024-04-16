@@ -7,6 +7,7 @@ use crate::{
         component::{base::Event, Component, EventCtx, Pad, TimerToken},
         event::{ButtonEvent, PhysicalButton},
         geometry::Rect,
+        shape::Renderer,
     },
 };
 
@@ -93,6 +94,18 @@ impl ButtonType {
             Self::Nothing => {}
         }
     }
+
+    pub fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        match self {
+            Self::Button(button) => {
+                button.render(target);
+            }
+            Self::HoldToConfirm(htc) => {
+                htc.render(target);
+            }
+            Self::Nothing => {}
+        }
+    }
 }
 
 /// Wrapping a button and its state, so that it can be easily
@@ -152,6 +165,10 @@ impl ButtonContainer {
     /// Painting the component that should be currently visible, if any.
     pub fn paint(&mut self) {
         self.button_type.paint();
+    }
+
+    pub fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        self.button_type.render(target);
     }
 
     /// Setting the visual state of the button - released/pressed.
@@ -575,6 +592,13 @@ impl Component for ButtonController {
         self.right_btn.paint();
     }
 
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        self.pad.render(target);
+        self.left_btn.render(target);
+        self.middle_btn.render(target);
+        self.right_btn.render(target);
+    }
+
     fn place(&mut self, bounds: Rect) -> Rect {
         // Saving button area so that we can re-place the buttons
         // when they get updated
@@ -753,6 +777,8 @@ impl Component for AutomaticMover {
     }
 
     fn paint(&mut self) {}
+
+    fn render<'s>(&'s self, _target: &mut impl Renderer<'s>) {}
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         // Moving automatically only when we receive a TimerToken that we have

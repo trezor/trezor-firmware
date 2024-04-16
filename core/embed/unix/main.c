@@ -37,9 +37,9 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "display.h"
 #include "extmod/misc.h"
 #include "extmod/vfs_posix.h"
-#include "display.h"
 #include "flash.h"
 #include "flash_otp.h"
 #include "genhdr/mpversion.h"
