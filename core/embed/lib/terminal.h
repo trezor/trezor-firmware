@@ -22,11 +22,9 @@
 
 #include "colors.h"
 
-#ifndef TREZOR_PRINT_DISABLE
 void term_set_color(uint16_t fgcolor, uint16_t bgcolor);
 void term_print(const char *text, int textlen);
 void term_printf(const char *fmt, ...)
     __attribute__((__format__(__printf__, 1, 2)));
-#endif
 
 #endif  // LIB_TERMINAL_H

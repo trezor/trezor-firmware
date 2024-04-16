@@ -26,6 +26,7 @@
 #include "button.h"
 #include "common.h"
 #include "display.h"
+#include "display_draw.h"
 #include "display_utils.h"
 #include "fault_handlers.h"
 #include "flash.h"

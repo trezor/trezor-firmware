@@ -10,6 +10,7 @@ TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 DMA2D =  TREZOR_MODEL in ('T', 'T3T1')
 OPTIGA = TREZOR_MODEL in ('R', 'T3T1')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
+NEW_RENDERING = ARGUMENTS.get('NEW_RENDERING', '1') == '1'
 
 if TREZOR_MODEL in ('DISC1', 'DISC2'):
     # skip unix build
@@ -205,9 +206,12 @@ SOURCE_MOD += [
     'embed/lib/buffers.c',
     'embed/lib/colors.c',
     'embed/lib/display_utils.c',
-    'embed/lib/display.c',
     'embed/lib/fonts/font_bitmap.c',
     'embed/lib/fonts/fonts.c',
+    'embed/lib/gl_color.c',
+    'embed/lib/gl_bitblt_rgb565.c',
+    'embed/lib/gl_bitblt_rgba8888.c',
+    'embed/lib/gl_bitblt_mono8.c',
     'embed/lib/image.c',
     'embed/lib/terminal.c',
     'embed/lib/translations.c',
@@ -216,6 +220,16 @@ SOURCE_MOD += [
     'vendor/micropython/lib/uzlib/crc32.c',
     'vendor/micropython/lib/uzlib/tinflate.c',
 ]
+
+if NEW_RENDERING:
+    SOURCE_MOD += [
+        'embed/lib/gl_draw.c',
+    ]
+else:
+    SOURCE_MOD += [
+        'embed/lib/display_draw.c',
+    ]
+
 
 if TREZOR_MODEL in ('1', ):
     SOURCE_MOD += [
@@ -249,6 +263,17 @@ if FROZEN:
     CPPDEFINES_MOD += ['TREZOR_EMULATOR_FROZEN']
 if RASPI:
     CPPDEFINES_MOD += ['TREZOR_EMULATOR_RASPI']
+
+if NEW_RENDERING:
+    CPPDEFINES_MOD += ['NEW_RENDERING']
+    if TREZOR_MODEL in ('T',):
+        CPPDEFINES_MOD += ['DISPLAY_RGB565']
+    elif TREZOR_MODEL in ('R', '1',):
+        CPPDEFINES_MOD += ['XFRAMEBUFFER', 'DISPLAY_MONO']
+    elif TREZOR_MODEL in ('T3T1',):
+        CPPDEFINES_MOD += ['XFRAMEBUFFER', 'DISPLAY_RGB565']
+
+
 
 # modtrezorutils
 SOURCE_MOD += [
@@ -394,7 +419,6 @@ SOURCE_MICROPYTHON = [
 SOURCE_UNIX = [
     'embed/trezorhal/unix/boot_args.c',
     'embed/trezorhal/unix/common.c',
-    'embed/trezorhal/unix/display-unix.c',
     'embed/trezorhal/unix/flash.c',
     'embed/trezorhal/unix/flash_otp.c',
     'embed/trezorhal/unix/random_delays.c',
@@ -410,6 +434,19 @@ SOURCE_UNIX = [
     'vendor/micropython/ports/unix/input.c',
     'vendor/micropython/ports/unix/unix_mphal.c',
 ]
+
+if NEW_RENDERING:
+    SOURCE_MOD += [
+        'embed/trezorhal/unix/display_driver.c',
+        'embed/trezorhal/unix/dma2d_bitblt.c',
+        'embed/trezorhal/xdisplay_legacy.c',
+    ]
+else:
+    SOURCE_MOD += [
+        'embed/trezorhal/unix/display-unix.c',
+    ]
+
+
 if TREZOR_MODEL in ('T', 'R', 'T3T1'):
     SOURCE_UNIX += [
         'embed/trezorhal/unix/sbu.c',
@@ -424,6 +461,7 @@ if DMA2D:
     CPPDEFINES_MOD += [
         'USE_DMA2D',
     ]
+
     SOURCE_UNIX += [
         'embed/lib/dma2d_emul.c',
     ]
@@ -839,8 +877,23 @@ def cargo_build():
     if TREZOR_MODEL in ('T', 'T3T1'):
         features.append('touch')
         features.append('sd_card')
+        features.append('ui_antialiasing')
+        features.append('ui_blurring')
+        features.append('ui_jpeg_decoder')
     if TREZOR_MODEL in ('R', '1'):
         features.append('button')
+
+
+    if NEW_RENDERING:
+        features.append('new_rendering')
+        if TREZOR_MODEL in ('T',):
+            features.append('display_rgb565')
+        elif TREZOR_MODEL in ('R', '1',):
+            features.append('display_mono')
+            features.append('xframebuffer')
+        elif TREZOR_MODEL in ('T3T1',):
+            features.append('display_rgb565')
+            features.append('xframebuffer')
 
     env.get('ENV')['TREZOR_MODEL'] = TREZOR_MODEL
 

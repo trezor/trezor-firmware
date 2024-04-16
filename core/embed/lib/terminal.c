@@ -24,7 +24,8 @@
 #include "display.h"
 #include TREZOR_BOARD
 
-#ifndef TREZOR_PRINT_DISABLE
+#include "fonts/fonts.h"
+#include "gl_draw.h"
 
 #define TERMINAL_COLS (DISPLAY_RESX / 6)
 #define TERMINAL_ROWS (DISPLAY_RESY / 8)
@@ -38,6 +39,62 @@ void term_set_color(uint16_t fgcolor, uint16_t bgcolor) {
   terminal_fgcolor = fgcolor;
   terminal_bgcolor = bgcolor;
 }
+
+#ifdef NEW_RENDERING
+
+// Font_Bitmap contains 96 (0x20 - 0x7F) 5x7 glyphs
+// Each glyph consists of 5 bytes (each byte represents one column)
+//
+// This function converts the glyph into the format compatible
+// with `display_copy_mono1p()` functions.
+static uint64_t term_glyph_bits(char ch) {
+  union {
+    uint64_t u64;
+    uint8_t bytes[8];
+  } result = {0};
+
+  if (ch > ' ' && ch < 128) {
+    const uint8_t *b = &Font_Bitmap[(ch - ' ') * 5];
+
+    for (int y = 0; y < 7; y++) {
+      uint8_t mask = 1 << y;
+      result.bytes[y] |= ((b[0] & mask) ? 128 : 0) + ((b[1] & mask) ? 64 : 0) +
+                         ((b[2] & mask) ? 32 : 0) + ((b[3] & mask) ? 16 : 0) +
+                         ((b[4] & mask) ? 8 : 0);
+    }
+  }
+  return result.u64;
+}
+
+// Redraws specified rows to the display
+static void term_redraw_rows(int start_row, int row_count) {
+  uint64_t glyph_bits = 0;
+  gl_bitblt_t bb = {
+      .height = 8,
+      .width = 6,
+      .dst_row = NULL,
+      .dst_x = 0,
+      .dst_y = 0,
+      .dst_stride = 0,
+
+      .src_row = &glyph_bits,
+      .src_x = 0,
+      .src_y = 0,
+      .src_stride = 8,
+      .src_fg = terminal_fgcolor,
+      .src_bg = terminal_bgcolor,
+  };
+
+  for (int y = start_row; y < start_row + row_count; y++) {
+    bb.dst_y = y * 8;
+    for (int x = 0; x < TERMINAL_COLS; x++) {
+      glyph_bits = term_glyph_bits(terminal_fb[y][x]);
+      bb.dst_x = x * 6;
+      display_copy_mono1p(&bb);
+    }
+  }
+}
+#endif  // NEW_RENDERING
 
 // display text using bitmap font
 void term_print(const char *text, int textlen) {
@@ -77,6 +134,10 @@ void term_print(const char *text, int textlen) {
     }
   }
 
+#ifdef NEW_RENDERING
+  term_redraw_rows(0, TERMINAL_ROWS);
+  display_refresh();
+#else  // NEW RENDERING
   // render buffer to display
   display_set_window(0, 0, DISPLAY_RESX - 1, DISPLAY_RESY - 1);
   for (int i = 0; i < DISPLAY_RESX * DISPLAY_RESY; i++) {
@@ -105,6 +166,7 @@ void term_print(const char *text, int textlen) {
   }
   display_pixeldata_dirty();
   display_refresh();
+#endif
 }
 
 #ifdef TREZOR_EMULATOR
@@ -127,5 +189,3 @@ void term_printf(const char *fmt, ...) {
     va_end(va);
   }
 }
-
-#endif  // TREZOR_PRINT_DISABLE

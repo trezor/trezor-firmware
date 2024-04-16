@@ -18,7 +18,9 @@
  */
 
 #include "colors.h"
-#include "display_interface.h"
+#include "display.h"
+
+#ifndef NEW_RENDERING
 
 typedef enum {
   DMA2D_LAYER_FG = 1,
@@ -142,3 +144,5 @@ void dma2d_start_blend(uint8_t* overlay_addr, uint8_t* bg_addr,
 void dma2d_wait_for_transfer(void) {
   // done in place when emulating, so no need for wait here
 }
+
+#endif

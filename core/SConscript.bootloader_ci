@@ -5,6 +5,7 @@ import tools
 
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
+NEW_RENDERING = ARGUMENTS.get('NEW_RENDERING', '1') == '1'
 
 if TREZOR_MODEL in ('1', 'DISC1', 'DISC2'):
     # skip bootloader_ci build
@@ -82,8 +83,8 @@ CPPPATH_MOD += [
 SOURCE_MOD += [
     'embed/extmod/modtrezorcrypto/rand.c',
     'embed/lib/colors.c',
+    'embed/lib/display_draw.c',
     'embed/lib/display_utils.c',
-    'embed/lib/display.c',
     'embed/lib/fonts/font_bitmap.c',
     'embed/lib/fonts/fonts.c',
     'embed/lib/image.c',

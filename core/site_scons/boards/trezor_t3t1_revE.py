@@ -20,6 +20,11 @@ def configure(
     features_available.append("framebuffer")
     defines += ["FRAMEBUFFER"]
 
+    if "new_rendering" in features_wanted:
+        features_available.append("xframebuffer")
+        features_available.append("display_rgb565")
+        defines += ["XFRAMEBUFFER"]
+
     mcu = "STM32U585xx"
     linker_script = "stm32u58"
 
@@ -40,11 +45,23 @@ def configure(
     sources += [
         "embed/models/model_T3T1_layout.c",
     ]
-    sources += [f"embed/trezorhal/stm32u5/displays/{display}"]
+
+    if "new_rendering" in features_wanted:
+        sources += ["embed/trezorhal/xdisplay_legacy.c"]
+        sources += ["embed/trezorhal/stm32f4/display/st-7789/display_fb.c"]
+        sources += ["embed/trezorhal/stm32f4/display/st-7789/display_driver.c"]
+        sources += ["embed/trezorhal/stm32f4/display/st-7789/display_io.c"]
+        sources += ["embed/trezorhal/stm32f4/display/st-7789/display_panel.c"]
+        sources += [
+            "embed/trezorhal/stm32u5/display/st-7789/panels/lx154a2422.c",
+        ]
+    else:
+        sources += [f"embed/trezorhal/stm32u5/displays/{display}"]
+        sources += [
+            "embed/trezorhal/stm32u5/displays/panels/lx154a2422.c",
+        ]
+
     sources += ["embed/trezorhal/stm32u5/backlight_pwm.c"]
-    sources += [
-        "embed/trezorhal/stm32u5/displays/panels/lx154a2422.c",
-    ]
 
     env_constraints = env.get("CONSTRAINTS")
     if not (env_constraints and "limited_util_s" in env_constraints):
@@ -94,6 +111,7 @@ def configure(
     if "dma2d" in features_wanted:
         defines += ["USE_DMA2D"]
         sources += ["embed/trezorhal/stm32u5/dma2d.c"]
+        sources += ["embed/trezorhal/stm32u5/dma2d_bitblt.c"]
         features_available.append("dma2d")
 
     if "optiga" in features_wanted:
@@ -114,6 +132,8 @@ def configure(
 
     rust_defs = env.get("ENV")["RUST_INCLUDES"]
     rust_defs += "-DFRAMEBUFFER;"
+    if "new_rendering" in features_wanted:
+        rust_defs += "-DXFRAMEBUFFER;"
     env.get("ENV")["RUST_INCLUDES"] = rust_defs
 
     return features_available

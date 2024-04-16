@@ -6,6 +6,7 @@ import boards
 
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
+NEW_RENDERING = ARGUMENTS.get('NEW_RENDERING', '1') == '1'
 DMA2D = False
 
 if TREZOR_MODEL in ('1', 'DISC1'):
@@ -21,6 +22,9 @@ if TREZOR_MODEL in ('1', 'DISC1'):
     Return()
 
 FEATURES_WANTED = ["input", "rgb_led", "dma2d"]
+
+if NEW_RENDERING:
+    FEATURES_WANTED.append("new_rendering")
 
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
@@ -87,10 +91,13 @@ SOURCE_MOD += [
     'embed/lib/buffers.c',
     'embed/lib/colors.c',
     'embed/lib/display_utils.c',
-    'embed/lib/display.c',
     'embed/lib/dma2d_emul.c',
     'embed/lib/fonts/font_bitmap.c',
     'embed/lib/fonts/fonts.c',
+    'embed/lib/gl_color.c',
+    'embed/lib/gl_bitblt_mono8.c',
+    'embed/lib/gl_bitblt_rgb565.c',
+    'embed/lib/gl_bitblt_rgba8888.c',
     'embed/lib/image.c',
     'embed/lib/terminal.c',
     'embed/lib/touch.c',
@@ -99,6 +106,22 @@ SOURCE_MOD += [
     'vendor/micropython/lib/uzlib/crc32.c',
     'vendor/micropython/lib/uzlib/tinflate.c',
     'vendor/trezor-storage/flash_area.c',
+]
+
+if NEW_RENDERING:
+    CPPDEFINES_MOD += ['NEW_RENDERING']
+    if TREZOR_MODEL in ('T',):
+        CPPDEFINES_MOD += ['DISPLAY_RGB565']
+    elif TREZOR_MODEL in ('R', '1',):
+        CPPDEFINES_MOD += ['XFRAMEBUFFER', 'DISPLAY_MONO']
+    elif TREZOR_MODEL in ('T3T1',):
+        CPPDEFINES_MOD += ['XFRAMEBUFFER', 'DISPLAY_RGB565']
+    SOURCE_MOD += [
+        'embed/lib/gl_draw.c',
+    ]
+else:
+    SOURCE_MOD += [
+        'embed/lib/display_draw.c',
 ]
 
 if TREZOR_MODEL in ('1', ):
@@ -135,7 +158,6 @@ SOURCE_BOOTLOADER = [
 
 SOURCE_TREZORHAL = [
     'embed/trezorhal/unix/boot_args.c',
-    'embed/trezorhal/unix/display-unix.c',
     'embed/trezorhal/unix/fault_handlers.c',
     'embed/trezorhal/unix/flash.c',
     'embed/trezorhal/unix/flash_otp.c',
@@ -146,6 +168,17 @@ SOURCE_TREZORHAL = [
     'embed/trezorhal/unix/random_delays.c',
     'embed/trezorhal/unix/secret.c',
 ]
+
+if NEW_RENDERING:
+    SOURCE_TREZORHAL += [
+        'embed/trezorhal/unix/display_driver.c',
+        'embed/trezorhal/unix/dma2d_bitblt.c',
+        'embed/trezorhal/xdisplay_legacy.c',
+    ]
+else:
+    SOURCE_TREZORHAL += [
+        'embed/trezorhal/unix/display-unix.c',
+    ]
 
 if TREZOR_MODEL in ('R', 'T3T1'):
     SOURCE_TREZORHAL += [
@@ -260,17 +293,18 @@ cmake_gen = env.Command(
 #
 
 RUST_TARGET = 'x86_64-unknown-linux-gnu'
-RUST_PROFILE = 'release'
 RUST_LIB = 'trezor_lib'
-RUST_LIBDIR = f'build/bootloader_emu/rust/{RUST_TARGET}/{RUST_PROFILE}'
+
+if ARGUMENTS.get('TREZOR_EMULATOR_DEBUGGABLE', '0') == '1':
+    RUST_PROFILE = 'dev'
+    RUST_LIBDIR = f'build/bootloader_emu/rust/{RUST_TARGET}/debug'
+else:
+    RUST_PROFILE = 'release'
+    RUST_LIBDIR = f'build/bootloader_emu/rust/{RUST_TARGET}/release'
+
 RUST_LIBPATH = f'{RUST_LIBDIR}/lib{RUST_LIB}.a'
 
 def cargo_build():
-    # Determine the profile build flags.
-    if RUST_PROFILE == 'release':
-        profile = '--release'
-    else:
-        profile = ''
     if TREZOR_MODEL in ("1",):
         features = ["model_t1"]
     elif TREZOR_MODEL in ("R",):
@@ -279,6 +313,19 @@ def cargo_build():
         features = ["model_mercury"]
     else:
         features = ["model_tt"]
+
+    if NEW_RENDERING:
+        features.append('new_rendering')
+        if TREZOR_MODEL in ('T',):
+            features.append('display_rgb565')
+            features.append('ui_antialiasing')
+        elif TREZOR_MODEL in ('R', '1',):
+            features.append('display_mono')
+            features.append('xframebuffer')
+        elif TREZOR_MODEL in ('T3T1',):
+            features.append('display_rgb565')
+            features.append('xframebuffer')
+            features.append('ui_antialiasing')
 
     if TREZOR_MODEL in ('T', 'T3T1'):
         features.append('touch')
@@ -299,7 +346,7 @@ def cargo_build():
         '-Z build-std-features=panic_immediate_abort',
     ]
 
-    return f'cd embed/rust; cargo build {profile} ' + ' '.join(cargo_opts)
+    return f'cd embed/rust; cargo build --profile {RUST_PROFILE} ' + ' '.join(cargo_opts)
 
 rust = env.Command(
     target=RUST_LIBPATH,

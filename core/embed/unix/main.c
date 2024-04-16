@@ -39,6 +39,7 @@
 
 #include "extmod/misc.h"
 #include "extmod/vfs_posix.h"
+#include "display.h"
 #include "flash.h"
 #include "flash_otp.h"
 #include "genhdr/mpversion.h"
@@ -480,6 +481,8 @@ MP_NOINLINE int main_(int argc, char **argv) {
   mp_stack_set_limit(600000 * (sizeof(void *) / 4));
 
   pre_process_options(argc, argv);
+
+  display_init();
 
   // Map trezor.flash to memory.
   flash_init();

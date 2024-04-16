@@ -36,9 +36,20 @@ def configure(
     sources += [
         "embed/models/model_D001_layout.c",
     ]
-    sources += [f"embed/trezorhal/stm32f4/displays/{display}"]
-    sources += ["embed/trezorhal/stm32f4/displays/ili9341_spi.c"]
+
+    if "new_rendering" in features_wanted:
+        sources += [
+            "embed/trezorhal/xdisplay_legacy.c",
+            "embed/trezorhal/stm32f4/display/stm32f429i-disc1/display_driver.c",
+            "embed/trezorhal/stm32f4/display/stm32f429i-disc1/display_ltdc.c",
+            "embed/trezorhal/stm32f4/display/stm32f429i-disc1/ili9341_spi.c",
+        ]
+    else:
+        sources += [f"embed/trezorhal/stm32f4/displays/{display}"]
+        sources += ["embed/trezorhal/stm32f4/displays/ili9341_spi.c"]
+
     sources += ["embed/trezorhal/stm32f4/dma2d.c"]
+    sources += ["embed/trezorhal/stm32f4/dma2d_bitblt.c"]
     sources += [
         "vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma2d.c"
     ]
@@ -50,6 +61,11 @@ def configure(
     defines += ["FRAMEBUFFER"]
     features_available.append("dma2d")
     features_available.append("framebuffer")
+
+    if "new_rendering" in features_wanted:
+        defines += ["XFRAMEBUFFER"]
+        features_available.append("xframebuffer")
+        features_available.append("display_rgb565")
 
     if "input" in features_wanted:
         sources += ["embed/trezorhal/stm32f4/i2c.c"]
@@ -70,5 +86,11 @@ def configure(
 
     env.get("ENV")["TREZOR_BOARD"] = board
     env.get("ENV")["MCU_TYPE"] = mcu
+
+    rust_defs = env.get("ENV")["RUST_INCLUDES"]
+    rust_defs += "-DFRAMEBUFFER;"
+    if "new_rendering" in features_wanted:
+        rust_defs += "-DXFRAMEBUFFER;"
+    env.get("ENV")["RUST_INCLUDES"] = rust_defs
 
     return features_available
