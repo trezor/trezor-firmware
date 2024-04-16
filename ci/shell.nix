@@ -22,6 +22,17 @@ let
     };
     overlays = [ rustOverlay ];
   };
+  # 23.11 from 15. 4. 2024
+  newNixpkgs = import (builtins.fetchTarball {
+    url = "https://github.com/NixOS/nixpkgs/archive/53a2c32bc66f5ae41a28d7a9a49d321172af621e.tar.gz";
+    sha256 = "0yqbwqbripb1bbhlwjfbqmg9qb0lai2fc0k1vfh674d6rrc8igwv";
+  }) {
+    config = {
+      allowUnfree = acceptJlink;
+      segger-jlink.acceptLicense = acceptJlink;
+    };
+    overlays = [ rustOverlay ];
+  };
   # commit before python36 was removed
   oldPythonNixpkgs = import (builtins.fetchTarball {
     url = "https://github.com/NixOS/nixpkgs/archive/b9126f77f553974c90ab65520eff6655415fc5f4.tar.gz";
@@ -108,7 +119,7 @@ stdenvNoCC.mkDerivation ({
     libffi
     libjpeg
     libusb1
-    llvmPackages.clang
+    newNixpkgs.llvmPackages_17.clang
     openssl
     pkgconfig
     poetry
