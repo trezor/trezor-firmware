@@ -3,7 +3,6 @@ use heapless::Vec;
 use super::theme;
 use crate::{
     micropython::buffer::StrBuffer,
-    strutil::TString,
     ui::{
         component::{base::Component, Event, EventCtx},
         display::Icon,

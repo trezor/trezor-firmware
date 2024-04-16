@@ -7,7 +7,7 @@ mod starry;
 
 use crate::ui::display::{Color, Icon};
 
-#[cfg(any(feature = "model_tt", feature = "model_mercury"))]
+#[cfg(feature = "model_tt")]
 use crate::ui::display::loader::circular::{
     loader_circular as determinate, loader_circular_indeterminate as indeterminate,
 };
