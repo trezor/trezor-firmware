@@ -195,7 +195,16 @@ obj_program.extend(env.Object(source=SOURCE_HAL))
 
 MODEL_IDENTIFIER = tools.get_model_identifier(TREZOR_MODEL)
 
-if PRODUCTION:
+
+if (vh := ARGUMENTS.get("VENDOR_HEADER", None)) is not None:
+    VENDORHEADER = vh
+elif (vh := os.environ.get("VENDOR_HEADER", None)) is not None:
+    # TODO looking at envvars in a build script is not very nice. But justifiable in case
+    # of vendor header which does not affect reproducibility of the build. Nonetheless,
+    # we should figure out a cleaner way to pass in this argument, without having to teach
+    # the Makefile about it.
+    VENDORHEADER = f'embed/vendorheader/{MODEL_IDENTIFIER}/{vh}'
+elif PRODUCTION:
     VENDORHEADER = f'embed/vendorheader/{MODEL_IDENTIFIER}/vendorheader_prodtest_signed_prod.bin'
 elif BOOTLOADER_DEVEL:
     VENDORHEADER = f'embed/vendorheader/{MODEL_IDENTIFIER}/vendorheader_dev_DO_NOT_SIGN_signed_dev.bin'

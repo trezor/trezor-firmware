@@ -59,6 +59,7 @@ function help_and_die() {
   echo "  --help"
   echo
   echo "Set PRODUCTION=0 to run non-production builds."
+  echo "Set VENDOR_HEADER=vendorheader_prodtest_unsigned.bin to use the specified vendor header for prodtest."
   exit 0
 }
 
@@ -382,6 +383,7 @@ EOF
       -v "$DIR/build/core$DIRSUFFIX":/build:z \
       --env TREZOR_MODEL="$TREZOR_MODEL" \
       --env PRODUCTION="$PRODUCTION" \
+      --env VENDOR_HEADER="$VENDOR_HEADER" \
       --init \
       "$SNAPSHOT_NAME" \
       /nix/var/nix/profiles/default/bin/nix-shell --run "bash /local/build/$SCRIPT_NAME"
