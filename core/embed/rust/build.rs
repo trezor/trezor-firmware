@@ -77,6 +77,16 @@ fn prepare_bindings() -> bindgen::Builder {
         clang_args.push(arg);
     }
 
+    #[cfg(feature = "xframebuffer")]
+    {
+        bindings = bindings.clang_args(&["-DXFRAMEBUFFER"]);
+    }
+
+    #[cfg(feature = "new_rendering")]
+    {
+        bindings = bindings.clang_args(["-DNEW_RENDERING"]);
+    }
+
     // Pass in correct include paths and defines.
     if is_firmware() {
         clang_args.push("-nostdinc");
@@ -289,6 +299,27 @@ fn generate_trezorhal_bindings() {
         .allowlist_var("DISPLAY_FRAMEBUFFER_OFFSET_Y")
         .allowlist_var("DISPLAY_RESX")
         .allowlist_var("DISPLAY_RESY")
+        .allowlist_type("display_fb_info_t")
+        .allowlist_function("display_get_frame_buffer")
+        .allowlist_function("display_fill")
+        .allowlist_function("display_copy_rgb565")
+        // gfx_bitblt
+        .allowlist_type("gfx_bitblt_t")
+        .allowlist_function("gfx_rgb565_fill")
+        .allowlist_function("gfx_rgb565_copy_mono4")
+        .allowlist_function("gfx_rgb565_copy_rgb565")
+        .allowlist_function("gfx_rgb565_blend_mono4")
+        .allowlist_function("gfx_rgba8888_fill")
+        .allowlist_function("gfx_rgba8888_copy_mono4")
+        .allowlist_function("gfx_rgba8888_copy_rgb565")
+        .allowlist_function("gfx_rgba8888_copy_rgba8888")
+        .allowlist_function("gfx_rgba8888_blend_mono4")
+        .allowlist_function("gfx_mono8_fill")
+        .allowlist_function("gfx_mono8_copy_mono1p")
+        .allowlist_function("gfx_mono8_copy_mono4")
+        .allowlist_function("gfx_mono8_blend_mono1p")
+        .allowlist_function("gfx_mono8_blend_mono4")
+        .allowlist_function("dma2d_wait")
         // fonts
         .allowlist_function("font_height")
         .allowlist_function("font_max_height")

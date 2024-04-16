@@ -1,5 +1,6 @@
 pub mod color;
 pub mod font;
+pub mod image;
 pub mod loader;
 #[cfg(feature = "jpeg")]
 pub mod tjpgd;
