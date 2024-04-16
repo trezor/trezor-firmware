@@ -1,6 +1,6 @@
 use crate::{
     error::Error,
-    strutil::{self, StringType, TString},
+    strutil::{self, TString},
     translations::TR,
     ui::{
         component::{
