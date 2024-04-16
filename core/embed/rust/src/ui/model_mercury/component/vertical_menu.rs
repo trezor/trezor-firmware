@@ -59,13 +59,13 @@ impl VerticalMenu {
         Self::new(buttons_vec)
     }
 
-    pub fn context_menu(options: [(&'static str, Icon); 3]) -> Self {
-        // TODO: this is just POC
+    pub fn context_menu(options: Vec<(&'static str, Icon), N_ITEMS>) -> Self {
         // FIXME: args should be TString when IconText has TString
         let mut buttons_vec = VerticalMenuButtons::new();
         for opt in options {
             let button_theme;
             match opt.1 {
+                // FIXME: might not be applicable everywhere
                 theme::ICON_CANCEL => {
                     button_theme = theme::button_vertical_menu_orange();
                 }
@@ -93,11 +93,12 @@ impl Component for VerticalMenu {
         self.area = bounds;
         self.areas_sep.clear();
         let mut remaining = bounds;
-        for i in 0..N_ITEMS {
+        let n_seps = self.buttons.len() - 1;
+        for (i, button) in self.buttons.iter_mut().enumerate() {
             let (area_button, new_remaining) = remaining.split_top(MENU_BUTTON_HEIGHT);
-            self.buttons[i].place(area_button);
+            button.place(area_button);
             remaining = new_remaining;
-            if i < N_SEPS {
+            if i < n_seps {
                 let (area_sep, new_remaining) = remaining.split_top(MENU_SEP_HEIGHT);
                 unwrap!(self.areas_sep.push(area_sep));
                 remaining = new_remaining;

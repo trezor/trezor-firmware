@@ -851,5 +851,6 @@
   "849": "cardano__delegating_to_key_hash",
   "850": "cardano__delegating_to_script",
   "851": "cardano__deposit",
-  "852": "cardano__vote_delegation"
+  "852": "cardano__vote_delegation",
+  "853": "instructions__swipe_up"
 }
