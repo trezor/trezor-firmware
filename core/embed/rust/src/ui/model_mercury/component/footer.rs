@@ -64,6 +64,14 @@ impl<'a> Footer<'a> {
         self.style_description = style;
         ctx.request_paint();
     }
+
+    pub fn height(&self) -> i16 {
+        if self.text_description.is_some() {
+            Footer::HEIGHT_DEFAULT
+        } else {
+            Footer::HEIGHT_SIMPLE
+        }
+    }
 }
 
 impl<'a> Component for Footer<'a> {
@@ -123,5 +131,10 @@ impl<'a> Component for Footer<'a> {
                 .with_align(Alignment::Center)
                 .render(target);
         });
+    }
+
+    #[cfg(feature = "ui_bounds")]
+    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
+        sink(self.area);
     }
 }
