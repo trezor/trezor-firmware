@@ -15,10 +15,18 @@ micropython = []
 protobuf = ["micropython"]
 ui = []
 dma2d = []
+xframebuffer = []
+display_mono = []
+display_rgb565 = []
+display_rgba8888 = []
 framebuffer = []
 framebuffer32bit = []
 ui_debug = []
 ui_bounds = []
+ui_antialiasing = []
+ui_blurring = []
+ui_jpeg_decoder = ["jpeg"]
+new_rendering = []
 bootloader = []
 button = []
 touch = []
@@ -44,6 +52,8 @@ test = [
     "micropython",
     "protobuf",
     "ui",
+    "ui_jpeg_decoder",
+    "ui_blurring",
     "dma2d",
     "touch",
     "backlight",
@@ -104,6 +114,15 @@ version = "0.3.3"
 version = "0.2.6"
 default-features = false
 features = ["nightly"]
+
+[dependencies.static-alloc]
+version = "0.2.4"
+
+[dependencies.without-alloc]
+version = "0.2.2"
+
+[dependencies.unsize]
+version = "1.1.0"
 
 # Build dependencies
 
