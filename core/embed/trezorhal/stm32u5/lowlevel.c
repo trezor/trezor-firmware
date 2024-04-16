@@ -211,6 +211,17 @@ uint32_t flash_set_option_bytes(void) {
   FLASH->WRP2AR = WRP_DEFAULT_VALUE;
   FLASH->WRP2BR = WRP_DEFAULT_VALUE;
 
+  // Set the OEM keys to the default value
+  // In case these are for any reason set, we will reset them to the default
+  // while locking the device, to ensure that there is no ability to reverse the
+  // RDP. These keys are write-only, so the only way to check that the keys are
+  // not set is through OEMxLOCK bits in FLASH->NSSR register. These bits are
+  // unset only if the keys are written to 0xFFFFFFFF.
+  FLASH->OEM1KEYR1 = 0xFFFFFFFF;
+  FLASH->OEM1KEYR2 = 0xFFFFFFFF;
+  FLASH->OEM2KEYR1 = 0xFFFFFFFF;
+  FLASH->OEM2KEYR2 = 0xFFFFFFFF;
+
   FLASH->OPTR =
       FLASH_OPTR_VALUE;  // WARNING: dev board safe unless you compile for
   // PRODUCTION or change this value!!!
