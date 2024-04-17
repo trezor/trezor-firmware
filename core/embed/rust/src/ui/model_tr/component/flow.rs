@@ -2,6 +2,7 @@ use crate::{
     strutil::TString,
     ui::{
         component::{Child, Component, ComponentExt, Event, EventCtx, Pad, Paginate},
+        constant::SCREEN,
         geometry::Rect,
     },
 };
@@ -94,11 +95,15 @@ where
     /// position.
     fn change_current_page(&mut self, ctx: &mut EventCtx) {
         self.current_page = self.pages.get(self.page_counter);
-        if let Some(title) = self.current_page.title() {
-            self.title = Some(Title::new(title));
-            self.title.place(self.title_area);
-        } else {
-            self.title = None;
+        if !self.has_common_title {
+            if let Some(title) = self.current_page.title() {
+                self.title = Some(Title::new(title));
+            } else {
+                self.title = None;
+            }
+            // in case the title was added or removed, re-calculate the areas for
+            // subcomponents
+            self.place(SCREEN);
         }
         let scrollbar_active_index = self
             .pages
