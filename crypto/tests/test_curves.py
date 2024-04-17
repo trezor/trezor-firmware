@@ -5,9 +5,9 @@ import hashlib
 import os
 import random
 
-import curve25519
 import ecdsa
 import pytest
+from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
 
 
 def bytes2num(s):
@@ -344,17 +344,17 @@ def test_validate_pubkey_direct(point):
 def test_curve25519(r):
     sec1 = bytes(bytearray(r.randbytes(32)))
     sec2 = bytes(bytearray(r.randbytes(32)))
-    pub1 = curve25519.Private(sec1).get_public()
-    pub2 = curve25519.Private(sec2).get_public()
+    pub1 = X25519PrivateKey.from_private_bytes(sec1).public_key()
+    pub2 = X25519PrivateKey.from_private_bytes(sec2).public_key()
 
     session1 = r.randbytes(32)
-    lib.curve25519_scalarmult(session1, sec2, pub1.public)
+    lib.curve25519_scalarmult(session1, sec2, pub1.public_bytes_raw())
     session2 = r.randbytes(32)
-    lib.curve25519_scalarmult(session2, sec1, pub2.public)
+    lib.curve25519_scalarmult(session2, sec1, pub2.public_bytes_raw())
     assert bytearray(session1) == bytearray(session2)
 
-    shared1 = curve25519.Private(sec2).get_shared_key(pub1, hashfunc=lambda x: x)
-    shared2 = curve25519.Private(sec1).get_shared_key(pub2, hashfunc=lambda x: x)
+    shared1 = X25519PrivateKey.from_private_bytes(sec2).exchange(pub1)
+    shared2 = X25519PrivateKey.from_private_bytes(sec1).exchange(pub2)
     assert shared1 == shared2
     assert bytearray(session1) == shared1
     assert bytearray(session2) == shared2
@@ -362,10 +362,10 @@ def test_curve25519(r):
 
 def test_curve25519_pubkey(r):
     sec = bytes(bytearray(r.randbytes(32)))
-    pub = curve25519.Private(sec).get_public()
+    pub = X25519PrivateKey.from_private_bytes(sec).public_key()
     res = r.randbytes(32)
     lib.curve25519_scalarmult_basepoint(res, sec)
-    assert bytearray(res) == pub.public
+    assert bytearray(res) == pub.public_bytes_raw()
 
 
 def test_curve25519_scalarmult_from_gpg(r):
