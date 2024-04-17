@@ -815,11 +815,21 @@ fn fill_octant(
 
     // Process area between a p1 and p2 lines
     let p2_iter = line_points(p2_start.v, p2_start.u, 0).skip(skip);
+    let mut first = true;
     for (p1, p2) in p1_iter.zip(p2_iter) {
         let p1_coord = Point::new(p1_start.u - p1.v, -p1_start.v + p1.u);
         let p2_coord = Point::new(p2_start.u - p2.v, -p2_start.v + p2.u);
-        let p2_frac = if join_flag { 255 } else { 255 - p2.frac };
+        let p2_frac = if first {
+            p2_start.frac
+        } else {
+            if join_flag {
+                255
+            } else {
+                255 - p2.frac
+            }
+        };
         fill(Some(p1_coord), p1.frac, p2_coord, p2_frac);
+        first = false;
     }
 }
 
