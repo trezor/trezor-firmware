@@ -1,0 +1,20 @@
+{
+    "header_len": 512,
+    "text": "UNSAFE, FACTORY TEST ONLY",
+    "hw_model": "T3B1",
+    "expiry": 0,
+    "version": [0, 0],
+    "sig_m": 2,
+    "trust": {
+        "allow_run_with_secret": true,
+        "show_vendor_string": false,
+        "require_user_click": false,
+        "red_background": false,
+        "delay": 0
+    },
+    "pubkeys": [
+        "cf9af91868919da222aaf423386446d5546e165fce0f005e806e3c1a0c2334ec",
+        "df28cea5a5c557ed56c073c8ddeece1f4c786498efdbb3432ccf93d0af837862",
+        "27b4374398d4854dc9ade7a500265e1e1d755dfe3b14d207fec76a2f0a0e0529"
+    ]
+}

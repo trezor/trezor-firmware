@@ -1,0 +1,20 @@
+{
+    "header_len": 512,
+    "text": "Trezor",
+    "hw_model": "T3B1",
+    "expiry": 0,
+    "version": [0, 0],
+    "sig_m": 2,
+    "trust": {
+        "allow_run_with_secret": true,
+        "show_vendor_string": false,
+        "require_user_click": false,
+        "red_background": false,
+        "delay": 0
+    },
+    "pubkeys": [
+        "90edb45db65f26d793f8b8c6a505062286262d028d341f273272e5d2bcc71f18",
+        "e32f59de973a39cb2b5ce79a17cbc4107272d46c617848e3c7b19b5b731cc174",
+        "8a5d0b43591db2dbf3895ce19d30d7ec05333b0028737ab76cacb4b7ed0833fe"
+    ]
+}
