@@ -76,7 +76,7 @@ void i2c_init_instance(uint16_t idx, i2c_instance_t *instance) {
 
   // configure CTP I2C SCL and SDA GPIO lines
   GPIO_InitStructure.Mode = GPIO_MODE_AF_OD;
-  GPIO_InitStructure.Pull = GPIO_NOPULL;
+  GPIO_InitStructure.Pull = GPIO_PULLUP;
   GPIO_InitStructure.Speed =
       GPIO_SPEED_FREQ_LOW;  // I2C is a KHz bus and low speed is still good into
   // the low MHz

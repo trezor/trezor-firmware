@@ -188,6 +188,18 @@ void haptic_play(haptic_effect_t effect) {
   }
 }
 
+void haptic_play_raw(uint8_t effect) {
+  if (effect < 124) {
+    haptic_play_lib((haptic_effect_t) effect);
+  } else {
+    switch (effect) {
+      case 200:
+        haptic_play(HAPTIC_BUTTON_PRESS);
+        break;
+    }
+  }
+}
+
 bool haptic_test(uint16_t duration_ms) {
   return haptic_play_RTP(PRODTEST_EFFECT_AMPLITUDE, duration_ms);
 }

@@ -23,4 +23,6 @@ bool haptic_test(uint16_t duration_ms);
 // Play haptic effect
 void haptic_play(haptic_effect_t effect);
 
+void haptic_play_raw(uint8_t effect);
+
 #endif

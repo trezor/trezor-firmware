@@ -8,6 +8,12 @@ pub enum HapticEffect {
 
 pub fn play(effect: HapticEffect) {
     unsafe {
-        ffi::haptic_play(effect as _);
+        //ffi::haptic_play(effect as _);
+    }
+}
+
+pub fn play_raw(effect: u8) {
+    unsafe {
+        ffi::haptic_play_raw(effect);
     }
 }

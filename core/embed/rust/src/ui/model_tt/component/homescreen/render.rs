@@ -32,8 +32,8 @@ pub struct HomescreenText<'a> {
 }
 
 #[derive(Clone, Copy)]
-pub struct HomescreenNotification {
-    pub text: TString<'static>,
+pub struct HomescreenNotification<'a> {
+    pub text: TString<'a>,
     pub icon: Icon,
     pub color: Color,
 }

@@ -1,5 +1,6 @@
 mod render;
 
+use heapless::String;
 use crate::{
     strutil::TString,
     time::{Duration, Instant},
@@ -32,6 +33,9 @@ use render::{
     homescreen, homescreen_blurred, HomescreenNotification, HomescreenText,
     HOMESCREEN_IMAGE_HEIGHT, HOMESCREEN_IMAGE_WIDTH,
 };
+use crate::trezorhal::haptic;
+use crate::ui::component::ComponentExt;
+use crate::ui::model_tt::component::{PinKeyboard, PinKeyboardMsg};
 
 use super::{theme, Loader, LoaderMsg};
 
@@ -53,7 +57,10 @@ pub struct Homescreen {
     loader: Loader,
     pad: Pad,
     paint_notification_only: bool,
+    pin: bool,
     delay: Option<TimerToken>,
+    kbd: PinKeyboard<'static>,
+    effect: u8,
 }
 
 pub enum HomescreenMsg {
@@ -74,6 +81,9 @@ impl Homescreen {
             pad: Pad::with_background(theme::BG),
             paint_notification_only: false,
             delay: None,
+            pin: false,
+            kbd: PinKeyboard::new("Enter effect num".into(), "".into(), None, true),
+            effect: 1,
         }
     }
 
@@ -86,24 +96,16 @@ impl Homescreen {
         }
     }
 
-    fn get_notification(&self) -> Option<HomescreenNotification> {
-        if !usb_configured() {
-            let (color, icon) = Self::level_to_style(0);
-            Some(HomescreenNotification {
-                text: TR::homescreen__title_no_usb_connection.into(),
-                icon,
-                color,
-            })
-        } else if let Some((notification, level)) = self.notification {
-            let (color, icon) = Self::level_to_style(level);
-            Some(HomescreenNotification {
-                text: notification,
-                icon,
-                color,
-            })
-        } else {
-            None
-        }
+    fn get_notification<'a>(&'a self, s: &'a mut String<20>) -> Option<HomescreenNotification> {
+
+        let (color, icon) = Self::level_to_style(0);
+        unwrap!(s.push_str("Effect: "));
+        unwrap!(s.push_str(inttostr!(self.effect)));
+        Some(HomescreenNotification {
+            text: TString::from_str(s.as_str()),
+            icon,
+            color,
+        })
     }
 
     fn paint_loader(&mut self) {
@@ -180,22 +182,70 @@ impl Component for Homescreen {
 
     fn place(&mut self, bounds: Rect) -> Rect {
         self.pad.place(AREA);
+        self.kbd.place(AREA);
         self.loader.place(AREA.translate(LOADER_OFFSET));
         bounds
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        Self::event_usb(self, ctx, event);
-        if self.hold_to_lock {
-            Self::event_hold(self, ctx, event).then_some(HomescreenMsg::Dismissed)
-        } else {
+
+        if let Event::Touch(TouchEvent::TouchStart(_)) = event {
+            haptic::play_raw(self.effect);
+
+            if !self.pin{
+            self.pin= true;
+            self.kbd.clear(ctx);
+            self.pad.clear();
+            ctx.request_paint();
+            self.request_complete_repaint(ctx);
+            return None;
+            }
+        }
+
+        if self.pin {
+            if let Some(e)=self.kbd.event(ctx, event) {
+                match e {
+                    PinKeyboardMsg::Confirmed => {
+                        let pin = self.kbd.pin();
+                        pin.parse().ok().map(|pin :u32| {
+                            if pin <= 255 {
+                                if pin == 0 {
+                                    self.effect = 1;
+                                } else {
+                                    self.effect = pin as u8;
+                                }
+                            }
+                            self.pin = false;
+                        });
+                        self.pad.clear();
+                        self.pin = false;
+                        ctx.request_paint();
+                        self.request_complete_repaint(ctx);
+                    }
+                    PinKeyboardMsg::Cancelled => {
+                        self.pin = false;
+                        self.pad.clear();
+                        ctx.request_paint();
+                        self.request_complete_repaint(ctx);
+                    }
+                }
+            }
             None
+        }else {
+            Self::event_usb(self, ctx, event);
+            if self.hold_to_lock {
+                Self::event_hold(self, ctx, event).then_some(HomescreenMsg::Dismissed)
+            } else {
+                None
+            }
         }
     }
 
     fn paint(&mut self) {
         self.pad.paint();
-        if self.loader.is_animating() || self.loader.is_completely_grown(Instant::now()) {
+        if self.pin {
+            self.kbd.paint();
+        } else if self.loader.is_animating() || self.loader.is_completely_grown(Instant::now()) {
             self.paint_loader();
         } else {
             let mut label_style = theme::TEXT_DEMIBOLD;
@@ -208,7 +258,9 @@ impl Component for Homescreen {
                 icon: None,
             };
 
-            let notification = self.get_notification();
+
+            let mut s: String<20> = String::new();
+            let notification = self.get_notification(&mut s);
 
             let res = get_user_custom_image();
             let mut show_default = true;

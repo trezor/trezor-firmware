@@ -407,7 +407,8 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("button_read")
         // haptic
         .allowlist_type("haptic_effect_t")
-        .allowlist_function("haptic_play");
+        .allowlist_function("haptic_play")
+        .allowlist_function("haptic_play_raw");
 
     // Write the bindings to a file in the OUR_DIR.
     bindings
