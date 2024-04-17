@@ -50,14 +50,12 @@ graphviz = "*"
 
 ## cointool
 click = "^8"
-ed25519 = "^1.4"
 requests = "^2.31"
 termcolor = "*"
 Pillow = ">=10.0.1"
 
 # crypto
 ecdsa = "^0.16"
-curve25519-donna = "*"
 pyasn1 = "*"
 
 # legacy

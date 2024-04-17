@@ -371,16 +371,6 @@ test = ["certifi", "pretend", "pytest (>=6.2.0)", "pytest-benchmark", "pytest-co
 test-randomorder = ["pytest-randomly"]
 
 [[package]]
-name = "curve25519-donna"
-version = "1.3"
-description = "Python wrapper for the Curve25519 cryptographic library"
-optional = false
-python-versions = "*"
-files = [
-    {file = "curve25519-donna-1.3.tar.gz", hash = "sha256:1818a9d5356a05c022cd504f44fe1d2f641a5c020f8a4c51b2294e02bd9c1bf0"},
-]
-
-[[package]]
 name = "demjson3"
 version = "3.0.5"
 description = "encoder, decoder, and lint/validator for JSON (JavaScript Object Notation) compliant with RFC 7159"
@@ -444,16 +434,6 @@ six = ">=1.9.0"
 [package.extras]
 gmpy = ["gmpy"]
 gmpy2 = ["gmpy2"]
-
-[[package]]
-name = "ed25519"
-version = "1.5"
-description = "Ed25519 public-key signatures"
-optional = false
-python-versions = "*"
-files = [
-    {file = "ed25519-1.5.tar.gz", hash = "sha256:02053ee019ceef0df97294be2d4d5a8fc120fc86e81e08bec1245fc0f9403358"},
-]
 
 [[package]]
 name = "execnet"
@@ -1824,4 +1804,4 @@ testing = ["func-timeout", "jaraco.itertools", "pytest (>=6)", "pytest-black (>=
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8.1"
-content-hash = "aee23e80ff37c84f73fad88ed177b3459cafb34202e6d1ecf8bf99446d43a401"
+content-hash = "c1a5ee4dda4cbbfd897232da06ce54e8e9047669d23f825ade8fc395f68a10cd"
