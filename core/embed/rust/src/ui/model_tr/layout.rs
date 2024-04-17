@@ -735,6 +735,8 @@ extern "C" fn new_altcoin_tx_summary(n_args: usize, args: *const Obj, kwargs: *m
                     let btn_actions = ButtonActions::cancel_confirm_next();
 
                     let ops = OpTextLayout::new(theme::TEXT_MONO)
+                        .text_bold(amount_title)
+                        .newline()
                         .text_mono(amount_value)
                         .newline()
                         .newline_half()
@@ -743,7 +745,7 @@ extern "C" fn new_altcoin_tx_summary(n_args: usize, args: *const Obj, kwargs: *m
                         .text_mono(fee_value);
 
                     let formatted = FormattedText::new(ops);
-                    Page::new(btn_layout, btn_actions, formatted).with_title(amount_title)
+                    Page::new(btn_layout, btn_actions, formatted)
                 }
                 1 => {
                     // Other information
