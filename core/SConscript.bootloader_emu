@@ -37,7 +37,7 @@ if TREZOR_MODEL in ('1', 'R'):
     FONT_DEMIBOLD='Font_PixelOperator_Regular_8'
     FONT_BOLD='Font_PixelOperator_Bold_8'
     FONT_MONO='Font_PixelOperator_Regular_8'
-    FONT_BIG=None
+    FONT_BIG='Font_PixelOperator_Regular_8'
     FONT_NORMAL_UPPER=None
     FONT_BOLD_UPPER=None
 elif TREZOR_MODEL in ('T', 'DISC2'):
