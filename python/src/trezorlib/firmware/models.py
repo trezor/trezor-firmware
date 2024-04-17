@@ -248,22 +248,22 @@ T3T1 = ModelKeys(
 )
 
 T3B1 = ModelKeys(
-    production=False,
+    production=True,
     boardloader_keys=[
         bytes.fromhex(key)
         for key in (
-            "db995fe25169d141cab9bbba92baa01f9f2e1ece7df4cb2ac05190f37fcc1f9d",
-            "2152f8d19b791d24453242e15f2eab6cb7cffa7b6a5ed30097960e069881db12",
-            "22fc297792f0b6ffc0bfcfdb7edb0c0aa14e025a365ec0e342e86e3829cb74b6",
+            "bbc21adbc1b44d6bfe10c5223de33c28429e52680707d3249007ed42dcc5be13",
+            "22e42a301f3b6ff4f2e6926bce4359e83fc83f0f4a84a7338959c1fd0e29dc13",
+            "7f478f5fb78d8c054b720d8104bf2f6487e452402458979b5525c290dc344d32",
         )
     ],
     boardloader_sigs_needed=2,
     bootloader_keys=[
         bytes.fromhex(key)
         for key in (
-            "d759793bbc13a2819a827c76adb6fba8a49aee007f49f2d0992d99b825ad2c48",
-            "6355691c178a8ff91007a7478afb955ef7352c63e7b25703984cf78b26e21a56",
-            "ee93a4f66f8d16b819bb9beb9ffccdfcdc1412e87fee6a324c2a99a1e0e67148",
+            "41d9884801377cff04b0b459fc9b56af1b51f47343a3a6e4fdc1eacabcad7756",
+            "23ec4ec4674d68ac5431e8ba84d7ac24cb5a66702ec565014d164a72182a66c7",
+            "8a7dac53e1be46607231920b0c71056a27be16b67a2fc0d8644d5f8708a28dd1",
         )
     ],
     bootloader_sigs_needed=2,
