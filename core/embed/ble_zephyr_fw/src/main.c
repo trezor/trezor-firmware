@@ -236,8 +236,8 @@ void ble_write_thread(void)
 		/* Wait indefinitely for data to be sent over bluetooth */
 		uart_data_t *buf = uart_get_data_ext();
 
-		if (bt_nus_send(NULL, buf->data, buf->len)) {
-			LOG_WRN("Failed to send data over BLE connection");
+		if (bt_nus_send(conn_get_current(), buf->data, buf->len)) {
+			LOG_WRN("Failed to send data over BLE connection: %d", buf->len);
 		}
 
 		k_free(buf);

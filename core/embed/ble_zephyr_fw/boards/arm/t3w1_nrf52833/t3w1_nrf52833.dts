@@ -102,7 +102,7 @@
 	pinctrl-0 = <&spi0_default>;
 	pinctrl-1 = <&spi0_sleep>;
 	pinctrl-names = "default", "sleep";
-	cs-gpios = <&gpio0 13 GPIO_ACTIVE_LOW>;
+	cs-gpios = <&gpio0 23 GPIO_ACTIVE_LOW>;
 	reg_my_spi_master: spi-dev-a@0 {
 		reg = <0>;
 	};

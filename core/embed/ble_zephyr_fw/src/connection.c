@@ -178,3 +178,8 @@ void pairing_failed(struct bt_conn *conn, enum bt_security_err reason)
 
   LOG_INF("Pairing failed conn: %s, reason %d", addr, reason);
 }
+
+
+struct bt_conn * conn_get_current(void){
+  return current_conn;
+}

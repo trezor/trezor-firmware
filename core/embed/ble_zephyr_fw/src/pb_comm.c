@@ -33,8 +33,9 @@ static K_FIFO_DEFINE(fifo_pb_tx_in);  // data to send to trezor
 static K_FIFO_DEFINE(fifo_pb_tx_out); // data to send to host
 
 
-void   prepare_response_wait() {
+void prepare_response_wait() {
   k_sem_reset(&pb_wait_for_ack);
+  uart_data_pb_flush();
 }
 
 

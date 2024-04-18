@@ -27,3 +27,4 @@ void pairing_complete(struct bt_conn *conn, bool bonded);
 void pairing_failed(struct bt_conn *conn, enum bt_security_err reason);
 
 void num_comp_reply(bool accept);
+struct bt_conn * conn_get_current(void);

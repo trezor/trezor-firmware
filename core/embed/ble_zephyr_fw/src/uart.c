@@ -311,6 +311,10 @@ uart_data_t *uart_get_data_pb(void)
   return k_fifo_get(&fifo_uart_rx_data_pb, K_MSEC(100));
 }
 
+void uart_data_pb_flush(void){
+  while(uart_get_data_pb() != NULL);
+}
+
 void uart_send(uart_data_t *tx)
 {
   int err = uart_tx(uart, tx->data, tx->len, SYS_FOREVER_MS);

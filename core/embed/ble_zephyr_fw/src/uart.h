@@ -14,6 +14,8 @@ int uart_init(void);
 uart_data_t * uart_get_data_ext(void);
 uart_data_t * uart_get_data_int(void);
 uart_data_t * uart_get_data_pb(void);
+void uart_data_pb_flush(void);
+
 
 void uart_send(uart_data_t *data);
 void uart_send_ext(uart_data_t *tx);
