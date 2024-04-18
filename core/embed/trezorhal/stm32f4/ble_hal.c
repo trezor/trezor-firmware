@@ -105,24 +105,24 @@ void ble_comm_init(void) {
 
   HAL_UART_Init(&urt);
 
-  __HAL_RCC_DMA2_CLK_ENABLE();
-  __HAL_RCC_SPI1_CLK_ENABLE();
+  __HAL_RCC_DMA1_CLK_ENABLE();
+  __HAL_RCC_SPI2_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
 
   GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;
   GPIO_InitStructure.Pull = GPIO_NOPULL;
-  GPIO_InitStructure.Alternate = GPIO_AF5_SPI1;
+  GPIO_InitStructure.Alternate = GPIO_AF5_SPI2;
   GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_MEDIUM;
-  GPIO_InitStructure.Pin = GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStructure);
-  GPIO_InitStructure.Pin = GPIO_PIN_5;
+  GPIO_InitStructure.Pin = GPIO_PIN_2 | GPIO_PIN_3;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStructure);
+  GPIO_InitStructure.Pin = GPIO_PIN_9;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStructure);
-  //  GPIO_InitStructure.Pin = GPIO_PIN_9;
-  //  HAL_GPIO_Init(GPIOB, &GPIO_InitStructure);
+  GPIO_InitStructure.Pin = GPIO_PIN_3;
+  HAL_GPIO_Init(GPIOD, &GPIO_InitStructure);
 
-  spi_dma.Init.Channel = DMA_CHANNEL_3;
+  spi_dma.Init.Channel = DMA_CHANNEL_0;
   spi_dma.Init.Direction = DMA_PERIPH_TO_MEMORY;
   spi_dma.Init.PeriphInc = DMA_PINC_DISABLE;
   spi_dma.Init.MemInc = DMA_MINC_ENABLE;
@@ -134,10 +134,10 @@ void ble_comm_init(void) {
   spi_dma.Init.FIFOThreshold = DMA_FIFO_THRESHOLD_FULL;
   spi_dma.Init.MemBurst = DMA_MBURST_SINGLE;
   spi_dma.Init.PeriphBurst = DMA_PBURST_SINGLE;
-  spi_dma.Instance = DMA2_Stream0;
+  spi_dma.Instance = DMA1_Stream3;
   HAL_DMA_Init(&spi_dma);
 
-  spi.Instance = SPI1;
+  spi.Instance = SPI2;
   spi.Init.Mode = SPI_MODE_SLAVE;
   spi.Init.Direction = SPI_DIRECTION_2LINES;  // rx only?
   spi.Init.DataSize = SPI_DATASIZE_8BIT;
@@ -164,7 +164,7 @@ void ble_comm_start(void) {
   memset(spi_queue, 0, sizeof(spi_queue));
   head = 0, tail = 0;
   overrun = false;
-  svc_enableIRQ(DMA2_Stream0_IRQn);
+  svc_enableIRQ(DMA1_Stream3_IRQn);
   HAL_SPI_Receive_DMA(&spi, spi_queue[0].buffer, BLE_PACKET_SIZE);
   spi_queue[0].used = true;
   g_comm_running = true;
@@ -174,7 +174,7 @@ void ble_comm_start(void) {
 void ble_comm_stop(void) {
   ble_signal_off();
   g_comm_running = false;
-  svc_disableIRQ(DMA2_Stream0_IRQn);
+  svc_disableIRQ(DMA1_Stream3_IRQn);
   HAL_SPI_Abort(&spi);
   memset(spi_queue, 0, sizeof(spi_queue));
 }
@@ -345,12 +345,12 @@ bool start_spi_dma(void) {
   return true;
 }
 
-void DMA2_Stream0_IRQHandler(void) {
-  IRQ_ENTER(DMA2_Stream0_IRQn);
+void DMA1_Stream3_IRQHandler(void) {
+  IRQ_ENTER(DMA1_Stream3_IRQn);
 
   HAL_DMA_IRQHandler(&spi_dma);
 
-  IRQ_EXIT(DMA2_Stream0_IRQn);
+  IRQ_EXIT(DMA1_Stream3_IRQn);
 }
 
 void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi) {
@@ -360,7 +360,7 @@ void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi) {
 }
 
 uint32_t ble_ext_comm_receive(uint8_t *data, uint32_t len) {
-  svc_disableIRQ(DMA2_Stream0_IRQn);
+  svc_disableIRQ(DMA1_Stream3_IRQn);
   if (spi_queue[head].ready) {
     uint8_t *buffer = (uint8_t *)spi_queue[head].buffer;
     memcpy(data, buffer, len > BLE_PACKET_SIZE ? BLE_PACKET_SIZE : len);
@@ -385,16 +385,16 @@ uint32_t ble_ext_comm_receive(uint8_t *data, uint32_t len) {
       HAL_SPI_Receive_DMA(&spi, spi_queue[0].buffer, BLE_PACKET_SIZE);
       spi_queue[0].used = true;
       // todo return error?
-      svc_enableIRQ(DMA2_Stream0_IRQn);
+      svc_enableIRQ(DMA1_Stream3_IRQn);
 
       return 0;
     }
 
-    svc_enableIRQ(DMA2_Stream0_IRQn);
+    svc_enableIRQ(DMA1_Stream3_IRQn);
     return len > BLE_PACKET_SIZE ? BLE_PACKET_SIZE : len;
   }
 
-  svc_enableIRQ(DMA2_Stream0_IRQn);
+  svc_enableIRQ(DMA1_Stream3_IRQn);
   return 0;
 }
 
