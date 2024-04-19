@@ -1,10 +1,9 @@
 use crate::ui::{
     display::Color,
-    geometry::Rect,
-    shape::{DirectRenderer, Mono8Canvas},
+    shape::{DirectRenderer, Mono8Canvas, Viewport},
 };
 
-pub fn render_on_display<'a, F>(_clip: Option<Rect>, _bg_color: Option<Color>, _func: F)
+pub fn render_on_display<'a, F>(_viewport: Option<Viewport>, _bg_color: Option<Color>, _func: F)
 where
     F: FnOnce(&mut DirectRenderer<'_, 'a, Mono8Canvas<'a>>),
 {

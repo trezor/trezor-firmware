@@ -1,6 +1,6 @@
 use crate::ui::{
     display::Color,
-    geometry::{Offset, Rect},
+    geometry::Offset,
     shape::{BasicCanvas, DirectRenderer, DrawingCache, Rgb565Canvas, Viewport},
 };
 
@@ -18,7 +18,7 @@ use static_alloc::Bump;
 /// `bg_color` specifies a background color with which the clip is filled before
 /// the drawing starts. If the background color is None, the background
 /// is undefined, and the user has to fill it themselves.
-pub fn render_on_display<'a, F>(clip: Option<Rect>, bg_color: Option<Color>, func: F)
+pub fn render_on_display<'a, F>(viewport: Option<Viewport>, bg_color: Option<Color>, func: F)
 where
     F: FnOnce(&mut DirectRenderer<'_, 'a, Rgb565Canvas<'a>>),
 {
@@ -51,8 +51,8 @@ where
             fb
         ));
 
-        if let Some(clip) = clip {
-            canvas.set_viewport(Viewport::new(clip));
+        if let Some(viewport) = viewport {
+            canvas.set_viewport(viewport);
         }
 
         let mut target = DirectRenderer::new(&mut canvas, bg_color, &cache);

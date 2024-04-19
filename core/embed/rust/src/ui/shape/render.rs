@@ -170,7 +170,10 @@ where
     /// Renders stored shapes onto the specified canvas
     pub fn render(&mut self, lines: usize) {
         let canvas_clip = self.canvas.viewport().clip;
-        let canvas_origin = self.canvas.viewport().origin;
+
+        if canvas_clip.is_empty() {
+            return;
+        }
 
         let buff = &mut unwrap!(self.cache.render_buff(), "No render buffer");
 
@@ -190,8 +193,7 @@ where
                 // slice_r is in absolute coordinates
                 Point::new(canvas_clip.x0, y),
                 Point::new(canvas_clip.x1, y + lines as i16),
-            )
-            .translate(-canvas_origin);
+            );
 
             // Clear the slice background
             if let Some(color) = self.bg_color {

@@ -63,7 +63,8 @@ pub trait BasicCanvas {
 
     /// Fills the canvas background with the specified color.
     fn fill_background(&mut self, color: Color) {
-        self.fill_rect(self.viewport().clip, color, 255);
+        let vp = self.viewport();
+        self.fill_rect(vp.clip.translate(-vp.origin), color, 255);
     }
 
     /// Draws a bitmap of bitmap into to the rectangle.
