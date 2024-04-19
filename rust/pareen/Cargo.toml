@@ -1,0 +1,34 @@
+[package]
+name = "pareen"
+version = "0.3.3"
+authors = ["leod <subtle.frustration@proton.me>"]
+edition = "2018"
+license = "MIT"
+description = "A small library for parameterized inbetweening"
+homepage = "https://github.com/leod/pareen"
+documentation = "https://docs.rs/pareen"
+repository = "https://github.com/leod/pareen"
+keywords = ["animation", "combinators", "tween", "easing"]
+readme = "README.md"
+exclude = [".github"]
+
+[features]
+default = ["std"]
+std = ["alloc", "num-traits/std"]
+alloc = []
+libm = ["num-traits/libm"]
+
+[dependencies]
+num-traits = { version = "0.2", default-features = false }
+easer = { version = "0.3.0", default-features = false, optional = true }
+
+[dev-dependencies]
+assert_approx_eq = "1.0"
+gnuplot = "0.0.32"
+
+[package.metadata.docs.rs]
+features = ["std", "alloc", "libm", "easer"]
+
+[[example]]
+name = "plots"
+required-features = ["std"]
