@@ -104,8 +104,9 @@ features = ["ufmt"]
 default_features = false
 
 [dependencies.num-traits]
-version = "0.2.15"
+version = "0.2.18"
 default_features = false
+features = ["libm"]
 
 [dependencies.num-derive]
 version = "0.3.3"
@@ -123,6 +124,18 @@ version = "0.2.2"
 
 [dependencies.unsize]
 version = "1.1.0"
+
+[dependencies.pareen]
+version = "0.3.3"
+path = "../../../rust/pareen"
+default-features = false
+features = ["libm", "easer"]
+
+[dependencies.easer]
+version = "0.3.0"
+default-features = false
+features = ["libm"]
+
 
 # Build dependencies
 
