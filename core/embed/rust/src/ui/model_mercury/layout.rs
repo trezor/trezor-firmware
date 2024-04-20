@@ -537,7 +537,7 @@ impl ConfirmBlobParams {
             frame = frame.with_subtitle(subtitle);
         }
         if self.info_button {
-            frame = frame.with_info_button();
+            frame = frame.with_menu_button();
         }
         let obj = LayoutObj::new(frame)?;
         Ok(obj.into())
@@ -604,7 +604,7 @@ extern "C" fn new_confirm_address(n_args: usize, args: *const Obj, kwargs: *mut 
                     .with_swipe_left()
                     .with_cancel_confirm(None, Some(verb)),
             )
-            .with_info_button(),
+            .with_menu_button(),
         )?;
         Ok(obj.into())
     };
@@ -791,7 +791,7 @@ extern "C" fn new_confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Ma
         }
         let mut frame = Frame::left_aligned(title, page);
         if info_button {
-            frame = frame.with_info_button();
+            frame = frame.with_menu_button();
         }
         let obj = LayoutObj::new(frame)?;
         Ok(obj.into())
@@ -867,7 +867,7 @@ extern "C" fn new_confirm_modify_fee(n_args: usize, args: *const Obj, kwargs: *m
                     .with_hold()?
                     .with_swipe_left(),
             )
-            .with_info_button(),
+            .with_menu_button(),
         )?;
         Ok(obj.into())
     };
@@ -1290,7 +1290,7 @@ extern "C" fn new_show_share_words(n_args: usize, args: *const Obj, kwargs: *mut
         let share_words_vec: Vec<TString, 33> = util::iter_into_vec(share_words_obj)?;
 
         let share_words = ShareWords::new(share_words_vec);
-        let frame_with_share_words = Frame::left_aligned(title, share_words).with_info_button();
+        let frame_with_share_words = Frame::left_aligned(title, share_words);
         let obj = LayoutObj::new(frame_with_share_words)?;
         Ok(obj.into())
     };
@@ -1593,7 +1593,7 @@ extern "C" fn new_confirm_firmware_update(
             Confirm::new(theme::BG, left, right, ConfirmTitle::Text(title), msg).with_info(
                 TR::firmware_update__title_fingerprint.into(),
                 fingerprint,
-                theme::button_moreinfo(),
+                theme::button_default(),
             ),
         )?;
         Ok(obj.into())
