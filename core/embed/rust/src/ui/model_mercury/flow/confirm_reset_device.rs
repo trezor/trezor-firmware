@@ -14,7 +14,7 @@ use crate::{
 use heapless::Vec;
 
 use super::super::{
-    component::{Frame, FrameMsg, VerticalMenu, VerticalMenuChoiceMsg},
+    component::{Frame, FrameMsg, PromptScreen, VerticalMenu, VerticalMenuChoiceMsg},
     theme,
 };
 
@@ -22,6 +22,7 @@ use super::super::{
 pub enum ConfirmResetDevice {
     Intro,
     Menu,
+    Confirm,
 }
 
 impl FlowState for ConfirmResetDevice {
@@ -33,7 +34,12 @@ impl FlowState for ConfirmResetDevice {
             (ConfirmResetDevice::Menu, SwipeDirection::Right) => {
                 Decision::Goto(ConfirmResetDevice::Intro, direction)
             }
-            (ConfirmResetDevice::Intro, SwipeDirection::Up) => Decision::Return(FlowMsg::Confirmed),
+            (ConfirmResetDevice::Intro, SwipeDirection::Up) => {
+                Decision::Goto(ConfirmResetDevice::Confirm, direction)
+            }
+            (ConfirmResetDevice::Confirm, SwipeDirection::Down) => {
+                Decision::Goto(ConfirmResetDevice::Intro, direction)
+            }
             _ => Decision::Nothing,
         }
     }
@@ -47,13 +53,16 @@ impl FlowState for ConfirmResetDevice {
                 Decision::Goto(ConfirmResetDevice::Intro, SwipeDirection::Right)
             }
             (ConfirmResetDevice::Menu, FlowMsg::Choice(0)) => Decision::Return(FlowMsg::Cancelled),
+            (ConfirmResetDevice::Confirm, FlowMsg::Confirmed) => {
+                Decision::Return(FlowMsg::Confirmed)
+            }
             _ => Decision::Nothing,
         }
     }
 }
 
 use crate::{
-    micropython::{buffer::StrBuffer, map::Map, obj::Obj, util},
+    micropython::{map::Map, obj::Obj, util},
     ui::layout::obj::LayoutObj,
 };
 
@@ -96,29 +105,19 @@ impl ConfirmResetDevice {
 
         let store = flow_store()
             // Intro,
-            .add(
-                Frame::left_aligned(title, SwipePage::vertical(paragraphs))
-                    .with_info_button()
-                    .with_footer(TR::instructions__swipe_up.into(), None),
-                |msg| matches!(msg, FrameMsg::Button(_)).then_some(FlowMsg::Info),
-            )?
-            // Menu,
-            .add(
-                Frame::left_aligned(
-                    "".into(),
-                    VerticalMenu::context_menu(unwrap!(Vec::from_slice(&[(
-                        "Cancel", // FIXME: use TString
-                        theme::ICON_CANCEL
-                    )]))),
-                )
-                .with_cancel_button(),
-                |msg| match msg {
-                    FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => {
-                        Some(FlowMsg::Choice(i))
-                    }
-                    FrameMsg::Button(_) => Some(FlowMsg::Cancelled),
-                },
-            )?;
+            .add(content_intro, |msg| {
+                matches!(msg, FrameMsg::Button(_)).then_some(FlowMsg::Info)
+            })?
+            // Context Menu,
+            .add(content_menu, |msg| match msg {
+                FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => Some(FlowMsg::Choice(i)),
+                FrameMsg::Button(_) => Some(FlowMsg::Cancelled),
+            })?
+            // Confirm prompt
+            .add(content_confirm, |msg| match msg {
+                FrameMsg::Content(()) => Some(FlowMsg::Confirmed),
+                _ => Some(FlowMsg::Cancelled),
+            })?;
 
         let res = SwipeFlow::new(ConfirmResetDevice::Intro, store)?;
         Ok(LayoutObj::new(res)?.into())
