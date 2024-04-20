@@ -11,7 +11,7 @@ use crate::{
     },
 };
 
-use super::{constant::SPACING, Button, ButtonMsg, CancelInfoConfirmMsg, Footer};
+use super::{constant::SPACING, Button, ButtonMsg, ButtonStyleSheet, CancelInfoConfirmMsg, Footer};
 
 const TITLE_HEIGHT: i16 = 42;
 
@@ -36,9 +36,10 @@ where
     T: Component,
 {
     pub fn new(alignment: Alignment, title: TString<'static>, content: T) -> Self {
-        let style: TextStyle = theme::label_title_main();
         Self {
-            title: Child::new(Label::new(title, alignment, style).vertically_centered()),
+            title: Child::new(
+                Label::new(title, alignment, theme::label_title_main()).vertically_centered(),
+            ),
             subtitle: None,
             border: theme::borders(),
             button: None,
@@ -65,6 +66,11 @@ where
         self
     }
 
+    pub fn title_styled(mut self, style: TextStyle) -> Self {
+        self.title = Child::new(self.title.into_inner().styled(style));
+        self
+    }
+
     pub fn with_subtitle(mut self, subtitle: TString<'static>) -> Self {
         let style = theme::TEXT_SUB_GREY_LIGHT;
         self.title = Child::new(self.title.into_inner().top_aligned());
@@ -76,7 +82,7 @@ where
         self
     }
 
-    fn with_button(mut self, icon: Icon, msg: CancelInfoConfirmMsg) -> Self {
+    fn with_button(mut self, icon: Icon, msg: CancelInfoConfirmMsg, enabled: bool) -> Self {
         let touch_area = Insets {
             left: self.border.left * 4,
             bottom: self.border.bottom * 4,
@@ -85,18 +91,30 @@ where
         self.button = Some(Child::new(
             Button::with_icon(icon)
                 .with_expanded_touch_area(touch_area)
-                .styled(theme::button_moreinfo()),
+                .initially_enabled(enabled)
+                .styled(theme::button_default()),
         ));
         self.button_msg = msg;
         self
     }
 
     pub fn with_cancel_button(self) -> Self {
-        self.with_button(theme::ICON_CORNER_CANCEL, CancelInfoConfirmMsg::Cancelled)
+        self.with_button(theme::ICON_CLOSE, CancelInfoConfirmMsg::Cancelled, true)
     }
 
-    pub fn with_info_button(self) -> Self {
-        self.with_button(theme::ICON_MENU, CancelInfoConfirmMsg::Info)
+    pub fn with_menu_button(self) -> Self {
+        self.with_button(theme::ICON_MENU, CancelInfoConfirmMsg::Info, true)
+    }
+
+    pub fn with_warning_button(self) -> Self {
+        self.with_button(theme::ICON_WARNING, CancelInfoConfirmMsg::Info, false)
+    }
+
+    pub fn button_styled(mut self, style: ButtonStyleSheet) -> Self {
+        if self.button.is_some() {
+            self.button = Some(Child::new(self.button.unwrap().into_inner().styled(style)));
+        }
+        self
     }
 
     pub fn with_footer(

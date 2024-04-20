@@ -225,27 +225,30 @@ pub const fn label_coinjoin_progress() -> TextStyle {
 pub const fn button_default() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
-            font: Font::BOLD,
-            text_color: FG,
-            button_color: GREY_DARK,
+            font: Font::DEMIBOLD,
+            text_color: GREY_LIGHT,
+            button_color: BG,
+            icon_color: GREY_LIGHT,
             background_color: BG,
             border_color: BG,
             border_radius: RADIUS,
             border_width: 0,
         },
         active: &ButtonStyle {
-            font: Font::BOLD,
-            text_color: FG,
-            button_color: GREY_MEDIUM,
+            font: Font::DEMIBOLD,
+            text_color: GREY_LIGHT,
+            button_color: BG,
+            icon_color: GREY_LIGHT,
             background_color: BG,
             border_color: FG,
             border_radius: RADIUS,
             border_width: 0,
         },
         disabled: &ButtonStyle {
-            font: Font::BOLD,
+            font: Font::DEMIBOLD,
             text_color: GREY_LIGHT,
-            button_color: GREY_DARK,
+            button_color: BG,
+            icon_color: GREY_LIGHT,
             background_color: BG,
             border_color: BG,
             border_radius: RADIUS,
@@ -254,12 +257,49 @@ pub const fn button_default() -> ButtonStyleSheet {
     }
 }
 
+pub const fn button_warning_high() -> ButtonStyleSheet {
+    ButtonStyleSheet {
+        normal: &ButtonStyle {
+            font: Font::DEMIBOLD,
+            text_color: ORANGE_LIGHT,
+            button_color: BG,
+            icon_color: ORANGE_DIMMED,
+            background_color: BG,
+            border_color: BG,
+            border_radius: RADIUS,
+            border_width: 0,
+        },
+        active: &ButtonStyle {
+            font: Font::DEMIBOLD,
+            text_color: ORANGE_LIGHT,
+            button_color: BG,
+            icon_color: ORANGE_DIMMED,
+            background_color: BG,
+            border_color: BG,
+            border_radius: RADIUS,
+            border_width: 0,
+        },
+        disabled: &ButtonStyle {
+            font: Font::DEMIBOLD,
+            text_color: ORANGE_LIGHT,
+            button_color: BG,
+            icon_color: ORANGE_DIMMED,
+            background_color: BG,
+            border_color: BG,
+            border_radius: RADIUS,
+            border_width: 0,
+        },
+    }
+}
+
+// TODO: delete
 pub const fn button_confirm() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
             font: Font::BOLD,
             text_color: FG,
             button_color: GREEN,
+            icon_color: GREY_LIGHT,
             background_color: BG,
             border_color: BG,
             border_radius: RADIUS,
@@ -269,6 +309,7 @@ pub const fn button_confirm() -> ButtonStyleSheet {
             font: Font::BOLD,
             text_color: FG,
             button_color: GREEN_DARK,
+            icon_color: GREY_LIGHT,
             background_color: BG,
             border_color: FG,
             border_radius: RADIUS,
@@ -278,6 +319,7 @@ pub const fn button_confirm() -> ButtonStyleSheet {
             font: Font::BOLD,
             text_color: GREY_LIGHT,
             button_color: GREEN_DARK,
+            icon_color: GREY_LIGHT,
             background_color: BG,
             border_color: BG,
             border_radius: RADIUS,
@@ -286,12 +328,14 @@ pub const fn button_confirm() -> ButtonStyleSheet {
     }
 }
 
+// TODO: delete
 pub const fn button_cancel() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
             font: Font::BOLD,
             text_color: FG,
             button_color: RED,
+            icon_color: GREY_LIGHT,
             background_color: BG,
             border_color: BG,
             border_radius: RADIUS,
@@ -301,6 +345,7 @@ pub const fn button_cancel() -> ButtonStyleSheet {
             font: Font::BOLD,
             text_color: FG,
             button_color: RED_DARK,
+            icon_color: GREY_LIGHT,
             background_color: BG,
             border_color: FG,
             border_radius: RADIUS,
@@ -310,6 +355,7 @@ pub const fn button_cancel() -> ButtonStyleSheet {
             font: Font::BOLD,
             text_color: GREY_LIGHT,
             button_color: RED,
+            icon_color: GREY_LIGHT,
             background_color: BG,
             border_color: BG,
             border_radius: RADIUS,
@@ -318,6 +364,7 @@ pub const fn button_cancel() -> ButtonStyleSheet {
     }
 }
 
+// TODO: delete
 pub const fn button_danger() -> ButtonStyleSheet {
     button_cancel()
 }
@@ -328,6 +375,7 @@ pub const fn button_reset() -> ButtonStyleSheet {
             font: Font::BOLD,
             text_color: FG,
             button_color: YELLOW,
+            icon_color: GREY_LIGHT,
             background_color: BG,
             border_color: BG,
             border_radius: RADIUS,
@@ -337,6 +385,7 @@ pub const fn button_reset() -> ButtonStyleSheet {
             font: Font::BOLD,
             text_color: FG,
             button_color: YELLOW_DARK,
+            icon_color: GREY_LIGHT,
             background_color: BG,
             border_color: FG,
             border_radius: RADIUS,
@@ -346,6 +395,7 @@ pub const fn button_reset() -> ButtonStyleSheet {
             font: Font::BOLD,
             text_color: FG,
             button_color: YELLOW,
+            icon_color: GREY_LIGHT,
             background_color: BG,
             border_color: BG,
             border_radius: RADIUS,
@@ -354,140 +404,13 @@ pub const fn button_reset() -> ButtonStyleSheet {
     }
 }
 
-pub const fn button_moreinfo() -> ButtonStyleSheet {
-    ButtonStyleSheet {
-        normal: &ButtonStyle {
-            font: Font::BOLD,
-            text_color: FG,
-            button_color: BG,
-            background_color: BG,
-            border_color: BG,
-            border_radius: 0,
-            border_width: 1,
-        },
-        active: &ButtonStyle {
-            font: Font::BOLD,
-            text_color: FG,
-            button_color: BG,
-            background_color: BG,
-            border_color: GREY_DARK,
-            border_radius: 0,
-            border_width: 1,
-        },
-        disabled: &ButtonStyle {
-            font: Font::BOLD,
-            text_color: GREY_LIGHT,
-            button_color: BG,
-            background_color: BG,
-            border_color: BG,
-            border_radius: 0,
-            border_width: 1,
-        },
-    }
-}
-
-pub const fn button_info() -> ButtonStyleSheet {
-    ButtonStyleSheet {
-        normal: &ButtonStyle {
-            font: Font::BOLD,
-            text_color: FG,
-            button_color: BLUE,
-            background_color: BG,
-            border_color: BG,
-            border_radius: RADIUS,
-            border_width: 0,
-        },
-        active: &ButtonStyle {
-            font: Font::BOLD,
-            text_color: FG,
-            button_color: BLUE_DARK,
-            background_color: BG,
-            border_color: FG,
-            border_radius: RADIUS,
-            border_width: 0,
-        },
-        disabled: &ButtonStyle {
-            font: Font::BOLD,
-            text_color: GREY_LIGHT,
-            button_color: BLUE,
-            background_color: BG,
-            border_color: BG,
-            border_radius: RADIUS,
-            border_width: 0,
-        },
-    }
-}
-
-pub const fn button_vertical_menu() -> ButtonStyleSheet {
-    ButtonStyleSheet {
-        normal: &ButtonStyle {
-            font: Font::NORMAL,
-            text_color: GREY_EXTRA_LIGHT,
-            button_color: BG,
-            background_color: BG,
-            border_color: BG,
-            border_radius: RADIUS,
-            border_width: 0,
-        },
-        // TODO: change when figma done
-        active: &ButtonStyle {
-            font: Font::NORMAL,
-            text_color: FG,
-            button_color: GREEN_LIME,
-            background_color: GREY_EXTRA_DARK,
-            border_color: GREEN_LIME,
-            border_radius: RADIUS,
-            border_width: 0,
-        },
-        disabled: &ButtonStyle {
-            font: Font::NORMAL,
-            text_color: GREY_LIGHT,
-            button_color: GREEN_LIME,
-            background_color: GREY_EXTRA_DARK,
-            border_color: GREEN_LIME,
-            border_radius: RADIUS,
-            border_width: 0,
-        },
-    }
-}
-
-pub const fn button_vertical_menu_orange() -> ButtonStyleSheet {
-    ButtonStyleSheet {
-        normal: &ButtonStyle {
-            font: Font::NORMAL,
-            text_color: ORANGE_LIGHT,
-            button_color: BG,
-            background_color: BG,
-            border_color: BG,
-            border_radius: RADIUS,
-            border_width: 0,
-        },
-        active: &ButtonStyle {
-            font: Font::NORMAL,
-            text_color: FG,
-            button_color: GREEN_LIME,
-            background_color: GREY_EXTRA_DARK,
-            border_color: GREEN_LIME,
-            border_radius: RADIUS,
-            border_width: 0,
-        },
-        disabled: &ButtonStyle {
-            font: Font::NORMAL,
-            text_color: GREY_LIGHT,
-            button_color: GREEN_LIME,
-            background_color: GREY_EXTRA_DARK,
-            border_color: GREEN_LIME,
-            border_radius: RADIUS,
-            border_width: 0,
-        },
-    }
-}
 pub const fn button_pin() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
             font: Font::MONO,
             text_color: FG,
             button_color: GREY_DARK,
+            icon_color: GREY_LIGHT,
             background_color: BG,
             border_color: BG,
             border_radius: RADIUS,
@@ -497,6 +420,7 @@ pub const fn button_pin() -> ButtonStyleSheet {
             font: Font::MONO,
             text_color: FG,
             button_color: GREY_MEDIUM,
+            icon_color: GREY_LIGHT,
             background_color: BG,
             border_color: FG,
             border_radius: RADIUS,
@@ -506,6 +430,7 @@ pub const fn button_pin() -> ButtonStyleSheet {
             font: Font::MONO,
             text_color: GREY_LIGHT,
             button_color: BG, // so there is no "button" itself, just the text
+            icon_color: GREY_LIGHT,
             background_color: BG,
             border_color: BG,
             border_radius: RADIUS,
@@ -520,6 +445,7 @@ pub const fn button_pin_confirm() -> ButtonStyleSheet {
             font: Font::MONO,
             text_color: FG,
             button_color: GREEN,
+            icon_color: GREY_LIGHT,
             background_color: BG,
             border_color: BG,
             border_radius: RADIUS,
@@ -529,6 +455,7 @@ pub const fn button_pin_confirm() -> ButtonStyleSheet {
             font: Font::MONO,
             text_color: FG,
             button_color: GREEN_DARK,
+            icon_color: GREY_LIGHT,
             background_color: BG,
             border_color: FG,
             border_radius: RADIUS,
@@ -538,6 +465,7 @@ pub const fn button_pin_confirm() -> ButtonStyleSheet {
             font: Font::MONO,
             text_color: GREY_LIGHT,
             button_color: GREY_DARK,
+            icon_color: GREY_LIGHT,
             background_color: BG,
             border_color: BG,
             border_radius: RADIUS,
@@ -552,6 +480,7 @@ pub const fn button_pin_autocomplete() -> ButtonStyleSheet {
             font: Font::MONO,
             text_color: FG,
             button_color: GREY_DARK, // same as PIN buttons
+            icon_color: GREY_LIGHT,
             background_color: BG,
             border_color: BG,
             border_radius: RADIUS,
@@ -561,6 +490,7 @@ pub const fn button_pin_autocomplete() -> ButtonStyleSheet {
             font: Font::MONO,
             text_color: FG,
             button_color: GREEN_DARK,
+            icon_color: GREY_LIGHT,
             background_color: BG,
             border_color: FG,
             border_radius: RADIUS,
@@ -570,6 +500,7 @@ pub const fn button_pin_autocomplete() -> ButtonStyleSheet {
             font: Font::MONO,
             text_color: GREY_LIGHT,
             button_color: BG,
+            icon_color: GREY_LIGHT,
             background_color: BG,
             border_color: BG,
             border_radius: RADIUS,
@@ -584,6 +515,7 @@ pub const fn button_suggestion_confirm() -> ButtonStyleSheet {
             font: Font::MONO,
             text_color: GREEN_DARK,
             button_color: GREEN,
+            icon_color: GREY_LIGHT,
             background_color: BG,
             border_color: BG,
             border_radius: RADIUS,
@@ -593,6 +525,7 @@ pub const fn button_suggestion_confirm() -> ButtonStyleSheet {
             font: Font::MONO,
             text_color: FG,
             button_color: GREEN_DARK,
+            icon_color: GREY_LIGHT,
             background_color: BG,
             border_color: FG,
             border_radius: RADIUS,
@@ -602,6 +535,7 @@ pub const fn button_suggestion_confirm() -> ButtonStyleSheet {
             font: Font::MONO,
             text_color: GREY_LIGHT,
             button_color: GREY_DARK,
+            icon_color: GREY_LIGHT,
             background_color: BG,
             border_color: BG,
             border_radius: RADIUS,
@@ -616,6 +550,7 @@ pub const fn button_suggestion_autocomplete() -> ButtonStyleSheet {
             font: Font::MONO,
             text_color: GREY_LIGHT,
             button_color: GREY_DARK, // same as PIN buttons
+            icon_color: GREY_LIGHT,
             background_color: BG,
             border_color: BG,
             border_radius: RADIUS,
@@ -625,6 +560,7 @@ pub const fn button_suggestion_autocomplete() -> ButtonStyleSheet {
             font: Font::MONO,
             text_color: FG,
             button_color: GREEN_DARK,
+            icon_color: GREY_LIGHT,
             background_color: BG,
             border_color: FG,
             border_radius: RADIUS,
@@ -634,6 +570,7 @@ pub const fn button_suggestion_autocomplete() -> ButtonStyleSheet {
             font: Font::MONO,
             text_color: GREY_LIGHT,
             button_color: BG,
+            icon_color: GREY_LIGHT,
             background_color: BG,
             border_color: BG,
             border_radius: RADIUS,
@@ -648,6 +585,7 @@ pub const fn button_counter() -> ButtonStyleSheet {
             font: Font::DEMIBOLD,
             text_color: FG,
             button_color: GREY_DARK,
+            icon_color: GREY_LIGHT,
             background_color: BG,
             border_color: BG,
             border_radius: RADIUS,
@@ -657,6 +595,7 @@ pub const fn button_counter() -> ButtonStyleSheet {
             font: Font::DEMIBOLD,
             text_color: FG,
             button_color: GREY_MEDIUM,
+            icon_color: GREY_LIGHT,
             background_color: BG,
             border_color: FG,
             border_radius: RADIUS,
@@ -666,6 +605,7 @@ pub const fn button_counter() -> ButtonStyleSheet {
             font: Font::DEMIBOLD,
             text_color: GREY_LIGHT,
             button_color: GREY_DARK,
+            icon_color: GREY_LIGHT,
             background_color: BG,
             border_color: BG,
             border_radius: RADIUS,
@@ -715,6 +655,7 @@ pub const TEXT_MAIN_GREY_LIGHT: TextStyle =
     TextStyle::new(Font::NORMAL, GREY_LIGHT, BG, GREY, GREY);
 pub const TEXT_SUB_GREY_LIGHT: TextStyle = TextStyle::new(Font::SUB, GREY_LIGHT, BG, GREY, GREY);
 pub const TEXT_SUB_GREY: TextStyle = TextStyle::new(Font::SUB, GREY, BG, GREY, GREY);
+pub const TEXT_WARNING: TextStyle = TextStyle::new(Font::NORMAL, ORANGE_LIGHT, BG, GREY, GREY);
 pub const TEXT_MONO: TextStyle = TextStyle::new(Font::MONO, GREY_EXTRA_LIGHT, BG, GREY, GREY)
     .with_line_breaking(LineBreaking::BreakWordsNoHyphen)
     .with_page_breaking(PageBreaking::CutAndInsertEllipsisBoth)
