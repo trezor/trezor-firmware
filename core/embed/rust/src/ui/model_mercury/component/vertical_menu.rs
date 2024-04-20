@@ -53,7 +53,7 @@ impl VerticalMenu {
     pub fn select_word(words: [StrBuffer; 3]) -> Self {
         let mut buttons_vec = VerticalMenuButtons::new();
         for word in words {
-            let button = Button::with_text(word.into()).styled(theme::button_vertical_menu());
+            let button = Button::with_text(word.into()).styled(theme::button_default());
             unwrap!(buttons_vec.push(button));
         }
         Self::new(buttons_vec)
@@ -67,10 +67,10 @@ impl VerticalMenu {
             match opt.1 {
                 // FIXME: might not be applicable everywhere
                 theme::ICON_CANCEL => {
-                    button_theme = theme::button_vertical_menu_orange();
+                    button_theme = theme::button_warning_high();
                 }
                 _ => {
-                    button_theme = theme::button_vertical_menu();
+                    button_theme = theme::button_default();
                 }
             }
             unwrap!(buttons_vec.push(

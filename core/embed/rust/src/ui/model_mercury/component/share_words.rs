@@ -1,6 +1,7 @@
 use super::theme;
 use crate::{
     strutil::TString,
+    translations::TR,
     ui::{
         component::{Component, Event, EventCtx, PageMsg, Paginate},
         constant::SPACING,
@@ -39,7 +40,7 @@ impl<'a> ShareWords<'a> {
             page_index: 0,
             area_word: Rect::zero(),
             swipe: Swipe::new().up().down(),
-            footer: Footer::new("Swipe up"),
+            footer: Footer::new(TR::instructions__swipe_up),
         }
     }
 
@@ -105,7 +106,11 @@ impl<'a> Component for ShareWords<'a> {
         // the ordinal number of the current word
         let ordinal_val = self.page_index as u8 + 1;
         let ordinal_pos = self.area_word.top_left()
-            + Offset::y(theme::TEXT_SUB_GREY_LIGHT.text_font.visible_text_height("1"));
+            + Offset::y(
+                theme::TEXT_SUB_GREY_LIGHT
+                    .text_font
+                    .visible_text_height("1"),
+            );
         let ordinal = build_string!(3, inttostr!(ordinal_val), ".");
         shape::Text::new(ordinal_pos, &ordinal)
             .with_font(theme::TEXT_SUB_GREY_LIGHT.text_font)

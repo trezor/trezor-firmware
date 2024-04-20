@@ -222,7 +222,7 @@ impl Button {
                 icon.draw(
                     self.area.center(),
                     Alignment2D::CENTER,
-                    style.text_color,
+                    style.icon_color,
                     style.button_color,
                 );
             }
@@ -253,7 +253,7 @@ impl Button {
             ButtonContent::Icon(icon) => {
                 shape::ToifImage::new(self.area.center(), icon.toif)
                     .with_align(Alignment2D::CENTER)
-                    .with_fg(style.text_color)
+                    .with_fg(style.icon_color)
                     .render(target);
             }
             ButtonContent::IconAndText(child) => {
@@ -267,7 +267,7 @@ impl Button {
                     .with_fg(style.button_color)
                     .render(target);
                 shape::ToifImage::new(self.area.top_left() + *offset, fg.toif)
-                    .with_fg(style.text_color)
+                    .with_fg(style.icon_color)
                     .render(target);
             }
         }
@@ -413,11 +413,13 @@ pub struct ButtonStyleSheet {
     pub disabled: &'static ButtonStyle,
 }
 
+// TODO: radius and borders not needed in T3T1 - sync with BL
 #[derive(PartialEq, Eq)]
 pub struct ButtonStyle {
     pub font: Font,
     pub text_color: Color,
     pub button_color: Color,
+    pub icon_color: Color,
     pub background_color: Color,
     pub border_color: Color,
     pub border_radius: u8,
@@ -492,7 +494,7 @@ impl Button {
                 (matches!(msg, ButtonMsg::Clicked)).then(|| CancelInfoConfirmMsg::Confirmed)
             });
         let top = Button::with_text(info)
-            .styled(theme::button_moreinfo())
+            .styled(theme::button_default())
             .map(|msg| (matches!(msg, ButtonMsg::Clicked)).then(|| CancelInfoConfirmMsg::Info));
         let left = Button::with_icon(theme::ICON_CANCEL).map(|msg| {
             (matches!(msg, ButtonMsg::Clicked)).then(|| CancelInfoConfirmMsg::Cancelled)
@@ -583,7 +585,7 @@ impl IconText {
             self.icon.draw(
                 icon_pos,
                 Alignment2D::CENTER,
-                style.text_color,
+                style.icon_color,
                 style.button_color,
             );
         }
@@ -629,7 +631,7 @@ impl IconText {
         if use_icon {
             shape::ToifImage::new(icon_pos, self.icon.toif)
                 .with_align(Alignment2D::CENTER)
-                .with_fg(style.text_color)
+                .with_fg(style.icon_color)
                 .render(target);
         }
     }
