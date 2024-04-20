@@ -53,6 +53,11 @@ impl<'a> Label<'a> {
         self
     }
 
+    pub fn styled(mut self, style: TextStyle) -> Self {
+        self.layout.style = style;
+        self
+    }
+
     pub fn text(&self) -> &TString<'a> {
         &self.text
     }
