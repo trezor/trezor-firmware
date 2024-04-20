@@ -35,7 +35,7 @@ use crate::{
             },
             Border, Component, Empty, FormattedText, Label, Never, Qr, Timeout,
         },
-        display::{tjpgd::jpeg_info, Icon},
+        display::tjpgd::jpeg_info,
         geometry,
         layout::{
             obj::{ComponentMsgObj, LayoutObj},
@@ -53,8 +53,8 @@ use super::{
         FidoMsg, Frame, FrameMsg, Homescreen, HomescreenMsg, IconDialog, Lockscreen, MnemonicInput,
         MnemonicKeyboard, MnemonicKeyboardMsg, NumberInputDialog, NumberInputDialogMsg,
         PassphraseKeyboard, PassphraseKeyboardMsg, PinKeyboard, PinKeyboardMsg, Progress,
-        SelectWordCount, SelectWordCountMsg, ShareWords, SimplePage, Slip39Input, VerticalMenu,
-        VerticalMenuChoiceMsg,
+        PromptScreen, SelectWordCount, SelectWordCountMsg, ShareWords, SimplePage, Slip39Input,
+        StatusScreen, VerticalMenu, VerticalMenuChoiceMsg,
     },
     flow, theme,
 };
@@ -203,6 +203,34 @@ impl ComponentMsgObj for VerticalMenu {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
             VerticalMenuChoiceMsg::Selected(i) => i.try_into(),
+        }
+    }
+}
+
+impl ComponentMsgObj for StatusScreen {
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        match msg {
+            () => Ok(CONFIRMED.as_obj()),
+        }
+    }
+}
+
+impl ComponentMsgObj for PromptScreen {
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        match msg {
+            () => Ok(CONFIRMED.as_obj()),
+        }
+    }
+}
+
+impl<T> ComponentMsgObj for SwipeUpScreen<T>
+where
+    T: Component,
+{
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        match msg {
+            SwipeUpScreenMsg::Content(_) => Err(Error::TypeError),
+            SwipeUpScreenMsg::Swiped => Ok(CONFIRMED.as_obj()),
         }
     }
 }
@@ -1292,6 +1320,22 @@ extern "C" fn new_show_share_words(n_args: usize, args: *const Obj, kwargs: *mut
         let share_words = ShareWords::new(share_words_vec);
         let frame_with_share_words = Frame::left_aligned(title, share_words);
         let obj = LayoutObj::new(frame_with_share_words)?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_confirm_backup_written_down(
+    n_args: usize,
+    args: *const Obj,
+    kwargs: *mut Map,
+) -> Obj {
+    let block = move |_args: &[Obj], _kwargs: &Map| {
+        let content = PromptScreen::new_hold_to_confirm();
+        let frame_with_hold_to_confirm =
+            Frame::left_aligned("I wrote down all words in order.".into(), content)
+                .with_footer(TR::instructions__hold_to_confirm.into(), None);
+        let obj = LayoutObj::new(frame_with_hold_to_confirm)?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
