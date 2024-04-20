@@ -1238,6 +1238,8 @@ pub enum TranslatedString {
     storage_msg__verifying_pin = 843,  // "VERIFYING PIN"
     storage_msg__wrong_pin = 844,  // "WRONG PIN"
     instructions__swipe_up = 845,  // "Swipe up"
+    instructions__tap_to_confirm = 846,  // "Tap to confirm"
+    instructions__hold_to_confirm = 847,  // "Hold to confirm"
 }
 
 impl TranslatedString {
@@ -2471,6 +2473,8 @@ impl TranslatedString {
             Self::storage_msg__verifying_pin => "VERIFYING PIN",
             Self::storage_msg__wrong_pin => "WRONG PIN",
             Self::instructions__swipe_up => "Swipe up",
+            Self::instructions__tap_to_confirm => "Tap to confirm",
+            Self::instructions__hold_to_confirm => "Hold to confirm",
         }
     }
 
@@ -3705,6 +3709,8 @@ impl TranslatedString {
             Qstr::MP_QSTR_storage_msg__verifying_pin => Some(Self::storage_msg__verifying_pin),
             Qstr::MP_QSTR_storage_msg__wrong_pin => Some(Self::storage_msg__wrong_pin),
             Qstr::MP_QSTR_instructions__swipe_up => Some(Self::instructions__swipe_up),
+            Qstr::MP_QSTR_instructions__tap_to_confirm => Some(Self::instructions__tap_to_confirm),
+            Qstr::MP_QSTR_instructions__hold_to_confirm => Some(Self::instructions__hold_to_confirm),
             _ => None,
         }
     }

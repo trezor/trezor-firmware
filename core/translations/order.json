@@ -844,5 +844,7 @@
   "842": "storage_msg__starting",
   "843": "storage_msg__verifying_pin",
   "844": "storage_msg__wrong_pin",
-  "845": "instructions__swipe_up"
+  "845": "instructions__swipe_up",
+  "846": "instructions__tap_to_confirm",
+  "847": "instructions__hold_to_confirm",
 }
