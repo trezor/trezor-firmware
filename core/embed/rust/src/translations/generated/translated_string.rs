@@ -1239,6 +1239,9 @@ pub enum TranslatedString {
     storage_msg__wrong_pin = 844,  // "Wrong PIN"
     reset__create_x_of_y_multi_share_backup_template = 845,  // "Do you want to create a {0} of {1} multi-share backup?"
     reset__title_shamir_backup = 846,  // "Multi-share backup"
+    instructions__swipe_up = 847,  // "Swipe up"
+    instructions__tap_to_confirm = 848,  // "Tap to confirm"
+    instructions__hold_to_confirm = 849,  // "Hold to confirm"
 }
 
 impl TranslatedString {
@@ -2473,6 +2476,9 @@ impl TranslatedString {
             Self::storage_msg__wrong_pin => "Wrong PIN",
             Self::reset__create_x_of_y_multi_share_backup_template => "Do you want to create a {0} of {1} multi-share backup?",
             Self::reset__title_shamir_backup => "Multi-share backup",
+            Self::instructions__swipe_up => "Swipe up",
+            Self::instructions__tap_to_confirm => "Tap to confirm",
+            Self::instructions__hold_to_confirm => "Hold to confirm",
         }
     }
 
@@ -3708,6 +3714,9 @@ impl TranslatedString {
             Qstr::MP_QSTR_storage_msg__wrong_pin => Some(Self::storage_msg__wrong_pin),
             Qstr::MP_QSTR_reset__create_x_of_y_multi_share_backup_template => Some(Self::reset__create_x_of_y_multi_share_backup_template),
             Qstr::MP_QSTR_reset__title_shamir_backup => Some(Self::reset__title_shamir_backup),
+            Qstr::MP_QSTR_instructions__swipe_up => Some(Self::instructions__swipe_up),
+            Qstr::MP_QSTR_instructions__tap_to_confirm => Some(Self::instructions__tap_to_confirm),
+            Qstr::MP_QSTR_instructions__hold_to_confirm => Some(Self::instructions__hold_to_confirm),
             _ => None,
         }
     }

@@ -203,6 +203,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_fingerprint;
   MP_QSTR_firmware_update__title;
   MP_QSTR_firmware_update__title_fingerprint;
+  MP_QSTR_flow_get_address;
   MP_QSTR_get_language;
   MP_QSTR_hold;
   MP_QSTR_hold_danger;
@@ -230,7 +231,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_inputs__return;
   MP_QSTR_inputs__show;
   MP_QSTR_inputs__space;
-  MP_QSTR_instructions__swipe_up;
   MP_QSTR_is_type_of;
   MP_QSTR_items;
   MP_QSTR_joint__title;
@@ -530,6 +530,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_show_share_words;
   MP_QSTR_show_simple;
   MP_QSTR_show_success;
+  MP_QSTR_show_tx_context_menu;
   MP_QSTR_show_wait_text;
   MP_QSTR_show_warning;
   MP_QSTR_sign;
