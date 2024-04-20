@@ -83,6 +83,7 @@ include_icon!(
 include_icon!(ICON_FIRE, "model_mercury/res/fire24.toif");
 include_icon!(ICON_QR_CODE, "model_mercury/res/qr_code24.toif");
 include_icon!(ICON_REBOOT, "model_mercury/res/reboot24.toif");
+include_icon!(ICON_WARNING, "model_mercury/res/warning24.toif");
 
 // 30x30
 include_icon!(ICON_AUTOFILL, "model_mercury/res/autofill30.toif");
@@ -93,6 +94,7 @@ include_icon!(
     ICON_SIMPLE_CHECKMARK,
     "model_mercury/res/simple_checkmark30.toif"
 );
+include_icon!(ICON_SIGN, "model_mercury/res/sign30.toif");
 
 // 40x40
 include_icon!(ICON_MINUS, "model_mercury/res/minus40.toif");
