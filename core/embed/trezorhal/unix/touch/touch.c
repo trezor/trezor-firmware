@@ -35,7 +35,7 @@ static int _touch_x = 0;
 static int _touch_y = 0;
 
 // distance from the edge where arrow button swipe starts [px]
-static const int _btn_swipe_begin = 20;
+static const int _btn_swipe_begin = 120;
 // length of the arrow button swipe [px]
 static const int _btn_swipe_length = 60;
 
