@@ -1251,6 +1251,9 @@ pub enum TranslatedString {
     cardano__deposit = 851,  // "Deposit:"
     #[cfg(feature = "universal_fw")]
     cardano__vote_delegation = 852,  // "Vote delegation"
+    instructions__swipe_up = 853,  // "Swipe up"
+    instructions__tap_to_confirm = 854,  // "Tap to confirm"
+    instructions__hold_to_confirm = 855,  // "Hold to confirm"
 }
 
 impl TranslatedString {
@@ -2497,6 +2500,9 @@ impl TranslatedString {
             Self::cardano__deposit => "Deposit:",
             #[cfg(feature = "universal_fw")]
             Self::cardano__vote_delegation => "Vote delegation",
+            Self::instructions__swipe_up => "Swipe up",
+            Self::instructions__tap_to_confirm => "Tap to confirm",
+            Self::instructions__hold_to_confirm => "Hold to confirm",
         }
     }
 
@@ -3744,6 +3750,9 @@ impl TranslatedString {
             Qstr::MP_QSTR_cardano__deposit => Some(Self::cardano__deposit),
             #[cfg(feature = "universal_fw")]
             Qstr::MP_QSTR_cardano__vote_delegation => Some(Self::cardano__vote_delegation),
+            Qstr::MP_QSTR_instructions__swipe_up => Some(Self::instructions__swipe_up),
+            Qstr::MP_QSTR_instructions__tap_to_confirm => Some(Self::instructions__tap_to_confirm),
+            Qstr::MP_QSTR_instructions__hold_to_confirm => Some(Self::instructions__hold_to_confirm),
             _ => None,
         }
     }

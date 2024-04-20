@@ -21,10 +21,12 @@ mod number_input;
 #[cfg(feature = "translations")]
 mod page;
 mod progress;
+mod prompt_screen;
 mod result;
 mod scroll;
 mod share_words;
 mod simple_page;
+mod status_screen;
 mod swipe;
 mod welcome_screen;
 
@@ -57,10 +59,12 @@ pub use number_input::{NumberInputDialog, NumberInputDialogMsg};
 #[cfg(feature = "translations")]
 pub use page::ButtonPage;
 pub use progress::Progress;
+pub use prompt_screen::PromptScreen;
 pub use result::{ResultFooter, ResultScreen, ResultStyle};
 pub use scroll::ScrollBar;
 pub use share_words::ShareWords;
 pub use simple_page::SimplePage;
+pub use status_screen::StatusScreen;
 pub use swipe::{Swipe, SwipeDirection};
 pub use vertical_menu::{VerticalMenu, VerticalMenuChoiceMsg};
 pub use welcome_screen::WelcomeScreen;
