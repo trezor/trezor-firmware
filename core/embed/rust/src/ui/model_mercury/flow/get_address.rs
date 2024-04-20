@@ -115,7 +115,7 @@ impl GetAddress {
                     ))),
                 )
                 .with_subtitle("address".into())
-                .with_info_button(),
+                .with_menu_button(),
                 |msg| matches!(msg, FrameMsg::Button(_)).then_some(FlowMsg::Info),
             )?
             .add(
