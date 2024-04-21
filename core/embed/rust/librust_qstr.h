@@ -150,6 +150,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_confirm_action;
   MP_QSTR_confirm_address;
   MP_QSTR_confirm_backup;
+  MP_QSTR_confirm_backup_written_down;
   MP_QSTR_confirm_blob;
   MP_QSTR_confirm_coinjoin;
   MP_QSTR_confirm_emphasized;
@@ -173,6 +174,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_confirm_value;
   MP_QSTR_confirm_with_info;
   MP_QSTR_count;
+  MP_QSTR_create_backup_flow;
   MP_QSTR_data;
   MP_QSTR_data_hash;
   MP_QSTR_data_len;
@@ -232,6 +234,9 @@ static void _librust_qstrs(void) {
   MP_QSTR_inputs__return;
   MP_QSTR_inputs__show;
   MP_QSTR_inputs__space;
+  MP_QSTR_instructions__hold_to_confirm;
+  MP_QSTR_instructions__swipe_up;
+  MP_QSTR_instructions__tap_to_confirm;
   MP_QSTR_is_type_of;
   MP_QSTR_items;
   MP_QSTR_joint__title;
@@ -620,6 +625,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__error;
   MP_QSTR_words__fee;
   MP_QSTR_words__from;
+  MP_QSTR_words__important;
   MP_QSTR_words__keep_it_safe;
   MP_QSTR_words__know_what_your_doing;
   MP_QSTR_words__my_trezor;
