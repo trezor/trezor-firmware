@@ -54,7 +54,7 @@ use super::{
         MnemonicKeyboard, MnemonicKeyboardMsg, NumberInputDialog, NumberInputDialogMsg,
         PassphraseKeyboard, PassphraseKeyboardMsg, PinKeyboard, PinKeyboardMsg, Progress,
         PromptScreen, SelectWordCount, SelectWordCountMsg, ShareWords, SimplePage, Slip39Input,
-        StatusScreen, VerticalMenu, VerticalMenuChoiceMsg,
+        StatusScreen, SwipeUpScreen, SwipeUpScreenMsg, VerticalMenu, VerticalMenuChoiceMsg,
     },
     flow, theme,
 };
