@@ -1240,6 +1240,7 @@ pub enum TranslatedString {
     instructions__swipe_up = 845,  // "Swipe up"
     instructions__tap_to_confirm = 846,  // "Tap to confirm"
     instructions__hold_to_confirm = 847,  // "Hold to confirm"
+    words__important = 848,  // "Important"
 }
 
 impl TranslatedString {
@@ -2475,6 +2476,7 @@ impl TranslatedString {
             Self::instructions__swipe_up => "Swipe up",
             Self::instructions__tap_to_confirm => "Tap to confirm",
             Self::instructions__hold_to_confirm => "Hold to confirm",
+            Self::words__important => "Important",
         }
     }
 
@@ -3711,6 +3713,7 @@ impl TranslatedString {
             Qstr::MP_QSTR_instructions__swipe_up => Some(Self::instructions__swipe_up),
             Qstr::MP_QSTR_instructions__tap_to_confirm => Some(Self::instructions__tap_to_confirm),
             Qstr::MP_QSTR_instructions__hold_to_confirm => Some(Self::instructions__hold_to_confirm),
+            Qstr::MP_QSTR_words__important => Some(Self::words__important),
             _ => None,
         }
     }

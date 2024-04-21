@@ -826,6 +826,7 @@ class TR:
     words__error: str = "Error"
     words__fee: str = "Fee"
     words__from: str = "from"
+    words__important: str = "Important"
     words__keep_it_safe: str = "Keep it safe!"
     words__know_what_your_doing: str = "Continue only if you know what you are doing!"
     words__my_trezor: str = "My Trezor"
