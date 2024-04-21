@@ -32,15 +32,29 @@ async def show_share_words(
             group_index + 1, share_index + 1
         )
 
+    await RustLayout(
+        trezorui2.show_share_words(
+            title=title,
+            pages=share_words,
+        ),
+    )
+
     result = await interact(
         RustLayout(
-            trezorui2.show_share_words(
+            trezorui2.confirm_backup_written_down(
                 title=title,
                 pages=share_words,
             ),
         ),
         "backup_words",
         ButtonRequestType.ResetDevice,
+    )
+
+    result = await RustLayout(
+        trezorui2.show_info(
+            title="Check wallet backup",
+            description="Let's do a quick check of your backup.",
+        )
     )
     if result != CONFIRMED:
         raise ActionCancelled
@@ -296,14 +310,21 @@ async def slip39_advanced_prompt_group_threshold(num_of_groups: int) -> int:
 async def show_warning_backup(slip39: bool) -> None:
     result = await interact(
         RustLayout(
-            trezorui2.show_info(
-                title=TR.reset__never_make_digital_copy,
-                button=TR.buttons__ok_i_understand,
+            trezorui2.show_warning(
+                title=TR.words__important,
+                value=TR.reset__never_make_digital_copy,
+                button="",
                 allow_cancel=False,
             )
         ),
         "backup_warning",
         ButtonRequestType.ResetDevice,
+    )
+    result = await RustLayout(
+        trezorui2.show_info(
+            title="Wallet backup",
+            description="Write the following words in order on your wallet backup card.",
+        )
     )
     if result != CONFIRMED:
         raise ActionCancelled
@@ -332,8 +353,9 @@ async def show_reset_warning(
             RustLayout(
                 trezorui2.show_warning(
                     title=subheader or "",
-                    description=content,
-                    button=button.upper(),
+                    description="",
+                    value=content,
+                    button="",
                     allow_cancel=False,
                 )
             ),

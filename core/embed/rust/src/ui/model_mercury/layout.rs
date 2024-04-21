@@ -1018,42 +1018,50 @@ extern "C" fn new_confirm_fido(n_args: usize, args: *const Obj, kwargs: *mut Map
 
 extern "C" fn new_show_warning(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let icon = BlendedImage::new(
-            theme::IMAGE_BG_OCTAGON,
-            theme::IMAGE_FG_WARN,
-            theme::WARN_COLOR,
-            theme::FG,
-            theme::BG,
-        );
-        new_show_modal(kwargs, icon, theme::button_reset())
+        let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let value: TString = kwargs.get_or(Qstr::MP_QSTR_value, "".into())?;
+
+        let content = SwipeUpScreen::new(Paragraphs::new([Paragraph::new(
+            &theme::TEXT_MAIN_GREY_LIGHT,
+            value,
+        )]));
+        let obj = LayoutObj::new(
+            Frame::left_aligned(title, content)
+                .with_warning_button()
+                .button_styled(theme::button_warning_low())
+                .with_footer(TR::instructions__swipe_up.into(), None),
+        )?;
+        Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
 extern "C" fn new_show_success(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let icon = BlendedImage::new(
-            theme::IMAGE_BG_CIRCLE,
-            theme::IMAGE_FG_SUCCESS,
-            theme::SUCCESS_COLOR,
-            theme::FG,
-            theme::BG,
-        );
-        new_show_modal(kwargs, icon, theme::button_confirm())
+        let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let content = StatusScreen::new_success();
+        let obj = LayoutObj::new(
+            Frame::left_aligned(title, content)
+                .with_footer(TR::instructions__swipe_up.into(), None),
+        )?;
+        Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
 extern "C" fn new_show_info(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let icon = BlendedImage::new(
-            theme::IMAGE_BG_CIRCLE,
-            theme::IMAGE_FG_INFO,
-            theme::INFO_COLOR,
-            theme::FG,
-            theme::BG,
-        );
-        new_show_modal(kwargs, icon, theme::button_info())
+        let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let description: TString = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
+        let content = SwipeUpScreen::new(Paragraphs::new([Paragraph::new(
+            &theme::TEXT_MAIN_GREY_LIGHT,
+            description,
+        )]));
+        let obj = LayoutObj::new(
+            Frame::left_aligned(title, content)
+                .with_footer(TR::instructions__swipe_up.into(), None),
+        )?;
+        Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
@@ -1330,7 +1338,7 @@ extern "C" fn new_confirm_backup_written_down(
     args: *const Obj,
     kwargs: *mut Map,
 ) -> Obj {
-    let block = move |_args: &[Obj], _kwargs: &Map| {
+    let block = move |_args: &[Obj], kwargs: &Map| {
         let content = PromptScreen::new_hold_to_confirm();
         let frame_with_hold_to_confirm =
             Frame::left_aligned("I wrote down all words in order.".into(), content)
@@ -2044,6 +2052,11 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///    information, 3) Cancel transaction"""
     Qstr::MP_QSTR_show_tx_context_menu => obj_fn_kw!(0, new_show_tx_context_menu).as_obj(),
 
+    // TODO: This is just POC
+    /// def create_backup_flow() -> LayoutObj[UiResult]
+    /// """Start create backup or skip flow."""
+    Qstr::MP_QSTR_create_backup_flow => obj_fn_kw!(0, flow::create_backup::new_create_backup).as_obj(),
+
     /// def show_share_words(
     ///     *,
     ///     title: str,
@@ -2051,6 +2064,11 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// ) -> LayoutObj[UiResult]:
     ///     """Show mnemonic for backup."""
     Qstr::MP_QSTR_show_share_words => obj_fn_kw!(0, new_show_share_words).as_obj(),
+
+    // TODO: This is just POC
+    /// def confirm_backup_written_down() -> LayoutObj[UiResult]
+    /// """Confirm with the user that backup words are written down."""
+    Qstr::MP_QSTR_confirm_backup_written_down => obj_fn_kw!(0, new_confirm_backup_written_down).as_obj(),
 
     /// def request_number(
     ///     *,

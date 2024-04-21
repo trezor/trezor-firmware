@@ -340,37 +340,21 @@ async def confirm_reset_device(title: str, recovery: bool = False) -> None:
     )
 
 
-# TODO cleanup @ redesign
 async def prompt_backup() -> bool:
-    result = await interact(
-        RustLayout(
-            trezorui2.confirm_action(
-                title=TR.words__title_success,
-                action=TR.backup__new_wallet_successfully_created,
-                description=TR.backup__it_should_be_backed_up,
-                verb=TR.buttons__back_up,
-                verb_cancel=TR.buttons__skip,
-            )
-        ),
+    # result = await interact(RustLayout(trezorui2.))
+    await interact(
+        RustLayout(trezorui2.show_success(title=TR.backup__new_wallet_created)),
         "backup_device",
         ButtonRequestType.ResetDevice,
     )
-    if result is CONFIRMED:
-        return True
 
     result = await interact(
-        RustLayout(
-            trezorui2.confirm_action(
-                title=TR.words__warning.upper(),
-                action=TR.backup__want_to_skip,
-                description=TR.backup__can_back_up_anytime,
-                verb=TR.buttons__back_up,
-                verb_cancel=TR.buttons__skip,
-            )
-        ),
+        # TODO: this is just POC
+        RustLayout(trezorui2.create_backup_flow()),
         "backup_device",
         ButtonRequestType.ResetDevice,
     )
+
     return result is CONFIRMED
 
 
@@ -586,8 +570,8 @@ async def show_success(
         interact(
             RustLayout(
                 trezorui2.show_success(
-                    title=content,
-                    description=subheader or "",
+                    title=subheader or "",
+                    description="",
                     button=button.upper(),
                     allow_cancel=False,
                 )

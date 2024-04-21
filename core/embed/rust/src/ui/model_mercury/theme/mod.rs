@@ -292,6 +292,41 @@ pub const fn button_warning_high() -> ButtonStyleSheet {
     }
 }
 
+pub const fn button_warning_low() -> ButtonStyleSheet {
+    ButtonStyleSheet {
+        normal: &ButtonStyle {
+            font: Font::DEMIBOLD,
+            text_color: GREY_LIGHT,
+            button_color: BG,
+            icon_color: GREEN_LIME,
+            background_color: BG,
+            border_color: BG,
+            border_radius: RADIUS,
+            border_width: 0,
+        },
+        active: &ButtonStyle {
+            font: Font::DEMIBOLD,
+            text_color: GREY_LIGHT,
+            button_color: BG,
+            icon_color: GREEN_LIME,
+            background_color: BG,
+            border_color: FG,
+            border_radius: RADIUS,
+            border_width: 0,
+        },
+        disabled: &ButtonStyle {
+            font: Font::DEMIBOLD,
+            text_color: GREY_LIGHT,
+            button_color: BG,
+            icon_color: GREEN_LIME,
+            background_color: BG,
+            border_color: BG,
+            border_radius: RADIUS,
+            border_width: 0,
+        },
+    }
+}
+
 // TODO: delete
 pub const fn button_confirm() -> ButtonStyleSheet {
     ButtonStyleSheet {

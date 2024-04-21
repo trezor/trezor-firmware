@@ -396,12 +396,22 @@ def show_tx_context_menu() -> LayoutObj[int]:
 
 
 # rust/src/ui/model_mercury/layout.rs
+def create_backup_flow() -> LayoutObj[UiResult]
+"""Start create backup or skip flow."""
+
+
+# rust/src/ui/model_mercury/layout.rs
 def show_share_words(
     *,
     title: str,
     pages: Iterable[str],
 ) -> LayoutObj[UiResult]:
     """Show mnemonic for backup."""
+
+
+# rust/src/ui/model_mercury/layout.rs
+def confirm_backup_written_down() -> LayoutObj[UiResult]
+"""Confirm with the user that backup words are written down."""
 
 
 # rust/src/ui/model_mercury/layout.rs
