@@ -626,7 +626,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
           return UPLOAD_ERR_NOT_FIRMWARE_UPGRADE;
         }
 
-        if ((vhdr.vtrust & VTRUST_ALL) != VTRUST_ALL) {
+        if ((vhdr.vtrust & VTRUST_NO_WARNING) != VTRUST_NO_WARNING) {
           MSG_SEND_INIT(Failure);
           MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
           MSG_SEND_ASSIGN_STRING(message, "Not a full-trust image");
@@ -640,7 +640,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
 
 #if defined USE_OPTIGA && !defined STM32U5
       if (sectrue != secret_wiped() &&
-          ((vhdr.vtrust & VTRUST_SECRET) != VTRUST_SECRET_ALLOW)) {
+          ((vhdr.vtrust & VTRUST_SECRET_MASK) != VTRUST_SECRET_ALLOW)) {
         MSG_SEND_INIT(Failure);
         MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
         MSG_SEND_ASSIGN_STRING(message, "Install restricted");

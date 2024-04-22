@@ -54,19 +54,28 @@ typedef struct {
 
 #define MAX_VENDOR_PUBLIC_KEYS 8
 
-#define VTRUST_WAIT 0x000F
-#define VTRUST_RED 0x0010
-#define VTRUST_CLICK 0x0020
-#define VTRUST_STRING 0x0040
+// The mask of the vendor screen wait time in seconds, encoded in bitwise
+// complement form.
+#define VTRUST_WAIT_MASK 0x000F
+
+// Use black background instead of red one in the vendor screen.
+#define VTRUST_NO_RED 0x0010
+
+// Do not require user click to leave the vendor screen.
+#define VTRUST_NO_CLICK 0x0020
+
+// Do not show vendor string in the vendor screen.
+#define VTRUST_NO_STRING 0x0040
 
 // Two bits for historical reasons. On T2B1, only the lower bit was used with
 // inverted logic (due to late inclusion of the secret handling during
 // development process). On T3T1, we decided to remedy the situation by
 // including the upper bit as well.
-#define VTRUST_SECRET 0x0180
+#define VTRUST_SECRET_MASK 0x0180
 #define VTRUST_SECRET_ALLOW 0x0100
 
-#define VTRUST_ALL (VTRUST_WAIT | VTRUST_RED | VTRUST_CLICK | VTRUST_STRING)
+#define VTRUST_NO_WARNING \
+  (VTRUST_WAIT_MASK | VTRUST_NO_RED | VTRUST_NO_CLICK | VTRUST_NO_STRING)
 
 typedef struct {
   uint32_t magic;
