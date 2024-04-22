@@ -325,16 +325,17 @@ void real_jump_to_firmware(void) {
          "Firmware is corrupted");
 
   secret_prepare_fw(
-      ((vhdr.vtrust & VTRUST_SECRET) == VTRUST_SECRET_ALLOW) * sectrue,
-      ((vhdr.vtrust & VTRUST_ALL) == VTRUST_ALL) * sectrue);
+      ((vhdr.vtrust & VTRUST_SECRET_MASK) == VTRUST_SECRET_ALLOW) * sectrue,
+      ((vhdr.vtrust & VTRUST_NO_WARNING) == VTRUST_NO_WARNING) * sectrue);
 
-  // if all VTRUST flags are unset = ultimate trust => skip the procedure
-  if ((vhdr.vtrust & VTRUST_ALL) != VTRUST_ALL) {
+  // if all warnings are disabled in VTRUST flags then skip the procedure
+  if ((vhdr.vtrust & VTRUST_NO_WARNING) != VTRUST_NO_WARNING) {
     ui_fadeout();
     ui_screen_boot(&vhdr, hdr, 0);
     ui_fadein();
 
-    int delay = (vhdr.vtrust & VTRUST_WAIT) ^ VTRUST_WAIT;
+    // The delay is encoded in bitwise complement form.
+    int delay = (vhdr.vtrust & VTRUST_WAIT_MASK) ^ VTRUST_WAIT_MASK;
     if (delay > 1) {
       while (delay > 0) {
         ui_screen_boot(&vhdr, hdr, delay);
@@ -345,7 +346,7 @@ void real_jump_to_firmware(void) {
       hal_delay(1000);
     }
 
-    if ((vhdr.vtrust & VTRUST_CLICK) == 0) {
+    if ((vhdr.vtrust & VTRUST_NO_CLICK) == 0) {
       ui_screen_boot(&vhdr, hdr, -1);
       ui_click();
     }

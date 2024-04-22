@@ -83,11 +83,11 @@ void ui_set_initial_setup(bool initial) { initial_setup = initial; }
 #ifndef NEW_RENDERING
 static void ui_screen_boot_old(const vendor_header *const vhdr,
                                const image_header *const hdr) {
-  const int show_string = ((vhdr->vtrust & VTRUST_STRING) == 0);
-  if ((vhdr->vtrust & VTRUST_RED) == 0) {
-    boot_background = COLOR_BL_FAIL;
-  } else {
+  const int show_string = ((vhdr->vtrust & VTRUST_NO_STRING) == 0);
+  if ((vhdr->vtrust & VTRUST_NO_RED) != 0) {
     boot_background = COLOR_BLACK;
+  } else {
+    boot_background = COLOR_BL_FAIL;
   }
 
   const uint8_t *vimg = vhdr->vimg;

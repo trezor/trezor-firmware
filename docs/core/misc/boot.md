@@ -139,8 +139,16 @@ Vendor trust is stored as bitmap where unset bit means the feature is active.
 |  2  | 0x0004 | wait 4 seconds                          |
 |  3  | 0x0008 | wait 8 seconds                          |
 |  4  | 0x0010 | use red background instead of black one |
-|  5  | 0x0020 | require user click                      |
+|  5  | 0x0020 | require user click to continue          |
 |  6  | 0x0040 | show vendor string (not just the logo)  |
+|  7  | 0x0080 | allow access to pairing secret          |
+|  8  | 0x0100 | disable access to pairing secret        |
+
+Bits 0 to 6 represent vendor screen settings. The wait times are additive.
+
+Two bits are used for access to the pairing secret for historical reasons.
+On T2B1 only bit 7 is evaluated.
+On newer models, both bits 7 and 8 are evaluated.
 
 ### Firmware Header
 
