@@ -53,7 +53,7 @@ static uint64_t term_glyph_bits(char ch) {
     uint8_t bytes[8];
   } result = {0};
 
-  if (ch > ' ' && ch < 128) {
+  if (ch > ' ' && ch <= '~') {
     const uint8_t *b = &Font_Bitmap[(ch - ' ') * 5];
 
     for (int y = 0; y < 7; y++) {
