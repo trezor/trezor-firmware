@@ -230,9 +230,6 @@ pub const fn button_default() -> ButtonStyleSheet {
             button_color: BG,
             icon_color: GREY_LIGHT,
             background_color: BG,
-            border_color: BG,
-            border_radius: RADIUS,
-            border_width: 0,
         },
         active: &ButtonStyle {
             font: Font::DEMIBOLD,
@@ -240,9 +237,6 @@ pub const fn button_default() -> ButtonStyleSheet {
             button_color: BG,
             icon_color: GREY_LIGHT,
             background_color: BG,
-            border_color: FG,
-            border_radius: RADIUS,
-            border_width: 0,
         },
         disabled: &ButtonStyle {
             font: Font::DEMIBOLD,
@@ -250,9 +244,6 @@ pub const fn button_default() -> ButtonStyleSheet {
             button_color: BG,
             icon_color: GREY_LIGHT,
             background_color: BG,
-            border_color: BG,
-            border_radius: RADIUS,
-            border_width: 0,
         },
     }
 }
@@ -265,9 +256,6 @@ pub const fn button_warning_high() -> ButtonStyleSheet {
             button_color: BG,
             icon_color: ORANGE_DIMMED,
             background_color: BG,
-            border_color: BG,
-            border_radius: RADIUS,
-            border_width: 0,
         },
         active: &ButtonStyle {
             font: Font::DEMIBOLD,
@@ -275,9 +263,6 @@ pub const fn button_warning_high() -> ButtonStyleSheet {
             button_color: BG,
             icon_color: ORANGE_DIMMED,
             background_color: BG,
-            border_color: BG,
-            border_radius: RADIUS,
-            border_width: 0,
         },
         disabled: &ButtonStyle {
             font: Font::DEMIBOLD,
@@ -285,9 +270,6 @@ pub const fn button_warning_high() -> ButtonStyleSheet {
             button_color: BG,
             icon_color: ORANGE_DIMMED,
             background_color: BG,
-            border_color: BG,
-            border_radius: RADIUS,
-            border_width: 0,
         },
     }
 }
@@ -300,9 +282,6 @@ pub const fn button_warning_low() -> ButtonStyleSheet {
             button_color: BG,
             icon_color: GREEN_LIME,
             background_color: BG,
-            border_color: BG,
-            border_radius: RADIUS,
-            border_width: 0,
         },
         active: &ButtonStyle {
             font: Font::DEMIBOLD,
@@ -310,9 +289,6 @@ pub const fn button_warning_low() -> ButtonStyleSheet {
             button_color: BG,
             icon_color: GREEN_LIME,
             background_color: BG,
-            border_color: FG,
-            border_radius: RADIUS,
-            border_width: 0,
         },
         disabled: &ButtonStyle {
             font: Font::DEMIBOLD,
@@ -320,9 +296,6 @@ pub const fn button_warning_low() -> ButtonStyleSheet {
             button_color: BG,
             icon_color: GREEN_LIME,
             background_color: BG,
-            border_color: BG,
-            border_radius: RADIUS,
-            border_width: 0,
         },
     }
 }
@@ -336,9 +309,6 @@ pub const fn button_confirm() -> ButtonStyleSheet {
             button_color: GREEN,
             icon_color: GREY_LIGHT,
             background_color: BG,
-            border_color: BG,
-            border_radius: RADIUS,
-            border_width: 0,
         },
         active: &ButtonStyle {
             font: Font::BOLD,
@@ -346,9 +316,6 @@ pub const fn button_confirm() -> ButtonStyleSheet {
             button_color: GREEN_DARK,
             icon_color: GREY_LIGHT,
             background_color: BG,
-            border_color: FG,
-            border_radius: RADIUS,
-            border_width: 0,
         },
         disabled: &ButtonStyle {
             font: Font::BOLD,
@@ -356,9 +323,6 @@ pub const fn button_confirm() -> ButtonStyleSheet {
             button_color: GREEN_DARK,
             icon_color: GREY_LIGHT,
             background_color: BG,
-            border_color: BG,
-            border_radius: RADIUS,
-            border_width: 0,
         },
     }
 }
@@ -372,9 +336,6 @@ pub const fn button_cancel() -> ButtonStyleSheet {
             button_color: RED,
             icon_color: GREY_LIGHT,
             background_color: BG,
-            border_color: BG,
-            border_radius: RADIUS,
-            border_width: 0,
         },
         active: &ButtonStyle {
             font: Font::BOLD,
@@ -382,9 +343,6 @@ pub const fn button_cancel() -> ButtonStyleSheet {
             button_color: RED_DARK,
             icon_color: GREY_LIGHT,
             background_color: BG,
-            border_color: FG,
-            border_radius: RADIUS,
-            border_width: 0,
         },
         disabled: &ButtonStyle {
             font: Font::BOLD,
@@ -392,9 +350,6 @@ pub const fn button_cancel() -> ButtonStyleSheet {
             button_color: RED,
             icon_color: GREY_LIGHT,
             background_color: BG,
-            border_color: BG,
-            border_radius: RADIUS,
-            border_width: 0,
         },
     }
 }
@@ -412,9 +367,6 @@ pub const fn button_reset() -> ButtonStyleSheet {
             button_color: YELLOW,
             icon_color: GREY_LIGHT,
             background_color: BG,
-            border_color: BG,
-            border_radius: RADIUS,
-            border_width: 0,
         },
         active: &ButtonStyle {
             font: Font::BOLD,
@@ -422,9 +374,6 @@ pub const fn button_reset() -> ButtonStyleSheet {
             button_color: YELLOW_DARK,
             icon_color: GREY_LIGHT,
             background_color: BG,
-            border_color: FG,
-            border_radius: RADIUS,
-            border_width: 0,
         },
         disabled: &ButtonStyle {
             font: Font::BOLD,
@@ -432,9 +381,6 @@ pub const fn button_reset() -> ButtonStyleSheet {
             button_color: YELLOW,
             icon_color: GREY_LIGHT,
             background_color: BG,
-            border_color: BG,
-            border_radius: RADIUS,
-            border_width: 0,
         },
     }
 }
@@ -447,9 +393,6 @@ pub const fn button_pin() -> ButtonStyleSheet {
             button_color: GREY_DARK,
             icon_color: GREY_LIGHT,
             background_color: BG,
-            border_color: BG,
-            border_radius: RADIUS,
-            border_width: 0,
         },
         active: &ButtonStyle {
             font: Font::MONO,
@@ -457,9 +400,6 @@ pub const fn button_pin() -> ButtonStyleSheet {
             button_color: GREY_MEDIUM,
             icon_color: GREY_LIGHT,
             background_color: BG,
-            border_color: FG,
-            border_radius: RADIUS,
-            border_width: 0,
         },
         disabled: &ButtonStyle {
             font: Font::MONO,
@@ -467,9 +407,6 @@ pub const fn button_pin() -> ButtonStyleSheet {
             button_color: BG, // so there is no "button" itself, just the text
             icon_color: GREY_LIGHT,
             background_color: BG,
-            border_color: BG,
-            border_radius: RADIUS,
-            border_width: 0,
         },
     }
 }
@@ -482,9 +419,6 @@ pub const fn button_pin_confirm() -> ButtonStyleSheet {
             button_color: GREEN,
             icon_color: GREY_LIGHT,
             background_color: BG,
-            border_color: BG,
-            border_radius: RADIUS,
-            border_width: 0,
         },
         active: &ButtonStyle {
             font: Font::MONO,
@@ -492,9 +426,6 @@ pub const fn button_pin_confirm() -> ButtonStyleSheet {
             button_color: GREEN_DARK,
             icon_color: GREY_LIGHT,
             background_color: BG,
-            border_color: FG,
-            border_radius: RADIUS,
-            border_width: 0,
         },
         disabled: &ButtonStyle {
             font: Font::MONO,
@@ -502,9 +433,6 @@ pub const fn button_pin_confirm() -> ButtonStyleSheet {
             button_color: GREY_DARK,
             icon_color: GREY_LIGHT,
             background_color: BG,
-            border_color: BG,
-            border_radius: RADIUS,
-            border_width: 0,
         },
     }
 }
@@ -517,9 +445,6 @@ pub const fn button_pin_autocomplete() -> ButtonStyleSheet {
             button_color: GREY_DARK, // same as PIN buttons
             icon_color: GREY_LIGHT,
             background_color: BG,
-            border_color: BG,
-            border_radius: RADIUS,
-            border_width: 0,
         },
         active: &ButtonStyle {
             font: Font::MONO,
@@ -527,9 +452,6 @@ pub const fn button_pin_autocomplete() -> ButtonStyleSheet {
             button_color: GREEN_DARK,
             icon_color: GREY_LIGHT,
             background_color: BG,
-            border_color: FG,
-            border_radius: RADIUS,
-            border_width: 0,
         },
         disabled: &ButtonStyle {
             font: Font::MONO,
@@ -537,9 +459,6 @@ pub const fn button_pin_autocomplete() -> ButtonStyleSheet {
             button_color: BG,
             icon_color: GREY_LIGHT,
             background_color: BG,
-            border_color: BG,
-            border_radius: RADIUS,
-            border_width: 0,
         },
     }
 }
@@ -552,9 +471,6 @@ pub const fn button_suggestion_confirm() -> ButtonStyleSheet {
             button_color: GREEN,
             icon_color: GREY_LIGHT,
             background_color: BG,
-            border_color: BG,
-            border_radius: RADIUS,
-            border_width: 0,
         },
         active: &ButtonStyle {
             font: Font::MONO,
@@ -562,9 +478,6 @@ pub const fn button_suggestion_confirm() -> ButtonStyleSheet {
             button_color: GREEN_DARK,
             icon_color: GREY_LIGHT,
             background_color: BG,
-            border_color: FG,
-            border_radius: RADIUS,
-            border_width: 0,
         },
         disabled: &ButtonStyle {
             font: Font::MONO,
@@ -572,9 +485,6 @@ pub const fn button_suggestion_confirm() -> ButtonStyleSheet {
             button_color: GREY_DARK,
             icon_color: GREY_LIGHT,
             background_color: BG,
-            border_color: BG,
-            border_radius: RADIUS,
-            border_width: 0,
         },
     }
 }
@@ -587,9 +497,6 @@ pub const fn button_suggestion_autocomplete() -> ButtonStyleSheet {
             button_color: GREY_DARK, // same as PIN buttons
             icon_color: GREY_LIGHT,
             background_color: BG,
-            border_color: BG,
-            border_radius: RADIUS,
-            border_width: 0,
         },
         active: &ButtonStyle {
             font: Font::MONO,
@@ -597,9 +504,6 @@ pub const fn button_suggestion_autocomplete() -> ButtonStyleSheet {
             button_color: GREEN_DARK,
             icon_color: GREY_LIGHT,
             background_color: BG,
-            border_color: FG,
-            border_radius: RADIUS,
-            border_width: 0,
         },
         disabled: &ButtonStyle {
             font: Font::MONO,
@@ -607,9 +511,6 @@ pub const fn button_suggestion_autocomplete() -> ButtonStyleSheet {
             button_color: BG,
             icon_color: GREY_LIGHT,
             background_color: BG,
-            border_color: BG,
-            border_radius: RADIUS,
-            border_width: 0,
         },
     }
 }
@@ -622,9 +523,6 @@ pub const fn button_counter() -> ButtonStyleSheet {
             button_color: GREY_DARK,
             icon_color: GREY_LIGHT,
             background_color: BG,
-            border_color: BG,
-            border_radius: RADIUS,
-            border_width: 0,
         },
         active: &ButtonStyle {
             font: Font::DEMIBOLD,
@@ -632,9 +530,6 @@ pub const fn button_counter() -> ButtonStyleSheet {
             button_color: GREY_MEDIUM,
             icon_color: GREY_LIGHT,
             background_color: BG,
-            border_color: FG,
-            border_radius: RADIUS,
-            border_width: 0,
         },
         disabled: &ButtonStyle {
             font: Font::DEMIBOLD,
@@ -642,9 +537,6 @@ pub const fn button_counter() -> ButtonStyleSheet {
             button_color: GREY_DARK,
             icon_color: GREY_LIGHT,
             background_color: BG,
-            border_color: BG,
-            border_radius: RADIUS,
-            border_width: 0,
         },
     }
 }
