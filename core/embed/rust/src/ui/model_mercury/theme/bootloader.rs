@@ -77,9 +77,6 @@ pub fn button_confirm() -> ButtonStyleSheet {
             button_color: WHITE,
             icon_color: BLD_BG,
             background_color: BLD_BG,
-            border_color: BLD_BG,
-            border_radius: RADIUS,
-            border_width: 0,
         },
         active: &ButtonStyle {
             font: Font::BOLD,
@@ -87,9 +84,6 @@ pub fn button_confirm() -> ButtonStyleSheet {
             button_color: BLD_INSTALL_BTN_COLOR_ACTIVE,
             icon_color: BLD_BG,
             background_color: BLD_BG,
-            border_color: BLD_BG,
-            border_radius: RADIUS,
-            border_width: 0,
         },
         disabled: &ButtonStyle {
             font: Font::BOLD,
@@ -97,9 +91,6 @@ pub fn button_confirm() -> ButtonStyleSheet {
             button_color: GREY_DARK,
             icon_color: BLD_BG,
             background_color: FG,
-            border_color: FG,
-            border_radius: RADIUS,
-            border_width: 0,
         },
     }
 }
@@ -112,9 +103,6 @@ pub fn button_wipe_cancel() -> ButtonStyleSheet {
             button_color: BLD_WIPE_CANCEL_BTN_COLOR,
             icon_color: WHITE,
             background_color: BLD_WIPE_COLOR,
-            border_color: BLD_WIPE_COLOR,
-            border_radius: RADIUS,
-            border_width: 0,
         },
         active: &ButtonStyle {
             font: Font::BOLD,
@@ -122,9 +110,6 @@ pub fn button_wipe_cancel() -> ButtonStyleSheet {
             button_color: BLD_WIPE_CANCEL_BTN_COLOR_ACTIVE,
             icon_color: WHITE,
             background_color: BLD_WIPE_COLOR,
-            border_color: BLD_WIPE_COLOR,
-            border_radius: RADIUS,
-            border_width: 0,
         },
         disabled: &ButtonStyle {
             font: Font::BOLD,
@@ -132,9 +117,6 @@ pub fn button_wipe_cancel() -> ButtonStyleSheet {
             button_color: GREY_DARK,
             icon_color: GREY_LIGHT,
             background_color: WHITE,
-            border_color: WHITE,
-            border_radius: RADIUS,
-            border_width: 0,
         },
     }
 }
@@ -147,9 +129,6 @@ pub fn button_wipe_confirm() -> ButtonStyleSheet {
             button_color: BLD_WIPE_BTN_COLOR,
             icon_color: BLD_WIPE_COLOR,
             background_color: BLD_WIPE_COLOR,
-            border_color: BLD_WIPE_COLOR,
-            border_radius: RADIUS,
-            border_width: 0,
         },
         active: &ButtonStyle {
             font: Font::BOLD,
@@ -157,9 +136,6 @@ pub fn button_wipe_confirm() -> ButtonStyleSheet {
             button_color: BLD_WIPE_BTN_COLOR_ACTIVE,
             icon_color: BLD_WIPE_COLOR,
             background_color: BLD_WIPE_COLOR,
-            border_color: BLD_WIPE_COLOR,
-            border_radius: RADIUS,
-            border_width: 0,
         },
         disabled: &ButtonStyle {
             font: Font::BOLD,
@@ -167,9 +143,6 @@ pub fn button_wipe_confirm() -> ButtonStyleSheet {
             button_color: GREY_DARK,
             icon_color: FG,
             background_color: FG,
-            border_color: FG,
-            border_radius: RADIUS,
-            border_width: 0,
         },
     }
 }
@@ -182,9 +155,6 @@ pub fn button_bld_menu() -> ButtonStyleSheet {
             button_color: BLD_BG,
             icon_color: BLD_FG,
             background_color: BLD_BG,
-            border_color: BLD_BTN_COLOR,
-            border_radius: 2,
-            border_width: 2,
         },
         active: &ButtonStyle {
             font: Font::BOLD,
@@ -192,9 +162,6 @@ pub fn button_bld_menu() -> ButtonStyleSheet {
             button_color: BLD_BG,
             icon_color: BLD_FG,
             background_color: BLD_BG,
-            border_color: BLD_BTN_COLOR_ACTIVE,
-            border_radius: 2,
-            border_width: 2,
         },
         disabled: &ButtonStyle {
             font: Font::BOLD,
@@ -202,9 +169,6 @@ pub fn button_bld_menu() -> ButtonStyleSheet {
             button_color: BLD_BG,
             icon_color: GREY_LIGHT,
             background_color: BLD_BG,
-            border_color: BLD_BG,
-            border_radius: 2,
-            border_width: 2,
         },
     }
 }
@@ -217,9 +181,6 @@ pub fn button_bld() -> ButtonStyleSheet {
             button_color: BLD_BTN_COLOR,
             icon_color: BLD_FG,
             background_color: BLD_BG,
-            border_color: BLD_BG,
-            border_radius: 4,
-            border_width: 0,
         },
         active: &ButtonStyle {
             font: Font::BOLD,
@@ -227,9 +188,6 @@ pub fn button_bld() -> ButtonStyleSheet {
             button_color: BLD_BTN_COLOR_ACTIVE,
             icon_color: BLD_FG,
             background_color: BLD_BG,
-            border_color: BLD_BG,
-            border_radius: 4,
-            border_width: 0,
         },
         disabled: &ButtonStyle {
             font: Font::BOLD,
@@ -237,9 +195,6 @@ pub fn button_bld() -> ButtonStyleSheet {
             button_color: BLD_BTN_COLOR,
             icon_color: GREY_LIGHT,
             background_color: BLD_BG,
-            border_color: BLD_BG,
-            border_radius: 4,
-            border_width: 0,
         },
     }
 }

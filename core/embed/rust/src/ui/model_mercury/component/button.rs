@@ -163,30 +163,7 @@ impl Button {
         match &self.content {
             ButtonContent::IconBlend(_, _, _) => {}
             _ => {
-                if style.border_width > 0 {
-                    // Paint the border and a smaller background on top of it.
-                    display::rect_fill_rounded(
-                        self.area,
-                        style.border_color,
-                        style.background_color,
-                        style.border_radius,
-                    );
-                    display::rect_fill_rounded(
-                        self.area.inset(Insets::uniform(style.border_width)),
-                        style.button_color,
-                        style.border_color,
-                        style.border_radius,
-                    );
-                } else {
-                    // We do not need to draw an explicit border in this case, just a
-                    // bigger background.
-                    display::rect_fill_rounded(
-                        self.area,
-                        style.button_color,
-                        style.background_color,
-                        style.border_radius,
-                    );
-                }
+                display::rect_fill(self.area, style.button_color);
             }
         }
     }
@@ -196,9 +173,7 @@ impl Button {
             ButtonContent::IconBlend(_, _, _) => {}
             _ => shape::Bar::new(self.area)
                 .with_bg(style.button_color)
-                .with_fg(style.border_color)
-                .with_thickness(style.border_width)
-                .with_radius(style.border_radius as i16)
+                .with_fg(style.button_color)
                 .render(target),
         }
     }
@@ -413,7 +388,6 @@ pub struct ButtonStyleSheet {
     pub disabled: &'static ButtonStyle,
 }
 
-// TODO: radius and borders not needed in T3T1 - sync with BL
 #[derive(PartialEq, Eq)]
 pub struct ButtonStyle {
     pub font: Font,
@@ -421,9 +395,6 @@ pub struct ButtonStyle {
     pub button_color: Color,
     pub icon_color: Color,
     pub background_color: Color,
-    pub border_color: Color,
-    pub border_radius: u8,
-    pub border_width: i16,
 }
 
 impl Button {
