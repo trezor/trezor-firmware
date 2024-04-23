@@ -55,8 +55,8 @@ elif TREZOR_MODEL in ('T', 'DISC1', 'DISC2'):
     FONT_SUB=None
 elif TREZOR_MODEL in ('T3T1',):
     FONT_NORMAL='Font_TTSatoshi_DemiBold_21'
-    FONT_DEMIBOLD=None
-    FONT_BOLD=None
+    FONT_DEMIBOLD='Font_TTSatoshi_DemiBold_21'
+    FONT_BOLD='Font_TTSatoshi_DemiBold_21'
     FONT_MONO='Font_RobotoMono_Medium_21'
     FONT_BIG='Font_TTSatoshi_DemiBold_42'
     FONT_SUB='Font_TTSatoshi_DemiBold_18'
