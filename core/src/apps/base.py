@@ -60,7 +60,7 @@ def _language_version_matches() -> bool | None:
 def get_features() -> Features:
     import storage.recovery as storage_recovery
     from trezor import translations
-    from trezor.enums import Capability
+    from trezor.enums import Capability, RecoveryKind, RecoveryStatus
     from trezor.messages import Features
     from trezor.ui import HEIGHT, WIDTH
 
@@ -160,7 +160,16 @@ def get_features() -> Features:
         f.unfinished_backup = storage_device.unfinished_backup()
         f.no_backup = storage_device.no_backup()
         f.flags = storage_device.get_flags()
-        f.recovery_mode = storage_recovery.is_in_progress()
+        if storage_recovery.is_in_progress():
+            kind = storage_recovery.get_kind()
+            if kind == RecoveryKind.NormalRecovery:
+                f.recovery_status = RecoveryStatus.InNormalRecovery
+            elif kind == RecoveryKind.DryRun:
+                f.recovery_status = RecoveryStatus.InDryRunRecovery
+            elif kind == RecoveryKind.UnlockRepeatedBackup:
+                f.recovery_status = RecoveryStatus.InUnlockRepeatedBackupRecovery
+        else:
+            f.recovery_status = RecoveryStatus.NoRecovery
         f.backup_type = mnemonic.get_type()
 
         # Only some models are capable of SD card
@@ -216,6 +225,7 @@ async def handle_GetFeatures(msg: GetFeatures) -> Features:
 
 
 async def handle_Cancel(msg: Cancel) -> Success:
+    workflow.close_others()
     raise wire.ActionCancelled
 
 
@@ -370,7 +380,7 @@ def set_homescreen() -> None:
 def lock_device(interrupt_workflow: bool = True) -> None:
     if config.has_pin():
         config.lock()
-        wire.find_handler = get_pinlocked_handler
+        wire.find_handler = _get_pinlocked_handler
         set_homescreen()
         if interrupt_workflow:
             workflow.close_others()
@@ -409,7 +419,7 @@ async def unlock_device() -> None:
     wire.find_handler = workflow_handlers.find_registered_handler
 
 
-def get_pinlocked_handler(
+def _get_pinlocked_handler(
     iface: wire.WireInterface, msg_type: int
 ) -> wire.Handler[wire.Msg] | None:
     orig_handler = workflow_handlers.find_registered_handler(iface, msg_type)
@@ -428,6 +438,38 @@ def get_pinlocked_handler(
     async def wrapper(msg: protobuf.MessageType) -> protobuf.MessageType:
         await unlock_device()
         return await orig_handler(msg)
+
+    return wrapper
+
+
+_ALLOW_WHILE_REPEATED_BACKUP_UNLOCKED = (
+    MessageType.Initialize,
+    MessageType.GetFeatures,
+    MessageType.EndSession,
+    MessageType.BackupDevice,
+    MessageType.WipeDevice,
+    MessageType.Cancel,
+)
+
+
+def _get_backup_handler(
+    iface: wire.WireInterface, msg_type: int
+) -> wire.Handler[wire.Msg] | None:
+    orig_handler = workflow_handlers.find_registered_handler(iface, msg_type)
+    if orig_handler is None:
+        return None
+
+    if __debug__:
+        import usb
+
+        if iface is usb.iface_debug:
+            return orig_handler
+
+    if msg_type in _ALLOW_WHILE_REPEATED_BACKUP_UNLOCKED:
+        return orig_handler
+
+    async def wrapper(_msg: protobuf.MessageType) -> protobuf.MessageType:
+        raise wire.ProcessError("Operation not allowed when in repeated backup state")
 
     return wrapper
 
@@ -464,7 +506,9 @@ def boot() -> None:
         workflow_handlers.register(msg_type, handler)
 
     reload_settings_from_storage()
-    if config.is_unlocked():
-        wire.find_handler = workflow_handlers.find_registered_handler
+    if not config.is_unlocked():
+        wire.find_handler = _get_pinlocked_handler
+    elif storage_cache.get_bool(storage_cache.APP_RECOVERY_REPEATED_BACKUP_UNLOCKED):
+        wire.find_handler = _get_backup_handler
     else:
-        wire.find_handler = get_pinlocked_handler
+        wire.find_handler = workflow_handlers.find_registered_handler

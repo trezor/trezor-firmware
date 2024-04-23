@@ -2,7 +2,7 @@ from typing import Callable, Iterable
 
 import trezorui2
 from trezor import TR
-from trezor.enums import ButtonRequestType
+from trezor.enums import ButtonRequestType, RecoveryKind
 
 from ..common import interact
 from . import RustLayout, raise_if_not_confirmed, show_warning
@@ -76,7 +76,7 @@ async def continue_recovery(
     text: str,
     subtext: str | None,
     info_func: Callable | None,
-    dry_run: bool,
+    kind: RecoveryKind,
     show_info: bool = False,
 ) -> bool:
     # TODO: implement info_func?
@@ -84,7 +84,7 @@ async def continue_recovery(
     # (and having middle button would mean shortening the right button text)
 
     # Never showing info for dry-run, user already saw it and it is disturbing
-    if dry_run:
+    if kind in (RecoveryKind.DryRun, RecoveryKind.UnlockRepeatedBackup):
         show_info = False
 
     if subtext:
@@ -95,8 +95,8 @@ async def continue_recovery(
             title="",
             description=text,
             button=button_label,
+            kind=kind,
             info_button=False,
-            dry_run=dry_run,
             show_info=show_info,  # type: ignore [No parameter named "show_info"]
         )
     )

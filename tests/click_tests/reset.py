@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 
 from shamir_mnemonic import shamir  # type: ignore
 
-from trezorlib import messages, models
+from trezorlib import models
 
 from .. import buttons
 from .. import translations as TR
@@ -81,9 +81,7 @@ def set_selection(debug: "DebugLink", button: tuple[int, int], diff: int) -> Non
         debug.press_middle(wait=True)
 
 
-def read_words(
-    debug: "DebugLink", backup_type: messages.BackupType, do_htc: bool = True
-) -> list[str]:
+def read_words(debug: "DebugLink", do_htc: bool = True) -> list[str]:
     words: list[str] = []
 
     if debug.model in (models.T2B1,):

@@ -10,17 +10,25 @@ BAK_T_BIP39 = BackupType.Bip39  # global_import_cache
 
 
 async def backup_device(msg: BackupDevice) -> Success:
+    import storage.cache as storage_cache
     import storage.device as storage_device
     from trezor import wire
     from trezor.messages import Success
 
+    from apps import workflow_handlers
     from apps.common import backup_types, mnemonic
 
     from .reset_device import backup_seed, backup_slip39_custom, layout
 
+    # do this early before we show any UI
+    # the homescreen will clear the flag right after its own UI is gone
+    repeated_backup_unlocked = storage_cache.get_bool(
+        storage_cache.APP_RECOVERY_REPEATED_BACKUP_UNLOCKED
+    )
+
     if not storage_device.is_initialized():
         raise wire.NotInitialized("Device is not initialized")
-    if not storage_device.needs_backup():
+    if not storage_device.needs_backup() and not repeated_backup_unlocked:
         raise wire.ProcessError("Seed already backed up")
 
     mnemonic_secret, backup_type = mnemonic.get()
@@ -40,7 +48,10 @@ async def backup_device(msg: BackupDevice) -> Success:
     elif len(groups) > 0:
         raise wire.DataError("group_threshold is missing")
 
-    storage_device.set_unfinished_backup(True)
+    if not repeated_backup_unlocked:
+        storage_device.set_unfinished_backup(True)
+
+    storage_cache.delete(storage_cache.APP_RECOVERY_REPEATED_BACKUP_UNLOCKED)
     storage_device.set_backed_up()
 
     if group_threshold is not None:
@@ -51,6 +62,7 @@ async def backup_device(msg: BackupDevice) -> Success:
 
     storage_device.set_unfinished_backup(False)
 
+    wire.find_handler = workflow_handlers.find_registered_handler
     await layout.show_backup_success()
 
     return Success(message="Seed successfully backed up")

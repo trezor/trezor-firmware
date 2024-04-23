@@ -440,6 +440,12 @@ if TYPE_CHECKING:
         Jpeg = 2
         ToiG = 3
 
+    class RecoveryStatus(IntEnum):
+        NoRecovery = 0
+        InNormalRecovery = 1
+        InDryRunRecovery = 2
+        InUnlockRepeatedBackupRecovery = 3
+
     class Capability(IntEnum):
         Bitcoin = 1
         Bitcoin_like = 2
@@ -471,6 +477,11 @@ if TYPE_CHECKING:
     class RecoveryDeviceType(IntEnum):
         ScrambledWords = 0
         Matrix = 1
+
+    class RecoveryKind(IntEnum):
+        NormalRecovery = 0
+        DryRun = 1
+        UnlockRepeatedBackup = 2
 
     class WordRequestType(IntEnum):
         Plain = 0

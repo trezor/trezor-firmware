@@ -91,8 +91,38 @@ message Features {
     // optional bytes fw_vendor_keys = 26;      // obsoleted, use fw_vendor
     optional bool unfinished_backup = 27;       // report unfinished backup (equals to Storage.unfinished_backup)
     optional bool no_backup = 28;               // report no backup (equals to Storage.no_backup)
-    optional bool recovery_mode = 29;           // is recovery mode in progress
+    optional RecoveryStatus recovery_status = 29;  // whether or not we are in recovery mode and of what kind
     repeated Capability capabilities = 30;      // list of supported capabilities
+    optional BackupType backup_type = 31;       // type of device backup (BIP-39 / SLIP-39 basic / SLIP-39 advanced)
+    optional bool sd_card_present = 32;         // is SD card present
+    optional bool sd_protection = 33;           // is SD Protect enabled
+    optional bool wipe_code_protection = 34;    // is wipe code protection enabled
+    optional bytes session_id = 35;
+    optional bool passphrase_always_on_device = 36;  // device enforces passphrase entry on Trezor
+    optional SafetyCheckLevel safety_checks = 37;            // safety check level, set to Prompt to limit path namespace enforcement
+    optional uint32 auto_lock_delay_ms = 38;    // number of milliseconds after which the device locks itself
+    optional uint32 display_rotation = 39;      // in degrees from North
+    optional bool experimental_features = 40;   // are experimental message types enabled?
+    optional bool busy = 41;                    // is the device busy, showing "Do not disconnect"?
+    optional HomescreenFormat homescreen_format = 42;   // format of the homescreen, 1 = TOIf, 2 = jpg, 3 = TOIG
+    optional bool hide_passphrase_from_host = 43;   // should we hide the passphrase when it comes from host?
+    optional string internal_model = 44;        // internal model name
+    optional uint32 unit_color = 45;          // color of the unit/device
+    optional bool unit_btconly = 46;          // unit/device is intended as bitcoin only
+    optional uint32 homescreen_width = 47;         // homescreen width in pixels
+    optional uint32 homescreen_height = 48;         // homescreen height in pixels
+    optional bool bootloader_locked = 49;       // bootloader is locked
+    optional bool language_version_matches = 50 [default=true];  // translation blob version matches firmware version
+    optional uint32 unit_packaging = 51;      // unit/device packaging version
+    optional bool haptic_feedback = 52;         // haptic feedback is enabled
+
+    enum RecoveryStatus {
+        NoRecovery = 0;
+        InNormalRecovery = 1;
+        InDryRunRecovery = 2;
+        InUnlockRepeatedBackupRecovery = 3;
+    }
+
     enum Capability {
         option (has_bitcoin_only_values) = true;
 
@@ -118,28 +148,6 @@ message Features {
         Capability_Brightness = 20 [(bitcoin_only) = true];
         Capability_Haptic = 21 [(bitcoin_only) = true];
     }
-    optional BackupType backup_type = 31;       // type of device backup (BIP-39 / SLIP-39 basic / SLIP-39 advanced)
-    optional bool sd_card_present = 32;         // is SD card present
-    optional bool sd_protection = 33;           // is SD Protect enabled
-    optional bool wipe_code_protection = 34;    // is wipe code protection enabled
-    optional bytes session_id = 35;
-    optional bool passphrase_always_on_device = 36;  // device enforces passphrase entry on Trezor
-    optional SafetyCheckLevel safety_checks = 37;            // safety check level, set to Prompt to limit path namespace enforcement
-    optional uint32 auto_lock_delay_ms = 38;    // number of milliseconds after which the device locks itself
-    optional uint32 display_rotation = 39;      // in degrees from North
-    optional bool experimental_features = 40;   // are experimental message types enabled?
-    optional bool busy = 41;                    // is the device busy, showing "Do not disconnect"?
-    optional HomescreenFormat homescreen_format = 42;   // format of the homescreen, 1 = TOIf, 2 = jpg, 3 = TOIG
-    optional bool hide_passphrase_from_host = 43;   // should we hide the passphrase when it comes from host?
-    optional string internal_model = 44;        // internal model name
-    optional uint32 unit_color = 45;          // color of the unit/device
-    optional bool unit_btconly = 46;          // unit/device is intended as bitcoin only
-    optional uint32 homescreen_width = 47;         // homescreen width in pixels
-    optional uint32 homescreen_height = 48;         // homescreen height in pixels
-    optional bool bootloader_locked = 49;       // bootloader is locked
-    optional bool language_version_matches = 50 [default=true];  // translation blob version matches firmware version
-    optional uint32 unit_packaging = 51;      // unit/device packaging version
-    optional bool haptic_feedback = 52;         // haptic feedback is enabled
 }
 
 /**
@@ -434,16 +442,16 @@ message EntropyAck {
  * @next WordRequest
  */
 message RecoveryDevice {
-    optional uint32 word_count = 1;                     // number of words in BIP-39 mnemonic
-    optional bool passphrase_protection = 2;            // enable master node encryption using passphrase
-    optional bool pin_protection = 3;                   // enable PIN protection
-    optional string language = 4 [deprecated=true];     // deprecated (use ChangeLanguage)
-    optional string label = 5;                          // device label
-    optional bool enforce_wordlist = 6;                 // enforce BIP-39 wordlist during the process
-    // 7 reserved for unused recovery method
-    optional RecoveryDeviceType type = 8;               // supported recovery type
-    optional uint32 u2f_counter = 9;                    // U2F counter
-    optional bool dry_run = 10;                         // perform dry-run recovery workflow (for safe mnemonic validation)
+    optional uint32 word_count = 1;                           // number of words in BIP-39 mnemonic (T1 only)
+    optional bool passphrase_protection = 2;                  // enable master node encryption using passphrase
+    optional bool pin_protection = 3;                         // enable PIN protection
+    optional string language = 4 [deprecated=true];           // deprecated (use ChangeLanguage)
+    optional string label = 5;                                // device label
+    optional bool enforce_wordlist = 6;                       // enforce BIP-39 wordlist during the process (T1 only)
+    reserved 7;                                               // unused recovery method
+    optional RecoveryDeviceType type = 8;                     // supported recovery type (T1 only)
+    optional uint32 u2f_counter = 9;                          // U2F counter
+    optional RecoveryKind kind = 10 [default=NormalRecovery]; // the kind of recovery to perform
     /**
      * Type of recovery procedure. These should be used as bitmask, e.g.,
      * `RecoveryDeviceType_ScrambledWords | RecoveryDeviceType_Matrix`
@@ -456,6 +464,12 @@ message RecoveryDevice {
         // use powers of two when extending this field
         RecoveryDeviceType_ScrambledWords = 0;        // words in scrambled order
         RecoveryDeviceType_Matrix = 1;                // matrix recovery type
+    }
+
+    enum RecoveryKind {
+        NormalRecovery = 0;          // recovery from seedphrase on an uninitialized device
+        DryRun = 1;                  // mnemonic validation
+        UnlockRepeatedBackup = 2;    // unlock SLIP-39 repeated backup
     }
 }
 

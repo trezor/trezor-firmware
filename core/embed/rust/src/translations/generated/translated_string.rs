@@ -798,7 +798,7 @@ pub enum TranslatedString {
     recovery__num_of_words = 511,  // "Select the number of words in your backup."
     recovery__only_first_n_letters = 512,  // "You'll only have to select the first 2-4 letters of each word."
     recovery__progress_will_be_lost = 513,  // "All progress will be lost."
-    recovery__select_num_of_words = 514,  // "Select the number of words in your backup."
+    recovery__select_num_of_words = 514,  // "\"\""
     recovery__share_already_entered = 515,  // "Share already entered"
     recovery__share_from_another_multi_share_backup = 516,  // "You have entered a share from a different backup."
     recovery__share_num_template = 517,  // "Share {0}"
@@ -1330,6 +1330,9 @@ pub enum TranslatedString {
     words__try_again = 930,  // "Try again."
     reset__slip39_checklist_num_groups_x_template = 931,  // "Number of groups: {0}"
     brightness__title = 932,  // "Set brightness"
+    recovery__title_unlock_repeated_backup = 933,  // "Multi-share backup"
+    recovery__unlock_repeated_backup = 934,  // "Do you want to unlock the seed for repeated backup?"
+    recovery__unlock_repeated_backup_verb = 935,  // "Unlock backup"
 }
 
 impl TranslatedString {
@@ -2123,7 +2126,7 @@ impl TranslatedString {
             Self::recovery__num_of_words => "Select the number of words in your backup.",
             Self::recovery__only_first_n_letters => "You'll only have to select the first 2-4 letters of each word.",
             Self::recovery__progress_will_be_lost => "All progress will be lost.",
-            Self::recovery__select_num_of_words => "Select the number of words in your backup.",
+            Self::recovery__select_num_of_words => "\"\"",
             Self::recovery__share_already_entered => "Share already entered",
             Self::recovery__share_from_another_multi_share_backup => "You have entered a share from a different backup.",
             Self::recovery__share_num_template => "Share {0}",
@@ -2655,6 +2658,9 @@ impl TranslatedString {
             Self::words__try_again => "Try again.",
             Self::reset__slip39_checklist_num_groups_x_template => "Number of groups: {0}",
             Self::brightness__title => "Set brightness",
+            Self::recovery__title_unlock_repeated_backup => "Multi-share backup",
+            Self::recovery__unlock_repeated_backup => "Do you want to unlock the seed for repeated backup?",
+            Self::recovery__unlock_repeated_backup_verb => "Unlock backup",
         }
     }
 
@@ -3981,6 +3987,9 @@ impl TranslatedString {
             Qstr::MP_QSTR_words__try_again => Some(Self::words__try_again),
             Qstr::MP_QSTR_reset__slip39_checklist_num_groups_x_template => Some(Self::reset__slip39_checklist_num_groups_x_template),
             Qstr::MP_QSTR_brightness__title => Some(Self::brightness__title),
+            Qstr::MP_QSTR_recovery__title_unlock_repeated_backup => Some(Self::recovery__title_unlock_repeated_backup),
+            Qstr::MP_QSTR_recovery__unlock_repeated_backup => Some(Self::recovery__unlock_repeated_backup),
+            Qstr::MP_QSTR_recovery__unlock_repeated_backup_verb => Some(Self::recovery__unlock_repeated_backup_verb),
             _ => None,
         }
     }

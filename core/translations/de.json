@@ -562,7 +562,6 @@
     "recovery__num_of_words": "Wörteranzahl in deinem Backup auswählen.",
     "recovery__only_first_n_letters": "Du musst nur die ersten 2-4 Buchstaben jedes Worts auswählen.",
     "recovery__progress_will_be_lost": "Alle Fortschritte gehen verloren.",
-    "recovery__select_num_of_words": "Wörteranzahl in deinem Backup auswählen.",
     "recovery__share_already_entered": "Share wurde bereits eingegeben",
     "recovery__share_from_another_multi_share_backup": "Share eines anderen Shamir-Backups eingegeben.",
     "recovery__share_num_template": "Share {0}",

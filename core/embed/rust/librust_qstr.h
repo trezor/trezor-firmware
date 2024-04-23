@@ -293,6 +293,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_joint__title;
   MP_QSTR_joint__to_the_total_amount;
   MP_QSTR_joint__you_are_contributing;
+  MP_QSTR_kind;
   MP_QSTR_label;
   MP_QSTR_language;
   MP_QSTR_language__change_to_template;
@@ -440,7 +441,10 @@ static void _librust_qstrs(void) {
   MP_QSTR_recovery__title_dry_run;
   MP_QSTR_recovery__title_recover;
   MP_QSTR_recovery__title_remaining_shares;
+  MP_QSTR_recovery__title_unlock_repeated_backup;
   MP_QSTR_recovery__type_word_x_of_y_template;
+  MP_QSTR_recovery__unlock_repeated_backup;
+  MP_QSTR_recovery__unlock_repeated_backup_verb;
   MP_QSTR_recovery__wallet_recovered;
   MP_QSTR_recovery__wanna_cancel_dry_run;
   MP_QSTR_recovery__wanna_cancel_recovery;

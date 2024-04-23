@@ -202,10 +202,10 @@ def test_already_initialized(client: Client):
     with pytest.raises(RuntimeError):
         device.recover(
             client,
-            12,
-            False,
-            False,
-            "label",
+            word_count=12,
+            pin_protection=False,
+            passphrase_protection=False,
+            label="label",
             input_callback=client.mnemonic_callback,
         )
 

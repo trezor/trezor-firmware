@@ -48,25 +48,27 @@ def enter_word(
         raise ValueError("Unknown model")
 
 
-def confirm_recovery(debug: "DebugLink") -> None:
+def confirm_recovery(debug: "DebugLink", title: str = "recovery__title") -> None:
     layout = debug.wait_layout()
-    TR.assert_equals(layout.title(), "recovery__title")
+    TR.assert_equals(layout.title(), title)
     if debug.model in (models.T2T1,):
         debug.click(buttons.OK, wait=True)
     elif debug.model in (models.T3T1,):
         debug.swipe_up(wait=True)
     elif debug.model in (models.T2B1,):
         debug.press_right(wait=True)
-        debug.press_right()
 
 
 def select_number_of_words(
-    debug: "DebugLink", num_of_words: int = 20, wait: bool = True
+    debug: "DebugLink",
+    num_of_words: int = 20,
+    wait: bool = True,
+    unlock_repeated_backup=False,
 ) -> None:
     if wait:
         debug.wait_layout()
-    TR.assert_equals(debug.read_layout().text_content(), "recovery__num_of_words")
     if debug.model in (models.T2T1,):
+        TR.assert_equals(debug.read_layout().text_content(), "recovery__num_of_words")
         # click the number
         word_option_offset = 6
         word_options = (12, 18, 20, 24, 33)
@@ -102,12 +104,14 @@ def select_number_of_words(
     else:
         raise ValueError("Unknown model")
 
-    if num_of_words in (20, 33):
+    if unlock_repeated_backup:
+        TR.assert_in(layout.text_content(), "recovery__enter_backup")
+    elif num_of_words in (20, 33):
         TR.assert_in_multiple(
             layout.text_content(),
             ["recovery__enter_any_share", "recovery__only_first_n_letters"],
         )
-    else:
+    else:  # BIP-39
         TR.assert_in_multiple(
             layout.text_content(),
             ["recovery__enter_backup", "recovery__only_first_n_letters"],
@@ -115,7 +119,10 @@ def select_number_of_words(
 
 
 def enter_share(
-    debug: "DebugLink", share: str, is_first: bool = True
+    debug: "DebugLink",
+    share: str,
+    is_first: bool = True,
+    before_title: str = "recovery__title_recover",
 ) -> "LayoutContent":
     if debug.model in (models.T2B1,):
         TR.assert_in(debug.read_layout().title(), "recovery__title_recover")
@@ -136,13 +143,21 @@ def enter_share(
     return layout
 
 
-def enter_shares(debug: "DebugLink", shares: list[str]) -> None:
+def enter_shares(
+    debug: "DebugLink",
+    shares: list[str],
+    enter_share_before_title: str = "recovery__title_recover",
+    text: str = "recovery__enter_any_share",
+    after_layout_text: str = "recovery__wallet_recovered",
+) -> None:
     TR.assert_in_multiple(
         debug.read_layout().text_content(),
-        ["recovery__enter_any_share", "recovery__only_first_n_letters"],
+        ["recovery__enter_any_share", "recovery__only_first_n_letters", text],
     )
     for index, share in enumerate(shares):
-        enter_share(debug, share, is_first=index == 0)
+        enter_share(
+            debug, share, is_first=index == 0, before_title=enter_share_before_title
+        )
         if index < len(shares) - 1:
             # FIXME: when ui-t3t1 done for shamir, we want to check the template below
             TR.assert_in(debug.read_layout().title(), "recovery__title_recover")
@@ -152,16 +167,22 @@ def enter_shares(debug: "DebugLink", shares: list[str]) -> None:
             #     template=(index + 1, len(shares)),
             # )
 
-    TR.assert_in(debug.read_layout().text_content(), "recovery__wallet_recovered")
+    TR.assert_in(debug.read_layout().text_content(), after_layout_text)
 
 
-def enter_seed(debug: "DebugLink", seed_words: list[str]) -> None:
-    prepare_enter_seed(debug)
+def enter_seed(
+    debug: "DebugLink",
+    seed_words: list[str],
+    is_slip39=False,
+    prepare_layout_text: str = "recovery__enter_backup",
+    after_layout_text: str = "recovery__wallet_recovered",
+) -> None:
+    prepare_enter_seed(debug, prepare_layout_text)
 
     for word in seed_words:
-        enter_word(debug, word, is_slip39=False)
+        enter_word(debug, word, is_slip39=is_slip39)
 
-    TR.assert_in(debug.read_layout().text_content(), "recovery__wallet_recovered")
+    TR.assert_in(debug.read_layout().text_content(), after_layout_text)
 
 
 def enter_seed_previous_correct(
@@ -209,10 +230,12 @@ def enter_seed_previous_correct(
     # TR.assert_in(debug.read_layout().text_content(), "recovery__wallet_recovered")
 
 
-def prepare_enter_seed(debug: "DebugLink") -> None:
+def prepare_enter_seed(
+    debug: "DebugLink", layout_text: str = "recovery__enter_backup"
+) -> None:
     TR.assert_in_multiple(
         debug.read_layout().text_content(),
-        ["recovery__enter_backup", "recovery__only_first_n_letters"],
+        ["recovery__enter_backup", "recovery__only_first_n_letters", layout_text],
     )
     if debug.model in (models.T2T1,):
         debug.click(buttons.OK, wait=True)
@@ -221,7 +244,6 @@ def prepare_enter_seed(debug: "DebugLink") -> None:
         debug.swipe_up(wait=True)
     elif debug.model in (models.T2B1,):
         debug.press_right(wait=True)
-        TR.assert_equals(debug.read_layout().title(), "recovery__title_recover")
         debug.press_right()
         layout = debug.press_right(wait=True)
         assert "MnemonicKeyboard" in layout.all_components()

@@ -491,7 +491,11 @@ void fsm_msgApplyFlags(const ApplyFlags *msg) {
 void fsm_msgRecoveryDevice(const RecoveryDevice *msg) {
   CHECK_PIN_UNCACHED
 
-  const bool dry_run = msg->has_dry_run ? msg->dry_run : false;
+  CHECK_PARAM(!msg->has_kind || msg->kind == RecoveryKind_NormalRecovery ||
+                  msg->kind == RecoveryKind_DryRun,
+              _("UnlockRepeatedBackup not supported"))
+
+  const bool dry_run = msg->has_kind ? msg->kind == RecoveryKind_DryRun : false;
   if (!dry_run) {
     CHECK_NOT_INITIALIZED
   } else {

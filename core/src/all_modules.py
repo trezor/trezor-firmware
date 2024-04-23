@@ -121,6 +121,10 @@ trezor.enums.PinMatrixRequestType
 import trezor.enums.PinMatrixRequestType
 trezor.enums.RecoveryDeviceType
 import trezor.enums.RecoveryDeviceType
+trezor.enums.RecoveryKind
+import trezor.enums.RecoveryKind
+trezor.enums.RecoveryStatus
+import trezor.enums.RecoveryStatus
 trezor.enums.RequestType
 import trezor.enums.RequestType
 trezor.enums.SafetyCheckLevel

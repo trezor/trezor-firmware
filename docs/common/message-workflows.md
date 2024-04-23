@@ -279,13 +279,23 @@ entering PIN) or standard recovery (with entering the seed to the host
 computer one by one in random order). The process continues with
 optional check of the seed validity and optional setting up the PIN,
 which has to be confirmed. Finally the recovered wallet is saved into
-device storage. The same process is used with the dry run recovery, the
+device storage.
+
+The same process is used with the dry run recovery, the
 differences are that this process can be done only with already
-initialized deviice and that the mnemonic is not saved into the device
+initialized device and that the mnemonic is not saved into the device
 but it is only compared to the mnemonic already loaded into the device
 with the successful result (The seed is valid and matches the one in the
-device) or unsuccessful result(The seed is valid but does not match the
+device) or unsuccessful result (The seed is valid but does not match the
 one in the device).
+
+A third kind of recovery is one that is done in order to
+unlock a repeated backup. This is similar to the dry run recovery in that
+the device needs to be already initialized and that the mnemonic entered
+is compared against the one stored in the device. Once successful,
+a special mode is activated, which allows an additional backup
+to be performed. This is useful for upgrading SLIP39 backups
+to multiple shares.
 
 ## LoadDevice
 

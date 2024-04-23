@@ -931,5 +931,8 @@
   "929": "words__settings",
   "930": "words__try_again",
   "931": "reset__slip39_checklist_num_groups_x_template",
-  "932": "brightness__title"
+  "932": "brightness__title",
+  "933": "recovery__title_unlock_repeated_backup",
+  "934": "recovery__unlock_repeated_backup",
+  "935": "recovery__unlock_repeated_backup_verb"
 }

@@ -149,21 +149,23 @@ async def homescreen_dialog(
     show_info: bool = False,
 ) -> None:
     import storage.recovery as storage_recovery
+    from trezor.enums import RecoveryKind
     from trezor.ui.layouts.recovery import continue_recovery
     from trezor.wire import ActionCancelled
 
     from .recover import RecoveryAborted
 
+    kind = storage_recovery.get_kind()
+
     while True:
-        dry_run = storage_recovery.is_dry_run()
         if await continue_recovery(
-            button_label, text, subtext, info_func, dry_run, show_info
+            button_label, text, subtext, info_func, kind, show_info
         ):
             # go forward in the recovery process
             break
         # user has chosen to abort, confirm the choice
         try:
-            await _confirm_abort(dry_run)
+            await _confirm_abort(kind != RecoveryKind.NormalRecovery)
         except ActionCancelled:
             pass
         else:

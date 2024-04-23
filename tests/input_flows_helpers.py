@@ -73,6 +73,12 @@ class RecoveryFlow:
         yield from self.input_number_of_words(num_words)
         yield from self.enter_any_share()
 
+    def setup_repeated_backup_recovery(self, num_words: int) -> BRGeneratorType:
+        if self.client.model is models.T2B1:
+            yield from self.tr_recovery_homescreen()
+        yield from self.input_number_of_words(num_words)
+        yield from self.enter_your_backup()
+
     def setup_bip39_recovery(self, num_words: int) -> BRGeneratorType:
         if self.client.model is models.T2B1:
             yield from self.tr_recovery_homescreen()

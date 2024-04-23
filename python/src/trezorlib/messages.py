@@ -472,6 +472,13 @@ class HomescreenFormat(IntEnum):
     ToiG = 3
 
 
+class RecoveryStatus(IntEnum):
+    NoRecovery = 0
+    InNormalRecovery = 1
+    InDryRunRecovery = 2
+    InUnlockRepeatedBackupRecovery = 3
+
+
 class Capability(IntEnum):
     Bitcoin = 1
     Bitcoin_like = 2
@@ -505,6 +512,12 @@ class SdProtectOperationType(IntEnum):
 class RecoveryDeviceType(IntEnum):
     ScrambledWords = 0
     Matrix = 1
+
+
+class RecoveryKind(IntEnum):
+    NormalRecovery = 0
+    DryRun = 1
+    UnlockRepeatedBackup = 2
 
 
 class WordRequestType(IntEnum):
@@ -3241,7 +3254,7 @@ class Features(protobuf.MessageType):
         25: protobuf.Field("fw_vendor", "string", repeated=False, required=False, default=None),
         27: protobuf.Field("unfinished_backup", "bool", repeated=False, required=False, default=None),
         28: protobuf.Field("no_backup", "bool", repeated=False, required=False, default=None),
-        29: protobuf.Field("recovery_mode", "bool", repeated=False, required=False, default=None),
+        29: protobuf.Field("recovery_status", "RecoveryStatus", repeated=False, required=False, default=None),
         30: protobuf.Field("capabilities", "Capability", repeated=True, required=False, default=None),
         31: protobuf.Field("backup_type", "BackupType", repeated=False, required=False, default=None),
         32: protobuf.Field("sd_card_present", "bool", repeated=False, required=False, default=None),
@@ -3297,7 +3310,7 @@ class Features(protobuf.MessageType):
         fw_vendor: Optional["str"] = None,
         unfinished_backup: Optional["bool"] = None,
         no_backup: Optional["bool"] = None,
-        recovery_mode: Optional["bool"] = None,
+        recovery_status: Optional["RecoveryStatus"] = None,
         backup_type: Optional["BackupType"] = None,
         sd_card_present: Optional["bool"] = None,
         sd_protection: Optional["bool"] = None,
@@ -3348,7 +3361,7 @@ class Features(protobuf.MessageType):
         self.fw_vendor = fw_vendor
         self.unfinished_backup = unfinished_backup
         self.no_backup = no_backup
-        self.recovery_mode = recovery_mode
+        self.recovery_status = recovery_status
         self.backup_type = backup_type
         self.sd_card_present = sd_card_present
         self.sd_protection = sd_protection
@@ -3783,7 +3796,7 @@ class RecoveryDevice(protobuf.MessageType):
         6: protobuf.Field("enforce_wordlist", "bool", repeated=False, required=False, default=None),
         8: protobuf.Field("type", "RecoveryDeviceType", repeated=False, required=False, default=None),
         9: protobuf.Field("u2f_counter", "uint32", repeated=False, required=False, default=None),
-        10: protobuf.Field("dry_run", "bool", repeated=False, required=False, default=None),
+        10: protobuf.Field("kind", "RecoveryKind", repeated=False, required=False, default=RecoveryKind.NormalRecovery),
     }
 
     def __init__(
@@ -3797,7 +3810,7 @@ class RecoveryDevice(protobuf.MessageType):
         enforce_wordlist: Optional["bool"] = None,
         type: Optional["RecoveryDeviceType"] = None,
         u2f_counter: Optional["int"] = None,
-        dry_run: Optional["bool"] = None,
+        kind: Optional["RecoveryKind"] = RecoveryKind.NormalRecovery,
     ) -> None:
         self.word_count = word_count
         self.passphrase_protection = passphrase_protection
@@ -3807,7 +3820,7 @@ class RecoveryDevice(protobuf.MessageType):
         self.enforce_wordlist = enforce_wordlist
         self.type = type
         self.u2f_counter = u2f_counter
-        self.dry_run = dry_run
+        self.kind = kind
 
 
 class WordRequest(protobuf.MessageType):

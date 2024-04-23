@@ -34,7 +34,7 @@ APP_COMMON_REQUEST_PIN_LAST_UNLOCK = const(3 | _SESSIONLESS_FLAG)
 APP_COMMON_BUSY_DEADLINE_MS = const(4 | _SESSIONLESS_FLAG)
 APP_MISC_COSI_NONCE = const(5 | _SESSIONLESS_FLAG)
 APP_MISC_COSI_COMMITMENT = const(6 | _SESSIONLESS_FLAG)
-
+APP_RECOVERY_REPEATED_BACKUP_UNLOCKED = const(7 | _SESSIONLESS_FLAG)
 
 # === Homescreen storage ===
 # This does not logically belong to the "cache" functionality, but the cache module is
@@ -57,7 +57,7 @@ class InvalidSessionError(Exception):
 
 
 class DataCache:
-    fields: Sequence[int]
+    fields: Sequence[int]  # field sizes
 
     def __init__(self) -> None:
         self.data = [bytearray(f + 1) for f in self.fields]
@@ -145,6 +145,7 @@ class SessionlessCache(DataCache):
             8,  # APP_COMMON_BUSY_DEADLINE_MS
             32,  # APP_MISC_COSI_NONCE
             32,  # APP_MISC_COSI_COMMITMENT
+            0,  # APP_RECOVERY_REPEATED_BACKUP_UNLOCKED
         )
         super().__init__()
 
@@ -233,13 +234,17 @@ def set(key: int, value: bytes) -> None:
     _SESSIONS[_active_session_idx].set(key, value)
 
 
-def set_int(key: int, value: int) -> None:
+def _get_length(key: int) -> int:
     if key & _SESSIONLESS_FLAG:
-        length = _SESSIONLESS_CACHE.fields[key ^ _SESSIONLESS_FLAG]
+        return _SESSIONLESS_CACHE.fields[key ^ _SESSIONLESS_FLAG]
     elif _active_session_idx is None:
         raise InvalidSessionError
     else:
-        length = _SESSIONS[_active_session_idx].fields[key]
+        return _SESSIONS[_active_session_idx].fields[key]
+
+
+def set_int(key: int, value: int) -> None:
+    length = _get_length(key)
 
     encoded = value.to_bytes(length, "big")
 
@@ -248,6 +253,14 @@ def set_int(key: int, value: int) -> None:
     assert int.from_bytes(encoded, "big") == value
 
     set(key, encoded)
+
+
+def set_bool(key: int, value: bool) -> None:
+    assert _get_length(key) == 0  # skipping get_length in production build
+    if value:
+        set(key, b"")
+    else:
+        delete(key)
 
 
 if TYPE_CHECKING:
@@ -274,6 +287,10 @@ def get_int(key: int, default: T | None = None) -> int | T | None:  # noqa: F811
         return default
     else:
         return int.from_bytes(encoded, "big")
+
+
+def get_bool(key: int) -> bool:  # noqa: F811
+    return get(key) is not None
 
 
 def get_int_all_sessions(key: int) -> builtins.set[int]:
