@@ -230,4 +230,5 @@ where
     }
 }
 
+#[cfg(feature = "micropython")]
 impl<U> crate::ui::flow::Swipable for IconDialog<U> {}

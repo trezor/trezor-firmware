@@ -4,11 +4,11 @@ use crate::{
         component::{
             image::BlendedImage,
             text::paragraphs::{Paragraph, Paragraphs},
-            Qr, Timeout,
+            Qr, SwipeDirection, Timeout,
         },
         flow::{
-            base::Decision, flow_store, FlowMsg, FlowState, FlowStore, IgnoreSwipe, SwipeDirection,
-            SwipeFlow, SwipePage,
+            base::Decision, flow_store, FlowMsg, FlowState, FlowStore, IgnoreSwipe, SwipeFlow,
+            SwipePage,
         },
     },
 };
