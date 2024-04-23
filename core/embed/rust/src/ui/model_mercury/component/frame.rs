@@ -245,15 +245,16 @@ where
     }
 }
 
+#[cfg(feature = "micropython")]
 impl<T> crate::ui::flow::Swipable for Frame<T>
 where
     T: Component + crate::ui::flow::Swipable,
 {
-    fn can_swipe(&self, direction: crate::ui::flow::SwipeDirection) -> bool {
+    fn can_swipe(&self, direction: crate::ui::component::SwipeDirection) -> bool {
         self.inner().can_swipe(direction)
     }
 
-    fn swiped(&mut self, ctx: &mut EventCtx, direction: crate::ui::flow::SwipeDirection) {
+    fn swiped(&mut self, ctx: &mut EventCtx, direction: crate::ui::component::SwipeDirection) {
         self.update_content(ctx, |ctx, inner| inner.swiped(ctx, direction))
     }
 }
