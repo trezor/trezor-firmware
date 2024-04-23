@@ -1979,15 +1979,25 @@ class InputFlowSlip39AdvancedRecoveryShareAlreadyEntered(InputFlowBase):
 
 
 class InputFlowSlip39BasicRecoveryDryRun(InputFlowBase):
-    def __init__(self, client: Client, shares: list[str], mismatch: bool = False):
+    def __init__(
+        self,
+        client: Client,
+        shares: list[str],
+        mismatch: bool = False,
+        unlock_repeated_backup=False,
+    ):
         super().__init__(client)
         self.shares = shares
         self.mismatch = mismatch
+        self.unlock_repeated_backup = unlock_repeated_backup
         self.word_count = len(shares[0].split(" "))
 
     def input_flow_common(self) -> BRGeneratorType:
         yield from self.REC.confirm_dry_run()
-        yield from self.REC.setup_slip39_recovery(self.word_count)
+        if self.unlock_repeated_backup:
+            yield from self.REC.setup_repeated_backup_recovery(self.word_count)
+        else:
+            yield from self.REC.setup_slip39_recovery(self.word_count)
         yield from self.REC.input_all_slip39_shares(self.shares)
         if self.mismatch:
             yield from self.REC.warning_slip39_dryrun_mismatch()

@@ -90,10 +90,16 @@ def _resolve_path_to_texts(
     texts: list[str] = []
     lookups = path.split(".")
     for language_data in all_language_data:
+        language_data_missing = False
         data: dict[str, t.Any] | str = language_data
         for lookup in lookups:
             assert isinstance(data, dict), f"{lookup} is not a dict"
+            if lookup not in data:
+                language_data_missing = True
+                break
             data = data[lookup]
+        if language_data_missing:
+            continue
         assert isinstance(data, str), f"{path} is not a string"
         if template:
             data = data.format(*template)

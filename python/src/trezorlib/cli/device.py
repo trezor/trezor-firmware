@@ -151,6 +151,7 @@ def load(
     "-t", "--type", "rec_type", type=ChoiceType(RECOVERY_TYPE), default="scrambled"
 )
 @click.option("-d", "--dry-run", is_flag=True)
+@click.option("-b", "--unlock-repeated-backup", is_flag=True)
 @with_client
 def recover(
     client: "TrezorClient",
@@ -162,6 +163,7 @@ def recover(
     u2f_counter: int,
     rec_type: messages.RecoveryDeviceType,
     dry_run: bool,
+    unlock_repeated_backup: bool,
 ) -> "MessageType":
     """Start safe recovery workflow."""
     if rec_type == messages.RecoveryDeviceType.ScrambledWords:
@@ -169,6 +171,15 @@ def recover(
     else:
         input_callback = ui.matrix_words
         click.echo(ui.RECOVERY_MATRIX_DESCRIPTION)
+
+    if dry_run and unlock_repeated_backup:
+        raise click.ClickException("Cannot use -d and -b together.")
+
+    recovery_kind = None
+    if dry_run:
+        recovery_kind = messages.RecoveryKind.DryRun
+    if unlock_repeated_backup:
+        recovery_kind = messages.RecoveryKind.UnlockRepeatedBackup
 
     return device.recover(
         client,
@@ -179,7 +190,7 @@ def recover(
         u2f_counter=u2f_counter,
         input_callback=input_callback,
         type=rec_type,
-        dry_run=dry_run,
+        recovery_kind=recovery_kind,
     )
 
 

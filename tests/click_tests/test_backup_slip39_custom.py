@@ -82,7 +82,7 @@ def test_backup_slip39_custom(
     all_words: list[str] = []
     for _ in range(share_count):
         # read words
-        words = reset.read_words(debug, messages.BackupType.Slip39_Basic)
+        words = reset.read_words(debug)
 
         # confirm words
         reset.confirm_words(debug, words)

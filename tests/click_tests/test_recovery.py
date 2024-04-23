@@ -47,7 +47,7 @@ def prepare_recovery_and_evaluate(
     assert isinstance(device_handler.result(), messages.Success)
     features = device_handler.features()
     assert features.initialized is True
-    assert features.recovery_mode is False
+    assert features.recovery_status == messages.RecoveryStatus.NoRecovery
 
 
 @pytest.mark.setup_client(uninitialized=True)

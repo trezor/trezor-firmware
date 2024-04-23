@@ -516,7 +516,6 @@
   "recovery__num_of_words": "text,2",
   "recovery__only_first_n_letters": "text,4",
   "recovery__progress_will_be_lost": "text,2",
-  "recovery__select_num_of_words": "text,3",
   "recovery__share_already_entered": "text,2",
   "recovery__share_from_another_multi_share_backup": "text,3",
   "recovery__share_num_template": "text,1",

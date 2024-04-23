@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 
+import storage.cache as storage_cache
 import storage.device as storage_device
 import storage.recovery as storage_recovery
 import storage.recovery_shares as storage_recovery_shares
@@ -11,7 +12,7 @@ from apps.common import backup_types
 from . import layout, recover
 
 if TYPE_CHECKING:
-    from trezor.enums import BackupType
+    from trezor.enums import BackupType, RecoveryKind
 
 
 async def recovery_homescreen() -> None:
@@ -19,35 +20,84 @@ async def recovery_homescreen() -> None:
 
     from apps.homescreen import homescreen
 
-    if not storage_recovery.is_in_progress():
+    if storage_cache.get_bool(storage_cache.APP_RECOVERY_REPEATED_BACKUP_UNLOCKED):
+        await _continue_repeated_backup()
+    elif not storage_recovery.is_in_progress():
         workflow.set_default(homescreen)
-        return
-
-    await recovery_process()
+    else:
+        await recovery_process()
 
 
 async def recovery_process() -> Success:
     import storage
-    from trezor.enums import MessageType
+    from trezor.enums import MessageType, RecoveryKind
 
-    wire.AVOID_RESTARTING_FOR = (MessageType.Initialize, MessageType.GetFeatures)
+    is_special_kind = storage_recovery.get_kind() in (
+        RecoveryKind.DryRun,
+        RecoveryKind.UnlockRepeatedBackup,
+    )
+
+    wire.AVOID_RESTARTING_FOR = (
+        MessageType.Initialize,
+        MessageType.GetFeatures,
+        MessageType.EndSession,
+    )
     try:
         return await _continue_recovery_process()
     except recover.RecoveryAborted:
-        dry_run = storage_recovery.is_dry_run()
-        if dry_run:
+        if is_special_kind:
             storage_recovery.end_progress()
         else:
             storage.wipe()
         raise wire.ActionCancelled
 
 
+async def _continue_repeated_backup() -> None:
+    from trezor import workflow
+    from trezor.enums import ButtonRequestType, MessageType
+    from trezor.ui.layouts import confirm_action
+    from trezor.wire import ActionCancelled
+
+    from apps import workflow_handlers
+    from apps.common import mnemonic
+    from apps.homescreen import homescreen
+    from apps.management.reset_device import backup_seed
+
+    wire.AVOID_RESTARTING_FOR = (
+        MessageType.Initialize,
+        MessageType.GetFeatures,
+        MessageType.EndSession,
+    )
+
+    try:
+        await confirm_action(
+            "confirm_repeated_backup",
+            TR.recovery__title_unlock_repeated_backup,
+            description=TR.recovery__unlock_repeated_backup,
+            br_code=ButtonRequestType.ProtectCall,
+            verb=TR.recovery__unlock_repeated_backup_verb,
+        )
+
+        mnemonic_secret, backup_type = mnemonic.get()
+        if mnemonic_secret is None:
+            raise RuntimeError
+
+        await backup_seed(backup_type, mnemonic_secret)
+    except ActionCancelled:
+        workflow.set_default(homescreen)
+    finally:
+        storage_cache.delete(storage_cache.APP_RECOVERY_REPEATED_BACKUP_UNLOCKED)
+        wire.find_handler = workflow_handlers.find_registered_handler
+        storage_recovery.end_progress()
+
+
 async def _continue_recovery_process() -> Success:
     from trezor import utils
+    from trezor.enums import RecoveryKind
     from trezor.errors import MnemonicError
 
     # gather the current recovery state from storage
-    dry_run = storage_recovery.is_dry_run()
+    kind = storage_recovery.get_kind()
     word_count, backup_type = recover.load_slip39_state()
 
     # Both word_count and backup_type are derived from the same data. Both will be
@@ -59,7 +109,7 @@ async def _continue_recovery_process() -> Success:
     if not is_first_step:
         assert word_count is not None
         # If we continue recovery, show starting screen with word count immediately.
-        await _request_share_first_screen(word_count)
+        await _request_share_first_screen(word_count, kind)
 
     secret = None
     while secret is None:
@@ -72,9 +122,9 @@ async def _continue_recovery_process() -> Success:
                     TR.buttons__continue, TR.recovery__num_of_words
                 )
             # ask for the number of words
-            word_count = await layout.request_word_count(dry_run)
+            word_count = await layout.request_word_count(kind == RecoveryKind.DryRun)
             # ...and only then show the starting screen with word count.
-            await _request_share_first_screen(word_count)
+            await _request_share_first_screen(word_count, kind)
         assert word_count is not None
 
         # ask for mnemonic words one by one
@@ -94,22 +144,21 @@ async def _continue_recovery_process() -> Success:
             await layout.show_invalid_mnemonic(word_count)
 
     assert backup_type is not None
-    if dry_run:
+    if kind == RecoveryKind.DryRun:
         result = await _finish_recovery_dry_run(secret, backup_type)
+    elif kind == RecoveryKind.UnlockRepeatedBackup:
+        result = await _finish_recovery_unlock_repeated_backup(secret, backup_type)
     else:
         result = await _finish_recovery(secret, backup_type)
 
     return result
 
 
-async def _finish_recovery_dry_run(secret: bytes, backup_type: BackupType) -> Success:
+def _check_secret_against_stored_secret(secret: bytes, is_slip39: bool, backup_type: BackupType) -> bool:
     from trezor import utils
     from trezor.crypto.hashlib import sha256
 
     from apps.common import mnemonic
-
-    if backup_type is None:
-        raise RuntimeError
 
     digest_input = sha256(secret).digest()
     stored = mnemonic.get_secret()
@@ -132,12 +181,44 @@ async def _finish_recovery_dry_run(secret: bytes, backup_type: BackupType) -> Su
             == storage_recovery.get_slip39_iteration_exponent()
         )
 
+    return result
+
+
+async def _finish_recovery_dry_run(secret: bytes, backup_type: BackupType) -> Success:
+    if backup_type is None:
+        raise RuntimeError
+
+    is_slip39 = backup_types.is_slip39_backup_type(backup_type)
+
+    result = _check_secret_against_stored_secret(secret, is_slip39, backup_type)
+
     storage_recovery.end_progress()
 
     await layout.show_dry_run_result(result, is_slip39)
 
     if result:
         return Success(message="The seed is valid and matches the one in the device")
+    else:
+        raise wire.ProcessError("The seed does not match the one in the device")
+
+
+async def _finish_recovery_unlock_repeated_backup(
+    secret: bytes, backup_type: BackupType
+) -> Success:
+    import storage.cache as storage_cache
+
+    if backup_type is None:
+        raise RuntimeError
+
+    is_slip39 = backup_types.is_slip39_backup_type(backup_type)
+
+    result = _check_secret_against_stored_secret(secret, is_slip39, backup_type)
+
+    if result:
+        storage_cache.set_bool(
+            storage_cache.APP_RECOVERY_REPEATED_BACKUP_UNLOCKED, True
+        )
+        return Success(message="Backup unlocked")
     else:
         raise wire.ProcessError("The seed does not match the one in the device")
 
@@ -191,15 +272,23 @@ async def _process_words(words: str) -> tuple[bytes | None, BackupType]:
     return secret, backup_type
 
 
-async def _request_share_first_screen(word_count: int) -> None:
+async def _request_share_first_screen(word_count: int, kind: RecoveryKind) -> None:
+    from trezor.enums import RecoveryKind
+
     if backup_types.is_slip39_word_count(word_count):
         remaining = storage_recovery.fetch_slip39_remaining_shares()
         if remaining:
             await _request_share_next_screen()
         else:
+            if kind == RecoveryKind.UnlockRepeatedBackup:
+                text = TR.recovery__enter_backup
+                button_label = TR.buttons__continue
+            else:
+                text = TR.recovery__enter_any_share
+                button_label = TR.buttons__enter_share
             await layout.homescreen_dialog(
-                TR.buttons__enter_share,
-                TR.recovery__enter_any_share,
+                button_label,
+                text,
                 TR.recovery__word_count_template.format(word_count),
                 show_info=True,
             )

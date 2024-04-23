@@ -562,7 +562,6 @@
     "recovery__num_of_words": "Elige el nro.de p. de la copia seg.",
     "recovery__only_first_n_letters": "Solo tendrás que seleccionar las primeras 2-4 letras de cada palabra.",
     "recovery__progress_will_be_lost": "Se perderá todo el progreso.",
-    "recovery__select_num_of_words": "Elige el nro.de p. de la copia seg.",
     "recovery__share_already_entered": "Ya se ha introducido el recurso compartido",
     "recovery__share_from_another_multi_share_backup": "El rec. comp. es de otra copia de seguridad de Shamir.",
     "recovery__share_num_template": "Recurso compartido {0}",

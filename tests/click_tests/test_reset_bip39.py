@@ -56,7 +56,7 @@ def test_reset_bip39(device_handler: "BackgroundDeviceHandler"):
     reset.confirm_read(debug, middle_r=True)
 
     # read words
-    words = reset.read_words(debug, messages.BackupType.Bip39)
+    words = reset.read_words(debug)
 
     # confirm words
     reset.confirm_words(debug, words)

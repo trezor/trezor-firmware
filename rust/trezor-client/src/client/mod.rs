@@ -169,7 +169,11 @@ impl Trezor {
         req.set_pin_protection(pin_protection);
         req.set_label(label);
         req.set_enforce_wordlist(true);
-        req.set_dry_run(dry_run);
+        if dry_run {
+            req.set_kind(protos::recovery_device::RecoveryKind::DryRun);
+        } else {
+            req.set_kind(protos::recovery_device::RecoveryKind::NormalRecovery);
+        }
         req.set_type(
             protos::recovery_device::RecoveryDeviceType::RecoveryDeviceType_ScrambledWords,
         );

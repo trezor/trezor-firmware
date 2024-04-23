@@ -40,7 +40,7 @@ def do_recover_legacy(client: Client, mnemonic: list[str], **kwargs: Any):
 
     ret = device.recover(
         client,
-        dry_run=True,
+        recovery_kind=messages.RecoveryKind.DryRun,
         word_count=len(mnemonic),
         type=messages.RecoveryDeviceType.ScrambledWords,
         input_callback=input_callback,
@@ -56,7 +56,7 @@ def do_recover_core(client: Client, mnemonic: list[str], mismatch: bool = False)
         client.watch_layout()
         IF = InputFlowBip39RecoveryDryRun(client, mnemonic, mismatch=mismatch)
         client.set_input_flow(IF.get())
-        return device.recover(client, dry_run=True)
+        return device.recover(client, recovery_kind=messages.RecoveryKind.DryRun)
 
 
 def do_recover(client: Client, mnemonic: list[str], mismatch: bool = False):
@@ -105,7 +105,7 @@ def test_uninitialized(client: Client):
 
 
 DRY_RUN_ALLOWED_FIELDS = (
-    "dry_run",
+    "kind",
     "word_count",
     "enforce_wordlist",
     "type",
@@ -131,6 +131,8 @@ def _make_bad_params():
             yield field.name, True
         elif field.type == "string":
             yield field.name, "test"
+        elif field.type == "RecoveryKind":
+            yield field.name, 1
         else:
             # Someone added a field to RecoveryDevice of a type that has no assigned
             # default value. This test must be fixed.
@@ -140,13 +142,14 @@ def _make_bad_params():
 @pytest.mark.parametrize("field_name, field_value", _make_bad_params())
 def test_bad_parameters(client: Client, field_name: str, field_value: Any):
     msg = messages.RecoveryDevice(
-        dry_run=True,
+        kind=messages.RecoveryKind.DryRun,
         word_count=12,
         enforce_wordlist=True,
         type=messages.RecoveryDeviceType.ScrambledWords,
     )
     setattr(msg, field_name, field_value)
     with pytest.raises(
-        exceptions.TrezorFailure, match="Forbidden field set in dry-run"
+        exceptions.TrezorFailure,
+        match="Forbidden field set in dry-run",
     ):
         client.call(msg)
