@@ -1,6 +1,6 @@
 use crate::ui::{
-    component::{Component, Event, EventCtx, Paginate},
-    flow::base::{Swipable, SwipeDirection},
+    component::{Component, Event, EventCtx, Paginate, SwipeDirection},
+    flow::base::Swipable,
     geometry::{Axis, Rect},
     shape::Renderer,
 };
