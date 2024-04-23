@@ -8,7 +8,7 @@ use crate::ui::{
 
 use super::theme;
 
-pub use crate::ui::flow::SwipeDirection;
+pub use crate::ui::component::SwipeDirection;
 
 pub struct Swipe {
     pub area: Rect,

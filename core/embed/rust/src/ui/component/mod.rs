@@ -16,6 +16,8 @@ pub mod pad;
 pub mod paginated;
 pub mod placed;
 pub mod qr_code;
+#[cfg(feature = "touch")]
+pub mod swipe;
 pub mod text;
 pub mod timeout;
 
@@ -33,6 +35,8 @@ pub use pad::Pad;
 pub use paginated::{PageMsg, Paginate};
 pub use placed::{FixedHeightBar, Floating, GridPlaced, Split};
 pub use qr_code::Qr;
+#[cfg(feature = "touch")]
+pub use swipe::{Swipe, SwipeDirection};
 pub use text::{
     formatted::FormattedText,
     layout::{LineBreaking, PageBreaking, TextLayout},
