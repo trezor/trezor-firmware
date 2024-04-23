@@ -1,10 +1,17 @@
 use crate::ui::{
     component::{Component, Event, EventCtx},
     event::TouchEvent,
-    flow::base::SwipeDirection,
     geometry::{Point, Rect},
     shape::Renderer,
 };
+
+#[derive(Copy, Clone)]
+pub enum SwipeDirection {
+    Up,
+    Down,
+    Left,
+    Right,
+}
 
 /// Copy of `model_tt/component/swipe.rs` but without the backlight handling.
 pub struct Swipe {

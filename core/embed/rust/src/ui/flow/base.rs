@@ -1,13 +1,8 @@
-use crate::ui::{component::EventCtx, geometry::Offset};
+use crate::ui::{
+    component::{EventCtx, SwipeDirection},
+    geometry::Offset,
+};
 use num_traits::ToPrimitive;
-
-#[derive(Copy, Clone)]
-pub enum SwipeDirection {
-    Up,
-    Down,
-    Left,
-    Right,
-}
 
 impl SwipeDirection {
     pub fn as_offset(self, size: Offset) -> Offset {

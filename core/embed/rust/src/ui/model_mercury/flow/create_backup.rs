@@ -3,11 +3,11 @@ use crate::{
     strutil::TString,
     translations::TR,
     ui::{
-        component::text::paragraphs::{Paragraph, Paragraphs},
-        flow::{
-            base::Decision, flow_store, FlowMsg, FlowState, FlowStore, SwipeDirection, SwipeFlow,
-            SwipePage,
+        component::{
+            text::paragraphs::{Paragraph, Paragraphs},
+            SwipeDirection,
         },
+        flow::{base::Decision, flow_store, FlowMsg, FlowState, FlowStore, SwipeFlow, SwipePage},
     },
 };
 use heapless::Vec;
