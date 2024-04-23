@@ -2,7 +2,7 @@ use heapless::Vec;
 
 use super::theme;
 use crate::{
-    micropython::buffer::StrBuffer,
+    strutil::TString,
     ui::{
         component::{base::Component, Event, EventCtx},
         display::Icon,
@@ -50,7 +50,7 @@ impl VerticalMenu {
             areas_sep: AreasForSeparators::new(),
         }
     }
-    pub fn select_word(words: [StrBuffer; 3]) -> Self {
+    pub fn select_word(words: [TString<'static>; 3]) -> Self {
         let mut buttons_vec = VerticalMenuButtons::new();
         for word in words {
             let button = Button::with_text(word.into()).styled(theme::button_default());
@@ -152,4 +152,5 @@ impl crate::trace::Trace for VerticalMenu {
     }
 }
 
+#[cfg(feature = "micropython")]
 impl crate::ui::flow::Swipable for VerticalMenu {}
