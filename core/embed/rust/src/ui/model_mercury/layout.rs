@@ -4,15 +4,8 @@ use heapless::Vec;
 use crate::{
     error::Error,
     micropython::{
-        buffer::{get_buffer, StrBuffer},
-        gc::Gc,
-        iter::IterBuf,
-        list::List,
-        map::Map,
-        module::Module,
-        obj::Obj,
-        qstr::Qstr,
-        util,
+        buffer::get_buffer, gc::Gc, iter::IterBuf, list::List, map::Map, module::Module, obj::Obj,
+        qstr::Qstr, util,
     },
     strutil::TString,
     translations::TR,
@@ -1292,7 +1285,7 @@ extern "C" fn new_select_word(n_args: usize, args: *const Obj, kwargs: *mut Map)
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let description: TString = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
         let words_iterable: Obj = kwargs.get(Qstr::MP_QSTR_words)?;
-        let words: [StrBuffer; 3] = util::iter_into_array(words_iterable)?;
+        let words: [TString; 3] = util::iter_into_array(words_iterable)?;
 
         let content = VerticalMenu::select_word(words);
         let frame_with_menu = Frame::left_aligned(title, content).with_subtitle(description);

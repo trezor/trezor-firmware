@@ -3,8 +3,8 @@ use crate::{
     time::{Duration, Instant},
     ui::{
         animation::Animation,
-        component::{Component, Event, EventCtx},
-        flow::{base::Decision, swipe::Swipe, FlowMsg, FlowState, FlowStore, SwipeDirection},
+        component::{Component, Event, EventCtx, Swipe, SwipeDirection},
+        flow::{base::Decision, FlowMsg, FlowState, FlowStore},
         geometry::{Offset, Rect},
         shape::Renderer,
     },
