@@ -9,7 +9,7 @@ use crate::{
         },
         display::{self, toif::Icon, Color, Font},
         event::TouchEvent,
-        geometry::{Alignment2D, Insets, Offset, Point, Rect},
+        geometry::{Alignment, Alignment2D, Insets, Offset, Point, Rect},
         shape,
         shape::Renderer,
     },
@@ -30,6 +30,7 @@ pub struct Button {
     touch_expand: Option<Insets>,
     content: ButtonContent,
     styles: ButtonStyleSheet,
+    text_align: Alignment,
     state: State,
     long_press: Option<Duration>,
     long_timer: Option<TimerToken>,
@@ -47,6 +48,7 @@ impl Button {
             area: Rect::zero(),
             touch_expand: None,
             styles: theme::button_default(),
+            text_align: Alignment::Start,
             state: State::Initial,
             long_press: None,
             long_timer: None,
@@ -75,6 +77,11 @@ impl Button {
 
     pub const fn styled(mut self, styles: ButtonStyleSheet) -> Self {
         self.styles = styles;
+        self
+    }
+
+    pub const fn with_text_align(mut self, align: Alignment) -> Self {
+        self.text_align = align;
         self
     }
 
@@ -217,11 +224,19 @@ impl Button {
         match &self.content {
             ButtonContent::Empty => {}
             ButtonContent::Text(text) => {
-                let start_of_baseline = self.area.left_center() + Self::BASELINE_OFFSET;
+                let y_offset = Offset::y(self.style().font.allcase_text_height() / 2);
+                let start_of_baseline = match self.text_align {
+                    Alignment::Start => {
+                        self.area.left_center() + Offset::x(Self::BASELINE_OFFSET.x)
+                    }
+                    Alignment::Center => self.area.center(),
+                    Alignment::End => self.area.right_center() - Offset::x(Self::BASELINE_OFFSET.x),
+                } + y_offset;
                 text.map(|text| {
                     shape::Text::new(start_of_baseline, text)
                         .with_font(style.font)
                         .with_fg(style.text_color)
+                        .with_align(self.text_align)
                         .render(target);
                 });
             }
