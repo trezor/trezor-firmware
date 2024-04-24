@@ -388,22 +388,22 @@ pub const fn button_reset() -> ButtonStyleSheet {
 pub const fn button_pin() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
-            font: Font::MONO,
-            text_color: FG,
-            button_color: GREY_DARK,
+            font: Font::NORMAL,
+            text_color: GREY_LIGHT,
+            button_color: GREY_EXTRA_DARK,
             icon_color: GREY_LIGHT,
             background_color: BG,
         },
         active: &ButtonStyle {
-            font: Font::MONO,
-            text_color: FG,
-            button_color: GREY_MEDIUM,
+            font: Font::NORMAL,
+            text_color: GREY_LIGHT,
+            button_color: GREY_EXTRA_DARK,
             icon_color: GREY_LIGHT,
             background_color: BG,
         },
         disabled: &ButtonStyle {
-            font: Font::MONO,
-            text_color: GREY_LIGHT,
+            font: Font::NORMAL,
+            text_color: GREY_DARK,
             button_color: BG, // so there is no "button" itself, just the text
             icon_color: GREY_LIGHT,
             background_color: BG,
@@ -639,9 +639,9 @@ pub const TEXT_CHECKLIST_DONE: TextStyle =
     TextStyle::new(Font::NORMAL, GREEN_DARK, BG, GREY_LIGHT, GREY_LIGHT);
 
 pub const CONTENT_BORDER: i16 = 0;
-pub const BUTTON_HEIGHT: i16 = 50;
-pub const BUTTON_WIDTH: i16 = 56;
-pub const BUTTON_SPACING: i16 = 6;
+pub const BUTTON_HEIGHT: i16 = 62;
+pub const BUTTON_WIDTH: i16 = 78;
+pub const BUTTON_SPACING: i16 = 2;
 pub const KEYBOARD_SPACING: i16 = BUTTON_SPACING;
 pub const CHECKLIST_SPACING: i16 = 10;
 pub const RECOVERY_SPACING: i16 = 18;
