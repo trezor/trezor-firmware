@@ -4,7 +4,7 @@
 #define DISPLAY_RESX 240
 #define DISPLAY_RESY 240
 
-#define VDD_1V8 1
+#define VDD_3V3 1
 #define HSE_16MHZ 1
 
 #define USE_SD_CARD 1
