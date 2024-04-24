@@ -60,12 +60,9 @@ impl AddressDetails {
             )
             .with_cancel_button()
             .with_border(theme::borders_horizontal_scroll()),
-            details: Frame::left_aligned(
-                details_title,
-                para.into_paragraphs(),
-            )
-            .with_cancel_button()
-            .with_border(theme::borders_horizontal_scroll()),
+            details: Frame::left_aligned(details_title, para.into_paragraphs())
+                .with_cancel_button()
+                .with_border(theme::borders_horizontal_scroll()),
             xpub_view: Frame::left_aligned(
                 " \n ".into(),
                 Paragraph::new(&theme::TEXT_MONO, "").into_paragraphs(),
