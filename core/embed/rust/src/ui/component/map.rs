@@ -1,6 +1,7 @@
 use super::{Component, Event, EventCtx};
 use crate::ui::{geometry::Rect, shape::Renderer};
 
+#[derive(Clone)]
 pub struct MsgMap<T, F> {
     inner: T,
     func: F,
@@ -48,5 +49,19 @@ where
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         self.inner.trace(t)
+    }
+}
+
+#[cfg(all(feature = "micropython", feature = "touch"))]
+impl<T, F> crate::ui::flow::Swipable for MsgMap<T, F>
+where
+    T: Component + crate::ui::flow::Swipable,
+{
+    fn can_swipe(&self, direction: crate::ui::component::SwipeDirection) -> bool {
+        self.inner.can_swipe(direction)
+    }
+
+    fn swiped(&mut self, ctx: &mut EventCtx, direction: crate::ui::component::SwipeDirection) {
+        self.inner.swiped(ctx, direction)
     }
 }

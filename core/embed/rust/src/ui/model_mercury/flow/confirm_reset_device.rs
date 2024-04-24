@@ -6,7 +6,7 @@ use crate::{
     ui::{
         component::{
             text::paragraphs::{Paragraph, Paragraphs},
-            SwipeDirection,
+            ComponentExt, SwipeDirection,
         },
         flow::{base::Decision, flow_store, FlowMsg, FlowState, FlowStore, SwipeFlow, SwipePage},
     },
@@ -86,7 +86,8 @@ impl ConfirmResetDevice {
         let paragraphs = Paragraphs::new(par_array);
         let content_intro = Frame::left_aligned(title, SwipePage::vertical(paragraphs))
             .with_menu_button()
-            .with_footer(TR::instructions__swipe_up.into(), None);
+            .with_footer(TR::instructions__swipe_up.into(), None)
+            .map(|msg| matches!(msg, FrameMsg::Button(_)).then_some(FlowMsg::Info));
 
         let content_menu = Frame::left_aligned(
             "".into(),
@@ -95,29 +96,29 @@ impl ConfirmResetDevice {
                 theme::ICON_CANCEL
             )]))),
         )
-        .with_cancel_button();
+        .with_cancel_button()
+        .map(|msg| match msg {
+            FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => Some(FlowMsg::Choice(i)),
+            FrameMsg::Button(_) => Some(FlowMsg::Cancelled),
+        });
 
         let content_confirm = Frame::left_aligned(
             TR::reset__title_create_wallet.into(),
             PromptScreen::new_hold_to_confirm(),
         )
-        .with_footer(TR::instructions__hold_to_confirm.into(), None);
+        .with_footer(TR::instructions__hold_to_confirm.into(), None)
+        .map(|msg| match msg {
+            FrameMsg::Content(()) => Some(FlowMsg::Confirmed),
+            _ => Some(FlowMsg::Cancelled),
+        });
 
         let store = flow_store()
             // Intro,
-            .add(content_intro, |msg| {
-                matches!(msg, FrameMsg::Button(_)).then_some(FlowMsg::Info)
-            })?
+            .add(content_intro)?
             // Context Menu,
-            .add(content_menu, |msg| match msg {
-                FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => Some(FlowMsg::Choice(i)),
-                FrameMsg::Button(_) => Some(FlowMsg::Cancelled),
-            })?
+            .add(content_menu)?
             // Confirm prompt
-            .add(content_confirm, |msg| match msg {
-                FrameMsg::Content(()) => Some(FlowMsg::Confirmed),
-                _ => Some(FlowMsg::Cancelled),
-            })?;
+            .add(content_confirm)?;
 
         let res = SwipeFlow::new(ConfirmResetDevice::Intro, store)?;
         Ok(LayoutObj::new(res)?.into())

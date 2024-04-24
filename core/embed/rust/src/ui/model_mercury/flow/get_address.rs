@@ -4,7 +4,7 @@ use crate::{
         component::{
             image::BlendedImage,
             text::paragraphs::{Paragraph, Paragraphs},
-            Qr, SwipeDirection, Timeout,
+            ButtonRequestExt, ComponentExt, Qr, SwipeDirection, Timeout,
         },
         flow::{
             base::Decision, flow_store, FlowMsg, FlowState, FlowStore, IgnoreSwipe, SwipeFlow,
@@ -115,8 +115,8 @@ impl GetAddress {
                     ))),
                 )
                 .with_subtitle("address".into())
-                .with_menu_button(),
-                |msg| matches!(msg, FrameMsg::Button(_)).then_some(FlowMsg::Info),
+                .with_menu_button()
+                .map(|msg| matches!(msg, FrameMsg::Button(_)).then_some(FlowMsg::Info)),
             )?
             .add(
                 Frame::left_aligned(
@@ -127,13 +127,13 @@ impl GetAddress {
                         ("Cancel trans.", theme::ICON_CANCEL),
                     ]))),
                 )
-                .with_cancel_button(),
-                |msg| match msg {
+                .with_cancel_button()
+                .map(|msg| match msg {
                     FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => {
                         Some(FlowMsg::Choice(i))
                     }
                     FrameMsg::Button(_) => Some(FlowMsg::Cancelled),
-                },
+                }),
             )?
             .add(
                 Frame::left_aligned(
@@ -143,8 +143,8 @@ impl GetAddress {
                         true,
                     )?),
                 )
-                .with_cancel_button(),
-                |msg| matches!(msg, FrameMsg::Button(_)).then_some(FlowMsg::Cancelled),
+                .with_cancel_button()
+                .map(|msg| matches!(msg, FrameMsg::Button(_)).then_some(FlowMsg::Cancelled)),
             )?
             .add(
                 Frame::left_aligned(
@@ -154,8 +154,8 @@ impl GetAddress {
                         StrBuffer::from("taproot xp"),
                     ))),
                 )
-                .with_cancel_button(),
-                |msg| matches!(msg, FrameMsg::Button(_)).then_some(FlowMsg::Cancelled),
+                .with_cancel_button()
+                .map(|msg| matches!(msg, FrameMsg::Button(_)).then_some(FlowMsg::Cancelled)),
             )?
             .add(
                 Frame::left_aligned(
@@ -165,8 +165,8 @@ impl GetAddress {
                         StrBuffer::from("O rly?"),
                     ))),
                 )
-                .with_cancel_button(),
-                |msg| matches!(msg, FrameMsg::Button(_)).then_some(FlowMsg::Cancelled),
+                .with_cancel_button()
+                .map(|msg| matches!(msg, FrameMsg::Button(_)).then_some(FlowMsg::Cancelled)),
             )?
             .add(
                 IconDialog::new(
@@ -179,8 +179,8 @@ impl GetAddress {
                     ),
                     StrBuffer::from("Confirmed"),
                     Timeout::new(100),
-                ),
-                |_| Some(FlowMsg::Confirmed),
+                )
+                .map(|_| Some(FlowMsg::Confirmed)),
             )?;
         let res = SwipeFlow::new(GetAddress::Address, store)?;
         Ok(LayoutObj::new(res)?.into())
