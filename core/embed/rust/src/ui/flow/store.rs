@@ -21,8 +21,7 @@ pub trait FlowStore {
     /// Call `Component::place` on all elements.
     fn place(&mut self, bounds: Rect) -> Rect;
 
-    /// Call `Component::event` on i-th element, if it emits a message it is
-    /// converted to `FlowMsg` using a function.
+    /// Call `Component::event` on i-th element.
     fn event(&mut self, i: usize, ctx: &mut EventCtx, event: Event) -> Option<FlowMsg>;
 
     /// Call `Component::render` on i-th element.
@@ -42,10 +41,9 @@ pub trait FlowStore {
     fn render_cloned<'s>(&'s self, target: &mut impl Renderer<'s>);
 
     /// Add a Component to the end of a `FlowStore`.
-    fn add<E: Component + MaybeTrace + Swipable + Clone>(
+    fn add<E: Component<Msg = FlowMsg> + MaybeTrace + Swipable + Clone>(
         self,
         elem: E,
-        func: fn(E::Msg) -> Option<FlowMsg>,
     ) -> Result<impl FlowStore, error::Error>
     where
         Self: Sized;
@@ -87,38 +85,33 @@ impl FlowStore for FlowEmpty {
     }
     fn render_cloned<'s>(&'s self, _target: &mut impl Renderer<'s>) {}
 
-    fn add<E: Component + MaybeTrace + Swipable + Clone>(
+    fn add<E: Component<Msg = FlowMsg> + MaybeTrace + Swipable + Clone>(
         self,
         elem: E,
-        func: fn(E::Msg) -> Option<FlowMsg>,
     ) -> Result<impl FlowStore, error::Error>
     where
         Self: Sized,
     {
         Ok(FlowComponent {
             elem: Gc::new(elem)?,
-            func,
             cloned: None,
             next: Self,
         })
     }
 }
 
-struct FlowComponent<E: Component, P> {
+struct FlowComponent<E: Component<Msg = FlowMsg>, P> {
     /// Component allocated on micropython heap.
     pub elem: Gc<E>,
 
     /// Clone.
     pub cloned: Option<Gc<E>>,
 
-    /// Function to convert message to `FlowMsg`.
-    pub func: fn(E::Msg) -> Option<FlowMsg>,
-
     /// Nested FlowStore.
     pub next: P,
 }
 
-impl<E: Component, P> FlowComponent<E, P> {
+impl<E: Component<Msg = FlowMsg>, P> FlowComponent<E, P> {
     fn as_ref(&self) -> &E {
         &self.elem
     }
@@ -132,7 +125,7 @@ impl<E: Component, P> FlowComponent<E, P> {
 
 impl<E, P> FlowStore for FlowComponent<E, P>
 where
-    E: Component + MaybeTrace + Swipable + Clone,
+    E: Component<Msg = FlowMsg> + MaybeTrace + Swipable + Clone,
     P: FlowStore,
 {
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -143,8 +136,7 @@ where
 
     fn event(&mut self, i: usize, ctx: &mut EventCtx, event: Event) -> Option<FlowMsg> {
         if i == 0 {
-            let msg = self.as_mut().event(ctx, event);
-            msg.and_then(self.func)
+            self.as_mut().event(ctx, event)
         } else {
             self.next.event(i - 1, ctx, event)
         }
@@ -201,19 +193,17 @@ where
         self.next.render_cloned(target);
     }
 
-    fn add<F: Component + MaybeTrace + Swipable + Clone>(
+    fn add<F: Component<Msg = FlowMsg> + MaybeTrace + Swipable + Clone>(
         self,
         elem: F,
-        func: fn(F::Msg) -> Option<FlowMsg>,
     ) -> Result<impl FlowStore, error::Error>
     where
         Self: Sized,
     {
         Ok(FlowComponent {
             elem: self.elem,
-            func: self.func,
             cloned: None,
-            next: self.next.add(elem, func)?,
+            next: self.next.add(elem)?,
         })
     }
 }
