@@ -5,7 +5,7 @@ use crate::{
     ui::{
         component::{
             text::paragraphs::{Paragraph, Paragraphs},
-            SwipeDirection,
+            ComponentExt, SwipeDirection,
         },
         flow::{base::Decision, flow_store, FlowMsg, FlowState, FlowStore, SwipeFlow, SwipePage},
     },
@@ -88,7 +88,10 @@ impl CreateBackup {
         let paragraphs = Paragraphs::new(par_array);
         let content_intro = Frame::left_aligned(title, SwipePage::vertical(paragraphs))
             .with_menu_button()
-            .with_footer(TR::instructions__swipe_up.into(), None);
+            .with_footer(TR::instructions__swipe_up.into(), None)
+            .map(|msg| {
+                matches!(msg, FrameMsg::Button(CancelInfoConfirmMsg::Info)).then_some(FlowMsg::Info)
+            });
 
         let content_menu = Frame::left_aligned(
             "".into(),
@@ -97,7 +100,12 @@ impl CreateBackup {
                 theme::ICON_CANCEL
             )]))),
         )
-        .with_cancel_button();
+        .with_cancel_button()
+        .map(|msg| match msg {
+            FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => Some(FlowMsg::Choice(i)),
+            FrameMsg::Button(CancelInfoConfirmMsg::Cancelled) => Some(FlowMsg::Cancelled),
+            FrameMsg::Button(_) => None,
+        });
 
         let par_array_skip_intro: [Paragraph<'static>; 2] = [
             Paragraph::new(&theme::TEXT_WARNING, TString::from_str("Not recommended!")),
@@ -115,32 +123,28 @@ impl CreateBackup {
         .with_footer(
             TR::instructions__swipe_up.into(),
             Some(TR::words__continue_anyway.into()),
-        );
+        )
+        .map(|msg| match msg {
+            FrameMsg::Button(CancelInfoConfirmMsg::Cancelled) => Some(FlowMsg::Cancelled),
+            _ => None,
+        });
 
         let content_skip_confirm = Frame::left_aligned(
             TR::backup__title_skip.into(),
             PromptScreen::new_tap_to_cancel(),
         )
-        .with_footer(TR::instructions__tap_to_confirm.into(), None);
+        .with_footer(TR::instructions__tap_to_confirm.into(), None)
+        .map(|msg| match msg {
+            FrameMsg::Content(()) => Some(FlowMsg::Confirmed),
+            FrameMsg::Button(CancelInfoConfirmMsg::Cancelled) => Some(FlowMsg::Cancelled),
+            _ => None,
+        });
 
         let store = flow_store()
-            .add(content_intro, |msg| {
-                matches!(msg, FrameMsg::Button(CancelInfoConfirmMsg::Info)).then_some(FlowMsg::Info)
-            })?
-            .add(content_menu, |msg| match msg {
-                FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => Some(FlowMsg::Choice(i)),
-                FrameMsg::Button(CancelInfoConfirmMsg::Cancelled) => Some(FlowMsg::Cancelled),
-                FrameMsg::Button(_) => None,
-            })?
-            .add(content_skip_intro, |msg| match msg {
-                FrameMsg::Button(CancelInfoConfirmMsg::Cancelled) => Some(FlowMsg::Cancelled),
-                _ => None,
-            })?
-            .add(content_skip_confirm, |msg| match msg {
-                FrameMsg::Content(()) => Some(FlowMsg::Confirmed),
-                FrameMsg::Button(CancelInfoConfirmMsg::Cancelled) => Some(FlowMsg::Cancelled),
-                _ => None,
-            })?;
+            .add(content_intro)?
+            .add(content_menu)?
+            .add(content_skip_intro)?
+            .add(content_skip_confirm)?;
         let res = SwipeFlow::new(CreateBackup::Intro, store)?;
         Ok(LayoutObj::new(res)?.into())
     }
