@@ -39,4 +39,4 @@ async def interact(
         # We know for certain how many pages the layout will have
         pages = layout.page_count()  # type: ignore [Cannot access attribute "page_count" for class "LayoutType"]
     await button_request(br_type, br_code, pages)
-    return await context.wait(layout)
+    return await layout

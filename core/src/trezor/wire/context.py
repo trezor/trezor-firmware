@@ -157,6 +157,17 @@ class Context:
             memoryview(buffer)[:msg_size],
         )
 
+    async def call(
+        self,
+        msg: protobuf.MessageType,
+        expected_type: type[LoadedMessageType],
+    ) -> LoadedMessageType:
+        assert expected_type.MESSAGE_WIRE_TYPE is not None
+
+        await self.write(msg)
+        del msg
+        return await self.read((expected_type.MESSAGE_WIRE_TYPE,), expected_type)
+
 
 CURRENT_CONTEXT: Context | None = None
 
@@ -186,11 +197,7 @@ async def call(
     if CURRENT_CONTEXT is None:
         raise RuntimeError("No wire context")
 
-    assert expected_type.MESSAGE_WIRE_TYPE is not None
-
-    await CURRENT_CONTEXT.write(msg)
-    del msg
-    return await CURRENT_CONTEXT.read((expected_type.MESSAGE_WIRE_TYPE,), expected_type)
+    return await CURRENT_CONTEXT.call(msg, expected_type)
 
 
 async def call_any(
