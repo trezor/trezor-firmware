@@ -41,6 +41,17 @@ class MockContext:
     async def read(self, _resp_types, _resp_type):
         return EthereumTypedDataValueAck(value=self.next_response)
 
+    async def call(
+        self,
+        msg: protobuf.MessageType,
+        expected_type: type[LoadedMessageType],
+    ) -> LoadedMessageType:
+        assert expected_type.MESSAGE_WIRE_TYPE is not None
+
+        await self.write(msg)
+        del msg
+        return await self.read((expected_type.MESSAGE_WIRE_TYPE,), expected_type)
+
 
 # Helper functions from trezorctl to build expected type data structures
 # TODO: it could be better to group these functions into a class, to visibly differentiate it

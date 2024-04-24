@@ -1,10 +1,10 @@
 from typing import TYPE_CHECKING
 
 import trezorui2
-from trezor import TR, io, loop, ui, utils
+from trezor import TR, io, log, loop, ui, utils
 from trezor.enums import ButtonRequestType
-from trezor.wire import ActionCancelled
-from trezor.wire.context import wait as ctx_wait
+from trezor.messages import ButtonAck, ButtonRequest
+from trezor.wire import ActionCancelled, context
 
 from ..common import button_request, interact
 
@@ -38,9 +38,11 @@ if __debug__:
 class RustLayout(LayoutParentType[T]):
     # pylint: disable=super-init-not-called
     def __init__(self, layout: trezorui2.LayoutObj[T]):
+        self.br_chan = loop.chan()
         self.layout = layout
         self.timer = loop.Timer()
         self.layout.attach_timer_fn(self.set_timer)
+        self._send_button_request()
 
     def set_timer(self, token: int, deadline: int) -> None:
         self.timer.schedule(deadline, token)
@@ -62,13 +64,23 @@ class RustLayout(LayoutParentType[T]):
         from trezor.enums import DebugPhysicalButton
 
         def create_tasks(self) -> tuple[loop.AwaitableTask, ...]:
-            return (
-                self.handle_input_and_rendering(),
-                self.handle_timers(),
-                self.handle_swipe_signal(),
-                self.handle_button_signal(),
-                self.handle_result_signal(),
-            )
+            if context.CURRENT_CONTEXT:
+                return (
+                    self.handle_input_and_rendering(),
+                    self.handle_timers(),
+                    self.handle_swipe_signal(),
+                    self.handle_button_signal(),
+                    self.handle_result_signal(),
+                    self.handle_usb(context.get_context()),
+                )
+            else:
+                return (
+                    self.handle_input_and_rendering(),
+                    self.handle_timers(),
+                    self.handle_swipe_signal(),
+                    self.handle_button_signal(),
+                    self.handle_result_signal(),
+                )
 
         async def handle_result_signal(self) -> None:
             """Enables sending arbitrary input - ui.Result.
@@ -98,30 +110,41 @@ class RustLayout(LayoutParentType[T]):
         async def _press_left(self, hold_ms: int | None) -> Any:
             """Triggers left button press."""
             self.layout.button_event(io.BUTTON_PRESSED, io.BUTTON_LEFT)
+            self._send_button_request()
             self._paint()
             if hold_ms is not None:
                 await loop.sleep(hold_ms)
-            return self.layout.button_event(io.BUTTON_RELEASED, io.BUTTON_LEFT)
+            r = self.layout.button_event(io.BUTTON_RELEASED, io.BUTTON_LEFT)
+            self._send_button_request()
+            return r
 
         async def _press_right(self, hold_ms: int | None) -> Any:
             """Triggers right button press."""
             self.layout.button_event(io.BUTTON_PRESSED, io.BUTTON_RIGHT)
+            self._send_button_request()
             self._paint()
             if hold_ms is not None:
                 await loop.sleep(hold_ms)
-            return self.layout.button_event(io.BUTTON_RELEASED, io.BUTTON_RIGHT)
+            r = self.layout.button_event(io.BUTTON_RELEASED, io.BUTTON_RIGHT)
+            self._send_button_request()
+            return r
 
         async def _press_middle(self, hold_ms: int | None) -> Any:
             """Triggers middle button press."""
             self.layout.button_event(io.BUTTON_PRESSED, io.BUTTON_LEFT)
+            self._send_button_request()
             self._paint()
             self.layout.button_event(io.BUTTON_PRESSED, io.BUTTON_RIGHT)
+            self._send_button_request()
             self._paint()
             if hold_ms is not None:
                 await loop.sleep(hold_ms)
             self.layout.button_event(io.BUTTON_RELEASED, io.BUTTON_LEFT)
+            self._send_button_request()
             self._paint()
-            return self.layout.button_event(io.BUTTON_RELEASED, io.BUTTON_RIGHT)
+            r = self.layout.button_event(io.BUTTON_RELEASED, io.BUTTON_RIGHT)
+            self._send_button_request()
+            return r
 
         async def _press_button(
             self,
@@ -197,7 +220,11 @@ class RustLayout(LayoutParentType[T]):
     else:
 
         def create_tasks(self) -> tuple[loop.AwaitableTask, ...]:
-            return self.handle_timers(), self.handle_input_and_rendering()
+            return (
+                self.handle_timers(),
+                self.handle_input_and_rendering(),
+                self.handle_usb(context.get_context()),
+            )
 
     def _first_paint(self) -> None:
         self._paint()
@@ -233,6 +260,7 @@ class RustLayout(LayoutParentType[T]):
             msg = None
             if event in (io.BUTTON_PRESSED, io.BUTTON_RELEASED):
                 msg = self.layout.button_event(event, button_num)
+                self._send_button_request()
             if msg is not None:
                 raise ui.Result(msg)
             self._paint()
@@ -242,6 +270,7 @@ class RustLayout(LayoutParentType[T]):
             # Using `yield` instead of `await` to avoid allocations.
             token = yield self.timer
             msg = self.layout.timer(token)
+            self._send_button_request()
             if msg is not None:
                 raise ui.Result(msg)
             self._paint()
@@ -249,6 +278,20 @@ class RustLayout(LayoutParentType[T]):
     def page_count(self) -> int:
         """How many paginated pages current screen has."""
         return self.layout.page_count()
+
+    async def handle_usb(self, ctx: context.Context):
+        while True:
+            br_code, br_type, page_count = await loop.race(
+                ctx.read(()), self.br_chan.take()
+            )
+            log.debug(__name__, "ButtonRequest.type=%s", br_type)
+            await ctx.call(ButtonRequest(code=br_code, pages=page_count), ButtonAck)
+
+    def _send_button_request(self):
+        res = self.layout.button_request()
+        if res is not None:
+            br_code, br_type = res
+            self.br_chan.publish((br_code, br_type, self.layout.page_count()))
 
 
 def draw_simple(layout: trezorui2.LayoutObj[Any]) -> None:
@@ -505,7 +548,7 @@ async def show_address(
                 pages=layout.page_count(),
             )
         layout.request_complete_repaint()
-        result = await ctx_wait(layout)
+        result = await layout
 
         # User confirmed with middle button.
         if result is CONFIRMED:
@@ -524,27 +567,23 @@ async def show_address(
                 )
                 return result
 
-            result = await ctx_wait(
-                RustLayout(
-                    trezorui2.show_address_details(
-                        qr_title="",  # unused on this model
-                        address=address if address_qr is None else address_qr,
-                        case_sensitive=case_sensitive,
-                        details_title="",  # unused on this model
-                        account=account,
-                        path=path,
-                        xpubs=[(xpub_title(i), xpub) for i, xpub in enumerate(xpubs)],
-                    )
-                ),
+            result = await RustLayout(
+                trezorui2.show_address_details(
+                    qr_title="",  # unused on this model
+                    address=address if address_qr is None else address_qr,
+                    case_sensitive=case_sensitive,
+                    details_title="",  # unused on this model
+                    account=account,
+                    path=path,
+                    xpubs=[(xpub_title(i), xpub) for i, xpub in enumerate(xpubs)],
+                )
             )
             # Can only go back from the address details.
             assert result is CANCELLED
 
         # User pressed left cancel button, show mismatch dialogue.
         else:
-            result = await ctx_wait(
-                RustLayout(trezorui2.show_mismatch(title=mismatch_title))
-            )
+            result = await RustLayout(trezorui2.show_mismatch(title=mismatch_title))
             assert result in (CONFIRMED, CANCELLED)
             # Right button aborts action, left goes back to showing address.
             if result is CONFIRMED:
@@ -1019,24 +1058,22 @@ async def confirm_value(
                     should_show_more_layout.page_count(),
                 )
 
-            result = await ctx_wait(should_show_more_layout)
+            result = await should_show_more_layout
 
             if result is CONFIRMED:
                 return
             elif result is INFO:
                 info_title, info_value = info_items_list[0]
-                await ctx_wait(
-                    RustLayout(
-                        trezorui2.confirm_blob(
-                            title=info_title,
-                            data=info_value,
-                            description=description,
-                            extra=None,
-                            verb="",
-                            verb_cancel="<",
-                            hold=False,
-                            chunkify=chunkify_info,
-                        )
+                await RustLayout(
+                    trezorui2.confirm_blob(
+                        title=info_title,
+                        data=info_value,
+                        description=description,
+                        extra=None,
+                        verb="",
+                        verb_cancel="<",
+                        hold=False,
+                        chunkify=chunkify_info,
                     )
                 )
             else:
@@ -1276,7 +1313,7 @@ async def confirm_modify_output(
                 address_layout.page_count(),
             )
         address_layout.request_complete_repaint()
-        await raise_if_not_confirmed(ctx_wait(address_layout))
+        await raise_if_not_confirmed(address_layout)
 
         if send_button_request:
             send_button_request = False
@@ -1286,7 +1323,7 @@ async def confirm_modify_output(
                 modify_layout.page_count(),
             )
         modify_layout.request_complete_repaint()
-        result = await ctx_wait(modify_layout)
+        result = await modify_layout
 
         if result is CONFIRMED:
             break

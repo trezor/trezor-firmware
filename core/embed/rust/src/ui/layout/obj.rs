@@ -17,6 +17,7 @@ use crate::{
     },
     time::Duration,
     ui::{
+        button_request::ButtonRequest,
         component::{Component, Event, EventCtx, Never, Root, TimerToken},
         constant,
         display::sync,
@@ -248,6 +249,17 @@ impl LayoutObj {
         self.inner.borrow().page_count.into()
     }
 
+    fn obj_button_request(&self) -> Result<Obj, Error> {
+        let inner = &mut *self.inner.borrow_mut();
+
+        match inner.event_ctx.button_request() {
+            None => Ok(Obj::const_none()),
+            Some(ButtonRequest { code, br_type }) => {
+                (code.num().into(), br_type.try_into()?).try_into()
+            }
+        }
+    }
+
     #[cfg(feature = "ui_debug")]
     fn obj_bounds(&self) {
         use crate::ui::display;
@@ -280,6 +292,7 @@ impl LayoutObj {
                 Qstr::MP_QSTR_trace => obj_fn_2!(ui_layout_trace).as_obj(),
                 Qstr::MP_QSTR_bounds => obj_fn_1!(ui_layout_bounds).as_obj(),
                 Qstr::MP_QSTR_page_count => obj_fn_1!(ui_layout_page_count).as_obj(),
+                Qstr::MP_QSTR_button_request => obj_fn_1!(ui_layout_button_request).as_obj(),
             }),
         };
         &TYPE
@@ -466,6 +479,14 @@ extern "C" fn ui_layout_page_count(this: Obj) -> Obj {
     let block = || {
         let this: Gc<LayoutObj> = this.try_into()?;
         Ok(this.obj_page_count())
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+extern "C" fn ui_layout_button_request(this: Obj) -> Obj {
+    let block = || {
+        let this: Gc<LayoutObj> = this.try_into()?;
+        this.obj_button_request()
     };
     unsafe { util::try_or_raise(block) }
 }

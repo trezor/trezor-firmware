@@ -93,6 +93,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_bounds;
   MP_QSTR_button;
   MP_QSTR_button_event;
+  MP_QSTR_button_request;
   MP_QSTR_buttons__abort;
   MP_QSTR_buttons__access;
   MP_QSTR_buttons__again;
