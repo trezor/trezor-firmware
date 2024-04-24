@@ -2,6 +2,7 @@
 pub mod macros;
 
 pub mod animation;
+pub mod button_request;
 pub mod component;
 pub mod constant;
 pub mod display;
