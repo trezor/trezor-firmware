@@ -248,9 +248,8 @@ def cargo_build():
 
     if NEW_RENDERING:
         features.append('new_rendering')
-
-    if TREZOR_MODEL in ('T',):
-        features.append('ui_antialiasing')
+        if TREZOR_MODEL in ('T', 'T3T1', ):
+            features.append('ui_antialiasing')
 
     cargo_opts = [
         f'--target={env.get("ENV")["RUST_TARGET"]}',
