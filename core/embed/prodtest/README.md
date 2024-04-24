@@ -98,9 +98,11 @@ The command requires two input parameters:
 
 If the display is not touched within the specified timeout, the command will return an `ERROR TIMEOUT`.
 
+The command does not check whether the touch point lies within the quadrant or not. It only returns the x and y coordinate of the touch point.
+
 Example (to draw a rectangle in the top-left quadrant and wait for 9 seconds for touch input):
 ```
-TOUCH 0 9
+TOUCH 09
 OK 50 90
 ```
 
@@ -201,27 +203,41 @@ OK (null)
 The `OTP WRITE` command enables you to store a string parameter (which can be used to identify the model and production batch, for instance) into the device's OTP memory.
 The parameter can be up to 31 characters in length.
 
+The standard format is `<internal_model>-<YYMMDD>`, where YYMMDD represents the provisioning date. In case of Model T the `internal_model` is `TREZOR2`.
+
 Example:
 ```
-OTP WRITE 10002
+OTP WRITE T2B1-231231
 OK
 ```
 
 ### VARIANT
-The `VARIANT` command allows you to write up to 32 decimal values (representing device variant options), each ranging from 0 to 255, and delimited by spaces, into the OTP memory.
+The `VARIANT` command writes up to 31 decimal values (representing device variant options), each ranging from 0 to 255, and delimited by spaces, into the OTP memory. This command should be called after the `LOCK` command was successfully executed.
 
-Example (to write 8 bytes into OTP memory):
+The standard format is `VARIANT <unit_color> <unit_btconly> <unit_packaging>`.
+
+Example (to write 3 bytes into OTP memory):
 ```
-VARIANT 128 64 100 1 2 3 0 0
+VARIANT 3 0 2
 ```
 
 ### VARIANT READ
-The `VARIANT READ` command allows you to read 32 bytes of stored variant data (representing device variant options), each ranging from 0 to 255, and delimited by spaces.
+The `VARIANT READ` command allows you to read 32 bytes of stored variant data (representing device variant options), each ranging from 0 to 255, and delimited by spaces. The first byte is the format version, followed by the bytes written using the VARIANT command and padded with null bytes.
 
 Example:
 ```
 VARIANT READ
-OK 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255
+OK 1 3 0 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+```
+
+### FIRMWARE VERSION
+Returns the version of the prodtest firmware.
+The command returns `OK` followed by the version in the format `<major>.<minor>.<patch>`.
+
+Example:
+```
+FIRMWARE VERSION
+OK 0.2.6
 ```
 
 ### WIPE

@@ -41,6 +41,7 @@
 #include "supervise.h"
 #include "touch.h"
 #include "usb.h"
+#include "version.h"
 
 #ifdef USE_OPTIGA
 #include "optiga_commands.h"
@@ -453,6 +454,10 @@ power_off:
 }
 #endif
 
+static void test_firmware_version(void) {
+  vcp_println("OK %d.%d.%d", VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH);
+}
+
 static void test_wipe(void) {
   // erase start of the firmware (metadata) -> invalidate FW
   ensure(flash_unlock_write(), NULL);
@@ -497,9 +502,10 @@ static void test_haptic(const char *args) {
 #endif
 
 static void test_otp_read(void) {
-  uint8_t data[32];
+  uint8_t data[FLASH_OTP_BLOCK_SIZE + 1];
   memzero(data, sizeof(data));
-  ensure(flash_otp_read(FLASH_OTP_BLOCK_BATCH, 0, data, sizeof(data)), NULL);
+  ensure(flash_otp_read(FLASH_OTP_BLOCK_BATCH, 0, data, FLASH_OTP_BLOCK_SIZE),
+         NULL);
 
   // strip trailing 0xFF
   for (size_t i = 0; i < sizeof(data); i++) {
@@ -518,7 +524,12 @@ static void test_otp_read(void) {
 }
 
 static void test_otp_write(const char *args) {
-  char data[32];
+  if (sectrue == flash_otp_is_locked(FLASH_OTP_BLOCK_BATCH)) {
+    vcp_println("ERROR ALREADY WRITTEN");
+    return;
+  }
+
+  char data[FLASH_OTP_BLOCK_SIZE];
   memzero(data, sizeof(data));
   strncpy(data, args, sizeof(data) - 1);
   ensure(flash_otp_write(FLASH_OTP_BLOCK_BATCH, 0, (const uint8_t *)data,
@@ -529,7 +540,7 @@ static void test_otp_write(const char *args) {
 }
 
 static void test_otp_read_device_variant() {
-  uint8_t data[32] = {0};
+  uint8_t data[FLASH_OTP_BLOCK_SIZE] = {0};
   if (sectrue !=
       flash_otp_read(FLASH_OTP_BLOCK_DEVICE_VARIANT, 0, data, sizeof(data))) {
     vcp_println("ERROR");
@@ -557,7 +568,12 @@ static void test_otp_write_device_variant(const char *args) {
   }
 #endif
 
-  volatile char data[32];
+  if (sectrue == flash_otp_is_locked(FLASH_OTP_BLOCK_DEVICE_VARIANT)) {
+    vcp_println("ERROR ALREADY WRITTEN");
+    return;
+  }
+
+  volatile char data[FLASH_OTP_BLOCK_SIZE];
   memzero((char *)data, sizeof(data));
   data[0] = 1;
 
@@ -568,7 +584,7 @@ static void test_otp_write_device_variant(const char *args) {
   while (args[n] != 0) {
     if (args[n] == ' ') {
       if (arg_len != 0) {
-        if (arg_num < 32) {
+        if (arg_num < sizeof(data)) {
           data[arg_num] = (uint8_t)atoi(&args[arg_start]);
         }
         arg_num++;
@@ -581,7 +597,7 @@ static void test_otp_write_device_variant(const char *args) {
     n++;
   }
 
-  if (arg_len != 0 && arg_num < 32) {
+  if (arg_len != 0 && arg_num < sizeof(data)) {
     data[arg_num] = (uint8_t)atoi(&args[arg_start]);
   }
 
@@ -744,6 +760,9 @@ int main(void) {
 
     } else if (startswith(line, "VARIANT ")) {
       test_otp_write_device_variant(line + 8);
+
+    } else if (startswith(line, "FIRMWARE VERSION")) {
+      test_firmware_version();
 
     } else if (startswith(line, "WIPE")) {
       test_wipe();
