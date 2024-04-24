@@ -123,9 +123,13 @@ async def _backup_slip39_basic(encrypted_master_secret: bytes) -> None:
     await layout.slip39_show_checklist(1, BAK_T_SLIP39_BASIC)
     share_threshold = await layout.slip39_prompt_threshold(share_count)
 
-    await backup_slip39_custom(
+    mnemonics = _get_slip39_mnemonics(
         encrypted_master_secret, group_threshold, ((share_threshold, share_count),)
     )
+
+    # show and confirm individual shares
+    await layout.slip39_show_checklist(2, BAK_T_SLIP39_BASIC)
+    await layout.slip39_basic_show_and_confirm_shares(mnemonics[0])
 
 
 async def _backup_slip39_advanced(encrypted_master_secret: bytes) -> None:
@@ -145,7 +149,10 @@ async def _backup_slip39_advanced(encrypted_master_secret: bytes) -> None:
         share_threshold = await layout.slip39_prompt_threshold(share_count, i)
         groups.append((share_threshold, share_count))
 
-    await backup_slip39_custom(encrypted_master_secret, group_threshold, groups)
+    mnemonics = _get_slip39_mnemonics(encrypted_master_secret, group_threshold, groups)
+
+    # show and confirm individual shares
+    await layout.slip39_advanced_show_and_confirm_shares(mnemonics)
 
 
 async def backup_slip39_custom(
@@ -153,28 +160,21 @@ async def backup_slip39_custom(
     group_threshold: int,
     groups: Sequence[tuple[int, int]],
 ) -> None:
-    mnemonics = await _get_slip39_mnemonics(encrypted_master_secret, group_threshold, groups)
+    mnemonics = _get_slip39_mnemonics(encrypted_master_secret, group_threshold, groups)
 
     # show and confirm individual shares
     if len(groups) == 1 and groups[0][0] == 1 and groups[0][1] == 1:
         # for a single 1-of-1 group, we use the same layouts as for BIP39
         await layout.show_and_confirm_mnemonic(mnemonics[0][0])
     else:
-        await confirm_action(
-            "warning_shamir_backup",
-            TR.reset__title_shamir_backup,
-            description=TR.reset__create_x_of_y_shamir_backup_template.format(
-                groups[0][0], groups[0][1]
-            ),
-            verb=TR.buttons__continue,
-        )
+        # TODO: a confirmation screen will be shown: "do you want to create a -of- Shamir backup?"
         if len(groups) == 1:
             await layout.slip39_basic_show_and_confirm_shares(mnemonics[0])
         else:
             await layout.slip39_advanced_show_and_confirm_shares(mnemonics)
 
 
-async def _get_slip39_mnemonics(
+def _get_slip39_mnemonics(
     encrypted_master_secret: bytes,
     group_threshold: int,
     groups: Sequence[tuple[int, int]],
@@ -185,20 +185,13 @@ async def _get_slip39_mnemonics(
         raise ValueError
 
     # generate the mnemonics
-    mnemonics = slip39.split_ems(
+    return slip39.split_ems(
         group_threshold,
         groups,
         identifier,
         iteration_exponent,
         encrypted_master_secret,
     )
-
-    # show and confirm individual shares
-    if len(groups) == 1:
-        await layout.slip39_show_checklist(2, BAK_T_SLIP39_BASIC)
-        await layout.slip39_basic_show_and_confirm_shares(mnemonics[0])
-    else:
-        await layout.slip39_advanced_show_and_confirm_shares(mnemonics)
 
 
 def _validate_reset_device(msg: ResetDevice) -> None:
@@ -247,4 +240,4 @@ async def backup_seed(backup_type: BackupType, mnemonic_secret: bytes) -> None:
     elif backup_type == BAK_T_SLIP39_ADVANCED:
         await _backup_slip39_advanced(mnemonic_secret)
     else:
-        await layout.bip39_show_and_confirm_mnemonic(mnemonic_secret.decode())
+        await layout.show_and_confirm_mnemonic(mnemonic_secret.decode())

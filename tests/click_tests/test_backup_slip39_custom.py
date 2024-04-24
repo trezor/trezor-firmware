@@ -75,9 +75,6 @@ def test_backup_slip39_custom(
         groups=[(share_threshold, share_count)],
     )
 
-    # confirm checklist
-    reset.confirm_read(debug)
-
     # confirm backup warning
     reset.confirm_read(debug, middle_r=True)
 
