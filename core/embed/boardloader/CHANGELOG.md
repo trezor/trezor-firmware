@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2.1.2 [April 2024]
+
+### Added
+- Added firmware update without interaction.
+  Split builds of different parts to use simple util.s assembler, while FW+bootloader use interconnected ones.  [#3205]
+- Added basic support for STM32U5  [#3370]
+
+
 ## 2.1.1 [September 2023]
 
 ### Added
@@ -43,4 +51,6 @@ Internal only release for Model R prototypes.
 [#2955]: https://github.com/trezor/trezor-firmware/pull/2955
 [#2989]: https://github.com/trezor/trezor-firmware/pull/2989
 [#3048]: https://github.com/trezor/trezor-firmware/pull/3048
+[#3205]: https://github.com/trezor/trezor-firmware/pull/3205
 [#3222]: https://github.com/trezor/trezor-firmware/pull/3222
+[#3370]: https://github.com/trezor/trezor-firmware/pull/3370
