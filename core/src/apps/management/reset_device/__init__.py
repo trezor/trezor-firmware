@@ -167,7 +167,14 @@ async def backup_slip39_custom(
         # for a single 1-of-1 group, we use the same layouts as for BIP39
         await layout.show_and_confirm_mnemonic(mnemonics[0][0])
     else:
-        # TODO: a confirmation screen will be shown: "do you want to create a -of- Shamir backup?"
+        await confirm_action(
+            "warning_shamir_backup",
+            TR.reset__title_shamir_backup,
+            description=TR.reset__create_x_of_y_shamir_backup_template.format(
+                groups[0][0], groups[0][1]
+            ),
+            verb=TR.buttons__continue,
+        )
         if len(groups) == 1:
             await layout.slip39_basic_show_and_confirm_shares(mnemonics[0])
         else:
