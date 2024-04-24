@@ -110,7 +110,8 @@ async def _show_confirmation_success(
     num_of_shares: int | None = None,
     group_index: int | None = None,
 ) -> None:
-    if share_index is None or num_of_shares is None:  # it is a BIP39 backup
+    if share_index is None or num_of_shares is None:
+        # it is a BIP39 or a 1-of-1 SLIP39 backup
         subheader = TR.reset__finished_verifying_seed
         text = ""
 
@@ -150,10 +151,10 @@ async def _show_confirmation_failure() -> None:
     )
 
 
-async def show_backup_warning(slip39: bool = False) -> None:
+async def show_backup_warning() -> None:
     from trezor.ui.layouts.reset import show_warning_backup
 
-    await show_warning_backup(slip39)
+    await show_warning_backup()
 
 
 async def show_backup_success() -> None:
@@ -162,11 +163,11 @@ async def show_backup_success() -> None:
     await show_success_backup()
 
 
-# BIP39
+# Simple setups: BIP39 or SLIP39 1-of-1
 # ===
 
 
-async def bip39_show_and_confirm_mnemonic(mnemonic: str) -> None:
+async def show_and_confirm_mnemonic(mnemonic: str) -> None:
     # warn user about mnemonic safety
     await show_backup_warning()
 
@@ -181,13 +182,13 @@ async def bip39_show_and_confirm_mnemonic(mnemonic: str) -> None:
             break  # mnemonic is confirmed, go next
 
 
-# SLIP39
+# Complex setups: SLIP39, except 1-of-1
 # ===
 
 
 async def slip39_basic_show_and_confirm_shares(shares: Sequence[str]) -> None:
     # warn user about mnemonic safety
-    await show_backup_warning(True)
+    await show_backup_warning()
 
     for index, share in enumerate(shares):
         share_words = share.split(" ")
@@ -204,7 +205,7 @@ async def slip39_advanced_show_and_confirm_shares(
     shares: Sequence[Sequence[str]],
 ) -> None:
     # warn user about mnemonic safety
-    await show_backup_warning(True)
+    await show_backup_warning()
 
     for group_index, group in enumerate(shares):
         for share_index, share in enumerate(group):

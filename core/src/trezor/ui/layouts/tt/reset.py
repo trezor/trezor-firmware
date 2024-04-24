@@ -319,7 +319,7 @@ async def slip39_advanced_prompt_group_threshold(num_of_groups: int) -> int:
     )
 
 
-async def show_warning_backup(slip39: bool) -> None:
+async def show_warning_backup() -> None:
     result = await interact(
         RustLayout(
             trezorui2.show_info(
