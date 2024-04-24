@@ -843,5 +843,7 @@
   "841": "ethereum__staking_unstake_intro",
   "842": "storage_msg__starting",
   "843": "storage_msg__verifying_pin",
-  "844": "storage_msg__wrong_pin"
+  "844": "storage_msg__wrong_pin",
+  "845": "reset__create_x_of_y_shamir_backup_template",
+  "846": "reset__title_shamir_backup"
 }

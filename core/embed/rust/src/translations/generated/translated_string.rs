@@ -1237,6 +1237,8 @@ pub enum TranslatedString {
     storage_msg__starting = 842,  // "STARTING UP"
     storage_msg__verifying_pin = 843,  // "VERIFYING PIN"
     storage_msg__wrong_pin = 844,  // "WRONG PIN"
+    reset__create_x_of_y_shamir_backup_template = 845,  // "Do you want to create a {0} of {1} Shamir backup?"
+    reset__title_shamir_backup = 846,  // "SHAMIR BACKUP"
 }
 
 impl TranslatedString {
@@ -2469,6 +2471,8 @@ impl TranslatedString {
             Self::storage_msg__starting => "STARTING UP",
             Self::storage_msg__verifying_pin => "VERIFYING PIN",
             Self::storage_msg__wrong_pin => "WRONG PIN",
+            Self::reset__create_x_of_y_shamir_backup_template => "Do you want to create a {0} of {1} Shamir backup?",
+            Self::reset__title_shamir_backup => "SHAMIR BACKUP",
         }
     }
 
@@ -3702,6 +3706,8 @@ impl TranslatedString {
             Qstr::MP_QSTR_storage_msg__starting => Some(Self::storage_msg__starting),
             Qstr::MP_QSTR_storage_msg__verifying_pin => Some(Self::storage_msg__verifying_pin),
             Qstr::MP_QSTR_storage_msg__wrong_pin => Some(Self::storage_msg__wrong_pin),
+            Qstr::MP_QSTR_reset__create_x_of_y_shamir_backup_template => Some(Self::reset__create_x_of_y_shamir_backup_template),
+            Qstr::MP_QSTR_reset__title_shamir_backup => Some(Self::reset__title_shamir_backup),
             _ => None,
         }
     }

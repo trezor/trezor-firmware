@@ -397,6 +397,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_reset__check_share_title_template;
   MP_QSTR_reset__continue_with_next_share;
   MP_QSTR_reset__continue_with_share_template;
+  MP_QSTR_reset__create_x_of_y_shamir_backup_template;
   MP_QSTR_reset__finished_verifying_group_template;
   MP_QSTR_reset__finished_verifying_seed;
   MP_QSTR_reset__finished_verifying_shares;
@@ -448,6 +449,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_reset__title_set_number_of_groups;
   MP_QSTR_reset__title_set_number_of_shares;
   MP_QSTR_reset__title_set_threshold;
+  MP_QSTR_reset__title_shamir_backup;
   MP_QSTR_reset__to_form_group_template;
   MP_QSTR_reset__tos_link;
   MP_QSTR_reset__total_number_of_shares_in_group_template;
