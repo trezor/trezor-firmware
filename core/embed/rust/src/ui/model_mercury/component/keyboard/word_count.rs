@@ -1,6 +1,6 @@
 use crate::ui::{
     component::{Component, Event, EventCtx},
-    geometry::{Grid, GridCellSpan, Rect},
+    geometry::{Alignment, Grid, GridCellSpan, Rect},
     model_mercury::{
         component::button::{Button, ButtonMsg},
         theme,
@@ -10,7 +10,7 @@ use crate::ui::{
 
 const NUMBERS: [u32; 5] = [12, 18, 20, 24, 33];
 const LABELS: [&str; 5] = ["12", "18", "20", "24", "33"];
-const CELLS: [(usize, usize); 5] = [(0, 0), (0, 2), (0, 4), (1, 0), (1, 2)];
+const CELLS: [(usize, usize); 5] = [(0, 0), (0, 2), (1, 0), (1, 2), (2, 1)];
 
 pub struct SelectWordCount {
     button: [Button; NUMBERS.len()],
@@ -23,7 +23,11 @@ pub enum SelectWordCountMsg {
 impl SelectWordCount {
     pub fn new() -> Self {
         SelectWordCount {
-            button: LABELS.map(|t| Button::with_text(t.into()).styled(theme::button_pin())),
+            button: LABELS.map(|t| {
+                Button::with_text(t.into())
+                    .styled(theme::button_pin())
+                    .with_text_align(Alignment::Center)
+            }),
         }
     }
 }
@@ -32,8 +36,13 @@ impl Component for SelectWordCount {
     type Msg = SelectWordCountMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        let (_, bounds) = bounds.split_bottom(2 * theme::BUTTON_HEIGHT + theme::BUTTON_SPACING);
-        let grid = Grid::new(bounds, 2, 6).with_spacing(theme::BUTTON_SPACING);
+        let n_rows: usize = 3;
+        let n_cols: usize = 4;
+
+        let (_, bounds) = bounds.split_bottom(
+            n_rows as i16 * theme::BUTTON_HEIGHT + (n_rows as i16 - 1) * theme::BUTTON_SPACING,
+        );
+        let grid = Grid::new(bounds, n_rows, n_cols).with_spacing(theme::BUTTON_SPACING);
         for (btn, (x, y)) in self.button.iter_mut().zip(CELLS) {
             btn.place(grid.cells(GridCellSpan {
                 from: (x, y),
