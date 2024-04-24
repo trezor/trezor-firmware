@@ -71,7 +71,7 @@ impl<Q> Decision<Q> {
 /// triggered by events and swipes.
 pub trait FlowState
 where
-    Self: Sized + Copy + PartialEq + Eq + ToPrimitive,
+    Self: Sized + Copy + Eq + ToPrimitive,
 {
     /// There needs to be a mapping from states to indices of the FlowStore
     /// array. Default implementation works for states that are enums, the

@@ -32,8 +32,11 @@ pub struct SwipeFlow<Q, S> {
 }
 
 struct Transition<Q> {
+    /// State we are transitioning _from_.
     prev_state: Q,
+    /// Animation progress.
     animation: Animation<Offset>,
+    /// Direction of the slide animation.
     direction: SwipeDirection,
 }
 
@@ -142,6 +145,7 @@ impl<Q: FlowState, S: FlowStore> Component for SwipeFlow<Q, S> {
         // TODO: are there any events we want to send to all? timers perhaps?
         if let Event::Timer(EventCtx::ANIM_FRAME_TIMER) = event {
             self.handle_transition(ctx);
+            return None;
         }
         // Ignore events while transition is running.
         if self.transition.is_some() {
