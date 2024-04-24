@@ -204,12 +204,12 @@ impl BitBlt {
         unsafe { ffi::gl_mono8_blend_mono4(self) };
     }
 
-    #[cfg(feature = "new_rendering")]
+    #[cfg(all(not(feature = "xframebuffer"), feature = "new_rendering"))]
     pub unsafe fn display_fill(&self) {
         unsafe { ffi::display_fill(self) };
     }
 
-    #[cfg(feature = "new_rendering")]
+    #[cfg(all(not(feature = "xframebuffer"), feature = "new_rendering"))]
     pub unsafe fn display_copy_rgb565(&self) {
         unsafe { ffi::display_copy_rgb565(self) };
     }
