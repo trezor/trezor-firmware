@@ -13,6 +13,7 @@ extern "C" fn screen_welcome() {
 }
 
 #[no_mangle]
+#[cfg(not(feature = "new_rendering"))]
 extern "C" fn bld_continue_label(bg_color: cty::uint16_t) {
     ModelUI::bld_continue_label(bg_color.into());
 }

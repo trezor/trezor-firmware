@@ -18,6 +18,7 @@ pub trait UIFeaturesCommon {
 pub trait UIFeaturesBootloader {
     fn screen_welcome();
 
+    #[cfg(not(feature = "new_rendering"))]
     fn bld_continue_label(bg_color: Color);
 
     fn screen_install_success(restart_seconds: u8, initial_setup: bool, complete_draw: bool);

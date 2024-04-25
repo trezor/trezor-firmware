@@ -149,6 +149,7 @@ impl UIFeaturesBootloader for ModelTRFeatures {
         show(&mut frame, true);
     }
 
+    #[cfg(not(feature = "new_rendering"))]
     fn bld_continue_label(bg_color: Color) {
         display::text_center(
             Point::new(constant::WIDTH / 2, HEIGHT - 2),
