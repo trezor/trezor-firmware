@@ -112,7 +112,7 @@ async def _show_confirmation_success(
 ) -> None:
     if share_index is None or num_of_shares is None:
         # it is a BIP39 or a 1-of-1 SLIP39 backup
-        subheader = TR.reset__finished_verifying_seed
+        subheader = TR.reset__finished_verifying_wallet_backup
         text = ""
 
     elif share_index == num_of_shares - 1:
