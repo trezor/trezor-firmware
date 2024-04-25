@@ -152,6 +152,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_confirm_backup_written_down;
   MP_QSTR_confirm_blob;
   MP_QSTR_confirm_coinjoin;
+  MP_QSTR_confirm_create_wallet;
   MP_QSTR_confirm_emphasized;
   MP_QSTR_confirm_fido;
   MP_QSTR_confirm_firmware_update;
