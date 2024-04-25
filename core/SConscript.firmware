@@ -769,7 +769,6 @@ def cargo_build():
         features.append('debug')
         features.append('ui_debug')
     if TREZOR_MODEL in ('T', 'T3T1', 'DISC1', 'DISC2'):
-        features.append('ui_antialiasing')
         features.append('ui_blurring')
         features.append('ui_jpeg_decoder')
 

@@ -318,14 +318,12 @@ def cargo_build():
         features.append('new_rendering')
         if TREZOR_MODEL in ('T',):
             features.append('display_rgb565')
-            features.append('ui_antialiasing')
         elif TREZOR_MODEL in ('R', '1',):
             features.append('display_mono')
             features.append('xframebuffer')
         elif TREZOR_MODEL in ('T3T1',):
             features.append('display_rgb565')
             features.append('xframebuffer')
-            features.append('ui_antialiasing')
 
     if TREZOR_MODEL in ('T', 'T3T1'):
         features.append('touch')

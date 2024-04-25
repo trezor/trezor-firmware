@@ -875,7 +875,6 @@ def cargo_build():
     if TREZOR_MODEL in ('T', 'T3T1'):
         features.append('touch')
         features.append('sd_card')
-        features.append('ui_antialiasing')
         features.append('ui_blurring')
         features.append('ui_jpeg_decoder')
     if TREZOR_MODEL in ('R', '1'):
