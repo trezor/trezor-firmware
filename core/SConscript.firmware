@@ -780,8 +780,6 @@ def cargo_build():
 
     features.extend(FEATURES_AVAILABLE)
 
-    env.get("ENV")["BINDGEN_MACROS"] = tools.get_bindgen_defines(env.get("ALLDEFS"), ALLPATHS)
-
     cargo_opts = [
         f'--target={env.get("ENV")["RUST_TARGET"]}',
         f'--target-dir=../../build/firmware/rust',
@@ -793,7 +791,9 @@ def cargo_build():
 
     env.get('ENV')['TREZOR_MODEL'] = TREZOR_MODEL
 
-    return f'cd embed/rust; cargo build {profile} ' + ' '.join(cargo_opts)
+    bindgen_macros = tools.get_bindgen_defines(env.get("CPPDEFINES"), ALLPATHS)
+
+    return f'export BINDGEN_MACROS=\'{bindgen_macros}\'; cd embed/rust; cargo build {profile} ' + ' '.join(cargo_opts)
 
 rust = env.Command(
     target=RUST_LIBPATH,

@@ -209,7 +209,7 @@ ALLPATHS = ['embed/rust',
            'embed/unix',
            'embed/extmod/modtrezorui',
            'vendor/nanopb',
-       ] + CPPPATH_MOD,
+       ] + CPPPATH_MOD
 
 env.Replace(
     COPT=env.get('ENV').get('OPTIMIZE', '-Os'),
@@ -291,7 +291,6 @@ def cargo_build():
     features.append("ui")
     features.append("bootloader")
 
-    env.get("ENV")["BINDGEN_MACROS"] = tools.get_bindgen_defines(env.get("ALLDEFS"), ALLPATHS)
 
     cargo_opts = [
         f'--target={RUST_TARGET}',
@@ -302,7 +301,9 @@ def cargo_build():
         '-Z build-std-features=panic_immediate_abort',
     ]
 
-    return f'cd embed/rust; cargo build {profile} ' + ' '.join(cargo_opts)
+    bindgen_macros = tools.get_bindgen_defines(env.get("CPPDEFINES"), ALLPATHS)
+
+    return f'export BINDGEN_MACROS=\'{bindgen_macros}\'; cd embed/rust; cargo build {profile} ' + ' '.join(cargo_opts)
 
 rust = env.Command(
     target=RUST_LIBPATH,
