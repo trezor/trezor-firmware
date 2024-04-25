@@ -88,6 +88,7 @@ include_icon!(ICON_WARNING, "model_mercury/res/warning24.toif");
 // 30x30
 include_icon!(ICON_AUTOFILL, "model_mercury/res/autofill30.toif");
 include_icon!(ICON_CLOSE, "model_mercury/res/close30.toif");
+include_icon!(ICON_CONFIRM_INPUT, "model_mercury/res/confirm_input30.toif");
 include_icon!(ICON_DELETE, "model_mercury/res/delete30.toif");
 include_icon!(ICON_MENU, "model_mercury/res/menu30.toif");
 include_icon!(
@@ -411,27 +412,29 @@ pub const fn button_pin() -> ButtonStyleSheet {
     }
 }
 
+// TODO: will button_pin_xyz styles be the same for PIN and Mnemonic keyboard?
+// Wait for Figma
 pub const fn button_pin_confirm() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
             font: Font::MONO,
             text_color: FG,
-            button_color: GREEN,
-            icon_color: GREY_LIGHT,
+            button_color: BG,
+            icon_color: GREEN_LIGHT,
             background_color: BG,
         },
         active: &ButtonStyle {
             font: Font::MONO,
             text_color: FG,
-            button_color: GREEN_DARK,
-            icon_color: GREY_LIGHT,
+            button_color: GREY_DARK,
+            icon_color: GREEN_LIGHT,
             background_color: BG,
         },
         disabled: &ButtonStyle {
             font: Font::MONO,
-            text_color: GREY_LIGHT,
-            button_color: GREY_DARK,
-            icon_color: GREY_LIGHT,
+            text_color: FG,
+            button_color: BG,
+            icon_color: GREEN_LIGHT,
             background_color: BG,
         },
     }
@@ -442,20 +445,20 @@ pub const fn button_pin_autocomplete() -> ButtonStyleSheet {
         normal: &ButtonStyle {
             font: Font::MONO,
             text_color: FG,
-            button_color: GREY_DARK, // same as PIN buttons
+            button_color: BG,
             icon_color: GREY_LIGHT,
             background_color: BG,
         },
         active: &ButtonStyle {
             font: Font::MONO,
             text_color: FG,
-            button_color: GREEN_DARK,
+            button_color: BG,
             icon_color: GREY_LIGHT,
             background_color: BG,
         },
         disabled: &ButtonStyle {
             font: Font::MONO,
-            text_color: GREY_LIGHT,
+            text_color: FG,
             button_color: BG,
             icon_color: GREY_LIGHT,
             background_color: BG,
@@ -467,7 +470,7 @@ pub const fn button_suggestion_confirm() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
             font: Font::MONO,
-            text_color: GREEN_DARK,
+            text_color: GREY_LIGHT,
             button_color: GREEN,
             icon_color: GREY_LIGHT,
             background_color: BG,

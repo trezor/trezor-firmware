@@ -196,7 +196,7 @@ impl Component for Bip39Input {
             let icon_center = area.top_right().center(area.bottom_right()) - Offset::new(16 + 8, 0);
             shape::ToifImage::new(icon_center, icon.toif)
                 .with_align(Alignment2D::CENTER)
-                .with_fg(style.text_color)
+                .with_fg(style.icon_color)
                 .render(target);
         }
     }
@@ -227,7 +227,8 @@ impl Bip39Input {
 
         // Styling the input to reflect already filled word
         Self {
-            button: Button::with_icon(theme::ICON_LIST_CHECK).styled(theme::button_pin_confirm()),
+            button: Button::with_icon(theme::ICON_CONFIRM_INPUT)
+                .styled(theme::button_pin_confirm()),
             textbox: TextBox::new(unwrap!(String::try_from(word))),
             multi_tap: MultiTapKeyboard::new(),
             options_num: bip39::options_num(word),
@@ -293,7 +294,7 @@ impl Bip39Input {
                 self.button.enable(ctx);
                 self.button.set_stylesheet(ctx, theme::button_pin_confirm());
                 self.button
-                    .set_content(ctx, ButtonContent::Icon(theme::ICON_LIST_CHECK));
+                    .set_content(ctx, ButtonContent::Icon(theme::ICON_CONFIRM_INPUT));
                 self.button_suggestion
                     .set_stylesheet(ctx, theme::button_suggestion_confirm());
             } else {
@@ -302,7 +303,7 @@ impl Bip39Input {
                 self.button
                     .set_stylesheet(ctx, theme::button_pin_autocomplete());
                 self.button
-                    .set_content(ctx, ButtonContent::Icon(theme::ICON_CLICK));
+                    .set_content(ctx, ButtonContent::Icon(theme::ICON_AUTOFILL));
                 self.button_suggestion
                     .set_stylesheet(ctx, theme::button_suggestion_autocomplete());
             }
