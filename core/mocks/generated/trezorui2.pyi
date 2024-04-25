@@ -155,6 +155,11 @@ def confirm_reset_device(
 
 
 # rust/src/ui/model_mercury/layout.rs
+def confirm_create_wallet() -> LayoutObj[UiResult]:
+    """Confirm creating wallet"""
+
+
+# rust/src/ui/model_mercury/layout.rs
 def show_address_details(
     *,
     qr_title: str,

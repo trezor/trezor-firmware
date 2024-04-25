@@ -41,10 +41,7 @@ async def show_share_words(
 
     result = await interact(
         RustLayout(
-            trezorui2.confirm_backup_written_down(
-                title=title,
-                pages=share_words,
-            ),
+            trezorui2.confirm_backup_written_down(),
         ),
         "backup_words",
         ButtonRequestType.ResetDevice,
