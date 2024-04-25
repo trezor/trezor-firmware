@@ -783,8 +783,8 @@ pub enum TranslatedString {
     recovery__cancel_dry_run = 495,  // "Cancel backup check"
     recovery__check_dry_run = 496,  // "Check your backup?"
     recovery__cursor_will_change = 497,  // "Position of the cursor will change between entries for enhanced security."
-    recovery__dry_run_bip39_valid_match = 498,  // "The entered recovery seed is valid and matches the one in the device."
-    recovery__dry_run_bip39_valid_mismatch = 499,  // "The entered recovery seed is valid but does not match the one in the device."
+    recovery__dry_run_bip39_valid_match = 498,  // "The entered recovery wallet backup is valid and matches the one in the device."
+    recovery__dry_run_bip39_valid_mismatch = 499,  // "The entered wallet backup is valid but does not match the one in the device."
     recovery__dry_run_slip39_valid_match = 500,  // "The entered recovery shares are valid and match what is currently in the device."
     recovery__dry_run_slip39_valid_mismatch = 501,  // "The entered recovery shares are valid but do not match what is currently in the device."
     recovery__enter_any_share = 502,  // "Enter any share"
@@ -793,7 +793,7 @@ pub enum TranslatedString {
     recovery__enter_share_from_diff_group = 505,  // "Enter share from a different group."
     recovery__group_num_template = 506,  // "Group {0}"
     recovery__group_threshold_reached = 507,  // "Group threshold reached."
-    recovery__invalid_seed_entered = 508,  // "Invalid recovery seed entered."
+    recovery__invalid_wallet_backup_entered = 508,  // "Invalid wallet backup entered."
     recovery__invalid_share_entered = 509,  // "Invalid recovery share entered."
     recovery__more_shares_needed = 510,  // "More shares needed"
     recovery__num_of_words = 511,  // "Select the number of words in your backup."
@@ -827,12 +827,12 @@ pub enum TranslatedString {
     reset__by_continuing = 539,  // "By continuing you agree to Trezor Company's terms and conditions."
     reset__check_backup_title = 540,  // "CHECK BACKUP"
     reset__check_group_share_title_template = 541,  // "CHECK G{0} - SHARE {1}"
-    reset__check_seed_title = 542,  // "CHECK SEED"
+    reset__check_wallet_backup_title = 542,  // "CHECK WALLET BACKUP"
     reset__check_share_title_template = 543,  // "CHECK SHARE #{0}"
     reset__continue_with_next_share = 544,  // "Continue with the next share."
     reset__continue_with_share_template = 545,  // "Continue with share #{0}."
     reset__finished_verifying_group_template = 546,  // "You have finished verifying your recovery shares for group {0}."
-    reset__finished_verifying_seed = 547,  // "You have finished verifying your recovery seed."
+    reset__finished_verifying_wallet_backup = 547,  // "You have finished verifying your wallet backup."
     reset__finished_verifying_shares = 548,  // "You have finished verifying your recovery shares."
     reset__group_description = 549,  // "A group is made up of recovery shares."
     reset__group_info = 550,  // "Each group has a set number of shares and its own threshold. In the next steps you will set the numbers of shares and the thresholds."
@@ -843,7 +843,7 @@ pub enum TranslatedString {
     reset__need_any_share_template = 555,  // "For recovery you need any {0} of the shares."
     reset__needed_to_form_a_group = 556,  // "needed to form a group. "
     reset__needed_to_recover_your_wallet = 557,  // "needed to recover your wallet. "
-    reset__never_make_digital_copy = 558,  // "Never make a digital copy of your backup or upload it online!"
+    reset__never_make_digital_copy = 558,  // "Never put your backup anywhere digital."
     reset__num_of_share_holders_template = 559,  // "{0} people or locations will each hold one share."
     reset__num_of_shares_advanced_info_template = 560,  // "Each recovery share is a sequence of 20 words. Next you will choose the threshold number of shares needed to form Group {0}."
     reset__num_of_shares_basic_info = 561,  // "Each recovery share is a sequence of 20 words. Next you will choose how many shares you need to recover your wallet."
@@ -851,7 +851,7 @@ pub enum TranslatedString {
     reset__number_of_shares_info = 563,  // "= total number of unique word lists used for wallet backup."
     reset__one_share = 564,  // "1 share"
     reset__only_one_share_will_be_created = 565,  // "Only one share will be created."
-    reset__recovery_seed_title = 566,  // "RECOVERY SEED"
+    reset__recovery_wallet_backup_title = 566,  // "WALLET BACKUP"
     reset__recovery_share_title_template = 567,  // "RECOVERY SHARE #{0}"
     reset__required_number_of_groups = 568,  // "The required number of groups for recovery."
     reset__select_correct_word = 569,  // "Select the correct word for each position."
@@ -2032,8 +2032,8 @@ impl TranslatedString {
             Self::recovery__cancel_dry_run => "Cancel backup check",
             Self::recovery__check_dry_run => "Check your backup?",
             Self::recovery__cursor_will_change => "Position of the cursor will change between entries for enhanced security.",
-            Self::recovery__dry_run_bip39_valid_match => "The entered recovery seed is valid and matches the one in the device.",
-            Self::recovery__dry_run_bip39_valid_mismatch => "The entered recovery seed is valid but does not match the one in the device.",
+            Self::recovery__dry_run_bip39_valid_match => "The entered recovery wallet backup is valid and matches the one in the device.",
+            Self::recovery__dry_run_bip39_valid_mismatch => "The entered wallet backup is valid but does not match the one in the device.",
             Self::recovery__dry_run_slip39_valid_match => "The entered recovery shares are valid and match what is currently in the device.",
             Self::recovery__dry_run_slip39_valid_mismatch => "The entered recovery shares are valid but do not match what is currently in the device.",
             Self::recovery__enter_any_share => "Enter any share",
@@ -2042,7 +2042,7 @@ impl TranslatedString {
             Self::recovery__enter_share_from_diff_group => "Enter share from a different group.",
             Self::recovery__group_num_template => "Group {0}",
             Self::recovery__group_threshold_reached => "Group threshold reached.",
-            Self::recovery__invalid_seed_entered => "Invalid recovery seed entered.",
+            Self::recovery__invalid_wallet_backup_entered => "Invalid wallet backup entered.",
             Self::recovery__invalid_share_entered => "Invalid recovery share entered.",
             Self::recovery__more_shares_needed => "More shares needed",
             Self::recovery__num_of_words => "Select the number of words in your backup.",
@@ -2076,12 +2076,12 @@ impl TranslatedString {
             Self::reset__by_continuing => "By continuing you agree to Trezor Company's terms and conditions.",
             Self::reset__check_backup_title => "CHECK BACKUP",
             Self::reset__check_group_share_title_template => "CHECK G{0} - SHARE {1}",
-            Self::reset__check_seed_title => "CHECK SEED",
+            Self::reset__check_wallet_backup_title => "CHECK WALLET BACKUP",
             Self::reset__check_share_title_template => "CHECK SHARE #{0}",
             Self::reset__continue_with_next_share => "Continue with the next share.",
             Self::reset__continue_with_share_template => "Continue with share #{0}.",
             Self::reset__finished_verifying_group_template => "You have finished verifying your recovery shares for group {0}.",
-            Self::reset__finished_verifying_seed => "You have finished verifying your recovery seed.",
+            Self::reset__finished_verifying_wallet_backup => "You have finished verifying your wallet backup.",
             Self::reset__finished_verifying_shares => "You have finished verifying your recovery shares.",
             Self::reset__group_description => "A group is made up of recovery shares.",
             Self::reset__group_info => "Each group has a set number of shares and its own threshold. In the next steps you will set the numbers of shares and the thresholds.",
@@ -2092,7 +2092,7 @@ impl TranslatedString {
             Self::reset__need_any_share_template => "For recovery you need any {0} of the shares.",
             Self::reset__needed_to_form_a_group => "needed to form a group. ",
             Self::reset__needed_to_recover_your_wallet => "needed to recover your wallet. ",
-            Self::reset__never_make_digital_copy => "Never make a digital copy of your backup or upload it online!",
+            Self::reset__never_make_digital_copy => "Never put your backup anywhere digital.",
             Self::reset__num_of_share_holders_template => "{0} people or locations will each hold one share.",
             Self::reset__num_of_shares_advanced_info_template => "Each recovery share is a sequence of 20 words. Next you will choose the threshold number of shares needed to form Group {0}.",
             Self::reset__num_of_shares_basic_info => "Each recovery share is a sequence of 20 words. Next you will choose how many shares you need to recover your wallet.",
@@ -2100,7 +2100,7 @@ impl TranslatedString {
             Self::reset__number_of_shares_info => "= total number of unique word lists used for wallet backup.",
             Self::reset__one_share => "1 share",
             Self::reset__only_one_share_will_be_created => "Only one share will be created.",
-            Self::reset__recovery_seed_title => "RECOVERY SEED",
+            Self::reset__recovery_wallet_backup_title => "WALLET BACKUP",
             Self::reset__recovery_share_title_template => "RECOVERY SHARE #{0}",
             Self::reset__required_number_of_groups => "The required number of groups for recovery.",
             Self::reset__select_correct_word => "Select the correct word for each position.",
@@ -3292,7 +3292,7 @@ impl TranslatedString {
             Qstr::MP_QSTR_recovery__enter_share_from_diff_group => Some(Self::recovery__enter_share_from_diff_group),
             Qstr::MP_QSTR_recovery__group_num_template => Some(Self::recovery__group_num_template),
             Qstr::MP_QSTR_recovery__group_threshold_reached => Some(Self::recovery__group_threshold_reached),
-            Qstr::MP_QSTR_recovery__invalid_seed_entered => Some(Self::recovery__invalid_seed_entered),
+            Qstr::MP_QSTR_recovery__invalid_wallet_backup_entered => Some(Self::recovery__invalid_wallet_backup_entered),
             Qstr::MP_QSTR_recovery__invalid_share_entered => Some(Self::recovery__invalid_share_entered),
             Qstr::MP_QSTR_recovery__more_shares_needed => Some(Self::recovery__more_shares_needed),
             Qstr::MP_QSTR_recovery__num_of_words => Some(Self::recovery__num_of_words),
@@ -3326,12 +3326,12 @@ impl TranslatedString {
             Qstr::MP_QSTR_reset__by_continuing => Some(Self::reset__by_continuing),
             Qstr::MP_QSTR_reset__check_backup_title => Some(Self::reset__check_backup_title),
             Qstr::MP_QSTR_reset__check_group_share_title_template => Some(Self::reset__check_group_share_title_template),
-            Qstr::MP_QSTR_reset__check_seed_title => Some(Self::reset__check_seed_title),
+            Qstr::MP_QSTR_reset__check_wallet_backup_title => Some(Self::reset__check_wallet_backup_title),
             Qstr::MP_QSTR_reset__check_share_title_template => Some(Self::reset__check_share_title_template),
             Qstr::MP_QSTR_reset__continue_with_next_share => Some(Self::reset__continue_with_next_share),
             Qstr::MP_QSTR_reset__continue_with_share_template => Some(Self::reset__continue_with_share_template),
             Qstr::MP_QSTR_reset__finished_verifying_group_template => Some(Self::reset__finished_verifying_group_template),
-            Qstr::MP_QSTR_reset__finished_verifying_seed => Some(Self::reset__finished_verifying_seed),
+            Qstr::MP_QSTR_reset__finished_verifying_wallet_backup => Some(Self::reset__finished_verifying_wallet_backup),
             Qstr::MP_QSTR_reset__finished_verifying_shares => Some(Self::reset__finished_verifying_shares),
             Qstr::MP_QSTR_reset__group_description => Some(Self::reset__group_description),
             Qstr::MP_QSTR_reset__group_info => Some(Self::reset__group_info),
@@ -3350,7 +3350,7 @@ impl TranslatedString {
             Qstr::MP_QSTR_reset__number_of_shares_info => Some(Self::reset__number_of_shares_info),
             Qstr::MP_QSTR_reset__one_share => Some(Self::reset__one_share),
             Qstr::MP_QSTR_reset__only_one_share_will_be_created => Some(Self::reset__only_one_share_will_be_created),
-            Qstr::MP_QSTR_reset__recovery_seed_title => Some(Self::reset__recovery_seed_title),
+            Qstr::MP_QSTR_reset__recovery_wallet_backup_title => Some(Self::reset__recovery_wallet_backup_title),
             Qstr::MP_QSTR_reset__recovery_share_title_template => Some(Self::reset__recovery_share_title_template),
             Qstr::MP_QSTR_reset__required_number_of_groups => Some(Self::reset__required_number_of_groups),
             Qstr::MP_QSTR_reset__select_correct_word => Some(Self::reset__select_correct_word),

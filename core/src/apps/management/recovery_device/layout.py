@@ -135,7 +135,7 @@ async def show_invalid_mnemonic(word_count: int) -> None:
     else:
         await show_recovery_warning(
             "warning_invalid_seed",
-            TR.recovery__invalid_seed_entered,
+            TR.recovery__invalid_wallet_backup_entered,
             TR.words__please_try_again,
         )
 
