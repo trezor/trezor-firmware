@@ -52,7 +52,7 @@ where
         ));
 
         if let Some(viewport) = viewport {
-            canvas.set_viewport(Viewport::new(viewport));
+            canvas.set_viewport(viewport);
         }
 
         let mut target = DirectRenderer::new(&mut canvas, bg_color, &cache);
