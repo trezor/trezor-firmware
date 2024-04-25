@@ -137,7 +137,7 @@ class RecoveryFlow:
     def warning_invalid_recovery_seed(self) -> BRGeneratorType:
         br = yield
         assert br.code == B.Warning
-        TR.assert_in(self._text_content(), "recovery__invalid_seed_entered")
+        TR.assert_in(self._text_content(), "recovery__invalid_wallet_backup_entered")
         self.debug.press_yes()
 
     def warning_invalid_recovery_share(self) -> BRGeneratorType:

@@ -353,8 +353,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_recovery__enter_share_from_diff_group;
   MP_QSTR_recovery__group_num_template;
   MP_QSTR_recovery__group_threshold_reached;
-  MP_QSTR_recovery__invalid_seed_entered;
   MP_QSTR_recovery__invalid_share_entered;
+  MP_QSTR_recovery__invalid_wallet_backup_entered;
   MP_QSTR_recovery__more_shares_needed;
   MP_QSTR_recovery__num_of_words;
   MP_QSTR_recovery__only_first_n_letters;
@@ -393,14 +393,14 @@ static void _librust_qstrs(void) {
   MP_QSTR_reset__by_continuing;
   MP_QSTR_reset__check_backup_title;
   MP_QSTR_reset__check_group_share_title_template;
-  MP_QSTR_reset__check_seed_title;
   MP_QSTR_reset__check_share_title_template;
+  MP_QSTR_reset__check_wallet_backup_title;
   MP_QSTR_reset__continue_with_next_share;
   MP_QSTR_reset__continue_with_share_template;
   MP_QSTR_reset__create_x_of_y_shamir_backup_template;
   MP_QSTR_reset__finished_verifying_group_template;
-  MP_QSTR_reset__finished_verifying_seed;
   MP_QSTR_reset__finished_verifying_shares;
+  MP_QSTR_reset__finished_verifying_wallet_backup;
   MP_QSTR_reset__group_description;
   MP_QSTR_reset__group_info;
   MP_QSTR_reset__group_share_checked_successfully_template;
@@ -418,8 +418,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_reset__number_of_shares_info;
   MP_QSTR_reset__one_share;
   MP_QSTR_reset__only_one_share_will_be_created;
-  MP_QSTR_reset__recovery_seed_title;
   MP_QSTR_reset__recovery_share_title_template;
+  MP_QSTR_reset__recovery_wallet_backup_title;
   MP_QSTR_reset__required_number_of_groups;
   MP_QSTR_reset__select_correct_word;
   MP_QSTR_reset__select_word_template;
