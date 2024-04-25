@@ -230,8 +230,6 @@ def cargo_build():
     features.append("bootloader")
     features.extend(FEATURES_AVAILABLE)
 
-    env.get("ENV")["BINDGEN_MACROS"] = tools.get_bindgen_defines(env.get("ALLDEFS"), ALLPATHS)
-
     cargo_opts = [
         f'--target={env.get("ENV")["RUST_TARGET"]}',
         f'--target-dir=../../build/bootloader/rust',
@@ -241,7 +239,9 @@ def cargo_build():
         '-Z build-std-features=panic_immediate_abort',
     ]
 
-    return f'cd embed/rust; cargo build {profile} ' + ' '.join(cargo_opts)
+    bindgen_macros = tools.get_bindgen_defines(env.get("CPPDEFINES"), ALLPATHS)
+
+    return f'export BINDGEN_MACROS=\'{bindgen_macros}\'; cd embed/rust; cargo build {profile} ' + ' '.join(cargo_opts)
 
 rust = env.Command(
     target=RUST_LIBPATH,

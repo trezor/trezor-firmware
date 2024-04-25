@@ -871,9 +871,9 @@ def cargo_build():
     if TREZOR_MODEL in ('R', '1'):
         features.append('button')
 
-    env.get("ENV")["BINDGEN_MACROS"] = tools.get_bindgen_defines(env.get("ALLDEFS"), ALLPATHS)
+    bindgen_macros = tools.get_bindgen_defines(env.get("CPPDEFINES"), ALLPATHS)
 
-    return f'cd embed/rust; cargo build --profile {RUST_PROFILE} --target-dir=../../build/unix/rust --no-default-features --features "{" ".join(features)}"  --target {TARGET}'
+    return f'export BINDGEN_MACROS=\'{bindgen_macros}\'; cd embed/rust; cargo build --profile {RUST_PROFILE} --target-dir=../../build/unix/rust --no-default-features --features "{" ".join(features)}"  --target {TARGET}'
 
 rust = env.Command(
     target=RUST_LIBPATH,

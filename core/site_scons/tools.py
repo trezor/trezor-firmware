@@ -153,9 +153,17 @@ def get_bindgen_defines(
 ) -> tuple(str, str):
     rest_defs = []
     for d in defines:
-        rest_defs.append(
-            f"-D{d}".replace('"<', "<").replace('>"', ">").replace('\\"', '"')
+        if type(d) is tuple:
+            d = f"-D{d[0]}={d[1]}"
+        else:
+            d = f"-D{d}"
+        d = (
+            d.replace('\\"', '"')
+            .replace("'", "'\"'\"'")
+            .replace('"<', "<")
+            .replace('>"', ">")
         )
+        rest_defs.append(d)
     for d in paths:
         rest_defs.append(f"-I../../{d}")
 
