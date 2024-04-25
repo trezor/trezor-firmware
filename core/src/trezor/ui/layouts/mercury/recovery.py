@@ -160,9 +160,7 @@ async def show_recovery_warning(
             RustLayout(
                 trezorui2.show_warning(
                     title=content,
-                    description=subheader or "",
-                    button=button.upper(),
-                    allow_cancel=False,
+                    value="Try again",  # TODO: use TR
                 )
             ),
             br_type,
