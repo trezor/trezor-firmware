@@ -228,11 +228,12 @@ def draw_simple(layout: Any) -> None:
     ui.backlight_fade(ui.style.BACKLIGHT_NORMAL)
 
 
-async def raise_if_not_confirmed(a: Awaitable[T], exc: Any = ActionCancelled) -> T:
+async def raise_if_not_confirmed(
+    a: Awaitable[ui.UiResult], exc: Any = ActionCancelled
+) -> None:
     result = await a
     if result is not CONFIRMED:
         raise exc
-    return result
 
 
 async def confirm_action(
@@ -322,22 +323,36 @@ async def confirm_single(
 
 
 async def confirm_reset_device(title: str, recovery: bool = False) -> None:
-    await raise_if_not_confirmed(
-        interact(
+    if recovery:
+        await raise_if_not_confirmed(
+            interact(
+                RustLayout(
+                    trezorui2.confirm_reset_device(
+                        title=title,
+                        button="",  # not used
+                    )
+                ),
+                "recover_device",
+                ButtonRequestType.ProtectCall,
+            )
+        )
+    else:
+        # creating wallet shows TOS first and then an extra screen confirms
+        await raise_if_not_confirmed(
             RustLayout(
                 trezorui2.confirm_reset_device(
                     title=title,
                     button="",  # not used
                 )
             ),
-            "recover_device" if recovery else "setup_device",
-            (
-                ButtonRequestType.ProtectCall
-                if recovery
-                else ButtonRequestType.ResetDevice
-            ),
         )
-    )
+        await raise_if_not_confirmed(
+            interact(
+                RustLayout(trezorui2.confirm_create_wallet()),
+                "setup_device",
+                ButtonRequestType.ResetDevice,
+            )
+        )
 
 
 async def prompt_backup() -> bool:
@@ -565,15 +580,12 @@ async def show_success(
     subheader: str | None = None,
     button: str | None = None,
 ) -> None:
-    button = button or TR.buttons__continue  # def_arg
     await raise_if_not_confirmed(
         interact(
             RustLayout(
                 trezorui2.show_success(
-                    title=subheader or "",
+                    title=content,
                     description="",
-                    button=button.upper(),
-                    allow_cancel=False,
                 )
             ),
             br_type,

@@ -192,6 +192,15 @@ impl ComponentMsgObj for ShareWords<'_> {
     }
 }
 
+impl ComponentMsgObj for SelectWordCount {
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        match msg {
+            SelectWordCountMsg::Selected(n) => n.try_into(),
+            _ => Err(Error::TypeError),
+        }
+    }
+}
+
 impl ComponentMsgObj for VerticalMenu {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
@@ -758,6 +767,18 @@ extern "C" fn new_show_info_with_cancel(n_args: usize, args: *const Obj, kwargs:
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
+extern "C" fn new_confirm_create_wallet(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], _kwargs: &Map| {
+        let content = PromptScreen::new_hold_to_confirm();
+        let obj = LayoutObj::new(
+            Frame::left_aligned(TR::reset__title_create_wallet.into(), content)
+                .with_footer(TR::instructions__hold_to_confirm.into(), None),
+        )?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
 extern "C" fn new_confirm_value(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
@@ -1314,8 +1335,9 @@ extern "C" fn new_confirm_backup_written_down(
     args: *const Obj,
     kwargs: *mut Map,
 ) -> Obj {
-    let block = move |_args: &[Obj], kwargs: &Map| {
+    let block = move |_args: &[Obj], _kwargs: &Map| {
         let content = PromptScreen::new_hold_to_confirm();
+        // TODO: use TR
         let frame_with_hold_to_confirm =
             Frame::left_aligned("I wrote down all words in order.".into(), content)
                 .with_footer(TR::instructions__hold_to_confirm.into(), None);
@@ -1396,17 +1418,13 @@ extern "C" fn new_show_checklist(n_args: usize, args: *const Obj, kwargs: *mut M
 
 extern "C" fn new_confirm_recovery(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let _title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let description: TString = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
-        let button: TString = kwargs.get(Qstr::MP_QSTR_button)?.try_into()?;
+        let _button: TString = kwargs.get(Qstr::MP_QSTR_button)?.try_into()?;
         let dry_run: bool = kwargs.get(Qstr::MP_QSTR_dry_run)?.try_into()?;
-        let info_button: bool = kwargs.get_or(Qstr::MP_QSTR_info_button, false)?;
+        let _info_button: bool = kwargs.get_or(Qstr::MP_QSTR_info_button, false)?;
 
-        let paragraphs = Paragraphs::new([
-            Paragraph::new(&theme::TEXT_DEMIBOLD, title),
-            Paragraph::new(&theme::TEXT_NORMAL, description),
-        ])
-        .with_spacing(theme::RECOVERY_SPACING);
+        let paragraphs = Paragraphs::new([Paragraph::new(&theme::TEXT_NORMAL, description)]);
 
         let notification: TString = if dry_run {
             TR::recovery__title_dry_run.try_into()?
@@ -1414,23 +1432,12 @@ extern "C" fn new_confirm_recovery(n_args: usize, args: *const Obj, kwargs: *mut
             TR::recovery__title.try_into()?
         };
 
-        let obj = if info_button {
-            LayoutObj::new(Frame::left_aligned(
-                notification,
-                Dialog::new(
-                    paragraphs,
-                    Button::cancel_info_confirm(
-                        TR::buttons__continue.into(),
-                        TR::buttons__more_info.into(),
-                    ),
-                ),
-            ))?
-        } else {
-            LayoutObj::new(Frame::left_aligned(
-                notification,
-                Dialog::new(paragraphs, Button::cancel_confirm_text(None, Some(button))),
-            ))?
-        };
+        let content = SwipeUpScreen::new(paragraphs);
+        let obj = LayoutObj::new(
+            Frame::left_aligned(notification, content)
+                .with_footer(TR::instructions__swipe_up.into(), None)
+                .with_subtitle("Instructions".into()), // FIXME: use TR
+        )?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -1438,21 +1445,11 @@ extern "C" fn new_confirm_recovery(n_args: usize, args: *const Obj, kwargs: *mut
 
 extern "C" fn new_select_word_count(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let dry_run: bool = kwargs.get(Qstr::MP_QSTR_dry_run)?.try_into()?;
-        let title: TString = if dry_run {
-            TR::recovery__title_dry_run.try_into()?
-        } else {
-            TR::recovery__title.try_into()?
-        };
-
-        let paragraphs = Paragraphs::new(Paragraph::new(
-            &theme::TEXT_DEMIBOLD,
-            TR::recovery__select_num_of_words,
-        ));
+        let _dry_run: bool = kwargs.get(Qstr::MP_QSTR_dry_run)?.try_into()?;
 
         let obj = LayoutObj::new(Frame::left_aligned(
-            title,
-            Dialog::new(paragraphs, SelectWordCount::new()),
+            TR::recovery__select_num_of_words.into(),
+            SelectWordCount::new(),
         ))?;
         Ok(obj.into())
     };
@@ -1807,6 +1804,10 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// ) -> LayoutObj[UiResult]:
     ///     """Confirm TOS before device setup."""
     Qstr::MP_QSTR_confirm_reset_device => obj_fn_kw!(0, flow::confirm_reset_device::new_confirm_reset_device).as_obj(),
+
+    /// def confirm_create_wallet() -> LayoutObj[UiResult]:
+    ///     """Confirm creating wallet"""
+    Qstr::MP_QSTR_confirm_create_wallet => obj_fn_kw!(0, new_confirm_create_wallet).as_obj(),
 
     /// def show_address_details(
     ///     *,

@@ -21,7 +21,6 @@ use super::super::{
 pub enum ConfirmResetDevice {
     Intro,
     Menu,
-    Confirm,
 }
 
 impl FlowState for ConfirmResetDevice {
@@ -33,12 +32,7 @@ impl FlowState for ConfirmResetDevice {
             (ConfirmResetDevice::Menu, SwipeDirection::Right) => {
                 Decision::Goto(ConfirmResetDevice::Intro, direction)
             }
-            (ConfirmResetDevice::Intro, SwipeDirection::Up) => {
-                Decision::Goto(ConfirmResetDevice::Confirm, direction)
-            }
-            (ConfirmResetDevice::Confirm, SwipeDirection::Down) => {
-                Decision::Goto(ConfirmResetDevice::Intro, direction)
-            }
+            (ConfirmResetDevice::Intro, SwipeDirection::Up) => Decision::Return(FlowMsg::Confirmed),
             _ => Decision::Nothing,
         }
     }
@@ -52,9 +46,6 @@ impl FlowState for ConfirmResetDevice {
                 Decision::Goto(ConfirmResetDevice::Intro, SwipeDirection::Right)
             }
             (ConfirmResetDevice::Menu, FlowMsg::Choice(0)) => Decision::Return(FlowMsg::Cancelled),
-            (ConfirmResetDevice::Confirm, FlowMsg::Confirmed) => {
-                Decision::Return(FlowMsg::Confirmed)
-            }
             _ => Decision::Nothing,
         }
     }
