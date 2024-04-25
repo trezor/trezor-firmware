@@ -2,7 +2,7 @@ use crate::{
     strutil::TString,
     ui::{
         component::{maybe::paint_overlapping, Child, Component, Event, EventCtx, Label, Maybe},
-        geometry::{Alignment2D, Grid, Offset, Rect},
+        geometry::{Alignment, Grid, Rect},
         model_mercury::{
             component::{Button, ButtonMsg, Swipe, SwipeDirection},
             theme,
@@ -44,23 +44,23 @@ where
         Self {
             prompt: Child::new(Maybe::new(
                 theme::BG,
-                Label::centered(prompt, theme::label_keyboard_prompt()),
+                Label::centered(prompt, theme::TEXT_MAIN_GREY_LIGHT),
                 prompt_visible,
             )),
             back: Child::new(Maybe::new(
                 theme::BG,
-                Button::with_icon_blend(
-                    theme::IMAGE_BG_BACK_BTN_TALL,
-                    theme::ICON_BACK,
-                    Offset::new(30, 17),
-                )
-                .styled(theme::button_reset())
-                .with_long_press(theme::ERASE_HOLD_DURATION),
+                Button::with_icon(theme::ICON_DELETE)
+                    .styled(theme::button_default())
+                    .with_long_press(theme::ERASE_HOLD_DURATION),
                 !prompt_visible,
             )),
             input: Child::new(Maybe::new(theme::BG, input, !prompt_visible)),
             keys: T::keys()
-                .map(|t| Button::with_text(t.into()).styled(theme::button_pin()))
+                .map(|t| {
+                    Button::with_text(t.into())
+                        .styled(theme::button_pin())
+                        .with_text_align(Alignment::Center)
+                })
                 .map(Child::new),
             swipe: Swipe::new().right(),
             can_go_back,
@@ -109,23 +109,27 @@ where
     type Msg = MnemonicKeyboardMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        let (_, bounds) = bounds
-            .inset(theme::borders())
-            .split_bottom(4 * theme::MNEMONIC_BUTTON_HEIGHT + 3 * theme::KEYBOARD_SPACING);
-        let grid = Grid::new(bounds, 4, 3).with_spacing(theme::KEYBOARD_SPACING);
-        let back_area = grid.row_col(0, 0);
-        let input_area = grid.row_col(0, 1).union(grid.row_col(0, 3));
+        let height_input_area: i16 = 30;
+        let space_top: i16 = 8;
+        let (remaining, keyboard_area) =
+            bounds.split_bottom(3 * theme::BUTTON_HEIGHT + 2 * theme::KEYBOARD_SPACING);
+        let prompt_area = remaining
+            .split_top(space_top)
+            .1
+            .split_top(height_input_area)
+            .0;
+        assert!(prompt_area.height() == height_input_area);
 
-        let prompt_center = grid.row_col(0, 0).union(grid.row_col(0, 3)).center();
-        let prompt_size = self.prompt.inner().inner().max_size();
-        let prompt_area = Rect::snap(prompt_center, prompt_size, Alignment2D::CENTER);
+        let (back_btn_area, input_area) = prompt_area.split_left(30);
+        let keyboard_grid = Grid::new(keyboard_area, 3, 3).with_spacing(theme::KEYBOARD_SPACING);
 
         self.swipe.place(bounds);
         self.prompt.place(prompt_area);
-        self.back.place(back_area);
+        self.back.place(back_btn_area);
         self.input.place(input_area);
+
         for (key, btn) in self.keys.iter_mut().enumerate() {
-            btn.place(grid.cell(key + grid.cols)); // Start in the second row.
+            btn.place(keyboard_grid.cell(key));
         }
         bounds
     }
@@ -185,9 +189,12 @@ where
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        self.prompt.render(target);
-        self.input.render(target);
-        self.back.render(target);
+        if self.input.inner().inner().is_empty() {
+            self.prompt.render(target);
+        } else {
+            self.input.render(target);
+            self.back.render(target);
+        }
 
         for btn in &self.keys {
             btn.render(target);
