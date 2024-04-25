@@ -181,7 +181,7 @@ impl Component for Slip39Input {
             icon.draw(
                 icon_center,
                 Alignment2D::CENTER,
-                style.text_color,
+                style.icon_color,
                 style.button_color,
             );
         }
@@ -247,7 +247,7 @@ impl Component for Slip39Input {
             let icon_center = area.top_right().center(area.bottom_right()) - Offset::new(16 + 8, 0);
             shape::ToifImage::new(icon_center, icon.toif)
                 .with_align(Alignment2D::CENTER)
-                .with_fg(style.text_color)
+                .with_fg(style.icon_color)
                 .render(target);
         }
     }
@@ -356,7 +356,7 @@ impl Slip39Input {
             // Confirm button.
             self.button.enable(ctx);
             self.button
-                .set_content(ctx, ButtonContent::Icon(theme::ICON_LIST_CHECK));
+                .set_content(ctx, ButtonContent::Icon(theme::ICON_CONFIRM_INPUT));
         } else {
             // Disabled button.
             self.button.disable(ctx);
