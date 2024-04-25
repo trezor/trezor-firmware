@@ -340,7 +340,7 @@ else
 endif
 
 flash_combine: $(PRODTEST_BUILD_DIR)/combined.bin ## flash combined using OpenOCD
-	$(OPENOCD) -c "init; reset halt; flash write_image erase $< $(FLASH_START); exit"
+	$(OPENOCD) -c "init; reset halt; flash write_image erase $< $(BOARDLOADER_START); exit"
 
 flash_erase: ## erase all sectors in flash bank 0
 	$(OPENOCD) -c "init; reset halt; flash info 0; flash erase_sector 0 0 last; flash erase_check 0; exit"
