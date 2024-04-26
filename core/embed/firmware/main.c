@@ -237,6 +237,10 @@ int main(void) {
   mp_obj_list_init(mp_sys_path, 0);
   mp_obj_list_append(mp_sys_path, MP_OBJ_NEW_QSTR(MP_QSTR__dot_frozen));
 
+  drawlib_demo();  // TODO: !!! remove
+  while (1)
+    ;
+
   // Execute the main script
   printf("CORE: Executing main script\n");
   pyexec_frozen_module("main.py");

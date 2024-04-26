@@ -56,6 +56,8 @@
 
 #include "common.h"
 
+#include "rust_ui.h"
+
 // Command line options, with their defaults
 STATIC bool compile_only = false;
 STATIC uint emit_opt = MP_EMIT_OPT_NONE;
@@ -546,6 +548,10 @@ MP_NOINLINE int main_(int argc, char **argv) {
   }
 
   mp_obj_list_init(MP_OBJ_TO_PTR(mp_sys_argv), 0);
+
+  display_backlight(255);
+  drawlib_demo();  // TODO: !!! remove
+  while (1) ;
 
   // Here is some example code to create a class and instance of that class.
   // First is the Python, then the C code.
