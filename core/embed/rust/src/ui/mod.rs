@@ -23,5 +23,7 @@ pub mod model_tr;
 #[cfg(feature = "model_tt")]
 pub mod model_tt;
 pub mod ui_features;
-
 pub use ui_features::UIFeaturesCommon;
+
+#[cfg(any(feature = "model_tt", feature = "model_mercury"))]
+pub mod demo; // !!! REMOVE

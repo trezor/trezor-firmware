@@ -25,7 +25,11 @@ use crate::{
 };
 
 #[cfg(feature = "new_rendering")]
-use crate::ui::{display::Color, shape::render_on_display};
+use crate::ui::{
+    display::Color,
+    geometry::Offset,
+    shape::{render_on_display, Viewport},
+};
 
 #[cfg(feature = "button")]
 use crate::ui::event::ButtonEvent;
@@ -50,6 +54,8 @@ pub trait ObjComponent: MaybeTrace {
     fn obj_place(&mut self, bounds: Rect) -> Rect;
     fn obj_event(&mut self, ctx: &mut EventCtx, event: Event) -> Result<Obj, Error>;
     fn obj_paint(&mut self) -> bool;
+    #[cfg(feature = "new_rendering")]
+    fn obj_render(&mut self, offset: Offset);
     fn obj_bounds(&self, _sink: &mut dyn FnMut(Rect)) {}
     fn obj_skip_paint(&mut self) {}
     fn obj_request_clear(&mut self) {}
@@ -90,6 +96,15 @@ where
             }
             will_paint
         }
+    }
+
+    #[cfg(feature = "new_rendering")]
+    fn obj_render(&mut self, offset: Offset) {
+        let screen = crate::ui::constant::screen();
+        let vp = Viewport::new(screen).translate(offset);
+        render_on_display(Some(vp), Some(Color::black()), |target| {
+            self.render(target);
+        });
     }
 
     #[cfg(feature = "ui_bounds")]
@@ -160,7 +175,7 @@ impl LayoutObj {
     /// pending timers are drained into `self.timer_callback`. Returns `Err`
     /// in case the timer callback raises or one of the components returns
     /// an error, `Ok` with the message otherwise.
-    fn obj_event(&self, event: Event) -> Result<Obj, Error> {
+    pub fn obj_event(&self, event: Event) -> Result<Obj, Error> {
         let inner = &mut *self.inner.borrow_mut();
 
         // Place the root component on the screen in case it was previously requested.
@@ -180,14 +195,14 @@ impl LayoutObj {
         // painting by now, and we're prepared for a paint pass.
 
         // Drain any pending timers into the callback.
-        while let Some((token, deadline)) = inner.event_ctx.pop_timer() {
-            let token = token.try_into();
+        while let Some((_token, _deadline)) = inner.event_ctx.pop_timer() {
+            /*let token = token.try_into();
             let deadline = deadline.try_into();
             if let (Ok(token), Ok(deadline)) = (token, deadline) {
                 inner.timer_fn.call_with_n_args(&[token, deadline])?;
             } else {
                 // Failed to convert token or deadline into `Obj`, skip.
-            }
+            }*/
         }
 
         if let Some(count) = inner.event_ctx.page_count() {
@@ -205,7 +220,7 @@ impl LayoutObj {
 
     /// Run a paint pass over the component tree. Returns true if any component
     /// actually requested painting since last invocation of the function.
-    fn obj_paint_if_requested(&self) -> bool {
+    pub fn obj_paint_if_requested(&self) -> bool {
         let mut inner = self.inner.borrow_mut();
 
         // Place the root component on the screen in case it was previously requested.
@@ -218,6 +233,21 @@ impl LayoutObj {
 
         // SAFETY: `inner.root` is unique because of the `inner.borrow_mut()`.
         unsafe { Gc::as_mut(&mut inner.root) }.obj_paint()
+    }
+
+    /// Run a paint pass over the component tree. Returns true if any component
+    /// actually requested painting since last invocation of the function.
+    pub fn obj_render(&self, offset: Offset) {
+        let mut inner = self.inner.borrow_mut();
+
+        // Place the root component on the screen in case it was previously requested.
+        if inner.event_ctx.needs_place_before_next_event_or_paint() {
+            // SAFETY: `inner.root` is unique because of the `inner.borrow_mut()`.
+            unsafe { Gc::as_mut(&mut inner.root) }.obj_place(constant::screen());
+        }
+
+        // SAFETY: `inner.root` is unique because of the `inner.borrow_mut()`.
+        unsafe { Gc::as_mut(&mut inner.root) }.obj_render(offset)
     }
 
     /// Run a tracing pass over the component tree. Passed `callback` is called
