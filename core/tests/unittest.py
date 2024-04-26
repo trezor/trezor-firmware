@@ -2,6 +2,10 @@ import sys
 
 from trezor.utils import ensure
 
+DEFAULT_COLOR = "\033[0m"
+ERROR_COLOR = "\033[31m"
+OK_COLOR = "\033[32m"
+
 
 class SkipTest(Exception):
     pass
@@ -252,16 +256,16 @@ def run_class(c, test_result):
                         raise RuntimeError(f"{name} should not return a result.")
                 finally:
                     tear_down()
-                print(" ok")
+                print(f"{OK_COLOR} ok{DEFAULT_COLOR}")
             except SkipTest as e:
                 print(" skipped:", e.args[0])
                 test_result.skippedNum += 1
             except AssertionError as e:
-                print(" failed")
+                print(f"{ERROR_COLOR} failed{DEFAULT_COLOR}")
                 sys.print_exception(e)
                 test_result.failuresNum += 1
             except BaseException as e:
-                print(" errored:", e)
+                print(f"{ERROR_COLOR} errored:{DEFAULT_COLOR}", e)
                 sys.print_exception(e)
                 test_result.errorsNum += 1
 
