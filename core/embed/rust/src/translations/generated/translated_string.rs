@@ -1243,6 +1243,11 @@ pub enum TranslatedString {
     instructions__tap_to_confirm = 848,  // "Tap to confirm"
     instructions__hold_to_confirm = 849,  // "Hold to confirm"
     words__important = 850,  // "Important"
+    reset__words_written_down_template = 851,  // "I wrote down all {0} words in order."
+    backup__create_backup_to_prevent_loss = 852,  // "Create a backup to avoid losing access to your funds"
+    reset__check_backup_instructions = 853,  // "Let's do a quick check of your backup."
+    words__instructions = 854,  // "Instructions"
+    words__not_recommended = 855,  // "Not recommended!"
 }
 
 impl TranslatedString {
@@ -2481,6 +2486,11 @@ impl TranslatedString {
             Self::instructions__tap_to_confirm => "Tap to confirm",
             Self::instructions__hold_to_confirm => "Hold to confirm",
             Self::words__important => "Important",
+            Self::reset__words_written_down_template => "I wrote down all {0} words in order.",
+            Self::backup__create_backup_to_prevent_loss => "Create a backup to avoid losing access to your funds",
+            Self::reset__check_backup_instructions => "Let's do a quick check of your backup.",
+            Self::words__instructions => "Instructions",
+            Self::words__not_recommended => "Not recommended!",
         }
     }
 
@@ -3720,6 +3730,11 @@ impl TranslatedString {
             Qstr::MP_QSTR_instructions__tap_to_confirm => Some(Self::instructions__tap_to_confirm),
             Qstr::MP_QSTR_instructions__hold_to_confirm => Some(Self::instructions__hold_to_confirm),
             Qstr::MP_QSTR_words__important => Some(Self::words__important),
+            Qstr::MP_QSTR_reset__words_written_down_template => Some(Self::reset__words_written_down_template),
+            Qstr::MP_QSTR_backup__create_backup_to_prevent_loss => Some(Self::backup__create_backup_to_prevent_loss),
+            Qstr::MP_QSTR_reset__check_backup_instructions => Some(Self::reset__check_backup_instructions),
+            Qstr::MP_QSTR_words__instructions => Some(Self::words__instructions),
+            Qstr::MP_QSTR_words__not_recommended => Some(Self::words__not_recommended),
             _ => None,
         }
     }

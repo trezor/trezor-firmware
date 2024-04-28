@@ -146,17 +146,13 @@ def confirm_properties(
 
 
 # rust/src/ui/model_mercury/layout.rs
-def confirm_reset_device(
-    *,
-    title: str,
-    button: str,
-) -> LayoutObj[UiResult]:
-    """Confirm TOS before device setup."""
+def flow_confirm_reset_recover() -> LayoutObj[UiResult]:
+    """Confirm TOS before recovery process."""
 
 
 # rust/src/ui/model_mercury/layout.rs
-def confirm_create_wallet() -> LayoutObj[UiResult]:
-    """Confirm creating wallet"""
+def flow_confirm_reset_create() -> LayoutObj[UiResult]:
+    """Confirm TOS before creating a wallet and have a user hold to confirm creation."""
 
 
 # rust/src/ui/model_mercury/layout.rs
@@ -395,22 +391,20 @@ def select_word(
 
 
 # rust/src/ui/model_mercury/layout.rs
-def create_backup_flow() -> LayoutObj[UiResult]
-"""Start create backup or skip flow."""
+def flow_prompt_backup() -> LayoutObj[UiResult]
+"""Prompt a user to create backup with an option to skip."""
 
 
 # rust/src/ui/model_mercury/layout.rs
-def show_share_words(
+def flow_show_share_words(
     *,
     title: str,
-    pages: Iterable[str],
+    words: Iterable[str],
+    text_info: str,
+    text_confirm: str,
 ) -> LayoutObj[UiResult]:
-    """Show mnemonic for backup."""
-
-
-# rust/src/ui/model_mercury/layout.rs
-def confirm_backup_written_down() -> LayoutObj[UiResult]
-"""Confirm with the user that backup words are written down."""
+    """Show wallet backup words preceded by an instruction screen and followed by
+    confirmation."""
 
 
 # rust/src/ui/model_mercury/layout.rs
