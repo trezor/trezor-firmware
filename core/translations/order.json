@@ -847,5 +847,10 @@
   "845": "instructions__swipe_up",
   "846": "instructions__tap_to_confirm",
   "847": "instructions__hold_to_confirm",
-  "848": "words__important"
+  "848": "words__important",
+  "849": "reset__words_written_down_template",
+  "850": "backup__create_backup_to_prevent_loss",
+  "851": "reset__check_backup_instructions",
+  "852": "words__instructions",
+  "853": "words__not_recommended"
 }

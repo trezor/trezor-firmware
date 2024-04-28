@@ -3,8 +3,9 @@ use crate::{
     strutil::TString,
     translations::TR,
     ui::{
-        component::{Component, Event, EventCtx, PageMsg, Paginate},
+        component::{Component, Event, EventCtx, Paginate},
         constant::SPACING,
+        flow::Swipable,
         geometry::{Alignment, Alignment2D, Insets, Offset, Rect},
         model_mercury::component::{Footer, Swipe, SwipeDirection},
         shape,
@@ -30,6 +31,11 @@ pub struct ShareWords<'a> {
     footer: Footer<'static>,
 }
 
+pub enum ShareWordsMsg {
+    GoPrevScreen,
+    WordsSeen,
+}
+
 impl<'a> ShareWords<'a> {
     const AREA_WORD_HEIGHT: i16 = 91;
 
@@ -44,13 +50,17 @@ impl<'a> ShareWords<'a> {
         }
     }
 
+    fn is_first_page(&self) -> bool {
+        self.page_index == 0
+    }
+
     fn is_final_page(&self) -> bool {
         self.page_index == self.share_words.len() - 1
     }
 }
 
 impl<'a> Component for ShareWords<'a> {
-    type Msg = PageMsg<()>;
+    type Msg = ShareWordsMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
         self.area = bounds;
@@ -72,17 +82,20 @@ impl<'a> Component for ShareWords<'a> {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        ctx.set_page_count(self.share_words.len());
+        // ctx.set_page_count(self.share_words.len());
         let swipe = self.swipe.event(ctx, event);
         match swipe {
             Some(SwipeDirection::Up) => {
                 if self.is_final_page() {
-                    return Some(PageMsg::Confirmed);
+                    return Some(ShareWordsMsg::WordsSeen);
                 }
                 self.change_page(self.page_index + 1);
                 ctx.request_paint();
             }
             Some(SwipeDirection::Down) => {
+                if self.is_first_page() {
+                    return Some(ShareWordsMsg::GoPrevScreen);
+                }
                 self.change_page(self.page_index.saturating_sub(1));
                 ctx.request_paint();
             }
@@ -135,6 +148,8 @@ impl<'a> Component for ShareWords<'a> {
     #[cfg(feature = "ui_bounds")]
     fn bounds(&self, _sink: &mut dyn FnMut(Rect)) {}
 }
+
+impl<'a> Swipable for ShareWords<'a> {}
 
 impl<'a> Paginate for ShareWords<'a> {
     fn page_count(&mut self) -> usize {

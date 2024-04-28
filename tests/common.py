@@ -249,7 +249,7 @@ def read_mnemonic_from_screen_mercury(
 
     debug.wait_layout()
 
-    for i in range(br.pages):
+    for _ in range(br.pages):
         words = debug.wait_layout().seed_words()
         mnemonic.extend(words)
         debug.swipe_up()

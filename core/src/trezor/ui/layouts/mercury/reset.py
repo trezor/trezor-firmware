@@ -23,7 +23,9 @@ async def show_share_words(
     share_index: int | None = None,
     group_index: int | None = None,
 ) -> None:
+
     if share_index is None:
+        # FIXME use TR.reset__recovery_wallet_backup_title after #3710 merged
         title = TR.reset__recovery_seed_title
     elif group_index is None:
         title = TR.reset__recovery_share_title_template.format(share_index + 1)
@@ -31,28 +33,23 @@ async def show_share_words(
         title = TR.reset__group_share_title_template.format(
             group_index + 1, share_index + 1
         )
-
-    await RustLayout(
-        trezorui2.show_share_words(
-            title=title,
-            pages=share_words,
-        ),
-    )
+    words_count = len(share_words)
+    text_info = TR.reset__write_down_words_template.format(words_count)
+    text_confirm = TR.reset__words_written_down_template.format(words_count)
 
     result = await interact(
         RustLayout(
-            trezorui2.confirm_backup_written_down(),
+            trezorui2.flow_show_share_words(
+                title=title,
+                words=share_words,
+                text_info=text_info,
+                text_confirm=text_confirm,
+            )
         ),
         "backup_words",
         ButtonRequestType.ResetDevice,
     )
 
-    result = await RustLayout(
-        trezorui2.show_info(
-            title="Check wallet backup",
-            description="Let's do a quick check of your backup.",
-        )
-    )
     if result != CONFIRMED:
         raise ActionCancelled
 
@@ -316,12 +313,6 @@ async def show_warning_backup(slip39: bool) -> None:
         ),
         "backup_warning",
         ButtonRequestType.ResetDevice,
-    )
-    result = await RustLayout(
-        trezorui2.show_info(
-            title="Wallet backup",
-            description="Write the following words in order on your wallet backup card.",
-        )
     )
     if result != CONFIRMED:
         raise ActionCancelled
