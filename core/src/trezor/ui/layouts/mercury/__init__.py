@@ -322,33 +322,19 @@ async def confirm_single(
     )
 
 
-async def confirm_reset_device(title: str, recovery: bool = False) -> None:
+async def confirm_reset_device(_title: str, recovery: bool = False) -> None:
     if recovery:
         await raise_if_not_confirmed(
             interact(
-                RustLayout(
-                    trezorui2.confirm_reset_device(
-                        title=title,
-                        button="",  # not used
-                    )
-                ),
+                RustLayout(trezorui2.flow_confirm_reset_recover()),
                 "recover_device",
                 ButtonRequestType.ProtectCall,
             )
         )
     else:
-        # creating wallet shows TOS first and then an extra screen confirms
-        await raise_if_not_confirmed(
-            RustLayout(
-                trezorui2.confirm_reset_device(
-                    title=title,
-                    button="",  # not used
-                )
-            ),
-        )
         await raise_if_not_confirmed(
             interact(
-                RustLayout(trezorui2.confirm_create_wallet()),
+                RustLayout(trezorui2.flow_confirm_reset_create()),
                 "setup_device",
                 ButtonRequestType.ResetDevice,
             )
@@ -356,7 +342,7 @@ async def confirm_reset_device(title: str, recovery: bool = False) -> None:
 
 
 async def prompt_backup() -> bool:
-    # result = await interact(RustLayout(trezorui2.))
+    # TODO: should we move this to `flow_prompt_backup`?
     await interact(
         RustLayout(trezorui2.show_success(title=TR.backup__new_wallet_created)),
         "backup_device",
@@ -364,8 +350,7 @@ async def prompt_backup() -> bool:
     )
 
     result = await interact(
-        # TODO: this is just POC
-        RustLayout(trezorui2.create_backup_flow()),
+        RustLayout(trezorui2.flow_prompt_backup()),
         "backup_device",
         ButtonRequestType.ResetDevice,
     )
