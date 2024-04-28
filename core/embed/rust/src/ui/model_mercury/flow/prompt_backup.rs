@@ -19,48 +19,48 @@ use super::super::{
 };
 
 #[derive(Copy, Clone, PartialEq, Eq, ToPrimitive)]
-pub enum CreateBackup {
+pub enum PromptBackup {
     Intro,
     Menu,
     SkipBackupIntro,
     SkipBackupConfirm,
 }
 
-impl FlowState for CreateBackup {
+impl FlowState for PromptBackup {
     fn handle_swipe(&self, direction: SwipeDirection) -> Decision<Self> {
         match (self, direction) {
-            (CreateBackup::Intro, SwipeDirection::Left) => {
-                Decision::Goto(CreateBackup::Menu, direction)
+            (PromptBackup::Intro, SwipeDirection::Left) => {
+                Decision::Goto(PromptBackup::Menu, direction)
             }
-            (CreateBackup::SkipBackupIntro, SwipeDirection::Up) => {
-                Decision::Goto(CreateBackup::SkipBackupConfirm, direction)
+            (PromptBackup::SkipBackupIntro, SwipeDirection::Up) => {
+                Decision::Goto(PromptBackup::SkipBackupConfirm, direction)
             }
-            (CreateBackup::SkipBackupConfirm, SwipeDirection::Down) => {
-                Decision::Goto(CreateBackup::SkipBackupIntro, direction)
+            (PromptBackup::SkipBackupConfirm, SwipeDirection::Down) => {
+                Decision::Goto(PromptBackup::SkipBackupIntro, direction)
             }
-            (CreateBackup::Intro, SwipeDirection::Up) => Decision::Return(FlowMsg::Confirmed),
+            (PromptBackup::Intro, SwipeDirection::Up) => Decision::Return(FlowMsg::Confirmed),
             _ => Decision::Nothing,
         }
     }
 
     fn handle_event(&self, msg: FlowMsg) -> Decision<Self> {
         match (self, msg) {
-            (CreateBackup::Intro, FlowMsg::Info) => {
-                Decision::Goto(CreateBackup::Menu, SwipeDirection::Left)
+            (PromptBackup::Intro, FlowMsg::Info) => {
+                Decision::Goto(PromptBackup::Menu, SwipeDirection::Left)
             }
-            (CreateBackup::Menu, FlowMsg::Choice(0)) => {
-                Decision::Goto(CreateBackup::SkipBackupIntro, SwipeDirection::Left)
+            (PromptBackup::Menu, FlowMsg::Choice(0)) => {
+                Decision::Goto(PromptBackup::SkipBackupIntro, SwipeDirection::Left)
             }
-            (CreateBackup::Menu, FlowMsg::Cancelled) => {
-                Decision::Goto(CreateBackup::Intro, SwipeDirection::Right)
+            (PromptBackup::Menu, FlowMsg::Cancelled) => {
+                Decision::Goto(PromptBackup::Intro, SwipeDirection::Right)
             }
-            (CreateBackup::SkipBackupIntro, FlowMsg::Cancelled) => {
-                Decision::Goto(CreateBackup::Menu, SwipeDirection::Right)
+            (PromptBackup::SkipBackupIntro, FlowMsg::Cancelled) => {
+                Decision::Goto(PromptBackup::Menu, SwipeDirection::Right)
             }
-            (CreateBackup::SkipBackupConfirm, FlowMsg::Cancelled) => {
-                Decision::Goto(CreateBackup::SkipBackupIntro, SwipeDirection::Right)
+            (PromptBackup::SkipBackupConfirm, FlowMsg::Cancelled) => {
+                Decision::Goto(PromptBackup::SkipBackupIntro, SwipeDirection::Right)
             }
-            (CreateBackup::SkipBackupConfirm, FlowMsg::Confirmed) => {
+            (PromptBackup::SkipBackupConfirm, FlowMsg::Confirmed) => {
                 Decision::Return(FlowMsg::Cancelled)
             }
             _ => Decision::Nothing,
@@ -73,16 +73,18 @@ use crate::{
     ui::layout::obj::LayoutObj,
 };
 
-pub extern "C" fn new_create_backup(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
-    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, CreateBackup::new) }
+pub extern "C" fn new_prompt_backup(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, PromptBackup::new) }
 }
 
-impl CreateBackup {
+impl PromptBackup {
     fn new(_args: &[Obj], _kwargs: &Map) -> Result<Obj, error::Error> {
         let title: TString = TR::backup__title_backup_wallet.into();
         let par_array: [Paragraph<'static>; 1] = [Paragraph::new(
             &theme::TEXT_MAIN_GREY_LIGHT,
-            TString::from_str("Your wallet backup contains X words in a specific order."),
+            // FIXME: should be "contains X words" but the mnemonic/shares are not yet generated at
+            // this point. We might need to merge the PromptBackup and ShowShareWords flows
+            TString::from_str("Your wallet backup contains words in a specific order."),
         )];
         let paragraphs = Paragraphs::new(par_array);
         let content_intro = Frame::left_aligned(title, SwipePage::vertical(paragraphs))
@@ -94,7 +96,7 @@ impl CreateBackup {
 
         let content_menu = Frame::left_aligned(
             "".into(),
-            VerticalMenu::empty().danger(theme::ICON_CANCEL, "Skip backup".into()),
+            VerticalMenu::empty().danger(theme::ICON_CANCEL, TR::backup__title_skip.into()),
         )
         .with_cancel_button()
         .map(|msg| match msg {
@@ -104,10 +106,10 @@ impl CreateBackup {
         });
 
         let par_array_skip_intro: [Paragraph<'static>; 2] = [
-            Paragraph::new(&theme::TEXT_WARNING, TString::from_str("Not recommended!")),
+            Paragraph::new(&theme::TEXT_WARNING, TR::words__not_recommended),
             Paragraph::new(
                 &theme::TEXT_MAIN_GREY_LIGHT,
-                TString::from_str("Create a backup to avoid losing access to your funds"),
+                TR::backup__create_backup_to_prevent_loss,
             ),
         ];
         let paragraphs_skip_intro = Paragraphs::new(par_array_skip_intro);
@@ -141,7 +143,7 @@ impl CreateBackup {
             .add(content_menu)?
             .add(content_skip_intro)?
             .add(content_skip_confirm)?;
-        let res = SwipeFlow::new(CreateBackup::Intro, store)?;
+        let res = SwipeFlow::new(PromptBackup::Intro, store)?;
         Ok(LayoutObj::new(res)?.into())
     }
 }
