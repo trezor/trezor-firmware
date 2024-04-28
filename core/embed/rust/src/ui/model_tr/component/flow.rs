@@ -20,8 +20,9 @@ where
     pages: FlowPages<F>,
     /// Instance of the current Page
     current_page: Page,
-    /// Title being shown at the top in bold
+    /// Title being shown at the top in bold upper
     title: Option<Title>,
+    has_common_title: bool,
     scrollbar: Child<ScrollBar>,
     content_area: Rect,
     title_area: Rect,
@@ -46,6 +47,7 @@ where
             pages,
             current_page,
             title,
+            has_common_title: false,
             content_area: Rect::zero(),
             title_area: Rect::zero(),
             scrollbar: Child::new(ScrollBar::to_be_filled_later()),
@@ -65,6 +67,7 @@ where
     /// with the page content, as the content will be offset.
     pub fn with_common_title(mut self, title: TString<'static>) -> Self {
         self.title = Some(Title::new(title));
+        self.has_common_title = true;
         self
     }
 
