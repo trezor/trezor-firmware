@@ -54,6 +54,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_auto_lock__change_template;
   MP_QSTR_auto_lock__title;
   MP_QSTR_backup__can_back_up_anytime;
+  MP_QSTR_backup__create_backup_to_prevent_loss;
   MP_QSTR_backup__it_should_be_backed_up;
   MP_QSTR_backup__it_should_be_backed_up_now;
   MP_QSTR_backup__new_wallet_created;
@@ -149,10 +150,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_confirm_action;
   MP_QSTR_confirm_address;
   MP_QSTR_confirm_backup;
-  MP_QSTR_confirm_backup_written_down;
   MP_QSTR_confirm_blob;
   MP_QSTR_confirm_coinjoin;
-  MP_QSTR_confirm_create_wallet;
   MP_QSTR_confirm_emphasized;
   MP_QSTR_confirm_fido;
   MP_QSTR_confirm_firmware_update;
@@ -174,7 +173,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_confirm_value;
   MP_QSTR_confirm_with_info;
   MP_QSTR_count;
-  MP_QSTR_create_backup_flow;
   MP_QSTR_data;
   MP_QSTR_data_hash;
   MP_QSTR_data_len;
@@ -206,7 +204,11 @@ static void _librust_qstrs(void) {
   MP_QSTR_fingerprint;
   MP_QSTR_firmware_update__title;
   MP_QSTR_firmware_update__title_fingerprint;
+  MP_QSTR_flow_confirm_reset_create;
+  MP_QSTR_flow_confirm_reset_recover;
   MP_QSTR_flow_get_address;
+  MP_QSTR_flow_prompt_backup;
+  MP_QSTR_flow_show_share_words;
   MP_QSTR_get_language;
   MP_QSTR_hold;
   MP_QSTR_hold_danger;
@@ -398,6 +400,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_reset__button_create;
   MP_QSTR_reset__button_recover;
   MP_QSTR_reset__by_continuing;
+  MP_QSTR_reset__check_backup_instructions;
   MP_QSTR_reset__check_backup_title;
   MP_QSTR_reset__check_group_share_title_template;
   MP_QSTR_reset__check_seed_title;
@@ -459,6 +462,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_reset__tos_link;
   MP_QSTR_reset__total_number_of_shares_in_group_template;
   MP_QSTR_reset__use_your_backup;
+  MP_QSTR_reset__words_written_down_template;
   MP_QSTR_reset__write_down_words_template;
   MP_QSTR_reset__wrong_word_selected;
   MP_QSTR_reset__you_need_one_share;
@@ -550,6 +554,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_storage_msg__wrong_pin;
   MP_QSTR_subprompt;
   MP_QSTR_subtitle;
+  MP_QSTR_text_confirm;
+  MP_QSTR_text_info;
   MP_QSTR_text_mono;
   MP_QSTR_time_ms;
   MP_QSTR_timer;
@@ -623,10 +629,12 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__fee;
   MP_QSTR_words__from;
   MP_QSTR_words__important;
+  MP_QSTR_words__instructions;
   MP_QSTR_words__keep_it_safe;
   MP_QSTR_words__know_what_your_doing;
   MP_QSTR_words__my_trezor;
   MP_QSTR_words__no;
+  MP_QSTR_words__not_recommended;
   MP_QSTR_words__outputs;
   MP_QSTR_words__please_check_again;
   MP_QSTR_words__please_try_again;
