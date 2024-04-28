@@ -46,8 +46,8 @@ use super::{
         FidoMsg, Frame, FrameMsg, Homescreen, HomescreenMsg, IconDialog, Lockscreen, MnemonicInput,
         MnemonicKeyboard, MnemonicKeyboardMsg, NumberInputDialog, NumberInputDialogMsg,
         PassphraseKeyboard, PassphraseKeyboardMsg, PinKeyboard, PinKeyboardMsg, Progress,
-        PromptScreen, SelectWordCount, SelectWordCountMsg, ShareWords, SimplePage, Slip39Input,
-        StatusScreen, SwipeUpScreen, SwipeUpScreenMsg, VerticalMenu, VerticalMenuChoiceMsg,
+        PromptScreen, SelectWordCount, SelectWordCountMsg, SimplePage, Slip39Input, StatusScreen,
+        SwipeUpScreen, SwipeUpScreenMsg, VerticalMenu, VerticalMenuChoiceMsg,
     },
     flow, theme,
 };
@@ -179,15 +179,6 @@ where
         match msg {
             FrameMsg::Content(c) => self.inner().msg_try_into_obj(c),
             FrameMsg::Button(b) => b.try_into(),
-        }
-    }
-}
-
-impl ComponentMsgObj for ShareWords<'_> {
-    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
-        match msg {
-            PageMsg::Confirmed => Ok(CONFIRMED.as_obj()),
-            _ => Err(Error::TypeError),
         }
     }
 }
@@ -767,18 +758,6 @@ extern "C" fn new_show_info_with_cancel(n_args: usize, args: *const Obj, kwargs:
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
-extern "C" fn new_confirm_create_wallet(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
-    let block = move |_args: &[Obj], _kwargs: &Map| {
-        let content = PromptScreen::new_hold_to_confirm();
-        let obj = LayoutObj::new(
-            Frame::left_aligned(TR::reset__title_create_wallet.into(), content)
-                .with_footer(TR::instructions__hold_to_confirm.into(), None),
-        )?;
-        Ok(obj.into())
-    };
-    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
-}
-
 extern "C" fn new_confirm_value(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
@@ -1316,37 +1295,6 @@ extern "C" fn new_select_word(n_args: usize, args: *const Obj, kwargs: *mut Map)
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
-extern "C" fn new_show_share_words(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
-    let block = move |_args: &[Obj], kwargs: &Map| {
-        let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
-        let share_words_obj: Obj = kwargs.get(Qstr::MP_QSTR_pages)?;
-        let share_words_vec: Vec<TString, 33> = util::iter_into_vec(share_words_obj)?;
-
-        let share_words = ShareWords::new(share_words_vec);
-        let frame_with_share_words = Frame::left_aligned(title, share_words);
-        let obj = LayoutObj::new(frame_with_share_words)?;
-        Ok(obj.into())
-    };
-    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
-}
-
-extern "C" fn new_confirm_backup_written_down(
-    n_args: usize,
-    args: *const Obj,
-    kwargs: *mut Map,
-) -> Obj {
-    let block = move |_args: &[Obj], _kwargs: &Map| {
-        let content = PromptScreen::new_hold_to_confirm();
-        // TODO: use TR
-        let frame_with_hold_to_confirm =
-            Frame::left_aligned("I wrote down all words in order.".into(), content)
-                .with_footer(TR::instructions__hold_to_confirm.into(), None);
-        let obj = LayoutObj::new(frame_with_hold_to_confirm)?;
-        Ok(obj.into())
-    };
-    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
-}
-
 extern "C" fn new_request_number(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
@@ -1436,7 +1384,7 @@ extern "C" fn new_confirm_recovery(n_args: usize, args: *const Obj, kwargs: *mut
         let obj = LayoutObj::new(
             Frame::left_aligned(notification, content)
                 .with_footer(TR::instructions__swipe_up.into(), None)
-                .with_subtitle("Instructions".into()), // FIXME: use TR
+                .with_subtitle(TR::words__instructions.into()),
         )?;
         Ok(obj.into())
     };
@@ -1797,17 +1745,13 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     the value is to be rendered as binary with monospace font, False otherwise."""
     Qstr::MP_QSTR_confirm_properties => obj_fn_kw!(0, new_confirm_properties).as_obj(),
 
-    /// def confirm_reset_device(
-    ///     *,
-    ///     title: str,
-    ///     button: str,
-    /// ) -> LayoutObj[UiResult]:
-    ///     """Confirm TOS before device setup."""
-    Qstr::MP_QSTR_confirm_reset_device => obj_fn_kw!(0, flow::confirm_reset_device::new_confirm_reset_device).as_obj(),
+    /// def flow_confirm_reset_recover() -> LayoutObj[UiResult]:
+    ///     """Confirm TOS before recovery process."""
+    Qstr::MP_QSTR_flow_confirm_reset_recover => obj_fn_kw!(0, flow::confirm_reset_recover::new_confirm_reset_recover).as_obj(),
 
-    /// def confirm_create_wallet() -> LayoutObj[UiResult]:
-    ///     """Confirm creating wallet"""
-    Qstr::MP_QSTR_confirm_create_wallet => obj_fn_kw!(0, new_confirm_create_wallet).as_obj(),
+    /// def flow_confirm_reset_create() -> LayoutObj[UiResult]:
+    ///     """Confirm TOS before creating a wallet and have a user hold to confirm creation."""
+    Qstr::MP_QSTR_flow_confirm_reset_create => obj_fn_kw!(0, flow::confirm_reset_create::new_confirm_reset_create).as_obj(),
 
     /// def show_address_details(
     ///     *,
@@ -2024,23 +1968,20 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///    iterable must be of exact size. Returns index in range `0..3`."""
     Qstr::MP_QSTR_select_word => obj_fn_kw!(0, new_select_word).as_obj(),
 
-    // TODO: This is just POC
-    /// def create_backup_flow() -> LayoutObj[UiResult]
-    /// """Start create backup or skip flow."""
-    Qstr::MP_QSTR_create_backup_flow => obj_fn_kw!(0, flow::create_backup::new_create_backup).as_obj(),
+    /// def flow_prompt_backup() -> LayoutObj[UiResult]
+    /// """Prompt a user to create backup with an option to skip."""
+    Qstr::MP_QSTR_flow_prompt_backup => obj_fn_kw!(0, flow::prompt_backup::new_prompt_backup).as_obj(),
 
-    /// def show_share_words(
+    /// def flow_show_share_words(
     ///     *,
     ///     title: str,
-    ///     pages: Iterable[str],
+    ///     words: Iterable[str],
+    ///     text_info: str,
+    ///     text_confirm: str,
     /// ) -> LayoutObj[UiResult]:
-    ///     """Show mnemonic for backup."""
-    Qstr::MP_QSTR_show_share_words => obj_fn_kw!(0, new_show_share_words).as_obj(),
-
-    // TODO: This is just POC
-    /// def confirm_backup_written_down() -> LayoutObj[UiResult]
-    /// """Confirm with the user that backup words are written down."""
-    Qstr::MP_QSTR_confirm_backup_written_down => obj_fn_kw!(0, new_confirm_backup_written_down).as_obj(),
+    ///     """Show wallet backup words preceded by an instruction screen and followed by
+    ///     confirmation."""
+    Qstr::MP_QSTR_flow_show_share_words => obj_fn_kw!(0, flow::show_share_words::new_show_share_words).as_obj(),
 
     /// def request_number(
     ///     *,
