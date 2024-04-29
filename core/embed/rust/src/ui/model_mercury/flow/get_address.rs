@@ -4,7 +4,7 @@ use crate::{
         component::{
             image::BlendedImage,
             text::paragraphs::{Paragraph, Paragraphs},
-            ButtonRequestExt, ComponentExt, Qr, SwipeDirection, Timeout,
+            ComponentExt, Qr, SwipeDirection, Timeout,
         },
         flow::{
             base::Decision, flow_store, FlowMsg, FlowState, FlowStore, IgnoreSwipe, SwipeFlow,
