@@ -11,3 +11,9 @@ pub fn play(effect: HapticEffect) {
         ffi::haptic_play(effect as _);
     }
 }
+
+pub fn play_rtp(amplitude: i8, duration: u16) {
+    unsafe {
+        ffi::haptic_play_rtp(amplitude, duration);
+    }
+}
