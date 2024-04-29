@@ -193,6 +193,7 @@ void rdi_handler(uint32_t uw_tick) {
  * against fault injection.
  */
 void wait_random(void) {
+#ifndef TREZOR_PRODTEST
   int wait = drbg_random8();
   volatile int i = 0;
   volatile int j = wait;
@@ -207,4 +208,5 @@ void wait_random(void) {
   if (i != wait || j != 0) {
     shutdown_privileged();
   }
+#endif
 }
