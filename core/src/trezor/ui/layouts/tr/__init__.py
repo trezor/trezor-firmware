@@ -221,7 +221,7 @@ class RustLayout(LayoutParentType[T]):
 
             notify_layout_change(self, event_id)
 
-    def handle_input_and_rendering(self) -> loop.Task:  # type: ignore [awaitable-is-generator]
+    def handle_input_and_rendering(self) -> loop.Task:
         from trezor import workflow
 
         button = loop.wait(io.BUTTON)
@@ -237,7 +237,7 @@ class RustLayout(LayoutParentType[T]):
                 raise ui.Result(msg)
             self._paint()
 
-    def handle_timers(self) -> loop.Task:  # type: ignore [awaitable-is-generator]
+    def handle_timers(self) -> loop.Task:
         while True:
             # Using `yield` instead of `await` to avoid allocations.
             token = yield self.timer
@@ -849,7 +849,7 @@ async def _confirm_ask_pagination(
 ) -> None:
     paginated: RustLayout[trezorui2.UiResult] | None = None
     # TODO: make should_show_more/confirm_more accept bytes directly
-    if isinstance(data, bytes):
+    if isinstance(data, (bytes, bytearray, memoryview)):
         from ubinascii import hexlify
 
         data = hexlify(data).decode()
@@ -939,13 +939,14 @@ def confirm_properties(
     from ubinascii import hexlify
 
     def handle_bytes(prop: PropertyType):
-        if isinstance(prop[1], bytes):
-            return (prop[0], hexlify(prop[1]).decode(), True)
+        key, value = prop
+        if isinstance(value, (bytes, bytearray, memoryview)):
+            return (key, hexlify(value).decode(), True)
         else:
             # When there is not space in the text, taking it as data
             # to not include hyphens
-            is_data = prop[1] and " " not in prop[1]
-            return (prop[0], prop[1], is_data)
+            is_data = value and " " not in value
+            return (key, value, is_data)
 
     return raise_if_not_confirmed(
         interact(
@@ -1407,7 +1408,7 @@ def show_error_popup(
             time_ms=timeout_ms,
         )
     )
-    return layout  # type: ignore [Expression of type "RustLayout[UiResult]" cannot be assigned to return type "Awaitable[None]"]
+    return layout  # type: ignore [Expression of type "RustLayout[UiResult]" is incompatible with return type "Awaitable[None]"]
 
 
 def request_passphrase_on_host() -> None:

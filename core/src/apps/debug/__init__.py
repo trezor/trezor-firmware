@@ -129,7 +129,7 @@ if __debug__:
     async def return_layout_change() -> None:
         content_tokens = await get_layout_change_content()
 
-        assert DEBUG_CONTEXT is not None
+        assert isinstance(DEBUG_CONTEXT, context.Context)
         if storage.layout_watcher is LAYOUT_WATCHER_LAYOUT:
             await DEBUG_CONTEXT.write(DebugLinkLayout(tokens=content_tokens))
         else:

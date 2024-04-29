@@ -2,8 +2,8 @@ try:
     from trezorio import fatfs, sdcard
 
     HAVE_SDCARD = True
-    is_present = sdcard.is_present  # type: ignore [obscured-by-same-name]
-    capacity = sdcard.capacity  # type: ignore [obscured-by-same-name]
+    is_present = sdcard.is_present
+    capacity = sdcard.capacity
 
 except Exception:
     HAVE_SDCARD = False
@@ -27,7 +27,7 @@ if TYPE_CHECKING:
 
 
 class FilesystemWrapper:
-    _INSTANCE: "FilesystemWrapper" | None = None
+    _INSTANCE: "FilesystemWrapper | None" = None
 
     def __init__(self, mounted: bool) -> None:
         if not HAVE_SDCARD:

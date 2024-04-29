@@ -300,14 +300,14 @@ class BufferReader:
         return byte
 
 
-def obj_eq(self: Any, __o: Any) -> bool:
+def obj_eq(__self: Any, __o: Any) -> bool:
     """
     Compares object contents.
     """
-    if self.__class__ is not __o.__class__:
+    if __self.__class__ is not __o.__class__:
         return False
-    assert not hasattr(self, "__slots__")
-    return self.__dict__ == __o.__dict__
+    assert not hasattr(__self, "__slots__")
+    return __self.__dict__ == __o.__dict__
 
 
 def obj_repr(self: Any) -> str:

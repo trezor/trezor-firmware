@@ -1947,7 +1947,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     title: str,
     ///     button: str,
     ///     info_button: str,
-    ///     items: Iterable[tuple[int, str]],
+    ///     items: Iterable[tuple[int, str | bytes]],
     /// ) -> LayoutObj[UiResult]:
     ///     """Confirm given items but with third button. Always single page
     ///     without scrolling."""
@@ -1957,7 +1957,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     *,
     ///     title: str,
     ///     button: str,
-    ///     items: Iterable[tuple[int, str]],
+    ///     items: Iterable[tuple[int, str | bytes]],
     /// ) -> LayoutObj[UiResult]:
     ///     """Confirm long content with the possibility to go back from any page.
     ///     Meant to be used with confirm_with_info."""

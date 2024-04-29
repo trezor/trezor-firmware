@@ -141,9 +141,9 @@ FILE_SPECIFIC_IGNORES: FileSpecificIgnores = {}
 
 # Allowing for more readable ignore of common problems, with an easy-to-understand alias
 ALIASES: dict[str, str] = {
-    "awaitable-is-generator": 'Return type of generator function must be "Generator" or "Iterable"',
+    "awaitable-return-type": 'Return type of generator function must be compatible with "Generator',
     "obscured-by-same-name": "is obscured by a declaration of the same name",
-    "int-into-enum": 'Expression of type "int.*" cannot be assigned to return type ".*"',
+    "int-into-enum": 'Expression of type "int.*" is incompatible with return type ".*"',
 }
 
 

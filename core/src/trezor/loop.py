@@ -295,7 +295,7 @@ class race(Syscall):
                 # child is a layout -- type-wise, it is an Awaitable, but
                 # implementation-wise it is an Iterable and we know that its __iter__
                 # will return a Generator.
-                child_task = child.__iter__()  # type: ignore [Cannot access member "__iter__" for type "Awaitable[Unknown]";;Cannot access member "__iter__" for type "Coroutine[Unknown, Unknown, Unknown]"]
+                child_task = child.__iter__()  # type: ignore [Cannot access attribute "__iter__" for class "Awaitable[Unknown]";;Cannot access attribute "__iter__" for class "Coroutine[Unknown, Unknown, Unknown]"]
             schedule(child_task, None, None, finalizer)
             scheduled.append(child_task)
 
@@ -319,7 +319,7 @@ class race(Syscall):
                 self.exit(task)
             schedule(self.callback, result)
 
-    def __iter__(self) -> Task:  # type: ignore [awaitable-is-generator]
+    def __iter__(self) -> Task:
         try:
             return (yield self)
         except:  # noqa: E722
@@ -383,20 +383,20 @@ class chan:
         self.putters: list[tuple[Task | None, Any]] = []
         self.takers: list[Task] = []
 
-    def put(self, value: Any) -> Awaitable[None]:  # type: ignore [awaitable-is-generator]
+    def put(self, value: Any) -> Awaitable[None]:  # type: ignore [awaitable-return-type]
         put = chan.Put(self, value)
         try:
-            return (yield put)
+            return (yield put)  # type: ignore [awaitable-return-type]
         except:  # noqa: E722
             entry = (put.task, value)
             if entry in self.putters:
                 self.putters.remove(entry)
             raise
 
-    def take(self) -> Awaitable[Any]:  # type: ignore [awaitable-is-generator]
+    def take(self) -> Awaitable[Any]:  # type: ignore [awaitable-return-type]
         take = chan.Take(self)
         try:
-            return (yield take)
+            return (yield take)  # type: ignore [awaitable-return-type]
         except:  # noqa: E722
             if take.task in self.takers:
                 self.takers.remove(take.task)
@@ -493,7 +493,7 @@ class spawn(Syscall):
         if self.finalizer_callback is not None:
             self.finalizer_callback(self)
 
-    def __iter__(self) -> Task:  # type: ignore [awaitable-is-generator]
+    def __iter__(self) -> Task:
         if self.finished:
             # exit immediately if we already have a return value
             if isinstance(self.return_value, BaseException):

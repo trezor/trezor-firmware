@@ -70,7 +70,7 @@ def _validate_structure(certificate: messages.CardanoTxCertificate) -> None:
     pool_parameters = certificate.pool_parameters  # local_cache_attribute
     CCT = CardanoCertificateType  # local_cache_global
 
-    fields_to_be_empty: dict[CCT, tuple[Any, ...]] = {
+    fields_to_be_empty: dict[CardanoCertificateType, tuple[Any, ...]] = {
         CCT.STAKE_REGISTRATION: (pool, pool_parameters),
         CCT.STAKE_DELEGATION: (pool_parameters,),
         CCT.STAKE_DEREGISTRATION: (pool, pool_parameters),

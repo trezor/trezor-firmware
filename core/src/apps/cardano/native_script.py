@@ -73,7 +73,7 @@ def _validate_native_script_structure(script: messages.CardanoNativeScript) -> N
     invalid_hereafter = script.invalid_hereafter  # local_cache_attribute
     CNST = CardanoNativeScriptType  # local_cache_global
 
-    fields_to_be_empty: dict[CNST, tuple[Any, ...]] = {
+    fields_to_be_empty: dict[CardanoNativeScriptType, tuple[Any, ...]] = {
         CNST.PUB_KEY: (
             scripts,
             required_signatures_count,
