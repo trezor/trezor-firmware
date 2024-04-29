@@ -94,6 +94,11 @@ void haptic_calibrate(void) {
   HAL_Delay(3000);
 }
 
+// Set to `true` if real-time playing is activated. to
+// This prevents the repeated set of `DRV2625_REG_MODE` register
+// which would otherwise stop all playback.
+static bool playing_rtp = false;
+
 void haptic_init(void) {
   // select library
   set_reg(DRV2625_REG_LIBRARY, LIB_SEL | DRV2625_REG_LIBRARY_GAIN_25);
@@ -124,26 +129,29 @@ void haptic_init(void) {
   TIM_Handle.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   TIM_Handle.Init.CounterMode = TIM_COUNTERMODE_UP;
   TIM_Handle.Init.RepetitionCounter = 0;
-  HAL_TIM_PWM_Init(&TIM_Handle);
+  HAL_TIM_OnePulse_Init(&TIM_Handle, TIM_OPMODE_SINGLE);
 
-  TIM_OC_InitTypeDef TIM_OC_InitStructure = {0};
-  TIM_OC_InitStructure.OCMode = TIM_OCMODE_PWM2;
-  TIM_OC_InitStructure.OCPolarity = TIM_OCPOLARITY_HIGH;
-  TIM_OC_InitStructure.Pulse = 1;
-  TIM_OC_InitStructure.OCNPolarity = TIM_OCNPOLARITY_HIGH;
-  TIM_OC_InitStructure.OCFastMode = TIM_OCFAST_DISABLE;
-  HAL_TIM_PWM_ConfigChannel(&TIM_Handle, &TIM_OC_InitStructure, TIM_CHANNEL_1);
+  TIM_OnePulse_InitTypeDef TIM_OP_InitStructure = {0};
+  TIM_OP_InitStructure.OCMode = TIM_OCMODE_PWM2;
+  TIM_OP_InitStructure.OCPolarity = TIM_OCPOLARITY_HIGH;
+  TIM_OP_InitStructure.Pulse = 1;
+  TIM_OP_InitStructure.OCNPolarity = TIM_OCNPOLARITY_HIGH;
+  HAL_TIM_OnePulse_ConfigChannel(&TIM_Handle, &TIM_OP_InitStructure,
+                                 TIM_CHANNEL_1, TIM_CHANNEL_2);
 
   HAL_TIM_OC_Start(&TIM_Handle, TIM_CHANNEL_1);
 
-  TIM16->CR1 |= TIM_CR1_OPM;
   TIM16->BDTR |= TIM_BDTR_MOE;
 }
 
-static bool haptic_play_RTP(int8_t amplitude, uint16_t duration_ms) {
-  if (!set_reg(DRV2625_REG_MODE,
-               DRV2625_REG_MODE_RTP | DRV2625_REG_MODE_TRGFUNC_ENABLE)) {
-    return false;
+bool haptic_play_rtp(int8_t amplitude, uint16_t duration_ms) {
+  if (!playing_rtp) {
+    if (!set_reg(DRV2625_REG_MODE,
+                 DRV2625_REG_MODE_RTP | DRV2625_REG_MODE_TRGFUNC_ENABLE)) {
+      return false;
+    }
+
+    playing_rtp = true;
   }
 
   if (!set_reg(DRV2625_REG_RTP, (uint8_t)amplitude)) {
@@ -166,6 +174,8 @@ static bool haptic_play_RTP(int8_t amplitude, uint16_t duration_ms) {
 }
 
 static void haptic_play_lib(drv2625_lib_effect_t effect) {
+  playing_rtp = false;
+
   set_reg(DRV2625_REG_MODE, DRV2625_REG_MODE_WAVEFORM);
   set_reg(DRV2625_REG_WAVESEQ1, effect);
   set_reg(DRV2625_REG_WAVESEQ2, 0);
@@ -175,13 +185,13 @@ static void haptic_play_lib(drv2625_lib_effect_t effect) {
 void haptic_play(haptic_effect_t effect) {
   switch (effect) {
     case HAPTIC_BUTTON_PRESS:
-      haptic_play_RTP(PRESS_EFFECT_AMPLITUDE, PRESS_EFFECT_DURATION);
+      haptic_play_rtp(PRESS_EFFECT_AMPLITUDE, PRESS_EFFECT_DURATION);
       break;
     case HAPTIC_ALERT:
       haptic_play_lib(ALERT_750MS_100);
       break;
     case HAPTIC_HOLD_TO_CONFIRM:
-      haptic_play_lib(TRANSITION_RAMP_UP_SHORT_SMOOTH_1);
+      haptic_play_lib(DOUBLE_CLICK_60);
       break;
     default:
       break;
@@ -189,5 +199,5 @@ void haptic_play(haptic_effect_t effect) {
 }
 
 bool haptic_test(uint16_t duration_ms) {
-  return haptic_play_RTP(PRODTEST_EFFECT_AMPLITUDE, duration_ms);
+  return haptic_play_rtp(PRODTEST_EFFECT_AMPLITUDE, duration_ms);
 }
