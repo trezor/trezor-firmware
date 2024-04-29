@@ -129,7 +129,7 @@ def _validate_address_parameters_structure(
     script_staking_hash = parameters.script_staking_hash  # local_cache_attribute
     CAT = CardanoAddressType  # local_cache_global
 
-    fields_to_be_empty: dict[CAT, tuple[Any, ...]] = {
+    fields_to_be_empty: dict[CardanoAddressType, tuple[Any, ...]] = {
         CAT.BASE: (
             certificate_pointer,
             script_payment_hash,

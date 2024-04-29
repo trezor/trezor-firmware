@@ -46,7 +46,8 @@ class SigHashType(IntEnum):
 
     @classmethod
     def from_int(cls, sighash_type: int) -> "SigHashType":
-        for val in cls.__dict__.values():  # type: SigHashType
+        val: SigHashType
+        for val in cls.__dict__.values():
             if val == sighash_type:
                 return val
         raise ValueError("Unsupported sighash type.")

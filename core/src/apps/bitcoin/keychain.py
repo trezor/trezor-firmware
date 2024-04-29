@@ -316,7 +316,7 @@ def _get_unlock_schemas(
 
 def with_keychain(func: HandlerWithCoinInfo[MsgOut]) -> Handler[MsgIn, MsgOut]:
     async def wrapper(
-        msg: MsgIn,
+        msg: BitcoinMessage,
         auth_msg: MessageType | None = None,
     ) -> MsgOut:
         coin = _get_coin_by_name(msg.coin_name)

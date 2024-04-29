@@ -418,7 +418,7 @@ def get_pinlocked_handler(
     if msg_type in workflow.ALLOW_WHILE_LOCKED:
         return orig_handler
 
-    async def wrapper(msg: wire.Msg) -> protobuf.MessageType:
+    async def wrapper(msg: protobuf.MessageType) -> protobuf.MessageType:
         await unlock_device()
         return await orig_handler(msg)
 
@@ -442,7 +442,7 @@ def boot() -> None:
     MT = MessageType  # local_cache_global
 
     # Register workflow handlers
-    for msg_type, handler in (
+    for msg_type, handler in [
         (MT.Initialize, handle_Initialize),
         (MT.GetFeatures, handle_GetFeatures),
         (MT.Cancel, handle_Cancel),
@@ -453,8 +453,8 @@ def boot() -> None:
         (MT.UnlockPath, handle_UnlockPath),
         (MT.CancelAuthorization, handle_CancelAuthorization),
         (MT.SetBusy, handle_SetBusy),
-    ):
-        workflow_handlers.register(msg_type, handler)  # type: ignore [cannot be assigned to type]
+    ]:
+        workflow_handlers.register(msg_type, handler)
 
     reload_settings_from_storage()
     if config.is_unlocked():

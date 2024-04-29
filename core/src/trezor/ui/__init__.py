@@ -45,7 +45,7 @@ if __debug__:
         display.refresh()
 
 else:
-    refresh = display.refresh  # type: ignore [obscured-by-same-name]
+    refresh = display.refresh
 
 
 # in both debug and production, emulator needs to draw the screen explicitly
@@ -188,6 +188,6 @@ class Layout(Generic[T]):
             content_store.append(self.__class__.__name__)
 
 
-def wait_until_layout_is_running() -> Awaitable[None]:  # type: ignore [awaitable-is-generator]
+def wait_until_layout_is_running() -> Awaitable[None]:  # type: ignore [awaitable-return-type]
     while not layout_chan.takers:
-        yield
+        yield  # type: ignore [awaitable-return-type]

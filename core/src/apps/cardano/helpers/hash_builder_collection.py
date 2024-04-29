@@ -23,7 +23,7 @@ class HashBuilderCollection:
         self.size = size
         self.remaining = size
         self.hash_fn: HashContext | None = None
-        self.parent: "HashBuilderCollection" | None = None
+        self.parent: "HashBuilderCollection | None" = None
         self.has_unfinished_child = False
 
     def start(self, hash_fn: HashContext) -> "HashBuilderCollection":

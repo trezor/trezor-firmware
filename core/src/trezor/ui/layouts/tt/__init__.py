@@ -193,7 +193,7 @@ class RustLayout(LayoutParentType[T]):
         # Turn the brightness on again.
         ui.backlight_fade(self.BACKLIGHT_LEVEL)
 
-    def handle_input_and_rendering(self) -> loop.Task:  # type: ignore [awaitable-is-generator]
+    def handle_input_and_rendering(self) -> loop.Task:
         from trezor import workflow
 
         touch = loop.wait(io.TOUCH)
@@ -209,7 +209,7 @@ class RustLayout(LayoutParentType[T]):
                 raise ui.Result(msg)
             self._paint()
 
-    def handle_timers(self) -> loop.Task:  # type: ignore [awaitable-is-generator]
+    def handle_timers(self) -> loop.Task:
         while True:
             # Using `yield` instead of `await` to avoid allocations.
             token = yield self.timer
@@ -691,7 +691,7 @@ async def should_show_payment_request_details(
 
 async def should_show_more(
     title: str,
-    para: Iterable[tuple[int, str]],
+    para: Iterable[tuple[int, str | bytes]],
     button_text: str | None = None,
     br_type: str = "should_show_more",
     br_code: ButtonRequestType = BR_TYPE_OTHER,
@@ -1397,7 +1397,7 @@ def show_error_popup(
             allow_cancel=False,
         )
     )
-    return layout  # type: ignore [Expression of type "RustLayout[UiResult]" cannot be assigned to return type "Awaitable[None]"]
+    return layout  # type: ignore [Expression of type "RustLayout[UiResult]" is incompatible with return type "Awaitable[None]"]
 
 
 def request_passphrase_on_host() -> None:

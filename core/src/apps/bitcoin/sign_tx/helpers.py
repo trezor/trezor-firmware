@@ -241,80 +241,80 @@ class UiConfirmMultipleAccounts(UiConfirm):
         return layout.confirm_multiple_accounts()
 
 
-def confirm_output(output: TxOutput, coin: CoinInfo, amount_unit: AmountUnit, output_index: int, chunkify: bool) -> Awaitable[None]:  # type: ignore [awaitable-is-generator]
-    return (yield UiConfirmOutput(output, coin, amount_unit, output_index, chunkify))
+def confirm_output(output: TxOutput, coin: CoinInfo, amount_unit: AmountUnit, output_index: int, chunkify: bool) -> Awaitable[None]:  # type: ignore [awaitable-return-type]
+    return (yield UiConfirmOutput(output, coin, amount_unit, output_index, chunkify))  # type: ignore [awaitable-return-type]
 
 
-def confirm_decred_sstx_submission(output: TxOutput, coin: CoinInfo, amount_unit: AmountUnit) -> Awaitable[None]:  # type: ignore [awaitable-is-generator]
-    return (yield UiConfirmDecredSSTXSubmission(output, coin, amount_unit))
+def confirm_decred_sstx_submission(output: TxOutput, coin: CoinInfo, amount_unit: AmountUnit) -> Awaitable[None]:  # type: ignore [awaitable-return-type]
+    return (yield UiConfirmDecredSSTXSubmission(output, coin, amount_unit))  # type: ignore [awaitable-return-type]
 
 
-def should_show_payment_request_details(payment_req: TxAckPaymentRequest, coin: CoinInfo, amount_unit: AmountUnit) -> Awaitable[bool]:  # type: ignore [awaitable-is-generator]
-    return (yield UiConfirmPaymentRequest(payment_req, coin, amount_unit))
+def should_show_payment_request_details(payment_req: TxAckPaymentRequest, coin: CoinInfo, amount_unit: AmountUnit) -> Awaitable[bool]:  # type: ignore [awaitable-return-type]
+    return (yield UiConfirmPaymentRequest(payment_req, coin, amount_unit))  # type: ignore [awaitable-return-type]
 
 
-def confirm_replacement(description: str, txid: bytes) -> Awaitable[Any]:  # type: ignore [awaitable-is-generator]
-    return (yield UiConfirmReplacement(description, txid))
+def confirm_replacement(description: str, txid: bytes) -> Awaitable[Any]:  # type: ignore [awaitable-return-type]
+    return (yield UiConfirmReplacement(description, txid))  # type: ignore [awaitable-return-type]
 
 
-def confirm_modify_output(txo: TxOutput, orig_txo: TxOutput, coin: CoinInfo, amount_unit: AmountUnit) -> Awaitable[Any]:  # type: ignore [awaitable-is-generator]
-    return (yield UiConfirmModifyOutput(txo, orig_txo, coin, amount_unit))
+def confirm_modify_output(txo: TxOutput, orig_txo: TxOutput, coin: CoinInfo, amount_unit: AmountUnit) -> Awaitable[Any]:  # type: ignore [awaitable-return-type]
+    return (yield UiConfirmModifyOutput(txo, orig_txo, coin, amount_unit))  # type: ignore [awaitable-return-type]
 
 
-def confirm_modify_fee(title: str, user_fee_change: int, total_fee_new: int, fee_rate: float, coin: CoinInfo, amount_unit: AmountUnit) -> Awaitable[Any]:  # type: ignore [awaitable-is-generator]
+def confirm_modify_fee(title: str, user_fee_change: int, total_fee_new: int, fee_rate: float, coin: CoinInfo, amount_unit: AmountUnit) -> Awaitable[Any]:  # type: ignore [awaitable-return-type]
     return (
-        yield UiConfirmModifyFee(
+        yield UiConfirmModifyFee(  # type: ignore [awaitable-return-type]
             title, user_fee_change, total_fee_new, fee_rate, coin, amount_unit
         )
     )
 
 
-def confirm_total(spending: int, fee: int, fee_rate: float, coin: CoinInfo, amount_unit: AmountUnit, address_n: Bip32Path | None) -> Awaitable[None]:  # type: ignore [awaitable-is-generator]
-    return (yield UiConfirmTotal(spending, fee, fee_rate, coin, amount_unit, address_n))
+def confirm_total(spending: int, fee: int, fee_rate: float, coin: CoinInfo, amount_unit: AmountUnit, address_n: Bip32Path | None) -> Awaitable[None]:  # type: ignore [awaitable-return-type]
+    return (yield UiConfirmTotal(spending, fee, fee_rate, coin, amount_unit, address_n))  # type: ignore [awaitable-return-type]
 
 
-def confirm_joint_total(spending: int, total: int, coin: CoinInfo, amount_unit: AmountUnit) -> Awaitable[Any]:  # type: ignore [awaitable-is-generator]
-    return (yield UiConfirmJointTotal(spending, total, coin, amount_unit))
+def confirm_joint_total(spending: int, total: int, coin: CoinInfo, amount_unit: AmountUnit) -> Awaitable[Any]:  # type: ignore [awaitable-return-type]
+    return (yield UiConfirmJointTotal(spending, total, coin, amount_unit))  # type: ignore [awaitable-return-type]
 
 
-def confirm_feeoverthreshold(fee: int, coin: CoinInfo, amount_unit: AmountUnit) -> Awaitable[Any]:  # type: ignore [awaitable-is-generator]
-    return (yield UiConfirmFeeOverThreshold(fee, coin, amount_unit))
+def confirm_feeoverthreshold(fee: int, coin: CoinInfo, amount_unit: AmountUnit) -> Awaitable[Any]:  # type: ignore [awaitable-return-type]
+    return (yield UiConfirmFeeOverThreshold(fee, coin, amount_unit))  # type: ignore [awaitable-return-type]
 
 
-def confirm_change_count_over_threshold(change_count: int) -> Awaitable[Any]:  # type: ignore [awaitable-is-generator]
-    return (yield UiConfirmChangeCountOverThreshold(change_count))
+def confirm_change_count_over_threshold(change_count: int) -> Awaitable[Any]:  # type: ignore [awaitable-return-type]
+    return (yield UiConfirmChangeCountOverThreshold(change_count))  # type: ignore [awaitable-return-type]
 
 
-def confirm_unverified_external_input() -> Awaitable[Any]:  # type: ignore [awaitable-is-generator]
-    return (yield UiConfirmUnverifiedExternalInput())
+def confirm_unverified_external_input() -> Awaitable[Any]:  # type: ignore [awaitable-return-type]
+    return (yield UiConfirmUnverifiedExternalInput())  # type: ignore [awaitable-return-type]
 
 
-def confirm_foreign_address(address_n: list) -> Awaitable[Any]:  # type: ignore [awaitable-is-generator]
-    return (yield UiConfirmForeignAddress(address_n))
+def confirm_foreign_address(address_n: list) -> Awaitable[Any]:  # type: ignore [awaitable-return-type]
+    return (yield UiConfirmForeignAddress(address_n))  # type: ignore [awaitable-return-type]
 
 
-def confirm_nondefault_locktime(lock_time: int, lock_time_disabled: bool) -> Awaitable[Any]:  # type: ignore [awaitable-is-generator]
-    return (yield UiConfirmNonDefaultLocktime(lock_time, lock_time_disabled))
+def confirm_nondefault_locktime(lock_time: int, lock_time_disabled: bool) -> Awaitable[Any]:  # type: ignore [awaitable-return-type]
+    return (yield UiConfirmNonDefaultLocktime(lock_time, lock_time_disabled))  # type: ignore [awaitable-return-type]
 
 
-def confirm_multiple_accounts() -> Awaitable[Any]:  # type: ignore [awaitable-is-generator]
-    return (yield UiConfirmMultipleAccounts())
+def confirm_multiple_accounts() -> Awaitable[Any]:  # type: ignore [awaitable-return-type]
+    return (yield UiConfirmMultipleAccounts())  # type: ignore [awaitable-return-type]
 
 
-def request_tx_meta(tx_req: TxRequest, coin: CoinInfo, tx_hash: bytes | None = None) -> Awaitable[PrevTx]:  # type: ignore [awaitable-is-generator]
+def request_tx_meta(tx_req: TxRequest, coin: CoinInfo, tx_hash: bytes | None = None) -> Awaitable[PrevTx]:  # type: ignore [awaitable-return-type]
     from trezor.messages import TxAckPrevMeta
 
     assert tx_req.details is not None
     tx_req.request_type = RequestType.TXMETA
     tx_req.details.tx_hash = tx_hash
-    ack = yield TxAckPrevMeta, tx_req
+    ack = yield TxAckPrevMeta, tx_req  # type: ignore [awaitable-return-type]
     _clear_tx_request(tx_req)
     return _sanitize_tx_meta(ack.tx, coin)
 
 
 def request_tx_extra_data(
     tx_req: TxRequest, offset: int, size: int, tx_hash: bytes | None = None
-) -> Awaitable[bytearray]:  # type: ignore [awaitable-is-generator]
+) -> Awaitable[bytearray]:  # type: ignore [awaitable-return-type]
     from trezor.messages import TxAckPrevExtraData
 
     details = tx_req.details  # local_cache_attribute
@@ -324,12 +324,12 @@ def request_tx_extra_data(
     details.extra_data_offset = offset
     details.extra_data_len = size
     details.tx_hash = tx_hash
-    ack = yield TxAckPrevExtraData, tx_req
+    ack = yield TxAckPrevExtraData, tx_req  # type: ignore [awaitable-return-type]
     _clear_tx_request(tx_req)
     return ack.tx.extra_data_chunk
 
 
-def request_tx_input(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes | None = None) -> Awaitable[TxInput]:  # type: ignore [awaitable-is-generator]
+def request_tx_input(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes | None = None) -> Awaitable[TxInput]:  # type: ignore [awaitable-return-type]
     from trezor.messages import TxAckInput
 
     assert tx_req.details is not None
@@ -339,24 +339,24 @@ def request_tx_input(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes |
     else:
         tx_req.request_type = RequestType.TXINPUT
     tx_req.details.request_index = i
-    ack = yield TxAckInput, tx_req
+    ack = yield TxAckInput, tx_req  # type: ignore [awaitable-return-type]
     _clear_tx_request(tx_req)
     return _sanitize_tx_input(ack.tx.input, coin)
 
 
-def request_tx_prev_input(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes | None = None) -> Awaitable[PrevInput]:  # type: ignore [awaitable-is-generator]
+def request_tx_prev_input(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes | None = None) -> Awaitable[PrevInput]:  # type: ignore [awaitable-return-type]
     from trezor.messages import TxAckPrevInput
 
     assert tx_req.details is not None
     tx_req.request_type = RequestType.TXINPUT
     tx_req.details.request_index = i
     tx_req.details.tx_hash = tx_hash
-    ack = yield TxAckPrevInput, tx_req
+    ack = yield TxAckPrevInput, tx_req  # type: ignore [awaitable-return-type]
     _clear_tx_request(tx_req)
     return _sanitize_tx_prev_input(ack.tx.input, coin)
 
 
-def request_tx_output(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes | None = None) -> Awaitable[TxOutput]:  # type: ignore [awaitable-is-generator]
+def request_tx_output(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes | None = None) -> Awaitable[TxOutput]:  # type: ignore [awaitable-return-type]
     from trezor.messages import TxAckOutput
 
     assert tx_req.details is not None
@@ -366,38 +366,38 @@ def request_tx_output(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes 
     else:
         tx_req.request_type = RequestType.TXOUTPUT
     tx_req.details.request_index = i
-    ack = yield TxAckOutput, tx_req
+    ack = yield TxAckOutput, tx_req  # type: ignore [awaitable-return-type]
     _clear_tx_request(tx_req)
     return _sanitize_tx_output(ack.tx.output, coin)
 
 
-def request_tx_prev_output(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes | None = None) -> Awaitable[PrevOutput]:  # type: ignore [awaitable-is-generator]
+def request_tx_prev_output(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes | None = None) -> Awaitable[PrevOutput]:  # type: ignore [awaitable-return-type]
     from trezor.messages import TxAckPrevOutput
 
     assert tx_req.details is not None
     tx_req.request_type = RequestType.TXOUTPUT
     tx_req.details.request_index = i
     tx_req.details.tx_hash = tx_hash
-    ack = yield TxAckPrevOutput, tx_req
+    ack = yield TxAckPrevOutput, tx_req  # type: ignore [awaitable-return-type]
     _clear_tx_request(tx_req)
     # return sanitize_tx_prev_output(ack.tx, coin)  # no sanitize is required
     return ack.tx.output
 
 
-def request_payment_req(tx_req: TxRequest, i: int) -> Awaitable[TxAckPaymentRequest]:  # type: ignore [awaitable-is-generator]
+def request_payment_req(tx_req: TxRequest, i: int) -> Awaitable[TxAckPaymentRequest]:  # type: ignore [awaitable-return-type]
     from trezor.messages import TxAckPaymentRequest
 
     assert tx_req.details is not None
     tx_req.request_type = RequestType.TXPAYMENTREQ
     tx_req.details.request_index = i
-    ack = yield TxAckPaymentRequest, tx_req
+    ack = yield TxAckPaymentRequest, tx_req  # type: ignore [awaitable-return-type]
     _clear_tx_request(tx_req)
     return _sanitize_payment_req(ack)
 
 
-def request_tx_finish(tx_req: TxRequest) -> Awaitable[None]:  # type: ignore [awaitable-is-generator]
+def request_tx_finish(tx_req: TxRequest) -> Awaitable[None]:  # type: ignore [awaitable-return-type]
     tx_req.request_type = RequestType.TXFINISHED
-    yield None, tx_req
+    yield None, tx_req  # type: ignore [awaitable-return-type]
     _clear_tx_request(tx_req)
 
 
