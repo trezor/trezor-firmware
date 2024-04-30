@@ -68,6 +68,10 @@ static const int I2C_MAX_RETRY_COUNT = 10;
 // Maximum number of times to retry reading Optiga's response to a command.
 static const int MAX_RETRY_READ = 10000;
 
+// Maximum number of times to retry reading Optiga's response to a command when
+// it claims it's not busy executing a command.
+static const int MAX_RETRY_READ_NOT_BUSY = 10;
+
 // Maximum number of packets per response. Used for flushing old reponses.
 static const int MAX_RESPONSE_PACKET_COUNT = 15;
 
@@ -371,6 +375,10 @@ optiga_result optiga_set_data_reg_len(size_t size) {
 }
 
 static optiga_result optiga_read(void) {
+  // The number of times we tried reading Optiga's response to a command while
+  // it claimed it's not busy executing a command.
+  int not_busy_count = 0;
+
   for (int i = 0; i < MAX_RETRY_READ; ++i) {
     optiga_result ret = optiga_i2c_write(&REG_I2C_STATE, 1);
     if (OPTIGA_SUCCESS != ret) {
@@ -410,9 +418,12 @@ static optiga_result optiga_read(void) {
 
     if ((frame_buffer[0] & I2C_STATE_BYTE1_BUSY) == 0) {
       // Optiga has no response ready and is not busy. This shouldn't happen if
-      // we are expecting to read a response, but Optiga occasionally fails to
-      // give any response to a command.
-      return OPTIGA_ERR_UNEXPECTED;
+      // we are expecting to read a response. However, we have observed that if
+      // we retry reading, then Optiga may return a response.
+      if (not_busy_count >= MAX_RETRY_READ_NOT_BUSY) {
+        return OPTIGA_ERR_UNEXPECTED;
+      }
+      not_busy_count += 1;
     }
   }
 
