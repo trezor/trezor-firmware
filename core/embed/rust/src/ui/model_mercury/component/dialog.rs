@@ -97,7 +97,6 @@ where
     }
 }
 
-#[derive(Clone)]
 pub struct IconDialog<U> {
     image: Child<BlendedImage>,
     paragraphs: Paragraphs<ParagraphVecShort<'static>>,
