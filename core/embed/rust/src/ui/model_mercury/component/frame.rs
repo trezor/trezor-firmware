@@ -250,11 +250,15 @@ impl<T> crate::ui::flow::Swipable for Frame<T>
 where
     T: Component + crate::ui::flow::Swipable,
 {
-    fn can_swipe(&self, direction: crate::ui::component::SwipeDirection) -> bool {
-        self.inner().can_swipe(direction)
+    fn swipe_start(
+        &mut self,
+        ctx: &mut EventCtx,
+        direction: crate::ui::component::SwipeDirection,
+    ) -> bool {
+        self.update_content(ctx, |ctx, inner| inner.swipe_start(ctx, direction))
     }
 
-    fn swiped(&mut self, ctx: &mut EventCtx, direction: crate::ui::component::SwipeDirection) {
-        self.update_content(ctx, |ctx, inner| inner.swiped(ctx, direction))
+    fn swipe_finished(&self) -> bool {
+        self.inner().swipe_finished()
     }
 }

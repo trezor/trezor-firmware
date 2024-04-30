@@ -7,7 +7,6 @@ use crate::{
     },
 };
 
-#[derive(Clone)]
 pub struct Timeout {
     time_ms: u32,
     timer: Option<TimerToken>,

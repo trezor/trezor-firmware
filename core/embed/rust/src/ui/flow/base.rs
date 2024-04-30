@@ -16,18 +16,21 @@ impl SwipeDirection {
 }
 
 /// Component must implement this trait in order to be part of swipe-based flow.
-/// The process of receiving a swipe is two-step, because in order to render the
-/// transition animation Flow makes a copy of the pre-swipe state of the
-/// component to render it along with the post-swipe state.
+///
+/// Default implementation ignores every swipe.
 pub trait Swipable {
-    /// Return true if component can handle swipe in a given direction.
-    fn can_swipe(&self, _direction: SwipeDirection) -> bool {
+    /// Attempt a swipe. Return false if component in its current state doesn't
+    /// accept a swipe in the given direction. Start a transition animation
+    /// if true is returned.
+    fn swipe_start(&mut self, _ctx: &mut EventCtx, _direction: SwipeDirection) -> bool {
         false
     }
 
-    /// Make component react to swipe event. Only called if component returned
-    /// true in the previous function.
-    fn swiped(&mut self, _ctx: &mut EventCtx, _direction: SwipeDirection) {}
+    /// Return true when transition animation is finished. SwipeFlow needs to
+    /// know this in order to resume normal input processing.
+    fn swipe_finished(&self) -> bool {
+        true
+    }
 }
 
 /// Component::Msg for component parts of a flow. Converting results of
@@ -68,7 +71,7 @@ impl<Q> Decision<Q> {
 }
 
 /// Encodes the flow logic as a set of states, and transitions between them
-/// triggered by events and swipes.
+/// triggered by events and swipes. Roughly the C in MVC.
 pub trait FlowState
 where
     Self: Sized + Copy + Eq + ToPrimitive,
