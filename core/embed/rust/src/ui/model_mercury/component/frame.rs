@@ -35,7 +35,7 @@ impl<T> Frame<T>
 where
     T: Component,
 {
-    pub fn new(alignment: Alignment, title: TString<'static>, content: T) -> Self {
+    pub const fn new(alignment: Alignment, title: TString<'static>, content: T) -> Self {
         Self {
             title: Child::new(
                 Label::new(title, alignment, theme::label_title_main()).vertically_centered(),
@@ -49,19 +49,19 @@ where
         }
     }
 
-    pub fn left_aligned(title: TString<'static>, content: T) -> Self {
+    pub const fn left_aligned(title: TString<'static>, content: T) -> Self {
         Self::new(Alignment::Start, title, content)
     }
 
-    pub fn right_aligned(title: TString<'static>, content: T) -> Self {
+    pub const fn right_aligned(title: TString<'static>, content: T) -> Self {
         Self::new(Alignment::End, title, content)
     }
 
-    pub fn centered(title: TString<'static>, content: T) -> Self {
+    pub const fn centered(title: TString<'static>, content: T) -> Self {
         Self::new(Alignment::Center, title, content)
     }
 
-    pub fn with_border(mut self, border: Insets) -> Self {
+    pub const fn with_border(mut self, border: Insets) -> Self {
         self.border = border;
         self
     }
@@ -128,6 +128,11 @@ where
         }
         self.footer = Some(footer);
         self
+    }
+
+    pub fn with_danger(self) -> Self {
+        self.button_styled(theme::button_danger())
+            .title_styled(theme::label_title_danger())
     }
 
     pub fn inner(&self) -> &T {

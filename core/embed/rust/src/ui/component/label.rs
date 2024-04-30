@@ -18,7 +18,7 @@ pub struct Label<'a> {
 }
 
 impl<'a> Label<'a> {
-    pub fn new(text: TString<'a>, align: Alignment, style: TextStyle) -> Self {
+    pub const fn new(text: TString<'a>, align: Alignment, style: TextStyle) -> Self {
         Self {
             text,
             layout: TextLayout::new(style).with_align(align),
@@ -26,34 +26,34 @@ impl<'a> Label<'a> {
         }
     }
 
-    pub fn left_aligned(text: TString<'a>, style: TextStyle) -> Self {
+    pub const fn left_aligned(text: TString<'a>, style: TextStyle) -> Self {
         Self::new(text, Alignment::Start, style)
     }
 
-    pub fn right_aligned(text: TString<'a>, style: TextStyle) -> Self {
+    pub const fn right_aligned(text: TString<'a>, style: TextStyle) -> Self {
         Self::new(text, Alignment::End, style)
     }
 
-    pub fn centered(text: TString<'a>, style: TextStyle) -> Self {
+    pub const fn centered(text: TString<'a>, style: TextStyle) -> Self {
         Self::new(text, Alignment::Center, style)
     }
 
-    pub fn top_aligned(mut self) -> Self {
+    pub const fn top_aligned(mut self) -> Self {
         self.vertical = Alignment::Start;
         self
     }
 
-    pub fn vertically_centered(mut self) -> Self {
+    pub const fn vertically_centered(mut self) -> Self {
         self.vertical = Alignment::Center;
         self
     }
 
-    pub fn bottom_aligned(mut self) -> Self {
+    pub const fn bottom_aligned(mut self) -> Self {
         self.vertical = Alignment::End;
         self
     }
 
-    pub fn styled(mut self, style: TextStyle) -> Self {
+    pub const fn styled(mut self, style: TextStyle) -> Self {
         self.layout.style = style;
         self
     }
@@ -74,7 +74,7 @@ impl<'a> Label<'a> {
         self.layout.bounds
     }
 
-    pub fn alignment(&self) -> Alignment {
+    pub const fn alignment(&self) -> Alignment {
         self.layout.align
     }
 

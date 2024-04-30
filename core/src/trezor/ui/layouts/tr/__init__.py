@@ -452,6 +452,14 @@ def confirm_path_warning(
     )
 
 
+def confirm_multisig_warning() -> Awaitable[None]:
+    return show_warning(
+        "warning_multisig",
+        TR.send__receiving_to_multisig,
+        TR.words__continue_anyway,
+    )
+
+
 def confirm_homescreen(image: bytes) -> Awaitable[None]:
     return raise_if_not_confirmed(
         interact(

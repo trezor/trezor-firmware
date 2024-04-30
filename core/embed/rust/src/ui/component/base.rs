@@ -81,7 +81,7 @@ pub struct Child<T> {
 }
 
 impl<T> Child<T> {
-    pub fn new(component: T) -> Self {
+    pub const fn new(component: T) -> Self {
         Self {
             component,
             marked_for_paint: true,

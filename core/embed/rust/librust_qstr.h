@@ -30,14 +30,21 @@ static void _librust_qstrs(void) {
   MP_QSTR_addr_mismatch__wrong_derivation_path;
   MP_QSTR_addr_mismatch__xpub_mismatch;
   MP_QSTR_address;
+  MP_QSTR_address__cancel_contact_support;
+  MP_QSTR_address__cancel_receive;
+  MP_QSTR_address__confirmed;
   MP_QSTR_address__public_key;
+  MP_QSTR_address__qr_code;
   MP_QSTR_address__title_cosigner;
   MP_QSTR_address__title_receive_address;
   MP_QSTR_address__title_yours;
+  MP_QSTR_address_details__account_info;
   MP_QSTR_address_details__derivation_path;
+  MP_QSTR_address_details__derivation_path_colon;
   MP_QSTR_address_details__title_receive_address;
   MP_QSTR_address_details__title_receiving_to;
   MP_QSTR_address_label;
+  MP_QSTR_address_qr;
   MP_QSTR_address_title;
   MP_QSTR_allow_cancel;
   MP_QSTR_altcoin_tx_summary;
@@ -209,6 +216,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_flow_get_address;
   MP_QSTR_flow_prompt_backup;
   MP_QSTR_flow_show_share_words;
+  MP_QSTR_flow_warning_hi_prio;
   MP_QSTR_get_language;
   MP_QSTR_hold;
   MP_QSTR_hold_danger;
@@ -236,6 +244,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_inputs__return;
   MP_QSTR_inputs__show;
   MP_QSTR_inputs__space;
+  MP_QSTR_instructions__continue_in_app;
   MP_QSTR_instructions__hold_to_confirm;
   MP_QSTR_instructions__swipe_up;
   MP_QSTR_instructions__tap_to_confirm;
@@ -620,6 +629,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__array_of;
   MP_QSTR_words__blockhash;
   MP_QSTR_words__buying;
+  MP_QSTR_words__cancel_and_exit;
   MP_QSTR_words__confirm;
   MP_QSTR_words__confirm_fee;
   MP_QSTR_words__contains;

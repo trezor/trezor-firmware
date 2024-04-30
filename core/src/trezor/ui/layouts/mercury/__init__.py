@@ -279,17 +279,6 @@ async def confirm_action(
     )
 
 
-async def flow_demo() -> None:
-    await raise_if_not_confirmed(
-        interact(
-            RustLayout(trezorui2.flow_get_address()),
-            "get_address",
-            BR_TYPE_OTHER,
-        ),
-        ActionCancelled,
-    )
-
-
 async def confirm_single(
     br_type: str,
     title: str,
@@ -362,7 +351,7 @@ async def confirm_path_warning(
     path: str,
     path_type: str | None = None,
 ) -> None:
-    title = (
+    description = (
         TR.addr_mismatch__wrong_derivation_path
         if not path_type
         else f"{TR.words__unknown} {path_type.lower()}."
@@ -370,15 +359,27 @@ async def confirm_path_warning(
     await raise_if_not_confirmed(
         interact(
             RustLayout(
-                trezorui2.show_warning(
-                    title=title,
-                    value=path,
-                    description=TR.words__continue_anyway,
-                    button=TR.buttons__continue,
+                trezorui2.flow_warning_hi_prio(
+                    title=f"{TR.words__warning}!", description=description, value=path
                 )
             ),
             "path_warning",
             br_code=ButtonRequestType.UnknownDerivationPath,
+        )
+    )
+
+
+async def confirm_multisig_warning() -> None:
+    await raise_if_not_confirmed(
+        interact(
+            RustLayout(
+                trezorui2.flow_warning_hi_prio(
+                    title=f"{TR.words__important}!",
+                    description=TR.send__receiving_to_multisig,
+                )
+            ),
+            "warning_multisig",
+            br_code=ButtonRequestType.Warning,
         )
     )
 
@@ -417,77 +418,34 @@ async def show_address(
     br_code: ButtonRequestType = ButtonRequestType.Address,
     chunkify: bool = False,
 ) -> None:
-    mismatch_title = mismatch_title or TR.addr_mismatch__mismatch  # def_arg
-    send_button_request = True
+    def xpub_title(i: int) -> str:
+        result = f"Multisig XPUB #{i + 1}\n"
+        result += (
+            f"({TR.address__title_yours.lower()})"
+            if i == multisig_index
+            else f"({TR.address__title_cosigner.lower()})"
+        )
+        return result
 
-    if title is None:
-        title = TR.address__title_receive_address
-        if multisig_index is not None:
-            title = f"{title}\n(MULTISIG)"
-        details_title = TR.send__title_receiving_to
-    elif details_title is None:
-        details_title = title
-
-    layout = RustLayout(
-        trezorui2.confirm_address(
-            title=title,
-            data=address,
-            description=network or "",
-            extra=None,
-            chunkify=chunkify,
+    await raise_if_not_confirmed(
+        interact(
+            RustLayout(
+                trezorui2.flow_get_address(
+                    address=address,
+                    description=network or "",
+                    extra=None,
+                    chunkify=chunkify,
+                    address_qr=address if address_qr is None else address_qr,
+                    case_sensitive=case_sensitive,
+                    account=account,
+                    path=path,
+                    xpubs=[(xpub_title(i), xpub) for i, xpub in enumerate(xpubs)],
+                )
+            ),
+            br_type,
+            br_code,
         )
     )
-
-    while True:
-        if send_button_request:
-            send_button_request = False
-            await button_request(
-                br_type,
-                br_code,
-                pages=layout.page_count(),
-            )
-        layout.request_complete_repaint()
-        result = await ctx_wait(layout)
-
-        # User pressed right button.
-        if result is CONFIRMED:
-            break
-
-        # User pressed corner button or swiped left, go to address details.
-        elif result is INFO:
-
-            def xpub_title(i: int) -> str:
-                result = f"MULTISIG XPUB #{i + 1}\n"
-                result += (
-                    f"({TR.address__title_yours})"
-                    if i == multisig_index
-                    else f"({TR.address__title_cosigner})"
-                )
-                return result
-
-            result = await ctx_wait(
-                RustLayout(
-                    trezorui2.show_address_details(
-                        qr_title=title,
-                        address=address if address_qr is None else address_qr,
-                        case_sensitive=case_sensitive,
-                        details_title=details_title,
-                        account=account,
-                        path=path,
-                        xpubs=[(xpub_title(i), xpub) for i, xpub in enumerate(xpubs)],
-                    )
-                )
-            )
-            assert result is CANCELLED
-
-        else:
-            result = await ctx_wait(
-                RustLayout(trezorui2.show_mismatch(title=mismatch_title))
-            )
-            assert result in (CONFIRMED, CANCELLED)
-            # Right button aborts action, left goes back to showing address.
-            if result is CONFIRMED:
-                raise ActionCancelled
 
 
 def show_pubkey(
@@ -1305,7 +1263,7 @@ async def confirm_signverify(
 
     items: list[tuple[str, str]] = []
     if account is not None:
-        items.append((f"{TR.words__account}:", account))
+        items.append((TR.words__account, account))
     if path is not None:
         items.append((TR.address_details__derivation_path, path))
     items.append(

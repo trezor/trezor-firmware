@@ -10,6 +10,7 @@ use super::theme;
 
 pub use crate::ui::component::SwipeDirection;
 
+#[derive(Clone)]
 pub struct Swipe {
     pub area: Rect,
     pub allow_up: bool,

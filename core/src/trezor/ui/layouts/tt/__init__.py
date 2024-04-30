@@ -397,6 +397,14 @@ def confirm_path_warning(path: str, path_type: str | None = None) -> Awaitable[N
     )
 
 
+def confirm_multisig_warning() -> Awaitable[None]:
+    return show_warning(
+        "warning_multisig",
+        TR.send__receiving_to_multisig,
+        TR.words__continue_anyway,
+    )
+
+
 def confirm_homescreen(image: bytes) -> Awaitable[None]:
     return raise_if_not_confirmed(
         interact(
@@ -1323,7 +1331,7 @@ async def confirm_signverify(
     if account is not None:
         items.append((f"{TR.words__account}:", account))
     if path is not None:
-        items.append((TR.address_details__derivation_path, path))
+        items.append((TR.address_details__derivation_path_colon, path))
     items.append(
         (
             TR.sign_message__message_size,
