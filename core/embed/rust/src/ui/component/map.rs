@@ -1,7 +1,6 @@
 use super::{Component, Event, EventCtx};
 use crate::ui::{geometry::Rect, shape::Renderer};
 
-#[derive(Clone)]
 pub struct MsgMap<T, F> {
     inner: T,
     func: F,
@@ -57,11 +56,11 @@ impl<T, F> crate::ui::flow::Swipable for MsgMap<T, F>
 where
     T: Component + crate::ui::flow::Swipable,
 {
-    fn can_swipe(&self, direction: crate::ui::component::SwipeDirection) -> bool {
-        self.inner.can_swipe(direction)
+    fn swipe_start(&mut self, ctx: &mut EventCtx, direction: super::SwipeDirection) -> bool {
+        self.inner.swipe_start(ctx, direction)
     }
 
-    fn swiped(&mut self, ctx: &mut EventCtx, direction: crate::ui::component::SwipeDirection) {
-        self.inner.swiped(ctx, direction)
+    fn swipe_finished(&self) -> bool {
+        self.inner.swipe_finished()
     }
 }
