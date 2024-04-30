@@ -65,8 +65,8 @@ static const uint16_t OPTIGA_ADDRESS = (BASE_ADDR << 1);
 static const uint32_t I2C_TIMEOUT = 15;
 static const int I2C_MAX_RETRY_COUNT = 10;
 
-// Maximum number of times to retry reading Optiga's response to a command.
-static const int MAX_RETRY_READ = 10000;
+// Maximum time in millisecods to retry reading Optiga's response to a command.
+static const int MAX_RETRY_READ_MS = 300;
 
 // Maximum number of times to retry reading Optiga's response to a command when
 // it claims it's not busy executing a command.
@@ -274,7 +274,8 @@ static optiga_result optiga_check_ack(void) {
 static optiga_result optiga_ensure_ready(void) {
   optiga_result ret = OPTIGA_SUCCESS;
   for (int i = 0; i < MAX_RESPONSE_PACKET_COUNT; ++i) {
-    for (int j = 0; j < MAX_RETRY_READ; ++j) {
+    uint32_t deadline = hal_ticks_ms() + MAX_RETRY_READ_MS;
+    do {
       ret = optiga_i2c_write(&REG_I2C_STATE, 1);
       if (OPTIGA_SUCCESS != ret) {
         return ret;
@@ -295,7 +296,7 @@ static optiga_result optiga_ensure_ready(void) {
         return OPTIGA_SUCCESS;
       }
       ret = OPTIGA_ERR_BUSY;
-    }
+    } while (hal_ticks_ms() < deadline);
 
     if (ret != OPTIGA_SUCCESS) {
       // Optiga is busy even after maximum retries at reading the I2C state.
@@ -379,7 +380,8 @@ static optiga_result optiga_read(void) {
   // it claimed it's not busy executing a command.
   int not_busy_count = 0;
 
-  for (int i = 0; i < MAX_RETRY_READ; ++i) {
+  uint32_t deadline = hal_ticks_ms() + MAX_RETRY_READ_MS;
+  do {
     optiga_result ret = optiga_i2c_write(&REG_I2C_STATE, 1);
     if (OPTIGA_SUCCESS != ret) {
       return ret;
@@ -425,7 +427,7 @@ static optiga_result optiga_read(void) {
       }
       not_busy_count += 1;
     }
-  }
+  } while (hal_ticks_ms() < deadline);
 
   return OPTIGA_ERR_TIMEOUT;
 }
