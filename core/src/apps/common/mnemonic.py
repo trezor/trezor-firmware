@@ -49,6 +49,7 @@ def get_seed(passphrase: str = "", progress_bar: bool = True) -> bytes:
         from trezor.crypto import slip39
 
         identifier = storage_device.get_slip39_identifier()
+        extendable = storage_device.get_slip39_extendable()
         iteration_exponent = storage_device.get_slip39_iteration_exponent()
         if identifier is None or iteration_exponent is None:
             # Identifier or exponent expected but not found
@@ -58,6 +59,7 @@ def get_seed(passphrase: str = "", progress_bar: bool = True) -> bytes:
             passphrase.encode(),
             iteration_exponent,
             identifier,
+            extendable,
             render_func,
         )
 

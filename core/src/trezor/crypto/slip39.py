@@ -67,10 +67,15 @@ def _xor(a: bytes, b: bytes) -> bytes:
 _ID_LENGTH_BITS = const(15)
 """The length of the random identifier in bits."""
 
-_ITERATION_EXP_LENGTH_BITS = const(5)
+_EXTENDABLE_FLAG_LENGTH_BITS = const(1)
+"""The length of the extendable backup flag in bits."""
+
+_ITERATION_EXP_LENGTH_BITS = const(4)
 """The length of the iteration exponent in bits."""
 
-_ID_EXP_LENGTH_WORDS = _bits_to_words(_ID_LENGTH_BITS + _ITERATION_EXP_LENGTH_BITS)
+_ID_EXP_LENGTH_WORDS = _bits_to_words(
+    _ID_LENGTH_BITS + _EXTENDABLE_FLAG_LENGTH_BITS + _ITERATION_EXP_LENGTH_BITS
+)
 """The length of the random identifier and iteration exponent in words."""
 
 _CHECKSUM_LENGTH_WORDS = const(3)
@@ -79,8 +84,13 @@ _CHECKSUM_LENGTH_WORDS = const(3)
 _DIGEST_LENGTH_BYTES = const(4)
 """The length of the digest of the shared secret in bytes."""
 
-_CUSTOMIZATION_STRING = b"shamir"
-"""The customization string used in the RS1024 checksum and in the PBKDF2 salt."""
+_CUSTOMIZATION_STRING_ORIG = b"shamir"
+"""The customization string used in the RS1024 checksum and in the PBKDF2 salt for shares
+_without_ the extendable backup flag."""
+
+_CUSTOMIZATION_STRING_EXTENDABLE = b"shamir_extendable"
+"""The customization string used in the RS1024 checksum for shares _with_ the extendable
+backup flag."""
 
 _METADATA_LENGTH_WORDS = _ID_EXP_LENGTH_WORDS + 2 + _CHECKSUM_LENGTH_WORDS
 """The length of the mnemonic in words without the share value."""
@@ -111,6 +121,7 @@ MAX_GROUP_COUNT = const(16)
 """The maximum number of groups that can be created."""
 
 DEFAULT_ITERATION_EXPONENT = const(1)
+DEFAULT_EXTENDABLE_FLAG = True
 
 
 class Share:
@@ -121,6 +132,7 @@ class Share:
     def __init__(
         self,
         identifier: int,
+        extendable: bool,
         iteration_exponent: int,
         group_index: int,
         group_threshold: int,
@@ -130,6 +142,7 @@ class Share:
         share_value: bytes,
     ):
         self.identifier = identifier
+        self.extendable = extendable
         self.iteration_exponent = iteration_exponent
         self.group_index = group_index
         self.group_threshold = group_threshold
@@ -144,6 +157,7 @@ def decrypt(
     passphrase: bytes,
     iteration_exponent: int,
     identifier: int,
+    extendable: bool,
     progress_callback: Callable[[int, int], None] | None = None,
 ) -> bytes:
     """
@@ -154,7 +168,7 @@ def decrypt(
     """
     l = encrypted_master_secret[: len(encrypted_master_secret) // 2]
     r = encrypted_master_secret[len(encrypted_master_secret) // 2 :]
-    salt = _get_salt(identifier)
+    salt = _get_salt(identifier, extendable)
     for i in reversed(range(_ROUND_COUNT)):
         (l, r) = (
             r,
@@ -178,6 +192,7 @@ def split_ems(
         tuple[int, int]
     ],  # A collection of (member_threshold, member_count).
     identifier: int,
+    extendable: bool,
     iteration_exponent: int,
     encrypted_master_secret: bytes,  # The encrypted master secret to split.
 ) -> list[list[str]]:
@@ -218,6 +233,7 @@ def split_ems(
             group_mnemonics.append(
                 _encode_mnemonic(
                     identifier,
+                    extendable,
                     iteration_exponent,
                     group_index,
                     group_threshold,
@@ -231,11 +247,11 @@ def split_ems(
     return mnemonics
 
 
-def recover_ems(mnemonics: list[str]) -> tuple[int, int, bytes]:
+def recover_ems(mnemonics: list[str]) -> tuple[int, bool, int, bytes]:
     """
     Combines mnemonic shares to obtain the encrypted master secret which was previously
     split using Shamir's secret sharing scheme.
-    Returns identifier, iteration exponent and the encrypted master secret.
+    Returns identifier, extendable backup flag, iteration exponent and the encrypted master secret.
     """
 
     if not mnemonics:
@@ -243,6 +259,7 @@ def recover_ems(mnemonics: list[str]) -> tuple[int, int, bytes]:
 
     (
         identifier,
+        extendable,
         iteration_exponent,
         group_threshold,
         _group_count,
@@ -266,7 +283,7 @@ def recover_ems(mnemonics: list[str]) -> tuple[int, int, bytes]:
     ]
 
     encrypted_master_secret = _recover_secret(group_threshold, group_shares)
-    return identifier, iteration_exponent, encrypted_master_secret
+    return identifier, extendable, iteration_exponent, encrypted_master_secret
 
 
 def decode_mnemonic(mnemonic: str) -> Share:
@@ -283,12 +300,16 @@ def decode_mnemonic(mnemonic: str) -> Share:
     if padding_len > 8:
         raise MnemonicError("Invalid mnemonic length.")
 
-    if not _rs1024_verify_checksum(mnemonic_data):
+    id_exp_int = _int_from_indices(mnemonic_data[:_ID_EXP_LENGTH_WORDS])
+    identifier = id_exp_int >> (
+        _EXTENDABLE_FLAG_LENGTH_BITS + _ITERATION_EXP_LENGTH_BITS
+    )
+    extendable = bool((id_exp_int >> _ITERATION_EXP_LENGTH_BITS) & 1)
+    iteration_exponent = id_exp_int & ((1 << _ITERATION_EXP_LENGTH_BITS) - 1)
+
+    if not _rs1024_verify_checksum(mnemonic_data, extendable):
         raise MnemonicError("Invalid mnemonic checksum.")
 
-    id_exp_int = _int_from_indices(mnemonic_data[:_ID_EXP_LENGTH_WORDS])
-    identifier = id_exp_int >> _ITERATION_EXP_LENGTH_BITS
-    iteration_exponent = id_exp_int & ((1 << _ITERATION_EXP_LENGTH_BITS) - 1)
     tmp = _int_from_indices(
         mnemonic_data[_ID_EXP_LENGTH_WORDS : _ID_EXP_LENGTH_WORDS + 2]
     )
@@ -314,6 +335,7 @@ def decode_mnemonic(mnemonic: str) -> Share:
 
     return Share(
         identifier,
+        extendable,
         iteration_exponent,
         group_index,
         group_threshold + 1,
@@ -352,13 +374,22 @@ def _mnemonic_to_indices(mnemonic: str) -> Iterable[int]:
 # === Checksum functions ===
 
 
-def _rs1024_create_checksum(data: Indices) -> Indices:
+def _customization_string(extendable: bool) -> bytes:
+    if extendable:
+        return _CUSTOMIZATION_STRING_EXTENDABLE
+    else:
+        return _CUSTOMIZATION_STRING_ORIG
+
+
+def _rs1024_create_checksum(data: Indices, extendable: bool) -> Indices:
     """
     This implements the checksum - a Reed-Solomon code over GF(1024) that guarantees
     detection of any error affecting at most 3 words and has less than a 1 in 10^9
     chance of failing to detect more errors.
     """
-    values = tuple(_CUSTOMIZATION_STRING) + data + _CHECKSUM_LENGTH_WORDS * (0,)
+    values = (
+        tuple(_customization_string(extendable)) + data + _CHECKSUM_LENGTH_WORDS * (0,)
+    )
     polymod = _rs1024_polymod(values) ^ 1
     return tuple(
         (polymod >> 10 * i) & 1023 for i in reversed(range(_CHECKSUM_LENGTH_WORDS))
@@ -387,11 +418,11 @@ def _rs1024_polymod(values: Indices) -> int:
     return chk
 
 
-def _rs1024_verify_checksum(data: Indices) -> bool:
+def _rs1024_verify_checksum(data: Indices, extendable: bool) -> bool:
     """
     Verifies a checksum of the given mnemonic, which was already parsed into Indices.
     """
-    return _rs1024_polymod(tuple(_CUSTOMIZATION_STRING) + data) == 1
+    return _rs1024_polymod(tuple(_customization_string(extendable)) + data) == 1
 
 
 # === Internal functions ===
@@ -409,10 +440,13 @@ def _round_function(i: int, passphrase: bytes, e: int, salt: bytes, r: bytes) ->
     ).key()[: len(r)]
 
 
-def _get_salt(identifier: int) -> bytes:
-    return _CUSTOMIZATION_STRING + identifier.to_bytes(
-        _bits_to_bytes(_ID_LENGTH_BITS), "big"
-    )
+def _get_salt(identifier: int, extendable: bool) -> bytes:
+    if extendable:
+        return bytes()
+    else:
+        return _CUSTOMIZATION_STRING_ORIG + identifier.to_bytes(
+            _bits_to_bytes(_ID_LENGTH_BITS), "big"
+        )
 
 
 def _create_digest(random_data: bytes, shared_secret: bytes) -> bytes:
@@ -481,12 +515,17 @@ def _recover_secret(threshold: int, shares: list[tuple[int, bytes]]) -> bytes:
 
 def _group_prefix(
     identifier: int,
+    extendable: bool,
     iteration_exponent: int,
     group_index: int,
     group_threshold: int,
     group_count: int,
 ) -> Indices:
-    id_exp_int = (identifier << _ITERATION_EXP_LENGTH_BITS) + iteration_exponent
+    id_exp_int = (
+        (identifier << (_EXTENDABLE_FLAG_LENGTH_BITS + _ITERATION_EXP_LENGTH_BITS))
+        + (int(extendable) << _ITERATION_EXP_LENGTH_BITS)
+        + iteration_exponent
+    )
     return tuple(_int_to_indices(id_exp_int, _ID_EXP_LENGTH_WORDS, _RADIX_BITS)) + (
         (group_index << 6) + ((group_threshold - 1) << 2) + ((group_count - 1) >> 2),
     )
@@ -494,6 +533,7 @@ def _group_prefix(
 
 def _encode_mnemonic(
     identifier: int,
+    extendable: bool,
     iteration_exponent: int,
     group_index: int,  # The x coordinate of the group share.
     group_threshold: int,  # The number of group shares needed to reconstruct the encrypted master secret.
@@ -513,7 +553,12 @@ def _encode_mnemonic(
 
     share_data = (
         _group_prefix(
-            identifier, iteration_exponent, group_index, group_threshold, group_count
+            identifier,
+            extendable,
+            iteration_exponent,
+            group_index,
+            group_threshold,
+            group_count,
         )
         + (
             (((group_count - 1) & 3) << 8)
@@ -522,15 +567,16 @@ def _encode_mnemonic(
         )
         + tuple(_int_to_indices(value_int, value_word_count, _RADIX_BITS))
     )
-    checksum = _rs1024_create_checksum(share_data)
+    checksum = _rs1024_create_checksum(share_data, extendable)
 
     return _mnemonic_from_indices(share_data + checksum)
 
 
 def _decode_mnemonics(
     mnemonics: list[str],
-) -> tuple[int, int, int, int, MnemonicGroups]:
+) -> tuple[int, bool, int, int, int, MnemonicGroups]:
     identifiers = set()
+    extendable_flags = set()
     iteration_exponents = set()
     group_thresholds = set()
     group_counts = set()
@@ -540,6 +586,7 @@ def _decode_mnemonics(
     for mnemonic in mnemonics:
         share = decode_mnemonic(mnemonic)
         identifiers.add(share.identifier)
+        extendable_flags.add(share.extendable)
         iteration_exponents.add(share.iteration_exponent)
         group_thresholds.add(share.group_threshold)
         group_counts.add(share.group_count)
@@ -550,7 +597,11 @@ def _decode_mnemonics(
             )
         group[1].add((share.index, share.share_value))
 
-    if len(identifiers) != 1 or len(iteration_exponents) != 1:
+    if (
+        len(identifiers) != 1
+        or len(extendable_flags) != 1
+        or len(iteration_exponents) != 1
+    ):
         raise MnemonicError(
             f"Invalid set of mnemonics. All mnemonics must begin with the same {_ID_EXP_LENGTH_WORDS} words."
         )
@@ -573,6 +624,7 @@ def _decode_mnemonics(
 
     return (
         identifiers.pop(),
+        extendable_flags.pop(),
         iteration_exponents.pop(),
         group_thresholds.pop(),
         group_counts.pop(),

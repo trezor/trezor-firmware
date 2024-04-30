@@ -41,6 +41,7 @@ class TestSlip39(unittest.TestCase):
             share.iteration_exponent, storage.recovery.get_slip39_iteration_exponent()
         )
         self.assertEqual(share.identifier, storage.recovery.get_slip39_identifier())
+        self.assertEqual(share.extendable, storage.recovery.get_slip39_extendable())
         self.assertEqual(storage.recovery.get_slip39_remaining_shares(0), 2)
         self.assertEqual(
             storage.recovery_shares.get(share.index, share.group_index), first
@@ -84,6 +85,7 @@ class TestSlip39(unittest.TestCase):
             share.iteration_exponent, storage.recovery.get_slip39_iteration_exponent()
         )
         self.assertEqual(share.identifier, storage.recovery.get_slip39_identifier())
+        self.assertEqual(share.extendable, storage.recovery.get_slip39_extendable())
         self.assertEqual(
             storage.recovery.fetch_slip39_remaining_shares(), [16, 0, 16, 16]
         )
@@ -100,6 +102,7 @@ class TestSlip39(unittest.TestCase):
             share.iteration_exponent, storage.recovery.get_slip39_iteration_exponent()
         )
         self.assertEqual(share.identifier, storage.recovery.get_slip39_identifier())
+        self.assertEqual(share.extendable, storage.recovery.get_slip39_extendable())
         self.assertEqual(
             storage.recovery_shares.get(share.index, share.group_index), words
         )
@@ -122,6 +125,7 @@ class TestSlip39(unittest.TestCase):
             share.iteration_exponent, storage.recovery.get_slip39_iteration_exponent()
         )
         self.assertEqual(share.identifier, storage.recovery.get_slip39_identifier())
+        self.assertEqual(share.extendable, storage.recovery.get_slip39_extendable())
         self.assertEqual(
             storage.recovery_shares.get(share.index, share.group_index), words
         )
@@ -146,6 +150,7 @@ class TestSlip39(unittest.TestCase):
             share.iteration_exponent, storage.recovery.get_slip39_iteration_exponent()
         )
         self.assertEqual(share.identifier, storage.recovery.get_slip39_identifier())
+        self.assertEqual(share.extendable, storage.recovery.get_slip39_extendable())
         self.assertEqual(
             storage.recovery_shares.get(share.index, share.group_index), words
         )

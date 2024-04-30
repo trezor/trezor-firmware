@@ -13,6 +13,7 @@ _SLIP39_IDENTIFIER         = const(0x03)  # bytes
 _REMAINING                 = const(0x05)  # int
 _SLIP39_ITERATION_EXPONENT = const(0x06)  # int
 _SLIP39_GROUP_COUNT        = const(0x07)  # int
+_SLIP39_EXTENDABLE         = const(0x08)  # bool
 
 # Deprecated Keys:
 # _WORD_COUNT                = const(0x02)  # int
@@ -54,6 +55,16 @@ def set_slip39_identifier(identifier: int) -> None:
 def get_slip39_identifier() -> int | None:
     _require_progress()
     return common.get_uint16(_NAMESPACE, _SLIP39_IDENTIFIER)
+
+
+def set_slip39_extendable(extendable: bool) -> None:
+    _require_progress()
+    common.set_bool(_NAMESPACE, _SLIP39_EXTENDABLE, extendable)
+
+
+def get_slip39_extendable() -> bool:
+    _require_progress()
+    return common.get_bool(_NAMESPACE, _SLIP39_EXTENDABLE)
 
 
 def set_slip39_iteration_exponent(exponent: int) -> None:
