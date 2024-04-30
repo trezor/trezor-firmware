@@ -7,7 +7,7 @@ import shutil
 import typing as t
 import warnings
 from copy import deepcopy
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, replace
 from difflib import SequenceMatcher
 from functools import cached_property
 from itertools import zip_longest
@@ -256,6 +256,11 @@ class TestCase:
     def fixtures_name(self) -> str:
         return f"{self.model}_{self.language}_{self.name}"
 
+    @classmethod
+    def from_fixtures(cls, fixtures_name: str, group: str) -> Self:
+        model, lang, name = fixtures_name.split("_", maxsplit=2)
+        return cls(model=model, group=group, name=name, language=lang)
+
     @property
     def dir(self) -> Path:
         return SCREENS_DIR / self.id
@@ -291,6 +296,9 @@ class TestCase:
         )
         result.save_metadata()
         return result
+
+    def replace(self, **kwargs) -> Self:
+        return replace(self, **kwargs)
 
 
 @dataclass
