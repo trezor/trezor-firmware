@@ -215,6 +215,16 @@ pub const fn label_title_main() -> TextStyle {
     )
 }
 
+pub const fn label_title_danger() -> TextStyle {
+    TextStyle::new(
+        Font::NORMAL,
+        ORANGE_LIGHT,
+        GREY_DARK,
+        GREY_LIGHT,
+        GREY_LIGHT,
+    )
+}
+
 pub const fn label_title_sub() -> TextStyle {
     TextStyle::new(Font::SUB, GREY, GREY_DARK, GREY_LIGHT, GREY_LIGHT)
 }
@@ -355,9 +365,30 @@ pub const fn button_cancel() -> ButtonStyleSheet {
     }
 }
 
-// TODO: delete
 pub const fn button_danger() -> ButtonStyleSheet {
-    button_cancel()
+    ButtonStyleSheet {
+        normal: &ButtonStyle {
+            font: Font::DEMIBOLD,
+            text_color: ORANGE_LIGHT,
+            button_color: BG,
+            icon_color: ORANGE_LIGHT,
+            background_color: BG,
+        },
+        active: &ButtonStyle {
+            font: Font::DEMIBOLD,
+            text_color: ORANGE_LIGHT,
+            button_color: BG,
+            icon_color: ORANGE_LIGHT,
+            background_color: BG,
+        },
+        disabled: &ButtonStyle {
+            font: Font::DEMIBOLD,
+            text_color: ORANGE_LIGHT,
+            button_color: BG,
+            icon_color: ORANGE_LIGHT,
+            background_color: BG,
+        },
+    }
 }
 
 pub const fn button_reset() -> ButtonStyleSheet {
@@ -591,6 +622,10 @@ pub const TEXT_MONO: TextStyle = TextStyle::new(Font::MONO, GREY_EXTRA_LIGHT, BG
     .with_page_breaking(PageBreaking::CutAndInsertEllipsisBoth)
     .with_ellipsis_icon(ICON_PAGE_NEXT, 0)
     .with_prev_page_icon(ICON_PAGE_PREV, 0);
+pub const TEXT_MONO_GREY_LIGHT: TextStyle = TextStyle {
+    text_color: GREY_LIGHT,
+    ..TEXT_MONO
+};
 /// Makes sure that the displayed text (usually address) will get divided into
 /// smaller chunks.
 pub const TEXT_MONO_ADDRESS_CHUNKS: TextStyle = TEXT_MONO
@@ -656,6 +691,7 @@ pub const MNEMONIC_BUTTON_HEIGHT: i16 = 52;
 pub const RESULT_PADDING: i16 = 6;
 pub const RESULT_FOOTER_START: i16 = 171;
 pub const RESULT_FOOTER_HEIGHT: i16 = 62;
+pub const DETAILS_SPACING: i16 = 8;
 
 // checklist settings
 pub const CHECKLIST_CHECK_WIDTH: i16 = 16;

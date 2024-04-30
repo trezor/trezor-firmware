@@ -7,7 +7,7 @@ use crate::{
     ui::{
         component::{
             text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs, VecExt},
-            Component, Event, EventCtx, Paginate, Qr,
+            Component, Event, EventCtx, Paginate,
         },
         geometry::Rect,
         shape::Renderer,
@@ -18,8 +18,8 @@ use super::{theme, Frame, FrameMsg};
 
 const MAX_XPUBS: usize = 16;
 
+#[derive(Clone)]
 pub struct AddressDetails {
-    qr_code: Frame<Qr>,
     details: Frame<Paragraphs<ParagraphVecShort<'static>>>,
     xpub_view: Frame<Paragraphs<Paragraph<'static>>>,
     xpubs: Vec<(TString<'static>, TString<'static>), MAX_XPUBS>,
@@ -29,43 +29,38 @@ pub struct AddressDetails {
 
 impl AddressDetails {
     pub fn new(
-        qr_title: TString<'static>,
-        qr_address: TString<'static>,
-        case_sensitive: bool,
         details_title: TString<'static>,
         account: Option<TString<'static>>,
         path: Option<TString<'static>>,
     ) -> Result<Self, Error> {
         let mut para = ParagraphVecShort::new();
         if let Some(a) = account {
-            para.add(Paragraph::new(
-                &theme::TEXT_NORMAL,
-                TR::words__account_colon,
+            para.add(Paragraph::new::<TString>(
+                &theme::TEXT_SUB_GREY,
+                TR::words__account.into(),
             ));
-            para.add(Paragraph::new(&theme::TEXT_MONO, a));
+            para.add(Paragraph::new(&theme::TEXT_MONO_GREY_LIGHT, a));
+        }
+        if account.is_some() & path.is_some() {
+            para.add(Paragraph::new(
+                &theme::TEXT_SUB_GREY,
+                TString::from_str(" "),
+            ));
         }
         if let Some(p) = path {
-            para.add(Paragraph::new(
-                &theme::TEXT_NORMAL,
-                TR::address_details__derivation_path,
+            para.add(Paragraph::new::<TString>(
+                &theme::TEXT_SUB_GREY,
+                TR::address_details__derivation_path.into(),
             ));
-            para.add(Paragraph::new(&theme::TEXT_MONO, p));
+            para.add(Paragraph::new(&theme::TEXT_MONO_GREY_LIGHT, p));
         }
         let result = Self {
-            qr_code: Frame::left_aligned(
-                qr_title,
-                qr_address
-                    .map(|s| Qr::new(s, case_sensitive))?
-                    .with_border(7),
-            )
-            .with_cancel_button()
-            .with_border(theme::borders_horizontal_scroll()),
             details: Frame::left_aligned(details_title, para.into_paragraphs())
                 .with_cancel_button()
                 .with_border(theme::borders_horizontal_scroll()),
             xpub_view: Frame::left_aligned(
                 " \n ".into(),
-                Paragraph::new(&theme::TEXT_MONO, "").into_paragraphs(),
+                Paragraph::new(&theme::TEXT_MONO_GREY_LIGHT, "").into_paragraphs(),
             )
             .with_cancel_button()
             .with_border(theme::borders_horizontal_scroll()),
@@ -121,13 +116,13 @@ impl AddressDetails {
 impl Paginate for AddressDetails {
     fn page_count(&mut self) -> usize {
         let total_xpub_pages: u8 = self.xpub_page_count.iter().copied().sum();
-        2usize.saturating_add(total_xpub_pages.into())
+        1usize.saturating_add(total_xpub_pages.into())
     }
 
     fn change_page(&mut self, to_page: usize) {
         self.current_page = to_page;
-        if to_page > 1 {
-            let i = to_page - 2;
+        if to_page > 0 {
+            let i = to_page - 1;
             let (xpub_index, xpub_page) = self.lookup(i);
             self.switch_xpub(xpub_index, xpub_page);
         }
@@ -138,7 +133,6 @@ impl Component for AddressDetails {
     type Msg = ();
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        self.qr_code.place(bounds);
         self.details.place(bounds);
         self.xpub_view.place(bounds);
 
@@ -153,8 +147,7 @@ impl Component for AddressDetails {
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         let msg = match self.current_page {
-            0 => self.qr_code.event(ctx, event),
-            1 => self.details.event(ctx, event),
+            0 => self.details.event(ctx, event),
             _ => self.xpub_view.event(ctx, event),
         };
         match msg {
@@ -165,16 +158,14 @@ impl Component for AddressDetails {
 
     fn paint(&mut self) {
         match self.current_page {
-            0 => self.qr_code.paint(),
-            1 => self.details.paint(),
+            0 => self.details.paint(),
             _ => self.xpub_view.paint(),
         }
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         match self.current_page {
-            0 => self.qr_code.render(target),
-            1 => self.details.render(target),
+            0 => self.details.render(target),
             _ => self.xpub_view.render(target),
         }
     }
@@ -182,8 +173,7 @@ impl Component for AddressDetails {
     #[cfg(feature = "ui_bounds")]
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         match self.current_page {
-            0 => self.qr_code.bounds(sink),
-            1 => self.details.bounds(sink),
+            0 => self.details.bounds(sink),
             _ => self.xpub_view.bounds(sink),
         }
     }
@@ -194,8 +184,7 @@ impl crate::trace::Trace for AddressDetails {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("AddressDetails");
         match self.current_page {
-            0 => t.child("qr_code", &self.qr_code),
-            1 => t.child("details", &self.details),
+            0 => t.child("details", &self.details),
             _ => t.child("xpub_view", &self.xpub_view),
         }
     }
