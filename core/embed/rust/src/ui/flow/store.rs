@@ -14,9 +14,7 @@ use crate::micropython::gc::Gc;
 /// `FlowStore` is essentially `Vec<Gc<dyn Component + Swipable>>` except that
 /// `trait Component` is not object-safe so it ends up being a kind of
 /// recursively-defined tuple.
-///
-/// Additionally the store makes it possible to make a clone of one of its
-/// items, in order to make it possible to render transition animations.
+/// Implementors are something like the V in MVC.
 pub trait FlowStore {
     /// Call `Component::place` on all elements.
     fn place(&mut self, bounds: Rect) -> Rect;
@@ -34,14 +32,8 @@ pub trait FlowStore {
     /// Forward `Swipable` methods to i-th element.
     fn map_swipable<T>(&mut self, i: usize, func: impl FnOnce(&mut dyn Swipable) -> T) -> T;
 
-    /// Make a clone of i-th element, or free all clones if None is given.
-    fn clone(&mut self, i: Option<usize>) -> Result<(), error::Error>;
-
-    /// Call `Component::render` on the cloned element.
-    fn render_cloned<'s>(&'s self, target: &mut impl Renderer<'s>);
-
     /// Add a Component to the end of a `FlowStore`.
-    fn add<E: Component<Msg = FlowMsg> + MaybeTrace + Swipable + Clone>(
+    fn add<E: Component<Msg = FlowMsg> + MaybeTrace + Swipable>(
         self,
         elem: E,
     ) -> Result<impl FlowStore, error::Error>
@@ -80,12 +72,7 @@ impl FlowStore for FlowEmpty {
         panic!()
     }
 
-    fn clone(&mut self, _i: Option<usize>) -> Result<(), error::Error> {
-        Ok(())
-    }
-    fn render_cloned<'s>(&'s self, _target: &mut impl Renderer<'s>) {}
-
-    fn add<E: Component<Msg = FlowMsg> + MaybeTrace + Swipable + Clone>(
+    fn add<E: Component<Msg = FlowMsg> + MaybeTrace + Swipable>(
         self,
         elem: E,
     ) -> Result<impl FlowStore, error::Error>
@@ -94,7 +81,6 @@ impl FlowStore for FlowEmpty {
     {
         Ok(FlowComponent {
             elem: Gc::new(elem)?,
-            cloned: None,
             next: Self,
         })
     }
@@ -103,9 +89,6 @@ impl FlowStore for FlowEmpty {
 struct FlowComponent<E: Component<Msg = FlowMsg>, P> {
     /// Component allocated on micropython heap.
     pub elem: Gc<E>,
-
-    /// Clone.
-    pub cloned: Option<Gc<E>>,
 
     /// Nested FlowStore.
     pub next: P,
@@ -125,7 +108,7 @@ impl<E: Component<Msg = FlowMsg>, P> FlowComponent<E, P> {
 
 impl<E, P> FlowStore for FlowComponent<E, P>
 where
-    E: Component<Msg = FlowMsg> + MaybeTrace + Swipable + Clone,
+    E: Component<Msg = FlowMsg> + MaybeTrace + Swipable,
     P: FlowStore,
 {
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -167,33 +150,7 @@ where
         }
     }
 
-    fn clone(&mut self, i: Option<usize>) -> Result<(), error::Error> {
-        match i {
-            None => {
-                // FIXME: how to ensure the allocation is returned?
-                self.cloned = None;
-                self.next.clone(None)?
-            }
-            Some(0) => {
-                self.cloned = Some(Gc::new(self.as_ref().clone())?);
-                self.next.clone(None)?
-            }
-            Some(i) => {
-                self.cloned = None;
-                self.next.clone(Some(i - 1))?
-            }
-        }
-        Ok(())
-    }
-
-    fn render_cloned<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        if let Some(cloned) = &self.cloned {
-            cloned.render(target)
-        }
-        self.next.render_cloned(target);
-    }
-
-    fn add<F: Component<Msg = FlowMsg> + MaybeTrace + Swipable + Clone>(
+    fn add<F: Component<Msg = FlowMsg> + MaybeTrace + Swipable>(
         self,
         elem: F,
     ) -> Result<impl FlowStore, error::Error>
@@ -202,7 +159,6 @@ where
     {
         Ok(FlowComponent {
             elem: self.elem,
-            cloned: None,
             next: self.next.add(elem)?,
         })
     }
