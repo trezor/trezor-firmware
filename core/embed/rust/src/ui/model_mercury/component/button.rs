@@ -503,7 +503,7 @@ pub enum CancelInfoConfirmMsg {
 
 #[derive(PartialEq, Eq, Clone)]
 pub struct IconText {
-    text: &'static str,
+    text: TString<'static>,
     icon: Icon,
 }
 
@@ -512,12 +512,15 @@ impl IconText {
     const ICON_MARGIN: i16 = 4;
     const TEXT_MARGIN: i16 = 6;
 
-    pub fn new(text: &'static str, icon: Icon) -> Self {
-        Self { text, icon }
+    pub fn new(text: impl Into<TString<'static>>, icon: Icon) -> Self {
+        Self {
+            text: text.into(),
+            icon,
+        }
     }
 
     pub fn paint(&self, area: Rect, style: &ButtonStyle, baseline_offset: Offset) {
-        let width = style.font.text_width(self.text);
+        let width = self.text.map(|t| style.font.text_width(t));
         let height = style.font.text_height();
 
         let mut use_icon = false;
@@ -543,13 +546,15 @@ impl IconText {
         }
 
         if use_text {
-            display::text_left(
-                text_pos,
-                self.text,
-                style.font,
-                style.text_color,
-                style.button_color,
-            );
+            self.text.map(|t| {
+                display::text_left(
+                    text_pos,
+                    t,
+                    style.font,
+                    style.text_color,
+                    style.button_color,
+                )
+            });
         }
 
         if use_icon {
@@ -568,7 +573,7 @@ impl IconText {
         style: &ButtonStyle,
         baseline_offset: Offset,
     ) {
-        let width = style.font.text_width(self.text.as_ref());
+        let width = self.text.map(|t| style.font.text_width(t));
 
         let mut use_icon = false;
         let mut use_text = false;
@@ -593,10 +598,12 @@ impl IconText {
         }
 
         if use_text {
-            shape::Text::new(text_pos, self.text)
-                .with_font(style.font)
-                .with_fg(style.text_color)
-                .render(target);
+            self.text.map(|t| {
+                shape::Text::new(text_pos, t)
+                    .with_font(style.font)
+                    .with_fg(style.text_color)
+                    .render(target)
+            });
         }
 
         if use_icon {
