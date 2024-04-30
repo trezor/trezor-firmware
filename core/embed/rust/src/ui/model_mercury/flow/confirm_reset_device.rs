@@ -11,7 +11,6 @@ use crate::{
         flow::{base::Decision, flow_store, FlowMsg, FlowState, FlowStore, SwipeFlow, SwipePage},
     },
 };
-use heapless::Vec;
 
 use super::super::{
     component::{Frame, FrameMsg, PromptScreen, VerticalMenu, VerticalMenuChoiceMsg},
@@ -91,10 +90,7 @@ impl ConfirmResetDevice {
 
         let content_menu = Frame::left_aligned(
             "".into(),
-            VerticalMenu::context_menu(unwrap!(Vec::from_slice(&[(
-                "Cancel", // FIXME: use TString
-                theme::ICON_CANCEL
-            )]))),
+            VerticalMenu::empty().danger(theme::ICON_CANCEL, "Cancel".into()),
         )
         .with_cancel_button()
         .map(|msg| match msg {
