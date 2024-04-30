@@ -8,6 +8,7 @@ from dominate.tags import a, h1, hr, i, p, script, table, td, th, tr
 from ..common import (
     UI_TESTS_DIR,
     FixturesType,
+    TestCase,
     get_screen_path,
     screens_and_hashes,
     screens_diff,
@@ -27,6 +28,12 @@ MASTER_CACHE_DIR = HERE / "master_cache"
 if not MASTER_CACHE_DIR.exists():
     MASTER_CACHE_DIR.mkdir()
 
+LEGACY_MODEL_NAMES = {
+    "T1": "T1B1",
+    "TT": "T2T1",
+    "TR": "T2B1",
+}
+
 
 def generate_master_diff_report(
     diff_tests: dict[str, tuple[str, str]], base_dir: Path
@@ -40,7 +47,7 @@ def get_diff(
     print_to_console: bool = False,
     models: list[str] | None = None,
 ) -> tuple[dict[str, str], dict[str, str], dict[str, tuple[str, str]]]:
-    master = _get_preprocessed_master_fixtures()
+    master = _preprocess_master_compat(download.fetch_fixtures_master())
 
     removed = {}
     added = {}
@@ -57,9 +64,9 @@ def get_diff(
             current_tests = current_groups.get(group, {})
 
             def testname(test: str) -> str:
-                assert test.startswith(model + "_")
-                test = test[len(model) + 1 :]
-                return f"{model}-{group}-{test}"
+                case = TestCase.from_fixtures(test, group)
+                model = LEGACY_MODEL_NAMES.get(case.model, case.model)
+                return case.replace(model=model).id
 
             # removed items
             removed_here = {
@@ -123,21 +130,24 @@ def document(
 
 
 def _preprocess_master_compat(master_fixtures: dict[str, Any]) -> FixturesType:
-    if all(isinstance(v, str) for v in master_fixtures.values()):
-        # old format, convert to new format
-        new_fixtures = {}
-        for key, val in master_fixtures.items():
-            model, _test = key.split("_", maxsplit=1)
-            groups_by_model = new_fixtures.setdefault(model, {})
-            default_group = groups_by_model.setdefault("device_tests", {})
-            default_group[key] = val
-        return FixturesType(new_fixtures)
-    else:
-        return FixturesType(master_fixtures)
+    new_fixtures = {}
+    for model, groups_by_model in master_fixtures.items():
+        if model not in LEGACY_MODEL_NAMES:
+            new_fixtures[model] = groups_by_model
+            continue
 
+        # (a) replace model group name
+        model = LEGACY_MODEL_NAMES.get(model)
+        new_groups_by_model = new_fixtures.setdefault(model, {})
+        for group, tests_by_group in groups_by_model.items():
+            new_tests_by_group = new_groups_by_model.setdefault(group, {})
+            for key, val in tests_by_group.items():
+                case = TestCase.from_fixtures(key, group)
+                # (b) in individual testcases, replace model name prefix
+                new_case = case.replace(model=model)
+                new_tests_by_group[new_case.fixtures_name] = val
 
-def _get_preprocessed_master_fixtures() -> FixturesType:
-    return _preprocess_master_compat(download.fetch_fixtures_master())
+    return FixturesType(new_fixtures)
 
 
 def _create_testcase_html_diff_file(
