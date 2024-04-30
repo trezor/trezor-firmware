@@ -63,13 +63,13 @@ tr.bad a:visited {
     display: none;
 }
 
-.model-T1 img,
-.model-TR img {
+.model-T1B1 img,
+.model-T2B1 img {
     image-rendering: pixelated;
     width: 256px;
 }
 
-.model-TR canvas {
+.model-T2B1 canvas {
     image-rendering: pixelated;
     width: 256px;
 }
