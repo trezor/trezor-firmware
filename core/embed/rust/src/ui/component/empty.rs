@@ -1,6 +1,7 @@
 use super::{Component, Event, EventCtx, Never};
 use crate::ui::{geometry::Rect, shape::Renderer};
 
+#[derive(Clone)]
 pub struct Empty;
 
 impl Component for Empty {
