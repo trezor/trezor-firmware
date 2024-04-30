@@ -62,7 +62,7 @@ static const uint8_t BASE_ADDR = 0x30;
 static const uint16_t OPTIGA_ADDRESS = (BASE_ADDR << 1);
 
 // Constants for our I2C HAL.
-static const uint32_t I2C_TIMEOUT = 15;
+static const uint32_t I2C_TIMEOUT_MS = 25;
 static const int I2C_MAX_RETRY_COUNT = 10;
 
 // Maximum time in millisecods to retry reading Optiga's response to a command.
@@ -195,7 +195,7 @@ static optiga_result optiga_i2c_write(const uint8_t *data, uint16_t data_size) {
       hal_delay(1);
     }
     if (HAL_OK == i2c_transmit(OPTIGA_I2C_INSTANCE, OPTIGA_ADDRESS,
-                               (uint8_t *)data, data_size, I2C_TIMEOUT)) {
+                               (uint8_t *)data, data_size, I2C_TIMEOUT_MS)) {
       hal_delay_us(1000);
       return OPTIGA_SUCCESS;
     }
@@ -208,7 +208,7 @@ static optiga_result optiga_i2c_read(uint8_t *buffer, uint16_t buffer_size) {
   for (int try_count = 0; try_count <= I2C_MAX_RETRY_COUNT; ++try_count) {
     HAL_Delay(1);
     if (HAL_OK == i2c_receive(OPTIGA_I2C_INSTANCE, OPTIGA_ADDRESS, buffer,
-                              buffer_size, I2C_TIMEOUT)) {
+                              buffer_size, I2C_TIMEOUT_MS)) {
       OPTIGA_LOG("<<<", buffer, buffer_size)
       return OPTIGA_SUCCESS;
     }
