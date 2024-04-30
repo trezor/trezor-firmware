@@ -1,42 +1,101 @@
-use crate::ui::{
-    component::{Component, Event, EventCtx, Paginate, SwipeDirection},
-    flow::base::Swipable,
-    geometry::{Axis, Rect},
-    shape::Renderer,
+use crate::{
+    micropython::gc::Gc,
+    time::{Duration, Instant},
+    ui::{
+        animation::Animation,
+        component::{Component, Event, EventCtx, Paginate, SwipeDirection},
+        flow::base::Swipable,
+        geometry::{Axis, Offset, Rect},
+        shape::Renderer,
+    },
 };
 
+pub struct Transition<T> {
+    /// Clone of the component before page change.
+    cloned: Gc<T>,
+    /// Animation progress.
+    animation: Animation<Offset>,
+    /// Direction of the slide animation.
+    direction: SwipeDirection,
+}
+
+const ANIMATION_DURATION: Duration = Duration::from_millis(333);
+
 /// Allows any implementor of `Paginate` to be part of `Swipable` UI flow.
-#[derive(Clone)]
+/// Renders sliding animation when changing pages.
 pub struct SwipePage<T> {
     inner: T,
+    bounds: Rect,
     axis: Axis,
     pages: usize,
     current: usize,
+    transition: Option<Transition<T>>,
 }
 
-impl<T> SwipePage<T> {
+impl<T: Component + Paginate + Clone> SwipePage<T> {
     pub fn vertical(inner: T) -> Self {
         Self {
             inner,
+            bounds: Rect::zero(),
             axis: Axis::Vertical,
             pages: 1,
             current: 0,
+            transition: None,
         }
+    }
+
+    fn handle_transition(ctx: &mut EventCtx, event: Event, transition: &mut Transition<T>) -> bool {
+        let mut finished = false;
+        if let Event::Timer(EventCtx::ANIM_FRAME_TIMER) = event {
+            if transition.animation.finished(Instant::now()) {
+                finished = true;
+            } else {
+                ctx.request_anim_frame();
+            }
+            ctx.request_paint()
+        }
+        finished
+    }
+
+    fn render_transition<'s>(
+        &'s self,
+        transition: &'s Transition<T>,
+        target: &mut impl Renderer<'s>,
+    ) {
+        let off = transition.animation.value(Instant::now());
+        target.in_clip(self.bounds, &|target| {
+            target.with_origin(off, &|target| {
+                transition.cloned.render(target);
+            });
+            target.with_origin(
+                off - transition.direction.as_offset(self.bounds.size()),
+                &|target| {
+                    self.inner.render(target);
+                },
+            );
+        });
     }
 }
 
-impl<T: Component + Paginate> Component for SwipePage<T> {
+impl<T: Component + Paginate + Clone> Component for SwipePage<T> {
     type Msg = T::Msg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        let result = self.inner.place(bounds);
+        self.bounds = self.inner.place(bounds);
         self.pages = self.inner.page_count();
-        result
+        self.bounds
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        let msg = self.inner.event(ctx, event);
-        msg
+        if let Some(t) = &mut self.transition {
+            let finished = Self::handle_transition(ctx, event, t);
+            if finished {
+                // FIXME: how to ensure the Gc allocation is returned?
+                self.transition = None
+            }
+            return None;
+        }
+        self.inner.event(ctx, event)
     }
 
     fn paint(&mut self) {
@@ -44,33 +103,49 @@ impl<T: Component + Paginate> Component for SwipePage<T> {
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        if let Some(t) = &self.transition {
+            return self.render_transition(t, target);
+        }
         self.inner.render(target)
     }
 }
 
-impl<T: Component + Paginate> Swipable for SwipePage<T> {
-    fn can_swipe(&self, direction: SwipeDirection) -> bool {
+impl<T: Component + Paginate + Clone> Swipable for SwipePage<T> {
+    fn swipe_start(&mut self, ctx: &mut EventCtx, direction: SwipeDirection) -> bool {
         match (self.axis, direction) {
-            (Axis::Horizontal, SwipeDirection::Up | SwipeDirection::Down) => false,
-            (Axis::Vertical, SwipeDirection::Left | SwipeDirection::Right) => false,
-            (_, SwipeDirection::Left | SwipeDirection::Up) => self.current + 1 < self.pages,
-            (_, SwipeDirection::Right | SwipeDirection::Down) => self.current > 0,
-        }
+            // Wrong direction
+            (Axis::Horizontal, SwipeDirection::Up | SwipeDirection::Down) => return false,
+            (Axis::Vertical, SwipeDirection::Left | SwipeDirection::Right) => return false,
+            // Begin
+            (_, SwipeDirection::Right | SwipeDirection::Down) if self.current == 0 => return false,
+            // End
+            (_, SwipeDirection::Left | SwipeDirection::Up) if self.current + 1 >= self.pages => {
+                return false
+            }
+            _ => {}
+        };
+        self.transition = Some(Transition {
+            cloned: unwrap!(Gc::new(self.inner.clone())),
+            animation: Animation::new(
+                Offset::zero(),
+                direction.as_offset(self.bounds.size()),
+                ANIMATION_DURATION,
+                Instant::now(),
+            ),
+            direction,
+        });
+        self.current = match direction {
+            SwipeDirection::Left | SwipeDirection::Up => (self.current + 1).min(self.pages - 1),
+            SwipeDirection::Right | SwipeDirection::Down => self.current.saturating_sub(1),
+        };
+        self.inner.change_page(self.current);
+        ctx.request_anim_frame();
+        ctx.request_paint();
+        true
     }
 
-    fn swiped(&mut self, ctx: &mut EventCtx, direction: SwipeDirection) {
-        match (self.axis, direction) {
-            (Axis::Horizontal, SwipeDirection::Up | SwipeDirection::Down) => return,
-            (Axis::Vertical, SwipeDirection::Left | SwipeDirection::Right) => return,
-            (_, SwipeDirection::Left | SwipeDirection::Up) => {
-                self.current = (self.current + 1).min(self.pages - 1);
-            }
-            (_, SwipeDirection::Right | SwipeDirection::Down) => {
-                self.current = self.current.saturating_sub(1);
-            }
-        }
-        self.inner.change_page(self.current);
-        ctx.request_paint();
+    fn swipe_finished(&self) -> bool {
+        self.transition.is_none()
     }
 }
 
@@ -85,7 +160,6 @@ where
 }
 
 /// Make any component swipable by ignoring all swipe events.
-#[derive(Clone)]
 pub struct IgnoreSwipe<T>(T);
 
 impl<T> IgnoreSwipe<T> {
@@ -114,12 +188,7 @@ impl<T: Component> Component for IgnoreSwipe<T> {
     }
 }
 
-impl<T> Swipable for IgnoreSwipe<T> {
-    fn can_swipe(&self, _direction: SwipeDirection) -> bool {
-        false
-    }
-    fn swiped(&mut self, _ctx: &mut EventCtx, _direction: SwipeDirection) {}
-}
+impl<T> Swipable for IgnoreSwipe<T> {}
 
 #[cfg(feature = "ui_debug")]
 impl<T> crate::trace::Trace for IgnoreSwipe<T>
