@@ -156,20 +156,6 @@ def flow_confirm_reset_create() -> LayoutObj[UiResult]:
 
 
 # rust/src/ui/model_mercury/layout.rs
-def show_address_details(
-    *,
-    qr_title: str,
-    address: str,
-    case_sensitive: bool,
-    details_title: str,
-    account: str | None,
-    path: str | None,
-    xpubs: list[tuple[str, str]],
-) -> LayoutObj[UiResult]:
-    """Show address details - QR code, account, path, cosigner xpubs."""
-
-
-# rust/src/ui/model_mercury/layout.rs
 def show_info_with_cancel(
     *,
     title: str,
@@ -529,8 +515,29 @@ def show_wait_text(message: str, /) -> LayoutObj[None]:
 
 
 # rust/src/ui/model_mercury/layout.rs
-def flow_get_address() -> LayoutObj[UiResult]:
+def flow_get_address(
+    *,
+    address: str | bytes,
+    description: str | None,
+    extra: str | None,
+    chunkify: bool,
+    address_qr: str | None,
+    case_sensitive: bool,
+    account: str | None,
+    path: str | None,
+    xpubs: list[tuple[str, str]],
+) -> LayoutObj[UiResult]:
     """Get address / receive funds."""
+
+
+# rust/src/ui/model_mercury/layout.rs
+def flow_warning_hi_prio(
+    *,
+    title: str,
+    description: str,
+    value: str = "",
+) -> LayoutObj[UiResult]:
+    """Warning modal with multiple steps to confirm."""
 CONFIRMED: UiResult
 CANCELLED: UiResult
 INFO: UiResult

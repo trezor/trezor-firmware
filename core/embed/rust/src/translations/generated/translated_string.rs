@@ -20,7 +20,7 @@ pub enum TranslatedString {
     address__title_cosigner = 7,  // "Cosigner"
     address__title_receive_address = 8,  // "Receive address"
     address__title_yours = 9,  // "Yours"
-    address_details__derivation_path = 10,  // "Derivation path:"
+    address_details__derivation_path_colon = 10,  // "Derivation path:"
     address_details__title_receive_address = 11,  // "Receive address"
     address_details__title_receiving_to = 12,  // "Receiving to"
     authenticate__confirm_template = 13,  // "Allow connected computer to confirm your {0} is genuine?"
@@ -1248,6 +1248,14 @@ pub enum TranslatedString {
     reset__check_backup_instructions = 853,  // "Let's do a quick check of your backup."
     words__instructions = 854,  // "Instructions"
     words__not_recommended = 855,  // "Not recommended!"
+    address_details__account_info = 856,  // "Account info"
+    address__cancel_contact_support = 857,  // "If receive address doesn't match, contact Trezor Support at trezor.io/support."
+    address__cancel_receive = 858,  // "Cancel receive"
+    address__qr_code = 859,  // "QR code"
+    address_details__derivation_path = 860,  // "Derivation path"
+    instructions__continue_in_app = 861,  // "Continue in the app"
+    words__cancel_and_exit = 862,  // "Cancel and exit"
+    address__confirmed = 863,  // "Receive address confirmed"
 }
 
 impl TranslatedString {
@@ -1263,7 +1271,7 @@ impl TranslatedString {
             Self::address__title_cosigner => "Cosigner",
             Self::address__title_receive_address => "Receive address",
             Self::address__title_yours => "Yours",
-            Self::address_details__derivation_path => "Derivation path:",
+            Self::address_details__derivation_path_colon => "Derivation path:",
             Self::address_details__title_receive_address => "Receive address",
             Self::address_details__title_receiving_to => "Receiving to",
             Self::authenticate__confirm_template => "Allow connected computer to confirm your {0} is genuine?",
@@ -2491,6 +2499,14 @@ impl TranslatedString {
             Self::reset__check_backup_instructions => "Let's do a quick check of your backup.",
             Self::words__instructions => "Instructions",
             Self::words__not_recommended => "Not recommended!",
+            Self::address_details__account_info => "Account info",
+            Self::address__cancel_contact_support => "If receive address doesn't match, contact Trezor Support at trezor.io/support.",
+            Self::address__cancel_receive => "Cancel receive",
+            Self::address__qr_code => "QR code",
+            Self::address_details__derivation_path => "Derivation path",
+            Self::instructions__continue_in_app => "Continue in the app",
+            Self::words__cancel_and_exit => "Cancel and exit",
+            Self::address__confirmed => "Receive address confirmed",
         }
     }
 
@@ -2507,7 +2523,7 @@ impl TranslatedString {
             Qstr::MP_QSTR_address__title_cosigner => Some(Self::address__title_cosigner),
             Qstr::MP_QSTR_address__title_receive_address => Some(Self::address__title_receive_address),
             Qstr::MP_QSTR_address__title_yours => Some(Self::address__title_yours),
-            Qstr::MP_QSTR_address_details__derivation_path => Some(Self::address_details__derivation_path),
+            Qstr::MP_QSTR_address_details__derivation_path_colon => Some(Self::address_details__derivation_path_colon),
             Qstr::MP_QSTR_address_details__title_receive_address => Some(Self::address_details__title_receive_address),
             Qstr::MP_QSTR_address_details__title_receiving_to => Some(Self::address_details__title_receiving_to),
             Qstr::MP_QSTR_authenticate__confirm_template => Some(Self::authenticate__confirm_template),
@@ -3735,6 +3751,14 @@ impl TranslatedString {
             Qstr::MP_QSTR_reset__check_backup_instructions => Some(Self::reset__check_backup_instructions),
             Qstr::MP_QSTR_words__instructions => Some(Self::words__instructions),
             Qstr::MP_QSTR_words__not_recommended => Some(Self::words__not_recommended),
+            Qstr::MP_QSTR_address_details__account_info => Some(Self::address_details__account_info),
+            Qstr::MP_QSTR_address__cancel_contact_support => Some(Self::address__cancel_contact_support),
+            Qstr::MP_QSTR_address__cancel_receive => Some(Self::address__cancel_receive),
+            Qstr::MP_QSTR_address__qr_code => Some(Self::address__qr_code),
+            Qstr::MP_QSTR_address_details__derivation_path => Some(Self::address_details__derivation_path),
+            Qstr::MP_QSTR_instructions__continue_in_app => Some(Self::instructions__continue_in_app),
+            Qstr::MP_QSTR_words__cancel_and_exit => Some(Self::words__cancel_and_exit),
+            Qstr::MP_QSTR_address__confirmed => Some(Self::address__confirmed),
             _ => None,
         }
     }

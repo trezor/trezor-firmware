@@ -52,7 +52,7 @@ impl AddressDetails {
             if let Some(path) = path {
                 para.add(Paragraph::new(
                     &theme::TEXT_BOLD,
-                    TR::address_details__derivation_path,
+                    TR::address_details__derivation_path_colon,
                 ));
                 para.add(Paragraph::new(&theme::TEXT_MONO, path));
             }

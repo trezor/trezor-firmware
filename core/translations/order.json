@@ -9,7 +9,7 @@
   "7": "address__title_cosigner",
   "8": "address__title_receive_address",
   "9": "address__title_yours",
-  "10": "address_details__derivation_path",
+  "10": "address_details__derivation_path_colon",
   "11": "address_details__title_receive_address",
   "12": "address_details__title_receiving_to",
   "13": "authenticate__confirm_template",
@@ -854,5 +854,13 @@
   "852": "backup__create_backup_to_prevent_loss",
   "853": "reset__check_backup_instructions",
   "854": "words__instructions",
-  "855": "words__not_recommended"
+  "855": "words__not_recommended",
+  "856": "address_details__account_info",
+  "857": "address__cancel_contact_support",
+  "858": "address__cancel_receive",
+  "859": "address__qr_code",
+  "860": "address_details__derivation_path",
+  "861": "instructions__continue_in_app",
+  "862": "words__cancel_and_exit",
+  "863": "address__confirmed"
 }

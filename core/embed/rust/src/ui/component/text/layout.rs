@@ -199,7 +199,7 @@ impl TextStyle {
 impl TextLayout {
     /// Create a new text layout, with empty size and default text parameters
     /// filled from `T`.
-    pub fn new(style: TextStyle) -> Self {
+    pub const fn new(style: TextStyle) -> Self {
         Self {
             bounds: Rect::zero(),
             padding_top: 0,
@@ -210,12 +210,12 @@ impl TextLayout {
         }
     }
 
-    pub fn with_bounds(mut self, bounds: Rect) -> Self {
+    pub const fn with_bounds(mut self, bounds: Rect) -> Self {
         self.bounds = bounds;
         self
     }
 
-    pub fn with_align(mut self, align: Alignment) -> Self {
+    pub const fn with_align(mut self, align: Alignment) -> Self {
         self.align = align;
         self
     }

@@ -25,6 +25,7 @@ use crate::{
 /// consumption and conversion time.
 pub const MAX_HEX_CHARS_ON_SCREEN: usize = 256;
 
+#[derive(Clone)]
 pub enum StrOrBytes {
     Str(TString<'static>),
     Bytes(Obj),
@@ -55,6 +56,7 @@ impl TryFrom<Obj> for StrOrBytes {
     }
 }
 
+#[derive(Clone)]
 pub struct ConfirmBlob {
     pub description: TString<'static>,
     pub extra: TString<'static>,
