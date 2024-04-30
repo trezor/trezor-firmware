@@ -59,25 +59,23 @@ impl VerticalMenu {
         Self::new(buttons_vec)
     }
 
-    pub fn context_menu(options: Vec<(&'static str, Icon), N_ITEMS>) -> Self {
-        // FIXME: args should be TString when IconText has TString
-        let mut buttons_vec = VerticalMenuButtons::new();
-        for opt in options {
-            let button_theme;
-            match opt.1 {
-                // FIXME: might not be applicable everywhere
-                theme::ICON_CANCEL => {
-                    button_theme = theme::button_warning_high();
-                }
-                _ => {
-                    button_theme = theme::button_default();
-                }
-            }
-            unwrap!(buttons_vec.push(
-                Button::with_icon_and_text(IconText::new(opt.0, opt.1)).styled(button_theme)
-            ));
-        }
-        Self::new(buttons_vec)
+    pub fn empty() -> Self {
+        Self::new(VerticalMenuButtons::new())
+    }
+
+    pub fn item(mut self, icon: Icon, text: TString<'static>) -> Self {
+        unwrap!(self.buttons.push(
+            Button::with_icon_and_text(IconText::new(text, icon)).styled(theme::button_default())
+        ));
+        self
+    }
+
+    pub fn danger(mut self, icon: Icon, text: TString<'static>) -> Self {
+        unwrap!(self.buttons.push(
+            Button::with_icon_and_text(IconText::new(text, icon))
+                .styled(theme::button_warning_high())
+        ));
+        self
     }
 }
 
