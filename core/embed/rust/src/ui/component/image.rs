@@ -72,7 +72,6 @@ impl crate::trace::Trace for Image {
     }
 }
 
-#[derive(Clone)]
 pub struct BlendedImage {
     bg: Icon,
     fg: Icon,

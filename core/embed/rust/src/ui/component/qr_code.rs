@@ -25,7 +25,6 @@ const CORNER_RADIUS: u8 = 4;
 const DARK: Color = Color::rgb(0, 0, 0);
 const LIGHT: Color = Color::rgb(0xff, 0xff, 0xff);
 
-#[derive(Clone)]
 pub struct Qr {
     text: String<MAX_DATA>,
     border: i16,

@@ -23,21 +23,28 @@ pub struct SwipeFlow<Q, S> {
     state: Q,
     /// FlowStore with all screens/components.
     store: S,
-    /// `Some` when state transition animation is in progress.
-    transition: Option<Transition<Q>>,
+    /// `Transition::None` when state transition animation is in not progress.
+    transition: Transition<Q>,
     /// Swipe detector.
     swipe: Swipe,
     /// Animation parameter.
     anim_offset: Offset,
 }
 
-struct Transition<Q> {
-    /// State we are transitioning _from_.
-    prev_state: Q,
-    /// Animation progress.
-    animation: Animation<Offset>,
-    /// Direction of the slide animation.
-    direction: SwipeDirection,
+enum Transition<Q> {
+    /// SwipeFlow is performing transition between different states.
+    External {
+        /// State we are transitioning _from_.
+        prev_state: Q,
+        /// Animation progress.
+        animation: Animation<Offset>,
+        /// Direction of the slide animation.
+        direction: SwipeDirection,
+    },
+    /// Transition runs in child component, we forward events and wait.
+    Internal,
+    /// No transition.
+    None,
 }
 
 impl<Q: FlowState, S: FlowStore> SwipeFlow<Q, S> {
@@ -45,14 +52,18 @@ impl<Q: FlowState, S: FlowStore> SwipeFlow<Q, S> {
         Ok(Self {
             state: init,
             store,
-            transition: None,
+            transition: Transition::None,
             swipe: Swipe::new().down().up().left().right(),
             anim_offset: Offset::zero(),
         })
     }
 
     fn goto(&mut self, ctx: &mut EventCtx, direction: SwipeDirection, state: Q) {
-        self.transition = Some(Transition {
+        if state == self.state {
+            self.transition = Transition::Internal;
+            return;
+        }
+        self.transition = Transition::External {
             prev_state: self.state,
             animation: Animation::new(
                 Offset::zero(),
@@ -61,58 +72,71 @@ impl<Q: FlowState, S: FlowStore> SwipeFlow<Q, S> {
                 Instant::now(),
             ),
             direction,
-        });
+        };
         self.state = state;
         ctx.request_anim_frame();
-        ctx.request_paint()
+        ctx.request_paint();
     }
 
     fn render_state<'s>(&'s self, state: Q, target: &mut impl Renderer<'s>) {
         self.store.render(state.index(), target)
     }
 
-    fn render_transition<'s>(&'s self, transition: &Transition<Q>, target: &mut impl Renderer<'s>) {
-        let off = transition.animation.value(Instant::now());
-
-        if self.state == transition.prev_state {
-            target.with_origin(off, &|target| {
-                self.store.render_cloned(target);
-            });
-        } else {
-            target.with_origin(off, &|target| {
-                self.render_state(transition.prev_state, target);
-            });
-        }
-        target.with_origin(
-            off - transition.direction.as_offset(self.anim_offset),
-            &|target| {
-                self.render_state(self.state, target);
-            },
-        );
+    fn render_transition<'s>(
+        &'s self,
+        prev_state: &Q,
+        animation: &Animation<Offset>,
+        direction: &SwipeDirection,
+        target: &mut impl Renderer<'s>,
+    ) {
+        let off = animation.value(Instant::now());
+        target.with_origin(off, &|target| {
+            self.render_state(*prev_state, target);
+        });
+        target.with_origin(off - direction.as_offset(self.anim_offset), &|target| {
+            self.render_state(self.state, target);
+        });
     }
 
-    fn handle_transition(&mut self, ctx: &mut EventCtx) {
-        if let Some(transition) = &self.transition {
-            if transition.animation.finished(Instant::now()) {
-                self.transition = None;
-                unwrap!(self.store.clone(None)); // Free the clone.
-
-                let msg = self.store.event(self.state.index(), ctx, Event::Attach);
-                assert!(msg.is_none())
-            } else {
-                ctx.request_anim_frame();
+    fn handle_transition(&mut self, ctx: &mut EventCtx, event: Event) -> Option<FlowMsg> {
+        let i = self.state.index();
+        let mut finished = false;
+        let result = match &self.transition {
+            Transition::External { animation, .. }
+                if matches!(event, Event::Timer(EventCtx::ANIM_FRAME_TIMER)) =>
+            {
+                if animation.finished(Instant::now()) {
+                    finished = true;
+                    ctx.request_paint();
+                    self.store.event(i, ctx, Event::Attach)
+                } else {
+                    ctx.request_anim_frame();
+                    ctx.request_paint();
+                    None
+                }
             }
-            ctx.request_paint();
+            Transition::External { .. } => None, // ignore all events until animation finishes
+            Transition::Internal => {
+                let msg = self.store.event(i, ctx, event);
+                if self.store.map_swipable(i, |s| s.swipe_finished()) {
+                    finished = true;
+                };
+                msg
+            }
+            Transition::None => unreachable!(),
+        };
+        if finished {
+            self.transition = Transition::None;
         }
+        return result;
     }
 
     fn handle_swipe_child(&mut self, ctx: &mut EventCtx, direction: SwipeDirection) -> Decision<Q> {
         let i = self.state.index();
-        if self.store.map_swipable(i, |s| s.can_swipe(direction)) {
-            // Before handling the swipe we make a copy of the original state so that we
-            // can render both states in the transition animation.
-            unwrap!(self.store.clone(Some(i)));
-            self.store.map_swipable(i, |s| s.swiped(ctx, direction));
+        if self
+            .store
+            .map_swipable(i, |s| s.swipe_start(ctx, direction))
+        {
             Decision::Goto(self.state, direction)
         } else {
             Decision::Nothing
@@ -142,14 +166,8 @@ impl<Q: FlowState, S: FlowStore> Component for SwipeFlow<Q, S> {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        // TODO: are there any events we want to send to all? timers perhaps?
-        if let Event::Timer(EventCtx::ANIM_FRAME_TIMER) = event {
-            self.handle_transition(ctx);
-            return None;
-        }
-        // Ignore events while transition is running.
-        if self.transition.is_some() {
-            return None;
+        if !matches!(self.transition, Transition::None) {
+            return self.handle_transition(ctx, event);
         }
 
         let mut decision = Decision::Nothing;
@@ -173,10 +191,13 @@ impl<Q: FlowState, S: FlowStore> Component for SwipeFlow<Q, S> {
     fn paint(&mut self) {}
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        if let Some(transition) = &self.transition {
-            self.render_transition(transition, target)
-        } else {
-            self.render_state(self.state, target)
+        match &self.transition {
+            Transition::None | Transition::Internal => self.render_state(self.state, target),
+            Transition::External {
+                prev_state,
+                animation,
+                direction,
+            } => self.render_transition(prev_state, animation, direction, target),
         }
     }
 }
