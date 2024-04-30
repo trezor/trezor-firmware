@@ -10,7 +10,6 @@ use super::{theme, Swipe, SwipeDirection};
 
 /// Component showing status of an operation. Most typically embedded as a
 /// content of a Frame and showing success (checkmark with a circle around).
-#[derive(Clone)]
 pub struct StatusScreen {
     area: Rect,
     icon: Icon,
@@ -19,7 +18,6 @@ pub struct StatusScreen {
     dismiss_type: DismissType,
 }
 
-#[derive(Clone)]
 enum DismissType {
     SwipeUp(Swipe),
     Timeout(Timeout),
