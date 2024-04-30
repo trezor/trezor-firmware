@@ -1295,23 +1295,6 @@ extern "C" fn new_select_word(n_args: usize, args: *const Obj, kwargs: *mut Map)
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
-extern "C" fn new_show_tx_context_menu(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
-    let block = move |_args: &[Obj], _kwargs: &Map| {
-        // TODO: this is just POC
-        let title: TString = "".into();
-        let options = unwrap!(Vec::from_slice(&[
-            ("Address QR code", theme::ICON_QR_CODE),
-            ("Fee info", theme::ICON_CHEVRON_RIGHT),
-            ("Cancel transaction", theme::ICON_CANCEL),
-        ]));
-        let content = VerticalMenu::context_menu(options);
-        let frame_with_menu = Frame::left_aligned(title, content).with_cancel_button();
-        let obj = LayoutObj::new(frame_with_menu)?;
-        Ok(obj.into())
-    };
-    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
-}
-
 extern "C" fn new_show_share_words(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
@@ -2039,11 +2022,6 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     """Select mnemonic word from three possibilities - seed check after backup. The
     ///    iterable must be of exact size. Returns index in range `0..3`."""
     Qstr::MP_QSTR_select_word => obj_fn_kw!(0, new_select_word).as_obj(),
-
-    /// def show_tx_context_menu() -> LayoutObj[int]:
-    ///    """Show transaction context menu with the options for 1) Address QR code, 2) Fee
-    ///    information, 3) Cancel transaction"""
-    Qstr::MP_QSTR_show_tx_context_menu => obj_fn_kw!(0, new_show_tx_context_menu).as_obj(),
 
     // TODO: This is just POC
     /// def create_backup_flow() -> LayoutObj[UiResult]

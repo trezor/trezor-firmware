@@ -12,7 +12,6 @@ use crate::{
         },
     },
 };
-use heapless::Vec;
 
 use super::super::{
     component::{Frame, FrameMsg, IconDialog, VerticalMenu, VerticalMenuChoiceMsg},
@@ -121,11 +120,10 @@ impl GetAddress {
             .add(
                 Frame::left_aligned(
                     "".into(),
-                    VerticalMenu::context_menu(unwrap!(Vec::from_slice(&[
-                        ("Address QR code", theme::ICON_QR_CODE),
-                        ("Account info", theme::ICON_CHEVRON_RIGHT),
-                        ("Cancel trans.", theme::ICON_CANCEL),
-                    ]))),
+                    VerticalMenu::empty()
+                        .item(theme::ICON_QR_CODE, "Address QR code".into())
+                        .item(theme::ICON_CHEVRON_RIGHT, "Account info".into())
+                        .danger(theme::ICON_CANCEL, "Cancel operation".into()),
                 )
                 .with_cancel_button()
                 .map(|msg| match msg {
