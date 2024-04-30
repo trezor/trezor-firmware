@@ -186,7 +186,8 @@ def _get_test_name_and_group(node_id: str) -> tuple[str, str]:
     return shortened_name, group_name
 
 
-def get_screen_path(test_name: str) -> Path | None:
+def get_screen_path(test_case: TestCase) -> Path | None:
+    test_name = test_case.id
     path = SCREENS_DIR / test_name / "actual"
     if path.exists():
         return path
