@@ -190,8 +190,8 @@ class TestCardanoAddress(unittest.TestCase):
             "talent drug much home firefly toxic analysis idea umbrella slice",
         ]
         passphrase = b"TREZOR"
-        identifier, exponent, ems = slip39.recover_ems(mnemonics)
-        master_secret = slip39.decrypt(ems, passphrase, exponent, identifier)
+        identifier, extendable, exponent, ems = slip39.recover_ems(mnemonics)
+        master_secret = slip39.decrypt(ems, passphrase, exponent, identifier, extendable)
 
         node = cardano.from_seed_slip23(master_secret)
 
@@ -264,8 +264,8 @@ class TestCardanoAddress(unittest.TestCase):
             "quick silent downtown oral critical step remove says rhythm venture aunt",
         ]
         passphrase = b"TREZOR"
-        identifier, exponent, ems = slip39.recover_ems(mnemonics)
-        master_secret = slip39.decrypt(ems, passphrase, exponent, identifier)
+        identifier, extendable, exponent, ems = slip39.recover_ems(mnemonics)
+        master_secret = slip39.decrypt(ems, passphrase, exponent, identifier, extendable)
 
         node = cardano.from_seed_slip23(master_secret)
 

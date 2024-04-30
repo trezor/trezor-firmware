@@ -279,4 +279,38 @@ vectors = [
         ],
         "",
     ],
+    [
+        [
+            "herald flea academic cage avoid space trend estate dryer hairy evoke eyebrow improve airline artwork garlic premium duration prevent oven",
+            "herald flea academic client blue skunk class goat luxury deny presence impulse graduate clay join blanket bulge survive dish necklace",
+            "herald flea academic acne advance fused brother frozen broken game ranked ajar already believe check install theory angry exercise adult"
+        ],
+        "ad6f2ad8b59bbbaa01369b9006208d9a",
+    ],
+    [
+        [
+            "testify swimming academic academic column loyalty smear include exotic bedroom exotic wrist lobe cover grief golden smart junior estimate learn"
+        ],
+        "1679b4516e0ee5954351d288a838f45e",
+    ],
+    [
+        [
+            "enemy favorite academic acid cowboy phrase havoc level response walnut budget painting inside trash adjust froth kitchen learn tidy punish",
+            "enemy favorite academic always academic sniff script carpet romp kind promise scatter center unfair training emphasis evening belong fake enforce"
+        ],
+        "48b1a4b80b8c209ad42c33672bdaa428",
+    ],
+    [
+        [
+            "impulse calcium academic academic alcohol sugar lyrics pajamas column facility finance tension extend space birthday rainbow swimming purple syndrome facility trial warn duration snapshot shadow hormone rhyme public spine counter easy hawk album"
+        ],
+        "8340611602fe91af634a5f4608377b5235fa2d757c51d720c0c7656249a3035f",
+    ],
+    [
+        [
+            "western apart academic always artist resident briefing sugar woman oven coding club ajar merit pecan answer prisoner artist fraction amount desktop mild false necklace muscle photo wealthy alpha category unwrap spew losing making",
+            "western apart academic acid answer ancient auction flip image penalty oasis beaver multiple thunder problem switch alive heat inherit superior teaspoon explain blanket pencil numb lend punish endless aunt garlic humidity kidney observe"
+        ],
+        "8dc652d6d6cd370d8c963141f6d79ba440300f25c467302c1d966bff8f62300d",
+    ],
 ]

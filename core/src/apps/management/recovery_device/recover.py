@@ -41,13 +41,14 @@ def process_slip39(words: str) -> tuple[bytes | None, slip39.Share]:
         storage_recovery.set_slip39_group_count(share.group_count)
         storage_recovery.set_slip39_iteration_exponent(share.iteration_exponent)
         storage_recovery.set_slip39_identifier(share.identifier)
+        storage_recovery.set_slip39_extendable(share.extendable)
         storage_recovery.set_slip39_remaining_shares(share.threshold - 1, group_index)
         storage_recovery_shares.set(share.index, group_index, words)
 
         # if share threshold and group threshold are 1
         # we can calculate the secret right away
         if share.threshold == 1 and share.group_threshold == 1:
-            _, _, secret = slip39.recover_ems([words])
+            _, _, _, secret = slip39.recover_ems([words])
             return secret, share
         else:
             # we need more shares
@@ -85,7 +86,7 @@ def process_slip39(words: str) -> tuple[bytes | None, slip39.Share]:
         # in case of slip39 basic we only need the first and only group
         mnemonics = storage_recovery_shares.fetch_group(0)
 
-    _, _, secret = slip39.recover_ems(mnemonics)
+    _, _, _, secret = slip39.recover_ems(mnemonics)
     return secret, share
 
 
