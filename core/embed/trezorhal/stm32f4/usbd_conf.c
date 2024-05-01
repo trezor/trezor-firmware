@@ -488,7 +488,7 @@ USBD_StatusTypeDef  USBD_LL_Init (USBD_HandleTypeDef *pdev)
   if (pdev->id == USB_PHY_FS_ID) {
     /*Set LL Driver parameters */
     pcd_fs_handle.Instance = USB_OTG_FS;
-    pcd_fs_handle.Init.dev_endpoints = 4;
+    pcd_fs_handle.Init.dev_endpoints = 6;
     pcd_fs_handle.Init.use_dedicated_ep1 = 0;
     pcd_fs_handle.Init.ep0_mps = 0x40;
     pcd_fs_handle.Init.dma_enable = 0;
@@ -508,10 +508,10 @@ USBD_StatusTypeDef  USBD_LL_Init (USBD_HandleTypeDef *pdev)
     // in this dedicated 1.25KiB data RAM to use. see section 6.3.8 in UM1021 and 29.13 in RM0033.
     // USB packets that we deal with are 64 bytes in size which equates to 16 32-bit words.
     // we size the transmit FIFO's equally and give the rest of the space to the receive FIFO.
-    const uint16_t transmit_fifo_size = 48; // 48 = 16 * 3 meaning that we give 3 packets of space for each transmit fifo
-    const uint16_t receive_fifo_zie = 128; // 128 = 320 - 4 * 48
+    const uint16_t transmit_fifo_size = 32; // 32 = 16 * 2 meaning that we give 2 packets of space for each transmit fifo
+    const uint16_t receive_fifo_zie = 128; // 128 = 320 - 6 * 32
     HAL_PCDEx_SetRxFiFo(&pcd_fs_handle, receive_fifo_zie);
-    for (uint16_t i = 0; i < 4; i++) {
+    for (uint16_t i = 0; i < 6; i++) {
       HAL_PCDEx_SetTxFiFo(&pcd_fs_handle, i, transmit_fifo_size);
     }
   }
