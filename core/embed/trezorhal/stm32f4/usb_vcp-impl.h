@@ -263,7 +263,7 @@ int usb_vcp_read(uint8_t iface_num, uint8_t *buf, uint32_t len) {
     return -1;  // Invalid interface number
   }
   if (iface->type != USB_IFACE_TYPE_VCP) {
-    return -2;  // Interface interface type
+    return -2;  // Invalid interface type
   }
   usb_vcp_state_t *state = &iface->vcp;
 
@@ -284,7 +284,7 @@ int usb_vcp_write(uint8_t iface_num, const uint8_t *buf, uint32_t len) {
     return -1;  // Invalid interface number
   }
   if (iface->type != USB_IFACE_TYPE_VCP) {
-    return -2;  // Interface interface type
+    return -2;  // Invalid interface type
   }
   usb_vcp_state_t *state = &iface->vcp;
 
