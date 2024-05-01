@@ -91,6 +91,7 @@ include_icon!(ICON_CLOSE, "model_mercury/res/close30.toif");
 include_icon!(ICON_CONFIRM_INPUT, "model_mercury/res/confirm_input30.toif");
 include_icon!(ICON_DELETE, "model_mercury/res/delete30.toif");
 include_icon!(ICON_MENU, "model_mercury/res/menu30.toif");
+include_icon!(ICON_KEY, "model_mercury/res/key30.toif");
 include_icon!(
     ICON_SIMPLE_CHECKMARK,
     "model_mercury/res/simple_checkmark30.toif"
@@ -100,6 +101,13 @@ include_icon!(ICON_SIGN, "model_mercury/res/sign30.toif");
 // 40x40
 include_icon!(ICON_MINUS, "model_mercury/res/minus40.toif");
 include_icon!(ICON_PLUS, "model_mercury/res/plus40.toif");
+
+// Homescreen
+include_icon!(
+    ICON_LOCKSCREEN_FILTER,
+    "model_mercury/res/lockscreen_filter.toif"
+);
+include_icon!(ICON_CENTRAL_CIRCLE, "model_mercury/res/central_circle.toif");
 
 // TODO remove TT icons:
 
