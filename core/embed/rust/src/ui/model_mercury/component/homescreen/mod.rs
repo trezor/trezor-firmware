@@ -7,8 +7,8 @@ use crate::{
     translations::TR,
     trezorhal::usb::usb_configured,
     ui::{
-        component::{Component, Event, EventCtx, Pad, TimerToken},
-        display::{self, tjpgd::jpeg_info, toif::Icon, Color, Font},
+        component::{Component, Event, EventCtx, TimerToken},
+        display::{tjpgd::jpeg_info, toif::Icon, Color, Font},
         event::{TouchEvent, USBEvent},
         geometry::{Alignment, Alignment2D, Insets, Offset, Point, Rect},
         layout::util::get_user_custom_image,
@@ -20,13 +20,16 @@ use crate::{
 use crate::{
     trezorhal::{buffers::BufferJpegWork, uzlib::UZLIB_WINDOW_SIZE},
     ui::{
-        constant::HEIGHT,
+        constant::{screen, HEIGHT},
         display::{
             tjpgd::BufferInput,
             toif::{Toif, ToifFormat},
         },
-        model_mercury::component::homescreen::render::{
-            HomescreenJpeg, HomescreenToif, HOMESCREEN_TOIF_SIZE,
+        model_mercury::{
+            component::homescreen::render::{HomescreenJpeg, HomescreenToif, HOMESCREEN_TOIF_SIZE},
+            theme::{
+                GREEN_LIGHT, GREY_LIGHT, ICON_CENTRAL_CIRCLE, ICON_KEY, ICON_LOCKSCREEN_FILTER,
+            },
         },
     },
 };
@@ -54,8 +57,6 @@ pub struct Homescreen {
     custom_image: Option<Gc<[u8]>>,
     hold_to_lock: bool,
     loader: Loader,
-    pad: Pad,
-    paint_notification_only: bool,
     delay: Option<TimerToken>,
 }
 
@@ -75,8 +76,6 @@ impl Homescreen {
             custom_image: get_user_custom_image().ok(),
             hold_to_lock,
             loader: Loader::with_lock_icon().with_durations(LOADER_DURATION, LOADER_DURATION / 3),
-            pad: Pad::with_background(theme::BG),
-            paint_notification_only: false,
             delay: None,
         }
     }
@@ -133,13 +132,8 @@ impl Homescreen {
         self.loader.render(target)
     }
 
-    pub fn set_paint_notification(&mut self) {
-        self.paint_notification_only = true;
-    }
-
     fn event_usb(&mut self, ctx: &mut EventCtx, event: Event) {
         if let Event::USB(USBEvent::Connected(_)) = event {
-            self.paint_notification_only = true;
             ctx.request_paint();
         }
     }
@@ -165,8 +159,6 @@ impl Homescreen {
             }
             Event::Timer(token) if Some(token) == self.delay => {
                 self.delay = None;
-                self.pad.clear();
-                self.paint_notification_only = false;
                 self.loader.start_growing(ctx, Instant::now());
             }
             _ => {}
@@ -178,8 +170,6 @@ impl Homescreen {
             }
             Some(LoaderMsg::ShrunkCompletely) => {
                 self.loader.reset();
-                self.pad.clear();
-                self.paint_notification_only = false;
                 ctx.request_paint()
             }
             None => {}
@@ -193,7 +183,6 @@ impl Component for Homescreen {
     type Msg = HomescreenMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        self.pad.place(AREA);
         self.loader.place(AREA.translate(LOADER_OFFSET));
         bounds
     }
@@ -268,7 +257,6 @@ impl Component for Homescreen {
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        self.pad.render(target);
         if self.loader.is_animating() || self.loader.is_completely_grown(Instant::now()) {
             self.render_loader(target);
         } else {
@@ -278,7 +266,7 @@ impl Component for Homescreen {
             };
 
             if is_image_jpeg(img_data) {
-                shape::JpegImage::new(self.pad.area.center(), img_data)
+                shape::JpegImage::new(AREA.center(), img_data)
                     .with_align(Alignment2D::CENTER)
                     .render(target);
             } else if is_image_toif(img_data) {
@@ -296,7 +284,7 @@ impl Component for Homescreen {
                     .render(target);
 
                 let style = theme::TEXT_DEMIBOLD;
-                let pos = Point::new(self.pad.area.center().x, LABEL_Y);
+                let pos = Point::new(AREA.center().x, LABEL_Y);
                 shape::Text::new(pos, t)
                     .with_align(Alignment::Center)
                     .with_font(style.text_font)
@@ -309,9 +297,7 @@ impl Component for Homescreen {
                 const NOTIFICATION_BORDER: i16 = 6;
                 const TEXT_ICON_SPACE: i16 = 8;
 
-                let banner = self
-                    .pad
-                    .area
+                let banner = AREA
                     .inset(Insets::sides(NOTIFICATION_BORDER))
                     .with_height(NOTIFICATION_HEIGHT)
                     .translate(Offset::y(NOTIFICATION_BORDER));
@@ -350,7 +336,7 @@ impl Component for Homescreen {
     #[cfg(feature = "ui_bounds")]
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         self.loader.bounds(sink);
-        sink(self.pad.area);
+        sink(AREA);
     }
 }
 
@@ -477,14 +463,24 @@ impl Component for Lockscreen<'_> {
             shape::JpegImage::new(center, img_data)
                 .with_align(Alignment2D::CENTER)
                 .with_blur(4)
-                .with_dim(140)
-                .render(target);
-        } else if is_image_toif(img_data) {
-            shape::ToifImage::new(center, unwrap!(Toif::new(img_data)))
-                .with_align(Alignment2D::CENTER)
-                //.with_blur(5)
+                .with_dim(102)
                 .render(target);
         }
+
+        shape::ToifImage::new(center, ICON_LOCKSCREEN_FILTER.toif)
+            .with_align(Alignment2D::CENTER)
+            .with_fg(Color::black())
+            .render(target);
+
+        shape::ToifImage::new(center + Offset::y(12), ICON_CENTRAL_CIRCLE.toif)
+            .with_align(Alignment2D::CENTER)
+            .with_fg(GREEN_LIGHT)
+            .render(target);
+
+        shape::ToifImage::new(center + Offset::y(12), ICON_KEY.toif)
+            .with_align(Alignment2D::CENTER)
+            .with_fg(GREY_LIGHT)
+            .render(target);
 
         let (locked, tap) = if self.bootscreen {
             (
@@ -498,69 +494,49 @@ impl Component for Lockscreen<'_> {
         let mut label_style = theme::TEXT_DEMIBOLD;
         label_style.text_color = theme::GREY_LIGHT;
 
-        let mut texts: &[HomescreenText] = &[
-            HomescreenText {
-                text: "".into(),
-                style: theme::TEXT_NORMAL,
-                offset: Offset::new(2, COINJOIN_Y),
-                icon: Some(theme::ICON_COINJOIN),
-            },
-            HomescreenText {
-                text: locked.into(),
-                style: theme::TEXT_BOLD,
-                offset: Offset::y(LOCKED_Y),
-                icon: Some(theme::ICON_LOCK),
-            },
-            HomescreenText {
-                text: tap.into(),
-                style: theme::TEXT_NORMAL,
-                offset: Offset::y(TAP_Y),
-                icon: None,
-            },
-            HomescreenText {
-                text: self.label,
-                style: label_style,
-                offset: Offset::y(LABEL_Y),
-                icon: None,
-            },
-        ];
+        let mut offset = 0;
 
-        if !self.coinjoin_authorized {
-            texts = &texts[1..];
-        }
+        self.label.map(|t| {
+            offset = theme::TEXT_DEMIBOLD.text_font.visible_text_height(t);
 
-        for item in texts.iter() {
-            item.text.map(|t| {
-                const TEXT_ICON_SPACE: i16 = 2;
+            let text_pos = Point::new(0, offset);
 
-                let icon_width = match item.icon {
-                    Some(icon) => icon.toif.width() + TEXT_ICON_SPACE,
-                    None => 0,
-                };
+            shape::Text::new(text_pos, t)
+                .with_font(theme::TEXT_DEMIBOLD.text_font)
+                .with_fg(theme::GREY_LIGHT)
+                .render(target);
+        });
 
-                let area = constant::screen();
+        offset += 6;
 
-                let text_pos = Point::new(
-                    item.style
-                        .text_font
-                        .horz_center(area.x0 + icon_width, area.x1, t),
-                    0,
-                ) + item.offset;
+        locked.map_translated(|t| {
+            offset += theme::TEXT_SUB_GREY.text_font.visible_text_height(t);
 
-                shape::Text::new(text_pos, t)
-                    .with_font(item.style.text_font)
-                    .with_fg(item.style.text_color)
-                    .render(target);
+            let text_pos = Point::new(0, offset);
 
-                if let Some(icon) = item.icon {
-                    let icon_pos = Point::new(text_pos.x - icon_width, text_pos.y);
-                    shape::ToifImage::new(icon_pos, icon.toif)
-                        .with_align(Alignment2D::BOTTOM_LEFT)
-                        .with_fg(item.style.text_color)
-                        .render(target);
-                }
-            });
-        }
+            shape::Text::new(text_pos, t)
+                .with_font(theme::TEXT_SUB_GREY.text_font)
+                .with_fg(theme::TEXT_SUB_GREY.text_color)
+                .render(target);
+        });
+
+        tap.map_translated(|t| {
+            offset = theme::TEXT_SUB_GREY.text_font.text_baseline();
+
+            let text_pos = Point::new(
+                theme::TEXT_SUB_GREY
+                    .text_font
+                    .horz_center(screen().x0, screen().x1, t),
+                screen().y1 - offset,
+            );
+
+            shape::Text::new(text_pos, t)
+                .with_font(theme::TEXT_SUB_GREY.text_font)
+                .with_fg(theme::GREY_DARK)
+                .render(target);
+        });
+
+        // TODO coinjoin authorized text
     }
 }
 
