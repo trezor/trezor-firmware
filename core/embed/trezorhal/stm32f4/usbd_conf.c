@@ -509,8 +509,8 @@ USBD_StatusTypeDef  USBD_LL_Init (USBD_HandleTypeDef *pdev)
     // USB packets that we deal with are 64 bytes in size which equates to 16 32-bit words.
     // we size the transmit FIFO's equally and give the rest of the space to the receive FIFO.
     const uint16_t transmit_fifo_size = 32; // 32 = 16 * 2 meaning that we give 2 packets of space for each transmit fifo
-    const uint16_t receive_fifo_zie = 128; // 128 = 320 - 6 * 32
-    HAL_PCDEx_SetRxFiFo(&pcd_fs_handle, receive_fifo_zie);
+    const uint16_t receive_fifo_size = 128; // 128 = 320 - 6 * 32
+    HAL_PCDEx_SetRxFiFo(&pcd_fs_handle, receive_fifo_size);
     for (uint16_t i = 0; i < 6; i++) {
       HAL_PCDEx_SetTxFiFo(&pcd_fs_handle, i, transmit_fifo_size);
     }
@@ -547,8 +547,8 @@ USBD_StatusTypeDef  USBD_LL_Init (USBD_HandleTypeDef *pdev)
     // USB packets that we deal with are 64 bytes in size which equates to 16 32-bit words.
     // we size the transmit FIFO's equally and give the rest of the space to the receive FIFO.
     const uint16_t transmit_fifo_size = 144; // 144 = 16 * 9 meaning that we give 9 packets of space for each transmit fifo
-    const uint16_t receive_fifo_zie = 160; // 160 = 1024 - 6 * 144 section 35.10.1 details what some of this is used for besides storing packets
-    HAL_PCDEx_SetRxFiFo(&pcd_hs_handle, receive_fifo_zie);
+    const uint16_t receive_fifo_size = 160; // 160 = 1024 - 6 * 144 section 35.10.1 details what some of this is used for besides storing packets
+    HAL_PCDEx_SetRxFiFo(&pcd_hs_handle, receive_fifo_size);
     for (uint16_t i = 0; i < 6; i++) {
       HAL_PCDEx_SetTxFiFo(&pcd_hs_handle, i, transmit_fifo_size);
     }
@@ -585,8 +585,8 @@ USBD_StatusTypeDef  USBD_LL_Init (USBD_HandleTypeDef *pdev)
     // USB packets that we deal with are 64 bytes in size which equates to 16 32-bit words.
     // we size the transmit FIFO's equally and give the rest of the space to the receive FIFO.
     const uint16_t transmit_fifo_size = 144; // 144 = 16 * 9 meaning that we give 9 packets of space for each transmit fifo
-    const uint16_t receive_fifo_zie = 160; // 160 = 1024 - 6 * 144 section 35.10.1 details what some of this is used for besides storing packets
-    HAL_PCDEx_SetRxFiFo(&pcd_hs_handle, receive_fifo_zie);
+    const uint16_t receive_fifo_size = 160; // 160 = 1024 - 6 * 144 section 35.10.1 details what some of this is used for besides storing packets
+    HAL_PCDEx_SetRxFiFo(&pcd_hs_handle, receive_fifo_size);
     for (uint16_t i = 0; i < 6; i++) {
       HAL_PCDEx_SetTxFiFo(&pcd_hs_handle, i, transmit_fifo_size);
     }
