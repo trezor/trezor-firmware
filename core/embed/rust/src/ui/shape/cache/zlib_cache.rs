@@ -6,12 +6,13 @@ use core::cell::UnsafeCell;
 use without_alloc::{alloc::LocalAllocLeakExt, FixedVec};
 
 struct ZlibCacheSlot<'a> {
-    /// Reference to compressed data
-    zdata: &'a [u8],
-    /// Current offset in docempressed data
-    offset: usize,
-    /// Decompression context for the current zdata
+    /// Decompression context for the current zdata.
+    /// If `None`, the slot is free to be used.
     dc: Option<UzlibContext<'a>>,
+    /// Reference to compressed data.
+    zdata: &'a [u8],
+    /// Current offset in docempressed data.
+    offset: usize,
     /// Window used by current decompression context.
     /// (It's used just by own dc and nobody else.)
     window: &'a UnsafeCell<[u8; UZLIB_WINDOW_SIZE]>,
@@ -35,23 +36,19 @@ impl<'a> ZlibCacheSlot<'a> {
         })
     }
 
-    /// May be called with zdata == &[] to make the slot free
     fn reset(&mut self, zdata: &'a [u8]) {
         // Drop the existing decompression context holding
         // a mutable reference to window buffer
         self.dc = None;
 
-        if !zdata.is_empty() {
-            // Now there's nobody else holding any reference to our window
-            // so we can get mutable reference and pass it to a new
-            // instance of the decompression context
-            let window = unsafe { &mut *self.window.get() };
+        // Now there's nobody else holding any reference to our window
+        // so we can get mutable reference and pass it to a new
+        // instance of the decompression context
+        let window = unsafe { &mut *self.window.get() };
 
-            self.dc = Some(UzlibContext::new(zdata, Some(window)));
-        }
-
-        self.offset = 0;
+        self.dc = Some(UzlibContext::new(zdata, Some(window)));
         self.zdata = zdata;
+        self.offset = 0;
     }
 
     fn uncompress(&mut self, dest_buf: &mut [u8]) -> Result<bool, ()> {
@@ -59,7 +56,7 @@ impl<'a> ZlibCacheSlot<'a> {
             match dc.uncompress(dest_buf) {
                 Ok(done) => {
                     if done {
-                        self.reset(&[]);
+                        self.dc = None;
                     } else {
                         self.offset += dest_buf.len();
                     }
@@ -77,7 +74,7 @@ impl<'a> ZlibCacheSlot<'a> {
             match dc.skip(nbytes) {
                 Ok(done) => {
                     if done {
-                        self.reset(&[]);
+                        self.dc = None;
                     } else {
                         self.offset += nbytes;
                     }
@@ -95,6 +92,7 @@ impl<'a> ZlibCacheSlot<'a> {
         self.zdata.as_ptr() == zdata.as_ptr()
             && self.zdata.len() == zdata.len()
             && self.offset == offset
+            && self.dc.is_some()
     }
 }
 
