@@ -519,7 +519,7 @@ extern "C" fn new_confirm_joint_total(n_args: usize, args: *const Obj, kwargs: *
         ]);
 
         content_in_button_page(
-            TR::joint__title.try_into()?,
+            TR::joint__title.into(),
             paragraphs,
             TR::buttons__hold_to_confirm.into(),
             Some("".into()),
@@ -549,7 +549,7 @@ extern "C" fn new_confirm_modify_output(n_args: usize, args: *const Obj, kwargs:
         ]);
 
         content_in_button_page(
-            TR::modify_amount__title.try_into()?,
+            TR::modify_amount__title.into(),
             paragraphs,
             TR::buttons__confirm.into(),
             Some("".into()),
@@ -919,7 +919,7 @@ extern "C" fn new_confirm_modify_fee(n_args: usize, args: *const Obj, kwargs: *m
         }
 
         content_in_button_page(
-            TR::modify_fee__title.try_into()?,
+            TR::modify_fee__title.into(),
             paragraphs_vec.into_paragraphs(),
             TR::buttons__confirm.into(),
             Some("".into()),
@@ -1104,7 +1104,7 @@ extern "C" fn new_show_info(n_args: usize, args: *const Obj, kwargs: *mut Map) -
 
 extern "C" fn new_show_passphrase() -> Obj {
     let block = move || {
-        let text: TString = TR::passphrase__please_enter.try_into()?;
+        let text: TString = TR::passphrase__please_enter.into();
         let paragraph = Paragraph::new(&theme::TEXT_NORMAL, text).centered();
         let content = Paragraphs::new([paragraph]);
         let obj = LayoutObj::new(content)?;
@@ -1228,7 +1228,7 @@ extern "C" fn new_confirm_coinjoin(n_args: usize, args: *const Obj, kwargs: *mut
         ]);
 
         content_in_button_page(
-            TR::coinjoin__title.try_into()?,
+            TR::coinjoin__title.into(),
             paragraphs,
             TR::buttons__hold_to_confirm.into(),
             None,
@@ -1423,7 +1423,7 @@ extern "C" fn new_confirm_recovery(n_args: usize, args: *const Obj, kwargs: *mut
         };
 
         content_in_button_page(
-            title.try_into()?,
+            title.into(),
             paragraphs.into_paragraphs(),
             button,
             Some("".into()),
@@ -1435,7 +1435,7 @@ extern "C" fn new_confirm_recovery(n_args: usize, args: *const Obj, kwargs: *mut
 
 extern "C" fn new_select_word_count(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], _kwargs: &Map| {
-        let title: TString = TR::word_count__title.try_into()?;
+        let title: TString = TR::word_count__title.into();
 
         let choices: Vec<TString<'static>, 5> = ["12", "18", "20", "24", "33"]
             .map(|num| num.into())

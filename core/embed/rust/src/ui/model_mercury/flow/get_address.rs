@@ -126,12 +126,13 @@ use crate::{
     ui::layout::obj::LayoutObj,
 };
 
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub extern "C" fn new_get_address(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
-    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, GetAddress::new) }
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, GetAddress::new_obj) }
 }
 
 impl GetAddress {
-    fn new(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Error> {
+    fn new_obj(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Error> {
         let title: TString = "Receive address".into(); // TODO: address__title_receive_address w/o uppercase
         let description: Option<TString> =
             kwargs.get(Qstr::MP_QSTR_description)?.try_into_option()?;

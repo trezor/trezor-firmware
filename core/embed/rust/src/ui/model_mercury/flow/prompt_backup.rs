@@ -73,12 +73,13 @@ use crate::{
     ui::layout::obj::LayoutObj,
 };
 
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub extern "C" fn new_prompt_backup(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
-    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, PromptBackup::new) }
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, PromptBackup::new_obj) }
 }
 
 impl PromptBackup {
-    fn new(_args: &[Obj], _kwargs: &Map) -> Result<Obj, error::Error> {
+    fn new_obj(_args: &[Obj], _kwargs: &Map) -> Result<Obj, error::Error> {
         let title: TString = TR::backup__title_backup_wallet.into();
         let par_array: [Paragraph<'static>; 1] = [Paragraph::new(
             &theme::TEXT_MAIN_GREY_LIGHT,
