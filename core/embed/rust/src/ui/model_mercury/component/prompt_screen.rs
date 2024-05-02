@@ -11,6 +11,9 @@ use crate::{
 
 use super::{theme, Button, ButtonContent, ButtonMsg};
 
+const HOLD_DURATION_MS: u32 = 1000;
+const BUTTON_SIZE: i16 = 110;
+
 /// Component requesting an action from a user. Most typically embedded as a
 /// content of a Frame and promptin "Tap to confirm" or "Hold to XYZ".
 #[derive(Clone)]
@@ -34,7 +37,7 @@ impl PromptScreen {
         let icon = theme::ICON_SIGN;
         let button = Button::new(ButtonContent::Icon(icon))
             .styled(theme::button_default())
-            .with_long_press(Duration::from_secs(2));
+            .with_long_press(Duration::from_millis(HOLD_DURATION_MS));
         Self {
             area: Rect::zero(),
             circle_color: theme::GREEN,
@@ -79,7 +82,7 @@ impl Component for PromptScreen {
         self.area = bounds;
         self.button.place(Rect::snap(
             self.area.center(),
-            Offset::uniform(55),
+            Offset::uniform(BUTTON_SIZE),
             Alignment2D::CENTER,
         ));
         bounds
@@ -126,7 +129,7 @@ impl Component for PromptScreen {
                 .with_thickness(2)
                 .render(target);
         });
-        self.button.render(target);
+        self.button.render_content(target, self.button.style());
     }
 }
 

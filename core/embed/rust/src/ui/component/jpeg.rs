@@ -67,3 +67,13 @@ impl crate::trace::Trace for Jpeg {
         t.component("Jpeg");
     }
 }
+
+#[cfg(feature = "micropython")]
+mod micropython {
+    use crate::{error::Error, micropython::obj::Obj, ui::layout::obj::ComponentMsgObj};
+    impl ComponentMsgObj for super::Jpeg {
+        fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
+            unreachable!();
+        }
+    }
+}

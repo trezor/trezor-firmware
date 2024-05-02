@@ -66,15 +66,16 @@ use crate::{
     ui::layout::obj::LayoutObj,
 };
 
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub extern "C" fn new_warning_hi_prio(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
-    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, WarningHiPrio::new) }
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, WarningHiPrio::new_obj) }
 }
 
 impl WarningHiPrio {
     const EXTRA_PADDING: i16 = 6;
 
-    fn new(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Error> {
-        let title: TString = kwargs.get_or(Qstr::MP_QSTR_title, TR::words__warning.try_into()?)?;
+    fn new_obj(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Error> {
+        let title: TString = kwargs.get_or(Qstr::MP_QSTR_title, TR::words__warning.into())?;
         let description: TString = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
         let value: TString = kwargs.get_or(Qstr::MP_QSTR_value, "".into())?;
         let cancel: TString = TR::words__cancel_and_exit.into();
