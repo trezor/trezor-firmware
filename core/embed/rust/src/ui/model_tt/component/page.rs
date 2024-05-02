@@ -49,8 +49,9 @@ where
     T: Component,
 {
     pub fn with_hold(mut self) -> Result<Self, Error> {
-        self.button_confirm =
-            Button::with_text(TR::buttons__hold_to_confirm.into()).styled(theme::button_confirm());
+        self.button_confirm = Button::with_text(TR::buttons__hold_to_confirm.into())
+            .styled(theme::button_confirm())
+            .without_haptics();
         self.loader = Some(Loader::new());
         Ok(self)
     }

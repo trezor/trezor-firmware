@@ -78,6 +78,7 @@
 #define PRESS_EFFECT_AMPLITUDE 25
 #define PRESS_EFFECT_DURATION 10
 
+#define MAX_AMPLITUDE 127
 #define PRODTEST_EFFECT_AMPLITUDE 127
 
 static bool set_reg(uint8_t addr, uint8_t value) {
@@ -144,7 +145,7 @@ void haptic_init(void) {
   TIM16->BDTR |= TIM_BDTR_MOE;
 }
 
-bool haptic_play_rtp(int8_t amplitude, uint16_t duration_ms) {
+static bool haptic_play_rtp(int8_t amplitude, uint16_t duration_ms) {
   if (!playing_rtp) {
     if (!set_reg(DRV2625_REG_MODE,
                  DRV2625_REG_MODE_RTP | DRV2625_REG_MODE_TRGFUNC_ENABLE)) {
@@ -196,6 +197,17 @@ void haptic_play(haptic_effect_t effect) {
     default:
       break;
   }
+}
+
+bool haptic_play_custom(int8_t amplitude_pct, uint16_t duration_ms) {
+  if (amplitude_pct < 0) {
+    amplitude_pct = 0;
+  } else if (amplitude_pct > 100) {
+    amplitude_pct = 100;
+  }
+
+  return haptic_play_rtp((int8_t)((amplitude_pct * MAX_AMPLITUDE) / 100),
+                         duration_ms);
 }
 
 bool haptic_test(uint16_t duration_ms) {

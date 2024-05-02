@@ -359,7 +359,7 @@ fn generate_trezorhal_bindings() {
         // haptic
         .allowlist_type("haptic_effect_t")
         .allowlist_function("haptic_play")
-        .allowlist_function("haptic_play_rtp");
+        .allowlist_function("haptic_play_custom");
 
     // Write the bindings to a file in the OUR_DIR.
     bindings
