@@ -7,5 +7,5 @@ pub fn render_on_display<'a, F>(_viewport: Option<Viewport>, _bg_color: Option<C
 where
     F: FnOnce(&mut DirectRenderer<'_, 'a, Mono8Canvas<'a>>),
 {
-    panic!("Not implemented")
+    unimplemented!();
 }

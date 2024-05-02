@@ -100,6 +100,6 @@ impl<'a> Canvas for Mono8Canvas<'a> {
 
     #[cfg(feature = "ui_blurring")]
     fn blur_rect(&mut self, _r: Rect, _radius: usize, _cache: &DrawingCache) {
-        // Not implemented
+        unimplemented!();
     }
 }
