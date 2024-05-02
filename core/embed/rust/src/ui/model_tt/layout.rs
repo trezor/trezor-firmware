@@ -616,7 +616,7 @@ extern "C" fn new_confirm_homescreen(n_args: usize, args: *const Obj, kwargs: *m
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let image: Obj = kwargs.get(Qstr::MP_QSTR_image)?;
 
-        let mut jpeg = unwrap!(ImageBuffer::from_object(image));
+        let mut jpeg = ImageBuffer::from_object(image)?;
 
         if jpeg.is_empty() {
             // Incoming data may be empty, meaning we should
