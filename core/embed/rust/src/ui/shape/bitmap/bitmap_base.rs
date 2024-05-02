@@ -166,57 +166,79 @@ impl<'a> Bitmap<'a> {
     /// Returns None if row is out of range.
     pub fn row<T>(&self, row: i16) -> Option<&[T]> {
         if row >= 0 && row < self.size.y {
-            self.wait_for_dma();
             let offset = row as usize * (self.stride / core::mem::size_of::<T>());
-            Some(unsafe {
-                core::slice::from_raw_parts(
-                    (self.ptr as *const T).add(offset),
-                    self.stride / core::mem::size_of::<T>(),
-                )
-            })
-        } else {
-            None
+            if offset % core::mem::align_of::<T>() == 0 {
+                self.wait_for_dma();
+                // SAFETY:
+                // The resulting slice is inside the bitmap and properly aligned.
+                // Potential DMA operation is finished.
+                return Some(unsafe {
+                    core::slice::from_raw_parts(
+                        (self.ptr as *const T).add(offset),
+                        self.stride / core::mem::size_of::<T>(),
+                    )
+                });
+            }
         }
+        None
     }
 
     /// Returns the specified row as a mutable slice.
     ///
-    /// Returns None if row is out of range.
+    /// Returns None if row is out of range or
+    /// the bitmap is not set as mutable.
     pub fn row_mut<T>(&mut self, row: i16) -> Option<&mut [T]> {
-        if row >= 0 && row < self.size.y {
-            self.wait_for_dma();
+        if self.mutable && row >= 0 && row < self.size.y {
             let offset = row as usize * (self.stride / core::mem::size_of::<T>());
-            Some(unsafe {
-                core::slice::from_raw_parts_mut(
-                    (self.ptr as *mut T).add(offset),
-                    self.stride / core::mem::size_of::<T>(),
-                )
-            })
-        } else {
-            None
+            if offset % core::mem::align_of::<T>() == 0 {
+                self.wait_for_dma();
+                // SAFETY:
+                // The bitmap is mutable.
+                // The resulting slice is inside the bitmap and properly aligned.
+                // Potential DMA operation is finished.
+                return Some(unsafe {
+                    core::slice::from_raw_parts_mut(
+                        (self.ptr as *mut T).add(offset),
+                        self.stride / core::mem::size_of::<T>(),
+                    )
+                });
+            }
         }
+        None
     }
 
     /// Returns specified consecutive rows as a mutable slice
     ///
-    /// Returns None if any of requested row is out of range.
+    /// Returns None if any of requested row is out of range or
+    /// the bitmap is not set as mutable.
     pub fn rows_mut<T>(&mut self, row: i16, height: i16) -> Option<&mut [T]> {
-        if row >= 0 && height > 0 && row < self.size.y && row + height <= self.size.y {
-            self.wait_for_dma();
+        if self.mutable
+            && row >= 0
+            && height > 0
+            && row < self.size.y
+            && row + height <= self.size.y
+        {
             let offset = self.stride * row as usize;
-            let len = self.stride * height as usize;
+            if offset % core::mem::align_of::<T>() == 0 {
+                let len = self.stride * height as usize;
 
-            let array = unsafe {
-                core::slice::from_raw_parts_mut(
-                    self.ptr as *mut T,
-                    self.size.y as usize * self.stride / core::mem::size_of::<T>(),
-                )
-            };
+                // SAFETY:
+                // The bitmap is mutable.
+                // The resulting slice is inside the bitmap and properly aligned.
+                // Potential DMA operation is finished.
+                let array = unsafe {
+                    core::slice::from_raw_parts_mut(
+                        self.ptr as *mut T,
+                        self.size.y as usize * self.stride / core::mem::size_of::<T>(),
+                    )
+                };
 
-            Some(&mut array[offset..offset + len])
-        } else {
-            None
+                self.wait_for_dma();
+
+                return Some(&mut array[offset..offset + len]);
+            }
         }
+        None
     }
 
     /// Return raw mut pointer to the specified bitmap row.
