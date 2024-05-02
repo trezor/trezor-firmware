@@ -28,6 +28,6 @@ void haptic_play(haptic_effect_t effect);
 // The function can be invoked repeatedly during the specified duration
 // (`duration_ms`) to modify the amplitude dynamically, allowing
 // the creation of customized haptic effects.
-bool haptic_play_rtp(int8_t amplitude, uint16_t duration_ms);
+bool haptic_play_custom(int8_t amplitude_pct, uint16_t duration_ms);
 
 #endif
