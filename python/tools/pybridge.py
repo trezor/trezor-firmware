@@ -213,7 +213,7 @@ def do_enumerate():
 def do_acquire(path: str, sid: str):
     check_origin()
     if sid == "null":
-        sid = None  # type: ignore [cannot be assigned to declared type]
+        sid = None  # type: ignore [is incompatible with declared type]
     trezor = Transport.find(path)
     if trezor is None:
         response.status = 404

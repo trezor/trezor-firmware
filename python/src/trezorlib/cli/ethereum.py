@@ -94,7 +94,7 @@ def _amount_to_int(
     if value.isdigit():
         return int(value)
     try:
-        number, unit = re.match(r"^(\d+(?:.\d+)?)([a-z]+)", value).groups()  # type: ignore ["groups" is not a known member of "None"]
+        number, unit = re.match(r"^(\d+(?:.\d+)?)([a-z]+)", value).groups()  # type: ignore ["groups" is not a known attribute of "None"]
         scale = ETHER_UNITS[unit]
         decoded_number = Decimal(number)
         return int(decoded_number * scale)

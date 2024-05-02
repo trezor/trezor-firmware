@@ -6,18 +6,20 @@ Function `get_address()` is showing the communication with ScriptUI
 on a specific example
 """
 
+from __future__ import annotations
+
 import os
 import subprocess
-from typing import Dict, List, Optional, Tuple, Union
+import typing as t
 
 import click
 
 
-def parse_args_from_line(line: str) -> Tuple[str, Dict[str, Union[str, bool]]]:
+def parse_args_from_line(line: str) -> tuple[str, dict[str, t.Any]]:
     # ?PIN code=123
     # ?PASSPHRASE available_on_device
     command, *args = line.split(" ")
-    result: Dict[str, Union[str, bool]] = {}
+    result = {}
     for arg in args:
         if "=" in arg:
             key, value = arg.split("=")
@@ -27,7 +29,7 @@ def parse_args_from_line(line: str) -> Tuple[str, Dict[str, Union[str, bool]]]:
     return command, result
 
 
-def get_pin_from_user(code: Optional[str] = None) -> str:
+def get_pin_from_user(code: str | None = None) -> str:
     # ?PIN
     # ?PIN code=Current
     while True:
@@ -47,7 +49,7 @@ def get_pin_from_user(code: Optional[str] = None) -> str:
 
 
 def show_button_request(
-    code: Optional[str] = None, pages: Optional[str] = None, name: Optional[str] = None
+    code: str | None = None, pages: str | None = None, name: str | None = None
 ) -> None:
     # ?BUTTON code=Other
     # ?BUTTON code=SignTx pages=2
@@ -98,7 +100,7 @@ def get_address() -> str:
     assert p.stdout is not None
     assert p.stdin is not None
 
-    text_result: List[str] = []
+    text_result = []
     while True:
         line = p.stdout.readline().strip()
         if not line:

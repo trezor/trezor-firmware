@@ -123,7 +123,7 @@ class TrezorClient(Generic[UI]):
         LOG.info(f"creating client instance for device: {transport.get_path()}")
         # Here, self.model could be set to None. Unless _init_device is False, it will
         # get correctly reconfigured as part of the init_device flow.
-        self.model = model  # type: ignore [Type "None" cannot be assigned]
+        self.model = model  # type: ignore ["None" is incompatible with "TrezorModel"]
         if self.model:
             self.mapping = self.model.default_mapping
         else:

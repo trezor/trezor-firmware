@@ -183,9 +183,9 @@ class Field:
 
 class _MessageTypeMeta(type):
     def __init__(cls, name: str, bases: tuple, d: dict) -> None:
-        super().__init__(name, bases, d)  # type: ignore [Expected 1 positional argument]
+        super().__init__(name, bases, d)
         if name != "MessageType":
-            cls.__init__ = MessageType.__init__  # type: ignore ["__init__" is obscured by a declaration of the same name;;Cannot assign member "__init__" for type "_MessageTypeMeta"]
+            cls.__init__ = MessageType.__init__  # type: ignore [Parameter]
 
 
 class MessageType(metaclass=_MessageTypeMeta):
@@ -209,6 +209,7 @@ class MessageType(metaclass=_MessageTypeMeta):
         for field, val in zip_longest(self.FIELDS.values(), args, fillvalue=MISSING):
             if field is MISSING:
                 raise TypeError("too many positional arguments")
+            assert isinstance(field, Field)
             if field.name in kwargs and val is not MISSING:
                 # both *args and **kwargs specify the same thing
                 raise TypeError(f"got multiple values for argument '{field.name}'")
