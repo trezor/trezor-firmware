@@ -1,5 +1,4 @@
 use core::{cmp::Ordering, convert::TryInto};
-use heapless::Vec;
 
 use crate::{
     error::Error,
@@ -17,7 +16,6 @@ use crate::{
             image::BlendedImage,
             jpeg::{ImageBuffer, Jpeg},
             paginated::{PageMsg, Paginate},
-            placed::GridPlaced,
             text::{
                 op::OpTextLayout,
                 paragraphs::{
@@ -26,7 +24,7 @@ use crate::{
                 },
                 TextStyle,
             },
-            Border, Component, Empty, FormattedText, Label, Never, Qr, Timeout,
+            Border, Component, Empty, FormattedText, Label, Never, Timeout,
         },
         display::tjpgd::jpeg_info,
         geometry,
@@ -187,7 +185,6 @@ impl ComponentMsgObj for SelectWordCount {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
             SelectWordCountMsg::Selected(n) => n.try_into(),
-            _ => Err(Error::TypeError),
         }
     }
 }
@@ -201,18 +198,14 @@ impl ComponentMsgObj for VerticalMenu {
 }
 
 impl ComponentMsgObj for StatusScreen {
-    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
-        match msg {
-            () => Ok(CONFIRMED.as_obj()),
-        }
+    fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
+        Ok(CONFIRMED.as_obj())
     }
 }
 
 impl ComponentMsgObj for PromptScreen {
-    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
-        match msg {
-            () => Ok(CONFIRMED.as_obj()),
-        }
+    fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
+        Ok(CONFIRMED.as_obj())
     }
 }
 
@@ -243,31 +236,10 @@ where
     }
 }
 
-impl ComponentMsgObj for Jpeg {
-    fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
-        unreachable!()
-    }
-}
-
 // Clippy/compiler complains about conflicting implementations
 // TODO move the common impls to a common module
 #[cfg(not(feature = "clippy"))]
 impl<'a, T> ComponentMsgObj for Paragraphs<T>
-where
-    T: ParagraphSource<'a>,
-{
-    fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
-        unreachable!()
-    }
-}
-
-impl ComponentMsgObj for FormattedText {
-    fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
-        unreachable!()
-    }
-}
-
-impl<'a, T> ComponentMsgObj for Checklist<T>
 where
     T: ParagraphSource<'a>,
 {
@@ -286,15 +258,6 @@ where
             NumberInputDialogMsg::Selected => Ok((CONFIRMED.as_obj(), value).try_into()?),
             NumberInputDialogMsg::InfoRequested => Ok((CANCELLED.as_obj(), value).try_into()?),
         }
-    }
-}
-
-impl<T> ComponentMsgObj for Border<T>
-where
-    T: ComponentMsgObj,
-{
-    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
-        self.inner().msg_try_into_obj(msg)
     }
 }
 
@@ -320,15 +283,6 @@ impl ComponentMsgObj for Lockscreen<'_> {
     }
 }
 
-impl<'a, T> ComponentMsgObj for (GridPlaced<Paragraphs<T>>, GridPlaced<FormattedText>)
-where
-    T: ParagraphSource<'a>,
-{
-    fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
-        unreachable!()
-    }
-}
-
 // Clippy/compiler complains about conflicting implementations
 #[cfg(not(feature = "clippy"))]
 impl<T> ComponentMsgObj for (Timeout, T)
@@ -337,12 +291,6 @@ where
 {
     fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
         Ok(CANCELLED.as_obj())
-    }
-}
-
-impl ComponentMsgObj for Qr {
-    fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
-        unreachable!();
     }
 }
 
@@ -596,7 +544,7 @@ extern "C" fn new_confirm_address(n_args: usize, args: *const Obj, kwargs: *mut 
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let description: Option<TString> =
             kwargs.get(Qstr::MP_QSTR_description)?.try_into_option()?;
-        let verb: TString = kwargs.get_or(Qstr::MP_QSTR_verb, TR::buttons__confirm.try_into()?)?;
+        let verb: TString = kwargs.get_or(Qstr::MP_QSTR_verb, TR::buttons__confirm.into())?;
         let extra: Option<TString> = kwargs.get(Qstr::MP_QSTR_extra)?.try_into_option()?;
         let data: Obj = kwargs.get(Qstr::MP_QSTR_data)?;
         let chunkify: bool = kwargs.get_or(Qstr::MP_QSTR_chunkify, false)?;
@@ -669,7 +617,7 @@ extern "C" fn new_confirm_homescreen(n_args: usize, args: *const Obj, kwargs: *m
             jpeg = ImageBuffer::from_slice(theme::IMAGE_HOMESCREEN);
         }
 
-        if let None = jpeg_info(jpeg.data()) {
+        if jpeg_info(jpeg.data()).is_none() {
             return Err(value_error!("Invalid image."));
         };
 
@@ -871,7 +819,7 @@ fn new_show_modal(
     let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
     let value: TString = kwargs.get_or(Qstr::MP_QSTR_value, "".into())?;
     let description: TString = kwargs.get_or(Qstr::MP_QSTR_description, "".into())?;
-    let button: TString = kwargs.get_or(Qstr::MP_QSTR_button, TR::buttons__continue.try_into()?)?;
+    let button: TString = kwargs.get_or(Qstr::MP_QSTR_button, TR::buttons__continue.into())?;
     let allow_cancel: bool = kwargs.get_or(Qstr::MP_QSTR_allow_cancel, true)?;
     let time_ms: u32 = kwargs.get_or(Qstr::MP_QSTR_time_ms, 0)?;
 
@@ -965,7 +913,7 @@ extern "C" fn new_confirm_fido(n_args: usize, args: *const Obj, kwargs: *mut Map
 
         let controls = Button::cancel_confirm(
             Button::with_icon(theme::ICON_CANCEL),
-            Button::with_text(TR::buttons__confirm.try_into()?).styled(theme::button_confirm()),
+            Button::with_text(TR::buttons__confirm.into()).styled(theme::button_confirm()),
             true,
         );
 
@@ -1031,9 +979,9 @@ extern "C" fn new_show_info(n_args: usize, args: *const Obj, kwargs: *mut Map) -
 extern "C" fn new_show_mismatch(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
-        let description: TString = TR::addr_mismatch__contact_support_at.try_into()?;
-        let url: TString = TR::addr_mismatch__support_url.try_into()?;
-        let button: TString = TR::buttons__quit.try_into()?;
+        let description: TString = TR::addr_mismatch__contact_support_at.into();
+        let url: TString = TR::addr_mismatch__support_url.into();
+        let button: TString = TR::buttons__quit.into();
 
         let icon = BlendedImage::new(
             theme::IMAGE_BG_OCTAGON,
@@ -1344,9 +1292,9 @@ extern "C" fn new_confirm_recovery(n_args: usize, args: *const Obj, kwargs: *mut
         let paragraphs = Paragraphs::new([Paragraph::new(&theme::TEXT_NORMAL, description)]);
 
         let notification: TString = if dry_run {
-            TR::recovery__title_dry_run.try_into()?
+            TR::recovery__title_dry_run.into()
         } else {
-            TR::recovery__title.try_into()?
+            TR::recovery__title.into()
         };
 
         let content = SwipeUpScreen::new(paragraphs);
