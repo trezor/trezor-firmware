@@ -42,12 +42,14 @@ if TYPE_CHECKING:
 
     from typing_extensions import Concatenate, ParamSpec
 
-    from .client import TrezorClient
+    from . import client
     from .protobuf import MessageType
 
     MT = TypeVar("MT", bound=MessageType)
     P = ParamSpec("P")
     R = TypeVar("R")
+
+    TrezorClient = TypeVar("TrezorClient", bound=client.TrezorClient)
 
 HARDENED_FLAG = 1 << 31
 
@@ -154,7 +156,7 @@ def b58decode_int(v: str) -> int:
         for char in v:
             decimal = decimal * __b58base + __b58chars.index(char)
     except KeyError:
-        raise ValueError(f"Invalid character {char!r}") from None  # type: ignore [possibly unbound]
+        raise ValueError(f"Invalid character {char!r}") from None
     return decimal
 
 

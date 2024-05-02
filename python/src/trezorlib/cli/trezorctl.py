@@ -119,7 +119,7 @@ class TrezorctlGroup(AliasedGroup):
             command, subcommand = cmd_name.split("-", maxsplit=1)
             # get_command can return None and the following line will fail.
             # We don't care, we ignore the exception anyway.
-            return super().get_command(ctx, command).get_command(ctx, subcommand)  # type: ignore ["get_command" is not a known member of "None";;Cannot access member "get_command" for type "Command"]
+            return super().get_command(ctx, command).get_command(ctx, subcommand)  # type: ignore [get_command]
         except Exception:
             pass
 
@@ -143,7 +143,7 @@ class TrezorctlGroup(AliasedGroup):
         from click import __version__ as click_version
 
         if click_version.startswith("7."):
-            return super().resultcallback()  # type: ignore [Cannot access member]
+            return super().resultcallback()  # type: ignore [Cannot access attribute]
         else:
             return super().result_callback()
 

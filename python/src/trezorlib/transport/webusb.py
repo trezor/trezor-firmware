@@ -124,7 +124,7 @@ class WebUsbTransport(ProtocolBasedTransport):
         if cls.context is None:
             cls.context = usb1.USBContext()
             cls.context.open()
-            atexit.register(cls.context.close)  # type: ignore [Param spec "_P@register" has no bound value]
+            atexit.register(cls.context.close)
 
         if models is None:
             models = TREZORS

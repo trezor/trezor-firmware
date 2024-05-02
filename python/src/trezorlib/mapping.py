@@ -14,9 +14,13 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from __future__ import annotations
+
 import io
 from types import ModuleType
 from typing import Dict, Optional, Tuple, Type, TypeVar
+
+from typing_extensions import Self
 
 from . import messages, protobuf
 
@@ -71,7 +75,7 @@ class ProtobufMapping:
         return protobuf.load_message(buf, cls)
 
     @classmethod
-    def from_module(cls: Type[T], module: ModuleType) -> T:
+    def from_module(cls, module: ModuleType) -> Self:
         """Generate a mapping from a module.
 
         The module must have a `MessageType` enum that specifies individual wire types.

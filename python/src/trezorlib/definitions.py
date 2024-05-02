@@ -139,7 +139,7 @@ class TarSource(Source):
         inner_name = "/".join(components)
         LOG.info("Extracting definition from %s:%s", self.archive.name, inner_name)
         try:
-            return self.archive.extractfile(inner_name).read()  # type: ignore [not a known member]
+            return self.archive.extractfile(inner_name).read()  # type: ignore [not a known attribute]
         except Exception:
             LOG.info("Requested definition at %s was not found", inner_name)
             return None

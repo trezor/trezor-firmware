@@ -4,10 +4,13 @@
         "tools",
         "helper-scripts"
     ],
+    "stubPath": "./stubs",
     "pythonVersion": "3.8",
     "typeCheckingMode": "basic",
     "reportMissingImports": false,
     "reportUntypedFunctionDecorator": true,
     "reportUntypedClassDecorator": true,
-    "reportMissingParameterType": true
+    "reportMissingParameterType": true,
+    "useLibraryCodeForTypes": false,
+    "reportMissingModuleSource": false
 }
