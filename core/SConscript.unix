@@ -11,7 +11,7 @@ DMA2D =  TREZOR_MODEL in ('T', 'T3T1')
 OPTIGA = TREZOR_MODEL in ('R', 'T3T1')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 THP = ARGUMENTS.get('THP', '0') == '1' # Trezor-Host Protocol
-NEW_RENDERING = ARGUMENTS.get('NEW_RENDERING', '1') == '1'
+NEW_RENDERING = ARGUMENTS.get('NEW_RENDERING', '1') == '1' or TREZOR_MODEL in ('T3T1',)
 
 if TREZOR_MODEL in ('DISC1', 'DISC2'):
     # skip unix build
