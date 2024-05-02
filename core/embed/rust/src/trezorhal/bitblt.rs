@@ -190,8 +190,8 @@ pub struct BitBltCopy<'a> {
 }
 
 impl<'a> BitBltCopy<'a> {
-    /// Prepares `BitBltCopy` structure for copying or blending a part of the source
-    /// bitmap to the destination bitmap or display.
+    /// Prepares `BitBltCopy` structure for copying or blending a part of the
+    /// source bitmap to the destination bitmap or display.
     ///
     /// - `r` is the rectangle in the destination bitmap.
     /// - `clip` is the clipping rectangle and must be completely inside the

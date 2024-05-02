@@ -1,4 +1,7 @@
-use crate::trezorhal::{bitblt::{BitBltCopy, BitBltFill}, display};
+use crate::trezorhal::{
+    bitblt::{BitBltCopy, BitBltFill},
+    display,
+};
 
 use crate::ui::{
     display::Color,

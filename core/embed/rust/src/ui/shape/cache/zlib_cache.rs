@@ -118,11 +118,16 @@ impl<'a> ZlibCache<'a> {
 
     fn select_slot_for_reuse(&self) -> Result<usize, ()> {
         if self.slots.capacity() > 0 {
+            // Try to find a free slot.  If there's no free slot,
+            // select the one that performed the least amount of work
+            // based on the offset in the uncompressed data.
             let mut selected = 0;
             for (i, slot) in self.slots.iter().enumerate() {
                 if slot.dc.is_none() {
                     selected = i;
                     break;
+                } else if slot.offset < self.slots[selected].offset {
+                    selected = i;
                 }
             }
             Ok(selected)
