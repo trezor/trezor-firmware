@@ -602,7 +602,16 @@ pub trait Canvas: BasicCanvas {
 
             // Calculate the octant's bounding rectangle
             let p = Point::new(sin(PI4) + 1, -radius - 1).rot(octant);
-            let r = Rect::new(center, p + center.into()).normalize();
+            let r = Rect::new(center, p + center.into());
+
+            // Ensure that `x0`, `y0` represents the top-left corner and
+            // `x1`, `y1` represents the bottom-right corner.
+            let r = Rect {
+                x0: r.x0.min(r.x1),
+                y0: r.y0.min(r.y1),
+                x1: r.x0.max(r.x1),
+                y1: r.y0.max(r.y1),
+            };
 
             // Skip octant if not visible
             if !self.viewport().contains(r) {
@@ -763,23 +772,12 @@ fn fill_octant(
     }
 }
 
-impl Rect {
-    /// Normalizes the rectangle coordinates.
-    ///
-    /// Returns a new `Rect` with potentially swapped left/right,
-    /// top/bottom coordinates, ensuring that `x0`, `y0` represents
-    /// the top-left corner and `x1`, `y1` represents the bottom-right corner.
-    fn normalize(&self) -> Self {
-        Rect {
-            x0: self.x0.min(self.x1),
-            y0: self.y0.min(self.y1),
-            x1: self.x0.max(self.x1),
-            y1: self.y0.max(self.y1),
-        }
-    }
-}
+// Private extension functions for the `Point` type not useful
+// enough to be exposed in the public API.
 
 impl Point {
+
+    /// Returns point on the left side of the current point.
     fn onleft(self) -> Self {
         Self {
             x: self.x - 1,
@@ -787,6 +785,7 @@ impl Point {
         }
     }
 
+    /// Returns point on the right side of the current point.
     fn onright(self) -> Self {
         Self {
             x: self.x + 1,
@@ -794,6 +793,7 @@ impl Point {
         }
     }
 
+    /// Returns point above the current point.
     fn above(self) -> Self {
         Self {
             y: self.y - 1,
@@ -801,6 +801,7 @@ impl Point {
         }
     }
 
+    /// Returns point below the current point.
     fn under(self) -> Self {
         Self {
             y: self.y + 1,
@@ -808,6 +809,7 @@ impl Point {
         }
     }
 
+    /// Rotates the point around (0,0) by `octant` * 45 degrees.
     fn rot(self, octant: i16) -> Self {
         let mut result = self;
 
