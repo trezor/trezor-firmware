@@ -115,7 +115,10 @@ impl<'a> JpegCacheSlot<'a> {
     }
 
     fn is_for<'i: 'a>(&self, jpeg: &'i [u8], scale: u8) -> bool {
-        jpeg == self.jpeg && scale == self.scale && self.decoder.is_some()
+        jpeg.as_ptr() == self.jpeg.as_ptr()
+            && jpeg.len() == self.jpeg.len()
+            && scale == self.scale
+            && self.decoder.is_some()
     }
 
     pub fn get_size<'i: 'a>(&mut self, jpeg: &'i [u8], scale: u8) -> Result<Offset, tjpgd::Error> {

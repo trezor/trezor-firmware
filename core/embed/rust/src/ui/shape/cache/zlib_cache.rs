@@ -92,7 +92,9 @@ impl<'a> ZlibCacheSlot<'a> {
     }
 
     fn is_for(&self, zdata: &[u8], offset: usize) -> bool {
-        self.zdata == zdata && self.offset == offset
+        self.zdata.as_ptr() == zdata.as_ptr()
+            && self.zdata.len() == zdata.len()
+            && self.offset == offset
     }
 }
 
