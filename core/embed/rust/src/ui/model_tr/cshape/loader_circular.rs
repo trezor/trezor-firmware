@@ -110,7 +110,7 @@ impl ShapeClone<'_> for LoaderCircular {
     where
         T: LocalAllocLeakExt<'alloc>,
     {
-        let clone = bump.alloc_t::<LoaderCircular>()?;
+        let clone = bump.alloc_t()?;
         Some(clone.uninit.init(LoaderCircular { ..self }))
     }
 }

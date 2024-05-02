@@ -99,7 +99,7 @@ impl ShapeClone<'_> for LoaderStarry {
     where
         T: LocalAllocLeakExt<'alloc>,
     {
-        let clone = bump.alloc_t::<LoaderStarry>()?;
+        let clone = bump.alloc_t()?;
         Some(clone.uninit.init(LoaderStarry { ..self }))
     }
 }

@@ -81,7 +81,7 @@ impl<'s> ShapeClone<'s> for HorizontalLine {
     where
         T: LocalAllocLeakExt<'alloc>,
     {
-        let clone = bump.alloc_t::<HorizontalLine>()?;
+        let clone = bump.alloc_t()?;
         Some(clone.uninit.init(HorizontalLine { ..self }))
     }
 }
