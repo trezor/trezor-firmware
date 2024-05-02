@@ -144,15 +144,18 @@ impl<'a> ZlibCache<'a> {
             .iter_mut()
             .find(|slot| slot.is_for(zdata, offset));
 
-        if let Some(slot) = slot {
-            slot.uncompress(dest_buf)
-        } else {
-            let selected = self.select_slot_for_reuse()?;
-            let slot = &mut self.slots[selected];
-            slot.reset(zdata);
-            slot.skip(offset)?;
-            slot.uncompress(dest_buf)
-        }
+        let slot = match slot {
+            Some(slot) => slot,
+            None => {
+                let selected = self.select_slot_for_reuse()?;
+                let slot = &mut self.slots[selected];
+                slot.reset(zdata);
+                slot.skip(offset)?;
+                slot
+            }
+        };
+
+        slot.uncompress(dest_buf)
     }
 
     pub fn uncompress_toif(
