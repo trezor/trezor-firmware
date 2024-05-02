@@ -68,8 +68,8 @@ impl Rgb<u16> {
 
 impl From<u16> for Rgb<u16> {
     #[inline(always)]
-    fn from(value: u16) -> Rgb<u16> {
-        Rgb::<u16> {
+    fn from(value: u16) -> Self {
+        Self {
             r: (value >> 8) & 0xF8,
             g: (value >> 3) & 0xFC,
             b: (value << 3) & 0xF8,
@@ -80,7 +80,7 @@ impl From<u16> for Rgb<u16> {
 impl core::ops::AddAssign<u16> for Rgb<u16> {
     #[inline(always)]
     fn add_assign(&mut self, rhs: u16) {
-        let rgb: Rgb<u16> = rhs.into();
+        let rgb: Self = rhs.into();
         *self += rgb;
     }
 }
@@ -88,7 +88,7 @@ impl core::ops::AddAssign<u16> for Rgb<u16> {
 impl core::ops::SubAssign<u16> for Rgb<u16> {
     #[inline(always)]
     fn sub_assign(&mut self, rhs: u16) {
-        let rgb: Rgb<u16> = rhs.into();
+        let rgb: Self = rhs.into();
         *self -= rgb;
     }
 }
@@ -104,7 +104,7 @@ impl core::ops::AddAssign for Rgb<u16> {
 
 impl core::ops::SubAssign for Rgb<u16> {
     #[inline(always)]
-    fn sub_assign(&mut self, rhs: Rgb<u16>) {
+    fn sub_assign(&mut self, rhs: Self) {
         self.r -= rhs.r;
         self.g -= rhs.g;
         self.b -= rhs.b;
@@ -123,8 +123,8 @@ impl From<Rgb<u8>> for u16 {
 
 impl From<Rgb<u16>> for Rgb<u8> {
     #[inline(always)]
-    fn from(value: Rgb<u16>) -> Rgb<u8> {
-        Rgb::<u8> {
+    fn from(value: Rgb<u16>) -> Self {
+        Self {
             r: value.r as u8,
             g: value.g as u8,
             b: value.b as u8,
