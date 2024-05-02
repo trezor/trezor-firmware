@@ -410,7 +410,7 @@ impl UIFeaturesBootloader for ModelMercuryFeatures {
     fn screen_boot(
         warning: bool,
         vendor_str: Option<&str>,
-        version: u32,
+        version: [u8; 4],
         vendor_img: &[u8],
         wait: i32,
     ) {
@@ -448,13 +448,12 @@ impl UIFeaturesBootloader for ModelMercuryFeatures {
                 let pos = Point::new(SCREEN.width() / 2, SCREEN.height() - 5 - 25);
 
                 let mut version_text: BootloaderString = String::new();
-                let ver_nums = version_split(version);
                 unwrap!(uwrite!(
                     version_text,
                     "{}.{}.{}",
-                    ver_nums[0],
-                    ver_nums[1],
-                    ver_nums[2]
+                    version[0],
+                    version[1],
+                    version[2]
                 ));
 
                 shape::Text::new(pos, version_text.as_str())

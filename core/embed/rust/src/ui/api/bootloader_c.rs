@@ -117,6 +117,10 @@ extern "C" fn screen_boot(
     let vendor_img =
         unsafe { core::slice::from_raw_parts(vendor_img as *const u8, vendor_img_len) };
 
+    // Splits a version stored as a u32 into four numbers
+    // starting with the major version.
+    let version = version.to_le_bytes();
+
     ModelUI::screen_boot(warning, vendor_str, version, vendor_img, wait);
 }
 

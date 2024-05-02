@@ -60,7 +60,7 @@ pub trait UIFeaturesBootloader {
     fn screen_boot(
         warning: bool,
         vendor_str: Option<&str>,
-        version: u32,
+        version: [u8; 4],
         vendor_img: &[u8],
         wait: i32,
     );

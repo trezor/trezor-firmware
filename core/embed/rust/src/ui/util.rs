@@ -179,12 +179,6 @@ macro_rules! include_icon {
     };
 }
 
-/// Splits a version stored as a u32 into four numbers
-/// starting with the major version.
-pub fn version_split(version: u32) -> [u8; 4] {
-    version.to_le_bytes()
-}
-
 #[cfg(test)]
 mod tests {
     use crate::strutil;

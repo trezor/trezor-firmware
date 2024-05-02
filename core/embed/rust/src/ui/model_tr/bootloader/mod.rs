@@ -379,7 +379,7 @@ impl UIFeaturesBootloader for ModelTRFeatures {
     fn screen_boot(
         _warning: bool,
         vendor_str: Option<&str>,
-        version: u32,
+        version: [u8; 4],
         vendor_img: &[u8],
         wait: i32,
     ) {
@@ -409,13 +409,12 @@ impl UIFeaturesBootloader for ModelTRFeatures {
                 let pos = Point::new(constant::WIDTH / 2, 46);
 
                 let mut version_text: BootloaderString = String::new();
-                let ver_nums = version_split(version);
                 unwrap!(uwrite!(
                     version_text,
                     "{}.{}.{}",
-                    ver_nums[0],
-                    ver_nums[1],
-                    ver_nums[2]
+                    version[0],
+                    version[1],
+                    version[2]
                 ));
 
                 shape::Text::new(pos, version_text.as_str())
