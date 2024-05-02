@@ -61,3 +61,13 @@ where
         self.inner.trace(t)
     }
 }
+
+#[cfg(feature = "micropython")]
+mod micropython {
+    use crate::{error::Error, micropython::obj::Obj, ui::layout::obj::ComponentMsgObj};
+    impl<T: ComponentMsgObj> ComponentMsgObj for super::Border<T> {
+        fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+            self.inner().msg_try_into_obj(msg)
+        }
+    }
+}

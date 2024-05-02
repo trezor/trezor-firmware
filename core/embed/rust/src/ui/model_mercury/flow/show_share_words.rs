@@ -8,10 +8,7 @@ use crate::{
             text::paragraphs::{Paragraph, Paragraphs},
             ComponentExt,
         },
-        flow::{
-            base::Decision, flow_store, FlowMsg, FlowState, FlowStore, IgnoreSwipe, SwipeFlow,
-            SwipePage,
-        },
+        flow::{base::Decision, flow_store, FlowMsg, FlowState, FlowStore, SwipeFlow, SwipePage},
         layout::obj::LayoutObj,
     },
 };
@@ -63,12 +60,13 @@ impl FlowState for ShowShareWords {
     }
 }
 
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub extern "C" fn new_show_share_words(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
-    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, ShowShareWords::new) }
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, ShowShareWords::new_obj) }
 }
 
 impl ShowShareWords {
-    fn new(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Error> {
+    fn new_obj(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Error> {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let share_words_obj: Obj = kwargs.get(Qstr::MP_QSTR_words)?;
         let share_words_vec: Vec<TString, 33> = util::iter_into_vec(share_words_obj)?;

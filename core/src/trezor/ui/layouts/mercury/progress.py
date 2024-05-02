@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 import trezorui2
-from trezor import TR, ui
+from trezor import TR, ui, utils
 
 if TYPE_CHECKING:
     from typing import Any
@@ -60,13 +60,13 @@ def pin_progress(message: str, description: str) -> ProgressLayout:
     return progress(message, description=description)
 
 
-def monero_keyimage_sync_progress() -> ProgressLayout:
-    return progress("", TR.progress__syncing)
+if not utils.BITCOIN_ONLY:
 
+    def monero_keyimage_sync_progress() -> ProgressLayout:
+        return progress("", TR.progress__syncing)
 
-def monero_live_refresh_progress() -> ProgressLayout:
-    return progress("", TR.progress__refreshing, indeterminate=True)
+    def monero_live_refresh_progress() -> ProgressLayout:
+        return progress("", TR.progress__refreshing, indeterminate=True)
 
-
-def monero_transaction_progress_inner() -> ProgressLayout:
-    return progress("", TR.progress__signing_transaction)
+    def monero_transaction_progress_inner() -> ProgressLayout:
+        return progress("", TR.progress__signing_transaction)

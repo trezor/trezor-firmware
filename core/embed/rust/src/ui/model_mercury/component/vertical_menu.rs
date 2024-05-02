@@ -53,7 +53,7 @@ impl VerticalMenu {
     pub fn select_word(words: [TString<'static>; 3]) -> Self {
         let mut buttons_vec = VerticalMenuButtons::new();
         for word in words {
-            let button = Button::with_text(word.into()).styled(theme::button_default());
+            let button = Button::with_text(word).styled(theme::button_default());
             unwrap!(buttons_vec.push(button));
         }
         Self::new(buttons_vec)
