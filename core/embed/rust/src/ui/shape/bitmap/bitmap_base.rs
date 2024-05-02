@@ -79,8 +79,8 @@ impl<'a> Bitmap<'a> {
         };
 
         assert!(stride >= min_stride);
-        assert!(buff.as_ptr() as usize & (alignment - 1) == 0);
-        assert!(stride & (alignment - 1) == 0);
+        assert!(buff.as_ptr().align_offset(alignment) == 0);
+        assert!(stride % alignment == 0);
 
         let max_height = if stride == 0 {
             size.y as usize
