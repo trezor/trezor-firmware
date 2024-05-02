@@ -776,7 +776,6 @@ fn fill_octant(
 // enough to be exposed in the public API.
 
 impl Point {
-
     /// Returns point on the left side of the current point.
     fn onleft(self) -> Self {
         Self {

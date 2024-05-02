@@ -1,6 +1,6 @@
 use super::{Bitmap, BitmapFormat, BitmapView};
 use crate::{
-    trezorhal::bitblt::BitBlt,
+    trezorhal::bitblt::{BitBltCopy, BitBltFill},
     ui::{display::Color, geometry::Rect},
 };
 
@@ -9,39 +9,33 @@ impl<'a> Bitmap<'a> {
     ///
     /// The function is aplicable only on bitmaps with RGB565 format.
     pub fn rgb565_fill(&mut self, r: Rect, clip: Rect, color: Color, alpha: u8) {
-        assert!(self.format() == BitmapFormat::RGB565);
-        if let Some(bitblt) = BitBlt::new_fill(r, clip, color, alpha) {
-            let bitblt = bitblt.with_dst(self);
-            unsafe { bitblt.rgb565_fill() };
-            self.mark_dma_pending();
+        if let Some(bitblt) = BitBltFill::new(r, clip, color, alpha) {
+            bitblt.rgb565_fill(self);
         }
     }
 
-    //
+    /// Copy a rectangle from the source bitmap to the destination bitmap.
+    ///
+    /// The function is aplicable only on bitmaps with RGB565 format.
     pub fn rgb565_copy(&mut self, r: Rect, clip: Rect, src: &BitmapView) {
-        assert!(self.format() == BitmapFormat::RGB565);
-        if let Some(bitblt) = BitBlt::new_copy(r, clip, src) {
-            let bitblt = bitblt.with_dst(self);
+        if let Some(bitblt) = BitBltCopy::new(r, clip, src) {
             match src.format() {
-                BitmapFormat::MONO4 => unsafe { bitblt.rgb565_copy_mono4() },
-                BitmapFormat::RGB565 => unsafe { bitblt.rgb565_copy_rgb565() },
+                BitmapFormat::MONO4 => bitblt.rgb565_copy_mono4(self),
+                BitmapFormat::RGB565 => bitblt.rgb565_copy_rgb565(self),
                 _ => panic!("Unsupported DMA operation"),
             }
-            self.mark_dma_pending();
-            src.bitmap.mark_dma_pending();
         }
     }
 
+    /// Blend a rectangle from the source bitmap to the destination bitmap.
+    ///
+    /// The function is aplicable only on bitmaps with RGB565 format.
     pub fn rgb565_blend(&mut self, r: Rect, clip: Rect, src: &BitmapView) {
-        assert!(self.format() == BitmapFormat::RGB565);
-        if let Some(bitblt) = BitBlt::new_copy(r, clip, src) {
-            let bitblt = bitblt.with_dst(self);
+        if let Some(bitblt) = BitBltCopy::new(r, clip, src) {
             match src.format() {
-                BitmapFormat::MONO4 => unsafe { bitblt.rgb565_blend_mono4() },
+                BitmapFormat::MONO4 => bitblt.rgb565_blend_mono4(self),
                 _ => panic!("Unsupported DMA operation"),
             }
-            self.mark_dma_pending();
-            src.bitmap.mark_dma_pending();
         }
     }
 }
