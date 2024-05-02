@@ -839,12 +839,12 @@ impl Rect {
     /// Returns a new `Rect` with potentially swapped left/right,
     /// top/bottom coordinates, ensuring that `x0`, `y0` represents
     /// the top-left corner and `x1`, `y1` represents the bottom-right corner.
-    pub fn normalize(&self) -> Self {
+    fn normalize(&self) -> Self {
         Rect {
-            x0: core::cmp::min(self.x0, self.x1),
-            y0: core::cmp::min(self.y0, self.y1),
-            x1: core::cmp::max(self.x0, self.x1),
-            y1: core::cmp::max(self.y0, self.y1),
+            x0: self.x0.min(self.x1),
+            y0: self.y0.min(self.y1),
+            x1: self.x0.max(self.x1),
+            y1: self.y0.max(self.y1),
         }
     }
 }

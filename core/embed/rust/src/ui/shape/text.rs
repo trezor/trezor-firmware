@@ -115,7 +115,7 @@ impl<'a, 's> ShapeClone<'s> for Text<'a> {
     where
         T: LocalAllocLeakExt<'alloc>,
     {
-        let clone = bump.alloc_t::<Text>()?;
+        let clone = bump.alloc_t()?;
         let text = bump.copy_str(self.text)?;
         Some(clone.uninit.init(Text { text, ..self }))
     }

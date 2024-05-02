@@ -39,7 +39,7 @@ impl<'s> ShapeClone<'s> for Blurring {
     where
         T: LocalAllocLeakExt<'alloc>,
     {
-        let clone = bump.alloc_t::<Blurring>()?;
+        let clone = bump.alloc_t()?;
         Some(clone.uninit.init(Blurring { ..self }))
     }
 }

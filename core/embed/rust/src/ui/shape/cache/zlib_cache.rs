@@ -23,7 +23,7 @@ impl<'a> ZlibCacheSlot<'a> {
         T: LocalAllocLeakExt<'alloc>,
     {
         let window = bump
-            .alloc_t::<UnsafeCell<[u8; UZLIB_WINDOW_SIZE]>>()?
+            .alloc_t()?
             .uninit
             .init(UnsafeCell::new([0; UZLIB_WINDOW_SIZE]));
 

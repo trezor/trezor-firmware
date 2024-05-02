@@ -45,7 +45,7 @@ where
     B: LocalAllocLeakExt<'a>,
 {
     Some(
-        bump.alloc_t::<RefCell<[u8; S]>>()?
+        bump.alloc_t()?
             .uninit
             .init(RefCell::new([0; S])),
     )

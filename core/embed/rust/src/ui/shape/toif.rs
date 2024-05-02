@@ -168,7 +168,7 @@ impl<'a> ShapeClone<'a> for ToifImage<'a> {
     where
         T: LocalAllocLeakExt<'alloc>,
     {
-        let clone = bump.alloc_t::<ToifImage>()?;
+        let clone = bump.alloc_t()?;
         Some(clone.uninit.init(ToifImage { ..self }))
     }
 }

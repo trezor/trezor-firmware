@@ -122,7 +122,7 @@ impl<'s> ShapeClone<'s> for Bar {
     where
         T: LocalAllocLeakExt<'alloc>,
     {
-        let clone = bump.alloc_t::<Bar>()?;
+        let clone = bump.alloc_t()?;
         Some(clone.uninit.init(Bar { ..self }))
     }
 }

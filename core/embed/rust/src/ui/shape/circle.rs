@@ -133,7 +133,7 @@ impl<'s> ShapeClone<'s> for Circle {
     where
         T: LocalAllocLeakExt<'alloc>,
     {
-        let clone = bump.alloc_t::<Circle>()?;
+        let clone = bump.alloc_t()?;
         Some(clone.uninit.init(Circle { ..self }))
     }
 }

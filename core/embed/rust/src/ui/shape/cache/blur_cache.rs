@@ -15,7 +15,7 @@ impl<'a> BlurCache<'a> {
         T: LocalAllocLeakExt<'alloc>,
     {
         let buff = bump
-            .alloc_t::<UnsafeCell<BlurBuff>>()?
+            .alloc_t()?
             .uninit
             .init(UnsafeCell::new([0; 7928])); // TODO !!! 7928
 

@@ -163,7 +163,7 @@ impl<'s> ShapeClone<'s> for QrImage {
     where
         T: LocalAllocLeakExt<'alloc>,
     {
-        let clone = bump.alloc_t::<QrImage>()?;
+        let clone = bump.alloc_t()?;
         Some(clone.uninit.init(QrImage { ..self }))
     }
 }

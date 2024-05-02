@@ -64,12 +64,12 @@ impl<'a> JpegCacheSlot<'a> {
         T: LocalAllocLeakExt<'alloc>,
     {
         let scratchpad = bump
-            .alloc_t::<UnsafeCell<[u8; JPEG_SCRATCHPAD_SIZE]>>()?
+            .alloc_t()?
             .uninit
             .init(UnsafeCell::new([0; JPEG_SCRATCHPAD_SIZE]));
 
         let canvas_buff = bump
-            .alloc_t::<UnsafeCell<[u8; JPEG_BUFF_SIZE]>>()?
+            .alloc_t()?
             .uninit
             .init(UnsafeCell::new([0; JPEG_BUFF_SIZE]));
 

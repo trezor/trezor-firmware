@@ -190,7 +190,7 @@ impl<'a> ShapeClone<'a> for JpegImage<'a> {
     where
         T: LocalAllocLeakExt<'alloc>,
     {
-        let clone = bump.alloc_t::<JpegImage>()?;
+        let clone = bump.alloc_t()?;
         Some(clone.uninit.init(JpegImage { ..self }))
     }
 }
