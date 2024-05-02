@@ -112,7 +112,7 @@ impl<'a> ZlibCache<'a> {
         };
 
         for _ in 0..cache.slots.capacity() {
-            unwrap!(cache.slots.push(ZlibCacheSlot::new(bump)?)); // should never fail
+            cache.slots.push(ZlibCacheSlot::new(bump)?).ok()?;
         }
 
         Some(cache)
