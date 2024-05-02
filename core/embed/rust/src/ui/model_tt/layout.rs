@@ -25,7 +25,7 @@ use crate::{
                 },
                 TextStyle,
             },
-            Border, Component, Empty, FormattedText, Label, Never, Qr, Timeout,
+            Border, Component, Empty, FormattedText, Label, Never, Timeout,
         },
         geometry,
         layout::{
@@ -195,31 +195,10 @@ where
     }
 }
 
-impl ComponentMsgObj for Jpeg {
-    fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
-        unreachable!()
-    }
-}
-
 // Clippy/compiler complains about conflicting implementations
 // TODO move the common impls to a common module
 #[cfg(not(feature = "clippy"))]
 impl<'a, T> ComponentMsgObj for Paragraphs<T>
-where
-    T: ParagraphSource<'a>,
-{
-    fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
-        unreachable!()
-    }
-}
-
-impl ComponentMsgObj for FormattedText {
-    fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
-        unreachable!()
-    }
-}
-
-impl<'a, T> ComponentMsgObj for Checklist<T>
 where
     T: ParagraphSource<'a>,
 {
@@ -238,15 +217,6 @@ where
             NumberInputDialogMsg::Selected => Ok((CONFIRMED.as_obj(), value).try_into()?),
             NumberInputDialogMsg::InfoRequested => Ok((INFO.as_obj(), value).try_into()?),
         }
-    }
-}
-
-impl<T> ComponentMsgObj for Border<T>
-where
-    T: ComponentMsgObj,
-{
-    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
-        self.inner().msg_try_into_obj(msg)
     }
 }
 
@@ -289,12 +259,6 @@ where
 {
     fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
         Ok(CANCELLED.as_obj())
-    }
-}
-
-impl ComponentMsgObj for Qr {
-    fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
-        unreachable!();
     }
 }
 

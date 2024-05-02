@@ -90,13 +90,12 @@ impl Component for StatusScreen {
         match self.dismiss_type {
             DismissType::SwipeUp(ref mut swipe) => {
                 let swipe_dir = swipe.event(ctx, event);
-                match swipe_dir {
-                    Some(SwipeDirection::Up) => return Some(()),
-                    _ => (),
+                if let Some(SwipeDirection::Up) = swipe_dir {
+                    return Some(());
                 }
             }
             DismissType::Timeout(ref mut timeout) => {
-                if let Some(_) = timeout.event(ctx, event) {
+                if timeout.event(ctx, event).is_some() {
                     return Some(());
                 }
             }

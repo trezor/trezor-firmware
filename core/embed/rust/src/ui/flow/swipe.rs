@@ -128,7 +128,7 @@ impl<Q: FlowState, S: FlowStore> SwipeFlow<Q, S> {
         if finished {
             self.transition = Transition::None;
         }
-        return result;
+        result
     }
 
     fn handle_swipe_child(&mut self, ctx: &mut EventCtx, direction: SwipeDirection) -> Decision<Q> {

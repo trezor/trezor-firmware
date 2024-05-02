@@ -20,8 +20,3 @@ pub const fn screen() -> Rect {
     Rect::from_top_left_and_size(Point::zero(), SIZE)
 }
 pub const SCREEN: Rect = screen();
-
-/// Spacing between components (e.g. header and main content) and offsets from
-/// the side of the screen. Generally applied everywhere except the top side of
-/// the header. [px]
-pub const SPACING: i16 = 2;

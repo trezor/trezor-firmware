@@ -189,3 +189,13 @@ impl crate::trace::Trace for Qr {
         t.string("text", self.text.as_str().into());
     }
 }
+
+#[cfg(feature = "micropython")]
+mod micropython {
+    use crate::{error::Error, micropython::obj::Obj, ui::layout::obj::ComponentMsgObj};
+    impl ComponentMsgObj for super::Qr {
+        fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
+            unreachable!();
+        }
+    }
+}
