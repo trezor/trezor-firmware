@@ -68,7 +68,7 @@ impl<'a> JpegCacheSlot<'a> {
             .uninit
             .init(UnsafeCell::new([0; JPEG_SCRATCHPAD_SIZE]));
 
-        let canvas_buff = bump
+        let row_buff = bump
             .alloc_t()?
             .uninit
             .init(UnsafeCell::new([0; JPEG_BUFF_SIZE]));
@@ -81,7 +81,7 @@ impl<'a> JpegCacheSlot<'a> {
             scratchpad,
             row_y: 0,
             row_canvas: None,
-            row_buff: canvas_buff,
+            row_buff,
         })
     }
 
