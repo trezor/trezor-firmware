@@ -676,10 +676,15 @@ pub const TEXT_CHECKLIST_SELECTED: TextStyle =
 pub const TEXT_CHECKLIST_DONE: TextStyle =
     TextStyle::new(Font::NORMAL, GREEN_DARK, BG, GREY_LIGHT, GREY_LIGHT);
 
+/// Spacing between components (e.g. header and main content) and offsets from
+/// the side of the screen. Generally applied everywhere except the top side of
+/// the header. [px]
+pub const SPACING: i16 = 2;
+
 pub const CONTENT_BORDER: i16 = 0;
 pub const BUTTON_HEIGHT: i16 = 62;
 pub const BUTTON_WIDTH: i16 = 78;
-pub const BUTTON_SPACING: i16 = 2;
+pub const BUTTON_SPACING: i16 = SPACING;
 pub const KEYBOARD_SPACING: i16 = BUTTON_SPACING;
 pub const CHECKLIST_SPACING: i16 = 10;
 pub const RECOVERY_SPACING: i16 = 18;

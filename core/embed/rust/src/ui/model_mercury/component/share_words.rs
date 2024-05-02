@@ -3,11 +3,10 @@ use crate::{
     strutil::TString,
     translations::TR,
     ui::{
-        component::{Component, Event, EventCtx, Paginate},
-        constant::SPACING,
+        component::{Component, Event, EventCtx, Paginate, Swipe},
         flow::Swipable,
         geometry::{Alignment, Alignment2D, Insets, Offset, Rect},
-        model_mercury::component::{Footer, Swipe, SwipeDirection},
+        model_mercury::component::{Footer, SwipeDirection},
         shape,
         shape::Renderer,
     },
@@ -65,8 +64,8 @@ impl<'a> Component for ShareWords<'a> {
     fn place(&mut self, bounds: Rect) -> Rect {
         self.area = bounds;
         let used_area = bounds
-            .inset(Insets::sides(SPACING))
-            .inset(Insets::bottom(SPACING));
+            .inset(Insets::sides(theme::SPACING))
+            .inset(Insets::bottom(theme::SPACING));
 
         self.area_word = Rect::snap(
             used_area.center(),

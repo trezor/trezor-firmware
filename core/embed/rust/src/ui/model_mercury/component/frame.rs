@@ -1,4 +1,3 @@
-use super::theme;
 use crate::{
     strutil::TString,
     ui::{
@@ -11,9 +10,10 @@ use crate::{
     },
 };
 
-use super::{constant::SPACING, Button, ButtonMsg, ButtonStyleSheet, CancelInfoConfirmMsg, Footer};
+use super::{theme, Button, ButtonMsg, ButtonStyleSheet, CancelInfoConfirmMsg, Footer};
 
 const TITLE_HEIGHT: i16 = 42;
+const BUTTON_EXPAND_BORDER: i16 = 16;
 
 #[derive(Clone)]
 pub struct Frame<T> {
@@ -84,8 +84,8 @@ where
 
     fn with_button(mut self, icon: Icon, msg: CancelInfoConfirmMsg, enabled: bool) -> Self {
         let touch_area = Insets {
-            left: self.border.left * 4,
-            bottom: self.border.bottom * 4,
+            left: BUTTON_EXPAND_BORDER,
+            bottom: BUTTON_EXPAND_BORDER,
             ..self.border
         };
         self.button = Some(Child::new(
@@ -166,8 +166,8 @@ where
 
     fn place(&mut self, bounds: Rect) -> Rect {
         let (mut header_area, mut content_area) = bounds.split_top(TITLE_HEIGHT);
-        content_area = content_area.inset(Insets::top(SPACING));
-        header_area = header_area.inset(Insets::sides(SPACING));
+        content_area = content_area.inset(Insets::top(theme::SPACING));
+        header_area = header_area.inset(Insets::sides(theme::SPACING));
 
         if let Some(b) = &mut self.button {
             let (rest, button_area) = header_area.split_right(TITLE_HEIGHT);
@@ -186,7 +186,7 @@ where
         if let Some(footer) = &mut self.footer {
             // FIXME: spacer at the bottom might be applied also for usage without footer
             // but not for VerticalMenu
-            content_area = content_area.inset(Insets::bottom(SPACING));
+            content_area = content_area.inset(Insets::bottom(theme::SPACING));
             let (remaining, footer_area) = content_area.split_bottom(footer.height());
             footer.place(footer_area);
             content_area = remaining;
