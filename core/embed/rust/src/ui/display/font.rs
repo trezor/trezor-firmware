@@ -130,7 +130,6 @@ impl Glyph {
                 None,
                 self.data,
             )),
-            2 => panic!(),
             4 => unwrap!(Bitmap::new(
                 BitmapFormat::MONO4,
                 None,
@@ -138,8 +137,7 @@ impl Glyph {
                 None,
                 self.data,
             )),
-            8 => panic!(),
-            _ => panic!(),
+            _ => unimplemented!(),
         }
     }
 }
@@ -263,12 +261,21 @@ impl Font {
         constant::LINE_SPACE + self.text_height()
     }
 
-    // Returns x-coordinate of the text start (including left bearing)
+    /// Helper functions for **horizontal** text centering.
+    ///
+    /// The `text` is centered between `start` and `end`.
+    ///
+    /// Returns x-coordinate of the centered text start (including left
+    /// bearing).
     pub fn horz_center(&self, start: i16, end: i16, text: &str) -> i16 {
         (start + end - self.visible_text_width(text)) / 2 - self.start_x_bearing(text)
     }
 
-    // Returns y-coordinate of the text baseline
+    /// Helper functions for **vertical** text centering.
+    ///
+    /// The `text` is centered between `start` and `end`.
+    ///
+    /// Returns y-coordinate of the centered text baseline.
     pub fn vert_center(&self, start: i16, end: i16, text: &str) -> i16 {
         (start + end + self.visible_text_height(text)) / 2
     }
