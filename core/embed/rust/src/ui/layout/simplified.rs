@@ -67,10 +67,7 @@ fn touch_eval() -> Option<TouchEvent> {
     TouchEvent::new(event_type, ex as _, ey as _).ok()
 }
 
-fn render<F>(frame: &mut F)
-where
-    F: Component,
-{
+fn render(frame: &mut impl Component) {
     #[cfg(not(feature = "new_rendering"))]
     {
         display::sync();
@@ -88,11 +85,7 @@ where
     }
 }
 
-pub fn run<F>(frame: &mut F) -> u32
-where
-    F: Component,
-    F::Msg: ReturnToC,
-{
+pub fn run(frame: &mut impl Component<Msg = impl ReturnToC>) -> u32 {
     frame.place(ModelUI::SCREEN);
     ModelUI::fadeout();
     render(frame);
@@ -121,10 +114,7 @@ where
     }
 }
 
-pub fn show<F>(frame: &mut F, fading: bool)
-where
-    F: Component,
-{
+pub fn show(frame: &mut impl Component, fading: bool) {
     frame.place(ModelUI::SCREEN);
 
     if fading {
