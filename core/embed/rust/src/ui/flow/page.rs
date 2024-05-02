@@ -7,6 +7,7 @@ use crate::{
         flow::base::Swipable,
         geometry::{Axis, Offset, Rect},
         shape::Renderer,
+        util,
     },
 };
 
@@ -47,7 +48,7 @@ impl<T: Component + Paginate + Clone> SwipePage<T> {
     fn handle_transition(ctx: &mut EventCtx, event: Event, transition: &mut Transition<T>) -> bool {
         let mut finished = false;
         if let Event::Timer(EventCtx::ANIM_FRAME_TIMER) = event {
-            if transition.animation.finished(Instant::now()) {
+            if transition.animation.finished(Instant::now()) || util::animation_disabled() {
                 finished = true;
             } else {
                 ctx.request_anim_frame();

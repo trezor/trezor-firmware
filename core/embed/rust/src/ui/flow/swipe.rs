@@ -7,6 +7,7 @@ use crate::{
         flow::{base::Decision, FlowMsg, FlowState, FlowStore},
         geometry::{Offset, Rect},
         shape::Renderer,
+        util,
     },
 };
 
@@ -105,7 +106,7 @@ impl<Q: FlowState, S: FlowStore> SwipeFlow<Q, S> {
             Transition::External { animation, .. }
                 if matches!(event, Event::Timer(EventCtx::ANIM_FRAME_TIMER)) =>
             {
-                if animation.finished(Instant::now()) {
+                if animation.finished(Instant::now()) || util::animation_disabled() {
                     finished = true;
                     ctx.request_paint();
                     self.store.event(i, ctx, Event::Attach)
