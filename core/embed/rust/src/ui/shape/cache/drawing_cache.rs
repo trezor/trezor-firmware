@@ -27,6 +27,7 @@ pub type ImageBuffRef<'a> = RefMut<'a, ImageBuff>;
 pub type RenderBuffRef<'a> = RefMut<'a, RenderBuff>;
 
 pub struct DrawingCache<'a> {
+    image_buff: &'a RefCell<ImageBuff>,
     zlib_cache: RefCell<ZlibCache<'a>>,
 
     #[cfg(feature = "ui_jpeg_decoder")]
@@ -37,18 +38,13 @@ pub struct DrawingCache<'a> {
 
     #[cfg(not(feature = "xframebuff"))]
     render_buff: &'a RefCell<RenderBuff>,
-    image_buff: &'a RefCell<ImageBuff>,
 }
 
 fn alloc_buf<'a, const S: usize, B>(bump: &'a B) -> Option<&'a RefCell<[u8; S]>>
 where
     B: LocalAllocLeakExt<'a>,
 {
-    Some(
-        bump.alloc_t()?
-            .uninit
-            .init(RefCell::new([0; S])),
-    )
+    Some(bump.alloc_t()?.uninit.init(RefCell::new([0; S])))
 }
 
 impl<'a> DrawingCache<'a> {
@@ -58,6 +54,7 @@ impl<'a> DrawingCache<'a> {
         TB: LocalAllocLeakExt<'a>,
     {
         Self {
+            image_buff: unwrap!(alloc_buf(bump_b), "Toif buff alloc"),
             zlib_cache: RefCell::new(unwrap!(
                 ZlibCache::new(bump_a, ZLIB_CACHE_SLOTS),
                 "ZLIB cache alloc"
@@ -72,7 +69,6 @@ impl<'a> DrawingCache<'a> {
 
             #[cfg(not(feature = "xframebuff"))]
             render_buff: unwrap!(alloc_buf(bump_b), "Render buff alloc"),
-            image_buff: unwrap!(alloc_buf(bump_b), "Toif buff alloc"),
         }
     }
 
