@@ -7,6 +7,7 @@ use crate::{
         flow::{base::Decision, FlowMsg, FlowState, FlowStore},
         geometry::{Offset, Rect},
         shape::Renderer,
+        util,
     },
 };
 
@@ -61,6 +62,12 @@ impl<Q: FlowState, S: FlowStore> SwipeFlow<Q, S> {
     fn goto(&mut self, ctx: &mut EventCtx, direction: SwipeDirection, state: Q) {
         if state == self.state {
             self.transition = Transition::Internal;
+            return;
+        }
+        if util::animation_disabled() {
+            self.state = state;
+            self.store.event(state.index(), ctx, Event::Attach);
+            ctx.request_paint();
             return;
         }
         self.transition = Transition::External {

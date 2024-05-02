@@ -7,6 +7,7 @@ use crate::{
         flow::base::Swipable,
         geometry::{Axis, Offset, Rect},
         shape::Renderer,
+        util,
     },
 };
 
@@ -124,6 +125,15 @@ impl<T: Component + Paginate + Clone> Swipable for SwipePage<T> {
             }
             _ => {}
         };
+        self.current = match direction {
+            SwipeDirection::Left | SwipeDirection::Up => (self.current + 1).min(self.pages - 1),
+            SwipeDirection::Right | SwipeDirection::Down => self.current.saturating_sub(1),
+        };
+        if util::animation_disabled() {
+            self.inner.change_page(self.current);
+            ctx.request_paint();
+            return true;
+        }
         self.transition = Some(Transition {
             cloned: unwrap!(Gc::new(self.inner.clone())),
             animation: Animation::new(
@@ -134,10 +144,6 @@ impl<T: Component + Paginate + Clone> Swipable for SwipePage<T> {
             ),
             direction,
         });
-        self.current = match direction {
-            SwipeDirection::Left | SwipeDirection::Up => (self.current + 1).min(self.pages - 1),
-            SwipeDirection::Right | SwipeDirection::Down => self.current.saturating_sub(1),
-        };
         self.inner.change_page(self.current);
         ctx.request_anim_frame();
         ctx.request_paint();
