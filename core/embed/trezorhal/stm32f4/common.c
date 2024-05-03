@@ -234,3 +234,14 @@ void show_pin_too_many_screen(void) {
   error_uni("TOO MANY PIN ATTEMPTS", "All data has been erased from the device",
             "PLEASE RECONNECT\nTHE DEVICE");
 }
+
+void invalidate_firmware(void) {
+  // erase start of the firmware (metadata) -> invalidate FW
+  ensure(flash_unlock_write(), NULL);
+  for (int i = 0; i < (1024 / FLASH_BLOCK_SIZE); i += FLASH_BLOCK_SIZE) {
+    flash_block_t data = {0};
+    ensure(flash_area_write_block(&FIRMWARE_AREA, i * FLASH_BLOCK_SIZE, data),
+           NULL);
+  }
+  ensure(flash_lock_write(), NULL);
+}

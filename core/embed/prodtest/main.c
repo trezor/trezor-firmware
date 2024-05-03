@@ -459,14 +459,7 @@ static void test_firmware_version(void) {
 }
 
 static void test_wipe(void) {
-  // erase start of the firmware (metadata) -> invalidate FW
-  ensure(flash_unlock_write(), NULL);
-  for (int i = 0; i < (1024 / FLASH_BLOCK_SIZE); i += FLASH_BLOCK_SIZE) {
-    flash_block_t data = {0};
-    ensure(flash_area_write_block(&FIRMWARE_AREA, i * FLASH_BLOCK_SIZE, data),
-           NULL);
-  }
-  ensure(flash_lock_write(), NULL);
+  invalidate_firmware();
   display_clear();
   display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY / 2 + 10, "WIPED", -1,
                       FONT_BOLD, COLOR_WHITE, COLOR_BLACK);
