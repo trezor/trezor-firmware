@@ -1,5 +1,5 @@
 use crate::{
-    trezorhal::bitblt::{self, BitBltCopy, BitBltFill},
+    trezorhal::bitblt::{BitBltCopy, BitBltFill},
     ui::{
         display::Color,
         geometry::{Offset, Point, Rect},

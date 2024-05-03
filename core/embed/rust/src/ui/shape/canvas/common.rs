@@ -760,13 +760,12 @@ fn fill_octant(
         let p2_coord = Point::new(p2_start.u - p2.v, -p2_start.v + p2.u);
         let p2_frac = if first {
             p2_start.frac
+        } else if join_flag {
+            255
         } else {
-            if join_flag {
-                255
-            } else {
-                255 - p2.frac
-            }
+            255 - p2.frac
         };
+
         fill(Some(p1_coord), p1.frac, p2_coord, p2_frac);
         first = false;
     }

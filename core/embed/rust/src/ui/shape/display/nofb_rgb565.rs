@@ -8,9 +8,7 @@ use crate::ui::{
     geometry::{Offset, Rect},
 };
 
-use super::super::{
-    BasicCanvas, BitmapFormat, BitmapView, DrawingCache, ProgressiveRenderer, Viewport,
-};
+use super::super::{BasicCanvas, BitmapView, DrawingCache, ProgressiveRenderer, Viewport};
 
 use static_alloc::Bump;
 
