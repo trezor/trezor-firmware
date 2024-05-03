@@ -243,7 +243,7 @@ void mpu_config_prodtest(void) {
   // clang-format off
   //   REGION    ADDRESS                   SIZE                TYPE       WRITE   UNPRIV
   SET_REGION( 0, STORAGE_START,            STORAGE_SIZE,       FLASH_DATA,  YES,   YES ); // Storage
-  SET_REGION( 1, FIRMWARE_START,           FIRMWARE_SIZE,      FLASH_CODE,   NO,   YES ); // Firmware
+  SET_REGION( 1, FIRMWARE_START,           FIRMWARE_SIZE,      FLASH_CODE,  YES,   YES ); // Firmware
   SET_REGION( 2, ASSETS_START,             ASSETS_SIZE,        FLASH_DATA,  YES,   YES ); // Assets
   SET_REGION( 3, SRAM1_BASE,               SRAM_SIZE,          SRAM,        YES,   YES ); // SRAM1/2/3/5
   SET_REGION( 4, GRAPHICS_START,           GRAPHICS_SIZE,      SRAM,        YES,   YES ); // Frame buffer or display interface
