@@ -19,9 +19,9 @@ struct ZlibCacheSlot<'a> {
 }
 
 impl<'a> ZlibCacheSlot<'a> {
-    fn new<'alloc: 'a, T>(bump: &'alloc T) -> Option<Self>
+    fn new<T>(bump: &'a T) -> Option<Self>
     where
-        T: LocalAllocLeakExt<'alloc>,
+        T: LocalAllocLeakExt<'a>,
     {
         let window = bump
             .alloc_t()?

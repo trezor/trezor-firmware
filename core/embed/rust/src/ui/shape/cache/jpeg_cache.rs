@@ -59,9 +59,9 @@ pub struct JpegCacheSlot<'a> {
 }
 
 impl<'a> JpegCacheSlot<'a> {
-    fn new<'alloc: 'a, T>(bump: &'alloc T) -> Option<Self>
+    fn new<T>(bump: &'a T) -> Option<Self>
     where
-        T: LocalAllocLeakExt<'alloc>,
+        T: LocalAllocLeakExt<'a>,
     {
         let scratchpad = bump
             .alloc_t()?
