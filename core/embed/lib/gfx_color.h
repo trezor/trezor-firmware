@@ -75,6 +75,8 @@ typedef uint32_t gfx_color32_t;
 #define gfx_color32_to_g(c) (((c) & 0x0000FF00) >> 8)
 // Extracts blue component from gfx_color32_t
 #define gfx_color32_to_b(c) (((c) & 0x000000FF) >> 0)
+// Extracts alpha component from gfx_color32_t
+#define gfx_color32_to_a(c) (((c) & 0xFF000000) >> 0)
 
 // 4-bit linear interpolation between `fg` and `bg`
 #define a4_lerp(fg, bg, alpha) (((fg) * (alpha) + ((bg) * (15 - (alpha)))) / 15)
@@ -93,6 +95,13 @@ static inline gfx_color16_t gfx_color16_rgb(uint8_t r, uint8_t g, uint8_t b) {
 // Alpha is set to 255.
 static inline gfx_color32_t gfx_color32_rgb(uint8_t r, uint8_t g, uint8_t b) {
   return (0xFFU << 24) | ((uint32_t)r << 16) | ((uint32_t)g << 8) | b;
+}
+
+// Constructs a 32-bit color from the given red (r),
+// green (g), blue (b) and alhpa (a) values in the range 0..255.
+static inline gfx_color32_t gfx_color32_rgba(uint8_t r, uint8_t g, uint8_t b,
+                                             uint8_t a) {
+  return (a << 24) | ((uint32_t)r << 16) | ((uint32_t)g << 8) | b;
 }
 
 // Converts a 16-bit color to a 32-bit color; alpha is set to 255
@@ -341,5 +350,13 @@ const gfx_color16_t* gfx_color16_gradient_a4(gfx_color_t fg, gfx_color_t bg);
 // Each element in the array represents a color, with `retval[0]` being
 // the background (`bg`) color and `retval[15]` the foreground (`fg`) color
 const gfx_color32_t* gfx_color32_gradient_a4(gfx_color_t fg, gfx_color_t bg);
+
+// Returns a color with alpha channel set
+//
+// The original color is not modified
+static inline gfx_color32_t gfx_color32_set_alpha(gfx_color32_t c,
+                                                  uint8_t alpha) {
+  return (c & 0xFFFFFF) | (alpha << 24);
+}
 
 #endif  // GFX_COLOR_H
