@@ -40,9 +40,9 @@ def configure(
     if "new_rendering" in features_wanted:
         sources += [
             "embed/trezorhal/xdisplay_legacy.c",
-            "embed/trezorhal/stm32f4/display/stm32f429i-disc1/display_driver.c",
-            "embed/trezorhal/stm32f4/display/stm32f429i-disc1/display_ltdc.c",
-            "embed/trezorhal/stm32f4/display/stm32f429i-disc1/ili9341_spi.c",
+            "embed/trezorhal/stm32f4/xdisplay/stm32f429i-disc1/display_driver.c",
+            "embed/trezorhal/stm32f4/xdisplay/stm32f429i-disc1/display_ltdc.c",
+            "embed/trezorhal/stm32f4/xdisplay/stm32f429i-disc1/ili9341_spi.c",
         ]
     else:
         sources += [f"embed/trezorhal/stm32f4/displays/{display}"]

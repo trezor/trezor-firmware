@@ -42,21 +42,21 @@ def configure(
     ]
     if "new_rendering" in features_wanted:
         sources += ["embed/trezorhal/xdisplay_legacy.c"]
-        sources += ["embed/trezorhal/stm32f4/display/st-7789/display_nofb.c"]
-        sources += ["embed/trezorhal/stm32f4/display/st-7789/display_driver.c"]
-        sources += ["embed/trezorhal/stm32f4/display/st-7789/display_io.c"]
-        sources += ["embed/trezorhal/stm32f4/display/st-7789/display_panel.c"]
+        sources += ["embed/trezorhal/stm32f4/xdisplay/st-7789/display_nofb.c"]
+        sources += ["embed/trezorhal/stm32f4/xdisplay/st-7789/display_driver.c"]
+        sources += ["embed/trezorhal/stm32f4/xdisplay/st-7789/display_io.c"]
+        sources += ["embed/trezorhal/stm32f4/xdisplay/st-7789/display_panel.c"]
         sources += [
-            "embed/trezorhal/stm32f4/display/st-7789/panels/tf15411a.c",
+            "embed/trezorhal/stm32f4/xdisplay/st-7789/panels/tf15411a.c",
         ]
         sources += [
-            "embed/trezorhal/stm32f4/display/st-7789/panels/154a.c",
+            "embed/trezorhal/stm32f4/xdisplay/st-7789/panels/154a.c",
         ]
         sources += [
-            "embed/trezorhal/stm32f4/display/st-7789/panels/lx154a2411.c",
+            "embed/trezorhal/stm32f4/xdisplay/st-7789/panels/lx154a2411.c",
         ]
         sources += [
-            "embed/trezorhal/stm32f4/display/st-7789/panels/lx154a2422.c",
+            "embed/trezorhal/stm32f4/xdisplay/st-7789/panels/lx154a2422.c",
         ]
 
     else:

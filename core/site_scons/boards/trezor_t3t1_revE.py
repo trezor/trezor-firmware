@@ -48,12 +48,12 @@ def configure(
 
     if "new_rendering" in features_wanted:
         sources += ["embed/trezorhal/xdisplay_legacy.c"]
-        sources += ["embed/trezorhal/stm32u5/display/st-7789/display_fb.c"]
-        sources += ["embed/trezorhal/stm32u5/display/st-7789/display_driver.c"]
-        sources += ["embed/trezorhal/stm32u5/display/st-7789/display_io.c"]
-        sources += ["embed/trezorhal/stm32u5/display/st-7789/display_panel.c"]
+        sources += ["embed/trezorhal/stm32u5/xdisplay/st-7789/display_fb.c"]
+        sources += ["embed/trezorhal/stm32u5/xdisplay/st-7789/display_driver.c"]
+        sources += ["embed/trezorhal/stm32u5/xdisplay/st-7789/display_io.c"]
+        sources += ["embed/trezorhal/stm32u5/xdisplay/st-7789/display_panel.c"]
         sources += [
-            "embed/trezorhal/stm32u5/display/st-7789/panels/lx154a2422.c",
+            "embed/trezorhal/stm32u5/xdisplay/st-7789/panels/lx154a2422.c",
         ]
     else:
         sources += [f"embed/trezorhal/stm32u5/displays/{display}"]

@@ -44,7 +44,7 @@ def configure(
 
     if "new_rendering" in features_wanted:
         sources += ["embed/trezorhal/xdisplay_legacy.c"]
-        sources += ["embed/trezorhal/stm32f4/display/ug-2828/display_driver.c"]
+        sources += ["embed/trezorhal/stm32f4/xdisplay/ug-2828/display_driver.c"]
     else:
         sources += [f"embed/trezorhal/stm32f4/displays/{display}"]
 
