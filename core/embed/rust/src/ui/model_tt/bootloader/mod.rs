@@ -40,7 +40,6 @@ use crate::ui::{
     geometry::{Alignment, Alignment2D, Offset},
     shape,
     shape::render_on_display,
-    util::version_split,
 };
 
 #[cfg(feature = "new_rendering")]

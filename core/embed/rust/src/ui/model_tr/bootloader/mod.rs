@@ -30,7 +30,6 @@ use crate::ui::geometry::Rect;
 #[cfg(feature = "new_rendering")]
 use crate::ui::{
     display::toif::Toif, geometry::Alignment, model_tr::cshape, shape, shape::render_on_display,
-    util::version_split,
 };
 
 #[cfg(feature = "new_rendering")]
