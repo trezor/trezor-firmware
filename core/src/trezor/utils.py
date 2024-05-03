@@ -6,6 +6,8 @@ from trezorutils import (  # noqa: F401
     INTERNAL_MODEL,
     MODEL,
     MODEL_FULL_NAME,
+    MODEL_USB_MANUFACTURER,
+    MODEL_USB_PRODUCT,
     SCM_REVISION,
     UI_LAYOUT,
     USE_BACKLIGHT,
