@@ -132,12 +132,12 @@ impl<'a> Shape<'a> for JpegImage<'a> {
             // Get a single line working bitmap
             let buff = &mut unwrap!(cache.image_buff(), "No image buffer");
             let mut slice = unwrap!(
-                Bitmap::new(
+                Bitmap::new_mut(
                     BitmapFormat::RGB565,
                     None,
                     Offset::new(jpeg_size.x, 1),
                     None,
-                    &buff[..]
+                    &mut buff[..]
                 ),
                 "Too small buffer"
             );
