@@ -126,7 +126,8 @@ void gfx_rgb565_blend_mono4(const gfx_bitblt_t* bb) {
       for (int x = 0; x < bb->width; x++) {
         uint8_t fg_data = src_row[(x + bb->src_x) / 2];
         uint8_t fg_alpha = (x + bb->src_x) & 1 ? fg_data >> 4 : fg_data & 0x0F;
-        dst_ptr[x] = gfx_color16_blend_a4(
+        fg_alpha = fg_alpha * bb->src_alpha / 15;
+        dst_ptr[x] = gfx_color16_blend_a8(
             bb->src_fg, gfx_color16_to_color(dst_ptr[x]), fg_alpha);
       }
       dst_ptr += bb->dst_stride / sizeof(*dst_ptr);
