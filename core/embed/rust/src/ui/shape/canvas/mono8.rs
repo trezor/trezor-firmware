@@ -1,6 +1,9 @@
-use crate::ui::{
-    display::Color,
-    geometry::{Offset, Point, Rect},
+use crate::{
+    trezorhal::bitblt::{BitBltCopy, BitBltFill},
+    ui::{
+        display::Color,
+        geometry::{Offset, Point, Rect},
+    },
 };
 
 use super::{
@@ -58,12 +61,16 @@ impl<'a> BasicCanvas for Mono8Canvas<'a> {
 
     fn fill_rect(&mut self, r: Rect, color: Color, alpha: u8) {
         let r = r.translate(self.viewport.origin);
-        self.bitmap.mono8_fill(r, self.viewport.clip, color, alpha);
+        if let Some(bitblt) = BitBltFill::new(r, self.viewport.clip, color, alpha) {
+            bitblt.mono8_fill(&mut self.bitmap);
+        }
     }
 
     fn draw_bitmap(&mut self, r: Rect, bitmap: BitmapView) {
         let r = r.translate(self.viewport.origin);
-        self.bitmap.mono8_copy(r, self.viewport.clip, &bitmap);
+        if let Some(bitblt) = BitBltCopy::new(r, self.viewport.clip, &bitmap) {
+            bitblt.mono8_copy(&mut self.bitmap);
+        }
     }
 }
 
@@ -95,7 +102,9 @@ impl<'a> Canvas for Mono8Canvas<'a> {
 
     fn blend_bitmap(&mut self, r: Rect, src: BitmapView) {
         let r = r.translate(self.viewport.origin);
-        self.bitmap.mono8_blend(r, self.viewport.clip, &src);
+        if let Some(bitblt) = BitBltCopy::new(r, self.viewport.clip, &src) {
+            bitblt.mono8_blend(&mut self.bitmap);
+        }
     }
 
     #[cfg(feature = "ui_blurring")]

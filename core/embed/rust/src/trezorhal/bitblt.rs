@@ -245,13 +245,12 @@ impl<'a> BitBltCopy<'a> {
         }
     }
 
-    /// Copies a part of the source bitmap to the destination bitmap.
-    ///
-    /// - The source bitmap format uses MONO4.
-    /// - The destination bitmap uses RGB565.
-    pub fn rgb565_copy_mono4(&self, dst: &mut Bitmap) {
+    /// Copies a part of the source bitmap to the destination bitmap in RGB565
+    /// format.
+    pub fn rgb565_copy(&self, dst: &mut Bitmap) {
         assert!(dst.format() == BitmapFormat::RGB565);
-        assert!(self.src.format() == BitmapFormat::MONO4);
+
+        let bitblt = self.bitblt.with_dst(dst);
 
         // SAFETY:
         // - The destination and source bitmaps are in the correct formats.
@@ -259,19 +258,22 @@ impl<'a> BitBltCopy<'a> {
         //   by the `new()` and `with_dst()` methods.
         // - BitBlt structure is properly initialized.
         // - The DMA pending flag is set for both bitmaps after operations.
-        unsafe { ffi::gl_rgb565_copy_mono4(&self.bitblt.with_dst(dst)) };
+        match self.src.format() {
+            BitmapFormat::MONO4 => unsafe { ffi::gl_rgb565_copy_mono4(&bitblt) },
+            BitmapFormat::RGB565 => unsafe { ffi::gl_rgb565_copy_rgb565(&bitblt) },
+            _ => unimplemented!(),
+        }
 
-        dst.mark_dma_pending();
         self.src.bitmap.mark_dma_pending();
+        dst.mark_dma_pending();
     }
 
-    /// Copies a part of the source bitmap to the destination bitmap.
-    ///
-    /// - The source bitmap uses the RGB565 format.
-    /// - The destination bitmap usesthe RGB565 format.
-    pub fn rgb565_copy_rgb565(&self, dst: &mut Bitmap) {
+    /// Blends a part of the source bitmap with the destination bitmap in RGB565
+    /// format.
+    pub fn rgb565_blend(&self, dst: &mut Bitmap) {
         assert!(dst.format() == BitmapFormat::RGB565);
-        assert!(self.src.format() == BitmapFormat::RGB565);
+
+        let bitblt = self.bitblt.with_dst(dst);
 
         // SAFETY:
         // - The destination and source bitmaps are in the correct formats.
@@ -279,39 +281,21 @@ impl<'a> BitBltCopy<'a> {
         //   by the `new()` and `with_dst()` methods.
         // - BitBlt structure is properly initialized.
         // - The DMA pending flag is set for both bitmaps after operations.
-        unsafe { ffi::gl_rgb565_copy_rgb565(&self.bitblt.with_dst(dst)) };
+        match self.src.format() {
+            BitmapFormat::MONO4 => unsafe { ffi::gl_rgb565_blend_mono4(&bitblt) },
+            _ => unimplemented!(),
+        }
 
-        dst.mark_dma_pending();
         self.src.bitmap.mark_dma_pending();
+        dst.mark_dma_pending();
     }
 
-    /// Blends a part of the source bitmap with the destination bitmap.
-    ///
-    /// - The source bitmap uses the MONO4 format.
-    /// - The destination bitmap uses the RGB565 format.
-    pub fn rgb565_blend_mono4(&self, dst: &mut Bitmap) {
-        assert!(dst.format() == BitmapFormat::RGB565);
-        assert!(self.src.format() == BitmapFormat::MONO4);
-
-        // SAFETY:
-        // - The destination and source bitmaps are in the correct formats.
-        // - Source and destination coordinates are properly clipped, which is ensured
-        //   by the `new()` and `with_dst()` methods.
-        // - BitBlt structure is properly initialized.
-        // - The DMA pending flag is set for both bitmaps after operations.
-        unsafe { ffi::gl_rgb565_blend_mono4(&self.bitblt.with_dst(dst)) };
-
-        dst.mark_dma_pending();
-        self.src.bitmap.mark_dma_pending();
-    }
-
-    /// Copies a part of the source bitmap to the destination bitmap.
-    ///
-    /// - The source bitmap uses the MONO4 format.
-    /// - The destination bitmap uses the RGBA8888 format.
-    pub fn rgba8888_copy_mono4(&self, dst: &mut Bitmap) {
+    /// Copies a part of the source bitmap to the destination bitmap in RGBA8888
+    /// format.
+    pub fn rgba8888_copy(&self, dst: &mut Bitmap) {
         assert!(dst.format() == BitmapFormat::RGBA8888);
-        assert!(self.src.format() == BitmapFormat::MONO4);
+
+        let bitblt = self.bitblt.with_dst(dst);
 
         // SAFETY:
         // - The destination and source bitmaps are in the correct formats.
@@ -319,19 +303,23 @@ impl<'a> BitBltCopy<'a> {
         //   by the `new()` and `with_dst()` methods.
         // - BitBlt structure is properly initialized.
         // - The DMA pending flag is set for both bitmaps after operations.
-        unsafe { ffi::gl_rgba8888_copy_mono4(&self.bitblt.with_dst(dst)) };
+        match self.src.format() {
+            BitmapFormat::MONO4 => unsafe { ffi::gl_rgba8888_copy_mono4(&bitblt) },
+            BitmapFormat::RGB565 => unsafe { ffi::gl_rgba8888_copy_rgb565(&bitblt) },
+            BitmapFormat::RGBA8888 => unsafe { ffi::gl_rgba8888_copy_rgba8888(&bitblt) },
+            _ => unimplemented!(),
+        }
 
-        dst.mark_dma_pending();
         self.src.bitmap.mark_dma_pending();
+        dst.mark_dma_pending();
     }
 
-    /// Copies a part of the source bitmap to the destination bitmap.
-    ///
-    /// - The source bitmap uses the RGB565 format.
-    /// - The destination bitmap uses the RGBA8888 format.
-    pub fn rgba8888_copy_rgb565(&self, dst: &mut Bitmap) {
+    /// Blends a part of the source bitmap with the destination bitmap in
+    /// RGBA8888 format.
+    pub fn rgba8888_blend(&self, dst: &mut Bitmap) {
         assert!(dst.format() == BitmapFormat::RGBA8888);
-        assert!(self.src.format() == BitmapFormat::RGB565);
+
+        let bitblt = self.bitblt.with_dst(dst);
 
         // SAFETY:
         // - The destination and source bitmaps are in the correct formats.
@@ -339,59 +327,21 @@ impl<'a> BitBltCopy<'a> {
         //   by the `new()` and `with_dst()` methods.
         // - BitBlt structure is properly initialized.
         // - The DMA pending flag is set for both bitmaps after operations.
-        unsafe { ffi::gl_rgba8888_copy_rgb565(&self.bitblt.with_dst(dst)) };
+        match self.src.format() {
+            BitmapFormat::MONO4 => unsafe { ffi::gl_rgba8888_blend_mono4(&bitblt) },
+            _ => unimplemented!(),
+        }
 
-        dst.mark_dma_pending();
         self.src.bitmap.mark_dma_pending();
+        dst.mark_dma_pending();
     }
 
-    /// Copies a part of the source bitmap to the destination bitmap.
-    ///
-    /// - The source bitmap uses the RGBA8888 format.
-    /// - The destination bitmap uses the RGBA8888 format.
-    pub fn rgba8888_copy_rgba8888(&self, dst: &mut Bitmap) {
-        assert!(dst.format() == BitmapFormat::RGBA8888);
-        assert!(self.src.format() == BitmapFormat::RGBA8888);
-
-        // SAFETY:
-        // - The destination and source bitmaps are in the correct formats.
-        // - Source and destination coordinates are properly clipped, which is ensured
-        //   by the `new()` and `with_dst()` methods.
-        // - BitBlt structure is properly initialized.
-        // - The DMA pending flag is set for both bitmaps after operations.
-        unsafe { ffi::gl_rgba8888_copy_rgba8888(&self.bitblt.with_dst(dst)) };
-
-        dst.mark_dma_pending();
-        self.src.bitmap.mark_dma_pending();
-    }
-
-    /// Blends a part of the source bitmap with the destination bitmap.
-    ///
-    /// - The source bitmap uses the MONO4 format.
-    /// - The destination bitmap uses the RGBA8888 format.
-    pub fn rgba8888_blend_mono4(&self, dst: &mut Bitmap) {
-        assert!(dst.format() == BitmapFormat::RGBA8888);
-        assert!(self.src.format() == BitmapFormat::MONO4);
-
-        // SAFETY:
-        // - The destination and source bitmaps are in the correct formats.
-        // - Source and destination coordinates are properly clipped, which is ensured
-        //   by the `new()` and `with_dst()` methods.
-        // - BitBlt structure is properly initialized.
-        // - The DMA pending flag is set for both bitmaps after operations.
-        unsafe { ffi::gl_rgba8888_blend_mono4(&self.bitblt.with_dst(dst)) };
-
-        dst.mark_dma_pending();
-        self.src.bitmap.mark_dma_pending();
-    }
-
-    /// Copies a part of the source bitmap to the destination bitmap.
-    ///
-    /// - The source bitmap uses the MONO1P format.
-    /// - The destination bitmap uses the MONO8 format.
-    pub fn mono8_copy_mono1p(&self, dst: &mut Bitmap) {
+    /// Copies a part of the source bitmap to the destination bitmap in MONO8
+    /// format.
+    pub fn mono8_copy(&self, dst: &mut Bitmap) {
         assert!(dst.format() == BitmapFormat::MONO8);
-        assert!(self.src.format() == BitmapFormat::MONO1P);
+
+        let bitblt = self.bitblt.with_dst(dst);
 
         // SAFETY:
         // - The destination and source bitmaps are in the correct formats.
@@ -399,19 +349,23 @@ impl<'a> BitBltCopy<'a> {
         //   by the `new()` and `with_dst()` methods.
         // - BitBlt structure is properly initialized.
         // - The DMA pending flag is set for both bitmaps after operations.
-        unsafe { ffi::gl_mono8_copy_mono1p(&self.bitblt.with_dst(dst)) };
 
-        dst.mark_dma_pending();
+        match self.src.format() {
+            BitmapFormat::MONO1P => unsafe { ffi::gl_mono8_copy_mono1p(&bitblt) },
+            BitmapFormat::MONO4 => unsafe { ffi::gl_mono8_copy_mono4(&bitblt) },
+            _ => unimplemented!(),
+        }
+
         self.src.bitmap.mark_dma_pending();
+        dst.mark_dma_pending();
     }
 
-    /// Copies a part of the source bitmap to the destination bitmap.
-    ///
-    /// - The source bitmap uses the MONO4 format.
-    /// - The destination bitmap uses the MONO8 format.
-    pub fn mono8_copy_mono4(&self, dst: &mut Bitmap) {
+    /// Blends a part of the source bitmap with the destination bitmap in MONO8
+    /// format.
+    pub fn mono8_blend(&self, dst: &mut Bitmap) {
         assert!(dst.format() == BitmapFormat::MONO8);
-        assert!(self.src.format() == BitmapFormat::MONO4);
+
+        let bitblt = self.bitblt.with_dst(dst);
 
         // SAFETY:
         // - The destination and source bitmaps are in the correct formats.
@@ -419,66 +373,33 @@ impl<'a> BitBltCopy<'a> {
         //   by the `new()` and `with_dst()` methods.
         // - BitBlt structure is properly initialized.
         // - The DMA pending flag is set for both bitmaps after operations.
-        unsafe { ffi::gl_mono8_copy_mono4(&self.bitblt.with_dst(dst)) };
 
-        dst.mark_dma_pending();
+        match self.src.format() {
+            BitmapFormat::MONO1P => unsafe { ffi::gl_mono8_blend_mono1p(&bitblt) },
+            BitmapFormat::MONO4 => unsafe { ffi::gl_mono8_blend_mono4(&bitblt) },
+            _ => unimplemented!(),
+        }
+
         self.src.bitmap.mark_dma_pending();
-    }
-
-    /// Blends a part of the source bitmap with the destination bitmap.
-    ///
-    /// - The source bitmap uses the MONO1P format.
-    /// - The destination bitmap uses the MONO8 format.
-    pub fn mono8_blend_mono1p(&self, dst: &mut Bitmap) {
-        assert!(dst.format() == BitmapFormat::MONO8);
-        assert!(self.src.format() == BitmapFormat::MONO1P);
-
-        // SAFETY:
-        // - The destination and source bitmaps are in the correct formats.
-        // - Source and destination coordinates are properly clipped, which is ensured
-        //   by the `new()` and `with_dst()` methods.
-        // - BitBlt structure is properly initialized.
-        // - The DMA pending flag is set for both bitmaps after operations.
-        unsafe { ffi::gl_mono8_blend_mono1p(&self.bitblt.with_dst(dst)) };
-
         dst.mark_dma_pending();
-        self.src.bitmap.mark_dma_pending();
-    }
-
-    /// Blends a part of the source bitmap with the destination bitmap.
-    ///
-    /// - The source bitmap uses the MONO4 format.
-    /// - The destination bitmap uses the MONO8 format.
-    pub fn mono8_blend_mono4(&self, dst: &mut Bitmap) {
-        assert!(dst.format() == BitmapFormat::MONO8);
-        assert!(self.src.format() == BitmapFormat::MONO4);
-
-        // SAFETY:
-        // - The destination and source bitmaps are in the correct formats.
-        // - Source and destination coordinates are properly clipped, which is ensured
-        //   by the `new()` and `with_dst()` methods.
-        // - BitBlt structure is properly initialized.
-        // - The DMA pending flag is set for both bitmaps after operations.
-        unsafe { ffi::gl_mono8_blend_mono4(&self.bitblt.with_dst(dst)) };
-
-        dst.mark_dma_pending();
-        self.src.bitmap.mark_dma_pending();
     }
 
     /// Copies a part of the source bitmap to the display.
     ///
     /// - The source bitmap uses the RGB565 format.
     #[cfg(all(not(feature = "xframebuffer"), feature = "new_rendering"))]
-    pub fn display_copy_rgb565(&self) {
-        assert!(self.src.format() == BitmapFormat::MONO4);
-
+    pub fn display_copy(&self) {
         // SAFETY:
         // - The source bitmap is in the correct formats.
         // - Source and destination coordinates are properly clipped, which is ensured
         //   by the `new()` and `with_dst()` methods.
         // - BitBlt structure is properly initialized.
         // - The DMA pending flag is set for src bitmap after operations.
-        unsafe { ffi::display_copy_rgb565(&self.bitblt) };
+
+        match self.src.format() {
+            BitmapFormat::RGB565 => unsafe { ffi::display_copy_rgb565(&self.bitblt) },
+            _ => unimplemented!(),
+        }
 
         self.src.bitmap.mark_dma_pending();
     }

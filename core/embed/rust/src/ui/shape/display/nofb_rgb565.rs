@@ -103,10 +103,7 @@ impl BasicCanvas for DisplayCanvas {
     fn draw_bitmap(&mut self, r: Rect, bitmap: BitmapView) {
         let r = r.translate(self.viewport.origin);
         if let Some(bitblt) = BitBltCopy::new(r, self.viewport.clip, &bitmap) {
-            match bitmap.format() {
-                BitmapFormat::RGB565 => bitblt.display_copy_rgb565(),
-                _ => panic!("Unsupported DMA operation"),
-            }
+            bitblt.display_copy();
         }
     }
 }
