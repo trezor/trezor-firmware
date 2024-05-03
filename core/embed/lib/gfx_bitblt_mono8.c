@@ -17,13 +17,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "gl_bitblt.h"
+#include "gfx_bitblt.h"
 
-void gl_mono8_fill(const gl_bitblt_t* bb) {
+void gfx_mono8_fill(const gfx_bitblt_t* bb) {
   uint8_t* dst_ptr = (uint8_t*)bb->dst_row + bb->dst_x;
   uint16_t height = bb->height;
 
-  uint8_t fg = gl_color_lum(bb->src_fg);
+  uint8_t fg = gfx_color_lum(bb->src_fg);
 
   while (height-- > 0) {
     for (int x = 0; x < bb->width; x++) {
@@ -33,14 +33,14 @@ void gl_mono8_fill(const gl_bitblt_t* bb) {
   }
 }
 
-void gl_mono8_copy_mono1p(const gl_bitblt_t* bb) {
+void gfx_mono8_copy_mono1p(const gfx_bitblt_t* bb) {
   uint8_t* dst_ptr = (uint8_t*)bb->dst_row + bb->dst_x;
   uint8_t* src = (uint8_t*)bb->src_row;
   uint16_t src_ofs = bb->src_stride * bb->src_y + bb->src_x;
   uint16_t height = bb->height;
 
-  uint8_t fg = gl_color_lum(bb->src_fg);
-  uint8_t bg = gl_color_lum(bb->src_bg);
+  uint8_t fg = gfx_color_lum(bb->src_fg);
+  uint8_t bg = gfx_color_lum(bb->src_bg);
 
   while (height-- > 0) {
     for (int x = 0; x < bb->width; x++) {
@@ -53,13 +53,13 @@ void gl_mono8_copy_mono1p(const gl_bitblt_t* bb) {
   }
 }
 
-void gl_mono8_copy_mono4(const gl_bitblt_t* bb) {
+void gfx_mono8_copy_mono4(const gfx_bitblt_t* bb) {
   uint8_t* dst_ptr = (uint8_t*)bb->dst_row + bb->dst_x;
   uint8_t* src_row = (uint8_t*)bb->src_row;
   uint16_t height = bb->height;
 
-  uint8_t fg = gl_color_lum(bb->src_fg);
-  uint8_t bg = gl_color_lum(bb->src_bg);
+  uint8_t fg = gfx_color_lum(bb->src_fg);
+  uint8_t bg = gfx_color_lum(bb->src_bg);
 
   while (height-- > 0) {
     for (int x = 0; x < bb->width; x++) {
@@ -72,13 +72,13 @@ void gl_mono8_copy_mono4(const gl_bitblt_t* bb) {
   }
 }
 
-void gl_mono8_blend_mono1p(const gl_bitblt_t* bb) {
+void gfx_mono8_blend_mono1p(const gfx_bitblt_t* bb) {
   uint8_t* dst_ptr = (uint8_t*)bb->dst_row + bb->dst_x;
   uint8_t* src = (uint8_t*)bb->src_row;
   uint16_t src_ofs = bb->src_stride * bb->src_y + bb->src_x;
   uint16_t height = bb->height;
 
-  uint8_t fg = gl_color_lum(bb->src_fg);
+  uint8_t fg = gfx_color_lum(bb->src_fg);
 
   while (height-- > 0) {
     for (int x = 0; x < bb->width; x++) {
@@ -91,12 +91,12 @@ void gl_mono8_blend_mono1p(const gl_bitblt_t* bb) {
   }
 }
 
-void gl_mono8_blend_mono4(const gl_bitblt_t* bb) {
+void gfx_mono8_blend_mono4(const gfx_bitblt_t* bb) {
   uint8_t* dst_ptr = (uint8_t*)bb->dst_row + bb->dst_x;
   uint8_t* src_row = (uint8_t*)bb->src_row;
   uint16_t height = bb->height;
 
-  uint8_t fg = gl_color_lum(bb->src_fg);
+  uint8_t fg = gfx_color_lum(bb->src_fg);
 
   while (height-- > 0) {
     for (int x = 0; x < bb->width; x++) {

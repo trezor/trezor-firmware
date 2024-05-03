@@ -6,7 +6,7 @@ use crate::ui::{
     shape::{Bitmap, BitmapFormat, BitmapView},
 };
 
-pub type BitBlt = ffi::gl_bitblt_t;
+pub type BitBlt = ffi::gfx_bitblt_t;
 
 impl Default for BitBlt {
     fn default() -> Self {
@@ -154,7 +154,7 @@ impl BitBltFill {
     /// Destination bitmap must be in RGB565 format
     pub fn rgb565_fill(&self, dst: &mut Bitmap) {
         assert!(dst.format() == BitmapFormat::RGB565);
-        unsafe { ffi::gl_rgb565_fill(&self.bitblt.with_dst(dst)) };
+        unsafe { ffi::gfx_rgb565_fill(&self.bitblt.with_dst(dst)) };
         dst.mark_dma_pending()
     }
 
@@ -163,7 +163,7 @@ impl BitBltFill {
     /// The destination bitmap is in the RGBA8888 format.
     pub fn rgba8888_fill(&self, dst: &mut Bitmap) {
         assert!(dst.format() == BitmapFormat::RGBA8888);
-        unsafe { ffi::gl_rgba8888_fill(&self.bitblt.with_dst(dst)) };
+        unsafe { ffi::gfx_rgba8888_fill(&self.bitblt.with_dst(dst)) };
         dst.mark_dma_pending()
     }
 
@@ -172,7 +172,7 @@ impl BitBltFill {
     /// The destination bitmap is in the MONO8 format.
     pub fn mono8_fill(&self, dst: &mut Bitmap) {
         assert!(dst.format() == BitmapFormat::RGBA8888);
-        unsafe { ffi::gl_mono8_fill(&self.bitblt.with_dst(dst)) };
+        unsafe { ffi::gfx_mono8_fill(&self.bitblt.with_dst(dst)) };
         dst.mark_dma_pending()
     }
 
@@ -259,8 +259,8 @@ impl<'a> BitBltCopy<'a> {
         // - BitBlt structure is properly initialized.
         // - The DMA pending flag is set for both bitmaps after operations.
         match self.src.format() {
-            BitmapFormat::MONO4 => unsafe { ffi::gl_rgb565_copy_mono4(&bitblt) },
-            BitmapFormat::RGB565 => unsafe { ffi::gl_rgb565_copy_rgb565(&bitblt) },
+            BitmapFormat::MONO4 => unsafe { ffi::gfx_rgb565_copy_mono4(&bitblt) },
+            BitmapFormat::RGB565 => unsafe { ffi::gfx_rgb565_copy_rgb565(&bitblt) },
             _ => unimplemented!(),
         }
 
@@ -282,7 +282,7 @@ impl<'a> BitBltCopy<'a> {
         // - BitBlt structure is properly initialized.
         // - The DMA pending flag is set for both bitmaps after operations.
         match self.src.format() {
-            BitmapFormat::MONO4 => unsafe { ffi::gl_rgb565_blend_mono4(&bitblt) },
+            BitmapFormat::MONO4 => unsafe { ffi::gfx_rgb565_blend_mono4(&bitblt) },
             _ => unimplemented!(),
         }
 
@@ -304,9 +304,9 @@ impl<'a> BitBltCopy<'a> {
         // - BitBlt structure is properly initialized.
         // - The DMA pending flag is set for both bitmaps after operations.
         match self.src.format() {
-            BitmapFormat::MONO4 => unsafe { ffi::gl_rgba8888_copy_mono4(&bitblt) },
-            BitmapFormat::RGB565 => unsafe { ffi::gl_rgba8888_copy_rgb565(&bitblt) },
-            BitmapFormat::RGBA8888 => unsafe { ffi::gl_rgba8888_copy_rgba8888(&bitblt) },
+            BitmapFormat::MONO4 => unsafe { ffi::gfx_rgba8888_copy_mono4(&bitblt) },
+            BitmapFormat::RGB565 => unsafe { ffi::gfx_rgba8888_copy_rgb565(&bitblt) },
+            BitmapFormat::RGBA8888 => unsafe { ffi::gfx_rgba8888_copy_rgba8888(&bitblt) },
             _ => unimplemented!(),
         }
 
@@ -328,7 +328,7 @@ impl<'a> BitBltCopy<'a> {
         // - BitBlt structure is properly initialized.
         // - The DMA pending flag is set for both bitmaps after operations.
         match self.src.format() {
-            BitmapFormat::MONO4 => unsafe { ffi::gl_rgba8888_blend_mono4(&bitblt) },
+            BitmapFormat::MONO4 => unsafe { ffi::gfx_rgba8888_blend_mono4(&bitblt) },
             _ => unimplemented!(),
         }
 
@@ -351,8 +351,8 @@ impl<'a> BitBltCopy<'a> {
         // - The DMA pending flag is set for both bitmaps after operations.
 
         match self.src.format() {
-            BitmapFormat::MONO1P => unsafe { ffi::gl_mono8_copy_mono1p(&bitblt) },
-            BitmapFormat::MONO4 => unsafe { ffi::gl_mono8_copy_mono4(&bitblt) },
+            BitmapFormat::MONO1P => unsafe { ffi::gfx_mono8_copy_mono1p(&bitblt) },
+            BitmapFormat::MONO4 => unsafe { ffi::gfx_mono8_copy_mono4(&bitblt) },
             _ => unimplemented!(),
         }
 
@@ -375,8 +375,8 @@ impl<'a> BitBltCopy<'a> {
         // - The DMA pending flag is set for both bitmaps after operations.
 
         match self.src.format() {
-            BitmapFormat::MONO1P => unsafe { ffi::gl_mono8_blend_mono1p(&bitblt) },
-            BitmapFormat::MONO4 => unsafe { ffi::gl_mono8_blend_mono4(&bitblt) },
+            BitmapFormat::MONO1P => unsafe { ffi::gfx_mono8_blend_mono1p(&bitblt) },
+            BitmapFormat::MONO4 => unsafe { ffi::gfx_mono8_blend_mono4(&bitblt) },
             _ => unimplemented!(),
         }
 

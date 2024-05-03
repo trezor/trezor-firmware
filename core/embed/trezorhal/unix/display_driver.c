@@ -300,7 +300,7 @@ static void copy_mono_framebuf(display_driver_t *drv) {
     uint8_t *src = &drv->mono_framebuf[y * DISPLAY_RESX];
     for (int x = 0; x < DISPLAY_RESX; x++) {
       uint8_t lum = src[x] > 40 ? 255 : 0;
-      dst[x] = gl_color16_rgb(lum, lum, lum);
+      dst[x] = gfx_color16_rgb(lum, lum, lum);
     }
   }
 }
@@ -349,70 +349,70 @@ void display_set_compatible_settings(void) {
 
 #ifndef DISPLAY_MONO
 
-void display_fill(const gl_bitblt_t *bb) {
+void display_fill(const gfx_bitblt_t *bb) {
   display_driver_t *drv = &g_display_driver;
 
-  gl_bitblt_t bb_new = *bb;
+  gfx_bitblt_t bb_new = *bb;
   bb_new.dst_row =
       (uint8_t *)drv->buffer->pixels + (drv->buffer->pitch * bb_new.dst_y);
   bb_new.dst_stride = drv->buffer->pitch;
 
-  gl_rgb565_fill(&bb_new);
+  gfx_rgb565_fill(&bb_new);
 }
 
-void display_copy_rgb565(const gl_bitblt_t *bb) {
+void display_copy_rgb565(const gfx_bitblt_t *bb) {
   display_driver_t *drv = &g_display_driver;
 
-  gl_bitblt_t bb_new = *bb;
+  gfx_bitblt_t bb_new = *bb;
   bb_new.dst_row =
       (uint8_t *)drv->buffer->pixels + (drv->buffer->pitch * bb_new.dst_y);
   bb_new.dst_stride = drv->buffer->pitch;
 
-  gl_rgb565_copy_rgb565(&bb_new);
+  gfx_rgb565_copy_rgb565(&bb_new);
 }
 
-void display_copy_mono1p(const gl_bitblt_t *bb) {
+void display_copy_mono1p(const gfx_bitblt_t *bb) {
   display_driver_t *drv = &g_display_driver;
 
-  gl_bitblt_t bb_new = *bb;
+  gfx_bitblt_t bb_new = *bb;
   bb_new.dst_row =
       (uint8_t *)drv->buffer->pixels + (drv->buffer->pitch * bb_new.dst_y);
   bb_new.dst_stride = DISPLAY_RESX;
 
-  gl_rgb565_copy_mono1p(&bb_new);
+  gfx_rgb565_copy_mono1p(&bb_new);
 }
 
-void display_copy_mono4(const gl_bitblt_t *bb) {
+void display_copy_mono4(const gfx_bitblt_t *bb) {
   display_driver_t *drv = &g_display_driver;
 
-  gl_bitblt_t bb_new = *bb;
+  gfx_bitblt_t bb_new = *bb;
   bb_new.dst_row =
       (uint8_t *)drv->buffer->pixels + (drv->buffer->pitch * bb_new.dst_y);
   bb_new.dst_stride = drv->buffer->pitch;
 
-  gl_rgb565_copy_mono4(&bb_new);
+  gfx_rgb565_copy_mono4(&bb_new);
 }
 
 #else  // DISPLAY_MONO
 
-void display_fill(const gl_bitblt_t *bb) {
+void display_fill(const gfx_bitblt_t *bb) {
   display_driver_t *drv = &g_display_driver;
 
-  gl_bitblt_t bb_new = *bb;
+  gfx_bitblt_t bb_new = *bb;
   bb_new.dst_row = drv->mono_framebuf + (DISPLAY_RESX * bb_new.dst_y);
   bb_new.dst_stride = DISPLAY_RESX;
 
-  gl_mono8_fill(&bb_new);
+  gfx_mono8_fill(&bb_new);
 }
 
-void display_copy_mono1p(const gl_bitblt_t *bb) {
+void display_copy_mono1p(const gfx_bitblt_t *bb) {
   display_driver_t *drv = &g_display_driver;
 
-  gl_bitblt_t bb_new = *bb;
+  gfx_bitblt_t bb_new = *bb;
   bb_new.dst_row = drv->mono_framebuf + (DISPLAY_RESX * bb_new.dst_y);
   bb_new.dst_stride = DISPLAY_RESX;
 
-  gl_mono8_copy_mono1p(&bb_new);
+  gfx_mono8_copy_mono1p(&bb_new);
 }
 
 #endif

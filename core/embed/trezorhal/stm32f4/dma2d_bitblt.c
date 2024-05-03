@@ -22,7 +22,7 @@
 #include <stddef.h>
 
 #include "dma2d_bitblt.h"
-#include "gl_color.h"
+#include "gfx_color.h"
 
 static DMA2D_HandleTypeDef dma2d_handle = {
     .Instance = (DMA2D_TypeDef*)DMA2D_BASE,
@@ -45,7 +45,7 @@ void dma2d_wait(void) {
     ;
 }
 
-bool dma2d_rgb565_fill(const gl_bitblt_t* bb) {
+bool dma2d_rgb565_fill(const gfx_bitblt_t* bb) {
   dma2d_wait();
 
   if (!dma2d_accessible(bb->dst_row)) {
@@ -59,7 +59,7 @@ bool dma2d_rgb565_fill(const gl_bitblt_t* bb) {
         bb->dst_stride / sizeof(uint16_t) - bb->width;
     HAL_DMA2D_Init(&dma2d_handle);
 
-    HAL_DMA2D_Start(&dma2d_handle, gl_color_to_color32(bb->src_fg),
+    HAL_DMA2D_Start(&dma2d_handle, gfx_color_to_color32(bb->src_fg),
                     (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint16_t),
                     bb->width, bb->height);
   } else {
@@ -84,7 +84,7 @@ bool dma2d_rgb565_fill(const gl_bitblt_t* bb) {
     HAL_DMA2D_ConfigLayer(&dma2d_handle, 0);
 
     HAL_DMA2D_BlendingStart(
-        &dma2d_handle, gl_color_to_color32(bb->src_fg),
+        &dma2d_handle, gfx_color_to_color32(bb->src_fg),
         (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint16_t),
         (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint16_t), bb->width,
         bb->height);
@@ -97,13 +97,13 @@ bool dma2d_rgb565_fill(const gl_bitblt_t* bb) {
   return true;
 }
 
-static void dma2d_config_clut(uint32_t layer, gl_color_t fg, gl_color_t bg) {
+static void dma2d_config_clut(uint32_t layer, gfx_color_t fg, gfx_color_t bg) {
 #define LAYER_COUNT 2
 #define GRADIENT_STEPS 16
 
   static struct {
-    gl_color_t c_fg;
-    gl_color_t c_bg;
+    gfx_color_t c_fg;
+    gfx_color_t c_bg;
   } cache[LAYER_COUNT] = {0};
 
   if (layer >= LAYER_COUNT) {
@@ -118,7 +118,7 @@ static void dma2d_config_clut(uint32_t layer, gl_color_t fg, gl_color_t bg) {
     cache[layer].c_bg = bg;
 
     for (int step = 0; step < GRADIENT_STEPS; step++) {
-      clut[step] = gl_color32_blend_a4(fg, bg, step);
+      clut[step] = gfx_color32_blend_a4(fg, bg, step);
     }
 
     DMA2D_CLUTCfgTypeDef clut;
@@ -130,8 +130,8 @@ static void dma2d_config_clut(uint32_t layer, gl_color_t fg, gl_color_t bg) {
   }
 }
 
-static void dma2d_rgb565_copy_mono4_first_col(gl_bitblt_t* bb,
-                                              const gl_color16_t* gradient) {
+static void dma2d_rgb565_copy_mono4_first_col(gfx_bitblt_t* bb,
+                                              const gfx_color16_t* gradient) {
   uint16_t* dst_ptr = (uint16_t*)bb->dst_row + bb->dst_x;
   uint8_t* src_ptr = (uint8_t*)bb->src_row + bb->src_x / 2;
 
@@ -145,8 +145,8 @@ static void dma2d_rgb565_copy_mono4_first_col(gl_bitblt_t* bb,
   }
 }
 
-static void dma2d_rgb565_copy_mono4_last_col(gl_bitblt_t* bb,
-                                             const gl_color16_t* gradient) {
+static void dma2d_rgb565_copy_mono4_last_col(gfx_bitblt_t* bb,
+                                             const gfx_color16_t* gradient) {
   uint16_t* dst_ptr = (uint16_t*)bb->dst_row + (bb->dst_x + bb->width - 1);
   uint8_t* src_ptr = (uint8_t*)bb->src_row + (bb->src_x + bb->width - 1) / 2;
 
@@ -160,11 +160,11 @@ static void dma2d_rgb565_copy_mono4_last_col(gl_bitblt_t* bb,
   }
 }
 
-bool dma2d_rgb565_copy_mono4(const gl_bitblt_t* params) {
-  const gl_color16_t* src_gradient = NULL;
+bool dma2d_rgb565_copy_mono4(const gfx_bitblt_t* params) {
+  const gfx_color16_t* src_gradient = NULL;
 
-  gl_bitblt_t bb_copy = *params;
-  gl_bitblt_t* bb = &bb_copy;
+  gfx_bitblt_t bb_copy = *params;
+  gfx_bitblt_t* bb = &bb_copy;
 
   dma2d_wait();
 
@@ -175,7 +175,7 @@ bool dma2d_rgb565_copy_mono4(const gl_bitblt_t* params) {
   if (bb->src_x & 1) {
     // First column of mono4 bitmap is odd
     // Use the CPU to draw the first column
-    src_gradient = gl_color16_gradient_a4(bb->src_fg, bb->src_bg);
+    src_gradient = gfx_color16_gradient_a4(bb->src_fg, bb->src_bg);
     dma2d_rgb565_copy_mono4_first_col(bb, src_gradient);
     bb->dst_x += 1;
     bb->src_x += 1;
@@ -186,7 +186,7 @@ bool dma2d_rgb565_copy_mono4(const gl_bitblt_t* params) {
     // The width is odd
     // Use the CPU to draw the last column
     if (src_gradient == NULL) {
-      src_gradient = gl_color16_gradient_a4(bb->src_fg, bb->src_bg);
+      src_gradient = gfx_color16_gradient_a4(bb->src_fg, bb->src_bg);
     }
     dma2d_rgb565_copy_mono4_last_col(bb, src_gradient);
     bb->width -= 1;
@@ -212,7 +212,7 @@ bool dma2d_rgb565_copy_mono4(const gl_bitblt_t* params) {
   return true;
 }
 
-bool dma2d_rgb565_copy_rgb565(const gl_bitblt_t* bb) {
+bool dma2d_rgb565_copy_rgb565(const gfx_bitblt_t* bb) {
   dma2d_wait();
 
   if (!dma2d_accessible(bb->dst_row) || !dma2d_accessible(bb->src_row)) {
@@ -239,7 +239,7 @@ bool dma2d_rgb565_copy_rgb565(const gl_bitblt_t* bb) {
   return true;
 }
 
-static void dma2d_rgb565_blend_mono4_first_col(const gl_bitblt_t* bb) {
+static void dma2d_rgb565_blend_mono4_first_col(const gfx_bitblt_t* bb) {
   uint16_t* dst_ptr = (uint16_t*)bb->dst_row + bb->dst_x;
   uint8_t* src_ptr = (uint8_t*)bb->src_row + bb->src_x / 2;
 
@@ -247,14 +247,14 @@ static void dma2d_rgb565_blend_mono4_first_col(const gl_bitblt_t* bb) {
 
   while (height-- > 0) {
     uint8_t fg_alpha = src_ptr[0] >> 4;
-    dst_ptr[0] = gl_color16_blend_a4(bb->src_fg,
-                                     gl_color16_to_color(dst_ptr[0]), fg_alpha);
+    dst_ptr[0] = gfx_color16_blend_a4(
+        bb->src_fg, gfx_color16_to_color(dst_ptr[0]), fg_alpha);
     dst_ptr += bb->dst_stride / sizeof(*dst_ptr);
     src_ptr += bb->src_stride / sizeof(*src_ptr);
   }
 }
 
-static void dma2d_rgb565_blend_mono4_last_col(const gl_bitblt_t* bb) {
+static void dma2d_rgb565_blend_mono4_last_col(const gfx_bitblt_t* bb) {
   uint16_t* dst_ptr = (uint16_t*)bb->dst_row + (bb->dst_x + bb->width - 1);
   uint8_t* src_ptr = (uint8_t*)bb->src_row + (bb->src_x + bb->width - 1) / 2;
 
@@ -262,18 +262,18 @@ static void dma2d_rgb565_blend_mono4_last_col(const gl_bitblt_t* bb) {
 
   while (height-- > 0) {
     uint8_t fg_alpha = src_ptr[0] & 0x0F;
-    dst_ptr[0] = gl_color16_blend_a4(bb->src_fg,
-                                     gl_color16_to_color(dst_ptr[0]), fg_alpha);
+    dst_ptr[0] = gfx_color16_blend_a4(
+        bb->src_fg, gfx_color16_to_color(dst_ptr[0]), fg_alpha);
     dst_ptr += bb->dst_stride / sizeof(*dst_ptr);
     src_ptr += bb->src_stride / sizeof(*src_ptr);
   }
 }
 
-bool dma2d_rgb565_blend_mono4(const gl_bitblt_t* params) {
+bool dma2d_rgb565_blend_mono4(const gfx_bitblt_t* params) {
   dma2d_wait();
 
-  gl_bitblt_t bb_copy = *params;
-  gl_bitblt_t* bb = &bb_copy;
+  gfx_bitblt_t bb_copy = *params;
+  gfx_bitblt_t* bb = &bb_copy;
 
   if (!dma2d_accessible(bb->dst_row) || !dma2d_accessible(bb->src_row)) {
     return false;
@@ -305,7 +305,7 @@ bool dma2d_rgb565_blend_mono4(const gl_bitblt_t* params) {
     dma2d_handle.LayerCfg[1].InputColorMode = DMA2D_INPUT_A4;
     dma2d_handle.LayerCfg[1].InputOffset = bb->src_stride * 2 - bb->width;
     dma2d_handle.LayerCfg[1].AlphaMode = 0;
-    dma2d_handle.LayerCfg[1].InputAlpha = gl_color_to_color32(bb->src_fg);
+    dma2d_handle.LayerCfg[1].InputAlpha = gfx_color_to_color32(bb->src_fg);
     HAL_DMA2D_ConfigLayer(&dma2d_handle, 1);
 
     dma2d_handle.LayerCfg[0].InputColorMode = DMA2D_INPUT_RGB565;
@@ -325,7 +325,7 @@ bool dma2d_rgb565_blend_mono4(const gl_bitblt_t* params) {
   return true;
 }
 
-bool dma2d_rgba8888_fill(const gl_bitblt_t* bb) {
+bool dma2d_rgba8888_fill(const gfx_bitblt_t* bb) {
   dma2d_wait();
 
   if (!dma2d_accessible(bb->dst_row)) {
@@ -339,7 +339,7 @@ bool dma2d_rgba8888_fill(const gl_bitblt_t* bb) {
         bb->dst_stride / sizeof(uint32_t) - bb->width;
     HAL_DMA2D_Init(&dma2d_handle);
 
-    HAL_DMA2D_Start(&dma2d_handle, gl_color_to_color32(bb->src_fg),
+    HAL_DMA2D_Start(&dma2d_handle, gfx_color_to_color32(bb->src_fg),
                     (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint32_t),
                     bb->width, bb->height);
   } else {
@@ -364,7 +364,7 @@ bool dma2d_rgba8888_fill(const gl_bitblt_t* bb) {
     HAL_DMA2D_ConfigLayer(&dma2d_handle, 0);
 
     HAL_DMA2D_BlendingStart(
-        &dma2d_handle, gl_color_to_color32(bb->src_fg),
+        &dma2d_handle, gfx_color_to_color32(bb->src_fg),
         (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint32_t),
         (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint32_t), bb->width,
         bb->height);
@@ -376,8 +376,8 @@ bool dma2d_rgba8888_fill(const gl_bitblt_t* bb) {
   return true;
 }
 
-static void dma2d_rgba8888_copy_mono4_first_col(gl_bitblt_t* bb,
-                                                const gl_color32_t* gradient) {
+static void dma2d_rgba8888_copy_mono4_first_col(gfx_bitblt_t* bb,
+                                                const gfx_color32_t* gradient) {
   uint32_t* dst_ptr = (uint32_t*)bb->dst_row + bb->dst_x;
   uint8_t* src_ptr = (uint8_t*)bb->src_row + bb->src_x / 2;
 
@@ -391,8 +391,8 @@ static void dma2d_rgba8888_copy_mono4_first_col(gl_bitblt_t* bb,
   }
 }
 
-static void dma2d_rgba8888_copy_mono4_last_col(gl_bitblt_t* bb,
-                                               const gl_color32_t* gradient) {
+static void dma2d_rgba8888_copy_mono4_last_col(gfx_bitblt_t* bb,
+                                               const gfx_color32_t* gradient) {
   uint32_t* dst_ptr = (uint32_t*)bb->dst_row + (bb->dst_x + bb->width - 1);
   uint8_t* src_ptr = (uint8_t*)bb->src_row + (bb->src_x + bb->width - 1) / 2;
 
@@ -406,11 +406,11 @@ static void dma2d_rgba8888_copy_mono4_last_col(gl_bitblt_t* bb,
   }
 }
 
-bool dma2d_rgba8888_copy_mono4(const gl_bitblt_t* params) {
-  const gl_color32_t* src_gradient = NULL;
+bool dma2d_rgba8888_copy_mono4(const gfx_bitblt_t* params) {
+  const gfx_color32_t* src_gradient = NULL;
 
-  gl_bitblt_t bb_copy = *params;
-  gl_bitblt_t* bb = &bb_copy;
+  gfx_bitblt_t bb_copy = *params;
+  gfx_bitblt_t* bb = &bb_copy;
 
   dma2d_wait();
 
@@ -421,7 +421,7 @@ bool dma2d_rgba8888_copy_mono4(const gl_bitblt_t* params) {
   if (bb->src_x & 1) {
     // First column of mono4 bitmap is odd
     // Use the CPU to draw the first column
-    src_gradient = gl_color32_gradient_a4(bb->src_fg, bb->src_bg);
+    src_gradient = gfx_color32_gradient_a4(bb->src_fg, bb->src_bg);
     dma2d_rgba8888_copy_mono4_first_col(bb, src_gradient);
     bb->dst_x += 1;
     bb->src_x += 1;
@@ -432,7 +432,7 @@ bool dma2d_rgba8888_copy_mono4(const gl_bitblt_t* params) {
     // The width is odd
     // Use the CPU to draw the last column
     if (src_gradient == NULL) {
-      src_gradient = gl_color32_gradient_a4(bb->src_fg, bb->src_bg);
+      src_gradient = gfx_color32_gradient_a4(bb->src_fg, bb->src_bg);
     }
     dma2d_rgba8888_copy_mono4_last_col(bb, src_gradient);
     bb->width -= 1;
@@ -458,7 +458,7 @@ bool dma2d_rgba8888_copy_mono4(const gl_bitblt_t* params) {
   return true;
 }
 
-bool dma2d_rgba8888_copy_rgb565(const gl_bitblt_t* bb) {
+bool dma2d_rgba8888_copy_rgb565(const gfx_bitblt_t* bb) {
   dma2d_wait();
 
   if (!dma2d_accessible(bb->dst_row) || !dma2d_accessible(bb->src_row)) {
@@ -485,7 +485,7 @@ bool dma2d_rgba8888_copy_rgb565(const gl_bitblt_t* bb) {
   return true;
 }
 
-static void dma2d_rgba8888_blend_mono4_first_col(const gl_bitblt_t* bb) {
+static void dma2d_rgba8888_blend_mono4_first_col(const gfx_bitblt_t* bb) {
   uint32_t* dst_ptr = (uint32_t*)bb->dst_row + bb->dst_x;
   uint8_t* src_ptr = (uint8_t*)bb->src_row + bb->src_x / 2;
 
@@ -493,14 +493,14 @@ static void dma2d_rgba8888_blend_mono4_first_col(const gl_bitblt_t* bb) {
 
   while (height-- > 0) {
     uint8_t fg_alpha = src_ptr[0] >> 4;
-    dst_ptr[0] = gl_color32_blend_a4(bb->src_fg,
-                                     gl_color32_to_color(dst_ptr[0]), fg_alpha);
+    dst_ptr[0] = gfx_color32_blend_a4(
+        bb->src_fg, gfx_color32_to_color(dst_ptr[0]), fg_alpha);
     dst_ptr += bb->dst_stride / sizeof(*dst_ptr);
     src_ptr += bb->src_stride / sizeof(*src_ptr);
   }
 }
 
-static void dma2d_rgba8888_blend_mono4_last_col(const gl_bitblt_t* bb) {
+static void dma2d_rgba8888_blend_mono4_last_col(const gfx_bitblt_t* bb) {
   uint32_t* dst_ptr = (uint32_t*)bb->dst_row + (bb->dst_x + bb->width - 1);
   uint8_t* src_ptr = (uint8_t*)bb->src_row + (bb->src_x + bb->width - 1) / 2;
 
@@ -508,18 +508,18 @@ static void dma2d_rgba8888_blend_mono4_last_col(const gl_bitblt_t* bb) {
 
   while (height-- > 0) {
     uint8_t fg_alpha = src_ptr[0] & 0x0F;
-    dst_ptr[0] = gl_color32_blend_a4(bb->src_fg,
-                                     gl_color32_to_color(dst_ptr[0]), fg_alpha);
+    dst_ptr[0] = gfx_color32_blend_a4(
+        bb->src_fg, gfx_color32_to_color(dst_ptr[0]), fg_alpha);
     dst_ptr += bb->dst_stride / sizeof(*dst_ptr);
     src_ptr += bb->src_stride / sizeof(*src_ptr);
   }
 }
 
-bool dma2d_rgba8888_blend_mono4(const gl_bitblt_t* params) {
+bool dma2d_rgba8888_blend_mono4(const gfx_bitblt_t* params) {
   dma2d_wait();
 
-  gl_bitblt_t bb_copy = *params;
-  gl_bitblt_t* bb = &bb_copy;
+  gfx_bitblt_t bb_copy = *params;
+  gfx_bitblt_t* bb = &bb_copy;
 
   if (!dma2d_accessible(bb->dst_row) || !dma2d_accessible(bb->src_row)) {
     return false;
@@ -551,7 +551,7 @@ bool dma2d_rgba8888_blend_mono4(const gl_bitblt_t* params) {
     dma2d_handle.LayerCfg[1].InputColorMode = DMA2D_INPUT_A4;
     dma2d_handle.LayerCfg[1].InputOffset = bb->src_stride * 2 - bb->width;
     dma2d_handle.LayerCfg[1].AlphaMode = 0;
-    dma2d_handle.LayerCfg[1].InputAlpha = gl_color_to_color32(bb->src_fg);
+    dma2d_handle.LayerCfg[1].InputAlpha = gfx_color_to_color32(bb->src_fg);
     HAL_DMA2D_ConfigLayer(&dma2d_handle, 1);
 
     dma2d_handle.LayerCfg[0].InputColorMode = DMA2D_INPUT_ARGB8888;
@@ -571,7 +571,7 @@ bool dma2d_rgba8888_blend_mono4(const gl_bitblt_t* params) {
   return true;
 }
 
-bool dma2d_rgba8888_copy_rgba8888(const gl_bitblt_t* bb) {
+bool dma2d_rgba8888_copy_rgba8888(const gfx_bitblt_t* bb) {
   dma2d_wait();
 
   if (!dma2d_accessible(bb->dst_row) || !dma2d_accessible(bb->src_row)) {

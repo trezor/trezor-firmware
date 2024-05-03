@@ -20,26 +20,26 @@
 #ifndef TREZORHAL_DMA2D_BITBLT_H
 #define TREZORHAL_DMA2D_BITBLT_H
 
-#include "gl_bitblt.h"
+#include "gfx_bitblt.h"
 
 // Waits until any pending DMA2D operation is finished
 void dma2d_wait(void);
 
 // Following functions are hardware (DMA2D) accelerated versions
-// of `gl_rgb565_xxx()` and `gl_rgba8888_xxx()` function from `gl_bitblt.h`
+// of `gfx_rgb565_xxx()` and `gfx_rgba8888_xxx()` function from `gfx_bitblt.h`
 
 // These functions may return `false`, indicating that the accelerated
 // operation cannot be performed and must be implemented in software
 
-bool dma2d_rgb565_fill(const gl_bitblt_t* bb);
-bool dma2d_rgb565_copy_mono4(const gl_bitblt_t* bb);
-bool dma2d_rgb565_copy_rgb565(const gl_bitblt_t* bb);
-bool dma2d_rgb565_blend_mono4(const gl_bitblt_t* bb);
+bool dma2d_rgb565_fill(const gfx_bitblt_t* bb);
+bool dma2d_rgb565_copy_mono4(const gfx_bitblt_t* bb);
+bool dma2d_rgb565_copy_rgb565(const gfx_bitblt_t* bb);
+bool dma2d_rgb565_blend_mono4(const gfx_bitblt_t* bb);
 
-bool dma2d_rgba8888_fill(const gl_bitblt_t* bb);
-bool dma2d_rgba8888_copy_mono4(const gl_bitblt_t* bb);
-bool dma2d_rgba8888_copy_rgb565(const gl_bitblt_t* bb);
-bool dma2d_rgba8888_copy_rgba8888(const gl_bitblt_t* bb);
-bool dma2d_rgba8888_blend_mono4(const gl_bitblt_t* bb);
+bool dma2d_rgba8888_fill(const gfx_bitblt_t* bb);
+bool dma2d_rgba8888_copy_mono4(const gfx_bitblt_t* bb);
+bool dma2d_rgba8888_copy_rgb565(const gfx_bitblt_t* bb);
+bool dma2d_rgba8888_copy_rgba8888(const gfx_bitblt_t* bb);
+bool dma2d_rgba8888_blend_mono4(const gfx_bitblt_t* bb);
 
 #endif  // TREZORHAL_DMA2D_BITBLT_H

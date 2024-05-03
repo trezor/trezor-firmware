@@ -21,7 +21,7 @@
 
 #include "display_draw.h"
 #include "fonts/fonts.h"
-#include "gl_draw.h"
+#include "gfx_draw.h"
 
 typedef struct {
   int16_t dst_x;
@@ -30,9 +30,9 @@ typedef struct {
   int16_t src_y;
   int16_t width;
   int16_t height;
-} gl_clip_t;
+} gfx_clip_t;
 
-static inline gl_clip_t gl_clip(gl_rect_t dst, const gl_bitmap_t* bitmap) {
+static inline gfx_clip_t gfx_clip(gfx_rect_t dst, const gfx_bitmap_t* bitmap) {
   int16_t dst_x = dst.x0;
   int16_t dst_y = dst.y0;
 
@@ -76,7 +76,7 @@ static inline gl_clip_t gl_clip(gl_rect_t dst, const gl_bitmap_t* bitmap) {
     height = MIN(height, bitmap->size.y - src_y);
   }
 
-  gl_clip_t clip = {
+  gfx_clip_t clip = {
       .dst_x = dst_x,
       .dst_y = dst_y,
       .src_x = src_x,
@@ -88,8 +88,8 @@ static inline gl_clip_t gl_clip(gl_rect_t dst, const gl_bitmap_t* bitmap) {
   return clip;
 }
 
-void gl_clear(void) {
-  gl_bitblt_t bb = {
+void gfx_clear(void) {
+  gfx_bitblt_t bb = {
       // Destination bitmap
       .height = DISPLAY_RESX,
       .width = DISPLAY_RESY,
@@ -106,14 +106,14 @@ void gl_clear(void) {
   display_fill(&bb);
 }
 
-void gl_draw_bar(gl_rect_t rect, gl_color_t color) {
-  gl_clip_t clip = gl_clip(rect, NULL);
+void gfx_draw_bar(gfx_rect_t rect, gfx_color_t color) {
+  gfx_clip_t clip = gfx_clip(rect, NULL);
 
   if (clip.width <= 0 || clip.height <= 0) {
     return;
   }
 
-  gl_bitblt_t bb = {
+  gfx_bitblt_t bb = {
       // Destination bitmap
       .height = clip.height,
       .width = clip.width,
@@ -130,14 +130,14 @@ void gl_draw_bar(gl_rect_t rect, gl_color_t color) {
   display_fill(&bb);
 }
 
-void gl_draw_bitmap(gl_rect_t rect, const gl_bitmap_t* bitmap) {
-  gl_clip_t clip = gl_clip(rect, bitmap);
+void gfx_draw_bitmap(gfx_rect_t rect, const gfx_bitmap_t* bitmap) {
+  gfx_clip_t clip = gfx_clip(rect, bitmap);
 
   if (clip.width <= 0 || clip.height <= 0) {
     return;
   }
 
-  gl_bitblt_t bb = {
+  gfx_bitblt_t bb = {
       // Destination bitmap
       .height = clip.height,
       .width = clip.width,
@@ -156,36 +156,36 @@ void gl_draw_bitmap(gl_rect_t rect, const gl_bitmap_t* bitmap) {
       .src_alpha = 255,
   };
 
-  // Currently, we use `gl_draw_bitmap` exclusively for text rendering.
+  // Currently, we use `gfx_draw_bitmap` exclusively for text rendering.
   // Therefore, we are including the variant of `display_copy_xxx()` that is
   // specifically needed for drawing glyphs in the format we are using
   // to save some space in the flash memory.
 
 #if TREZOR_FONT_BPP == 1
-  if (bitmap->format == GL_FORMAT_MONO1P) {
+  if (bitmap->format == GFX_FORMAT_MONO1P) {
     display_copy_mono1p(&bb);
   }
 #endif
 #if TREZOR_FONT_BPP == 4
-  if (bitmap->format == GL_FORMAT_MONO4) {
+  if (bitmap->format == GFX_FORMAT_MONO4) {
     display_copy_mono4(&bb);
   }
 #endif
 }
 
 #if TREZOR_FONT_BPP == 1
-#define GLYPH_FORMAT GL_FORMAT_MONO1P
+#define GLYPH_FORMAT GFX_FORMAT_MONO1P
 #define GLYPH_STRIDE(w) (((w) + 7) / 8)
 #elif TREZOR_FONT_BPP == 2
 #error Unsupported TREZOR_FONT_BPP value
-#define GLYPH_FORMAT GL_FORMAT_MONO2
+#define GLYPH_FORMAT GFX_FORMAT_MONO2
 #define GLYPH_STRIDE(w) (((w) + 3) / 4)
 #elif TREZOR_FONT_BPP == 4
-#define GLYPH_FORMAT GL_FORMAT_MONO4
+#define GLYPH_FORMAT GFX_FORMAT_MONO4
 #define GLYPH_STRIDE(w) (((w) + 1) / 2)
 #elif TREZOR_FONT_BPP == 8
 #error Unsupported TREZOR_FONT_BPP value
-#define GLYPH_FORMAT GL_FORMAT_MONO8
+#define GLYPH_FORMAT GFX_FORMAT_MONO8
 #define GLYPH_STRIDE(w) (w)
 #else
 #error Unsupported TREZOR_FONT_BPP value
@@ -198,13 +198,13 @@ void gl_draw_bitmap(gl_rect_t rect, const gl_bitmap_t* bitmap) {
 #define GLYPH_BEARING_Y(g) ((g)[4])
 #define GLYPH_DATA(g) ((void*)&(g)[5])
 
-void gl_draw_text(gl_offset_t pos, const char* text, size_t maxlen,
-                  const gl_text_attr_t* attr) {
+void gfx_draw_text(gfx_offset_t pos, const char* text, size_t maxlen,
+                   const gfx_text_attr_t* attr) {
   if (text == NULL) {
     return;
   }
 
-  gl_bitmap_t bitmap = {
+  gfx_bitmap_t bitmap = {
       .format = GLYPH_FORMAT,
       .fg_color = attr->fg_color,
       .bg_color = attr->bg_color,
@@ -234,7 +234,8 @@ void gl_draw_text(gl_offset_t pos, const char* text, size_t maxlen,
     bitmap.offset.x = -GLYPH_BEARING_X(glyph);
     bitmap.offset.y = -(max_height - baseline - GLYPH_BEARING_Y(glyph));
 
-    gl_draw_bitmap(gl_rect(pos.x, pos.y, DISPLAY_RESX, DISPLAY_RESY), &bitmap);
+    gfx_draw_bitmap(gfx_rect(pos.x, pos.y, DISPLAY_RESX, DISPLAY_RESY),
+                    &bitmap);
 
     pos.x += GLYPH_ADVANCE(glyph);
   }
@@ -243,27 +244,27 @@ void gl_draw_text(gl_offset_t pos, const char* text, size_t maxlen,
 // ===============================================================
 // emulation of legacy functions
 
-void display_clear(void) { gl_clear(); }
+void display_clear(void) { gfx_clear(); }
 
 void display_bar(int x, int y, int w, int h, uint16_t c) {
-  gl_draw_bar(gl_rect_wh(x, y, w, h), c);
+  gfx_draw_bar(gfx_rect_wh(x, y, w, h), c);
 }
 
 void display_text(int x, int y, const char* text, int textlen, int font,
                   uint16_t fg_color, uint16_t bg_color) {
-  gl_text_attr_t attr = {
+  gfx_text_attr_t attr = {
       .font = font,
       .fg_color = fg_color,
       .bg_color = bg_color,
   };
 
   size_t maxlen = textlen < 0 ? UINT32_MAX : textlen;
-  gl_draw_text(gl_offset(x, y), text, maxlen, &attr);
+  gfx_draw_text(gfx_offset(x, y), text, maxlen, &attr);
 }
 
 void display_text_center(int x, int y, const char* text, int textlen, int font,
                          uint16_t fg_color, uint16_t bg_color) {
-  gl_text_attr_t attr = {
+  gfx_text_attr_t attr = {
       .font = font,
       .fg_color = fg_color,
       .bg_color = bg_color,
@@ -271,5 +272,5 @@ void display_text_center(int x, int y, const char* text, int textlen, int font,
 
   size_t maxlen = textlen < 0 ? UINT32_MAX : textlen;
   int w = font_text_width(font, text, textlen);
-  gl_draw_text(gl_offset(x - w / 2, y), text, maxlen, &attr);
+  gfx_draw_text(gfx_offset(x - w / 2, y), text, maxlen, &attr);
 }

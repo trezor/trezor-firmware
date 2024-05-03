@@ -28,7 +28,7 @@ void display_refresh(void) {
   // if the framebuffer is not used the implementation is empty
 }
 
-static inline void set_window(const gl_bitblt_t* bb) {
+static inline void set_window(const gfx_bitblt_t* bb) {
   display_panel_set_window(bb->dst_x, bb->dst_y, bb->dst_x + bb->width - 1,
                            bb->dst_y + bb->height + 1);
 }
@@ -41,7 +41,7 @@ static inline void set_window(const gl_bitblt_t* bb) {
 // needed, we could use double-slice similarly to double-framebuffer and render
 // to one with DMA2D while copying the other to the display with DMA.
 
-void display_fill(const gl_bitblt_t* bb) {
+void display_fill(const gfx_bitblt_t* bb) {
   set_window(bb);
 
   uint16_t height = bb->height;
@@ -53,7 +53,7 @@ void display_fill(const gl_bitblt_t* bb) {
   }
 }
 
-void display_copy_rgb565(const gl_bitblt_t* bb) {
+void display_copy_rgb565(const gfx_bitblt_t* bb) {
   set_window(bb);
 
   uint16_t* src_ptr = (uint16_t*)bb->src_row + bb->src_x;
@@ -67,7 +67,7 @@ void display_copy_rgb565(const gl_bitblt_t* bb) {
   }
 }
 
-void display_copy_mono1p(const gl_bitblt_t* bb) {
+void display_copy_mono1p(const gfx_bitblt_t* bb) {
   set_window(bb);
 
   uint8_t* src = (uint8_t*)bb->src_row;
@@ -84,10 +84,11 @@ void display_copy_mono1p(const gl_bitblt_t* bb) {
   }
 }
 
-void display_copy_mono4(const gl_bitblt_t* bb) {
+void display_copy_mono4(const gfx_bitblt_t* bb) {
   set_window(bb);
 
-  const gl_color16_t* gradient = gl_color16_gradient_a4(bb->src_fg, bb->src_bg);
+  const gfx_color16_t* gradient =
+      gfx_color16_gradient_a4(bb->src_fg, bb->src_bg);
 
   uint8_t* src_row = (uint8_t*)bb->src_row;
   uint16_t height = bb->height;

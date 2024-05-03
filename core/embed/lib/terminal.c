@@ -25,7 +25,7 @@
 #include TREZOR_BOARD
 
 #include "fonts/fonts.h"
-#include "gl_draw.h"
+#include "gfx_draw.h"
 
 #define TERMINAL_COLS (DISPLAY_RESX / 6)
 #define TERMINAL_ROWS (DISPLAY_RESY / 8)
@@ -69,7 +69,7 @@ static uint64_t term_glyph_bits(char ch) {
 // Redraws specified rows to the display
 static void term_redraw_rows(int start_row, int row_count) {
   uint64_t glyph_bits = 0;
-  gl_bitblt_t bb = {
+  gfx_bitblt_t bb = {
       .height = 8,
       .width = 6,
       .dst_row = NULL,

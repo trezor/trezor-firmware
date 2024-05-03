@@ -17,13 +17,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef GL_BITBLT_H
-#define GL_BITBLT_H
+#ifndef GFX_BITBLT_H
+#define GFX_BITBLT_H
 
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "gl_color.h"
+#include "gfx_color.h"
 
 // These module provides low-level bit block transfer (bitblt)
 // operations on different bitmap/framebuffer types.
@@ -68,53 +68,53 @@ typedef struct {
   uint16_t src_y;
 
   // Foreground color used when copying/blending/filling
-  gl_color_t src_fg;
+  gfx_color_t src_fg;
   // Background color used when copying mono bitmaps
-  gl_color_t src_bg;
+  gfx_color_t src_bg;
   // Alpha value for fill operation (255 => normal fill, 0 => noop)
   uint8_t src_alpha;
 
-} gl_bitblt_t;
+} gfx_bitblt_t;
 
 // Functions for RGB565 bitmap/framebuffer
 
 // Fills a rectangle with a solid color
-void gl_rgb565_fill(const gl_bitblt_t* bb);
+void gfx_rgb565_fill(const gfx_bitblt_t* bb);
 // Copies a mono bitmap (with 1-bit alpha channel)
-void gl_rgb565_copy_mono1p(const gl_bitblt_t* bb);
+void gfx_rgb565_copy_mono1p(const gfx_bitblt_t* bb);
 // Copies a mono bitmap (with 4-bit alpha channel)
-void gl_rgb565_copy_mono4(const gl_bitblt_t* bb);
+void gfx_rgb565_copy_mono4(const gfx_bitblt_t* bb);
 // Copies an RGB565 bitmap
-void gl_rgb565_copy_rgb565(const gl_bitblt_t* bb);
+void gfx_rgb565_copy_rgb565(const gfx_bitblt_t* bb);
 // Blends a mono bitmap (with 4-bit alpha channel)
 // with the destination bitmap
-void gl_rgb565_blend_mono4(const gl_bitblt_t* bb);
+void gfx_rgb565_blend_mono4(const gfx_bitblt_t* bb);
 
 // Functions for RGBA8888 bitmap/framebuffer
-void gl_rgba8888_fill(const gl_bitblt_t* bb);
+void gfx_rgba8888_fill(const gfx_bitblt_t* bb);
 // Copies a mono bitmap (with 1-bit alpha channel)
-void gl_rgba8888_copy_mono1p(const gl_bitblt_t* bb);
+void gfx_rgba8888_copy_mono1p(const gfx_bitblt_t* bb);
 // Copies a mono bitmap (with 4-bit alpha channel)
-void gl_rgba8888_copy_mono4(const gl_bitblt_t* bb);
+void gfx_rgba8888_copy_mono4(const gfx_bitblt_t* bb);
 // Copies an RGB565 bitmap
-void gl_rgba8888_copy_rgb565(const gl_bitblt_t* bb);
+void gfx_rgba8888_copy_rgb565(const gfx_bitblt_t* bb);
 // Copies an RGBA8888 bitmap
-void gl_rgba8888_copy_rgba8888(const gl_bitblt_t* bb);
+void gfx_rgba8888_copy_rgba8888(const gfx_bitblt_t* bb);
 // Blends a mono bitmap (with 4-bit alpha channel)
 // with the destination bitmap
-void gl_rgba8888_blend_mono4(const gl_bitblt_t* bb);
+void gfx_rgba8888_blend_mono4(const gfx_bitblt_t* bb);
 
 // Functions for Mono8 bitmap/framebuffer
-void gl_mono8_fill(const gl_bitblt_t* bb);
+void gfx_mono8_fill(const gfx_bitblt_t* bb);
 // Copies a mono bitmap (with 1-bit alpha channel)
-void gl_mono8_copy_mono1p(const gl_bitblt_t* bb);
+void gfx_mono8_copy_mono1p(const gfx_bitblt_t* bb);
 // Copies a mono bitmap (with 4-bit alpha channel)
-void gl_mono8_copy_mono4(const gl_bitblt_t* bb);
+void gfx_mono8_copy_mono4(const gfx_bitblt_t* bb);
 // Blends a mono bitmap (with 1-bit alpha channel)
 // with the destination bitmap
-void gl_mono8_blend_mono1p(const gl_bitblt_t* bb);
+void gfx_mono8_blend_mono1p(const gfx_bitblt_t* bb);
 // Blends a mono bitmap (with 4-bit alpha channel)
 // with the destination bitmap
-void gl_mono8_blend_mono4(const gl_bitblt_t* bb);
+void gfx_mono8_blend_mono4(const gfx_bitblt_t* bb);
 
-#endif  // GL_BITBLT_H
+#endif  // GFX_BITBLT_H

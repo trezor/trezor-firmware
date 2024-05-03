@@ -96,10 +96,10 @@ SOURCE_MOD += [
     'embed/lib/display_utils.c',
     'embed/lib/fonts/font_bitmap.c',
     'embed/lib/fonts/fonts.c',
-    'embed/lib/gl_color.c',
-    'embed/lib/gl_bitblt_mono8.c',
-    'embed/lib/gl_bitblt_rgb565.c',
-    'embed/lib/gl_bitblt_rgba8888.c',
+    'embed/lib/gfx_color.c',
+    'embed/lib/gfx_bitblt_mono8.c',
+    'embed/lib/gfx_bitblt_rgb565.c',
+    'embed/lib/gfx_bitblt_rgba8888.c',
     'embed/lib/image.c',
     'embed/lib/mini_printf.c',
     'embed/lib/terminal.c',
@@ -112,7 +112,7 @@ SOURCE_MOD += [
 if NEW_RENDERING:
     CPPDEFINES_MOD += ['NEW_RENDERING']
     SOURCE_MOD += [
-        'embed/lib/gl_draw.c',
+        'embed/lib/gfx_draw.c',
     ]
 else:
     SOURCE_MOD += [

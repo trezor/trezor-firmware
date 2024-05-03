@@ -358,22 +358,22 @@ void display_refresh(void) {
 
 void display_set_compatible_settings() {}
 
-void display_fill(const gl_bitblt_t *bb) {
+void display_fill(const gfx_bitblt_t *bb) {
   display_driver_t *drv = &g_display_driver;
 
-  gl_bitblt_t bb_new = *bb;
+  gfx_bitblt_t bb_new = *bb;
   bb_new.dst_row = &drv->framebuf[DISPLAY_RESX * bb_new.dst_y];
   bb_new.dst_stride = DISPLAY_RESX;
 
-  gl_mono8_fill(&bb_new);
+  gfx_mono8_fill(&bb_new);
 }
 
-void display_copy_mono1p(const gl_bitblt_t *bb) {
+void display_copy_mono1p(const gfx_bitblt_t *bb) {
   display_driver_t *drv = &g_display_driver;
 
-  gl_bitblt_t bb_new = *bb;
+  gfx_bitblt_t bb_new = *bb;
   bb_new.dst_row = &drv->framebuf[DISPLAY_RESX * bb_new.dst_y];
   bb_new.dst_stride = DISPLAY_RESX;
 
-  gl_mono8_copy_mono1p(&bb_new);
+  gfx_mono8_copy_mono1p(&bb_new);
 }

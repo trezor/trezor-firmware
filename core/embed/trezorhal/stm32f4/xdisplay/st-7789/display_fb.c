@@ -29,7 +29,7 @@
 #include "display_panel.h"
 #include "xdisplay.h"
 
-#include "gl_bitblt.h"
+#include "gfx_bitblt.h"
 #include "irq.h"
 #include "supervise.h"
 
@@ -177,42 +177,42 @@ void display_refresh(void) {
 #endif
 }
 
-void display_fill(const gl_bitblt_t *bb) {
+void display_fill(const gfx_bitblt_t *bb) {
   display_fb_info_t fb = display_get_frame_buffer();
 
-  gl_bitblt_t bb_new = *bb;
+  gfx_bitblt_t bb_new = *bb;
   bb_new.dst_row = (uint16_t *)((uintptr_t)fb.ptr + fb.stride * bb_new.dst_y);
   bb_new.dst_stride = fb.stride;
 
-  gl_rgb565_fill(&bb_new);
+  gfx_rgb565_fill(&bb_new);
 }
 
-void display_copy_rgb565(const gl_bitblt_t *bb) {
+void display_copy_rgb565(const gfx_bitblt_t *bb) {
   display_fb_info_t fb = display_get_frame_buffer();
 
-  gl_bitblt_t bb_new = *bb;
+  gfx_bitblt_t bb_new = *bb;
   bb_new.dst_row = (uint16_t *)((uintptr_t)fb.ptr + fb.stride * bb_new.dst_y);
   bb_new.dst_stride = fb.stride;
 
-  gl_rgb565_copy_rgb565(&bb_new);
+  gfx_rgb565_copy_rgb565(&bb_new);
 }
 
-void display_copy_mono1p(const gl_bitblt_t *bb) {
+void display_copy_mono1p(const gfx_bitblt_t *bb) {
   display_fb_info_t fb = display_get_frame_buffer();
 
-  gl_bitblt_t bb_new = *bb;
+  gfx_bitblt_t bb_new = *bb;
   bb_new.dst_row = (uint16_t *)((uintptr_t)fb.ptr + fb.stride * bb_new.dst_y);
   bb_new.dst_stride = fb.stride;
 
-  gl_rgb565_copy_mono1p(&bb_new);
+  gfx_rgb565_copy_mono1p(&bb_new);
 }
 
-void display_copy_mono4(const gl_bitblt_t *bb) {
+void display_copy_mono4(const gfx_bitblt_t *bb) {
   display_fb_info_t fb = display_get_frame_buffer();
 
-  gl_bitblt_t bb_new = *bb;
+  gfx_bitblt_t bb_new = *bb;
   bb_new.dst_row = (uint16_t *)((uintptr_t)fb.ptr + fb.stride * bb_new.dst_y);
   bb_new.dst_stride = fb.stride;
 
-  gl_rgb565_copy_mono4(&bb_new);
+  gfx_rgb565_copy_mono4(&bb_new);
 }

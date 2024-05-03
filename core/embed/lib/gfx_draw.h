@@ -17,10 +17,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef GL_DRAW_H
-#define GL_DRAW_H
+#ifndef GFX_DRAW_H
+#define GFX_DRAW_H
 
-#include "gl_color.h"
+#include "gfx_color.h"
 
 // 2D rectangle coordinates
 //
@@ -31,11 +31,12 @@ typedef struct {
   int16_t y0;
   int16_t x1;
   int16_t y1;
-} gl_rect_t;
+} gfx_rect_t;
 
-// Builds a rectangle (`gl_rect_t`) from top-left coordinates and dimensions
-static inline gl_rect_t gl_rect_wh(int16_t x, int16_t y, int16_t w, int16_t h) {
-  gl_rect_t rect = {
+// Builds a rectangle (`gfx_rect_t`) from top-left coordinates and dimensions
+static inline gfx_rect_t gfx_rect_wh(int16_t x, int16_t y, int16_t w,
+                                     int16_t h) {
+  gfx_rect_t rect = {
       .x0 = x,
       .y0 = y,
       .x1 = x + w,
@@ -45,10 +46,10 @@ static inline gl_rect_t gl_rect_wh(int16_t x, int16_t y, int16_t w, int16_t h) {
   return rect;
 }
 
-// Builds a rectangle (`gl_rect_t`) from top-left and bottom-right coordinates
-static inline gl_rect_t gl_rect(int16_t x0, int16_t y0, int16_t x1,
-                                int16_t y1) {
-  gl_rect_t rect = {
+// Builds a rectangle (`gfx_rect_t`) from top-left and bottom-right coordinates
+static inline gfx_rect_t gfx_rect(int16_t x0, int16_t y0, int16_t x1,
+                                  int16_t y1) {
+  gfx_rect_t rect = {
       .x0 = x0,
       .y0 = y0,
       .x1 = x1,
@@ -62,11 +63,11 @@ static inline gl_rect_t gl_rect(int16_t x0, int16_t y0, int16_t x1,
 typedef struct {
   int16_t x;
   int16_t y;
-} gl_offset_t;
+} gfx_offset_t;
 
-// Builds a `gl_offset_t` structure
-static inline gl_offset_t gl_offset(int16_t x, int16_t y) {
-  gl_offset_t offset = {
+// Builds a `gfx_offset_t` structure
+static inline gfx_offset_t gfx_offset(int16_t x, int16_t y) {
+  gfx_offset_t offset = {
       .x = x,
       .y = y,
   };
@@ -78,11 +79,11 @@ static inline gl_offset_t gl_offset(int16_t x, int16_t y) {
 typedef struct {
   int16_t x;
   int16_t y;
-} gl_size_t;
+} gfx_size_t;
 
-// Builds a `gl_size_t` structure
-static inline gl_size_t gl_size(int16_t x, int16_t y) {
-  gl_size_t size = {
+// Builds a `gfx_size_t` structure
+static inline gfx_size_t gfx_size(int16_t x, int16_t y) {
+  gfx_size_t size = {
       .x = x,
       .y = y,
   };
@@ -92,12 +93,12 @@ static inline gl_size_t gl_size(int16_t x, int16_t y) {
 
 // Format of pixels in a bitmap
 typedef enum {
-  GL_FORMAT_UNKNOWN,   //
-  GL_FORMAT_MONO1P,    // 1-bpp per pixel (packed)
-  GL_FORMAT_MONO4,     // 4-bpp per pixel
-  GL_FORMAT_RGB565,    // 16-bpp per pixel
-  GL_FORMAT_RGBA8888,  // 32-bpp
-} gl_format_t;
+  GFX_FORMAT_UNKNOWN,   //
+  GFX_FORMAT_MONO1P,    // 1-bpp per pixel (packed)
+  GFX_FORMAT_MONO4,     // 4-bpp per pixel
+  GFX_FORMAT_RGB565,    // 16-bpp per pixel
+  GFX_FORMAT_RGBA8888,  // 32-bpp
+} gfx_format_t;
 
 // 2D bitmap reference
 typedef struct {
@@ -106,29 +107,29 @@ typedef struct {
   // stride in bytes
   size_t stride;
   // size in pixels
-  gl_size_t size;
-  // format of pixels, GL_FORMAT_xxx
+  gfx_size_t size;
+  // format of pixels, GFX_FORMAT_xxx
   uint8_t format;
-  // offset used when bitmap is drawed using gl_draw_bitmap()
-  gl_offset_t offset;
+  // offset used when bitmap is drawed using gfx_draw_bitmap()
+  gfx_offset_t offset;
   // foreground color (used with MONOx formats)
-  gl_color_t fg_color;
+  gfx_color_t fg_color;
   // background color (used with MONOx formats)
-  gl_color_t bg_color;
-} gl_bitmap_t;
+  gfx_color_t bg_color;
+} gfx_bitmap_t;
 
 // Text attributes (font and color)
 typedef struct {
   // Font identifier
   int font;
   // Foreground color
-  gl_color_t fg_color;
+  gfx_color_t fg_color;
   // Background color
-  gl_color_t bg_color;
-} gl_text_attr_t;
+  gfx_color_t bg_color;
+} gfx_text_attr_t;
 
 // Fills a rectangle with a specified color.
-void gl_draw_bar(gl_rect_t rect, gl_color_t color);
+void gfx_draw_bar(gfx_rect_t rect, gfx_color_t color);
 
 // Draws a bitmap into the specified rectangle.
 //
@@ -136,9 +137,9 @@ void gl_draw_bar(gl_rect_t rect, gl_color_t color);
 // is smaller than destination rectangle or if the bitmap is translated by
 // an offset partially or completely outside the destination rectangle.
 //
-// Currently, we use `gl_draw_bitmap` exclusively for text rendering.
+// Currently, we use `gfx_draw_bitmap` exclusively for text rendering.
 // Not all bitmap formats are supported now. Please see the implementation.
-void gl_draw_bitmap(gl_rect_t rect, const gl_bitmap_t* bitmap);
+void gfx_draw_bitmap(gfx_rect_t rect, const gfx_bitmap_t* bitmap);
 
 // Draws a text to the specified position.
 //
@@ -146,7 +147,7 @@ void gl_draw_bitmap(gl_rect_t rect, const gl_bitmap_t* bitmap);
 // `text` - utf-8 text
 // `maxlen` - maximum number of characters displayed (use SIZE_MAX when not
 // specified) `attr` - font & text color
-void gl_draw_text(gl_offset_t offset, const char* text, size_t maxlen,
-                  const gl_text_attr_t* attr);
+void gfx_draw_text(gfx_offset_t offset, const char* text, size_t maxlen,
+                   const gfx_text_attr_t* attr);
 
-#endif  // GL_DRAW_H
+#endif  // GFX_DRAW_H
