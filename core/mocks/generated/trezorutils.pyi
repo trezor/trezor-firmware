@@ -132,6 +132,10 @@ MODEL: str
 """Model name."""
 MODEL_FULL_NAME: str
 """Full name including Trezor prefix."""
+MODEL_USB_MANUFACTURER: str
+"""USB Manufacturer name."""
+MODEL_USB_PRODUCT: str
+"""USB Product name."""
 INTERNAL_MODEL: str
 """Internal model code."""
 EMULATOR: bool

@@ -390,6 +390,18 @@ STATIC mp_obj_str_t mod_trezorutils_full_name_obj = {
     sizeof(MODEL_FULL_NAME) - 1,
     (const byte *)MODEL_FULL_NAME};
 
+STATIC mp_obj_str_t mod_trezorutils_model_usb_manufacturer_obj = {
+    {&mp_type_str},
+    0,
+    sizeof(MODEL_USB_MANUFACTURER) - 1,
+    (const byte *)MODEL_USB_MANUFACTURER};
+
+STATIC mp_obj_str_t mod_trezorutils_model_usb_product_obj = {
+    {&mp_type_str},
+    0,
+    sizeof(MODEL_USB_PRODUCT) - 1,
+    (const byte *)MODEL_USB_PRODUCT};
+
 STATIC mp_obj_tuple_t mod_trezorutils_version_obj = {
     {&mp_type_tuple},
     4,
@@ -410,6 +422,10 @@ STATIC mp_obj_tuple_t mod_trezorutils_version_obj = {
 /// """Model name."""
 /// MODEL_FULL_NAME: str
 /// """Full name including Trezor prefix."""
+/// MODEL_USB_MANUFACTURER: str
+/// """USB Manufacturer name."""
+/// MODEL_USB_PRODUCT: str
+/// """USB Product name."""
 /// INTERNAL_MODEL: str
 /// """Internal model code."""
 /// EMULATOR: bool
@@ -464,6 +480,10 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_MODEL), MP_ROM_PTR(&mod_trezorutils_model_name_obj)},
     {MP_ROM_QSTR(MP_QSTR_MODEL_FULL_NAME),
      MP_ROM_PTR(&mod_trezorutils_full_name_obj)},
+    {MP_ROM_QSTR(MP_QSTR_MODEL_USB_MANUFACTURER),
+     MP_ROM_PTR(&mod_trezorutils_model_usb_manufacturer_obj)},
+    {MP_ROM_QSTR(MP_QSTR_MODEL_USB_PRODUCT),
+     MP_ROM_PTR(&mod_trezorutils_model_usb_product_obj)},
     {MP_ROM_QSTR(MP_QSTR_INTERNAL_MODEL),
      MP_ROM_QSTR(MODEL_INTERNAL_NAME_QSTR)},
 #ifdef TREZOR_EMULATOR
