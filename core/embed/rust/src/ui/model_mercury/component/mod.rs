@@ -12,6 +12,9 @@ mod vertical_menu;
 mod fido_icons;
 mod error;
 mod frame;
+
+#[cfg(feature = "translations")]
+mod hold_to_confirm;
 #[cfg(feature = "micropython")]
 mod homescreen;
 #[cfg(feature = "translations")]
@@ -48,6 +51,8 @@ pub use error::ErrorScreen;
 pub use fido::{FidoConfirm, FidoMsg};
 pub use footer::Footer;
 pub use frame::{Frame, FrameMsg};
+#[cfg(feature = "translations")]
+pub use hold_to_confirm::HoldToConfirm;
 #[cfg(feature = "micropython")]
 pub use homescreen::{check_homescreen_format, Homescreen, HomescreenMsg, Lockscreen};
 #[cfg(feature = "translations")]
