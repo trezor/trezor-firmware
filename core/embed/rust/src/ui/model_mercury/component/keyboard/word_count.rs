@@ -25,7 +25,7 @@ impl SelectWordCount {
         SelectWordCount {
             button: LABELS.map(|t| {
                 Button::with_text(t.into())
-                    .styled(theme::button_pin())
+                    .styled(theme::button_keyboard())
                     .with_text_align(Alignment::Center)
             }),
         }
