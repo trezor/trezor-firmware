@@ -6,13 +6,13 @@ use crate::{
         },
         display::Icon,
         geometry::{Alignment, Insets, Rect},
+        model_mercury::theme::TITLE_HEIGHT,
         shape::Renderer,
     },
 };
 
 use super::{theme, Button, ButtonMsg, ButtonStyleSheet, CancelInfoConfirmMsg, Footer};
 
-const TITLE_HEIGHT: i16 = 42;
 const BUTTON_EXPAND_BORDER: i16 = 32;
 
 #[derive(Clone)]
@@ -24,6 +24,7 @@ pub struct Frame<T> {
     button_msg: CancelInfoConfirmMsg,
     content: Child<T>,
     footer: Option<Footer<'static>>,
+    overlapping_content: bool,
 }
 
 pub enum FrameMsg<T> {
@@ -46,6 +47,7 @@ where
             button_msg: CancelInfoConfirmMsg::Cancelled,
             content: Child::new(content),
             footer: None,
+            overlapping_content: false,
         }
     }
 
@@ -188,7 +190,11 @@ where
             footer.place(footer_area);
             content_area = remaining;
         }
-        self.content.place(content_area);
+        if self.overlapping_content {
+            self.content.place(bounds);
+        } else {
+            self.content.place(content_area);
+        }
         bounds
     }
 
@@ -209,15 +215,15 @@ where
         self.title.paint();
         self.subtitle.paint();
         self.button.paint();
-        self.content.paint();
         self.footer.paint();
+        self.content.paint();
     }
     fn render<'s>(&self, target: &mut impl Renderer<'s>) {
         self.title.render(target);
         self.subtitle.render(target);
         self.button.render(target);
-        self.content.render(target);
         self.footer.render(target);
+        self.content.render(target);
     }
 
     #[cfg(feature = "ui_bounds")]
@@ -225,8 +231,8 @@ where
         self.title.bounds(sink);
         self.subtitle.bounds(sink);
         self.button.bounds(sink);
-        self.content.bounds(sink);
         self.footer.bounds(sink);
+        self.content.bounds(sink);
     }
 }
 
