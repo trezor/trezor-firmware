@@ -388,6 +388,8 @@
     "instructions__swipe_up": "Swipe up",
     "instructions__tap_to_confirm": "Tap to confirm",
     "instructions__tap_to_start": "Tap to start",
+    "instructions__hold_to_confirm": "Hold to confirm",
+    "instructions__continue_holding": "Continue\nholding",
     "joint__title": "Joint transaction",
     "joint__to_the_total_amount": "To the total amount:",
     "joint__you_are_contributing": "You are contributing:",
