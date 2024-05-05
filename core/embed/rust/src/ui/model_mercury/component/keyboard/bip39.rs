@@ -301,7 +301,7 @@ impl Bip39Input {
                 // Auto-complete button.
                 self.button.enable(ctx);
                 self.button
-                    .set_stylesheet(ctx, theme::button_pin_autocomplete());
+                    .set_stylesheet(ctx, theme::button_bip39_autocomplete());
                 self.button
                     .set_content(ctx, ButtonContent::Icon(theme::ICON_AUTOFILL));
                 self.button_suggestion
@@ -310,7 +310,7 @@ impl Bip39Input {
         } else {
             // Disabled button.
             self.button.disable(ctx);
-            self.button.set_stylesheet(ctx, theme::button_pin());
+            self.button.set_stylesheet(ctx, theme::button_keyboard());
             self.button.set_content(ctx, ButtonContent::Text("".into()));
         }
     }

@@ -10,7 +10,7 @@ use crate::{
             base::ComponentExt, text::TextStyle, Child, Component, Event, EventCtx, Label, Maybe,
             Never, Pad, TimerToken,
         },
-        display::{self, Font},
+        display::Font,
         event::TouchEvent,
         geometry::{Alignment, Alignment2D, Grid, Insets, Offset, Rect},
         model_mercury::component::{
@@ -28,15 +28,15 @@ pub enum PinKeyboardMsg {
 }
 
 const MAX_LENGTH: usize = 50;
-const MAX_VISIBLE_DOTS: usize = 14;
-const MAX_VISIBLE_DIGITS: usize = 16;
+const MAX_VISIBLE_DOTS: usize = 18;
+const MAX_VISIBLE_DIGITS: usize = 18;
 const DIGIT_COUNT: usize = 10; // 0..10
 
-const HEADER_PADDING_SIDE: i16 = 5;
-const HEADER_PADDING_BOTTOM: i16 = 12;
+const HEADER_PADDING_SIDE: i16 = 2;
+const HEADER_PADDING_BOTTOM: i16 = 2;
 
 const HEADER_PADDING: Insets = Insets::new(
-    theme::borders().top,
+    0,
     HEADER_PADDING_SIDE,
     HEADER_PADDING_BOTTOM,
     HEADER_PADDING_SIDE,
@@ -57,10 +57,6 @@ pub struct PinKeyboard<'a> {
 }
 
 impl<'a> PinKeyboard<'a> {
-    // Label position fine-tuning.
-    const MAJOR_OFF: Offset = Offset::y(11);
-    const MINOR_OFF: Offset = Offset::y(11);
-
     pub fn new(
         major_prompt: TString<'a>,
         minor_prompt: TString<'a>,
@@ -68,17 +64,13 @@ impl<'a> PinKeyboard<'a> {
         allow_cancel: bool,
     ) -> Self {
         // Control buttons.
-        let erase_btn = Button::with_icon_blend(
-            theme::IMAGE_BG_BACK_BTN,
-            theme::ICON_BACK,
-            Offset::new(30, 12),
-        )
-        .styled(theme::button_reset())
-        .with_long_press(theme::ERASE_HOLD_DURATION)
-        .initially_enabled(false);
+        let erase_btn = Button::with_icon(theme::ICON_DELETE)
+            .styled(theme::button_pin_erase())
+            .with_long_press(theme::ERASE_HOLD_DURATION)
+            .initially_enabled(false);
         let erase_btn = Maybe::hidden(theme::BG, erase_btn).into_child();
 
-        let cancel_btn = Button::with_icon(theme::ICON_CANCEL).styled(theme::button_cancel());
+        let cancel_btn = Button::with_icon(theme::ICON_CLOSE).styled(theme::button_pin_cancel());
         let cancel_btn = Maybe::new(theme::BG, cancel_btn, allow_cancel).into_child();
 
         Self {
@@ -94,7 +86,7 @@ impl<'a> PinKeyboard<'a> {
             erase_btn,
             cancel_btn,
             confirm_btn: Button::with_icon(theme::ICON_CONFIRM)
-                .styled(theme::button_confirm())
+                .styled(theme::button_pin_confirm())
                 .initially_enabled(false)
                 .into_child(),
             digit_btns: Self::generate_digit_buttons(),
@@ -108,7 +100,10 @@ impl<'a> PinKeyboard<'a> {
         random::shuffle(&mut digits);
         digits
             .map(|c| Button::with_text(c.into()))
-            .map(|b| b.styled(theme::button_pin()))
+            .map(|b| {
+                b.styled(theme::button_keyboard())
+                    .with_text_align(Alignment::Center)
+            })
             .map(Child::new)
     }
 
@@ -150,20 +145,10 @@ impl Component for PinKeyboard<'_> {
     type Msg = PinKeyboardMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        // Ignore the top padding for now, we need it to reliably register textbox touch
-        // events.
-        let borders_no_top = Insets {
-            top: 0,
-            ..theme::borders()
-        };
         // Prompts and PIN dots display.
-        let (header, keypad) = bounds
-            .inset(borders_no_top)
-            .split_bottom(4 * theme::PIN_BUTTON_HEIGHT + 3 * theme::BUTTON_SPACING);
+        let (header, keypad) =
+            bounds.split_bottom(4 * theme::PIN_BUTTON_HEIGHT + 3 * theme::BUTTON_SPACING);
         let prompt = header.inset(HEADER_PADDING);
-        // the inset -3 is a workaround for long text in "re-enter wipe code"
-        let major_area = prompt.translate(Self::MAJOR_OFF).inset(Insets::right(-3));
-        let minor_area = prompt.translate(Self::MINOR_OFF);
 
         // Control buttons.
         let grid = Grid::new(keypad, 4, 3).with_spacing(theme::BUTTON_SPACING);
@@ -171,9 +156,9 @@ impl Component for PinKeyboard<'_> {
         // Prompts and PIN dots display.
         self.textbox_pad.place(header);
         self.textbox.place(header);
-        self.major_prompt.place(major_area);
-        self.minor_prompt.place(minor_area);
-        self.major_warning.as_mut().map(|c| c.place(major_area));
+        self.major_prompt.place(prompt);
+        self.minor_prompt.place(prompt);
+        self.major_warning.as_mut().map(|c| c.place(prompt));
 
         // Control buttons.
         let erase_cancel_area = grid.row_col(3, 0);
@@ -269,6 +254,7 @@ impl Component for PinKeyboard<'_> {
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.erase_btn.render(target);
         self.textbox_pad.render(target);
+
         if self.textbox.inner().is_empty() {
             if let Some(ref w) = self.major_warning {
                 w.render(target);
@@ -280,7 +266,9 @@ impl Component for PinKeyboard<'_> {
         } else {
             self.textbox.render(target);
         }
+
         self.confirm_btn.render(target);
+
         for btn in &self.digit_btns {
             btn.render(target);
         }
@@ -310,7 +298,7 @@ struct PinDots {
 
 impl PinDots {
     const DOT: i16 = 6;
-    const PADDING: i16 = 6;
+    const PADDING: i16 = 7;
     const TWITCH: i16 = 4;
 
     fn new(style: TextStyle) -> Self {
@@ -361,128 +349,63 @@ impl PinDots {
         &self.digits
     }
 
-    fn paint_digits(&self, area: Rect) {
-        let center = area.center() + Offset::y(Font::MONO.text_height() / 2);
-        let right = center + Offset::x(Font::MONO.text_width("0") * (MAX_VISIBLE_DOTS as i16) / 2);
-        let digits = self.digits.len();
-
-        if digits <= MAX_VISIBLE_DOTS {
-            display::text_center(
-                center,
-                &self.digits,
-                Font::MONO,
-                self.style.text_color,
-                self.style.background_color,
-            );
-        } else {
-            let offset: usize = digits.saturating_sub(MAX_VISIBLE_DIGITS);
-            display::text_right(
-                right,
-                &self.digits[offset..],
-                Font::MONO,
-                self.style.text_color,
-                self.style.background_color,
-            );
-        }
-    }
-
     fn render_digits<'s>(&self, area: Rect, target: &mut impl Renderer<'s>) {
-        let center = area.center() + Offset::y(Font::MONO.text_height() / 2);
-        let right = center + Offset::x(Font::MONO.text_width("0") * (MAX_VISIBLE_DOTS as i16) / 2);
+        let left = area.left_center() + Offset::y(Font::MONO.visible_text_height("1") / 2);
         let digits = self.digits.len();
 
-        if digits <= MAX_VISIBLE_DOTS {
-            shape::Text::new(center, &self.digits)
-                .with_align(Alignment::Center)
+        if digits <= MAX_VISIBLE_DIGITS {
+            shape::Text::new(left, &self.digits)
+                .with_align(Alignment::Start)
                 .with_font(Font::MONO)
                 .with_fg(self.style.text_color)
                 .render(target);
         } else {
             let offset: usize = digits.saturating_sub(MAX_VISIBLE_DIGITS);
-            shape::Text::new(right, &self.digits[offset..])
-                .with_align(Alignment::End)
+            shape::Text::new(left, &self.digits[offset..])
+                .with_align(Alignment::Start)
                 .with_font(Font::MONO)
                 .with_fg(self.style.text_color)
                 .render(target);
-        }
-    }
-
-    fn paint_dots(&self, area: Rect) {
-        let mut cursor = self.size().snap(area.center(), Alignment2D::CENTER);
-
-        let digits = self.digits.len();
-        let dots_visible = digits.min(MAX_VISIBLE_DOTS);
-        let step = Self::DOT + Self::PADDING;
-
-        // Jiggle when overflowed.
-        if digits > dots_visible && digits % 2 == 0 {
-            cursor.x += Self::TWITCH
-        }
-
-        // Small leftmost dot.
-        if digits > dots_visible + 1 {
-            theme::DOT_SMALL.draw(
-                cursor - Offset::x(2 * step),
-                Alignment2D::TOP_LEFT,
-                self.style.text_color,
-                self.style.background_color,
-            );
-        }
-
-        // Greyed out dot.
-        if digits > dots_visible {
-            theme::DOT_ACTIVE.draw(
-                cursor - Offset::x(step),
-                Alignment2D::TOP_LEFT,
-                theme::GREY_LIGHT,
-                self.style.background_color,
-            );
-        }
-
-        // Draw a dot for each PIN digit.
-        for _ in 0..dots_visible {
-            theme::DOT_ACTIVE.draw(
-                cursor,
-                Alignment2D::TOP_LEFT,
-                self.style.text_color,
-                self.style.background_color,
-            );
-            cursor.x += step;
         }
     }
 
     fn render_dots<'s>(&self, area: Rect, target: &mut impl Renderer<'s>) {
-        let mut cursor = self.size().snap(area.center(), Alignment2D::CENTER);
+        let mut cursor = area.left_center();
 
         let digits = self.digits.len();
         let dots_visible = digits.min(MAX_VISIBLE_DOTS);
         let step = Self::DOT + Self::PADDING;
 
         // Jiggle when overflowed.
-        if digits > dots_visible && digits % 2 == 0 {
+        if digits >= MAX_VISIBLE_DOTS + 2 && (digits + 1) % 2 == 0 {
             cursor.x += Self::TWITCH
         }
 
+        let mut digit_idx = 0;
         // Small leftmost dot.
-        if digits > dots_visible + 1 {
-            shape::ToifImage::new(cursor - Offset::x(2 * step), theme::DOT_SMALL.toif)
-                .with_align(Alignment2D::TOP_LEFT)
-                .with_fg(self.style.text_color)
+        if digits >= MAX_VISIBLE_DOTS + 2 {
+            shape::ToifImage::new(cursor, theme::DOT_SMALL.toif)
+                .with_align(Alignment2D::CENTER_LEFT)
+                .with_fg(theme::GREY_DARK)
                 .render(target);
+            cursor.x += step;
+            digit_idx += 1;
         }
 
         // Greyed out dot.
-        if digits > dots_visible {
-            shape::ToifImage::new(cursor - Offset::x(step), theme::DOT_ACTIVE.toif)
-                .with_align(Alignment2D::TOP_LEFT)
-                .with_fg(theme::GREY_LIGHT)
+        if digits >= MAX_VISIBLE_DOTS + 1 {
+            shape::ToifImage::new(cursor, theme::DOT_ACTIVE.toif)
+                .with_align(Alignment2D::CENTER_LEFT)
+                .with_fg(theme::GREY)
                 .render(target);
+            cursor.x += step;
+            digit_idx += 1;
         }
 
         // Draw a dot for each PIN digit.
-        for _ in 0..dots_visible {
+        for _ in digit_idx..dots_visible {
             shape::ToifImage::new(cursor, theme::DOT_ACTIVE.toif)
-                .with_align(Alignment2D::TOP_LEFT)
+                .with_align(Alignment2D::CENTER_LEFT)
                 .with_fg(self.style.text_color)
                 .render(target);
             cursor.x += step;
@@ -521,13 +444,7 @@ impl Component for PinDots {
     }
 
     fn paint(&mut self) {
-        let dot_area = self.area.inset(HEADER_PADDING);
-        self.pad.paint();
-        if self.display_digits {
-            self.paint_digits(dot_area)
-        } else {
-            self.paint_dots(dot_area)
-        }
+        // TODO: remove when ui-t3t1 done
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
