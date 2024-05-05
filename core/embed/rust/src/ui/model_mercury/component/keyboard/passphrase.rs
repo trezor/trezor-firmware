@@ -67,7 +67,7 @@ impl PassphraseKeyboard {
             .with_long_press(theme::ERASE_HOLD_DURATION)
             .into_child(),
             keys: KEYBOARD[STARTING_PAGE].map(|text| {
-                Child::new(Button::new(Self::key_content(text)).styled(theme::button_pin()))
+                Child::new(Button::new(Self::key_content(text)).styled(theme::button_keyboard()))
             }),
             scrollbar: ScrollBar::horizontal(),
             fade: Cell::new(false),
