@@ -81,7 +81,7 @@ pub trait Canvas: BasicCanvas {
     /// Draws a single pixel and blends its color with the background.
     ///
     /// - If alpha == 255, the (foreground) pixel color is used.
-    /// - If 0 < alpha << 255, pixel and backround colors are blended.
+    /// - If 0 < alpha << 255, pixel and background colors are blended.
     /// - If alpha == 0, the background color is used.
     fn blend_pixel(&mut self, pt: Point, color: Color, alpha: u8);
 
@@ -364,7 +364,7 @@ pub trait Canvas: BasicCanvas {
 
     // Draws circle with the specified center and the radius.
     #[cfg(not(feature = "ui_antialiasing"))]
-    fn draw_circle(&mut self, center: Point, radius: i16, color: Color) {
+    fn draw_circle(&mut self, center: Point, radius: i16, color: Color, alpha: u8) {
         let split = unwrap!(circle_points(radius).last()).v;
 
         let r = Rect::new(
@@ -376,8 +376,8 @@ pub trait Canvas: BasicCanvas {
             for p in circle_points(radius) {
                 let pt_l = Point::new(center.x - p.u, center.y - p.v);
                 let pt_r = Point::new(center.x + p.u, center.y - p.v);
-                self.draw_pixel(pt_l, color);
-                self.draw_pixel(pt_r, color);
+                self.blend_pixel(pt_l, color, alpha);
+                self.blend_pixel(pt_r, color, alpha);
             }
         }
 
@@ -390,8 +390,8 @@ pub trait Canvas: BasicCanvas {
             for p in circle_points(radius).take_while(|p| p.u < p.v) {
                 let pt_l = Point::new(center.x - p.v, center.y - p.u);
                 let pt_r = Point::new(center.x + p.v, center.y - p.u);
-                self.draw_pixel(pt_l, color);
-                self.draw_pixel(pt_r, color);
+                self.blend_pixel(pt_l, color, alpha);
+                self.blend_pixel(pt_r, color, alpha);
             }
         }
 
@@ -404,8 +404,8 @@ pub trait Canvas: BasicCanvas {
             for p in circle_points(radius).skip(1).take_while(|p| p.u < p.v) {
                 let pt_l = Point::new(center.x - p.v, center.y + p.u);
                 let pt_r = Point::new(center.x + p.v, center.y + p.u);
-                self.draw_pixel(pt_l, color);
-                self.draw_pixel(pt_r, color);
+                self.blend_pixel(pt_l, color, alpha);
+                self.blend_pixel(pt_r, color, alpha);
             }
         }
 
@@ -418,17 +418,16 @@ pub trait Canvas: BasicCanvas {
             for p in circle_points(radius) {
                 let pt_l = Point::new(center.x - p.u, center.y + p.v);
                 let pt_r = Point::new(center.x + p.u, center.y + p.v);
-                self.draw_pixel(pt_l, color);
-                self.draw_pixel(pt_r, color);
+                self.blend_pixel(pt_l, color, alpha);
+                self.blend_pixel(pt_r, color, alpha);
             }
         }
     }
 
     /// Draws filled circle with the specified center and the radius.
     #[cfg(not(feature = "ui_antialiasing"))]
-    fn fill_circle(&mut self, center: Point, radius: i16, color: Color) {
+    fn fill_circle(&mut self, center: Point, radius: i16, color: Color, alpha: u8) {
         let split = unwrap!(circle_points(radius).last()).v;
-        let alpha = 255;
 
         let r = Rect::new(
             Point::new(center.x - radius, center.y - radius),
@@ -490,10 +489,9 @@ pub trait Canvas: BasicCanvas {
     /// Draws antialiased filled circle with the specified center and the
     /// radius.
     #[cfg(feature = "ui_antialiasing")]
-    fn fill_circle(&mut self, center: Point, radius: i16, color: Color) {
+    fn fill_circle(&mut self, center: Point, radius: i16, color: Color, alpha: u8) {
         let split = unwrap!(circle_points(radius).last()).v;
 
-        let alpha = 255;
         let alpha_mul = |a: u8| -> u8 { ((a as u16 * alpha as u16) / 255) as u8 };
 
         let r = Rect::new(

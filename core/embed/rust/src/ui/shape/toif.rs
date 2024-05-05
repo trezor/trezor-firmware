@@ -22,6 +22,8 @@ pub struct ToifImage<'a> {
     fg_color: Color,
     // Optional background color
     bg_color: Option<Color>,
+    // Alpha value
+    alpha: u8,
     /// Final size calculated from TOIF data
     size: Offset,
 }
@@ -34,6 +36,7 @@ impl<'a> ToifImage<'a> {
             toif,
             fg_color: Color::white(),
             bg_color: None,
+            alpha: 255,
             size: Offset::zero(),
         }
     }
@@ -45,6 +48,7 @@ impl<'a> ToifImage<'a> {
             toif: toif.original_data().into(),
             fg_color: Color::white(),
             bg_color: None,
+            alpha: 255,
             size: Offset::zero(),
         }
     }
@@ -62,6 +66,10 @@ impl<'a> ToifImage<'a> {
             bg_color: Some(bg_color),
             ..self
         }
+    }
+
+    pub fn with_alpha(self, alpha: u8) -> Self {
+        Self { alpha, ..self }
     }
 
     pub fn render(mut self, renderer: &mut impl Renderer<'a>) {
@@ -106,7 +114,8 @@ impl<'a> ToifImage<'a> {
             let slice_view = slice
                 .view()
                 .with_fg(self.fg_color)
-                .with_offset(Offset::new(r.x0 - bounds.top_left().x, 0));
+                .with_offset(Offset::new(r.x0 - bounds.top_left().x, 0))
+                .with_alpha(self.alpha);
 
             match self.bg_color {
                 Some(bg_color) => canvas.draw_bitmap(r, slice_view.with_bg(bg_color)),

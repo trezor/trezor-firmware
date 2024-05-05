@@ -14,6 +14,7 @@ pub struct Circle {
     fg_color: Option<Color>,
     bg_color: Option<Color>,
     thickness: i16,
+    alpha: u8,
     start_angle: Option<i16>,
     end_angle: Option<i16>,
 }
@@ -26,6 +27,7 @@ impl Circle {
             fg_color: None,
             bg_color: None,
             thickness: 1,
+            alpha: 255,
             start_angle: None,
             end_angle: None,
         }
@@ -47,6 +49,10 @@ impl Circle {
 
     pub fn with_thickness(self, thickness: i16) -> Self {
         Self { thickness, ..self }
+    }
+
+    pub fn with_alpha(self, alpha: u8) -> Self {
+        Self { alpha, ..self }
     }
 
     pub fn with_start_angle(self, from_angle: i16) -> Self {
@@ -94,22 +100,22 @@ impl Shape<'_> for Circle {
         if self.start_angle.is_none() && self.end_angle.is_none() {
             if th == 1 {
                 if let Some(color) = self.bg_color {
-                    canvas.fill_circle(self.center, self.radius, color);
+                    canvas.fill_circle(self.center, self.radius, color, self.alpha);
                 }
                 if let Some(color) = self.fg_color {
                     #[cfg(not(feature = "ui_antialiasing"))]
-                    canvas.draw_circle(self.center, self.radius, color);
+                    canvas.draw_circle(self.center, self.radius, color, self.alpha);
                     #[cfg(feature = "ui_antialiasing")]
-                    canvas.fill_circle(self.center, self.radius, color);
+                    canvas.fill_circle(self.center, self.radius, color, self.alpha);
                 }
             } else {
                 if let Some(color) = self.fg_color {
                     if th > 0 {
-                        canvas.fill_circle(self.center, self.radius, color);
+                        canvas.fill_circle(self.center, self.radius, color, self.alpha);
                     }
                 }
                 if let Some(color) = self.bg_color {
-                    canvas.fill_circle(self.center, self.radius - th, color);
+                    canvas.fill_circle(self.center, self.radius - th, color, self.alpha);
                 }
             }
         } else {
