@@ -15,6 +15,8 @@ pub struct Text<'a> {
     text: &'a str,
     // Text color
     color: Color,
+    // Text alpha
+    alpha: u8,
     // Text font
     font: Font,
     // Horizontal alignment
@@ -31,6 +33,7 @@ impl<'a> Text<'a> {
             pos,
             text,
             color: Color::white(),
+            alpha: 255,
             font: Font::NORMAL,
             align: Alignment::Start,
             bounds: Rect::zero(),
@@ -47,6 +50,10 @@ impl<'a> Text<'a> {
 
     pub fn with_align(self, align: Alignment) -> Self {
         Self { align, ..self }
+    }
+
+    pub fn with_alpha(self, alpha: u8) -> Self {
+        Self { alpha, ..self }
     }
 
     pub fn render<'r>(mut self, renderer: &mut impl Renderer<'r>) {
@@ -98,6 +105,7 @@ impl<'a> Shape<'_> for Text<'a> {
             let glyph = self.font.get_glyph(ch);
             let glyph_bitmap = glyph.bitmap();
             let glyph_view = BitmapView::new(&glyph_bitmap)
+                .with_alpha(self.alpha)
                 .with_fg(self.color)
                 .with_offset(Offset::new(
                     -glyph.bearing_x,
