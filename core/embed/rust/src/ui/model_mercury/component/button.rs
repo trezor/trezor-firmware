@@ -35,6 +35,7 @@ pub struct Button {
     state: State,
     long_press: Option<Duration>,
     long_timer: Option<TimerToken>,
+    haptic: bool,
 }
 
 impl Button {
@@ -54,6 +55,7 @@ impl Button {
             state: State::Initial,
             long_press: None,
             long_timer: None,
+            haptic: true,
         }
     }
 
@@ -99,6 +101,11 @@ impl Button {
 
     pub fn with_radius(mut self, radius: u8) -> Self {
         self.radius = Some(radius);
+        self
+    }
+
+    pub fn without_haptics(mut self) -> Self {
+        self.haptic = false;
         self
     }
 
@@ -182,7 +189,12 @@ impl Button {
         }
     }
 
-    pub fn render_background<'s>(&self, target: &mut impl Renderer<'s>, style: &ButtonStyle) {
+    pub fn render_background<'s>(
+        &self,
+        target: &mut impl Renderer<'s>,
+        style: &ButtonStyle,
+        alpha: u8,
+    ) {
         match &self.content {
             ButtonContent::IconBlend(_, _, _) => {}
             _ => {
@@ -192,11 +204,13 @@ impl Button {
                         .with_radius(self.radius.unwrap() as i16)
                         .with_thickness(2)
                         .with_fg(style.button_color)
+                        .with_alpha(alpha)
                         .render(target);
                 } else {
                     shape::Bar::new(self.area)
                         .with_bg(style.button_color)
                         .with_fg(style.button_color)
+                        .with_alpha(alpha)
                         .render(target);
                 }
             }
@@ -238,7 +252,12 @@ impl Button {
         }
     }
 
-    pub fn render_content<'s>(&self, target: &mut impl Renderer<'s>, style: &ButtonStyle) {
+    pub fn render_content<'s>(
+        &self,
+        target: &mut impl Renderer<'s>,
+        style: &ButtonStyle,
+        alpha: u8,
+    ) {
         match &self.content {
             ButtonContent::Empty => {}
             ButtonContent::Text(text) => {
@@ -255,6 +274,7 @@ impl Button {
                         .with_font(style.font)
                         .with_fg(style.text_color)
                         .with_align(self.text_align)
+                        .with_alpha(alpha)
                         .render(target);
                 });
             }
@@ -262,23 +282,39 @@ impl Button {
                 shape::ToifImage::new(self.area.center(), icon.toif)
                     .with_align(Alignment2D::CENTER)
                     .with_fg(style.icon_color)
+                    .with_alpha(alpha)
                     .render(target);
             }
             ButtonContent::IconAndText(child) => {
-                child.render(target, self.area, self.style(), Self::BASELINE_OFFSET);
+                child.render(
+                    target,
+                    self.area,
+                    self.style(),
+                    Self::BASELINE_OFFSET,
+                    alpha,
+                );
             }
             ButtonContent::IconBlend(bg, fg, offset) => {
                 shape::Bar::new(self.area)
                     .with_bg(style.background_color)
+                    .with_alpha(alpha)
                     .render(target);
                 shape::ToifImage::new(self.area.top_left(), bg.toif)
                     .with_fg(style.button_color)
+                    .with_alpha(alpha)
                     .render(target);
                 shape::ToifImage::new(self.area.top_left() + *offset, fg.toif)
                     .with_fg(style.icon_color)
+                    .with_alpha(alpha)
                     .render(target);
             }
         }
+    }
+
+    pub fn render_with_alpha<'s>(&self, target: &mut impl Renderer<'s>, alpha: u8) {
+        let style = self.style();
+        self.render_background(target, style, alpha);
+        self.render_content(target, style, alpha);
     }
 }
 
@@ -307,7 +343,9 @@ impl Component for Button {
                         // Touch started in our area, transform to `Pressed` state.
                         if touch_area.contains(pos) {
                             #[cfg(feature = "haptic")]
-                            play(HapticEffect::ButtonPress);
+                            if self.haptic {
+                                play(HapticEffect::ButtonPress);
+                            }
                             self.set(ctx, State::Pressed);
                             if let Some(duration) = self.long_press {
                                 self.long_timer = Some(ctx.request_timer(duration));
@@ -351,7 +389,9 @@ impl Component for Button {
                     self.long_timer = None;
                     if matches!(self.state, State::Pressed) {
                         #[cfg(feature = "haptic")]
-                        play(HapticEffect::ButtonPress);
+                        if self.haptic {
+                            play(HapticEffect::ButtonPress);
+                        }
                         self.set(ctx, State::Initial);
                         return Some(ButtonMsg::LongPressed);
                     }
@@ -370,8 +410,8 @@ impl Component for Button {
 
     fn render<'s>(&self, target: &mut impl Renderer<'s>) {
         let style = self.style();
-        self.render_background(target, style);
-        self.render_content(target, style);
+        self.render_background(target, style, 0xFF);
+        self.render_content(target, style, 0xFF);
     }
 
     #[cfg(feature = "ui_bounds")]
@@ -605,6 +645,7 @@ impl IconText {
         area: Rect,
         style: &ButtonStyle,
         baseline_offset: Offset,
+        alpha: u8,
     ) {
         let width = self.text.map(|t| style.font.text_width(t));
 
@@ -635,6 +676,7 @@ impl IconText {
                 shape::Text::new(text_pos, t)
                     .with_font(style.font)
                     .with_fg(style.text_color)
+                    .with_alpha(alpha)
                     .render(target)
             });
         }
@@ -643,6 +685,7 @@ impl IconText {
             shape::ToifImage::new(icon_pos, self.icon.toif)
                 .with_align(Alignment2D::CENTER)
                 .with_fg(style.icon_color)
+                .with_alpha(alpha)
                 .render(target);
         }
     }

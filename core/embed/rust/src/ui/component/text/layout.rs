@@ -239,10 +239,19 @@ impl TextLayout {
 
     /// Draw as much text as possible on the current screen.
     pub fn render_text2<'s>(&self, text: &str, target: &mut impl Renderer<'s>) -> LayoutFit {
+        self.render_text_with_alpha(text, target, 255)
+    }
+    /// Draw as much text as possible on the current screen.
+    pub fn render_text_with_alpha<'s>(
+        &self,
+        text: &str,
+        target: &mut impl Renderer<'s>,
+        alpha: u8,
+    ) -> LayoutFit {
         self.layout_text(
             text,
             &mut self.initial_cursor(),
-            &mut TextRenderer2::new(target),
+            &mut TextRenderer2::new(target).with_alpha(alpha),
         )
     }
 
@@ -541,16 +550,29 @@ impl LayoutSink for TextRenderer {
     }
 }
 
-pub struct TextRenderer2<'a, 's, R>(pub &'a mut R, core::marker::PhantomData<&'s ()>)
+pub struct TextRenderer2<'a, 's, R>
 where
-    R: Renderer<'s>;
+    R: Renderer<'s>,
+{
+    pub renderer: &'a mut R,
+    pd: core::marker::PhantomData<&'s ()>,
+    alpha: u8,
+}
 
 impl<'a, 's, R> TextRenderer2<'a, 's, R>
 where
     R: Renderer<'s>,
 {
     pub fn new(target: &'a mut R) -> Self {
-        Self(target, core::marker::PhantomData)
+        Self {
+            renderer: target,
+            pd: core::marker::PhantomData,
+            alpha: 255,
+        }
+    }
+
+    pub fn with_alpha(self, alpha: u8) -> Self {
+        Self { alpha, ..self }
     }
 }
 
@@ -562,14 +584,16 @@ where
         shape::Text::new(cursor, text)
             .with_font(layout.style.text_font)
             .with_fg(layout.style.text_color)
-            .render(self.0);
+            .with_alpha(self.alpha)
+            .render(self.renderer);
     }
 
     fn hyphen(&mut self, cursor: Point, layout: &TextLayout) {
         shape::Text::new(cursor, "-")
             .with_font(layout.style.text_font)
             .with_fg(layout.style.hyphen_color)
-            .render(self.0);
+            .with_alpha(self.alpha)
+            .render(self.renderer);
     }
 
     fn ellipsis(&mut self, cursor: Point, layout: &TextLayout) {
@@ -578,12 +602,14 @@ where
             shape::ToifImage::new(bottom_left, icon.toif)
                 .with_align(Alignment2D::BOTTOM_LEFT)
                 .with_fg(layout.style.ellipsis_color)
-                .render(self.0);
+                .with_alpha(self.alpha)
+                .render(self.renderer);
         } else {
             shape::Text::new(cursor, ELLIPSIS)
                 .with_font(layout.style.text_font)
                 .with_fg(layout.style.ellipsis_color)
-                .render(self.0);
+                .with_alpha(self.alpha)
+                .render(self.renderer);
         }
     }
 
@@ -592,12 +618,14 @@ where
             shape::ToifImage::new(cursor, icon.toif)
                 .with_align(Alignment2D::BOTTOM_LEFT)
                 .with_fg(layout.style.ellipsis_color)
-                .render(self.0);
+                .with_alpha(self.alpha)
+                .render(self.renderer);
         } else {
             shape::Text::new(cursor, ELLIPSIS)
                 .with_font(layout.style.text_font)
                 .with_fg(layout.style.ellipsis_color)
-                .render(self.0);
+                .with_alpha(self.alpha)
+                .render(self.renderer);
         }
     }
 }
