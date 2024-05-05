@@ -35,9 +35,11 @@ pub const GREY_DARK: Color = Color::rgb(0x46, 0x48, 0x4A);
 pub const GREY: Color = Color::rgb(0x8B, 0x8F, 0x93); // secondary text, subtitle, instructions
 pub const GREY_LIGHT: Color = Color::rgb(0xC7, 0xCD, 0xD3); // content
 pub const GREY_EXTRA_LIGHT: Color = Color::rgb(0xF0, 0xF0, 0xF0); // primary text, header
+pub const GREEN_DARK: Color = Color::rgb(0x06, 0x1E, 0x19);
 pub const GREEN: Color = Color::rgb(0x08, 0x74, 0x48);
 pub const GREEN_LIGHT: Color = Color::rgb(0x0B, 0xA5, 0x67);
 pub const GREEN_LIME: Color = Color::rgb(0x9B, 0xE8, 0x87);
+pub const ORANGE_DARK: Color = Color::rgb(0x18, 0x0C, 0x0A);
 pub const ORANGE_DIMMED: Color = Color::rgb(0x9E, 0x57, 0x42);
 pub const ORANGE_LIGHT: Color = Color::rgb(0xFF, 0x8D, 0x6A); // cancel button
 
@@ -46,7 +48,6 @@ pub const RED: Color = Color::rgb(0xE7, 0x0E, 0x0E); // button
 pub const RED_DARK: Color = Color::rgb(0xAE, 0x09, 0x09); // button pressed
 pub const YELLOW: Color = Color::rgb(0xD9, 0x9E, 0x00); // button
 pub const YELLOW_DARK: Color = Color::rgb(0x7A, 0x58, 0x00); // button pressed
-pub const GREEN_DARK: Color = Color::rgb(0x00, 0x55, 0x1D); // button pressed
 pub const BLUE: Color = Color::rgb(0x06, 0x1E, 0xAD); // button
 pub const BLUE_DARK: Color = Color::rgb(0x04, 0x10, 0x58); // button pressed
 pub const OFF_WHITE: Color = Color::rgb(0xDE, 0xDE, 0xDE); // very light grey
@@ -109,6 +110,20 @@ include_icon!(
 );
 include_icon!(ICON_CENTRAL_CIRCLE, "model_mercury/res/central_circle.toif");
 
+// Scrollbar/PIN dots - taken from model T
+include_icon!(DOT_ACTIVE, "model_mercury/res/scroll-active.toif");
+include_icon!(DOT_INACTIVE, "model_mercury/res/scroll-inactive.toif");
+include_icon!(
+    DOT_INACTIVE_HALF,
+    "model_mercury/res/scroll-inactive-half.toif"
+);
+include_icon!(
+    DOT_INACTIVE_QUARTER,
+    "model_mercury/res/scroll-inactive-quarter.toif"
+);
+include_icon!(DOT_SMALL, "model_mercury/res/scroll-small.toif");
+include_icon!(ICON_PIN_BULLET, "model_mercury/res/pin_bullet6.toif");
+
 // TODO remove TT icons:
 
 // Button icons.
@@ -162,16 +177,6 @@ include_icon!(ICON_LOGO_EMPTY, "model_tt/res/lock_empty.toif");
 
 // Default homescreen
 pub const IMAGE_HOMESCREEN: &[u8] = include_res!("model_tt/res/bg.jpg");
-
-// Scrollbar/PIN dots.
-include_icon!(DOT_ACTIVE, "model_tt/res/scroll-active.toif");
-include_icon!(DOT_INACTIVE, "model_tt/res/scroll-inactive.toif");
-include_icon!(DOT_INACTIVE_HALF, "model_tt/res/scroll-inactive-half.toif");
-include_icon!(
-    DOT_INACTIVE_QUARTER,
-    "model_tt/res/scroll-inactive-quarter.toif"
-);
-include_icon!(DOT_SMALL, "model_tt/res/scroll-small.toif");
 
 pub const fn label_default() -> TextStyle {
     TEXT_NORMAL
@@ -399,6 +404,7 @@ pub const fn button_danger() -> ButtonStyleSheet {
     }
 }
 
+// TODO: delete
 pub const fn button_reset() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
@@ -425,7 +431,8 @@ pub const fn button_reset() -> ButtonStyleSheet {
     }
 }
 
-pub const fn button_pin() -> ButtonStyleSheet {
+// used for PIN digit keys and passphrase/recovery letter keys
+pub const fn button_keyboard() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
             font: Font::NORMAL,
@@ -436,9 +443,9 @@ pub const fn button_pin() -> ButtonStyleSheet {
         },
         active: &ButtonStyle {
             font: Font::NORMAL,
-            text_color: GREY_LIGHT,
-            button_color: GREY_EXTRA_DARK,
-            icon_color: GREY_LIGHT,
+            text_color: BG,
+            button_color: GREY_LIGHT,
+            icon_color: BG,
             background_color: BG,
         },
         disabled: &ButtonStyle {
@@ -451,24 +458,49 @@ pub const fn button_pin() -> ButtonStyleSheet {
     }
 }
 
-// TODO: will button_pin_xyz styles be the same for PIN and Mnemonic keyboard?
-// Wait for Figma
 pub const fn button_pin_confirm() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
             font: Font::MONO,
             text_color: FG,
-            button_color: BG,
-            icon_color: GREEN_LIGHT,
+            button_color: GREEN_DARK,
+            icon_color: GREEN_LIME,
             background_color: BG,
         },
         active: &ButtonStyle {
             font: Font::MONO,
             text_color: FG,
-            button_color: GREY_DARK,
-            icon_color: GREEN_LIGHT,
+            button_color: GREEN_LIGHT,
+            icon_color: GREEN_DARK,
             background_color: BG,
         },
+        disabled: &ButtonStyle {
+            font: Font::MONO,
+            text_color: GREY_DARK,
+            button_color: BG,
+            icon_color: GREY_DARK,
+            background_color: BG,
+        },
+    }
+}
+
+pub const fn button_pin_cancel() -> ButtonStyleSheet {
+    ButtonStyleSheet {
+        normal: &ButtonStyle {
+            font: Font::MONO,
+            text_color: FG,
+            button_color: BG, // TODO: gradient
+            icon_color: ORANGE_LIGHT,
+            background_color: BG,
+        },
+        active: &ButtonStyle {
+            font: Font::MONO,
+            text_color: FG,
+            button_color: ORANGE_LIGHT,
+            icon_color: BG,
+            background_color: BG,
+        },
+        // not used
         disabled: &ButtonStyle {
             font: Font::MONO,
             text_color: FG,
@@ -479,7 +511,34 @@ pub const fn button_pin_confirm() -> ButtonStyleSheet {
     }
 }
 
-pub const fn button_pin_autocomplete() -> ButtonStyleSheet {
+pub const fn button_pin_erase() -> ButtonStyleSheet {
+    ButtonStyleSheet {
+        normal: &ButtonStyle {
+            font: Font::MONO,
+            text_color: FG,
+            button_color: BG, // TODO: gradient
+            icon_color: GREY,
+            background_color: BG,
+        },
+        active: &ButtonStyle {
+            font: Font::MONO,
+            text_color: FG,
+            button_color: GREY_LIGHT,
+            icon_color: BG,
+            background_color: BG,
+        },
+        // not used
+        disabled: &ButtonStyle {
+            font: Font::MONO,
+            text_color: FG,
+            button_color: BG,
+            icon_color: GREEN_LIGHT,
+            background_color: BG,
+        },
+    }
+}
+
+pub const fn button_bip39_autocomplete() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
             font: Font::MONO,
@@ -691,7 +750,7 @@ pub const RECOVERY_SPACING: i16 = 18;
 pub const CORNER_BUTTON_SIDE: i16 = 44;
 pub const CORNER_BUTTON_SPACING: i16 = BUTTON_SPACING;
 pub const INFO_BUTTON_HEIGHT: i16 = 44;
-pub const PIN_BUTTON_HEIGHT: i16 = 40;
+pub const PIN_BUTTON_HEIGHT: i16 = 52;
 pub const MNEMONIC_BUTTON_HEIGHT: i16 = 52;
 pub const RESULT_PADDING: i16 = 6;
 pub const RESULT_FOOTER_START: i16 = 171;
