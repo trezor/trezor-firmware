@@ -67,18 +67,6 @@ impl Div<Duration> for Duration {
     }
 }
 
-impl From<f32> for Duration {
-    fn from(value: f32) -> Self {
-        Self::from_millis((value * 1000.0) as u32)
-    }
-}
-
-impl From<Duration> for f32 {
-    fn from(value: Duration) -> Self {
-        value.to_millis() as f32 / 1000.0
-    }
-}
-
 /* Instants can wrap around and we want them to be comparable even after
  * wrapping around. This works by setting a maximum allowable difference
  * between two Instants to half the range. In checked_add and checked_sub, we
@@ -163,6 +151,7 @@ impl Ord for Instant {
 /// A stopwatch is a utility designed for measuring the amount of time
 /// that elapses between its start and stop points. It can be used in various
 /// situations - animation timing, event timing, testing and debugging.
+#[derive(Clone)]
 pub enum Stopwatch {
     Stopped(Duration),
     Running(Instant),
@@ -214,7 +203,7 @@ impl Stopwatch {
         }
     }
 
-    /// Returns `true` if the stopwatch is currenly running.
+    /// Returns `true` if the stopwatch is currently running.
     pub fn is_running(&self) -> bool {
         matches!(*self, Self::Running(_))
     }
