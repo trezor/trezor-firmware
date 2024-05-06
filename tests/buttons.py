@@ -40,6 +40,14 @@ RESET_WORD_CHECK = [
     (MID, grid(DISPLAY_HEIGHT, 5, 4)),
 ]
 
+VERTICAL_MENU = [
+    (MID, grid(DISPLAY_HEIGHT, 4, 1)),
+    (MID, grid(DISPLAY_HEIGHT, 4, 2)),
+    (MID, grid(DISPLAY_HEIGHT, 4, 3)),
+]
+
+TAP_TO_CONFIRM = VERTICAL_MENU[1]
+
 
 BUTTON_LETTERS_BIP39 = ("abc", "def", "ghi", "jkl", "mno", "pqr", "stu", "vwx", "yz")
 BUTTON_LETTERS_SLIP39 = ("ab", "cd", "ef", "ghij", "klm", "nopq", "rs", "tuv", "wxyz")
