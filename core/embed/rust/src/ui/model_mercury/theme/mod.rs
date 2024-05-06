@@ -581,14 +581,10 @@ pub const fn button_clear() -> ButtonStyleSheet {
 
 pub const fn loader_default() -> LoaderStyleSheet {
     LoaderStyleSheet {
-        normal: &LoaderStyle {
-            icon: None,
-            loader_color: FG,
-            background_color: BG,
-        },
         active: &LoaderStyle {
             icon: None,
-            loader_color: GREEN,
+            active: GREEN_LIGHT,
+            inactive: GREY_EXTRA_DARK,
             background_color: BG,
         },
     }
@@ -596,14 +592,10 @@ pub const fn loader_default() -> LoaderStyleSheet {
 
 pub const fn loader_lock_icon() -> LoaderStyleSheet {
     LoaderStyleSheet {
-        normal: &LoaderStyle {
-            icon: Some((ICON_LOCK_BIG, FG)),
-            loader_color: FG,
-            background_color: BG,
-        },
         active: &LoaderStyle {
             icon: Some((ICON_LOCK_BIG, FG)),
-            loader_color: GREEN,
+            active: GREEN_LIGHT,
+            inactive: GREY_EXTRA_DARK,
             background_color: BG,
         },
     }
