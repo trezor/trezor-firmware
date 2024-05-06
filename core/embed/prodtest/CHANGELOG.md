@@ -1,4 +1,16 @@
 
+## 0.2.6 [6th May 2024]
+
+### Added
+- Added FIRMWARE VERSION command.
+
+### Changed
+- [T3T1] Changed USB manufacturer string to "Trezor Company" and product string to "Trezor Safe 5" in the USB descriptor strings.  [#3770]
+
+### Fixed
+- [T3T1] Fixed `WIPE` command on STM32U5.  [#3769]
+
+
 ## 0.2.5 [16th April 2024]
 
 ### Added
@@ -29,6 +41,7 @@
 ### Changed
 - [T2B1] Start with all-white screen instead of border.  [#3325]
 
-
 [#3325]: https://github.com/trezor/trezor-firmware/pull/3325
 [#3370]: https://github.com/trezor/trezor-firmware/pull/3370
+[#3769]: https://github.com/trezor/trezor-firmware/pull/3769
+[#3770]: https://github.com/trezor/trezor-firmware/pull/3770
