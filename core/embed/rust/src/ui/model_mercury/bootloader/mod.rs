@@ -36,8 +36,9 @@ use super::theme::BLACK;
 #[cfg(feature = "new_rendering")]
 use crate::ui::{
     constant,
-    display::toif::Toif,
+    display::{toif::Toif, LOADER_MAX},
     geometry::{Alignment, Alignment2D},
+    model_mercury::shapes::render_loader,
     shape,
     shape::render_on_display,
 };
@@ -122,19 +123,18 @@ impl ModelMercuryFeatures {
             let center_text_offset: i16 = 10;
             let center = SCREEN.center() + Offset::y(loader_offset);
             let inactive_color = bg_color.blend(fg_color, 85);
+            let end = ((progress as i32 * 8 * shape::PI4 as i32) / 1000) as i16;
 
-            shape::Circle::new(center, constant::LOADER_OUTER)
-                .with_bg(inactive_color)
-                .render(target);
-
-            shape::Circle::new(center, constant::LOADER_OUTER)
-                .with_bg(fg_color)
-                .with_end_angle(((progress as i32 * shape::PI4 as i32 * 8) / 1000) as i16)
-                .render(target);
-
-            shape::Circle::new(center, constant::LOADER_INNER + 2)
-                .with_bg(bg_color)
-                .render(target);
+            render_loader(
+                center,
+                inactive_color,
+                fg_color,
+                bg_color,
+                0,
+                end,
+                progress >= LOADER_MAX,
+                target,
+            );
 
             if let Some((icon, color)) = icon {
                 shape::ToifImage::new(center, icon.toif)
