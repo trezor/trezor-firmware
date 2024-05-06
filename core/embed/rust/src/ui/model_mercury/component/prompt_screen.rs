@@ -139,7 +139,7 @@ impl crate::ui::flow::Swipable for PromptScreen {}
 #[cfg(feature = "ui_debug")]
 impl crate::trace::Trace for PromptScreen {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        t.component("StatusScreen");
+        t.component("PromptScreen");
         t.child("button", &self.button);
     }
 }
