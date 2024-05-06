@@ -9,9 +9,9 @@ use crate::{
             text::paragraphs::{Paragraph, Paragraphs},
             Child, Component, Event, EventCtx, Label, Never, Pad,
         },
-        display::{self, Font},
+        display::{self, Font, LOADER_MAX},
         geometry::{Insets, Offset, Rect},
-        model_mercury::constant,
+        model_mercury::{constant, shapes::render_loader},
         shape,
         shape::Renderer,
         util::animation_disabled,
@@ -112,9 +112,9 @@ impl Component for Progress {
         self.title.render(target);
 
         let center = constant::screen().center() + Offset::y(self.loader_y_offset);
-        let active_color = theme::FG;
+        let active_color = theme::GREEN_LIGHT;
         let background_color = theme::BG;
-        let inactive_color = background_color.blend(active_color, 85);
+        let inactive_color = theme::GREY_EXTRA_DARK;
 
         let (start, end) = if self.indeterminate {
             let start = (self.value - 100) % 1000;
@@ -127,23 +127,16 @@ impl Component for Progress {
             (0, end)
         };
 
-        shape::Circle::new(center, constant::LOADER_OUTER)
-            .with_bg(inactive_color)
-            .render(target);
-
-        shape::Circle::new(center, constant::LOADER_OUTER)
-            .with_bg(active_color)
-            .with_start_angle(start)
-            .with_end_angle(end)
-            .render(target);
-
-        shape::Circle::new(center, constant::LOADER_INNER + 2)
-            .with_bg(active_color)
-            .render(target);
-
-        shape::Circle::new(center, constant::LOADER_INNER)
-            .with_bg(background_color)
-            .render(target);
+        render_loader(
+            center,
+            inactive_color,
+            active_color,
+            background_color,
+            start,
+            end,
+            !self.indeterminate && self.value >= LOADER_MAX,
+            target,
+        );
 
         self.description_pad.render(target);
         self.description.render(target);
