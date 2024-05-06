@@ -108,7 +108,7 @@ features = ["nightly"]
 # Build dependencies
 
 [build-dependencies.bindgen]
-version = "0.60.1"
+version = "0.62.0"
 default_features = false
 features = ["runtime"]
 
