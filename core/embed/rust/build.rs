@@ -77,7 +77,10 @@ fn generate_qstr_bindings() {
     bindgen::Builder::default()
         .header("qstr.h")
         // Build the Qstr enum as a newtype so we can define method on it.
-        .default_enum_style(bindgen::EnumVariation::NewType { is_bitfield: false })
+        .default_enum_style(bindgen::EnumVariation::NewType {
+            is_bitfield: false,
+            is_global: false,
+        })
         // Pass in correct include paths.
         .clang_args(&[
             "-I",
