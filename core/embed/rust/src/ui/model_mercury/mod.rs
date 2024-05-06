@@ -11,6 +11,7 @@ pub mod flow;
 #[cfg(feature = "micropython")]
 pub mod layout;
 pub mod screens;
+pub mod shapes;
 
 pub struct ModelMercuryFeatures;
 
