@@ -80,15 +80,17 @@ async def confirm_instruction(
                 continue
 
             if ui_property.default_value_to_hide == value:
-                continue
+                if not property_template.is_nullable or not (value is None):
+                    continue
 
+            display_text = "null" if value is None else property_template.format(instruction, value)
             await confirm_properties(
                 "confirm_instruction",
                 f"{instruction_index}/{instructions_count}: {instruction.ui_name}",
                 (
                     (
                         ui_property.display_name,
-                        property_template.format(instruction, value),
+                        display_text,
                     ),
                 ),
             )

@@ -51,8 +51,15 @@ class Instruction:
         for property_template in property_templates:
             is_included = True
             if property_template.is_optional:
+                if property_template.is_nullable:
+                    raise DataError("Parameter is nullable and optional")
                 is_included = True if reader.get() == 1 else False
 
+            if property_template.is_nullable:
+                is_included = True if reader.get() == 1 else False
+                if not is_included:
+                    if not property_template.is_nullable or reader.remaining_count() != 0:
+                        property_template.parse(reader)
             parsed_data[property_template.name] = (
                 property_template.parse(reader) if is_included else None
             )

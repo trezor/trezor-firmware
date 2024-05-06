@@ -161,6 +161,7 @@ def get_instruction(
                         "${parameter["name"]}",
                         ${parameter["type"] == "authority"},
                         ${parameter["optional"]},
+                        ${parameter.get("nullable", False)},
                         ${programs["types"][parameter["type"]]["parse"]},
                         ${programs["types"][parameter["type"]]["format"]},
                     ),
