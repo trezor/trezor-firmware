@@ -5,8 +5,9 @@ use crate::{
     ui::{
         animation::Animation,
         component::{Component, Event, EventCtx, Pad},
-        display::{self, toif::Icon, Color},
+        display::{self, toif::Icon, Color, LOADER_MAX},
         geometry::{Alignment2D, Offset, Rect},
+        model_mercury::shapes::render_loader,
         shape::{self, Renderer},
         util::animation_disabled,
     },
@@ -52,7 +53,7 @@ impl Loader {
 
     pub fn with_styles(styles: LoaderStyleSheet) -> Self {
         Self {
-            pad: Pad::with_background(styles.normal.background_color),
+            pad: Pad::with_background(styles.active.background_color),
             state: State::Initial,
             growing_duration: Duration::from_millis(GROWING_DURATION_MS),
             shrinking_duration: Duration::from_millis(SHRINKING_DURATION_MS),
@@ -190,17 +191,13 @@ impl Component for Loader {
         let now = Instant::now();
 
         if let Some(progress) = self.progress(now) {
-            let style = if progress < display::LOADER_MAX {
-                self.styles.normal
-            } else {
-                self.styles.active
-            };
+            let style = self.styles.active;
 
             self.pad.paint();
             display::loader(
                 progress,
                 self.offset_y,
-                style.loader_color,
+                style.active,
                 style.background_color,
                 style.icon,
             );
@@ -216,30 +213,29 @@ impl Component for Loader {
         let now = Instant::now();
 
         if let Some(progress) = self.progress(now) {
-            let style = if progress < display::LOADER_MAX {
-                self.styles.normal
-            } else {
-                self.styles.active
-            };
+            let style = self.styles.active;
 
             self.pad.render(target);
 
             let center = self.pad.area.center();
 
-            let inactive_color = Color::black().blend(style.loader_color, 85);
+            let inactive_color = style.inactive;
+            let active_color = style.active;
+            let background_color = style.background_color;
 
-            shape::Circle::new(center, constant::LOADER_OUTER)
-                .with_bg(inactive_color)
-                .render(target);
+            let end = ((progress as i32 * 8 * shape::PI4 as i32) / 1000) as i16;
+            let start = 0;
 
-            shape::Circle::new(center, constant::LOADER_OUTER)
-                .with_bg(style.loader_color)
-                .with_end_angle(((progress as i32 * shape::PI4 as i32 * 8) / 1000) as i16)
-                .render(target);
-
-            shape::Circle::new(center, constant::LOADER_INNER)
-                .with_bg(style.background_color)
-                .render(target);
+            render_loader(
+                center,
+                inactive_color,
+                active_color,
+                background_color,
+                start,
+                end,
+                progress >= LOADER_MAX,
+                target,
+            );
 
             if let Some((icon, color)) = style.icon {
                 shape::ToifImage::new(center, icon.toif)
@@ -252,13 +248,13 @@ impl Component for Loader {
 }
 
 pub struct LoaderStyleSheet {
-    pub normal: &'static LoaderStyle,
     pub active: &'static LoaderStyle,
 }
 
 pub struct LoaderStyle {
     pub icon: Option<(Icon, Color)>,
-    pub loader_color: Color,
+    pub active: Color,
+    pub inactive: Color,
     pub background_color: Color,
 }
 
