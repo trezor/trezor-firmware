@@ -48,7 +48,7 @@ impl<T: Component + Paginate + Clone> SwipePage<T> {
     fn handle_transition(ctx: &mut EventCtx, event: Event, transition: &mut Transition<T>) -> bool {
         let mut finished = false;
         if let Event::Timer(EventCtx::ANIM_FRAME_TIMER) = event {
-            if transition.animation.finished(Instant::now()) || util::animation_disabled() {
+            if transition.animation.finished(Instant::now()) {
                 finished = true;
             } else {
                 ctx.request_anim_frame();
@@ -125,6 +125,15 @@ impl<T: Component + Paginate + Clone> Swipable for SwipePage<T> {
             }
             _ => {}
         };
+        self.current = match direction {
+            SwipeDirection::Left | SwipeDirection::Up => (self.current + 1).min(self.pages - 1),
+            SwipeDirection::Right | SwipeDirection::Down => self.current.saturating_sub(1),
+        };
+        if util::animation_disabled() {
+            self.inner.change_page(self.current);
+            ctx.request_paint();
+            return true;
+        }
         self.transition = Some(Transition {
             cloned: unwrap!(Gc::new(self.inner.clone())),
             animation: Animation::new(
@@ -135,10 +144,6 @@ impl<T: Component + Paginate + Clone> Swipable for SwipePage<T> {
             ),
             direction,
         });
-        self.current = match direction {
-            SwipeDirection::Left | SwipeDirection::Up => (self.current + 1).min(self.pages - 1),
-            SwipeDirection::Right | SwipeDirection::Down => self.current.saturating_sub(1),
-        };
         self.inner.change_page(self.current);
         ctx.request_anim_frame();
         ctx.request_paint();

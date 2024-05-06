@@ -64,6 +64,12 @@ impl<Q: FlowState, S: FlowStore> SwipeFlow<Q, S> {
             self.transition = Transition::Internal;
             return;
         }
+        if util::animation_disabled() {
+            self.state = state;
+            self.store.event(state.index(), ctx, Event::Attach);
+            ctx.request_paint();
+            return;
+        }
         self.transition = Transition::External {
             prev_state: self.state,
             animation: Animation::new(
@@ -106,7 +112,7 @@ impl<Q: FlowState, S: FlowStore> SwipeFlow<Q, S> {
             Transition::External { animation, .. }
                 if matches!(event, Event::Timer(EventCtx::ANIM_FRAME_TIMER)) =>
             {
-                if animation.finished(Instant::now()) || util::animation_disabled() {
+                if animation.finished(Instant::now()) {
                     finished = true;
                     ctx.request_paint();
                     self.store.event(i, ctx, Event::Attach)
