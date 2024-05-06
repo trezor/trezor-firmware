@@ -45,6 +45,17 @@ impl<T: Component + Paginate + Clone> SwipePage<T> {
         }
     }
 
+    pub fn horizontal(inner: T) -> Self {
+        Self {
+            inner,
+            bounds: Rect::zero(),
+            axis: Axis::Horizontal,
+            pages: 1,
+            current: 0,
+            transition: None,
+        }
+    }
+
     fn handle_transition(ctx: &mut EventCtx, event: Event, transition: &mut Transition<T>) -> bool {
         let mut finished = false;
         if let Event::Timer(EventCtx::ANIM_FRAME_TIMER) = event {

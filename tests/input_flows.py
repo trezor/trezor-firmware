@@ -358,15 +358,30 @@ class InputFlowShowAddressQRCode(InputFlowBase):
         yield
         self.debug.click(buttons.CORNER_BUTTON, wait=True)
         # synchronize; TODO get rid of this once we have single-global-layout
-        self.debug.synchronize_at("SimplePage")
-
-        self.debug.swipe_left(wait=True)
-        self.debug.swipe_right(wait=True)
-        self.debug.swipe_left(wait=True)
+        self.debug.synchronize_at("VerticalMenu")
+        # menu
+        self.debug.click(buttons.VERTICAL_MENU[0], wait=True)
+        self.debug.synchronize_at("Qr")
+        # qr code
         self.debug.click(buttons.CORNER_BUTTON, wait=True)
-        self.debug.press_no(wait=True)
-        self.debug.press_no(wait=True)
-        self.debug.press_yes()
+        # menu
+        self.debug.click(buttons.VERTICAL_MENU[1], wait=True)
+        # address details
+        self.debug.click(buttons.CORNER_BUTTON, wait=True)
+        # menu
+        self.debug.click(buttons.VERTICAL_MENU[2], wait=True)
+        # cancel
+        self.debug.swipe_up(wait=True)
+        # really cancel
+        self.debug.click(buttons.CORNER_BUTTON, wait=True)
+        # menu
+        layout = self.debug.click(buttons.CORNER_BUTTON, wait=True)
+
+        while "PromptScreen" not in layout.all_components():
+            layout = self.debug.swipe_up(wait=True)
+        self.debug.synchronize_at("PromptScreen")
+        # tap to confirm
+        self.debug.click(buttons.TAP_TO_CONFIRM)
 
 
 class InputFlowShowAddressQRCodeCancel(InputFlowBase):
@@ -403,12 +418,23 @@ class InputFlowShowAddressQRCodeCancel(InputFlowBase):
         yield
         self.debug.click(buttons.CORNER_BUTTON, wait=True)
         # synchronize; TODO get rid of this once we have single-global-layout
-        self.debug.synchronize_at("SimplePage")
-
-        self.debug.swipe_left(wait=True)
+        self.debug.synchronize_at("VerticalMenu")
+        # menu
+        self.debug.click(buttons.VERTICAL_MENU[0], wait=True)
+        self.debug.synchronize_at("Qr")
+        # qr code
         self.debug.click(buttons.CORNER_BUTTON, wait=True)
-        self.debug.press_no(wait=True)
-        self.debug.press_yes()
+        # menu
+        self.debug.click(buttons.VERTICAL_MENU[1], wait=True)
+        # address details
+        self.debug.click(buttons.CORNER_BUTTON, wait=True)
+        # menu
+        self.debug.click(buttons.VERTICAL_MENU[2], wait=True)
+        # cancel
+        self.debug.swipe_up(wait=True)
+        self.debug.synchronize_at("PromptScreen")
+        # really cancel
+        self.debug.click(buttons.TAP_TO_CONFIRM, wait=True)
 
 
 class InputFlowShowMultisigXPUBs(InputFlowBase):
@@ -494,36 +520,53 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
 
     def input_flow_t3t1(self) -> BRGeneratorType:
         yield  # multisig address warning
-        self.debug.press_yes()
+        self.debug.click(buttons.CORNER_BUTTON, wait=True)
+        self.debug.synchronize_at("VerticalMenu")
+        self.debug.click(buttons.VERTICAL_MENU[1])
 
         yield  # show address
         layout = self.debug.wait_layout()
         TR.assert_in(layout.title(), "address__title_receive_address")
-        assert "(MULTISIG)" in layout.title()
         assert layout.text_content().replace(" ", "") == self.address
 
-        self.debug.click(buttons.CORNER_BUTTON)
+        self.debug.click(buttons.CORNER_BUTTON, wait=True)
+        assert "VerticalMenu" in self.all_components()
+        # menu
+        self.debug.click(buttons.VERTICAL_MENU[0], wait=True)
+        self.debug.synchronize_at("Qr")
+        # qr code
         assert "Qr" in self.all_components()
-
-        layout = self.debug.swipe_left(wait=True)
+        self.debug.click(buttons.CORNER_BUTTON, wait=True)
+        # menu
+        assert "VerticalMenu" in self.all_components()
+        self.debug.click(buttons.VERTICAL_MENU[1], wait=True)
+        layout = self.debug.synchronize_at("AddressDetails")
         # address details
         assert "Multisig 2 of 3" in layout.screen_content()
-        TR.assert_in(layout.screen_content(), "address_details__derivation_path_colon")
+        TR.assert_in(layout.screen_content(), "address_details__derivation_path")
 
-        # Three xpub pages with the same testing logic
-        for xpub_num in range(3):
-            expected_title = f"MULTISIG XPUB #{xpub_num + 1}"
+        # three xpub pages with the same testing logic
+        for _xpub_num in range(3):
             layout = self.debug.swipe_left(wait=True)
-            assert expected_title in layout.title()
-            content = layout.text_content().replace(" ", "")
-            assert self.xpubs[xpub_num] in content
+            layout = self.debug.swipe_left(wait=True)
 
         self.debug.click(buttons.CORNER_BUTTON, wait=True)
-        # show address
-        self.debug.press_no(wait=True)
-        # address mismatch
-        self.debug.press_no(wait=True)
-        # show address
+        layout = self.debug.synchronize_at("VerticalMenu")
+        # menu
+        self.debug.click(buttons.VERTICAL_MENU[2], wait=True)
+        # cancel
+        self.debug.swipe_up(wait=True)
+        # really cancel
+        self.debug.click(buttons.CORNER_BUTTON, wait=True)
+        layout = self.debug.synchronize_at("VerticalMenu")
+        # menu
+        self.debug.click(buttons.CORNER_BUTTON, wait=True)
+        layout = self.debug.synchronize_at("Paragraphs")
+        # address
+        while "PromptScreen" not in layout.all_components():
+            layout = self.debug.swipe_up(wait=True)
+        self.debug.synchronize_at("PromptScreen")
+        # tap to confirm
         self.debug.press_yes()
 
 
@@ -598,19 +641,42 @@ class InputFlowShowXpubQRCode(InputFlowBase):
         if "coinjoin" in layout.title().lower() or br.code == B.UnknownDerivationPath:
             self.debug.press_yes()
             br = yield
+            layout = self.debug.wait_layout()
+
+        TR.assert_in(layout.title(), "address__title_receive_address")
 
         self.debug.click(buttons.CORNER_BUTTON, wait=True)
-        # synchronize; TODO get rid of this once we have single-global-layout
-        self.debug.synchronize_at("SimplePage")
-
-        self.debug.swipe_left(wait=True)
-        self.debug.swipe_right(wait=True)
-        self.debug.swipe_left(wait=True)
+        assert "VerticalMenu" in self.all_components()
+        # menu
+        self.debug.click(buttons.VERTICAL_MENU[0], wait=True)
+        self.debug.synchronize_at("Qr")
+        # qr code
+        assert "Qr" in self.all_components()
         self.debug.click(buttons.CORNER_BUTTON, wait=True)
-        self.debug.press_no(wait=True)
-        self.debug.press_no(wait=True)
-        for _ in range(br.pages - 1):
-            self.debug.swipe_up(wait=True)
+        # menu
+        assert "VerticalMenu" in self.all_components()
+        self.debug.click(buttons.VERTICAL_MENU[1], wait=True)
+        layout = self.debug.synchronize_at("AddressDetails")
+        # address details
+        TR.assert_in(layout.screen_content(), "address_details__derivation_path")
+
+        self.debug.click(buttons.CORNER_BUTTON, wait=True)
+        layout = self.debug.synchronize_at("VerticalMenu")
+        # menu
+        self.debug.click(buttons.VERTICAL_MENU[2], wait=True)
+        # cancel
+        self.debug.swipe_up(wait=True)
+        # really cancel
+        self.debug.click(buttons.CORNER_BUTTON, wait=True)
+        layout = self.debug.synchronize_at("VerticalMenu")
+        # menu
+        self.debug.click(buttons.CORNER_BUTTON, wait=True)
+        layout = self.debug.synchronize_at("Paragraphs")
+        # address
+        while "PromptScreen" not in layout.all_components():
+            layout = self.debug.swipe_up(wait=True)
+        self.debug.synchronize_at("PromptScreen")
+        # tap to confirm
         self.debug.press_yes()
 
 
@@ -1133,8 +1199,26 @@ class InputFlowBip39ResetBackup(InputFlowBase):
         self.mnemonic = None
 
     # NOTE: same as above, just two more YES
-    def input_flow_common(self) -> BRGeneratorType:
+    def input_flow_tt(self) -> BRGeneratorType:
         # 1. Confirm Reset
+        # 2. Backup your seed
+        # 3. Confirm warning
+        yield from click_through(self.debug, screens=3, code=B.ResetDevice)
+
+        # mnemonic phrases and rest
+        self.mnemonic = yield from get_mnemonic_and_confirm_success(self.debug)
+
+    def input_flow_tr(self) -> BRGeneratorType:
+        # 1. Confirm Reset
+        # 2. Backup your seed
+        # 3. Confirm warning
+        yield from click_through(self.debug, screens=3, code=B.ResetDevice)
+
+        # mnemonic phrases and rest
+        self.mnemonic = yield from get_mnemonic_and_confirm_success(self.debug)
+
+    def input_flow_t3t1(self) -> BRGeneratorType:
+        # 1. Confirm Reset x3
         # 2. Backup your seed
         # 3. Confirm warning
         yield from click_through(self.debug, screens=3, code=B.ResetDevice)

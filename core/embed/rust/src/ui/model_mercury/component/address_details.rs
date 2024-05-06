@@ -56,14 +56,12 @@ impl AddressDetails {
         }
         let result = Self {
             details: Frame::left_aligned(details_title, para.into_paragraphs())
-                .with_cancel_button()
-                .with_border(theme::borders_horizontal_scroll()),
+                .with_cancel_button(),
             xpub_view: Frame::left_aligned(
                 " \n ".into(),
                 Paragraph::new(&theme::TEXT_MONO_GREY_LIGHT, "").into_paragraphs(),
             )
-            .with_cancel_button()
-            .with_border(theme::borders_horizontal_scroll()),
+            .with_cancel_button(),
             xpubs: Vec::new(),
             xpub_page_count: Vec::new(),
             current_page: 0,

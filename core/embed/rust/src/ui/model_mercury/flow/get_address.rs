@@ -222,7 +222,7 @@ impl GetAddress {
             let [xtitle, text]: [TString; 2] = util::iter_into_array(i)?;
             ad.add_xpub(xtitle, text)?;
         }
-        let content_account = SwipePage::vertical(ad).map(|_| Some(FlowMsg::Cancelled));
+        let content_account = SwipePage::horizontal(ad).map(|_| Some(FlowMsg::Cancelled));
 
         // Cancel
         let content_cancel_info = Frame::left_aligned(
