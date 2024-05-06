@@ -63,7 +63,8 @@ void display_physical_fb_clear(void) {
 }
 
 #ifndef BOARDLOADER
-static bool pending_fb_switch = false;
+static volatile bool pending_fb_switch = false;
+static volatile uint32_t last_fb_update_time = 0;
 #endif
 
 #ifndef BOARDLOADER
@@ -82,6 +83,7 @@ void DISPLAY_TE_INTERRUPT_HANDLER(void) {
   }
 
   pending_fb_switch = false;
+  last_fb_update_time = HAL_GetTick();
   __HAL_GPIO_EXTI_CLEAR_FLAG(DISPLAY_TE_PIN);
 }
 
@@ -93,7 +95,7 @@ static void wait_for_fb_switch(void) {
 }
 #endif
 
-static void copy_fb_to_display(uint16_t *fb) {
+static void copy_fb_to_display(const uint16_t *fb) {
   for (int i = 0; i < DISPLAY_RESX * DISPLAY_RESY; i++) {
     // 2 bytes per pixel because we're using RGB 5-6-5 format
     ISSUE_PIXEL_DATA(fb[i]);
@@ -122,7 +124,7 @@ static void switch_fb_manually(void) {
 }
 
 #ifndef BOARDLOADER
-static void switch_fb_in_backround(void) {
+static void switch_fb_in_background(void) {
   if (current_frame_buffer == 0) {
     current_frame_buffer = 1;
 
@@ -169,11 +171,25 @@ void display_refresh(void) {
   if (is_mode_handler()) {
     switch_fb_manually();
   } else {
-    switch_fb_in_backround();
+    switch_fb_in_background();
   }
 #else
   display_panel_set_window(0, 0, DISPLAY_RESX - 1, DISPLAY_RESY - 1);
   switch_fb_manually();
+#endif
+}
+
+void display_ensure_refreshed(void) {
+#ifndef BOARDLOADER
+  if (!is_mode_handler()) {
+    wait_for_fb_switch();
+    // the update time is collected after starting the BG copy, then we need to
+    // wait: for the bg copy to finish and for at least one full refresh cycle
+    // before we can consider the display fully redrawn
+    while (HAL_GetTick() - last_fb_update_time < 40) {
+      __WFI();
+    }
+  }
 #endif
 }
 

@@ -89,10 +89,9 @@ void display_finish_actions(void) {
 int display_set_backlight(int level) {
 #ifdef XFRAMEBUFFER
 #ifndef BOARDLOADER
-  // wait for DMA transfer to finish before changing backlight
-  // so that we know that panel has current data
-  if (backlight_pwm_get() != level && !is_mode_handler()) {
-    bg_copy_wait();
+  // if turning on the backlight, wait until the panel is refreshed
+  if (backlight_pwm_get() < level && !is_mode_handler()) {
+    display_ensure_refreshed();
   }
 #endif
 #endif
