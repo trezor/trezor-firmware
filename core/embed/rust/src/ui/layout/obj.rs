@@ -19,11 +19,13 @@ use crate::{
     ui::{
         component::{Component, Event, EventCtx, Never, Root, TimerToken},
         constant,
-        display::{sync, Color},
+        display::sync,
         geometry::Rect,
-        shape::render_on_display,
     },
 };
+
+#[cfg(feature = "new_rendering")]
+use crate::ui::{display::Color, shape::render_on_display};
 
 #[cfg(feature = "button")]
 use crate::ui::event::ButtonEvent;

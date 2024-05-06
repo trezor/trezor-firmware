@@ -271,6 +271,10 @@ impl<'i> Toif<'i> {
         &self.data[TOIF_HEADER_LENGTH..]
     }
 
+    pub fn original_data(&self) -> &'i [u8] {
+        self.data
+    }
+
     pub fn uncompress(&self, dest: &mut [u8]) {
         let mut ctx = self.decompression_context(None);
         unwrap!(ctx.uncompress(dest));

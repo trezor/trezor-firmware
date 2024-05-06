@@ -1,6 +1,9 @@
-use crate::ui::{
-    display::{toif::Toif, Color},
-    geometry::{Alignment2D, Offset, Point, Rect},
+use crate::{
+    io::BinaryData,
+    ui::{
+        display::{image::ToifInfo, toif::Toif, Color},
+        geometry::{Alignment2D, Offset, Point, Rect},
+    },
 };
 
 use super::{Bitmap, BitmapFormat, Canvas, DrawingCache, Renderer, Shape, ShapeClone};
@@ -14,7 +17,7 @@ pub struct ToifImage<'a> {
     // Image position alignment
     align: Alignment2D,
     // Image data
-    toif: Toif<'a>,
+    toif: BinaryData<'a>,
     // Foreground color
     fg_color: Color,
     // Optional background color
@@ -22,11 +25,21 @@ pub struct ToifImage<'a> {
 }
 
 impl<'a> ToifImage<'a> {
-    pub fn new(pos: Point, toif: Toif<'a>) -> Self {
+    pub fn new_image(pos: Point, toif: BinaryData<'a>) -> Self {
         Self {
             pos,
             align: Alignment2D::TOP_LEFT,
             toif,
+            fg_color: Color::white(),
+            bg_color: None,
+        }
+    }
+
+    pub fn new(pos: Point, toif: Toif<'a>) -> Self {
+        Self {
+            pos,
+            align: Alignment2D::TOP_LEFT,
+            toif: BinaryData::from_slice(&toif.original_data()),
             fg_color: Color::white(),
             bg_color: None,
         }
@@ -65,7 +78,7 @@ impl<'a> ToifImage<'a> {
             Bitmap::new_mut(
                 BitmapFormat::MONO4,
                 None,
-                self.toif.size(),
+                bounds.size(),
                 Some(1),
                 &mut buff[..]
             ),
@@ -113,7 +126,7 @@ impl<'a> ToifImage<'a> {
             Bitmap::new_mut(
                 BitmapFormat::RGB565,
                 None,
-                self.toif.size(),
+                bounds.size(),
                 Some(1),
                 &mut buff[..]
             ),
@@ -146,7 +159,8 @@ impl<'a> ToifImage<'a> {
 
 impl<'a> Shape<'a> for ToifImage<'a> {
     fn bounds(&self, _cache: &DrawingCache<'a>) -> Rect {
-        let size = Offset::new(self.toif.width(), self.toif.height());
+        let info = unwrap!(ToifInfo::parse(self.toif), "Invalid image");
+        let size = info.size();
         Rect::from_top_left_and_size(size.snap(self.pos, self.align), size)
     }
 
@@ -155,7 +169,8 @@ impl<'a> Shape<'a> for ToifImage<'a> {
     }
 
     fn draw(&mut self, canvas: &mut dyn Canvas, cache: &DrawingCache<'a>) {
-        if self.toif.is_grayscale() {
+        let info = unwrap!(ToifInfo::parse(self.toif), "Invalid image");
+        if info.is_grayscale() {
             self.draw_grayscale(canvas, cache);
         } else {
             self.draw_rgb(canvas, cache);

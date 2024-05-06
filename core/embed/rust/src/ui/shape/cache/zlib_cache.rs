@@ -1,6 +1,7 @@
 use crate::{
-    trezorhal::uzlib::{UzlibContext, UZLIB_WINDOW_SIZE},
-    ui::display::toif::Toif,
+    io::BinaryData,
+    trezorhal::uzlib::{ZlibInflate, UZLIB_WINDOW_SIZE},
+    ui::display::image::ToifInfo,
 };
 use core::cell::UnsafeCell;
 use without_alloc::{alloc::LocalAllocLeakExt, FixedVec};
@@ -8,11 +9,11 @@ use without_alloc::{alloc::LocalAllocLeakExt, FixedVec};
 struct ZlibCacheSlot<'a> {
     /// Decompression context for the current zdata.
     /// If `None`, the slot is free to be used.
-    dc: Option<UzlibContext<'a>>,
-    /// Reference to compressed data.
-    zdata: &'a [u8],
-    /// Current offset in docempressed data.
-    offset: usize,
+    dc: Option<ZlibInflate<'a>>,
+    /// Reference to compressed data
+    image: Option<BinaryData<'a>>,
+    /// Current offset in decompressed data
+    output_offset: usize,
     /// Window used by current decompression context.
     /// (It's used just by own dc and nobody else.)
     window: &'a UnsafeCell<[u8; UZLIB_WINDOW_SIZE]>,
@@ -29,36 +30,40 @@ impl<'a> ZlibCacheSlot<'a> {
             .init(UnsafeCell::new([0; UZLIB_WINDOW_SIZE]));
 
         Some(Self {
-            zdata: &[],
-            offset: 0,
             dc: None,
+            image: None,
+            output_offset: 0,
             window,
         })
     }
 
-    fn reset(&mut self, zdata: &'a [u8]) {
+    /// Calling with None makes the slot free
+    fn reset(&mut self, image: Option<BinaryData<'a>>) {
         // Drop the existing decompression context holding
         // a mutable reference to window buffer
         self.dc = None;
 
-        // Now there's nobody else holding any reference to our window
-        // so we can get mutable reference and pass it to a new
-        // instance of the decompression context
-        let window = unsafe { &mut *self.window.get() };
+        if let Some(image) = image {
+            // Now there's nobody else holding any reference to our window
+            // so we can get mutable reference and pass it to a new
+            // instance of the decompression context
+            let window = unsafe { &mut *self.window.get() };
 
-        self.dc = Some(UzlibContext::new(zdata, Some(window)));
-        self.zdata = zdata;
-        self.offset = 0;
+            self.dc = Some(ZlibInflate::new(image, ToifInfo::HEADER_LENGTH, window));
+        }
+
+        self.output_offset = 0;
+        self.image = image;
     }
 
     fn uncompress(&mut self, dest_buf: &mut [u8]) -> Result<bool, ()> {
         if let Some(dc) = self.dc.as_mut() {
-            match dc.uncompress(dest_buf) {
+            match dc.read(dest_buf) {
                 Ok(done) => {
                     if done {
-                        self.dc = None;
+                        self.reset(None);
                     } else {
-                        self.offset += dest_buf.len();
+                        self.output_offset += dest_buf.len();
                     }
                     Ok(done)
                 }
@@ -74,9 +79,9 @@ impl<'a> ZlibCacheSlot<'a> {
             match dc.skip(nbytes) {
                 Ok(done) => {
                     if done {
-                        self.dc = None;
+                        self.reset(None);
                     } else {
-                        self.offset += nbytes;
+                        self.output_offset += nbytes;
                     }
 
                     Ok(done)
@@ -88,11 +93,11 @@ impl<'a> ZlibCacheSlot<'a> {
         }
     }
 
-    fn is_for(&self, zdata: &[u8], offset: usize) -> bool {
-        self.zdata.as_ptr() == zdata.as_ptr()
-            && self.zdata.len() == zdata.len()
-            && self.offset == offset
-            && self.dc.is_some()
+    fn is_for(&self, image: BinaryData<'a>, offset: usize) -> bool {
+        match self.image {
+            Some(current) => current == image && self.output_offset == offset,
+            None => false,
+        }
     }
 }
 
@@ -126,7 +131,7 @@ impl<'a> ZlibCache<'a> {
                 if slot.dc.is_none() {
                     selected = i;
                     break;
-                } else if slot.offset < self.slots[selected].offset {
+                } else if slot.output_offset < self.slots[selected].output_offset {
                     selected = i;
                 }
             }
@@ -138,21 +143,21 @@ impl<'a> ZlibCache<'a> {
 
     pub fn uncompress(
         &mut self,
-        zdata: &'a [u8],
+        image: BinaryData<'a>,
         offset: usize,
         dest_buf: &mut [u8],
     ) -> Result<bool, ()> {
         let slot = self
             .slots
             .iter_mut()
-            .find(|slot| slot.is_for(zdata, offset));
+            .find(|slot| slot.is_for(image, offset));
 
         let slot = match slot {
             Some(slot) => slot,
             None => {
                 let selected = self.select_slot_for_reuse()?;
                 let slot = &mut self.slots[selected];
-                slot.reset(zdata);
+                slot.reset(Some(image));
                 slot.skip(offset)?;
                 slot
             }
@@ -163,12 +168,14 @@ impl<'a> ZlibCache<'a> {
 
     pub fn uncompress_toif(
         &mut self,
-        toif: Toif<'a>,
+        image: BinaryData<'a>,
         from_row: i16,
         dest_buf: &mut [u8],
     ) -> Result<(), ()> {
-        let from_offset = toif.stride() * from_row as usize;
-        self.uncompress(toif.zdata(), from_offset, dest_buf)?;
+        // TODO: optimize this
+        let info = ToifInfo::parse(image).ok_or(())?;
+        let from_offset = info.stride() * from_row as usize;
+        self.uncompress(image, from_offset, dest_buf)?;
         Ok(())
     }
 

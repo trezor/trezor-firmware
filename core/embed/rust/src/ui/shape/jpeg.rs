@@ -1,4 +1,7 @@
-use crate::ui::geometry::{Alignment2D, Offset, Point, Rect};
+use crate::{
+    io::BinaryData,
+    ui::geometry::{Alignment2D, Offset, Point, Rect},
+};
 
 use super::{Bitmap, BitmapFormat, BitmapView, Canvas, DrawingCache, Renderer, Shape, ShapeClone};
 
@@ -11,7 +14,7 @@ pub struct JpegImage<'a> {
     // Image position alignment
     align: Alignment2D,
     /// JPEG data
-    jpeg: &'a [u8],
+    jpeg: BinaryData<'a>,
     /// Scale factor (default 0)
     scale: u8,
     /// Blurring radius or 0 if no blurring required (default 0)
@@ -24,7 +27,7 @@ pub struct JpegImage<'a> {
 }
 
 impl<'a> JpegImage<'a> {
-    pub fn new(pos: Point, jpeg: &'a [u8]) -> Self {
+    pub fn new_image(pos: Point, jpeg: BinaryData<'a>) -> Self {
         JpegImage {
             pos,
             align: Alignment2D::TOP_LEFT,
@@ -34,6 +37,10 @@ impl<'a> JpegImage<'a> {
             jpeg,
             blur_tag: None,
         }
+    }
+
+    pub fn new(pos: Point, jpeg: &'a [u8]) -> Self {
+        Self::new_image(pos, BinaryData::from_slice(jpeg))
     }
 
     pub fn with_align(self, align: Alignment2D) -> Self {

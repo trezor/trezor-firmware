@@ -4,17 +4,11 @@ use heapless::Vec;
 
 use crate::{
     error::Error,
+    io::BinaryData,
     maybe_trace::MaybeTrace,
     micropython::{
-        buffer::{get_buffer, StrBuffer},
-        gc::Gc,
-        iter::IterBuf,
-        list::List,
-        map::Map,
-        module::Module,
-        obj::Obj,
-        qstr::Qstr,
-        util,
+        buffer::StrBuffer, gc::Gc, iter::IterBuf, list::List, map::Map, module::Module, obj::Obj,
+        qstr::Qstr, util,
     },
     strutil::TString,
     translations::TR,
@@ -34,7 +28,7 @@ use crate::{
             },
             ComponentExt, FormattedText, Label, LineBreaking, Timeout,
         },
-        display, geometry,
+        geometry,
         layout::{
             obj::{ComponentMsgObj, LayoutObj},
             result::{CANCELLED, CONFIRMED, INFO},
@@ -398,7 +392,10 @@ extern "C" fn new_confirm_homescreen(n_args: usize, args: *const Obj, kwargs: *m
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let image: Obj = kwargs.get(Qstr::MP_QSTR_image)?;
-        let obj = LayoutObj::new(ConfirmHomescreen::new(title, image))?;
+        let obj = LayoutObj::new(ConfirmHomescreen::new(
+            title,
+            BinaryData::from_object(image)?,
+        ))?;
         Ok(obj.into())
     };
 
@@ -1603,13 +1600,8 @@ extern "C" fn new_confirm_firmware_update(
 
 pub extern "C" fn upy_check_homescreen_format(data: Obj) -> Obj {
     let block = || {
-        // SAFETY: buffer does not outlive this function
-        let buffer = unsafe { get_buffer(data) }?;
-
-        Ok(display::toif::Toif::new(buffer)
-            .map(|toif| check_homescreen_format(&toif))
-            .unwrap_or(false)
-            .into())
+        let image = BinaryData::from_object(data)?;
+        Ok(check_homescreen_format(image).into())
     };
 
     unsafe { util::try_or_raise(block) }

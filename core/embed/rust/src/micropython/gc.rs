@@ -100,6 +100,20 @@ impl<T: ?Sized> Gc<T> {
         // a mutable reference.
         unsafe { this.0.as_mut() }
     }
+
+    /// Return a immutable reference to the value.
+    ///
+    /// # Safety
+    ///
+    /// `Gc` values can originate in the MicroPython interpreter, and these can
+    /// be both shared and mutable. Before calling this function, you have to
+    /// ensure that `this` is unique for the whole lifetime of the
+    /// returned mutable reference.
+    pub unsafe fn as_ref(this: &Self) -> &T {
+        // SAFETY: The caller must guarantee that `this` meets all the requirements for
+        // a immutable reference.
+        unsafe { this.0.as_ref() }
+    }
 }
 
 impl<T: ?Sized> Deref for Gc<T> {

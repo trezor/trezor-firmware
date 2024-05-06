@@ -1,58 +1,25 @@
 use crate::{
-    error::Error,
-    micropython::{buffer::get_buffer, obj::Obj},
+    io::BinaryData,
+    ui::{
+        component::{Component, Event, EventCtx, Never},
+        display,
+        geometry::{Alignment2D, Offset, Rect},
+        shape,
+        shape::Renderer,
+    },
 };
-
-use crate::ui::{
-    component::{Component, Event, EventCtx, Never},
-    display,
-    geometry::{Alignment2D, Offset, Rect},
-    shape,
-    shape::Renderer,
-};
-
-pub enum ImageBuffer {
-    Object { obj: Obj },
-    Slice { data: &'static [u8] },
-}
-
-impl ImageBuffer {
-    pub fn from_object(obj: Obj) -> Result<Self, Error> {
-        if !obj.is_bytes() {
-            return Err(Error::TypeError);
-        }
-        Ok(ImageBuffer::Object { obj })
-    }
-
-    pub fn from_slice(data: &'static [u8]) -> Self {
-        ImageBuffer::Slice { data }
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.data().is_empty()
-    }
-
-    pub fn data(&self) -> &[u8] {
-        match self {
-            // SAFETY: We expect no existing mutable reference. Resulting reference is
-            // discarded before returning to micropython.
-            ImageBuffer::Object { obj } => unsafe { unwrap!(get_buffer(*obj)) },
-            ImageBuffer::Slice { data } => data,
-        }
-    }
-}
 
 pub struct Jpeg {
     area: Rect,
-    data: ImageBuffer,
+    image: BinaryData<'static>,
     scale: u8,
 }
 
 impl Jpeg {
-    pub fn new(data: ImageBuffer, scale: u8) -> Self {
+    pub fn new(image: BinaryData<'static>, scale: u8) -> Self {
         Self {
             area: Rect::zero(),
-            data,
+            image,
             scale,
         }
     }
@@ -71,14 +38,18 @@ impl Component for Jpeg {
     }
 
     fn paint(&mut self) {
-        if let Some((size, _)) = display::tjpgd::jpeg_info(self.data.data()) {
+        // SAFETY: We expect no existing mutable reference. Resulting reference is
+        // discarded before returning to micropython.
+        let jpeg_data = unsafe { self.image.data() };
+
+        if let Some((size, _)) = display::tjpgd::jpeg_info(jpeg_data) {
             let off = Offset::new(size.x / (2 << self.scale), size.y / (2 << self.scale));
-            display::tjpgd::jpeg(self.data.data(), self.area.center() - off, self.scale);
+            display::tjpgd::jpeg(jpeg_data, self.area.center() - off, self.scale);
         }
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        shape::JpegImage::new(self.area.center(), self.data.data())
+        shape::JpegImage::new_image(self.area.center(), self.image)
             .with_align(Alignment2D::CENTER)
             .with_scale(self.scale)
             .render(target);

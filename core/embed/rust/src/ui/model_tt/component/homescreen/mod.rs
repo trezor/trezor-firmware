@@ -1,14 +1,19 @@
 mod render;
 
 use crate::{
-    micropython::gc::Gc,
+    io::BinaryData,
     strutil::TString,
     time::{Duration, Instant},
     translations::TR,
     trezorhal::usb::usb_configured,
     ui::{
         component::{Component, Event, EventCtx, Pad, TimerToken},
-        display::{self, tjpgd::jpeg_info, toif::Icon, Color, Font},
+        display::{
+            self,
+            image::{ImageInfo, ToifFormat},
+            toif::{Icon, Toif},
+            Color, Font,
+        },
         event::{TouchEvent, USBEvent},
         geometry::{Alignment, Alignment2D, Insets, Offset, Point, Rect},
         layout::util::get_user_custom_image,
@@ -21,10 +26,7 @@ use crate::{
     trezorhal::{buffers::BufferJpegWork, uzlib::UZLIB_WINDOW_SIZE},
     ui::{
         constant::HEIGHT,
-        display::{
-            tjpgd::BufferInput,
-            toif::{Toif, ToifFormat},
-        },
+        display::tjpgd::BufferInput,
         model_tt::component::homescreen::render::{
             HomescreenJpeg, HomescreenToif, HOMESCREEN_TOIF_SIZE,
         },
@@ -51,7 +53,7 @@ const LOADER_DURATION: Duration = Duration::from_millis(2000);
 pub struct Homescreen {
     label: TString<'static>,
     notification: Option<(TString<'static>, u8)>,
-    custom_image: Option<Gc<[u8]>>,
+    image: BinaryData<'static>,
     hold_to_lock: bool,
     loader: Loader,
     pad: Pad,
@@ -72,7 +74,7 @@ impl Homescreen {
         Self {
             label,
             notification,
-            custom_image: get_user_custom_image().ok(),
+            image: get_homescreen_image(),
             hold_to_lock,
             loader: Loader::with_lock_icon().with_durations(LOADER_DURATION, LOADER_DURATION / 3),
             pad: Pad::with_background(theme::BG),
@@ -224,11 +226,11 @@ impl Component for Homescreen {
 
             let notification = self.get_notification();
 
-            let mut show_default = true;
-
-            if let Some(ref data) = self.custom_image {
-                if is_image_jpeg(data.as_ref()) {
-                    let input = BufferInput(data.as_ref());
+            match ImageInfo::parse(self.image) {
+                ImageInfo::Jpeg(_) => {
+                    // SAFETY: We expect no existing mutable reference. Resulting reference is
+                    // discarded before returning to micropython.
+                    let input = BufferInput(unsafe { self.image.data() });
                     let mut pool = BufferJpegWork::get_cleared();
                     let mut hs_img = HomescreenJpeg::new(input, pool.buffer.as_mut_slice());
                     homescreen(
@@ -237,9 +239,11 @@ impl Component for Homescreen {
                         notification,
                         self.paint_notification_only,
                     );
-                    show_default = false;
-                } else if is_image_toif(data.as_ref()) {
-                    let input = unwrap!(Toif::new(data.as_ref()));
+                }
+                ImageInfo::Toif(_) => {
+                    // SAFETY: We expect no existing mutable reference. Resulting reference is
+                    // discarded before returning to micropython.
+                    let input = unwrap!(Toif::new(unsafe { self.image.data() }));
                     let mut window = [0; UZLIB_WINDOW_SIZE];
                     let mut hs_img =
                         HomescreenToif::new(input.decompression_context(Some(&mut window)));
@@ -249,20 +253,8 @@ impl Component for Homescreen {
                         notification,
                         self.paint_notification_only,
                     );
-                    show_default = false;
                 }
-            }
-
-            if show_default {
-                let input = BufferInput(IMAGE_HOMESCREEN);
-                let mut pool = BufferJpegWork::get_cleared();
-                let mut hs_img = HomescreenJpeg::new(input, pool.buffer.as_mut_slice());
-                homescreen(
-                    &mut hs_img,
-                    &[text],
-                    notification,
-                    self.paint_notification_only,
-                );
+                _ => {}
             }
         }
     }
@@ -272,19 +264,18 @@ impl Component for Homescreen {
         if self.loader.is_animating() || self.loader.is_completely_grown(Instant::now()) {
             self.render_loader(target);
         } else {
-            let img_data = match self.custom_image {
-                Some(ref img) => img.as_ref(),
-                None => IMAGE_HOMESCREEN,
-            };
-
-            if is_image_jpeg(img_data) {
-                shape::JpegImage::new(self.pad.area.center(), img_data)
-                    .with_align(Alignment2D::CENTER)
-                    .render(target);
-            } else if is_image_toif(img_data) {
-                shape::ToifImage::new(self.pad.area.center(), unwrap!(Toif::new(img_data)))
-                    .with_align(Alignment2D::CENTER)
-                    .render(target);
+            match ImageInfo::parse(self.image) {
+                ImageInfo::Jpeg(_) => {
+                    shape::JpegImage::new_image(self.pad.area.center(), self.image)
+                        .with_align(Alignment2D::CENTER)
+                        .render(target)
+                }
+                ImageInfo::Toif(_) => {
+                    shape::ToifImage::new_image(self.pad.area.center(), self.image)
+                        .with_align(Alignment2D::CENTER)
+                        .render(target)
+                }
+                _ => {}
             }
 
             self.label.map(|t| {
@@ -364,7 +355,7 @@ impl crate::trace::Trace for Homescreen {
 
 pub struct Lockscreen<'a> {
     label: TString<'a>,
-    custom_image: Option<Gc<[u8]>>,
+    image: BinaryData<'a>,
     bootscreen: bool,
     coinjoin_authorized: bool,
 }
@@ -373,7 +364,7 @@ impl<'a> Lockscreen<'a> {
     pub fn new(label: TString<'a>, bootscreen: bool, coinjoin_authorized: bool) -> Self {
         Lockscreen {
             label,
-            custom_image: get_user_custom_image().ok(),
+            image: get_homescreen_image(),
             bootscreen,
             coinjoin_authorized,
         }
@@ -438,52 +429,42 @@ impl Component for Lockscreen<'_> {
             texts = &texts[1..];
         }
 
-        let mut show_default = true;
-
-        if let Some(ref data) = self.custom_image {
-            if is_image_jpeg(data.as_ref()) {
-                let input = BufferInput(data.as_ref());
+        match ImageInfo::parse(self.image) {
+            ImageInfo::Jpeg(_) => {
+                // SAFETY: We expect no existing mutable reference. Resulting reference is
+                // discarded before returning to micropython.
+                let input = BufferInput(unsafe { self.image.data() });
                 let mut pool = BufferJpegWork::get_cleared();
                 let mut hs_img = HomescreenJpeg::new(input, pool.buffer.as_mut_slice());
                 homescreen_blurred(&mut hs_img, texts);
-                show_default = false;
-            } else if is_image_toif(data.as_ref()) {
-                let input = unwrap!(Toif::new(data.as_ref()));
+            }
+            ImageInfo::Toif(_) => {
+                // SAFETY: We expect no existing mutable reference. Resulting reference is
+                // discarded before returning to micropython.
+                let input = unwrap!(Toif::new(unsafe { self.image.data() }));
                 let mut window = [0; UZLIB_WINDOW_SIZE];
                 let mut hs_img =
                     HomescreenToif::new(input.decompression_context(Some(&mut window)));
                 homescreen_blurred(&mut hs_img, texts);
-                show_default = false;
             }
-        }
-
-        if show_default {
-            let input = BufferInput(IMAGE_HOMESCREEN);
-            let mut pool = BufferJpegWork::get_cleared();
-            let mut hs_img = HomescreenJpeg::new(input, pool.buffer.as_mut_slice());
-            homescreen_blurred(&mut hs_img, texts);
+            _ => {}
         }
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        let img_data = match self.custom_image {
-            Some(ref img) => img.as_ref(),
-            None => IMAGE_HOMESCREEN,
-        };
-
         let center = constant::screen().center();
 
-        if is_image_jpeg(img_data) {
-            shape::JpegImage::new(center, img_data)
+        match ImageInfo::parse(self.image) {
+            ImageInfo::Jpeg(_) => shape::JpegImage::new_image(center, self.image)
                 .with_align(Alignment2D::CENTER)
                 .with_blur(4)
                 .with_dim(140)
-                .render(target);
-        } else if is_image_toif(img_data) {
-            shape::ToifImage::new(center, unwrap!(Toif::new(img_data)))
+                .render(target),
+            ImageInfo::Toif(_) => shape::ToifImage::new_image(center, self.image)
                 .with_align(Alignment2D::CENTER)
                 //.with_blur(5)
-                .render(target);
+                .render(target),
+            _ => {}
         }
 
         let (locked, tap) = if self.bootscreen {
@@ -564,37 +545,30 @@ impl Component for Lockscreen<'_> {
     }
 }
 
-pub fn check_homescreen_format(buffer: &[u8]) -> bool {
-    #[cfg(not(feature = "new_rendering"))]
-    let result = is_image_jpeg(buffer) && crate::ui::display::tjpgd::jpeg_test(buffer);
-    #[cfg(feature = "new_rendering")]
-    let result = is_image_jpeg(buffer); // !@# TODO: test like if `new_rendering` is off
-
-    result
+pub fn check_homescreen_format(image: BinaryData, accept_toif: bool) -> bool {
+    match ImageInfo::parse(image) {
+        ImageInfo::Jpeg(info) => {
+            info.width() == HOMESCREEN_IMAGE_WIDTH
+                && info.height() == HOMESCREEN_IMAGE_HEIGHT
+                && info.mcu_height() <= 16
+        }
+        ImageInfo::Toif(info) => {
+            accept_toif
+                && info.width() == HOMESCREEN_TOIF_SIZE
+                && info.height() == HOMESCREEN_TOIF_SIZE
+                && info.format() == ToifFormat::FullColorBE
+        }
+        _ => false,
+    }
 }
 
-fn is_image_jpeg(buffer: &[u8]) -> bool {
-    let jpeg = jpeg_info(buffer);
-    if let Some((size, mcu_height)) = jpeg {
-        if size.x == HOMESCREEN_IMAGE_WIDTH && size.y == HOMESCREEN_IMAGE_HEIGHT && mcu_height <= 16
-        {
-            return true;
+fn get_homescreen_image() -> BinaryData<'static> {
+    if let Ok(image) = get_user_custom_image() {
+        if check_homescreen_format(image, true) {
+            return image;
         }
     }
-    false
-}
-
-fn is_image_toif(buffer: &[u8]) -> bool {
-    let toif = Toif::new(buffer);
-    if let Ok(toif) = toif {
-        if toif.size().x == HOMESCREEN_TOIF_SIZE
-            && toif.size().y == HOMESCREEN_TOIF_SIZE
-            && toif.format() == ToifFormat::FullColorBE
-        {
-            return true;
-        }
-    }
-    false
+    BinaryData::from_slice(IMAGE_HOMESCREEN)
 }
 
 #[cfg(feature = "ui_debug")]

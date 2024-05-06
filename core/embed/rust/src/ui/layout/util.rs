@@ -1,5 +1,6 @@
 use crate::{
     error::Error,
+    io::BinaryData,
     micropython::{
         buffer::{hexlify_bytes, StrBuffer},
         gc::Gc,
@@ -167,10 +168,21 @@ pub extern "C" fn upy_disable_animation(disable: Obj) -> Obj {
     unsafe { try_or_raise(block) }
 }
 
-pub fn get_user_custom_image() -> Result<Gc<[u8]>, Error> {
+/*pub fn get_user_custom_image() -> Result<Gc<[u8]>, Error> {
     let len = get_avatar_len()?;
     let mut data = Gc::<[u8]>::new_slice(len)?;
     // SAFETY: buffer is freshly allocated so nobody else has it.
     load_avatar(unsafe { Gc::<[u8]>::as_mut(&mut data) })?;
     Ok(data)
+}*/
+
+pub fn get_user_custom_image() -> Result<BinaryData<'static>, Error> {
+    let len = get_avatar_len()?;
+    let mut data = Gc::<[u8]>::new_slice(len)?;
+    // SAFETY: buffer is freshly allocated so nobody else has it.
+    load_avatar(unsafe { Gc::<[u8]>::as_mut(&mut data) })?;
+    // Convert to mp_obj_bytes
+    let bytes = Obj::try_from(data.as_ref())?;
+    // Convert to BinaryData
+    BinaryData::from_object(bytes)
 }

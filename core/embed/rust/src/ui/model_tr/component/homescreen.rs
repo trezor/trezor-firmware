@@ -1,5 +1,5 @@
 use crate::{
-    micropython::{buffer::get_buffer, gc::Gc, obj::Obj},
+    io::BinaryData,
     strutil::TString,
     translations::TR,
     trezorhal::usb::usb_configured,
@@ -7,8 +7,10 @@ use crate::{
         component::{Child, Component, Event, EventCtx, Label},
         constant::{HEIGHT, WIDTH},
         display::{
-            self, rect_fill,
-            toif::{Toif, ToifFormat},
+            self,
+            image::{ImageInfo, ToifFormat},
+            rect_fill,
+            toif::Toif,
             Font, Icon,
         },
         event::USBEvent,
@@ -70,7 +72,7 @@ pub struct Homescreen {
     // always painted, so we need to always paint the label too
     label: Label<'static>,
     notification: Option<(TString<'static>, u8)>,
-    custom_image: Option<Gc<[u8]>>,
+    custom_image: Option<BinaryData<'static>>,
     /// Used for HTC functionality to lock device from homescreen
     invisible_buttons: Child<ButtonController>,
     /// Holds the loader component
@@ -92,10 +94,11 @@ impl Homescreen {
         let invisible_btn_layout = ButtonLayout::text_none_text("".into(), "".into());
         let loader =
             loader_description.map(|desc| Child::new(ProgressLoader::new(desc, HOLD_TO_LOCK_MS)));
+
         Self {
             label: Label::centered(label, theme::TEXT_BIG),
             notification,
-            custom_image: get_user_custom_image().ok(),
+            custom_image: get_homescreen_image(),
             invisible_buttons: Child::new(ButtonController::new(invisible_btn_layout)),
             loader,
             show_loader: false,
@@ -104,12 +107,10 @@ impl Homescreen {
     }
 
     fn paint_homescreen_image(&self) {
-        let homescreen = self
-            .custom_image
-            .as_ref()
-            .and_then(|data| Toif::new(data.as_ref()).ok())
-            .filter(check_homescreen_format);
-        if let Some(toif) = homescreen {
+        if let Some(image) = self.custom_image {
+            // SAFETY: We expect no existing mutable reference. Resulting reference is
+            // discarded before returning to micropython.
+            let toif = unwrap!(Toif::new(unsafe { image.data() }));
             toif.draw(TOP_CENTER, Alignment2D::TOP_CENTER, theme::FG, theme::BG);
         } else {
             paint_default_image();
@@ -117,13 +118,8 @@ impl Homescreen {
     }
 
     fn render_homescreen_image<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        let homescreen = self
-            .custom_image
-            .as_ref()
-            .and_then(|data| Toif::new(data.as_ref()).ok())
-            .filter(check_homescreen_format);
-        if let Some(toif) = homescreen {
-            shape::ToifImage::new(TOP_CENTER, toif)
+        if let Some(image) = self.custom_image {
+            shape::ToifImage::new_image(TOP_CENTER, image)
                 .with_align(Alignment2D::TOP_CENTER)
                 .with_fg(theme::FG)
                 .render(target);
@@ -431,12 +427,12 @@ impl Component for Lockscreen<'_> {
 
 pub struct ConfirmHomescreen {
     title: Child<Label<'static>>,
-    image: Obj,
+    image: BinaryData<'static>,
     buttons: Child<ButtonController>,
 }
 
 impl ConfirmHomescreen {
-    pub fn new(title: TString<'static>, image: Obj) -> Self {
+    pub fn new(title: TString<'static>, image: BinaryData<'static>) -> Self {
         let btn_layout = ButtonLayout::cancel_none_text(TR::buttons__change.into());
         ConfirmHomescreen {
             title: Child::new(Label::centered(title, theme::TEXT_BOLD)),
@@ -471,14 +467,13 @@ impl Component for ConfirmHomescreen {
     }
 
     fn paint(&mut self) {
-        // Drawing the image full-screen first and then other things on top
-        // SAFETY: We expect no existing mutable reference. Resulting reference is
-        // discarded before returning to micropython.
-        let image_data = unwrap!(unsafe { get_buffer(self.image) });
-        if image_data.is_empty() {
+        if self.image.is_empty() {
             paint_default_image();
         } else {
-            let toif_data = unwrap!(Toif::new(image_data));
+            // Drawing the image full-screen first and then other things on top
+            // SAFETY: We expect no existing mutable reference. Resulting reference is
+            // discarded before returning to micropython.
+            let toif_data = unwrap!(Toif::new(unsafe { self.image.data() }));
             toif_data.draw(TOP_CENTER, Alignment2D::TOP_CENTER, theme::FG, theme::BG);
         };
         // Need to make all the title background black, so the title text is well
@@ -490,15 +485,10 @@ impl Component for ConfirmHomescreen {
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        // Drawing the image full-screen first and then other things on top
-        // SAFETY: We expect no existing mutable reference. Resulting reference is
-        // discarded before returning to micropython.
-        let image_data = unwrap!(unsafe { get_buffer(self.image) });
-        if image_data.is_empty() {
+        if self.image.is_empty() {
             render_default_image(target);
         } else {
-            let toif_data = unwrap!(Toif::new(image_data));
-            shape::ToifImage::new(TOP_CENTER, toif_data)
+            shape::ToifImage::new_image(TOP_CENTER, self.image)
                 .with_align(Alignment2D::TOP_CENTER)
                 .with_fg(theme::FG)
                 .render(target);
@@ -516,8 +506,24 @@ impl Component for ConfirmHomescreen {
     }
 }
 
-pub fn check_homescreen_format(toif: &Toif) -> bool {
-    toif.format() == ToifFormat::GrayScaleEH && toif.width() == WIDTH && toif.height() == HEIGHT
+pub fn check_homescreen_format(image: BinaryData) -> bool {
+    match ImageInfo::parse(image) {
+        ImageInfo::Toif(info) => {
+            info.width() == WIDTH
+                && info.height() == HEIGHT
+                && info.format() == ToifFormat::GrayScaleEH
+        }
+        _ => false,
+    }
+}
+
+fn get_homescreen_image() -> Option<BinaryData<'static>> {
+    if let Ok(image) = get_user_custom_image() {
+        if check_homescreen_format(image) {
+            return Some(image);
+        }
+    }
+    None
 }
 
 // DEBUG-ONLY SECTION BELOW

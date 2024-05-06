@@ -1,7 +1,10 @@
-use crate::ui::{
-    display::tjpgd,
-    geometry::{Offset, Point, Rect},
-    shape::{BasicCanvas, Bitmap, BitmapFormat, BitmapView, Canvas, Rgb565Canvas},
+use crate::{
+    io::BinaryData,
+    ui::{
+        display::tjpgd,
+        geometry::{Offset, Point, Rect},
+        shape::{BasicCanvas, Bitmap, BitmapFormat, BitmapView, Canvas, Rgb565Canvas},
+    },
 };
 
 use core::cell::UnsafeCell;
@@ -38,23 +41,23 @@ const ALIGN_PAD: usize = 8;
 const JPEG_BUFF_SIZE: usize = (240 * 2 * 16) + ALIGN_PAD;
 
 pub struct JpegCacheSlot<'a> {
-    // Reference to compressed data
-    jpeg: &'a [u8],
-    // value in range 0..3 leads into scale factor 1 << scale
+    /// Reference to compressed data
+    image: Option<BinaryData<'a>>,
+    /// Value in range 0..3 leads into scale factor 1 << scale
     scale: u8,
-    // Input buffer referencing compressed data
-    input: Option<tjpgd::BufferInput<'a>>,
-    // JPEG decoder instance
+    /// Reader for compressed data
+    reader: Option<BinaryDataReader<'a>>,
+    /// JPEG decoder instance
     decoder: Option<tjpgd::JDEC<'a>>,
-    // Scratchpad memory used by the JPEG decoder
-    // (it's used just by our decoder and nobody else)
+    /// Scratchpad memory used by the JPEG decoder
+    /// (it's used just by our decoder and nobody else)
     scratchpad: &'a UnsafeCell<[u8; JPEG_SCRATCHPAD_SIZE]>,
-    // horizontal coordinate of cached row or None
-    // (valid if row_canvas is Some)
+    /// horizontal coordinate of cached row or None
+    /// (valid if row_canvas is Some)
     row_y: i16,
-    // Canvas for recently decoded row of MCU's
+    /// Canvas for recently decoded row of MCU's
     row_canvas: Option<Rgb565Canvas<'a>>,
-    // Buffer for slice canvas
+    /// Buffer for slice canvas
     row_buff: &'a UnsafeCell<[u8; JPEG_BUFF_SIZE]>,
 }
 
@@ -74,9 +77,9 @@ impl<'a> JpegCacheSlot<'a> {
             .init(UnsafeCell::new([0; JPEG_BUFF_SIZE]));
 
         Some(Self {
-            jpeg: &[],
+            image: None,
             scale: 0,
-            input: None,
+            reader: None,
             decoder: None,
             scratchpad,
             row_y: 0,
@@ -85,45 +88,53 @@ impl<'a> JpegCacheSlot<'a> {
         })
     }
 
-    fn reset<'i: 'a>(&mut self, jpeg: &'i [u8], scale: u8) -> Result<(), tjpgd::Error> {
+    fn reset<'i: 'a>(
+        &mut self,
+        image: Option<BinaryData<'a>>,
+        scale: u8,
+    ) -> Result<(), tjpgd::Error> {
         // Drop the existing decoder holding
         // a mutable reference to the scratchpad and canvas buffer & c
         self.decoder = None;
         self.row_canvas = None;
 
-        if !jpeg.is_empty() {
+        if let Some(image) = image {
             // Now there's nobody else holding any reference to our scratchpad buffer
             // so we can get a mutable reference and pass it to a new
             // instance of the JPEG decoder
             let scratchpad = unsafe { &mut *self.scratchpad.get() };
             // Prepare a input buffer
-            let mut input = tjpgd::BufferInput(jpeg);
+            let mut input = BinaryDataReader::new(image);
             // Initialize the decoder by reading headers from input
             let mut decoder = tjpgd::JDEC::new(&mut input, scratchpad)?;
             // Set decoder scale factor
             decoder.set_scale(scale)?;
             self.decoder = Some(decoder);
             // Save modified input buffer
-            self.input = Some(input);
+            self.reader = Some(input);
         } else {
-            self.input = None;
+            self.reader = None;
         }
 
-        self.jpeg = jpeg;
+        self.image = image;
         self.scale = scale;
         Ok(())
     }
 
-    fn is_for<'i: 'a>(&self, jpeg: &'i [u8], scale: u8) -> bool {
-        jpeg.as_ptr() == self.jpeg.as_ptr()
-            && jpeg.len() == self.jpeg.len()
-            && scale == self.scale
-            && self.decoder.is_some()
+    fn is_for<'i: 'a>(&self, image: BinaryData<'i>, scale: u8) -> bool {
+        match self.image {
+            Some(current) => self.decoder.is_some() && current == image && scale == self.scale,
+            None => false,
+        }
     }
 
-    pub fn get_size<'i: 'a>(&mut self, jpeg: &'i [u8], scale: u8) -> Result<Offset, tjpgd::Error> {
-        if !self.is_for(jpeg, scale) {
-            self.reset(jpeg, scale)?;
+    pub fn get_size<'i: 'a>(
+        &mut self,
+        image: BinaryData<'i>,
+        scale: u8,
+    ) -> Result<Offset, tjpgd::Error> {
+        if !self.is_for(image, scale) {
+            self.reset(Some(image), scale)?;
         }
         let decoder = unwrap!(self.decoder.as_mut()); // should never fail
         let divisor = 1 << self.scale;
@@ -136,14 +147,14 @@ impl<'a> JpegCacheSlot<'a> {
     // left-top origin of output rectangle must be aligned to JPEG MCU size
     pub fn decompress_mcu<'i: 'a>(
         &mut self,
-        jpeg: &'i [u8],
+        image: BinaryData<'i>,
         scale: u8,
         offset: Point,
         output: &mut dyn FnMut(Rect, BitmapView) -> bool,
     ) -> Result<(), tjpgd::Error> {
         // Reset the slot if the JPEG image is different
-        if !self.is_for(jpeg, scale) {
-            self.reset(jpeg, scale)?;
+        if !self.is_for(image, scale) {
+            self.reset(Some(image), scale)?;
         }
 
         // Get coordinates of the next coming MCU
@@ -159,11 +170,11 @@ impl<'a> JpegCacheSlot<'a> {
 
         // Reset the decoder if pixel at the offset was already decoded
         if offset.y < next_mcu.y || (offset.x < next_mcu.x && offset.y < next_mcu.y + mcu_height) {
-            self.reset(self.jpeg, scale)?;
+            self.reset(self.image, scale)?;
         }
 
         let decoder = unwrap!(self.decoder.as_mut()); // should never fail
-        let input = unwrap!(self.input.as_mut()); // should never fail
+        let input = unwrap!(self.reader.as_mut()); // should never fail
         let mut output = JpegFnOutput::new(output);
 
         match decoder.decomp2(input, &mut output) {
@@ -174,14 +185,14 @@ impl<'a> JpegCacheSlot<'a> {
 
     pub fn decompress_row<'i: 'a>(
         &mut self,
-        jpeg: &'i [u8],
+        image: BinaryData<'i>,
         scale: u8,
         mut offset_y: i16,
         output: &mut dyn FnMut(Rect, BitmapView) -> bool,
     ) -> Result<(), tjpgd::Error> {
         // Reset the slot if the JPEG image is different
-        if !self.is_for(jpeg, scale) {
-            self.reset(jpeg, scale)?;
+        if !self.is_for(image, scale) {
+            self.reset(Some(image), scale)?;
         }
 
         let mut row_canvas = self.row_canvas.take();
@@ -220,7 +231,7 @@ impl<'a> JpegCacheSlot<'a> {
         }
 
         self.decompress_mcu(
-            jpeg,
+            image,
             scale,
             Point::new(0, offset_y),
             &mut |mcu_r, mcu_bitmap| {
@@ -255,6 +266,29 @@ impl<'a> JpegCacheSlot<'a> {
         self.row_canvas = row_canvas;
 
         Ok(())
+    }
+}
+
+struct BinaryDataReader<'a> {
+    data: BinaryData<'a>,
+    offset: usize,
+}
+
+impl<'a> BinaryDataReader<'a> {
+    fn new(data: BinaryData<'a>) -> Self {
+        Self { data, offset: 0 }
+    }
+}
+
+impl<'a> trezor_tjpgdec::JpegInput for BinaryDataReader<'a> {
+    fn read(&mut self, buf: Option<&mut [u8]>, n_data: usize) -> usize {
+        let bytes_read = if let Some(buf) = buf {
+            self.data.read(self.offset, &mut buf[..n_data])
+        } else {
+            n_data.min(self.data.len() - self.offset)
+        };
+        self.offset += bytes_read;
+        return bytes_read;
     }
 }
 
@@ -330,9 +364,13 @@ impl<'a> JpegCache<'a> {
         Some(cache)
     }
 
-    pub fn get_size<'i: 'a>(&mut self, jpeg: &'i [u8], scale: u8) -> Result<Offset, tjpgd::Error> {
+    pub fn get_size<'i: 'a>(
+        &mut self,
+        image: BinaryData<'i>,
+        scale: u8,
+    ) -> Result<Offset, tjpgd::Error> {
         if self.slots.capacity() > 0 {
-            self.slots[0].get_size(jpeg, scale)
+            self.slots[0].get_size(image, scale)
         } else {
             Err(tjpgd::Error::MemoryPool)
         }
@@ -340,13 +378,13 @@ impl<'a> JpegCache<'a> {
 
     pub fn decompress_mcu<'i: 'a>(
         &mut self,
-        jpeg: &'i [u8],
+        image: BinaryData<'i>,
         scale: u8,
         offset: Point,
         output: &mut dyn FnMut(Rect, BitmapView) -> bool,
     ) -> Result<(), tjpgd::Error> {
         if self.slots.capacity() > 0 {
-            self.slots[0].decompress_mcu(jpeg, scale, offset, output)
+            self.slots[0].decompress_mcu(image, scale, offset, output)
         } else {
             Err(tjpgd::Error::MemoryPool)
         }
@@ -354,13 +392,13 @@ impl<'a> JpegCache<'a> {
 
     pub fn decompress_row<'i: 'a>(
         &mut self,
-        jpeg: &'i [u8],
+        image: BinaryData<'i>,
         scale: u8,
         offset_y: i16,
         output: &mut dyn FnMut(Rect, BitmapView) -> bool,
     ) -> Result<(), tjpgd::Error> {
         if self.slots.capacity() > 0 {
-            self.slots[0].decompress_row(jpeg, scale, offset_y, output)
+            self.slots[0].decompress_row(image, scale, offset_y, output)
         } else {
             Err(tjpgd::Error::MemoryPool)
         }

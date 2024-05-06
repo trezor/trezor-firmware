@@ -1,6 +1,10 @@
 use crate::ui::geometry::Rect;
+
 #[cfg(feature = "bootloader")]
-use crate::{trezorhal::secbool::secbool, ui::display::Color};
+use crate::trezorhal::secbool::secbool;
+
+#[cfg(not(feature = "new_rendering"))]
+use crate::ui::display::Color;
 
 pub trait UIFeaturesCommon {
     fn fadein() {}

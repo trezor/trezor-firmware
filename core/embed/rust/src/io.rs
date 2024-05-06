@@ -1,5 +1,8 @@
 use crate::error::Error;
 
+#[cfg(feature = "micropython")]
+use crate::micropython::{buffer::get_buffer, obj::Obj};
+
 pub struct InputStream<'a> {
     buf: &'a [u8],
     pos: usize,
@@ -67,5 +70,81 @@ impl<'a> InputStream<'a> {
             }
         }
         Ok(uint)
+    }
+}
+
+#[derive(Copy, Clone, PartialEq)]
+pub enum BinaryData<'a> {
+    Slice(&'a [u8]),
+    #[cfg(feature = "micropython")]
+    Object(Obj),
+}
+
+impl<'a> BinaryData<'a> {
+    /// Creates a new `BinaryData` from a slice of binary data.
+    pub fn from_slice(data: &'a [u8]) -> Self {
+        Self::Slice(data)
+    }
+
+    /// Creates a new `BinaryData` from a micropython `bytes` object.
+    #[cfg(feature = "micropython")]
+    pub fn from_object(obj: Obj) -> Result<Self, Error> {
+        if !obj.is_bytes() {
+            return Err(Error::TypeError);
+        }
+        Ok(Self::Object(obj))
+    }
+
+    /// Returns `true` if the binary data is empty.
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
+    /// Returns a reference to the binary data.
+    ///
+    /// # Safety
+    /// The caller must ensure that the returned slice is not used before
+    /// the return to micropython.
+    pub unsafe fn data(&self) -> &[u8] {
+        match self {
+            Self::Slice(data) => data,
+            // SAFETY: We expect no existing mutable reference. Resulting reference is
+            // discarded before returning to micropython.
+            #[cfg(feature = "micropython")]
+            Self::Object(obj) => unsafe { unwrap!(get_buffer(*obj)) },
+        }
+    }
+
+    /// Returns the length of the binary data in bytes.
+    pub fn len(&self) -> usize {
+        match self {
+            Self::Slice(data) => data.len(),
+            #[cfg(feature = "micropython")]
+            Self::Object(obj) => unsafe { unwrap!(get_buffer(*obj)).len() },
+        }
+    }
+
+    /// Reads binary data from the source into the buffer.
+    /// - 'ofs' is the offset in bytes from the start of the binary data.
+    /// - 'buff' is the buffer to read the data into.
+    ///
+    /// Returns the number of bytes read.
+    pub fn read(&self, ofs: usize, buff: &mut [u8]) -> usize {
+        match self {
+            Self::Slice(data) => {
+                let size = buff.len().min(data.len() - data.len().min(ofs));
+                buff[..size].copy_from_slice(&data[ofs..ofs + size]);
+                size
+            }
+
+            // SAFETY: We expect no existing mutable reference to `obj`.
+            #[cfg(feature = "micropython")]
+            Self::Object(obj) => {
+                let data = unsafe { unwrap!(get_buffer(*obj)) };
+                let size = buff.len().min(data.len() - data.len().min(ofs));
+                buff[..size].copy_from_slice(&data[ofs..ofs + size]);
+                size
+            }
+        }
     }
 }
