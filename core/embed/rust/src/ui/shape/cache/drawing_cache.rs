@@ -16,7 +16,6 @@ const ZLIB_CACHE_SLOTS: usize = 1;
 #[cfg(not(feature = "xframebuff"))]
 const ZLIB_CACHE_SLOTS: usize = 3;
 
-const JPEG_CACHE_SLOTS: usize = 1;
 const RENDER_BUFF_SIZE: usize = (240 * 2 * 16) + ALIGN_PAD;
 const IMAGE_BUFF_SIZE: usize = 2048 + ALIGN_PAD;
 
@@ -61,7 +60,7 @@ impl<'a> DrawingCache<'a> {
             )),
             #[cfg(feature = "ui_jpeg_decoder")]
             jpeg_cache: RefCell::new(unwrap!(
-                JpegCache::new(bump_a, JPEG_CACHE_SLOTS),
+                JpegCache::new(bump_a),
                 "JPEG cache alloc"
             )),
             #[cfg(feature = "ui_blurring")]
@@ -108,7 +107,7 @@ impl<'a> DrawingCache<'a> {
 
         #[cfg(feature = "ui_jpeg_decoder")]
         {
-            size += JpegCache::get_bump_size(JPEG_CACHE_SLOTS);
+            size += JpegCache::get_bump_size();
         }
 
         #[cfg(feature = "ui_blurring")]

@@ -8,7 +8,7 @@ use crate::{
 };
 
 use core::cell::UnsafeCell;
-use without_alloc::{alloc::LocalAllocLeakExt, FixedVec};
+use without_alloc::alloc::LocalAllocLeakExt;
 
 // JDEC work buffer size
 //
@@ -40,7 +40,7 @@ const JPEG_SCRATCHPAD_SIZE: usize = 10500; // the same const > 10336 as in origi
 const ALIGN_PAD: usize = 8;
 const JPEG_BUFF_SIZE: usize = (240 * 2 * 16) + ALIGN_PAD;
 
-pub struct JpegCacheSlot<'a> {
+pub struct JpegCache<'a> {
     /// Reference to compressed data
     image: Option<BinaryData<'a>>,
     /// Value in range 0..3 leads into scale factor 1 << scale
@@ -61,8 +61,8 @@ pub struct JpegCacheSlot<'a> {
     row_buff: &'a UnsafeCell<[u8; JPEG_BUFF_SIZE]>,
 }
 
-impl<'a> JpegCacheSlot<'a> {
-    fn new<T>(bump: &'a T) -> Option<Self>
+impl<'a> JpegCache<'a> {
+    pub fn new<T>(bump: &'a T) -> Option<Self>
     where
         T: LocalAllocLeakExt<'a>,
     {
@@ -267,6 +267,11 @@ impl<'a> JpegCacheSlot<'a> {
 
         Ok(())
     }
+
+    pub const fn get_bump_size() -> usize {
+        core::mem::size_of::<UnsafeCell<[u8; JPEG_SCRATCHPAD_SIZE]>>() +
+        core::mem::size_of::<UnsafeCell<[u8; JPEG_BUFF_SIZE]>>()
+    }
 }
 
 struct BinaryDataReader<'a> {
@@ -342,72 +347,3 @@ where
     }
 }
 
-pub struct JpegCache<'a> {
-    slots: FixedVec<'a, JpegCacheSlot<'a>>,
-}
-
-impl<'a> JpegCache<'a> {
-    pub fn new<'alloc: 'a, T>(bump: &'alloc T, slot_count: usize) -> Option<Self>
-    where
-        T: LocalAllocLeakExt<'alloc>,
-    {
-        assert!(slot_count <= 1); // we support just 1 decoder
-
-        let mut cache = Self {
-            slots: bump.fixed_vec(slot_count)?,
-        };
-
-        for _ in 0..cache.slots.capacity() {
-            unwrap!(cache.slots.push(JpegCacheSlot::new(bump)?)); // should never fail
-        }
-
-        Some(cache)
-    }
-
-    pub fn get_size<'i: 'a>(
-        &mut self,
-        image: BinaryData<'i>,
-        scale: u8,
-    ) -> Result<Offset, tjpgd::Error> {
-        if self.slots.capacity() > 0 {
-            self.slots[0].get_size(image, scale)
-        } else {
-            Err(tjpgd::Error::MemoryPool)
-        }
-    }
-
-    pub fn decompress_mcu<'i: 'a>(
-        &mut self,
-        image: BinaryData<'i>,
-        scale: u8,
-        offset: Point,
-        output: &mut dyn FnMut(Rect, BitmapView) -> bool,
-    ) -> Result<(), tjpgd::Error> {
-        if self.slots.capacity() > 0 {
-            self.slots[0].decompress_mcu(image, scale, offset, output)
-        } else {
-            Err(tjpgd::Error::MemoryPool)
-        }
-    }
-
-    pub fn decompress_row<'i: 'a>(
-        &mut self,
-        image: BinaryData<'i>,
-        scale: u8,
-        offset_y: i16,
-        output: &mut dyn FnMut(Rect, BitmapView) -> bool,
-    ) -> Result<(), tjpgd::Error> {
-        if self.slots.capacity() > 0 {
-            self.slots[0].decompress_row(image, scale, offset_y, output)
-        } else {
-            Err(tjpgd::Error::MemoryPool)
-        }
-    }
-
-    pub const fn get_bump_size(slot_count: usize) -> usize {
-        (core::mem::size_of::<JpegCacheSlot>()
-            + core::mem::size_of::<UnsafeCell<[u8; JPEG_SCRATCHPAD_SIZE]>>()
-            + core::mem::size_of::<UnsafeCell<[u8; JPEG_BUFF_SIZE]>>())
-            * slot_count
-    }
-}
