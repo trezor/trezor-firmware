@@ -55,9 +55,12 @@ bool usb_connected_previously = true;
 #include "modtrezorio-fatfs.h"
 #include "modtrezorio-sdcard.h"
 #endif
+#ifdef USE_HAPTIC
+#include "modtrezorio-haptic.h"
+#endif
 
 /// package: trezorio.__init__
-/// from . import fatfs, sdcard
+/// from . import fatfs, haptic, sdcard
 
 /// POLL_READ: int  # wait until interface is readable and return read data
 /// POLL_WRITE: int  # wait until interface is writable
@@ -87,6 +90,10 @@ STATIC const mp_rom_map_elem_t mp_module_trezorio_globals_table[] = {
 #ifdef USE_SD_CARD
     {MP_ROM_QSTR(MP_QSTR_fatfs), MP_ROM_PTR(&mod_trezorio_fatfs_module)},
     {MP_ROM_QSTR(MP_QSTR_sdcard), MP_ROM_PTR(&mod_trezorio_sdcard_module)},
+#endif
+
+#ifdef USE_HAPTIC
+    {MP_ROM_QSTR(MP_QSTR_haptic), MP_ROM_PTR(&mod_trezorio_haptic_module)},
 #endif
 
 #ifdef USE_TOUCH

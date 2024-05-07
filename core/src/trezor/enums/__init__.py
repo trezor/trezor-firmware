@@ -461,6 +461,7 @@ if TYPE_CHECKING:
         Solana = 18
         Translations = 19
         Brightness = 20
+        Haptic = 21
 
     class SdProtectOperationType(IntEnum):
         DISABLE = 0
