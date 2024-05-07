@@ -36,12 +36,13 @@ INITIALIZED                = const(0x13)  # bool (0x01 or empty)
 _SAFETY_CHECK_LEVEL        = const(0x14)  # int
 _EXPERIMENTAL_FEATURES     = const(0x15)  # bool (0x01 or empty)
 _HIDE_PASSPHRASE_FROM_HOST = const(0x16)  # bool (0x01 or empty)
-# unused from python:
-# _BRIGHTNESS                = const(0x18)  # int
-
 if utils.USE_THP:
     _DEVICE_SECRET         = const(0x17)  # bytes
     _CRED_AUTH_KEY_COUNTER = const(0x18)  # bytes
+# unused from python:
+# _BRIGHTNESS                = const(0x19)  # int
+_DISABLE_HAPTIC_FEEDBACK   = const(0x20)  # bool (0x01 or empty)
+
 
 SAFETY_CHECK_LEVEL_STRICT  : Literal[0] = const(0)
 SAFETY_CHECK_LEVEL_PROMPT  : Literal[1] = const(1)
@@ -377,3 +378,17 @@ if utils.USE_THP:
         counter = int.from_bytes(get_cred_auth_key_counter(), "big")
         utils.ensure(counter < 0xFFFFFFFF, "Overflow of cred_auth_key_counter")
         common.set(_NAMESPACE, _CRED_AUTH_KEY_COUNTER, (counter + 1).to_bytes(4, "big"))
+
+
+def set_haptic_feedback(enable: bool) -> None:
+    """
+    Enable or disable haptic feedback.
+    """
+    common.set_bool(_NAMESPACE, _DISABLE_HAPTIC_FEEDBACK, not enable, True)
+
+
+def get_haptic_feedback() -> bool:
+    """
+    Get haptic feedback enable, default to true if not set.
+    """
+    return not common.get_bool(_NAMESPACE, _DISABLE_HAPTIC_FEEDBACK, True)

@@ -2163,6 +2163,7 @@ if TYPE_CHECKING:
         bootloader_locked: "bool | None"
         language_version_matches: "bool"
         unit_packaging: "int | None"
+        haptic_feedback: "bool | None"
 
         def __init__(
             self,
@@ -2215,6 +2216,7 @@ if TYPE_CHECKING:
             bootloader_locked: "bool | None" = None,
             language_version_matches: "bool | None" = None,
             unit_packaging: "int | None" = None,
+            haptic_feedback: "bool | None" = None,
         ) -> None:
             pass
 
@@ -2258,6 +2260,7 @@ if TYPE_CHECKING:
         safety_checks: "SafetyCheckLevel | None"
         experimental_features: "bool | None"
         hide_passphrase_from_host: "bool | None"
+        haptic_feedback: "bool | None"
 
         def __init__(
             self,
@@ -2271,6 +2274,7 @@ if TYPE_CHECKING:
             safety_checks: "SafetyCheckLevel | None" = None,
             experimental_features: "bool | None" = None,
             hide_passphrase_from_host: "bool | None" = None,
+            haptic_feedback: "bool | None" = None,
         ) -> None:
             pass
 

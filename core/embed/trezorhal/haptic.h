@@ -30,4 +30,6 @@ void haptic_play(haptic_effect_t effect);
 // the creation of customized haptic effects.
 bool haptic_play_custom(int8_t amplitude_pct, uint16_t duration_ms);
 
+void haptic_set_enabled(bool enable);
+
 #endif

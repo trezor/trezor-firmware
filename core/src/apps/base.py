@@ -135,6 +135,10 @@ def get_features() -> Features:
                 ]
             )
 
+    if utils.USE_HAPTIC:
+        f.haptic_feedback = storage_device.get_haptic_feedback()
+        f.capabilities.append(Capability.Haptic)
+
     if utils.USE_BACKLIGHT:
         f.capabilities.append(Capability.Brightness)
 
