@@ -293,7 +293,8 @@ impl<'a> trezor_tjpgdec::JpegInput for BinaryDataReader<'a> {
             n_data.min(self.data.len() - self.offset)
         };
         self.offset += bytes_read;
-        return bytes_read;
+
+        bytes_read
     }
 }
 
