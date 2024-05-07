@@ -116,6 +116,7 @@ message Features {
         Capability_Solana = 18;
         Capability_Translations = 19 [(bitcoin_only) = true];
         Capability_Brightness = 20 [(bitcoin_only) = true];
+        Capability_Haptic = 21 [(bitcoin_only) = true];
     }
     optional BackupType backup_type = 31;       // type of device backup (BIP-39 / SLIP-39 basic / SLIP-39 advanced)
     optional bool sd_card_present = 32;         // is SD card present
@@ -138,6 +139,7 @@ message Features {
     optional bool bootloader_locked = 49;       // bootloader is locked
     optional bool language_version_matches = 50 [default=true];  // translation blob version matches firmware version
     optional uint32 unit_packaging = 51;      // unit/device packaging version
+    optional bool haptic_feedback = 52;         // haptic feedback is enabled
 }
 
 /**
@@ -185,6 +187,7 @@ message ApplySettings {
     optional SafetyCheckLevel safety_checks = 9;  // Safety check level, set to Prompt to limit path namespace enforcement
     optional bool experimental_features = 10;  // enable experimental message types
     optional bool hide_passphrase_from_host = 11;  // do not show passphrase coming from host
+    optional bool haptic_feedback = 13;  // enable haptic feedback
 }
 
 /**

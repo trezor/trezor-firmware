@@ -493,6 +493,7 @@ class Capability(IntEnum):
     Solana = 18
     Translations = 19
     Brightness = 20
+    Haptic = 21
 
 
 class SdProtectOperationType(IntEnum):
@@ -3263,6 +3264,7 @@ class Features(protobuf.MessageType):
         49: protobuf.Field("bootloader_locked", "bool", repeated=False, required=False, default=None),
         50: protobuf.Field("language_version_matches", "bool", repeated=False, required=False, default=True),
         51: protobuf.Field("unit_packaging", "uint32", repeated=False, required=False, default=None),
+        52: protobuf.Field("haptic_feedback", "bool", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -3317,6 +3319,7 @@ class Features(protobuf.MessageType):
         bootloader_locked: Optional["bool"] = None,
         language_version_matches: Optional["bool"] = True,
         unit_packaging: Optional["int"] = None,
+        haptic_feedback: Optional["bool"] = None,
     ) -> None:
         self.capabilities: Sequence["Capability"] = capabilities if capabilities is not None else []
         self.major_version = major_version
@@ -3367,6 +3370,7 @@ class Features(protobuf.MessageType):
         self.bootloader_locked = bootloader_locked
         self.language_version_matches = language_version_matches
         self.unit_packaging = unit_packaging
+        self.haptic_feedback = haptic_feedback
 
 
 class LockDevice(protobuf.MessageType):
@@ -3405,6 +3409,7 @@ class ApplySettings(protobuf.MessageType):
         9: protobuf.Field("safety_checks", "SafetyCheckLevel", repeated=False, required=False, default=None),
         10: protobuf.Field("experimental_features", "bool", repeated=False, required=False, default=None),
         11: protobuf.Field("hide_passphrase_from_host", "bool", repeated=False, required=False, default=None),
+        13: protobuf.Field("haptic_feedback", "bool", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -3421,6 +3426,7 @@ class ApplySettings(protobuf.MessageType):
         safety_checks: Optional["SafetyCheckLevel"] = None,
         experimental_features: Optional["bool"] = None,
         hide_passphrase_from_host: Optional["bool"] = None,
+        haptic_feedback: Optional["bool"] = None,
     ) -> None:
         self.language = language
         self.label = label
@@ -3433,6 +3439,7 @@ class ApplySettings(protobuf.MessageType):
         self.safety_checks = safety_checks
         self.experimental_features = experimental_features
         self.hide_passphrase_from_host = hide_passphrase_from_host
+        self.haptic_feedback = haptic_feedback
 
 
 class ChangeLanguage(protobuf.MessageType):
