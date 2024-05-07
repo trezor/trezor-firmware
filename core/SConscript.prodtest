@@ -243,6 +243,7 @@ obj_program.extend(
         source=VENDORHEADER,
         action='$OBJCOPY -I binary -O elf32-littlearm -B arm'
         ' --rename-section .data=.vendorheader,alloc,load,readonly,contents'
+        ' --remove-section=.ARM.exidx'
         ' $SOURCE $TARGET', ))
 
 program_elf = env.Command(

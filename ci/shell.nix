@@ -86,7 +86,7 @@ let
   }));
   llvmPackages = nixpkgs.llvmPackages_14;
   # see pyright/README.md for update procedure
-  pyright = nixpkgs.callPackage ./pyright {};
+  # XXX why are we even building it from source? # pyright = nixpkgs.callPackage ./pyright {};
 in
 with nixpkgs;
 stdenvNoCC.mkDerivation ({
@@ -99,7 +99,7 @@ stdenvNoCC.mkDerivation ({
   ] ++ lib.optionals fullDeps [
     python310
     python39
-    python38
+    oldPythonNixpkgs.python38
     oldPythonNixpkgs.python37
     oldPythonNixpkgs.python36
     bitcoind
