@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 import storage.device as storage_device
 import trezorui2
-from trezor import TR
+from trezor import TR, utils
 from trezor.enums import ButtonRequestType
 from trezor.ui.layouts import confirm_action
 from trezor.wire import DataError
@@ -50,6 +50,7 @@ async def apply_settings(msg: ApplySettings) -> Success:
     msg_safety_checks = msg.safety_checks  # local_cache_attribute
     experimental_features = msg.experimental_features  # local_cache_attribute
     hide_passphrase_from_host = msg.hide_passphrase_from_host  # local_cache_attribute
+    haptic_feedback = msg.haptic_feedback
 
     if (
         homescreen is None
@@ -61,6 +62,7 @@ async def apply_settings(msg: ApplySettings) -> Success:
         and msg_safety_checks is None
         and experimental_features is None
         and hide_passphrase_from_host is None
+        and (haptic_feedback is None or not utils.USE_HAPTIC)
     ):
         raise ProcessError("No setting provided")
 
@@ -113,6 +115,13 @@ async def apply_settings(msg: ApplySettings) -> Success:
             raise ProcessError("Safety checks are strict")
         await _require_confirm_hide_passphrase_from_host(hide_passphrase_from_host)
         storage_device.set_hide_passphrase_from_host(hide_passphrase_from_host)
+
+    if haptic_feedback is not None and utils.USE_HAPTIC:
+        from trezor import io
+
+        await _require_confirm_haptic_feedback(haptic_feedback)
+        io.haptic.haptic_set_enabled(haptic_feedback)
+        storage_device.set_haptic_feedback(haptic_feedback)
 
     reload_settings_from_storage()
 
@@ -253,5 +262,17 @@ async def _require_confirm_hide_passphrase_from_host(enable: bool) -> None:
             "set_hide_passphrase_from_host",
             TR.passphrase__title_hide,
             description=TR.passphrase__hide,
+            br_code=BRT_PROTECT_CALL,
+        )
+
+
+if utils.USE_HAPTIC:
+
+    async def _require_confirm_haptic_feedback(enable: bool) -> None:
+        await confirm_action(
+            "haptic_feedback__settings",
+            TR.haptic_feedback__title,
+            TR.haptic_feedback__enable if enable else TR.haptic_feedback__disable,
+            subtitle=TR.haptic_feedback__subtitle,
             br_code=BRT_PROTECT_CALL,
         )

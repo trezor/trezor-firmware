@@ -126,6 +126,8 @@ USE_SD_CARD: bool
 """Whether the hardware supports SD card."""
 USE_BACKLIGHT: bool
 """Whether the hardware supports backlight brightness control."""
+USE_HAPTIC: bool
+"""Whether the hardware supports haptic feedback."""
 USE_OPTIGA: bool
 """Whether the hardware supports Optiga secure element."""
 MODEL: str

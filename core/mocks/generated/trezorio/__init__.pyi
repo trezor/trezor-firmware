@@ -190,7 +190,7 @@ class WebUSB:
         """
         Sends message using USB WebUSB (device) or UDP (emulator).
         """
-from . import fatfs, sdcard
+from . import fatfs, haptic, sdcard
 POLL_READ: int  # wait until interface is readable and return read data
 POLL_WRITE: int  # wait until interface is writable
 TOUCH: int  # interface id of the touch events

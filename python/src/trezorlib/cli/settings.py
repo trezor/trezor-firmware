@@ -214,6 +214,14 @@ def brightness(client: "TrezorClient") -> str:
 
 
 @cli.command()
+@click.argument("enable", type=ChoiceType({"on": True, "off": False}))
+@with_client
+def haptic_feedback(client: "TrezorClient", enable: bool) -> str:
+    """Enable or disable haptic feedback."""
+    return device.apply_settings(client, haptic_feedback=enable)
+
+
+@cli.command()
 @click.argument("path_or_url", required=False)
 @click.option(
     "-r", "--remove", is_flag=True, default=False, help="Switch back to english."
