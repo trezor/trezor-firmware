@@ -90,7 +90,7 @@ ${camelcase(program.name)}_${camelcase(instruction.name)} = Struct(
     "data" / CompactStruct(
         "instruction_id" / ${instruction_subcon(program, instruction)},
         % for parameter in instruction.parameters:
-            % if parameter["optional"]:
+            % if parameter["optional"] or parameter.get("nullable", False):
         "${parameter["name"]}" / OptionalParameter(${CONSTRUCT_TYPES.get(parameter.type)}),
             % else:
         "${parameter["name"]}" / ${CONSTRUCT_TYPES.get(parameter.type, "Int64ul")},

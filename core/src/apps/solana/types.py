@@ -40,12 +40,14 @@ class PropertyTemplate(Generic[T]):
         name: str,
         is_authority: bool,
         is_optional: bool,
+        is_nullable: bool,
         parse: Callable[[BufferReader], T],
         format: Callable[[Instruction, T], str],
     ):
         self.name = name
         self.is_authority = is_authority
         self.is_optional = is_optional
+        self.is_nullable = is_nullable
         self.parse = parse
         self.format = format
 

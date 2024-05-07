@@ -282,6 +282,48 @@
       }
     },
     {
+      "description": "Set Authority - null authority",
+      "parameters": {
+        "address": "m/44'/501'/0'/0'",
+        "construct": {
+          "version": null,
+          "header": {
+            "signers": 1,
+            "readonly_signers": 0,
+            "readonly_non_signers": 1
+          },
+          "accounts": [
+            "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
+            "FUqrjRRtF1LiptdFqaFxipE8R3YfCE4k56xwm5n1piqX",
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          ],
+          "blockhash": "2p4rYZAaFfV5Uk5ugdG5KPNty9Uda9B3b4gWB8qnNqak",
+          "instructions": [
+            {
+              "program_index": 2,
+              "accounts": {
+                "mint_account": 1,
+                "current_authority": 0,
+                "multisig_signers": []
+              },
+              "data": {
+                "instruction_id": 6,
+                "authority_type": 1,
+                "new_authority": {
+                  "is_included": false,
+                  "value": null
+                }
+              }
+            }
+          ],
+          "luts": []
+        }
+      },
+      "result": {
+        "expected_signature": "f983c4f3ac794bf02e67d3320c91e515c3de649b377c61c25546699fe6f551ffc8c022853823eb81cf785e71a5bbb78f5cbcfd49eb38480629bdc906c5c50202"
+      }
+    },
+    {
       "description": "Set Authority - Multisig",
       "parameters": {
         "address": "m/44'/501'/0'/0'",

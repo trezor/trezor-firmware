@@ -157,10 +157,15 @@ def get_instruction(
                 ${getInstructionIdText(program, instruction)},
                 [
                 % for parameter in instruction["parameters"]:
+                <%
+                    if parameter["optional"] and parameter.get("nullable", False):
+                        raise Exception(f"Parameter \"{parameter['name']}\" in instruction \"{instruction['name']}\" is both optional and nullable.")
+                %>
                     PropertyTemplate(
                         "${parameter["name"]}",
                         ${parameter["type"] == "authority"},
                         ${parameter["optional"]},
+                        ${parameter.get("nullable", False)},
                         ${programs["types"][parameter["type"]]["parse"]},
                         ${programs["types"][parameter["type"]]["format"]},
                     ),

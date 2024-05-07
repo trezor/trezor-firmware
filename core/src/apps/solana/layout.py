@@ -80,15 +80,24 @@ async def confirm_instruction(
                 continue
 
             if ui_property.default_value_to_hide == value:
-                continue
+                # currently we can define a default value to hide,
+                # but it needs to be of the type that the property is of (such as public key for new_authority)
+                # and for nullable values(such as new_authority) we want to display it to the user
+                if not property_template.is_nullable or value is not None:
+                    continue
 
+            display_text = (
+                "Not set"
+                if value is None
+                else property_template.format(instruction, value)
+            )
             await confirm_properties(
                 "confirm_instruction",
                 f"{instruction_index}/{instructions_count}: {instruction.ui_name}",
                 (
                     (
                         ui_property.display_name,
-                        property_template.format(instruction, value),
+                        display_text,
                     ),
                 ),
             )

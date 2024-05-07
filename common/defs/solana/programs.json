@@ -1573,7 +1573,8 @@
             {
               "name": "new_authority",
               "type": "authority",
-              "optional": true
+              "optional": false,
+              "nullable": true
             }
           ],
           "references": [

@@ -50,8 +50,22 @@ class Instruction:
         parsed_data = {}
         for property_template in property_templates:
             is_included = True
+            # Property cannot be both optional and nullable as if there are multiple such properties in 1 instruction
+            # it could lead to non-deterministic parsing
+            # it is validated by mako template
+            assert not (property_template.is_nullable and property_template.is_optional)
+
             if property_template.is_optional:
                 is_included = True if reader.get() == 1 else False
+
+            if property_template.is_nullable:
+                is_included = True if reader.get() == 1 else False
+                if not is_included:
+                    # A default (null) value is included in the parsed message for nullable properties
+                    # (e.g. new_authority in Set Authority instruction) even if the is_included flag is not set.
+                    # We can safely discard this value.
+                    if reader.remaining_count() != 0:
+                        property_template.parse(reader)
 
             parsed_data[property_template.name] = (
                 property_template.parse(reader) if is_included else None
