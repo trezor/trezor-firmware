@@ -177,6 +177,7 @@ impl GetAddress {
 
         // Tap
         let content_tap = Frame::left_aligned(title, PromptScreen::new_tap_to_confirm())
+            .with_overlapping_content()
             .with_footer(TR::instructions__tap_to_confirm.into(), None)
             .map(|msg| match msg {
                 FrameMsg::Content(()) => Some(FlowMsg::Confirmed),
@@ -248,6 +249,7 @@ impl GetAddress {
             PromptScreen::new_tap_to_cancel(),
         )
         .with_cancel_button()
+        .with_overlapping_content()
         .with_footer(TR::instructions__tap_to_confirm.into(), None)
         .map(|msg| match msg {
             FrameMsg::Content(()) => Some(FlowMsg::Confirmed),

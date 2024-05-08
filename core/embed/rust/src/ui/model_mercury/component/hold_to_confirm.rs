@@ -188,8 +188,8 @@ impl Component for HoldToConfirm {
     fn place(&mut self, bounds: Rect) -> Rect {
         self.area = bounds;
         self.button.place(Rect::snap(
-            self.area.center(),
-            Offset::uniform(120),
+            self.area.center() + Offset::y(CONFIRM_ANIMATION_OFFSET),
+            Offset::uniform(80),
             Alignment2D::CENTER,
         ));
         self.title.place(bounds.split_top(TITLE_HEIGHT).0);

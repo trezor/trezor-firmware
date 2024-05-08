@@ -189,8 +189,8 @@ fn new_confirm_action_obj(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Err
 
     let mut content_confirm = Frame::left_aligned(title, prompt)
         .with_footer(prompt_action, None)
-        .with_menu_button();
-    // .with_overlapping_content();
+        .with_menu_button()
+        .with_overlapping_content();
 
     if let Some(subtitle) = subtitle {
         content_confirm = content_confirm.with_subtitle(subtitle);
