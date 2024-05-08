@@ -1,5 +1,3 @@
-mod render;
-
 use crate::{
     micropython::gc::Gc,
     strutil::TString,
@@ -17,25 +15,11 @@ use crate::{
     },
 };
 
-use crate::{
-    trezorhal::{buffers::BufferJpegWork, uzlib::UZLIB_WINDOW_SIZE},
-    ui::{
-        constant::{screen, HEIGHT},
-        display::{
-            tjpgd::BufferInput,
-            toif::{Toif, ToifFormat},
-        },
-        model_mercury::{
-            component::homescreen::render::{HomescreenJpeg, HomescreenToif, HOMESCREEN_TOIF_SIZE},
-            theme::{
-                GREEN_LIGHT, GREY_LIGHT, ICON_CENTRAL_CIRCLE, ICON_KEY, ICON_LOCKSCREEN_FILTER,
-            },
-        },
+use crate::ui::{
+    constant::{screen, HEIGHT, WIDTH},
+    model_mercury::theme::{
+        GREEN_LIGHT, GREY_LIGHT, ICON_CENTRAL_CIRCLE, ICON_KEY, ICON_LOCKSCREEN_FILTER,
     },
-};
-use render::{
-    homescreen, homescreen_blurred, HomescreenNotification, HomescreenText,
-    HOMESCREEN_IMAGE_HEIGHT, HOMESCREEN_IMAGE_WIDTH,
 };
 
 use super::{theme, Loader, LoaderMsg};
@@ -50,6 +34,16 @@ const COINJOIN_Y: i16 = 30;
 const LOADER_OFFSET: Offset = Offset::y(-10);
 const LOADER_DELAY: Duration = Duration::from_millis(500);
 const LOADER_DURATION: Duration = Duration::from_millis(2000);
+
+pub const HOMESCREEN_IMAGE_WIDTH: i16 = WIDTH;
+pub const HOMESCREEN_IMAGE_HEIGHT: i16 = HEIGHT;
+
+#[derive(Clone, Copy)]
+pub struct HomescreenNotification {
+    pub text: TString<'static>,
+    pub icon: Icon,
+    pub color: Color,
+}
 
 pub struct Homescreen {
     label: TString<'static>,
@@ -107,19 +101,6 @@ impl Homescreen {
         } else {
             None
         }
-    }
-
-    fn paint_loader(&mut self) {
-        TR::progress__locking_device.map_translated(|t| {
-            display::text_center(
-                TOP_CENTER + Offset::y(HOLD_Y),
-                t,
-                Font::NORMAL,
-                theme::FG,
-                theme::BG,
-            )
-        });
-        self.loader.paint()
     }
 
     fn render_loader<'s>(&'s self, target: &mut impl Renderer<'s>) {
@@ -197,63 +178,7 @@ impl Component for Homescreen {
     }
 
     fn paint(&mut self) {
-        self.pad.paint();
-        if self.loader.is_animating() || self.loader.is_completely_grown(Instant::now()) {
-            self.paint_loader();
-        } else {
-            let mut label_style = theme::TEXT_DEMIBOLD;
-            label_style.text_color = theme::FG;
-
-            let text = HomescreenText {
-                text: self.label,
-                style: label_style,
-                offset: Offset::y(LABEL_Y),
-                icon: None,
-            };
-
-            let notification = self.get_notification();
-
-            let mut show_default = true;
-
-            if let Some(ref data) = self.custom_image {
-                if is_image_jpeg(data.as_ref()) {
-                    let input = BufferInput(data.as_ref());
-                    let mut pool = BufferJpegWork::get_cleared();
-                    let mut hs_img = HomescreenJpeg::new(input, pool.buffer.as_mut_slice());
-                    homescreen(
-                        &mut hs_img,
-                        &[text],
-                        notification,
-                        self.paint_notification_only,
-                    );
-                    show_default = false;
-                } else if is_image_toif(data.as_ref()) {
-                    let input = unwrap!(Toif::new(data.as_ref()));
-                    let mut window = [0; UZLIB_WINDOW_SIZE];
-                    let mut hs_img =
-                        HomescreenToif::new(input.decompression_context(Some(&mut window)));
-                    homescreen(
-                        &mut hs_img,
-                        &[text],
-                        notification,
-                        self.paint_notification_only,
-                    );
-                    show_default = false;
-                }
-            }
-
-            if show_default {
-                let input = BufferInput(IMAGE_HOMESCREEN);
-                let mut pool = BufferJpegWork::get_cleared();
-                let mut hs_img = HomescreenJpeg::new(input, pool.buffer.as_mut_slice());
-                homescreen(
-                    &mut hs_img,
-                    &[text],
-                    notification,
-                    self.paint_notification_only,
-                );
-            }
-        }
+        todo!()
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
@@ -267,10 +192,6 @@ impl Component for Homescreen {
 
             if is_image_jpeg(img_data) {
                 shape::JpegImage::new(AREA.center(), img_data)
-                    .with_align(Alignment2D::CENTER)
-                    .render(target);
-            } else if is_image_toif(img_data) {
-                shape::ToifImage::new(self.pad.area.center(), unwrap!(Toif::new(img_data)))
                     .with_align(Alignment2D::CENTER)
                     .render(target);
             }
@@ -381,74 +302,7 @@ impl Component for Lockscreen<'_> {
     }
 
     fn paint(&mut self) {
-        let (locked, tap) = if self.bootscreen {
-            (
-                TR::lockscreen__title_not_connected,
-                TR::lockscreen__tap_to_connect,
-            )
-        } else {
-            (TR::lockscreen__title_locked, TR::lockscreen__tap_to_unlock)
-        };
-
-        let mut label_style = theme::TEXT_DEMIBOLD;
-        label_style.text_color = theme::GREY_LIGHT;
-
-        let mut texts: &[HomescreenText] = &[
-            HomescreenText {
-                text: "".into(),
-                style: theme::TEXT_NORMAL,
-                offset: Offset::new(2, COINJOIN_Y),
-                icon: Some(theme::ICON_COINJOIN),
-            },
-            HomescreenText {
-                text: locked.into(),
-                style: theme::TEXT_BOLD,
-                offset: Offset::y(LOCKED_Y),
-                icon: Some(theme::ICON_LOCK),
-            },
-            HomescreenText {
-                text: tap.into(),
-                style: theme::TEXT_NORMAL,
-                offset: Offset::y(TAP_Y),
-                icon: None,
-            },
-            HomescreenText {
-                text: self.label,
-                style: label_style,
-                offset: Offset::y(LABEL_Y),
-                icon: None,
-            },
-        ];
-
-        if !self.coinjoin_authorized {
-            texts = &texts[1..];
-        }
-
-        let mut show_default = true;
-
-        if let Some(ref data) = self.custom_image {
-            if is_image_jpeg(data.as_ref()) {
-                let input = BufferInput(data.as_ref());
-                let mut pool = BufferJpegWork::get_cleared();
-                let mut hs_img = HomescreenJpeg::new(input, pool.buffer.as_mut_slice());
-                homescreen_blurred(&mut hs_img, texts);
-                show_default = false;
-            } else if is_image_toif(data.as_ref()) {
-                let input = unwrap!(Toif::new(data.as_ref()));
-                let mut window = [0; UZLIB_WINDOW_SIZE];
-                let mut hs_img =
-                    HomescreenToif::new(input.decompression_context(Some(&mut window)));
-                homescreen_blurred(&mut hs_img, texts);
-                show_default = false;
-            }
-        }
-
-        if show_default {
-            let input = BufferInput(IMAGE_HOMESCREEN);
-            let mut pool = BufferJpegWork::get_cleared();
-            let mut hs_img = HomescreenJpeg::new(input, pool.buffer.as_mut_slice());
-            homescreen_blurred(&mut hs_img, texts);
-        }
+        todo!()
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
@@ -553,19 +407,6 @@ fn is_image_jpeg(buffer: &[u8]) -> bool {
     let jpeg = jpeg_info(buffer);
     if let Some((size, mcu_height)) = jpeg {
         if size.x == HOMESCREEN_IMAGE_WIDTH && size.y == HOMESCREEN_IMAGE_HEIGHT && mcu_height <= 16
-        {
-            return true;
-        }
-    }
-    false
-}
-
-fn is_image_toif(buffer: &[u8]) -> bool {
-    let toif = Toif::new(buffer);
-    if let Ok(toif) = toif {
-        if toif.size().x == HOMESCREEN_TOIF_SIZE
-            && toif.size().y == HOMESCREEN_TOIF_SIZE
-            && toif.format() == ToifFormat::FullColorBE
         {
             return true;
         }
