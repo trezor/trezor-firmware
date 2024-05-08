@@ -171,7 +171,7 @@ async def _get_keychain(derivation_type: CardanoDerivationType) -> Keychain:
     if mnemonic.is_bip39():
         return await _get_keychain_bip39(derivation_type)
     else:
-        # derive the root node via SLIP-0023 https://github.com/satoshilabs/slips/blob/master/slip-0022.md
+        # derive the root node via SLIP-0023 https://github.com/satoshilabs/slips/blob/master/slip-0023.md
         seed = await get_seed()
         return Keychain(cardano.from_seed_slip23(seed))
 
