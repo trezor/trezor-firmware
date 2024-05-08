@@ -133,6 +133,7 @@ impl PromptBackup {
             PromptScreen::new_tap_to_cancel(),
         )
         .with_footer(TR::instructions__tap_to_confirm.into(), None)
+        .with_overlapping_content()
         .map(|msg| match msg {
             FrameMsg::Content(()) => Some(FlowMsg::Confirmed),
             FrameMsg::Button(CancelInfoConfirmMsg::Cancelled) => Some(FlowMsg::Cancelled),

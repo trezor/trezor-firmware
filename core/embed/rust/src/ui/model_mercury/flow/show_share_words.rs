@@ -102,6 +102,7 @@ impl ShowShareWords {
         let content_confirm =
             Frame::left_aligned(text_confirm, PromptScreen::new_hold_to_confirm())
                 .with_footer(TR::instructions__hold_to_confirm.into(), None)
+                .with_overlapping_content()
                 .map(|_| Some(FlowMsg::Confirmed));
 
         let content_check_backup_intro = Frame::left_aligned(

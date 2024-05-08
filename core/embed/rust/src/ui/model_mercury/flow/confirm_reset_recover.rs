@@ -102,6 +102,7 @@ impl ConfirmResetRecover {
             PromptScreen::new_hold_to_confirm(),
         )
         .with_footer(TR::instructions__hold_to_confirm.into(), None)
+        .with_overlapping_content()
         .map(|msg| match msg {
             FrameMsg::Content(()) => Some(FlowMsg::Confirmed),
             _ => Some(FlowMsg::Cancelled),
