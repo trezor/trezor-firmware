@@ -91,7 +91,7 @@ async def request_mnemonic(
             # show_identifier_mismatch
             await show_recovery_warning(
                 "warning_mismatched_share",
-                TR.recovery__share_from_another_shamir,
+                TR.recovery__share_from_another_multi_share_backup,
             )
             return None
         except word_validity.ThresholdReached:
