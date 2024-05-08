@@ -801,7 +801,7 @@ pub enum TranslatedString {
     recovery__progress_will_be_lost = 513,  // "All progress will be lost."
     recovery__select_num_of_words = 514,  // "Select the number of words in your backup."
     recovery__share_already_entered = 515,  // "Share already entered"
-    recovery__share_from_another_shamir = 516,  // "You have entered a share from another Shamir Backup."
+    recovery__share_from_another_multi_share_backup = 516,  // "You have entered a share from another multi-share backup."
     recovery__share_num_template = 517,  // "Share {0}"
     recovery__title = 518,  // "Recover wallet"
     recovery__title_cancel_dry_run = 519,  // "Cancel backup check"
@@ -874,7 +874,7 @@ pub enum TranslatedString {
     reset__threshold_info = 586,  // "= minimum number of unique word lists used for recovery."
     reset__title_backup_is_done = 587,  // "Backup is done"
     reset__title_create_wallet = 588,  // "Create wallet"
-    reset__title_create_wallet_shamir = 589,  // "Create wallet (shamir)"
+    reset__title_create_wallet_shamir = 589,  // "\"\""
     reset__title_group_threshold = 590,  // "Group threshold"
     reset__title_number_of_groups = 591,  // "Number of groups"
     reset__title_number_of_shares = 592,  // "Number of shares"
@@ -1237,8 +1237,8 @@ pub enum TranslatedString {
     storage_msg__starting = 842,  // "Starting up"
     storage_msg__verifying_pin = 843,  // "Verifying PIN"
     storage_msg__wrong_pin = 844,  // "Wrong PIN"
-    reset__create_x_of_y_shamir_backup_template = 845,  // "Do you want to create a {0} of {1} Shamir backup?"
-    reset__title_shamir_backup = 846,  // "Shamir backup"
+    reset__create_x_of_y_multi_share_backup_template = 845,  // "Do you want to create a {0} of {1} multi-share backup?"
+    reset__title_shamir_backup = 846,  // "Multi-share backup"
 }
 
 impl TranslatedString {
@@ -2035,7 +2035,7 @@ impl TranslatedString {
             Self::recovery__progress_will_be_lost => "All progress will be lost.",
             Self::recovery__select_num_of_words => "Select the number of words in your backup.",
             Self::recovery__share_already_entered => "Share already entered",
-            Self::recovery__share_from_another_shamir => "You have entered a share from another Shamir Backup.",
+            Self::recovery__share_from_another_multi_share_backup => "You have entered a share from another multi-share backup.",
             Self::recovery__share_num_template => "Share {0}",
             Self::recovery__title => "Recover wallet",
             Self::recovery__title_cancel_dry_run => "Cancel backup check",
@@ -2108,7 +2108,7 @@ impl TranslatedString {
             Self::reset__threshold_info => "= minimum number of unique word lists used for recovery.",
             Self::reset__title_backup_is_done => "Backup is done",
             Self::reset__title_create_wallet => "Create wallet",
-            Self::reset__title_create_wallet_shamir => "Create wallet (shamir)",
+            Self::reset__title_create_wallet_shamir => "\"\"",
             Self::reset__title_group_threshold => "Group threshold",
             Self::reset__title_number_of_groups => "Number of groups",
             Self::reset__title_number_of_shares => "Number of shares",
@@ -2471,8 +2471,8 @@ impl TranslatedString {
             Self::storage_msg__starting => "Starting up",
             Self::storage_msg__verifying_pin => "Verifying PIN",
             Self::storage_msg__wrong_pin => "Wrong PIN",
-            Self::reset__create_x_of_y_shamir_backup_template => "Do you want to create a {0} of {1} Shamir backup?",
-            Self::reset__title_shamir_backup => "Shamir backup",
+            Self::reset__create_x_of_y_multi_share_backup_template => "Do you want to create a {0} of {1} multi-share backup?",
+            Self::reset__title_shamir_backup => "Multi-share backup",
         }
     }
 
@@ -3270,7 +3270,7 @@ impl TranslatedString {
             Qstr::MP_QSTR_recovery__progress_will_be_lost => Some(Self::recovery__progress_will_be_lost),
             Qstr::MP_QSTR_recovery__select_num_of_words => Some(Self::recovery__select_num_of_words),
             Qstr::MP_QSTR_recovery__share_already_entered => Some(Self::recovery__share_already_entered),
-            Qstr::MP_QSTR_recovery__share_from_another_shamir => Some(Self::recovery__share_from_another_shamir),
+            Qstr::MP_QSTR_recovery__share_from_another_multi_share_backup => Some(Self::recovery__share_from_another_multi_share_backup),
             Qstr::MP_QSTR_recovery__share_num_template => Some(Self::recovery__share_num_template),
             Qstr::MP_QSTR_recovery__title => Some(Self::recovery__title),
             Qstr::MP_QSTR_recovery__title_cancel_dry_run => Some(Self::recovery__title_cancel_dry_run),
@@ -3706,7 +3706,7 @@ impl TranslatedString {
             Qstr::MP_QSTR_storage_msg__starting => Some(Self::storage_msg__starting),
             Qstr::MP_QSTR_storage_msg__verifying_pin => Some(Self::storage_msg__verifying_pin),
             Qstr::MP_QSTR_storage_msg__wrong_pin => Some(Self::storage_msg__wrong_pin),
-            Qstr::MP_QSTR_reset__create_x_of_y_shamir_backup_template => Some(Self::reset__create_x_of_y_shamir_backup_template),
+            Qstr::MP_QSTR_reset__create_x_of_y_multi_share_backup_template => Some(Self::reset__create_x_of_y_multi_share_backup_template),
             Qstr::MP_QSTR_reset__title_shamir_backup => Some(Self::reset__title_shamir_backup),
             _ => None,
         }

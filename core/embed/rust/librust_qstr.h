@@ -361,7 +361,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_recovery__progress_will_be_lost;
   MP_QSTR_recovery__select_num_of_words;
   MP_QSTR_recovery__share_already_entered;
-  MP_QSTR_recovery__share_from_another_shamir;
+  MP_QSTR_recovery__share_from_another_multi_share_backup;
   MP_QSTR_recovery__share_num_template;
   MP_QSTR_recovery__title;
   MP_QSTR_recovery__title_cancel_dry_run;
@@ -397,7 +397,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_reset__check_wallet_backup_title;
   MP_QSTR_reset__continue_with_next_share;
   MP_QSTR_reset__continue_with_share_template;
-  MP_QSTR_reset__create_x_of_y_shamir_backup_template;
+  MP_QSTR_reset__create_x_of_y_multi_share_backup_template;
   MP_QSTR_reset__finished_verifying_group_template;
   MP_QSTR_reset__finished_verifying_shares;
   MP_QSTR_reset__finished_verifying_wallet_backup;

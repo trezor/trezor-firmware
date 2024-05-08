@@ -39,11 +39,7 @@ async def reset_device(msg: ResetDevice) -> Success:
     _validate_reset_device(msg)
 
     # make sure user knows they're setting up a new wallet
-    if backup_type in (BAK_T_SLIP39_BASIC, BAK_T_SLIP39_ADVANCED):
-        title = TR.reset__title_create_wallet_shamir
-    else:
-        title = TR.reset__title_create_wallet
-    await confirm_reset_device(title)
+    await confirm_reset_device(TR.reset__title_create_wallet)
 
     # Rendering empty loader so users do not feel a freezing screen
     render_empty_loader(config.StorageMessage.PROCESSING_MSG)
@@ -170,7 +166,7 @@ async def backup_slip39_custom(
         await confirm_action(
             "warning_shamir_backup",
             TR.reset__title_shamir_backup,
-            description=TR.reset__create_x_of_y_shamir_backup_template.format(
+            description=TR.reset__create_x_of_y_multi_share_backup_template.format(
                 groups[0][0], groups[0][1]
             ),
             verb=TR.buttons__continue,

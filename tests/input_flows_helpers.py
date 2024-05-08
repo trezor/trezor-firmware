@@ -161,7 +161,9 @@ class RecoveryFlow:
     def warning_share_from_another_shamir(self) -> BRGeneratorType:
         br = yield
         assert br.code == B.Warning
-        TR.assert_in(self._text_content(), "recovery__share_from_another_shamir")
+        TR.assert_in(
+            self._text_content(), "recovery__share_from_another_multi_share_backup"
+        )
         self.debug.press_yes()
 
     def success_share_group_entered(self) -> BRGeneratorType:
