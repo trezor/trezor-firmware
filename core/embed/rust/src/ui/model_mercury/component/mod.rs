@@ -26,6 +26,7 @@ pub mod number_input_slider;
 #[cfg(feature = "translations")]
 mod page;
 mod progress;
+#[cfg(feature = "translations")]
 mod prompt_screen;
 mod result;
 mod scroll;
@@ -36,6 +37,8 @@ mod share_words;
 mod simple_page;
 mod status_screen;
 mod swipe_up_screen;
+#[cfg(feature = "translations")]
+mod tap_to_confirm;
 mod welcome_screen;
 
 #[cfg(feature = "translations")]
@@ -72,6 +75,7 @@ pub use number_input_slider::NumberInputSliderDialog;
 #[cfg(feature = "translations")]
 pub use page::ButtonPage;
 pub use progress::Progress;
+#[cfg(feature = "translations")]
 pub use prompt_screen::PromptScreen;
 pub use result::{ResultFooter, ResultScreen, ResultStyle};
 pub use scroll::ScrollBar;
@@ -82,6 +86,8 @@ pub use share_words::ShareWords;
 pub use simple_page::SimplePage;
 pub use status_screen::StatusScreen;
 pub use swipe_up_screen::{SwipeUpScreen, SwipeUpScreenMsg};
+#[cfg(feature = "translations")]
+pub use tap_to_confirm::TapToConfirm;
 pub use vertical_menu::{VerticalMenu, VerticalMenuChoiceMsg};
 pub use welcome_screen::WelcomeScreen;
 
