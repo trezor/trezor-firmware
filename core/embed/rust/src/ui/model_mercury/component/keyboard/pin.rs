@@ -32,11 +32,12 @@ const MAX_VISIBLE_DOTS: usize = 18;
 const MAX_VISIBLE_DIGITS: usize = 18;
 const DIGIT_COUNT: usize = 10; // 0..10
 
+const HEADER_PADDING_TOP: i16 = 4;
 const HEADER_PADDING_SIDE: i16 = 2;
-const HEADER_PADDING_BOTTOM: i16 = 2;
+const HEADER_PADDING_BOTTOM: i16 = 4;
 
 const HEADER_PADDING: Insets = Insets::new(
-    0,
+    HEADER_PADDING_TOP,
     HEADER_PADDING_SIDE,
     HEADER_PADDING_BOTTOM,
     HEADER_PADDING_SIDE,
@@ -232,23 +233,7 @@ impl Component for PinKeyboard<'_> {
     }
 
     fn paint(&mut self) {
-        self.erase_btn.paint();
-        self.textbox_pad.paint();
-        if self.textbox.inner().is_empty() {
-            if let Some(ref mut w) = self.major_warning {
-                w.paint();
-            } else {
-                self.major_prompt.paint();
-            }
-            self.minor_prompt.paint();
-            self.cancel_btn.paint();
-        } else {
-            self.textbox.paint();
-        }
-        self.confirm_btn.paint();
-        for btn in &mut self.digit_btns {
-            btn.paint();
-        }
+        todo!("remove when ui-t3t1 done");
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

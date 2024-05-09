@@ -95,7 +95,9 @@ def prepare(
     elif situation == Situation.PIN_SETUP:
         # Set new PIN
         device_handler.run(device.change_pin)  # type: ignore
-        TR.assert_in(debug.wait_layout().text_content(), "pin__turn_on")
+        TR.assert_in_multiple(
+            debug.wait_layout().text_content(), ["pin__turn_on", "pin__info"]
+        )
         if debug.model in (models.T2T1, models.T3T1):
             go_next(debug)
         elif debug.model in (models.T2B1,):
@@ -306,12 +308,15 @@ def test_pin_setup(device_handler: "BackgroundDeviceHandler"):
 def test_pin_setup_mismatch(device_handler: "BackgroundDeviceHandler"):
     with PIN_CANCELLED, prepare(device_handler, Situation.PIN_SETUP) as debug:
         _enter_two_times(debug, "1", "2")
-        if debug.model in (models.T2T1, models.T3T1):
+        if debug.model in (models.T2T1,):
             go_next(debug)
             _cancel_pin(debug)
         elif debug.model in (models.T2B1,):
             debug.press_middle()
             debug.press_no()
+        elif debug.model in (models.T3T1,):
+            go_next(debug, wait=True)
+            _cancel_pin(debug)
 
 
 @pytest.mark.setup_client(pin="1")
