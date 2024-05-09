@@ -76,11 +76,13 @@ def confirm_action(
     title: str,
     action: str | None,
     description: str | None,
+    subtitle: str | None = None,
     verb: str | None = None,
     verb_cancel: str | None = None,
     hold: bool = False,
     hold_danger: bool = False,
     reverse: bool = False,
+    prompt_screen: bool = False,
 ) -> LayoutObj[UiResult]:
     """Confirm action."""
 

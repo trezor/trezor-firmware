@@ -357,6 +357,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_progress__x_seconds_left_template;
   MP_QSTR_progress_event;
   MP_QSTR_prompt;
+  MP_QSTR_prompt_screen;
   MP_QSTR_qr_title;
   MP_QSTR_reboot_to_bootloader__just_a_moment;
   MP_QSTR_reboot_to_bootloader__restart;
