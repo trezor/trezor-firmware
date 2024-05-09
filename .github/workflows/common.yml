@@ -1,6 +1,10 @@
 name: Common
 
-on: [pull_request]
+on:
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: '14 23 * * *'  # every day @ 23:14
 
 jobs:
   crypto_build:
