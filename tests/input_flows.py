@@ -643,7 +643,7 @@ class InputFlowShowXpubQRCode(InputFlowBase):
             br = yield
             layout = self.debug.wait_layout()
 
-        TR.assert_in(layout.title(), "address__title_receive_address") #XXX this is wrong
+        TR.assert_in(layout.title(), "address__title_receive_address")
 
         self.debug.click(buttons.CORNER_BUTTON, wait=True)
         assert "VerticalMenu" in self.all_components()
