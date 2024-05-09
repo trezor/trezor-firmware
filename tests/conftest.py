@@ -421,12 +421,11 @@ def pytest_configure(config: "Config") -> None:
 def pytest_runtest_setup(item: pytest.Item) -> None:
     """Called for each test item (class, individual tests).
 
-    Ensures that altcoin tests are skipped, and that no test is skipped on
-    both T1 and TT.
+    Ensures that altcoin tests are skipped, and that no test is skipped for all models.
     """
     if all(
         item.get_closest_marker(marker)
-        for marker in ("skip_t1b1", "skip_t2t1", "skip_t2b1")
+        for marker in ("skip_t1b1", "skip_t2t1", "skip_t2b1", "skip_t3t1")
     ):
         raise RuntimeError("Don't skip tests for all trezor models!")
 

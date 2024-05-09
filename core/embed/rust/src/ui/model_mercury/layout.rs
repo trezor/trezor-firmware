@@ -882,14 +882,26 @@ fn new_show_modal(
 
 extern "C" fn new_show_error(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let icon = BlendedImage::new(
-            theme::IMAGE_BG_CIRCLE,
-            theme::IMAGE_FG_ERROR,
-            theme::ERROR_COLOR,
-            theme::FG,
-            theme::BG,
-        );
-        new_show_modal(kwargs, icon, theme::button_default())
+        let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let description: TString = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
+        let allow_cancel: bool = kwargs.get(Qstr::MP_QSTR_allow_cancel)?.try_into()?;
+
+        let content = SwipeUpScreen::new(Paragraphs::new([Paragraph::new(
+            &theme::TEXT_MAIN_GREY_LIGHT,
+            description,
+        )]));
+        let frame = if allow_cancel {
+            Frame::left_aligned(title, content)
+                .with_cancel_button()
+                .with_danger()
+                .with_footer(TR::instructions__swipe_up.into(), None)
+        } else {
+            Frame::left_aligned(title, content)
+                .with_danger()
+                .with_footer(TR::instructions__swipe_up.into(), None)
+        };
+        let obj = LayoutObj::new(frame)?;
+        Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
@@ -1669,6 +1681,15 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// def flow_confirm_reset_create() -> LayoutObj[UiResult]:
     ///     """Confirm TOS before creating a wallet and have a user hold to confirm creation."""
     Qstr::MP_QSTR_flow_confirm_reset_create => obj_fn_kw!(0, flow::confirm_reset_create::new_confirm_reset_create).as_obj(),
+
+    // TODO: supply more arguments for Wipe code setting when figma done
+    /// def flow_confirm_set_new_pin(
+    ///     *,
+    ///     title: str,
+    ///     description: str,
+    /// ) -> LayoutObj[UiResult]:
+    ///     """Confirm new PIN setup with an option to cancel action."""
+    Qstr::MP_QSTR_flow_confirm_set_new_pin => obj_fn_kw!(0, flow::confirm_set_new_pin::new_set_new_pin).as_obj(),
 
     /// def show_info_with_cancel(
     ///     *,

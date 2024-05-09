@@ -1404,8 +1404,9 @@ async def pin_mismatch_popup(
     is_wipe_code: bool = False,
 ) -> None:
     await button_request("pin_mismatch", code=BR_TYPE_OTHER)
-    title = TR.wipe_code__wipe_code_mismatch if is_wipe_code else TR.pin__pin_mismatch
-    description = TR.wipe_code__mismatch if is_wipe_code else TR.pin__mismatch
+    title = TR.wipe_code__mismatch if is_wipe_code else TR.pin__mismatch
+    description = TR.wipe_code__enter_new if is_wipe_code else TR.pin__reenter_new
+
     return await show_error_popup(
         title,
         description,
@@ -1432,14 +1433,7 @@ async def confirm_set_new_pin(
     await raise_if_not_confirmed(
         interact(
             RustLayout(
-                trezorui2.confirm_emphasized(
-                    title=title,
-                    items=(
-                        (True, description + "\n\n"),
-                        information,
-                    ),
-                    verb=TR.buttons__turn_on,
-                )
+                trezorui2.flow_confirm_set_new_pin(title=title, description=description)
             ),
             br_type,
             br_code,

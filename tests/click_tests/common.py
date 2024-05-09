@@ -46,10 +46,12 @@ def get_char_category(char: str) -> PassphraseCategory:
 
 
 def go_next(debug: "DebugLink", wait: bool = False) -> "LayoutContent" | None:
-    if debug.model in (models.T2T1, models.T3T1):
+    if debug.model in (models.T2T1,):
         return debug.click(buttons.OK, wait=wait)  # type: ignore
     elif debug.model in (models.T2B1,):
         return debug.press_right(wait=wait)  # type: ignore
+    elif debug.model in (models.T3T1,):
+        return debug.swipe_up(wait=wait)
     else:
         raise RuntimeError("Unknown model")
 
@@ -109,6 +111,17 @@ def navigate_to_action_and_press(
         debug.press_middle_htc(1000)
     else:
         debug.press_middle(wait=True)
+
+
+def unlock_gesture(debug: "DebugLink", wait: bool = False) -> "LayoutContent" | None:
+    if debug.model in (models.T2T1,):
+        return debug.click(buttons.OK, wait=wait)  # type: ignore
+    elif debug.model in (models.T2B1,):
+        return debug.press_right(wait=wait)  # type: ignore
+    elif debug.model in (models.T3T1,):
+        return debug.click(buttons.TAP_TO_CONFIRM, wait=wait)  # type: ignore
+    else:
+        raise RuntimeError("Unknown model")
 
 
 def _get_action_index(wanted_action: str, all_actions: list[str]) -> int:

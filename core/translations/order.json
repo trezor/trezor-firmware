@@ -862,5 +862,9 @@
   "860": "address_details__derivation_path",
   "861": "instructions__continue_in_app",
   "862": "words__cancel_and_exit",
-  "863": "address__confirmed"
+  "863": "address__confirmed",
+  "864": "reset__title_shamir_backup",
+  "865": "pin__cancel_description",
+  "866": "pin__cancel_info",
+  "867": "pin__cancel_setup"
 }

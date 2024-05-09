@@ -156,6 +156,15 @@ def flow_confirm_reset_create() -> LayoutObj[UiResult]:
 
 
 # rust/src/ui/model_mercury/layout.rs
+def flow_confirm_set_new_pin(
+    *,
+    title: str,
+    description: str,
+) -> LayoutObj[UiResult]:
+    """Confirm new PIN setup with an option to cancel action."""
+
+
+# rust/src/ui/model_mercury/layout.rs
 def show_info_with_cancel(
     *,
     title: str,
