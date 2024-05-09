@@ -1255,6 +1255,9 @@ pub enum TranslatedString {
     words__cancel_and_exit = 860,  // "Cancel and exit"
     address__confirmed = 861,  // "Receive address confirmed"
     reset__title_shamir_backup = 862,  // "Shamir backup"
+    pin__cancel_description = 863,  // "Continue without PIN"
+    pin__cancel_info = 864,  // "Without a PIN, anyone can access this device."
+    pin__cancel_setup = 865,  // "Cancel PIN setup"
 }
 
 impl TranslatedString {
@@ -2505,6 +2508,9 @@ impl TranslatedString {
             Self::words__cancel_and_exit => "Cancel and exit",
             Self::address__confirmed => "Receive address confirmed",
             Self::reset__title_shamir_backup => "Shamir backup",
+            Self::pin__cancel_description => "Continue without PIN",
+            Self::pin__cancel_info => "Without a PIN, anyone can access this device.",
+            Self::pin__cancel_setup => "Cancel PIN setup",
         }
     }
 
@@ -3756,6 +3762,9 @@ impl TranslatedString {
             Qstr::MP_QSTR_words__cancel_and_exit => Some(Self::words__cancel_and_exit),
             Qstr::MP_QSTR_address__confirmed => Some(Self::address__confirmed),
             Qstr::MP_QSTR_reset__title_shamir_backup => Some(Self::reset__title_shamir_backup),
+            Qstr::MP_QSTR_pin__cancel_description => Some(Self::pin__cancel_description),
+            Qstr::MP_QSTR_pin__cancel_info => Some(Self::pin__cancel_info),
+            Qstr::MP_QSTR_pin__cancel_setup => Some(Self::pin__cancel_setup),
             _ => None,
         }
     }

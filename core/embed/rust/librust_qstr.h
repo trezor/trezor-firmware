@@ -213,6 +213,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_firmware_update__title_fingerprint;
   MP_QSTR_flow_confirm_reset_create;
   MP_QSTR_flow_confirm_reset_recover;
+  MP_QSTR_flow_confirm_set_new_pin;
   MP_QSTR_flow_get_address;
   MP_QSTR_flow_prompt_backup;
   MP_QSTR_flow_show_share_words;
@@ -306,6 +307,9 @@ static void _librust_qstrs(void) {
   MP_QSTR_passphrase__turn_off;
   MP_QSTR_passphrase__turn_on;
   MP_QSTR_path;
+  MP_QSTR_pin__cancel_description;
+  MP_QSTR_pin__cancel_info;
+  MP_QSTR_pin__cancel_setup;
   MP_QSTR_pin__change;
   MP_QSTR_pin__changed;
   MP_QSTR_pin__cursor_will_change;
