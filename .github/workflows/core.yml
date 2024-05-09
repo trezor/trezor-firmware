@@ -109,8 +109,6 @@ jobs:
       BITCOIN_ONLY: ${{ matrix.coins == 'universal' && '0' || '1' }}
       PYOPT: ${{ matrix.type == 'debuglink' && '0' || '1' }}
       ADDRESS_SANITIZER: ${{ matrix.asan == 'asan' && '1' || '0' }}
-      RUSTC_BOOTSTRAP: ${{ matrix.asan == 'asan' && '1' || '0' }}
-      RUSTFLAGS: ${{ matrix.asan == 'asan' && '-Z sanitizer=address' || '' }}
       LSAN_OPTIONS: "suppressions=../../asan_suppressions.txt"
     steps:
       - uses: actions/checkout@v4
