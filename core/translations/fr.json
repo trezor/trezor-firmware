@@ -631,7 +631,6 @@
     "reset__threshold_info": "= nbre min de listes de mots uniques utilisées pour la récup.",
     "reset__title_backup_is_done": "Sauv. terminée",
     "reset__title_create_wallet": "Créer portef.",
-    "reset__title_create_wallet_shamir": "Créer port. (shamir)",
     "reset__title_group_threshold": "Seuil du groupe",
     "reset__title_number_of_groups": "Nbre de groupes",
     "reset__title_number_of_shares": "Nbre fragm.",

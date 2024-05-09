@@ -601,7 +601,6 @@ class TR:
     reset__threshold_info: str = "= minimum number of unique word lists used for recovery."
     reset__title_backup_is_done: str = "Backup is done"
     reset__title_create_wallet: str = "Create wallet"
-    reset__title_create_wallet_shamir: str = "Create wallet (shamir)"
     reset__title_group_threshold: str = "Group threshold"
     reset__title_number_of_groups: str = "Number of groups"
     reset__title_number_of_shares: str = "Number of shares"

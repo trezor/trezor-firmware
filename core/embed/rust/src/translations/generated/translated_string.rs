@@ -874,7 +874,7 @@ pub enum TranslatedString {
     reset__threshold_info = 586,  // "= minimum number of unique word lists used for recovery."
     reset__title_backup_is_done = 587,  // "Backup is done"
     reset__title_create_wallet = 588,  // "Create wallet"
-    reset__title_create_wallet_shamir = 589,  // "Create wallet (shamir)"
+    reset__title_create_wallet_shamir = 589,  // "\"\""
     reset__title_group_threshold = 590,  // "Group threshold"
     reset__title_number_of_groups = 591,  // "Number of groups"
     reset__title_number_of_shares = 592,  // "Number of shares"
@@ -2108,7 +2108,7 @@ impl TranslatedString {
             Self::reset__threshold_info => "= minimum number of unique word lists used for recovery.",
             Self::reset__title_backup_is_done => "Backup is done",
             Self::reset__title_create_wallet => "Create wallet",
-            Self::reset__title_create_wallet_shamir => "Create wallet (shamir)",
+            Self::reset__title_create_wallet_shamir => "\"\"",
             Self::reset__title_group_threshold => "Group threshold",
             Self::reset__title_number_of_groups => "Number of groups",
             Self::reset__title_number_of_shares => "Number of shares",

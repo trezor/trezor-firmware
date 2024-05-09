@@ -13,10 +13,7 @@ if TYPE_CHECKING:
 
 
 def confirm_new_wallet(debug: "DebugLink") -> None:
-    TR.assert_equals_multiple(
-        debug.read_layout().title(),
-        ["reset__title_create_wallet", "reset__title_create_wallet_shamir"],
-    )
+    TR.assert_equals(debug.read_layout().title(), "reset__title_create_wallet")
     if debug.model in (models.T2T1, models.T3T1):
         debug.click(buttons.OK, wait=True)
     elif debug.model in (models.T2B1,):

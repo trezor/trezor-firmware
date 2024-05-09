@@ -631,7 +631,6 @@
     "reset__threshold_info": "= mínimo de listas de palabras únicas para la recuperación.",
     "reset__title_backup_is_done": "C. seg. completa",
     "reset__title_create_wallet": "Crear monedero",
-    "reset__title_create_wallet_shamir": "Crear monedero (shamir)",
     "reset__title_group_threshold": "Umbral grupos",
     "reset__title_number_of_groups": "Nro.grupos",
     "reset__title_number_of_shares": "Nro.rec. comp.",

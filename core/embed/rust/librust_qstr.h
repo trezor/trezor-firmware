@@ -441,7 +441,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_reset__threshold_info;
   MP_QSTR_reset__title_backup_is_done;
   MP_QSTR_reset__title_create_wallet;
-  MP_QSTR_reset__title_create_wallet_shamir;
   MP_QSTR_reset__title_group_threshold;
   MP_QSTR_reset__title_number_of_groups;
   MP_QSTR_reset__title_number_of_shares;

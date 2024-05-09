@@ -631,7 +631,6 @@
     "reset__threshold_info": "= Mindestanzahl eindeutiger Wortlisten für Wiederherstellung.",
     "reset__title_backup_is_done": "Backup fertig",
     "reset__title_create_wallet": "Wallet erstellen",
-    "reset__title_create_wallet_shamir": "Wallet erstellen (shamir)",
     "reset__title_group_threshold": "Gruppenschwelle",
     "reset__title_number_of_groups": "Anzahl der gruppen",
     "reset__title_number_of_shares": "Anzahl shares",

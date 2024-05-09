@@ -591,7 +591,6 @@
   "reset__threshold_info": "text,3",
   "reset__title_backup_is_done": "title,1",
   "reset__title_create_wallet": "title,1",
-  "reset__title_create_wallet_shamir": "title,2",
   "reset__title_group_threshold": "title,1",
   "reset__title_number_of_groups": "title,1",
   "reset__title_number_of_shares": "title,1",
