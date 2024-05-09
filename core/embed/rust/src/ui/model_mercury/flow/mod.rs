@@ -1,3 +1,4 @@
+pub mod confirm_action;
 pub mod confirm_reset_create;
 pub mod confirm_reset_recover;
 pub mod confirm_set_new_pin;
@@ -6,6 +7,7 @@ pub mod prompt_backup;
 pub mod show_share_words;
 pub mod warning_hi_prio;
 
+pub use confirm_action::new_confirm_action;
 pub use confirm_reset_create::ConfirmResetCreate;
 pub use confirm_reset_recover::ConfirmResetRecover;
 pub use confirm_set_new_pin::SetNewPin;
