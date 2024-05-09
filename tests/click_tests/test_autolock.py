@@ -29,7 +29,7 @@ from .. import translations as TR
 from ..device_tests.bitcoin.payment_req import make_coinjoin_request
 from ..tx_cache import TxCache
 from . import recovery
-from .common import go_next
+from .common import go_next, unlock_gesture
 
 if TYPE_CHECKING:
     from trezorlib.debuglink import DebugLink, LayoutContent
@@ -279,7 +279,8 @@ def test_dryrun_locks_at_number_of_words(device_handler: "BackgroundDeviceHandle
     # unlock
     # lockscreen triggered automatically
     debug.wait_layout(wait_for_external_change=True)
-    layout = go_next(debug, wait=True)
+    layout = unlock_gesture(debug, wait=True)
+
     assert "PinKeyboard" in layout.all_components()
     layout = debug.input(PIN4, wait=True)
     assert layout is not None
@@ -301,7 +302,7 @@ def test_dryrun_locks_at_word_entry(device_handler: "BackgroundDeviceHandler"):
     recovery.select_number_of_words(debug, 20)
 
     if debug.model in (models.T2T1, models.T3T1):
-        layout = debug.click(buttons.OK, wait=True)
+        layout = go_next(debug, wait=True)
         assert layout.main_component() == "MnemonicKeyboard"
     elif debug.model in (models.T2B1,):
         layout = debug.press_right(wait=True)

@@ -21,6 +21,7 @@ from trezorlib.client import MAX_PIN_LENGTH, PASSPHRASE_TEST_PATH
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import Cancelled, TrezorFailure
 
+from .. import buttons
 from ..input_flows import (
     InputFlowCodeChangeFail,
     InputFlowNewCodeMismatch,
@@ -180,3 +181,27 @@ def test_change_invalid_current(client: Client):
     client.init_device()
     assert client.features.pin_protection is True
     _check_pin(client, PIN4)
+
+
+@pytest.mark.skip_t2b1()
+@pytest.mark.skip_t2t1()
+@pytest.mark.setup_client(pin=None)
+def test_pin_menu_cancel_setup(client: Client):
+    def cancel_pin_setup_input_flow():
+        yield
+        # enter context menu
+        client.debug.click(buttons.CORNER_BUTTON)
+        client.debug.synchronize_at("VerticalMenu")
+        # click "Cancel PIN setup"
+        client.debug.click(buttons.VERTICAL_MENU[0])
+        client.debug.synchronize_at("Paragraphs")
+        # swipe through info screen
+        client.debug.swipe_up()
+        client.debug.synchronize_at("PromptScreen")
+        # tap to confirm
+        client.debug.click(buttons.TAP_TO_CONFIRM)
+
+    with client, pytest.raises(Cancelled):
+        client.set_input_flow(cancel_pin_setup_input_flow)
+        client.call(messages.ChangePin())
+    _check_no_pin(client)
