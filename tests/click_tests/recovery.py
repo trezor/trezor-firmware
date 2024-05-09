@@ -62,7 +62,7 @@ def select_number_of_words(
     if wait:
         debug.wait_layout()
     TR.assert_equals(debug.read_layout().text_content(), "recovery__num_of_words")
-    if debug.model in (models.T2T1, models.T3T1):
+    if debug.model in (models.T2T1,):
         # click the number
         word_option_offset = 6
         word_options = (12, 18, 20, 24, 33)
@@ -81,6 +81,20 @@ def select_number_of_words(
         for _ in range(index):
             debug.press_right(wait=True)
         layout = debug.press_middle(wait=True)
+    elif debug.model in (models.T3T1,):
+        if num_of_words == 12:
+            coords = buttons.grid34(0, 1)
+        elif num_of_words == 18:
+            coords = buttons.grid34(2, 1)
+        elif num_of_words == 20:
+            coords = buttons.grid34(0, 2)
+        elif num_of_words == 24:
+            coords = buttons.grid34(2, 2)
+        elif num_of_words == 33:
+            coords = buttons.grid34(1, 3)
+        else:
+            raise ValueError("Invalid num_of_words")
+        layout = debug.click(coords, wait=True)
     else:
         raise ValueError("Unknown model")
 
