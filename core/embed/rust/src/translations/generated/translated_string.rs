@@ -1268,6 +1268,10 @@ pub enum TranslatedString {
     instructions__continue_in_app = 867,  // "Continue in the app"
     words__cancel_and_exit = 868,  // "Cancel and exit"
     address__confirmed = 869,  // "Receive address confirmed"
+    reset__title_shamir_backup = 870,  // "Multi-share backup"
+    pin__cancel_description = 871,  // "Continue without PIN"
+    pin__cancel_info = 872,  // "Without a PIN, anyone can access this device."
+    pin__cancel_setup = 873,  // "Cancel PIN setup"
 }
 
 impl TranslatedString {
@@ -2531,6 +2535,10 @@ impl TranslatedString {
             Self::instructions__continue_in_app => "Continue in the app",
             Self::words__cancel_and_exit => "Cancel and exit",
             Self::address__confirmed => "Receive address confirmed",
+            Self::reset__title_shamir_backup => "Multi-share backup",
+            Self::pin__cancel_description => "Continue without PIN",
+            Self::pin__cancel_info => "Without a PIN, anyone can access this device.",
+            Self::pin__cancel_setup => "Cancel PIN setup",
         }
     }
 
@@ -3795,6 +3803,10 @@ impl TranslatedString {
             Qstr::MP_QSTR_instructions__continue_in_app => Some(Self::instructions__continue_in_app),
             Qstr::MP_QSTR_words__cancel_and_exit => Some(Self::words__cancel_and_exit),
             Qstr::MP_QSTR_address__confirmed => Some(Self::address__confirmed),
+            Qstr::MP_QSTR_reset__title_shamir_backup => Some(Self::reset__title_shamir_backup),
+            Qstr::MP_QSTR_pin__cancel_description => Some(Self::pin__cancel_description),
+            Qstr::MP_QSTR_pin__cancel_info => Some(Self::pin__cancel_info),
+            Qstr::MP_QSTR_pin__cancel_setup => Some(Self::pin__cancel_setup),
             _ => None,
         }
     }
