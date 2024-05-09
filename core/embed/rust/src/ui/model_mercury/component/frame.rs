@@ -13,7 +13,7 @@ use crate::{
 use super::{theme, Button, ButtonMsg, ButtonStyleSheet, CancelInfoConfirmMsg, Footer};
 
 const TITLE_HEIGHT: i16 = 42;
-const BUTTON_EXPAND_BORDER: i16 = 16;
+const BUTTON_EXPAND_BORDER: i16 = 32;
 
 #[derive(Clone)]
 pub struct Frame<T> {
@@ -83,11 +83,7 @@ where
     }
 
     fn with_button(mut self, icon: Icon, msg: CancelInfoConfirmMsg, enabled: bool) -> Self {
-        let touch_area = Insets {
-            left: BUTTON_EXPAND_BORDER,
-            bottom: BUTTON_EXPAND_BORDER,
-            ..self.border
-        };
+        let touch_area = Insets::uniform(BUTTON_EXPAND_BORDER);
         self.button = Some(Child::new(
             Button::with_icon(icon)
                 .with_expanded_touch_area(touch_area)
