@@ -1,6 +1,10 @@
 name: "Prebuild checks"
 
-on: [pull_request]
+on:
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: '13 23 * * *'  # every day @ 23:13
 
 jobs:
   block-fixup:
@@ -54,7 +58,7 @@ jobs:
   # or contain `[no changelog]` in the commit message.
   changelog_check:
     name: Changelog check
-    if: ${{ github.ref != 'main' }}
+    if: ${{ github.ref != 'main' && github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
