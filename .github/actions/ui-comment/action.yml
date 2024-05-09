@@ -4,7 +4,7 @@ runs:
   using: composite
   steps:
     - name: Find Comment
-      uses: peter-evans/find-comment@v2
+      uses: peter-evans/find-comment@v3
       id: fc
       if: github.event_name == 'pull_request'
       with:
@@ -13,7 +13,7 @@ runs:
         body-includes: ui-comment-${{ github.workflow }}
 
     - name: Create or update comment
-      uses: peter-evans/create-or-update-comment@v3
+      uses: peter-evans/create-or-update-comment@v4
       if: github.event_name == 'pull_request'
       with:
         comment-id: ${{ steps.fc.outputs.comment-id }}
