@@ -36,7 +36,9 @@
 
 #include "display_interface.h"
 
-static struct { int x, y; } DISPLAY_OFFSET;
+static struct {
+  int x, y;
+} DISPLAY_OFFSET;
 
 // common display functions
 

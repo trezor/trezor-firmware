@@ -25,10 +25,10 @@
 
 #define SAU_INIT_CTRL_ENABLE 1
 #define SAU_INIT_CTRL_ALLNS 0
-#define SAU_INIT_REGION(n, start, end, sec) \
-  SAU->RNR = ((n)&SAU_RNR_REGION_Msk);      \
-  SAU->RBAR = ((start)&SAU_RBAR_BADDR_Msk); \
-  SAU->RLAR = ((end)&SAU_RLAR_LADDR_Msk) |  \
+#define SAU_INIT_REGION(n, start, end, sec)   \
+  SAU->RNR = ((n) & SAU_RNR_REGION_Msk);      \
+  SAU->RBAR = ((start) & SAU_RBAR_BADDR_Msk); \
+  SAU->RLAR = ((end) & SAU_RLAR_LADDR_Msk) |  \
               (((sec) << SAU_RLAR_NSC_Pos) & SAU_RLAR_NSC_Msk) | 1U
 
 static void trustzone_configure_sau(void) {

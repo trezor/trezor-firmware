@@ -33,7 +33,7 @@
 // block_count blocks of hash function in derivation_function. There is no need
 // the input to have this length, it's just an optimalization.
 #define CHACHA_DRBG_OPTIMAL_RESEED_LENGTH(block_count) \
-  ((block_count)*SHA256_BLOCK_LENGTH - 1 - 4 - 9)
+  ((block_count) * SHA256_BLOCK_LENGTH - 1 - 4 - 9)
 // 1 = sizeof(counter), 4 = sizeof(output_length) in
 // derivation_function, 9 is length of SHA256 padding of message
 // aligned to bytes

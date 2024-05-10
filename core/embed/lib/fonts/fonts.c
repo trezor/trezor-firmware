@@ -139,7 +139,7 @@ font_glyph_iter_t font_glyph_iter_init(const int font, const uint8_t *text,
   };
 }
 
-#define IS_UTF8_CONTINUE(c) (((c)&0b11000000) == 0b10000000)
+#define IS_UTF8_CONTINUE(c) (((c) & 0b11000000) == 0b10000000)
 
 static uint16_t next_utf8_codepoint(font_glyph_iter_t *iter) {
   uint16_t out;

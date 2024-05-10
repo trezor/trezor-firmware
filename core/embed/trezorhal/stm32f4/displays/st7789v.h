@@ -55,7 +55,7 @@ void display_efficient_clear(void);
 #define PIXELDATA(X) DATA(X)
 #elif USE_DISP_I8080_8BIT_DW
 #define PIXELDATA(X) \
-  DATA((X)&0xFF);    \
+  DATA((X) & 0xFF);  \
   DATA((X) >> 8)
 #endif
 
