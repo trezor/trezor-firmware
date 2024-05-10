@@ -450,7 +450,7 @@ def _load_fido_apps() -> FidoApps:
 
 RELEASES_URL = "https://data.trezor.io/firmware/{}/releases.json"
 MISSING_SUPPORT_MEANS_NO = ("connect", "suite")
-VERSIONED_SUPPORT_INFO = ("T1B1", "T2T1", "T2B1")
+VERSIONED_SUPPORT_INFO = ("T1B1", "T2T1", "T2B1", "T3T1")
 
 
 def get_support_data() -> SupportData:

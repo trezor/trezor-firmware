@@ -51,8 +51,9 @@ def token_by_chain_address(chain_id: int, address: bytes) -> EthereumTokenInfo |
 
 
 def _token_iterator(chain_id: int) -> Iterator[tuple[bytes, str, int, str]]:
-    if utils.MODEL_IS_T2B1:
-% for token_chain_id, tokens in group_tokens(supported_on("T2B1", erc20)).items():
+% for model in ["T2B1", "T3T1", "T2T1"]:
+    if utils.INTERNAL_MODEL == "${model}":
+% for token_chain_id, tokens in group_tokens(supported_on(model, erc20)).items():
         if chain_id == ${token_chain_id}:  # ${tokens[0].chain}
             % for t in tokens:
             yield (  # address, symbol, decimals, name
@@ -63,15 +64,4 @@ def _token_iterator(chain_id: int) -> Iterator[tuple[bytes, str, int, str]]:
             )
             % endfor
 % endfor
-    else:
-% for token_chain_id, tokens in group_tokens(supported_on("T2T1", erc20)).items():
-        if chain_id == ${token_chain_id}:  # ${tokens[0].chain}
-            % for t in tokens:
-            yield (  # address, symbol, decimals, name
-                ${black_repr(t.address_bytes)},
-                ${black_repr(t.symbol)},
-                ${t.decimals},
-                ${black_repr(t.name.strip())},
-            )
-            % endfor
 % endfor
