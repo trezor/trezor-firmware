@@ -59,7 +59,7 @@ def by_slip44(slip44: int) -> EthereumNetworkInfo:
 
 # fmt: off
 def _networks_iterator() -> Iterator[NetworkInfoTuple]:
-    if utils.MODEL_IS_T2B1:
+    if utils.INTERNAL_MODEL == "T2B1":
         yield (
             1,  # chain_id
             60,  # slip44
@@ -102,7 +102,50 @@ def _networks_iterator() -> Iterator[NetworkInfoTuple]:
             "MATIC",  # symbol
             "Polygon",  # name
         )
-    else:
+    if utils.INTERNAL_MODEL == "T3T1":
+        yield (
+            1,  # chain_id
+            60,  # slip44
+            "ETH",  # symbol
+            "Ethereum",  # name
+        )
+        yield (
+            3,  # chain_id
+            1,  # slip44
+            "tETH",  # symbol
+            "Ropsten",  # name
+        )
+        yield (
+            4,  # chain_id
+            1,  # slip44
+            "tETH",  # symbol
+            "Rinkeby",  # name
+        )
+        yield (
+            5,  # chain_id
+            1,  # slip44
+            "tETH",  # symbol
+            "Görli",  # name
+        )
+        yield (
+            56,  # chain_id
+            714,  # slip44
+            "BNB",  # symbol
+            "Binance Smart Chain",  # name
+        )
+        yield (
+            61,  # chain_id
+            61,  # slip44
+            "ETC",  # symbol
+            "Ethereum Classic",  # name
+        )
+        yield (
+            137,  # chain_id
+            966,  # slip44
+            "MATIC",  # symbol
+            "Polygon",  # name
+        )
+    if utils.INTERNAL_MODEL == "T2T1":
         yield (
             1,  # chain_id
             60,  # slip44

@@ -47,7 +47,7 @@ FAKE_TXHASH_a63dbe = bytes.fromhex(
     "a63dbedd8cd284bf0d3c468e84b9b0eeb14c3a08824eab8f80e7723a299f30db"
 )
 
-pytestmark = [pytest.mark.altcoin, pytest.mark.skip_t2b1]
+pytestmark = [pytest.mark.altcoin, pytest.mark.skip_t2b1, pytest.mark.skip_t3t1]
 
 
 # All data taken from T1

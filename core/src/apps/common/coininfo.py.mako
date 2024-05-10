@@ -134,20 +134,19 @@ ATTRIBUTES = (
     ("confidential_assets", optional_dict),
 )
 
+models = ["T2B1", "T3T1", "T2T1"]
+
 btc_names = ["Bitcoin", "Testnet", "Regtest"]
 
-# TODO: make this easily extendable for more models
-
-coins_btc_t2t1 = [c for c in supported_on("T2T1", bitcoin) if c.name in btc_names]
-coins_alt_t2t1 = [c for c in supported_on("T2T1", bitcoin) if c.name not in btc_names]
-
-coins_btc_t2b1 = [c for c in supported_on("T2B1", bitcoin) if c.name in btc_names]
-coins_alt_t2b1 = [c for c in supported_on("T2B1", bitcoin) if c.name not in btc_names]
-
+coins = {}
+for model in models:
+    coins.setdefault('btc', {})[model] = [c for c in supported_on(model, bitcoin) if c.name in btc_names]
+    coins.setdefault('alt', {})[model] = [c for c in supported_on(model, bitcoin) if c.name not in btc_names]
 %>\
 def by_name(name: str) -> CoinInfo:
-    if utils.MODEL_IS_T2B1:
-% for coin in coins_btc_t2b1:
+% for model in models:
+    if utils.INTERNAL_MODEL == "${model}":
+% for coin in coins['btc'][model]:
         if name == ${black_repr(coin["coin_name"])}:
             return CoinInfo(
                 % for attr, func in ATTRIBUTES:
@@ -156,7 +155,7 @@ def by_name(name: str) -> CoinInfo:
             )
 % endfor
         if not utils.BITCOIN_ONLY:
-% for coin in coins_alt_t2b1:
+% for coin in coins['alt'][model]:
             if name == ${black_repr(coin["coin_name"])}:
                 return CoinInfo(
                     % for attr, func in ATTRIBUTES:
@@ -165,22 +164,5 @@ def by_name(name: str) -> CoinInfo:
                 )
 % endfor
         raise ValueError  # Unknown coin name
-    else:
-% for coin in coins_btc_t2t1:
-        if name == ${black_repr(coin["coin_name"])}:
-            return CoinInfo(
-                % for attr, func in ATTRIBUTES:
-                ${func(coin[attr])},  # ${attr}
-                % endfor
-            )
 % endfor
-        if not utils.BITCOIN_ONLY:
-% for coin in coins_alt_t2t1:
-            if name == ${black_repr(coin["coin_name"])}:
-                return CoinInfo(
-                    % for attr, func in ATTRIBUTES:
-                    ${func(coin[attr])},  # ${attr}
-                    % endfor
-                )
-% endfor
-        raise ValueError  # Unknown coin name
+    raise ValueError  # Unknown model

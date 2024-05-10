@@ -59,8 +59,9 @@ def by_slip44(slip44: int) -> EthereumNetworkInfo:
 
 # fmt: off
 def _networks_iterator() -> Iterator[NetworkInfoTuple]:
-    if utils.MODEL_IS_T2B1:
-% for n in sorted(supported_on("T2B1", eth), key=lambda network: (int(network.chain_id), network.name)):
+% for model in ["T2B1", "T3T1", "T2T1"]:
+    if utils.INTERNAL_MODEL == "${model}":
+% for n in sorted(supported_on(model, eth), key=lambda network: (int(network.chain_id), network.name)):
         yield (
             ${n.chain_id},  # chain_id
             ${n.slip44},  # slip44
@@ -68,12 +69,4 @@ def _networks_iterator() -> Iterator[NetworkInfoTuple]:
             "${n.name}",  # name
         )
 % endfor
-    else:
-% for n in sorted(supported_on("T2T1", eth), key=lambda network: (int(network.chain_id), network.name)):
-        yield (
-            ${n.chain_id},  # chain_id
-            ${n.slip44},  # slip44
-            "${n.shortcut}",  # symbol
-            "${n.name}",  # name
-        )
 % endfor

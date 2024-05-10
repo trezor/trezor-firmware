@@ -36,12 +36,16 @@ PREV_TXES = {PREV_HASH: PREV_TX}
 pytestmark = [pytest.mark.skip_t1b1, pytest.mark.experimental]
 
 
-def case(id, *args, altcoin: bool = False, skip_t2b1: bool = False):
+def case(
+    id, *args, altcoin: bool = False, skip_t2b1: bool = False, skip_t3t1: bool = False
+):
     marks = []
     if altcoin:
         marks.append(pytest.mark.altcoin)
     if skip_t2b1:
         marks.append(pytest.mark.skip_t2b1)
+    if skip_t3t1:
+        marks.append(pytest.mark.skip_t3t1)
     return pytest.param(*args, id=id, marks=marks)
 
 
@@ -115,12 +119,14 @@ SERIALIZED_TX = "01000000000101e29305e85821ea86f2bca1fcfe45e7cb0c8de87b612479ee6
             (PaymentRequestParams([0], memos1, get_nonce=True),),
             altcoin=True,
             skip_t2b1=True,
+            skip_t3t1=True,
         ),
         case(
             "out1",
             (PaymentRequestParams([1], memos2, get_nonce=True),),
             altcoin=True,
             skip_t2b1=True,
+            skip_t3t1=True,
         ),
         case("out2", (PaymentRequestParams([2], [], get_nonce=True),)),
         case(
@@ -276,6 +282,7 @@ def test_payment_req_wrong_mac_refund(client: Client):
 
 @pytest.mark.altcoin
 @pytest.mark.skip_t2b1
+@pytest.mark.skip_t3t1
 def test_payment_req_wrong_mac_purchase(client: Client):
     # Test wrong MAC in payment request memo.
     memo = CoinPurchaseMemo(
