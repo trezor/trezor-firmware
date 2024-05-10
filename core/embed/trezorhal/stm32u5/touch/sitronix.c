@@ -681,8 +681,8 @@ typedef struct {
 #define TS_INT_EXTI_IRQn EXTI8_IRQn
 
 /* Includes ------------------------------------------------------------------*/
-//#include "stm32u5x9j_discovery_ts.h"
-//#include "stm32u5x9j_discovery.h"
+// #include "stm32u5x9j_discovery_ts.h"
+// #include "stm32u5x9j_discovery.h"
 
 /** @addtogroup BSP
  * @{

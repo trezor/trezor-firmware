@@ -59,10 +59,10 @@
 #define ATB_MASK_2 (0x30)
 #define ATB_MASK_3 (0xc0)
 
-#define ATB_0_IS_FREE(a) (((a)&ATB_MASK_0) == 0)
-#define ATB_1_IS_FREE(a) (((a)&ATB_MASK_1) == 0)
-#define ATB_2_IS_FREE(a) (((a)&ATB_MASK_2) == 0)
-#define ATB_3_IS_FREE(a) (((a)&ATB_MASK_3) == 0)
+#define ATB_0_IS_FREE(a) (((a) & ATB_MASK_0) == 0)
+#define ATB_1_IS_FREE(a) (((a) & ATB_MASK_1) == 0)
+#define ATB_2_IS_FREE(a) (((a) & ATB_MASK_2) == 0)
+#define ATB_3_IS_FREE(a) (((a) & ATB_MASK_3) == 0)
 
 #define BLOCK_SHIFT(block) (2 * ((block) & (BLOCKS_PER_ATB - 1)))
 #define ATB_GET_KIND(block)                                         \
@@ -98,7 +98,7 @@
 #define BLOCK_FROM_PTR(ptr) \
   (((byte *)(ptr)-MP_STATE_MEM(gc_pool_start)) / BYTES_PER_BLOCK)
 #define PTR_FROM_BLOCK(block) \
-  (((block)*BYTES_PER_BLOCK + (uintptr_t)MP_STATE_MEM(gc_pool_start)))
+  (((block) * BYTES_PER_BLOCK + (uintptr_t)MP_STATE_MEM(gc_pool_start)))
 #define ATB_FROM_BLOCK(bl) ((bl) / BLOCKS_PER_ATB)
 
 // ptr should be of type void*

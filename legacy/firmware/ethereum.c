@@ -159,7 +159,7 @@ static void hash_rlp_number(uint64_t number) {
   data[4] = (number >> 24) & 0xff;
   data[5] = (number >> 16) & 0xff;
   data[6] = (number >> 8) & 0xff;
-  data[7] = (number)&0xff;
+  data[7] = (number) & 0xff;
   int offset = 0;
   while (!data[offset]) {
     offset++;

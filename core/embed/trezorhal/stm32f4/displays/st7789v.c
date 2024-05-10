@@ -70,7 +70,7 @@ __IO DISP_MEM_TYPE *const DISPLAY_DATA_ADDRESS =
 #endif
 
 #define DATA_TRANSFER(X) \
-  DATA((X)&0xFF);        \
+  DATA((X) & 0xFF);      \
   DATA((X) >> 8)
 
 __attribute__((section(".fb1")))

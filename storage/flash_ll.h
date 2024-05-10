@@ -36,10 +36,10 @@ typedef uint32_t flash_block_t[FLASH_BLOCK_WORDS];
 
 #if FLASH_BLOCK_WORDS == 1
 #define FLASH_ALIGN(X) (((X) + 3) & ~3)
-#define FLASH_IS_ALIGNED(X) (((X)&3) == 0)
+#define FLASH_IS_ALIGNED(X) (((X) & 3) == 0)
 #elif FLASH_BLOCK_WORDS == 4
 #define FLASH_ALIGN(X) (((X) + 0xF) & ~0xF)
-#define FLASH_IS_ALIGNED(X) (((X)&0xF) == 0)
+#define FLASH_IS_ALIGNED(X) (((X) & 0xF) == 0)
 #else
 #error Unsupported number of FLASH_BLOCK_WORDS.
 #endif

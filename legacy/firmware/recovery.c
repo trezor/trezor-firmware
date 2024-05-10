@@ -112,7 +112,7 @@ static uint8_t word_matrix[9];
  * prefix length or table for the very first level, as the prefix length
  * is always one and there are always nine choices on the second level.
  */
-#define MASK_IDX(x) ((x)&0xfff)
+#define MASK_IDX(x) ((x) & 0xfff)
 #define TABLE1(x) MASK_IDX(word_table1[x])
 #define TABLE2(x) MASK_IDX(word_table2[x])
 

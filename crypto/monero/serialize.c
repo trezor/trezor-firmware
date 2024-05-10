@@ -16,7 +16,7 @@ int xmr_size_varint(uint64_t num) {
 int xmr_write_varint(uint8_t *buff, size_t buff_size, uint64_t num) {
   unsigned ctr = 0;
   while (num >= 0x80 && ctr < buff_size) {
-    *buff = (uint8_t)(((num)&0x7f) | 0x80);
+    *buff = (uint8_t)(((num) & 0x7f) | 0x80);
     ++buff;
     ++ctr;
     num >>= 7;
