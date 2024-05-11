@@ -4,7 +4,7 @@ use crate::ui::{
 };
 
 use super::super::{
-    utils::{circle_points, line_points, sin_i16, PI4},
+    utils::{circle_points, line_points, sin_f32},
     BitmapView, Viewport,
 };
 
@@ -578,12 +578,12 @@ pub trait Canvas: BasicCanvas {
         &mut self,
         center: Point,
         radius: i16,
-        mut start: i16,
-        mut end: i16,
+        mut start: f32,
+        mut end: f32,
         color: Color,
     ) {
-        start = (PI4 * 8 + start % (PI4 * 8)) % (PI4 * 8);
-        end = (PI4 * 8 + end % (PI4 * 8)) % (PI4 * 8);
+        start = (360.0 + start % 360.0) % 360.0;
+        end = (360.0 + end % 360.0) % 360.0;
 
         let alpha = 255;
         let alpha_mul = |a: u8| -> u8 { ((a as u16 * alpha as u16) / 255) as u8 };
@@ -593,15 +593,17 @@ pub trait Canvas: BasicCanvas {
             self.draw_pixel(center, color);
         }
 
+        const PI4: f32 = 45.0;
+
         for octant in 0..8 {
-            let angle = octant * PI4;
+            let angle = PI4 * octant as f32;
 
             // Function for calculation of 'u' coordinate inside the circle octant
             // radius * sin(angle)
-            let sin = |angle: i16| -> i16 { sin_i16(angle, radius) };
+            let sin = |angle: f32| -> i16 { (sin_f32(angle) * radius as f32 + 0.5) as i16 };
 
             // Calculate the octant's bounding rectangle
-            let p = Point::new(sin(PI4) + 1, -radius - 1).rot(octant);
+            let p = Point::new(sin(PI4) as i16 + 1, -radius - 1).rot(octant);
             let r = Rect::new(center, p + center.into());
 
             // Ensure that `x0`, `y0` represents the top-left corner and
@@ -662,7 +664,7 @@ pub trait Canvas: BasicCanvas {
                     } else {
                         // Partial fill
                         let u1 = if start <= angle {
-                            sin(corr(0))
+                            sin(corr(0.0))
                         } else {
                             sin(corr(start - angle))
                         };
@@ -684,7 +686,7 @@ pub trait Canvas: BasicCanvas {
                     // Partial fill
                     if (end > angle) && (end < angle + PI4) {
                         // Fill up to `end`
-                        fill_octant(radius, sin(corr(0)), sin(corr(end - angle)), filler);
+                        fill_octant(radius, sin(corr(0.0)), sin(corr(end - angle)), filler);
                     }
                     if start < angle + PI4 {
                         // Fill all from `start`

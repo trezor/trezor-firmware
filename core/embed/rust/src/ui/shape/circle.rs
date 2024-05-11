@@ -14,8 +14,8 @@ pub struct Circle {
     fg_color: Option<Color>,
     bg_color: Option<Color>,
     thickness: i16,
-    start_angle: Option<i16>,
-    end_angle: Option<i16>,
+    start_angle: Option<f32>,
+    end_angle: Option<f32>,
 }
 
 impl Circle {
@@ -49,14 +49,14 @@ impl Circle {
         Self { thickness, ..self }
     }
 
-    pub fn with_start_angle(self, from_angle: i16) -> Self {
+    pub fn with_start_angle(self, from_angle: f32) -> Self {
         Self {
             start_angle: Some(from_angle),
             ..self
         }
     }
 
-    pub fn with_end_angle(self, to_angle: i16) -> Self {
+    pub fn with_end_angle(self, to_angle: f32) -> Self {
         Self {
             end_angle: Some(to_angle),
             ..self
@@ -113,8 +113,8 @@ impl Shape<'_> for Circle {
                 }
             }
         } else {
-            let start = self.start_angle.unwrap_or(0);
-            let end = self.end_angle.unwrap_or(360);
+            let start = self.start_angle.unwrap_or(0.0);
+            let end = self.end_angle.unwrap_or(360.0);
 
             if let Some(color) = self.fg_color {
                 if th > 0 {
