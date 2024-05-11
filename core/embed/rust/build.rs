@@ -358,6 +358,7 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("gfx_rgb565_copy_mono4")
         .allowlist_function("gfx_rgb565_copy_rgb565")
         .allowlist_function("gfx_rgb565_blend_mono4")
+        .allowlist_function("gfx_rgb565_blend_mono8")
         .allowlist_function("gfx_rgba8888_fill")
         .allowlist_function("gfx_rgba8888_copy_mono4")
         .allowlist_function("gfx_rgba8888_copy_rgb565")
