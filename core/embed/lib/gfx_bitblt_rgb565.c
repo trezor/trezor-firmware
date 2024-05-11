@@ -135,3 +135,24 @@ void gfx_rgb565_blend_mono4(const gfx_bitblt_t* bb) {
     }
   }
 }
+
+void gfx_rgb565_blend_mono8(const gfx_bitblt_t* bb) {
+#if defined(USE_DMA2D) && !defined(TREZOR_EMULATOR)
+  if (!dma2d_rgb565_blend_mono8(bb))
+#endif
+  {
+    uint16_t* dst_ptr = (uint16_t*)bb->dst_row + bb->dst_x;
+    uint8_t* src_ptr = (uint8_t*)bb->src_row + bb->src_x;
+    uint16_t height = bb->height;
+
+    while (height-- > 0) {
+      for (int x = 0; x < bb->width; x++) {
+        uint8_t fg_alpha = src_ptr[x];
+        dst_ptr[x] = gfx_color16_blend_a8(
+            bb->src_fg, gfx_color16_to_color(dst_ptr[x]), fg_alpha);
+      }
+      dst_ptr += bb->dst_stride / sizeof(*dst_ptr);
+      src_ptr += bb->src_stride / sizeof(*src_ptr);
+    }
+  }
+}

@@ -325,6 +325,7 @@ impl<'a> BitBltCopy<'a> {
             let bitblt = self.bitblt.with_dst(dst);
             match self.src.format() {
                 BitmapFormat::MONO4 => ffi::gfx_rgb565_blend_mono4(&bitblt),
+                BitmapFormat::MONO8 => ffi::gfx_rgb565_blend_mono8(&bitblt),
                 _ => unimplemented!(),
             }
         }
@@ -369,6 +370,7 @@ impl<'a> BitBltCopy<'a> {
             let bitblt = self.bitblt.with_dst(dst);
             match self.src.format() {
                 BitmapFormat::MONO4 => ffi::gfx_rgba8888_blend_mono4(&bitblt),
+                BitmapFormat::MONO8 => ffi::gfx_rgba8888_blend_mono8(&bitblt),
                 _ => unimplemented!(),
             }
         }
