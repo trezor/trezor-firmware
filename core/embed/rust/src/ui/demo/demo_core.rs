@@ -13,7 +13,7 @@ use crate::{
 use core::fmt::Write;
 use heapless::String;
 
-use super::{screen1::build_screen1, screen2::build_screen2};
+use super::{screen1::build_screen1, screen2::build_screen2, screen3::build_screen3};
 
 fn render_time_overlay(duration: Duration) {
     shape::render_on_display(
@@ -90,9 +90,11 @@ extern "C" fn void() {}
 extern "C" fn drawlib_demo() {
     let screen1 = build_screen1().unwrap();
     let screen2 = build_screen2().unwrap();
+    let screen3 = build_screen3().unwrap();
 
     screen1.obj_event(Event::Attach).unwrap();
     screen2.obj_event(Event::Attach).unwrap();
+    screen3.obj_event(Event::Attach).unwrap();
 
     let mut anim = ScreenTransitionAnim::default();
     anim.timer.start();
@@ -104,6 +106,7 @@ extern "C" fn drawlib_demo() {
         if let Some(e) = touch_event() {
             screen1.obj_event(Event::Touch(e)).unwrap();
             screen2.obj_event(Event::Touch(e)).unwrap();
+            screen3.obj_event(Event::Touch(e)).unwrap();
         }
 
         let split = anim.eval();
@@ -114,8 +117,10 @@ extern "C" fn drawlib_demo() {
 
         //screen1.obj_paint_if_requested();
 
-        screen1.obj_render(Offset::x(split));
-        screen2.obj_render(Offset::x(240 + split));
+        //screen1.obj_render(Offset::x(split));
+        //screen2.obj_render(Offset::x(240 + split));
+
+        screen3.obj_render(Offset::x(0));
 
         render_time_overlay(stopwatch.elapsed());
 
