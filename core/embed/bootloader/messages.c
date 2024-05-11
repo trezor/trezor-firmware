@@ -837,7 +837,7 @@ void process_msg_unknown(uint8_t iface_num, uint32_t msg_size, uint8_t *buf) {
   MSG_SEND(Failure);
 }
 
-#if defined USE_OPTIGA && !defined STM32U5
+#if defined USE_OPTIGA && ((!defined STM32U5) || !PRODUCTION)
 void process_msg_UnlockBootloader(uint8_t iface_num, uint32_t msg_size,
                                   uint8_t *buf) {
   secret_erase();

@@ -216,11 +216,33 @@ impl UIFeaturesBootloader for ModelMercuryFeatures {
     }
 
     fn screen_unlock_bootloader_confirm() -> u32 {
-        unimplemented!();
+        let icon = Icon::new(WARNING40);
+
+        let msg = Label::centered(
+            "Are you sure you want to unlock bootloader?".into(),
+            TEXT_WIPE_NORMAL,
+        );
+        let alert = Label::centered("This action cannot be undone!".into(), TEXT_WIPE_BOLD);
+
+        let right = Button::with_text("UNLOCK".into()).styled(button_wipe_confirm());
+        let left = Button::with_text("CANCEL".into()).styled(button_wipe_cancel());
+
+        let mut frame = Confirm::new(BLD_WIPE_COLOR, left, right, ConfirmTitle::Icon(icon), msg)
+            .with_alert(alert);
+
+        run(&mut frame)
     }
 
     fn screen_unlock_bootloader_success() {
-        unimplemented!();
+        let mut frame = ResultScreen::new(
+            &RESULT_WIPE,
+            Icon::new(CHECK40),
+            "Bootloader unlocked\nsuccessfully".into(),
+            Label::centered(RECONNECT_MESSAGE.into(), RESULT_WIPE.title_style())
+                .vertically_centered(),
+            true,
+        );
+        show(&mut frame, true);
     }
 
     fn screen_menu(firmware_present: secbool) -> u32 {
