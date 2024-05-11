@@ -35,11 +35,13 @@ bool dma2d_rgb565_fill(const gfx_bitblt_t* bb);
 bool dma2d_rgb565_copy_mono4(const gfx_bitblt_t* bb);
 bool dma2d_rgb565_copy_rgb565(const gfx_bitblt_t* bb);
 bool dma2d_rgb565_blend_mono4(const gfx_bitblt_t* bb);
+bool dma2d_rgb565_blend_mono8(const gfx_bitblt_t* bb);
 
 bool dma2d_rgba8888_fill(const gfx_bitblt_t* bb);
 bool dma2d_rgba8888_copy_mono4(const gfx_bitblt_t* bb);
 bool dma2d_rgba8888_copy_rgb565(const gfx_bitblt_t* bb);
 bool dma2d_rgba8888_copy_rgba8888(const gfx_bitblt_t* bb);
 bool dma2d_rgba8888_blend_mono4(const gfx_bitblt_t* bb);
+bool dma2d_rgba8888_blend_mono8(const gfx_bitblt_t* bb);
 
 #endif  // TREZORHAL_DMA2D_BITBLT_H

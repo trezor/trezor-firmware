@@ -89,6 +89,9 @@ void gfx_rgb565_copy_rgb565(const gfx_bitblt_t* bb);
 // Blends a mono bitmap (with 4-bit alpha channel)
 // with the destination bitmap
 void gfx_rgb565_blend_mono4(const gfx_bitblt_t* bb);
+// Blends a mono bitmap (with 8-bit alpha channel)
+// with the destination bitmap
+void gfx_rgb565_blend_mono8(const gfx_bitblt_t* bb);
 
 // Functions for RGBA8888 bitmap/framebuffer
 void gfx_rgba8888_fill(const gfx_bitblt_t* bb);
@@ -103,6 +106,9 @@ void gfx_rgba8888_copy_rgba8888(const gfx_bitblt_t* bb);
 // Blends a mono bitmap (with 4-bit alpha channel)
 // with the destination bitmap
 void gfx_rgba8888_blend_mono4(const gfx_bitblt_t* bb);
+// Blends a mono bitmap (with 8-bit alpha channel)
+// with the destination bitmap
+void gfx_rgba8888_blend_mono8(const gfx_bitblt_t* bb);
 
 // Functions for Mono8 bitmap/framebuffer
 void gfx_mono8_fill(const gfx_bitblt_t* bb);
