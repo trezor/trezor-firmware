@@ -104,6 +104,7 @@ where
 
     pub fn with_warning_button(self) -> Self {
         self.with_button(theme::ICON_WARNING, CancelInfoConfirmMsg::Info, false)
+            .button_styled(theme::button_danger())
     }
 
     pub fn button_styled(mut self, style: ButtonStyleSheet) -> Self {

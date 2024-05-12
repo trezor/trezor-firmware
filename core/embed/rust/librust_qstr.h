@@ -19,7 +19,9 @@ static void _librust_qstrs(void) {
   MP_QSTR___dict__;
   MP_QSTR___name__;
   MP_QSTR_account;
+  MP_QSTR_account_items;
   MP_QSTR_account_label;
+  MP_QSTR_account_path;
   MP_QSTR_accounts;
   MP_QSTR_action;
   MP_QSTR_active;
@@ -175,6 +177,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_confirm_reset_device;
   MP_QSTR_confirm_total;
   MP_QSTR_confirm_total__fee_rate;
+  MP_QSTR_confirm_total__fee_rate_colon;
   MP_QSTR_confirm_total__sending_from_account;
   MP_QSTR_confirm_total__title_fee;
   MP_QSTR_confirm_total__title_sending_from;
@@ -205,6 +208,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_experimental_mode__title;
   MP_QSTR_extra;
   MP_QSTR_fee_amount;
+  MP_QSTR_fee_items;
   MP_QSTR_fee_label;
   MP_QSTR_fee_rate_amount;
   MP_QSTR_fee_title;
@@ -212,9 +216,11 @@ static void _librust_qstrs(void) {
   MP_QSTR_fingerprint;
   MP_QSTR_firmware_update__title;
   MP_QSTR_firmware_update__title_fingerprint;
+  MP_QSTR_flow_confirm_output;
   MP_QSTR_flow_confirm_reset_create;
   MP_QSTR_flow_confirm_reset_recover;
   MP_QSTR_flow_confirm_set_new_pin;
+  MP_QSTR_flow_confirm_summary;
   MP_QSTR_flow_get_address;
   MP_QSTR_flow_prompt_backup;
   MP_QSTR_flow_show_share_words;
@@ -248,6 +254,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_inputs__space;
   MP_QSTR_instructions__continue_in_app;
   MP_QSTR_instructions__hold_to_confirm;
+  MP_QSTR_instructions__hold_to_sign;
   MP_QSTR_instructions__swipe_up;
   MP_QSTR_instructions__tap_to_confirm;
   MP_QSTR_is_type_of;
@@ -521,11 +528,15 @@ static void _librust_qstrs(void) {
   MP_QSTR_select_word;
   MP_QSTR_select_word_count;
   MP_QSTR_send__address_path;
+  MP_QSTR_send__cancel_sign;
   MP_QSTR_send__confirm_sending;
   MP_QSTR_send__from_multiple_accounts;
+  MP_QSTR_send__incl_transaction_fee;
   MP_QSTR_send__including_fee;
   MP_QSTR_send__maximum_fee;
   MP_QSTR_send__receiving_to_multisig;
+  MP_QSTR_send__send_from;
+  MP_QSTR_send__sign_transaction;
   MP_QSTR_send__title_confirm_sending;
   MP_QSTR_send__title_joint_transaction;
   MP_QSTR_send__title_receiving_to;
@@ -534,6 +545,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_send__title_sending_to;
   MP_QSTR_send__to_the_total_amount;
   MP_QSTR_send__total_amount;
+  MP_QSTR_send__total_amount_colon;
   MP_QSTR_send__transaction_id;
   MP_QSTR_send__you_are_contributing;
   MP_QSTR_share_words;
@@ -833,7 +845,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_eos__requirement;
   MP_QSTR_eos__sell_ram;
   MP_QSTR_eos__sender;
-  MP_QSTR_eos__sign_transaction;
   MP_QSTR_eos__threshold;
   MP_QSTR_eos__to;
   MP_QSTR_eos__transfer;

@@ -641,6 +641,8 @@ async def confirm_output(
     address_label: str | None = None,
     output_index: int | None = None,
     chunkify: bool = False,
+    source_account: str | None = None,  # ignored on model t
+    source_account_path: str | None = None,  # ignored on model t
 ) -> None:
     if title is not None:
         # TODO: handle translation:
@@ -978,13 +980,14 @@ def confirm_total(
     title: str | None = None,
     total_label: str | None = None,
     fee_label: str | None = None,
-    account_label: str | None = None,
+    source_account: str | None = None,
+    source_account_path: str | None = None,
     fee_rate_amount: str | None = None,
     br_type: str = "confirm_total",
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
 ) -> Awaitable[None]:
     title = title or TR.words__title_summary  # def_arg
-    total_label = total_label or TR.send__total_amount  # def_arg
+    total_label = total_label or TR.send__total_amount_colon  # def_arg
     fee_label = fee_label or TR.send__including_fee  # def_arg
 
     items = [
@@ -992,10 +995,10 @@ def confirm_total(
         (fee_label, fee_amount),
     ]
     info_items = []
-    if account_label:
-        info_items.append((TR.confirm_total__sending_from_account, account_label))
+    if source_account:
+        info_items.append((TR.confirm_total__sending_from_account, source_account))
     if fee_rate_amount:
-        info_items.append((TR.confirm_total__fee_rate, fee_rate_amount))
+        info_items.append((TR.confirm_total__fee_rate_colon, fee_rate_amount))
 
     return confirm_summary(
         items,
