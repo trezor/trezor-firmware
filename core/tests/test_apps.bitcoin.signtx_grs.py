@@ -112,7 +112,7 @@ class TestSignTx_GRS(unittest.TestCase):
                 serialized=EMPTY_SERIALIZED,
             ),
             TxAckOutput(tx=TxAckOutputWrapper(output=out1)),
-            helpers.UiConfirmOutput(out1, coin, AmountUnit.BITCOIN, 0, False),
+            helpers.UiConfirmOutput(out1, coin, AmountUnit.BITCOIN, 0, False, [H_(44), H_(17), H_(0)]),
             True,
             helpers.UiConfirmTotal(
                 210016, 192, fee_rate, coin, AmountUnit.BITCOIN, inp1.address_n[:3]

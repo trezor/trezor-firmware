@@ -175,6 +175,7 @@ class TestApprover(unittest.TestCase):
         authorization = CoinJoinAuthorization(self.msg_auth)
         approver = CoinJoinApprover(tx, self.coin, authorization)
         signer = Bitcoin(tx, None, self.coin, approver)
+        tx_info = TxInfo(signer, tx)
 
         for txi in inputs:
             if txi.script_type == InputScriptType.EXTERNAL:
@@ -186,9 +187,9 @@ class TestApprover(unittest.TestCase):
             if txo.address_n:
                 await_result(approver.add_change_output(txo, script_pubkey=bytes(22)))
             else:
-                await_result(approver.add_external_output(txo, script_pubkey=bytes(22)))
+                await_result(approver.add_external_output(txo, script_pubkey=bytes(22), tx_info=tx_info))
 
-        await_result(approver.approve_tx(TxInfo(signer, tx), [], None))
+        await_result(approver.approve_tx(tx_info, [], None))
 
     def test_coinjoin_input_account_depth_mismatch(self):
         txi = TxInput(
