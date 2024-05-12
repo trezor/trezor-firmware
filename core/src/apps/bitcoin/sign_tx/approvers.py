@@ -121,6 +121,7 @@ class Approver:
         self,
         txo: TxOutput,
         script_pubkey: bytes,
+        tx_info: TxInfo | None,
         orig_txo: TxOutput | None = None,
     ) -> None:
         await self._add_output(txo, script_pubkey)
@@ -193,11 +194,12 @@ class BasicApprover(Approver):
         self,
         txo: TxOutput,
         script_pubkey: bytes,
+        tx_info: TxInfo | None,
         orig_txo: TxOutput | None = None,
     ) -> None:
         from trezor.enums import OutputScriptType
 
-        await super().add_external_output(txo, script_pubkey, orig_txo)
+        await super().add_external_output(txo, script_pubkey, tx_info, orig_txo)
 
         if orig_txo:
             if txo.amount < orig_txo.amount:
@@ -230,6 +232,7 @@ class BasicApprover(Approver):
                     "Adding new OP_RETURN outputs in replacement transactions is not supported."
                 )
         elif txo.payment_req_index is None or self.show_payment_req_details:
+            source_path = tx_info.wallet_path.get_path() if tx_info else None
             # Ask user to confirm output, unless it is part of a payment
             # request, which gets confirmed separately.
             await helpers.confirm_output(
@@ -238,6 +241,7 @@ class BasicApprover(Approver):
                 self.amount_unit,
                 self.external_output_index,
                 self.chunkify,
+                source_path,
             )
             self.external_output_index += 1
 

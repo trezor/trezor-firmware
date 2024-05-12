@@ -351,9 +351,9 @@ pub enum TranslatedString {
     coinjoin__title_do_not_disconnect = 217,  // "Do not disconnect your trezor!"
     coinjoin__title_progress = 218,  // "Coinjoin in progress"
     coinjoin__waiting_for_others = 219,  // "Waiting for others"
-    confirm_total__fee_rate = 220,  // "Fee rate:"
+    confirm_total__fee_rate_colon = 220,  // "Fee rate:"
     confirm_total__sending_from_account = 221,  // "Sending from account:"
-    confirm_total__title_fee = 222,  // "Fee information"
+    confirm_total__title_fee = 222,  // "Fee info"
     confirm_total__title_sending_from = 223,  // "Sending from"
     debug__loading_seed = 224,  // "Loading seed"
     debug__loading_seed_not_recommended = 225,  // "Loading private seed is not recommended."
@@ -420,8 +420,7 @@ pub enum TranslatedString {
     eos__sell_ram = 258,  // "Sell RAM"
     #[cfg(feature = "universal_fw")]
     eos__sender = 259,  // "Sender:"
-    #[cfg(feature = "universal_fw")]
-    eos__sign_transaction = 260,  // "Sign transaction"
+    send__sign_transaction = 260,  // "Sign transaction"
     #[cfg(feature = "universal_fw")]
     eos__threshold = 261,  // "Threshold:"
     #[cfg(feature = "universal_fw")]
@@ -940,7 +939,7 @@ pub enum TranslatedString {
     send__title_sending_amount = 650,  // "Sending amount"
     send__title_sending_to = 651,  // "Sending to"
     send__to_the_total_amount = 652,  // "To the total amount:"
-    send__total_amount = 653,  // "Total amount:"
+    send__total_amount_colon = 653,  // "Total amount:"
     send__transaction_id = 654,  // "Transaction ID:"
     send__you_are_contributing = 655,  // "You are contributing:"
     share_words__words_in_order = 656,  // " words in order."
@@ -1259,6 +1258,12 @@ pub enum TranslatedString {
     pin__cancel_description = 864,  // "Continue without PIN"
     pin__cancel_info = 865,  // "Without a PIN, anyone can access this device."
     pin__cancel_setup = 866,  // "Cancel PIN setup"
+    send__cancel_sign = 867,  // "Cancel sign"
+    send__send_from = 868,  // "Send from"
+    instructions__hold_to_sign = 869,  // "Hold to sign"
+    confirm_total__fee_rate = 870,  // "Fee rate"
+    send__incl_transaction_fee = 871,  // "incl. Transaction fee"
+    send__total_amount = 872,  // "Total amount"
 }
 
 impl TranslatedString {
@@ -1605,9 +1610,9 @@ impl TranslatedString {
             Self::coinjoin__title_do_not_disconnect => "Do not disconnect your trezor!",
             Self::coinjoin__title_progress => "Coinjoin in progress",
             Self::coinjoin__waiting_for_others => "Waiting for others",
-            Self::confirm_total__fee_rate => "Fee rate:",
+            Self::confirm_total__fee_rate_colon => "Fee rate:",
             Self::confirm_total__sending_from_account => "Sending from account:",
-            Self::confirm_total__title_fee => "Fee information",
+            Self::confirm_total__title_fee => "Fee info",
             Self::confirm_total__title_sending_from => "Sending from",
             Self::debug__loading_seed => "Loading seed",
             Self::debug__loading_seed_not_recommended => "Loading private seed is not recommended.",
@@ -1674,8 +1679,7 @@ impl TranslatedString {
             Self::eos__sell_ram => "Sell RAM",
             #[cfg(feature = "universal_fw")]
             Self::eos__sender => "Sender:",
-            #[cfg(feature = "universal_fw")]
-            Self::eos__sign_transaction => "Sign transaction",
+            Self::send__sign_transaction => "Sign transaction",
             #[cfg(feature = "universal_fw")]
             Self::eos__threshold => "Threshold:",
             #[cfg(feature = "universal_fw")]
@@ -2194,7 +2198,7 @@ impl TranslatedString {
             Self::send__title_sending_amount => "Sending amount",
             Self::send__title_sending_to => "Sending to",
             Self::send__to_the_total_amount => "To the total amount:",
-            Self::send__total_amount => "Total amount:",
+            Self::send__total_amount_colon => "Total amount:",
             Self::send__transaction_id => "Transaction ID:",
             Self::send__you_are_contributing => "You are contributing:",
             Self::share_words__words_in_order => " words in order.",
@@ -2513,6 +2517,12 @@ impl TranslatedString {
             Self::pin__cancel_description => "Continue without PIN",
             Self::pin__cancel_info => "Without a PIN, anyone can access this device.",
             Self::pin__cancel_setup => "Cancel PIN setup",
+            Self::send__cancel_sign => "Cancel sign",
+            Self::send__send_from => "Send from",
+            Self::instructions__hold_to_sign => "Hold to sign",
+            Self::confirm_total__fee_rate => "Fee rate",
+            Self::send__incl_transaction_fee => "incl. Transaction fee",
+            Self::send__total_amount => "Total amount",
         }
     }
 
@@ -2860,7 +2870,7 @@ impl TranslatedString {
             Qstr::MP_QSTR_coinjoin__title_do_not_disconnect => Some(Self::coinjoin__title_do_not_disconnect),
             Qstr::MP_QSTR_coinjoin__title_progress => Some(Self::coinjoin__title_progress),
             Qstr::MP_QSTR_coinjoin__waiting_for_others => Some(Self::coinjoin__waiting_for_others),
-            Qstr::MP_QSTR_confirm_total__fee_rate => Some(Self::confirm_total__fee_rate),
+            Qstr::MP_QSTR_confirm_total__fee_rate_colon => Some(Self::confirm_total__fee_rate_colon),
             Qstr::MP_QSTR_confirm_total__sending_from_account => Some(Self::confirm_total__sending_from_account),
             Qstr::MP_QSTR_confirm_total__title_fee => Some(Self::confirm_total__title_fee),
             Qstr::MP_QSTR_confirm_total__title_sending_from => Some(Self::confirm_total__title_sending_from),
@@ -2929,8 +2939,7 @@ impl TranslatedString {
             Qstr::MP_QSTR_eos__sell_ram => Some(Self::eos__sell_ram),
             #[cfg(feature = "universal_fw")]
             Qstr::MP_QSTR_eos__sender => Some(Self::eos__sender),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_eos__sign_transaction => Some(Self::eos__sign_transaction),
+            Qstr::MP_QSTR_send__sign_transaction => Some(Self::send__sign_transaction),
             #[cfg(feature = "universal_fw")]
             Qstr::MP_QSTR_eos__threshold => Some(Self::eos__threshold),
             #[cfg(feature = "universal_fw")]
@@ -3449,7 +3458,7 @@ impl TranslatedString {
             Qstr::MP_QSTR_send__title_sending_amount => Some(Self::send__title_sending_amount),
             Qstr::MP_QSTR_send__title_sending_to => Some(Self::send__title_sending_to),
             Qstr::MP_QSTR_send__to_the_total_amount => Some(Self::send__to_the_total_amount),
-            Qstr::MP_QSTR_send__total_amount => Some(Self::send__total_amount),
+            Qstr::MP_QSTR_send__total_amount_colon => Some(Self::send__total_amount_colon),
             Qstr::MP_QSTR_send__transaction_id => Some(Self::send__transaction_id),
             Qstr::MP_QSTR_send__you_are_contributing => Some(Self::send__you_are_contributing),
             Qstr::MP_QSTR_share_words__words_in_order => Some(Self::share_words__words_in_order),
@@ -3768,6 +3777,12 @@ impl TranslatedString {
             Qstr::MP_QSTR_pin__cancel_description => Some(Self::pin__cancel_description),
             Qstr::MP_QSTR_pin__cancel_info => Some(Self::pin__cancel_info),
             Qstr::MP_QSTR_pin__cancel_setup => Some(Self::pin__cancel_setup),
+            Qstr::MP_QSTR_send__cancel_sign => Some(Self::send__cancel_sign),
+            Qstr::MP_QSTR_send__send_from => Some(Self::send__send_from),
+            Qstr::MP_QSTR_instructions__hold_to_sign => Some(Self::instructions__hold_to_sign),
+            Qstr::MP_QSTR_confirm_total__fee_rate => Some(Self::confirm_total__fee_rate),
+            Qstr::MP_QSTR_send__incl_transaction_fee => Some(Self::send__incl_transaction_fee),
+            Qstr::MP_QSTR_send__total_amount => Some(Self::send__total_amount),
             _ => None,
         }
     }

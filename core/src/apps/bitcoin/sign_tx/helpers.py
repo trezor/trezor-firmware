@@ -45,12 +45,14 @@ class UiConfirmOutput(UiConfirm):
         amount_unit: AmountUnit,
         output_index: int,
         chunkify: bool,
+        address_n: Bip32Path | None,
     ):
         self.output = output
         self.coin = coin
         self.amount_unit = amount_unit
         self.output_index = output_index
         self.chunkify = chunkify
+        self.address_n = address_n
 
     def confirm_dialog(self) -> Awaitable[Any]:
         return layout.confirm_output(
@@ -59,6 +61,7 @@ class UiConfirmOutput(UiConfirm):
             self.amount_unit,
             self.output_index,
             self.chunkify,
+            self.address_n,
         )
 
 
@@ -241,8 +244,12 @@ class UiConfirmMultipleAccounts(UiConfirm):
         return layout.confirm_multiple_accounts()
 
 
-def confirm_output(output: TxOutput, coin: CoinInfo, amount_unit: AmountUnit, output_index: int, chunkify: bool) -> Awaitable[None]:  # type: ignore [awaitable-return-type]
-    return (yield UiConfirmOutput(output, coin, amount_unit, output_index, chunkify))  # type: ignore [awaitable-return-type]
+def confirm_output(output: TxOutput, coin: CoinInfo, amount_unit: AmountUnit, output_index: int, chunkify: bool, address_n: Bip32Path | None) -> Awaitable[None]:  # type: ignore [awaitable-return-type]
+    return (
+        yield UiConfirmOutput(  # type: ignore [awaitable-return-type]
+            output, coin, amount_unit, output_index, chunkify, address_n
+        )
+    )
 
 
 def confirm_decred_sstx_submission(output: TxOutput, coin: CoinInfo, amount_unit: AmountUnit) -> Awaitable[None]:  # type: ignore [awaitable-return-type]

@@ -180,7 +180,7 @@ class TestSignTxFeeThreshold(unittest.TestCase):
                 serialized=EMPTY_SERIALIZED,
             ),
             TxAckOutput(tx=TxAckOutputWrapper(output=out1)),
-            helpers.UiConfirmOutput(out1, coin_bitcoin, AmountUnit.BITCOIN, 0, False),
+            helpers.UiConfirmOutput(out1, coin_bitcoin, AmountUnit.BITCOIN, 0, False, None),
             True,
             helpers.UiConfirmMultipleAccounts(),
             True,

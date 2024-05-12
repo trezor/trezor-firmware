@@ -893,6 +893,7 @@ extern "C" fn new_show_warning(n_args: usize, args: *const Obj, kwargs: *mut Map
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let description: TString = kwargs.get_or(Qstr::MP_QSTR_description, "".into())?;
         let value: TString = kwargs.get_or(Qstr::MP_QSTR_value, "".into())?;
+        let action: Option<TString> = kwargs.get(Qstr::MP_QSTR_button)?.try_into_option()?;
 
         let content = SwipeUpScreen::new(Paragraphs::new([
             Paragraph::new(&theme::TEXT_MAIN_GREY_LIGHT, description),
@@ -901,8 +902,7 @@ extern "C" fn new_show_warning(n_args: usize, args: *const Obj, kwargs: *mut Map
         let obj = LayoutObj::new(
             Frame::left_aligned(title, content)
                 .with_warning_button()
-                .button_styled(theme::button_warning_low())
-                .with_footer(TR::instructions__swipe_up.into(), None),
+                .with_footer(TR::instructions__swipe_up.into(), action),
         )?;
         Ok(obj.into())
     };
@@ -1992,6 +1992,28 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// ) -> LayoutObj[UiResult]:
     ///     """Warning modal with multiple steps to confirm."""
     Qstr::MP_QSTR_flow_warning_hi_prio => obj_fn_kw!(0, flow::warning_hi_prio::new_warning_hi_prio).as_obj(),
+
+    /// def flow_confirm_output(
+    ///     *,
+    ///     title: str | None,
+    ///     address: str,
+    ///     amount: str,
+    ///     chunkify: bool,
+    ///     account: str | None,
+    ///     account_path: str | None,
+    /// ) -> LayoutObj[UiResult]:
+    ///     """Confirm recipient."""
+    Qstr::MP_QSTR_flow_confirm_output => obj_fn_kw!(0, flow::new_confirm_output).as_obj(),
+
+    /// def flow_confirm_summary(
+    ///     *,
+    ///     title: str,
+    ///     items: Iterable[tuple[str, str]],
+    ///     account_items: Iterable[tuple[str, str]],
+    ///     fee_items: Iterable[tuple[str, str]],
+    /// ) -> LayoutObj[UiResult]:
+    ///     """Total summary and hold to confirm."""
+    Qstr::MP_QSTR_flow_confirm_summary => obj_fn_kw!(0, flow::new_confirm_summary).as_obj(),
 };
 
 #[cfg(test)]
