@@ -530,7 +530,9 @@ class Bitcoin:
             # Output is change and does not need approval.
             await approver.add_change_output(txo, script_pubkey)
         else:
-            await approver.add_external_output(txo, script_pubkey, orig_txo)
+            await approver.add_external_output(
+                txo, script_pubkey, self.tx_info, orig_txo
+            )
 
         self.tx_info.add_output(txo, script_pubkey)
 

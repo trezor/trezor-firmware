@@ -549,6 +549,30 @@ def flow_warning_hi_prio(
     value: str = "",
 ) -> LayoutObj[UiResult]:
     """Warning modal with multiple steps to confirm."""
+
+
+# rust/src/ui/model_mercury/layout.rs
+def flow_confirm_output(
+    *,
+    title: str | None,
+    address: str,
+    amount: str,
+    chunkify: bool,
+    account: str | None,
+    account_path: str | None,
+) -> LayoutObj[UiResult]:
+    """Confirm recipient."""
+
+
+# rust/src/ui/model_mercury/layout.rs
+def flow_confirm_summary(
+    *,
+    title: str,
+    items: Iterable[tuple[str, str]],
+    account_items: Iterable[tuple[str, str]],
+    fee_items: Iterable[tuple[str, str]],
+) -> LayoutObj[UiResult]:
+    """Total summary and hold to confirm."""
 CONFIRMED: UiResult
 CANCELLED: UiResult
 INFO: UiResult

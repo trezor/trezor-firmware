@@ -658,7 +658,7 @@ extern "C" fn new_confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Ma
                         .newline()
                         .newline()
                         .newline_half()
-                        .text_bold(TR::confirm_total__fee_rate)
+                        .text_bold(TR::confirm_total__fee_rate_colon)
                         .newline()
                         .text_mono(fee_rate_amount);
 

@@ -14,7 +14,7 @@ async def require_sign_tx(num_actions: int) -> None:
 
     await confirm_action(
         "confirm_tx",
-        TR.eos__sign_transaction,
+        TR.send__sign_transaction,
         description=TR.eos__about_to_sign_template,
         description_param=format_plural(
             "{count} {plural}", num_actions, TR.plurals__sign_x_actions
