@@ -62,6 +62,7 @@ async def confirm_output(
     amount_unit: AmountUnit,
     output_index: int,
     chunkify: bool,
+    address_n: Bip32Path | None,
 ) -> None:
     from trezor.enums import OutputScriptType
 
@@ -119,6 +120,8 @@ async def confirm_output(
             address_label=address_label,
             output_index=output_index,
             chunkify=chunkify,
+            source_account=account_label(coin, address_n),
+            source_account_path=address_n_to_str(address_n) if address_n else None,
         )
 
     await layout
@@ -245,7 +248,8 @@ async def confirm_total(
         format_coin_amount(spending, coin, amount_unit),
         format_coin_amount(fee, coin, amount_unit),
         fee_rate_amount=format_fee_rate(fee_rate, coin) if fee_rate >= 0 else None,
-        account_label=account_label(coin, address_n),
+        source_account=account_label(coin, address_n),
+        source_account_path=address_n_to_str(address_n) if address_n else None,
     )
 
 
