@@ -734,6 +734,8 @@ async def confirm_output(
     address_label: str | None = None,
     output_index: int | None = None,
     chunkify: bool = False,
+    source_account: str | None = None,  # ignored on safe 3
+    source_account_path: str | None = None,  # ignored on safe 3
 ) -> None:
     title = title or TR.send__confirm_sending  # def_arg
     address_title = TR.words__recipient
@@ -1096,11 +1098,12 @@ def confirm_total(
     title: str | None = None,
     total_label: str | None = None,
     fee_label: str | None = None,
-    account_label: str | None = None,
+    source_account: str | None = None,
+    source_account_path: str | None = None,
     br_type: str = "confirm_total",
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
 ) -> Awaitable[None]:
-    total_label = total_label or TR.send__total_amount  # def_arg
+    total_label = total_label or TR.send__total_amount_colon  # def_arg
     fee_label = fee_label or TR.send__including_fee  # def_arg
     return raise_if_not_confirmed(
         interact(
@@ -1110,7 +1113,7 @@ def confirm_total(
                     total_amount=total_amount,  # type: ignore [No parameter named]
                     fee_amount=fee_amount,  # type: ignore [No parameter named]
                     fee_rate_amount=fee_rate_amount,  # type: ignore [No parameter named]
-                    account_label=account_label,  # type: ignore [No parameter named]
+                    account_label=source_account,  # type: ignore [No parameter named]
                     total_label=total_label,  # type: ignore [No parameter named]
                     fee_label=fee_label,  # type: ignore [No parameter named]
                 )
