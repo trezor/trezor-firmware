@@ -1,4 +1,4 @@
-use crate::trezorhal::bitblt::BitBlt;
+use crate::trezorhal::bitblt;
 
 use crate::ui::{display::Color, geometry::Offset};
 
@@ -278,7 +278,7 @@ impl<'a> Bitmap<'a> {
     /// Waits until DMA operation is finished
     fn wait_for_dma(&self) {
         if self.dma_pending.get() {
-            BitBlt::wait_for_transfer();
+            bitblt::wait_for_transfer();
             self.dma_pending.set(false);
         }
     }
