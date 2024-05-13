@@ -160,18 +160,18 @@ impl<'a> ZlibInflate<'a> {
 /// This function is called by the uzlib library to read more data from the
 /// input stream.
 unsafe extern "C" fn zlib_reader_callback(uncomp: *mut ffi::uzlib_uncomp) -> i32 {
-    assert!(!uncomp.is_null());
-
-    // SAFETY: `uncomp` is not null and it's mutable as this
-    // function is called from `Self::uncompress` function
-    let uncomp = unsafe { &mut *uncomp };
-
-    let ctx = uncomp.source_read_cb_context as *mut ZlibInflate;
-    assert!(!ctx.is_null());
-
-    // SAFETY: `ctx` is not null and it's mutable as this
-    // function is called from `Self::uncompress` function
-    let ctx = unsafe { &mut *ctx };
+    // Get mutable reference to the ZlibInflate instance
+    // SAFETY:
+    // This routine is indirectly called from `Self::read()` where
+    // self is a mutable reference. Nobody else holds this reference.
+    // We are dereferencing here twice and in both cases, we are checking
+    // that the pointers are not null.
+    let ctx = unsafe {
+        assert!(!uncomp.is_null());
+        let ctx = (*uncomp).source_read_cb_context as *mut ZlibInflate;
+        assert!(!ctx.is_null());
+        &mut *ctx
+    };
 
     // let the reader fill our internal buffer with new data
     let bytes_read = ctx.data.read(ctx.offset, ctx.buf.as_mut());
@@ -187,8 +187,8 @@ unsafe extern "C" fn zlib_reader_callback(uncomp: *mut ffi::uzlib_uncomp) -> i32
         // The data in cache is valid and unchanged until the next call
         // to this function
         unsafe {
-            uncomp.source = ctx.buf.as_ptr().add(ctx.buf_head);
-            uncomp.source_limit = ctx.buf.as_ptr().add(ctx.buf_tail);
+            ctx.uncomp.source = ctx.buf.as_ptr().add(ctx.buf_head);
+            ctx.uncomp.source_limit = ctx.buf.as_ptr().add(ctx.buf_tail);
         }
         // Pass the first byte to the uzlib library
         return ctx.buf[0] as i32;
