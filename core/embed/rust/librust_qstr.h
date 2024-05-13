@@ -467,6 +467,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_reset__title_set_number_of_groups;
   MP_QSTR_reset__title_set_number_of_shares;
   MP_QSTR_reset__title_set_threshold;
+  MP_QSTR_reset__title_shamir_backup;
   MP_QSTR_reset__to_form_group_template;
   MP_QSTR_reset__tos_link;
   MP_QSTR_reset__total_number_of_shares_in_group_template;
