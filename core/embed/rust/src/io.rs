@@ -103,13 +103,15 @@ impl<'a> BinaryData<'a> {
     /// Returns a reference to the binary data.
     ///
     /// # Safety
-    /// The caller must ensure that the returned slice is not used before
-    /// the return to micropython.
+    /// The caller must ensure that the returned slice is not modified by
+    /// MicroPython. This means (a) discarding the slice before returning
+    /// to Python, and (b) being careful about calling into Python while
+    /// the slice is held.
     pub unsafe fn data(&self) -> &[u8] {
         match self {
             Self::Slice(data) => data,
-            // SAFETY: We expect no existing mutable reference. Resulting reference is
-            // discarded before returning to micropython.
+            // SAFETY: We expect no existing mutable reference. See safety
+            // note above.
             #[cfg(feature = "micropython")]
             Self::Object(obj) => unsafe { unwrap!(get_buffer(*obj)) },
         }
@@ -120,6 +122,7 @@ impl<'a> BinaryData<'a> {
         match self {
             Self::Slice(data) => data.len(),
             #[cfg(feature = "micropython")]
+            // SAFETY: We expect no existing mutable reference.
             Self::Object(obj) => unsafe { unwrap!(get_buffer(*obj)).len() },
         }
     }
@@ -132,7 +135,8 @@ impl<'a> BinaryData<'a> {
     pub fn read(&self, ofs: usize, buff: &mut [u8]) -> usize {
         match self {
             Self::Slice(data) => {
-                let size = buff.len().min(data.len() - data.len().min(ofs));
+                let remaining = data.len().saturating_sub(ofs);
+                let size = buff.len().min(remaining);
                 buff[..size].copy_from_slice(&data[ofs..ofs + size]);
                 size
             }
@@ -141,7 +145,8 @@ impl<'a> BinaryData<'a> {
             #[cfg(feature = "micropython")]
             Self::Object(obj) => {
                 let data = unsafe { unwrap!(get_buffer(*obj)) };
-                let size = buff.len().min(data.len() - data.len().min(ofs));
+                let remaining = data.len().saturating_sub(ofs);
+                let size = buff.len().min(remaining);
                 buff[..size].copy_from_slice(&data[ofs..ofs + size]);
                 size
             }
