@@ -158,6 +158,7 @@ impl<'a> PartialEq for BinaryData<'a> {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
             (Self::Slice(a), Self::Slice(b)) => a.as_ptr() == b.as_ptr() && a.len() == b.len(),
+            #[cfg(feature = "micropython")]
             (Self::Object(a), Self::Object(b)) => a == b,
             _ => false,
         }
