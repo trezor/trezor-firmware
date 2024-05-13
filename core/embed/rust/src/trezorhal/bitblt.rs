@@ -72,8 +72,8 @@ impl BitBlt {
 
         Self {
             // SAFETY:
-            // it's safe if the functions the source rectangle is
-            // properly clipped what's ensured by the `BitBltCopy::new()` method.
+            // it's safe if source rectangle is properly clipped
+            // (ensured by the `BitBltCopy::new()`).
             src_row: unsafe { bitmap.row_ptr(y as u16) },
             src_stride: bitmap_stride,
             src_x: x as u16,
