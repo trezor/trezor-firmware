@@ -13,7 +13,7 @@ const TEXT_BOTTOM_MARGIN: i16 = 54;
 const ICON_TOP_MARGIN: i16 = 48;
 #[cfg(not(feature = "bootloader"))]
 const MODEL_NAME_FONT: display::Font = display::Font::DEMIBOLD;
-#[cfg(not(feature = "bootloader"))]
+
 use crate::trezorhal::model;
 
 pub struct WelcomeScreen {
@@ -47,7 +47,7 @@ impl Component for WelcomeScreen {
         );
         display::text_center(
             self.area.bottom_center() - Offset::y(TEXT_BOTTOM_MARGIN),
-            "Trezor Safe 5",
+            model::FULL_NAME,
             display::Font::NORMAL,
             theme::FG,
             theme::BG,
@@ -66,7 +66,7 @@ impl Component for WelcomeScreen {
 
         shape::Text::new(
             self.area.bottom_center() - Offset::y(TEXT_BOTTOM_MARGIN),
-            "Trezor Safe 5",
+            model::FULL_NAME,
         )
         .with_align(Alignment::Center)
         .with_font(Font::NORMAL)
