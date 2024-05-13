@@ -39,7 +39,7 @@ def progress(
     message = message or TR.progress__please_wait  # def_arg
     return RustProgress(
         layout=trezorui2.show_progress(
-            title=message.upper(),
+            title=message,
             indeterminate=indeterminate,
             description=description or "",
         )
