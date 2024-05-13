@@ -100,7 +100,7 @@ impl ModelTTFeatures {
         icon: Option<(Icon, Color)>,
     ) {
         if initialize {
-            ModelTTFeatures::fadeout();
+            Self::fadeout();
         }
         display::sync();
 
@@ -142,7 +142,7 @@ impl ModelTTFeatures {
 
         display::refresh();
         if initialize {
-            ModelTTFeatures::fadein();
+            Self::fadein();
         }
     }
 
