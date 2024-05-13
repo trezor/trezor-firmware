@@ -205,7 +205,7 @@ impl BitBltFill {
     }
 
     /// Fills a rectangle on the display with the specified color.
-    #[cfg(all(not(feature = "xframebuffer"), feature = "new_rendering"))]
+    #[cfg(feature = "new_rendering")]
     pub fn display_fill(&self) {
         assert!(self.bitblt.dst_x + self.bitblt.width <= ffi::DISPLAY_RESX as u16);
         assert!(self.bitblt.dst_y + self.bitblt.height <= ffi::DISPLAY_RESY as u16);
@@ -424,7 +424,7 @@ impl<'a> BitBltCopy<'a> {
     /// Copies a part of the source bitmap to the display.
     ///
     /// - The source bitmap uses the RGB565 format.
-    #[cfg(all(not(feature = "xframebuffer"), feature = "new_rendering"))]
+    #[cfg(feature = "new_rendering")]
     pub fn display_copy(&self) {
         assert!(self.bitblt.dst_x + self.bitblt.width <= ffi::DISPLAY_RESX as u16);
         assert!(self.bitblt.dst_y + self.bitblt.height <= ffi::DISPLAY_RESY as u16);
