@@ -1,4 +1,4 @@
-use crate::ui::geometry::Offset;
+use crate::{trezorhal::display, ui::geometry::Offset};
 /// This is a simple and fast blurring algorithm that uses a box filter -
 /// a square kernel with all coefficients set to 1.
 ///
@@ -42,7 +42,7 @@ use core::mem::size_of;
 
 const MAX_RADIUS: usize = 4;
 const MAX_SIDE: usize = 1 + MAX_RADIUS * 2;
-const MAX_WIDTH: usize = 240;
+const MAX_WIDTH: usize = display::DISPLAY_RESX as usize;
 
 pub type BlurBuff = [u8; MAX_WIDTH * (MAX_SIDE * 3 + size_of::<u16>() * 3) + 8];
 
