@@ -73,7 +73,7 @@ impl<'a> InputStream<'a> {
     }
 }
 
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone)]
 pub enum BinaryData<'a> {
     Slice(&'a [u8]),
     #[cfg(feature = "micropython")]
@@ -150,6 +150,16 @@ impl<'a> BinaryData<'a> {
                 buff[..size].copy_from_slice(&data[ofs..ofs + size]);
                 size
             }
+        }
+    }
+}
+
+impl<'a> PartialEq for BinaryData<'a> {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::Slice(a), Self::Slice(b)) => a.as_ptr() == b.as_ptr() && a.len() == b.len(),
+            (Self::Object(a), Self::Object(b)) => a == b,
+            _ => false,
         }
     }
 }
