@@ -107,8 +107,8 @@ impl<T: ?Sized> Gc<T> {
     ///
     /// `Gc` values can originate in the MicroPython interpreter, and these can
     /// be both shared and mutable. Before calling this function, you have to
-    /// ensure that `this` is unique for the whole lifetime of the
-    /// returned mutable reference.
+    /// ensure that `this` does not get externally mutated and nobody
+    /// holds a mutable reference.
     pub unsafe fn as_ref(this: &Self) -> &T {
         // SAFETY: The caller must guarantee that `this` meets all the requirements for
         // a immutable reference.
