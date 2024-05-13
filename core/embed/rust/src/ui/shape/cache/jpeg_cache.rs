@@ -269,8 +269,8 @@ impl<'a> JpegCache<'a> {
     }
 
     pub const fn get_bump_size() -> usize {
-        core::mem::size_of::<UnsafeCell<[u8; JPEG_SCRATCHPAD_SIZE]>>() +
-        core::mem::size_of::<UnsafeCell<[u8; JPEG_BUFF_SIZE]>>()
+        core::mem::size_of::<UnsafeCell<[u8; JPEG_SCRATCHPAD_SIZE]>>()
+            + core::mem::size_of::<UnsafeCell<[u8; JPEG_BUFF_SIZE]>>()
     }
 }
 
@@ -347,4 +347,3 @@ where
         (self.output)(mcu_r, BitmapView::new(&mcu_bitmap))
     }
 }
-

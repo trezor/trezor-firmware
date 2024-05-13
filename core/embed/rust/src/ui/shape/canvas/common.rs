@@ -4,7 +4,7 @@ use crate::ui::{
 };
 
 use super::super::{
-    algo::{circle_points, line_points, sin_i16, PI4},
+    utils::{circle_points, line_points, sin_i16, PI4},
     BitmapView, Viewport,
 };
 

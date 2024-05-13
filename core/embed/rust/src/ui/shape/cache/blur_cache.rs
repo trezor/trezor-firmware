@@ -1,5 +1,7 @@
-use super::super::algo::{BlurAlgorithm, BlurBuff};
-use crate::ui::geometry::Offset;
+use crate::ui::{
+    geometry::Offset,
+    shape::utils::{BlurAlgorithm, BlurBuff},
+};
 use core::cell::UnsafeCell;
 use without_alloc::alloc::LocalAllocLeakExt;
 

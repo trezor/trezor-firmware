@@ -221,7 +221,7 @@ impl<'a> Bitmap<'a> {
             let offset = self.stride * row as usize;
             if offset % core::mem::align_of::<T>() == 0 {
                 let len = self.stride * height as usize;
-
+                self.wait_for_dma();
                 // SAFETY:
                 // The bitmap is mutable.
                 // The resulting slice is inside the bitmap and properly aligned.
@@ -232,8 +232,6 @@ impl<'a> Bitmap<'a> {
                         self.size.y as usize * self.stride / core::mem::size_of::<T>(),
                     )
                 };
-
-                self.wait_for_dma();
 
                 return Some(&mut array[offset..offset + len]);
             }

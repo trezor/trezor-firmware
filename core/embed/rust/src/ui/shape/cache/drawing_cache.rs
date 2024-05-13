@@ -59,10 +59,7 @@ impl<'a> DrawingCache<'a> {
                 "ZLIB cache alloc"
             )),
             #[cfg(feature = "ui_jpeg_decoder")]
-            jpeg_cache: RefCell::new(unwrap!(
-                JpegCache::new(bump_a),
-                "JPEG cache alloc"
-            )),
+            jpeg_cache: RefCell::new(unwrap!(JpegCache::new(bump_a), "JPEG cache alloc")),
             #[cfg(feature = "ui_blurring")]
             blur_cache: RefCell::new(unwrap!(BlurCache::new(bump_a), "Blur cache alloc")),
 

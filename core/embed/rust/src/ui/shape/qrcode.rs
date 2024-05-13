@@ -6,7 +6,7 @@ use crate::ui::{
 use qrcodegen::QrCode;
 
 use super::{
-    algo::line_points, Bitmap, BitmapFormat, Canvas, DrawingCache, Renderer, Shape, ShapeClone,
+    utils::line_points, Bitmap, BitmapFormat, Canvas, DrawingCache, Renderer, Shape, ShapeClone,
 };
 
 use without_alloc::alloc::LocalAllocLeakExt;

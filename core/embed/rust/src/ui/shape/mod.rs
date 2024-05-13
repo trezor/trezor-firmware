@@ -1,4 +1,3 @@
-mod algo;
 mod bar;
 mod base;
 mod bitmap;
@@ -14,8 +13,8 @@ mod qrcode;
 mod render;
 mod text;
 mod toif;
+mod utils;
 
-pub use algo::PI4;
 pub use bar::Bar;
 pub use base::{Shape, ShapeClone};
 pub use bitmap::{Bitmap, BitmapFormat, BitmapView};
@@ -31,3 +30,4 @@ pub use qrcode::QrImage;
 pub use render::{DirectRenderer, ProgressiveRenderer, Renderer};
 pub use text::Text;
 pub use toif::ToifImage;
+pub use utils::PI4;
