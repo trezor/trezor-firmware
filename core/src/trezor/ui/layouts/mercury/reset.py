@@ -25,8 +25,7 @@ async def show_share_words(
 ) -> None:
 
     if share_index is None:
-        # FIXME use TR.reset__recovery_wallet_backup_title after #3710 merged
-        title = TR.reset__recovery_seed_title
+        title = TR.reset__recovery_wallet_backup_title
     elif group_index is None:
         title = TR.reset__recovery_share_title_template.format(share_index + 1)
     else:
@@ -62,7 +61,7 @@ async def select_word(
     group_index: int | None = None,
 ) -> str:
     if share_index is None:
-        description: str = TR.reset__check_seed_title
+        description: str = TR.reset__check_wallet_backup_title
     elif group_index is None:
         description: str = TR.reset__check_share_title_template.format(share_index + 1)
     else:
