@@ -56,7 +56,7 @@ async def confirm_fido(
     """Webauthn confirmation for one or more credentials."""
     confirm = _RustFidoLayout(
         trezorui2.confirm_fido(
-            title=header.upper(),
+            title=header,
             app_name=app_name,
             icon_name=icon_name,
             accounts=accounts,
