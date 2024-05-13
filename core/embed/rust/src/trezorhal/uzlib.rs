@@ -20,7 +20,7 @@ impl<'a> UzlibContext<'a> {
     pub fn new(src: &'a [u8], window: Option<&'a mut [u8; UZLIB_WINDOW_SIZE]>) -> Self {
         let mut ctx = Self {
             uncomp: uzlib_uncomp::default(),
-            src_data: Default::default(),
+            src_data: PhantomData,
         };
 
         unsafe {
@@ -91,7 +91,7 @@ impl<'a> ZlibInflate<'a> {
             buf_head: 0,
             buf_tail: 0,
             uncomp: uzlib_uncomp::default(),
-            window: Default::default(),
+            window: PhantomData,
         };
 
         // SAFETY:
