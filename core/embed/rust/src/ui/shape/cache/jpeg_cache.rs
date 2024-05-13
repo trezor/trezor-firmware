@@ -128,22 +128,6 @@ impl<'a> JpegCache<'a> {
         }
     }
 
-    pub fn get_size<'i: 'a>(
-        &mut self,
-        image: BinaryData<'i>,
-        scale: u8,
-    ) -> Result<Offset, tjpgd::Error> {
-        if !self.is_for(image, scale) {
-            self.reset(Some(image), scale)?;
-        }
-        let decoder = unwrap!(self.decoder.as_mut()); // should never fail
-        let divisor = 1 << self.scale;
-        Ok(Offset::new(
-            decoder.width() / divisor,
-            decoder.height() / divisor,
-        ))
-    }
-
     // left-top origin of output rectangle must be aligned to JPEG MCU size
     pub fn decompress_mcu<'i: 'a>(
         &mut self,

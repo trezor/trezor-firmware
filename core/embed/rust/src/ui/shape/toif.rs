@@ -22,6 +22,8 @@ pub struct ToifImage<'a> {
     fg_color: Color,
     // Optional background color
     bg_color: Option<Color>,
+    /// Final size calculated from TOIF data
+    size: Offset,
 }
 
 impl<'a> ToifImage<'a> {
@@ -32,6 +34,7 @@ impl<'a> ToifImage<'a> {
             toif,
             fg_color: Color::white(),
             bg_color: None,
+            size: Offset::zero(),
         }
     }
 
@@ -42,6 +45,7 @@ impl<'a> ToifImage<'a> {
             toif: BinaryData::from_slice(toif.original_data()),
             fg_color: Color::white(),
             bg_color: None,
+            size: Offset::zero(),
         }
     }
 
@@ -60,16 +64,17 @@ impl<'a> ToifImage<'a> {
         }
     }
 
-    pub fn render(self, renderer: &mut impl Renderer<'a>) {
+    pub fn render(mut self, renderer: &mut impl Renderer<'a>) {
+        self.size = self.calc_size();
         renderer.render_shape(self);
     }
 
     fn draw_grayscale(&self, canvas: &mut dyn Canvas, cache: &DrawingCache<'a>) {
         // TODO: introduce new viewport/shape function for this calculation
-        let bounds = self.bounds(cache);
+        let bounds = self.bounds();
         let viewport = canvas.viewport();
         let mut clip = self
-            .bounds(cache)
+            .bounds()
             .clamp(viewport.clip.translate(-viewport.origin))
             .translate((-bounds.top_left()).into());
 
@@ -114,10 +119,10 @@ impl<'a> ToifImage<'a> {
 
     fn draw_rgb(&self, canvas: &mut dyn Canvas, cache: &DrawingCache<'a>) {
         // TODO: introduce new viewport/shape function for this calculation
-        let bounds = self.bounds(cache);
+        let bounds = self.bounds();
         let viewport = canvas.viewport();
         let mut clip = self
-            .bounds(cache)
+            .bounds()
             .clamp(viewport.clip.translate(-viewport.origin))
             .translate((-bounds.top_left()).into());
 
@@ -155,13 +160,16 @@ impl<'a> ToifImage<'a> {
             clip.y0 += height;
         }
     }
+
+    fn calc_size(&self) -> Offset {
+        let info = unwrap!(ToifInfo::parse(self.toif), "Invalid image");
+        return info.size();
+    }
 }
 
 impl<'a> Shape<'a> for ToifImage<'a> {
-    fn bounds(&self, _cache: &DrawingCache<'a>) -> Rect {
-        let info = unwrap!(ToifInfo::parse(self.toif), "Invalid image");
-        let size = info.size();
-        Rect::from_top_left_and_size(size.snap(self.pos, self.align), size)
+    fn bounds(&self) -> Rect {
+        Rect::from_top_left_and_size(self.size.snap(self.pos, self.align), self.size)
     }
 
     fn cleanup(&mut self, _cache: &DrawingCache<'a>) {

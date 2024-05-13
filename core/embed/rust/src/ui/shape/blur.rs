@@ -23,7 +23,7 @@ impl Blurring {
 }
 
 impl Shape<'_> for Blurring {
-    fn bounds(&self, _cache: &DrawingCache) -> Rect {
+    fn bounds(&self) -> Rect {
         self.area
     }
 

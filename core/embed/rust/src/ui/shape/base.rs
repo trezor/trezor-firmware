@@ -22,7 +22,7 @@ pub trait Shape<'s> {
     ///
     /// The function is used by renderer for optimization if the shape
     /// must be renderer or not.
-    fn bounds(&self, cache: &DrawingCache<'s>) -> Rect;
+    fn bounds(&self) -> Rect;
 
     /// Draws shape on the canvas.
     fn draw(&mut self, canvas: &mut dyn Canvas, cache: &DrawingCache<'s>);

@@ -64,7 +64,7 @@ impl Bar {
 }
 
 impl Shape<'_> for Bar {
-    fn bounds(&self, _cache: &DrawingCache) -> Rect {
+    fn bounds(&self) -> Rect {
         self.area
     }
 

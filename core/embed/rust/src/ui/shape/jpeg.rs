@@ -1,6 +1,9 @@
 use crate::{
     io::BinaryData,
-    ui::geometry::{Alignment2D, Offset, Point, Rect},
+    ui::{
+        display::image::JpegInfo,
+        geometry::{Alignment2D, Offset, Point, Rect},
+    },
 };
 
 use super::{Bitmap, BitmapFormat, BitmapView, Canvas, DrawingCache, Renderer, Shape, ShapeClone};
@@ -24,6 +27,8 @@ pub struct JpegImage<'a> {
     /// Set if blurring is pending
     /// (used only during image drawing).
     blur_tag: Option<u32>,
+    /// Final size calculated from TOIF data
+    size: Offset,
 }
 
 impl<'a> JpegImage<'a> {
@@ -36,6 +41,7 @@ impl<'a> JpegImage<'a> {
             blur_radius: 0,
             jpeg,
             blur_tag: None,
+            size: Offset::zero(),
         }
     }
 
@@ -63,15 +69,22 @@ impl<'a> JpegImage<'a> {
         Self { dim, ..self }
     }
 
-    pub fn render(self, renderer: &mut impl Renderer<'a>) {
+    pub fn render(mut self, renderer: &mut impl Renderer<'a>) {
+        self.size = self.calc_size();
         renderer.render_shape(self);
+    }
+
+    fn calc_size(&self) -> Offset {
+        let info = unwrap!(JpegInfo::parse(self.jpeg), "Invalid image");
+        let scale_factor = 1 << self.scale;
+        let size = info.size();
+        Offset::new(size.x / scale_factor, size.y / scale_factor)
     }
 }
 
 impl<'a> Shape<'a> for JpegImage<'a> {
-    fn bounds(&self, cache: &DrawingCache<'a>) -> Rect {
-        let size = unwrap!(cache.jpeg().get_size(self.jpeg, self.scale), "Invalid JPEG");
-        Rect::from_top_left_and_size(size.snap(self.pos, self.align), size)
+    fn bounds(&self) -> Rect {
+        Rect::from_top_left_and_size(self.size.snap(self.pos, self.align), self.size)
     }
 
     fn cleanup(&mut self, _cache: &DrawingCache<'a>) {
@@ -108,7 +121,7 @@ impl<'a> Shape<'a> for JpegImage<'a> {
 
     // This is a little bit slower implementation suitable for ProgressiveRenderer
     fn draw(&mut self, canvas: &mut dyn Canvas, cache: &DrawingCache<'a>) {
-        let bounds = self.bounds(cache);
+        let bounds = self.bounds();
         let clip = canvas.viewport().relative_clip(bounds).clip;
 
         // Translate clip to JPEG relative coordinates
@@ -134,7 +147,7 @@ impl<'a> Shape<'a> for JpegImage<'a> {
             );
         } else {
             // Draw JPEG with blurring effect
-            let jpeg_size = self.bounds(cache).size();
+            let jpeg_size = self.bounds().size();
 
             // Get a single line working bitmap
             let buff = &mut unwrap!(cache.image_buff(), "No image buffer");

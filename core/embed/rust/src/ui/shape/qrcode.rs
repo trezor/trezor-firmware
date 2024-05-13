@@ -109,7 +109,7 @@ impl QrImage {
 }
 
 impl Shape<'_> for QrImage {
-    fn bounds(&self, _cache: &DrawingCache) -> Rect {
+    fn bounds(&self) -> Rect {
         self.area
     }
 
@@ -129,7 +129,7 @@ impl Shape<'_> for QrImage {
             "Too small buffer"
         );
 
-        let clip = canvas.viewport().relative_clip(self.bounds(cache)).clip;
+        let clip = canvas.viewport().relative_clip(self.bounds()).clip;
 
         // translate clip to the relative coordinates
         let clip = clip.translate(-canvas.viewport().origin);

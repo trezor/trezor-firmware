@@ -69,7 +69,7 @@ impl Circle {
 }
 
 impl Shape<'_> for Circle {
-    fn bounds(&self, _cache: &DrawingCache) -> Rect {
+    fn bounds(&self) -> Rect {
         let c = self.center;
         let r = self.radius;
         Rect::new(

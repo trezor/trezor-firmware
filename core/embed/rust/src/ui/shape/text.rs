@@ -78,14 +78,14 @@ impl<'a> Text<'a> {
 }
 
 impl<'a> Shape<'_> for Text<'a> {
-    fn bounds(&self, _cache: &DrawingCache) -> Rect {
+    fn bounds(&self) -> Rect {
         self.bounds
     }
 
     fn cleanup(&mut self, _cache: &DrawingCache) {}
 
-    fn draw(&mut self, canvas: &mut dyn Canvas, cache: &DrawingCache) {
-        let mut r = self.bounds(cache);
+    fn draw(&mut self, canvas: &mut dyn Canvas, _cache: &DrawingCache) {
+        let mut r = self.bounds();
         let max_ascent = self.pos.y - r.y0;
 
         // TODO: optimize  text clipping, use canvas.viewport()

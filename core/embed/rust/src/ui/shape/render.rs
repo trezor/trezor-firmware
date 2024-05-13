@@ -107,7 +107,7 @@ where
     where
         S: Shape<'alloc> + ShapeClone<'alloc>,
     {
-        if self.canvas.viewport().contains(shape.bounds(self.cache)) {
+        if self.canvas.viewport().contains(shape.bounds()) {
             shape.draw(self.canvas, self.cache);
             shape.cleanup(self.cache);
         }
@@ -206,7 +206,7 @@ where
             // Draw all shapes that overlaps the slice
             for holder in self.shapes.iter_mut() {
                 let shape_viewport = holder.viewport.absolute_clip(slice_r);
-                let shape_bounds = holder.shape.bounds(self.cache);
+                let shape_bounds = holder.shape.bounds();
 
                 // Is the shape overlapping the current slice?
                 if shape_viewport.contains(shape_bounds) {
@@ -242,7 +242,7 @@ where
         S: Shape<'alloc> + ShapeClone<'alloc>,
     {
         // Is the shape visible?
-        if self.viewport.contains(shape.bounds(self.cache)) {
+        if self.viewport.contains(shape.bounds()) {
             // Clone the shape & push it to the list
             let holder = ShapeHolder {
                 shape: unwrap!(shape.clone_at_bump(self.bump), "No shape memory"),
