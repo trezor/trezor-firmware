@@ -67,7 +67,7 @@ pub trait BasicCanvas {
         self.fill_rect(vp.clip.translate(-vp.origin), color, 255);
     }
 
-    /// Draws a bitmap of bitmap into to the rectangle.
+    /// Draws a bitmap into to the rectangle.
     fn draw_bitmap(&mut self, r: Rect, bitmap: BitmapView);
 }
 
