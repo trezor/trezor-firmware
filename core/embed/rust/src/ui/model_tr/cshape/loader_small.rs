@@ -53,7 +53,7 @@ impl LoaderSmall {
 }
 
 impl Shape<'_> for LoaderSmall {
-    fn bounds(&self, _cache: &DrawingCache) -> Rect {
+    fn bounds(&self) -> Rect {
         Rect::from_top_left_and_size(self.pos, Offset::uniform(1)).expand(RADIUS + 1)
     }
 

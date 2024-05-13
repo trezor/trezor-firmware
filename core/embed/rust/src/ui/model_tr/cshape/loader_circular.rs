@@ -82,7 +82,7 @@ impl LoaderCircular {
 }
 
 impl<'s> Shape<'s> for LoaderCircular {
-    fn bounds(&self, _cache: &DrawingCache<'s>) -> Rect {
+    fn bounds(&self) -> Rect {
         let cells = self.cells();
 
         if cells.is_empty() {

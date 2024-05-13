@@ -49,7 +49,7 @@ impl HorizontalLine {
 }
 
 impl<'s> Shape<'s> for HorizontalLine {
-    fn bounds(&self, _cache: &DrawingCache<'s>) -> Rect {
+    fn bounds(&self) -> Rect {
         let size = Offset::new(self.length, self.thickness as i16);
         Rect::from_top_left_and_size(self.pos, size)
     }
