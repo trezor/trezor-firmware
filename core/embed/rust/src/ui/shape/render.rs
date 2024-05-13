@@ -187,6 +187,8 @@ where
             "No render memory"
         );
 
+        let lines = slice.height() as usize;
+
         for y in (canvas_clip.y0..canvas_clip.y1).step_by(lines) {
             // Calculate the coordinates of the slice we will draw into
             let slice_r = Rect::new(
