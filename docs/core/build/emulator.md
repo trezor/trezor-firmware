@@ -82,6 +82,8 @@ make build_unix                     # default
 make build_unix TREZOR_MODEL=R      # different model
 ```
 
+> **Note**: On Ubuntu, if you are getting error: `make: python: No such file or directory`, do: `sudo apt-get install python-is-python3`
+
 ## Run
 
 Now you can start the emulator:
