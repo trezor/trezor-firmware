@@ -31,7 +31,15 @@ pub struct Bitmap<'a> {
     format: BitmapFormat,
     /// Bitmap data is mutable
     mutable: bool,
-    /// DMA operation is pending
+    /// DMA operation is pending.
+    ///
+    /// If this flag is set, a DMA operation on the pointed-to buffer
+    /// may be pending and so nobody is allowed to look at it --
+    /// either through a pre-existing reference (so the Bitmap object must not
+    /// be dropped) or through one of Bitmap's methods.
+    ///
+    /// The `Bitmap` ensures that by `wait_for_dma()`ing the buffer before
+    /// dropping it or doing anything else with it.
     dma_pending: Cell<bool>,
     ///
     _phantom: core::marker::PhantomData<&'a ()>,
