@@ -103,7 +103,7 @@ impl<'a> SourceReadContext<'a> {
     pub unsafe fn advance(&mut self, uncomp: &ffi::uzlib_uncomp) {
         unsafe {
             // SAFETY: we trust uzlib to move the `source` pointer only up to `source_limit`
-            self.buf_head += uncomp.source.offset_from(self.buf.as_ptr()) as usize;
+            self.buf_head = uncomp.source.offset_from(self.buf.as_ptr()) as usize;
         }
     }
 
