@@ -23,7 +23,8 @@
 / Jul 01, 2021 R0.03  Added JD_FASTDECODE option.
 /                     Some performance improvement.
 / Jan 02, 2023        Rust version by Trezor Company, modified to meet our needs.
-
+/ May 14, 2024        Added better support for decompression resuming after an
+/                     output function interruption.
 Trezor modifications:
  - included overflow detection from https://github.com/cmumford/TJpgDec
  - removed JD_FASTDECODE=0 option
@@ -31,6 +32,7 @@ Trezor modifications:
  - allowed interrupted functionality
  - tighter integration into Trezor codebase by using our data structures
  - removed generic input and output functions, replaced by our specific functionality
+ - added better support for decompression resuming after an output function interruption
 /----------------------------------------------------------------------------*/
 
 #![no_std]
@@ -1348,42 +1350,14 @@ impl<'p> JDEC<'p> {
         }
     }
 
-    /// Start to decompress the JPEG picture
-    /// `scale`: output de-scaling factor (0 to 3)
+    /// Start/resume JPEG decompression
+    ///
+    /// The function decompress the JPEG image in stream and calls
+    /// the output function for each decoded MCU.
+    ///
+    /// If the output function returns `false`, the decompression is interrupted.
+    /// It's possible later to call `decomp()` again to resume the decompression.
     pub fn decomp(&mut self, input_func: &mut dyn JpegInput, output_func: &mut dyn JpegOutput) -> Result<(), Error> {
-        let mx = (self.msx as i32 * 8) as u32; // Size of the MCU (pixel)
-        let my = (self.msy as i32 * 8) as u32; // Size of the MCU (pixel)
-        let mut y = 0;
-        while y < self.height as u32 {
-            // Vertical loop of MCUs
-            let mut x = 0;
-            while x < self.width as u32 {
-                // Horizontal loop of MCUs
-                if self.nrst != 0 && {
-                    // Process restart interval if enabled
-                    let val = self.rst;
-                    self.rst += 1;
-                    val == self.nrst
-                } {
-                    let val = self.rsc;
-                    self.rsc += 1;
-                    self.restart(val, input_func)?;
-                    self.rst = 1;
-                }
-                // Load an MCU (decompress huffman coded stream, dequantize and apply IDCT)
-                self.mcu_load(input_func)?;
-                // Output the MCU (YCbCr to RGB, scaling and output)
-                self.mcu_output(x, y, output_func)?;
-                x += mx;
-            }
-            y += my;
-        }
-        Ok(())
-    }
-
-    /// Start to decompress the JPEG picture
-    /// `scale`: output de-scaling factor (0 to 3)
-    pub fn decomp2(&mut self, input_func: &mut dyn JpegInput, output_func: &mut dyn JpegOutput) -> Result<(), Error> {
         let mx = self.msx as u16 * 8; // Size of the MCU (pixel)
         let my = self.msy as u16 * 8; // Size of the MCU (pixel)
         while self.mcu_y < self.height {
@@ -1417,6 +1391,10 @@ impl<'p> JDEC<'p> {
         Ok(())
     }
 
+    /// Returns pixel coordinates (top-left) of the next decoded MCU
+    ///
+    /// The function is useful when the decompression is interrupted
+    /// and later resumed by `decomp()`.
     pub fn next_mcu(&self) -> (u16, u16) {
         (self.mcu_x, self.mcu_y)
     }
