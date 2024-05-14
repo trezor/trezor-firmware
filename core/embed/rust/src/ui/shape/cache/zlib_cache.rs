@@ -106,9 +106,9 @@ pub struct ZlibCache<'a> {
 }
 
 impl<'a> ZlibCache<'a> {
-    pub fn new<'alloc: 'a, T>(bump: &'alloc T, slot_count: usize) -> Option<Self>
+    pub fn new<T>(bump: &'a T, slot_count: usize) -> Option<Self>
     where
-        T: LocalAllocLeakExt<'alloc>,
+        T: LocalAllocLeakExt<'a>,
     {
         let mut cache = Self {
             slots: bump.fixed_vec(slot_count)?,
