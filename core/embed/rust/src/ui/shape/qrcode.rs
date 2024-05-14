@@ -123,7 +123,7 @@ impl Shape<'_> for QrImage {
                 BitmapFormat::MONO4,
                 None,
                 Offset::new(self.area.width(), 1),
-                Some(1),
+                None,
                 &mut buff[..]
             ),
             "Too small buffer"
