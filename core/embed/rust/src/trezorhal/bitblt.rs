@@ -85,7 +85,7 @@ impl ffi::gfx_bitblt_t {
     /// # SAFETY
     /// 1) Ensure that `x` and `y` are inside the source bitmap.
     /// 2) Source bitmap complete covers destination rectangle.
-    /// 3) Ensure that caller holds mutable reference to the source bitmap.
+    /// 3) Ensure that caller holds immutable reference to the source bitmap.
     ///    until the `gfx_bitblt_t` is dropped.
     unsafe fn with_src(self, bitmap: &Bitmap, x: i16, y: i16) -> Self {
         let bitmap_stride = match bitmap.format() {
@@ -154,8 +154,8 @@ impl BitBltFill {
                 // SAFETY:
                 // The only unsafe operation is `.with_rect()`, which is safe
                 // as long as the rectangle is completely inside the destination bitmap.
-                // We will set the destination bitmap later, so for now, we can
-                // safely assume that the rectangle is within the bitmap.
+                // We will set the destination bitmap later, so at the moment the
+                // rectangle cannot be out of bounds.
                 bitblt: unsafe {
                     ffi::gfx_bitblt_t::default()
                         .with_rect(r)
@@ -267,13 +267,13 @@ impl<'a> BitBltCopy<'a> {
             Some(Self {
                 // SAFETY:
                 // The only unsafe operations are `.with_rect()` and `.with_src()`:
-                // - We can safely assume that the destination rectangle is inside the destination
-                //   bitmap. This will be verified later in `.with_dst()`.
+                // - There is currently no set destination so the destination rectangle can't be out
+                //   of bounds
                 // - The `x`, `y` offsets are within the source bitmap, as ensured by the preceding
                 //   code.
                 // - The source bitmap completely covers the destination rectangle, which is also
                 //   ensured by the preceding code.
-                // - We hold a non-mutable reference to the source bitmap in the `BitBltCopy`
+                // - We hold a immutable reference to the source bitmap in the `BitBltCopy`
                 //   structure.
                 bitblt: unsafe {
                     ffi::gfx_bitblt_t::default()
