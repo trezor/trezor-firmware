@@ -161,7 +161,7 @@ impl<'a> JpegCache<'a> {
         let input = unwrap!(self.reader.as_mut()); // should never fail
         let mut output = JpegFnOutput::new(output);
 
-        match decoder.decomp2(input, &mut output) {
+        match decoder.decomp(input, &mut output) {
             Ok(_) | Err(tjpgd::Error::Interrupted) => Ok(()),
             Err(e) => Err(e),
         }
