@@ -9,10 +9,15 @@ use crate::error::Error;
 use super::ffi;
 
 /// A pointer type for values on the garbage-collected heap.
-///
-/// Although a garbage-collected pointer type technically should implement
-/// `Copy` and `Clone`, we avoid doing this until proven necessary.
 pub struct Gc<T: ?Sized>(NonNull<T>);
+
+impl<T: ?Sized> Clone for Gc<T> {
+    fn clone(&self) -> Self {
+        *self
+    }
+}
+
+impl<T: ?Sized> Copy for Gc<T> {}
 
 impl<T> Gc<T> {
     /// Allocate memory on the heap managed by the MicroPython garbage collector
@@ -99,6 +104,20 @@ impl<T: ?Sized> Gc<T> {
         // SAFETY: The caller must guarantee that `this` meets all the requirements for
         // a mutable reference.
         unsafe { this.0.as_mut() }
+    }
+
+    /// Return a immutable reference to the value.
+    ///
+    /// # Safety
+    ///
+    /// `Gc` values can originate in the MicroPython interpreter, and these can
+    /// be both shared and mutable. Before calling this function, you have to
+    /// ensure that `this` does not get externally mutated and nobody
+    /// holds a mutable reference.
+    pub unsafe fn as_ref(this: &Self) -> &T {
+        // SAFETY: The caller must guarantee that `this` meets all the requirements for
+        // a immutable reference.
+        unsafe { this.0.as_ref() }
     }
 }
 
