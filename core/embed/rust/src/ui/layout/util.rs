@@ -181,8 +181,5 @@ pub fn get_user_custom_image() -> Result<BinaryData<'static>, Error> {
     let mut data = Gc::<[u8]>::new_slice(len)?;
     // SAFETY: buffer is freshly allocated so nobody else has it.
     load_avatar(unsafe { Gc::<[u8]>::as_mut(&mut data) })?;
-    // Convert to mp_obj_bytes
-    let bytes = Obj::try_from(data.as_ref())?;
-    // Convert to BinaryData
-    BinaryData::from_object(bytes)
+    Ok(data.into())
 }

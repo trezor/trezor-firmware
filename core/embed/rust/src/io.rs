@@ -1,4 +1,4 @@
-use crate::error::Error;
+use crate::{error::Error, micropython::gc::Gc};
 
 #[cfg(feature = "micropython")]
 use crate::micropython::{buffer::get_buffer, obj::Obj};
@@ -78,23 +78,11 @@ pub enum BinaryData<'a> {
     Slice(&'a [u8]),
     #[cfg(feature = "micropython")]
     Object(Obj),
+    #[cfg(feature = "micropython")]
+    AllocatedSlice(Gc<[u8]>),
 }
 
 impl<'a> BinaryData<'a> {
-    /// Creates a new `BinaryData` from a slice of binary data.
-    pub fn from_slice(data: &'a [u8]) -> Self {
-        Self::Slice(data)
-    }
-
-    /// Creates a new `BinaryData` from a micropython `bytes` object.
-    #[cfg(feature = "micropython")]
-    pub fn from_object(obj: Obj) -> Result<Self, Error> {
-        if !obj.is_bytes() {
-            return Err(Error::TypeError);
-        }
-        Ok(Self::Object(obj))
-    }
-
     /// Returns `true` if the binary data is empty.
     pub fn is_empty(&self) -> bool {
         self.len() == 0
@@ -114,17 +102,15 @@ impl<'a> BinaryData<'a> {
             // note above.
             #[cfg(feature = "micropython")]
             Self::Object(obj) => unsafe { unwrap!(get_buffer(*obj)) },
+            #[cfg(feature = "micropython")]
+            Self::AllocatedSlice(data) => data,
         }
     }
 
     /// Returns the length of the binary data in bytes.
     pub fn len(&self) -> usize {
-        match self {
-            Self::Slice(data) => data.len(),
-            #[cfg(feature = "micropython")]
-            // SAFETY: We expect no existing mutable reference.
-            Self::Object(obj) => unsafe { unwrap!(get_buffer(*obj)).len() },
-        }
+        // SAFETY: reference is discarded immediately
+        unsafe { self.data().len() }
     }
 
     /// Reads binary data from the source into the buffer.
@@ -150,6 +136,14 @@ impl<'a> BinaryData<'a> {
                 buff[..size].copy_from_slice(&data[ofs..ofs + size]);
                 size
             }
+
+            #[cfg(feature = "micropython")]
+            Self::AllocatedSlice(data) => {
+                let remaining = data.len().saturating_sub(ofs);
+                let size = buff.len().min(remaining);
+                buff[..size].copy_from_slice(&data[ofs..ofs + size]);
+                size
+            }
         }
     }
 }
@@ -163,5 +157,28 @@ impl<'a> PartialEq for BinaryData<'a> {
             #[cfg(feature = "micropython")]
             _ => false,
         }
+    }
+}
+
+impl From<Gc<[u8]>> for BinaryData<'static> {
+    fn from(data: Gc<[u8]>) -> Self {
+        Self::AllocatedSlice(data)
+    }
+}
+
+impl TryFrom<Obj> for BinaryData<'static> {
+    type Error = Error;
+
+    fn try_from(obj: Obj) -> Result<Self, Self::Error> {
+        if !obj.is_bytes() {
+            return Err(Error::TypeError);
+        }
+        Ok(Self::Object(obj))
+    }
+}
+
+impl<'a> From<&'a [u8]> for BinaryData<'a> {
+    fn from(data: &'a [u8]) -> Self {
+        Self::Slice(data)
     }
 }

@@ -615,12 +615,12 @@ extern "C" fn new_confirm_homescreen(n_args: usize, args: *const Obj, kwargs: *m
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let image: Obj = kwargs.get(Qstr::MP_QSTR_image)?;
 
-        let mut jpeg = BinaryData::from_object(image)?;
+        let mut jpeg: BinaryData = image.try_into()?;
 
         if jpeg.is_empty() {
             // Incoming data may be empty, meaning we should
             // display default homescreen image.
-            jpeg = BinaryData::from_slice(theme::IMAGE_HOMESCREEN);
+            jpeg = theme::IMAGE_HOMESCREEN.into();
         }
 
         if !check_homescreen_format(jpeg, false) {
@@ -1573,7 +1573,7 @@ extern "C" fn new_show_lockscreen(n_args: usize, args: *const Obj, kwargs: *mut 
 
 pub extern "C" fn upy_check_homescreen_format(data: Obj) -> Obj {
     let block = || {
-        let buffer = BinaryData::from_object(data)?;
+        let buffer = data.try_into()?;
         Ok(check_homescreen_format(buffer, false).into())
     };
 

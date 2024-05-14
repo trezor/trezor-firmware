@@ -42,7 +42,7 @@ impl<'a> ToifImage<'a> {
         Self {
             pos,
             align: Alignment2D::TOP_LEFT,
-            toif: BinaryData::from_slice(toif.original_data()),
+            toif: toif.original_data().into(),
             fg_color: Color::white(),
             bg_color: None,
             size: Offset::zero(),

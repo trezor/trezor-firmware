@@ -46,7 +46,7 @@ impl<'a> JpegImage<'a> {
     }
 
     pub fn new(pos: Point, jpeg: &'a [u8]) -> Self {
-        Self::new_image(pos, BinaryData::from_slice(jpeg))
+        Self::new_image(pos, jpeg.into())
     }
 
     pub fn with_align(self, align: Alignment2D) -> Self {

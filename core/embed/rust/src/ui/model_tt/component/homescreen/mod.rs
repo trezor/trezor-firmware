@@ -568,7 +568,7 @@ fn get_homescreen_image() -> BinaryData<'static> {
             return image;
         }
     }
-    BinaryData::from_slice(IMAGE_HOMESCREEN)
+    IMAGE_HOMESCREEN.into()
 }
 
 #[cfg(feature = "ui_debug")]

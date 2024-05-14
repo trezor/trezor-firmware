@@ -4,7 +4,6 @@ use heapless::Vec;
 
 use crate::{
     error::Error,
-    io::BinaryData,
     maybe_trace::MaybeTrace,
     micropython::{
         buffer::StrBuffer, gc::Gc, iter::IterBuf, list::List, map::Map, module::Module, obj::Obj,
@@ -392,10 +391,7 @@ extern "C" fn new_confirm_homescreen(n_args: usize, args: *const Obj, kwargs: *m
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let image: Obj = kwargs.get(Qstr::MP_QSTR_image)?;
-        let obj = LayoutObj::new(ConfirmHomescreen::new(
-            title,
-            BinaryData::from_object(image)?,
-        ))?;
+        let obj = LayoutObj::new(ConfirmHomescreen::new(title, image.try_into()?))?;
         Ok(obj.into())
     };
 
@@ -1600,7 +1596,7 @@ extern "C" fn new_confirm_firmware_update(
 
 pub extern "C" fn upy_check_homescreen_format(data: Obj) -> Obj {
     let block = || {
-        let image = BinaryData::from_object(data)?;
+        let image = data.try_into()?;
         Ok(check_homescreen_format(image).into())
     };
 
