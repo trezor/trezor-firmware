@@ -1,12 +1,18 @@
 use crate::{
-    micropython::gc::Gc,
+    io::BinaryData,
     strutil::TString,
     time::{Duration, Instant},
     translations::TR,
     trezorhal::usb::usb_configured,
     ui::{
         component::{Component, Event, EventCtx, TimerToken},
-        display::{tjpgd::jpeg_info, toif::Icon, Color, Font},
+        display::{
+            self,
+            image::{ImageInfo, ToifFormat},
+            tjpgd::jpeg_info,
+            toif::{Icon, Toif},
+            Color, Font,
+        },
         event::{TouchEvent, USBEvent},
         geometry::{Alignment, Alignment2D, Insets, Offset, Point, Rect},
         layout::util::get_user_custom_image,
@@ -37,6 +43,7 @@ const LOADER_DURATION: Duration = Duration::from_millis(2000);
 
 pub const HOMESCREEN_IMAGE_WIDTH: i16 = WIDTH;
 pub const HOMESCREEN_IMAGE_HEIGHT: i16 = HEIGHT;
+pub const HOMESCREEN_TOIF_SIZE: i16 = 144;
 
 #[derive(Clone, Copy)]
 pub struct HomescreenNotification {
@@ -48,7 +55,7 @@ pub struct HomescreenNotification {
 pub struct Homescreen {
     label: TString<'static>,
     notification: Option<(TString<'static>, u8)>,
-    custom_image: Option<Gc<[u8]>>,
+    image: BinaryData<'static>,
     hold_to_lock: bool,
     loader: Loader,
     delay: Option<TimerToken>,
@@ -67,7 +74,7 @@ impl Homescreen {
         Self {
             label,
             notification,
-            custom_image: get_user_custom_image().ok(),
+            image: get_homescreen_image(),
             hold_to_lock,
             loader: Loader::with_lock_icon().with_durations(LOADER_DURATION, LOADER_DURATION / 3),
             delay: None,
@@ -185,15 +192,14 @@ impl Component for Homescreen {
         if self.loader.is_animating() || self.loader.is_completely_grown(Instant::now()) {
             self.render_loader(target);
         } else {
-            let img_data = match self.custom_image {
-                Some(ref img) => img.as_ref(),
-                None => IMAGE_HOMESCREEN,
-            };
-
-            if is_image_jpeg(img_data) {
-                shape::JpegImage::new(AREA.center(), img_data)
+            match ImageInfo::parse(self.image) {
+                ImageInfo::Jpeg(_) => shape::JpegImage::new_image(AREA.center(), self.image)
                     .with_align(Alignment2D::CENTER)
-                    .render(target);
+                    .render(target),
+                ImageInfo::Toif(_) => shape::ToifImage::new_image(AREA.center(), self.image)
+                    .with_align(Alignment2D::CENTER)
+                    .render(target),
+                _ => {}
             }
 
             self.label.map(|t| {
@@ -271,7 +277,7 @@ impl crate::trace::Trace for Homescreen {
 
 pub struct Lockscreen<'a> {
     label: TString<'a>,
-    custom_image: Option<Gc<[u8]>>,
+    image: BinaryData<'static>,
     bootscreen: bool,
     coinjoin_authorized: bool,
 }
@@ -280,7 +286,7 @@ impl<'a> Lockscreen<'a> {
     pub fn new(label: TString<'a>, bootscreen: bool, coinjoin_authorized: bool) -> Self {
         Lockscreen {
             label,
-            custom_image: get_user_custom_image().ok(),
+            image: get_homescreen_image(),
             bootscreen,
             coinjoin_authorized,
         }
@@ -306,19 +312,19 @@ impl Component for Lockscreen<'_> {
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        let img_data = match self.custom_image {
-            Some(ref img) => img.as_ref(),
-            None => IMAGE_HOMESCREEN,
-        };
+        let center = AREA.center();
 
-        let center = constant::screen().center();
-
-        if is_image_jpeg(img_data) {
-            shape::JpegImage::new(center, img_data)
+        match ImageInfo::parse(self.image) {
+            ImageInfo::Jpeg(_) => shape::JpegImage::new_image(center, self.image)
                 .with_align(Alignment2D::CENTER)
                 .with_blur(4)
                 .with_dim(102)
-                .render(target);
+                .render(target),
+            ImageInfo::Toif(_) => shape::ToifImage::new_image(center, self.image)
+                .with_align(Alignment2D::CENTER)
+                //.with_blur(5)
+                .render(target),
+            _ => {}
         }
 
         shape::ToifImage::new(center, ICON_LOCKSCREEN_FILTER.toif)
@@ -394,24 +400,30 @@ impl Component for Lockscreen<'_> {
     }
 }
 
-pub fn check_homescreen_format(buffer: &[u8]) -> bool {
-    #[cfg(not(feature = "new_rendering"))]
-    let result = is_image_jpeg(buffer) && crate::ui::display::tjpgd::jpeg_test(buffer);
-    #[cfg(feature = "new_rendering")]
-    let result = is_image_jpeg(buffer); // !@# TODO: test like if `new_rendering` is off
-
-    result
+pub fn check_homescreen_format(image: BinaryData, accept_toif: bool) -> bool {
+    match ImageInfo::parse(image) {
+        ImageInfo::Jpeg(info) => {
+            info.width() == HOMESCREEN_IMAGE_WIDTH
+                && info.height() == HOMESCREEN_IMAGE_HEIGHT
+                && info.mcu_height() <= 16
+        }
+        ImageInfo::Toif(info) => {
+            accept_toif
+                && info.width() == HOMESCREEN_TOIF_SIZE
+                && info.height() == HOMESCREEN_TOIF_SIZE
+                && info.format() == ToifFormat::FullColorBE
+        }
+        _ => false,
+    }
 }
 
-fn is_image_jpeg(buffer: &[u8]) -> bool {
-    let jpeg = jpeg_info(buffer);
-    if let Some((size, mcu_height)) = jpeg {
-        if size.x == HOMESCREEN_IMAGE_WIDTH && size.y == HOMESCREEN_IMAGE_HEIGHT && mcu_height <= 16
-        {
-            return true;
+fn get_homescreen_image() -> BinaryData<'static> {
+    if let Ok(image) = get_user_custom_image() {
+        if check_homescreen_format(image, true) {
+            return image;
         }
     }
-    false
+    IMAGE_HOMESCREEN.into()
 }
 
 #[cfg(feature = "ui_debug")]
