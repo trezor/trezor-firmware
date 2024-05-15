@@ -105,10 +105,10 @@ impl<'s> Shape<'s> for LoaderCircular {
     }
 }
 
-impl ShapeClone<'_> for LoaderCircular {
-    fn clone_at_bump<'alloc, T>(self, bump: &'alloc T) -> Option<&'alloc mut dyn Shape>
+impl<'s> ShapeClone<'s> for LoaderCircular {
+    fn clone_at_bump<T>(self, bump: &'s T) -> Option<&'s mut dyn Shape>
     where
-        T: LocalAllocLeakExt<'alloc>,
+        T: LocalAllocLeakExt<'s>,
     {
         let clone = bump.alloc_t()?;
         Some(clone.uninit.init(LoaderCircular { ..self }))

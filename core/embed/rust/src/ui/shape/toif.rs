@@ -187,9 +187,9 @@ impl<'a> Shape<'a> for ToifImage<'a> {
 }
 
 impl<'a> ShapeClone<'a> for ToifImage<'a> {
-    fn clone_at_bump<'alloc, T>(self, bump: &'alloc T) -> Option<&'alloc mut dyn Shape<'a>>
+    fn clone_at_bump<T>(self, bump: &'a T) -> Option<&'a mut dyn Shape<'a>>
     where
-        T: LocalAllocLeakExt<'alloc>,
+        T: LocalAllocLeakExt<'a>,
     {
         let clone = bump.alloc_t()?;
         Some(clone.uninit.init(ToifImage { ..self }))

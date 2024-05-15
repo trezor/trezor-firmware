@@ -46,8 +46,7 @@ pub trait ShapeClone<'s> {
     ///
     /// The method is used by `ProgressiveRenderer` to store shape objects for
     /// deferred drawing.
-    fn clone_at_bump<'alloc, T>(self, bump: &'alloc T) -> Option<&'alloc mut dyn Shape<'s>>
+    fn clone_at_bump<T>(self, bump: &'s T) -> Option<&'s mut dyn Shape<'s>>
     where
-        T: LocalAllocLeakExt<'alloc>,
-        'alloc: 's;
+        T: LocalAllocLeakExt<'s>;
 }
