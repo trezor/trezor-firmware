@@ -869,8 +869,7 @@
   "867": "instructions__continue_in_app",
   "868": "words__cancel_and_exit",
   "869": "address__confirmed",
-  "870": "reset__title_shamir_backup",
-  "871": "pin__cancel_description",
-  "872": "pin__cancel_info",
-  "873": "pin__cancel_setup"
+  "870": "pin__cancel_description",
+  "871": "pin__cancel_info",
+  "872": "pin__cancel_setup"
 }

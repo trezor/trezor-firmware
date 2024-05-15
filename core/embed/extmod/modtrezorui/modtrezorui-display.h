@@ -170,7 +170,11 @@ STATIC const mp_rom_map_elem_t mod_trezorui_Display_locals_dict_table[] = {
     {MP_ROM_QSTR(MP_QSTR_FONT_NORMAL), MP_ROM_INT(FONT_NORMAL)},
     {MP_ROM_QSTR(MP_QSTR_FONT_DEMIBOLD), MP_ROM_INT(FONT_DEMIBOLD)},
     {MP_ROM_QSTR(MP_QSTR_FONT_MONO), MP_ROM_INT(FONT_MONO)},
+#ifdef FONT_BOLD_UPPER
     {MP_ROM_QSTR(MP_QSTR_FONT_BOLD_UPPER), MP_ROM_INT(FONT_BOLD_UPPER)},
+#else
+    {MP_ROM_QSTR(MP_QSTR_FONT_BOLD_UPPER), MP_ROM_INT(FONT_BOLD)},
+#endif
 };
 STATIC MP_DEFINE_CONST_DICT(mod_trezorui_Display_locals_dict,
                             mod_trezorui_Display_locals_dict_table);

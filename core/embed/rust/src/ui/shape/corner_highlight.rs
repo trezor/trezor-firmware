@@ -88,7 +88,7 @@ impl CornerHighlight {
 }
 
 impl Shape<'_> for CornerHighlight {
-    fn bounds(&self, _cache: &DrawingCache) -> Rect {
+    fn bounds(&self) -> Rect {
         Rect::snap(
             self.pos_rect,
             Offset::uniform(self.length),
@@ -103,7 +103,7 @@ impl Shape<'_> for CornerHighlight {
         let circle_center = self.pos + Offset::uniform(self.r_outer).rotate(self.corner);
         let circle_visible_part = Rect::snap(self.pos_rect, Offset::uniform(self.r_outer), align);
         in_clip(canvas, circle_visible_part, &|can| {
-            can.fill_circle(circle_center, self.r_outer, self.color);
+            can.fill_circle(circle_center, self.r_outer, self.color, self.alpha);
         });
 
         // rectangles (rounded) tailing from a corner
@@ -146,7 +146,7 @@ impl Shape<'_> for CornerHighlight {
             self.pos + Offset::uniform(self.thickness + self.r_inner).rotate(self.corner);
         in_clip(canvas, rect_outer_fill, &|can| {
             can.fill_rect(rect_outer_fill, self.color, self.alpha);
-            can.fill_circle(circle_cover_center, self.r_inner, self.bg_color);
+            can.fill_circle(circle_cover_center, self.r_inner, self.bg_color, self.alpha);
         });
     }
 
@@ -154,9 +154,9 @@ impl Shape<'_> for CornerHighlight {
 }
 
 impl<'s> ShapeClone<'s> for CornerHighlight {
-    fn clone_at_bump<'alloc, T>(self, bump: &'alloc T) -> Option<&'alloc mut dyn Shape<'s>>
+    fn clone_at_bump<T>(self, bump: &'s T) -> Option<&'s mut dyn Shape<'s>>
     where
-        T: LocalAllocLeakExt<'alloc>,
+        T: LocalAllocLeakExt<'s>,
     {
         let clone = bump.alloc_t::<CornerHighlight>()?;
         Some(clone.uninit.init(CornerHighlight { ..self }))
