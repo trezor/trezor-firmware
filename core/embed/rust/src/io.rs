@@ -1,7 +1,7 @@
-use crate::{error::Error, micropython::gc::Gc};
+use crate::error::Error;
 
 #[cfg(feature = "micropython")]
-use crate::micropython::{buffer::get_buffer, obj::Obj};
+use crate::micropython::{buffer::get_buffer, gc::Gc, obj::Obj};
 
 pub struct InputStream<'a> {
     buf: &'a [u8],
@@ -171,12 +171,14 @@ impl<'a> PartialEq for BinaryData<'a> {
     }
 }
 
+#[cfg(feature = "micropython")]
 impl From<Gc<[u8]>> for BinaryData<'static> {
     fn from(data: Gc<[u8]>) -> Self {
         Self::AllocatedSlice(data)
     }
 }
 
+#[cfg(feature = "micropython")]
 impl TryFrom<Obj> for BinaryData<'static> {
     type Error = Error;
 
