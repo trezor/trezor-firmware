@@ -2,9 +2,9 @@ use core::{cmp::Ordering, convert::TryInto};
 
 use crate::{
     error::Error,
+    io::BinaryData,
     micropython::{
-        buffer::get_buffer, gc::Gc, iter::IterBuf, list::List, map::Map, module::Module, obj::Obj,
-        qstr::Qstr, util,
+        gc::Gc, iter::IterBuf, list::List, map::Map, module::Module, obj::Obj, qstr::Qstr, util,
     },
     strutil::TString,
     translations::TR,
@@ -14,7 +14,7 @@ use crate::{
             base::ComponentExt,
             connect::Connect,
             image::BlendedImage,
-            jpeg::{ImageBuffer, Jpeg},
+            jpeg::Jpeg,
             paginated::{PageMsg, Paginate},
             text::{
                 op::OpTextLayout,
@@ -26,7 +26,6 @@ use crate::{
             },
             Border, Component, Empty, FormattedText, Label, Never, Timeout,
         },
-        display::tjpgd::jpeg_info,
         geometry,
         layout::{
             obj::{ComponentMsgObj, LayoutObj},
@@ -561,15 +560,15 @@ extern "C" fn new_confirm_homescreen(n_args: usize, args: *const Obj, kwargs: *m
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let image: Obj = kwargs.get(Qstr::MP_QSTR_image)?;
 
-        let mut jpeg = unwrap!(ImageBuffer::from_object(image));
+        let mut jpeg: BinaryData = image.try_into()?;
 
         if jpeg.is_empty() {
             // Incoming data may be empty, meaning we should
             // display default homescreen image.
-            jpeg = ImageBuffer::from_slice(theme::IMAGE_HOMESCREEN);
+            jpeg = theme::IMAGE_HOMESCREEN.into();
         }
 
-        if jpeg_info(jpeg.data()).is_none() {
+        if !check_homescreen_format(jpeg, false) {
             return Err(value_error!("Invalid image."));
         };
 
@@ -1417,9 +1416,8 @@ extern "C" fn new_show_lockscreen(n_args: usize, args: *const Obj, kwargs: *mut 
 
 pub extern "C" fn upy_check_homescreen_format(data: Obj) -> Obj {
     let block = || {
-        let buffer = unsafe { get_buffer(data) }?;
-
-        Ok(check_homescreen_format(buffer).into())
+        let buffer = data.try_into()?;
+        Ok(check_homescreen_format(buffer, false).into())
     };
 
     unsafe { util::try_or_raise(block) }
