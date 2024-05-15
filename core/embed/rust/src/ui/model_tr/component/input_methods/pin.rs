@@ -6,6 +6,7 @@ use crate::{
         component::{text::common::TextBox, Child, Component, ComponentExt, Event, EventCtx},
         display::{Font, Icon},
         geometry::Rect,
+        shape::Renderer,
     },
 };
 
@@ -322,6 +323,12 @@ impl Component for PinEntry<'_> {
         self.header_line.paint();
         self.pin_line.paint();
         self.choice_page.paint();
+    }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        self.header_line.render(target);
+        self.pin_line.render(target);
+        self.choice_page.render(target);
     }
 }
 

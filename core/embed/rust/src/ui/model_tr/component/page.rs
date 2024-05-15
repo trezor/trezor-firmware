@@ -4,6 +4,7 @@ use crate::{
         component::{Child, Component, ComponentExt, Event, EventCtx, Pad, PageMsg, Paginate},
         display::Color,
         geometry::{Insets, Rect},
+        shape::Renderer,
     },
 };
 
@@ -214,6 +215,12 @@ where
         self.pad.paint();
         self.content.paint();
         self.buttons.paint();
+    }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        self.pad.render(target);
+        self.content.render(target);
+        self.buttons.render(target);
     }
 }
 

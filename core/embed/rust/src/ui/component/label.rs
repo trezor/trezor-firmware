@@ -4,6 +4,7 @@ use crate::{
         component::{Component, Event, EventCtx, Never},
         display::Font,
         geometry::{Alignment, Insets, Offset, Point, Rect},
+        shape::Renderer,
     },
 };
 
@@ -112,6 +113,10 @@ impl Component for Label<'_> {
 
     fn paint(&mut self) {
         self.text.map(|c| self.layout.render_text(c));
+    }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        self.text.map(|c| self.layout.render_text2(c, target));
     }
 
     #[cfg(feature = "ui_bounds")]

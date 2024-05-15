@@ -8,7 +8,11 @@ pub mod theme;
 
 #[cfg(feature = "micropython")]
 pub mod layout;
-mod screens;
+
+use crate::ui::{
+    layout::simplified::show,
+    model_tt::component::{ErrorScreen, WelcomeScreen},
+};
 
 pub struct ModelTTFeatures;
 
@@ -31,10 +35,12 @@ impl UIFeaturesCommon for ModelTTFeatures {
     const SCREEN: Rect = constant::SCREEN;
 
     fn screen_fatal_error(title: &str, msg: &str, footer: &str) {
-        screens::screen_fatal_error(title, msg, footer);
+        let mut frame = ErrorScreen::new(title.into(), msg.into(), footer.into());
+        show(&mut frame, false);
     }
 
     fn screen_boot_stage_2() {
-        screens::screen_boot_stage_2();
+        let mut frame = WelcomeScreen::new(false);
+        show(&mut frame, false);
     }
 }

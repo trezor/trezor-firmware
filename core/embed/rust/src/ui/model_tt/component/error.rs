@@ -4,6 +4,8 @@ use crate::{
         component::{Child, Component, Event, EventCtx, Label, Never, Pad},
         constant::screen,
         geometry::{Alignment2D, Point, Rect},
+        shape,
+        shape::Renderer,
     },
 };
 
@@ -88,5 +90,20 @@ impl<'a> Component for ErrorScreen<'a> {
         self.title.paint();
         self.message.paint();
         self.footer.paint();
+    }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        self.bg.render(target);
+
+        let icon = ICON_WARNING40;
+        shape::ToifImage::new(Point::new(screen().center().x, ICON_TOP), icon.toif)
+            .with_fg(WHITE)
+            .with_bg(FATAL_ERROR_COLOR)
+            .with_align(Alignment2D::TOP_CENTER)
+            .render(target);
+
+        self.title.render(target);
+        self.message.render(target);
+        self.footer.render(target);
     }
 }

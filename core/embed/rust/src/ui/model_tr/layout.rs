@@ -6,15 +6,8 @@ use crate::{
     error::Error,
     maybe_trace::MaybeTrace,
     micropython::{
-        buffer::{get_buffer, StrBuffer},
-        gc::Gc,
-        iter::IterBuf,
-        list::List,
-        map::Map,
-        module::Module,
-        obj::Obj,
-        qstr::Qstr,
-        util,
+        buffer::StrBuffer, gc::Gc, iter::IterBuf, list::List, map::Map, module::Module, obj::Obj,
+        qstr::Qstr, util,
     },
     strutil::TString,
     translations::TR,
@@ -34,7 +27,7 @@ use crate::{
             },
             ComponentExt, FormattedText, Label, LineBreaking, Timeout,
         },
-        display, geometry,
+        geometry,
         layout::{
             obj::{ComponentMsgObj, LayoutObj},
             result::{CANCELLED, CONFIRMED, INFO},
@@ -216,10 +209,7 @@ impl<'a> ComponentMsgObj for Lockscreen<'a> {
     }
 }
 
-impl<'a, F> ComponentMsgObj for ConfirmHomescreen<F>
-where
-    F: Fn() -> &'a [u8],
-{
+impl ComponentMsgObj for ConfirmHomescreen {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
             CancelConfirmMsg::Confirmed => Ok(CONFIRMED.as_obj()),
@@ -400,15 +390,8 @@ extern "C" fn new_confirm_properties(n_args: usize, args: *const Obj, kwargs: *m
 extern "C" fn new_confirm_homescreen(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
-        let data: Obj = kwargs.get(Qstr::MP_QSTR_image)?;
-
-        // Layout needs to hold the Obj to play nice with GC. Obj is resolved to &[u8]
-        // in every paint pass.
-        // SAFETY: We expect no existing mutable reference. Resulting reference is
-        //         discarded before returning to micropython.
-        let buffer_func = move || unsafe { unwrap!(get_buffer(data)) };
-
-        let obj = LayoutObj::new(ConfirmHomescreen::new(title, buffer_func))?;
+        let image: Obj = kwargs.get(Qstr::MP_QSTR_image)?;
+        let obj = LayoutObj::new(ConfirmHomescreen::new(title, image.try_into()?))?;
         Ok(obj.into())
     };
 
@@ -1615,13 +1598,8 @@ extern "C" fn new_confirm_firmware_update(
 
 pub extern "C" fn upy_check_homescreen_format(data: Obj) -> Obj {
     let block = || {
-        // SAFETY: buffer does not outlive this function
-        let buffer = unsafe { get_buffer(data) }?;
-
-        Ok(display::toif::Toif::new(buffer)
-            .map(|toif| check_homescreen_format(&toif))
-            .unwrap_or(false)
-            .into())
+        let image = data.try_into()?;
+        Ok(check_homescreen_format(image).into())
     };
 
     unsafe { util::try_or_raise(block) }

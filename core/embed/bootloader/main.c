@@ -331,13 +331,13 @@ void real_jump_to_firmware(void) {
   // if all VTRUST flags are unset = ultimate trust => skip the procedure
   if ((vhdr.vtrust & VTRUST_ALL) != VTRUST_ALL) {
     ui_fadeout();
-    ui_screen_boot(&vhdr, hdr);
+    ui_screen_boot(&vhdr, hdr, 0);
     ui_fadein();
 
     int delay = (vhdr.vtrust & VTRUST_WAIT) ^ VTRUST_WAIT;
     if (delay > 1) {
       while (delay > 0) {
-        ui_screen_boot_wait(delay);
+        ui_screen_boot(&vhdr, hdr, delay);
         hal_delay(1000);
         delay--;
       }
@@ -346,7 +346,8 @@ void real_jump_to_firmware(void) {
     }
 
     if ((vhdr.vtrust & VTRUST_CLICK) == 0) {
-      ui_screen_boot_click();
+      ui_screen_boot(&vhdr, hdr, -1);
+      ui_click();
     }
 
     ui_screen_boot_stage_1(false);

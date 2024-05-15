@@ -13,6 +13,7 @@ extern "C" fn screen_welcome() {
 }
 
 #[no_mangle]
+#[cfg(not(feature = "new_rendering"))]
 extern "C" fn bld_continue_label(bg_color: cty::uint16_t) {
     ModelUI::bld_continue_label(bg_color.into());
 }
@@ -99,6 +100,28 @@ extern "C" fn screen_intro(
 #[no_mangle]
 extern "C" fn screen_boot_stage_1(fading: bool) {
     ModelUI::screen_boot_stage_1(fading)
+}
+
+#[no_mangle]
+#[cfg(feature = "new_rendering")]
+extern "C" fn screen_boot(
+    warning: bool,
+    vendor_str: *const cty::c_char,
+    vendor_str_len: usize,
+    version: u32,
+    vendor_img: *const cty::c_void,
+    vendor_img_len: usize,
+    wait: i32,
+) {
+    let vendor_str = unsafe { from_c_array(vendor_str, vendor_str_len) };
+    let vendor_img =
+        unsafe { core::slice::from_raw_parts(vendor_img as *const u8, vendor_img_len) };
+
+    // Splits a version stored as a u32 into four numbers
+    // starting with the major version.
+    let version = version.to_le_bytes();
+
+    ModelUI::screen_boot(warning, vendor_str, version, vendor_img, wait);
 }
 
 #[no_mangle]

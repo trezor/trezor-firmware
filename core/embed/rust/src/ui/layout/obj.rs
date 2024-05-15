@@ -24,6 +24,9 @@ use crate::{
     },
 };
 
+#[cfg(feature = "new_rendering")]
+use crate::ui::{display::Color, shape::render_on_display};
+
 #[cfg(feature = "button")]
 use crate::ui::event::ButtonEvent;
 #[cfg(feature = "touch")]
@@ -69,9 +72,24 @@ where
     }
 
     fn obj_paint(&mut self) -> bool {
-        let will_paint = self.inner().will_paint();
-        self.paint();
-        will_paint
+        #[cfg(not(feature = "new_rendering"))]
+        {
+            let will_paint = self.inner().will_paint();
+            self.paint();
+            will_paint
+        }
+
+        #[cfg(feature = "new_rendering")]
+        {
+            let will_paint = self.inner().will_paint();
+            if will_paint {
+                render_on_display(None, Some(Color::black()), |target| {
+                    self.render(target);
+                });
+                self.skip_paint();
+            }
+            will_paint
+        }
     }
 
     #[cfg(feature = "ui_bounds")]

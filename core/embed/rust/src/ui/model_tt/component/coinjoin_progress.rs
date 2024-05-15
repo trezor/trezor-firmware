@@ -7,11 +7,13 @@ use crate::{
     translations::TR,
     ui::{
         component::{
-            base::Never, painter, Child, Component, ComponentExt, Empty, Event, EventCtx, Label,
-            Split,
+            base::Never, Bar, Child, Component, ComponentExt, Empty, Event, EventCtx, Label, Split,
         },
+        constant,
         display::loader::{loader_circular_uncompress, LoaderDimensions},
-        geometry::{Insets, Rect},
+        geometry::{Insets, Offset, Rect},
+        shape,
+        shape::Renderer,
         util::animation_disabled,
     },
 };
@@ -42,7 +44,7 @@ impl<U> CoinJoinProgress<U> {
         let style = theme::label_coinjoin_progress();
         let label = Label::centered(TR::coinjoin__title_do_not_disconnect.into(), style)
             .vertically_centered();
-        let bg = painter::rect_painter(style.background_color, theme::BG);
+        let bg = Bar::new(style.background_color, theme::BG, 2);
         let inner = (bg, label);
         CoinJoinProgress::with_background(text, inner, indeterminate)
     }
@@ -121,6 +123,40 @@ where
             None,
         );
         self.label.paint();
+    }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        self.content.render(target);
+
+        let center = constant::screen().center() + Offset::y(LOADER_OFFSET);
+        let active_color = theme::FG;
+        let background_color = theme::BG;
+        let inactive_color = background_color.blend(active_color, 85);
+
+        let start = (self.value as i16 - 100) % 1000;
+        let end = (self.value as i16 + 100) % 1000;
+        let start = ((start as i32 * 8 * shape::PI4 as i32) / 1000) as i16;
+        let end = ((end as i32 * 8 * shape::PI4 as i32) / 1000) as i16;
+
+        shape::Circle::new(center, LOADER_OUTER)
+            .with_bg(inactive_color)
+            .render(target);
+
+        shape::Circle::new(center, LOADER_OUTER)
+            .with_bg(active_color)
+            .with_start_angle(start)
+            .with_end_angle(end)
+            .render(target);
+
+        shape::Circle::new(center, LOADER_INNER + 2)
+            .with_bg(active_color)
+            .render(target);
+
+        shape::Circle::new(center, LOADER_INNER)
+            .with_bg(background_color)
+            .render(target);
+
+        self.label.render(target);
     }
 }
 

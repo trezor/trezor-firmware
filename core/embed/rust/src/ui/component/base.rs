@@ -9,6 +9,7 @@ use crate::{
         component::{maybe::PaintOverlapping, MsgMap},
         display::{self, Color},
         geometry::{Offset, Rect},
+        shape::Renderer,
     },
 };
 
@@ -60,6 +61,8 @@ pub trait Component {
     /// To prevent unnecessary over-draw, dirty state checking is performed in
     /// the `Child` wrapper.
     fn paint(&mut self);
+
+    fn render<'s>(&'s self, _target: &mut impl Renderer<'s>);
 
     #[cfg(feature = "ui_bounds")]
     /// Report current paint bounds of this component. Used for debugging.
@@ -152,6 +155,10 @@ where
             self.marked_for_paint = false;
             self.component.paint();
         }
+    }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        self.component.render(target);
     }
 
     #[cfg(feature = "ui_bounds")]
@@ -254,6 +261,10 @@ where
         self.inner.paint();
     }
 
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        self.inner.render(target);
+    }
+
     #[cfg(feature = "ui_bounds")]
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         self.inner.bounds(sink)
@@ -290,6 +301,11 @@ where
     fn paint(&mut self) {
         self.0.paint();
         self.1.paint();
+    }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        self.0.render(target);
+        self.1.render(target);
     }
 
     #[cfg(feature = "ui_bounds")]
@@ -341,6 +357,12 @@ where
         self.2.paint();
     }
 
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        self.0.render(target);
+        self.1.render(target);
+        self.2.render(target);
+    }
+
     #[cfg(feature = "ui_bounds")]
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         self.0.bounds(sink);
@@ -365,6 +387,12 @@ where
     fn paint(&mut self) {
         if let Some(ref mut c) = self {
             c.paint()
+        }
+    }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        if let Some(ref c) = self {
+            c.render(target)
         }
     }
 

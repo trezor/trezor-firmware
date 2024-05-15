@@ -1,5 +1,5 @@
 use super::{Component, Event, EventCtx};
-use crate::ui::geometry::Rect;
+use crate::ui::{geometry::Rect, shape::Renderer};
 
 pub struct MsgMap<T, F> {
     inner: T,
@@ -29,6 +29,10 @@ where
 
     fn paint(&mut self) {
         self.inner.paint()
+    }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        self.inner.render(target);
     }
 
     #[cfg(feature = "ui_bounds")]

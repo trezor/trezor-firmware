@@ -1,4 +1,5 @@
 use crate::{
+    io::BinaryData,
     strutil::TString,
     translations::TR,
     trezorhal::usb::usb_configured,
@@ -6,13 +7,17 @@ use crate::{
         component::{Child, Component, Event, EventCtx, Label},
         constant::{HEIGHT, WIDTH},
         display::{
-            self, rect_fill,
-            toif::{Toif, ToifFormat},
+            self,
+            image::{ImageInfo, ToifFormat},
+            rect_fill,
+            toif::Toif,
             Font, Icon,
         },
         event::USBEvent,
-        geometry::{Alignment2D, Insets, Offset, Point, Rect},
+        geometry::{Alignment, Alignment2D, Insets, Offset, Point, Rect},
         layout::util::get_user_custom_image,
+        shape,
+        shape::Renderer,
     },
 };
 
@@ -46,6 +51,16 @@ fn paint_default_image() {
     );
 }
 
+fn render_default_image<'s>(target: &mut impl Renderer<'s>) {
+    shape::ToifImage::new(
+        TOP_CENTER + Offset::y(LOGO_ICON_TOP_MARGIN),
+        theme::ICON_LOGO.toif,
+    )
+    .with_align(Alignment2D::TOP_CENTER)
+    .with_fg(theme::FG)
+    .render(target);
+}
+
 enum CurrentScreen {
     EmptyAtStart,
     Homescreen,
@@ -57,6 +72,7 @@ pub struct Homescreen {
     // always painted, so we need to always paint the label too
     label: Label<'static>,
     notification: Option<(TString<'static>, u8)>,
+    custom_image: Option<BinaryData<'static>>,
     /// Used for HTC functionality to lock device from homescreen
     invisible_buttons: Child<ButtonController>,
     /// Holds the loader component
@@ -78,9 +94,11 @@ impl Homescreen {
         let invisible_btn_layout = ButtonLayout::text_none_text("".into(), "".into());
         let loader =
             loader_description.map(|desc| Child::new(ProgressLoader::new(desc, HOLD_TO_LOCK_MS)));
+
         Self {
             label: Label::centered(label, theme::TEXT_BIG),
             notification,
+            custom_image: get_homescreen_image(),
             invisible_buttons: Child::new(ButtonController::new(invisible_btn_layout)),
             loader,
             show_loader: false,
@@ -89,15 +107,24 @@ impl Homescreen {
     }
 
     fn paint_homescreen_image(&self) {
-        let homescreen_bytes = get_user_custom_image().ok();
-        let homescreen = homescreen_bytes
-            .as_ref()
-            .and_then(|data| Toif::new(data.as_ref()).ok())
-            .filter(check_homescreen_format);
-        if let Some(toif) = homescreen {
+        if let Some(image) = self.custom_image {
+            // SAFETY: We expect no existing mutable reference. Resulting reference is
+            // discarded before returning to micropython.
+            let toif = unwrap!(Toif::new(unsafe { image.data() }));
             toif.draw(TOP_CENTER, Alignment2D::TOP_CENTER, theme::FG, theme::BG);
         } else {
             paint_default_image();
+        }
+    }
+
+    fn render_homescreen_image<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        if let Some(image) = self.custom_image {
+            shape::ToifImage::new_image(TOP_CENTER, image)
+                .with_align(Alignment2D::TOP_CENTER)
+                .with_fg(theme::FG)
+                .render(target);
+        } else {
+            render_default_image(target);
         }
     }
 
@@ -132,6 +159,51 @@ impl Homescreen {
         }
     }
 
+    fn render_notification<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        let baseline = TOP_CENTER + Offset::y(NOTIFICATION_FONT.line_height());
+        if !usb_configured() {
+            shape::Bar::new(AREA.split_top(NOTIFICATION_HEIGHT).0)
+                .with_bg(theme::BG)
+                .render(target);
+
+            // TODO: fill warning icons here as well?
+            TR::homescreen__title_no_usb_connection.map_translated(|t| {
+                shape::Text::new(baseline, t)
+                    .with_align(Alignment::Center)
+                    .with_font(NOTIFICATION_FONT)
+                    .render(target)
+            });
+        } else if let Some((notification, _level)) = &self.notification {
+            shape::Bar::new(AREA.split_top(NOTIFICATION_HEIGHT).0)
+                .with_bg(theme::BG)
+                .render(target);
+
+            notification.map(|c| {
+                shape::Text::new(baseline, c)
+                    .with_align(Alignment::Center)
+                    .with_font(NOTIFICATION_FONT)
+                    .render(target)
+            });
+
+            // Painting warning icons in top corners when the text is short enough not to
+            // collide with them
+            let icon_width = NOTIFICATION_ICON.toif.width();
+            let text_width = notification.map(|c| NOTIFICATION_FONT.text_width(c));
+            if AREA.width() >= text_width + (icon_width + 1) * 2 {
+                shape::ToifImage::new(AREA.top_left(), NOTIFICATION_ICON.toif)
+                    .with_align(Alignment2D::TOP_LEFT)
+                    .with_fg(theme::FG)
+                    .with_bg(theme::BG)
+                    .render(target);
+                shape::ToifImage::new(AREA.top_right(), NOTIFICATION_ICON.toif)
+                    .with_align(Alignment2D::TOP_RIGHT)
+                    .with_fg(theme::FG)
+                    .with_bg(theme::BG)
+                    .render(target);
+            }
+        }
+    }
+
     fn paint_label(&mut self) {
         // paint black background to place the label
         let mut outset = Insets::uniform(LABEL_OUTSET);
@@ -140,6 +212,19 @@ impl Homescreen {
         outset.top -= 5;
         rect_fill(self.label.text_area().outset(outset), theme::BG);
         self.label.paint();
+    }
+
+    fn render_label<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        // paint black background to place the label
+        let mut outset = Insets::uniform(LABEL_OUTSET);
+        // the margin at top is bigger (caused by text-height vs line-height?)
+        // compensate by shrinking the outset
+        outset.top -= 5;
+        shape::Bar::new(self.label.text_area().outset(outset))
+            .with_bg(theme::BG)
+            .render(target);
+
+        self.label.render(target);
     }
 
     /// So that notification is well visible even on homescreen image
@@ -229,6 +314,19 @@ impl Component for Homescreen {
             self.paint_label();
         }
     }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        // Redraw the whole screen when the screen changes (loader vs homescreen)
+        if self.show_loader {
+            self.loader.render(target);
+        } else {
+            // Painting the homescreen image first, as the notification and label
+            // should be "on top of it"
+            self.render_homescreen_image(target);
+            self.render_notification(target);
+            self.render_label(target);
+        }
+    }
 }
 
 pub struct Lockscreen<'a> {
@@ -301,29 +399,50 @@ impl Component for Lockscreen<'_> {
             )
         }
     }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        if self.screensaver {
+            // keep screen blank
+            return;
+        }
+        shape::ToifImage::new(
+            TOP_CENTER + Offset::y(LOCK_ICON_TOP_MARGIN),
+            theme::ICON_LOCK.toif,
+        )
+        .with_align(Alignment2D::TOP_CENTER)
+        .with_fg(theme::FG)
+        .render(target);
+
+        self.instruction.render(target);
+        self.label.render(target);
+
+        if let Some(icon) = &self.coinjoin_icon {
+            shape::ToifImage::new(COINJOIN_CORNER, icon.toif)
+                .with_align(Alignment2D::TOP_RIGHT)
+                .with_fg(theme::FG)
+                .render(target);
+        }
+    }
 }
 
-pub struct ConfirmHomescreen<F> {
+pub struct ConfirmHomescreen {
     title: Child<Label<'static>>,
-    buffer_func: F,
+    image: BinaryData<'static>,
     buttons: Child<ButtonController>,
 }
 
-impl<F> ConfirmHomescreen<F> {
-    pub fn new(title: TString<'static>, buffer_func: F) -> Self {
+impl ConfirmHomescreen {
+    pub fn new(title: TString<'static>, image: BinaryData<'static>) -> Self {
         let btn_layout = ButtonLayout::cancel_none_text(TR::buttons__change.into());
         ConfirmHomescreen {
             title: Child::new(Label::centered(title, theme::TEXT_BOLD_UPPER)),
-            buffer_func,
+            image,
             buttons: Child::new(ButtonController::new(btn_layout)),
         }
     }
 }
 
-impl<'a, F> Component for ConfirmHomescreen<F>
-where
-    F: Fn() -> &'a [u8],
-{
+impl Component for ConfirmHomescreen {
     type Msg = CancelConfirmMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -348,12 +467,13 @@ where
     }
 
     fn paint(&mut self) {
-        // Drawing the image full-screen first and then other things on top
-        let buffer = (self.buffer_func)();
-        if buffer.is_empty() {
+        if self.image.is_empty() {
             paint_default_image();
         } else {
-            let toif_data = unwrap!(Toif::new(buffer));
+            // Drawing the image full-screen first and then other things on top
+            // SAFETY: We expect no existing mutable reference. Resulting reference is
+            // discarded before returning to micropython.
+            let toif_data = unwrap!(Toif::new(unsafe { self.image.data() }));
             toif_data.draw(TOP_CENTER, Alignment2D::TOP_CENTER, theme::FG, theme::BG);
         };
         // Need to make all the title background black, so the title text is well
@@ -363,10 +483,47 @@ where
         self.title.paint();
         self.buttons.paint();
     }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        if self.image.is_empty() {
+            render_default_image(target);
+        } else {
+            shape::ToifImage::new_image(TOP_CENTER, self.image)
+                .with_align(Alignment2D::TOP_CENTER)
+                .with_fg(theme::FG)
+                .render(target);
+        };
+        // Need to make all the title background black, so the title text is well
+        // visible
+        let title_area = self.title.inner().area();
+
+        shape::Bar::new(title_area)
+            .with_bg(theme::BG)
+            .render(target);
+
+        self.title.render(target);
+        self.buttons.render(target);
+    }
 }
 
-pub fn check_homescreen_format(toif: &Toif) -> bool {
-    toif.format() == ToifFormat::GrayScaleEH && toif.width() == WIDTH && toif.height() == HEIGHT
+pub fn check_homescreen_format(image: BinaryData) -> bool {
+    match ImageInfo::parse(image) {
+        ImageInfo::Toif(info) => {
+            info.width() == WIDTH
+                && info.height() == HEIGHT
+                && info.format() == ToifFormat::GrayScaleEH
+        }
+        _ => false,
+    }
+}
+
+fn get_homescreen_image() -> Option<BinaryData<'static>> {
+    if let Ok(image) = get_user_custom_image() {
+        if check_homescreen_format(image) {
+            return Some(image);
+        }
+    }
+    None
 }
 
 // DEBUG-ONLY SECTION BELOW
@@ -388,7 +545,7 @@ impl crate::trace::Trace for Lockscreen<'_> {
 }
 
 #[cfg(feature = "ui_debug")]
-impl<F> crate::trace::Trace for ConfirmHomescreen<F> {
+impl crate::trace::Trace for ConfirmHomescreen {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("ConfirmHomescreen");
         t.child("title", &self.title);
