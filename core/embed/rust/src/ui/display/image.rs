@@ -166,6 +166,11 @@ impl JpegInfo {
                         return None;
                     };
                     let mcu_height = (8 * (c1 & 15)) as i16;
+
+                    // We now have all the information we need, but
+                    // we will not exit the loop yet until we find the
+                    // M_SOS marker. While this does not ensure absolute
+                    // correctness, it improves the verification slightly.
                     result = Some(JpegInfo {
                         size: Offset::new(w, h),
                         mcu_height,
