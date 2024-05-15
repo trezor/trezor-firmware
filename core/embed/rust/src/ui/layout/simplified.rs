@@ -12,7 +12,11 @@ use crate::ui::{
     ui_features::ModelUI,
     UIFeaturesCommon,
 };
+
 use num_traits::ToPrimitive;
+
+#[cfg(feature = "new_rendering")]
+use crate::ui::{display::color::Color, shape::render_on_display};
 
 pub trait ReturnToC {
     fn return_to_c(self) -> u32;
@@ -63,16 +67,28 @@ fn touch_eval() -> Option<TouchEvent> {
     TouchEvent::new(event_type, ex as _, ey as _).ok()
 }
 
-pub fn run<F>(frame: &mut F) -> u32
-where
-    F: Component,
-    F::Msg: ReturnToC,
-{
+fn render(frame: &mut impl Component) {
+    #[cfg(not(feature = "new_rendering"))]
+    {
+        display::sync();
+        frame.paint();
+        display::refresh();
+    }
+
+    #[cfg(feature = "new_rendering")]
+    {
+        display::sync();
+        render_on_display(None, Some(Color::black()), |target| {
+            frame.render(target);
+        });
+        display::refresh();
+    }
+}
+
+pub fn run(frame: &mut impl Component<Msg = impl ReturnToC>) -> u32 {
     frame.place(ModelUI::SCREEN);
     ModelUI::fadeout();
-    display::sync();
-    frame.paint();
-    display::refresh();
+    render(frame);
     ModelUI::fadein();
 
     #[cfg(feature = "button")]
@@ -93,24 +109,20 @@ where
             if let Some(message) = msg {
                 return message.return_to_c();
             }
-            display::sync();
-            frame.paint();
-            display::refresh();
+            render(frame);
         }
     }
 }
 
-pub fn show<F>(frame: &mut F, fading: bool)
-where
-    F: Component,
-{
+pub fn show(frame: &mut impl Component, fading: bool) {
     frame.place(ModelUI::SCREEN);
+
     if fading {
         ModelUI::fadeout()
     };
-    display::sync();
-    frame.paint();
-    display::refresh();
+
+    render(frame);
+
     if fading {
         ModelUI::fadein()
     };

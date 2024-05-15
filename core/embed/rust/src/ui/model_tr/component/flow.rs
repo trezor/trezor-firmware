@@ -4,6 +4,7 @@ use crate::{
         component::{Child, Component, ComponentExt, Event, EventCtx, Pad, Paginate},
         constant::SCREEN,
         geometry::Rect,
+        shape::Renderer,
     },
 };
 
@@ -312,6 +313,23 @@ where
         // whole height of the display for showing the content
         // (and painting buttons last would cover the lower part).
         self.current_page.paint();
+    }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        self.pad.render(target);
+        // Scrollbars are painted only with a title and when requested
+        if self.title.is_some() {
+            if self.show_scrollbar {
+                self.scrollbar.render(target);
+            }
+            self.title.render(target);
+        }
+        self.buttons.render(target);
+        // On purpose painting current page at the end, after buttons,
+        // because we sometimes (in the case of QR code) need to use the
+        // whole height of the display for showing the content
+        // (and painting buttons last would cover the lower part).
+        self.current_page.render(target);
     }
 }
 

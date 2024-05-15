@@ -18,6 +18,8 @@ use crate::{
                 WHITE,
             },
         },
+        shape,
+        shape::Renderer,
     },
 };
 
@@ -233,6 +235,40 @@ impl Component for Confirm<'_> {
                     WHITE,
                     self.bg_color,
                 );
+            }
+        }
+    }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        self.bg.render(target);
+        self.content_pad.render(target);
+
+        if let Some(info) = self.info.as_ref() {
+            if self.show_info {
+                info.close_button.render(target);
+                info.title.render(target);
+                info.text.render(target);
+                self.left_button.render(target);
+                self.right_button.render(target);
+                // short-circuit before painting the main components
+                return;
+            } else {
+                info.info_button.render(target);
+                // pass through to the rest of the paint
+            }
+        }
+
+        self.message.render(target);
+        self.alert.render(target);
+        self.left_button.render(target);
+        self.right_button.render(target);
+        match &self.title {
+            ConfirmTitle::Text(label) => label.render(target),
+            ConfirmTitle::Icon(icon) => {
+                shape::ToifImage::new(Point::new(screen().center().x, ICON_TOP), icon.toif)
+                    .with_align(Alignment2D::TOP_CENTER)
+                    .with_fg(WHITE)
+                    .render(target);
             }
         }
     }

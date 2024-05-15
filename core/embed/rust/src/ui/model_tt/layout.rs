@@ -2,9 +2,9 @@ use core::{cmp::Ordering, convert::TryInto};
 
 use crate::{
     error::Error,
+    io::BinaryData,
     micropython::{
-        buffer::get_buffer, gc::Gc, iter::IterBuf, list::List, map::Map, module::Module, obj::Obj,
-        qstr::Qstr, util,
+        gc::Gc, iter::IterBuf, list::List, map::Map, module::Module, obj::Obj, qstr::Qstr, util,
     },
     strutil::TString,
     translations::TR,
@@ -14,8 +14,8 @@ use crate::{
             base::ComponentExt,
             connect::Connect,
             image::BlendedImage,
+            jpeg::Jpeg,
             paginated::{PageMsg, Paginate},
-            painter,
             placed::GridPlaced,
             text::{
                 op::OpTextLayout,
@@ -27,7 +27,6 @@ use crate::{
             },
             Border, Component, Empty, FormattedText, Label, Never, Qr, Timeout,
         },
-        display::tjpgd::jpeg_info,
         geometry,
         layout::{
             obj::{ComponentMsgObj, LayoutObj},
@@ -196,10 +195,7 @@ where
     }
 }
 
-impl<F> ComponentMsgObj for painter::Painter<F>
-where
-    F: FnMut(geometry::Rect),
-{
+impl ComponentMsgObj for Jpeg {
     fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
         unreachable!()
     }
@@ -617,33 +613,25 @@ extern "C" fn new_confirm_properties(n_args: usize, args: *const Obj, kwargs: *m
 extern "C" fn new_confirm_homescreen(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
-        let data: Obj = kwargs.get(Qstr::MP_QSTR_image)?;
+        let image: Obj = kwargs.get(Qstr::MP_QSTR_image)?;
 
-        // Layout needs to hold the Obj to play nice with GC. Obj is resolved to &[u8]
-        // in every paint pass.
-        let buffer_func = move || {
-            // SAFETY: We expect no existing mutable reference. Resulting reference is
-            //         discarded before returning to micropython.
-            let buffer = unsafe { unwrap!(get_buffer(data)) };
-            // Incoming data may be empty, meaning we should display default homescreen
-            // image.
-            if buffer.is_empty() {
-                theme::IMAGE_HOMESCREEN
-            } else {
-                buffer
-            }
-        };
+        let mut jpeg: BinaryData = image.try_into()?;
 
-        let size = match jpeg_info(buffer_func()) {
-            Some(info) => info.0,
-            _ => return Err(value_error!("Invalid image.")),
+        if jpeg.is_empty() {
+            // Incoming data may be empty, meaning we should
+            // display default homescreen image.
+            jpeg = theme::IMAGE_HOMESCREEN.into();
+        }
+
+        if !check_homescreen_format(jpeg, false) {
+            return Err(value_error!("Invalid image."));
         };
 
         let buttons = Button::cancel_confirm_text(None, Some(TR::buttons__change.into()));
         let obj = LayoutObj::new(Frame::centered(
             theme::label_title(),
             title,
-            Dialog::new(painter::jpeg_painter(buffer_func, size, 1), buttons),
+            Dialog::new(Jpeg::new(jpeg, 1), buttons),
         ))?;
         Ok(obj.into())
     };
@@ -1585,9 +1573,8 @@ extern "C" fn new_show_lockscreen(n_args: usize, args: *const Obj, kwargs: *mut 
 
 pub extern "C" fn upy_check_homescreen_format(data: Obj) -> Obj {
     let block = || {
-        let buffer = unsafe { get_buffer(data) }?;
-
-        Ok(check_homescreen_format(buffer).into())
+        let buffer = data.try_into()?;
+        Ok(check_homescreen_format(buffer, false).into())
     };
 
     unsafe { util::try_or_raise(block) }

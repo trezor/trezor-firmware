@@ -1,5 +1,5 @@
 use super::{Component, Event, EventCtx, Never};
-use crate::ui::geometry::Rect;
+use crate::ui::{geometry::Rect, shape::Renderer};
 
 pub struct Empty;
 
@@ -15,6 +15,8 @@ impl Component for Empty {
     }
 
     fn paint(&mut self) {}
+
+    fn render<'s>(&'s self, _target: &mut impl Renderer<'s>) {}
 }
 
 #[cfg(feature = "ui_debug")]

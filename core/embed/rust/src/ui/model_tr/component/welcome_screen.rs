@@ -1,6 +1,8 @@
 use crate::ui::{
     component::{Component, Event, EventCtx, Never},
     geometry::{Alignment2D, Offset, Rect},
+    shape,
+    shape::Renderer,
 };
 
 use super::super::theme;
@@ -51,6 +53,30 @@ impl Component for WelcomeScreen {
             theme::FG,
             theme::BG,
         );
+    }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        shape::ToifImage::new(
+            self.area.bottom_center() - Offset::y(5),
+            theme::ICON_DEVICE_NAME.toif,
+        )
+        .with_align(Alignment2D::BOTTOM_CENTER)
+        .with_fg(theme::FG)
+        .render(target);
+
+        let icon = if self.empty_lock {
+            theme::ICON_LOGO_EMPTY
+        } else {
+            theme::ICON_LOGO
+        };
+
+        shape::ToifImage::new(
+            self.area.top_center() + Offset::y(ICON_TOP_MARGIN),
+            icon.toif,
+        )
+        .with_align(Alignment2D::TOP_CENTER)
+        .with_fg(theme::FG)
+        .render(target);
     }
 }
 

@@ -9,6 +9,8 @@ use crate::{
             swipe::{Swipe, SwipeDirection},
             theme, ScrollBar,
         },
+        shape,
+        shape::Renderer,
     },
 };
 
@@ -203,6 +205,36 @@ where
         let app_name = self.app_name.text();
         if !account_name.is_empty() && account_name != app_name {
             self.account_name.paint();
+        }
+
+        if self.fade.take() {
+            // Note that this is blocking and takes some time.
+            display::fade_backlight(theme::BACKLIGHT_NORMAL);
+        }
+    }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        self.icon.render(target);
+        self.controls.render(target);
+        self.app_name.render(target);
+
+        if self.scrollbar.page_count > 1 {
+            self.scrollbar.render(target);
+        }
+
+        // Erasing the old text content before writing the new one.
+        let account_name_area = self.account_name.area();
+        let real_area = account_name_area
+            .with_height(account_name_area.height() + self.account_name.font().text_baseline() + 1);
+        shape::Bar::new(real_area).with_bg(theme::BG).render(target);
+
+        // Account name is optional.
+        // Showing it only if it differs from app name.
+        // (Dummy requests usually have some text as both app_name and account_name.)
+        let account_name = self.account_name.text();
+        let app_name = self.app_name.text();
+        if !account_name.is_empty() && account_name != app_name {
+            self.account_name.render(target);
         }
 
         if self.fade.take() {

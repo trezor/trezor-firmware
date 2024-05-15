@@ -2,6 +2,7 @@ use crate::ui::{
     component::{Component, ComponentExt, Event, EventCtx, Pad},
     display::{self, Color},
     geometry::Rect,
+    shape::Renderer,
 };
 
 pub struct Maybe<T> {
@@ -91,6 +92,13 @@ where
         self.pad.paint();
         if self.visible {
             self.inner.paint();
+        }
+    }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        self.pad.render(target);
+        if self.visible {
+            self.inner.render(target);
         }
     }
 

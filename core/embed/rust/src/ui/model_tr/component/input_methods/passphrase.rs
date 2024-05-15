@@ -6,6 +6,7 @@ use crate::{
         component::{text::common::TextBox, Child, Component, ComponentExt, Event, EventCtx},
         display::Icon,
         geometry::Rect,
+        shape::Renderer,
         util::char_to_string,
     },
 };
@@ -447,6 +448,11 @@ impl Component for PassphraseEntry {
     fn paint(&mut self) {
         self.passphrase_dots.paint();
         self.choice_page.paint();
+    }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        self.passphrase_dots.render(target);
+        self.choice_page.render(target);
     }
 }
 

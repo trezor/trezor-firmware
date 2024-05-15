@@ -1,7 +1,9 @@
 use crate::ui::{
     component::{Component, Event, EventCtx, Never, Pad},
     display::{self, Font},
-    geometry::{Offset, Rect},
+    geometry::{Alignment, Offset, Rect},
+    shape,
+    shape::Renderer,
 };
 
 use super::super::theme::bootloader::{BLD_BG, BLD_FG};
@@ -56,5 +58,29 @@ impl Component for Welcome {
             BLD_FG,
             BLD_BG,
         );
+    }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        self.bg.render(target);
+
+        let top_center = self.bg.area.top_center();
+
+        shape::Text::new(top_center + Offset::y(24), "Get started with")
+            .with_align(Alignment::Center)
+            .with_font(Font::NORMAL)
+            .with_fg(BLD_FG)
+            .render(target);
+
+        shape::Text::new(top_center + Offset::y(32), "your Trezor at")
+            .with_align(Alignment::Center)
+            .with_font(Font::NORMAL)
+            .with_fg(BLD_FG)
+            .render(target);
+
+        shape::Text::new(top_center + Offset::y(48), "trezor.io/start")
+            .with_align(Alignment::Center)
+            .with_font(Font::BOLD)
+            .with_fg(BLD_FG)
+            .render(target);
     }
 }
