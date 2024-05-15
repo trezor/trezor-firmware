@@ -196,7 +196,7 @@ impl BitBltFill {
     ///
     /// The destination bitmap is in the MONO8 format.
     pub fn mono8_fill(&self, dst: &mut Bitmap) {
-        assert!(dst.format() == BitmapFormat::RGBA8888);
+        assert!(dst.format() == BitmapFormat::MONO8);
         // SAFETY:
         // - The destination bitmap is in the correct format.
         // - The destination rectangle is completely inside the destination bitmap.
