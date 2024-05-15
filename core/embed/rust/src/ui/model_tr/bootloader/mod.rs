@@ -19,7 +19,7 @@ use super::{
     },
     theme::{
         bootloader::{BLD_BG, BLD_FG, ICON_ALERT, ICON_SPINNER, ICON_SUCCESS},
-        ICON_ARM_LEFT, ICON_ARM_RIGHT, TEXT_BOLD, TEXT_NORMAL, WHITE,
+        ICON_ARM_LEFT, ICON_ARM_RIGHT, TEXT_BOLD, TEXT_NORMAL,
     },
     ModelTRFeatures,
 };
@@ -154,19 +154,19 @@ impl UIFeaturesBootloader for ModelTRFeatures {
             Point::new(constant::WIDTH / 2, HEIGHT - 2),
             "CONTINUE",
             Font::NORMAL,
-            WHITE,
+            BLD_FG,
             bg_color,
         );
         ICON_ARM_LEFT.draw(
             Point::new(constant::WIDTH / 2 - 36, HEIGHT - 6),
             Alignment2D::TOP_LEFT,
-            WHITE,
+            BLD_FG,
             bg_color,
         );
         ICON_ARM_RIGHT.draw(
             Point::new(constant::WIDTH / 2 + 25, HEIGHT - 6),
             Alignment2D::TOP_LEFT,
-            WHITE,
+            BLD_FG,
             bg_color,
         );
     }
