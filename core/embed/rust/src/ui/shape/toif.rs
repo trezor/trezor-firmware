@@ -163,7 +163,8 @@ impl<'a> ToifImage<'a> {
 
     fn calc_size(&self) -> Offset {
         let info = unwrap!(ToifInfo::parse(self.toif), "Invalid image");
-        return info.size();
+
+        info.size()
     }
 }
 
