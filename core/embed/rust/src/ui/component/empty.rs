@@ -16,7 +16,7 @@ impl Component for Empty {
 
     fn paint(&mut self) {}
 
-    fn render<'s>(&'s self, _target: &mut impl Renderer<'s>) {}
+    fn render<'s>(&self, _target: &mut impl Renderer<'s>) {}
 }
 
 #[cfg(feature = "ui_debug")]

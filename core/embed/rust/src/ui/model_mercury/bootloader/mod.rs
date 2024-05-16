@@ -410,7 +410,7 @@ impl UIFeaturesBootloader for ModelMercuryFeatures {
         warning: bool,
         vendor_str: Option<&str>,
         version: [u8; 4],
-        vendor_img: &[u8],
+        vendor_img: &'static [u8],
         wait: i32,
     ) {
         let bg_color = if warning { BLD_WARN_COLOR } else { BLD_BG };

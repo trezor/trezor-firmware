@@ -1,3 +1,8 @@
+mod bumps;
+mod direct_canvas;
+
+pub use direct_canvas::render_on_canvas;
+
 #[cfg(all(feature = "xframebuffer", feature = "display_mono"))]
 pub mod fb_mono8;
 #[cfg(all(feature = "xframebuffer", feature = "display_mono"))]
