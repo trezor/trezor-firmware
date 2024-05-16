@@ -17,7 +17,7 @@ use crate::{
 use heapless::{String, Vec};
 
 const MAX_WORDS: usize = 33; // super-shamir has 33 words, all other have less
-const ANIMATION_DURATION: Duration = Duration::from_millis(166);
+const ANIMATION_DURATION_MS: Duration = Duration::from_millis(166);
 
 /// Component showing mnemonic/share words during backup procedure. Model T3T1
 /// contains one word per screen. A user is instructed to swipe up/down to see
@@ -180,7 +180,7 @@ impl<'a> Swipable for ShareWords<'a> {
         self.animation = Some(Animation::new(
             0.0f32,
             1.0f32,
-            ANIMATION_DURATION,
+            ANIMATION_DURATION_MS,
             Instant::now(),
         ));
         ctx.request_anim_frame();

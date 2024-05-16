@@ -25,7 +25,7 @@ pub trait InvLerp: Copy {
     fn inv_lerp(min: Self, max: Self, value: Self) -> f32;
 }
 
-macro_rules! impl_lerp_for_int {
+macro_rules! impl_lerp_for_signed {
     ($int: ident) => {
         impl Lerp for $int {
             fn lerp(a: Self, b: Self, t: f32) -> Self {
@@ -41,7 +41,7 @@ macro_rules! impl_lerp_for_int {
     };
 }
 
-macro_rules! impl_lerp_for_uint {
+macro_rules! impl_lerp_for_unsigned {
     ($uint: ident) => {
         impl Lerp for $uint {
             fn lerp(a: Self, b: Self, t: f32) -> Self {
@@ -65,13 +65,13 @@ macro_rules! impl_lerp_for_uint {
     };
 }
 
-impl_lerp_for_int!(i16);
-impl_lerp_for_int!(i32);
-impl_lerp_for_uint!(u8);
-impl_lerp_for_uint!(u16);
-impl_lerp_for_uint!(u32);
+impl_lerp_for_signed!(i16);
+impl_lerp_for_signed!(i32);
+impl_lerp_for_unsigned!(u8);
+impl_lerp_for_unsigned!(u16);
+impl_lerp_for_unsigned!(u32);
 
-impl_lerp_for_int!(f32);
+impl_lerp_for_signed!(f32);
 
 #[cfg(test)]
 mod tests {
