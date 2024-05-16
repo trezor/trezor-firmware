@@ -121,7 +121,7 @@ impl ModelTTFeatures {
 
             shape::Circle::new(center, constant::LOADER_OUTER)
                 .with_bg(fg_color)
-                .with_end_angle(((progress as i32 * shape::PI4 as i32 * 8) / 1000) as i16)
+                .with_end_angle(360.0 * progress as f32 / 1000.0)
                 .render(target);
 
             shape::Circle::new(center, constant::LOADER_INNER + 2)
