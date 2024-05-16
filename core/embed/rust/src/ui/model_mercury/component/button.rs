@@ -31,6 +31,7 @@ pub struct Button {
     content: ButtonContent,
     styles: ButtonStyleSheet,
     text_align: Alignment,
+    radius: Option<u8>,
     state: State,
     long_press: Option<Duration>,
     long_timer: Option<TimerToken>,
@@ -49,6 +50,7 @@ impl Button {
             touch_expand: None,
             styles: theme::button_default(),
             text_align: Alignment::Start,
+            radius: None,
             state: State::Initial,
             long_press: None,
             long_timer: None,
@@ -92,6 +94,11 @@ impl Button {
 
     pub fn with_long_press(mut self, duration: Duration) -> Self {
         self.long_press = Some(duration);
+        self
+    }
+
+    pub fn with_radius(mut self, radius: u8) -> Self {
+        self.radius = Some(radius);
         self
     }
 
@@ -178,10 +185,21 @@ impl Button {
     pub fn render_background<'s>(&self, target: &mut impl Renderer<'s>, style: &ButtonStyle) {
         match &self.content {
             ButtonContent::IconBlend(_, _, _) => {}
-            _ => shape::Bar::new(self.area)
-                .with_bg(style.button_color)
-                .with_fg(style.button_color)
-                .render(target),
+            _ => {
+                if self.radius.is_some() {
+                    shape::Bar::new(self.area)
+                        .with_bg(style.background_color)
+                        .with_radius(self.radius.unwrap() as i16)
+                        .with_thickness(2)
+                        .with_fg(style.button_color)
+                        .render(target);
+                } else {
+                    shape::Bar::new(self.area)
+                        .with_bg(style.button_color)
+                        .with_fg(style.button_color)
+                        .render(target);
+                }
+            }
         }
     }
 
