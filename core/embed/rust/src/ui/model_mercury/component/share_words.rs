@@ -1,19 +1,23 @@
 use super::theme;
 use crate::{
     strutil::TString,
+    time::{Duration, Instant},
     translations::TR,
     ui::{
-        component::{Component, Event, EventCtx, Paginate, Swipe, SwipeDirection},
+        animation::Animation,
+        component::{Component, Event, EventCtx, Never, SwipeDirection},
         flow::Swipable,
         geometry::{Alignment, Alignment2D, Insets, Offset, Rect},
         model_mercury::component::Footer,
         shape,
         shape::Renderer,
+        util,
     },
 };
 use heapless::{String, Vec};
 
 const MAX_WORDS: usize = 33; // super-shamir has 33 words, all other have less
+const ANIMATION_DURATION: Duration = Duration::from_millis(166);
 
 /// Component showing mnemonic/share words during backup procedure. Model T3T1
 /// contains one word per screen. A user is instructed to swipe up/down to see
@@ -22,17 +26,13 @@ pub struct ShareWords<'a> {
     area: Rect,
     share_words: Vec<TString<'a>, MAX_WORDS>,
     page_index: usize,
+    prev_index: usize,
     /// Area reserved for a shown word from mnemonic/share
     area_word: Rect,
-    /// TODO: review when swipe concept done for T3T1
-    swipe: Swipe,
+    /// `Some` when transition animation is in progress
+    animation: Option<Animation<f32>>,
     /// Footer component for instructions and word counting
     footer: Footer<'static>,
-}
-
-pub enum ShareWordsMsg {
-    GoPrevScreen,
-    WordsSeen,
 }
 
 impl<'a> ShareWords<'a> {
@@ -43,8 +43,9 @@ impl<'a> ShareWords<'a> {
             area: Rect::zero(),
             share_words,
             page_index: 0,
+            prev_index: 0,
             area_word: Rect::zero(),
-            swipe: Swipe::new().up().down(),
+            animation: None,
             footer: Footer::new(TR::instructions__swipe_up),
         }
     }
@@ -56,10 +57,23 @@ impl<'a> ShareWords<'a> {
     fn is_final_page(&self) -> bool {
         self.page_index == self.share_words.len() - 1
     }
+
+    fn render_word<'s>(&'s self, word_index: usize, target: &mut impl Renderer<'s>) {
+        // the share word
+        let word = self.share_words[word_index];
+        let word_baseline = target.viewport().clip.center()
+            + Offset::y(theme::TEXT_SUPER.text_font.visible_text_height("A") / 2);
+        word.map(|w| {
+            shape::Text::new(word_baseline, w)
+                .with_font(theme::TEXT_SUPER.text_font)
+                .with_align(Alignment::Center)
+                .render(target);
+        });
+    }
 }
 
 impl<'a> Component for ShareWords<'a> {
-    type Msg = ShareWordsMsg;
+    type Msg = Never;
 
     fn place(&mut self, bounds: Rect) -> Rect {
         self.area = bounds;
@@ -76,29 +90,18 @@ impl<'a> Component for ShareWords<'a> {
         self.footer
             .place(used_area.split_bottom(Footer::HEIGHT_SIMPLE).1);
 
-        self.swipe.place(bounds); // Swipe possible on the whole screen area
         self.area
     }
 
-    fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+    fn event(&mut self, ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {
         // ctx.set_page_count(self.share_words.len());
-        let swipe = self.swipe.event(ctx, event);
-        match swipe {
-            Some(SwipeDirection::Up) => {
-                if self.is_final_page() {
-                    return Some(ShareWordsMsg::WordsSeen);
-                }
-                self.change_page(self.page_index + 1);
-                ctx.request_paint();
+        if let Some(a) = &self.animation {
+            if a.finished(Instant::now()) {
+                self.animation = None;
+            } else {
+                ctx.request_anim_frame();
             }
-            Some(SwipeDirection::Down) => {
-                if self.is_first_page() {
-                    return Some(ShareWordsMsg::GoPrevScreen);
-                }
-                self.change_page(self.page_index.saturating_sub(1));
-                ctx.request_paint();
-            }
-            _ => (),
+            ctx.request_paint();
         }
         None
     }
@@ -129,16 +132,25 @@ impl<'a> Component for ShareWords<'a> {
             .with_fg(theme::GREY)
             .render(target);
 
-        // the share word
-        let word = self.share_words[self.page_index];
-        let word_baseline = self.area_word.center()
-            + Offset::y(theme::TEXT_SUPER.text_font.visible_text_height("A") / 2);
-        word.map(|w| {
-            shape::Text::new(word_baseline, w)
-                .with_font(theme::TEXT_SUPER.text_font)
-                .with_align(Alignment::Center)
-                .render(target);
-        });
+        if let Some(animation) = &self.animation {
+            target.in_clip(self.area_word, &|target| {
+                util::render_slide(
+                    |target| self.render_word(self.prev_index, target),
+                    |target| self.render_word(self.page_index, target),
+                    animation.value(Instant::now()),
+                    if self.prev_index < self.page_index {
+                        SwipeDirection::Up
+                    } else {
+                        SwipeDirection::Down
+                    },
+                    target,
+                )
+            });
+        } else {
+            target.in_clip(self.area_word, &|target| {
+                self.render_word(self.page_index, target);
+            })
+        };
 
         // footer with instructions
         self.footer.render(target);
@@ -148,15 +160,36 @@ impl<'a> Component for ShareWords<'a> {
     fn bounds(&self, _sink: &mut dyn FnMut(Rect)) {}
 }
 
-impl<'a> Swipable for ShareWords<'a> {}
-
-impl<'a> Paginate for ShareWords<'a> {
-    fn page_count(&mut self) -> usize {
-        self.share_words.len()
+impl<'a> Swipable for ShareWords<'a> {
+    fn swipe_start(&mut self, ctx: &mut EventCtx, direction: SwipeDirection) -> bool {
+        match direction {
+            SwipeDirection::Up if !self.is_final_page() => {
+                self.prev_index = self.page_index;
+                self.page_index = (self.page_index + 1).min(self.share_words.len() - 1);
+            }
+            SwipeDirection::Down if !self.is_first_page() => {
+                self.prev_index = self.page_index;
+                self.page_index = self.page_index.saturating_sub(1);
+            }
+            _ => return false,
+        };
+        if util::animation_disabled() {
+            ctx.request_paint();
+            return true;
+        }
+        self.animation = Some(Animation::new(
+            0.0f32,
+            1.0f32,
+            ANIMATION_DURATION,
+            Instant::now(),
+        ));
+        ctx.request_anim_frame();
+        ctx.request_paint();
+        true
     }
 
-    fn change_page(&mut self, active_page: usize) {
-        self.page_index = active_page;
+    fn swipe_finished(&self) -> bool {
+        self.animation.is_none()
     }
 }
 

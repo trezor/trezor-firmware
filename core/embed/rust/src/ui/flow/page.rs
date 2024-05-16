@@ -1,11 +1,11 @@
 use crate::{
     micropython::gc::Gc,
-    time::{Duration, Instant},
+    time::Instant,
     ui::{
         animation::Animation,
         component::{Component, Event, EventCtx, Paginate, SwipeDirection},
         flow::base::Swipable,
-        geometry::{Axis, Offset, Rect},
+        geometry::{Axis, Rect},
         shape::Renderer,
         util,
     },
@@ -15,12 +15,10 @@ pub struct Transition<T> {
     /// Clone of the component before page change.
     cloned: Gc<T>,
     /// Animation progress.
-    animation: Animation<Offset>,
+    animation: Animation<f32>,
     /// Direction of the slide animation.
     direction: SwipeDirection,
 }
-
-const ANIMATION_DURATION: Duration = Duration::from_millis(333);
 
 /// Allows any implementor of `Paginate` to be part of `Swipable` UI flow.
 /// Renders sliding animation when changing pages.
@@ -74,16 +72,13 @@ impl<T: Component + Paginate + Clone> SwipePage<T> {
         transition: &'s Transition<T>,
         target: &mut impl Renderer<'s>,
     ) {
-        let off = transition.animation.value(Instant::now());
         target.in_clip(self.bounds, &|target| {
-            target.with_origin(off, &|target| {
-                transition.cloned.render(target);
-            });
-            target.with_origin(
-                off - transition.direction.as_offset(self.bounds.size()),
-                &|target| {
-                    self.inner.render(target);
-                },
+            util::render_slide(
+                |target| transition.cloned.render(target),
+                |target| self.inner.render(target),
+                transition.animation.value(Instant::now()),
+                transition.direction,
+                target,
             );
         });
     }
@@ -147,12 +142,7 @@ impl<T: Component + Paginate + Clone> Swipable for SwipePage<T> {
         }
         self.transition = Some(Transition {
             cloned: unwrap!(Gc::new(self.inner.clone())),
-            animation: Animation::new(
-                Offset::zero(),
-                direction.as_offset(self.bounds.size()),
-                ANIMATION_DURATION,
-                Instant::now(),
-            ),
+            animation: Animation::new(0.0f32, 1.0f32, util::SLIDE_DURATION, Instant::now()),
             direction,
         });
         self.inner.change_page(self.current);

@@ -1,6 +1,6 @@
 use crate::{
     error,
-    time::{Duration, Instant},
+    time::Instant,
     ui::{
         animation::Animation,
         component::{Component, Event, EventCtx, Swipe, SwipeDirection},
@@ -10,8 +10,6 @@ use crate::{
         util,
     },
 };
-
-const ANIMATION_DURATION: Duration = Duration::from_millis(333);
 
 /// Given a state enum and a corresponding FlowStore, create a Component that
 /// implements a swipe navigation between the states with animated transitions.
@@ -28,8 +26,6 @@ pub struct SwipeFlow<Q, S> {
     transition: Transition<Q>,
     /// Swipe detector.
     swipe: Swipe,
-    /// Animation parameter.
-    anim_offset: Offset,
 }
 
 enum Transition<Q> {
@@ -38,7 +34,7 @@ enum Transition<Q> {
         /// State we are transitioning _from_.
         prev_state: Q,
         /// Animation progress.
-        animation: Animation<Offset>,
+        animation: Animation<f32>,
         /// Direction of the slide animation.
         direction: SwipeDirection,
     },
@@ -55,7 +51,6 @@ impl<Q: FlowState, S: FlowStore> SwipeFlow<Q, S> {
             store,
             transition: Transition::None,
             swipe: Swipe::new().down().up().left().right(),
-            anim_offset: Offset::zero(),
         })
     }
 
@@ -72,12 +67,7 @@ impl<Q: FlowState, S: FlowStore> SwipeFlow<Q, S> {
         }
         self.transition = Transition::External {
             prev_state: self.state,
-            animation: Animation::new(
-                Offset::zero(),
-                direction.as_offset(self.anim_offset),
-                ANIMATION_DURATION,
-                Instant::now(),
-            ),
+            animation: Animation::new(0.0f32, 1.0f32, util::SLIDE_DURATION, Instant::now()),
             direction,
         };
         self.state = state;
@@ -92,17 +82,17 @@ impl<Q: FlowState, S: FlowStore> SwipeFlow<Q, S> {
     fn render_transition<'s>(
         &'s self,
         prev_state: &Q,
-        animation: &Animation<Offset>,
+        animation: &Animation<f32>,
         direction: &SwipeDirection,
         target: &mut impl Renderer<'s>,
     ) {
-        let off = animation.value(Instant::now());
-        target.with_origin(off, &|target| {
-            self.render_state(*prev_state, target);
-        });
-        target.with_origin(off - direction.as_offset(self.anim_offset), &|target| {
-            self.render_state(self.state, target);
-        });
+        util::render_slide(
+            |target| self.render_state(*prev_state, target),
+            |target| self.render_state(self.state, target),
+            animation.value(Instant::now()),
+            *direction,
+            target,
+        );
     }
 
     fn handle_transition(&mut self, ctx: &mut EventCtx, event: Event) -> Option<FlowMsg> {
@@ -164,10 +154,6 @@ impl<Q: FlowState, S: FlowStore> Component for SwipeFlow<Q, S> {
     type Msg = FlowMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        // Save screen size for slide animation. Once we have reasonable constants trait
-        // this can be set in the constructor.
-        self.anim_offset = bounds.size();
-
         self.swipe.place(bounds);
         self.store.place(bounds)
     }
