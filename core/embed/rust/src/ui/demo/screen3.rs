@@ -1,12 +1,9 @@
 use crate::ui::{
     component::{Component, Event, EventCtx, Never},
-    display::{font::Font, Color},
-    event::TouchEvent,
     geometry::{Point, Rect},
     layout::obj::{ComponentMsgObj, LayoutObj},
     model_tt::{component::Frame, theme},
-    shape,
-    shape::Renderer,
+    shape::{self, Renderer},
 };
 
 use crate::time::{Duration, Stopwatch};

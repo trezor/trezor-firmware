@@ -20,6 +20,13 @@ pub struct Rgb565Canvas<'a> {
     viewport: Viewport,
 }
 
+impl<'a> From<Bitmap<'a>> for Rgb565Canvas<'a> {
+    fn from(bitmap: Bitmap<'a>) -> Self {
+        let viewport = Viewport::from_size(bitmap.size());
+        Self { bitmap, viewport }
+    }
+}
+
 impl<'a> Rgb565Canvas<'a> {
     /// Creates a new canvas with the specified size and buffer.
     ///
@@ -37,6 +44,7 @@ impl<'a> Rgb565Canvas<'a> {
         let viewport = Viewport::from_size(bitmap.size());
         Some(Self { bitmap, viewport })
     }
+
 
     /// Returns the specified row as a mutable slice.
     ///

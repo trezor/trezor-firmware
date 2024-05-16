@@ -1,3 +1,7 @@
+pub mod fb_rgb565;
+pub use fb_rgb565::render_on_display;
+
+/*
 #[cfg(all(feature = "xframebuffer", feature = "display_mono"))]
 pub mod fb_mono8;
 #[cfg(all(feature = "xframebuffer", feature = "display_mono"))]
@@ -38,3 +42,4 @@ pub use fb_rgba8888::render_on_display;
 pub mod fake_display;
 #[cfg(not(feature = "new_rendering"))]
 pub use fake_display::render_on_display;
+*/
