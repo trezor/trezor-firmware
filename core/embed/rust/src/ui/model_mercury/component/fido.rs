@@ -1,14 +1,12 @@
 use crate::{
     strutil::TString,
     ui::{
-        component::{image::Image, Child, Component, Event, EventCtx, Label},
+        component::{
+            image::Image, Child, Component, Event, EventCtx, Label, Swipe, SwipeDirection,
+        },
         display,
         geometry::{Insets, Rect},
-        model_mercury::component::{
-            fido_icons::get_fido_icon_data,
-            swipe::{Swipe, SwipeDirection},
-            theme, ScrollBar,
-        },
+        model_mercury::component::{fido_icons::get_fido_icon_data, theme, ScrollBar},
         shape,
         shape::Renderer,
     },
