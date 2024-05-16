@@ -295,6 +295,7 @@ impl<'a> Drop for Bitmap<'a> {
     }
 }
 
+#[derive(Copy, Clone)]
 pub struct BitmapView<'a> {
     pub bitmap: &'a Bitmap<'a>,
     pub offset: Offset,
