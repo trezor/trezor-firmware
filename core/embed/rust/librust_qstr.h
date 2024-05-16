@@ -1004,6 +1004,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_cardano__collateral_input_index;
   MP_QSTR_cardano__collateral_output_contains_tokens;
   MP_QSTR_cardano__collateral_return;
+  MP_QSTR_cardano__confirm_message;
   MP_QSTR_cardano__confirm_signing_stake_pool;
   MP_QSTR_cardano__confirm_transaction;
   MP_QSTR_cardano__confirming_a_multisig_transaction;
@@ -1017,6 +1018,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_cardano__delegating_to_key_hash;
   MP_QSTR_cardano__delegating_to_script;
   MP_QSTR_cardano__deposit;
+  MP_QSTR_cardano__empty_message;
   MP_QSTR_cardano__for_account_and_index_template;
   MP_QSTR_cardano__for_account_template;
   MP_QSTR_cardano__for_key_hash;
@@ -1029,6 +1031,9 @@ static void _librust_qstrs(void) {
   MP_QSTR_cardano__intro_text_registration_payment;
   MP_QSTR_cardano__key_hash;
   MP_QSTR_cardano__margin;
+  MP_QSTR_cardano__message_hash;
+  MP_QSTR_cardano__message_hex;
+  MP_QSTR_cardano__message_text;
   MP_QSTR_cardano__multisig_path;
   MP_QSTR_cardano__nested_scripts_template;
   MP_QSTR_cardano__network;
@@ -1063,6 +1068,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_cardano__script_reward;
   MP_QSTR_cardano__sending;
   MP_QSTR_cardano__show_simple;
+  MP_QSTR_cardano__sign_message_hash_path_template;
+  MP_QSTR_cardano__sign_message_path_template;
   MP_QSTR_cardano__sign_tx_path_template;
   MP_QSTR_cardano__stake_delegation;
   MP_QSTR_cardano__stake_deregistration;

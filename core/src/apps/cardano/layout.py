@@ -338,13 +338,13 @@ async def confirm_message_payload(
     if not payload_first_chunk:
         assert payload_size == 0
         props = _get_data_chunk_props(
-            title="Empty message",
+            title=TR.cardano__empty_message,
             first_chunk=payload_first_chunk,
             data_size=payload_size,
         )
     elif not prefer_hex_display and is_unambiguous_ascii(payload_first_chunk):
         props = _get_data_chunk_props(
-            title="Message text",
+            title=TR.cardano__message_text,
             first_chunk=payload_first_chunk,
             data_size=payload_size,
             max_displayed_size=max_displayed_bytes,
@@ -352,17 +352,17 @@ async def confirm_message_payload(
         )
     else:
         props = _get_data_chunk_props(
-            title="Message hex",
+            title=TR.cardano__message_hex,
             first_chunk=payload_first_chunk,
             data_size=payload_size,
             max_displayed_size=max_displayed_bytes,
         )
 
-    props.append(("Message hash:", payload_hash))
+    props.append((TR.cardano__message_hash, payload_hash))
 
     await confirm_properties(
         "confirm_message_payload",
-        title="Confirm message",
+        title=TR.cardano__confirm_message,
         props=props,
         br_code=BRT_Other,
     )
@@ -411,7 +411,7 @@ async def show_credentials(
 
 
 async def show_message_header_credentials(credentials: list[Credential]) -> None:
-    intro_text = "Address"
+    intro_text = TR.words__address
     for credential in credentials:
         await _show_credential(credential, intro_text, purpose="message")
 
@@ -467,7 +467,7 @@ async def _show_credential(
         "address": f"{ADDRESS_TYPE_NAMES[credential.address_type]} address",
         "output": TR.cardano__confirm_transaction,
         "cvote_reg_payment_address": TR.cardano__confirm_transaction,
-        "message": "Confirm message",
+        "message": TR.cardano__confirm_message,
     }[purpose]
 
     props: list[PropertyType] = []
@@ -603,11 +603,17 @@ async def confirm_witness_request(
 
 
 async def confirm_message_path(path: list[int], is_signing_hash: bool) -> None:
+    path_title = _get_path_title(path)
+    text = (
+        TR.cardano__sign_message_hash_path_template.format(path_title)
+        if is_signing_hash
+        else TR.cardano__sign_message_path_template.format(path_title)
+    )
     await layouts.confirm_text(
         "confirm_message_signing_path",
-        "Confirm message",
+        TR.cardano__confirm_message,
         address_n_to_str(path),
-        f"Sign message{' hash' if is_signing_hash else ''} with {_get_path_title(path)}:",
+        text,
         BRT_Other,
     )
 
