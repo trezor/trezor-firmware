@@ -51,7 +51,7 @@ where
     }
 }
 
-#[cfg(all(feature = "micropython", feature = "touch"))]
+#[cfg(all(feature = "micropython", feature = "touch", feature = "new_rendering"))]
 impl<T, F> crate::ui::flow::Swipable for MsgMap<T, F>
 where
     T: Component + crate::ui::flow::Swipable,

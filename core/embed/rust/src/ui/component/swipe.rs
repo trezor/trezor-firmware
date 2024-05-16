@@ -24,10 +24,8 @@ impl SwipeDirection {
     }
 }
 
-/// Copy of `model_tt/component/swipe.rs` but without the backlight handling.
 #[derive(Clone)]
 pub struct Swipe {
-    pub area: Rect,
     pub allow_up: bool,
     pub allow_down: bool,
     pub allow_left: bool,
@@ -42,7 +40,6 @@ impl Swipe {
 
     pub fn new() -> Self {
         Self {
-            area: Rect::zero(),
             allow_up: false,
             allow_down: false,
             allow_left: false,
@@ -92,8 +89,7 @@ impl Component for Swipe {
     type Msg = SwipeDirection;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        self.area = bounds;
-        self.area
+        bounds
     }
 
     fn event(&mut self, _ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
@@ -101,7 +97,7 @@ impl Component for Swipe {
             return None;
         }
         match (event, self.origin) {
-            (Event::Touch(TouchEvent::TouchStart(pos)), _) if self.area.contains(pos) => {
+            (Event::Touch(TouchEvent::TouchStart(pos)), _) => {
                 // Mark the starting position of this touch.
                 self.origin.replace(pos);
             }
