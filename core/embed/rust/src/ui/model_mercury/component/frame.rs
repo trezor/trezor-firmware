@@ -195,10 +195,14 @@ where
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         self.title.event(ctx, event);
         self.subtitle.event(ctx, event);
+        let msg = self.content.event(ctx, event).map(FrameMsg::Content);
+        if msg.is_some() {
+            return msg;
+        }
         if let Some(ButtonMsg::Clicked) = self.button.event(ctx, event) {
             return Some(FrameMsg::Button(self.button_msg));
         }
-        self.content.event(ctx, event).map(FrameMsg::Content)
+        None
     }
 
     fn paint(&mut self) {
