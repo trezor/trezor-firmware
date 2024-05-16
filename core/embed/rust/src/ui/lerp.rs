@@ -71,6 +71,8 @@ impl_lerp_for_uint!(u8);
 impl_lerp_for_uint!(u16);
 impl_lerp_for_uint!(u32);
 
+impl_lerp_for_int!(f32);
+
 #[cfg(test)]
 mod tests {
     use super::*;
