@@ -15,7 +15,7 @@ use crate::{
 use heapless::Vec;
 
 use super::super::{
-    component::{Frame, FrameMsg, PromptScreen, ShareWords, ShareWordsMsg, SwipeDirection},
+    component::{Frame, FrameMsg, PromptScreen, ShareWords, SwipeDirection},
     theme,
 };
 
@@ -36,6 +36,12 @@ impl FlowState for ShowShareWords {
             }
             (ShowShareWords::Confirm, SwipeDirection::Down) => {
                 Decision::Goto(ShowShareWords::Words, direction)
+            }
+            (ShowShareWords::Words, SwipeDirection::Up) => {
+                Decision::Goto(ShowShareWords::Confirm, direction)
+            }
+            (ShowShareWords::Words, SwipeDirection::Down) => {
+                Decision::Goto(ShowShareWords::Instruction, direction)
             }
             (ShowShareWords::CheckBackupIntro, SwipeDirection::Up) => {
                 Decision::Return(FlowMsg::Confirmed)
@@ -85,11 +91,7 @@ impl ShowShareWords {
         .map(|msg| matches!(msg, FrameMsg::Content(_)).then_some(FlowMsg::Confirmed));
 
         let content_words =
-            Frame::left_aligned(title, ShareWords::new(share_words_vec)).map(|msg| match msg {
-                FrameMsg::Content(ShareWordsMsg::GoPrevScreen) => Some(FlowMsg::Cancelled),
-                FrameMsg::Content(ShareWordsMsg::WordsSeen) => Some(FlowMsg::Confirmed),
-                _ => None,
-            });
+            Frame::left_aligned(title, ShareWords::new(share_words_vec)).map(|_| None);
 
         let content_confirm =
             Frame::left_aligned(text_confirm, PromptScreen::new_hold_to_confirm())
