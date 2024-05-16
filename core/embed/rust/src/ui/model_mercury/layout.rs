@@ -959,7 +959,7 @@ extern "C" fn new_show_mismatch(n_args: usize, args: *const Obj, kwargs: *mut Ma
                 title,
                 Button::cancel_confirm(
                     Button::with_icon(theme::ICON_BACK),
-                    Button::with_text(button).styled(theme::button_reset()),
+                    Button::with_text(button).styled(theme::button_default()),
                     true,
                 ),
             )
