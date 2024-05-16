@@ -10,16 +10,9 @@ use crate::ui::{
 
 use super::super::{BasicCanvas, BitmapView, DrawingCache, ProgressiveRenderer, Viewport};
 
-use static_alloc::Bump;
+use super::bumps;
 
-// Maximum number of shapes on a single screen
-const SHAPE_MAX_COUNT: usize = 45;
-// Memory reserved for ProgressiveRenderes shape storage
-const SHAPE_MEM_SIZE: usize = 5 * 1024;
-// Memory not accessible by DMA
-const BUMP_A_SIZE: usize = DrawingCache::get_bump_a_size() + SHAPE_MEM_SIZE;
-// Memory accessible by DMA
-const BUMP_B_SIZE: usize = DrawingCache::get_bump_b_size();
+use static_alloc::Bump;
 
 /// Creates the `Renderer` object for drawing on a display and invokes a
 /// user-defined function that takes a single argument `target`. The user's
@@ -33,20 +26,9 @@ const BUMP_B_SIZE: usize = DrawingCache::get_bump_b_size();
 /// is undefined, and the user has to fill it themselves.
 pub fn render_on_display<'a, F>(viewport: Option<Viewport>, bg_color: Option<Color>, func: F)
 where
-    F: FnOnce(&mut ProgressiveRenderer<'_, 'a, Bump<[u8; BUMP_A_SIZE]>, DisplayCanvas>),
+    F: FnOnce(&mut ProgressiveRenderer<'_, 'a, Bump<[u8; bumps::BUMP_A_SIZE]>, DisplayCanvas>),
 {
-    #[cfg_attr(not(target_os = "macos"), link_section = ".no_dma_buffers")]
-    static mut BUMP_A: Bump<[u8; BUMP_A_SIZE]> = Bump::uninit();
-
-    #[cfg_attr(not(target_os = "macos"), link_section = ".buf")]
-    static mut BUMP_B: Bump<[u8; BUMP_B_SIZE]> = Bump::uninit();
-
-    let bump_a = unsafe { &mut *core::ptr::addr_of_mut!(BUMP_A) };
-    let bump_b = unsafe { &mut *core::ptr::addr_of_mut!(BUMP_B) };
-    {
-        bump_a.reset();
-        bump_b.reset();
-
+    bumps::run_with_bumps(|bump_a, bump_b| {
         let cache = DrawingCache::new(bump_a, bump_b);
         let mut canvas = DisplayCanvas::new();
 
@@ -54,13 +36,18 @@ where
             canvas.set_viewport(viewport);
         }
 
-        let mut target =
-            ProgressiveRenderer::new(&mut canvas, bg_color, &cache, bump_a, SHAPE_MAX_COUNT);
+        let mut target = ProgressiveRenderer::new(
+            &mut canvas,
+            bg_color,
+            &cache,
+            bump_a,
+            bumps::SHAPE_MAX_COUNT,
+        );
 
         func(&mut target);
 
         target.render(16);
-    }
+    });
 }
 
 /// A simple display canvas allowing just two bitblt operations:
