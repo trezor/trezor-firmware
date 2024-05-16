@@ -1067,5 +1067,12 @@
   "1065": "tutorial__tropic_info2",
   "1066": "tutorial__tropic_info3",
   "1067": "tutorial__welcome_safe7",
-  "1068": "tutorial__what_is_tropic"
+  "1068": "tutorial__what_is_tropic",
+  "1069": "cardano__confirm_message",
+  "1070": "cardano__empty_message",
+  "1071": "cardano__message_hash",
+  "1072": "cardano__message_hex",
+  "1073": "cardano__message_text",
+  "1074": "cardano__sign_message_hash_path_template",
+  "1075": "cardano__sign_message_path_template"
 }

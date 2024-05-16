@@ -1465,6 +1465,20 @@ pub enum TranslatedString {
     tutorial__tropic_info3 = 1066,  // "Built for security from the ground up, and open to independent audits."
     tutorial__welcome_safe7 = 1067,  // "Welcome to\nTrezor\nSafe 7"
     tutorial__what_is_tropic = 1068,  // "What is TROPIC01?"
+    #[cfg(feature = "universal_fw")]
+    cardano__confirm_message = 1069,  // "Confirm message"
+    #[cfg(feature = "universal_fw")]
+    cardano__empty_message = 1070,  // "Empty message"
+    #[cfg(feature = "universal_fw")]
+    cardano__message_hash = 1071,  // "Message hash:"
+    #[cfg(feature = "universal_fw")]
+    cardano__message_hex = 1072,  // "Message hex"
+    #[cfg(feature = "universal_fw")]
+    cardano__message_text = 1073,  // "Message text"
+    #[cfg(feature = "universal_fw")]
+    cardano__sign_message_hash_path_template = 1074,  // "Sign message hash with {0}"
+    #[cfg(feature = "universal_fw")]
+    cardano__sign_message_path_template = 1075,  // "Sign message with {0}"
 }
 
 impl TranslatedString {
@@ -3249,6 +3263,20 @@ impl TranslatedString {
             (Self::tutorial__tropic_info3, "Built for security from the ground up, and open to independent audits."),
             (Self::tutorial__welcome_safe7, "Welcome to\nTrezor\nSafe 7"),
             (Self::tutorial__what_is_tropic, "What is TROPIC01?"),
+            #[cfg(feature = "universal_fw")]
+            (Self::cardano__confirm_message, "Confirm message"),
+            #[cfg(feature = "universal_fw")]
+            (Self::cardano__empty_message, "Empty message"),
+            #[cfg(feature = "universal_fw")]
+            (Self::cardano__message_hash, "Message hash:"),
+            #[cfg(feature = "universal_fw")]
+            (Self::cardano__message_hex, "Message hex"),
+            #[cfg(feature = "universal_fw")]
+            (Self::cardano__message_text, "Message text"),
+            #[cfg(feature = "universal_fw")]
+            (Self::cardano__sign_message_hash_path_template, "Sign message hash with {0}"),
+            #[cfg(feature = "universal_fw")]
+            (Self::cardano__sign_message_path_template, "Sign message with {0}"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -3422,6 +3450,8 @@ impl TranslatedString {
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_cardano__collateral_return, Self::cardano__collateral_return),
         #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__confirm_message, Self::cardano__confirm_message),
+        #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_cardano__confirm_signing_stake_pool, Self::cardano__confirm_signing_stake_pool),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_cardano__confirm_transaction, Self::cardano__confirm_transaction),
@@ -3448,6 +3478,8 @@ impl TranslatedString {
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_cardano__deposit, Self::cardano__deposit),
         #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__empty_message, Self::cardano__empty_message),
+        #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_cardano__for_account_and_index_template, Self::cardano__for_account_and_index_template),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_cardano__for_account_template, Self::cardano__for_account_template),
@@ -3471,6 +3503,12 @@ impl TranslatedString {
         (Qstr::MP_QSTR_cardano__key_hash, Self::cardano__key_hash),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_cardano__margin, Self::cardano__margin),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__message_hash, Self::cardano__message_hash),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__message_hex, Self::cardano__message_hex),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__message_text, Self::cardano__message_text),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_cardano__multisig_path, Self::cardano__multisig_path),
         #[cfg(feature = "universal_fw")]
@@ -3539,6 +3577,10 @@ impl TranslatedString {
         (Qstr::MP_QSTR_cardano__sending, Self::cardano__sending),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_cardano__show_simple, Self::cardano__show_simple),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__sign_message_hash_path_template, Self::cardano__sign_message_hash_path_template),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__sign_message_path_template, Self::cardano__sign_message_path_template),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_cardano__sign_tx_path_template, Self::cardano__sign_tx_path_template),
         #[cfg(feature = "universal_fw")]
