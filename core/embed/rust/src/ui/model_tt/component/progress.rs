@@ -119,12 +119,12 @@ impl Component for Progress {
         let (start, end) = if self.indeterminate {
             let start = (self.value as i16 - 100) % 1000;
             let end = (self.value as i16 + 100) % 1000;
-            let start = ((start as i32 * 8 * shape::PI4 as i32) / 1000) as i16;
-            let end = ((end as i32 * 8 * shape::PI4 as i32) / 1000) as i16;
+            let start = 360.0 * start as f32 / 1000.0;
+            let end = 360.0 * end as f32 / 1000.0;
             (start, end)
         } else {
-            let end = ((self.value as i32 * 8 * shape::PI4 as i32) / 1000) as i16;
-            (0, end)
+            let end = 360.0 * self.value as f32 / 1000.0;
+            (0.0, end)
         };
 
         shape::Circle::new(center, constant::LOADER_OUTER)

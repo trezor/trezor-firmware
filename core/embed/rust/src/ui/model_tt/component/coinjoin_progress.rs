@@ -135,8 +135,8 @@ where
 
         let start = (self.value as i16 - 100) % 1000;
         let end = (self.value as i16 + 100) % 1000;
-        let start = ((start as i32 * 8 * shape::PI4 as i32) / 1000) as i16;
-        let end = ((end as i32 * 8 * shape::PI4 as i32) / 1000) as i16;
+        let start = 360.0 * start as f32 / 1000.0;
+        let end = 360.0 * end as f32 / 1000.0;
 
         shape::Circle::new(center, LOADER_OUTER)
             .with_bg(inactive_color)
