@@ -1,12 +1,12 @@
 use crate::ui::{
-    component::{Component, Event, EventCtx, Timeout},
+    component::{Component, Event, EventCtx, Swipe, SwipeDirection, Timeout},
     display::{Color, Icon},
     geometry::{Alignment2D, Rect},
     shape,
     shape::Renderer,
 };
 
-use super::{theme, Swipe, SwipeDirection};
+use super::theme;
 
 /// Component showing status of an operation. Most typically embedded as a
 /// content of a Frame and showing success (checkmark with a circle around).

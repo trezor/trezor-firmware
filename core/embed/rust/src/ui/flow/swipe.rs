@@ -5,7 +5,7 @@ use crate::{
         animation::Animation,
         component::{Component, Event, EventCtx, Swipe, SwipeDirection},
         flow::{base::Decision, FlowMsg, FlowState, FlowStore},
-        geometry::{Offset, Rect},
+        geometry::Rect,
         shape::Renderer,
         util,
     },
