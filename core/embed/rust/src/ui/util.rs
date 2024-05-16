@@ -180,7 +180,7 @@ macro_rules! include_icon {
     };
 }
 
-pub const SLIDE_DURATION: Duration = Duration::from_millis(333);
+pub const SLIDE_DURATION_MS: Duration = Duration::from_millis(333);
 
 #[cfg(feature = "new_rendering")]
 pub fn render_slide<'s, F0, F1, R>(

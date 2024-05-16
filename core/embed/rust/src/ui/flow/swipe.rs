@@ -67,7 +67,7 @@ impl<Q: FlowState, S: FlowStore> SwipeFlow<Q, S> {
         }
         self.transition = Transition::External {
             prev_state: self.state,
-            animation: Animation::new(0.0f32, 1.0f32, util::SLIDE_DURATION, Instant::now()),
+            animation: Animation::new(0.0f32, 1.0f32, util::SLIDE_DURATION_MS, Instant::now()),
             direction,
         };
         self.state = state;
