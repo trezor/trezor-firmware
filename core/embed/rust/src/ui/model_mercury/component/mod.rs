@@ -67,7 +67,7 @@ pub use prompt_screen::PromptScreen;
 pub use result::{ResultFooter, ResultScreen, ResultStyle};
 pub use scroll::ScrollBar;
 #[cfg(feature = "translations")]
-pub use share_words::{ShareWords, ShareWordsMsg};
+pub use share_words::ShareWords;
 pub use simple_page::SimplePage;
 pub use status_screen::StatusScreen;
 pub use swipe::{Swipe, SwipeDirection};

@@ -1,19 +1,5 @@
-use crate::ui::{
-    component::{EventCtx, SwipeDirection},
-    geometry::Offset,
-};
+use crate::ui::component::{EventCtx, SwipeDirection};
 use num_traits::ToPrimitive;
-
-impl SwipeDirection {
-    pub fn as_offset(self, size: Offset) -> Offset {
-        match self {
-            SwipeDirection::Up => Offset::y(-size.y),
-            SwipeDirection::Down => Offset::y(size.y),
-            SwipeDirection::Left => Offset::x(-size.x),
-            SwipeDirection::Right => Offset::x(size.x),
-        }
-    }
-}
 
 /// Component must implement this trait in order to be part of swipe-based flow.
 ///
