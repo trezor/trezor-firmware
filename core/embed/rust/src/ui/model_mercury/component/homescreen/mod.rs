@@ -7,10 +7,8 @@ use crate::{
     ui::{
         component::{Component, Event, EventCtx, TimerToken},
         display::{
-            self,
             image::{ImageInfo, ToifFormat},
-            tjpgd::jpeg_info,
-            toif::{Icon, Toif},
+            toif::Icon,
             Color, Font,
         },
         event::{TouchEvent, USBEvent},

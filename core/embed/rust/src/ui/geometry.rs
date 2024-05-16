@@ -1,5 +1,5 @@
 use crate::ui::lerp::Lerp;
-use core::ops::{Add, Neg, Sub};
+use core::ops::{Add, Mul, Neg, Sub};
 
 const fn min(a: i16, b: i16) -> i16 {
     if a < b {
@@ -125,6 +125,17 @@ impl Sub<Offset> for Offset {
 
     fn sub(self, rhs: Offset) -> Self::Output {
         Offset::sub(self, rhs)
+    }
+}
+
+impl Mul<f32> for Offset {
+    type Output = Offset;
+
+    fn mul(self, rhs: f32) -> Self::Output {
+        Offset::new(
+            (f32::from(self.x) * rhs) as i16,
+            (f32::from(self.y) * rhs) as i16,
+        )
     }
 }
 

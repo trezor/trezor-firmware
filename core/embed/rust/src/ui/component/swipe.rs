@@ -1,7 +1,7 @@
 use crate::ui::{
     component::{Component, Event, EventCtx},
     event::TouchEvent,
-    geometry::{Point, Rect},
+    geometry::{Offset, Point, Rect},
     shape::Renderer,
 };
 
@@ -11,6 +11,17 @@ pub enum SwipeDirection {
     Down,
     Left,
     Right,
+}
+
+impl SwipeDirection {
+    pub fn as_offset(self, size: Offset) -> Offset {
+        match self {
+            SwipeDirection::Up => Offset::y(-size.y),
+            SwipeDirection::Down => Offset::y(size.y),
+            SwipeDirection::Left => Offset::x(-size.x),
+            SwipeDirection::Right => Offset::x(size.x),
+        }
+    }
 }
 
 /// Copy of `model_tt/component/swipe.rs` but without the backlight handling.
