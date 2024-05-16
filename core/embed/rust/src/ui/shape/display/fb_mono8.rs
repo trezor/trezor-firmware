@@ -18,9 +18,9 @@ use static_alloc::Bump;
 /// `bg_color` specifies a background color with which the clip is filled before
 /// the drawing starts. If the background color is None, the background
 /// is undefined, and the user has to fill it themselves.
-pub fn render_on_display<'a, F>(viewport: Option<Viewport>, bg_color: Option<Color>, func: F)
+pub fn render_on_display<F>(viewport: Option<Viewport>, bg_color: Option<Color>, func: F)
 where
-    F: FnOnce(&mut DirectRenderer<'_, 'a, Mono8Canvas<'a>>),
+    F: for<'a> FnOnce(&mut DirectRenderer<'_, 'a, Mono8Canvas<'a>>),
 {
     const BUMP_SIZE: usize = DrawingCache::get_bump_a_size() + DrawingCache::get_bump_b_size();
 

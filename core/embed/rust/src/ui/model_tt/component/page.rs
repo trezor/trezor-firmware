@@ -418,7 +418,7 @@ where
         }
     }
 
-    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
         self.pad.render(target);
         match &self.loader {
             Some(l) if l.is_animating() => self.loader.render(target),
