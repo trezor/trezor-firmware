@@ -4,7 +4,10 @@ use crate::{
     time::Instant,
     translations::TR,
     ui::{
-        component::{paginated::PageMsg, Component, ComponentExt, Event, EventCtx, Pad, Paginate},
+        component::{
+            paginated::PageMsg, Component, ComponentExt, Event, EventCtx, Pad, Paginate, Swipe,
+            SwipeDirection,
+        },
         constant,
         display::{self, Color},
         geometry::{Insets, Rect},
@@ -14,8 +17,7 @@ use crate::{
 };
 
 use super::{
-    theme, Button, ButtonContent, ButtonMsg, ButtonStyleSheet, Loader, LoaderMsg, ScrollBar, Swipe,
-    SwipeDirection,
+    theme, Button, ButtonContent, ButtonMsg, ButtonStyleSheet, Loader, LoaderMsg, ScrollBar,
 };
 
 use core::cell::Cell;
