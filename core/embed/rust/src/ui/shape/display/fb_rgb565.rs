@@ -1,7 +1,7 @@
 use crate::ui::{
     display::Color,
     geometry::Offset,
-    shape::{BasicCanvas, DirectRenderer, DrawingCache, Rgb565Canvas, Viewport},
+    shape::{BasicCanvas, DirectRenderer, DrawingCache, Renderer, Rgb565Canvas, Viewport},
 };
 
 use crate::trezorhal::display;
@@ -11,16 +11,15 @@ use static_alloc::Bump;
 const BUMP_A_SIZE: usize = DrawingCache::get_bump_a_size();
 const BUMP_B_SIZE: usize = DrawingCache::get_bump_b_size();
 
-
 /// Runs a user-defined function with two bump allocators.
 ///
 /// The function is passed two bump allocators, `bump_a` and `bump_b`, which
 /// can be used to allocate memory for temporary objects.
 ///
 /// The function calls cannot be nested. The function panics if that happens.
-fn run_with_bumps<'a, F>(func: F)
+fn run_with_bumps<F>(func: F)
 where
-    F: FnOnce(&'a mut Bump<[u8; BUMP_A_SIZE]>, &'a mut Bump<[u8; BUMP_B_SIZE]>),
+    F: FnOnce(&mut Bump<[u8; BUMP_A_SIZE]>, &mut Bump<[u8; BUMP_B_SIZE]>),
 {
     // TODO: check if the function call is nested and panic
 
@@ -39,6 +38,32 @@ where
     func(bump_a, bump_b);
 }
 
+type ConcreteRenderer<'a, 'alloc> = DirectRenderer<'a, 'alloc, Rgb565Canvas<'alloc>>;
+
+pub struct ScopedRenderer<'a, 'alloc, 'env>
+where
+    'env: 'alloc,
+{
+    pub renderer: ConcreteRenderer<'a, 'alloc>,
+    _env: core::marker::PhantomData<&'env mut &'env ()>,
+}
+
+impl<'alloc> Renderer<'alloc> for ScopedRenderer<'_, 'alloc, '_> {
+    fn viewport(&self) -> Viewport {
+        self.renderer.viewport()
+    }
+
+    fn set_viewport(&mut self, viewport: Viewport) {
+        self.renderer.set_viewport(viewport);
+    }
+
+    fn render_shape<S>(&mut self, shape: S)
+    where
+        S: crate::ui::shape::Shape<'alloc> + crate::ui::shape::ShapeClone<'alloc> {
+        self.renderer.render_shape(shape);
+    }
+}
+
 /// Creates the `Renderer` object for drawing on a display and invokes a
 /// user-defined function that takes a single argument `target`. The user's
 /// function can utilize the `target` for drawing on the display.
@@ -49,9 +74,9 @@ where
 /// `bg_color` specifies a background color with which the clip is filled before
 /// the drawing starts. If the background color is None, the background
 /// is undefined, and the user has to fill it themselves.
-pub fn render_on_display<'a, F>(viewport: Option<Viewport>, bg_color: Option<Color>, func: F)
+pub fn render_on_display<'env, F>(viewport: Option<Viewport>, bg_color: Option<Color>, func: F)
 where
-    F: FnOnce(&mut DirectRenderer<'_, 'a, Rgb565Canvas<'a>>),
+    F: for<'alloc> FnOnce(&mut ScopedRenderer<'_, 'alloc, 'env>),
 {
     run_with_bumps(|bump_a, bump_b| {
         let width = display::DISPLAY_RESX as i16;
@@ -72,20 +97,24 @@ where
             canvas.set_viewport(viewport);
         }
 
-        let mut target = DirectRenderer::new(&mut canvas, bg_color, &cache);
-
-        func(&mut target);
+        let mut scoped = ScopedRenderer {
+            renderer: DirectRenderer::new(&mut canvas, bg_color, &cache),
+            _env: core::marker::PhantomData,
+        };
+        func(&mut scoped);
     });
 }
 
-
-pub fn render_on_canvas<F>(canvas: &mut Rgb565Canvas, bg_color: Option<Color>, func: F)
-where
-    F: for<'a> FnOnce(&mut DirectRenderer<'_, 'a, Rgb565Canvas<'_>>),
-{
-    run_with_bumps(|bump_a, bump_b| {
-        let cache = DrawingCache::new(bump_a, bump_b);
-        let mut target = DirectRenderer::new(canvas, bg_color, &cache);
-        func(&mut target);
-    });
-}
+// pub fn render_on_canvas<'c, 'env, F>(canvas: &'c mut Rgb565Canvas, bg_color: Option<Color>, func: F)
+// where
+//     F: for<'alloc> FnOnce(&mut ScopedRenderer<'c, 'alloc, 'env>),
+// {
+//     run_with_bumps(|bump_a, bump_b| {
+//         let cache = DrawingCache::new(bump_a, bump_b);
+//         let mut scoped = ScopedRenderer {
+//             renderer: DirectRenderer::new(canvas, bg_color, &cache),
+//             _env: core::marker::PhantomData,
+//         };
+//         func(&mut scoped);
+//     });
+// }
