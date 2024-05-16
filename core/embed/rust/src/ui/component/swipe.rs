@@ -25,6 +25,7 @@ impl SwipeDirection {
 }
 
 /// Copy of `model_tt/component/swipe.rs` but without the backlight handling.
+#[derive(Clone)]
 pub struct Swipe {
     pub area: Rect,
     pub allow_up: bool,

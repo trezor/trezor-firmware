@@ -1,11 +1,14 @@
 use crate::ui::{
-    component::{base::ComponentExt, Component, Event, EventCtx, Pad, PageMsg, Paginate},
+    component::{
+        base::ComponentExt, Component, Event, EventCtx, Pad, PageMsg, Paginate, Swipe,
+        SwipeDirection,
+    },
     display::{self, Color},
     geometry::{Axis, Insets, Rect},
     shape::Renderer,
 };
 
-use super::{theme, ScrollBar, Swipe, SwipeDirection};
+use super::{theme, ScrollBar};
 use core::cell::Cell;
 
 const SCROLLBAR_HEIGHT: i16 = 18;
