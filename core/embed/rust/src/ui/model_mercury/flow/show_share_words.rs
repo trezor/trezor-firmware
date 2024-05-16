@@ -6,7 +6,7 @@ use crate::{
     ui::{
         component::{
             text::paragraphs::{Paragraph, Paragraphs},
-            ComponentExt,
+            ComponentExt, SwipeDirection,
         },
         flow::{base::Decision, flow_store, FlowMsg, FlowState, FlowStore, SwipeFlow, SwipePage},
         layout::obj::LayoutObj,
@@ -15,7 +15,7 @@ use crate::{
 use heapless::Vec;
 
 use super::super::{
-    component::{Frame, FrameMsg, PromptScreen, ShareWords, SwipeDirection},
+    component::{Frame, FrameMsg, PromptScreen, ShareWords},
     theme,
 };
 

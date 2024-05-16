@@ -1,10 +1,13 @@
 use crate::{
     strutil::TString,
     ui::{
-        component::{maybe::paint_overlapping, Child, Component, Event, EventCtx, Label, Maybe},
+        component::{
+            maybe::paint_overlapping, Child, Component, Event, EventCtx, Label, Maybe, Swipe,
+            SwipeDirection,
+        },
         geometry::{Alignment, Grid, Insets, Rect},
         model_mercury::{
-            component::{Button, ButtonMsg, Swipe, SwipeDirection},
+            component::{Button, ButtonMsg},
             theme,
         },
         shape::Renderer,
