@@ -5,7 +5,7 @@ use crate::ui::{
 
 use super::super::{
     utils::{circle_points, line_points, sin_f32},
-    BitmapView, Viewport,
+    Bitmap, BitmapFormat, BitmapView, Viewport,
 };
 
 #[cfg(feature = "ui_blurring")]
@@ -69,6 +69,16 @@ pub trait BasicCanvas {
 
     /// Draws a bitmap into to the rectangle.
     fn draw_bitmap(&mut self, r: Rect, bitmap: BitmapView);
+}
+
+pub trait CanvasBuilder<'a> {
+    /// Returns a format of the underlying bitmap.
+    fn format() -> BitmapFormat;
+
+    /// Creates a new canvas from the specified bitmap.
+    ///
+    /// The bitmap must be mutable and have the same format as the canvas.
+    fn from_bitmap(bitmap: Bitmap<'a>) -> Self;
 }
 
 pub trait Canvas: BasicCanvas {
