@@ -8,7 +8,7 @@ use crate::{
 
 use super::{
     super::{Bitmap, BitmapFormat, BitmapView},
-    BasicCanvas, Canvas, Viewport,
+    BasicCanvas, Canvas, CanvasBuilder, Viewport,
 };
 
 #[cfg(feature = "ui_blurring")]
@@ -71,6 +71,18 @@ impl<'a> BasicCanvas for Rgba8888Canvas<'a> {
         if let Some(bitblt) = BitBltCopy::new(r, self.viewport.clip, &bitmap) {
             bitblt.rgba8888_copy(&mut self.bitmap);
         }
+    }
+}
+
+impl<'a> CanvasBuilder<'a> for Rgba8888Canvas<'a> {
+    fn format() -> BitmapFormat {
+        BitmapFormat::RGBA8888
+    }
+
+    fn from_bitmap(bitmap: Bitmap<'a>) -> Self {
+        assert!(bitmap.format() == Self::format());
+        let viewport = Viewport::from_size(bitmap.size());
+        Self { bitmap, viewport }
     }
 }
 
