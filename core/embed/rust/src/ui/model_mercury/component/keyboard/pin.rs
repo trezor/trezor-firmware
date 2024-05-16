@@ -66,12 +66,13 @@ impl<'a> PinKeyboard<'a> {
     ) -> Self {
         // Control buttons.
         let erase_btn = Button::with_icon(theme::ICON_DELETE)
-            .styled(theme::button_pin_erase())
+            .styled(theme::button_keyboard_erase())
             .with_long_press(theme::ERASE_HOLD_DURATION)
             .initially_enabled(false);
         let erase_btn = Maybe::hidden(theme::BG, erase_btn).into_child();
 
-        let cancel_btn = Button::with_icon(theme::ICON_CLOSE).styled(theme::button_pin_cancel());
+        let cancel_btn =
+            Button::with_icon(theme::ICON_CLOSE).styled(theme::button_keyboard_cancel());
         let cancel_btn = Maybe::new(theme::BG, cancel_btn, allow_cancel).into_child();
 
         Self {

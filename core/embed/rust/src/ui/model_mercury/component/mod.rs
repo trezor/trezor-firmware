@@ -14,6 +14,7 @@ mod error;
 mod frame;
 #[cfg(feature = "micropython")]
 mod homescreen;
+#[cfg(feature = "translations")]
 mod keyboard;
 mod loader;
 #[cfg(feature = "translations")]
@@ -47,6 +48,7 @@ pub use footer::Footer;
 pub use frame::{Frame, FrameMsg};
 #[cfg(feature = "micropython")]
 pub use homescreen::{check_homescreen_format, Homescreen, HomescreenMsg, Lockscreen};
+#[cfg(feature = "translations")]
 pub use keyboard::{
     bip39::Bip39Input,
     mnemonic::{MnemonicInput, MnemonicKeyboard, MnemonicKeyboardMsg},

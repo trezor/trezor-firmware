@@ -126,6 +126,14 @@ include_icon!(DOT_SMALL, "model_mercury/res/scroll-small.toif");
 include_icon!(ICON_PAGE_NEXT, "model_mercury/res/page-next.toif");
 include_icon!(ICON_PAGE_PREV, "model_mercury/res/page-prev.toif");
 
+// Icon for "<space>*#" key on the passphrase keyboard.
+include_icon!(
+    ICON_SPECIAL_CHARS_GROUP,
+    "model_mercury/res/special_chars_group.toif"
+);
+// Icon for "next keyboard layout" for special characters
+include_icon!(ICON_ASTERISK, "model_mercury/res/asterisk16.toif");
+
 // Large, three-color icons.
 pub const WARN_COLOR: Color = ORANGE_LIGHT;
 pub const INFO_COLOR: Color = GREY_LIGHT;
@@ -404,33 +412,6 @@ pub const fn button_danger() -> ButtonStyleSheet {
     }
 }
 
-// TODO: delete
-pub const fn button_reset() -> ButtonStyleSheet {
-    ButtonStyleSheet {
-        normal: &ButtonStyle {
-            font: Font::BOLD,
-            text_color: FG,
-            button_color: YELLOW,
-            icon_color: GREY_LIGHT,
-            background_color: BG,
-        },
-        active: &ButtonStyle {
-            font: Font::BOLD,
-            text_color: FG,
-            button_color: YELLOW_DARK,
-            icon_color: GREY_LIGHT,
-            background_color: BG,
-        },
-        disabled: &ButtonStyle {
-            font: Font::BOLD,
-            text_color: FG,
-            button_color: YELLOW,
-            icon_color: GREY_LIGHT,
-            background_color: BG,
-        },
-    }
-}
-
 // used for PIN digit keys and passphrase/recovery letter keys
 pub const fn button_keyboard() -> ButtonStyleSheet {
     ButtonStyleSheet {
@@ -458,33 +439,7 @@ pub const fn button_keyboard() -> ButtonStyleSheet {
     }
 }
 
-pub const fn button_pin_confirm() -> ButtonStyleSheet {
-    ButtonStyleSheet {
-        normal: &ButtonStyle {
-            font: Font::MONO,
-            text_color: FG,
-            button_color: GREEN_DARK,
-            icon_color: GREEN_LIME,
-            background_color: BG,
-        },
-        active: &ButtonStyle {
-            font: Font::MONO,
-            text_color: FG,
-            button_color: GREEN_LIGHT,
-            icon_color: GREEN_DARK,
-            background_color: BG,
-        },
-        disabled: &ButtonStyle {
-            font: Font::MONO,
-            text_color: GREY_DARK,
-            button_color: BG,
-            icon_color: GREY_DARK,
-            background_color: BG,
-        },
-    }
-}
-
-pub const fn button_pin_cancel() -> ButtonStyleSheet {
+pub const fn button_keyboard_cancel() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
             font: Font::MONO,
@@ -511,7 +466,7 @@ pub const fn button_pin_cancel() -> ButtonStyleSheet {
     }
 }
 
-pub const fn button_pin_erase() -> ButtonStyleSheet {
+pub const fn button_keyboard_erase() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
             font: Font::MONO,
@@ -533,6 +488,88 @@ pub const fn button_pin_erase() -> ButtonStyleSheet {
             text_color: FG,
             button_color: BG,
             icon_color: GREEN_LIGHT,
+            background_color: BG,
+        },
+    }
+}
+
+// TODO: merge `button_pin_confirm` and `_passphrase_confirm`. Need to render
+// button `.with_radius` correctly
+pub const fn button_pin_confirm() -> ButtonStyleSheet {
+    ButtonStyleSheet {
+        normal: &ButtonStyle {
+            font: Font::MONO,
+            text_color: FG,
+            button_color: GREEN_DARK,
+            icon_color: GREEN_LIME,
+            background_color: BG,
+        },
+        active: &ButtonStyle {
+            font: Font::MONO,
+            text_color: FG,
+            button_color: GREEN_LIGHT,
+            icon_color: GREEN_DARK,
+            background_color: BG,
+        },
+        disabled: &ButtonStyle {
+            font: Font::MONO,
+            text_color: GREY_DARK,
+            button_color: BG,
+            icon_color: GREY_DARK,
+            background_color: BG,
+        },
+    }
+}
+
+pub const fn button_passphrase_confirm() -> ButtonStyleSheet {
+    ButtonStyleSheet {
+        normal: &ButtonStyle {
+            font: Font::DEMIBOLD,
+            text_color: GREEN_LIME,
+            button_color: GREEN_LIGHT,
+            icon_color: GREEN_LIME,
+            background_color: GREEN_DARK,
+        },
+        active: &ButtonStyle {
+            font: Font::DEMIBOLD,
+            text_color: GREEN_LIME,
+            button_color: GREEN_LIGHT,
+            icon_color: GREEN_DARK,
+            background_color: GREEN_LIGHT,
+        },
+        // not used
+        disabled: &ButtonStyle {
+            font: Font::DEMIBOLD,
+            text_color: BG,
+            button_color: BG,
+            icon_color: BG,
+            background_color: BG,
+        },
+    }
+}
+
+pub const fn button_passphrase_next() -> ButtonStyleSheet {
+    ButtonStyleSheet {
+        normal: &ButtonStyle {
+            font: Font::DEMIBOLD,
+            text_color: GREY_LIGHT,
+            button_color: BG, // TODO: gradient
+            icon_color: GREY_LIGHT,
+            background_color: BG,
+        },
+        active: &ButtonStyle {
+            font: Font::DEMIBOLD,
+            text_color: GREY_LIGHT,
+            button_color: BG, // TODO: gradient
+            icon_color: GREY_LIGHT,
+            background_color: BG,
+        },
+        // not used
+        disabled: &ButtonStyle {
+            font: Font::DEMIBOLD,
+            text_color: GREY_LIGHT,
+            button_color: BG,
+            icon_color: GREY_LIGHT,
             background_color: BG,
         },
     }
@@ -751,7 +788,8 @@ pub const CORNER_BUTTON_SIDE: i16 = 44;
 pub const CORNER_BUTTON_SPACING: i16 = BUTTON_SPACING;
 pub const INFO_BUTTON_HEIGHT: i16 = 44;
 pub const PIN_BUTTON_HEIGHT: i16 = 52;
-pub const MNEMONIC_BUTTON_HEIGHT: i16 = 52;
+pub const MNEMONIC_BUTTON_HEIGHT: i16 = 62;
+pub const PASSPHRASE_BUTTON_HEIGHT: i16 = 48;
 pub const RESULT_PADDING: i16 = 6;
 pub const RESULT_FOOTER_START: i16 = 171;
 pub const RESULT_FOOTER_HEIGHT: i16 = 62;
