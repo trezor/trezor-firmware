@@ -1462,25 +1462,39 @@ pub enum TranslatedString {
     regulatory_certification__title = 1078,  // "Regulatory certification"
     words__name = 1079,  // "Name"
     device_name__changed = 1080,  // "Device name changed."
-    ble__manage_paired = 1081,  // "Manage paired devices"
-    ble__pair_new = 1082,  // "Pair new device"
-    ble__pair_title = 1083,  // "Pair & connect"
-    homescreen__firmware_version = 1084,  // "Firmware version"
-    words__about = 1085,  // "About"
-    words__connected = 1086,  // "Connected"
-    words__device = 1087,  // "Device"
-    words__disconnect = 1088,  // "Disconnect"
-    words__led = 1089,  // "LED"
-    words__manage = 1090,  // "Manage"
-    words__review = 1091,  // "Review"
-    words__security = 1092,  // "Security"
-    ble__version = 1093,  // "Bluetooth version"
-    homescreen__firmware_type = 1094,  // "Firmware type"
-    words__off = 1095,  // "OFF"
-    words__on = 1096,  // "ON"
-    led__disable = 1097,  // "Disable LED?"
-    led__enable = 1098,  // "Enable LED?"
-    led__title = 1099,  // "LED"
+    #[cfg(feature = "universal_fw")]
+    cardano__confirm_message = 1081,  // "Confirm message"
+    #[cfg(feature = "universal_fw")]
+    cardano__empty_message = 1082,  // "Empty message"
+    #[cfg(feature = "universal_fw")]
+    cardano__message_hash = 1083,  // "Message hash:"
+    #[cfg(feature = "universal_fw")]
+    cardano__message_hex = 1084,  // "Message hex"
+    #[cfg(feature = "universal_fw")]
+    cardano__message_text = 1085,  // "Message text"
+    #[cfg(feature = "universal_fw")]
+    cardano__sign_message_hash_path_template = 1086,  // "Sign message hash with {0}"
+    #[cfg(feature = "universal_fw")]
+    cardano__sign_message_path_template = 1087,  // "Sign message with {0}"
+    ble__manage_paired = 1088,  // "Manage paired devices"
+    ble__pair_new = 1089,  // "Pair new device"
+    ble__pair_title = 1090,  // "Pair & connect"
+    ble__version = 1091,  // "Bluetooth version"
+    homescreen__firmware_type = 1092,  // "Firmware type"
+    homescreen__firmware_version = 1093,  // "Firmware version"
+    led__disable = 1094,  // "Disable LED?"
+    led__enable = 1095,  // "Enable LED?"
+    led__title = 1096,  // "LED"
+    words__about = 1097,  // "About"
+    words__connected = 1098,  // "Connected"
+    words__device = 1099,  // "Device"
+    words__disconnect = 1100,  // "Disconnect"
+    words__led = 1101,  // "LED"
+    words__manage = 1102,  // "Manage"
+    words__off = 1103,  // "OFF"
+    words__on = 1104,  // "ON"
+    words__review = 1105,  // "Review"
+    words__security = 1106,  // "Security"
 }
 
 impl TranslatedString {
@@ -3262,25 +3276,39 @@ impl TranslatedString {
             (Self::regulatory_certification__title, "Regulatory certification"),
             (Self::words__name, "Name"),
             (Self::device_name__changed, "Device name changed."),
+            #[cfg(feature = "universal_fw")]
+            (Self::cardano__confirm_message, "Confirm message"),
+            #[cfg(feature = "universal_fw")]
+            (Self::cardano__empty_message, "Empty message"),
+            #[cfg(feature = "universal_fw")]
+            (Self::cardano__message_hash, "Message hash:"),
+            #[cfg(feature = "universal_fw")]
+            (Self::cardano__message_hex, "Message hex"),
+            #[cfg(feature = "universal_fw")]
+            (Self::cardano__message_text, "Message text"),
+            #[cfg(feature = "universal_fw")]
+            (Self::cardano__sign_message_hash_path_template, "Sign message hash with {0}"),
+            #[cfg(feature = "universal_fw")]
+            (Self::cardano__sign_message_path_template, "Sign message with {0}"),
             (Self::ble__manage_paired, "Manage paired devices"),
             (Self::ble__pair_new, "Pair new device"),
             (Self::ble__pair_title, "Pair & connect"),
+            (Self::ble__version, "Bluetooth version"),
+            (Self::homescreen__firmware_type, "Firmware type"),
             (Self::homescreen__firmware_version, "Firmware version"),
+            (Self::led__disable, "Disable LED?"),
+            (Self::led__enable, "Enable LED?"),
+            (Self::led__title, "LED"),
             (Self::words__about, "About"),
             (Self::words__connected, "Connected"),
             (Self::words__device, "Device"),
             (Self::words__disconnect, "Disconnect"),
             (Self::words__led, "LED"),
             (Self::words__manage, "Manage"),
-            (Self::words__review, "Review"),
-            (Self::words__security, "Security"),
-            (Self::ble__version, "Bluetooth version"),
-            (Self::homescreen__firmware_type, "Firmware type"),
             (Self::words__off, "OFF"),
             (Self::words__on, "ON"),
-            (Self::led__disable, "Disable LED?"),
-            (Self::led__enable, "Enable LED?"),
-            (Self::led__title, "LED"),
+            (Self::words__review, "Review"),
+            (Self::words__security, "Security"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -3458,6 +3486,8 @@ impl TranslatedString {
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_cardano__collateral_return, Self::cardano__collateral_return),
         #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__confirm_message, Self::cardano__confirm_message),
+        #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_cardano__confirm_signing_stake_pool, Self::cardano__confirm_signing_stake_pool),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_cardano__confirm_transaction, Self::cardano__confirm_transaction),
@@ -3484,6 +3514,8 @@ impl TranslatedString {
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_cardano__deposit, Self::cardano__deposit),
         #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__empty_message, Self::cardano__empty_message),
+        #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_cardano__for_account_and_index_template, Self::cardano__for_account_and_index_template),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_cardano__for_account_template, Self::cardano__for_account_template),
@@ -3507,6 +3539,12 @@ impl TranslatedString {
         (Qstr::MP_QSTR_cardano__key_hash, Self::cardano__key_hash),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_cardano__margin, Self::cardano__margin),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__message_hash, Self::cardano__message_hash),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__message_hex, Self::cardano__message_hex),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__message_text, Self::cardano__message_text),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_cardano__multisig_path, Self::cardano__multisig_path),
         #[cfg(feature = "universal_fw")]
@@ -3575,6 +3613,10 @@ impl TranslatedString {
         (Qstr::MP_QSTR_cardano__sending, Self::cardano__sending),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_cardano__show_simple, Self::cardano__show_simple),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__sign_message_hash_path_template, Self::cardano__sign_message_hash_path_template),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__sign_message_path_template, Self::cardano__sign_message_path_template),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_cardano__sign_tx_path_template, Self::cardano__sign_tx_path_template),
         #[cfg(feature = "universal_fw")]
