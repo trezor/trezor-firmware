@@ -10,6 +10,7 @@ mod display;
 #[cfg(feature = "ui_jpeg_decoder")]
 mod jpeg;
 mod qrcode;
+mod rawimage;
 mod render;
 mod text;
 mod toif;
@@ -29,6 +30,7 @@ pub use display::render_on_display;
 #[cfg(feature = "ui_jpeg_decoder")]
 pub use jpeg::JpegImage;
 pub use qrcode::QrImage;
+pub use rawimage::RawImage;
 pub use render::{DirectRenderer, ProgressiveRenderer, Renderer};
 pub use text::Text;
 pub use toif::ToifImage;
