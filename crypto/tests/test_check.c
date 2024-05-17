@@ -11261,6 +11261,9 @@ Suite *test_suite(void) {
   tc = tcase_create("der");
   tcase_add_test(tc, test_der_length);
   tcase_add_test(tc, test_der_reencode_int);
+
+  tc = tcase_create("elligator2");
+  tcase_add_test(tc, test_elligator2);
   suite_add_tcase(s, tc);
 
   tc = tcase_create("elligator2");
