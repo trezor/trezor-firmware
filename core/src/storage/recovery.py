@@ -57,16 +57,6 @@ def get_slip39_identifier() -> int | None:
     return common.get_uint16(_NAMESPACE, _SLIP39_IDENTIFIER)
 
 
-def set_slip39_extendable(extendable: bool) -> None:
-    _require_progress()
-    common.set_bool(_NAMESPACE, _SLIP39_EXTENDABLE, extendable)
-
-
-def get_slip39_extendable() -> bool:
-    _require_progress()
-    return common.get_bool(_NAMESPACE, _SLIP39_EXTENDABLE)
-
-
 def set_slip39_iteration_exponent(exponent: int) -> None:
     _require_progress()
     common.set_uint8(_NAMESPACE, _SLIP39_ITERATION_EXPONENT, exponent)

@@ -10395,6 +10395,12 @@ pub enum BackupType {
     Slip39_Basic = 1,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.management.BackupType.Slip39_Advanced)
     Slip39_Advanced = 2,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.management.BackupType.Slip39_Single_Extendable)
+    Slip39_Single_Extendable = 3,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.management.BackupType.Slip39_Basic_Extendable)
+    Slip39_Basic_Extendable = 4,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.management.BackupType.Slip39_Advanced_Extendable)
+    Slip39_Advanced_Extendable = 5,
 }
 
 impl ::protobuf::Enum for BackupType {
@@ -10409,6 +10415,9 @@ impl ::protobuf::Enum for BackupType {
             0 => ::std::option::Option::Some(BackupType::Bip39),
             1 => ::std::option::Option::Some(BackupType::Slip39_Basic),
             2 => ::std::option::Option::Some(BackupType::Slip39_Advanced),
+            3 => ::std::option::Option::Some(BackupType::Slip39_Single_Extendable),
+            4 => ::std::option::Option::Some(BackupType::Slip39_Basic_Extendable),
+            5 => ::std::option::Option::Some(BackupType::Slip39_Advanced_Extendable),
             _ => ::std::option::Option::None
         }
     }
@@ -10418,6 +10427,9 @@ impl ::protobuf::Enum for BackupType {
             "Bip39" => ::std::option::Option::Some(BackupType::Bip39),
             "Slip39_Basic" => ::std::option::Option::Some(BackupType::Slip39_Basic),
             "Slip39_Advanced" => ::std::option::Option::Some(BackupType::Slip39_Advanced),
+            "Slip39_Single_Extendable" => ::std::option::Option::Some(BackupType::Slip39_Single_Extendable),
+            "Slip39_Basic_Extendable" => ::std::option::Option::Some(BackupType::Slip39_Basic_Extendable),
+            "Slip39_Advanced_Extendable" => ::std::option::Option::Some(BackupType::Slip39_Advanced_Extendable),
             _ => ::std::option::Option::None
         }
     }
@@ -10426,6 +10438,9 @@ impl ::protobuf::Enum for BackupType {
         BackupType::Bip39,
         BackupType::Slip39_Basic,
         BackupType::Slip39_Advanced,
+        BackupType::Slip39_Single_Extendable,
+        BackupType::Slip39_Basic_Extendable,
+        BackupType::Slip39_Advanced_Extendable,
     ];
 }
 
@@ -10744,13 +10759,15 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12\x10\n\x03mac\x18\
     \x02\x20\x01(\x0cR\x03mac\"'\n\x13UnlockedPathRequest\x12\x10\n\x03mac\
     \x18\x01\x20\x01(\x0cR\x03mac\"\x14\n\x12ShowDeviceTutorial\"\x12\n\x10U\
-    nlockBootloader*>\n\nBackupType\x12\t\n\x05Bip39\x10\0\x12\x10\n\x0cSlip\
-    39_Basic\x10\x01\x12\x13\n\x0fSlip39_Advanced\x10\x02*G\n\x10SafetyCheck\
-    Level\x12\n\n\x06Strict\x10\0\x12\x10\n\x0cPromptAlways\x10\x01\x12\x15\
-    \n\x11PromptTemporarily\x10\x02*0\n\x10HomescreenFormat\x12\x08\n\x04Toi\
-    f\x10\x01\x12\x08\n\x04Jpeg\x10\x02\x12\x08\n\x04ToiG\x10\x03BB\n#com.sa\
-    toshilabs.trezor.lib.protobufB\x17TrezorMessageManagement\x80\xa6\x1d\
-    \x01\
+    nlockBootloader*\x99\x01\n\nBackupType\x12\t\n\x05Bip39\x10\0\x12\x10\n\
+    \x0cSlip39_Basic\x10\x01\x12\x13\n\x0fSlip39_Advanced\x10\x02\x12\x1c\n\
+    \x18Slip39_Single_Extendable\x10\x03\x12\x1b\n\x17Slip39_Basic_Extendabl\
+    e\x10\x04\x12\x1e\n\x1aSlip39_Advanced_Extendable\x10\x05*G\n\x10SafetyC\
+    heckLevel\x12\n\n\x06Strict\x10\0\x12\x10\n\x0cPromptAlways\x10\x01\x12\
+    \x15\n\x11PromptTemporarily\x10\x02*0\n\x10HomescreenFormat\x12\x08\n\
+    \x04Toif\x10\x01\x12\x08\n\x04Jpeg\x10\x02\x12\x08\n\x04ToiG\x10\x03BB\n\
+    #com.satoshilabs.trezor.lib.protobufB\x17TrezorMessageManagement\x80\xa6\
+    \x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

@@ -10,7 +10,7 @@ from trezor.ui.layouts.recovery import (  # noqa: F401
     show_remaining_shares,
 )
 
-from .. import backup_types
+from apps.common import backup_types
 
 if TYPE_CHECKING:
     from typing import Callable

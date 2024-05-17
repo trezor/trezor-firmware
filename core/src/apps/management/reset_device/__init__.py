@@ -8,7 +8,8 @@ from trezor.enums import BackupType
 from trezor.ui.layouts import confirm_action
 from trezor.wire import ProcessError
 
-from .. import backup_types
+from apps.common import backup_types
+
 from . import layout
 
 if __debug__:
@@ -21,6 +22,9 @@ if TYPE_CHECKING:
 BAK_T_BIP39 = BackupType.Bip39  # global_import_cache
 BAK_T_SLIP39_BASIC = BackupType.Slip39_Basic  # global_import_cache
 BAK_T_SLIP39_ADVANCED = BackupType.Slip39_Advanced  # global_import_cache
+BAK_T_SLIP39_SINGLE_EXT = BackupType.Slip39_Single_Extendable  # global_import_cache
+BAK_T_SLIP39_BASIC_EXT = BackupType.Slip39_Basic_Extendable  # global_import_cache
+BAK_T_SLIP39_ADVANCED_EXT = BackupType.Slip39_Advanced_Extendable  # global_import_cache
 _DEFAULT_BACKUP_TYPE = BAK_T_BIP39
 
 
@@ -35,6 +39,13 @@ async def reset_device(msg: ResetDevice) -> Success:
     from apps.common.request_pin import request_pin_confirm
 
     backup_type = msg.backup_type  # local_cache_attribute
+
+    # Force extendable backup.
+    if backup_type == BAK_T_SLIP39_BASIC:
+        backup_type = BAK_T_SLIP39_BASIC_EXT
+
+    if backup_type == BAK_T_SLIP39_ADVANCED:
+        backup_type = BAK_T_SLIP39_ADVANCED_EXT
 
     # validate parameters and device state
     _validate_reset_device(msg)
@@ -74,7 +85,6 @@ async def reset_device(msg: ResetDevice) -> Success:
     elif backup_types.is_slip39_backup_type(backup_type):
         # generate and set SLIP39 parameters
         storage_device.set_slip39_identifier(slip39.generate_random_identifier())
-        storage_device.set_slip39_extendable(slip39.DEFAULT_EXTENDABLE_FLAG)
         storage_device.set_slip39_iteration_exponent(slip39.DEFAULT_ITERATION_EXPONENT)
     else:
         # Unknown backup type.
@@ -110,7 +120,18 @@ async def reset_device(msg: ResetDevice) -> Success:
     return Success(message="Initialized")
 
 
-async def _backup_slip39_basic(encrypted_master_secret: bytes) -> None:
+async def _backup_slip39_single(
+    encrypted_master_secret: bytes, extendable: bool
+) -> None:
+    mnemonics = _get_slip39_mnemonics(encrypted_master_secret, 1, ((1, 1),), extendable)
+
+    # for a single 1-of-1 group, we use the same layouts as for BIP39
+    await layout.show_and_confirm_mnemonic(mnemonics[0][0])
+
+
+async def _backup_slip39_basic(
+    encrypted_master_secret: bytes, extendable: bool
+) -> None:
     group_threshold = 1
 
     # get number of shares
@@ -122,7 +143,10 @@ async def _backup_slip39_basic(encrypted_master_secret: bytes) -> None:
     share_threshold = await layout.slip39_prompt_threshold(share_count)
 
     mnemonics = _get_slip39_mnemonics(
-        encrypted_master_secret, group_threshold, ((share_threshold, share_count),)
+        encrypted_master_secret,
+        group_threshold,
+        ((share_threshold, share_count),),
+        extendable,
     )
 
     # show and confirm individual shares
@@ -130,7 +154,9 @@ async def _backup_slip39_basic(encrypted_master_secret: bytes) -> None:
     await layout.slip39_basic_show_and_confirm_shares(mnemonics[0])
 
 
-async def _backup_slip39_advanced(encrypted_master_secret: bytes) -> None:
+async def _backup_slip39_advanced(
+    encrypted_master_secret: bytes, extendable: bool
+) -> None:
     # get number of groups
     await layout.slip39_show_checklist(0, advanced=True)
     groups_count = await layout.slip39_advanced_prompt_number_of_groups()
@@ -147,7 +173,9 @@ async def _backup_slip39_advanced(encrypted_master_secret: bytes) -> None:
         share_threshold = await layout.slip39_prompt_threshold(share_count, i)
         groups.append((share_threshold, share_count))
 
-    mnemonics = _get_slip39_mnemonics(encrypted_master_secret, group_threshold, groups)
+    mnemonics = _get_slip39_mnemonics(
+        encrypted_master_secret, group_threshold, groups, extendable
+    )
 
     # show and confirm individual shares
     await layout.slip39_advanced_show_and_confirm_shares(mnemonics)
@@ -157,14 +185,15 @@ async def backup_slip39_custom(
     encrypted_master_secret: bytes,
     group_threshold: int,
     groups: Sequence[tuple[int, int]],
+    extendable: bool,
 ) -> None:
-    mnemonics = _get_slip39_mnemonics(encrypted_master_secret, group_threshold, groups)
-
     # show and confirm individual shares
     if len(groups) == 1 and groups[0][0] == 1 and groups[0][1] == 1:
-        # for a single 1-of-1 group, we use the same layouts as for BIP39
-        await layout.show_and_confirm_mnemonic(mnemonics[0][0])
+        await _backup_slip39_single(encrypted_master_secret, extendable)
     else:
+        mnemonics = _get_slip39_mnemonics(
+            encrypted_master_secret, group_threshold, groups, extendable
+        )
         await confirm_action(
             "warning_shamir_backup",
             TR.reset__title_shamir_backup,
@@ -183,9 +212,9 @@ def _get_slip39_mnemonics(
     encrypted_master_secret: bytes,
     group_threshold: int,
     groups: Sequence[tuple[int, int]],
+    extendable: bool,
 ):
     identifier = storage_device.get_slip39_identifier()
-    extendable = storage_device.get_slip39_extendable()
     iteration_exponent = storage_device.get_slip39_iteration_exponent()
     if identifier is None or iteration_exponent is None:
         raise ValueError
@@ -203,8 +232,6 @@ def _get_slip39_mnemonics(
 
 def _validate_reset_device(msg: ResetDevice) -> None:
     from trezor.wire import UnexpectedMessage
-
-    from .. import backup_types
 
     backup_type = msg.backup_type or _DEFAULT_BACKUP_TYPE
     if backup_types.is_slip39_backup_type(backup_type):
@@ -239,9 +266,13 @@ def _compute_secret_from_entropy(
 
 
 async def backup_seed(backup_type: BackupType, mnemonic_secret: bytes) -> None:
-    if backup_type == BAK_T_SLIP39_BASIC:
-        await _backup_slip39_basic(mnemonic_secret)
-    elif backup_type == BAK_T_SLIP39_ADVANCED:
-        await _backup_slip39_advanced(mnemonic_secret)
+    if backup_types.is_slip39_backup_type(backup_type):
+        extendable = backup_types.is_extendable_backup_type(backup_type)
+        if backup_types.is_slip39_advanced_backup_type(backup_type):
+            await _backup_slip39_advanced(mnemonic_secret, extendable)
+        elif backup_type == BAK_T_SLIP39_SINGLE_EXT:
+            await _backup_slip39_single(mnemonic_secret, extendable)
+        else:
+            await _backup_slip39_basic(mnemonic_secret, extendable)
     else:
         await layout.show_and_confirm_mnemonic(mnemonic_secret.decode())

@@ -35,7 +35,6 @@ INITIALIZED                = const(0x13)  # bool (0x01 or empty)
 _SAFETY_CHECK_LEVEL        = const(0x14)  # int
 _EXPERIMENTAL_FEATURES     = const(0x15)  # bool (0x01 or empty)
 _HIDE_PASSPHRASE_FROM_HOST = const(0x16)  # bool (0x01 or empty)
-_SLIP39_EXTENDABLE         = const(0x17)  # bool (0x01 or empty)
 
 SAFETY_CHECK_LEVEL_STRICT  : Literal[0] = const(0)
 SAFETY_CHECK_LEVEL_PROMPT  : Literal[1] = const(1)
@@ -130,6 +129,9 @@ def get_backup_type() -> BackupType:
         BackupType.Bip39,
         BackupType.Slip39_Basic,
         BackupType.Slip39_Advanced,
+        BackupType.Slip39_Single_Extendable,
+        BackupType.Slip39_Basic_Extendable,
+        BackupType.Slip39_Advanced_Extendable,
     ):
         # Invalid backup type
         raise RuntimeError
@@ -259,20 +261,6 @@ def set_slip39_identifier(identifier: int) -> None:
 def get_slip39_identifier() -> int | None:
     """The device's actual SLIP-39 identifier used in legacy passphrase derivation."""
     return common.get_uint16(_NAMESPACE, _SLIP39_IDENTIFIER)
-
-
-def set_slip39_extendable(extendable: bool) -> None:
-    """
-    The device's actual SLIP-39 extendable backup flag.
-    Not to be confused with recovery.extendable, which is stored only during
-    the recovery process and it is copied here upon success.
-    """
-    common.set_bool(_NAMESPACE, _SLIP39_EXTENDABLE, extendable)
-
-
-def get_slip39_extendable() -> bool:
-    """The device's actual SLIP-39 extendable backup flag."""
-    return common.get_bool(_NAMESPACE, _SLIP39_EXTENDABLE)
 
 
 def set_slip39_iteration_exponent(exponent: int) -> None:

@@ -14,7 +14,7 @@ async def backup_device(msg: BackupDevice) -> Success:
     from trezor import wire
     from trezor.messages import Success
 
-    from apps.common import mnemonic
+    from apps.common import backup_types, mnemonic
 
     from .reset_device import backup_seed, backup_slip39_custom, layout
 
@@ -44,7 +44,8 @@ async def backup_device(msg: BackupDevice) -> Success:
     storage_device.set_backed_up()
 
     if group_threshold is not None:
-        await backup_slip39_custom(mnemonic_secret, group_threshold, groups)
+        extendable = backup_types.is_extendable_backup_type(backup_type)
+        await backup_slip39_custom(mnemonic_secret, group_threshold, groups, extendable)
     else:
         await backup_seed(backup_type, mnemonic_secret)
 
