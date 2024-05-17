@@ -1545,7 +1545,6 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     hold: bool = False,
     ///     hold_danger: bool = False,
     ///     reverse: bool = False,
-    ///     prompt_screen: bool = False,
     /// ) -> LayoutObj[UiResult]:
     ///     """Confirm action."""
     Qstr::MP_QSTR_confirm_action => obj_fn_kw!(0, flow::confirm_action::new_confirm_action).as_obj(),
