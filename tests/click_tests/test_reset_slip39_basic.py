@@ -118,4 +118,4 @@ def test_reset_slip39_basic(
     assert features.needs_backup is False
     assert features.pin_protection is False
     assert features.passphrase_protection is False
-    assert features.backup_type is messages.BackupType.Slip39_Basic
+    assert features.backup_type is messages.BackupType.Slip39_Basic_Extendable

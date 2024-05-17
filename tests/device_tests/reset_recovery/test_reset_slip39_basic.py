@@ -60,7 +60,7 @@ def reset_device(client: Client, strength: int):
     assert client.features.needs_backup is False
     assert client.features.pin_protection is False
     assert client.features.passphrase_protection is False
-    assert client.features.backup_type is BackupType.Slip39_Basic
+    assert client.features.backup_type is BackupType.Slip39_Basic_Extendable
 
     # backup attempt fails because backup was done in reset
     with pytest.raises(TrezorFailure, match="ProcessError: Seed already backed up"):
