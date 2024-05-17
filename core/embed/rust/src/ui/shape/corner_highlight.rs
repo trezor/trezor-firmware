@@ -103,7 +103,7 @@ impl Shape<'_> for CornerHighlight {
         let circle_center = self.pos + Offset::uniform(self.r_outer).rotate(self.corner);
         let circle_visible_part = Rect::snap(self.pos_rect, Offset::uniform(self.r_outer), align);
         in_clip(canvas, circle_visible_part, &|can| {
-            can.fill_circle(circle_center, self.r_outer, self.color);
+            can.fill_circle(circle_center, self.r_outer, self.color, self.alpha);
         });
 
         // rectangles (rounded) tailing from a corner
@@ -146,7 +146,7 @@ impl Shape<'_> for CornerHighlight {
             self.pos + Offset::uniform(self.thickness + self.r_inner).rotate(self.corner);
         in_clip(canvas, rect_outer_fill, &|can| {
             can.fill_rect(rect_outer_fill, self.color, self.alpha);
-            can.fill_circle(circle_cover_center, self.r_inner, self.bg_color);
+            can.fill_circle(circle_cover_center, self.r_inner, self.bg_color, self.alpha);
         });
     }
 
