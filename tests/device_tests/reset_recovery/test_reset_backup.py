@@ -66,8 +66,8 @@ def backup_flow_slip39_advanced(client: Client):
 
 VECTORS = [
     (BackupType.Bip39, backup_flow_bip39),
-    (BackupType.Slip39_Basic, backup_flow_slip39_basic),
-    (BackupType.Slip39_Advanced, backup_flow_slip39_advanced),
+    (BackupType.Slip39_Basic_Extendable, backup_flow_slip39_basic),
+    (BackupType.Slip39_Advanced_Extendable, backup_flow_slip39_advanced),
 ]
 
 

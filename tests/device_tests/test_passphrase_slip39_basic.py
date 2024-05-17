@@ -18,7 +18,11 @@ import pytest
 
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 
-from ..common import MNEMONIC_SLIP39_BASIC_20_3of6, get_test_address
+from ..common import (
+    MNEMONIC_SLIP39_BASIC_20_3of6,
+    MNEMONIC_SLIP39_BASIC_EXT_20_2of3,
+    get_test_address,
+)
 
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC_SLIP39_BASIC_20_3of6, passphrase="TREZOR")
@@ -51,3 +55,17 @@ def test_2of5_passphrase(client: Client):
     assert client.features.passphrase_protection is True
     address = get_test_address(client)
     assert address == "mjXH4pN7TtbHp3tWLqVKktKuaQeByHMoBZ"
+
+
+@pytest.mark.setup_client(
+    mnemonic=MNEMONIC_SLIP39_BASIC_EXT_20_2of3, passphrase="TREZOR"
+)
+@pytest.mark.skip_t1b1
+def test_2of3_ext_passphrase(client: Client):
+    """
+    BIP32 Root Key for passphrase TREZOR:
+    xprv9s21ZrQH143K4FS1qQdXYAFVAHiSAnjj21YAKGh2CqUPJ2yQhMmYGT4e5a2tyGLiVsRgTEvajXkxhg92zJ8zmWZas9LguQWz7WZShfJg6RS
+    """
+    assert client.features.passphrase_protection is True
+    address = get_test_address(client)
+    assert address == "moELJhDbGK41k6J2ePYh2U8uc5qskC663C"

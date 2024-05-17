@@ -78,6 +78,7 @@ def reset(client: Client, strength: int = 128) -> list[str]:
     assert client.features.needs_backup is False
     assert client.features.pin_protection is False
     assert client.features.passphrase_protection is False
+    assert client.features.backup_type is BackupType.Slip39_Advanced_Extendable
 
     return IF.mnemonics
 
@@ -92,3 +93,4 @@ def recover(client: Client, shares: list[str]):
     assert ret == messages.Success(message="Device recovered")
     assert client.features.pin_protection is False
     assert client.features.passphrase_protection is False
+    assert client.features.backup_type is BackupType.Slip39_Advanced_Extendable

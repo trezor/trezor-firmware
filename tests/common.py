@@ -46,6 +46,11 @@ MNEMONIC_SLIP39_BASIC_20_3of6 = [
     "extra extend academic arcade born dive legal hush gross briefing talent drug much home firefly toxic analysis idea umbrella slice",
 ]
 MNEMONIC_SLIP39_BASIC_20_3of6_SECRET = "491b795b80fc21ccdf466c0fbc98c8fc"
+MNEMONIC_SLIP39_BASIC_EXT_20_2of3 = [
+    "enemy favorite academic acid cowboy phrase havoc level response walnut budget painting inside trash adjust froth kitchen learn tidy punish",
+    "enemy favorite academic always academic sniff script carpet romp kind promise scatter center unfair training emphasis evening belong fake enforce",
+]
+MNEMONIC_SLIP39_BASIC_EXT_20_2of3_SECRET = "644c905b0c4da21692f06fff3ed8b3e1"
 # Shamir shares (128 bits, 2 groups from 1 of 1, 1 of 1, 3 of 5, 2 of 6)
 MNEMONIC_SLIP39_ADVANCED_20 = [
     "eraser senior beard romp adorn nuclear spill corner cradle style ancient family general leader ambition exchange unusual garlic promise voice",
