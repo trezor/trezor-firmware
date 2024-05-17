@@ -20,7 +20,13 @@ from trezor.ui.layouts.homescreen import Lockscreen
 
 from apps.common.request_pin import can_lock_device, verify_user_pin
 
-_WELCOME_SCREEN_MS = 1000  # how long do we want to show welcome screen (minimum)
+# have to use "==" over "in (list)" so that it can be statically replaced
+# with the correct value during the build process
+# pylint: disable-next=consider-using-in
+if utils.INTERNAL_MODEL == "T2T1" or utils.INTERNAL_MODEL == "T2B1":
+    _WELCOME_SCREEN_MS = 1000  # how long do we want to show welcome screen (minimum)
+else:
+    _WELCOME_SCREEN_MS = 0
 
 
 def enforce_welcome_screen_duration() -> None:
