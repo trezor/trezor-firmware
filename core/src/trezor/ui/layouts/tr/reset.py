@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import Sequence
 
 import trezorui2
 from trezor import TR
@@ -9,11 +9,6 @@ from ..common import interact
 from . import RustLayout, confirm_action, show_warning
 
 CONFIRMED = trezorui2.CONFIRMED  # global_import_cache
-
-if TYPE_CHECKING:
-    from typing import Sequence
-
-    from trezor.enums import BackupType
 
 
 async def show_share_words(
@@ -104,18 +99,14 @@ async def select_word(
     return words[result]
 
 
-async def slip39_show_checklist(step: int, backup_type: BackupType) -> None:
-    from trezor.enums import BackupType
-
-    assert backup_type in (BackupType.Slip39_Basic, BackupType.Slip39_Advanced)
-
+async def slip39_show_checklist(step: int, advanced: bool) -> None:
     items = (
         (
             TR.reset__slip39_checklist_num_shares,
             TR.reset__slip39_checklist_set_threshold,
             TR.reset__slip39_checklist_write_down,
         )
-        if backup_type == BackupType.Slip39_Basic
+        if not advanced
         else (
             TR.reset__slip39_checklist_num_groups,
             TR.reset__slip39_checklist_num_shares,
