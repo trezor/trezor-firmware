@@ -14,12 +14,54 @@ fn main() {
     link_core_objects();
 }
 
-// fn block_words() -> String {
-//     match env::var("FLASH_BLOCK_WORDS") {
-//         Ok(model) => model,
-//         Err(_) => panic!("FLASH_BLOCK_WORDS not set")
-//     }
-// }
+const DEFAULT_BINDGEN_MACROS_COMMON: &[&str] = &[
+    "-I../unix",
+    "-I../trezorhal/unix",
+    "-I../../build/unix",
+    "-I../../vendor/micropython/ports/unix",
+    "-I../../../crypto",
+    "-I../../../storage",
+    "-I../../vendor/micropython",
+    "-I../../vendor/micropython/lib/uzlib",
+    "-I../lib",
+    "-I../trezorhal",
+    "-I../trezorhal/unix",
+    "-I../models",
+    "-DTREZOR_EMULATOR",
+    "-DTREZOR_BOARD=\"boards/board-unix.h\"",
+];
+
+#[cfg(feature = "model_tt")]
+const DEFAULT_BINDGEN_MACROS_T2T1: &[&str] = &[
+    "-DSTM32F427",
+    "-DTREZOR_MODEL_T",
+    "-DFLASH_BIT_ACCESS=1",
+    "-DFLASH_BLOCK_WORDS=1",
+];
+#[cfg(not(feature = "model_tt"))]
+const DEFAULT_BINDGEN_MACROS_T2T1: &[&str] = &[];
+
+#[cfg(feature = "model_tr")]
+const DEFAULT_BINDGEN_MACROS_T2B1: &[&str] = &[
+    "-DSTM32F427",
+    "-DTREZOR_MODEL_R",
+    "-DFLASH_BIT_ACCESS=1",
+    "-DFLASH_BLOCK_WORDS=1",
+];
+#[cfg(not(feature = "model_tr"))]
+const DEFAULT_BINDGEN_MACROS_T2B1: &[&str] = &[];
+
+fn add_bindgen_macros<'a>(clang_args: &mut Vec<&'a str>, envvar: Option<&'a str>) {
+    let default_macros = DEFAULT_BINDGEN_MACROS_COMMON
+        .iter()
+        .chain(DEFAULT_BINDGEN_MACROS_T2T1)
+        .chain(DEFAULT_BINDGEN_MACROS_T2B1);
+
+    match envvar {
+        Some(envvar) => clang_args.extend(envvar.split(',')),
+        None => clang_args.extend(default_macros),
+    }
+}
 
 /// Generates Rust module that exports QSTR constants used in firmware.
 #[cfg(feature = "micropython")]
@@ -70,12 +112,9 @@ fn prepare_bindings() -> bindgen::Builder {
     let mut bindings = bindgen::Builder::default();
 
     let mut clang_args: Vec<&str> = Vec::new();
-    let includes = env::var("BINDGEN_MACROS").unwrap();
-    let args = includes.split(',');
 
-    for arg in args {
-        clang_args.push(arg);
-    }
+    let bindgen_macros_env = env::var("BINDGEN_MACROS").ok();
+    add_bindgen_macros(&mut clang_args, bindgen_macros_env.as_deref());
 
     #[cfg(feature = "xframebuffer")]
     {
