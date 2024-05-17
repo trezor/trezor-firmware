@@ -8,6 +8,7 @@ from trezor.enums import BackupType
 from trezor.ui.layouts import confirm_action
 from trezor.wire import ProcessError
 
+from .. import backup_types
 from . import layout
 
 if __debug__:
@@ -70,7 +71,7 @@ async def reset_device(msg: ResetDevice) -> Success:
     if backup_type == BAK_T_BIP39:
         # in BIP-39 we store mnemonic string instead of the secret
         secret = bip39.from_data(secret).encode()
-    elif backup_type in (BAK_T_SLIP39_BASIC, BAK_T_SLIP39_ADVANCED):
+    elif backup_types.is_slip39_backup_type(backup_type):
         # generate and set SLIP39 parameters
         storage_device.set_slip39_identifier(slip39.generate_random_identifier())
         storage_device.set_slip39_extendable(slip39.DEFAULT_EXTENDABLE_FLAG)
@@ -113,11 +114,11 @@ async def _backup_slip39_basic(encrypted_master_secret: bytes) -> None:
     group_threshold = 1
 
     # get number of shares
-    await layout.slip39_show_checklist(0, BAK_T_SLIP39_BASIC)
+    await layout.slip39_show_checklist(0, advanced=False)
     share_count = await layout.slip39_prompt_number_of_shares()
 
     # get threshold
-    await layout.slip39_show_checklist(1, BAK_T_SLIP39_BASIC)
+    await layout.slip39_show_checklist(1, advanced=False)
     share_threshold = await layout.slip39_prompt_threshold(share_count)
 
     mnemonics = _get_slip39_mnemonics(
@@ -125,21 +126,21 @@ async def _backup_slip39_basic(encrypted_master_secret: bytes) -> None:
     )
 
     # show and confirm individual shares
-    await layout.slip39_show_checklist(2, BAK_T_SLIP39_BASIC)
+    await layout.slip39_show_checklist(2, advanced=False)
     await layout.slip39_basic_show_and_confirm_shares(mnemonics[0])
 
 
 async def _backup_slip39_advanced(encrypted_master_secret: bytes) -> None:
     # get number of groups
-    await layout.slip39_show_checklist(0, BAK_T_SLIP39_ADVANCED)
+    await layout.slip39_show_checklist(0, advanced=True)
     groups_count = await layout.slip39_advanced_prompt_number_of_groups()
 
     # get group threshold
-    await layout.slip39_show_checklist(1, BAK_T_SLIP39_ADVANCED)
+    await layout.slip39_show_checklist(1, advanced=True)
     group_threshold = await layout.slip39_advanced_prompt_group_threshold(groups_count)
 
     # get shares and thresholds
-    await layout.slip39_show_checklist(2, BAK_T_SLIP39_ADVANCED)
+    await layout.slip39_show_checklist(2, advanced=True)
     groups = []
     for i in range(groups_count):
         share_count = await layout.slip39_prompt_number_of_shares(i)
@@ -206,18 +207,15 @@ def _validate_reset_device(msg: ResetDevice) -> None:
     from .. import backup_types
 
     backup_type = msg.backup_type or _DEFAULT_BACKUP_TYPE
-    if backup_type not in (
-        BAK_T_BIP39,
-        BAK_T_SLIP39_BASIC,
-        BAK_T_SLIP39_ADVANCED,
-    ):
-        raise ProcessError("Backup type not implemented")
     if backup_types.is_slip39_backup_type(backup_type):
         if msg.strength not in (128, 256):
             raise ProcessError("Invalid strength (has to be 128 or 256 bits)")
-    else:  # BIP-39
+    elif backup_type == BAK_T_BIP39:
         if msg.strength not in (128, 192, 256):
             raise ProcessError("Invalid strength (has to be 128, 192 or 256 bits)")
+    else:
+        raise ProcessError("Backup type not implemented")
+
     if msg.display_random and (msg.skip_backup or msg.no_backup):
         raise ProcessError("Can't show internal entropy when backup is skipped")
     if storage_device.is_initialized():

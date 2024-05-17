@@ -152,7 +152,7 @@ async def _finish_recovery(secret: bytes, backup_type: BackupType) -> Success:
     storage_device.store_mnemonic_secret(
         secret, backup_type, needs_backup=False, no_backup=False
     )
-    if backup_type in (BackupType.Slip39_Basic, BackupType.Slip39_Advanced):
+    if backup_types.is_slip39_backup_type(backup_type):
         identifier = storage_recovery.get_slip39_identifier()
         extendable = storage_recovery.get_slip39_extendable()
         exponent = storage_recovery.get_slip39_iteration_exponent()
