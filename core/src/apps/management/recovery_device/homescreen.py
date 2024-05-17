@@ -6,7 +6,8 @@ import storage.recovery_shares as storage_recovery_shares
 from trezor import TR, wire
 from trezor.messages import Success
 
-from .. import backup_types
+from apps.common import backup_types
+
 from . import layout, recover
 
 if TYPE_CHECKING:
@@ -116,17 +117,16 @@ async def _finish_recovery_dry_run(secret: bytes, backup_type: BackupType) -> Su
     result = utils.consteq(digest_stored, digest_input)
 
     is_slip39 = backup_types.is_slip39_backup_type(backup_type)
-    # Check that the identifier and iteration exponent match as well
+    # Check that the identifier, extendable backup flag and iteration exponent match as well
     if is_slip39:
         if not backup_types.is_extendable_backup_type(backup_type):
             result &= (
                 storage_device.get_slip39_identifier()
                 == storage_recovery.get_slip39_identifier()
             )
-        result &= (
-            storage_device.get_slip39_extendable()
-            == storage_recovery.get_slip39_extendable()
-        )
+        result &= backup_types.is_extendable_backup_type(
+            storage_device.get_backup_type()
+        ) == backup_types.is_extendable_backup_type(backup_type)
         result &= (
             storage_device.get_slip39_iteration_exponent()
             == storage_recovery.get_slip39_iteration_exponent()
@@ -143,7 +143,6 @@ async def _finish_recovery_dry_run(secret: bytes, backup_type: BackupType) -> Su
 
 
 async def _finish_recovery(secret: bytes, backup_type: BackupType) -> Success:
-    from trezor.enums import BackupType
     from trezor.ui.layouts import show_success
 
     if backup_type is None:
@@ -154,13 +153,11 @@ async def _finish_recovery(secret: bytes, backup_type: BackupType) -> Success:
     )
     if backup_types.is_slip39_backup_type(backup_type):
         identifier = storage_recovery.get_slip39_identifier()
-        extendable = storage_recovery.get_slip39_extendable()
         exponent = storage_recovery.get_slip39_iteration_exponent()
-        if identifier is None or extendable is None or exponent is None:
+        if identifier is None or exponent is None:
             # Identifier and exponent need to be stored in storage at this point
             raise RuntimeError
         storage_device.set_slip39_identifier(identifier)
-        storage_device.set_slip39_extendable(extendable)
         storage_device.set_slip39_iteration_exponent(exponent)
 
     storage_recovery.end_progress()

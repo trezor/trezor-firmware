@@ -13,9 +13,12 @@ import "messages.proto";
  * Type of the mnemonic backup given/received by the device during reset/recovery.
  */
 enum BackupType {
-    Bip39 = 0;              // also called "Single Backup", see BIP-0039
-    Slip39_Basic = 1;       // also called "Shamir Backup", see SLIP-0039
-    Slip39_Advanced = 2;    // also called "Super Shamir" or "Shamir with Groups", see SLIP-0039#two-level-scheme
+    Bip39 = 0;                       // also called "Single Backup", see BIP-0039
+    Slip39_Basic = 1;                // also called "Shamir Backup", see SLIP-0039
+    Slip39_Advanced = 2;             // also called "Super Shamir" or "Shamir with Groups", see SLIP-0039#two-level-scheme
+    Slip39_Single_Extendable = 3;    // extendable single-share Shamir backup
+    Slip39_Basic_Extendable = 4;     // extendable multi-share Shamir backup
+    Slip39_Advanced_Extendable = 5;  // extendable multi-share Shamir backup with groups
 }
 
 /**

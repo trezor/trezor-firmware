@@ -41,7 +41,6 @@ def process_slip39(words: str) -> tuple[bytes | None, slip39.Share]:
         storage_recovery.set_slip39_group_count(share.group_count)
         storage_recovery.set_slip39_iteration_exponent(share.iteration_exponent)
         storage_recovery.set_slip39_identifier(share.identifier)
-        storage_recovery.set_slip39_extendable(share.extendable)
         storage_recovery.set_slip39_remaining_shares(share.threshold - 1, group_index)
         storage_recovery_shares.set(share.index, group_index, words)
 
@@ -95,7 +94,7 @@ if TYPE_CHECKING:
 
 
 def load_slip39_state() -> Slip39State:
-    from .. import backup_types
+    from apps.common import backup_types
 
     previous_mnemonics = fetch_previous_mnemonics()
     if not previous_mnemonics:

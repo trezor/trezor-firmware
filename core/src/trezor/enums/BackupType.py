@@ -5,3 +5,6 @@
 Bip39 = 0
 Slip39_Basic = 1
 Slip39_Advanced = 2
+Slip39_Single_Extendable = 3
+Slip39_Basic_Extendable = 4
+Slip39_Advanced_Extendable = 5

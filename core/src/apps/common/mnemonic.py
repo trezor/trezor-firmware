@@ -3,6 +3,8 @@ from typing import TYPE_CHECKING
 import storage.device as storage_device
 from trezor import utils
 
+from . import backup_types
+
 if TYPE_CHECKING:
     from trezor.enums import BackupType
     from trezor.ui.layouts.common import ProgressLayout
@@ -49,7 +51,7 @@ def get_seed(passphrase: str = "", progress_bar: bool = True) -> bytes:
         from trezor.crypto import slip39
 
         identifier = storage_device.get_slip39_identifier()
-        extendable = storage_device.get_slip39_extendable()
+        extendable = backup_types.is_extendable_backup_type(get_type())
         iteration_exponent = storage_device.get_slip39_iteration_exponent()
         if identifier is None or iteration_exponent is None:
             # Identifier or exponent expected but not found
