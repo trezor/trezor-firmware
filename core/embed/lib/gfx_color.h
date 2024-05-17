@@ -76,7 +76,7 @@ typedef uint32_t gfx_color32_t;
 // Extracts blue component from gfx_color32_t
 #define gfx_color32_to_b(c) (((c) & 0x000000FF) >> 0)
 // Extracts alpha component from gfx_color32_t
-#define gfx_color32_to_a(c) (((c) & 0xFF000000) >> 0)
+#define gfx_color32_to_a(c) (((c) & 0xFF000000) >> 24)
 
 // 4-bit linear interpolation between `fg` and `bg`
 #define a4_lerp(fg, bg, alpha) (((fg) * (alpha) + ((bg) * (15 - (alpha)))) / 15)
