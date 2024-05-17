@@ -1642,11 +1642,13 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     title: str,
     ///     action: str | None,
     ///     description: str | None,
+    ///     subtitle: str | None = None,
     ///     verb: str = "CONFIRM",
     ///     verb_cancel: str | None = None,
     ///     hold: bool = False,
     ///     hold_danger: bool = False,  # unused on TR
     ///     reverse: bool = False,
+    ///     prompt_screen: bool = False,
     /// ) -> LayoutObj[UiResult]:
     ///     """Confirm action."""
     Qstr::MP_QSTR_confirm_action => obj_fn_kw!(0, new_confirm_action).as_obj(),
