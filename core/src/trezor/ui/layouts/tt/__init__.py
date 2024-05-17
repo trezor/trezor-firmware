@@ -289,6 +289,7 @@ def confirm_action(
     action: str | None = None,
     description: str | None = None,
     description_param: str | None = None,
+    subtitle: str | None = None,
     verb: str | None = None,
     verb_cancel: str | None = None,
     hold: bool = False,
@@ -296,6 +297,7 @@ def confirm_action(
     reverse: bool = False,
     exc: ExceptionType = ActionCancelled,
     br_code: ButtonRequestType = BR_TYPE_OTHER,
+    prompt_screen: bool = False,
 ) -> Awaitable[None]:
     if description is not None and description_param is not None:
         description = description.format(description_param)
@@ -307,6 +309,7 @@ def confirm_action(
                     title=title,
                     action=action,
                     description=description,
+                    subtitle=subtitle,
                     verb=verb,
                     verb_cancel=verb_cancel,
                     hold=hold,

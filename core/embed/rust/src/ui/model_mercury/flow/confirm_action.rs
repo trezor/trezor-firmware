@@ -121,6 +121,10 @@ fn new_confirm_action_obj(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Err
     let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
     let action: Option<TString> = kwargs.get(Qstr::MP_QSTR_action)?.try_into_option()?;
     let description: Option<TString> = kwargs.get(Qstr::MP_QSTR_description)?.try_into_option()?;
+    let subtitle: Option<TString> = kwargs
+        .get(Qstr::MP_QSTR_subtitle)
+        .unwrap_or(Obj::const_none())
+        .try_into_option()?;
     // let verb: Option<TString> = kwargs
     //     .get(Qstr::MP_QSTR_verb)
     //     .unwrap_or_else(|_| Obj::const_none())
@@ -150,10 +154,16 @@ fn new_confirm_action_obj(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Err
         paragraphs.into_paragraphs()
     };
 
-    let content_intro = Frame::left_aligned(title, SwipePage::vertical(paragraphs))
+    let mut content_intro = Frame::left_aligned(title, SwipePage::vertical(paragraphs))
         .with_menu_button()
-        .with_footer(TR::instructions__swipe_up.into(), None)
-        .map(|msg| matches!(msg, FrameMsg::Button(_)).then_some(FlowMsg::Info));
+        .with_footer(TR::instructions__swipe_up.into(), None);
+
+    if let Some(subtitle) = subtitle {
+        content_intro = content_intro.with_subtitle(subtitle);
+    }
+
+    let content_intro =
+        content_intro.map(|msg| matches!(msg, FrameMsg::Button(_)).then_some(FlowMsg::Info));
 
     let content_menu = if let Some(verb_cancel) = verb_cancel {
         Frame::left_aligned(
@@ -189,14 +199,13 @@ fn new_confirm_action_obj(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Err
             )
         };
 
-        let content_confirm = Frame::left_aligned(title, prompt)
+        let mut content_confirm = Frame::left_aligned(title, prompt)
             .with_footer(prompt_action, None)
             .with_menu_button();
-        // .with_overlapping_content();
 
-        // if let Some(subtitle) = subtitle {
-        //     content_confirm = content_confirm.with_subtitle(subtitle);
-        // }
+        if let Some(subtitle) = subtitle {
+            content_confirm = content_confirm.with_subtitle(subtitle);
+        }
 
         let content_confirm = content_confirm.map(move |msg| match msg {
             FrameMsg::Content(()) => Some(FlowMsg::Confirmed),

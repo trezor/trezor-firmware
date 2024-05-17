@@ -374,6 +374,7 @@ def confirm_action(
     action: str | None = None,
     description: str | None = None,
     description_param: str | None = None,
+    subtitle: str | None = None,
     verb: str | None = None,
     verb_cancel: str | None = "",
     hold: bool = False,
@@ -381,6 +382,7 @@ def confirm_action(
     reverse: bool = False,
     exc: ExceptionType = ActionCancelled,
     br_code: ButtonRequestType = BR_TYPE_OTHER,
+    prompt_screen: bool = False,
 ) -> Awaitable[None]:
     verb = verb or TR.buttons__confirm  # def_arg
     if description is not None and description_param is not None:
@@ -393,6 +395,7 @@ def confirm_action(
                     title=title,
                     action=action,
                     description=description,
+                    subtitle=subtitle,
                     verb=verb,
                     verb_cancel=verb_cancel,
                     hold=hold,
