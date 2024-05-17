@@ -7,7 +7,6 @@ use crate::{
         component::{Component, Event, EventCtx, Pad},
         display::{self, toif::Icon, Color},
         geometry::{Alignment2D, Offset, Rect},
-        lerp::Lerp,
         model_tt::constant,
         shape::{self, Renderer},
         util::animation_disabled,
@@ -180,6 +179,8 @@ impl Component for Loader {
                 } else {
                     #[cfg(feature = "haptic")]
                     {
+                        use crate::ui::lerp::Lerp;
+
                         if matches!(self.state, State::Growing(_)) {
                             let progress =
                                 self.progress(now).unwrap() as f32 / display::LOADER_MAX as f32;

@@ -66,8 +66,8 @@ impl ffi::gfx_bitblt_t {
     /// # SAFETY
     /// 1) Ensure that the rectangle is completely inside the destination
     ///    bitmap.
-    /// 2) If the copy or blend operation is used, ensure that the rectangle
-    ///    is completely filled with source bitmap or its part.
+    /// 2) If the copy or blend operation is used, ensure that the rectangle is
+    ///    completely filled with source bitmap or its part.
     unsafe fn with_rect(self, r: Rect) -> Self {
         Self {
             width: r.width() as u16,

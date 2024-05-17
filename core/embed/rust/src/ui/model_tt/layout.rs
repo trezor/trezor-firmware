@@ -549,7 +549,7 @@ extern "C" fn new_confirm_address(n_args: usize, args: *const Obj, kwargs: *mut 
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let description: Option<TString> =
             kwargs.get(Qstr::MP_QSTR_description)?.try_into_option()?;
-        let verb: TString = kwargs.get_or(Qstr::MP_QSTR_verb, TR::buttons__confirm.try_into()?)?;
+        let verb: TString = kwargs.get_or(Qstr::MP_QSTR_verb, TR::buttons__confirm.into())?;
         let extra: Option<TString> = kwargs.get(Qstr::MP_QSTR_extra)?.try_into_option()?;
         let data: Obj = kwargs.get(Qstr::MP_QSTR_data)?;
         let chunkify: bool = kwargs.get_or(Qstr::MP_QSTR_chunkify, false)?;
@@ -887,7 +887,7 @@ fn new_show_modal(
     let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
     let value: TString = kwargs.get_or(Qstr::MP_QSTR_value, "".into())?;
     let description: TString = kwargs.get_or(Qstr::MP_QSTR_description, "".into())?;
-    let button: TString = kwargs.get_or(Qstr::MP_QSTR_button, TR::buttons__continue.try_into()?)?;
+    let button: TString = kwargs.get_or(Qstr::MP_QSTR_button, TR::buttons__continue.into())?;
     let allow_cancel: bool = kwargs.get_or(Qstr::MP_QSTR_allow_cancel, true)?;
     let time_ms: u32 = kwargs.get_or(Qstr::MP_QSTR_time_ms, 0)?;
 
@@ -1038,9 +1038,9 @@ extern "C" fn new_show_info(n_args: usize, args: *const Obj, kwargs: *mut Map) -
 extern "C" fn new_show_mismatch(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
-        let description: TString = TR::addr_mismatch__contact_support_at.try_into()?;
-        let url: TString = TR::addr_mismatch__support_url.try_into()?;
-        let button: TString = TR::buttons__quit.try_into()?;
+        let description: TString = TR::addr_mismatch__contact_support_at.into();
+        let url: TString = TR::addr_mismatch__support_url.into();
+        let button: TString = TR::buttons__quit.into();
 
         let icon = BlendedImage::new(
             theme::IMAGE_BG_OCTAGON,
@@ -1387,9 +1387,9 @@ extern "C" fn new_confirm_recovery(n_args: usize, args: *const Obj, kwargs: *mut
         .with_spacing(theme::RECOVERY_SPACING);
 
         let notification: TString = if dry_run {
-            TR::recovery__title_dry_run.try_into()?
+            TR::recovery__title_dry_run.into()
         } else {
-            TR::recovery__title.try_into()?
+            TR::recovery__title.into()
         };
 
         let obj = if info_button {
@@ -1420,9 +1420,9 @@ extern "C" fn new_select_word_count(n_args: usize, args: *const Obj, kwargs: *mu
     let block = move |_args: &[Obj], kwargs: &Map| {
         let dry_run: bool = kwargs.get(Qstr::MP_QSTR_dry_run)?.try_into()?;
         let title: TString = if dry_run {
-            TR::recovery__title_dry_run.try_into()?
+            TR::recovery__title_dry_run.into()
         } else {
-            TR::recovery__title.try_into()?
+            TR::recovery__title.into()
         };
 
         let paragraphs = Paragraphs::new(Paragraph::new(
