@@ -64,6 +64,7 @@ def configure(
 
     if "new_rendering" in features_wanted:
         defines += ["XFRAMEBUFFER"]
+        defines += ["DISPLAY_RGB565"]
         features_available.append("xframebuffer")
         features_available.append("display_rgb565")
 

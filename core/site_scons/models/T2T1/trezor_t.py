@@ -19,6 +19,7 @@ def configure(
     features_available.append("disp_i8080_8bit_dw")
 
     if "new_rendering" in features_wanted:
+        defines += ["DISPLAY_RGB565"]
         features_available.append("display_rgb565")
 
     mcu = "STM32F427xx"
