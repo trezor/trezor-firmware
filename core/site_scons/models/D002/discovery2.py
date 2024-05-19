@@ -100,15 +100,15 @@ def configure(
     features_available.append("framebuffer")
     features_available.append("framebuffer32bit")
 
+    if "new_rendering" in features_wanted:
+        defines += ["XFRAMEBUFFER"]
+        defines += ["DISPLAY_RGBA8888"]
+        features_available.append("xframebuffer")
+        features_available.append("display_rgba8888")
+
     env.get("ENV")["LINKER_SCRIPT"] = linker_script
 
     defs = env.get("CPPDEFINES_IMPLICIT")
     defs += ["__ARM_FEATURE_CMSE=3"]
-
-    rust_defs = env.get("ENV")["RUST_INCLUDES"]
-    rust_defs += "-DFRAMEBUFFER;"
-    if "new_rendering" in features_wanted:
-        rust_defs += "-DXFRAMEBUFFER;"
-    env.get("ENV")["RUST_INCLUDES"] = rust_defs
 
     return features_available
