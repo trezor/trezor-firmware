@@ -23,6 +23,7 @@ def configure(
     if "new_rendering" in features_wanted:
         features_available.append("xframebuffer")
         features_available.append("display_rgb565")
+        defines += ["DISPLAY_RGB565"]
         defines += ["XFRAMEBUFFER"]
 
     mcu = "STM32U585xx"
