@@ -155,7 +155,7 @@ fn new_confirm_action_obj(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Err
     let content_menu = if let Some(verb_cancel) = verb_cancel {
         Frame::left_aligned(
             "".into(),
-            VerticalMenu::empty().danger(theme::ICON_CANCEL, verb_cancel.into()),
+            VerticalMenu::empty().danger(theme::ICON_CANCEL, verb_cancel),
         )
     } else {
         Frame::left_aligned(
@@ -172,7 +172,7 @@ fn new_confirm_action_obj(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Err
     if !prompt_screen {
         let store = flow_store().add(content_intro)?.add(content_menu)?;
         let res = SwipeFlow::new(ConfirmActionSimple::Intro, store)?;
-        return Ok(LayoutObj::new(res)?.into());
+        Ok(LayoutObj::new(res)?.into())
     } else {
         let (prompt, prompt_action) = if hold {
             (
@@ -205,6 +205,6 @@ fn new_confirm_action_obj(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Err
             .add(content_menu)?
             .add(content_confirm)?;
         let res = SwipeFlow::new(ConfirmAction::Intro, store)?;
-        return Ok(LayoutObj::new(res)?.into());
-    };
+        Ok(LayoutObj::new(res)?.into())
+    }
 }

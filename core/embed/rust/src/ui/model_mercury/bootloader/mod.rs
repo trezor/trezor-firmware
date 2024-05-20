@@ -38,7 +38,7 @@ use crate::ui::{
     constant,
     display::{toif::Toif, LOADER_MAX},
     geometry::{Alignment, Alignment2D},
-    model_mercury::shapes::render_loader,
+    model_mercury::shapes::{render_loader, LoaderRange},
     shape,
     shape::render_on_display,
 };
@@ -130,9 +130,11 @@ impl ModelMercuryFeatures {
                 inactive_color,
                 fg_color,
                 bg_color,
-                0,
-                end,
-                progress >= LOADER_MAX,
+                if progress >= LOADER_MAX {
+                    LoaderRange::Full
+                } else {
+                    LoaderRange::FromTo(0, end)
+                },
                 target,
             );
 
