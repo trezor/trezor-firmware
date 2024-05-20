@@ -34,7 +34,7 @@ async def request_word_count(dry_run: bool) -> int:
 async def request_word(
     word_index: int, word_count: int, is_slip39: bool, prefill_word: str = ""
 ) -> str:
-    prompt = TR.recovery__type_word_x_of_y_template.format(word_index + 1, word_count)
+    prompt = TR.recovery__word_x_of_y_template.format(word_index + 1, word_count)
     can_go_back = word_index > 0
     if is_slip39:
         keyboard = RustLayout(
