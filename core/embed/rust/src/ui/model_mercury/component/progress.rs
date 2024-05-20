@@ -11,7 +11,10 @@ use crate::{
         },
         display::{self, Font, LOADER_MAX},
         geometry::{Insets, Offset, Rect},
-        model_mercury::{constant, shapes::render_loader},
+        model_mercury::{
+            constant,
+            shapes::{render_loader, LoaderRange},
+        },
         shape,
         shape::Renderer,
         util::animation_disabled,
@@ -116,15 +119,19 @@ impl Component for Progress {
         let background_color = theme::BG;
         let inactive_color = theme::GREY_EXTRA_DARK;
 
-        let (start, end) = if self.indeterminate {
+        let range = if self.indeterminate {
             let start = (self.value - 100) % 1000;
             let end = (self.value + 100) % 1000;
             let start = ((start as i32 * 8 * shape::PI4 as i32) / 1000) as i16;
             let end = ((end as i32 * 8 * shape::PI4 as i32) / 1000) as i16;
-            (start, end)
+            LoaderRange::FromTo(start, end)
         } else {
             let end = ((self.value as i32 * 8 * shape::PI4 as i32) / 1000) as i16;
-            (0, end)
+            if self.value >= LOADER_MAX {
+                LoaderRange::Full
+            } else {
+                LoaderRange::FromTo(0, end)
+            }
         };
 
         render_loader(
@@ -132,9 +139,7 @@ impl Component for Progress {
             inactive_color,
             active_color,
             background_color,
-            start,
-            end,
-            !self.indeterminate && self.value >= LOADER_MAX,
+            range,
             target,
         );
 
