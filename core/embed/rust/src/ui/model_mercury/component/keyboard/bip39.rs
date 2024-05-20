@@ -2,16 +2,16 @@ use crate::{
     trezorhal::bip39,
     ui::{
         component::{text::common::TextBox, Component, Event, EventCtx},
-        display,
-        geometry::{Alignment2D, Offset, Rect},
+        geometry::{Alignment, Alignment2D, Offset, Point, Rect},
         model_mercury::{
             component::{
                 keyboard::{
-                    common::{paint_pending_marker, render_pending_marker, MultiTapKeyboard},
+                    common::{render_pending_marker, render_pill_shape, MultiTapKeyboard},
                     mnemonic::{MnemonicInput, MnemonicInputMsg, MNEMONIC_KEY_COUNT},
                 },
-                Button, ButtonContent, ButtonMsg,
+                Button, ButtonMsg,
             },
+            constant::WIDTH,
             theme,
         },
         shape,
@@ -104,100 +104,66 @@ impl Component for Bip39Input {
     }
 
     fn paint(&mut self) {
-        let area = self.button.area();
-        let style = self.button.style();
-
-        // First, paint the button background.
-        self.button.paint_background(style);
-
-        // Paint the entered content (the prefix of the suggested word).
-        let text = self.textbox.content();
-        let width = style.font.text_width(text);
-        // Content starts in the left-center point, offset by 16px to the right and 8px
-        // to the bottom.
-        let text_baseline = area.top_left().center(area.bottom_left()) + Offset::new(16, 8);
-        display::text_left(
-            text_baseline,
-            text,
-            style.font,
-            style.text_color,
-            style.button_color,
-        );
-
-        // Paint the rest of the suggested dictionary word.
-        if let Some(word) = self.suggested_word.and_then(|w| w.get(text.len()..)) {
-            let word_baseline = text_baseline + Offset::new(width, 0);
-            let style = self.button_suggestion.style();
-            display::text_left(
-                word_baseline,
-                word,
-                style.font,
-                style.text_color,
-                style.button_color,
-            );
-        }
-
-        // Paint the pending marker.
-        if self.multi_tap.pending_key().is_some() {
-            paint_pending_marker(text_baseline, text, style.font, style.text_color);
-        }
-
-        // Paint the icon.
-        if let ButtonContent::Icon(icon) = self.button.content() {
-            // Icon is painted in the right-center point, of expected size 16x16 pixels, and
-            // 16px from the right edge.
-            let icon_center = area.top_right().center(area.bottom_right()) - Offset::new(16 + 8, 0);
-            icon.draw(
-                icon_center,
-                Alignment2D::CENTER,
-                style.text_color,
-                style.button_color,
-            );
-        }
+        todo!("remove when ui-t3t1 done");
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let area = self.button.area();
         let style = self.button.style();
 
-        // First, paint the button background.
-        self.button.render_background(target, style);
-
         // Paint the entered content (the prefix of the suggested word).
         let text = self.textbox.content();
         let width = style.font.text_width(text);
-        // Content starts in the left-center point, offset by 16px to the right and 8px
-        // to the bottom.
-        let text_baseline = area.top_left().center(area.bottom_left()) + Offset::new(16, 8);
-        shape::Text::new(text_baseline, text)
+
+        // User input together with suggestion is centered vertically in the input area
+        // and centered horizontally on the screen
+        let text_base_y = area.left_center().y + style.font.allcase_text_height() / 2;
+        let text_base_x = if let Some(word) = self.suggested_word {
+            style.font.horz_center(0, WIDTH, word)
+        } else {
+            style.font.horz_center(0, WIDTH, text)
+        };
+        let text_base = Point::new(text_base_x, text_base_y);
+
+        // Render pill-shaped button
+        if let Some(word) = self.suggested_word {
+            let choice_unambiguous = self.is_choice_unambiguous();
+            render_pill_shape(
+                target,
+                text_base,
+                word,
+                style,
+                if choice_unambiguous { Some(area) } else { None },
+            );
+            if choice_unambiguous {
+                // Icon is painted in the right-center point, 10px from the right edge.
+                let icon_right_center = area.right_center() - Offset::x(10);
+                shape::ToifImage::new(icon_right_center, theme::ICON_SIMPLE_CHECKMARK24.toif)
+                    .with_align(Alignment2D::CENTER_RIGHT)
+                    .with_fg(style.icon_color)
+                    .render(target);
+            }
+        };
+
+        // Render text input + suggested completion
+        shape::Text::new(text_base, text)
             .with_font(style.font)
             .with_fg(style.text_color)
+            .with_align(Alignment::Start)
             .render(target);
-
-        // Paint the rest of the suggested dictionary word.
         if let Some(word) = self.suggested_word.and_then(|w| w.get(text.len()..)) {
-            let word_baseline = text_baseline + Offset::new(width, 0);
+            let word_baseline = text_base + Offset::x(width);
             let style = self.button_suggestion.style();
             shape::Text::new(word_baseline, word)
                 .with_font(style.font)
                 .with_fg(style.text_color)
+                .with_align(Alignment::Start)
                 .render(target);
         }
 
         // Paint the pending marker.
         if self.multi_tap.pending_key().is_some() {
-            render_pending_marker(target, text_baseline, text, style.font, style.text_color);
-        }
-
-        // Paint the icon.
-        if let ButtonContent::Icon(icon) = self.button.content() {
-            // Icon is painted in the right-center point, of expected size 16x16 pixels, and
-            // 16px from the right edge.
-            let icon_center = area.top_right().center(area.bottom_right()) - Offset::new(16 + 8, 0);
-            shape::ToifImage::new(icon_center, icon.toif)
-                .with_align(Alignment2D::CENTER)
-                .with_fg(style.icon_color)
-                .render(target);
+            render_pending_marker(target, text_base, text, style.font, style.text_color);
         }
     }
 
@@ -227,8 +193,7 @@ impl Bip39Input {
 
         // Styling the input to reflect already filled word
         Self {
-            button: Button::with_icon(theme::ICON_CONFIRM_INPUT)
-                .styled(theme::button_pin_confirm()),
+            button: Button::empty().styled(theme::button_recovery_confirm()),
             textbox: TextBox::new(unwrap!(String::try_from(word))),
             multi_tap: MultiTapKeyboard::new(),
             options_num: bip39::options_num(word),
@@ -249,13 +214,18 @@ impl Bip39Input {
         mask
     }
 
+    fn is_choice_unambiguous(&self) -> bool {
+        if let (Some(word), Some(_num)) = (self.suggested_word, self.options_num) {
+            return word.eq(self.textbox.content());
+        }
+        false
+    }
+
     /// Input button was clicked.  If the content matches the suggested word,
     /// let's confirm it, otherwise just auto-complete.
     fn on_input_click(&mut self, ctx: &mut EventCtx) -> Option<MnemonicInputMsg> {
-        if let (Some(word), Some(num)) = (self.suggested_word, self.options_num) {
-            return if num == 1 && word.starts_with(self.textbox.content())
-                || num > 1 && word.eq(self.textbox.content())
-            {
+        if let (Some(word), Some(_num)) = (self.suggested_word, self.options_num) {
+            return if word.eq(self.textbox.content()) {
                 // Confirm button.
                 self.textbox.clear(ctx);
                 Some(MnemonicInputMsg::Confirmed)
@@ -286,24 +256,19 @@ impl Bip39Input {
         self.suggested_word = bip39::complete_word(self.textbox.content());
 
         // Change the style of the button depending on the completed word.
-        if let (Some(word), Some(num)) = (self.suggested_word, self.options_num) {
-            if num == 1 && word.starts_with(self.textbox.content())
-                || num > 1 && word.eq(self.textbox.content())
-            {
+        if let (Some(word), Some(_num)) = (self.suggested_word, self.options_num) {
+            if word.eq(self.textbox.content()) {
                 // Confirm button.
                 self.button.enable(ctx);
-                self.button.set_stylesheet(ctx, theme::button_pin_confirm());
                 self.button
-                    .set_content(ctx, ButtonContent::Icon(theme::ICON_CONFIRM_INPUT));
+                    .set_stylesheet(ctx, theme::button_recovery_confirm());
                 self.button_suggestion
                     .set_stylesheet(ctx, theme::button_suggestion_confirm());
             } else {
                 // Auto-complete button.
                 self.button.enable(ctx);
                 self.button
-                    .set_stylesheet(ctx, theme::button_bip39_autocomplete());
-                self.button
-                    .set_content(ctx, ButtonContent::Icon(theme::ICON_AUTOFILL));
+                    .set_stylesheet(ctx, theme::button_recovery_autocomplete());
                 self.button_suggestion
                     .set_stylesheet(ctx, theme::button_suggestion_autocomplete());
             }
@@ -311,7 +276,6 @@ impl Bip39Input {
             // Disabled button.
             self.button.disable(ctx);
             self.button.set_stylesheet(ctx, theme::button_keyboard());
-            self.button.set_content(ctx, ButtonContent::Text("".into()));
         }
     }
 }
