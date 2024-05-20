@@ -3,11 +3,13 @@ use crate::{
     ui::{
         component::{text::common::TextEdit, Event, EventCtx, TimerToken},
         display::{self, Color, Font},
-        geometry::{Offset, Point, Rect},
+        geometry::{Alignment2D, Offset, Point, Rect},
         shape,
         shape::Renderer,
     },
 };
+
+use super::super::ButtonStyle;
 
 /// Contains state commonly used in implementations multi-tap keyboards.
 pub struct MultiTapKeyboard {
@@ -149,4 +151,42 @@ pub fn render_pending_marker<'s>(
             Rect::from_top_left_and_size(marker_origin, Offset::new(last_width + 1, 3));
         shape::Bar::new(marker_rect).with_bg(color).render(target);
     }
+}
+
+/// Create a pill-shaped button around a text.
+pub fn render_pill_shape<'s>(
+    target: &mut impl Renderer<'s>,
+    base_point: Point,
+    text: &str,
+    style: &ButtonStyle,
+    expand_area: Option<Rect>,
+) {
+    let pill_radius = 18;
+    let pill_bearing_x = 17;
+    let pill_bearing_y = 12;
+    let pill_height = 2 * pill_radius + 4; // adding 4px looks better, if the height is just 2*r it does not look like a
+                                           // perfect half-circle but there is a visible narrowing of the pill shape
+    let pill_width = style.font.text_width(text) + 2 * pill_bearing_x;
+
+    let pill_baseline = base_point + Offset::new(-pill_bearing_x, pill_bearing_y);
+    let mut pill_area = Rect::snap(
+        pill_baseline,
+        Offset::new(pill_width, pill_height),
+        Alignment2D::BOTTOM_LEFT,
+    );
+    if let Some(area) = expand_area {
+        // "dummy" rectangle to use in the `union` call
+        let expander = Rect::snap(
+            area.bottom_right(),
+            Offset::uniform(1),
+            Alignment2D::BOTTOM_RIGHT,
+        );
+        pill_area = pill_area.union(expander);
+    }
+    shape::Bar::new(pill_area)
+        .with_bg(style.background_color)
+        .with_fg(style.button_color)
+        .with_radius(pill_radius)
+        .with_thickness(2)
+        .render(target);
 }

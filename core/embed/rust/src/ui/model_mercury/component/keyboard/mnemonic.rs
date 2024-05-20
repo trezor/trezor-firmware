@@ -2,7 +2,7 @@ use crate::{
     strutil::TString,
     ui::{
         component::{maybe::paint_overlapping, Child, Component, Event, EventCtx, Label, Maybe},
-        geometry::{Alignment, Grid, Rect},
+        geometry::{Alignment, Grid, Insets, Rect},
         model_mercury::{
             component::{Button, ButtonMsg, Swipe, SwipeDirection},
             theme,
@@ -12,6 +12,7 @@ use crate::{
 };
 
 pub const MNEMONIC_KEY_COUNT: usize = 9;
+const BACK_BUTTON_RIGHT_EXPAND: i16 = 24;
 
 pub enum MnemonicKeyboardMsg {
     Confirmed,
@@ -21,7 +22,9 @@ pub enum MnemonicKeyboardMsg {
 pub struct MnemonicKeyboard<T> {
     /// Initial prompt, displayed on empty input.
     prompt: Child<Maybe<Label<'static>>>,
-    /// Backspace button.
+    /// Delete a char button.
+    erase: Child<Maybe<Button>>,
+    /// Go to previous word button
     back: Child<Maybe<Button>>,
     /// Input area, acting as the auto-complete and confirm button.
     input: Child<Maybe<T>>,
@@ -40,19 +43,24 @@ where
     pub fn new(input: T, prompt: TString<'static>, can_go_back: bool) -> Self {
         // Input might be already pre-filled
         let prompt_visible = input.is_empty();
-
+        let erase_btn = Button::with_icon(theme::ICON_DELETE)
+            .styled(theme::button_default())
+            .with_expanded_touch_area(Insets::right(BACK_BUTTON_RIGHT_EXPAND))
+            .with_long_press(theme::ERASE_HOLD_DURATION);
+        let back_btn = Button::with_icon(theme::ICON_CHEVRON_LEFT)
+            .styled(theme::button_default())
+            .with_expanded_touch_area(Insets::right(BACK_BUTTON_RIGHT_EXPAND));
         Self {
             prompt: Child::new(Maybe::new(
                 theme::BG,
-                Label::centered(prompt, theme::TEXT_MAIN_GREY_LIGHT),
+                Label::centered(prompt, theme::TEXT_MAIN_GREY_LIGHT).vertically_centered(),
                 prompt_visible,
             )),
+            erase: Child::new(Maybe::new(theme::BG, erase_btn, !prompt_visible)),
             back: Child::new(Maybe::new(
                 theme::BG,
-                Button::with_icon(theme::ICON_DELETE)
-                    .styled(theme::button_default())
-                    .with_long_press(theme::ERASE_HOLD_DURATION),
-                !prompt_visible,
+                back_btn,
+                prompt_visible && can_go_back,
             )),
             input: Child::new(Maybe::new(theme::BG, input, !prompt_visible)),
             keys: T::keys()
@@ -86,15 +94,18 @@ where
     }
 
     /// After edit operations, we need to either show or hide the prompt, the
-    /// input, and the back button.
+    /// input, the erase button and the back button.
     fn toggle_prompt_or_input(&mut self, ctx: &mut EventCtx) {
         let prompt_visible = self.input.inner().inner().is_empty();
         self.prompt
             .mutate(ctx, |ctx, p| p.show_if(ctx, prompt_visible));
         self.input
             .mutate(ctx, |ctx, i| i.show_if(ctx, !prompt_visible));
-        self.back
+        self.erase
             .mutate(ctx, |ctx, b| b.show_if(ctx, !prompt_visible));
+        self.back.mutate(ctx, |ctx, b| {
+            b.show_if(ctx, prompt_visible && self.can_go_back)
+        });
     }
 
     pub fn mnemonic(&self) -> Option<&'static str> {
@@ -109,22 +120,25 @@ where
     type Msg = MnemonicKeyboardMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        let height_input_area: i16 = 30;
-        let space_top: i16 = 8;
+        let height_input_area: i16 = 38;
+        let padding_top: i16 = 6;
+        let back_btn_area_width: i16 = 32;
         let (remaining, keyboard_area) =
-            bounds.split_bottom(3 * theme::BUTTON_HEIGHT + 2 * theme::KEYBOARD_SPACING);
+            bounds.split_bottom(3 * theme::MNEMONIC_BUTTON_HEIGHT + 2 * theme::KEYBOARD_SPACING);
         let prompt_area = remaining
-            .split_top(space_top)
+            .split_top(padding_top)
             .1
             .split_top(height_input_area)
             .0;
         assert!(prompt_area.height() == height_input_area);
 
-        let (back_btn_area, input_area) = prompt_area.split_left(30);
+        let (back_btn_area, input_area) = prompt_area.split_left(back_btn_area_width);
+        let input_area = input_area.inset(Insets::left(BACK_BUTTON_RIGHT_EXPAND));
         let keyboard_grid = Grid::new(keyboard_area, 3, 3).with_spacing(theme::KEYBOARD_SPACING);
 
         self.swipe.place(bounds);
         self.prompt.place(prompt_area);
+        self.erase.place(back_btn_area);
         self.back.place(back_btn_area);
         self.input.place(input_area);
 
@@ -135,8 +149,11 @@ where
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        // Swipe will cause going back to the previous word when allowed.
+        // Back button or swipe will cause going back to the previous word when allowed.
         if self.can_go_back {
+            if let Some(ButtonMsg::Clicked) = self.back.event(ctx, event) {
+                return Some(MnemonicKeyboardMsg::Previous);
+            }
             if let Some(SwipeDirection::Right) = self.swipe.event(ctx, event) {
                 return Some(MnemonicKeyboardMsg::Previous);
             }
@@ -155,7 +172,7 @@ where
             _ => {}
         }
 
-        match self.back.event(ctx, event) {
+        match self.erase.event(ctx, event) {
             Some(ButtonMsg::Clicked) => {
                 self.input
                     .mutate(ctx, |ctx, i| i.inner_mut().on_backspace_click(ctx));
@@ -182,7 +199,7 @@ where
     }
 
     fn paint(&mut self) {
-        paint_overlapping(&mut [&mut self.prompt, &mut self.input, &mut self.back]);
+        paint_overlapping(&mut [&mut self.prompt, &mut self.input, &mut self.erase]);
         for btn in &mut self.keys {
             btn.paint();
         }
@@ -191,9 +208,12 @@ where
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         if self.input.inner().inner().is_empty() {
             self.prompt.render(target);
+            if self.can_go_back {
+                self.back.render(target);
+            }
         } else {
             self.input.render(target);
-            self.back.render(target);
+            self.erase.render(target);
         }
 
         for btn in &self.keys {
@@ -205,6 +225,7 @@ where
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         self.prompt.bounds(sink);
         self.input.bounds(sink);
+        self.erase.bounds(sink);
         self.back.bounds(sink);
         for btn in &self.keys {
             btn.bounds(sink)

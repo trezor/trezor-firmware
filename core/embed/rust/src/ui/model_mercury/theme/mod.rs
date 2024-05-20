@@ -75,6 +75,7 @@ include_icon!(ICON_PAGE_UP, "model_mercury/res/page_up20.toif");
 
 // 24x24
 include_icon!(ICON_CANCEL, "model_mercury/res/cancel24.toif");
+include_icon!(ICON_CHEVRON_LEFT, "model_mercury/res/chevron_left24.toif");
 include_icon!(ICON_CHEVRON_RIGHT, "model_mercury/res/chevron_right24.toif");
 include_icon!(ICON_DOWNLOAD, "model_mercury/res/download24.toif");
 include_icon!(ICON_KEY, "model_mercury/res/key20.toif");
@@ -575,27 +576,28 @@ pub const fn button_passphrase_next() -> ButtonStyleSheet {
     }
 }
 
-pub const fn button_bip39_autocomplete() -> ButtonStyleSheet {
+pub const fn button_recovery_confirm() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
-            font: Font::MONO,
-            text_color: FG,
-            button_color: BG,
-            icon_color: GREY_LIGHT,
-            background_color: BG,
+            font: Font::DEMIBOLD,
+            text_color: GREEN_LIME,
+            button_color: GREEN_LIGHT,
+            icon_color: GREEN_LIME,
+            background_color: GREEN_DARK,
         },
         active: &ButtonStyle {
-            font: Font::MONO,
-            text_color: FG,
-            button_color: BG,
-            icon_color: GREY_LIGHT,
-            background_color: BG,
+            font: Font::DEMIBOLD,
+            text_color: GREEN_DARK,
+            button_color: GREEN_LIGHT,
+            icon_color: GREEN_DARK,
+            background_color: GREEN_LIGHT,
         },
+        // used in SLIP-39 recovery for "*"
         disabled: &ButtonStyle {
-            font: Font::MONO,
-            text_color: FG,
+            font: Font::DEMIBOLD,
+            text_color: GREY_LIGHT,
             button_color: BG,
-            icon_color: GREY_LIGHT,
+            icon_color: BG,
             background_color: BG,
         },
     }
@@ -604,24 +606,52 @@ pub const fn button_bip39_autocomplete() -> ButtonStyleSheet {
 pub const fn button_suggestion_confirm() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
-            font: Font::MONO,
+            font: Font::DEMIBOLD,
+            text_color: GREY_LIGHT, // difference
+            button_color: GREEN_LIGHT,
+            icon_color: GREEN_LIME,
+            background_color: GREEN_DARK,
+        },
+        active: &ButtonStyle {
+            font: Font::DEMIBOLD,
+            text_color: GREEN_LIME,
+            button_color: GREEN_LIGHT,
+            icon_color: GREEN_DARK,
+            background_color: GREEN_LIGHT,
+        },
+        // not used
+        disabled: &ButtonStyle {
+            font: Font::DEMIBOLD,
+            text_color: BG,
+            button_color: BG,
+            icon_color: BG,
+            background_color: BG,
+        },
+    }
+}
+
+pub const fn button_recovery_autocomplete() -> ButtonStyleSheet {
+    ButtonStyleSheet {
+        normal: &ButtonStyle {
+            font: Font::DEMIBOLD,
             text_color: GREY_LIGHT,
-            button_color: GREEN,
+            button_color: GREY_EXTRA_DARK,
             icon_color: GREY_LIGHT,
             background_color: BG,
         },
         active: &ButtonStyle {
-            font: Font::MONO,
-            text_color: FG,
-            button_color: GREEN_DARK,
-            icon_color: GREY_LIGHT,
-            background_color: BG,
+            font: Font::DEMIBOLD,
+            text_color: BG,
+            button_color: FG,
+            icon_color: BG,
+            background_color: FG,
         },
+        // not used
         disabled: &ButtonStyle {
-            font: Font::MONO,
-            text_color: GREY_LIGHT,
-            button_color: GREY_DARK,
-            icon_color: GREY_LIGHT,
+            font: Font::DEMIBOLD,
+            text_color: BG,
+            button_color: BG,
+            icon_color: BG,
             background_color: BG,
         },
     }
@@ -630,24 +660,25 @@ pub const fn button_suggestion_confirm() -> ButtonStyleSheet {
 pub const fn button_suggestion_autocomplete() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
-            font: Font::MONO,
-            text_color: GREY_LIGHT,
-            button_color: GREY_DARK, // same as PIN buttons
-            icon_color: GREY_LIGHT,
+            font: Font::DEMIBOLD,
+            text_color: GREY,
+            button_color: BG,
+            icon_color: BG,
             background_color: BG,
         },
         active: &ButtonStyle {
             font: Font::MONO,
-            text_color: FG,
-            button_color: GREEN_DARK,
-            icon_color: GREY_LIGHT,
-            background_color: BG,
+            text_color: BG,
+            button_color: FG,
+            icon_color: BG,
+            background_color: FG,
         },
+        // not used
         disabled: &ButtonStyle {
             font: Font::MONO,
-            text_color: GREY_LIGHT,
+            text_color: BG,
             button_color: BG,
-            icon_color: GREY_LIGHT,
+            icon_color: BG,
             background_color: BG,
         },
     }
