@@ -4,7 +4,8 @@ use crate::{
     strutil::TString,
     translations::TR,
     ui::{
-        component::{ComponentExt, SwipeDirection},
+        button_request::ButtonRequest,
+        component::{ButtonRequestExt, ComponentExt, SwipeDirection},
         flow::{base::Decision, flow_store, FlowMsg, FlowState, FlowStore, SwipeFlow},
     },
 };
@@ -91,6 +92,8 @@ impl ConfirmSummary {
         let items: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
         let account_items: Obj = kwargs.get(Qstr::MP_QSTR_account_items)?;
         let fee_items: Obj = kwargs.get(Qstr::MP_QSTR_fee_items)?;
+        let br_type: TString = kwargs.get(Qstr::MP_QSTR_br_type)?.try_into()?;
+        let br_code: u16 = kwargs.get(Qstr::MP_QSTR_br_code)?.try_into()?;
 
         // Summary
         let mut summary = ShowInfoParams::new(title)
@@ -100,7 +103,9 @@ impl ConfirmSummary {
             let [label, value]: [TString; 2] = util::iter_into_array(pair)?;
             summary = unwrap!(summary.add(label, value));
         }
-        let content_summary = summary.into_layout()?;
+        let content_summary = summary
+            .into_layout()?
+            .one_button_request(ButtonRequest::from_tstring(br_code, br_type));
 
         // Hold to confirm
         let content_hold = Frame::left_aligned(
