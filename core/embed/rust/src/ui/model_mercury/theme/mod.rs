@@ -63,7 +63,7 @@ pub const RADIUS: u8 = 0;
 // Full-size QR code.
 pub const QR_SIDE_MAX: u32 = 140;
 
-// UI icons (greyscale).
+// UI icons (white color).
 
 // 20x20
 include_icon!(
@@ -77,14 +77,14 @@ include_icon!(ICON_PAGE_UP, "model_mercury/res/page_up20.toif");
 include_icon!(ICON_CANCEL, "model_mercury/res/cancel24.toif");
 include_icon!(ICON_CHEVRON_RIGHT, "model_mercury/res/chevron_right24.toif");
 include_icon!(ICON_DOWNLOAD, "model_mercury/res/download24.toif");
-include_icon!(
-    ICON_EXCLAMATION_MARK,
-    "model_mercury/res/exclamation_mark24.toif"
-);
-include_icon!(ICON_FIRE, "model_mercury/res/fire24.toif");
+include_icon!(ICON_KEY, "model_mercury/res/key20.toif");
 include_icon!(ICON_QR_CODE, "model_mercury/res/qr_code24.toif");
 include_icon!(ICON_REBOOT, "model_mercury/res/reboot24.toif");
 include_icon!(ICON_WARNING, "model_mercury/res/warning24.toif");
+include_icon!(
+    ICON_SIMPLE_CHECKMARK24,
+    "model_mercury/res/simple_checkmark24.toif"
+);
 
 // 30x30
 include_icon!(ICON_AUTOFILL, "model_mercury/res/autofill30.toif");
@@ -92,7 +92,6 @@ include_icon!(ICON_CLOSE, "model_mercury/res/close30.toif");
 include_icon!(ICON_CONFIRM_INPUT, "model_mercury/res/confirm_input30.toif");
 include_icon!(ICON_DELETE, "model_mercury/res/delete30.toif");
 include_icon!(ICON_MENU, "model_mercury/res/menu30.toif");
-include_icon!(ICON_KEY, "model_mercury/res/key30.toif");
 include_icon!(
     ICON_SIMPLE_CHECKMARK,
     "model_mercury/res/simple_checkmark30.toif"
@@ -123,6 +122,21 @@ include_icon!(
 );
 include_icon!(DOT_SMALL, "model_mercury/res/scroll-small.toif");
 
+// Text arrows.
+include_icon!(ICON_PAGE_NEXT, "model_mercury/res/page-next.toif");
+include_icon!(ICON_PAGE_PREV, "model_mercury/res/page-prev.toif");
+
+// Large, three-color icons.
+pub const WARN_COLOR: Color = ORANGE_LIGHT;
+pub const INFO_COLOR: Color = GREY_LIGHT;
+pub const SUCCESS_COLOR: Color = GREEN;
+pub const ERROR_COLOR: Color = ORANGE_DIMMED;
+include_icon!(IMAGE_FG_SUCCESS, "model_mercury/res/fg-check48.toif");
+include_icon!(IMAGE_BG_CIRCLE, "model_mercury/res/circle48.toif");
+
+// Welcome screen.
+include_icon!(ICON_LOGO, "model_mercury/res/lock_full.toif");
+
 // TODO remove TT icons:
 
 // Button icons.
@@ -149,29 +163,16 @@ include_icon!(ICON_LOCK_BIG, "model_tt/res/lock24.toif");
 include_icon!(ICON_COINJOIN, "model_tt/res/coinjoin16.toif");
 include_icon!(ICON_MAGIC, "model_tt/res/magic.toif");
 
-// Text arrows.
-include_icon!(ICON_PAGE_NEXT, "model_tt/res/page-next.toif");
-include_icon!(ICON_PAGE_PREV, "model_tt/res/page-prev.toif");
-
-// Large, three-color icons.
-pub const WARN_COLOR: Color = YELLOW;
-pub const INFO_COLOR: Color = BLUE;
-pub const SUCCESS_COLOR: Color = GREEN;
-pub const ERROR_COLOR: Color = RED;
 include_icon!(IMAGE_FG_WARN, "model_tt/res/fg-warning48.toif");
-include_icon!(IMAGE_FG_SUCCESS, "model_tt/res/fg-check48.toif");
 include_icon!(IMAGE_FG_ERROR, "model_tt/res/fg-error48.toif");
 include_icon!(IMAGE_FG_INFO, "model_tt/res/fg-info48.toif");
 include_icon!(IMAGE_FG_USER, "model_tt/res/fg-user48.toif");
-include_icon!(IMAGE_BG_CIRCLE, "model_tt/res/circle48.toif");
 include_icon!(IMAGE_BG_OCTAGON, "model_tt/res/octagon48.toif");
 
 // Non-square button backgrounds.
 include_icon!(IMAGE_BG_BACK_BTN, "model_tt/res/bg-back40.toif");
 include_icon!(IMAGE_BG_BACK_BTN_TALL, "model_tt/res/bg-back52.toif");
 
-// Welcome screen.
-include_icon!(ICON_LOGO, "model_tt/res/lock_full.toif");
 include_icon!(ICON_LOGO_EMPTY, "model_tt/res/lock_empty.toif");
 
 // Default homescreen
@@ -251,7 +252,7 @@ pub const fn button_default() -> ButtonStyleSheet {
             font: Font::DEMIBOLD,
             text_color: GREY_LIGHT,
             button_color: BG,
-            icon_color: GREY_LIGHT,
+            icon_color: GREY,
             background_color: BG,
         },
         active: &ButtonStyle {
