@@ -363,24 +363,14 @@ impl PinDots {
         let step = Self::DOT + Self::PADDING;
 
         // Jiggle when overflowed.
-        if digits >= MAX_VISIBLE_DOTS + 2 && (digits + 1) % 2 == 0 {
+        if digits > MAX_VISIBLE_DOTS + 1 && (digits + 1) % 2 == 0 {
             cursor.x += Self::TWITCH
         }
 
         let mut digit_idx = 0;
         // Small leftmost dot.
-        if digits >= MAX_VISIBLE_DOTS + 2 {
+        if digits > MAX_VISIBLE_DOTS + 1 {
             shape::ToifImage::new(cursor, theme::DOT_SMALL.toif)
-                .with_align(Alignment2D::CENTER_LEFT)
-                .with_fg(theme::GREY_DARK)
-                .render(target);
-            cursor.x += step;
-            digit_idx += 1;
-        }
-
-        // Greyed out dot.
-        if digits > MAX_VISIBLE_DOTS {
-            shape::ToifImage::new(cursor, theme::DOT_ACTIVE.toif)
                 .with_align(Alignment2D::CENTER_LEFT)
                 .with_fg(theme::GREY)
                 .render(target);
@@ -388,9 +378,19 @@ impl PinDots {
             digit_idx += 1;
         }
 
+        // Greyed out dot.
+        if digits > MAX_VISIBLE_DOTS {
+            shape::ToifImage::new(cursor, theme::DOT_SMALL.toif)
+                .with_align(Alignment2D::CENTER_LEFT)
+                .with_fg(self.style.text_color)
+                .render(target);
+            cursor.x += step;
+            digit_idx += 1;
+        }
+
         // Draw a dot for each PIN digit.
         for _ in digit_idx..dots_visible {
-            shape::ToifImage::new(cursor, theme::DOT_ACTIVE.toif)
+            shape::ToifImage::new(cursor, theme::ICON_PIN_BULLET.toif)
                 .with_align(Alignment2D::CENTER_LEFT)
                 .with_fg(self.style.text_color)
                 .render(target);
