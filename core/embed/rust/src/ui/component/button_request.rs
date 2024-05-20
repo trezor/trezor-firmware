@@ -63,3 +63,21 @@ pub trait ButtonRequestExt {
 }
 
 impl<T: Component> ButtonRequestExt for T {}
+
+#[cfg(all(feature = "micropython", feature = "touch"))]
+impl<T> crate::ui::flow::Swipable for OneButtonRequest<T>
+where
+    T: Component + crate::ui::flow::Swipable,
+{
+    fn swipe_start(
+        &mut self,
+        ctx: &mut EventCtx,
+        direction: crate::ui::component::SwipeDirection,
+    ) -> bool {
+        self.inner.swipe_start(ctx, direction)
+    }
+
+    fn swipe_finished(&self) -> bool {
+        self.inner.swipe_finished()
+    }
+}

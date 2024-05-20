@@ -3,7 +3,6 @@ from typing import Callable, Iterable
 import trezorui2
 from trezor import TR
 from trezor.enums import ButtonRequestType
-from trezor.wire.context import wait as ctx_wait
 
 from ..common import interact
 from . import RustLayout, raise_if_not_confirmed
@@ -17,7 +16,7 @@ async def _is_confirmed_info(
     info_func: Callable,
 ) -> bool:
     while True:
-        result = await ctx_wait(dialog)
+        result = await dialog
 
         if result is trezorui2.INFO:
             await info_func()
@@ -50,7 +49,7 @@ async def request_word(
             )
         )
 
-    word: str = await ctx_wait(keyboard)
+    word: str = await keyboard
     return word
 
 
@@ -143,7 +142,7 @@ async def continue_recovery(
     if info_func is not None:
         return await _is_confirmed_info(homepage, info_func)
     else:
-        result = await ctx_wait(homepage)
+        result = await homepage
         return result is CONFIRMED
 
 

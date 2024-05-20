@@ -4,7 +4,6 @@ import trezorui2
 from trezor import TR
 from trezor.enums import ButtonRequestType
 from trezor.wire import ActionCancelled
-from trezor.wire.context import wait as ctx_wait
 
 from ..common import interact
 from . import RustLayout, raise_if_not_confirmed
@@ -76,15 +75,13 @@ async def select_word(
     while len(words) < 3:
         words.append(words[-1])
 
-    result = await ctx_wait(
-        RustLayout(
-            trezorui2.select_word(
-                title=TR.reset__select_word_x_of_y_template.format(
-                    checked_index + 1, count
-                ),
-                description=description,
-                words=(words[0], words[1], words[2]),
-            )
+    result = RustLayout(
+        trezorui2.select_word(
+            title=TR.reset__select_word_x_of_y_template.format(
+                checked_index + 1, count
+            ),
+            description=description,
+            words=(words[0], words[1], words[2]),
         )
     )
     if __debug__ and isinstance(result, str):
@@ -164,13 +161,11 @@ async def _prompt_number(
             assert isinstance(value, int)
             return value
 
-        await ctx_wait(
-            RustLayout(
-                trezorui2.show_simple(
-                    title=None,
-                    description=info(value),
-                    button=TR.buttons__ok_i_understand,
-                )
+        await RustLayout(
+            trezorui2.show_simple(
+                title=None,
+                description=info(value),
+                button=TR.buttons__ok_i_understand,
             )
         )
         num_input.request_complete_repaint()
