@@ -4,7 +4,8 @@ use crate::{
     strutil::TString,
     translations::TR,
     ui::{
-        component::{ComponentExt, SwipeDirection},
+        button_request::ButtonRequest,
+        component::{ButtonRequestExt, ComponentExt, SwipeDirection},
         flow::{base::Decision, flow_store, FlowMsg, FlowState, FlowStore, SwipeFlow, SwipePage},
     },
 };
@@ -91,6 +92,8 @@ impl ConfirmOutput {
         let account: Option<TString> = kwargs.get(Qstr::MP_QSTR_account)?.try_into_option()?;
         let account_path: Option<TString> =
             kwargs.get(Qstr::MP_QSTR_account_path)?.try_into_option()?;
+        let br_type: TString = kwargs.get(Qstr::MP_QSTR_br_type)?.try_into()?;
+        let br_code: u16 = kwargs.get(Qstr::MP_QSTR_br_code)?.try_into()?;
 
         let address: Obj = kwargs.get(Qstr::MP_QSTR_address)?;
         let amount: Obj = kwargs.get(Qstr::MP_QSTR_amount)?;
@@ -105,8 +108,8 @@ impl ConfirmOutput {
             .with_footer(TR::instructions__swipe_up.into(), None)
             .with_chunkify(chunkify)
             .with_text_mono(text_mono)
-            .into_layout()?;
-        // .one_button_request(ButtonRequestCode::ConfirmOutput, br_type);
+            .into_layout()?
+            .one_button_request(ButtonRequest::from_tstring(br_code, br_type));
 
         // Amount
         let content_amount = ConfirmBlobParams::new(TR::words__amount.into(), amount, None)
@@ -114,8 +117,8 @@ impl ConfirmOutput {
             .with_menu_button()
             .with_footer(TR::instructions__swipe_up.into(), None)
             .with_text_mono(text_mono)
-            .into_layout()?;
-        // .one_button_request(ButtonRequestCode::ConfirmOutput, br_type);
+            .into_layout()?
+            .one_button_request(ButtonRequest::from_tstring(br_code, br_type));
 
         // Menu
         let content_menu = Frame::left_aligned(
