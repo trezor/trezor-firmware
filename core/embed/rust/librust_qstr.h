@@ -101,6 +101,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_bitcoin__voting_rights;
   MP_QSTR_bootscreen;
   MP_QSTR_bounds;
+  MP_QSTR_br_code;
+  MP_QSTR_br_type;
   MP_QSTR_button;
   MP_QSTR_button_event;
   MP_QSTR_button_request;
