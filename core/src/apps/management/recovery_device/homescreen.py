@@ -32,10 +32,9 @@ async def recovery_process() -> Success:
     import storage
     from trezor.enums import MessageType, RecoveryKind
 
-    is_special_kind = storage_recovery.get_kind() in (
-        RecoveryKind.DryRun,
-        RecoveryKind.UnlockRepeatedBackup,
-    )
+    from apps.common import backup
+
+    kind = storage_recovery.get_kind()
 
     wire.AVOID_RESTARTING_FOR = (
         MessageType.Initialize,
@@ -45,7 +44,10 @@ async def recovery_process() -> Success:
     try:
         return await _continue_recovery_process()
     except recover.RecoveryAborted:
-        if is_special_kind:
+        if kind == RecoveryKind.DryRun:
+            storage_recovery.end_progress()
+        elif kind == RecoveryKind.UnlockRepeatedBackup:
+            backup.disable_repeated_backup()
             storage_recovery.end_progress()
         else:
             storage.wipe()
@@ -58,8 +60,7 @@ async def _continue_repeated_backup() -> None:
     from trezor.ui.layouts import confirm_action
     from trezor.wire import ActionCancelled
 
-    from apps import workflow_handlers
-    from apps.common import mnemonic
+    from apps.common import backup, mnemonic
     from apps.homescreen import homescreen
     from apps.management.reset_device import backup_seed
 
@@ -86,8 +87,7 @@ async def _continue_repeated_backup() -> None:
     except ActionCancelled:
         workflow.set_default(homescreen)
     finally:
-        storage_cache.delete(storage_cache.APP_RECOVERY_REPEATED_BACKUP_UNLOCKED)
-        wire.find_handler = workflow_handlers.find_registered_handler
+        backup.disable_repeated_backup()
         storage_recovery.end_progress()
 
 

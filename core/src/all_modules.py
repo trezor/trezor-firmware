@@ -287,6 +287,8 @@ apps.common.address_type
 import apps.common.address_type
 apps.common.authorization
 import apps.common.authorization
+apps.common.backup
+import apps.common.backup
 apps.common.backup_types
 import apps.common.backup_types
 apps.common.cbor

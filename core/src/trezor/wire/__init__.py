@@ -119,13 +119,13 @@ async def _handle_single_message(
 
     res_msg: protobuf.MessageType | None = None
 
-    # We need to find a handler for this message type.  Should not raise.
-    handler = find_handler(ctx.iface, msg.type)  # pylint: disable=assignment-from-none
-
-    if handler is None:
-        # If no handler is found, we can skip decoding and directly
-        # respond with failure.
-        await ctx.write(unexpected_message())
+    # We need to find a handler for this message type.
+    try:
+        handler = find_handler(ctx.iface, msg.type)
+    except Error as exc:
+        # Handlers are allowed to exception out. In that case, we can skip decoding
+        # and return the error.
+        await ctx.write(failure(exc))
         return None
 
     if msg.type in workflow.ALLOW_WHILE_LOCKED:
@@ -259,12 +259,46 @@ async def handle_session(
                 log.exception(__name__, exc)
 
 
-def _find_handler_placeholder(iface: WireInterface, msg_type: int) -> Handler | None:
-    """Placeholder handler lookup before a proper one is registered."""
-    return None
+def find_handler(iface: WireInterface, msg_type: int) -> Handler:
+    import usb
+    from apps import workflow_handlers
+
+    handler = workflow_handlers.find_registered_handler(iface, msg_type)
+    if handler is None:
+        raise context.UnexpectedMessage(msg="Unexpected message")
+
+    if __debug__ and iface is usb.iface_debug:
+        # no filtering allowed for debuglink
+        return handler
+
+    for filter in filters:
+        handler = filter(msg_type, handler)
+
+    return handler
 
 
-find_handler = _find_handler_placeholder
+filters: list[Callable[[int, Handler], Handler]] = []
+"""Filters for the wire handler.
+
+Filters are applied in order. Each filter gets a message id and a preceding handler. It
+must either return a handler (the same one or a modified one), or raise an exception
+that gets sent to wire directly.
+
+Filters are not applied to debug sessions.
+
+The filters are designed for:
+ * rejecting messages -- while in Recovery mode, most messages are not allowed
+ * adding additional behavior -- while device is soft-locked, a PIN screen will be shown
+   before allowing a message to trigger its original behavior.
+
+For this, the filters are effectively deny-first. If an earlier filter rejects the
+message, the later filters are not called. But if a filter adds behavior, the latest
+filter "wins" and the latest behavior triggers first.
+Please note that this behavior is really unsuited to anything other than what we are
+using it for now. It might be necessary to modify the semantics if we need more complex
+usecases.
+"""
+
 AVOID_RESTARTING_FOR: Container[int] = ()
 
 

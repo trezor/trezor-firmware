@@ -23,6 +23,7 @@ if TYPE_CHECKING:
         Ping,
         SetBusy,
     )
+    from trezor.wire import Handler, Msg
 
 
 _SCREENSAVER_IS_ON = False
@@ -380,7 +381,7 @@ def set_homescreen() -> None:
 def lock_device(interrupt_workflow: bool = True) -> None:
     if config.has_pin():
         config.lock()
-        wire.find_handler = _get_pinlocked_handler
+        wire.filters.append(_pinlock_filter)
         set_homescreen()
         if interrupt_workflow:
             workflow.close_others()
@@ -416,28 +417,16 @@ async def unlock_device() -> None:
 
     _SCREENSAVER_IS_ON = False
     set_homescreen()
-    wire.find_handler = workflow_handlers.find_registered_handler
+    wire.filters.remove(_pinlock_filter)
 
 
-def _get_pinlocked_handler(
-    iface: wire.WireInterface, msg_type: int
-) -> wire.Handler[wire.Msg] | None:
-    orig_handler = workflow_handlers.find_registered_handler(iface, msg_type)
-    if orig_handler is None:
-        return None
-
-    if __debug__:
-        import usb
-
-        if iface is usb.iface_debug:
-            return orig_handler
-
+def _pinlock_filter(msg_type: int, prev_handler: Handler[Msg]) -> Handler[Msg]:
     if msg_type in workflow.ALLOW_WHILE_LOCKED:
-        return orig_handler
+        return prev_handler
 
-    async def wrapper(msg: protobuf.MessageType) -> protobuf.MessageType:
+    async def wrapper(msg: Msg) -> protobuf.MessageType:
         await unlock_device()
-        return await orig_handler(msg)
+        return await prev_handler(msg)
 
     return wrapper
 
@@ -452,26 +441,18 @@ _ALLOW_WHILE_REPEATED_BACKUP_UNLOCKED = (
 )
 
 
-def _get_backup_handler(
-    iface: wire.WireInterface, msg_type: int
-) -> wire.Handler[wire.Msg] | None:
-    orig_handler = workflow_handlers.find_registered_handler(iface, msg_type)
-    if orig_handler is None:
-        return None
-
-    if __debug__:
-        import usb
-
-        if iface is usb.iface_debug:
-            return orig_handler
-
+def _repeated_backup_filter(msg_type: int, prev_handler: Handler[Msg]) -> Handler[Msg]:
     if msg_type in _ALLOW_WHILE_REPEATED_BACKUP_UNLOCKED:
-        return orig_handler
-
-    async def wrapper(_msg: protobuf.MessageType) -> protobuf.MessageType:
+        return prev_handler
+    else:
         raise wire.ProcessError("Operation not allowed when in repeated backup state")
 
-    return wrapper
+
+def remove_repeated_backup_filter():
+    try:
+        wire.filters.remove(_repeated_backup_filter)
+    except ValueError:
+        pass
 
 
 # this function is also called when handling ApplySettings
@@ -506,9 +487,9 @@ def boot() -> None:
         workflow_handlers.register(msg_type, handler)
 
     reload_settings_from_storage()
+
+    if storage_cache.get_bool(storage_cache.APP_RECOVERY_REPEATED_BACKUP_UNLOCKED):
+        wire.filters.append(_repeated_backup_filter)
     if not config.is_unlocked():
-        wire.find_handler = _get_pinlocked_handler
-    elif storage_cache.get_bool(storage_cache.APP_RECOVERY_REPEATED_BACKUP_UNLOCKED):
-        wire.find_handler = _get_backup_handler
-    else:
-        wire.find_handler = workflow_handlers.find_registered_handler
+        # pinlocked handler should always be the last one
+        wire.filters.append(_pinlock_filter)
