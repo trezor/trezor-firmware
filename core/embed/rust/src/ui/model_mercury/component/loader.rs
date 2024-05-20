@@ -7,7 +7,7 @@ use crate::{
         component::{Component, Event, EventCtx, Pad},
         display::{self, toif::Icon, Color, LOADER_MAX},
         geometry::{Alignment2D, Offset, Rect},
-        model_mercury::shapes::render_loader,
+        model_mercury::shapes::{render_loader, LoaderRange},
         shape::{self, Renderer},
         util::animation_disabled,
     },
@@ -231,9 +231,11 @@ impl Component for Loader {
                 inactive_color,
                 active_color,
                 background_color,
-                start,
-                end,
-                progress >= LOADER_MAX,
+                if progress >= LOADER_MAX {
+                    LoaderRange::Full
+                } else {
+                    LoaderRange::FromTo(start, end)
+                },
                 target,
             );
 
