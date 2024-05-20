@@ -1980,6 +1980,8 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     account: str | None,
     ///     path: str | None,
     ///     xpubs: list[tuple[str, str]],
+    ///     br_code: ButtonRequestType,
+    ///     br_type: str,
     /// ) -> LayoutObj[UiResult]:
     ///     """Get address / receive funds."""
     Qstr::MP_QSTR_flow_get_address => obj_fn_kw!(0, flow::get_address::new_get_address).as_obj(),
@@ -2001,6 +2003,8 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     chunkify: bool,
     ///     account: str | None,
     ///     account_path: str | None,
+    ///     br_code: ButtonRequestType,
+    ///     br_type: str,
     /// ) -> LayoutObj[UiResult]:
     ///     """Confirm recipient."""
     Qstr::MP_QSTR_flow_confirm_output => obj_fn_kw!(0, flow::new_confirm_output).as_obj(),
@@ -2011,6 +2015,8 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     items: Iterable[tuple[str, str]],
     ///     account_items: Iterable[tuple[str, str]],
     ///     fee_items: Iterable[tuple[str, str]],
+    ///     br_code: ButtonRequestType,
+    ///     br_type: str,
     /// ) -> LayoutObj[UiResult]:
     ///     """Total summary and hold to confirm."""
     Qstr::MP_QSTR_flow_confirm_summary => obj_fn_kw!(0, flow::new_confirm_summary).as_obj(),
