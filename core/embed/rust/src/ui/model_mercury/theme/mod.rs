@@ -122,6 +122,7 @@ include_icon!(
     "model_mercury/res/scroll-inactive-quarter.toif"
 );
 include_icon!(DOT_SMALL, "model_mercury/res/scroll-small.toif");
+include_icon!(ICON_PIN_BULLET, "model_mercury/res/pin_bullet6.toif");
 
 // Text arrows.
 include_icon!(ICON_PAGE_NEXT, "model_mercury/res/page-next.toif");
