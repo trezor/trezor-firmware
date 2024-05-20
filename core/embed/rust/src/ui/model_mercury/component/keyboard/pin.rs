@@ -378,7 +378,7 @@ impl PinDots {
         }
 
         // Greyed out dot.
-        if digits >= MAX_VISIBLE_DOTS + 1 {
+        if digits > MAX_VISIBLE_DOTS {
             shape::ToifImage::new(cursor, theme::DOT_ACTIVE.toif)
                 .with_align(Alignment2D::CENTER_LEFT)
                 .with_fg(theme::GREY)
