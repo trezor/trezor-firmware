@@ -537,6 +537,8 @@ def flow_get_address(
     account: str | None,
     path: str | None,
     xpubs: list[tuple[str, str]],
+    br_code: ButtonRequestType,
+    br_type: str,
 ) -> LayoutObj[UiResult]:
     """Get address / receive funds."""
 
@@ -560,6 +562,8 @@ def flow_confirm_output(
     chunkify: bool,
     account: str | None,
     account_path: str | None,
+    br_code: ButtonRequestType,
+    br_type: str,
 ) -> LayoutObj[UiResult]:
     """Confirm recipient."""
 
@@ -571,6 +575,8 @@ def flow_confirm_summary(
     items: Iterable[tuple[str, str]],
     account_items: Iterable[tuple[str, str]],
     fee_items: Iterable[tuple[str, str]],
+    br_code: ButtonRequestType,
+    br_type: str,
 ) -> LayoutObj[UiResult]:
     """Total summary and hold to confirm."""
 CONFIRMED: UiResult

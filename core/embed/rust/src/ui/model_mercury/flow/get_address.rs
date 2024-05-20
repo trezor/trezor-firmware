@@ -4,9 +4,10 @@ use crate::{
     strutil::TString,
     translations::TR,
     ui::{
+        button_request::ButtonRequest,
         component::{
             text::paragraphs::{Paragraph, ParagraphSource, Paragraphs},
-            ComponentExt, Qr, SwipeDirection,
+            ButtonRequestExt, ComponentExt, Qr, SwipeDirection,
         },
         flow::{
             base::Decision, flow_store, FlowMsg, FlowState, FlowStore, IgnoreSwipe, SwipeFlow,
@@ -147,6 +148,9 @@ impl GetAddress {
         let path: Option<TString> = kwargs.get(Qstr::MP_QSTR_path)?.try_into_option()?;
         let xpubs: Obj = kwargs.get(Qstr::MP_QSTR_xpubs)?;
 
+        let br_type: TString = kwargs.get(Qstr::MP_QSTR_br_type)?.try_into()?;
+        let br_code: u16 = kwargs.get(Qstr::MP_QSTR_br_code)?.try_into()?;
+
         // Address
         let data_style = if chunkify {
             let address: TString = address.try_into()?;
@@ -166,8 +170,8 @@ impl GetAddress {
         let content_address = Frame::left_aligned(title, SwipePage::vertical(paragraphs))
             .with_menu_button()
             .with_footer(TR::instructions__swipe_up.into(), None)
-            .map(|msg| matches!(msg, FrameMsg::Button(_)).then_some(FlowMsg::Info));
-        // .one_button_request(ButtonRequestCode::Address, "show_address");
+            .map(|msg| matches!(msg, FrameMsg::Button(_)).then_some(FlowMsg::Info))
+            .one_button_request(ButtonRequest::from_tstring(br_code, br_type));
 
         // Tap
         let content_tap = Frame::left_aligned(title, PromptScreen::new_tap_to_confirm())
