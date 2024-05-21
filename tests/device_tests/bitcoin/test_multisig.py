@@ -22,6 +22,7 @@ from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
 from ...common import MNEMONIC12, is_core
+from ...input_flows import InputFlowConfirmAllWarnings
 from ...tx_cache import TxCache
 from .signtx import (
     assert_tx_matches,
@@ -304,6 +305,9 @@ def test_attack_change_input(client: Client):
 
     # Transaction can be signed without the attack processor
     with client:
+        if is_core(client):
+            IF = InputFlowConfirmAllWarnings(client)
+            client.set_input_flow(IF.get())
         btc.sign_tx(
             client,
             "Testnet",

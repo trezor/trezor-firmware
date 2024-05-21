@@ -8,6 +8,8 @@ from trezorlib import btc, messages, models, tools
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 
+from ...common import is_core
+from ...input_flows import InputFlowConfirmAllWarnings
 from .signtx import forge_prevtx
 
 # address at seed "all all all..." path m/44h/0h/0h/0/0
@@ -130,6 +132,9 @@ def test_invalid_prev_hash_attack(client: Client, prev_hash):
 
     with client, pytest.raises(TrezorFailure) as e:
         client.set_filter(messages.TxAck, attack_filter)
+        if is_core(client):
+            IF = InputFlowConfirmAllWarnings(client)
+            client.set_input_flow(IF.get())
         btc.sign_tx(client, "Bitcoin", [inp1], [out1], prev_txes=PREV_TXES)
 
     # check that injection was performed
@@ -163,6 +168,9 @@ def test_invalid_prev_hash_in_prevtx(client: Client, prev_hash):
     tx_hash = hash_tx(serialize_tx(prev_tx))
     inp0.prev_hash = tx_hash
 
-    with pytest.raises(TrezorFailure) as e:
+    with client, pytest.raises(TrezorFailure) as e:
+        if client.model is not models.T1B1:
+            IF = InputFlowConfirmAllWarnings(client)
+            client.set_input_flow(IF.get())
         btc.sign_tx(client, "Bitcoin", [inp0], [out1], prev_txes={tx_hash: prev_tx})
     _check_error_message(prev_hash, client.model, e.value.message)
