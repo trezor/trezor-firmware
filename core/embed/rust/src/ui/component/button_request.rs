@@ -9,15 +9,22 @@ use crate::ui::{
 #[derive(Clone)]
 pub struct OneButtonRequest<T> {
     button_request: Option<ButtonRequest>,
+    page_count: Option<u16>,
     pub inner: T,
 }
 
 impl<T> OneButtonRequest<T> {
-    pub fn new(button_request: ButtonRequest, inner: T) -> Self {
+    pub const fn new(button_request: ButtonRequest, inner: T) -> Self {
         Self {
             button_request: Some(button_request),
+            page_count: None,
             inner,
         }
+    }
+
+    pub const fn with_pages(mut self, page_count: u16) -> Self {
+        self.page_count = Some(page_count);
+        self
     }
 }
 
@@ -29,6 +36,9 @@ impl<T: Component> Component for OneButtonRequest<T> {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        if let Some(page_count) = self.page_count {
+            ctx.set_page_count(page_count.into());
+        }
         if matches!(event, Event::Attach) {
             if let Some(button_request) = self.button_request.take() {
                 ctx.send_button_request(button_request.code, button_request.br_type)
