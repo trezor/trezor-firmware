@@ -50,7 +50,7 @@ graphviz = "*"
 
 ## cointool
 click = "^8"
-requests = "^2.31"
+requests = "^2.32"
 termcolor = "*"
 Pillow = ">=10.0.1"
 
