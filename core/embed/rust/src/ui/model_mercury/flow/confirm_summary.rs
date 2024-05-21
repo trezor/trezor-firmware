@@ -105,7 +105,9 @@ impl ConfirmSummary {
         }
         let content_summary = summary
             .into_layout()?
-            .one_button_request(ButtonRequest::from_tstring(br_code, br_type));
+            .one_button_request(ButtonRequest::from_tstring(br_code, br_type))
+            // Summary(1) + Hold(1)
+            .with_pages(|summary_pages| summary_pages + 1);
 
         // Hold to confirm
         let content_hold = Frame::left_aligned(
