@@ -24,7 +24,12 @@ from trezorlib.debuglink import message_filters
 from trezorlib.exceptions import Cancelled
 from trezorlib.tools import parse_path
 
-from ...input_flows import InputFlowSignMessageInfo, InputFlowSignMessagePagination
+from ...common import is_core
+from ...input_flows import (
+    InputFlowConfirmAllWarnings,
+    InputFlowSignMessageInfo,
+    InputFlowSignMessagePagination,
+)
 
 S = messages.InputScriptType
 
@@ -414,6 +419,9 @@ def test_signmessage_path_warning(client: Client):
                 messages.MessageSignature,
             ]
         )
+        if is_core(client):
+            IF = InputFlowConfirmAllWarnings(client)
+            client.set_input_flow(IF.get())
         btc.sign_message(
             client,
             coin_name="Bitcoin",
