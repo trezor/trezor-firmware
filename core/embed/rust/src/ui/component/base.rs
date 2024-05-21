@@ -7,7 +7,7 @@ use crate::{
     time::Duration,
     ui::{
         button_request::{ButtonRequest, ButtonRequestCode},
-        component::{maybe::PaintOverlapping, MsgMap},
+        component::{maybe::PaintOverlapping, MsgMap, PageMap},
         display::{self, Color},
         geometry::{Offset, Rect},
         shape::Renderer,
@@ -415,6 +415,7 @@ where
 
 pub trait ComponentExt: Sized {
     fn map<F>(self, func: F) -> MsgMap<Self, F>;
+    fn with_pages<F>(self, func: F) -> PageMap<Self, F>;
     fn into_child(self) -> Child<Self>;
     fn request_complete_repaint(&mut self, ctx: &mut EventCtx);
 }
@@ -425,6 +426,10 @@ where
 {
     fn map<F>(self, func: F) -> MsgMap<Self, F> {
         MsgMap::new(self, func)
+    }
+
+    fn with_pages<F>(self, func: F) -> PageMap<Self, F> {
+        PageMap::new(self, func)
     }
 
     fn into_child(self) -> Child<Self> {
@@ -567,6 +572,10 @@ impl EventCtx {
         #[cfg(feature = "ui_debug")]
         assert!(self.page_count.is_none());
         self.page_count = Some(count);
+    }
+
+    pub fn map_page_count(&mut self, func: impl Fn(usize) -> usize) {
+        self.page_count = Some(func(self.page_count.unwrap_or(1)));
     }
 
     pub fn page_count(&self) -> Option<usize> {

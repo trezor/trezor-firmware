@@ -13,7 +13,7 @@ pub struct OneButtonRequest<T> {
 }
 
 impl<T> OneButtonRequest<T> {
-    pub fn new(button_request: ButtonRequest, inner: T) -> Self {
+    pub const fn new(button_request: ButtonRequest, inner: T) -> Self {
         Self {
             button_request: Some(button_request),
             inner,
