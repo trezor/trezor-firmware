@@ -21,6 +21,8 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import H_, parse_path
 
+from ...common import is_core
+from ...input_flows import InputFlowConfirmAllWarnings
 from .signtx import forge_prevtx, request_input
 
 B = messages.ButtonRequestType
@@ -78,7 +80,12 @@ def test_invalid_path_prompt(client: Client):
         client, safety_checks=messages.SafetyCheckLevel.PromptTemporarily
     )
 
-    btc.sign_tx(client, "Litecoin", [inp1], [out1], prev_txes=PREV_TXES)
+    with client:
+        if is_core(client):
+            IF = InputFlowConfirmAllWarnings(client)
+            client.set_input_flow(IF.get())
+
+        btc.sign_tx(client, "Litecoin", [inp1], [out1], prev_txes=PREV_TXES)
 
 
 # Bcash does have strong replay protection using SIGHASH_FORKID,
@@ -99,7 +106,12 @@ def test_invalid_path_pass_forkid(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    btc.sign_tx(client, "Bcash", [inp1], [out1], prev_txes=PREV_TXES)
+    with client:
+        if is_core(client):
+            IF = InputFlowConfirmAllWarnings(client)
+            client.set_input_flow(IF.get())
+
+        btc.sign_tx(client, "Bcash", [inp1], [out1], prev_txes=PREV_TXES)
 
 
 def test_attack_path_segwit(client: Client):

@@ -355,6 +355,12 @@ class LayoutContent(UnstructuredJSONReader):
             choice_obj.get(choice, {}).get("content", "") for choice in choice_keys
         )
 
+    def footer(self) -> str:
+        footer = self.find_unique_object_with_key_and_value("component", "Footer")
+        if not footer:
+            return ""
+        return footer.get("description", "") + " " + footer.get("instruction", "")
+
 
 def multipage_content(layouts: List[LayoutContent]) -> str:
     """Get overall content from multiple-page layout."""
@@ -804,6 +810,25 @@ class DebugUI:
             Generator[None, messages.ButtonRequest, None], object, None
         ] = None
 
+    def _default_input_flow(self, br: messages.ButtonRequest) -> None:
+        if br.code == messages.ButtonRequestType.PinEntry:
+            self.debuglink.input(self.get_pin())
+        else:
+            # Paginating (going as further as possible) and pressing Yes
+            if br.pages is not None:
+                for _ in range(br.pages - 1):
+                    self.debuglink.swipe_up(wait=True)
+            if self.debuglink.model is models.T3T1:
+                layout = self.debuglink.read_layout()
+                if "PromptScreen" in layout.all_components():
+                    self.debuglink.press_yes()
+                elif "swipe up" in layout.footer().lower():
+                    self.debuglink.swipe_up()
+                else:
+                    self.debuglink.press_yes()
+            else:
+                self.debuglink.press_yes()
+
     def button_request(self, br: messages.ButtonRequest) -> None:
         self.debuglink.take_t1_screenshot_if_relevant()
 
@@ -814,14 +839,7 @@ class DebugUI:
             # recording their screens that way (as well as
             # possible swipes below).
             self.debuglink.save_current_screen_if_relevant(wait=True)
-            if br.code == messages.ButtonRequestType.PinEntry:
-                self.debuglink.input(self.get_pin())
-            else:
-                # Paginating (going as further as possible) and pressing Yes
-                if br.pages is not None:
-                    for _ in range(br.pages - 1):
-                        self.debuglink.swipe_up(wait=True)
-                self.debuglink.press_yes()
+            self._default_input_flow(br)
         elif self.input_flow is self.INPUT_FLOW_DONE:
             raise AssertionError("input flow ended prematurely")
         else:

@@ -22,6 +22,7 @@ from trezorlib.tools import H_, parse_path
 
 from ...bip32 import deserialize
 from ...common import is_core
+from ...input_flows import InputFlowConfirmAllWarnings
 from ...tx_cache import TxCache
 from .signtx import (
     assert_tx_matches,
@@ -612,6 +613,9 @@ def test_send_multisig_3_change(client: Client):
 
     with client:
         client.set_expected_responses(expected_responses)
+        if is_core(client):
+            IF = InputFlowConfirmAllWarnings(client)
+            client.set_input_flow(IF.get())
         signatures, _ = btc.sign_tx(
             client, "Testnet", [inp1], [out1], prev_txes=TX_API_TESTNET
         )
@@ -624,6 +628,9 @@ def test_send_multisig_3_change(client: Client):
 
     with client:
         client.set_expected_responses(expected_responses)
+        if is_core(client):
+            IF = InputFlowConfirmAllWarnings(client)
+            client.set_input_flow(IF.get())
         _, serialized_tx = btc.sign_tx(
             client, "Testnet", [inp1], [out1], prev_txes=TX_API_TESTNET
         )
@@ -698,6 +705,9 @@ def test_send_multisig_4_change(client: Client):
 
     with client:
         client.set_expected_responses(expected_responses)
+        if is_core(client):
+            IF = InputFlowConfirmAllWarnings(client)
+            client.set_input_flow(IF.get())
         signatures, _ = btc.sign_tx(
             client, "Testnet", [inp1], [out1], prev_txes=TX_API_TESTNET
         )
@@ -710,6 +720,9 @@ def test_send_multisig_4_change(client: Client):
 
     with client:
         client.set_expected_responses(expected_responses)
+        if is_core(client):
+            IF = InputFlowConfirmAllWarnings(client)
+            client.set_input_flow(IF.get())
         _, serialized_tx = btc.sign_tx(
             client, "Testnet", [inp1], [out1], prev_txes=TX_API_TESTNET
         )

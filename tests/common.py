@@ -344,4 +344,4 @@ def swipe_till_the_end(debug: "DebugLink", br: messages.ButtonRequest) -> None:
 
 
 def is_core(client: "Client") -> bool:
-    return client.model in (models.T2T1, models.T2B1, models.T3T1)
+    return client.model is not models.T1B1

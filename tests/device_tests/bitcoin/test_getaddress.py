@@ -23,6 +23,8 @@ from trezorlib.messages import SafetyCheckLevel
 from trezorlib.tools import parse_path
 
 from ... import bip32
+from ...common import is_core
+from ...input_flows import InputFlowConfirmAllWarnings
 
 
 def getmultisig(chain, nr, xpubs):
@@ -202,26 +204,30 @@ def test_multisig(client: Client):
         xpubs.append(node.xpub)
 
     for nr in range(1, 4):
-        assert (
-            btc.get_address(
-                client,
-                "Bitcoin",
-                parse_path(f"m/44h/0h/{nr}h/0/0"),
-                show_display=(nr == 1),
-                multisig=getmultisig(0, 0, xpubs=xpubs),
+        with client:
+            if is_core(client):
+                IF = InputFlowConfirmAllWarnings(client)
+                client.set_input_flow(IF.get())
+            assert (
+                btc.get_address(
+                    client,
+                    "Bitcoin",
+                    parse_path(f"m/44h/0h/{nr}h/0/0"),
+                    show_display=(nr == 1),
+                    multisig=getmultisig(0, 0, xpubs=xpubs),
+                )
+                == "3Pdz86KtfJBuHLcSv4DysJo4aQfanTqCzG"
             )
-            == "3Pdz86KtfJBuHLcSv4DysJo4aQfanTqCzG"
-        )
-        assert (
-            btc.get_address(
-                client,
-                "Bitcoin",
-                parse_path(f"m/44h/0h/{nr}h/1/0"),
-                show_display=(nr == 1),
-                multisig=getmultisig(1, 0, xpubs=xpubs),
+            assert (
+                btc.get_address(
+                    client,
+                    "Bitcoin",
+                    parse_path(f"m/44h/0h/{nr}h/1/0"),
+                    show_display=(nr == 1),
+                    multisig=getmultisig(1, 0, xpubs=xpubs),
+                )
+                == "36gP3KVx1ooStZ9quZDXbAF3GCr42b2zzd"
             )
-            == "36gP3KVx1ooStZ9quZDXbAF3GCr42b2zzd"
-        )
 
 
 @pytest.mark.multisig
@@ -254,7 +260,10 @@ def test_multisig_missing(client: Client, show_display):
     )
 
     for multisig in (multisig1, multisig2):
-        with pytest.raises(TrezorFailure):
+        with client, pytest.raises(TrezorFailure):
+            if is_core(client):
+                IF = InputFlowConfirmAllWarnings(client)
+                client.set_input_flow(IF.get())
             btc.get_address(
                 client,
                 "Bitcoin",
@@ -275,26 +284,30 @@ def test_bch_multisig(client: Client):
         xpubs.append(node.xpub)
 
     for nr in range(1, 4):
-        assert (
-            btc.get_address(
-                client,
-                "Bcash",
-                parse_path(f"m/44h/145h/{nr}h/0/0"),
-                show_display=(nr == 1),
-                multisig=getmultisig(0, 0, xpubs=xpubs),
+        with client:
+            if is_core(client):
+                IF = InputFlowConfirmAllWarnings(client)
+                client.set_input_flow(IF.get())
+            assert (
+                btc.get_address(
+                    client,
+                    "Bcash",
+                    parse_path(f"m/44h/145h/{nr}h/0/0"),
+                    show_display=(nr == 1),
+                    multisig=getmultisig(0, 0, xpubs=xpubs),
+                )
+                == "bitcoincash:pqguz4nqq64jhr5v3kvpq4dsjrkda75hwy86gq0qzw"
             )
-            == "bitcoincash:pqguz4nqq64jhr5v3kvpq4dsjrkda75hwy86gq0qzw"
-        )
-        assert (
-            btc.get_address(
-                client,
-                "Bcash",
-                parse_path(f"m/44h/145h/{nr}h/1/0"),
-                show_display=(nr == 1),
-                multisig=getmultisig(1, 0, xpubs=xpubs),
+            assert (
+                btc.get_address(
+                    client,
+                    "Bcash",
+                    parse_path(f"m/44h/145h/{nr}h/1/0"),
+                    show_display=(nr == 1),
+                    multisig=getmultisig(1, 0, xpubs=xpubs),
+                )
+                == "bitcoincash:pp6kcpkhua7789g2vyj0qfkcux3yvje7euhyhltn0a"
             )
-            == "bitcoincash:pp6kcpkhua7789g2vyj0qfkcux3yvje7euhyhltn0a"
-        )
 
 
 def test_public_ckd(client: Client):
@@ -342,6 +355,9 @@ def test_unknown_path(client: Client):
                 messages.Address,
             ]
         )
+        if is_core(client):
+            IF = InputFlowConfirmAllWarnings(client)
+            client.set_input_flow(IF.get())
         # try again with a warning
         btc.get_address(client, "Bitcoin", UNKNOWN_PATH, show_display=True)
 

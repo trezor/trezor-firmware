@@ -20,7 +20,9 @@ from trezorlib import btc, messages, tools
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import Cancelled, TrezorFailure
 
+from ...common import is_core
 from ...input_flows import (
+    InputFlowConfirmAllWarnings,
     InputFlowShowAddressQRCode,
     InputFlowShowAddressQRCodeCancel,
     InputFlowShowMultisigXPUBs,
@@ -148,17 +150,21 @@ def test_show_multisig_3(client: Client):
     )
 
     for i in [1, 2, 3]:
-        assert (
-            btc.get_address(
-                client,
-                "Bitcoin",
-                tools.parse_path(f"m/45h/0/0/{i}"),
-                show_display=True,
-                multisig=multisig,
-                script_type=messages.InputScriptType.SPENDMULTISIG,
+        with client:
+            if is_core(client):
+                IF = InputFlowConfirmAllWarnings(client)
+                client.set_input_flow(IF.get())
+            assert (
+                btc.get_address(
+                    client,
+                    "Bitcoin",
+                    tools.parse_path(f"m/45h/0/0/{i}"),
+                    show_display=True,
+                    multisig=multisig,
+                    script_type=messages.InputScriptType.SPENDMULTISIG,
+                )
+                == "35Q3tgZZfr9GhVpaqz7fbDK8WXV1V1KxfD"
             )
-            == "35Q3tgZZfr9GhVpaqz7fbDK8WXV1V1KxfD"
-        )
 
 
 VECTORS_MULTISIG = (  # script_type, bip48_type, address, xpubs, ignore_xpub_magic
@@ -289,14 +295,18 @@ def test_show_multisig_15(client: Client):
     )
 
     for i in range(15):
-        assert (
-            btc.get_address(
-                client,
-                "Bitcoin",
-                tools.parse_path(f"m/45h/0/0/{i}"),
-                show_display=True,
-                multisig=multisig,
-                script_type=messages.InputScriptType.SPENDMULTISIG,
+        with client:
+            if is_core(client):
+                IF = InputFlowConfirmAllWarnings(client)
+                client.set_input_flow(IF.get())
+            assert (
+                btc.get_address(
+                    client,
+                    "Bitcoin",
+                    tools.parse_path(f"m/45h/0/0/{i}"),
+                    show_display=True,
+                    multisig=multisig,
+                    script_type=messages.InputScriptType.SPENDMULTISIG,
+                )
+                == "3GG78bp1hA3mu9xv1vZLXiENmeabmi7WKQ"
             )
-            == "3GG78bp1hA3mu9xv1vZLXiENmeabmi7WKQ"
-        )

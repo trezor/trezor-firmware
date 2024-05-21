@@ -21,6 +21,9 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
+from ...common import is_core
+from ...input_flows import InputFlowConfirmAllWarnings
+
 
 def test_show_segwit(client: Client):
     assert (
@@ -71,61 +74,65 @@ def test_show_segwit(client: Client):
 
 @pytest.mark.altcoin
 def test_show_segwit_altcoin(client: Client):
-    assert (
-        btc.get_address(
-            client,
-            "Groestlcoin Testnet",
-            parse_path("m/49h/1h/0h/1/0"),
-            True,
-            None,
-            script_type=messages.InputScriptType.SPENDP2SHWITNESS,
+    with client:
+        if is_core(client):
+            IF = InputFlowConfirmAllWarnings(client)
+            client.set_input_flow(IF.get())
+        assert (
+            btc.get_address(
+                client,
+                "Groestlcoin Testnet",
+                parse_path("m/49h/1h/0h/1/0"),
+                True,
+                None,
+                script_type=messages.InputScriptType.SPENDP2SHWITNESS,
+            )
+            == "2N1LGaGg836mqSQqiuUBLfcyGBhyZYBtBZ7"
         )
-        == "2N1LGaGg836mqSQqiuUBLfcyGBhyZYBtBZ7"
-    )
-    assert (
-        btc.get_address(
-            client,
-            "Groestlcoin Testnet",
-            parse_path("m/49h/1h/0h/0/0"),
-            True,
-            None,
-            script_type=messages.InputScriptType.SPENDP2SHWITNESS,
+        assert (
+            btc.get_address(
+                client,
+                "Groestlcoin Testnet",
+                parse_path("m/49h/1h/0h/0/0"),
+                True,
+                None,
+                script_type=messages.InputScriptType.SPENDP2SHWITNESS,
+            )
+            == "2N4Q5FhU2497BryFfUgbqkAJE87aKDv3V3e"
         )
-        == "2N4Q5FhU2497BryFfUgbqkAJE87aKDv3V3e"
-    )
-    assert (
-        btc.get_address(
-            client,
-            "Groestlcoin Testnet",
-            parse_path("m/44h/1h/0h/0/0"),
-            True,
-            None,
-            script_type=messages.InputScriptType.SPENDP2SHWITNESS,
+        assert (
+            btc.get_address(
+                client,
+                "Groestlcoin Testnet",
+                parse_path("m/44h/1h/0h/0/0"),
+                True,
+                None,
+                script_type=messages.InputScriptType.SPENDP2SHWITNESS,
+            )
+            == "2N6UeBoqYEEnybg4cReFYDammpsyDzLXvCT"
         )
-        == "2N6UeBoqYEEnybg4cReFYDammpsyDzLXvCT"
-    )
-    assert (
-        btc.get_address(
-            client,
-            "Groestlcoin Testnet",
-            parse_path("m/44h/1h/0h/0/0"),
-            True,
-            None,
-            script_type=messages.InputScriptType.SPENDADDRESS,
+        assert (
+            btc.get_address(
+                client,
+                "Groestlcoin Testnet",
+                parse_path("m/44h/1h/0h/0/0"),
+                True,
+                None,
+                script_type=messages.InputScriptType.SPENDADDRESS,
+            )
+            == "mvbu1Gdy8SUjTenqerxUaZyYjmvedc787y"
         )
-        == "mvbu1Gdy8SUjTenqerxUaZyYjmvedc787y"
-    )
-    assert (
-        btc.get_address(
-            client,
-            "Elements",
-            parse_path("m/49h/1h/0h/0/0"),
-            True,
-            None,
-            script_type=messages.InputScriptType.SPENDP2SHWITNESS,
+        assert (
+            btc.get_address(
+                client,
+                "Elements",
+                parse_path("m/49h/1h/0h/0/0"),
+                True,
+                None,
+                script_type=messages.InputScriptType.SPENDP2SHWITNESS,
+            )
+            == "XNW67ZQA9K3AuXPBWvJH4zN2y5QBDTwy2Z"
         )
-        == "XNW67ZQA9K3AuXPBWvJH4zN2y5QBDTwy2Z"
-    )
 
 
 @pytest.mark.multisig
