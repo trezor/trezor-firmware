@@ -716,21 +716,20 @@ class InputFlowPaymentRequestDetails(InputFlowBase):
 
         yield  # confirm first output
         assert self.outputs[0].address[:16] in self.text_content()  # type: ignore
-        self.debug.press_yes()
+        self.debug.swipe_up()
         yield  # confirm first output
         self.debug.wait_layout()
-        self.debug.press_yes()
+        self.debug.swipe_up()
 
         yield  # confirm second output
         assert self.outputs[1].address[:16] in self.text_content()  # type: ignore
-        self.debug.press_yes()
+        self.debug.swipe_up()
         yield  # confirm second output
         self.debug.wait_layout()
-        self.debug.press_yes()
+        self.debug.swipe_up()
 
         yield  # confirm transaction
-        self.debug.press_yes()
-        yield  # confirm transaction
+        self.debug.swipe_up()
         self.debug.press_yes()
 
 
@@ -747,7 +746,7 @@ class InputFlowSignTxHighFee(InputFlowBase):
 
         self.finished = True
 
-    def input_flow_common(self) -> BRGeneratorType:
+    def input_flow_tt(self) -> BRGeneratorType:
         screens = [
             B.ConfirmOutput,
             B.ConfirmOutput,
@@ -755,6 +754,31 @@ class InputFlowSignTxHighFee(InputFlowBase):
             B.SignTx,
         ]
         yield from self.go_through_all_screens(screens)
+
+    def input_flow_tr(self) -> BRGeneratorType:
+        screens = [
+            B.ConfirmOutput,
+            B.ConfirmOutput,
+            B.FeeOverThreshold,
+            B.SignTx,
+        ]
+        yield from self.go_through_all_screens(screens)
+
+    def input_flow_t3t1(self) -> BRGeneratorType:
+        screens = [
+            B.ConfirmOutput,
+            B.ConfirmOutput,
+            B.FeeOverThreshold,
+            B.SignTx,
+        ]
+        for expected in screens:
+            br = yield
+            assert br.code == expected
+            self.debug.swipe_up()
+            if br.code == B.SignTx:
+                self.debug.press_yes()
+
+        self.finished = True
 
 
 def sign_tx_go_to_info(client: Client) -> Generator[None, None, str]:
@@ -772,6 +796,43 @@ def sign_tx_go_to_info(client: Client) -> Generator[None, None, str]:
     layout = client.debug.wait_layout()
     content = layout.text_content()
 
+    client.debug.click(buttons.CORNER_BUTTON, wait=True)
+
+    return content
+
+
+def sign_tx_go_to_info_t3t1(
+    client: Client, multi_account: bool = False
+) -> Generator[None, None, str]:
+    yield  # confirm output
+    client.debug.wait_layout()
+    client.debug.swipe_up()
+    yield  # confirm output
+    client.debug.wait_layout()
+    client.debug.swipe_up()
+
+    if multi_account:
+        yield
+        client.debug.wait_layout()
+        client.debug.swipe_up()
+
+    yield  # confirm transaction
+    client.debug.wait_layout()
+    client.debug.click(buttons.CORNER_BUTTON)
+    client.debug.synchronize_at("VerticalMenu")
+    client.debug.click(buttons.VERTICAL_MENU[0])
+
+    layout = client.debug.wait_layout()
+    content = layout.text_content()
+
+    client.debug.click(buttons.CORNER_BUTTON)
+    client.debug.synchronize_at("VerticalMenu")
+    client.debug.click(buttons.VERTICAL_MENU[1])
+
+    layout = client.debug.wait_layout()
+    content += " " + layout.text_content()
+
+    client.debug.click(buttons.CORNER_BUTTON)
     client.debug.click(buttons.CORNER_BUTTON, wait=True)
 
     return content
@@ -829,8 +890,9 @@ class InputFlowSignTxInformation(InputFlowBase):
         self.debug.press_yes()
 
     def input_flow_t3t1(self) -> BRGeneratorType:
-        content = yield from sign_tx_go_to_info(self.client)
+        content = yield from sign_tx_go_to_info_t3t1(self.client)
         self.assert_content(content, "confirm_total__sending_from_account")
+        self.debug.swipe_up()
         self.debug.press_yes()
 
 
@@ -863,12 +925,9 @@ class InputFlowSignTxInformationMixed(InputFlowBase):
         self.debug.press_yes()
 
     def input_flow_t3t1(self) -> BRGeneratorType:
-        # multiple accounts warning
-        yield
-        self.debug.press_yes()
-
-        content = yield from sign_tx_go_to_info(self.client)
+        content = yield from sign_tx_go_to_info_t3t1(self.client, multi_account=True)
         self.assert_content(content, "confirm_total__sending_from_account")
+        self.debug.swipe_up()
         self.debug.press_yes()
 
 
@@ -885,8 +944,11 @@ class InputFlowSignTxInformationCancel(InputFlowBase):
         self.debug.press_left()
 
     def input_flow_t3t1(self) -> BRGeneratorType:
-        yield from sign_tx_go_to_info(self.client)
-        self.debug.press_no()
+        yield from sign_tx_go_to_info_t3t1(self.client)
+        self.debug.click(buttons.CORNER_BUTTON)
+        self.debug.click(buttons.VERTICAL_MENU[2])
+        self.debug.synchronize_at("PromptScreen")
+        self.debug.click(buttons.TAP_TO_CONFIRM)
 
 
 class InputFlowSignTxInformationReplacement(InputFlowBase):
@@ -984,6 +1046,30 @@ def lock_time_input_flow_tr(
     debug.press_yes()
 
 
+def lock_time_input_flow_t3t1(
+    debug: DebugLink,
+    layout_assert_func: Callable[[DebugLink, messages.ButtonRequest], None],
+    double_confirm: bool = False,
+) -> BRGeneratorType:
+    yield  # confirm output
+    debug.wait_layout()
+    debug.swipe_up()
+    yield  # confirm output
+    debug.wait_layout()
+    debug.swipe_up()
+
+    br = yield  # confirm locktime
+    layout_assert_func(debug, br)
+    debug.press_yes()
+
+    yield  # confirm transaction
+    debug.swipe_up()
+    debug.press_yes()
+    if double_confirm:
+        yield  # confirm transaction
+        debug.press_yes()
+
+
 class InputFlowLockTimeBlockHeight(InputFlowBase):
     def __init__(self, client: Client, block_height: str):
         super().__init__(client)
@@ -1003,7 +1089,7 @@ class InputFlowLockTimeBlockHeight(InputFlowBase):
         yield from lock_time_input_flow_tr(self.debug, self.assert_func)
 
     def input_flow_t3t1(self) -> BRGeneratorType:
-        yield from lock_time_input_flow_tt(
+        yield from lock_time_input_flow_t3t1(
             self.debug, self.assert_func, double_confirm=True
         )
 
@@ -1025,7 +1111,7 @@ class InputFlowLockTimeDatetime(InputFlowBase):
         yield from lock_time_input_flow_tr(self.debug, self.assert_func)
 
     def input_flow_t3t1(self) -> BRGeneratorType:
-        yield from lock_time_input_flow_tt(self.debug, self.assert_func)
+        yield from lock_time_input_flow_t3t1(self.debug, self.assert_func)
 
 
 class InputFlowEIP712ShowMore(InputFlowBase):
@@ -2048,3 +2134,50 @@ class InputFlowResetSkipBackup(InputFlowBase):
         yield  # Confirm skip backup
         TR.assert_in(self.text_content(), "backup__want_to_skip")
         self.debug.press_no()
+
+
+class InputFlowConfirmAllWarnings(InputFlowBase):
+    def __init__(self, client: Client):
+        super().__init__(client)
+
+    def input_flow_tt(self) -> BRGeneratorType:
+        br = yield
+        # wait for homescreen to go away
+        self.debug.wait_layout()
+        while True:
+            self.client.ui._default_input_flow(br)
+            br = yield
+
+    def input_flow_tr(self) -> BRGeneratorType:
+        return self.input_flow_tt()
+
+    def input_flow_t3t1(self) -> BRGeneratorType:
+        br = yield
+        # wait for homescreen to go away
+        # probably won't be needed after https://github.com/trezor/trezor-firmware/pull/3686
+        self.debug.wait_layout()
+        while True:
+            # Paginating (going as further as possible) and pressing Yes
+            if br.pages is not None:
+                for _ in range(br.pages - 1):
+                    self.debug.swipe_up(wait=True)
+            layout = self.debug.read_layout()
+            text = layout.text_content().lower()
+            # hi priority warning
+            if (
+                ("wrong derivation path" in text)
+                or ("to a multisig" in text)
+                or ("multiple accounts" in text)
+            ):
+                self.debug.click(buttons.CORNER_BUTTON, wait=True)
+                self.debug.synchronize_at("VerticalMenu")
+                self.debug.click(buttons.VERTICAL_MENU[1])
+            elif "receive address" in layout.title().lower():
+                self.debug.swipe_up()
+                self.debug.synchronize_at("PromptScreen")
+                self.debug.press_yes()
+            elif "swipe up" in layout.footer().lower():
+                self.debug.swipe_up()
+            else:
+                self.debug.press_yes()
+            br = yield
