@@ -10,6 +10,7 @@ use crate::{
     translations::TR,
     trezorhal::model,
     ui::{
+        backlight::BACKLIGHT_LEVELS_OBJ,
         component::{
             base::ComponentExt,
             connect::Connect,
@@ -2117,6 +2118,17 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// def show_wait_text(message: str, /) -> LayoutObj[None]:
     ///     """Show single-line text in the middle of the screen."""
     Qstr::MP_QSTR_show_wait_text => obj_fn_1!(new_show_wait_text).as_obj(),
+
+    /// class BacklightLevels:
+    ///     """Backlight levels. Values dynamically update based on user settings."""
+    ///     MAX: ClassVar[int]
+    ///     NORMAL: ClassVar[int]
+    ///     LOW: ClassVar[int]
+    ///     DIM: ClassVar[int]
+    ///     NONE: ClassVar[int]
+    ///
+    /// mock:global
+    Qstr::MP_QSTR_BacklightLevels => BACKLIGHT_LEVELS_OBJ.as_obj(),
 };
 
 #[cfg(test)]

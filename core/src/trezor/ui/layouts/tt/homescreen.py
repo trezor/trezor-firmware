@@ -93,9 +93,9 @@ class Lockscreen(HomescreenBase):
         coinjoin_authorized: bool = False,
     ) -> None:
         self.bootscreen = bootscreen
-        self.backlight_level = ui.style.get_backlight_low()
+        self.backlight_level = ui.BacklightLevels.LOW
         if bootscreen:
-            self.backlight_level = ui.style.get_backlight_normal()
+            self.backlight_level = ui.BacklightLevels.NORMAL
 
         skip = (
             not bootscreen and storage_cache.homescreen_shown is self.RENDER_INDICATOR
