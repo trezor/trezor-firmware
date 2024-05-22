@@ -31,6 +31,7 @@
 #define POLL_WRITE (0x0100)
 
 extern bool usb_connected_previously;
+extern uint32_t last_touch_sample_time;
 
 /// package: trezorio.__init__
 
@@ -84,38 +85,46 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
       }
 #if defined USE_TOUCH
       else if (iface == TOUCH_IFACE) {
+
         const uint32_t evt = touch_read();
+
         if (evt) {
-          mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(3, NULL));
-          const uint32_t etype = (evt >> 24) & 0xFFU;  // event type
-          const uint32_t ex = (evt >> 12) & 0xFFFU;    // x position
-          const uint32_t ey = evt & 0xFFFU;            // y position
-          uint32_t exr;                                // rotated x position
-          uint32_t eyr;                                // rotated y position
-          switch (display_orientation(-1)) {
-            case 90:
-              exr = ey;
-              eyr = DISPLAY_RESX - ex;
-              break;
-            case 180:
-              exr = DISPLAY_RESX - ex;
-              eyr = DISPLAY_RESY - ey;
-              break;
-            case 270:
-              exr = DISPLAY_RESY - ey;
-              eyr = ex;
-              break;
-            default:
-              exr = ex;
-              eyr = ey;
-              break;
+          // ignore TOUCH_MOVE events if they are too frequent
+          if ((evt & TOUCH_MOVE) == 0 ||
+              (hal_ticks_ms() - last_touch_sample_time > 10)) {
+            last_touch_sample_time = hal_ticks_ms();
+
+            mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(3, NULL));
+            const uint32_t etype = (evt >> 24) & 0xFFU;  // event type
+            const uint32_t ex = (evt >> 12) & 0xFFFU;    // x position
+            const uint32_t ey = evt & 0xFFFU;            // y position
+            uint32_t exr;                                // rotated x position
+            uint32_t eyr;                                // rotated y position
+            switch (display_orientation(-1)) {
+              case 90:
+                exr = ey;
+                eyr = DISPLAY_RESX - ex;
+                break;
+              case 180:
+                exr = DISPLAY_RESX - ex;
+                eyr = DISPLAY_RESY - ey;
+                break;
+              case 270:
+                exr = DISPLAY_RESY - ey;
+                eyr = ex;
+                break;
+              default:
+                exr = ex;
+                eyr = ey;
+                break;
+            }
+            tuple->items[0] = MP_OBJ_NEW_SMALL_INT(etype);
+            tuple->items[1] = MP_OBJ_NEW_SMALL_INT(exr);
+            tuple->items[2] = MP_OBJ_NEW_SMALL_INT(eyr);
+            ret->items[0] = MP_OBJ_NEW_SMALL_INT(i);
+            ret->items[1] = MP_OBJ_FROM_PTR(tuple);
+            return mp_const_true;
           }
-          tuple->items[0] = MP_OBJ_NEW_SMALL_INT(etype);
-          tuple->items[1] = MP_OBJ_NEW_SMALL_INT(exr);
-          tuple->items[2] = MP_OBJ_NEW_SMALL_INT(eyr);
-          ret->items[0] = MP_OBJ_NEW_SMALL_INT(i);
-          ret->items[1] = MP_OBJ_FROM_PTR(tuple);
-          return mp_const_true;
         }
       } else if (iface == USB_DATA_IFACE) {
         bool usb_connected = usb_configured() == sectrue ? true : false;

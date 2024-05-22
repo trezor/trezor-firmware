@@ -35,6 +35,8 @@
 // Whether USB data pins were connected on last check (USB configured)
 bool usb_connected_previously = true;
 
+uint32_t last_touch_sample_time = 0;
+
 #define CHECK_PARAM_RANGE(value, minimum, maximum)  \
   if (value < minimum || value > maximum) {         \
     mp_raise_ValueError(#value " is out of range"); \

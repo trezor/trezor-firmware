@@ -262,7 +262,9 @@ uint32_t touch_read(void) {
   if (touch_data[1] == GESTURE_NO_GESTURE) {
     xy = touch_pack_xy((X_POS_MSB << 8) | X_POS_LSB,
                        (Y_POS_MSB << 8) | Y_POS_LSB);
-    if ((number_of_touch_points == 1) && (event_flag == EVENT_PRESS_DOWN)) {
+    if ((number_of_touch_points == 1) &&
+        ((event_flag == EVENT_PRESS_DOWN) ||
+         ((event_flag == EVENT_CONTACT) && (touching == 0)))) {
       touching = 1;
       return TOUCH_START | xy;
     } else if ((number_of_touch_points == 1) && (event_flag == EVENT_CONTACT)) {
