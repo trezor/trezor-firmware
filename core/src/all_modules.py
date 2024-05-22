@@ -163,8 +163,6 @@ trezor.ui.layouts.mercury.fido
 import trezor.ui.layouts.mercury.fido
 trezor.ui.layouts.mercury.homescreen
 import trezor.ui.layouts.mercury.homescreen
-trezor.ui.layouts.mercury.progress
-import trezor.ui.layouts.mercury.progress
 trezor.ui.layouts.mercury.recovery
 import trezor.ui.layouts.mercury.recovery
 trezor.ui.layouts.mercury.reset
