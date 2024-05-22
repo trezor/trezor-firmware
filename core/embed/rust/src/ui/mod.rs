@@ -2,6 +2,8 @@
 pub mod macros;
 
 pub mod animation;
+#[cfg(feature = "micropython")]
+pub mod backlight;
 pub mod button_request;
 pub mod component;
 pub mod constant;

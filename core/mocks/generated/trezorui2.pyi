@@ -592,6 +592,16 @@ def flow_confirm_summary(
     br_type: str,
 ) -> LayoutObj[UiResult]:
     """Total summary and hold to confirm."""
+
+
+# rust/src/ui/model_mercury/layout.rs
+class BacklightLevels:
+    """Backlight levels. Values dynamically update based on user settings."""
+    MAX: ClassVar[int]
+    NORMAL: ClassVar[int]
+    LOW: ClassVar[int]
+    DIM: ClassVar[int]
+    NONE: ClassVar[int]
 CONFIRMED: UiResult
 CANCELLED: UiResult
 INFO: UiResult
@@ -1586,3 +1596,13 @@ def confirm_firmware_update(
 # rust/src/ui/model_tt/layout.rs
 def show_wait_text(message: str, /) -> LayoutObj[None]:
     """Show single-line text in the middle of the screen."""
+
+
+# rust/src/ui/model_tt/layout.rs
+class BacklightLevels:
+    """Backlight levels. Values dynamically update based on user settings."""
+    MAX: ClassVar[int]
+    NORMAL: ClassVar[int]
+    LOW: ClassVar[int]
+    DIM: ClassVar[int]
+    NONE: ClassVar[int]
