@@ -20,6 +20,7 @@ from trezorlib import btc, messages
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.tools import parse_path
 
+from ...common import is_core
 from ...input_flows import InputFlowConfirmAllWarnings
 from .signtx import forge_prevtx
 
@@ -115,8 +116,9 @@ def test_getaddress(
 ):
     for script_type in script_types:
         with client:
-            IF = InputFlowConfirmAllWarnings(client)
-            client.set_input_flow(IF.get())
+            if is_core(client):
+                IF = InputFlowConfirmAllWarnings(client)
+                client.set_input_flow(IF.get())
             res = btc.get_address(
                 client,
                 "Bitcoin",
@@ -135,8 +137,9 @@ def test_signmessage(
 ):
     for script_type in script_types:
         with client:
-            IF = InputFlowConfirmAllWarnings(client)
-            client.set_input_flow(IF.get())
+            if is_core(client):
+                IF = InputFlowConfirmAllWarnings(client)
+                client.set_input_flow(IF.get())
 
             sig = btc.sign_message(
                 client,
@@ -173,8 +176,9 @@ def test_signtx(
         )
 
         with client:
-            IF = InputFlowConfirmAllWarnings(client)
-            client.set_input_flow(IF.get())
+            if is_core(client):
+                IF = InputFlowConfirmAllWarnings(client)
+                client.set_input_flow(IF.get())
             _, serialized_tx = btc.sign_tx(
                 client, "Bitcoin", [inp1], [out1], prev_txes={prevhash: prevtx}
             )
@@ -199,8 +203,9 @@ def test_getaddress_multisig(
     multisig = messages.MultisigRedeemScriptType(pubkeys=pubs, m=2)
 
     with client:
-        IF = InputFlowConfirmAllWarnings(client)
-        client.set_input_flow(IF.get())
+        if is_core(client):
+            IF = InputFlowConfirmAllWarnings(client)
+            client.set_input_flow(IF.get())
         address = btc.get_address(
             client,
             "Bitcoin",
@@ -257,8 +262,9 @@ def test_signtx_multisig(client: Client, paths: list[str], address_index: list[i
     )
 
     with client:
-        IF = InputFlowConfirmAllWarnings(client)
-        client.set_input_flow(IF.get())
+        if is_core(client):
+            IF = InputFlowConfirmAllWarnings(client)
+            client.set_input_flow(IF.get())
         sig, _ = btc.sign_tx(
             client, "Bitcoin", [inp1], [out1], prev_txes={prevhash: prevtx}
         )

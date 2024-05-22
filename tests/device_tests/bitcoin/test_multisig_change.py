@@ -22,6 +22,7 @@ from trezorlib.tools import H_, parse_path
 
 from ... import bip32
 from ...common import MNEMONIC12, is_core
+from ...input_flows import InputFlowConfirmAllWarnings
 from ...tx_cache import TxCache
 from .signtx import request_finished, request_input, request_meta, request_output
 
@@ -243,6 +244,9 @@ def test_external_internal(client: Client):
         client.set_expected_responses(
             _responses(client, INP1, INP2, change=2, foreign=True)
         )
+        if is_core(client):
+            IF = InputFlowConfirmAllWarnings(client)
+            client.set_input_flow(IF.get())
         _, serialized_tx = btc.sign_tx(
             client,
             "Bitcoin",
@@ -276,6 +280,9 @@ def test_internal_external(client: Client):
         client.set_expected_responses(
             _responses(client, INP1, INP2, change=1, foreign=True)
         )
+        if is_core(client):
+            IF = InputFlowConfirmAllWarnings(client)
+            client.set_input_flow(IF.get())
         _, serialized_tx = btc.sign_tx(
             client,
             "Bitcoin",

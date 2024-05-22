@@ -21,6 +21,7 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import H_, parse_path
 
+from ...common import is_core
 from ...input_flows import InputFlowConfirmAllWarnings
 from .signtx import forge_prevtx, request_input
 
@@ -80,8 +81,9 @@ def test_invalid_path_prompt(client: Client):
     )
 
     with client:
-        IF = InputFlowConfirmAllWarnings(client)
-        client.set_input_flow(IF.get())
+        if is_core(client):
+            IF = InputFlowConfirmAllWarnings(client)
+            client.set_input_flow(IF.get())
 
         btc.sign_tx(client, "Litecoin", [inp1], [out1], prev_txes=PREV_TXES)
 
@@ -105,8 +107,9 @@ def test_invalid_path_pass_forkid(client: Client):
     )
 
     with client:
-        IF = InputFlowConfirmAllWarnings(client)
-        client.set_input_flow(IF.get())
+        if is_core(client):
+            IF = InputFlowConfirmAllWarnings(client)
+            client.set_input_flow(IF.get())
 
         btc.sign_tx(client, "Bcash", [inp1], [out1], prev_txes=PREV_TXES)
 

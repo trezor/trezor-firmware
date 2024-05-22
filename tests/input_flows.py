@@ -2142,9 +2142,9 @@ class InputFlowConfirmAllWarnings(InputFlowBase):
 
     def input_flow_tt(self) -> BRGeneratorType:
         br = yield
-        # wait for homescreen to go away
-        self.debug.wait_layout()
         while True:
+            # wait for homescreen to go away
+            self.debug.wait_layout()
             self.client.ui._default_input_flow(br)
             br = yield
 
@@ -2153,10 +2153,10 @@ class InputFlowConfirmAllWarnings(InputFlowBase):
 
     def input_flow_t3t1(self) -> BRGeneratorType:
         br = yield
-        # wait for homescreen to go away
-        # probably won't be needed after https://github.com/trezor/trezor-firmware/pull/3686
-        self.debug.wait_layout()
         while True:
+            # wait for homescreen to go away
+            # probably won't be needed after https://github.com/trezor/trezor-firmware/pull/3686
+            self.debug.wait_layout()
             # Paginating (going as further as possible) and pressing Yes
             if br.pages is not None:
                 for _ in range(br.pages - 1):
@@ -2164,18 +2164,10 @@ class InputFlowConfirmAllWarnings(InputFlowBase):
             layout = self.debug.read_layout()
             text = layout.text_content().lower()
             # hi priority warning
-            if (
-                ("wrong derivation path" in text)
-                or ("to a multisig" in text)
-                or ("multiple accounts" in text)
-            ):
+            if ("wrong derivation path" in text) or ("to a multisig" in text):
                 self.debug.click(buttons.CORNER_BUTTON, wait=True)
                 self.debug.synchronize_at("VerticalMenu")
                 self.debug.click(buttons.VERTICAL_MENU[1])
-            elif "receive address" in layout.title().lower():
-                self.debug.swipe_up()
-                self.debug.synchronize_at("PromptScreen")
-                self.debug.press_yes()
             elif "swipe up" in layout.footer().lower():
                 self.debug.swipe_up()
             else:

@@ -613,8 +613,9 @@ def test_send_multisig_3_change(client: Client):
 
     with client:
         client.set_expected_responses(expected_responses)
-        IF = InputFlowConfirmAllWarnings(client)
-        client.set_input_flow(IF.get())
+        if is_core(client):
+            IF = InputFlowConfirmAllWarnings(client)
+            client.set_input_flow(IF.get())
         signatures, _ = btc.sign_tx(
             client, "Testnet", [inp1], [out1], prev_txes=TX_API_TESTNET
         )
@@ -627,8 +628,9 @@ def test_send_multisig_3_change(client: Client):
 
     with client:
         client.set_expected_responses(expected_responses)
-        IF = InputFlowConfirmAllWarnings(client)
-        client.set_input_flow(IF.get())
+        if is_core(client):
+            IF = InputFlowConfirmAllWarnings(client)
+            client.set_input_flow(IF.get())
         _, serialized_tx = btc.sign_tx(
             client, "Testnet", [inp1], [out1], prev_txes=TX_API_TESTNET
         )
@@ -703,8 +705,9 @@ def test_send_multisig_4_change(client: Client):
 
     with client:
         client.set_expected_responses(expected_responses)
-        IF = InputFlowConfirmAllWarnings(client)
-        client.set_input_flow(IF.get())
+        if is_core(client):
+            IF = InputFlowConfirmAllWarnings(client)
+            client.set_input_flow(IF.get())
         signatures, _ = btc.sign_tx(
             client, "Testnet", [inp1], [out1], prev_txes=TX_API_TESTNET
         )
@@ -717,8 +720,9 @@ def test_send_multisig_4_change(client: Client):
 
     with client:
         client.set_expected_responses(expected_responses)
-        IF = InputFlowConfirmAllWarnings(client)
-        client.set_input_flow(IF.get())
+        if is_core(client):
+            IF = InputFlowConfirmAllWarnings(client)
+            client.set_input_flow(IF.get())
         _, serialized_tx = btc.sign_tx(
             client, "Testnet", [inp1], [out1], prev_txes=TX_API_TESTNET
         )
