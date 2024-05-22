@@ -272,8 +272,12 @@ def check_share(
     three rounds of `Select word X of Y` choices.
     """
     for _ in range(3):
-        # Word position is the first number in the text
-        word_pos_match = re.search(r"\d+", debug.wait_layout().text_content())
+        if debug.model is models.T2B1:
+            # T2B1 has the instruction in the title
+            word_pos_match = re.search(r"\d+", debug.wait_layout().title())
+        else:
+            # Other models has position as the first number in the text
+            word_pos_match = re.search(r"\d+", debug.wait_layout().text_content())
         assert word_pos_match is not None
         word_pos = int(word_pos_match.group(0))
 
