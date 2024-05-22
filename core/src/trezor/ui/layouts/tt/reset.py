@@ -118,7 +118,7 @@ async def slip39_show_checklist(step: int, backup_type: BackupType) -> None:
         (
             TR.reset__slip39_checklist_set_num_shares,
             TR.reset__slip39_checklist_set_threshold,
-            TR.reset__slip39_checklist_write_down_recovery,
+            TR.reset__slip39_checklist_write_down,
         )
         if backup_type == BackupType.Slip39_Basic
         else (
