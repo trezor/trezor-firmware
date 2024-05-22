@@ -4,8 +4,8 @@ use crate::ui::{
 };
 
 /// Size of image buffer in bytes
-/// (up to 180x180 pixel, 16-bit RGB565 image)
-const IMAGE_BUFFER_SIZE: usize = 64 * 1024;
+/// (up to 240x240 pixel, 16-bit RGB565 image)
+const IMAGE_BUFFER_SIZE: usize = 240 * 240 * 2;
 
 #[repr(align(16))]
 struct AlignedBuffer {

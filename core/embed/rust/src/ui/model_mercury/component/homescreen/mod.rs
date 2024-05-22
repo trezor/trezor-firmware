@@ -1,16 +1,12 @@
 use crate::{
     io::BinaryData,
     strutil::TString,
-    time::{Duration, Instant},
+    time::{Duration, Instant, Stopwatch},
     translations::TR,
     trezorhal::usb::usb_configured,
     ui::{
         component::{Component, Event, EventCtx, TimerToken},
-        display::{
-            image::{ImageInfo, ToifFormat},
-            toif::Icon,
-            Color, Font,
-        },
+        display::{image::ImageInfo, toif::Icon, Color, Font},
         event::{TouchEvent, USBEvent},
         geometry::{Alignment, Alignment2D, Insets, Offset, Point, Rect},
         layout::util::get_user_custom_image,
@@ -18,12 +14,15 @@ use crate::{
         shape::{self, Renderer},
     },
 };
+use core::mem;
 
 use crate::ui::{
     constant::{screen, HEIGHT, WIDTH},
-    model_mercury::theme::{
-        GREEN_LIGHT, GREY_LIGHT, ICON_CENTRAL_CIRCLE, ICON_KEY, ICON_LOCKSCREEN_FILTER,
+    model_mercury::{
+        cshape,
+        theme::{GREY_LIGHT, ICON_KEY},
     },
+    shape::{render_on_canvas, ImageBuffer, Rgb565Canvas},
 };
 
 use super::{theme, Loader, LoaderMsg};
@@ -194,9 +193,6 @@ impl Component for Homescreen {
                 ImageInfo::Jpeg(_) => shape::JpegImage::new_image(AREA.center(), self.image)
                     .with_align(Alignment2D::CENTER)
                     .render(target),
-                ImageInfo::Toif(_) => shape::ToifImage::new_image(AREA.center(), self.image)
-                    .with_align(Alignment2D::CENTER)
-                    .render(target),
                 _ => {}
             }
 
@@ -273,20 +269,51 @@ impl crate::trace::Trace for Homescreen {
     }
 }
 
+#[derive(Default)]
+struct LockscreenAnim {
+    pub timer: Stopwatch,
+}
+impl LockscreenAnim {
+    const DURATION_MS: u32 = 1500;
+
+    pub fn is_active(&self) -> bool {
+        true
+    }
+
+    pub fn eval(&self) -> f32 {
+        let anim = pareen::prop(30.0f32);
+
+        let t: f32 = self.timer.elapsed().to_millis() as f32 / 1000.0;
+
+        anim.eval(t)
+    }
+}
+
 pub struct Lockscreen<'a> {
+    anim: LockscreenAnim,
     label: TString<'a>,
     image: BinaryData<'static>,
     bootscreen: bool,
     coinjoin_authorized: bool,
+    bg_image: ImageBuffer<Rgb565Canvas<'static>>,
 }
 
 impl<'a> Lockscreen<'a> {
     pub fn new(label: TString<'a>, bootscreen: bool, coinjoin_authorized: bool) -> Self {
+        let image = get_homescreen_image();
+        let mut buf = unwrap!(ImageBuffer::new(AREA.size()), "no image buf");
+
+        render_on_canvas(buf.canvas(), None, |target| {
+            shape::JpegImage::new_image(Point::zero(), image).render(target);
+        });
+
         Lockscreen {
+            anim: LockscreenAnim::default(),
             label,
-            image: get_homescreen_image(),
+            image,
             bootscreen,
             coinjoin_authorized,
+            bg_image: buf,
         }
     }
 }
@@ -298,10 +325,30 @@ impl Component for Lockscreen<'_> {
         bounds
     }
 
-    fn event(&mut self, _ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+    fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        match event {
+            Event::Attach => {
+                ctx.request_anim_frame();
+            }
+            _ => {}
+        }
+
+        if let Event::Timer(EventCtx::ANIM_FRAME_TIMER) = event {
+            if !self.anim.timer.is_running() {
+                self.anim.timer.start();
+            }
+            ctx.request_anim_frame();
+            ctx.request_paint();
+        }
+
         if let Event::Touch(TouchEvent::TouchEnd(_)) = event {
+            let bg_img = mem::replace(&mut self.bg_image, None);
+            if let Some(bg_img) = bg_img {
+                drop(bg_img);
+            }
             return Some(HomescreenMsg::Dismissed);
         }
+
         None
     }
 
@@ -310,43 +357,46 @@ impl Component for Lockscreen<'_> {
     }
 
     fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+        const OVERLAY_SIZE: i16 = 170;
+        const OVERLAY_BORDER: i16 = (AREA.height() - OVERLAY_SIZE) / 2;
+        const OVERLAY_OFFSET: i16 = 9;
+
         let center = AREA.center();
 
-        match ImageInfo::parse(self.image) {
-            ImageInfo::Jpeg(_) => shape::JpegImage::new_image(center, self.image)
-                .with_align(Alignment2D::CENTER)
-                .with_blur(4)
-                .with_dim(102)
-                .render(target),
-            ImageInfo::Toif(_) => shape::ToifImage::new_image(center, self.image)
-                .with_align(Alignment2D::CENTER)
-                //.with_blur(5)
-                .render(target),
-            _ => {}
-        }
+        // shape::RawImage::new(AREA, self.bg_image.view())
+        //     .render(target);
 
-        shape::ToifImage::new(center, ICON_LOCKSCREEN_FILTER.toif)
-            .with_align(Alignment2D::CENTER)
-            .with_fg(Color::black())
+        cshape::UnlockOverlay::new(center + Offset::y(OVERLAY_OFFSET), self.anim.eval())
             .render(target);
 
-        shape::ToifImage::new(center + Offset::y(12), ICON_CENTRAL_CIRCLE.toif)
-            .with_align(Alignment2D::CENTER)
-            .with_fg(GREEN_LIGHT)
+        shape::Bar::new(AREA.split_top(OVERLAY_BORDER + OVERLAY_OFFSET).0)
+            .with_bg(Color::black())
             .render(target);
 
-        shape::ToifImage::new(center + Offset::y(12), ICON_KEY.toif)
+        shape::Bar::new(AREA.split_bottom(OVERLAY_BORDER - OVERLAY_OFFSET).1)
+            .with_bg(Color::black())
+            .render(target);
+
+        shape::Bar::new(AREA.split_left(OVERLAY_BORDER).0)
+            .with_bg(Color::black())
+            .render(target);
+
+        shape::Bar::new(AREA.split_right(OVERLAY_BORDER).1)
+            .with_bg(Color::black())
+            .render(target);
+
+        shape::ToifImage::new(center + Offset::y(OVERLAY_OFFSET), ICON_KEY.toif)
             .with_align(Alignment2D::CENTER)
             .with_fg(GREY_LIGHT)
             .render(target);
 
         let (locked, tap) = if self.bootscreen {
             (
-                TR::lockscreen__title_not_connected,
+                Some(TR::lockscreen__title_not_connected),
                 TR::lockscreen__tap_to_connect,
             )
         } else {
-            (TR::lockscreen__title_locked, TR::lockscreen__tap_to_unlock)
+            (None, TR::lockscreen__tap_to_unlock)
         };
 
         let mut label_style = theme::TEXT_DEMIBOLD;
@@ -367,15 +417,17 @@ impl Component for Lockscreen<'_> {
 
         offset += 6;
 
-        locked.map_translated(|t| {
-            offset += theme::TEXT_SUB_GREY.text_font.visible_text_height(t);
+        locked.map(|t| {
+            t.map_translated(|t| {
+                offset += theme::TEXT_SUB_GREY.text_font.visible_text_height(t);
 
-            let text_pos = Point::new(0, offset);
+                let text_pos = Point::new(0, offset);
 
-            shape::Text::new(text_pos, t)
-                .with_font(theme::TEXT_SUB_GREY.text_font)
-                .with_fg(theme::TEXT_SUB_GREY.text_color)
-                .render(target);
+                shape::Text::new(text_pos, t)
+                    .with_font(theme::TEXT_SUB_GREY.text_font)
+                    .with_fg(theme::TEXT_SUB_GREY.text_color)
+                    .render(target);
+            })
         });
 
         tap.map_translated(|t| {
@@ -398,18 +450,12 @@ impl Component for Lockscreen<'_> {
     }
 }
 
-pub fn check_homescreen_format(image: BinaryData, accept_toif: bool) -> bool {
+pub fn check_homescreen_format(image: BinaryData) -> bool {
     match ImageInfo::parse(image) {
         ImageInfo::Jpeg(info) => {
             info.width() == HOMESCREEN_IMAGE_WIDTH
                 && info.height() == HOMESCREEN_IMAGE_HEIGHT
                 && info.mcu_height() <= 16
-        }
-        ImageInfo::Toif(info) => {
-            accept_toif
-                && info.width() == HOMESCREEN_TOIF_SIZE
-                && info.height() == HOMESCREEN_TOIF_SIZE
-                && info.format() == ToifFormat::FullColorBE
         }
         _ => false,
     }
@@ -417,7 +463,7 @@ pub fn check_homescreen_format(image: BinaryData, accept_toif: bool) -> bool {
 
 fn get_homescreen_image() -> BinaryData<'static> {
     if let Ok(image) = get_user_custom_image() {
-        if check_homescreen_format(image, true) {
+        if check_homescreen_format(image) {
             return image;
         }
     }
