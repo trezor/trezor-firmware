@@ -46,7 +46,6 @@ async def bootscreen() -> None:
     Any non-PIN loaders are ignored during this function.
     Allowing all of them before returning.
     """
-    lockscreen = Lockscreen(label=storage.device.get_label(), bootscreen=True)
     while True:
         try:
 
@@ -56,7 +55,9 @@ async def bootscreen() -> None:
                 ui.display.orientation(storage.device.get_rotation())
                 if utils.USE_HAPTIC:
                     io.haptic.haptic_set_enabled(storage.device.get_haptic_feedback())
-
+                lockscreen = Lockscreen(
+                    label=storage.device.get_label(), bootscreen=True
+                )
                 await lockscreen
                 await verify_user_pin()
                 storage.init_unlocked()
