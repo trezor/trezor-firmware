@@ -80,7 +80,7 @@ pub extern "C" fn new_prompt_backup(n_args: usize, args: *const Obj, kwargs: *mu
 
 impl PromptBackup {
     fn new_obj(_args: &[Obj], _kwargs: &Map) -> Result<Obj, error::Error> {
-        let title: TString = TR::backup__title_backup_wallet.into();
+        let title: TString = TR::backup__title_create_wallet_backup.into();
         let par_array: [Paragraph<'static>; 1] = [Paragraph::new(
             &theme::TEXT_MAIN_GREY_LIGHT,
             // FIXME: should be "contains X words" but the mnemonic/shares are not yet generated at
