@@ -75,7 +75,7 @@ pub trait ButtonRequestExt {
 
 impl<T: Component> ButtonRequestExt for T {}
 
-#[cfg(all(feature = "micropython", feature = "touch"))]
+#[cfg(all(feature = "micropython", feature = "touch", feature = "new_rendering"))]
 impl<T> crate::ui::flow::Swipable for OneButtonRequest<T>
 where
     T: Component + crate::ui::flow::Swipable,
