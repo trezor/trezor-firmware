@@ -8,7 +8,7 @@ use crate::{
         component::{Component, Event, EventCtx, TimerToken},
         display::{image::ImageInfo, toif::Icon, Color, Font},
         event::{TouchEvent, USBEvent},
-        geometry::{Alignment, Alignment2D, Insets, Offset, Point, Rect},
+        geometry::{Alignment, Alignment2D, Offset, Point, Rect},
         layout::util::get_user_custom_image,
         model_mercury::{constant, theme::IMAGE_HOMESCREEN},
         shape::{self, Renderer},
@@ -17,10 +17,11 @@ use crate::{
 use core::mem;
 
 use crate::ui::{
+    component::Label,
     constant::{screen, HEIGHT, WIDTH},
     model_mercury::{
         cshape,
-        theme::{GREY_LIGHT, ICON_KEY},
+        theme::{GREY_LIGHT, ICON_KEY, TITLE_HEIGHT},
     },
     shape::{render_on_canvas, ImageBuffer, Rgb565Canvas},
 };
@@ -50,7 +51,7 @@ pub struct HomescreenNotification {
 }
 
 pub struct Homescreen {
-    label: TString<'static>,
+    label: Label<'static>,
     notification: Option<(TString<'static>, u8)>,
     image: BinaryData<'static>,
     hold_to_lock: bool,
@@ -69,7 +70,7 @@ impl Homescreen {
         hold_to_lock: bool,
     ) -> Self {
         Self {
-            label,
+            label: Label::new(label, Alignment::Start, theme::TEXT_DEMIBOLD).vertically_centered(),
             notification,
             image: get_homescreen_image(),
             hold_to_lock,
@@ -80,10 +81,10 @@ impl Homescreen {
 
     fn level_to_style(level: u8) -> (Color, Icon) {
         match level {
-            3 => (theme::YELLOW, theme::ICON_COINJOIN),
-            2 => (theme::VIOLET, theme::ICON_MAGIC),
-            1 => (theme::YELLOW, theme::ICON_WARN),
-            _ => (theme::RED, theme::ICON_WARN),
+            3 => (theme::ORANGE_DARK, theme::ICON_COINJOIN),
+            2 => (theme::ORANGE_DARK, theme::ICON_MAGIC),
+            1 => (theme::ORANGE_DARK, theme::ICON_WARN),
+            _ => (theme::ORANGE_DARK, theme::ICON_WARN),
         }
     }
 
@@ -169,6 +170,8 @@ impl Component for Homescreen {
 
     fn place(&mut self, bounds: Rect) -> Rect {
         self.loader.place(AREA.translate(LOADER_OFFSET));
+        self.label
+            .place(bounds.split_top(TITLE_HEIGHT).0.translate(Offset::x(4)));
         bounds
     }
 
@@ -196,58 +199,55 @@ impl Component for Homescreen {
                 _ => {}
             }
 
-            self.label.map(|t| {
-                let r = Rect::new(Point::new(6, 198), Point::new(234, 233));
-                shape::Bar::new(r)
-                    .with_bg(Color::black())
-                    .with_alpha(89)
-                    .with_radius(3)
-                    .render(target);
+            let label_width = self
+                .label
+                .text()
+                .map(|t| theme::TEXT_DEMIBOLD.text_font.text_width(t));
 
-                let style = theme::TEXT_DEMIBOLD;
-                let pos = Point::new(AREA.center().x, LABEL_Y);
-                shape::Text::new(pos, t)
-                    .with_align(Alignment::Center)
-                    .with_font(style.text_font)
-                    .with_fg(theme::FG)
-                    .render(target);
-            });
+            let r = Rect::new(Point::new(-30, -30), Point::new(label_width + 12, 42));
+            shape::Bar::new(r)
+                .with_bg(Color::black())
+                .with_alpha(160)
+                .with_radius(16)
+                .render(target);
+
+            self.label.render(target);
 
             if let Some(notif) = self.get_notification() {
-                const NOTIFICATION_HEIGHT: i16 = 36;
-                const NOTIFICATION_BORDER: i16 = 6;
-                const TEXT_ICON_SPACE: i16 = 8;
-
-                let banner = AREA
-                    .inset(Insets::sides(NOTIFICATION_BORDER))
-                    .with_height(NOTIFICATION_HEIGHT)
-                    .translate(Offset::y(NOTIFICATION_BORDER));
-
-                shape::Bar::new(banner)
-                    .with_radius(2)
-                    .with_bg(notif.color)
-                    .render(target);
+                const NOTIFICATION_HEIGHT: i16 = 34;
+                const NOTIFICATION_TOP: i16 = 202;
+                const NOTIFICATION_BORDER: i16 = 16;
 
                 notif.text.map(|t| {
                     let style = theme::TEXT_BOLD;
-                    let icon_width = notif.icon.toif.width() + TEXT_ICON_SPACE;
+
+                    let text_width = style.text_font.text_width(t);
+
+                    let banner = Rect::new(
+                        Point::new(
+                            AREA.center().x - NOTIFICATION_BORDER - text_width / 2,
+                            NOTIFICATION_TOP,
+                        ),
+                        Point::new(
+                            AREA.center().x + NOTIFICATION_BORDER + text_width / 2,
+                            NOTIFICATION_TOP + NOTIFICATION_HEIGHT,
+                        ),
+                    );
+
                     let text_pos = Point::new(
-                        style
-                            .text_font
-                            .horz_center(banner.x0 + icon_width, banner.x1, t),
+                        style.text_font.horz_center(banner.x0, banner.x1, t),
                         style.text_font.vert_center(banner.y0, banner.y1, "A"),
                     );
 
-                    shape::Text::new(text_pos, t)
-                        .with_font(style.text_font)
-                        .with_fg(style.text_color)
+                    shape::Bar::new(banner)
+                        .with_radius(16)
+                        .with_bg(theme::ORANGE_DARK)
+                        .with_alpha(160)
                         .render(target);
 
-                    let icon_pos = Point::new(text_pos.x - icon_width, banner.center().y);
-
-                    shape::ToifImage::new(icon_pos, notif.icon.toif)
-                        .with_fg(style.text_color)
-                        .with_align(Alignment2D::CENTER_LEFT)
+                    shape::Text::new(text_pos, t)
+                        .with_font(style.text_font)
+                        .with_fg(theme::ORANGE_LIGHT)
                         .render(target);
                 });
             }
@@ -265,7 +265,7 @@ impl Component for Homescreen {
 impl crate::trace::Trace for Homescreen {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("Homescreen");
-        t.string("label", self.label);
+        t.child("label", &self.label);
     }
 }
 

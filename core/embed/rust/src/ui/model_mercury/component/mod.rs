@@ -15,7 +15,7 @@ mod frame;
 
 #[cfg(feature = "translations")]
 mod hold_to_confirm;
-#[cfg(feature = "micropython")]
+#[cfg(feature = "translations")]
 mod homescreen;
 #[cfg(feature = "translations")]
 mod keyboard;
