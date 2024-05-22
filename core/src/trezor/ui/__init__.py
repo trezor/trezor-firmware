@@ -4,6 +4,7 @@ from trezorui import Display
 from typing import TYPE_CHECKING, Any, Awaitable, Generator
 
 from trezor import loop, utils
+from trezorui2 import BacklightLevels
 
 if TYPE_CHECKING:
     from typing import Generic, TypeVar
@@ -53,21 +54,17 @@ if utils.EMULATOR or utils.INTERNAL_MODEL in ("T1B1", "T2B1"):
     loop.after_step_hook = refresh
 
 
-# import style later to avoid circular dep
-from trezor.ui import style  # isort:skip
-
-
 async def _alert(count: int) -> None:
     short_sleep = loop.sleep(20)
     long_sleep = loop.sleep(80)
     for i in range(count * 2):
         if i % 2 == 0:
-            display.backlight(style.get_backlight_max())
+            display.backlight(BacklightLevels.MAX)
             await short_sleep
         else:
-            display.backlight(style.get_backlight_dim())
+            display.backlight(BacklightLevels.DIM)
             await long_sleep
-    display.backlight(style.get_backlight_normal())
+    display.backlight(BacklightLevels.NORMAL)
     global _alert_in_progress
     _alert_in_progress = False
 

@@ -11,6 +11,22 @@ pub trait UIFeaturesCommon {
     fn fadeout() {}
     fn backlight_on() {}
 
+    fn get_backlight_none() -> u16 {
+        0
+    }
+    fn get_backlight_normal() -> u16 {
+        0
+    }
+    fn get_backlight_low() -> u16 {
+        0
+    }
+    fn get_backlight_dim() -> u16 {
+        0
+    }
+    fn get_backlight_max() -> u16 {
+        0
+    }
+
     const SCREEN: Rect;
 
     fn screen_fatal_error(title: &str, msg: &str, footer: &str);
