@@ -569,6 +569,10 @@ impl EventCtx {
         self.page_count = Some(count);
     }
 
+    pub fn map_page_count(&mut self, func: fn(usize) -> usize) {
+        self.page_count = Some(func(self.page_count.unwrap_or(1)));
+    }
+
     pub fn page_count(&self) -> Option<usize> {
         self.page_count
     }
