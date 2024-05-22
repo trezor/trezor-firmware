@@ -592,7 +592,7 @@ extern "C" fn new_confirm_homescreen(n_args: usize, args: *const Obj, kwargs: *m
             jpeg = theme::IMAGE_HOMESCREEN.into();
         }
 
-        if !check_homescreen_format(jpeg, false) {
+        if !check_homescreen_format(jpeg) {
             return Err(value_error!("Invalid image."));
         };
 
@@ -1418,7 +1418,7 @@ extern "C" fn new_show_lockscreen(n_args: usize, args: *const Obj, kwargs: *mut 
 pub extern "C" fn upy_check_homescreen_format(data: Obj) -> Obj {
     let block = || {
         let buffer = data.try_into()?;
-        Ok(check_homescreen_format(buffer, false).into())
+        Ok(check_homescreen_format(buffer).into())
     };
 
     unsafe { util::try_or_raise(block) }
