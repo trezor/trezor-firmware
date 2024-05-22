@@ -266,7 +266,12 @@ uint32_t touch_read(void) {
       touching = 1;
       return TOUCH_START | xy;
     } else if ((number_of_touch_points == 1) && (event_flag == EVENT_CONTACT)) {
-      return TOUCH_MOVE | xy;
+      if (touching) {
+        return TOUCH_MOVE | xy;
+      } else {
+        touching = 1;
+        return TOUCH_START | xy;
+      }
     } else if ((number_of_touch_points == 0) && (event_flag == EVENT_LIFT_UP)) {
       touching = 0;
       return TOUCH_END | xy;

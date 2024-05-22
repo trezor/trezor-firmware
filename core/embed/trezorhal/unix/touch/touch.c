@@ -211,7 +211,6 @@ uint32_t touch_read(void) {
     if (ev_type != 0) {
       _touch_x = ev_x;
       _touch_y = ev_y;
-      break;
     }
   }
   return ev_type | touch_pack_xy(ev_x, ev_y);
