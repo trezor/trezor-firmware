@@ -44,8 +44,8 @@ use super::{
         FidoMsg, Frame, FrameMsg, Homescreen, HomescreenMsg, IconDialog, Lockscreen, MnemonicInput,
         MnemonicKeyboard, MnemonicKeyboardMsg, PassphraseKeyboard, PassphraseKeyboardMsg,
         PinKeyboard, PinKeyboardMsg, Progress, PromptScreen, SelectWordCount, SelectWordCountMsg,
-        SetBrightnessDialog, SimplePage, Slip39Input, StatusScreen, SwipeUpScreen, SwipeUpScreenMsg,
-        VerticalMenu, VerticalMenuChoiceMsg,
+        SetBrightnessDialog, SimplePage, Slip39Input, StatusScreen, SwipeUpScreen,
+        SwipeUpScreenMsg, VerticalMenu, VerticalMenuChoiceMsg,
     },
     flow, theme,
 };
@@ -2033,6 +2033,17 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// ) -> LayoutObj[UiResult]:
     ///     """Total summary and hold to confirm."""
     Qstr::MP_QSTR_flow_confirm_summary => obj_fn_kw!(0, flow::new_confirm_summary).as_obj(),
+
+    /// class BacklightLevels:
+    ///     """Backlight levels. Values dynamically update based on user settings."""
+    ///     MAX: ClassVar[int]
+    ///     NORMAL: ClassVar[int]
+    ///     LOW: ClassVar[int]
+    ///     DIM: ClassVar[int]
+    ///     NONE: ClassVar[int]
+    ///
+    /// mock:global
+    Qstr::MP_QSTR_BacklightLevels => BACKLIGHT_LEVELS_OBJ.as_obj(),
 };
 
 #[cfg(test)]

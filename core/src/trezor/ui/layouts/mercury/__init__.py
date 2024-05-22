@@ -38,7 +38,7 @@ class RustLayout(ui.Layout):
         self.timer = loop.Timer()
         self.layout.attach_timer_fn(self.set_timer)
         self._send_button_request()
-        self.backlight_level = ui.style.get_backlight_normal()
+        self.backlight_level = ui.BacklightLevels.NORMAL
 
     def set_timer(self, token: int, deadline: int) -> None:
         self.timer.schedule(deadline, token)
@@ -187,7 +187,7 @@ class RustLayout(ui.Layout):
                 )
 
     def _first_paint(self) -> None:
-        ui.backlight_fade(ui.style.get_backlight_none())
+        ui.backlight_fade(ui.BacklightLevels.NONE)
         self._paint()
 
         if __debug__ and self.should_notify_layout_change:
@@ -263,10 +263,10 @@ def draw_simple(layout: Any) -> None:
         raise RuntimeError
 
     layout.attach_timer_fn(dummy_set_timer)
-    ui.backlight_fade(ui.style.get_backlight_dim())
+    ui.backlight_fade(ui.BacklightLevels.DIM)
     layout.paint()
     ui.refresh()
-    ui.backlight_fade(ui.style.get_backlight_normal())
+    ui.backlight_fade(ui.BacklightLevels.NORMAL)
 
 
 async def raise_if_not_confirmed(

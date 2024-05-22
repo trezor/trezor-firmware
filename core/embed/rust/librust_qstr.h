@@ -6,14 +6,20 @@
 
 static void _librust_qstrs(void) {
   MP_QSTR_;
+  MP_QSTR_BacklightLevels;
   MP_QSTR_CANCELLED;
   MP_QSTR_CONFIRMED;
+  MP_QSTR_DIM;
   MP_QSTR_INFO;
+  MP_QSTR_LOW;
   MP_QSTR_LayoutObj;
+  MP_QSTR_MAX;
   MP_QSTR_MESSAGE_NAME;
   MP_QSTR_MESSAGE_WIRE_TYPE;
   MP_QSTR_Msg;
   MP_QSTR_MsgDef;
+  MP_QSTR_NONE;
+  MP_QSTR_NORMAL;
   MP_QSTR_TR;
   MP_QSTR_TranslationsHeader;
   MP_QSTR___dict__;

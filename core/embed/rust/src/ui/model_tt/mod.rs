@@ -20,19 +20,42 @@ use crate::ui::{
 pub struct ModelTTFeatures;
 
 impl UIFeaturesCommon for ModelTTFeatures {
+    #[cfg(feature = "backlight")]
     fn fadein() {
-        #[cfg(feature = "backlight")]
         crate::ui::display::fade_backlight_duration(backlight::get_backlight_normal(), 150);
     }
-
+    #[cfg(feature = "backlight")]
     fn fadeout() {
-        #[cfg(feature = "backlight")]
         crate::ui::display::fade_backlight_duration(backlight::get_backlight_normal(), 150);
     }
-
+    #[cfg(feature = "backlight")]
     fn backlight_on() {
-        #[cfg(feature = "backlight")]
         crate::ui::display::set_backlight(backlight::get_backlight_normal());
+    }
+
+    #[cfg(feature = "backlight")]
+    fn get_backlight_none() -> u16 {
+        backlight::get_backlight_none()
+    }
+
+    #[cfg(feature = "backlight")]
+    fn get_backlight_normal() -> u16 {
+        backlight::get_backlight_normal()
+    }
+
+    #[cfg(feature = "backlight")]
+    fn get_backlight_low() -> u16 {
+        backlight::get_backlight_low()
+    }
+
+    #[cfg(feature = "backlight")]
+    fn get_backlight_dim() -> u16 {
+        backlight::get_backlight_dim()
+    }
+
+    #[cfg(feature = "backlight")]
+    fn get_backlight_max() -> u16 {
+        backlight::get_backlight_max()
     }
 
     const SCREEN: Rect = constant::SCREEN;

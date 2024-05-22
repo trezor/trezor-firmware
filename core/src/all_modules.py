@@ -195,8 +195,6 @@ trezor.ui.layouts.tt.recovery
 import trezor.ui.layouts.tt.recovery
 trezor.ui.layouts.tt.reset
 import trezor.ui.layouts.tt.reset
-trezor.ui.style
-import trezor.ui.style
 trezor.utils
 import trezor.utils
 trezor.wire
