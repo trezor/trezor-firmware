@@ -237,7 +237,7 @@ async def slip39_prompt_number_of_shares(group_id: int | None = None) -> int:
             if i == 1:
                 return TR.reset__only_one_share_will_be_created
             else:
-                return TR.reset__num_of_share_holders_template.format(i)
+                return TR.reset__num_of_shares_how_many
         else:
             return TR.reset__total_number_of_shares_in_group_template.format(
                 group_id + 1
