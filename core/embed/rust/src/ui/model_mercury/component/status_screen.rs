@@ -166,9 +166,11 @@ impl Component for StatusScreen {
             ctx.request_paint();
             ctx.request_anim_frame();
         }
-        if self.anim.is_active() {
-            ctx.request_anim_frame();
-            ctx.request_paint();
+        if let Event::Timer(EventCtx::ANIM_FRAME_TIMER) = event {
+            if self.anim.is_active() {
+                ctx.request_anim_frame();
+                ctx.request_paint();
+            }
         }
 
         match self.dismiss_type {
