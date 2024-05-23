@@ -197,6 +197,8 @@ trezor.wire.errors
 import trezor.wire.errors
 trezor.wire.thp
 import trezor.wire.thp
+trezor.wire.thp.checksum
+import trezor.wire.thp.checksum
 trezor.workflow
 import trezor.workflow
 apps
