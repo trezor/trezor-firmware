@@ -230,4 +230,4 @@ where
 }
 
 #[cfg(feature = "micropython")]
-impl<U> crate::ui::flow::Swipable for IconDialog<U> {}
+impl<U: Component> crate::ui::flow::Swipable<U::Msg> for IconDialog<U> {}

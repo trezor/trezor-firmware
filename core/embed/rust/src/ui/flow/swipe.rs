@@ -4,7 +4,7 @@ use crate::{
     ui::{
         animation::Animation,
         component::{Component, Event, EventCtx, Swipe, SwipeDirection},
-        flow::{base::Decision, FlowMsg, FlowState, FlowStore},
+        flow::{base::Decision, FlowMsg, FlowState, FlowStore, SwipableResult},
         geometry::Rect,
         shape::Renderer,
         util,
@@ -135,13 +135,13 @@ impl<Q: FlowState, S: FlowStore> SwipeFlow<Q, S> {
 
     fn handle_swipe_child(&mut self, ctx: &mut EventCtx, direction: SwipeDirection) -> Decision<Q> {
         let i = self.state.index();
-        if self
+        match self
             .store
             .map_swipable(i, |s| s.swipe_start(ctx, direction))
         {
-            Decision::Goto(self.state, direction)
-        } else {
-            Decision::Nothing
+            SwipableResult::Ignored => Decision::Nothing,
+            SwipableResult::Animating => Decision::Goto(self.state, direction),
+            SwipableResult::Return(x) => Decision::Return(x),
         }
     }
 
