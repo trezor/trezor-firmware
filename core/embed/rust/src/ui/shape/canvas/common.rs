@@ -375,7 +375,7 @@ pub trait Canvas: BasicCanvas {
     // Draws circle with the specified center and the radius.
     #[cfg(not(feature = "ui_antialiasing"))]
     fn draw_circle(&mut self, center: Point, radius: i16, color: Color, alpha: u8) {
-        if radius == 0 {
+        if radius <= 0 {
             return;
         }
 
@@ -441,7 +441,7 @@ pub trait Canvas: BasicCanvas {
     /// Draws filled circle with the specified center and the radius.
     #[cfg(not(feature = "ui_antialiasing"))]
     fn fill_circle(&mut self, center: Point, radius: i16, color: Color, alpha: u8) {
-        if radius == 0 {
+        if radius <= 0 {
             return;
         }
 
@@ -508,7 +508,7 @@ pub trait Canvas: BasicCanvas {
     /// radius.
     #[cfg(feature = "ui_antialiasing")]
     fn fill_circle(&mut self, center: Point, radius: i16, color: Color, alpha: u8) {
-        if radius == 0 {
+        if radius <= 0 {
             return;
         }
 
@@ -602,7 +602,7 @@ pub trait Canvas: BasicCanvas {
         mut end: f32,
         color: Color,
     ) {
-        if radius == 0 {
+        if radius <= 0 {
             return;
         }
 
@@ -731,7 +731,7 @@ fn fill_octant(
     mut u2: i16,
     fill: &mut impl FnMut(Option<Point>, u8, Point, u8),
 ) {
-    if radius == 0 {
+    if radius <= 0 {
         return;
     }
 
