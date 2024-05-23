@@ -30,10 +30,14 @@ pub trait FlowStore {
     fn trace(&self, i: usize, t: &mut dyn crate::trace::Tracer);
 
     /// Forward `Swipable` methods to i-th element.
-    fn map_swipable<T>(&mut self, i: usize, func: impl FnOnce(&mut dyn Swipable) -> T) -> T;
+    fn map_swipable<T>(
+        &mut self,
+        i: usize,
+        func: impl FnOnce(&mut dyn Swipable<FlowMsg>) -> T,
+    ) -> T;
 
     /// Add a Component to the end of a `FlowStore`.
-    fn add<E: Component<Msg = FlowMsg> + MaybeTrace + Swipable>(
+    fn add<E: Component<Msg = FlowMsg> + MaybeTrace + Swipable<FlowMsg>>(
         self,
         elem: E,
     ) -> Result<impl FlowStore, error::Error>
@@ -68,11 +72,15 @@ impl FlowStore for FlowEmpty {
         panic!()
     }
 
-    fn map_swipable<T>(&mut self, _i: usize, _func: impl FnOnce(&mut dyn Swipable) -> T) -> T {
+    fn map_swipable<T>(
+        &mut self,
+        _i: usize,
+        _func: impl FnOnce(&mut dyn Swipable<FlowMsg>) -> T,
+    ) -> T {
         panic!()
     }
 
-    fn add<E: Component<Msg = FlowMsg> + MaybeTrace + Swipable>(
+    fn add<E: Component<Msg = FlowMsg> + MaybeTrace + Swipable<FlowMsg>>(
         self,
         elem: E,
     ) -> Result<impl FlowStore, error::Error>
@@ -108,7 +116,7 @@ impl<E: Component<Msg = FlowMsg>, P> FlowComponent<E, P> {
 
 impl<E, P> FlowStore for FlowComponent<E, P>
 where
-    E: Component<Msg = FlowMsg> + MaybeTrace + Swipable,
+    E: Component<Msg = FlowMsg> + MaybeTrace + Swipable<FlowMsg>,
     P: FlowStore,
 {
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -142,7 +150,11 @@ where
         }
     }
 
-    fn map_swipable<T>(&mut self, i: usize, func: impl FnOnce(&mut dyn Swipable) -> T) -> T {
+    fn map_swipable<T>(
+        &mut self,
+        i: usize,
+        func: impl FnOnce(&mut dyn Swipable<FlowMsg>) -> T,
+    ) -> T {
         if i == 0 {
             func(self.as_mut())
         } else {
@@ -150,7 +162,7 @@ where
         }
     }
 
-    fn add<F: Component<Msg = FlowMsg> + MaybeTrace + Swipable>(
+    fn add<F: Component<Msg = FlowMsg> + MaybeTrace + Swipable<FlowMsg>>(
         self,
         elem: F,
     ) -> Result<impl FlowStore, error::Error>
