@@ -417,6 +417,22 @@ def request_number(
 
 
 # rust/src/ui/model_mercury/layout.rs
+def flow_request_number(
+    *,
+    title: str,
+    count: int,
+    min_count: int,
+    max_count: int,
+    description: Callable[[int], str] | None = None,
+    info: Callable[[int], str] | None = None,
+    br_code: ButtonRequestType,
+    br_type: str,
+) -> LayoutObj[tuple[UiResult, int]]:
+    """Numer input with + and - buttons, description, and context menu with cancel and
+    info."""
+
+
+# rust/src/ui/model_mercury/layout.rs
 def show_checklist(
     *,
     title: str,
