@@ -4,18 +4,46 @@ use num_traits::ToPrimitive;
 /// Component must implement this trait in order to be part of swipe-based flow.
 ///
 /// Default implementation ignores every swipe.
-pub trait Swipable {
-    /// Attempt a swipe. Return false if component in its current state doesn't
-    /// accept a swipe in the given direction. Start a transition animation
-    /// if true is returned.
-    fn swipe_start(&mut self, _ctx: &mut EventCtx, _direction: SwipeDirection) -> bool {
-        false
+pub trait Swipable<T> {
+    /// Attempt a swipe. Return `Ignored` if the component in its current state
+    /// doesn't accept a swipe in that direction. Return `Animating` if
+    /// component accepted the swipe and started a transition animation. The
+    /// `Return(x)` variant indicates that the current flow should be terminated
+    /// with the result `x`.
+    fn swipe_start(
+        &mut self,
+        _ctx: &mut EventCtx,
+        _direction: SwipeDirection,
+    ) -> SwipableResult<T> {
+        SwipableResult::Ignored
     }
 
     /// Return true when transition animation is finished. SwipeFlow needs to
     /// know this in order to resume normal input processing.
     fn swipe_finished(&self) -> bool {
         true
+    }
+}
+
+pub enum SwipableResult<T> {
+    Ignored,
+    Animating,
+    Return(T),
+}
+
+impl<T> SwipableResult<T> {
+    pub fn map<U>(self, func: impl FnOnce(T) -> Option<U>) -> SwipableResult<U> {
+        match self {
+            SwipableResult::Ignored => SwipableResult::Ignored,
+            SwipableResult::Animating => SwipableResult::Animating,
+            SwipableResult::Return(x) => {
+                if let Some(res) = func(x) {
+                    SwipableResult::Return(res)
+                } else {
+                    SwipableResult::Ignored
+                }
+            }
+        }
     }
 }
 

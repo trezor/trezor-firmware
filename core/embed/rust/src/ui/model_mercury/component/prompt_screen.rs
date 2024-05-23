@@ -134,7 +134,7 @@ impl Component for PromptScreen {
 }
 
 #[cfg(feature = "micropython")]
-impl crate::ui::flow::Swipable for PromptScreen {}
+impl crate::ui::flow::Swipable<()> for PromptScreen {}
 
 #[cfg(feature = "ui_debug")]
 impl crate::trace::Trace for PromptScreen {

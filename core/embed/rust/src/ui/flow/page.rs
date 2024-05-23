@@ -4,7 +4,7 @@ use crate::{
     ui::{
         animation::Animation,
         component::{Component, Event, EventCtx, Paginate, SwipeDirection},
-        flow::base::Swipable,
+        flow::base::{Swipable, SwipableResult},
         geometry::{Axis, Rect},
         shape::Renderer,
         util,
@@ -117,17 +117,27 @@ impl<T: Component + Paginate + Clone> Component for SwipePage<T> {
     }
 }
 
-impl<T: Component + Paginate + Clone> Swipable for SwipePage<T> {
-    fn swipe_start(&mut self, ctx: &mut EventCtx, direction: SwipeDirection) -> bool {
+impl<T: Component + Paginate + Clone> Swipable<T::Msg> for SwipePage<T> {
+    fn swipe_start(
+        &mut self,
+        ctx: &mut EventCtx,
+        direction: SwipeDirection,
+    ) -> SwipableResult<T::Msg> {
         match (self.axis, direction) {
             // Wrong direction
-            (Axis::Horizontal, SwipeDirection::Up | SwipeDirection::Down) => return false,
-            (Axis::Vertical, SwipeDirection::Left | SwipeDirection::Right) => return false,
+            (Axis::Horizontal, SwipeDirection::Up | SwipeDirection::Down) => {
+                return SwipableResult::Ignored
+            }
+            (Axis::Vertical, SwipeDirection::Left | SwipeDirection::Right) => {
+                return SwipableResult::Ignored
+            }
             // Begin
-            (_, SwipeDirection::Right | SwipeDirection::Down) if self.current == 0 => return false,
+            (_, SwipeDirection::Right | SwipeDirection::Down) if self.current == 0 => {
+                return SwipableResult::Ignored
+            }
             // End
             (_, SwipeDirection::Left | SwipeDirection::Up) if self.current + 1 >= self.pages => {
-                return false
+                return SwipableResult::Ignored;
             }
             _ => {}
         };
@@ -138,7 +148,7 @@ impl<T: Component + Paginate + Clone> Swipable for SwipePage<T> {
         if util::animation_disabled() {
             self.inner.change_page(self.current);
             ctx.request_paint();
-            return true;
+            return SwipableResult::Animating;
         }
         self.transition = Some(Transition {
             cloned: unwrap!(Gc::new(self.inner.clone())),
@@ -148,7 +158,7 @@ impl<T: Component + Paginate + Clone> Swipable for SwipePage<T> {
         self.inner.change_page(self.current);
         ctx.request_anim_frame();
         ctx.request_paint();
-        true
+        SwipableResult::Animating
     }
 
     fn swipe_finished(&self) -> bool {
@@ -195,7 +205,7 @@ impl<T: Component> Component for IgnoreSwipe<T> {
     }
 }
 
-impl<T> Swipable for IgnoreSwipe<T> {}
+impl<T: Component> Swipable<T::Msg> for IgnoreSwipe<T> {}
 
 #[cfg(feature = "ui_debug")]
 impl<T> crate::trace::Trace for IgnoreSwipe<T>

@@ -52,12 +52,17 @@ where
 }
 
 #[cfg(all(feature = "micropython", feature = "touch", feature = "new_rendering"))]
-impl<T, F> crate::ui::flow::Swipable for MsgMap<T, F>
+impl<T, F, U> crate::ui::flow::Swipable<U> for MsgMap<T, F>
 where
-    T: Component + crate::ui::flow::Swipable,
+    T: Component + crate::ui::flow::Swipable<T::Msg>,
+    F: Fn(T::Msg) -> Option<U>,
 {
-    fn swipe_start(&mut self, ctx: &mut EventCtx, direction: super::SwipeDirection) -> bool {
-        self.inner.swipe_start(ctx, direction)
+    fn swipe_start(
+        &mut self,
+        ctx: &mut EventCtx,
+        direction: super::SwipeDirection,
+    ) -> crate::ui::flow::SwipableResult<U> {
+        self.inner.swipe_start(ctx, direction).map(&self.func)
     }
 
     fn swipe_finished(&self) -> bool {
