@@ -84,7 +84,6 @@ async def reset_device(msg: ResetDevice) -> Success:
         secret = bip39.from_data(secret).encode()
     elif backup_types.is_slip39_backup_type(backup_type):
         # generate and set SLIP39 parameters
-        storage_device.set_slip39_identifier(slip39.generate_random_identifier())
         storage_device.set_slip39_iteration_exponent(slip39.DEFAULT_ITERATION_EXPONENT)
     else:
         # Unknown backup type.
@@ -214,7 +213,11 @@ def _get_slip39_mnemonics(
     groups: Sequence[tuple[int, int]],
     extendable: bool,
 ):
-    identifier = storage_device.get_slip39_identifier()
+    if extendable:
+        identifier = slip39.generate_random_identifier()
+    else:
+        identifier = storage_device.get_slip39_identifier()
+
     iteration_exponent = storage_device.get_slip39_iteration_exponent()
     if identifier is None or iteration_exponent is None:
         raise ValueError

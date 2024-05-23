@@ -56,7 +56,8 @@ async def load_device(msg: LoadDevice) -> Success:
         # this must succeed if the recover_ems call succeeded
         share = slip39.decode_mnemonic(mnemonics[0])
         backup_type = backup_types.infer_backup_type(is_slip39, share)
-        storage_device.set_slip39_identifier(identifier)
+        if not extendable:
+            storage_device.set_slip39_identifier(identifier)
         storage_device.set_slip39_iteration_exponent(iteration_exponent)
 
     storage_device.store_mnemonic_secret(

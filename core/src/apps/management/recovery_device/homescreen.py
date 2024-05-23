@@ -152,12 +152,17 @@ async def _finish_recovery(secret: bytes, backup_type: BackupType) -> Success:
         secret, backup_type, needs_backup=False, no_backup=False
     )
     if backup_types.is_slip39_backup_type(backup_type):
-        identifier = storage_recovery.get_slip39_identifier()
+        if not backup_types.is_extendable_backup_type(backup_type):
+            identifier = storage_recovery.get_slip39_identifier()
+            if identifier is None:
+                # The identifier needs to be stored in storage at this point
+                raise RuntimeError
+            storage_device.set_slip39_identifier(identifier)
+
         exponent = storage_recovery.get_slip39_iteration_exponent()
-        if identifier is None or exponent is None:
-            # Identifier and exponent need to be stored in storage at this point
+        if exponent is None:
+            # The iteration exponent needs to be stored in storage at this point
             raise RuntimeError
-        storage_device.set_slip39_identifier(identifier)
         storage_device.set_slip39_iteration_exponent(exponent)
 
     storage_recovery.end_progress()
