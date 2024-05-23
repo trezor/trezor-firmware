@@ -6,7 +6,7 @@ use crate::{
     ui::{
         animation::Animation,
         component::{Component, Event, EventCtx, Never, SwipeDirection},
-        flow::Swipable,
+        flow::{Swipable, SwipableResult},
         geometry::{Alignment, Alignment2D, Insets, Offset, Rect},
         model_mercury::component::Footer,
         shape,
@@ -160,8 +160,12 @@ impl<'a> Component for ShareWords<'a> {
     fn bounds(&self, _sink: &mut dyn FnMut(Rect)) {}
 }
 
-impl<'a> Swipable for ShareWords<'a> {
-    fn swipe_start(&mut self, ctx: &mut EventCtx, direction: SwipeDirection) -> bool {
+impl<'a> Swipable<Never> for ShareWords<'a> {
+    fn swipe_start(
+        &mut self,
+        ctx: &mut EventCtx,
+        direction: SwipeDirection,
+    ) -> SwipableResult<Never> {
         match direction {
             SwipeDirection::Up if !self.is_final_page() => {
                 self.prev_index = self.page_index;
@@ -171,11 +175,11 @@ impl<'a> Swipable for ShareWords<'a> {
                 self.prev_index = self.page_index;
                 self.page_index = self.page_index.saturating_sub(1);
             }
-            _ => return false,
+            _ => return SwipableResult::Ignored,
         };
         if util::animation_disabled() {
             ctx.request_paint();
-            return true;
+            return SwipableResult::Animating;
         }
         self.animation = Some(Animation::new(
             0.0f32,
@@ -185,7 +189,7 @@ impl<'a> Swipable for ShareWords<'a> {
         ));
         ctx.request_anim_frame();
         ctx.request_paint();
-        true
+        SwipableResult::Animating
     }
 
     fn swipe_finished(&self) -> bool {

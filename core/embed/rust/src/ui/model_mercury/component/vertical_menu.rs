@@ -151,4 +151,4 @@ impl crate::trace::Trace for VerticalMenu {
 }
 
 #[cfg(feature = "micropython")]
-impl crate::ui::flow::Swipable for VerticalMenu {}
+impl crate::ui::flow::Swipable<VerticalMenuChoiceMsg> for VerticalMenu {}

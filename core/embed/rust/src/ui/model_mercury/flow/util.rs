@@ -89,7 +89,7 @@ impl ConfirmBlobParams {
 
     pub fn into_layout(
         self,
-    ) -> Result<impl Component<Msg = FlowMsg> + Swipable + MaybeTrace, Error> {
+    ) -> Result<impl Component<Msg = FlowMsg> + Swipable<FlowMsg> + MaybeTrace, Error> {
         let paragraphs = ConfirmBlob {
             description: self.description.unwrap_or("".into()),
             extra: self.extra.unwrap_or("".into()),
@@ -187,7 +187,7 @@ impl ShowInfoParams {
 
     pub fn into_layout(
         self,
-    ) -> Result<impl Component<Msg = FlowMsg> + Swipable + MaybeTrace, Error> {
+    ) -> Result<impl Component<Msg = FlowMsg> + Swipable<FlowMsg> + MaybeTrace, Error> {
         let mut paragraphs = ParagraphVecShort::new();
         let mut first: bool = true;
         for item in self.items {
