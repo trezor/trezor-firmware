@@ -22,4 +22,6 @@ void bg_copy_wait(void);
  */
 void bg_copy_start_const_out_8(const uint8_t *src, uint8_t *dst, size_t size);
 
+void bg_copy_abort(void);
+
 #endif

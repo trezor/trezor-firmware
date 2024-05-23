@@ -95,3 +95,13 @@ void bg_copy_start_const_out_8(const uint8_t *src, uint8_t *dst, size_t size) {
 
   HAL_DMA_Start_IT(&DMA_Handle, (uint32_t)src, (uint32_t)dst, data_to_send);
 }
+
+void bg_copy_abort(void) {
+  dma_transfer_remaining = 0;
+  dma_data_transferred = 0;
+  HAL_DMA_Abort(&DMA_Handle);
+  HAL_DMA_DeInit(&DMA_Handle);
+  HAL_NVIC_DisableIRQ(GPDMA1_Channel0_IRQn);
+  data_src = NULL;
+  data_dst = NULL;
+}
