@@ -211,7 +211,8 @@ def test_already_initialized(client: Client):
 
     ret = client.call_raw(
         messages.RecoveryDevice(
-            word_count=12, type=messages.RecoveryDeviceType.ScrambledWords
+            word_count=12,
+            input_method=messages.RecoveryDeviceInputMethod.ScrambledWords,
         )
     )
     assert isinstance(ret, messages.Failure)

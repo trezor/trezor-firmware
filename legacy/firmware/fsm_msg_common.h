@@ -60,8 +60,11 @@ bool get_features(Features *resp) {
   resp->has_imported = config_getImported(&(resp->imported));
   resp->has_unlocked = true;
   resp->unlocked = session_isUnlocked();
-  resp->has_needs_backup = true;
-  config_getNeedsBackup(&(resp->needs_backup));
+  resp->has_backup_availability = true;
+  bool needs_backup = false;
+  config_getNeedsBackup(&needs_backup);
+  resp->backup_availability = needs_backup ? BackupAvailability_Required
+                                           : BackupAvailability_NotAvailable;
   resp->has_unfinished_backup = true;
   config_getUnfinishedBackup(&(resp->unfinished_backup));
   resp->has_no_backup = true;
@@ -491,11 +494,11 @@ void fsm_msgApplyFlags(const ApplyFlags *msg) {
 void fsm_msgRecoveryDevice(const RecoveryDevice *msg) {
   CHECK_PIN_UNCACHED
 
-  CHECK_PARAM(!msg->has_kind || msg->kind == RecoveryKind_NormalRecovery ||
-                  msg->kind == RecoveryKind_DryRun,
+  CHECK_PARAM(msg->type == RecoveryType_NormalRecovery ||
+                  msg->type == RecoveryType_DryRun,
               _("UnlockRepeatedBackup not supported"))
 
-  const bool dry_run = msg->has_kind ? msg->kind == RecoveryKind_DryRun : false;
+  const bool dry_run = msg->has_type ? msg->type == RecoveryType_DryRun : false;
   if (!dry_run) {
     CHECK_NOT_INITIALIZED
   } else {
@@ -516,7 +519,7 @@ void fsm_msgRecoveryDevice(const RecoveryDevice *msg) {
                 msg->has_language ? msg->language : 0,
                 msg->has_label ? msg->label : 0,
                 msg->has_enforce_wordlist && msg->enforce_wordlist,
-                msg->has_type ? msg->type : 0,
+                msg->has_input_method ? msg->input_method : 0,
                 msg->has_u2f_counter ? msg->u2f_counter : 0, dry_run);
 }
 

@@ -61,11 +61,11 @@ def _language_version_matches() -> bool | None:
 def get_features() -> Features:
     import storage.recovery as storage_recovery
     from trezor import translations
-    from trezor.enums import Capability, RecoveryKind, RecoveryStatus
+    from trezor.enums import BackupAvailability, Capability, RecoveryStatus
     from trezor.messages import Features
     from trezor.ui import HEIGHT, WIDTH
 
-    from apps.common import mnemonic, safety_checks
+    from apps.common import backup, mnemonic, safety_checks
 
     v_major, v_minor, v_patch, _v_build = utils.VERSION
 
@@ -157,20 +157,22 @@ def get_features() -> Features:
     if config.is_unlocked():
         # passphrase_protection is private, see #1807
         f.passphrase_protection = storage_device.is_passphrase_enabled()
-        f.needs_backup = storage_device.needs_backup()
+        if storage_device.needs_backup():
+            f.backup_availability = BackupAvailability.Required
+        elif backup.repeated_backup_enabled():
+            f.backup_availability = BackupAvailability.Available
+        else:
+            f.backup_availability = BackupAvailability.NotAvailable
         f.unfinished_backup = storage_device.unfinished_backup()
         f.no_backup = storage_device.no_backup()
         f.flags = storage_device.get_flags()
         if storage_recovery.is_in_progress():
-            kind = storage_recovery.get_kind()
-            if kind == RecoveryKind.NormalRecovery:
-                f.recovery_status = RecoveryStatus.InNormalRecovery
-            elif kind == RecoveryKind.DryRun:
-                f.recovery_status = RecoveryStatus.InDryRunRecovery
-            elif kind == RecoveryKind.UnlockRepeatedBackup:
-                f.recovery_status = RecoveryStatus.InUnlockRepeatedBackupRecovery
+            f.recovery_status = RecoveryStatus.Recovery
+            f.recovery_type = storage_recovery.get_type()
+        elif backup.repeated_backup_enabled():
+            f.recovery_status = RecoveryStatus.Backup
         else:
-            f.recovery_status = RecoveryStatus.NoRecovery
+            f.recovery_status = RecoveryStatus.Nothing
         f.backup_type = mnemonic.get_type()
 
         # Only some models are capable of SD card
@@ -417,7 +419,7 @@ async def unlock_device() -> None:
 
     _SCREENSAVER_IS_ON = False
     set_homescreen()
-    wire.filters.remove(_pinlock_filter)
+    wire.remove_filter(_pinlock_filter)
 
 
 def _pinlock_filter(msg_type: int, prev_handler: Handler[Msg]) -> Handler[Msg]:
@@ -429,30 +431,6 @@ def _pinlock_filter(msg_type: int, prev_handler: Handler[Msg]) -> Handler[Msg]:
         return await prev_handler(msg)
 
     return wrapper
-
-
-_ALLOW_WHILE_REPEATED_BACKUP_UNLOCKED = (
-    MessageType.Initialize,
-    MessageType.GetFeatures,
-    MessageType.EndSession,
-    MessageType.BackupDevice,
-    MessageType.WipeDevice,
-    MessageType.Cancel,
-)
-
-
-def _repeated_backup_filter(msg_type: int, prev_handler: Handler[Msg]) -> Handler[Msg]:
-    if msg_type in _ALLOW_WHILE_REPEATED_BACKUP_UNLOCKED:
-        return prev_handler
-    else:
-        raise wire.ProcessError("Operation not allowed when in repeated backup state")
-
-
-def remove_repeated_backup_filter():
-    try:
-        wire.filters.remove(_repeated_backup_filter)
-    except ValueError:
-        pass
 
 
 # this function is also called when handling ApplySettings
@@ -469,6 +447,8 @@ def reload_settings_from_storage() -> None:
 
 
 def boot() -> None:
+    from apps.common import backup
+
     MT = MessageType  # local_cache_global
 
     # Register workflow handlers
@@ -488,8 +468,8 @@ def boot() -> None:
 
     reload_settings_from_storage()
 
-    if storage_cache.get_bool(storage_cache.APP_RECOVERY_REPEATED_BACKUP_UNLOCKED):
-        wire.filters.append(_repeated_backup_filter)
+    if backup.repeated_backup_enabled():
+        backup.activate_repeated_backup()
     if not config.is_unlocked():
         # pinlocked handler should always be the last one
         wire.filters.append(_pinlock_filter)

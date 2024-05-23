@@ -91,6 +91,8 @@ trezor.crypto.slip39
 import trezor.crypto.slip39
 trezor.enums.AmountUnit
 import trezor.enums.AmountUnit
+trezor.enums.BackupAvailability
+import trezor.enums.BackupAvailability
 trezor.enums.BackupType
 import trezor.enums.BackupType
 trezor.enums.BootCommand
@@ -119,12 +121,12 @@ trezor.enums.OutputScriptType
 import trezor.enums.OutputScriptType
 trezor.enums.PinMatrixRequestType
 import trezor.enums.PinMatrixRequestType
-trezor.enums.RecoveryDeviceType
-import trezor.enums.RecoveryDeviceType
-trezor.enums.RecoveryKind
-import trezor.enums.RecoveryKind
+trezor.enums.RecoveryDeviceInputMethod
+import trezor.enums.RecoveryDeviceInputMethod
 trezor.enums.RecoveryStatus
 import trezor.enums.RecoveryStatus
+trezor.enums.RecoveryType
+import trezor.enums.RecoveryType
 trezor.enums.RequestType
 import trezor.enums.RequestType
 trezor.enums.SafetyCheckLevel

@@ -55,7 +55,9 @@ def reset(client: Client, strength: int = 128, skip_backup: bool = False) -> str
 
     # Check if device is properly initialized
     assert client.features.initialized is True
-    assert client.features.needs_backup is False
+    assert (
+        client.features.backup_availability == messages.BackupAvailability.NotAvailable
+    )
     assert client.features.pin_protection is False
     assert client.features.passphrase_protection is False
 

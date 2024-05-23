@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 from storage import common
 
 if TYPE_CHECKING:
-    from trezor.enums import RecoveryKind
+    from trezor.enums import RecoveryType
 
 # Namespace:
 _NAMESPACE = common.APP_RECOVERY
@@ -12,7 +12,7 @@ _NAMESPACE = common.APP_RECOVERY
 # fmt: off
 # Keys:
 _IN_PROGRESS               = const(0x00)  # bool
-_KIND                      = const(0x01)  # int
+_TYPE                      = const(0x01)  # int
 _SLIP39_IDENTIFIER         = const(0x03)  # bytes
 _REMAINING                 = const(0x05)  # int
 _SLIP39_ITERATION_EXPONENT = const(0x06)  # int
@@ -41,27 +41,27 @@ def is_in_progress() -> bool:
     return common.get_bool(_NAMESPACE, _IN_PROGRESS)
 
 
-def set_kind(val: int) -> None:
+def set_type(val: int) -> None:
     _require_progress()
-    common.set_uint8(_NAMESPACE, _KIND, val)
+    common.set_uint8(_NAMESPACE, _TYPE, val)
 
 
-def get_kind() -> RecoveryKind:
-    from trezor.enums import RecoveryKind
+def get_type() -> RecoveryType:
+    from trezor.enums import RecoveryType
 
     _require_progress()
-    recovery_kind = common.get_uint8(_NAMESPACE, _KIND)
-    if recovery_kind is None:
-        recovery_kind = RecoveryKind.NormalRecovery
+    recovery_type = common.get_uint8(_NAMESPACE, _TYPE)
+    if recovery_type is None:
+        recovery_type = RecoveryType.NormalRecovery
 
-    if recovery_kind not in (
-        RecoveryKind.NormalRecovery,
-        RecoveryKind.DryRun,
-        RecoveryKind.UnlockRepeatedBackup,
+    if recovery_type not in (
+        RecoveryType.NormalRecovery,
+        RecoveryType.DryRun,
+        RecoveryType.UnlockRepeatedBackup,
     ):
-        # Invalid recovery kind
+        # Invalid recovery type
         raise RuntimeError
-    return recovery_kind
+    return recovery_type
 
 
 def set_slip39_identifier(identifier: int) -> None:
@@ -146,7 +146,7 @@ def end_progress() -> None:
     _require_progress()
     for key in (
         _IN_PROGRESS,
-        _KIND,
+        _TYPE,
         _SLIP39_IDENTIFIER,
         _REMAINING,
         _SLIP39_ITERATION_EXPONENT,

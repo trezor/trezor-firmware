@@ -980,7 +980,7 @@ def confirm_recovery(
     title: str,  # unused on TR
     description: str,
     button: str,
-    kind: int,  # RecoveryKind enum, passed as an int
+    recovery_type: RecoveryType,
     info_button: bool,  # unused on TR
     show_info: bool,
 ) -> LayoutObj[UiResult]:
@@ -990,7 +990,7 @@ def confirm_recovery(
 # rust/src/ui/model_tr/layout.rs
 def select_word_count(
     *,
-    dry_run: bool,  # unused on TR
+    recovery_type: RecoveryType,  # unused on TR
 ) -> LayoutObj[int | str]:
    """Select mnemonic word count from (12, 18, 20, 24, 33)."""
 
@@ -1515,7 +1515,7 @@ def confirm_recovery(
     title: str,
     description: str,
     button: str,
-    kind: int,  # RecoveryKind enum, passed as an int
+    recovery_type: RecoveryType,
     info_button: bool = False,
 ) -> LayoutObj[UiResult]:
     """Device recovery homescreen."""
@@ -1524,7 +1524,7 @@ def confirm_recovery(
 # rust/src/ui/model_tt/layout.rs
 def select_word_count(
     *,
-    dry_run: bool,
+    recovery_type: RecoveryType,
 ) -> LayoutObj[int | str]:  # TT returns int
     """Select mnemonic word count from (12, 18, 20, 24, 33)."""
 

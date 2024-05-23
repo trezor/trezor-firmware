@@ -1,6 +1,5 @@
 from typing import TYPE_CHECKING
 
-import storage.cache as storage_cache
 import storage.device as storage_device
 import storage.recovery as storage_recovery
 import storage.recovery_shares as storage_recovery_shares
@@ -12,15 +11,17 @@ from apps.common import backup_types
 from . import layout, recover
 
 if TYPE_CHECKING:
-    from trezor.enums import BackupType, RecoveryKind
+    from trezor.enums import BackupType, RecoveryType
 
 
 async def recovery_homescreen() -> None:
     from trezor import workflow
 
+    from apps.common import backup
     from apps.homescreen import homescreen
 
-    if storage_cache.get_bool(storage_cache.APP_RECOVERY_REPEATED_BACKUP_UNLOCKED):
+    if backup.repeated_backup_enabled():
+        storage_recovery.end_progress()
         await _continue_repeated_backup()
     elif not storage_recovery.is_in_progress():
         workflow.set_default(homescreen)
@@ -30,11 +31,11 @@ async def recovery_homescreen() -> None:
 
 async def recovery_process() -> Success:
     import storage
-    from trezor.enums import MessageType, RecoveryKind
+    from trezor.enums import MessageType, RecoveryType
 
     from apps.common import backup
 
-    kind = storage_recovery.get_kind()
+    recovery_type = storage_recovery.get_type()
 
     wire.AVOID_RESTARTING_FOR = (
         MessageType.Initialize,
@@ -44,24 +45,18 @@ async def recovery_process() -> Success:
     try:
         return await _continue_recovery_process()
     except recover.RecoveryAborted:
-        if kind == RecoveryKind.DryRun:
-            storage_recovery.end_progress()
-        elif kind == RecoveryKind.UnlockRepeatedBackup:
-            backup.disable_repeated_backup()
-            storage_recovery.end_progress()
-        else:
+        storage_recovery.end_progress()
+        backup.deactivate_repeated_backup()
+        if recovery_type == RecoveryType.NormalRecovery:
             storage.wipe()
         raise wire.ActionCancelled
 
 
 async def _continue_repeated_backup() -> None:
-    from trezor import workflow
     from trezor.enums import ButtonRequestType, MessageType
     from trezor.ui.layouts import confirm_action
-    from trezor.wire import ActionCancelled
 
     from apps.common import backup, mnemonic
-    from apps.homescreen import homescreen
     from apps.management.reset_device import backup_seed
 
     wire.AVOID_RESTARTING_FOR = (
@@ -84,20 +79,17 @@ async def _continue_repeated_backup() -> None:
             raise RuntimeError
 
         await backup_seed(backup_type, mnemonic_secret)
-    except ActionCancelled:
-        workflow.set_default(homescreen)
     finally:
-        backup.disable_repeated_backup()
-        storage_recovery.end_progress()
+        backup.deactivate_repeated_backup()
 
 
 async def _continue_recovery_process() -> Success:
     from trezor import utils
-    from trezor.enums import RecoveryKind
+    from trezor.enums import RecoveryType
     from trezor.errors import MnemonicError
 
     # gather the current recovery state from storage
-    kind = storage_recovery.get_kind()
+    recovery_type = storage_recovery.get_type()
     word_count, backup_type = recover.load_slip39_state()
 
     # Both word_count and backup_type are derived from the same data. Both will be
@@ -109,7 +101,7 @@ async def _continue_recovery_process() -> Success:
     if not is_first_step:
         assert word_count is not None
         # If we continue recovery, show starting screen with word count immediately.
-        await _request_share_first_screen(word_count, kind)
+        await _request_share_first_screen(word_count, recovery_type)
 
     secret = None
     while secret is None:
@@ -122,9 +114,9 @@ async def _continue_recovery_process() -> Success:
                     TR.buttons__continue, TR.recovery__num_of_words
                 )
             # ask for the number of words
-            word_count = await layout.request_word_count(kind == RecoveryKind.DryRun)
+            word_count = await layout.request_word_count(recovery_type)
             # ...and only then show the starting screen with word count.
-            await _request_share_first_screen(word_count, kind)
+            await _request_share_first_screen(word_count, recovery_type)
         assert word_count is not None
 
         # ask for mnemonic words one by one
@@ -144,9 +136,9 @@ async def _continue_recovery_process() -> Success:
             await layout.show_invalid_mnemonic(word_count)
 
     assert backup_type is not None
-    if kind == RecoveryKind.DryRun:
+    if recovery_type == RecoveryType.DryRun:
         result = await _finish_recovery_dry_run(secret, backup_type)
-    elif kind == RecoveryKind.UnlockRepeatedBackup:
+    elif recovery_type == RecoveryType.UnlockRepeatedBackup:
         result = await _finish_recovery_unlock_repeated_backup(secret, backup_type)
     else:
         result = await _finish_recovery(secret, backup_type)
@@ -154,7 +146,9 @@ async def _continue_recovery_process() -> Success:
     return result
 
 
-def _check_secret_against_stored_secret(secret: bytes, is_slip39: bool, backup_type: BackupType) -> bool:
+def _check_secret_against_stored_secret(
+    secret: bytes, is_slip39: bool, backup_type: BackupType
+) -> bool:
     from trezor import utils
     from trezor.crypto.hashlib import sha256
 
@@ -205,7 +199,7 @@ async def _finish_recovery_dry_run(secret: bytes, backup_type: BackupType) -> Su
 async def _finish_recovery_unlock_repeated_backup(
     secret: bytes, backup_type: BackupType
 ) -> Success:
-    import storage.cache as storage_cache
+    from apps.common import backup
 
     if backup_type is None:
         raise RuntimeError
@@ -215,9 +209,7 @@ async def _finish_recovery_unlock_repeated_backup(
     result = _check_secret_against_stored_secret(secret, is_slip39, backup_type)
 
     if result:
-        storage_cache.set_bool(
-            storage_cache.APP_RECOVERY_REPEATED_BACKUP_UNLOCKED, True
-        )
+        backup.activate_repeated_backup()
         return Success(message="Backup unlocked")
     else:
         raise wire.ProcessError("The seed does not match the one in the device")
@@ -272,15 +264,17 @@ async def _process_words(words: str) -> tuple[bytes | None, BackupType]:
     return secret, backup_type
 
 
-async def _request_share_first_screen(word_count: int, kind: RecoveryKind) -> None:
-    from trezor.enums import RecoveryKind
+async def _request_share_first_screen(
+    word_count: int, recovery_type: RecoveryType
+) -> None:
+    from trezor.enums import RecoveryType
 
     if backup_types.is_slip39_word_count(word_count):
         remaining = storage_recovery.fetch_slip39_remaining_shares()
         if remaining:
             await _request_share_next_screen()
         else:
-            if kind == RecoveryKind.UnlockRepeatedBackup:
+            if recovery_type == RecoveryType.UnlockRepeatedBackup:
                 text = TR.recovery__enter_backup
                 button_label = TR.buttons__continue
             else:

@@ -106,7 +106,7 @@ def test_backup_slip39_custom(
     assert device_handler.result() == "Seed successfully backed up"
     features = device_handler.features()
     assert features.initialized is True
-    assert features.needs_backup is False
+    assert features.backup_availability == messages.BackupAvailability.NotAvailable
     assert features.pin_protection is False
     assert features.passphrase_protection is False
     assert features.backup_type is messages.BackupType.Slip39_Basic_Extendable

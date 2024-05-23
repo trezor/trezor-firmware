@@ -28,7 +28,7 @@ from ...input_flows import (
 )
 
 
-def do_recover_legacy(client: Client, mnemonic: list[str], **kwargs: Any):
+def do_recover_legacy(client: Client, mnemonic: list[str]):
     def input_callback(_):
         word, pos = client.debug.read_recovery_word()
         if pos != 0 and pos is not None:
@@ -40,11 +40,10 @@ def do_recover_legacy(client: Client, mnemonic: list[str], **kwargs: Any):
 
     ret = device.recover(
         client,
-        recovery_kind=messages.RecoveryKind.DryRun,
+        type=messages.RecoveryType.DryRun,
         word_count=len(mnemonic),
-        type=messages.RecoveryDeviceType.ScrambledWords,
+        input_method=messages.RecoveryDeviceInputMethod.ScrambledWords,
         input_callback=input_callback,
-        **kwargs
     )
     # if the call succeeded, check that all words have been used
     assert all(m is None for m in mnemonic)
@@ -56,7 +55,7 @@ def do_recover_core(client: Client, mnemonic: list[str], mismatch: bool = False)
         client.watch_layout()
         IF = InputFlowBip39RecoveryDryRun(client, mnemonic, mismatch=mismatch)
         client.set_input_flow(IF.get())
-        return device.recover(client, recovery_kind=messages.RecoveryKind.DryRun)
+        return device.recover(client, type=messages.RecoveryType.DryRun)
 
 
 def do_recover(client: Client, mnemonic: list[str], mismatch: bool = False):
@@ -105,10 +104,10 @@ def test_uninitialized(client: Client):
 
 
 DRY_RUN_ALLOWED_FIELDS = (
-    "kind",
+    "type",
     "word_count",
     "enforce_wordlist",
-    "type",
+    "input_method",
     "show_tutorial",
 )
 
@@ -131,7 +130,7 @@ def _make_bad_params():
             yield field.name, True
         elif field.type == "string":
             yield field.name, "test"
-        elif field.type == "RecoveryKind":
+        elif field.type == "RecoveryType":
             yield field.name, 1
         else:
             # Someone added a field to RecoveryDevice of a type that has no assigned
@@ -142,10 +141,10 @@ def _make_bad_params():
 @pytest.mark.parametrize("field_name, field_value", _make_bad_params())
 def test_bad_parameters(client: Client, field_name: str, field_value: Any):
     msg = messages.RecoveryDevice(
-        kind=messages.RecoveryKind.DryRun,
+        type=messages.RecoveryType.DryRun,
         word_count=12,
         enforce_wordlist=True,
-        type=messages.RecoveryDeviceType.ScrambledWords,
+        input_method=messages.RecoveryDeviceInputMethod.ScrambledWords,
     )
     setattr(msg, field_name, field_value)
     with pytest.raises(

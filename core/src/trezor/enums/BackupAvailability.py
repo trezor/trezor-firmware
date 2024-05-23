@@ -2,6 +2,6 @@
 # fmt: off
 # isort:skip_file
 
-Nothing = 0
-Recovery = 1
-Backup = 2
+NotAvailable = 0
+Required = 1
+Available = 2

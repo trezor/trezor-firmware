@@ -474,8 +474,8 @@ void next_word(void) {
 
 void recovery_init(uint32_t _word_count, bool passphrase_protection,
                    bool pin_protection, const char *language, const char *label,
-                   bool _enforce_wordlist, uint32_t type, uint32_t u2f_counter,
-                   bool _dry_run) {
+                   bool _enforce_wordlist, uint32_t input_method,
+                   uint32_t u2f_counter, bool _dry_run) {
   if (_word_count != 12 && _word_count != 18 && _word_count != 24) return;
 
   recovery_mode = RECOVERY_NONE;
@@ -510,7 +510,7 @@ void recovery_init(uint32_t _word_count, bool passphrase_protection,
   }
 
   // Prefer matrix recovery if the host supports it.
-  if ((type & RecoveryDeviceType_RecoveryDeviceType_Matrix) != 0) {
+  if ((input_method & RecoveryDeviceInputMethod_Matrix) != 0) {
     recovery_mode = RECOVERY_MATRIX;
     next_matrix();
   } else {

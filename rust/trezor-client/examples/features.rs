@@ -78,8 +78,7 @@ fn do_main() -> Result<(), trezor_client::Error> {
     //optional bool pin_cached = 16;              // is PIN already cached in session?
     //optional bool passphrase_cached = 17;       // is passphrase already cached in session?
     //optional bool firmware_present = 18;        // is valid firmware loaded?
-    //optional bool needs_backup = 19;            // does storage need backup? (equals to
-    // Storage.needs_backup) optional uint32 flags = 20;                 // device flags (equals
+    //optional uint32 flags = 20;                 // device flags (equals
     // to Storage.flags) optional string model = 21;                 // device hardware model
     //optional uint32 fw_major = 22;              // reported firmware version if in bootloader
     // mode optional uint32 fw_minor = 23;              // reported firmware version if in

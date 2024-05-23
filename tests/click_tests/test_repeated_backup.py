@@ -93,16 +93,16 @@ def test_repeated_backup(
     # great ... device is initialized, backup done, and we are not in recovery mode!
     assert device_handler.result() == "Initialized"
     features = device_handler.features()
-    assert features.backup_type is messages.BackupType.Slip39_Basic
+    assert features.backup_type is messages.BackupType.Slip39_Basic_Extendable
     assert features.initialized is True
-    assert features.needs_backup is False
+    assert features.backup_availability == messages.BackupAvailability.NotAvailable
     assert features.no_backup is False
-    assert features.recovery_status == messages.RecoveryStatus.NoRecovery
+    assert features.recovery_status == messages.RecoveryStatus.Nothing
 
     # run recovery to unlock backup
     device_handler.run(
         device.recover,
-        recovery_kind=messages.RecoveryKind.UnlockRepeatedBackup,
+        type=messages.RecoveryType.UnlockRepeatedBackup,
     )
 
     recovery.confirm_recovery(debug, "recovery__title_unlock_repeated_backup")
@@ -123,14 +123,11 @@ def test_repeated_backup(
 
     # we are now in recovery mode
     features = device_handler.features()
-    assert features.backup_type is messages.BackupType.Slip39_Basic
+    assert features.backup_type is messages.BackupType.Slip39_Basic_Extendable
     assert features.initialized is True
-    assert features.needs_backup is False
+    assert features.backup_availability == messages.BackupAvailability.Available
     assert features.no_backup is False
-    assert (
-        features.recovery_status
-        == messages.RecoveryStatus.InUnlockRepeatedBackupRecovery
-    )
+    assert features.recovery_status == messages.RecoveryStatus.Backup
 
     # at this point, the backup is unlocked...
 
@@ -169,16 +166,16 @@ def test_repeated_backup(
 
     # we are not in recovery mode anymore, because we finished the backup process!
     features = device_handler.features()
-    assert features.backup_type is messages.BackupType.Slip39_Basic
+    assert features.backup_type is messages.BackupType.Slip39_Basic_Extendable
     assert features.initialized is True
-    assert features.needs_backup is False
+    assert features.backup_availability == messages.BackupAvailability.NotAvailable
     assert features.no_backup is False
-    assert features.recovery_status == messages.RecoveryStatus.NoRecovery
+    assert features.recovery_status == messages.RecoveryStatus.Nothing
 
     # try to unlock backup again...
     device_handler.run(
         device.recover,
-        recovery_kind=messages.RecoveryKind.UnlockRepeatedBackup,
+        type=messages.RecoveryType.UnlockRepeatedBackup,
     )
 
     recovery.confirm_recovery(debug, "recovery__title_unlock_repeated_backup")
@@ -188,7 +185,7 @@ def test_repeated_backup(
     recovery.enter_shares(
         debug,
         second_backup_2_of_3[-2:],
-        "recovery__title_unlock_repeated_backup",
+        "recovery__title_dry_run",
         "recovery__enter_backup",
         "recovery__unlock_repeated_backup",
     )
@@ -197,22 +194,19 @@ def test_repeated_backup(
 
     # we are now in recovery mode again!
     features = device_handler.features()
-    assert features.backup_type is messages.BackupType.Slip39_Basic
+    assert features.backup_type is messages.BackupType.Slip39_Basic_Extendable
     assert features.initialized is True
-    assert features.needs_backup is False
+    assert features.backup_availability == messages.BackupAvailability.Available
     assert features.no_backup is False
-    assert (
-        features.recovery_status
-        == messages.RecoveryStatus.InUnlockRepeatedBackupRecovery
-    )
+    assert features.recovery_status == messages.RecoveryStatus.Backup
 
     # but if we cancel the backup at this point...
     reset.cancel_backup(debug)
 
     # ...we are out of recovery mode!
     features = device_handler.features()
-    assert features.backup_type is messages.BackupType.Slip39_Basic
+    assert features.backup_type is messages.BackupType.Slip39_Basic_Extendable
     assert features.initialized is True
-    assert features.needs_backup is False
+    assert features.backup_availability == messages.BackupAvailability.NotAvailable
     assert features.no_backup is False
-    assert features.recovery_status == messages.RecoveryStatus.NoRecovery
+    assert features.recovery_status == messages.RecoveryStatus.Nothing
