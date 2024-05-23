@@ -65,15 +65,15 @@ pub trait ButtonRequestExt {
 impl<T: Component> ButtonRequestExt for T {}
 
 #[cfg(all(feature = "micropython", feature = "touch", feature = "new_rendering"))]
-impl<T> crate::ui::flow::Swipable for OneButtonRequest<T>
+impl<T> crate::ui::flow::Swipable<T::Msg> for OneButtonRequest<T>
 where
-    T: Component + crate::ui::flow::Swipable,
+    T: Component + crate::ui::flow::Swipable<T::Msg>,
 {
     fn swipe_start(
         &mut self,
         ctx: &mut EventCtx,
         direction: crate::ui::component::SwipeDirection,
-    ) -> bool {
+    ) -> crate::ui::flow::SwipableResult<T::Msg> {
         self.inner.swipe_start(ctx, direction)
     }
 
