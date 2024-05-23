@@ -1,15 +1,15 @@
 use crate::{
     error::Error,
     strutil::{self, TString},
-    translations::TR,
     ui::{
         component::{
             base::ComponentExt,
             paginated::Paginate,
             text::paragraphs::{Paragraph, Paragraphs},
-            Child, Component, Event, EventCtx, Pad,
+            Child, Component, Event, EventCtx, Pad, SwipeDirection,
         },
-        display::{self, Font},
+        display::Font,
+        flow::{Swipable, SwipableResult},
         geometry::{Alignment, Grid, Insets, Offset, Rect},
         shape::{self, Renderer},
     },
@@ -17,10 +17,7 @@ use crate::{
 
 use super::{theme, Button, ButtonMsg};
 
-pub enum NumberInputDialogMsg {
-    Selected,
-    InfoRequested,
-}
+pub struct NumberInputDialogMsg(pub u32);
 
 pub struct NumberInputDialog<F>
 where
@@ -31,8 +28,6 @@ where
     input: Child<NumberInput>,
     paragraphs: Child<Paragraphs<Paragraph<'static>>>,
     paragraphs_pad: Pad,
-    info_button: Child<Button>,
-    confirm_button: Child<Button>,
 }
 
 impl<F> NumberInputDialog<F>
@@ -45,12 +40,9 @@ where
             area: Rect::zero(),
             description_func,
             input: NumberInput::new(min, max, init_value).into_child(),
-            paragraphs: Paragraphs::new(Paragraph::new(&theme::TEXT_NORMAL, text)).into_child(),
-            paragraphs_pad: Pad::with_background(theme::BG),
-            info_button: Button::with_text(TR::buttons__info.into()).into_child(),
-            confirm_button: Button::with_text(TR::buttons__continue.into())
-                .styled(theme::button_confirm())
+            paragraphs: Paragraphs::new(Paragraph::new(&theme::TEXT_MAIN_GREY_LIGHT, text))
                 .into_child(),
+            paragraphs_pad: Pad::with_background(theme::BG),
         })
     }
 
@@ -79,23 +71,17 @@ where
 
     fn place(&mut self, bounds: Rect) -> Rect {
         self.area = bounds;
-        let button_height = theme::BUTTON_HEIGHT;
-        let content_area = self.area.inset(Insets::top(2 * theme::BUTTON_SPACING));
-        let (input_area, content_area) = content_area.split_top(button_height);
-        let (content_area, button_area) = content_area.split_bottom(button_height);
-        let content_area = content_area.inset(Insets::new(
-            theme::BUTTON_SPACING,
-            0,
-            theme::BUTTON_SPACING,
-            theme::CONTENT_BORDER,
-        ));
+        let bot_padding = 20;
+        let top_padding = 14;
+        let button_height = theme::COUNTER_BUTTON_HEIGHT;
 
-        let grid = Grid::new(button_area, 1, 2).with_spacing(theme::KEYBOARD_SPACING);
-        self.input.place(input_area);
+        let content_area = self.area.inset(Insets::top(top_padding));
+        let (content_area, input_area) = content_area.split_bottom(button_height + bot_padding);
+        let input_area = input_area.inset(Insets::bottom(bot_padding));
+
         self.paragraphs.place(content_area);
         self.paragraphs_pad.place(content_area);
-        self.info_button.place(grid.row_col(0, 0));
-        self.confirm_button.place(grid.row_col(0, 1));
+        self.input.place(input_area);
         bounds
     }
 
@@ -104,29 +90,17 @@ where
             self.update_text(ctx, i);
         }
         self.paragraphs.event(ctx, event);
-        if let Some(ButtonMsg::Clicked) = self.info_button.event(ctx, event) {
-            return Some(Self::Msg::InfoRequested);
-        }
-        if let Some(ButtonMsg::Clicked) = self.confirm_button.event(ctx, event) {
-            return Some(Self::Msg::Selected);
-        };
         None
     }
 
     fn paint(&mut self) {
-        self.input.paint();
-        self.paragraphs_pad.paint();
-        self.paragraphs.paint();
-        self.info_button.paint();
-        self.confirm_button.paint();
+        todo!("remove when ui-t3t1 done");
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.input.render(target);
         self.paragraphs_pad.render(target);
         self.paragraphs.render(target);
-        self.info_button.render(target);
-        self.confirm_button.render(target);
     }
 
     #[cfg(feature = "ui_bounds")]
@@ -134,8 +108,26 @@ where
         sink(self.area);
         self.input.bounds(sink);
         self.paragraphs.bounds(sink);
-        self.info_button.bounds(sink);
-        self.confirm_button.bounds(sink);
+    }
+}
+
+impl<F> Swipable<NumberInputDialogMsg> for NumberInputDialog<F>
+where
+    F: Fn(u32) -> TString<'static>,
+{
+    fn swipe_start(
+        &mut self,
+        _ctx: &mut EventCtx,
+        direction: SwipeDirection,
+    ) -> SwipableResult<NumberInputDialogMsg> {
+        match direction {
+            SwipeDirection::Up => SwipableResult::Return(NumberInputDialogMsg(self.value())),
+            _ => SwipableResult::Ignored,
+        }
+    }
+
+    fn swipe_finished(&self) -> bool {
+        true
     }
 }
 
@@ -148,8 +140,6 @@ where
         t.component("NumberInputDialog");
         t.child("input", &self.input);
         t.child("paragraphs", &self.paragraphs);
-        t.child("info_button", &self.info_button);
-        t.child("confirm_button", &self.confirm_button);
     }
 }
 
@@ -168,10 +158,10 @@ pub struct NumberInput {
 
 impl NumberInput {
     pub fn new(min: u32, max: u32, value: u32) -> Self {
-        let dec = Button::with_text("-".into())
+        let dec = Button::with_icon(theme::ICON_MINUS)
             .styled(theme::button_counter())
             .into_child();
-        let inc = Button::with_text("+".into())
+        let inc = Button::with_icon(theme::ICON_PLUS)
             .styled(theme::button_counter())
             .into_child();
         let value = value.clamp(min, max);
@@ -219,21 +209,7 @@ impl Component for NumberInput {
     }
 
     fn paint(&mut self) {
-        let mut buf = [0u8; 10];
-        if let Some(text) = strutil::format_i64(self.value as i64, &mut buf) {
-            let digit_font = Font::DEMIBOLD;
-            let y_offset = digit_font.text_height() / 2 + Button::BASELINE_OFFSET.y;
-            display::rect_fill(self.area, theme::BG);
-            display::text_center(
-                self.area.center() + Offset::y(y_offset),
-                text,
-                digit_font,
-                theme::FG,
-                theme::BG,
-            );
-        }
-        self.dec.paint();
-        self.inc.paint();
+        todo!("remove when ui-t3t1 done");
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
@@ -241,7 +217,7 @@ impl Component for NumberInput {
 
         if let Some(text) = strutil::format_i64(self.value as i64, &mut buf) {
             let digit_font = Font::DEMIBOLD;
-            let y_offset = digit_font.text_height() / 2 + Button::BASELINE_OFFSET.y;
+            let y_offset = digit_font.text_height() / 2;
 
             shape::Bar::new(self.area).with_bg(theme::BG).render(target);
             shape::Text::new(self.area.center() + Offset::y(y_offset), text)

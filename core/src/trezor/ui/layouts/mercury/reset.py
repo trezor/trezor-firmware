@@ -134,41 +134,32 @@ async def _prompt_number(
     max_count: int,
     br_name: str,
 ) -> int:
-    num_input = RustLayout(
-        trezorui2.request_number(
+
+    result = await RustLayout(
+        trezorui2.flow_request_number(
             title=title,
             description=description,
             count=count,
             min_count=min_count,
             max_count=max_count,
+            info=info,
+            br_code=ButtonRequestType.ResetDevice,
+            br_type=br_name,
         )
     )
 
-    while True:
-        result = await interact(
-            num_input,
-            br_name,
-            ButtonRequestType.ResetDevice,
-        )
-        if __debug__:
-            if not isinstance(result, tuple):
-                # DebugLink currently can't send number of shares and it doesn't
-                # change the counter either so just use the initial value.
-                result = (result, count)
-        status, value = result
-
-        if status == CONFIRMED:
-            assert isinstance(value, int)
-            return value
-
-        await RustLayout(
-            trezorui2.show_simple(
-                title=None,
-                description=info(value),
-                button=TR.buttons__ok_i_understand,
-            )
-        )
-        num_input.request_complete_repaint()
+    if __debug__:
+        # TODO: is this still relevant?
+        if not isinstance(result, tuple):
+            # DebugLink currently can't send number of shares and it doesn't
+            # change the counter either so just use the initial value.
+            result = (result, count)
+    status, value = result
+    if status == CONFIRMED:
+        assert isinstance(value, int)
+        return value
+    else:
+        raise ActionCancelled  # user cancelled request number prompt
 
 
 async def slip39_prompt_threshold(
