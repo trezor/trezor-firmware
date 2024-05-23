@@ -36,8 +36,8 @@ if __debug__:
                 (io.TOUCH_END, 220, 220),
             ):
                 msg = self.layout.touch_event(event, x, y)
-                self.layout.paint()
-                ui.refresh()
+                if self.layout.paint():
+                    ui.refresh()
                 if msg is not None:
                     raise Result(msg)
 
