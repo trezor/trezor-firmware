@@ -84,7 +84,7 @@ void display_reinit(void) {
 void display_finish_actions(void) {
 #ifdef XFRAMEBUFFER
 #ifndef BOARDLOADER
-  bg_copy_wait();
+  wait_for_fb_switch();
 #endif
 #endif
 }
