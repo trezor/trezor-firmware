@@ -19,8 +19,8 @@ class HomescreenBase(RustLayout):
         super().__init__(layout=layout)
 
     def _paint(self) -> None:
-        self.layout.paint()
-        ui.refresh()
+        if self.layout.paint():
+            ui.refresh()
 
     def _first_paint(self) -> None:
         if storage_cache.homescreen_shown is not self.RENDER_INDICATOR:
@@ -76,8 +76,8 @@ class Homescreen(HomescreenBase):
         while True:
             is_connected = await usbcheck
             self.layout.usb_event(is_connected)
-            self.layout.paint()
-            ui.refresh()
+            if self.layout.paint():
+                ui.refresh()
 
     def create_tasks(self) -> Tuple[loop.AwaitableTask, ...]:
         return super().create_tasks() + (self.usb_checker_task(),)
