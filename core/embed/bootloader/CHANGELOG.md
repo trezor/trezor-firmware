@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## 2.1.6 [May 2024]
 
+### Added
+- Added `unit_packaging` field to `Features`.  [#3711]
+
 ### Changed
 - [T3T1] Changed USB manufacturer string to "Trezor Company" and product string to "Trezor Safe 5" in the USB descriptor strings.  [#3770]
 
@@ -135,4 +138,5 @@ Internal only release for Model R prototypes.
 [#3303]: https://github.com/trezor/trezor-firmware/pull/3303
 [#3370]: https://github.com/trezor/trezor-firmware/pull/3370
 [#3429]: https://github.com/trezor/trezor-firmware/pull/3429
+[#3711]: https://github.com/trezor/trezor-firmware/pull/3711
 [#3770]: https://github.com/trezor/trezor-firmware/pull/3770
