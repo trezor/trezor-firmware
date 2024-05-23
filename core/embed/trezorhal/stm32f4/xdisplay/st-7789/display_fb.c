@@ -63,32 +63,34 @@ void display_physical_fb_clear(void) {
 }
 
 #ifndef BOARDLOADER
-static volatile bool pending_fb_switch = false;
+static volatile uint16_t pending_fb_switch = 0;
 static volatile uint32_t last_fb_update_time = 0;
 #endif
 
 #ifndef BOARDLOADER
 void DISPLAY_TE_INTERRUPT_HANDLER(void) {
-  HAL_NVIC_DisableIRQ(DISPLAY_TE_INTERRUPT_NUM);
+  if (pending_fb_switch == 1) {
+    if (current_frame_buffer == 1) {
+      bg_copy_start_const_out_8((uint8_t *)physical_frame_buffer_1,
+                                (uint8_t *)DISPLAY_DATA_ADDRESS,
+                                DISPLAY_RESX * DISPLAY_RESY * 2);
 
-  if (current_frame_buffer == 1) {
-    bg_copy_start_const_out_8((uint8_t *)physical_frame_buffer_1,
-                              (uint8_t *)DISPLAY_DATA_ADDRESS,
-                              DISPLAY_RESX * DISPLAY_RESY * 2);
-
-  } else {
-    bg_copy_start_const_out_8((uint8_t *)physical_frame_buffer_0,
-                              (uint8_t *)DISPLAY_DATA_ADDRESS,
-                              DISPLAY_RESX * DISPLAY_RESY * 2);
+    } else {
+      bg_copy_start_const_out_8((uint8_t *)physical_frame_buffer_0,
+                                (uint8_t *)DISPLAY_DATA_ADDRESS,
+                                DISPLAY_RESX * DISPLAY_RESY * 2);
+    }
+    last_fb_update_time = HAL_GetTick();
+    pending_fb_switch = 2;
+  } else if (pending_fb_switch == 2) {
+    HAL_NVIC_DisableIRQ(DISPLAY_TE_INTERRUPT_NUM);
+    pending_fb_switch = 0;
   }
-
-  pending_fb_switch = false;
-  last_fb_update_time = HAL_GetTick();
   __HAL_GPIO_EXTI_CLEAR_FLAG(DISPLAY_TE_PIN);
 }
 
 static void wait_for_fb_switch(void) {
-  while (pending_fb_switch) {
+  while (pending_fb_switch != 0) {
     __WFI();
   }
   bg_copy_wait();
@@ -131,7 +133,7 @@ static void switch_fb_in_background(void) {
     memcpy(physical_frame_buffer_0, physical_frame_buffer_1,
            sizeof(physical_frame_buffer_0));
 
-    pending_fb_switch = true;
+    pending_fb_switch = 1;
     __HAL_GPIO_EXTI_CLEAR_FLAG(DISPLAY_TE_PIN);
     svc_enableIRQ(DISPLAY_TE_INTERRUPT_NUM);
   } else {
@@ -139,7 +141,7 @@ static void switch_fb_in_background(void) {
     memcpy(physical_frame_buffer_1, physical_frame_buffer_0,
            sizeof(physical_frame_buffer_1));
 
-    pending_fb_switch = true;
+    pending_fb_switch = 1;
     __HAL_GPIO_EXTI_CLEAR_FLAG(DISPLAY_TE_PIN);
     svc_enableIRQ(DISPLAY_TE_INTERRUPT_NUM);
   }
