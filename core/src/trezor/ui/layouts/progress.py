@@ -36,8 +36,8 @@ class RustProgress:
         self.layout = layout
         ui.backlight_fade(ui.BacklightLevels.DIM)
         self.layout.attach_timer_fn(self.set_timer)
-        self.layout.paint()
-        ui.refresh()
+        if self.layout.paint():
+            ui.refresh()
         ui.backlight_fade(ui.BacklightLevels.NORMAL)
 
     def set_timer(self, token: int, deadline: int) -> None:
@@ -46,8 +46,8 @@ class RustProgress:
     def report(self, value: int, description: str | None = None):
         msg = self.layout.progress_event(value, description or "")
         assert msg is None
-        self.layout.paint()
-        ui.refresh()
+        if self.layout.paint():
+            ui.refresh()
 
 
 def progress(
