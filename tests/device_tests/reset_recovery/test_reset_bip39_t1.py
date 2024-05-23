@@ -80,7 +80,7 @@ def reset_device(client: Client, strength: int):
     # Check if device is properly initialized
     resp = client.call_raw(messages.Initialize())
     assert resp.initialized is True
-    assert resp.needs_backup is False
+    assert resp.backup_availability == messages.BackupAvailability.NotAvailable
     assert resp.pin_protection is False
     assert resp.passphrase_protection is False
 
@@ -177,7 +177,7 @@ def test_reset_device_256_pin(client: Client):
     # Check if device is properly initialized
     resp = client.call_raw(messages.Initialize())
     assert resp.initialized is True
-    assert resp.needs_backup is False
+    assert resp.backup_availability == messages.BackupAvailability.NotAvailable
     assert resp.pin_protection is True
     assert resp.passphrase_protection is True
 

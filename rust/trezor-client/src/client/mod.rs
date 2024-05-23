@@ -170,13 +170,11 @@ impl Trezor {
         req.set_label(label);
         req.set_enforce_wordlist(true);
         if dry_run {
-            req.set_kind(protos::recovery_device::RecoveryKind::DryRun);
+            req.set_type(protos::RecoveryType::DryRun);
         } else {
-            req.set_kind(protos::recovery_device::RecoveryKind::NormalRecovery);
+            req.set_type(protos::RecoveryType::NormalRecovery);
         }
-        req.set_type(
-            protos::recovery_device::RecoveryDeviceType::RecoveryDeviceType_ScrambledWords,
-        );
+        req.set_input_method(protos::recovery_device::RecoveryDeviceInputMethod::ScrambledWords);
         //TODO(stevenroose) support languages
         req.set_language("english".to_owned());
         self.call(req, Box::new(|_, _| Ok(())))

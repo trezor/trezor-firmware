@@ -228,8 +228,8 @@ impl ComponentMsgObj for super::component::bl_confirm::Confirm<'_> {
     }
 }
 
-const RECOVERY_KIND_DRY_RUN: u32 = 1;
-const RECOVERY_KIND_UNLOCK_REPEATED_BACKUP: u32 = 2;
+const RECOVERY_TYPE_DRY_RUN: u32 = 1;
+const RECOVERY_TYPE_UNLOCK_REPEATED_BACKUP: u32 = 2;
 
 /// Function to create and call a `ButtonPage` dialog based on paginable content
 /// (e.g. `Paragraphs` or `FormattedText`).
@@ -1398,7 +1398,7 @@ extern "C" fn new_confirm_recovery(n_args: usize, args: *const Obj, kwargs: *mut
     let block = move |_args: &[Obj], kwargs: &Map| {
         let description: TString = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
         let button: TString<'static> = kwargs.get(Qstr::MP_QSTR_button)?.try_into()?;
-        let kind: u32 = kwargs.get(Qstr::MP_QSTR_kind)?.try_into()?;
+        let recovery_type: u32 = kwargs.get(Qstr::MP_QSTR_recovery_type)?.try_into()?;
         let show_info: bool = kwargs.get(Qstr::MP_QSTR_show_info)?.try_into()?;
 
         let mut paragraphs = ParagraphVecShort::new();
@@ -1415,9 +1415,9 @@ extern "C" fn new_confirm_recovery(n_args: usize, args: *const Obj, kwargs: *mut
                 ));
         }
 
-        let title = match kind {
-            RECOVERY_KIND_DRY_RUN => TR::recovery__title_dry_run,
-            RECOVERY_KIND_UNLOCK_REPEATED_BACKUP => TR::recovery__title_unlock_repeated_backup,
+        let title = match recovery_type {
+            RECOVERY_TYPE_DRY_RUN => TR::recovery__title_dry_run,
+            RECOVERY_TYPE_UNLOCK_REPEATED_BACKUP => TR::recovery__title_dry_run,
             _ => TR::recovery__title,
         };
 
@@ -1968,7 +1968,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     title: str,  # unused on TR
     ///     description: str,
     ///     button: str,
-    ///     kind: int,  # RecoveryKind enum, passed as an int
+    ///     recovery_type: RecoveryType,
     ///     info_button: bool,  # unused on TR
     ///     show_info: bool,
     /// ) -> LayoutObj[UiResult]:
@@ -1977,7 +1977,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
 
     /// def select_word_count(
     ///     *,
-    ///     dry_run: bool,  # unused on TR
+    ///     recovery_type: RecoveryType,  # unused on TR
     /// ) -> LayoutObj[int | str]:
     ///    """Select mnemonic word count from (12, 18, 20, 24, 33)."""
     Qstr::MP_QSTR_select_word_count => obj_fn_kw!(0, new_select_word_count).as_obj(),

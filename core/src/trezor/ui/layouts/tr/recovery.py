@@ -2,15 +2,15 @@ from typing import Callable, Iterable
 
 import trezorui2
 from trezor import TR
-from trezor.enums import ButtonRequestType, RecoveryKind
+from trezor.enums import ButtonRequestType, RecoveryType
 
 from ..common import interact
 from . import RustLayout, raise_if_not_confirmed, show_warning
 
 
-async def request_word_count(dry_run: bool) -> int:
+async def request_word_count(recovery_type: RecoveryType) -> int:
     count = await interact(
-        RustLayout(trezorui2.select_word_count(dry_run=dry_run)),
+        RustLayout(trezorui2.select_word_count(recovery_type=recovery_type)),
         "word_count",
         ButtonRequestType.MnemonicWordCount,
     )
@@ -76,7 +76,7 @@ async def continue_recovery(
     text: str,
     subtext: str | None,
     info_func: Callable | None,
-    kind: RecoveryKind,
+    recovery_type: RecoveryType,
     show_info: bool = False,
 ) -> bool:
     # TODO: implement info_func?
@@ -84,7 +84,7 @@ async def continue_recovery(
     # (and having middle button would mean shortening the right button text)
 
     # Never showing info for dry-run, user already saw it and it is disturbing
-    if kind in (RecoveryKind.DryRun, RecoveryKind.UnlockRepeatedBackup):
+    if recovery_type in (RecoveryType.DryRun, RecoveryType.UnlockRepeatedBackup):
         show_info = False
 
     if subtext:
@@ -95,7 +95,7 @@ async def continue_recovery(
             title="",
             description=text,
             button=button_label,
-            kind=kind,
+            recovery_type=recovery_type,
             info_button=False,
             show_info=show_info,  # type: ignore [No parameter named "show_info"]
         )

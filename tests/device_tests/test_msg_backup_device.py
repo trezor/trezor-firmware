@@ -40,7 +40,7 @@ from ..input_flows import (
 @pytest.mark.skip_t1b1  # TODO we want this for t1 too
 @pytest.mark.setup_client(needs_backup=True, mnemonic=MNEMONIC12)
 def test_backup_bip39(client: Client):
-    assert client.features.needs_backup is True
+    assert client.features.backup_availability == messages.BackupAvailability.Required
 
     with client:
         IF = InputFlowBip39Backup(client)
@@ -50,7 +50,9 @@ def test_backup_bip39(client: Client):
     assert IF.mnemonic == MNEMONIC12
     client.init_device()
     assert client.features.initialized is True
-    assert client.features.needs_backup is False
+    assert (
+        client.features.backup_availability == messages.BackupAvailability.NotAvailable
+    )
     assert client.features.unfinished_backup is False
     assert client.features.no_backup is False
     assert client.features.backup_type is messages.BackupType.Bip39
@@ -65,7 +67,7 @@ def test_backup_slip39_basic(client: Client, click_info: bool):
     if click_info and client.model is models.T2B1:
         pytest.skip("click_info not implemented on T2B1")
 
-    assert client.features.needs_backup is True
+    assert client.features.backup_availability == messages.BackupAvailability.Required
 
     with client:
         IF = InputFlowSlip39BasicBackup(client, click_info)
@@ -74,7 +76,9 @@ def test_backup_slip39_basic(client: Client, click_info: bool):
 
     client.init_device()
     assert client.features.initialized is True
-    assert client.features.needs_backup is False
+    assert (
+        client.features.backup_availability == messages.BackupAvailability.NotAvailable
+    )
     assert client.features.unfinished_backup is False
     assert client.features.no_backup is False
     assert client.features.backup_type is messages.BackupType.Slip39_Basic
@@ -93,7 +97,7 @@ def test_backup_slip39_advanced(client: Client, click_info: bool):
     if click_info and client.model is models.T2B1:
         pytest.skip("click_info not implemented on T2B1")
 
-    assert client.features.needs_backup is True
+    assert client.features.backup_availability == messages.BackupAvailability.Required
 
     with client:
         IF = InputFlowSlip39AdvancedBackup(client, click_info)
@@ -102,7 +106,9 @@ def test_backup_slip39_advanced(client: Client, click_info: bool):
 
     client.init_device()
     assert client.features.initialized is True
-    assert client.features.needs_backup is False
+    assert (
+        client.features.backup_availability == messages.BackupAvailability.NotAvailable
+    )
     assert client.features.unfinished_backup is False
     assert client.features.no_backup is False
     assert client.features.backup_type is messages.BackupType.Slip39_Advanced
@@ -122,7 +128,7 @@ def test_backup_slip39_advanced(client: Client, click_info: bool):
     ids=["1_of_1", "2_of_2", "3_of_5"],
 )
 def test_backup_slip39_custom(client: Client, share_threshold, share_count):
-    assert client.features.needs_backup is True
+    assert client.features.backup_availability == messages.BackupAvailability.Required
 
     with client:
         IF = InputFlowSlip39CustomBackup(client, share_count)
@@ -133,7 +139,9 @@ def test_backup_slip39_custom(client: Client, share_threshold, share_count):
 
     client.init_device()
     assert client.features.initialized is True
-    assert client.features.needs_backup is False
+    assert (
+        client.features.backup_availability == messages.BackupAvailability.NotAvailable
+    )
     assert client.features.unfinished_backup is False
     assert client.features.no_backup is False
 
@@ -150,7 +158,9 @@ def test_no_backup_fails(client: Client):
     client.ensure_unlocked()
     assert client.features.initialized is True
     assert client.features.no_backup is True
-    assert client.features.needs_backup is False
+    assert (
+        client.features.backup_availability == messages.BackupAvailability.NotAvailable
+    )
 
     # backup attempt should fail because no_backup=True
     with pytest.raises(TrezorFailure, match=r".*Seed already backed up"):
@@ -162,7 +172,7 @@ def test_no_backup_fails(client: Client):
 def test_interrupt_backup_fails(client: Client):
     client.ensure_unlocked()
     assert client.features.initialized is True
-    assert client.features.needs_backup is True
+    assert client.features.backup_availability == messages.BackupAvailability.Required
     assert client.features.unfinished_backup is False
     assert client.features.no_backup is False
 
@@ -174,7 +184,9 @@ def test_interrupt_backup_fails(client: Client):
 
     # check that device state is as expected
     assert client.features.initialized is True
-    assert client.features.needs_backup is False
+    assert (
+        client.features.backup_availability == messages.BackupAvailability.NotAvailable
+    )
     assert client.features.unfinished_backup is True
     assert client.features.no_backup is False
 

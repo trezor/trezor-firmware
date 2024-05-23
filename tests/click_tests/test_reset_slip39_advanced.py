@@ -139,7 +139,7 @@ def test_reset_slip39_advanced(
 
     features = device_handler.features()
     assert features.initialized is True
-    assert features.needs_backup is False
+    assert features.backup_availability == messages.BackupAvailability.NotAvailable
     assert features.pin_protection is False
     assert features.passphrase_protection is False
     assert features.backup_type is messages.BackupType.Slip39_Advanced_Extendable

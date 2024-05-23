@@ -53,7 +53,7 @@ def test_reset_device_skip_backup(client: Client):
     # Check if device is properly initialized
     ret = client.call_raw(messages.Initialize())
     assert ret.initialized is True
-    assert ret.needs_backup is True
+    assert ret.backup_availability == messages.BackupAvailability.Required
     assert ret.unfinished_backup is False
     assert ret.no_backup is False
 
@@ -120,7 +120,7 @@ def test_reset_device_skip_backup_break(client: Client):
     # Check if device is properly initialized
     ret = client.call_raw(messages.Initialize())
     assert ret.initialized is True
-    assert ret.needs_backup is True
+    assert ret.backup_availability == messages.BackupAvailability.Required
     assert ret.unfinished_backup is False
     assert ret.no_backup is False
 
@@ -131,7 +131,7 @@ def test_reset_device_skip_backup_break(client: Client):
     ret = client.call_raw(messages.Initialize())
     assert isinstance(ret, messages.Features)
     assert ret.initialized is True
-    assert ret.needs_backup is False
+    assert ret.backup_availability == messages.BackupAvailability.NotAvailable
     assert ret.unfinished_backup is True
     assert ret.no_backup is False
 
@@ -143,7 +143,7 @@ def test_reset_device_skip_backup_break(client: Client):
     ret = client.call_raw(messages.Initialize())
     assert isinstance(ret, messages.Features)
     assert ret.initialized is True
-    assert ret.needs_backup is False
+    assert ret.backup_availability == messages.BackupAvailability.NotAvailable
     assert ret.unfinished_backup is True
     assert ret.no_backup is False
 

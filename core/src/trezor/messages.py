@@ -17,6 +17,7 @@ def __getattr__(name: str) -> Any:
 if TYPE_CHECKING:
     from typing import TypeGuard
     from trezor.enums import AmountUnit  # noqa: F401
+    from trezor.enums import BackupAvailability  # noqa: F401
     from trezor.enums import BackupType  # noqa: F401
     from trezor.enums import BinanceOrderSide  # noqa: F401
     from trezor.enums import BinanceOrderType  # noqa: F401
@@ -53,9 +54,9 @@ if TYPE_CHECKING:
     from trezor.enums import NEMSupplyChangeType  # noqa: F401
     from trezor.enums import OutputScriptType  # noqa: F401
     from trezor.enums import PinMatrixRequestType  # noqa: F401
-    from trezor.enums import RecoveryDeviceType  # noqa: F401
-    from trezor.enums import RecoveryKind  # noqa: F401
+    from trezor.enums import RecoveryDeviceInputMethod  # noqa: F401
     from trezor.enums import RecoveryStatus  # noqa: F401
+    from trezor.enums import RecoveryType  # noqa: F401
     from trezor.enums import RequestType  # noqa: F401
     from trezor.enums import SafetyCheckLevel  # noqa: F401
     from trezor.enums import SdProtectOperationType  # noqa: F401
@@ -2133,7 +2134,7 @@ if TYPE_CHECKING:
         imported: "bool | None"
         unlocked: "bool | None"
         firmware_present: "bool | None"
-        needs_backup: "bool | None"
+        backup_availability: "BackupAvailability | None"
         flags: "int | None"
         model: "str | None"
         fw_major: "int | None"
@@ -2166,6 +2167,7 @@ if TYPE_CHECKING:
         language_version_matches: "bool"
         unit_packaging: "int | None"
         haptic_feedback: "bool | None"
+        recovery_type: "RecoveryType | None"
 
         def __init__(
             self,
@@ -2187,7 +2189,7 @@ if TYPE_CHECKING:
             imported: "bool | None" = None,
             unlocked: "bool | None" = None,
             firmware_present: "bool | None" = None,
-            needs_backup: "bool | None" = None,
+            backup_availability: "BackupAvailability | None" = None,
             flags: "int | None" = None,
             model: "str | None" = None,
             fw_major: "int | None" = None,
@@ -2219,6 +2221,7 @@ if TYPE_CHECKING:
             language_version_matches: "bool | None" = None,
             unit_packaging: "int | None" = None,
             haptic_feedback: "bool | None" = None,
+            recovery_type: "RecoveryType | None" = None,
         ) -> None:
             pass
 
@@ -2600,9 +2603,9 @@ if TYPE_CHECKING:
         pin_protection: "bool | None"
         label: "str | None"
         enforce_wordlist: "bool | None"
-        type: "RecoveryDeviceType | None"
+        input_method: "RecoveryDeviceInputMethod | None"
         u2f_counter: "int | None"
-        kind: "RecoveryKind"
+        type: "RecoveryType"
 
         def __init__(
             self,
@@ -2612,9 +2615,9 @@ if TYPE_CHECKING:
             pin_protection: "bool | None" = None,
             label: "str | None" = None,
             enforce_wordlist: "bool | None" = None,
-            type: "RecoveryDeviceType | None" = None,
+            input_method: "RecoveryDeviceInputMethod | None" = None,
             u2f_counter: "int | None" = None,
-            kind: "RecoveryKind | None" = None,
+            type: "RecoveryType | None" = None,
         ) -> None:
             pass
 

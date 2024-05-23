@@ -44,7 +44,7 @@ def test_abort(core_emulator: Emulator):
     if debug.model is models.T3T1:
         pytest.skip("abort not supported on T3T1")
 
-    assert features.recovery_status == RecoveryStatus.NoRecovery
+    assert features.recovery_status == RecoveryStatus.Nothing
 
     device_handler.run(device.recover, pin_protection=False)
 
@@ -56,7 +56,7 @@ def test_abort(core_emulator: Emulator):
     debug = _restart(device_handler, core_emulator)
     features = device_handler.features()
 
-    assert features.recovery_status == RecoveryStatus.InNormalRecovery
+    assert features.recovery_status == RecoveryStatus.Recovery
 
     # no waiting for layout because layout doesn't change
     assert "number of words" in debug.read_layout().text_content()
@@ -72,7 +72,7 @@ def test_abort(core_emulator: Emulator):
 
     assert layout.main_component() == "Homescreen"
     features = device_handler.features()
-    assert features.recovery_status == RecoveryStatus.NoRecovery
+    assert features.recovery_status == RecoveryStatus.Nothing
 
 
 @core_only
@@ -82,7 +82,7 @@ def test_recovery_single_reset(core_emulator: Emulator):
     features = device_handler.features()
 
     assert features.initialized is False
-    assert features.recovery_status == RecoveryStatus.NoRecovery
+    assert features.recovery_status == RecoveryStatus.Nothing
 
     device_handler.run(device.recover, pin_protection=False)
 
@@ -92,7 +92,7 @@ def test_recovery_single_reset(core_emulator: Emulator):
 
     debug = _restart(device_handler, core_emulator)
     features = device_handler.features()
-    assert features.recovery_status == RecoveryStatus.InNormalRecovery
+    assert features.recovery_status == RecoveryStatus.Recovery
 
     # we need to enter the number of words again, that's a feature
     recovery.select_number_of_words(debug, wait=False)
@@ -101,7 +101,7 @@ def test_recovery_single_reset(core_emulator: Emulator):
 
     features = device_handler.features()
     assert features.initialized is True
-    assert features.recovery_status == RecoveryStatus.NoRecovery
+    assert features.recovery_status == RecoveryStatus.Nothing
 
 
 @core_only
@@ -119,7 +119,7 @@ def test_recovery_on_old_wallet(core_emulator: Emulator):
     features = device_handler.features()
 
     assert features.initialized is False
-    assert features.recovery_status == RecoveryStatus.NoRecovery
+    assert features.recovery_status == RecoveryStatus.Nothing
 
     # enter recovery mode
     device_handler.run(device.recover, pin_protection=False)
@@ -129,7 +129,7 @@ def test_recovery_on_old_wallet(core_emulator: Emulator):
     # restart to get into stand-alone recovery
     debug = _restart(device_handler, core_emulator)
     features = device_handler.features()
-    assert features.recovery_status == RecoveryStatus.InNormalRecovery
+    assert features.recovery_status == RecoveryStatus.Recovery
 
     # enter number of words
     recovery.select_number_of_words(debug, wait=False)
@@ -168,7 +168,7 @@ def test_recovery_on_old_wallet(core_emulator: Emulator):
     # check that the recovery succeeded
     features = device_handler.features()
     assert features.initialized is True
-    assert features.recovery_status == RecoveryStatus.NoRecovery
+    assert features.recovery_status == RecoveryStatus.Nothing
 
 
 @core_only
@@ -192,7 +192,7 @@ def test_recovery_multiple_resets(core_emulator: Emulator):
     features = device_handler.features()
 
     assert features.initialized is False
-    assert features.recovery_status == RecoveryStatus.NoRecovery
+    assert features.recovery_status == RecoveryStatus.Nothing
 
     # start device and recovery
     device_handler.run(device.recover, pin_protection=False)
@@ -205,7 +205,7 @@ def test_recovery_multiple_resets(core_emulator: Emulator):
     # restart
     debug = _restart(device_handler, core_emulator)
     features = device_handler.features()
-    assert features.recovery_status == RecoveryStatus.InNormalRecovery
+    assert features.recovery_status == RecoveryStatus.Recovery
 
     # enter the number of words again, that's a feature!
     recovery.select_number_of_words(debug, wait=False)
@@ -217,4 +217,4 @@ def test_recovery_multiple_resets(core_emulator: Emulator):
 
     features = device_handler.features()
     assert features.initialized is True
-    assert features.recovery_status == RecoveryStatus.NoRecovery
+    assert features.recovery_status == RecoveryStatus.Nothing

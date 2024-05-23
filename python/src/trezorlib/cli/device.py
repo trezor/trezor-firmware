@@ -28,9 +28,9 @@ if TYPE_CHECKING:
     from ..protobuf import MessageType
     from . import TrezorConnection
 
-RECOVERY_TYPE = {
-    "scrambled": messages.RecoveryDeviceType.ScrambledWords,
-    "matrix": messages.RecoveryDeviceType.Matrix,
+RECOVERY_DEVICE_INPUT_METHOD = {
+    "scrambled": messages.RecoveryDeviceInputMethod.ScrambledWords,
+    "matrix": messages.RecoveryDeviceInputMethod.Matrix,
 }
 
 BACKUP_TYPE = {
@@ -148,7 +148,12 @@ def load(
 @click.option("-l", "--label")
 @click.option("-u", "--u2f-counter", default=None, type=int)
 @click.option(
-    "-t", "--type", "rec_type", type=ChoiceType(RECOVERY_TYPE), default="scrambled"
+    "-i",
+    "--input_method",
+    "-t",
+    "--type",
+    type=ChoiceType(RECOVERY_DEVICE_INPUT_METHOD),
+    default="scrambled",
 )
 @click.option("-d", "--dry-run", is_flag=True)
 @click.option("-b", "--unlock-repeated-backup", is_flag=True)
@@ -161,12 +166,12 @@ def recover(
     passphrase_protection: bool,
     label: Optional[str],
     u2f_counter: int,
-    rec_type: messages.RecoveryDeviceType,
+    input_method: messages.RecoveryDeviceInputMethod,
     dry_run: bool,
     unlock_repeated_backup: bool,
 ) -> "MessageType":
     """Start safe recovery workflow."""
-    if rec_type == messages.RecoveryDeviceType.ScrambledWords:
+    if input_method == messages.RecoveryDeviceInputMethod.ScrambledWords:
         input_callback = ui.mnemonic_words(expand)
     else:
         input_callback = ui.matrix_words
@@ -175,11 +180,11 @@ def recover(
     if dry_run and unlock_repeated_backup:
         raise click.ClickException("Cannot use -d and -b together.")
 
-    recovery_kind = None
+    type = None
     if dry_run:
-        recovery_kind = messages.RecoveryKind.DryRun
+        type = messages.RecoveryType.DryRun
     if unlock_repeated_backup:
-        recovery_kind = messages.RecoveryKind.UnlockRepeatedBackup
+        type = messages.RecoveryType.UnlockRepeatedBackup
 
     return device.recover(
         client,
@@ -189,8 +194,8 @@ def recover(
         label=label,
         u2f_counter=u2f_counter,
         input_callback=input_callback,
-        type=rec_type,
-        recovery_kind=recovery_kind,
+        input_method=input_method,
+        type=type,
     )
 
 

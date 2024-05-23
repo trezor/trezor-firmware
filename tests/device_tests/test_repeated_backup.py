@@ -29,7 +29,7 @@ from ..input_flows import InputFlowSlip39BasicBackup, InputFlowSlip39BasicRecove
 @pytest.mark.skip_t1b1
 @WITH_MOCK_URANDOM
 def test_repeated_backup(client: Client):
-    assert client.features.needs_backup is True
+    assert client.features.backup_availability == messages.BackupAvailability.Required
 
     # initial device backup
     mnemonics = []
@@ -51,9 +51,7 @@ def test_repeated_backup(client: Client):
             client, mnemonics[:3], unlock_repeated_backup=True
         )
         client.set_input_flow(IF.get())
-        ret = device.recover(
-            client, recovery_kind=messages.RecoveryKind.UnlockRepeatedBackup
-        )
+        ret = device.recover(client, type=messages.RecoveryType.UnlockRepeatedBackup)
         assert ret == messages.Success(message="Backup unlocked")
 
     # we can now perform another backup
@@ -71,7 +69,7 @@ def test_repeated_backup(client: Client):
 @pytest.mark.skip_t1b1
 @WITH_MOCK_URANDOM
 def test_repeated_backup_cancel(client: Client):
-    assert client.features.needs_backup is True
+    assert client.features.backup_availability == messages.BackupAvailability.Required
 
     # initial device backup
     mnemonics = []
@@ -93,9 +91,7 @@ def test_repeated_backup_cancel(client: Client):
             client, mnemonics[:3], unlock_repeated_backup=True
         )
         client.set_input_flow(IF.get())
-        ret = device.recover(
-            client, recovery_kind=messages.RecoveryKind.UnlockRepeatedBackup
-        )
+        ret = device.recover(client, type=messages.RecoveryType.UnlockRepeatedBackup)
         assert ret == messages.Success(message="Backup unlocked")
 
     client.debug.wait_layout()

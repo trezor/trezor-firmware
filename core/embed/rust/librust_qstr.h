@@ -293,7 +293,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_joint__title;
   MP_QSTR_joint__to_the_total_amount;
   MP_QSTR_joint__you_are_contributing;
-  MP_QSTR_kind;
   MP_QSTR_label;
   MP_QSTR_language;
   MP_QSTR_language__change_to_template;
@@ -454,6 +453,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_recovery__x_more_shares_needed_template_plural;
   MP_QSTR_recovery__x_of_y_entered_template;
   MP_QSTR_recovery__you_have_entered;
+  MP_QSTR_recovery_type;
   MP_QSTR_request_bip39;
   MP_QSTR_request_complete_repaint;
   MP_QSTR_request_number;

@@ -1,14 +1,14 @@
 from typing import TYPE_CHECKING
 
-from trezor.enums import RecoveryKind
+from trezor.enums import RecoveryType
 
 if TYPE_CHECKING:
     from trezor.messages import RecoveryDevice, Success
 
 # List of RecoveryDevice fields that can be set when doing dry-run recovery.
-# All except `kind` are allowed for T1 compatibility, but their values are ignored.
+# All except `type` are allowed for T1 compatibility, but their values are ignored.
 # If set, `enforce_wordlist` must be True, because we do not support non-enforcing.
-DRY_RUN_ALLOWED_FIELDS = ("kind", "word_count", "enforce_wordlist", "type")
+DRY_RUN_ALLOWED_FIELDS = ("type", "word_count", "enforce_wordlist", "input_method")
 
 
 async def recovery_device(msg: RecoveryDevice) -> Success:
@@ -34,18 +34,18 @@ async def recovery_device(msg: RecoveryDevice) -> Success:
 
     from .homescreen import recovery_homescreen, recovery_process
 
-    recovery_kind = msg.kind  # local_cache_attribute
+    recovery_type = msg.type  # local_cache_attribute
 
     # --------------------------------------------------------
     # validate
-    if recovery_kind == RecoveryKind.NormalRecovery:
+    if recovery_type == RecoveryType.NormalRecovery:
         if storage_device.is_initialized():
             raise wire.UnexpectedMessage("Already initialized")
-    elif recovery_kind in (RecoveryKind.DryRun, RecoveryKind.UnlockRepeatedBackup):
+    elif recovery_type in (RecoveryType.DryRun, RecoveryType.UnlockRepeatedBackup):
         if not storage_device.is_initialized():
             raise wire.NotInitialized("Device is not initialized")
         if (
-            recovery_kind == RecoveryKind.UnlockRepeatedBackup
+            recovery_type == RecoveryType.UnlockRepeatedBackup
             and mnemonic.get_type() == BackupType.Bip39
         ):
             raise wire.ProcessError("Repeated Backup not available for BIP39 backups")
@@ -54,7 +54,7 @@ async def recovery_device(msg: RecoveryDevice) -> Success:
             if key not in DRY_RUN_ALLOWED_FIELDS and value is not None:
                 raise wire.ProcessError(f"Forbidden field set in dry-run: {key}")
     else:
-        raise RuntimeError  # Unknown RecoveryKind
+        raise RuntimeError  # Unknown RecoveryType
 
     if msg.enforce_wordlist is False:
         raise wire.ProcessError(
@@ -66,7 +66,7 @@ async def recovery_device(msg: RecoveryDevice) -> Success:
     if storage_recovery.is_in_progress():
         return await recovery_process()
 
-    if recovery_kind == RecoveryKind.NormalRecovery:
+    if recovery_type == RecoveryType.NormalRecovery:
         await confirm_reset_device(TR.recovery__title_recover, recovery=True)
 
         # wipe storage to make sure the device is in a clear state
@@ -85,10 +85,10 @@ async def recovery_device(msg: RecoveryDevice) -> Success:
         if msg.label is not None:
             storage_device.set_label(msg.label)
 
-    elif recovery_kind in (RecoveryKind.DryRun, RecoveryKind.UnlockRepeatedBackup):
+    elif recovery_type in (RecoveryType.DryRun, RecoveryType.UnlockRepeatedBackup):
         title = (
             TR.recovery__title_dry_run
-            if recovery_kind == RecoveryKind.DryRun
+            if recovery_type == RecoveryType.DryRun
             else TR.recovery__title_unlock_repeated_backup
         )
         await confirm_action(
@@ -105,7 +105,7 @@ async def recovery_device(msg: RecoveryDevice) -> Success:
 
     storage_recovery.set_in_progress(True)
 
-    storage_recovery.set_kind(int(recovery_kind))
+    storage_recovery.set_type(int(recovery_type))
 
     workflow.set_default(recovery_homescreen)
 
