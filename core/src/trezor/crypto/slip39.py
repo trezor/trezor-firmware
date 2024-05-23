@@ -156,7 +156,7 @@ def decrypt(
     encrypted_master_secret: bytes,
     passphrase: bytes,
     iteration_exponent: int,
-    identifier: int,
+    identifier: int | None,
     extendable: bool,
     progress_callback: Callable[[int, int], None] | None = None,
 ) -> bytes:
@@ -440,10 +440,12 @@ def _round_function(i: int, passphrase: bytes, e: int, salt: bytes, r: bytes) ->
     ).key()[: len(r)]
 
 
-def _get_salt(identifier: int, extendable: bool) -> bytes:
+def _get_salt(identifier: int | None, extendable: bool) -> bytes:
     if extendable:
         return bytes()
     else:
+        if identifier is None:
+            raise RuntimeError
         return _CUSTOMIZATION_STRING_ORIG + identifier.to_bytes(
             _bits_to_bytes(_ID_LENGTH_BITS), "big"
         )
