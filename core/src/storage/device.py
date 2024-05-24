@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 
 import storage.cache as storage_cache
 from storage import common
+from trezor import utils
 
 if TYPE_CHECKING:
     from trezor.enums import BackupType
@@ -35,6 +36,10 @@ INITIALIZED                = const(0x13)  # bool (0x01 or empty)
 _SAFETY_CHECK_LEVEL        = const(0x14)  # int
 _EXPERIMENTAL_FEATURES     = const(0x15)  # bool (0x01 or empty)
 _HIDE_PASSPHRASE_FROM_HOST = const(0x16)  # bool (0x01 or empty)
+
+if utils.USE_THP:
+    _DEVICE_SECRET         = const(0x17)  # bytes
+    _CRED_AUTH_KEY_COUNTER = const(0x18)  # bytes
 
 SAFETY_CHECK_LEVEL_STRICT  : Literal[0] = const(0)
 SAFETY_CHECK_LEVEL_PROMPT  : Literal[1] = const(1)
@@ -344,3 +349,26 @@ def get_hide_passphrase_from_host() -> bool:
     Whether we should hide the passphrase from the host.
     """
     return common.get_bool(_NAMESPACE, _HIDE_PASSPHRASE_FROM_HOST)
+
+
+if utils.USE_THP:
+
+    def get_device_secret() -> bytes:
+        """
+        Device secret is used to derive keys that are independent of the seed.
+        """
+        device_secret = common.get(_NAMESPACE, _DEVICE_SECRET)
+        if not device_secret:
+            from trezor.crypto import random
+
+            device_secret = random.bytes(16, True)
+            common.set(_NAMESPACE, _DEVICE_SECRET, device_secret)
+        return device_secret
+
+    def get_cred_auth_key_counter() -> bytes:
+        return common.get(_NAMESPACE, _CRED_AUTH_KEY_COUNTER) or bytes(4)
+
+    def increment_cred_auth_key_counter() -> None:
+        counter = int.from_bytes(get_cred_auth_key_counter(), "big")
+        utils.ensure(counter < 0xFFFFFFFF, "Overflow of cred_auth_key_counter")
+        common.set(_NAMESPACE, _CRED_AUTH_KEY_COUNTER, (counter + 1).to_bytes(4, "big"))
