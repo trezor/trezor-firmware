@@ -55,14 +55,19 @@ impl<Q: FlowState, S: FlowStore> SwipeFlow<Q, S> {
     }
 
     fn goto(&mut self, ctx: &mut EventCtx, direction: SwipeDirection, state: Q) {
-        if state == self.state {
-            self.transition = Transition::Internal;
-            return;
-        }
         if util::animation_disabled() {
+            if state == self.state {
+                assert!(self
+                    .store
+                    .map_swipable(state.index(), |s| s.swipe_finished()));
+            }
             self.state = state;
             self.store.event(state.index(), ctx, Event::Attach);
             ctx.request_paint();
+            return;
+        }
+        if state == self.state {
+            self.transition = Transition::Internal;
             return;
         }
         self.transition = Transition::External {
