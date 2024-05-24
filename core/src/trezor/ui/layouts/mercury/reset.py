@@ -75,7 +75,7 @@ async def select_word(
     while len(words) < 3:
         words.append(words[-1])
 
-    result = RustLayout(
+    result = await RustLayout(
         trezorui2.select_word(
             title=TR.reset__select_word_x_of_y_template.format(
                 checked_index + 1, count
