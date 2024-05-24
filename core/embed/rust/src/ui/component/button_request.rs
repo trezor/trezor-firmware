@@ -9,7 +9,6 @@ use crate::ui::{
 #[derive(Clone)]
 pub struct OneButtonRequest<T> {
     button_request: Option<ButtonRequest>,
-    page_count_func: Option<fn(usize) -> usize>,
     pub inner: T,
 }
 
@@ -17,14 +16,8 @@ impl<T> OneButtonRequest<T> {
     pub const fn new(button_request: ButtonRequest, inner: T) -> Self {
         Self {
             button_request: Some(button_request),
-            page_count_func: None,
             inner,
         }
-    }
-
-    pub const fn with_pages(mut self, func: fn(usize) -> usize) -> Self {
-        self.page_count_func = Some(func);
-        self
     }
 }
 
@@ -41,11 +34,7 @@ impl<T: Component> Component for OneButtonRequest<T> {
                 ctx.send_button_request(button_request.code, button_request.br_type)
             }
         }
-        let res = self.inner.event(ctx, event);
-        if let Some(func) = self.page_count_func {
-            ctx.map_page_count(func);
-        }
-        res
+        self.inner.event(ctx, event)
     }
 
     fn paint(&mut self) {

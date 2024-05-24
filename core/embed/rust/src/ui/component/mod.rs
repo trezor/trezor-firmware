@@ -30,7 +30,7 @@ pub use empty::Empty;
 #[cfg(all(feature = "jpeg", feature = "micropython"))]
 pub use jpeg::Jpeg;
 pub use label::Label;
-pub use map::MsgMap;
+pub use map::{MsgMap, PageMap};
 pub use marquee::Marquee;
 pub use maybe::Maybe;
 pub use pad::Pad;
