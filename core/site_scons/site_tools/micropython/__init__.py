@@ -42,29 +42,41 @@ def generate(env):
         # replace "utils.BITCOIN_ONLY" with literal constant (True/False)
         # so the compiler can optimize out the things we don't want
         btc_only = env["bitcoin_only"] == "1"
-        is_t2b1 = env["TREZOR_MODEL"] == "R"
         backlight = env["backlight"]
         optiga = env["optiga"]
         layout_tt = env["ui_layout"] == "UI_LAYOUT_TT"
         layout_tr = env["ui_layout"] == "UI_LAYOUT_TR"
         thp = env["thp"]
         interim = f"{target[:-4]}.i"  # replace .mpy with .i
-        sed_scripts = " ".join(
-            [
-                rf"-e 's/utils\.MODEL_IS_T2B1/{is_t2b1}/g'",
-                rf"-e 's/utils\.BITCOIN_ONLY/{btc_only}/g'",
-                rf"-e 's/utils\.USE_BACKLIGHT/{backlight}/g'",
-                rf"-e 's/utils\.USE_OPTIGA/{optiga}/g'",
-                rf"-e 's/utils\.UI_LAYOUT == \"TT\"/{layout_tt}/g'",
-                rf"-e 's/utils\.UI_LAYOUT == \"TR\"/{layout_tr}/g'",
-                rf"-e 's/utils\.USE_THP/{thp}/g'",
-                r"-e 's/if TYPE_CHECKING/if False/'",
-                r"-e 's/import typing/# \0/'",
-                r"-e '/from typing import (/,/^\s*)/ {s/^/# /; }'",
-                r"-e 's/from typing import/# \0/'",
-            ]
-        )
-        return f"$SED {sed_scripts} {source} > {interim} && $MPY_CROSS -o {target} -s {source_name} {interim}"
+        sed_scripts = [
+            rf"-e 's/utils\.BITCOIN_ONLY/{btc_only}/g'",
+            rf"-e 's/utils\.USE_BACKLIGHT/{backlight}/g'",
+            rf"-e 's/utils\.USE_OPTIGA/{optiga}/g'",
+            rf"-e 's/utils\.UI_LAYOUT == \"TT\"/{layout_tt}/g'",
+            rf"-e 's/utils\.UI_LAYOUT == \"TR\"/{layout_tr}/g'",
+            rf"-e 's/utils\.USE_THP/{thp}/g'",
+            r"-e 's/if TYPE_CHECKING/if False/'",
+            r"-e 's/import typing/# \0/'",
+            r"-e '/from typing import (/,/^\s*)/ {s/^/# /; }'",
+            r"-e 's/from typing import/# \0/'",
+        ]
+
+        MODEL_SYMS = {
+            "T": "T2T1",
+            "R": "T2B1",
+            "T3T1": "T3T1",
+        }
+
+        for model_sym, internal_model in MODEL_SYMS.items():
+            model_matches = env["TREZOR_MODEL"] == model_sym
+            sed_scripts.extend(
+                (
+                    rf"-e 's/utils\.INTERNAL_MODEL == \"{internal_model}\"/{model_matches}/g'",
+                    rf"-e 's/utils\.INTERNAL_MODEL != \"{internal_model}\"/{not model_matches}/g'",
+                )
+            )
+
+        return f"$SED {' '.join(sed_scripts)} {source} > {interim} && $MPY_CROSS -o {target} -s {source_name} {interim}"
 
     env["BUILDERS"]["FrozenModule"] = SCons.Builder.Builder(
         generator=generate_frozen_module,

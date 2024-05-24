@@ -22,7 +22,7 @@ class TestCoins(unittest.TestCase):
             ("ZEC", "Zcash", 7352),
             ("TAZ", "Zcash Testnet", 7461),
         ]
-        if not utils.MODEL_IS_T2B1:
+        if utils.INTERNAL_MODEL not in ("T2B1", "T3T1"):
             ref.extend(
                 [
                     ("NMC", "Namecoin", 52),
