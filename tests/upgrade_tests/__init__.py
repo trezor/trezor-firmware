@@ -46,6 +46,17 @@ core_only = pytest.mark.skipif(
 )
 
 
+def version_from_tag(tag: str | None) -> tuple | None:
+    if tag is None or not tag.startswith("v"):
+        return None
+
+    # Strip initial "v" and optional revision from the tag string.
+    tag_version = tag[1:].partition("-")[0]
+
+    # Translate string to an integer tuple.
+    return tuple(int(n) for n in tag_version.split("."))
+
+
 def for_all(
     *args: str,
     legacy_minimum_version: Tuple[int, int, int] = (1, 0, 0),
@@ -84,13 +95,9 @@ def for_all(
             continue
         try:
             for tag in ALL_TAGS[gen]:
-                if tag.startswith("v"):
-                    tag_version = tag[1:]
-                    if "-" in tag:  # contains revision
-                        tag_version = tag[1:-9]
-                    tag_version = tuple(int(n) for n in tag_version.split("."))
-                    if tag_version < minimum_version:
-                        continue
+                tag_version = version_from_tag(tag)
+                if tag_version is not None and tag_version < minimum_version:
+                    continue
                 all_params.append((gen, tag))
 
             # at end, add None tag, which is the current master
