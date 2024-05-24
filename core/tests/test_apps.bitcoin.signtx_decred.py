@@ -1,6 +1,6 @@
 from common import *  # isort:skip
 
-if not utils.MODEL_IS_T2B1:
+if utils.INTERNAL_MODEL not in ("T2B1", "T3T1"):
     from trezor.crypto import bip39
     from trezor.enums import AmountUnit, OutputScriptType
     from trezor.enums.RequestType import TXFINISHED, TXINPUT, TXMETA, TXOUTPUT
@@ -405,5 +405,5 @@ class TestSignTxDecred(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    if not utils.MODEL_IS_T2B1:
+    if utils.INTERNAL_MODEL not in ("T2B1", "T3T1"):
         unittest.main()

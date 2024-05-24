@@ -126,8 +126,8 @@ def get_features() -> Features:
             Capability.Translations,
         ]
 
-        # We do not support some currencies on T2B1
-        if not utils.MODEL_IS_T2B1:
+        # We don't support some currencies on later models (see #2793)
+        if utils.INTERNAL_MODEL == "T2T1":
             f.capabilities.extend(
                 [
                     Capability.NEM,
