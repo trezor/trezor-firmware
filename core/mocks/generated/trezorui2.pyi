@@ -396,24 +396,13 @@ def flow_prompt_backup() -> LayoutObj[UiResult]
 def flow_show_share_words(
     *,
     title: str,
+    subtitle: str,
     words: Iterable[str],
     text_info: str,
     text_confirm: str,
 ) -> LayoutObj[UiResult]:
     """Show wallet backup words preceded by an instruction screen and followed by
     confirmation."""
-
-
-# rust/src/ui/model_mercury/layout.rs
-def request_number(
-    *,
-    title: str,
-    count: int,
-    min_count: int,
-    max_count: int,
-    description: Callable[[int], str] | None = None,
-) -> LayoutObj[tuple[UiResult, int]]:
-    """Number input with + and - buttons, description, and info button."""
 
 
 # rust/src/ui/model_mercury/layout.rs

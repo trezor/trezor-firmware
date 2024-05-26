@@ -1165,7 +1165,7 @@ extern "C" fn new_select_word(n_args: usize, args: *const Obj, kwargs: *mut Map)
 extern "C" fn new_show_checklist(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
-        let button: TString = kwargs.get(Qstr::MP_QSTR_button)?.try_into()?;
+        let _button: TString = kwargs.get(Qstr::MP_QSTR_button)?.try_into()?;
         let active: usize = kwargs.get(Qstr::MP_QSTR_active)?.try_into()?;
         let items: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
 
@@ -1180,25 +1180,22 @@ extern "C" fn new_show_checklist(n_args: usize, args: *const Obj, kwargs: *mut M
             paragraphs.add(Paragraph::new(style, text));
         }
 
-        let obj = LayoutObj::new(Frame::left_aligned(
-            title,
-            Dialog::new(
-                Checklist::from_paragraphs(
-                    theme::ICON_LIST_CURRENT,
-                    theme::ICON_LIST_CHECK,
-                    active,
-                    paragraphs
-                        .into_paragraphs()
-                        .with_spacing(theme::CHECKLIST_SPACING),
-                )
-                .with_check_width(theme::CHECKLIST_CHECK_WIDTH)
-                .with_current_offset(theme::CHECKLIST_CURRENT_OFFSET)
-                .with_done_offset(theme::CHECKLIST_DONE_OFFSET),
-                theme::button_bar(Button::with_text(button).map(|msg| {
-                    (matches!(msg, ButtonMsg::Clicked)).then(|| CancelConfirmMsg::Confirmed)
-                })),
-            ),
-        ))?;
+        let checklist_content = SwipeUpScreen::new(
+            Checklist::from_paragraphs(
+                theme::ICON_CHEVRON_RIGHT,
+                theme::ICON_BULLET_CHECKMARK,
+                active,
+                paragraphs
+                    .into_paragraphs()
+                    .with_spacing(theme::CHECKLIST_SPACING),
+            )
+            .with_check_width(theme::CHECKLIST_CHECK_WIDTH)
+            .with_icon_done_color(theme::GREEN),
+        );
+        let obj = LayoutObj::new(
+            Frame::left_aligned(title, checklist_content)
+                .with_footer(TR::instructions__swipe_up.into(), None),
+        )?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -1812,6 +1809,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// def flow_show_share_words(
     ///     *,
     ///     title: str,
+    ///     subtitle: str,
     ///     words: Iterable[str],
     ///     text_info: str,
     ///     text_confirm: str,
