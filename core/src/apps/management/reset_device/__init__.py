@@ -138,7 +138,7 @@ async def _backup_slip39_basic(
     share_count = await layout.slip39_prompt_number_of_shares()
 
     # get threshold
-    await layout.slip39_show_checklist(1, advanced=False)
+    await layout.slip39_show_checklist(1, advanced=False, count=share_count)
     share_threshold = await layout.slip39_prompt_threshold(share_count)
 
     mnemonics = _get_slip39_mnemonics(
@@ -149,7 +149,9 @@ async def _backup_slip39_basic(
     )
 
     # show and confirm individual shares
-    await layout.slip39_show_checklist(2, advanced=False)
+    await layout.slip39_show_checklist(
+        2, advanced=False, count=share_count, threshold=share_threshold
+    )
     await layout.slip39_basic_show_and_confirm_shares(mnemonics[0])
 
 
