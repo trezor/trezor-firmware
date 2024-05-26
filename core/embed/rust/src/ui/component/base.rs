@@ -16,11 +16,13 @@ use crate::{
 
 #[cfg(feature = "button")]
 use crate::ui::event::ButtonEvent;
-#[cfg(feature = "touch")]
-use crate::ui::event::TouchEvent;
 use crate::ui::event::USBEvent;
+#[cfg(feature = "touch")]
+use crate::ui::event::{SwipeEvent, TouchEvent};
 
 use super::Paginate;
+#[cfg(feature = "touch")]
+use super::SwipeDirection;
 
 /// Type used by components that do not return any messages.
 ///
@@ -467,6 +469,13 @@ where
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]
+pub enum AttachType {
+    Initial,
+    #[cfg(feature = "touch")]
+    Swipe(SwipeDirection),
+}
+
+#[derive(Copy, Clone, PartialEq, Eq)]
 pub enum Event {
     #[cfg(feature = "button")]
     Button(ButtonEvent),
@@ -480,10 +489,13 @@ pub enum Event {
     Progress(u16, TString<'static>),
     /// Component has been attached to component tree. This event is sent once
     /// before any other events.
-    Attach,
+    Attach(AttachType),
     /// Internally-handled event to inform all `Child` wrappers in a sub-tree to
     /// get scheduled for painting.
     RequestPaint,
+    /// Swipe and transition events
+    #[cfg(feature = "touch")]
+    Swipe(SwipeEvent),
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -511,6 +523,8 @@ pub struct EventCtx {
     page_count: Option<usize>,
     button_request: Option<ButtonRequest>,
     root_repaint_requested: bool,
+    swipe_disable_req: bool,
+    swipe_enable_req: bool,
 }
 
 impl EventCtx {
@@ -538,6 +552,8 @@ impl EventCtx {
             page_count: None,
             button_request: None,
             root_repaint_requested: false,
+            swipe_disable_req: false,
+            swipe_enable_req: false,
         }
     }
 
@@ -612,6 +628,22 @@ impl EventCtx {
         self.timers.pop()
     }
 
+    pub fn disable_swipe(&mut self) {
+        self.swipe_disable_req = true;
+    }
+
+    pub fn disable_swipe_requested(&self) -> bool {
+        self.swipe_disable_req
+    }
+
+    pub fn enable_swipe(&mut self) {
+        self.swipe_enable_req = true;
+    }
+
+    pub fn enable_swipe_requested(&self) -> bool {
+        self.swipe_enable_req
+    }
+
     pub fn clear(&mut self) {
         self.place_requested = false;
         self.paint_requested = false;
@@ -621,6 +653,8 @@ impl EventCtx {
         assert!(self.button_request.is_none());
         self.button_request = None;
         self.root_repaint_requested = false;
+        self.swipe_disable_req = false;
+        self.swipe_enable_req = false;
     }
 
     fn register_timer(&mut self, token: TimerToken, deadline: Duration) {

@@ -63,7 +63,7 @@ impl Component for CoinJoinProgress {
         // Determinate ones are receiving Event::Progress events.
         if self.indeterminate {
             match event {
-                Event::Attach => {
+                Event::Attach(_) => {
                     ctx.request_anim_frame();
                 }
                 Event::Timer(EventCtx::ANIM_FRAME_TIMER) => {

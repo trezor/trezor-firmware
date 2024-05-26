@@ -1,6 +1,9 @@
 use crate::{error, ui::geometry::Point};
 use core::convert::TryInto;
 
+#[cfg(feature = "touch")]
+use crate::ui::component::SwipeDirection;
+
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum PhysicalButton {
     Left,
@@ -64,4 +67,11 @@ impl TouchEvent {
 pub enum USBEvent {
     /// USB host has connected/disconnected.
     Connected(bool),
+}
+
+#[cfg(feature = "touch")]
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum SwipeEvent {
+    Move(SwipeDirection, i16),
+    End(SwipeDirection),
 }

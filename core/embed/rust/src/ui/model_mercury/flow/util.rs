@@ -10,11 +10,13 @@ use crate::{
     ui::{
         component::{
             base::ComponentExt,
+            swipe_detect::SwipeSettings,
             text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, VecExt},
-            Component,
+            Component, SwipeDirection,
         },
         flow::{FlowMsg, Swipable, SwipePage},
         layout::util::ConfirmBlob,
+        model_mercury::component::SwipeContent,
     },
 };
 use heapless::Vec;
@@ -30,6 +32,7 @@ pub struct ConfirmBlobParams {
     menu_button: bool,
     chunkify: bool,
     text_mono: bool,
+    swipe_down: bool,
 }
 
 impl ConfirmBlobParams {
@@ -49,6 +52,7 @@ impl ConfirmBlobParams {
             menu_button: false,
             chunkify: false,
             text_mono: true,
+            swipe_down: false,
         }
     }
 
@@ -64,6 +68,11 @@ impl ConfirmBlobParams {
 
     pub const fn with_menu_button(mut self) -> Self {
         self.menu_button = true;
+        self
+    }
+
+    pub const fn with_swipe_down(mut self) -> Self {
+        self.swipe_down = true;
         self
     }
 
@@ -89,7 +98,7 @@ impl ConfirmBlobParams {
 
     pub fn into_layout(
         self,
-    ) -> Result<impl Component<Msg = FlowMsg> + Swipable<FlowMsg> + MaybeTrace, Error> {
+    ) -> Result<impl Component<Msg = FlowMsg> + Swipable + MaybeTrace, Error> {
         let paragraphs = ConfirmBlob {
             description: self.description.unwrap_or("".into()),
             extra: self.extra.unwrap_or("".into()),
@@ -107,7 +116,7 @@ impl ConfirmBlobParams {
         }
         .into_paragraphs();
 
-        let page = SwipePage::vertical(paragraphs);
+        let page = SwipeContent::new(SwipePage::vertical(paragraphs));
         let mut frame = Frame::left_aligned(self.title, page);
         if let Some(subtitle) = self.subtitle {
             frame = frame.with_subtitle(subtitle);
@@ -117,7 +126,16 @@ impl ConfirmBlobParams {
         }
         if let Some(instruction) = self.footer_instruction {
             frame = frame.with_footer(instruction, self.footer_description);
+            frame = frame.with_swipe(SwipeDirection::Left, SwipeSettings::default());
         }
+
+        if self.swipe_down {
+            frame = frame.with_swipe(SwipeDirection::Down, SwipeSettings::default());
+        }
+
+        frame = frame.with_swipe(SwipeDirection::Up, SwipeSettings::default());
+        frame = frame.with_vertical_pages();
+
         Ok(frame.map(|msg| matches!(msg, FrameMsg::Button(_)).then_some(FlowMsg::Info)))
     }
 }
@@ -130,6 +148,7 @@ pub struct ShowInfoParams {
     footer_instruction: Option<TString<'static>>,
     footer_description: Option<TString<'static>>,
     chunkify: bool,
+    swipe_up: bool,
     items: Vec<(TString<'static>, TString<'static>), 4>,
 }
 
@@ -143,6 +162,7 @@ impl ShowInfoParams {
             footer_instruction: None,
             footer_description: None,
             chunkify: false,
+            swipe_up: false,
             items: Vec::new(),
         }
     }
@@ -185,9 +205,14 @@ impl ShowInfoParams {
         self
     }
 
+    pub const fn with_swipe_up(mut self) -> Self {
+        self.swipe_up = true;
+        self
+    }
+
     pub fn into_layout(
         self,
-    ) -> Result<impl Component<Msg = FlowMsg> + Swipable<FlowMsg> + MaybeTrace, Error> {
+    ) -> Result<impl Component<Msg = FlowMsg> + Swipable + MaybeTrace, Error> {
         let mut paragraphs = ParagraphVecShort::new();
         let mut first: bool = true;
         for item in self.items {
@@ -212,19 +237,30 @@ impl ShowInfoParams {
 
         let mut frame = Frame::left_aligned(
             self.title,
-            SwipePage::vertical(paragraphs.into_paragraphs()),
+            SwipeContent::new(SwipePage::vertical(paragraphs.into_paragraphs())),
         );
         if let Some(subtitle) = self.subtitle {
             frame = frame.with_subtitle(subtitle);
         }
         if self.cancel_button {
-            frame = frame.with_cancel_button();
+            frame = frame
+                .with_cancel_button()
+                .with_swipe(SwipeDirection::Right, SwipeSettings::immediate());
         } else if self.menu_button {
-            frame = frame.with_menu_button();
+            frame = frame
+                .with_menu_button()
+                .with_swipe(SwipeDirection::Left, SwipeSettings::default());
         }
         if let Some(instruction) = self.footer_instruction {
             frame = frame.with_footer(instruction, self.footer_description);
         }
+
+        if self.swipe_up {
+            frame = frame.with_swipe(SwipeDirection::Up, SwipeSettings::default());
+        }
+
+        frame = frame.with_vertical_pages();
+
         Ok(frame.map(move |msg| {
             matches!(msg, FrameMsg::Button(_)).then_some(if self.cancel_button {
                 FlowMsg::Cancelled

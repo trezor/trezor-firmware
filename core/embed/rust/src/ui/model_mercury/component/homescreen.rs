@@ -328,12 +328,12 @@ impl Component for Lockscreen {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        if event == Event::Attach {
+        if let Event::Attach(_) = event {
             ctx.request_anim_frame();
         }
 
         if let Event::Timer(EventCtx::ANIM_FRAME_TIMER) = event {
-            if (!animation_disabled()) {
+            if !animation_disabled() {
                 if !self.anim.timer.is_running() {
                     self.anim.timer.start();
                 }

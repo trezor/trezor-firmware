@@ -1,5 +1,7 @@
 use crate::ui::{
-    component::{Component, Event, EventCtx, Swipe, SwipeDirection},
+    component::{Component, Event, EventCtx, SwipeDetect, SwipeDetectMsg},
+    event::SwipeEvent,
+    flow::Swipable,
     geometry::Rect,
     shape::Renderer,
 };
@@ -7,7 +9,7 @@ use crate::ui::{
 /// Wrapper component adding "swipe up" handling to `content`.
 pub struct SwipeUpScreen<T> {
     content: T,
-    swipe: Swipe,
+    swipe: SwipeDetect,
 }
 
 pub enum SwipeUpScreenMsg<T> {
@@ -19,33 +21,40 @@ impl<T> SwipeUpScreen<T>
 where
     T: Component,
 {
-    pub fn new(content: T) -> Self {
+    pub fn new(content: T) -> Self
+    where
+        T: Swipable,
+    {
         Self {
             content,
-            swipe: Swipe::new().up(),
+            swipe: SwipeDetect::new(),
         }
     }
 }
 
-impl<T> Component for SwipeUpScreen<T>
-where
-    T: Component,
-{
+impl<T: Swipable + Component> Component for SwipeUpScreen<T> {
     type Msg = SwipeUpScreenMsg<T::Msg>;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        self.swipe.place(bounds);
         self.content.place(bounds);
         bounds
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        if let Some(SwipeDirection::Up) = self.swipe.event(ctx, event) {
-            return Some(SwipeUpScreenMsg::Swiped);
-        }
-        self.content
-            .event(ctx, event)
-            .map(SwipeUpScreenMsg::Content)
+        let e = match self
+            .swipe
+            .event(ctx, event, self.content.get_swipe_config())
+        {
+            Some(SwipeDetectMsg::Trigger(_)) => {
+                return Some(SwipeUpScreenMsg::Swiped);
+            }
+            Some(SwipeDetectMsg::Move(dir, progress)) => {
+                Event::Swipe(SwipeEvent::Move(dir, progress))
+            }
+            _ => event,
+        };
+
+        self.content.event(ctx, e).map(SwipeUpScreenMsg::Content)
     }
 
     fn paint(&mut self) {

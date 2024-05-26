@@ -36,6 +36,8 @@ mod set_brightness;
 mod share_words;
 mod simple_page;
 mod status_screen;
+mod swipe_content;
+#[cfg(feature = "translations")]
 mod swipe_up_screen;
 #[cfg(feature = "translations")]
 mod tap_to_confirm;
@@ -85,6 +87,8 @@ pub use set_brightness::SetBrightnessDialog;
 pub use share_words::ShareWords;
 pub use simple_page::SimplePage;
 pub use status_screen::StatusScreen;
+pub use swipe_content::SwipeContent;
+#[cfg(feature = "translations")]
 pub use swipe_up_screen::{SwipeUpScreen, SwipeUpScreenMsg};
 #[cfg(feature = "translations")]
 pub use tap_to_confirm::TapToConfirm;

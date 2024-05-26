@@ -3,17 +3,21 @@ use crate::{
     maybe_trace::MaybeTrace,
     ui::{
         component::{Component, Event, EventCtx},
-        flow::base::{FlowMsg, Swipable},
+        flow::base::FlowMsg,
         geometry::Rect,
         shape::Renderer,
     },
 };
 
-use crate::micropython::gc::Gc;
+use crate::{
+    micropython::gc::Gc,
+    ui::{component::swipe_detect::SwipeConfig, flow::Swipable},
+};
 
-/// `FlowStore` is essentially `Vec<Gc<dyn Component + Swipable>>` except that
-/// `trait Component` is not object-safe so it ends up being a kind of
+/// `FlowStore` is essentially `Vec<Gc<dyn Component + SimpleSwipable>>` except
+/// that `trait Component` is not object-safe so it ends up being a kind of
 /// recursively-defined tuple.
+/// Implementors are something like the V in MVC.
 pub trait FlowStore {
     /// Call `Component::place` on all elements.
     fn place(&mut self, bounds: Rect) -> Rect;
@@ -28,15 +32,15 @@ pub trait FlowStore {
     /// Call `Trace::trace` on i-th element.
     fn trace(&self, i: usize, t: &mut dyn crate::trace::Tracer);
 
-    /// Forward `Swipable` methods to i-th element.
-    fn map_swipable<T>(
-        &mut self,
-        i: usize,
-        func: impl FnOnce(&mut dyn Swipable<FlowMsg>) -> T,
-    ) -> T;
+    /// Forward `SimpleSwipable` methods to i-th element.
+    fn map_swipable<T>(&mut self, i: usize, func: impl FnOnce(&mut dyn Swipable) -> T) -> T;
+
+    fn get_swipe_config(&self, i: usize) -> SwipeConfig;
+
+    fn get_internal_page_count(&mut self, i: usize) -> usize;
 
     /// Add a Component to the end of a `FlowStore`.
-    fn add<E: Component<Msg = FlowMsg> + MaybeTrace + Swipable<FlowMsg>>(
+    fn add<E: Component<Msg = FlowMsg> + MaybeTrace + Swipable>(
         self,
         elem: E,
     ) -> Result<impl FlowStore, error::Error>
@@ -62,7 +66,7 @@ impl FlowStore for FlowEmpty {
         panic!()
     }
 
-    fn render<'s>(&'s self, _i: usize, _target: &mut impl Renderer<'s>) {
+    fn render<'s>(&self, _i: usize, _target: &mut impl Renderer<'s>) {
         panic!()
     }
 
@@ -71,29 +75,31 @@ impl FlowStore for FlowEmpty {
         panic!()
     }
 
-    fn map_swipable<T>(
-        &mut self,
-        _i: usize,
-        _func: impl FnOnce(&mut dyn Swipable<FlowMsg>) -> T,
-    ) -> T {
+    fn map_swipable<T>(&mut self, _i: usize, _func: impl FnOnce(&mut dyn Swipable) -> T) -> T {
         panic!()
     }
 
-    fn add<E: Component<Msg = FlowMsg> + MaybeTrace + Swipable<FlowMsg>>(
+    fn add<E: Component<Msg = FlowMsg> + MaybeTrace + Swipable>(
         self,
         elem: E,
     ) -> Result<impl FlowStore, error::Error>
     where
         Self: Sized,
     {
-        Ok(FlowComponent {
+        Ok(FlowComponent2 {
             elem: Gc::new(elem)?,
             next: Self,
         })
     }
+    fn get_swipe_config(&self, _i: usize) -> SwipeConfig {
+        SwipeConfig::new()
+    }
+    fn get_internal_page_count(&mut self, _i: usize) -> usize {
+        1
+    }
 }
 
-struct FlowComponent<E: Component<Msg = FlowMsg>, P> {
+struct FlowComponent2<E: Component<Msg = FlowMsg>, P> {
     /// Component allocated on micropython heap.
     pub elem: Gc<E>,
 
@@ -101,7 +107,7 @@ struct FlowComponent<E: Component<Msg = FlowMsg>, P> {
     pub next: P,
 }
 
-impl<E: Component<Msg = FlowMsg>, P> FlowComponent<E, P> {
+impl<E: Component<Msg = FlowMsg>, P> FlowComponent2<E, P> {
     fn as_ref(&self) -> &E {
         &self.elem
     }
@@ -113,9 +119,9 @@ impl<E: Component<Msg = FlowMsg>, P> FlowComponent<E, P> {
     }
 }
 
-impl<E, P> FlowStore for FlowComponent<E, P>
+impl<E, P> FlowStore for FlowComponent2<E, P>
 where
-    E: Component<Msg = FlowMsg> + MaybeTrace + Swipable<FlowMsg>,
+    E: Component<Msg = FlowMsg> + MaybeTrace + Swipable,
     P: FlowStore,
 {
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -149,11 +155,7 @@ where
         }
     }
 
-    fn map_swipable<T>(
-        &mut self,
-        i: usize,
-        func: impl FnOnce(&mut dyn Swipable<FlowMsg>) -> T,
-    ) -> T {
+    fn map_swipable<T>(&mut self, i: usize, func: impl FnOnce(&mut dyn Swipable) -> T) -> T {
         if i == 0 {
             func(self.as_mut())
         } else {
@@ -161,16 +163,28 @@ where
         }
     }
 
-    fn add<F: Component<Msg = FlowMsg> + MaybeTrace + Swipable<FlowMsg>>(
+    fn add<F: Component<Msg = FlowMsg> + MaybeTrace + Swipable>(
         self,
         elem: F,
     ) -> Result<impl FlowStore, error::Error>
     where
         Self: Sized,
     {
-        Ok(FlowComponent {
+        Ok(FlowComponent2 {
             elem: self.elem,
             next: self.next.add(elem)?,
         })
+    }
+
+    fn get_swipe_config(&self, i: usize) -> SwipeConfig {
+        if i == 0 {
+            self.as_ref().get_swipe_config()
+        } else {
+            self.next.get_swipe_config(i - 1)
+        }
+    }
+
+    fn get_internal_page_count(&mut self, i: usize) -> usize {
+        self.map_swipable(i, |swipable| swipable.get_internal_page_count())
     }
 }
