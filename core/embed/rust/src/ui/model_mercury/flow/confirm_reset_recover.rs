@@ -7,12 +7,12 @@ use crate::{
             text::paragraphs::{Paragraph, Paragraphs},
             ButtonRequestExt, ComponentExt, SwipeDirection,
         },
-        flow::{base::Decision, flow_store, FlowMsg, FlowState, FlowStore, SwipeFlow, SwipePage},
+        flow::{base::Decision, flow_store, FlowMsg, FlowState, FlowStore, SwipeFlow},
     },
 };
 
 use super::super::{
-    component::{Frame, FrameMsg, PromptScreen, VerticalMenu, VerticalMenuChoiceMsg},
+    component::{Frame, FrameMsg, VerticalMenu, VerticalMenuChoiceMsg},
     theme,
 };
 
@@ -54,7 +54,11 @@ impl FlowState for ConfirmResetRecover {
 
 use crate::{
     micropython::{map::Map, obj::Obj, util},
-    ui::layout::obj::LayoutObj,
+    ui::{
+        component::swipe_detect::SwipeSettings,
+        layout::obj::LayoutObj,
+        model_mercury::component::{PromptScreen, SwipeContent},
+    },
 };
 
 #[allow(clippy::not_unsafe_ptr_arg_deref)]
@@ -77,10 +81,12 @@ impl ConfirmResetRecover {
         let paragraphs = Paragraphs::new(par_array);
         let content_intro = Frame::left_aligned(
             TR::recovery__title_recover.into(),
-            SwipePage::vertical(paragraphs),
+            SwipeContent::new(paragraphs),
         )
         .with_menu_button()
         .with_footer(TR::instructions__swipe_up.into(), None)
+        .with_swipe(SwipeDirection::Up, SwipeSettings::default())
+        .with_swipe(SwipeDirection::Left, SwipeSettings::default())
         .map(|msg| matches!(msg, FrameMsg::Button(_)).then_some(FlowMsg::Info))
         .one_button_request(ButtonRequestCode::ProtectCall.with_type("recover_device"));
 
@@ -92,6 +98,7 @@ impl ConfirmResetRecover {
             ),
         )
         .with_cancel_button()
+        .with_swipe(SwipeDirection::Right, SwipeSettings::immediate())
         .map(|msg| match msg {
             FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => Some(FlowMsg::Choice(i)),
             FrameMsg::Button(_) => Some(FlowMsg::Cancelled),
@@ -99,9 +106,10 @@ impl ConfirmResetRecover {
 
         let content_confirm = Frame::left_aligned(
             TR::reset__title_create_wallet.into(),
-            PromptScreen::new_hold_to_confirm(),
+            SwipeContent::new(PromptScreen::new_hold_to_confirm()),
         )
         .with_footer(TR::instructions__hold_to_confirm.into(), None)
+        .with_swipe(SwipeDirection::Down, SwipeSettings::default())
         .map(|msg| match msg {
             FrameMsg::Content(()) => Some(FlowMsg::Confirmed),
             _ => Some(FlowMsg::Cancelled),

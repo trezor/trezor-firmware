@@ -4,6 +4,7 @@ use crate::{
 };
 
 /// Running, time-based linear progression of a value.
+#[derive(Clone)]
 pub struct Animation<T> {
     /// Starting value.
     pub from: T,

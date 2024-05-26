@@ -25,6 +25,10 @@ impl TapToConfirmAmin {
     const DURATION_MS: u32 = 600;
 
     pub fn is_active(&self) -> bool {
+        if animation_disabled() {
+            return false;
+        }
+
         self.timer
             .is_running_within(Duration::from_millis(Self::DURATION_MS))
     }
@@ -161,33 +165,27 @@ impl Component for TapToConfirm {
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         let btn_msg = self.button.event(ctx, event);
-        match btn_msg {
-            Some(ButtonMsg::Pressed) => {
-                self.anim.start();
-                ctx.request_anim_frame();
-                ctx.request_paint();
+        if let Some(ButtonMsg::Clicked) = btn_msg {
+            if animation_disabled() {
+                return Some(());
             }
-            Some(ButtonMsg::Released) => {
-                self.anim.reset();
-                ctx.request_anim_frame();
-                ctx.request_paint();
-            }
-            Some(ButtonMsg::Clicked) => {
-                if animation_disabled() {
-                    return Some(());
+            self.anim.start();
+            ctx.request_anim_frame();
+            ctx.request_paint();
+        }
+
+        if !animation_disabled() {
+            if let Event::Timer(EventCtx::ANIM_FRAME_TIMER) = event {
+                if self.anim.is_active() {
+                    ctx.request_anim_frame();
+                    ctx.request_paint();
                 }
             }
-            _ => (),
+            if self.anim.is_finished() {
+                ctx.enable_swipe();
+                return Some(());
+            };
         }
-        if let Event::Timer(EventCtx::ANIM_FRAME_TIMER) = event {
-            if self.anim.is_active() {
-                ctx.request_anim_frame();
-                ctx.request_paint();
-            }
-        }
-        if self.anim.is_finished() {
-            return Some(());
-        };
 
         None
     }

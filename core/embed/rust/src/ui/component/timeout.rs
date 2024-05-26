@@ -32,7 +32,7 @@ impl Component for Timeout {
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         match event {
             // Set up timer.
-            Event::Attach => {
+            Event::Attach(_) => {
                 self.timer = Some(ctx.request_timer(Duration::from_millis(self.time_ms)));
                 None
             }

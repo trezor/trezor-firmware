@@ -9,7 +9,7 @@ use crate::{
             text::paragraphs::{Paragraph, Paragraphs},
             ButtonRequestExt, ComponentExt, SwipeDirection,
         },
-        flow::{base::Decision, flow_store, FlowMsg, FlowState, FlowStore, SwipeFlow, SwipePage},
+        flow::{base::Decision, flow_store, FlowMsg, FlowState, FlowStore, SwipeFlow},
     },
 };
 
@@ -67,7 +67,10 @@ impl FlowState for RequestNumber {
 
 use crate::{
     micropython::{map::Map, obj::Obj, util},
-    ui::layout::obj::LayoutObj,
+    ui::{
+        component::swipe_detect::SwipeSettings, layout::obj::LayoutObj,
+        model_mercury::component::SwipeContent,
+    },
 };
 
 #[allow(clippy::not_unsafe_ptr_arg_deref)]
@@ -102,14 +105,17 @@ impl RequestNumber {
 
         let number_input_dialog =
             NumberInputDialog::new(min_count, max_count, count, description_cb)?;
-        let content_number_input = Frame::left_aligned(title, number_input_dialog)
-            .with_menu_button()
-            .with_footer(TR::instructions__swipe_up.into(), None)
-            .map(|msg| match msg {
-                FrameMsg::Button(_) => Some(FlowMsg::Info),
-                FrameMsg::Content(NumberInputDialogMsg(n)) => Some(FlowMsg::Choice(n as usize)),
-            })
-            .one_button_request(ButtonRequest::from_num(br_code, br_type));
+        let content_number_input =
+            Frame::left_aligned(title, SwipeContent::new(number_input_dialog))
+                .with_menu_button()
+                .with_footer(TR::instructions__swipe_up.into(), None)
+                .with_swipe(SwipeDirection::Up, SwipeSettings::default())
+                .with_swipe(SwipeDirection::Left, SwipeSettings::default())
+                .map(|msg| match msg {
+                    FrameMsg::Button(_) => Some(FlowMsg::Info),
+                    FrameMsg::Content(NumberInputDialogMsg(n)) => Some(FlowMsg::Choice(n as usize)),
+                })
+                .one_button_request(ButtonRequest::from_num(br_code, br_type));
 
         let content_menu = Frame::left_aligned(
             "".into(),
@@ -118,6 +124,7 @@ impl RequestNumber {
                 .danger(theme::ICON_CANCEL, TR::backup__title_skip.into()),
         )
         .with_cancel_button()
+        .with_swipe(SwipeDirection::Right, SwipeSettings::immediate())
         .map(|msg| match msg {
             FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => Some(FlowMsg::Choice(i)),
             FrameMsg::Button(CancelInfoConfirmMsg::Cancelled) => Some(FlowMsg::Cancelled),
@@ -130,9 +137,10 @@ impl RequestNumber {
         ));
         let content_info = Frame::left_aligned(
             TR::backup__title_skip.into(),
-            SwipePage::vertical(paragraphs_info),
+            SwipeContent::new(paragraphs_info),
         )
         .with_cancel_button()
+        .with_swipe(SwipeDirection::Right, SwipeSettings::immediate())
         .map(|msg| match msg {
             FrameMsg::Button(CancelInfoConfirmMsg::Cancelled) => Some(FlowMsg::Cancelled),
             _ => None,

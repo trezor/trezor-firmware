@@ -8,10 +8,7 @@ use crate::{
             text::paragraphs::{Paragraph, ParagraphSource},
             ComponentExt, SwipeDirection,
         },
-        flow::{
-            base::Decision, flow_store, FlowMsg, FlowState, FlowStore, IgnoreSwipe, SwipeFlow,
-            SwipePage,
-        },
+        flow::{base::Decision, flow_store, FlowMsg, FlowState, FlowStore, SwipeFlow},
     },
 };
 
@@ -63,7 +60,10 @@ impl FlowState for WarningHiPrio {
 
 use crate::{
     micropython::{map::Map, obj::Obj, util},
-    ui::layout::obj::LayoutObj,
+    ui::{
+        component::swipe_detect::SwipeSettings, layout::obj::LayoutObj,
+        model_mercury::component::SwipeContent,
+    },
 };
 
 #[allow(clippy::not_unsafe_ptr_arg_deref)]
@@ -89,10 +89,12 @@ impl WarningHiPrio {
                 .with_top_padding(Self::EXTRA_PADDING),
         ]
         .into_paragraphs();
-        let content_message = Frame::left_aligned(title, SwipePage::vertical(paragraphs))
+        let content_message = Frame::left_aligned(title, SwipeContent::new(paragraphs))
             .with_menu_button()
             .with_footer(TR::instructions__swipe_up.into(), Some(cancel))
             .with_danger()
+            .with_swipe(SwipeDirection::Up, SwipeSettings::default())
+            .with_swipe(SwipeDirection::Left, SwipeSettings::default())
             .map(|msg| matches!(msg, FrameMsg::Button(_)).then_some(FlowMsg::Info));
         // .one_button_request(ButtonRequestCode::Warning, br_type);
 
@@ -104,17 +106,17 @@ impl WarningHiPrio {
                 .danger(theme::ICON_CHEVRON_RIGHT, confirm),
         )
         .with_cancel_button()
+        .with_swipe(SwipeDirection::Right, SwipeSettings::immediate())
         .map(|msg| match msg {
             FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => Some(FlowMsg::Choice(i)),
             FrameMsg::Button(_) => Some(FlowMsg::Cancelled),
         });
 
         // Cancelled
-        let content_cancelled = IgnoreSwipe::new(
+        let content_cancelled =
             Frame::left_aligned(done_title, StatusScreen::new_neutral_timeout())
-                .with_footer(TR::instructions__continue_in_app.into(), None),
-        )
-        .map(|_| Some(FlowMsg::Cancelled));
+                .with_footer(TR::instructions__continue_in_app.into(), None)
+                .map(|_| Some(FlowMsg::Cancelled));
 
         let store = flow_store()
             .add(content_message)?
