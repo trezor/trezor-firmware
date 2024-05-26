@@ -104,7 +104,12 @@ async def select_word(
     return words[result]
 
 
-async def slip39_show_checklist(step: int, backup_type: BackupType) -> None:
+async def slip39_show_checklist(
+    step: int,
+    backup_type: BackupType,
+    count: int | None = None,
+    threshold: int | None = None,
+) -> None:
     from trezor.enums import BackupType
 
     assert backup_type in (BackupType.Slip39_Basic, BackupType.Slip39_Advanced)

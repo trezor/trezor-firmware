@@ -23,12 +23,13 @@ async def show_share_words(
     group_index: int | None = None,
 ) -> None:
 
+    title = TR.reset__recovery_wallet_backup_title
     if share_index is None:
-        title = TR.reset__recovery_wallet_backup_title
+        subtitle = ""
     elif group_index is None:
-        title = TR.reset__recovery_share_title_template.format(share_index + 1)
+        subtitle = TR.reset__recovery_share_title_template.format(share_index + 1)
     else:
-        title = TR.reset__group_share_title_template.format(
+        subtitle = TR.reset__group_share_title_template.format(
             group_index + 1, share_index + 1
         )
     words_count = len(share_words)
@@ -39,6 +40,7 @@ async def show_share_words(
         RustLayout(
             trezorui2.flow_show_share_words(
                 title=title,
+                subtitle=subtitle,
                 words=share_words,
                 text_info=text_info,
                 text_confirm=text_confirm,
@@ -90,29 +92,17 @@ async def select_word(
     return words[result]
 
 
-async def slip39_show_checklist(step: int, backup_type: BackupType) -> None:
-    from trezor.enums import BackupType
-
-    assert backup_type in (BackupType.Slip39_Basic, BackupType.Slip39_Advanced)
-
-    items = (
-        (
-            TR.reset__slip39_checklist_set_num_shares,
-            TR.reset__slip39_checklist_set_threshold,
-            TR.reset__slip39_checklist_write_down_recovery,
-        )
-        if backup_type == BackupType.Slip39_Basic
-        else (
-            TR.reset__slip39_checklist_set_num_groups,
-            TR.reset__slip39_checklist_set_num_shares,
-            TR.reset__slip39_checklist_set_sizes_longer,
-        )
-    )
-
+async def slip39_show_checklist(
+    step: int,
+    backup_type: BackupType,
+    count: int | None = None,
+    threshold: int | None = None,
+) -> None:
+    items = _slip_39_checklist_items(step, backup_type, count, threshold)
     result = await interact(
         RustLayout(
             trezorui2.show_checklist(
-                title=TR.reset__slip39_checklist_title,
+                title=TR.reset__title_shamir_backup,
                 button=TR.buttons__continue,
                 active=step,
                 items=items,
@@ -123,6 +113,44 @@ async def slip39_show_checklist(step: int, backup_type: BackupType) -> None:
     )
     if result != CONFIRMED:
         raise ActionCancelled
+
+
+def _slip_39_checklist_items(
+    step: int,
+    backup_type: BackupType,
+    count: int | None = None,
+    threshold: int | None = None,
+):
+    from trezor.enums import BackupType
+
+    assert backup_type in (BackupType.Slip39_Basic, BackupType.Slip39_Advanced)
+
+    if backup_type == BackupType.Slip39_Basic:
+        entry_1 = (
+            TR.reset__slip39_checklist_num_shares_x_template.format(count)
+            if count
+            else TR.reset__slip39_checklist_set_num_shares
+        )
+        entry_2 = (
+            TR.reset__slip39_checklist_threshold_x_template.format(threshold)
+            if threshold
+            else TR.reset__slip39_checklist_set_threshold
+        )
+        entry_3 = TR.reset__slip39_checklist_write_down_recovery
+        return (entry_1, entry_2, entry_3)
+    else:
+        entry_1 = (
+            TR.reset__slip39_checklist_num_groups_x_template.format(count)
+            if count
+            else TR.reset__slip39_checklist_set_num_groups
+        )
+        entry_2 = (
+            TR.reset__slip39_checklist_threshold_x_template.format(threshold)
+            if threshold
+            else TR.reset__slip39_checklist_set_threshold
+        )
+        entry_3 = TR.reset__slip39_checklist_set_sizes_longer
+        return (entry_1, entry_2, entry_3)
 
 
 async def _prompt_number(
@@ -149,7 +177,6 @@ async def _prompt_number(
     )
 
     if __debug__:
-        # TODO: is this still relevant?
         if not isinstance(result, tuple):
             # DebugLink currently can't send number of shares and it doesn't
             # change the counter either so just use the initial value.
@@ -173,12 +200,7 @@ async def slip39_prompt_threshold(
 
     def description(count: int) -> str:
         if group_id is None:
-            if count == 1:
-                return TR.reset__you_need_one_share
-            elif count == max_count:
-                return TR.reset__need_all_share_template.format(count)
-            else:
-                return TR.reset__need_any_share_template.format(count)
+            return TR.reset__select_threshold
         else:
             return TR.reset__num_shares_for_group_template.format(group_id + 1)
 
@@ -186,6 +208,8 @@ async def slip39_prompt_threshold(
         # TODO: this is madness...
         text = TR.reset__the_threshold_sets_the_number_of_shares
         if group_id is None:
+            # FIXME: need to propagate the argument in rust, temporary hack to show plausible value
+            count = num_of_shares - 1
             text += TR.reset__needed_to_recover_your_wallet
             text += TR.reset__set_it_to_count_template.format(count)
             if num_of_shares == 1:
@@ -225,17 +249,14 @@ async def slip39_prompt_number_of_shares(group_id: int | None = None) -> int:
 
     def description(i: int):
         if group_id is None:
-            if i == 1:
-                return TR.reset__only_one_share_will_be_created
-            else:
-                return TR.reset__num_of_shares_how_many
+            return TR.reset__num_of_shares_how_many
         else:
             return TR.reset__total_number_of_shares_in_group_template.format(
                 group_id + 1
             )
 
     if group_id is None:
-        info = TR.reset__num_of_shares_basic_info
+        info = TR.reset__num_of_shares_long_info
     else:
         info = TR.reset__num_of_shares_advanced_info_template.format(group_id + 1)
 

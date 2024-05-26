@@ -161,10 +161,6 @@ include_icon!(ICON_CLICK, "model_tt/res/finger24.toif");
 include_icon!(ICON_CORNER_CANCEL, "model_tt/res/x32.toif");
 include_icon!(ICON_CORNER_INFO, "model_tt/res/info32.toif");
 
-// Checklist symbols.
-include_icon!(ICON_LIST_CURRENT, "model_tt/res/arrow-right16.toif");
-include_icon!(ICON_LIST_CHECK, "model_tt/res/check16.toif");
-
 // Homescreen notifications.
 include_icon!(ICON_WARN, "model_tt/res/warning16.toif");
 include_icon!(ICON_WARNING40, "model_tt/res/warning40.toif");
@@ -689,23 +685,23 @@ pub const fn button_counter() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
             font: Font::DEMIBOLD,
-            text_color: FG,
-            button_color: GREY_DARK,
-            icon_color: GREY_LIGHT,
+            text_color: GREY,
+            button_color: GREY_EXTRA_DARK,
+            icon_color: GREY,
             background_color: BG,
         },
         active: &ButtonStyle {
             font: Font::DEMIBOLD,
-            text_color: FG,
-            button_color: GREY_MEDIUM,
-            icon_color: GREY_LIGHT,
+            text_color: BG,
+            button_color: GREY_LIGHT,
+            icon_color: BG,
             background_color: BG,
         },
         disabled: &ButtonStyle {
             font: Font::DEMIBOLD,
-            text_color: GREY_LIGHT,
-            button_color: GREY_DARK,
-            icon_color: GREY_LIGHT,
+            text_color: GREY_DARK,
+            button_color: BG,
+            icon_color: GREY_DARK,
             background_color: BG,
         },
     }
@@ -797,12 +793,10 @@ pub fn textstyle_number(num: i32) -> &'static TextStyle {
 
 pub const TEXT_NORMAL_OFF_WHITE: TextStyle =
     TextStyle::new(Font::NORMAL, OFF_WHITE, BG, GREY_LIGHT, GREY_LIGHT);
-pub const TEXT_CHECKLIST_DEFAULT: TextStyle =
-    TextStyle::new(Font::NORMAL, GREY_LIGHT, BG, GREY_LIGHT, GREY_LIGHT);
+pub const TEXT_CHECKLIST_DEFAULT: TextStyle = TextStyle::new(Font::SUB, GREY, BG, GREY, GREY);
 pub const TEXT_CHECKLIST_SELECTED: TextStyle =
-    TextStyle::new(Font::NORMAL, FG, BG, GREY_LIGHT, GREY_LIGHT);
-pub const TEXT_CHECKLIST_DONE: TextStyle =
-    TextStyle::new(Font::NORMAL, GREEN_DARK, BG, GREY_LIGHT, GREY_LIGHT);
+    TextStyle::new(Font::NORMAL, GREY_LIGHT, BG, GREY_LIGHT, GREY_LIGHT);
+pub const TEXT_CHECKLIST_DONE: TextStyle = TextStyle::new(Font::SUB, GREY, BG, GREY, GREY);
 
 /// Spacing between components (e.g. header and main content) and offsets from
 /// the side of the screen. Generally applied everywhere except the top side of
@@ -814,10 +808,11 @@ pub const BUTTON_HEIGHT: i16 = 62;
 pub const BUTTON_WIDTH: i16 = 78;
 pub const BUTTON_SPACING: i16 = SPACING;
 pub const KEYBOARD_SPACING: i16 = BUTTON_SPACING;
-pub const CHECKLIST_SPACING: i16 = 10;
+pub const CHECKLIST_SPACING: i16 = 12;
 pub const RECOVERY_SPACING: i16 = 18;
 pub const CORNER_BUTTON_SIDE: i16 = 44;
 pub const CORNER_BUTTON_SPACING: i16 = BUTTON_SPACING;
+pub const COUNTER_BUTTON_HEIGHT: i16 = 60;
 pub const INFO_BUTTON_HEIGHT: i16 = 44;
 pub const PIN_BUTTON_HEIGHT: i16 = 52;
 pub const MNEMONIC_BUTTON_HEIGHT: i16 = 62;
@@ -828,9 +823,7 @@ pub const RESULT_FOOTER_HEIGHT: i16 = 62;
 pub const DETAILS_SPACING: i16 = 8;
 
 // checklist settings
-pub const CHECKLIST_CHECK_WIDTH: i16 = 16;
-pub const CHECKLIST_DONE_OFFSET: Offset = Offset::new(-2, 6);
-pub const CHECKLIST_CURRENT_OFFSET: Offset = Offset::new(2, 3);
+pub const CHECKLIST_CHECK_WIDTH: i16 = 32; // icon width (20px) + padding (12px)
 
 pub const fn button_bar<T>(inner: T) -> FixedHeightBar<T> {
     FixedHeightBar::bottom(inner, BUTTON_HEIGHT)
