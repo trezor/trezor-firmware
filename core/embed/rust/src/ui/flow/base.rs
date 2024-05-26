@@ -1,50 +1,10 @@
-use crate::ui::component::{EventCtx, SwipeDirection};
+use crate::ui::component::{swipe_detect::SwipeConfig, SwipeDirection};
 use num_traits::ToPrimitive;
 
-/// Component must implement this trait in order to be part of swipe-based flow.
-///
-/// Default implementation ignores every swipe.
-pub trait Swipable<T> {
-    /// Attempt a swipe. Return `Ignored` if the component in its current state
-    /// doesn't accept a swipe in that direction. Return `Animating` if
-    /// component accepted the swipe and started a transition animation. The
-    /// `Return(x)` variant indicates that the current flow should be terminated
-    /// with the result `x`.
-    fn swipe_start(
-        &mut self,
-        _ctx: &mut EventCtx,
-        _direction: SwipeDirection,
-    ) -> SwipableResult<T> {
-        SwipableResult::Ignored
-    }
+pub trait Swipable {
+    fn get_swipe_config(&self) -> SwipeConfig;
 
-    /// Return true when transition animation is finished. SwipeFlow needs to
-    /// know this in order to resume normal input processing.
-    fn swipe_finished(&self) -> bool {
-        true
-    }
-}
-
-pub enum SwipableResult<T> {
-    Ignored,
-    Animating,
-    Return(T),
-}
-
-impl<T> SwipableResult<T> {
-    pub fn map<U>(self, func: impl FnOnce(T) -> Option<U>) -> SwipableResult<U> {
-        match self {
-            SwipableResult::Ignored => SwipableResult::Ignored,
-            SwipableResult::Animating => SwipableResult::Animating,
-            SwipableResult::Return(x) => {
-                if let Some(res) = func(x) {
-                    SwipableResult::Return(res)
-                } else {
-                    SwipableResult::Ignored
-                }
-            }
-        }
-    }
+    fn get_internal_page_count(&self) -> usize;
 }
 
 /// Component::Msg for component parts of a flow. Converting results of

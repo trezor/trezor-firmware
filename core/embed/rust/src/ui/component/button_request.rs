@@ -4,6 +4,9 @@ use crate::ui::{
     geometry::Rect,
 };
 
+#[cfg(all(feature = "micropython", feature = "touch", feature = "new_rendering"))]
+use crate::ui::component::swipe_detect::SwipeConfig;
+
 /// Component that sends a ButtonRequest after receiving Event::Attach. The
 /// request is only sent once.
 #[derive(Clone)]
@@ -29,7 +32,7 @@ impl<T: Component> Component for OneButtonRequest<T> {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        if matches!(event, Event::Attach) {
+        if matches!(event, Event::Attach(_)) {
             if let Some(button_request) = self.button_request.take() {
                 ctx.send_button_request(button_request.code, button_request.br_type)
             }
@@ -43,6 +46,17 @@ impl<T: Component> Component for OneButtonRequest<T> {
 
     fn render<'s>(&'s self, target: &mut impl crate::ui::shape::Renderer<'s>) {
         self.inner.render(target)
+    }
+}
+
+#[cfg(all(feature = "micropython", feature = "touch", feature = "new_rendering"))]
+impl<T: crate::ui::flow::Swipable> crate::ui::flow::Swipable for OneButtonRequest<T> {
+    fn get_swipe_config(&self) -> SwipeConfig {
+        self.inner.get_swipe_config()
+    }
+
+    fn get_internal_page_count(&self) -> usize {
+        self.inner.get_internal_page_count()
     }
 }
 
@@ -63,21 +77,3 @@ pub trait ButtonRequestExt {
 }
 
 impl<T: Component> ButtonRequestExt for T {}
-
-#[cfg(all(feature = "micropython", feature = "touch", feature = "new_rendering"))]
-impl<T> crate::ui::flow::Swipable<T::Msg> for OneButtonRequest<T>
-where
-    T: Component + crate::ui::flow::Swipable<T::Msg>,
-{
-    fn swipe_start(
-        &mut self,
-        ctx: &mut EventCtx,
-        direction: crate::ui::component::SwipeDirection,
-    ) -> crate::ui::flow::SwipableResult<T::Msg> {
-        self.inner.swipe_start(ctx, direction)
-    }
-
-    fn swipe_finished(&self) -> bool {
-        self.inner.swipe_finished()
-    }
-}

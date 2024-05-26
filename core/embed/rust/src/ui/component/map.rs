@@ -1,6 +1,9 @@
 use super::{Component, Event, EventCtx};
 use crate::ui::{geometry::Rect, shape::Renderer};
 
+#[cfg(all(feature = "micropython", feature = "touch", feature = "new_rendering"))]
+use crate::ui::component::swipe_detect::SwipeConfig;
+
 pub struct MsgMap<T, F> {
     inner: T,
     func: F,
@@ -41,6 +44,19 @@ where
     }
 }
 
+#[cfg(all(feature = "micropython", feature = "touch", feature = "new_rendering"))]
+impl<T, F> crate::ui::flow::Swipable for MsgMap<T, F>
+where
+    T: Component + crate::ui::flow::Swipable,
+{
+    fn get_swipe_config(&self) -> SwipeConfig {
+        self.inner.get_swipe_config()
+    }
+    fn get_internal_page_count(&self) -> usize {
+        self.inner.get_internal_page_count()
+    }
+}
+
 #[cfg(feature = "ui_debug")]
 impl<T, F> crate::trace::Trace for MsgMap<T, F>
 where
@@ -48,25 +64,6 @@ where
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         self.inner.trace(t)
-    }
-}
-
-#[cfg(all(feature = "micropython", feature = "touch", feature = "new_rendering"))]
-impl<T, F, U> crate::ui::flow::Swipable<U> for MsgMap<T, F>
-where
-    T: Component + crate::ui::flow::Swipable<T::Msg>,
-    F: Fn(T::Msg) -> Option<U>,
-{
-    fn swipe_start(
-        &mut self,
-        ctx: &mut EventCtx,
-        direction: super::SwipeDirection,
-    ) -> crate::ui::flow::SwipableResult<U> {
-        self.inner.swipe_start(ctx, direction).map(&self.func)
-    }
-
-    fn swipe_finished(&self) -> bool {
-        self.inner.swipe_finished()
     }
 }
 
@@ -123,19 +120,14 @@ where
 }
 
 #[cfg(all(feature = "micropython", feature = "touch", feature = "new_rendering"))]
-impl<T, F> crate::ui::flow::Swipable<T::Msg> for PageMap<T, F>
+impl<T, F> crate::ui::flow::Swipable for PageMap<T, F>
 where
-    T: Component + crate::ui::flow::Swipable<T::Msg>,
+    T: Component + crate::ui::flow::Swipable,
 {
-    fn swipe_start(
-        &mut self,
-        ctx: &mut EventCtx,
-        direction: super::SwipeDirection,
-    ) -> crate::ui::flow::SwipableResult<T::Msg> {
-        self.inner.swipe_start(ctx, direction)
+    fn get_swipe_config(&self) -> SwipeConfig {
+        self.inner.get_swipe_config()
     }
-
-    fn swipe_finished(&self) -> bool {
-        self.inner.swipe_finished()
+    fn get_internal_page_count(&self) -> usize {
+        self.inner.get_internal_page_count()
     }
 }

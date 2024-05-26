@@ -4,10 +4,8 @@ use crate::{
     strutil::TString,
     translations::TR,
     ui::{
-        component::{
-            text::paragraphs::Paragraph, Component, ComponentExt, Paginate, SwipeDirection,
-        },
-        flow::{base::Decision, flow_store, FlowMsg, FlowState, FlowStore, SwipeFlow, SwipePage},
+        component::{text::paragraphs::Paragraph, ComponentExt, SwipeDirection},
+        flow::{base::Decision, FlowMsg, FlowState, FlowStore},
     },
 };
 
@@ -107,8 +105,14 @@ impl FlowState for ConfirmActionSimple {
 use crate::{
     micropython::{map::Map, obj::Obj, qstr::Qstr, util},
     ui::{
-        component::text::paragraphs::{ParagraphSource, ParagraphVecShort, VecExt},
+        component::{
+            swipe_detect::SwipeSettings,
+            text::paragraphs::{ParagraphSource, ParagraphVecShort, VecExt},
+            Component, Paginate,
+        },
+        flow::{flow_store, SwipeFlow, SwipePage},
         layout::obj::LayoutObj,
+        model_mercury::component::SwipeContent,
     },
 };
 
@@ -154,16 +158,22 @@ fn new_confirm_action_obj(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Err
         paragraphs.into_paragraphs()
     };
 
-    let mut content_intro = Frame::left_aligned(title, SwipePage::vertical(paragraphs))
-        .with_menu_button()
-        .with_footer(TR::instructions__swipe_up.into(), None);
+    let mut content_intro =
+        Frame::left_aligned(title, SwipeContent::new(SwipePage::vertical(paragraphs)))
+            .with_menu_button()
+            .with_footer(TR::instructions__swipe_up.into(), None)
+            .with_swipe(SwipeDirection::Up, SwipeSettings::default())
+            .with_swipe(SwipeDirection::Left, SwipeSettings::default())
+            .with_vertical_pages();
 
     if let Some(subtitle) = subtitle {
         content_intro = content_intro.with_subtitle(subtitle);
     }
 
-    let content_intro =
-        content_intro.map(|msg| matches!(msg, FrameMsg::Button(_)).then_some(FlowMsg::Info));
+    let content_intro = content_intro.map(move |msg| match msg {
+        FrameMsg::Button(_) => Some(FlowMsg::Info),
+        _ => None,
+    });
 
     let content_menu = if let Some(verb_cancel) = verb_cancel {
         Frame::left_aligned(
@@ -177,6 +187,7 @@ fn new_confirm_action_obj(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Err
         )
     }
     .with_cancel_button()
+    .with_swipe(SwipeDirection::Right, SwipeSettings::immediate())
     .map(move |msg| match msg {
         FrameMsg::Content(VerticalMenuChoiceMsg::Selected(_)) => Some(FlowMsg::Choice(0)),
         FrameMsg::Button(_) => Some(FlowMsg::Cancelled),
@@ -199,9 +210,11 @@ fn new_confirm_action_obj(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Err
             )
         };
 
-        let mut content_confirm = Frame::left_aligned(title, prompt)
+        let mut content_confirm = Frame::left_aligned(title, SwipeContent::new(prompt))
             .with_footer(prompt_action, None)
-            .with_menu_button();
+            .with_menu_button()
+            .with_swipe(SwipeDirection::Down, SwipeSettings::default())
+            .with_swipe(SwipeDirection::Left, SwipeSettings::default());
 
         if let Some(subtitle) = subtitle {
             content_confirm = content_confirm.with_subtitle(subtitle);
@@ -228,9 +241,12 @@ pub fn new_confirm_action_simple<T: Component + Paginate + Clone + MaybeTrace + 
     verb: Option<TString<'static>>,
     verb_cancel: Option<TString<'static>>,
 ) -> Result<Obj, error::Error> {
-    let mut frame = Frame::left_aligned(title, SwipePage::vertical(content))
+    let mut frame = Frame::left_aligned(title, SwipeContent::new(SwipePage::vertical(content)))
         .with_menu_button()
-        .with_footer(TR::instructions__swipe_up.into(), verb);
+        .with_footer(TR::instructions__swipe_up.into(), verb)
+        .with_swipe(SwipeDirection::Up, SwipeSettings::default())
+        .with_swipe(SwipeDirection::Left, SwipeSettings::immediate())
+        .with_vertical_pages();
     if let Some(subtitle) = subtitle {
         frame = frame.with_subtitle(subtitle)
     }
@@ -249,6 +265,7 @@ pub fn new_confirm_action_simple<T: Component + Paginate + Clone + MaybeTrace + 
         )
     }
     .with_cancel_button()
+    .with_swipe(SwipeDirection::Right, SwipeSettings::immediate())
     .map(move |msg| match msg {
         FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => Some(FlowMsg::Choice(i)),
         FrameMsg::Button(_) => Some(FlowMsg::Cancelled),

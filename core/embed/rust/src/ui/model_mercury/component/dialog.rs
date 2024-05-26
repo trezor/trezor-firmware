@@ -228,6 +228,3 @@ where
         t.child("controls", &self.controls);
     }
 }
-
-#[cfg(feature = "micropython")]
-impl<U: Component> crate::ui::flow::Swipable<U::Msg> for IconDialog<U> {}

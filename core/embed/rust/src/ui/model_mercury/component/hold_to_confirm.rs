@@ -36,6 +36,10 @@ impl HoldToConfirmAnim {
     const DURATION_MS: u32 = 2200;
 
     pub fn is_active(&self) -> bool {
+        if animation_disabled() {
+            return false;
+        }
+
         self.timer
             .is_running_within(Duration::from_millis(Self::DURATION_MS))
     }
@@ -331,9 +335,6 @@ impl Component for HoldToConfirm {
         }
     }
 }
-
-#[cfg(feature = "micropython")]
-impl crate::ui::flow::Swipable<()> for HoldToConfirm {}
 
 #[cfg(feature = "ui_debug")]
 impl crate::trace::Trace for HoldToConfirm {

@@ -6,11 +6,13 @@ use crate::{
     ui::{
         button_request::ButtonRequestCode,
         component::{
+            swipe_detect::SwipeSettings,
             text::paragraphs::{Paragraph, Paragraphs},
             ButtonRequestExt, ComponentExt, SwipeDirection,
         },
-        flow::{base::Decision, flow_store, FlowMsg, FlowState, FlowStore, SwipeFlow, SwipePage},
+        flow::{base::Decision, flow_store, FlowMsg, FlowState, FlowStore, SwipeFlow},
         layout::obj::LayoutObj,
+        model_mercury::component::SwipeContent,
     },
 };
 use heapless::Vec;
@@ -84,35 +86,41 @@ impl ShowShareWords {
 
         let content_instruction = Frame::left_aligned(
             title,
-            SwipePage::vertical(Paragraphs::new(Paragraph::new(
+            SwipeContent::new(Paragraphs::new(Paragraph::new(
                 &theme::TEXT_MAIN_GREY_LIGHT,
                 text_info,
             ))),
         )
         .with_subtitle(TR::words__instructions.into())
         .with_footer(TR::instructions__swipe_up.into(), None)
+        .with_swipe(SwipeDirection::Up, SwipeSettings::default())
         .map(|msg| matches!(msg, FrameMsg::Content(_)).then_some(FlowMsg::Confirmed))
         .one_button_request(ButtonRequestCode::ResetDevice.with_type("share_words"))
         .with_pages(move |_| nwords + 2);
 
         let content_words = Frame::left_aligned(title, ShareWords::new(share_words_vec))
             .with_subtitle(subtitle)
+            .with_swipe(SwipeDirection::Up, SwipeSettings::default())
+            .with_swipe(SwipeDirection::Down, SwipeSettings::default())
+            .with_vertical_pages()
             .map(|_| None);
 
         let content_confirm =
             Frame::left_aligned(text_confirm, PromptScreen::new_hold_to_confirm())
                 .with_footer(TR::instructions__hold_to_confirm.into(), None)
+                .with_swipe(SwipeDirection::Down, SwipeSettings::default())
                 .map(|_| Some(FlowMsg::Confirmed));
 
         let content_check_backup_intro = Frame::left_aligned(
             TR::reset__check_backup_title.into(),
-            SwipePage::vertical(Paragraphs::new(Paragraph::new(
+            SwipeContent::new(Paragraphs::new(Paragraph::new(
                 &theme::TEXT_MAIN_GREY_LIGHT,
                 TR::reset__check_backup_instructions,
             ))),
         )
         .with_subtitle(TR::words__instructions.into())
         .with_footer(TR::instructions__swipe_up.into(), None)
+        .with_swipe(SwipeDirection::Up, SwipeSettings::default())
         .map(|_| Some(FlowMsg::Confirmed));
 
         let store = flow_store()

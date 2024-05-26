@@ -12,11 +12,12 @@ use crate::{
     ui::{
         backlight::BACKLIGHT_LEVELS_OBJ,
         component::{
-            base::ComponentExt,
+            base::{AttachType, ComponentExt},
             connect::Connect,
             image::BlendedImage,
             jpeg::Jpeg,
             paginated::{PageMsg, Paginate},
+            swipe_detect::SwipeSettings,
             text::{
                 op::OpTextLayout,
                 paragraphs::{
@@ -25,15 +26,16 @@ use crate::{
                 },
                 TextStyle,
             },
-            Border, Component, Empty, FormattedText, Label, Never, Timeout,
+            Border, Component, Empty, FormattedText, Label, Never, SwipeDirection, Timeout,
         },
+        flow::Swipable,
         geometry,
         layout::{
             obj::{ComponentMsgObj, LayoutObj},
             result::{CANCELLED, CONFIRMED, INFO},
             util::{upy_disable_animation, ConfirmBlob, PropsList},
         },
-        model_mercury::component::check_homescreen_format,
+        model_mercury::component::{check_homescreen_format, SwipeContent},
     },
 };
 
@@ -209,10 +211,7 @@ impl ComponentMsgObj for PromptScreen {
     }
 }
 
-impl<T> ComponentMsgObj for SwipeUpScreen<T>
-where
-    T: Component,
-{
+impl<T: Component + Swipable> ComponentMsgObj for SwipeUpScreen<T> {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
             SwipeUpScreenMsg::Content(_) => Err(Error::TypeError),
@@ -736,7 +735,8 @@ extern "C" fn new_confirm_modify_output(n_args: usize, args: *const Obj, kwargs:
         let obj = LayoutObj::new(SwipeUpScreen::new(
             Frame::left_aligned(TR::modify_amount__title.into(), paragraphs)
                 .with_cancel_button()
-                .with_footer(TR::instructions__swipe_up.into(), None),
+                .with_footer(TR::instructions__swipe_up.into(), None)
+                .with_swipe(SwipeDirection::Up, SwipeSettings::default()),
         ))?;
         Ok(obj.into())
     };
@@ -778,7 +778,8 @@ extern "C" fn new_confirm_modify_fee(n_args: usize, args: *const Obj, kwargs: *m
         let obj = LayoutObj::new(SwipeUpScreen::new(
             Frame::left_aligned(title, paragraphs)
                 .with_menu_button()
-                .with_footer(TR::instructions__swipe_up.into(), None),
+                .with_footer(TR::instructions__swipe_up.into(), None)
+                .with_swipe(SwipeDirection::Up, SwipeSettings::default()),
         ))?;
         Ok(obj.into())
     };
@@ -860,20 +861,21 @@ extern "C" fn new_show_error(n_args: usize, args: *const Obj, kwargs: *mut Map) 
         let description: TString = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
         let allow_cancel: bool = kwargs.get(Qstr::MP_QSTR_allow_cancel)?.try_into()?;
 
-        let content = SwipeUpScreen::new(Paragraphs::new([Paragraph::new(
-            &theme::TEXT_MAIN_GREY_LIGHT,
-            description,
-        )]));
+        let content = Paragraphs::new([Paragraph::new(&theme::TEXT_MAIN_GREY_LIGHT, description)]);
         let frame = if allow_cancel {
-            Frame::left_aligned(title, content)
+            Frame::left_aligned(title, SwipeContent::new(content))
                 .with_cancel_button()
                 .with_danger()
                 .with_footer(TR::instructions__swipe_up.into(), None)
+                .with_swipe(SwipeDirection::Up, SwipeSettings::default())
         } else {
-            Frame::left_aligned(title, content)
+            Frame::left_aligned(title, SwipeContent::new(content))
                 .with_danger()
                 .with_footer(TR::instructions__swipe_up.into(), None)
+                .with_swipe(SwipeDirection::Up, SwipeSettings::default())
         };
+
+        let frame = SwipeUpScreen::new(frame);
         let obj = LayoutObj::new(frame)?;
         Ok(obj.into())
     };
@@ -918,15 +920,16 @@ extern "C" fn new_show_warning(n_args: usize, args: *const Obj, kwargs: *mut Map
         let value: TString = kwargs.get_or(Qstr::MP_QSTR_value, "".into())?;
         let action: Option<TString> = kwargs.get(Qstr::MP_QSTR_button)?.try_into_option()?;
 
-        let content = SwipeUpScreen::new(Paragraphs::new([
+        let content = Paragraphs::new([
             Paragraph::new(&theme::TEXT_MAIN_GREY_LIGHT, description),
             Paragraph::new(&theme::TEXT_MAIN_GREY_EXTRA_LIGHT, value),
-        ]));
-        let obj = LayoutObj::new(
-            Frame::left_aligned(title, content)
+        ]);
+        let obj = LayoutObj::new(SwipeUpScreen::new(
+            Frame::left_aligned(title, SwipeContent::new(content))
                 .with_warning_button()
-                .with_footer(TR::instructions__swipe_up.into(), action),
-        )?;
+                .with_footer(TR::instructions__swipe_up.into(), action)
+                .with_swipe(SwipeDirection::Up, SwipeSettings::default()),
+        ))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -936,10 +939,11 @@ extern "C" fn new_show_success(n_args: usize, args: *const Obj, kwargs: *mut Map
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let content = StatusScreen::new_success();
-        let obj = LayoutObj::new(
-            Frame::left_aligned(title, content)
-                .with_footer(TR::instructions__swipe_up.into(), None),
-        )?;
+        let obj = LayoutObj::new(SwipeUpScreen::new(
+            Frame::left_aligned(title, SwipeContent::new(content).with_normal_attach(None))
+                .with_footer(TR::instructions__swipe_up.into(), None)
+                .with_swipe(SwipeDirection::Up, SwipeSettings::default()),
+        ))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -949,14 +953,12 @@ extern "C" fn new_show_info(n_args: usize, args: *const Obj, kwargs: *mut Map) -
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let description: TString = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
-        let content = SwipeUpScreen::new(Paragraphs::new([Paragraph::new(
-            &theme::TEXT_MAIN_GREY_LIGHT,
-            description,
-        )]));
-        let obj = LayoutObj::new(
-            Frame::left_aligned(title, content)
-                .with_footer(TR::instructions__swipe_up.into(), None),
-        )?;
+        let content = Paragraphs::new([Paragraph::new(&theme::TEXT_MAIN_GREY_LIGHT, description)]);
+        let obj = LayoutObj::new(SwipeUpScreen::new(
+            Frame::left_aligned(title, SwipeContent::new(content))
+                .with_footer(TR::instructions__swipe_up.into(), None)
+                .with_swipe(SwipeDirection::Up, SwipeSettings::default()),
+        ))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -1070,7 +1072,8 @@ extern "C" fn new_confirm_with_info(n_args: usize, args: *const Obj, kwargs: *mu
         let obj = LayoutObj::new(SwipeUpScreen::new(
             Frame::left_aligned(title, paragraphs.into_paragraphs())
                 .with_menu_button()
-                .with_footer(TR::instructions__swipe_up.into(), Some(button)),
+                .with_footer(TR::instructions__swipe_up.into(), Some(button))
+                .with_swipe(SwipeDirection::Up, SwipeSettings::default()),
         ))?;
         Ok(obj.into())
     };
@@ -1227,22 +1230,26 @@ extern "C" fn new_show_checklist(n_args: usize, args: *const Obj, kwargs: *mut M
             paragraphs.add(Paragraph::new(style, text));
         }
 
-        let checklist_content = SwipeUpScreen::new(
-            Checklist::from_paragraphs(
-                theme::ICON_CHEVRON_RIGHT,
-                theme::ICON_BULLET_CHECKMARK,
-                active,
-                paragraphs
-                    .into_paragraphs()
-                    .with_spacing(theme::CHECKLIST_SPACING),
+        let checklist_content = Checklist::from_paragraphs(
+            theme::ICON_CHEVRON_RIGHT,
+            theme::ICON_BULLET_CHECKMARK,
+            active,
+            paragraphs
+                .into_paragraphs()
+                .with_spacing(theme::CHECKLIST_SPACING),
+        )
+        .with_check_width(theme::CHECKLIST_CHECK_WIDTH)
+        .with_icon_done_color(theme::GREEN);
+
+        let obj = LayoutObj::new(SwipeUpScreen::new(
+            Frame::left_aligned(
+                title,
+                SwipeContent::new(checklist_content)
+                    .with_normal_attach(Some(AttachType::Swipe(SwipeDirection::Up))),
             )
-            .with_check_width(theme::CHECKLIST_CHECK_WIDTH)
-            .with_icon_done_color(theme::GREEN),
-        );
-        let obj = LayoutObj::new(
-            Frame::left_aligned(title, checklist_content)
-                .with_footer(TR::instructions__swipe_up.into(), None),
-        )?;
+            .with_footer(TR::instructions__swipe_up.into(), None)
+            .with_swipe(SwipeDirection::Up, SwipeSettings::default()),
+        ))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -1264,12 +1271,12 @@ extern "C" fn new_confirm_recovery(n_args: usize, args: *const Obj, kwargs: *mut
             _ => TR::recovery__title.into(),
         };
 
-        let content = SwipeUpScreen::new(paragraphs);
-        let obj = LayoutObj::new(
-            Frame::left_aligned(notification, content)
+        let obj = LayoutObj::new(SwipeUpScreen::new(
+            Frame::left_aligned(notification, SwipeContent::new(paragraphs))
                 .with_footer(TR::instructions__swipe_up.into(), None)
-                .with_subtitle(TR::words__instructions.into()),
-        )?;
+                .with_subtitle(TR::words__instructions.into())
+                .with_swipe(SwipeDirection::Up, SwipeSettings::default()),
+        ))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }

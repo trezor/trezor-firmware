@@ -88,7 +88,7 @@ SECTIONS {
   } >SRAM1
 
   .stack : ALIGN(8) {
-    . = 16K; /* Overflow causes UsageFault */
+    . = 32K; /* Overflow causes UsageFault */
   } >SRAM2
 
   .confidential : ALIGN(512) {
