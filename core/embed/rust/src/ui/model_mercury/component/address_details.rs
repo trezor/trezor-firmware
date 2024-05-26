@@ -6,9 +6,12 @@ use crate::{
     translations::TR,
     ui::{
         component::{
+            base::SwipeEvent,
+            swipe_detect::{SwipeConfig, SwipeSettings},
             text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs, VecExt},
-            Component, Event, EventCtx, Paginate,
+            Component, Event, EventCtx, Paginate, SwipeDirection,
         },
+        flow::SimpleSwipable,
         geometry::Rect,
         shape::Renderer,
     },
@@ -56,12 +59,15 @@ impl AddressDetails {
         }
         let result = Self {
             details: Frame::left_aligned(details_title, para.into_paragraphs())
-                .with_cancel_button(),
+                .with_cancel_button()
+                .with_swipe(SwipeDirection::Right, SwipeSettings::immediate())
+                .with_horizontal_pages(),
             xpub_view: Frame::left_aligned(
                 " \n ".into(),
                 Paragraph::new(&theme::TEXT_MONO_GREY_LIGHT, "").into_paragraphs(),
             )
-            .with_cancel_button(),
+            .with_cancel_button()
+            .with_horizontal_pages(),
             xpubs: Vec::new(),
             xpub_page_count: Vec::new(),
             current_page: 0,
@@ -144,6 +150,22 @@ impl Component for AddressDetails {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        ctx.set_page_count(self.page_count());
+        match event {
+            Event::Swipe(SwipeEvent::End(SwipeDirection::Right)) => {
+                let to_page = self.current_page.saturating_sub(1);
+                self.change_page(to_page);
+            }
+            Event::Swipe(SwipeEvent::End(SwipeDirection::Left)) => {
+                let to_page = self
+                    .current_page
+                    .saturating_add(1)
+                    .min(self.page_count() - 1);
+                self.change_page(to_page);
+            }
+            _ => {}
+        }
+
         let msg = match self.current_page {
             0 => self.details.event(ctx, event),
             _ => self.xpub_view.event(ctx, event),
@@ -174,6 +196,19 @@ impl Component for AddressDetails {
             0 => self.details.bounds(sink),
             _ => self.xpub_view.bounds(sink),
         }
+    }
+}
+
+impl SimpleSwipable for AddressDetails {
+    fn get_swipe_config(&self) -> SwipeConfig {
+        match self.current_page {
+            0 => self.details.get_swipe_config(),
+            _ => self.xpub_view.get_swipe_config(),
+        }
+    }
+
+    fn get_internal_page_count(&mut self) -> usize {
+        self.page_count()
     }
 }
 

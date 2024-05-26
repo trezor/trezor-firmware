@@ -93,7 +93,7 @@ where
             _ if animation_disabled() => {
                 return None;
             }
-            Event::Attach if self.indeterminate => {
+            Event::Attach(_) if self.indeterminate => {
                 ctx.request_anim_frame();
             }
             Event::Timer(EventCtx::ANIM_FRAME_TIMER) => {

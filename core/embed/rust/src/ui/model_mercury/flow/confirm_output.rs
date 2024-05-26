@@ -6,7 +6,7 @@ use crate::{
     ui::{
         button_request::ButtonRequest,
         component::{ButtonRequestExt, ComponentExt, SwipeDirection},
-        flow::{base::Decision, flow_store, FlowMsg, FlowState, FlowStore, SwipeFlow, SwipePage},
+        flow::{base::Decision, flow_store, FlowMsg, FlowState, FlowStore, SwipeFlow},
     },
 };
 
@@ -76,7 +76,10 @@ impl FlowState for ConfirmOutput {
 
 use crate::{
     micropython::{map::Map, obj::Obj, util},
-    ui::layout::obj::LayoutObj,
+    ui::{
+        component::swipe_detect::SwipeSettings, layout::obj::LayoutObj,
+        model_mercury::component::SwipeContent,
+    },
 };
 
 #[allow(clippy::not_unsafe_ptr_arg_deref)]
@@ -117,6 +120,7 @@ impl ConfirmOutput {
             .with_menu_button()
             .with_footer(TR::instructions__swipe_up.into(), None)
             .with_text_mono(text_mono)
+            .with_swipe_down()
             .into_layout()?
             .one_button_request(ButtonRequest::from_num(br_code, br_type));
 
@@ -128,6 +132,7 @@ impl ConfirmOutput {
                 .danger(theme::ICON_CANCEL, "Cancel sign".into()),
         )
         .with_cancel_button()
+        .with_swipe(SwipeDirection::Right, SwipeSettings::immediate())
         .map(|msg| match msg {
             FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => Some(FlowMsg::Choice(i)),
             FrameMsg::Button(_) => Some(FlowMsg::Cancelled),
@@ -135,15 +140,17 @@ impl ConfirmOutput {
 
         // AccountInfo
         let ad = AddressDetails::new(TR::send__send_from.into(), account, account_path)?;
-        let content_account = SwipePage::horizontal(ad).map(|_| Some(FlowMsg::Cancelled));
+        let content_account = ad.map(|_| Some(FlowMsg::Cancelled));
 
         // CancelTap
         let content_cancel_tap = Frame::left_aligned(
             TR::send__cancel_sign.into(),
-            PromptScreen::new_tap_to_cancel(),
+            SwipeContent::new(PromptScreen::new_tap_to_cancel()),
         )
         .with_cancel_button()
         .with_footer(TR::instructions__tap_to_confirm.into(), None)
+        .with_swipe(SwipeDirection::Down, SwipeSettings::default())
+        .with_swipe(SwipeDirection::Left, SwipeSettings::default())
         .map(|msg| match msg {
             FrameMsg::Content(()) => Some(FlowMsg::Confirmed),
             FrameMsg::Button(_) => Some(FlowMsg::Cancelled),

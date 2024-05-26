@@ -1,7 +1,7 @@
 use crate::{
     time::{Duration, Stopwatch},
     ui::{
-        component::{Component, Event, EventCtx, Swipe, SwipeDirection, Timeout},
+        component::{Component, Event, EventCtx, Timeout},
         constant::screen,
         display::{Color, Icon},
         geometry::{Alignment2D, Insets, Rect},
@@ -23,13 +23,17 @@ struct StatusAnimation {
 
 impl StatusAnimation {
     pub fn is_active(&self) -> bool {
+        if animation_disabled() {
+            return false;
+        }
+
         self.timer
             .is_running_within(Duration::from_millis(TIMEOUT_MS))
     }
 
     pub fn eval(&self) -> f32 {
         if animation_disabled() {
-            return 1.0;
+            return TIMEOUT_MS as f32 / 1000.0;
         }
         self.timer.elapsed().to_millis() as f32 / 1000.0
     }
@@ -96,7 +100,7 @@ pub struct StatusScreen {
 
 #[derive(Clone)]
 enum DismissType {
-    SwipeUp(Swipe),
+    SwipeUp,
     Timeout(Timeout),
 }
 
@@ -117,7 +121,7 @@ impl StatusScreen {
             theme::ICON_SIMPLE_CHECKMARK,
             theme::GREEN_LIME,
             theme::GREEN_LIGHT,
-            DismissType::SwipeUp(Swipe::new().up()),
+            DismissType::SwipeUp,
         )
     }
 
@@ -135,7 +139,7 @@ impl StatusScreen {
             theme::ICON_SIMPLE_CHECKMARK,
             theme::GREY_EXTRA_LIGHT,
             theme::GREY_DARK,
-            DismissType::SwipeUp(Swipe::new().up()),
+            DismissType::SwipeUp,
         )
     }
 
@@ -154,14 +158,11 @@ impl Component for StatusScreen {
 
     fn place(&mut self, bounds: Rect) -> Rect {
         self.area = bounds;
-        if let DismissType::SwipeUp(swipe) = &mut self.dismiss_type {
-            swipe.place(bounds);
-        }
         bounds
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        if let Event::Attach = event {
+        if let Event::Attach(_) = event {
             self.anim.start();
             ctx.request_paint();
             ctx.request_anim_frame();
@@ -173,17 +174,9 @@ impl Component for StatusScreen {
             }
         }
 
-        match self.dismiss_type {
-            DismissType::SwipeUp(ref mut swipe) => {
-                let swipe_dir = swipe.event(ctx, event);
-                if let Some(SwipeDirection::Up) = swipe_dir {
-                    return Some(());
-                }
-            }
-            DismissType::Timeout(ref mut timeout) => {
-                if timeout.event(ctx, event).is_some() {
-                    return Some(());
-                }
+        if let DismissType::Timeout(ref mut timeout) = self.dismiss_type {
+            if timeout.event(ctx, event).is_some() {
+                return Some(());
             }
         }
 

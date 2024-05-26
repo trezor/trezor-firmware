@@ -186,7 +186,7 @@ impl Component for PinKeyboard<'_> {
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         match event {
             // Set up timer to switch off warning prompt.
-            Event::Attach if self.major_warning.is_some() => {
+            Event::Attach(_) if self.major_warning.is_some() => {
                 self.warning_timer = Some(ctx.request_timer(Duration::from_secs(2)));
             }
             // Hide warning, show major prompt.

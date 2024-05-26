@@ -6,16 +6,18 @@ use crate::{
     ui::{
         button_request::ButtonRequestCode,
         component::{
+            swipe_detect::SwipeSettings,
             text::paragraphs::{Paragraph, Paragraphs},
             ButtonRequestExt, ComponentExt, SwipeDirection,
         },
-        flow::{base::Decision, flow_store, FlowMsg, FlowState, FlowStore, SwipeFlow, SwipePage},
+        flow::{base::Decision, flow_store, FlowMsg, FlowState, FlowStore, SwipeFlow},
         layout::obj::LayoutObj,
+        model_mercury::component::{PromptScreen, SwipeContent},
     },
 };
 
 use super::super::{
-    component::{Frame, FrameMsg, HoldToConfirm, VerticalMenu, VerticalMenuChoiceMsg},
+    component::{Frame, FrameMsg, VerticalMenu, VerticalMenuChoiceMsg},
     theme,
 };
 
@@ -32,14 +34,17 @@ impl FlowState for ConfirmResetCreate {
             (ConfirmResetCreate::Intro, SwipeDirection::Left) => {
                 Decision::Goto(ConfirmResetCreate::Menu, direction)
             }
-            (ConfirmResetCreate::Menu, SwipeDirection::Right) => {
-                Decision::Goto(ConfirmResetCreate::Intro, direction)
-            }
             (ConfirmResetCreate::Intro, SwipeDirection::Up) => {
                 Decision::Goto(ConfirmResetCreate::Confirm, direction)
             }
+            (ConfirmResetCreate::Menu, SwipeDirection::Right) => {
+                Decision::Goto(ConfirmResetCreate::Intro, direction)
+            }
             (ConfirmResetCreate::Confirm, SwipeDirection::Down) => {
                 Decision::Goto(ConfirmResetCreate::Intro, direction)
+            }
+            (ConfirmResetCreate::Confirm, SwipeDirection::Left) => {
+                Decision::Goto(ConfirmResetCreate::Menu, direction)
             }
             _ => Decision::Nothing,
         }
@@ -56,6 +61,9 @@ impl FlowState for ConfirmResetCreate {
             (ConfirmResetCreate::Menu, FlowMsg::Choice(0)) => Decision::Return(FlowMsg::Cancelled),
             (ConfirmResetCreate::Confirm, FlowMsg::Confirmed) => {
                 Decision::Return(FlowMsg::Confirmed)
+            }
+            (ConfirmResetCreate::Confirm, FlowMsg::Info) => {
+                Decision::Goto(ConfirmResetCreate::Menu, SwipeDirection::Left)
             }
             _ => Decision::Nothing,
         }
@@ -81,9 +89,11 @@ impl ConfirmResetCreate {
             Paragraph::new(&theme::TEXT_SUB_GREY_LIGHT, TR::reset__tos_link),
         ];
         let paragraphs = Paragraphs::new(par_array);
-        let content_intro = Frame::left_aligned(title, SwipePage::vertical(paragraphs))
+        let content_intro = Frame::left_aligned(title, SwipeContent::new(paragraphs))
             .with_menu_button()
             .with_footer(TR::instructions__swipe_up.into(), None)
+            .with_swipe(SwipeDirection::Up, SwipeSettings::default())
+            .with_swipe(SwipeDirection::Left, SwipeSettings::default())
             .map(|msg| matches!(msg, FrameMsg::Button(_)).then_some(FlowMsg::Info))
             .one_button_request(ButtonRequestCode::ResetDevice.with_type("setup_device"));
 
@@ -92,21 +102,25 @@ impl ConfirmResetCreate {
             VerticalMenu::empty().danger(theme::ICON_CANCEL, "Cancel".into()), // TODO: use TR
         )
         .with_cancel_button()
+        .with_swipe(SwipeDirection::Right, SwipeSettings::immediate())
         .map(|msg| match msg {
             FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => Some(FlowMsg::Choice(i)),
             FrameMsg::Button(_) => Some(FlowMsg::Cancelled),
         });
 
-        let content_confirm =
-            Frame::left_aligned(TR::reset__title_create_wallet.into(), HoldToConfirm::new())
-                .with_footer(TR::instructions__hold_to_confirm.into(), None)
-                .map(|msg| match msg {
-                    FrameMsg::Content(()) => Some(FlowMsg::Confirmed),
-                    _ => Some(FlowMsg::Cancelled),
-                })
-                .one_button_request(
-                    ButtonRequestCode::ResetDevice.with_type("confirm_setup_device"),
-                );
+        let content_confirm = Frame::left_aligned(
+            TR::reset__title_create_wallet.into(),
+            SwipeContent::new(PromptScreen::new_hold_to_confirm()),
+        )
+        .with_menu_button()
+        .with_footer(TR::instructions__hold_to_confirm.into(), None)
+        .with_swipe(SwipeDirection::Down, SwipeSettings::default())
+        .with_swipe(SwipeDirection::Left, SwipeSettings::default())
+        .map(|msg| match msg {
+            FrameMsg::Content(()) => Some(FlowMsg::Confirmed),
+            FrameMsg::Button(_) => Some(FlowMsg::Info),
+        })
+        .one_button_request(ButtonRequestCode::ResetDevice.with_type("confirm_setup_device"));
 
         let store = flow_store()
             .add(content_intro)?
