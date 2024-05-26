@@ -74,6 +74,7 @@ pub extern "C" fn new_show_share_words(n_args: usize, args: *const Obj, kwargs: 
 impl ShowShareWords {
     fn new_obj(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Error> {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let subtitle: TString = kwargs.get(Qstr::MP_QSTR_subtitle)?.try_into()?;
         let share_words_obj: Obj = kwargs.get(Qstr::MP_QSTR_words)?;
         let share_words_vec: Vec<TString, 33> = util::iter_into_vec(share_words_obj)?;
         let text_info: TString = kwargs.get(Qstr::MP_QSTR_text_info)?.try_into()?;
@@ -90,8 +91,9 @@ impl ShowShareWords {
         .with_footer(TR::instructions__swipe_up.into(), None)
         .map(|msg| matches!(msg, FrameMsg::Content(_)).then_some(FlowMsg::Confirmed));
 
-        let content_words =
-            Frame::left_aligned(title, ShareWords::new(share_words_vec)).map(|_| None);
+        let content_words = Frame::left_aligned(title, ShareWords::new(share_words_vec))
+            .with_subtitle(subtitle)
+            .map(|_| None);
 
         let content_confirm =
             Frame::left_aligned(text_confirm, PromptScreen::new_hold_to_confirm())

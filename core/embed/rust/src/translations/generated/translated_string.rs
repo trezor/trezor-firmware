@@ -1307,11 +1307,11 @@ pub enum TranslatedString {
     reset__incorrect_word_selected = 907,  // "Incorrect word selected"
     reset__more_at = 908,  // "More at"
     reset__num_of_shares_how_many = 909,  // "How many wallet backup shares do you want to create?"
-    reset__num_of_shares_long_info = 910,  // "Each recovery share is a sequence of 20 words. Store each wordlist in a separate, safe location or share with trusted individuals. Collect as needed to recover your wallet."
+    reset__num_of_shares_long_info = 910,  // "Each backup share is a sequence of 20 words. Store each wordlist in a separate, safe location or share with trusted individuals. Collect as needed to recover your wallet."
     reset__select_threshold = 911,  // "Select the minimum shares required to recover your wallet."
     reset__share_completed_template = 912,  // "Share #{0} completed"
-    reset__slip39_checklist_num_shares_x_template = 913,  // "Number of shares"
-    reset__slip39_checklist_threshold_x_template = 914,  // "Recovery threshold:"
+    reset__slip39_checklist_num_shares_x_template = 913,  // "Number of shares: {0}"
+    reset__slip39_checklist_threshold_x_template = 914,  // "Recovery threshold: {0}"
     send__transaction_signed = 915,  // "Transaction signed"
     tutorial__continue = 916,  // "Continue tutorial"
     tutorial__exit = 917,  // "Exit tutorial"
@@ -1328,6 +1328,7 @@ pub enum TranslatedString {
     words__operation_cancelled = 928,  // "Operation cancelled"
     words__settings = 929,  // "Settings"
     words__try_again = 930,  // "Try again."
+    reset__slip39_checklist_num_groups_x_template = 931,  // "Number of groups: {0}"
 }
 
 impl TranslatedString {
@@ -2630,11 +2631,11 @@ impl TranslatedString {
             Self::reset__incorrect_word_selected => "Incorrect word selected",
             Self::reset__more_at => "More at",
             Self::reset__num_of_shares_how_many => "How many wallet backup shares do you want to create?",
-            Self::reset__num_of_shares_long_info => "Each recovery share is a sequence of 20 words. Store each wordlist in a separate, safe location or share with trusted individuals. Collect as needed to recover your wallet.",
+            Self::reset__num_of_shares_long_info => "Each backup share is a sequence of 20 words. Store each wordlist in a separate, safe location or share with trusted individuals. Collect as needed to recover your wallet.",
             Self::reset__select_threshold => "Select the minimum shares required to recover your wallet.",
             Self::reset__share_completed_template => "Share #{0} completed",
-            Self::reset__slip39_checklist_num_shares_x_template => "Number of shares",
-            Self::reset__slip39_checklist_threshold_x_template => "Recovery threshold:",
+            Self::reset__slip39_checklist_num_shares_x_template => "Number of shares: {0}",
+            Self::reset__slip39_checklist_threshold_x_template => "Recovery threshold: {0}",
             Self::send__transaction_signed => "Transaction signed",
             Self::tutorial__continue => "Continue tutorial",
             Self::tutorial__exit => "Exit tutorial",
@@ -2651,6 +2652,7 @@ impl TranslatedString {
             Self::words__operation_cancelled => "Operation cancelled",
             Self::words__settings => "Settings",
             Self::words__try_again => "Try again.",
+            Self::reset__slip39_checklist_num_groups_x_template => "Number of groups: {0}",
         }
     }
 
@@ -3975,6 +3977,7 @@ impl TranslatedString {
             Qstr::MP_QSTR_words__operation_cancelled => Some(Self::words__operation_cancelled),
             Qstr::MP_QSTR_words__settings => Some(Self::words__settings),
             Qstr::MP_QSTR_words__try_again => Some(Self::words__try_again),
+            Qstr::MP_QSTR_reset__slip39_checklist_num_groups_x_template => Some(Self::reset__slip39_checklist_num_groups_x_template),
             _ => None,
         }
     }

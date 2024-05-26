@@ -99,7 +99,12 @@ async def select_word(
     return words[result]
 
 
-async def slip39_show_checklist(step: int, advanced: bool) -> None:
+async def slip39_show_checklist(
+    step: int,
+    advanced: bool,
+    count: int | None = None,
+    threshold: int | None = None,
+) -> None:
     items = (
         (
             TR.reset__slip39_checklist_num_shares,

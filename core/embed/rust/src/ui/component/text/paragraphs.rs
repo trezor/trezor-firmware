@@ -4,7 +4,7 @@ use crate::{
     strutil::TString,
     ui::{
         component::{Component, Event, EventCtx, Never, Paginate},
-        display::toif::Icon,
+        display::{toif::Icon, Color, Font},
         geometry::{
             Alignment, Alignment2D, Dimensions, Insets, LinearPlacement, Offset, Point, Rect,
         },
@@ -14,6 +14,7 @@ use crate::{
 };
 
 use super::layout::{LayoutFit, TextLayout, TextStyle};
+use heapless::String;
 
 /// Used as an upper bound of number of different styles we may render on single
 /// page.
@@ -557,6 +558,8 @@ pub struct Checklist<T> {
     current: usize,
     icon_current: Icon,
     icon_done: Icon,
+    icon_done_color: Option<Color>,
+    show_numerals: bool,
     /// How wide will the left icon column be
     check_width: i16,
     /// Offset of the icon representing DONE
@@ -565,7 +568,10 @@ pub struct Checklist<T> {
     current_offset: Offset,
 }
 
-impl<T> Checklist<T> {
+impl<'a, T> Checklist<T>
+where
+    T: ParagraphSource<'a>,
+{
     pub fn from_paragraphs(
         icon_current: Icon,
         icon_done: Icon,
@@ -578,6 +584,8 @@ impl<T> Checklist<T> {
             current,
             icon_current,
             icon_done,
+            icon_done_color: None,
+            show_numerals: false,
             check_width: 0,
             done_offset: Offset::zero(),
             current_offset: Offset::zero(),
@@ -599,6 +607,38 @@ impl<T> Checklist<T> {
         self
     }
 
+    pub fn with_icon_done_color(mut self, col: Color) -> Self {
+        self.icon_done_color = Some(col);
+        self
+    }
+
+    pub fn with_numerals(mut self, show_numerals: bool) -> Self {
+        self.show_numerals = show_numerals;
+        self
+    }
+
+    fn render_left_column<'s>(&self, target: &mut impl Renderer<'s>) {
+        let current_visible = self.current.saturating_sub(self.paragraphs.offset.par);
+        for (i, layout) in self.paragraphs.visible.iter().enumerate() {
+            let l = &layout.layout(&self.paragraphs.source);
+            let base = Point::new(self.area.x0, l.bounds.y0);
+            if i < current_visible {
+                // finished tasks - labeled with icon "done"
+                let color = self.icon_done_color.unwrap_or(l.style.text_color);
+                self.render_icon(base + self.done_offset, self.icon_done, color, target)
+            } else {
+                // current and future tasks - ordinal numbers or icon on current task
+                if self.show_numerals {
+                    let num_offset = Offset::y(Font::NORMAL.visible_text_height("1"));
+                    self.render_numeral(base + num_offset, i, l.style.text_color, target);
+                } else if i == current_visible {
+                    let color = l.style.text_color;
+                    self.render_icon(base + self.current_offset, self.icon_current, color, target);
+                }
+            }
+        }
+    }
+
     fn paint_icon(&self, layout: &TextLayout, icon: Icon, offset: Offset) {
         let top_left = Point::new(self.area.x0, layout.bounds.y0);
         icon.draw(
@@ -609,16 +649,29 @@ impl<T> Checklist<T> {
         );
     }
 
-    fn render_icon<'s>(
+    fn render_numeral<'s>(
         &self,
-        layout: &TextLayout,
-        icon: Icon,
-        offset: Offset,
+        base_point: Point,
+        n: usize,
+        color: Color,
         target: &mut impl Renderer<'s>,
     ) {
-        let top_left = Point::new(self.area.x0, layout.bounds.y0);
-        shape::ToifImage::new(top_left + offset, icon.toif)
-            .with_fg(layout.style.text_color)
+        let numeral = build_string!(10, inttostr!(n as u8 + 1), ".");
+        shape::Text::new(base_point, numeral.as_str())
+            .with_font(Font::NORMAL)
+            .with_fg(color)
+            .render(target);
+    }
+
+    fn render_icon<'s>(
+        &self,
+        base_point: Point,
+        icon: Icon,
+        color: Color,
+        target: &mut impl Renderer<'s>,
+    ) {
+        shape::ToifImage::new(base_point, icon.toif)
+            .with_fg(color)
             .render(target);
     }
 }
@@ -662,24 +715,7 @@ where
 
     fn render<'s>(&self, target: &mut impl Renderer<'s>) {
         self.paragraphs.render(target);
-
-        let current_visible = self.current.saturating_sub(self.paragraphs.offset.par);
-        for layout in self.paragraphs.visible.iter().take(current_visible) {
-            self.render_icon(
-                &layout.layout(&self.paragraphs.source),
-                self.icon_done,
-                self.done_offset,
-                target,
-            );
-        }
-        if let Some(layout) = self.paragraphs.visible.iter().nth(current_visible) {
-            self.render_icon(
-                &layout.layout(&self.paragraphs.source),
-                self.icon_current,
-                self.current_offset,
-                target,
-            );
-        }
+        self.render_left_column(target);
     }
 
     #[cfg(feature = "ui_bounds")]

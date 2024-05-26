@@ -498,6 +498,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_reset__share_completed_template;
   MP_QSTR_reset__share_words_title;
   MP_QSTR_reset__slip39_checklist_num_groups;
+  MP_QSTR_reset__slip39_checklist_num_groups_x_template;
   MP_QSTR_reset__slip39_checklist_num_shares;
   MP_QSTR_reset__slip39_checklist_num_shares_x_template;
   MP_QSTR_reset__slip39_checklist_set_num_groups;
