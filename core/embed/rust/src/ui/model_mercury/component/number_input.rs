@@ -3,13 +3,12 @@ use crate::{
     strutil::{self, TString},
     ui::{
         component::{
-            base::ComponentExt,
+            base::{ComponentExt, SwipeEvent},
             paginated::Paginate,
             text::paragraphs::{Paragraph, Paragraphs},
             Child, Component, Event, EventCtx, Pad, SwipeDirection,
         },
         display::Font,
-        flow::{Swipable, SwipableResult},
         geometry::{Alignment, Grid, Insets, Offset, Rect},
         shape::{self, Renderer},
     },
@@ -89,6 +88,10 @@ where
         if let Some(NumberInputMsg::Changed(i)) = self.input.event(ctx, event) {
             self.update_text(ctx, i);
         }
+
+        if let Event::Swipe(SwipeEvent::End(SwipeDirection::Up)) = event {
+            return Some(NumberInputDialogMsg(self.input.inner().value));
+        }
         self.paragraphs.event(ctx, event);
         None
     }
@@ -108,26 +111,6 @@ where
         sink(self.area);
         self.input.bounds(sink);
         self.paragraphs.bounds(sink);
-    }
-}
-
-impl<F> Swipable<NumberInputDialogMsg> for NumberInputDialog<F>
-where
-    F: Fn(u32) -> TString<'static>,
-{
-    fn swipe_start(
-        &mut self,
-        _ctx: &mut EventCtx,
-        direction: SwipeDirection,
-    ) -> SwipableResult<NumberInputDialogMsg> {
-        match direction {
-            SwipeDirection::Up => SwipableResult::Return(NumberInputDialogMsg(self.value())),
-            _ => SwipableResult::Ignored,
-        }
-    }
-
-    fn swipe_finished(&self) -> bool {
-        true
     }
 }
 

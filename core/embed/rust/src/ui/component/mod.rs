@@ -19,6 +19,8 @@ pub mod placed;
 pub mod qr_code;
 #[cfg(feature = "touch")]
 pub mod swipe;
+#[cfg(feature = "touch")]
+pub mod swipe_detect;
 pub mod text;
 pub mod timeout;
 
@@ -39,6 +41,8 @@ pub use placed::{FixedHeightBar, Floating, GridPlaced, Split};
 pub use qr_code::Qr;
 #[cfg(feature = "touch")]
 pub use swipe::{Swipe, SwipeDirection};
+#[cfg(feature = "touch")]
+pub use swipe_detect::{SwipeDetect, SwipeDetectMsg};
 pub use text::{
     formatted::FormattedText,
     layout::{LineBreaking, PageBreaking, TextLayout},

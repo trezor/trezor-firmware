@@ -7,7 +7,7 @@ use crate::{
             text::paragraphs::{Paragraph, Paragraphs},
             ComponentExt, SwipeDirection,
         },
-        flow::{base::Decision, flow_store, FlowMsg, FlowState, FlowStore, SwipeFlow, SwipePage},
+        flow::{base::Decision, FlowMsg, FlowState, FlowStore},
     },
 };
 
@@ -32,13 +32,24 @@ impl FlowState for PromptBackup {
             (PromptBackup::Intro, SwipeDirection::Left) => {
                 Decision::Goto(PromptBackup::Menu, direction)
             }
+            (PromptBackup::Intro, SwipeDirection::Up) => Decision::Return(FlowMsg::Confirmed),
+
+            (PromptBackup::Menu, SwipeDirection::Right) => {
+                Decision::Goto(PromptBackup::Intro, direction)
+            }
+
             (PromptBackup::SkipBackupIntro, SwipeDirection::Up) => {
                 Decision::Goto(PromptBackup::SkipBackupConfirm, direction)
+            }
+            (PromptBackup::SkipBackupIntro, SwipeDirection::Right) => {
+                Decision::Goto(PromptBackup::Intro, direction)
             }
             (PromptBackup::SkipBackupConfirm, SwipeDirection::Down) => {
                 Decision::Goto(PromptBackup::SkipBackupIntro, direction)
             }
-            (PromptBackup::Intro, SwipeDirection::Up) => Decision::Return(FlowMsg::Confirmed),
+            (PromptBackup::SkipBackupConfirm, SwipeDirection::Right) => {
+                Decision::Goto(PromptBackup::Intro, direction)
+            }
             _ => Decision::Nothing,
         }
     }
@@ -70,7 +81,12 @@ impl FlowState for PromptBackup {
 
 use crate::{
     micropython::{map::Map, obj::Obj, util},
-    ui::layout::obj::LayoutObj,
+    ui::{
+        component::swipe_detect::SwipeSettings,
+        flow::{flow_store, SwipeFlow},
+        layout::obj::LayoutObj,
+        model_mercury::component::SwipeContent,
+    },
 };
 
 #[allow(clippy::not_unsafe_ptr_arg_deref)]
@@ -88,9 +104,11 @@ impl PromptBackup {
             TString::from_str("Your wallet backup contains words in a specific order."),
         )];
         let paragraphs = Paragraphs::new(par_array);
-        let content_intro = Frame::left_aligned(title, SwipePage::vertical(paragraphs))
+        let content_intro = Frame::left_aligned(title, SwipeContent::new(paragraphs))
             .with_menu_button()
             .with_footer(TR::instructions__swipe_up.into(), None)
+            .with_swipe(SwipeDirection::Up, SwipeSettings::default())
+            .with_swipe(SwipeDirection::Left, SwipeSettings::default())
             .map(|msg| {
                 matches!(msg, FrameMsg::Button(CancelInfoConfirmMsg::Info)).then_some(FlowMsg::Info)
             });
@@ -100,6 +118,7 @@ impl PromptBackup {
             VerticalMenu::empty().danger(theme::ICON_CANCEL, TR::backup__title_skip.into()),
         )
         .with_cancel_button()
+        .with_swipe(SwipeDirection::Right, SwipeSettings::immediate())
         .map(|msg| match msg {
             FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => Some(FlowMsg::Choice(i)),
             FrameMsg::Button(CancelInfoConfirmMsg::Cancelled) => Some(FlowMsg::Cancelled),
@@ -116,13 +135,15 @@ impl PromptBackup {
         let paragraphs_skip_intro = Paragraphs::new(par_array_skip_intro);
         let content_skip_intro = Frame::left_aligned(
             TR::backup__title_skip.into(),
-            SwipePage::vertical(paragraphs_skip_intro),
+            SwipeContent::new(paragraphs_skip_intro),
         )
         .with_cancel_button()
         .with_footer(
             TR::instructions__swipe_up.into(),
             Some(TR::words__continue_anyway.into()),
         )
+        .with_swipe(SwipeDirection::Up, SwipeSettings::default())
+        .with_swipe(SwipeDirection::Right, SwipeSettings::immediate())
         .map(|msg| match msg {
             FrameMsg::Button(CancelInfoConfirmMsg::Cancelled) => Some(FlowMsg::Cancelled),
             _ => None,
@@ -130,9 +151,12 @@ impl PromptBackup {
 
         let content_skip_confirm = Frame::left_aligned(
             TR::backup__title_skip.into(),
-            PromptScreen::new_tap_to_cancel(),
+            SwipeContent::new(PromptScreen::new_tap_to_cancel()),
         )
+        .with_cancel_button()
         .with_footer(TR::instructions__tap_to_confirm.into(), None)
+        .with_swipe(SwipeDirection::Down, SwipeSettings::default())
+        .with_swipe(SwipeDirection::Right, SwipeSettings::immediate())
         .map(|msg| match msg {
             FrameMsg::Content(()) => Some(FlowMsg::Confirmed),
             FrameMsg::Button(CancelInfoConfirmMsg::Cancelled) => Some(FlowMsg::Cancelled),

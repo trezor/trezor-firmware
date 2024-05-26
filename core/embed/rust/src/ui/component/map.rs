@@ -1,6 +1,9 @@
 use super::{Component, Event, EventCtx};
 use crate::ui::{geometry::Rect, shape::Renderer};
 
+#[cfg(all(feature = "micropython", feature = "touch", feature = "new_rendering"))]
+use crate::ui::component::swipe_detect::SwipeConfig;
+
 pub struct MsgMap<T, F> {
     inner: T,
     func: F,
@@ -38,6 +41,19 @@ where
     #[cfg(feature = "ui_bounds")]
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         self.inner.bounds(sink);
+    }
+}
+
+#[cfg(all(feature = "micropython", feature = "touch", feature = "new_rendering"))]
+impl<T, F> crate::ui::flow::SimpleSwipable for MsgMap<T, F>
+where
+    T: Component + crate::ui::flow::SimpleSwipable,
+{
+    fn get_swipe_config(&self) -> SwipeConfig {
+        self.inner.get_swipe_config()
+    }
+    fn get_internal_page_count(&mut self) -> usize {
+        self.inner.get_internal_page_count()
     }
 }
 
@@ -137,5 +153,18 @@ where
 
     fn swipe_finished(&self) -> bool {
         self.inner.swipe_finished()
+    }
+}
+
+#[cfg(all(feature = "micropython", feature = "touch", feature = "new_rendering"))]
+impl<T, F> crate::ui::flow::SimpleSwipable for PageMap<T, F>
+where
+    T: Component + crate::ui::flow::SimpleSwipable,
+{
+    fn get_swipe_config(&self) -> SwipeConfig {
+        self.inner.get_swipe_config()
+    }
+    fn get_internal_page_count(&mut self) -> usize {
+        self.inner.get_internal_page_count()
     }
 }

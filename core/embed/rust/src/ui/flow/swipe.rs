@@ -1,13 +1,15 @@
 use crate::{
     error,
-    time::Instant,
     ui::{
-        animation::Animation,
-        component::{Component, Event, EventCtx, Swipe, SwipeDirection},
-        flow::{base::Decision, FlowMsg, FlowState, FlowStore, SwipableResult},
+        component::{
+            base::{AttachType, SwipeEvent},
+            swipe_detect::SwipeSettings,
+            Component, Event, EventCtx, SwipeDetect, SwipeDetectMsg, SwipeDirection,
+        },
+        flow::{base::Decision, FlowMsg, FlowState, FlowStore},
         geometry::Rect,
         shape::Renderer,
-        util,
+        util::animation_disabled,
     },
 };
 
@@ -22,61 +24,54 @@ pub struct SwipeFlow<Q, S> {
     state: Q,
     /// FlowStore with all screens/components.
     store: S,
-    /// `Transition::None` when state transition animation is in not progress.
-    transition: Transition<Q>,
     /// Swipe detector.
-    swipe: Swipe,
-}
-
-enum Transition<Q> {
-    /// SwipeFlow is performing transition between different states.
-    External {
-        /// State we are transitioning _from_.
-        prev_state: Q,
-        /// Animation progress.
-        animation: Animation<f32>,
-        /// Direction of the slide animation.
-        direction: SwipeDirection,
-    },
-    /// Transition runs in child component, we forward events and wait.
-    Internal,
-    /// No transition.
-    None,
+    swipe: SwipeDetect,
+    /// Swipe allowed
+    allow_swipe: bool,
+    /// Current internal state
+    internal_state: u16,
+    /// Internal pages count
+    internal_pages: u16,
+    /// If triggering swipe by event, make this decision instead of default
+    /// after the swipe.
+    decision_override: Option<Decision<Q>>,
 }
 
 impl<Q: FlowState, S: FlowStore> SwipeFlow<Q, S> {
     pub fn new(init: Q, store: S) -> Result<Self, error::Error> {
         Ok(Self {
             state: init,
+            swipe: SwipeDetect::new(),
             store,
-            transition: Transition::None,
-            swipe: Swipe::new().down().up().left().right(),
+            allow_swipe: true,
+            internal_state: 0,
+            internal_pages: 1,
+            decision_override: None,
         })
     }
-
     fn goto(&mut self, ctx: &mut EventCtx, direction: SwipeDirection, state: Q) {
-        if util::animation_disabled() {
-            if state == self.state {
-                assert!(self
-                    .store
-                    .map_swipable(state.index(), |s| s.swipe_finished()));
-            }
-            self.state = state;
-            self.store.event(state.index(), ctx, Event::Attach);
-            ctx.request_paint();
-            return;
-        }
-        if state == self.state {
-            self.transition = Transition::Internal;
-            return;
-        }
-        self.transition = Transition::External {
-            prev_state: self.state,
-            animation: Animation::new(0.0f32, 1.0f32, util::SLIDE_DURATION_MS, Instant::now()),
-            direction,
-        };
         self.state = state;
-        ctx.request_anim_frame();
+        self.swipe = SwipeDetect::new();
+        self.allow_swipe = true;
+
+        self.store.event(
+            state.index(),
+            ctx,
+            Event::Attach(AttachType::Swipe(direction)),
+        );
+
+        self.internal_pages = self.store.get_internal_page_count(state.index()) as u16;
+
+        match direction {
+            SwipeDirection::Up => {
+                self.internal_state = 0;
+            }
+            SwipeDirection::Down => {
+                self.internal_state = self.internal_pages.saturating_sub(1);
+            }
+            _ => {}
+        }
+
         ctx.request_paint();
     }
 
@@ -84,69 +79,17 @@ impl<Q: FlowState, S: FlowStore> SwipeFlow<Q, S> {
         self.store.render(state.index(), target)
     }
 
-    fn render_transition<'s>(
-        &'s self,
-        prev_state: &Q,
-        animation: &Animation<f32>,
-        direction: &SwipeDirection,
-        target: &mut impl Renderer<'s>,
-    ) {
-        util::render_slide(
-            |target| self.render_state(*prev_state, target),
-            |target| self.render_state(self.state, target),
-            animation.value(Instant::now()),
-            *direction,
-            target,
-        );
-    }
-
-    fn handle_transition(&mut self, ctx: &mut EventCtx, event: Event) -> Option<FlowMsg> {
-        let i = self.state.index();
-        let mut finished = false;
-        let result = match &self.transition {
-            Transition::External { animation, .. }
-                if matches!(event, Event::Timer(EventCtx::ANIM_FRAME_TIMER)) =>
-            {
-                if animation.finished(Instant::now()) {
-                    finished = true;
-                    ctx.request_paint();
-                    self.store.event(i, ctx, Event::Attach)
-                } else {
-                    ctx.request_anim_frame();
-                    ctx.request_paint();
-                    None
-                }
-            }
-            Transition::External { .. } => None, // ignore all events until animation finishes
-            Transition::Internal => {
-                let msg = self.store.event(i, ctx, event);
-                if self.store.map_swipable(i, |s| s.swipe_finished()) {
-                    finished = true;
-                };
-                msg
-            }
-            Transition::None => unreachable!(),
-        };
-        if finished {
-            self.transition = Transition::None;
-        }
-        result
-    }
-
-    fn handle_swipe_child(&mut self, ctx: &mut EventCtx, direction: SwipeDirection) -> Decision<Q> {
-        let i = self.state.index();
-        match self
-            .store
-            .map_swipable(i, |s| s.swipe_start(ctx, direction))
-        {
-            SwipableResult::Ignored => Decision::Nothing,
-            SwipableResult::Animating => Decision::Goto(self.state, direction),
-            SwipableResult::Return(x) => Decision::Return(x),
-        }
+    fn handle_swipe_child(
+        &mut self,
+        _ctx: &mut EventCtx,
+        direction: SwipeDirection,
+    ) -> Decision<Q> {
+        self.state.handle_swipe(direction)
     }
 
     fn handle_event_child(&mut self, ctx: &mut EventCtx, event: Event) -> Decision<Q> {
         let msg = self.store.event(self.state.index(), ctx, event);
+
         if let Some(msg) = msg {
             self.state.handle_event(msg)
         } else {
@@ -159,44 +102,146 @@ impl<Q: FlowState, S: FlowStore> Component for SwipeFlow<Q, S> {
     type Msg = FlowMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        self.swipe.place(bounds);
         self.store.place(bounds)
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        if !matches!(self.transition, Transition::None) {
-            return self.handle_transition(ctx, event);
-        }
+        let mut decision: Decision<Q> = Decision::Nothing;
 
-        let mut decision = Decision::Nothing;
-        if let Some(direction) = self.swipe.event(ctx, event) {
-            decision = self
-                .handle_swipe_child(ctx, direction)
-                .or_else(|| self.state.handle_swipe(direction));
+        let mut attach = false;
+
+        let e = if self.allow_swipe {
+            let mut config = self.store.get_swipe_config(self.state.index());
+
+            self.internal_pages = self.store.get_internal_page_count(self.state.index()) as u16;
+
+            // add additional swipe directions if there are more internal pages
+            // todo can we get internal settings from config somehow?
+            // might wanna different duration or something
+            if config.vertical_pages && self.internal_state > 0 {
+                config = config.with_swipe(SwipeDirection::Down, SwipeSettings::default())
+            }
+            if config.horizontal_pages && self.internal_state > 0 {
+                config = config.with_swipe(SwipeDirection::Right, SwipeSettings::default())
+            }
+            if config.vertical_pages && self.internal_state < self.internal_pages - 1 {
+                config = config.with_swipe(SwipeDirection::Up, SwipeSettings::default())
+            }
+            if config.horizontal_pages && self.internal_state < self.internal_pages - 1 {
+                config = config.with_swipe(SwipeDirection::Left, SwipeSettings::default())
+            }
+
+            match self.swipe.event(ctx, event, config.clone()) {
+                Some(SwipeDetectMsg::Trigger(dir)) => {
+                    if let Some(override_decision) = self.decision_override.take() {
+                        decision = override_decision;
+                    } else {
+                        decision = self.handle_swipe_child(ctx, dir);
+                    }
+
+                    let states_num = self.internal_pages;
+                    if states_num > 0 {
+                        if config.has_horizontal_pages() {
+                            let current_state = self.internal_state;
+                            if dir == SwipeDirection::Left && current_state < states_num - 1 {
+                                self.internal_state += 1;
+                                decision = Decision::Nothing;
+                                attach = true;
+                            } else if dir == SwipeDirection::Right && current_state > 0 {
+                                self.internal_state -= 1;
+                                decision = Decision::Nothing;
+                                attach = true;
+                            }
+                        }
+                        if config.has_vertical_pages() {
+                            let current_state = self.internal_state;
+                            if dir == SwipeDirection::Up && current_state < states_num - 1 {
+                                self.internal_state += 1;
+                                decision = Decision::Nothing;
+                                attach = true;
+                            } else if dir == SwipeDirection::Down && current_state > 0 {
+                                self.internal_state -= 1;
+                                decision = Decision::Nothing;
+                                attach = true;
+                            }
+                        }
+                    }
+
+                    Some(Event::Swipe(SwipeEvent::End(dir)))
+                }
+                Some(SwipeDetectMsg::Move(dir, progress)) => {
+                    Some(Event::Swipe(SwipeEvent::Move(dir, progress)))
+                }
+                _ => Some(event),
+            }
+        } else {
+            Some(event)
+        };
+
+        if let Some(e) = e {
+            match decision {
+                Decision::Nothing => {
+                    decision = self.handle_event_child(ctx, e);
+
+                    // when doing internal transition, pass attach event to the child after sending
+                    // swipe end.
+                    if attach {
+                        if let Event::Swipe(SwipeEvent::End(dir)) = e {
+                            self.store.event(
+                                self.state.index(),
+                                ctx,
+                                Event::Attach(AttachType::Swipe(dir)),
+                            );
+                        }
+                    }
+
+                    if ctx.disable_swipe_requested() {
+                        self.swipe.reset();
+                        self.allow_swipe = false;
+                    }
+                    if ctx.enable_swipe_requested() {
+                        self.swipe.reset();
+                        self.allow_swipe = true;
+                    };
+
+                    let config = self.store.get_swipe_config(self.state.index());
+
+                    if let Decision::Goto(_, direction) = decision {
+                        if config.is_allowed(direction) {
+                            if !animation_disabled() {
+                                self.swipe.trigger(ctx, direction, config);
+                                self.decision_override = Some(decision);
+                                decision = Decision::Nothing;
+                            }
+                            self.allow_swipe = true;
+                        }
+                    }
+                }
+                _ => {
+                    //ignore message, we are already transitioning
+                    self.store.event(self.state.index(), ctx, event);
+                }
+            }
         }
-        decision = decision.or_else(|| self.handle_event_child(ctx, event));
 
         match decision {
-            Decision::Nothing => None,
             Decision::Goto(next_state, direction) => {
                 self.goto(ctx, direction, next_state);
                 None
             }
-            Decision::Return(msg) => Some(msg),
+            Decision::Return(msg) => {
+                self.swipe.reset();
+                self.allow_swipe = true;
+                Some(msg)
+            }
+            _ => None,
         }
     }
 
     fn paint(&mut self) {}
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        match &self.transition {
-            Transition::None | Transition::Internal => self.render_state(self.state, target),
-            Transition::External {
-                prev_state,
-                animation,
-                direction,
-            } => self.render_transition(prev_state, animation, direction, target),
-        }
+        self.render_state(self.state, target);
     }
 }
 

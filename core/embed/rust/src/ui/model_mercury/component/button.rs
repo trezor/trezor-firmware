@@ -350,6 +350,7 @@ impl Component for Button {
                             if let Some(duration) = self.long_press {
                                 self.long_timer = Some(ctx.request_timer(duration));
                             }
+                            ctx.disable_swipe();
                             return Some(ButtonMsg::Pressed);
                         }
                     }
@@ -360,6 +361,7 @@ impl Component for Button {
                     State::Pressed if !touch_area.contains(pos) => {
                         // Touch is leaving our area, transform to `Released` state.
                         self.set(ctx, State::Released);
+                        ctx.enable_swipe();
                         return Some(ButtonMsg::Released);
                     }
                     _ => {
@@ -375,11 +377,13 @@ impl Component for Button {
                     State::Pressed if touch_area.contains(pos) => {
                         // Touch finished in our area, we got clicked.
                         self.set(ctx, State::Initial);
+                        ctx.enable_swipe();
                         return Some(ButtonMsg::Clicked);
                     }
                     _ => {
                         // Touch finished outside our area.
                         self.set(ctx, State::Initial);
+                        ctx.enable_swipe();
                         self.long_timer = None;
                     }
                 }

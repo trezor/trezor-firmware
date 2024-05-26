@@ -5,7 +5,7 @@ use crate::ui::{
     shape::Renderer,
 };
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Eq, PartialEq)]
 pub enum SwipeDirection {
     Up,
     Down,

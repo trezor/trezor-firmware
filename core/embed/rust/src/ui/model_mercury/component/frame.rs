@@ -2,11 +2,19 @@ use crate::{
     strutil::TString,
     ui::{
         component::{
-            base::ComponentExt, label::Label, text::TextStyle, Child, Component, Event, EventCtx,
+            base::{ComponentExt, SwipeEvent},
+            label::Label,
+            swipe_detect::{SwipeConfig, SwipeSettings},
+            text::TextStyle,
+            Child, Component, Event,
+            Event::Swipe,
+            EventCtx, SwipeDetect, SwipeDirection,
         },
         display::Icon,
-        geometry::{Alignment, Insets, Rect},
+        geometry::{Alignment, Insets, Point, Rect},
+        lerp::Lerp,
         model_mercury::theme::TITLE_HEIGHT,
+        shape,
         shape::Renderer,
     },
 };
@@ -18,13 +26,17 @@ const BUTTON_EXPAND_BORDER: i16 = 32;
 #[derive(Clone)]
 pub struct Frame<T> {
     border: Insets,
+    bounds: Rect,
     title: Child<Label<'static>>,
     subtitle: Option<Child<Label<'static>>>,
     button: Option<Child<Button>>,
     button_msg: CancelInfoConfirmMsg,
     content: Child<T>,
     footer: Option<Footer<'static>>,
-    overlapping_content: bool,
+    swipe: SwipeConfig,
+    internal_page_cnt: usize,
+    progress: i16,
+    dir: SwipeDirection,
 }
 
 pub enum FrameMsg<T> {
@@ -41,13 +53,17 @@ where
             title: Child::new(
                 Label::new(title, alignment, theme::label_title_main()).vertically_centered(),
             ),
+            bounds: Rect::zero(),
             subtitle: None,
             border: theme::borders(),
             button: None,
             button_msg: CancelInfoConfirmMsg::Cancelled,
             content: Child::new(content),
             footer: None,
-            overlapping_content: false,
+            swipe: SwipeConfig::new(),
+            internal_page_cnt: 1,
+            progress: 0,
+            dir: SwipeDirection::Up,
         }
     }
 
@@ -155,6 +171,31 @@ where
             res
         })
     }
+
+    pub fn with_swipe(self, dir: SwipeDirection, settings: SwipeSettings) -> Self {
+        Self {
+            footer: self.footer.map(|f| match dir {
+                SwipeDirection::Up => f.with_swipe_up(),
+                SwipeDirection::Down => f.with_swipe_down(),
+                _ => f,
+            }),
+            swipe: self.swipe.with_swipe(dir, settings),
+            ..self
+        }
+    }
+
+    pub fn with_horizontal_pages(self) -> Self {
+        Self {
+            swipe: self.swipe.with_horizontal_pages(),
+            ..self
+        }
+    }
+    pub fn with_vertical_pages(self) -> Self {
+        Self {
+            swipe: self.swipe.with_vertical_pages(),
+            ..self
+        }
+    }
 }
 
 impl<T> Component for Frame<T>
@@ -164,6 +205,8 @@ where
     type Msg = FrameMsg<T::Msg>;
 
     fn place(&mut self, bounds: Rect) -> Rect {
+        self.bounds = bounds;
+
         let (mut header_area, mut content_area) = bounds.split_top(TITLE_HEIGHT);
         content_area = content_area.inset(Insets::top(theme::SPACING));
         header_area = header_area.inset(Insets::sides(theme::SPACING));
@@ -190,18 +233,37 @@ where
             footer.place(footer_area);
             content_area = remaining;
         }
-        if self.overlapping_content {
-            self.content.place(bounds);
-        } else {
-            self.content.place(content_area);
-        }
+
+        self.content.place(content_area);
+
         bounds
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        if let Event::Attach(_) = event {
+            self.progress = 0;
+        }
+
+        if let Swipe(SwipeEvent::Move(dir, progress)) = event {
+            if self.swipe.is_allowed(dir) {
+                match dir {
+                    SwipeDirection::Left | SwipeDirection::Right => {
+                        self.progress = progress;
+                        self.dir = dir;
+                    }
+                    _ => {}
+                }
+            }
+        }
+
         self.title.event(ctx, event);
         self.subtitle.event(ctx, event);
+        self.footer.event(ctx, event);
         let msg = self.content.event(ctx, event).map(FrameMsg::Content);
+        if let Some(count) = ctx.page_count() {
+            self.internal_page_cnt = count;
+        }
+
         if msg.is_some() {
             return msg;
         }
@@ -224,6 +286,32 @@ where
         self.button.render(target);
         self.footer.render(target);
         self.content.render(target);
+
+        if self.progress > 0 {
+            match self.dir {
+                SwipeDirection::Left => {
+                    let shift = pareen::constant(0.0).seq_ease_out(
+                        0.0,
+                        easer::functions::Circ,
+                        1.0,
+                        pareen::constant(1.0),
+                    );
+
+                    let p = Point::lerp(
+                        self.bounds.top_right(),
+                        self.bounds.top_left(),
+                        shift.eval(self.progress as f32 / SwipeDetect::PROGRESS_MAX as f32),
+                    );
+
+                    shape::Bar::new(Rect::new(p, self.bounds.bottom_right()))
+                        .with_fg(theme::BLACK)
+                        .with_bg(theme::BLACK)
+                        .render(target);
+                }
+                SwipeDirection::Right => {}
+                _ => {}
+            }
+        }
     }
 
     #[cfg(feature = "ui_bounds")]
@@ -233,6 +321,17 @@ where
         self.button.bounds(sink);
         self.footer.bounds(sink);
         self.content.bounds(sink);
+    }
+}
+
+#[cfg(feature = "micropython")]
+impl<T> crate::ui::flow::SimpleSwipable for Frame<T> {
+    fn get_swipe_config(&self) -> SwipeConfig {
+        self.swipe.clone()
+    }
+
+    fn get_internal_page_count(&mut self) -> usize {
+        self.internal_page_cnt
     }
 }
 

@@ -36,6 +36,10 @@ impl HoldToConfirmAnim {
     const DURATION_MS: u32 = 2200;
 
     pub fn is_active(&self) -> bool {
+        if animation_disabled() {
+            return false;
+        }
+
         self.timer
             .is_running_within(Duration::from_millis(Self::DURATION_MS))
     }

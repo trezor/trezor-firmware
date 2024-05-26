@@ -1,4 +1,4 @@
-use crate::ui::component::{EventCtx, SwipeDirection};
+use crate::ui::component::{swipe_detect::SwipeConfig, EventCtx, SwipeDirection};
 use num_traits::ToPrimitive;
 
 /// Component must implement this trait in order to be part of swipe-based flow.
@@ -23,6 +23,12 @@ pub trait Swipable<T> {
     fn swipe_finished(&self) -> bool {
         true
     }
+}
+
+pub trait SimpleSwipable {
+    fn get_swipe_config(&self) -> SwipeConfig;
+
+    fn get_internal_page_count(&mut self) -> usize;
 }
 
 pub enum SwipableResult<T> {
