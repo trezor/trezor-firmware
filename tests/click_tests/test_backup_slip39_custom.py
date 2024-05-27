@@ -64,9 +64,6 @@ def test_backup_slip39_custom(
     # cancel back up
     reset.cancel_backup(debug)
 
-    # confirm cancel
-    reset.cancel_backup(debug)
-
     assert device_handler.result() == "Initialized"
 
     device_handler.run(

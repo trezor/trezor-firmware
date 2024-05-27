@@ -6,6 +6,7 @@ use crate::{
         geometry::{Alignment2D, Offset, Rect},
         shape,
         shape::Renderer,
+        util::animation_disabled,
     },
 };
 
@@ -95,6 +96,9 @@ impl Component for PromptScreen {
                 return Some(());
             }
             (DismissType::Hold, Some(ButtonMsg::LongPressed)) => {
+                return Some(());
+            }
+            (DismissType::Hold, Some(ButtonMsg::Clicked)) if animation_disabled() => {
                 return Some(());
             }
             _ => (),

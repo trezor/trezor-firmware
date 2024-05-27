@@ -24,6 +24,7 @@ from . import translations as TR
 from .common import (
     BRGeneratorType,
     check_pin_backoff_time,
+    click_info_button_mercury,
     click_info_button_tt,
     click_through,
     get_text_possible_pagination,
@@ -1307,7 +1308,7 @@ class InputFlowBip39ResetBackup(InputFlowBase):
         # 1. Confirm Reset x3
         # 2. Backup your seed
         # 3. Confirm warning
-        yield from click_through(self.debug, screens=3, code=B.ResetDevice)
+        yield from click_through(self.debug, screens=4, code=B.ResetDevice)
 
         # mnemonic phrases and rest
         self.mnemonic = yield from get_mnemonic_and_confirm_success(self.debug)
@@ -1328,6 +1329,11 @@ class InputFlowBip39ResetPIN(InputFlowBase):
         br = yield  # Confirm entropy
         assert br.code == B.ResetDevice
         self.debug.press_yes()
+
+        if self.debug.model is models.T3T1:
+            br = yield  # Wallet created
+            assert br.code == B.ResetDevice
+            self.debug.press_yes()
 
         br = yield  # Backup your seed
         assert br.code == B.ResetDevice
@@ -1355,10 +1361,12 @@ class InputFlowBip39ResetFailedCheck(InputFlowBase):
         self.mnemonic = None
 
     def input_flow_common(self) -> BRGeneratorType:
+        screens = 4 if self.debug.model is models.T3T1 else 3
         # 1. Confirm Reset
+        # 1a. (T3T1) done
         # 2. Backup your seed
         # 3. Confirm warning
-        yield from click_through(self.debug, screens=3, code=B.ResetDevice)
+        yield from click_through(self.debug, screens=screens, code=B.ResetDevice)
 
         # mnemonic phrases, wrong answer
         self.mnemonic = yield from read_and_confirm_mnemonic(
@@ -1458,21 +1466,22 @@ class InputFlowSlip39BasicBackup(InputFlowBase):
 
     def input_flow_t3t1(self) -> BRGeneratorType:
         yield  # 1. Checklist
-        self.debug.press_yes()
+        self.debug.wait_layout()
+        self.debug.swipe_up(wait=True)
         if self.click_info:
-            yield from click_info_button_tt(self.debug)
+            click_info_button_mercury(self.debug)
         yield  # 2. Number of shares (5)
-        self.debug.press_yes()
+        self.debug.swipe_up()
         yield  # 3. Checklist
-        self.debug.press_yes()
+        self.debug.swipe_up(wait=True)
         if self.click_info:
-            yield from click_info_button_tt(self.debug)
+            click_info_button_mercury(self.debug)
         yield  # 4. Threshold (3)
-        self.debug.press_yes()
+        self.debug.swipe_up()
         yield  # 5. Checklist
-        self.debug.press_yes()
+        self.debug.swipe_up()
         yield  # 6. Confirm show seeds
-        self.debug.press_yes()
+        self.debug.swipe_up()
 
         # Mnemonic phrases
         self.mnemonics = yield from load_N_shares(self.debug, 5)
@@ -1543,7 +1552,7 @@ class InputFlowSlip39BasicResetRecovery(InputFlowBase):
         # 6. threshold info
         # 7. Set & confirm threshold value
         # 8. Confirm show seeds
-        yield from click_through(self.debug, screens=8, code=B.ResetDevice)
+        yield from click_through(self.debug, screens=9, code=B.ResetDevice)
 
         # Mnemonic phrases
         self.mnemonics = yield from load_N_shares(self.debug, 5)
@@ -1695,28 +1704,28 @@ class InputFlowSlip39AdvancedBackup(InputFlowBase):
 
     def input_flow_t3t1(self) -> BRGeneratorType:
         yield  # 1. Checklist
-        self.debug.press_yes()
+        self.debug.swipe_up(wait=True)
         if self.click_info:
-            yield from click_info_button_tt(self.debug)
+            click_info_button_mercury(self.debug)
         yield  # 2. Set and confirm group count
-        self.debug.press_yes()
+        self.debug.swipe_up()
         yield  # 3. Checklist
-        self.debug.press_yes()
+        self.debug.swipe_up(wait=True)
         if self.click_info:
-            yield from click_info_button_tt(self.debug)
+            click_info_button_mercury(self.debug)
         yield  # 4. Set and confirm group threshold
-        self.debug.press_yes()
+        self.debug.swipe_up()
         yield  # 5. Checklist
-        self.debug.press_yes()
-        for _ in range(5):  # for each of 5 groups
+        self.debug.swipe_up(wait=True)
+        for _i in range(5):  # for each of 5 groups
             if self.click_info:
-                yield from click_info_button_tt(self.debug)
+                click_info_button_mercury(self.debug)
             yield  # Set & Confirm number of shares
-            self.debug.press_yes()
+            self.debug.swipe_up(wait=True)
             if self.click_info:
-                yield from click_info_button_tt(self.debug)
+                click_info_button_mercury(self.debug)
             yield  # Set & confirm share threshold value
-            self.debug.press_yes()
+            self.debug.swipe_up(wait=_i != 4)
         yield  # Confirm show seeds
         self.debug.press_yes()
 
@@ -1801,7 +1810,7 @@ class InputFlowSlip39AdvancedResetRecovery(InputFlowBase):
         #   1. Set & Confirm number of shares
         #   2. Set & confirm share threshold value
         # 18. Confirm show seeds
-        yield from click_through(self.debug, screens=18, code=B.ResetDevice)
+        yield from click_through(self.debug, screens=19, code=B.ResetDevice)
 
         # Mnemonic phrases - show & confirm shares for all groups
         self.mnemonics = yield from load_5_groups_5_shares(self.debug)
@@ -2119,21 +2128,37 @@ class InputFlowResetSkipBackup(InputFlowBase):
     def __init__(self, client: Client):
         super().__init__(client)
 
-    def input_flow_common(self) -> BRGeneratorType:
+    def input_flow_tt(self) -> BRGeneratorType:
         yield from self.BAK.confirm_new_wallet()
         yield  # Skip Backup
-        info_path = (
-            "backup__new_wallet_created"
-            if self.model() is models.T2B1
-            else "backup__new_wallet_successfully_created"
-        )
-        TR.assert_in(self.text_content(), info_path)
-        if self.model() is models.T2B1:
-            self.debug.press_right()
+        TR.assert_in(self.text_content(), "backup__new_wallet_successfully_created")
         self.debug.press_no()
         yield  # Confirm skip backup
         TR.assert_in(self.text_content(), "backup__want_to_skip")
         self.debug.press_no()
+
+    def input_flow_tr(self) -> BRGeneratorType:
+        yield from self.BAK.confirm_new_wallet()
+        yield  # Skip Backup
+        TR.assert_in(self.text_content(), "backup__new_wallet_created")
+        self.debug.press_right()
+        self.debug.press_no()
+        yield  # Confirm skip backup
+        TR.assert_in(self.text_content(), "backup__want_to_skip")
+        self.debug.press_no()
+
+    def input_flow_t3t1(self) -> BRGeneratorType:
+        yield from self.BAK.confirm_new_wallet()
+        yield  # Skip Backup
+        TR.assert_in(self.text_content(), "backup__new_wallet_created")
+        self.debug.swipe_up()
+        yield
+        self.debug.click(buttons.CORNER_BUTTON)
+        self.debug.synchronize_at("VerticalMenu")
+        self.debug.click(buttons.VERTICAL_MENU[0])
+        self.debug.swipe_up()
+        self.debug.synchronize_at("PromptScreen")
+        self.debug.click(buttons.TAP_TO_CONFIRM)
 
 
 class InputFlowConfirmAllWarnings(InputFlowBase):
@@ -2164,7 +2189,16 @@ class InputFlowConfirmAllWarnings(InputFlowBase):
             layout = self.debug.read_layout()
             text = layout.text_content().lower()
             # hi priority warning
-            if ("wrong derivation path" in text) or ("to a multisig" in text):
+            hi_prio = (
+                TR.translate("addr_mismatch__wrong_derivation_path")
+                + TR.translate("send__receiving_to_multisig")
+                + [
+                    "witness path",
+                    "certificate path",
+                    "pool owner staking path",
+                ]
+            )
+            if any(needle.lower() in text for needle in hi_prio):
                 self.debug.click(buttons.CORNER_BUTTON, wait=True)
                 self.debug.synchronize_at("VerticalMenu")
                 self.debug.click(buttons.VERTICAL_MENU[1])

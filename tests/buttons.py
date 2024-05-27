@@ -31,8 +31,24 @@ CORNER_BUTTON = (215, 25)
 CONFIRM_WORD = (MID, TOP)
 TOP_ROW = (MID, TOP)
 
-RESET_MINUS = (LEFT, grid(DISPLAY_HEIGHT, 5, 1))
-RESET_PLUS = (RIGHT, grid(DISPLAY_HEIGHT, 5, 1))
+
+def reset_minus(model_internal_name: str) -> Coords:
+    RESET_MINUS_T3T1 = (LEFT, grid(DISPLAY_HEIGHT, 5, 3))
+    RESET_MINUS = (LEFT, grid(DISPLAY_HEIGHT, 5, 1))
+    if model_internal_name == "T3T1":
+        return RESET_MINUS_T3T1
+    else:
+        return RESET_MINUS
+
+
+def reset_plus(model_internal_name: str) -> Coords:
+    RESET_PLUS_T3T1 = (RIGHT, grid(DISPLAY_HEIGHT, 5, 3))
+    RESET_PLUS = (RIGHT, grid(DISPLAY_HEIGHT, 5, 1))
+    if model_internal_name == "T3T1":
+        return RESET_PLUS_T3T1
+    else:
+        return RESET_PLUS
+
 
 RESET_WORD_CHECK = [
     (MID, grid(DISPLAY_HEIGHT, 5, 2)),

@@ -4,9 +4,10 @@ use crate::{
     strutil::TString,
     translations::TR,
     ui::{
+        button_request::ButtonRequestCode,
         component::{
             text::paragraphs::{Paragraph, Paragraphs},
-            ComponentExt, SwipeDirection,
+            ButtonRequestExt, ComponentExt, SwipeDirection,
         },
         flow::{base::Decision, flow_store, FlowMsg, FlowState, FlowStore, SwipeFlow, SwipePage},
         layout::obj::LayoutObj,
@@ -79,6 +80,7 @@ impl ShowShareWords {
         let share_words_vec: Vec<TString, 33> = util::iter_into_vec(share_words_obj)?;
         let text_info: TString = kwargs.get(Qstr::MP_QSTR_text_info)?.try_into()?;
         let text_confirm: TString = kwargs.get(Qstr::MP_QSTR_text_confirm)?.try_into()?;
+        let nwords = share_words_vec.len();
 
         let content_instruction = Frame::left_aligned(
             title,
@@ -89,7 +91,9 @@ impl ShowShareWords {
         )
         .with_subtitle(TR::words__instructions.into())
         .with_footer(TR::instructions__swipe_up.into(), None)
-        .map(|msg| matches!(msg, FrameMsg::Content(_)).then_some(FlowMsg::Confirmed));
+        .map(|msg| matches!(msg, FrameMsg::Content(_)).then_some(FlowMsg::Confirmed))
+        .one_button_request(ButtonRequestCode::ResetDevice.with_type("share_words"))
+        .with_pages(move |_| nwords + 2);
 
         let content_words = Frame::left_aligned(title, ShareWords::new(share_words_vec))
             .with_subtitle(subtitle)

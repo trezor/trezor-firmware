@@ -1,6 +1,7 @@
 from trezorlib import messages, models
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 
+from . import buttons
 from . import translations as TR
 from .common import BRGeneratorType, get_text_possible_pagination
 
@@ -51,7 +52,8 @@ class RecoveryFlow:
         self.debug = self.client.debug
 
     def _text_content(self) -> str:
-        return self.debug.wait_layout().text_content()
+        layout = self.debug.wait_layout()
+        return layout.title() + " " + layout.text_content()
 
     def confirm_recovery(self) -> BRGeneratorType:
         yield
@@ -84,7 +86,10 @@ class RecoveryFlow:
 
     def enter_your_backup(self) -> BRGeneratorType:
         yield
-        TR.assert_in(self._text_content(), "recovery__enter_backup")
+        if self.debug.model is models.T3T1:
+            TR.assert_in(self._text_content(), "recovery__only_first_n_letters")
+        else:
+            TR.assert_in(self._text_content(), "recovery__enter_backup")
         is_dry_run = any(
             title in self.debug.wait_layout().title().lower()
             for title in TR.translate("recovery__title_dry_run", lower=True)
@@ -97,7 +102,10 @@ class RecoveryFlow:
 
     def enter_any_share(self) -> BRGeneratorType:
         yield
-        TR.assert_in(self._text_content(), "recovery__enter_any_share")
+        TR.assert_in_multiple(
+            self._text_content(),
+            ["recovery__enter_any_share", "recovery__only_first_n_letters"],
+        )
         is_dry_run = any(
             title in self.debug.wait_layout().title().lower()
             for title in TR.translate("recovery__title_dry_run", lower=True)
@@ -112,6 +120,8 @@ class RecoveryFlow:
         yield
         if self.client.model is models.T2B1:
             TR.assert_in(self._text_content(), "recovery__num_of_words")
+        elif self.client.model is models.T3T1:
+            TR.assert_in(self._text_content(), "recovery__only_first_n_letters")
         else:
             TR.assert_in(self._text_content(), "recovery__enter_any_share")
         self.debug.press_no()
@@ -242,8 +252,11 @@ class RecoveryFlow:
             if index < len(shares) - 1:
                 if has_groups:
                     yield from self.success_share_group_entered()
-                if self.client.model in (models.T2T1, models.T3T1) and click_info:
-                    yield from self.tt_click_info()
+                if click_info:
+                    if self.client.model is models.T2T1:
+                        yield from self.tt_click_info()
+                    elif self.client.model is models.T3T1:
+                        self.mercury_click_info()
                 yield from self.success_more_shares_needed()
 
     def tt_click_info(
@@ -254,6 +267,13 @@ class RecoveryFlow:
         yield
         self.debug.swipe_up()
         self.debug.press_yes()
+
+    def mercury_click_info(self):
+        self.debug.click(buttons.CORNER_BUTTON, wait=True)
+        self.debug.synchronize_at("VerticalMenu")
+        self.debug.click(buttons.VERTICAL_MENU[0], wait=True)
+        self.debug.click(buttons.CORNER_BUTTON, wait=True)
+        self.debug.click(buttons.CORNER_BUTTON, wait=True)
 
 
 class EthereumFlow:
@@ -392,7 +412,7 @@ class EthereumFlow:
         if self.client.model in (models.T2T1, models.T3T1):
             # confirm intro
             if info:
-                self.debug.press_info(wait=True)
+                self.debug.click(buttons.CORNER_BUTTON, wait=True)
                 TR.assert_equals_multiple(
                     self.debug.wait_layout().title(),
                     [
@@ -405,7 +425,7 @@ class EthereumFlow:
             yield
 
             # confirm summary
-            if info:
+            if info and self.client.model != models.T3T1:
                 self.debug.press_info(wait=True)
                 TR.assert_in(
                     self.debug.wait_layout().text_content(), "ethereum__gas_limit"

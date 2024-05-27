@@ -14,16 +14,22 @@ if TYPE_CHECKING:
 
 def confirm_new_wallet(debug: "DebugLink") -> None:
     TR.assert_equals(debug.read_layout().title(), "reset__title_create_wallet")
-    if debug.model in (models.T2T1, models.T3T1):
+    if debug.model in (models.T2T1,):
         debug.click(buttons.OK, wait=True)
+    elif debug.model in (models.T3T1,):
+        debug.swipe_up(wait=True)
+        debug.click(buttons.TAP_TO_CONFIRM, wait=True)
+        debug.swipe_up(wait=True)  # Wallet created
     elif debug.model in (models.T2B1,):
         debug.press_right(wait=True)
         debug.press_right(wait=True)
 
 
 def confirm_read(debug: "DebugLink", middle_r: bool = False) -> None:
-    if debug.model in (models.T2T1, models.T3T1):
+    if debug.model in (models.T2T1,):
         debug.click(buttons.OK, wait=True)
+    elif debug.model in (models.T3T1,):
+        debug.swipe_up(wait=True)
     elif debug.model in (models.T2B1,):
         page_count = debug.read_layout().page_count()
         if page_count > 1:
@@ -36,9 +42,16 @@ def confirm_read(debug: "DebugLink", middle_r: bool = False) -> None:
 
 
 def cancel_backup(debug: "DebugLink", middle_r: bool = False) -> None:
-    if debug.model in (models.T2T1, models.T3T1):
+    if debug.model in (models.T2T1,):
         debug.click(buttons.CANCEL, wait=True)
+        debug.click(buttons.CANCEL, wait=True)
+    elif debug.model in (models.T3T1,):
+        debug.click(buttons.CORNER_BUTTON, wait=True)
+        debug.click(buttons.VERTICAL_MENU[0], wait=True)
+        debug.swipe_up(wait=True)
+        debug.click(buttons.TAP_TO_CONFIRM)
     elif debug.model in (models.T2B1,):
+        debug.press_left(wait=True)
         debug.press_left(wait=True)
 
 
@@ -46,8 +59,11 @@ def set_selection(debug: "DebugLink", button: tuple[int, int], diff: int) -> Non
     if debug.model in (models.T2T1, models.T3T1):
         assert "NumberInputDialog" in debug.read_layout().all_components()
         for _ in range(diff):
-            debug.click(button)
-        debug.click(buttons.OK, wait=True)
+            debug.click(button, wait=True)
+        if debug.model in (models.T2T1,):
+            debug.click(buttons.OK, wait=True)
+        else:
+            debug.swipe_up(wait=True)
     elif debug.model in (models.T2B1,):
         layout = debug.read_layout()
         if layout.title() in TR.translate(
@@ -56,7 +72,7 @@ def set_selection(debug: "DebugLink", button: tuple[int, int], diff: int) -> Non
             # Special info screens
             layout = debug.press_right(wait=True)
         assert "NumberInput" in layout.all_components()
-        if button == buttons.RESET_MINUS:
+        if button == buttons.reset_minus(debug.model.internal_name):
             for _ in range(diff):
                 debug.press_left(wait=True)
         else:
@@ -72,6 +88,8 @@ def read_words(
 
     if debug.model in (models.T2B1,):
         debug.press_right(wait=True)
+    elif debug.model in (models.T3T1,):
+        debug.swipe_up(wait=True)
 
     # Swiping through all the pages and loading the words
     layout = debug.read_layout()
@@ -82,10 +100,15 @@ def read_words(
     if debug.model in (models.T2T1, models.T3T1):
         words.extend(layout.seed_words())
 
+    if debug.model in (models.T3T1,):
+        debug.swipe_up(wait=True)
+
     # There is hold-to-confirm button
     if do_htc:
-        if debug.model in (models.T2T1, models.T3T1):
+        if debug.model in (models.T2T1,):
             debug.click_hold(buttons.OK, hold_ms=1500)
+        elif debug.model in (models.T3T1,):
+            debug.click_hold(buttons.TAP_TO_CONFIRM, hold_ms=1500)
         elif debug.model in (models.T2B1,):
             debug.press_right_htc(1200)
     else:
@@ -97,6 +120,9 @@ def read_words(
 
 
 def confirm_words(debug: "DebugLink", words: list[str]) -> None:
+    if debug.model in (models.T3T1,):
+        debug.swipe_up(wait=True)
+
     layout = debug.wait_layout()
     if debug.model in (models.T2T1, models.T3T1):
         TR.assert_template(layout.text_content(), "reset__select_word_x_of_y_template")
@@ -112,7 +138,11 @@ def confirm_words(debug: "DebugLink", words: list[str]) -> None:
             ]
             wanted_word = words[word_pos - 1].lower()
             button_pos = btn_texts.index(wanted_word)
-            layout = debug.click(buttons.RESET_WORD_CHECK[button_pos], wait=True)
+            if debug.model is models.T3T1:
+                btn_positions = buttons.VERTICAL_MENU
+            else:
+                btn_positions = buttons.RESET_WORD_CHECK
+            layout = debug.click(btn_positions[button_pos], wait=True)
     elif debug.model in (models.T2B1,):
         TR.assert_in(layout.text_content(), "reset__select_correct_word")
         layout = debug.press_right(wait=True)

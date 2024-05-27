@@ -205,5 +205,6 @@ impl<'a> crate::trace::Trace for ShareWords<'a> {
         let content =
             word.map(|w| build_string!(50, inttostr!(self.page_index as u8 + 1), ". ", w, "\n"));
         t.string("screen_content", content.as_str().into());
+        t.int("page_count", self.share_words.len() as i64)
     }
 }

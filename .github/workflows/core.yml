@@ -266,6 +266,7 @@ jobs:
     needs:
       - param
       - core_emu
+    timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix:
@@ -350,6 +351,7 @@ jobs:
     needs:
       - param
       - core_emu
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:

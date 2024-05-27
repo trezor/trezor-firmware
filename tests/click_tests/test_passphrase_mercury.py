@@ -16,9 +16,11 @@
 
 import time
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Generator, Optional
+from typing import TYPE_CHECKING, Generator, Optional, Tuple
 
 import pytest
+
+from trezorlib import exceptions
 
 from .. import buttons
 from ..common import get_test_address
@@ -30,24 +32,29 @@ if TYPE_CHECKING:
     from ..device_handler import BackgroundDeviceHandler
 
 
-pytestmark = [pytest.mark.skip_t1b1, pytest.mark.skip_t2b1, pytest.mark.skip_t3t1]
+pytestmark = [pytest.mark.skip_t1b1, pytest.mark.skip_t2b1, pytest.mark.skip_t2t1]
 
-# TODO: it is not possible to cancel the passphrase entry on TT
-# NOTE: the prompt (underscoring) is not there when a space is entered
+PASSPHRASE_CANCELLED = pytest.raises(exceptions.Cancelled, match="")
 
-TT_CATEGORIES = [
-    PassphraseCategory.DIGITS,
+MERCURY_CATEGORIES = [
     PassphraseCategory.LOWERCASE,
     PassphraseCategory.UPPERCASE,
+    PassphraseCategory.DIGITS,
     PassphraseCategory.SPECIAL,
 ]
+
+# fmt: off
+PASSPHRASE_LOWERCASE = ("abc", "def", "ghi", "jkl", "mno", "pq", "rst", "uvw", "xyz", " *#")
+PASSPHRASE_UPPERCASE = ("ABC", "DEF", "GHI", "JKL", "MNO", "PQ", "RST", "UVW", "XYZ", " *#")
+PASSPHRASE_DIGITS = ("1", "2", "3", "4", "5", "6", "7", "8", "9", "0")
+PASSPHRASE_SPECIAL = ("_<>", ".:@", "/|\\", "!()", "+%&", "-[]", "?{}", ",'`", ";\"~", "$^=")
+# fmt: on
+
 # TODO: better read this from the trace
-TT_CATEGORY = PassphraseCategory.LOWERCASE
-TT_COORDS_PREV: buttons.Coords = (0, 0)
+MERCURY_CATEGORY = PassphraseCategory.LOWERCASE
+MERCURY_COORDS_PREV: buttons.Coords = (0, 0)
 
 # Testing the maximum length is really 50
-# TODO: show some UI message when length reaches 50?
-# (it currently disabled typing and greys out the buttons)
 
 DA_50 = 25 * "da"
 DA_50_ADDRESS = "mg5L2i8HZKUvceK1sfmGHhE4gichFSsdvm"
@@ -64,6 +71,27 @@ assert len(DA_51) == 51
 assert DA_51_ADDRESS == DA_50_ADDRESS
 
 
+def get_passphrase_choices(char: str) -> tuple[str, ...]:
+    if char in " *#":
+        return PASSPHRASE_LOWERCASE
+
+    if char.islower():
+        return PASSPHRASE_LOWERCASE
+    elif char.isupper():
+        return PASSPHRASE_UPPERCASE
+    elif char.isdigit():
+        return PASSPHRASE_DIGITS
+    else:
+        return PASSPHRASE_SPECIAL
+
+
+def passphrase(char: str) -> Tuple[buttons.Coords, int]:
+    choices = get_passphrase_choices(char)
+    idx = next(i for i, letters in enumerate(choices) if char in letters)
+    click_amount = choices[idx].index(char) + 1
+    return buttons.pin_passphrase_index(idx), click_amount
+
+
 @contextmanager
 def prepare_passphrase_dialogue(
     device_handler: "BackgroundDeviceHandler", address: Optional[str] = None
@@ -73,8 +101,8 @@ def prepare_passphrase_dialogue(
     assert debug.wait_layout().main_component() == "PassphraseKeyboard"
 
     # Resetting the category as it could have been changed by previous tests
-    global TT_CATEGORY
-    TT_CATEGORY = PassphraseCategory.LOWERCASE  # type: ignore
+    global MERCURY_CATEGORY
+    MERCURY_CATEGORY = PassphraseCategory.LOWERCASE  # type: ignore
 
     yield debug
 
@@ -85,29 +113,29 @@ def prepare_passphrase_dialogue(
 
 def go_to_category(debug: "DebugLink", category: PassphraseCategory) -> None:
     """Go to a specific category"""
-    global TT_CATEGORY
-    global TT_COORDS_PREV
+    global MERCURY_CATEGORY
+    global MERCURY_COORDS_PREV
 
     # Already there
-    if TT_CATEGORY == category:
+    if MERCURY_CATEGORY == category:
         return
 
-    current_index = TT_CATEGORIES.index(TT_CATEGORY)
-    target_index = TT_CATEGORIES.index(category)
+    current_index = MERCURY_CATEGORIES.index(MERCURY_CATEGORY)
+    target_index = MERCURY_CATEGORIES.index(category)
     if target_index > current_index:
         for _ in range(target_index - current_index):
             debug.swipe_left(wait=True)
     else:
         for _ in range(current_index - target_index):
             debug.swipe_right(wait=True)
-    TT_CATEGORY = category  # type: ignore
+    MERCURY_CATEGORY = category  # type: ignore
     # Category changed, reset coordinates
-    TT_COORDS_PREV = (0, 0)  # type: ignore
+    MERCURY_COORDS_PREV = (0, 0)  # type: ignore
 
 
 def press_char(debug: "DebugLink", char: str) -> None:
     """Press a character"""
-    global TT_COORDS_PREV
+    global MERCURY_COORDS_PREV
 
     # Space and couple others are a special case
     if char in " *#":
@@ -117,13 +145,12 @@ def press_char(debug: "DebugLink", char: str) -> None:
 
     go_to_category(debug, char_category)
 
-    coords, amount = buttons.passphrase(char)
+    coords, amount = passphrase(char)
     # If the button is the same as for the previous char,
     # waiting a second before pressing it again.
-    # (not for a space)
-    if coords == TT_COORDS_PREV and char != " ":
+    if coords == MERCURY_COORDS_PREV:
         time.sleep(1.1)
-    TT_COORDS_PREV = coords  # type: ignore
+    MERCURY_COORDS_PREV = coords  # type: ignore
     for _ in range(amount):
         debug.click(coords, wait=True)
 
@@ -141,7 +168,7 @@ def input_passphrase(debug: "DebugLink", passphrase: str, check: bool = True) ->
 
 def enter_passphrase(debug: "DebugLink") -> None:
     """Enter a passphrase"""
-    coords = buttons.pin_passphrase_grid(11)
+    coords = buttons.grid35(2, 0)  # top-right corner
     debug.click(coords, wait=True)
 
 
@@ -277,7 +304,7 @@ def test_passphrase_dollar_sign_deletion(
     device_handler: "BackgroundDeviceHandler",
 ):
     # Checks that dollar signs will not leave one pixel on the top after deleting
-    # (was a bug previously)
+    # (was a bug previously on model T)
     with prepare_passphrase_dialogue(device_handler, CommonPass.EMPTY_ADDRESS) as debug:
         passphrase = "$$ I want $$"
         input_passphrase(debug, passphrase)

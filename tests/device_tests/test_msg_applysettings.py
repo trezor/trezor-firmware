@@ -22,6 +22,8 @@ from trezorlib import btc, device, exceptions, messages, misc, models
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.tools import parse_path
 
+from ..input_flows import InputFlowConfirmAllWarnings
+
 HERE = Path(__file__).parent.resolve()
 
 
@@ -364,6 +366,8 @@ def test_safety_checks(client: Client):
             client.set_expected_responses(
                 [messages.ButtonRequest, messages.ButtonRequest, messages.Address]
             )
+            IF = InputFlowConfirmAllWarnings(client)
+            client.set_input_flow(IF.get())
             get_bad_address()
 
     with client:
@@ -388,6 +392,9 @@ def test_safety_checks(client: Client):
         client.set_expected_responses(
             [messages.ButtonRequest, messages.ButtonRequest, messages.Address]
         )
+        if client.model is not models.T1B1:
+            IF = InputFlowConfirmAllWarnings(client)
+            client.set_input_flow(IF.get())
         get_bad_address()
 
 

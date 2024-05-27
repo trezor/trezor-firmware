@@ -14,7 +14,9 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-from trezorlib import device
+import pytest
+
+from trezorlib import device, models
 from trezorlib.debuglink import DebugLink
 
 from .. import buttons
@@ -37,6 +39,9 @@ def test_abort(core_emulator: Emulator):
     device_handler = BackgroundDeviceHandler(core_emulator.client)
     debug = device_handler.debuglink()
     features = device_handler.features()
+
+    if debug.model is models.T3T1:
+        pytest.skip("abort not supported on T3T1")
 
     assert features.recovery_mode is False
 
@@ -132,7 +137,7 @@ def test_recovery_on_old_wallet(core_emulator: Emulator):
     words = first_share.split(" ")
 
     # start entering first share
-    assert "Enter any share" in debug.read_layout().text_content()
+    assert "the first 2-4 letters" in debug.read_layout().text_content()
     debug.press_yes()
     assert debug.wait_layout().main_component() == "MnemonicKeyboard"
 
@@ -151,7 +156,7 @@ def test_recovery_on_old_wallet(core_emulator: Emulator):
         layout = debug.wait_layout()
 
     # check that we entered the first share successfully
-    assert "1 of 3 shares entered" in layout.text_content()
+    assert "2 more shares needed" in layout.text_content()
 
     # try entering the remaining shares
     for share in MNEMONIC_SLIP39_BASIC_20_3of6[1:3]:
@@ -170,7 +175,7 @@ def test_recovery_multiple_resets(core_emulator: Emulator):
     def enter_shares_with_restarts(debug: DebugLink) -> None:
         shares = MNEMONIC_SLIP39_ADVANCED_20
         layout = debug.read_layout()
-        expected_text = "Enter any share"
+        expected_text = "the first 2-4 letters"
         remaining = len(shares)
         for share in shares:
             assert expected_text in layout.text_content()
