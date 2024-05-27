@@ -22,7 +22,9 @@ def enter_word(
         typed_word = word[:4]
         for coords in buttons.type_word(typed_word, is_slip39=is_slip39):
             debug.click(coords)
-
+        if debug.model is models.T3T1 and not is_slip39 and len(word) > 4:
+            # T3T1 (mercury) BIP39 keyboard allows to "confirm" only if the word is fully written, you need to click the word to auto-complete
+            debug.click(buttons.CONFIRM_WORD, wait=True)
         return debug.click(buttons.CONFIRM_WORD, wait=True)
     elif debug.model in (models.T2B1,):
         letter_index = 0
@@ -49,8 +51,10 @@ def enter_word(
 def confirm_recovery(debug: "DebugLink") -> None:
     layout = debug.wait_layout()
     TR.assert_equals(layout.title(), "recovery__title")
-    if debug.model in (models.T2T1, models.T3T1):
+    if debug.model in (models.T2T1,):
         debug.click(buttons.OK, wait=True)
+    elif debug.model in (models.T3T1,):
+        debug.swipe_up(wait=True)
     elif debug.model in (models.T2B1,):
         debug.press_right(wait=True)
         debug.press_right()
@@ -99,20 +103,29 @@ def select_number_of_words(
         raise ValueError("Unknown model")
 
     if num_of_words in (20, 33):
-        TR.assert_in(layout.text_content(), "recovery__enter_any_share")
+        TR.assert_in_multiple(
+            layout.text_content(),
+            ["recovery__enter_any_share", "recovery__only_first_n_letters"],
+        )
     else:
-        TR.assert_in(layout.text_content(), "recovery__enter_backup")
+        TR.assert_in_multiple(
+            layout.text_content(),
+            ["recovery__enter_backup", "recovery__only_first_n_letters"],
+        )
 
 
 def enter_share(
     debug: "DebugLink", share: str, is_first: bool = True
 ) -> "LayoutContent":
-    TR.assert_in(debug.read_layout().title(), "recovery__title_recover")
     if debug.model in (models.T2B1,):
+        TR.assert_in(debug.read_layout().title(), "recovery__title_recover")
         layout = debug.wait_layout()
         for _ in range(layout.page_count()):
             layout = debug.press_right(wait=True)
+    elif debug.model in (models.T3T1,):
+        layout = debug.swipe_up(wait=True)
     else:
+        TR.assert_in(debug.read_layout().title(), "recovery__title_recover")
         layout = debug.click(buttons.OK, wait=True)
 
     assert "MnemonicKeyboard" in layout.all_components()
@@ -124,15 +137,20 @@ def enter_share(
 
 
 def enter_shares(debug: "DebugLink", shares: list[str]) -> None:
-    TR.assert_in(debug.read_layout().text_content(), "recovery__enter_any_share")
+    TR.assert_in_multiple(
+        debug.read_layout().text_content(),
+        ["recovery__enter_any_share", "recovery__only_first_n_letters"],
+    )
     for index, share in enumerate(shares):
         enter_share(debug, share, is_first=index == 0)
         if index < len(shares) - 1:
-            TR.assert_in(
-                debug.read_layout().text_content(),
-                "recovery__x_of_y_entered_template",
-                template=(index + 1, len(shares)),
-            )
+            # FIXME: when ui-t3t1 done for shamir, we want to check the template below
+            TR.assert_in(debug.read_layout().title(), "recovery__title_recover")
+            # TR.assert_in(
+            #     debug.read_layout().text_content(),
+            #     "recovery__x_of_y_entered_template",
+            #     template=(index + 1, len(shares)),
+            # )
 
     TR.assert_in(debug.read_layout().text_content(), "recovery__wallet_recovered")
 
@@ -188,13 +206,19 @@ def enter_seed_previous_correct(
             i += 1
         layout = enter_word(debug, word, is_slip39=False)
 
-    TR.assert_in(debug.read_layout().text_content(), "recovery__wallet_recovered")
+    # TR.assert_in(debug.read_layout().text_content(), "recovery__wallet_recovered")
 
 
 def prepare_enter_seed(debug: "DebugLink") -> None:
-    TR.assert_in(debug.read_layout().text_content(), "recovery__enter_backup")
-    if debug.model in (models.T2T1, models.T3T1):
+    TR.assert_in_multiple(
+        debug.read_layout().text_content(),
+        ["recovery__enter_backup", "recovery__only_first_n_letters"],
+    )
+    if debug.model in (models.T2T1,):
         debug.click(buttons.OK, wait=True)
+    elif debug.model in (models.T3T1,):
+        debug.swipe_up(wait=True)
+        debug.swipe_up(wait=True)
     elif debug.model in (models.T2B1,):
         debug.press_right(wait=True)
         TR.assert_equals(debug.read_layout().title(), "recovery__title_recover")

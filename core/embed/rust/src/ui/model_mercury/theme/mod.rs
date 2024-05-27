@@ -47,11 +47,7 @@ pub const ORANGE_LIGHT: Color = Color::rgb(0xFF, 0x8D, 0x6A); // cancel button
 pub const RED: Color = Color::rgb(0xE7, 0x0E, 0x0E); // button
 pub const RED_DARK: Color = Color::rgb(0xAE, 0x09, 0x09); // button pressed
 pub const YELLOW: Color = Color::rgb(0xD9, 0x9E, 0x00); // button
-pub const YELLOW_DARK: Color = Color::rgb(0x7A, 0x58, 0x00); // button pressed
 pub const BLUE: Color = Color::rgb(0x06, 0x1E, 0xAD); // button
-pub const BLUE_DARK: Color = Color::rgb(0x04, 0x10, 0x58); // button pressed
-pub const OFF_WHITE: Color = Color::rgb(0xDE, 0xDE, 0xDE); // very light grey
-pub const GREY_MEDIUM: Color = Color::rgb(0x4F, 0x4F, 0x4F); // button pressed
 pub const VIOLET: Color = Color::rgb(0x95, 0x00, 0xCA);
 
 pub const FATAL_ERROR_COLOR: Color = Color::rgb(0xE7, 0x0E, 0x0E);
@@ -189,7 +185,7 @@ pub const fn label_default() -> TextStyle {
 }
 
 pub const fn label_keyboard() -> TextStyle {
-    TextStyle::new(Font::DEMIBOLD, OFF_WHITE, BG, GREY_LIGHT, GREY_LIGHT)
+    TextStyle::new(Font::DEMIBOLD, GREY_EXTRA_LIGHT, BG, GREY_LIGHT, GREY_LIGHT)
 }
 
 pub const fn label_keyboard_prompt() -> TextStyle {
@@ -197,11 +193,11 @@ pub const fn label_keyboard_prompt() -> TextStyle {
 }
 
 pub const fn label_keyboard_warning() -> TextStyle {
-    TextStyle::new(Font::DEMIBOLD, RED, BG, GREY_LIGHT, GREY_LIGHT)
+    TextStyle::new(Font::DEMIBOLD, ORANGE_LIGHT, BG, GREY_LIGHT, GREY_LIGHT)
 }
 
 pub const fn label_keyboard_minor() -> TextStyle {
-    TEXT_NORMAL_OFF_WHITE
+    TEXT_NORMAL_GREY_EXTRA_LIGHT
 }
 
 pub const fn label_warning() -> TextStyle {
@@ -209,7 +205,7 @@ pub const fn label_warning() -> TextStyle {
 }
 
 pub const fn label_warning_value() -> TextStyle {
-    TEXT_NORMAL_OFF_WHITE
+    TEXT_NORMAL_GREY_EXTRA_LIGHT
 }
 
 pub const fn label_recovery_title() -> TextStyle {
@@ -217,7 +213,7 @@ pub const fn label_recovery_title() -> TextStyle {
 }
 
 pub const fn label_recovery_description() -> TextStyle {
-    TEXT_NORMAL_OFF_WHITE
+    TEXT_NORMAL_GREY_EXTRA_LIGHT
 }
 
 pub const fn label_progress() -> TextStyle {
@@ -363,21 +359,21 @@ pub const fn button_cancel() -> ButtonStyleSheet {
         normal: &ButtonStyle {
             font: Font::BOLD,
             text_color: FG,
-            button_color: RED,
+            button_color: ORANGE_LIGHT,
             icon_color: GREY_LIGHT,
             background_color: BG,
         },
         active: &ButtonStyle {
             font: Font::BOLD,
             text_color: FG,
-            button_color: RED_DARK,
+            button_color: ORANGE_DIMMED,
             icon_color: GREY_LIGHT,
             background_color: BG,
         },
         disabled: &ButtonStyle {
             font: Font::BOLD,
             text_color: GREY_LIGHT,
-            button_color: RED,
+            button_color: ORANGE_DIMMED,
             icon_color: GREY_LIGHT,
             background_color: BG,
         },
@@ -791,8 +787,8 @@ pub fn textstyle_number(num: i32) -> &'static TextStyle {
     }
 }
 
-pub const TEXT_NORMAL_OFF_WHITE: TextStyle =
-    TextStyle::new(Font::NORMAL, OFF_WHITE, BG, GREY_LIGHT, GREY_LIGHT);
+pub const TEXT_NORMAL_GREY_EXTRA_LIGHT: TextStyle =
+    TextStyle::new(Font::NORMAL, GREY_EXTRA_LIGHT, BG, GREY_LIGHT, GREY_LIGHT);
 pub const TEXT_CHECKLIST_DEFAULT: TextStyle = TextStyle::new(Font::SUB, GREY, BG, GREY, GREY);
 pub const TEXT_CHECKLIST_SELECTED: TextStyle =
     TextStyle::new(Font::NORMAL, GREY_LIGHT, BG, GREY_LIGHT, GREY_LIGHT);
