@@ -3,9 +3,10 @@ use crate::{
     strutil::TString,
     translations::TR,
     ui::{
+        button_request::ButtonRequestCode,
         component::{
             text::paragraphs::{Paragraph, Paragraphs},
-            ComponentExt, SwipeDirection,
+            ButtonRequestExt, ComponentExt, SwipeDirection,
         },
         flow::{base::Decision, flow_store, FlowMsg, FlowState, FlowStore, SwipeFlow, SwipePage},
     },
@@ -86,7 +87,8 @@ impl ConfirmResetCreate {
         let content_intro = Frame::left_aligned(title, SwipePage::vertical(paragraphs))
             .with_menu_button()
             .with_footer(TR::instructions__swipe_up.into(), None)
-            .map(|msg| matches!(msg, FrameMsg::Button(_)).then_some(FlowMsg::Info));
+            .map(|msg| matches!(msg, FrameMsg::Button(_)).then_some(FlowMsg::Info))
+            .one_button_request(ButtonRequestCode::ResetDevice.with_type("setup_device"));
 
         let content_menu = Frame::left_aligned(
             "".into(),
@@ -106,7 +108,8 @@ impl ConfirmResetCreate {
         .map(|msg| match msg {
             FrameMsg::Content(()) => Some(FlowMsg::Confirmed),
             _ => Some(FlowMsg::Cancelled),
-        });
+        })
+        .one_button_request(ButtonRequestCode::ResetDevice.with_type("confirm_setup_device"));
 
         let store = flow_store()
             .add(content_intro)?

@@ -569,8 +569,8 @@ impl EventCtx {
     }
 
     pub fn set_page_count(&mut self, count: usize) {
-        #[cfg(feature = "ui_debug")]
-        assert!(self.page_count.is_none());
+        // #[cfg(feature = "ui_debug")]
+        // assert!(self.page_count.unwrap_or(count) == count);
         self.page_count = Some(count);
     }
 

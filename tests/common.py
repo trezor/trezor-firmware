@@ -25,6 +25,8 @@ import pytest
 
 from trezorlib import btc, messages, models, tools
 
+from . import buttons
+
 if TYPE_CHECKING:
     from _pytest.mark.structures import MarkDecorator
 
@@ -255,11 +257,15 @@ def read_mnemonic_from_screen_mercury(
     assert br.pages is not None
 
     debug.wait_layout()
+    debug.swipe_up()
 
-    for _ in range(br.pages):
+    for _ in range(br.pages - 2):
         words = debug.wait_layout().seed_words()
         mnemonic.extend(words)
         debug.swipe_up()
+
+    debug.wait_layout()
+    debug.press_yes()
 
     return mnemonic
 
@@ -296,6 +302,15 @@ def click_info_button_tt(debug: "DebugLink"):
     debug.press_info()
     yield  # Info screen with text
     debug.press_yes()
+
+
+def click_info_button_mercury(debug: "DebugLink"):
+    """Click Shamir backup info button and return back."""
+    debug.click(buttons.CORNER_BUTTON, wait=True)
+    debug.synchronize_at("VerticalMenu")
+    debug.click(buttons.VERTICAL_MENU[0], wait=True)
+    debug.click(buttons.CORNER_BUTTON, wait=True)
+    debug.click(buttons.CORNER_BUTTON)
 
 
 def check_pin_backoff_time(attempts: int, start: float) -> None:

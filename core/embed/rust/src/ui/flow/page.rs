@@ -94,6 +94,7 @@ impl<T: Component + Paginate + Clone> Component for SwipePage<T> {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        ctx.set_page_count(self.pages);
         if let Some(t) = &mut self.transition {
             let finished = Self::handle_transition(ctx, event, t);
             if finished {

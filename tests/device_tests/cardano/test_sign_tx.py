@@ -21,6 +21,7 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 
 from ...common import parametrize_using_common_fixtures
+from ...input_flows import InputFlowConfirmAllWarnings
 
 pytestmark = [
     pytest.mark.altcoin,
@@ -53,7 +54,11 @@ def show_details_input_flow(client: Client):
     "cardano/sign_tx.slip39.json",
 )
 def test_cardano_sign_tx(client: Client, parameters, result):
-    response = call_sign_tx(client, parameters)
+    response = call_sign_tx(
+        client,
+        parameters,
+        input_flow=lambda client: InputFlowConfirmAllWarnings(client).get(),
+    )
     assert response == _transform_expected_result(result)
 
 

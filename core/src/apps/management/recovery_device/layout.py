@@ -91,6 +91,7 @@ async def request_mnemonic(
             # show_identifier_mismatch
             await show_recovery_warning(
                 "warning_mismatched_share",
+                "",
                 TR.recovery__share_from_another_multi_share_backup,
             )
             return None
@@ -129,14 +130,14 @@ async def show_invalid_mnemonic(word_count: int) -> None:
     if backup_types.is_slip39_word_count(word_count):
         await show_recovery_warning(
             "warning_invalid_share",
-            TR.recovery__invalid_share_entered,
             TR.words__please_try_again,
+            TR.recovery__invalid_share_entered,
         )
     else:
         await show_recovery_warning(
             "warning_invalid_seed",
-            TR.recovery__invalid_wallet_backup_entered,
             TR.words__please_try_again,
+            TR.recovery__invalid_wallet_backup_entered,
         )
 
 
