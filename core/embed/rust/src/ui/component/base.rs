@@ -208,28 +208,44 @@ where
 /// Same as `Child` but also handles screen clearing when layout is first
 /// painted.
 pub struct Root<T> {
-    inner: Child<T>,
+    inner: Option<Child<T>>,
     marked_for_clear: bool,
 }
 
 impl<T> Root<T> {
     pub fn new(component: T) -> Self {
         Self {
-            inner: Child::new(component),
+            inner: Some(Child::new(component)),
             marked_for_clear: true,
         }
     }
 
+    pub fn inner_mut(&mut self) -> &mut Child<T> {
+        if let Some(ref mut c) = self.inner {
+            c
+        } else {
+            fatal_error!("deallocated", "Root object is deallocated")
+        }
+    }
+
     pub fn inner(&self) -> &Child<T> {
-        &self.inner
+        if let Some(ref c) = self.inner {
+            c
+        } else {
+            fatal_error!("deallocated", "Root object is deallocated")
+        }
     }
 
     pub fn skip_paint(&mut self) {
-        self.inner.skip_paint()
+        self.inner_mut().skip_paint();
     }
 
     pub fn clear_screen(&mut self) {
         self.marked_for_clear = true;
+    }
+
+    pub fn delete(&mut self) {
+        self.inner = None;
     }
 }
 
@@ -240,15 +256,15 @@ where
     type Msg = T::Msg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        self.inner.place(bounds)
+        self.inner_mut().place(bounds)
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        let msg = self.inner.event(ctx, event);
+        let msg = self.inner_mut().event(ctx, event);
         if ctx.needs_repaint_root() {
             self.marked_for_clear = true;
             let mut dummy_ctx = EventCtx::new();
-            let paint_msg = self.inner.event(&mut dummy_ctx, Event::RequestPaint);
+            let paint_msg = self.inner_mut().event(&mut dummy_ctx, Event::RequestPaint);
             assert!(paint_msg.is_none());
             assert!(dummy_ctx.timers.is_empty());
         }
@@ -256,7 +272,7 @@ where
     }
 
     fn paint(&mut self) {
-        if self.marked_for_clear && self.inner.will_paint() {
+        if self.marked_for_clear && self.inner().will_paint() {
             self.marked_for_clear = false;
             display::clear()
         }
@@ -264,12 +280,12 @@ where
     }
 
     fn render<'s>(&self, target: &mut impl Renderer<'s>) {
-        self.inner.render(target);
+        self.inner().render(target);
     }
 
     #[cfg(feature = "ui_bounds")]
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
-        self.inner.bounds(sink)
+        self.inner().bounds(sink)
     }
 }
 
@@ -279,7 +295,7 @@ where
     T: crate::trace::Trace,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        self.inner.trace(t)
+        self.inner().trace(t);
     }
 }
 
