@@ -54,6 +54,7 @@ pub trait ObjComponent: MaybeTrace {
     fn obj_bounds(&self, _sink: &mut dyn FnMut(Rect)) {}
     fn obj_skip_paint(&mut self) {}
     fn obj_request_clear(&mut self) {}
+    fn obj_delete(&mut self) {}
 }
 
 impl<T> ObjComponent for Root<T>
@@ -105,6 +106,10 @@ where
     fn obj_request_clear(&mut self) {
         self.clear_screen()
     }
+
+    fn obj_delete(&mut self) {
+        self.delete()
+    }
 }
 
 /// `LayoutObj` is a GC-allocated object exported to MicroPython, with type
@@ -142,6 +147,13 @@ impl LayoutObj {
                 page_count: 1,
             }),
         })
+    }
+
+    pub fn obj_delete(&self) {
+        let mut inner = self.inner.borrow_mut();
+
+        // SAFETY: `inner.root` is unique because of the `inner.borrow_mut()`.
+        unsafe { Gc::as_mut(&mut inner.root) }.obj_delete();
     }
 
     pub fn skip_first_paint(&self) {
@@ -291,6 +303,7 @@ impl LayoutObj {
                 Qstr::MP_QSTR_request_complete_repaint => obj_fn_1!(ui_layout_request_complete_repaint).as_obj(),
                 Qstr::MP_QSTR_trace => obj_fn_2!(ui_layout_trace).as_obj(),
                 Qstr::MP_QSTR_bounds => obj_fn_1!(ui_layout_bounds).as_obj(),
+                Qstr::MP_QSTR_delete => obj_fn_1!(ui_layout_delete).as_obj(),
                 Qstr::MP_QSTR_page_count => obj_fn_1!(ui_layout_page_count).as_obj(),
                 Qstr::MP_QSTR_button_request => obj_fn_1!(ui_layout_button_request).as_obj(),
             }),
@@ -525,4 +538,13 @@ extern "C" fn ui_layout_bounds(this: Obj) -> Obj {
 #[cfg(not(feature = "ui_bounds"))]
 extern "C" fn ui_layout_bounds(_this: Obj) -> Obj {
     Obj::const_none()
+}
+
+extern "C" fn ui_layout_delete(this: Obj) -> Obj {
+    let block = || {
+        let this: Gc<LayoutObj> = this.try_into()?;
+        this.obj_delete();
+        Ok(Obj::const_none())
+    };
+    unsafe { util::try_or_raise(block) }
 }

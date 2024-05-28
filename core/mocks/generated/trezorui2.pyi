@@ -49,6 +49,8 @@ class LayoutObj(Generic[T]):
             """Paint bounds of individual components on screen."""
     def page_count(self) -> int:
         """Return the number of pages in the layout object."""
+    def delete(self) -> None:
+        """Calls drop on contents of the root component."""
 
 
 # rust/src/ui/model_mercury/layout.rs
@@ -1120,6 +1122,8 @@ class LayoutObj(Generic[T]):
         """Return the number of pages in the layout object."""
     def button_request(self) -> tuple[int, str] | None:
         """Return (code, type) of button request made during the last event or timer pass."""
+    def delete(self) -> None:
+        """Calls drop on contents of the root component."""
 
 
 # rust/src/ui/model_tt/layout.rs

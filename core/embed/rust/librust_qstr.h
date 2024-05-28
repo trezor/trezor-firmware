@@ -206,6 +206,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_debug__loading_seed_not_recommended;
   MP_QSTR_decode;
   MP_QSTR_deinit;
+  MP_QSTR_delete;
   MP_QSTR_description;
   MP_QSTR_details_title;
   MP_QSTR_device_name__change_template;

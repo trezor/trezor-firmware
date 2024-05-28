@@ -27,5 +27,7 @@ if __debug__:
 
 loop.run()
 
+workflow.kill_default()
+
 if __debug__:
     log.debug(__name__, "Restarting main loop")
