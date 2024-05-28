@@ -267,6 +267,8 @@ static void usb_hid_class_deinit(USBD_HandleTypeDef *dev,
 
 static int usb_hid_class_setup(USBD_HandleTypeDef *dev, usb_hid_state_t *state,
                                USBD_SetupReqTypedef *req) {
+  wait_random();
+
   switch (req->bmRequest & USB_REQ_TYPE_MASK) {
     // Class request
     case USB_REQ_TYPE_CLASS:
@@ -340,6 +342,7 @@ static int usb_hid_class_setup(USBD_HandleTypeDef *dev, usb_hid_state_t *state,
 static void usb_hid_class_data_in(USBD_HandleTypeDef *dev,
                                   usb_hid_state_t *state, uint8_t ep_num) {
   if ((ep_num | USB_EP_DIR_IN) == state->ep_in) {
+    wait_random();
     state->ep_in_is_idle = 1;
   }
 }
@@ -347,6 +350,7 @@ static void usb_hid_class_data_in(USBD_HandleTypeDef *dev,
 static void usb_hid_class_data_out(USBD_HandleTypeDef *dev,
                                    usb_hid_state_t *state, uint8_t ep_num) {
   if (ep_num == state->ep_out) {
+    wait_random();
     // Save the report length to indicate we have read something, but don't
     // schedule next reading until user reads this one
     state->last_read_len = USBD_LL_GetRxDataSize(dev, ep_num);
