@@ -487,12 +487,10 @@ static uint8_t usb_class_setup(USBD_HandleTypeDef *dev,
     }
     switch (usb_ifaces[req->wIndex].type) {
       case USB_IFACE_TYPE_HID:
-        wait_random();
         return usb_hid_class_setup(dev, &usb_ifaces[req->wIndex].hid, req);
       case USB_IFACE_TYPE_VCP:
         return usb_vcp_class_setup(dev, &usb_ifaces[req->wIndex].vcp, req);
       case USB_IFACE_TYPE_WEBUSB:
-        wait_random();
         return usb_webusb_class_setup(dev, &usb_ifaces[req->wIndex].webusb,
                                       req);
       default:
@@ -511,14 +509,12 @@ static uint8_t usb_class_data_in(USBD_HandleTypeDef *dev, uint8_t ep_num) {
   for (int i = 0; i < USBD_MAX_NUM_INTERFACES; i++) {
     switch (usb_ifaces[i].type) {
       case USB_IFACE_TYPE_HID:
-        wait_random();
         usb_hid_class_data_in(dev, &usb_ifaces[i].hid, ep_num);
         break;
       case USB_IFACE_TYPE_VCP:
         usb_vcp_class_data_in(dev, &usb_ifaces[i].vcp, ep_num);
         break;
       case USB_IFACE_TYPE_WEBUSB:
-        wait_random();
         usb_webusb_class_data_in(dev, &usb_ifaces[i].webusb, ep_num);
         break;
       default:
@@ -535,14 +531,12 @@ static uint8_t usb_class_data_out(USBD_HandleTypeDef *dev, uint8_t ep_num) {
   for (int i = 0; i < USBD_MAX_NUM_INTERFACES; i++) {
     switch (usb_ifaces[i].type) {
       case USB_IFACE_TYPE_HID:
-        wait_random();
         usb_hid_class_data_out(dev, &usb_ifaces[i].hid, ep_num);
         break;
       case USB_IFACE_TYPE_VCP:
         usb_vcp_class_data_out(dev, &usb_ifaces[i].vcp, ep_num);
         break;
       case USB_IFACE_TYPE_WEBUSB:
-        wait_random();
         usb_webusb_class_data_out(dev, &usb_ifaces[i].webusb, ep_num);
         break;
       default:
