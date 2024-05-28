@@ -2,7 +2,7 @@
 #! nix-shell -i bash -p nodePackages.node2nix
 
 node2nix \
-  --nodejs-14 \
+  --nodejs-18 \
   --development \
   --input package.json \
   --output node-packages.nix \
