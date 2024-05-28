@@ -243,6 +243,8 @@ static int usb_webusb_class_setup(USBD_HandleTypeDef *dev,
     return USBD_OK;
   }
 
+  wait_random();
+
   switch (req->bRequest) {
     case USB_REQ_SET_INTERFACE:
       state->alt_setting = req->wValue;
@@ -263,6 +265,7 @@ static void usb_webusb_class_data_in(USBD_HandleTypeDef *dev,
                                      usb_webusb_state_t *state,
                                      uint8_t ep_num) {
   if ((ep_num | USB_EP_DIR_IN) == state->ep_in) {
+    wait_random();
     state->ep_in_is_idle = 1;
   }
 }
@@ -271,6 +274,7 @@ static void usb_webusb_class_data_out(USBD_HandleTypeDef *dev,
                                       usb_webusb_state_t *state,
                                       uint8_t ep_num) {
   if (ep_num == state->ep_out) {
+    wait_random();
     // Save the report length to indicate we have read something, but don't
     // schedule next reading until user reads this one
     state->last_read_len = USBD_LL_GetRxDataSize(dev, ep_num);
