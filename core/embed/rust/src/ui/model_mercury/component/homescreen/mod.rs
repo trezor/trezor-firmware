@@ -108,7 +108,7 @@ impl Homescreen {
         }
     }
 
-    fn render_loader<'s>(&'s self, target: &mut impl Renderer<'s>) {
+    fn render_loader<'s>(&self, target: &mut impl Renderer<'s>) {
         TR::progress__locking_device.map_translated(|t| {
             shape::Text::new(TOP_CENTER + Offset::y(HOLD_Y), t)
                 .with_align(Alignment::Center)
@@ -186,7 +186,7 @@ impl Component for Homescreen {
         todo!()
     }
 
-    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
         if self.loader.is_animating() || self.loader.is_completely_grown(Instant::now()) {
             self.render_loader(target);
         } else {
@@ -309,7 +309,7 @@ impl Component for Lockscreen<'_> {
         todo!()
     }
 
-    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
         let center = AREA.center();
 
         match ImageInfo::parse(self.image) {
