@@ -1532,6 +1532,9 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     def page_count(self) -> int:
     ///         """Return the number of pages in the layout object."""
     ///
+    ///     def __del__(self) -> None:
+    ///         """Calls drop on contents of the root component."""
+    ///
     /// class UiResult:
     ///    """Result of a UI operation."""
     ///    pass

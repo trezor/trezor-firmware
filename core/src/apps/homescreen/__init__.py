@@ -12,7 +12,11 @@ from apps.common.authorization import is_set_any_session
 
 
 async def busyscreen() -> None:
-    await Busyscreen(busy_expiry_ms())
+    obj = Busyscreen(busy_expiry_ms())
+    try:
+        await obj
+    finally:
+        obj.__del__()
 
 
 async def homescreen() -> None:
@@ -42,12 +46,17 @@ async def homescreen() -> None:
     elif storage.device.get_experimental_features():
         notification = TR.homescreen__title_experimental_mode
 
-    await Homescreen(
+    obj = Homescreen(
         label=label,
         notification=notification,
         notification_is_error=notification_is_error,
         hold_to_lock=config.has_pin(),
     )
+    try:
+        await obj
+    finally:
+        obj.__del__()
+
     lock_device()
 
 
@@ -58,10 +67,14 @@ async def _lockscreen(screensaver: bool = False) -> None:
     # Only show the lockscreen UI if the device can in fact be locked, or if it is
     # and OLED device (in which case the lockscreen is a screensaver).
     if can_lock_device() or screensaver:
-        await Lockscreen(
+        obj = Lockscreen(
             label=storage.device.get_label(),
             coinjoin_authorized=is_set_any_session(MessageType.AuthorizeCoinJoin),
         )
+        try:
+            await obj
+        finally:
+            obj.__del__()
     # Otherwise proceed directly to unlock() call. If the device is already unlocked,
     # it should be a no-op storage-wise, but it resets the internal configuration
     # to an unlocked state.

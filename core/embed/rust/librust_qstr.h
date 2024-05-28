@@ -22,6 +22,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_NORMAL;
   MP_QSTR_TR;
   MP_QSTR_TranslationsHeader;
+  MP_QSTR___del__;
   MP_QSTR___dict__;
   MP_QSTR___name__;
   MP_QSTR_account;
