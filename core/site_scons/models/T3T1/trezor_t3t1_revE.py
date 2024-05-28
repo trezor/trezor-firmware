@@ -100,11 +100,11 @@ def configure(
 
     if "usb" in features_wanted:
         sources += [
-            "embed/trezorhal/stm32u5/usb.c",
-            "embed/trezorhal/stm32u5/usbd_conf.c",
-            "embed/trezorhal/stm32u5/usbd_core.c",
-            "embed/trezorhal/stm32u5/usbd_ctlreq.c",
-            "embed/trezorhal/stm32u5/usbd_ioreq.c",
+            "embed/trezorhal/stm32u5/usb/usb.c",
+            "embed/trezorhal/stm32u5/usb/usbd_conf.c",
+            "embed/trezorhal/stm32u5/usb/usbd_core.c",
+            "embed/trezorhal/stm32u5/usb/usbd_ctlreq.c",
+            "embed/trezorhal/stm32u5/usb/usbd_ioreq.c",
             "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_ll_usb.c",
         ]
         features_available.append("usb")
