@@ -1679,6 +1679,9 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     def button_request(self) -> tuple[int, str] | None:
     ///         """Return (code, type) of button request made during the last event or timer pass."""
     ///
+    ///     def delete(self) -> None:
+    ///         """Calls drop on contents of the root component."""
+    ///
     /// class UiResult:
     ///    """Result of a UI operation."""
     ///    pass

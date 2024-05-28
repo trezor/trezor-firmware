@@ -208,28 +208,44 @@ where
 /// Same as `Child` but also handles screen clearing when layout is first
 /// painted.
 pub struct Root<T> {
-    inner: Child<T>,
+    inner: Option<Child<T>>,
     marked_for_clear: bool,
 }
 
 impl<T> Root<T> {
     pub fn new(component: T) -> Self {
         Self {
-            inner: Child::new(component),
+            inner: Some(Child::new(component)),
             marked_for_clear: true,
         }
     }
 
     pub fn inner(&self) -> &Child<T> {
-        &self.inner
+        if let Some(ref c) = self.inner {
+            c
+        } else {
+            fatal_error!("deallocated", "Root object is deallocated")
+        }
     }
 
     pub fn skip_paint(&mut self) {
-        self.inner.skip_paint()
+        if let Some(ref mut c) = self.inner {
+            c.skip_paint();
+        } else {
+            fatal_error!("deallocated", "Root object is deallocated")
+        }
     }
 
     pub fn clear_screen(&mut self) {
-        self.marked_for_clear = true;
+        if self.inner.is_none() {
+            fatal_error!("deallocated", "Root object is deallocated")
+        } else {
+            self.marked_for_clear = true;
+        }
+    }
+
+    pub fn delete(&mut self) {
+        self.inner = None;
     }
 }
 
@@ -240,36 +256,54 @@ where
     type Msg = T::Msg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        self.inner.place(bounds)
+        if let Some(ref mut c) = self.inner {
+            c.place(bounds)
+        } else {
+            fatal_error!("deallocated", "Root object is deallocated")
+        }
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        let msg = self.inner.event(ctx, event);
-        if ctx.needs_repaint_root() {
-            self.marked_for_clear = true;
-            let mut dummy_ctx = EventCtx::new();
-            let paint_msg = self.inner.event(&mut dummy_ctx, Event::RequestPaint);
-            assert!(paint_msg.is_none());
-            assert!(dummy_ctx.timers.is_empty());
+        if let Some(ref mut c) = self.inner {
+            let msg = c.event(ctx, event);
+            if ctx.needs_repaint_root() {
+                self.marked_for_clear = true;
+                let mut dummy_ctx = EventCtx::new();
+                let paint_msg = c.event(&mut dummy_ctx, Event::RequestPaint);
+                assert!(paint_msg.is_none());
+                assert!(dummy_ctx.timers.is_empty());
+            }
+            msg
+        } else {
+            fatal_error!("deallocated", "Root object is deallocated")
         }
-        msg
     }
 
     fn paint(&mut self) {
-        if self.marked_for_clear && self.inner.will_paint() {
-            self.marked_for_clear = false;
-            display::clear()
+        if let Some(ref mut c) = self.inner {
+            if self.marked_for_clear && c.will_paint() {
+                self.marked_for_clear = false;
+                display::clear()
+            }
+            self.inner.paint();
         }
-        self.inner.paint();
     }
 
     fn render<'s>(&self, target: &mut impl Renderer<'s>) {
-        self.inner.render(target);
+        if let Some(ref c) = self.inner {
+            c.render(target);
+        } else {
+            fatal_error!("deallocated", "Root object is deallocated")
+        }
     }
 
     #[cfg(feature = "ui_bounds")]
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
-        self.inner.bounds(sink)
+        if let Some(ref c) = self.inner {
+            c.bounds(sink);
+        } else {
+            fatal_error!("deallocated", "Root object is deallocated")
+        }
     }
 }
 
@@ -279,7 +313,11 @@ where
     T: crate::trace::Trace,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        self.inner.trace(t)
+        if let Some(ref c) = self.inner {
+            c.trace(t);
+        } else {
+            fatal_error!("deallocated", "Root object is deallocated")
+        }
     }
 }
 

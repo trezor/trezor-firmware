@@ -14,7 +14,6 @@ use crate::{
         shape::{self, Renderer},
     },
 };
-use core::mem;
 
 use crate::ui::{
     component::Label,
@@ -342,10 +341,6 @@ impl Component for Lockscreen<'_> {
         }
 
         if let Event::Touch(TouchEvent::TouchEnd(_)) = event {
-            let bg_img = mem::replace(&mut self.bg_image, None);
-            if let Some(bg_img) = bg_img {
-                drop(bg_img);
-            }
             return Some(HomescreenMsg::Dismissed);
         }
 

@@ -46,6 +46,9 @@ class RustLayout(LayoutParentType[T]):
         self._send_button_request()
         self.backlight_level = ui.BacklightLevels.NORMAL
 
+    def __del__(self):
+        self.layout.delete()
+
     def set_timer(self, token: int, deadline: int) -> None:
         self.timer.schedule(deadline, token)
 
