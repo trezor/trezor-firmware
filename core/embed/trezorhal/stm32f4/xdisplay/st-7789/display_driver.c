@@ -32,7 +32,10 @@
 #include "bg_copy.h"
 #endif
 
-#if (DISPLAY_RESX != 240) || (DISPLAY_RESY != 240)
+#define INTERNAL_FB_WIDTH 240
+#define INTERNAL_FB_HEIGHT 320
+
+#if (DISPLAY_RESX > INTERNAL_FB_WIDTH) || (DISPLAY_RESY > INTERNAL_FB_HEIGHT)
 #error "Incompatible display resolution"
 #endif
 
@@ -112,8 +115,9 @@ int display_set_orientation(int angle) {
       display_physical_fb_clear();
 #endif
 
-      display_panel_set_window(0, 0, DISPLAY_RESX - 1, DISPLAY_RESY - 1);
-      for (uint32_t i = 0; i < DISPLAY_RESX * DISPLAY_RESY; i++) {
+      display_panel_set_window(0, 0, INTERNAL_FB_WIDTH - 1,
+                               INTERNAL_FB_HEIGHT - 1);
+      for (uint32_t i = 0; i < INTERNAL_FB_WIDTH * INTERNAL_FB_HEIGHT; i++) {
         // 2 bytes per pixel because we're using RGB 5-6-5 format
         ISSUE_PIXEL_DATA(0x0000);
       }
