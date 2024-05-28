@@ -89,20 +89,32 @@ void DISPLAY_TE_INTERRUPT_HANDLER(void) {
   __HAL_GPIO_EXTI_CLEAR_FLAG(DISPLAY_TE_PIN);
 }
 
-static void wait_for_fb_switch(void) {
-  while (pending_fb_switch != 0) {
-    __WFI();
-  }
-  bg_copy_wait();
-}
-#endif
-
 static void copy_fb_to_display(const uint16_t *fb) {
   for (int i = 0; i < DISPLAY_RESX * DISPLAY_RESY; i++) {
     // 2 bytes per pixel because we're using RGB 5-6-5 format
     ISSUE_PIXEL_DATA(fb[i]);
   }
 }
+
+void wait_for_fb_switch(void) {
+  if (is_mode_handler()) {
+    if (pending_fb_switch != 0) {
+      if (current_frame_buffer == 0) {
+        copy_fb_to_display((uint16_t *)physical_frame_buffer_1);
+      } else {
+        copy_fb_to_display((uint16_t *)physical_frame_buffer_0);
+      }
+      pending_fb_switch = 0;
+    }
+  }else {
+    while (pending_fb_switch != 0) {
+      __WFI();
+    }
+    bg_copy_wait();
+  }
+}
+#endif
+
 
 static void switch_fb_manually(void) {
   // sync with the panel refresh
@@ -167,12 +179,14 @@ display_fb_info_t display_get_frame_buffer(void) {
 
 void display_refresh(void) {
 #ifndef BOARDLOADER
-  wait_for_fb_switch();
-  display_panel_set_window(0, 0, DISPLAY_RESX - 1, DISPLAY_RESY - 1);
 
   if (is_mode_handler()) {
+    display_panel_set_window(0, 0, DISPLAY_RESX - 1, DISPLAY_RESY - 1);
     switch_fb_manually();
+    //TODO we should abort any ongoing BG copy here
   } else {
+    wait_for_fb_switch();
+    display_panel_set_window(0, 0, DISPLAY_RESX - 1, DISPLAY_RESY - 1);
     switch_fb_in_background();
   }
 #else
