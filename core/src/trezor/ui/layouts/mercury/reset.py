@@ -9,9 +9,8 @@ from ..common import interact
 from . import RustLayout, raise_if_not_confirmed
 
 if TYPE_CHECKING:
+    pass
     from typing import Callable, Sequence
-
-    from trezor.enums import BackupType
 
 
 CONFIRMED = trezorui2.CONFIRMED  # global_import_cache
@@ -94,11 +93,11 @@ async def select_word(
 
 async def slip39_show_checklist(
     step: int,
-    backup_type: BackupType,
+    advanced: bool,
     count: int | None = None,
     threshold: int | None = None,
 ) -> None:
-    items = _slip_39_checklist_items(step, backup_type, count, threshold)
+    items = _slip_39_checklist_items(step, advanced, count, threshold)
     result = await interact(
         RustLayout(
             trezorui2.show_checklist(
@@ -117,15 +116,11 @@ async def slip39_show_checklist(
 
 def _slip_39_checklist_items(
     step: int,
-    backup_type: BackupType,
+    advanced: bool,
     count: int | None = None,
     threshold: int | None = None,
 ):
-    from trezor.enums import BackupType
-
-    assert backup_type in (BackupType.Slip39_Basic, BackupType.Slip39_Advanced)
-
-    if backup_type == BackupType.Slip39_Basic:
+    if not advanced:
         entry_1 = (
             TR.reset__slip39_checklist_num_shares_x_template.format(count)
             if count

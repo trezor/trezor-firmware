@@ -8,7 +8,7 @@ use crate::{
             FixedHeightBar,
         },
         display::{Color, Font, Icon},
-        geometry::{Insets, Offset},
+        geometry::Insets,
     },
 };
 

@@ -15,7 +15,6 @@ use crate::{
             constant,
             shapes::{render_loader, LoaderRange},
         },
-        shape,
         shape::Renderer,
         util::animation_disabled,
     },
@@ -111,7 +110,7 @@ impl Component for Progress {
         self.description.paint();
     }
 
-    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
         self.title.render(target);
 
         let center = constant::screen().center() + Offset::y(self.loader_y_offset);
@@ -120,17 +119,17 @@ impl Component for Progress {
         let inactive_color = theme::GREY_EXTRA_DARK;
 
         let range = if self.indeterminate {
-            let start = (self.value - 100) % 1000;
-            let end = (self.value + 100) % 1000;
-            let start = ((start as i32 * 8 * shape::PI4 as i32) / 1000) as i16;
-            let end = ((end as i32 * 8 * shape::PI4 as i32) / 1000) as i16;
+            let start = (self.value as i16 - 100) % 1000;
+            let end = (self.value as i16 + 100) % 1000;
+            let start = 360.0 * start as f32 / 1000.0;
+            let end = 360.0 * end as f32 / 1000.0;
             LoaderRange::FromTo(start, end)
         } else {
-            let end = ((self.value as i32 * 8 * shape::PI4 as i32) / 1000) as i16;
+            let end = 360.0 * self.value as f32 / 1000.0;
             if self.value >= LOADER_MAX {
                 LoaderRange::Full
             } else {
-                LoaderRange::FromTo(0, end)
+                LoaderRange::FromTo(0.0, end)
             }
         };
 
