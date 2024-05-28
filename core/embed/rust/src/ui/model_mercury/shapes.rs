@@ -2,7 +2,7 @@ use crate::ui::{display::Color, geometry::Point, model_mercury::constant, shape,
 
 pub enum LoaderRange {
     Full,
-    FromTo(i16, i16),
+    FromTo(f32, f32),
 }
 
 pub fn render_loader<'s>(

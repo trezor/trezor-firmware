@@ -106,7 +106,7 @@ impl Component for PromptScreen {
         todo!()
     }
 
-    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
         shape::Circle::new(self.area.center(), 70)
             .with_fg(self.circle_pad_color)
             .with_bg(theme::BLACK)

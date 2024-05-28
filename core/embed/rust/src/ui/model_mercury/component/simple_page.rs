@@ -169,7 +169,7 @@ where
         }
     }
 
-    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
         self.pad.render(target);
         self.content.render(target);
         if self.scrollbar.has_pages() {

@@ -67,11 +67,7 @@ impl<T: Component + Paginate + Clone> SwipePage<T> {
         finished
     }
 
-    fn render_transition<'s>(
-        &'s self,
-        transition: &'s Transition<T>,
-        target: &mut impl Renderer<'s>,
-    ) {
+    fn render_transition<'s>(&self, transition: &Transition<T>, target: &mut impl Renderer<'s>) {
         target.in_clip(self.bounds, &|target| {
             util::render_slide(
                 |target| transition.cloned.render(target),
@@ -110,7 +106,7 @@ impl<T: Component + Paginate + Clone> Component for SwipePage<T> {
         self.inner.paint()
     }
 
-    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
         if let Some(t) = &self.transition {
             return self.render_transition(t, target);
         }
@@ -201,7 +197,7 @@ impl<T: Component> Component for IgnoreSwipe<T> {
         self.0.paint()
     }
 
-    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
         self.0.render(target)
     }
 }

@@ -109,7 +109,7 @@ impl ConfirmOutput {
             .with_chunkify(chunkify)
             .with_text_mono(text_mono)
             .into_layout()?
-            .one_button_request(ButtonRequest::from_tstring(br_code, br_type));
+            .one_button_request(ButtonRequest::from_num(br_code, br_type));
 
         // Amount
         let content_amount = ConfirmBlobParams::new(TR::words__amount.into(), amount, None)
@@ -118,7 +118,7 @@ impl ConfirmOutput {
             .with_footer(TR::instructions__swipe_up.into(), None)
             .with_text_mono(text_mono)
             .into_layout()?
-            .one_button_request(ButtonRequest::from_tstring(br_code, br_type));
+            .one_button_request(ButtonRequest::from_num(br_code, br_type));
 
         // Menu
         let content_menu = Frame::left_aligned(
