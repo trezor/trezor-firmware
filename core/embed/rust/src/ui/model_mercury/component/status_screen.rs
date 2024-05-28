@@ -108,7 +108,7 @@ impl Component for StatusScreen {
         todo!()
     }
 
-    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
         shape::Circle::new(self.area.center(), 40)
             .with_fg(self.circle_color)
             .with_bg(theme::BLACK)

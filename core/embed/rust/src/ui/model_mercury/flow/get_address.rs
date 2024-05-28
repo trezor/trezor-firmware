@@ -171,7 +171,7 @@ impl GetAddress {
             .with_menu_button()
             .with_footer(TR::instructions__swipe_up.into(), None)
             .map(|msg| matches!(msg, FrameMsg::Button(_)).then_some(FlowMsg::Info))
-            .one_button_request(ButtonRequest::from_tstring(br_code, br_type))
+            .one_button_request(ButtonRequest::from_num(br_code, br_type))
             // Count tap-to-confirm screen towards page count
             .with_pages(|address_pages| address_pages + 1);
 

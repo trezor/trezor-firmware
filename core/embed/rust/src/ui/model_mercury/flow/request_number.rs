@@ -109,7 +109,7 @@ impl RequestNumber {
                 FrameMsg::Button(_) => Some(FlowMsg::Info),
                 FrameMsg::Content(NumberInputDialogMsg(n)) => Some(FlowMsg::Choice(n as usize)),
             })
-            .one_button_request(ButtonRequest::from_tstring(br_code, br_type));
+            .one_button_request(ButtonRequest::from_num(br_code, br_type));
 
         let content_menu = Frame::left_aligned(
             "".into(),
