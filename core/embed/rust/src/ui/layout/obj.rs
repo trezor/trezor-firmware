@@ -138,15 +138,18 @@ impl LayoutObj {
         let root =
             unsafe { Gc::from_raw(Gc::into_raw(Gc::new(wrapped_root)?) as *mut dyn ObjComponent) };
 
-        Gc::new_with_custom_finaliser(Self {
-            base: Self::obj_type().as_base(),
-            inner: RefCell::new(LayoutObjInner {
-                root,
-                event_ctx: EventCtx::new(),
-                timer_fn: Obj::const_none(),
-                page_count: 1,
-            }),
-        })
+        // SAFETY: This is a Python object and hase a base as first element
+        unsafe {
+            Gc::new_with_custom_finaliser(Self {
+                base: Self::obj_type().as_base(),
+                inner: RefCell::new(LayoutObjInner {
+                    root,
+                    event_ctx: EventCtx::new(),
+                    timer_fn: Obj::const_none(),
+                    page_count: 1,
+                }),
+            })
+        }
     }
 
     pub fn obj_delete(&self) {
