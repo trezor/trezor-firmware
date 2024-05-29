@@ -7,7 +7,7 @@ use crate::{
         component::{Component, Event, EventCtx, Pad},
         display::{self, toif::Icon, Color, LOADER_MAX},
         geometry::{Alignment2D, Offset, Rect},
-        model_mercury::shapes::{render_loader, LoaderRange},
+        model_mercury::cshape::{render_loader, LoaderRange},
         shape::{self, Renderer},
         util::animation_disabled,
     },
