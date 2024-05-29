@@ -19,10 +19,12 @@
 
 #include STM32_HAL_H
 
-#include "usb.h"
 #include "common.h"
 #include "random_delays.h"
+#include "secbool.h"
+#include "usb.h"
 #include "usbd_core.h"
+#include "usbd_internal.h"
 
 #define USB_MAX_CONFIG_DESC_SIZE 256
 #define USB_MAX_STR_SIZE 62
@@ -38,39 +40,51 @@
 #error Unable to determine proper USB_PHY_ID to use
 #endif
 
-#define USB_WINUSB_VENDOR_CODE \
-  '!'  // arbitrary, but must be equivalent to the last character in extra
-       // string
-#define USB_WINUSB_EXTRA_STRING                                                \
-  'M', 0x00, 'S', 0x00, 'F', 0x00, 'T', 0x00, '1', 0x00, '0', 0x00, '0', 0x00, \
-      USB_WINUSB_VENDOR_CODE, 0x00  // MSFT100!
-#define USB_WINUSB_EXTRA_STRING_INDEX 0xEE
-#define USB_WINUSB_REQ_GET_COMPATIBLE_ID_FEATURE_DESCRIPTOR 0x04
-#define USB_WINUSB_REQ_GET_EXTENDED_PROPERTIES_OS_FEATURE_DESCRIPTOR 0x05
+typedef struct {
+  const char *manufacturer;
+  const char *product;
+  const char *serial_number;
+  const char *interface;
+} usb_dev_string_table_t;
 
-#define UNCONST(X) ((uint8_t *)(X))
+typedef struct {
+  // USB class dispatch table
+  const USBD_ClassTypeDef *class;
+  // Internal state for USB class driver
+  uint8_t state[USBD_CLASS_STATE_MAX_SIZE] __attribute__((aligned(8)));
+} usb_iface_t;
 
-static usb_device_descriptor_t usb_dev_desc;
+typedef struct {
+  // Handle to the USB device (lower layer driver)
+  USBD_HandleTypeDef dev_handle;
+  // Device descriptor
+  usb_device_descriptor_t dev_desc;
+  // Device string descriptors
+  usb_dev_string_table_t str_table;
+  // Interfaces of registered class drivers
+  // (each class driver must add 1 or more interfaces)
+  usb_iface_t ifaces[USBD_MAX_NUM_INTERFACES];
+  // Buffer for configuration descriptor and additional descriptors
+  // (interface, endpoint, ..) added by registered class drivers
+  uint8_t config_buf[USB_MAX_CONFIG_DESC_SIZE] __attribute__((aligned(4)));
+  // Pointer to the first unused byte in the config_buf
+  usb_interface_descriptor_t *next_iface_desc;
+  // Configuration descriptor (located at the beginning of the config_buf)
+  usb_config_descriptor_t *config_desc;
+  // Temporary buffer for unicode strings
+  uint8_t str_buf[USB_MAX_STR_DESC_SIZE] __attribute__((aligned(4)));
 
-// Config descriptor
-static uint8_t usb_config_buf[USB_MAX_CONFIG_DESC_SIZE]
-    __attribute__((aligned(4)));
-static usb_config_descriptor_t *usb_config_desc =
-    (usb_config_descriptor_t *)(usb_config_buf);
-static usb_interface_descriptor_t *usb_next_iface_desc;
+  secbool usb21_enabled;
+  secbool usb21_landing;
 
-// String descriptor
-static uint8_t usb_str_buf[USB_MAX_STR_DESC_SIZE] __attribute__((aligned(4)));
-static usb_dev_string_table_t usb_str_table;
+} usb_driver_t;
 
-static usb_iface_t usb_ifaces[USBD_MAX_NUM_INTERFACES];
+// USB driver instance
+static usb_driver_t g_usb_driver;
 
-static USBD_HandleTypeDef usb_dev_handle;
-static const USBD_DescriptorsTypeDef usb_descriptors;
+// forward declarations of dispatch functions
 static const USBD_ClassTypeDef usb_class;
-
-static secbool usb21_enabled = secfalse;
-static secbool usb21_landing = secfalse;
+static const USBD_DescriptorsTypeDef usb_descriptors;
 
 static secbool __wur check_desc_str(const char *s) {
   if (NULL == s) return secfalse;
@@ -79,28 +93,30 @@ static secbool __wur check_desc_str(const char *s) {
 }
 
 void usb_init(const usb_dev_info_t *dev_info) {
+  usb_driver_t *usb = &g_usb_driver;
+
   // enable/disable USB 2.1 features
-  usb21_enabled = dev_info->usb21_enabled;
-  usb21_landing = dev_info->usb21_landing;
+  usb->usb21_enabled = dev_info->usb21_enabled;
+  usb->usb21_landing = dev_info->usb21_landing;
 
   // Device descriptor
-  usb_dev_desc.bLength = sizeof(usb_device_descriptor_t);
-  usb_dev_desc.bDescriptorType = USB_DESC_TYPE_DEVICE;
-  usb_dev_desc.bcdUSB =
-      (sectrue == usb21_enabled) ? 0x0210 : 0x0200;  // USB 2.1 or USB 2.0
-  usb_dev_desc.bDeviceClass = dev_info->device_class;
-  usb_dev_desc.bDeviceSubClass = dev_info->device_subclass;
-  usb_dev_desc.bDeviceProtocol = dev_info->device_protocol;
-  usb_dev_desc.bMaxPacketSize0 = USB_MAX_EP0_SIZE;
-  usb_dev_desc.idVendor = dev_info->vendor_id;
-  usb_dev_desc.idProduct = dev_info->product_id;
-  usb_dev_desc.bcdDevice = dev_info->release_num;
-  usb_dev_desc.iManufacturer =
-      USBD_IDX_MFC_STR;                          // Index of manufacturer string
-  usb_dev_desc.iProduct = USBD_IDX_PRODUCT_STR;  // Index of product string
-  usb_dev_desc.iSerialNumber =
+  usb->dev_desc.bLength = sizeof(usb_device_descriptor_t);
+  usb->dev_desc.bDescriptorType = USB_DESC_TYPE_DEVICE;
+  usb->dev_desc.bcdUSB =
+      (sectrue == usb->usb21_enabled) ? 0x0210 : 0x0200;  // USB 2.1 or USB 2.0
+  usb->dev_desc.bDeviceClass = dev_info->device_class;
+  usb->dev_desc.bDeviceSubClass = dev_info->device_subclass;
+  usb->dev_desc.bDeviceProtocol = dev_info->device_protocol;
+  usb->dev_desc.bMaxPacketSize0 = USB_MAX_EP0_SIZE;
+  usb->dev_desc.idVendor = dev_info->vendor_id;
+  usb->dev_desc.idProduct = dev_info->product_id;
+  usb->dev_desc.bcdDevice = dev_info->release_num;
+  usb->dev_desc.iManufacturer =
+      USBD_IDX_MFC_STR;  // Index of manufacturer string
+  usb->dev_desc.iProduct = USBD_IDX_PRODUCT_STR;  // Index of product string
+  usb->dev_desc.iSerialNumber =
       USBD_IDX_SERIAL_STR;  // Index of serial number string
-  usb_dev_desc.bNumConfigurations = 1;
+  usb->dev_desc.bNumConfigurations = 1;
 
   // String table
   ensure(check_desc_str(dev_info->manufacturer), NULL);
@@ -108,57 +124,71 @@ void usb_init(const usb_dev_info_t *dev_info) {
   ensure(check_desc_str(dev_info->serial_number), NULL);
   ensure(check_desc_str(dev_info->interface), NULL);
 
-  usb_str_table.manufacturer = dev_info->manufacturer;
-  usb_str_table.product = dev_info->product;
-  usb_str_table.serial_number = dev_info->serial_number;
-  usb_str_table.interface = dev_info->interface;
+  usb->str_table.manufacturer = dev_info->manufacturer;
+  usb->str_table.product = dev_info->product;
+  usb->str_table.serial_number = dev_info->serial_number;
+  usb->str_table.interface = dev_info->interface;
+
+  usb->config_desc = (usb_config_descriptor_t *)(usb->config_buf);
 
   // Configuration descriptor
-  usb_config_desc->bLength = sizeof(usb_config_descriptor_t);
-  usb_config_desc->bDescriptorType = USB_DESC_TYPE_CONFIGURATION;
-  usb_config_desc->wTotalLength =
+  usb->config_desc->bLength = sizeof(usb_config_descriptor_t);
+  usb->config_desc->bDescriptorType = USB_DESC_TYPE_CONFIGURATION;
+  usb->config_desc->wTotalLength =
       sizeof(usb_config_descriptor_t);  // will be updated later via
                                         // usb_desc_add_iface()
-  usb_config_desc->bNumInterfaces =
+  usb->config_desc->bNumInterfaces =
       0;  // will be updated later via usb_desc_add_iface()
-  usb_config_desc->bConfigurationValue = 0x01;
-  usb_config_desc->iConfiguration = 0;
-  usb_config_desc->bmAttributes =
-      0x80;                           // 0x80 = bus powered; 0xC0 = self powered
-  usb_config_desc->bMaxPower = 0x32;  // Maximum Power Consumption in 2mA units
+  usb->config_desc->bConfigurationValue = 0x01;
+  usb->config_desc->iConfiguration = 0;
+  usb->config_desc->bmAttributes =
+      0x80;  // 0x80 = bus powered; 0xC0 = self powered
+  usb->config_desc->bMaxPower = 0x32;  // Maximum Power Consumption in 2mA units
 
   // Pointer to interface descriptor data
-  usb_next_iface_desc =
-      (usb_interface_descriptor_t *)(usb_config_buf +
-                                     usb_config_desc->wTotalLength);
+  usb->next_iface_desc =
+      (usb_interface_descriptor_t *)(usb->config_buf +
+                                     usb->config_desc->wTotalLength);
 
   ensure(sectrue *
-             (USBD_OK == USBD_Init(&usb_dev_handle,
+             (USBD_OK == USBD_Init(&usb->dev_handle,
                                    (USBD_DescriptorsTypeDef *)&usb_descriptors,
                                    USB_PHY_ID)),
          NULL);
   ensure(sectrue *
-             (USBD_OK == USBD_RegisterClass(&usb_dev_handle,
+             (USBD_OK == USBD_RegisterClass(&usb->dev_handle,
                                             (USBD_ClassTypeDef *)&usb_class)),
          NULL);
 }
 
 void usb_deinit(void) {
-  USBD_DeInit(&usb_dev_handle);
+  usb_driver_t *usb = &g_usb_driver;
+
+  USBD_DeInit(&usb->dev_handle);
   for (int i = 0; i < USBD_MAX_NUM_INTERFACES; i++) {
-    usb_ifaces[i].type = USB_IFACE_TYPE_DISABLED;
+    usb->ifaces[i].class = NULL;
   }
 }
 
-void usb_start(void) { USBD_Start(&usb_dev_handle); }
+void usb_start(void) {
+  usb_driver_t *usb = &g_usb_driver;
 
-void usb_stop(void) { USBD_Stop(&usb_dev_handle); }
+  USBD_Start(&usb->dev_handle);
+}
+
+void usb_stop(void) {
+  usb_driver_t *usb = &g_usb_driver;
+
+  USBD_Stop(&usb->dev_handle);
+}
 
 secbool usb_configured(void) {
+  usb_driver_t *usb = &g_usb_driver;
+
   static uint32_t usb_configured_last_ok = 0;
   uint32_t ticks = hal_ticks_ms();
 
-  const USBD_HandleTypeDef *pdev = &usb_dev_handle;
+  const USBD_HandleTypeDef *pdev = &usb->dev_handle;
   if (pdev->dev_state == USBD_STATE_CONFIGURED) {
     usb_configured_last_ok = hal_ticks_ms();
     return sectrue;
@@ -189,50 +219,69 @@ secbool usb_configured(void) {
   return secfalse;
 }
 
-/*
- * Utility functions for USB interfaces
- */
+// ==========================================================================
+// Utility functions for USB class drivers
+// ==========================================================================
 
-static usb_iface_t *usb_get_iface(uint8_t iface_num) {
+void *usb_get_iface_state(uint8_t iface_num, const USBD_ClassTypeDef *class) {
+  usb_driver_t *usb = &g_usb_driver;
+
   if (iface_num < USBD_MAX_NUM_INTERFACES) {
-    return &usb_ifaces[iface_num];
-  } else {
-    return NULL;  // Invalid interface number
+    usb_iface_t *iface = &usb->ifaces[iface_num];
+
+    if (iface->class == class) {
+      return &iface->state;
+    }
+  }
+
+  // Invalid interface number or type
+  return NULL;
+}
+
+void usb_set_iface_class(uint8_t iface_num, const USBD_ClassTypeDef *class) {
+  usb_driver_t *usb = &g_usb_driver;
+
+  if (iface_num < USBD_MAX_NUM_INTERFACES) {
+    usb->ifaces[iface_num].class = class;
   }
 }
 
-static void *usb_desc_alloc_iface(size_t desc_len) {
-  if (usb_config_desc->wTotalLength + desc_len < USB_MAX_CONFIG_DESC_SIZE) {
-    return usb_next_iface_desc;
+USBD_HandleTypeDef *usb_get_dev_handle(void) {
+  usb_driver_t *usb = &g_usb_driver;
+
+  return &usb->dev_handle;
+}
+
+void *usb_desc_alloc_iface(size_t desc_len) {
+  usb_driver_t *usb = &g_usb_driver;
+
+  if (usb->config_desc->wTotalLength + desc_len < USB_MAX_CONFIG_DESC_SIZE) {
+    return usb->next_iface_desc;
   } else {
     return NULL;  // Not enough space in the descriptor
   }
 }
 
-static void usb_desc_add_iface(size_t desc_len) {
-  usb_config_desc->bNumInterfaces++;
-  usb_config_desc->wTotalLength += desc_len;
-  usb_next_iface_desc =
-      (usb_interface_descriptor_t *)(usb_config_buf +
-                                     usb_config_desc->wTotalLength);
+void usb_desc_add_iface(size_t desc_len, uint8_t num_ifaces) {
+  usb_driver_t *usb = &g_usb_driver;
+
+  usb->config_desc->bNumInterfaces += num_ifaces;
+  usb->config_desc->wTotalLength += desc_len;
+  usb->next_iface_desc =
+      (usb_interface_descriptor_t *)(usb->config_buf +
+                                     usb->config_desc->wTotalLength);
 }
 
-/*
- * USB interface implementations
- */
-
-#include "usb_hid-impl.h"
-#include "usb_vcp-impl.h"
-#include "usb_webusb-impl.h"
-
-/*
- * USB configuration (device & string descriptors)
- */
+// ==========================================================================
+// USB configuration (device & string descriptors)
+// ==========================================================================
 
 static uint8_t *usb_get_dev_descriptor(USBD_SpeedTypeDef speed,
                                        uint16_t *length) {
-  *length = sizeof(usb_dev_desc);
-  return (uint8_t *)(&usb_dev_desc);
+  usb_driver_t *usb = &g_usb_driver;
+
+  *length = sizeof(usb->dev_desc);
+  return (uint8_t *)(&usb->dev_desc);
 }
 
 static uint8_t *usb_get_langid_str_descriptor(USBD_SpeedTypeDef speed,
@@ -248,37 +297,49 @@ static uint8_t *usb_get_langid_str_descriptor(USBD_SpeedTypeDef speed,
 
 static uint8_t *usb_get_manufacturer_str_descriptor(USBD_SpeedTypeDef speed,
                                                     uint16_t *length) {
-  USBD_GetString((uint8_t *)usb_str_table.manufacturer, usb_str_buf, length);
-  return usb_str_buf;
+  usb_driver_t *usb = &g_usb_driver;
+
+  USBD_GetString((uint8_t *)usb->str_table.manufacturer, usb->str_buf, length);
+  return usb->str_buf;
 }
 
 static uint8_t *usb_get_product_str_descriptor(USBD_SpeedTypeDef speed,
                                                uint16_t *length) {
-  USBD_GetString((uint8_t *)usb_str_table.product, usb_str_buf, length);
-  return usb_str_buf;
+  usb_driver_t *usb = &g_usb_driver;
+
+  USBD_GetString((uint8_t *)usb->str_table.product, usb->str_buf, length);
+  return usb->str_buf;
 }
 
 static uint8_t *usb_get_serial_str_descriptor(USBD_SpeedTypeDef speed,
                                               uint16_t *length) {
-  USBD_GetString((uint8_t *)usb_str_table.serial_number, usb_str_buf, length);
-  return usb_str_buf;
+  usb_driver_t *usb = &g_usb_driver;
+
+  USBD_GetString((uint8_t *)usb->str_table.serial_number, usb->str_buf, length);
+  return usb->str_buf;
 }
 
 static uint8_t *usb_get_configuration_str_descriptor(USBD_SpeedTypeDef speed,
                                                      uint16_t *length) {
-  USBD_GetString((uint8_t *)"", usb_str_buf, length);
-  return usb_str_buf;
+  usb_driver_t *usb = &g_usb_driver;
+
+  USBD_GetString((uint8_t *)"", usb->str_buf, length);
+  return usb->str_buf;
 }
 
 static uint8_t *usb_get_interface_str_descriptor(USBD_SpeedTypeDef speed,
                                                  uint16_t *length) {
-  USBD_GetString((uint8_t *)usb_str_table.interface, usb_str_buf, length);
-  return usb_str_buf;
+  usb_driver_t *usb = &g_usb_driver;
+
+  USBD_GetString((uint8_t *)usb->str_table.interface, usb->str_buf, length);
+  return usb->str_buf;
 }
 
 static uint8_t *usb_get_bos_descriptor(USBD_SpeedTypeDef speed,
                                        uint16_t *length) {
-  if (sectrue == usb21_enabled) {
+  usb_driver_t *usb = &g_usb_driver;
+
+  if (sectrue == usb->usb21_enabled) {
     static uint8_t bos[] = {
         // usb_bos_descriptor {
         0x05,               // uint8_t  bLength
@@ -298,7 +359,7 @@ static uint8_t *usb_get_bos_descriptor(USBD_SpeedTypeDef speed,
         USB_WEBUSB_LANDING_PAGE,  // uint8_t  iLandingPage
                                   // }
     };
-    bos[28] = (sectrue == usb21_landing) ? USB_WEBUSB_LANDING_PAGE : 0;
+    bos[28] = (sectrue == usb->usb21_landing) ? USB_WEBUSB_LANDING_PAGE : 0;
     *length = sizeof(bos);
     return UNCONST(bos);
   } else {
@@ -318,45 +379,49 @@ static const USBD_DescriptorsTypeDef usb_descriptors = {
     .GetBOSDescriptor = usb_get_bos_descriptor,
 };
 
-/*
- * USB class (interface dispatch, configuration descriptor)
- */
+// ==========================================================================
+// USB class (interface dispatch, configuration descriptor)
+// ==========================================================================
+
+#define USB_WINUSB_VENDOR_CODE \
+  '!'  // arbitrary, but must be equivalent to the last character in extra
+       // string
+#define USB_WINUSB_EXTRA_STRING                                                \
+  'M', 0x00, 'S', 0x00, 'F', 0x00, 'T', 0x00, '1', 0x00, '0', 0x00, '0', 0x00, \
+      USB_WINUSB_VENDOR_CODE, 0x00  // MSFT100!
+#define USB_WINUSB_EXTRA_STRING_INDEX 0xEE
+#define USB_WINUSB_REQ_GET_COMPATIBLE_ID_FEATURE_DESCRIPTOR 0x04
+#define USB_WINUSB_REQ_GET_EXTENDED_PROPERTIES_OS_FEATURE_DESCRIPTOR 0x05
 
 static uint8_t usb_class_init(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
+  usb_driver_t *usb = &g_usb_driver;
+
   for (int i = 0; i < USBD_MAX_NUM_INTERFACES; i++) {
-    switch (usb_ifaces[i].type) {
-      case USB_IFACE_TYPE_HID:
-        usb_hid_class_init(dev, &usb_ifaces[i].hid, cfg_idx);
-        break;
-      case USB_IFACE_TYPE_VCP:
-        usb_vcp_class_init(dev, &usb_ifaces[i].vcp, cfg_idx);
-        break;
-      case USB_IFACE_TYPE_WEBUSB:
-        usb_webusb_class_init(dev, &usb_ifaces[i].webusb, cfg_idx);
-        break;
-      default:
-        break;
+    usb_iface_t *iface = &usb->ifaces[i];
+    if (iface->class != NULL && iface->class->Init != NULL) {
+      dev->pUserData = iface->state;
+      iface->class->Init(dev, cfg_idx);
     }
   }
+
+  dev->pUserData = NULL;
+
   return USBD_OK;
 }
 
 static uint8_t usb_class_deinit(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
+  usb_driver_t *usb = &g_usb_driver;
+
   for (int i = 0; i < USBD_MAX_NUM_INTERFACES; i++) {
-    switch (usb_ifaces[i].type) {
-      case USB_IFACE_TYPE_HID:
-        usb_hid_class_deinit(dev, &usb_ifaces[i].hid, cfg_idx);
-        break;
-      case USB_IFACE_TYPE_VCP:
-        usb_vcp_class_deinit(dev, &usb_ifaces[i].vcp, cfg_idx);
-        break;
-      case USB_IFACE_TYPE_WEBUSB:
-        usb_webusb_class_deinit(dev, &usb_ifaces[i].webusb, cfg_idx);
-        break;
-      default:
-        break;
+    usb_iface_t *iface = &usb->ifaces[i];
+    if (iface->class != NULL && iface->class->DeInit != NULL) {
+      dev->pUserData = iface->state;
+      iface->class->DeInit(dev, cfg_idx);
     }
   }
+
+  dev->pUserData = NULL;
+
   return USBD_OK;
 }
 
@@ -367,6 +432,8 @@ static uint8_t usb_class_deinit(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
 
 static uint8_t usb_class_setup(USBD_HandleTypeDef *dev,
                                USBD_SetupReqTypedef *req) {
+  usb_driver_t *usb = &g_usb_driver;
+
   if (((req->bmRequest & USB_REQ_TYPE_MASK) != USB_REQ_TYPE_CLASS) &&
       ((req->bmRequest & USB_REQ_TYPE_MASK) != USB_REQ_TYPE_STANDARD) &&
       ((req->bmRequest & USB_REQ_TYPE_MASK) != USB_REQ_TYPE_VENDOR)) {
@@ -375,7 +442,8 @@ static uint8_t usb_class_setup(USBD_HandleTypeDef *dev,
 
   if ((req->bmRequest & USB_REQ_TYPE_MASK) == USB_REQ_TYPE_VENDOR) {
     if ((req->bmRequest & USB_REQ_RECIPIENT_MASK) == USB_REQ_RECIPIENT_DEVICE) {
-      if (sectrue == usb21_enabled && req->bRequest == USB_WEBUSB_VENDOR_CODE) {
+      if (sectrue == usb->usb21_enabled &&
+          req->bRequest == USB_WEBUSB_VENDOR_CODE) {
         if (req->wIndex == USB_WEBUSB_REQ_GET_URL &&
             req->wValue == USB_WEBUSB_LANDING_PAGE) {
           static const char webusb_url[] = {
@@ -407,7 +475,7 @@ static uint8_t usb_class_setup(USBD_HandleTypeDef *dev,
           USBD_CtlError(dev, req);
           return USBD_FAIL;
         }
-      } else if (sectrue == usb21_enabled &&
+      } else if (sectrue == usb->usb21_enabled &&
                  req->bRequest == USB_WINUSB_VENDOR_CODE) {
         if (req->wIndex ==
             USB_WINUSB_REQ_GET_COMPATIBLE_ID_FEATURE_DESCRIPTOR) {
@@ -440,7 +508,8 @@ static uint8_t usb_class_setup(USBD_HandleTypeDef *dev,
     }
     if ((req->bmRequest & USB_REQ_RECIPIENT_MASK) ==
         USB_REQ_RECIPIENT_INTERFACE) {
-      if (sectrue == usb21_enabled && req->bRequest == USB_WINUSB_VENDOR_CODE) {
+      if (sectrue == usb->usb21_enabled &&
+          req->bRequest == USB_WINUSB_VENDOR_CODE) {
         if (req->wIndex ==
                 USB_WINUSB_REQ_GET_EXTENDED_PROPERTIES_OS_FEATURE_DESCRIPTOR &&
             (req->wValue & 0xFF) == 0) {  // reply only if interface is 0
@@ -485,88 +554,89 @@ static uint8_t usb_class_setup(USBD_HandleTypeDef *dev,
       USBD_CtlError(dev, req);
       return USBD_FAIL;
     }
-    switch (usb_ifaces[req->wIndex].type) {
-      case USB_IFACE_TYPE_HID:
-        return usb_hid_class_setup(dev, &usb_ifaces[req->wIndex].hid, req);
-      case USB_IFACE_TYPE_VCP:
-        return usb_vcp_class_setup(dev, &usb_ifaces[req->wIndex].vcp, req);
-      case USB_IFACE_TYPE_WEBUSB:
-        return usb_webusb_class_setup(dev, &usb_ifaces[req->wIndex].webusb,
-                                      req);
-      default:
-        wait_random();
-        USBD_CtlError(dev, req);
-        return USBD_FAIL;
+
+    usb_iface_t *iface = &usb->ifaces[req->wIndex];
+    if (iface->class != NULL && iface->class->Setup != NULL) {
+      dev->pUserData = iface->state;
+      iface->class->Setup(dev, req);
+      dev->pUserData = NULL;
+    } else {
+      wait_random();
+      USBD_CtlError(dev, req);
+      return USBD_FAIL;
     }
   }
   return USBD_OK;
 }
 
 static uint8_t usb_class_data_in(USBD_HandleTypeDef *dev, uint8_t ep_num) {
+  usb_driver_t *usb = &g_usb_driver;
+
 #ifdef RDI
   rdi_refresh_session_delay();
 #endif
+
   for (int i = 0; i < USBD_MAX_NUM_INTERFACES; i++) {
-    switch (usb_ifaces[i].type) {
-      case USB_IFACE_TYPE_HID:
-        usb_hid_class_data_in(dev, &usb_ifaces[i].hid, ep_num);
-        break;
-      case USB_IFACE_TYPE_VCP:
-        usb_vcp_class_data_in(dev, &usb_ifaces[i].vcp, ep_num);
-        break;
-      case USB_IFACE_TYPE_WEBUSB:
-        usb_webusb_class_data_in(dev, &usb_ifaces[i].webusb, ep_num);
-        break;
-      default:
-        break;
+    usb_iface_t *iface = &usb->ifaces[i];
+    if (iface->class != NULL && iface->class->DataIn != NULL) {
+      dev->pUserData = iface->state;
+      iface->class->DataIn(dev, ep_num);
     }
   }
+
+  dev->pUserData = NULL;
+
   return USBD_OK;
 }
 
 static uint8_t usb_class_data_out(USBD_HandleTypeDef *dev, uint8_t ep_num) {
+  usb_driver_t *usb = &g_usb_driver;
+
 #ifdef RDI
   rdi_refresh_session_delay();
 #endif
+
   for (int i = 0; i < USBD_MAX_NUM_INTERFACES; i++) {
-    switch (usb_ifaces[i].type) {
-      case USB_IFACE_TYPE_HID:
-        usb_hid_class_data_out(dev, &usb_ifaces[i].hid, ep_num);
-        break;
-      case USB_IFACE_TYPE_VCP:
-        usb_vcp_class_data_out(dev, &usb_ifaces[i].vcp, ep_num);
-        break;
-      case USB_IFACE_TYPE_WEBUSB:
-        usb_webusb_class_data_out(dev, &usb_ifaces[i].webusb, ep_num);
-        break;
-      default:
-        break;
+    usb_iface_t *iface = &usb->ifaces[i];
+    if (iface->class != NULL && iface->class->DataOut != NULL) {
+      dev->pUserData = iface->state;
+      iface->class->DataOut(dev, ep_num);
     }
   }
+
+  dev->pUserData = NULL;
+
   return USBD_OK;
 }
 
 static uint8_t usb_class_sof(USBD_HandleTypeDef *dev) {
+  usb_driver_t *usb = &g_usb_driver;
+
   for (int i = 0; i < USBD_MAX_NUM_INTERFACES; i++) {
-    switch (usb_ifaces[i].type) {
-      case USB_IFACE_TYPE_VCP:
-        usb_vcp_class_sof(dev, &usb_ifaces[i].vcp);
-        break;
-      default:
-        break;
+    usb_iface_t *iface = &usb->ifaces[i];
+    if (iface->class != NULL && iface->class->SOF != NULL) {
+      dev->pUserData = iface->state;
+      iface->class->SOF(dev);
     }
   }
+
+  dev->pUserData = NULL;
+
   return USBD_OK;
 }
 
 static uint8_t *usb_class_get_cfg_desc(uint16_t *length) {
-  *length = usb_config_desc->wTotalLength;
-  return usb_config_buf;
+  usb_driver_t *usb = &g_usb_driver;
+
+  *length = usb->config_desc->wTotalLength;
+  return usb->config_buf;
 }
 
 static uint8_t *usb_class_get_usrstr_desc(USBD_HandleTypeDef *dev,
                                           uint8_t index, uint16_t *length) {
-  if (sectrue == usb21_enabled && index == USB_WINUSB_EXTRA_STRING_INDEX) {
+  usb_driver_t *usb = &g_usb_driver;
+
+  if (sectrue == usb->usb21_enabled && index == USB_WINUSB_EXTRA_STRING_INDEX) {
     static const uint8_t winusb_string_descriptor[] = {
         0x12,                    // bLength
         USB_DESC_TYPE_STRING,    // bDescriptorType

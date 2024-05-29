@@ -32,6 +32,13 @@
 
 #include "memzero.h"
 
+typedef enum {
+  USB_IFACE_TYPE_DISABLED = 0,
+  USB_IFACE_TYPE_VCP = 1,
+  USB_IFACE_TYPE_HID = 2,
+  USB_IFACE_TYPE_WEBUSB = 3,
+} usb_iface_type_t;
+
 void __attribute__((noreturn))
 __fatal_error(const char *expr, const char *msg, const char *file, int line,
               const char *func);
