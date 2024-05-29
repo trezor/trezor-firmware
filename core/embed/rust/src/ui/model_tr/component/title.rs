@@ -135,7 +135,7 @@ impl Component for Title {
         }
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         if self.needs_marquee {
             self.marquee.render(target);
         } else if self.centered {

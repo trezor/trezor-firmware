@@ -325,7 +325,7 @@ impl Component for PinEntry<'_> {
         self.choice_page.paint();
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.header_line.render(target);
         self.pin_line.render(target);
         self.choice_page.render(target);

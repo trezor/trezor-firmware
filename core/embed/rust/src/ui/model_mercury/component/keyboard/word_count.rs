@@ -67,7 +67,7 @@ impl Component for SelectWordCount {
         }
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         for btn in self.button.iter() {
             btn.render(target)
         }

@@ -154,7 +154,7 @@ impl Component for Progress {
         self.description.paint();
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.title.render(target);
 
         let area = constant::screen();

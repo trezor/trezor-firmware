@@ -97,7 +97,7 @@ impl Component for ResultFooter<'_> {
         self.text.paint();
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         // divider line
         let bar = Rect::from_center_and_size(
             Point::new(self.area.center().x, self.area.y0),
@@ -182,7 +182,7 @@ impl<'a> Component for ResultScreen<'a> {
         self.footer.paint();
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.bg.render(target);
         self.footer_pad.render(target);
 

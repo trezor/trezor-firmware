@@ -136,7 +136,7 @@ impl Component for Label<'_> {
         self.text.map(|c| self.layout.render_text(c));
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.text.map(|c| self.layout.render_text2(c, target));
     }
 

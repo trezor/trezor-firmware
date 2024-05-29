@@ -124,7 +124,7 @@ impl Marquee {
             .map(|t| display::marquee(self.area, t, offset, self.font, self.fg, self.bg));
     }
 
-    pub fn render_anim<'s>(&self, target: &mut impl Renderer<'s>, offset: i16) {
+    pub fn render_anim<'s>(&'s self, target: &mut impl Renderer<'s>, offset: i16) {
         target.in_window(self.area, &|target| {
             let text_height = self.font.text_height();
             let pos = self.area.top_left() + Offset::new(offset, text_height - 1);
@@ -228,7 +228,7 @@ impl Component for Marquee {
         }
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let now = Instant::now();
 
         match self.state {

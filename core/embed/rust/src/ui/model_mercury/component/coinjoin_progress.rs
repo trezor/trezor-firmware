@@ -124,7 +124,7 @@ where
         self.label.paint();
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.content.render(target);
 
         let center = constant::screen().center() + Offset::y(LOADER_OFFSET);

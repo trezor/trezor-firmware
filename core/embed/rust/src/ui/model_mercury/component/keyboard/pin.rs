@@ -237,7 +237,7 @@ impl Component for PinKeyboard<'_> {
         todo!("remove when ui-t3t1 done");
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.erase_btn.render(target);
         self.textbox_pad.render(target);
 
@@ -433,7 +433,7 @@ impl Component for PinDots {
         // TODO: remove when ui-t3t1 done
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let dot_area = self.area.inset(HEADER_PADDING);
         self.pad.render(target);
         if self.display_digits {

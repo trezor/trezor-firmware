@@ -204,7 +204,7 @@ impl Component for Loader {
         }
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         // TODO: Consider passing the current instant along with the event -- that way,
         // we could synchronize painting across the component tree. Also could be useful
         // in automated tests.

@@ -176,7 +176,7 @@ where
         self.content.paint();
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.title.render(target);
         self.subtitle.render(target);
         self.button.render(target);

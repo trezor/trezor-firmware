@@ -241,7 +241,7 @@ impl Component for Confirm<'_> {
         }
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.bg.render(target);
         self.content_pad.render(target);
 

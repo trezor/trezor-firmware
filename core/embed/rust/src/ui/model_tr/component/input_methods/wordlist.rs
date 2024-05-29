@@ -316,7 +316,7 @@ impl Component for WordlistEntry {
         self.choice_page.paint();
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.chosen_letters.render(target);
         self.choice_page.render(target);
     }

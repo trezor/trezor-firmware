@@ -97,7 +97,7 @@ where
         todo!("remove when ui-t3t1 done");
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.input.render(target);
         self.paragraphs_pad.render(target);
         self.paragraphs.render(target);
@@ -212,7 +212,7 @@ impl Component for NumberInput {
         todo!("remove when ui-t3t1 done");
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let mut buf = [0u8; 10];
 
         if let Some(text) = strutil::format_i64(self.value as i64, &mut buf) {

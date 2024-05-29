@@ -48,7 +48,7 @@ impl Component for Jpeg {
         }
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         shape::JpegImage::new_image(self.area.center(), self.image)
             .with_align(Alignment2D::CENTER)
             .with_scale(self.scale)

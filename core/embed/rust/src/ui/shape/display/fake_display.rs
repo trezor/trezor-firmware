@@ -1,11 +1,13 @@
 use crate::ui::{
     display::Color,
-    shape::{DirectRenderer, Mono8Canvas, Viewport},
+    shape::{render::ScopedRenderer, DirectRenderer, Mono8Canvas, Viewport},
 };
 
-pub fn render_on_display<F>(_viewport: Option<Viewport>, _bg_color: Option<Color>, _func: F)
+type ConcreteRenderer<'a, 'alloc> = DirectRenderer<'a, 'alloc, Mono8Canvas<'alloc>>;
+
+pub fn render_on_display<'env, F>(_viewport: Option<Viewport>, _bg_color: Option<Color>, _func: F)
 where
-    F: for<'a> FnOnce(&mut DirectRenderer<'_, 'a, Mono8Canvas<'a>>),
+    F: for<'alloc> FnOnce(&mut ScopedRenderer<'alloc, 'env, ConcreteRenderer<'_, 'alloc>>),
 {
     unimplemented!();
 }

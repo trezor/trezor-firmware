@@ -177,7 +177,7 @@ impl Component for AddressDetails {
         }
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         match self.current_page {
             0 => self.qr_code.render(target),
             1 => self.details.render(target),

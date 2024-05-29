@@ -76,7 +76,7 @@ impl Component for WelcomeScreen {
         );
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let logo = if self.empty_lock {
             theme::ICON_LOGO_EMPTY
         } else {

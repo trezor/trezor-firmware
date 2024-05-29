@@ -41,7 +41,7 @@ impl<T: Component> Component for OneButtonRequest<T> {
         self.inner.paint()
     }
 
-    fn render<'s>(&self, target: &mut impl crate::ui::shape::Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl crate::ui::shape::Renderer<'s>) {
         self.inner.render(target)
     }
 }
