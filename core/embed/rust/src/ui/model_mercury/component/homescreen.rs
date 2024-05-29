@@ -24,6 +24,7 @@ use crate::ui::{
     },
     shape::{render_on_canvas, ImageBuffer, Rgb565Canvas},
 };
+use crate::ui::shape::RawImage;
 
 use super::{theme, Loader, LoaderMsg};
 
@@ -288,23 +289,27 @@ impl LockscreenAnim {
     }
 }
 
-pub struct Lockscreen<'a> {
+pub struct Lockscreen {
     anim: LockscreenAnim,
-    label: TString<'a>,
+    label: TString<'static>,
     image: BinaryData<'static>,
     bootscreen: bool,
     coinjoin_authorized: bool,
-    bg_image: Option<ImageBuffer<Rgb565Canvas<'static>>>,
+    bg_image: ImageBuffer<Rgb565Canvas<'static>>,
 }
 
-impl<'a> Lockscreen<'a> {
-    pub fn new(label: TString<'a>, bootscreen: bool, coinjoin_authorized: bool) -> Self {
+impl Lockscreen {
+    pub fn new(label: TString<'static>, bootscreen: bool, coinjoin_authorized: bool) -> Self {
         let image = get_homescreen_image();
-        let mut bg_image = unwrap!(ImageBuffer::new(AREA.size()), "no image buf");
+        let mut buf = unwrap!( ImageBuffer::new(AREA.size()), "no image buf");
 
-        render_on_canvas(bg_image.canvas(), None, |target| {
+        render_on_canvas(buf.canvas(), None, |target| {
             shape::JpegImage::new_image(Point::zero(), image).render(target);
         });
+
+        //
+        // let raw_image = shape::RawImage::new(AREA, bg_image.as_ref().expect("no bg img").view());
+
 
         Lockscreen {
             anim: LockscreenAnim::default(),
@@ -312,12 +317,12 @@ impl<'a> Lockscreen<'a> {
             image,
             bootscreen,
             coinjoin_authorized,
-            bg_image: Some(bg_image),
+            bg_image: buf,
         }
     }
 }
 
-impl Component for Lockscreen<'_> {
+impl Component for Lockscreen {
     type Msg = HomescreenMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -358,7 +363,7 @@ impl Component for Lockscreen<'_> {
 
         let center = AREA.center();
 
-        shape::RawImage::new(AREA, self.bg_image.as_ref().expect("no bg img").view())
+        shape::RawImage::new(AREA, self.bg_image.view())
             .render(target);
 
         cshape::UnlockOverlay::new(center + Offset::y(OVERLAY_OFFSET), self.anim.eval())
@@ -466,7 +471,7 @@ fn get_homescreen_image() -> BinaryData<'static> {
 }
 
 #[cfg(feature = "ui_debug")]
-impl crate::trace::Trace for Lockscreen<'_> {
+impl crate::trace::Trace for Lockscreen {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("Lockscreen");
     }
