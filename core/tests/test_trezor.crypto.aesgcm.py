@@ -61,6 +61,29 @@ class TestCryptoAes(unittest.TestCase):
             self.assertEqual(ctx.decrypt(ct), pt)
             self.assertEqual(ctx.finish(), tag)
 
+    def test_gcm_in_place(self):
+        for vector in self.vectors:
+            key, iv, pt, aad, ct, tag = map(unhexlify, vector)
+            buffer = bytearray(pt)
+
+            # Test encryption.
+            ctx = aesgcm(key, iv)
+            if aad:
+                ctx.auth(aad)
+            returned = ctx.encrypt_in_place(buffer)
+            self.assertEqual(buffer, ct)
+            self.assertEqual(returned, len(buffer))
+            self.assertEqual(ctx.finish(), tag)
+
+            # Test decryption.
+            ctx.reset(iv)
+            if aad:
+                ctx.auth(aad)
+            returned = ctx.decrypt_in_place(buffer)
+            self.assertEqual(buffer, pt)
+            self.assertEqual(returned, len(buffer))
+            self.assertEqual(ctx.finish(), tag)
+
     def test_gcm_chunks(self):
         for vector in self.vectors:
             key, iv, pt, aad, ct, tag = map(unhexlify, vector)
@@ -81,6 +104,35 @@ class TestCryptoAes(unittest.TestCase):
             self.assertEqual(ctx.encrypt(pt[:chunk1]), ct[:chunk1])
             ctx.auth(aad[7:])
             self.assertEqual(ctx.encrypt(pt[chunk1:]), ct[chunk1:])
+            self.assertEqual(ctx.finish(), tag)
+
+    def test_gcm_chunks_in_place(self):
+        for vector in self.vectors:
+            key, iv, pt, aad, ct, tag = map(unhexlify, vector)
+            buffer = bytearray(ct)
+            chunk1_length = len(pt) // 3
+            chunk2_length = len(pt) - chunk1_length
+
+            # Decrypt by chunks and add authenticated data by chunks.
+            ctx = aesgcm(key, iv)
+            returned = ctx.decrypt_in_place(memoryview(buffer)[: chunk1_length])
+            self.assertEqual(returned, chunk1_length)
+            ctx.auth(aad[:17])
+            returned = ctx.decrypt_in_place(memoryview(buffer)[chunk1_length:])
+            ctx.auth(aad[17:])
+            self.assertEqual(returned, chunk2_length)
+            self.assertEqual(buffer, pt)
+            self.assertEqual(ctx.finish(), tag)
+
+            # Encrypt by chunks and add authenticated data by chunks.
+            ctx.reset(iv)
+            ctx.auth(aad[:7])
+            returned = ctx.encrypt_in_place(memoryview(buffer)[: chunk1_length])
+            self.assertEqual(returned, chunk1_length)
+            ctx.auth(aad[7:])
+            returned = ctx.encrypt_in_place(memoryview(buffer)[chunk1_length:])
+            self.assertEqual(returned, chunk2_length)
+            self.assertEqual(buffer, ct)
             self.assertEqual(ctx.finish(), tag)
 
 

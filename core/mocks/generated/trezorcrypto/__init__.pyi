@@ -54,10 +54,20 @@ class aesgcm:
         Encrypt data chunk.
         """
 
+    def encrypt_in_place(self, data: bytearray | memoryview) -> int:
+       """
+       Encrypt data chunk in place. Returns the length of the encrypted data.
+       """
+
     def decrypt(self, data: bytes) -> bytes:
         """
         Decrypt data chunk.
         """
+
+    def decrypt_in_place(self, data: bytearray | memoryview) -> int:
+      """
+      Decrypt data chunk in place. Returns the length of the decrypted data.
+      """
 
     def auth(self, data: bytes) -> None:
         """
