@@ -13,7 +13,7 @@ use crate::{
         geometry::{Insets, Offset, Rect},
         model_mercury::{
             constant,
-            shapes::{render_loader, LoaderRange},
+            cshape::{render_loader, LoaderRange},
         },
         shape::Renderer,
         util::animation_disabled,

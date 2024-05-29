@@ -38,7 +38,7 @@ use super::theme::BLACK;
 use crate::ui::{
     display::{toif::Toif, LOADER_MAX},
     geometry::{Alignment, Alignment2D},
-    model_mercury::shapes::{render_loader, LoaderRange},
+    model_mercury::cshape::{render_loader, LoaderRange},
     shape,
     shape::render_on_display,
 };
