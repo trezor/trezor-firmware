@@ -136,7 +136,7 @@ where
     }
 
     pub fn with_description(self, description: impl Into<TString<'static>>) -> Self {
-        self.with_text(&theme::TEXT_NORMAL_OFF_WHITE, description)
+        self.with_text(&theme::TEXT_NORMAL_GREY_EXTRA_LIGHT, description)
     }
 
     pub fn with_value(self, value: impl Into<TString<'static>>) -> Self {
@@ -154,9 +154,9 @@ where
                 theme::BG,
             )),
             paragraphs: ParagraphVecShort::from_iter([
-                Paragraph::new(&theme::TEXT_NORMAL_OFF_WHITE, l0).centered(),
+                Paragraph::new(&theme::TEXT_NORMAL_GREY_EXTRA_LIGHT, l0).centered(),
                 Paragraph::new(&theme::TEXT_DEMIBOLD, l1).centered(),
-                Paragraph::new(&theme::TEXT_NORMAL_OFF_WHITE, l2).centered(),
+                Paragraph::new(&theme::TEXT_NORMAL_GREY_EXTRA_LIGHT, l2).centered(),
                 Paragraph::new(&theme::TEXT_DEMIBOLD, l3).centered(),
             ])
             .into_paragraphs()

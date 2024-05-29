@@ -76,7 +76,7 @@ pub struct PassphraseKeyboard {
     input_prompt: Child<Label<'static>>,
     erase_btn: Child<Maybe<Button>>,
     cancel_btn: Child<Maybe<Button>>,
-    confirm_btn: Child<Maybe<Button>>,
+    confirm_btn: Child<Button>,
     next_btn: Child<Button>,
     keys: [Child<Button>; KEY_COUNT],
     active_layout: KeyboardLayout,
@@ -102,8 +102,7 @@ impl PassphraseKeyboard {
         let confirm_btn = Button::with_icon(theme::ICON_CONFIRM)
             .styled(theme::button_passphrase_confirm())
             .with_radius(15)
-            .initially_enabled(false);
-        let confirm_btn = Maybe::hidden(theme::BG, confirm_btn).into_child();
+            .into_child();
 
         let next_btn = Button::new(active_layout.next().into())
             .styled(theme::button_passphrase_next())
@@ -205,10 +204,6 @@ impl PassphraseKeyboard {
         self.cancel_btn.mutate(ctx, |ctx, btn| {
             btn.show_if(ctx, is_empty);
             btn.inner_mut().enable_if(ctx, is_empty);
-        });
-        self.confirm_btn.mutate(ctx, |ctx, btn| {
-            btn.show_if(ctx, !is_empty);
-            btn.inner_mut().enable_if(ctx, !is_empty);
         });
 
         self.update_input_btns_state(ctx);
@@ -381,11 +376,11 @@ impl Component for PassphraseKeyboard {
         self.input.render(target);
         self.next_btn.render(target);
         self.erase_btn.render(target);
+        self.confirm_btn.render(target);
         if self.input.inner().textbox.is_empty() {
             self.cancel_btn.render(target);
-            self.input_prompt.render(target);
-        } else {
-            self.confirm_btn.render(target);
+            // FIXME: when prompt fixed in Figma
+            // self.input_prompt.render(target);
         }
         for btn in &self.keys {
             btn.render(target);
