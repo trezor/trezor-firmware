@@ -54,7 +54,7 @@ impl Component for WelcomeScreen {
         );
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         shape::ToifImage::new(
             self.area.top_center() + Offset::y(ICON_TOP_MARGIN),
             theme::ICON_LOGO.toif,

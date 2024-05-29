@@ -55,7 +55,7 @@ impl Pad {
         }
     }
 
-    pub fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    pub fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         shape::Bar::new(self.area)
             .with_bg(self.color)
             .render(target);

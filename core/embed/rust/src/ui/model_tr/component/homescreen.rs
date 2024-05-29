@@ -117,7 +117,7 @@ impl Homescreen {
         }
     }
 
-    fn render_homescreen_image<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render_homescreen_image<'s>(&'s self, target: &mut impl Renderer<'s>) {
         if let Some(image) = self.custom_image {
             shape::ToifImage::new_image(TOP_CENTER, image)
                 .with_align(Alignment2D::TOP_CENTER)
@@ -159,7 +159,7 @@ impl Homescreen {
         }
     }
 
-    fn render_notification<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render_notification<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let baseline = TOP_CENTER + Offset::y(NOTIFICATION_FONT.line_height());
         if !usb_configured() {
             shape::Bar::new(AREA.split_top(NOTIFICATION_HEIGHT).0)
@@ -214,7 +214,7 @@ impl Homescreen {
         self.label.paint();
     }
 
-    fn render_label<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render_label<'s>(&'s self, target: &mut impl Renderer<'s>) {
         // paint black background to place the label
         let mut outset = Insets::uniform(LABEL_OUTSET);
         // the margin at top is bigger (caused by text-height vs line-height?)
@@ -315,7 +315,7 @@ impl Component for Homescreen {
         }
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         // Redraw the whole screen when the screen changes (loader vs homescreen)
         if self.show_loader {
             self.loader.render(target);
@@ -329,8 +329,8 @@ impl Component for Homescreen {
     }
 }
 
-pub struct Lockscreen {
-    label: Child<Label<'static>>,
+pub struct Lockscreen<'a> {
+    label: Child<Label<'a>>,
     instruction: Child<Label<'static>>,
     /// Used for unlocking the device from lockscreen
     invisible_buttons: Child<ButtonController>,
@@ -340,8 +340,8 @@ pub struct Lockscreen {
     screensaver: bool,
 }
 
-impl Lockscreen {
-    pub fn new(label: TString<'static>, bootscreen: bool, coinjoin_authorized: bool) -> Self {
+impl<'a> Lockscreen<'a> {
+    pub fn new(label: TString<'a>, bootscreen: bool, coinjoin_authorized: bool) -> Self {
         // Buttons will not be visible, we only need all three of them to be present,
         // so that even middle-click triggers the event.
         let invisible_btn_layout = ButtonLayout::arrow_armed_arrow("".into());
@@ -360,7 +360,7 @@ impl Lockscreen {
     }
 }
 
-impl Component for Lockscreen {
+impl Component for Lockscreen<'_> {
     type Msg = ();
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -400,7 +400,7 @@ impl Component for Lockscreen {
         }
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         if self.screensaver {
             // keep screen blank
             return;
@@ -484,7 +484,7 @@ impl Component for ConfirmHomescreen {
         self.buttons.paint();
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         if self.image.is_empty() {
             render_default_image(target);
         } else {
@@ -537,7 +537,7 @@ impl crate::trace::Trace for Homescreen {
 }
 
 #[cfg(feature = "ui_debug")]
-impl crate::trace::Trace for Lockscreen {
+impl crate::trace::Trace for Lockscreen<'_> {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("Lockscreen");
         t.child("label", &self.label);

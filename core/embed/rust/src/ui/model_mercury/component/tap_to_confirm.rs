@@ -196,7 +196,7 @@ impl Component for TapToConfirm {
         unimplemented!()
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         const PAD_RADIUS: i16 = 70;
         const PAD_THICKNESS: i16 = 20;
         const CIRCLE_RADIUS: i16 = 50;

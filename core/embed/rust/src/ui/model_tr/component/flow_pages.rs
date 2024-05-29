@@ -122,7 +122,7 @@ impl Page {
         self.formatted.paint();
     }
 
-    pub fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    pub fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.formatted.render(target);
     }
 

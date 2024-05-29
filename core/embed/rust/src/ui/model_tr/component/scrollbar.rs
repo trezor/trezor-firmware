@@ -234,7 +234,7 @@ impl ScrollBar {
         }
     }
 
-    fn render_horizontal<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render_horizontal<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let mut top_right = self.pad.area.top_right();
         for dot in self.get_drawable_dots().iter().rev() {
             self.render_dot(target, dot, top_right);
@@ -274,7 +274,7 @@ impl Component for ScrollBar {
     }
 
     /// Displaying one dot for each page.
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         // Not showing the scrollbar dot when there is only one page
         if self.page_count <= 1 {
             return;

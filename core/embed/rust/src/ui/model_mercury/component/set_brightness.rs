@@ -55,7 +55,7 @@ impl Component for SetBrightnessDialog {
         self.0.paint()
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.0.render(target);
     }
 

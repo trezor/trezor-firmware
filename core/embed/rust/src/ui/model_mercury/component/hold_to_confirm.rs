@@ -245,7 +245,7 @@ impl Component for HoldToConfirm {
         unimplemented!()
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let elapsed = self.anim.eval();
 
         shape::Bar::new(self.area)

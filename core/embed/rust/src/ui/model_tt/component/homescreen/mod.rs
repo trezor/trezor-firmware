@@ -125,7 +125,7 @@ impl Homescreen {
         self.loader.paint()
     }
 
-    fn render_loader<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render_loader<'s>(&'s self, target: &mut impl Renderer<'s>) {
         TR::progress__locking_device.map_translated(|t| {
             shape::Text::new(TOP_CENTER + Offset::y(HOLD_Y), t)
                 .with_align(Alignment::Center)
@@ -259,7 +259,7 @@ impl Component for Homescreen {
         }
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.pad.render(target);
         if self.loader.is_animating() || self.loader.is_completely_grown(Instant::now()) {
             self.render_loader(target);
@@ -353,15 +353,15 @@ impl crate::trace::Trace for Homescreen {
     }
 }
 
-pub struct Lockscreen {
-    label: TString<'static>,
-    image: BinaryData<'static>,
+pub struct Lockscreen<'a> {
+    label: TString<'a>,
+    image: BinaryData<'a>,
     bootscreen: bool,
     coinjoin_authorized: bool,
 }
 
-impl Lockscreen {
-    pub fn new(label: TString<'static>, bootscreen: bool, coinjoin_authorized: bool) -> Self {
+impl<'a> Lockscreen<'a> {
+    pub fn new(label: TString<'a>, bootscreen: bool, coinjoin_authorized: bool) -> Self {
         Lockscreen {
             label,
             image: get_homescreen_image(),
@@ -371,7 +371,7 @@ impl Lockscreen {
     }
 }
 
-impl Component for Lockscreen {
+impl Component for Lockscreen<'_> {
     type Msg = HomescreenMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -451,7 +451,7 @@ impl Component for Lockscreen {
         }
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let center = constant::screen().center();
 
         match ImageInfo::parse(self.image) {
@@ -572,7 +572,7 @@ fn get_homescreen_image() -> BinaryData<'static> {
 }
 
 #[cfg(feature = "ui_debug")]
-impl crate::trace::Trace for Lockscreen {
+impl crate::trace::Trace for Lockscreen<'_> {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("Lockscreen");
     }

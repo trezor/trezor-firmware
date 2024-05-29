@@ -78,7 +78,7 @@ impl Component for NumberInputSliderDialog {
         self.confirm_button.paint();
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.input.render(target);
         self.cancel_button.render(target);
         self.confirm_button.render(target);
@@ -167,7 +167,7 @@ impl Component for NumberInputSlider {
         display::bar_with_text_and_fill(self.area, None, theme::FG, theme::BG, 0, fill_to as _);
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let val_pct = (100 * (self.value - self.min)) / (self.max - self.min);
 
         shape::Bar::new(self.area)

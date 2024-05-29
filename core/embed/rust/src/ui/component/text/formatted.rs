@@ -134,7 +134,7 @@ impl Component for FormattedText {
         self.layout_content(&mut TextRenderer);
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.layout_content(&mut TextRenderer2::new(target));
     }
 

@@ -72,7 +72,7 @@ where
         self.controls.paint();
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.content.render(target);
         self.controls.render(target);
     }
@@ -202,7 +202,7 @@ where
         self.controls.paint();
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.image.render(target);
         self.paragraphs.render(target);
         self.controls.render(target);

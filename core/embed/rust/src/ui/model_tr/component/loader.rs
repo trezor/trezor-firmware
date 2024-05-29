@@ -168,7 +168,7 @@ impl Loader {
     }
 
     pub fn render_loader<'s>(
-        &self,
+        &'s self,
         target: &mut impl Renderer<'s>,
         style: &LoaderStyle,
         done: i32,
@@ -271,7 +271,7 @@ impl Component for Loader {
         }
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         // TODO: Consider passing the current instant along with the event -- that way,
         // we could synchronize painting across the component tree. Also could be useful
         // in automated tests.
@@ -393,7 +393,7 @@ impl Component for ProgressLoader {
         self.loader.paint();
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.loader.render(target);
     }
 }

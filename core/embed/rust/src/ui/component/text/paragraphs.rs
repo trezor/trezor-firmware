@@ -189,7 +189,7 @@ where
         )
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         Self::foreach_visible(
             &self.source,
             &self.visible,
@@ -713,7 +713,7 @@ where
         }
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.paragraphs.render(target);
         self.render_left_column(target);
     }

@@ -41,7 +41,7 @@ impl Component for Bar {
         display::rect_fill_rounded(self.area, self.color, self.bg_color, self.radius as u8);
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         shape::Bar::new(self.area)
             .with_bg(self.color)
             .with_radius(self.radius)

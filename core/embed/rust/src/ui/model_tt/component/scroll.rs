@@ -124,7 +124,7 @@ impl Component for ScrollBar {
         }
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         fn dotsize(distance: usize, nhidden: usize) -> Icon {
             match (nhidden.saturating_sub(distance)).min(2 - distance) {
                 0 => theme::DOT_INACTIVE,

@@ -80,12 +80,12 @@ impl<Q: FlowState, S: FlowStore> SwipeFlow<Q, S> {
         ctx.request_paint();
     }
 
-    fn render_state<'s>(&self, state: Q, target: &mut impl Renderer<'s>) {
+    fn render_state<'s>(&'s self, state: Q, target: &mut impl Renderer<'s>) {
         self.store.render(state.index(), target)
     }
 
     fn render_transition<'s>(
-        &self,
+        &'s self,
         prev_state: &Q,
         animation: &Animation<f32>,
         direction: &SwipeDirection,
@@ -188,7 +188,7 @@ impl<Q: FlowState, S: FlowStore> Component for SwipeFlow<Q, S> {
 
     fn paint(&mut self) {}
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         match &self.transition {
             Transition::None | Transition::Internal => self.render_state(self.state, target),
             Transition::External {

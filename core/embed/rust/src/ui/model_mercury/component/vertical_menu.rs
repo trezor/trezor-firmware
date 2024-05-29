@@ -119,7 +119,7 @@ impl Component for VerticalMenu {
         // TODO remove when ui-t3t1 done
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         // render buttons separated by thin bars
         for button in &self.buttons {
             button.render(target);

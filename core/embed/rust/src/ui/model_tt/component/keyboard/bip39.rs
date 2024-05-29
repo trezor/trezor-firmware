@@ -156,7 +156,7 @@ impl Component for Bip39Input {
         }
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let area = self.button.area();
         let style = self.button.style();
 

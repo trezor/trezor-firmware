@@ -161,7 +161,7 @@ impl Component for AddressDetails {
         }
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         match self.current_page {
             0 => self.details.render(target),
             _ => self.xpub_view.render(target),

@@ -102,7 +102,7 @@ impl Component for ErrorScreen<'_> {
         self.footer.paint();
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.bg.render(target);
 
         if self.show_icons {

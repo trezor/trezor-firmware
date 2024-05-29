@@ -408,7 +408,7 @@ impl Component for Button {
         self.paint_content(style);
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let style = self.style();
         self.render_background(target, style, 0xFF);
         self.render_content(target, style, 0xFF);

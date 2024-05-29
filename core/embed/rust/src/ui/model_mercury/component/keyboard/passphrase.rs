@@ -372,7 +372,7 @@ impl Component for PassphraseKeyboard {
         todo!("remove when ui-t3t1 done")
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.input.render(target);
         self.next_btn.render(target);
         self.erase_btn.render(target);
@@ -436,7 +436,7 @@ impl Component for Input {
         todo!("remove when ui-t3t1 done");
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let style = theme::label_keyboard();
 
         let text_baseline = self.area.top_left() + Offset::y(style.text_font.text_height())

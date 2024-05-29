@@ -184,7 +184,7 @@ where
         }
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         if self.input.inner().inner().is_empty() {
             self.prompt.render(target);
         } else {

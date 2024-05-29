@@ -218,7 +218,7 @@ impl Component for Confirm<'_> {
         self.buttons.paint();
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.bg.render(target);
 
         let mut display_top_left = |text: TString| {

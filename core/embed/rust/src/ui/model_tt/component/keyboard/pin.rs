@@ -266,7 +266,7 @@ impl Component for PinKeyboard<'_> {
         }
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.erase_btn.render(target);
         self.textbox_pad.render(target);
         if self.textbox.inner().is_empty() {
@@ -530,7 +530,7 @@ impl Component for PinDots {
         }
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let dot_area = self.area.inset(HEADER_PADDING);
         self.pad.render(target);
         if self.display_digits {

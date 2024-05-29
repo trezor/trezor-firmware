@@ -127,7 +127,7 @@ impl Component for Slip39Input {
         todo!("remove when ui-t3t1 done")
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let area = self.button.area();
         let style = self.button.style();
 

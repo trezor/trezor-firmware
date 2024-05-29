@@ -1,12 +1,16 @@
 use crate::ui::{
     display::Color,
     geometry::Offset,
-    shape::{BasicCanvas, DirectRenderer, DrawingCache, Mono8Canvas, Viewport},
+    shape::{
+        render::ScopedRenderer, BasicCanvas, DirectRenderer, DrawingCache, Mono8Canvas, Viewport,
+    },
 };
 
 use crate::trezorhal::display;
 
 use static_alloc::Bump;
+
+type ConcreteRenderer<'a, 'alloc> = DirectRenderer<'a, 'alloc, Mono8Canvas<'alloc>>;
 
 /// Creates the `Renderer` object for drawing on a display and invokes a
 /// user-defined function that takes a single argument `target`. The user's
@@ -18,9 +22,9 @@ use static_alloc::Bump;
 /// `bg_color` specifies a background color with which the clip is filled before
 /// the drawing starts. If the background color is None, the background
 /// is undefined, and the user has to fill it themselves.
-pub fn render_on_display<F>(viewport: Option<Viewport>, bg_color: Option<Color>, func: F)
+pub fn render_on_display<'env, F>(viewport: Option<Viewport>, bg_color: Option<Color>, func: F)
 where
-    F: for<'a> FnOnce(&mut DirectRenderer<'_, 'a, Mono8Canvas<'a>>),
+    F: for<'alloc> FnOnce(&mut ScopedRenderer<'alloc, 'env, ConcreteRenderer<'_, 'alloc>>),
 {
     const BUMP_SIZE: usize = DrawingCache::get_bump_a_size() + DrawingCache::get_bump_b_size();
 
@@ -48,7 +52,7 @@ where
             canvas.set_viewport(viewport);
         }
 
-        let mut target = DirectRenderer::new(&mut canvas, bg_color, &cache);
+        let mut target = ScopedRenderer::new(DirectRenderer::new(&mut canvas, bg_color, &cache));
 
         func(&mut target);
     }

@@ -194,7 +194,7 @@ impl Component for StatusScreen {
         todo!()
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let t = self.anim.eval();
 
         shape::Circle::new(self.area.center(), self.anim.get_circle_radius(t))

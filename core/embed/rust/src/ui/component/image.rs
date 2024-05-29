@@ -50,7 +50,7 @@ impl Component for Image {
         self.draw(self.area.center(), Alignment2D::CENTER);
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         shape::ToifImage::new(self.area.center(), self.toif)
             .with_align(Alignment2D::CENTER)
             .render(target);
@@ -138,7 +138,7 @@ impl Component for BlendedImage {
         self.paint_image();
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         shape::ToifImage::new(self.bg_top_left, self.bg.toif)
             .with_fg(self.bg_color)
             .render(target);

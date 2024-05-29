@@ -63,7 +63,7 @@ pub trait Component {
     /// the `Child` wrapper.
     fn paint(&mut self);
 
-    fn render<'s>(&self, _target: &mut impl Renderer<'s>);
+    fn render<'s>(&'s self, _target: &mut impl Renderer<'s>);
 
     #[cfg(feature = "ui_bounds")]
     /// Report current paint bounds of this component. Used for debugging.
@@ -159,7 +159,7 @@ where
         }
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.component.render(target);
     }
 
@@ -279,7 +279,7 @@ where
         self.inner.paint();
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.inner().render(target);
     }
 
@@ -321,7 +321,7 @@ where
         self.1.paint();
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.0.render(target);
         self.1.render(target);
     }
@@ -375,7 +375,7 @@ where
         self.2.paint();
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.0.render(target);
         self.1.render(target);
         self.2.render(target);
@@ -408,7 +408,7 @@ where
         }
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         if let Some(ref c) = self {
             c.render(target)
         }

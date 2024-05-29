@@ -204,7 +204,7 @@ impl ComponentMsgObj for Homescreen {
     }
 }
 
-impl ComponentMsgObj for Lockscreen {
+impl<'a> ComponentMsgObj for Lockscreen<'a> {
     fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
         Ok(CANCELLED.as_obj())
     }

@@ -111,7 +111,7 @@ where
         common::display_left(baseline, &self.text, self.font);
     }
 
-    fn render_left<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render_left<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let baseline = Point::new(self.pad.area.x0, self.y_baseline());
         shape::Text::new(baseline, self.text.as_ref())
             .with_font(self.font)
@@ -123,7 +123,7 @@ where
         common::display_center(baseline, &self.text, self.font);
     }
 
-    fn render_center<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render_center<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let baseline = Point::new(self.pad.area.bottom_center().x, self.y_baseline());
         shape::Text::new(baseline, self.text.as_ref())
             .with_align(Alignment::Center)
@@ -136,7 +136,7 @@ where
         common::display_right(baseline, &self.text, self.font);
     }
 
-    fn render_right<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render_right<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let baseline = Point::new(self.pad.area.x1, self.y_baseline());
         shape::Text::new(baseline, self.text.as_ref())
             .with_align(Alignment::End)
@@ -201,7 +201,7 @@ where
         }
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.pad.render(target);
         if self.show_content {
             // In the case text cannot fit, show ellipsis and its right part
