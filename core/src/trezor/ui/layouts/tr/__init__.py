@@ -45,7 +45,7 @@ class RustLayout(LayoutParentType[T]):
         self._send_button_request()
 
     def __del__(self):
-        self.layout.delete()
+        self.layout.__del__()
 
     def set_timer(self, token: int, deadline: int) -> None:
         self.timer.schedule(deadline, token)

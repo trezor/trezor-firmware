@@ -138,7 +138,7 @@ impl LayoutObj {
         let root =
             unsafe { Gc::from_raw(Gc::into_raw(Gc::new(wrapped_root)?) as *mut dyn ObjComponent) };
 
-        Gc::new(Self {
+        Gc::new_with_custom_finaliser(Self {
             base: Self::obj_type().as_base(),
             inner: RefCell::new(LayoutObjInner {
                 root,
@@ -303,7 +303,7 @@ impl LayoutObj {
                 Qstr::MP_QSTR_request_complete_repaint => obj_fn_1!(ui_layout_request_complete_repaint).as_obj(),
                 Qstr::MP_QSTR_trace => obj_fn_2!(ui_layout_trace).as_obj(),
                 Qstr::MP_QSTR_bounds => obj_fn_1!(ui_layout_bounds).as_obj(),
-                Qstr::MP_QSTR_delete => obj_fn_1!(ui_layout_delete).as_obj(),
+                Qstr::MP_QSTR___del__ => obj_fn_1!(ui_layout_delete).as_obj(),
                 Qstr::MP_QSTR_page_count => obj_fn_1!(ui_layout_page_count).as_obj(),
                 Qstr::MP_QSTR_button_request => obj_fn_1!(ui_layout_button_request).as_obj(),
             }),

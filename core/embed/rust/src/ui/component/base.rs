@@ -220,6 +220,14 @@ impl<T> Root<T> {
         }
     }
 
+    pub fn inner_mut(&mut self) -> &mut Child<T> {
+        if let Some(ref mut c) = self.inner {
+            c
+        } else {
+            fatal_error!("deallocated", "Root object is deallocated")
+        }
+    }
+
     pub fn inner(&self) -> &Child<T> {
         if let Some(ref c) = self.inner {
             c
@@ -229,11 +237,7 @@ impl<T> Root<T> {
     }
 
     pub fn skip_paint(&mut self) {
-        if let Some(ref mut c) = self.inner {
-            c.skip_paint();
-        } else {
-            fatal_error!("deallocated", "Root object is deallocated")
-        }
+        self.inner_mut().skip_paint();
     }
 
     pub fn clear_screen(&mut self) {
@@ -256,54 +260,36 @@ where
     type Msg = T::Msg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        if let Some(ref mut c) = self.inner {
-            c.place(bounds)
-        } else {
-            fatal_error!("deallocated", "Root object is deallocated")
-        }
+        self.inner_mut().place(bounds)
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        if let Some(ref mut c) = self.inner {
-            let msg = c.event(ctx, event);
-            if ctx.needs_repaint_root() {
-                self.marked_for_clear = true;
-                let mut dummy_ctx = EventCtx::new();
-                let paint_msg = c.event(&mut dummy_ctx, Event::RequestPaint);
-                assert!(paint_msg.is_none());
-                assert!(dummy_ctx.timers.is_empty());
-            }
-            msg
-        } else {
-            fatal_error!("deallocated", "Root object is deallocated")
+        let msg = self.inner_mut().event(ctx, event);
+        if ctx.needs_repaint_root() {
+            self.marked_for_clear = true;
+            let mut dummy_ctx = EventCtx::new();
+            let paint_msg = self.inner_mut().event(&mut dummy_ctx, Event::RequestPaint);
+            assert!(paint_msg.is_none());
+            assert!(dummy_ctx.timers.is_empty());
         }
+        msg
     }
 
     fn paint(&mut self) {
-        if let Some(ref mut c) = self.inner {
-            if self.marked_for_clear && c.will_paint() {
-                self.marked_for_clear = false;
-                display::clear()
-            }
-            self.inner.paint();
+        if self.marked_for_clear && self.inner().will_paint() {
+            self.marked_for_clear = false;
+            display::clear()
         }
+        self.inner.paint();
     }
 
     fn render<'s>(&self, target: &mut impl Renderer<'s>) {
-        if let Some(ref c) = self.inner {
-            c.render(target);
-        } else {
-            fatal_error!("deallocated", "Root object is deallocated")
-        }
+        self.inner().render(target);
     }
 
     #[cfg(feature = "ui_bounds")]
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
-        if let Some(ref c) = self.inner {
-            c.bounds(sink);
-        } else {
-            fatal_error!("deallocated", "Root object is deallocated")
-        }
+        self.inner().bounds(sink)
     }
 }
 
@@ -313,11 +299,7 @@ where
     T: crate::trace::Trace,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        if let Some(ref c) = self.inner {
-            c.trace(t);
-        } else {
-            fatal_error!("deallocated", "Root object is deallocated")
-        }
+        self.inner().trace(t);
     }
 }
 
