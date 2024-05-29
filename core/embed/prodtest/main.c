@@ -148,8 +148,8 @@ static void usb_init_all(void) {
       .rx_intr_byte = 3,  // Ctrl-C
       .iface_num = VCP_IFACE,
       .data_iface_num = 0x01,
-      .ep_cmd = 0x82,
-      .ep_in = 0x81,
+      .ep_cmd = 0x02,
+      .ep_in = 0x01,
       .ep_out = 0x01,
       .polling_interval = 10,
       .max_packet_len = VCP_PACKET_LEN,

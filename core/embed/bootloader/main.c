@@ -112,8 +112,8 @@ static void usb_init_all(secbool usb21_landing) {
 #ifdef TREZOR_EMULATOR
       .emu_port = 21324,
 #else
-      .ep_in = USB_EP_DIR_IN | 0x01,
-      .ep_out = USB_EP_DIR_OUT | 0x01,
+      .ep_in = 0x01,
+      .ep_out = 0x01,
 #endif
       .subclass = 0,
       .protocol = 0,

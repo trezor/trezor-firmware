@@ -17,73 +17,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef TREZORHAL_USB_CLASS_VCP_H
+#define TREZORHAL_USB_CLASS_VCP_H
+
 #include <stddef.h>
-
-typedef struct __attribute__((packed)) {
-  uint8_t bFunctionLength;
-  uint8_t bDescriptorType;
-  uint8_t bDescriptorSubtype;
-  uint16_t bcdCDC;
-} usb_vcp_header_descriptor_t;
-
-typedef struct __attribute__((packed)) {
-  uint8_t bFunctionLength;
-  uint8_t bDescriptorType;
-  uint8_t bDescriptorSubtype;
-  uint8_t bmCapabilities;
-  uint8_t bDataInterface;
-} usb_vcp_cm_descriptor_t;
-
-typedef struct __attribute__((packed)) {
-  uint8_t bFunctionLength;
-  uint8_t bDescriptorType;
-  uint8_t bDescriptorSubtype;
-  uint8_t bmCapabilities;
-} usb_vcp_acm_descriptor_t;
-
-typedef struct __attribute__((packed)) {
-  uint8_t bFunctionLength;
-  uint8_t bDescriptorType;
-  uint8_t bDescriptorSubtype;
-  uint8_t bControlInterface;
-  uint8_t bSubordinateInterface0;
-} usb_vcp_union_descriptor_t;
-
-typedef struct __attribute__((packed)) {
-  usb_interface_assoc_descriptor_t assoc;
-  usb_interface_descriptor_t iface_cdc;
-  usb_vcp_header_descriptor_t
-      fheader;                  // Class-Specific Descriptor Header Format
-  usb_vcp_cm_descriptor_t fcm;  // Call Management Functional Descriptor
-  usb_vcp_acm_descriptor_t
-      facm;  // Abstract Control Management Functional Descriptor
-  usb_vcp_union_descriptor_t funion;  // Union Interface Functional Descriptor
-  usb_endpoint_descriptor_t ep_cmd;
-  usb_interface_descriptor_t iface_data;
-  usb_endpoint_descriptor_t ep_in;
-  usb_endpoint_descriptor_t ep_out;
-} usb_vcp_descriptor_block_t;
-
-typedef struct __attribute__((packed)) {
-  uint32_t dwDTERate;
-  uint8_t bCharFormat;  // usb_cdc_line_coding_bCharFormat_t
-  uint8_t bParityType;  // usb_cdc_line_coding_bParityType_t
-  uint8_t bDataBits;
-} usb_cdc_line_coding_t;
-
-typedef enum {
-  USB_CDC_1_STOP_BITS = 0,
-  USB_CDC_1_5_STOP_BITS = 1,
-  USB_CDC_2_STOP_BITS = 2,
-} usb_cdc_line_coding_bCharFormat_t;
-
-typedef enum {
-  USB_CDC_NO_PARITY = 0,
-  USB_CDC_ODD_PARITY = 1,
-  USB_CDC_EVEN_PARITY = 2,
-  USB_CDC_MARK_PARITY = 3,
-  USB_CDC_SPACE_PARITY = 4,
-} usb_cdc_line_coding_bParityType_t;
+#include "secbool.h"
 
 /* usb_vcp_info_t contains all information for setting up a VCP interface.  All
  * passed pointers need to live at least until the interface is disabled
@@ -117,37 +55,6 @@ typedef struct {
                            // rx_packet
 } usb_vcp_info_t;
 
-/* usb_rbuf_t is used internally for the RX/TX buffering. */
-typedef struct {
-  size_t cap;
-  volatile size_t read;
-  volatile size_t write;
-  uint8_t *buf;
-} usb_rbuf_t;
-
-// Maximal length of packets on IN CMD EP
-#define USB_CDC_MAX_CMD_PACKET_LEN 0x08
-
-/* usb_vcp_state_t encapsulates all state used by enabled VCP interface.  It
- * needs to be completely initialized in usb_vcp_add and reset in
- * usb_vcp_class_init.  See usb_vcp_info_t for details of the configuration
- * fields. */
-typedef struct {
-  const usb_vcp_descriptor_block_t *desc_block;
-  usb_rbuf_t rx_ring;
-  usb_rbuf_t tx_ring;
-  uint8_t *rx_packet;
-  uint8_t *tx_packet;
-  void (*rx_intr_fn)(void);
-  uint8_t rx_intr_byte;
-  uint8_t ep_cmd;
-  uint8_t ep_in;
-  uint8_t ep_out;
-  uint8_t max_packet_len;
-  uint8_t ep_in_is_idle;  // Set to 1 after IN endpoint gets idle
-  uint8_t cmd_buffer[USB_CDC_MAX_CMD_PACKET_LEN];
-} usb_vcp_state_t;
-
 secbool __wur usb_vcp_add(const usb_vcp_info_t *vcp_info);
 secbool __wur usb_vcp_can_read(uint8_t iface_num);
 secbool __wur usb_vcp_can_write(uint8_t iface_num);
@@ -158,3 +65,5 @@ int __wur usb_vcp_read_blocking(uint8_t iface_num, uint8_t *buf, uint32_t len,
                                 int timeout);
 int __wur usb_vcp_write_blocking(uint8_t iface_num, const uint8_t *buf,
                                  uint32_t len, int timeout);
+
+#endif  // TREZORHAL_USB_CLASS_VCP_H
