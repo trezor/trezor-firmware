@@ -87,8 +87,8 @@ const PAGE_COUNT: usize = 4;
 const KEY_COUNT: usize = 10;
 #[rustfmt::skip]
 const KEYBOARD: [[&str; KEY_COUNT]; PAGE_COUNT] = [
-    ["abc", "def", "ghi", "jkl", "mno", "pq", "rst", "uvq", "xyz", " *#"],
-    ["ABC", "DEF", "GHI", "JKL", "MNO", "PQ", "RST", "UVQ", "XYZ", " *#"],
+    ["abc", "def", "ghi", "jkl", "mno", "pq", "rst", "uvw", "xyz", " *#"],
+    ["ABC", "DEF", "GHI", "JKL", "MNO", "PQ", "RST", "UVW", "XYZ", " *#"],
     ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
     ["_<>", ".:@", "/|\\", "!()", "+%&", "-[]", "?{}", ",'`", ";\"~", "$^="],
     ];

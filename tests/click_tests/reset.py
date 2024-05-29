@@ -14,8 +14,11 @@ if TYPE_CHECKING:
 
 def confirm_new_wallet(debug: "DebugLink") -> None:
     TR.assert_equals(debug.read_layout().title(), "reset__title_create_wallet")
-    if debug.model in (models.T2T1, models.T3T1):
+    if debug.model in (models.T2T1,):
         debug.click(buttons.OK, wait=True)
+    elif debug.model in (models.T3T1,):
+        debug.swipe_up(wait=True)
+        debug.click(buttons.TAP_TO_CONFIRM, wait=True)
     elif debug.model in (models.T2B1,):
         debug.press_right(wait=True)
         debug.press_right(wait=True)
@@ -47,7 +50,10 @@ def set_selection(debug: "DebugLink", button: tuple[int, int], diff: int) -> Non
         assert "NumberInputDialog" in debug.read_layout().all_components()
         for _ in range(diff):
             debug.click(button)
-        debug.click(buttons.OK, wait=True)
+        if debug.model in (models.T2T1,):
+            debug.click(buttons.OK, wait=True)
+        else:
+            debug.swipe_up(wait=True)
     elif debug.model in (models.T2B1,):
         layout = debug.read_layout()
         if layout.title() in TR.translate(
@@ -72,6 +78,8 @@ def read_words(
 
     if debug.model in (models.T2B1,):
         debug.press_right(wait=True)
+    elif debug.model in (models.T3T1,):
+        debug.swipe_up(wait=True)
 
     # Swiping through all the pages and loading the words
     layout = debug.read_layout()
@@ -82,10 +90,15 @@ def read_words(
     if debug.model in (models.T2T1, models.T3T1):
         words.extend(layout.seed_words())
 
+    if debug.model in (models.T3T1,):
+        debug.swipe_up(wait=True)
+
     # There is hold-to-confirm button
     if do_htc:
-        if debug.model in (models.T2T1, models.T3T1):
+        if debug.model in (models.T2T1,):
             debug.click_hold(buttons.OK, hold_ms=1500)
+        elif debug.model in (models.T3T1,):
+            debug.click_hold(buttons.TAP_TO_CONFIRM, hold_ms=1500)
         elif debug.model in (models.T2B1,):
             debug.press_right_htc(1200)
     else:
@@ -97,6 +110,9 @@ def read_words(
 
 
 def confirm_words(debug: "DebugLink", words: list[str]) -> None:
+    if debug.model in (models.T3T1,):
+        debug.swipe_up(wait=True)
+
     layout = debug.wait_layout()
     if debug.model in (models.T2T1, models.T3T1):
         TR.assert_template(layout.text_content(), "reset__select_word_x_of_y_template")

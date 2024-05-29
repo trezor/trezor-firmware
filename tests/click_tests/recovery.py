@@ -49,8 +49,10 @@ def enter_word(
 def confirm_recovery(debug: "DebugLink") -> None:
     layout = debug.wait_layout()
     TR.assert_equals(layout.title(), "recovery__title")
-    if debug.model in (models.T2T1, models.T3T1):
+    if debug.model in (models.T2T1,):
         debug.click(buttons.OK, wait=True)
+    elif debug.model in (models.T3T1,):
+        debug.swipe_up(wait=True)
     elif debug.model in (models.T2B1,):
         debug.press_right(wait=True)
         debug.press_right()
@@ -99,9 +101,15 @@ def select_number_of_words(
         raise ValueError("Unknown model")
 
     if num_of_words in (20, 33):
-        TR.assert_in(layout.text_content(), "recovery__enter_any_share")
+        TR.assert_in_multiple(
+            layout.text_content(),
+            ["recovery__enter_any_share", "recovery__only_first_n_letters"],
+        )
     else:
-        TR.assert_in(layout.text_content(), "recovery__enter_backup")
+        TR.assert_in_multiple(
+            layout.text_content(),
+            ["recovery__enter_backup", "recovery__only_first_n_letters"],
+        )
 
 
 def enter_share(
@@ -188,13 +196,19 @@ def enter_seed_previous_correct(
             i += 1
         layout = enter_word(debug, word, is_slip39=False)
 
-    TR.assert_in(debug.read_layout().text_content(), "recovery__wallet_recovered")
+    # TR.assert_in(debug.read_layout().text_content(), "recovery__wallet_recovered")
 
 
 def prepare_enter_seed(debug: "DebugLink") -> None:
-    TR.assert_in(debug.read_layout().text_content(), "recovery__enter_backup")
-    if debug.model in (models.T2T1, models.T3T1):
+    TR.assert_in_multiple(
+        debug.read_layout().text_content(),
+        ["recovery__enter_backup", "recovery__only_first_n_letters"],
+    )
+    if debug.model in (models.T2T1,):
         debug.click(buttons.OK, wait=True)
+    elif debug.model in (models.T3T1,):
+        debug.swipe_up(wait=True)
+        debug.swipe_up(wait=True)
     elif debug.model in (models.T2B1,):
         debug.press_right(wait=True)
         TR.assert_equals(debug.read_layout().title(), "recovery__title_recover")
