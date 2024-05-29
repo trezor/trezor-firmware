@@ -22,7 +22,7 @@ use crate::ui::{
         cshape,
         theme::{GREY_LIGHT, ICON_KEY, TITLE_HEIGHT},
     },
-    shape::{render_on_canvas, ImageBuffer, Rgb565Canvas},
+    shape::{render_on_canvas, BitmapView, ImageBuffer, Rgb565Canvas},
 };
 
 use super::{theme, Loader, LoaderMsg};
@@ -358,8 +358,11 @@ impl Component for Lockscreen {
 
         let center = AREA.center();
 
-        // shape::RawImage::new(AREA, self.bg_image.view())
-        //     .render(target);
+        unsafe {
+            let view =
+                core::mem::transmute::<BitmapView<'_>, BitmapView<'static>>(self.bg_image.view());
+            shape::RawImage::new(AREA, view).render(target);
+        }
 
         cshape::UnlockOverlay::new(center + Offset::y(OVERLAY_OFFSET), self.anim.eval())
             .render(target);
