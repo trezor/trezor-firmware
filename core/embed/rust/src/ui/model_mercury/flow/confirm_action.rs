@@ -118,7 +118,10 @@ fn new_confirm_action_obj(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Err
     let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
     let action: Option<TString> = kwargs.get(Qstr::MP_QSTR_action)?.try_into_option()?;
     let description: Option<TString> = kwargs.get(Qstr::MP_QSTR_description)?.try_into_option()?;
-    let subtitle: Option<TString> = kwargs.get(Qstr::MP_QSTR_subtitle)?.try_into_option()?;
+    let subtitle: Option<TString> = kwargs
+        .get(Qstr::MP_QSTR_subtitle)
+        .unwrap_or(Obj::const_none())
+        .try_into_option()?;
     // let verb: Option<TString> = kwargs
     //     .get(Qstr::MP_QSTR_verb)
     //     .unwrap_or_else(|_| Obj::const_none())
