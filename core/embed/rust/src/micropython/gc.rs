@@ -27,7 +27,11 @@ impl<T> Gc<T> {
     /// The current MicroPython only supports GC_ALLOC_FLAG_HAS_FINALISER, which
     /// will cause the __del__ method to be called when the object is
     /// garbage collected.
-    fn alloc(v: T, flags: u32) -> Result<Self, Error> {
+    ///
+    /// SAFETY:
+    /// Flag GC_ALLOC_FLAG_HAS_FINALISER can only be used with Python objects
+    /// that have a base as their first element
+    unsafe fn alloc(v: T, flags: u32) -> Result<Self, Error> {
         let layout = Layout::for_value(&v);
         // TODO: Assert that `layout.align()` is the same as the GC alignment.
         // SAFETY:
@@ -50,7 +54,10 @@ impl<T> Gc<T> {
     /// Allocate memory on the heap managed by the MicroPython garbage collector
     /// and then place `v` into it. `v` will _not_ get its destructor called.
     pub fn new(v: T) -> Result<Self, Error> {
-        Self::alloc(v, 0)
+        unsafe {
+            // SAFETY: No flag is used
+            Self::alloc(v, 0)
+        }
     }
 
     /// Allocate memory on the heap managed by the MicroPython garbage
@@ -61,8 +68,11 @@ impl<T> Gc<T> {
     /// has a `__del__` method, it will be called when the object is garbage
     /// collected. You can use this to implement custom finalisation, in
     /// which you can, e.g., invoke the Drop implementation.
-    pub fn new_with_custom_finaliser(v: T) -> Result<Self, Error> {
-        Self::alloc(v, ffi::GC_ALLOC_FLAG_HAS_FINALISER)
+    /// SAFETY:
+    /// Can only be used with Python objects that have a base as their
+    /// first element
+    pub unsafe fn new_with_custom_finaliser(v: T) -> Result<Self, Error> {
+        unsafe { Self::alloc(v, ffi::GC_ALLOC_FLAG_HAS_FINALISER) }
     }
 }
 
