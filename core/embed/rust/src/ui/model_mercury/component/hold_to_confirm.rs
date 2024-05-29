@@ -8,6 +8,7 @@ use crate::{
         lerp::Lerp,
         shape,
         shape::Renderer,
+        util::animation_disabled,
     },
 };
 
@@ -40,6 +41,10 @@ impl HoldToConfirmAnim {
     }
 
     pub fn eval(&self) -> f32 {
+        if animation_disabled() {
+            return 0.0;
+        }
+
         self.timer.elapsed().to_millis() as f32 / 1000.0
     }
 
@@ -210,6 +215,11 @@ impl Component for HoldToConfirm {
                 ctx.request_paint();
             }
             Some(ButtonMsg::Clicked) => {
+                if animation_disabled() {
+                    #[cfg(feature = "haptic")]
+                    haptic::play(HapticEffect::HoldToConfirm);
+                    return Some(());
+                }
                 self.anim.reset();
                 ctx.request_anim_frame();
                 ctx.request_paint();
