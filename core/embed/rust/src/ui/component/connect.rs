@@ -57,7 +57,7 @@ impl Component for Connect {
         });
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let font = Font::NORMAL;
 
         self.bg.render(target);

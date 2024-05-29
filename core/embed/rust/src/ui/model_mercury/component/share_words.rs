@@ -110,7 +110,7 @@ impl<'a> Component for ShareWords<'a> {
         // TODO: remove when ui-t3t1 done
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         // corner highlights
         let (_, top_right_shape, bot_left_shape, bot_right_shape) =
             shape::CornerHighlight::from_rect(self.area_word, theme::GREY_DARK, theme::BG);

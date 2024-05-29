@@ -213,7 +213,7 @@ where
         }
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.icon.render(target);
         self.controls.render(target);
         self.app_name.render(target);

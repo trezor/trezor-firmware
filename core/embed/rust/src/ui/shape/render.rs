@@ -252,3 +252,50 @@ where
         }
     }
 }
+
+pub struct ScopedRenderer<'alloc, 'env, T>
+where
+    'env: 'alloc,
+    T: Renderer<'alloc>,
+{
+    pub renderer: T,
+    _env: core::marker::PhantomData<&'env mut &'env ()>,
+    _alloc: core::marker::PhantomData<&'alloc ()>,
+}
+
+impl<'alloc, T> ScopedRenderer<'alloc, '_, T>
+where
+    T: Renderer<'alloc>,
+{
+    pub fn new(renderer: T) -> Self {
+        Self {
+            renderer,
+            _env: core::marker::PhantomData,
+            _alloc: core::marker::PhantomData,
+        }
+    }
+
+    pub fn into_inner(self) -> T {
+        self.renderer
+    }
+}
+
+impl<'alloc, T> Renderer<'alloc> for ScopedRenderer<'alloc, '_, T>
+where
+    T: Renderer<'alloc>,
+{
+    fn viewport(&self) -> Viewport {
+        self.renderer.viewport()
+    }
+
+    fn set_viewport(&mut self, viewport: Viewport) {
+        self.renderer.set_viewport(viewport);
+    }
+
+    fn render_shape<S>(&mut self, shape: S)
+    where
+        S: Shape<'alloc> + ShapeClone<'alloc>,
+    {
+        self.renderer.render_shape(shape);
+    }
+}

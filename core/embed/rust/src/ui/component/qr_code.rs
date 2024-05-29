@@ -143,7 +143,7 @@ impl Component for Qr {
         Self::draw(&qr, area, self.border, scale);
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let mut outbuffer = [0u8; QR_MAX_VERSION.buffer_len()];
         let mut tempbuffer = [0u8; QR_MAX_VERSION.buffer_len()];
 

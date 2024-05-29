@@ -92,7 +92,7 @@ impl<'a> Component for ErrorScreen<'a> {
         self.footer.paint();
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.bg.render(target);
 
         let icon = ICON_WARNING40;

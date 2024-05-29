@@ -301,7 +301,7 @@ impl Component for PassphraseKeyboard {
         }
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.input.render(target);
         self.scrollbar.render(target);
         self.confirm.render(target);
@@ -395,7 +395,7 @@ impl Component for Input {
         }
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let style = theme::label_keyboard();
 
         let text_baseline = self.area.top_left() + Offset::y(style.text_font.text_height())

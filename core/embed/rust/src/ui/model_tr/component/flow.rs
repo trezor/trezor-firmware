@@ -315,7 +315,7 @@ where
         self.current_page.paint();
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.pad.render(target);
         // Scrollbars are painted only with a title and when requested
         if self.title.is_some() {

@@ -106,7 +106,7 @@ impl<'a> Component for Intro<'a> {
         self.menu.paint();
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.bg.render(target);
         self.title.render(target);
         self.text.render(target);

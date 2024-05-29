@@ -95,7 +95,7 @@ impl ButtonType {
         }
     }
 
-    pub fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    pub fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         match self {
             Self::Button(button) => {
                 button.render(target);
@@ -167,7 +167,7 @@ impl ButtonContainer {
         self.button_type.paint();
     }
 
-    pub fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    pub fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.button_type.render(target);
     }
 
@@ -592,7 +592,7 @@ impl Component for ButtonController {
         self.right_btn.paint();
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.pad.render(target);
         self.left_btn.render(target);
         self.middle_btn.render(target);
@@ -778,7 +778,7 @@ impl Component for AutomaticMover {
 
     fn paint(&mut self) {}
 
-    fn render<'s>(&self, _target: &mut impl Renderer<'s>) {}
+    fn render<'s>(&'s self, _target: &mut impl Renderer<'s>) {}
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         // Moving automatically only when we receive a TimerToken that we have

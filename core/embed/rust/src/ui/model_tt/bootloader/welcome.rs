@@ -59,7 +59,7 @@ impl Component for Welcome {
         );
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.bg.render(target);
 
         shape::Text::new(screen().top_center() + Offset::y(102), "Get started with")

@@ -1,6 +1,6 @@
 use crate::ui::{
     display::Color,
-    shape::{Canvas, DirectRenderer, DrawingCache},
+    shape::{render::ScopedRenderer, Canvas, DirectRenderer, DrawingCache},
 };
 
 use super::bumps::run_with_bumps;
@@ -12,13 +12,13 @@ use super::bumps::run_with_bumps;
 /// `bg_color` specifies a background color with which the canvas is filled
 /// before the drawing starts. If the background color is None, the background
 /// is undefined, and the user has to fill it themselves.
-pub fn render_on_canvas<C: Canvas, F>(canvas: &mut C, bg_color: Option<Color>, func: F)
+pub fn render_on_canvas<'env, C: Canvas, F>(canvas: &mut C, bg_color: Option<Color>, func: F)
 where
-    F: for<'a> FnOnce(&mut DirectRenderer<'_, 'a, C>),
+    F: for<'alloc> FnOnce(&mut ScopedRenderer<'alloc, 'env, DirectRenderer<'_, 'alloc, C>>),
 {
     run_with_bumps(|bump_a, bump_b| {
         let cache = DrawingCache::new(bump_a, bump_b);
-        let mut target = DirectRenderer::new(canvas, bg_color, &cache);
+        let mut target = ScopedRenderer::new(DirectRenderer::new(canvas, bg_color, &cache));
         func(&mut target);
     });
 }

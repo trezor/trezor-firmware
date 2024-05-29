@@ -22,7 +22,7 @@ pub trait FlowStore {
     fn event(&mut self, i: usize, ctx: &mut EventCtx, event: Event) -> Option<FlowMsg>;
 
     /// Call `Component::render` on i-th element.
-    fn render<'s>(&self, i: usize, target: &mut impl Renderer<'s>);
+    fn render<'s>(&'s self, i: usize, target: &mut impl Renderer<'s>);
 
     #[cfg(feature = "ui_debug")]
     /// Call `Trace::trace` on i-th element.
@@ -62,7 +62,7 @@ impl FlowStore for FlowEmpty {
         panic!()
     }
 
-    fn render<'s>(&self, _i: usize, _target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, _i: usize, _target: &mut impl Renderer<'s>) {
         panic!()
     }
 
@@ -132,7 +132,7 @@ where
         }
     }
 
-    fn render<'s>(&self, i: usize, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, i: usize, target: &mut impl Renderer<'s>) {
         if i == 0 {
             self.as_ref().render(target)
         } else {

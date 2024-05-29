@@ -99,7 +99,7 @@ where
     }
 
     /// Display the final page with user confirmation.
-    fn render_final_page<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render_final_page<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let final_text = self.get_final_text();
         text_multiline2(
             target,
@@ -131,7 +131,7 @@ where
     }
 
     /// Display current set of recovery words.
-    fn render_words<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render_words<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let mut y_offset = 0;
         // Showing the word index and the words itself
         for i in 0..WORDS_PER_PAGE {
@@ -191,7 +191,7 @@ where
         }
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         // Showing scrollbar in all cases
         // Individual pages are responsible for not colliding with it
         self.scrollbar.render(target);

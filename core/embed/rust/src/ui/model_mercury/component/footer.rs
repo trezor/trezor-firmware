@@ -94,7 +94,7 @@ impl<'a> Component for Footer<'a> {
         todo!()
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         // show description only if there is space for it
         if self.area.height() == Footer::HEIGHT_DEFAULT {
             if let Some(description) = self.text_description {

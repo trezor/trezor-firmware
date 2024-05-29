@@ -257,7 +257,7 @@ where
 
     /// Display current, previous and next choices according to
     /// the current ChoiceItem.
-    fn render_choices<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render_choices<'s>(&'s self, target: &mut impl Renderer<'s>) {
         // Getting the row area for the choices - so that displaying
         // items in the used font will show them in the middle vertically.
         let area_height_half = self.pad.area.height() / 2;
@@ -341,7 +341,7 @@ where
     }
 
     /// Display the current choice in the middle.
-    fn show_current_choice2<'s>(&self, target: &mut impl Renderer<'s>, area: Rect) {
+    fn show_current_choice2<'s>(&'s self, target: &mut impl Renderer<'s>, area: Rect) {
         self.get_current_item()
             .render_center(target, area, self.inverse_selected_item);
     }
@@ -390,7 +390,7 @@ where
 
     /// Display all the choices fitting on the left side.
     /// Going as far as possible.
-    fn show_left_choices2<'s>(&self, target: &mut impl Renderer<'s>, area: Rect) {
+    fn show_left_choices2<'s>(&'s self, target: &mut impl Renderer<'s>, area: Rect) {
         // NOTE: page index can get negative here, so having it as i16 instead of usize
         let mut page_index = self.page_counter as i16 - 1;
         let mut current_area = area.split_right(self.items_distance).0;
@@ -473,7 +473,7 @@ where
 
     /// Display all the choices fitting on the right side.
     /// Going as far as possible.
-    fn show_right_choices2<'s>(&self, target: &mut impl Renderer<'s>, area: Rect) {
+    fn show_right_choices2<'s>(&'s self, target: &mut impl Renderer<'s>, area: Rect) {
         let mut page_index = self.page_counter + 1;
         let mut current_area = area.split_left(self.items_distance).1;
         while current_area.width() > 0 {
@@ -720,7 +720,7 @@ where
         self.paint_choices();
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.pad.render(target);
         self.buttons.render(target);
         self.render_choices(target);

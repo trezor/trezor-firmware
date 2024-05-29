@@ -130,7 +130,7 @@ impl Component for CoinJoinProgress {
         }
     }
 
-    fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         // TOP
         let center = self.area.center() + Offset::y(self.loader_y_offset);
 
