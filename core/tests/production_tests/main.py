@@ -5,9 +5,9 @@ import utime
 usb_vcp = io.VCP(
     iface_num=0x00,
     data_iface_num=0x01,
-    ep_in=0x81,
+    ep_in=0x01,
     ep_out=0x01,
-    ep_cmd=0x82,
+    ep_cmd=0x02,
 )
 
 usb = io.USB(

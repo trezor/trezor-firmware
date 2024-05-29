@@ -33,7 +33,7 @@ ENABLE_IFACE_VCP = __debug__
 id_wire = next(_iface_iter)
 iface_wire = io.WebUSB(
     iface_num=id_wire,
-    ep_in=0x81 + id_wire,
+    ep_in=0x01 + id_wire,
     ep_out=0x01 + id_wire,
     emu_port=UDP_PORT + _WIRE_PORT_OFFSET,
 )
@@ -55,7 +55,7 @@ if __debug__ and ENABLE_IFACE_DEBUG:
     id_debug = next(_iface_iter)
     iface_debug = io.WebUSB(
         iface_num=id_debug,
-        ep_in=0x81 + id_debug,
+        ep_in=0x01 + id_debug,
         ep_out=0x01 + id_debug,
         emu_port=UDP_PORT + _DEBUGLINK_PORT_OFFSET,
     )
@@ -66,7 +66,7 @@ if not utils.BITCOIN_ONLY and ENABLE_IFACE_WEBAUTHN:
     id_webauthn = next(_iface_iter)
     iface_webauthn = io.HID(
         iface_num=id_webauthn,
-        ep_in=0x81 + id_webauthn,
+        ep_in=0x01 + id_webauthn,
         ep_out=0x01 + id_webauthn,
         emu_port=UDP_PORT + _WEBAUTHN_PORT_OFFSET,
         # fmt: off
@@ -99,9 +99,9 @@ if __debug__ and ENABLE_IFACE_VCP:
     iface_vcp = io.VCP(
         iface_num=id_vcp,
         data_iface_num=id_vcp_data,
-        ep_in=0x81 + id_vcp,
+        ep_in=0x01 + id_vcp,
         ep_out=0x01 + id_vcp,
-        ep_cmd=0x81 + id_vcp_data,
+        ep_cmd=0x01 + id_vcp_data,
         emu_port=UDP_PORT + _VCP_PORT_OFFSET,
     )
     bus.add(iface_vcp)

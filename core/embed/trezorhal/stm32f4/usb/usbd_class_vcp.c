@@ -17,6 +17,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "common.h"
+
+#include "usbd_core.h"
+#include "usbd_internal.h"
+
+#include "usb_vcp.h"
+
 // Communications Device Class Code (bFunctionClass, bInterfaceClass)
 #define USB_CLASS_CDC 0x02
 
@@ -50,34 +57,129 @@
 #define USB_CDC_GET_LINE_CODING 0x21
 #define USB_CDC_SET_CONTROL_LINE_STATE 0x22
 
+typedef struct __attribute__((packed)) {
+  uint8_t bFunctionLength;
+  uint8_t bDescriptorType;
+  uint8_t bDescriptorSubtype;
+  uint16_t bcdCDC;
+} usb_vcp_header_descriptor_t;
+
+typedef struct __attribute__((packed)) {
+  uint8_t bFunctionLength;
+  uint8_t bDescriptorType;
+  uint8_t bDescriptorSubtype;
+  uint8_t bmCapabilities;
+  uint8_t bDataInterface;
+} usb_vcp_cm_descriptor_t;
+
+typedef struct __attribute__((packed)) {
+  uint8_t bFunctionLength;
+  uint8_t bDescriptorType;
+  uint8_t bDescriptorSubtype;
+  uint8_t bmCapabilities;
+} usb_vcp_acm_descriptor_t;
+
+typedef struct __attribute__((packed)) {
+  uint8_t bFunctionLength;
+  uint8_t bDescriptorType;
+  uint8_t bDescriptorSubtype;
+  uint8_t bControlInterface;
+  uint8_t bSubordinateInterface0;
+} usb_vcp_union_descriptor_t;
+
+typedef struct __attribute__((packed)) {
+  usb_interface_assoc_descriptor_t assoc;
+  usb_interface_descriptor_t iface_cdc;
+  usb_vcp_header_descriptor_t
+      fheader;                  // Class-Specific Descriptor Header Format
+  usb_vcp_cm_descriptor_t fcm;  // Call Management Functional Descriptor
+  usb_vcp_acm_descriptor_t
+      facm;  // Abstract Control Management Functional Descriptor
+  usb_vcp_union_descriptor_t funion;  // Union Interface Functional Descriptor
+  usb_endpoint_descriptor_t ep_cmd;
+  usb_interface_descriptor_t iface_data;
+  usb_endpoint_descriptor_t ep_in;
+  usb_endpoint_descriptor_t ep_out;
+} usb_vcp_descriptor_block_t;
+
+typedef struct __attribute__((packed)) {
+  uint32_t dwDTERate;
+  uint8_t bCharFormat;  // usb_cdc_line_coding_bCharFormat_t
+  uint8_t bParityType;  // usb_cdc_line_coding_bParityType_t
+  uint8_t bDataBits;
+} usb_cdc_line_coding_t;
+
+typedef enum {
+  USB_CDC_1_STOP_BITS = 0,
+  USB_CDC_1_5_STOP_BITS = 1,
+  USB_CDC_2_STOP_BITS = 2,
+} usb_cdc_line_coding_bCharFormat_t;
+
+typedef enum {
+  USB_CDC_NO_PARITY = 0,
+  USB_CDC_ODD_PARITY = 1,
+  USB_CDC_EVEN_PARITY = 2,
+  USB_CDC_MARK_PARITY = 3,
+  USB_CDC_SPACE_PARITY = 4,
+} usb_cdc_line_coding_bParityType_t;
+
+/* usb_rbuf_t is used internally for the RX/TX buffering. */
+typedef struct {
+  size_t cap;
+  volatile size_t read;
+  volatile size_t write;
+  uint8_t *buf;
+} usb_rbuf_t;
+
+// Maximal length of packets on IN CMD EP
+#define USB_CDC_MAX_CMD_PACKET_LEN 0x08
+
+/* usb_vcp_state_t encapsulates all state used by enabled VCP interface.  It
+ * needs to be completely initialized in usb_vcp_add and reset in
+ * usb_vcp_class_init.  See usb_vcp_info_t for details of the configuration
+ * fields. */
+typedef struct {
+  USBD_HandleTypeDef *dev_handle;
+  const usb_vcp_descriptor_block_t *desc_block;
+  usb_rbuf_t rx_ring;
+  usb_rbuf_t tx_ring;
+  uint8_t *rx_packet;
+  uint8_t *tx_packet;
+  void (*rx_intr_fn)(void);
+  uint8_t rx_intr_byte;
+  uint8_t ep_cmd;
+  uint8_t ep_in;
+  uint8_t ep_out;
+  uint8_t max_packet_len;
+  uint8_t ep_in_is_idle;  // Set to 1 after IN endpoint gets idle
+  uint8_t cmd_buffer[USB_CDC_MAX_CMD_PACKET_LEN];
+} usb_vcp_state_t;
+
+_Static_assert(sizeof(usb_vcp_state_t) <= USBD_CLASS_STATE_MAX_SIZE);
+
+// interface dispatch functions
+static const USBD_ClassTypeDef usb_vcp_class;
+static const USBD_ClassTypeDef usb_vcp_data_class;
+
+#define usb_get_vcp_state(iface_num) \
+  ((usb_vcp_state_t *)usb_get_iface_state(iface_num, &usb_vcp_class))
+
 /* usb_vcp_add adds and configures new USB VCP interface according to
  * configuration options passed in `info`. */
 secbool usb_vcp_add(const usb_vcp_info_t *info) {
-  usb_iface_t *iface = usb_get_iface(info->iface_num);
+  usb_vcp_state_t *state = usb_get_iface_state(info->iface_num, NULL);
 
-  if (iface == NULL) {
+  if (state == NULL) {
     return secfalse;  // Invalid interface number
-  }
-  if (iface->type != USB_IFACE_TYPE_DISABLED) {
-    return secfalse;  // Interface is already enabled
   }
 
   usb_vcp_descriptor_block_t *d =
-      usb_desc_alloc_iface(sizeof(usb_vcp_descriptor_block_t));
+      usb_alloc_class_descriptors(sizeof(usb_vcp_descriptor_block_t));
 
   if (d == NULL) {
     return secfalse;  // Not enough space in the configuration descriptor
   }
 
-  if ((info->ep_cmd & USB_EP_DIR_MASK) != USB_EP_DIR_IN) {
-    return secfalse;  // IN CMD EP is invalid
-  }
-  if ((info->ep_in & USB_EP_DIR_MASK) != USB_EP_DIR_IN) {
-    return secfalse;  // IN EP is invalid
-  }
-  if ((info->ep_out & USB_EP_DIR_MASK) != USB_EP_DIR_OUT) {
-    return secfalse;  // OUT EP is invalid
-  }
   if ((info->rx_buffer_len == 0) ||
       (info->rx_buffer_len & (info->rx_buffer_len - 1)) != 0) {
     return secfalse;  // Capacity needs to be a power of 2
@@ -96,6 +198,15 @@ secbool usb_vcp_add(const usb_vcp_info_t *info) {
     return secfalse;
   }
   if (info->tx_packet == NULL) {
+    return secfalse;
+  }
+  if (info->ep_in >= USBD_MAX_NUM_INTERFACES) {
+    return secfalse;
+  }
+  if (info->ep_out >= USBD_MAX_NUM_INTERFACES) {
+    return secfalse;
+  }
+  if (info->ep_cmd >= USBD_MAX_NUM_INTERFACES) {
     return secfalse;
   }
 
@@ -155,7 +266,7 @@ secbool usb_vcp_add(const usb_vcp_info_t *info) {
   // IN CMD endpoint (control)
   d->ep_cmd.bLength = sizeof(usb_endpoint_descriptor_t);
   d->ep_cmd.bDescriptorType = USB_DESC_TYPE_ENDPOINT;
-  d->ep_cmd.bEndpointAddress = info->ep_cmd;
+  d->ep_cmd.bEndpointAddress = info->ep_cmd | USB_EP_DIR_IN;
   d->ep_cmd.bmAttributes = USBD_EP_TYPE_INTR;
   d->ep_cmd.wMaxPacketSize = USB_CDC_MAX_CMD_PACKET_LEN;
   d->ep_cmd.bInterval = info->polling_interval;
@@ -174,7 +285,7 @@ secbool usb_vcp_add(const usb_vcp_info_t *info) {
   // OUT endpoint (receiving)
   d->ep_out.bLength = sizeof(usb_endpoint_descriptor_t);
   d->ep_out.bDescriptorType = USB_DESC_TYPE_ENDPOINT;
-  d->ep_out.bEndpointAddress = info->ep_out;
+  d->ep_out.bEndpointAddress = info->ep_out | USB_EP_DIR_OUT;
   d->ep_out.bmAttributes = USBD_EP_TYPE_BULK;
   d->ep_out.wMaxPacketSize = info->max_packet_len;
   d->ep_out.bInterval = 0;
@@ -182,43 +293,43 @@ secbool usb_vcp_add(const usb_vcp_info_t *info) {
   // IN endpoint (sending)
   d->ep_in.bLength = sizeof(usb_endpoint_descriptor_t);
   d->ep_in.bDescriptorType = USB_DESC_TYPE_ENDPOINT;
-  d->ep_in.bEndpointAddress = info->ep_in;
+  d->ep_in.bEndpointAddress = info->ep_in | USB_EP_DIR_IN;
   d->ep_in.bmAttributes = USBD_EP_TYPE_BULK;
   d->ep_in.wMaxPacketSize = info->max_packet_len;
   d->ep_in.bInterval = 0;
 
-  // Config descriptor
-  usb_desc_add_iface(sizeof(usb_vcp_descriptor_block_t));
-  usb_config_desc
-      ->bNumInterfaces++;  // usb_vcp_descriptor_block_t contains 2 interfaces
-
   // Interface state
+  state->dev_handle = usb_get_dev_handle();
+  state->desc_block = d;
 
-  iface->type = USB_IFACE_TYPE_VCP;
-  iface->vcp.desc_block = d;
+  state->rx_ring.buf = info->rx_buffer;
+  state->rx_ring.cap = info->rx_buffer_len;
+  state->rx_ring.read = 0;
+  state->rx_ring.write = 0;
 
-  iface->vcp.rx_ring.buf = info->rx_buffer;
-  iface->vcp.rx_ring.cap = info->rx_buffer_len;
-  iface->vcp.rx_ring.read = 0;
-  iface->vcp.rx_ring.write = 0;
+  state->tx_ring.buf = info->tx_buffer;
+  state->tx_ring.cap = info->tx_buffer_len;
+  state->tx_ring.read = 0;
+  state->tx_ring.write = 0;
 
-  iface->vcp.tx_ring.buf = info->tx_buffer;
-  iface->vcp.tx_ring.cap = info->tx_buffer_len;
-  iface->vcp.tx_ring.read = 0;
-  iface->vcp.tx_ring.write = 0;
+  state->rx_packet = info->rx_packet;
+  state->tx_packet = info->tx_packet;
 
-  iface->vcp.rx_packet = info->rx_packet;
-  iface->vcp.tx_packet = info->tx_packet;
+  state->rx_intr_fn = info->rx_intr_fn;
+  state->rx_intr_byte = info->rx_intr_byte;
 
-  iface->vcp.rx_intr_fn = info->rx_intr_fn;
-  iface->vcp.rx_intr_byte = info->rx_intr_byte;
+  state->ep_cmd = info->ep_cmd | USB_EP_DIR_IN;
+  state->ep_in = info->ep_in | USB_EP_DIR_IN;
+  state->ep_out = info->ep_out | USB_EP_DIR_OUT;
+  state->max_packet_len = info->max_packet_len;
 
-  iface->vcp.ep_cmd = info->ep_cmd;
-  iface->vcp.ep_in = info->ep_in;
-  iface->vcp.ep_out = info->ep_out;
-  iface->vcp.max_packet_len = info->max_packet_len;
+  state->ep_in_is_idle = 1;
 
-  iface->vcp.ep_in_is_idle = 1;
+  usb_set_iface_class(info->iface_num, &usb_vcp_class);
+
+  // This just make the data interface slot occupied so it can't be reused
+  // by another class driver. Data interface dispatch functiona are not used.
+  usb_set_iface_class(info->data_iface_num, &usb_vcp_data_class);
 
   return sectrue;
 }
@@ -230,42 +341,32 @@ static inline int ring_empty(usb_rbuf_t *b) { return ring_length(b) == 0; }
 static inline int ring_full(usb_rbuf_t *b) { return ring_length(b) == b->cap; }
 
 secbool usb_vcp_can_read(uint8_t iface_num) {
-  usb_iface_t *iface = usb_get_iface(iface_num);
-  if (iface == NULL) {
+  usb_vcp_state_t *state = usb_get_vcp_state(iface_num);
+  if (state == NULL) {
     return secfalse;  // Invalid interface number
   }
-  if (iface->type != USB_IFACE_TYPE_VCP) {
-    return secfalse;  // Invalid interface type
-  }
-  if (ring_empty(&iface->vcp.rx_ring)) {
+  if (ring_empty(&state->rx_ring)) {
     return secfalse;  // Nothing in the rx buffer
   }
   return sectrue;
 }
 
 secbool usb_vcp_can_write(uint8_t iface_num) {
-  usb_iface_t *iface = usb_get_iface(iface_num);
-  if (iface == NULL) {
+  usb_vcp_state_t *state = usb_get_vcp_state(iface_num);
+  if (state == NULL) {
     return secfalse;  // Invalid interface number
   }
-  if (iface->type != USB_IFACE_TYPE_VCP) {
-    return secfalse;  // Invalid interface type
-  }
-  if (ring_full(&iface->vcp.tx_ring)) {
+  if (ring_full(&state->tx_ring)) {
     return secfalse;  // Tx ring buffer is full
   }
   return sectrue;
 }
 
 int usb_vcp_read(uint8_t iface_num, uint8_t *buf, uint32_t len) {
-  usb_iface_t *iface = usb_get_iface(iface_num);
-  if (iface == NULL) {
+  usb_vcp_state_t *state = usb_get_vcp_state(iface_num);
+  if (state == NULL) {
     return -1;  // Invalid interface number
   }
-  if (iface->type != USB_IFACE_TYPE_VCP) {
-    return -2;  // Invalid interface type
-  }
-  usb_vcp_state_t *state = &iface->vcp;
 
   // Read from the rx ring buffer
   usb_rbuf_t *b = &state->rx_ring;
@@ -279,14 +380,10 @@ int usb_vcp_read(uint8_t iface_num, uint8_t *buf, uint32_t len) {
 }
 
 int usb_vcp_write(uint8_t iface_num, const uint8_t *buf, uint32_t len) {
-  usb_iface_t *iface = usb_get_iface(iface_num);
-  if (iface == NULL) {
+  usb_vcp_state_t *state = usb_get_vcp_state(iface_num);
+  if (state == NULL) {
     return -1;  // Invalid interface number
   }
-  if (iface->type != USB_IFACE_TYPE_VCP) {
-    return -2;  // Invalid interface type
-  }
-  usb_vcp_state_t *state = &iface->vcp;
 
   // Write into the tx ring buffer
   usb_rbuf_t *b = &state->tx_ring;
@@ -330,8 +427,9 @@ int usb_vcp_write_blocking(uint8_t iface_num, const uint8_t *buf, uint32_t len,
   return i;
 }
 
-static void usb_vcp_class_init(USBD_HandleTypeDef *dev, usb_vcp_state_t *state,
-                               uint8_t cfg_idx) {
+static uint8_t usb_vcp_class_init(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
+  usb_vcp_state_t *state = (usb_vcp_state_t *)dev->pUserData;
+
   // Open endpoints
   USBD_LL_OpenEP(dev, state->ep_in, USBD_EP_TYPE_BULK, state->max_packet_len);
   USBD_LL_OpenEP(dev, state->ep_out, USBD_EP_TYPE_BULK, state->max_packet_len);
@@ -348,10 +446,13 @@ static void usb_vcp_class_init(USBD_HandleTypeDef *dev, usb_vcp_state_t *state,
   // Prepare the OUT EP to receive next packet
   USBD_LL_PrepareReceive(dev, state->ep_out, state->rx_packet,
                          state->max_packet_len);
+
+  return USBD_OK;
 }
 
-static void usb_vcp_class_deinit(USBD_HandleTypeDef *dev,
-                                 usb_vcp_state_t *state, uint8_t cfg_idx) {
+static uint8_t usb_vcp_class_deinit(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
+  usb_vcp_state_t *state = (usb_vcp_state_t *)dev->pUserData;
+
   // Flush endpoints
   USBD_LL_FlushEP(dev, state->ep_in);
   USBD_LL_FlushEP(dev, state->ep_out);
@@ -360,10 +461,14 @@ static void usb_vcp_class_deinit(USBD_HandleTypeDef *dev,
   USBD_LL_CloseEP(dev, state->ep_in);
   USBD_LL_CloseEP(dev, state->ep_out);
   USBD_LL_CloseEP(dev, state->ep_cmd);
+
+  return USBD_OK;
 }
 
-static int usb_vcp_class_setup(USBD_HandleTypeDef *dev, usb_vcp_state_t *state,
-                               USBD_SetupReqTypedef *req) {
+static uint8_t usb_vcp_class_setup(USBD_HandleTypeDef *dev,
+                                   USBD_SetupReqTypedef *req) {
+  usb_vcp_state_t *state = (usb_vcp_state_t *)dev->pUserData;
+
   static const usb_cdc_line_coding_t line_coding = {
       .dwDTERate = 115200,
       .bCharFormat = USB_CDC_1_STOP_BITS,
@@ -393,15 +498,19 @@ static int usb_vcp_class_setup(USBD_HandleTypeDef *dev, usb_vcp_state_t *state,
   return USBD_OK;
 }
 
-static void usb_vcp_class_data_in(USBD_HandleTypeDef *dev,
-                                  usb_vcp_state_t *state, uint8_t ep_num) {
+static uint8_t usb_vcp_class_data_in(USBD_HandleTypeDef *dev, uint8_t ep_num) {
+  usb_vcp_state_t *state = (usb_vcp_state_t *)dev->pUserData;
+
   if ((ep_num | USB_EP_DIR_IN) == state->ep_in) {
     state->ep_in_is_idle = 1;
   }
+
+  return USBD_OK;
 }
 
-static void usb_vcp_class_data_out(USBD_HandleTypeDef *dev,
-                                   usb_vcp_state_t *state, uint8_t ep_num) {
+static uint8_t usb_vcp_class_data_out(USBD_HandleTypeDef *dev, uint8_t ep_num) {
+  usb_vcp_state_t *state = (usb_vcp_state_t *)dev->pUserData;
+
   if (ep_num == state->ep_out) {
     uint32_t len = USBD_LL_GetRxDataSize(dev, ep_num);
 
@@ -425,11 +534,15 @@ static void usb_vcp_class_data_out(USBD_HandleTypeDef *dev,
     USBD_LL_PrepareReceive(dev, state->ep_out, state->rx_packet,
                            state->max_packet_len);
   }
+
+  return USBD_OK;
 }
 
-static void usb_vcp_class_sof(USBD_HandleTypeDef *dev, usb_vcp_state_t *state) {
+static uint8_t usb_vcp_class_sof(USBD_HandleTypeDef *dev) {
+  usb_vcp_state_t *state = (usb_vcp_state_t *)dev->pUserData;
+
   if (!state->ep_in_is_idle) {
-    return;
+    return USBD_OK;
   }
 
   // Read from the tx ring buffer
@@ -447,6 +560,28 @@ static void usb_vcp_class_sof(USBD_HandleTypeDef *dev, usb_vcp_state_t *state) {
 
   if (i > 0) {
     state->ep_in_is_idle = 0;
-    USBD_LL_Transmit(&usb_dev_handle, state->ep_in, buf, (uint16_t)i);
+    USBD_LL_Transmit(dev, state->ep_in, buf, (uint16_t)i);
   }
+
+  return USBD_OK;
 }
+
+static const USBD_ClassTypeDef usb_vcp_class = {
+    .Init = usb_vcp_class_init,
+    .DeInit = usb_vcp_class_deinit,
+    .Setup = usb_vcp_class_setup,
+    .EP0_TxSent = NULL,
+    .EP0_RxReady = NULL,
+    .DataIn = usb_vcp_class_data_in,
+    .DataOut = usb_vcp_class_data_out,
+    .SOF = usb_vcp_class_sof,
+    .IsoINIncomplete = NULL,
+    .IsoOUTIncomplete = NULL,
+    .GetHSConfigDescriptor = NULL,
+    .GetFSConfigDescriptor = NULL,
+    .GetOtherSpeedConfigDescriptor = NULL,
+    .GetDeviceQualifierDescriptor = NULL,
+    .GetUsrStrDescriptor = NULL,
+};
+
+static const USBD_ClassTypeDef usb_vcp_data_class = {};
