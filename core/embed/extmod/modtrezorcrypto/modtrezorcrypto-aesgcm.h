@@ -110,6 +110,28 @@ STATIC mp_obj_t mod_trezorcrypto_AesGcm_encrypt(mp_obj_t self, mp_obj_t data) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_AesGcm_encrypt_obj,
                                  mod_trezorcrypto_AesGcm_encrypt);
 
+/// def encrypt_in_place(self, data: bytearray | memoryview) -> int:
+///    """
+///    Encrypt data chunk in place. Returns the length of the encrypted data.
+///    """
+STATIC mp_obj_t mod_trezorcrypto_AesGcm_encrypt_in_place(mp_obj_t self,
+                                                         mp_obj_t data) {
+  mp_obj_AesGcm_t *o = MP_OBJ_TO_PTR(self);
+  if (o->state != STATE_INIT && o->state != STATE_ENCRYPTING) {
+    mp_raise_msg(&mp_type_RuntimeError, "Invalid state.");
+  }
+  o->state = STATE_ENCRYPTING;
+  mp_buffer_info_t in = {0};
+  mp_get_buffer_raise(data, &in, MP_BUFFER_READ | MP_BUFFER_WRITE);
+  if (gcm_encrypt((unsigned char *)in.buf, in.len, &(o->ctx)) != RETURN_GOOD) {
+    o->state = STATE_FAILED;
+    mp_raise_type(&mp_type_RuntimeError);
+  }
+  return mp_obj_new_int(in.len);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_AesGcm_encrypt_in_place_obj,
+                                 mod_trezorcrypto_AesGcm_encrypt_in_place);
+
 /// def decrypt(self, data: bytes) -> bytes:
 ///     """
 ///     Decrypt data chunk.
@@ -134,6 +156,28 @@ STATIC mp_obj_t mod_trezorcrypto_AesGcm_decrypt(mp_obj_t self, mp_obj_t data) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_AesGcm_decrypt_obj,
                                  mod_trezorcrypto_AesGcm_decrypt);
+
+/// def decrypt_in_place(self, data: bytearray | memoryview) -> int:
+///   """
+///   Decrypt data chunk in place. Returns the length of the decrypted data.
+///   """
+STATIC mp_obj_t mod_trezorcrypto_AesGcm_decrypt_in_place(mp_obj_t self,
+                                                         mp_obj_t data) {
+  mp_obj_AesGcm_t *o = MP_OBJ_TO_PTR(self);
+  if (o->state != STATE_INIT && o->state != STATE_DECRYPTING) {
+    mp_raise_msg(&mp_type_RuntimeError, "Invalid state.");
+  }
+  o->state = STATE_DECRYPTING;
+  mp_buffer_info_t in = {0};
+  mp_get_buffer_raise(data, &in, MP_BUFFER_READ | MP_BUFFER_WRITE);
+  if (gcm_decrypt((unsigned char *)in.buf, in.len, &(o->ctx)) != RETURN_GOOD) {
+    o->state = STATE_FAILED;
+    mp_raise_type(&mp_type_RuntimeError);
+  }
+  return mp_obj_new_int(in.len);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_AesGcm_decrypt_in_place_obj,
+                                 mod_trezorcrypto_AesGcm_decrypt_in_place);
 
 /// def auth(self, data: bytes) -> None:
 ///     """
@@ -194,8 +238,12 @@ STATIC const mp_rom_map_elem_t mod_trezorcrypto_AesGcm_locals_dict_table[] = {
      MP_ROM_PTR(&mod_trezorcrypto_AesGcm_reset_obj)},
     {MP_ROM_QSTR(MP_QSTR_encrypt),
      MP_ROM_PTR(&mod_trezorcrypto_AesGcm_encrypt_obj)},
+    {MP_ROM_QSTR(MP_QSTR_encrypt_in_place),
+     MP_ROM_PTR(&mod_trezorcrypto_AesGcm_encrypt_in_place_obj)},
     {MP_ROM_QSTR(MP_QSTR_decrypt),
      MP_ROM_PTR(&mod_trezorcrypto_AesGcm_decrypt_obj)},
+    {MP_ROM_QSTR(MP_QSTR_decrypt_in_place),
+     MP_ROM_PTR(&mod_trezorcrypto_AesGcm_decrypt_in_place_obj)},
     {MP_ROM_QSTR(MP_QSTR_auth), MP_ROM_PTR(&mod_trezorcrypto_AesGcm_auth_obj)},
     {MP_ROM_QSTR(MP_QSTR_finish),
      MP_ROM_PTR(&mod_trezorcrypto_AesGcm_finish_obj)},
