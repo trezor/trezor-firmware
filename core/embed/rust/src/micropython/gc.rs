@@ -21,8 +21,13 @@ impl<T: ?Sized> Copy for Gc<T> {}
 
 impl<T> Gc<T> {
     /// Allocate memory on the heap managed by the MicroPython garbage collector
-    /// and then place `v` into it. `v` will _not_ get its destructor called.
-    pub fn new(v: T) -> Result<Self, Error> {
+    /// and then place `v` into it.
+    ///
+    /// `flags` can be an int value built out of constants in the ffi module.
+    /// The current MicroPython only supports GC_ALLOC_FLAG_HAS_FINALISER, which
+    /// will cause the __del__ method to be called when the object is
+    /// garbage collected.
+    fn alloc(v: T, flags: u32) -> Result<Self, Error> {
         let layout = Layout::for_value(&v);
         // TODO: Assert that `layout.align()` is the same as the GC alignment.
         // SAFETY:
@@ -32,7 +37,7 @@ impl<T> Gc<T> {
         //    or the MicroPython heap.
         // EXCEPTION: Returns null instead of raising.
         unsafe {
-            let raw = ffi::gc_alloc(layout.size(), 0);
+            let raw = ffi::gc_alloc(layout.size(), flags);
             if raw.is_null() {
                 return Err(Error::AllocationFailed);
             }
@@ -40,6 +45,24 @@ impl<T> Gc<T> {
             ptr::write(typed, v);
             Ok(Self::from_raw(typed))
         }
+    }
+
+    /// Allocate memory on the heap managed by the MicroPython garbage collector
+    /// and then place `v` into it. `v` will _not_ get its destructor called.
+    pub fn new(v: T) -> Result<Self, Error> {
+        Self::alloc(v, 0)
+    }
+
+    /// Allocate memory on the heap managed by the MicroPython garbage
+    /// collector, place `v` into it, and register for finalisation.
+    ///
+    /// `v` will **not** get its destructor called automatically! However, if
+    /// `v` is a Python-style object (has a base as its first field), and
+    /// has a `__del__` method, it will be called when the object is garbage
+    /// collected. You can use this to implement custom finalisation, in
+    /// which you can, e.g., invoke the Drop implementation.
+    pub fn new_with_custom_finaliser(v: T) -> Result<Self, Error> {
+        Self::alloc(v, ffi::GC_ALLOC_FLAG_HAS_FINALISER)
     }
 }
 
