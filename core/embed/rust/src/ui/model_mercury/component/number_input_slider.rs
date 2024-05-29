@@ -1,10 +1,13 @@
-use crate::ui::{
-    component::{base::ComponentExt, Child, Component, Event, EventCtx},
-    constant::screen,
-    display,
-    event::TouchEvent,
-    geometry::{Grid, Insets, Point, Rect},
-    shape::{self, Renderer},
+use crate::{
+    strutil::ShortString,
+    ui::{
+        component::{base::ComponentExt, Child, Component, Event, EventCtx},
+        constant::screen,
+        display,
+        event::TouchEvent,
+        geometry::{Alignment, Grid, Insets, Point, Rect},
+        shape::{self, Renderer},
+    },
 };
 
 use super::{theme, Button, ButtonMsg};
@@ -17,15 +20,20 @@ pub enum NumberInputSliderDialogMsg {
 
 pub struct NumberInputSliderDialog {
     area: Rect,
+    text_area: Rect,
     input: Child<NumberInputSlider>,
     cancel_button: Child<Button>,
     confirm_button: Child<Button>,
+    min: u16,
+    max: u16,
+    val: u16,
 }
 
 impl NumberInputSliderDialog {
     pub fn new(min: u16, max: u16, init_value: u16) -> Self {
         Self {
             area: Rect::zero(),
+            text_area: Rect::zero(),
             input: NumberInputSlider::new(min, max, init_value).into_child(),
             cancel_button: Button::with_text("CANCEL".into())
                 .styled(theme::button_cancel())
@@ -33,6 +41,9 @@ impl NumberInputSliderDialog {
             confirm_button: Button::with_text("CONFIRM".into())
                 .styled(theme::button_confirm())
                 .into_child(),
+            min,
+            max,
+            val: init_value,
         }
     }
 
@@ -50,7 +61,9 @@ impl Component for NumberInputSliderDialog {
         let content_area = self.area.inset(Insets::top(2 * theme::BUTTON_SPACING));
         let (_, content_area) = content_area.split_top(30);
         let (input_area, _) = content_area.split_top(15);
-        let (_, button_area) = content_area.split_bottom(button_height);
+        let (text_area, button_area) = content_area.split_bottom(button_height);
+
+        self.text_area = text_area;
 
         let grid = Grid::new(button_area, 1, 2).with_spacing(theme::KEYBOARD_SPACING);
         self.input.place(input_area.inset(Insets::sides(20)));
@@ -61,6 +74,7 @@ impl Component for NumberInputSliderDialog {
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         if let Some(value) = self.input.event(ctx, event) {
+            self.val = value;
             return Some(Self::Msg::Changed(value));
         }
         if let Some(ButtonMsg::Clicked) = self.cancel_button.event(ctx, event) {
@@ -80,6 +94,18 @@ impl Component for NumberInputSliderDialog {
 
     fn render<'s>(&self, target: &mut impl Renderer<'s>) {
         self.input.render(target);
+
+        let mut str = ShortString::new();
+        let val_pct = (100 * (self.val - self.min)) / (self.max - self.min);
+
+        unwrap!(ufmt::uwrite!(str, "{} %", val_pct));
+
+        shape::Text::new(self.text_area.center(), &str)
+            .with_font(theme::TEXT_NORMAL.text_font)
+            .with_fg(theme::TEXT_NORMAL.text_color)
+            .with_align(Alignment::Center)
+            .render(target);
+
         self.cancel_button.render(target);
         self.confirm_button.render(target);
     }
