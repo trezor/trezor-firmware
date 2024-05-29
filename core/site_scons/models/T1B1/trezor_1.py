@@ -42,11 +42,14 @@ def configure(
 
     if "usb" in features_wanted:
         sources += [
-            "embed/trezorhal/stm32f4/usb/usb.c",
+            "embed/trezorhal/stm32f4/usb/usbd_class_hid.c",
+            "embed/trezorhal/stm32f4/usb/usbd_class_vcp.c",
+            "embed/trezorhal/stm32f4/usb/usbd_class_webusb.c",
             "embed/trezorhal/stm32f4/usb/usbd_conf.c",
             "embed/trezorhal/stm32f4/usb/usbd_core.c",
             "embed/trezorhal/stm32f4/usb/usbd_ctlreq.c",
             "embed/trezorhal/stm32f4/usb/usbd_ioreq.c",
+            "embed/trezorhal/stm32f4/usb/usbd.c",
             "vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_usb.c",
         ]
         features_available.append("usb")

@@ -69,8 +69,8 @@ static void usb_init_all(secbool usb21_landing) {
 
   static const usb_webusb_info_t webusb_info = {
       .iface_num = USB_IFACE_NUM,
-      .ep_in = USB_EP_DIR_IN | 0x01,
-      .ep_out = USB_EP_DIR_OUT | 0x01,
+      .ep_in = 0x01,
+      .ep_out = 0x01,
       .subclass = 0,
       .protocol = 0,
       .max_packet_len = sizeof(rx_buffer),

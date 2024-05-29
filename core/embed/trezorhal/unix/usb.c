@@ -38,6 +38,13 @@
 
 #define USBD_MAX_NUM_INTERFACES 8
 
+typedef enum {
+  USB_IFACE_TYPE_DISABLED = 0,
+  USB_IFACE_TYPE_VCP = 1,
+  USB_IFACE_TYPE_HID = 2,
+  USB_IFACE_TYPE_WEBUSB = 3,
+} usb_iface_type_t;
+
 static struct {
   usb_iface_type_t type;
   uint16_t port;

@@ -272,6 +272,8 @@ typedef struct _USBD_HandleTypeDef
 #define MAX(a, b)  (((a) > (b)) ? (a) : (b))
 #endif
 
+#define UNCONST(X) ((uint8_t *)(X))
+
 #if  defined ( __GNUC__ )
   #ifndef __weak
     #define __weak   __attribute__((weak))
