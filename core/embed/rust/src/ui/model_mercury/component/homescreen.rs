@@ -288,17 +288,17 @@ impl LockscreenAnim {
     }
 }
 
-pub struct Lockscreen<'a> {
+pub struct Lockscreen {
     anim: LockscreenAnim,
-    label: TString<'a>,
+    label: TString<'static>,
     image: BinaryData<'static>,
     bootscreen: bool,
     coinjoin_authorized: bool,
     bg_image: ImageBuffer<Rgb565Canvas<'static>>,
 }
 
-impl<'a> Lockscreen<'a> {
-    pub fn new(label: TString<'a>, bootscreen: bool, coinjoin_authorized: bool) -> Self {
+impl Lockscreen {
+    pub fn new(label: TString<'static>, bootscreen: bool, coinjoin_authorized: bool) -> Self {
         let image = get_homescreen_image();
         let mut buf = unwrap!(ImageBuffer::new(AREA.size()), "no image buf");
 
@@ -317,7 +317,7 @@ impl<'a> Lockscreen<'a> {
     }
 }
 
-impl Component for Lockscreen<'_> {
+impl Component for Lockscreen {
     type Msg = HomescreenMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -466,7 +466,7 @@ fn get_homescreen_image() -> BinaryData<'static> {
 }
 
 #[cfg(feature = "ui_debug")]
-impl crate::trace::Trace for Lockscreen<'_> {
+impl crate::trace::Trace for Lockscreen {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("Lockscreen");
     }
