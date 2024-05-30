@@ -37,11 +37,11 @@ extern bool usb_connected_previously;
 /// def poll(ifaces: Iterable[int], list_ref: list, timeout_ms: int) -> bool:
 ///     """
 ///     Wait until one of `ifaces` is ready to read or write (using masks
-//      `io.POLL_READ` and `io.POLL_WRITE`) and assign the result into
+///     `io.POLL_READ` and `io.POLL_WRITE`) and assign the result into
 ///     `list_ref`:
 ///
-///     `list_ref[0]` - the interface number, including the mask
-///     `list_ref[1]` - for touch event, tuple of:
+///     - `list_ref[0]` - the interface number, including the mask
+///     - `list_ref[1]` - for touch event, tuple of:
 ///                     (event_type, x_position, y_position)
 ///                   - for button event (T1), tuple of:
 ///                     (event type, button number)
