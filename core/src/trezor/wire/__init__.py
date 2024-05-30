@@ -89,20 +89,19 @@ if __debug__:
 
 async def _handle_single_message(
     ctx: context.Context, msg: codec_v1.Message, use_workflow: bool
-) -> codec_v1.Message | None:
+) -> bool:
     """Handle a message that was loaded from USB by the caller.
 
     Find the appropriate handler, run it and write its result on the wire. In case
     a problem is encountered at any point, write the appropriate error on the wire.
 
-    If the workflow finished normally or with an error, the return value is None.
-
-    If an unexpected message had arrived on the wire while the workflow was processing,
-    the workflow is shut down with an `UnexpectedMessage` exception. This is not
-    considered an "error condition" to return over the wire -- instead the message
-    is processed as if starting a new workflow.
-    In such case, the `UnexpectedMessage` is caught and the message is returned
-    to the caller. It will then be processed in the next iteration of the message loop.
+    The return value indicates whether to override the default restarting behavior. If
+    `False` is returned, the caller is allowed to clear the loop and restart the
+    MicroPython machine (see `session.py`). This would lose all state and incurs a cost
+    in terms of repeated startup time. When handling the message didn't cause any
+    significant fragmentation (e.g., if decoding the message was skipped), or if
+    the type of message is supposed to be optimized and not disrupt the running state,
+    this function will return `True`.
     """
     if __debug__:
         try:
@@ -126,7 +125,7 @@ async def _handle_single_message(
         # Handlers are allowed to exception out. In that case, we can skip decoding
         # and return the error.
         await ctx.write(failure(exc))
-        return None
+        return True
 
     if msg.type in workflow.ALLOW_WHILE_LOCKED:
         workflow.autolock_interrupts_workflow = False
@@ -158,16 +157,21 @@ async def _handle_single_message(
             # results of the handler.
             res_msg = await task
 
-    except context.UnexpectedMessage as exc:
+    except context.UnexpectedMessage:
         # Workflow was trying to read a message from the wire, and
         # something unexpected came in.  See Context.read() for
         # example, which expects some particular message and raises
         # UnexpectedMessage if another one comes in.
-        # In order not to lose the message, we return it to the caller.
-        # TODO:
-        # We might handle only the few common cases here, like
-        # Initialize and Cancel.
-        return exc.msg
+        #
+        # We process the unexpected message by aborting the current workflow and
+        # possibly starting a new one, initiated by that message. (The main usecase
+        # being, the host does not finish the workflow, we want other callers to
+        # be able to do their own thing.)
+        #
+        # The message is stored in the exception, which we re-raise for the caller
+        # to process. It is not a standard exception that should be logged and a result
+        # sent to the wire.
+        raise
 
     except BaseException as exc:
         # Either:
@@ -189,7 +193,9 @@ async def _handle_single_message(
         # perform the write outside the big try-except block, so that usb write
         # problem bubbles up
         await ctx.write(res_msg)
-    return None
+
+    # Look into `AVOID_RESTARTING_FOR` to see if this message should avoid restarting.
+    return msg.type in AVOID_RESTARTING_FOR
 
 
 async def handle_session(
@@ -230,9 +236,16 @@ async def handle_session(
                 next_msg = None
 
             try:
-                next_msg = await _handle_single_message(
+                do_not_restart = await _handle_single_message(
                     ctx, msg, use_workflow=not is_debug_session
                 )
+            except context.UnexpectedMessage as unexpected:
+                # The workflow was interrupted by an unexpected message. We need to
+                # process it as if it was a new message...
+                next_msg = unexpected.msg
+                # ...and we must not restart because that would lose the message.
+                do_not_restart = True
+                continue
             except Exception as exc:
                 # Log and ignore. The session handler can only exit explicitly in the
                 # following finally block.
@@ -246,8 +259,7 @@ async def handle_session(
                     # workflow running on wire.
                     utils.unimport_end(modules)
 
-                    if next_msg is None and msg.type not in AVOID_RESTARTING_FOR:
-                        # Shut down the loop if there is no next message waiting.
+                    if not do_not_restart:
                         # Let the session be restarted from `main`.
                         loop.clear()
                         return  # pylint: disable=lost-exception
