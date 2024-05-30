@@ -46,49 +46,56 @@ async def bootscreen() -> None:
     Any non-PIN loaders are ignored during this function.
     Allowing all of them before returning.
     """
-    while True:
-        try:
+    lockscreen = None
+    try:
+        # turn on peripherals
+        if utils.USE_HAPTIC:
+            io.haptic.haptic_set_enabled(storage.device.get_haptic_feedback())
 
-            if can_lock_device():
-                enforce_welcome_screen_duration()
-                ui.backlight_fade(ui.BacklightLevels.NONE)
-                ui.display.orientation(storage.device.get_rotation())
-                if utils.USE_HAPTIC:
-                    io.haptic.haptic_set_enabled(storage.device.get_haptic_feedback())
-                lockscreen = Lockscreen(
-                    label=storage.device.get_label(), bootscreen=True
-                )
+        # if required, change display orientation
+        rotation = storage.device.get_rotation()
+        if rotation != ui.display.orientation():
+            # wait before hiding the welcome screen
+            enforce_welcome_screen_duration()
+            # hide, rotate
+            ui.backlight_fade(ui.BacklightLevels.NONE)
+            ui.display.orientation(rotation)
+
+        if can_lock_device():
+            lockscreen = Lockscreen(label=storage.device.get_label(), bootscreen=True)
+            # we will be showing the lockscreen soon, wait for welcome screen first
+            enforce_welcome_screen_duration()
+        else:
+            lockscreen = None
+
+        while True:
+            if lockscreen:
                 await lockscreen
-                lockscreen.__del__()
-                await verify_user_pin()
-                storage.init_unlocked()
-                allow_all_loader_messages()
-                return
-            else:
-                await verify_user_pin()
-                storage.init_unlocked()
-                enforce_welcome_screen_duration()
-                rotation = storage.device.get_rotation()
-                if utils.USE_HAPTIC:
-                    io.haptic.haptic_set_enabled(storage.device.get_haptic_feedback())
 
-                if rotation != ui.display.orientation():
-                    # there is a slight delay before next screen is shown,
-                    # so we don't fade unless there is a change of orientation
-                    ui.backlight_fade(ui.BacklightLevels.DIM)
-                    ui.display.orientation(rotation)
-                allow_all_loader_messages()
-                return
-        except wire.PinCancelled:
-            # verify_user_pin will convert a SdCardUnavailable (in case of sd salt)
-            # to PinCancelled exception.
-            # Ignore exception, retry loop.
-            pass
-        except BaseException as e:
-            # other exceptions here are unexpected and should halt the device
-            if __debug__:
-                log.exception(__name__, e)
-            utils.halt(e.__class__.__name__)
+            try:
+                await verify_user_pin()
+            except wire.PinCancelled:
+                # verify_user_pin will convert a SdCardUnavailable (in case of sd salt)
+                # to PinCancelled exception.
+                # Ignore exception, retry loop.
+                continue
+            else:
+                storage.init_unlocked()
+                break
+
+    except BaseException as e:
+        # halt the device if anything failed
+        if __debug__:
+            log.exception(__name__, e)
+        utils.halt(e.__class__.__name__)
+
+    finally:
+        if lockscreen:
+            lockscreen.__del__()
+
+    # if nothing was shown so far, wait for welcome screen duration
+    enforce_welcome_screen_duration()
+    allow_all_loader_messages()
 
 
 # Ignoring all non-PIN messages in the boot-phase (turned off in `bootscreen()`).
