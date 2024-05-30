@@ -320,15 +320,15 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
     mod_trezorutils_reboot_to_bootloader);
 
 /// VersionTuple = Tuple[int, int, int, int]
-///
+
 /// class FirmwareHeaderInfo(NamedTuple):
 ///     version: VersionTuple
 ///     vendor: str
 ///     fingerprint: bytes
 ///     hash: bytes
-///
+
 /// mock:global
-///
+
 /// def check_firmware_header(header : bytes) -> FirmwareHeaderInfo:
 ///     """Parses incoming firmware header and returns information about it."""
 STATIC mp_obj_t mod_trezorutils_check_firmware_header(mp_obj_t header) {

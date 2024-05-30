@@ -140,7 +140,7 @@ STATIC void mp_unpack_scalar(bignum256modm r, const mp_obj_t arg,
 ///     """
 ///     EC point on ED25519
 ///     """
-///
+
 ///     def __init__(self, x: Point | bytes | None = None):
 ///         """
 ///         Constructor
@@ -179,13 +179,12 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_monero_ge25519___del___obj,
 ///     """
 ///     EC scalar on SC25519
 ///     """
-///
+
 ///     def __init__(self, x: Scalar | bytes | int | None = None):
 ///         """
 ///         Constructor
 ///         """
-///
-///
+
 STATIC mp_obj_t mod_trezorcrypto_monero_bignum256modm_make_new(
     const mp_obj_type_t *type, size_t n_args, size_t n_kw,
     const mp_obj_t *args) {
@@ -223,28 +222,27 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(
 ///     """
 ///     XMR hasher
 ///     """
-///
+
 ///     def __init__(self, x: bytes | None = None):
 ///         """
 ///         Constructor
 ///         """
-///
+
 ///     def update(self, buffer: bytes) -> None:
 ///         """
 ///         Update hasher
 ///         """
-///
+
 ///     def digest(self) -> bytes:
 ///         """
 ///         Computes digest
 ///         """
-///
+
 ///     def copy(self) -> Hasher:
 ///         """
 ///         Creates copy of the hasher, preserving the state
 ///         """
-///
-///
+
 STATIC mp_obj_t mod_trezorcrypto_monero_hasher_make_new(
     const mp_obj_type_t *type, size_t n_args, size_t n_kw,
     const mp_obj_t *args) {

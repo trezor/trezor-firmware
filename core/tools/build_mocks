@@ -11,7 +11,8 @@ EXTMOD_PATH = CORE_DIR / "embed" / "extmod"
 RUSTMOD_PATH = CORE_DIR / "embed" / "rust" / "src"
 MOCKS_PATH = CORE_DIR / "mocks" / "generated"
 
-COMMENT_PREFIX = "/// "
+COMMENT_PREFIX_SHORT = "///"
+COMMENT_PREFIX = COMMENT_PREFIX_SHORT + " "
 
 current_indent = 0
 current_class = None
@@ -61,9 +62,11 @@ def split_to_parts(line, mod_desc=None):
             yield (current_package, current_indent * " " + "@overload\n")
             current_method_is_overload = False
 
-    line = current_indent * " " + line
-
-    yield (current_package, line)
+    if not line.strip():
+        yield (current_package, "\n")
+    else:
+        line = current_indent * " " + line
+        yield (current_package, line)
 
 
 def store_to_file(dest, parts):
@@ -105,10 +108,10 @@ def build_module(mod_file, dest):
     mod_desc = str(mod_file.relative_to(CORE_DIR / "embed"))
 
     for l in open(mod_file):
-        if not l.startswith(COMMENT_PREFIX):
+        if not l.startswith(COMMENT_PREFIX_SHORT):
             continue
-
         l = l[len(COMMENT_PREFIX) :]  # .strip()
+
         store_to_file(dest, split_to_parts(l, mod_desc))
 
 
