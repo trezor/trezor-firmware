@@ -241,11 +241,7 @@ impl<T> Root<T> {
     }
 
     pub fn clear_screen(&mut self) {
-        if self.inner.is_none() {
-            fatal_error!("deallocated", "Root object is deallocated")
-        } else {
-            self.marked_for_clear = true;
-        }
+        self.marked_for_clear = true;
     }
 
     pub fn delete(&mut self) {
