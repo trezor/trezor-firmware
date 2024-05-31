@@ -17,7 +17,6 @@ pub unsafe fn raise_exception(err: Error) -> ! {
         // (err.into_obj() should return the right thing)
         ffi::nlr_jump(err.into_obj().as_ptr());
     }
-    panic!();
 }
 
 /// Execute `func` while catching MicroPython exceptions. Returns `Ok` in the
