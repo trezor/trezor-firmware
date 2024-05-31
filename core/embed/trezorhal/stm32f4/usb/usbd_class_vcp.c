@@ -294,7 +294,6 @@ secbool usb_vcp_add(const usb_vcp_info_t *info) {
   usb_desc_add_iface(sizeof(usb_vcp_descriptor_block_t), 2);
 
   // Interface state
-  state->dev_handle = usb_get_dev_handle();
   state->desc_block = d;
 
   state->rx_ring.buf = info->rx_buffer;
@@ -425,6 +424,8 @@ int usb_vcp_write_blocking(uint8_t iface_num, const uint8_t *buf, uint32_t len,
 static uint8_t usb_vcp_class_init(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
   usb_vcp_state_t *state = (usb_vcp_state_t *)dev->pUserData;
 
+  state->dev_handle = dev;
+
   // Open endpoints
   USBD_LL_OpenEP(dev, state->ep_in, USBD_EP_TYPE_BULK, state->max_packet_len);
   USBD_LL_OpenEP(dev, state->ep_out, USBD_EP_TYPE_BULK, state->max_packet_len);
@@ -456,6 +457,8 @@ static uint8_t usb_vcp_class_deinit(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
   USBD_LL_CloseEP(dev, state->ep_in);
   USBD_LL_CloseEP(dev, state->ep_out);
   USBD_LL_CloseEP(dev, state->ep_cmd);
+
+  state->dev_handle = NULL;
 
   return USBD_OK;
 }

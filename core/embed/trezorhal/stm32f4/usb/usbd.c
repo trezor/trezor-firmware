@@ -291,12 +291,6 @@ void usb_set_iface_class(uint8_t iface_num, const USBD_ClassTypeDef *class) {
   }
 }
 
-USBD_HandleTypeDef *usb_get_dev_handle(void) {
-  usb_driver_t *usb = &g_usb_driver;
-
-  return &usb->dev_handle;
-}
-
 void *usb_desc_alloc_iface(size_t desc_len) {
   usb_driver_t *usb = &g_usb_driver;
 

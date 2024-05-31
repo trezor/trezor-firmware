@@ -132,7 +132,4 @@ void *usb_desc_alloc_iface(size_t desc_len);
 // by `usb_desc_alloc_iface`.
 void usb_desc_add_iface(size_t desc_len, uint8_t num_ifaces);
 
-// Returns the global handle to the USB device.
-USBD_HandleTypeDef *usb_get_dev_handle(void);
-
 #endif  // TREZORHAL_USBD_INTERNAL_H
