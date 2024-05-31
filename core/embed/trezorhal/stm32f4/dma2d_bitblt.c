@@ -624,7 +624,7 @@ bool dma2d_rgba8888_blend_mono4(const gfx_bitblt_t* params) {
   return true;
 }
 
-bool dma2d_rgb8888_blend_mono8(const gfx_bitblt_t* bb) {
+bool dma2d_rgba8888_blend_mono8(const gfx_bitblt_t* bb) {
   dma2d_wait();
 
   if (!dma2d_accessible(bb->dst_row) || !dma2d_accessible(bb->src_row)) {
