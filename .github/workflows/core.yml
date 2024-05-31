@@ -157,7 +157,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        model: [T2T1, T2B1]
+        model: [T2T1, T2B1, T3T1]
         asan: ${{ fromJSON(needs.param.outputs.asan) }}
     env:
       TREZOR_MODEL: ${{ matrix.model == 'T2T1' && 'T' || matrix.model == 'T2B1' && 'R' || matrix.model }}
