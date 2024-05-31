@@ -52,11 +52,23 @@ const DEFAULT_BINDGEN_MACROS_T2B1: &[&str] = &[
 #[cfg(not(feature = "model_tr"))]
 const DEFAULT_BINDGEN_MACROS_T2B1: &[&str] = &[];
 
+#[cfg(feature = "model_mercury")]
+const DEFAULT_BINDGEN_MACROS_T3T1: &[&str] = &[
+    "-DSTM32U5",
+    "-DTREZOR_MODEL_T3T1",
+    "-DFLASH_BIT_ACCESS=0",
+    "-DFLASH_BLOCK_WORDS=4",
+    "-DTREZOR_BOARD=\"T3T1/boards/t3t1-unix.h\"",
+];
+#[cfg(not(feature = "model_mercury"))]
+const DEFAULT_BINDGEN_MACROS_T3T1: &[&str] = &[];
+
 fn add_bindgen_macros<'a>(clang_args: &mut Vec<&'a str>, envvar: Option<&'a str>) {
     let default_macros = DEFAULT_BINDGEN_MACROS_COMMON
         .iter()
         .chain(DEFAULT_BINDGEN_MACROS_T2T1)
-        .chain(DEFAULT_BINDGEN_MACROS_T2B1);
+        .chain(DEFAULT_BINDGEN_MACROS_T2B1)
+        .chain(DEFAULT_BINDGEN_MACROS_T3T1);
 
     match envvar {
         Some(envvar) => clang_args.extend(envvar.split(',')),
