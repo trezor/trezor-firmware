@@ -153,7 +153,7 @@ void display_handle_init(void) {
   spi_handle.Init.Mode = SPI_MODE_MASTER;
 }
 
-void display_init(void) {
+void display_init_all(void) {
   OLED_DC_CLK_ENA();
   OLED_CS_CLK_ENA();
   OLED_RST_CLK_ENA();

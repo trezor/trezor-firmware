@@ -41,44 +41,49 @@ typedef struct {
 // Display driver instance
 static display_driver_t g_display_driver;
 
-void display_init(void) {
-  RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
+void display_init(display_content_mode_t mode) {
+  if (mode == DISPLAY_RESET_CONTENT) {
+    RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
 
-  // Initializes the common periph clock
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_LTDC | RCC_PERIPHCLK_DSI;
-  PeriphClkInit.DsiClockSelection = RCC_DSICLKSOURCE_PLL3;
-  PeriphClkInit.LtdcClockSelection = RCC_LTDCCLKSOURCE_PLL3;
-  PeriphClkInit.PLL3.PLL3Source = RCC_PLLSOURCE_HSE;
-  PeriphClkInit.PLL3.PLL3M = 4;
-  PeriphClkInit.PLL3.PLL3N = 125;
-  PeriphClkInit.PLL3.PLL3P = 8;
-  PeriphClkInit.PLL3.PLL3Q = 2;
-  PeriphClkInit.PLL3.PLL3R = 24;
-  PeriphClkInit.PLL3.PLL3RGE = RCC_PLLVCIRANGE_0;
-  PeriphClkInit.PLL3.PLL3FRACN = 0;
-  PeriphClkInit.PLL3.PLL3ClockOut = RCC_PLL3_DIVP | RCC_PLL3_DIVR;
-  HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit);
+    // Initializes the common periph clock
+    PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_LTDC | RCC_PERIPHCLK_DSI;
+    PeriphClkInit.DsiClockSelection = RCC_DSICLKSOURCE_PLL3;
+    PeriphClkInit.LtdcClockSelection = RCC_LTDCCLKSOURCE_PLL3;
+    PeriphClkInit.PLL3.PLL3Source = RCC_PLLSOURCE_HSE;
+    PeriphClkInit.PLL3.PLL3M = 4;
+    PeriphClkInit.PLL3.PLL3N = 125;
+    PeriphClkInit.PLL3.PLL3P = 8;
+    PeriphClkInit.PLL3.PLL3Q = 2;
+    PeriphClkInit.PLL3.PLL3R = 24;
+    PeriphClkInit.PLL3.PLL3RGE = RCC_PLLVCIRANGE_0;
+    PeriphClkInit.PLL3.PLL3FRACN = 0;
+    PeriphClkInit.PLL3.PLL3ClockOut = RCC_PLL3_DIVP | RCC_PLL3_DIVR;
+    HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit);
 
-  // Clear framebuffers
-  memset(physical_frame_buffer_0, 0x00, PHYSICAL_FRAME_BUFFER_SIZE);
-  memset(physical_frame_buffer_1, 0x00, PHYSICAL_FRAME_BUFFER_SIZE);
+    // Clear framebuffers
+    memset(physical_frame_buffer_0, 0x00, PHYSICAL_FRAME_BUFFER_SIZE);
+    memset(physical_frame_buffer_1, 0x00, PHYSICAL_FRAME_BUFFER_SIZE);
 
-  BSP_LCD_Init(0, LCD_ORIENTATION_PORTRAIT);
-  BSP_LCD_SetBrightness(0, 100);
-  BSP_LCD_DisplayOn(0);
-}
-
-void display_reinit(void) {
-  BSP_LCD_Reinit(0);
-  if (current_frame_buffer == 0) {
-    BSP_LCD_SetFrameBuffer(0, GFXMMU_VIRTUAL_BUFFER1_BASE_S);
+    BSP_LCD_Init(0, LCD_ORIENTATION_PORTRAIT);
+    BSP_LCD_SetBrightness(0, 100);
+    BSP_LCD_DisplayOn(0);
   } else {
-    BSP_LCD_SetFrameBuffer(0, GFXMMU_VIRTUAL_BUFFER0_BASE_S);
+    // Retain display content
+    BSP_LCD_Reinit(0);
+    if (current_frame_buffer == 0) {
+      BSP_LCD_SetFrameBuffer(0, GFXMMU_VIRTUAL_BUFFER1_BASE_S);
+    } else {
+      BSP_LCD_SetFrameBuffer(0, GFXMMU_VIRTUAL_BUFFER0_BASE_S);
+    }
   }
 }
 
-void display_finish_actions(void) {
-  // Not used and intentionally left empty
+void display_deinit(display_content_mode_t mode) {
+  if (mode == DISPLAY_RESET_CONTENT) {
+    BSP_LCD_DisplayOff(0);
+    BSP_LCD_SetBrightness(0, 0);
+    BSP_LCD_DeInit(0);
+  }
 }
 
 int display_set_backlight(int level) {
@@ -111,8 +116,6 @@ int display_get_orientation(void) {
 
   return drv->orientation_angle;
 }
-
-void display_set_compatible_settings() {}
 
 void display_fill(const gfx_bitblt_t *bb) {
   display_fb_info_t fb = display_get_frame_buffer();
