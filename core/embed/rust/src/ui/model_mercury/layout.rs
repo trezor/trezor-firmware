@@ -449,6 +449,33 @@ impl ConfirmBlobParams {
         let obj = LayoutObj::new(frame)?;
         Ok(obj.into())
     }
+
+    fn into_flow(self) -> Result<Obj, Error> {
+        let paragraphs = ConfirmBlob {
+            description: self.description.unwrap_or("".into()),
+            extra: self.extra.unwrap_or("".into()),
+            data: self.data.try_into()?,
+            description_font: &theme::TEXT_NORMAL,
+            extra_font: &theme::TEXT_DEMIBOLD,
+            data_font: if self.chunkify {
+                let data: TString = self.data.try_into()?;
+                theme::get_chunkified_text_style(data.len())
+            } else if self.text_mono {
+                &theme::TEXT_MONO
+            } else {
+                &theme::TEXT_NORMAL
+            },
+        }
+        .into_paragraphs();
+
+        flow::new_confirm_action_simple(
+            paragraphs,
+            self.title,
+            self.subtitle,
+            self.verb,
+            self.verb_cancel,
+        )
+    }
 }
 
 extern "C" fn new_confirm_blob(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
@@ -472,7 +499,7 @@ extern "C" fn new_confirm_blob(n_args: usize, args: *const Obj, kwargs: *mut Map
         ConfirmBlobParams::new(title, data, description, verb, verb_cancel, hold)
             .with_extra(extra)
             .with_chunkify(chunkify)
-            .into_layout()
+            .into_flow()
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
@@ -638,7 +665,7 @@ extern "C" fn new_confirm_value(n_args: usize, args: *const Obj, kwargs: *mut Ma
             .with_info_button(info_button)
             .with_chunkify(chunkify)
             .with_text_mono(text_mono)
-            .into_layout()
+            .into_flow()
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
@@ -693,10 +720,10 @@ extern "C" fn new_confirm_modify_output(n_args: usize, args: *const Obj, kwargs:
             Paragraph::new(&theme::TEXT_MONO, amount_new),
         ]);
 
-        let obj = LayoutObj::new(Frame::left_aligned(
-            TR::modify_amount__title.into(),
-            ButtonPage::new(paragraphs, theme::BG)
-                .with_cancel_confirm(Some("^".into()), Some(TR::buttons__continue.into())),
+        let obj = LayoutObj::new(SwipeUpScreen::new(
+            Frame::left_aligned(TR::modify_amount__title.into(), paragraphs)
+                .with_cancel_button()
+                .with_footer(TR::instructions__swipe_up.into(), None),
         ))?;
         Ok(obj.into())
     };
@@ -735,15 +762,11 @@ extern "C" fn new_confirm_modify_fee(n_args: usize, args: *const Obj, kwargs: *m
             Paragraph::new(&theme::TEXT_MONO, total_fee_new),
         ]);
 
-        let obj = LayoutObj::new(
-            Frame::left_aligned(
-                title,
-                ButtonPage::new(paragraphs, theme::BG)
-                    .with_hold()?
-                    .with_swipe_left(),
-            )
-            .with_menu_button(),
-        )?;
+        let obj = LayoutObj::new(SwipeUpScreen::new(
+            Frame::left_aligned(title, paragraphs)
+                .with_menu_button()
+                .with_footer(TR::instructions__swipe_up.into(), None),
+        ))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -1031,11 +1054,10 @@ extern "C" fn new_confirm_with_info(n_args: usize, args: *const Obj, kwargs: *mu
             }
         }
 
-        let buttons = Button::cancel_info_confirm(button, info_button);
-
-        let obj = LayoutObj::new(Frame::left_aligned(
-            title,
-            Dialog::new(paragraphs.into_paragraphs(), buttons),
+        let obj = LayoutObj::new(SwipeUpScreen::new(
+            Frame::left_aligned(title, paragraphs.into_paragraphs())
+                .with_menu_button()
+                .with_footer(TR::instructions__swipe_up.into(), Some(button)),
         ))?;
         Ok(obj.into())
     };
