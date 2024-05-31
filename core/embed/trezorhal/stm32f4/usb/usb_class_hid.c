@@ -20,62 +20,86 @@
 #include "common.h"
 #include "random_delays.h"
 
-#include "usbd_core.h"
-#include "usbd_internal.h"
+#include "usb_hid.h"
+#include "usb_internal.h"
 
-#include "usb_webusb.h"
+#define USB_CLASS_HID 0x03
 
-#define USB_CLASS_WEBUSB 0xFF
+#define USB_DESC_TYPE_HID 0x21
+#define USB_DESC_TYPE_REPORT 0x22
+
+#define USB_HID_REQ_SET_PROTOCOL 0x0B
+#define USB_HID_REQ_GET_PROTOCOL 0x03
+#define USB_HID_REQ_SET_IDLE 0x0A
+#define USB_HID_REQ_GET_IDLE 0x02
+
+typedef struct __attribute__((packed)) {
+  uint8_t bLength;
+  uint8_t bDescriptorType;
+  uint16_t bcdHID;
+  uint8_t bCountryCode;
+  uint8_t bNumDescriptors;
+  uint8_t bReportDescriptorType;
+  uint16_t wReportDescriptorLength;
+} usb_hid_descriptor_t;
 
 typedef struct __attribute__((packed)) {
   usb_interface_descriptor_t iface;
+  usb_hid_descriptor_t hid;
   usb_endpoint_descriptor_t ep_in;
   usb_endpoint_descriptor_t ep_out;
-} usb_webusb_descriptor_block_t;
+} usb_hid_descriptor_block_t;
 
-/* usb_webusb_state_t encapsulates all state used by enabled WebUSB interface.
- * It needs to be completely initialized in usb_webusb_add and reset in
- * usb_webusb_class_init.  See usb_webusb_info_t for details of the
- * configuration fields. */
+/* usb_hid_state_t encapsulates all state used by enabled HID interface.  It
+ * needs to be completely initialized in usb_hid_add and reset in
+ * usb_hid_class_init.  See usb_hid_info_t for details of the configuration
+ * fields. */
+
 typedef struct {
   USBD_HandleTypeDef *dev_handle;
-  const usb_webusb_descriptor_block_t *desc_block;
+  const usb_hid_descriptor_block_t *desc_block;
+  const uint8_t *report_desc;
   uint8_t *rx_buffer;
   uint8_t ep_in;
   uint8_t ep_out;
   uint8_t max_packet_len;
+  uint8_t report_desc_len;
 
+  uint8_t protocol;       // For SET_PROTOCOL/GET_PROTOCOL setup reqs
+  uint8_t idle_rate;      // For SET_IDLE/GET_IDLE setup reqs
   uint8_t alt_setting;    // For SET_INTERFACE/GET_INTERFACE setup reqs
   uint8_t last_read_len;  // Length of data read into rx_buffer
   uint8_t ep_in_is_idle;  // Set to 1 after IN endpoint gets idle
-} usb_webusb_state_t;
+} usb_hid_state_t;
 
-_Static_assert(sizeof(usb_webusb_state_t) <= USBD_CLASS_STATE_MAX_SIZE);
+_Static_assert(sizeof(usb_hid_state_t) <= USBD_CLASS_STATE_MAX_SIZE);
 
 // interface dispatch functions
-static const USBD_ClassTypeDef usb_webusb_class;
+static const USBD_ClassTypeDef usb_hid_class;
 
-#define usb_get_webusb_state(iface_num) \
-  ((usb_webusb_state_t *)usb_get_iface_state(iface_num, &usb_webusb_class))
+#define usb_get_hid_state(iface_num) \
+  ((usb_hid_state_t *)usb_get_iface_state(iface_num, &usb_hid_class))
 
-/* usb_webusb_add adds and configures new USB WebUSB interface according to
+/* usb_hid_add adds and configures new USB HID interface according to
  * configuration options passed in `info`. */
-secbool usb_webusb_add(const usb_webusb_info_t *info) {
-  usb_webusb_state_t *state =
-      (usb_webusb_state_t *)usb_get_iface_state(info->iface_num, NULL);
+secbool usb_hid_add(const usb_hid_info_t *info) {
+  usb_hid_state_t *state = usb_get_iface_state(info->iface_num, NULL);
 
   if (state == NULL) {
     return secfalse;  // Invalid interface number
   }
 
-  usb_webusb_descriptor_block_t *d =
-      usb_alloc_class_descriptors(sizeof(usb_webusb_descriptor_block_t));
+  usb_hid_descriptor_block_t *d =
+      usb_alloc_class_descriptors(sizeof(usb_hid_descriptor_block_t));
 
   if (d == NULL) {
     return secfalse;  // Not enough space in the configuration descriptor
   }
 
   if (info->rx_buffer == NULL) {
+    return secfalse;
+  }
+  if (info->report_desc == NULL) {
     return secfalse;
   }
   if (info->ep_in >= USBD_MAX_NUM_INTERFACES) {
@@ -91,10 +115,19 @@ secbool usb_webusb_add(const usb_webusb_info_t *info) {
   d->iface.bInterfaceNumber = info->iface_num;
   d->iface.bAlternateSetting = 0;
   d->iface.bNumEndpoints = 2;
-  d->iface.bInterfaceClass = USB_CLASS_WEBUSB;
+  d->iface.bInterfaceClass = USB_CLASS_HID;
   d->iface.bInterfaceSubClass = info->subclass;
   d->iface.bInterfaceProtocol = info->protocol;
   d->iface.iInterface = USBD_IDX_INTERFACE_STR;
+
+  // HID descriptor
+  d->hid.bLength = sizeof(usb_hid_descriptor_t);
+  d->hid.bDescriptorType = USB_DESC_TYPE_HID;
+  d->hid.bcdHID = 0x0111;      // HID Class Spec release number (1.11)
+  d->hid.bCountryCode = 0;     // Hardware target country
+  d->hid.bNumDescriptors = 1;  // Number of HID class descriptors
+  d->hid.bReportDescriptorType = USB_DESC_TYPE_REPORT;
+  d->hid.wReportDescriptorLength = info->report_desc_len;
 
   // IN endpoint (sending)
   d->ep_in.bLength = sizeof(usb_endpoint_descriptor_t);
@@ -115,35 +148,41 @@ secbool usb_webusb_add(const usb_webusb_info_t *info) {
   // Interface state
   state->dev_handle = usb_get_dev_handle();
   state->desc_block = d;
+  state->report_desc = info->report_desc;
   state->rx_buffer = info->rx_buffer;
   state->ep_in = info->ep_in | USB_EP_DIR_IN;
   state->ep_out = info->ep_out | USB_EP_DIR_OUT;
   state->max_packet_len = info->max_packet_len;
+  state->report_desc_len = info->report_desc_len;
+  state->protocol = 0;
+  state->idle_rate = 0;
   state->alt_setting = 0;
   state->last_read_len = 0;
   state->ep_in_is_idle = 1;
 
-  usb_set_iface_class(info->iface_num, &usb_webusb_class);
+  usb_set_iface_class(info->iface_num, &usb_hid_class);
 
   return sectrue;
 }
 
-secbool usb_webusb_can_read(uint8_t iface_num) {
-  usb_webusb_state_t *state = usb_get_webusb_state(iface_num);
+secbool usb_hid_can_read(uint8_t iface_num) {
+  usb_hid_state_t *state = usb_get_hid_state(iface_num);
+
   if (state == NULL) {
     return secfalse;  // Invalid interface number
   }
   if (state->last_read_len == 0) {
     return secfalse;  // Nothing in the receiving buffer
   }
+
   if (state->dev_handle->dev_state != USBD_STATE_CONFIGURED) {
     return secfalse;  // Device is not configured
   }
   return sectrue;
 }
 
-secbool usb_webusb_can_write(uint8_t iface_num) {
-  usb_webusb_state_t *state = usb_get_webusb_state(iface_num);
+secbool usb_hid_can_write(uint8_t iface_num) {
+  usb_hid_state_t *state = usb_get_hid_state(iface_num);
   if (state == NULL) {
     return secfalse;  // Invalid interface number
   }
@@ -156,8 +195,9 @@ secbool usb_webusb_can_write(uint8_t iface_num) {
   return sectrue;
 }
 
-int usb_webusb_read(uint8_t iface_num, uint8_t *buf, uint32_t len) {
-  volatile usb_webusb_state_t *state = usb_get_webusb_state(iface_num);
+int usb_hid_read(uint8_t iface_num, uint8_t *buf, uint32_t len) {
+  volatile usb_hid_state_t *state = usb_get_hid_state(iface_num);
+
   if (state == NULL) {
     return -1;  // Invalid interface number
   }
@@ -179,10 +219,15 @@ int usb_webusb_read(uint8_t iface_num, uint8_t *buf, uint32_t len) {
   return last_read_len;
 }
 
-int usb_webusb_write(uint8_t iface_num, const uint8_t *buf, uint32_t len) {
-  volatile usb_webusb_state_t *state = usb_get_webusb_state(iface_num);
+int usb_hid_write(uint8_t iface_num, const uint8_t *buf, uint32_t len) {
+  volatile usb_hid_state_t *state = usb_get_hid_state(iface_num);
+
   if (state == NULL) {
     return -1;  // Invalid interface number
+  }
+
+  if (state->ep_in_is_idle == 0) {
+    return 0;  // Last transmission is not over yet
   }
 
   state->ep_in_is_idle = 0;
@@ -192,11 +237,11 @@ int usb_webusb_write(uint8_t iface_num, const uint8_t *buf, uint32_t len) {
   return len;
 }
 
-int usb_webusb_read_select(uint32_t timeout) {
+int usb_hid_read_select(uint32_t timeout) {
   const uint32_t start = HAL_GetTick();
   for (;;) {
     for (int i = 0; i < USBD_MAX_NUM_INTERFACES; i++) {
-      if (sectrue == usb_webusb_can_read(i)) {
+      if (sectrue == usb_hid_can_read(i)) {
         return i;
       }
     }
@@ -208,38 +253,40 @@ int usb_webusb_read_select(uint32_t timeout) {
   return -1;  // Timeout
 }
 
-int usb_webusb_read_blocking(uint8_t iface_num, uint8_t *buf, uint32_t len,
-                             int timeout) {
+int usb_hid_read_blocking(uint8_t iface_num, uint8_t *buf, uint32_t len,
+                          int timeout) {
   const uint32_t start = HAL_GetTick();
-  while (sectrue != usb_webusb_can_read(iface_num)) {
+  while (sectrue != usb_hid_can_read(iface_num)) {
     if (timeout >= 0 && HAL_GetTick() - start >= timeout) {
       return 0;  // Timeout
     }
     __WFI();  // Enter sleep mode, waiting for interrupt
   }
-  return usb_webusb_read(iface_num, buf, len);
+  return usb_hid_read(iface_num, buf, len);
 }
 
-int usb_webusb_write_blocking(uint8_t iface_num, const uint8_t *buf,
-                              uint32_t len, int timeout) {
+int usb_hid_write_blocking(uint8_t iface_num, const uint8_t *buf, uint32_t len,
+                           int timeout) {
   const uint32_t start = HAL_GetTick();
-  while (sectrue != usb_webusb_can_write(iface_num)) {
+  while (sectrue != usb_hid_can_write(iface_num)) {
     if (timeout >= 0 && HAL_GetTick() - start >= timeout) {
       return 0;  // Timeout
     }
     __WFI();  // Enter sleep mode, waiting for interrupt
   }
-  return usb_webusb_write(iface_num, buf, len);
+  return usb_hid_write(iface_num, buf, len);
 }
 
-static uint8_t usb_webusb_class_init(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
-  usb_webusb_state_t *state = (usb_webusb_state_t *)dev->pUserData;
+static uint8_t usb_hid_class_init(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
+  usb_hid_state_t *state = (usb_hid_state_t *)dev->pUserData;
 
   // Open endpoints
   USBD_LL_OpenEP(dev, state->ep_in, USBD_EP_TYPE_INTR, state->max_packet_len);
   USBD_LL_OpenEP(dev, state->ep_out, USBD_EP_TYPE_INTR, state->max_packet_len);
 
   // Reset the state
+  state->protocol = 0;
+  state->idle_rate = 0;
   state->alt_setting = 0;
   state->last_read_len = 0;
   state->ep_in_is_idle = 1;
@@ -251,9 +298,8 @@ static uint8_t usb_webusb_class_init(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
   return USBD_OK;
 }
 
-static uint8_t usb_webusb_class_deinit(USBD_HandleTypeDef *dev,
-                                       uint8_t cfg_idx) {
-  usb_webusb_state_t *state = (usb_webusb_state_t *)dev->pUserData;
+static uint8_t usb_hid_class_deinit(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
+  usb_hid_state_t *state = (usb_hid_state_t *)dev->pUserData;
 
   // Flush endpoints
   USBD_LL_FlushEP(dev, state->ep_in);
@@ -265,39 +311,84 @@ static uint8_t usb_webusb_class_deinit(USBD_HandleTypeDef *dev,
   return USBD_OK;
 }
 
-static uint8_t usb_webusb_class_setup(USBD_HandleTypeDef *dev,
-                                      USBD_SetupReqTypedef *req) {
-  usb_webusb_state_t *state = (usb_webusb_state_t *)dev->pUserData;
+static uint8_t usb_hid_class_setup(USBD_HandleTypeDef *dev,
+                                   USBD_SetupReqTypedef *req) {
+  usb_hid_state_t *state = (usb_hid_state_t *)dev->pUserData;
 
   wait_random();
 
-  if ((req->bmRequest & USB_REQ_TYPE_MASK) != USB_REQ_TYPE_STANDARD) {
-    return USBD_OK;
-  }
+  switch (req->bmRequest & USB_REQ_TYPE_MASK) {
+    // Class request
+    case USB_REQ_TYPE_CLASS:
+      switch (req->bRequest) {
+        case USB_HID_REQ_SET_PROTOCOL:
+          state->protocol = req->wValue;
+          USBD_CtlSendStatus(dev);
+          return USBD_OK;
 
-  wait_random();
+        case USB_HID_REQ_GET_PROTOCOL:
+          USBD_CtlSendData(dev, &state->protocol, sizeof(state->protocol));
+          return USBD_OK;
 
-  switch (req->bRequest) {
-    case USB_REQ_SET_INTERFACE:
-      state->alt_setting = req->wValue;
-      USBD_CtlSendStatus(dev);
-      return USBD_OK;
+        case USB_HID_REQ_SET_IDLE:
+          state->idle_rate = req->wValue >> 8;
+          USBD_CtlSendStatus(dev);
+          return USBD_OK;
 
-    case USB_REQ_GET_INTERFACE:
-      USBD_CtlSendData(dev, &state->alt_setting, sizeof(state->alt_setting));
-      return USBD_OK;
+        case USB_HID_REQ_GET_IDLE:
+          USBD_CtlSendData(dev, &state->idle_rate, sizeof(state->idle_rate));
+          return USBD_OK;
 
-    default:
-      USBD_CtlError(dev, req);
-      return USBD_FAIL;
+        default:
+          USBD_CtlError(dev, req);
+          return USBD_FAIL;
+      }
+      break;
+
+    // Interface & Endpoint request
+    case USB_REQ_TYPE_STANDARD:
+      switch (req->bRequest) {
+        case USB_REQ_SET_INTERFACE:
+          state->alt_setting = req->wValue;
+          USBD_CtlSendStatus(dev);
+          return USBD_OK;
+
+        case USB_REQ_GET_INTERFACE:
+          USBD_CtlSendData(dev, &state->alt_setting,
+                           sizeof(state->alt_setting));
+          return USBD_OK;
+
+        case USB_REQ_GET_DESCRIPTOR:
+          switch (req->wValue >> 8) {
+            case USB_DESC_TYPE_HID:
+              USBD_CtlSendData(
+                  dev, UNCONST(&state->desc_block->hid),
+                  MIN_8bits(req->wLength, sizeof(state->desc_block->hid)));
+              return USBD_OK;
+
+            case USB_DESC_TYPE_REPORT:
+              USBD_CtlSendData(dev, UNCONST(state->report_desc),
+                               MIN_8bits(req->wLength, state->report_desc_len));
+              return USBD_OK;
+
+            default:
+              USBD_CtlError(dev, req);
+              return USBD_FAIL;
+          }
+          break;
+
+        default:
+          USBD_CtlError(dev, req);
+          return USBD_FAIL;
+      }
+      break;
   }
 
   return USBD_OK;
 }
 
-static uint8_t usb_webusb_class_data_in(USBD_HandleTypeDef *dev,
-                                        uint8_t ep_num) {
-  usb_webusb_state_t *state = (usb_webusb_state_t *)dev->pUserData;
+static uint8_t usb_hid_class_data_in(USBD_HandleTypeDef *dev, uint8_t ep_num) {
+  usb_hid_state_t *state = (usb_hid_state_t *)dev->pUserData;
 
   if ((ep_num | USB_EP_DIR_IN) == state->ep_in) {
     wait_random();
@@ -307,9 +398,8 @@ static uint8_t usb_webusb_class_data_in(USBD_HandleTypeDef *dev,
   return USBD_OK;
 }
 
-static uint8_t usb_webusb_class_data_out(USBD_HandleTypeDef *dev,
-                                         uint8_t ep_num) {
-  usb_webusb_state_t *state = (usb_webusb_state_t *)dev->pUserData;
+static uint8_t usb_hid_class_data_out(USBD_HandleTypeDef *dev, uint8_t ep_num) {
+  usb_hid_state_t *state = (usb_hid_state_t *)dev->pUserData;
 
   if (ep_num == state->ep_out) {
     wait_random();
@@ -321,14 +411,14 @@ static uint8_t usb_webusb_class_data_out(USBD_HandleTypeDef *dev,
   return USBD_OK;
 }
 
-static const USBD_ClassTypeDef usb_webusb_class = {
-    .Init = usb_webusb_class_init,
-    .DeInit = usb_webusb_class_deinit,
-    .Setup = usb_webusb_class_setup,
+static const USBD_ClassTypeDef usb_hid_class = {
+    .Init = usb_hid_class_init,
+    .DeInit = usb_hid_class_deinit,
+    .Setup = usb_hid_class_setup,
     .EP0_TxSent = NULL,
     .EP0_RxReady = NULL,
-    .DataIn = usb_webusb_class_data_in,
-    .DataOut = usb_webusb_class_data_out,
+    .DataIn = usb_hid_class_data_in,
+    .DataOut = usb_hid_class_data_out,
     .SOF = NULL,
     .IsoINIncomplete = NULL,
     .IsoOUTIncomplete = NULL,

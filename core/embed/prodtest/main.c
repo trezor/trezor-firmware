@@ -155,9 +155,9 @@ static void usb_init_all(void) {
       .max_packet_len = VCP_PACKET_LEN,
   };
 
-  usb_init(&dev_info);
+  ensure(usb_init(&dev_info), NULL);
   ensure(usb_vcp_add(&vcp_info), "usb_vcp_add");
-  usb_start();
+  ensure(usb_start(), NULL);
 }
 
 static void draw_border(int width, int padding) {

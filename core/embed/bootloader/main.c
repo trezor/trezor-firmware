@@ -122,11 +122,11 @@ static void usb_init_all(secbool usb21_landing) {
       .polling_interval = 1,
   };
 
-  usb_init(&dev_info);
+  ensure(usb_init(&dev_info), NULL);
 
   ensure(usb_webusb_add(&webusb_info), NULL);
 
-  usb_start();
+  ensure(usb_start(), NULL);
 }
 
 static usb_result_t bootloader_usb_loop(const vendor_header *const vhdr,

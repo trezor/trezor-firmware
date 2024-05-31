@@ -19,9 +19,7 @@
 
 #include "common.h"
 
-#include "usbd_core.h"
-#include "usbd_internal.h"
-
+#include "usb_internal.h"
 #include "usb_vcp.h"
 
 // Communications Device Class Code (bFunctionClass, bInterfaceClass)
