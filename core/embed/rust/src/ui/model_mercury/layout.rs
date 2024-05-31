@@ -2021,8 +2021,11 @@ mod tests {
 
     #[test]
     fn trace_example_layout() {
-        let buttons =
-            Button::cancel_confirm(Button::with_text("Left"), Button::with_text("Right"), false);
+        let buttons = Button::cancel_confirm(
+            Button::with_text("Left".into()),
+            Button::with_text("Right".into()),
+            false,
+        );
 
         let ops = OpTextLayout::new(theme::TEXT_NORMAL)
             .text_normal("Testing text layout, with some text, and some more text. And ")
