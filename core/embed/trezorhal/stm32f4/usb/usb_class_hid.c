@@ -146,7 +146,6 @@ secbool usb_hid_add(const usb_hid_info_t *info) {
   d->ep_out.bInterval = info->polling_interval;
 
   // Interface state
-  state->dev_handle = usb_get_dev_handle();
   state->desc_block = d;
   state->report_desc = info->report_desc;
   state->rx_buffer = info->rx_buffer;
@@ -171,10 +170,12 @@ secbool usb_hid_can_read(uint8_t iface_num) {
   if (state == NULL) {
     return secfalse;  // Invalid interface number
   }
+  if (state->dev_handle == NULL) {
+    return secfalse;  // Class driver not initialized
+  }
   if (state->last_read_len == 0) {
     return secfalse;  // Nothing in the receiving buffer
   }
-
   if (state->dev_handle->dev_state != USBD_STATE_CONFIGURED) {
     return secfalse;  // Device is not configured
   }
@@ -185,6 +186,9 @@ secbool usb_hid_can_write(uint8_t iface_num) {
   usb_hid_state_t *state = usb_get_hid_state(iface_num);
   if (state == NULL) {
     return secfalse;  // Invalid interface number
+  }
+  if (state->dev_handle == NULL) {
+    return secfalse;  // Class driver not initialized
   }
   if (state->ep_in_is_idle == 0) {
     return secfalse;  // Last transmission is not over yet
@@ -200,6 +204,10 @@ int usb_hid_read(uint8_t iface_num, uint8_t *buf, uint32_t len) {
 
   if (state == NULL) {
     return -1;  // Invalid interface number
+  }
+
+  if (state->dev_handle == NULL) {
+    return -1;  // Class driver not initialized
   }
 
   // Copy maximum possible amount of data
@@ -224,6 +232,10 @@ int usb_hid_write(uint8_t iface_num, const uint8_t *buf, uint32_t len) {
 
   if (state == NULL) {
     return -1;  // Invalid interface number
+  }
+
+  if (state->dev_handle == NULL) {
+    return -1;  // Class driver not initialized
   }
 
   if (state->ep_in_is_idle == 0) {
@@ -280,6 +292,8 @@ int usb_hid_write_blocking(uint8_t iface_num, const uint8_t *buf, uint32_t len,
 static uint8_t usb_hid_class_init(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
   usb_hid_state_t *state = (usb_hid_state_t *)dev->pUserData;
 
+  state->dev_handle = dev;
+
   // Open endpoints
   USBD_LL_OpenEP(dev, state->ep_in, USBD_EP_TYPE_INTR, state->max_packet_len);
   USBD_LL_OpenEP(dev, state->ep_out, USBD_EP_TYPE_INTR, state->max_packet_len);
@@ -307,6 +321,8 @@ static uint8_t usb_hid_class_deinit(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
   // Close endpoints
   USBD_LL_CloseEP(dev, state->ep_in);
   USBD_LL_CloseEP(dev, state->ep_out);
+
+  state->dev_handle = NULL;
 
   return USBD_OK;
 }

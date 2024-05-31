@@ -324,13 +324,13 @@ void usb_set_iface_class(uint8_t iface_num, const USBD_ClassTypeDef *class) {
 }
 
 USBD_HandleTypeDef *usb_get_dev_handle(void) {
-  usb_driver_t *usb = &g_usb_driver;
+  usb_driver_t *drv = &g_usb_driver;
 
-  return &usb->dev_handle;
+  return &drv->dev_handle;
 }
 
 void *usb_alloc_class_descriptors(size_t desc_len) {
-  usb_driver_t *usb = &g_usb_driver;
+  usb_driver_t *drv = &g_usb_driver;
 
   if (drv->config_desc->wTotalLength + desc_len < USB_MAX_CONFIG_DESC_SIZE) {
     void *retval = &drv->desc_buffer[drv->config_desc->wTotalLength];

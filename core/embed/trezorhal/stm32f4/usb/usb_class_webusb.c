@@ -111,7 +111,6 @@ secbool usb_webusb_add(const usb_webusb_info_t *info) {
   d->ep_out.bInterval = info->polling_interval;
 
   // Interface state
-  state->dev_handle = usb_get_dev_handle();
   state->desc_block = d;
   state->rx_buffer = info->rx_buffer;
   state->ep_in = info->ep_in | USB_EP_DIR_IN;
@@ -128,8 +127,12 @@ secbool usb_webusb_add(const usb_webusb_info_t *info) {
 
 secbool usb_webusb_can_read(uint8_t iface_num) {
   usb_webusb_state_t *state = usb_get_webusb_state(iface_num);
+
   if (state == NULL) {
     return secfalse;  // Invalid interface number
+  }
+  if (state->dev_handle == NULL) {
+    return secfalse;  // Class driver not initialized
   }
   if (state->last_read_len == 0) {
     return secfalse;  // Nothing in the receiving buffer
@@ -145,6 +148,9 @@ secbool usb_webusb_can_write(uint8_t iface_num) {
   if (state == NULL) {
     return secfalse;  // Invalid interface number
   }
+  if (state->dev_handle == NULL) {
+    return secfalse;  // Class driver not initialized
+  }
   if (state->ep_in_is_idle == 0) {
     return secfalse;  // Last transmission is not over yet
   }
@@ -158,6 +164,10 @@ int usb_webusb_read(uint8_t iface_num, uint8_t *buf, uint32_t len) {
   volatile usb_webusb_state_t *state = usb_get_webusb_state(iface_num);
   if (state == NULL) {
     return -1;  // Invalid interface number
+  }
+
+  if (state->dev_handle == NULL) {
+    return -1;  // Class driver not initialized
   }
 
   // Copy maximum possible amount of data
@@ -181,6 +191,10 @@ int usb_webusb_write(uint8_t iface_num, const uint8_t *buf, uint32_t len) {
   volatile usb_webusb_state_t *state = usb_get_webusb_state(iface_num);
   if (state == NULL) {
     return -1;  // Invalid interface number
+  }
+
+  if (state->dev_handle == NULL) {
+    return -1;  // Class driver not initialized
   }
 
   state->ep_in_is_idle = 0;
@@ -233,6 +247,8 @@ int usb_webusb_write_blocking(uint8_t iface_num, const uint8_t *buf,
 static uint8_t usb_webusb_class_init(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
   usb_webusb_state_t *state = (usb_webusb_state_t *)dev->pUserData;
 
+  state->dev_handle = dev;
+
   // Open endpoints
   USBD_LL_OpenEP(dev, state->ep_in, USBD_EP_TYPE_INTR, state->max_packet_len);
   USBD_LL_OpenEP(dev, state->ep_out, USBD_EP_TYPE_INTR, state->max_packet_len);
@@ -259,6 +275,8 @@ static uint8_t usb_webusb_class_deinit(USBD_HandleTypeDef *dev,
   // Close endpoints
   USBD_LL_CloseEP(dev, state->ep_in);
   USBD_LL_CloseEP(dev, state->ep_out);
+
+  state->dev_handle = NULL;
 
   return USBD_OK;
 }
