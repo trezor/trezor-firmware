@@ -36,6 +36,7 @@
 #include "i2c.h"
 #include "model.h"
 #include "mpu.h"
+#include "powerctl/pmic.h"
 #include "prodtest_common.h"
 #include "random_delays.h"
 #include "sbu.h"
@@ -773,6 +774,57 @@ void cpuid_read(void) {
   vcp_println_hex((uint8_t *)cpuid, sizeof(cpuid));
 }
 
+void test_pmic(const char *args) {
+  if (strcmp(args, "INIT") == 0) {
+    pmic_deinit();
+    bool ok = pmic_init();
+    vcp_println("pmic_init() -> %d", ok);
+  } else if (strcmp(args, "CHGSTART") == 0) {
+    bool ok = pmic_charge_enable(true);
+    vcp_println("pmic_charge_enable() -> %d", ok);
+  } else if (strcmp(args, "CHGSTOP") == 0) {
+    bool ok = pmic_charge_enable(false);
+    vcp_println("pmic_charge_enable() -> %d", ok);
+  } else {
+    uint8_t rc = pmic_restart_cause();
+    vcp_println("restart_cause() -> %02X", rc);
+
+    pmic_measure_trigger();
+
+    hal_delay(1500);
+
+    pmic_report_t report;
+    bool ok = pmic_measure(&report);
+    vcp_println("pmic_measure() -> %d", ok);
+    vcp_println("vbat=%d.%02d", (int)report.vbat,
+                (int)(report.vbat * 100) % 100);
+    vcp_println("vsys=%d.%02d", (int)report.vsys,
+                (int)(report.vsys * 100) % 100);
+    vcp_println("die_temp=%d.%02d", (int)report.die_temp,
+                (int)(report.die_temp * 100) % 100);
+    vcp_println("ntc_temp=%d.%02d", (int)report.ntc_temp,
+                (int)(report.ntc_temp * 100) % 100);
+    vcp_println("ibat=%d.%02d", (int)report.ibat,
+                (int)abs(report.ibat * 100) % 100);
+    vcp_println("ibat_meas_status=%02X", report.ibat_meas_status);
+    vcp_println("ilim_status=%02X", report.ilim_status);
+    vcp_println("ntc_status=%02X", report.ntc_status);
+    vcp_println("die_temp_status=%02X", report.die_temp_status);
+    vcp_println("charge_status=%02X", report.charge_status);
+    vcp_println("usb_status=%02X", report.usb_status);
+    vcp_println("vbusin_status=%02X", report.vbus_status);
+
+    vcp_println("events_adc=%02X", report.events_adc);
+    vcp_println("events_bcharger0=%02X", report.events_bcharger0);
+    vcp_println("events_bcharger1=%02X", report.events_bcharger1);
+    vcp_println("events_bcharger2=%02X", report.events_bcharger2);
+    vcp_println("events_shphld=%02X", report.events_shphld);
+    vcp_println("events_vbusin0=%02X", report.events_vbusin0);
+    vcp_println("events_vbusin1=%02X", report.events_vbusin1);
+    vcp_println("events_gpio=%02X", report.events_gpio);
+  }
+}
+
 #define BACKLIGHT_NORMAL 150
 
 int main(void) {
@@ -794,6 +846,7 @@ int main(void) {
 #ifdef USE_I2C
   i2c_init();
 #endif
+  pmic_init();
 #ifdef USE_TOUCH
   touch_init();
 #endif
@@ -935,6 +988,10 @@ int main(void) {
       test_wipe();
     } else if (startswith(line, "REBOOT")) {
       test_reboot();
+    } else if (startswith(line, "PMIC ")) {
+      test_pmic(line + 5);
+    } else if (startswith(line, "PMIC")) {
+      test_pmic(line + 4);
     } else {
       vcp_println("UNKNOWN");
     }

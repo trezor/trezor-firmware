@@ -57,6 +57,9 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
     mp_raise_TypeError("invalid list_ref");
   }
 
+  extern void device_suspend_test(void);
+  device_suspend_test();
+
   // The value `timeout_ms` can be negative in a minority of cases, indicating a
   // deadline overrun. This is not a problem because we use the `timeout` only
   // to calculate a `deadline`, and having deadline in the past works fine

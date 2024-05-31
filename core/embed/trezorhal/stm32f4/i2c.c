@@ -79,7 +79,7 @@ void i2c_init_instance(uint16_t idx, i2c_instance_t *instance) {
   }
 }
 
-void i2c_init(void) {
+__attribute__((optimize("-O0"))) void i2c_init(void) {
   // enable I2C clock
   I2C_INSTANCE_0_CLK_EN();
   I2C_INSTANCE_0_SCL_CLK_EN();
