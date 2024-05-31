@@ -118,6 +118,7 @@
 #define USB_MAX_EP0_SIZE                                  64
 
 /*  Device Status */
+#define USBD_STATE_UNINITIALIZED                          0
 #define USBD_STATE_DEFAULT                                1
 #define USBD_STATE_ADDRESSED                              2
 #define USBD_STATE_CONFIGURED                             3

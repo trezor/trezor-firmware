@@ -77,6 +77,11 @@ typedef struct {
   secbool usb21_enabled;
   secbool usb21_landing;
 
+  // Time (in ticks) when we've seen the USB ready last time
+  uint32_t ready_time;
+  // Set to `sectrue` if the USB stack was ready sinced the last start
+  secbool was_ready;
+
 } usb_driver_t;
 
 // USB driver instance
@@ -94,6 +99,8 @@ static secbool __wur check_desc_str(const char *s) {
 
 void usb_init(const usb_dev_info_t *dev_info) {
   usb_driver_t *usb = &g_usb_driver;
+
+  memset(usb, 0, sizeof(usb_driver_t));
 
   // enable/disable USB 2.1 features
   usb->usb21_enabled = dev_info->usb21_enabled;
@@ -149,6 +156,32 @@ void usb_init(const usb_dev_info_t *dev_info) {
   usb->next_iface_desc =
       (usb_interface_descriptor_t *)(usb->config_buf +
                                      usb->config_desc->wTotalLength);
+}
+
+void usb_deinit(void) {
+  usb_driver_t *usb = &g_usb_driver;
+
+  usb_stop();
+
+  // Set usb->dev_handle.dev_state to USBD_STATE_INITIALIZED
+  // Set usb->config_desc to NULL
+  memset(&usb, 0, sizeof(usb_driver_t));
+}
+
+void usb_start(void) {
+  usb_driver_t *usb = &g_usb_driver;
+
+  if (usb->config_desc == NULL) {
+    // The driver is not initialized
+    return;
+  }
+
+  if (usb->dev_handle.dev_state != USBD_STATE_UNINITIALIZED) {
+    // The driver has been started already
+    return;
+  }
+
+  usb->was_ready = secfalse;
 
   ensure(sectrue *
              (USBD_OK == USBD_Init(&usb->dev_handle,
@@ -159,64 +192,76 @@ void usb_init(const usb_dev_info_t *dev_info) {
              (USBD_OK == USBD_RegisterClass(&usb->dev_handle,
                                             (USBD_ClassTypeDef *)&usb_class)),
          NULL);
-}
 
-void usb_deinit(void) {
-  usb_driver_t *usb = &g_usb_driver;
-
-  USBD_DeInit(&usb->dev_handle);
-  for (int i = 0; i < USBD_MAX_NUM_INTERFACES; i++) {
-    usb->ifaces[i].class = NULL;
-  }
-}
-
-void usb_start(void) {
-  usb_driver_t *usb = &g_usb_driver;
-
-  USBD_Start(&usb->dev_handle);
+  ensure(sectrue * (USBD_OK == USBD_Start(&usb->dev_handle)), NULL);
 }
 
 void usb_stop(void) {
   usb_driver_t *usb = &g_usb_driver;
 
-  USBD_Stop(&usb->dev_handle);
+  if (usb->dev_handle.dev_state == USBD_STATE_UNINITIALIZED) {
+    // The driver is already stopped or not initialized
+    return;
+  }
+
+  USBD_DeInit(&usb->dev_handle);
+
+  // Set usb->dev_handle.dev_state to USBD_STATE_INITIALIZED
+  memset(&usb->dev_handle, 0, sizeof(usb->dev_handle));
 }
 
 secbool usb_configured(void) {
   usb_driver_t *usb = &g_usb_driver;
 
-  static uint32_t usb_configured_last_ok = 0;
-  uint32_t ticks = hal_ticks_ms();
+  if (usb->config_desc == NULL) {
+    // The driver is not initialized
+    return secfalse;
+  }
 
   const USBD_HandleTypeDef *pdev = &usb->dev_handle;
+
+  if (pdev->dev_state == USBD_STATE_UNINITIALIZED) {
+    // The driver has not been started yet
+    return secfalse;
+  }
+
+  secbool powered_from_usb = sectrue;  // TODO
+
+  secbool ready = secfalse;
+
   if (pdev->dev_state == USBD_STATE_CONFIGURED) {
-    usb_configured_last_ok = hal_ticks_ms();
-    return sectrue;
+    // USB is configured, ready to transfer data
+    ready = sectrue;
+  } else if (pdev->dev_state == USBD_STATE_SUSPENDED &&
+             pdev->dev_old_state == USBD_STATE_CONFIGURED) {
+    // USB is suspended, but was configured before
+    //
+    // Linux has autosuspend device after 2 seconds by default.
+    // So a suspended device that was seen as configured is reported as
+    // configured.
+    //
+    ready = sectrue;
+  } else if ((usb->was_ready == secfalse) && (powered_from_usb == sectrue)) {
+    // First run after the startup with USB power
+    usb->was_ready = sectrue;
+    ready = sectrue;
   }
 
-  // Linux has autosuspend device after 2 seconds by default.
-  // So a suspended device that was seen as configured is reported as
-  // configured.
-  if (pdev->dev_state == USBD_STATE_SUSPENDED &&
-      pdev->dev_old_state == USBD_STATE_CONFIGURED) {
-    usb_configured_last_ok = hal_ticks_ms();
-    return sectrue;
+  // This is a workaround to handle the glitches in the USB connection,
+  // especially for USB-powered-only devices. This should be
+  // revisited and probably fixed elsewhere.
+
+  uint32_t ticks = hal_ticks_ms();
+
+  if (ready == sectrue) {
+    usb->ready_time = ticks;
+  } else if ((usb->was_ready == sectrue) && (ticks - usb->ready_time) < 2000) {
+    // NOTE: When the timer overflows the timeout is shortened.
+    //       We are ignoring it for now.
+    ready = sectrue;
   }
 
-  if (usb_configured_last_ok == 0) {
-    usb_configured_last_ok = ticks;
-    return sectrue;
-  }
-  if (usb_configured_last_ok > ticks) {
-    // probably overflow of 32bit ms counter, ignore as its just once in a long
-    // time
-    return sectrue;
-  }
-  if ((hal_ticks_ms() - usb_configured_last_ok) < 2000) {
-    return sectrue;
-  }
-
-  return secfalse;
+  return ready;
 }
 
 // ==========================================================================

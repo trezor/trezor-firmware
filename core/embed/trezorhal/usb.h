@@ -27,6 +27,38 @@
 #include "usb_vcp.h"
 #include "usb_webusb.h"
 
+// clang-format off
+//
+// USB stack high-level state machine
+// ------------------------------------
+//
+//              +---------------+
+//        ----> | Uninitialized |   - Stack is completely uninitialized
+//        |     +---------------+
+//        |            |
+//        |         usb_init()
+//   usb_deinit()      |
+//        |            v
+//        |     +---------------+   - Stack is partially initialized
+//        |-----|  Initialized  |   - Ready for class registration
+//        |     +---------------+
+//        |            |
+//        |       N x usb_xxx_add() - Multiple class drivers can be registered
+//        |            |
+//        |            v
+//        |     +---------------+   - Stack is completely initialized
+//        |-----|    Stopped    |   - USB hardware left uninitialized
+//        |     +---------------+   - Can go low power at this mode
+//        |        |        ^
+//        |    usb_start()  |
+//        |        |     usb_stop()
+//        |        v        |
+//        |     +---------------+   - USB hardware initialized
+//        ------|    Running    |   - Stack is running if the USB host is connected
+//              +---------------+
+//
+// clang-format on
+
 typedef struct {
   uint8_t device_class;
   uint8_t device_subclass;
@@ -42,10 +74,40 @@ typedef struct {
   secbool usb21_landing;
 } usb_dev_info_t;
 
+// Initializes USB stack
+//
+// When the USB driver is initialized, class drivers can be registered.
+// After all class drivers are registered, `usb_start()` can  be called.
 void usb_init(const usb_dev_info_t *dev_info);
+
+// Deinitialize USB stack
+//
+// This function completely deinitializes the USB driver and all class drivers.
+// After this function is called, `usb_init()` can be called again.
 void usb_deinit(void);
+
+// Starts USB driver and its class drivers
+//
+// Initializes the USB stack (and hardware) and starts all registered class
+// drivers.
+//
+// This function can called after all class drivers are registered or after
+// `usb_stop()` is called.
 void usb_start(void);
+
+// Stops USB driver and its class drivers
+//
+// Unitializes the USB stack (and hardware) but leaves all configuration intact,
+// so it can be started again with `usb_start()`.
+//
+// When the USB stack is stopped, it does not respond to any USB events and
+// the CPU can go to stop/standby mode.
 void usb_stop(void);
+
+// Returns `sectrue` if the device is connected to the host (or is expected to
+// be)
+//
+// TODO: Review and clarify the logic of this function in the future
 secbool usb_configured(void);
 
 #endif
