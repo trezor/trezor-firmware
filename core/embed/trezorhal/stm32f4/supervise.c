@@ -5,6 +5,7 @@
 #include "../mpu.h"
 #include "common.h"
 #include "display.h"
+#include "powerctl.h"
 #include "supervise.h"
 
 #ifdef ARM_USER_MODE
@@ -46,6 +47,29 @@ void svc_reboot(void) {
     __asm__ __volatile__("svc %0" ::"i"(SVC_REBOOT) : "memory");
   } else {
     NVIC_SystemReset();
+  }
+}
+
+void svc_suspend(void) {
+  if (is_mode_unprivileged() && !is_mode_handler()) {
+    __asm__ __volatile__("svc %0" ::"i"(SVC_SUSPEND) : "memory");
+  } else {
+    device_suspend_privileged();
+  }
+}
+
+void svc_elevate_privileged(void) {
+  // jump to unprivileged mode
+  // http://infocenter.arm.com/help/topic/com.arm.doc.dui0552a/CHDBIBGJ.html
+  __asm__ volatile("msr control, %0" ::"r"(0x0));
+  __asm__ volatile("isb");
+}
+
+void svc_elevate(void) {
+  if (is_mode_unprivileged() && !is_mode_handler()) {
+    __asm__ __volatile__("svc %0" ::"i"(SVC_ELEVATE) : "memory");
+  } else {
+    svc_elevate_privileged();
   }
 }
 
@@ -95,6 +119,11 @@ void SVC_C_Handler(uint32_t *stack) {
       break;
     case SVC_REBOOT:
       NVIC_SystemReset();
+    case SVC_SUSPEND:
+      device_suspend_privileged();
+      break;
+    case SVC_ELEVATE:
+      svc_elevate_privileged();
       break;
     default:
       stack[0] = 0xffffffff;

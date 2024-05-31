@@ -1,3 +1,6 @@
+#ifndef SUPERVISE_H
+#define SUPERVISE_H
+
 // supervisor call functions
 
 #define SVC_ENABLE_IRQ 0
@@ -7,6 +10,9 @@
 #define SVC_REBOOT_TO_BOOTLOADER 5
 #define SVC_GET_SYSTICK_VAL 6
 #define SVC_REBOOT 7
+#define SVC_SUSPEND 8
+#define SVC_ELEVATE 9
+
 
 #include <string.h>
 #include "boot_args.h"
@@ -82,3 +88,8 @@ static inline uint32_t svc_get_systick_val(void) {
     return systick_val_copy;
   }
 }
+
+void svc_suspend(void);
+void svc_elevate(void);
+
+#endif  // SUPERVISE_H
