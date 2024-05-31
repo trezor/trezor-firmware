@@ -44,21 +44,22 @@ usb = []
 optiga = []
 translations = ["crypto"]
 test = [
+    "backlight",
     "button",
     "cc",
     "crypto",
+    "dma2d",
     "debug",
     "glob",
     "micropython",
+    "new_rendering",
+    "optiga",
     "protobuf",
+    "touch",
+    "translations",
     "ui",
     "ui_jpeg_decoder",
     "ui_blurring",
-    "dma2d",
-    "touch",
-    "backlight",
-    "optiga",
-    "translations",
     "universal_fw",
 ]
 universal_fw = []
