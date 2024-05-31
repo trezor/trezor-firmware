@@ -68,6 +68,12 @@ void display_init(void) {
   BSP_LCD_DisplayOn(0);
 }
 
+void display_deinit(void) {
+  BSP_LCD_DisplayOff(0);
+  BSP_LCD_SetBrightness(0, 0);
+  BSP_LCD_DeInit(0);
+}
+
 void display_reinit(void) {
   BSP_LCD_Reinit(0);
   if (current_frame_buffer == 0) {

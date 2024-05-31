@@ -49,6 +49,8 @@
 // Fully initializes the display controller.
 void display_init(void);
 
+void display_deinit(void);
+
 // Called in application or bootloader to reinitialize an already initialized
 // display controller without any distrubing visible effect (blinking, etc.).
 void display_reinit(void);
