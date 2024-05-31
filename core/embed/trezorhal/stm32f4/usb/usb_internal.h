@@ -21,6 +21,7 @@
 #define TREZORHAL_USBD_INTERNAL_H
 
 #include <stdint.h>
+#include "usbd_core.h"
 
 #define USB_EP_DIR_MASK 0x80
 #define USB_EP_DIR_OUT 0x00

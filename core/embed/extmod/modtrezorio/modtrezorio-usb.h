@@ -190,7 +190,9 @@ STATIC mp_obj_t mod_trezorio_USB_open(mp_obj_t self,
   mp_obj_get_array(MP_OBJ_FROM_PTR(&o->ifaces), &iface_cnt, &iface_objs);
 
   // Initialize the USB stack
-  usb_init(&o->info);
+  if (sectrue != usb_init(&o->info)) {
+    mp_raise_msg(&mp_type_RuntimeError, "failed to initialize usb driver");
+  }
 
   int vcp_iface_num = -1;
 
@@ -224,7 +226,10 @@ STATIC mp_obj_t mod_trezorio_USB_open(mp_obj_t self,
   }
 
   // Start the USB stack
-  usb_start();
+  if (sectrue != usb_start()) {
+    usb_deinit();
+    mp_raise_msg(&mp_type_RuntimeError, "failed to start usb driver");
+  }
   o->state = USB_OPENED;
 
   // If we found any VCP interfaces, use the last one for stdio,
