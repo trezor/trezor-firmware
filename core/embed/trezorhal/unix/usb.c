@@ -46,7 +46,7 @@ static struct {
   socklen_t slen;
 } usb_ifaces[USBD_MAX_NUM_INTERFACES];
 
-void usb_init(const usb_dev_info_t *dev_info) {
+secbool usb_init(const usb_dev_info_t *dev_info) {
   (void)dev_info;
   for (int i = 0; i < USBD_MAX_NUM_INTERFACES; i++) {
     usb_ifaces[i].type = USB_IFACE_TYPE_DISABLED;
@@ -56,11 +56,12 @@ void usb_init(const usb_dev_info_t *dev_info) {
     memzero(&usb_ifaces[i].si_other, sizeof(struct sockaddr_in));
     usb_ifaces[i].slen = 0;
   }
+  return sectrue;
 }
 
 void usb_deinit(void) {}
 
-void usb_start(void) {
+secbool usb_start(void) {
   const char *ip = getenv("TREZOR_UDP_IP");
 
   // iterate interfaces
@@ -89,6 +90,8 @@ void usb_start(void) {
                                 sizeof(struct sockaddr_in))),
            NULL);
   }
+
+  return sectrue;
 }
 
 void usb_stop(void) {
