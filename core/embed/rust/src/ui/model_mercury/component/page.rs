@@ -522,7 +522,6 @@ mod tests {
     use serde_json;
 
     use crate::{
-        strutil::SkipPrefix,
         trace::tests::trace,
         ui::{
             component::text::paragraphs::{Paragraph, Paragraphs},
