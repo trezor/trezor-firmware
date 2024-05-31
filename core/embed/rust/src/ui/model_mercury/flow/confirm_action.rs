@@ -1,9 +1,12 @@
 use crate::{
     error,
+    maybe_trace::MaybeTrace,
     strutil::TString,
     translations::TR,
     ui::{
-        component::{text::paragraphs::Paragraph, ComponentExt, SwipeDirection},
+        component::{
+            text::paragraphs::Paragraph, Component, ComponentExt, Paginate, SwipeDirection,
+        },
         flow::{base::Decision, flow_store, FlowMsg, FlowState, FlowStore, SwipeFlow, SwipePage},
     },
 };
@@ -207,4 +210,42 @@ fn new_confirm_action_obj(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Err
         let res = SwipeFlow::new(ConfirmAction::Intro, store)?;
         Ok(LayoutObj::new(res)?.into())
     }
+}
+
+pub fn new_confirm_action_simple<T: Component + Paginate + Clone + MaybeTrace + 'static>(
+    content: T,
+    title: TString<'static>,
+    subtitle: Option<TString<'static>>,
+    verb: Option<TString<'static>>,
+    verb_cancel: Option<TString<'static>>,
+) -> Result<Obj, error::Error> {
+    let mut frame = Frame::left_aligned(title, SwipePage::vertical(content))
+        .with_menu_button()
+        .with_footer(TR::instructions__swipe_up.into(), verb);
+    if let Some(subtitle) = subtitle {
+        frame = frame.with_subtitle(subtitle)
+    }
+    let content_intro =
+        frame.map(|msg| matches!(msg, FrameMsg::Button(_)).then_some(FlowMsg::Info));
+
+    let content_menu = if let Some(verb_cancel) = verb_cancel {
+        Frame::left_aligned(
+            "".into(),
+            VerticalMenu::empty().danger(theme::ICON_CANCEL, verb_cancel),
+        )
+    } else {
+        Frame::left_aligned(
+            "".into(),
+            VerticalMenu::empty().danger(theme::ICON_CANCEL, TR::buttons__cancel.into()),
+        )
+    }
+    .with_cancel_button()
+    .map(move |msg| match msg {
+        FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => Some(FlowMsg::Choice(i)),
+        FrameMsg::Button(_) => Some(FlowMsg::Cancelled),
+    });
+
+    let store = flow_store().add(content_intro)?.add(content_menu)?;
+    let res = SwipeFlow::new(ConfirmActionSimple::Intro, store)?;
+    Ok(LayoutObj::new(res)?.into())
 }

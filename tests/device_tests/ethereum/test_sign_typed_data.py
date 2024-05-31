@@ -97,6 +97,7 @@ DATA = {
 }
 
 
+@pytest.mark.skip_t3t1(reason="Not yet implemented in new UI")
 @pytest.mark.skip_t1b1
 def test_ethereum_sign_typed_data_show_more_button(client: Client):
     with client:

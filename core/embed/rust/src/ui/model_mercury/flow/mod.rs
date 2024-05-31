@@ -10,7 +10,7 @@ pub mod request_number;
 pub mod show_share_words;
 pub mod warning_hi_prio;
 
-pub use confirm_action::new_confirm_action;
+pub use confirm_action::{new_confirm_action, new_confirm_action_simple};
 mod util;
 
 pub use confirm_output::new_confirm_output;

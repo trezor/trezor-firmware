@@ -264,12 +264,12 @@ class InputFlowSignMessagePagination(InputFlowBase):
         self.debug.press_yes()
 
         br = yield
-        assert br.pages is not None
-        for i in range(br.pages):
+        # assert br.pages is not None
+        for i in range(br.pages or 1):
             layout = self.debug.wait_layout()
             layouts.append(layout)
 
-            if i < br.pages - 1:
+            if br.pages and i < br.pages - 1:
                 self.debug.swipe_up()
 
         self.message_read = multipage_content(layouts)

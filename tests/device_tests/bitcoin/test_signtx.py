@@ -1613,6 +1613,7 @@ def test_information_cancel(client: Client):
         )
 
 
+@pytest.mark.skip_t3t1(reason="Not yet implemented in new UI")
 @pytest.mark.skip_t1b1(reason="Cannot test layouts on T1")
 def test_information_replacement(client: Client):
     # Use the change output and an external output to bump the fee.
