@@ -274,7 +274,8 @@ int main(void) {
   dma2d_init();
 #endif
 
-  display_init();
+  display_init(DISPLAY_RESET_CONTENT);
+
   display_clear();
   display_refresh();
 
@@ -324,6 +325,7 @@ int main(void) {
   // This includes the version of bootloader potentially updated from SD card.
   write_bootloader_min_version(hdr->monotonic);
 
+  display_deinit(DISPLAY_RETAIN_CONTENT);
   ensure_compatible_settings();
 
   mpu_config_off();

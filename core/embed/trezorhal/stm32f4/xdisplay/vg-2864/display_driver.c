@@ -220,84 +220,79 @@ static void display_sync_with_fb(display_driver_t *drv) {
   HAL_GPIO_WritePin(OLED_DC_PORT, OLED_DC_PIN, GPIO_PIN_RESET);
 }
 
-void display_init(void) {
+void display_init(display_content_mode_t mode) {
   display_driver_t *drv = &g_display_driver;
 
   memset(drv, 0, sizeof(display_driver_t));
   drv->backlight_level = 255;
 
-  OLED_DC_CLK_ENA();
-  OLED_CS_CLK_ENA();
-  OLED_RST_CLK_ENA();
-  OLED_SPI_SCK_CLK_ENA();
-  OLED_SPI_MOSI_CLK_ENA();
-  OLED_SPI_CLK_ENA();
+  if (mode == DISPLAY_RESET_CONTENT) {
+    OLED_DC_CLK_ENA();
+    OLED_CS_CLK_ENA();
+    OLED_RST_CLK_ENA();
+    OLED_SPI_SCK_CLK_ENA();
+    OLED_SPI_MOSI_CLK_ENA();
+    OLED_SPI_CLK_ENA();
 
-  GPIO_InitTypeDef GPIO_InitStructure;
+    GPIO_InitTypeDef GPIO_InitStructure;
 
-  // Set GPIO for OLED display
-  GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStructure.Pull = GPIO_NOPULL;
-  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  GPIO_InitStructure.Alternate = 0;
-  GPIO_InitStructure.Pin = OLED_CS_PIN;
-  HAL_GPIO_WritePin(OLED_CS_PORT, OLED_CS_PIN, GPIO_PIN_RESET);
-  HAL_GPIO_Init(OLED_CS_PORT, &GPIO_InitStructure);
-  GPIO_InitStructure.Pin = OLED_DC_PIN;
-  HAL_GPIO_WritePin(OLED_DC_PORT, OLED_DC_PIN, GPIO_PIN_RESET);
-  HAL_GPIO_Init(OLED_DC_PORT, &GPIO_InitStructure);
-  GPIO_InitStructure.Pin = OLED_RST_PIN;
-  HAL_GPIO_WritePin(OLED_RST_PORT, OLED_RST_PIN, GPIO_PIN_RESET);
-  HAL_GPIO_Init(OLED_RST_PORT, &GPIO_InitStructure);
+    // Set GPIO for OLED display
+    GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStructure.Pull = GPIO_NOPULL;
+    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+    GPIO_InitStructure.Alternate = 0;
+    GPIO_InitStructure.Pin = OLED_CS_PIN;
+    HAL_GPIO_WritePin(OLED_CS_PORT, OLED_CS_PIN, GPIO_PIN_RESET);
+    HAL_GPIO_Init(OLED_CS_PORT, &GPIO_InitStructure);
+    GPIO_InitStructure.Pin = OLED_DC_PIN;
+    HAL_GPIO_WritePin(OLED_DC_PORT, OLED_DC_PIN, GPIO_PIN_RESET);
+    HAL_GPIO_Init(OLED_DC_PORT, &GPIO_InitStructure);
+    GPIO_InitStructure.Pin = OLED_RST_PIN;
+    HAL_GPIO_WritePin(OLED_RST_PORT, OLED_RST_PIN, GPIO_PIN_RESET);
+    HAL_GPIO_Init(OLED_RST_PORT, &GPIO_InitStructure);
 
-  // Enable SPI 1 for OLED display
-  GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStructure.Pull = GPIO_NOPULL;
-  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  GPIO_InitStructure.Alternate = OLED_SPI_AF;
-  GPIO_InitStructure.Pin = OLED_SPI_SCK_PIN;
-  HAL_GPIO_Init(OLED_SPI_SCK_PORT, &GPIO_InitStructure);
-  GPIO_InitStructure.Pin = OLED_SPI_MOSI_PIN;
-  HAL_GPIO_Init(OLED_SPI_MOSI_PORT, &GPIO_InitStructure);
+    // Enable SPI 1 for OLED display
+    GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStructure.Pull = GPIO_NOPULL;
+    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+    GPIO_InitStructure.Alternate = OLED_SPI_AF;
+    GPIO_InitStructure.Pin = OLED_SPI_SCK_PIN;
+    HAL_GPIO_Init(OLED_SPI_SCK_PORT, &GPIO_InitStructure);
+    GPIO_InitStructure.Pin = OLED_SPI_MOSI_PIN;
+    HAL_GPIO_Init(OLED_SPI_MOSI_PORT, &GPIO_InitStructure);
 
-  // Initialize SPI controller
-  display_init_spi(drv);
+    // Initialize SPI controller
+    display_init_spi(drv);
 
-  // Set to CMD
-  HAL_GPIO_WritePin(OLED_DC_PORT, OLED_DC_PIN, GPIO_PIN_RESET);
-  // SPI deselect
-  HAL_GPIO_WritePin(OLED_CS_PORT, OLED_CS_PIN, GPIO_PIN_SET);
+    // Set to CMD
+    HAL_GPIO_WritePin(OLED_DC_PORT, OLED_DC_PIN, GPIO_PIN_RESET);
+    // SPI deselect
+    HAL_GPIO_WritePin(OLED_CS_PORT, OLED_CS_PIN, GPIO_PIN_SET);
 
-  // Reset the LCD
-  HAL_GPIO_WritePin(OLED_RST_PORT, OLED_RST_PIN, GPIO_PIN_SET);
-  HAL_Delay(1);
-  HAL_GPIO_WritePin(OLED_RST_PORT, OLED_RST_PIN, GPIO_PIN_RESET);
-  HAL_Delay(1);
-  HAL_GPIO_WritePin(OLED_RST_PORT, OLED_RST_PIN, GPIO_PIN_SET);
+    // Reset the LCD
+    HAL_GPIO_WritePin(OLED_RST_PORT, OLED_RST_PIN, GPIO_PIN_SET);
+    HAL_Delay(1);
+    HAL_GPIO_WritePin(OLED_RST_PORT, OLED_RST_PIN, GPIO_PIN_RESET);
+    HAL_Delay(1);
+    HAL_GPIO_WritePin(OLED_RST_PORT, OLED_RST_PIN, GPIO_PIN_SET);
 
-  // SPI select
-  HAL_GPIO_WritePin(OLED_CS_PORT, OLED_CS_PIN, GPIO_PIN_RESET);
-  // Send initialization command sequence
-  display_send_bytes(drv, &vg_2864ksweg01_init_seq[0],
-                     sizeof(vg_2864ksweg01_init_seq));
-  // SPI deselect
-  HAL_GPIO_WritePin(OLED_CS_PORT, OLED_CS_PIN, GPIO_PIN_SET);
+    // SPI select
+    HAL_GPIO_WritePin(OLED_CS_PORT, OLED_CS_PIN, GPIO_PIN_RESET);
+    // Send initialization command sequence
+    display_send_bytes(drv, &vg_2864ksweg01_init_seq[0],
+                       sizeof(vg_2864ksweg01_init_seq));
+    // SPI deselect
+    HAL_GPIO_WritePin(OLED_CS_PORT, OLED_CS_PIN, GPIO_PIN_SET);
 
-  // Clear display internal framebuffer
-  display_sync_with_fb(drv);
+    // Clear display internal framebuffer
+    display_sync_with_fb(drv);
+  } else {
+    display_init_spi(drv);
+  }
 }
 
-void display_reinit(void) {
-  display_driver_t *drv = &g_display_driver;
-
-  memset(drv, 0, sizeof(display_driver_t));
-  drv->backlight_level = 255;
-
-  display_init_spi(drv);
-}
-
-void display_finish_actions(void) {
-  /// Not used and intentionally left empty
+void display_deinit(display_content_mode_t mode) {
+  // Not used and intentionally left empty
 }
 
 int display_set_backlight(int level) {

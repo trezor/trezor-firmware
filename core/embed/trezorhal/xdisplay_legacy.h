@@ -23,12 +23,12 @@
 #include <buffers.h>
 #include <stdint.h>
 
-// These declarationscode emulates will be removed after the
-// final cleanup of display drivers. They are here just to simplify
-// integration with the legacy code.
+// These declarations will be removed after the final cleanup
+// of display drivers. They are here just to simplify integration
+// with the legacy code.
 //
-// Most of these function are not called when NEW_RENDERING=1
-// and they are only needed to for succesfully code compilation
+// Most of these functions are not called when NEW_RENDERING=1,
+// and they are only needed for successful code compilation.
 
 #define DISPLAY_FRAMEBUFFER_WIDTH 768
 #define DISPLAY_FRAMEBUFFER_HEIGHT 480

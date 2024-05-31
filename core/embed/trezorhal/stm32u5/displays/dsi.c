@@ -1654,7 +1654,7 @@ int display_orientation(int degrees) { return degrees; }
 int display_get_orientation(void) { return 0; }
 int display_backlight(int val) { return val; }
 
-void display_init(void) {
+void display_init_all(void) {
   RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
 
   /** Initializes the common periph clock
