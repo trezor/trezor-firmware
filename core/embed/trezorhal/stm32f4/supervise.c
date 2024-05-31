@@ -6,6 +6,7 @@
 #include "common.h"
 #include "display.h"
 #include "irq.h"
+#include "powerctl.h"
 #include "supervise.h"
 
 #ifdef ARM_USER_MODE
@@ -62,6 +63,14 @@ void svc_reboot(void) {
   }
 }
 
+void svc_suspend(void) {
+  if (is_mode_unprivileged() && !is_mode_handler()) {
+    __asm__ __volatile__("svc %0" ::"i"(SVC_SUSPEND) : "memory");
+  } else {
+    powerctl_suspend();
+  }
+}
+
 void SVC_C_Handler(uint32_t *stack) {
   uint8_t svc_number = ((uint8_t *)stack[6])[-2];
   switch (svc_number) {
@@ -107,6 +116,8 @@ void SVC_C_Handler(uint32_t *stack) {
       break;
     case SVC_REBOOT:
       NVIC_SystemReset();
+    case SVC_SUSPEND:
+      powerctl_suspend();
       break;
     default:
       stack[0] = 0xffffffff;
