@@ -31,6 +31,8 @@ __attribute__((noreturn)) static void _reboot_to_bootloader(
 #else
 __attribute__((noreturn)) static void _reboot_to_bootloader(
     boot_command_t boot_command) {
+  display_deinit(DISPLAY_RETAIN_CONTENT);
+  ensure_compatible_settings();
   mpu_config_bootloader();
   jump_to_with_flag(IMAGE_CODE_ALIGN(BOOTLOADER_START + IMAGE_HEADER_SIZE),
                     boot_command);
@@ -40,14 +42,12 @@ __attribute__((noreturn)) static void _reboot_to_bootloader(
 #endif
 
 void svc_reboot_to_bootloader(void) {
-  display_finish_actions();
   boot_command_t boot_command = bootargs_get_command();
   if (is_mode_unprivileged() && !is_mode_handler()) {
     register uint32_t r0 __asm__("r0") = boot_command;
     __asm__ __volatile__("svc %0" ::"i"(SVC_REBOOT_TO_BOOTLOADER), "r"(r0)
                          : "memory");
   } else {
-    ensure_compatible_settings();
     _reboot_to_bootloader(boot_command);
   }
 }
@@ -83,7 +83,6 @@ void SVC_C_Handler(uint32_t *stack) {
         ;
       break;
     case SVC_REBOOT_TO_BOOTLOADER:
-      ensure_compatible_settings();
 
       __asm__ volatile("msr control, %0" ::"r"(0x0));
       __asm__ volatile("isb");

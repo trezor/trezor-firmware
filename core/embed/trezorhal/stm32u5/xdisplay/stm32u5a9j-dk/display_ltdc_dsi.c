@@ -202,6 +202,11 @@ static void DSI_EndOfRefreshCallback(DSI_HandleTypeDef *hdsi);
  * @retval BSP status.
  */
 int32_t BSP_LCD_Init(uint32_t Instance, uint32_t Orientation) {
+  memset(&hlcd_gfxmmu, 0, sizeof(hlcd_gfxmmu));
+  memset(&hlcd_ltdc, 0, sizeof(hlcd_ltdc));
+  memset(&hlcd_dsi, 0, sizeof(hlcd_dsi));
+  memset(&DSIVidCfg, 0, sizeof(DSIVidCfg));
+
   int32_t status = BSP_ERROR_NONE;
 
   if ((Instance >= LCD_INSTANCES_NBR) ||
@@ -1274,7 +1279,7 @@ static int32_t LCD_DeInit(void) {
   }
 
   /* Wait before entering in sleep mode */
-  HAL_Delay(2000);
+  // HAL_Delay(2000);
 
   /* Put LCD in sleep mode */
   if (HAL_DSI_ShortWrite(&hlcd_dsi, 0, DSI_DCS_SHORT_PKT_WRITE_P0,
