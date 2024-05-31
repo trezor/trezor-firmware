@@ -46,18 +46,27 @@
 // MIPI            -
 //                 - STM32U5A9J-DK Discovery Board
 
-// Fully initializes the display controller.
-void display_init(void);
+// Specifies how display content should be handled during
+// initialization or deinitialization.
+typedef enum {
+  // Clear the display content
+  DISPLAY_RESET_CONTENT,
+  // Retain the display content
+  DISPLAY_RETAIN_CONTENT
+} display_content_mode_t;
 
-// Called in application or bootloader to reinitialize an already initialized
-// display controller without any distrubing visible effect (blinking, etc.).
-void display_reinit(void);
-
-// Waits for any backround operations (such as DMA copying) and returns.
+// Initializes the display controller.
 //
-// The function provides a barrier when jumping between
-// boardloader/bootloader and firmware.
-void display_finish_actions(void);
+// If `mode` is `DISPLAY_RETAIN_CONTENT`, ensure the driver was previously
+// initialized and `display_deinit(DISPLAY_RETAIN_CONTENT)` was called.
+void display_init(display_content_mode_t mode);
+
+// Deinitializes the display controller.
+//
+// If `mode` is `DISPLAY_RETAIN_CONTENT`, wait for background operations to
+// complete and disable interrupts, so the application can safely proceed to
+// the next boot stage and call `display_init(DISPLAY_RETAIN_CONTENT)`.
+void display_deinit(display_content_mode_t mode);
 
 // Sets display backlight level ranging from 0 (off)..255 (maximum).
 //
@@ -122,7 +131,7 @@ void display_refresh(void);
 // This is used when switching between the firmware and the bootloader.
 void display_set_compatible_settings(void);
 
-// Following function define display's bitblt interface.
+// Following functions define display's bitblt interface.
 //
 // These functions draw directly to to display or to the
 // currently inactive framebuffer.

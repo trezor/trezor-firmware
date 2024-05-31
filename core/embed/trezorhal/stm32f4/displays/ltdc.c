@@ -221,7 +221,7 @@ int display_backlight(int val) {
 
 void display_init_seq(void) { display_unsleep(); }
 
-void display_init(void) {
+void display_init_all(void) {
   GPIO_InitTypeDef GPIO_InitStructure = {0};
 
   /* Enable the LTDC and DMA2D Clock */

@@ -50,9 +50,11 @@ extern uint32_t current_frame_buffer;
 #define LCD_ORIENTATION_LANDSCAPE_ROT180 3U
 
 int32_t BSP_LCD_Init(uint32_t Instance, uint32_t Orientation);
+int32_t BSP_LCD_DeInit(uint32_t Instance);
 int32_t BSP_LCD_Reinit(uint32_t Instance);
 int32_t BSP_LCD_SetBrightness(uint32_t Instance, uint32_t Brightness);
 int32_t BSP_LCD_DisplayOn(uint32_t Instance);
+int32_t BSP_LCD_DisplayOff(uint32_t Instance);
 int32_t BSP_LCD_SetFrameBuffer(uint32_t Instance, uint32_t fb_addr);
 
 #endif  // TREZOR_HAL_DISPLAY_INTERNAL_H

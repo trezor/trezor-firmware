@@ -291,25 +291,20 @@ static void display_init_interface(void) {
   HAL_SRAM_Init(&display_sram, &normal_mode_timing, NULL);
 }
 
-void display_init(void) {
+void display_init(display_content_mode_t mode) {
   display_driver_t *drv = &g_display_driver;
   memset(drv, 0, sizeof(display_driver_t));
 
-  // Initialize GPIO & FSMC controller
-  display_init_interface();
-  // Initialize display controller
-  display_init_controller();
+  if (mode == DISPLAY_RESET_CONTENT) {
+    // Initialize GPIO & FSMC controller
+    display_init_interface();
+    // Initialize display controller
+    display_init_controller();
+  }
 }
 
-void display_reinit(void) {
-  display_driver_t *drv = &g_display_driver;
-  memset(drv, 0, sizeof(display_driver_t));
-
-  // !@# TODO backlight level??
-}
-
-void display_finish_actions(void) {
-  /// Not used and intentionally left empty
+void display_deinit(display_content_mode_t mode) {
+  // Not used and intentionally left empty
 }
 
 int display_set_backlight(int level) {

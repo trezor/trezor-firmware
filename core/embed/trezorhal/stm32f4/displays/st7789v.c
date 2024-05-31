@@ -389,7 +389,7 @@ void display_setup_te_interrupt(void) {
 }
 #endif
 
-void display_init(void) {
+void display_init_all(void) {
   // init peripherals
   __HAL_RCC_GPIOE_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();

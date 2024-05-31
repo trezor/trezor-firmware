@@ -58,34 +58,18 @@ static display_driver_t g_display_driver;
 int sdl_display_res_x = DISPLAY_RESX, sdl_display_res_y = DISPLAY_RESY;
 int sdl_touch_offset_x, sdl_touch_offset_y;
 
-void display_deinit(void) {
-  display_driver_t *drv = &g_display_driver;
-
-  SDL_FreeSurface(drv->prev_saved);
-  SDL_FreeSurface(drv->buffer);
-  if (drv->background != NULL) {
-    SDL_DestroyTexture(drv->background);
-  }
-  if (drv->texture != NULL) {
-    SDL_DestroyTexture(drv->texture);
-  }
-  if (drv->renderer != NULL) {
-    SDL_DestroyRenderer(drv->renderer);
-  }
-  if (drv->window != NULL) {
-    SDL_DestroyWindow(drv->window);
-  }
-  SDL_Quit();
+static void display_exit_handler(void) {
+  display_deinit(DISPLAY_RESET_CONTENT);
 }
 
-void display_init(void) {
+void display_init(display_content_mode_t mode) {
   display_driver_t *drv = &g_display_driver;
 
   if (SDL_Init(SDL_INIT_VIDEO) != 0) {
     printf("%s\n", SDL_GetError());
     error_shutdown("SDL_Init error");
   }
-  atexit(display_deinit);
+  atexit(display_exit_handler);
 
   char *window_title = NULL;
   char *window_title_alloc = NULL;
@@ -162,12 +146,24 @@ void display_init(void) {
 #endif
 }
 
-void display_reinit(void) {
-  // not used
-}
+void display_deinit(display_content_mode_t mode) {
+  display_driver_t *drv = &g_display_driver;
 
-void display_finish_actions(void) {
-  // not used
+  SDL_FreeSurface(drv->prev_saved);
+  SDL_FreeSurface(drv->buffer);
+  if (drv->background != NULL) {
+    SDL_DestroyTexture(drv->background);
+  }
+  if (drv->texture != NULL) {
+    SDL_DestroyTexture(drv->texture);
+  }
+  if (drv->renderer != NULL) {
+    SDL_DestroyRenderer(drv->renderer);
+  }
+  if (drv->window != NULL) {
+    SDL_DestroyWindow(drv->window);
+  }
+  SDL_Quit();
 }
 
 int display_set_backlight(int level) {

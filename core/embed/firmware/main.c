@@ -155,7 +155,7 @@ int main(void) {
   dma2d_init();
 #endif
 
-  display_reinit();
+  display_init(DISPLAY_RETAIN_CONTENT);
 
 #ifdef STM32U5
   check_oem_keys();

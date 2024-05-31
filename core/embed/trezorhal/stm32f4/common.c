@@ -42,7 +42,7 @@ uint32_t systick_val_copy = 0;
 extern void shutdown_privileged(void);
 
 void __attribute__((noreturn)) trezor_shutdown(void) {
-  display_finish_actions();
+  display_deinit(DISPLAY_RETAIN_CONTENT);
 #ifdef USE_SVC_SHUTDOWN
   svc_shutdown();
 #else

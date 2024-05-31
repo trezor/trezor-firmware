@@ -43,40 +43,33 @@
 // Display driver instance
 display_driver_t g_display_driver;
 
-void display_init(void) {
+void display_init(display_content_mode_t mode) {
   display_driver_t* drv = &g_display_driver;
   memset(drv, 0, sizeof(display_driver_t));
 
-  display_io_init_gpio();
-  display_io_init_fmc();
-  display_panel_init();
-  display_panel_set_little_endian();
-  backlight_pwm_init(BACKLIGHT_RESET);
+  if (mode == DISPLAY_RESET_CONTENT) {
+    display_io_init_gpio();
+    display_io_init_fmc();
+    display_panel_init();
+    display_panel_set_little_endian();
+    backlight_pwm_init(BACKLIGHT_RESET);
+  } else {
+    // Reinitialize FMC to set correct timing
+    // We have to do this in reinit because boardloader is fixed.
+    display_io_init_fmc();
+
+    // Important for model T as this is not set in boardloader
+    display_panel_set_little_endian();
+    display_panel_init_gamma();
+    backlight_pwm_init(BACKLIGHT_RETAIN);
+  }
 
 #ifdef XFRAMEBUFFER
   display_io_init_te_interrupt();
 #endif
 }
 
-void display_reinit(void) {
-  display_driver_t* drv = &g_display_driver;
-  memset(drv, 0, sizeof(display_driver_t));
-
-  // Reinitialize FMC to set correct timing
-  // We have to do this in reinit because boardloader is fixed.
-  display_io_init_fmc();
-
-  // Important for model T as this is not set in boardloader
-  display_panel_set_little_endian();
-  display_panel_init_gamma();
-  backlight_pwm_init(BACKLIGHT_RETAIN);
-
-#ifdef XFRAMEBUFFER
-  display_io_init_te_interrupt();
-#endif
-}
-
-void display_finish_actions(void) {
+void display_deinit(display_content_mode_t mode) {
 #ifdef XFRAMEBUFFER
 #ifndef BOARDLOADER
   display_ensure_refreshed();

@@ -44,24 +44,20 @@ typedef struct {
 // Display driver instance
 static display_driver_t g_display_driver;
 
-void display_init(void) {
+void display_init(display_content_mode_t mode) {
   display_driver_t *drv = &g_display_driver;
   memset(drv, 0, sizeof(display_driver_t));
   drv->framebuf = (uint16_t *)FRAME_BUFFER_ADDR;
 
-  // Initialize LTDC controller
-  BSP_LCD_Init();
-  // Initialize external display controller
-  ili9341_init();
+  if (mode == DISPLAY_RESET_CONTENT) {
+    // Initialize LTDC controller
+    BSP_LCD_Init();
+    // Initialize external display controller
+    ili9341_init();
+  }
 }
 
-void display_reinit(void) {
-  display_driver_t *drv = &g_display_driver;
-  memset(drv, 0, sizeof(display_driver_t));
-  drv->framebuf = (uint16_t *)FRAME_BUFFER_ADDR;
-}
-
-void display_finish_actions(void) {
+void display_deinit(display_content_mode_t mode) {
   // Not used and intentionally left empty
 }
 
