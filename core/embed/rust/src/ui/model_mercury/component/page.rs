@@ -595,7 +595,7 @@ mod tests {
                 ),
                 Paragraph::new(
                     &theme::TEXT_BOLD,
-                    "Second, bold, paragraph should also fit on the screen whole I think.",
+                    "Second, bold, paragraph should also fit on the screen.",
                 ),
             ]),
             theme::BG,
@@ -610,7 +610,7 @@ mod tests {
                 "component": "Paragraphs",
                 "paragraphs": [
                     ["This is the first", "\n", "paragraph and it should", "\n", "fit on the screen", "\n", "entirely."],
-                    ["Second, bold, paragraph", "\n", "should also fit on the", "\n", "screen whole I think."],
+                    ["Second, bold,", "\n", "paragraph should also", "\n", "fit on the screen."],
                 ],
             },
             "hold": false,
@@ -645,13 +645,12 @@ mod tests {
                 "paragraphs": [
                     [
                         "This is somewhat long", "\n",
-                        "paragraph that goes on", "\n",
-                        "and on and on and on and", "\n",
-                        "on and will definitely not", "\n",
-                        "fit on just a single", "\n",
-                        "screen. You have to", "\n",
-                        "swipe a bit to see all the", "\n",
-                        "text it contains I guess.", "...",
+                        "paragraph that goes", "\n",
+                        "on and on and on and", "\n",
+                        "on and on and will", "\n",
+                        "definitely not fit on", "\n",
+                        "just a single screen.", "\n",
+                        "You have to swipe a", "...",
                     ],
                 ],
             },
@@ -664,7 +663,12 @@ mod tests {
             "content": {
                 "component": "Paragraphs",
                 "paragraphs": [
-                    ["There's just so much", "\n", "letters in it."],
+                    [
+                        "bit to see all the text it", "\n",
+                        "contains I guess.", "\n",
+                        "There's just so much", "\n",
+                        "letters in it."
+                    ],
                 ],
             },
             "hold": false,
@@ -710,15 +714,15 @@ mod tests {
                 "component": "Paragraphs",
                 "paragraphs": [
                     [
-                        "This paragraph is using a", "\n",
-                        "bold font. It doesn't need", "\n",
-                        "to be all that long.",
+                        "This paragraph is", "\n",
+                        "using a bold font. It", "\n",
+                        "doesn't need to be all", "\n",
+                        "that long.",
                     ],
                     [
                         "And this one is u", "\n",
                         "sing MONO. Monosp", "\n",
-                        "ace is nice for n", "\n",
-                        "umbers, they", "...",
+                        "ace is nice f", "...",
                     ],
                 ],
             },
@@ -732,15 +736,13 @@ mod tests {
                 "component": "Paragraphs",
                 "paragraphs": [
                     [
-                        "...", "have the same", "\n",
+                        "...", "or numbers, t", "\n",
+                        "hey have the same", "\n",
                         "width and can be", "\n",
                         "scanned quickly.", "\n",
                         "Even if they span", "\n",
                         "several pages or", "\n",
-                        "something.",
-                    ],
-                    [
-                        "Let's add another one", "...",
+                        "something."
                     ],
                 ],
             },
@@ -754,10 +756,12 @@ mod tests {
                 "component": "Paragraphs",
                 "paragraphs": [
                     [
-                        "for a good measure. This", "\n",
-                        "one should overflow all", "\n",
-                        "the way to the third page", "\n",
-                        "with a bit of luck.",
+                        "Let's add another one", "\n",
+                        "for a good measure.", "\n",
+                        "This one should", "\n",
+                        "overflow all the way to", "\n",
+                        "the third page with a", "\n",
+                        "bit of luck.",
                     ],
                 ],
             },
