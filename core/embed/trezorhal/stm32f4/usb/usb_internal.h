@@ -126,7 +126,4 @@ void usb_set_iface_class(uint8_t iface_num, const USBD_ClassTypeDef *class);
 // returns NULL if not.
 void *usb_alloc_class_descriptors(size_t desc_len);
 
-// Returns the global handle to the USB device.
-USBD_HandleTypeDef *usb_get_dev_handle(void);
-
 #endif  // TREZORHAL_USBD_INTERNAL_H
