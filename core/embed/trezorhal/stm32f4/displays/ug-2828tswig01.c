@@ -270,7 +270,7 @@ void display_init_seq(void) {
   display_unsleep();
 }
 
-void display_init(void) {
+void display_init_all(void) {
   // init peripherals
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
