@@ -851,5 +851,12 @@
   "849": "cardano__delegating_to_key_hash",
   "850": "cardano__delegating_to_script",
   "851": "cardano__deposit",
-  "852": "cardano__vote_delegation"
+  "852": "cardano__vote_delegation",
+  "853": "cardano__confirm_message",
+  "854": "cardano__empty_message",
+  "855": "cardano__message_hash",
+  "856": "cardano__message_hex",
+  "857": "cardano__message_text",
+  "858": "cardano__sign_message_hash_path_template",
+  "859": "cardano__sign_message_path_template"
 }
