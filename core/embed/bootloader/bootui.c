@@ -203,10 +203,10 @@ static void ui_screen_boot_click(void) {
 #ifdef NEW_RENDERING
 void ui_screen_boot(const vendor_header *const vhdr,
                     const image_header *const hdr, int wait) {
-  bool show_string = ((vhdr->vtrust & VTRUST_STRING) == 0);
+  bool show_string = ((vhdr->vtrust & VTRUST_NO_STRING) == 0);
   const char *vendor_str = show_string ? vhdr->vstr : NULL;
   const size_t vendor_str_len = show_string ? vhdr->vstr_len : 0;
-  bool red_screen = ((vhdr->vtrust & VTRUST_RED) == 0);
+  bool red_screen = ((vhdr->vtrust & VTRUST_NO_RED) == 0);
   uint32_t vimg_len = *(uint32_t *)(vhdr->vimg + 8);
 
   screen_boot(red_screen, vendor_str, vendor_str_len, hdr->version, vhdr->vimg,
