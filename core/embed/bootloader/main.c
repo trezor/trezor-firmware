@@ -165,7 +165,6 @@ static usb_result_t bootloader_usb_loop(const vendor_header *const vhdr,
         if (INPUT_CANCEL == response) {
           send_user_abort(USB_IFACE_NUM, "Wipe cancelled");
           hal_delay(100);
-          usb_stop();
           usb_deinit();
           return RETURN_TO_MENU;
         }
@@ -174,13 +173,11 @@ static usb_result_t bootloader_usb_loop(const vendor_header *const vhdr,
         if (r < 0) {  // error
           screen_wipe_fail();
           hal_delay(100);
-          usb_stop();
           usb_deinit();
           return SHUTDOWN;
         } else {  // success
           screen_wipe_success();
           hal_delay(100);
-          usb_stop();
           usb_deinit();
           return SHUTDOWN;
         }
@@ -196,12 +193,10 @@ static usb_result_t bootloader_usb_loop(const vendor_header *const vhdr,
           } else {
             ui_screen_fail();
           }
-          usb_stop();
           usb_deinit();
           return SHUTDOWN;
         } else if (r == UPLOAD_ERR_USER_ABORT) {
           hal_delay(100);
-          usb_stop();
           usb_deinit();
           return RETURN_TO_MENU;
         } else if (r == 0) {  // last chunk received
@@ -213,7 +208,6 @@ static usb_result_t bootloader_usb_loop(const vendor_header *const vhdr,
           hal_delay(1000);
           ui_screen_done(1, secfalse);
           hal_delay(1000);
-          usb_stop();
           usb_deinit();
           return CONTINUE_TO_FIRMWARE;
         }
@@ -227,14 +221,12 @@ static usb_result_t bootloader_usb_loop(const vendor_header *const vhdr,
         if (INPUT_CANCEL == response) {
           send_user_abort(USB_IFACE_NUM, "Bootloader unlock cancelled");
           hal_delay(100);
-          usb_stop();
           usb_deinit();
           return RETURN_TO_MENU;
         }
         process_msg_UnlockBootloader(USB_IFACE_NUM, msg_size, buf);
         screen_unlock_bootloader_success();
         hal_delay(100);
-        usb_stop();
         usb_deinit();
         return SHUTDOWN;
         break;
