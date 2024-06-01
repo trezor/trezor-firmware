@@ -117,12 +117,10 @@ static secbool bootloader_usb_loop(const vendor_header *const vhdr,
         r = process_msg_WipeDevice(USB_IFACE_NUM, msg_size, buf);
         if (r < 0) {  // error
           ui_screen_fail();
-          usb_stop();
           usb_deinit();
           return secfalse;  // shutdown
         } else {            // success
           ui_screen_done(0, sectrue);
-          usb_stop();
           usb_deinit();
           return secfalse;  // shutdown
         }
@@ -134,7 +132,6 @@ static secbool bootloader_usb_loop(const vendor_header *const vhdr,
         r = process_msg_FirmwareUpload(USB_IFACE_NUM, msg_size, buf);
         if (r < 0 && r != UPLOAD_ERR_USER_ABORT) {  // error, but not user abort
           ui_screen_fail();
-          usb_stop();
           usb_deinit();
           return secfalse;    // shutdown
         } else if (r == 0) {  // last chunk received
@@ -146,7 +143,6 @@ static secbool bootloader_usb_loop(const vendor_header *const vhdr,
           hal_delay(1000);
           ui_screen_done(1, secfalse);
           hal_delay(1000);
-          usb_stop();
           usb_deinit();
           return sectrue;  // jump to firmware
         }
