@@ -251,7 +251,6 @@ STATIC mp_obj_t mod_trezorio_USB_close(mp_obj_t self) {
   if (o->state != USB_OPENED) {
     mp_raise_msg(&mp_type_RuntimeError, "not initialized");
   }
-  usb_stop();
   usb_deinit();
   mp_obj_list_set_len(MP_OBJ_FROM_PTR(&o->ifaces), 0);
   mp_seq_clear(o->ifaces.items, 0, o->ifaces.alloc, sizeof(*o->ifaces.items));
@@ -271,7 +270,6 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_USB_close_obj,
 STATIC mp_obj_t mod_trezorio_USB___del__(mp_obj_t self) {
   mp_obj_USB_t *o = MP_OBJ_TO_PTR(self);
   if (o->state != USB_CLOSED) {
-    usb_stop();
     usb_deinit();
     o->state = USB_CLOSED;
   }
