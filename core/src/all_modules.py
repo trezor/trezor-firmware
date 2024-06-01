@@ -101,6 +101,8 @@ trezor.enums.Capability
 import trezor.enums.Capability
 trezor.enums.DebugButton
 import trezor.enums.DebugButton
+trezor.enums.DebugFlashArea
+import trezor.enums.DebugFlashArea
 trezor.enums.DebugPhysicalButton
 import trezor.enums.DebugPhysicalButton
 trezor.enums.DebugSwipeDirection

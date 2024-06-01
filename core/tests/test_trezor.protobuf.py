@@ -2,7 +2,7 @@ from common import *  # isort:skip
 
 from trezor import protobuf
 from trezor.messages import (
-    DebugLinkMemoryRead,
+    PrevOutput,
     Failure,
     SignMessage,
     WebAuthnCredential,
@@ -19,12 +19,20 @@ def load_uvarint32(data: bytes) -> int:
 
 
 def load_uvarint64(data: bytes) -> int:
-    # use known uint64 field in an all-optional message
-    buffer = bytearray(len(data) + 1)
-    buffer[1:] = data
-    buffer[0] = (2 << 3) | 0  # field number 1, wire type 0
-    msg = protobuf.decode(buffer, DebugLinkMemoryRead, False)
-    return msg.length
+    # use known uint64 field
+    # message PrevOutput {
+    #     required uint64 amount = 1;
+    #     required bytes script_pubkey = 2;
+    #     optional uint32 decred_script_version = 3;
+    # }
+    buffer = bytearray(len(data) + 1 + 2)
+    buffer[1:-2] = data
+    buffer[0] = (1 << 3) | 0  # field number 1, wire type 0
+    # create a zero-length script-pubkey field
+    buffer[-2] = (2 << 3) | 2  # field number 2, wire type 2
+    buffer[-1] = 0  # length of the script-pubkey
+    msg = protobuf.decode(buffer, PrevOutput, False)
+    return msg.amount
 
 
 def dump_uvarint32(value: int) -> bytearray:
@@ -39,12 +47,14 @@ def dump_uvarint32(value: int) -> bytearray:
 
 def dump_uvarint64(value: int) -> bytearray:
     # use known uint64 field in an all-optional message
-    msg = DebugLinkMemoryRead(length=value)
+    msg = PrevOutput(amount=value, script_pubkey=b"")
     length = protobuf.encoded_length(msg)
     buffer = bytearray(length)
     protobuf.encode(buffer, msg)
-    assert buffer[0] == (2 << 3) | 0  # field number 2, wire type 0
-    return buffer[1:]
+    assert buffer[0] == (1 << 3) | 0  # field number 1, wire type 0
+    assert buffer[-2] == (2 << 3) | 2  # field number 2, wire type 2
+    assert buffer[-1] == 0  # length of the script-pubkey
+    return buffer[1:-2]
 
 
 def dump_message(msg: protobuf.MessageType) -> bytearray:
