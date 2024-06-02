@@ -465,6 +465,11 @@ def confirm_reset_device(
     )
 
 
+async def show_wallet_created_success() -> None:
+    # not shown on model R
+    return None
+
+
 async def prompt_backup() -> bool:
     br_type = "backup_device"
     br_code = ButtonRequestType.ResetDevice
