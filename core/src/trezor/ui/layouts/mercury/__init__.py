@@ -366,18 +366,17 @@ async def confirm_reset_device(_title: str, recovery: bool = False) -> None:
         )
 
 
-async def prompt_backup() -> bool:
-    # TODO: should we move this to `flow_prompt_backup`?
+async def show_wallet_created_success() -> None:
     await interact(
         RustLayout(
-            trezorui2.show_success(
-                title=TR.backup__new_wallet_created, description=None
-            )
+            trezorui2.show_success(title=TR.backup__new_wallet_created, description="")
         ),
         "backup_device",
         ButtonRequestType.ResetDevice,
     )
 
+
+async def prompt_backup() -> bool:
     result = await interact(
         RustLayout(trezorui2.flow_prompt_backup()),
         "backup_device",

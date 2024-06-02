@@ -383,6 +383,11 @@ def confirm_reset_device(title: str, recovery: bool = False) -> Awaitable[None]:
     )
 
 
+async def show_wallet_created_success() -> None:
+    # not shown on model T
+    return None
+
+
 # TODO cleanup @ redesign
 async def prompt_backup() -> bool:
     result = await interact(

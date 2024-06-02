@@ -33,7 +33,11 @@ async def reset_device(msg: ResetDevice) -> Success:
     from trezor.crypto import bip39, random
     from trezor.messages import EntropyAck, EntropyRequest, Success
     from trezor.pin import render_empty_loader
-    from trezor.ui.layouts import confirm_reset_device, prompt_backup
+    from trezor.ui.layouts import (
+        confirm_reset_device,
+        prompt_backup,
+        show_wallet_created_success,
+    )
     from trezor.wire.context import call
 
     from apps.common.request_pin import request_pin_confirm
@@ -92,6 +96,9 @@ async def reset_device(msg: ResetDevice) -> Success:
     # If either of skip_backup or no_backup is specified, we are not doing backup now.
     # Otherwise, we try to do it.
     perform_backup = not msg.no_backup and not msg.skip_backup
+
+    # Wallet created successfully
+    await show_wallet_created_success()
 
     # If doing backup, ask the user to confirm.
     if perform_backup:
