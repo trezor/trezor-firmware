@@ -239,9 +239,9 @@ pub const fn button_default() -> ButtonStyleSheet {
         },
         active: &ButtonStyle {
             font: Font::DEMIBOLD,
-            text_color: GREY_LIGHT,
+            text_color: GREY_EXTRA_LIGHT,
             button_color: BG,
-            icon_color: GREY_LIGHT,
+            icon_color: GREY_EXTRA_LIGHT,
             background_color: BG,
         },
         disabled: &ButtonStyle {
@@ -366,7 +366,7 @@ pub const fn button_danger() -> ButtonStyleSheet {
             font: Font::DEMIBOLD,
             text_color: ORANGE_LIGHT,
             button_color: BG,
-            icon_color: ORANGE_LIGHT,
+            icon_color: ORANGE_DIMMED,
             background_color: BG,
         },
         active: &ButtonStyle {
