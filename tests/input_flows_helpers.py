@@ -93,7 +93,7 @@ class RecoveryFlow:
     def enter_your_backup(self) -> BRGeneratorType:
         yield
         if self.debug.model is models.T3T1:
-            TR.assert_in(self._text_content(), "recovery__only_first_n_letters")
+            TR.assert_in(self._text_content(), "recovery__enter_each_word")
         else:
             TR.assert_in(self._text_content(), "recovery__enter_backup")
         is_dry_run = any(
@@ -110,7 +110,7 @@ class RecoveryFlow:
         yield
         TR.assert_in_multiple(
             self._text_content(),
-            ["recovery__enter_any_share", "recovery__only_first_n_letters"],
+            ["recovery__enter_any_share", "recovery__enter_each_word"],
         )
         is_dry_run = any(
             title in self.debug.wait_layout().title().lower()
@@ -127,7 +127,7 @@ class RecoveryFlow:
         if self.client.model is models.T2B1:
             TR.assert_in(self._text_content(), "recovery__num_of_words")
         elif self.client.model is models.T3T1:
-            TR.assert_in(self._text_content(), "recovery__only_first_n_letters")
+            TR.assert_in(self._text_content(), "recovery__enter_each_word")
         else:
             TR.assert_in(self._text_content(), "recovery__enter_any_share")
         self.debug.press_no()

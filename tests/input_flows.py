@@ -1255,9 +1255,11 @@ def get_mnemonic_and_confirm_success(
     # mnemonic phrases
     mnemonic = yield from read_and_confirm_mnemonic(debug)
 
-    br = yield  # confirm recovery seed check
-    assert br.code == B.Success
-    debug.press_yes()
+    is_slip39 = len(mnemonic.split()) in (20, 33)
+    if debug.model in (models.T2T1, models.T2B1) or is_slip39:
+        br = yield  # confirm recovery share check
+        assert br.code == B.Success
+        debug.press_yes()
 
     br = yield  # confirm success
     assert br.code == B.Success

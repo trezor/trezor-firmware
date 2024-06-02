@@ -278,7 +278,7 @@ def show_success(
     allow_cancel: bool = False,
     time_ms: int = 0,
 ) -> LayoutObj[UiResult]:
-    """Success modal. No buttons shown when `button` is empty string."""
+    """Success screen. Description is used in the footer."""
 
 
 # rust/src/ui/model_mercury/layout.rs

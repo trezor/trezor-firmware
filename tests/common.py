@@ -277,13 +277,21 @@ def check_share(
     Given the mnemonic word list, proceed with the backup check:
     three rounds of `Select word X of Y` choices.
     """
+    re_num_of_word = r"\d+"
     for _ in range(3):
-        if debug.model is models.T2B1:
-            # T2B1 has the instruction in the title
-            word_pos_match = re.search(r"\d+", debug.wait_layout().title())
+        if debug.model is models.T2T1:
+            # T2T1 has position as the first number in the text
+            word_pos_match = re.search(
+                re_num_of_word, debug.wait_layout().text_content()
+            )
+        elif debug.model is models.T2B1:
+            # other models have the instruction in the title/subtitle
+            word_pos_match = re.search(re_num_of_word, debug.wait_layout().title())
+        elif debug.model is models.T3T1:
+            word_pos_match = re.search(re_num_of_word, debug.wait_layout().subtitle())
         else:
-            # Other models has position as the first number in the text
-            word_pos_match = re.search(r"\d+", debug.wait_layout().text_content())
+            word_pos_match = None
+
         assert word_pos_match is not None
         word_pos = int(word_pos_match.group(0))
 

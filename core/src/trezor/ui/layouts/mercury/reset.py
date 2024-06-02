@@ -6,7 +6,7 @@ from trezor.enums import ButtonRequestType
 from trezor.wire import ActionCancelled
 
 from ..common import interact
-from . import RustLayout, raise_if_not_confirmed
+from . import RustLayout, raise_if_not_confirmed, show_success
 
 if TYPE_CHECKING:
     pass
@@ -57,11 +57,11 @@ async def select_word(
     group_index: int | None = None,
 ) -> str:
     if share_index is None:
-        description: str = TR.reset__check_wallet_backup_title
+        title: str = TR.reset__check_wallet_backup_title
     elif group_index is None:
-        description: str = TR.reset__check_share_title_template.format(share_index + 1)
+        title: str = TR.reset__check_share_title_template.format(share_index + 1)
     else:
-        description: str = TR.reset__check_group_share_title_template.format(
+        title: str = TR.reset__check_group_share_title_template.format(
             group_index + 1, share_index + 1
         )
 
@@ -74,10 +74,10 @@ async def select_word(
 
     result = await RustLayout(
         trezorui2.select_word(
-            title=TR.reset__select_word_x_of_y_template.format(
+            title=title,
+            description=TR.reset__select_word_x_of_y_template.format(
                 checked_index + 1, count
             ),
-            description=description,
             words=(words[0], words[1], words[2]),
         )
     )
@@ -316,12 +316,9 @@ async def show_warning_backup() -> None:
 
 
 async def show_success_backup() -> None:
-    from . import show_success
-
     await show_success(
         "success_backup",
-        TR.reset__use_your_backup,
-        TR.reset__your_backup_is_done,
+        TR.backup__title_backup_completed,
     )
 
 
@@ -332,19 +329,64 @@ async def show_reset_warning(
     button: str | None = None,
     br_code: ButtonRequestType = ButtonRequestType.Warning,
 ) -> None:
-    button = button or TR.buttons__try_again  # def_arg
     await raise_if_not_confirmed(
         interact(
             RustLayout(
                 trezorui2.show_warning(
-                    title=content or TR.words__warning,
-                    description="",
-                    value=subheader or "",
-                    button=button,
+                    title=subheader or "",
+                    description=content,
+                    value="",
+                    button="",
                     allow_cancel=False,
                 )
             ),
             br_type,
             br_code,
         )
+    )
+
+
+async def show_share_confirmation_success(
+    share_index: int | None = None,
+    num_of_shares: int | None = None,
+    group_index: int | None = None,
+) -> None:
+    if share_index is None or num_of_shares is None:
+        # it is a BIP39 or a 1-of-1 SLIP39 backup
+        # mercury UI shows only final wallet backup confirmation screen later
+        return
+
+    # TODO: super-shamir copy not done
+    if share_index == num_of_shares - 1:
+        title = TR.reset__share_completed_template.format(share_index + 1)
+        if group_index is None:
+            footer_description = ""
+        else:
+            footer_description = TR.reset__finished_verifying_group_template.format(
+                group_index + 1
+            )
+    else:
+        if group_index is None:
+            title = TR.reset__share_completed_template.format(share_index + 1)
+            footer_description = (
+                TR.instructions__shares_continue_with_x_template.format(share_index + 2)
+            )
+        else:
+            title = TR.reset__continue_with_next_share
+            footer_description = (
+                TR.reset__group_share_checked_successfully_template.format(
+                    group_index + 1, share_index + 1
+                )
+            )
+
+    return await show_success("success_recovery", title, subheader=footer_description)
+
+
+async def show_share_confirmation_failure() -> None:
+    await show_reset_warning(
+        "warning_backup_check",
+        TR.words__try_again,
+        TR.reset__incorrect_word_selected,
+        "",
+        ButtonRequestType.ResetDevice,
     )
