@@ -24,7 +24,7 @@
       "1_FONT_NORMAL": "font_ttsatoshi_demibold_21_es.json",
       "2_FONT_BOLD": "font_ttsatoshi_demibold_21_es.json",
       "3_FONT_MONO": "font_robotomono_medium_21_es.json",
-      "4_FONT_BIG": "font_ttsatoshi_demibold_42_es.json",
+      "4_FONT_BIG": null,
       "5_FONT_DEMIBOLD": "font_ttsatoshi_demibold_21_es.json",
       "6_FONT_NORMAL_UPPER": null,
       "7_FONT_BOLD_UPPER": null,
