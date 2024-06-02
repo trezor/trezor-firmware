@@ -6,7 +6,7 @@ from trezor.enums import ButtonRequestType
 from trezor.wire import ActionCancelled
 
 from ..common import interact
-from . import RustLayout, confirm_action, show_warning
+from . import RustLayout, confirm_action, show_warning, show_success
 
 CONFIRMED = trezorui2.CONFIRMED  # global_import_cache
 
@@ -290,4 +290,48 @@ async def show_reset_warning(
         content,
         button,
         br_code=br_code,
+    )
+
+
+async def show_share_confirmation_success(
+    share_index: int | None = None,
+    num_of_shares: int | None = None,
+    group_index: int | None = None,
+) -> None:
+    if share_index is None or num_of_shares is None:
+        # it is a BIP39 or a 1-of-1 SLIP39 backup
+        subheader = TR.reset__finished_verifying_wallet_backup
+        text = ""
+
+    elif share_index == num_of_shares - 1:
+        if group_index is None:
+            subheader = TR.reset__finished_verifying_shares
+        else:
+            subheader = TR.reset__finished_verifying_group_template.format(
+                group_index + 1
+            )
+        text = ""
+
+    else:
+        if group_index is None:
+            subheader = TR.reset__share_checked_successfully_template.format(
+                share_index + 1
+            )
+            text = TR.reset__continue_with_share_template.format(share_index + 2)
+        else:
+            subheader = TR.reset__group_share_checked_successfully_template.format(
+                group_index + 1, share_index + 1
+            )
+            text = TR.reset__continue_with_next_share
+
+    return await show_success("success_recovery", text, subheader)
+
+
+async def show_share_confirmation_failure() -> None:
+    await show_reset_warning(
+        "warning_backup_check",
+        TR.words__please_check_again,
+        TR.reset__wrong_word_selected,
+        TR.buttons__check_again,
+        ButtonRequestType.ResetDevice,
     )

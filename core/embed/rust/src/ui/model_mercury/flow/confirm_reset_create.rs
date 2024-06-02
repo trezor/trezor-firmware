@@ -97,9 +97,11 @@ impl ConfirmResetCreate {
             .map(|msg| matches!(msg, FrameMsg::Button(_)).then_some(FlowMsg::Info))
             .one_button_request(ButtonRequestCode::ResetDevice.with_type("setup_device"));
 
+        // FIXME: TR::reset__cancel_create_wallet should be used but Button text on
+        // multiple lines not supported yet
         let content_menu = Frame::left_aligned(
             "".into(),
-            VerticalMenu::empty().danger(theme::ICON_CANCEL, "Cancel".into()), // TODO: use TR
+            VerticalMenu::empty().danger(theme::ICON_CANCEL, TR::buttons__cancel.into()),
         )
         .with_cancel_button()
         .with_swipe(SwipeDirection::Right, SwipeSettings::immediate())

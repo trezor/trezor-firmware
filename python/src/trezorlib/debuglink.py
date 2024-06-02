@@ -171,26 +171,31 @@ class LayoutContent(UnstructuredJSONReader):
 
         return visible
 
+    def _get_str_or_dict_text(self, key: str) -> str:
+        value = self.find_unique_value_by_key(key, "")
+        if isinstance(value, dict):
+            return value["text"]
+        return value
+
     def title(self) -> str:
-        """Getting text that is displayed as a title."""
+        """Getting text that is displayed as a title and potentially subtitle."""
         # There could be possibly subtitle as well
         title_parts: List[str] = []
 
-        def _get_str_or_dict_text(key: str) -> str:
-            value = self.find_unique_value_by_key(key, "")
-            if isinstance(value, dict):
-                return value["text"]
-            return value
-
-        title = _get_str_or_dict_text("title")
+        title = self._get_str_or_dict_text("title")
         if title:
             title_parts.append(title)
 
-        subtitle = _get_str_or_dict_text("subtitle")
+        subtitle = self.subtitle()
         if subtitle:
             title_parts.append(subtitle)
 
         return "\n".join(title_parts)
+
+    def subtitle(self) -> str:
+        """Getting text that is displayed as a subtitle."""
+        subtitle = self._get_str_or_dict_text("subtitle")
+        return subtitle
 
     def text_content(self) -> str:
         """What is on the screen, in one long string, so content can be

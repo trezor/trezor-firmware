@@ -112,13 +112,12 @@ impl ShowShareWords {
                 .map(|_| Some(FlowMsg::Confirmed));
 
         let content_check_backup_intro = Frame::left_aligned(
-            TR::reset__check_backup_title.into(),
+            TR::reset__check_wallet_backup_title.into(),
             SwipeContent::new(Paragraphs::new(Paragraph::new(
                 &theme::TEXT_MAIN_GREY_LIGHT,
                 TR::reset__check_backup_instructions,
             ))),
         )
-        .with_subtitle(TR::words__instructions.into())
         .with_footer(TR::instructions__swipe_up.into(), None)
         .with_swipe(SwipeDirection::Up, SwipeSettings::default())
         .map(|_| Some(FlowMsg::Confirmed));
