@@ -788,10 +788,15 @@ extern "C" fn new_show_warning(n_args: usize, args: *const Obj, kwargs: *mut Map
 extern "C" fn new_show_success(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let description: Option<TString> = kwargs
+            .get(Qstr::MP_QSTR_description)?
+            .try_into_option()?
+            .and_then(|desc: TString| if desc.is_empty() { None } else { Some(desc) });
+
         let content = StatusScreen::new_success();
         let obj = LayoutObj::new(SwipeUpScreen::new(
             Frame::left_aligned(title, SwipeContent::new(content).with_normal_attach(None))
-                .with_footer(TR::instructions__swipe_up.into(), None)
+                .with_footer(TR::instructions__swipe_up.into(), description)
                 .with_swipe(SwipeDirection::Up, SwipeSettings::default()),
         ))?;
         Ok(obj.into())
@@ -1572,7 +1577,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     allow_cancel: bool = False,
     ///     time_ms: int = 0,
     /// ) -> LayoutObj[UiResult]:
-    ///     """Success modal. No buttons shown when `button` is empty string."""
+    ///     """Success screen. Description is used in the footer."""
     Qstr::MP_QSTR_show_success => obj_fn_kw!(0, new_show_success).as_obj(),
 
     /// def show_info(

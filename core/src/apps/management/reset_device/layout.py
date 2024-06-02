@@ -69,17 +69,20 @@ async def _share_words_confirmed(
 
     Return true if the words are confirmed successfully.
     """
-    # TODO: confirm_action("Select the words bla bla")
+    from trezor.ui.layouts.reset import (
+        show_share_confirmation_success,
+        show_share_confirmation_failure,
+    )
 
     if await _do_confirm_share_words(share_index, share_words, group_index):
-        await _show_confirmation_success(
+        await show_share_confirmation_success(
             share_index,
             num_of_shares,
             group_index,
         )
         return True
     else:
-        await _show_confirmation_failure()
+        await show_share_confirmation_failure()
 
     return False
 
@@ -103,52 +106,6 @@ async def _do_confirm_share_words(
         offset += len(part)
 
     return True
-
-
-async def _show_confirmation_success(
-    share_index: int | None = None,
-    num_of_shares: int | None = None,
-    group_index: int | None = None,
-) -> None:
-    if share_index is None or num_of_shares is None:
-        # it is a BIP39 or a 1-of-1 SLIP39 backup
-        subheader = TR.reset__finished_verifying_wallet_backup
-        text = ""
-
-    elif share_index == num_of_shares - 1:
-        if group_index is None:
-            subheader = TR.reset__finished_verifying_shares
-        else:
-            subheader = TR.reset__finished_verifying_group_template.format(
-                group_index + 1
-            )
-        text = ""
-
-    else:
-        if group_index is None:
-            subheader = TR.reset__share_checked_successfully_template.format(
-                share_index + 1
-            )
-            text = TR.reset__continue_with_share_template.format(share_index + 2)
-        else:
-            subheader = TR.reset__group_share_checked_successfully_template.format(
-                group_index + 1, share_index + 1
-            )
-            text = TR.reset__continue_with_next_share
-
-    return await show_success("success_recovery", text, subheader)
-
-
-async def _show_confirmation_failure() -> None:
-    from trezor.ui.layouts.reset import show_reset_warning
-
-    await show_reset_warning(
-        "warning_backup_check",
-        TR.words__please_check_again,
-        TR.reset__wrong_word_selected,
-        TR.buttons__check_again,
-        ButtonRequestType.ResetDevice,
-    )
 
 
 async def show_backup_warning() -> None:
