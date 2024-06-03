@@ -31,6 +31,7 @@ def configure(
     defines += ["FLASH_BLOCK_WORDS=1"]
 
     if "input" in features_wanted:
+        sources += ["embed/trezorhal/unix/button.c"]
         features_available.append("button")
 
     sources += ["embed/models/T1B1/model_T1B1_layout.c"]

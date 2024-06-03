@@ -20,34 +20,105 @@
 #include STM32_HAL_H
 #include TREZOR_BOARD
 
+#include <stdbool.h>
 #include <string.h>
 
 #include "common.h"
-#include "secbool.h"
 
 #include "ft6x36.h"
 #include "i2c.h"
 #include "touch.h"
 
-#define TOUCH_ADDRESS \
-  (0x38U << 1)  // the HAL requires the 7-bit address to be shifted by one bit
-#define TOUCH_PACKET_SIZE 7U
-#define EVENT_PRESS_DOWN 0x00U
-#define EVENT_CONTACT 0x80U
-#define EVENT_LIFT_UP 0x40U
-#define EVENT_NO_EVENT 0xC0U
-#define GESTURE_NO_GESTURE 0x00U
-#define X_POS_MSB (touch_data[3] & 0x0FU)
-#define X_POS_LSB (touch_data[4])
-#define Y_POS_MSB (touch_data[5] & 0x0FU)
-#define Y_POS_LSB (touch_data[6])
+typedef struct {
+  // Set if the driver is initialized
+  secbool initialized;
+  // Set if the driver is ready to report touches.
+  // FT6X36 needs about 300ms after power-up to stabilize.
+  secbool ready;
+  // Captured tick counter when `touch_init()` was called
+  uint32_t init_ticks;
+  // Time (in ticks) when touch_get_event() was called last time
+  uint32_t poll_ticks;
+  // Set if the touch controller is currently touched
+  // (respectively, the we detected a touch event)
+  bool pressed;
+  // Previously reported x-coordinate
+  uint16_t last_x;
+  // Previously reported y-coordinate
+  uint16_t last_y;
 
-#define EVENT_OLD_TIMEOUT_MS 50
-#define EVENT_MISSING_TIMEOUT_MS 50
+} touch_driver_t;
 
-static uint32_t touch_init_ticks = 0;
+// Touch driver instance
+static touch_driver_t g_touch_driver = {
+    .initialized = secfalse,
+};
 
-static void touch_default_pin_state(void) {
+// Reads a subsequent registers from the FT6X36.
+//
+// Returns: `sectrue` if the register was read
+// successfully, `secfalse` otherwise.
+//
+// If the I2C bus is busy, the function will cycle the
+// bus and retry the operation.
+static secbool ft6x36_read_regs(uint8_t reg, uint8_t* value, size_t count) {
+  uint16_t i2c_bus = TOUCH_I2C_INSTANCE;
+  uint8_t i2c_addr = FT6X36_I2C_ADDR;
+  uint8_t txdata[] = {reg};
+  uint8_t retries = 3;
+
+  do {
+    int result = i2c_transmit(i2c_bus, i2c_addr, txdata, sizeof(txdata), 10);
+    if (HAL_OK == result) {
+      result = i2c_receive(i2c_bus, i2c_addr, value, count, 10);
+    }
+
+    if (HAL_OK == result) {
+      // success
+      return sectrue;
+    } else if (HAL_BUSY == result && retries > 0) {
+      // I2C bus is busy, cycle it and try again
+      i2c_cycle(i2c_bus);
+      retries--;
+    } else {
+      // Aother error or retries exhausted
+      return secfalse;
+    }
+  } while (1);
+}
+
+// Writes a register to the FT6X36.
+//
+// Returns: `sectrue` if the register was written
+// successfully, `secfalse` otherwise.
+//
+// If the I2C bus is busy, the function will cycle the
+// bus and retry the operation.
+static secbool ft6x36_write_reg(uint8_t reg, uint8_t value) {
+  uint16_t i2c_bus = TOUCH_I2C_INSTANCE;
+  uint8_t i2c_addr = FT6X36_I2C_ADDR;
+  uint8_t txdata[] = {reg, value};
+  uint8_t retries = 3;
+
+  do {
+    int result = i2c_transmit(i2c_bus, i2c_addr, txdata, sizeof(txdata), 10);
+    if (HAL_OK == result) {
+      // success
+      return sectrue;
+    } else if (HAL_BUSY == result && retries > 0) {
+      // I2C bus is busy, cycle it and try again
+      i2c_cycle(i2c_bus);
+      retries--;
+    } else {
+      // Another error or retries exhausted
+      return secfalse;
+    }
+  } while (1);
+}
+
+// Powers down the touch controller and puts all
+// the pins in the proper state to save power.
+static void ft6x36_power_down(void) {
   GPIO_PinState state = HAL_GPIO_ReadPin(TOUCH_ON_PORT, TOUCH_ON_PIN);
 
   // set power off and other pins as per section 3.5 of FT6236 datasheet
@@ -74,227 +145,291 @@ static void touch_default_pin_state(void) {
   GPIO_InitStructure.Pin = TOUCH_ON_PIN;
   HAL_GPIO_Init(TOUCH_ON_PORT, &GPIO_InitStructure);
 
-  // in-case power was on, or CTPM was active make sure to wait long enough
-  // for these changes to take effect. a reset needs to be low for
-  // a minimum of 5ms. also wait for power circuitry to stabilize (if it
-  // changed).
-  HAL_Delay(10);
-
   if (state == GPIO_PIN_SET) {
-    HAL_Delay(90);  // add 90 ms for circuitry to stabilize (being conservative)
+    // 90 ms for circuitry to stabilize (being conservative)
+    hal_delay(90);
   }
 }
 
-static void touch_active_pin_state(void) {
-  HAL_GPIO_WritePin(TOUCH_ON_PORT, TOUCH_ON_PIN, GPIO_PIN_RESET);  // CTP_ON
-  HAL_Delay(10);  // we need to wait until the circuit fully kicks-in
+// Powers up the touch controller and do proper reset sequence
+//
+// `ft6x36_power_down()` must be called before calling this first time function
+// to properly initialize the GPIO pins.
+static void ft6x36_power_up(void) {
+  // Ensure the touch controller is in reset state
+  HAL_GPIO_WritePin(TOUCH_RST_PORT, TOUCH_RST_PIN, GPIO_PIN_RESET);
+  // Power up the touch controller
+  HAL_GPIO_WritePin(TOUCH_ON_PORT, TOUCH_ON_PIN, GPIO_PIN_RESET);
 
+  // Wait until the circuit fully kicks-in
+  // (5ms is the minimum time required for the reset signal to be effective)
+  hal_delay(10);
+
+  // Enable intterrupt input
   GPIO_InitTypeDef GPIO_InitStructure = {0};
-
-  // capacitive touch panel module (CTPM) interrupt (INT) input
   GPIO_InitStructure.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStructure.Pull = GPIO_PULLUP;
   GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
   GPIO_InitStructure.Pin = TOUCH_INT_PIN;
   HAL_GPIO_Init(TOUCH_INT_PORT, &GPIO_InitStructure);
+
+  // Release touch controller from reset
+  HAL_GPIO_WritePin(TOUCH_RST_PORT, TOUCH_RST_PIN, GPIO_PIN_SET);
+
+  // Wait for the touch controller to boot up
+  hal_delay(5);
+
+  // Clear the flag indicating rising edge on INT_PIN
   __HAL_GPIO_EXTI_CLEAR_FLAG(TOUCH_INT_PIN);
-
-  HAL_GPIO_WritePin(TOUCH_RST_PORT, TOUCH_RST_PIN,
-                    GPIO_PIN_SET);  // release CTPM reset
-
-  touch_init_ticks = hal_ticks_ms();
-
-  HAL_Delay(5);
 }
 
-secbool touch_set_mode(void) {
-  // set register 0xA4 G_MODE to interrupt trigger mode (0x01). basically, CTPM
-  // generates a pulse when new data is available
-  uint8_t touch_panel_config[] = {0xA4, 0x01};
-  for (int i = 0; i < 3; i++) {
-    if (HAL_OK == i2c_transmit(TOUCH_I2C_INSTANCE, TOUCH_ADDRESS,
-                               touch_panel_config, sizeof(touch_panel_config),
-                               10)) {
-      return sectrue;
-    }
-    i2c_cycle(TOUCH_I2C_INSTANCE);
-  }
-
-  return secfalse;
-}
-
-void touch_power_on(void) {
-  touch_default_pin_state();
-
-  // turn on CTP circuitry
-  touch_active_pin_state();
-}
-
-void touch_power_off(void) {
-  // turn off CTP circuitry
-  HAL_Delay(50);
-  touch_default_pin_state();
-}
-
-secbool touch_init(void) {
-  GPIO_InitTypeDef GPIO_InitStructure = {0};
-
-  // PC4 capacitive touch panel module (CTPM) interrupt (INT) input
-  GPIO_InitStructure.Mode = GPIO_MODE_IT_RISING;
-  GPIO_InitStructure.Pull = GPIO_PULLUP;
-  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStructure.Pin = TOUCH_INT_PIN;
-  HAL_GPIO_Init(TOUCH_INT_PORT, &GPIO_InitStructure);
-  __HAL_GPIO_EXTI_CLEAR_FLAG(TOUCH_INT_PIN);
-
-  if (sectrue != touch_set_mode()) {
-    return secfalse;
-  }
-  return touch_sensitivity(TOUCH_SENSITIVITY);
-}
-
-void touch_wait_until_ready(void) {
-  // wait for the touch controller to be ready
-  while (hal_ticks_ms() - touch_init_ticks < 310) {
-    HAL_Delay(1);
-  }
-}
-
-secbool touch_sensitivity(uint8_t value) {
-  // set panel threshold (TH_GROUP) - default value is 0x12
-  uint8_t touch_panel_threshold[] = {0x80, value};
-  for (int i = 0; i < 3; i++) {
-    if (HAL_OK == i2c_transmit(TOUCH_I2C_INSTANCE, TOUCH_ADDRESS,
-                               touch_panel_threshold,
-                               sizeof(touch_panel_threshold), 10)) {
-      return sectrue;
-    }
-    i2c_cycle(TOUCH_I2C_INSTANCE);
-  }
-
-  return secfalse;
-}
-
-uint32_t touch_is_detected(void) {
-  // check the interrupt line coming in from the CTPM.
-  // the line make a short pulse, which sets an interrupt flag when new data is
-  // available.
-  // Reference section 1.2 of "Application Note for FT6x06 CTPM". we
-  // configure the touch controller to use "interrupt trigger mode".
-
+// Checks if the touch controller has an interrupt pending
+// which indicates that new data is available.
+//
+// The function clears the interrupt flag if it was set so the
+// next call returns `false` if no new impulses were detected.
+static bool ft6x36_test_and_clear_interrupt(void) {
   uint32_t event = __HAL_GPIO_EXTI_GET_FLAG(TOUCH_INT_PIN);
   if (event != 0) {
     __HAL_GPIO_EXTI_CLEAR_FLAG(TOUCH_INT_PIN);
   }
 
-  return event;
+  return event != 0;
 }
 
-uint32_t check_timeout(uint32_t prev, uint32_t timeout) {
-  uint32_t current = hal_ticks_ms();
-  uint32_t diff = current - prev;
+// Configures the touch controller to the funtional state.
+static secbool ft6x36_configure(void) {
+  const static uint8_t config[] = {
+      // Set touch controller to the interrupt trigger mode.
+      // Basically, CTPM generates a pulse when new data is available.
+      FT6X36_REG_G_MODE,
+      0x01,
+      FT6X36_REG_TH_GROUP,
+      TOUCH_SENSITIVITY,
+  };
 
-  if (diff >= timeout) {
-    return 1;
-  }
+  _Static_assert(sizeof(config) % 2 == 0);
 
-  return 0;
-}
+  for (int i = 0; i < sizeof(config); i += 2) {
+    uint8_t reg = config[i];
+    uint8_t value = config[i + 1];
 
-uint32_t touch_read(void) {
-  static uint8_t touch_data[TOUCH_PACKET_SIZE],
-      previous_touch_data[TOUCH_PACKET_SIZE];
-  static uint32_t xy;
-  static uint32_t last_check_time = 0;
-  static uint32_t last_event_time = 0;
-  static int touching = 0;
-
-  uint32_t detected = touch_is_detected();
-
-  if (detected == 0) {
-    last_check_time = hal_ticks_ms();
-
-    if (touching && check_timeout(last_event_time, EVENT_MISSING_TIMEOUT_MS)) {
-      // we didn't detect an event for a long time, but there was an active
-      // touch: send END event, as we probably missed the END event
-      touching = 0;
-      return TOUCH_END | xy;
+    if (sectrue != ft6x36_write_reg(reg, value)) {
+      return secfalse;
     }
-
-    return 0;
   }
 
-  if ((touching == 0) &&
-      (check_timeout(last_check_time, EVENT_OLD_TIMEOUT_MS))) {
-    // we have detected an event, but it might be too old, rather drop it
-    // (only dropping old events if there was no touch active)
-    last_check_time = hal_ticks_ms();
-    return 0;
+  return sectrue;
+}
+
+secbool touch_init(void) {
+  touch_driver_t* driver = &g_touch_driver;
+
+  if (sectrue == driver->initialized) {
+    // The driver is already initialized
+    return sectrue;
   }
 
-  last_check_time = hal_ticks_ms();
+  // Initialize GPIO to the default configuration
+  // (touch controller is powered down)
+  ft6x36_power_down();
 
-  uint8_t outgoing[] = {0x00};  // start reading from address 0x00
-  int result = i2c_transmit(TOUCH_I2C_INSTANCE, TOUCH_ADDRESS, outgoing,
-                            sizeof(outgoing), 1);
-  if (result != HAL_OK) {
-    if (result == HAL_BUSY) i2c_cycle(TOUCH_I2C_INSTANCE);
-    return 0;
+  // Power up the touch controller and perform the reset sequence
+  ft6x36_power_up();
+
+  // Configure the touch controller
+  if (sectrue != ft6x36_configure()) {
+    ft6x36_power_down();
+    return secfalse;
   }
 
-  if (HAL_OK != i2c_receive(TOUCH_I2C_INSTANCE, TOUCH_ADDRESS, touch_data,
-                            TOUCH_PACKET_SIZE, 1)) {
-    return 0;  // read failure
+  driver->init_ticks = hal_ticks_ms();
+  driver->poll_ticks = driver->init_ticks;
+  driver->initialized = sectrue;
+
+  return sectrue;
+}
+
+void touch_deinit(void) {
+  touch_driver_t* driver = &g_touch_driver;
+
+  if (sectrue == driver->initialized) {
+    // Do not need to deinitialized the controller
+    // just power it off
+    ft6x36_power_down();
+
+    memset(driver, 0, sizeof(touch_driver_t));
+  }
+}
+
+secbool touch_ready(void) {
+  touch_driver_t* driver = &g_touch_driver;
+
+  if (sectrue == driver->initialized && sectrue != driver->ready) {
+    // FT6X36 does not report events for 300ms
+    // after it is released from the reset state
+    if ((int)(hal_ticks_ms() - driver->init_ticks) >= 310) {
+      driver->ready = sectrue;
+    }
   }
 
-  last_event_time = hal_ticks_ms();
+  return driver->ready;
+}
 
-  if (0 == memcmp(previous_touch_data, touch_data, TOUCH_PACKET_SIZE)) {
-    return 0;  // same data, filter it out
+secbool touch_set_sensitivity(uint8_t value) {
+  touch_driver_t* driver = &g_touch_driver;
+
+  if (sectrue == driver->initialized) {
+    return ft6x36_write_reg(FT6X36_REG_TH_GROUP, value);
   } else {
-    memcpy(previous_touch_data, touch_data, TOUCH_PACKET_SIZE);
+    return secfalse;
   }
-
-  const uint32_t number_of_touch_points =
-      touch_data[2] & 0x0F;  // valid values are 0, 1, 2 (invalid 0xF before
-                             // first touch) (tested with FT6206)
-  const uint32_t event_flag = touch_data[3] & 0xC0;
-  if (touch_data[1] == GESTURE_NO_GESTURE) {
-    xy = touch_pack_xy((X_POS_MSB << 8) | X_POS_LSB,
-                       (Y_POS_MSB << 8) | Y_POS_LSB);
-    if ((number_of_touch_points == 1) && (event_flag == EVENT_PRESS_DOWN)) {
-      touching = 1;
-      return TOUCH_START | xy;
-    } else if ((number_of_touch_points == 1) && (event_flag == EVENT_CONTACT)) {
-      if (touching) {
-        return TOUCH_MOVE | xy;
-      } else {
-        touching = 1;
-        return TOUCH_START | xy;
-      }
-    } else if ((number_of_touch_points == 0) && (event_flag == EVENT_LIFT_UP)) {
-      touching = 0;
-      return TOUCH_END | xy;
-    }
-  }
-
-  return 0;
 }
 
 uint8_t touch_get_version(void) {
-  uint8_t version = 0;
-  uint8_t outgoing[] = {0xA6};  // start reading from address 0xA6
-  int result = i2c_transmit(TOUCH_I2C_INSTANCE, TOUCH_ADDRESS, outgoing,
-                            sizeof(outgoing), 1);
-  if (result != HAL_OK) {
-    if (result == HAL_BUSY) i2c_cycle(TOUCH_I2C_INSTANCE);
+  touch_driver_t* driver = &g_touch_driver;
+
+  if (sectrue != driver->initialized) {
     return 0;
   }
 
-  if (HAL_OK != i2c_receive(TOUCH_I2C_INSTANCE, TOUCH_ADDRESS, &version,
-                            sizeof(version), 1)) {
-    return 0;  // read failure
+  // After powering up the touch controller, we need to wait
+  // for an unspecified amount of time (~100ms) before attempting
+  // to read the firmware version. If we try to read too soon, we get 0x00
+  // and the chip behaves unpredictably.
+  while (sectrue != touch_ready()) {
+    hal_delay(1);
   }
 
-  return version;
+  uint8_t fw_version = 0;
+
+  if (sectrue != ft6x36_read_regs(FT6X36_REG_FIRMID, &fw_version, 1)) {
+    ft6x36_power_down();
+    return secfalse;
+  }
+
+  return fw_version;
+}
+
+secbool touch_activity(void) {
+  touch_driver_t* driver = &g_touch_driver;
+
+  if (sectrue == driver->initialized) {
+    if (ft6x36_test_and_clear_interrupt()) {
+      return sectrue;
+    }
+  }
+
+  return secfalse;
+}
+
+uint32_t touch_get_event(void) {
+  touch_driver_t* driver = &g_touch_driver;
+
+  if (sectrue != driver->initialized) {
+    return 0;
+  }
+
+  // Content of registers 0x00 - 0x06 read from the touch controller
+  uint8_t regs[7];
+
+  // Ensure the registers are within the bounds
+  _Static_assert(sizeof(regs) > FT6X63_REG_GEST_ID);
+  _Static_assert(sizeof(regs) > FT6X63_REG_TD_STATUS);
+  _Static_assert(sizeof(regs) > FT6X63_REG_P1_XH);
+  _Static_assert(sizeof(regs) > FT6X63_REG_P1_XL);
+  _Static_assert(sizeof(regs) > FT6X63_REG_P1_YH);
+  _Static_assert(sizeof(regs) > FT6X63_REG_P1_YL);
+
+  uint32_t ticks = hal_ticks_ms();
+
+  // Test if the touch_get_event() is starving (not called frequently enough)
+  bool starving = (int32_t)(ticks - driver->poll_ticks) > 300 /* ms */;
+  driver->poll_ticks = ticks;
+
+  // Fast track: if there is no new event and the touch controller
+  // is not touched, we do not need to read the registers
+  if (!ft6x36_test_and_clear_interrupt() && !driver->pressed) {
+    return 0;
+  }
+
+  // Read the set of registers containing touch event and coordinates
+  if (sectrue != ft6x36_read_regs(0x00, regs, sizeof(regs))) {
+    // Failed to read the touch registers
+    return 0;
+  }
+
+  // Extract gesture ID (FT6X63_GESTURE_xxx)
+  uint8_t gesture = regs[FT6X63_REG_GEST_ID];
+
+  if (gesture != FT6X36_GESTURE_NONE) {
+    // This is here for unknown historical reasons
+    // It seems we can't get here with FT6X36
+    return 0;
+  }
+
+  // Extract number of touches (0, 1, 2) or 0x0F before
+  // the first touch (tested with FT6206)
+  uint8_t nb_touches = regs[FT6X63_REG_TD_STATUS] & 0x0F;
+
+  // Extract event flags (one of press down, contact, lift up)
+  uint8_t flags = regs[FT6X63_REG_P1_XH] & FT6X63_EVENT_MASK;
+
+  // Extract touch coordinates
+  uint16_t x = ((regs[FT6X63_REG_P1_XH] & 0x0F) << 8) | regs[FT6X63_REG_P1_XL];
+  uint16_t y = ((regs[FT6X63_REG_P1_YH] & 0x0F) << 8) | regs[FT6X63_REG_P1_YL];
+
+  uint32_t event = 0;
+
+  uint32_t xy = touch_pack_xy(x, y);
+
+  if ((nb_touches == 1) && (flags == FT6X63_EVENT_PRESS_DOWN)) {
+    if (!driver->pressed) {
+      // Finger was just pressed down
+      event = TOUCH_START | xy;
+    } else {
+      // It looks like we have missed the lift up event
+      // We should send the TOUCH_END event here with old coordinates
+      event = TOUCH_END | touch_pack_xy(driver->last_x, driver->last_y);
+    }
+  } else if ((nb_touches == 1) && (flags == FT6X63_EVENT_CONTACT)) {
+    if (driver->pressed) {
+      if ((x != driver->last_x) || (y != driver->last_y)) {
+        // Report the move event only if the coordinates
+        // have changed
+        event = TOUCH_MOVE | xy;
+      }
+    } else {
+      // We have missed the press down event, we have to simulate it.
+      // But ensure we don't simulate TOUCH_START if touch_get_event() is not
+      // called frequently enough to not produce false events.
+      if (!starving) {
+        event = TOUCH_START | xy;
+      }
+    }
+  } else if ((nb_touches == 0) && (flags == FT6X63_EVENT_LIFT_UP)) {
+    if (driver->pressed) {
+      // Finger was just lifted up
+      event = TOUCH_END | xy;
+    } else {
+      // 1. Most likely, we have missed the PRESS_DOWN event.
+      //    Touch duration was too short (< 20ms) to be worth reporting.
+      // 2. Finger is still lifted up. Since we have already sent the
+      //    TOUCH_END event => no event needed. This should not happen
+      //    since two consecutive LIFT_UPs are not possible due to
+      //    testing the interrupt line before reading the registers.
+    }
+  }
+
+  // remember the last state
+  if ((event & TOUCH_START) || (event & TOUCH_MOVE)) {
+    driver->pressed = true;
+  } else if (event & TOUCH_END) {
+    driver->pressed = false;
+  }
+
+  driver->last_x = x;
+  driver->last_y = y;
+
+  return event;
 }
