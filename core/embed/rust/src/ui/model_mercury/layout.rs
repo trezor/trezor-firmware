@@ -1020,39 +1020,17 @@ extern "C" fn new_show_simple(n_args: usize, args: *const Obj, kwargs: *mut Map)
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: Option<TString> = kwargs.get(Qstr::MP_QSTR_title)?.try_into_option()?;
         let description: TString = kwargs.get_or(Qstr::MP_QSTR_description, "".into())?;
-        let button: TString = kwargs.get_or(Qstr::MP_QSTR_button, "".into())?;
 
         let obj = if let Some(t) = title {
             LayoutObj::new(Frame::left_aligned(
                 t,
-                Dialog::new(
-                    Paragraphs::new([Paragraph::new(&theme::TEXT_NORMAL, description)]),
-                    theme::button_bar(Button::with_text(button).map(|msg| {
-                        (matches!(msg, ButtonMsg::Clicked)).then(|| CancelConfirmMsg::Confirmed)
-                    })),
-                ),
-            ))?
-            .into()
-        } else if !button.is_empty() {
-            LayoutObj::new(Border::new(
-                theme::borders(),
-                Dialog::new(
-                    Paragraphs::new([Paragraph::new(&theme::TEXT_NORMAL, description)]),
-                    theme::button_bar(Button::with_text(button).map(|msg| {
-                        (matches!(msg, ButtonMsg::Clicked)).then(|| CancelConfirmMsg::Confirmed)
-                    })),
-                ),
+                Paragraphs::new(Paragraph::new(&theme::TEXT_NORMAL, description)),
             ))?
             .into()
         } else {
             LayoutObj::new(Border::new(
                 theme::borders(),
-                Dialog::new(
-                    Paragraphs::new(
-                        [Paragraph::new(&theme::TEXT_DEMIBOLD, description).centered()],
-                    ),
-                    Empty,
-                ),
+                Paragraphs::new(Paragraph::new(&theme::TEXT_DEMIBOLD, description)),
             ))?
             .into()
         };
