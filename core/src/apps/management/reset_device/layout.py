@@ -3,7 +3,6 @@ from typing import Sequence
 
 from trezor import TR
 from trezor.enums import ButtonRequestType
-from trezor.ui.layouts import show_success
 from trezor.ui.layouts.reset import (  # noqa: F401
     show_share_words,
     slip39_advanced_prompt_group_threshold,
@@ -70,8 +69,8 @@ async def _share_words_confirmed(
     Return true if the words are confirmed successfully.
     """
     from trezor.ui.layouts.reset import (
-        show_share_confirmation_success,
         show_share_confirmation_failure,
+        show_share_confirmation_success,
     )
 
     if await _do_confirm_share_words(share_index, share_words, group_index):
@@ -108,6 +107,14 @@ async def _do_confirm_share_words(
     return True
 
 
+async def show_backup_intro(
+    single_share: bool, num_of_words: int | None = None
+) -> None:
+    from trezor.ui.layouts.reset import show_intro_backup
+
+    await show_intro_backup(single_share, num_of_words)
+
+
 async def show_backup_warning() -> None:
     from trezor.ui.layouts.reset import show_warning_backup
 
@@ -124,11 +131,9 @@ async def show_backup_success() -> None:
 # ===
 
 
-async def show_and_confirm_mnemonic(mnemonic: str) -> None:
+async def show_and_confirm_single_share(words: Sequence[str]) -> None:
     # warn user about mnemonic safety
     await show_backup_warning()
-
-    words = mnemonic.split()
 
     while True:
         # display paginated mnemonic on the screen

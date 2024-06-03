@@ -382,7 +382,6 @@ async def prompt_backup() -> bool:
         "backup_device",
         ButtonRequestType.ResetDevice,
     )
-
     return result is CONFIRMED
 
 

@@ -79,6 +79,10 @@ impl ShowShareWords {
         let subtitle: TString = kwargs.get(Qstr::MP_QSTR_subtitle)?.try_into()?;
         let share_words_obj: Obj = kwargs.get(Qstr::MP_QSTR_words)?;
         let share_words_vec: Vec<TString, 33> = util::iter_into_vec(share_words_obj)?;
+        let description: Option<TString> = kwargs
+            .get(Qstr::MP_QSTR_description)?
+            .try_into_option()?
+            .and_then(|desc: TString| if desc.is_empty() { None } else { Some(desc) });
         let text_info: Obj = kwargs.get(Qstr::MP_QSTR_text_info)?;
         let text_confirm: TString = kwargs.get(Qstr::MP_QSTR_text_confirm)?.try_into()?;
         let nwords = share_words_vec.len();
@@ -98,7 +102,7 @@ impl ShowShareWords {
             ),
         )
         .with_subtitle(TR::words__instructions.into())
-        .with_footer(TR::instructions__swipe_up.into(), None)
+        .with_footer(TR::instructions__swipe_up.into(), description)
         .with_swipe(SwipeDirection::Up, SwipeSettings::default())
         .map(|msg| matches!(msg, FrameMsg::Content(_)).then_some(FlowMsg::Confirmed))
         .one_button_request(ButtonRequestCode::ResetDevice.with_type("share_words"))

@@ -1310,7 +1310,7 @@ class InputFlowBip39ResetBackup(InputFlowBase):
         # 1. Confirm Reset x3
         # 2. Backup your seed
         # 3. Confirm warning
-        yield from click_through(self.debug, screens=4, code=B.ResetDevice)
+        yield from click_through(self.debug, screens=5, code=B.ResetDevice)
 
         # mnemonic phrases and rest
         self.mnemonic = yield from get_mnemonic_and_confirm_success(self.debug)
