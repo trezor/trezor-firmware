@@ -62,7 +62,7 @@ async def _request_on_host() -> str:
             await confirm_action(
                 "passphrase_host1_hidden",
                 TR.passphrase__hidden_wallet,
-                description=f"{TR.passphrase__access_hidden_wallet}\n{TR.passphrase__from_host_not_shown}",
+                description=TR.passphrase__from_host_not_shown,
             )
         else:
             await confirm_action(
