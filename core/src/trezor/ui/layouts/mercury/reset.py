@@ -32,7 +32,13 @@ async def show_share_words(
             group_index + 1, share_index + 1
         )
     words_count = len(share_words)
-    text_info = TR.reset__write_down_words_template.format(words_count)
+    text_info = [TR.reset__write_down_words_template.format(words_count)]
+    if words_count == 20 and share_index is None:
+        # 1-of-1 SLIP39: inform the user about repeated words
+        text_info.append(TR.reset__words_may_repeat)
+    if share_index == 0:
+        # regular SLIP39, 1st share
+        text_info.append(TR.reset__repeat_for_all_shares)
     text_confirm = TR.reset__words_written_down_template.format(words_count)
 
     result = await RustLayout(

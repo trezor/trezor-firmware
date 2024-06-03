@@ -402,7 +402,7 @@ def flow_show_share_words(
     title: str,
     subtitle: str,
     words: Iterable[str],
-    text_info: str,
+    text_info: Iterable[str],
     text_confirm: str,
 ) -> LayoutObj[UiResult]:
     """Show wallet backup words preceded by an instruction screen and followed by
