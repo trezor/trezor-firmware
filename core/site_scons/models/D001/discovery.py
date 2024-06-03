@@ -71,7 +71,6 @@ def configure(
     if "input" in features_wanted:
         sources += ["embed/trezorhal/stm32f4/i2c.c"]
         sources += ["embed/trezorhal/stm32f4/touch/stmpe811.c"]
-        sources += ["embed/lib/touch.c"]
         features_available.append("touch")
 
     if "usb" in features_wanted:

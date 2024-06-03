@@ -41,6 +41,7 @@ def configure(
         features_available.append("optiga")
 
     if "input" in features_wanted:
+        sources += ["embed/trezorhal/unix/button.c"]
         features_available.append("button")
 
     sources += ["embed/models/T2B1/model_T2B1_layout.c"]

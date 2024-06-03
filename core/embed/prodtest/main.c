@@ -312,15 +312,15 @@ static secbool touch_click_timeout(uint32_t *touch, uint32_t timeout_ms) {
   uint32_t deadline = HAL_GetTick() + timeout_ms;
   uint32_t r = 0;
 
-  while (touch_read())
+  while (touch_get_event())
     ;
-  while ((touch_read() & TOUCH_START) == 0) {
+  while ((touch_get_event() & TOUCH_START) == 0) {
     if (HAL_GetTick() > deadline) return secfalse;
   }
-  while (((r = touch_read()) & TOUCH_END) == 0) {
+  while (((r = touch_get_event()) & TOUCH_END) == 0) {
     if (HAL_GetTick() > deadline) return secfalse;
   }
-  while (touch_read())
+  while (touch_get_event())
     ;
 
   *touch = r;
@@ -348,7 +348,7 @@ static void test_touch(const char *args) {
   }
   display_refresh();
 
-  touch_power_on();
+  touch_init();
 
   uint32_t evt = 0;
   if (touch_click_timeout(&evt, timeout * 1000)) {
@@ -361,20 +361,20 @@ static void test_touch(const char *args) {
   display_clear();
   display_refresh();
 
-  touch_power_off();
+  touch_deinit();
 }
 
 static void test_sensitivity(const char *args) {
   int v = atoi(args);
 
-  touch_power_on();
-  touch_sensitivity(v & 0xFF);
+  touch_init();
+  touch_set_sensitivity(v & 0xFF);
 
   display_clear();
   display_refresh();
 
   for (;;) {
-    uint32_t evt = touch_read();
+    uint32_t evt = touch_get_event();
     if (evt & TOUCH_START || evt & TOUCH_MOVE) {
       int x = touch_unpack_x(evt);
       int y = touch_unpack_y(evt);
@@ -387,14 +387,14 @@ static void test_sensitivity(const char *args) {
     }
   }
 
-  touch_power_off();
+  touch_deinit();
 }
 
 static void touch_version(void) {
-  touch_power_on();
+  touch_init();
   uint8_t version = touch_get_version();
   vcp_println("OK %d", version);
-  touch_power_off();
+  touch_deinit();
 }
 #endif
 

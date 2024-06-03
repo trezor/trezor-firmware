@@ -442,7 +442,7 @@ fn generate_trezorhal_bindings() {
         //usb
         .allowlist_function("usb_configured")
         // touch
-        .allowlist_function("touch_read")
+        .allowlist_function("touch_get_event")
         // button
         .allowlist_function("button_read")
         // haptic
