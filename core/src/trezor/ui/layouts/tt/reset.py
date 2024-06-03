@@ -309,6 +309,27 @@ async def slip39_advanced_prompt_group_threshold(num_of_groups: int) -> int:
     )
 
 
+async def show_intro_backup(single_share: bool, num_of_words: int | None) -> None:
+    if single_share:
+        assert num_of_words is not None
+        description = TR.backup__info_single_share_backup.format(num_of_words)
+    else:
+        description = TR.backup__info_multi_share_backup
+
+    await interact(
+        RustLayout(
+            trezorui2.show_info(
+                title="",
+                button=TR.buttons__continue,
+                description=description,
+                allow_cancel=False,
+            )
+        ),
+        "backup_warning",
+        ButtonRequestType.ResetDevice,
+    )
+
+
 async def show_warning_backup() -> None:
     result = await interact(
         RustLayout(

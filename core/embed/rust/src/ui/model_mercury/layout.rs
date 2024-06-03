@@ -1688,6 +1688,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     title: str,
     ///     subtitle: str,
     ///     words: Iterable[str],
+    ///     description: str,
     ///     text_info: Iterable[str],
     ///     text_confirm: str,
     /// ) -> LayoutObj[UiResult]:

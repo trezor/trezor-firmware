@@ -32,12 +32,14 @@ async def show_share_words(
             group_index + 1, share_index + 1
         )
     words_count = len(share_words)
+    description = ""
     text_info = [TR.reset__write_down_words_template.format(words_count)]
     if words_count == 20 and share_index is None:
         # 1-of-1 SLIP39: inform the user about repeated words
         text_info.append(TR.reset__words_may_repeat)
     if share_index == 0:
         # regular SLIP39, 1st share
+        description = TR.instructions__shares_start_with_1
         text_info.append(TR.reset__repeat_for_all_shares)
     text_confirm = TR.reset__words_written_down_template.format(words_count)
 
@@ -46,6 +48,7 @@ async def show_share_words(
             title=title,
             subtitle=subtitle,
             words=share_words,
+            description=description,
             text_info=text_info,
             text_confirm=text_confirm,
         )
@@ -301,6 +304,24 @@ async def slip39_advanced_prompt_group_threshold(num_of_groups: int) -> int:
         min_count,
         max_count,
         "slip39_group_threshold",
+    )
+
+
+async def show_intro_backup(single_share: bool, num_of_words: int | None) -> None:
+    if single_share:
+        assert num_of_words is not None
+        description = TR.backup__info_single_share_backup.format(num_of_words)
+    else:
+        description = TR.backup__info_multi_share_backup
+
+    await interact(
+        RustLayout(
+            trezorui2.show_info(
+                title=TR.backup__title_create_wallet_backup, description=description
+            )
+        ),
+        "backup_warning",
+        ButtonRequestType.ResetDevice,
     )
 
 

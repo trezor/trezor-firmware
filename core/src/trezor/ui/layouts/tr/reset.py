@@ -6,7 +6,7 @@ from trezor.enums import ButtonRequestType
 from trezor.wire import ActionCancelled
 
 from ..common import interact
-from . import RustLayout, confirm_action, show_warning, show_success
+from . import RustLayout, confirm_action, show_success, show_warning
 
 CONFIRMED = trezorui2.CONFIRMED  # global_import_cache
 
@@ -251,6 +251,23 @@ async def slip39_advanced_prompt_group_threshold(num_of_groups: int) -> int:
         min_count,
         max_count,
         "slip39_group_threshold",
+    )
+
+
+async def show_intro_backup(single_share: bool, num_of_words: int | None) -> None:
+    if single_share:
+        assert num_of_words is not None
+        description = TR.backup__info_single_share_backup.format(num_of_words)
+    else:
+        description = TR.backup__info_multi_share_backup
+
+    await confirm_action(
+        "backup_warning",
+        title=TR.backup__title_backup_wallet,
+        verb=TR.buttons__continue,
+        description=description,
+        verb_cancel=None,
+        br_code=ButtonRequestType.ResetDevice,
     )
 
 

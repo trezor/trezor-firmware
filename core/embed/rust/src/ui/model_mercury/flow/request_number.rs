@@ -52,7 +52,6 @@ impl FlowState for RequestNumber {
             (RequestNumber::Menu, FlowMsg::Choice(0)) => {
                 Decision::Goto(RequestNumber::Info, SwipeDirection::Left)
             }
-            (RequestNumber::Menu, FlowMsg::Choice(1)) => Decision::Return(FlowMsg::Cancelled),
             (RequestNumber::Menu, FlowMsg::Cancelled) => {
                 Decision::Goto(RequestNumber::Number, SwipeDirection::Right)
             }
@@ -119,9 +118,7 @@ impl RequestNumber {
 
         let content_menu = Frame::left_aligned(
             "".into(),
-            VerticalMenu::empty()
-                .item(theme::ICON_CHEVRON_RIGHT, TR::buttons__more_info.into())
-                .danger(theme::ICON_CANCEL, TR::backup__title_skip.into()),
+            VerticalMenu::empty().item(theme::ICON_CHEVRON_RIGHT, TR::buttons__more_info.into()),
         )
         .with_cancel_button()
         .with_swipe(SwipeDirection::Right, SwipeSettings::immediate())
