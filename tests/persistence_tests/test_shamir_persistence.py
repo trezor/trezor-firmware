@@ -138,7 +138,7 @@ def test_recovery_on_old_wallet(core_emulator: Emulator):
     words = first_share.split(" ")
 
     # start entering first share
-    assert "the first 2-4 letters" in debug.read_layout().text_content()
+    assert "Enter each word of your wallet backup" in debug.read_layout().text_content()
     debug.press_yes()
     assert debug.wait_layout().main_component() == "MnemonicKeyboard"
 
@@ -176,7 +176,7 @@ def test_recovery_multiple_resets(core_emulator: Emulator):
     def enter_shares_with_restarts(debug: DebugLink) -> None:
         shares = MNEMONIC_SLIP39_ADVANCED_20
         layout = debug.read_layout()
-        expected_text = "the first 2-4 letters"
+        expected_text = "Enter each word of your wallet backup"
         remaining = len(shares)
         for share in shares:
             assert expected_text in layout.text_content()

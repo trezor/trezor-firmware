@@ -126,19 +126,29 @@ async def reset_device(msg: ResetDevice) -> Success:
     return Success(message="Initialized")
 
 
+async def _backup_bip39(mnemonic: str) -> None:
+    words = mnemonic.split()
+    await layout.show_backup_intro(single_share=True, num_of_words=len(words))
+    await layout.show_and_confirm_single_share(words)
+
+
 async def _backup_slip39_single(
     encrypted_master_secret: bytes, extendable: bool
 ) -> None:
     mnemonics = _get_slip39_mnemonics(encrypted_master_secret, 1, ((1, 1),), extendable)
+    words = mnemonics[0][0].split()
 
     # for a single 1-of-1 group, we use the same layouts as for BIP39
-    await layout.show_and_confirm_mnemonic(mnemonics[0][0])
+    await layout.show_backup_intro(single_share=True, num_of_words=len(words))
+    await layout.show_and_confirm_single_share(words)
 
 
 async def _backup_slip39_basic(
     encrypted_master_secret: bytes, extendable: bool
 ) -> None:
     group_threshold = 1
+
+    await layout.show_backup_intro(single_share=False)
 
     # get number of shares
     await layout.slip39_show_checklist(0, advanced=False)
@@ -165,6 +175,9 @@ async def _backup_slip39_basic(
 async def _backup_slip39_advanced(
     encrypted_master_secret: bytes, extendable: bool
 ) -> None:
+
+    await layout.show_backup_intro(single_share=False)
+
     # get number of groups
     await layout.slip39_show_checklist(0, advanced=True)
     groups_count = await layout.slip39_advanced_prompt_number_of_groups()
@@ -287,4 +300,4 @@ async def backup_seed(backup_type: BackupType, mnemonic_secret: bytes) -> None:
         else:
             await _backup_slip39_basic(mnemonic_secret, extendable)
     else:
-        await layout.show_and_confirm_mnemonic(mnemonic_secret.decode())
+        await _backup_bip39(mnemonic_secret.decode())

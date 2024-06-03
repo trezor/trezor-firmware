@@ -97,13 +97,9 @@ pub extern "C" fn new_prompt_backup(n_args: usize, args: *const Obj, kwargs: *mu
 impl PromptBackup {
     fn new_obj(_args: &[Obj], _kwargs: &Map) -> Result<Obj, error::Error> {
         let title: TString = TR::backup__title_create_wallet_backup.into();
-        let par_array: [Paragraph<'static>; 1] = [Paragraph::new(
-            &theme::TEXT_MAIN_GREY_LIGHT,
-            // FIXME: should be "contains X words" but the mnemonic/shares are not yet generated at
-            // this point. We might need to merge the PromptBackup and ShowShareWords flows
-            TString::from_str("Your wallet backup contains words in a specific order."),
-        )];
-        let paragraphs = Paragraphs::new(par_array);
+        let text_intro: TString = TR::backup__it_should_be_backed_up.into();
+
+        let paragraphs = Paragraphs::new(Paragraph::new(&theme::TEXT_MAIN_GREY_LIGHT, text_intro));
         let content_intro = Frame::left_aligned(title, SwipeContent::new(paragraphs))
             .with_menu_button()
             .with_footer(TR::instructions__swipe_up.into(), None)

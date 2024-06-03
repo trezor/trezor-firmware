@@ -402,6 +402,7 @@ def flow_show_share_words(
     title: str,
     subtitle: str,
     words: Iterable[str],
+    description: str,
     text_info: Iterable[str],
     text_confirm: str,
 ) -> LayoutObj[UiResult]:
