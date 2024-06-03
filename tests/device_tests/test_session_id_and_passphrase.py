@@ -398,9 +398,10 @@ def test_hide_passphrase_from_host(client: Client):
 
         def input_flow():
             yield
-            TR.assert_in(
-                client.debug.wait_layout().text_content(),
-                "passphrase__access_hidden_wallet",
+            content = client.debug.wait_layout().text_content().lower()
+            assert any(
+                (s[:50].lower() in content)
+                for s in TR.translate("passphrase__from_host_not_shown")
             )
             if client.model in (models.T2T1, models.T3T1):
                 client.debug.press_yes()
