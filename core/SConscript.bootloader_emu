@@ -110,7 +110,6 @@ SOURCE_MOD += [
     'embed/lib/gfx_bitblt_rgba8888.c',
     'embed/lib/image.c',
     'embed/lib/terminal.c',
-    'embed/lib/touch.c',
     'embed/lib/unit_variant.c',
     'vendor/micropython/lib/uzlib/adler32.c',
     'vendor/micropython/lib/uzlib/crc32.c',
@@ -144,15 +143,16 @@ SOURCE_BOOTLOADER = [
 
 SOURCE_TREZORHAL = [
     'embed/trezorhal/unix/boot_args.c',
-    'embed/trezorhal/unix/fault_handlers.c',
-    'embed/trezorhal/unix/flash.c',
-    'embed/trezorhal/unix/flash_otp.c',
+    'embed/trezorhal/unix/button.c',
     'embed/trezorhal/unix/common.c',
-    'embed/trezorhal/unix/touch/touch.c',
-    'embed/trezorhal/unix/rng.c',
-    'embed/trezorhal/unix/usb.c',
+    'embed/trezorhal/unix/fault_handlers.c',
+    'embed/trezorhal/unix/flash_otp.c',
+    'embed/trezorhal/unix/flash.c',
     'embed/trezorhal/unix/random_delays.c',
+    'embed/trezorhal/unix/rng.c',
     'embed/trezorhal/unix/secret.c',
+    'embed/trezorhal/unix/touch.c',
+    'embed/trezorhal/unix/usb.c',
 ]
 
 if NEW_RENDERING:

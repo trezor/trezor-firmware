@@ -73,7 +73,6 @@ def configure(
     if "input" in features_wanted:
         sources += ["embed/trezorhal/stm32u5/i2c.c"]
         sources += ["embed/trezorhal/stm32u5/touch/ft6x36.c"]
-        sources += ["embed/lib/touch.c"]
         features_available.append("touch")
 
     if "haptic" in features_wanted:

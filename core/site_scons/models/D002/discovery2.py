@@ -61,9 +61,6 @@ def configure(
             "embed/trezorhal/stm32u5/i2c.c",
         ]
         sources += [
-            "embed/lib/touch.c",
-        ]
-        sources += [
             "embed/trezorhal/stm32u5/touch/sitronix.c",
         ]
         features_available.append("touch")
