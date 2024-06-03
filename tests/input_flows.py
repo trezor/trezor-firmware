@@ -1554,7 +1554,9 @@ class InputFlowSlip39BasicResetRecovery(InputFlowBase):
         # 6. threshold info
         # 7. Set & confirm threshold value
         # 8. Confirm show seeds
-        yield from click_through(self.debug, screens=9, code=B.ResetDevice)
+        # 9. Warning
+        # 10. Instructions
+        yield from click_through(self.debug, screens=10, code=B.ResetDevice)
 
         # Mnemonic phrases
         self.mnemonics = yield from load_N_shares(self.debug, 5)
