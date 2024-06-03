@@ -85,9 +85,7 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
       }
 #if defined USE_TOUCH
       else if (iface == TOUCH_IFACE) {
-
-        const uint32_t evt = touch_read();
-
+        const uint32_t evt = touch_get_event();
         if (evt) {
           // ignore TOUCH_MOVE events if they are too frequent
           if ((evt & TOUCH_MOVE) == 0 ||

@@ -53,6 +53,7 @@
 #include "py/repl.h"
 #include "py/runtime.h"
 #include "py/stackctrl.h"
+#include "touch.h"
 
 #include "common.h"
 
@@ -473,6 +474,10 @@ MP_NOINLINE int main_(int argc, char **argv) {
   pre_process_options(argc, argv);
 
   display_init();
+
+#if USE_TOUCH
+  touch_init();
+#endif
 
   // Map trezor.flash to memory.
   flash_init();

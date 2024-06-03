@@ -360,7 +360,6 @@ int32_t SITRONIX_GetState(SITRONIX_Object_t *pObj, SITRONIX_State_t *State) {
 
   return ret;
 }
-
 /**
  * @brief  Get the touch screen Xn and Yn positions values in multi-touch mode
  * @param  pObj Component object pointer
@@ -1135,86 +1134,100 @@ static int32_t SITRONIX_Probe(uint32_t Instance) {
 #include <string.h>
 #include "touch.h"
 
+// Touch driver
+typedef struct {
+  // Set if driver is initialized
+  secbool initialized;
+  // Last lower-level driver state
+  TS_State_t prev_state;
+
+} touch_driver_t;
+
+// Touch driver instance
+static touch_driver_t g_touch_driver = {
+    .initialized = secfalse,
+};
+
 secbool touch_init(void) {
-  TS_Init_t TsInit;
+  touch_driver_t *driver = &g_touch_driver;
 
-  /* Initialize the TouchScreen */
-  TsInit.Width = 480;
-  TsInit.Height = 480;
-  TsInit.Orientation = 0;
-  TsInit.Accuracy = 10;
+  if (sectrue != driver->initialized) {
+    TS_Init_t TsInit;
 
-  BSP_TS_Init(0, &TsInit);
+    /* Initialize the TouchScreen */
+    TsInit.Width = 480;
+    TsInit.Height = 480;
+    TsInit.Orientation = 0;
+    TsInit.Accuracy = 10;
 
+    BSP_TS_Init(0, &TsInit);
+
+    driver->initialized = sectrue;
+  }
+
+  return driver->initialized;
+}
+
+void touch_deinit(void) {
+  touch_driver_t *driver = &g_touch_driver;
+
+  if (sectrue == driver->initialized) {
+    BSP_TS_DeInit(0);
+    memset(driver, 0, sizeof(touch_driver_t));
+  }
+}
+
+secbool touch_ready(void) {
+  touch_driver_t *driver = &g_touch_driver;
+  return driver->initialized;
+}
+
+secbool touch_set_sensitivity(uint8_t value) {
+  // Not implemented for the discovery kit
   return sectrue;
 }
-void touch_power_on(void) {}
-void touch_power_off(void) {}
-secbool touch_sensitivity(uint8_t value) { return sectrue; }
 
-uint32_t touch_is_detected(void) { return sitronix_touching != 0; }
-
-uint32_t touch_read(void) {
-  TS_State_t state = {0};
-  static uint32_t xy = 0;
-  static TS_State_t state_last = {0};
-  // static uint16_t first = 1;
-  static uint16_t touching = 0;
-
-  BSP_TS_GetState(0, &state);
-
-  state.TouchDetected = touch_is_detected();
-  state.TouchY = state.TouchY > 120 ? state.TouchY - 120 : 0;
-  state.TouchX = state.TouchX > 120 ? state.TouchX - 120 : 0;
-
-  if (!touch_is_detected()) {
-    // if (state.TouchDetected == 0) {
-    if (touching) {
-      // touch end
-      memcpy(&state_last, &state, sizeof(state));
-      touching = 0;
-      return TOUCH_END | xy;
-    }
-    return 0;
-  }
-
-  if (state.TouchDetected == 0) {
-    return 0;
-  }
-
-  //  if (first != 0) {
-  //    memcpy(&state_last, &state, sizeof(state));
-  //    first = 0;
-  //    return 0;
-  //  }
-
-  if ((state.TouchDetected == 0 && state_last.TouchDetected == 0) ||
-      memcmp(&state, &state_last, sizeof(state)) == 0) {
-    // no change detected
-    return 0;
-  }
-
-  xy = touch_pack_xy(state.TouchX, state.TouchY);
-
-  if (state.TouchDetected && !state_last.TouchDetected) {
-    // touch start
-    memcpy(&state_last, &state, sizeof(state));
-    touching = 1;
-    return TOUCH_START | xy;
-  } else if (!state.TouchDetected && state_last.TouchDetected) {
-    // touch end
-    memcpy(&state_last, &state, sizeof(state));
-    touching = 0;
-    return TOUCH_END | xy;
-  } else {
-    // touch move
-    memcpy(&state_last, &state, sizeof(state));
-    return TOUCH_MOVE | xy;
-  }
-
+uint8_t touch_get_version(void) {
+  // Not implemented for the discovery kit
   return 0;
 }
 
-void touch_wait_until_ready(void) {}
+secbool touch_activity(void) {
+  if (sitronix_touching) {
+    return sectrue;
+  } else {
+    return secfalse;
+  }
+}
 
-uint8_t touch_get_version(void) { return 0; }
+uint32_t touch_get_event(void) {
+  touch_driver_t *driver = &g_touch_driver;
+
+  if (sectrue != driver->initialized) {
+    return 0;
+  }
+
+  TS_State_t new_state = {0};
+  BSP_TS_GetState(0, &new_state);
+
+  new_state.TouchX = new_state.TouchX > 120 ? new_state.TouchX - 120 : 0;
+  new_state.TouchY = new_state.TouchY > 120 ? new_state.TouchY - 120 : 0;
+
+  uint32_t event = 0;
+
+  if (new_state.TouchDetected && !driver->prev_state.TouchDetected) {
+    uint32_t xy = touch_pack_xy(new_state.TouchX, new_state.TouchY);
+    event = TOUCH_START | xy;
+  } else if (!new_state.TouchDetected && driver->prev_state.TouchDetected) {
+    uint32_t xy =
+        touch_pack_xy(driver->prev_state.TouchX, driver->prev_state.TouchY);
+    event = TOUCH_END | xy;
+  } else if (new_state.TouchDetected) {
+    uint32_t xy = touch_pack_xy(new_state.TouchX, new_state.TouchY);
+    event = TOUCH_MOVE | xy;
+  }
+
+  driver->prev_state = new_state;
+
+  return event;
+}

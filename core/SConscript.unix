@@ -419,20 +419,19 @@ SOURCE_MICROPYTHON = [
 SOURCE_UNIX = [
     'embed/trezorhal/unix/boot_args.c',
     'embed/trezorhal/unix/common.c',
-    'embed/trezorhal/unix/flash.c',
     'embed/trezorhal/unix/flash_otp.c',
+    'embed/trezorhal/unix/flash.c',
     'embed/trezorhal/unix/random_delays.c',
     'embed/trezorhal/unix/rng.c',
     'embed/trezorhal/unix/usb.c',
-    'embed/trezorhal/unix/touch/touch.c',
-    'embed/unix/main.c',
     'embed/unix/main_main.c',
+    'embed/unix/main.c',
     'embed/unix/profile.c',
-    'vendor/micropython/shared/runtime/gchelper_generic.c',
     'vendor/micropython/ports/unix/alloc.c',
     'vendor/micropython/ports/unix/gccollect.c',
     'vendor/micropython/ports/unix/input.c',
     'vendor/micropython/ports/unix/unix_mphal.c',
+    'vendor/micropython/shared/runtime/gchelper_generic.c',
 ]
 
 if NEW_RENDERING:

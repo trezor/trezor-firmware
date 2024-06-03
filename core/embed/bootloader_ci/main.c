@@ -206,7 +206,6 @@ int main(void) {
   random_delays_init();
 #ifdef USE_TOUCH
   touch_init();
-  touch_power_on();
 #endif
 
 #ifdef USE_HASH_PROCESSOR

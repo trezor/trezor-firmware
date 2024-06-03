@@ -398,7 +398,6 @@ int bootloader_main(void) {
   unit_variant_init();
 
 #ifdef USE_TOUCH
-  touch_power_on();
 #ifdef TREZOR_MODEL_T3T1
   // on T3T1, tester needs to run without touch, so making an exception
   // until unit variant is written in OTP
@@ -514,17 +513,22 @@ int bootloader_main(void) {
   uint32_t touched = 0;
 #ifdef USE_TOUCH
   if (firmware_present == sectrue && stay_in_bootloader != sectrue) {
-    touch_wait_until_ready();
+    // Wait until the touch controller is ready
+    // (on hardware this may take a while)
+    while (touch_ready() != sectrue) {
+      hal_delay(1);
+    }
+#ifdef TREZOR_EMULATOR
+    hal_delay(500);
+#endif
+    // Give the touch controller time to report events
+    // if someone touches the screen
     for (int i = 0; i < 10; i++) {
-      touched = touch_is_detected() | touch_read();
-      if (touched) {
+      if (touch_activity() == sectrue) {
+        touched = 1;
         break;
       }
-#ifdef TREZOR_EMULATOR
-      hal_delay(25);
-#else
-      hal_delay_us(1000);
-#endif
+      hal_delay(5);
     }
   }
 #elif defined USE_BUTTON

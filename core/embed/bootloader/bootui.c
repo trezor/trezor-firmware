@@ -154,16 +154,16 @@ static void ui_screen_boot_wait(int wait_seconds) {
 
 void ui_click(void) {
   // flush touch events if any
-  while (touch_read()) {
+  while (touch_get_event()) {
   }
   // wait for TOUCH_START
-  while ((touch_read() & TOUCH_START) == 0) {
+  while ((touch_get_event() & TOUCH_START) == 0) {
   }
   // wait for TOUCH_END
-  while ((touch_read() & TOUCH_END) == 0) {
+  while ((touch_get_event() & TOUCH_END) == 0) {
   }
   // flush touch events if any
-  while (touch_read()) {
+  while (touch_get_event()) {
   }
 }
 

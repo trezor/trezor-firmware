@@ -1,7 +1,7 @@
 #[cfg(feature = "button")]
 use crate::trezorhal::io::io_button_read;
 #[cfg(feature = "touch")]
-use crate::trezorhal::io::io_touch_read;
+use crate::trezorhal::io::io_touch_get_event;
 #[cfg(feature = "button")]
 use crate::ui::event::ButtonEvent;
 #[cfg(feature = "touch")]
@@ -56,7 +56,7 @@ fn button_eval() -> Option<ButtonEvent> {
 
 #[cfg(feature = "touch")]
 fn touch_eval() -> Option<TouchEvent> {
-    let event = io_touch_read();
+    let event = io_touch_get_event();
     if event == 0 {
         return None;
     }
