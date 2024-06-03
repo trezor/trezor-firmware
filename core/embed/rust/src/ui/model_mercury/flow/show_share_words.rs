@@ -1,13 +1,13 @@
 use crate::{
     error,
-    micropython::{map::Map, obj::Obj, qstr::Qstr, util},
+    micropython::{iter::IterBuf, map::Map, obj::Obj, qstr::Qstr, util},
     strutil::TString,
     translations::TR,
     ui::{
         button_request::ButtonRequestCode,
         component::{
             swipe_detect::SwipeSettings,
-            text::paragraphs::{Paragraph, Paragraphs},
+            text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs, VecExt},
             ButtonRequestExt, ComponentExt, SwipeDirection,
         },
         flow::{base::Decision, flow_store, FlowMsg, FlowState, FlowStore, SwipeFlow},
@@ -24,7 +24,6 @@ use super::super::{
 
 #[derive(Copy, Clone, PartialEq, Eq, ToPrimitive)]
 pub enum ShowShareWords {
-    // TODO: potentially also add there the 'never put anywhere digital' warning?
     Instruction,
     Words,
     Confirm,
@@ -80,16 +79,23 @@ impl ShowShareWords {
         let subtitle: TString = kwargs.get(Qstr::MP_QSTR_subtitle)?.try_into()?;
         let share_words_obj: Obj = kwargs.get(Qstr::MP_QSTR_words)?;
         let share_words_vec: Vec<TString, 33> = util::iter_into_vec(share_words_obj)?;
-        let text_info: TString = kwargs.get(Qstr::MP_QSTR_text_info)?.try_into()?;
+        let text_info: Obj = kwargs.get(Qstr::MP_QSTR_text_info)?;
         let text_confirm: TString = kwargs.get(Qstr::MP_QSTR_text_confirm)?.try_into()?;
         let nwords = share_words_vec.len();
 
+        let mut instructions_paragraphs = ParagraphVecShort::new();
+        for item in IterBuf::new().try_iterate(text_info)? {
+            let text: TString = item.try_into()?;
+            instructions_paragraphs.add(Paragraph::new(&theme::TEXT_MAIN_GREY_LIGHT, text));
+        }
+        let paragraphs_spacing = 8;
         let content_instruction = Frame::left_aligned(
             title,
-            SwipeContent::new(Paragraphs::new(Paragraph::new(
-                &theme::TEXT_MAIN_GREY_LIGHT,
-                text_info,
-            ))),
+            SwipeContent::new(
+                instructions_paragraphs
+                    .into_paragraphs()
+                    .with_spacing(paragraphs_spacing),
+            ),
         )
         .with_subtitle(TR::words__instructions.into())
         .with_footer(TR::instructions__swipe_up.into(), None)
