@@ -728,7 +728,6 @@ async def confirm_blob(
     ask_pagination: bool = False,
     chunkify: bool = False,
 ) -> None:
-    verb = verb or TR.buttons__confirm  # def_arg
     layout = RustLayout(
         trezorui2.confirm_blob(
             title=title,
