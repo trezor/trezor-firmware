@@ -193,7 +193,7 @@ fn new_confirm_action_obj(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Err
         FrameMsg::Button(_) => Some(FlowMsg::Cancelled),
     });
 
-    if !prompt_screen {
+    if !prompt_screen && !hold {
         let store = flow_store().add(content_intro)?.add(content_menu)?;
         let res = SwipeFlow::new(ConfirmActionSimple::Intro, store)?;
         Ok(LayoutObj::new(res)?.into())
@@ -209,6 +209,8 @@ fn new_confirm_action_obj(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Err
                 TR::instructions__tap_to_confirm.into(),
             )
         };
+
+        let content_intro = content_intro.with_pages(|p| p + 1);
 
         let mut content_confirm = Frame::left_aligned(title, SwipeContent::new(prompt))
             .with_footer(prompt_action, None)
