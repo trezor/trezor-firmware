@@ -23,30 +23,36 @@ impl SwipeDirection {
         }
     }
 
-    pub fn iter() -> impl Iterator<Item = Self> {
-        SwipeDirection::Up
+    pub fn iter() -> SwipeDirectionIterator {
+        SwipeDirectionIterator::new()
     }
 }
 
-impl Iterator for SwipeDirection {
-    type Item = Self;
+pub struct SwipeDirectionIterator {
+    current: Option<SwipeDirection>,
+}
+
+impl SwipeDirectionIterator {
+    pub fn new() -> Self {
+        SwipeDirectionIterator {
+            current: Some(SwipeDirection::Up),
+        }
+    }
+}
+
+impl Iterator for SwipeDirectionIterator {
+    type Item = SwipeDirection;
 
     fn next(&mut self) -> Option<Self::Item> {
-        match self {
-            SwipeDirection::Up => {
-                *self = SwipeDirection::Down;
-                Some(SwipeDirection::Up)
-            }
-            SwipeDirection::Down => {
-                *self = SwipeDirection::Left;
-                Some(SwipeDirection::Down)
-            }
-            SwipeDirection::Left => {
-                *self = SwipeDirection::Right;
-                Some(SwipeDirection::Left)
-            }
-            SwipeDirection::Right => None,
-        }
+        let next_state = match self.current {
+            Some(SwipeDirection::Up) => Some(SwipeDirection::Down),
+            Some(SwipeDirection::Down) => Some(SwipeDirection::Left),
+            Some(SwipeDirection::Left) => Some(SwipeDirection::Right),
+            Some(SwipeDirection::Right) => None,
+            None => None,
+        };
+
+        core::mem::replace(&mut self.current, next_state)
     }
 }
 
