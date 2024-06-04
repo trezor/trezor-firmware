@@ -177,7 +177,7 @@ impl GetAddress {
         .into_paragraphs();
         let content_address = Frame::left_aligned(
             title,
-            SwipeContent::new(SwipePage::vertical(paragraphs.clone())),
+            SwipeContent::new(SwipePage::vertical(paragraphs)),
         )
         .with_menu_button()
         .with_footer(TR::instructions__swipe_up.into(), None)
