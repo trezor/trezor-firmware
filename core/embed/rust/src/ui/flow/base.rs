@@ -1,5 +1,4 @@
 use crate::ui::component::{swipe_detect::SwipeConfig, SwipeDirection};
-use num_traits::ToPrimitive;
 
 pub trait Swipable {
     fn get_swipe_config(&self) -> SwipeConfig;
@@ -22,20 +21,20 @@ pub enum FlowMsg {
 
 /// Composable event handler result.
 #[derive(Copy, Clone)]
-pub enum Decision<Q> {
+pub enum Decision {
     /// Do nothing, continue with processing next handler.
     Nothing,
 
     /// Initiate transition to another state, end event processing.
     /// NOTE: it might make sense to include Option<ButtonRequest> here
-    Goto(Q, SwipeDirection),
+    Transition(SwipeDirection),
 
     /// Yield a message to the caller of the flow (i.e. micropython), end event
     /// processing.
     Return(FlowMsg),
 }
 
-impl<Q> Decision<Q> {
+impl Decision {
     pub fn or_else(self, func: impl FnOnce() -> Self) -> Self {
         match self {
             Decision::Nothing => func(),
@@ -44,24 +43,71 @@ impl<Q> Decision<Q> {
     }
 }
 
+/// State transition type.
+///
+/// Contains a new state (by convention it must be of the same concrete type as
+/// the current one) and a Decision object that tells the flow what to do next.
+pub type StateChange = (&'static dyn FlowState, Decision);
+
 /// Encodes the flow logic as a set of states, and transitions between them
 /// triggered by events and swipes.
-pub trait FlowState
-where
-    Self: Sized + Copy + Eq + ToPrimitive,
-{
-    /// There needs to be a mapping from states to indices of the FlowStore
-    /// array. Default implementation works for states that are enums, the
-    /// FlowStore has to have number of elements equal to number of states.
-    fn index(&self) -> usize {
-        unwrap!(self.to_usize())
-    }
-
+pub trait FlowState {
     /// What to do when user swipes on screen and current component doesn't
     /// respond to swipe of that direction.
-    fn handle_swipe(&self, direction: SwipeDirection) -> Decision<Self>;
+    ///
+    /// By convention, the type of the new state inside the state change must be
+    /// Self. This can't be enforced by the type system unfortunately, because
+    /// this trait must remain object-safe and so can't refer to Self.
+    fn handle_swipe(&'static self, direction: SwipeDirection) -> StateChange;
 
     /// What to do when the current component emits a message in response to an
     /// event.
-    fn handle_event(&self, msg: FlowMsg) -> Decision<Self>;
+    ///
+    /// By convention, the type of the new state inside the state change must be
+    /// Self. This can't be enforced by the type system unfortunately, because
+    /// this trait must remain object-safe and so can't refer to Self.
+    fn handle_event(&'static self, msg: FlowMsg) -> StateChange;
+
+    /// Page index of the current state.
+    fn index(&'static self) -> usize;
 }
+
+/// Helper trait for writing nicer flow logic.
+pub trait DecisionBuilder: FlowState + Sized {
+    #[inline]
+    fn swipe(&'static self, direction: SwipeDirection) -> StateChange {
+        (self, Decision::Transition(direction))
+    }
+
+    #[inline]
+    fn swipe_left(&'static self) -> StateChange {
+        self.swipe(SwipeDirection::Left)
+    }
+
+    #[inline]
+    fn swipe_right(&'static self) -> StateChange {
+        self.swipe(SwipeDirection::Right)
+    }
+
+    #[inline]
+    fn swipe_up(&'static self) -> StateChange {
+        self.swipe(SwipeDirection::Up)
+    }
+
+    #[inline]
+    fn swipe_down(&'static self) -> StateChange {
+        self.swipe(SwipeDirection::Down)
+    }
+
+    #[inline]
+    fn do_nothing(&'static self) -> StateChange {
+        (self, Decision::Nothing)
+    }
+
+    #[inline]
+    fn return_msg(&'static self, msg: FlowMsg) -> StateChange {
+        (self, Decision::Return(msg))
+    }
+}
+
+impl<T: FlowState> DecisionBuilder for T {}

@@ -319,8 +319,7 @@ impl LayoutObjInner {
 
 impl LayoutObj {
     /// Create a new `LayoutObj`, wrapping a root component.
-    #[inline(never)]
-    pub fn new(root: impl ComponentMsgObj + MaybeTrace + 'static) -> Result<Gc<Self>, Error> {
+    pub fn new(root: impl ObjComponent + 'static) -> Result<Gc<Self>, Error> {
         // SAFETY: This is a Python object and hase a base as first element
         unsafe {
             Gc::new_with_custom_finaliser(Self {

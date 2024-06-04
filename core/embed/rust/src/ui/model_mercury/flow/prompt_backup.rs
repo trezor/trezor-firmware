@@ -1,13 +1,20 @@
 use crate::{
     error,
+    micropython::{map::Map, obj::Obj, util},
     strutil::TString,
     translations::TR,
     ui::{
         component::{
+            swipe_detect::SwipeSettings,
             text::paragraphs::{Paragraph, Paragraphs},
             ComponentExt, SwipeDirection,
         },
-        flow::{base::Decision, FlowMsg, FlowState, FlowStore},
+        flow::{
+            base::{DecisionBuilder as _, StateChange},
+            FlowMsg, FlowState, SwipeFlow,
+        },
+        layout::obj::LayoutObj,
+        model_mercury::component::SwipeContent,
     },
 };
 
@@ -18,7 +25,7 @@ use super::super::{
     theme,
 };
 
-#[derive(Copy, Clone, PartialEq, Eq, ToPrimitive)]
+#[derive(Copy, Clone, PartialEq, Eq)]
 pub enum PromptBackup {
     Intro,
     Menu,
@@ -27,67 +34,38 @@ pub enum PromptBackup {
 }
 
 impl FlowState for PromptBackup {
-    fn handle_swipe(&self, direction: SwipeDirection) -> Decision<Self> {
+    #[inline]
+    fn index(&'static self) -> usize {
+        *self as usize
+    }
+
+    fn handle_swipe(&'static self, direction: SwipeDirection) -> StateChange {
         match (self, direction) {
-            (PromptBackup::Intro, SwipeDirection::Left) => {
-                Decision::Goto(PromptBackup::Menu, direction)
+            (Self::Intro, SwipeDirection::Left) => Self::Menu.swipe(direction),
+            (Self::Intro, SwipeDirection::Up) => self.return_msg(FlowMsg::Confirmed),
+            (Self::Menu, SwipeDirection::Right) => Self::Intro.swipe(direction),
+            (Self::SkipBackupIntro, SwipeDirection::Up) => Self::SkipBackupConfirm.swipe(direction),
+            (Self::SkipBackupIntro, SwipeDirection::Right) => Self::Intro.swipe(direction),
+            (Self::SkipBackupConfirm, SwipeDirection::Down) => {
+                Self::SkipBackupIntro.swipe(direction)
             }
-            (PromptBackup::Intro, SwipeDirection::Up) => Decision::Return(FlowMsg::Confirmed),
-
-            (PromptBackup::Menu, SwipeDirection::Right) => {
-                Decision::Goto(PromptBackup::Intro, direction)
-            }
-
-            (PromptBackup::SkipBackupIntro, SwipeDirection::Up) => {
-                Decision::Goto(PromptBackup::SkipBackupConfirm, direction)
-            }
-            (PromptBackup::SkipBackupIntro, SwipeDirection::Right) => {
-                Decision::Goto(PromptBackup::Intro, direction)
-            }
-            (PromptBackup::SkipBackupConfirm, SwipeDirection::Down) => {
-                Decision::Goto(PromptBackup::SkipBackupIntro, direction)
-            }
-            (PromptBackup::SkipBackupConfirm, SwipeDirection::Right) => {
-                Decision::Goto(PromptBackup::Intro, direction)
-            }
-            _ => Decision::Nothing,
+            (Self::SkipBackupConfirm, SwipeDirection::Right) => Self::Intro.swipe(direction),
+            _ => self.do_nothing(),
         }
     }
 
-    fn handle_event(&self, msg: FlowMsg) -> Decision<Self> {
+    fn handle_event(&'static self, msg: FlowMsg) -> StateChange {
         match (self, msg) {
-            (PromptBackup::Intro, FlowMsg::Info) => {
-                Decision::Goto(PromptBackup::Menu, SwipeDirection::Left)
-            }
-            (PromptBackup::Menu, FlowMsg::Choice(0)) => {
-                Decision::Goto(PromptBackup::SkipBackupIntro, SwipeDirection::Left)
-            }
-            (PromptBackup::Menu, FlowMsg::Cancelled) => {
-                Decision::Goto(PromptBackup::Intro, SwipeDirection::Right)
-            }
-            (PromptBackup::SkipBackupIntro, FlowMsg::Cancelled) => {
-                Decision::Goto(PromptBackup::Menu, SwipeDirection::Right)
-            }
-            (PromptBackup::SkipBackupConfirm, FlowMsg::Cancelled) => {
-                Decision::Goto(PromptBackup::SkipBackupIntro, SwipeDirection::Right)
-            }
-            (PromptBackup::SkipBackupConfirm, FlowMsg::Confirmed) => {
-                Decision::Return(FlowMsg::Cancelled)
-            }
-            _ => Decision::Nothing,
+            (Self::Intro, FlowMsg::Info) => Self::Menu.swipe_left(),
+            (Self::Menu, FlowMsg::Choice(0)) => Self::SkipBackupIntro.swipe_left(),
+            (Self::Menu, FlowMsg::Cancelled) => Self::Intro.swipe_right(),
+            (Self::SkipBackupIntro, FlowMsg::Cancelled) => Self::Menu.swipe_right(),
+            (Self::SkipBackupConfirm, FlowMsg::Cancelled) => Self::SkipBackupIntro.swipe_right(),
+            (Self::SkipBackupConfirm, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Cancelled),
+            _ => self.do_nothing(),
         }
     }
 }
-
-use crate::{
-    micropython::{map::Map, obj::Obj, util},
-    ui::{
-        component::swipe_detect::SwipeSettings,
-        flow::{flow_store, SwipeFlow},
-        layout::obj::LayoutObj,
-        model_mercury::component::SwipeContent,
-    },
-};
 
 #[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub extern "C" fn new_prompt_backup(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
@@ -159,12 +137,11 @@ impl PromptBackup {
             _ => None,
         });
 
-        let store = flow_store()
-            .add(content_intro)?
-            .add(content_menu)?
-            .add(content_skip_intro)?
-            .add(content_skip_confirm)?;
-        let res = SwipeFlow::new(PromptBackup::Intro, store)?;
+        let res = SwipeFlow::new(&PromptBackup::Intro)?
+            .with_page(&PromptBackup::Intro, content_intro)?
+            .with_page(&PromptBackup::Menu, content_menu)?
+            .with_page(&PromptBackup::SkipBackupIntro, content_skip_intro)?
+            .with_page(&PromptBackup::SkipBackupConfirm, content_skip_confirm)?;
         Ok(LayoutObj::new(res)?.into())
     }
 }

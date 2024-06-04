@@ -1,14 +1,20 @@
 use crate::{
     error,
-    micropython::qstr::Qstr,
+    micropython::{map::Map, obj::Obj, qstr::Qstr, util},
     strutil::TString,
     translations::TR,
     ui::{
         component::{
+            swipe_detect::SwipeSettings,
             text::paragraphs::{Paragraph, ParagraphSource},
             ComponentExt, SwipeDirection,
         },
-        flow::{base::Decision, flow_store, FlowMsg, FlowState, FlowStore, SwipeFlow},
+        flow::{
+            base::{DecisionBuilder as _, StateChange},
+            FlowMsg, FlowState, SwipeFlow,
+        },
+        layout::obj::LayoutObj,
+        model_mercury::component::SwipeContent,
     },
 };
 
@@ -17,7 +23,7 @@ use super::super::{
     theme,
 };
 
-#[derive(Copy, Clone, PartialEq, Eq, ToPrimitive)]
+#[derive(Copy, Clone, PartialEq, Eq)]
 pub enum WarningHiPrio {
     Message,
     Menu,
@@ -25,46 +31,31 @@ pub enum WarningHiPrio {
 }
 
 impl FlowState for WarningHiPrio {
-    fn handle_swipe(&self, direction: SwipeDirection) -> Decision<Self> {
+    #[inline]
+    fn index(&'static self) -> usize {
+        *self as usize
+    }
+
+    fn handle_swipe(&'static self, direction: SwipeDirection) -> StateChange {
         match (self, direction) {
-            (WarningHiPrio::Message, SwipeDirection::Left) => {
-                Decision::Goto(WarningHiPrio::Menu, direction)
-            }
-            (WarningHiPrio::Message, SwipeDirection::Up) => {
-                Decision::Goto(WarningHiPrio::Cancelled, direction)
-            }
-            (WarningHiPrio::Menu, SwipeDirection::Right) => {
-                Decision::Goto(WarningHiPrio::Message, direction)
-            }
-            _ => Decision::Nothing,
+            (Self::Message, SwipeDirection::Left) => Self::Menu.swipe(direction),
+            (Self::Message, SwipeDirection::Up) => Self::Cancelled.swipe(direction),
+            (Self::Menu, SwipeDirection::Right) => Self::Message.swipe(direction),
+            _ => self.do_nothing(),
         }
     }
 
-    fn handle_event(&self, msg: FlowMsg) -> Decision<Self> {
+    fn handle_event(&'static self, msg: FlowMsg) -> StateChange {
         match (self, msg) {
-            (WarningHiPrio::Message, FlowMsg::Info) => {
-                Decision::Goto(WarningHiPrio::Menu, SwipeDirection::Left)
-            }
-            (WarningHiPrio::Menu, FlowMsg::Choice(1)) => Decision::Return(FlowMsg::Confirmed),
-            (WarningHiPrio::Menu, FlowMsg::Choice(_)) => {
-                Decision::Goto(WarningHiPrio::Cancelled, SwipeDirection::Up)
-            }
-            (WarningHiPrio::Menu, FlowMsg::Cancelled) => {
-                Decision::Goto(WarningHiPrio::Message, SwipeDirection::Right)
-            }
-            (WarningHiPrio::Cancelled, _) => Decision::Return(FlowMsg::Cancelled),
-            _ => Decision::Nothing,
+            (Self::Message, FlowMsg::Info) => Self::Menu.swipe_left(),
+            (Self::Menu, FlowMsg::Choice(1)) => self.return_msg(FlowMsg::Confirmed),
+            (Self::Menu, FlowMsg::Choice(_)) => Self::Cancelled.swipe_up(),
+            (Self::Menu, FlowMsg::Cancelled) => Self::Message.swipe_right(),
+            (Self::Cancelled, _) => self.return_msg(FlowMsg::Cancelled),
+            _ => self.do_nothing(),
         }
     }
 }
-
-use crate::{
-    micropython::{map::Map, obj::Obj, util},
-    ui::{
-        component::swipe_detect::SwipeSettings, layout::obj::LayoutObj,
-        model_mercury::component::SwipeContent,
-    },
-};
 
 #[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub extern "C" fn new_warning_hi_prio(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
@@ -118,11 +109,10 @@ impl WarningHiPrio {
                 .with_footer(TR::instructions__continue_in_app.into(), None)
                 .map(|_| Some(FlowMsg::Cancelled));
 
-        let store = flow_store()
-            .add(content_message)?
-            .add(content_menu)?
-            .add(content_cancelled)?;
-        let res = SwipeFlow::new(WarningHiPrio::Message, store)?;
+        let res = SwipeFlow::new(&WarningHiPrio::Message)?
+            .with_page(&WarningHiPrio::Message, content_message)?
+            .with_page(&WarningHiPrio::Menu, content_menu)?
+            .with_page(&WarningHiPrio::Cancelled, content_cancelled)?;
         Ok(LayoutObj::new(res)?.into())
     }
 }

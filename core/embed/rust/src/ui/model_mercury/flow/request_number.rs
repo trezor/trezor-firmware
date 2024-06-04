@@ -1,15 +1,21 @@
 use crate::{
     error,
-    micropython::qstr::Qstr,
+    micropython::{map::Map, obj::Obj, qstr::Qstr, util},
     strutil::TString,
     translations::TR,
     ui::{
         button_request::ButtonRequest,
         component::{
+            swipe_detect::SwipeSettings,
             text::paragraphs::{Paragraph, Paragraphs},
             ButtonRequestExt, ComponentExt, SwipeDirection,
         },
-        flow::{base::Decision, flow_store, FlowMsg, FlowState, FlowStore, SwipeFlow},
+        flow::{
+            base::{DecisionBuilder as _, StateChange},
+            FlowMsg, FlowState, SwipeFlow,
+        },
+        layout::obj::LayoutObj,
+        model_mercury::component::SwipeContent,
     },
 };
 
@@ -21,7 +27,7 @@ use super::super::{
     theme,
 };
 
-#[derive(Copy, Clone, PartialEq, Eq, ToPrimitive)]
+#[derive(Copy, Clone, PartialEq, Eq)]
 pub enum RequestNumber {
     Number,
     Menu,
@@ -29,48 +35,31 @@ pub enum RequestNumber {
 }
 
 impl FlowState for RequestNumber {
-    fn handle_swipe(&self, direction: SwipeDirection) -> Decision<Self> {
+    #[inline]
+    fn index(&'static self) -> usize {
+        *self as usize
+    }
+
+    fn handle_swipe(&'static self, direction: SwipeDirection) -> StateChange {
         match (self, direction) {
-            (RequestNumber::Number, SwipeDirection::Left) => {
-                Decision::Goto(RequestNumber::Menu, direction)
-            }
-            (RequestNumber::Menu, SwipeDirection::Right) => {
-                Decision::Goto(RequestNumber::Number, direction)
-            }
-            (RequestNumber::Info, SwipeDirection::Right) => {
-                Decision::Goto(RequestNumber::Menu, direction)
-            }
-            _ => Decision::Nothing,
+            (Self::Number, SwipeDirection::Left) => Self::Menu.swipe(direction),
+            (Self::Menu, SwipeDirection::Right) => Self::Number.swipe(direction),
+            (Self::Info, SwipeDirection::Right) => Self::Menu.swipe(direction),
+            _ => self.do_nothing(),
         }
     }
 
-    fn handle_event(&self, msg: FlowMsg) -> Decision<Self> {
+    fn handle_event(&'static self, msg: FlowMsg) -> StateChange {
         match (self, msg) {
-            (RequestNumber::Number, FlowMsg::Info) => {
-                Decision::Goto(RequestNumber::Menu, SwipeDirection::Left)
-            }
-            (RequestNumber::Menu, FlowMsg::Choice(0)) => {
-                Decision::Goto(RequestNumber::Info, SwipeDirection::Left)
-            }
-            (RequestNumber::Menu, FlowMsg::Cancelled) => {
-                Decision::Goto(RequestNumber::Number, SwipeDirection::Right)
-            }
-            (RequestNumber::Info, FlowMsg::Cancelled) => {
-                Decision::Goto(RequestNumber::Menu, SwipeDirection::Right)
-            }
-            (RequestNumber::Number, FlowMsg::Choice(n)) => Decision::Return(FlowMsg::Choice(n)),
-            _ => Decision::Nothing,
+            (Self::Number, FlowMsg::Info) => Self::Menu.swipe_left(),
+            (Self::Menu, FlowMsg::Choice(0)) => Self::Info.swipe_left(),
+            (Self::Menu, FlowMsg::Cancelled) => Self::Number.swipe_right(),
+            (Self::Info, FlowMsg::Cancelled) => Self::Menu.swipe_right(),
+            (Self::Number, FlowMsg::Choice(n)) => self.return_msg(FlowMsg::Choice(n)),
+            _ => self.do_nothing(),
         }
     }
 }
-
-use crate::{
-    micropython::{map::Map, obj::Obj, util},
-    ui::{
-        component::swipe_detect::SwipeSettings, layout::obj::LayoutObj,
-        model_mercury::component::SwipeContent,
-    },
-};
 
 #[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub extern "C" fn new_request_number(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
@@ -143,11 +132,10 @@ impl RequestNumber {
             _ => None,
         });
 
-        let store = flow_store()
-            .add(content_number_input)?
-            .add(content_menu)?
-            .add(content_info)?;
-        let res = SwipeFlow::new(RequestNumber::Number, store)?;
+        let res = SwipeFlow::new(&RequestNumber::Number)?
+            .with_page(&RequestNumber::Number, content_number_input)?
+            .with_page(&RequestNumber::Menu, content_menu)?
+            .with_page(&RequestNumber::Info, content_info)?;
         Ok(LayoutObj::new(res)?.into())
     }
 }

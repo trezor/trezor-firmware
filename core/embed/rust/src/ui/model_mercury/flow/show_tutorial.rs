@@ -1,5 +1,6 @@
 use crate::{
     error,
+    micropython::{map::Map, obj::Obj, util},
     translations::TR,
     ui::{
         component::{
@@ -7,7 +8,10 @@ use crate::{
             text::paragraphs::{Paragraph, Paragraphs},
             ComponentExt, SwipeDirection,
         },
-        flow::{base::Decision, flow_store, FlowMsg, FlowState, FlowStore, SwipeFlow},
+        flow::{
+            base::{DecisionBuilder as _, StateChange},
+            FlowMsg, FlowState, SwipeFlow,
+        },
         layout::obj::LayoutObj,
         model_mercury::component::SwipeContent,
     },
@@ -18,7 +22,7 @@ use super::super::{
     theme,
 };
 
-#[derive(Copy, Clone, PartialEq, Eq, ToPrimitive)]
+#[derive(Copy, Clone, PartialEq, Eq)]
 pub enum ShowTutorial {
     StepWelcome,
     StepBegin,
@@ -32,75 +36,42 @@ pub enum ShowTutorial {
 }
 
 impl FlowState for ShowTutorial {
-    fn handle_swipe(&self, direction: SwipeDirection) -> Decision<Self> {
+    #[inline]
+    fn index(&'static self) -> usize {
+        *self as usize
+    }
+
+    fn handle_swipe(&'static self, direction: SwipeDirection) -> StateChange {
         match (self, direction) {
-            (ShowTutorial::StepBegin, SwipeDirection::Up) => {
-                Decision::Goto(ShowTutorial::StepNavigation, direction)
-            }
-            (ShowTutorial::StepNavigation, SwipeDirection::Up) => {
-                Decision::Goto(ShowTutorial::StepMenu, direction)
-            }
-            (ShowTutorial::StepNavigation, SwipeDirection::Down) => {
-                Decision::Goto(ShowTutorial::StepBegin, direction)
-            }
-            (ShowTutorial::StepMenu, SwipeDirection::Up) => {
-                Decision::Goto(ShowTutorial::StepHold, direction)
-            }
-            (ShowTutorial::StepMenu, SwipeDirection::Down) => {
-                Decision::Goto(ShowTutorial::StepNavigation, direction)
-            }
-            (ShowTutorial::StepMenu, SwipeDirection::Left) => {
-                Decision::Goto(ShowTutorial::Menu, direction)
-            }
-            (ShowTutorial::Menu, SwipeDirection::Left) => {
-                Decision::Goto(ShowTutorial::DidYouKnow, direction)
-            }
-            (ShowTutorial::Menu, SwipeDirection::Right) => {
-                Decision::Goto(ShowTutorial::StepBegin, direction)
-            }
-            (ShowTutorial::DidYouKnow, SwipeDirection::Right) => {
-                Decision::Goto(ShowTutorial::Menu, direction)
-            }
-            (ShowTutorial::StepDone, SwipeDirection::Up) => Decision::Return(FlowMsg::Confirmed),
-            _ => Decision::Nothing,
+            (Self::StepBegin, SwipeDirection::Up) => Self::StepNavigation.swipe(direction),
+            (Self::StepNavigation, SwipeDirection::Up) => Self::StepMenu.swipe(direction),
+            (Self::StepNavigation, SwipeDirection::Down) => Self::StepBegin.swipe(direction),
+            (Self::StepMenu, SwipeDirection::Up) => Self::StepHold.swipe(direction),
+            (Self::StepMenu, SwipeDirection::Down) => Self::StepNavigation.swipe(direction),
+            (Self::StepMenu, SwipeDirection::Left) => Self::Menu.swipe(direction),
+            (Self::Menu, SwipeDirection::Left) => Self::DidYouKnow.swipe(direction),
+            (Self::Menu, SwipeDirection::Right) => Self::StepBegin.swipe(direction),
+            (Self::DidYouKnow, SwipeDirection::Right) => Self::Menu.swipe(direction),
+            (Self::StepDone, SwipeDirection::Up) => self.return_msg(FlowMsg::Confirmed),
+            _ => self.do_nothing(),
         }
     }
 
-    fn handle_event(&self, msg: FlowMsg) -> Decision<Self> {
+    fn handle_event(&'static self, msg: FlowMsg) -> StateChange {
         match (self, msg) {
-            (ShowTutorial::StepWelcome, FlowMsg::Confirmed) => {
-                Decision::Goto(ShowTutorial::StepBegin, SwipeDirection::Up)
-            }
-            (ShowTutorial::StepMenu, FlowMsg::Info) => {
-                Decision::Goto(ShowTutorial::Menu, SwipeDirection::Left)
-            }
-            (ShowTutorial::Menu, FlowMsg::Choice(0)) => {
-                Decision::Goto(ShowTutorial::DidYouKnow, SwipeDirection::Left)
-            }
-            (ShowTutorial::Menu, FlowMsg::Choice(1)) => {
-                Decision::Goto(ShowTutorial::StepBegin, SwipeDirection::Right)
-            }
-            (ShowTutorial::Menu, FlowMsg::Choice(2)) => {
-                Decision::Goto(ShowTutorial::HoldToExit, SwipeDirection::Up)
-            }
-            (ShowTutorial::Menu, FlowMsg::Cancelled) => {
-                Decision::Goto(ShowTutorial::StepMenu, SwipeDirection::Right)
-            }
-            (ShowTutorial::DidYouKnow, FlowMsg::Cancelled) => {
-                Decision::Goto(ShowTutorial::Menu, SwipeDirection::Right)
-            }
-            (ShowTutorial::StepHold, FlowMsg::Confirmed) => {
-                Decision::Goto(ShowTutorial::StepDone, SwipeDirection::Up)
-            }
-            (ShowTutorial::HoldToExit, FlowMsg::Confirmed) => {
-                Decision::Goto(ShowTutorial::StepDone, SwipeDirection::Up)
-            }
-            _ => Decision::Nothing,
+            (Self::StepWelcome, FlowMsg::Confirmed) => Self::StepBegin.swipe_up(),
+            (Self::StepMenu, FlowMsg::Info) => Self::Menu.swipe_left(),
+            (Self::Menu, FlowMsg::Choice(0)) => Self::DidYouKnow.swipe_left(),
+            (Self::Menu, FlowMsg::Choice(1)) => Self::StepBegin.swipe_right(),
+            (Self::Menu, FlowMsg::Choice(2)) => Self::HoldToExit.swipe_up(),
+            (Self::Menu, FlowMsg::Cancelled) => Self::StepMenu.swipe_right(),
+            (Self::DidYouKnow, FlowMsg::Cancelled) => Self::Menu.swipe_right(),
+            (Self::StepHold, FlowMsg::Confirmed) => Self::StepDone.swipe_up(),
+            (Self::HoldToExit, FlowMsg::Confirmed) => Self::StepDone.swipe_up(),
+            _ => self.do_nothing(),
         }
     }
 }
-
-use crate::micropython::{map::Map, obj::Obj, util};
 
 #[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub extern "C" fn new_show_tutorial(_n_args: usize, _args: *const Obj, _kwargs: *mut Map) -> Obj {
@@ -213,17 +184,16 @@ impl ShowTutorial {
         .with_footer(TR::instructions__exit_tutorial.into(), None)
         .map(|msg| matches!(msg, FrameMsg::Content(())).then_some(FlowMsg::Confirmed));
 
-        let store = flow_store()
-            .add(content_step_welcome)?
-            .add(content_step_begin)?
-            .add(content_step_navigation)?
-            .add(content_step_menu)?
-            .add(content_step_hold)?
-            .add(content_step_done)?
-            .add(content_menu)?
-            .add(content_did_you_know)?
-            .add(content_hold_to_exit)?;
-        let res = SwipeFlow::new(ShowTutorial::StepWelcome, store)?;
+        let res = SwipeFlow::new(&ShowTutorial::StepWelcome)?
+            .with_page(&ShowTutorial::StepWelcome, content_step_welcome)?
+            .with_page(&ShowTutorial::StepBegin, content_step_begin)?
+            .with_page(&ShowTutorial::StepNavigation, content_step_navigation)?
+            .with_page(&ShowTutorial::StepMenu, content_step_menu)?
+            .with_page(&ShowTutorial::StepHold, content_step_hold)?
+            .with_page(&ShowTutorial::StepDone, content_step_done)?
+            .with_page(&ShowTutorial::Menu, content_menu)?
+            .with_page(&ShowTutorial::DidYouKnow, content_did_you_know)?
+            .with_page(&ShowTutorial::HoldToExit, content_hold_to_exit)?;
         Ok(LayoutObj::new(res)?.into())
     }
 }

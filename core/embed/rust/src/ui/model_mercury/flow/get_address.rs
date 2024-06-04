@@ -1,16 +1,21 @@
 use crate::{
     error,
-    micropython::{iter::IterBuf, qstr::Qstr},
+    micropython::{iter::IterBuf, map::Map, obj::Obj, qstr::Qstr, util},
     strutil::TString,
     translations::TR,
     ui::{
         button_request::ButtonRequest,
         component::{
+            swipe_detect::SwipeSettings,
             text::paragraphs::{Paragraph, ParagraphSource, Paragraphs},
             ButtonRequestExt, ComponentExt, Qr, SwipeDirection,
         },
-        flow::{base::Decision, flow_store, FlowMsg, FlowState, FlowStore, SwipeFlow},
-        layout::util::ConfirmBlob,
+        flow::{
+            base::{DecisionBuilder as _, StateChange},
+            FlowMsg, FlowState, SwipeFlow, SwipePage,
+        },
+        layout::{obj::LayoutObj, util::ConfirmBlob},
+        model_mercury::component::SwipeContent,
     },
 };
 
@@ -24,7 +29,7 @@ use super::super::{
 
 const QR_BORDER: i16 = 4;
 
-#[derive(Copy, Clone, PartialEq, Eq, ToPrimitive)]
+#[derive(Copy, Clone, PartialEq, Eq)]
 pub enum GetAddress {
     Address,
     Tap,
@@ -37,103 +42,47 @@ pub enum GetAddress {
 }
 
 impl FlowState for GetAddress {
-    fn handle_swipe(&self, direction: SwipeDirection) -> Decision<Self> {
+    #[inline]
+    fn index(&'static self) -> usize {
+        *self as usize
+    }
+
+    fn handle_swipe(&'static self, direction: SwipeDirection) -> StateChange {
         match (self, direction) {
-            (GetAddress::Address, SwipeDirection::Left) => {
-                Decision::Goto(GetAddress::Menu, direction)
-            }
-            (GetAddress::Address, SwipeDirection::Up) => Decision::Goto(GetAddress::Tap, direction),
-            (GetAddress::Tap, SwipeDirection::Down) => {
-                Decision::Goto(GetAddress::Address, direction)
-            }
-            (GetAddress::Tap, SwipeDirection::Left) => Decision::Goto(GetAddress::Menu, direction),
-            (GetAddress::Menu, SwipeDirection::Right) => {
-                Decision::Goto(GetAddress::Address, direction)
-            }
-            (GetAddress::QrCode, SwipeDirection::Right) => {
-                Decision::Goto(GetAddress::Menu, direction)
-            }
-            (GetAddress::AccountInfo, SwipeDirection::Right) => {
-                Decision::Goto(GetAddress::Menu, SwipeDirection::Right)
-            }
-            (GetAddress::Cancel, SwipeDirection::Up) => {
-                Decision::Goto(GetAddress::CancelTap, direction)
-            }
-            (GetAddress::Cancel, SwipeDirection::Right) => {
-                Decision::Goto(GetAddress::Menu, direction)
-            }
-            (GetAddress::CancelTap, SwipeDirection::Down) => {
-                Decision::Goto(GetAddress::Cancel, direction)
-            }
-            (GetAddress::CancelTap, SwipeDirection::Right) => {
-                Decision::Goto(GetAddress::Menu, direction)
-            }
-            _ => Decision::Nothing,
+            (Self::Address, SwipeDirection::Left) => Self::Menu.swipe(direction),
+            (Self::Address, SwipeDirection::Up) => Self::Tap.swipe(direction),
+            (Self::Tap, SwipeDirection::Down) => Self::Address.swipe(direction),
+            (Self::Tap, SwipeDirection::Left) => Self::Menu.swipe(direction),
+            (Self::Menu, SwipeDirection::Right) => Self::Address.swipe(direction),
+            (Self::QrCode, SwipeDirection::Right) => Self::Menu.swipe(direction),
+            (Self::AccountInfo, SwipeDirection::Right) => Self::Menu.swipe_right(),
+            (Self::Cancel, SwipeDirection::Up) => Self::CancelTap.swipe(direction),
+            (Self::Cancel, SwipeDirection::Right) => Self::Menu.swipe(direction),
+            (Self::CancelTap, SwipeDirection::Down) => Self::Cancel.swipe(direction),
+            (Self::CancelTap, SwipeDirection::Right) => Self::Menu.swipe(direction),
+            _ => self.do_nothing(),
         }
     }
 
-    fn handle_event(&self, msg: FlowMsg) -> Decision<Self> {
+    fn handle_event(&'static self, msg: FlowMsg) -> StateChange {
         match (self, msg) {
-            (GetAddress::Address, FlowMsg::Info) => {
-                Decision::Goto(GetAddress::Menu, SwipeDirection::Left)
-            }
-
-            (GetAddress::Tap, FlowMsg::Confirmed) => {
-                Decision::Goto(GetAddress::Confirmed, SwipeDirection::Up)
-            }
-
-            (GetAddress::Tap, FlowMsg::Info) => {
-                Decision::Goto(GetAddress::Menu, SwipeDirection::Left)
-            }
-
-            (GetAddress::Confirmed, _) => Decision::Return(FlowMsg::Confirmed),
-
-            (GetAddress::Menu, FlowMsg::Choice(0)) => {
-                Decision::Goto(GetAddress::QrCode, SwipeDirection::Left)
-            }
-
-            (GetAddress::Menu, FlowMsg::Choice(1)) => {
-                Decision::Goto(GetAddress::AccountInfo, SwipeDirection::Left)
-            }
-
-            (GetAddress::Menu, FlowMsg::Choice(2)) => {
-                Decision::Goto(GetAddress::Cancel, SwipeDirection::Left)
-            }
-
-            (GetAddress::Menu, FlowMsg::Cancelled) => {
-                Decision::Goto(GetAddress::Address, SwipeDirection::Right)
-            }
-
-            (GetAddress::QrCode, FlowMsg::Cancelled) => {
-                Decision::Goto(GetAddress::Menu, SwipeDirection::Right)
-            }
-
-            (GetAddress::AccountInfo, FlowMsg::Cancelled) => {
-                Decision::Goto(GetAddress::Menu, SwipeDirection::Right)
-            }
-
-            (GetAddress::Cancel, FlowMsg::Cancelled) => {
-                Decision::Goto(GetAddress::Menu, SwipeDirection::Right)
-            }
-
-            (GetAddress::CancelTap, FlowMsg::Confirmed) => Decision::Return(FlowMsg::Cancelled),
-
-            (GetAddress::CancelTap, FlowMsg::Cancelled) => {
-                Decision::Goto(GetAddress::Menu, SwipeDirection::Right)
-            }
-
-            _ => Decision::Nothing,
+            (Self::Address, FlowMsg::Info) => Self::Menu.swipe_left(),
+            (Self::Tap, FlowMsg::Confirmed) => Self::Confirmed.swipe_up(),
+            (Self::Tap, FlowMsg::Info) => Self::Menu.swipe_left(),
+            (Self::Confirmed, _) => self.return_msg(FlowMsg::Confirmed),
+            (Self::Menu, FlowMsg::Choice(0)) => Self::QrCode.swipe_left(),
+            (Self::Menu, FlowMsg::Choice(1)) => Self::AccountInfo.swipe_left(),
+            (Self::Menu, FlowMsg::Choice(2)) => Self::Cancel.swipe_left(),
+            (Self::Menu, FlowMsg::Cancelled) => Self::Address.swipe_right(),
+            (Self::QrCode, FlowMsg::Cancelled) => Self::Menu.swipe_right(),
+            (Self::AccountInfo, FlowMsg::Cancelled) => Self::Menu.swipe_right(),
+            (Self::Cancel, FlowMsg::Cancelled) => Self::Menu.swipe_right(),
+            (Self::CancelTap, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Cancelled),
+            (Self::CancelTap, FlowMsg::Cancelled) => Self::Menu.swipe_right(),
+            _ => self.do_nothing(),
         }
     }
 }
-
-use crate::{
-    micropython::{map::Map, obj::Obj, util},
-    ui::{
-        component::swipe_detect::SwipeSettings, flow::SwipePage, layout::obj::LayoutObj,
-        model_mercury::component::SwipeContent,
-    },
-};
 
 #[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub extern "C" fn new_get_address(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
@@ -271,16 +220,15 @@ impl GetAddress {
             _ => None,
         });
 
-        let store = flow_store()
-            .add(content_address)?
-            .add(content_tap)?
-            .add(content_confirmed)?
-            .add(content_menu)?
-            .add(content_qr)?
-            .add(content_account)?
-            .add(content_cancel_info)?
-            .add(content_cancel_tap)?;
-        let res = SwipeFlow::new(GetAddress::Address, store)?;
+        let res = SwipeFlow::new(&GetAddress::Address)?
+            .with_page(&GetAddress::Address, content_address)?
+            .with_page(&GetAddress::Tap, content_tap)?
+            .with_page(&GetAddress::Confirmed, content_confirmed)?
+            .with_page(&GetAddress::Menu, content_menu)?
+            .with_page(&GetAddress::QrCode, content_qr)?
+            .with_page(&GetAddress::AccountInfo, content_account)?
+            .with_page(&GetAddress::Cancel, content_cancel_info)?
+            .with_page(&GetAddress::CancelTap, content_cancel_tap)?;
         Ok(LayoutObj::new(res)?.into())
     }
 }
