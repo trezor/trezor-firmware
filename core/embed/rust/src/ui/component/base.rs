@@ -470,7 +470,7 @@ where
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum AttachType {
-    Normal,
+    Initial,
     #[cfg(feature = "touch")]
     Swipe(SwipeDirection),
 }

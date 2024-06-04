@@ -126,7 +126,7 @@ impl<T: Component> Component for SwipeContent<T> {
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         if let Event::Attach(attach_type) = event {
             self.progress = 0;
-            if let AttachType::Normal = attach_type {
+            if let AttachType::Initial = attach_type {
                 self.attach_type = self.normal;
             } else {
                 self.attach_type = Some(attach_type);
