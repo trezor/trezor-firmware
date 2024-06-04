@@ -14,7 +14,7 @@ use crate::{
             text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, VecExt},
             Component, SwipeDirection,
         },
-        flow::{FlowMsg, SimpleSwipable, SwipePage},
+        flow::{FlowMsg, Swipable, SwipePage},
         layout::util::ConfirmBlob,
         model_mercury::component::SwipeContent,
     },
@@ -98,7 +98,7 @@ impl ConfirmBlobParams {
 
     pub fn into_layout(
         self,
-    ) -> Result<impl Component<Msg = FlowMsg> + SimpleSwipable + MaybeTrace, Error> {
+    ) -> Result<impl Component<Msg = FlowMsg> + Swipable + MaybeTrace, Error> {
         let paragraphs = ConfirmBlob {
             description: self.description.unwrap_or("".into()),
             extra: self.extra.unwrap_or("".into()),
@@ -212,7 +212,7 @@ impl ShowInfoParams {
 
     pub fn into_layout(
         self,
-    ) -> Result<impl Component<Msg = FlowMsg> + SimpleSwipable + MaybeTrace, Error> {
+    ) -> Result<impl Component<Msg = FlowMsg> + Swipable + MaybeTrace, Error> {
         let mut paragraphs = ParagraphVecShort::new();
         let mut first: bool = true;
         for item in self.items {

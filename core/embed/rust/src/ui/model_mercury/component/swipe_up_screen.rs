@@ -1,6 +1,6 @@
 use crate::ui::{
     component::{base::SwipeEvent, Component, Event, EventCtx, SwipeDetect, SwipeDetectMsg},
-    flow::SimpleSwipable,
+    flow::Swipable,
     geometry::Rect,
     shape::Renderer,
 };
@@ -22,7 +22,7 @@ where
 {
     pub fn new(content: T) -> Self
     where
-        T: SimpleSwipable,
+        T: Swipable,
     {
         Self {
             content,
@@ -31,7 +31,7 @@ where
     }
 }
 
-impl<T: SimpleSwipable + Component> Component for SwipeUpScreen<T> {
+impl<T: Swipable + Component> Component for SwipeUpScreen<T> {
     type Msg = SwipeUpScreenMsg<T::Msg>;
 
     fn place(&mut self, bounds: Rect) -> Rect {

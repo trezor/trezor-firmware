@@ -45,9 +45,9 @@ where
 }
 
 #[cfg(all(feature = "micropython", feature = "touch", feature = "new_rendering"))]
-impl<T, F> crate::ui::flow::SimpleSwipable for MsgMap<T, F>
+impl<T, F> crate::ui::flow::Swipable for MsgMap<T, F>
 where
-    T: Component + crate::ui::flow::SimpleSwipable,
+    T: Component + crate::ui::flow::Swipable,
 {
     fn get_swipe_config(&self) -> SwipeConfig {
         self.inner.get_swipe_config()
@@ -64,25 +64,6 @@ where
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         self.inner.trace(t)
-    }
-}
-
-#[cfg(all(feature = "micropython", feature = "touch", feature = "new_rendering"))]
-impl<T, F, U> crate::ui::flow::Swipable<U> for MsgMap<T, F>
-where
-    T: Component + crate::ui::flow::Swipable<T::Msg>,
-    F: Fn(T::Msg) -> Option<U>,
-{
-    fn swipe_start(
-        &mut self,
-        ctx: &mut EventCtx,
-        direction: super::SwipeDirection,
-    ) -> crate::ui::flow::SwipableResult<U> {
-        self.inner.swipe_start(ctx, direction).map(&self.func)
-    }
-
-    fn swipe_finished(&self) -> bool {
-        self.inner.swipe_finished()
     }
 }
 
@@ -139,27 +120,9 @@ where
 }
 
 #[cfg(all(feature = "micropython", feature = "touch", feature = "new_rendering"))]
-impl<T, F> crate::ui::flow::Swipable<T::Msg> for PageMap<T, F>
+impl<T, F> crate::ui::flow::Swipable for PageMap<T, F>
 where
-    T: Component + crate::ui::flow::Swipable<T::Msg>,
-{
-    fn swipe_start(
-        &mut self,
-        ctx: &mut EventCtx,
-        direction: super::SwipeDirection,
-    ) -> crate::ui::flow::SwipableResult<T::Msg> {
-        self.inner.swipe_start(ctx, direction)
-    }
-
-    fn swipe_finished(&self) -> bool {
-        self.inner.swipe_finished()
-    }
-}
-
-#[cfg(all(feature = "micropython", feature = "touch", feature = "new_rendering"))]
-impl<T, F> crate::ui::flow::SimpleSwipable for PageMap<T, F>
-where
-    T: Component + crate::ui::flow::SimpleSwipable,
+    T: Component + crate::ui::flow::Swipable,
 {
     fn get_swipe_config(&self) -> SwipeConfig {
         self.inner.get_swipe_config()

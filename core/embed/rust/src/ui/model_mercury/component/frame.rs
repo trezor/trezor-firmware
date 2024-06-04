@@ -325,7 +325,7 @@ where
 }
 
 #[cfg(feature = "micropython")]
-impl<T> crate::ui::flow::SimpleSwipable for Frame<T> {
+impl<T> crate::ui::flow::Swipable for Frame<T> {
     fn get_swipe_config(&self) -> SwipeConfig {
         self.swipe.clone()
     }
@@ -353,24 +353,5 @@ where
         if let Some(footer) = &self.footer {
             t.child("footer", footer);
         }
-    }
-}
-
-#[cfg(feature = "micropython")]
-impl<T> crate::ui::flow::Swipable<FrameMsg<T::Msg>> for Frame<T>
-where
-    T: Component + crate::ui::flow::Swipable<T::Msg>,
-{
-    fn swipe_start(
-        &mut self,
-        ctx: &mut EventCtx,
-        direction: crate::ui::component::SwipeDirection,
-    ) -> crate::ui::flow::SwipableResult<FrameMsg<T::Msg>> {
-        self.update_content(ctx, |ctx, inner| inner.swipe_start(ctx, direction))
-            .map(|x| Some(FrameMsg::Content(x)))
-    }
-
-    fn swipe_finished(&self) -> bool {
-        self.inner().swipe_finished()
     }
 }

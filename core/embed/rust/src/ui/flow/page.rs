@@ -3,7 +3,6 @@ use crate::{
     ui::{
         animation::Animation,
         component::{base::SwipeEvent, Component, Event, EventCtx, Paginate, SwipeDirection},
-        flow::base::Swipable,
         geometry::{Axis, Rect},
         shape::Renderer,
     },
@@ -114,46 +113,5 @@ where
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         self.inner.trace(t)
-    }
-}
-
-/// Make any component swipable by ignoring all swipe events.
-pub struct IgnoreSwipe<T>(T);
-
-impl<T> IgnoreSwipe<T> {
-    pub fn new(inner: T) -> Self {
-        IgnoreSwipe(inner)
-    }
-}
-
-impl<T: Component> Component for IgnoreSwipe<T> {
-    type Msg = T::Msg;
-
-    fn place(&mut self, bounds: Rect) -> Rect {
-        self.0.place(bounds)
-    }
-
-    fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        self.0.event(ctx, event)
-    }
-
-    fn paint(&mut self) {
-        self.0.paint()
-    }
-
-    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        self.0.render(target)
-    }
-}
-
-impl<T: Component> Swipable<T::Msg> for IgnoreSwipe<T> {}
-
-#[cfg(feature = "ui_debug")]
-impl<T> crate::trace::Trace for IgnoreSwipe<T>
-where
-    T: crate::trace::Trace,
-{
-    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        self.0.trace(t)
     }
 }

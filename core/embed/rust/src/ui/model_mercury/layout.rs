@@ -28,7 +28,7 @@ use crate::{
             },
             Border, Component, Empty, FormattedText, Label, Never, SwipeDirection, Timeout,
         },
-        flow::SimpleSwipable,
+        flow::Swipable,
         geometry,
         layout::{
             obj::{ComponentMsgObj, LayoutObj},
@@ -211,7 +211,7 @@ impl ComponentMsgObj for PromptScreen {
     }
 }
 
-impl<T: Component + SimpleSwipable> ComponentMsgObj for SwipeUpScreen<T> {
+impl<T: Component + Swipable> ComponentMsgObj for SwipeUpScreen<T> {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
             SwipeUpScreenMsg::Content(_) => Err(Error::TypeError),
