@@ -55,7 +55,7 @@ impl<T: crate::ui::flow::Swipable> crate::ui::flow::Swipable for OneButtonReques
         self.inner.get_swipe_config()
     }
 
-    fn get_internal_page_count(&mut self) -> usize {
+    fn get_internal_page_count(&self) -> usize {
         self.inner.get_internal_page_count()
     }
 }

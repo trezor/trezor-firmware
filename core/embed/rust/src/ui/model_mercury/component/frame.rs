@@ -331,7 +331,7 @@ impl<T> crate::ui::flow::Swipable for Frame<T> {
         self.swipe
     }
 
-    fn get_internal_page_count(&mut self) -> usize {
+    fn get_internal_page_count(&self) -> usize {
         self.internal_page_cnt
     }
 }

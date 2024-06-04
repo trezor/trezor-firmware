@@ -119,8 +119,7 @@ impl AddressDetails {
 
 impl Paginate for AddressDetails {
     fn page_count(&mut self) -> usize {
-        let total_xpub_pages: u8 = self.xpub_page_count.iter().copied().sum();
-        1usize.saturating_add(total_xpub_pages.into())
+        self.get_internal_page_count()
     }
 
     fn change_page(&mut self, to_page: usize) {
@@ -207,8 +206,9 @@ impl Swipable for AddressDetails {
         }
     }
 
-    fn get_internal_page_count(&mut self) -> usize {
-        self.page_count()
+    fn get_internal_page_count(&self) -> usize {
+        let total_xpub_pages: u8 = self.xpub_page_count.iter().copied().sum();
+        1usize.saturating_add(total_xpub_pages.into())
     }
 }
 

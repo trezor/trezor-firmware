@@ -4,7 +4,7 @@ use num_traits::ToPrimitive;
 pub trait Swipable {
     fn get_swipe_config(&self) -> SwipeConfig;
 
-    fn get_internal_page_count(&mut self) -> usize;
+    fn get_internal_page_count(&self) -> usize;
 }
 
 /// Component::Msg for component parts of a flow. Converting results of
