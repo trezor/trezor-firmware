@@ -45,7 +45,7 @@ struct AttachAnimation {
 
 impl AttachAnimation {
     const DURATION_MS: u32 = 350;
-    pub fn is_active(&self) -> bool {
+    fn is_active(&self) -> bool {
         if animation_disabled() {
             return false;
         }
@@ -54,7 +54,7 @@ impl AttachAnimation {
             .is_running_within(Duration::from_millis(Self::DURATION_MS))
     }
 
-    pub fn eval(&self) -> f32 {
+    fn eval(&self) -> f32 {
         if animation_disabled() {
             return 1.0;
         }
@@ -62,7 +62,7 @@ impl AttachAnimation {
         self.timer.elapsed().to_millis() as f32 / 1000.0
     }
 
-    pub fn get_offset(&self, t: f32) -> Offset {
+    fn get_offset(&self, t: f32) -> Offset {
         let value = pareen::constant(0.0).seq_ease_in(
             0.0,
             easer::functions::Cubic,
@@ -73,7 +73,7 @@ impl AttachAnimation {
         Offset::lerp(Offset::new(-40, 0), Offset::zero(), value.eval(t))
     }
 
-    pub fn get_mask_width(&self, t: f32) -> i16 {
+    fn get_mask_width(&self, t: f32) -> i16 {
         let value = pareen::constant(0.0).seq_ease_in(
             0.0,
             easer::functions::Circ,
@@ -84,17 +84,17 @@ impl AttachAnimation {
         i16::lerp(screen().width(), 0, value.eval(t))
     }
 
-    pub fn start(&mut self) {
+    fn start(&mut self) {
         self.active = true;
         self.timer.start();
     }
 
-    pub fn reset(&mut self) {
+    fn reset(&mut self) {
         self.active = false;
         self.timer = Stopwatch::new_stopped();
     }
 
-    pub fn lazy_start(&mut self, ctx: &mut EventCtx, event: Event) {
+    fn lazy_start(&mut self, ctx: &mut EventCtx, event: Event) {
         if let Event::Attach(_) = event {
             self.reset();
             ctx.request_anim_frame();
