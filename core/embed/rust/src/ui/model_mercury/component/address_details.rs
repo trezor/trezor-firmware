@@ -6,11 +6,11 @@ use crate::{
     translations::TR,
     ui::{
         component::{
-            base::SwipeEvent,
             swipe_detect::{SwipeConfig, SwipeSettings},
             text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs, VecExt},
             Component, Event, EventCtx, Paginate, SwipeDirection,
         },
+        event::SwipeEvent,
         flow::Swipable,
         geometry::Rect,
         shape::Renderer,

@@ -175,19 +175,17 @@ impl GetAddress {
             data_font: data_style,
         }
         .into_paragraphs();
-        let content_address = Frame::left_aligned(
-            title,
-            SwipeContent::new(SwipePage::vertical(paragraphs)),
-        )
-        .with_menu_button()
-        .with_footer(TR::instructions__swipe_up.into(), None)
-        .with_swipe(SwipeDirection::Up, SwipeSettings::default())
-        .with_swipe(SwipeDirection::Left, SwipeSettings::default())
-        .with_vertical_pages()
-        .map(|msg| matches!(msg, FrameMsg::Button(_)).then_some(FlowMsg::Info))
-        .one_button_request(ButtonRequest::from_num(br_code, br_type))
-        // Count tap-to-confirm screen towards page count
-        .with_pages(|address_pages| address_pages + 1);
+        let content_address =
+            Frame::left_aligned(title, SwipeContent::new(SwipePage::vertical(paragraphs)))
+                .with_menu_button()
+                .with_footer(TR::instructions__swipe_up.into(), None)
+                .with_swipe(SwipeDirection::Up, SwipeSettings::default())
+                .with_swipe(SwipeDirection::Left, SwipeSettings::default())
+                .with_vertical_pages()
+                .map(|msg| matches!(msg, FrameMsg::Button(_)).then_some(FlowMsg::Info))
+                .one_button_request(ButtonRequest::from_num(br_code, br_type))
+                // Count tap-to-confirm screen towards page count
+                .with_pages(|address_pages| address_pages + 1);
 
         // Tap
         let content_tap =
