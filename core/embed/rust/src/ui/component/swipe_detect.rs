@@ -9,7 +9,7 @@ use crate::{
     },
 };
 
-#[derive(Clone)]
+#[derive(Copy, Clone)]
 pub struct SwipeSettings {
     pub duration: Duration,
 }
@@ -32,7 +32,7 @@ impl SwipeSettings {
     }
 }
 
-#[derive(Clone, Default)]
+#[derive(Copy, Clone, Default)]
 pub struct SwipeConfig {
     pub horizontal_pages: bool,
     pub vertical_pages: bool,
@@ -54,33 +54,17 @@ impl SwipeConfig {
         }
     }
 
-    pub fn with_swipe(&self, dir: SwipeDirection, settings: SwipeSettings) -> Self {
-        let mut new = self.clone();
-        match dir {
-            SwipeDirection::Up => new.up = Some(settings),
-            SwipeDirection::Down => new.down = Some(settings),
-            SwipeDirection::Left => new.left = Some(settings),
-            SwipeDirection::Right => new.right = Some(settings),
-        }
-        new
+    pub fn with_swipe(mut self, dir: SwipeDirection, settings: SwipeSettings) -> Self {
+        self[dir] = Some(settings);
+        self
     }
 
     pub fn is_allowed(&self, dir: SwipeDirection) -> bool {
-        match dir {
-            SwipeDirection::Up => self.up.is_some(),
-            SwipeDirection::Down => self.down.is_some(),
-            SwipeDirection::Left => self.left.is_some(),
-            SwipeDirection::Right => self.right.is_some(),
-        }
+        self[dir].is_some()
     }
 
     pub fn duration(&self, dir: SwipeDirection) -> Option<Duration> {
-        match dir {
-            SwipeDirection::Up => self.up.as_ref().map(|s| s.duration),
-            SwipeDirection::Down => self.down.as_ref().map(|s| s.duration),
-            SwipeDirection::Left => self.left.as_ref().map(|s| s.duration),
-            SwipeDirection::Right => self.right.as_ref().map(|s| s.duration),
-        }
+        self[dir].as_ref().map(|s| s.duration)
     }
     pub fn has_horizontal_pages(&self) -> bool {
         self.horizontal_pages
@@ -90,16 +74,38 @@ impl SwipeConfig {
         self.vertical_pages
     }
 
-    pub fn with_horizontal_pages(&self) -> Self {
-        let mut new = self.clone();
-        new.horizontal_pages = true;
-        new
+    pub fn with_horizontal_pages(mut self) -> Self {
+        self.horizontal_pages = true;
+        self
     }
 
-    pub fn with_vertical_pages(&self) -> Self {
-        let mut new = self.clone();
-        new.vertical_pages = true;
-        new
+    pub fn with_vertical_pages(mut self) -> Self {
+        self.vertical_pages = true;
+        self
+    }
+}
+
+impl core::ops::Index<SwipeDirection> for SwipeConfig {
+    type Output = Option<SwipeSettings>;
+
+    fn index(&self, index: SwipeDirection) -> &Self::Output {
+        match index {
+            SwipeDirection::Up => &self.up,
+            SwipeDirection::Down => &self.down,
+            SwipeDirection::Left => &self.left,
+            SwipeDirection::Right => &self.right,
+        }
+    }
+}
+
+impl core::ops::IndexMut<SwipeDirection> for SwipeConfig {
+    fn index_mut(&mut self, index: SwipeDirection) -> &mut Self::Output {
+        match index {
+            SwipeDirection::Up => &mut self.up,
+            SwipeDirection::Down => &mut self.down,
+            SwipeDirection::Left => &mut self.left,
+            SwipeDirection::Right => &mut self.right,
+        }
     }
 }
 
@@ -109,7 +115,6 @@ pub enum SwipeDetectMsg {
     Trigger(SwipeDirection),
 }
 
-#[derive(Clone)]
 pub struct SwipeDetect {
     origin: Option<Point>,
     locked: Option<SwipeDirection>,

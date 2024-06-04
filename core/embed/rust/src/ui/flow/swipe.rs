@@ -131,7 +131,7 @@ impl<Q: FlowState, S: FlowStore> Component for SwipeFlow<Q, S> {
                 config = config.with_swipe(SwipeDirection::Left, SwipeSettings::default())
             }
 
-            match self.swipe.event(ctx, event, config.clone()) {
+            match self.swipe.event(ctx, event, config) {
                 Some(SwipeDetectMsg::Trigger(dir)) => {
                     if let Some(override_decision) = self.decision_override.take() {
                         decision = override_decision;
