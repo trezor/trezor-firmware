@@ -7,7 +7,7 @@ use crate::trezorhal::time;
 
 const MILLIS_PER_SEC: u32 = 1000;
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Default)]
 pub struct Duration {
     millis: u32,
 }
