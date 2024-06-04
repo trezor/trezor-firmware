@@ -34,6 +34,7 @@ struct HoldToConfirmAnim {
 
 impl HoldToConfirmAnim {
     const DURATION_MS: u32 = 2200;
+    const LOCK_TIME_MS: u32 = 2000;
 
     pub fn is_active(&self) -> bool {
         if animation_disabled() {
@@ -42,6 +43,17 @@ impl HoldToConfirmAnim {
 
         self.timer
             .is_running_within(Duration::from_millis(Self::DURATION_MS))
+    }
+
+    pub fn is_locked(&self) -> bool {
+        if animation_disabled() {
+            return false;
+        }
+
+        (!self
+            .timer
+            .is_running_within(Duration::from_millis(Self::LOCK_TIME_MS)))
+            && self.timer.is_running()
     }
 
     pub fn eval(&self) -> f32 {
@@ -65,9 +77,9 @@ impl HoldToConfirmAnim {
 
     pub fn get_header_opacity(&self, t: f32) -> u8 {
         let header_opacity = pareen::constant(0.0).seq_ease_out(
-            0.1,
+            0.15,
             easer::functions::Cubic,
-            0.3,
+            0.2,
             pareen::constant(1.0),
         );
 
@@ -76,9 +88,9 @@ impl HoldToConfirmAnim {
 
     pub fn get_header_opacity2(&self, t: f32) -> u8 {
         let header_opacity2 = pareen::constant(1.0).seq_ease_in(
-            2.0,
+            2.1,
             easer::functions::Cubic,
-            0.2,
+            0.1,
             pareen::constant(0.0),
         );
 
@@ -100,7 +112,7 @@ impl HoldToConfirmAnim {
         let pad_color = pareen::constant(0.0).seq_ease_in_out(
             0.1,
             easer::functions::Cubic,
-            1.9,
+            2.1,
             pareen::constant(1.0),
         );
 
@@ -108,10 +120,10 @@ impl HoldToConfirmAnim {
     }
 
     pub fn get_circle_max_height(&self, t: f32) -> i16 {
-        let circle_max_height = pareen::constant(0.0).seq_ease_in(
-            0.1,
-            easer::functions::Cubic,
-            1.5,
+        let circle_max_height = pareen::constant(0.0).seq_ease_in_out(
+            0.25,
+            easer::functions::Linear,
+            1.95,
             pareen::constant(1.0),
         );
 
@@ -119,10 +131,10 @@ impl HoldToConfirmAnim {
     }
 
     pub fn get_circle_radius(&self, t: f32) -> i16 {
-        let circle_radius = pareen::constant(0.0).seq_ease_in(
-            1.6,
+        let circle_radius = pareen::constant(0.0).seq_ease_out(
+            1.8,
             easer::functions::Cubic,
-            0.6,
+            0.4,
             pareen::constant(1.0),
         );
 
@@ -133,7 +145,7 @@ impl HoldToConfirmAnim {
         let haptic = pareen::constant(0.0).seq_ease_in(
             0.0,
             easer::functions::Linear,
-            Self::DURATION_MS as f32 / 1000.0,
+            Self::LOCK_TIME_MS as f32 / 1000.0,
             pareen::constant(1.0),
         );
 
@@ -160,6 +172,7 @@ pub struct HoldToConfirm {
     circle_pad_color: Color,
     circle_inner_color: Color,
     anim: HoldToConfirmAnim,
+    finalizing: bool,
 }
 
 #[derive(Clone)]
@@ -187,6 +200,7 @@ impl HoldToConfirm {
             circle_inner_color: theme::GREEN_LIGHT,
             button,
             anim: HoldToConfirmAnim::default(),
+            finalizing: false,
         }
     }
 }
@@ -209,14 +223,20 @@ impl Component for HoldToConfirm {
         let btn_msg = self.button.event(ctx, event);
         match btn_msg {
             Some(ButtonMsg::Pressed) => {
-                self.anim.start();
-                ctx.request_anim_frame();
-                ctx.request_paint();
+                if !self.anim.is_locked() {
+                    self.anim.start();
+                    ctx.request_anim_frame();
+                    ctx.request_paint();
+                    self.finalizing = false;
+                }
             }
             Some(ButtonMsg::Released) => {
-                self.anim.reset();
-                ctx.request_anim_frame();
-                ctx.request_paint();
+                if !self.anim.is_locked() {
+                    self.anim.reset();
+                    ctx.request_anim_frame();
+                    ctx.request_paint();
+                    self.finalizing = false;
+                }
             }
             Some(ButtonMsg::Clicked) => {
                 if animation_disabled() {
@@ -224,11 +244,15 @@ impl Component for HoldToConfirm {
                     haptic::play(HapticEffect::HoldToConfirm);
                     return Some(());
                 }
-                self.anim.reset();
-                ctx.request_anim_frame();
-                ctx.request_paint();
+                if !self.anim.is_locked() {
+                    self.finalizing = false;
+                    self.anim.reset();
+                    ctx.request_anim_frame();
+                    ctx.request_paint();
+                }
             }
             Some(ButtonMsg::LongPressed) => {
+                self.finalizing = false;
                 #[cfg(feature = "haptic")]
                 haptic::play(HapticEffect::HoldToConfirm);
                 return Some(());
@@ -240,6 +264,14 @@ impl Component for HoldToConfirm {
             if self.anim.is_active() {
                 ctx.request_anim_frame();
                 ctx.request_paint();
+
+                if self.anim.is_locked() && !self.finalizing {
+                    self.finalizing = true;
+                    #[cfg(feature = "haptic")]
+                    haptic::play(HapticEffect::HoldToConfirm);
+                }
+            } else if self.anim.is_locked() {
+                return Some(());
             }
         }
         None
@@ -329,7 +361,7 @@ impl Component for HoldToConfirm {
         #[cfg(feature = "haptic")]
         {
             let hap = self.anim.get_haptic(elapsed);
-            if hap > 0 {
+            if hap > 0 && !self.anim.is_locked() {
                 haptic::play_custom(hap as i8, 100);
             }
         }
