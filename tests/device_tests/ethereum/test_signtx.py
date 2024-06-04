@@ -430,6 +430,7 @@ HEXDATA = "0123456789abcd000023456789abcd010003456789abcd020000456789abcd0300000
 @pytest.mark.parametrize(
     "flow", (input_flow_data_skip, input_flow_data_scroll_down, input_flow_data_go_back)
 )
+@pytest.mark.skip_t3t1(reason="Not yet implemented in new UI")
 @pytest.mark.skip_t1b1
 def test_signtx_data_pagination(client: Client, flow):
     def _sign_tx_call():
