@@ -185,10 +185,6 @@ where
     }
 
     fn get_internal_page_count(&mut self, i: usize) -> usize {
-        if i == 0 {
-            self.as_mut().get_internal_page_count()
-        } else {
-            self.next.get_internal_page_count(i - 1)
-        }
+        self.map_swipable(i, |swipable| swipable.get_internal_page_count())
     }
 }

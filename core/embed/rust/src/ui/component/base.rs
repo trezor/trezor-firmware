@@ -16,9 +16,9 @@ use crate::{
 
 #[cfg(feature = "button")]
 use crate::ui::event::ButtonEvent;
-#[cfg(feature = "touch")]
-use crate::ui::event::TouchEvent;
 use crate::ui::event::USBEvent;
+#[cfg(feature = "touch")]
+use crate::ui::event::{SwipeEvent, TouchEvent};
 
 use super::Paginate;
 #[cfg(feature = "touch")]
@@ -473,13 +473,6 @@ pub enum AttachType {
     Normal,
     #[cfg(feature = "touch")]
     Swipe(SwipeDirection),
-}
-
-#[cfg(feature = "touch")]
-#[derive(Copy, Clone, PartialEq, Eq)]
-pub enum SwipeEvent {
-    Move(SwipeDirection, i16),
-    End(SwipeDirection),
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]

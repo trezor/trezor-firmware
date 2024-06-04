@@ -5,7 +5,8 @@ use crate::{
     translations::TR,
     ui::{
         animation::Animation,
-        component::{base::SwipeEvent, Component, Event, EventCtx, Never, SwipeDirection},
+        component::{Component, Event, EventCtx, Never, SwipeDirection},
+        event::SwipeEvent,
         geometry::{Alignment, Alignment2D, Insets, Offset, Rect},
         model_mercury::component::Footer,
         shape,

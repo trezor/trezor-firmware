@@ -1,10 +1,9 @@
 use crate::{
     strutil::TString,
     ui::{
-        component::{
-            base::SwipeEvent, text::TextStyle, Component, Event, EventCtx, Never, SwipeDirection,
-        },
+        component::{text::TextStyle, Component, Event, EventCtx, Never, SwipeDirection},
         display::Color,
+        event::SwipeEvent,
         geometry::{Alignment, Offset, Rect},
         lerp::Lerp,
         model_mercury::theme,
