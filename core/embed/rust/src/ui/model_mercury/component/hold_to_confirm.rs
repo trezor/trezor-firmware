@@ -253,8 +253,6 @@ impl Component for HoldToConfirm {
             }
             Some(ButtonMsg::LongPressed) => {
                 self.finalizing = false;
-                #[cfg(feature = "haptic")]
-                haptic::play(HapticEffect::HoldToConfirm);
                 return Some(());
             }
             _ => (),
