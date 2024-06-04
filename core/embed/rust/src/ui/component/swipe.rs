@@ -22,6 +22,32 @@ impl SwipeDirection {
             SwipeDirection::Right => Offset::x(size.x),
         }
     }
+
+    pub fn iter() -> impl Iterator<Item = Self> {
+        SwipeDirection::Up
+    }
+}
+
+impl Iterator for SwipeDirection {
+    type Item = Self;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self {
+            SwipeDirection::Up => {
+                *self = SwipeDirection::Down;
+                Some(SwipeDirection::Up)
+            }
+            SwipeDirection::Down => {
+                *self = SwipeDirection::Left;
+                Some(SwipeDirection::Down)
+            }
+            SwipeDirection::Left => {
+                *self = SwipeDirection::Right;
+                Some(SwipeDirection::Left)
+            }
+            SwipeDirection::Right => None,
+        }
+    }
 }
 
 #[derive(Clone)]

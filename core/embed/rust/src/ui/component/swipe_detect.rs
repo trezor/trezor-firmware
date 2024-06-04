@@ -63,6 +63,23 @@ impl SwipeConfig {
         self[dir].is_some()
     }
 
+    /// Calculate how much progress over `threshold` was made in the swipe
+    /// direction.
+    ///
+    /// If the swipe direction is not allowed, this will return 0.
+    pub fn progress(&self, dir: SwipeDirection, movement: Offset, threshold: u16) -> u16 {
+        if !self.is_allowed(dir) {
+            return 0;
+        }
+        let threshold = threshold as i16;
+        match dir {
+            SwipeDirection::Right => movement.x.min(0).saturating_sub(threshold) as u16,
+            SwipeDirection::Left => movement.x.max(0).saturating_sub(-threshold) as u16,
+            SwipeDirection::Down => movement.y.min(0).saturating_sub(threshold) as u16,
+            SwipeDirection::Up => movement.y.max(0).saturating_sub(-threshold) as u16,
+        }
+    }
+
     pub fn duration(&self, dir: SwipeDirection) -> Option<Duration> {
         self[dir].as_ref().map(|s| s.duration)
     }
@@ -111,7 +128,7 @@ impl core::ops::IndexMut<SwipeDirection> for SwipeConfig {
 
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub enum SwipeDetectMsg {
-    Move(SwipeDirection, i16),
+    Move(SwipeDirection, u16),
     Trigger(SwipeDirection),
 }
 
@@ -119,18 +136,24 @@ pub struct SwipeDetect {
     origin: Option<Point>,
     locked: Option<SwipeDirection>,
     final_animation: Option<Animation<i16>>,
-    moved: i16,
+    moved: u16,
 }
 
 impl SwipeDetect {
-    const DISTANCE: i16 = 120;
+    const DISTANCE: u16 = 120;
     pub const PROGRESS_MAX: i16 = 1000;
 
     const DURATION_MS: u32 = 333;
     const TRIGGER_THRESHOLD: f32 = 0.3;
     const DETECT_THRESHOLD: f32 = 0.1;
 
+    const MIN_LOCK: u16 = (Self::DISTANCE as f32 * Self::DETECT_THRESHOLD) as u16;
+    const MIN_TRIGGER: u16 = (Self::DISTANCE as f32 * Self::TRIGGER_THRESHOLD as f32) as u16;
+
     pub fn new() -> Self {
+        debug_assert!(Self::TRIGGER_THRESHOLD > 0f32);
+        debug_assert!(Self::DETECT_THRESHOLD > 0f32);
+
         Self {
             origin: None,
             locked: None,
@@ -139,16 +162,16 @@ impl SwipeDetect {
         }
     }
 
-    fn min_lock(&self) -> i16 {
-        (Self::DISTANCE as f32 * Self::DETECT_THRESHOLD) as i16
+    const fn min_lock(&self) -> u16 {
+        Self::MIN_LOCK
     }
 
-    fn min_trigger(&self) -> i16 {
-        (Self::DISTANCE as f32 * Self::TRIGGER_THRESHOLD) as i16
+    const fn min_trigger(&self) -> u16 {
+        Self::MIN_TRIGGER
     }
 
-    fn progress(&self, val: i16) -> i16 {
-        ((val.max(0) as f32 / Self::DISTANCE as f32) * Self::PROGRESS_MAX as f32) as i16
+    fn progress(&self, val: u16) -> u16 {
+        ((val as f32 / Self::DISTANCE as f32) * Self::PROGRESS_MAX as f32) as u16
     }
 
     pub fn trigger(&mut self, ctx: &mut EventCtx, dir: SwipeDirection, config: SwipeConfig) {
@@ -191,87 +214,31 @@ impl SwipeDetect {
                     // Compare the touch distance with our allowed directions and determine if it
                     // constitutes a valid swipe.
                     let ofs = pos - origin;
-                    let ofs_min = ofs.abs() - Offset::new(self.min_lock(), self.min_lock());
 
-                    let mut res = None;
-                    if self.locked.is_none() {
-                        if ofs.x > 0 && ofs_min.x > 0 && config.is_allowed(SwipeDirection::Right) {
-                            self.locked = Some(SwipeDirection::Right);
-                            res = Some(SwipeDetectMsg::Move(
-                                SwipeDirection::Right,
-                                self.progress(ofs_min.x),
-                            ));
+                    let res = match self.locked {
+                        Some(locked) => {
+                            // advance in locked direction only
+                            let moved = config.progress(locked, ofs, 0);
+                            Some(SwipeDetectMsg::Move(locked, self.progress(moved)))
                         }
-                        if ofs.x < 0 && ofs_min.x > 0 && config.is_allowed(SwipeDirection::Left) {
-                            self.locked = Some(SwipeDirection::Left);
-                            res = Some(SwipeDetectMsg::Move(
-                                SwipeDirection::Left,
-                                self.progress(ofs_min.x),
-                            ));
-                        }
-                        if ofs.y < 0 && ofs_min.y > 0 && config.is_allowed(SwipeDirection::Up) {
-                            self.locked = Some(SwipeDirection::Up);
-                            res = Some(SwipeDetectMsg::Move(
-                                SwipeDirection::Up,
-                                self.progress(ofs_min.y),
-                            ));
-                        }
-                        if ofs.y > 0 && ofs_min.y > 0 && config.is_allowed(SwipeDirection::Down) {
-                            self.locked = Some(SwipeDirection::Down);
-                            res = Some(SwipeDetectMsg::Move(
-                                SwipeDirection::Down,
-                                self.progress(ofs_min.y),
-                            ));
-                        }
-                    } else {
-                        res = match self.locked.unwrap() {
-                            SwipeDirection::Left => {
-                                if ofs.x > 0 {
-                                    Some(SwipeDetectMsg::Move(SwipeDirection::Left, 0))
-                                } else {
-                                    Some(SwipeDetectMsg::Move(
-                                        SwipeDirection::Left,
-                                        self.progress(ofs_min.x),
-                                    ))
+                        None => {
+                            let mut res = None;
+                            for dir in SwipeDirection::iter() {
+                                let progress = config.progress(dir, ofs, self.min_lock());
+                                if progress > 0 {
+                                    self.locked = Some(dir);
+                                    res = Some(SwipeDetectMsg::Move(dir, self.progress(progress)));
+                                    break;
                                 }
                             }
-                            SwipeDirection::Right => {
-                                if ofs.x < 0 {
-                                    Some(SwipeDetectMsg::Move(SwipeDirection::Right, 0))
-                                } else {
-                                    Some(SwipeDetectMsg::Move(
-                                        SwipeDirection::Right,
-                                        self.progress(ofs_min.x),
-                                    ))
-                                }
-                            }
-                            SwipeDirection::Up => {
-                                if ofs.y > 0 {
-                                    Some(SwipeDetectMsg::Move(SwipeDirection::Up, 0))
-                                } else {
-                                    Some(SwipeDetectMsg::Move(
-                                        SwipeDirection::Up,
-                                        self.progress(ofs_min.y),
-                                    ))
-                                }
-                            }
-                            SwipeDirection::Down => {
-                                if ofs.y < 0 {
-                                    Some(SwipeDetectMsg::Move(SwipeDirection::Down, 0))
-                                } else {
-                                    Some(SwipeDetectMsg::Move(
-                                        SwipeDirection::Down,
-                                        self.progress(ofs_min.y),
-                                    ))
-                                }
-                            }
-                        };
-                    }
+                            res
+                        }
+                    };
 
                     // Todo trigger an action if distance is met
 
-                    if let Some(SwipeDetectMsg::Move(_, ofs)) = res {
-                        self.moved = ofs;
+                    if let Some(SwipeDetectMsg::Move(_, progress)) = res {
+                        self.moved = progress;
                     }
 
                     if animation_disabled() {
@@ -289,103 +256,67 @@ impl SwipeDetect {
                     // Compare the touch distance with our allowed directions and determine if it
                     // constitutes a valid swipe.
                     let ofs = pos - origin;
-                    let ofs_min = ofs.abs() - Offset::new(self.min_trigger(), self.min_trigger());
 
-                    let mut final_value = 0;
-                    let mut finalize = false;
-                    if self.locked.is_none() {
-                        if ofs.x > 0 && ofs_min.x > 0 && config.is_allowed(SwipeDirection::Right) {
-                            final_value = Self::PROGRESS_MAX;
-                            finalize = true;
-                            self.locked = Some(SwipeDirection::Right);
+                    match self.locked {
+                        // advance in locked direction only
+                        Some(locked) if config.progress(locked, ofs, 0) > 0 => (),
+                        // advance in direction other than locked clears the lock -- touch ends without triggering
+                        Some(_) => self.locked = None,
+                        None => {
+                            for dir in SwipeDirection::iter() {
+                                // insta-lock if the movement went at least the trigger distance
+                                if config.progress(dir, ofs, self.min_trigger()) > 0 {
+                                    self.locked = Some(dir);
+                                    break;
+                                }
+                            }
                         }
-                        if ofs.x < 0 && ofs_min.x > 0 && config.is_allowed(SwipeDirection::Left) {
-                            final_value = Self::PROGRESS_MAX;
-                            finalize = true;
-                            self.locked = Some(SwipeDirection::Left);
-                        }
-                        if ofs.y < 0 && ofs_min.y > 0 && config.is_allowed(SwipeDirection::Up) {
-                            final_value = Self::PROGRESS_MAX;
-                            finalize = true;
-                            self.locked = Some(SwipeDirection::Up);
-                        }
-                        if ofs.y > 0 && ofs_min.y > 0 && config.is_allowed(SwipeDirection::Down) {
-                            final_value = Self::PROGRESS_MAX;
-                            finalize = true;
-                            self.locked = Some(SwipeDirection::Down);
-                        }
+                    };
+
+
+                    let Some(locked) = self.locked else {
+                        // No direction is locked. Touch ended without triggering a swipe.
+                        return None;
+                    };
+
+                    ctx.request_anim_frame();
+                    ctx.request_paint();
+
+                    if !animation_disabled() {
+                        let done = self.moved as f32 / Self::PROGRESS_MAX as f32;
+                        let ratio = 1.0 - done;
+
+                        let duration = config
+                            .duration(locked)
+                            .unwrap_or(Duration::from_millis(Self::DURATION_MS));
+
+                        let duration = ((duration.to_millis() as f32 * ratio) as u32).max(0);
+                        self.final_animation = Some(Animation::new(
+                            self.moved as i16,
+                            Self::PROGRESS_MAX,
+                            Duration::from_millis(duration),
+                            Instant::now(),
+                        ));
                     } else {
-                        let locked = self.locked.unwrap();
-                        finalize = true;
-
-                        match locked {
-                            SwipeDirection::Right => {
-                                if ofs.x > 0 && ofs_min.x > 0 {
-                                    final_value = Self::PROGRESS_MAX;
-                                }
-                            }
-                            SwipeDirection::Left => {
-                                if ofs.x < 0 && ofs_min.x > 0 {
-                                    final_value = Self::PROGRESS_MAX;
-                                }
-                            }
-                            SwipeDirection::Up => {
-                                if ofs.y < 0 && ofs_min.y > 0 {
-                                    final_value = Self::PROGRESS_MAX;
-                                }
-                            }
-                            SwipeDirection::Down => {
-                                if ofs.y > 0 && ofs_min.y > 0 {
-                                    final_value = Self::PROGRESS_MAX;
-                                }
-                            }
-                        };
+                        // clear animation
+                        self.final_animation = None;
+                        self.moved = 0;
+                        self.locked = None;
+                        return Some(SwipeDetectMsg::Trigger(locked));
                     }
-
-                    if finalize {
-                        if !animation_disabled() {
-                            ctx.request_anim_frame();
-                            ctx.request_paint();
-
-                            let done = self.moved as f32 / Self::PROGRESS_MAX as f32;
-                            let ratio = 1.0 - done;
-
-                            let duration = config
-                                .duration(self.locked.unwrap())
-                                .unwrap_or(Duration::from_millis(Self::DURATION_MS));
-
-                            let duration = ((duration.to_millis() as f32 * ratio) as u32).max(0);
-                            self.final_animation = Some(Animation::new(
-                                self.moved,
-                                final_value,
-                                Duration::from_millis(duration),
-                                Instant::now(),
-                            ));
-                        } else {
-                            ctx.request_anim_frame();
-                            ctx.request_paint();
-                            self.final_animation = None;
-                            self.moved = 0;
-                            let locked = self.locked.take();
-                            if final_value != 0 {
-                                return Some(SwipeDetectMsg::Trigger(locked.unwrap()));
-                            }
-                        }
-                    }
-
                     return None;
                 }
             }
             (Event::Timer(EventCtx::ANIM_FRAME_TIMER), _) => {
-                if self.locked.is_some() {
+                if let Some(locked) = self.locked {
                     let mut finish = false;
                     let res = if let Some(animation) = &self.final_animation {
                         if animation.finished(Instant::now()) {
                             finish = true;
                             if animation.to != 0 {
-                                Some(SwipeDetectMsg::Trigger(self.locked.unwrap()))
+                                Some(SwipeDetectMsg::Trigger(locked))
                             } else {
-                                Some(SwipeDetectMsg::Move(self.locked.unwrap(), 0))
+                                Some(SwipeDetectMsg::Move(locked, 0))
                             }
                         } else {
                             ctx.request_anim_frame();
@@ -394,8 +325,8 @@ impl SwipeDetect {
                                 None
                             } else {
                                 Some(SwipeDetectMsg::Move(
-                                    self.locked.unwrap(),
-                                    animation.value(Instant::now()),
+                                    locked,
+                                    animation.value(Instant::now()).max(0) as u16,
                                 ))
                             }
                         }
