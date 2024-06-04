@@ -175,21 +175,25 @@ impl ShowInfoParams {
         }
     }
 
+    #[inline(never)]
     pub const fn with_subtitle(mut self, subtitle: Option<TString<'static>>) -> Self {
         self.subtitle = subtitle;
         self
     }
 
+    #[inline(never)]
     pub const fn with_menu_button(mut self) -> Self {
         self.menu_button = true;
         self
     }
 
+    #[inline(never)]
     pub const fn with_cancel_button(mut self) -> Self {
         self.cancel_button = true;
         self
     }
 
+    #[inline(never)]
     pub const fn with_footer(
         mut self,
         instruction: TString<'static>,
@@ -210,6 +214,7 @@ impl ShowInfoParams {
         self
     }
 
+    #[inline(never)]
     pub fn into_layout(
         self,
     ) -> Result<impl Component<Msg = FlowMsg> + Swipable + MaybeTrace, Error> {
