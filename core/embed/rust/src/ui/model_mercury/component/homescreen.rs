@@ -354,8 +354,8 @@ impl Component for Lockscreen {
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        const OVERLAY_SIZE: i16 = 170;
-        const OVERLAY_BORDER: i16 = (AREA.height() - OVERLAY_SIZE) / 2;
+        const OVERLAY_RADIUS: i16 = 85;
+        const OVERLAY_BORDER: i16 = (AREA.height() / 2) - OVERLAY_RADIUS;
         const OVERLAY_OFFSET: i16 = 9;
 
         let center = AREA.center();
@@ -369,7 +369,7 @@ impl Component for Lockscreen {
             .with_bg(Color::black())
             .render(target);
 
-        shape::Bar::new(AREA.split_bottom(OVERLAY_BORDER - OVERLAY_OFFSET).1)
+        shape::Bar::new(AREA.split_bottom(OVERLAY_BORDER - OVERLAY_OFFSET - 2).1)
             .with_bg(Color::black())
             .render(target);
 
@@ -377,7 +377,7 @@ impl Component for Lockscreen {
             .with_bg(Color::black())
             .render(target);
 
-        shape::Bar::new(AREA.split_right(OVERLAY_BORDER).1)
+        shape::Bar::new(AREA.split_right(OVERLAY_BORDER - 2).1)
             .with_bg(Color::black())
             .render(target);
 
