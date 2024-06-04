@@ -148,12 +148,9 @@ impl SwipeDetect {
     const DETECT_THRESHOLD: f32 = 0.1;
 
     const MIN_LOCK: u16 = (Self::DISTANCE as f32 * Self::DETECT_THRESHOLD) as u16;
-    const MIN_TRIGGER: u16 = (Self::DISTANCE as f32 * Self::TRIGGER_THRESHOLD as f32) as u16;
+    const MIN_TRIGGER: u16 = (Self::DISTANCE as f32 * Self::TRIGGER_THRESHOLD) as u16;
 
     pub fn new() -> Self {
-        debug_assert!(Self::TRIGGER_THRESHOLD > 0f32);
-        debug_assert!(Self::DETECT_THRESHOLD > 0f32);
-
         Self {
             origin: None,
             locked: None,
