@@ -4,7 +4,6 @@ pub mod bl_confirm;
 mod button;
 #[cfg(feature = "translations")]
 mod coinjoin_progress;
-mod dialog;
 mod fido;
 mod footer;
 mod vertical_menu;
@@ -12,7 +11,6 @@ mod vertical_menu;
 mod fido_icons;
 mod error;
 mod frame;
-
 #[cfg(feature = "translations")]
 mod hold_to_confirm;
 #[cfg(feature = "translations")]
@@ -23,8 +21,6 @@ mod loader;
 #[cfg(feature = "translations")]
 mod number_input;
 pub mod number_input_slider;
-#[cfg(feature = "translations")]
-mod page;
 mod progress;
 #[cfg(feature = "translations")]
 mod prompt_screen;
@@ -34,7 +30,6 @@ mod scroll;
 mod set_brightness;
 #[cfg(feature = "translations")]
 mod share_words;
-mod simple_page;
 mod status_screen;
 mod swipe_content;
 #[cfg(feature = "translations")]
@@ -51,7 +46,6 @@ pub use button::{
 };
 #[cfg(feature = "translations")]
 pub use coinjoin_progress::CoinJoinProgress;
-pub use dialog::{Dialog, DialogMsg, IconDialog};
 pub use error::ErrorScreen;
 pub use fido::{FidoConfirm, FidoMsg};
 pub use footer::Footer;
@@ -74,8 +68,6 @@ pub use loader::{Loader, LoaderMsg, LoaderStyle, LoaderStyleSheet};
 pub use number_input::{NumberInputDialog, NumberInputDialogMsg};
 #[cfg(feature = "translations")]
 pub use number_input_slider::NumberInputSliderDialog;
-#[cfg(feature = "translations")]
-pub use page::ButtonPage;
 pub use progress::Progress;
 #[cfg(feature = "translations")]
 pub use prompt_screen::PromptScreen;
@@ -85,7 +77,6 @@ pub use scroll::ScrollBar;
 pub use set_brightness::SetBrightnessDialog;
 #[cfg(feature = "translations")]
 pub use share_words::ShareWords;
-pub use simple_page::SimplePage;
 pub use status_screen::StatusScreen;
 pub use swipe_content::SwipeContent;
 #[cfg(feature = "translations")]
