@@ -1333,6 +1333,7 @@ pub enum TranslatedString {
     recovery__title_unlock_repeated_backup = 933,  // "Multi-share backup"
     recovery__unlock_repeated_backup = 934,  // "Create additional backup?"
     recovery__unlock_repeated_backup_verb = 935,  // "Unlock backup"
+    homescreen__set_default = 936,  // "Do you really want to set default homescreen image?"
 }
 
 impl TranslatedString {
@@ -2661,6 +2662,7 @@ impl TranslatedString {
             Self::recovery__title_unlock_repeated_backup => "Multi-share backup",
             Self::recovery__unlock_repeated_backup => "Create additional backup?",
             Self::recovery__unlock_repeated_backup_verb => "Unlock backup",
+            Self::homescreen__set_default => "Do you really want to set default homescreen image?",
         }
     }
 
@@ -3990,6 +3992,7 @@ impl TranslatedString {
             Qstr::MP_QSTR_recovery__title_unlock_repeated_backup => Some(Self::recovery__title_unlock_repeated_backup),
             Qstr::MP_QSTR_recovery__unlock_repeated_backup => Some(Self::recovery__unlock_repeated_backup),
             Qstr::MP_QSTR_recovery__unlock_repeated_backup_verb => Some(Self::recovery__unlock_repeated_backup_verb),
+            Qstr::MP_QSTR_homescreen__set_default => Some(Self::homescreen__set_default),
             _ => None,
         }
     }
