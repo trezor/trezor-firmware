@@ -5,7 +5,10 @@ use crate::{
     strutil::TString,
     time::{Duration, Stopwatch},
     ui::{
-        component::{base::Component, Event, EventCtx},
+        component::{
+            base::{AttachType, Component},
+            Event, EventCtx, SwipeDirection,
+        },
         constant::screen,
         display::{Color, Icon},
         geometry::{Offset, Rect},
@@ -39,19 +42,19 @@ type AreasForSeparators = Vec<Rect, N_SEPS>;
 
 #[derive(Default, Clone)]
 struct AttachAnimation {
+    pub attach_top: bool,
     pub timer: Stopwatch,
     pub active: bool,
+    pub duration: Duration,
 }
 
 impl AttachAnimation {
-    const DURATION_MS: u32 = 350;
     fn is_active(&self) -> bool {
         if animation_disabled() {
             return false;
         }
 
-        self.timer
-            .is_running_within(Duration::from_millis(Self::DURATION_MS))
+        self.timer.is_running_within(self.duration)
     }
 
     fn eval(&self) -> f32 {
@@ -63,25 +66,69 @@ impl AttachAnimation {
     }
 
     fn get_offset(&self, t: f32) -> Offset {
-        let value = pareen::constant(0.0).seq_ease_in(
-            0.0,
-            easer::functions::Cubic,
-            Self::DURATION_MS as f32 / 1000.0,
-            pareen::constant(1.0),
-        );
+        let value = if self.attach_top {
+            1.0
+        } else {
+            pareen::constant(0.0)
+                .seq_ease_in(
+                    0.0,
+                    easer::functions::Cubic,
+                    self.duration.to_millis() as f32 / 1000.0,
+                    pareen::constant(1.0).eval(t),
+                )
+                .eval(t)
+        };
 
-        Offset::lerp(Offset::new(-40, 0), Offset::zero(), value.eval(t))
+        Offset::lerp(Offset::new(-40, 0), Offset::zero(), value)
     }
 
     fn get_mask_width(&self, t: f32) -> i16 {
-        let value = pareen::constant(0.0).seq_ease_in(
-            0.0,
-            easer::functions::Circ,
-            0.15,
-            pareen::constant(1.0),
-        );
+        let value = if self.attach_top {
+            1.0
+        } else {
+            pareen::constant(0.0)
+                .seq_ease_in(0.0, easer::functions::Circ, 0.15, pareen::constant(1.0))
+                .eval(t)
+        };
+
         //todo screen here is incorrect
-        i16::lerp(screen().width(), 0, value.eval(t))
+        i16::lerp(screen().width(), 0, value)
+    }
+
+    pub fn get_mask_item1_opacity(&self, t: f32) -> u8 {
+        let value = if self.attach_top {
+            pareen::constant(0.0)
+                .seq_ease_in(0.0, easer::functions::Cubic, 0.15, pareen::constant(1.0))
+                .eval(t)
+        } else {
+            1.0
+        };
+
+        u8::lerp(255, 0, value)
+    }
+
+    pub fn get_mask_item2_opacity(&self, t: f32) -> u8 {
+        let value = if self.attach_top {
+            pareen::constant(0.0)
+                .seq_ease_in(0.1, easer::functions::Cubic, 0.15, pareen::constant(1.0))
+                .eval(t)
+        } else {
+            1.0
+        };
+
+        u8::lerp(255, 0, value)
+    }
+
+    pub fn get_mask_item3_opacity(&self, t: f32) -> u8 {
+        let value = if self.attach_top {
+            pareen::constant(0.0)
+                .seq_ease_in(0.2, easer::functions::Cubic, 0.15, pareen::constant(1.0))
+                .eval(t)
+        } else {
+            1.0
+        };
+
+        u8::lerp(255, 0, value)
     }
 
     fn start(&mut self) {
@@ -96,6 +143,15 @@ impl AttachAnimation {
 
     fn lazy_start(&mut self, ctx: &mut EventCtx, event: Event) {
         if let Event::Attach(_) = event {
+            if let Event::Attach(AttachType::Swipe(SwipeDirection::Up))
+            | Event::Attach(AttachType::Swipe(SwipeDirection::Down))
+            | Event::Attach(AttachType::Initial) = event
+            {
+                self.attach_top = true;
+                self.duration = Duration::from_millis(350);
+            } else {
+                self.duration = Duration::from_millis(350);
+            }
             self.reset();
             ctx.request_anim_frame();
         }
@@ -213,16 +269,33 @@ impl Component for VerticalMenu {
 
         let offset = self.attach_animation.get_offset(t);
         let mask_width = self.attach_animation.get_mask_width(t);
+        let item1_opacity = self.attach_animation.get_mask_item1_opacity(t);
+        let item2_opacity = self.attach_animation.get_mask_item2_opacity(t);
+        let item3_opacity = self.attach_animation.get_mask_item3_opacity(t);
+
+        let opacities = [item1_opacity, item2_opacity, item3_opacity];
 
         target.with_origin(offset, &|target| {
             // render buttons separated by thin bars
-            for button in &self.buttons {
+            for (i, button) in (&self.buttons).into_iter().enumerate() {
                 button.render(target);
+
+                Bar::new(button.area())
+                    .with_fg(Color::black())
+                    .with_bg(Color::black())
+                    .with_alpha(opacities[i])
+                    .render(target);
             }
-            for area in self.areas_sep.iter() {
+            for (i, area) in self.areas_sep.iter().enumerate() {
                 Bar::new(*area)
                     .with_thickness(MENU_SEP_HEIGHT)
                     .with_fg(theme::GREY_EXTRA_DARK)
+                    .render(target);
+
+                Bar::new(*area)
+                    .with_fg(Color::black())
+                    .with_bg(Color::black())
+                    .with_alpha(opacities[i])
                     .render(target);
             }
 
