@@ -11,7 +11,7 @@ use crate::{
             text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs, VecExt},
             Component, Event, EventCtx, Paginate, SwipeDirection,
         },
-        flow::SimpleSwipable,
+        flow::Swipable,
         geometry::Rect,
         shape::Renderer,
     },
@@ -199,7 +199,7 @@ impl Component for AddressDetails {
     }
 }
 
-impl SimpleSwipable for AddressDetails {
+impl Swipable for AddressDetails {
     fn get_swipe_config(&self) -> SwipeConfig {
         match self.current_page {
             0 => self.details.get_swipe_config(),

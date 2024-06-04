@@ -50,7 +50,7 @@ impl<T: Component> Component for OneButtonRequest<T> {
 }
 
 #[cfg(all(feature = "micropython", feature = "touch", feature = "new_rendering"))]
-impl<T: crate::ui::flow::SimpleSwipable> crate::ui::flow::SimpleSwipable for OneButtonRequest<T> {
+impl<T: crate::ui::flow::Swipable> crate::ui::flow::Swipable for OneButtonRequest<T> {
     fn get_swipe_config(&self) -> SwipeConfig {
         self.inner.get_swipe_config()
     }
@@ -77,21 +77,3 @@ pub trait ButtonRequestExt {
 }
 
 impl<T: Component> ButtonRequestExt for T {}
-
-#[cfg(all(feature = "micropython", feature = "touch", feature = "new_rendering"))]
-impl<T> crate::ui::flow::Swipable<T::Msg> for OneButtonRequest<T>
-where
-    T: Component + crate::ui::flow::Swipable<T::Msg>,
-{
-    fn swipe_start(
-        &mut self,
-        ctx: &mut EventCtx,
-        direction: crate::ui::component::SwipeDirection,
-    ) -> crate::ui::flow::SwipableResult<T::Msg> {
-        self.inner.swipe_start(ctx, direction)
-    }
-
-    fn swipe_finished(&self) -> bool {
-        self.inner.swipe_finished()
-    }
-}
