@@ -68,14 +68,17 @@ where
         }
     }
 
+    #[inline(never)]
     pub const fn left_aligned(title: TString<'static>, content: T) -> Self {
         Self::new(Alignment::Start, title, content)
     }
 
+    #[inline(never)]
     pub const fn right_aligned(title: TString<'static>, content: T) -> Self {
         Self::new(Alignment::End, title, content)
     }
 
+    #[inline(never)]
     pub const fn centered(title: TString<'static>, content: T) -> Self {
         Self::new(Alignment::Center, title, content)
     }
@@ -90,6 +93,7 @@ where
         self
     }
 
+    #[inline(never)]
     pub fn with_subtitle(mut self, subtitle: TString<'static>) -> Self {
         let style = theme::TEXT_SUB_GREY;
         self.title = Child::new(self.title.into_inner().top_aligned());
@@ -173,16 +177,14 @@ where
         })
     }
 
-    pub fn with_swipe(self, dir: SwipeDirection, settings: SwipeSettings) -> Self {
-        Self {
-            footer: self.footer.map(|f| match dir {
-                SwipeDirection::Up => f.with_swipe_up(),
-                SwipeDirection::Down => f.with_swipe_down(),
-                _ => f,
-            }),
-            swipe: self.swipe.with_swipe(dir, settings),
-            ..self
-        }
+    pub fn with_swipe(mut self, dir: SwipeDirection, settings: SwipeSettings) -> Self {
+        self.footer = self.footer.map(|f| match dir {
+            SwipeDirection::Up => f.with_swipe_up(),
+            SwipeDirection::Down => f.with_swipe_down(),
+            _ => f,
+        });
+        self.swipe = self.swipe.with_swipe(dir, settings);
+        self
     }
 
     pub fn with_horizontal_pages(self) -> Self {

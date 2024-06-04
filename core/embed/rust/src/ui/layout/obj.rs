@@ -131,6 +131,7 @@ struct LayoutObjInner {
 
 impl LayoutObj {
     /// Create a new `LayoutObj`, wrapping a root component.
+    #[inline(never)]
     pub fn new(root: impl ComponentMsgObj + MaybeTrace + 'static) -> Result<Gc<Self>, Error> {
         // Let's wrap the root component into a `Root` to maintain the top-level
         // invalidation logic.
