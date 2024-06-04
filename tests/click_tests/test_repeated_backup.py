@@ -60,14 +60,17 @@ def test_repeated_backup(
 
     # let's make a 1-of-1 backup to start with...
 
+    assert debug.model is not None
+    model_name: str = debug.model.internal_name
+
     # shares=1
-    reset.set_selection(debug, buttons.RESET_MINUS, 5 - 1)
+    reset.set_selection(debug, buttons.reset_minus(model_name), 5 - 1)
 
     # confirm checklist
     reset.confirm_read(debug)
 
     # threshold=1
-    reset.set_selection(debug, buttons.RESET_PLUS, 0)
+    reset.set_selection(debug, buttons.reset_plus(model_name), 0)
 
     # confirm checklist
     reset.confirm_read(debug)
@@ -133,17 +136,19 @@ def test_repeated_backup(
 
     # ... so let's try to do a 2-of-3 backup
 
+    debug.wait_layout()
+
     # confirm checklist
     reset.confirm_read(debug)
 
     # shares=3
-    reset.set_selection(debug, buttons.RESET_MINUS, 5 - 3)
+    reset.set_selection(debug, buttons.reset_minus(model_name), 5 - 3)
 
     # confirm checklist
     reset.confirm_read(debug)
 
     # threshold=2
-    reset.set_selection(debug, buttons.RESET_MINUS, 1)
+    reset.set_selection(debug, buttons.reset_minus(model_name), 1)
 
     # confirm checklist
     reset.confirm_read(debug)

@@ -449,7 +449,7 @@ def confirm_recovery(
     title: str,
     description: str,
     button: str,
-    dry_run: bool,
+    recovery_type: RecoveryType,
     info_button: bool = False,
 ) -> LayoutObj[UiResult]:
     """Device recovery homescreen."""
@@ -458,7 +458,7 @@ def confirm_recovery(
 # rust/src/ui/model_mercury/layout.rs
 def select_word_count(
     *,
-    dry_run: bool,
+    recovery_type: RecoveryType,
 ) -> LayoutObj[int | str]:  # TT returns int
     """Select mnemonic word count from (12, 18, 20, 24, 33)."""
 

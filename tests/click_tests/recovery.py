@@ -105,11 +105,18 @@ def select_number_of_words(
         raise ValueError("Unknown model")
 
     if unlock_repeated_backup:
-        TR.assert_in(layout.text_content(), "recovery__enter_backup")
+        if debug.model in (models.T2B1,):
+            TR.assert_in(layout.text_content(), "recovery__enter_backup")
+        else:
+            TR.assert_in(layout.text_content(), "recovery__only_first_n_letters")
     elif num_of_words in (20, 33):
         TR.assert_in_multiple(
             layout.text_content(),
-            ["recovery__enter_any_share", "recovery__only_first_n_letters"],
+            [
+                "recovery__enter_backup",
+                "recovery__enter_any_share",
+                "recovery__only_first_n_letters",
+            ],
         )
     else:  # BIP-39
         TR.assert_in_multiple(
@@ -125,14 +132,14 @@ def enter_share(
     before_title: str = "recovery__title_recover",
 ) -> "LayoutContent":
     if debug.model in (models.T2B1,):
-        TR.assert_in(debug.read_layout().title(), "recovery__title_recover")
+        TR.assert_in(debug.read_layout().title(), before_title)
         layout = debug.wait_layout()
         for _ in range(layout.page_count()):
             layout = debug.press_right(wait=True)
     elif debug.model in (models.T3T1,):
         layout = debug.swipe_up(wait=True)
     else:
-        TR.assert_in(debug.read_layout().title(), "recovery__title_recover")
+        TR.assert_in(debug.read_layout().title(), before_title)
         layout = debug.click(buttons.OK, wait=True)
 
     assert "MnemonicKeyboard" in layout.all_components()
@@ -152,7 +159,12 @@ def enter_shares(
 ) -> None:
     TR.assert_in_multiple(
         debug.read_layout().text_content(),
-        ["recovery__enter_any_share", "recovery__only_first_n_letters", text],
+        [
+            "recovery__enter_backup",
+            "recovery__enter_any_share",
+            "recovery__only_first_n_letters",
+            text,
+        ],
     )
     for index, share in enumerate(shares):
         enter_share(
@@ -160,7 +172,7 @@ def enter_shares(
         )
         if index < len(shares) - 1:
             # FIXME: when ui-t3t1 done for shamir, we want to check the template below
-            TR.assert_in(debug.read_layout().title(), "recovery__title_recover")
+            TR.assert_in(debug.read_layout().title(), enter_share_before_title)
             # TR.assert_in(
             #     debug.read_layout().text_content(),
             #     "recovery__x_of_y_entered_template",
