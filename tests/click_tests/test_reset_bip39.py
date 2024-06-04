@@ -52,6 +52,9 @@ def test_reset_bip39(device_handler: "BackgroundDeviceHandler"):
     # confirm back up
     reset.confirm_read(debug)
 
+    # confirm backup intro
+    reset.confirm_read(debug, middle_r=True)
+
     # confirm backup warning
     reset.confirm_read(debug, middle_r=True)
 

@@ -125,7 +125,7 @@ def confirm_words(debug: "DebugLink", words: list[str]) -> None:
         debug.swipe_up(wait=True)
 
     layout = debug.wait_layout()
-    if debug.model in (models.T2T1, models.T3T1):
+    if debug.model in (models.T2T1,):
         TR.assert_template(layout.text_content(), "reset__select_word_x_of_y_template")
         for _ in range(3):
             # "Select word 3 of 20"
@@ -139,11 +139,22 @@ def confirm_words(debug: "DebugLink", words: list[str]) -> None:
             ]
             wanted_word = words[word_pos - 1].lower()
             button_pos = btn_texts.index(wanted_word)
-            if debug.model is models.T3T1:
-                btn_positions = buttons.VERTICAL_MENU
-            else:
-                btn_positions = buttons.RESET_WORD_CHECK
-            layout = debug.click(btn_positions[button_pos], wait=True)
+            layout = debug.click(buttons.RESET_WORD_CHECK[button_pos], wait=True)
+    elif debug.model in (models.T3T1,):
+        TR.assert_template(layout.subtitle(), "reset__select_word_x_of_y_template")
+        for _ in range(3):
+            # "Select word 3 of 20"
+            #              ^
+            word_pos_match = re.search(r"\d+", debug.wait_layout().subtitle())
+            assert word_pos_match is not None
+            word_pos = int(word_pos_match.group(0))
+            # Unifying both the buttons and words to lowercase
+            btn_texts = [
+                text.lower() for text in layout.tt_check_seed_button_contents()
+            ]
+            wanted_word = words[word_pos - 1].lower()
+            button_pos = btn_texts.index(wanted_word)
+            layout = debug.click(buttons.VERTICAL_MENU[button_pos], wait=True)
     elif debug.model in (models.T2B1,):
         TR.assert_in(layout.text_content(), "reset__select_correct_word")
         layout = debug.press_right(wait=True)

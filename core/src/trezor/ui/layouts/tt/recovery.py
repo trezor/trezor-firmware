@@ -123,7 +123,7 @@ async def continue_recovery(
 
     if show_info:
         # Show this just one-time
-        description = TR.recovery__only_first_n_letters
+        description = TR.recovery__enter_each_word
     else:
         description = subtext or ""
 

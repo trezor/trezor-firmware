@@ -1407,7 +1407,7 @@ extern "C" fn new_confirm_recovery(n_args: usize, args: *const Obj, kwargs: *mut
             paragraphs
                 .add(Paragraph::new(
                     &theme::TEXT_NORMAL,
-                    TR::recovery__only_first_n_letters,
+                    TR::recovery__enter_each_word,
                 ))
                 .add(Paragraph::new(
                     &theme::TEXT_NORMAL,
