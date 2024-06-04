@@ -380,7 +380,7 @@ extern "C" fn ui_layout_attach_timer_fn(this: Obj, timer_fn: Obj) -> Obj {
     let block = || {
         let this: Gc<LayoutObj> = this.try_into()?;
         this.obj_set_timer_fn(timer_fn);
-        let msg = this.obj_event(Event::Attach(AttachType::Normal))?;
+        let msg = this.obj_event(Event::Attach(AttachType::Initial))?;
         assert!(msg == Obj::const_none());
         Ok(Obj::const_none())
     };
