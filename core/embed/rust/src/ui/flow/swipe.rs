@@ -1,29 +1,103 @@
 use crate::{
-    error,
+    error::{self, Error},
+    maybe_trace::MaybeTrace,
+    micropython::{
+        gc::{self, GcBox},
+        obj::Obj,
+    },
     ui::{
         component::{
             base::AttachType, swipe_detect::SwipeSettings, Component, Event, EventCtx, SwipeDetect,
             SwipeDetectMsg, SwipeDirection,
         },
+        display::Color,
         event::{SwipeEvent, TouchEvent},
-        flow::{base::Decision, FlowMsg, FlowState, FlowStore},
+        flow::{base::Decision, FlowMsg, FlowState},
         geometry::Rect,
-        shape::Renderer,
+        layout::obj::ObjComponent,
+        shape::{render_on_display, ConcreteRenderer, Renderer, ScopedRenderer},
         util::animation_disabled,
     },
 };
 
-/// Given a state enum and a corresponding FlowStore, create a Component that
-/// implements a swipe navigation between the states with animated transitions.
+use super::{base::StateChange, Swipable};
+
+use heapless::Vec;
+
+/// Component-like proto-object-safe trait.
+///
+/// This copies the Component interface, but it is parametrized by a concrete
+/// Renderer type, making it object-safe.
+pub trait FlowComponentTrait<'s, R: Renderer<'s>>: Swipable {
+    fn place(&mut self, bounds: Rect) -> Rect;
+    fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<FlowMsg>;
+    fn render(&'s self, target: &mut R);
+
+    #[cfg(feature = "ui_debug")]
+    fn trace(&self, t: &mut dyn crate::trace::Tracer);
+}
+
+/// FlowComponentTrait implementation for Components.
+///
+/// Components implementing FlowComponentTrait must:
+/// * also implement Swipable, required by FlowComponentTrait,
+/// * use FlowMsg as their Msg type,
+/// * implement MaybeTrace to be able to conform to ObjComponent.
+impl<'s, R, C> FlowComponentTrait<'s, R> for C
+where
+    C: Component<Msg = FlowMsg> + MaybeTrace + Swipable,
+    R: Renderer<'s>,
+{
+    fn place(&mut self, bounds: Rect) -> Rect {
+        <Self as Component>::place(self, bounds)
+    }
+
+    fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<FlowMsg> {
+        <Self as Component>::event(self, ctx, event)
+    }
+
+    fn render(&'s self, target: &mut R) {
+        <Self as Component>::render(self, target)
+    }
+
+    #[cfg(feature = "ui_debug")]
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        <Self as crate::trace::Trace>::trace(self, t)
+    }
+}
+
+/// Shortcut type for the concrete renderer passed into `render()` method.
+type RendererImpl<'a, 'alloc, 'env> = ScopedRenderer<'alloc, 'env, ConcreteRenderer<'a, 'alloc>>;
+
+/// Fully object-safe component-like trait for flow components.
+///
+/// This trait has no generic parameters:
+/// * it is instantiated with a concrete Renderer type, and
+/// * it requires the `FlowComponentTrait` trait to be implemented for _any_
+///   lifetimes.
+pub trait FlowComponentDynTrait:
+    for<'a, 'alloc, 'env> FlowComponentTrait<'alloc, RendererImpl<'a, 'alloc, 'env>>
+{
+}
+
+impl<T> FlowComponentDynTrait for T where
+    T: for<'a, 'alloc, 'env> FlowComponentTrait<'alloc, RendererImpl<'a, 'alloc, 'env>>
+{
+}
+
+/// Swipe flow consisting of multiple screens.
+///
+/// Implements swipe navigation between the states with animated transitions,
+/// based on state transitions provided by the FlowState type.
 ///
 /// If a swipe is detected:
 /// - currently active component is asked to handle the event,
 /// - if it can't then FlowState::handle_swipe is consulted.
-pub struct SwipeFlow<Q, S> {
-    /// Current state.
-    state: Q,
-    /// FlowStore with all screens/components.
-    store: S,
+pub struct SwipeFlow {
+    /// Current state of the flow.
+    state: &'static dyn FlowState,
+    /// Store of all screens which are part of the flow.
+    store: Vec<GcBox<dyn FlowComponentDynTrait>, 10>,
     /// Swipe detector.
     swipe: SwipeDetect,
     /// Swipe allowed
@@ -34,33 +108,53 @@ pub struct SwipeFlow<Q, S> {
     internal_pages: u16,
     /// If triggering swipe by event, make this decision instead of default
     /// after the swipe.
-    decision_override: Option<Decision<Q>>,
+    decision_override: Option<StateChange>,
 }
 
-impl<Q: FlowState, S: FlowStore> SwipeFlow<Q, S> {
-    pub fn new(init: Q, store: S) -> Result<Self, error::Error> {
+impl SwipeFlow {
+    pub fn new(initial_state: &'static dyn FlowState) -> Result<Self, error::Error> {
         Ok(Self {
-            state: init,
+            state: initial_state,
             swipe: SwipeDetect::new(),
-            store,
+            store: Vec::new(),
             allow_swipe: true,
             internal_state: 0,
             internal_pages: 1,
             decision_override: None,
         })
     }
-    fn goto(&mut self, ctx: &mut EventCtx, direction: SwipeDirection, state: Q) {
-        self.state = state;
+
+    /// Add a page to the flow.
+    ///
+    /// Pages must be inserted in the order of the flow state index.
+    pub fn with_page(
+        mut self,
+        state: &'static dyn FlowState,
+        page: impl FlowComponentDynTrait + 'static,
+    ) -> Result<Self, error::Error> {
+        debug_assert!(self.store.len() == state.index());
+        let alloc = GcBox::new(page)?;
+        let page = gc::coerce!(FlowComponentDynTrait, alloc);
+        unwrap!(self.store.push(page));
+        Ok(self)
+    }
+
+    fn current_page(&self) -> &GcBox<dyn FlowComponentDynTrait> {
+        &self.store[self.state.index()]
+    }
+
+    fn current_page_mut(&mut self) -> &mut GcBox<dyn FlowComponentDynTrait> {
+        &mut self.store[self.state.index()]
+    }
+
+    fn goto(&mut self, ctx: &mut EventCtx, direction: SwipeDirection) {
         self.swipe = SwipeDetect::new();
         self.allow_swipe = true;
 
-        self.store.event(
-            state.index(),
-            ctx,
-            Event::Attach(AttachType::Swipe(direction)),
-        );
+        self.current_page_mut()
+            .event(ctx, Event::Attach(AttachType::Swipe(direction)));
 
-        self.internal_pages = self.store.get_internal_page_count(state.index()) as u16;
+        self.internal_pages = self.current_page_mut().get_internal_page_count() as u16;
 
         match direction {
             SwipeDirection::Up => {
@@ -75,46 +169,43 @@ impl<Q: FlowState, S: FlowStore> SwipeFlow<Q, S> {
         ctx.request_paint();
     }
 
-    fn render_state<'s>(&'s self, state: Q, target: &mut impl Renderer<'s>) {
-        self.store.render(state.index(), target)
+    fn render_state<'s>(&'s self, state: usize, target: &mut RendererImpl<'_, 's, '_>) {
+        self.store[state].render(target);
     }
 
     fn handle_swipe_child(
         &mut self,
         _ctx: &mut EventCtx,
         direction: SwipeDirection,
-    ) -> Decision<Q> {
+    ) -> StateChange {
         self.state.handle_swipe(direction)
     }
 
-    fn handle_event_child(&mut self, ctx: &mut EventCtx, event: Event) -> Decision<Q> {
-        let msg = self.store.event(self.state.index(), ctx, event);
+    fn handle_event_child(&mut self, ctx: &mut EventCtx, event: Event) -> StateChange {
+        let msg = self.current_page_mut().event(ctx, event);
 
         if let Some(msg) = msg {
             self.state.handle_event(msg)
         } else {
-            Decision::Nothing
+            (self.state, Decision::Nothing)
         }
     }
-}
 
-impl<Q: FlowState, S: FlowStore> Component for SwipeFlow<Q, S> {
-    type Msg = FlowMsg;
-
-    fn place(&mut self, bounds: Rect) -> Rect {
-        self.store.place(bounds)
+    fn state_unchanged(&self) -> StateChange {
+        (self.state, Decision::Nothing)
     }
 
-    fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        let mut decision: Decision<Q> = Decision::Nothing;
+    fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<FlowMsg> {
+        let mut state_change = self.state_unchanged();
         let mut return_transition: AttachType = AttachType::Initial;
 
         let mut attach = false;
 
         let e = if self.allow_swipe {
-            let mut config = self.store.get_swipe_config(self.state.index());
+            let page = self.current_page();
+            let mut config = page.get_swipe_config();
 
-            self.internal_pages = self.store.get_internal_page_count(self.state.index()) as u16;
+            self.internal_pages = page.get_internal_page_count() as u16;
 
             // add additional swipe directions if there are more internal pages
             // todo can we get internal settings from config somehow?
@@ -135,9 +226,9 @@ impl<Q: FlowState, S: FlowStore> Component for SwipeFlow<Q, S> {
             match self.swipe.event(ctx, event, config) {
                 Some(SwipeDetectMsg::Trigger(dir)) => {
                     if let Some(override_decision) = self.decision_override.take() {
-                        decision = override_decision;
+                        state_change = override_decision;
                     } else {
-                        decision = self.handle_swipe_child(ctx, dir);
+                        state_change = self.handle_swipe_child(ctx, dir);
                     }
 
                     return_transition = AttachType::Swipe(dir);
@@ -148,11 +239,11 @@ impl<Q: FlowState, S: FlowStore> Component for SwipeFlow<Q, S> {
                             let current_state = self.internal_state;
                             if dir == SwipeDirection::Left && current_state < states_num - 1 {
                                 self.internal_state += 1;
-                                decision = Decision::Nothing;
+                                state_change = self.state_unchanged();
                                 attach = true;
                             } else if dir == SwipeDirection::Right && current_state > 0 {
                                 self.internal_state -= 1;
-                                decision = Decision::Nothing;
+                                state_change = self.state_unchanged();
                                 attach = true;
                             }
                         }
@@ -160,77 +251,75 @@ impl<Q: FlowState, S: FlowStore> Component for SwipeFlow<Q, S> {
                             let current_state = self.internal_state;
                             if dir == SwipeDirection::Up && current_state < states_num - 1 {
                                 self.internal_state += 1;
-                                decision = Decision::Nothing;
+                                state_change = self.state_unchanged();
                                 attach = true;
                             } else if dir == SwipeDirection::Down && current_state > 0 {
                                 self.internal_state -= 1;
-                                decision = Decision::Nothing;
+                                state_change = self.state_unchanged();
                                 attach = true;
                             }
                         }
                     }
 
-                    Some(Event::Swipe(SwipeEvent::End(dir)))
+                    Event::Swipe(SwipeEvent::End(dir))
                 }
                 Some(SwipeDetectMsg::Move(dir, progress)) => {
-                    Some(Event::Swipe(SwipeEvent::Move(dir, progress as i16)))
+                    Event::Swipe(SwipeEvent::Move(dir, progress as i16))
                 }
-                Some(SwipeDetectMsg::Start(_)) => Some(Event::Touch(TouchEvent::TouchAbort)),
-                _ => Some(event),
+                Some(SwipeDetectMsg::Start(_)) => Event::Touch(TouchEvent::TouchAbort),
+                _ => event,
             }
         } else {
-            Some(event)
+            event
         };
 
-        if let Some(e) = e {
-            match decision {
-                Decision::Nothing => {
-                    decision = self.handle_event_child(ctx, e);
+        match state_change {
+            (_, Decision::Nothing) => {
+                state_change = self.handle_event_child(ctx, e);
 
-                    // when doing internal transition, pass attach event to the child after sending
-                    // swipe end.
-                    if attach {
-                        if let Event::Swipe(SwipeEvent::End(dir)) = e {
-                            self.store.event(
-                                self.state.index(),
-                                ctx,
-                                Event::Attach(AttachType::Swipe(dir)),
-                            );
+                // when doing internal transition, pass attach event to the child after sending
+                // swipe end.
+                if attach {
+                    if let Event::Swipe(SwipeEvent::End(dir)) = e {
+                        self.current_page_mut()
+                            .event(ctx, Event::Attach(AttachType::Swipe(dir)));
+                    }
+                }
+
+                if ctx.disable_swipe_requested() {
+                    self.swipe.reset();
+                    self.allow_swipe = false;
+                }
+                if ctx.enable_swipe_requested() {
+                    self.swipe.reset();
+                    self.allow_swipe = true;
+                };
+
+                let config = self.current_page().get_swipe_config();
+
+                if let (_, Decision::Transition(direction)) = state_change {
+                    if config.is_allowed(direction) {
+                        if !animation_disabled() {
+                            self.swipe.trigger(ctx, direction, config);
+                            self.decision_override = Some(state_change);
+                            state_change = self.state_unchanged();
                         }
-                    }
-
-                    if ctx.disable_swipe_requested() {
-                        self.swipe.reset();
-                        self.allow_swipe = false;
-                    }
-                    if ctx.enable_swipe_requested() {
-                        self.swipe.reset();
                         self.allow_swipe = true;
-                    };
-
-                    let config = self.store.get_swipe_config(self.state.index());
-
-                    if let Decision::Goto(_, direction) = decision {
-                        if config.is_allowed(direction) {
-                            if !animation_disabled() {
-                                self.swipe.trigger(ctx, direction, config);
-                                self.decision_override = Some(decision);
-                                decision = Decision::Nothing;
-                            }
-                            self.allow_swipe = true;
-                        }
                     }
                 }
-                _ => {
-                    //ignore message, we are already transitioning
-                    self.store.event(self.state.index(), ctx, event);
-                }
+            }
+            _ => {
+                //ignore message, we are already transitioning
+                self.current_page_mut().event(ctx, event);
             }
         }
 
+        let (new_state, decision) = state_change;
+        self.state = new_state;
         match decision {
-            Decision::Goto(next_state, direction) => {
-                self.goto(ctx, direction, next_state);
+            Decision::Transition(direction) => {
+                self.state = new_state;
+                self.goto(ctx, direction);
                 None
             }
             Decision::Return(msg) => {
@@ -242,34 +331,49 @@ impl<Q: FlowState, S: FlowStore> Component for SwipeFlow<Q, S> {
             _ => None,
         }
     }
+}
 
-    fn paint(&mut self) {}
+/// ObjComponent implementation for SwipeFlow.
+///
+/// Instead of using the generic `impl ObjComponent for ComponentMsgObj`, we
+/// provide our own short-circuit implementation for `SwipeFlow`. This way we
+/// can completely avoid implementing `Component`. That also allows us to pass
+/// around concrete Renderers instead of having to conform to `Component`'s
+/// not-object-safe interface.
+///
+/// This implementation relies on the fact that swipe components always return
+/// `FlowMsg` as their `Component::Msg` (provided by `impl FlowComponentTrait`
+/// earlier in this file).
+#[cfg(feature = "micropython")]
+impl ObjComponent for SwipeFlow {
+    fn obj_place(&mut self, bounds: Rect) -> Rect {
+        for elem in self.store.iter_mut() {
+            elem.place(bounds);
+        }
+        bounds
+    }
 
-    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        self.render_state(self.state, target);
+    fn obj_event(&mut self, ctx: &mut EventCtx, event: Event) -> Result<Obj, Error> {
+        match self.event(ctx, event) {
+            None => Ok(Obj::const_none()),
+            Some(FlowMsg::Confirmed) => Ok(crate::ui::layout::result::CONFIRMED.as_obj()),
+            Some(FlowMsg::Cancelled) => Ok(crate::ui::layout::result::CANCELLED.as_obj()),
+            Some(FlowMsg::Info) => Ok(crate::ui::layout::result::INFO.as_obj()),
+            Some(FlowMsg::Choice(i)) => {
+                Ok((crate::ui::layout::result::CONFIRMED.as_obj(), i.try_into()?).try_into()?)
+            }
+        }
+    }
+    fn obj_paint(&mut self) {
+        render_on_display(None, Some(Color::black()), |target| {
+            self.render_state(self.state.index(), target);
+        });
     }
 }
 
 #[cfg(feature = "ui_debug")]
-impl<Q: FlowState, S: FlowStore> crate::trace::Trace for SwipeFlow<Q, S> {
+impl crate::trace::Trace for SwipeFlow {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        self.store.trace(self.state.index(), t)
-    }
-}
-
-#[cfg(feature = "micropython")]
-impl<Q: FlowState, S: FlowStore> crate::ui::layout::obj::ComponentMsgObj for SwipeFlow<Q, S> {
-    fn msg_try_into_obj(
-        &self,
-        msg: Self::Msg,
-    ) -> Result<crate::micropython::obj::Obj, error::Error> {
-        match msg {
-            FlowMsg::Confirmed => Ok(crate::ui::layout::result::CONFIRMED.as_obj()),
-            FlowMsg::Cancelled => Ok(crate::ui::layout::result::CANCELLED.as_obj()),
-            FlowMsg::Info => Ok(crate::ui::layout::result::INFO.as_obj()),
-            FlowMsg::Choice(i) => {
-                Ok((crate::ui::layout::result::CONFIRMED.as_obj(), i.try_into()?).try_into()?)
-            }
-        }
+        self.current_page().trace(t)
     }
 }

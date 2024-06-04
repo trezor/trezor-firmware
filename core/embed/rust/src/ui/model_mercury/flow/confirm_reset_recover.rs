@@ -1,13 +1,20 @@
 use crate::{
     error,
+    micropython::{map::Map, obj::Obj, util},
     translations::TR,
     ui::{
         button_request::ButtonRequestCode,
         component::{
+            swipe_detect::SwipeSettings,
             text::paragraphs::{Paragraph, Paragraphs},
             ButtonRequestExt, ComponentExt, SwipeDirection,
         },
-        flow::{base::Decision, flow_store, FlowMsg, FlowState, FlowStore, SwipeFlow},
+        flow::{
+            base::{DecisionBuilder as _, StateChange},
+            FlowMsg, FlowState, SwipeFlow,
+        },
+        layout::obj::LayoutObj,
+        model_mercury::component::SwipeContent,
     },
 };
 
@@ -16,50 +23,36 @@ use super::super::{
     theme,
 };
 
-#[derive(Copy, Clone, PartialEq, Eq, ToPrimitive)]
+#[derive(Copy, Clone, PartialEq, Eq)]
 pub enum ConfirmResetRecover {
     Intro,
     Menu,
 }
 
 impl FlowState for ConfirmResetRecover {
-    fn handle_swipe(&self, direction: SwipeDirection) -> Decision<Self> {
+    #[inline]
+    fn index(&'static self) -> usize {
+        *self as usize
+    }
+
+    fn handle_swipe(&'static self, direction: SwipeDirection) -> StateChange {
         match (self, direction) {
-            (ConfirmResetRecover::Intro, SwipeDirection::Left) => {
-                Decision::Goto(ConfirmResetRecover::Menu, direction)
-            }
-            (ConfirmResetRecover::Menu, SwipeDirection::Right) => {
-                Decision::Goto(ConfirmResetRecover::Intro, direction)
-            }
-            (ConfirmResetRecover::Intro, SwipeDirection::Up) => {
-                Decision::Return(FlowMsg::Confirmed)
-            }
-            _ => Decision::Nothing,
+            (Self::Intro, SwipeDirection::Left) => Self::Menu.swipe(direction),
+            (Self::Menu, SwipeDirection::Right) => Self::Intro.swipe(direction),
+            (Self::Intro, SwipeDirection::Up) => self.return_msg(FlowMsg::Confirmed),
+            _ => self.do_nothing(),
         }
     }
 
-    fn handle_event(&self, msg: FlowMsg) -> Decision<Self> {
+    fn handle_event(&'static self, msg: FlowMsg) -> StateChange {
         match (self, msg) {
-            (ConfirmResetRecover::Intro, FlowMsg::Info) => {
-                Decision::Goto(ConfirmResetRecover::Menu, SwipeDirection::Left)
-            }
-            (ConfirmResetRecover::Menu, FlowMsg::Cancelled) => {
-                Decision::Goto(ConfirmResetRecover::Intro, SwipeDirection::Right)
-            }
-            (ConfirmResetRecover::Menu, FlowMsg::Choice(0)) => Decision::Return(FlowMsg::Cancelled),
-            _ => Decision::Nothing,
+            (Self::Intro, FlowMsg::Info) => Self::Menu.swipe_left(),
+            (Self::Menu, FlowMsg::Cancelled) => Self::Intro.swipe_right(),
+            (Self::Menu, FlowMsg::Choice(0)) => self.return_msg(FlowMsg::Cancelled),
+            _ => self.do_nothing(),
         }
     }
 }
-
-use crate::{
-    micropython::{map::Map, obj::Obj, util},
-    ui::{
-        component::swipe_detect::SwipeSettings,
-        layout::obj::LayoutObj,
-        model_mercury::component::{PromptScreen, SwipeContent},
-    },
-};
 
 #[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub extern "C" fn new_confirm_reset_recover(
@@ -104,23 +97,9 @@ impl ConfirmResetRecover {
             FrameMsg::Button(_) => Some(FlowMsg::Cancelled),
         });
 
-        let content_confirm = Frame::left_aligned(
-            TR::reset__title_create_wallet.into(),
-            SwipeContent::new(PromptScreen::new_hold_to_confirm()),
-        )
-        .with_footer(TR::instructions__hold_to_confirm.into(), None)
-        .with_swipe(SwipeDirection::Down, SwipeSettings::default())
-        .map(|msg| match msg {
-            FrameMsg::Content(()) => Some(FlowMsg::Confirmed),
-            _ => Some(FlowMsg::Cancelled),
-        });
-
-        let store = flow_store()
-            .add(content_intro)?
-            .add(content_menu)?
-            .add(content_confirm)?;
-
-        let res = SwipeFlow::new(ConfirmResetRecover::Intro, store)?;
+        let res = SwipeFlow::new(&ConfirmResetRecover::Intro)?
+            .with_page(&ConfirmResetRecover::Intro, content_intro)?
+            .with_page(&ConfirmResetRecover::Menu, content_menu)?;
         Ok(LayoutObj::new(res)?.into())
     }
 }

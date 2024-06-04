@@ -1,23 +1,29 @@
 use crate::{
     error,
-    micropython::{iter::IterBuf, qstr::Qstr},
+    micropython::{iter::IterBuf, map::Map, obj::Obj, qstr::Qstr, util},
     strutil::TString,
     translations::TR,
     ui::{
         button_request::ButtonRequest,
-        component::{ButtonRequestExt, ComponentExt, SwipeDirection},
-        flow::{base::Decision, flow_store, FlowMsg, FlowState, FlowStore, SwipeFlow},
+        component::{swipe_detect::SwipeSettings, ButtonRequestExt, ComponentExt, SwipeDirection},
+        flow::{
+            base::{DecisionBuilder as _, StateChange},
+            FlowMsg, FlowState, SwipeFlow,
+        },
+        layout::obj::LayoutObj,
+        model_mercury::component::SwipeContent,
     },
 };
 
-use super::super::{
-    component::{Frame, FrameMsg, PromptScreen, VerticalMenu, VerticalMenuChoiceMsg},
-    theme,
+use super::{
+    super::{
+        component::{Frame, FrameMsg, PromptScreen, VerticalMenu, VerticalMenuChoiceMsg},
+        theme,
+    },
+    util::ShowInfoParams,
 };
 
-use super::util::ShowInfoParams;
-
-#[derive(Copy, Clone, PartialEq, Eq, ToPrimitive)]
+#[derive(Copy, Clone, PartialEq, Eq)]
 pub enum ConfirmSummary {
     Summary,
     Hold,
@@ -28,61 +34,39 @@ pub enum ConfirmSummary {
 }
 
 impl FlowState for ConfirmSummary {
-    fn handle_swipe(&self, direction: SwipeDirection) -> Decision<Self> {
+    #[inline]
+    fn index(&'static self) -> usize {
+        *self as usize
+    }
+
+    fn handle_swipe(&'static self, direction: SwipeDirection) -> StateChange {
         match (self, direction) {
-            (ConfirmSummary::Summary | ConfirmSummary::Hold, SwipeDirection::Left) => {
-                Decision::Goto(ConfirmSummary::Menu, direction)
+            (Self::Summary | Self::Hold, SwipeDirection::Left) => Self::Menu.swipe(direction),
+            (Self::Summary, SwipeDirection::Up) => Self::Hold.swipe(direction),
+            (Self::Hold, SwipeDirection::Down) => Self::Summary.swipe(direction),
+            (Self::Menu, SwipeDirection::Right) => Self::Summary.swipe(direction),
+            (Self::Menu, SwipeDirection::Left) => Self::FeeInfo.swipe(direction),
+            (Self::AccountInfo | Self::FeeInfo | Self::CancelTap, SwipeDirection::Right) => {
+                Self::Menu.swipe(direction)
             }
-            (ConfirmSummary::Summary, SwipeDirection::Up) => {
-                Decision::Goto(ConfirmSummary::Hold, direction)
-            }
-            (ConfirmSummary::Hold, SwipeDirection::Down) => {
-                Decision::Goto(ConfirmSummary::Summary, direction)
-            }
-            (ConfirmSummary::Menu, SwipeDirection::Right) => {
-                Decision::Goto(ConfirmSummary::Summary, direction)
-            }
-            (ConfirmSummary::Menu, SwipeDirection::Left) => {
-                Decision::Goto(ConfirmSummary::FeeInfo, direction)
-            }
-            (
-                ConfirmSummary::AccountInfo | ConfirmSummary::FeeInfo | ConfirmSummary::CancelTap,
-                SwipeDirection::Right,
-            ) => Decision::Goto(ConfirmSummary::Menu, direction),
-            _ => Decision::Nothing,
+            _ => self.do_nothing(),
         }
     }
 
-    fn handle_event(&self, msg: FlowMsg) -> Decision<Self> {
+    fn handle_event(&'static self, msg: FlowMsg) -> StateChange {
         match (self, msg) {
-            (_, FlowMsg::Info) => Decision::Goto(ConfirmSummary::Menu, SwipeDirection::Left),
-            (ConfirmSummary::Hold, FlowMsg::Confirmed) => Decision::Return(FlowMsg::Confirmed),
-            (ConfirmSummary::Menu, FlowMsg::Choice(0)) => {
-                Decision::Goto(ConfirmSummary::FeeInfo, SwipeDirection::Left)
-            }
-            (ConfirmSummary::Menu, FlowMsg::Choice(1)) => {
-                Decision::Goto(ConfirmSummary::AccountInfo, SwipeDirection::Left)
-            }
-            (ConfirmSummary::Menu, FlowMsg::Choice(2)) => {
-                Decision::Goto(ConfirmSummary::CancelTap, SwipeDirection::Left)
-            }
-            (ConfirmSummary::Menu, FlowMsg::Cancelled) => {
-                Decision::Goto(ConfirmSummary::Summary, SwipeDirection::Right)
-            }
-            (ConfirmSummary::CancelTap, FlowMsg::Confirmed) => Decision::Return(FlowMsg::Cancelled),
-            (_, FlowMsg::Cancelled) => Decision::Goto(ConfirmSummary::Menu, SwipeDirection::Right),
-            _ => Decision::Nothing,
+            (_, FlowMsg::Info) => Self::Menu.swipe_left(),
+            (Self::Hold, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Confirmed),
+            (Self::Menu, FlowMsg::Choice(0)) => Self::FeeInfo.swipe_left(),
+            (Self::Menu, FlowMsg::Choice(1)) => Self::AccountInfo.swipe_left(),
+            (Self::Menu, FlowMsg::Choice(2)) => Self::CancelTap.swipe_left(),
+            (Self::Menu, FlowMsg::Cancelled) => Self::Summary.swipe_right(),
+            (Self::CancelTap, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Cancelled),
+            (_, FlowMsg::Cancelled) => Self::Menu.swipe_right(),
+            _ => self.do_nothing(),
         }
     }
 }
-
-use crate::{
-    micropython::{map::Map, obj::Obj, util},
-    ui::{
-        component::swipe_detect::SwipeSettings, layout::obj::LayoutObj,
-        model_mercury::component::SwipeContent,
-    },
-};
 
 #[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub extern "C" fn new_confirm_summary(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
@@ -171,14 +155,14 @@ impl ConfirmSummary {
             FrameMsg::Button(_) => Some(FlowMsg::Cancelled),
         });
 
-        let store = flow_store()
-            .add(content_summary)?
-            .add(content_hold)?
-            .add(content_menu)?
-            .add(content_fee)?
-            .add(content_account)?
-            .add(content_cancel_tap)?;
-        let res = SwipeFlow::new(ConfirmSummary::Summary, store)?;
+        let res = SwipeFlow::new(&ConfirmSummary::Summary)?
+            .with_page(&ConfirmSummary::Summary, content_summary)?
+            .with_page(&ConfirmSummary::Hold, content_hold)?
+            .with_page(&ConfirmSummary::Menu, content_menu)?
+            .with_page(&ConfirmSummary::FeeInfo, content_fee)?
+            .with_page(&ConfirmSummary::AccountInfo, content_account)?
+            .with_page(&ConfirmSummary::CancelTap, content_cancel_tap)?;
+
         Ok(LayoutObj::new(res)?.into())
     }
 }

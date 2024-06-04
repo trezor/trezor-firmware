@@ -10,7 +10,10 @@ use crate::{
             text::paragraphs::{Paragraph, Paragraphs},
             ButtonRequestExt, ComponentExt, SwipeDirection,
         },
-        flow::{base::Decision, flow_store, FlowMsg, FlowState, FlowStore, SwipeFlow},
+        flow::{
+            base::{DecisionBuilder as _, StateChange},
+            FlowMsg, FlowState, SwipeFlow,
+        },
         layout::obj::LayoutObj,
         model_mercury::component::{PromptScreen, SwipeContent},
     },
@@ -21,7 +24,7 @@ use super::super::{
     theme,
 };
 
-#[derive(Copy, Clone, PartialEq, Eq, ToPrimitive)]
+#[derive(Copy, Clone, PartialEq, Eq)]
 pub enum ConfirmResetCreate {
     Intro,
     Menu,
@@ -29,43 +32,30 @@ pub enum ConfirmResetCreate {
 }
 
 impl FlowState for ConfirmResetCreate {
-    fn handle_swipe(&self, direction: SwipeDirection) -> Decision<Self> {
+    #[inline]
+    fn index(&'static self) -> usize {
+        *self as usize
+    }
+
+    fn handle_swipe(&'static self, direction: SwipeDirection) -> StateChange {
         match (self, direction) {
-            (ConfirmResetCreate::Intro, SwipeDirection::Left) => {
-                Decision::Goto(ConfirmResetCreate::Menu, direction)
-            }
-            (ConfirmResetCreate::Intro, SwipeDirection::Up) => {
-                Decision::Goto(ConfirmResetCreate::Confirm, direction)
-            }
-            (ConfirmResetCreate::Menu, SwipeDirection::Right) => {
-                Decision::Goto(ConfirmResetCreate::Intro, direction)
-            }
-            (ConfirmResetCreate::Confirm, SwipeDirection::Down) => {
-                Decision::Goto(ConfirmResetCreate::Intro, direction)
-            }
-            (ConfirmResetCreate::Confirm, SwipeDirection::Left) => {
-                Decision::Goto(ConfirmResetCreate::Menu, direction)
-            }
-            _ => Decision::Nothing,
+            (Self::Intro, SwipeDirection::Left) => Self::Menu.swipe(direction),
+            (Self::Intro, SwipeDirection::Up) => Self::Confirm.swipe(direction),
+            (Self::Menu, SwipeDirection::Right) => Self::Intro.swipe(direction),
+            (Self::Confirm, SwipeDirection::Down) => Self::Intro.swipe(direction),
+            (Self::Confirm, SwipeDirection::Left) => Self::Menu.swipe(direction),
+            _ => self.do_nothing(),
         }
     }
 
-    fn handle_event(&self, msg: FlowMsg) -> Decision<Self> {
+    fn handle_event(&'static self, msg: FlowMsg) -> StateChange {
         match (self, msg) {
-            (ConfirmResetCreate::Intro, FlowMsg::Info) => {
-                Decision::Goto(ConfirmResetCreate::Menu, SwipeDirection::Left)
-            }
-            (ConfirmResetCreate::Menu, FlowMsg::Cancelled) => {
-                Decision::Goto(ConfirmResetCreate::Intro, SwipeDirection::Right)
-            }
-            (ConfirmResetCreate::Menu, FlowMsg::Choice(0)) => Decision::Return(FlowMsg::Cancelled),
-            (ConfirmResetCreate::Confirm, FlowMsg::Confirmed) => {
-                Decision::Return(FlowMsg::Confirmed)
-            }
-            (ConfirmResetCreate::Confirm, FlowMsg::Info) => {
-                Decision::Goto(ConfirmResetCreate::Menu, SwipeDirection::Left)
-            }
-            _ => Decision::Nothing,
+            (Self::Intro, FlowMsg::Info) => Self::Menu.swipe_left(),
+            (Self::Menu, FlowMsg::Cancelled) => Self::Intro.swipe_right(),
+            (Self::Menu, FlowMsg::Choice(0)) => self.return_msg(FlowMsg::Cancelled),
+            (Self::Confirm, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Confirmed),
+            (Self::Confirm, FlowMsg::Info) => Self::Menu.swipe_left(),
+            _ => self.do_nothing(),
         }
     }
 }
@@ -124,12 +114,10 @@ impl ConfirmResetCreate {
         })
         .one_button_request(ButtonRequestCode::ResetDevice.with_type("confirm_setup_device"));
 
-        let store = flow_store()
-            .add(content_intro)?
-            .add(content_menu)?
-            .add(content_confirm)?;
-
-        let res = SwipeFlow::new(ConfirmResetCreate::Intro, store)?;
+        let res = SwipeFlow::new(&ConfirmResetCreate::Intro)?
+            .with_page(&ConfirmResetCreate::Intro, content_intro)?
+            .with_page(&ConfirmResetCreate::Menu, content_menu)?
+            .with_page(&ConfirmResetCreate::Confirm, content_confirm)?;
         Ok(LayoutObj::new(res)?.into())
     }
 }

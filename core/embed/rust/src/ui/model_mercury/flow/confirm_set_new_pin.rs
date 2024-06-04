@@ -1,14 +1,20 @@
 use crate::{
     error,
-    micropython::qstr::Qstr,
+    micropython::{map::Map, obj::Obj, qstr::Qstr, util},
     strutil::TString,
     translations::TR,
     ui::{
         component::{
+            swipe_detect::SwipeSettings,
             text::paragraphs::{Paragraph, Paragraphs},
             ComponentExt, SwipeDirection,
         },
-        flow::{base::Decision, FlowMsg, FlowState, FlowStore},
+        flow::{
+            base::{DecisionBuilder as _, StateChange},
+            FlowMsg, FlowState, SwipeFlow,
+        },
+        layout::obj::LayoutObj,
+        model_mercury::component::SwipeContent,
     },
 };
 
@@ -19,7 +25,7 @@ use super::super::{
     theme,
 };
 
-#[derive(Copy, Clone, PartialEq, Eq, ToPrimitive)]
+#[derive(Copy, Clone, PartialEq, Eq)]
 pub enum SetNewPin {
     Intro,
     Menu,
@@ -28,62 +34,36 @@ pub enum SetNewPin {
 }
 
 impl FlowState for SetNewPin {
-    fn handle_swipe(&self, direction: SwipeDirection) -> Decision<Self> {
-        match (self, direction) {
-            (SetNewPin::Intro, SwipeDirection::Left) => Decision::Goto(SetNewPin::Menu, direction),
-            (SetNewPin::Intro, SwipeDirection::Up) => Decision::Return(FlowMsg::Confirmed),
+    #[inline]
+    fn index(&'static self) -> usize {
+        *self as usize
+    }
 
-            (SetNewPin::Menu, SwipeDirection::Right) => Decision::Goto(SetNewPin::Intro, direction),
-            (SetNewPin::CancelPinIntro, SwipeDirection::Up) => {
-                Decision::Goto(SetNewPin::CancelPinConfirm, direction)
-            }
-            (SetNewPin::CancelPinIntro, SwipeDirection::Right) => {
-                Decision::Goto(SetNewPin::Intro, direction)
-            }
-            (SetNewPin::CancelPinConfirm, SwipeDirection::Down) => {
-                Decision::Goto(SetNewPin::CancelPinIntro, direction)
-            }
-            (SetNewPin::CancelPinConfirm, SwipeDirection::Right) => {
-                Decision::Goto(SetNewPin::Intro, direction)
-            }
-            _ => Decision::Nothing,
+    fn handle_swipe(&'static self, direction: SwipeDirection) -> StateChange {
+        match (self, direction) {
+            (Self::Intro, SwipeDirection::Left) => Self::Menu.swipe(direction),
+            (Self::Intro, SwipeDirection::Up) => self.return_msg(FlowMsg::Confirmed),
+            (Self::Menu, SwipeDirection::Right) => Self::Intro.swipe(direction),
+            (Self::CancelPinIntro, SwipeDirection::Up) => Self::CancelPinConfirm.swipe(direction),
+            (Self::CancelPinIntro, SwipeDirection::Right) => Self::Intro.swipe(direction),
+            (Self::CancelPinConfirm, SwipeDirection::Down) => Self::CancelPinIntro.swipe(direction),
+            (Self::CancelPinConfirm, SwipeDirection::Right) => Self::Intro.swipe(direction),
+            _ => self.do_nothing(),
         }
     }
 
-    fn handle_event(&self, msg: FlowMsg) -> Decision<Self> {
+    fn handle_event(&'static self, msg: FlowMsg) -> StateChange {
         match (self, msg) {
-            (SetNewPin::Intro, FlowMsg::Info) => {
-                Decision::Goto(SetNewPin::Menu, SwipeDirection::Left)
-            }
-            (SetNewPin::Menu, FlowMsg::Choice(0)) => {
-                Decision::Goto(SetNewPin::CancelPinIntro, SwipeDirection::Left)
-            }
-            (SetNewPin::Menu, FlowMsg::Cancelled) => {
-                Decision::Goto(SetNewPin::Intro, SwipeDirection::Right)
-            }
-            (SetNewPin::CancelPinIntro, FlowMsg::Cancelled) => {
-                Decision::Goto(SetNewPin::Intro, SwipeDirection::Right)
-            }
-            (SetNewPin::CancelPinConfirm, FlowMsg::Cancelled) => {
-                Decision::Goto(SetNewPin::CancelPinIntro, SwipeDirection::Right)
-            }
-            (SetNewPin::CancelPinConfirm, FlowMsg::Confirmed) => {
-                Decision::Return(FlowMsg::Cancelled)
-            }
-            _ => Decision::Nothing,
+            (Self::Intro, FlowMsg::Info) => Self::Menu.swipe_left(),
+            (Self::Menu, FlowMsg::Choice(0)) => Self::CancelPinIntro.swipe_left(),
+            (Self::Menu, FlowMsg::Cancelled) => Self::Intro.swipe_right(),
+            (Self::CancelPinIntro, FlowMsg::Cancelled) => Self::Intro.swipe_right(),
+            (Self::CancelPinConfirm, FlowMsg::Cancelled) => Self::CancelPinIntro.swipe_right(),
+            (Self::CancelPinConfirm, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Cancelled),
+            _ => self.do_nothing(),
         }
     }
 }
-
-use crate::{
-    micropython::{map::Map, obj::Obj, util},
-    ui::{
-        component::swipe_detect::SwipeSettings,
-        flow::{flow_store, SwipeFlow},
-        layout::obj::LayoutObj,
-        model_mercury::component::SwipeContent,
-    },
-};
 
 #[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub extern "C" fn new_set_new_pin(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
@@ -155,12 +135,11 @@ impl SetNewPin {
             _ => None,
         });
 
-        let store = flow_store()
-            .add(content_intro)?
-            .add(content_menu)?
-            .add(content_cancel_intro)?
-            .add(content_cancel_confirm)?;
-        let res = SwipeFlow::new(SetNewPin::Intro, store)?;
+        let res = SwipeFlow::new(&SetNewPin::Intro)?
+            .with_page(&SetNewPin::Intro, content_intro)?
+            .with_page(&SetNewPin::Menu, content_menu)?
+            .with_page(&SetNewPin::CancelPinIntro, content_cancel_intro)?
+            .with_page(&SetNewPin::CancelPinConfirm, content_cancel_confirm)?;
         Ok(LayoutObj::new(res)?.into())
     }
 }

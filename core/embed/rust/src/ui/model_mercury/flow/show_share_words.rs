@@ -10,7 +10,10 @@ use crate::{
             text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs, VecExt},
             ButtonRequestExt, ComponentExt, SwipeDirection,
         },
-        flow::{base::Decision, flow_store, FlowMsg, FlowState, FlowStore, SwipeFlow},
+        flow::{
+            base::{DecisionBuilder as _, StateChange},
+            FlowMsg, FlowState, SwipeFlow,
+        },
         layout::obj::LayoutObj,
         model_mercury::component::SwipeContent,
     },
@@ -22,7 +25,7 @@ use super::super::{
     theme,
 };
 
-#[derive(Copy, Clone, PartialEq, Eq, ToPrimitive)]
+#[derive(Copy, Clone, PartialEq, Eq)]
 pub enum ShowShareWords {
     Instruction,
     Words,
@@ -31,39 +34,28 @@ pub enum ShowShareWords {
 }
 
 impl FlowState for ShowShareWords {
-    fn handle_swipe(&self, direction: SwipeDirection) -> Decision<Self> {
+    #[inline]
+    fn index(&'static self) -> usize {
+        *self as usize
+    }
+
+    fn handle_swipe(&'static self, direction: SwipeDirection) -> StateChange {
         match (self, direction) {
-            (ShowShareWords::Instruction, SwipeDirection::Up) => {
-                Decision::Goto(ShowShareWords::Words, direction)
-            }
-            (ShowShareWords::Confirm, SwipeDirection::Down) => {
-                Decision::Goto(ShowShareWords::Words, direction)
-            }
-            (ShowShareWords::Words, SwipeDirection::Up) => {
-                Decision::Goto(ShowShareWords::Confirm, direction)
-            }
-            (ShowShareWords::Words, SwipeDirection::Down) => {
-                Decision::Goto(ShowShareWords::Instruction, direction)
-            }
-            (ShowShareWords::CheckBackupIntro, SwipeDirection::Up) => {
-                Decision::Return(FlowMsg::Confirmed)
-            }
-            _ => Decision::Nothing,
+            (Self::Instruction, SwipeDirection::Up) => Self::Words.swipe(direction),
+            (Self::Confirm, SwipeDirection::Down) => Self::Words.swipe(direction),
+            (Self::Words, SwipeDirection::Up) => Self::Confirm.swipe(direction),
+            (Self::Words, SwipeDirection::Down) => Self::Instruction.swipe(direction),
+            (Self::CheckBackupIntro, SwipeDirection::Up) => self.return_msg(FlowMsg::Confirmed),
+            _ => self.do_nothing(),
         }
     }
 
-    fn handle_event(&self, msg: FlowMsg) -> Decision<Self> {
+    fn handle_event(&'static self, msg: FlowMsg) -> StateChange {
         match (self, msg) {
-            (ShowShareWords::Words, FlowMsg::Cancelled) => {
-                Decision::Goto(ShowShareWords::Instruction, SwipeDirection::Down)
-            }
-            (ShowShareWords::Words, FlowMsg::Confirmed) => {
-                Decision::Goto(ShowShareWords::Confirm, SwipeDirection::Up)
-            }
-            (ShowShareWords::Confirm, FlowMsg::Confirmed) => {
-                Decision::Goto(ShowShareWords::CheckBackupIntro, SwipeDirection::Up)
-            }
-            _ => Decision::Nothing,
+            (Self::Words, FlowMsg::Cancelled) => Self::Instruction.swipe_down(),
+            (Self::Words, FlowMsg::Confirmed) => Self::Confirm.swipe_up(),
+            (Self::Confirm, FlowMsg::Confirmed) => Self::CheckBackupIntro.swipe_up(),
+            _ => self.do_nothing(),
         }
     }
 }
@@ -131,12 +123,14 @@ impl ShowShareWords {
         .with_swipe(SwipeDirection::Up, SwipeSettings::default())
         .map(|_| Some(FlowMsg::Confirmed));
 
-        let store = flow_store()
-            .add(content_instruction)?
-            .add(content_words)?
-            .add(content_confirm)?
-            .add(content_check_backup_intro)?;
-        let res = SwipeFlow::new(ShowShareWords::Instruction, store)?;
+        let res = SwipeFlow::new(&ShowShareWords::Instruction)?
+            .with_page(&ShowShareWords::Instruction, content_instruction)?
+            .with_page(&ShowShareWords::Words, content_words)?
+            .with_page(&ShowShareWords::Confirm, content_confirm)?
+            .with_page(
+                &ShowShareWords::CheckBackupIntro,
+                content_check_backup_intro,
+            )?;
         Ok(LayoutObj::new(res)?.into())
     }
 }

@@ -1,122 +1,100 @@
 use crate::{
     error,
     maybe_trace::MaybeTrace,
+    micropython::{map::Map, obj::Obj, qstr::Qstr, util},
     strutil::TString,
     translations::TR,
     ui::{
-        component::{text::paragraphs::Paragraph, ComponentExt, SwipeDirection},
-        flow::{base::Decision, FlowMsg, FlowState, FlowStore},
+        component::{
+            swipe_detect::SwipeSettings,
+            text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, VecExt},
+            Component, ComponentExt, Paginate, SwipeDirection,
+        },
+        flow::{
+            base::{DecisionBuilder as _, StateChange},
+            FlowMsg, FlowState, SwipeFlow, SwipePage,
+        },
+        layout::obj::LayoutObj,
     },
 };
 
 use super::super::{
-    component::{Frame, FrameMsg, PromptScreen, VerticalMenu, VerticalMenuChoiceMsg},
+    component::{Frame, FrameMsg, PromptScreen, SwipeContent, VerticalMenu, VerticalMenuChoiceMsg},
     theme,
 };
 
 // TODO: merge with code from https://github.com/trezor/trezor-firmware/pull/3805
 // when ready
 
-#[derive(Copy, Clone, PartialEq, Eq, ToPrimitive)]
+#[derive(Copy, Clone, PartialEq, Eq)]
 pub enum ConfirmAction {
     Intro,
     Menu,
     Confirm,
 }
 
+impl FlowState for ConfirmAction {
+    fn index(&'static self) -> usize {
+        *self as usize
+    }
+
+    fn handle_swipe(&'static self, direction: SwipeDirection) -> StateChange {
+        match (self, direction) {
+            (Self::Intro, SwipeDirection::Left) => Self::Menu.swipe(direction),
+            (Self::Menu, SwipeDirection::Right) => Self::Intro.swipe(direction),
+            (Self::Intro, SwipeDirection::Up) => Self::Confirm.swipe(direction),
+            (Self::Confirm, SwipeDirection::Down) => Self::Intro.swipe(direction),
+            (Self::Confirm, SwipeDirection::Left) => Self::Menu.swipe(direction),
+            _ => self.do_nothing(),
+        }
+    }
+
+    fn handle_event(&'static self, msg: FlowMsg) -> StateChange {
+        match (self, msg) {
+            (Self::Intro, FlowMsg::Info) => Self::Menu.swipe_left(),
+            (Self::Menu, FlowMsg::Cancelled) => Self::Intro.swipe_right(),
+            (Self::Menu, FlowMsg::Choice(0)) => self.return_msg(FlowMsg::Cancelled),
+            (Self::Menu, FlowMsg::Choice(1)) => self.return_msg(FlowMsg::Info),
+            (Self::Confirm, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Confirmed),
+            (Self::Confirm, FlowMsg::Info) => Self::Menu.swipe_left(),
+            _ => self.do_nothing(),
+        }
+    }
+}
+
 /// ConfirmAction flow without a separate "Tap to confirm" or "Hold to confirm"
 /// screen. Swiping up directly from the intro screen confirms action.
-#[derive(Copy, Clone, PartialEq, Eq, ToPrimitive)]
+#[derive(Copy, Clone, PartialEq, Eq)]
 pub enum ConfirmActionSimple {
     Intro,
     Menu,
 }
 
-impl FlowState for ConfirmAction {
-    fn handle_swipe(&self, direction: SwipeDirection) -> Decision<Self> {
-        match (self, direction) {
-            (ConfirmAction::Intro, SwipeDirection::Left) => {
-                Decision::Goto(ConfirmAction::Menu, direction)
-            }
-            (ConfirmAction::Menu, SwipeDirection::Right) => {
-                Decision::Goto(ConfirmAction::Intro, direction)
-            }
-            (ConfirmAction::Intro, SwipeDirection::Up) => {
-                Decision::Goto(ConfirmAction::Confirm, direction)
-            }
-            (ConfirmAction::Confirm, SwipeDirection::Down) => {
-                Decision::Goto(ConfirmAction::Intro, direction)
-            }
-            (ConfirmAction::Confirm, SwipeDirection::Left) => {
-                Decision::Goto(ConfirmAction::Menu, direction)
-            }
-            _ => Decision::Nothing,
-        }
-    }
-
-    fn handle_event(&self, msg: FlowMsg) -> Decision<Self> {
-        match (self, msg) {
-            (ConfirmAction::Intro, FlowMsg::Info) => {
-                Decision::Goto(ConfirmAction::Menu, SwipeDirection::Left)
-            }
-            (ConfirmAction::Menu, FlowMsg::Cancelled) => {
-                Decision::Goto(ConfirmAction::Intro, SwipeDirection::Right)
-            }
-            (ConfirmAction::Menu, FlowMsg::Choice(0)) => Decision::Return(FlowMsg::Cancelled),
-            (ConfirmAction::Menu, FlowMsg::Choice(1)) => Decision::Return(FlowMsg::Info),
-            (ConfirmAction::Confirm, FlowMsg::Confirmed) => Decision::Return(FlowMsg::Confirmed),
-            (ConfirmAction::Confirm, FlowMsg::Info) => {
-                Decision::Goto(ConfirmAction::Menu, SwipeDirection::Left)
-            }
-            _ => Decision::Nothing,
-        }
-    }
-}
-
 impl FlowState for ConfirmActionSimple {
-    fn handle_swipe(&self, direction: SwipeDirection) -> Decision<Self> {
+    #[inline]
+    fn index(&'static self) -> usize {
+        *self as usize
+    }
+
+    fn handle_swipe(&'static self, direction: SwipeDirection) -> StateChange {
         match (self, direction) {
-            (ConfirmActionSimple::Intro, SwipeDirection::Left) => {
-                Decision::Goto(ConfirmActionSimple::Menu, direction)
-            }
-            (ConfirmActionSimple::Menu, SwipeDirection::Right) => {
-                Decision::Goto(ConfirmActionSimple::Intro, direction)
-            }
-            (ConfirmActionSimple::Intro, SwipeDirection::Up) => {
-                Decision::Return(FlowMsg::Confirmed)
-            }
-            _ => Decision::Nothing,
+            (Self::Intro, SwipeDirection::Left) => Self::Menu.swipe(direction),
+            (Self::Menu, SwipeDirection::Right) => Self::Intro.swipe(direction),
+            (Self::Intro, SwipeDirection::Up) => self.return_msg(FlowMsg::Confirmed),
+            _ => self.do_nothing(),
         }
     }
 
-    fn handle_event(&self, msg: FlowMsg) -> Decision<Self> {
+    fn handle_event(&'static self, msg: FlowMsg) -> StateChange {
         match (self, msg) {
-            (ConfirmActionSimple::Intro, FlowMsg::Info) => {
-                Decision::Goto(ConfirmActionSimple::Menu, SwipeDirection::Left)
-            }
-            (ConfirmActionSimple::Menu, FlowMsg::Cancelled) => {
-                Decision::Goto(ConfirmActionSimple::Intro, SwipeDirection::Right)
-            }
-            (ConfirmActionSimple::Menu, FlowMsg::Choice(0)) => Decision::Return(FlowMsg::Cancelled),
-            (ConfirmActionSimple::Menu, FlowMsg::Choice(1)) => Decision::Return(FlowMsg::Info),
-            _ => Decision::Nothing,
+            (Self::Intro, FlowMsg::Info) => Self::Menu.swipe_left(),
+            (Self::Menu, FlowMsg::Cancelled) => Self::Intro.swipe_right(),
+            (Self::Menu, FlowMsg::Choice(0)) => self.return_msg(FlowMsg::Cancelled),
+            (Self::Menu, FlowMsg::Choice(1)) => self.return_msg(FlowMsg::Info),
+            _ => self.do_nothing(),
         }
     }
 }
-
-use crate::{
-    micropython::{map::Map, obj::Obj, qstr::Qstr, util},
-    ui::{
-        component::{
-            swipe_detect::SwipeSettings,
-            text::paragraphs::{ParagraphSource, ParagraphVecShort, VecExt},
-            Component, Paginate,
-        },
-        flow::{flow_store, SwipeFlow, SwipePage},
-        layout::obj::LayoutObj,
-        model_mercury::component::SwipeContent,
-    },
-};
 
 #[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
@@ -248,15 +226,15 @@ pub fn new_confirm_action_uni<T: Component + MaybeTrace + 'static>(
             FrameMsg::Button(_) => Some(FlowMsg::Info),
         });
 
-        let store = flow_store()
-            .add(content_intro)?
-            .add(content_menu)?
-            .add(content_confirm)?;
-        let res = SwipeFlow::new(ConfirmAction::Intro, store)?;
+        let res = SwipeFlow::new(&ConfirmAction::Intro)?
+            .with_page(&ConfirmAction::Intro, content_intro)?
+            .with_page(&ConfirmAction::Menu, content_menu)?
+            .with_page(&ConfirmAction::Confirm, content_confirm)?;
         Ok(LayoutObj::new(res)?.into())
     } else {
-        let store = flow_store().add(content_intro)?.add(content_menu)?;
-        let res = SwipeFlow::new(ConfirmActionSimple::Intro, store)?;
+        let res = SwipeFlow::new(&ConfirmActionSimple::Intro)?
+            .with_page(&ConfirmActionSimple::Intro, content_intro)?
+            .with_page(&ConfirmActionSimple::Menu, content_menu)?;
         Ok(LayoutObj::new(res)?.into())
     }
 }
