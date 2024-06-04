@@ -69,7 +69,7 @@ impl UnlockOverlay {
         canvas.fill_sector(center, r, 180.0 + angle, 280.0 + angle, transp);
         canvas.fill_circle(center, r - Self::THICKNESS, opaque, 255);
 
-        // Innner fixed circle
+        // Inner fixed circle
         let r = Self::RADIUS - (9 * Self::SPAN) / 2;
         canvas.fill_circle(center, r, transp, 255);
         canvas.fill_circle(center, r - Self::THICKNESS, opaque, 255);
@@ -78,9 +78,10 @@ impl UnlockOverlay {
 
 impl<'a> Shape<'a> for UnlockOverlay {
     fn bounds(&self) -> Rect {
+        // +1 pixel because middle pixel is not counted in circle radius
         Rect::new(
-            self.pos - Offset::uniform(Self::RADIUS),
-            self.pos + Offset::uniform(Self::RADIUS + 1),
+            self.pos - Offset::uniform(Self::RADIUS + 1),
+            self.pos + Offset::uniform(Self::RADIUS + 2),
         )
     }
 
