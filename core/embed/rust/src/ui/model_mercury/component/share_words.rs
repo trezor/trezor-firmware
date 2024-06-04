@@ -198,43 +198,6 @@ impl<'a> Component for ShareWords<'a> {
     fn bounds(&self, _sink: &mut dyn FnMut(Rect)) {}
 }
 
-// impl<'a> Swipable<Never> for ShareWords<'a> {
-//     fn swipe_start(
-//         &mut self,
-//         ctx: &mut EventCtx,
-//         direction: SwipeDirection,
-//     ) -> SwipableResult<Never> {
-//         // match direction {
-//         //     SwipeDirection::Up if !self.is_final_page() => {
-//         //         self.prev_index = self.page_index;
-//         //         self.page_index = (self.page_index +
-// 1).min(self.share_words.len() - 1);         //     }
-//         //     SwipeDirection::Down if !self.is_first_page() => {
-//         //         self.prev_index = self.page_index;
-//         //         self.page_index = self.page_index.saturating_sub(1);
-//         //     }
-//         //     _ => return SwipableResult::Ignored,
-//         // };
-//         // if util::animation_disabled() {
-//         //     ctx.request_paint();
-//         //     return SwipableResult::Animating;
-//         // }
-//         // self.animation = Some(Animation::new(
-//         //     0.0f32,
-//         //     1.0f32,
-//         //     ANIMATION_DURATION_MS,
-//         //     Instant::now(),
-//         // ));
-//         // ctx.request_anim_frame();
-//         // ctx.request_paint();
-//         // SwipableResult::Animating
-//     }
-//
-//     fn swipe_finished(&self) -> bool {
-//         self.animation.is_none()
-//     }
-//}
-
 #[cfg(feature = "ui_debug")]
 impl<'a> crate::trace::Trace for ShareWords<'a> {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {

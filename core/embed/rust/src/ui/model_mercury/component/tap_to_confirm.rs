@@ -243,9 +243,6 @@ impl Component for TapToConfirm {
     }
 }
 
-#[cfg(feature = "micropython")]
-impl crate::ui::flow::Swipable<()> for TapToConfirm {}
-
 #[cfg(feature = "ui_debug")]
 impl crate::trace::Trace for TapToConfirm {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {

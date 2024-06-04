@@ -11,7 +11,7 @@ use crate::{
 
 use crate::{
     micropython::gc::Gc,
-    ui::{component::swipe_detect::SwipeConfig, flow::SimpleSwipable},
+    ui::{component::swipe_detect::SwipeConfig, flow::Swipable},
 };
 
 /// `FlowStore` is essentially `Vec<Gc<dyn Component + SimpleSwipable>>` except
@@ -33,14 +33,14 @@ pub trait FlowStore {
     fn trace(&self, i: usize, t: &mut dyn crate::trace::Tracer);
 
     /// Forward `SimpleSwipable` methods to i-th element.
-    fn map_swipable<T>(&mut self, i: usize, func: impl FnOnce(&mut dyn SimpleSwipable) -> T) -> T;
+    fn map_swipable<T>(&mut self, i: usize, func: impl FnOnce(&mut dyn Swipable) -> T) -> T;
 
     fn get_swipe_config(&self, i: usize) -> SwipeConfig;
 
     fn get_internal_page_count(&mut self, i: usize) -> usize;
 
     /// Add a Component to the end of a `FlowStore`.
-    fn add<E: Component<Msg = FlowMsg> + MaybeTrace + SimpleSwipable>(
+    fn add<E: Component<Msg = FlowMsg> + MaybeTrace + Swipable>(
         self,
         elem: E,
     ) -> Result<impl FlowStore, error::Error>
@@ -75,15 +75,11 @@ impl FlowStore for FlowEmpty {
         panic!()
     }
 
-    fn map_swipable<T>(
-        &mut self,
-        _i: usize,
-        _func: impl FnOnce(&mut dyn SimpleSwipable) -> T,
-    ) -> T {
+    fn map_swipable<T>(&mut self, _i: usize, _func: impl FnOnce(&mut dyn Swipable) -> T) -> T {
         panic!()
     }
 
-    fn add<E: Component<Msg = FlowMsg> + MaybeTrace + SimpleSwipable>(
+    fn add<E: Component<Msg = FlowMsg> + MaybeTrace + Swipable>(
         self,
         elem: E,
     ) -> Result<impl FlowStore, error::Error>
@@ -125,7 +121,7 @@ impl<E: Component<Msg = FlowMsg>, P> FlowComponent2<E, P> {
 
 impl<E, P> FlowStore for FlowComponent2<E, P>
 where
-    E: Component<Msg = FlowMsg> + MaybeTrace + SimpleSwipable,
+    E: Component<Msg = FlowMsg> + MaybeTrace + Swipable,
     P: FlowStore,
 {
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -159,7 +155,7 @@ where
         }
     }
 
-    fn map_swipable<T>(&mut self, i: usize, func: impl FnOnce(&mut dyn SimpleSwipable) -> T) -> T {
+    fn map_swipable<T>(&mut self, i: usize, func: impl FnOnce(&mut dyn Swipable) -> T) -> T {
         if i == 0 {
             func(self.as_mut())
         } else {
@@ -167,7 +163,7 @@ where
         }
     }
 
-    fn add<F: Component<Msg = FlowMsg> + MaybeTrace + SimpleSwipable>(
+    fn add<F: Component<Msg = FlowMsg> + MaybeTrace + Swipable>(
         self,
         elem: F,
     ) -> Result<impl FlowStore, error::Error>
