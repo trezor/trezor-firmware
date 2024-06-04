@@ -1,8 +1,8 @@
-use crate::{
-    error,
-    ui::{component::SwipeDirection, geometry::Point},
-};
+use crate::{error, ui::geometry::Point};
 use core::convert::TryInto;
+
+#[cfg(feature = "touch")]
+use crate::ui::component::SwipeDirection;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum PhysicalButton {
