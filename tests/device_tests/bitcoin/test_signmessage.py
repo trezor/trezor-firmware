@@ -316,6 +316,7 @@ def test_signmessage(
 
 @pytest.mark.skip_t1b1
 @pytest.mark.skip_t2b1
+@pytest.mark.skip_t3t1(reason="Not yet implemented in new UI")
 @pytest.mark.parametrize(
     "coin_name, path, script_type, no_script_type, address, message, signature", VECTORS
 )

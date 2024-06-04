@@ -15,7 +15,7 @@ pub struct SwipePage<T> {
     current: usize,
 }
 
-impl<T: Component + Paginate + Clone> SwipePage<T> {
+impl<T: Component + Paginate> SwipePage<T> {
     pub fn vertical(inner: T) -> Self {
         Self {
             inner,
@@ -37,7 +37,7 @@ impl<T: Component + Paginate + Clone> SwipePage<T> {
     }
 }
 
-impl<T: Component + Paginate + Clone> Component for SwipePage<T> {
+impl<T: Component + Paginate> Component for SwipePage<T> {
     type Msg = T::Msg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
