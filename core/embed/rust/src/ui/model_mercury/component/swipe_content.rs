@@ -1,11 +1,9 @@
 use crate::{
     time::{Duration, Stopwatch},
     ui::{
-        component::{
-            base::{AttachType, SwipeEvent},
-            Component, Event, EventCtx, SwipeDirection,
-        },
+        component::{base::AttachType, Component, Event, EventCtx, SwipeDirection},
         display::Color,
+        event::SwipeEvent,
         geometry::{Offset, Rect},
         lerp::Lerp,
         shape,

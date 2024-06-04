@@ -3,12 +3,13 @@ use crate::{
     strutil::{self, TString},
     ui::{
         component::{
-            base::{ComponentExt, SwipeEvent},
+            base::ComponentExt,
             paginated::Paginate,
             text::paragraphs::{Paragraph, Paragraphs},
             Child, Component, Event, EventCtx, Pad, SwipeDirection,
         },
         display::Font,
+        event::SwipeEvent,
         geometry::{Alignment, Grid, Insets, Offset, Rect},
         shape::{self, Renderer},
     },

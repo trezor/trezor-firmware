@@ -1,21 +1,9 @@
-use crate::{
-    micropython::gc::Gc,
-    ui::{
-        animation::Animation,
-        component::{base::SwipeEvent, Component, Event, EventCtx, Paginate, SwipeDirection},
-        geometry::{Axis, Rect},
-        shape::Renderer,
-    },
+use crate::ui::{
+    component::{Component, Event, EventCtx, Paginate, SwipeDirection},
+    event::SwipeEvent,
+    geometry::{Axis, Rect},
+    shape::Renderer,
 };
-
-pub struct Transition<T> {
-    /// Clone of the component before page change.
-    cloned: Gc<T>,
-    /// Animation progress.
-    animation: Animation<f32>,
-    /// Direction of the slide animation.
-    direction: SwipeDirection,
-}
 
 /// Allows any implementor of `Paginate` to be part of `Swipable` UI flow.
 /// Renders sliding animation when changing pages.
@@ -62,35 +50,28 @@ impl<T: Component + Paginate + Clone> Component for SwipePage<T> {
         ctx.set_page_count(self.pages);
 
         if let Event::Swipe(SwipeEvent::End(direction)) = event {
-            if let Axis::Vertical = self.axis {
-                match direction {
-                    SwipeDirection::Up => {
-                        self.current = (self.current + 1).min(self.pages - 1);
-                        self.inner.change_page(self.current);
-                        ctx.request_paint();
-                    }
-                    SwipeDirection::Down => {
-                        self.current = self.current.saturating_sub(1);
-                        self.inner.change_page(self.current);
-                        ctx.request_paint();
-                    }
-                    _ => {}
+            match (self.axis, direction) {
+                (Axis::Vertical, SwipeDirection::Up) => {
+                    self.current = (self.current + 1).min(self.pages - 1);
+                    self.inner.change_page(self.current);
+                    ctx.request_paint();
                 }
-            }
-            if let Axis::Horizontal = self.axis {
-                match direction {
-                    SwipeDirection::Left => {
-                        self.current = (self.current + 1).min(self.pages - 1);
-                        self.inner.change_page(self.current);
-                        ctx.request_paint();
-                    }
-                    SwipeDirection::Right => {
-                        self.current = self.current.saturating_sub(1);
-                        self.inner.change_page(self.current);
-                        ctx.request_paint();
-                    }
-                    _ => {}
+                (Axis::Vertical, SwipeDirection::Down) => {
+                    self.current = self.current.saturating_sub(1);
+                    self.inner.change_page(self.current);
+                    ctx.request_paint();
                 }
+                (Axis::Horizontal, SwipeDirection::Left) => {
+                    self.current = (self.current + 1).min(self.pages - 1);
+                    self.inner.change_page(self.current);
+                    ctx.request_paint();
+                }
+                (Axis::Horizontal, SwipeDirection::Right) => {
+                    self.current = self.current.saturating_sub(1);
+                    self.inner.change_page(self.current);
+                    ctx.request_paint();
+                }
+                _ => {}
             }
         }
 

@@ -257,7 +257,8 @@ impl SwipeDetect {
                     match self.locked {
                         // advance in locked direction only
                         Some(locked) if config.progress(locked, ofs, 0) > 0 => (),
-                        // advance in direction other than locked clears the lock -- touch ends without triggering
+                        // advance in direction other than locked clears the lock -- touch ends
+                        // without triggering
                         Some(_) => self.locked = None,
                         None => {
                             for dir in SwipeDirection::iter() {
@@ -269,7 +270,6 @@ impl SwipeDetect {
                             }
                         }
                     };
-
 
                     let Some(locked) = self.locked else {
                         // No direction is locked. Touch ended without triggering a swipe.

@@ -1,4 +1,7 @@
-use crate::{error, ui::geometry::Point};
+use crate::{
+    error,
+    ui::{component::SwipeDirection, geometry::Point},
+};
 use core::convert::TryInto;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -64,4 +67,11 @@ impl TouchEvent {
 pub enum USBEvent {
     /// USB host has connected/disconnected.
     Connected(bool),
+}
+
+#[cfg(feature = "touch")]
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum SwipeEvent {
+    Move(SwipeDirection, i16),
+    End(SwipeDirection),
 }

@@ -2,7 +2,7 @@ use crate::{
     strutil::TString,
     ui::{
         component::{
-            base::{ComponentExt, SwipeEvent},
+            base::ComponentExt,
             label::Label,
             swipe_detect::{SwipeConfig, SwipeSettings},
             text::TextStyle,
@@ -11,6 +11,7 @@ use crate::{
             EventCtx, SwipeDetect, SwipeDirection,
         },
         display::Icon,
+        event::SwipeEvent,
         geometry::{Alignment, Insets, Point, Rect},
         lerp::Lerp,
         model_mercury::theme::TITLE_HEIGHT,
@@ -327,7 +328,7 @@ where
 #[cfg(feature = "micropython")]
 impl<T> crate::ui::flow::Swipable for Frame<T> {
     fn get_swipe_config(&self) -> SwipeConfig {
-        self.swipe.clone()
+        self.swipe
     }
 
     fn get_internal_page_count(&mut self) -> usize {

@@ -2,10 +2,10 @@ use crate::{
     error,
     ui::{
         component::{
-            base::{AttachType, SwipeEvent},
-            swipe_detect::SwipeSettings,
-            Component, Event, EventCtx, SwipeDetect, SwipeDetectMsg, SwipeDirection,
+            base::AttachType, swipe_detect::SwipeSettings, Component, Event, EventCtx, SwipeDetect,
+            SwipeDetectMsg, SwipeDirection,
         },
+        event::SwipeEvent,
         flow::{base::Decision, FlowMsg, FlowState, FlowStore},
         geometry::Rect,
         shape::Renderer,

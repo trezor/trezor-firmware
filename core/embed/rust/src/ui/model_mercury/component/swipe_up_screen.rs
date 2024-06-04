@@ -1,5 +1,6 @@
 use crate::ui::{
-    component::{base::SwipeEvent, Component, Event, EventCtx, SwipeDetect, SwipeDetectMsg},
+    component::{Component, Event, EventCtx, SwipeDetect, SwipeDetectMsg},
+    event::SwipeEvent,
     flow::Swipable,
     geometry::Rect,
     shape::Renderer,
