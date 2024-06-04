@@ -179,10 +179,10 @@ where
 
     pub fn with_swipe(mut self, dir: SwipeDirection, settings: SwipeSettings) -> Self {
         self.footer = self.footer.map(|f| match dir {
-                SwipeDirection::Up => f.with_swipe_up(),
-                SwipeDirection::Down => f.with_swipe_down(),
-                _ => f,
-            });
+            SwipeDirection::Up => f.with_swipe_up(),
+            SwipeDirection::Down => f.with_swipe_down(),
+            _ => f,
+        });
         self.swipe = self.swipe.with_swipe(dir, settings);
         self
     }
