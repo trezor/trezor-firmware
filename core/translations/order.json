@@ -934,5 +934,6 @@
   "932": "brightness__title",
   "933": "recovery__title_unlock_repeated_backup",
   "934": "recovery__unlock_repeated_backup",
-  "935": "recovery__unlock_repeated_backup_verb"
+  "935": "recovery__unlock_repeated_backup_verb",
+  "936": "homescreen__set_default"
 }
