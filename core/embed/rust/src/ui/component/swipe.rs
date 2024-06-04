@@ -22,6 +22,38 @@ impl SwipeDirection {
             SwipeDirection::Right => Offset::x(size.x),
         }
     }
+
+    pub fn iter() -> SwipeDirectionIterator {
+        SwipeDirectionIterator::new()
+    }
+}
+
+pub struct SwipeDirectionIterator {
+    current: Option<SwipeDirection>,
+}
+
+impl SwipeDirectionIterator {
+    pub fn new() -> Self {
+        SwipeDirectionIterator {
+            current: Some(SwipeDirection::Up),
+        }
+    }
+}
+
+impl Iterator for SwipeDirectionIterator {
+    type Item = SwipeDirection;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let next_state = match self.current {
+            Some(SwipeDirection::Up) => Some(SwipeDirection::Down),
+            Some(SwipeDirection::Down) => Some(SwipeDirection::Left),
+            Some(SwipeDirection::Left) => Some(SwipeDirection::Right),
+            Some(SwipeDirection::Right) => None,
+            None => None,
+        };
+
+        core::mem::replace(&mut self.current, next_state)
+    }
 }
 
 #[derive(Clone)]
