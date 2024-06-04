@@ -236,7 +236,7 @@ fn new_confirm_action_obj(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Err
     }
 }
 
-pub fn new_confirm_action_simple<T: Component + Paginate + Clone + MaybeTrace + 'static>(
+pub fn new_confirm_action_simple<T: Component + Paginate + MaybeTrace + 'static>(
     content: T,
     title: TString<'static>,
     subtitle: Option<TString<'static>>,

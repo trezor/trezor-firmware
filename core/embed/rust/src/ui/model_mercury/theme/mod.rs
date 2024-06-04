@@ -99,7 +99,6 @@ include_icon!(
     ICON_LOCKSCREEN_FILTER,
     "model_mercury/res/lockscreen_filter.toif"
 );
-include_icon!(ICON_CENTRAL_CIRCLE, "model_mercury/res/central_circle.toif");
 
 // Scrollbar/PIN dots - taken from model T
 include_icon!(DOT_ACTIVE, "model_mercury/res/scroll-active.toif");
@@ -127,14 +126,6 @@ include_icon!(
 // Icon for "next keyboard layout" for special characters
 include_icon!(ICON_ASTERISK, "model_mercury/res/asterisk16.toif");
 
-// Large, three-color icons.
-pub const WARN_COLOR: Color = ORANGE_LIGHT;
-pub const INFO_COLOR: Color = GREY_LIGHT;
-pub const SUCCESS_COLOR: Color = GREEN;
-pub const ERROR_COLOR: Color = ORANGE_DIMMED;
-include_icon!(IMAGE_FG_SUCCESS, "model_mercury/res/fg-check48.toif");
-include_icon!(IMAGE_BG_CIRCLE, "model_mercury/res/circle48.toif");
-
 // Welcome screen.
 include_icon!(ICON_LOGO, "model_mercury/res/lock_full.toif");
 
@@ -159,12 +150,6 @@ include_icon!(ICON_LOCK, "model_tt/res/lock16.toif");
 include_icon!(ICON_LOCK_BIG, "model_tt/res/lock24.toif");
 include_icon!(ICON_COINJOIN, "model_tt/res/coinjoin16.toif");
 include_icon!(ICON_MAGIC, "model_tt/res/magic.toif");
-
-include_icon!(IMAGE_FG_WARN, "model_tt/res/fg-warning48.toif");
-include_icon!(IMAGE_FG_ERROR, "model_tt/res/fg-error48.toif");
-include_icon!(IMAGE_FG_INFO, "model_tt/res/fg-info48.toif");
-include_icon!(IMAGE_FG_USER, "model_tt/res/fg-user48.toif");
-include_icon!(IMAGE_BG_OCTAGON, "model_tt/res/octagon48.toif");
 
 // Non-square button backgrounds.
 include_icon!(IMAGE_BG_BACK_BTN, "model_tt/res/bg-back40.toif");
