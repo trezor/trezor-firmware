@@ -366,6 +366,7 @@
     "homescreen__title_pin_not_set": "PIN not set",
     "homescreen__title_seedless": "Seedless",
     "homescreen__title_set": "Change homescreen?",
+    "homescreen__set_default": "Do you really want to set default homescreen image?",
     "inputs__back": "BACK",
     "inputs__cancel": "CANCEL",
     "inputs__delete": "DELETE",

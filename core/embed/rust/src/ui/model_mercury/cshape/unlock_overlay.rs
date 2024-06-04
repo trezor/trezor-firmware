@@ -70,7 +70,7 @@ impl UnlockOverlay {
         canvas.fill_circle(center, r - Self::THICKNESS, opaque, 255);
 
         // Inner fixed circle
-        let r = Self::RADIUS - (9 * Self::SPAN) / 2;
+        let r = Self::RADIUS - (9 * Self::SPAN) / 2 - 1;
         canvas.fill_circle(center, r, transp, 255);
         canvas.fill_circle(center, r - Self::THICKNESS, opaque, 255);
     }

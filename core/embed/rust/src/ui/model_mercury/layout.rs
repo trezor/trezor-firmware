@@ -586,24 +586,36 @@ extern "C" fn new_confirm_homescreen(n_args: usize, args: *const Obj, kwargs: *m
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let image: Obj = kwargs.get(Qstr::MP_QSTR_image)?;
 
-        let mut jpeg: BinaryData = image.try_into()?;
+        let jpeg: BinaryData = image.try_into()?;
 
         if jpeg.is_empty() {
             // Incoming data may be empty, meaning we should
-            // display default homescreen image.
-            jpeg = theme::IMAGE_HOMESCREEN.into();
+            // display default homescreen message.
+            let buttons = Button::cancel_confirm_text(None, Some(TR::buttons__change.into()));
+            let obj = LayoutObj::new(Frame::centered(
+                title,
+                Dialog::new(
+                    Paragraphs::new([Paragraph::new(
+                        &theme::TEXT_DEMIBOLD,
+                        TR::homescreen__set_default,
+                    )
+                    .centered()]),
+                    buttons,
+                ),
+            ))?;
+            Ok(obj.into())
+        } else {
+            if !check_homescreen_format(jpeg) {
+                return Err(value_error!("Invalid image."));
+            };
+
+            let buttons = Button::cancel_confirm_text(None, Some(TR::buttons__change.into()));
+            let obj = LayoutObj::new(Frame::centered(
+                title,
+                Dialog::new(Jpeg::new(jpeg, 1), buttons),
+            ))?;
+            Ok(obj.into())
         }
-
-        if !check_homescreen_format(jpeg) {
-            return Err(value_error!("Invalid image."));
-        };
-
-        let buttons = Button::cancel_confirm_text(None, Some(TR::buttons__change.into()));
-        let obj = LayoutObj::new(Frame::centered(
-            title,
-            Dialog::new(Jpeg::new(jpeg, 1), buttons),
-        ))?;
-        Ok(obj.into())
     };
 
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }

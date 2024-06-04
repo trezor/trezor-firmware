@@ -356,6 +356,7 @@ class TR:
     haptic_feedback__title: str = "Haptic feedback"
     homescreen__click_to_connect: str = "Click to Connect"
     homescreen__click_to_unlock: str = "Click to Unlock"
+    homescreen__set_default: str = "Do you really want to set default homescreen image?"
     homescreen__title_backup_failed: str = "Backup failed"
     homescreen__title_backup_needed: str = "Backup needed"
     homescreen__title_coinjoin_authorized: str = "Coinjoin authorized"

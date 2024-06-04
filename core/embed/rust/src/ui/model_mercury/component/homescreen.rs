@@ -10,7 +10,7 @@ use crate::{
         event::{TouchEvent, USBEvent},
         geometry::{Alignment, Alignment2D, Offset, Point, Rect},
         layout::util::get_user_custom_image,
-        model_mercury::{constant, theme::IMAGE_HOMESCREEN},
+        model_mercury::constant,
         shape::{self, Renderer},
     },
 };
@@ -20,7 +20,7 @@ use crate::ui::{
     constant::{screen, HEIGHT, WIDTH},
     model_mercury::{
         cshape,
-        theme::{GREY_LIGHT, ICON_KEY, TITLE_HEIGHT},
+        theme::{GREY_LIGHT, HOMESCREEN_ICON, ICON_KEY},
     },
     shape::{render_on_canvas, ImageBuffer, Rgb565Canvas},
     util::animation_disabled,
@@ -43,6 +43,46 @@ pub const HOMESCREEN_IMAGE_WIDTH: i16 = WIDTH;
 pub const HOMESCREEN_IMAGE_HEIGHT: i16 = HEIGHT;
 pub const HOMESCREEN_TOIF_SIZE: i16 = 144;
 
+fn render_default_hs<'a>(target: &mut impl Renderer<'a>) {
+    const OVERLAY_OFFSET: i16 = 9;
+
+    const RADIUS: i16 = 85;
+
+    const SPAN: i16 = 10;
+
+    const THICKNESS: i16 = 6;
+
+    const NUM_CIRCLES: i16 = 5;
+
+    let area = AREA.translate(Offset::y(OVERLAY_OFFSET));
+
+    shape::Bar::new(area)
+        .with_fg(theme::BG)
+        .with_bg(theme::BG)
+        .render(target);
+
+    #[cfg(any(feature = "universal_fw", feature = "ui_debug"))]
+    let colors = [0x0BB671, 0x247553, 0x235C44, 0x1D3E30, 0x14271F];
+    #[cfg(not(any(feature = "universal_fw", feature = "ui_debug")))]
+    let colors = [0xEEA600, 0xB27C00, 0x775300, 0x463100, 0x2C1F00];
+
+    for i in 0..NUM_CIRCLES {
+        let r = RADIUS - i * SPAN;
+        let fg = Color::from_u32(colors[i as usize]);
+        let bg = theme::BG;
+        let thickness = THICKNESS;
+        shape::Circle::new(area.center(), r)
+            .with_fg(fg)
+            .with_bg(bg)
+            .with_thickness(thickness)
+            .render(target);
+    }
+
+    shape::ToifImage::new(area.center(), HOMESCREEN_ICON.toif)
+        .with_align(Alignment2D::CENTER)
+        .render(target);
+}
+
 #[derive(Clone, Copy)]
 pub struct HomescreenNotification {
     pub text: TString<'static>,
@@ -52,8 +92,10 @@ pub struct HomescreenNotification {
 
 pub struct Homescreen {
     label: Label<'static>,
+    label_width: i16,
+    label_height: i16,
     notification: Option<(TString<'static>, u8)>,
-    image: BinaryData<'static>,
+    image: Option<BinaryData<'static>>,
     hold_to_lock: bool,
     loader: Loader,
     delay: Option<TimerToken>,
@@ -69,8 +111,13 @@ impl Homescreen {
         notification: Option<(TString<'static>, u8)>,
         hold_to_lock: bool,
     ) -> Self {
+        let label_width = label.map(|t| theme::TEXT_DEMIBOLD.text_font.text_width(t));
+        let label_height = label.map(|t| theme::TEXT_DEMIBOLD.text_font.visible_text_height(t));
+
         Self {
-            label: Label::new(label, Alignment::Start, theme::TEXT_DEMIBOLD).vertically_centered(),
+            label: Label::new(label, Alignment::Center, theme::TEXT_DEMIBOLD).vertically_centered(),
+            label_width,
+            label_height,
             notification,
             image: get_homescreen_image(),
             hold_to_lock,
@@ -171,7 +218,7 @@ impl Component for Homescreen {
     fn place(&mut self, bounds: Rect) -> Rect {
         self.loader.place(AREA.translate(LOADER_OFFSET));
         self.label
-            .place(bounds.split_top(TITLE_HEIGHT).0.translate(Offset::x(4)));
+            .place(bounds.split_top(38).0.split_left(self.label_width + 12).0);
         bounds
     }
 
@@ -192,10 +239,14 @@ impl Component for Homescreen {
         if self.loader.is_animating() || self.loader.is_completely_grown(Instant::now()) {
             self.render_loader(target);
         } else {
-            if let ImageInfo::Jpeg(_) = ImageInfo::parse(self.image) {
-                shape::JpegImage::new_image(AREA.center(), self.image)
-                    .with_align(Alignment2D::CENTER)
-                    .render(target);
+            if let Some(image) = self.image {
+                if let ImageInfo::Jpeg(_) = ImageInfo::parse(image) {
+                    shape::JpegImage::new_image(AREA.center(), image)
+                        .with_align(Alignment2D::CENTER)
+                        .render(target);
+                }
+            } else {
+                render_default_hs(target);
             }
 
             let label_width = self
@@ -203,7 +254,7 @@ impl Component for Homescreen {
                 .text()
                 .map(|t| theme::TEXT_DEMIBOLD.text_font.text_width(t));
 
-            let r = Rect::new(Point::new(-30, -30), Point::new(label_width + 12, 42));
+            let r = Rect::new(Point::new(-30, -30), Point::new(label_width + 12, 38));
             shape::Bar::new(r)
                 .with_bg(Color::black())
                 .with_alpha(160)
@@ -293,8 +344,10 @@ impl LockscreenAnim {
 
 pub struct Lockscreen {
     anim: LockscreenAnim,
-    label: TString<'static>,
-    image: BinaryData<'static>,
+    label: Label<'static>,
+    label_width: i16,
+    label_height: i16,
+    image: Option<BinaryData<'static>>,
     bootscreen: bool,
     coinjoin_authorized: bool,
     bg_image: ImageBuffer<Rgb565Canvas<'static>>,
@@ -306,12 +359,21 @@ impl Lockscreen {
         let mut buf = unwrap!(ImageBuffer::new(AREA.size()), "no image buf");
 
         render_on_canvas(buf.canvas(), None, |target| {
-            shape::JpegImage::new_image(Point::zero(), image).render(target);
+            if let Some(image) = image {
+                shape::JpegImage::new_image(Point::zero(), image).render(target);
+            } else {
+                render_default_hs(target);
+            }
         });
+
+        let label_width = label.map(|t| theme::TEXT_DEMIBOLD.text_font.text_width(t));
+        let label_height = label.map(|t| theme::TEXT_DEMIBOLD.text_font.visible_text_height(t));
 
         Lockscreen {
             anim: LockscreenAnim::default(),
-            label,
+            label: Label::new(label, Alignment::Center, theme::TEXT_DEMIBOLD),
+            label_width,
+            label_height,
             image,
             bootscreen,
             coinjoin_authorized,
@@ -324,6 +386,8 @@ impl Component for Lockscreen {
     type Msg = HomescreenMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
+        self.label
+            .place(bounds.split_top(38).0.split_left(self.label_width + 12).0);
         bounds
     }
 
@@ -395,29 +459,15 @@ impl Component for Lockscreen {
             (None, TR::lockscreen__tap_to_unlock)
         };
 
-        let mut label_style = theme::TEXT_DEMIBOLD;
-        label_style.text_color = theme::GREY_LIGHT;
+        self.label.render(target);
 
-        let mut offset = 0;
-
-        self.label.map(|t| {
-            offset = theme::TEXT_DEMIBOLD.text_font.visible_text_height(t);
-
-            let text_pos = Point::new(0, offset);
-
-            shape::Text::new(text_pos, t)
-                .with_font(theme::TEXT_DEMIBOLD.text_font)
-                .with_fg(theme::GREY_LIGHT)
-                .render(target);
-        });
-
-        offset += 6;
+        let mut offset = 6 + self.label_height;
 
         if let Some(t) = locked {
             t.map_translated(|t| {
                 offset += theme::TEXT_SUB_GREY.text_font.visible_text_height(t);
 
-                let text_pos = Point::new(0, offset);
+                let text_pos = Point::new(6, offset);
 
                 shape::Text::new(text_pos, t)
                     .with_font(theme::TEXT_SUB_GREY.text_font)
@@ -457,13 +507,13 @@ pub fn check_homescreen_format(image: BinaryData) -> bool {
     }
 }
 
-fn get_homescreen_image() -> BinaryData<'static> {
+fn get_homescreen_image() -> Option<BinaryData<'static>> {
     if let Ok(image) = get_user_custom_image() {
         if check_homescreen_format(image) {
-            return image;
+            return Some(image);
         }
     }
-    IMAGE_HOMESCREEN.into()
+    None
 }
 
 #[cfg(feature = "ui_debug")]
