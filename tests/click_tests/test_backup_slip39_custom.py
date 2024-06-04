@@ -18,7 +18,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from trezorlib import device, messages
+from trezorlib import device, messages, models
 
 from ..common import EXTERNAL_ENTROPY, WITH_MOCK_URANDOM, generate_entropy
 from . import reset
@@ -78,6 +78,9 @@ def test_backup_slip39_custom(
     if share_count > 1:
         # confirm shamir warning
         reset.confirm_read(debug, middle_r=True)
+    else:
+        # confirm backup intro
+        reset.confirm_read(debug, middle_r=True)
 
     all_words: list[str] = []
     for _ in range(share_count):
@@ -93,7 +96,10 @@ def test_backup_slip39_custom(
         all_words.append(" ".join(words))
 
     # confirm backup done
-    reset.confirm_read(debug)
+    if debug.model is models.T3T1 and share_count > 1:
+        reset.confirm_read(debug)
+    elif debug.model != models.T3T1:
+        reset.confirm_read(debug)
 
     # generate secret locally
     internal_entropy = debug.state().reset_entropy

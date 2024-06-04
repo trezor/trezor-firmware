@@ -108,7 +108,10 @@ def select_number_of_words(
         if debug.model in (models.T2B1,):
             TR.assert_in(layout.text_content(), "recovery__enter_backup")
         else:
-            TR.assert_in(layout.text_content(), "recovery__only_first_n_letters")
+            TR.assert_in_multiple(
+                layout.text_content(),
+                ["recovery__only_first_n_letters", "recovery__enter_each_word"],
+            )
     elif num_of_words in (20, 33):
         TR.assert_in_multiple(
             layout.text_content(),
@@ -116,12 +119,17 @@ def select_number_of_words(
                 "recovery__enter_backup",
                 "recovery__enter_any_share",
                 "recovery__only_first_n_letters",
+                "recovery__enter_each_word",
             ],
         )
     else:  # BIP-39
         TR.assert_in_multiple(
             layout.text_content(),
-            ["recovery__enter_backup", "recovery__only_first_n_letters"],
+            [
+                "recovery__enter_backup",
+                "recovery__only_first_n_letters",
+                "recovery__enter_each_word",
+            ],
         )
 
 
@@ -163,6 +171,7 @@ def enter_shares(
             "recovery__enter_backup",
             "recovery__enter_any_share",
             "recovery__only_first_n_letters",
+            "recovery__enter_each_word",
             text,
         ],
     )
@@ -247,7 +256,12 @@ def prepare_enter_seed(
 ) -> None:
     TR.assert_in_multiple(
         debug.read_layout().text_content(),
-        ["recovery__enter_backup", "recovery__only_first_n_letters", layout_text],
+        [
+            "recovery__enter_backup",
+            "recovery__only_first_n_letters",
+            "recovery__enter_each_word",
+            layout_text,
+        ],
     )
     if debug.model in (models.T2T1,):
         debug.click(buttons.OK, wait=True)

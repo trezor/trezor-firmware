@@ -64,6 +64,9 @@ def test_reset_slip39_advanced(
     # confirm back up
     reset.confirm_read(debug)
 
+    # confirm backup intro
+    reset.confirm_read(debug)
+
     # confirm checklist
     reset.confirm_read(debug)
 
