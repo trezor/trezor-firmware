@@ -212,7 +212,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_device_name__change_template;
   MP_QSTR_device_name__title;
   MP_QSTR_disable_animation;
-  MP_QSTR_dry_run;
   MP_QSTR_encode;
   MP_QSTR_encoded_length;
   MP_QSTR_entropy__send;

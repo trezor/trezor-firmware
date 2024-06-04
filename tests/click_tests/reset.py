@@ -41,15 +41,18 @@ def confirm_read(debug: "DebugLink", middle_r: bool = False) -> None:
             debug.press_right(wait=True)
 
 
-def cancel_backup(debug: "DebugLink", middle_r: bool = False) -> None:
+def cancel_backup(
+    debug: "DebugLink", middle_r: bool = False, confirm: bool = False
+) -> None:
     if debug.model in (models.T2T1,):
         debug.click(buttons.CANCEL, wait=True)
         debug.click(buttons.CANCEL, wait=True)
     elif debug.model in (models.T3T1,):
         debug.click(buttons.CORNER_BUTTON, wait=True)
         debug.click(buttons.VERTICAL_MENU[0], wait=True)
-        debug.swipe_up(wait=True)
-        debug.click(buttons.TAP_TO_CONFIRM)
+        if confirm:
+            debug.swipe_up(wait=True)
+            debug.click(buttons.TAP_TO_CONFIRM)
     elif debug.model in (models.T2B1,):
         debug.press_left(wait=True)
         debug.press_left(wait=True)

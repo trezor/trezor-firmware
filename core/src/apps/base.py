@@ -352,6 +352,8 @@ async def handle_CancelAuthorization(msg: CancelAuthorization) -> protobuf.Messa
 def set_homescreen() -> None:
     import storage.recovery as storage_recovery
 
+    from apps.common import backup
+
     set_default = workflow.set_default  # local_cache_attribute
 
     if storage_cache.is_set(storage_cache.APP_COMMON_BUSY_DEADLINE_MS):
@@ -369,7 +371,7 @@ def set_homescreen() -> None:
 
         set_default(screensaver, restart=True)
 
-    elif storage_recovery.is_in_progress():
+    elif storage_recovery.is_in_progress() or backup.repeated_backup_enabled():
         from apps.management.recovery_device.homescreen import recovery_homescreen
 
         set_default(recovery_homescreen)

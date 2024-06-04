@@ -21,7 +21,6 @@ async def recovery_homescreen() -> None:
     from apps.homescreen import homescreen
 
     if backup.repeated_backup_enabled():
-        storage_recovery.end_progress()
         await _continue_repeated_backup()
     elif not storage_recovery.is_in_progress():
         workflow.set_default(homescreen)
@@ -207,6 +206,8 @@ async def _finish_recovery_unlock_repeated_backup(
     is_slip39 = backup_types.is_slip39_backup_type(backup_type)
 
     result = _check_secret_against_stored_secret(secret, is_slip39, backup_type)
+
+    storage_recovery.end_progress()
 
     if result:
         backup.activate_repeated_backup()

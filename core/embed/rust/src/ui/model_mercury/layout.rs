@@ -488,6 +488,9 @@ impl ConfirmBlobParams {
     }
 }
 
+const RECOVERY_TYPE_DRY_RUN: u32 = 1;
+const RECOVERY_TYPE_UNLOCK_REPEATED_BACKUP: u32 = 2;
+
 extern "C" fn new_confirm_blob(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
@@ -1250,15 +1253,15 @@ extern "C" fn new_confirm_recovery(n_args: usize, args: *const Obj, kwargs: *mut
         let _title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let description: TString = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
         let _button: TString = kwargs.get(Qstr::MP_QSTR_button)?.try_into()?;
-        let dry_run: bool = kwargs.get(Qstr::MP_QSTR_dry_run)?.try_into()?;
+        let recovery_type: u32 = kwargs.get(Qstr::MP_QSTR_recovery_type)?.try_into()?;
         let _info_button: bool = kwargs.get_or(Qstr::MP_QSTR_info_button, false)?;
 
         let paragraphs = Paragraphs::new([Paragraph::new(&theme::TEXT_NORMAL, description)]);
 
-        let notification: TString = if dry_run {
-            TR::recovery__title_dry_run.into()
-        } else {
-            TR::recovery__title.into()
+        let notification = match recovery_type {
+            RECOVERY_TYPE_DRY_RUN => TR::recovery__title_dry_run.into(),
+            RECOVERY_TYPE_UNLOCK_REPEATED_BACKUP => TR::recovery__title_dry_run.into(),
+            _ => TR::recovery__title.into(),
         };
 
         let content = SwipeUpScreen::new(paragraphs);
@@ -1274,10 +1277,8 @@ extern "C" fn new_confirm_recovery(n_args: usize, args: *const Obj, kwargs: *mut
 
 extern "C" fn new_select_word_count(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let _dry_run: bool = kwargs.get(Qstr::MP_QSTR_dry_run)?.try_into()?;
-
         let obj = LayoutObj::new(Frame::left_aligned(
-            TR::recovery__select_num_of_words.into(),
+            TR::recovery__num_of_words.into(),
             SelectWordCount::new(),
         ))?;
         Ok(obj.into())
@@ -1903,7 +1904,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     title: str,
     ///     description: str,
     ///     button: str,
-    ///     dry_run: bool,
+    ///     recovery_type: RecoveryType,
     ///     info_button: bool = False,
     /// ) -> LayoutObj[UiResult]:
     ///     """Device recovery homescreen."""
@@ -1911,7 +1912,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
 
     /// def select_word_count(
     ///     *,
-    ///     dry_run: bool,
+    ///     recovery_type: RecoveryType,
     /// ) -> LayoutObj[int | str]:  # TT returns int
     ///     """Select mnemonic word count from (12, 18, 20, 24, 33)."""
     Qstr::MP_QSTR_select_word_count => obj_fn_kw!(0, new_select_word_count).as_obj(),

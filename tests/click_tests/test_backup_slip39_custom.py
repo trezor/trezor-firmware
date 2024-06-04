@@ -62,7 +62,7 @@ def test_backup_slip39_custom(
     reset.confirm_new_wallet(debug)
 
     # cancel back up
-    reset.cancel_backup(debug)
+    reset.cancel_backup(debug, confirm=True)
 
     assert device_handler.result() == "Initialized"
 

@@ -21,7 +21,7 @@ from trezorlib import device, messages
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import Cancelled, TrezorFailure
 
-from ..common import WITH_MOCK_URANDOM, MNEMONIC_SLIP39_BASIC_20_3of6
+from ..common import TEST_ADDRESS_N, WITH_MOCK_URANDOM, MNEMONIC_SLIP39_BASIC_20_3of6
 from ..input_flows import InputFlowSlip39BasicBackup, InputFlowSlip39BasicRecoveryDryRun
 
 
@@ -30,6 +30,7 @@ from ..input_flows import InputFlowSlip39BasicBackup, InputFlowSlip39BasicRecove
 @WITH_MOCK_URANDOM
 def test_repeated_backup(client: Client):
     assert client.features.backup_availability == messages.BackupAvailability.Required
+    assert client.features.recovery_status == messages.RecoveryStatus.Nothing
 
     # initial device backup
     mnemonics = []
@@ -42,6 +43,10 @@ def test_repeated_backup(client: Client):
     assert len(mnemonics) == 5
 
     # cannot backup, since we already just did that!
+    assert (
+        client.features.backup_availability == messages.BackupAvailability.NotAvailable
+    )
+    assert client.features.recovery_status == messages.RecoveryStatus.Nothing
     with pytest.raises(TrezorFailure, match=r".*Seed already backed up"):
         device.backup(client)
 
@@ -53,6 +58,10 @@ def test_repeated_backup(client: Client):
         client.set_input_flow(IF.get())
         ret = device.recover(client, type=messages.RecoveryType.UnlockRepeatedBackup)
         assert ret == messages.Success(message="Backup unlocked")
+        assert (
+            client.features.backup_availability == messages.BackupAvailability.Available
+        )
+        assert client.features.recovery_status == messages.RecoveryStatus.Backup
 
     # we can now perform another backup
     with client:
@@ -61,6 +70,10 @@ def test_repeated_backup(client: Client):
         device.backup(client)
 
     # the backup feature is locked again...
+    assert (
+        client.features.backup_availability == messages.BackupAvailability.NotAvailable
+    )
+    assert client.features.recovery_status == messages.RecoveryStatus.Nothing
     with pytest.raises(TrezorFailure, match=r".*Seed already backed up"):
         device.backup(client)
 
@@ -70,6 +83,7 @@ def test_repeated_backup(client: Client):
 @WITH_MOCK_URANDOM
 def test_repeated_backup_cancel(client: Client):
     assert client.features.backup_availability == messages.BackupAvailability.Required
+    assert client.features.recovery_status == messages.RecoveryStatus.Nothing
 
     # initial device backup
     mnemonics = []
@@ -82,6 +96,10 @@ def test_repeated_backup_cancel(client: Client):
     assert len(mnemonics) == 5
 
     # cannot backup, since we already just did that!
+    assert (
+        client.features.backup_availability == messages.BackupAvailability.NotAvailable
+    )
+    assert client.features.recovery_status == messages.RecoveryStatus.Nothing
     with pytest.raises(TrezorFailure, match=r".*Seed already backed up"):
         device.backup(client)
 
@@ -93,6 +111,10 @@ def test_repeated_backup_cancel(client: Client):
         client.set_input_flow(IF.get())
         ret = device.recover(client, type=messages.RecoveryType.UnlockRepeatedBackup)
         assert ret == messages.Success(message="Backup unlocked")
+        assert (
+            client.features.backup_availability == messages.BackupAvailability.Available
+        )
+        assert client.features.recovery_status == messages.RecoveryStatus.Backup
 
     client.debug.wait_layout()
 
@@ -101,6 +123,72 @@ def test_repeated_backup_cancel(client: Client):
     with pytest.raises(Cancelled):
         client.call(messages.Cancel())
 
+    client.refresh_features()
+
     # the backup feature is locked again...
+    assert (
+        client.features.backup_availability == messages.BackupAvailability.NotAvailable
+    )
+    assert client.features.recovery_status == messages.RecoveryStatus.Nothing
     with pytest.raises(TrezorFailure, match=r".*Seed already backed up"):
         device.backup(client)
+
+
+@pytest.mark.setup_client(needs_backup=True, mnemonic=MNEMONIC_SLIP39_BASIC_20_3of6)
+@pytest.mark.skip_t1b1
+@WITH_MOCK_URANDOM
+def test_repeated_backup_send_disallowed_message(client: Client):
+    assert client.features.backup_availability == messages.BackupAvailability.Required
+    assert client.features.recovery_status == messages.RecoveryStatus.Nothing
+
+    # initial device backup
+    mnemonics = []
+    with client:
+        IF = InputFlowSlip39BasicBackup(client, False)
+        client.set_input_flow(IF.get())
+        device.backup(client)
+        mnemonics = IF.mnemonics
+
+    assert len(mnemonics) == 5
+
+    # cannot backup, since we already just did that!
+    assert (
+        client.features.backup_availability == messages.BackupAvailability.NotAvailable
+    )
+    assert client.features.recovery_status == messages.RecoveryStatus.Nothing
+    with pytest.raises(TrezorFailure, match=r".*Seed already backed up"):
+        device.backup(client)
+
+    # unlock repeated backup by entering 3 of the 5 shares we have got
+    with client:
+        IF = InputFlowSlip39BasicRecoveryDryRun(
+            client, mnemonics[:3], unlock_repeated_backup=True
+        )
+        client.set_input_flow(IF.get())
+        ret = device.recover(client, type=messages.RecoveryType.UnlockRepeatedBackup)
+        assert ret == messages.Success(message="Backup unlocked")
+        assert (
+            client.features.backup_availability == messages.BackupAvailability.Available
+        )
+        assert client.features.recovery_status == messages.RecoveryStatus.Backup
+
+    client.debug.wait_layout()
+
+    # send a GetAddress message
+
+    resp = client.call_raw(
+        messages.GetAddress(
+            coin_name="Testnet",
+            address_n=TEST_ADDRESS_N,
+            show_display=True,
+            script_type=messages.InputScriptType.SPENDADDRESS,
+        )
+    )
+    assert isinstance(resp, messages.Failure)
+    assert "not allowed" in resp.message
+
+    assert client.features.backup_availability == messages.BackupAvailability.Available
+    assert client.features.recovery_status == messages.RecoveryStatus.Backup
+
+    # we are still on the confirmation screen!
+    assert client.debug.read_layout().text_content() == "Create additional backup?"
