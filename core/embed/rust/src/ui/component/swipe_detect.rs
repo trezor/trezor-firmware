@@ -71,12 +71,25 @@ impl SwipeConfig {
         if !self.is_allowed(dir) {
             return 0;
         }
-        let threshold = threshold as i16;
+
+        let correct_movement = match dir {
+            SwipeDirection::Right => movement.x > 0,
+            SwipeDirection::Left => movement.x < 0,
+            SwipeDirection::Down => movement.y > 0,
+            SwipeDirection::Up => movement.y < 0,
+        };
+
+        if !correct_movement {
+            return 0;
+        }
+
+        let movement = movement.abs();
+
         match dir {
-            SwipeDirection::Right => movement.x.min(0).saturating_sub(threshold) as u16,
-            SwipeDirection::Left => movement.x.max(0).saturating_sub(-threshold) as u16,
-            SwipeDirection::Down => movement.y.min(0).saturating_sub(threshold) as u16,
-            SwipeDirection::Up => movement.y.max(0).saturating_sub(-threshold) as u16,
+            SwipeDirection::Right => (movement.x as u16).saturating_sub(threshold),
+            SwipeDirection::Left => (movement.x as u16).saturating_sub(threshold),
+            SwipeDirection::Down => (movement.y as u16).saturating_sub(threshold),
+            SwipeDirection::Up => (movement.y as u16).saturating_sub(threshold),
         }
     }
 
@@ -215,7 +228,7 @@ impl SwipeDetect {
                     let res = match self.locked {
                         Some(locked) => {
                             // advance in locked direction only
-                            let moved = config.progress(locked, ofs, 0);
+                            let moved = config.progress(locked, ofs, self.min_lock());
                             Some(SwipeDetectMsg::Move(locked, self.progress(moved)))
                         }
                         None => {
@@ -254,25 +267,31 @@ impl SwipeDetect {
                     // constitutes a valid swipe.
                     let ofs = pos - origin;
 
-                    match self.locked {
-                        // advance in locked direction only
-                        Some(locked) if config.progress(locked, ofs, 0) > 0 => (),
-                        // advance in direction other than locked clears the lock -- touch ends
-                        // without triggering
-                        Some(_) => self.locked = None,
+                    let final_value = match self.locked {
+                        // advance in locked direction only trigger animation towards ending
+                        // position
+                        Some(locked) if config.progress(locked, ofs, self.min_trigger()) > 0 => {
+                            Self::PROGRESS_MAX
+                        }
+                        // advance in direction other than locked trigger animation towards starting
+                        // position
+                        Some(_) => 0,
                         None => {
+                            let mut res = 0;
                             for dir in SwipeDirection::iter() {
                                 // insta-lock if the movement went at least the trigger distance
                                 if config.progress(dir, ofs, self.min_trigger()) > 0 {
                                     self.locked = Some(dir);
-                                    break;
+                                    res = Self::PROGRESS_MAX;
                                 }
                             }
+
+                            res
                         }
                     };
 
                     let Some(locked) = self.locked else {
-                        // No direction is locked. Touch ended without triggering a swipe.
+                        // Touch ended without triggering a swipe.
                         return None;
                     };
 
@@ -290,7 +309,7 @@ impl SwipeDetect {
                         let duration = ((duration.to_millis() as f32 * ratio) as u32).max(0);
                         self.final_animation = Some(Animation::new(
                             self.moved as i16,
-                            Self::PROGRESS_MAX,
+                            final_value,
                             Duration::from_millis(duration),
                             Instant::now(),
                         ));
