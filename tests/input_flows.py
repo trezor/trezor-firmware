@@ -1275,8 +1275,9 @@ class InputFlowBip39Backup(InputFlowBase):
         self.mnemonic = None
 
     def input_flow_common(self) -> BRGeneratorType:
-        # 1. Confirm Reset
-        yield from click_through(self.debug, screens=1, code=B.ResetDevice)
+        # 1. Backup intro
+        # 2. Backup warning
+        yield from click_through(self.debug, screens=2, code=B.ResetDevice)
 
         # mnemonic phrases and rest
         self.mnemonic = yield from get_mnemonic_and_confirm_success(self.debug)
@@ -1291,8 +1292,9 @@ class InputFlowBip39ResetBackup(InputFlowBase):
     def input_flow_tt(self) -> BRGeneratorType:
         # 1. Confirm Reset
         # 2. Backup your seed
-        # 3. Confirm warning
-        yield from click_through(self.debug, screens=3, code=B.ResetDevice)
+        # 3. Backup intro
+        # 4. Confirm warning
+        yield from click_through(self.debug, screens=4, code=B.ResetDevice)
 
         # mnemonic phrases and rest
         self.mnemonic = yield from get_mnemonic_and_confirm_success(self.debug)
@@ -1300,16 +1302,19 @@ class InputFlowBip39ResetBackup(InputFlowBase):
     def input_flow_tr(self) -> BRGeneratorType:
         # 1. Confirm Reset
         # 2. Backup your seed
-        # 3. Confirm warning
-        yield from click_through(self.debug, screens=3, code=B.ResetDevice)
+        # 3. Backup intro
+        # 4. Confirm warning
+        yield from click_through(self.debug, screens=4, code=B.ResetDevice)
 
         # mnemonic phrases and rest
         self.mnemonic = yield from get_mnemonic_and_confirm_success(self.debug)
 
     def input_flow_t3t1(self) -> BRGeneratorType:
-        # 1. Confirm Reset x3
-        # 2. Backup your seed
-        # 3. Confirm warning
+        # 1. Confirm Reset
+        # 2. Wallet created
+        # 3. Backup your seed
+        # 4. Backup intro
+        # 5. Confirm warning
         yield from click_through(self.debug, screens=5, code=B.ResetDevice)
 
         # mnemonic phrases and rest
@@ -1345,6 +1350,10 @@ class InputFlowBip39ResetPIN(InputFlowBase):
         assert br.code == B.ResetDevice
         self.debug.press_yes()
 
+        br = yield  # Backup intro
+        assert br.code == B.ResetDevice
+        self.debug.press_yes()
+
         # mnemonic phrases
         self.mnemonic = yield from read_and_confirm_mnemonic(self.debug)
 
@@ -1363,11 +1372,12 @@ class InputFlowBip39ResetFailedCheck(InputFlowBase):
         self.mnemonic = None
 
     def input_flow_common(self) -> BRGeneratorType:
-        screens = 4 if self.debug.model is models.T3T1 else 3
+        screens = 5 if self.debug.model is models.T3T1 else 4
         # 1. Confirm Reset
-        # 1a. (T3T1) done
-        # 2. Backup your seed
-        # 3. Confirm warning
+        # 1a. (T3T1) Walet Creation done
+        # 2. Confirm backup prompt
+        # 3. Backup your seed
+        # 4. Confirm warning
         yield from click_through(self.debug, screens=screens, code=B.ResetDevice)
 
         # mnemonic phrases, wrong answer
@@ -1417,21 +1427,23 @@ class InputFlowSlip39BasicBackup(InputFlowBase):
         self.click_info = click_info
 
     def input_flow_tt(self) -> BRGeneratorType:
-        yield  # 1. Checklist
+        yield  # 1. Backup intro
+        self.debug.press_yes()
+        yield  # 2. Checklist
         self.debug.press_yes()
         if self.click_info:
             yield from click_info_button_tt(self.debug)
-        yield  # 2. Number of shares (5)
+        yield  # 3. Number of shares (5)
         self.debug.press_yes()
-        yield  # 3. Checklist
+        yield  # 4. Checklist
         self.debug.press_yes()
         if self.click_info:
             yield from click_info_button_tt(self.debug)
-        yield  # 4. Threshold (3)
+        yield  # 5. Threshold (3)
         self.debug.press_yes()
-        yield  # 5. Checklist
+        yield  # 6. Checklist
         self.debug.press_yes()
-        yield  # 6. Confirm show seeds
+        yield  # 7. Confirm show seeds
         self.debug.press_yes()
 
         # Mnemonic phrases
@@ -1442,21 +1454,23 @@ class InputFlowSlip39BasicBackup(InputFlowBase):
         self.debug.press_yes()
 
     def input_flow_tr(self) -> BRGeneratorType:
-        yield  # 1. Checklist
+        yield  # 1. Backup intro
         self.debug.press_yes()
-        yield  # 1.5 Number of shares info
+        yield  # 2. Checklist
         self.debug.press_yes()
-        yield  # 2. Number of shares (5)
+        yield  # 2.5 Number of shares info
+        self.debug.press_yes()
+        yield  # 3. Number of shares (5)
         self.debug.input("5")
-        yield  # 3. Checklist
+        yield  # 4. Checklist
         self.debug.press_yes()
-        yield  # 3.5 Threshold info
+        yield  # 4.5 Threshold info
         self.debug.press_yes()
-        yield  # 4. Threshold (3)
+        yield  # 5. Threshold (3)
         self.debug.input("3")
-        yield  # 5. Checklist
+        yield  # 6. Checklist
         self.debug.press_yes()
-        yield  # 6. Confirm show seeds
+        yield  # 7. Confirm show seeds
         self.debug.press_yes()
 
         # Mnemonic phrases
@@ -1467,22 +1481,25 @@ class InputFlowSlip39BasicBackup(InputFlowBase):
         self.debug.press_yes()
 
     def input_flow_t3t1(self) -> BRGeneratorType:
-        yield  # 1. Checklist
+        yield  # 1. Backup intro
+        self.debug.wait_layout()
+        self.debug.swipe_up()
+        yield  # 2. Checklist
         self.debug.wait_layout()
         self.debug.swipe_up(wait=True)
         if self.click_info:
             click_info_button_mercury(self.debug)
-        yield  # 2. Number of shares (5)
+        yield  # 3. Number of shares (5)
         self.debug.swipe_up()
-        yield  # 3. Checklist
+        yield  # 4. Checklist
         self.debug.swipe_up(wait=True)
         if self.click_info:
             click_info_button_mercury(self.debug)
-        yield  # 4. Threshold (3)
+        yield  # 5. Threshold (3)
         self.debug.swipe_up()
-        yield  # 5. Checklist
+        yield  # 6. Checklist
         self.debug.swipe_up()
-        yield  # 6. Confirm show seeds
+        yield  # 7. Confirm show seeds
         self.debug.swipe_up()
 
         # Mnemonic phrases
@@ -1501,13 +1518,14 @@ class InputFlowSlip39BasicResetRecovery(InputFlowBase):
     def input_flow_tt(self) -> BRGeneratorType:
         # 1. Confirm Reset
         # 2. Backup your seed
-        # 3. Confirm warning
-        # 4. shares info
-        # 5. Set & Confirm number of shares
-        # 6. threshold info
-        # 7. Set & confirm threshold value
-        # 8. Confirm show seeds
-        yield from click_through(self.debug, screens=8, code=B.ResetDevice)
+        # 3. Backup intro
+        # 4. Confirm warning
+        # 5. shares info
+        # 6. Set & Confirm number of shares
+        # 7. threshold info
+        # 8. Set & confirm threshold value
+        # 9. Confirm show seeds
+        yield from click_through(self.debug, screens=9, code=B.ResetDevice)
 
         # Mnemonic phrases
         self.mnemonics = yield from load_N_shares(self.debug, 5)
@@ -1520,6 +1538,8 @@ class InputFlowSlip39BasicResetRecovery(InputFlowBase):
         yield  # Confirm Reset
         self.debug.press_yes()
         yield  # Backup your seed
+        self.debug.press_yes()
+        yield  # Backup intro
         self.debug.press_yes()
         yield  # Checklist
         self.debug.press_yes()
@@ -1547,9 +1567,9 @@ class InputFlowSlip39BasicResetRecovery(InputFlowBase):
 
     def input_flow_t3t1(self) -> BRGeneratorType:
         # 1. Confirm Reset
-        # 2. Backup your seed
-        # 3. Confirm warning
-        # 4. shares info
+        # 2. Wallet Created
+        # 3. Backup your seed
+        # 4. Backup intro
         # 5. Set & Confirm number of shares
         # 6. threshold info
         # 7. Set & confirm threshold value
@@ -1576,6 +1596,9 @@ class InputFlowSlip39CustomBackup(InputFlowBase):
         if self.share_count > 1:
             yield  # Checklist
             self.debug.press_yes()
+        else:
+            yield  # Backup intro
+            self.debug.press_yes()
 
         yield  # Confirm show seeds
         self.debug.press_yes()
@@ -1591,6 +1614,9 @@ class InputFlowSlip39CustomBackup(InputFlowBase):
         if self.share_count > 1:
             yield  # Checklist
             self.debug.press_yes()
+        else:
+            yield  # Backup intro
+            self.debug.press_yes()
 
         yield  # Confirm show seeds
         self.debug.press_yes()
@@ -1605,6 +1631,9 @@ class InputFlowSlip39CustomBackup(InputFlowBase):
     def input_flow_t3t1(self) -> BRGeneratorType:
         if self.share_count > 1:
             yield  # Checklist
+            self.debug.press_yes()
+        else:
+            yield  # Backup intro
             self.debug.press_yes()
 
         yield  # Confirm show seeds
@@ -1643,19 +1672,21 @@ class InputFlowSlip39AdvancedBackup(InputFlowBase):
         self.click_info = click_info
 
     def input_flow_tt(self) -> BRGeneratorType:
-        yield  # 1. Checklist
+        yield  # 1. Backup intro
+        self.debug.press_yes()
+        yield  # 2. Checklist
         self.debug.press_yes()
         if self.click_info:
             yield from click_info_button_tt(self.debug)
-        yield  # 2. Set and confirm group count
+        yield  # 3. Set and confirm group count
         self.debug.press_yes()
-        yield  # 3. Checklist
+        yield  # 4. Checklist
         self.debug.press_yes()
         if self.click_info:
             yield from click_info_button_tt(self.debug)
-        yield  # 4. Set and confirm group threshold
+        yield  # 5. Set and confirm group threshold
         self.debug.press_yes()
-        yield  # 5. Checklist
+        yield  # 6. Checklist
         self.debug.press_yes()
         for _ in range(5):  # for each of 5 groups
             if self.click_info:
@@ -1677,15 +1708,17 @@ class InputFlowSlip39AdvancedBackup(InputFlowBase):
         self.debug.press_yes()
 
     def input_flow_tr(self) -> BRGeneratorType:
-        yield  # 1. Checklist
+        yield  # 1. Backup intro
         self.debug.press_yes()
-        yield  # 2. Set and confirm group count
+        yield  # 2. Checklist
+        self.debug.press_yes()
+        yield  # 3. Set and confirm group count
         self.debug.input("5")
-        yield  # 3. Checklist
+        yield  # 4. Checklist
         self.debug.press_yes()
-        yield  # 4. Set and confirm group threshold
+        yield  # 5. Set and confirm group threshold
         self.debug.input("3")
-        yield  # 5. Checklist
+        yield  # 6. Checklist
         self.debug.press_yes()
         for _ in range(5):  # for each of 5 groups
             yield  # Number of shares info
@@ -1707,19 +1740,22 @@ class InputFlowSlip39AdvancedBackup(InputFlowBase):
         self.debug.press_yes()
 
     def input_flow_t3t1(self) -> BRGeneratorType:
-        yield  # 1. Checklist
+        yield  # 1. Backup intro
+        self.debug.wait_layout()
+        self.debug.swipe_up()
+        yield  # 2. Checklist
         self.debug.swipe_up(wait=True)
         if self.click_info:
             click_info_button_mercury(self.debug)
-        yield  # 2. Set and confirm group count
+        yield  # 3. Set and confirm group count
         self.debug.swipe_up()
-        yield  # 3. Checklist
+        yield  # 4. Checklist
         self.debug.swipe_up(wait=True)
         if self.click_info:
             click_info_button_mercury(self.debug)
-        yield  # 4. Set and confirm group threshold
+        yield  # 5. Set and confirm group threshold
         self.debug.swipe_up()
-        yield  # 5. Checklist
+        yield  # 6. Checklist
         self.debug.swipe_up(wait=True)
         for _i in range(5):  # for each of 5 groups
             if self.click_info:
@@ -1750,16 +1786,17 @@ class InputFlowSlip39AdvancedResetRecovery(InputFlowBase):
     def input_flow_tt(self) -> BRGeneratorType:
         # 1. Confirm Reset
         # 2. Backup your seed
-        # 3. Confirm warning
-        # 4. shares info
-        # 5. Set & Confirm number of groups
-        # 6. threshold info
-        # 7. Set & confirm group threshold value
-        # 8-17: for each of 5 groups:
+        # 3. Backup intro
+        # 4. Confirm warning
+        # 5. shares info
+        # 6. Set & Confirm number of groups
+        # 7. threshold info
+        # 8. Set & confirm group threshold value
+        # 9-18: for each of 5 groups:
         #   1. Set & Confirm number of shares
         #   2. Set & confirm share threshold value
-        # 18. Confirm show seeds
-        yield from click_through(self.debug, screens=18, code=B.ResetDevice)
+        # 19. Confirm show seeds
+        yield from click_through(self.debug, screens=19, code=B.ResetDevice)
 
         # Mnemonic phrases - show & confirm shares for all groups
         self.mnemonics = yield from load_5_groups_5_shares(self.debug)
@@ -1772,6 +1809,8 @@ class InputFlowSlip39AdvancedResetRecovery(InputFlowBase):
         yield  # Wallet backup
         self.debug.press_yes()
         yield  # Wallet creation
+        self.debug.press_yes()
+        yield  # Backup intro
         self.debug.press_yes()
         yield  # Checklist
         self.debug.press_yes()
@@ -1804,17 +1843,19 @@ class InputFlowSlip39AdvancedResetRecovery(InputFlowBase):
 
     def input_flow_t3t1(self) -> BRGeneratorType:
         # 1. Confirm Reset
-        # 2. Backup your seed
-        # 3. Confirm warning
-        # 4. shares info
-        # 5. Set & Confirm number of groups
-        # 6. threshold info
-        # 7. Set & confirm group threshold value
-        # 8-17: for each of 5 groups:
+        # 2. Wallet Created
+        # 3. Prompt Backup
+        # 4. Backup intro
+        # 5. Confirm warning
+        # 6. shares info
+        # 7. Set & Confirm number of groups
+        # 8. threshold info
+        # 9. Set & confirm group threshold value
+        # 10-19: for each of 5 groups:
         #   1. Set & Confirm number of shares
         #   2. Set & confirm share threshold value
-        # 18. Confirm show seeds
-        yield from click_through(self.debug, screens=19, code=B.ResetDevice)
+        # 20. Confirm show seeds
+        yield from click_through(self.debug, screens=20, code=B.ResetDevice)
 
         # Mnemonic phrases - show & confirm shares for all groups
         self.mnemonics = yield from load_5_groups_5_shares(self.debug)

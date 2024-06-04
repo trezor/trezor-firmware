@@ -55,6 +55,9 @@ def test_repeated_backup(
     # confirm back up
     reset.confirm_read(debug)
 
+    # confirm backup intro
+    reset.confirm_read(debug)
+
     # confirm backup warning
     reset.confirm_read(debug, middle_r=True)
 
@@ -137,6 +140,9 @@ def test_repeated_backup(
     # ... so let's try to do a 2-of-3 backup
 
     debug.wait_layout()
+
+    # confirm backup intro
+    reset.confirm_read(debug)
 
     # confirm checklist
     reset.confirm_read(debug)
