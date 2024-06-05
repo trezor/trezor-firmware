@@ -2286,7 +2286,9 @@ class InputFlowConfirmAllWarnings(InputFlowBase):
                 self.debug.click(buttons.CORNER_BUTTON, wait=True)
                 self.debug.synchronize_at("VerticalMenu")
                 self.debug.click(buttons.VERTICAL_MENU[1])
-            elif "swipe up" in layout.footer().lower():
+            elif "PromptScreen" in layout.all_components():
+                self.debug.press_yes()
+            elif "SwipeContent" in layout.all_components():
                 self.debug.swipe_up()
             else:
                 self.debug.press_yes()

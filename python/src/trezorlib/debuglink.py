@@ -827,7 +827,7 @@ class DebugUI:
                 layout = self.debuglink.read_layout()
                 if "PromptScreen" in layout.all_components():
                     self.debuglink.press_yes()
-                elif "swipe up" in layout.footer().lower():
+                elif "SwipeContent" in layout.all_components():
                     self.debuglink.swipe_up()
                 else:
                     self.debuglink.press_yes()
