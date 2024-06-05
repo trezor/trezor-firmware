@@ -113,6 +113,10 @@ impl<T: Component> SwipeContent<T> {
             ..self
         }
     }
+
+    pub fn inner(&self) -> &T {
+        &self.inner
+    }
 }
 
 impl<T: Component> Component for SwipeContent<T> {
