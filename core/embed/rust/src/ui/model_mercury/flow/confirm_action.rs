@@ -63,6 +63,7 @@ impl FlowState for ConfirmAction {
                 Decision::Goto(ConfirmAction::Intro, SwipeDirection::Right)
             }
             (ConfirmAction::Menu, FlowMsg::Choice(0)) => Decision::Return(FlowMsg::Cancelled),
+            (ConfirmAction::Menu, FlowMsg::Choice(1)) => Decision::Return(FlowMsg::Info),
             (ConfirmAction::Confirm, FlowMsg::Confirmed) => Decision::Return(FlowMsg::Confirmed),
             (ConfirmAction::Confirm, FlowMsg::Info) => {
                 Decision::Goto(ConfirmAction::Menu, SwipeDirection::Left)
@@ -97,6 +98,7 @@ impl FlowState for ConfirmActionSimple {
                 Decision::Goto(ConfirmActionSimple::Intro, SwipeDirection::Right)
             }
             (ConfirmActionSimple::Menu, FlowMsg::Choice(0)) => Decision::Return(FlowMsg::Cancelled),
+            (ConfirmActionSimple::Menu, FlowMsg::Choice(1)) => Decision::Return(FlowMsg::Info),
             _ => Decision::Nothing,
         }
     }
@@ -166,6 +168,7 @@ fn new_confirm_action_obj(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Err
         verb_cancel,
         prompt_screen.then_some(prompt_title),
         hold,
+        false,
     )
 }
 
@@ -177,6 +180,7 @@ pub fn new_confirm_action_simple<T: Component + Paginate + MaybeTrace + 'static>
     verb_cancel: Option<TString<'static>>,
     prompt_screen: Option<TString<'static>>,
     hold: bool,
+    info: bool,
 ) -> Result<Obj, error::Error> {
     let mut content_intro =
         Frame::left_aligned(title, SwipeContent::new(SwipePage::vertical(content)))
@@ -198,23 +202,23 @@ pub fn new_confirm_action_simple<T: Component + Paginate + MaybeTrace + 'static>
         })
         .with_pages(move |intro_pages| intro_pages + prompt_pages);
 
-    let content_menu = if let Some(verb_cancel) = verb_cancel {
-        Frame::left_aligned(
-            "".into(),
-            VerticalMenu::empty().danger(theme::ICON_CANCEL, verb_cancel),
-        )
-    } else {
-        Frame::left_aligned(
-            "".into(),
-            VerticalMenu::empty().danger(theme::ICON_CANCEL, TR::buttons__cancel.into()),
-        )
+    let mut menu_choices = VerticalMenu::empty().danger(
+        theme::ICON_CANCEL,
+        verb_cancel.unwrap_or(TR::buttons__cancel.into()),
+    );
+    if info {
+        menu_choices = menu_choices.item(
+            theme::ICON_CHEVRON_RIGHT,
+            TR::words__title_information.into(),
+        );
     }
-    .with_cancel_button()
-    .with_swipe(SwipeDirection::Right, SwipeSettings::immediate())
-    .map(move |msg| match msg {
-        FrameMsg::Content(VerticalMenuChoiceMsg::Selected(_)) => Some(FlowMsg::Choice(0)),
-        FrameMsg::Button(_) => Some(FlowMsg::Cancelled),
-    });
+    let content_menu = Frame::left_aligned("".into(), menu_choices)
+        .with_cancel_button()
+        .with_swipe(SwipeDirection::Right, SwipeSettings::immediate())
+        .map(move |msg| match msg {
+            FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => Some(FlowMsg::Choice(i)),
+            FrameMsg::Button(_) => Some(FlowMsg::Cancelled),
+        });
 
     if let Some(prompt_title) = prompt_screen {
         let (prompt, prompt_action) = if hold {
