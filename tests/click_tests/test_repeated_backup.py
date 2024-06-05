@@ -58,13 +58,13 @@ def test_repeated_backup(
     # confirm backup intro
     reset.confirm_read(debug)
 
-    # confirm backup warning
-    reset.confirm_read(debug, middle_r=True)
-
     # let's make a 1-of-1 backup to start with...
 
     assert debug.model is not None
     model_name: str = debug.model.internal_name
+
+    # confirm checklist
+    reset.confirm_read(debug)
 
     # shares=1
     reset.set_selection(debug, buttons.reset_minus(model_name), 5 - 1)
