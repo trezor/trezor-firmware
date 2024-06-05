@@ -1,61 +1,46 @@
-#include "drv2625_lib.h"
-#include "haptic.h"
+/*
+ * This file is part of the Trezor project, https://trezor.io/
+ *
+ * Copyright (c) SatoshiLabs
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#include TREZOR_BOARD
 
 #include <stdbool.h>
+#include <string.h>
+
+#include "common.h"
+#include "drv2625.h"
+#include "haptic.h"
+#include "i2c.h"
 
 #include STM32_HAL_H
 
-#include "i2c.h"
-#include TREZOR_BOARD
+// Maximum amplitude of the vibration effect
+// (DRV2625 supports 7-bit amplitude)
+#define MAX_AMPLITUDE 127
+// Amplitude of the vibration effect used for production test
+#define PRODTEST_EFFECT_AMPLITUDE 127
+// Amplitude of the button press effect
+#define PRESS_EFFECT_AMPLITUDE 25
+// Duration of the button press effect
+#define PRESS_EFFECT_DURATION 10
+
+// Actuator configuration
 #include HAPTIC_ACTUATOR
-
-#define DRV2625_I2C_ADDRESS (0x5A << 1)
-
-#define DRV2625_REG_CHIPID 0x00
-#define DRV2625_REG_STATUS 0x01
-#define DRV2625_REG_MODE 0x07
-#define DRV2625_REG_MODE_RTP 0
-#define DRV2625_REG_MODE_WAVEFORM 0x01
-#define DRV2625_REG_MODE_DIAG 0x02
-#define DRV2625_REG_MODE_AUTOCAL 0x03
-#define DRV2625_REG_MODE_TRGFUNC_PULSE 0x00
-#define DRV2625_REG_MODE_TRGFUNC_ENABLE 0x04
-#define DRV2625_REG_MODE_TRGFUNC_INTERRUPT 0x08
-
-#define DRV2625_REG_LRAERM 0x08
-#define DRV2625_REG_LRAERM_LRA 0x80
-#define DRV2625_REG_LRAERM_OPENLOOP 0x40
-#define DRV2625_REG_LRAERM_AUTO_BRK_OL 0x10
-#define DRV2625_REG_LRAERM_AUTO_BRK_STBY 0x08
-
-#define DRV2625_REG_LIBRARY 0x0D  ///< Waveform library selection register
-#define DRV2625_REG_LIBRARY_OPENLOOP 0x40
-#define DRV2625_REG_LIBRARY_GAIN_100 0x00
-#define DRV2625_REG_LIBRARY_GAIN_75 0x01
-#define DRV2625_REG_LIBRARY_GAIN_50 0x02
-#define DRV2625_REG_LIBRARY_GAIN_25 0x03
-
-#define DRV2625_REG_RTP 0x0E  ///< RTP input register
-
-#define DRV2625_REG_WAVESEQ1 0x0F  ///< Waveform sequence register 1
-#define DRV2625_REG_WAVESEQ2 0x10  ///< Waveform sequence register 2
-#define DRV2625_REG_WAVESEQ3 0x11  ///< Waveform sequence register 3
-#define DRV2625_REG_WAVESEQ4 0x12  ///< Waveform sequence register 4
-#define DRV2625_REG_WAVESEQ5 0x13  ///< Waveform sequence register 5
-#define DRV2625_REG_WAVESEQ6 0x14  ///< Waveform sequence register 6
-#define DRV2625_REG_WAVESEQ7 0x15  ///< Waveform sequence register 7
-#define DRV2625_REG_WAVESEQ8 0x16  ///< Waveform sequence register 8
-
-#define DRV2625_REG_GO 0x0C  ///< Go register
-#define DRV2625_REG_GO_GO 0x01
-
-#define DRV2625_REG_OD_CLAMP 0x20
-
-#define DRV2625_REG_LRA_WAVE_SHAPE 0x2C
-#define DRV2625_REG_LRA_WAVE_SHAPE_SINE 0x01
-
-#define DRV2625_REG_OL_LRA_PERIOD_LO 0x2F
-#define DRV2625_REG_OL_LRA_PERIOD_HI 0x2E
 
 #if defined ACTUATOR_CLOSED_LOOP
 #define LIB_SEL 0x00
@@ -75,45 +60,68 @@
 #error "Must define either LRA or ERM"
 #endif
 
-#define PRESS_EFFECT_AMPLITUDE 25
-#define PRESS_EFFECT_DURATION 10
+// Driver state
+typedef struct {
+  // Set if driver is initialized
+  bool initialized;
+  // Set if driver is enabled
+  bool enabled;
+  // Set to if real-time playing is activated.
+  // This prevents the repeated set of `DRV2625_REG_MODE` register
+  // which would otherwise stop all playback.
+  bool playing_rtp;
 
-#define MAX_AMPLITUDE 127
-#define PRODTEST_EFFECT_AMPLITUDE 127
+} haptic_driver_t;
 
-bool haptic_enabled = true;
+// Haptic driver instance
+static haptic_driver_t g_haptic_driver = {
+    .initialized = false,
+};
 
-static bool set_reg(uint8_t addr, uint8_t value) {
+static bool drv2625_set_reg(uint8_t addr, uint8_t value) {
   uint8_t data[] = {addr, value};
   return i2c_transmit(DRV2625_I2C_INSTANCE, DRV2625_I2C_ADDRESS, data,
                       sizeof(data), 1) == HAL_OK;
 }
 
-void haptic_calibrate(void) {
-  set_reg(DRV2625_REG_MODE, DRV2625_REG_MODE_AUTOCAL);
-  HAL_Delay(1);
-  set_reg(DRV2625_REG_GO, DRV2625_REG_GO_GO);
+bool haptic_init(void) {
+  haptic_driver_t *driver = &g_haptic_driver;
 
-  HAL_Delay(3000);
-}
+  if (driver->initialized) {
+    return false;
+  }
 
-// Set to `true` if real-time playing is activated. to
-// This prevents the repeated set of `DRV2625_REG_MODE` register
-// which would otherwise stop all playback.
-static bool playing_rtp = false;
+  memset(driver, 0, sizeof(haptic_driver_t));
 
-void haptic_init(void) {
   // select library
-  set_reg(DRV2625_REG_LIBRARY, LIB_SEL | DRV2625_REG_LIBRARY_GAIN_25);
-  set_reg(DRV2625_REG_LRAERM,
-          LRA_ERM_SEL | LOOP_SEL | DRV2625_REG_LRAERM_AUTO_BRK_OL);
+  if (!drv2625_set_reg(DRV2625_REG_LIBRARY,
+                       LIB_SEL | DRV2625_REG_LIBRARY_GAIN_25)) {
+    return false;
+  }
 
-  set_reg(DRV2625_REG_OD_CLAMP, ACTUATOR_OD_CLAMP);
+  if (!drv2625_set_reg(
+          DRV2625_REG_LRAERM,
+          LRA_ERM_SEL | LOOP_SEL | DRV2625_REG_LRAERM_AUTO_BRK_OL)) {
+  }
 
-  set_reg(DRV2625_REG_LRA_WAVE_SHAPE, DRV2625_REG_LRA_WAVE_SHAPE_SINE);
+  if (!drv2625_set_reg(DRV2625_REG_OD_CLAMP, ACTUATOR_OD_CLAMP)) {
+    return false;
+  }
 
-  set_reg(DRV2625_REG_OL_LRA_PERIOD_LO, ACTUATOR_LRA_PERIOD & 0xFF);
-  set_reg(DRV2625_REG_OL_LRA_PERIOD_HI, ACTUATOR_LRA_PERIOD >> 8);
+  if (!drv2625_set_reg(DRV2625_REG_LRA_WAVE_SHAPE,
+                       DRV2625_REG_LRA_WAVE_SHAPE_SINE)) {
+    return false;
+  }
+
+  if (!drv2625_set_reg(DRV2625_REG_OL_LRA_PERIOD_LO,
+                       ACTUATOR_LRA_PERIOD & 0xFF)) {
+    return false;
+  }
+
+  if (!drv2625_set_reg(DRV2625_REG_OL_LRA_PERIOD_HI,
+                       ACTUATOR_LRA_PERIOD >> 8)) {
+    return false;
+  }
 
   GPIO_InitTypeDef GPIO_InitStructure = {0};
   GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;
@@ -145,19 +153,59 @@ void haptic_init(void) {
   HAL_TIM_OC_Start(&TIM_Handle, TIM_CHANNEL_1);
 
   TIM16->BDTR |= TIM_BDTR_MOE;
+
+  driver->initialized = true;
+  driver->enabled = true;
+
+  return true;
+}
+
+void haptic_deinit(void) {
+  haptic_driver_t *driver = &g_haptic_driver;
+
+  if (!driver->initialized) {
+    return;
+  }
+
+  // TODO: deinitialize GPIOs and the TIMER
+
+  memset(driver, 0, sizeof(haptic_driver_t));
+}
+
+void haptic_set_enabled(bool enabled) {
+  haptic_driver_t *driver = &g_haptic_driver;
+
+  driver->enabled = enabled;
+}
+
+bool haptic_get_enabled(void) {
+  haptic_driver_t *driver = &g_haptic_driver;
+
+  if (!driver->initialized) {
+    return false;
+  }
+
+  return driver->enabled;
 }
 
 static bool haptic_play_rtp(int8_t amplitude, uint16_t duration_ms) {
-  if (!playing_rtp) {
-    if (!set_reg(DRV2625_REG_MODE,
-                 DRV2625_REG_MODE_RTP | DRV2625_REG_MODE_TRGFUNC_ENABLE)) {
+  haptic_driver_t *driver = &g_haptic_driver;
+
+  if (!driver->initialized) {
+    return false;
+  }
+
+  if (!driver->playing_rtp) {
+    if (!drv2625_set_reg(
+            DRV2625_REG_MODE,
+            DRV2625_REG_MODE_RTP | DRV2625_REG_MODE_TRGFUNC_ENABLE)) {
       return false;
     }
 
-    playing_rtp = true;
+    driver->playing_rtp = true;
   }
 
-  if (!set_reg(DRV2625_REG_RTP, (uint8_t)amplitude)) {
+  if (!drv2625_set_reg(DRV2625_REG_RTP, (uint8_t)amplitude)) {
     return false;
   }
 
@@ -176,33 +224,57 @@ static bool haptic_play_rtp(int8_t amplitude, uint16_t duration_ms) {
   return true;
 }
 
-static void haptic_play_lib(drv2625_lib_effect_t effect) {
-  playing_rtp = false;
+static bool haptic_play_lib(drv2625_lib_effect_t effect) {
+  haptic_driver_t *driver = &g_haptic_driver;
 
-  set_reg(DRV2625_REG_MODE, DRV2625_REG_MODE_WAVEFORM);
-  set_reg(DRV2625_REG_WAVESEQ1, effect);
-  set_reg(DRV2625_REG_WAVESEQ2, 0);
-  set_reg(DRV2625_REG_GO, DRV2625_REG_GO_GO);
+  if (!driver->initialized) {
+    return false;
+  }
+
+  driver->playing_rtp = false;
+
+  if (!drv2625_set_reg(DRV2625_REG_MODE, DRV2625_REG_MODE_WAVEFORM)) {
+    return false;
+  }
+
+  if (!drv2625_set_reg(DRV2625_REG_WAVESEQ1, effect)) {
+    return false;
+  }
+
+  if (!drv2625_set_reg(DRV2625_REG_WAVESEQ2, 0)) {
+    return false;
+  }
+
+  if (!drv2625_set_reg(DRV2625_REG_GO, DRV2625_REG_GO_GO)) {
+    return false;
+  }
+
+  return true;
 }
 
-void haptic_play(haptic_effect_t effect) {
-  if (!haptic_enabled) {
-    return;
+bool haptic_play(haptic_effect_t effect) {
+  haptic_driver_t *driver = &g_haptic_driver;
+
+  if (!driver->initialized) {
+    return false;
+  }
+
+  if (!driver->enabled) {
+    return true;
   }
 
   switch (effect) {
     case HAPTIC_BUTTON_PRESS:
-      haptic_play_rtp(PRESS_EFFECT_AMPLITUDE, PRESS_EFFECT_DURATION);
-      break;
-    case HAPTIC_ALERT:
-      haptic_play_lib(ALERT_750MS_100);
+      return haptic_play_rtp(PRESS_EFFECT_AMPLITUDE, PRESS_EFFECT_DURATION);
       break;
     case HAPTIC_HOLD_TO_CONFIRM:
-      haptic_play_lib(DOUBLE_CLICK_60);
+      return haptic_play_lib(DOUBLE_CLICK_60);
       break;
     default:
       break;
   }
+
+  return false;
 }
 
 bool haptic_play_custom(int8_t amplitude_pct, uint16_t duration_ms) {
@@ -219,5 +291,3 @@ bool haptic_play_custom(int8_t amplitude_pct, uint16_t duration_ms) {
 bool haptic_test(uint16_t duration_ms) {
   return haptic_play_rtp(PRODTEST_EFFECT_AMPLITUDE, duration_ms);
 }
-
-void haptic_set_enabled(bool enable) { haptic_enabled = enable; }

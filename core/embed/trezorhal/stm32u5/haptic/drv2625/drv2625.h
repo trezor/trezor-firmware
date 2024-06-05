@@ -1,5 +1,63 @@
-#ifndef __DRV_2625_LIB_H__
-#define __DRV_2625_LIB_H__
+#ifndef TREZOR_HAL_DRV_2625_H
+#define TREZOR_HAL_DRV_2625_H
+
+// I2C address of the DRV2625 on the I2C bus.
+// `<< 1` is required because the HAL expects the address to be shifted by 1.
+#define DRV2625_I2C_ADDRESS (0x5A << 1)
+
+// ------------------------------------------------------------
+// DRV2625 registers
+// ------------------------------------------------------------
+
+#define DRV2625_REG_CHIPID 0x00
+#define DRV2625_REG_STATUS 0x01
+#define DRV2625_REG_MODE 0x07
+#define DRV2625_REG_MODE_RTP 0
+#define DRV2625_REG_MODE_WAVEFORM 0x01
+#define DRV2625_REG_MODE_DIAG 0x02
+#define DRV2625_REG_MODE_AUTOCAL 0x03
+#define DRV2625_REG_MODE_TRGFUNC_PULSE 0x00
+#define DRV2625_REG_MODE_TRGFUNC_ENABLE 0x04
+#define DRV2625_REG_MODE_TRGFUNC_INTERRUPT 0x08
+
+#define DRV2625_REG_LRAERM 0x08
+#define DRV2625_REG_LRAERM_LRA 0x80
+#define DRV2625_REG_LRAERM_OPENLOOP 0x40
+#define DRV2625_REG_LRAERM_AUTO_BRK_OL 0x10
+#define DRV2625_REG_LRAERM_AUTO_BRK_STBY 0x08
+
+#define DRV2625_REG_LIBRARY 0x0D  ///< Waveform library selection register
+#define DRV2625_REG_LIBRARY_OPENLOOP 0x40
+#define DRV2625_REG_LIBRARY_GAIN_100 0x00
+#define DRV2625_REG_LIBRARY_GAIN_75 0x01
+#define DRV2625_REG_LIBRARY_GAIN_50 0x02
+#define DRV2625_REG_LIBRARY_GAIN_25 0x03
+
+#define DRV2625_REG_RTP 0x0E  ///< RTP input register
+
+#define DRV2625_REG_WAVESEQ1 0x0F  ///< Waveform sequence register 1
+#define DRV2625_REG_WAVESEQ2 0x10  ///< Waveform sequence register 2
+#define DRV2625_REG_WAVESEQ3 0x11  ///< Waveform sequence register 3
+#define DRV2625_REG_WAVESEQ4 0x12  ///< Waveform sequence register 4
+#define DRV2625_REG_WAVESEQ5 0x13  ///< Waveform sequence register 5
+#define DRV2625_REG_WAVESEQ6 0x14  ///< Waveform sequence register 6
+#define DRV2625_REG_WAVESEQ7 0x15  ///< Waveform sequence register 7
+#define DRV2625_REG_WAVESEQ8 0x16  ///< Waveform sequence register 8
+
+#define DRV2625_REG_GO 0x0C  ///< Go register
+#define DRV2625_REG_GO_GO 0x01
+
+#define DRV2625_REG_OD_CLAMP 0x20
+
+#define DRV2625_REG_LRA_WAVE_SHAPE 0x2C
+#define DRV2625_REG_LRA_WAVE_SHAPE_SINE 0x01
+
+#define DRV2625_REG_OL_LRA_PERIOD_LO 0x2F
+#define DRV2625_REG_OL_LRA_PERIOD_HI 0x2E
+
+// ------------------------------------------------------------
+// DRV2625 effect types
+// ------------------------------------------------------------
 
 typedef enum {
   STRONG_CLICK_100 = 1,
@@ -127,4 +185,4 @@ typedef enum {
   SMOOTH_HUM_5_20 = 123,
 } drv2625_lib_effect_t;
 
-#endif
+#endif  // TREZOR_HAL_DRV_2625_H
