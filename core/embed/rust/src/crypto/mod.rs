@@ -1,3 +1,5 @@
+use crate::error::value_error;
+
 pub mod cosi;
 pub mod ed25519;
 mod ffi;

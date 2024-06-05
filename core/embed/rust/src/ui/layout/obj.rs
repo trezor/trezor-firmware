@@ -9,6 +9,7 @@ use crate::{
     micropython::{
         buffer::StrBuffer,
         gc::Gc,
+        macros::{obj_dict, obj_fn_1, obj_fn_2, obj_fn_var, obj_map, obj_type},
         map::Map,
         obj::{Obj, ObjBase},
         qstr::Qstr,

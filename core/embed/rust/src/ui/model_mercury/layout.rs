@@ -1,10 +1,18 @@
 use core::{cmp::Ordering, convert::TryInto};
 
 use crate::{
-    error::Error,
+    error::{value_error, Error},
     io::BinaryData,
     micropython::{
-        gc::Gc, iter::IterBuf, list::List, map::Map, module::Module, obj::Obj, qstr::Qstr, util,
+        gc::Gc,
+        iter::IterBuf,
+        list::List,
+        macros::{obj_fn_1, obj_fn_kw, obj_module},
+        map::Map,
+        module::Module,
+        obj::Obj,
+        qstr::Qstr,
+        util,
     },
     strutil::TString,
     translations::TR,

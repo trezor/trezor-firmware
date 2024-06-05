@@ -1,6 +1,8 @@
 use crate::{
     error::Error,
-    micropython::{ffi, obj::Obj, qstr::Qstr, simple_type::SimpleTypeObj, typ::Type, util},
+    micropython::{
+        ffi, macros::obj_type, obj::Obj, qstr::Qstr, simple_type::SimpleTypeObj, typ::Type, util,
+    },
     ui::{ui_features::ModelUI, UIFeaturesCommon},
 };
 

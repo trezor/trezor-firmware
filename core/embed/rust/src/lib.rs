@@ -13,35 +13,33 @@
 extern crate num_derive;
 
 #[macro_use]
-mod error;
-// use trezorhal for its macros early
-#[macro_use]
-mod trezorhal;
+mod macros;
 
 #[cfg(feature = "crypto")]
 mod crypto;
+#[cfg(feature = "debug")]
+mod debug;
+mod error;
 mod io;
 mod maybe_trace;
 #[cfg(feature = "micropython")]
-#[macro_use]
 mod micropython;
 #[cfg(feature = "protobuf")]
 mod protobuf;
 mod storage;
+mod strutil;
 mod time;
 #[cfg(feature = "ui_debug")]
 mod trace;
 #[cfg(feature = "translations")]
-pub mod translations;
+mod translations;
+mod trezorhal;
 
+// mod ui is `pub` because of the re-export pattern in individual models, which
+// would trigger a brickload of "unused symbol" warnings otherwise.
+// TODO: maybe get rid of the re-export pattern :shrugs:
 #[cfg(feature = "ui")]
-#[macro_use]
 pub mod ui;
-pub mod strutil;
-
-#[cfg(feature = "debug")]
-#[macro_use]
-pub mod debug;
 
 #[cfg(feature = "debug")]
 #[cfg(not(test))]

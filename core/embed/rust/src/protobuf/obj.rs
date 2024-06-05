@@ -6,6 +6,7 @@ use crate::{
         dict::Dict,
         ffi,
         gc::Gc,
+        macros::{obj_fn_1, obj_fn_2, obj_fn_3, obj_module, obj_type},
         map::Map,
         module::Module,
         obj::{Obj, ObjBase},

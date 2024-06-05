@@ -4,6 +4,9 @@ use crate::{
     micropython::{
         buffer::{get_buffer, StrBuffer},
         ffi,
+        macros::{
+            attr_tuple, obj_dict, obj_fn_0, obj_fn_1, obj_fn_2, obj_map, obj_module, obj_type,
+        },
         map::Map,
         module::Module,
         obj::Obj,

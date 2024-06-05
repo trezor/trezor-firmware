@@ -1,6 +1,9 @@
 use spin::{RwLock, RwLockReadGuard};
 
-use crate::{error::Error, trezorhal::translations};
+use crate::{
+    error::{value_error, Error},
+    trezorhal::translations,
+};
 
 use super::blob::Translations;
 

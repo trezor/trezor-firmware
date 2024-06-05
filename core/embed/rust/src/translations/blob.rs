@@ -2,7 +2,7 @@ use core::{mem, str};
 
 use crate::{
     crypto::{cosi, ed25519, merkle::merkle_root, sha256},
-    error::Error,
+    error::{value_error, Error},
     io::InputStream,
 };
 
