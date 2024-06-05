@@ -67,6 +67,9 @@ MNEMONIC_SLIP39_ADVANCED_33 = [
 ]
 MNEMONIC_SLIP39_CUSTOM_1of1 = ["tolerate flexible academic academic average dwarf square home promise aspect temple cluster roster forward hand unfair tenant emperor ceramic element forget perfect knit adapt review usual formal receiver typical pleasure duke yield party"]
 MNEMONIC_SLIP39_CUSTOM_SECRET = "3439316237393562383066633231636364663436366330666263393863386663"
+
+MNEMONIC_SLIP39_SINGLE_EXT_20 = ["academic again academic academic academic academic academic academic academic academic academic academic academic academic academic academic academic pecan provide remember"]
+
 # External entropy mocked as received from trezorlib.
 EXTERNAL_ENTROPY = b"zlutoucky kun upel divoke ody" * 2
 # fmt: on

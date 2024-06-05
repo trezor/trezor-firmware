@@ -52,11 +52,10 @@ async def recovery_process() -> Success:
 
 
 async def _continue_repeated_backup() -> None:
-    from trezor.enums import ButtonRequestType, MessageType
-    from trezor.ui.layouts import confirm_action
+    from trezor.enums import MessageType
 
-    from apps.common import backup, mnemonic
-    from apps.management.reset_device import backup_seed
+    from apps.common import backup
+    from apps.management.backup_device import perform_backup
 
     wire.AVOID_RESTARTING_FOR = (
         MessageType.Initialize,
@@ -65,19 +64,7 @@ async def _continue_repeated_backup() -> None:
     )
 
     try:
-        await confirm_action(
-            "confirm_repeated_backup",
-            TR.recovery__title_unlock_repeated_backup,
-            description=TR.recovery__unlock_repeated_backup,
-            br_code=ButtonRequestType.ProtectCall,
-            verb=TR.recovery__unlock_repeated_backup_verb,
-        )
-
-        mnemonic_secret, backup_type = mnemonic.get()
-        if mnemonic_secret is None:
-            raise RuntimeError
-
-        await backup_seed(backup_type, mnemonic_secret)
+        await perform_backup(is_repeated_backup=True)
     finally:
         backup.deactivate_repeated_backup()
 
