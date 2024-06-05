@@ -295,6 +295,7 @@ extern "C" fn new_confirm_emphasized(n_args: usize, args: *const Obj, kwargs: *m
             None,
             Some(title),
             false,
+            false,
         )
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -391,6 +392,7 @@ impl ConfirmBlobParams {
             self.verb_cancel,
             self.prompt.then_some(self.title),
             self.hold,
+            self.info_button,
         )
     }
 }
@@ -459,7 +461,7 @@ extern "C" fn new_confirm_address(n_args: usize, args: *const Obj, kwargs: *mut 
         }
         .into_paragraphs();
 
-        flow::new_confirm_action_simple(paragraphs, title, None, None, None, false)
+        flow::new_confirm_action_simple(paragraphs, title, None, None, None, false, false)
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
@@ -484,6 +486,7 @@ extern "C" fn new_confirm_properties(n_args: usize, args: *const Obj, kwargs: *m
             None,
             hold.then_some(title),
             hold,
+            false,
         )
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -613,14 +616,15 @@ extern "C" fn new_confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Ma
             paragraphs.add(Paragraph::new(&theme::TEXT_MONO, value));
         }
 
-        // FIXME: hold
-        let obj = LayoutObj::new(SwipeUpScreen::new(
-            Frame::left_aligned(title, SwipeContent::new(paragraphs.into_paragraphs()))
-                .with_menu_button()
-                .with_footer(TR::instructions__swipe_up.into(), None)
-                .with_swipe(SwipeDirection::Up, SwipeSettings::default()),
-        ))?;
-        Ok(obj.into())
+        flow::new_confirm_action_simple(
+            paragraphs.into_paragraphs(),
+            title,
+            None,
+            None,
+            Some(title),
+            true,
+            true,
+        )
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
@@ -923,6 +927,7 @@ extern "C" fn new_confirm_coinjoin(n_args: usize, args: *const Obj, kwargs: *mut
             None,
             Some(TR::coinjoin__title.into()),
             true,
+            false,
         )
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -1083,7 +1088,7 @@ extern "C" fn new_confirm_recovery(n_args: usize, args: *const Obj, kwargs: *mut
 }
 
 extern "C" fn new_select_word_count(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
-    let block = move |_args: &[Obj], kwargs: &Map| {
+    let block = move |_args: &[Obj], _kwargs: &Map| {
         let obj = LayoutObj::new(Frame::left_aligned(
             TR::recovery__num_of_words.into(),
             SelectWordCount::new(),
