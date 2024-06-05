@@ -194,6 +194,7 @@ pub fn new_confirm_action_simple<T: Component + Paginate + MaybeTrace + 'static>
         content_intro = content_intro.with_subtitle(subtitle);
     }
 
+    let prompt_screen = prompt_screen.or_else(|| hold.then_some(title));
     let prompt_pages: usize = prompt_screen.is_some().into();
     let content_intro = content_intro
         .map(move |msg| match msg {
