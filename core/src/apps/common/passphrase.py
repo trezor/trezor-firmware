@@ -63,6 +63,8 @@ async def _request_on_host() -> str:
                 "passphrase_host1_hidden",
                 TR.passphrase__hidden_wallet,
                 description=TR.passphrase__from_host_not_shown,
+                prompt_screen=True,
+                prompt_title=TR.passphrase__access_hidden_wallet,
             )
         else:
             await confirm_action(

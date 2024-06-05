@@ -387,6 +387,7 @@ def confirm_action(
     exc: ExceptionType = ActionCancelled,
     br_code: ButtonRequestType = BR_TYPE_OTHER,
     prompt_screen: bool = False,
+    prompt_title: str | None = None,
 ) -> Awaitable[None]:
     verb = verb or TR.buttons__confirm  # def_arg
     if description is not None and description_param is not None:
@@ -860,6 +861,7 @@ def confirm_blob(
     br_code: ButtonRequestType = BR_TYPE_OTHER,
     ask_pagination: bool = False,
     chunkify: bool = False,
+    prompt_screen: bool = True,
 ) -> Awaitable[None]:
     verb = verb or TR.buttons__confirm  # def_arg
     layout = RustLayout(
