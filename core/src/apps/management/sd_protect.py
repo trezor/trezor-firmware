@@ -171,4 +171,6 @@ def require_confirm_sd_protect(msg: SdProtect) -> Awaitable[None]:
     else:
         raise ProcessError("Unknown operation")
 
-    return confirm_action("set_sd", TR.sd_card__title, description=text)
+    return confirm_action(
+        "set_sd", TR.sd_card__title, description=text, prompt_screen=True
+    )

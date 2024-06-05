@@ -84,6 +84,7 @@ async def confirm_fido_reset() -> bool:
             action=TR.fido__erase_credentials,
             description=TR.words__really_wanna,
             reverse=True,
+            prompt_screen=True,
         )
     )
     return (await confirm) is trezorui2.CONFIRMED

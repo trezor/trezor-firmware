@@ -23,6 +23,7 @@ async def set_u2f_counter(msg: SetU2FCounter) -> Success:
         description_param=str(msg.u2f_counter),
         verb=TR.buttons__set,
         br_code=ButtonRequestType.ProtectCall,
+        prompt_screen=True,
     )
 
     storage_device.set_u2f_counter(msg.u2f_counter)
