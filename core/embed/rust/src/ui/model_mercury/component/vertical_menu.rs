@@ -145,7 +145,7 @@ impl AttachAnimation {
         if let Event::Attach(_) = event {
             if let Event::Attach(AttachType::Swipe(SwipeDirection::Up))
             | Event::Attach(AttachType::Swipe(SwipeDirection::Down))
-            | Event::Attach(AttachType::Normal) = event
+            | Event::Attach(AttachType::Initial) = event
             {
                 self.attach_top = true;
                 self.duration = Duration::from_millis(350);
