@@ -34,7 +34,8 @@ RECOVERY_DEVICE_INPUT_METHOD = {
 }
 
 BACKUP_TYPE = {
-    "single": messages.BackupType.Bip39,
+    "bip39": messages.BackupType.Bip39,
+    "single": messages.BackupType.Slip39_Single_Extendable,
     "shamir": messages.BackupType.Slip39_Basic,
     "advanced": messages.BackupType.Slip39_Advanced,
 }
