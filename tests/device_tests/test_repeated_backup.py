@@ -21,7 +21,12 @@ from trezorlib import device, messages
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import Cancelled, TrezorFailure
 
-from ..common import TEST_ADDRESS_N, WITH_MOCK_URANDOM, MNEMONIC_SLIP39_BASIC_20_3of6
+from ..common import (
+    MNEMONIC_SLIP39_SINGLE_EXT_20,
+    TEST_ADDRESS_N,
+    WITH_MOCK_URANDOM,
+    MNEMONIC_SLIP39_BASIC_20_3of6,
+)
 from ..input_flows import InputFlowSlip39BasicBackup, InputFlowSlip39BasicRecoveryDryRun
 
 
@@ -65,10 +70,50 @@ def test_repeated_backup(client: Client):
 
     # we can now perform another backup
     with client:
-        IF = InputFlowSlip39BasicBackup(client, False)
+        IF = InputFlowSlip39BasicBackup(client, False, repeated=True)
         client.set_input_flow(IF.get())
         device.backup(client)
 
+    # the backup feature is locked again...
+    assert (
+        client.features.backup_availability == messages.BackupAvailability.NotAvailable
+    )
+    assert client.features.recovery_status == messages.RecoveryStatus.Nothing
+    with pytest.raises(TrezorFailure, match=r".*Seed already backed up"):
+        device.backup(client)
+
+
+@pytest.mark.setup_client(mnemonic=MNEMONIC_SLIP39_SINGLE_EXT_20)
+@pytest.mark.skip_t1b1
+@WITH_MOCK_URANDOM
+def test_repeated_backup_upgrade_single(client: Client):
+    assert (
+        client.features.backup_availability == messages.BackupAvailability.NotAvailable
+    )
+    assert client.features.recovery_status == messages.RecoveryStatus.Nothing
+    assert client.features.backup_type == messages.BackupType.Slip39_Single_Extendable
+
+    # unlock repeated backup by entering the single share
+    with client:
+        IF = InputFlowSlip39BasicRecoveryDryRun(
+            client, MNEMONIC_SLIP39_SINGLE_EXT_20, unlock_repeated_backup=True
+        )
+        client.set_input_flow(IF.get())
+        ret = device.recover(client, type=messages.RecoveryType.UnlockRepeatedBackup)
+        assert ret == messages.Success(message="Backup unlocked")
+        assert (
+            client.features.backup_availability == messages.BackupAvailability.Available
+        )
+        assert client.features.recovery_status == messages.RecoveryStatus.Backup
+
+    # we can now perform another backup
+    with client:
+        IF = InputFlowSlip39BasicBackup(client, False, repeated=True)
+        client.set_input_flow(IF.get())
+        device.backup(client)
+
+    # backup type was upgraded:
+    assert client.features.backup_type == messages.BackupType.Slip39_Basic_Extendable
     # the backup feature is locked again...
     assert (
         client.features.backup_availability == messages.BackupAvailability.NotAvailable

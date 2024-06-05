@@ -146,6 +146,10 @@ def get_backup_type() -> BackupType:
     return backup_type
 
 
+def set_backup_type(backup_type: BackupType) -> None:
+    common.set_uint8(_NAMESPACE, _BACKUP_TYPE, backup_type)
+
+
 def is_passphrase_enabled() -> bool:
     return common.get_bool(_NAMESPACE, _USE_PASSPHRASE)
 

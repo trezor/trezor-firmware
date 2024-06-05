@@ -1421,12 +1421,18 @@ def load_N_shares(
 
 
 class InputFlowSlip39BasicBackup(InputFlowBase):
-    def __init__(self, client: Client, click_info: bool):
+    def __init__(self, client: Client, click_info: bool, repeated: bool = False):
         super().__init__(client)
         self.mnemonics: list[str] = []
         self.click_info = click_info
+        self.repeated = repeated
 
     def input_flow_tt(self) -> BRGeneratorType:
+        if self.repeated:
+            # intro confirmation screen
+            yield
+            self.debug.press_yes()
+
         yield  # 1. Backup intro
         self.debug.press_yes()
         yield  # 2. Checklist
@@ -1454,6 +1460,11 @@ class InputFlowSlip39BasicBackup(InputFlowBase):
         self.debug.press_yes()
 
     def input_flow_tr(self) -> BRGeneratorType:
+        if self.repeated:
+            # intro confirmation screen
+            yield
+            self.debug.press_yes()
+
         yield  # 1. Backup intro
         self.debug.press_yes()
         yield  # 2. Checklist
@@ -1481,6 +1492,11 @@ class InputFlowSlip39BasicBackup(InputFlowBase):
         self.debug.press_yes()
 
     def input_flow_t3t1(self) -> BRGeneratorType:
+        if self.repeated:
+            # intro confirmation screen
+            yield
+            self.debug.press_yes()
+
         yield  # 1. Backup intro
         self.debug.wait_layout()
         self.debug.swipe_up()
@@ -1587,12 +1603,17 @@ class InputFlowSlip39BasicResetRecovery(InputFlowBase):
 
 
 class InputFlowSlip39CustomBackup(InputFlowBase):
-    def __init__(self, client: Client, share_count: int):
+    def __init__(self, client: Client, share_count: int, repeated: bool = False):
         super().__init__(client)
         self.mnemonics: list[str] = []
         self.share_count = share_count
+        self.repeated = repeated
 
     def input_flow_tt(self) -> BRGeneratorType:
+        if self.repeated:
+            yield
+            self.debug.press_yes()
+
         if self.share_count > 1:
             yield  # Checklist
             self.debug.press_yes()
@@ -1611,6 +1632,10 @@ class InputFlowSlip39CustomBackup(InputFlowBase):
         self.debug.press_yes()
 
     def input_flow_tr(self) -> BRGeneratorType:
+        if self.repeated:
+            yield
+            self.debug.press_yes()
+
         if self.share_count > 1:
             yield  # Checklist
             self.debug.press_yes()
@@ -1629,6 +1654,10 @@ class InputFlowSlip39CustomBackup(InputFlowBase):
         self.debug.press_yes()
 
     def input_flow_t3t1(self) -> BRGeneratorType:
+        if self.repeated:
+            yield
+            self.debug.press_yes()
+
         if self.share_count > 1:
             yield  # Checklist
             self.debug.press_yes()
