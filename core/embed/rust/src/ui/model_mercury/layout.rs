@@ -637,12 +637,13 @@ extern "C" fn new_confirm_modify_output(n_args: usize, args: *const Obj, kwargs:
             TR::modify_amount__increase_amount
         };
 
-        let paragraphs = Paragraphs::new([
+        let paragraphs = ParagraphVecShort::from_iter([
             Paragraph::new(&theme::TEXT_NORMAL, description),
             Paragraph::new(&theme::TEXT_MONO, amount_change),
             Paragraph::new(&theme::TEXT_NORMAL, TR::modify_amount__new_amount),
             Paragraph::new(&theme::TEXT_MONO, amount_new),
-        ]);
+        ])
+        .into_paragraphs();
 
         let obj = LayoutObj::new(SwipeUpScreen::new(
             Frame::left_aligned(TR::modify_amount__title.into(), paragraphs)
@@ -680,12 +681,13 @@ extern "C" fn new_confirm_modify_fee(n_args: usize, args: *const Obj, kwargs: *m
             ),
         };
 
-        let paragraphs = Paragraphs::new([
+        let paragraphs = ParagraphVecShort::from_iter([
             Paragraph::new(&theme::TEXT_NORMAL, description),
             Paragraph::new(&theme::TEXT_MONO, change),
             Paragraph::new(&theme::TEXT_NORMAL, total_label),
             Paragraph::new(&theme::TEXT_MONO, total_fee_new),
-        ]);
+        ])
+        .into_paragraphs();
 
         let obj = LayoutObj::new(SwipeUpScreen::new(
             Frame::left_aligned(title, paragraphs)
@@ -763,10 +765,11 @@ extern "C" fn new_show_warning(n_args: usize, args: *const Obj, kwargs: *mut Map
         let value: TString = kwargs.get_or(Qstr::MP_QSTR_value, "".into())?;
         let action: Option<TString> = kwargs.get(Qstr::MP_QSTR_button)?.try_into_option()?;
 
-        let content = Paragraphs::new([
+        let content = ParagraphVecShort::from_iter([
             Paragraph::new(&theme::TEXT_MAIN_GREY_LIGHT, description),
             Paragraph::new(&theme::TEXT_MAIN_GREY_EXTRA_LIGHT, value),
-        ]);
+        ])
+        .into_paragraphs();
         let obj = LayoutObj::new(SwipeUpScreen::new(
             Frame::left_aligned(title, SwipeContent::new(content))
                 .with_warning_button()
@@ -814,10 +817,11 @@ extern "C" fn new_show_mismatch(n_args: usize, args: *const Obj, kwargs: *mut Ma
         let url: TString = TR::addr_mismatch__support_url.into();
         let button: TString = TR::buttons__quit.into();
 
-        let paragraphs = Paragraphs::new([
+        let paragraphs = ParagraphVecShort::from_iter([
             Paragraph::new(&theme::TEXT_NORMAL, description).centered(),
             Paragraph::new(&theme::TEXT_DEMIBOLD, url).centered(),
-        ]);
+        ])
+        .into_paragraphs();
 
         let obj = LayoutObj::new(SwipeUpScreen::new(
             Frame::left_aligned(title, SwipeContent::new(paragraphs))
@@ -904,12 +908,13 @@ extern "C" fn new_confirm_coinjoin(n_args: usize, args: *const Obj, kwargs: *mut
         let max_rounds: TString = kwargs.get(Qstr::MP_QSTR_max_rounds)?.try_into()?;
         let max_feerate: TString = kwargs.get(Qstr::MP_QSTR_max_feerate)?.try_into()?;
 
-        let paragraphs = Paragraphs::new([
+        let paragraphs = ParagraphVecShort::from_iter([
             Paragraph::new(&theme::TEXT_NORMAL, TR::coinjoin__max_rounds),
             Paragraph::new(&theme::TEXT_MONO, max_rounds),
             Paragraph::new(&theme::TEXT_NORMAL, TR::coinjoin__max_mining_fee),
             Paragraph::new(&theme::TEXT_MONO, max_feerate),
-        ]);
+        ])
+        .into_paragraphs();
 
         flow::new_confirm_action_simple(
             paragraphs,
