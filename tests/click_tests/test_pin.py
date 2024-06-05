@@ -74,6 +74,7 @@ class Situation(Enum):
     PIN_SETUP = 2
     PIN_CHANGE = 3
     WIPE_CODE_SETUP = 4
+    PIN_INPUT_CANCEL = 5
 
 
 @contextmanager
@@ -88,8 +89,14 @@ def prepare(
     # without reseeding "again", the results are still random.
     debug.reseed(0)
 
+    tap = False
+
     # Setup according to the wanted situation
     if situation == Situation.PIN_INPUT:
+        # Any action triggering the PIN dialogue
+        device_handler.run(device.apply_settings, auto_lock_delay_ms=300_000)  # type: ignore
+        tap = True
+    if situation == Situation.PIN_INPUT_CANCEL:
         # Any action triggering the PIN dialogue
         device_handler.run(device.apply_settings, auto_lock_delay_ms=300_000)  # type: ignore
     elif situation == Situation.PIN_SETUP:
@@ -130,7 +137,13 @@ def prepare(
     debug.wait_layout()
     _assert_pin_entry(debug)
     yield debug
-    go_next(debug)
+
+    if debug.model in (models.T3T1,) and tap:
+        go_next(debug, wait=True)
+        debug.click(buttons.TAP_TO_CONFIRM)
+    else:
+        go_next(debug)
+
     device_handler.result()
 
 
@@ -290,7 +303,7 @@ def test_pin_incorrect(device_handler: "BackgroundDeviceHandler"):
 @pytest.mark.skip_t2b1("TODO: will we support cancelling on T2B1?")
 @pytest.mark.setup_client(pin=PIN4)
 def test_pin_cancel(device_handler: "BackgroundDeviceHandler"):
-    with PIN_CANCELLED, prepare(device_handler) as debug:
+    with PIN_CANCELLED, prepare(device_handler, Situation.PIN_INPUT_CANCEL) as debug:
         _input_pin(debug, PIN4)
         _see_pin(debug)
         _delete_pin(debug, len(PIN4))

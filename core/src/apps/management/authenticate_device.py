@@ -25,6 +25,7 @@ async def authenticate_device(msg: AuthenticateDevice) -> AuthenticityProof:
         TR.authenticate__header,
         description=TR.authenticate__confirm_template.format(utils.MODEL_FULL_NAME),
         verb=TR.buttons__allow,
+        prompt_screen=True,
     )
 
     header = b"AuthenticateDevice:"

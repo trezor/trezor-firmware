@@ -36,7 +36,13 @@ async def cipher_key_value(msg: CipherKeyValue) -> CipheredKeyValue:
                 title = TR.misc__decrypt_value
             verb = TR.buttons__confirm
 
-        await confirm_action("cipher_key_value", title, description=msg.key, verb=verb)
+        await confirm_action(
+            "cipher_key_value",
+            title,
+            description=msg.key,
+            verb=verb,
+            prompt_screen=True,
+        )
 
     node = keychain.derive(msg.address_n)
 

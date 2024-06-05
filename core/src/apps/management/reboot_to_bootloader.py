@@ -83,6 +83,7 @@ async def reboot_to_bootloader(msg: RebootToBootloader) -> NoReturn:
             TR.reboot_to_bootloader__title,
             TR.reboot_to_bootloader__restart,
             verb=TR.buttons__restart,
+            prompt_screen=True,
         )
         boot_command = BootCommand.STOP_AND_WAIT
         boot_args = None

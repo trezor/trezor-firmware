@@ -155,6 +155,7 @@ async def _require_confirm_change_passphrase(use: bool) -> None:
         description=description,
         verb=verb,
         br_code=BRT_PROTECT_CALL,
+        prompt_screen=True,
     )
 
 
@@ -171,6 +172,7 @@ async def _require_confirm_change_passphrase_source(
         TR.passphrase__title_source,
         description=description,
         br_code=BRT_PROTECT_CALL,
+        prompt_screen=True,
     )
 
 
@@ -192,6 +194,7 @@ async def _require_confirm_change_display_rotation(rotation: int) -> None:
         description=TR.rotation__change_template,
         description_param=label,
         br_code=BRT_PROTECT_CALL,
+        prompt_screen=True,
     )
 
 
@@ -211,6 +214,7 @@ async def _require_confirm_change_autolock_delay(delay_ms: int) -> None:
         description=TR.auto_lock__change_template,
         description_param=format_duration_ms(delay_ms, unit_plurals),
         br_code=BRT_PROTECT_CALL,
+        prompt_screen=True,
     )
 
 
@@ -223,6 +227,7 @@ async def _require_confirm_safety_checks(level: SafetyCheckLevel) -> None:
             TR.safety_checks__title,
             description=TR.safety_checks__enforce_strict,
             br_code=BRT_PROTECT_CALL,
+            prompt_screen=True,
         )
     elif level in (SafetyCheckLevel.PromptAlways, SafetyCheckLevel.PromptTemporarily):
         description = (
@@ -239,6 +244,7 @@ async def _require_confirm_safety_checks(level: SafetyCheckLevel) -> None:
             verb=TR.buttons__hold_to_confirm,
             reverse=True,
             br_code=BRT_PROTECT_CALL,
+            prompt_screen=True,
         )
     else:
         raise ValueError  # enum value out of range
@@ -253,6 +259,7 @@ async def _require_confirm_experimental_features(enable: bool) -> None:
             TR.experimental_mode__enable,
             reverse=True,
             br_code=BRT_PROTECT_CALL,
+            prompt_screen=True,
         )
 
 
@@ -263,6 +270,7 @@ async def _require_confirm_hide_passphrase_from_host(enable: bool) -> None:
             TR.passphrase__title_hide,
             description=TR.passphrase__hide,
             br_code=BRT_PROTECT_CALL,
+            prompt_screen=True,
         )
 
 
@@ -275,4 +283,5 @@ if utils.USE_HAPTIC:
             TR.haptic_feedback__enable if enable else TR.haptic_feedback__disable,
             subtitle=TR.haptic_feedback__subtitle,
             br_code=BRT_PROTECT_CALL,
+            prompt_screen=True,
         )
