@@ -2,11 +2,10 @@ use crate::{
     strutil::TString,
     ui::{
         component::{
-            base::ComponentExt,
             label::Label,
             swipe_detect::{SwipeConfig, SwipeSettings},
             text::TextStyle,
-            Child, Component, Event,
+            Component, Event,
             Event::Swipe,
             EventCtx, SwipeDetect, SwipeDirection,
         },
@@ -28,11 +27,11 @@ const BUTTON_EXPAND_BORDER: i16 = 32;
 pub struct Frame<T> {
     border: Insets,
     bounds: Rect,
-    title: Child<Label<'static>>,
-    subtitle: Option<Child<Label<'static>>>,
-    button: Option<Child<Button>>,
+    title: Label<'static>,
+    subtitle: Option<Label<'static>>,
+    button: Option<Button>,
     button_msg: CancelInfoConfirmMsg,
-    content: Child<T>,
+    content: T,
     footer: Option<Footer<'static>>,
     swipe: SwipeConfig,
     internal_page_cnt: usize,
@@ -51,15 +50,13 @@ where
 {
     pub const fn new(alignment: Alignment, title: TString<'static>, content: T) -> Self {
         Self {
-            title: Child::new(
-                Label::new(title, alignment, theme::label_title_main()).vertically_centered(),
-            ),
+            title: Label::new(title, alignment, theme::label_title_main()).vertically_centered(),
             bounds: Rect::zero(),
             subtitle: None,
             border: theme::borders(),
             button: None,
             button_msg: CancelInfoConfirmMsg::Cancelled,
-            content: Child::new(content),
+            content,
             footer: None,
             swipe: SwipeConfig::new(),
             internal_page_cnt: 1,
@@ -83,36 +80,34 @@ where
         Self::new(Alignment::Center, title, content)
     }
 
+    #[inline(never)]
     pub const fn with_border(mut self, border: Insets) -> Self {
         self.border = border;
         self
     }
 
     pub fn title_styled(mut self, style: TextStyle) -> Self {
-        self.title = Child::new(self.title.into_inner().styled(style));
+        self.title = self.title.styled(style);
         self
     }
 
     #[inline(never)]
     pub fn with_subtitle(mut self, subtitle: TString<'static>) -> Self {
         let style = theme::TEXT_SUB_GREY;
-        self.title = Child::new(self.title.into_inner().top_aligned());
-        self.subtitle = Some(Child::new(Label::new(
-            subtitle,
-            self.title.inner().alignment(),
-            style,
-        )));
+        self.title = self.title.top_aligned();
+        self.subtitle = Some(Label::new(subtitle, self.title.alignment(), style));
         self
     }
 
+    #[inline(never)]
     fn with_button(mut self, icon: Icon, msg: CancelInfoConfirmMsg, enabled: bool) -> Self {
         let touch_area = Insets::uniform(BUTTON_EXPAND_BORDER);
-        self.button = Some(Child::new(
+        self.button = Some(
             Button::with_icon(icon)
                 .with_expanded_touch_area(touch_area)
                 .initially_enabled(enabled)
                 .styled(theme::button_default()),
-        ));
+        );
         self.button_msg = msg;
         self
     }
@@ -132,11 +127,12 @@ where
 
     pub fn button_styled(mut self, style: ButtonStyleSheet) -> Self {
         if self.button.is_some() {
-            self.button = Some(Child::new(self.button.unwrap().into_inner().styled(style)));
+            self.button = Some(self.button.unwrap().styled(style));
         }
         self
     }
 
+    #[inline(never)]
     pub fn with_footer(
         mut self,
         instruction: TString<'static>,
@@ -156,27 +152,24 @@ where
     }
 
     pub fn inner(&self) -> &T {
-        self.content.inner()
+        &self.content
     }
 
     pub fn update_title(&mut self, ctx: &mut EventCtx, new_title: TString<'static>) {
-        self.title.mutate(ctx, |ctx, t| {
-            t.set_text(new_title);
-            t.request_complete_repaint(ctx)
-        })
+        self.title.set_text(new_title);
+        ctx.request_paint();
     }
 
     pub fn update_content<F, R>(&mut self, ctx: &mut EventCtx, update_fn: F) -> R
     where
         F: Fn(&mut EventCtx, &mut T) -> R,
     {
-        self.content.mutate(ctx, |ctx, c| {
-            let res = update_fn(ctx, c);
-            c.request_complete_repaint(ctx);
-            res
-        })
+        let res = update_fn(ctx, &mut self.content);
+        ctx.request_paint();
+        res
     }
 
+    #[inline(never)]
     pub fn with_swipe(mut self, dir: SwipeDirection, settings: SwipeSettings) -> Self {
         self.footer = self.footer.map(|f| match dir {
             SwipeDirection::Up => f.with_swipe_up(),
