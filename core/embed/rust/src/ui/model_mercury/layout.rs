@@ -181,10 +181,16 @@ impl ComponentMsgObj for PromptScreen {
     }
 }
 
-impl<T: Component + Swipable> ComponentMsgObj for SwipeUpScreen<T> {
+impl<T: Component + ComponentMsgObj> ComponentMsgObj for SwipeContent<T> {
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        self.inner().msg_try_into_obj(msg)
+    }
+}
+
+impl<T: Component + ComponentMsgObj + Swipable> ComponentMsgObj for SwipeUpScreen<T> {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
-            SwipeUpScreenMsg::Content(_) => Err(Error::TypeError),
+            SwipeUpScreenMsg::Content(c) => self.inner().msg_try_into_obj(c),
             SwipeUpScreenMsg::Swiped => Ok(CONFIRMED.as_obj()),
         }
     }
@@ -1083,6 +1089,7 @@ extern "C" fn new_confirm_recovery(n_args: usize, args: *const Obj, kwargs: *mut
 
         let obj = LayoutObj::new(SwipeUpScreen::new(
             Frame::left_aligned(notification, SwipeContent::new(paragraphs))
+                .with_cancel_button()
                 .with_footer(TR::instructions__swipe_up.into(), None)
                 .with_subtitle(TR::words__instructions.into())
                 .with_swipe(SwipeDirection::Up, SwipeSettings::default()),
