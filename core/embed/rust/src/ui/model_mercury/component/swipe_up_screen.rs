@@ -30,6 +30,10 @@ where
             swipe: SwipeDetect::new(),
         }
     }
+
+    pub fn inner(&self) -> &T {
+        &self.content
+    }
 }
 
 impl<T: Swipable + Component> Component for SwipeUpScreen<T> {
