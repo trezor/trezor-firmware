@@ -1652,6 +1652,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     hold_danger: bool = False,  # unused on TR
     ///     reverse: bool = False,
     ///     prompt_screen: bool = False,
+    ///     prompt_title: str | None = None,
     /// ) -> LayoutObj[UiResult]:
     ///     """Confirm action."""
     Qstr::MP_QSTR_confirm_action => obj_fn_kw!(0, new_confirm_action).as_obj(),
@@ -1674,6 +1675,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     verb_cancel: str | None = None,
     ///     hold: bool = False,
     ///     chunkify: bool = False,
+    ///     prompt_screen: bool = False,
     /// ) -> LayoutObj[UiResult]:
     ///     """Confirm byte sequence data."""
     Qstr::MP_QSTR_confirm_blob => obj_fn_kw!(0, new_confirm_blob).as_obj(),

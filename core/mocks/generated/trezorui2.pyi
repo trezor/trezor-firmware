@@ -85,6 +85,7 @@ def confirm_action(
     hold_danger: bool = False,
     reverse: bool = False,
     prompt_screen: bool = False,
+    prompt_title: str | None = None,
 ) -> LayoutObj[UiResult]:
     """Confirm action."""
 
@@ -120,6 +121,7 @@ def confirm_blob(
     verb_cancel: str | None = None,
     hold: bool = False,
     chunkify: bool = False,
+    prompt_screen: bool = False,
 ) -> LayoutObj[UiResult]:
     """Confirm byte sequence data."""
 
@@ -632,6 +634,7 @@ def confirm_action(
     hold_danger: bool = False,  # unused on TR
     reverse: bool = False,
     prompt_screen: bool = False,
+    prompt_title: str | None = None,
 ) -> LayoutObj[UiResult]:
     """Confirm action."""
 
@@ -656,6 +659,7 @@ def confirm_blob(
     verb_cancel: str | None = None,
     hold: bool = False,
     chunkify: bool = False,
+    prompt_screen: bool = False,
 ) -> LayoutObj[UiResult]:
     """Confirm byte sequence data."""
 
@@ -1160,6 +1164,7 @@ def confirm_action(
     hold_danger: bool = False,
     reverse: bool = False,
     prompt_screen: bool = False,
+    prompt_title: str | None = None,
 ) -> LayoutObj[UiResult]:
     """Confirm action."""
 
@@ -1195,6 +1200,7 @@ def confirm_blob(
     verb_cancel: str | None = None,
     hold: bool = False,
     chunkify: bool = False,
+    prompt_screen: bool = False,
 ) -> LayoutObj[UiResult]:
     """Confirm byte sequence data."""
 
