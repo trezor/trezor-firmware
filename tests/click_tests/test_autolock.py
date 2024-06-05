@@ -29,7 +29,7 @@ from .. import translations as TR
 from ..device_tests.bitcoin.payment_req import make_coinjoin_request
 from ..tx_cache import TxCache
 from . import recovery
-from .common import go_next, unlock_gesture
+from .common import go_next, tap_to_confirm, unlock_gesture
 
 if TYPE_CHECKING:
     from trezorlib.debuglink import DebugLink, LayoutContent
@@ -70,6 +70,8 @@ def set_autolock_delay(device_handler: "BackgroundDeviceHandler", delay_ms: int)
     )
 
     layout = go_next(debug, wait=True)
+    if debug.model in (models.T3T1,):
+        layout = tap_to_confirm(debug, wait=True)
     assert layout.main_component() == "Homescreen"
     assert device_handler.result() == "Settings applied"
 

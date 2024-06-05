@@ -89,6 +89,7 @@ async def require_confirm_memo(memo_type: StellarMemoType, memo_text: str) -> No
             TR.stellar__no_memo_set,
             TR.stellar__exchanges_require_memo,
             br_code=ButtonRequestType.ConfirmOutput,
+            prompt_screen=True,
         )
 
     await layouts.confirm_blob(

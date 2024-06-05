@@ -17,6 +17,7 @@ async def get_entropy(msg: GetEntropy) -> Entropy:
         TR.entropy__send,
         TR.words__know_what_your_doing,
         br_code=ButtonRequestType.ProtectCall,
+        prompt_screen=True,
     )
 
     size = min(msg.size, 1024)

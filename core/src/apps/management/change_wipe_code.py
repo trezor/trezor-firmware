@@ -68,6 +68,7 @@ def _require_confirm_action(
             TR.wipe_code__title_settings,
             description=TR.wipe_code__turn_off,
             verb=TR.buttons__turn_off,
+            prompt_screen=True,
         )
 
     if not msg.remove and has_wipe_code:

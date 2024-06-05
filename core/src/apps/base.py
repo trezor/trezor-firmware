@@ -328,6 +328,7 @@ async def handle_UnlockPath(msg: UnlockPath) -> protobuf.MessageType:
             title="Coinjoin",
             description=TR.coinjoin__access_account,
             verb=TR.buttons__access,
+            prompt_screen=True,
         )
 
     wire_types = (MessageType.GetAddress, MessageType.GetPublicKey, MessageType.SignTx)

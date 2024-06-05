@@ -56,6 +56,17 @@ def go_next(debug: "DebugLink", wait: bool = False) -> "LayoutContent" | None:
         raise RuntimeError("Unknown model")
 
 
+def tap_to_confirm(debug: "DebugLink", wait: bool = False) -> "LayoutContent" | None:
+    if debug.model in (models.T2T1,):
+        return debug.read_layout()  # type: ignore
+    elif debug.model in (models.T2B1,):
+        return debug.read_layout()  # type: ignore
+    elif debug.model in (models.T3T1,):
+        return debug.click(buttons.TAP_TO_CONFIRM, wait=wait)
+    else:
+        raise RuntimeError("Unknown model")
+
+
 def go_back(
     debug: "DebugLink", wait: bool = False, r_middle: bool = False
 ) -> "LayoutContent" | None:

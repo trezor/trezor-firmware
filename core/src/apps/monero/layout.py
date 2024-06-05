@@ -65,6 +65,7 @@ async def require_confirm_watchkey() -> None:
         TR.monero__confirm_export,
         description=TR.monero__wanna_export_watchkey,
         br_code=BRT_SignTx,
+        prompt_screen=True,
     )
 
 
@@ -74,6 +75,7 @@ async def require_confirm_keyimage_sync() -> None:
         TR.monero__confirm_ki_sync,
         description=TR.monero__wanna_sync_key_images,
         br_code=BRT_SignTx,
+        prompt_screen=True,
     )
 
 
@@ -83,6 +85,7 @@ async def require_confirm_live_refresh() -> None:
         TR.monero__confirm_refresh,
         description=TR.monero__wanna_start_refresh,
         br_code=BRT_SignTx,
+        prompt_screen=True,
     )
 
 
@@ -95,6 +98,7 @@ async def require_confirm_tx_key(export_key: bool = False) -> None:
         TR.monero__confirm_export,
         description=description,
         br_code=BRT_SignTx,
+        prompt_screen=True,
     )
 
 

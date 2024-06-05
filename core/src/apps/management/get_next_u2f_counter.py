@@ -20,6 +20,7 @@ async def get_next_u2f_counter(msg: GetNextU2FCounter) -> NextU2FCounter:
         TR.u2f__title_get,
         description=TR.u2f__get,
         br_code=ButtonRequestType.ProtectCall,
+        prompt_screen=True,
     )
 
     return NextU2FCounter(u2f_counter=storage_device.next_u2f_counter())
