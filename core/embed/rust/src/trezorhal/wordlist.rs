@@ -1,6 +1,5 @@
 use super::ffi;
-use core::cmp::Ordering;
-use cstr_core::CStr;
+use core::{cmp::Ordering, ffi::CStr};
 
 /// Holds all the possible words with the possibility to interact
 /// with the "list" - filtering it further, getting their count, etc.
@@ -102,7 +101,7 @@ unsafe fn from_utf8_unchecked<'a>(word: *const cty::c_char) -> &'a str {
     // SAFETY: caller must pass a valid 0-terminated UTF-8 string.
     // This assumption holds for usage on words of the BIP-39/SLIP-39 wordlists.
     unsafe {
-        let word = CStr::from_ptr(word);
+        let word = CStr::from_ptr(word as _);
         core::str::from_utf8_unchecked(word.to_bytes())
     }
 }

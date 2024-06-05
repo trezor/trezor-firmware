@@ -526,7 +526,7 @@ extern "C" fn new_confirm_homescreen(n_args: usize, args: *const Obj, kwargs: *m
             ))
         } else {
             if !check_homescreen_format(jpeg) {
-                return Err(value_error!("Invalid image."));
+                return Err(value_error!(c"Invalid image."));
             };
 
             LayoutObj::new(SwipeUpScreen::new(

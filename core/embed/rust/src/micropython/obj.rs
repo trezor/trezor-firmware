@@ -1,6 +1,7 @@
-use core::convert::{TryFrom, TryInto};
-
-use cstr_core::CStr;
+use core::{
+    convert::{TryFrom, TryInto},
+    ffi::CStr,
+};
 
 use crate::error::Error;
 
@@ -290,7 +291,7 @@ impl TryFrom<&'static CStr> for Obj {
         // SAFETY:
         //  - `CStr` is guaranteed to be null-terminated UTF-8.
         //  - the argument is static so it will remain valid for the lifetime of result.
-        let obj = unsafe { ffi::trezor_obj_str_from_rom_text(val.as_ptr()) };
+        let obj = unsafe { ffi::trezor_obj_str_from_rom_text(val.as_ptr() as _) };
         if obj.is_null() {
             Err(Error::AllocationFailed)
         } else {

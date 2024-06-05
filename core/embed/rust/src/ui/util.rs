@@ -9,7 +9,6 @@ use crate::{
     },
 };
 
-use cstr_core::CStr;
 use heapless::String;
 
 use super::display::Font;
@@ -40,7 +39,7 @@ pub unsafe fn from_c_str<'a>(c_str: *const cty::c_char) -> Option<&'a str> {
         return None;
     }
     unsafe {
-        let bytes = CStr::from_ptr(c_str).to_bytes();
+        let bytes = core::ffi::CStr::from_ptr(c_str as _).to_bytes();
         if bytes.is_ascii() {
             Some(core::str::from_utf8_unchecked(bytes))
         } else {
