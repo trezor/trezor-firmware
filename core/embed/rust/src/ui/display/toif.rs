@@ -1,5 +1,5 @@
 use crate::{
-    error::Error,
+    error::{value_error, Error},
     trezorhal::uzlib::{UzlibContext, UZLIB_WINDOW_SIZE},
     ui::{
         component::image::Image,

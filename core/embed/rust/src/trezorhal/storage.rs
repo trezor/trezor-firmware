@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
 use super::ffi;
-use crate::error::Error;
+use crate::error::{value_error, Error};
 use core::ptr;
 
 use num_traits::FromPrimitive;

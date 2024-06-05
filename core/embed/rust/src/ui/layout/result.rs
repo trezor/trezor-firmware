@@ -1,4 +1,4 @@
-use crate::micropython::{qstr::Qstr, simple_type::SimpleTypeObj, typ::Type};
+use crate::micropython::{macros::obj_type, qstr::Qstr, simple_type::SimpleTypeObj, typ::Type};
 
 static CONFIRMED_TYPE: Type = obj_type! { name: Qstr::MP_QSTR_CONFIRMED, };
 static CANCELLED_TYPE: Type = obj_type! { name: Qstr::MP_QSTR_CANCELLED, };

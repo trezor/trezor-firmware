@@ -10,7 +10,7 @@ use super::{
     qstr::Qstr,
     runtime::{catch_exception, raise_exception},
 };
-use crate::error::Error;
+use crate::error::{value_error, Error};
 
 /// Perform a call and convert errors into a raised MicroPython exception.
 /// Should only called when returning from Rust to C. See `raise_exception` for
