@@ -296,6 +296,7 @@ async def confirm_action(
     exc: ExceptionType = ActionCancelled,
     br_code: ButtonRequestType = BR_TYPE_OTHER,
     prompt_screen: bool = False,
+    prompt_title: str | None = None,
 ) -> None:
     if description is not None and description_param is not None:
         description = description.format(description_param)
@@ -314,6 +315,7 @@ async def confirm_action(
                     hold_danger=hold_danger,
                     reverse=reverse,
                     prompt_screen=prompt_screen,
+                    prompt_title=prompt_title or title,
                 )
             ),
             br_type,
@@ -727,6 +729,7 @@ async def confirm_blob(
     br_code: ButtonRequestType = BR_TYPE_OTHER,
     ask_pagination: bool = False,
     chunkify: bool = False,
+    prompt_screen: bool = True,
 ) -> None:
     layout = RustLayout(
         trezorui2.confirm_blob(
@@ -738,6 +741,7 @@ async def confirm_blob(
             verb=verb,
             verb_cancel=verb_cancel,
             chunkify=chunkify,
+            prompt_screen=prompt_screen,
         )
     )
 
@@ -987,6 +991,7 @@ if not utils.BITCOIN_ONLY:
                 recipient,
                 verb=TR.buttons__continue,
                 chunkify=chunkify,
+                prompt_screen=False,
             )
 
             try:

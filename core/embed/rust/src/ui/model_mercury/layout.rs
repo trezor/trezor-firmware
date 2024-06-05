@@ -271,10 +271,6 @@ impl ComponentMsgObj for super::component::bl_confirm::Confirm<'_> {
 extern "C" fn new_confirm_emphasized(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
-        let verb: Option<TString> = kwargs
-            .get(Qstr::MP_QSTR_verb)
-            .unwrap_or_else(|_| Obj::const_none())
-            .try_into_option()?;
 
         let items: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
         let mut ops = OpTextLayout::new(theme::TEXT_NORMAL);
@@ -296,8 +292,9 @@ extern "C" fn new_confirm_emphasized(n_args: usize, args: *const Obj, kwargs: *m
             FormattedText::new(ops).vertically_centered(),
             title,
             None,
-            verb,
             None,
+            Some(title),
+            false,
         )
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -312,6 +309,7 @@ struct ConfirmBlobParams {
     verb: Option<TString<'static>>,
     verb_cancel: Option<TString<'static>>,
     info_button: bool,
+    prompt: bool,
     hold: bool,
     chunkify: bool,
     text_mono: bool,
@@ -324,6 +322,7 @@ impl ConfirmBlobParams {
         description: Option<TString<'static>>,
         verb: Option<TString<'static>>,
         verb_cancel: Option<TString<'static>>,
+        prompt: bool,
         hold: bool,
     ) -> Self {
         Self {
@@ -335,6 +334,7 @@ impl ConfirmBlobParams {
             verb,
             verb_cancel,
             info_button: false,
+            prompt,
             hold,
             chunkify: false,
             text_mono: true,
@@ -388,8 +388,9 @@ impl ConfirmBlobParams {
             paragraphs,
             self.title,
             self.subtitle,
-            self.verb,
             self.verb_cancel,
+            self.prompt.then_some(self.title),
+            self.hold,
         )
     }
 }
@@ -414,11 +415,20 @@ extern "C" fn new_confirm_blob(n_args: usize, args: *const Obj, kwargs: *mut Map
             .try_into_option()?;
         let hold: bool = kwargs.get_or(Qstr::MP_QSTR_hold, false)?;
         let chunkify: bool = kwargs.get_or(Qstr::MP_QSTR_chunkify, false)?;
+        let prompt_screen: bool = kwargs.get_or(Qstr::MP_QSTR_prompt_screen, true)?;
 
-        ConfirmBlobParams::new(title, data, description, verb, verb_cancel, hold)
-            .with_extra(extra)
-            .with_chunkify(chunkify)
-            .into_flow()
+        ConfirmBlobParams::new(
+            title,
+            data,
+            description,
+            verb,
+            verb_cancel,
+            prompt_screen,
+            hold,
+        )
+        .with_extra(extra)
+        .with_chunkify(chunkify)
+        .into_flow()
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
@@ -449,7 +459,7 @@ extern "C" fn new_confirm_address(n_args: usize, args: *const Obj, kwargs: *mut 
         }
         .into_paragraphs();
 
-        flow::new_confirm_action_simple(paragraphs, title, None, None, None)
+        flow::new_confirm_action_simple(paragraphs, title, None, None, None, false)
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
@@ -457,7 +467,7 @@ extern "C" fn new_confirm_address(n_args: usize, args: *const Obj, kwargs: *mut 
 extern "C" fn new_confirm_properties(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
-        let _hold: bool = kwargs.get_or(Qstr::MP_QSTR_hold, false)?; // FIXME
+        let hold: bool = kwargs.get_or(Qstr::MP_QSTR_hold, false)?;
         let items: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
 
         let paragraphs = PropsList::new(
@@ -471,8 +481,9 @@ extern "C" fn new_confirm_properties(n_args: usize, args: *const Obj, kwargs: *m
             paragraphs.into_paragraphs(),
             title,
             None,
-            Some(TR::buttons__confirm.into()),
             None,
+            hold.then_some(title),
+            hold,
         )
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -579,7 +590,7 @@ extern "C" fn new_confirm_value(n_args: usize, args: *const Obj, kwargs: *mut Ma
         let chunkify: bool = kwargs.get_or(Qstr::MP_QSTR_chunkify, false)?;
         let text_mono: bool = kwargs.get_or(Qstr::MP_QSTR_text_mono, true)?;
 
-        ConfirmBlobParams::new(title, value, description, verb, verb_cancel, hold)
+        ConfirmBlobParams::new(title, value, description, verb, verb_cancel, hold, hold)
             .with_subtitle(subtitle)
             .with_info_button(info_button)
             .with_chunkify(chunkify)
@@ -900,8 +911,14 @@ extern "C" fn new_confirm_coinjoin(n_args: usize, args: *const Obj, kwargs: *mut
             Paragraph::new(&theme::TEXT_MONO, max_feerate),
         ]);
 
-        // FIXME: hold
-        flow::new_confirm_action_simple(paragraphs, TR::coinjoin__title.into(), None, None, None)
+        flow::new_confirm_action_simple(
+            paragraphs,
+            TR::coinjoin__title.into(),
+            None,
+            None,
+            Some(TR::coinjoin__title.into()),
+            true,
+        )
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
@@ -1367,6 +1384,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     hold_danger: bool = False,
     ///     reverse: bool = False,
     ///     prompt_screen: bool = False,
+    ///     prompt_title: str | None = None,
     /// ) -> LayoutObj[UiResult]:
     ///     """Confirm action."""
     Qstr::MP_QSTR_confirm_action => obj_fn_kw!(0, flow::confirm_action::new_confirm_action).as_obj(),
@@ -1399,6 +1417,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     verb_cancel: str | None = None,
     ///     hold: bool = False,
     ///     chunkify: bool = False,
+    ///     prompt_screen: bool = False,
     /// ) -> LayoutObj[UiResult]:
     ///     """Confirm byte sequence data."""
     Qstr::MP_QSTR_confirm_blob => obj_fn_kw!(0, new_confirm_blob).as_obj(),
