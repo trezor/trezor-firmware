@@ -19,7 +19,7 @@ const SIGNATURE_THRESHOLD: u8 = 2;
 // should be max 1.
 const MAX_TABLE_PADDING: usize = 3;
 
-const INVALID_TRANSLATIONS_BLOB: Error = value_error!("Invalid translations blob");
+const INVALID_TRANSLATIONS_BLOB: Error = value_error!(c"Invalid translations blob");
 
 #[repr(packed)]
 struct OffsetEntry {
@@ -145,7 +145,7 @@ impl<'a> Translations<'a> {
         let remaining = blob_reader.rest();
         if !remaining.iter().all(|&b| b == EMPTY_BYTE) {
             // TODO optimize to quadwords?
-            return Err(value_error!("Trailing data in translations blob"));
+            return Err(value_error!(c"Trailing data in translations blob"));
         }
 
         let payload_bytes = payload_reader.rest();
@@ -337,7 +337,7 @@ impl<'a> TranslationsHeader<'a> {
 
         let model = read_fixedsize_str(&mut header_reader, 4)?;
         if model != crate::trezorhal::model::INTERNAL_NAME {
-            return Err(value_error!("Wrong Trezor model"));
+            return Err(value_error!(c"Wrong Trezor model"));
         }
 
         let version_bytes = header_reader.read(4)?;

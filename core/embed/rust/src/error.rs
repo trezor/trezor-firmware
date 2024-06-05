@@ -1,5 +1,4 @@
-use core::{convert::Infallible, num::TryFromIntError};
-use cstr_core::CStr;
+use core::{convert::Infallible, ffi::CStr, num::TryFromIntError};
 
 #[cfg(feature = "micropython")]
 use {
@@ -30,7 +29,7 @@ pub enum Error {
 #[macro_export]
 macro_rules! value_error {
     ($msg:expr) => {
-        $crate::error::Error::ValueError(cstr_core::cstr!($msg))
+        $crate::error::Error::ValueError($msg)
     };
 }
 

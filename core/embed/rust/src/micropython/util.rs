@@ -133,7 +133,7 @@ where
     let vec: Vec<T, N> = iter_into_vec(iterable)?;
     // Returns error if array.len() != N
     vec.into_array()
-        .map_err(|_| value_error!("Invalid iterable length"))
+        .map_err(|_| value_error!(c"Invalid iterable length"))
 }
 
 pub fn iter_into_vec<T, E, const N: usize>(iterable: Obj) -> Result<Vec<T, N>, Error>
@@ -144,7 +144,7 @@ where
     let mut vec = Vec::<T, N>::new();
     for item in IterBuf::new().try_iterate(iterable)? {
         vec.push(item.try_into()?)
-            .map_err(|_| value_error!("Invalid iterable length"))?;
+            .map_err(|_| value_error!(c"Invalid iterable length"))?;
     }
     Ok(vec)
 }

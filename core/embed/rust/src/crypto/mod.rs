@@ -16,9 +16,9 @@ pub enum Error {
 impl From<Error> for crate::error::Error {
     fn from(e: Error) -> Self {
         match e {
-            Error::SignatureVerificationFailed => value_error!("Signature verification failed"),
-            Error::InvalidEncoding => value_error!("Invalid key or signature encoding"),
-            Error::InvalidParams => value_error!("Invalid cryptographic parameters"),
+            Error::SignatureVerificationFailed => value_error!(c"Signature verification failed"),
+            Error::InvalidEncoding => value_error!(c"Invalid key or signature encoding"),
+            Error::InvalidParams => value_error!(c"Invalid cryptographic parameters"),
         }
     }
 }

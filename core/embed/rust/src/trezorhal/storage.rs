@@ -80,12 +80,12 @@ pub enum StorageError {
 impl From<StorageError> for Error {
     fn from(err: StorageError) -> Self {
         match err {
-            StorageError::InvalidData => value_error!("Invalid data for storage"),
-            StorageError::WriteFailed => value_error!("Storage write failed"),
-            StorageError::ReadFailed => value_error!("Storage read failed"),
-            StorageError::DeleteFailed => value_error!("Storage delete failed"),
+            StorageError::InvalidData => value_error!(c"Invalid data for storage"),
+            StorageError::WriteFailed => value_error!(c"Storage write failed"),
+            StorageError::ReadFailed => value_error!(c"Storage read failed"),
+            StorageError::DeleteFailed => value_error!(c"Storage delete failed"),
             StorageError::CounterFailed => {
-                value_error!("Retrieving counter value failed")
+                value_error!(c"Retrieving counter value failed")
             }
         }
     }

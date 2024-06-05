@@ -602,7 +602,7 @@ extern "C" fn new_confirm_homescreen(n_args: usize, args: *const Obj, kwargs: *m
         }
 
         if !check_homescreen_format(jpeg, false) {
-            return Err(value_error!("Invalid image."));
+            return Err(value_error!(c"Invalid image."));
         };
 
         let buttons = Button::cancel_confirm_text(None, Some(TR::buttons__change.into()));
