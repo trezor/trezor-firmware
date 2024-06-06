@@ -611,6 +611,8 @@
     "recovery__title_recover": "Récup. portef.",
     "recovery__title_remaining_shares": "Fragm. restants",
     "recovery__type_word_x_of_y_template": "Entrez le mot {0} sur {1}",
+    "recovery__unlock_repeated_backup": "Créer une autre sauvegarde?",
+    "recovery__unlock_repeated_backup_verb": "Créer sauvegarde",
     "recovery__wallet_recovered": "Récupération du portefeuille terminée",
     "recovery__wanna_cancel_dry_run": "Voulez-vous vraiment annuler la vér. de la sauv. ?",
     "recovery__wanna_cancel_recovery": "Voulez-vous vraiment annuler le processus de récup. ?",

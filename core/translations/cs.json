@@ -611,6 +611,8 @@
     "recovery__title_recover": "Obnovit peněženku",
     "recovery__title_remaining_shares": "Zbývající části",
     "recovery__type_word_x_of_y_template": "Zadejte slovo {0} z {1}",
+    "recovery__unlock_repeated_backup": "Vytvořit další zálohu?",
+    "recovery__unlock_repeated_backup_verb": "Vytvořit zálohu",
     "recovery__wallet_recovered": "Obnovení peněženky dokončeno",
     "recovery__wanna_cancel_dry_run": "Opravdu chcete zrušit kontrolu zálohy?",
     "recovery__wanna_cancel_recovery": "Opravdu chcete proces obnovy zrušit?",

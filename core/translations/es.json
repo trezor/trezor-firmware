@@ -611,6 +611,8 @@
     "recovery__title_recover": "Recuperar monedero",
     "recovery__title_remaining_shares": "Resto rec. comp.",
     "recovery__type_word_x_of_y_template": "Meter palabra {0} de {1}",
+    "recovery__unlock_repeated_backup": "¿Crear copia de seguridad adicional?",
+    "recovery__unlock_repeated_backup_verb": "Crear",
     "recovery__wallet_recovered": "Recuperación del monedero completada",
     "recovery__wanna_cancel_dry_run": "¿Quieres anular la revisión de la copia de seguridad?",
     "recovery__wanna_cancel_recovery": "¿Quieres anular el proceso de recuperación?",

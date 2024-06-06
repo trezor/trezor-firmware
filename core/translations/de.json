@@ -611,6 +611,8 @@
     "recovery__title_recover": "Wallet wiederherst.",
     "recovery__title_remaining_shares": "Verbleibende shares",
     "recovery__type_word_x_of_y_template": "Tippe Wort {0} von {1}",
+    "recovery__unlock_repeated_backup": "Zusätzliches Backup erstellen?",
+    "recovery__unlock_repeated_backup_verb": "Backup erstellen",
     "recovery__wallet_recovered": "Wiederherstellung des Wallets abgeschlossen",
     "recovery__wanna_cancel_dry_run": "Möchtest du die Backup-Überprüfung wirklich abbrechen?",
     "recovery__wanna_cancel_recovery": "Möchtest du die Wiederherstellung wirklich abbrechen?",

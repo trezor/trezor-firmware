@@ -21,6 +21,7 @@ from trezorlib import device, messages
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import Cancelled, TrezorFailure
 
+from .. import translations as TR
 from ..common import (
     MNEMONIC_SLIP39_SINGLE_EXT_20,
     TEST_ADDRESS_N,
@@ -236,4 +237,6 @@ def test_repeated_backup_send_disallowed_message(client: Client):
     assert client.features.recovery_status == messages.RecoveryStatus.Backup
 
     # we are still on the confirmation screen!
-    assert client.debug.read_layout().text_content() == "Create additional backup?"
+    TR.assert_in(
+        client.debug.read_layout().text_content(), "recovery__unlock_repeated_backup"
+    )

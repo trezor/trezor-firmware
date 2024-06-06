@@ -1332,7 +1332,7 @@ pub enum TranslatedString {
     brightness__title = 932,  // "Set brightness"
     recovery__title_unlock_repeated_backup = 933,  // "Multi-share backup"
     recovery__unlock_repeated_backup = 934,  // "Create additional backup?"
-    recovery__unlock_repeated_backup_verb = 935,  // "Unlock backup"
+    recovery__unlock_repeated_backup_verb = 935,  // "Create backup"
     homescreen__set_default = 936,  // "Do you really want to set default homescreen image?"
     reset__words_may_repeat = 937,  // "Words may repeat."
     reset__repeat_for_all_shares = 938,  // "Repeat for all shares."
@@ -2663,7 +2663,7 @@ impl TranslatedString {
             Self::brightness__title => "Set brightness",
             Self::recovery__title_unlock_repeated_backup => "Multi-share backup",
             Self::recovery__unlock_repeated_backup => "Create additional backup?",
-            Self::recovery__unlock_repeated_backup_verb => "Unlock backup",
+            Self::recovery__unlock_repeated_backup_verb => "Create backup",
             Self::homescreen__set_default => "Do you really want to set default homescreen image?",
             Self::reset__words_may_repeat => "Words may repeat.",
             Self::reset__repeat_for_all_shares => "Repeat for all shares.",
