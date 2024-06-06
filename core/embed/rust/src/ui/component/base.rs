@@ -535,7 +535,7 @@ impl EventCtx {
     pub const ANIM_FRAME_TIMER: TimerToken = TimerToken(1);
 
     /// How long into the future we should schedule the animation frame timer.
-    const ANIM_FRAME_DEADLINE: Duration = Duration::from_millis(18);
+    const ANIM_FRAME_DEADLINE: Duration = Duration::from_millis(1);
 
     // 0 == `TimerToken::INVALID`,
     // 1 == `Self::ANIM_FRAME_TIMER`.
