@@ -25,7 +25,23 @@
 #include "display_panel.h"
 
 void display_refresh(void) {
-  // if the framebuffer is not used the implementation is empty
+  // If the framebuffer is not used the, we do not need
+  // to refresh the display explicitly as we write the data
+  // directly to the display internal RAM.
+}
+
+void display_wait_for_sync(void) {
+#ifdef DISPLAY_TE_PIN
+  uint32_t id = display_panel_identify();
+  if (id && (id != DISPLAY_ID_GC9307)) {
+    // synchronize with the panel synchronization signal
+    // in order to avoid visual tearing effects
+    while (GPIO_PIN_SET == HAL_GPIO_ReadPin(DISPLAY_TE_PORT, DISPLAY_TE_PIN))
+      ;
+    while (GPIO_PIN_RESET == HAL_GPIO_ReadPin(DISPLAY_TE_PORT, DISPLAY_TE_PIN))
+      ;
+  }
+#endif
 }
 
 static inline void set_window(const gfx_bitblt_t* bb) {
