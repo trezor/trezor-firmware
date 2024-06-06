@@ -9,6 +9,7 @@ static volatile uint32_t dma_transfer_remaining = 0;
 static volatile uint32_t dma_data_transferred = 0;
 static void *data_src = NULL;
 static void *data_dst = NULL;
+static bg_copy_callback_t bg_copy_callback = NULL;
 static DMA_HandleTypeDef DMA_Handle = {0};
 
 void HAL_DMA_XferCpltCallback(DMA_HandleTypeDef *hdma) {
@@ -46,6 +47,10 @@ void GPDMA1_Channel0_IRQHandler(void) {
     HAL_NVIC_DisableIRQ(GPDMA1_Channel0_IRQn);
     data_src = NULL;
     data_dst = NULL;
+
+    if (bg_copy_callback != NULL) {
+      bg_copy_callback();
+    }
   }
 }
 
@@ -57,12 +62,14 @@ void bg_copy_wait(void) {
   }
 }
 
-void bg_copy_start_const_out_8(const uint8_t *src, uint8_t *dst, size_t size) {
+void bg_copy_start_const_out_8(const uint8_t *src, uint8_t *dst, size_t size,
+                               bg_copy_callback_t callback) {
   uint32_t data_to_send = size > MAX_DATA_SIZE ? MAX_DATA_SIZE : size;
   dma_transfer_remaining = size;
   dma_data_transferred = 0;
   data_src = (void *)src;
   data_dst = (void *)dst;
+  bg_copy_callback = callback;
 
   // setup DMA for data copy to constant output address
 

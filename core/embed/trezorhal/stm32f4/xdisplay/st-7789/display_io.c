@@ -22,6 +22,7 @@
 
 #include "display_io.h"
 #include "irq.h"
+#include "supervise.h"
 
 __IO DISP_MEM_TYPE *const DISPLAY_CMD_ADDRESS =
     (__IO DISP_MEM_TYPE *const)((uint32_t)DISPLAY_MEMORY_BASE);
@@ -35,7 +36,6 @@ void display_io_init_gpio(void) {
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
-  __HAL_RCC_FMC_CLK_ENABLE();
 
   GPIO_InitTypeDef GPIO_InitStructure;
 
@@ -87,6 +87,8 @@ void display_io_init_gpio(void) {
 }
 
 void display_io_init_fmc(void) {
+  __HAL_RCC_FMC_CLK_ENABLE();
+
   // Reference UM1725 "Description of STM32F4 HAL and LL drivers",
   // section 64.2.1 "How to use this driver"
   SRAM_HandleTypeDef external_display_data_sram = {0};
@@ -141,5 +143,6 @@ void display_io_init_te_interrupt(void) {
 
   // setup interrupt for tearing effect pin
   HAL_NVIC_SetPriority(DISPLAY_TE_INTERRUPT_NUM, IRQ_PRI_DMA, 0);
+  svc_enableIRQ(DISPLAY_TE_INTERRUPT_NUM);
 }
 #endif

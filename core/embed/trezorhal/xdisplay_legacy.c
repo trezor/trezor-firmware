@@ -40,4 +40,8 @@ int display_backlight(int level) {
   }
 }
 
-void display_sync(void) {}
+void display_sync(void) {
+#ifndef XFRAMEBUFFER
+  display_wait_for_sync();
+#endif
+}
