@@ -644,7 +644,7 @@ class InputFlowShowXpubQRCode(InputFlowBase):
             br = yield
             layout = self.debug.wait_layout()
 
-        TR.assert_in(layout.title(), "address__title_receive_address")
+        assert layout.title() in TR.translate("address__public_key") + ["XPUB"]
 
         self.debug.click(buttons.CORNER_BUTTON, wait=True)
         assert "VerticalMenu" in self.all_components()
