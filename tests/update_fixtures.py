@@ -97,7 +97,9 @@ def ci(
             is_error = True
             print("No results found.")
             continue
+        _model, lang, _job = job_name.split("-")
         model = next(iter(ui_res_dict.keys()))
+        assert model == _model
         group = next(iter(ui_res_dict[model].keys()))
         current_model = current_fixtures.setdefault(model, {})
         current_group = current_model.setdefault(group, {})  # type: ignore
@@ -106,6 +108,8 @@ def ci(
             # get rid of tests that were not run in CI
             removed = 0
             for key in list(current_group.keys()):
+                if not key.startswith(f"{model}_{lang}_"):
+                    continue
                 if key not in ui_res_dict[model][group]:
                     current_group.pop(key)
                     removed += 1
