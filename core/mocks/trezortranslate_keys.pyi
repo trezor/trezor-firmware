@@ -587,7 +587,7 @@ class TR:
     recovery__title_unlock_repeated_backup: str = "Multi-share backup"
     recovery__type_word_x_of_y_template: str = "Type word {0} of {1}"
     recovery__unlock_repeated_backup: str = "Create additional backup?"
-    recovery__unlock_repeated_backup_verb: str = "Unlock backup"
+    recovery__unlock_repeated_backup_verb: str = "Create backup"
     recovery__wallet_recovered: str = "Wallet recovery completed"
     recovery__wanna_cancel_dry_run: str = "Are you sure you want to cancel the backup check?"
     recovery__wanna_cancel_recovery: str = "Are you sure you want to cancel the recovery process?"
