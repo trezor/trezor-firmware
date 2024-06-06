@@ -74,7 +74,6 @@ async def select_word(
     group_index: int | None = None,
 ) -> str:
     from trezor.strings import format_ordinal
-    from trezor.wire.context import wait
 
     # It may happen (with a very low probability)
     # that there will be less than three unique words to choose from.
@@ -84,13 +83,11 @@ async def select_word(
         words.append(words[-1])
 
     word_ordinal = format_ordinal(checked_index + 1)
-    result = await wait(
-        RustLayout(
-            trezorui2.select_word(
-                title="",
-                description=TR.reset__select_word_template.format(word_ordinal),
-                words=(words[0].lower(), words[1].lower(), words[2].lower()),
-            )
+    result = await RustLayout(
+        trezorui2.select_word(
+            title="",
+            description=TR.reset__select_word_template.format(word_ordinal),
+            words=(words[0].lower(), words[1].lower(), words[2].lower()),
         )
     )
     if __debug__ and isinstance(result, str):
