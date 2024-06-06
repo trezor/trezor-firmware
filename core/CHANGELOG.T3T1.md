@@ -7,19 +7,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [2.7.1] (14th June 2024)
 
 ### Added
-- [T2T1] Added user adjustable brightness setting.  [#3208]
 - Added basic support for STM32U5.  [#3370]
 - Cardano: Added support for tagged sets in CBOR (tag 258).  [#3496]
 - Cardano: Added support for Conway certificates.  [#3496]
 - Added ability to request Shamir backups with any number of groups/shares.  [#3636]
 - Added support for repeated backups.  [#3640]
-- [T2T1] Allow SD card hotswap based on production date.  [#3940]
 - Support extendable backup flag in SLIP-39.
-- [T3T1] User interface implementation.
+- User interface implementation.
 
 ### Changed
 - Cardano: Increased max URL length to 128 bytes.  [#3496]
-- [T3T1] Upgrade to bootloader 2.1.6.  [#3855]
+- Upgrade to bootloader 2.1.6.  [#3855]
 
 ### Fixed
 - Translate also texts for PIN progress loaders.  [#3520]
@@ -30,7 +28,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 - Add translations capability.  [#3206]
 - Stellar: add support for `StellarClaimClaimableBalanceOp`.  [#3434]
-- [T2B1] Add loader to homescreen when locking the device.  [#3440]
 - Allow for going back to previous word in recovery process.  [#3458]
 - Clear sign ETH staking transactions on Everstake pool.  [#3517]
 - Send BIP-380 descriptor in GetPublicKey response.  [#3539]
@@ -39,11 +36,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Display descriptors for BTC Taproot public keys.  [#3475]
 
 ### Fixed
-- [T2T1] Fixed blank display delay on startup when display orientation is set to other than north.  [#3244]
 - Improved UI of multiple Solana instructions.  [#3445]
 - Solana multisig instruction warning will be displayed before instruction details are displayed.  [#3445]
 - Fixed Solana Memo instruction being unknown - it will now be recognized and displayed properly.  [#3445]
-- [T2B1] Add missing semicolon character to the passphrase entry.  [#3477]
 
 
 ## [2.6.4] (20th December 2023)
@@ -56,7 +51,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 - Fix invalid encoding of signatures from Optiga.  [#3411]
-- [T2B1] Re-added missing address confirmation screens.  [#3424]
 
 
 ## [2.6.3] (15th November 2023)
@@ -64,35 +58,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 - Support interaction-less upgrade.  [#2919]
 - Allowed non-zero address index in Cardano staking paths.  [#3242]
-- [T2B1] Turn the screen off when device is locked, to prolong OLED life.  [#3377]
 
 ### Changed
-- [T2T1] Adjust buttons used for scrolling multipage content.  [#2888]
 
 ### Fixed
-- [T2T1] Fixed backlight flickering at the end of PIN loader animation.  [#3311]
 
 
 ## [2.6.2] (internal release)
 
 ### Added
-- [T2B1] Integrate Optiga into PIN verification.  [#3296]
 
 
 ## [2.6.1] (internal release)
 
 ### Added
-- [T2B1] Implement UI.  [#2610]
 - QR code display when exporting XPUBs.  [#3047]
 - Added hw model field to all vendor headers.  [#3048]
 - Added firmware update without interaction.  [#3205]
 - Split builds of different parts to use simple util.s assembler, while FW+bootloader use interconnected ones.  [#3205]
 - Add support for address chunkification in Receive and Sign flow.  [#3237]
-- [T2B1] Implement device authentication.  [#3255]
-- [T2B1] Use Optiga as a source of randomness in seed generation.  [#3256]
 
 ### Changed
-- [T2T1] Changed design of the path warning screen.  [#2161]
 - Update to MicroPython 1.19.1.  [#2341]
 - Introduce multisig warning to BTC receive flow.  [#2937]
 - Introduce multiple account warning to BTC send flow.  [#2937]
@@ -101,8 +87,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - MUE coin support.  [#3216]
 
 ### Fixed
-- [T2T1] Fixed gamma correction settings for.  [#2955]
-- [T2T1] Fix more info button on shamir recovery screen.  [#3218]
 
 
 ## [2.6.0] (19th April 2023)
