@@ -25,6 +25,7 @@
 #include STM32_HAL_H
 
 #include "display_fb.h"
+#include "display_internal.h"
 #include "display_io.h"
 #include "display_panel.h"
 #include "xdisplay.h"
@@ -41,173 +42,220 @@
 #error Framebuffer only supported on STM32U5 for now
 #endif
 
+// The following code supports only 1 or 2 frame buffers
+_Static_assert(FRAME_BUFFER_COUNT == 1 || FRAME_BUFFER_COUNT == 2);
+
 // Size of the physical frame buffer in bytes
 #define PHYSICAL_FRAME_BUFFER_SIZE (DISPLAY_RESX * DISPLAY_RESY * 2)
 
 // Physical frame buffers in internal SRAM memory.
 // Both frame buffers layes in the fixed addresses that
 // are shared between bootloaders and the firmware.
-__attribute__((section(".fb1")))
+static __attribute__((section(".fb1")))
 ALIGN_32BYTES(uint8_t physical_frame_buffer_0[PHYSICAL_FRAME_BUFFER_SIZE]);
-__attribute__((section(".fb2")))
-ALIGN_32BYTES(uint8_t physical_frame_buffer_1[PHYSICAL_FRAME_BUFFER_SIZE]);
 
-// The current frame buffer selector at fixed memory address
-// It's shared between bootloaders and the firmware
-__attribute__((section(".framebuffer_select"))) uint32_t current_frame_buffer =
-    0;
+#if (FRAME_BUFFER_COUNT > 1)
+static __attribute__((section(".fb2")))
+ALIGN_32BYTES(uint8_t physical_frame_buffer_1[PHYSICAL_FRAME_BUFFER_SIZE]);
+#endif
+
+// Returns the pointer to the physical frame buffer (0.. FRAME_BUFFER_COUNT-1)
+// Returns NULL if the framebuffer index is out of range.
+static uint8_t *get_fb_ptr(uint32_t index) {
+  if (index == 0) {
+    return physical_frame_buffer_0;
+#if (FRAME_BUFFER_COUNT > 1)
+  } else if (index == 1) {
+    return physical_frame_buffer_1;
+#endif
+  } else {
+    return NULL;
+  }
+}
 
 void display_physical_fb_clear(void) {
-  memset(physical_frame_buffer_0, 0, sizeof(physical_frame_buffer_0));
-  memset(physical_frame_buffer_1, 0, sizeof(physical_frame_buffer_1));
+  for (int i = 0; i < FRAME_BUFFER_COUNT; i++) {
+    memset(get_fb_ptr(i), 0, PHYSICAL_FRAME_BUFFER_SIZE);
+  }
 }
 
 #ifndef BOARDLOADER
-static volatile uint16_t pending_fb_switch = 0;
-static volatile uint32_t last_fb_update_time = 0;
-#endif
 
-#ifndef BOARDLOADER
+// Callback called when the background copying is done
+// It's called from the IRQ context
+static void bg_copy_callback(void) {
+  display_driver_t *drv = &g_display_driver;
+
+  if (drv->queue.rix >= FRAME_BUFFER_COUNT) {
+    // This is an invalid state and we should never get here
+    return;
+  }
+
+  drv->queue.entry[drv->queue.rix] = FB_STATE_EMPTY;
+  drv->queue.rix = (drv->queue.rix + 1) % FRAME_BUFFER_COUNT;
+}
+
+// Interrupt routing handling TE signal
 void DISPLAY_TE_INTERRUPT_HANDLER(void) {
-  if (pending_fb_switch == 1) {
-    if (current_frame_buffer == 1) {
-      bg_copy_start_const_out_8((uint8_t *)physical_frame_buffer_1,
-                                (uint8_t *)DISPLAY_DATA_ADDRESS,
-                                DISPLAY_RESX * DISPLAY_RESY * 2);
+  display_driver_t *drv = &g_display_driver;
 
-    } else {
-      bg_copy_start_const_out_8((uint8_t *)physical_frame_buffer_0,
-                                (uint8_t *)DISPLAY_DATA_ADDRESS,
-                                DISPLAY_RESX * DISPLAY_RESY * 2);
-    }
-    last_fb_update_time = HAL_GetTick();
-    pending_fb_switch = 2;
-  } else if (pending_fb_switch == 2) {
-    HAL_NVIC_DisableIRQ(DISPLAY_TE_INTERRUPT_NUM);
-    pending_fb_switch = 0;
-  } else {
-    HAL_NVIC_DisableIRQ(DISPLAY_TE_INTERRUPT_NUM);
-    pending_fb_switch = 0;
-  }
   __HAL_GPIO_EXTI_CLEAR_FLAG(DISPLAY_TE_PIN);
-}
 
-static void copy_fb_to_display(const uint16_t *fb) {
-  for (int i = 0; i < DISPLAY_RESX * DISPLAY_RESY; i++) {
-    // 2 bytes per pixel because we're using RGB 5-6-5 format
-    ISSUE_PIXEL_DATA(fb[i]);
-  }
-}
-
-void wait_for_fb_switch(void) {
-  if (is_mode_handler()) {
-    if (pending_fb_switch != 0) {
-      if (current_frame_buffer == 0) {
-        copy_fb_to_display((uint16_t *)physical_frame_buffer_1);
-      } else {
-        copy_fb_to_display((uint16_t *)physical_frame_buffer_0);
-      }
-      pending_fb_switch = 0;
-    }
-  } else {
-    while (pending_fb_switch != 0) {
-      __WFI();
-    }
-    bg_copy_wait();
-  }
-}
-#endif
-
-static void switch_fb_manually(void) {
-  // sync with the panel refresh
-  while (GPIO_PIN_SET == HAL_GPIO_ReadPin(DISPLAY_TE_PORT, DISPLAY_TE_PIN)) {
-  }
-  while (GPIO_PIN_RESET == HAL_GPIO_ReadPin(DISPLAY_TE_PORT, DISPLAY_TE_PIN)) {
+  if (drv->queue.rix >= FRAME_BUFFER_COUNT) {
+    // This is an invalid state and we should never get here
+    return;
   }
 
-  if (current_frame_buffer == 0) {
-    current_frame_buffer = 1;
-    copy_fb_to_display((uint16_t *)physical_frame_buffer_1);
-    memcpy(physical_frame_buffer_0, physical_frame_buffer_1,
-           sizeof(physical_frame_buffer_0));
+  switch (drv->queue.entry[drv->queue.rix]) {
+    case FB_STATE_EMPTY:
+    case FB_STATE_PREPARING:
+      // No new frame queued
+      break;
 
-  } else {
-    current_frame_buffer = 0;
-    copy_fb_to_display((uint16_t *)physical_frame_buffer_0);
-    memcpy(physical_frame_buffer_1, physical_frame_buffer_0,
-           sizeof(physical_frame_buffer_1));
-  }
-}
+    case FB_STATE_COPYING:
+      // Currently we are copying a data to the display.
+      // We need to wait for the next TE interrupt.
+      break;
 
-#ifndef BOARDLOADER
-static void switch_fb_in_background(void) {
-  if (current_frame_buffer == 0) {
-    current_frame_buffer = 1;
+    case FB_STATE_READY:
+      // Now it's proper time to copy the data to the display
+      drv->queue.entry[drv->queue.rix] = FB_STATE_COPYING;
+      display_panel_set_window(0, 0, DISPLAY_RESX - 1, DISPLAY_RESY - 1);
+      bg_copy_start_const_out_8(get_fb_ptr(drv->queue.rix),
+                                (uint8_t *)DISPLAY_DATA_ADDRESS,
+                                PHYSICAL_FRAME_BUFFER_SIZE, bg_copy_callback);
 
-    memcpy(physical_frame_buffer_0, physical_frame_buffer_1,
-           sizeof(physical_frame_buffer_0));
+      // NOTE: when copying is done, this queue slot is marked empty
+      // (see bg_copy_callback())
+      break;
 
-    pending_fb_switch = 1;
-    __HAL_GPIO_EXTI_CLEAR_FLAG(DISPLAY_TE_PIN);
-    svc_enableIRQ(DISPLAY_TE_INTERRUPT_NUM);
-  } else {
-    current_frame_buffer = 0;
-    memcpy(physical_frame_buffer_1, physical_frame_buffer_0,
-           sizeof(physical_frame_buffer_1));
-
-    pending_fb_switch = 1;
-    __HAL_GPIO_EXTI_CLEAR_FLAG(DISPLAY_TE_PIN);
-    svc_enableIRQ(DISPLAY_TE_INTERRUPT_NUM);
+    default:
+      // This is an invalid state and we should never get here
+      break;
   }
 }
 #endif
 
 display_fb_info_t display_get_frame_buffer(void) {
-  void *addr;
+  display_driver_t *drv = &g_display_driver;
 
-  if (current_frame_buffer == 0) {
-    addr = (void *)physical_frame_buffer_1;
-  } else {
-    addr = (void *)physical_frame_buffer_0;
-  }
+  frame_buffer_state_t state;
+
+  // We have to wait if the buffer was passed for copying
+  // to the interrupt handler
+  do {
+    state = drv->queue.entry[drv->queue.wix];
+  } while (state == FB_STATE_READY || state == FB_STATE_COPYING);
+
+  if (state == FB_STATE_EMPTY) {
+    // First use of this buffer, copy the previous buffer into it
+#if (FRAME_BUFFER_COUNT > 1)
+    uint8_t *src = get_fb_ptr((FRAME_BUFFER_COUNT + drv->queue.wix - 1) %
+                              FRAME_BUFFER_COUNT);
+    uint8_t *dst = get_fb_ptr(drv->queue.wix);
+    memcpy(dst, src, PHYSICAL_FRAME_BUFFER_SIZE);
+#endif
+  };
+
+  drv->queue.entry[drv->queue.wix] = FB_STATE_PREPARING;
 
   display_fb_info_t fb = {
-      .ptr = addr,
+      .ptr = get_fb_ptr(drv->queue.wix),
       .stride = DISPLAY_RESX * sizeof(uint16_t),
   };
 
   return fb;
 }
 
-void display_refresh(void) {
-#ifndef BOARDLOADER
+// Copies the frame buffer with the given index to the display
+static void copy_fb_to_display(uint8_t index) {
+  uint16_t *fb = (uint16_t *)get_fb_ptr(index);
 
-  if (is_mode_handler()) {
-    if (pending_fb_switch != 0) {
-      pending_fb_switch = 0;
-      bg_copy_abort();
+  if (fb != NULL) {
+    display_panel_set_window(0, 0, DISPLAY_RESX - 1, DISPLAY_RESY - 1);
+    for (int i = 0; i < DISPLAY_RESX * DISPLAY_RESY; i++) {
+      // 2 bytes per pixel because we're using RGB 5-6-5 format
+      ISSUE_PIXEL_DATA(fb[i]);
     }
-    display_panel_set_window(0, 0, DISPLAY_RESX - 1, DISPLAY_RESY - 1);
-    switch_fb_manually();
-  } else {
-    wait_for_fb_switch();
-    display_panel_set_window(0, 0, DISPLAY_RESX - 1, DISPLAY_RESY - 1);
-    switch_fb_in_background();
   }
-#else
-  display_panel_set_window(0, 0, DISPLAY_RESX - 1, DISPLAY_RESY - 1);
-  switch_fb_manually();
+}
+
+static void wait_for_te_signal(void) {
+  // sync with the panel refresh
+  while (GPIO_PIN_SET == HAL_GPIO_ReadPin(DISPLAY_TE_PORT, DISPLAY_TE_PIN)) {
+  }
+  while (GPIO_PIN_RESET == HAL_GPIO_ReadPin(DISPLAY_TE_PORT, DISPLAY_TE_PIN)) {
+  }
+}
+
+void display_refresh(void) {
+  display_driver_t *drv = &g_display_driver;
+
+  if (drv->queue.entry[drv->queue.wix] != FB_STATE_PREPARING) {
+    // No refresh needed as the frame buffer is not in
+    // the state to be copied to the display
+    return;
+  }
+
+#ifndef BOARDLOADER
+  if (is_mode_handler()) {
+    // Disable scheduling of any new background copying
+    HAL_NVIC_DisableIRQ(DISPLAY_TE_INTERRUPT_NUM);
+    // Wait for next TE signal. During this time the
+    // display might be updated in the background
+    wait_for_te_signal();
+    // Stop any background copying even if it is not finished yet
+    bg_copy_abort();
+    // Copy the frame buffer to the display manually
+    copy_fb_to_display(drv->queue.wix);
+    // Reset the buffer queue so we can eventually continue
+    // safely in thread mode
+    drv->queue.wix = 0;
+    drv->queue.rix = 0;
+    for (int i = 0; i < FRAME_BUFFER_COUNT; i++) {
+      drv->queue.entry[i] = FB_STATE_EMPTY;
+    }
+    // Enable normal processing again
+    HAL_NVIC_EnableIRQ(DISPLAY_TE_INTERRUPT_NUM);
+  } else {
+    // Mark the buffer ready to switch to
+    drv->queue.entry[drv->queue.wix] = FB_STATE_READY;
+    drv->queue.wix = (drv->queue.wix + 1) % FRAME_BUFFER_COUNT;
+  }
+
+#else  // BOARDLOADER
+  wait_for_te_signal();
+  copy_fb_to_display(drv->queue.wix);
+  drv->queue.entry[drv->queue.wix] = FB_STATE_EMPTY;
 #endif
 }
 
 void display_ensure_refreshed(void) {
 #ifndef BOARDLOADER
+  display_driver_t *drv = &g_display_driver;
+
   if (!is_mode_handler()) {
-    wait_for_fb_switch();
-    // the update time is collected after starting the BG copy, then we need to
-    // wait: for the bg copy to finish and for at least one full refresh cycle
-    // before we can consider the display fully redrawn
-    while (HAL_GetTick() - last_fb_update_time < 40) {
+    bool copy_pending;
+
+    // Wait until all frame buffers are written to the display
+    //  so we can be sure there's not scheduled or pending
+    // background copying
+    do {
+      copy_pending = false;
+      for (int i = 0; i < FRAME_BUFFER_COUNT; i++) {
+        frame_buffer_state_t state = drv->queue.entry[i];
+        if (state == FB_STATE_READY || state == FB_STATE_COPYING) {
+          copy_pending = true;
+          break;
+        }
+      }
+      __WFI();
+    } while (copy_pending);
+
+    // Wait until the display is fully refreshed
+    // (TE signal is low when the display is updating)
+    while (GPIO_PIN_RESET ==
+           HAL_GPIO_ReadPin(DISPLAY_TE_PORT, DISPLAY_TE_PIN)) {
       __WFI();
     }
   }

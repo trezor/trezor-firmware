@@ -29,8 +29,6 @@ void display_physical_fb_clear(void);
 
 void display_ensure_refreshed(void);
 
-void wait_for_fb_switch(void);
-
 #endif  // XFRAMEBUFFER
 
 #endif  // TREZORHAL_DISPLAY_FB_H

@@ -22,6 +22,7 @@
 #include <xdisplay.h>
 
 #include "display_fb.h"
+#include "display_internal.h"
 #include "display_io.h"
 #include "display_panel.h"
 
@@ -39,14 +40,8 @@
 #error "Incompatible display resolution"
 #endif
 
-// Display driver context.
-typedef struct {
-  // Current display orientation (0, 90, 180, 270)
-  int orientation_angle;
-} display_driver_t;
-
 // Display driver instance
-static display_driver_t g_display_driver;
+display_driver_t g_display_driver;
 
 void display_init(void) {
   display_driver_t* drv = &g_display_driver;
@@ -84,7 +79,8 @@ void display_reinit(void) {
 void display_finish_actions(void) {
 #ifdef XFRAMEBUFFER
 #ifndef BOARDLOADER
-  wait_for_fb_switch();
+  display_ensure_refreshed();
+  svc_disableIRQ(DISPLAY_TE_INTERRUPT_NUM);
 #endif
 #endif
 }
@@ -133,20 +129,6 @@ int display_get_orientation(void) {
   display_driver_t* drv = &g_display_driver;
 
   return drv->orientation_angle;
-}
-
-void display_wait_for_sync(void) {
-#ifdef DISPLAY_TE_PIN
-  uint32_t id = display_panel_identify();
-  if (id && (id != DISPLAY_ID_GC9307)) {
-    // synchronize with the panel synchronization signal
-    // in order to avoid visual tearing effects
-    while (GPIO_PIN_SET == HAL_GPIO_ReadPin(DISPLAY_TE_PORT, DISPLAY_TE_PIN))
-      ;
-    while (GPIO_PIN_RESET == HAL_GPIO_ReadPin(DISPLAY_TE_PORT, DISPLAY_TE_PIN))
-      ;
-  }
-#endif
 }
 
 void display_set_compatible_settings(void) { display_panel_set_big_endian(); }

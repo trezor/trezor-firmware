@@ -567,12 +567,12 @@ void DISPLAY_TE_INTERRUPT_HANDLER(void) {
   if (act_frame_buffer == 1) {
     bg_copy_start_const_out_8((uint8_t *)PhysFrameBuffer1,
                               (uint8_t *)DISPLAY_DATA_ADDRESS,
-                              DISPLAY_RESX * DISPLAY_RESY * 2);
+                              DISPLAY_RESX * DISPLAY_RESY * 2, NULL);
 
   } else {
     bg_copy_start_const_out_8((uint8_t *)PhysFrameBuffer0,
                               (uint8_t *)DISPLAY_DATA_ADDRESS,
-                              DISPLAY_RESX * DISPLAY_RESY * 2);
+                              DISPLAY_RESX * DISPLAY_RESY * 2, NULL);
   }
 
   pending_fb_switch = false;
