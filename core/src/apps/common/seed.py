@@ -57,7 +57,7 @@ if not utils.BITCOIN_ONLY:
             raise wire.NotInitialized("Device is not initialized")
 
         need_seed = not storage_cache.is_set(storage_cache.APP_COMMON_SEED)
-        need_cardano_secret = storage_cache.get(
+        need_cardano_secret = storage_cache.get_bool(
             storage_cache.APP_COMMON_DERIVE_CARDANO
         ) and not storage_cache.is_set(storage_cache.APP_CARDANO_ICARUS_SECRET)
 

@@ -31,11 +31,11 @@ def delete(
     config.delete(app, key, public, writable_locked)
 
 
-def set_true_or_delete(app: int, key: int, value: bool) -> None:
+def set_true_or_delete(app: int, key: int, value: bool, public: bool = False) -> None:
     if value:
-        set_bool(app, key, value)
+        set_bool(app, key, value, public)
     else:
-        delete(app, key)
+        delete(app, key, public)
 
 
 def set_bool(app: int, key: int, value: bool, public: bool = False) -> None:

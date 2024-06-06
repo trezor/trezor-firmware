@@ -112,10 +112,10 @@ class SessionCache(DataCache):
                 2,  # APP_COMMON_AUTHORIZATION_TYPE
                 128,  # APP_COMMON_AUTHORIZATION_DATA
                 32,  # APP_COMMON_NONCE
-                1,  # APP_COMMON_DERIVE_CARDANO
+                0,  # APP_COMMON_DERIVE_CARDANO
                 96,  # APP_CARDANO_ICARUS_SECRET
                 96,  # APP_CARDANO_ICARUS_TREZOR_SECRET
-                1,  # APP_MONERO_LIVE_REFRESH
+                0,  # APP_MONERO_LIVE_REFRESH
             )
         self.last_usage = 0
         super().__init__()
