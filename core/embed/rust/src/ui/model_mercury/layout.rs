@@ -1826,6 +1826,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// def flow_get_address(
     ///     *,
     ///     address: str | bytes,
+    ///     title: str,
     ///     description: str | None,
     ///     extra: str | None,
     ///     chunkify: bool,

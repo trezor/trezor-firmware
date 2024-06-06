@@ -142,7 +142,7 @@ pub extern "C" fn new_get_address(n_args: usize, args: *const Obj, kwargs: *mut 
 
 impl GetAddress {
     fn new_obj(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Error> {
-        let title: TString = "Receive address".into(); // TODO: address__title_receive_address w/o uppercase
+        let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let description: Option<TString> =
             kwargs.get(Qstr::MP_QSTR_description)?.try_into_option()?;
         let extra: Option<TString> = kwargs.get(Qstr::MP_QSTR_extra)?.try_into_option()?;

@@ -547,6 +547,7 @@ def show_wait_text(message: str, /) -> LayoutObj[None]:
 def flow_get_address(
     *,
     address: str | bytes,
+    title: str,
     description: str | None,
     extra: str | None,
     chunkify: bool,

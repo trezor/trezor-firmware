@@ -469,6 +469,7 @@ async def show_address(
         RustLayout(
             trezorui2.flow_get_address(
                 address=address,
+                title=title or TR.address__title_receive_address,
                 description=network or "",
                 extra=None,
                 chunkify=chunkify,
