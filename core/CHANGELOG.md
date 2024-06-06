@@ -4,7 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [2.7.1] (14th June 2024)
+## [2.7.2] (14th June 2024)
+
+### Fixed
+- [T3T1] Fixed device authenticity check.  [#3922]
+- [T3T1] Wrong XPUB screen title.  [#3911]
+- [T2B1] Fixed device freeze after setup.  [#3925]
+- Translation fixes.  [#3916]
+
+
+## [2.7.1] (internal release)
 
 ### Added
 - [T2T1] Added user adjustable brightness setting.  [#3208]
@@ -894,4 +903,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#3636]: https://github.com/trezor/trezor-firmware/pull/3636
 [#3640]: https://github.com/trezor/trezor-firmware/pull/3640
 [#3855]: https://github.com/trezor/trezor-firmware/pull/3855
+[#3911]: https://github.com/trezor/trezor-firmware/pull/3911
+[#3916]: https://github.com/trezor/trezor-firmware/pull/3916
+[#3922]: https://github.com/trezor/trezor-firmware/pull/3922
+[#3925]: https://github.com/trezor/trezor-firmware/pull/3925
 [#3940]: https://github.com/trezor/trezor-firmware/pull/3940
