@@ -27,6 +27,7 @@ def get_branch_ui_fixtures_results(
     branch_name: str,
     only_jobs: Iterable[str] | None,
     exclude_jobs: Iterable[str] | None,
+    run_id: int | None,
 ) -> dict[str, AnyDict]:
     print(f"Checking branch {branch_name}")
 
@@ -34,7 +35,7 @@ def get_branch_ui_fixtures_results(
         LIST_RUNS_TEMPLATE.format(branch=branch_name, workflow="core.yml")
     )
     response.raise_for_status()
-    run_id = response.json()["workflow_runs"][0]["id"]
+    run_id = run_id or response.json()["workflow_runs"][0]["id"]
 
     def yield_key_value() -> Iterator[tuple[str, AnyDict]]:
         for model in MODELS:
