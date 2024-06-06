@@ -192,7 +192,7 @@ class Syscall:
 
     if TYPE_CHECKING:
 
-        def __await__(self) -> Generator:
+        def __await__(self) -> Generator[Any, Any, Any]:
             return self.__iter__()
 
     def handle(self, task: Task) -> None:
