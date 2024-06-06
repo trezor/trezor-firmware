@@ -224,11 +224,17 @@ class RustLayout(LayoutParentType[T]):
     else:
 
         def create_tasks(self) -> tuple[loop.AwaitableTask, ...]:
-            return (
-                self.handle_timers(),
-                self.handle_input_and_rendering(),
-                self.handle_usb(context.get_context()),
-            )
+            if context.CURRENT_CONTEXT:
+                return (
+                    self.handle_timers(),
+                    self.handle_input_and_rendering(),
+                    self.handle_usb(context.get_context()),
+                )
+            else:
+                return (
+                    self.handle_timers(),
+                    self.handle_input_and_rendering(),
+                )
 
     def _first_paint(self) -> None:
         self._paint()

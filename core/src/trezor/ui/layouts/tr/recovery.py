@@ -21,8 +21,6 @@ async def request_word_count(recovery_type: RecoveryType) -> int:
 async def request_word(
     word_index: int, word_count: int, is_slip39: bool, prefill_word: str = ""
 ) -> str:
-    from trezor.wire.context import wait
-
     prompt = TR.recovery__word_x_of_y_template.format(word_index + 1, word_count)
 
     can_go_back = word_index > 0
@@ -40,7 +38,7 @@ async def request_word(
             )
         )
 
-    word: str = await wait(word_choice)
+    word: str = await word_choice
     return word
 
 
