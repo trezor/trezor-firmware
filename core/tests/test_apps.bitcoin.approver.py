@@ -3,8 +3,6 @@ from common import H_, await_result, unittest  # isort:skip
 import storage.cache
 from trezor import wire
 from trezor.crypto import bip32
-from trezor.crypto.curve import bip340, secp256k1
-from trezor.crypto.hashlib import sha256
 from trezor.enums import InputScriptType, OutputScriptType
 from trezor.messages import (
     AuthorizeCoinJoin,
@@ -13,9 +11,7 @@ from trezor.messages import (
     TxInput,
     TxOutput,
 )
-from trezor.utils import HashWriter
 
-from apps.bitcoin import writers
 from apps.bitcoin.authorization import FEE_RATE_DECIMALS, CoinJoinAuthorization
 from apps.bitcoin.sign_tx.approvers import CoinJoinApprover
 from apps.bitcoin.sign_tx.bitcoin import Bitcoin
@@ -31,10 +27,6 @@ class TestApprover(unittest.TestCase):
         self.min_registrable_amount = 5000
         self.coordinator_name = "www.example.com"
 
-        # Private key for signing and masking CoinJoin requests.
-        # m/0h for "all all ... all" seed.
-        self.private_key = b"?S\ti\x8b\xc5o{,\xab\x03\x194\xea\xa8[_:\xeb\xdf\xce\xef\xe50\xf17D\x98`\xb9dj"
-
         self.node = bip32.HDNode(
             depth=0,
             fingerprint=0,
@@ -42,9 +34,6 @@ class TestApprover(unittest.TestCase):
             chain_code=bytearray(32),
             private_key=b"\x01" * 32,
             curve_name="secp256k1",
-        )
-        self.tweaked_node_pubkey = b"\x02" + bip340.tweak_public_key(
-            self.node.public_key()[1:]
         )
 
         self.msg_auth = AuthorizeCoinJoin(
@@ -61,42 +50,12 @@ class TestApprover(unittest.TestCase):
         storage.cache.start_session()
 
     def make_coinjoin_request(self, inputs):
-        mask_public_key = secp256k1.publickey(self.private_key)
-        coinjoin_flags = bytearray()
-        for txi in inputs:
-            shared_secret = secp256k1.multiply(
-                self.private_key, self.tweaked_node_pubkey
-            )[1:33]
-            h_mask = HashWriter(sha256())
-            writers.write_bytes_fixed(h_mask, shared_secret, 32)
-            writers.write_bytes_reversed(h_mask, txi.prev_hash, writers.TX_HASH_SIZE)
-            writers.write_uint32(h_mask, txi.prev_index)
-            mask = h_mask.get_digest()[0] & 1
-            signable = txi.script_type == InputScriptType.SPENDTAPROOT
-            txi.coinjoin_flags = signable ^ mask
-            coinjoin_flags.append(txi.coinjoin_flags)
-
-        # Compute CoinJoin request signature.
-        h_request = HashWriter(sha256(b"CJR1"))
-        writers.write_bytes_prefixed(h_request, self.coordinator_name.encode())
-        writers.write_uint32(h_request, self.coin.slip44)
-        writers.write_uint32(
-            h_request, int(self.fee_rate_percent * 10**FEE_RATE_DECIMALS)
-        )
-        writers.write_uint64(h_request, self.no_fee_threshold)
-        writers.write_uint64(h_request, self.min_registrable_amount)
-        writers.write_bytes_fixed(h_request, mask_public_key, 33)
-        writers.write_bytes_prefixed(h_request, coinjoin_flags)
-        writers.write_bytes_fixed(h_request, sha256().digest(), 32)
-        writers.write_bytes_fixed(h_request, sha256().digest(), 32)
-        signature = secp256k1.sign(self.private_key, h_request.get_digest())
-
         return CoinJoinRequest(
             fee_rate=int(self.fee_rate_percent * 10**FEE_RATE_DECIMALS),
             no_fee_threshold=self.no_fee_threshold,
             min_registrable_amount=self.min_registrable_amount,
-            mask_public_key=mask_public_key,
-            signature=signature,
+            mask_public_key=bytearray(),
+            signature=bytearray(),
         )
 
     def test_coinjoin_lots_of_inputs(self):
