@@ -183,7 +183,22 @@
         "curve": "ed25519",
         "decimals": 9,
         "links": {
-            "Homepage": "https://solana.com"
+            "Homepage": "https://solana.com",
+            "Github": "https://github.com/solana-labs"
+        },
+        "wallet": {
+            "Trezor Suite": "https://suite.trezor.io"
+        }
+    },
+    {
+        "name": "Solana Devnet",
+        "shortcut": "DSOL",
+        "slip44": 501,
+        "curve": "ed25519",
+        "decimals": 9,
+        "links": {
+            "Homepage": "https://solana.com",
+            "Github": "https://github.com/solana-labs"
         },
         "wallet": {
             "Trezor Suite": "https://suite.trezor.io"
