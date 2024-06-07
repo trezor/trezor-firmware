@@ -1,18 +1,13 @@
 from micropython import const
 from typing import TYPE_CHECKING
 
-from trezor.crypto.curve import bip340, secp256k1
-from trezor.crypto.hashlib import sha256
-from trezor.utils import HashWriter
 from trezor.wire import DataError, ProcessError
 
 from apps.common import safety_checks
 
-from .. import writers
 from ..common import input_is_external_unverified
-from ..keychain import SLIP44_TESTNET, validate_path_against_script_type
+from ..keychain import validate_path_against_script_type
 from . import helpers, tx_weight
-from .sig_hasher import BitcoinSigHasher
 from .tx_info import OriginalTxInfo
 
 if TYPE_CHECKING:
@@ -409,16 +404,8 @@ class CoinJoinApprover(Approver):
     # Largest possible weight of an output supported by Trezor (P2TR or P2WSH).
     MAX_OUTPUT_WEIGHT = 4 * (8 + 1 + 1 + 1 + 32)
 
-    # Masks for the signable and no_fee bits in coinjoin_flags.
-    COINJOIN_FLAGS_SIGNABLE = const(0x01)
+    # Mask for the no_fee bits in coinjoin_flags.
     COINJOIN_FLAGS_NO_FEE = const(0x02)
-
-    # The public key used for verifying coinjoin requests in production on mainnet.
-    COINJOIN_REQ_PUBKEY = b"\x02W\x03\xbb\xe1[\xb0\x8e\x98!\xfed\xaf\xf6\xb2\xef\x1a1`\xe3y\x9d\xd8\xf0\xce\xbf,y\xe8g\xdd\x12]"
-
-    # The public key used for verifying coinjoin requests on testnet and in debug mode.
-    # secp256k1 public key of m/0h for "all all ... all" seed.
-    COINJOIN_REQ_PUBKEY_TEST = b"\x03\x0f\xdf^(\x9bZ\xefSb\x90\x95:\xe8\x1c\xe6\x0e\x84\x1f\xf9V\xf3f\xac\x12?\xa6\x9d\xb3\xc7\x9f!\xb0"
 
     def __init__(
         self,
@@ -435,45 +422,13 @@ class CoinJoinApprover(Approver):
         self.authorization = authorization
         self.coordination_fee_base = 0
 
-        # Begin hashing the coinjoin request.
-        self.h_request = HashWriter(sha256(b"CJR1"))  # "CJR1" = Coinjoin Request v1.
-        writers.write_bytes_prefixed(
-            self.h_request, authorization.params.coordinator.encode()
-        )
-        writers.write_uint32(self.h_request, coin.slip44)
-        writers.write_uint32(self.h_request, self.request.fee_rate)
-        writers.write_uint64(self.h_request, self.request.no_fee_threshold)
-        writers.write_uint64(self.h_request, self.request.min_registrable_amount)
-        writers.write_bytes_fixed(self.h_request, self.request.mask_public_key, 33)
-        writers.write_compact_size(self.h_request, tx.inputs_count)
-
         # Upper bound on the user's contribution to the weight of the transaction.
         self.our_weight = tx_weight.TxWeightCalculator()
-
-    def _add_input(self, txi: TxInput) -> None:
-        super()._add_input(txi)
-        writers.write_uint8(self.h_request, txi.coinjoin_flags)
 
     async def add_internal_input(self, txi: TxInput, node: bip32.HDNode) -> None:
         self.our_weight.add_input(txi)
         if not self.authorization.check_internal_input(txi):
             raise ProcessError("Unauthorized path")
-
-        # Compute the masking bit for the signable bit in coinjoin flags.
-        internal_private_key = node.private_key()
-        output_private_key = bip340.tweak_secret_key(internal_private_key)
-        shared_secret = secp256k1.multiply(
-            output_private_key, self.request.mask_public_key
-        )
-        h_mask = HashWriter(sha256())
-        writers.write_bytes_fixed(h_mask, shared_secret[1:33], 32)
-        writers.write_bytes_reversed(h_mask, txi.prev_hash, writers.TX_HASH_SIZE)
-        writers.write_uint32(h_mask, txi.prev_index)
-        mask = h_mask.get_digest()[0] & 1
-
-        # Ensure that the input can be signed.
-        if bool(txi.coinjoin_flags & self.COINJOIN_FLAGS_SIGNABLE) ^ mask != 1:
-            raise ProcessError("Unauthorized input")
 
         # Add to coordination_fee_base, except for remixes and small inputs which are
         # not charged a coordination fee.
@@ -509,33 +464,6 @@ class CoinJoinApprover(Approver):
     ) -> None:
         pass
 
-    def _verify_coinjoin_request(self, tx_info: TxInfo):
-        if not isinstance(tx_info.sig_hasher, BitcoinSigHasher):
-            raise ProcessError("Unexpected signature hasher.")
-
-        # Finish hashing the coinjoin request.
-        writers.write_bytes_fixed(
-            self.h_request, tx_info.sig_hasher.h_prevouts.get_digest(), 32
-        )
-        writers.write_bytes_fixed(
-            self.h_request, tx_info.sig_hasher.h_outputs.get_digest(), 32
-        )
-
-        # Verify the coinjoin request signature.
-        if __debug__ or self.coin.slip44 == SLIP44_TESTNET:
-            if secp256k1.verify(
-                self.COINJOIN_REQ_PUBKEY_TEST,
-                self.request.signature,
-                self.h_request.get_digest(),
-            ):
-                return True
-
-        return secp256k1.verify(
-            self.COINJOIN_REQ_PUBKEY,
-            self.request.signature,
-            self.h_request.get_digest(),
-        )
-
     async def approve_tx(
         self,
         tx_info: TxInfo,
@@ -545,9 +473,6 @@ class CoinJoinApprover(Approver):
         from ..authorization import FEE_RATE_DECIMALS
 
         await super().approve_tx(tx_info, orig_txs, signer)
-
-        if not self._verify_coinjoin_request(tx_info):
-            raise DataError("Invalid signature in coinjoin request.")
 
         # The mining fee of the transaction as a whole.
         mining_fee = self.total_in - self.total_out
