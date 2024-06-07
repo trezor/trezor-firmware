@@ -159,7 +159,6 @@ impl<T: Component> Component for SwipeContent<T> {
                 _ => {}
             }
             ctx.request_paint();
-            ctx.request_anim_frame();
         }
 
         match event {
