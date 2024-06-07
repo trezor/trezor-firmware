@@ -231,6 +231,7 @@ impl GetAddress {
                 .with_border(QR_BORDER),
         )
         .with_cancel_button()
+        .with_swipe(SwipeDirection::Right, SwipeSettings::immediate())
         .map(|msg| matches!(msg, FrameMsg::Button(_)).then_some(FlowMsg::Cancelled));
 
         // AccountInfo
