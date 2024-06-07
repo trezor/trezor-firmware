@@ -38,7 +38,7 @@ secbool secret_ensure_initialized(void) {
 
 secbool secret_bootloader_locked(void) {
 #ifdef FIRMWARE
-  return TAMP->BKP8R != 0 * sectrue;
+  return (TAMP->BKP8R != 0) * sectrue;
 #else
   return sectrue;
 #endif
