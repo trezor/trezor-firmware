@@ -250,6 +250,13 @@ WIPE
 OK
 ```
 
+### REBOOT
+This command initiates device reboot. No response, as the device reboots immediately after receiving the command.
+Example:
+```
+REBOOT
+```
+
 ### OPTIGAID READ
 Returns the coprocessor UID of the Optiga chip as a 27 byte hexadecimal string.
 
