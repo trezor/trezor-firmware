@@ -391,8 +391,10 @@ static void test_sensitivity(const char *args) {
 }
 
 static void touch_version(void) {
+  touch_power_on();
   uint8_t version = touch_get_version();
   vcp_println("OK %d", version);
+  touch_power_off();
 }
 #endif
 
