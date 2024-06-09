@@ -604,6 +604,8 @@ static void test_otp_write_device_variant(const char *args) {
   vcp_println("OK");
 }
 
+static void test_reboot(void) { svc_reboot(); }
+
 void cpuid_read(void) {
   uint32_t cpuid[3];
   cpuid[0] = LL_GetUID_Word0();
@@ -762,7 +764,8 @@ int main(void) {
 
     } else if (startswith(line, "WIPE")) {
       test_wipe();
-
+    } else if (startswith(line, "REBOOT")) {
+      test_reboot();
     } else {
       vcp_println("UNKNOWN");
     }

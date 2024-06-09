@@ -41,6 +41,14 @@ void svc_reboot_to_bootloader(void) {
   }
 }
 
+void svc_reboot(void) {
+  if (is_mode_unprivileged() && !is_mode_handler()) {
+    __asm__ __volatile__("svc %0" ::"i"(SVC_REBOOT) : "memory");
+  } else {
+    NVIC_SystemReset();
+  }
+}
+
 void SVC_C_Handler(uint32_t *stack) {
   uint8_t svc_number = ((uint8_t *)stack[6])[-2];
   switch (svc_number) {
@@ -84,6 +92,9 @@ void SVC_C_Handler(uint32_t *stack) {
       return;
     case SVC_GET_SYSTICK_VAL:
       systick_val_copy = SysTick->VAL;
+      break;
+    case SVC_REBOOT:
+      NVIC_SystemReset();
       break;
     default:
       stack[0] = 0xffffffff;

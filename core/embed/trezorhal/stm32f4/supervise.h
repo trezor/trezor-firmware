@@ -6,6 +6,7 @@
 #define SVC_SHUTDOWN 4
 #define SVC_REBOOT_TO_BOOTLOADER 5
 #define SVC_GET_SYSTICK_VAL 6
+#define SVC_REBOOT 7
 
 #include <string.h>
 #include "boot_args.h"
@@ -69,6 +70,8 @@ static inline void svc_shutdown(void) {
 }
 
 void svc_reboot_to_bootloader(void);
+
+void svc_reboot(void);
 
 static inline uint32_t svc_get_systick_val(void) {
   if (is_mode_unprivileged() && !is_mode_handler()) {
