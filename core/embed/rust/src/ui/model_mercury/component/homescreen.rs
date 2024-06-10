@@ -18,8 +18,10 @@ use crate::{
 use crate::ui::{
     component::Label,
     constant::{screen, HEIGHT, WIDTH},
+    lerp::Lerp,
     model_mercury::{
         cshape,
+        cshape::UnlockOverlay,
         theme::{GREY_LIGHT, HOMESCREEN_ICON, ICON_KEY},
     },
     shape::{render_on_canvas, ImageBuffer, Rgb565Canvas},
@@ -41,22 +43,14 @@ const LOADER_DURATION: Duration = Duration::from_millis(2000);
 
 pub const HOMESCREEN_IMAGE_WIDTH: i16 = WIDTH;
 pub const HOMESCREEN_IMAGE_HEIGHT: i16 = HEIGHT;
-pub const HOMESCREEN_TOIF_SIZE: i16 = 144;
+
+const DEFAULT_HS_RADIUS: i16 = UnlockOverlay::RADIUS;
+const DEFAULT_HS_SPAN: i16 = UnlockOverlay::SPAN;
+const DEFAULT_HS_THICKNESS: i16 = 6;
+const DEFAULT_HS_NUM_CIRCLES: i16 = 5;
 
 fn render_default_hs<'a>(target: &mut impl Renderer<'a>) {
-    const OVERLAY_OFFSET: i16 = 9;
-
-    const RADIUS: i16 = 85;
-
-    const SPAN: i16 = 10;
-
-    const THICKNESS: i16 = 6;
-
-    const NUM_CIRCLES: i16 = 5;
-
-    let area = AREA.translate(Offset::y(OVERLAY_OFFSET));
-
-    shape::Bar::new(area)
+    shape::Bar::new(AREA)
         .with_fg(theme::BG)
         .with_bg(theme::BG)
         .render(target);
@@ -66,21 +60,145 @@ fn render_default_hs<'a>(target: &mut impl Renderer<'a>) {
     #[cfg(not(any(feature = "universal_fw", feature = "ui_debug")))]
     let colors = [0xEEA600, 0xB27C00, 0x775300, 0x463100, 0x2C1F00];
 
-    for i in 0..NUM_CIRCLES {
-        let r = RADIUS - i * SPAN;
+    for i in 0..DEFAULT_HS_NUM_CIRCLES {
+        let r = DEFAULT_HS_RADIUS - i * DEFAULT_HS_SPAN;
         let fg = Color::from_u32(colors[i as usize]);
         let bg = theme::BG;
-        let thickness = THICKNESS;
-        shape::Circle::new(area.center(), r)
+        let thickness = DEFAULT_HS_THICKNESS;
+        shape::Circle::new(AREA.center(), r)
             .with_fg(fg)
             .with_bg(bg)
             .with_thickness(thickness)
             .render(target);
     }
 
-    shape::ToifImage::new(area.center(), HOMESCREEN_ICON.toif)
+    shape::ToifImage::new(AREA.center(), HOMESCREEN_ICON.toif)
         .with_align(Alignment2D::CENTER)
         .render(target);
+}
+
+struct HideLabelAnimation {
+    pub timer: Stopwatch,
+    token: TimerToken,
+    animating: bool,
+    hidden: bool,
+    duration: Duration,
+}
+impl HideLabelAnimation {
+    const HIDE_AFTER: Duration = Duration::from_millis(3000);
+
+    fn new(label_width: i16) -> Self {
+        Self {
+            timer: Stopwatch::default(),
+            token: TimerToken::INVALID,
+            animating: false,
+            hidden: false,
+            duration: Duration::from_millis((label_width as u32 * 300) / 120),
+        }
+    }
+
+    fn is_active(&self) -> bool {
+        self.timer.is_running_within(self.duration)
+    }
+
+    fn reset(&mut self) {
+        self.timer = Stopwatch::default();
+    }
+
+    fn change_dir(&mut self) {
+        let elapsed = self.timer.elapsed();
+
+        let start = self
+            .duration
+            .checked_sub(elapsed)
+            .and_then(|e| Instant::now().checked_sub(e));
+
+        if let Some(start) = start {
+            self.timer = Stopwatch::Running(start);
+        } else {
+            self.timer = Stopwatch::new_started();
+        }
+    }
+
+    fn eval(&self, label_width: i16) -> Offset {
+        if animation_disabled() {
+            return Offset::zero();
+        }
+
+        let t = self.timer.elapsed().to_millis() as f32 / 1000.0;
+
+        let pos = if self.hidden {
+            pareen::constant(0.0)
+                .seq_ease_out(
+                    0.0,
+                    easer::functions::Cubic,
+                    self.duration.to_millis() as f32 / 1000.0,
+                    pareen::constant(1.0),
+                )
+                .eval(t)
+        } else {
+            pareen::constant(1.0)
+                .seq_ease_in(
+                    0.0,
+                    easer::functions::Cubic,
+                    self.duration.to_millis() as f32 / 1000.0,
+                    pareen::constant(0.0),
+                )
+                .eval(t)
+        };
+
+        Offset::x(i16::lerp(-(label_width + 12), 0, pos))
+    }
+
+    fn process_event(&mut self, ctx: &mut EventCtx, event: Event) {
+        if let Event::Attach(_) = event {
+            ctx.request_anim_frame();
+            self.token = ctx.request_timer(Self::HIDE_AFTER);
+        }
+
+        if let Event::Timer(token) = event {
+            if token == self.token && !animation_disabled() {
+                self.timer.start();
+                ctx.request_anim_frame();
+                self.animating = true;
+                self.hidden = false;
+            }
+        }
+
+        if let Event::Timer(EventCtx::ANIM_FRAME_TIMER) = event {
+            if self.is_active() {
+                ctx.request_anim_frame();
+                ctx.request_paint();
+            } else if self.animating {
+                self.animating = false;
+                self.hidden = !self.hidden;
+                self.reset();
+                ctx.request_paint();
+
+                if !self.hidden {
+                    self.token = ctx.request_timer(Self::HIDE_AFTER);
+                }
+            }
+        }
+
+        if let Event::Touch(TouchEvent::TouchStart(_)) = event {
+            if !self.animating {
+                if self.hidden {
+                    self.timer.start();
+                    self.animating = true;
+                    ctx.request_anim_frame();
+                    ctx.request_paint();
+                } else {
+                    self.token = ctx.request_timer(Self::HIDE_AFTER);
+                }
+            } else if !self.hidden {
+                self.change_dir();
+                self.hidden = true;
+                ctx.request_anim_frame();
+                ctx.request_paint();
+            }
+        }
+    }
 }
 
 #[derive(Clone, Copy)]
@@ -96,9 +214,11 @@ pub struct Homescreen {
     label_height: i16,
     notification: Option<(TString<'static>, u8)>,
     image: Option<BinaryData<'static>>,
+    bg_image: ImageBuffer<Rgb565Canvas<'static>>,
     hold_to_lock: bool,
     loader: Loader,
     delay: Option<TimerToken>,
+    label_anim: HideLabelAnimation,
 }
 
 pub enum HomescreenMsg {
@@ -114,15 +234,28 @@ impl Homescreen {
         let label_width = label.map(|t| theme::TEXT_DEMIBOLD.text_font.text_width(t));
         let label_height = label.map(|t| theme::TEXT_DEMIBOLD.text_font.visible_text_height(t));
 
+        let image = get_homescreen_image();
+        let mut buf = unwrap!(ImageBuffer::new(AREA.size()), "no image buf");
+
+        render_on_canvas(buf.canvas(), None, |target| {
+            if let Some(image) = image {
+                shape::JpegImage::new_image(Point::zero(), image).render(target);
+            } else {
+                render_default_hs(target);
+            }
+        });
+
         Self {
             label: Label::new(label, Alignment::Center, theme::TEXT_DEMIBOLD).vertically_centered(),
             label_width,
             label_height,
             notification,
-            image: get_homescreen_image(),
+            image,
+            bg_image: buf,
             hold_to_lock,
             loader: Loader::with_lock_icon().with_durations(LOADER_DURATION, LOADER_DURATION / 3),
             delay: None,
+            label_anim: HideLabelAnimation::new(label_width),
         }
     }
 
@@ -218,12 +351,15 @@ impl Component for Homescreen {
     fn place(&mut self, bounds: Rect) -> Rect {
         self.loader.place(AREA.translate(LOADER_OFFSET));
         self.label
-            .place(bounds.split_top(38).0.split_left(self.label_width + 12).0);
+            .place(bounds.split_top(32).0.with_width(self.label_width + 12));
         bounds
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         Self::event_usb(self, ctx, event);
+
+        self.label_anim.process_event(ctx, event);
+
         if self.hold_to_lock {
             Self::event_hold(self, ctx, event).then_some(HomescreenMsg::Dismissed)
         } else {
@@ -239,33 +375,29 @@ impl Component for Homescreen {
         if self.loader.is_animating() || self.loader.is_completely_grown(Instant::now()) {
             self.render_loader(target);
         } else {
-            if let Some(image) = self.image {
-                if let ImageInfo::Jpeg(_) = ImageInfo::parse(image) {
-                    shape::JpegImage::new_image(AREA.center(), image)
-                        .with_align(Alignment2D::CENTER)
-                        .render(target);
-                }
-            } else {
-                render_default_hs(target);
-            }
+            shape::RawImage::new(AREA, self.bg_image.view()).render(target);
 
-            let label_width = self
-                .label
-                .text()
-                .map(|t| theme::TEXT_DEMIBOLD.text_font.text_width(t));
+            let y_offset = self.label_anim.eval(self.label_width);
 
-            let r = Rect::new(Point::new(-30, -30), Point::new(label_width + 12, 38));
-            shape::Bar::new(r)
-                .with_bg(Color::black())
-                .with_alpha(160)
-                .with_radius(16)
-                .render(target);
+            target.with_origin(y_offset, &|target| {
+                let label_width = self
+                    .label
+                    .text()
+                    .map(|t| theme::TEXT_DEMIBOLD.text_font.text_width(t));
 
-            self.label.render(target);
+                let r = Rect::new(Point::new(-30, -30), Point::new(label_width + 12, 32));
+                shape::Bar::new(r)
+                    .with_bg(Color::black())
+                    .with_alpha(160)
+                    .with_radius(16)
+                    .render(target);
+
+                self.label.render(target);
+            });
 
             if let Some(notif) = self.get_notification() {
-                const NOTIFICATION_HEIGHT: i16 = 34;
-                const NOTIFICATION_TOP: i16 = 202;
+                const NOTIFICATION_HEIGHT: i16 = 30;
+                const NOTIFICATION_TOP: i16 = 208;
                 const NOTIFICATION_BORDER: i16 = 16;
 
                 notif.text.map(|t| {
@@ -290,7 +422,7 @@ impl Component for Homescreen {
                     );
 
                     shape::Bar::new(banner)
-                        .with_radius(16)
+                        .with_radius(14)
                         .with_bg(theme::ORANGE_DARK)
                         .with_alpha(160)
                         .render(target);
@@ -351,6 +483,7 @@ pub struct Lockscreen {
     bootscreen: bool,
     coinjoin_authorized: bool,
     bg_image: ImageBuffer<Rgb565Canvas<'static>>,
+    label_anim: HideLabelAnimation,
 }
 
 impl Lockscreen {
@@ -378,6 +511,7 @@ impl Lockscreen {
             bootscreen,
             coinjoin_authorized,
             bg_image: buf,
+            label_anim: HideLabelAnimation::new(label_width),
         }
     }
 }
@@ -387,7 +521,7 @@ impl Component for Lockscreen {
 
     fn place(&mut self, bounds: Rect) -> Rect {
         self.label
-            .place(bounds.split_top(38).0.split_left(self.label_width + 12).0);
+            .place(bounds.split_top(38).0.with_width(self.label_width + 12));
         bounds
     }
 
@@ -406,6 +540,8 @@ impl Component for Lockscreen {
             }
         }
 
+        self.label_anim.process_event(ctx, event);
+
         if let Event::Touch(TouchEvent::TouchEnd(_)) = event {
             return Some(HomescreenMsg::Dismissed);
         }
@@ -418,22 +554,19 @@ impl Component for Lockscreen {
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        const OVERLAY_RADIUS: i16 = 85;
-        const OVERLAY_BORDER: i16 = (AREA.height() / 2) - OVERLAY_RADIUS;
-        const OVERLAY_OFFSET: i16 = 9;
+        const OVERLAY_BORDER: i16 = (AREA.height() / 2) - DEFAULT_HS_RADIUS;
 
         let center = AREA.center();
 
         shape::RawImage::new(AREA, self.bg_image.view()).render(target);
 
-        cshape::UnlockOverlay::new(center + Offset::y(OVERLAY_OFFSET), self.anim.eval())
-            .render(target);
+        cshape::UnlockOverlay::new(center, self.anim.eval()).render(target);
 
-        shape::Bar::new(AREA.split_top(OVERLAY_BORDER + OVERLAY_OFFSET).0)
+        shape::Bar::new(AREA.split_top(OVERLAY_BORDER).0)
             .with_bg(Color::black())
             .render(target);
 
-        shape::Bar::new(AREA.split_bottom(OVERLAY_BORDER - OVERLAY_OFFSET - 2).1)
+        shape::Bar::new(AREA.split_bottom(OVERLAY_BORDER - 2).1)
             .with_bg(Color::black())
             .render(target);
 
@@ -445,7 +578,7 @@ impl Component for Lockscreen {
             .with_bg(Color::black())
             .render(target);
 
-        shape::ToifImage::new(center + Offset::y(OVERLAY_OFFSET), ICON_KEY.toif)
+        shape::ToifImage::new(center, ICON_KEY.toif)
             .with_align(Alignment2D::CENTER)
             .with_fg(GREY_LIGHT)
             .render(target);
@@ -459,22 +592,30 @@ impl Component for Lockscreen {
             (None, TR::lockscreen__tap_to_unlock)
         };
 
-        self.label.render(target);
+        let y_offset = self.label_anim.eval(self.label_width);
 
         let mut offset = 6 + self.label_height;
 
         if let Some(t) = locked {
             t.map_translated(|t| {
                 offset += theme::TEXT_SUB_GREY.text_font.visible_text_height(t);
+            });
+        }
 
-                let text_pos = Point::new(6, offset);
+        target.with_origin(y_offset, &|target| {
+            self.label.render(target);
 
-                shape::Text::new(text_pos, t)
-                    .with_font(theme::TEXT_SUB_GREY.text_font)
-                    .with_fg(theme::TEXT_SUB_GREY.text_color)
-                    .render(target);
-            })
-        };
+            if let Some(t) = locked {
+                t.map_translated(|t| {
+                    let text_pos = Point::new(6, offset);
+
+                    shape::Text::new(text_pos, t)
+                        .with_font(theme::TEXT_SUB_GREY.text_font)
+                        .with_fg(theme::TEXT_SUB_GREY.text_color)
+                        .render(target);
+                })
+            };
+        });
 
         tap.map_translated(|t| {
             offset = theme::TEXT_SUB_GREY.text_font.text_baseline();
