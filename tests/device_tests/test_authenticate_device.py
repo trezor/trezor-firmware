@@ -4,19 +4,23 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.x509 import extensions as ext
 
-from trezorlib import device
+from trezorlib import device, models
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 
 from ..common import compact_size
 
 pytestmark = [pytest.mark.skip_t1b1, pytest.mark.skip_t2t1]
 
-ROOT_PUBLIC_KEY = bytes.fromhex(
-    "047f77368dea2d4d61e989f474a56723c3212dacf8a808d8795595ef38441427c4389bc454f02089d7f08b873005e4c28d432468997871c0bf286fd3861e21e96a"
-)
+ROOT_PUBLIC_KEY = {
+    models.T2B1: bytes.fromhex(
+        "047f77368dea2d4d61e989f474a56723c3212dacf8a808d8795595ef38441427c4389bc454f02089d7f08b873005e4c28d432468997871c0bf286fd3861e21e96a"
+    ),
+    models.T3T1: bytes.fromhex(
+        "04e48b69cd7962068d3cca3bcc6b1747ef496c1e28b5529e34ad7295215ea161dbe8fb08ae0479568f9d2cb07630cb3e52f4af0692102da5873559e45e9fa72959"
+    ),
+}
 
 
-@pytest.mark.skip_t3t1  # FIXME https://github.com/trezor/trezor-firmware/issues/3596
 @pytest.mark.parametrize(
     "challenge",
     (
@@ -37,7 +41,7 @@ def test_authenticate_device(client: Client, challenge: bytes) -> None:
 
     # Verify the last certificate in the certificate chain against trust anchor.
     root_public_key = ec.EllipticCurvePublicKey.from_encoded_point(
-        ec.SECP256R1(), ROOT_PUBLIC_KEY
+        ec.SECP256R1(), ROOT_PUBLIC_KEY[client.model]
     )
     root_public_key.verify(
         certs[-1].signature,

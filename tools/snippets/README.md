@@ -21,3 +21,8 @@ These scripts do not need to have a high standard, but each of those should have
 ## [eth_defs_unpack.py](./eth_defs_unpack.py)
 - Unpacks the definitions from a `definitions-sparse.zip` that does not contain the
   Merkle proofs for space-saving. This format is not currently distributed.
+
+## [recalc_optiga_for_emulator.py](./recalc_optiga_for_emulator.py)
+- Takes a valid Infineon certificate from an Optiga and replaces its public key with
+  a pubkey for private key 0x01000000..., so that the staging HSM can sign the resulting
+  certificate.
