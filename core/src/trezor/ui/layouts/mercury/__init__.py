@@ -425,6 +425,11 @@ def confirm_multisig_warning() -> Awaitable[None]:
 def confirm_homescreen(
     image: bytes,
 ) -> Awaitable[None]:
+
+    from trezor import workflow
+
+    workflow.close_others()
+
     return raise_if_not_confirmed(
         interact(
             RustLayout(

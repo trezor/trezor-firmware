@@ -26,6 +26,7 @@ ui_bounds = []
 ui_antialiasing = []
 ui_blurring = []
 ui_jpeg_decoder = ["jpeg"]
+ui_image_buffer = []
 new_rendering = []
 bootloader = []
 button = []
@@ -60,6 +61,7 @@ test = [
     "ui",
     "ui_jpeg_decoder",
     "ui_blurring",
+    "ui_image_buffer",
     "universal_fw",
 ]
 universal_fw = []

@@ -937,5 +937,7 @@
   "935": "recovery__unlock_repeated_backup_verb",
   "936": "homescreen__set_default",
   "937": "reset__words_may_repeat",
-  "938": "reset__repeat_for_all_shares"
+  "938": "reset__repeat_for_all_shares",
+  "939": "homescreen__settings_subtitle",
+  "940": "homescreen__settings_title"
 }

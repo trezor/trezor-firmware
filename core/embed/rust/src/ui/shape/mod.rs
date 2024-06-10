@@ -36,5 +36,5 @@ pub use rawimage::RawImage;
 pub use render::{DirectRenderer, ProgressiveRenderer, Renderer};
 pub use text::Text;
 pub use toif::ToifImage;
-#[cfg(feature = "model_mercury")]
+#[cfg(feature = "ui_image_buffer")]
 pub use utils::ImageBuffer;
