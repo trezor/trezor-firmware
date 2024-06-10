@@ -180,12 +180,18 @@ void term_print(const char *text, int textlen) {
 void term_printf(const char *fmt, ...) {
   if (!strchr(fmt, '%')) {
     term_print(fmt, strlen(fmt));
+#ifdef TREZOR_EMULATOR
+    printf("%s", fmt);
+#endif
   } else {
     va_list va;
     va_start(va, fmt);
     char buf[256] = {0};
     int len = mini_vsnprintf(buf, sizeof(buf), fmt, va);
     term_print(buf, len);
+#ifdef TREZOR_EMULATOR
+    vprintf(fmt, va);
+#endif
     va_end(va);
   }
 }

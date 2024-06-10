@@ -88,27 +88,6 @@ bool load_firmware(const char *filename, uint8_t *hash) {
   return true;
 }
 
-__attribute__((noreturn)) void display_error_and_die(const char *message,
-                                                     const char *title,
-                                                     const char *footer) {
-  if (footer == NULL) {
-    footer = "PLEASE VISIT\nTREZOR.IO/RSOD";
-  }
-  if (title == NULL) {
-    title = "INTERNAL ERROR";
-  }
-  display_init();
-  display_backlight(180);
-  screen_fatal_error_rust(title, message, footer);
-#if USE_TOUCH
-  printf("Click screen to exit.\n");
-#elif USE_BUTTON
-  printf("Press both buttons to exit.\n");
-#endif
-  ui_click();
-  exit(0);
-}
-
 __attribute__((noreturn)) int main(int argc, char **argv) {
   display_init();
   flash_init();
@@ -175,7 +154,7 @@ __attribute__((noreturn)) int main(int argc, char **argv) {
     } else {
       message = "No message specified";
     }
-    display_error_and_die(message, title, footer);
+    error_shutdown_ex(title, message, footer);
   }
 
   // write variant to OTP
@@ -198,18 +177,13 @@ __attribute__((noreturn)) void jump_to(void *addr) {
 
   if (storage_is_erased) {
     printf("STORAGE WAS ERASED\n");
-    screen_fatal_error_rust("BOOTLOADER EXIT", "Jumped to firmware",
-                            "STORAGE WAS ERASED");
+    error_shutdown_ex("BOOTLOADER EXIT", "Jumped to firmware",
+                      "STORAGE WAS ERASED");
   } else {
     printf("storage was retained\n");
-    screen_fatal_error_rust("BOOTLOADER EXIT", "Jumped to firmware",
-                            "STORAGE WAS RETAINED");
+    error_shutdown_ex("BOOTLOADER EXIT", "Jumped to firmware",
+                      "STORAGE WAS RETAINED");
   }
-  display_backlight(180);
-  hal_delay(3000);
-  exit(0);
 }
 
 void ensure_compatible_settings(void) {}
-
-void main_clean_exit(int code) { exit(code); }

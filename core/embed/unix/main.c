@@ -407,16 +407,6 @@ STATIC void set_sys_argv(char *argv[], int argc, int start_arg) {
   }
 }
 
-void main_clean_exit(int status) {
-  fflush(stdout);
-  fflush(stderr);
-  // sys.exit is disabled, so raise a SystemExit exception directly
-  nlr_raise(mp_obj_new_exception_arg1(&mp_type_SystemExit,
-                                      MP_OBJ_NEW_SMALL_INT(status)));
-  // the above shouldn't return, but make sure we exit just in case
-  exit(status);
-}
-
 #ifdef _WIN32
 #define PATHLIST_SEP_CHAR ';'
 #else

@@ -5,24 +5,34 @@ mod ffi {
     }
 }
 
-use crate::ui::ui_features::{ModelUI, UIFeaturesCommon};
+use crate::ui::{
+    shape,
+    ui_features::{ModelUI, UIFeaturesCommon},
+};
 
 fn shutdown() -> ! {
     unsafe { ffi::trezor_shutdown() }
 }
 
-#[cfg(feature = "bootloader")]
-pub fn __fatal_error(_expr: &str, _msg: &str, _file: &str, _line: u32, _func: &str) -> ! {
-    ModelUI::screen_fatal_error("BL.rs", "BL.rs", "PLEASE VISIT\nTREZOR.IO/RSOD");
+/// Shows an error message and shuts down the device.
+pub fn error_shutdown(title: &str, msg: &str, footer: &str) -> ! {
+    // SAFETY:
+    // This is the only situation we are allowed use this function
+    // to allow nested calls to `run_with_bumps`/`render_on_display`,
+    // because after the error message is displayed, the application will
+    // shut down.
+    unsafe { shape::unlock_bumps_on_failure() };
+
+    ModelUI::screen_fatal_error(title, msg, footer);
     ModelUI::backlight_on();
     shutdown()
 }
 
-#[cfg(not(feature = "bootloader"))]
+/// Shows an error message on the screen and shuts down the device.
+/// In debug mode, also prints the error message to the console.
+#[inline(never)] // saves few kilobytes of flash
 pub fn __fatal_error(_expr: &str, msg: &str, _file: &str, _line: u32, _func: &str) -> ! {
-    ModelUI::screen_fatal_error("INTERNAL_ERROR", msg, "PLEASE VISIT\nTREZOR.IO/RSOD");
-    ModelUI::backlight_on();
-    shutdown()
+    error_shutdown("INTERNAL_ERROR", msg, "PLEASE VISIT\nTREZOR.IO/RSOD");
 }
 
 pub trait UnwrapOrFatalError<T> {

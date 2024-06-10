@@ -192,7 +192,8 @@ static usb_result_t bootloader_usb_loop(const vendor_header *const vhdr,
         r = process_msg_FirmwareUpload(USB_IFACE_NUM, msg_size, buf);
         if (r < 0 && r != UPLOAD_ERR_USER_ABORT) {  // error, but not user abort
           if (r == UPLOAD_ERR_BOOTLOADER_LOCKED) {
-            secret_show_install_restricted_screen();
+            // This function does not return
+            show_install_restricted_screen();
           } else {
             ui_screen_fail();
           }
@@ -291,9 +292,7 @@ static void check_bootloader_version(void) {
 
 #endif
 
-void failed_jump_to_firmware(void) {
-  error_shutdown("INTERNAL ERROR", "(glitch)");
-}
+void failed_jump_to_firmware(void) { error_shutdown("(glitch)"); }
 
 void real_jump_to_firmware(void) {
   const image_header *hdr = NULL;

@@ -5,11 +5,11 @@ void fault_handlers_init(void) {
   SCB->SHCSR |= (SCB_SHCSR_USGFAULTENA_Msk | SCB_SHCSR_BUSFAULTENA_Msk);
 }
 
-void HardFault_Handler(void) { error_shutdown("INTERNAL ERROR", "(HF)"); }
+void HardFault_Handler(void) { error_shutdown("(HF)"); }
 
-void MemManage_Handler(void) { error_shutdown("INTERNAL ERROR", "(MM)"); }
+void MemManage_Handler(void) { error_shutdown("(MM)"); }
 
-void BusFault_Handler(void) { error_shutdown("INTERNAL ERROR", "(BF)"); }
+void BusFault_Handler(void) { error_shutdown("(BF)"); }
 
 void UsageFault_Handler(void) {
   if (SCB->CFSR & SCB_CFSR_STKOF_Msk) {
@@ -17,20 +17,20 @@ void UsageFault_Handler(void) {
     extern uint8_t _estack;  // linker script symbol
     // Fix stack pointer
     __set_MSP((uint32_t)&_estack);
-    error_shutdown("INTERNAL ERROR", "(SO)");
+    error_shutdown("(SO)");
   } else {
     // Other error
-    error_shutdown("INTERNAL ERROR", "(UF)");
+    error_shutdown("(UF)");
   }
 }
 
-void SecureFault_Handler(void) { error_shutdown("INTERNAL ERROR", "(SF)"); }
+void SecureFault_Handler(void) { error_shutdown("(SF)"); }
 
-void GTZC_IRQHandler(void) { error_shutdown("INTERNAL ERROR", "(IA)"); }
+void GTZC_IRQHandler(void) { error_shutdown("(IA)"); }
 
 void NMI_Handler(void) {
   // Clock Security System triggered NMI
   if ((RCC->CIFR & RCC_CIFR_CSSF) != 0) {
-    error_shutdown("INTERNAL ERROR", "(CS)");
+    error_shutdown("(CS)");
   }
 }

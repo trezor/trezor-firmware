@@ -22,6 +22,9 @@ pub const BUMP_A_SIZE: usize = DrawingCache::get_bump_a_size() + SHAPE_MEM_SIZE;
 /// Size of `bump_b` memory that must be accessible by DMA
 pub const BUMP_B_SIZE: usize = DrawingCache::get_bump_b_size();
 
+//
+static mut LOCKED: bool = false;
+
 /// Runs a user-defined function with two bump allocators.
 ///
 /// The function is passed two bump allocators, `bump_a` and `bump_b`, which
@@ -32,8 +35,6 @@ pub fn run_with_bumps<F>(func: F)
 where
     F: for<'a> FnOnce(&'a mut Bump<[u8; BUMP_A_SIZE]>, &'a mut Bump<[u8; BUMP_B_SIZE]>),
 {
-    static mut LOCKED: bool = false;
-
     // SAFETY:
     // The application is single-threaded, so we can safely use a
     // static variable as a lock against nested calls.
@@ -60,6 +61,23 @@ where
 
     func(bump_a, bump_b);
 
+    unsafe {
+        LOCKED = false;
+    };
+}
+
+// This function enables nested invocations of `run_with_bumps()`,
+// which is necessary when the application needs to display a
+// fatal error message and subsequently terminate.
+//
+// SAFETY:
+// This function must be invoked exclusively in failure scenarios
+// where the application is required to display a fatal error
+// message and then shut down. It is safe to call this function
+// only under these specific conditions.
+pub unsafe fn unlock_bumps_on_failure() {
+    // The application is single-threaded, so we can safely use a
+    // static variable as a lock against nested calls.
     unsafe {
         LOCKED = false;
     };

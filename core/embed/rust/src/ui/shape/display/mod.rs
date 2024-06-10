@@ -49,3 +49,5 @@ mod _new_rendering {
 }
 
 pub use _new_rendering::render_on_display;
+
+pub use bumps::unlock_bumps_on_failure;

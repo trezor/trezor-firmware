@@ -24,27 +24,16 @@
 #include "common.h"
 #include "display.h"
 #include "model.h"
-#include "terminal.h"
 
-#ifdef FANCY_FATAL_ERROR
-#include "rust_ui.h"
-#endif
 #include "flash_otp.h"
 #include "platform.h"
 #include "rand.h"
 #include "supervise.h"
 
-#include "mini_printf.h"
 #include "stm32f4xx_ll_utils.h"
 
 #ifdef TREZOR_MODEL_T
 #include "backlight_pwm.h"
-#endif
-
-#ifdef RGB16
-#define COLOR_FATAL_ERROR RGB16(0x7F, 0x00, 0x00)
-#else
-#define COLOR_FATAL_ERROR COLOR_BLACK
 #endif
 
 uint32_t systick_val_copy = 0;
@@ -64,92 +53,6 @@ void __attribute__((noreturn)) trezor_shutdown(void) {
   for (;;)
     ;
 }
-
-void __attribute__((noreturn))
-error_uni(const char *label, const char *msg, const char *footer) {
-  display_orientation(0);
-
-#ifdef FANCY_FATAL_ERROR
-  screen_fatal_error_rust(label, msg, "PLEASE VISIT\nTREZOR.IO/RSOD");
-#else
-  term_set_color(COLOR_WHITE, COLOR_FATAL_ERROR);
-  if (label) {
-    term_printf("%s\n", label);
-  }
-  if (msg) {
-    term_printf("%s\n", msg);
-  }
-  if (footer) {
-    term_printf("\n%s\n", footer);
-  }
-#endif
-  display_backlight(255);
-  trezor_shutdown();
-}
-
-void __attribute__((noreturn))
-__fatal_error(const char *expr, const char *msg, const char *file, int line,
-              const char *func) {
-  display_orientation(0);
-  display_backlight(255);
-
-#ifdef FANCY_FATAL_ERROR
-  char buf[256] = {0};
-  mini_snprintf(buf, sizeof(buf), "%s: %d", file, line);
-  screen_fatal_error_rust("INTERNAL ERROR", msg != NULL ? msg : buf,
-                          "PLEASE VISIT\nTREZOR.IO/RSOD");
-#else
-  term_set_color(COLOR_WHITE, COLOR_FATAL_ERROR);
-  term_printf("\nINTERNAL ERROR:\n");
-  if (expr) {
-    term_printf("expr: %s\n", expr);
-  }
-  if (msg) {
-    term_printf("msg : %s\n", msg);
-  }
-  if (file) {
-    term_printf("file: %s:%d\n", file, line);
-  }
-  if (func) {
-    term_printf("func: %s\n", func);
-  }
-#ifdef SCM_REVISION
-  const uint8_t *rev = (const uint8_t *)SCM_REVISION;
-  term_printf("rev : %02x%02x%02x%02x%02x\n", rev[0], rev[1], rev[2], rev[3],
-              rev[4]);
-#endif
-  term_printf("\nPlease contact Trezor support.\n");
-#endif
-  trezor_shutdown();
-}
-
-void __attribute__((noreturn))
-error_shutdown(const char *label, const char *msg) {
-  display_orientation(0);
-
-#ifdef FANCY_FATAL_ERROR
-
-  screen_fatal_error_rust(label, msg, "PLEASE VISIT\nTREZOR.IO/RSOD");
-#else
-  term_set_color(COLOR_WHITE, COLOR_FATAL_ERROR);
-  if (label) {
-    term_printf("%s\n", label);
-  }
-  if (msg) {
-    term_printf("%s\n", msg);
-  }
-  term_printf("\nPLEASE VISIT TREZOR.IO/RSOD\n");
-#endif
-  display_backlight(255);
-  trezor_shutdown();
-}
-
-#ifndef NDEBUG
-void __assert_func(const char *file, int line, const char *func,
-                   const char *expr) {
-  __fatal_error(expr, "assert failed", file, line, func);
-}
-#endif
 
 void hal_delay(uint32_t ms) { HAL_Delay(ms); }
 uint32_t hal_ticks_ms() { return HAL_GetTick(); }
@@ -185,7 +88,7 @@ void clear_otg_hs_memory(void) {
 uint32_t __stack_chk_guard = 0;
 
 void __attribute__((noreturn)) __stack_chk_fail(void) {
-  error_shutdown("INTERNAL ERROR", "(SS)");
+  error_shutdown("(SS)");
 }
 
 uint8_t HW_ENTROPY_DATA[HW_ENTROPY_LEN];
@@ -228,15 +131,6 @@ void ensure_compatible_settings(void) {
   set_core_clock(CLOCK_168_MHZ);
   backlight_pwm_set_slow();
 #endif
-}
-
-void show_wipe_code_screen(void) {
-  error_uni("WIPE CODE ENTERED", "All data has been erased from the device",
-            "PLEASE RECONNECT\nTHE DEVICE");
-}
-void show_pin_too_many_screen(void) {
-  error_uni("TOO MANY PIN ATTEMPTS", "All data has been erased from the device",
-            "PLEASE RECONNECT\nTHE DEVICE");
 }
 
 void invalidate_firmware(void) {
