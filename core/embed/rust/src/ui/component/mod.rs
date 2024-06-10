@@ -4,6 +4,8 @@ pub mod bar;
 pub mod base;
 pub mod border;
 pub mod button_request;
+#[cfg(all(feature = "jpeg", feature = "ui_image_buffer", feature = "micropython"))]
+pub mod cached_jpeg;
 pub mod connect;
 pub mod empty;
 pub mod image;
@@ -28,6 +30,8 @@ pub use bar::Bar;
 pub use base::{Child, Component, ComponentExt, Event, EventCtx, Never, Root, TimerToken};
 pub use border::Border;
 pub use button_request::{ButtonRequestExt, OneButtonRequest};
+#[cfg(all(feature = "jpeg", feature = "ui_image_buffer", feature = "micropython"))]
+pub use cached_jpeg::CachedJpeg;
 pub use empty::Empty;
 #[cfg(all(feature = "jpeg", feature = "micropython"))]
 pub use jpeg::Jpeg;

@@ -885,6 +885,8 @@ def cargo_build():
         features.append('ui_blurring')
         features.append('ui_jpeg_decoder')
 
+    if NEW_RENDERING and TREZOR_MODEL in ('T3T1', ):
+        features.append('ui_image_buffer')
 
     if NEW_RENDERING:
         features.append('new_rendering')

@@ -546,7 +546,7 @@ pub enum TranslatedString {
     homescreen__title_no_usb_connection = 327,  // "No USB connection"
     homescreen__title_pin_not_set = 328,  // "PIN not set"
     homescreen__title_seedless = 329,  // "Seedless"
-    homescreen__title_set = 330,  // "Change homescreen?"
+    homescreen__title_set = 330,  // "Change wallpaper"
     inputs__back = 331,  // "BACK"
     inputs__cancel = 332,  // "CANCEL"
     inputs__delete = 333,  // "DELETE"
@@ -1334,9 +1334,11 @@ pub enum TranslatedString {
     recovery__title_unlock_repeated_backup = 933,  // "Multi-share backup"
     recovery__unlock_repeated_backup = 934,  // "Create additional backup?"
     recovery__unlock_repeated_backup_verb = 935,  // "Create backup"
-    homescreen__set_default = 936,  // "Do you really want to set default homescreen image?"
+    homescreen__set_default = 936,  // "Change wallpaper to default image?"
     reset__words_may_repeat = 937,  // "Words may repeat."
     reset__repeat_for_all_shares = 938,  // "Repeat for all shares."
+    homescreen__settings_subtitle = 939,  // "Settings"
+    homescreen__settings_title = 940,  // "Homescreen"
 }
 
 impl TranslatedString {
@@ -1877,7 +1879,7 @@ impl TranslatedString {
             Self::homescreen__title_no_usb_connection => "No USB connection",
             Self::homescreen__title_pin_not_set => "PIN not set",
             Self::homescreen__title_seedless => "Seedless",
-            Self::homescreen__title_set => "Change homescreen?",
+            Self::homescreen__title_set => "Change wallpaper",
             Self::inputs__back => "BACK",
             Self::inputs__cancel => "CANCEL",
             Self::inputs__delete => "DELETE",
@@ -2665,9 +2667,11 @@ impl TranslatedString {
             Self::recovery__title_unlock_repeated_backup => "Multi-share backup",
             Self::recovery__unlock_repeated_backup => "Create additional backup?",
             Self::recovery__unlock_repeated_backup_verb => "Create backup",
-            Self::homescreen__set_default => "Do you really want to set default homescreen image?",
+            Self::homescreen__set_default => "Change wallpaper to default image?",
             Self::reset__words_may_repeat => "Words may repeat.",
             Self::reset__repeat_for_all_shares => "Repeat for all shares.",
+            Self::homescreen__settings_subtitle => "Settings",
+            Self::homescreen__settings_title => "Homescreen",
         }
     }
 
@@ -4000,6 +4004,8 @@ impl TranslatedString {
             Qstr::MP_QSTR_homescreen__set_default => Some(Self::homescreen__set_default),
             Qstr::MP_QSTR_reset__words_may_repeat => Some(Self::reset__words_may_repeat),
             Qstr::MP_QSTR_reset__repeat_for_all_shares => Some(Self::reset__repeat_for_all_shares),
+            Qstr::MP_QSTR_homescreen__settings_subtitle => Some(Self::homescreen__settings_subtitle),
+            Qstr::MP_QSTR_homescreen__settings_title => Some(Self::homescreen__settings_title),
             _ => None,
         }
     }

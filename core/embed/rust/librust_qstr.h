@@ -251,6 +251,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_homescreen__click_to_connect;
   MP_QSTR_homescreen__click_to_unlock;
   MP_QSTR_homescreen__set_default;
+  MP_QSTR_homescreen__settings_subtitle;
+  MP_QSTR_homescreen__settings_title;
   MP_QSTR_homescreen__title_backup_failed;
   MP_QSTR_homescreen__title_backup_needed;
   MP_QSTR_homescreen__title_coinjoin_authorized;

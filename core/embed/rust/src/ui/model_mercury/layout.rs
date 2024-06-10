@@ -22,7 +22,6 @@ use crate::{
         component::{
             base::{AttachType, ComponentExt},
             connect::Connect,
-            jpeg::Jpeg,
             swipe_detect::SwipeSettings,
             text::{
                 op::OpTextLayout,
@@ -32,7 +31,7 @@ use crate::{
                 },
                 TextStyle,
             },
-            Border, Component, FormattedText, Label, Never, SwipeDirection, Timeout,
+            Border, CachedJpeg, Component, FormattedText, Label, Never, SwipeDirection, Timeout,
         },
         flow::Swipable,
         geometry,
@@ -41,7 +40,10 @@ use crate::{
             result::{CANCELLED, CONFIRMED, INFO},
             util::{upy_disable_animation, ConfirmBlob, PropsList},
         },
-        model_mercury::component::{check_homescreen_format, SwipeContent},
+        model_mercury::{
+            component::{check_homescreen_format, SwipeContent},
+            flow::new_confirm_action_simple,
+        },
     },
 };
 
@@ -516,38 +518,38 @@ extern "C" fn new_confirm_homescreen(n_args: usize, args: *const Obj, kwargs: *m
         let obj = if jpeg.is_empty() {
             // Incoming data may be empty, meaning we should
             // display default homescreen message.
-            LayoutObj::new(SwipeUpScreen::new(
-                Frame::centered(
-                    title,
-                    SwipeContent::new(Paragraphs::new([Paragraph::new(
-                        &theme::TEXT_DEMIBOLD,
-                        TR::homescreen__set_default,
-                    )
-                    .centered()])),
-                )
-                .with_cancel_button()
-                .with_footer(
-                    TR::instructions__swipe_up.into(),
-                    Some(TR::buttons__change.into()),
-                )
-                .with_swipe(SwipeDirection::Up, SwipeSettings::default()),
-            ))
+            let paragraphs = ParagraphVecShort::from_iter([Paragraph::new(
+                &theme::TEXT_DEMIBOLD,
+                TR::homescreen__set_default,
+            )])
+            .into_paragraphs();
+
+            new_confirm_action_simple(
+                paragraphs,
+                TR::homescreen__settings_title.into(),
+                Some(TR::homescreen__settings_subtitle.into()),
+                None,
+                Some(TR::homescreen__settings_title.into()),
+                false,
+                false,
+            )
         } else {
             if !check_homescreen_format(jpeg) {
                 return Err(value_error!(c"Invalid image."));
             };
 
-            LayoutObj::new(SwipeUpScreen::new(
-                Frame::left_aligned(title, Jpeg::new(jpeg, 1))
+            let obj = LayoutObj::new(SwipeUpScreen::new(
+                Frame::left_aligned(title, SwipeContent::new(CachedJpeg::new(jpeg, 1)))
                     .with_cancel_button()
                     .with_footer(
                         TR::instructions__swipe_up.into(),
                         Some(TR::buttons__change.into()),
                     )
                     .with_swipe(SwipeDirection::Up, SwipeSettings::default()),
-            ))
+            ));
+            Ok(obj?.into())
         };
-        Ok(obj?.into())
+        obj
     };
 
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }

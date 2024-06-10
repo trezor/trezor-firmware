@@ -173,7 +173,7 @@ fn new_confirm_action_obj(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Err
 }
 
 #[inline(never)]
-pub fn new_confirm_action_simple<T: Component + Paginate + MaybeTrace + 'static>(
+pub fn new_confirm_action_uni<T: Component + MaybeTrace + 'static>(
     content: T,
     title: TString<'static>,
     subtitle: Option<TString<'static>>,
@@ -182,13 +182,12 @@ pub fn new_confirm_action_simple<T: Component + Paginate + MaybeTrace + 'static>
     hold: bool,
     info: bool,
 ) -> Result<Obj, error::Error> {
-    let mut content_intro =
-        Frame::left_aligned(title, SwipeContent::new(SwipePage::vertical(content)))
-            .with_menu_button()
-            .with_footer(TR::instructions__swipe_up.into(), None)
-            .with_swipe(SwipeDirection::Up, SwipeSettings::default())
-            .with_swipe(SwipeDirection::Left, SwipeSettings::default())
-            .with_vertical_pages();
+    let mut content_intro = Frame::left_aligned(title, content)
+        .with_menu_button()
+        .with_footer(TR::instructions__swipe_up.into(), None)
+        .with_swipe(SwipeDirection::Up, SwipeSettings::default())
+        .with_swipe(SwipeDirection::Left, SwipeSettings::default())
+        .with_vertical_pages();
 
     if let Some(subtitle) = subtitle {
         content_intro = content_intro.with_subtitle(subtitle);
@@ -260,4 +259,25 @@ pub fn new_confirm_action_simple<T: Component + Paginate + MaybeTrace + 'static>
         let res = SwipeFlow::new(ConfirmActionSimple::Intro, store)?;
         Ok(LayoutObj::new(res)?.into())
     }
+}
+
+#[inline(never)]
+pub fn new_confirm_action_simple<T: Component + Paginate + MaybeTrace + 'static>(
+    content: T,
+    title: TString<'static>,
+    subtitle: Option<TString<'static>>,
+    verb_cancel: Option<TString<'static>>,
+    prompt_screen: Option<TString<'static>>,
+    hold: bool,
+    info: bool,
+) -> Result<Obj, error::Error> {
+    new_confirm_action_uni(
+        SwipeContent::new(SwipePage::vertical(content)),
+        title,
+        subtitle,
+        verb_cancel,
+        prompt_screen,
+        hold,
+        info,
+    )
 }
