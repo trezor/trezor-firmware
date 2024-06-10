@@ -1747,8 +1747,8 @@ class CoinJoinRequest(protobuf.MessageType):
         1: protobuf.Field("fee_rate", "uint32", repeated=False, required=True),
         2: protobuf.Field("no_fee_threshold", "uint64", repeated=False, required=True),
         3: protobuf.Field("min_registrable_amount", "uint64", repeated=False, required=True),
-        4: protobuf.Field("mask_public_key", "bytes", repeated=False, required=True),
-        5: protobuf.Field("signature", "bytes", repeated=False, required=True),
+        4: protobuf.Field("mask_public_key", "bytes", repeated=False, required=False, default=None),
+        5: protobuf.Field("signature", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -1757,8 +1757,8 @@ class CoinJoinRequest(protobuf.MessageType):
         fee_rate: "int",
         no_fee_threshold: "int",
         min_registrable_amount: "int",
-        mask_public_key: "bytes",
-        signature: "bytes",
+        mask_public_key: Optional["bytes"] = None,
+        signature: Optional["bytes"] = None,
     ) -> None:
         self.fee_rate = fee_rate
         self.no_fee_threshold = no_fee_threshold

@@ -212,8 +212,8 @@ message SignTx {
         required uint32 fee_rate = 1;                // coordination fee rate in units of 10^-6 percent
         required uint64 no_fee_threshold = 2;        // PlebsDontPayThreshold in Wasabi, the input amount above which the fee rate applies
         required uint64 min_registrable_amount = 3;  // minimum registrable output amount
-        required bytes mask_public_key = 4;          // ephemeral secp256k1 public key used for masking coinjoin_flags, 33 bytes in compressed form
-        required bytes signature = 5;                // the trusted party's signature of the CoinJoin request digest
+        optional bytes mask_public_key = 4;          // ephemeral secp256k1 public key used for masking coinjoin_flags, 33 bytes in compressed form
+        optional bytes signature = 5;                // the trusted party's signature of the CoinJoin request digest
     }
 }
 
