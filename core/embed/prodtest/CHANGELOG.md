@@ -1,4 +1,13 @@
 
+## 0.2.7 [10th June 2024]
+
+### Added
+- Added REBOOT command  [#3932]
+
+### Fixed
+- Fix TOUCH_VERSION command  [#3932]
+
+
 ## 0.2.6 [6th May 2024]
 
 ### Added
@@ -45,3 +54,4 @@
 [#3370]: https://github.com/trezor/trezor-firmware/pull/3370
 [#3769]: https://github.com/trezor/trezor-firmware/pull/3769
 [#3770]: https://github.com/trezor/trezor-firmware/pull/3770
+[#3932]: https://github.com/trezor/trezor-firmware/pull/3932
