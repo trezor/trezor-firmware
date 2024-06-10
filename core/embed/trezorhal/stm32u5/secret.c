@@ -239,12 +239,6 @@ void secret_erase(void) {
   ensure(flash_area_erase(&SECRET_AREA, NULL), "secret erase");
 }
 
-void secret_show_install_restricted_screen(void) {
-  // this should never happen on U5
-  __fatal_error("INTERNAL ERROR", "Install restricted", __FILE__, __LINE__,
-                __func__);
-}
-
 void secret_prepare_fw(secbool allow_run_with_secret, secbool trust_all) {
   /**
    * The BHK is copied to the backup registers, which are accessible by the SAES

@@ -1,7 +1,8 @@
 #include "common.h"
 
-void screen_fatal_error_rust(const char* title, const char* msg,
-                             const char* footer);
+__attribute__((noreturn)) void error_shutdown_rust(const char* title,
+                                                   const char* msg,
+                                                   const char* footer);
 
 void screen_boot_stage_2(void);
 

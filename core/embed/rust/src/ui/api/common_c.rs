@@ -10,19 +10,19 @@ use crate::ui::{
     geometry::{Alignment2D, Point},
 };
 
-use crate::ui::util::from_c_str;
+use crate::{trezorhal::fatal_error, ui::util::from_c_str};
 
 #[no_mangle]
-extern "C" fn screen_fatal_error_rust(
+extern "C" fn error_shutdown_rust(
     title: *const cty::c_char,
     msg: *const cty::c_char,
     footer: *const cty::c_char,
-) {
+) -> ! {
     let title = unsafe { from_c_str(title) }.unwrap_or("");
     let msg = unsafe { from_c_str(msg) }.unwrap_or("");
     let footer = unsafe { from_c_str(footer) }.unwrap_or("");
 
-    ModelUI::screen_fatal_error(title, msg, footer);
+    fatal_error::error_shutdown(title, msg, footer)
 }
 
 #[no_mangle]

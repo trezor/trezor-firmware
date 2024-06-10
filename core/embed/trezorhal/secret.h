@@ -60,7 +60,3 @@ void secret_bhk_regenerate(void);
 // Disables access to the secret storage until next reset, if possible
 // This function is called by the bootloader before starting the firmware
 void secret_prepare_fw(secbool allow_run_with_secret, secbool trust_all);
-
-// Shows a screen informing the user that installation of custom firmware is
-// currently restricted
-void secret_show_install_restricted_screen(void);

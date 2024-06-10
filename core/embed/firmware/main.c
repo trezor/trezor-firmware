@@ -274,7 +274,7 @@ int main(void) {
   mp_deinit();
 
   // Python code shouldn't ever exit, avoid black screen if it does
-  error_shutdown("INTERNAL ERROR", "(PE)");
+  error_shutdown("(PE)");
 
   return 0;
 }
@@ -282,7 +282,7 @@ int main(void) {
 // MicroPython default exception handler
 
 void __attribute__((noreturn)) nlr_jump_fail(void *val) {
-  error_shutdown("INTERNAL ERROR", "(UE)");
+  error_shutdown("(UE)");
 }
 
 // MicroPython builtin stubs

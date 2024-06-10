@@ -161,8 +161,7 @@ void secp256k1_default_illegal_callback_fn(const char *str, void *data) {
 
 void secp256k1_default_error_callback_fn(const char *str, void *data) {
   (void)data;
-  __fatal_error(NULL, str, __FILE__, __LINE__, __func__);
-  return;
+  error_shutdown(str);
 }
 #endif
 
