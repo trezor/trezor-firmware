@@ -517,7 +517,7 @@ def sign_tx(
 
     if publish:
         tx_hash = _get_web3().eth.send_raw_transaction(tx_bytes).hex()
-        return f"Transaction published with ID: 0x{tx_hash}"
+        return f"Transaction published with ID: {tx_hash}"
     else:
         return f"Signed raw transaction:\n0x{tx_bytes.hex()}"
 
