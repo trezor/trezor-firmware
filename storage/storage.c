@@ -1531,46 +1531,37 @@ static secbool storage_upgrade(void) {
 
     unlocked = secfalse;
     memzero(cached_keys, sizeof(cached_keys));
-  } else {
-    // Copy all entries.
+  } else if (norcow_active_version < 4) {
+    // Change data structure for encrypted entries.
     uint32_t offset = 0;
     while (sectrue == norcow_get_next(&offset, &key, &val, &len)) {
-      if (norcow_active_version < 4) {
-        // Change data structure for encrypted entries.
-        const uint8_t app = key >> 8;
-
-        if (((app & FLAG_PUBLIC) == 0) &&
-            !(key == PIN_LOGS_KEY || key == EDEK_PVC_KEY ||
-              key == PIN_NOT_SET_KEY || key == STORAGE_TAG_KEY ||
-              key == WIPE_CODE_DATA_KEY || key == STORAGE_UPGRADED_KEY ||
-              key == UNAUTH_VERSION_KEY)) {
-          if (sectrue != norcow_set(key, NULL, len)) {
-            return secfalse;
-          }
-          if (sectrue !=
-              norcow_update_bytes(key, ((uint8_t *)val), CHACHA20_IV_SIZE)) {
-            return secfalse;
-          }
-          if (sectrue !=
-              norcow_update_bytes(
-                  key, ((uint8_t *)val) + CHACHA20_IV_SIZE + POLY1305_TAG_SIZE,
-                  len - CHACHA20_IV_SIZE - POLY1305_TAG_SIZE)) {
-            return secfalse;
-          }
-          if (sectrue !=
-              norcow_update_bytes(key, ((uint8_t *)val) + CHACHA20_IV_SIZE,
-                                  POLY1305_TAG_SIZE)) {
-            return secfalse;
-          }
-        } else {
-          if (sectrue != norcow_set(key, val, len)) {
-            return secfalse;
-          }
+      const uint8_t app = key >> 8;
+      if (((app & FLAG_PUBLIC) == 0) &&
+          (app != APP_STORAGE || key == VERSION_KEY)) {
+        const uint8_t *iv = (const uint8_t *)val;
+        const uint8_t *tag = (const uint8_t *)val + CHACHA20_IV_SIZE;
+        const uint8_t *ciphertext =
+            (const uint8_t *)val + CHACHA20_IV_SIZE + POLY1305_TAG_SIZE;
+        const size_t ciphertext_len =
+            len - CHACHA20_IV_SIZE - POLY1305_TAG_SIZE;
+        if (sectrue != norcow_set(key, NULL, len) ||
+            sectrue != norcow_update_bytes(key, iv, CHACHA20_IV_SIZE) ||
+            sectrue != norcow_update_bytes(key, ciphertext, ciphertext_len) ||
+            sectrue != norcow_update_bytes(key, tag, POLY1305_TAG_SIZE)) {
+          return secfalse;
         }
       } else {
         if (sectrue != norcow_set(key, val, len)) {
           return secfalse;
         }
+      }
+    }
+  } else {
+    // Copy all entries.
+    uint32_t offset = 0;
+    while (sectrue == norcow_get_next(&offset, &key, &val, &len)) {
+      if (sectrue != norcow_set(key, val, len)) {
+        return secfalse;
       }
     }
   }
