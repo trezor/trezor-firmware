@@ -40,6 +40,10 @@ pub mod ui;
 pub mod strutil;
 
 #[cfg(feature = "debug")]
+#[macro_use]
+pub mod debug;
+
+#[cfg(feature = "debug")]
 #[cfg(not(test))]
 #[panic_handler]
 /// More detailed panic handling. The difference against
@@ -48,13 +52,8 @@ pub mod strutil;
 fn panic_debug(panic_info: &core::panic::PanicInfo) -> ! {
     // Filling at least the file and line information, if available.
     // TODO: find out how to display message from panic_info.message()
-
     if let Some(location) = panic_info.location() {
-        let file = location.file();
-        print!(file);
-        print!(":");
-        println!(inttostr!(location.line()));
-        trezorhal::fatal_error::__fatal_error("", "rs", file, location.line(), "");
+        trezorhal::fatal_error::__fatal_error("", "rs", location.file(), location.line(), "");
     } else {
         trezorhal::fatal_error::__fatal_error("", "rs", "", 0, "");
     }
