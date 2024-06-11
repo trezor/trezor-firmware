@@ -75,7 +75,7 @@ impl Shape<'_> for Bar {
         //       is not supported. If we needed it, we would have to
         //       introduce a new function in RgbCanvas.
 
-        // TODO: panic! in unsupported scenarious
+        // TODO: fatal_error! in unsupported scenarious
 
         let th = match self.fg_color {
             Some(_) => self.thickness,

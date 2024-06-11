@@ -49,7 +49,7 @@ impl HoldToConfirm {
             ButtonContent::Text(text) => {
                 Self::text(pos, text, LoaderStyleSheet::default_loader(), duration)
             }
-            ButtonContent::Icon(_) => panic!("Icon is not supported"),
+            ButtonContent::Icon(_) => fatal_error!("Icon is not supported"),
         }
     }
 

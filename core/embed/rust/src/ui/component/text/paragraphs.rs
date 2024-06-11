@@ -766,7 +766,7 @@ impl<'a, const N: usize> VecExt<'a> for Vec<Paragraph<'a>, N> {
         }
         if self.push(paragraph).is_err() {
             #[cfg(feature = "ui_debug")]
-            panic!("paragraph list is full");
+            fatal_error!("Paragraph list is full");
         }
         self
     }

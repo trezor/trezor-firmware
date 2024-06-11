@@ -108,19 +108,19 @@ macro_rules! unwrap {
 macro_rules! ensure {
     ($what:expr, $error:expr) => {
         if !($what) {
-            fatal_error!(stringify!($what), $error);
+            crate::trezorhal::fatal_error::__fatal_error(
+                stringify!($what),
+                $error,
+                file!(),
+                line!(),
+                function_name!(),
+            );
         }
     };
 }
 
 macro_rules! fatal_error {
-    ($expr:expr, $msg:expr) => {{
-        crate::trezorhal::fatal_error::__fatal_error(
-            stringify!($expr),
-            $msg,
-            file!(),
-            line!(),
-            function_name!(),
-        );
+    ($msg:expr) => {{
+        crate::trezorhal::fatal_error::__fatal_error("", $msg, file!(), line!(), function_name!());
     }};
 }

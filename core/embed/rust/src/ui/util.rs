@@ -22,9 +22,7 @@ impl<T, E> ResultExt for Result<T, E> {
     fn assert_if_debugging_ui(self, #[allow(unused)] message: &str) {
         #[cfg(feature = "ui_debug")]
         if self.is_err() {
-            print!("Panic from assert_if_debugging_ui: ");
-            println!(message);
-            panic!("{}", message);
+            fatal_error!(message);
         }
     }
 }

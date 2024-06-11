@@ -87,7 +87,7 @@ impl<'a> Iterator for Iter<'a> {
                 self.iter_buf.caught_exception = exc;
                 None
             }
-            Err(_) => panic!("unexpected error"),
+            Err(_) => fatal_error!("Unexpected error"),
             Ok(item) if item == Obj::const_stop_iteration() => {
                 self.finished = true;
                 None

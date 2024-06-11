@@ -57,7 +57,7 @@ impl<T> Animation<T> {
         } else {
             // Duration is too large to be added to an `Instant`.
             #[cfg(feature = "ui_debug")]
-            panic!("offset is too large");
+            fatal_error!("Offset is too large");
         }
     }
 

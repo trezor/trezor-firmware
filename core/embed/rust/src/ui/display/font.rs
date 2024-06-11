@@ -47,7 +47,7 @@ impl Glyph {
                 2 => (width * height + 3) / 4, // packed bits
                 4 => (width + 1) / 2 * height, // row aligned to bytes
                 8 => width * height,
-                _ => panic!(),
+                _ => fatal_error!("Unsupported font bpp"),
             };
 
             Glyph {

@@ -73,7 +73,7 @@ fn panic(_info: &core::panic::PanicInfo) -> ! {
     // raises a Hard Fault on hardware.
     //
     // Otherwise, use `unwrap!` macro from trezorhal.
-    fatal_error!("", "rs");
+    fatal_error!("rs");
 }
 
 #[cfg(not(target_arch = "arm"))]
