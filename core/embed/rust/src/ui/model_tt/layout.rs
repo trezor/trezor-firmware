@@ -162,7 +162,7 @@ where
                 if let Some(word) = self.mnemonic() {
                     word.try_into()
                 } else {
-                    panic!("invalid mnemonic")
+                    fatal_error!("Invalid mnemonic")
                 }
             }
             MnemonicKeyboardMsg::Previous => "".try_into(),

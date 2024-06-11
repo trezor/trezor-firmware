@@ -163,7 +163,7 @@ where
         let mut border = self.border;
         let area = match self.align.0 {
             Alignment::Start => bounds.split_left(self.size.x).0,
-            Alignment::Center => panic!("alignment not supported"),
+            Alignment::Center => fatal_error!("Alignment not supported"),
             Alignment::End => {
                 border.x = -border.x;
                 bounds.split_right(self.size.x).1
@@ -171,7 +171,7 @@ where
         };
         let area = match self.align.1 {
             Alignment::Start => area.split_top(self.size.y).0,
-            Alignment::Center => panic!("alignment not supported"),
+            Alignment::Center => fatal_error!("Alignment not supported"),
             Alignment::End => {
                 border.y = -border.y;
                 area.split_bottom(self.size.y).1

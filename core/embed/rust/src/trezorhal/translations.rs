@@ -7,7 +7,7 @@ pub unsafe fn get_blob<'a>() -> &'a [u8] {
     let mut len: u32 = 0;
     let ptr = unsafe { ffi::translations_read(&mut len, 0) };
     if ptr.is_null() {
-        fatal_error!("Translations read failed", "");
+        fatal_error!("Translations read failed");
     }
     // SAFETY: The pointer is always valid.
     unsafe { core::slice::from_raw_parts(ptr, len as usize) }

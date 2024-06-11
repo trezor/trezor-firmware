@@ -91,7 +91,7 @@ impl Shape<'_> for Circle {
         //       is not supported. If we needed it, we would have to
         //       introduce RgbCanvas::draw_ring() function.
 
-        // TODO: panic! in unsupported scenarious
+        // TODO: fatal_error! in unsupported scenarious
         let th = match self.fg_color {
             Some(_) => self.thickness,
             None => 0,

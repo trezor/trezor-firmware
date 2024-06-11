@@ -30,7 +30,7 @@ pub struct QrImage {
 impl QrImage {
     pub fn new(area: Rect, qrcode: &QrCode) -> Self {
         if area.width() < qrcode.size() as i16 || area.height() < qrcode.size() as i16 {
-            panic!("Too small area");
+            fatal_error!("Too small area");
         }
 
         let mut result = QrImage {

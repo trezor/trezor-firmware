@@ -226,7 +226,7 @@ impl<T> Root<T> {
         if let Some(ref mut c) = self.inner {
             c
         } else {
-            fatal_error!("deallocated", "Root object is deallocated")
+            fatal_error!("Root object is deallocated")
         }
     }
 
@@ -234,7 +234,7 @@ impl<T> Root<T> {
         if let Some(ref c) = self.inner {
             c
         } else {
-            fatal_error!("deallocated", "Root object is deallocated")
+            fatal_error!("Root object is deallocated")
         }
     }
 
@@ -459,7 +459,7 @@ where
             // Messages raised during a `RequestPaint` dispatch are not propagated, let's
             // make sure we don't do that.
             #[cfg(feature = "ui_debug")]
-            panic!("cannot raise messages during RequestPaint");
+            fatal_error!("Cannot raise messages during RequestPaint");
         }
         // Make sure to at least a propagate the paint flag upwards (in case there are
         // no `Child` instances in `self`, paint would not get automatically requested
@@ -662,7 +662,7 @@ impl EventCtx {
             // The timer queue is full, this would be a development error in the layout
             // layer. Let's panic in the debug env.
             #[cfg(feature = "ui_debug")]
-            panic!("timer queue is full");
+            fatal_error!("Timer queue is full");
         }
     }
 

@@ -485,7 +485,7 @@ extern "C" fn ui_layout_request_complete_repaint(this: Obj) -> Obj {
             // Messages raised during a `RequestPaint` dispatch are not propagated, let's
             // make sure we don't do that.
             #[cfg(feature = "ui_debug")]
-            panic!("cannot raise messages during RequestPaint");
+            fatal_error!("Cannot raise messages during RequestPaint");
         };
         this.obj_request_clear();
         Ok(Obj::const_none())
