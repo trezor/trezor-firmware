@@ -58,7 +58,6 @@ jobs:
       BITCOIN_ONLY: ${{ matrix.coins == 'universal' && '0' || '1' }}
       PYOPT: ${{ matrix.type == 'debuglink' && '0' || '1' }}
       PRODUCTION: ${{ matrix.type == 'production' && '1' || '0' }}
-      BOOTLOADER_DEVEL: ${{ matrix.model == 'T3T1' && '1' || '0' }}
     steps:
       - uses: actions/checkout@v4
         with:
