@@ -1339,6 +1339,7 @@ pub enum TranslatedString {
     reset__repeat_for_all_shares = 938,  // "Repeat for all shares."
     homescreen__settings_subtitle = 939,  // "Settings"
     homescreen__settings_title = 940,  // "Homescreen"
+    reset__the_word_is_repeated = 941,  // "The word is repeated"
 }
 
 impl TranslatedString {
@@ -2672,6 +2673,7 @@ impl TranslatedString {
             Self::reset__repeat_for_all_shares => "Repeat for all shares.",
             Self::homescreen__settings_subtitle => "Settings",
             Self::homescreen__settings_title => "Homescreen",
+            Self::reset__the_word_is_repeated => "The word is repeated",
         }
     }
 
@@ -4006,6 +4008,7 @@ impl TranslatedString {
             Qstr::MP_QSTR_reset__repeat_for_all_shares => Some(Self::reset__repeat_for_all_shares),
             Qstr::MP_QSTR_homescreen__settings_subtitle => Some(Self::homescreen__settings_subtitle),
             Qstr::MP_QSTR_homescreen__settings_title => Some(Self::homescreen__settings_title),
+            Qstr::MP_QSTR_reset__the_word_is_repeated => Some(Self::reset__the_word_is_repeated),
             _ => None,
         }
     }

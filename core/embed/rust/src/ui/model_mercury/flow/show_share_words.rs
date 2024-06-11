@@ -85,6 +85,7 @@ impl ShowShareWords {
             .and_then(|desc: TString| if desc.is_empty() { None } else { Some(desc) });
         let text_info: Obj = kwargs.get(Qstr::MP_QSTR_text_info)?;
         let text_confirm: TString = kwargs.get(Qstr::MP_QSTR_text_confirm)?.try_into()?;
+        let highlight_repeated: bool = kwargs.get(Qstr::MP_QSTR_highlight_repeated)?.try_into()?;
         let nwords = share_words_vec.len();
 
         let mut instructions_paragraphs = ParagraphVecShort::new();
@@ -108,12 +109,8 @@ impl ShowShareWords {
         .one_button_request(ButtonRequestCode::ResetDevice.with_type("share_words"))
         .with_pages(move |_| nwords + 2);
 
-        let content_words = Frame::left_aligned(title, ShareWords::new(share_words_vec))
-            .with_subtitle(subtitle)
-            .with_swipe(SwipeDirection::Up, SwipeSettings::default())
-            .with_swipe(SwipeDirection::Down, SwipeSettings::default())
-            .with_vertical_pages()
-            .map(|_| None);
+        let content_words =
+            ShareWords::new(title, subtitle, share_words_vec, highlight_repeated).map(|_| None);
 
         let content_confirm =
             Frame::left_aligned(text_confirm, PromptScreen::new_hold_to_confirm())

@@ -66,6 +66,10 @@ impl<'a> Label<'a> {
         self.text = text;
     }
 
+    pub fn set_style(&mut self, style: TextStyle) {
+        self.layout.style = style;
+    }
+
     pub fn font(&self) -> Font {
         self.layout.style.text_font
     }

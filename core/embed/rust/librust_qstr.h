@@ -246,6 +246,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_haptic_feedback__enable;
   MP_QSTR_haptic_feedback__subtitle;
   MP_QSTR_haptic_feedback__title;
+  MP_QSTR_highlight_repeated;
   MP_QSTR_hold;
   MP_QSTR_hold_danger;
   MP_QSTR_homescreen__click_to_connect;
@@ -528,6 +529,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_reset__slip39_checklist_write_down;
   MP_QSTR_reset__slip39_checklist_write_down_recovery;
   MP_QSTR_reset__the_threshold_sets_the_number_of_shares;
+  MP_QSTR_reset__the_word_is_repeated;
   MP_QSTR_reset__threshold_info;
   MP_QSTR_reset__title_backup_is_done;
   MP_QSTR_reset__title_create_wallet;

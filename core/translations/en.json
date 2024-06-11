@@ -666,6 +666,7 @@
     "reset__slip39_checklist_write_down": "Write down and check all shares",
     "reset__slip39_checklist_write_down_recovery": "Write down & check all wallet backup shares",
     "reset__the_threshold_sets_the_number_of_shares": "The threshold sets the number of shares ",
+    "reset__the_word_is_repeated": "The word is repeated",
     "reset__threshold_info": "= minimum number of unique word lists used for recovery.",
     "reset__title_backup_is_done": "Backup is done",
     "reset__title_create_wallet": "Create wallet",

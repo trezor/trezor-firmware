@@ -717,6 +717,8 @@ pub const TEXT_MAIN_GREY_LIGHT: TextStyle =
     TextStyle::new(Font::NORMAL, GREY_LIGHT, BG, GREY, GREY);
 pub const TEXT_SUB_GREY_LIGHT: TextStyle = TextStyle::new(Font::SUB, GREY_LIGHT, BG, GREY, GREY);
 pub const TEXT_SUB_GREY: TextStyle = TextStyle::new(Font::SUB, GREY, BG, GREY, GREY);
+pub const TEXT_SUB_GREEN_LIME: TextStyle =
+    TextStyle::new(Font::SUB, GREEN_LIME, BG, GREEN_LIME, GREEN_LIME);
 pub const TEXT_WARNING: TextStyle = TextStyle::new(Font::NORMAL, ORANGE_LIGHT, BG, GREY, GREY);
 pub const TEXT_MONO: TextStyle = TextStyle::new(Font::MONO, GREY_EXTRA_LIGHT, BG, GREY, GREY)
     .with_line_breaking(LineBreaking::BreakWordsNoHyphen)

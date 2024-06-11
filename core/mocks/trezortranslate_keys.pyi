@@ -664,6 +664,7 @@ class TR:
     reset__slip39_checklist_write_down: str = "Write down and check all shares"
     reset__slip39_checklist_write_down_recovery: str = "Write down & check all wallet backup shares"
     reset__the_threshold_sets_the_number_of_shares: str = "The threshold sets the number of shares "
+    reset__the_word_is_repeated: str = "The word is repeated"
     reset__threshold_info: str = "= minimum number of unique word lists used for recovery."
     reset__title_backup_is_done: str = "Backup is done"
     reset__title_create_wallet: str = "Create wallet"
