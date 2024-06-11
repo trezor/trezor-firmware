@@ -405,6 +405,7 @@ def flow_show_share_words(
     description: str,
     text_info: Iterable[str],
     text_confirm: str,
+    highlight_repeated: bool,
 ) -> LayoutObj[UiResult]:
     """Show wallet backup words preceded by an instruction screen and followed by
     confirmation."""

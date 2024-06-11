@@ -86,11 +86,6 @@ where
         self
     }
 
-    pub fn title_styled(mut self, style: TextStyle) -> Self {
-        self.title = self.title.styled(style);
-        self
-    }
-
     #[inline(never)]
     pub fn with_subtitle(mut self, subtitle: TString<'static>) -> Self {
         let style = theme::TEXT_SUB_GREY;
@@ -125,6 +120,18 @@ where
             .button_styled(theme::button_danger())
     }
 
+    pub fn title_styled(mut self, style: TextStyle) -> Self {
+        self.title = self.title.styled(style);
+        self
+    }
+
+    pub fn subtitle_styled(mut self, style: TextStyle) -> Self {
+        if let Some(subtitle) = self.subtitle.take() {
+            self.subtitle = Some(subtitle.styled(style))
+        }
+        self
+    }
+
     pub fn button_styled(mut self, style: ButtonStyleSheet) -> Self {
         if self.button.is_some() {
             self.button = Some(self.button.unwrap().styled(style));
@@ -157,6 +164,25 @@ where
 
     pub fn update_title(&mut self, ctx: &mut EventCtx, new_title: TString<'static>) {
         self.title.set_text(new_title);
+        ctx.request_paint();
+    }
+
+    pub fn update_subtitle(
+        &mut self,
+        ctx: &mut EventCtx,
+        new_subtitle: TString<'static>,
+        new_style: Option<TextStyle>,
+    ) {
+        let style = new_style.unwrap_or(theme::TEXT_SUB_GREY);
+        match &mut self.subtitle {
+            Some(subtitle) => {
+                subtitle.set_style(style);
+                subtitle.set_text(new_subtitle);
+            }
+            None => {
+                self.subtitle = Some(Label::new(new_subtitle, self.title.alignment(), style));
+            }
+        }
         ctx.request_paint();
     }
 
