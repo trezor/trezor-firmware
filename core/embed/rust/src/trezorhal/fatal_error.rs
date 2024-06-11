@@ -10,6 +10,9 @@ use crate::ui::{
     ui_features::{ModelUI, UIFeaturesCommon},
 };
 
+#[cfg(feature = "debug")]
+use crate::dbg_println;
+
 fn shutdown() -> ! {
     unsafe { ffi::trezor_shutdown() }
 }
@@ -32,6 +35,23 @@ pub fn error_shutdown(title: &str, msg: &str, footer: &str) -> ! {
 /// In debug mode, also prints the error message to the console.
 #[inline(never)] // saves few kilobytes of flash
 pub fn __fatal_error(_expr: &str, msg: &str, _file: &str, _line: u32, _func: &str) -> ! {
+    #[cfg(feature = "debug")]
+    {
+        dbg_println!("=== FATAL ERROR");
+
+        if _line != 0 {
+            dbg_println!("Location: {}:{}", _file, _line);
+        }
+        if !_expr.is_empty() {
+            dbg_println!("Expression: {}", _expr);
+        }
+        if !msg.is_empty() {
+            dbg_println!("Message: {}", msg);
+        }
+
+        dbg_println!("===");
+    }
+
     error_shutdown("INTERNAL_ERROR", msg, "PLEASE VISIT\nTREZOR.IO/RSOD");
 }
 

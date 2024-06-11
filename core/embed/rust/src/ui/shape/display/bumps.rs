@@ -66,15 +66,15 @@ where
     };
 }
 
-// This function enables nested invocations of `run_with_bumps()`,
-// which is necessary when the application needs to display a
-// fatal error message and subsequently terminate.
-//
-// SAFETY:
-// This function must be invoked exclusively in failure scenarios
-// where the application is required to display a fatal error
-// message and then shut down. It is safe to call this function
-// only under these specific conditions.
+/// This function enables nested invocations of `run_with_bumps()`,
+/// which is necessary when the application needs to display a
+/// fatal error message and subsequently terminate.
+///
+/// # Safety
+/// This function must be invoked exclusively in failure scenarios
+/// where the application is required to display a fatal error
+/// message and then shut down. It is safe to call this function
+/// only under these specific conditions.
 pub unsafe fn unlock_bumps_on_failure() {
     // The application is single-threaded, so we can safely use a
     // static variable as a lock against nested calls.
