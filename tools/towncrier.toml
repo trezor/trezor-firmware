@@ -1,3 +1,6 @@
+# This is the default configuration that is used by subprojects via symlink.
+# Some subprojects have their own configuration which is not a symlink.
+
 [tool.towncrier]
 directory = ".changelog.d"
 filename = "CHANGELOG.md"
