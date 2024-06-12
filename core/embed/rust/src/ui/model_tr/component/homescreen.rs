@@ -435,7 +435,7 @@ impl ConfirmHomescreen {
     pub fn new(title: TString<'static>, image: BinaryData<'static>) -> Self {
         let btn_layout = ButtonLayout::cancel_none_text(TR::buttons__change.into());
         ConfirmHomescreen {
-            title: Child::new(Label::centered(title, theme::TEXT_BOLD_UPPER)),
+            title: Child::new(Label::left_aligned(title, theme::TEXT_BOLD_UPPER)),
             image,
             buttons: Child::new(ButtonController::new(btn_layout)),
         }
