@@ -21,7 +21,7 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 #define UART_WAIT_FOR_BUF_DELAY K_MSEC(50)
 #define UART_WAIT_FOR_RX CONFIG_BT_NUS_UART_RX_WAIT_TIME
 
-static const struct device *uart = DEVICE_DT_GET(DT_CHOSEN(nordic_nus_uart));
+const struct device *uart = DEVICE_DT_GET(DT_CHOSEN(nordic_nus_uart));
 
 static K_FIFO_DEFINE(fifo_uart_tx_data);
 static K_FIFO_DEFINE(fifo_uart_rx_data);
@@ -274,8 +274,8 @@ int uart_init(void)
 
   err = uart_callback_set(uart, uart_cb, NULL);
   if (err) {
+    LOG_ERR("Cannot initialize UART callback (err: %d) FF", err);
     k_free(rx);
-    LOG_ERR("Cannot initialize UART callback");
     return err;
   }
 
