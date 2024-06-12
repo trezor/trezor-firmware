@@ -71,7 +71,7 @@ def _version_from_version_h() -> VersionTuple:
     )
 
 
-def _version_str(version: VersionTuple) -> str:
+def _version_str(version: tuple[int, ...]) -> str:
     return ".".join(str(v) for v in version)
 
 
@@ -128,45 +128,46 @@ class TranslationsDir:
         return json.loads(self._lang_path(lang).read_text())
 
     def save_lang(self, lang: str, data: translations.JsonDef) -> None:
-        self._lang_path(lang).write_text(json.dumps(data, indent=2) + "\n")
+        self._lang_path(lang).write_text(
+            json.dumps(
+                data,
+                indent=2,
+                ensure_ascii=False,
+            )
+            + "\n"
+        )
 
     def all_languages(self) -> t.Iterable[str]:
         return (lang_file.stem for lang_file in self.path.glob("??.json"))
+
+    def update_version_from_h(self) -> VersionTuple:
+        version = _version_from_version_h()
+        for lang in self.all_languages():
+            blob_json = self.load_lang(lang)
+            blob_version = translations.version_from_json(
+                blob_json["header"]["version"]
+            )
+            if blob_version != version:
+                blob_json["header"]["version"] = _version_str(version[:3])
+                self.save_lang(lang, blob_json)
+        return version
 
     def generate_single_blob(
         self,
         lang: str,
         model: models.TrezorModel,
         version: VersionTuple | None,
-        write_version: bool = False,
     ) -> translations.TranslationsBlob:
         blob_json = self.load_lang(lang)
         blob_version = translations.version_from_json(blob_json["header"]["version"])
-
-        if version is None:
-            version = blob_version
-
-        if write_version and blob_version != version:
-            blob_json["header"]["version"] = _version_str(version)
-            self.save_lang(lang, blob_json)
-
         return translations.blob_from_defs(
-            blob_json, self.order, model, version, self.fonts_dir
+            blob_json, self.order, model, version or blob_version, self.fonts_dir
         )
 
     def generate_all_blobs(
-        self,
-        version: VersionTuple | t.Literal["auto"] | t.Literal["json"],
+        self, version: VersionTuple | None
     ) -> list[translations.TranslationsBlob]:
-        current_version = _version_from_version_h()
         common_version = None
-
-        if version == "auto":
-            used_version = current_version
-        elif version == "json":
-            used_version = None
-        else:
-            used_version = version
 
         all_blobs: list[translations.TranslationsBlob] = []
         for lang in self.all_languages():
@@ -175,7 +176,7 @@ class TranslationsDir:
 
             for model in ALL_MODELS:
                 try:
-                    blob = self.generate_single_blob(lang, model, used_version)
+                    blob = self.generate_single_blob(lang, model, version)
                     blob_version = blob.header.firmware_version
                     if common_version is None:
                         common_version = blob_version
@@ -214,7 +215,7 @@ def build_all_blobs(
         blob.proof = proof
         header = blob.header
         model = header.model.value.decode("ascii")
-        version = ".".join(str(v) for v in header.firmware_version[:3])
+        version = _version_str(header.firmware_version[:3])
         if production:
             suffix = ""
         else:
@@ -239,12 +240,13 @@ def gen(signed: bool | None, version_str: str | None) -> None:
 
     The generated blobs will be signed with the development keys.
     """
-    if version_str is not None:
-        version = translations.version_from_json(version_str)
-    else:
-        version = "auto"
-
     tdir = TranslationsDir()
+
+    if version_str is None:
+        version = tdir.update_version_from_h()
+    else:
+        version = translations.version_from_json(version_str)
+
     all_blobs = tdir.generate_all_blobs(version)
     tree = merkle_tree.MerkleTree(b.header_bytes for b in all_blobs)
     root = tree.get_root_hash()
@@ -284,7 +286,7 @@ def gen(signed: bool | None, version_str: str | None) -> None:
 def merkle_root(version_str: str | None) -> None:
     """Print the Merkle root of all language blobs."""
     if version_str is None:
-        version = "json"
+        version = None
     else:
         version = translations.version_from_json(version_str)
 
@@ -320,7 +322,7 @@ def merkle_root(version_str: str | None) -> None:
 def sign(signature_hex: str, force: bool | None, version_str: str | None) -> None:
     """Insert a signature into language blobs."""
     if version_str is None:
-        version = "json"
+        version = None
     else:
         version = translations.version_from_json(version_str)
 
