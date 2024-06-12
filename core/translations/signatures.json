@@ -6,6 +6,20 @@
   },
   "history": [
     {
+      "signature": "03e15faccf60328fee27c3cb2a22597656f22aa8d212537669a067e940e454c8eb90060c0fd8eb0783c9b5bb9e657a1fc40b5fea7f46eeee71d218a885fb68f401",
+      "version": "2.7.2.0",
+      "merkle_root": "47dc6ffabb554cd7f098a2fa87b96b7bfd8de82e94286a20355c5078f8df8d16",
+      "datetime": "2024-06-12T09:32:45.909833",
+      "commit": "905ef05f3aeb327f963785a8126e7f54bdf55b38"
+    },
+    {
+      "signature": "03c2dacdc7800fed2c8bc4052ddbcd260a69d0529bda38d5282f081b4eb9b91b42d1002fa6976d1332815c30e1f38b9b9dc48ae05f040b693d7be906df8c2c6500",
+      "version": "2.7.1.0",
+      "merkle_root": "7fba6f82bbd54d09ca75a1454a0af359fd187dea5b689f4f19552b5ae1d8e2f0",
+      "datetime": "2024-06-12T09:33:19.676243",
+      "commit": "905ef05f3aeb327f963785a8126e7f54bdf55b38"
+    },
+    {
       "signature": "032facfa6224385230e30d6e61179f88c8ddced38759ac778d7f4e412ab70ecaf4f8ac020a25ed4e3c7fd647bdbffc1c66071613d39359ebc834161a0888bcc305",
       "version": "2.7.0.0",
       "merkle_root": "33c7debbc1ee109d5c66835a84191b34696b324d0d0f026a0de7d7df01cab106",
