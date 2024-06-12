@@ -124,13 +124,13 @@ def _make_bad_params():
         if field.name in DRY_RUN_ALLOWED_FIELDS:
             continue
 
-        if "int" in field.type:
+        if field.py_type is int:
             yield field.name, 1
-        elif field.type == "bool":
+        elif field.py_type is bool:
             yield field.name, True
-        elif field.type == "string":
+        elif field.py_type is str:
             yield field.name, "test"
-        elif field.type == "RecoveryType":
+        elif field.py_type is messages.RecoveryType:
             yield field.name, 1
         else:
             # Someone added a field to RecoveryDevice of a type that has no assigned

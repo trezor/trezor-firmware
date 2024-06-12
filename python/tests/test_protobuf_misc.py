@@ -18,7 +18,7 @@ from enum import IntEnum
 
 import pytest
 
-from trezorlib import messages, protobuf
+from trezorlib import protobuf
 
 
 class SimpleEnum(IntEnum):
@@ -55,18 +55,11 @@ class RequiredFields(protobuf.MessageType):
     }
 
 
-# message types are read from the messages module so we need to "include" these messages there for now
-messages.SimpleEnum = SimpleEnum
-messages.SimpleMessage = SimpleMessage
-messages.NestedMessage = NestedMessage
-messages.RequiredFields = RequiredFields
-
-
 def test_get_field():
     # smoke test
     field = SimpleMessage.get_field("bool")
     assert field.name == "bool"
-    assert field.type == "bool"
+    assert field.proto_type == "bool"
     assert field.repeated is False
     assert field.required is False
     assert field.default is None
@@ -89,6 +82,19 @@ def test_dict_roundtrip():
     recovered = protobuf.dict_to_proto(SimpleMessage, converted)
 
     assert recovered == msg
+
+
+def test_dict_to_proto_fresh():
+    class FreshMessage(protobuf.MessageType):
+        FIELDS = {
+            1: protobuf.Field("scalar", "uint64"),
+            2: protobuf.Field("nested", "SimpleMessage"),
+        }
+
+    dictdata = {"scalar": 5, "nested": {"uvarint": 5}}
+    recovered = protobuf.dict_to_proto(FreshMessage, dictdata)
+    assert recovered.scalar == 5
+    assert recovered.nested.uvarint == 5
 
 
 def test_to_dict():
@@ -204,7 +210,6 @@ def test_nested_recover():
     assert isinstance(recovered.nested, SimpleMessage)
 
 
-@pytest.mark.xfail(reason="formatting broken because of size counting")
 def test_unknown_enum_to_str():
     simple = SimpleMessage(enum=SimpleEnum.QUUX)
     string = protobuf.format_message(simple)
