@@ -45,13 +45,13 @@
 #ifdef USE_SECP256K1_ZKP
 void secp256k1_default_illegal_callback_fn(const char *str, void *data) {
   (void)data;
-  __fatal_error(NULL, str, __FILE__, __LINE__, __func__);
+  __fatal_error(str, __FILE__, __LINE__);
   return;
 }
 
 void secp256k1_default_error_callback_fn(const char *str, void *data) {
   (void)data;
-  __fatal_error(NULL, str, __FILE__, __LINE__, __func__);
+  __fatal_error(str, __FILE__, __LINE__);
   return;
 }
 #endif

@@ -28,20 +28,13 @@ void __shutdown(void) {
   exit(3);
 }
 
-void __fatal_error(const char *expr, const char *msg, const char *file,
-                   int line, const char *func) {
+void __fatal_error(const char *msg, const char *file, int line) {
   printf("\nFATAL ERROR:\n");
-  if (expr) {
-    printf("expr: %s\n", expr);
-  }
   if (msg) {
     printf("msg : %s\n", msg);
   }
   if (file) {
     printf("file: %s:%d\n", file, line);
-  }
-  if (func) {
-    printf("func: %s\n", func);
   }
   __shutdown();
 }

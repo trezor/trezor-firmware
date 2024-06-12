@@ -22,16 +22,13 @@
 
 #include "secbool.h"
 
-void __fatal_error(const char *expr, const char *msg, const char *file,
-                   int line, const char *func);
+void __fatal_error(const char *msg, const char *file, int line);
 
 void show_wipe_code_screen(void);
 void show_pin_too_many_screen(void);
 
 #define ensure(expr, msg) \
-  (((expr) == sectrue)    \
-       ? (void)0          \
-       : __fatal_error(#expr, msg, __FILE__, __LINE__, __func__))
+  (((expr) == sectrue) ? (void)0 : __fatal_error(msg, __FILE__, __LINE__))
 
 #define hal_delay(ms) (void)ms;
 
