@@ -5,7 +5,7 @@ This directory contains mostly tools that can manipulate definitions in [defs/](
 Tools are written with [Click](http://click.pocoo.org/6/), so you always get a help text
 if you use the `--help` option.
 
-All tools require Python 3.6 or higher and a bunch of dependencies, listed in `requirements.txt`.
+All tools require Python 3.8 or higher and a bunch of dependencies, listed in `requirements.txt`.
 You can install them all with `pip3 install -r requirements.txt`.
 
 ## Tools overview

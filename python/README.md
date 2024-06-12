@@ -9,7 +9,7 @@ See <https://trezor.io> for more information.
 
 ## Install
 
-Python Trezor tools require Python 3.6 or higher, and libusb 1.0. The easiest
+Python Trezor tools require Python 3.8 or higher, and libusb 1.0. The easiest
 way to install it is with `pip`. The rest of this guide assumes you have
 a working `pip`; if not, you can refer to [this
 guide](https://packaging.python.org/tutorials/installing-packages/).

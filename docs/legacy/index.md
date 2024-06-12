@@ -38,7 +38,7 @@ For firmwares older than 1.8.1, please clone the archived [trezor-mcu](https://g
 
 ## Local development build
 
-Make sure you have Python 3.6 or later and [Poetry](https://python-poetry.org/)
+Make sure you have Python 3.8 or later and [Poetry](https://python-poetry.org/)
 installed.
 
 If you want to build device firmware, also make sure that you have the [GNU ARM Embedded toolchain](https://developer.arm.com/open-source/gnu-toolchain/gnu-rm/downloads) installed.

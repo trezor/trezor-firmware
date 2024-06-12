@@ -27,7 +27,7 @@ install_requires = (CWD / "requirements.txt").read_text().splitlines()
 
 extras_require = {
     "hidapi": ["hidapi>=0.7.99.post20"],
-    "ethereum": ["rlp>=1.1.0 ; python_version<'3.7'", "web3>=5"],
+    "ethereum": ["web3>=5"],
     "qt-widgets": ["PyQt5"],
     "extra": ["Pillow>=10"],
     "stellar": ["stellar-sdk>=6"],
@@ -64,7 +64,7 @@ setup(
     entry_points={"console_scripts": ["trezorctl=trezorlib.cli.trezorctl:cli"]},
     install_requires=install_requires,
     extras_require=extras_require,
-    python_requires=">=3.6",
+    python_requires=">=3.8",
     include_package_data=True,
     zip_safe=False,
     classifiers=[
