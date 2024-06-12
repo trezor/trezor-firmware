@@ -117,7 +117,7 @@ def image_to_toif(filename: Path, width: int, height: int, greyscale: bool) -> b
     return toif_image.to_bytes()
 
 
-def image_to_jpeg(filename: Path, width: int, height: int) -> bytes:
+def image_to_jpeg(filename: Path, width: int, height: int, quality: int = 90) -> bytes:
     if filename.suffix in (".jpg", ".jpeg") and not PIL_AVAILABLE:
         click.echo("Warning: Image library is missing, skipping image validation.")
         return filename.read_bytes()
@@ -147,7 +147,7 @@ def image_to_jpeg(filename: Path, width: int, height: int) -> bytes:
         image = image.convert("RGB")
 
     buf = io.BytesIO()
-    image.save(buf, format="jpeg", progressive=False)
+    image.save(buf, format="jpeg", progressive=False, quality=quality)
     return buf.getvalue()
 
 
@@ -307,8 +307,9 @@ def flags(client: "TrezorClient", flags: str) -> str:
 @click.option(
     "-f", "--filename", "_ignore", is_flag=True, hidden=True, expose_value=False
 )
+@click.option("-q", "--quality", type=int, default=90, help="JPEG quality (0-100)")
 @with_client
-def homescreen(client: "TrezorClient", filename: str) -> str:
+def homescreen(client: "TrezorClient", filename: str, quality: int) -> str:
     """Set new homescreen.
 
     To revert to default homescreen, use 'trezorctl set homescreen default'
@@ -334,7 +335,7 @@ def homescreen(client: "TrezorClient", filename: str) -> str:
                     if client.features.homescreen_height is not None
                     else 240
                 )
-                img = image_to_jpeg(path, width, height)
+                img = image_to_jpeg(path, width, height, quality)
             elif client.features.homescreen_format == messages.HomescreenFormat.ToiG:
                 width = client.features.homescreen_width
                 height = client.features.homescreen_height
