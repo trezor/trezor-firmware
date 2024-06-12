@@ -53,9 +53,9 @@ fn panic_debug(panic_info: &core::panic::PanicInfo) -> ! {
     // Filling at least the file and line information, if available.
     // TODO: find out how to display message from panic_info.message()
     if let Some(location) = panic_info.location() {
-        trezorhal::fatal_error::__fatal_error("", "rs", location.file(), location.line(), "");
+        trezorhal::fatal_error::__fatal_error("rs", location.file(), location.line());
     } else {
-        trezorhal::fatal_error::__fatal_error("", "rs", "", 0, "");
+        trezorhal::fatal_error::__fatal_error("rs", "", 0);
     }
 }
 

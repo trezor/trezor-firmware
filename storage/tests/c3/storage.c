@@ -171,9 +171,8 @@ static const uint8_t FALSE_BYTE = 0x00;
 static const uint32_t TRUE_WORD = 0xC35A69A5;
 static const uint32_t FALSE_WORD = 0x3CA5965A;
 
-static void __handle_fault(const char *msg, const char *file, int line,
-                           const char *func);
-#define handle_fault(msg) (__handle_fault(msg, __FILE__, __LINE__, __func__))
+static void __handle_fault(const char *msg, const char *file, int line);
+#define handle_fault(msg) (__handle_fault(msg, __FILE__, __LINE__))
 
 static uint32_t pin_to_int(const uint8_t *pin, size_t pin_len);
 static secbool storage_upgrade(void);
@@ -1634,15 +1633,14 @@ void storage_wipe(void) {
   init_wiped_storage();
 }
 
-static void __handle_fault(const char *msg, const char *file, int line,
-                           const char *func) {
+static void __handle_fault(const char *msg, const char *file, int line) {
   static secbool in_progress = secfalse;
 
   // If fault handling is already in progress, then we are probably facing a
   // fault injection attack, so wipe.
   if (secfalse != in_progress) {
     storage_wipe();
-    __fatal_error("Fault detected", msg, file, line, func);
+    __fatal_error(msg, file, line);
   }
 
   // We use the PIN fail counter as a fault counter. Increment the counter,
@@ -1651,19 +1649,19 @@ static void __handle_fault(const char *msg, const char *file, int line,
   uint32_t ctr = 0;
   if (sectrue != pin_get_fails(&ctr)) {
     storage_wipe();
-    __fatal_error("Fault detected", msg, file, line, func);
+    __fatal_error(msg, file, line);
   }
 
   if (sectrue != storage_pin_fails_increase()) {
     storage_wipe();
-    __fatal_error("Fault detected", msg, file, line, func);
+    __fatal_error(msg, file, line);
   }
 
   uint32_t ctr_new = 0;
   if (sectrue != pin_get_fails(&ctr_new) || ctr + 1 != ctr_new) {
     storage_wipe();
   }
-  __fatal_error("Fault detected", msg, file, line, func);
+  __fatal_error(msg, file, line);
 }
 
 /*

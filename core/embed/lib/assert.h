@@ -17,32 +17,39 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __TREZORHAL_COMMON_H__
-#define __TREZORHAL_COMMON_H__
+#ifndef LIB_ASSERT_H
+#define LIB_ASSERT_H
 
-#include <stddef.h>
-#include <stdint.h>
-#include "secbool.h"
+// This file overrides the standard `assert` macro to
+// save space in flash memory.
+//
+// This file will be included instead of the standard assert.h
+// as it is passed to the compiler with -include before the
+// paths to the standard libraries.
+//
+// Our custom assert macro eliminates printing of the
+// expression and prints only a short file name and line number.
 
-#define HW_ENTROPY_LEN (12 + 32)
-extern uint8_t HW_ENTROPY_DATA[HW_ENTROPY_LEN];
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#ifndef NDEBUG
 
 void __attribute__((noreturn))
 __fatal_error(const char *msg, const char *file, int line);
-void __attribute__((noreturn))
-error_shutdown(const char *line1, const char *line2, const char *line3,
-               const char *line4);
-void show_wipe_code_screen(void);
-void show_pin_too_many_screen(void);
 
-#define ensure(expr, msg) \
-  (((expr) == sectrue) ? (void)0 : __fatal_error(msg, __FILE__, __LINE__))
+#define assert(expr) \
+  ((expr) ? (void)0 : __fatal_error("Assert", __FILE_NAME__, __LINE__))
 
-void hal_delay(uint32_t ms);
+#else
 
-void drbg_init(void);
-void drbg_reseed(const uint8_t *entropy, size_t len);
-void drbg_generate(uint8_t *buf, size_t len);
-uint32_t drbg_random32(void);
+#define assert(expr) ((void)0)
 
 #endif
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif  // LIB_ASSERT_H

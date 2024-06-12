@@ -33,8 +33,7 @@ uint8_t HW_ENTROPY_DATA[HW_ENTROPY_LEN];
 static HMAC_DRBG_CTX drbg_ctx;
 
 void __attribute__((noreturn))
-__fatal_error(const char *expr, const char *msg, const char *file, int line_num,
-              const char *func) {
+__fatal_error(const char *msg, const char *file, int line_num) {
   const BITMAP *icon = &bmp_icon_error;
   char line[128] = {0};
   int y = icon->height + 3;
@@ -44,7 +43,7 @@ __fatal_error(const char *expr, const char *msg, const char *file, int line_num,
   oledDrawStringCenter(OLED_WIDTH / 2, (icon->height - FONT_HEIGHT) / 2 + 1,
                        "FATAL  ERROR", FONT_STANDARD);
 
-  snprintf(line, sizeof(line), "Expr: %s", expr ? expr : "(null)");
+  snprintf(line, sizeof(line), "Expr: %s", "(null)");
   oledDrawString(0, y, line, FONT_STANDARD);
   y += FONT_HEIGHT + 1;
 
@@ -59,7 +58,7 @@ __fatal_error(const char *expr, const char *msg, const char *file, int line_num,
   oledDrawString(0, y, label, FONT_STANDARD);
   y += FONT_HEIGHT + 1;
 
-  snprintf(line, sizeof(line), "Func: %s", func ? func : "(null)");
+  snprintf(line, sizeof(line), "Func: %s", "(null)");
   oledDrawString(0, y, line, FONT_STANDARD);
   y += FONT_HEIGHT + 1;
 
@@ -80,7 +79,10 @@ error_shutdown(const char *line1, const char *line2, const char *line3,
 #ifndef NDEBUG
 void __assert_func(const char *file, int line, const char *func,
                    const char *expr) {
-  __fatal_error(expr, "assert failed", file, line, func);
+  (void)func;
+  (void)expr;
+
+  __fatal_error("assert failed", file, line);
 }
 #endif
 

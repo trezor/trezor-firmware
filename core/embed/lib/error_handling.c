@@ -64,27 +64,23 @@ void __attribute__((noreturn)) error_shutdown(const char *message) {
 }
 
 void __attribute__((noreturn))
-__fatal_error(const char *expr, const char *msg, const char *file, int line,
-              const char *func) {
+__fatal_error(const char *msg, const char *file, int line) {
 #ifdef FANCY_FATAL_ERROR
-  char buf[256] = {0};
-  mini_snprintf(buf, sizeof(buf), "%s: %d", file, line);
-  error_shutdown(msg != NULL ? msg : buf);
+  if (msg == NULL) {
+    char buf[128] = {0};
+    mini_snprintf(buf, sizeof(buf), "%s:%d", file, line);
+    msg = buf;
+  }
+  error_shutdown(msg);
 #else
   display_orientation(0);
   term_set_color(COLOR_WHITE, COLOR_FATAL_ERROR);
   term_printf("\nINTERNAL ERROR:\n");
-  if (expr) {
-    term_printf("expr: %s\n", expr);
-  }
   if (msg) {
     term_printf("msg : %s\n", msg);
   }
   if (file) {
     term_printf("file: %s:%d\n", file, line);
-  }
-  if (func) {
-    term_printf("func: %s\n", func);
   }
 #ifdef SCM_REVISION
   const uint8_t *rev = (const uint8_t *)SCM_REVISION;
@@ -96,13 +92,6 @@ __fatal_error(const char *expr, const char *msg, const char *file, int line,
   trezor_shutdown();
 #endif
 }
-
-#ifndef NDEBUG
-void __assert_func(const char *file, int line, const char *func,
-                   const char *expr) {
-  __fatal_error(expr, "assert failed", file, line, func);
-}
-#endif
 
 void __attribute__((noreturn)) show_wipe_code_screen(void) {
   error_shutdown_ex("WIPE CODE ENTERED",
