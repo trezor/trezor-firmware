@@ -470,10 +470,11 @@ static secbool ui_progress(uint32_t elapsed_ms) {
 }
 
 #if !USE_OPTIGA
-static void derive_kek(const uint8_t *pin, size_t pin_len,
-                       const uint8_t *storage_salt, const uint8_t *ext_salt,
-                       uint8_t kek[SHA256_DIGEST_LENGTH],
-                       uint8_t keiv[SHA256_DIGEST_LENGTH]) {
+static void derive_kek_v4(const uint8_t *pin, size_t pin_len,
+                          const uint8_t *storage_salt, const uint8_t *ext_salt,
+                          uint8_t kek[SHA256_DIGEST_LENGTH],
+                          uint8_t keiv[SHA256_DIGEST_LENGTH]) {
+  // Legacy PIN verification method used in storage versions 1, 2, 3 and 4.
   uint8_t salt[HARDWARE_SALT_SIZE + STORAGE_SALT_SIZE + EXTERNAL_SALT_SIZE] = {
       0};
   size_t salt_len = 0;
@@ -519,11 +520,10 @@ static void derive_kek(const uint8_t *pin, size_t pin_len,
 }
 #endif
 
-#if USE_OPTIGA
-static void stretch_pin_optiga(const uint8_t *pin, size_t pin_len,
-                               const uint8_t storage_salt[STORAGE_SALT_SIZE],
-                               const uint8_t *ext_salt,
-                               uint8_t stretched_pin[OPTIGA_PIN_SECRET_SIZE]) {
+static void stretch_pin(const uint8_t *pin, size_t pin_len,
+                        const uint8_t storage_salt[STORAGE_SALT_SIZE],
+                        const uint8_t *ext_salt,
+                        uint8_t stretched_pin[SHA256_DIGEST_LENGTH]) {
   // Combining the PIN with the storage salt aims to ensure that if the
   // MCU-Optiga communication is compromised, then a user with a low-entropy PIN
   // remains protected against an attacker who is not able to read the contents
@@ -567,10 +567,10 @@ static void stretch_pin_optiga(const uint8_t *pin, size_t pin_len,
 #endif
   memzero(&ctx, sizeof(ctx));
 }
-#endif
 
 #if USE_OPTIGA
-static void derive_kek_optiga(
+static void derive_kek_optiga_v4(
+    // Legacy PIN verification method used in storage versions 3 and 4.
     const uint8_t optiga_secret[OPTIGA_PIN_SECRET_SIZE],
     uint8_t kek[SHA256_DIGEST_LENGTH], uint8_t keiv[SHA256_DIGEST_LENGTH]) {
   PBKDF2_HMAC_SHA256_CTX ctx = {0};
@@ -588,39 +588,30 @@ static void derive_kek_optiga(
 }
 #endif
 
-static secbool __wur derive_kek_set(const uint8_t *pin, size_t pin_len,
-                                    const uint8_t *storage_salt,
-                                    const uint8_t *ext_salt,
-                                    uint8_t kek[SHA256_DIGEST_LENGTH],
-                                    uint8_t keiv[SHA256_DIGEST_LENGTH]) {
+static secbool __wur derive_kek_set(
+    const uint8_t *pin, size_t pin_len, const uint8_t *storage_salt,
+    const uint8_t *ext_salt, uint8_t stretched_pin[SHA256_DIGEST_LENGTH]) {
+  stretch_pin(pin, pin_len, storage_salt, ext_salt, stretched_pin);
 #if USE_OPTIGA
-  uint8_t optiga_secret[OPTIGA_PIN_SECRET_SIZE] = {0};
-  uint8_t stretched_pin[OPTIGA_PIN_SECRET_SIZE] = {0};
-  stretch_pin_optiga(pin, pin_len, storage_salt, ext_salt, stretched_pin);
-  int ret = optiga_pin_set(ui_progress, stretched_pin, optiga_secret);
-  memzero(stretched_pin, sizeof(stretched_pin));
-  if (ret != OPTIGA_SUCCESS) {
-    memzero(optiga_secret, sizeof(optiga_secret));
+  if (optiga_pin_set(ui_progress, stretched_pin) != OPTIGA_SUCCESS) {
+    memzero(stretched_pin, SHA256_DIGEST_LENGTH);
     return secfalse;
   }
-  derive_kek_optiga(optiga_secret, kek, keiv);
-  memzero(optiga_secret, sizeof(optiga_secret));
-#else
-  derive_kek(pin, pin_len, storage_salt, ext_salt, kek, keiv);
 #endif
   return sectrue;
 }
 
-static secbool __wur derive_kek_unlock(const uint8_t *pin, size_t pin_len,
-                                       const uint8_t *storage_salt,
-                                       const uint8_t *ext_salt,
-                                       uint8_t kek[SHA256_DIGEST_LENGTH],
-                                       uint8_t keiv[SHA256_DIGEST_LENGTH]) {
+static secbool __wur derive_kek_unlock_v4(const uint8_t *pin, size_t pin_len,
+                                          const uint8_t *storage_salt,
+                                          const uint8_t *ext_salt,
+                                          uint8_t kek[SHA256_DIGEST_LENGTH],
+                                          uint8_t keiv[SHA256_DIGEST_LENGTH]) {
+  // Legacy PIN verification method used in storage versions 1, 2, 3 and 4.
 #if USE_OPTIGA
   uint8_t optiga_secret[OPTIGA_PIN_SECRET_SIZE] = {0};
   uint8_t stretched_pin[OPTIGA_PIN_SECRET_SIZE] = {0};
-  stretch_pin_optiga(pin, pin_len, storage_salt, ext_salt, stretched_pin);
-  int ret = optiga_pin_verify(ui_progress, stretched_pin, optiga_secret);
+  stretch_pin(pin, pin_len, storage_salt, ext_salt, stretched_pin);
+  int ret = optiga_pin_verify_v4(ui_progress, stretched_pin, optiga_secret);
   memzero(stretched_pin, sizeof(stretched_pin));
   if (ret != OPTIGA_SUCCESS) {
     memzero(optiga_secret, sizeof(optiga_secret));
@@ -633,10 +624,32 @@ static secbool __wur derive_kek_unlock(const uint8_t *pin, size_t pin_len,
            "optiga_pin_verify failed");
     return secfalse;
   }
-  derive_kek_optiga(optiga_secret, kek, keiv);
+  derive_kek_optiga_v4(optiga_secret, kek, keiv);
   memzero(optiga_secret, sizeof(optiga_secret));
 #else
-  derive_kek(pin, pin_len, storage_salt, ext_salt, kek, keiv);
+  derive_kek_v4(pin, pin_len, storage_salt, ext_salt, kek, keiv);
+#endif
+  return sectrue;
+}
+
+static secbool __wur derive_kek_unlock(
+    const uint8_t *pin, size_t pin_len, const uint8_t *storage_salt,
+    const uint8_t *ext_salt, uint8_t stretched_pin[SHA256_DIGEST_LENGTH]) {
+  stretch_pin(pin, pin_len, storage_salt, ext_salt, stretched_pin);
+#if USE_OPTIGA
+  int ret = optiga_pin_verify(ui_progress, stretched_pin);
+  if (ret != OPTIGA_SUCCESS) {
+    memzero(stretched_pin, SHA256_DIGEST_LENGTH);
+
+    if (ret == OPTIGA_ERR_COUNTER_EXCEEDED) {
+      // Unreachable code. Wipe should have already been triggered in unlock().
+      storage_wipe();
+      show_pin_too_many_screen();
+    }
+    ensure(ret == OPTIGA_ERR_AUTH_FAIL ? sectrue : secfalse,
+           "optiga_pin_verify failed");
+    return secfalse;
+  }
 #endif
   return sectrue;
 }
@@ -650,15 +663,14 @@ static secbool set_pin(const uint8_t *pin, size_t pin_len,
   uint8_t *pvc = buffer + STORAGE_SALT_SIZE + KEYS_SIZE;
 
   uint8_t kek[SHA256_DIGEST_LENGTH] = {0};
-  uint8_t keiv[SHA256_DIGEST_LENGTH] = {0};
+  uint8_t keiv[12] = {0};
   chacha20poly1305_ctx ctx = {0};
   random_buffer(rand_salt, STORAGE_SALT_SIZE);
   ui_progress(0);
-  ensure(derive_kek_set(pin, pin_len, rand_salt, ext_salt, kek, keiv),
+  ensure(derive_kek_set(pin, pin_len, rand_salt, ext_salt, kek),
          "derive_kek_set failed");
   rfc7539_init(&ctx, kek, keiv);
   memzero(kek, sizeof(kek));
-  memzero(keiv, sizeof(keiv));
   chacha20poly1305_encrypt(&ctx, cached_keys, ekeys, KEYS_SIZE);
   rfc7539_finish(&ctx, 0, KEYS_SIZE, pvc);
   memzero(&ctx, sizeof(ctx));
@@ -828,7 +840,9 @@ secbool check_storage_version(void) {
   return sectrue;
 }
 
-static secbool decrypt_dek(const uint8_t *kek, const uint8_t *keiv) {
+static secbool __wur decrypt_dek(const uint8_t *pin, size_t pin_len,
+                                 const uint8_t *storage_salt,
+                                 const uint8_t *ext_salt) {
   const void *buffer = NULL;
   uint16_t len = 0;
   if (sectrue != initialized ||
@@ -836,6 +850,20 @@ static secbool decrypt_dek(const uint8_t *kek, const uint8_t *keiv) {
       len != STORAGE_SALT_SIZE + KEYS_SIZE + PVC_SIZE) {
     handle_fault("no EDEK");
     return secfalse;
+  }
+
+  uint8_t kek[SHA256_DIGEST_LENGTH] = {0};
+  uint8_t keiv[SHA256_DIGEST_LENGTH] = {0};
+  if (get_lock_version() >= 5) {
+    if (sectrue !=
+        derive_kek_unlock(pin, pin_len, storage_salt, ext_salt, kek)) {
+      return secfalse;
+    }
+  } else {
+    if (sectrue !=
+        derive_kek_unlock_v4(pin, pin_len, storage_salt, ext_salt, kek, keiv)) {
+      return secfalse;
+    };
   }
 
   const uint8_t *ekeys = (const uint8_t *)buffer + STORAGE_SALT_SIZE;
@@ -851,6 +879,8 @@ static secbool decrypt_dek(const uint8_t *kek, const uint8_t *keiv) {
   // Decrypt the data encryption key and the storage authentication key and
   // check the PIN verification code.
   rfc7539_init(&ctx, kek, keiv);
+  memzero(kek, sizeof(kek));
+  memzero(keiv, sizeof(keiv));
   chacha20poly1305_decrypt(&ctx, ekeys, keys, KEYS_SIZE);
   rfc7539_finish(&ctx, 0, KEYS_SIZE, tag);
   memzero(&ctx, sizeof(ctx));
@@ -878,16 +908,20 @@ static secbool unlock(const uint8_t *pin, size_t pin_len,
   const uint8_t *unlock_pin = pin;
   size_t unlock_pin_len = pin_len;
 
-  // In case of an upgrade from version 1 or 2, encode the PIN to the old format
-  // and bump the total time of UI progress to account for the set_pin() call in
-  // storage_upgrade_unlocked().
+  // In case of an upgrade from version 1 or 2, encode the PIN to the old
+  // format.
   uint32_t legacy_pin = 0;
   if (get_lock_version() <= 2) {
-    ui_total += PIN_DERIVE_MS;
-    ui_rem += PIN_DERIVE_MS;
     legacy_pin = pin_to_int(pin, pin_len);
     unlock_pin = (const uint8_t *)&legacy_pin;
     unlock_pin_len = sizeof(legacy_pin);
+  }
+
+  // In case of an upgrade from version 4 or earlier bump the total time of UI
+  // progress to account for the set_pin() call in storage_upgrade_unlocked().
+  if (get_lock_version() <= 4) {
+    ui_total += PIN_DERIVE_MS;
+    ui_rem += PIN_DERIVE_MS;
   }
 
   // Now we can check for wipe code.
@@ -946,14 +980,10 @@ static secbool unlock(const uint8_t *pin, size_t pin_len,
     handle_fault("no EDEK");
     return secfalse;
   }
-  uint8_t kek[SHA256_DIGEST_LENGTH] = {0};
-  uint8_t keiv[SHA256_DIGEST_LENGTH] = {0};
 
   // Check whether the entered PIN is correct.
-  if (sectrue != derive_kek_unlock(unlock_pin, unlock_pin_len,
-                                   (const uint8_t *)rand_salt, ext_salt, kek,
-                                   keiv) ||
-      sectrue != decrypt_dek(kek, keiv)) {
+  if (sectrue != decrypt_dek(unlock_pin, unlock_pin_len,
+                             (const uint8_t *)rand_salt, ext_salt)) {
     memzero(&legacy_pin, sizeof(legacy_pin));
     // Wipe storage if too many failures
     wait_random();
@@ -974,8 +1004,6 @@ static secbool unlock(const uint8_t *pin, size_t pin_len,
     return secfalse;
   }
   memzero(&legacy_pin, sizeof(legacy_pin));
-  memzero(kek, sizeof(kek));
-  memzero(keiv, sizeof(keiv));
 
   // Check for storage upgrades that need to be performed after unlocking and
   // check that the authenticated version number matches the unauthenticated
@@ -1439,6 +1467,24 @@ static uint32_t pin_to_int(const uint8_t *pin, size_t pin_len) {
   return val;
 }
 
+// Legacy conversion of PIN from the uint32 scheme that was used prior to
+// storage version 3.
+static size_t int_to_pin(uint32_t val, uint8_t pin[V0_MAX_PIN_LEN]) {
+  size_t i = V0_MAX_PIN_LEN;
+  while (val > 9) {
+    i -= 1;
+    pin[i] = (val % 10) + '0';
+    val /= 10;
+  }
+
+  if (val != 1) {
+    return 0;
+  }
+
+  memmove(pin, &pin[i], V0_MAX_PIN_LEN - i);
+  return V0_MAX_PIN_LEN - i;
+}
+
 // Legacy conversion of wipe code from the uint32 scheme that was used prior to
 // storage version 3.
 static char *int_to_wipe_code(uint32_t val) {
@@ -1473,6 +1519,7 @@ static secbool storage_upgrade(void) {
   // Storage version 2: adds 9 digit wipe code
   // Storage version 3: adds variable length PIN and wipe code
   // Storage version 4: changes data structure of encrypted data
+  // Storage version 5: unifies KEK derivation for non-Optiga and Optiga
 
   const uint16_t V0_PIN_KEY = 0x0000;
   const uint16_t V0_PIN_FAIL_KEY = 0x0001;
@@ -1488,7 +1535,7 @@ static secbool storage_upgrade(void) {
     auth_init();
 
     // Set the new storage version number.
-    uint32_t version = 1;
+    uint32_t version = NORCOW_VERSION;
     if (sectrue !=
         storage_set_encrypted(VERSION_KEY, &version, sizeof(version))) {
       return secfalse;
@@ -1498,13 +1545,14 @@ static secbool storage_upgrade(void) {
     ui_total = PIN_DERIVE_MS;
     ui_rem = ui_total;
     ui_message = PROCESSING_MSG;
+    uint8_t pin[V0_MAX_PIN_LEN] = {0};
+    size_t pin_len = 0;
     secbool found = norcow_get(V0_PIN_KEY, &val, &len);
     if (sectrue == found && *(const uint32_t *)val != V0_PIN_EMPTY) {
-      set_pin((const uint8_t *)val, len, NULL);
-    } else {
-      set_pin((const uint8_t *)&V0_PIN_EMPTY, sizeof(V0_PIN_EMPTY), NULL);
-      ret = norcow_set(PIN_NOT_SET_KEY, &TRUE_BYTE, sizeof(TRUE_BYTE));
+      pin_len = int_to_pin(*(const uint32_t *)val, pin);
     }
+    set_pin(pin, pin_len, NULL);
+    memzero(pin, sizeof(pin));
 
     // Convert PIN failure counter.
     uint32_t fails = 0;
@@ -1584,12 +1632,22 @@ static secbool storage_upgrade(void) {
       version = 2;
     }
 
+    // Version 0 upgrades directly to the latest.
+    if (norcow_active_version == 0) {
+      version = NORCOW_VERSION;
+    }
+
     if (sectrue != norcow_set(UNAUTH_VERSION_KEY, &version, sizeof(version))) {
       return secfalse;
     }
   }
 
-  norcow_set(STORAGE_UPGRADED_KEY, &TRUE_WORD, sizeof(TRUE_WORD));
+  if (norcow_active_version == 0) {
+    // Version 0 upgrades directly to the latest.
+    norcow_set(STORAGE_UPGRADED_KEY, &FALSE_WORD, sizeof(FALSE_WORD));
+  } else {
+    norcow_set(STORAGE_UPGRADED_KEY, &TRUE_WORD, sizeof(TRUE_WORD));
+  }
 
   norcow_active_version = NORCOW_VERSION;
   return norcow_upgrade_finish();
@@ -1607,9 +1665,10 @@ static secbool storage_upgrade_unlocked(const uint8_t *pin, size_t pin_len,
   }
 
   secbool ret = sectrue;
-  if (version <= 2) {
-    // Upgrade EDEK_PVC_KEY from the old uint32 PIN scheme to the new
-    // variable-length PIN scheme.
+  if (version <= 4) {
+    // Upgrade EDEK_PVC_KEY from the uint32 PIN scheme (versions 1 and 2) or
+    // from the version 3 and 4 variable-length PIN scheme to the unified PIN
+    // scheme.
     if (sectrue != set_pin(pin, pin_len, ext_salt)) {
       return secfalse;
     }
@@ -1635,8 +1694,6 @@ static secbool storage_upgrade_unlocked(const uint8_t *pin, size_t pin_len,
     ret = set_wipe_code((const uint8_t *)wipe_code, wipe_code_len);
     memzero(wipe_code, wipe_code_len);
   }
-
-  // nothing to do for upgrading to version 4
 
   return ret;
 }
