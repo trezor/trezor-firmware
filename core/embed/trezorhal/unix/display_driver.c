@@ -83,7 +83,7 @@ void display_init(void) {
 
   if (SDL_Init(SDL_INIT_VIDEO) != 0) {
     printf("%s\n", SDL_GetError());
-    ensure(secfalse, "SDL_Init error");
+    error_shutdown("SDL_Init error");
   }
   atexit(display_deinit);
 
@@ -108,13 +108,13 @@ void display_init(void) {
   free(window_title_alloc);
   if (!drv->window) {
     printf("%s\n", SDL_GetError());
-    ensure(secfalse, "SDL_CreateWindow error");
+    error_shutdown("SDL_CreateWindow error");
   }
   drv->renderer = SDL_CreateRenderer(drv->window, -1, SDL_RENDERER_SOFTWARE);
   if (!drv->renderer) {
     printf("%s\n", SDL_GetError());
     SDL_DestroyWindow(drv->window);
-    ensure(secfalse, "SDL_CreateRenderer error");
+    error_shutdown("SDL_CreateRenderer error");
   }
   SDL_SetRenderDrawColor(drv->renderer, 0, 0, 0, 255);
   SDL_RenderClear(drv->renderer);

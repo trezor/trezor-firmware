@@ -99,7 +99,7 @@ void i2c_init_instance(uint16_t idx, i2c_instance_t *instance) {
   i2c_handle[idx].Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
 
   if (HAL_OK != HAL_I2C_Init(&i2c_handle[idx])) {
-    ensure(secfalse, "I2C was not loaded properly.");
+    error_shutdown("I2C was not loaded properly.");
     return;
   }
 }
