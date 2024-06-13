@@ -273,7 +273,7 @@ pub struct PassphraseEntry {
     passphrase_dots: Child<ChangingTextLine>,
     show_plain_passphrase: bool,
     show_last_digit: bool,
-    textbox: TextBox<MAX_PASSPHRASE_LENGTH>,
+    textbox: TextBox,
     current_category: ChoiceCategory,
 }
 
@@ -355,7 +355,7 @@ impl PassphraseEntry {
     }
 
     fn is_full(&self) -> bool {
-        self.textbox.is_full()
+        self.textbox.len() >= MAX_PASSPHRASE_LENGTH
     }
 
     /// Randomly choose an index in the current category

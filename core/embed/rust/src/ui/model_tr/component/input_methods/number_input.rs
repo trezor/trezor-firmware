@@ -1,14 +1,12 @@
 use crate::{
-    translations::TR,
-    ui::{
+    strutil::ShortString, translations::TR, ui::{
         component::{Component, Event, EventCtx},
         geometry::Rect,
         shape::Renderer,
-    },
+    }
 };
 
 use super::super::{ButtonLayout, ChoiceFactory, ChoiceItem, ChoicePage};
-use heapless::String;
 
 struct ChoiceFactoryNumberInput {
     min: u32,
@@ -31,7 +29,7 @@ impl ChoiceFactory for ChoiceFactoryNumberInput {
 
     fn get(&self, choice_index: usize) -> (Self::Item, Self::Action) {
         let num = self.min + choice_index as u32;
-        let text: String<10> = unwrap!(String::try_from(num));
+        let text = unwrap!(ShortString::try_from(num));
         let mut choice_item = ChoiceItem::new(
             text,
             ButtonLayout::arrow_armed_arrow(TR::buttons__select.into()),

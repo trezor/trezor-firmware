@@ -158,7 +158,7 @@ impl ChoiceFactory for ChoiceFactoryWordlist {
 pub struct WordlistEntry {
     choice_page: ChoicePage<ChoiceFactoryWordlist, WordlistAction>,
     chosen_letters: Child<ChangingTextLine>,
-    textbox: TextBox<MAX_WORD_LENGTH>,
+    textbox: TextBox,
     offer_words: bool,
     wordlist_type: WordlistType,
     /// Whether going back is allowed (is not on the very first word).
@@ -196,7 +196,7 @@ impl WordlistEntry {
                 .with_incomplete(true)
                 .with_initial_page_counter(1),
             chosen_letters: Child::new(ChangingTextLine::center_mono(word, LINE_CAPACITY)),
-            textbox: TextBox::new(unwrap!(String::try_from(word))),
+            textbox: TextBox::new(word),
             offer_words: false,
             wordlist_type,
             can_go_back,
