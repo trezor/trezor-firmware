@@ -11,7 +11,7 @@ use crate::{
         },
         event::SwipeEvent,
         geometry::{Alignment, Alignment2D, Insets, Offset, Rect},
-        model_mercury::component::{Footer, Frame, FrameMsg},
+        model_mercury::component::{Frame, FrameMsg},
         shape::{self, Renderer},
         util,
     },
@@ -46,13 +46,15 @@ impl<'a> ShareWords<'a> {
         } else {
             None
         };
+        let n_words = share_words.len();
         Self {
             subtitle,
             frame: Frame::left_aligned(title, ShareWordsInner::new(share_words))
                 .with_swipe(SwipeDirection::Up, SwipeSettings::default())
                 .with_swipe(SwipeDirection::Down, SwipeSettings::default())
                 .with_vertical_pages()
-                .with_subtitle(subtitle),
+                .with_subtitle(subtitle)
+                .with_footer_counter(TR::instructions__swipe_up.into(), n_words as u8),
             repeated_indices,
         }
     }
@@ -81,7 +83,7 @@ impl<'a> Component for ShareWords<'a> {
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         let page_index = self.frame.inner().page_index as u8;
         if let Some(repeated_indices) = &self.repeated_indices {
-            if repeated_indices.contains(&(page_index as usize)) {
+            if repeated_indices.contains(&page_index) {
                 let updated_subtitle = TString::from_translation(TR::reset__the_word_is_repeated);
                 self.frame
                     .update_subtitle(ctx, updated_subtitle, Some(theme::TEXT_SUB_GREEN_LIME));
@@ -133,8 +135,6 @@ struct ShareWordsInner<'a> {
     area_word: Rect,
     /// `Some` when transition animation is in progress
     animation: Option<Animation<f32>>,
-    /// Footer component for instructions and word counting
-    footer: Footer<'static>,
     progress: i16,
 }
 
@@ -148,7 +148,6 @@ impl<'a> ShareWordsInner<'a> {
             next_index: 0,
             area_word: Rect::zero(),
             animation: None,
-            footer: Footer::new(TR::instructions__swipe_up),
             progress: 0,
         }
     }
@@ -287,9 +286,6 @@ impl<'a> Component for ShareWordsInner<'a> {
                 self.render_word(self.page_index, target);
             })
         };
-
-        // footer with instructions
-        self.footer.render(target);
     }
 
     #[cfg(feature = "ui_bounds")]
