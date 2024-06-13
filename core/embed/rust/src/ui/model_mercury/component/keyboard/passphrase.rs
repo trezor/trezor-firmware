@@ -236,7 +236,7 @@ impl PassphraseKeyboard {
     /// We should disable the input when the passphrase has reached maximum
     /// length and we are not cycling through the characters.
     fn is_button_active(&self, key: usize) -> bool {
-        let textbox_not_full = !self.input.inner().textbox.is_full();
+        let textbox_not_full = self.input.inner().textbox.len() < MAX_LENGTH;
         let key_is_pending = {
             if let Some(pending) = self.input.inner().multi_tap.pending_key() {
                 pending == key
@@ -406,7 +406,7 @@ impl Component for PassphraseKeyboard {
 
 struct Input {
     area: Rect,
-    textbox: TextBox<MAX_LENGTH>,
+    textbox: TextBox,
     multi_tap: MultiTapKeyboard,
 }
 

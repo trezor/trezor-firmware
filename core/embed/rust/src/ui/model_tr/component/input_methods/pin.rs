@@ -140,7 +140,7 @@ pub struct PinEntry<'a> {
     showing_real_prompt: bool,
     show_real_pin: bool,
     show_last_digit: bool,
-    textbox: TextBox<MAX_PIN_LENGTH>,
+    textbox: TextBox,
 }
 
 impl<'a> PinEntry<'a> {
@@ -236,7 +236,7 @@ impl<'a> PinEntry<'a> {
     }
 
     fn is_full(&self) -> bool {
-        self.textbox.is_full()
+        self.textbox.len() >= MAX_PIN_LENGTH
     }
 
     fn is_empty(&self) -> bool {

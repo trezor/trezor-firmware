@@ -1,4 +1,7 @@
-use crate::ui::{component::EventCtx, util::ResultExt};
+use crate::{
+    strutil::ShortString,
+    ui::{component::EventCtx, util::ResultExt},
+};
 use heapless::String;
 
 /// Reified editing operations of `TextBox`.
@@ -13,19 +16,20 @@ pub enum TextEdit {
 /// Wraps a character buffer of maximum length `L` and provides text editing
 /// operations over it. Text ops usually take a `EventCtx` to request a paint
 /// pass in case of any state modification.
-pub struct TextBox<const L: usize> {
-    text: String<L>,
+pub struct TextBox {
+    text: ShortString,
 }
 
-impl<const L: usize> TextBox<L> {
+impl TextBox {
     /// Create a new `TextBox` with content `text`.
-    pub fn new(text: String<L>) -> Self {
+    pub fn new(text: &str) -> Self {
+        let text = unwrap!(String::try_from(text));
         Self { text }
     }
 
     /// Create an empty `TextBox`.
     pub fn empty() -> Self {
-        Self::new(String::new())
+        Self::new("")
     }
 
     pub fn content(&self) -> &str {
@@ -38,10 +42,6 @@ impl<const L: usize> TextBox<L> {
 
     pub fn is_empty(&self) -> bool {
         self.text.is_empty()
-    }
-
-    pub fn is_full(&self) -> bool {
-        self.text.len() == self.text.capacity()
     }
 
     /// Delete the last character of content, if any.
@@ -107,7 +107,7 @@ impl<const L: usize> TextBox<L> {
 // DEBUG-ONLY SECTION BELOW
 
 #[cfg(feature = "ui_debug")]
-impl<const L: usize> crate::trace::Trace for TextBox<L> {
+impl crate::trace::Trace for TextBox {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("TextBox");
         t.string("text", self.text.as_str().into());
