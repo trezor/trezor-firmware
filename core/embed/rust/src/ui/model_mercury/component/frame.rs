@@ -153,6 +153,12 @@ where
         self
     }
 
+    #[inline(never)]
+    pub fn with_footer_counter(mut self, instruction: TString<'static>, max_value: u8) -> Self {
+        self.footer = Some(Footer::new(instruction).with_page_counter(max_value));
+        self
+    }
+
     pub fn with_danger(self) -> Self {
         self.button_styled(theme::button_danger())
             .title_styled(theme::label_title_danger())
@@ -193,6 +199,12 @@ where
         let res = update_fn(ctx, &mut self.content);
         ctx.request_paint();
         res
+    }
+
+    pub fn update_footer_counter(&mut self, ctx: &mut EventCtx, new_val: u8) {
+        if let Some(footer) = &mut self.footer {
+            footer.update_page_counter(ctx, new_val);
+        }
     }
 
     #[inline(never)]

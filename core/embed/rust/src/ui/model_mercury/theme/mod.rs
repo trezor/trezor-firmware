@@ -57,6 +57,9 @@ pub const QR_SIDE_MAX: u32 = 140;
 
 // UI icons (white color).
 
+// 12x12
+include_icon!(ICON_FORESLASH, "model_mercury/res/foreslash12.toif");
+
 // 20x20
 include_icon!(
     ICON_BULLET_CHECKMARK,
@@ -140,9 +143,6 @@ include_icon!(ICON_FORWARD, "model_tt/res/caret-right24.toif");
 include_icon!(ICON_UP, "model_tt/res/caret-up24.toif");
 include_icon!(ICON_DOWN, "model_tt/res/caret-down24.toif");
 include_icon!(ICON_CLICK, "model_tt/res/finger24.toif");
-
-include_icon!(ICON_CORNER_CANCEL, "model_tt/res/x32.toif");
-include_icon!(ICON_CORNER_INFO, "model_tt/res/info32.toif");
 
 // Homescreen notifications.
 include_icon!(ICON_WARN, "model_tt/res/warning16.toif");

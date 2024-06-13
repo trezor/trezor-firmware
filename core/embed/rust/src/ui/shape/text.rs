@@ -27,7 +27,7 @@ pub struct Text<'a> {
 
 impl<'a> Text<'a> {
     /// Creates a `shape::Text` structure with a specified
-    /// text (`str`) and the top-left corner (`pos`).
+    /// text (`str`) and the bottom-left corner (`pos`).
     pub fn new(pos: Point, text: &'a str) -> Self {
         Self {
             pos,
