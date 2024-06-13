@@ -60,12 +60,14 @@ bool __wur optiga_read_cert(uint8_t index, uint8_t *cert, size_t max_cert_size,
 bool __wur optiga_random_buffer(uint8_t *dest, size_t size);
 
 int __wur optiga_pin_set(OPTIGA_UI_PROGRESS ui_progress,
-                         const uint8_t pin_secret[OPTIGA_PIN_SECRET_SIZE],
-                         uint8_t out_secret[OPTIGA_PIN_SECRET_SIZE]);
+                         uint8_t stretched_pin[OPTIGA_PIN_SECRET_SIZE]);
 
 int __wur optiga_pin_verify(OPTIGA_UI_PROGRESS ui_progress,
-                            const uint8_t pin_secret[OPTIGA_PIN_SECRET_SIZE],
-                            uint8_t out_secret[OPTIGA_PIN_SECRET_SIZE]);
+                            uint8_t stretched_pin[OPTIGA_PIN_SECRET_SIZE]);
+
+int __wur optiga_pin_verify_v4(OPTIGA_UI_PROGRESS ui_progress,
+                               const uint8_t pin_secret[OPTIGA_PIN_SECRET_SIZE],
+                               uint8_t out_secret[OPTIGA_PIN_SECRET_SIZE]);
 
 int __wur optiga_pin_get_fails(uint32_t *ctr);
 
