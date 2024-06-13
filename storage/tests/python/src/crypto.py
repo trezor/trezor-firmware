@@ -10,17 +10,13 @@ from . import consts, prng
 def derive_kek_keiv(salt: bytes, pin: str) -> (bytes, bytes):
     kdf = PBKDF2HMAC(
         algorithm=hashes.SHA256(),
-        length=consts.KEK_SIZE + consts.KEIV_SIZE,
+        length=consts.KEK_SIZE,
         salt=bytes(salt),
-        iterations=10000,
+        iterations=20000,
         backend=default_backend(),
     )
-    pbkdf_output = kdf.derive(pin.encode())
-    # the first 256b is Key Encryption Key
-    kek = pbkdf_output[: consts.KEK_SIZE]
-    # following with 96b of Initialization Vector
-    keiv = pbkdf_output[consts.KEK_SIZE :]
-
+    kek = kdf.derive(pin.encode())
+    keiv = b"\0" * consts.KEIV_SIZE
     return kek, keiv
 
 
