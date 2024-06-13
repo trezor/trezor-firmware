@@ -4,6 +4,7 @@
 
 
 use crate::strutil::TString;
+use crate::ui::util::include_res;
 
 <%
 icons: list[tuple[str, str]] = []

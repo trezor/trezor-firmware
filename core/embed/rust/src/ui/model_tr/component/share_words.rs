@@ -1,5 +1,5 @@
 use crate::{
-    strutil::StringType,
+    strutil::{ShortString, StringType, TString},
     translations::TR,
     ui::{
         component::{
@@ -8,12 +8,12 @@ use crate::{
         },
         display::Font,
         geometry::{Alignment, Offset, Rect},
-        shape,
-        shape::Renderer,
+        shape::{self, Renderer},
     },
 };
 
-use heapless::{String, Vec};
+use heapless::Vec;
+use ufmt::uwrite;
 
 use super::{common::display_left, scrollbar::SCROLLBAR_SPACE, theme, ScrollBar};
 
@@ -72,15 +72,10 @@ where
         word_screens + 1
     }
 
-    fn get_final_text(&self) -> String<50> {
+    fn get_final_text(&self) -> ShortString {
         TR::share_words__wrote_down_all.map_translated(|wrote_down_all| {
             TR::share_words__words_in_order.map_translated(|in_order| {
-                build_string!(
-                    50,
-                    wrote_down_all,
-                    inttostr!(self.share_words.len() as u8),
-                    in_order
-                )
+                uformat!("{}{}{}", wrote_down_all, self.share_words.len(), in_order)
             })
         })
     }
@@ -124,7 +119,7 @@ where
             }
             let word = &self.share_words[index];
             let baseline = self.area.top_left() + Offset::y(y_offset);
-            let ordinal = build_string!(5, inttostr!(index as u8 + 1), ".");
+            let ordinal = uformat!("{}.", index + 1);
             display_left(baseline + Offset::x(NUMBER_X_OFFSET), &ordinal, NUMBER_FONT);
             display_left(baseline + Offset::x(WORD_X_OFFSET), word, WORD_FONT);
         }
@@ -142,7 +137,7 @@ where
             }
             let word = &self.share_words[index];
             let baseline = self.area.top_left() + Offset::y(y_offset);
-            let ordinal = build_string!(5, inttostr!(index as u8 + 1), ".");
+            let ordinal = uformat!("{}.", index + 1);
 
             shape::Text::new(baseline + Offset::x(NUMBER_X_OFFSET), &ordinal)
                 .with_font(NUMBER_FONT)
@@ -230,16 +225,14 @@ where
         let content = if self.is_final_page() {
             self.get_final_text()
         } else {
-            let mut content = String::<50>::new();
+            let mut content = ShortString::new();
             for i in 0..WORDS_PER_PAGE {
                 let index = self.word_index() + i;
                 if index >= self.share_words.len() {
                     break;
                 }
-                let word = &self.share_words[index];
-                let current_line =
-                    build_string!(50, inttostr!(index as u8 + 1), ". ", word.as_ref(), "\n");
-                unwrap!(content.push_str(&current_line));
+                let word: TString = self.share_words[index].clone().into();
+                unwrap!(uwrite!(content, "{}. {}\n", index + 1, word));
             }
             content
         };

@@ -4,6 +4,7 @@
 
 
 use crate::strutil::TString;
+use crate::ui::util::include_res;
 
 
 const ICON_APPLE: &[u8] = include_res!("model_tt/res/fido/icon_apple.toif");

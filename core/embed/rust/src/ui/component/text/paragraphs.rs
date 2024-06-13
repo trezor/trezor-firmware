@@ -14,7 +14,6 @@ use crate::{
 };
 
 use super::layout::{LayoutFit, TextLayout, TextStyle};
-use heapless::String;
 
 /// Used as an upper bound of number of different styles we may render on single
 /// page.
@@ -656,7 +655,7 @@ where
         color: Color,
         target: &mut impl Renderer<'s>,
     ) {
-        let numeral = build_string!(10, inttostr!(n as u8 + 1), ".");
+        let numeral = uformat!("{}.", n + 1);
         shape::Text::new(base_point, numeral.as_str())
             .with_font(Font::NORMAL)
             .with_fg(color)

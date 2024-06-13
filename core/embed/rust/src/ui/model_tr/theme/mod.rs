@@ -3,8 +3,9 @@ use crate::ui::{
         text::{layout::Chunks, TextStyle},
         LineBreaking, PageBreaking,
     },
-    display::{toif::Icon, Color, Font},
+    display::{Color, Font},
     geometry::Offset,
+    util::include_icon,
 };
 
 use num_traits::FromPrimitive;
