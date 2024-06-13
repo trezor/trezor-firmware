@@ -174,9 +174,16 @@ int optiga_pin_verify(OPTIGA_UI_PROGRESS ui_progress,
   return OPTIGA_SUCCESS;
 }
 
+int optiga_pin_get_fails_v4(uint32_t *ctr) {
+  *ctr = 0;
+  return OPTIGA_SUCCESS;
+}
+
 int optiga_pin_get_fails(uint32_t *ctr) {
   *ctr = 0;
   return OPTIGA_SUCCESS;
 }
+
+int optiga_pin_fails_increase_v4(uint32_t count) { return OPTIGA_SUCCESS; }
 
 int optiga_pin_fails_increase(uint32_t count) { return OPTIGA_SUCCESS; }
