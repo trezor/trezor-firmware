@@ -204,7 +204,7 @@ void check_and_replace_bootloader(void) {
         (new_bld_hdr->hw_model != 0)) {
       // reject non-model T bootloader
       // 0 represents pre-model check bootloader
-      ensure(secfalse, "Incompatible embedded bootloader");
+      error_shutdown("Incompatible embedded bootloader");
     }
   }
   // at this point, due to the previous check_image_model call, we know that the
@@ -213,7 +213,7 @@ void check_and_replace_bootloader(void) {
   //  against the firmware hw_model.
   else if (board_name != HW_MODEL) {
     // reject incompatible bootloader
-    ensure(secfalse, "Incompatible embedded bootloader");
+    error_shutdown("Incompatible embedded bootloader");
   }
 
   ensure(flash_area_erase(&BOOTLOADER_AREA, NULL), NULL);

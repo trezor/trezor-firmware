@@ -79,7 +79,7 @@ static secbool startswith(const char *s, const char *prefix) {
 
 static void vcp_intr(void) {
   display_clear();
-  ensure(secfalse, "vcp_intr");
+  error_shutdown("vcp_intr");
 }
 
 static char vcp_getchar(void) {
