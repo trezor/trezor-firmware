@@ -1,5 +1,5 @@
 use crate::{
-    strutil::TString,
+    strutil::{ShortString, TString},
     translations::TR,
     trezorhal::random,
     ui::{
@@ -270,7 +270,7 @@ impl ChoiceFactory for ChoiceFactoryPassphrase {
 /// Component for entering a passphrase.
 pub struct PassphraseEntry {
     choice_page: ChoicePage<ChoiceFactoryPassphrase, PassphraseAction>,
-    passphrase_dots: Child<ChangingTextLine<String<MAX_PASSPHRASE_LENGTH>>>,
+    passphrase_dots: Child<ChangingTextLine>,
     show_plain_passphrase: bool,
     show_last_digit: bool,
     textbox: TextBox<MAX_PASSPHRASE_LENGTH>,
@@ -283,7 +283,7 @@ impl PassphraseEntry {
             choice_page: ChoicePage::new(ChoiceFactoryPassphrase::new(ChoiceCategory::Menu, true))
                 .with_carousel(true)
                 .with_initial_page_counter(random_menu_position()),
-            passphrase_dots: Child::new(ChangingTextLine::center_mono(String::new())),
+            passphrase_dots: Child::new(ChangingTextLine::center_mono("", MAX_PASSPHRASE_LENGTH)),
             show_plain_passphrase: false,
             show_last_digit: false,
             textbox: TextBox::empty(),
@@ -298,7 +298,7 @@ impl PassphraseEntry {
             unwrap!(String::try_from(""))
         } else {
             // Showing asterisks and possibly the last digit.
-            let mut dots: String<MAX_PASSPHRASE_LENGTH> = String::new();
+            let mut dots: ShortString = String::new();
             for _ in 0..self.textbox.len() - 1 {
                 unwrap!(dots.push('*'));
             }
@@ -311,7 +311,7 @@ impl PassphraseEntry {
             dots
         };
         self.passphrase_dots.mutate(ctx, |ctx, passphrase_dots| {
-            passphrase_dots.update_text(text_to_show);
+            passphrase_dots.update_text(&text_to_show);
             passphrase_dots.request_complete_repaint(ctx);
         });
     }

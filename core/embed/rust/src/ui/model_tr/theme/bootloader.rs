@@ -1,6 +1,7 @@
 use crate::ui::{
     component::text::TextStyle,
-    display::{toif::Icon, Color, Font},
+    display::{Color, Font},
+    util::include_icon,
 };
 
 pub use super::super::theme::{BLACK, WHITE};

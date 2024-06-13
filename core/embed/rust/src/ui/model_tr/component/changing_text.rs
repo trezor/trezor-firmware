@@ -1,10 +1,12 @@
-use crate::ui::{
-    component::{Component, Event, EventCtx, Never, Pad},
-    display::Font,
-    geometry::{Alignment, Point, Rect},
-    shape,
-    shape::Renderer,
-    util::long_line_content_with_ellipsis,
+use crate::{
+    strutil::ShortString,
+    ui::{
+        component::{Component, Event, EventCtx, Never, Pad},
+        display::Font,
+        geometry::{Alignment, Point, Rect},
+        shape::{self, Renderer},
+        util::long_line_content_with_ellipsis,
+    },
 };
 
 use super::{common, theme};
@@ -12,9 +14,9 @@ use super::{common, theme};
 /// Component that allows for "allocating" a standalone line of text anywhere
 /// on the screen and updating it arbitrarily - without affecting the rest
 /// and without being affected by other components.
-pub struct ChangingTextLine<T> {
+pub struct ChangingTextLine {
     pad: Pad,
-    text: T,
+    text: ShortString,
     font: Font,
     /// Whether to show the text. Can be disabled.
     show_content: bool,
@@ -25,11 +27,10 @@ pub struct ChangingTextLine<T> {
     text_at_the_top: bool,
 }
 
-impl<T> ChangingTextLine<T>
-where
-    T: AsRef<str>,
-{
-    pub fn new(text: T, font: Font, alignment: Alignment) -> Self {
+impl ChangingTextLine {
+    pub fn new(text: &str, font: Font, alignment: Alignment, max_len: usize) -> Self {
+        let text = unwrap!(ShortString::try_from(text));
+        debug_assert!(text.capacity() >= max_len);
         Self {
             pad: Pad::with_background(theme::BG),
             text,
@@ -41,12 +42,12 @@ where
         }
     }
 
-    pub fn center_mono(text: T) -> Self {
-        Self::new(text, Font::MONO, Alignment::Center)
+    pub fn center_mono(text: &str, max_len: usize) -> Self {
+        Self::new(text, Font::MONO, Alignment::Center, max_len)
     }
 
-    pub fn center_bold(text: T) -> Self {
-        Self::new(text, Font::BOLD_UPPER, Alignment::Center)
+    pub fn center_bold(text: &str, max_len: usize) -> Self {
+        Self::new(text, Font::BOLD_UPPER, Alignment::Center, max_len)
     }
 
     /// Not showing ellipsis at the beginning of longer texts.
@@ -62,13 +63,14 @@ where
     }
 
     /// Update the text to be displayed in the line.
-    pub fn update_text(&mut self, text: T) {
-        self.text = text;
+    pub fn update_text(&mut self, text: &str) {
+        self.text.clear();
+        unwrap!(self.text.push_str(text));
     }
 
     /// Get current text.
-    pub fn get_text(&self) -> &T {
-        &self.text
+    pub fn get_text(&self) -> &str {
+        self.text.as_str()
     }
 
     /// Changing the current font
@@ -155,21 +157,14 @@ where
         // Creating the notion of motion by shifting the text left and right with
         // each new text character.
         // (So that it is apparent for the user that the text is changing.)
-        let x_offset = if self.text.as_ref().len() % 2 == 0 {
-            0
-        } else {
-            2
-        };
+        let x_offset = if self.text.len() % 2 == 0 { 0 } else { 2 };
 
         let baseline = Point::new(self.pad.area.x0 + x_offset, self.y_baseline());
         common::display_left(baseline, &text_to_display, self.font);
     }
 }
 
-impl<T> Component for ChangingTextLine<T>
-where
-    T: AsRef<str>,
-{
+impl Component for ChangingTextLine {
     type Msg = Never;
 
     fn place(&mut self, bounds: Rect) -> Rect {

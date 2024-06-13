@@ -2,7 +2,7 @@ use crate::ui::{
     component::{text::TextStyle, LineBreaking::BreakWordsNoHyphen},
     constant::{HEIGHT, WIDTH},
     display::{Color, Font},
-    geometry::{Offset, Point, Rect},
+    geometry::{Offset, Point, Rect}, util::include_res,
 };
 
 use super::super::{

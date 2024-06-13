@@ -9,8 +9,8 @@ use crate::{
             text::{layout::Chunks, LineBreaking, PageBreaking, TextStyle},
             FixedHeightBar,
         },
-        display::{Color, Font, Icon},
-        geometry::Insets,
+        display::{Color, Font},
+        geometry::Insets, util::include_icon,
     },
 };
 

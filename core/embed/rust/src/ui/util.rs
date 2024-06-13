@@ -155,20 +155,29 @@ pub fn long_line_content_with_ellipsis(
         let remaining_available_width = available_width - ellipsis_width;
         let chars_from_right = text_font.longest_suffix(remaining_available_width, text);
 
-        build_string!(50, ellipsis, &text[text.len() - chars_from_right..])
+        let mut s = ShortString::new();
+        unwrap!(s.push_str(ellipsis));
+        unwrap!(s.push_str(&text[text.len() - chars_from_right..]));
+        s
     }
 }
 
-#[macro_export]
 /// Create the `Icon` constant with given name and path.
 /// Possibly users can supply `true` as a third argument and this
 /// will signify that the icon has empty right column.
 macro_rules! include_icon {
     ($name:ident, $path:expr, empty_right_col = $empty:expr) => {
-        pub const $name: Icon = if $empty {
-            Icon::debug_named(include_res!($path), stringify!($name)).with_empty_right_column()
+        pub const $name: $crate::ui::display::toif::Icon = if $empty {
+            $crate::ui::display::toif::Icon::debug_named(
+                $crate::ui::util::include_res!($path),
+                stringify!($name),
+            )
+            .with_empty_right_column()
         } else {
-            Icon::debug_named(include_res!($path), stringify!($name))
+            $crate::ui::display::toif::Icon::debug_named(
+                $crate::ui::util::include_res!($path),
+                stringify!($name),
+            )
         };
     };
     // No empty right column by default.
@@ -176,6 +185,14 @@ macro_rules! include_icon {
         include_icon!($name, $path, empty_right_col = false);
     };
 }
+pub(crate) use include_icon;
+
+macro_rules! include_res {
+    ($filename:expr) => {
+        include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/src/ui/", $filename))
+    };
+}
+pub(crate) use include_res;
 
 pub const SLIDE_DURATION_MS: Duration = Duration::from_millis(333);
 

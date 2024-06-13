@@ -9,12 +9,11 @@ use crate::{
         event::SwipeEvent,
         geometry::{Alignment, Alignment2D, Insets, Offset, Rect},
         model_mercury::component::Footer,
-        shape,
-        shape::Renderer,
+        shape::{self, Renderer},
         util,
     },
 };
-use heapless::{String, Vec};
+use heapless::Vec;
 
 const MAX_WORDS: usize = 33; // super-shamir has 33 words, all other have less
 const ANIMATION_DURATION_MS: Duration = Duration::from_millis(166);
@@ -158,7 +157,7 @@ impl<'a> Component for ShareWords<'a> {
                     .text_font
                     .visible_text_height("1"),
             );
-        let ordinal = build_string!(3, inttostr!(ordinal_val), ".");
+        let ordinal = uformat!("{}.", ordinal_val);
         shape::Text::new(ordinal_pos, &ordinal)
             .with_font(theme::TEXT_SUB_GREY_LIGHT.text_font)
             .with_fg(theme::GREY)
@@ -204,8 +203,7 @@ impl<'a> crate::trace::Trace for ShareWords<'a> {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("ShareWords");
         let word = &self.share_words[self.page_index as usize];
-        let content =
-            word.map(|w| build_string!(50, inttostr!(self.page_index as u8 + 1), ". ", w, "\n"));
+        let content = word.map(|w| uformat!("{}. {}\n", self.page_index + 1, w));
         t.string("screen_content", content.as_str().into());
         t.int("page_count", self.share_words.len() as i64)
     }

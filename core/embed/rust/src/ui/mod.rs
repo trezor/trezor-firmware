@@ -1,6 +1,3 @@
-#[macro_use]
-pub mod macros;
-
 pub mod animation;
 #[cfg(feature = "micropython")]
 pub mod backlight;
@@ -14,7 +11,6 @@ pub mod flow;
 pub mod geometry;
 pub mod lerp;
 pub mod shape;
-#[macro_use]
 pub mod util;
 
 pub mod layout;
