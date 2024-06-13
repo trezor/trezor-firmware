@@ -2,8 +2,12 @@ recursive-include bash_completion.d *.sh
 include tools/*
 graft src
 graft tests
+graft stubs
 
 include AUTHORS README.md COPYING CHANGELOG.md
 include requirements*.txt
+include tox.ini pyrightconfig.json
 exclude src/trezorlib/_proto_messages.mako
 exclude tests/*.bin
+global-exclude *.pyc
+global-exclude */__pycache__/*
