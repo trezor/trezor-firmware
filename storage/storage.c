@@ -1275,9 +1275,14 @@ uint32_t storage_get_pin_rem(void) {
 #if USE_OPTIGA
   // Synchronize counters in case they diverged.
   uint32_t ctr_optiga = 0;
-  ensure(
-      optiga_pin_get_fails(&ctr_optiga) == OPTIGA_SUCCESS ? sectrue : secfalse,
-      "optiga_pin_get_fails failed");
+  optiga_result ret = OPTIGA_SUCCESS;
+  if (get_lock_version() >= 5) {
+    ret = optiga_pin_get_fails(&ctr_optiga);
+  } else {
+    ret = optiga_pin_get_fails_v4(&ctr_optiga);
+  }
+  ensure(ret == OPTIGA_SUCCESS ? sectrue : secfalse,
+         "optiga_pin_get_fails failed");
 
   while (ctr_mcu < ctr_optiga) {
     storage_pin_fails_increase();
@@ -1285,9 +1290,12 @@ uint32_t storage_get_pin_rem(void) {
   }
 
   if (ctr_optiga < ctr_mcu) {
-    ensure(optiga_pin_fails_increase(ctr_mcu - ctr_optiga) == OPTIGA_SUCCESS
-               ? sectrue
-               : secfalse,
+    if (get_lock_version() >= 5) {
+      ret = optiga_pin_fails_increase(ctr_mcu - ctr_optiga);
+    } else {
+      ret = optiga_pin_fails_increase_v4(ctr_mcu - ctr_optiga);
+    }
+    ensure(ret == OPTIGA_SUCCESS ? sectrue : secfalse,
            "optiga_pin_fails_increase failed");
   }
 #endif
