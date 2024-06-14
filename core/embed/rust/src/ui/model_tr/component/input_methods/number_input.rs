@@ -1,9 +1,11 @@
 use crate::{
-    strutil::ShortString, translations::TR, ui::{
+    strutil::ShortString,
+    translations::TR,
+    ui::{
         component::{Component, Event, EventCtx},
         geometry::Rect,
         shape::Renderer,
-    }
+    },
 };
 
 use super::super::{ButtonLayout, ChoiceFactory, ChoiceItem, ChoicePage};
