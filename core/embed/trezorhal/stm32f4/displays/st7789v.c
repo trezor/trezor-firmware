@@ -397,7 +397,7 @@ void display_init(void) {
   __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_FMC_CLK_ENABLE();
 
-  backlight_pwm_init();
+  backlight_pwm_init(BACKLIGHT_RESET);
 
 #ifdef STM32F4
 #define DISPLAY_GPIO_SPEED GPIO_SPEED_FREQ_VERY_HIGH
@@ -477,7 +477,7 @@ void display_reinit(void) {
   DISPLAY_ORIENTATION = 0;
   panel_set_window(0, 0, DISPLAY_RESX - 1, DISPLAY_RESY - 1);
 
-  backlight_pwm_reinit();
+  backlight_pwm_init(BACKLIGHT_RETAIN);
 
 #ifdef TREZOR_MODEL_T
   uint32_t id = display_identify();
