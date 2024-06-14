@@ -1,5 +1,5 @@
 use crate::{
-    strutil::{ShortString, StringType, TString},
+    strutil::{ShortString, TString},
     translations::TR,
     ui::{
         component::{
@@ -27,21 +27,15 @@ const INFO_TOP_OFFSET: i16 = 20;
 const MAX_WORDS: usize = 33; // super-shamir has 33 words, all other have less
 
 /// Showing the given share words.
-pub struct ShareWords<T>
-where
-    T: StringType,
-{
+pub struct ShareWords<'a> {
     area: Rect,
     scrollbar: Child<ScrollBar>,
-    share_words: Vec<T, MAX_WORDS>,
+    share_words: Vec<TString<'a>, MAX_WORDS>,
     page_index: usize,
 }
 
-impl<T> ShareWords<T>
-where
-    T: StringType + Clone,
-{
-    pub fn new(share_words: Vec<T, MAX_WORDS>) -> Self {
+impl<'a> ShareWords<'a> {
+    pub fn new(share_words: Vec<TString<'a>, MAX_WORDS>) -> Self {
         let mut instance = Self {
             area: Rect::zero(),
             scrollbar: Child::new(ScrollBar::to_be_filled_later()),
@@ -117,11 +111,13 @@ where
             if index >= self.share_words.len() {
                 break;
             }
-            let word = &self.share_words[index];
             let baseline = self.area.top_left() + Offset::y(y_offset);
             let ordinal = uformat!("{}.", index + 1);
             display_left(baseline + Offset::x(NUMBER_X_OFFSET), &ordinal, NUMBER_FONT);
-            display_left(baseline + Offset::x(WORD_X_OFFSET), word, WORD_FONT);
+            let word = &self.share_words[index];
+            word.map(|w| {
+                display_left(baseline + Offset::x(WORD_X_OFFSET), w, WORD_FONT);
+            });
         }
     }
 
@@ -144,18 +140,17 @@ where
                 .with_fg(theme::FG)
                 .render(target);
 
-            shape::Text::new(baseline + Offset::x(WORD_X_OFFSET), word.as_ref())
-                .with_font(WORD_FONT)
-                .with_fg(theme::FG)
-                .render(target);
+            word.map(|w| {
+                shape::Text::new(baseline + Offset::x(WORD_X_OFFSET), w)
+                    .with_font(WORD_FONT)
+                    .with_fg(theme::FG)
+                    .render(target);
+            });
         }
     }
 }
 
-impl<T> Component for ShareWords<T>
-where
-    T: StringType + Clone,
-{
+impl<'a> Component for ShareWords<'a> {
     type Msg = Never;
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -198,10 +193,7 @@ where
     }
 }
 
-impl<T> Paginate for ShareWords<T>
-where
-    T: StringType + Clone,
-{
+impl<'a> Paginate for ShareWords<'a> {
     fn page_count(&mut self) -> usize {
         // Not defining the logic here, as we do not want it to be `&mut`.
         self.total_page_count()
@@ -216,10 +208,7 @@ where
 // DEBUG-ONLY SECTION BELOW
 
 #[cfg(feature = "ui_debug")]
-impl<T> crate::trace::Trace for ShareWords<T>
-where
-    T: StringType + Clone,
-{
+impl<'a> crate::trace::Trace for ShareWords<'a> {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("ShareWords");
         let content = if self.is_final_page() {
@@ -231,8 +220,8 @@ where
                 if index >= self.share_words.len() {
                     break;
                 }
-                let word: TString = self.share_words[index].clone().into();
-                unwrap!(uwrite!(content, "{}. {}\n", index + 1, word));
+                self.share_words[index]
+                    .map(|word| unwrap!(uwrite!(content, "{}. {}\n", index + 1, word)));
             }
             content
         };
