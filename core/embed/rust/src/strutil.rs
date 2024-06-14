@@ -9,19 +9,6 @@ use crate::micropython::{buffer::StrBuffer, obj::Obj};
 #[cfg(feature = "translations")]
 use crate::translations::TR;
 
-/// Trait for internal representation of strings. This is a legacy crutch before
-/// we fully transition to `TString`. For now, it allows some manner of
-/// compatibility between `&str` and `StrBuffer`. Implies the following
-/// operations:
-/// - dereference into a short-lived `&str` reference (AsRef<str>) (probably not
-///   strictly necessary anymore)
-/// - create a new string from a string literal (From<&'static str>)
-/// - infallibly convert into a `TString` (Into<TString<'static>>), which is
-///   then used for other operations.
-pub trait StringType: AsRef<str> + From<&'static str> + Into<TString<'static>> {}
-
-impl<T> StringType for T where T: AsRef<str> + From<&'static str> + Into<TString<'static>> {}
-
 /// Unified-length String type, long enough for most simple use-cases.
 pub type ShortString = String<50>;
 

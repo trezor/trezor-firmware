@@ -6,8 +6,7 @@ use crate::{
     error::Error,
     maybe_trace::MaybeTrace,
     micropython::{
-        buffer::StrBuffer, gc::Gc, iter::IterBuf, list::List, map::Map, module::Module, obj::Obj,
-        qstr::Qstr, util,
+        gc::Gc, iter::IterBuf, list::List, map::Map, module::Module, obj::Obj, qstr::Qstr, util,
     },
     strutil::TString,
     translations::TR,
@@ -1323,7 +1322,7 @@ extern "C" fn new_select_word(n_args: usize, args: *const Obj, kwargs: *mut Map)
 extern "C" fn new_show_share_words(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
         let share_words_obj: Obj = kwargs.get(Qstr::MP_QSTR_share_words)?;
-        let share_words: Vec<StrBuffer, 33> = util::iter_into_vec(share_words_obj)?;
+        let share_words: Vec<TString, 33> = util::iter_into_vec(share_words_obj)?;
 
         let cancel_btn = Some(ButtonDetails::up_arrow_icon());
         let confirm_btn =
