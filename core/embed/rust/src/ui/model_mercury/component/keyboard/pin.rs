@@ -14,7 +14,10 @@ use crate::{
         event::TouchEvent,
         geometry::{Alignment, Alignment2D, Grid, Insets, Offset, Rect},
         model_mercury::component::{
-            button::{Button, ButtonContent, ButtonMsg::{self, Clicked}},
+            button::{
+                Button, ButtonContent,
+                ButtonMsg::{self, Clicked},
+            },
             theme,
         },
         shape::{self, Renderer},

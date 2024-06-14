@@ -10,7 +10,8 @@ use crate::{
             FixedHeightBar,
         },
         display::{Color, Font},
-        geometry::Insets, util::include_icon,
+        geometry::Insets,
+        util::include_icon,
     },
 };
 

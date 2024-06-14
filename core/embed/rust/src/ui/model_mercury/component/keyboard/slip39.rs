@@ -3,7 +3,9 @@ use core::iter;
 use heapless::String;
 
 use crate::{
-    strutil::ShortString, trezorhal::slip39, ui::{
+    strutil::ShortString,
+    trezorhal::slip39,
+    ui::{
         component::{
             text::common::{TextBox, TextEdit},
             Component, Event, EventCtx,
@@ -22,7 +24,7 @@ use crate::{
         },
         shape::{self, Renderer},
         util::ResultExt,
-    }
+    },
 };
 
 const MAX_LENGTH: usize = 8;
@@ -227,9 +229,7 @@ impl Slip39Input {
         }
     }
 
-    fn setup_from_prefilled_word(
-        word: &str,
-    ) -> (ShortString, Slip39Mask, Option<&'static str>) {
+    fn setup_from_prefilled_word(word: &str) -> (ShortString, Slip39Mask, Option<&'static str>) {
         let mut buff = ShortString::new();
 
         // Gradually appending encoded key digits to the buffer and checking if
