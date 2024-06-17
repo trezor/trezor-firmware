@@ -19,8 +19,6 @@
 
 #include TREZOR_BOARD
 
-#ifdef USE_TOUCH
-
 #include <SDL.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -278,5 +276,3 @@ uint32_t touch_get_event(void) {
   }
   return ev_type | touch_pack_xy(ev_x, ev_y);
 }
-
-#endif  // USE_TOUCH

@@ -19,8 +19,6 @@
 
 #include TREZOR_BOARD
 
-#ifdef USE_BUTTON
-
 #include <SDL.h>
 
 #include "button.h"
@@ -70,5 +68,3 @@ uint32_t button_read(void) {
 }
 
 void button_init(void) {}
-
-#endif  // USE_BUTTON
