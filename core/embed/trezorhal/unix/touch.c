@@ -75,7 +75,7 @@ static bool is_inside_display(int x, int y) {
          y - sdl_touch_offset_y < sdl_display_res_y;
 }
 
-static bool is_button_swipe_initiated(touch_driver_t* driver) {
+static bool is_button_swipe_initiated(const touch_driver_t* driver) {
   return driver->state == BUTTON_SWIPE_LEFT_INITIATED ||
          driver->state == BUTTON_SWIPE_RIGHT_INITIATED ||
          driver->state == BUTTON_SWIPE_UP_INITIATED ||
