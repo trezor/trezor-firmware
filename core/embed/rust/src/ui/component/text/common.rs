@@ -2,7 +2,6 @@ use crate::{
     strutil::ShortString,
     ui::{component::EventCtx, util::ResultExt},
 };
-use heapless::String;
 
 /// Reified editing operations of `TextBox`.
 ///
@@ -22,14 +21,15 @@ pub struct TextBox {
 
 impl TextBox {
     /// Create a new `TextBox` with content `text`.
-    pub fn new(text: &str) -> Self {
-        let text = unwrap!(String::try_from(text));
+    pub fn new(text: &str, max_len: usize) -> Self {
+        let text = unwrap!(ShortString::try_from(text));
+        debug_assert!(text.capacity() >= max_len);
         Self { text }
     }
 
     /// Create an empty `TextBox`.
-    pub fn empty() -> Self {
-        Self::new("")
+    pub fn empty(max_len: usize) -> Self {
+        Self::new("", max_len)
     }
 
     pub fn content(&self) -> &str {

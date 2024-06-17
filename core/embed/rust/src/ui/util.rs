@@ -9,8 +9,6 @@ use crate::{
     },
 };
 
-use heapless::String;
-
 use super::display::Font;
 
 pub trait ResultExt {
@@ -129,7 +127,7 @@ pub fn icon_text_center(
 
 /// Convert char to a ShortString.
 pub fn char_to_string(ch: char) -> ShortString {
-    let mut s = String::new();
+    let mut s = ShortString::new();
     unwrap!(s.push(ch));
     s
 }
@@ -137,8 +135,7 @@ pub fn char_to_string(ch: char) -> ShortString {
 /// Returns text to be fit on one line of a given length.
 /// When the text is too long to fit, it is truncated with ellipsis
 /// on the left side.
-/// Hardcoding 50 (via ShortString) as the length of the returned String -
-/// there should not be any lines as long as this.
+/// This assumes no lines are longer than 50 chars (ShortString limit)
 pub fn long_line_content_with_ellipsis(
     text: &str,
     ellipsis: &str,
@@ -146,7 +143,7 @@ pub fn long_line_content_with_ellipsis(
     available_width: i16,
 ) -> ShortString {
     if text_font.text_width(text) <= available_width {
-        unwrap!(String::try_from(text)) // whole text can fit
+        unwrap!(ShortString::try_from(text)) // whole text can fit
     } else {
         // Text is longer, showing its right end with ellipsis at the beginning.
         // Finding out how many additional text characters will fit in,

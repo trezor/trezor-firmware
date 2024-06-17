@@ -337,7 +337,7 @@ impl Input {
     fn new() -> Self {
         Self {
             area: Rect::zero(),
-            textbox: TextBox::empty(),
+            textbox: TextBox::empty(MAX_LENGTH),
             multi_tap: MultiTapKeyboard::new(),
         }
     }

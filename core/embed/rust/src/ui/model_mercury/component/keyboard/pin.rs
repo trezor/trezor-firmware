@@ -1,5 +1,4 @@
 use core::mem;
-use heapless::String;
 
 use crate::{
     strutil::{ShortString, TString},
@@ -294,7 +293,7 @@ impl PinDots {
             area: Rect::zero(),
             pad: Pad::with_background(style.background_color),
             style,
-            digits: String::new(),
+            digits: ShortString::new(),
             display_digits: false,
         }
     }

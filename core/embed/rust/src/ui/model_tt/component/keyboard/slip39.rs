@@ -1,7 +1,5 @@
 use core::iter;
 
-use heapless::String;
-
 use crate::{
     strutil::ShortString,
     trezorhal::slip39,
@@ -263,7 +261,7 @@ impl Slip39Input {
         Self {
             // Button has the same style the whole time
             button: Button::empty().styled(theme::button_pin_confirm()),
-            textbox: TextBox::empty(),
+            textbox: TextBox::empty(MAX_LENGTH),
             multi_tap: MultiTapKeyboard::new(),
             final_word: None,
             input_mask: Slip39Mask::full(),
@@ -281,7 +279,7 @@ impl Slip39Input {
         Self {
             // Button has the same style the whole time
             button: Button::empty().styled(theme::button_pin_confirm()),
-            textbox: TextBox::new(&buff),
+            textbox: TextBox::new(&buff, MAX_LENGTH),
             multi_tap: MultiTapKeyboard::new(),
             final_word,
             input_mask,
@@ -290,6 +288,7 @@ impl Slip39Input {
 
     fn setup_from_prefilled_word(word: &str) -> (ShortString, Slip39Mask, Option<&'static str>) {
         let mut buff = ShortString::new();
+        debug_assert!(buff.capacity() >= MAX_LENGTH);
 
         // Gradually appending encoded key digits to the buffer and checking if
         // have not already formed a final word.
