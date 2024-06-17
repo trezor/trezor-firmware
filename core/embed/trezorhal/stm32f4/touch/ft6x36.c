@@ -46,9 +46,9 @@ typedef struct {
   // (respectively, the we detected a touch event)
   bool pressed;
   // Previously reported x-coordinate
-  bool last_x;
+  uint16_t last_x;
   // Previously reported y-coordinate
-  bool last_y;
+  uint16_t last_y;
 
 } touch_driver_t;
 
@@ -386,7 +386,7 @@ uint32_t touch_get_event(void) {
     }
   } else if ((nb_touches == 1) && (flags == FT6X63_EVENT_CONTACT)) {
     if (driver->pressed) {
-      if (x != driver->last_x || y != driver->last_y) {
+      if ((x != driver->last_x) || (y != driver->last_y)) {
         // Report the move event only if the coordinates
         // have changed
         event = TOUCH_MOVE | xy;
@@ -410,7 +410,12 @@ uint32_t touch_get_event(void) {
   }
 
   // remember the last state
-  driver->pressed = (event & TOUCH_MOVE) || (event & TOUCH_START);
+  if ((event & TOUCH_START) || (event & TOUCH_MOVE)) {
+    driver->pressed = true;
+  } else if (event & TOUCH_END) {
+    driver->pressed = false;
+  }
+
   driver->last_x = x;
   driver->last_y = y;
 
