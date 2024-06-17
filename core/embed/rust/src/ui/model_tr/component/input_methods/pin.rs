@@ -14,7 +14,6 @@ use super::super::{
     theme, ButtonDetails, ButtonLayout, CancelConfirmMsg, ChangingTextLine, ChoiceFactory,
     ChoiceItem, ChoicePage,
 };
-use heapless::String;
 
 #[derive(Clone, Copy)]
 enum PinAction {
@@ -179,7 +178,7 @@ impl<'a> PinEntry<'a> {
             showing_real_prompt,
             show_real_pin: false,
             show_last_digit: false,
-            textbox: TextBox::empty(),
+            textbox: TextBox::empty(MAX_PIN_LENGTH),
         }
     }
 
@@ -192,15 +191,19 @@ impl<'a> PinEntry<'a> {
     /// Show updated content in the changing line.
     /// Many possibilities, according to the PIN state.
     fn update_pin_line(&mut self, ctx: &mut EventCtx) {
+        debug_assert!({
+            let s = ShortString::new();
+            s.capacity() >= MAX_PIN_LENGTH
+        });
         let mut used_font = Font::BOLD;
         let pin_line_text = if self.is_empty() && !self.subprompt.is_empty() {
             // Showing the subprompt in NORMAL font
             used_font = Font::NORMAL;
-            self.subprompt.map(|s| unwrap!(String::try_from(s)))
+            self.subprompt.map(|s| unwrap!(ShortString::try_from(s)))
         } else if self.is_empty() {
-            unwrap!(String::try_from(EMPTY_PIN_STR))
+            unwrap!(ShortString::try_from(EMPTY_PIN_STR))
         } else if self.show_real_pin {
-            unwrap!(String::try_from(self.pin()))
+            unwrap!(ShortString::try_from(self.pin()))
         } else {
             // Showing asterisks and possibly the last digit.
             let mut dots = ShortString::new();

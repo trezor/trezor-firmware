@@ -10,7 +10,7 @@ use crate::{
 };
 
 use super::super::{theme, ButtonLayout, ChangingTextLine, ChoiceFactory, ChoiceItem, ChoicePage};
-use heapless::{String, Vec};
+use heapless::Vec;
 
 enum WordlistAction {
     Letter(char),
@@ -176,7 +176,7 @@ impl WordlistEntry {
                 .with_carousel(true)
                 .with_initial_page_counter(get_random_position(choices_count)),
             chosen_letters: Child::new(ChangingTextLine::center_mono(PROMPT, LINE_CAPACITY)),
-            textbox: TextBox::empty(),
+            textbox: TextBox::empty(MAX_WORD_LENGTH),
             offer_words: false,
             wordlist_type,
             can_go_back,
@@ -196,7 +196,7 @@ impl WordlistEntry {
                 .with_incomplete(true)
                 .with_initial_page_counter(1),
             chosen_letters: Child::new(ChangingTextLine::center_mono(word, LINE_CAPACITY)),
-            textbox: TextBox::new(word),
+            textbox: TextBox::new(word, MAX_WORD_LENGTH),
             offer_words: false,
             wordlist_type,
             can_go_back,

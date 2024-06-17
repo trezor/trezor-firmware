@@ -210,7 +210,7 @@ impl Bip39Input {
     pub fn new() -> Self {
         Self {
             button: Button::empty(),
-            textbox: TextBox::empty(),
+            textbox: TextBox::empty(MAX_LENGTH),
             multi_tap: MultiTapKeyboard::new(),
             options_num: None,
             suggested_word: None,
@@ -227,7 +227,7 @@ impl Bip39Input {
         // Styling the input to reflect already filled word
         Self {
             button: Button::with_icon(theme::ICON_LIST_CHECK).styled(theme::button_pin_confirm()),
-            textbox: TextBox::new(word),
+            textbox: TextBox::new(word, MAX_LENGTH),
             multi_tap: MultiTapKeyboard::new(),
             options_num: bip39::options_num(word),
             suggested_word: bip39::complete_word(word),

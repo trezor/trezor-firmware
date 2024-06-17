@@ -1,5 +1,4 @@
-use core::{char::MAX, mem};
-use heapless::String;
+use core::mem;
 
 use crate::{
     strutil::{ShortString, TString},
@@ -316,11 +315,13 @@ impl PinDots {
     const TWITCH: i16 = 4;
 
     fn new(style: TextStyle) -> Self {
+        let digits = ShortString::new();
+        debug_assert!(digits.capacity() >= MAX_LENGTH);
         Self {
             area: Rect::zero(),
             pad: Pad::with_background(style.background_color),
             style,
-            digits: String::new(),
+            digits,
             display_digits: false,
         }
     }

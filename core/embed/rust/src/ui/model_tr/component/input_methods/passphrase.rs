@@ -11,8 +11,6 @@ use crate::{
     },
 };
 
-use heapless::String;
-
 use super::super::{
     theme, ButtonDetails, ButtonLayout, CancelConfirmMsg, ChangingTextLine, ChoiceFactory,
     ChoiceItem, ChoicePage,
@@ -286,19 +284,24 @@ impl PassphraseEntry {
             passphrase_dots: Child::new(ChangingTextLine::center_mono("", MAX_PASSPHRASE_LENGTH)),
             show_plain_passphrase: false,
             show_last_digit: false,
-            textbox: TextBox::empty(),
+            textbox: TextBox::empty(MAX_PASSPHRASE_LENGTH),
             current_category: ChoiceCategory::Menu,
         }
     }
 
     fn update_passphrase_dots(&mut self, ctx: &mut EventCtx) {
+        debug_assert!({
+            let s = ShortString::new();
+            s.capacity() >= MAX_PASSPHRASE_LENGTH
+        });
+
         let text_to_show = if self.show_plain_passphrase {
-            unwrap!(String::try_from(self.passphrase()))
+            unwrap!(ShortString::try_from(self.passphrase()))
         } else if self.is_empty() {
-            unwrap!(String::try_from(""))
+            unwrap!(ShortString::try_from(""))
         } else {
             // Showing asterisks and possibly the last digit.
-            let mut dots: ShortString = String::new();
+            let mut dots = ShortString::new();
             for _ in 0..self.textbox.len() - 1 {
                 unwrap!(dots.push('*'));
             }
