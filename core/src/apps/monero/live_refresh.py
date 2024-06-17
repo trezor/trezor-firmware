@@ -64,9 +64,9 @@ async def _init_step(
 
     await paths.validate_path(keychain, msg.address_n)
 
-    if not storage_cache.get(storage_cache.APP_MONERO_LIVE_REFRESH):
+    if not storage_cache.get_bool(storage_cache.APP_MONERO_LIVE_REFRESH):
         await layout.require_confirm_live_refresh()
-        storage_cache.set(storage_cache.APP_MONERO_LIVE_REFRESH, b"\x01")
+        storage_cache.set_bool(storage_cache.APP_MONERO_LIVE_REFRESH, True)
 
     s.creds = misc.get_creds(keychain, msg.address_n, msg.network_type)
 

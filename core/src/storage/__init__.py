@@ -1,8 +1,7 @@
-from storage import common, device
+from storage import cache, common, device
 
 
 def wipe() -> None:
-    from storage import cache
     from trezor import config
 
     config.wipe()

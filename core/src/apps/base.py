@@ -198,7 +198,7 @@ async def handle_Initialize(msg: Initialize) -> Features:
     session_id = storage_cache.start_session(msg.session_id)
 
     if not utils.BITCOIN_ONLY:
-        derive_cardano = storage_cache.get(storage_cache.APP_COMMON_DERIVE_CARDANO)
+        derive_cardano = storage_cache.get_bool(storage_cache.APP_COMMON_DERIVE_CARDANO)
         have_seed = storage_cache.is_set(storage_cache.APP_COMMON_SEED)
 
         if (
@@ -213,9 +213,8 @@ async def handle_Initialize(msg: Initialize) -> Features:
             have_seed = False
 
         if not have_seed:
-            storage_cache.set(
-                storage_cache.APP_COMMON_DERIVE_CARDANO,
-                b"\x01" if msg.derive_cardano else b"",
+            storage_cache.set_bool(
+                storage_cache.APP_COMMON_DERIVE_CARDANO, bool(msg.derive_cardano)
             )
 
     features = get_features()
