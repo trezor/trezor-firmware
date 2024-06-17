@@ -65,7 +65,9 @@ typedef struct {
 } touch_driver_t;
 
 // Touch driver instance
-touch_driver_t g_touch_driver;
+static touch_driver_t g_touch_driver = {
+  .initialized = secfalse,
+};
 
 static bool is_inside_display(int x, int y) {
   return x >= sdl_touch_offset_x && y >= sdl_touch_offset_y &&

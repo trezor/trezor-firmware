@@ -1144,7 +1144,9 @@ typedef struct {
 } touch_driver_t;
 
 // Touch driver instance
-touch_driver_t g_touch_driver;
+static touch_driver_t g_touch_driver = {
+  .initialized = secfalse,
+};
 
 secbool touch_init(void) {
   touch_driver_t *driver = &g_touch_driver;
