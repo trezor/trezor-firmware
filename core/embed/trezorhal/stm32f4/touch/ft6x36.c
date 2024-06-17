@@ -53,7 +53,9 @@ typedef struct {
 } touch_driver_t;
 
 // Touch driver instance
-static touch_driver_t g_touch_driver;
+static touch_driver_t g_touch_driver = {
+    .initialized = secfalse,
+};
 
 // Reads a subsequent registers from the FT6X36.
 //
