@@ -1005,8 +1005,8 @@ if TYPE_CHECKING:
         fee_rate: "int"
         no_fee_threshold: "int"
         min_registrable_amount: "int"
-        mask_public_key: "bytes"
-        signature: "bytes"
+        mask_public_key: "bytes | None"
+        signature: "bytes | None"
 
         def __init__(
             self,
@@ -1014,8 +1014,8 @@ if TYPE_CHECKING:
             fee_rate: "int",
             no_fee_threshold: "int",
             min_registrable_amount: "int",
-            mask_public_key: "bytes",
-            signature: "bytes",
+            mask_public_key: "bytes | None" = None,
+            signature: "bytes | None" = None,
         ) -> None:
             pass
 

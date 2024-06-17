@@ -3705,7 +3705,7 @@ pub mod sign_tx {
             self.min_registrable_amount = ::std::option::Option::Some(v);
         }
 
-        // required bytes mask_public_key = 4;
+        // optional bytes mask_public_key = 4;
 
         pub fn mask_public_key(&self) -> &[u8] {
             match self.mask_public_key.as_ref() {
@@ -3741,7 +3741,7 @@ pub mod sign_tx {
             self.mask_public_key.take().unwrap_or_else(|| ::std::vec::Vec::new())
         }
 
-        // required bytes signature = 5;
+        // optional bytes signature = 5;
 
         pub fn signature(&self) -> &[u8] {
             match self.signature.as_ref() {
@@ -3824,12 +3824,6 @@ pub mod sign_tx {
                 return false;
             }
             if self.min_registrable_amount.is_none() {
-                return false;
-            }
-            if self.mask_public_key.is_none() {
-                return false;
-            }
-            if self.signature.is_none() {
                 return false;
             }
             true
@@ -13416,8 +13410,8 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     ify\x1a\xd2\x01\n\x0fCoinJoinRequest\x12\x19\n\x08fee_rate\x18\x01\x20\
     \x02(\rR\x07feeRate\x12(\n\x10no_fee_threshold\x18\x02\x20\x02(\x04R\x0e\
     noFeeThreshold\x124\n\x16min_registrable_amount\x18\x03\x20\x02(\x04R\
-    \x14minRegistrableAmount\x12&\n\x0fmask_public_key\x18\x04\x20\x02(\x0cR\
-    \rmaskPublicKey\x12\x1c\n\tsignature\x18\x05\x20\x02(\x0cR\tsignature\"\
+    \x14minRegistrableAmount\x12&\n\x0fmask_public_key\x18\x04\x20\x01(\x0cR\
+    \rmaskPublicKey\x12\x1c\n\tsignature\x18\x05\x20\x01(\x0cR\tsignature\"\
     \xd4\x05\n\tTxRequest\x12T\n\x0crequest_type\x18\x01\x20\x01(\x0e21.hw.t\
     rezor.messages.bitcoin.TxRequest.RequestTypeR\x0brequestType\x12T\n\x07d\
     etails\x18\x02\x20\x01(\x0b2:.hw.trezor.messages.bitcoin.TxRequest.TxReq\

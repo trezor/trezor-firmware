@@ -4,6 +4,30 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.7.2] (14th June 2024)
+
+### Fixed
+- Fixed device freeze after setup.  [#3925]
+- Translation fixes.  [#3916]
+
+
+## [2.7.1] (internal release)
+
+### Added
+- Added basic support for STM32U5.  [#3370]
+- Cardano: Added support for tagged sets in CBOR (tag 258).  [#3496]
+- Cardano: Added support for Conway certificates.  [#3496]
+- Added ability to request Shamir backups with any number of groups/shares.  [#3636]
+- Added support for repeated backups.  [#3640]
+- Support extendable backup flag in SLIP-39.
+
+### Changed
+- Cardano: Increased max URL length to 128 bytes.  [#3496]
+
+### Fixed
+- Translate also texts for PIN progress loaders.  [#3520]
+
+
 ## [2.7.0] (20th March 2024)
 
 ### Added
@@ -838,6 +862,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#3048]: https://github.com/trezor/trezor-firmware/pull/3048
 [#3205]: https://github.com/trezor/trezor-firmware/pull/3205
 [#3206]: https://github.com/trezor/trezor-firmware/pull/3206
+[#3208]: https://github.com/trezor/trezor-firmware/pull/3208
 [#3216]: https://github.com/trezor/trezor-firmware/pull/3216
 [#3218]: https://github.com/trezor/trezor-firmware/pull/3218
 [#3237]: https://github.com/trezor/trezor-firmware/pull/3237
@@ -849,6 +874,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#3296]: https://github.com/trezor/trezor-firmware/pull/3296
 [#3311]: https://github.com/trezor/trezor-firmware/pull/3311
 [#3359]: https://github.com/trezor/trezor-firmware/pull/3359
+[#3370]: https://github.com/trezor/trezor-firmware/pull/3370
 [#3377]: https://github.com/trezor/trezor-firmware/pull/3377
 [#3411]: https://github.com/trezor/trezor-firmware/pull/3411
 [#3424]: https://github.com/trezor/trezor-firmware/pull/3424
@@ -858,5 +884,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#3458]: https://github.com/trezor/trezor-firmware/pull/3458
 [#3475]: https://github.com/trezor/trezor-firmware/pull/3475
 [#3477]: https://github.com/trezor/trezor-firmware/pull/3477
+[#3496]: https://github.com/trezor/trezor-firmware/pull/3496
 [#3517]: https://github.com/trezor/trezor-firmware/pull/3517
+[#3520]: https://github.com/trezor/trezor-firmware/pull/3520
 [#3539]: https://github.com/trezor/trezor-firmware/pull/3539
+[#3636]: https://github.com/trezor/trezor-firmware/pull/3636
+[#3640]: https://github.com/trezor/trezor-firmware/pull/3640
+[#3855]: https://github.com/trezor/trezor-firmware/pull/3855
+[#3911]: https://github.com/trezor/trezor-firmware/pull/3911
+[#3916]: https://github.com/trezor/trezor-firmware/pull/3916
+[#3922]: https://github.com/trezor/trezor-firmware/pull/3922
+[#3925]: https://github.com/trezor/trezor-firmware/pull/3925
+[#3940]: https://github.com/trezor/trezor-firmware/pull/3940

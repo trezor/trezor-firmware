@@ -7,23 +7,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [2.7.2] (14th June 2024)
 
 ### Fixed
+- Fixed device authenticity check.  [#3922]
+- Wrong XPUB screen title.  [#3911]
 - Translation fixes.  [#3916]
 
 
 ## [2.7.1] (internal release)
 
 ### Added
-- Added user adjustable brightness setting.  [#3208]
 - Added basic support for STM32U5.  [#3370]
 - Cardano: Added support for tagged sets in CBOR (tag 258).  [#3496]
 - Cardano: Added support for Conway certificates.  [#3496]
 - Added ability to request Shamir backups with any number of groups/shares.  [#3636]
 - Added support for repeated backups.  [#3640]
-- Allow SD card hotswap based on production date.  [#3940]
 - Support extendable backup flag in SLIP-39.
+- User interface implementation.
 
 ### Changed
 - Cardano: Increased max URL length to 128 bytes.  [#3496]
+- Upgrade to bootloader 2.1.6.  [#3855]
 
 ### Fixed
 - Translate also texts for PIN progress loaders.  [#3520]
@@ -42,7 +44,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Display descriptors for BTC Taproot public keys.  [#3475]
 
 ### Fixed
-- Fixed blank display delay on startup when display orientation is set to other than north.  [#3244]
 - Improved UI of multiple Solana instructions.  [#3445]
 - Solana multisig instruction warning will be displayed before instruction details are displayed.  [#3445]
 - Fixed Solana Memo instruction being unknown - it will now be recognized and displayed properly.  [#3445]
@@ -67,10 +68,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Allowed non-zero address index in Cardano staking paths.  [#3242]
 
 ### Changed
-- Adjust buttons used for scrolling multipage content.  [#2888]
 
 ### Fixed
-- Fixed backlight flickering at the end of PIN loader animation.  [#3311]
 
 
 ## [2.6.2] (internal release)
@@ -88,7 +87,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add support for address chunkification in Receive and Sign flow.  [#3237]
 
 ### Changed
-- Changed design of the path warning screen.  [#2161]
 - Update to MicroPython 1.19.1.  [#2341]
 - Introduce multisig warning to BTC receive flow.  [#2937]
 - Introduce multiple account warning to BTC send flow.  [#2937]
@@ -97,8 +95,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - MUE coin support.  [#3216]
 
 ### Fixed
-- Fixed gamma correction settings for.  [#2955]
-- Fix more info button on shamir recovery screen.  [#3218]
 
 
 ## [2.6.0] (19th April 2023)
