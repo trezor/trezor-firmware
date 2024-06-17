@@ -38,7 +38,7 @@ uint8_t touch_get_version(void);
 // (Internally threadhsold for ????)
 secbool touch_set_sensitivity(uint8_t value);
 
-// Checks if the touch is currentl reporting any events
+// Checks if the touch is currently reporting any events
 //
 // The purpose of this function is very special. It is used
 // in bootloader startup to detect if the user is touching the screen.
