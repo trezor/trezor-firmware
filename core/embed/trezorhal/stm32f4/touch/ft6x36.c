@@ -240,7 +240,6 @@ secbool touch_init(void) {
 
   // Read the firmware version
   // (can be later read by `touch_get_version()`)
-  _Static_assert(sizeof(driver->fw_version) == 1);
   if (sectrue != ft6x36_read_regs(FT6X36_REG_FIRMID, &driver->fw_version, 1)) {
     ft6x36_power_down();
     return secfalse;
