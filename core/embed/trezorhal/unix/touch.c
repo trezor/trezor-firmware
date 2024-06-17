@@ -225,12 +225,12 @@ secbool touch_ready(void) {
 }
 
 secbool touch_set_sensitivity(uint8_t value) {
-  // Not implemented on the simulator
+  // Not implemented on the emulator
   return sectrue;
 }
 
 uint8_t touch_get_version(void) {
-  // Not implemented on the simulator
+  // Not implemented on the emulator
   return 0;
 }
 
