@@ -181,6 +181,21 @@ impl SwipeDetect {
         Self::MIN_TRIGGER
     }
 
+    fn is_lockable(&self, dir: SwipeDirection) -> bool {
+        let Some(origin) = self.origin else {
+            return false;
+        };
+
+        let min_distance = self.min_trigger() as i16;
+
+        match dir {
+            SwipeDirection::Up => origin.y > min_distance,
+            SwipeDirection::Down => origin.y < (screen().height() - min_distance),
+            SwipeDirection::Left => origin.x > min_distance,
+            SwipeDirection::Right => origin.x < (screen().width() - min_distance),
+        }
+    }
+
     fn progress(&self, val: u16) -> u16 {
         ((val as f32 / Self::DISTANCE as f32) * Self::PROGRESS_MAX as f32) as u16
     }
@@ -236,7 +251,7 @@ impl SwipeDetect {
                             let mut res = None;
                             for dir in SwipeDirection::iter() {
                                 let progress = config.progress(dir, ofs, self.min_lock());
-                                if progress > 0 {
+                                if progress > 0 && self.is_lockable(dir) {
                                     self.locked = Some(dir);
                                     res = Some(SwipeDetectMsg::Start(dir));
                                     break;
