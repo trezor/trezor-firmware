@@ -6,7 +6,7 @@ use crate::{
     trezorhal::usb::usb_configured,
     ui::{
         component::{Component, Event, EventCtx, TimerToken},
-        display::{image::ImageInfo, toif::Icon, Color, Font},
+        display::{image::ImageInfo, Color, Font},
         event::{TouchEvent, USBEvent},
         geometry::{Alignment, Alignment2D, Offset, Point, Rect},
         layout::util::get_user_custom_image,
@@ -48,6 +48,47 @@ const DEFAULT_HS_RADIUS: i16 = UnlockOverlay::RADIUS;
 const DEFAULT_HS_SPAN: i16 = UnlockOverlay::SPAN;
 const DEFAULT_HS_THICKNESS: i16 = 6;
 const DEFAULT_HS_NUM_CIRCLES: i16 = 5;
+
+const NOTIFICATION_HEIGHT: i16 = 30;
+const NOTIFICATION_TOP: i16 = 208;
+const NOTIFICATION_LOCKSCREEN_TOP: i16 = 190;
+const NOTIFICATION_BORDER: i16 = 13;
+
+const NOTIFICATION_BG_ALPHA: u8 = 204;
+
+const NOTIFICATION_BG_RADIUS: i16 = 14;
+
+fn render_notif<'s>(notif: HomescreenNotification, top: i16, target: &mut impl Renderer<'s>) {
+    notif.text.map(|t| {
+        let style = theme::TEXT_BOLD;
+
+        let text_width = style.text_font.text_width(t);
+
+        let banner = Rect::new(
+            Point::new(AREA.center().x - NOTIFICATION_BORDER - text_width / 2, top),
+            Point::new(
+                AREA.center().x + NOTIFICATION_BORDER + text_width / 2,
+                top + NOTIFICATION_HEIGHT,
+            ),
+        );
+
+        let text_pos = Point::new(
+            style.text_font.horz_center(banner.x0, banner.x1, t),
+            style.text_font.vert_center(banner.y0, banner.y1, "A"),
+        );
+
+        shape::Bar::new(banner)
+            .with_radius(NOTIFICATION_BG_RADIUS)
+            .with_bg(notif.color_bg)
+            .with_alpha(NOTIFICATION_BG_ALPHA)
+            .render(target);
+
+        shape::Text::new(text_pos, t)
+            .with_font(style.text_font)
+            .with_fg(notif.color_text)
+            .render(target);
+    });
+}
 
 fn render_default_hs<'a>(target: &mut impl Renderer<'a>) {
     shape::Bar::new(AREA)
@@ -204,8 +245,8 @@ impl HideLabelAnimation {
 #[derive(Clone, Copy)]
 pub struct HomescreenNotification {
     pub text: TString<'static>,
-    pub icon: Icon,
-    pub color: Color,
+    pub color_bg: Color,
+    pub color_text: Color,
 }
 
 pub struct Homescreen {
@@ -259,29 +300,27 @@ impl Homescreen {
         }
     }
 
-    fn level_to_style(level: u8) -> (Color, Icon) {
+    fn level_to_style(level: u8) -> (Color, Color) {
         match level {
-            3 => (theme::ORANGE_DARK, theme::ICON_COINJOIN),
-            2 => (theme::ORANGE_DARK, theme::ICON_MAGIC),
-            1 => (theme::ORANGE_DARK, theme::ICON_WARN),
-            _ => (theme::ORANGE_DARK, theme::ICON_WARN),
+            3 => (theme::GREEN_DARK, theme::GREEN_LIME),
+            _ => (theme::ORANGE_DARK, theme::ORANGE_LIGHT),
         }
     }
 
     fn get_notification(&self) -> Option<HomescreenNotification> {
         if !usb_configured() {
-            let (color, icon) = Self::level_to_style(0);
+            let (color_bg, color_text) = Self::level_to_style(0);
             Some(HomescreenNotification {
                 text: TR::homescreen__title_no_usb_connection.into(),
-                icon,
-                color,
+                color_bg,
+                color_text,
             })
         } else if let Some((notification, level)) = self.notification {
-            let (color, icon) = Self::level_to_style(level);
+            let (color_bg, color_text) = Self::level_to_style(level);
             Some(HomescreenNotification {
                 text: notification,
-                icon,
-                color,
+                color_bg,
+                color_text,
             })
         } else {
             None
@@ -396,42 +435,7 @@ impl Component for Homescreen {
             });
 
             if let Some(notif) = self.get_notification() {
-                const NOTIFICATION_HEIGHT: i16 = 30;
-                const NOTIFICATION_TOP: i16 = 208;
-                const NOTIFICATION_BORDER: i16 = 16;
-
-                notif.text.map(|t| {
-                    let style = theme::TEXT_BOLD;
-
-                    let text_width = style.text_font.text_width(t);
-
-                    let banner = Rect::new(
-                        Point::new(
-                            AREA.center().x - NOTIFICATION_BORDER - text_width / 2,
-                            NOTIFICATION_TOP,
-                        ),
-                        Point::new(
-                            AREA.center().x + NOTIFICATION_BORDER + text_width / 2,
-                            NOTIFICATION_TOP + NOTIFICATION_HEIGHT,
-                        ),
-                    );
-
-                    let text_pos = Point::new(
-                        style.text_font.horz_center(banner.x0, banner.x1, t),
-                        style.text_font.vert_center(banner.y0, banner.y1, "A"),
-                    );
-
-                    shape::Bar::new(banner)
-                        .with_radius(14)
-                        .with_bg(theme::ORANGE_DARK)
-                        .with_alpha(160)
-                        .render(target);
-
-                    shape::Text::new(text_pos, t)
-                        .with_font(style.text_font)
-                        .with_fg(theme::ORANGE_LIGHT)
-                        .render(target);
-                });
+                render_notif(notif, NOTIFICATION_TOP, target);
             }
         }
     }
@@ -633,7 +637,15 @@ impl Component for Lockscreen {
                 .render(target);
         });
 
-        // TODO coinjoin authorized text
+        if self.coinjoin_authorized {
+            let notif = HomescreenNotification {
+                text: TR::homescreen__title_coinjoin_authorized.into(),
+                color_bg: theme::GREEN_DARK,
+                color_text: theme::GREEN_LIME,
+            };
+
+            render_notif(notif, NOTIFICATION_LOCKSCREEN_TOP, target);
+        }
     }
 }
 
