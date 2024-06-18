@@ -401,8 +401,6 @@ static int optiga_pin_stretch_common(
     hmac_sha256_Update(ctx, buffer, size);
   }
 
-  ui_progress(200);
-
   // Combine intermediate result with OID_PIN_ECDH
   uint8_t encoded_point[BIT_STRING_HEADER_SIZE + 65] = {0x03, 0x42, 0x00};
   if (!hash_to_curve_optiga(input, &encoded_point[BIT_STRING_HEADER_SIZE])) {
@@ -417,7 +415,7 @@ static int optiga_pin_stretch_common(
     return res;
   }
 
-  ui_progress(200);
+  ui_progress(250);
 
   hmac_sha256_Update(ctx, buffer, size);
   memzero(buffer, sizeof(buffer));
@@ -517,7 +515,7 @@ int optiga_pin_set(OPTIGA_UI_PROGRESS ui_progress,
     goto end;
   }
 
-  ui_progress(200);
+  ui_progress(300);
 
   // Stretch the PIN more with stretching secrets from the Optiga. This step
   // ensures that if an attacker extracts the value of OID_STRETCHED_PIN or
@@ -596,6 +594,8 @@ int optiga_pin_set(OPTIGA_UI_PROGRESS ui_progress,
     goto end;
   }
 
+  ui_progress(250);
+
   // Authorise using OID_STRETCHED_PIN so that we can write to OID_PIN_HMAC and
   // OID_PIN_HMAC_CTR.
   res = optiga_set_auto_state(OPTIGA_OID_SESSION_CTX, OID_STRETCHED_PIN, digest,
@@ -626,7 +626,7 @@ int optiga_pin_set(OPTIGA_UI_PROGRESS ui_progress,
     goto end;
   }
 
-  ui_progress(200);
+  ui_progress(250);
 
   // Stretch the PIN more with the counter-protected PIN secret. This method
   // ensures that if the user chooses a high-entropy PIN, then even if the
@@ -781,6 +781,8 @@ int optiga_pin_verify(OPTIGA_UI_PROGRESS ui_progress,
     return error_code + OPTIGA_COMMAND_ERROR_OFFSET;
   }
 
+  ui_progress(200);
+
   // Reset the counter which limits the use of OID_PIN_HMAC.
   res = optiga_set_data_object(OID_PIN_HMAC_CTR, false, COUNTER_RESET,
                                sizeof(COUNTER_RESET));
@@ -788,8 +790,6 @@ int optiga_pin_verify(OPTIGA_UI_PROGRESS ui_progress,
     optiga_clear_auto_state(OID_STRETCHED_PIN);
     return res;
   }
-
-  ui_progress(200);
 
   // Read the counter-protected PIN secret from OID_PIN_SECRET.
   uint8_t pin_secret[OPTIGA_PIN_SECRET_SIZE] = {0};

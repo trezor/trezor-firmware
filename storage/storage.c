@@ -91,11 +91,18 @@ const uint32_t V0_PIN_EMPTY = 1;
 // The number of milliseconds required to execute PBKDF2.
 #define PIN_PBKDF2_MS 1280
 
-// The number of milliseconds required to derive the KEK and KEIV.
+// The number of milliseconds required to set the PIN.
 #if USE_OPTIGA
-#define PIN_DERIVE_MS (PIN_PBKDF2_MS + OPTIGA_PIN_DERIVE_MS)
+#define PIN_SET_MS (PIN_PBKDF2_MS + OPTIGA_PIN_SET_MS)
 #else
-#define PIN_DERIVE_MS PIN_PBKDF2_MS
+#define PIN_SET_MS PIN_PBKDF2_MS
+#endif
+
+// The number of milliseconds required to verify the PIN.
+#if USE_OPTIGA
+#define PIN_VERIFY_MS (PIN_PBKDF2_MS + OPTIGA_PIN_VERIFY_MS)
+#else
+#define PIN_VERIFY_MS PIN_PBKDF2_MS
 #endif
 
 // The length of the hashed hardware salt in bytes.
@@ -451,6 +458,16 @@ static secbool is_not_wipe_code(const uint8_t *pin, size_t pin_len) {
   return sectrue;
 }
 
+static void ui_total_init(uint32_t total_ms) {
+  ui_total = total_ms;
+  ui_rem = total_ms;
+}
+
+static void ui_total_add(uint32_t added_ms) {
+  ui_total += added_ms;
+  ui_rem += added_ms;
+}
+
 static secbool ui_progress(uint32_t elapsed_ms) {
   ui_rem -= elapsed_ms;
   if (ui_callback && ui_message) {
@@ -721,8 +738,7 @@ static void init_wiped_storage(void) {
   ensure(set_wipe_code(WIPE_CODE_EMPTY, WIPE_CODE_EMPTY_LEN),
          "set_wipe_code failed");
 
-  ui_total = PIN_DERIVE_MS;
-  ui_rem = ui_total;
+  ui_total_init(PIN_SET_MS);
   ui_message = PROCESSING_MSG;
   ensure(set_pin(PIN_EMPTY, PIN_EMPTY_LEN, NULL), "init_pin failed");
 }
@@ -921,8 +937,7 @@ static secbool unlock(const uint8_t *pin, size_t pin_len,
   // In case of an upgrade from version 4 or earlier bump the total time of UI
   // progress to account for the set_pin() call in storage_upgrade_unlocked().
   if (get_lock_version() <= 4) {
-    ui_total += PIN_DERIVE_MS;
-    ui_rem += PIN_DERIVE_MS;
+    ui_total_add(PIN_SET_MS);
   }
 
   // Now we can check for wipe code.
@@ -945,8 +960,7 @@ static secbool unlock(const uint8_t *pin, size_t pin_len,
 
   // Sleep for 2^ctr - 1 seconds before checking the PIN.
   uint32_t wait = (1 << ctr) - 1;
-  ui_total += wait * 1000;
-  ui_rem += wait * 1000;
+  ui_total_add(wait * 1000);
   ui_progress(0);
   for (uint32_t i = 0; i < 10 * wait; i++) {
     if (sectrue == ui_progress(100)) {
@@ -1015,8 +1029,7 @@ secbool storage_unlock(const uint8_t *pin, size_t pin_len,
     return secfalse;
   }
 
-  ui_total = PIN_DERIVE_MS;
-  ui_rem = ui_total;
+  ui_total_init(PIN_VERIFY_MS);
   if (pin_len == 0) {
     if (ui_message == NO_MSG) {
       ui_message = STARTING_MSG;
@@ -1311,8 +1324,7 @@ secbool storage_change_pin(const uint8_t *oldpin, size_t oldpin_len,
     return secfalse;
   }
 
-  ui_total = 2 * PIN_DERIVE_MS;
-  ui_rem = ui_total;
+  ui_total_init(PIN_VERIFY_MS + PIN_SET_MS);
   ui_message =
       (oldpin_len != 0 && newpin_len == 0) ? VERIFYING_PIN_MSG : PROCESSING_MSG;
 
@@ -1360,8 +1372,7 @@ secbool storage_change_wipe_code(const uint8_t *pin, size_t pin_len,
     return secfalse;
   }
 
-  ui_total = PIN_DERIVE_MS;
-  ui_rem = ui_total;
+  ui_total_init(PIN_VERIFY_MS);
   ui_message =
       (pin_len != 0 && wipe_code_len == 0) ? VERIFYING_PIN_MSG : PROCESSING_MSG;
 
@@ -1537,8 +1548,7 @@ static secbool storage_upgrade(void) {
     }
 
     // Set EDEK_PVC_KEY and PIN_NOT_SET_KEY.
-    ui_total = PIN_DERIVE_MS;
-    ui_rem = ui_total;
+    ui_total_init(PIN_SET_MS);
     ui_message = PROCESSING_MSG;
     uint8_t pin[V0_MAX_PIN_LEN] = {0};
     size_t pin_len = 0;
