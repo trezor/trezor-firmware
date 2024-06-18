@@ -45,6 +45,9 @@ impl AttachAnimation {
         );
 
         match attach_type {
+            Some(AttachType::Initial) => {
+                Offset::lerp(Offset::new(0, -20), Offset::zero(), value.eval(t))
+            }
             Some(AttachType::Swipe(dir)) => match dir {
                 SwipeDirection::Up => {
                     Offset::lerp(Offset::new(0, 20), Offset::zero(), value.eval(t))
@@ -66,7 +69,8 @@ impl AttachAnimation {
             pareen::constant(1.0),
         );
         match attach_type {
-            Some(AttachType::Swipe(SwipeDirection::Up))
+            Some(AttachType::Initial)
+            | Some(AttachType::Swipe(SwipeDirection::Up))
             | Some(AttachType::Swipe(SwipeDirection::Down)) => {}
             _ => {
                 return 255;
@@ -89,9 +93,9 @@ pub struct SwipeContent<T> {
     bounds: Rect,
     progress: i16,
     dir: SwipeDirection,
-    normal: Option<AttachType>,
     attach_animation: AttachAnimation,
     attach_type: Option<AttachType>,
+    show_attach_anim: bool,
 }
 
 impl<T: Component> SwipeContent<T> {
@@ -101,17 +105,15 @@ impl<T: Component> SwipeContent<T> {
             bounds: Rect::zero(),
             progress: 0,
             dir: SwipeDirection::Up,
-            normal: Some(AttachType::Swipe(SwipeDirection::Down)),
             attach_animation: AttachAnimation::default(),
             attach_type: None,
+            show_attach_anim: true,
         }
     }
 
-    pub fn with_normal_attach(self, attach_type: Option<AttachType>) -> Self {
-        Self {
-            normal: attach_type,
-            ..self
-        }
+    pub fn with_no_attach_anim(mut self) -> Self {
+        self.show_attach_anim = false;
+        self
     }
 
     pub fn inner(&self) -> &T {
@@ -130,9 +132,7 @@ impl<T: Component> Component for SwipeContent<T> {
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         if let Event::Attach(attach_type) = event {
             self.progress = 0;
-            if let AttachType::Initial = attach_type {
-                self.attach_type = self.normal;
-            } else {
+            if self.show_attach_anim {
                 self.attach_type = Some(attach_type);
             }
             self.attach_animation.reset();

@@ -2,6 +2,7 @@ use core::{
     cell::RefCell,
     convert::{TryFrom, TryInto},
 };
+use num_traits::{FromPrimitive, ToPrimitive};
 
 use crate::{
     error::Error,
@@ -9,7 +10,7 @@ use crate::{
     micropython::{
         buffer::StrBuffer,
         gc::Gc,
-        macros::{obj_dict, obj_fn_1, obj_fn_2, obj_fn_var, obj_map, obj_type},
+        macros::{obj_dict, obj_fn_1, obj_fn_2, obj_fn_3, obj_fn_var, obj_map, obj_type},
         map::Map,
         obj::{Obj, ObjBase},
         qstr::Qstr,
@@ -32,9 +33,33 @@ use crate::ui::{display::Color, shape::render_on_display};
 
 #[cfg(feature = "button")]
 use crate::ui::event::ButtonEvent;
-#[cfg(feature = "touch")]
-use crate::ui::event::TouchEvent;
 use crate::ui::event::USBEvent;
+#[cfg(feature = "touch")]
+use crate::ui::{component::SwipeDirection, event::TouchEvent};
+
+impl AttachType {
+    fn to_obj(self) -> Obj {
+        match self {
+            Self::Initial => Obj::const_none(),
+            #[cfg(feature = "touch")]
+            Self::Swipe(dir) => dir.to_u8().into(),
+        }
+    }
+    fn try_from_obj(obj: Obj) -> Result<Self, Error> {
+        if obj == Obj::const_none() {
+            return Ok(Self::Initial);
+        }
+        #[cfg(feature = "touch")]
+        {
+            let dir: u8 = obj.try_into()?;
+            return Ok(AttachType::Swipe(
+                SwipeDirection::from_u8(dir).ok_or(Error::TypeError)?,
+            ));
+        }
+        #[allow(unreachable_code)]
+        Err(Error::TypeError)
+    }
+}
 
 /// Conversion trait implemented by components that know how to convert their
 /// message values into MicroPython `Obj`s.
@@ -57,6 +82,7 @@ pub trait ObjComponent: MaybeTrace {
     fn obj_skip_paint(&mut self) {}
     fn obj_request_clear(&mut self) {}
     fn obj_delete(&mut self) {}
+    fn obj_get_transition_out(&self) -> Result<Obj, Error>;
 }
 
 impl<T> ObjComponent for Root<T>
@@ -111,6 +137,14 @@ where
 
     fn obj_delete(&mut self) {
         self.delete()
+    }
+
+    fn obj_get_transition_out(&self) -> Result<Obj, Error> {
+        if let Some(msg) = self.get_transition_out() {
+            Ok(msg.to_obj())
+        } else {
+            Ok(Obj::const_none())
+        }
     }
 }
 
@@ -278,6 +312,14 @@ impl LayoutObj {
         }
     }
 
+    fn obj_get_transition_out(&self) -> Result<Obj, Error> {
+        let inner = &mut *self.inner.borrow_mut();
+
+        // Get transition out result
+        // SAFETY: `inner.root` is unique because of the `inner.borrow_mut()`.
+        unsafe { Gc::as_mut(&mut inner.root) }.obj_get_transition_out()
+    }
+
     #[cfg(feature = "ui_debug")]
     fn obj_bounds(&self) {
         use crate::ui::display;
@@ -299,7 +341,7 @@ impl LayoutObj {
         static TYPE: Type = obj_type! {
             name: Qstr::MP_QSTR_LayoutObj,
             locals: &obj_dict!(obj_map! {
-                Qstr::MP_QSTR_attach_timer_fn => obj_fn_2!(ui_layout_attach_timer_fn).as_obj(),
+                Qstr::MP_QSTR_attach_timer_fn => obj_fn_3!(ui_layout_attach_timer_fn).as_obj(),
                 Qstr::MP_QSTR_touch_event => obj_fn_var!(4, 4, ui_layout_touch_event).as_obj(),
                 Qstr::MP_QSTR_button_event => obj_fn_var!(3, 3, ui_layout_button_event).as_obj(),
                 Qstr::MP_QSTR_progress_event => obj_fn_var!(3, 3, ui_layout_progress_event).as_obj(),
@@ -312,6 +354,7 @@ impl LayoutObj {
                 Qstr::MP_QSTR___del__ => obj_fn_1!(ui_layout_delete).as_obj(),
                 Qstr::MP_QSTR_page_count => obj_fn_1!(ui_layout_page_count).as_obj(),
                 Qstr::MP_QSTR_button_request => obj_fn_1!(ui_layout_button_request).as_obj(),
+                Qstr::MP_QSTR_get_transition_out => obj_fn_1!(ui_layout_get_transition_out).as_obj(),
             }),
         };
         &TYPE
@@ -378,11 +421,12 @@ impl TryFrom<Never> for Obj {
     }
 }
 
-extern "C" fn ui_layout_attach_timer_fn(this: Obj, timer_fn: Obj) -> Obj {
+extern "C" fn ui_layout_attach_timer_fn(this: Obj, timer_fn: Obj, attach_type: Obj) -> Obj {
     let block = || {
         let this: Gc<LayoutObj> = this.try_into()?;
         this.obj_set_timer_fn(timer_fn);
-        let msg = this.obj_event(Event::Attach(AttachType::Initial))?;
+
+        let msg = this.obj_event(Event::Attach(AttachType::try_from_obj(attach_type)?))?;
         assert!(msg == Obj::const_none());
         Ok(Obj::const_none())
     };
@@ -506,6 +550,14 @@ extern "C" fn ui_layout_button_request(this: Obj) -> Obj {
     let block = || {
         let this: Gc<LayoutObj> = this.try_into()?;
         this.obj_button_request()
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+extern "C" fn ui_layout_get_transition_out(this: Obj) -> Obj {
+    let block = || {
+        let this: Gc<LayoutObj> = this.try_into()?;
+        this.obj_get_transition_out()
     };
     unsafe { util::try_or_raise(block) }
 }

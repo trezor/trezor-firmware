@@ -212,6 +212,7 @@ where
 pub struct Root<T> {
     inner: Option<Child<T>>,
     marked_for_clear: bool,
+    transition_out: Option<AttachType>,
 }
 
 impl<T> Root<T> {
@@ -219,6 +220,7 @@ impl<T> Root<T> {
         Self {
             inner: Some(Child::new(component)),
             marked_for_clear: true,
+            transition_out: None,
         }
     }
 
@@ -246,6 +248,10 @@ impl<T> Root<T> {
         self.marked_for_clear = true;
     }
 
+    pub fn get_transition_out(&self) -> Option<AttachType> {
+        self.transition_out
+    }
+
     pub fn delete(&mut self) {
         self.inner = None;
     }
@@ -270,6 +276,11 @@ where
             assert!(paint_msg.is_none());
             assert!(dummy_ctx.timers.is_empty());
         }
+
+        if let Some(t) = ctx.get_transition_out() {
+            self.transition_out = Some(t);
+        }
+
         msg
     }
 
@@ -528,6 +539,7 @@ pub struct EventCtx {
     root_repaint_requested: bool,
     swipe_disable_req: bool,
     swipe_enable_req: bool,
+    transition_out: Option<AttachType>,
 }
 
 impl EventCtx {
@@ -557,6 +569,7 @@ impl EventCtx {
             root_repaint_requested: false,
             swipe_disable_req: false,
             swipe_enable_req: false,
+            transition_out: None,
         }
     }
 
@@ -658,6 +671,7 @@ impl EventCtx {
         self.root_repaint_requested = false;
         self.swipe_disable_req = false;
         self.swipe_enable_req = false;
+        self.transition_out = None;
     }
 
     fn register_timer(&mut self, token: TimerToken, deadline: Duration) {
@@ -679,5 +693,13 @@ impl EventCtx {
             .checked_add(1)
             .unwrap_or(Self::STARTING_TIMER_TOKEN);
         token
+    }
+
+    pub fn set_transition_out(&mut self, attach_type: AttachType) {
+        self.transition_out = Some(attach_type);
+    }
+
+    pub fn get_transition_out(&self) -> Option<AttachType> {
+        self.transition_out
     }
 }

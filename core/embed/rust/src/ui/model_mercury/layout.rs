@@ -20,7 +20,7 @@ use crate::{
     ui::{
         backlight::BACKLIGHT_LEVELS_OBJ,
         component::{
-            base::{AttachType, ComponentExt},
+            base::ComponentExt,
             connect::Connect,
             swipe_detect::SwipeSettings,
             text::{
@@ -811,7 +811,7 @@ extern "C" fn new_show_success(n_args: usize, args: *const Obj, kwargs: *mut Map
 
         let content = StatusScreen::new_success();
         let obj = LayoutObj::new(SwipeUpScreen::new(
-            Frame::left_aligned(title, SwipeContent::new(content).with_normal_attach(None))
+            Frame::left_aligned(title, SwipeContent::new(content).with_no_attach_anim())
                 .with_footer(TR::instructions__swipe_up.into(), description)
                 .with_swipe(SwipeDirection::Up, SwipeSettings::default()),
         ))?;
@@ -1070,13 +1070,9 @@ extern "C" fn new_show_checklist(n_args: usize, args: *const Obj, kwargs: *mut M
         .with_done_offset(theme::CHECKLIST_DONE_OFFSET);
 
         let obj = LayoutObj::new(SwipeUpScreen::new(
-            Frame::left_aligned(
-                title,
-                SwipeContent::new(checklist_content)
-                    .with_normal_attach(Some(AttachType::Swipe(SwipeDirection::Up))),
-            )
-            .with_footer(TR::instructions__swipe_up.into(), None)
-            .with_swipe(SwipeDirection::Up, SwipeSettings::default()),
+            Frame::left_aligned(title, SwipeContent::new(checklist_content))
+                .with_footer(TR::instructions__swipe_up.into(), None)
+                .with_swipe(SwipeDirection::Up, SwipeSettings::default()),
         ))?;
         Ok(obj.into())
     };
@@ -1317,12 +1313,15 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///
     /// T = TypeVar("T")
     ///
+    /// class AttachType:
+    ///     ...
+    ///
     /// class LayoutObj(Generic[T]):
     ///     """Representation of a Rust-based layout object.
     ///     see `trezor::ui::layout::obj::LayoutObj`.
     ///     """
     ///
-    ///     def attach_timer_fn(self, fn: Callable[[int, int], None]) -> None:
+    ///     def attach_timer_fn(self, fn: Callable[[int, int], None], attach_type: AttachType | None) -> None:
     ///         """Attach a timer setter function.
     ///
     ///         The layout object can call the timer setter with two arguments,
@@ -1378,6 +1377,9 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///
     ///     def page_count(self) -> int:
     ///         """Return the number of pages in the layout object."""
+    ///
+    ///     def get_transition_out(self) -> AttachType:
+    ///         """Return the transition type."""
     ///
     ///     def __del__(self) -> None:
     ///         """Calls drop on contents of the root component."""

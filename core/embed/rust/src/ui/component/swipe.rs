@@ -5,7 +5,7 @@ use crate::ui::{
     shape::Renderer,
 };
 
-#[derive(Copy, Clone, Eq, PartialEq)]
+#[derive(Copy, Clone, Eq, PartialEq, ToPrimitive, FromPrimitive)]
 #[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 pub enum SwipeDirection {
     Up,

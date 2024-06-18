@@ -42,7 +42,7 @@ class RustLayout(LayoutParentType[T]):
         self.br_chan = loop.chan()
         self.layout = layout
         self.timer = loop.Timer()
-        self.layout.attach_timer_fn(self.set_timer)
+        self.layout.attach_timer_fn(self.set_timer, None)
         self._send_button_request()
         self.backlight_level = ui.BacklightLevels.NORMAL
 
@@ -272,7 +272,7 @@ def draw_simple(layout: trezorui2.LayoutObj[Any]) -> None:
     def dummy_set_timer(token: int, deadline: int) -> None:
         raise RuntimeError
 
-    layout.attach_timer_fn(dummy_set_timer)
+    layout.attach_timer_fn(dummy_set_timer, None)
     ui.backlight_fade(ui.BacklightLevels.DIM)
     layout.paint()
     ui.refresh()
