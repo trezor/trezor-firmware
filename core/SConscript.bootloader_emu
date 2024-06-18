@@ -143,7 +143,6 @@ SOURCE_BOOTLOADER = [
 
 SOURCE_TREZORHAL = [
     'embed/trezorhal/unix/boot_args.c',
-    'embed/trezorhal/unix/button.c',
     'embed/trezorhal/unix/common.c',
     'embed/trezorhal/unix/fault_handlers.c',
     'embed/trezorhal/unix/flash_otp.c',
@@ -151,7 +150,6 @@ SOURCE_TREZORHAL = [
     'embed/trezorhal/unix/random_delays.c',
     'embed/trezorhal/unix/rng.c',
     'embed/trezorhal/unix/secret.c',
-    'embed/trezorhal/unix/touch.c',
     'embed/trezorhal/unix/usb.c',
 ]
 
