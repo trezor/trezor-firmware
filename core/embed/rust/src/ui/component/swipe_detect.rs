@@ -141,6 +141,7 @@ impl core::ops::IndexMut<SwipeDirection> for SwipeConfig {
 
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub enum SwipeDetectMsg {
+    Start(SwipeDirection),
     Move(SwipeDirection, u16),
     Trigger(SwipeDirection),
 }
@@ -237,7 +238,7 @@ impl SwipeDetect {
                                 let progress = config.progress(dir, ofs, self.min_lock());
                                 if progress > 0 {
                                     self.locked = Some(dir);
-                                    res = Some(SwipeDetectMsg::Move(dir, self.progress(progress)));
+                                    res = Some(SwipeDetectMsg::Start(dir));
                                     break;
                                 }
                             }

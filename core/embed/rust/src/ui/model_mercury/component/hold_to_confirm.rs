@@ -227,6 +227,7 @@ impl Component for HoldToConfirm {
                     self.anim.start();
                     ctx.request_anim_frame();
                     ctx.request_paint();
+                    ctx.disable_swipe();
                     self.finalizing = false;
                 }
             }
@@ -235,6 +236,7 @@ impl Component for HoldToConfirm {
                     self.anim.reset();
                     ctx.request_anim_frame();
                     ctx.request_paint();
+                    ctx.enable_swipe();
                     self.finalizing = false;
                 }
             }
@@ -249,6 +251,7 @@ impl Component for HoldToConfirm {
                     self.anim.reset();
                     ctx.request_anim_frame();
                     ctx.request_paint();
+                    ctx.enable_swipe();
                 }
             }
             Some(ButtonMsg::LongPressed) => {
