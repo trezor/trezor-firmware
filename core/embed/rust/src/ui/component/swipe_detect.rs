@@ -277,18 +277,7 @@ impl SwipeDetect {
                         // advance in direction other than locked trigger animation towards starting
                         // position
                         Some(_) => 0,
-                        None => {
-                            let mut res = 0;
-                            for dir in SwipeDirection::iter() {
-                                // insta-lock if the movement went at least the trigger distance
-                                if config.progress(dir, ofs, self.min_trigger()) > 0 {
-                                    self.locked = Some(dir);
-                                    res = Self::PROGRESS_MAX;
-                                }
-                            }
-
-                            res
-                        }
+                        None => return None,
                     };
 
                     let Some(locked) = self.locked else {
