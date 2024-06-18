@@ -1063,7 +1063,9 @@ extern "C" fn new_show_checklist(n_args: usize, args: *const Obj, kwargs: *mut M
                 .with_spacing(theme::CHECKLIST_SPACING),
         )
         .with_check_width(theme::CHECKLIST_CHECK_WIDTH)
-        .with_icon_done_color(theme::GREEN);
+        .with_numerals()
+        .with_icon_done_color(theme::GREEN)
+        .with_done_offset(theme::CHECKLIST_DONE_OFFSET);
 
         let obj = LayoutObj::new(SwipeUpScreen::new(
             Frame::left_aligned(

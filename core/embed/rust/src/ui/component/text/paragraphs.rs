@@ -611,8 +611,8 @@ where
         self
     }
 
-    pub fn with_numerals(mut self, show_numerals: bool) -> Self {
-        self.show_numerals = show_numerals;
+    pub fn with_numerals(mut self) -> Self {
+        self.show_numerals = true;
         self
     }
 
@@ -628,7 +628,7 @@ where
             } else {
                 // current and future tasks - ordinal numbers or icon on current task
                 if self.show_numerals {
-                    let num_offset = Offset::y(Font::NORMAL.visible_text_height("1"));
+                    let num_offset = Offset::new(4, Font::NORMAL.visible_text_height("1"));
                     self.render_numeral(base + num_offset, i, l.style.text_color, target);
                 } else if i == current_visible {
                     let color = l.style.text_color;
@@ -657,7 +657,7 @@ where
     ) {
         let numeral = uformat!("{}.", n + 1);
         shape::Text::new(base_point, numeral.as_str())
-            .with_font(Font::NORMAL)
+            .with_font(Font::SUB)
             .with_fg(color)
             .render(target);
     }
