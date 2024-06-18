@@ -290,7 +290,7 @@ impl SwipeDetect {
 
                     if !animation_disabled() {
                         let done = self.moved as f32 / Self::PROGRESS_MAX as f32;
-                        let ratio = 1.0 - done;
+                        let ratio = if final_value == 0 { done } else { 1.0 - done };
 
                         let duration = config
                             .duration(locked)
