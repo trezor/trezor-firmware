@@ -10,7 +10,7 @@ use crate::{
             FixedHeightBar,
         },
         display::{Color, Font},
-        geometry::Insets,
+        geometry::{Insets, Offset},
         util::include_icon,
     },
 };
@@ -802,6 +802,7 @@ pub const DETAILS_SPACING: i16 = 8;
 
 // checklist settings
 pub const CHECKLIST_CHECK_WIDTH: i16 = 32; // icon width (20px) + padding (12px)
+pub const CHECKLIST_DONE_OFFSET: Offset = Offset::y(-2);
 
 pub const fn button_bar<T>(inner: T) -> FixedHeightBar<T> {
     FixedHeightBar::bottom(inner, BUTTON_HEIGHT)
