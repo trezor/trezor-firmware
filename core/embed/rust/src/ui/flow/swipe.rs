@@ -175,6 +175,7 @@ impl<Q: FlowState, S: FlowStore> Component for SwipeFlow<Q, S> {
                 Some(SwipeDetectMsg::Move(dir, progress)) => {
                     Some(Event::Swipe(SwipeEvent::Move(dir, progress as i16)))
                 }
+                Some(SwipeDetectMsg::Start(_)) => Some(Event::Touch(TouchEvent::TouchAbort)),
                 _ => Some(event),
             }
         } else {
