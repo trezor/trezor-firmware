@@ -42,9 +42,11 @@
 // Size of secrets used in PIN processing, e.g. salted PIN, master secret etc.
 #define OPTIGA_PIN_SECRET_SIZE 32
 
-// The number of milliseconds it takes to execute optiga_pin_set() or
-// optiga_pin_verify().
-#define OPTIGA_PIN_DERIVE_MS 1200
+// The number of milliseconds it takes to execute optiga_pin_set().
+#define OPTIGA_PIN_SET_MS 1300
+
+// The number of milliseconds it takes to execute optiga_pin_verify().
+#define OPTIGA_PIN_VERIFY_MS 900
 
 typedef secbool (*OPTIGA_UI_PROGRESS)(uint32_t elapsed_ms);
 
