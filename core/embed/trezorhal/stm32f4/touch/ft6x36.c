@@ -405,8 +405,12 @@ uint32_t touch_get_event(void) {
       // Finger was just lifted up
       event = TOUCH_END | xy;
     } else {
-      // Finger is still lifted up. Since we have already sent the
-      // TOUCH_END event => no event needed
+      // 1. Most likely, we have missed the PRESS_DOWN event.
+      //    Touch duration was too (< 10ms) to be worth reporting.
+      // 2. Finger is still lifted up. Since we have already sent the
+      //    TOUCH_END event => no event needed. This should not happen
+      //    since two consecutive LIFT_UPs are not possible due to
+      //    testing the interrupt line before reading the registers.
     }
   }
 
