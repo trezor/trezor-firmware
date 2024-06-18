@@ -9,7 +9,7 @@ from trezorui2 import BacklightLevels
 if TYPE_CHECKING:
     from typing import Generic, TypeVar
 
-    from trezorui2 import UiResult  # noqa: F401
+    from trezorui2 import AttachType, UiResult  # noqa: F401
 
     T = TypeVar("T")
 
@@ -33,6 +33,9 @@ layout_chan = loop.chan()
 
 # allow only one alert at a time to avoid alerts overlapping
 _alert_in_progress = False
+
+# storing last transition type, so that next layout can continue nicely
+LAST_TRANSITION_OUT: AttachType | None = None
 
 # in debug mode, display an indicator in top right corner
 if __debug__:
@@ -131,6 +134,12 @@ class Layout(Generic[T]):
     raised, usually from some of the child components.
     """
 
+    def finalize(self) -> None:
+        """
+        Called when the layout is done. Usually overridden to allow cleanup or storing context.
+        """
+        pass
+
     async def __iter__(self) -> T:
         """
         Run the layout and wait until it completes.  Returns the result value.
@@ -159,6 +168,8 @@ class Layout(Generic[T]):
         except Result as result:
             # Result exception was raised, this means this layout is complete.
             value = result.value
+        finally:
+            self.finalize()
         return value
 
     if TYPE_CHECKING:

@@ -36,7 +36,7 @@ class RustLayout(ui.Layout):
         self.br_chan = loop.chan()
         self.layout = layout
         self.timer = loop.Timer()
-        self.layout.attach_timer_fn(self.set_timer)
+        self.layout.attach_timer_fn(self.set_timer, ui.LAST_TRANSITION_OUT)
         self._send_button_request()
         self.backlight_level = ui.BacklightLevels.NORMAL
 
@@ -191,6 +191,7 @@ class RustLayout(ui.Layout):
                 )
 
     def _first_paint(self) -> None:
+
         ui.backlight_fade(ui.BacklightLevels.NONE)
         self._paint()
 
@@ -213,7 +214,7 @@ class RustLayout(ui.Layout):
 
             notify_layout_change(self, event_id)
 
-        # Turn the brightness on again.
+        # Fade brightness to desired level
         ui.backlight_fade(self.backlight_level)
 
     def handle_input_and_rendering(self) -> loop.Task:
@@ -260,13 +261,16 @@ class RustLayout(ui.Layout):
             br_code, br_type = res
             self.br_chan.publish((br_code, br_type, self.layout.page_count()))
 
+    def finalize(self):
+        ui.LAST_TRANSITION_OUT = self.layout.get_transition_out()
+
 
 def draw_simple(layout: Any) -> None:
     # Simple drawing not supported for layouts that set timers.
     def dummy_set_timer(token: int, deadline: int) -> None:
         raise RuntimeError
 
-    layout.attach_timer_fn(dummy_set_timer)
+    layout.attach_timer_fn(dummy_set_timer, None)
     ui.backlight_fade(ui.BacklightLevels.DIM)
     layout.paint()
     ui.refresh()

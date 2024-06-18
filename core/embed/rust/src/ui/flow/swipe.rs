@@ -5,7 +5,7 @@ use crate::{
             base::AttachType, swipe_detect::SwipeSettings, Component, Event, EventCtx, SwipeDetect,
             SwipeDetectMsg, SwipeDirection,
         },
-        event::SwipeEvent,
+        event::{SwipeEvent, TouchEvent},
         flow::{base::Decision, FlowMsg, FlowState, FlowStore},
         geometry::Rect,
         shape::Renderer,
@@ -107,6 +107,7 @@ impl<Q: FlowState, S: FlowStore> Component for SwipeFlow<Q, S> {
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         let mut decision: Decision<Q> = Decision::Nothing;
+        let mut return_transition: AttachType = AttachType::Initial;
 
         let mut attach = false;
 
@@ -138,6 +139,8 @@ impl<Q: FlowState, S: FlowStore> Component for SwipeFlow<Q, S> {
                     } else {
                         decision = self.handle_swipe_child(ctx, dir);
                     }
+
+                    return_transition = AttachType::Swipe(dir);
 
                     let states_num = self.internal_pages;
                     if states_num > 0 {
@@ -230,6 +233,7 @@ impl<Q: FlowState, S: FlowStore> Component for SwipeFlow<Q, S> {
                 None
             }
             Decision::Return(msg) => {
+                ctx.set_transition_out(return_transition);
                 self.swipe.reset();
                 self.allow_swipe = true;
                 Some(msg)
