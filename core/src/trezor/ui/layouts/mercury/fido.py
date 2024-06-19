@@ -18,8 +18,8 @@ if __debug__:
     class _RustFidoLayoutImpl(RustLayout):
         def create_tasks(self) -> tuple[AwaitableTask, ...]:
             return (
-                self.handle_timers(),
                 self.handle_input_and_rendering(),
+                self.handle_timers(),
                 self.handle_swipe(),
                 self.handle_debug_confirm(),
             )

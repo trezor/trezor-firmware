@@ -71,8 +71,8 @@ class RustLayout(LayoutParentType[T]):
         def create_tasks(self) -> tuple[loop.AwaitableTask, ...]:
             if context.CURRENT_CONTEXT:
                 return (
-                    self.handle_timers(),
                     self.handle_input_and_rendering(),
+                    self.handle_timers(),
                     self.handle_swipe(),
                     self.handle_click_signal(),
                     self.handle_result_signal(),
@@ -80,8 +80,8 @@ class RustLayout(LayoutParentType[T]):
                 )
             else:
                 return (
-                    self.handle_timers(),
                     self.handle_input_and_rendering(),
+                    self.handle_timers(),
                     self.handle_swipe(),
                     self.handle_click_signal(),
                     self.handle_result_signal(),
@@ -186,14 +186,14 @@ class RustLayout(LayoutParentType[T]):
         def create_tasks(self) -> tuple[loop.AwaitableTask, ...]:
             if context.CURRENT_CONTEXT:
                 return (
-                    self.handle_timers(),
                     self.handle_input_and_rendering(),
+                    self.handle_timers(),
                     self.handle_usb(context.get_context()),
                 )
             else:
                 return (
-                    self.handle_timers(),
                     self.handle_input_and_rendering(),
+                    self.handle_timers(),
                 )
 
     def _first_paint(self) -> None:
