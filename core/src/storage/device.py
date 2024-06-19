@@ -6,7 +6,7 @@ from storage import common
 from trezor import utils
 
 if TYPE_CHECKING:
-    from trezor.enums import BackupType
+    from trezor.enums import BackupType, ThpPairingMethod
     from typing_extensions import Literal
 
 # Namespace:
@@ -37,8 +37,9 @@ _SAFETY_CHECK_LEVEL        = const(0x14)  # int
 _EXPERIMENTAL_FEATURES     = const(0x15)  # bool (0x01 or empty)
 _HIDE_PASSPHRASE_FROM_HOST = const(0x16)  # bool (0x01 or empty)
 if utils.USE_THP:
-    _DEVICE_SECRET         = const(0x17)  # bytes
-    _CRED_AUTH_KEY_COUNTER = const(0x18)  # bytes
+    _DEVICE_SECRET             = const(0x17)  # bytes
+    _CRED_AUTH_KEY_COUNTER     = const(0x18)  # bytes
+    _ALLOWED_PAIRING_METHODS   = const(0x1A)  # uint8
 # unused from python:
 # _BRIGHTNESS                = const(0x19)  # int
 _DISABLE_HAPTIC_FEEDBACK   = const(0x20)  # bool (0x01 or empty)
@@ -382,6 +383,51 @@ if utils.USE_THP:
         counter = int.from_bytes(get_cred_auth_key_counter(), "big")
         utils.ensure(counter < 0xFFFFFFFF, "Overflow of cred_auth_key_counter")
         common.set(_NAMESPACE, _CRED_AUTH_KEY_COUNTER, (counter + 1).to_bytes(4, "big"))
+
+    def enable_pairing_method(pairing_method: ThpPairingMethod) -> None:
+        utils.ensure(
+            pairing_method > 0 and pairing_method <= _get_pairing_methods_count(),
+            "Invalid pairing method",
+        )
+        val = 1 << pairing_method - 1
+        current = common.get_uint8(_NAMESPACE, _ALLOWED_PAIRING_METHODS)
+        if current is None:
+            current = 0x00
+        common.set_uint8(_NAMESPACE, _ALLOWED_PAIRING_METHODS, current | val)
+
+    def disable_pairing_method(pairing_method: ThpPairingMethod) -> None:
+        utils.ensure(
+            pairing_method > 0 and pairing_method <= _get_pairing_methods_count(),
+            "Invalid pairing method",
+        )
+        val = 1 << pairing_method - 1
+        current = common.get_uint8(_NAMESPACE, _ALLOWED_PAIRING_METHODS)
+        if current is None:
+            current = 0x00
+        common.set_uint8(_NAMESPACE, _ALLOWED_PAIRING_METHODS, current ^ val)
+
+    def get_enabled_pairing_methods() -> list[ThpPairingMethod]:
+        pairing_methods_count = _get_pairing_methods_count()
+        enabled_methods_stored = common.get_uint8(_NAMESPACE, _ALLOWED_PAIRING_METHODS)
+        enabled_methods = []
+        if enabled_methods_stored is None:
+            return enabled_methods
+        pos = 0
+        while enabled_methods_stored > 0 and pos < pairing_methods_count:
+            pos += 1
+            if enabled_methods_stored & 1:
+                enabled_methods.append(pos)
+            enabled_methods_stored >>= 1
+        return enabled_methods
+
+    def _get_pairing_methods_count() -> int:
+        from trezor.enums import ThpPairingMethod
+
+        pairing_methods_count = 0
+        for name in dir(ThpPairingMethod):
+            if not name.startswith("__"):
+                pairing_methods_count += 1
+        return pairing_methods_count
 
 
 def set_haptic_feedback(enable: bool) -> None:
