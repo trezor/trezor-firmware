@@ -52,6 +52,14 @@ you install HIDAPI support (see below).
   pip3 install trezor[stellar]
   ```
 
+* **Extended device authentication**: For user-friendly device authentication for Trezor
+  Safe 3 and newer models (`trezorctl device authenticate` command), additional packages
+  are needed. Install with:
+
+  ```sh
+  pip3 install trezor[authentication]
+  ```
+
 * **Firmware-less Trezor One**: If you are setting up a brand new Trezor One
   manufactured before 2021 (with pre-installed bootloader older than 1.6.0), you will
   need HIDAPI support. On Linux, you will need the following packages (or their
@@ -64,7 +72,7 @@ you install HIDAPI support (see below).
   pip3 install trezor[hidapi]
   ```
 
-To install all three, use `pip3 install trezor[hidapi,ethereum,stellar]`.
+To install all four, use `pip3 install trezor[hidapi,ethereum,stellar,authentication]`.
 
 ### Distro packages
 
@@ -136,8 +144,8 @@ You have to enter: **3795**
 
 ## Contributing
 
-If you want to change protobuf or coin definitions, you will need to regenerate
-definitions in the `python/` subdirectory.
+If you want to change protobuf definitions, you will need to regenerate definitions in
+the `python/` subdirectory.
 
 First, make sure your submodules are up-to-date with:
 
@@ -151,6 +159,3 @@ directory:
 ```sh
 make gen
 ```
-
-To get support for BTC-like coins, these steps are enough and no further
-changes to the library are necessary.
