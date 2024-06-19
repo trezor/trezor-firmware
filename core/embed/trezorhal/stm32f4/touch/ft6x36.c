@@ -388,9 +388,15 @@ uint32_t touch_get_event(void) {
       // Finger was just pressed down
       event = TOUCH_START | xy;
     } else {
-      // It looks like we have missed the lift up event
-      // We should send the TOUCH_END event here with old coordinates
-      event = TOUCH_END | touch_pack_xy(driver->last_x, driver->last_y);
+      if ((x != driver->last_x) || (y != driver->last_y)) {
+        // It looks like we have missed the lift up event
+        // We should send the TOUCH_END event here with old coordinates
+        event = TOUCH_END | touch_pack_xy(driver->last_x, driver->last_y);
+      } else {
+        // We have received the same coordinates as before,
+        // probably this is the same start event, or a quick bounce,
+        // we should ignore it.
+      }
     }
   } else if ((nb_touches == 1) && (flags == FT6X63_EVENT_CONTACT)) {
     if (driver->pressed) {
