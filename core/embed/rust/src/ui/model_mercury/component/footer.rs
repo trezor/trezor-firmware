@@ -12,8 +12,6 @@ use crate::{
     },
 };
 
-use heapless::String;
-
 /// Component showing a task instruction, e.g. "Swipe up", and an optional
 /// content consisting of one of these:
 ///     - a task description e.g. "Confirm transaction", or
@@ -94,6 +92,8 @@ impl<'a> Footer<'a> {
         if let Some(ref mut content) = self.content {
             if let Some(counter) = content.as_page_counter_mut() {
                 counter.update_current_page(n);
+                self.swipe_allow_down = counter.is_first_page();
+                self.swipe_allow_up = counter.is_last_page();
                 ctx.request_paint();
             } else {
                 #[cfg(feature = "ui_debug")]
@@ -284,9 +284,9 @@ impl<'a> FooterContent<'a> {
 #[derive(Clone)]
 struct PageCounter {
     area: Rect,
+    font: Font,
     page_curr: u8,
     page_max: u8,
-    font: Font,
 }
 
 impl PageCounter {
@@ -300,7 +300,15 @@ impl PageCounter {
     }
 
     fn update_current_page(&mut self, new_value: u8) {
-        self.page_curr = new_value;
+        self.page_curr = new_value.clamp(1, self.page_max);
+    }
+
+    fn is_first_page(&self) -> bool {
+        self.page_curr == 1
+    }
+
+    fn is_last_page(&self) -> bool {
+        self.page_curr == self.page_max
     }
 }
 
