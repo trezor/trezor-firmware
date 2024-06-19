@@ -13,11 +13,12 @@
 #
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
+from __future__ import annotations
 
 import logging
 import secrets
 import sys
-from typing import TYPE_CHECKING, BinaryIO, Optional, Sequence, Tuple
+import typing as t
 
 import click
 import requests
@@ -25,7 +26,7 @@ import requests
 from .. import debuglink, device, exceptions, messages, ui
 from . import ChoiceType, with_client
 
-if TYPE_CHECKING:
+if t.TYPE_CHECKING:
     from ..client import TrezorClient
     from ..protobuf import MessageType
     from . import TrezorConnection
@@ -104,7 +105,7 @@ def wipe(client: "TrezorClient", bootloader: bool) -> str:
 @with_client
 def load(
     client: "TrezorClient",
-    mnemonic: Sequence[str],
+    mnemonic: t.Sequence[str],
     pin: str,
     passphrase_protection: bool,
     label: str,
@@ -169,7 +170,7 @@ def recover(
     expand: bool,
     pin_protection: bool,
     passphrase_protection: bool,
-    label: Optional[str],
+    label: str | None,
     u2f_counter: int,
     input_method: messages.RecoveryDeviceInputMethod,
     dry_run: bool,
@@ -218,10 +219,10 @@ def recover(
 def setup(
     client: "TrezorClient",
     show_entropy: bool,
-    strength: Optional[int],
+    strength: int | None,
     passphrase_protection: bool,
     pin_protection: bool,
-    label: Optional[str],
+    label: str | None,
     u2f_counter: int,
     skip_backup: bool,
     no_backup: bool,
@@ -263,8 +264,8 @@ def setup(
 @with_client
 def backup(
     client: "TrezorClient",
-    group_threshold: Optional[int] = None,
-    groups: Sequence[Tuple[int, int]] = (),
+    group_threshold: int | None = None,
+    groups: t.Sequence[tuple[int, int]] = (),
 ) -> str:
     """Perform device seed backup."""
 
@@ -331,9 +332,7 @@ def unlock_bootloader(client: "TrezorClient") -> str:
     help="Dialog expiry in seconds.",
 )
 @with_client
-def set_busy(
-    client: "TrezorClient", enable: Optional[bool], expiry: Optional[int]
-) -> str:
+def set_busy(client: "TrezorClient", enable: bool | None, expiry: int | None) -> str:
     """Show a "Do not disconnect" dialog."""
     if enable is False:
         return device.set_busy(client, None)
@@ -369,10 +368,10 @@ PUBKEY_WHITELIST_URL_TEMPLATE = (
 @with_client
 def authenticate(
     client: "TrezorClient",
-    hex_challenge: Optional[str],
-    root: Optional[BinaryIO],
-    raw: Optional[bool],
-    skip_whitelist: Optional[bool],
+    hex_challenge: str | None,
+    root: t.BinaryIO | None,
+    raw: bool | None,
+    skip_whitelist: bool | None,
 ) -> None:
     """Verify the authenticity of the device.
 
