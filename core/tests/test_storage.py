@@ -2,6 +2,7 @@ from common import *  # isort:skip
 
 from storage import device
 from trezor import config, utils
+from trezor.enums import ThpPairingMethod
 
 class TestConfig(unittest.TestCase):
 
@@ -56,6 +57,35 @@ class TestConfig(unittest.TestCase):
             secret3 = device.get_device_secret()
             self.assertEqual(len(secret3), 16)
             self.assertNotEqual(secret1, secret3)
+
+        def test_enabled_pairing_methods(self):
+            stored = device.get_enabled_pairing_methods()
+            self.assertEqual(stored, [])
+            device.enable_pairing_method(ThpPairingMethod.CodeEntry)
+            device.enable_pairing_method(ThpPairingMethod.QrCode)
+            stored = device.get_enabled_pairing_methods()
+            self.assertEqual(
+                stored, [ThpPairingMethod.CodeEntry, ThpPairingMethod.QrCode]
+            )
+            device.disable_pairing_method(ThpPairingMethod.CodeEntry)
+            stored = device.get_enabled_pairing_methods()
+            self.assertTrue(ThpPairingMethod.CodeEntry not in stored)
+            self.assertEqual(stored, [ThpPairingMethod.QrCode])
+
+            # invalid values can be stored in the storage but will be ignored
+            # when calling device.get_enabled_pairing_methods()
+            with self.assertRaises(AssertionError) as e:
+                device.enable_pairing_method(6)
+            self.assertEqual(e.value.value, "Invalid pairing method")
+            with self.assertRaises(AssertionError) as e:
+                device.enable_pairing_method(0)
+            self.assertEqual(e.value.value, "Invalid pairing method")
+            with self.assertRaises(AssertionError) as e:
+                device.disable_pairing_method(5)
+            self.assertEqual(e.value.value, "Invalid pairing method")
+
+            stored = device.get_enabled_pairing_methods()
+            self.assertEqual(stored, [ThpPairingMethod.QrCode])
 
 
 if __name__ == "__main__":
