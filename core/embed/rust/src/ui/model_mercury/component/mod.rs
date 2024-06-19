@@ -78,7 +78,7 @@ pub use set_brightness::SetBrightnessDialog;
 #[cfg(feature = "translations")]
 pub use share_words::ShareWords;
 pub use status_screen::StatusScreen;
-pub use swipe_content::SwipeContent;
+pub use swipe_content::{InternallySwipable, InternallySwipableContent, SwipeContent};
 #[cfg(feature = "translations")]
 pub use swipe_up_screen::{SwipeUpScreen, SwipeUpScreenMsg};
 #[cfg(feature = "translations")]
