@@ -214,7 +214,7 @@ def recover(
 @click.option("-u", "--u2f-counter", default=0)
 @click.option("-s", "--skip-backup", is_flag=True)
 @click.option("-n", "--no-backup", is_flag=True)
-@click.option("-b", "--backup-type", type=ChoiceType(BACKUP_TYPE), default="single")
+@click.option("-b", "--backup-type", type=ChoiceType(BACKUP_TYPE))
 @with_client
 def setup(
     client: "TrezorClient",
@@ -226,22 +226,33 @@ def setup(
     u2f_counter: int,
     skip_backup: bool,
     no_backup: bool,
-    backup_type: messages.BackupType,
+    backup_type: messages.BackupType | None,
 ) -> str:
     """Perform device setup and generate new seed."""
     if strength:
         strength = int(strength)
 
+    BT = messages.BackupType
+
+    if backup_type is None:
+        if client.version >= (2, 7, 1):
+            # SLIP39 extendable was introduced in 2.7.1
+            backup_type = BT.Slip39_Single_Extendable
+        else:
+            # this includes both T1 and older trezor-cores
+            backup_type = BT.Bip39
+
     if (
-        backup_type == messages.BackupType.Slip39_Basic
+        backup_type
+        in (BT.Slip39_Single_Extendable, BT.Slip39_Basic, BT.Slip39_Basic_Extendable)
         and messages.Capability.Shamir not in client.features.capabilities
     ) or (
-        backup_type == messages.BackupType.Slip39_Advanced
+        backup_type in (BT.Slip39_Advanced, BT.Slip39_Advanced_Extendable)
         and messages.Capability.ShamirGroups not in client.features.capabilities
     ):
         click.echo(
             "WARNING: Your Trezor device does not indicate support for the requested\n"
-            "backup type. Traditional single-seed backup may be generated instead."
+            "backup type. Traditional BIP39 backup may be generated instead."
         )
 
     return device.reset(
