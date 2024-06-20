@@ -55,14 +55,14 @@ impl FlowState for ConfirmSummary {
 
     fn handle_event(&'static self, msg: FlowMsg) -> StateChange {
         match (self, msg) {
-            (_, FlowMsg::Info) => Self::Menu.swipe_left(),
+            (_, FlowMsg::Info) => Self::Menu.transit(),
             (Self::Hold, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Confirmed),
             (Self::Menu, FlowMsg::Choice(0)) => Self::FeeInfo.swipe_left(),
             (Self::Menu, FlowMsg::Choice(1)) => Self::AccountInfo.swipe_left(),
             (Self::Menu, FlowMsg::Choice(2)) => Self::CancelTap.swipe_left(),
             (Self::Menu, FlowMsg::Cancelled) => Self::Summary.swipe_right(),
             (Self::CancelTap, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Cancelled),
-            (_, FlowMsg::Cancelled) => Self::Menu.swipe_right(),
+            (_, FlowMsg::Cancelled) => Self::Menu.transit(),
             _ => self.do_nothing(),
         }
     }

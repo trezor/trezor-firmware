@@ -66,7 +66,7 @@ impl FlowState for GetAddress {
 
     fn handle_event(&'static self, msg: FlowMsg) -> StateChange {
         match (self, msg) {
-            (Self::Address, FlowMsg::Info) => Self::Menu.swipe_left(),
+            (Self::Address, FlowMsg::Info) => Self::Menu.transit(),
             (Self::Tap, FlowMsg::Confirmed) => Self::Confirmed.swipe_up(),
             (Self::Tap, FlowMsg::Info) => Self::Menu.swipe_left(),
             (Self::Confirmed, _) => self.return_msg(FlowMsg::Confirmed),
@@ -74,11 +74,11 @@ impl FlowState for GetAddress {
             (Self::Menu, FlowMsg::Choice(1)) => Self::AccountInfo.swipe_left(),
             (Self::Menu, FlowMsg::Choice(2)) => Self::Cancel.swipe_left(),
             (Self::Menu, FlowMsg::Cancelled) => Self::Address.swipe_right(),
-            (Self::QrCode, FlowMsg::Cancelled) => Self::Menu.swipe_right(),
-            (Self::AccountInfo, FlowMsg::Cancelled) => Self::Menu.swipe_right(),
-            (Self::Cancel, FlowMsg::Cancelled) => Self::Menu.swipe_right(),
+            (Self::QrCode, FlowMsg::Cancelled) => Self::Menu.transit(),
+            (Self::AccountInfo, FlowMsg::Cancelled) => Self::Menu.transit(),
+            (Self::Cancel, FlowMsg::Cancelled) => Self::Menu.transit(),
             (Self::CancelTap, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Cancelled),
-            (Self::CancelTap, FlowMsg::Cancelled) => Self::Menu.swipe_right(),
+            (Self::CancelTap, FlowMsg::Cancelled) => Self::Menu.transit(),
             _ => self.do_nothing(),
         }
     }

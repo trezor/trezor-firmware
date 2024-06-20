@@ -54,7 +54,7 @@ impl FlowState for SetNewPin {
 
     fn handle_event(&'static self, msg: FlowMsg) -> StateChange {
         match (self, msg) {
-            (Self::Intro, FlowMsg::Info) => Self::Menu.swipe_left(),
+            (Self::Intro, FlowMsg::Info) => Self::Menu.transit(),
             (Self::Menu, FlowMsg::Choice(0)) => Self::CancelPinIntro.swipe_left(),
             (Self::Menu, FlowMsg::Cancelled) => Self::Intro.swipe_right(),
             (Self::CancelPinIntro, FlowMsg::Cancelled) => Self::Intro.swipe_right(),

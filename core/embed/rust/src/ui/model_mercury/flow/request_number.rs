@@ -51,10 +51,10 @@ impl FlowState for RequestNumber {
 
     fn handle_event(&'static self, msg: FlowMsg) -> StateChange {
         match (self, msg) {
-            (Self::Number, FlowMsg::Info) => Self::Menu.swipe_left(),
+            (Self::Number, FlowMsg::Info) => Self::Menu.transit(),
             (Self::Menu, FlowMsg::Choice(0)) => Self::Info.swipe_left(),
             (Self::Menu, FlowMsg::Cancelled) => Self::Number.swipe_right(),
-            (Self::Info, FlowMsg::Cancelled) => Self::Menu.swipe_right(),
+            (Self::Info, FlowMsg::Cancelled) => Self::Menu.transit(),
             (Self::Number, FlowMsg::Choice(n)) => self.return_msg(FlowMsg::Choice(n)),
             _ => self.do_nothing(),
         }

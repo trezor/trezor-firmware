@@ -7,8 +7,9 @@ use crate::{
     },
     ui::{
         component::{
-            base::AttachType, swipe_detect::SwipeSettings, Component, Event, EventCtx, SwipeDetect,
-            SwipeDetectMsg, SwipeDirection,
+            base::{AttachType, AttachType::Swipe},
+            swipe_detect::SwipeSettings,
+            Component, Event, EventCtx, SwipeDetect, SwipeDetectMsg, SwipeDirection,
         },
         display::Color,
         event::{SwipeEvent, TouchEvent},
@@ -147,20 +148,20 @@ impl SwipeFlow {
         &mut self.store[self.state.index()]
     }
 
-    fn goto(&mut self, ctx: &mut EventCtx, direction: SwipeDirection) {
+    fn goto(&mut self, ctx: &mut EventCtx, attach_type: AttachType) {
         self.swipe = SwipeDetect::new();
         self.allow_swipe = true;
 
         self.current_page_mut()
-            .event(ctx, Event::Attach(AttachType::Swipe(direction)));
+            .event(ctx, Event::Attach(attach_type));
 
         self.internal_pages = self.current_page_mut().get_internal_page_count() as u16;
 
-        match direction {
-            SwipeDirection::Up => {
+        match attach_type {
+            Swipe(SwipeDirection::Up) => {
                 self.internal_state = 0;
             }
-            SwipeDirection::Down => {
+            Swipe(SwipeDirection::Down) => {
                 self.internal_state = self.internal_pages.saturating_sub(1);
             }
             _ => {}
@@ -297,7 +298,7 @@ impl SwipeFlow {
 
                 let config = self.current_page().get_swipe_config();
 
-                if let (_, Decision::Transition(direction)) = state_change {
+                if let (_, Decision::Transition(Swipe(direction))) = state_change {
                     if config.is_allowed(direction) {
                         if !animation_disabled() {
                             self.swipe.trigger(ctx, direction, config);
@@ -317,9 +318,9 @@ impl SwipeFlow {
         let (new_state, decision) = state_change;
         self.state = new_state;
         match decision {
-            Decision::Transition(direction) => {
+            Decision::Transition(attach) => {
                 self.state = new_state;
-                self.goto(ctx, direction);
+                self.goto(ctx, attach);
                 None
             }
             Decision::Return(msg) => {

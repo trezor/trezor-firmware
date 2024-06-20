@@ -1,4 +1,4 @@
-use crate::ui::component::{swipe_detect::SwipeConfig, SwipeDirection};
+use crate::ui::component::{base::AttachType, swipe_detect::SwipeConfig, SwipeDirection};
 
 pub trait Swipable {
     fn get_swipe_config(&self) -> SwipeConfig;
@@ -27,7 +27,7 @@ pub enum Decision {
 
     /// Initiate transition to another state, end event processing.
     /// NOTE: it might make sense to include Option<ButtonRequest> here
-    Transition(SwipeDirection),
+    Transition(AttachType),
 
     /// Yield a message to the caller of the flow (i.e. micropython), end event
     /// processing.
@@ -76,7 +76,7 @@ pub trait FlowState {
 pub trait DecisionBuilder: FlowState + Sized {
     #[inline]
     fn swipe(&'static self, direction: SwipeDirection) -> StateChange {
-        (self, Decision::Transition(direction))
+        (self, Decision::Transition(AttachType::Swipe(direction)))
     }
 
     #[inline]
@@ -97,6 +97,11 @@ pub trait DecisionBuilder: FlowState + Sized {
     #[inline]
     fn swipe_down(&'static self) -> StateChange {
         self.swipe(SwipeDirection::Down)
+    }
+
+    #[inline]
+    fn transit(&'static self) -> StateChange {
+        (self, Decision::Transition(AttachType::Initial))
     }
 
     #[inline]

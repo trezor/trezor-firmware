@@ -60,12 +60,12 @@ impl FlowState for ShowTutorial {
     fn handle_event(&'static self, msg: FlowMsg) -> StateChange {
         match (self, msg) {
             (Self::StepWelcome, FlowMsg::Confirmed) => Self::StepBegin.swipe_up(),
-            (Self::StepMenu, FlowMsg::Info) => Self::Menu.swipe_left(),
+            (Self::StepMenu, FlowMsg::Info) => Self::Menu.transit(),
             (Self::Menu, FlowMsg::Choice(0)) => Self::DidYouKnow.swipe_left(),
             (Self::Menu, FlowMsg::Choice(1)) => Self::StepBegin.swipe_right(),
             (Self::Menu, FlowMsg::Choice(2)) => Self::HoldToExit.swipe_up(),
             (Self::Menu, FlowMsg::Cancelled) => Self::StepMenu.swipe_right(),
-            (Self::DidYouKnow, FlowMsg::Cancelled) => Self::Menu.swipe_right(),
+            (Self::DidYouKnow, FlowMsg::Cancelled) => Self::Menu.transit(),
             (Self::StepHold, FlowMsg::Confirmed) => Self::StepDone.swipe_up(),
             (Self::HoldToExit, FlowMsg::Confirmed) => Self::StepDone.swipe_up(),
             _ => self.do_nothing(),

@@ -51,12 +51,12 @@ impl FlowState for ConfirmAction {
 
     fn handle_event(&'static self, msg: FlowMsg) -> StateChange {
         match (self, msg) {
-            (Self::Intro, FlowMsg::Info) => Self::Menu.swipe_left(),
+            (Self::Intro, FlowMsg::Info) => Self::Menu.transit(),
             (Self::Menu, FlowMsg::Cancelled) => Self::Intro.swipe_right(),
             (Self::Menu, FlowMsg::Choice(0)) => self.return_msg(FlowMsg::Cancelled),
             (Self::Menu, FlowMsg::Choice(1)) => self.return_msg(FlowMsg::Info),
             (Self::Confirm, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Confirmed),
-            (Self::Confirm, FlowMsg::Info) => Self::Menu.swipe_left(),
+            (Self::Confirm, FlowMsg::Info) => Self::Menu.transit(),
             _ => self.do_nothing(),
         }
     }
@@ -87,7 +87,7 @@ impl FlowState for ConfirmActionSimple {
 
     fn handle_event(&'static self, msg: FlowMsg) -> StateChange {
         match (self, msg) {
-            (Self::Intro, FlowMsg::Info) => Self::Menu.swipe_left(),
+            (Self::Intro, FlowMsg::Info) => Self::Menu.transit(),
             (Self::Menu, FlowMsg::Cancelled) => Self::Intro.swipe_right(),
             (Self::Menu, FlowMsg::Choice(0)) => self.return_msg(FlowMsg::Cancelled),
             (Self::Menu, FlowMsg::Choice(1)) => self.return_msg(FlowMsg::Info),

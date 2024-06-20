@@ -47,7 +47,7 @@ impl FlowState for WarningHiPrio {
 
     fn handle_event(&'static self, msg: FlowMsg) -> StateChange {
         match (self, msg) {
-            (Self::Message, FlowMsg::Info) => Self::Menu.swipe_left(),
+            (Self::Message, FlowMsg::Info) => Self::Menu.transit(),
             (Self::Menu, FlowMsg::Choice(1)) => self.return_msg(FlowMsg::Confirmed),
             (Self::Menu, FlowMsg::Choice(_)) => Self::Cancelled.swipe_up(),
             (Self::Menu, FlowMsg::Cancelled) => Self::Message.swipe_right(),
