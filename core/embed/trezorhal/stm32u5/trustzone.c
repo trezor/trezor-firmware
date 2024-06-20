@@ -20,6 +20,7 @@
 #include <trustzone.h>
 
 #include STM32_HAL_H
+#include "irq.h"
 
 #ifdef BOARDLOADER
 
@@ -142,8 +143,8 @@ void trustzone_init_boardloader(void) {
   HAL_GTZC_TZIC_EnableIT(GTZC_PERIPH_ALL);
 
   // Enable GTZC secure interrupt
-  HAL_NVIC_SetPriority(GTZC_IRQn, 0, 0);  // Highest priority level
-  HAL_NVIC_EnableIRQ(GTZC_IRQn);
+  NVIC_SetPriority(GTZC_IRQn, IRQ_PRI_HIGHEST);
+  NVIC_EnableIRQ(GTZC_IRQn);
 }
 
 #endif  // BOARDLOADER
