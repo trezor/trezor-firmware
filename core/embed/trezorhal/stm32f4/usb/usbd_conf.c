@@ -147,7 +147,7 @@ void HAL_PCD_MspInit(PCD_HandleTypeDef *hpcd)
 #endif
 
     /* Set USBFS Interrupt priority */
-    svc_setpriority(OTG_FS_IRQn, IRQ_PRI_OTG_FS);
+    svc_setpriority(OTG_FS_IRQn, IRQ_PRI_NORMAL);
 
     /* Enable USBFS Interrupt */
     svc_enableIRQ(OTG_FS_IRQn);
@@ -302,7 +302,7 @@ void HAL_PCD_MspInit(PCD_HandleTypeDef *hpcd)
 #endif // !USE_USB_HS_IN_FS
 
     /* Set USBHS Interrupt to the lowest priority */
-    svc_setpriority(OTG_HS_IRQn, IRQ_PRI_OTG_HS);
+    svc_setpriority(OTG_HS_IRQn, IRQ_PRI_NORMAL);
 
     /* Enable USBHS Interrupt */
     svc_enableIRQ(OTG_HS_IRQn);
