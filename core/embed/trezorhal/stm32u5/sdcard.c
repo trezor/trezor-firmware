@@ -138,7 +138,7 @@ void HAL_SD_MspInit(SD_HandleTypeDef *hsd) {
     SDMMC_CLK_ENABLE();
 
     // NVIC configuration for SDIO interrupts
-    svc_setpriority(SDMMC_IRQn, IRQ_PRI_SDIO);
+    svc_setpriority(SDMMC_IRQn, IRQ_PRI_NORMAL);
     svc_enableIRQ(SDMMC_IRQn);
   }
 

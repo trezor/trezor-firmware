@@ -44,7 +44,7 @@ void GPDMA1_Channel0_IRQHandler(void) {
   if (dma_transfer_remaining == 0) {
     // transfer finished, disable the channel
     HAL_DMA_DeInit(&DMA_Handle);
-    HAL_NVIC_DisableIRQ(GPDMA1_Channel0_IRQn);
+    NVIC_DisableIRQ(GPDMA1_Channel0_IRQn);
     data_src = NULL;
     data_dst = NULL;
 
@@ -97,8 +97,8 @@ void bg_copy_start_const_out_8(const uint8_t *src, uint8_t *dst, size_t size,
                                                    DMA_CHANNEL_SRC_SEC |
                                                    DMA_CHANNEL_DEST_SEC);
 
-  HAL_NVIC_SetPriority(GPDMA1_Channel0_IRQn, IRQ_PRI_DMA, 0);
-  HAL_NVIC_EnableIRQ(GPDMA1_Channel0_IRQn);
+  NVIC_SetPriority(GPDMA1_Channel0_IRQn, IRQ_PRI_NORMAL);
+  NVIC_EnableIRQ(GPDMA1_Channel0_IRQn);
 
   HAL_DMA_Start_IT(&DMA_Handle, (uint32_t)src, (uint32_t)dst, data_to_send);
 }
@@ -108,7 +108,7 @@ void bg_copy_abort(void) {
   dma_data_transferred = 0;
   HAL_DMA_Abort(&DMA_Handle);
   HAL_DMA_DeInit(&DMA_Handle);
-  HAL_NVIC_DisableIRQ(GPDMA1_Channel0_IRQn);
+  NVIC_DisableIRQ(GPDMA1_Channel0_IRQn);
   data_src = NULL;
   data_dst = NULL;
 }
