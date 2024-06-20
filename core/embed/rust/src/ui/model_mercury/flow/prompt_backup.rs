@@ -56,10 +56,10 @@ impl FlowState for PromptBackup {
 
     fn handle_event(&'static self, msg: FlowMsg) -> StateChange {
         match (self, msg) {
-            (Self::Intro, FlowMsg::Info) => Self::Menu.swipe_left(),
+            (Self::Intro, FlowMsg::Info) => Self::Menu.transit(),
             (Self::Menu, FlowMsg::Choice(0)) => Self::SkipBackupIntro.swipe_left(),
             (Self::Menu, FlowMsg::Cancelled) => Self::Intro.swipe_right(),
-            (Self::SkipBackupIntro, FlowMsg::Cancelled) => Self::Menu.swipe_right(),
+            (Self::SkipBackupIntro, FlowMsg::Cancelled) => Self::Menu.transit(),
             (Self::SkipBackupConfirm, FlowMsg::Cancelled) => Self::SkipBackupIntro.swipe_right(),
             (Self::SkipBackupConfirm, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Cancelled),
             _ => self.do_nothing(),

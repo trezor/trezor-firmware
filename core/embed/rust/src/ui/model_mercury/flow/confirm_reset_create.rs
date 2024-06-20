@@ -50,11 +50,11 @@ impl FlowState for ConfirmResetCreate {
 
     fn handle_event(&'static self, msg: FlowMsg) -> StateChange {
         match (self, msg) {
-            (Self::Intro, FlowMsg::Info) => Self::Menu.swipe_left(),
+            (Self::Intro, FlowMsg::Info) => Self::Menu.transit(),
             (Self::Menu, FlowMsg::Cancelled) => Self::Intro.swipe_right(),
             (Self::Menu, FlowMsg::Choice(0)) => self.return_msg(FlowMsg::Cancelled),
             (Self::Confirm, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Confirmed),
-            (Self::Confirm, FlowMsg::Info) => Self::Menu.swipe_left(),
+            (Self::Confirm, FlowMsg::Info) => Self::Menu.transit(),
             _ => self.do_nothing(),
         }
     }
