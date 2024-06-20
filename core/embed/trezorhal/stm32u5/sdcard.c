@@ -301,16 +301,12 @@ secbool sdcard_read_blocks(uint32_t *dest, uint32_t block_num,
 
   HAL_StatusTypeDef err = HAL_OK;
 
-  // we must disable USB irqs to prevent MSC contention with SD card
-  uint32_t basepri = raise_irq_pri(IRQ_PRI_OTG_FS);
-
   sdcard_reset_periph();
   err =
       HAL_SD_ReadBlocks_DMA(&sd_handle, (uint8_t *)dest, block_num, num_blocks);
   if (err == HAL_OK) {
     err = sdcard_wait_finished(&sd_handle, 5000);
   }
-  restore_irq_pri(basepri);
 
   return sectrue * (err == HAL_OK);
 }
@@ -329,17 +325,12 @@ secbool sdcard_write_blocks(const uint32_t *src, uint32_t block_num,
 
   HAL_StatusTypeDef err = HAL_OK;
 
-  // we must disable USB irqs to prevent MSC contention with SD card
-  uint32_t basepri = raise_irq_pri(IRQ_PRI_OTG_FS);
-
   sdcard_reset_periph();
   err =
       HAL_SD_WriteBlocks_DMA(&sd_handle, (uint8_t *)src, block_num, num_blocks);
   if (err == HAL_OK) {
     err = sdcard_wait_finished(&sd_handle, 5000);
   }
-
-  restore_irq_pri(basepri);
 
   return sectrue * (err == HAL_OK);
 }
