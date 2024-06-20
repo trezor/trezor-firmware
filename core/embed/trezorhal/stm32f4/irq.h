@@ -155,10 +155,7 @@ static inline void restore_irq_pri(uint32_t state) {
 
 #define IRQ_PRI_EXTINT          NVIC_EncodePriority(NVIC_PRIORITYGROUP_4, 14, 0)
 
-// PENDSV should be at the lowst priority so that other interrupts complete
-// before exception is raised.
-#define IRQ_PRI_PENDSV          NVIC_EncodePriority(NVIC_PRIORITYGROUP_4, 15, 0)
-#define IRQ_PRI_RTC_WKUP        NVIC_EncodePriority(NVIC_PRIORITYGROUP_4, 15, 0)
+//?#define IRQ_PRI_RTC_WKUP        NVIC_EncodePriority(NVIC_PRIORITYGROUP_4, 15, 0)
 
 // !@# TAMPER interrupt priority should be probably much higher
 #define IRQ_PRI_TAMP            NVIC_EncodePriority(NVIC_PRIORITYGROUP_4, 15, 0)
