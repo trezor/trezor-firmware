@@ -20,6 +20,7 @@ import sys
 from typing import TYPE_CHECKING, BinaryIO, Optional, Sequence, Tuple
 
 import click
+import requests
 
 from .. import debuglink, device, exceptions, messages, ui
 from . import ChoiceType, with_client
@@ -348,6 +349,11 @@ def set_busy(
     return device.set_busy(client, expiry * 1000)
 
 
+PUBKEY_WHITELIST_URL_TEMPLATE = (
+    "https://data.trezor.io/firmware/{model}/authenticity.json"
+)
+
+
 @cli.command()
 @click.argument("hex_challenge", required=False)
 @click.option("-R", "--root", type=click.File("rb"), help="Custom root certificate.")
@@ -373,9 +379,9 @@ def authenticate(
     Use the --raw option to get the raw challenge, signature, and certificate data.
 
     Otherwise, trezorctl will attempt to decode the signatures and check their
-    authenticity. By default, it will also check the public keys against a built-in
-    whitelist, and in the future also against a whitelist downloaded from Trezor
-    servers. You can skip this check with the --skip-whitelist option.
+    authenticity. By default, it will also check the public keys against a whitelist
+    downloaded from Trezor servers. You can skip this check with the --skip-whitelist
+    option.
 
     \b
     When not using --raw, 'cryptography' library is required. You can install it via:
@@ -430,8 +436,20 @@ def authenticate(
     authentication.LOG.addHandler(handler)
     authentication.LOG.setLevel(logging.DEBUG)
 
+    if skip_whitelist:
+        whitelist = None
+    else:
+        whitelist_json = requests.get(
+            PUBKEY_WHITELIST_URL_TEMPLATE.format(
+                model=client.model.internal_name.lower()
+            )
+        ).json()
+        whitelist = [bytes.fromhex(pk) for pk in whitelist_json["ca_pubkeys"]]
+
     try:
-        authentication.authenticate_device(client, challenge, root_pubkey=root_bytes)
+        authentication.authenticate_device(
+            client, challenge, root_pubkey=root_bytes, whitelist=whitelist
+        )
     except authentication.DeviceNotAuthentic:
         click.echo("Device is not authentic.")
         sys.exit(5)
