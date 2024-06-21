@@ -34,6 +34,7 @@ jump_to:
   // "there is no requirement to insert memory barrier instructions after CPSID".
   cpsid f
   // wipe memory at the end of the current stage of code
+  ldr r2, =0             // r2 - the word-sized value to be written
   ldr r0, =sram1_start   // r0 - point to beginning of SRAM
   ldr r1, =sram1_end     // r1 - point to byte after the end of SRAM
   bl memset_reg
