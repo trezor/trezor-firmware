@@ -633,8 +633,11 @@ uint32_t touch_get_event(void) {
     uint32_t xy = touch_pack_xy(driver->prev_state.X, driver->prev_state.Y);
     event = TOUCH_END | xy;
   } else if (new_state.TouchDetected) {
-    uint32_t xy = touch_pack_xy(new_state.X, new_state.Y);
-    event = TOUCH_MOVE | xy;
+    if ((new_state.X != driver->prev_state.X) ||
+        (new_state.Y != driver->prev_state.Y)) {
+      uint32_t xy = touch_pack_xy(new_state.X, new_state.Y);
+      event = TOUCH_MOVE | xy;
+    }
   }
 
   driver->prev_state = new_state;
