@@ -100,7 +100,7 @@ int optiga_sign(uint8_t index, const uint8_t *digest, size_t digest_size,
                        &signature[2], max_sig_size - 2, sig_size);
   if (ret == OPTIGA_ERR_CMD) {
     uint8_t error_code = 0;
-    optiga_get_error_code(&error_code);
+    (void) optiga_get_error_code(&error_code);
     return error_code + OPTIGA_COMMAND_ERROR_OFFSET;
   }
 
@@ -672,7 +672,7 @@ int optiga_pin_verify_v4(OPTIGA_UI_PROGRESS ui_progress,
   memzero(stretched_pin, sizeof(stretched_pin));
   if (res == OPTIGA_ERR_CMD) {
     uint8_t error_code = 0;
-    optiga_get_error_code(&error_code);
+    (void) optiga_get_error_code(&error_code);
     return error_code + OPTIGA_COMMAND_ERROR_OFFSET;
   }
 
@@ -736,7 +736,7 @@ static int optiga_pin_stretch_hmac(
   memzero(digest, sizeof(digest));
   if (res != OPTIGA_SUCCESS) {
     uint8_t error_code = 0;
-    optiga_get_error_code(&error_code);
+    (void) optiga_get_error_code(&error_code);
     if (error_code + OPTIGA_COMMAND_ERROR_OFFSET ==
         OPTIGA_ERR_ACCESS_COND_NOT_SAT) {
       return OPTIGA_ERR_COUNTER_EXCEEDED;
@@ -777,7 +777,7 @@ int optiga_pin_verify(OPTIGA_UI_PROGRESS ui_progress,
   memzero(digest, sizeof(digest));
   if (res == OPTIGA_ERR_CMD) {
     uint8_t error_code = 0;
-    optiga_get_error_code(&error_code);
+    (void) optiga_get_error_code(&error_code);
     return error_code + OPTIGA_COMMAND_ERROR_OFFSET;
   }
 
