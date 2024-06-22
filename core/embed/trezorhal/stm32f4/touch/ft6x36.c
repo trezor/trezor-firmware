@@ -418,12 +418,20 @@ uint32_t touch_get_event(void) {
       // Finger was just lifted up
       event = TOUCH_END | xy;
     } else {
-      // 1. Most likely, we have missed the PRESS_DOWN event.
-      //    Touch duration was too short (< 20ms) to be worth reporting.
-      // 2. Finger is still lifted up. Since we have already sent the
-      //    TOUCH_END event => no event needed. This should not happen
-      //    since two consecutive LIFT_UPs are not possible due to
-      //    testing the interrupt line before reading the registers.
+      if (!starving && ((x != driver->last_x) || (y != driver->last_y))) {
+        // We have missed the PRESS_DOWN event.
+        // Report the start event only if the coordinates
+        // have changed and driver is not starving.
+        // This suggest that the previous touch was very short,
+        // or/and the driver is not called very frequently.
+        event = TOUCH_START | xy;
+      } else {
+        // Either the driver is starving or the coordinates
+        // have not changed, which would suggest that the TOUCH_END
+        // is repeated, so no event is needed -this should not happen
+        // since two consecutive LIFT_UPs are not possible due to
+        // testing the interrupt line before reading the registers.
+      }
     }
   }
 
