@@ -101,11 +101,6 @@ void collect_hw_entropy(void) {
          NULL);
 }
 
-// this function resets settings changed in one layer (bootloader/firmware),
-// which might be incompatible with the other layers older versions,
-// where this setting might be unknown
-void ensure_compatible_settings(void) {}
-
 void invalidate_firmware(void) {
   // on stm32u5, we need to disable the instruction cache before erasing the
   // firmware - otherwise, the write check will fail

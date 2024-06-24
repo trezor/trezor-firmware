@@ -93,6 +93,12 @@ static inline void display_init(display_content_mode_t mode) {
 }
 
 static inline void display_deinit(display_content_mode_t mode) {
+
+#ifdef TREZOR_MODEL_T
+  if (mode == DISPLAY_RESET_CONTENT) {
+    display_orientation(0);
+  }
+#endif
   display_finish_actions();
 }
 

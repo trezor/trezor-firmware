@@ -117,22 +117,6 @@ void collect_hw_entropy(void) {
          NULL);
 }
 
-// this function resets settings changed in one layer (bootloader/firmware),
-// which might be incompatible with the other layers older versions,
-// where this setting might be unknown
-void ensure_compatible_settings(void) {
-#ifdef TREZOR_MODEL_T
-#ifdef NEW_RENDERING
-  display_set_compatible_settings();
-#else
-  display_set_big_endian();
-#endif
-  display_orientation(0);
-  set_core_clock(CLOCK_168_MHZ);
-  backlight_pwm_deinit(BACKLIGHT_RETAIN);
-#endif
-}
-
 void invalidate_firmware(void) {
   // erase start of the firmware (metadata) -> invalidate FW
   ensure(flash_unlock_write(), NULL);

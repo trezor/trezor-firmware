@@ -31,8 +31,10 @@ __attribute__((noreturn)) static void _reboot_to_bootloader(
 #else
 __attribute__((noreturn)) static void _reboot_to_bootloader(
     boot_command_t boot_command) {
-  display_deinit(DISPLAY_RETAIN_CONTENT);
+  display_deinit(DISPLAY_RESET_CONTENT);
+#ifdef ENSURE_COMPATIBLE_SETTINGS
   ensure_compatible_settings();
+#endif
   mpu_config_bootloader();
   jump_to_with_flag(IMAGE_CODE_ALIGN(BOOTLOADER_START + IMAGE_HEADER_SIZE),
                     boot_command);

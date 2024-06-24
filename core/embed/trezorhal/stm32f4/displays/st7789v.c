@@ -721,6 +721,7 @@ void display_finish_actions(void) {
 #ifndef BOARDLOADER
   bg_copy_wait();
 #endif
+  backlight_pwm_deinit(BACKLIGHT_RETAIN);
 }
 #else
 //  NOT FRAMEBUFFER
@@ -753,6 +754,11 @@ uint16_t display_get_window_offset(void) { return 0; }
 
 void display_shift_window(uint16_t pixels) {}
 
-void display_finish_actions(void) {}
+void display_finish_actions(void) {
+  backlight_pwm_deinit(BACKLIGHT_RETAIN);
+#ifdef TREZOR_MODEL_T
+  display_set_big_endian();
+#endif
+}
 
 #endif

@@ -76,7 +76,7 @@ void display_pixeldata(pixel_color c) {
   c = (c & 0x8410) ? 0xFFFF : 0x0000;
 #endif
   if (!RENDERER) {
-    display_init();
+    display_init_all();
   }
   if (PIXELWINDOW.pos.x <= PIXELWINDOW.end.x &&
       PIXELWINDOW.pos.y <= PIXELWINDOW.end.y) {
@@ -97,7 +97,7 @@ void display_reset_state() {}
 
 void display_init_seq(void) {}
 
-void display_deinit(void) {
+void display_exit_handler(void) {
   SDL_FreeSurface(PREV_SAVED);
   SDL_FreeSurface(BUFFER);
   if (BACKGROUND != NULL) {
@@ -115,12 +115,12 @@ void display_deinit(void) {
   SDL_Quit();
 }
 
-void display_init(void) {
+void display_init_all(void) {
   if (SDL_Init(SDL_INIT_VIDEO) != 0) {
     printf("%s\n", SDL_GetError());
     error_shutdown("SDL_Init error");
   }
-  atexit(display_deinit);
+  atexit(display_exit_handler);
 
   char *window_title = NULL;
   char *window_title_alloc = NULL;
@@ -197,7 +197,7 @@ void display_init(void) {
 
 void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1) {
   if (!RENDERER) {
-    display_init();
+    display_init_all();
   }
   PIXELWINDOW.start.x = x0;
   PIXELWINDOW.start.y = y0;
@@ -211,7 +211,7 @@ void display_sync(void) {}
 
 void display_refresh(void) {
   if (!RENDERER) {
-    display_init();
+    display_init_all();
   }
   if (BACKGROUND) {
     const SDL_Rect r = {0, 0, WINDOW_WIDTH, WINDOW_HEIGHT};
@@ -267,7 +267,7 @@ int display_backlight(int val) {
 
 const char *display_save(const char *prefix) {
   if (!RENDERER) {
-    display_init();
+    display_init_all();
   }
   static int count;
   static char filename[256];

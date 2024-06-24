@@ -370,8 +370,6 @@ display_fb_info_t display_get_frame_buffer(void) {
 
 void display_refresh(void) { display_sync_with_fb(); }
 
-void display_set_compatible_settings() {}
-
 void display_fill(const gfx_bitblt_t *bb) {
   display_driver_t *drv = &g_display_driver;
 
