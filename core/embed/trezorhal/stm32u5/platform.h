@@ -34,7 +34,6 @@ typedef enum {
 } clock_settings_t;
 
 void set_core_clock(clock_settings_t settings);
-void ensure_compatible_settings(void);
 void drop_privileges(void);
 
 // the following functions are defined in util.s

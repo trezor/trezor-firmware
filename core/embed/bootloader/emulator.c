@@ -188,5 +188,3 @@ __attribute__((noreturn)) void jump_to(uint32_t address) {
                       "STORAGE WAS RETAINED");
   }
 }
-
-void ensure_compatible_settings(void) {}

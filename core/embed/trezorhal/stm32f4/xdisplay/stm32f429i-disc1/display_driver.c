@@ -107,8 +107,6 @@ void display_refresh(void) {
   // Do nothing as using just a single frame buffer
 }
 
-void display_set_compatible_settings() {}
-
 void display_fill(const gfx_bitblt_t *bb) {
   display_driver_t *drv = &g_display_driver;
 

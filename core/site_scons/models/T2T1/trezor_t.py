@@ -40,6 +40,7 @@ def configure(
     defines += [f"HW_REVISION={hw_revision}"]
     sources += [
         "embed/models/T2T1/model_T2T1_layout.c",
+        "embed/models/T2T1/compat_settings.c",
     ]
     if "new_rendering" in features_wanted:
         sources += ["embed/trezorhal/xdisplay_legacy.c"]
