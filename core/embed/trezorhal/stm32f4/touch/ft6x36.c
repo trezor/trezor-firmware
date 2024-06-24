@@ -29,6 +29,10 @@
 #include "i2c.h"
 #include "touch.h"
 
+#ifdef TOUCH_PANEL_LX154A2422CPT23
+#include "panels/lx154a2422cpt23.h"
+#endif
+
 typedef struct {
   // Set if the driver is initialized
   secbool initialized;
@@ -222,6 +226,16 @@ static secbool ft6x36_configure(void) {
   return sectrue;
 }
 
+static void ft6x36_panel_correction(uint16_t x, uint16_t y, uint16_t* x_new,
+                                    uint16_t* y_new) {
+#ifdef TOUCH_PANEL_LX154A2422CPT23
+  lx154a2422cpt23_touch_correction(x, y, x_new, y_new);
+#else
+  *x_new = x;
+  *y_new = y;
+#endif
+}
+
 secbool touch_init(void) {
   touch_driver_t* driver = &g_touch_driver;
 
@@ -376,8 +390,14 @@ uint32_t touch_get_event(void) {
   uint8_t flags = regs[FT6X63_REG_P1_XH] & FT6X63_EVENT_MASK;
 
   // Extract touch coordinates
-  uint16_t x = ((regs[FT6X63_REG_P1_XH] & 0x0F) << 8) | regs[FT6X63_REG_P1_XL];
-  uint16_t y = ((regs[FT6X63_REG_P1_YH] & 0x0F) << 8) | regs[FT6X63_REG_P1_YL];
+  uint16_t x_raw =
+      ((regs[FT6X63_REG_P1_XH] & 0x0F) << 8) | regs[FT6X63_REG_P1_XL];
+  uint16_t y_raw =
+      ((regs[FT6X63_REG_P1_YH] & 0x0F) << 8) | regs[FT6X63_REG_P1_YL];
+
+  uint16_t x, y;
+
+  ft6x36_panel_correction(x_raw, y_raw, &x, &y);
 
   uint32_t event = 0;
 
