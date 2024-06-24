@@ -326,7 +326,10 @@ int main(void) {
   write_bootloader_min_version(hdr->monotonic);
 
   display_deinit(DISPLAY_RETAIN_CONTENT);
+
+#ifdef ENSURE_COMPATIBLE_SETTINGS
   ensure_compatible_settings();
+#endif
 
   mpu_config_off();
 

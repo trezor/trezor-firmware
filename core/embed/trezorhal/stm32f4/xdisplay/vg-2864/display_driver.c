@@ -351,8 +351,6 @@ void display_refresh(void) {
   display_sync_with_fb(drv);
 }
 
-void display_set_compatible_settings() {}
-
 void display_fill(const gfx_bitblt_t *bb) {
   display_driver_t *drv = &g_display_driver;
 
