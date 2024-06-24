@@ -359,7 +359,10 @@ int main(void) {
 #endif
 
   display_deinit(DISPLAY_RETAIN_CONTENT);
+
+#ifdef ENSURE_COMPATIBLE_SETTINGS
   ensure_compatible_settings();
+#endif
 
   mpu_config_off();
 

@@ -18,7 +18,6 @@ extern uint32_t systick_val_copy;
 
 // from util.s
 extern void shutdown_privileged(void);
-extern void ensure_compatible_settings(void);
 
 // Initializes the supervise module
 //

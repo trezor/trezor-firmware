@@ -126,11 +126,6 @@ void display_wait_for_sync(void);
 // swaps the active (currently displayed) and the inactive frame buffers.
 void display_refresh(void);
 
-// Sets display to the mode compatible with the legacy bootloader code.
-//
-// This is used when switching between the firmware and the bootloader.
-void display_set_compatible_settings(void);
-
 // Following functions define display's bitblt interface.
 //
 // These functions draw directly to to display or to the
