@@ -72,9 +72,23 @@ void display_init(display_content_mode_t mode) {
 void display_deinit(display_content_mode_t mode) {
 #ifdef XFRAMEBUFFER
 #ifndef BOARDLOADER
+  // Ensure that the ready frame buffer is transfered to
+  // the display controller
   display_ensure_refreshed();
+  // Disable periodical interrupt
   svc_disableIRQ(DISPLAY_TE_INTERRUPT_NUM);
 #endif
+#endif
+
+  backlight_pwm_deinit(mode == DISPLAY_RESET_CONTENT ? BACKLIGHT_RESET : BACKLIGHT_RETAIN);
+
+#ifdef TREZOR_MODEL_T
+  // This ensures backward compatibility with legacy bootloader/firmware
+  // that relies on this hardware settings from the previous boot stage
+  if (mode == DISPLAY_RESET_CONTENT) {
+    display_set_orientation(0);
+  }
+  display_panel_set_big_endian();
 #endif
 }
 
@@ -123,5 +137,3 @@ int display_get_orientation(void) {
 
   return drv->orientation_angle;
 }
-
-void display_set_compatible_settings(void) { display_panel_set_big_endian(); }

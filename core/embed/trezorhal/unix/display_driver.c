@@ -254,7 +254,7 @@ void display_refresh(void) {
   display_driver_t *drv = &g_display_driver;
 
   if (!drv->renderer) {
-    display_init();
+    return;
   }
 
 #ifdef DISPLAY_MONO
@@ -285,10 +285,6 @@ void display_refresh(void) {
                      drv->orientation_angle, NULL, 0);
   }
   SDL_RenderPresent(drv->renderer);
-}
-
-void display_set_compatible_settings(void) {
-  // not used
 }
 
 #ifndef DISPLAY_MONO
@@ -365,7 +361,7 @@ const char *display_save(const char *prefix) {
   display_driver_t *drv = &g_display_driver;
 
   if (!drv->renderer) {
-    display_init();
+    return NULL;
   }
 
 #ifdef DISPLAY_MONO

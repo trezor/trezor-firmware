@@ -331,7 +331,10 @@ void real_jump_to_firmware(void) {
   }
 
   display_deinit(DISPLAY_RETAIN_CONTENT);
+
+#ifdef ENSURE_COMPATIBLE_SETTINGS
   ensure_compatible_settings();
+#endif
 
   mpu_config_off();
   jump_to(IMAGE_CODE_ALIGN(FIRMWARE_START + vhdr.hdrlen + IMAGE_HEADER_SIZE));
