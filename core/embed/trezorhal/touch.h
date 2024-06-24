@@ -66,6 +66,7 @@ uint32_t touch_get_event(void);
 #define TOUCH_START (1U << 24)
 #define TOUCH_MOVE (1U << 25)
 #define TOUCH_END (1U << 26)
+#define TOUCH_EVENT_MASK (0xFF << 24)
 
 // Returns x-coordinates from a packed touch event
 static inline uint16_t touch_unpack_x(uint32_t evt) {
