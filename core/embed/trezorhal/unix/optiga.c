@@ -156,7 +156,7 @@ bool optiga_random_buffer(uint8_t *dest, size_t size) {
 
 int optiga_pin_set(OPTIGA_UI_PROGRESS ui_progress,
                    uint8_t stretched_pin[OPTIGA_PIN_SECRET_SIZE]) {
-  ui_progress(OPTIGA_PIN_DERIVE_MS);
+  ui_progress(OPTIGA_PIN_SET_MS);
   return OPTIGA_SUCCESS;
 }
 
@@ -164,13 +164,13 @@ int optiga_pin_verify_v4(OPTIGA_UI_PROGRESS ui_progress,
                          const uint8_t pin_secret[OPTIGA_PIN_SECRET_SIZE],
                          uint8_t out_secret[OPTIGA_PIN_SECRET_SIZE]) {
   memcpy(out_secret, pin_secret, OPTIGA_PIN_SECRET_SIZE);
-  ui_progress(OPTIGA_PIN_DERIVE_MS);
+  ui_progress(OPTIGA_PIN_VERIFY_MS);
   return OPTIGA_SUCCESS;
 }
 
 int optiga_pin_verify(OPTIGA_UI_PROGRESS ui_progress,
                       uint8_t stretched_pin[OPTIGA_PIN_SECRET_SIZE]) {
-  ui_progress(OPTIGA_PIN_DERIVE_MS);
+  ui_progress(OPTIGA_PIN_VERIFY_MS);
   return OPTIGA_SUCCESS;
 }
 
