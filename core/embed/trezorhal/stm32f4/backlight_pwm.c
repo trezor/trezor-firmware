@@ -198,27 +198,37 @@ void backlight_pwm_deinit(backlight_action_t action) {
     return;
   }
 
-  if (action == BACKLIGHT_RETAIN) {
-    // We keep both the GPIO and the timer running
-
 #ifdef TREZOR_MODEL_T
-    // This code here is for backward compatibility with the old
-    // bootloader that used a different PWM settings.
+  // This code is for backward compatibility with the older
+  // bootloader/firmware on model T that used different
+  // PWM settings and relies on proper settings from the
+  // previous stage during boot.
 
 // about 10Hz (with PSC = (SystemCoreClock / 1000000) - 1)
 #define LED_PWM_SLOW_TIM_PERIOD (10000)
 #define LED_PWM_PRESCALER_SLOW (SystemCoreClock / 1000000 - 1)  // 1 MHz
 
-    BACKLIGHT_PWM_TIM->PSC = LED_PWM_PRESCALER_SLOW;
-    BACKLIGHT_PWM_TIM->CR1 |= TIM_CR1_ARPE;
-    BACKLIGHT_PWM_TIM->CR2 |= TIM_CR2_CCPC;
-    BACKLIGHT_PWM_TIM->ARR = LED_PWM_SLOW_TIM_PERIOD - 1;
+  BACKLIGHT_PWM_TIM->PSC = LED_PWM_PRESCALER_SLOW;
+  BACKLIGHT_PWM_TIM->CR1 |= TIM_CR1_ARPE;
+  BACKLIGHT_PWM_TIM->CR2 |= TIM_CR2_CCPC;
+  BACKLIGHT_PWM_TIM->ARR = LED_PWM_SLOW_TIM_PERIOD - 1;
+
+  if (action == BACKLIGHT_RESET) {
+    BACKLIGHT_PWM_TIM->BACKLIGHT_PWM_TIM_CCR = 0;
+  } else {  // action == BACKLIGHT_RETAIN
     BACKLIGHT_PWM_TIM->BACKLIGHT_PWM_TIM_CCR =
         (LED_PWM_SLOW_TIM_PERIOD * drv->current_level) / 255;
-#endif
-  } else {
-    // TODO: deinitialize GPIOs and the TIMER
   }
+
+#else
+  if (action == BACKLIGHT_RESET) {
+    // TODO: reset TIMER and GPIO
+    BACKLIGHT_PWM_TIM->BACKLIGHT_PWM_TIM_CCR = 0;
+  } else {  // action == BACKLIGHT_RETAIN
+    BACKLIGHT_PWM_TIM->BACKLIGHT_PWM_TIM_CCR =
+        (LED_PWM_TIM_PERIOD * drv->current_level) / 255;
+  }
+#endif
 
   drv->initialized = false;
 }
