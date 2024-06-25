@@ -151,6 +151,11 @@ def get_features() -> Features:
     else:
         f.sd_card_present = False
 
+    if utils.USE_OPTIGA:
+        from trezor.crypto import optiga
+
+        f.optiga_sec = optiga.get_sec()
+
     f.initialized = storage_device.is_initialized()
 
     # private fields:
