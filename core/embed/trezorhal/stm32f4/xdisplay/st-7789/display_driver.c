@@ -72,7 +72,9 @@ void display_init(display_content_mode_t mode) {
   }
 
 #ifdef XFRAMEBUFFER
+#ifndef BOARDLOADER
   display_io_init_te_interrupt();
+#endif
 #endif
 
   drv->initialized = true;
