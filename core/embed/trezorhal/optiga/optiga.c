@@ -159,6 +159,13 @@ bool optiga_read_cert(uint8_t index, uint8_t *cert, size_t max_cert_size,
   return OPTIGA_SUCCESS == ret;
 }
 
+bool optiga_read_sec(uint8_t *sec) {
+  size_t size = 0;
+  optiga_result ret = optiga_get_data_object(OPTIGA_OID_SEC, false, sec,
+                                             sizeof(uint8_t), &size);
+  return ret == OPTIGA_SUCCESS && size == sizeof(uint8_t);
+}
+
 bool optiga_random_buffer(uint8_t *dest, size_t size) {
   while (size > OPTIGA_RANDOM_MAX_SIZE) {
     if (optiga_get_random(dest, OPTIGA_RANDOM_MAX_SIZE) != OPTIGA_SUCCESS) {

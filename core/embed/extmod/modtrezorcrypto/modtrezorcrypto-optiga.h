@@ -104,9 +104,22 @@ STATIC mp_obj_t mod_trezorcrypto_optiga_sign(mp_obj_t key_index,
   sig.len = sig_size;
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &sig);
 }
-
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_optiga_sign_obj,
                                  mod_trezorcrypto_optiga_sign);
+
+/// def get_sec() -> int | None:
+///     """
+///     Returns the value of Optiga's security event counter.
+///     """
+STATIC mp_obj_t mod_trezorcrypto_optiga_get_sec() {
+  uint8_t sec = 0;
+  if (optiga_read_sec(&sec)) {
+    return mp_obj_new_int_from_uint(sec);
+  }
+  return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorcrypto_optiga_get_sec_obj,
+                                 mod_trezorcrypto_optiga_get_sec);
 
 /// DEVICE_CERT_INDEX: int
 /// DEVICE_ECC_KEY_INDEX: int
@@ -116,6 +129,8 @@ STATIC const mp_rom_map_elem_t mod_trezorcrypto_optiga_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_get_certificate),
      MP_ROM_PTR(&mod_trezorcrypto_optiga_get_certificate_obj)},
     {MP_ROM_QSTR(MP_QSTR_sign), MP_ROM_PTR(&mod_trezorcrypto_optiga_sign_obj)},
+    {MP_ROM_QSTR(MP_QSTR_get_sec),
+     MP_ROM_PTR(&mod_trezorcrypto_optiga_get_sec_obj)},
     {MP_ROM_QSTR(MP_QSTR_DEVICE_CERT_INDEX),
      MP_ROM_INT(OPTIGA_DEVICE_CERT_INDEX)},
     {MP_ROM_QSTR(MP_QSTR_DEVICE_ECC_KEY_INDEX),
