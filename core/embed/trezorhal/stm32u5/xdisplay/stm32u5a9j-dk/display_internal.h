@@ -20,7 +20,21 @@
 #ifndef TREZOR_HAL_DISPLAY_INTERNAL_H
 #define TREZOR_HAL_DISPLAY_INTERNAL_H
 
+#include <stdbool.h>
 #include <stdint.h>
+
+// Display driver context.
+typedef struct {
+  // Set if the driver is initialized
+  bool initialized;
+  // Current display orientation (0, 90, 180, 270)
+  int orientation_angle;
+  // Current backlight level ranging from 0 to 255
+  int backlight_level;
+} display_driver_t;
+
+// Display driver instance
+extern display_driver_t g_display_driver;
 
 // Size of the physical frame buffer in bytes
 //

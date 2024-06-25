@@ -139,6 +139,14 @@ void DISPLAY_TE_INTERRUPT_HANDLER(void) {
 display_fb_info_t display_get_frame_buffer(void) {
   display_driver_t *drv = &g_display_driver;
 
+  if (!drv->initialized) {
+    display_fb_info_t fb = {
+        .ptr = NULL,
+        .stride = 0,
+    };
+    return fb;
+  }
+
   frame_buffer_state_t state;
 
   // We have to wait if the buffer was passed for copying
@@ -191,6 +199,10 @@ static void wait_for_te_signal(void) {
 void display_refresh(void) {
   display_driver_t *drv = &g_display_driver;
 
+  if (!drv->initialized) {
+    return;
+  }
+
   if (drv->queue.entry[drv->queue.wix] != FB_STATE_PREPARING) {
     // No refresh needed as the frame buffer is not in
     // the state to be copied to the display
@@ -234,6 +246,10 @@ void display_ensure_refreshed(void) {
 #ifndef BOARDLOADER
   display_driver_t *drv = &g_display_driver;
 
+  if (!drv->initialized) {
+    return;
+  }
+
   if (!is_mode_handler()) {
     bool copy_pending;
 
@@ -265,6 +281,10 @@ void display_ensure_refreshed(void) {
 void display_fill(const gfx_bitblt_t *bb) {
   display_fb_info_t fb = display_get_frame_buffer();
 
+  if (fb.ptr == NULL) {
+    return;
+  }
+
   gfx_bitblt_t bb_new = *bb;
   bb_new.dst_row = (uint16_t *)((uintptr_t)fb.ptr + fb.stride * bb_new.dst_y);
   bb_new.dst_stride = fb.stride;
@@ -274,6 +294,10 @@ void display_fill(const gfx_bitblt_t *bb) {
 
 void display_copy_rgb565(const gfx_bitblt_t *bb) {
   display_fb_info_t fb = display_get_frame_buffer();
+
+  if (fb.ptr == NULL) {
+    return;
+  }
 
   gfx_bitblt_t bb_new = *bb;
   bb_new.dst_row = (uint16_t *)((uintptr_t)fb.ptr + fb.stride * bb_new.dst_y);
@@ -285,6 +309,10 @@ void display_copy_rgb565(const gfx_bitblt_t *bb) {
 void display_copy_mono1p(const gfx_bitblt_t *bb) {
   display_fb_info_t fb = display_get_frame_buffer();
 
+  if (fb.ptr == NULL) {
+    return;
+  }
+
   gfx_bitblt_t bb_new = *bb;
   bb_new.dst_row = (uint16_t *)((uintptr_t)fb.ptr + fb.stride * bb_new.dst_y);
   bb_new.dst_stride = fb.stride;
@@ -294,6 +322,10 @@ void display_copy_mono1p(const gfx_bitblt_t *bb) {
 
 void display_copy_mono4(const gfx_bitblt_t *bb) {
   display_fb_info_t fb = display_get_frame_buffer();
+
+  if (fb.ptr == NULL) {
+    return;
+  }
 
   gfx_bitblt_t bb_new = *bb;
   bb_new.dst_row = (uint16_t *)((uintptr_t)fb.ptr + fb.stride * bb_new.dst_y);
