@@ -2976,6 +2976,12 @@
               "name": "spl_token",
               "is_authority": false,
               "optional": false
+            },
+            {
+              "//": "Some dApps still include the rent sysvar although it's not officially required anymore.",
+              "name": "rent_sysvar",
+              "is_authority": false,
+              "optional": true
             }
           ],
           "ui_properties": [

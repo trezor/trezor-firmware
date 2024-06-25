@@ -1281,6 +1281,7 @@ AssociatedTokenAccountProgram_Create = Struct(
         "token_mint" / Byte,
         "system_program" / Byte,
         "spl_token" / Byte,
+        "rent_sysvar" / Optional(Byte),
     ),
     "data"
     / CompactStruct(
