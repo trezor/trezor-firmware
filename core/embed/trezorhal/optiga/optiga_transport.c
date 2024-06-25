@@ -66,7 +66,10 @@ static const uint32_t I2C_TIMEOUT_MS = 25;
 static const int I2C_MAX_RETRY_COUNT = 10;
 
 // Maximum time in millisecods to retry reading Optiga's response to a command.
-static const int MAX_RETRY_READ_MS = 300;
+// If the SEC is high, then the throttling down delay can be as high as
+// t_max = 5000 ms. The maximum time to execute a non-RSA operation is 130 ms.
+// We round the total up to the nearest second.
+static const int MAX_RETRY_READ_MS = 6000;
 
 // Maximum number of times to retry reading Optiga's response to a command when
 // it claims it's not busy executing a command.
