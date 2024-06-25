@@ -2168,6 +2168,7 @@ if TYPE_CHECKING:
         unit_packaging: "int | None"
         haptic_feedback: "bool | None"
         recovery_type: "RecoveryType | None"
+        optiga_sec: "int | None"
 
         def __init__(
             self,
@@ -2222,6 +2223,7 @@ if TYPE_CHECKING:
             unit_packaging: "int | None" = None,
             haptic_feedback: "bool | None" = None,
             recovery_type: "RecoveryType | None" = None,
+            optiga_sec: "int | None" = None,
         ) -> None:
             pass
 
