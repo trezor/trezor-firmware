@@ -42,6 +42,8 @@
 
 // Display driver context.
 typedef struct {
+  // Set if the driver is initialized
+  bool initialized;
   // SPI driver instance
   SPI_HandleTypeDef spi;
   // Frame buffer (8-bit Mono)
@@ -53,7 +55,9 @@ typedef struct {
 } display_driver_t;
 
 // Display driver instance
-static display_driver_t g_display_driver;
+static display_driver_t g_display_driver = {
+    .initialized = false,
+};
 
 // Display controller registers
 #define OLED_SETCONTRAST 0x81
@@ -223,6 +227,10 @@ static void display_sync_with_fb(display_driver_t *drv) {
 void display_init(display_content_mode_t mode) {
   display_driver_t *drv = &g_display_driver;
 
+  if (drv->initialized) {
+    return;
+  }
+
   memset(drv, 0, sizeof(display_driver_t));
   drv->backlight_level = 255;
 
@@ -289,14 +297,22 @@ void display_init(display_content_mode_t mode) {
   } else {
     display_init_spi(drv);
   }
+
+  drv->initialized = true;
 }
 
 void display_deinit(display_content_mode_t mode) {
-  // Not used and intentionally left empty
+  display_driver_t *drv = &g_display_driver;
+
+  drv->initialized = false;
 }
 
 int display_set_backlight(int level) {
   display_driver_t *drv = &g_display_driver;
+
+  if (!drv->initialized) {
+    return 0;
+  }
 
   drv->backlight_level = 255;
   return drv->backlight_level;
@@ -305,11 +321,19 @@ int display_set_backlight(int level) {
 int display_get_backlight(void) {
   display_driver_t *drv = &g_display_driver;
 
+  if (!drv->initialized) {
+    return 0;
+  }
+
   return drv->backlight_level;
 }
 
 int display_set_orientation(int angle) {
   display_driver_t *drv = &g_display_driver;
+
+  if (!drv->initialized) {
+    return 0;
+  }
 
   if (angle != drv->orientation_angle) {
     if (angle == 0 || angle == 180) {
@@ -324,22 +348,37 @@ int display_set_orientation(int angle) {
 int display_get_orientation(void) {
   display_driver_t *drv = &g_display_driver;
 
+  if (!drv->initialized) {
+    return 0;
+  }
+
   return drv->orientation_angle;
 }
 
 display_fb_info_t display_get_frame_buffer(void) {
   display_driver_t *drv = &g_display_driver;
 
-  display_fb_info_t fb = {
-      .ptr = &drv->framebuf[0],
-      .stride = DISPLAY_RESX,
-  };
-
-  return fb;
+  if (!drv->initialized) {
+    static const display_fb_info_t fb = {
+        .ptr = NULL,
+        .stride = 0,
+    };
+    return fb;
+  } else {
+    display_fb_info_t fb = {
+        .ptr = &drv->framebuf[0],
+        .stride = DISPLAY_RESX,
+    };
+    return fb;
+  }
 }
 
 void display_refresh(void) {
   display_driver_t *drv = &g_display_driver;
+
+  if (!drv->initialized) {
+    return;
+  }
 
 #if defined USE_CONSUMPTION_MASK && !defined BOARDLOADER
   // This is an intentional randomization of the consumption masking algorithm
@@ -354,6 +393,10 @@ void display_refresh(void) {
 void display_fill(const gfx_bitblt_t *bb) {
   display_driver_t *drv = &g_display_driver;
 
+  if (!drv->initialized) {
+    return;
+  }
+
   gfx_bitblt_t bb_new = *bb;
   bb_new.dst_row = &drv->framebuf[DISPLAY_RESX * bb_new.dst_y];
   bb_new.dst_stride = DISPLAY_RESX;
@@ -363,6 +406,10 @@ void display_fill(const gfx_bitblt_t *bb) {
 
 void display_copy_mono1p(const gfx_bitblt_t *bb) {
   display_driver_t *drv = &g_display_driver;
+
+  if (!drv->initialized) {
+    return;
+  }
 
   gfx_bitblt_t bb_new = *bb;
   bb_new.dst_row = &drv->framebuf[DISPLAY_RESX * bb_new.dst_y];

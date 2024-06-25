@@ -41,10 +41,17 @@
 #endif
 
 // Display driver instance
-display_driver_t g_display_driver;
+display_driver_t g_display_driver = {
+    .initialized = false,
+};
 
 void display_init(display_content_mode_t mode) {
   display_driver_t* drv = &g_display_driver;
+
+  if (drv->initialized) {
+    return;
+  }
+
   memset(drv, 0, sizeof(display_driver_t));
 
   if (mode == DISPLAY_RESET_CONTENT) {
@@ -67,9 +74,17 @@ void display_init(display_content_mode_t mode) {
 #ifdef XFRAMEBUFFER
   display_io_init_te_interrupt();
 #endif
+
+  drv->initialized = true;
 }
 
 void display_deinit(display_content_mode_t mode) {
+  display_driver_t* drv = &g_display_driver;
+
+  if (!drv->initialized) {
+    return;
+  }
+
 #ifdef XFRAMEBUFFER
 #ifndef BOARDLOADER
   // Ensure that the ready frame buffer is transfered to
@@ -80,7 +95,8 @@ void display_deinit(display_content_mode_t mode) {
 #endif
 #endif
 
-  backlight_pwm_deinit(mode == DISPLAY_RESET_CONTENT ? BACKLIGHT_RESET : BACKLIGHT_RETAIN);
+  backlight_pwm_deinit(mode == DISPLAY_RESET_CONTENT ? BACKLIGHT_RESET
+                                                     : BACKLIGHT_RETAIN);
 
 #ifdef TREZOR_MODEL_T
   // This ensures backward compatibility with legacy bootloader/firmware
@@ -90,9 +106,17 @@ void display_deinit(display_content_mode_t mode) {
   }
   display_panel_set_big_endian();
 #endif
+
+  drv->initialized = false;
 }
 
 int display_set_backlight(int level) {
+  display_driver_t* drv = &g_display_driver;
+
+  if (!drv->initialized) {
+    return 0;
+  }
+
 #ifdef XFRAMEBUFFER
 #ifndef BOARDLOADER
   // if turning on the backlight, wait until the panel is refreshed
@@ -109,6 +133,10 @@ int display_get_backlight(void) { return backlight_pwm_get(); }
 
 int display_set_orientation(int angle) {
   display_driver_t* drv = &g_display_driver;
+
+  if (!drv->initialized) {
+    return 0;
+  }
 
   if (angle != drv->orientation_angle) {
     if (angle == 0 || angle == 90 || angle == 180 || angle == 270) {
@@ -134,6 +162,10 @@ int display_set_orientation(int angle) {
 
 int display_get_orientation(void) {
   display_driver_t* drv = &g_display_driver;
+
+  if (!drv->initialized) {
+    return 0;
+  }
 
   return drv->orientation_angle;
 }

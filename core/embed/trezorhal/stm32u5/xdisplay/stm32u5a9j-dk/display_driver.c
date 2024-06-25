@@ -30,18 +30,18 @@
 #error "Incompatible display resolution"
 #endif
 
-// Display driver context.
-typedef struct {
-  // Current display orientation (0, 90, 180, 270)
-  int orientation_angle;
-  // Current backlight level ranging from 0 to 255
-  int backlight_level;
-} display_driver_t;
-
 // Display driver instance
-static display_driver_t g_display_driver;
+display_driver_t g_display_driver = {
+    .initialized = false,
+};
 
 void display_init(display_content_mode_t mode) {
+  display_driver_t *drv = &g_display_driver;
+
+  if (drv->initialized) {
+    return;
+  }
+
   if (mode == DISPLAY_RESET_CONTENT) {
     RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
 
@@ -76,18 +76,32 @@ void display_init(display_content_mode_t mode) {
       BSP_LCD_SetFrameBuffer(0, GFXMMU_VIRTUAL_BUFFER0_BASE_S);
     }
   }
+
+  drv->initialized = true;
 }
 
 void display_deinit(display_content_mode_t mode) {
+  display_driver_t *drv = &g_display_driver;
+
+  if (!drv->initialized) {
+    return;
+  }
+
   if (mode == DISPLAY_RESET_CONTENT) {
     BSP_LCD_DisplayOff(0);
     BSP_LCD_SetBrightness(0, 0);
     BSP_LCD_DeInit(0);
   }
+
+  drv->initialized = false;
 }
 
 int display_set_backlight(int level) {
   display_driver_t *drv = &g_display_driver;
+
+  if (!drv->initialized) {
+    return 0;
+  }
 
   // Just emulation, not doing anything
   drv->backlight_level = level;
@@ -97,11 +111,19 @@ int display_set_backlight(int level) {
 int display_get_backlight(void) {
   display_driver_t *drv = &g_display_driver;
 
+  if (!drv->initialized) {
+    return 0;
+  }
+
   return drv->orientation_angle;
 }
 
 int display_set_orientation(int angle) {
   display_driver_t *drv = &g_display_driver;
+
+  if (!drv->initialized) {
+    return 0;
+  }
 
   if (angle == 0 || angle == 90 || angle == 180 || angle == 270) {
     // Just emulation, not doing anything
@@ -114,11 +136,19 @@ int display_set_orientation(int angle) {
 int display_get_orientation(void) {
   display_driver_t *drv = &g_display_driver;
 
+  if (!drv->initialized) {
+    return 0;
+  }
+
   return drv->orientation_angle;
 }
 
 void display_fill(const gfx_bitblt_t *bb) {
   display_fb_info_t fb = display_get_frame_buffer();
+
+  if (fb.ptr == NULL) {
+    return;
+  }
 
   gfx_bitblt_t bb_new = *bb;
   bb_new.dst_row = (uint8_t *)fb.ptr + (fb.stride * bb_new.dst_y);
@@ -130,6 +160,10 @@ void display_fill(const gfx_bitblt_t *bb) {
 void display_copy_rgb565(const gfx_bitblt_t *bb) {
   display_fb_info_t fb = display_get_frame_buffer();
 
+  if (fb.ptr == NULL) {
+    return;
+  }
+
   gfx_bitblt_t bb_new = *bb;
   bb_new.dst_row = (uint8_t *)fb.ptr + (fb.stride * bb_new.dst_y);
   bb_new.dst_stride = fb.stride;
@@ -140,6 +174,10 @@ void display_copy_rgb565(const gfx_bitblt_t *bb) {
 void display_copy_mono1p(const gfx_bitblt_t *bb) {
   display_fb_info_t fb = display_get_frame_buffer();
 
+  if (fb.ptr == NULL) {
+    return;
+  }
+
   gfx_bitblt_t bb_new = *bb;
   bb_new.dst_row = (uint8_t *)fb.ptr + (fb.stride * bb_new.dst_y);
   bb_new.dst_stride = fb.stride;
@@ -149,6 +187,10 @@ void display_copy_mono1p(const gfx_bitblt_t *bb) {
 
 void display_copy_mono4(const gfx_bitblt_t *bb) {
   display_fb_info_t fb = display_get_frame_buffer();
+
+  if (fb.ptr == NULL) {
+    return;
+  }
 
   gfx_bitblt_t bb_new = *bb;
   bb_new.dst_row = (uint8_t *)fb.ptr + (fb.stride * bb_new.dst_y);

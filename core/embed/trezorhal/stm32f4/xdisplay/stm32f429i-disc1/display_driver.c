@@ -33,6 +33,8 @@
 
 // Display driver context.
 typedef struct {
+  // Set if the driver is initialized
+  bool initialized;
   // Pointer to the frame buffer
   uint16_t *framebuf;
   // Current display orientation (0, 90, 180, 270)
@@ -42,10 +44,17 @@ typedef struct {
 } display_driver_t;
 
 // Display driver instance
-static display_driver_t g_display_driver;
+static display_driver_t g_display_driver = {
+    .initialized = false,
+};
 
 void display_init(display_content_mode_t mode) {
   display_driver_t *drv = &g_display_driver;
+
+  if (drv->initialized) {
+    return;
+  }
+
   memset(drv, 0, sizeof(display_driver_t));
   drv->framebuf = (uint16_t *)FRAME_BUFFER_ADDR;
 
@@ -55,14 +64,22 @@ void display_init(display_content_mode_t mode) {
     // Initialize external display controller
     ili9341_init();
   }
+
+  drv->initialized = true;
 }
 
 void display_deinit(display_content_mode_t mode) {
-  // Not used and intentionally left empty
+  display_driver_t *drv = &g_display_driver;
+
+  drv->initialized = false;
 }
 
 int display_set_backlight(int level) {
   display_driver_t *drv = &g_display_driver;
+
+  if (!drv->initialized) {
+    return 0;
+  }
 
   // Just emulation, not doing anything
   drv->backlight_level = level;
@@ -72,11 +89,19 @@ int display_set_backlight(int level) {
 int display_get_backlight(void) {
   display_driver_t *drv = &g_display_driver;
 
+  if (!drv->initialized) {
+    return 0;
+  }
+
   return drv->backlight_level;
 }
 
 int display_set_orientation(int angle) {
   display_driver_t *drv = &g_display_driver;
+
+  if (!drv->initialized) {
+    return 0;
+  }
 
   if (angle == 0 || angle == 90 || angle == 180 || angle == 270) {
     // Just emulation, not doing anything
@@ -89,18 +114,29 @@ int display_set_orientation(int angle) {
 int display_get_orientation(void) {
   display_driver_t *drv = &g_display_driver;
 
+  if (!drv->initialized) {
+    return 0;
+  }
+
   return drv->orientation_angle;
 }
 
 display_fb_info_t display_get_frame_buffer(void) {
   display_driver_t *drv = &g_display_driver;
 
-  display_fb_info_t fb = {
-      .ptr = (void *)drv->framebuf,
-      .stride = DISPLAY_RESX * sizeof(uint16_t),
-  };
-
-  return fb;
+  if (!drv->initialized) {
+    display_fb_info_t fb = {
+        .ptr = NULL,
+        .stride = 0,
+    };
+    return fb;
+  } else {
+    display_fb_info_t fb = {
+        .ptr = (void *)drv->framebuf,
+        .stride = DISPLAY_RESX * sizeof(uint16_t),
+    };
+    return fb;
+  }
 }
 
 void display_refresh(void) {
@@ -109,6 +145,10 @@ void display_refresh(void) {
 
 void display_fill(const gfx_bitblt_t *bb) {
   display_driver_t *drv = &g_display_driver;
+
+  if (!drv->initialized) {
+    return;
+  }
 
   gfx_bitblt_t bb_new = *bb;
   bb_new.dst_row = drv->framebuf + (DISPLAY_RESX * bb_new.dst_y);
@@ -120,6 +160,10 @@ void display_fill(const gfx_bitblt_t *bb) {
 void display_copy_rgb565(const gfx_bitblt_t *bb) {
   display_driver_t *drv = &g_display_driver;
 
+  if (!drv->initialized) {
+    return;
+  }
+
   gfx_bitblt_t bb_new = *bb;
   bb_new.dst_row = drv->framebuf + (DISPLAY_RESX * bb_new.dst_y);
   bb_new.dst_stride = DISPLAY_RESX * sizeof(uint16_t);
@@ -130,6 +174,10 @@ void display_copy_rgb565(const gfx_bitblt_t *bb) {
 void display_copy_mono1p(const gfx_bitblt_t *bb) {
   display_driver_t *drv = &g_display_driver;
 
+  if (!drv->initialized) {
+    return;
+  }
+
   gfx_bitblt_t bb_new = *bb;
   bb_new.dst_row = drv->framebuf + (DISPLAY_RESX * bb_new.dst_y);
   bb_new.dst_stride = DISPLAY_RESX * sizeof(uint16_t);
@@ -139,6 +187,10 @@ void display_copy_mono1p(const gfx_bitblt_t *bb) {
 
 void display_copy_mono4(const gfx_bitblt_t *bb) {
   display_driver_t *drv = &g_display_driver;
+
+  if (!drv->initialized) {
+    return;
+  }
 
   gfx_bitblt_t bb_new = *bb;
   bb_new.dst_row = drv->framebuf + (DISPLAY_RESX * bb_new.dst_y);
