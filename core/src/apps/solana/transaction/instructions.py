@@ -743,6 +743,7 @@ if TYPE_CHECKING:
         token_mint: Account
         system_program: Account
         spl_token: Account
+        rent_sysvar: Account | None
 
     class AssociatedTokenAccountProgramCreateIdempotentInstruction(Instruction):
 
@@ -5133,6 +5134,11 @@ def get_instruction(
                         "spl_token",
                         False,
                         False,
+                    ),
+                    AccountTemplate(
+                        "rent_sysvar",
+                        False,
+                        True,
                     ),
                 ],
                 [

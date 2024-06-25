@@ -47,6 +47,52 @@
         "expected_signature": "629daa88d10bca2315fe4176c323197a22c821026f7f6019cadbcf2769c5bb38ceef7652b5cba7e246a51f131f14fa8d776df63c50a1c4a09a3cf0bf2d446201"
       }
     },
+
+    {
+      "description": "Create Associated Token Account With Sysvar Rent included",
+      "parameters": {
+        "address": "m/44'/501'/0'/0'",
+        "construct": {
+          "version": null,
+          "header": {
+            "signers": 1,
+            "readonly_signers": 0,
+            "readonly_non_signers": 4
+          },
+          "accounts": [
+            "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
+            "FUqrjRRtF1LiptdFqaFxipE8R3YfCE4k56xwm5n1piqX",
+            "11111111111111111111111111111111",
+            "6YuhWADZyAAxAaVKPm1G5N51RvDBXsnWo4SfsJ47wSoK",
+            "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+            "SysvarRent111111111111111111111111111111111"
+          ],
+          "blockhash": "2p4rYZAaFfV5Uk5ugdG5KPNty9Uda9B3b4gWB8qnNqak",
+          "instructions": [
+            {
+              "program_index": 4,
+              "accounts": {
+                "funding_account": 0,
+                "associated_token_account": 1,
+                "wallet_address": 0,
+                "token_mint": 3,
+                "system_program": 2,
+                "spl_token": 5,
+                "sysvar_rent": 6
+              },
+              "data": {
+                "instruction_id": null
+              }
+            }
+          ],
+          "luts": []
+        }
+      },
+      "result": {
+        "expected_signature": "098276fc4770c80395e5dd2d3de24f14a6557a0078da95646558ce5dc91aebbdd961bf641dd1ad80ed09391b18f5dcc82157a240c689d86da225a26b9ac2b509"
+      }
+    },
     {
       "description": "Create Associated Token Account Idempotent",
       "parameters": {
