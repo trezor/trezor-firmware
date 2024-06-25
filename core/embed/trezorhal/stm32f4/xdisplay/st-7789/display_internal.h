@@ -41,6 +41,9 @@ typedef struct {
 
 // Display driver state
 typedef struct {
+  // Set if the driver is initialized
+  bool initialized;
+
 #ifdef XFRAMEBUFFER
   // Framebuffer queue
   // (accessed & updated in the context of the main thread
