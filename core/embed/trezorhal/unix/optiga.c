@@ -149,6 +149,11 @@ bool optiga_read_cert(uint8_t index, uint8_t *cert, size_t max_cert_size,
   return true;
 }
 
+bool optiga_read_sec(uint8_t *sec) {
+  *sec = 0;
+  return true;
+}
+
 bool optiga_random_buffer(uint8_t *dest, size_t size) {
   random_buffer(dest, size);
   return true;
