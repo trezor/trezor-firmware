@@ -62,6 +62,10 @@
 // Value of the PIN counter when it is reset.
 static const uint8_t COUNTER_RESET[] = {0, 0, 0, 0, 0, 0, 0, PIN_MAX_TRIES};
 
+// Value of the PIN counter with one extra attempt needed in optiga_pin_set().
+static const uint8_t COUNTER_RESET_EXTRA[] = {0, 0, 0, 0,
+                                              0, 0, 0, PIN_MAX_TRIES + 1};
+
 // Initial value of the counter which limits the total number of PIN stretching
 // operations. The limit is 600000 stretching operations, which equates to
 // 300000 / PIN_STRETCH_ITERATIONS unlock operations over the lifetime of the
@@ -578,10 +582,10 @@ bool optiga_pin_set(OPTIGA_UI_PROGRESS ui_progress,
     goto end;
   }
 
-  // Initialize the counter which limits the guesses at OID_STRETCHED_PIN so
-  // that we can authorise using OID_STRETCHED_PIN.
-  if (optiga_set_data_object(OID_STRETCHED_PIN_CTR, false, COUNTER_RESET,
-                             sizeof(COUNTER_RESET)) != OPTIGA_SUCCESS) {
+  // Initialize the counter which limits the guesses at OID_STRETCHED_PIN with
+  // one extra attempt that we will use up in the next step.
+  if (optiga_set_data_object(OID_STRETCHED_PIN_CTR, false, COUNTER_RESET_EXTRA,
+                             sizeof(COUNTER_RESET_EXTRA)) != OPTIGA_SUCCESS) {
     ret = false;
     goto end;
   }
@@ -599,14 +603,6 @@ bool optiga_pin_set(OPTIGA_UI_PROGRESS ui_progress,
   // Initialize the key for HMAC-SHA256 PIN stretching.
   if (optiga_set_data_object(OID_PIN_HMAC, false, pin_hmac, sizeof(pin_hmac)) !=
       OPTIGA_SUCCESS) {
-    ret = false;
-    goto end;
-  }
-
-  // Initialize the counter which limits the guesses at OID_STRETCHED_PIN again,
-  // since we just depleted one attempt.
-  if (optiga_set_data_object(OID_STRETCHED_PIN_CTR, false, COUNTER_RESET,
-                             sizeof(COUNTER_RESET)) != OPTIGA_SUCCESS) {
     ret = false;
     goto end;
   }
