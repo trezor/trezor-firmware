@@ -851,75 +851,73 @@ end:
   return ret;
 }
 
-static int optiga_get_counter(uint16_t oid, uint32_t *ctr) {
+static uint32_t uint32_from_be(uint8_t buf[4]) {
+  uint32_t i = buf[0];
+  i = (i << 8) + buf[1];
+  i = (i << 8) + buf[2];
+  i = (i << 8) + buf[3];
+  return i;
+}
+
+static bool optiga_get_counter_rem(uint16_t oid, uint32_t *ctr) {
   uint8_t counter[8] = {0};
   size_t counter_size = 0;
-  optiga_result res = optiga_get_data_object(oid, false, counter,
-                                             sizeof(counter), &counter_size);
-  if (res != OPTIGA_SUCCESS) {
-    return res;
+  if (optiga_get_data_object(oid, false, counter, sizeof(counter),
+                             &counter_size) != OPTIGA_SUCCESS ||
+      counter_size != sizeof(counter)) {
+    return false;
   }
 
-  if (counter_size != sizeof(counter)) {
-    return OPTIGA_ERR_SIZE;
-  }
-
-  *ctr = counter[0];
-  *ctr = (*ctr << 8) + counter[1];
-  *ctr = (*ctr << 8) + counter[2];
-  *ctr = (*ctr << 8) + counter[3];
-
-  return OPTIGA_SUCCESS;
+  *ctr = uint32_from_be(&counter[4]) - uint32_from_be(&counter[0]);
+  return true;
 }
 
-int optiga_pin_get_fails_v4(uint32_t *ctr) {
-  return optiga_get_counter(OID_STRETCHED_PIN_CTR, ctr);
+bool optiga_pin_get_rem_v4(uint32_t *ctr) {
+  return optiga_get_counter_rem(OID_STRETCHED_PIN_CTR, ctr);
 }
 
-int optiga_pin_get_fails(uint32_t *ctr) {
+bool optiga_pin_get_rem(uint32_t *ctr) {
   uint32_t ctr1 = 0;
   uint32_t ctr2 = 0;
-  if (optiga_get_counter(OID_PIN_HMAC_CTR, &ctr1) != OPTIGA_SUCCESS ||
-      optiga_get_counter(OID_STRETCHED_PIN_CTR, &ctr2) != OPTIGA_SUCCESS) {
-    return -1;
+  if (!optiga_get_counter_rem(OID_PIN_HMAC_CTR, &ctr1) ||
+      !optiga_get_counter_rem(OID_STRETCHED_PIN_CTR, &ctr2)) {
+    return false;
   }
 
   // Ensure that the counters are in sync.
   if (ctr1 > ctr2) {
-    if (optiga_count_data_object(OID_STRETCHED_PIN_CTR, ctr1 - ctr2) !=
+    if (optiga_count_data_object(OID_PIN_HMAC_CTR, ctr1 - ctr2) !=
         OPTIGA_SUCCESS) {
-      return -1;
-    }
-    *ctr = ctr1;
-  } else if (ctr2 > ctr1) {
-    if (optiga_count_data_object(OID_PIN_HMAC_CTR, ctr2 - ctr1) !=
-        OPTIGA_SUCCESS) {
-      return -1;
+      return false;
     }
     *ctr = ctr2;
+  } else if (ctr2 > ctr1) {
+    if (optiga_count_data_object(OID_STRETCHED_PIN_CTR, ctr2 - ctr1) !=
+        OPTIGA_SUCCESS) {
+      return false;
+    }
+    *ctr = ctr1;
   } else {
     *ctr = ctr2;
   }
-  return OPTIGA_SUCCESS;
+  return true;
 }
 
-int optiga_pin_fails_increase_v4(uint32_t count) {
+bool optiga_pin_decrease_rem_v4(uint32_t count) {
   if (count > 0xff) {
-    return OPTIGA_ERR_PARAM;
+    return false;
   }
 
-  return optiga_count_data_object(OID_STRETCHED_PIN_CTR, count);
+  return optiga_count_data_object(OID_STRETCHED_PIN_CTR, count) ==
+         OPTIGA_SUCCESS;
 }
 
-int optiga_pin_fails_increase(uint32_t count) {
+bool optiga_pin_decrease_rem(uint32_t count) {
   if (count > 0xff) {
-    return OPTIGA_ERR_PARAM;
+    return false;
   }
 
-  if (optiga_count_data_object(OID_PIN_HMAC_CTR, count) != OPTIGA_SUCCESS ||
-      optiga_count_data_object(OID_STRETCHED_PIN_CTR, count) !=
-          OPTIGA_SUCCESS) {
-    return -1;
-  }
-  return OPTIGA_SUCCESS;
+  return optiga_count_data_object(OID_PIN_HMAC_CTR, count) == OPTIGA_SUCCESS &&
+         optiga_count_data_object(OID_STRETCHED_PIN_CTR, count) ==
+             OPTIGA_SUCCESS;
 }

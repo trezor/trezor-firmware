@@ -23,6 +23,7 @@
 #include "nist256p1.h"
 #include "optiga_common.h"
 #include "rand.h"
+#include "storage.h"
 
 #if defined(TREZOR_MODEL_R)
 #include "certs/T2B1.h"
@@ -114,16 +115,16 @@ optiga_pin_result optiga_pin_verify(
   return OPTIGA_PIN_SUCCESS;
 }
 
-int optiga_pin_get_fails_v4(uint32_t *ctr) {
-  *ctr = 0;
-  return OPTIGA_SUCCESS;
+bool optiga_pin_get_rem_v4(uint32_t *ctr) {
+  *ctr = PIN_MAX_TRIES;
+  return true;
 }
 
-int optiga_pin_get_fails(uint32_t *ctr) {
-  *ctr = 0;
-  return OPTIGA_SUCCESS;
+bool optiga_pin_get_rem(uint32_t *ctr) {
+  *ctr = PIN_MAX_TRIES;
+  return true;
 }
 
-int optiga_pin_fails_increase_v4(uint32_t count) { return OPTIGA_SUCCESS; }
+bool optiga_pin_decrease_rem_v4(uint32_t count) { return true; }
 
-int optiga_pin_fails_increase(uint32_t count) { return OPTIGA_SUCCESS; }
+bool optiga_pin_decrease_rem(uint32_t count) { return true; }
