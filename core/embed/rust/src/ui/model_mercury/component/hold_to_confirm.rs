@@ -175,14 +175,8 @@ pub struct HoldToConfirm {
     finalizing: bool,
 }
 
-#[derive(Clone)]
-enum DismissType {
-    Tap,
-    Hold,
-}
-
 impl HoldToConfirm {
-    pub fn new() -> Self {
+    pub fn new(circle_color: Color, circle_inner_color: Color) -> Self {
         let button = Button::new(ButtonContent::Empty)
             .styled(theme::button_default())
             .with_long_press(Duration::from_millis(2200))
@@ -195,9 +189,9 @@ impl HoldToConfirm {
             )
             .vertically_centered(),
             area: Rect::zero(),
-            circle_color: theme::GREEN,
+            circle_color,
             circle_pad_color: theme::GREY_EXTRA_DARK,
-            circle_inner_color: theme::GREEN_LIGHT,
+            circle_inner_color,
             button,
             anim: HoldToConfirmAnim::default(),
             finalizing: false,

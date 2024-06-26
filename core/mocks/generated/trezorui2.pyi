@@ -547,6 +547,11 @@ def confirm_firmware_update(
 
 
 # rust/src/ui/model_mercury/layout.rs
+def tutorial() -> LayoutObj[UiResult]:
+    """Show user how to interact with the device."""
+
+
+# rust/src/ui/model_mercury/layout.rs
 def show_wait_text(message: str, /) -> LayoutObj[None]:
     """Show single-line text in the middle of the screen."""
 
