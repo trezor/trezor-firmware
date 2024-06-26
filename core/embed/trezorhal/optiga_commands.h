@@ -113,6 +113,40 @@ typedef enum {
   OPTIGA_LCS_TE = 0x0f,  // Termination state.
 } optiga_lcs;
 
+// Error codes returned by optiga_get_error_code().
+typedef enum {
+  OPTIGA_ERR_CODE_NONE = 0x00,             // No Error.
+  OPTIGA_ERR_CODE_INVAL_OID = 0x01,        // Invalid OID.
+  OPTIGA_ERR_CODE_INVAL_CMD_PARAM = 0x03,  // Invalid param field in command.
+  OPTIGA_ERR_CODE_INVAL_CMD_LEN = 0x04,    // Invalid length field in command.
+  OPTIGA_ERR_CODE_INVAL_CMD_DATA = 0x05,   // Invalid parameter in command data.
+  OPTIGA_ERR_CODE_PROCESS = 0x06,          // Internal process error.
+  OPTIGA_ERR_CODE_ACCESS_COND = 0x07,      // Access conditions not satisfied.
+  OPTIGA_ERR_CODE_OBJ_BOUNDARY = 0x08,     // Data object boundary exceeded.
+  OPTIGA_ERR_CODE_META_TRUNC = 0x09,       // Metadata truncation error.
+  OPTIGA_ERR_CODE_INVAL_CMD_FIELD = 0x0A,  // Invalid command field.
+  OPTIGA_ERR_CODE_CMD_SEQ = 0x0B,          // Command out of sequence.
+  OPTIGA_ERR_CODE_CMD_UNAVAIL = 0x0C,      // Command not available.
+  OPTIGA_ERR_CODE_MEMORY = 0x0D,           // Insufficient memory to process the
+                                           // command.
+  OPTIGA_ERR_CODE_CTR_LIMIT = 0x0E,        // Counter threshold limit exceeded.
+  OPTIGA_ERR_CODE_INVAL_MANIFEST = 0x0F,   // Invalid manifest.
+  OPTIGA_ERR_CODE_PAYLOAD_VER = 0x10,      // Wrong payload version.
+  OPTIGA_ERR_CODE_INVAL_OBJ_META = 0x11,   // Invalid data object metadata.
+  OPTIGA_ERR_CODE_UNSUP_EXT_ID = 0x24,     // Unsupported key usage, extension
+                                           // or algorithm identifier.
+  OPTIGA_ERR_CODE_UNSUP_PARAM = 0x25,      // Unsupported parameters in
+                                           // handshake or command APDU InData.
+  OPTIGA_ERR_CODE_INVAL_CERT = 0x29,       // Invalid certificate format or
+                                           // signature.
+  OPTIGA_ERR_CODE_UNSUP_CERT = 0x2A,       // Unsupported certificate.
+  OPTIGA_ERR_CODE_SIG_FAIL = 0x2C,         // Signature verification failure.
+  OPTIGA_ERR_CODE_INT_FAIL = 0x2D,      // Message integrity validation failed
+                                        // (e.g. during CCM decryption).
+  OPTIGA_ERR_CODE_DECRYPT_FAIL = 0x2E,  // Decryption failure
+  OPTIGA_ERR_CODE_AUTH_FAIL = 0x2F,     // Authorization failure
+} optiga_err_code;
+
 typedef struct {
   const uint8_t *ptr;
   uint16_t len;

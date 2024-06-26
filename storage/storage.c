@@ -609,7 +609,7 @@ static secbool __wur derive_kek_set(
     const uint8_t *ext_salt, uint8_t stretched_pin[SHA256_DIGEST_LENGTH]) {
   stretch_pin(pin, pin_len, storage_salt, ext_salt, stretched_pin);
 #if USE_OPTIGA
-  if (optiga_pin_set(ui_progress, stretched_pin) != OPTIGA_SUCCESS) {
+  if (!optiga_pin_set(ui_progress, stretched_pin)) {
     memzero(stretched_pin, SHA256_DIGEST_LENGTH);
     return secfalse;
   }
@@ -627,16 +627,17 @@ static secbool __wur derive_kek_unlock_v4(const uint8_t *pin, size_t pin_len,
   uint8_t optiga_secret[OPTIGA_PIN_SECRET_SIZE] = {0};
   uint8_t stretched_pin[OPTIGA_PIN_SECRET_SIZE] = {0};
   stretch_pin(pin, pin_len, storage_salt, ext_salt, stretched_pin);
-  int ret = optiga_pin_verify_v4(ui_progress, stretched_pin, optiga_secret);
+  optiga_pin_result ret =
+      optiga_pin_verify_v4(ui_progress, stretched_pin, optiga_secret);
   memzero(stretched_pin, sizeof(stretched_pin));
-  if (ret != OPTIGA_SUCCESS) {
+  if (ret != OPTIGA_PIN_SUCCESS) {
     memzero(optiga_secret, sizeof(optiga_secret));
-    if (ret == OPTIGA_ERR_COUNTER_EXCEEDED) {
+    if (ret == OPTIGA_PIN_COUNTER_EXCEEDED) {
       // Unreachable code. Wipe should have already been triggered in unlock().
       storage_wipe();
       show_pin_too_many_screen();
     }
-    ensure(ret == OPTIGA_ERR_AUTH_FAIL ? sectrue : secfalse,
+    ensure(ret == OPTIGA_PIN_INVALID ? sectrue : secfalse,
            "optiga_pin_verify failed");
     return secfalse;
   }
@@ -653,16 +654,16 @@ static secbool __wur derive_kek_unlock(
     const uint8_t *ext_salt, uint8_t stretched_pin[SHA256_DIGEST_LENGTH]) {
   stretch_pin(pin, pin_len, storage_salt, ext_salt, stretched_pin);
 #if USE_OPTIGA
-  int ret = optiga_pin_verify(ui_progress, stretched_pin);
-  if (ret != OPTIGA_SUCCESS) {
+  optiga_pin_result ret = optiga_pin_verify(ui_progress, stretched_pin);
+  if (ret != OPTIGA_PIN_SUCCESS) {
     memzero(stretched_pin, SHA256_DIGEST_LENGTH);
 
-    if (ret == OPTIGA_ERR_COUNTER_EXCEEDED) {
+    if (ret == OPTIGA_PIN_COUNTER_EXCEEDED) {
       // Unreachable code. Wipe should have already been triggered in unlock().
       storage_wipe();
       show_pin_too_many_screen();
     }
-    ensure(ret == OPTIGA_ERR_AUTH_FAIL ? sectrue : secfalse,
+    ensure(ret == OPTIGA_PIN_INVALID ? sectrue : secfalse,
            "optiga_pin_verify failed");
     return secfalse;
   }

@@ -34,27 +34,28 @@
 #error "Cert chain for specified model is not available."
 #endif
 
-int optiga_sign(uint8_t index, const uint8_t *digest, size_t digest_size,
-                uint8_t *signature, size_t max_sig_size, size_t *sig_size) {
+optiga_sign_result optiga_sign(uint8_t index, const uint8_t *digest,
+                               size_t digest_size, uint8_t *signature,
+                               size_t max_sig_size, size_t *sig_size) {
   const uint8_t DEVICE_PRIV_KEY[32] = {1};
 
   if (index != OPTIGA_DEVICE_ECC_KEY_INDEX) {
-    return false;
+    return OPTIGA_SIGN_ERROR;
   }
 
   if (max_sig_size < 72) {
-    return OPTIGA_ERR_SIZE;
+    return OPTIGA_SIGN_ERROR;
   }
 
   uint8_t raw_signature[64] = {0};
   int ret = ecdsa_sign_digest(&nist256p1, DEVICE_PRIV_KEY, digest,
                               raw_signature, NULL, NULL);
   if (ret != 0) {
-    return OPTIGA_ERR_CMD;
+    return OPTIGA_SIGN_ERROR;
   }
 
   *sig_size = ecdsa_sig_to_der(raw_signature, signature);
-  return OPTIGA_SUCCESS;
+  return OPTIGA_SIGN_SUCCESS;
 }
 
 bool optiga_cert_size(uint8_t index, size_t *cert_size) {
@@ -91,24 +92,26 @@ bool optiga_random_buffer(uint8_t *dest, size_t size) {
   return true;
 }
 
-int optiga_pin_set(OPTIGA_UI_PROGRESS ui_progress,
-                   uint8_t stretched_pin[OPTIGA_PIN_SECRET_SIZE]) {
+bool optiga_pin_set(OPTIGA_UI_PROGRESS ui_progress,
+                    uint8_t stretched_pin[OPTIGA_PIN_SECRET_SIZE]) {
   ui_progress(OPTIGA_PIN_SET_MS);
-  return OPTIGA_SUCCESS;
+  return true;
 }
 
-int optiga_pin_verify_v4(OPTIGA_UI_PROGRESS ui_progress,
-                         const uint8_t pin_secret[OPTIGA_PIN_SECRET_SIZE],
-                         uint8_t out_secret[OPTIGA_PIN_SECRET_SIZE]) {
+optiga_pin_result optiga_pin_verify_v4(
+    OPTIGA_UI_PROGRESS ui_progress,
+    const uint8_t pin_secret[OPTIGA_PIN_SECRET_SIZE],
+    uint8_t out_secret[OPTIGA_PIN_SECRET_SIZE]) {
   memcpy(out_secret, pin_secret, OPTIGA_PIN_SECRET_SIZE);
   ui_progress(OPTIGA_PIN_VERIFY_MS);
-  return OPTIGA_SUCCESS;
+  return OPTIGA_PIN_SUCCESS;
 }
 
-int optiga_pin_verify(OPTIGA_UI_PROGRESS ui_progress,
-                      uint8_t stretched_pin[OPTIGA_PIN_SECRET_SIZE]) {
+optiga_pin_result optiga_pin_verify(
+    OPTIGA_UI_PROGRESS ui_progress,
+    uint8_t stretched_pin[OPTIGA_PIN_SECRET_SIZE]) {
   ui_progress(OPTIGA_PIN_VERIFY_MS);
-  return OPTIGA_SUCCESS;
+  return OPTIGA_PIN_SUCCESS;
 }
 
 int optiga_pin_get_fails_v4(uint32_t *ctr) {

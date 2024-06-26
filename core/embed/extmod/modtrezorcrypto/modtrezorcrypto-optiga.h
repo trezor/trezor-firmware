@@ -90,11 +90,12 @@ STATIC mp_obj_t mod_trezorcrypto_optiga_sign(mp_obj_t key_index,
   vstr_t sig = {0};
   vstr_init_len(&sig, MAX_DER_SIGNATURE_SIZE);
   size_t sig_size = 0;
-  int ret = optiga_sign(idx, (const uint8_t *)dig.buf, dig.len,
-                        ((uint8_t *)sig.buf), sig.alloc, &sig_size);
-  if (ret != 0) {
+  optiga_sign_result ret =
+      optiga_sign(idx, (const uint8_t *)dig.buf, dig.len, ((uint8_t *)sig.buf),
+                  sig.alloc, &sig_size);
+  if (ret != OPTIGA_SIGN_SUCCESS) {
     vstr_clear(&sig);
-    if (ret == OPTIGA_ERR_ACCESS_COND_NOT_SAT) {
+    if (ret == OPTIGA_SIGN_INACCESSIBLE) {
       mp_raise_msg(&mp_type_SigningInaccessible, "Signing inaccessible.");
     } else {
       mp_raise_msg(&mp_type_OptigaError, "Signing failed.");
