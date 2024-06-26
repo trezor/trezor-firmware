@@ -8,6 +8,7 @@ pub mod get_address;
 pub mod prompt_backup;
 pub mod request_number;
 pub mod show_share_words;
+pub mod show_tutorial;
 pub mod warning_hi_prio;
 
 pub use confirm_action::{new_confirm_action, new_confirm_action_simple};
@@ -22,4 +23,5 @@ pub use get_address::GetAddress;
 pub use prompt_backup::PromptBackup;
 pub use request_number::RequestNumber;
 pub use show_share_words::ShowShareWords;
+pub use show_tutorial::ShowTutorial;
 pub use warning_hi_prio::WarningHiPrio;

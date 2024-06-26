@@ -1487,3 +1487,14 @@ async def set_brightness(current: int | None = None) -> None:
         "set_brightness",
         BR_TYPE_OTHER,
     )
+
+
+def tutorial(br_code: ButtonRequestType = BR_TYPE_OTHER) -> Awaitable[None]:
+    """Showing users how to interact with the device."""
+    return raise_if_not_confirmed(
+        interact(
+            RustLayout(trezorui2.tutorial()),
+            "tutorial",
+            br_code,
+        )
+    )

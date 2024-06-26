@@ -890,7 +890,7 @@
   "888": "instructions__continue_holding",
   "889": "instructions__enter_next_share",
   "890": "instructions__hold_to_continue",
-  "891": "instructions__hold_to_exit_tutorial",
+  "891": "instructions__exit_tutorial",
   "892": "instructions__hold_to_finish_tutorial",
   "893": "instructions__learn_more",
   "894": "instructions__shares_continue_with_x_template",
@@ -924,7 +924,7 @@
   "922": "tutorial__ready_to_use_safe5",
   "923": "tutorial__subtitle_safe5",
   "924": "tutorial__swipe_up_and_down",
-  "925": "tutorial__title_navigation",
+  "925": "tutorial__title_easy_navigation",
   "926": "tutorial__welcome_safe5",
   "927": "words__good_to_know",
   "928": "words__operation_cancelled",
@@ -940,5 +940,14 @@
   "938": "reset__repeat_for_all_shares",
   "939": "homescreen__settings_subtitle",
   "940": "homescreen__settings_title",
-  "941": "reset__the_word_is_repeated"
+  "941": "reset__the_word_is_repeated",
+  "942": "tutorial__title_lets_begin",
+  "943": "tutorial__did_you_know",
+  "944": "tutorial__first_wallet",
+  "945": "tutorial__restart_tutorial",
+  "946": "tutorial__title_handy_menu",
+  "947": "tutorial__title_hold",
+  "948": "tutorial__title_well_done",
+  "949": "tutorial__lets_begin",
+  "950": "tutorial__get_started"
 }

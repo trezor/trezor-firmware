@@ -1289,8 +1289,8 @@ pub enum TranslatedString {
     instructions__continue_holding = 888,  // "Continue\nholding"
     instructions__enter_next_share = 889,  // "Enter next share"
     instructions__hold_to_continue = 890,  // "Hold to continue"
-    instructions__hold_to_exit_tutorial = 891,  // "Hold to exit tutorial"
-    instructions__hold_to_finish_tutorial = 892,  // "Hold to finish tutorial"
+    instructions__exit_tutorial = 891,  // "Exit tutorial"
+    instructions__hold_to_finish_tutorial = 892,  // "\"\""
     instructions__learn_more = 893,  // "Learn more"
     instructions__shares_continue_with_x_template = 894,  // "Continue with Share #{0}"
     instructions__shares_start_with_1 = 895,  // "Start with share #1"
@@ -1316,15 +1316,15 @@ pub enum TranslatedString {
     send__transaction_signed = 915,  // "Transaction signed"
     tutorial__continue = 916,  // "Continue tutorial"
     tutorial__exit = 917,  // "Exit tutorial"
-    tutorial__first_transaction_finish = 918,  // "took place on 12 January 2009."
-    tutorial__first_transaction_intro = 919,  // "The world's first bitcoin transaction"
-    tutorial__menu = 920,  // "Menu includes context-specific actions and options."
-    tutorial__one_more_step = 921,  // "One more step..."
-    tutorial__ready_to_use_safe5 = 922,  // "Well done!\nNow you're ready to use your Trezor Safe 5."
-    tutorial__subtitle_safe5 = 923,  // "Trezor Safe 5 tutorial"
-    tutorial__swipe_up_and_down = 924,  // "Swipe up & down to move through screens."
-    tutorial__title_navigation = 925,  // "Navigation"
-    tutorial__welcome_safe5 = 926,  // "Welcome to Trezor Safe 5."
+    tutorial__first_transaction_finish = 918,  // "\"\""
+    tutorial__first_transaction_intro = 919,  // "\"\""
+    tutorial__menu = 920,  // "Find context-specific actions and options in the menu."
+    tutorial__one_more_step = 921,  // "\"\""
+    tutorial__ready_to_use_safe5 = 922,  // "You're all set to start using your device!"
+    tutorial__subtitle_safe5 = 923,  // "\"\""
+    tutorial__swipe_up_and_down = 924,  // "Swipe up & down\nto move through screens."
+    tutorial__title_easy_navigation = 925,  // "Easy navigation"
+    tutorial__welcome_safe5 = 926,  // "Welcome to\nTrezor Safe 5"
     words__good_to_know = 927,  // "Good to know"
     words__operation_cancelled = 928,  // "Operation cancelled"
     words__settings = 929,  // "Settings"
@@ -1340,6 +1340,15 @@ pub enum TranslatedString {
     homescreen__settings_subtitle = 939,  // "Settings"
     homescreen__settings_title = 940,  // "Homescreen"
     reset__the_word_is_repeated = 941,  // "The word is repeated"
+    tutorial__title_lets_begin = 942,  // "Let's begin"
+    tutorial__did_you_know = 943,  // "Did you know?"
+    tutorial__first_wallet = 944,  // "The Trezor Model One, created in 2013,\nwas the world's first hardware wallet."
+    tutorial__restart_tutorial = 945,  // "Restart tutorial"
+    tutorial__title_handy_menu = 946,  // "Handy menu"
+    tutorial__title_hold = 947,  // "Hold to confirm important actions"
+    tutorial__title_well_done = 948,  // "Well done!"
+    tutorial__lets_begin = 949,  // "Learn how to use and navigate this device with ease."
+    tutorial__get_started = 950,  // "Get started!"
 }
 
 impl TranslatedString {
@@ -2623,8 +2632,8 @@ impl TranslatedString {
             Self::instructions__continue_holding => "Continue\nholding",
             Self::instructions__enter_next_share => "Enter next share",
             Self::instructions__hold_to_continue => "Hold to continue",
-            Self::instructions__hold_to_exit_tutorial => "Hold to exit tutorial",
-            Self::instructions__hold_to_finish_tutorial => "Hold to finish tutorial",
+            Self::instructions__exit_tutorial => "Exit tutorial",
+            Self::instructions__hold_to_finish_tutorial => "\"\"",
             Self::instructions__learn_more => "Learn more",
             Self::instructions__shares_continue_with_x_template => "Continue with Share #{0}",
             Self::instructions__shares_start_with_1 => "Start with share #1",
@@ -2650,15 +2659,15 @@ impl TranslatedString {
             Self::send__transaction_signed => "Transaction signed",
             Self::tutorial__continue => "Continue tutorial",
             Self::tutorial__exit => "Exit tutorial",
-            Self::tutorial__first_transaction_finish => "took place on 12 January 2009.",
-            Self::tutorial__first_transaction_intro => "The world's first bitcoin transaction",
-            Self::tutorial__menu => "Menu includes context-specific actions and options.",
-            Self::tutorial__one_more_step => "One more step...",
-            Self::tutorial__ready_to_use_safe5 => "Well done!\nNow you're ready to use your Trezor Safe 5.",
-            Self::tutorial__subtitle_safe5 => "Trezor Safe 5 tutorial",
-            Self::tutorial__swipe_up_and_down => "Swipe up & down to move through screens.",
-            Self::tutorial__title_navigation => "Navigation",
-            Self::tutorial__welcome_safe5 => "Welcome to Trezor Safe 5.",
+            Self::tutorial__first_transaction_finish => "\"\"",
+            Self::tutorial__first_transaction_intro => "\"\"",
+            Self::tutorial__menu => "Find context-specific actions and options in the menu.",
+            Self::tutorial__one_more_step => "\"\"",
+            Self::tutorial__ready_to_use_safe5 => "You're all set to start using your device!",
+            Self::tutorial__subtitle_safe5 => "\"\"",
+            Self::tutorial__swipe_up_and_down => "Swipe up & down\nto move through screens.",
+            Self::tutorial__title_easy_navigation => "Easy navigation",
+            Self::tutorial__welcome_safe5 => "Welcome to\nTrezor Safe 5",
             Self::words__good_to_know => "Good to know",
             Self::words__operation_cancelled => "Operation cancelled",
             Self::words__settings => "Settings",
@@ -2674,6 +2683,15 @@ impl TranslatedString {
             Self::homescreen__settings_subtitle => "Settings",
             Self::homescreen__settings_title => "Homescreen",
             Self::reset__the_word_is_repeated => "The word is repeated",
+            Self::tutorial__title_lets_begin => "Let's begin",
+            Self::tutorial__did_you_know => "Did you know?",
+            Self::tutorial__first_wallet => "The Trezor Model One, created in 2013,\nwas the world's first hardware wallet.",
+            Self::tutorial__restart_tutorial => "Restart tutorial",
+            Self::tutorial__title_handy_menu => "Handy menu",
+            Self::tutorial__title_hold => "Hold to confirm important actions",
+            Self::tutorial__title_well_done => "Well done!",
+            Self::tutorial__lets_begin => "Learn how to use and navigate this device with ease.",
+            Self::tutorial__get_started => "Get started!",
         }
     }
 
@@ -3958,7 +3976,7 @@ impl TranslatedString {
             Qstr::MP_QSTR_instructions__continue_holding => Some(Self::instructions__continue_holding),
             Qstr::MP_QSTR_instructions__enter_next_share => Some(Self::instructions__enter_next_share),
             Qstr::MP_QSTR_instructions__hold_to_continue => Some(Self::instructions__hold_to_continue),
-            Qstr::MP_QSTR_instructions__hold_to_exit_tutorial => Some(Self::instructions__hold_to_exit_tutorial),
+            Qstr::MP_QSTR_instructions__exit_tutorial => Some(Self::instructions__exit_tutorial),
             Qstr::MP_QSTR_instructions__hold_to_finish_tutorial => Some(Self::instructions__hold_to_finish_tutorial),
             Qstr::MP_QSTR_instructions__learn_more => Some(Self::instructions__learn_more),
             Qstr::MP_QSTR_instructions__shares_continue_with_x_template => Some(Self::instructions__shares_continue_with_x_template),
@@ -3992,7 +4010,7 @@ impl TranslatedString {
             Qstr::MP_QSTR_tutorial__ready_to_use_safe5 => Some(Self::tutorial__ready_to_use_safe5),
             Qstr::MP_QSTR_tutorial__subtitle_safe5 => Some(Self::tutorial__subtitle_safe5),
             Qstr::MP_QSTR_tutorial__swipe_up_and_down => Some(Self::tutorial__swipe_up_and_down),
-            Qstr::MP_QSTR_tutorial__title_navigation => Some(Self::tutorial__title_navigation),
+            Qstr::MP_QSTR_tutorial__title_easy_navigation => Some(Self::tutorial__title_easy_navigation),
             Qstr::MP_QSTR_tutorial__welcome_safe5 => Some(Self::tutorial__welcome_safe5),
             Qstr::MP_QSTR_words__good_to_know => Some(Self::words__good_to_know),
             Qstr::MP_QSTR_words__operation_cancelled => Some(Self::words__operation_cancelled),
@@ -4009,6 +4027,15 @@ impl TranslatedString {
             Qstr::MP_QSTR_homescreen__settings_subtitle => Some(Self::homescreen__settings_subtitle),
             Qstr::MP_QSTR_homescreen__settings_title => Some(Self::homescreen__settings_title),
             Qstr::MP_QSTR_reset__the_word_is_repeated => Some(Self::reset__the_word_is_repeated),
+            Qstr::MP_QSTR_tutorial__title_lets_begin => Some(Self::tutorial__title_lets_begin),
+            Qstr::MP_QSTR_tutorial__did_you_know => Some(Self::tutorial__did_you_know),
+            Qstr::MP_QSTR_tutorial__first_wallet => Some(Self::tutorial__first_wallet),
+            Qstr::MP_QSTR_tutorial__restart_tutorial => Some(Self::tutorial__restart_tutorial),
+            Qstr::MP_QSTR_tutorial__title_handy_menu => Some(Self::tutorial__title_handy_menu),
+            Qstr::MP_QSTR_tutorial__title_hold => Some(Self::tutorial__title_hold),
+            Qstr::MP_QSTR_tutorial__title_well_done => Some(Self::tutorial__title_well_done),
+            Qstr::MP_QSTR_tutorial__lets_begin => Some(Self::tutorial__lets_begin),
+            Qstr::MP_QSTR_tutorial__get_started => Some(Self::tutorial__get_started),
             _ => None,
         }
     }

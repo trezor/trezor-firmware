@@ -2,7 +2,7 @@ use crate::{
     time::Duration,
     ui::{
         component::{Component, Event, EventCtx},
-        display::Color,
+        display::{toif::Icon, Color},
         geometry::{Alignment2D, Offset, Rect},
         lerp::Lerp,
         shape,
@@ -17,11 +17,11 @@ use crate::{time::Stopwatch, ui::constant::screen};
 use pareen;
 
 #[derive(Default, Clone)]
-struct TapToConfirmAmin {
+struct TapToConfirmAnim {
     pub timer: Stopwatch,
 }
 
-impl TapToConfirmAmin {
+impl TapToConfirmAnim {
     const DURATION_MS: u32 = 600;
 
     pub fn is_active(&self) -> bool {
@@ -121,13 +121,8 @@ pub struct TapToConfirm {
     circle_pad_color: Color,
     circle_inner_color: Color,
     mask_color: Color,
-    anim: TapToConfirmAmin,
-}
-
-#[derive(Clone)]
-enum DismissType {
-    Tap,
-    Hold,
+    icon: Icon,
+    anim: TapToConfirmAnim,
 }
 
 impl TapToConfirm {
@@ -136,6 +131,7 @@ impl TapToConfirm {
         circle_inner_color: Color,
         circle_pad_color: Color,
         mask_color: Color,
+        icon: Icon,
     ) -> Self {
         let button = Button::new(ButtonContent::Empty).styled(theme::button_default());
         Self {
@@ -145,7 +141,8 @@ impl TapToConfirm {
             circle_pad_color,
             mask_color,
             button,
-            anim: TapToConfirmAmin::default(),
+            icon,
+            anim: TapToConfirmAnim::default(),
         }
     }
 }
@@ -235,7 +232,7 @@ impl Component for TapToConfirm {
             .with_fg(theme::BLACK)
             .render(target);
 
-        shape::ToifImage::new(center, theme::ICON_SIMPLE_CHECKMARK.toif)
+        shape::ToifImage::new(center, self.icon.toif)
             .with_fg(theme::GREY)
             .with_alpha(255 - self.anim.get_parent_cover_opacity(t))
             .with_align(Alignment2D::CENTER)

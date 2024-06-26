@@ -17,7 +17,11 @@ pub enum PromptScreen {
 
 impl PromptScreen {
     pub fn new_hold_to_confirm() -> Self {
-        PromptScreen::Hold(HoldToConfirm::new())
+        PromptScreen::Hold(HoldToConfirm::new(theme::GREEN, theme::GREEN_LIGHT))
+    }
+
+    pub fn new_hold_to_confirm_danger() -> Self {
+        PromptScreen::Hold(HoldToConfirm::new(theme::ORANGE_LIGHT, theme::ORANGE_LIGHT))
     }
 
     pub fn new_tap_to_confirm() -> Self {
@@ -26,6 +30,7 @@ impl PromptScreen {
             theme::GREEN,
             theme::GREY_EXTRA_DARK,
             theme::GREEN_LIGHT,
+            theme::ICON_SIMPLE_CHECKMARK,
         ))
     }
 
@@ -35,6 +40,17 @@ impl PromptScreen {
             theme::ORANGE_LIGHT,
             theme::GREY_EXTRA_DARK,
             theme::ORANGE_DIMMED,
+            theme::ICON_SIMPLE_CHECKMARK,
+        ))
+    }
+
+    pub fn new_tap_to_start() -> Self {
+        PromptScreen::Tap(TapToConfirm::new(
+            theme::GREY,
+            theme::GREY,
+            theme::GREY_EXTRA_DARK,
+            theme::GREY_LIGHT,
+            theme::ICON_CHEVRON_RIGHT,
         ))
     }
 }
