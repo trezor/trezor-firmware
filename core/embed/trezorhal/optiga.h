@@ -79,12 +79,12 @@ optiga_pin_verify_v4(OPTIGA_UI_PROGRESS ui_progress,
                      const uint8_t pin_secret[OPTIGA_PIN_SECRET_SIZE],
                      uint8_t out_secret[OPTIGA_PIN_SECRET_SIZE]);
 
-int __wur optiga_pin_get_fails_v4(uint32_t *ctr);
+bool __wur optiga_pin_get_rem_v4(uint32_t *ctr);
 
-int __wur optiga_pin_get_fails(uint32_t *ctr);
+bool __wur optiga_pin_get_rem(uint32_t *ctr);
 
-int __wur optiga_pin_fails_increase_v4(uint32_t count);
+bool __wur optiga_pin_decrease_rem_v4(uint32_t count);
 
-int __wur optiga_pin_fails_increase(uint32_t count);
+bool __wur optiga_pin_decrease_rem(uint32_t count);
 
 #endif

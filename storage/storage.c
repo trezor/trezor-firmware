@@ -1286,35 +1286,36 @@ uint32_t storage_get_pin_rem(void) {
     return 0;
   }
 
+  uint32_t rem_mcu = PIN_MAX_TRIES - ctr_mcu;
+
 #if USE_OPTIGA
   // Synchronize counters in case they diverged.
-  uint32_t ctr_optiga = 0;
-  optiga_result ret = OPTIGA_SUCCESS;
+  uint32_t rem_optiga = 0;
   if (get_lock_version() >= 5) {
-    ret = optiga_pin_get_fails(&ctr_optiga);
+    ensure(optiga_pin_get_rem(&rem_optiga) * sectrue,
+           "optiga_pin_get_rem failed");
   } else {
-    ret = optiga_pin_get_fails_v4(&ctr_optiga);
+    ensure(optiga_pin_get_rem_v4(&rem_optiga) * sectrue,
+           "optiga_pin_get_rem failed");
   }
-  ensure(ret == OPTIGA_SUCCESS ? sectrue : secfalse,
-         "optiga_pin_get_fails failed");
 
-  while (ctr_mcu < ctr_optiga) {
+  while (rem_mcu > rem_optiga) {
     storage_pin_fails_increase();
-    ctr_mcu++;
+    rem_mcu--;
   }
 
-  if (ctr_optiga < ctr_mcu) {
+  if (rem_optiga > rem_mcu) {
     if (get_lock_version() >= 5) {
-      ret = optiga_pin_fails_increase(ctr_mcu - ctr_optiga);
+      ensure(optiga_pin_decrease_rem(rem_optiga - rem_mcu) * sectrue,
+             "optiga_pin_decrease_rem failed");
     } else {
-      ret = optiga_pin_fails_increase_v4(ctr_mcu - ctr_optiga);
+      ensure(optiga_pin_decrease_rem_v4(rem_optiga - rem_mcu) * sectrue,
+             "optiga_pin_decrease_rem failed");
     }
-    ensure(ret == OPTIGA_SUCCESS ? sectrue : secfalse,
-           "optiga_pin_fails_increase failed");
   }
 #endif
 
-  return PIN_MAX_TRIES - ctr_mcu;
+  return rem_mcu;
 }
 
 secbool storage_change_pin(const uint8_t *oldpin, size_t oldpin_len,
