@@ -1,6 +1,7 @@
 use core::{
-    cell::RefCell,
+    cell::{RefCell, RefMut},
     convert::{TryFrom, TryInto},
+    ops::{Deref, DerefMut},
 };
 use num_traits::{FromPrimitive, ToPrimitive};
 
@@ -9,7 +10,7 @@ use crate::{
     maybe_trace::MaybeTrace,
     micropython::{
         buffer::StrBuffer,
-        gc::Gc,
+        gc::{self, Gc, GcBox},
         macros::{obj_dict, obj_fn_1, obj_fn_2, obj_fn_3, obj_fn_var, obj_map, obj_type},
         map::Map,
         obj::{Obj, ObjBase},
@@ -20,9 +21,8 @@ use crate::{
     time::Duration,
     ui::{
         button_request::ButtonRequest,
-        component::{Component, Event, EventCtx, Never, Root, TimerToken},
-        constant,
-        display::sync,
+        component::{Component, Event, EventCtx, Never, TimerToken},
+        constant, display,
         geometry::Rect,
     },
 };
@@ -77,17 +77,13 @@ pub trait ComponentMsgObj: Component {
 pub trait ObjComponent: MaybeTrace {
     fn obj_place(&mut self, bounds: Rect) -> Rect;
     fn obj_event(&mut self, ctx: &mut EventCtx, event: Event) -> Result<Obj, Error>;
-    fn obj_paint(&mut self) -> bool;
+    fn obj_paint(&mut self);
     fn obj_bounds(&self, _sink: &mut dyn FnMut(Rect)) {}
-    fn obj_skip_paint(&mut self) {}
-    fn obj_request_clear(&mut self) {}
-    fn obj_delete(&mut self) {}
-    fn obj_get_transition_out(&self) -> Result<Obj, Error>;
 }
 
-impl<T> ObjComponent for Root<T>
+impl<T> ObjComponent for T
 where
-    T: ComponentMsgObj + MaybeTrace,
+    T: Component + ComponentMsgObj + MaybeTrace,
 {
     fn obj_place(&mut self, bounds: Rect) -> Rect {
         self.place(bounds)
@@ -95,30 +91,23 @@ where
 
     fn obj_event(&mut self, ctx: &mut EventCtx, event: Event) -> Result<Obj, Error> {
         if let Some(msg) = self.event(ctx, event) {
-            self.inner().inner().msg_try_into_obj(msg)
+            self.msg_try_into_obj(msg)
         } else {
             Ok(Obj::const_none())
         }
     }
 
-    fn obj_paint(&mut self) -> bool {
+    fn obj_paint(&mut self) {
         #[cfg(not(feature = "new_rendering"))]
         {
-            let will_paint = self.inner().will_paint();
             self.paint();
-            will_paint
         }
 
         #[cfg(feature = "new_rendering")]
         {
-            let will_paint = self.inner().will_paint();
-            if will_paint {
-                render_on_display(None, Some(Color::black()), |target| {
-                    self.render(target);
-                });
-                self.skip_paint();
-            }
-            will_paint
+            render_on_display(None, Some(Color::black()), |target| {
+                self.render(target);
+            });
         }
     }
 
@@ -126,26 +115,13 @@ where
     fn obj_bounds(&self, sink: &mut dyn FnMut(Rect)) {
         self.bounds(sink)
     }
+}
 
-    fn obj_skip_paint(&mut self) {
-        self.skip_paint()
-    }
-
-    fn obj_request_clear(&mut self) {
-        self.clear_screen()
-    }
-
-    fn obj_delete(&mut self) {
-        self.delete()
-    }
-
-    fn obj_get_transition_out(&self) -> Result<Obj, Error> {
-        if let Some(msg) = self.get_transition_out() {
-            Ok(msg.to_obj())
-        } else {
-            Ok(Obj::const_none())
-        }
-    }
+#[derive(Copy, Clone, PartialEq, Eq)]
+enum Repaint {
+    None,
+    Partial,
+    Full,
 }
 
 /// `LayoutObj` is a GC-allocated object exported to MicroPython, with type
@@ -158,119 +134,130 @@ pub struct LayoutObj {
 }
 
 struct LayoutObjInner {
-    root: Gc<dyn ObjComponent>,
+    root: Option<GcBox<dyn ObjComponent>>,
     event_ctx: EventCtx,
     timer_fn: Obj,
     page_count: u16,
+    repaint: Repaint,
+    transition_out: AttachType,
 }
 
-impl LayoutObj {
+impl LayoutObjInner {
     /// Create a new `LayoutObj`, wrapping a root component.
     #[inline(never)]
-    pub fn new(root: impl ComponentMsgObj + MaybeTrace + 'static) -> Result<Gc<Self>, Error> {
-        // Let's wrap the root component into a `Root` to maintain the top-level
-        // invalidation logic.
-        let wrapped_root = Root::new(root);
-        // SAFETY: We are coercing GC-allocated sized ptr into an unsized one.
-        let root =
-            unsafe { Gc::from_raw(Gc::into_raw(Gc::new(wrapped_root)?) as *mut dyn ObjComponent) };
+    pub fn new(root: impl ObjComponent + 'static) -> Result<Self, Error> {
+        let root = GcBox::new(root)?;
 
-        // SAFETY: This is a Python object and hase a base as first element
-        unsafe {
-            Gc::new_with_custom_finaliser(Self {
-                base: Self::obj_type().as_base(),
-                inner: RefCell::new(LayoutObjInner {
-                    root,
-                    event_ctx: EventCtx::new(),
-                    timer_fn: Obj::const_none(),
-                    page_count: 1,
-                }),
-            })
-        }
+        Ok(Self {
+            root: Some(gc::coerce!(ObjComponent, root)),
+            event_ctx: EventCtx::new(),
+            timer_fn: Obj::const_none(),
+            page_count: 1,
+            repaint: Repaint::Full,
+            transition_out: AttachType::Initial,
+        })
     }
 
-    pub fn obj_delete(&self) {
-        let mut inner = self.inner.borrow_mut();
-
-        // SAFETY: `inner.root` is unique because of the `inner.borrow_mut()`.
-        unsafe { Gc::as_mut(&mut inner.root) }.obj_delete();
-    }
-
-    pub fn skip_first_paint(&self) {
-        let mut inner = self.inner.borrow_mut();
-
-        // SAFETY: `inner.root` is unique because of the `inner.borrow_mut()`.
-        unsafe { Gc::as_mut(&mut inner.root) }.obj_skip_paint();
+    fn obj_delete(&mut self) {
+        self.root = None;
     }
 
     /// Timer callback is expected to be a callable object of the following
     /// form: `def timer(token: int, deadline_in_ms: int)`.
-    fn obj_set_timer_fn(&self, timer_fn: Obj) {
-        self.inner.borrow_mut().timer_fn = timer_fn;
+    fn obj_set_timer_fn(&mut self, timer_fn: Obj) {
+        self.timer_fn = timer_fn;
+    }
+
+    fn root(&self) -> &impl Deref<Target = dyn ObjComponent> {
+        unwrap!(self.root.as_ref())
+    }
+
+    fn root_mut(&mut self) -> &mut impl DerefMut<Target = dyn ObjComponent> {
+        unwrap!(self.root.as_mut())
+    }
+
+    fn obj_request_repaint(&mut self) {
+        self.repaint = Repaint::Full;
+        let mut dummy_ctx = EventCtx::new();
+        let paint_msg = self
+            .root_mut()
+            .obj_event(&mut dummy_ctx, Event::RequestPaint);
+        // paint_msg must not be an error and it must not return a result
+        assert!(matches!(paint_msg, Ok(s) if s == Obj::const_none()));
+        // there must be no timers set
+        assert!(dummy_ctx.pop_timer().is_none());
     }
 
     /// Run an event pass over the component tree. After the traversal, any
     /// pending timers are drained into `self.timer_callback`. Returns `Err`
     /// in case the timer callback raises or one of the components returns
     /// an error, `Ok` with the message otherwise.
-    fn obj_event(&self, event: Event) -> Result<Obj, Error> {
-        let inner = &mut *self.inner.borrow_mut();
-
+    fn obj_event(&mut self, event: Event) -> Result<Obj, Error> {
+        let root = unwrap!(self.root.as_mut());
         // Place the root component on the screen in case it was previously requested.
-        if inner.event_ctx.needs_place_before_next_event_or_paint() {
-            // SAFETY: `inner.root` is unique because of the `inner.borrow_mut()`.
-            unsafe { Gc::as_mut(&mut inner.root) }.obj_place(constant::screen());
+        if self.event_ctx.needs_place() {
+            root.obj_place(constant::screen());
         }
 
         // Clear the leftover flags from the previous event pass.
-        inner.event_ctx.clear();
+        self.event_ctx.clear();
 
         // Send the event down the component tree. Bail out in case of failure.
-        // SAFETY: `inner.root` is unique because of the `inner.borrow_mut()`.
-        let msg = unsafe { Gc::as_mut(&mut inner.root) }.obj_event(&mut inner.event_ctx, event)?;
+        let msg = root.obj_event(&mut self.event_ctx, event)?;
+
+        // Check if we should repaint next time
+        if self.event_ctx.needs_repaint_root() {
+            self.obj_request_repaint();
+        } else if self.event_ctx.needs_repaint() {
+            self.repaint = Repaint::Partial;
+        }
 
         // All concerning `Child` wrappers should have already marked themselves for
         // painting by now, and we're prepared for a paint pass.
 
         // Drain any pending timers into the callback.
-        while let Some((token, deadline)) = inner.event_ctx.pop_timer() {
+        while let Some((token, deadline)) = self.event_ctx.pop_timer() {
             let token = token.try_into();
             let deadline = deadline.try_into();
             if let (Ok(token), Ok(deadline)) = (token, deadline) {
-                inner.timer_fn.call_with_n_args(&[token, deadline])?;
+                self.timer_fn.call_with_n_args(&[token, deadline])?;
             } else {
                 // Failed to convert token or deadline into `Obj`, skip.
             }
         }
 
-        if let Some(count) = inner.event_ctx.page_count() {
-            inner.page_count = count as u16;
+        if let Some(count) = self.event_ctx.page_count() {
+            self.page_count = count as u16;
+        }
+
+        if let Some(t) = self.event_ctx.get_transition_out() {
+            self.transition_out = t;
         }
 
         Ok(msg)
     }
 
-    fn obj_request_clear(&self) {
-        let mut inner = self.inner.borrow_mut();
-        // SAFETY: `inner.root` is unique because of the `inner.borrow_mut()`.
-        unsafe { Gc::as_mut(&mut inner.root) }.obj_request_clear();
-    }
-
     /// Run a paint pass over the component tree. Returns true if any component
     /// actually requested painting since last invocation of the function.
-    fn obj_paint_if_requested(&self) -> bool {
-        let mut inner = self.inner.borrow_mut();
-
-        // Place the root component on the screen in case it was previously requested.
-        if inner.event_ctx.needs_place_before_next_event_or_paint() {
-            // SAFETY: `inner.root` is unique because of the `inner.borrow_mut()`.
-            unsafe { Gc::as_mut(&mut inner.root) }.obj_place(constant::screen());
+    fn obj_paint_if_requested(&mut self) -> bool {
+        if self.repaint == Repaint::Full {
+            display::clear();
         }
 
-        sync();
+        // Place the root component on the screen in case it was previously requested.
+        if self.event_ctx.needs_place() {
+            self.root_mut().obj_place(constant::screen());
+        }
 
-        // SAFETY: `inner.root` is unique because of the `inner.borrow_mut()`.
-        unsafe { Gc::as_mut(&mut inner.root) }.obj_paint()
+        display::sync();
+
+        if self.repaint != Repaint::None {
+            self.repaint = Repaint::None;
+            self.root_mut().obj_paint();
+            true
+        } else {
+            false
+        }
     }
 
     /// Run a tracing pass over the component tree. Passed `callback` is called
@@ -293,18 +280,16 @@ impl LayoutObj {
         // because trait upcasting is unstable.
         // Luckily, calling `root.trace()` works perfectly fine in spite of the above.)
         tracer.root(&|t| {
-            self.inner.borrow().root.trace(t);
+            self.root().trace(t);
         });
     }
 
     fn obj_page_count(&self) -> Obj {
-        self.inner.borrow().page_count.into()
+        self.page_count.into()
     }
 
-    fn obj_button_request(&self) -> Result<Obj, Error> {
-        let inner = &mut *self.inner.borrow_mut();
-
-        match inner.event_ctx.button_request() {
+    fn obj_button_request(&mut self) -> Result<Obj, Error> {
+        match self.event_ctx.button_request() {
             None => Ok(Obj::const_none()),
             Some(ButtonRequest { code, br_type }) => {
                 (code.num().into(), br_type.try_into()?).try_into()
@@ -312,18 +297,12 @@ impl LayoutObj {
         }
     }
 
-    fn obj_get_transition_out(&self) -> Result<Obj, Error> {
-        let inner = &mut *self.inner.borrow_mut();
-
-        // Get transition out result
-        // SAFETY: `inner.root` is unique because of the `inner.borrow_mut()`.
-        unsafe { Gc::as_mut(&mut inner.root) }.obj_get_transition_out()
+    fn obj_get_transition_out(&self) -> Obj {
+        self.transition_out.to_obj()
     }
 
     #[cfg(feature = "ui_debug")]
     fn obj_bounds(&self) {
-        use crate::ui::display;
-
         // Sink for `Trace::bounds` that draws the boundaries using pseudorandom color.
         fn wireframe(r: Rect) {
             let w = r.width() as u16;
@@ -334,7 +313,25 @@ impl LayoutObj {
 
         // use crate::ui::model_tt::theme;
         // wireframe(theme::borders());
-        self.inner.borrow().root.obj_bounds(&mut wireframe);
+        self.root().obj_bounds(&mut wireframe);
+    }
+}
+
+impl LayoutObj {
+    /// Create a new `LayoutObj`, wrapping a root component.
+    #[inline(never)]
+    pub fn new(root: impl ComponentMsgObj + MaybeTrace + 'static) -> Result<Gc<Self>, Error> {
+        // SAFETY: This is a Python object and hase a base as first element
+        unsafe {
+            Gc::new_with_custom_finaliser(Self {
+                base: Self::obj_type().as_base(),
+                inner: RefCell::new(LayoutObjInner::new(root)?),
+            })
+        }
+    }
+
+    fn inner_mut(&self) -> RefMut<LayoutObjInner> {
+        self.inner.borrow_mut()
     }
 
     fn obj_type() -> &'static Type {
@@ -358,6 +355,10 @@ impl LayoutObj {
             }),
         };
         &TYPE
+    }
+
+    pub fn skip_first_paint(&self) {
+        self.inner_mut().repaint = Repaint::None;
     }
 }
 
@@ -424,9 +425,11 @@ impl TryFrom<Never> for Obj {
 extern "C" fn ui_layout_attach_timer_fn(this: Obj, timer_fn: Obj, attach_type: Obj) -> Obj {
     let block = || {
         let this: Gc<LayoutObj> = this.try_into()?;
-        this.obj_set_timer_fn(timer_fn);
+        this.inner_mut().obj_set_timer_fn(timer_fn);
 
-        let msg = this.obj_event(Event::Attach(AttachType::try_from_obj(attach_type)?))?;
+        let msg = this
+            .inner_mut()
+            .obj_event(Event::Attach(AttachType::try_from_obj(attach_type)?))?;
         assert!(msg == Obj::const_none());
         Ok(Obj::const_none())
     };
@@ -445,7 +448,7 @@ extern "C" fn ui_layout_touch_event(n_args: usize, args: *const Obj) -> Obj {
             args[2].try_into()?,
             args[3].try_into()?,
         )?;
-        let msg = this.obj_event(Event::Touch(event))?;
+        let msg = this.inner_mut().obj_event(Event::Touch(event))?;
         Ok(msg)
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, &Map::EMPTY, block) }
@@ -464,7 +467,7 @@ extern "C" fn ui_layout_button_event(n_args: usize, args: *const Obj) -> Obj {
         }
         let this: Gc<LayoutObj> = args[0].try_into()?;
         let event = ButtonEvent::new(args[1].try_into()?, args[2].try_into()?)?;
-        let msg = this.obj_event(Event::Button(event))?;
+        let msg = this.inner_mut().obj_event(Event::Button(event))?;
         Ok(msg)
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, &Map::EMPTY, block) }
@@ -483,7 +486,9 @@ extern "C" fn ui_layout_progress_event(n_args: usize, args: *const Obj) -> Obj {
         let this: Gc<LayoutObj> = args[0].try_into()?;
         let value: u16 = args[1].try_into()?;
         let description: StrBuffer = args[2].try_into()?;
-        let msg = this.obj_event(Event::Progress(value, description.into()))?;
+        let msg = this
+            .inner_mut()
+            .obj_event(Event::Progress(value, description.into()))?;
         Ok(msg)
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, &Map::EMPTY, block) }
@@ -496,7 +501,7 @@ extern "C" fn ui_layout_usb_event(n_args: usize, args: *const Obj) -> Obj {
         }
         let this: Gc<LayoutObj> = args[0].try_into()?;
         let event = USBEvent::Connected(args[1].try_into()?);
-        let msg = this.obj_event(Event::USB(event))?;
+        let msg = this.inner_mut().obj_event(Event::USB(event))?;
         Ok(msg)
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, &Map::EMPTY, block) }
@@ -506,7 +511,7 @@ extern "C" fn ui_layout_timer(this: Obj, token: Obj) -> Obj {
     let block = || {
         let this: Gc<LayoutObj> = this.try_into()?;
         let event = Event::Timer(token.try_into()?);
-        let msg = this.obj_event(event)?;
+        let msg = this.inner_mut().obj_event(event)?;
         Ok(msg)
     };
     unsafe { util::try_or_raise(block) }
@@ -515,7 +520,7 @@ extern "C" fn ui_layout_timer(this: Obj, token: Obj) -> Obj {
 extern "C" fn ui_layout_paint(this: Obj) -> Obj {
     let block = || {
         let this: Gc<LayoutObj> = this.try_into()?;
-        let painted = this.obj_paint_if_requested().into();
+        let painted = this.inner_mut().obj_paint_if_requested().into();
         Ok(painted)
     };
     unsafe { util::try_or_raise(block) }
@@ -524,15 +529,7 @@ extern "C" fn ui_layout_paint(this: Obj) -> Obj {
 extern "C" fn ui_layout_request_complete_repaint(this: Obj) -> Obj {
     let block = || {
         let this: Gc<LayoutObj> = this.try_into()?;
-        let event = Event::RequestPaint;
-        let msg = this.obj_event(event)?;
-        if msg != Obj::const_none() {
-            // Messages raised during a `RequestPaint` dispatch are not propagated, let's
-            // make sure we don't do that.
-            #[cfg(feature = "ui_debug")]
-            fatal_error!("Cannot raise messages during RequestPaint");
-        };
-        this.obj_request_clear();
+        this.inner_mut().obj_request_repaint();
         Ok(Obj::const_none())
     };
     unsafe { util::try_or_raise(block) }
@@ -541,7 +538,8 @@ extern "C" fn ui_layout_request_complete_repaint(this: Obj) -> Obj {
 extern "C" fn ui_layout_page_count(this: Obj) -> Obj {
     let block = || {
         let this: Gc<LayoutObj> = this.try_into()?;
-        Ok(this.obj_page_count())
+        let page_count = this.inner_mut().obj_page_count();
+        Ok(page_count)
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -549,7 +547,8 @@ extern "C" fn ui_layout_page_count(this: Obj) -> Obj {
 extern "C" fn ui_layout_button_request(this: Obj) -> Obj {
     let block = || {
         let this: Gc<LayoutObj> = this.try_into()?;
-        this.obj_button_request()
+        let button_request = this.inner_mut().obj_button_request();
+        button_request
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -557,7 +556,8 @@ extern "C" fn ui_layout_button_request(this: Obj) -> Obj {
 extern "C" fn ui_layout_get_transition_out(this: Obj) -> Obj {
     let block = || {
         let this: Gc<LayoutObj> = this.try_into()?;
-        this.obj_get_transition_out()
+        let transition_out = this.inner_mut().obj_get_transition_out();
+        Ok(transition_out)
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -572,7 +572,7 @@ pub extern "C" fn ui_debug_layout_type() -> &'static Type {
 extern "C" fn ui_layout_trace(this: Obj, callback: Obj) -> Obj {
     let block = || {
         let this: Gc<LayoutObj> = this.try_into()?;
-        this.obj_trace(callback);
+        this.inner_mut().obj_trace(callback);
         Ok(Obj::const_none())
     };
     unsafe { util::try_or_raise(block) }
@@ -587,7 +587,7 @@ extern "C" fn ui_layout_trace(_this: Obj, _callback: Obj) -> Obj {
 extern "C" fn ui_layout_bounds(this: Obj) -> Obj {
     let block = || {
         let this: Gc<LayoutObj> = this.try_into()?;
-        this.obj_bounds();
+        this.inner_mut().obj_bounds();
         Ok(Obj::const_none())
     };
     unsafe { util::try_or_raise(block) }
@@ -601,7 +601,7 @@ extern "C" fn ui_layout_bounds(_this: Obj) -> Obj {
 extern "C" fn ui_layout_delete(this: Obj) -> Obj {
     let block = || {
         let this: Gc<LayoutObj> = this.try_into()?;
-        this.obj_delete();
+        this.inner_mut().obj_delete();
         Ok(Obj::const_none())
     };
     unsafe { util::try_or_raise(block) }

@@ -8,7 +8,7 @@ use crate::{
     ui::{
         button_request::{ButtonRequest, ButtonRequestCode},
         component::{maybe::PaintOverlapping, MsgMap, PageMap},
-        display::{self, Color},
+        display::Color,
         geometry::{Offset, Rect},
         shape::Renderer,
     },
@@ -204,111 +204,6 @@ where
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         self.component.trace(t)
-    }
-}
-
-/// Same as `Child` but also handles screen clearing when layout is first
-/// painted.
-pub struct Root<T> {
-    inner: Option<Child<T>>,
-    marked_for_clear: bool,
-    transition_out: Option<AttachType>,
-}
-
-impl<T> Root<T> {
-    pub fn new(component: T) -> Self {
-        Self {
-            inner: Some(Child::new(component)),
-            marked_for_clear: true,
-            transition_out: None,
-        }
-    }
-
-    pub fn inner_mut(&mut self) -> &mut Child<T> {
-        if let Some(ref mut c) = self.inner {
-            c
-        } else {
-            fatal_error!("Root object is deallocated")
-        }
-    }
-
-    pub fn inner(&self) -> &Child<T> {
-        if let Some(ref c) = self.inner {
-            c
-        } else {
-            fatal_error!("Root object is deallocated")
-        }
-    }
-
-    pub fn skip_paint(&mut self) {
-        self.inner_mut().skip_paint();
-    }
-
-    pub fn clear_screen(&mut self) {
-        self.marked_for_clear = true;
-    }
-
-    pub fn get_transition_out(&self) -> Option<AttachType> {
-        self.transition_out
-    }
-
-    pub fn delete(&mut self) {
-        self.inner = None;
-    }
-}
-
-impl<T> Component for Root<T>
-where
-    T: Component,
-{
-    type Msg = T::Msg;
-
-    fn place(&mut self, bounds: Rect) -> Rect {
-        self.inner_mut().place(bounds)
-    }
-
-    fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        let msg = self.inner_mut().event(ctx, event);
-        if ctx.needs_repaint_root() {
-            self.marked_for_clear = true;
-            let mut dummy_ctx = EventCtx::new();
-            let paint_msg = self.inner_mut().event(&mut dummy_ctx, Event::RequestPaint);
-            assert!(paint_msg.is_none());
-            assert!(dummy_ctx.timers.is_empty());
-        }
-
-        if let Some(t) = ctx.get_transition_out() {
-            self.transition_out = Some(t);
-        }
-
-        msg
-    }
-
-    fn paint(&mut self) {
-        if self.marked_for_clear && self.inner().will_paint() {
-            self.marked_for_clear = false;
-            display::clear()
-        }
-        self.inner.paint();
-    }
-
-    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        self.inner().render(target);
-    }
-
-    #[cfg(feature = "ui_bounds")]
-    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
-        self.inner().bounds(sink)
-    }
-}
-
-#[cfg(feature = "ui_debug")]
-impl<T> crate::trace::Trace for Root<T>
-where
-    T: crate::trace::Trace,
-{
-    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        self.inner().trace(t);
     }
 }
 
@@ -582,7 +477,7 @@ impl EventCtx {
 
     /// Returns `true` if we should first perform a place traversal before
     /// processing events or painting.
-    pub fn needs_place_before_next_event_or_paint(&self) -> bool {
+    pub fn needs_place(&self) -> bool {
         self.place_requested
     }
 
@@ -614,6 +509,10 @@ impl EventCtx {
 
     pub fn needs_repaint_root(&self) -> bool {
         self.root_repaint_requested
+    }
+
+    pub fn needs_repaint(&self) -> bool {
+        self.paint_requested
     }
 
     pub fn set_page_count(&mut self, count: usize) {
