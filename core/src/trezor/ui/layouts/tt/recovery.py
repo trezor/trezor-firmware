@@ -11,18 +11,18 @@ CONFIRMED = trezorui2.CONFIRMED  # global_import_cache
 INFO = trezorui2.INFO  # global_import_cache
 
 
-async def _is_confirmed_info(
+async def _homepage_with_info(
     dialog: RustLayout,
     info_func: Callable,
-) -> bool:
+) -> trezorui2.UiResult:
     while True:
         result = await dialog
 
-        if result is trezorui2.INFO:
+        if result is INFO:
             await info_func()
             dialog.request_complete_repaint()
         else:
-            return result is CONFIRMED
+            return result
 
 
 async def request_word_count(recovery_type: RecoveryType) -> int:
@@ -111,14 +111,40 @@ async def show_group_share_success(share_index: int, group_index: int) -> None:
     )
 
 
+async def _confirm_abort(dry_run: bool = False) -> None:
+    from . import confirm_action
+
+    if dry_run:
+        await confirm_action(
+            "abort_recovery",
+            TR.recovery__title_cancel_dry_run,
+            TR.recovery__cancel_dry_run,
+            description=TR.recovery__wanna_cancel_dry_run,
+            verb=TR.buttons__cancel,
+            br_code=ButtonRequestType.ProtectCall,
+        )
+    else:
+        await confirm_action(
+            "abort_recovery",
+            TR.recovery__title_cancel_recovery,
+            TR.recovery__progress_will_be_lost,
+            TR.recovery__wanna_cancel_recovery,
+            verb=TR.buttons__cancel,
+            reverse=True,
+            br_code=ButtonRequestType.ProtectCall,
+        )
+
+
 async def continue_recovery(
     button_label: str,
     text: str,
     subtext: str | None,
     info_func: Callable | None,
     recovery_type: RecoveryType,
-    show_info: bool = False,  # unused on TT
+    show_info: bool = False,
 ) -> bool:
+    from trezor.wire import ActionCancelled
+
     from ..common import button_request
 
     if show_info:
@@ -127,23 +153,32 @@ async def continue_recovery(
     else:
         description = subtext or ""
 
-    homepage = RustLayout(
-        trezorui2.confirm_recovery(
-            title=text,
-            description=description,
-            button=button_label,
-            recovery_type=recovery_type,
-            info_button=info_func is not None,
+    while True:
+        homepage = RustLayout(
+            trezorui2.confirm_recovery(
+                title=text,
+                description=description,
+                button=button_label,
+                recovery_type=recovery_type,
+                info_button=info_func is not None,
+            )
         )
-    )
 
-    await button_request("recovery", ButtonRequestType.RecoveryHomepage)
+        await button_request("recovery", ButtonRequestType.RecoveryHomepage)
 
-    if info_func is not None:
-        return await _is_confirmed_info(homepage, info_func)
-    else:
-        result = await homepage
-        return result is CONFIRMED
+        result = (
+            await homepage
+            if info_func is None
+            else await _homepage_with_info(homepage, info_func)
+        )
+        if result is CONFIRMED:
+            return True
+        try:
+            await _confirm_abort(recovery_type != RecoveryType.NormalRecovery)
+        except ActionCancelled:
+            pass
+        else:
+            return False
 
 
 async def show_recovery_warning(

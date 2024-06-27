@@ -2,7 +2,6 @@ from typing import TYPE_CHECKING
 
 from trezor import TR
 from trezor.enums import ButtonRequestType
-from trezor.ui.layouts import confirm_action
 from trezor.ui.layouts.recovery import (  # noqa: F401
     request_word_count,
     show_group_share_success,
@@ -16,28 +15,6 @@ if TYPE_CHECKING:
     from typing import Callable
 
     from trezor.enums import BackupType
-
-
-async def _confirm_abort(dry_run: bool = False) -> None:
-    if dry_run:
-        await confirm_action(
-            "abort_recovery",
-            TR.recovery__title_cancel_dry_run,
-            TR.recovery__cancel_dry_run,
-            description=TR.recovery__wanna_cancel_dry_run,
-            verb=TR.buttons__cancel,
-            br_code=ButtonRequestType.ProtectCall,
-        )
-    else:
-        await confirm_action(
-            "abort_recovery",
-            TR.recovery__title_cancel_recovery,
-            TR.recovery__progress_will_be_lost,
-            TR.recovery__wanna_cancel_recovery,
-            verb=TR.buttons__cancel,
-            reverse=True,
-            br_code=ButtonRequestType.ProtectCall,
-        )
 
 
 async def request_mnemonic(
@@ -149,24 +126,12 @@ async def homescreen_dialog(
     show_info: bool = False,
 ) -> None:
     import storage.recovery as storage_recovery
-    from trezor.enums import RecoveryType
     from trezor.ui.layouts.recovery import continue_recovery
-    from trezor.wire import ActionCancelled
 
     from .recover import RecoveryAborted
 
     recovery_type = storage_recovery.get_type()
-
-    while True:
-        if await continue_recovery(
-            button_label, text, subtext, info_func, recovery_type, show_info
-        ):
-            # go forward in the recovery process
-            break
-        # user has chosen to abort, confirm the choice
-        try:
-            await _confirm_abort(recovery_type != RecoveryType.NormalRecovery)
-        except ActionCancelled:
-            pass
-        else:
-            raise RecoveryAborted
+    if not await continue_recovery(
+        button_label, text, subtext, info_func, recovery_type, show_info
+    ):
+        raise RecoveryAborted

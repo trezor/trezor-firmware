@@ -239,10 +239,12 @@ static void _librust_qstrs(void) {
   MP_QSTR_fingerprint;
   MP_QSTR_firmware_update__title;
   MP_QSTR_firmware_update__title_fingerprint;
+  MP_QSTR_first_screen;
   MP_QSTR_flow_confirm_output;
   MP_QSTR_flow_confirm_reset;
   MP_QSTR_flow_confirm_set_new_pin;
   MP_QSTR_flow_confirm_summary;
+  MP_QSTR_flow_continue_recovery;
   MP_QSTR_flow_get_address;
   MP_QSTR_flow_prompt_backup;
   MP_QSTR_flow_request_number;
@@ -659,7 +661,9 @@ static void _librust_qstrs(void) {
   MP_QSTR_storage_msg__verifying_pin;
   MP_QSTR_storage_msg__wrong_pin;
   MP_QSTR_subprompt;
+  MP_QSTR_subtext;
   MP_QSTR_subtitle;
+  MP_QSTR_text;
   MP_QSTR_text_confirm;
   MP_QSTR_text_info;
   MP_QSTR_text_mono;
