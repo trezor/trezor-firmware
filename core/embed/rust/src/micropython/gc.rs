@@ -1,6 +1,6 @@
 use core::{
     alloc::Layout,
-    ops::Deref,
+    ops::{Deref, DerefMut},
     ptr::{self, NonNull},
 };
 
@@ -33,6 +33,10 @@ impl<T> Gc<T> {
     /// that have a base as their first element
     unsafe fn alloc(v: T, flags: u32) -> Result<Self, Error> {
         let layout = Layout::for_value(&v);
+        debug_assert!(
+            layout.size() > 0,
+            "Zero-sized allocations are not supported"
+        );
         // TODO: Assert that `layout.align()` is the same as the GC alignment.
         // SAFETY:
         //  - Unfortunately we cannot respect `layout.align()` as MicroPython GC does
@@ -159,5 +163,227 @@ impl<T: ?Sized> Deref for Gc<T> {
 
     fn deref(&self) -> &Self::Target {
         unsafe { self.0.as_ref() }
+    }
+}
+
+/// Box-like allocation on the GC heap.
+///
+/// Values allocated using GcBox are guaranteed to be only owned by that
+/// particular GcBox instance. This makes them safe to mutate, and they run
+/// destructors when dropped.
+///
+/// Suitable for use in cases where you would normally use Rust's native Box
+/// type -- i.e., typically for storing sub-values in a struct, possibly also
+/// for returning values from functions.
+///
+/// While general unsizing is not available, you can use the `coerce!` macro to
+/// safely cast the box to a trait object.
+///
+/// # Safety and usage notes
+///
+/// One caveat of using GcBox is that it still always needs to be visible to the
+/// GC -- that is, stored in a struct which is allocated on the GC heap, on the
+/// call stack, or reachable from one of the GC roots.
+///
+/// Specifically, it is generally unsafe to store a GcBox in a global variable.
+///
+/// When a GcBox is stored in a struct, which itself is allocated via raw GC,
+/// the containing struct might get GC'd, which will cause GcBox not to get
+/// dropped, which in turn will prevent GcBox's contents from getting dropped.
+pub struct GcBox<T: ?Sized>(Gc<T>);
+
+impl<T> GcBox<T> {
+    /// Allocate memory on the heap managed by the MicroPython GC and then place
+    /// `value` into it.
+    ///
+    /// `value` _will_ get its Drop implementation called when the GcBox is
+    /// dropped.
+    pub fn new(value: T) -> Result<Self, Error> {
+        Ok(Self(Gc::new(value)?))
+    }
+}
+
+impl<T: ?Sized> GcBox<T> {
+    /// Leak contents of the box as a pointer.
+    ///
+    /// # Safety
+    ///
+    /// The value will not be dropped. If necessary, the caller is responsible
+    /// for dropping it manually, e.g., via `ptr::drop_in_place`.
+    pub fn into_raw(this: Self) -> *mut T {
+        let result = Gc::into_raw(this.0);
+        core::mem::forget(this);
+        result
+    }
+
+    /// Construct a `GcBox` from a raw pointer.
+    ///
+    /// # Safety
+    ///
+    /// This is only safe for pointers _allocated on the MicroPython GC heap_
+    /// via `gc_alloc()`. Specifically, unlike `Gc::from_raw`, it is unsafe
+    /// to construct a GcBox from ROM values, even those that are trackable
+    /// by the GC.
+    ///
+    /// This is because the Drop implementation of GcBox calls `gc_free()` on
+    /// the pointer.
+    ///
+    /// In addition, the caller must ensure that it is safe to apply box-like
+    /// semantics to the value, namely that:
+    ///  * nobody else has the pointer to the value, so that it is safe to
+    ///    create mutable references to it
+    ///  * the value is going to be dropped when the GcBox is dropped.
+    pub unsafe fn from_raw(ptr: *mut T) -> Self {
+        // SAFETY: just a wrapper around Gc::from_raw
+        Self(unsafe { Gc::from_raw(ptr) })
+    }
+
+    /// Leak contents of the box as a regular Gc allocation.
+    ///
+    /// This gives up the unique ownership. It is no longer possible to safely
+    /// mutably borrow the value, and its destructor will not be called when
+    /// it is dropped. In exchange, it is possible to return Gc instance to
+    /// MicroPython.
+    pub fn leak(self) -> Gc<T> {
+        let inner = self.0;
+        core::mem::forget(self);
+        inner
+    }
+}
+
+/// Type-cast GcBox contents to a `dyn Trait` object.
+macro_rules! coerce {
+    ($t:path, $v:expr) => {
+        // SAFETY: we are just re-wrapping the pointer, so all safety requirements
+        // of `GcBox::from_raw` are upheld.
+        // Rust type system will not allow us to cast to a trait object that is not
+        // implemented by the type.
+        unsafe { GcBox::from_raw(GcBox::into_raw($v) as *mut dyn $t) }
+    };
+}
+
+pub(crate) use coerce;
+
+impl<T: ?Sized> Deref for GcBox<T> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        self.0.deref()
+    }
+}
+
+impl<T: ?Sized> DerefMut for GcBox<T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        // SAFETY: We are the sole owner of the allocated value, and we are borrowed
+        // mutably.
+        unsafe { Gc::as_mut(&mut self.0) }
+    }
+}
+
+impl<T: ?Sized> Drop for GcBox<T> {
+    fn drop(&mut self) {
+        let ptr = Gc::into_raw(self.0);
+        // SAFETY: We are the sole owner of the allocated value, and we are being
+        // dropped.
+        unsafe {
+            ptr::drop_in_place(ptr);
+            ffi::gc_free(ptr.cast());
+        }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use core::cell::Cell;
+
+    use crate::micropython::testutil::mpy_init;
+
+    use super::*;
+
+    struct SignalDrop<'a>(&'a Cell<bool>);
+
+    impl Drop for SignalDrop<'_> {
+        fn drop(&mut self) {
+            self.0.set(true);
+        }
+    }
+
+    trait Foo {
+        fn foo(&self) -> i32;
+    }
+
+    impl Foo for SignalDrop<'_> {
+        fn foo(&self) -> i32 {
+            42
+        }
+    }
+
+    #[test]
+    fn gc_nodrop() {
+        unsafe { mpy_init() };
+
+        let drop_signalled = Cell::new(false);
+        {
+            let _gc = Gc::new(SignalDrop(&drop_signalled)).unwrap();
+        }
+        assert!(!drop_signalled.get());
+    }
+
+    #[test]
+    fn gcbox_drop() {
+        unsafe { mpy_init() };
+
+        let drop_signalled = Cell::new(false);
+        {
+            let _gcbox = GcBox::new(SignalDrop(&drop_signalled)).unwrap();
+        }
+        assert!(drop_signalled.get());
+    }
+
+    #[test]
+    fn gc_raw_roundtrip() {
+        unsafe { mpy_init() };
+
+        let gc = Gc::new(42).unwrap();
+        let ptr = Gc::into_raw(gc);
+        let wrapped = unsafe { Gc::from_raw(ptr) };
+        let retrieved = Gc::into_raw(wrapped);
+        assert_eq!(ptr, retrieved);
+    }
+
+    #[test]
+    fn gcbox_raw_roundtrip() {
+        unsafe { mpy_init() };
+
+        let drop_signalled = Cell::new(false);
+
+        {
+            let gcbox = GcBox::new(SignalDrop(&drop_signalled)).unwrap();
+            assert!(!drop_signalled.get());
+            let ptr = GcBox::into_raw(gcbox);
+            assert!(!drop_signalled.get());
+            let wrapped = unsafe { GcBox::from_raw(ptr) };
+            assert!(!drop_signalled.get());
+            let retrieved = GcBox::into_raw(wrapped);
+            assert!(!drop_signalled.get());
+            assert_eq!(ptr, retrieved);
+
+            let _rewrapped = unsafe { GcBox::from_raw(ptr) };
+        }
+        assert!(drop_signalled.get());
+    }
+
+    #[test]
+    fn test_coerce() {
+        unsafe { mpy_init() };
+
+        let drop_signalled = Cell::new(false);
+        {
+            let gcbox = GcBox::new(SignalDrop(&drop_signalled)).unwrap();
+            let coerced: GcBox<dyn Foo> = coerce!(Foo, gcbox);
+            assert!(!drop_signalled.get());
+            assert_eq!(coerced.foo(), 42);
+        }
+        assert!(drop_signalled.get());
     }
 }
