@@ -395,9 +395,6 @@ impl ConfirmBlobParams {
     }
 }
 
-const RECOVERY_TYPE_DRY_RUN: u32 = 1;
-const RECOVERY_TYPE_UNLOCK_REPEATED_BACKUP: u32 = 2;
-
 extern "C" fn new_confirm_blob(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
@@ -1053,34 +1050,6 @@ extern "C" fn new_show_checklist(n_args: usize, args: *const Obj, kwargs: *mut M
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
-extern "C" fn new_confirm_recovery(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
-    let block = move |_args: &[Obj], kwargs: &Map| {
-        let _title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
-        let description: TString = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
-        let _button: TString = kwargs.get(Qstr::MP_QSTR_button)?.try_into()?;
-        let recovery_type: u32 = kwargs.get(Qstr::MP_QSTR_recovery_type)?.try_into()?;
-        let _info_button: bool = kwargs.get_or(Qstr::MP_QSTR_info_button, false)?;
-
-        let paragraphs = Paragraphs::new(Paragraph::new(&theme::TEXT_NORMAL, description));
-
-        let notification = match recovery_type {
-            RECOVERY_TYPE_DRY_RUN => TR::recovery__title_dry_run.into(),
-            RECOVERY_TYPE_UNLOCK_REPEATED_BACKUP => TR::recovery__title_dry_run.into(),
-            _ => TR::recovery__title.into(),
-        };
-
-        let obj = LayoutObj::new(SwipeUpScreen::new(
-            Frame::left_aligned(notification, SwipeContent::new(paragraphs))
-                .with_cancel_button()
-                .with_footer(TR::instructions__swipe_up.into(), None)
-                .with_subtitle(TR::words__instructions.into())
-                .with_swipe(SwipeDirection::Up, SwipeSettings::default()),
-        ))?;
-        Ok(obj.into())
-    };
-    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
-}
-
 extern "C" fn new_select_word_count(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], _kwargs: &Map| {
         let obj = LayoutObj::new(Frame::left_aligned(
@@ -1688,16 +1657,15 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///    mark next to them."""
     Qstr::MP_QSTR_show_checklist => obj_fn_kw!(0, new_show_checklist).as_obj(),
 
-    /// def confirm_recovery(
+    /// def flow_continue_recovery(
     ///     *,
-    ///     title: str,
-    ///     description: str,
-    ///     button: str,
+    ///     first_screen: bool,
     ///     recovery_type: RecoveryType,
-    ///     info_button: bool = False,
+    ///     text: str,
+    ///     subtext: str | None = None,
     /// ) -> LayoutObj[UiResult]:
     ///     """Device recovery homescreen."""
-    Qstr::MP_QSTR_confirm_recovery => obj_fn_kw!(0, new_confirm_recovery).as_obj(),
+    Qstr::MP_QSTR_flow_continue_recovery => obj_fn_kw!(0, flow::continue_recovery::new_continue_recovery).as_obj(),
 
     /// def select_word_count(
     ///     *,

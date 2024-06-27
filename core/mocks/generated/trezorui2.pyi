@@ -445,13 +445,12 @@ def show_checklist(
 
 
 # rust/src/ui/model_mercury/layout.rs
-def confirm_recovery(
+def flow_continue_recovery(
     *,
-    title: str,
-    description: str,
-    button: str,
+    first_screen: bool,
     recovery_type: RecoveryType,
-    info_button: bool = False,
+    text: str,
+    subtext: str | None = None,
 ) -> LayoutObj[UiResult]:
     """Device recovery homescreen."""
 

@@ -69,6 +69,30 @@ async def show_group_share_success(share_index: int, group_index: int) -> None:
     )
 
 
+async def _confirm_abort(dry_run: bool = False) -> None:
+    from . import confirm_action
+
+    if dry_run:
+        await confirm_action(
+            "abort_recovery",
+            TR.recovery__title_cancel_dry_run,
+            TR.recovery__cancel_dry_run,
+            description=TR.recovery__wanna_cancel_dry_run,
+            verb=TR.buttons__cancel,
+            br_code=ButtonRequestType.ProtectCall,
+        )
+    else:
+        await confirm_action(
+            "abort_recovery",
+            TR.recovery__title_cancel_recovery,
+            TR.recovery__progress_will_be_lost,
+            TR.recovery__wanna_cancel_recovery,
+            verb=TR.buttons__cancel,
+            reverse=True,
+            br_code=ButtonRequestType.ProtectCall,
+        )
+
+
 async def continue_recovery(
     button_label: str,
     text: str,
@@ -81,6 +105,8 @@ async def continue_recovery(
     # There is very limited space on the screen
     # (and having middle button would mean shortening the right button text)
 
+    from trezor.wire import ActionCancelled
+
     # Never showing info for dry-run, user already saw it and it is disturbing
     if recovery_type in (RecoveryType.DryRun, RecoveryType.UnlockRepeatedBackup):
         show_info = False
@@ -88,22 +114,32 @@ async def continue_recovery(
     if subtext:
         text += f"\n\n{subtext}"
 
-    homepage = RustLayout(
-        trezorui2.confirm_recovery(
-            title="",
-            description=text,
-            button=button_label,
-            recovery_type=recovery_type,
-            info_button=False,
-            show_info=show_info,  # type: ignore [No parameter named "show_info"]
+    while True:
+        homepage = RustLayout(
+            trezorui2.confirm_recovery(
+                title="",
+                description=text,
+                button=button_label,
+                recovery_type=recovery_type,
+                info_button=False,
+                show_info=show_info,  # type: ignore [No parameter named "show_info"]
+            )
         )
-    )
-    result = await interact(
-        homepage,
-        "recovery",
-        ButtonRequestType.RecoveryHomepage,
-    )
-    return result is trezorui2.CONFIRMED
+        result = await interact(
+            homepage,
+            "recovery",
+            ButtonRequestType.RecoveryHomepage,
+        )
+        if result is trezorui2.CONFIRMED:
+            return True
+
+        # user has chosen to abort, confirm the choice
+        try:
+            await _confirm_abort(recovery_type != RecoveryType.NormalRecovery)
+        except ActionCancelled:
+            pass
+        else:
+            return False
 
 
 async def show_recovery_warning(

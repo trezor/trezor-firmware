@@ -8,21 +8,8 @@ from ..common import interact
 from . import RustLayout, raise_if_not_confirmed
 
 CONFIRMED = trezorui2.CONFIRMED  # global_import_cache
+CANCELLED = trezorui2.CANCELLED  # global_import_cache
 INFO = trezorui2.INFO  # global_import_cache
-
-
-async def _is_confirmed_info(
-    dialog: RustLayout,
-    info_func: Callable,
-) -> bool:
-    while True:
-        result = await dialog
-
-        if result is trezorui2.INFO:
-            await info_func()
-            dialog.request_complete_repaint()
-        else:
-            return result is CONFIRMED
 
 
 async def request_word_count(recovery_type: RecoveryType) -> int:
@@ -112,38 +99,30 @@ async def show_group_share_success(share_index: int, group_index: int) -> None:
 
 
 async def continue_recovery(
-    button_label: str,
+    button_label: str,  # unused on mercury
     text: str,
     subtext: str | None,
-    info_func: Callable | None,
+    info_func: Callable | None,  # TODO: see below
     recovery_type: RecoveryType,
-    show_info: bool = False,  # unused on TT
+    show_info: bool = False,
 ) -> bool:
-    from ..common import button_request
+    # TODO: info_func should be changed to return data to be shown (and not show
+    # them) so that individual models can implement showing logic on their own.
+    # T3T1 should move the data to `flow_continue_recovery` and hide them
+    # in the context menu
 
-    if show_info:
-        # Show this just one-time
-        description = TR.recovery__enter_each_word
-    else:
-        description = subtext or ""
-
+    # NOTE: show_info can be understood as first screen before any shares
     homepage = RustLayout(
-        trezorui2.confirm_recovery(
-            title=text,
-            description=description,
-            button=button_label,
-            info_button=info_func is not None,
+        trezorui2.flow_continue_recovery(
+            first_screen=show_info,
             recovery_type=recovery_type,
+            text=text,
+            subtext=subtext,
         )
     )
-
-    await button_request("recovery", ButtonRequestType.RecoveryHomepage)
-
-    if info_func is not None:
-        return await _is_confirmed_info(homepage, info_func)
-    else:
-        result = await homepage
-        return result is CONFIRMED
+    # TODO: the button request might go to rust
+    result = await interact(homepage, "recovery", ButtonRequestType.RecoveryHomepage)
+    return result is CONFIRMED
 
 
 async def show_recovery_warning(
