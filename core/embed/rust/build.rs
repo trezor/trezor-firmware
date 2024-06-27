@@ -235,6 +235,7 @@ fn generate_micropython_bindings() {
         .allowlist_var("mp_type_fun_builtin_var")
         // gc
         .allowlist_function("gc_alloc")
+        .allowlist_function("gc_free")
         .allowlist_var("GC_ALLOC_FLAG_HAS_FINALISER")
         // iter
         .allowlist_type("mp_obj_iter_buf_t")
