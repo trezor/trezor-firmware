@@ -337,31 +337,6 @@ int hdnode_public_ckd(HDNode *inout, uint32_t i) {
   return 1;
 }
 
-void hdnode_public_ckd_address_optimized(const curve_point *pub,
-                                         const uint8_t *chain_code, uint32_t i,
-                                         uint32_t version,
-                                         HasherType hasher_pubkey,
-                                         HasherType hasher_base58, char *addr,
-                                         int addrsize, int addrformat) {
-  uint8_t child_pubkey[33] = {0};
-  curve_point b = {0};
-
-  hdnode_public_ckd_cp(&secp256k1, pub, chain_code, i, &b, NULL);
-  child_pubkey[0] = 0x02 | (b.y.val[0] & 0x01);
-  bn_write_be(&b.x, child_pubkey + 1);
-
-  switch (addrformat) {
-    case 1:  // Segwit-in-P2SH
-      ecdsa_get_address_segwit_p2sh(child_pubkey, version, hasher_pubkey,
-                                    hasher_base58, addr, addrsize);
-      break;
-    default:  // normal address
-      ecdsa_get_address(child_pubkey, version, hasher_pubkey, hasher_base58,
-                        addr, addrsize);
-      break;
-  }
-}
-
 #if USE_BIP32_CACHE
 static bool private_ckd_cache_root_set = false;
 static CONFIDENTIAL HDNode private_ckd_cache_root;
