@@ -18,6 +18,9 @@
  */
 
 #include <stddef.h>
+#ifdef TREZOR_EMULATOR
+#include <stdio.h>
+#endif
 
 #include "common.h"
 #include "display.h"
@@ -65,6 +68,13 @@ void __attribute__((noreturn)) error_shutdown(const char *message) {
 
 void __attribute__((noreturn))
 __fatal_error(const char *msg, const char *file, int line) {
+#ifdef TREZOR_EMULATOR
+  fprintf(stderr, "FATAL ERROR: %s\n", msg);
+  if (file) {
+    fprintf(stderr, "file: %s:%d\n", file, line);
+  }
+  fflush(stderr);
+#endif
 #ifdef FANCY_FATAL_ERROR
   if (msg == NULL) {
     char buf[128] = {0};
