@@ -481,6 +481,7 @@ impl LockscreenAnim {
 pub struct Lockscreen {
     anim: LockscreenAnim,
     label: Label<'static>,
+    name_width: i16,
     label_width: i16,
     label_height: i16,
     image: Option<BinaryData<'static>>,
@@ -503,12 +504,22 @@ impl Lockscreen {
             }
         });
 
-        let label_width = label.map(|t| theme::TEXT_DEMIBOLD.text_font.text_width(t));
+        let name_width = label.map(|t| theme::TEXT_DEMIBOLD.text_font.text_width(t));
+
+        let label_width = if bootscreen {
+            let min = TR::lockscreen__title_not_connected
+                .map_translated(|t| theme::TEXT_SUB_GREY.text_font.text_width(t));
+            name_width.max(min)
+        } else {
+            name_width
+        };
+
         let label_height = label.map(|t| theme::TEXT_DEMIBOLD.text_font.visible_text_height(t));
 
         Lockscreen {
             anim: LockscreenAnim::default(),
             label: Label::new(label, Alignment::Center, theme::TEXT_DEMIBOLD),
+            name_width,
             label_width,
             label_height,
             image,
@@ -525,7 +536,7 @@ impl Component for Lockscreen {
 
     fn place(&mut self, bounds: Rect) -> Rect {
         self.label
-            .place(bounds.split_top(38).0.with_width(self.label_width + 12));
+            .place(bounds.split_top(38).0.with_width(self.name_width + 12));
         bounds
     }
 
