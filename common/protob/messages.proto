@@ -54,8 +54,9 @@ extend google.protobuf.EnumOptions {
 
 /** Options for tagging message types */
 extend google.protobuf.MessageOptions {
-    optional bool experimental_message = 52001;   // indicate that a message is intended for development and beta testing only and its definition may change at any time
-    optional uint32 wire_type = 52002;   // override wire type specified in the MessageType enum
+    optional bool experimental_message = 52001;  // indicate that a message is intended for development and beta testing only and its definition may change at any time
+    optional uint32 wire_type = 52002;           // override wire type specified in the MessageType enum
+    optional bool internal_only = 52003;         // indicate that a message is intended for internal use only and should not be transmitted via the wire
 }
 
 /** Options for tagging field types */
