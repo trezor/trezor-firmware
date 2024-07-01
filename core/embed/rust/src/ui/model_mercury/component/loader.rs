@@ -124,8 +124,16 @@ impl Loader {
         }
     }
 
-    pub fn progress(&self, now: Instant) -> Option<u16> {
+    pub fn progress_raw(&self, now: Instant) -> Option<u16> {
         self.animation().map(|a| a.value(now))
+    }
+
+    pub fn progress(&self, now: Instant) -> Option<u16> {
+        if animation_disabled() {
+            self.progress_raw(now).map(|_a| display::LOADER_MIN)
+        } else {
+            self.progress_raw(now)
+        }
     }
 
     pub fn is_animating(&self) -> bool {
@@ -133,11 +141,11 @@ impl Loader {
     }
 
     pub fn is_completely_grown(&self, now: Instant) -> bool {
-        matches!(self.progress(now), Some(display::LOADER_MAX))
+        matches!(self.progress_raw(now), Some(display::LOADER_MAX))
     }
 
     pub fn is_completely_shrunk(&self, now: Instant) -> bool {
-        matches!(self.progress(now), Some(display::LOADER_MIN))
+        matches!(self.progress_raw(now), Some(display::LOADER_MIN))
     }
 }
 

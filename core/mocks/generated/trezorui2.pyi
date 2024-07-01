@@ -4,11 +4,6 @@ T = TypeVar("T")
 
 
 # rust/src/ui/model_mercury/layout.rs
-class AttachType:
-    ...
-
-
-# rust/src/ui/model_mercury/layout.rs
 class LayoutObj(Generic[T]):
     """Representation of a Rust-based layout object.
     see `trezor::ui::layout::obj::LayoutObj`.
@@ -621,6 +616,16 @@ class BacklightLevels:
     LOW: ClassVar[int]
     DIM: ClassVar[int]
     NONE: ClassVar[int]
+
+
+# rust/src/ui/model_mercury/layout.rs
+class AttachType:
+    INITIAL: ClassVar[int]
+    RESUME: ClassVar[int]
+    SWIPE_UP: ClassVar[int]
+    SWIPE_DOWN: ClassVar[int]
+    SWIPE_LEFT: ClassVar[int]
+    SWIPE_RIGHT: ClassVar[int]
 CONFIRMED: UiResult
 CANCELLED: UiResult
 INFO: UiResult
@@ -1091,13 +1096,18 @@ class BacklightLevels:
     LOW: ClassVar[int]
     DIM: ClassVar[int]
     NONE: ClassVar[int]
+
+
+# rust/src/ui/model_tr/layout.rs
+class AttachType:
+    INITIAL: ClassVar[int]
+    RESUME: ClassVar[int]
+    SWIPE_UP: ClassVar[int]
+    SWIPE_DOWN: ClassVar[int]
+    SWIPE_LEFT: ClassVar[int]
+    SWIPE_RIGHT: ClassVar[int]
 from trezor import utils
 T = TypeVar("T")
-
-
-# rust/src/ui/model_tt/layout.rs
-class AttachType:
-    ...
 
 
 # rust/src/ui/model_tt/layout.rs
@@ -1642,3 +1652,13 @@ class BacklightLevels:
     LOW: ClassVar[int]
     DIM: ClassVar[int]
     NONE: ClassVar[int]
+
+
+# rust/src/ui/model_tt/layout.rs
+class AttachType:
+    INITIAL: ClassVar[int]
+    RESUME: ClassVar[int]
+    SWIPE_UP: ClassVar[int]
+    SWIPE_DOWN: ClassVar[int]
+    SWIPE_LEFT: ClassVar[int]
+    SWIPE_RIGHT: ClassVar[int]
