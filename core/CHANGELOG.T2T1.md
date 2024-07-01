@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.8.0] (17th July 2024)
+
+### Added
+- Expose value of the Optiga SEC counter in `Features` message.
+
+### Changed
+- Reworked PIN processing.
+
+### Removed
+- CoSi functionality.  [#3442]
+
+### Fixed
+- Increase Optiga read timeout to avoid spurious RSODs.
+
+
 ## [2.7.2] (14th June 2024)
 
 ### Fixed
@@ -879,6 +894,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#3424]: https://github.com/trezor/trezor-firmware/pull/3424
 [#3434]: https://github.com/trezor/trezor-firmware/pull/3434
 [#3440]: https://github.com/trezor/trezor-firmware/pull/3440
+[#3442]: https://github.com/trezor/trezor-firmware/pull/3442
 [#3445]: https://github.com/trezor/trezor-firmware/pull/3445
 [#3458]: https://github.com/trezor/trezor-firmware/pull/3458
 [#3475]: https://github.com/trezor/trezor-firmware/pull/3475
@@ -890,8 +906,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#3636]: https://github.com/trezor/trezor-firmware/pull/3636
 [#3640]: https://github.com/trezor/trezor-firmware/pull/3640
 [#3855]: https://github.com/trezor/trezor-firmware/pull/3855
+[#3895]: https://github.com/trezor/trezor-firmware/pull/3895
+[#3907]: https://github.com/trezor/trezor-firmware/pull/3907
 [#3911]: https://github.com/trezor/trezor-firmware/pull/3911
 [#3916]: https://github.com/trezor/trezor-firmware/pull/3916
+[#3917]: https://github.com/trezor/trezor-firmware/pull/3917
+[#3919]: https://github.com/trezor/trezor-firmware/pull/3919
 [#3922]: https://github.com/trezor/trezor-firmware/pull/3922
 [#3925]: https://github.com/trezor/trezor-firmware/pull/3925
 [#3940]: https://github.com/trezor/trezor-firmware/pull/3940
+[#3965]: https://github.com/trezor/trezor-firmware/pull/3965
