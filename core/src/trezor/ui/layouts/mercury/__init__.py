@@ -36,9 +36,12 @@ class RustLayout(ui.Layout):
         self.br_chan = loop.chan()
         self.layout = layout
         self.timer = loop.Timer()
-        self.layout.attach_timer_fn(self.set_timer, ui.LAST_TRANSITION_OUT)
+        self._attach()
         self._send_button_request()
         self.backlight_level = ui.BacklightLevels.NORMAL
+
+    def _attach(self) -> None:
+        self.layout.attach_timer_fn(self.set_timer, ui.LAST_TRANSITION_OUT)
 
     def __del__(self):
         self.layout.__del__()

@@ -18,6 +18,12 @@ class HomescreenBase(RustLayout):
     def __init__(self, layout: Any) -> None:
         super().__init__(layout=layout)
 
+    def _attach(self) -> None:
+        if storage_cache.homescreen_shown is self.RENDER_INDICATOR:
+            self.layout.attach_timer_fn(self.set_timer, ui.AttachType.RESUME)
+        else:
+            self.layout.attach_timer_fn(self.set_timer, ui.LAST_TRANSITION_OUT)
+
     def _paint(self) -> None:
         if self.layout.paint():
             ui.refresh()

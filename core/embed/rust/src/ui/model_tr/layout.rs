@@ -2,6 +2,16 @@ use core::{cmp::Ordering, convert::TryInto};
 
 use heapless::Vec;
 
+use super::{
+    component::{
+        AddressDetails, ButtonActions, ButtonDetails, ButtonLayout, ButtonPage, CancelConfirmMsg,
+        CancelInfoConfirmMsg, CoinJoinProgress, ConfirmHomescreen, Flow, FlowPages, Frame,
+        Homescreen, Lockscreen, NumberInput, Page, PassphraseEntry, PinEntry, Progress,
+        ScrollableContent, ScrollableFrame, ShareWords, ShowMore, SimpleChoice, WordlistEntry,
+        WordlistType,
+    },
+    constant, theme,
+};
 use crate::{
     error::Error,
     maybe_trace::MaybeTrace,
@@ -37,23 +47,12 @@ use crate::{
         },
         geometry,
         layout::{
-            obj::{ComponentMsgObj, LayoutObj},
+            obj::{ComponentMsgObj, LayoutObj, ATTACH_TYPE_OBJ},
             result::{CANCELLED, CONFIRMED, INFO},
             util::{upy_disable_animation, ConfirmBlob},
         },
         model_tr::component::check_homescreen_format,
     },
-};
-
-use super::{
-    component::{
-        AddressDetails, ButtonActions, ButtonDetails, ButtonLayout, ButtonPage, CancelConfirmMsg,
-        CancelInfoConfirmMsg, CoinJoinProgress, ConfirmHomescreen, Flow, FlowPages, Frame,
-        Homescreen, Lockscreen, NumberInput, Page, PassphraseEntry, PinEntry, Progress,
-        ScrollableContent, ScrollableFrame, ShareWords, ShowMore, SimpleChoice, WordlistEntry,
-        WordlistType,
-    },
-    constant, theme,
 };
 
 impl From<CancelConfirmMsg> for Obj {
@@ -2063,4 +2062,13 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///
     /// mock:global
     Qstr::MP_QSTR_BacklightLevels => BACKLIGHT_LEVELS_OBJ.as_obj(),
+
+    /// class AttachType:
+    ///     INITIAL: ClassVar[int]
+    ///     RESUME: ClassVar[int]
+    ///     SWIPE_UP: ClassVar[int]
+    ///     SWIPE_DOWN: ClassVar[int]
+    ///     SWIPE_LEFT: ClassVar[int]
+    ///     SWIPE_RIGHT: ClassVar[int]
+    Qstr::MP_QSTR_AttachType => ATTACH_TYPE_OBJ.as_obj(),
 };

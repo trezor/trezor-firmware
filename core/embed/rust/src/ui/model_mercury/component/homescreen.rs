@@ -16,7 +16,7 @@ use crate::{
 };
 
 use crate::ui::{
-    component::Label,
+    component::{base::AttachType, Label},
     constant::{screen, HEIGHT, WIDTH},
     lerp::Lerp,
     model_mercury::{
@@ -118,6 +118,122 @@ fn render_default_hs<'a>(target: &mut impl Renderer<'a>) {
         .render(target);
 }
 
+struct HomescreenState {
+    attach: AttachAnimationState,
+    label: HideLabelAnimationState,
+}
+
+static mut HOMESCREEN_STATE: HomescreenState = HomescreenState {
+    attach: AttachAnimation::DEFAULT_STATE,
+    label: HideLabelAnimation::DEFAULT_STATE,
+};
+
+#[derive(Default, Clone)]
+struct AttachAnimation {
+    pub timer: Stopwatch,
+    pub active: bool,
+    pub duration: Duration,
+    start_opacity: f32,
+}
+
+#[derive(Clone, Copy)]
+struct AttachAnimationState {
+    opacity: u8,
+}
+
+impl AttachAnimation {
+    const DURATION_MS: u32 = 500;
+
+    pub const DEFAULT_STATE: AttachAnimationState = AttachAnimationState { opacity: 255 };
+
+    fn is_active(&self) -> bool {
+        if animation_disabled() {
+            return false;
+        }
+
+        self.timer.is_running_within(self.duration)
+    }
+
+    fn eval(&self) -> f32 {
+        if animation_disabled() {
+            return 1.0;
+        }
+
+        self.timer.elapsed().to_millis() as f32 / 1000.0
+    }
+
+    fn opacity(&self, t: f32) -> u8 {
+        if animation_disabled() {
+            return 255;
+        }
+
+        let f = pareen::constant(self.start_opacity)
+            .seq_ease_in_out(
+                0.0,
+                easer::functions::Linear,
+                self.duration.to_millis() as f32 / 1000.0,
+                pareen::constant(1.0),
+            )
+            .eval(t);
+
+        (f * 255.0) as u8
+    }
+
+    fn start(&mut self) {
+        self.active = true;
+        self.timer.start();
+    }
+
+    fn reset(&mut self) {
+        self.active = false;
+        self.timer = Stopwatch::new_stopped();
+    }
+
+    fn lazy_start(&mut self, ctx: &mut EventCtx, event: Event, resume: AttachAnimationState) {
+        match event {
+            Event::Attach(AttachType::Initial) => {
+                self.duration = Duration::from_millis(Self::DURATION_MS);
+                self.reset();
+                if !animation_disabled() {
+                    ctx.request_anim_frame();
+                }
+            }
+            Event::Attach(AttachType::Resume) => {
+                let start_opacity = resume.opacity as f32 / 255.0;
+                let duration = start_opacity * Self::DURATION_MS as f32;
+                self.start_opacity = start_opacity;
+                self.duration = Duration::from_millis(duration as u32);
+                self.timer = Stopwatch::new_stopped();
+                self.active = resume.opacity < 255;
+
+                if !animation_disabled() {
+                    ctx.request_anim_frame();
+                }
+            }
+            Event::Timer(EventCtx::ANIM_FRAME_TIMER) => {
+                if !self.timer.is_running() {
+                    self.start();
+                }
+                if self.is_active() {
+                    ctx.request_anim_frame();
+                    ctx.request_paint();
+                } else if self.active {
+                    self.active = false;
+                    ctx.request_anim_frame();
+                    ctx.request_paint();
+                }
+            }
+            _ => {}
+        }
+    }
+
+    fn get_state(&self, t: f32) -> AttachAnimationState {
+        AttachAnimationState {
+            opacity: self.opacity(t),
+        }
+    }
+}
+
 struct HideLabelAnimation {
     pub timer: Stopwatch,
     token: TimerToken,
@@ -125,8 +241,22 @@ struct HideLabelAnimation {
     hidden: bool,
     duration: Duration,
 }
+
+#[derive(Clone, Copy)]
+struct HideLabelAnimationState {
+    animating: bool,
+    hidden: bool,
+    elapsed: u32,
+}
+
 impl HideLabelAnimation {
     const HIDE_AFTER: Duration = Duration::from_millis(3000);
+
+    pub const DEFAULT_STATE: HideLabelAnimationState = HideLabelAnimationState {
+        animating: false,
+        hidden: false,
+        elapsed: 0,
+    };
 
     fn new(label_width: i16) -> Self {
         Self {
@@ -144,6 +274,10 @@ impl HideLabelAnimation {
 
     fn reset(&mut self) {
         self.timer = Stopwatch::default();
+    }
+
+    fn elapsed(&self) -> Duration {
+        self.timer.elapsed()
     }
 
     fn change_dir(&mut self) {
@@ -191,53 +325,81 @@ impl HideLabelAnimation {
         Offset::x(i16::lerp(-(label_width + 12), 0, pos))
     }
 
-    fn process_event(&mut self, ctx: &mut EventCtx, event: Event) {
-        if let Event::Attach(_) = event {
-            ctx.request_anim_frame();
-            self.token = ctx.request_timer(Self::HIDE_AFTER);
-        }
-
-        if let Event::Timer(token) = event {
-            if token == self.token && !animation_disabled() {
-                self.timer.start();
+    fn process_event(&mut self, ctx: &mut EventCtx, event: Event, resume: HideLabelAnimationState) {
+        match event {
+            Event::Attach(AttachType::Initial) => {
                 ctx.request_anim_frame();
-                self.animating = true;
-                self.hidden = false;
+                self.token = ctx.request_timer(Self::HIDE_AFTER);
             }
-        }
+            Event::Attach(AttachType::Resume) => {
+                self.hidden = resume.hidden;
 
-        if let Event::Timer(EventCtx::ANIM_FRAME_TIMER) = event {
-            if self.is_active() {
-                ctx.request_anim_frame();
-                ctx.request_paint();
-            } else if self.animating {
-                self.animating = false;
-                self.hidden = !self.hidden;
-                self.reset();
-                ctx.request_paint();
+                let start = Instant::now()
+                    .checked_sub(Duration::from_millis(resume.elapsed))
+                    .unwrap_or(Instant::now());
 
-                if !self.hidden {
+                self.animating = resume.animating;
+
+                if self.animating {
+                    self.timer = Stopwatch::Running(start);
+                    ctx.request_anim_frame();
+                } else {
+                    self.timer = Stopwatch::new_stopped();
+                }
+                if !self.animating && !self.hidden {
                     self.token = ctx.request_timer(Self::HIDE_AFTER);
                 }
             }
-        }
-
-        if let Event::Touch(TouchEvent::TouchStart(_)) = event {
-            if !self.animating {
-                if self.hidden {
-                    self.timer.start();
-                    self.animating = true;
+            Event::Timer(EventCtx::ANIM_FRAME_TIMER) => {
+                if self.is_active() {
                     ctx.request_anim_frame();
                     ctx.request_paint();
-                } else {
-                    self.token = ctx.request_timer(Self::HIDE_AFTER);
+                } else if self.animating {
+                    self.animating = false;
+                    self.hidden = !self.hidden;
+                    self.reset();
+                    ctx.request_paint();
+
+                    if !self.hidden {
+                        self.token = ctx.request_timer(Self::HIDE_AFTER);
+                    }
                 }
-            } else if !self.hidden {
-                self.change_dir();
-                self.hidden = true;
-                ctx.request_anim_frame();
-                ctx.request_paint();
             }
+            Event::Timer(token) => {
+                if token == self.token && !animation_disabled() {
+                    self.timer.start();
+                    ctx.request_anim_frame();
+                    self.animating = true;
+                    self.hidden = false;
+                }
+            }
+
+            Event::Touch(TouchEvent::TouchStart(_)) => {
+                if !self.animating {
+                    if self.hidden {
+                        self.timer.start();
+                        self.animating = true;
+                        ctx.request_anim_frame();
+                        ctx.request_paint();
+                    } else {
+                        self.token = ctx.request_timer(Self::HIDE_AFTER);
+                    }
+                } else if !self.hidden {
+                    self.change_dir();
+                    self.hidden = true;
+                    ctx.request_anim_frame();
+                    ctx.request_paint();
+                }
+            }
+            _ => {}
+        }
+    }
+
+    fn get_state(&self) -> HideLabelAnimationState {
+        HideLabelAnimationState {
+            animating: self.animating,
+            hidden: self.hidden,
+            elapsed: self.timer.elapsed().to_millis(),
         }
     }
 }
@@ -259,6 +421,7 @@ pub struct Homescreen {
     hold_to_lock: bool,
     loader: Loader,
     delay: Option<TimerToken>,
+    attach_animation: AttachAnimation,
     label_anim: HideLabelAnimation,
 }
 
@@ -296,6 +459,7 @@ impl Homescreen {
             hold_to_lock,
             loader: Loader::with_lock_icon().with_durations(LOADER_DURATION, LOADER_DURATION / 3),
             delay: None,
+            attach_animation: AttachAnimation::default(),
             label_anim: HideLabelAnimation::new(label_width),
         }
     }
@@ -395,9 +559,15 @@ impl Component for Homescreen {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        // SAFETY: Single threaded access
+        let resume_attach = unsafe { HOMESCREEN_STATE.attach };
+        self.attach_animation.lazy_start(ctx, event, resume_attach);
+
         Self::event_usb(self, ctx, event);
 
-        self.label_anim.process_event(ctx, event);
+        let resume_label = unsafe { HOMESCREEN_STATE.label };
+
+        self.label_anim.process_event(ctx, event, resume_label);
 
         if self.hold_to_lock {
             Self::event_hold(self, ctx, event).then_some(HomescreenMsg::Dismissed)
@@ -414,7 +584,18 @@ impl Component for Homescreen {
         if self.loader.is_animating() || self.loader.is_completely_grown(Instant::now()) {
             self.render_loader(target);
         } else {
-            shape::RawImage::new(AREA, self.bg_image.view()).render(target);
+            let t = self.attach_animation.eval();
+            let opacity = self.attach_animation.opacity(t);
+
+            if let Some(image) = self.image {
+                if let ImageInfo::Jpeg(_) = ImageInfo::parse(image) {
+                    shape::JpegImage::new_image(AREA.center(), image)
+                        .with_align(Alignment2D::CENTER)
+                        .render(target);
+                }
+            } else {
+                render_default_hs(target);
+            }
 
             let y_offset = self.label_anim.eval(self.label_width);
 
@@ -437,6 +618,17 @@ impl Component for Homescreen {
             if let Some(notif) = self.get_notification() {
                 render_notif(notif, NOTIFICATION_TOP, target);
             }
+
+            shape::Bar::new(AREA)
+                .with_bg(Color::black())
+                .with_alpha(255 - opacity)
+                .render(target);
+
+            // SAFETY: Single threaded access
+            unsafe {
+                HOMESCREEN_STATE.attach = self.attach_animation.get_state(t);
+                HOMESCREEN_STATE.label = self.label_anim.get_state();
+            }
         }
     }
 }
@@ -449,12 +641,33 @@ impl crate::trace::Trace for Homescreen {
     }
 }
 
+struct LockscreenState {
+    attach: AttachAnimationState,
+    overlay: LockscreenAnimState,
+    label: HideLabelAnimationState,
+}
+
+static mut LOCKSCREEN_STATE: LockscreenState = LockscreenState {
+    attach: AttachAnimation::DEFAULT_STATE,
+    overlay: LockscreenAnim::DEFAULT_STATE,
+    label: HideLabelAnimation::DEFAULT_STATE,
+};
+
 #[derive(Default)]
 struct LockscreenAnim {
+    pub start: f32,
     pub timer: Stopwatch,
 }
+
+#[derive(Clone, Copy)]
+struct LockscreenAnimState {
+    angle: f32,
+}
+
 impl LockscreenAnim {
     const DURATION_MS: u32 = 1500;
+
+    pub const DEFAULT_STATE: LockscreenAnimState = LockscreenAnimState { angle: 0.0 };
 
     pub fn is_active(&self) -> bool {
         true
@@ -468,12 +681,44 @@ impl LockscreenAnim {
 
         let t: f32 = self.timer.elapsed().to_millis() as f32 / 1000.0;
 
-        anim.eval(t)
+        self.start + anim.eval(t)
+    }
+
+    pub fn lazy_start(&mut self, ctx: &mut EventCtx, event: Event, resume: LockscreenAnimState) {
+        match event {
+            Event::Attach(AttachType::Initial) => {
+                self.start = 0.0;
+                if !animation_disabled() {
+                    ctx.request_anim_frame();
+                }
+            }
+            Event::Attach(AttachType::Resume) => {
+                self.start = resume.angle;
+                if !animation_disabled() {
+                    ctx.request_anim_frame();
+                }
+            }
+            Event::Timer(EventCtx::ANIM_FRAME_TIMER) => {
+                if !animation_disabled() {
+                    if !self.timer.is_running() {
+                        self.timer.start();
+                    }
+                    ctx.request_anim_frame();
+                    ctx.request_paint();
+                }
+            }
+            _ => {}
+        }
+    }
+
+    pub fn get_state(&self) -> LockscreenAnimState {
+        LockscreenAnimState { angle: self.eval() }
     }
 }
 
 pub struct Lockscreen {
     anim: LockscreenAnim,
+    attach_animation: AttachAnimation,
     label: Label<'static>,
     name_width: i16,
     label_width: i16,
@@ -512,6 +757,7 @@ impl Lockscreen {
 
         Lockscreen {
             anim: LockscreenAnim::default(),
+            attach_animation: AttachAnimation::default(),
             label: Label::new(label, Alignment::Center, theme::TEXT_DEMIBOLD),
             name_width,
             label_width,
@@ -535,21 +781,18 @@ impl Component for Lockscreen {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        if let Event::Attach(_) = event {
-            ctx.request_anim_frame();
-        }
+        // SAFETY: Single threaded access
+        let resume_attach = unsafe { LOCKSCREEN_STATE.attach };
+        self.attach_animation.lazy_start(ctx, event, resume_attach);
 
-        if let Event::Timer(EventCtx::ANIM_FRAME_TIMER) = event {
-            if !animation_disabled() {
-                if !self.anim.timer.is_running() {
-                    self.anim.timer.start();
-                }
-                ctx.request_anim_frame();
-                ctx.request_paint();
-            }
-        }
+        // SAFETY: Single threaded access
+        let resume_overlay = unsafe { LOCKSCREEN_STATE.overlay };
+        self.anim.lazy_start(ctx, event, resume_overlay);
 
-        self.label_anim.process_event(ctx, event);
+        // SAFETY: Single threaded access
+        let resume_label = unsafe { LOCKSCREEN_STATE.label };
+
+        self.label_anim.process_event(ctx, event, resume_label);
 
         if let Event::Touch(TouchEvent::TouchEnd(_)) = event {
             return Some(HomescreenMsg::Dismissed);
@@ -569,7 +812,8 @@ impl Component for Lockscreen {
 
         shape::RawImage::new(AREA, self.bg_image.view()).render(target);
 
-        cshape::UnlockOverlay::new(center, self.anim.eval()).render(target);
+        let overlay_rotation = self.anim.eval();
+        cshape::UnlockOverlay::new(center, overlay_rotation).render(target);
 
         shape::Bar::new(AREA.split_top(OVERLAY_BORDER).0)
             .with_bg(Color::black())
@@ -650,6 +894,22 @@ impl Component for Lockscreen {
             };
 
             render_notif(notif, NOTIFICATION_LOCKSCREEN_TOP, target);
+        }
+
+        let t = self.attach_animation.eval();
+        let opacity = self.attach_animation.opacity(t);
+
+        shape::Bar::new(AREA)
+            .with_bg(Color::black())
+            .with_fg(Color::black())
+            .with_alpha(255 - opacity)
+            .render(target);
+
+        // SAFETY: Single threaded access
+        unsafe {
+            LOCKSCREEN_STATE.attach = self.attach_animation.get_state(t);
+            LOCKSCREEN_STATE.overlay = self.anim.get_state();
+            LOCKSCREEN_STATE.label = self.label_anim.get_state();
         }
     }
 }
