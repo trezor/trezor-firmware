@@ -192,7 +192,6 @@ class RustLayout(ui.Layout):
 
     def _first_paint(self) -> None:
 
-        ui.backlight_fade(ui.BacklightLevels.NONE)
         self._paint()
 
         if __debug__ and self.should_notify_layout_change:
