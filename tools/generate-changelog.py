@@ -18,7 +18,7 @@ INTERNAL_MODELS = ("T2T1", "T2B1", "T3T1", "D001")
 INTERNAL_MODELS_SKIP = ("D001",)
 
 
-def linkify_changelog(changelog_file, only_check=False):
+def linkify_changelog(changelog_file: Path, only_check: bool = False) -> bool:
     links = {}
     orig_links = {}
     result_lines = []
@@ -54,7 +54,7 @@ def linkify_changelog(changelog_file, only_check=False):
     return True
 
 
-def linkify_gh_diff(changelog_file, tag_prefix):
+def linkify_gh_diff(changelog_file: Path, tag_prefix: str):
     linkified = False
     versions = []
     result_lines = []
@@ -79,7 +79,7 @@ def linkify_gh_diff(changelog_file, tag_prefix):
                 linkified = True
 
 
-def current_date(project):
+def current_date(project: Path) -> str:
     parts = project.parts
     today = datetime.datetime.now()
 
@@ -98,8 +98,8 @@ def current_date(project):
         return today.strftime(f"%-d{daysuffix} %B %Y")
 
 
-def filter_changelog(changelog_file, internal_name):
-    def filter_line(line):
+def filter_changelog(changelog_file: Path, internal_name: str):
+    def filter_line(line: str) -> str | None:
         m = MODELS_RE.search(line)
         if not m:
             return line
@@ -116,6 +116,16 @@ def filter_changelog(changelog_file, internal_name):
                 destination.write(res)
 
 
+def generate_filtered(project: Path, changelog: Path):
+    if project.parts[-1] != "core":
+        return
+
+    for internal_name in INTERNAL_MODELS:
+        if internal_name in INTERNAL_MODELS_SKIP:
+            continue
+        filter_changelog(changelog, internal_name)
+
+
 @click.command()
 @click.argument(
     "project",
@@ -130,7 +140,8 @@ def filter_changelog(changelog_file, internal_name):
 @click.option(
     "--check", is_flag=True, help="Dry run, do not actually create changelog."
 )
-def cli(project, version, date, check):
+@click.option("--only-models", is_flag=True, help="Only regenerate the model-changelogs from the main one.")
+def cli(project, version, date, check, only_models):
     """Generate changelog for given project (core, python, legacy/firmware,
     legacy/bootloader).
 
@@ -148,12 +159,16 @@ def cli(project, version, date, check):
         raise click.ClickException(f"{changelog} not found")
 
     if version is None:
-        if not check:
+        if not check and not only_models:
             raise click.ClickException("Version argument is required.")
         version = "unreleased"
 
     if date is None:
         date = current_date(project)
+
+    if only_models:
+        generate_filtered(project, changelog)
+        return 0
 
     args = ["towncrier", "build", "--yes", "--version", version, "--date", date]
     if check:
@@ -168,11 +183,7 @@ def cli(project, version, date, check):
             linkify_gh_diff(changelog, tag_prefix="python/v")
 
         # core changelog for each model
-        if project.parts[-1] == "core":
-            for internal_name in INTERNAL_MODELS:
-                if internal_name in INTERNAL_MODELS_SKIP:
-                    continue
-                filter_changelog(changelog, internal_name)
+        generate_filtered(project, changelog)
 
         # towncrier calls git add before we do linkification, stage the changes too
         subprocess.run(["git", "add", changelog], check=True)
