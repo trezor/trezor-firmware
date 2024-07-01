@@ -30,6 +30,9 @@
 #elif defined(TREZOR_MODEL_T3T1)
 #include "certs/T3T1.h"
 #define DEVICE_CERT_CHAIN T3T1_der
+#elif defined(TREZOR_MODEL_T3B1)
+#include "certs/T2B1.h"
+#define DEVICE_CERT_CHAIN T2B1_der
 #else
 #error "Cert chain for specified model is not available."
 #endif
