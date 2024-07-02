@@ -88,30 +88,29 @@ bool optiga_read_sec(uint8_t *sec) {
   return true;
 }
 
+uint32_t optiga_estimate_time_ms(storage_pin_op_t op) { return 0; }
+
 bool optiga_random_buffer(uint8_t *dest, size_t size) {
   random_buffer(dest, size);
   return true;
 }
 
-bool optiga_pin_set(OPTIGA_UI_PROGRESS ui_progress,
+bool optiga_pin_set(optiga_ui_progress_t ui_progress,
                     uint8_t stretched_pin[OPTIGA_PIN_SECRET_SIZE]) {
-  ui_progress(OPTIGA_PIN_SET_MS);
   return true;
 }
 
 optiga_pin_result optiga_pin_verify_v4(
-    OPTIGA_UI_PROGRESS ui_progress,
+    optiga_ui_progress_t ui_progress,
     const uint8_t pin_secret[OPTIGA_PIN_SECRET_SIZE],
     uint8_t out_secret[OPTIGA_PIN_SECRET_SIZE]) {
   memcpy(out_secret, pin_secret, OPTIGA_PIN_SECRET_SIZE);
-  ui_progress(OPTIGA_PIN_VERIFY_MS);
   return OPTIGA_PIN_SUCCESS;
 }
 
 optiga_pin_result optiga_pin_verify(
-    OPTIGA_UI_PROGRESS ui_progress,
+    optiga_ui_progress_t ui_progress,
     uint8_t stretched_pin[OPTIGA_PIN_SECRET_SIZE]) {
-  ui_progress(OPTIGA_PIN_VERIFY_MS);
   return OPTIGA_PIN_SUCCESS;
 }
 

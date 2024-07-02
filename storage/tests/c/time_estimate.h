@@ -17,32 +17,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#ifndef TREZORHAL_TIME_ESTIMATE_H
+#define TREZORHAL_TIME_ESTIMATE_H
 
-#include "common.h"
+#include <stdint.h>
 
-static uint32_t ticks_ms = 0;
-
-void __shutdown(void) {
-  printf("SHUTDOWN\n");
-  exit(3);
+uint32_t time_estimate_pbkdf2_ms(uint32_t iterations) {
+  (void)iterations;
+  return 500;
 }
 
-void __fatal_error(const char *msg, const char *file, int line) {
-  printf("\nFATAL ERROR:\n");
-  if (msg) {
-    printf("msg : %s\n", msg);
-  }
-  if (file) {
-    printf("file: %s:%d\n", file, line);
-  }
-  __shutdown();
-}
-
-void show_wipe_code_screen(void) {}
-void show_pin_too_many_screen(void) {}
-
-void hal_delay(uint32_t delay_ms) { ticks_ms += delay_ms; }
-uint32_t hal_ticks_ms(void) { return ticks_ms; }
+#endif

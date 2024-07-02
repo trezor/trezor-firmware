@@ -39,6 +39,7 @@ void show_pin_too_many_screen(void);
   (((expr) == sectrue) ? (void)0 : __fatal_error(msg, __FILE__, __LINE__))
 
 void hal_delay(uint32_t ms);
+uint32_t hal_ticks_ms(void);
 
 void drbg_init(void);
 void drbg_reseed(const uint8_t *entropy, size_t len);
