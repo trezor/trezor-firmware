@@ -29,6 +29,10 @@
 #include "i2c.h"
 #include "touch.h"
 
+#ifdef TOUCH_PANEL_LX154A2422CPT23
+#include "panels/lx154a2422cpt23.h"
+#endif
+
 typedef struct {
   // Set if the driver is initialized
   secbool initialized;
@@ -222,6 +226,16 @@ static secbool ft6x36_configure(void) {
   return sectrue;
 }
 
+static void ft6x36_panel_correction(uint16_t x, uint16_t y, uint16_t* x_new,
+                                    uint16_t* y_new) {
+#ifdef TOUCH_PANEL_LX154A2422CPT23
+  lx154a2422cpt23_touch_correction(x, y, x_new, y_new);
+#else
+  *x_new = x;
+  *y_new = y;
+#endif
+}
+
 secbool touch_init(void) {
   touch_driver_t* driver = &g_touch_driver;
 
@@ -376,8 +390,14 @@ uint32_t touch_get_event(void) {
   uint8_t flags = regs[FT6X63_REG_P1_XH] & FT6X63_EVENT_MASK;
 
   // Extract touch coordinates
-  uint16_t x = ((regs[FT6X63_REG_P1_XH] & 0x0F) << 8) | regs[FT6X63_REG_P1_XL];
-  uint16_t y = ((regs[FT6X63_REG_P1_YH] & 0x0F) << 8) | regs[FT6X63_REG_P1_YL];
+  uint16_t x_raw =
+      ((regs[FT6X63_REG_P1_XH] & 0x0F) << 8) | regs[FT6X63_REG_P1_XL];
+  uint16_t y_raw =
+      ((regs[FT6X63_REG_P1_YH] & 0x0F) << 8) | regs[FT6X63_REG_P1_YL];
+
+  uint16_t x, y;
+
+  ft6x36_panel_correction(x_raw, y_raw, &x, &y);
 
   uint32_t event = 0;
 
@@ -418,12 +438,20 @@ uint32_t touch_get_event(void) {
       // Finger was just lifted up
       event = TOUCH_END | xy;
     } else {
-      // 1. Most likely, we have missed the PRESS_DOWN event.
-      //    Touch duration was too short (< 20ms) to be worth reporting.
-      // 2. Finger is still lifted up. Since we have already sent the
-      //    TOUCH_END event => no event needed. This should not happen
-      //    since two consecutive LIFT_UPs are not possible due to
-      //    testing the interrupt line before reading the registers.
+      if (!starving && ((x != driver->last_x) || (y != driver->last_y))) {
+        // We have missed the PRESS_DOWN event.
+        // Report the start event only if the coordinates
+        // have changed and driver is not starving.
+        // This suggest that the previous touch was very short,
+        // or/and the driver is not called very frequently.
+        event = TOUCH_START | xy;
+      } else {
+        // Either the driver is starving or the coordinates
+        // have not changed, which would suggest that the TOUCH_END
+        // is repeated, so no event is needed -this should not happen
+        // since two consecutive LIFT_UPs are not possible due to
+        // testing the interrupt line before reading the registers.
+      }
     }
   }
 
