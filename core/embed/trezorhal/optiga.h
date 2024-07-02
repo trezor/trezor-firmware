@@ -52,6 +52,9 @@ typedef enum _optiga_sign_result {
 // The number of milliseconds it takes to execute optiga_pin_verify().
 #define OPTIGA_PIN_VERIFY_MS 900
 
+// The number of milliseconds it takes to execute optiga_pin_change().
+#define OPTIGA_PIN_CHANGE_MS 1550
+
 typedef secbool (*OPTIGA_UI_PROGRESS)(uint32_t elapsed_ms);
 
 optiga_sign_result __wur optiga_sign(uint8_t index, const uint8_t *digest,
@@ -78,6 +81,11 @@ optiga_pin_result __wur
 optiga_pin_verify_v4(OPTIGA_UI_PROGRESS ui_progress,
                      const uint8_t pin_secret[OPTIGA_PIN_SECRET_SIZE],
                      uint8_t out_secret[OPTIGA_PIN_SECRET_SIZE]);
+
+optiga_pin_result __wur
+optiga_pin_change(OPTIGA_UI_PROGRESS ui_progress,
+                  uint8_t old_stretched_pin[OPTIGA_PIN_SECRET_SIZE],
+                  uint8_t new_stretched_pin[OPTIGA_PIN_SECRET_SIZE]);
 
 bool __wur optiga_pin_get_rem_v4(uint32_t *ctr);
 
