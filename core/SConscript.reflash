@@ -29,7 +29,7 @@ CPPDEFINES_HAL = []
 SOURCE_HAL = []
 PATH_HAL = []
 
-if TREZOR_MODEL in ('1', 'R'):
+if TREZOR_MODEL in ('1', 'R', 'T3B1'):
     FONT_NORMAL=None
     FONT_DEMIBOLD=None
     FONT_BOLD='Font_PixelOperator_Bold_8'
@@ -182,7 +182,7 @@ obj_program += env.Object(source=SOURCE_HAL)
 
 MODEL_IDENTIFIER = models.get_model_identifier(TREZOR_MODEL)
 
-VENDORHEADER = f'embed/vendorheader/{MODEL_IDENTIFIER}/vendorheader_' + ('unsafe_signed_dev.bin' if ARGUMENTS.get('PRODUCTION', '0') == '0' else 'satoshilabs_signed_prod.bin')
+VENDORHEADER = f'embed/models/{MODEL_IDENTIFIER}/vendorheader/vendorheader_' + ('unsafe_signed_dev.bin' if ARGUMENTS.get('PRODUCTION', '0') == '0' else 'satoshilabs_signed_prod.bin')
 
 obj_program.extend(
     env.Command(

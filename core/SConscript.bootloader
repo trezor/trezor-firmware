@@ -36,13 +36,13 @@ CPPDEFINES_HAL = []
 SOURCE_HAL = []
 PATH_HAL = []
 
-if TREZOR_MODEL in ('R', ):
+if TREZOR_MODEL in ('R', 'T3B1'):
     FONT_NORMAL='Font_PixelOperator_Regular_8'
     FONT_DEMIBOLD='Font_PixelOperator_Regular_8'
     FONT_BOLD='Font_PixelOperator_Bold_8'
     FONT_MONO='Font_PixelOperator_Regular_8'
     FONT_BIG='Font_PixelOperator_Regular_8'
-    FONT_NORMAL_UPPER=None
+    FONT_NORMAL_UPPER='Font_PixelOperator_Regular_8_upper'
     FONT_BOLD_UPPER=None
     FONT_SUB=None
 elif TREZOR_MODEL in ('T', 'DISC1', 'DISC2'):
@@ -255,7 +255,7 @@ def cargo_build():
         profile = ''
     if TREZOR_MODEL in ("1",):
         features = ["model_t1"]
-    elif TREZOR_MODEL in ("R",):
+    elif TREZOR_MODEL in ("R", "T3B1"):
         features = ["model_tr"]
     elif TREZOR_MODEL in ("T3T1",):
         features = ["model_mercury"]

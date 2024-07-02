@@ -4,8 +4,8 @@ set -e
 
 cd $(dirname $0)
 
-BUILDVH=$(realpath ../../tools/build_vendorheader)
-BINCTL=$(realpath ../../tools/headertool.py)
+BUILDVH=$(realpath ./build_vendorheader)
+BINCTL=$(realpath ./headertool.py)
 
 for arg in "$@"; do
     if [ "$arg" == "--check" ]; then
@@ -16,10 +16,21 @@ for arg in "$@"; do
     fi
 done
 
-MODELS=(T2T1 T2B1 T3T1 D001 D002)
+cd ../embed/models/
+
+# Find directories and store them in an array
+dirs=($(find . -maxdepth 1 -type d ! -name '.' | sed 's|^\./||'))
+
+# Filter directories that have 'vendorheader' subdirectory
+MODELS=()
+for dir in "${dirs[@]}"; do
+    if [ -d "$dir/vendorheader" ]; then
+        MODELS+=("$dir")
+    fi
+done
 
 for MODEL in ${MODELS[@]}; do
-    cd $MODEL
+    cd ./$MODEL/vendorheader
     echo "Generating vendor headers for $MODEL"
     # construct all vendor headers
     for fn in *.json; do
@@ -42,5 +53,5 @@ for MODEL in ${MODELS[@]}; do
         fi
         cp -a "$TMPDIR/$DEST_NAME" "$DEST_NAME"
     done
-    cd ..
+    cd ../../
 done

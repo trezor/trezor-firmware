@@ -11,6 +11,8 @@
 #include "T2B1/model_T2B1.h"
 #elif defined TREZOR_MODEL_T3T1
 #include "T3T1/model_T3T1.h"
+#elif defined TREZOR_MODEL_T3B1
+#include "T3B1/model_T3B1.h"
 #elif defined TREZOR_MODEL_DISC1
 #include "D001/model_D001.h"
 #elif defined TREZOR_MODEL_DISC2

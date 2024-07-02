@@ -31,6 +31,7 @@ class Model(Enum):
     T1B1 = b"T1B1"
     T2T1 = b"T2T1"
     T3T1 = b"T3T1"
+    T3B1 = b"T3B1"
     T2B1 = b"T2B1"
     D001 = b"D001"
     D002 = b"D002"
@@ -246,6 +247,30 @@ T3T1 = ModelKeys(
     firmware_sigs_needed=-1,
 )
 
+T3B1 = ModelKeys(
+    production=True,
+    boardloader_keys=[
+        bytes.fromhex(key)
+        for key in (
+            "bbc21adbc1b44d6bfe10c5223de33c28429e52680707d3249007ed42dcc5be13",
+            "22e42a301f3b6ff4f2e6926bce4359e83fc83f0f4a84a7338959c1fd0e29dc13",
+            "7f478f5fb78d8c054b720d8104bf2f6487e452402458979b5525c290dc344d32",
+        )
+    ],
+    boardloader_sigs_needed=2,
+    bootloader_keys=[
+        bytes.fromhex(key)
+        for key in (
+            "41d9884801377cff04b0b459fc9b56af1b51f47343a3a6e4fdc1eacabcad7756",
+            "23ec4ec4674d68ac5431e8ba84d7ac24cb5a66702ec565014d164a72182a66c7",
+            "8a7dac53e1be46607231920b0c71056a27be16b67a2fc0d8644d5f8708a28dd1",
+        )
+    ],
+    bootloader_sigs_needed=2,
+    firmware_keys=(),
+    firmware_sigs_needed=-1,
+)
+
 LEGACY_HASH_PARAMS = FirmwareHashParameters(
     hash_function=hashlib.sha256,
     chunk_size=1024 * 64,
@@ -264,6 +289,12 @@ T3T1_HASH_PARAMS = FirmwareHashParameters(
     padding_byte=None,
 )
 
+T3B1_HASH_PARAMS = FirmwareHashParameters(
+    hash_function=hashlib.sha256,
+    chunk_size=1024 * 128,
+    padding_byte=None,
+)
+
 D002_HASH_PARAMS = FirmwareHashParameters(
     hash_function=hashlib.sha256,
     chunk_size=1024 * 256,
@@ -275,6 +306,7 @@ MODEL_MAP = {
     Model.T2T1: T2T1,
     Model.T2B1: T2B1,
     Model.T3T1: T3T1,
+    Model.T3B1: T3B1,
     Model.D001: TREZOR_CORE_DEV,
     Model.D002: TREZOR_CORE_DEV,
 }
@@ -284,6 +316,7 @@ MODEL_MAP_DEV = {
     Model.T2T1: TREZOR_CORE_DEV,
     Model.T2B1: TREZOR_CORE_DEV,
     Model.T3T1: TREZOR_CORE_DEV,
+    Model.T3B1: TREZOR_CORE_DEV,
     Model.D001: TREZOR_CORE_DEV,
     Model.D002: TREZOR_CORE_DEV,
 }
@@ -293,6 +326,7 @@ MODEL_HASH_PARAMS_MAP = {
     Model.T2T1: T2T1_HASH_PARAMS,
     Model.T2B1: T2T1_HASH_PARAMS,
     Model.T3T1: T3T1_HASH_PARAMS,
+    Model.T3B1: T3B1_HASH_PARAMS,
     Model.D001: T2T1_HASH_PARAMS,
     Model.D002: D002_HASH_PARAMS,
 }
@@ -307,6 +341,7 @@ TREZOR_ONE_V3_DEV = LEGACY_V3_DEV
 TREZOR_T = T2T1
 TREZOR_R = T2B1
 TREZOR_T3T1 = T3T1
+TREZOR_T3B1 = T3B1
 TREZOR_T_DEV = TREZOR_CORE_DEV
 TREZOR_R_DEV = TREZOR_CORE_DEV
 

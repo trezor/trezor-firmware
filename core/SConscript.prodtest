@@ -34,7 +34,7 @@ CPPDEFINES_HAL = []
 SOURCE_HAL = []
 PATH_HAL = []
 
-if TREZOR_MODEL in ('1', 'R'):
+if TREZOR_MODEL in ('1', 'R', 'T3B1'):
     FONT_NORMAL=None
     FONT_DEMIBOLD=None
     FONT_BOLD='Font_PixelOperator_Bold_8'
@@ -227,13 +227,13 @@ elif (vh := os.environ.get("VENDOR_HEADER", None)):
     # of vendor header which does not affect reproducibility of the build. Nonetheless,
     # we should figure out a cleaner way to pass in this argument, without having to teach
     # the Makefile about it.
-    VENDORHEADER = f'embed/vendorheader/{MODEL_IDENTIFIER}/{vh}'
+    VENDORHEADER = f'embed/models/{MODEL_IDENTIFIER}/vendorheader/{vh}'
 elif PRODUCTION:
-    VENDORHEADER = f'embed/vendorheader/{MODEL_IDENTIFIER}/vendorheader_prodtest_signed_prod.bin'
+    VENDORHEADER = f'embed/models/{MODEL_IDENTIFIER}/vendorheader/vendorheader_prodtest_signed_prod.bin'
 elif BOOTLOADER_DEVEL:
-    VENDORHEADER = f'embed/vendorheader/{MODEL_IDENTIFIER}/vendorheader_dev_DO_NOT_SIGN_signed_dev.bin'
+    VENDORHEADER = f'embed/models/{MODEL_IDENTIFIER}/vendorheader/vendorheader_dev_DO_NOT_SIGN_signed_dev.bin'
 else:
-    VENDORHEADER = f'embed/vendorheader/{MODEL_IDENTIFIER}/vendorheader_unsafe_signed_prod.bin'
+    VENDORHEADER = f'embed/models/{MODEL_IDENTIFIER}/vendorheader/vendorheader_unsafe_signed_prod.bin'
 
 
 

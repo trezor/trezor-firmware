@@ -31,13 +31,13 @@ CPPDEFINES_HAL = []
 SOURCE_HAL = []
 PATH_HAL = []
 
-if TREZOR_MODEL in ('1', 'R'):
+if TREZOR_MODEL in ('1', 'R', 'T3B1'):
     FONT_NORMAL='Font_PixelOperator_Regular_8'
     FONT_DEMIBOLD=None
     FONT_BOLD=None
     FONT_MONO='Font_PixelOperatorMono_Regular_8'
     FONT_BIG='Font_PixelOperator_Regular_8'
-    FONT_NORMAL_UPPER=None
+    FONT_NORMAL_UPPER='Font_PixelOperator_Regular_8_upper'
     FONT_BOLD_UPPER=None
     FONT_SUB=None
 elif TREZOR_MODEL in ('T',):
