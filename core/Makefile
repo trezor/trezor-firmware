@@ -66,6 +66,7 @@ MODEL_FEATURE = model_mercury
 else ifeq ($(TREZOR_MODEL),$(filter $(TREZOR_MODEL),DISC1))
 MCU = STM32F4
 LAYOUT_FILE = embed/models/D001/model_D001.h
+OPENOCD_TARGET = target/stm32f4x.cfg
 else ifeq ($(TREZOR_MODEL),$(filter $(TREZOR_MODEL),DISC2))
 MCU = STM32U5
 LAYOUT_FILE = embed/models/D002/model_D002.h
