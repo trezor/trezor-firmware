@@ -115,6 +115,14 @@ optiga_pin_result optiga_pin_verify(
   return OPTIGA_PIN_SUCCESS;
 }
 
+optiga_pin_result __wur
+optiga_pin_change(OPTIGA_UI_PROGRESS ui_progress,
+                  uint8_t old_stretched_pin[OPTIGA_PIN_SECRET_SIZE],
+                  uint8_t new_stretched_pin[OPTIGA_PIN_SECRET_SIZE]) {
+  ui_progress(OPTIGA_PIN_CHANGE_MS);
+  return OPTIGA_PIN_SUCCESS;
+}
+
 bool optiga_pin_get_rem_v4(uint32_t *ctr) {
   *ctr = PIN_MAX_TRIES;
   return true;
