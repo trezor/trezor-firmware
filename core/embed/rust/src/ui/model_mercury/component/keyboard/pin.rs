@@ -88,7 +88,7 @@ impl<'a> PinKeyboard<'a> {
             textbox_pad: Pad::with_background(theme::label_default().background_color),
             erase_btn,
             cancel_btn,
-            confirm_btn: Button::with_icon(theme::ICON_CONFIRM)
+            confirm_btn: Button::with_icon(theme::ICON_SIMPLE_CHECKMARK24)
                 .styled(theme::button_pin_confirm())
                 .initially_enabled(false)
                 .into_child(),
