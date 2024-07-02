@@ -1330,7 +1330,7 @@ pub enum TranslatedString {
     words__settings = 929,  // "Settings"
     words__try_again = 930,  // "Try again."
     reset__slip39_checklist_num_groups_x_template = 931,  // "Number of groups: {0}"
-    brightness__title = 932,  // "Set brightness"
+    brightness__title = 932,  // "Change display brightness"
     recovery__title_unlock_repeated_backup = 933,  // "Multi-share backup"
     recovery__unlock_repeated_backup = 934,  // "Create additional backup?"
     recovery__unlock_repeated_backup_verb = 935,  // "Create backup"
@@ -2673,7 +2673,7 @@ impl TranslatedString {
             Self::words__settings => "Settings",
             Self::words__try_again => "Try again.",
             Self::reset__slip39_checklist_num_groups_x_template => "Number of groups: {0}",
-            Self::brightness__title => "Set brightness",
+            Self::brightness__title => "Change display brightness",
             Self::recovery__title_unlock_repeated_backup => "Multi-share backup",
             Self::recovery__unlock_repeated_backup => "Create additional backup?",
             Self::recovery__unlock_repeated_backup_verb => "Create backup",

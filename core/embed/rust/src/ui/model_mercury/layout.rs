@@ -217,15 +217,6 @@ where
     }
 }
 
-impl ComponentMsgObj for SetBrightnessDialog {
-    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
-        match msg {
-            CancelConfirmMsg::Confirmed => Ok(CONFIRMED.as_obj()),
-            CancelConfirmMsg::Cancelled => Ok(CANCELLED.as_obj()),
-        }
-    }
-}
-
 impl ComponentMsgObj for Progress {
     fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
         unreachable!()
@@ -1025,18 +1016,6 @@ extern "C" fn new_select_word(n_args: usize, args: *const Obj, kwargs: *mut Map)
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
-extern "C" fn new_set_brightness(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
-    let block = move |_args: &[Obj], kwargs: &Map| {
-        let current: Option<u16> = kwargs.get(Qstr::MP_QSTR_current)?.try_into_option()?;
-        let obj = LayoutObj::new(Frame::centered(
-            TR::brightness__title.into(),
-            SetBrightnessDialog::new(current),
-        ))?;
-        Ok(obj.into())
-    };
-    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
-}
-
 extern "C" fn new_show_checklist(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
@@ -1734,7 +1713,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     current: int | None = None
     /// ) -> LayoutObj[UiResult]:
     ///     """Show the brightness configuration dialog."""
-    Qstr::MP_QSTR_set_brightness => obj_fn_kw!(0, new_set_brightness).as_obj(),
+    Qstr::MP_QSTR_set_brightness => obj_fn_kw!(0, flow::set_brightness::new_set_brightness).as_obj(),
 
     /// def show_checklist(
     ///     *,
