@@ -150,4 +150,13 @@ void gfx_draw_bitmap(gfx_rect_t rect, const gfx_bitmap_t* bitmap);
 void gfx_draw_text(gfx_offset_t offset, const char* text, size_t maxlen,
                    const gfx_text_attr_t* attr);
 
+#ifdef TREZOR_PRODTEST
+// Draws a QR code to the specified position.
+//
+// `x`, `y` - center of the QR code
+// `scale` - size of a single QR code module
+// `data` - utf-8 text
+void gfx_draw_qrcode(int x, int y, uint8_t scale, const char* data);
+#endif
+
 #endif  // GFX_DRAW_H

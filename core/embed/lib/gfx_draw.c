@@ -241,6 +241,53 @@ void gfx_draw_text(gfx_offset_t pos, const char* text, size_t maxlen,
   }
 }
 
+#ifdef TREZOR_PRODTEST
+
+#include "qr-code-generator/qrcodegen.h"
+#define QR_MAX_VERSION 9
+
+void gfx_draw_qrcode(int x, int y, uint8_t scale, const char* data) {
+  if (scale < 1 || scale > 10) return;
+
+  uint8_t codedata[qrcodegen_BUFFER_LEN_FOR_VERSION(QR_MAX_VERSION)] = {0};
+  uint8_t tempdata[qrcodegen_BUFFER_LEN_FOR_VERSION(QR_MAX_VERSION)] = {0};
+
+  int side = 0;
+  if (qrcodegen_encodeText(data, tempdata, codedata, qrcodegen_Ecc_MEDIUM,
+                           qrcodegen_VERSION_MIN, QR_MAX_VERSION,
+                           qrcodegen_Mask_AUTO, true)) {
+    side = qrcodegen_getSize(codedata);
+  }
+
+  // Calculate border size (1 extra modules around the QR code)
+  int border_side = ((side + 2) * scale);
+
+  // Calculate border left-top corner
+  x -= border_side / 2;
+  y -= border_side / 2;
+
+  // Fill the backround (including the border) with white color
+  gfx_rect_t border_rect = gfx_rect_wh(x, y, border_side, border_side);
+  gfx_draw_bar(border_rect, COLOR_WHITE);
+
+  // Center QR code inside the border
+  x += scale;
+  y += scale;
+
+  // Draw black modules
+  for (int i = 0; i < side; i++) {
+    for (int j = 0; j < side; j++) {
+      if (qrcodegen_getModule(codedata, i, j)) {
+        gfx_rect_t rect =
+            gfx_rect_wh(x + i * scale, y + j * scale, scale, scale);
+        gfx_draw_bar(rect, COLOR_BLACK);
+      }
+    }
+  }
+}
+
+#endif  // TREZOR_PRODTEST
+
 // ===============================================================
 // emulation of legacy functions
 
@@ -274,3 +321,9 @@ void display_text_center(int x, int y, const char* text, int textlen, int font,
   int w = font_text_width(font, text, textlen);
   gfx_draw_text(gfx_offset(x - w / 2, y), text, maxlen, &attr);
 }
+
+#ifdef TREZOR_PRODTEST
+void display_qrcode(int x, int y, const char* data, uint8_t scale) {
+  gfx_draw_qrcode(x, y, scale, data);
+}
+#endif  // TREZOR_PRODTEST
