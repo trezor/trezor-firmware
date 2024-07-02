@@ -1,10 +1,15 @@
 use crate::ui::{
     display::Color,
-    geometry::{Offset, Point, Rect},
+    geometry::{Offset, Rect},
 };
 
-use super::{BasicCanvas, Canvas, DrawingCache, Rgb565Canvas, Shape, ShapeClone, Viewport};
+use super::{BasicCanvas, Canvas, DrawingCache, Shape, ShapeClone, Viewport};
 
+#[cfg(not(feature = "xframebuffer"))]
+use super::Rgb565Canvas;
+#[cfg(not(feature = "xframebuffer"))]
+use crate::ui::geometry::Point;
+#[cfg(not(feature = "xframebuffer"))]
 use without_alloc::{alloc::LocalAllocLeakExt, FixedVec};
 
 // ==========================================================================
@@ -118,12 +123,14 @@ where
 // struct ProgressiveRenderer
 // ==========================================================================
 
+// #[cfg(not(feature = "xframebuffer"))]
 struct ShapeHolder<'a> {
     shape: &'a mut dyn Shape<'a>,
     viewport: Viewport,
 }
 
 /// A more advanced Renderer implementation that supports deferred rendering.
+#[cfg(not(feature = "xframebuffer"))]
 pub struct ProgressiveRenderer<'a, 'alloc, T, C>
 where
     T: LocalAllocLeakExt<'alloc>,
@@ -143,6 +150,7 @@ where
     cache: &'a DrawingCache<'alloc>,
 }
 
+#[cfg(not(feature = "xframebuffer"))]
 impl<'a, 'alloc, T, C> ProgressiveRenderer<'a, 'alloc, T, C>
 where
     T: LocalAllocLeakExt<'alloc>,
@@ -224,6 +232,7 @@ where
     }
 }
 
+#[cfg(not(feature = "xframebuffer"))]
 impl<'a, 'alloc, T, C> Renderer<'alloc> for ProgressiveRenderer<'a, 'alloc, T, C>
 where
     T: LocalAllocLeakExt<'alloc>,

@@ -193,7 +193,7 @@ pub(crate) use include_res;
 
 pub const SLIDE_DURATION_MS: Duration = Duration::from_millis(333);
 
-#[cfg(feature = "new_rendering")]
+#[cfg(all(feature = "new_rendering", feature = "touch"))]
 pub fn render_slide<'s, F0, F1, R>(
     render_old: F0,
     render_new: F1,

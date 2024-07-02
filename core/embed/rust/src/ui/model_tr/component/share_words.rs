@@ -13,6 +13,7 @@ use crate::{
 };
 
 use heapless::Vec;
+#[cfg(feature = "ui_debug")]
 use ufmt::uwrite;
 
 use super::{common::display_left, scrollbar::SCROLLBAR_SPACE, theme, ScrollBar};

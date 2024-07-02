@@ -11,9 +11,9 @@ use without_alloc::alloc::LocalAllocLeakExt;
 
 const ALIGN_PAD: usize = 8;
 
-#[cfg(feature = "xframebuff")]
+#[cfg(feature = "xframebuffer")]
 const ZLIB_CACHE_SLOTS: usize = 1;
-#[cfg(not(feature = "xframebuff"))]
+#[cfg(not(feature = "xframebuffer"))]
 const ZLIB_CACHE_SLOTS: usize = 3;
 
 const RENDER_BUFF_SIZE: usize = (240 * 2 * 16) + ALIGN_PAD;
@@ -39,7 +39,7 @@ pub struct DrawingCache<'a> {
     #[cfg(feature = "ui_blurring")]
     blur_cache: RefCell<BlurCache<'a>>,
 
-    #[cfg(not(feature = "xframebuff"))]
+    #[cfg(not(feature = "xframebuffer"))]
     render_buff: &'a RefCell<RenderBuff>,
 }
 
@@ -67,7 +67,7 @@ impl<'a> DrawingCache<'a> {
             #[cfg(feature = "ui_blurring")]
             blur_cache: RefCell::new(unwrap!(BlurCache::new(bump_a), "Blur cache alloc")),
 
-            #[cfg(not(feature = "xframebuff"))]
+            #[cfg(not(feature = "xframebuffer"))]
             render_buff: unwrap!(alloc_buf(bump_b), "Render buff alloc"),
         }
     }
@@ -90,7 +90,7 @@ impl<'a> DrawingCache<'a> {
     }
 
     /// Returns a buffer used for ProgressiveRenderer slice
-    #[cfg(not(feature = "xframebuff"))]
+    #[cfg(not(feature = "xframebuffer"))]
     pub fn render_buff(&self) -> Option<RenderBuffRef<'a>> {
         self.render_buff.try_borrow_mut().ok()
     }
@@ -122,7 +122,7 @@ impl<'a> DrawingCache<'a> {
     pub const fn get_bump_b_size() -> usize {
         let mut size = 0;
 
-        #[cfg(not(feature = "xframebuff"))]
+        #[cfg(not(feature = "xframebuffer"))]
         {
             size += core::mem::size_of::<RefCell<RenderBuff>>();
         }
