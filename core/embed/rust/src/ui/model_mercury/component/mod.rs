@@ -27,8 +27,6 @@ mod prompt_screen;
 mod result;
 mod scroll;
 #[cfg(feature = "translations")]
-mod set_brightness;
-#[cfg(feature = "translations")]
 mod share_words;
 mod status_screen;
 mod swipe_content;
@@ -73,8 +71,6 @@ pub use progress::Progress;
 pub use prompt_screen::PromptScreen;
 pub use result::{ResultFooter, ResultScreen, ResultStyle};
 pub use scroll::ScrollBar;
-#[cfg(feature = "translations")]
-pub use set_brightness::SetBrightnessDialog;
 #[cfg(feature = "translations")]
 pub use share_words::ShareWords;
 pub use status_screen::StatusScreen;

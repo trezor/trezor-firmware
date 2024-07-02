@@ -79,7 +79,7 @@ class TR:
     bitcoin__unverified_external_inputs: str = "The transaction contains unverified external inputs."
     bitcoin__valid_signature: str = "The signature is valid."
     bitcoin__voting_rights: str = "Voting rights to:"
-    brightness__title: str = "Set brightness"
+    brightness__title: str = "Change display brightness"
     buttons__abort: str = "Abort"
     buttons__access: str = "Access"
     buttons__again: str = "Again"
