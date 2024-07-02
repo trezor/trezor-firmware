@@ -150,6 +150,7 @@ impl AttachAnimation {
                 self.attach_top = true;
                 self.duration = Duration::from_millis(350);
             } else {
+                self.attach_top = false;
                 self.duration = Duration::from_millis(350);
             }
             self.reset();

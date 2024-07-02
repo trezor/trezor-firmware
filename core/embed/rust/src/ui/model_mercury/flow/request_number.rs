@@ -30,15 +30,16 @@ pub enum RequestNumber {
 
 impl FlowState for RequestNumber {
     fn handle_swipe(&self, direction: SwipeDirection) -> Decision<Self> {
+        let attach = AttachType::Swipe(direction);
         match (self, direction) {
             (RequestNumber::Number, SwipeDirection::Left) => {
-                Decision::Goto(RequestNumber::Menu, direction)
+                Decision::Goto(RequestNumber::Menu, attach)
             }
             (RequestNumber::Menu, SwipeDirection::Right) => {
-                Decision::Goto(RequestNumber::Number, direction)
+                Decision::Goto(RequestNumber::Number, attach)
             }
             (RequestNumber::Info, SwipeDirection::Right) => {
-                Decision::Goto(RequestNumber::Menu, direction)
+                Decision::Goto(RequestNumber::Menu, attach)
             }
             _ => Decision::Nothing,
         }
@@ -47,16 +48,17 @@ impl FlowState for RequestNumber {
     fn handle_event(&self, msg: FlowMsg) -> Decision<Self> {
         match (self, msg) {
             (RequestNumber::Number, FlowMsg::Info) => {
-                Decision::Goto(RequestNumber::Menu, SwipeDirection::Left)
+                Decision::Goto(RequestNumber::Menu, AttachType::Initial)
             }
             (RequestNumber::Menu, FlowMsg::Choice(0)) => {
-                Decision::Goto(RequestNumber::Info, SwipeDirection::Left)
+                Decision::Goto(RequestNumber::Info, AttachType::Swipe(SwipeDirection::Left))
             }
-            (RequestNumber::Menu, FlowMsg::Cancelled) => {
-                Decision::Goto(RequestNumber::Number, SwipeDirection::Right)
-            }
+            (RequestNumber::Menu, FlowMsg::Cancelled) => Decision::Goto(
+                RequestNumber::Number,
+                AttachType::Swipe(SwipeDirection::Right),
+            ),
             (RequestNumber::Info, FlowMsg::Cancelled) => {
-                Decision::Goto(RequestNumber::Menu, SwipeDirection::Right)
+                Decision::Goto(RequestNumber::Menu, AttachType::Initial)
             }
             (RequestNumber::Number, FlowMsg::Choice(n)) => Decision::Return(FlowMsg::Choice(n)),
             _ => Decision::Nothing,
@@ -67,7 +69,8 @@ impl FlowState for RequestNumber {
 use crate::{
     micropython::{map::Map, obj::Obj, util},
     ui::{
-        component::swipe_detect::SwipeSettings, layout::obj::LayoutObj,
+        component::{base::AttachType, swipe_detect::SwipeSettings},
+        layout::obj::LayoutObj,
         model_mercury::component::SwipeContent,
     },
 };

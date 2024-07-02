@@ -28,27 +28,28 @@ pub enum PromptBackup {
 
 impl FlowState for PromptBackup {
     fn handle_swipe(&self, direction: SwipeDirection) -> Decision<Self> {
+        let attach = AttachType::Swipe(direction);
         match (self, direction) {
             (PromptBackup::Intro, SwipeDirection::Left) => {
-                Decision::Goto(PromptBackup::Menu, direction)
+                Decision::Goto(PromptBackup::Menu, attach)
             }
             (PromptBackup::Intro, SwipeDirection::Up) => Decision::Return(FlowMsg::Confirmed),
 
             (PromptBackup::Menu, SwipeDirection::Right) => {
-                Decision::Goto(PromptBackup::Intro, direction)
+                Decision::Goto(PromptBackup::Intro, attach)
             }
 
             (PromptBackup::SkipBackupIntro, SwipeDirection::Up) => {
-                Decision::Goto(PromptBackup::SkipBackupConfirm, direction)
+                Decision::Goto(PromptBackup::SkipBackupConfirm, attach)
             }
             (PromptBackup::SkipBackupIntro, SwipeDirection::Right) => {
-                Decision::Goto(PromptBackup::Intro, direction)
+                Decision::Goto(PromptBackup::Intro, attach)
             }
             (PromptBackup::SkipBackupConfirm, SwipeDirection::Down) => {
-                Decision::Goto(PromptBackup::SkipBackupIntro, direction)
+                Decision::Goto(PromptBackup::SkipBackupIntro, attach)
             }
             (PromptBackup::SkipBackupConfirm, SwipeDirection::Right) => {
-                Decision::Goto(PromptBackup::Intro, direction)
+                Decision::Goto(PromptBackup::Intro, attach)
             }
             _ => Decision::Nothing,
         }
@@ -57,20 +58,23 @@ impl FlowState for PromptBackup {
     fn handle_event(&self, msg: FlowMsg) -> Decision<Self> {
         match (self, msg) {
             (PromptBackup::Intro, FlowMsg::Info) => {
-                Decision::Goto(PromptBackup::Menu, SwipeDirection::Left)
+                Decision::Goto(PromptBackup::Menu, AttachType::Initial)
             }
-            (PromptBackup::Menu, FlowMsg::Choice(0)) => {
-                Decision::Goto(PromptBackup::SkipBackupIntro, SwipeDirection::Left)
-            }
-            (PromptBackup::Menu, FlowMsg::Cancelled) => {
-                Decision::Goto(PromptBackup::Intro, SwipeDirection::Right)
-            }
+            (PromptBackup::Menu, FlowMsg::Choice(0)) => Decision::Goto(
+                PromptBackup::SkipBackupIntro,
+                AttachType::Swipe(SwipeDirection::Left),
+            ),
+            (PromptBackup::Menu, FlowMsg::Cancelled) => Decision::Goto(
+                PromptBackup::Intro,
+                AttachType::Swipe(SwipeDirection::Right),
+            ),
             (PromptBackup::SkipBackupIntro, FlowMsg::Cancelled) => {
-                Decision::Goto(PromptBackup::Menu, SwipeDirection::Right)
+                Decision::Goto(PromptBackup::Menu, AttachType::Initial)
             }
-            (PromptBackup::SkipBackupConfirm, FlowMsg::Cancelled) => {
-                Decision::Goto(PromptBackup::SkipBackupIntro, SwipeDirection::Right)
-            }
+            (PromptBackup::SkipBackupConfirm, FlowMsg::Cancelled) => Decision::Goto(
+                PromptBackup::SkipBackupIntro,
+                AttachType::Swipe(SwipeDirection::Right),
+            ),
             (PromptBackup::SkipBackupConfirm, FlowMsg::Confirmed) => {
                 Decision::Return(FlowMsg::Cancelled)
             }
@@ -82,7 +86,7 @@ impl FlowState for PromptBackup {
 use crate::{
     micropython::{map::Map, obj::Obj, util},
     ui::{
-        component::swipe_detect::SwipeSettings,
+        component::{base::AttachType, swipe_detect::SwipeSettings},
         flow::{flow_store, SwipeFlow},
         layout::obj::LayoutObj,
         model_mercury::component::SwipeContent,

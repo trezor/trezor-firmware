@@ -2,8 +2,9 @@ use crate::{
     error,
     ui::{
         component::{
-            base::AttachType, swipe_detect::SwipeSettings, Component, Event, EventCtx, SwipeDetect,
-            SwipeDetectMsg, SwipeDirection,
+            base::{AttachType, AttachType::Swipe},
+            swipe_detect::SwipeSettings,
+            Component, Event, EventCtx, SwipeDetect, SwipeDetectMsg, SwipeDirection,
         },
         event::{SwipeEvent, TouchEvent},
         flow::{base::Decision, FlowMsg, FlowState, FlowStore},
@@ -49,24 +50,21 @@ impl<Q: FlowState, S: FlowStore> SwipeFlow<Q, S> {
             decision_override: None,
         })
     }
-    fn goto(&mut self, ctx: &mut EventCtx, direction: SwipeDirection, state: Q) {
+    fn goto(&mut self, ctx: &mut EventCtx, attach_type: AttachType, state: Q) {
         self.state = state;
         self.swipe = SwipeDetect::new();
         self.allow_swipe = true;
 
-        self.store.event(
-            state.index(),
-            ctx,
-            Event::Attach(AttachType::Swipe(direction)),
-        );
+        self.store
+            .event(state.index(), ctx, Event::Attach(attach_type));
 
         self.internal_pages = self.store.get_internal_page_count(state.index()) as u16;
 
-        match direction {
-            SwipeDirection::Up => {
+        match attach_type {
+            Swipe(SwipeDirection::Up) => {
                 self.internal_state = 0;
             }
-            SwipeDirection::Down => {
+            Swipe(SwipeDirection::Down) => {
                 self.internal_state = self.internal_pages.saturating_sub(1);
             }
             _ => {}
@@ -210,7 +208,7 @@ impl<Q: FlowState, S: FlowStore> Component for SwipeFlow<Q, S> {
 
                     let config = self.store.get_swipe_config(self.state.index());
 
-                    if let Decision::Goto(_, direction) = decision {
+                    if let Decision::Goto(_, Swipe(direction)) = decision {
                         if config.is_allowed(direction) {
                             if !animation_disabled() {
                                 self.swipe.trigger(ctx, direction, config);
@@ -229,8 +227,8 @@ impl<Q: FlowState, S: FlowStore> Component for SwipeFlow<Q, S> {
         }
 
         match decision {
-            Decision::Goto(next_state, direction) => {
-                self.goto(ctx, direction, next_state);
+            Decision::Goto(next_state, attach) => {
+                self.goto(ctx, attach, next_state);
                 None
             }
             Decision::Return(msg) => {

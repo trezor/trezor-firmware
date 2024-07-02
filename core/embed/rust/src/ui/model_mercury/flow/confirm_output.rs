@@ -31,25 +31,26 @@ pub enum ConfirmOutput {
 
 impl FlowState for ConfirmOutput {
     fn handle_swipe(&self, direction: SwipeDirection) -> Decision<Self> {
+        let attach = AttachType::Swipe(direction);
         match (self, direction) {
             (ConfirmOutput::Address | ConfirmOutput::Amount, SwipeDirection::Left) => {
-                Decision::Goto(ConfirmOutput::Menu, direction)
+                Decision::Goto(ConfirmOutput::Menu, attach)
             }
             (ConfirmOutput::Address, SwipeDirection::Up) => {
-                Decision::Goto(ConfirmOutput::Amount, direction)
+                Decision::Goto(ConfirmOutput::Amount, attach)
             }
             (ConfirmOutput::Amount, SwipeDirection::Up) => Decision::Return(FlowMsg::Confirmed),
             (ConfirmOutput::Amount, SwipeDirection::Down) => {
-                Decision::Goto(ConfirmOutput::Address, direction)
+                Decision::Goto(ConfirmOutput::Address, attach)
             }
             (ConfirmOutput::Menu, SwipeDirection::Right) => {
-                Decision::Goto(ConfirmOutput::Address, direction)
+                Decision::Goto(ConfirmOutput::Address, attach)
             }
             (ConfirmOutput::Menu, SwipeDirection::Left) => {
-                Decision::Goto(ConfirmOutput::AccountInfo, direction)
+                Decision::Goto(ConfirmOutput::AccountInfo, attach)
             }
             (ConfirmOutput::AccountInfo | ConfirmOutput::CancelTap, SwipeDirection::Right) => {
-                Decision::Goto(ConfirmOutput::Menu, direction)
+                Decision::Goto(ConfirmOutput::Menu, attach)
             }
             _ => Decision::Nothing,
         }
@@ -57,18 +58,21 @@ impl FlowState for ConfirmOutput {
 
     fn handle_event(&self, msg: FlowMsg) -> Decision<Self> {
         match (self, msg) {
-            (_, FlowMsg::Info) => Decision::Goto(ConfirmOutput::Menu, SwipeDirection::Left),
-            (ConfirmOutput::Menu, FlowMsg::Choice(0)) => {
-                Decision::Goto(ConfirmOutput::AccountInfo, SwipeDirection::Left)
-            }
-            (ConfirmOutput::Menu, FlowMsg::Choice(1)) => {
-                Decision::Goto(ConfirmOutput::CancelTap, SwipeDirection::Left)
-            }
-            (ConfirmOutput::Menu, FlowMsg::Cancelled) => {
-                Decision::Goto(ConfirmOutput::Address, SwipeDirection::Right)
-            }
+            (_, FlowMsg::Info) => Decision::Goto(ConfirmOutput::Menu, AttachType::Initial),
+            (ConfirmOutput::Menu, FlowMsg::Choice(0)) => Decision::Goto(
+                ConfirmOutput::AccountInfo,
+                AttachType::Swipe(SwipeDirection::Left),
+            ),
+            (ConfirmOutput::Menu, FlowMsg::Choice(1)) => Decision::Goto(
+                ConfirmOutput::CancelTap,
+                AttachType::Swipe(SwipeDirection::Left),
+            ),
+            (ConfirmOutput::Menu, FlowMsg::Cancelled) => Decision::Goto(
+                ConfirmOutput::Address,
+                AttachType::Swipe(SwipeDirection::Right),
+            ),
             (ConfirmOutput::CancelTap, FlowMsg::Confirmed) => Decision::Return(FlowMsg::Cancelled),
-            (_, FlowMsg::Cancelled) => Decision::Goto(ConfirmOutput::Menu, SwipeDirection::Right),
+            (_, FlowMsg::Cancelled) => Decision::Goto(ConfirmOutput::Menu, AttachType::Initial),
             _ => Decision::Nothing,
         }
     }
@@ -77,7 +81,8 @@ impl FlowState for ConfirmOutput {
 use crate::{
     micropython::{map::Map, obj::Obj, util},
     ui::{
-        component::swipe_detect::SwipeSettings, layout::obj::LayoutObj,
+        component::{base::AttachType, swipe_detect::SwipeSettings},
+        layout::obj::LayoutObj,
         model_mercury::component::SwipeContent,
     },
 };

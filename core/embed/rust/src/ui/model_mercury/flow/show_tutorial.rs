@@ -33,33 +33,34 @@ pub enum ShowTutorial {
 
 impl FlowState for ShowTutorial {
     fn handle_swipe(&self, direction: SwipeDirection) -> Decision<Self> {
+        let attach = AttachType::Swipe(direction);
         match (self, direction) {
             (ShowTutorial::StepBegin, SwipeDirection::Up) => {
-                Decision::Goto(ShowTutorial::StepNavigation, direction)
+                Decision::Goto(ShowTutorial::StepNavigation, attach)
             }
             (ShowTutorial::StepNavigation, SwipeDirection::Up) => {
-                Decision::Goto(ShowTutorial::StepMenu, direction)
+                Decision::Goto(ShowTutorial::StepMenu, attach)
             }
             (ShowTutorial::StepNavigation, SwipeDirection::Down) => {
-                Decision::Goto(ShowTutorial::StepBegin, direction)
+                Decision::Goto(ShowTutorial::StepBegin, attach)
             }
             (ShowTutorial::StepMenu, SwipeDirection::Up) => {
-                Decision::Goto(ShowTutorial::StepHold, direction)
+                Decision::Goto(ShowTutorial::StepHold, attach)
             }
             (ShowTutorial::StepMenu, SwipeDirection::Down) => {
-                Decision::Goto(ShowTutorial::StepNavigation, direction)
+                Decision::Goto(ShowTutorial::StepNavigation, attach)
             }
             (ShowTutorial::StepMenu, SwipeDirection::Left) => {
-                Decision::Goto(ShowTutorial::Menu, direction)
+                Decision::Goto(ShowTutorial::Menu, attach)
             }
             (ShowTutorial::Menu, SwipeDirection::Left) => {
-                Decision::Goto(ShowTutorial::DidYouKnow, direction)
+                Decision::Goto(ShowTutorial::DidYouKnow, attach)
             }
             (ShowTutorial::Menu, SwipeDirection::Right) => {
-                Decision::Goto(ShowTutorial::StepBegin, direction)
+                Decision::Goto(ShowTutorial::StepBegin, attach)
             }
             (ShowTutorial::DidYouKnow, SwipeDirection::Right) => {
-                Decision::Goto(ShowTutorial::Menu, direction)
+                Decision::Goto(ShowTutorial::Menu, attach)
             }
             (ShowTutorial::StepDone, SwipeDirection::Up) => Decision::Return(FlowMsg::Confirmed),
             _ => Decision::Nothing,
@@ -68,39 +69,49 @@ impl FlowState for ShowTutorial {
 
     fn handle_event(&self, msg: FlowMsg) -> Decision<Self> {
         match (self, msg) {
-            (ShowTutorial::StepWelcome, FlowMsg::Confirmed) => {
-                Decision::Goto(ShowTutorial::StepBegin, SwipeDirection::Up)
-            }
+            (ShowTutorial::StepWelcome, FlowMsg::Confirmed) => Decision::Goto(
+                ShowTutorial::StepBegin,
+                AttachType::Swipe(SwipeDirection::Up),
+            ),
             (ShowTutorial::StepMenu, FlowMsg::Info) => {
-                Decision::Goto(ShowTutorial::Menu, SwipeDirection::Left)
+                Decision::Goto(ShowTutorial::Menu, AttachType::Initial)
             }
-            (ShowTutorial::Menu, FlowMsg::Choice(0)) => {
-                Decision::Goto(ShowTutorial::DidYouKnow, SwipeDirection::Left)
-            }
-            (ShowTutorial::Menu, FlowMsg::Choice(1)) => {
-                Decision::Goto(ShowTutorial::StepBegin, SwipeDirection::Right)
-            }
-            (ShowTutorial::Menu, FlowMsg::Choice(2)) => {
-                Decision::Goto(ShowTutorial::HoldToExit, SwipeDirection::Up)
-            }
-            (ShowTutorial::Menu, FlowMsg::Cancelled) => {
-                Decision::Goto(ShowTutorial::StepMenu, SwipeDirection::Right)
-            }
+            (ShowTutorial::Menu, FlowMsg::Choice(0)) => Decision::Goto(
+                ShowTutorial::DidYouKnow,
+                AttachType::Swipe(SwipeDirection::Left),
+            ),
+            (ShowTutorial::Menu, FlowMsg::Choice(1)) => Decision::Goto(
+                ShowTutorial::StepBegin,
+                AttachType::Swipe(SwipeDirection::Right),
+            ),
+            (ShowTutorial::Menu, FlowMsg::Choice(2)) => Decision::Goto(
+                ShowTutorial::HoldToExit,
+                AttachType::Swipe(SwipeDirection::Up),
+            ),
+            (ShowTutorial::Menu, FlowMsg::Cancelled) => Decision::Goto(
+                ShowTutorial::StepMenu,
+                AttachType::Swipe(SwipeDirection::Right),
+            ),
             (ShowTutorial::DidYouKnow, FlowMsg::Cancelled) => {
-                Decision::Goto(ShowTutorial::Menu, SwipeDirection::Right)
+                Decision::Goto(ShowTutorial::Menu, AttachType::Swipe(SwipeDirection::Right))
             }
-            (ShowTutorial::StepHold, FlowMsg::Confirmed) => {
-                Decision::Goto(ShowTutorial::StepDone, SwipeDirection::Up)
-            }
-            (ShowTutorial::HoldToExit, FlowMsg::Confirmed) => {
-                Decision::Goto(ShowTutorial::StepDone, SwipeDirection::Up)
-            }
+            (ShowTutorial::StepHold, FlowMsg::Confirmed) => Decision::Goto(
+                ShowTutorial::StepDone,
+                AttachType::Swipe(SwipeDirection::Up),
+            ),
+            (ShowTutorial::HoldToExit, FlowMsg::Confirmed) => Decision::Goto(
+                ShowTutorial::StepDone,
+                AttachType::Swipe(SwipeDirection::Up),
+            ),
             _ => Decision::Nothing,
         }
     }
 }
 
-use crate::micropython::{map::Map, obj::Obj, util};
+use crate::{
+    micropython::{map::Map, obj::Obj, util},
+    ui::component::base::AttachType,
+};
 
 #[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub extern "C" fn new_show_tutorial(_n_args: usize, _args: *const Obj, _kwargs: *mut Map) -> Obj {

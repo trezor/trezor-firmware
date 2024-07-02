@@ -36,19 +36,19 @@ impl FlowState for ConfirmAction {
     fn handle_swipe(&self, direction: SwipeDirection) -> Decision<Self> {
         match (self, direction) {
             (ConfirmAction::Intro, SwipeDirection::Left) => {
-                Decision::Goto(ConfirmAction::Menu, direction)
+                Decision::Goto(ConfirmAction::Menu, AttachType::Swipe(direction))
             }
             (ConfirmAction::Menu, SwipeDirection::Right) => {
-                Decision::Goto(ConfirmAction::Intro, direction)
+                Decision::Goto(ConfirmAction::Intro, AttachType::Swipe(direction))
             }
             (ConfirmAction::Intro, SwipeDirection::Up) => {
-                Decision::Goto(ConfirmAction::Confirm, direction)
+                Decision::Goto(ConfirmAction::Confirm, AttachType::Swipe(direction))
             }
             (ConfirmAction::Confirm, SwipeDirection::Down) => {
-                Decision::Goto(ConfirmAction::Intro, direction)
+                Decision::Goto(ConfirmAction::Intro, AttachType::Swipe(direction))
             }
             (ConfirmAction::Confirm, SwipeDirection::Left) => {
-                Decision::Goto(ConfirmAction::Menu, direction)
+                Decision::Goto(ConfirmAction::Menu, AttachType::Swipe(direction))
             }
             _ => Decision::Nothing,
         }
@@ -57,16 +57,17 @@ impl FlowState for ConfirmAction {
     fn handle_event(&self, msg: FlowMsg) -> Decision<Self> {
         match (self, msg) {
             (ConfirmAction::Intro, FlowMsg::Info) => {
-                Decision::Goto(ConfirmAction::Menu, SwipeDirection::Left)
+                Decision::Goto(ConfirmAction::Menu, AttachType::Initial)
             }
-            (ConfirmAction::Menu, FlowMsg::Cancelled) => {
-                Decision::Goto(ConfirmAction::Intro, SwipeDirection::Right)
-            }
+            (ConfirmAction::Menu, FlowMsg::Cancelled) => Decision::Goto(
+                ConfirmAction::Intro,
+                AttachType::Swipe(SwipeDirection::Right),
+            ),
             (ConfirmAction::Menu, FlowMsg::Choice(0)) => Decision::Return(FlowMsg::Cancelled),
             (ConfirmAction::Menu, FlowMsg::Choice(1)) => Decision::Return(FlowMsg::Info),
             (ConfirmAction::Confirm, FlowMsg::Confirmed) => Decision::Return(FlowMsg::Confirmed),
             (ConfirmAction::Confirm, FlowMsg::Info) => {
-                Decision::Goto(ConfirmAction::Menu, SwipeDirection::Left)
+                Decision::Goto(ConfirmAction::Menu, AttachType::Initial)
             }
             _ => Decision::Nothing,
         }
@@ -77,10 +78,10 @@ impl FlowState for ConfirmActionSimple {
     fn handle_swipe(&self, direction: SwipeDirection) -> Decision<Self> {
         match (self, direction) {
             (ConfirmActionSimple::Intro, SwipeDirection::Left) => {
-                Decision::Goto(ConfirmActionSimple::Menu, direction)
+                Decision::Goto(ConfirmActionSimple::Menu, AttachType::Swipe(direction))
             }
             (ConfirmActionSimple::Menu, SwipeDirection::Right) => {
-                Decision::Goto(ConfirmActionSimple::Intro, direction)
+                Decision::Goto(ConfirmActionSimple::Intro, AttachType::Swipe(direction))
             }
             (ConfirmActionSimple::Intro, SwipeDirection::Up) => {
                 Decision::Return(FlowMsg::Confirmed)
@@ -92,11 +93,12 @@ impl FlowState for ConfirmActionSimple {
     fn handle_event(&self, msg: FlowMsg) -> Decision<Self> {
         match (self, msg) {
             (ConfirmActionSimple::Intro, FlowMsg::Info) => {
-                Decision::Goto(ConfirmActionSimple::Menu, SwipeDirection::Left)
+                Decision::Goto(ConfirmActionSimple::Menu, AttachType::Initial)
             }
-            (ConfirmActionSimple::Menu, FlowMsg::Cancelled) => {
-                Decision::Goto(ConfirmActionSimple::Intro, SwipeDirection::Right)
-            }
+            (ConfirmActionSimple::Menu, FlowMsg::Cancelled) => Decision::Goto(
+                ConfirmActionSimple::Intro,
+                AttachType::Swipe(SwipeDirection::Right),
+            ),
             (ConfirmActionSimple::Menu, FlowMsg::Choice(0)) => Decision::Return(FlowMsg::Cancelled),
             (ConfirmActionSimple::Menu, FlowMsg::Choice(1)) => Decision::Return(FlowMsg::Info),
             _ => Decision::Nothing,
@@ -108,6 +110,7 @@ use crate::{
     micropython::{map::Map, obj::Obj, qstr::Qstr, util},
     ui::{
         component::{
+            base::AttachType,
             swipe_detect::SwipeSettings,
             text::paragraphs::{ParagraphSource, ParagraphVecShort, VecExt},
             Component, Paginate,

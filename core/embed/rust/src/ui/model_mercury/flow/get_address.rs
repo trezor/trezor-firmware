@@ -38,35 +38,28 @@ pub enum GetAddress {
 
 impl FlowState for GetAddress {
     fn handle_swipe(&self, direction: SwipeDirection) -> Decision<Self> {
+        let attach = AttachType::Swipe(direction);
         match (self, direction) {
-            (GetAddress::Address, SwipeDirection::Left) => {
-                Decision::Goto(GetAddress::Menu, direction)
-            }
-            (GetAddress::Address, SwipeDirection::Up) => Decision::Goto(GetAddress::Tap, direction),
-            (GetAddress::Tap, SwipeDirection::Down) => {
-                Decision::Goto(GetAddress::Address, direction)
-            }
-            (GetAddress::Tap, SwipeDirection::Left) => Decision::Goto(GetAddress::Menu, direction),
+            (GetAddress::Address, SwipeDirection::Left) => Decision::Goto(GetAddress::Menu, attach),
+            (GetAddress::Address, SwipeDirection::Up) => Decision::Goto(GetAddress::Tap, attach),
+            (GetAddress::Tap, SwipeDirection::Down) => Decision::Goto(GetAddress::Address, attach),
+            (GetAddress::Tap, SwipeDirection::Left) => Decision::Goto(GetAddress::Menu, attach),
             (GetAddress::Menu, SwipeDirection::Right) => {
-                Decision::Goto(GetAddress::Address, direction)
+                Decision::Goto(GetAddress::Address, attach)
             }
-            (GetAddress::QrCode, SwipeDirection::Right) => {
-                Decision::Goto(GetAddress::Menu, direction)
-            }
+            (GetAddress::QrCode, SwipeDirection::Right) => Decision::Goto(GetAddress::Menu, attach),
             (GetAddress::AccountInfo, SwipeDirection::Right) => {
-                Decision::Goto(GetAddress::Menu, SwipeDirection::Right)
+                Decision::Goto(GetAddress::Menu, attach)
             }
             (GetAddress::Cancel, SwipeDirection::Up) => {
-                Decision::Goto(GetAddress::CancelTap, direction)
+                Decision::Goto(GetAddress::CancelTap, attach)
             }
-            (GetAddress::Cancel, SwipeDirection::Right) => {
-                Decision::Goto(GetAddress::Menu, direction)
-            }
+            (GetAddress::Cancel, SwipeDirection::Right) => Decision::Goto(GetAddress::Menu, attach),
             (GetAddress::CancelTap, SwipeDirection::Down) => {
-                Decision::Goto(GetAddress::Cancel, direction)
+                Decision::Goto(GetAddress::Cancel, attach)
             }
             (GetAddress::CancelTap, SwipeDirection::Right) => {
-                Decision::Goto(GetAddress::Menu, direction)
+                Decision::Goto(GetAddress::Menu, attach)
             }
             _ => Decision::Nothing,
         }
@@ -75,51 +68,53 @@ impl FlowState for GetAddress {
     fn handle_event(&self, msg: FlowMsg) -> Decision<Self> {
         match (self, msg) {
             (GetAddress::Address, FlowMsg::Info) => {
-                Decision::Goto(GetAddress::Menu, SwipeDirection::Left)
+                Decision::Goto(GetAddress::Menu, AttachType::Initial)
             }
 
             (GetAddress::Tap, FlowMsg::Confirmed) => {
-                Decision::Goto(GetAddress::Confirmed, SwipeDirection::Up)
+                Decision::Goto(GetAddress::Confirmed, AttachType::Swipe(SwipeDirection::Up))
             }
 
             (GetAddress::Tap, FlowMsg::Info) => {
-                Decision::Goto(GetAddress::Menu, SwipeDirection::Left)
+                Decision::Goto(GetAddress::Menu, AttachType::Initial)
             }
 
             (GetAddress::Confirmed, _) => Decision::Return(FlowMsg::Confirmed),
 
             (GetAddress::Menu, FlowMsg::Choice(0)) => {
-                Decision::Goto(GetAddress::QrCode, SwipeDirection::Left)
+                Decision::Goto(GetAddress::QrCode, AttachType::Swipe(SwipeDirection::Left))
             }
 
-            (GetAddress::Menu, FlowMsg::Choice(1)) => {
-                Decision::Goto(GetAddress::AccountInfo, SwipeDirection::Left)
-            }
+            (GetAddress::Menu, FlowMsg::Choice(1)) => Decision::Goto(
+                GetAddress::AccountInfo,
+                AttachType::Swipe(SwipeDirection::Left),
+            ),
 
             (GetAddress::Menu, FlowMsg::Choice(2)) => {
-                Decision::Goto(GetAddress::Cancel, SwipeDirection::Left)
+                Decision::Goto(GetAddress::Cancel, AttachType::Swipe(SwipeDirection::Left))
             }
 
-            (GetAddress::Menu, FlowMsg::Cancelled) => {
-                Decision::Goto(GetAddress::Address, SwipeDirection::Right)
-            }
+            (GetAddress::Menu, FlowMsg::Cancelled) => Decision::Goto(
+                GetAddress::Address,
+                AttachType::Swipe(SwipeDirection::Right),
+            ),
 
             (GetAddress::QrCode, FlowMsg::Cancelled) => {
-                Decision::Goto(GetAddress::Menu, SwipeDirection::Right)
+                Decision::Goto(GetAddress::Menu, AttachType::Initial)
             }
 
             (GetAddress::AccountInfo, FlowMsg::Cancelled) => {
-                Decision::Goto(GetAddress::Menu, SwipeDirection::Right)
+                Decision::Goto(GetAddress::Menu, AttachType::Swipe(SwipeDirection::Right))
             }
 
             (GetAddress::Cancel, FlowMsg::Cancelled) => {
-                Decision::Goto(GetAddress::Menu, SwipeDirection::Right)
+                Decision::Goto(GetAddress::Menu, AttachType::Initial)
             }
 
             (GetAddress::CancelTap, FlowMsg::Confirmed) => Decision::Return(FlowMsg::Cancelled),
 
             (GetAddress::CancelTap, FlowMsg::Cancelled) => {
-                Decision::Goto(GetAddress::Menu, SwipeDirection::Right)
+                Decision::Goto(GetAddress::Menu, AttachType::Initial)
             }
 
             _ => Decision::Nothing,
@@ -130,7 +125,9 @@ impl FlowState for GetAddress {
 use crate::{
     micropython::{map::Map, obj::Obj, util},
     ui::{
-        component::swipe_detect::SwipeSettings, flow::SwipePage, layout::obj::LayoutObj,
+        component::{base::AttachType, swipe_detect::SwipeSettings},
+        flow::SwipePage,
+        layout::obj::LayoutObj,
         model_mercury::component::SwipeContent,
     },
 };

@@ -24,12 +24,13 @@ pub enum ConfirmResetRecover {
 
 impl FlowState for ConfirmResetRecover {
     fn handle_swipe(&self, direction: SwipeDirection) -> Decision<Self> {
+        let attach = AttachType::Swipe(direction);
         match (self, direction) {
             (ConfirmResetRecover::Intro, SwipeDirection::Left) => {
-                Decision::Goto(ConfirmResetRecover::Menu, direction)
+                Decision::Goto(ConfirmResetRecover::Menu, attach)
             }
             (ConfirmResetRecover::Menu, SwipeDirection::Right) => {
-                Decision::Goto(ConfirmResetRecover::Intro, direction)
+                Decision::Goto(ConfirmResetRecover::Intro, attach)
             }
             (ConfirmResetRecover::Intro, SwipeDirection::Up) => {
                 Decision::Return(FlowMsg::Confirmed)
@@ -41,11 +42,12 @@ impl FlowState for ConfirmResetRecover {
     fn handle_event(&self, msg: FlowMsg) -> Decision<Self> {
         match (self, msg) {
             (ConfirmResetRecover::Intro, FlowMsg::Info) => {
-                Decision::Goto(ConfirmResetRecover::Menu, SwipeDirection::Left)
+                Decision::Goto(ConfirmResetRecover::Menu, AttachType::Initial)
             }
-            (ConfirmResetRecover::Menu, FlowMsg::Cancelled) => {
-                Decision::Goto(ConfirmResetRecover::Intro, SwipeDirection::Right)
-            }
+            (ConfirmResetRecover::Menu, FlowMsg::Cancelled) => Decision::Goto(
+                ConfirmResetRecover::Intro,
+                AttachType::Swipe(SwipeDirection::Right),
+            ),
             (ConfirmResetRecover::Menu, FlowMsg::Choice(0)) => Decision::Return(FlowMsg::Cancelled),
             _ => Decision::Nothing,
         }
@@ -55,7 +57,7 @@ impl FlowState for ConfirmResetRecover {
 use crate::{
     micropython::{map::Map, obj::Obj, util},
     ui::{
-        component::swipe_detect::SwipeSettings,
+        component::{base::AttachType, swipe_detect::SwipeSettings},
         layout::obj::LayoutObj,
         model_mercury::component::{PromptScreen, SwipeContent},
     },

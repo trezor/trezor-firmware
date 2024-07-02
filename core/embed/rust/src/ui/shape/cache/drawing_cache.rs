@@ -19,7 +19,7 @@ const ZLIB_CACHE_SLOTS: usize = 3;
 const RENDER_BUFF_SIZE: usize = (240 * 2 * 16) + ALIGN_PAD;
 
 #[cfg(feature = "model_mercury")]
-const IMAGE_BUFF_SIZE: usize = 32768 + ALIGN_PAD;
+const IMAGE_BUFF_SIZE: usize = 240 * 240 + ALIGN_PAD;
 #[cfg(not(feature = "model_mercury"))]
 const IMAGE_BUFF_SIZE: usize = 2048 + ALIGN_PAD;
 

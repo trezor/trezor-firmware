@@ -26,15 +26,16 @@ pub enum WarningHiPrio {
 
 impl FlowState for WarningHiPrio {
     fn handle_swipe(&self, direction: SwipeDirection) -> Decision<Self> {
+        let attach = AttachType::Swipe(direction);
         match (self, direction) {
             (WarningHiPrio::Message, SwipeDirection::Left) => {
-                Decision::Goto(WarningHiPrio::Menu, direction)
+                Decision::Goto(WarningHiPrio::Menu, attach)
             }
             (WarningHiPrio::Message, SwipeDirection::Up) => {
-                Decision::Goto(WarningHiPrio::Cancelled, direction)
+                Decision::Goto(WarningHiPrio::Cancelled, attach)
             }
             (WarningHiPrio::Menu, SwipeDirection::Right) => {
-                Decision::Goto(WarningHiPrio::Message, direction)
+                Decision::Goto(WarningHiPrio::Message, attach)
             }
             _ => Decision::Nothing,
         }
@@ -43,15 +44,17 @@ impl FlowState for WarningHiPrio {
     fn handle_event(&self, msg: FlowMsg) -> Decision<Self> {
         match (self, msg) {
             (WarningHiPrio::Message, FlowMsg::Info) => {
-                Decision::Goto(WarningHiPrio::Menu, SwipeDirection::Left)
+                Decision::Goto(WarningHiPrio::Menu, AttachType::Initial)
             }
             (WarningHiPrio::Menu, FlowMsg::Choice(1)) => Decision::Return(FlowMsg::Confirmed),
-            (WarningHiPrio::Menu, FlowMsg::Choice(_)) => {
-                Decision::Goto(WarningHiPrio::Cancelled, SwipeDirection::Up)
-            }
-            (WarningHiPrio::Menu, FlowMsg::Cancelled) => {
-                Decision::Goto(WarningHiPrio::Message, SwipeDirection::Right)
-            }
+            (WarningHiPrio::Menu, FlowMsg::Choice(_)) => Decision::Goto(
+                WarningHiPrio::Cancelled,
+                AttachType::Swipe(SwipeDirection::Up),
+            ),
+            (WarningHiPrio::Menu, FlowMsg::Cancelled) => Decision::Goto(
+                WarningHiPrio::Message,
+                AttachType::Swipe(SwipeDirection::Right),
+            ),
             (WarningHiPrio::Cancelled, _) => Decision::Return(FlowMsg::Cancelled),
             _ => Decision::Nothing,
         }
@@ -61,7 +64,8 @@ impl FlowState for WarningHiPrio {
 use crate::{
     micropython::{map::Map, obj::Obj, util},
     ui::{
-        component::swipe_detect::SwipeSettings, layout::obj::LayoutObj,
+        component::{base::AttachType, swipe_detect::SwipeSettings},
+        layout::obj::LayoutObj,
         model_mercury::component::SwipeContent,
     },
 };

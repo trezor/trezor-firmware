@@ -482,7 +482,12 @@ where
 #[derive(Copy, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 pub enum AttachType {
+    /// Initial attach, redraw the whole screen
     Initial,
+    /// The layout is already rendered on display, resume any animation
+    /// where we left off. The animation state is expected to be stored locally
+    /// in the given component.
+    Resume,
     #[cfg(feature = "touch")]
     Swipe(SwipeDirection),
 }

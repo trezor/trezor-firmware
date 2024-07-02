@@ -4,12 +4,12 @@ from trezorui import Display
 from typing import TYPE_CHECKING, Any, Awaitable, Generator
 
 from trezor import loop, utils
-from trezorui2 import BacklightLevels
+from trezorui2 import AttachType, BacklightLevels
 
 if TYPE_CHECKING:
     from typing import Generic, TypeVar
 
-    from trezorui2 import AttachType, UiResult  # noqa: F401
+    from trezorui2 import UiResult  # noqa: F401
 
     T = TypeVar("T")
 

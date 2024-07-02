@@ -1,4 +1,4 @@
-use crate::ui::component::{swipe_detect::SwipeConfig, SwipeDirection};
+use crate::ui::component::{base::AttachType, swipe_detect::SwipeConfig, SwipeDirection};
 use num_traits::ToPrimitive;
 
 pub trait Swipable {
@@ -28,7 +28,7 @@ pub enum Decision<Q> {
 
     /// Initiate transition to another state, end event processing.
     /// NOTE: it might make sense to include Option<ButtonRequest> here
-    Goto(Q, SwipeDirection),
+    Goto(Q, AttachType),
 
     /// Yield a message to the caller of the flow (i.e. micropython), end event
     /// processing.

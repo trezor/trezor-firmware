@@ -4,32 +4,32 @@ use core::{
 };
 use num_traits::{FromPrimitive, ToPrimitive};
 
+#[cfg(feature = "new_rendering")]
+use crate::ui::{display::Color, shape::render_on_display};
 use crate::{
     error::Error,
     maybe_trace::MaybeTrace,
     micropython::{
         buffer::StrBuffer,
+        ffi,
         gc::Gc,
         macros::{obj_dict, obj_fn_1, obj_fn_2, obj_fn_3, obj_fn_var, obj_map, obj_type},
         map::Map,
         obj::{Obj, ObjBase},
         qstr::Qstr,
+        simple_type::SimpleTypeObj,
         typ::Type,
         util,
     },
     time::Duration,
     ui::{
         button_request::ButtonRequest,
-        component::{Component, Event, EventCtx, Never, Root, TimerToken},
+        component::{base::AttachType, Component, Event, EventCtx, Never, Root, TimerToken},
         constant,
         display::sync,
         geometry::Rect,
     },
 };
-
-use crate::ui::component::base::AttachType;
-#[cfg(feature = "new_rendering")]
-use crate::ui::{display::Color, shape::render_on_display};
 
 #[cfg(feature = "button")]
 use crate::ui::event::ButtonEvent;
@@ -41,25 +41,58 @@ impl AttachType {
     fn to_obj(self) -> Obj {
         match self {
             Self::Initial => Obj::const_none(),
+            Self::Resume => 1u8.into(),
             #[cfg(feature = "touch")]
-            Self::Swipe(dir) => dir.to_u8().into(),
+            Self::Swipe(dir) => (2u8 + unwrap!(dir.to_u8())).into(),
         }
     }
     fn try_from_obj(obj: Obj) -> Result<Self, Error> {
         if obj == Obj::const_none() {
             return Ok(Self::Initial);
         }
-        #[cfg(feature = "touch")]
-        {
-            let dir: u8 = obj.try_into()?;
-            return Ok(AttachType::Swipe(
-                SwipeDirection::from_u8(dir).ok_or(Error::TypeError)?,
-            ));
+        let val: u8 = obj.try_into()?;
+
+        match val {
+            0 => Ok(Self::Initial),
+            1 => Ok(Self::Resume),
+            #[cfg(feature = "touch")]
+            2..=5 => Ok(Self::Swipe(
+                SwipeDirection::from_u8(val - 2).ok_or(Error::TypeError)?,
+            )),
+            _ => Err(Error::TypeError),
         }
-        #[allow(unreachable_code)]
-        Err(Error::TypeError)
     }
 }
+
+static ATTACH_TYPE: Type = obj_type! {
+    name: Qstr::MP_QSTR_AttachType,
+    attr_fn: attach_type_attr,
+};
+
+unsafe extern "C" fn attach_type_attr(_self_in: Obj, attr: ffi::qstr, dest: *mut Obj) {
+    let block = || {
+        let arg = unsafe { dest.read() };
+        if !arg.is_null() {
+            // Null destination would mean a `setattr`.
+            return Err(Error::TypeError);
+        }
+        let attr = Qstr::from_u16(attr as _);
+        let value = match attr {
+            Qstr::MP_QSTR_INITIAL => 0u8,
+            Qstr::MP_QSTR_RESUME => 1u8,
+            Qstr::MP_QSTR_SWIPE_UP => 2u8,
+            Qstr::MP_QSTR_SWIPE_DOWN => 3u8,
+            Qstr::MP_QSTR_SWIPE_LEFT => 4u8,
+            Qstr::MP_QSTR_SWIPE_RIGHT => 5u8,
+            _ => return Err(Error::AttributeError(attr)),
+        };
+        unsafe { dest.write(value.into()) };
+        Ok(())
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+pub static ATTACH_TYPE_OBJ: SimpleTypeObj = SimpleTypeObj::new(&ATTACH_TYPE);
 
 /// Conversion trait implemented by components that know how to convert their
 /// message values into MicroPython `Obj`s.

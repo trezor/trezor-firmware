@@ -1,5 +1,16 @@
 use core::{cmp::Ordering, convert::TryInto};
 
+use super::{
+    component::{
+        AddressDetails, Bip39Input, Button, CancelConfirmMsg, CancelInfoConfirmMsg,
+        CoinJoinProgress, FidoConfirm, FidoMsg, Frame, FrameMsg, Homescreen, HomescreenMsg,
+        Lockscreen, MnemonicInput, MnemonicKeyboard, MnemonicKeyboardMsg, PassphraseKeyboard,
+        PassphraseKeyboardMsg, PinKeyboard, PinKeyboardMsg, Progress, PromptScreen,
+        SelectWordCount, SelectWordCountMsg, SetBrightnessDialog, Slip39Input, StatusScreen,
+        SwipeUpScreen, SwipeUpScreenMsg, VerticalMenu, VerticalMenuChoiceMsg,
+    },
+    flow, theme,
+};
 use crate::{
     error::{value_error, Error},
     io::BinaryData,
@@ -36,7 +47,7 @@ use crate::{
         flow::Swipable,
         geometry,
         layout::{
-            obj::{ComponentMsgObj, LayoutObj},
+            obj::{ComponentMsgObj, LayoutObj, ATTACH_TYPE_OBJ},
             result::{CANCELLED, CONFIRMED, INFO},
             util::{upy_disable_animation, ConfirmBlob, PropsList},
         },
@@ -45,18 +56,6 @@ use crate::{
             flow::new_confirm_action_simple,
         },
     },
-};
-
-use super::{
-    component::{
-        AddressDetails, Bip39Input, Button, CancelConfirmMsg, CancelInfoConfirmMsg,
-        CoinJoinProgress, FidoConfirm, FidoMsg, Frame, FrameMsg, Homescreen, HomescreenMsg,
-        Lockscreen, MnemonicInput, MnemonicKeyboard, MnemonicKeyboardMsg, PassphraseKeyboard,
-        PassphraseKeyboardMsg, PinKeyboard, PinKeyboardMsg, Progress, PromptScreen,
-        SelectWordCount, SelectWordCountMsg, SetBrightnessDialog, Slip39Input, StatusScreen,
-        SwipeUpScreen, SwipeUpScreenMsg, VerticalMenu, VerticalMenuChoiceMsg,
-    },
-    flow, theme,
 };
 
 impl TryFrom<CancelConfirmMsg> for Obj {
@@ -1313,9 +1312,6 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///
     /// T = TypeVar("T")
     ///
-    /// class AttachType:
-    ///     ...
-    ///
     /// class LayoutObj(Generic[T]):
     ///     """Representation of a Rust-based layout object.
     ///     see `trezor::ui::layout::obj::LayoutObj`.
@@ -1905,4 +1901,14 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///
     /// mock:global
     Qstr::MP_QSTR_BacklightLevels => BACKLIGHT_LEVELS_OBJ.as_obj(),
+
+    /// class AttachType:
+    ///     INITIAL: ClassVar[int]
+    ///     RESUME: ClassVar[int]
+    ///     SWIPE_UP: ClassVar[int]
+    ///     SWIPE_DOWN: ClassVar[int]
+    ///     SWIPE_LEFT: ClassVar[int]
+    ///     SWIPE_RIGHT: ClassVar[int]
+    Qstr::MP_QSTR_AttachType => ATTACH_TYPE_OBJ.as_obj(),
+
 };
