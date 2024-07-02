@@ -881,7 +881,7 @@ int main(void) {
   // format: {MODEL_IDENTIFIER}-YYMMDD
   if (sectrue == flash_otp_read(FLASH_OTP_BLOCK_BATCH, 0, (uint8_t *)dom, 32) &&
       sectrue == startswith(dom, MODEL_IDENTIFIER) && dom[31] == 0) {
-    display_qrcode(DISPLAY_RESX / 2, DISPLAY_RESY / 2, dom, 4);
+    // display_qrcode(DISPLAY_RESX / 2, DISPLAY_RESY / 2, dom, 4);
     display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 30, dom + 8, -1,
                         FONT_BOLD, COLOR_WHITE, COLOR_BLACK);
   }
