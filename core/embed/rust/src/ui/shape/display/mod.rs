@@ -10,7 +10,7 @@ pub mod fb_mono8;
 pub mod fb_rgb565;
 #[cfg(all(feature = "xframebuffer", feature = "display_rgba8888",))]
 pub mod fb_rgba8888;
-#[cfg(feature = "display_rgb565")]
+#[cfg(all(not(feature = "xframebuffer"), feature = "display_rgb565"))]
 pub mod nofb_rgb565;
 
 #[cfg(not(feature = "new_rendering"))]
