@@ -384,7 +384,7 @@ void display_setup_te_interrupt(void) {
   HAL_EXTI_SetConfigLine(&EXTI_Handle, &EXTI_Config);
 
   // setup interrupt for tearing effect pin
-  HAL_NVIC_SetPriority(DISPLAY_TE_INTERRUPT_NUM, IRQ_PRI_DMA, 0);
+  NVIC_SetPriority(DISPLAY_TE_INTERRUPT_NUM, IRQ_PRI_NORMAL);
 #endif
 }
 #endif
@@ -562,7 +562,7 @@ void display_sync(void) {}
 
 #ifndef BOARDLOADER
 void DISPLAY_TE_INTERRUPT_HANDLER(void) {
-  HAL_NVIC_DisableIRQ(DISPLAY_TE_INTERRUPT_NUM);
+  NVIC_DisableIRQ(DISPLAY_TE_INTERRUPT_NUM);
 
   if (act_frame_buffer == 1) {
     bg_copy_start_const_out_8((uint8_t *)PhysFrameBuffer1,

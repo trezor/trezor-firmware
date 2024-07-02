@@ -619,6 +619,7 @@ void cpuid_read(void) {
 #define BACKLIGHT_NORMAL 150
 
 int main(void) {
+  svc_init();
   display_reinit();
   display_orientation(0);
   random_delays_init();

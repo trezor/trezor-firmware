@@ -227,7 +227,7 @@ void tamper_init(void) {
               TAMP_IER_ITAMP11IE | TAMP_IER_ITAMP12IE | TAMP_IER_ITAMP13IE;
 
   // Enable TAMP interrupt at NVIC controller
-  NVIC_SetPriority(TAMP_IRQn, IRQ_PRI_TAMP);
+  NVIC_SetPriority(TAMP_IRQn, IRQ_PRI_HIGHEST);
   NVIC_EnableIRQ(TAMP_IRQn);
 }
 

@@ -5,16 +5,26 @@
 #include "../mpu.h"
 #include "common.h"
 #include "display.h"
+#include "irq.h"
 #include "supervise.h"
 
 #ifdef ARM_USER_MODE
+
+void svc_init(void) {
+  NVIC_SetPriority(SVCall_IRQn, IRQ_PRI_LOWEST);
+
+  // We need to ensure that SysTick has the expected priority.
+  // The SysTick priority is configured in the boardloader,
+  // and some early versions didn't set this properly.
+  NVIC_SetPriority(SysTick_IRQn, IRQ_PRI_HIGHEST);
+}
 
 #ifdef STM32U5
 extern uint32_t g_boot_command;
 __attribute__((noreturn)) static void _reboot_to_bootloader(
     boot_command_t boot_command) {
   g_boot_command = boot_command;
-  __disable_irq();
+  disable_irq();
   delete_secrets();
   NVIC_SystemReset();
 }
@@ -53,10 +63,10 @@ void SVC_C_Handler(uint32_t *stack) {
   uint8_t svc_number = ((uint8_t *)stack[6])[-2];
   switch (svc_number) {
     case SVC_ENABLE_IRQ:
-      HAL_NVIC_EnableIRQ(stack[0]);
+      NVIC_EnableIRQ(stack[0]);
       break;
     case SVC_DISABLE_IRQ:
-      HAL_NVIC_DisableIRQ(stack[0]);
+      NVIC_DisableIRQ(stack[0]);
       break;
     case SVC_SET_PRIORITY:
       NVIC_SetPriority(stack[0], stack[1]);
@@ -105,7 +115,7 @@ void SVC_C_Handler(uint32_t *stack) {
 __attribute__((naked)) void SVC_Handler(void) {
   __asm volatile(
       " tst lr, #4    \n"    // Test Bit 3 to see which stack pointer we should
-                             // use.
+                             // use
       " ite eq        \n"    // Tell the assembler that the nest 2 instructions
                              // are if-then-else
       " mrseq r0, msp \n"    // Make R0 point to main stack pointer

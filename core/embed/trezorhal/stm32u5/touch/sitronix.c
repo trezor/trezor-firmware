@@ -2,6 +2,7 @@
 #include TREZOR_BOARD
 
 #include "i2c.h"
+#include "irq.h"
 
 /** @addtogroup STM32U5x9J_DISCOVERY
  * @{
@@ -823,8 +824,8 @@ int32_t BSP_TS_EnableIT(uint32_t Instance) {
   HAL_GPIO_Init(TS_INT_GPIO_PORT, &gpio_init_structure);
 
   /* Enable and set Touch screen EXTI Interrupt to the lowest priority */
-  HAL_NVIC_SetPriority((IRQn_Type)(TS_INT_EXTI_IRQn), 0x0F, 0x00);
-  HAL_NVIC_EnableIRQ((IRQn_Type)(TS_INT_EXTI_IRQn));
+  NVIC_SetPriority((IRQn_Type)(TS_INT_EXTI_IRQn), IRQ_PRI_NORMAL);
+  NVIC_EnableIRQ((IRQn_Type)(TS_INT_EXTI_IRQn));
 
   return BSP_ERROR_NONE;
 }

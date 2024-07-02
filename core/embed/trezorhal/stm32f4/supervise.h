@@ -20,6 +20,11 @@ extern uint32_t systick_val_copy;
 extern void shutdown_privileged(void);
 extern void ensure_compatible_settings(void);
 
+// Initializes the supervise module
+//
+// Must be called before invoking the first `svc_xxx` call
+void svc_init(void);
+
 static inline uint32_t is_mode_unprivileged(void) {
   uint32_t r0;
   __asm__ volatile("mrs %0, control" : "=r"(r0));
@@ -37,7 +42,7 @@ static inline void svc_enableIRQ(uint32_t IRQn) {
     register uint32_t r0 __asm__("r0") = IRQn;
     __asm__ __volatile__("svc %0" ::"i"(SVC_ENABLE_IRQ), "r"(r0) : "memory");
   } else {
-    HAL_NVIC_EnableIRQ(IRQn);
+    NVIC_EnableIRQ(IRQn);
   }
 }
 
@@ -46,7 +51,7 @@ static inline void svc_disableIRQ(uint32_t IRQn) {
     register uint32_t r0 __asm__("r0") = IRQn;
     __asm__ __volatile__("svc %0" ::"i"(SVC_DISABLE_IRQ), "r"(r0) : "memory");
   } else {
-    HAL_NVIC_DisableIRQ(IRQn);
+    NVIC_DisableIRQ(IRQn);
   }
 }
 
