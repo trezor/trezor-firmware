@@ -528,24 +528,43 @@ STATIC mp_obj_t mod_trezorio_fatfs_is_mounted() {
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_fatfs_is_mounted_obj,
                                  mod_trezorio_fatfs_is_mounted);
 
-/// def mkfs() -> None:
+STATIC mp_obj_t ui_wait_callback = mp_const_none;
+
+STATIC void wrapped_ui_wait_callback(uint32_t current) {
+  if (mp_obj_is_callable(ui_wait_callback)) {
+    mp_call_function_1_protected(ui_wait_callback, mp_obj_new_int(current));
+  }
+}
+
+/// def mkfs(callback: Callable[[int], None] | None = None) -> None:
 ///     """
 ///     Create a FAT volume on the SD card,
 ///     """
-STATIC mp_obj_t mod_trezorio_fatfs_mkfs() {
+STATIC mp_obj_t mod_trezorio_fatfs_mkfs(size_t n_args, const mp_obj_t *args) {
   if (_fatfs_instance_is_mounted()) {
     FATFS_RAISE(FatFSError, FR_LOCKED);
   }
   MKFS_PARM params = {FM_FAT32, 0, 0, 0, 0};
   uint8_t working_buf[FF_MAX_SS] = {0};
-  FRESULT res = f_mkfs("", &params, working_buf, sizeof(working_buf));
+  FRESULT res;
+  if (n_args == 1) {
+    // format with a progress callback
+    ui_wait_callback = args[0];
+    res = f_mkfs("", &params, working_buf, sizeof(working_buf),
+                 wrapped_ui_wait_callback);
+    ui_wait_callback = mp_const_none;
+  } else {
+    // format without a progress callback
+    res = f_mkfs("", &params, working_buf, sizeof(working_buf), NULL);
+  }
+
   if (res != FR_OK) {
     FATFS_RAISE(FatFSError, res);
   }
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_fatfs_mkfs_obj,
-                                 mod_trezorio_fatfs_mkfs);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorio_fatfs_mkfs_obj, 0, 1,
+                                           mod_trezorio_fatfs_mkfs);
 
 /// def setlabel(label: str) -> None:
 ///     """
