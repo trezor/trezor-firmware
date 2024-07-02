@@ -34,6 +34,7 @@ jump_to:
   // "there is no requirement to insert memory barrier instructions after CPSID".
   cpsid f
   // wipe memory at the end of the current stage of code
+  ldr r2, =0             // r2 - the word-sized value to be written
   ldr r0, =sram1_start   // r0 - point to beginning of SRAM
   ldr r1, =sram1_end     // r1 - point to byte after the end of SRAM
   bl memset_reg
@@ -52,8 +53,9 @@ jump_to:
   ldr r0, =__fb_end      // r0 - point to end of framebuffer
   ldr r1, =sram5_end     // r1 - point to byte after the end of SRAM
   bl memset_reg
+
   mov lr, r4
-  // clear out the general purpose registers before the next stage's code can run (even the NMI exception handler)
+  // clear out the general purpose registers before the next stage's code can run
   ldr r0, =0
   mov r1, r0
   mov r2, r0
@@ -79,7 +81,6 @@ jump_to:
   // go on to the next stage
   ldr lr, [lr, 4]       // set lr to the next stage's reset_handler
   bx lr
-
 
   .global shutdown_privileged
   .type shutdown_privileged, STT_FUNC
