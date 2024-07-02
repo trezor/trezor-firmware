@@ -51,6 +51,7 @@ pub trait UIFeaturesBootloader {
         fingerprint: &str,
         should_keep_seed: bool,
         is_newvendor: bool,
+        is_newinstall: bool,
         version_cmp: i32,
     ) -> u32;
 

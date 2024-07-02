@@ -62,7 +62,8 @@ uint32_t ui_screen_menu(secbool firmware_present);
 uint32_t ui_screen_install_confirm(const vendor_header* const vhdr,
                                    const image_header* const hdr,
                                    secbool shold_keep_seed,
-                                   secbool is_newvendor, int version_cmp);
+                                   secbool is_newvendor, secbool is_newinstall,
+                                   int version_cmp);
 void ui_screen_install_start();
 void ui_screen_install_progress_erase(int pos, int len);
 void ui_screen_install_progress_upload(int pos);
