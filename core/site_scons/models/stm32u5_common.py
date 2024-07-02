@@ -66,6 +66,7 @@ def stm32u5_common_files(env, defines, sources, paths):
         "embed/trezorhal/stm32u5/random_delays.c",
         "embed/trezorhal/stm32u5/rng.c",
         "embed/trezorhal/stm32u5/tamper.c",
+        "embed/trezorhal/stm32u5/time_estimate.c",
         "embed/trezorhal/stm32u5/trustzone.c",
         "embed/trezorhal/stm32u5/vectortable.s",
     ]

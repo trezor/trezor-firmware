@@ -26,6 +26,7 @@
 #include "layout.h"
 #include "oled.h"
 #include "rng.h"
+#include "timer.h"
 #include "util.h"
 
 uint8_t HW_ENTROPY_DATA[HW_ENTROPY_LEN];
@@ -97,6 +98,8 @@ void hal_delay(uint32_t ms) {
   }
 #endif
 }
+
+uint32_t hal_ticks_ms(void) { return timer_ms(); }
 
 void drbg_init(void) {
   uint8_t entropy[48] = {0};

@@ -30,6 +30,7 @@ void show_pin_too_many_screen(void);
 #define ensure(expr, msg) \
   (((expr) == sectrue) ? (void)0 : __fatal_error(msg, __FILE__, __LINE__))
 
-#define hal_delay(ms) (void)ms;
+void hal_delay(uint32_t delay_ms);
+uint32_t hal_ticks_ms(void);
 
 #endif

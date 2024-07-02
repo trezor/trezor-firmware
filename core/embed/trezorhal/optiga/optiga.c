@@ -23,6 +23,7 @@
 #include "hmac.h"
 #include "memzero.h"
 #include "optiga_commands.h"
+#include "optiga_transport.h"
 #include "rand.h"
 #include "storage.h"
 
@@ -58,6 +59,9 @@
 
 // The number of times that PIN stretching is repeated.
 #define PIN_STRETCH_ITERATIONS 2
+
+// The throttling delay when the security event counter is at its maximum.
+#define OPTIGA_T_MAX_MS 5000
 
 // Value of the PIN counter when it is reset.
 static const uint8_t COUNTER_RESET[] = {0, 0, 0, 0, 0, 0, 0, PIN_MAX_TRIES};
@@ -170,6 +174,37 @@ bool optiga_read_sec(uint8_t *sec) {
   optiga_result ret = optiga_get_data_object(OPTIGA_OID_SEC, false, sec,
                                              sizeof(uint8_t), &size);
   return ret == OPTIGA_SUCCESS && size == sizeof(uint8_t);
+}
+
+uint32_t optiga_estimate_time_ms(storage_pin_op_t op) {
+  uint8_t sec = 0;
+  if (!optiga_read_sec(&sec)) {
+    return UINT32_MAX;
+  }
+
+  // Heuristic: The SEC will increase by about 4 during the operation up to a
+  // maximum of 255.
+  sec = (sec < 255 - 4) ? sec + 4 : 255;
+
+  // If the SEC is above 127, then Optiga introduces a throttling delay before
+  // the execution of each protected command. The delay grows propotionally to
+  // the SEC value up to a maximum delay of OPTIGA_T_MAX_MS.
+  uint32_t throttling_delay =
+      sec > 127 ? (sec - 127) * OPTIGA_T_MAX_MS / 128 : 0;
+
+  // To estimate the overall time of the PIN operation we multiply the
+  // throttling delay by the number of protected Optiga commands and add the
+  // time required to execute all Optiga commands without throttling delays.
+  switch (op) {
+    case STORAGE_PIN_OP_SET:
+      return throttling_delay * 6 + 1300;
+    case STORAGE_PIN_OP_VERIFY:
+      return throttling_delay * 7 + 1000;
+    case STORAGE_PIN_OP_CHANGE:
+      return throttling_delay * 13 + 2300;
+    default:
+      return 0;
+  }
 }
 
 bool optiga_random_buffer(uint8_t *dest, size_t size) {
@@ -371,7 +406,7 @@ static bool optiga_pin_init_stretch(void) {
 }
 
 static bool optiga_pin_stretch_common(
-    OPTIGA_UI_PROGRESS ui_progress, HMAC_SHA256_CTX *ctx,
+    optiga_ui_progress_t ui_progress, HMAC_SHA256_CTX *ctx,
     const uint8_t input[OPTIGA_PIN_SECRET_SIZE], bool version4) {
   // Implements the functionality that is common to
   // optiga_pin_stretch_cmac_ecdh() and the legacy function
@@ -417,7 +452,7 @@ static bool optiga_pin_stretch_common(
     goto end;
   }
 
-  ui_progress(250);
+  ui_progress();
 
   hmac_sha256_Update(ctx, buffer, size);
 
@@ -428,7 +463,7 @@ end:
 }
 
 static bool optiga_pin_stretch_secret_v4(
-    OPTIGA_UI_PROGRESS ui_progress, uint8_t secret[OPTIGA_PIN_SECRET_SIZE]) {
+    optiga_ui_progress_t ui_progress, uint8_t secret[OPTIGA_PIN_SECRET_SIZE]) {
   // Legacy PIN verification method used in storage versions 3 and 4.
 
   // This step hardens the PIN verification process in case an attacker is able
@@ -459,7 +494,7 @@ static bool optiga_pin_stretch_secret_v4(
 }
 
 static bool optiga_pin_stretch_cmac_ecdh(
-    OPTIGA_UI_PROGRESS ui_progress,
+    optiga_ui_progress_t ui_progress,
     uint8_t stretched_pin[OPTIGA_PIN_SECRET_SIZE]) {
   // This step hardens the PIN verification process in case an attacker is able
   // to extract the secret value of a data object in Optiga that has a
@@ -503,15 +538,17 @@ end:
   return ret;
 }
 
-bool optiga_pin_set(OPTIGA_UI_PROGRESS ui_progress,
+bool optiga_pin_set(optiga_ui_progress_t ui_progress,
                     uint8_t stretched_pin[OPTIGA_PIN_SECRET_SIZE]) {
+  optiga_set_ui_progress(ui_progress);
+
   bool ret = true;
   if (!optiga_pin_init_metadata() || !optiga_pin_init_stretch()) {
     ret = false;
     goto end;
   }
 
-  ui_progress(300);
+  ui_progress();
 
   // Stretch the PIN more with stretching secrets from the Optiga. This step
   // ensures that if an attacker extracts the value of OID_STRETCHED_PIN or
@@ -590,7 +627,7 @@ bool optiga_pin_set(OPTIGA_UI_PROGRESS ui_progress,
     goto end;
   }
 
-  ui_progress(250);
+  ui_progress();
 
   // Authorise using OID_STRETCHED_PIN so that we can write to OID_PIN_HMAC and
   // OID_PIN_HMAC_CTR.
@@ -614,7 +651,7 @@ bool optiga_pin_set(OPTIGA_UI_PROGRESS ui_progress,
     goto end;
   }
 
-  ui_progress(250);
+  ui_progress();
 
   // Stretch the PIN more with the counter-protected PIN secret. This method
   // ensures that if the user chooses a high-entropy PIN, then even if the
@@ -631,15 +668,17 @@ end:
   memzero(digest, sizeof(digest));
   optiga_clear_auto_state(OID_PIN_SECRET);
   optiga_clear_auto_state(OID_STRETCHED_PIN);
+  optiga_set_ui_progress(NULL);
   return ret;
 }
 
 optiga_pin_result optiga_pin_verify_v4(
-    OPTIGA_UI_PROGRESS ui_progress,
+    optiga_ui_progress_t ui_progress,
     const uint8_t pin_secret[OPTIGA_PIN_SECRET_SIZE],
     uint8_t out_secret[OPTIGA_PIN_SECRET_SIZE]) {
   // Legacy PIN verification method used in storage version 3 and 4.
 
+  optiga_set_ui_progress(ui_progress);
   optiga_pin_result ret = OPTIGA_PIN_SUCCESS;
 
   // Process the PIN-derived secret using a one-way function before sending it
@@ -687,7 +726,7 @@ optiga_pin_result optiga_pin_verify_v4(
     goto end;
   }
 
-  ui_progress(200);
+  ui_progress();
 
   // Authorise using OID_PIN_SECRET so that we can write to OID_PIN_COUNTER.
   if (optiga_set_auto_state(OPTIGA_OID_SESSION_CTX, OID_PIN_SECRET, out_secret,
@@ -696,7 +735,7 @@ optiga_pin_result optiga_pin_verify_v4(
     goto end;
   }
 
-  ui_progress(200);
+  ui_progress();
 
   // Combine the value of OID_PIN_SECRET with the PIN-derived secret and
   // stretching secrets from the Optiga.
@@ -715,6 +754,7 @@ optiga_pin_result optiga_pin_verify_v4(
 end:
   memzero(stretched_pin, sizeof(stretched_pin));
   optiga_clear_auto_state(OID_STRETCHED_PIN);
+  optiga_set_ui_progress(NULL);
   return ret;
 }
 
@@ -756,8 +796,9 @@ end:
 }
 
 optiga_pin_result optiga_pin_verify(
-    OPTIGA_UI_PROGRESS ui_progress,
+    optiga_ui_progress_t ui_progress,
     uint8_t stretched_pin[OPTIGA_PIN_SECRET_SIZE]) {
+  optiga_set_ui_progress(ui_progress);
   optiga_pin_result ret = OPTIGA_PIN_SUCCESS;
 
   // Stretch the PIN more with stretching secrets from the Optiga.
@@ -801,7 +842,7 @@ optiga_pin_result optiga_pin_verify(
     goto end;
   }
 
-  ui_progress(200);
+  ui_progress();
 
   // Reset the counter which limits the use of OID_PIN_HMAC.
   if (optiga_set_data_object(OID_PIN_HMAC_CTR, false, COUNTER_RESET,
@@ -837,13 +878,14 @@ optiga_pin_result optiga_pin_verify(
     goto end;
   }
 
-  ui_progress(200);
+  ui_progress();
 
 end:
   memzero(pin_secret, sizeof(pin_secret));
   memzero(digest, sizeof(digest));
   optiga_clear_auto_state(OID_STRETCHED_PIN);
   optiga_clear_auto_state(OID_PIN_SECRET);
+  optiga_set_ui_progress(NULL);
   return ret;
 }
 

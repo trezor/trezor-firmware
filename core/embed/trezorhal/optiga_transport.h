@@ -44,6 +44,8 @@ optiga_result optiga_resync(void);
 optiga_result optiga_soft_reset(void);
 optiga_result optiga_set_data_reg_len(size_t size);
 
+void optiga_set_ui_progress(optiga_ui_progress_t f);
+
 #if !PRODUCTION
 void optiga_transport_set_log_hex(optiga_log_hex_t f);
 #endif

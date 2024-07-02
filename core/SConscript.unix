@@ -423,6 +423,7 @@ SOURCE_UNIX = [
     'embed/trezorhal/unix/flash.c',
     'embed/trezorhal/unix/random_delays.c',
     'embed/trezorhal/unix/rng.c',
+    'embed/trezorhal/unix/time_estimate.c',
     'embed/trezorhal/unix/usb.c',
     'embed/unix/main_main.c',
     'embed/unix/main.c',
