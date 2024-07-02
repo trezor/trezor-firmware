@@ -520,65 +520,6 @@ impl Button {
             }),
         ))
     }
-
-    pub fn cancel_confirm_text(
-        left: Option<TString<'static>>,
-        right: Option<TString<'static>>,
-    ) -> CancelConfirm<
-        impl Fn(ButtonMsg) -> Option<CancelConfirmMsg>,
-        impl Fn(ButtonMsg) -> Option<CancelConfirmMsg>,
-    > {
-        let left_is_small: bool;
-
-        let left = if let Some(verb) = left {
-            left_is_small = verb.len() <= 4;
-            if verb == "^".into() {
-                Button::with_icon(theme::ICON_UP)
-            } else {
-                Button::with_text(verb)
-            }
-        } else {
-            left_is_small = right.is_some();
-            Button::with_icon(theme::ICON_CANCEL)
-        };
-        let right = if let Some(verb) = right {
-            Button::with_text(verb).styled(theme::button_confirm())
-        } else {
-            Button::with_icon(theme::ICON_CONFIRM).styled(theme::button_confirm())
-        };
-        Self::cancel_confirm(left, right, left_is_small)
-    }
-
-    pub fn cancel_info_confirm(
-        confirm: TString<'static>,
-        info: TString<'static>,
-    ) -> CancelInfoConfirm<
-        impl Fn(ButtonMsg) -> Option<CancelInfoConfirmMsg>,
-        impl Fn(ButtonMsg) -> Option<CancelInfoConfirmMsg>,
-        impl Fn(ButtonMsg) -> Option<CancelInfoConfirmMsg>,
-    > {
-        let right = Button::with_text(confirm)
-            .styled(theme::button_confirm())
-            .map(|msg| {
-                (matches!(msg, ButtonMsg::Clicked)).then(|| CancelInfoConfirmMsg::Confirmed)
-            });
-        let top = Button::with_text(info)
-            .styled(theme::button_default())
-            .map(|msg| (matches!(msg, ButtonMsg::Clicked)).then(|| CancelInfoConfirmMsg::Info));
-        let left = Button::with_icon(theme::ICON_CANCEL).map(|msg| {
-            (matches!(msg, ButtonMsg::Clicked)).then(|| CancelInfoConfirmMsg::Cancelled)
-        });
-        let total_height = theme::BUTTON_HEIGHT + theme::BUTTON_SPACING + theme::INFO_BUTTON_HEIGHT;
-        FixedHeightBar::bottom(
-            Split::top(
-                theme::INFO_BUTTON_HEIGHT,
-                theme::BUTTON_SPACING,
-                top,
-                Split::left(theme::BUTTON_WIDTH, theme::BUTTON_SPACING, left, right),
-            ),
-            total_height,
-        )
-    }
 }
 
 #[derive(Copy, Clone)]
@@ -586,9 +527,6 @@ pub enum CancelConfirmMsg {
     Cancelled,
     Confirmed,
 }
-
-type CancelInfoConfirm<F0, F1, F2> =
-    FixedHeightBar<Split<MsgMap<Button, F0>, Split<MsgMap<Button, F1>, MsgMap<Button, F2>>>>;
 
 type CancelConfirm<F0, F1> = FixedHeightBar<Split<MsgMap<Button, F0>, MsgMap<Button, F1>>>;
 

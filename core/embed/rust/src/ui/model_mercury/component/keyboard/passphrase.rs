@@ -99,7 +99,7 @@ impl PassphraseKeyboard {
     pub fn new() -> Self {
         let active_layout = KeyboardLayout::LettersLower;
 
-        let confirm_btn = Button::with_icon(theme::ICON_CONFIRM)
+        let confirm_btn = Button::with_icon(theme::ICON_SIMPLE_CHECKMARK24)
             .styled(theme::button_passphrase_confirm())
             .with_radius(15)
             .into_child();

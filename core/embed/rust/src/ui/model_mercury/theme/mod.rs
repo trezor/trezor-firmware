@@ -39,24 +39,13 @@ pub const ORANGE_DARK: Color = Color::rgb(0x18, 0x0C, 0x0A);
 pub const ORANGE_DIMMED: Color = Color::rgb(0x9E, 0x57, 0x42);
 pub const ORANGE_LIGHT: Color = Color::rgb(0xFF, 0x8D, 0x6A); // cancel button
 
-// TODO: delete colors below when ui-t3t1 done
-pub const RED: Color = Color::rgb(0xE7, 0x0E, 0x0E); // button
-pub const RED_DARK: Color = Color::rgb(0xAE, 0x09, 0x09); // button pressed
-pub const YELLOW: Color = Color::rgb(0xD9, 0x9E, 0x00); // button
-pub const BLUE: Color = Color::rgb(0x06, 0x1E, 0xAD); // button
-pub const VIOLET: Color = Color::rgb(0x95, 0x00, 0xCA);
-
 pub const FATAL_ERROR_COLOR: Color = Color::rgb(0xE7, 0x0E, 0x0E);
 pub const FATAL_ERROR_HIGHLIGHT_COLOR: Color = Color::rgb(0xFF, 0x41, 0x41);
 
 // Commonly used corner radius (i.e. for buttons).
 pub const RADIUS: u8 = 0;
 
-// Full-size QR code.
-pub const QR_SIDE_MAX: u32 = 140;
-
 // UI icons (white color).
-
 // 12x12
 include_icon!(ICON_FORESLASH, "model_mercury/res/foreslash12.toif");
 
@@ -133,30 +122,8 @@ include_icon!(ICON_ASTERISK, "model_mercury/res/asterisk16.toif");
 // Welcome screen.
 include_icon!(ICON_LOGO, "model_mercury/res/lock_full.toif");
 
-// TODO remove TT icons:
-
-// Button icons.
-include_icon!(ICON_CONFIRM, "model_tt/res/check24.toif");
-include_icon!(ICON_SPACE, "model_tt/res/space.toif");
-include_icon!(ICON_BACK, "model_tt/res/caret-left24.toif");
-include_icon!(ICON_FORWARD, "model_tt/res/caret-right24.toif");
-include_icon!(ICON_UP, "model_tt/res/caret-up24.toif");
-include_icon!(ICON_DOWN, "model_tt/res/caret-down24.toif");
-include_icon!(ICON_CLICK, "model_tt/res/finger24.toif");
-
 // Homescreen notifications.
-include_icon!(ICON_WARN, "model_tt/res/warning16.toif");
-include_icon!(ICON_WARNING40, "model_tt/res/warning40.toif");
-include_icon!(ICON_LOCK, "model_tt/res/lock16.toif");
-include_icon!(ICON_LOCK_BIG, "model_tt/res/lock24.toif");
-include_icon!(ICON_COINJOIN, "model_tt/res/coinjoin16.toif");
-include_icon!(ICON_MAGIC, "model_tt/res/magic.toif");
-
-// Non-square button backgrounds.
-include_icon!(IMAGE_BG_BACK_BTN, "model_tt/res/bg-back40.toif");
-include_icon!(IMAGE_BG_BACK_BTN_TALL, "model_tt/res/bg-back52.toif");
-
-include_icon!(ICON_LOGO_EMPTY, "model_tt/res/lock_empty.toif");
+include_icon!(ICON_WARNING40, "model_mercury/res/warning40.toif");
 
 // Default homescreen
 include_icon!(HOMESCREEN_ICON, "model_mercury/res/hs_lock.toif");
@@ -226,7 +193,7 @@ pub const fn label_title_sub() -> TextStyle {
 }
 
 pub const fn label_coinjoin_progress() -> TextStyle {
-    TextStyle::new(Font::BOLD, FG, YELLOW, FG, FG)
+    TextStyle::new(Font::BOLD, FG, ORANGE_DIMMED, FG, FG)
 }
 
 pub const fn button_default() -> ButtonStyleSheet {
@@ -702,7 +669,7 @@ pub const fn loader_default() -> LoaderStyleSheet {
 pub const fn loader_lock_icon() -> LoaderStyleSheet {
     LoaderStyleSheet {
         active: &LoaderStyle {
-            icon: Some((ICON_LOCK_BIG, FG)),
+            icon: Some((ICON_KEY, FG)),
             active: GREEN_LIGHT,
             inactive: GREY_EXTRA_DARK,
             background_color: BG,
@@ -818,10 +785,6 @@ pub const fn button_bar<T>(inner: T) -> FixedHeightBar<T> {
 /// |     6    |
 /// +----------+
 pub const fn borders() -> Insets {
-    Insets::new(0, 0, 0, 0)
-}
-
-pub const fn borders_horizontal_scroll() -> Insets {
     Insets::new(0, 0, 0, 0)
 }
 
