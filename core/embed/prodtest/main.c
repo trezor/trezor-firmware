@@ -831,6 +831,7 @@ int main(void) {
     display_qrcode(DISPLAY_RESX / 2, DISPLAY_RESY / 2, dom, 4);
     display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 30, dom + 8, -1,
                         FONT_BOLD, COLOR_WHITE, COLOR_BLACK);
+    display_refresh();
   }
 
   display_fade(0, BACKLIGHT_NORMAL, 1000);
