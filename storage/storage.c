@@ -105,6 +105,13 @@ const uint32_t V0_PIN_EMPTY = 1;
 #define PIN_VERIFY_MS PIN_PBKDF2_MS
 #endif
 
+// The number of milliseconds required to change the PIN.
+#if USE_OPTIGA
+#define PIN_CHANGE_MS (2 * PIN_PBKDF2_MS + OPTIGA_PIN_CHANGE_MS)
+#else
+#define PIN_CHANGE_MS (2 * PIN_PBKDF2_MS)
+#endif
+
 // The length of the hashed hardware salt in bytes.
 #define HARDWARE_SALT_SIZE SHA256_DIGEST_LENGTH
 
@@ -923,31 +930,12 @@ static void ensure_not_wipe_code(const uint8_t *pin, size_t pin_len) {
 
 static secbool unlock(const uint8_t *pin, size_t pin_len,
                       const uint8_t *ext_salt) {
-  const uint8_t *unlock_pin = pin;
-  size_t unlock_pin_len = pin_len;
-
-  // In case of an upgrade from version 1 or 2, encode the PIN to the old
-  // format.
-  uint32_t legacy_pin = 0;
-  if (get_lock_version() <= 2) {
-    legacy_pin = pin_to_int(pin, pin_len);
-    unlock_pin = (const uint8_t *)&legacy_pin;
-    unlock_pin_len = sizeof(legacy_pin);
-  }
-
-  // In case of an upgrade from version 4 or earlier bump the total time of UI
-  // progress to account for the set_pin() call in storage_upgrade_unlocked().
-  if (get_lock_version() <= 4) {
-    ui_total_add(PIN_SET_MS);
-  }
-
   // Now we can check for wipe code.
-  ensure_not_wipe_code(unlock_pin, unlock_pin_len);
+  ensure_not_wipe_code(pin, pin_len);
 
   // Get the pin failure counter
   uint32_t ctr = 0;
   if (sectrue != pin_get_fails(&ctr)) {
-    memzero(&legacy_pin, sizeof(legacy_pin));
     return secfalse;
   }
 
@@ -965,7 +953,6 @@ static secbool unlock(const uint8_t *pin, size_t pin_len,
   ui_progress(0);
   for (uint32_t i = 0; i < 10 * wait; i++) {
     if (sectrue == ui_progress(100)) {
-      memzero(&legacy_pin, sizeof(legacy_pin));
       return secfalse;
     }
     hal_delay(100);
@@ -986,8 +973,7 @@ static secbool unlock(const uint8_t *pin, size_t pin_len,
   }
 
   // Check whether the entered PIN is correct.
-  if (sectrue != decrypt_dek(unlock_pin, unlock_pin_len, ext_salt)) {
-    memzero(&legacy_pin, sizeof(legacy_pin));
+  if (sectrue != decrypt_dek(pin, pin_len, ext_salt)) {
     // Wipe storage if too many failures
     wait_random();
     if (ctr + 1 >= PIN_MAX_TRIES) {
@@ -1006,17 +992,8 @@ static secbool unlock(const uint8_t *pin, size_t pin_len,
 
     return secfalse;
   }
-  memzero(&legacy_pin, sizeof(legacy_pin));
 
-  // Check for storage upgrades that need to be performed after unlocking and
-  // check that the authenticated version number matches the unauthenticated
-  // version and norcow version.
-  // NOTE: This also initializes the authentication_sum by calling
-  // storage_get_encrypted() which calls auth_get().
-  if (sectrue != storage_upgrade_unlocked(pin, pin_len, ext_salt) ||
-      sectrue != check_storage_version()) {
-    return secfalse;
-  }
+  // TODO initialize authentication_sum
 
   unlocked = sectrue;
 
@@ -1040,7 +1017,41 @@ secbool storage_unlock(const uint8_t *pin, size_t pin_len,
   } else {
     ui_message = VERIFYING_PIN_MSG;
   }
-  return unlock(pin, pin_len, ext_salt);
+
+  // In case of an upgrade from version 1 or 2, encode the PIN to the old
+  // format.
+  const uint8_t *unlock_pin = pin;
+  size_t unlock_pin_len = pin_len;
+  uint32_t legacy_pin = 0;
+  if (get_lock_version() <= 2) {
+    legacy_pin = pin_to_int(pin, pin_len);
+    unlock_pin = (const uint8_t *)&legacy_pin;
+    unlock_pin_len = sizeof(legacy_pin);
+  }
+
+  // In case of an upgrade from version 4 or earlier bump the total time of UI
+  // progress to account for the set_pin() call in storage_upgrade_unlocked().
+  if (get_lock_version() <= 4) {
+    ui_total_add(PIN_SET_MS);
+  }
+
+  secbool ret = unlock(unlock_pin, unlock_pin_len, ext_salt);
+  memzero(&legacy_pin, sizeof(legacy_pin));
+  if (sectrue != ret) {
+    return secfalse;
+  }
+
+  // Check for storage upgrades that need to be performed after unlocking and
+  // check that the authenticated version number matches the unauthenticated
+  // version and norcow version.
+  // NOTE: storage_upgrade_unlocked() also initializes the authentication_sum by
+  // calling storage_get_encrypted() which calls auth_get().
+  if (sectrue != storage_upgrade_unlocked(pin, pin_len, ext_salt) ||
+      sectrue != check_storage_version()) {
+    return secfalse;
+  }
+
+  return sectrue;
 }
 
 /*
@@ -1326,16 +1337,16 @@ secbool storage_change_pin(const uint8_t *oldpin, size_t oldpin_len,
     return secfalse;
   }
 
-  ui_total_init(PIN_VERIFY_MS + PIN_SET_MS);
+  ui_total_init(PIN_CHANGE_MS);
   ui_message =
       (oldpin_len != 0 && newpin_len == 0) ? VERIFYING_PIN_MSG : PROCESSING_MSG;
 
-  if (sectrue != unlock(oldpin, oldpin_len, old_ext_salt)) {
+  // Fail if the new PIN is the same as the wipe code.
+  if (sectrue != is_not_wipe_code(newpin, newpin_len)) {
     return secfalse;
   }
 
-  // Fail if the new PIN is the same as the wipe code.
-  if (sectrue != is_not_wipe_code(newpin, newpin_len)) {
+  if (sectrue != unlock(oldpin, oldpin_len, old_ext_salt)) {
     return secfalse;
   }
 
