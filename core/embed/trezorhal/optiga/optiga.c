@@ -634,6 +634,31 @@ end:
   return ret;
 }
 
+static optiga_pin_result optiga_auth_strethed_pin(
+    const uint8_t stretched_pin[OPTIGA_PIN_SECRET_SIZE]) {
+  optiga_result res =
+      optiga_set_auto_state(OPTIGA_OID_SESSION_CTX, OID_STRETCHED_PIN,
+                            stretched_pin, OPTIGA_PIN_SECRET_SIZE);
+  if (res == OPTIGA_SUCCESS) {
+    return OPTIGA_PIN_SUCCESS;
+  }
+
+  uint8_t error_code = 0;
+  if (res != OPTIGA_ERR_CMD ||
+      optiga_get_error_code(&error_code) != OPTIGA_SUCCESS) {
+    return OPTIGA_PIN_ERROR;
+  }
+
+  switch (error_code) {
+    case OPTIGA_ERR_CODE_CTR_LIMIT:
+      return OPTIGA_PIN_COUNTER_EXCEEDED;
+    case OPTIGA_ERR_CODE_AUTH_FAIL:
+      return OPTIGA_PIN_INVALID;
+    default:
+      return OPTIGA_PIN_ERROR;
+  }
+}
+
 optiga_pin_result optiga_pin_verify_v4(
     OPTIGA_UI_PROGRESS ui_progress,
     const uint8_t pin_secret[OPTIGA_PIN_SECRET_SIZE],
@@ -654,27 +679,8 @@ optiga_pin_result optiga_pin_verify_v4(
   }
 
   // Authorise using OID_STRETCHED_PIN so that we can read from OID_PIN_SECRET.
-  optiga_result res =
-      optiga_set_auto_state(OPTIGA_OID_SESSION_CTX, OID_STRETCHED_PIN,
-                            stretched_pin, sizeof(stretched_pin));
-  if (res != OPTIGA_SUCCESS) {
-    uint8_t error_code = 0;
-    if (res != OPTIGA_ERR_CMD ||
-        optiga_get_error_code(&error_code) != OPTIGA_SUCCESS) {
-      ret = OPTIGA_PIN_ERROR;
-      goto end;
-    }
-
-    switch (error_code) {
-      case OPTIGA_ERR_CODE_CTR_LIMIT:
-        ret = OPTIGA_PIN_COUNTER_EXCEEDED;
-        break;
-      case OPTIGA_ERR_CODE_AUTH_FAIL:
-        ret = OPTIGA_PIN_INVALID;
-        break;
-      default:
-        ret = OPTIGA_PIN_ERROR;
-    }
+  ret = optiga_auth_strethed_pin(stretched_pin);
+  if (ret != OPTIGA_PIN_SUCCESS) {
     goto end;
   }
 
@@ -778,26 +784,8 @@ optiga_pin_result optiga_pin_verify(
 
   // Authorise using OID_STRETCHED_PIN so that we can read from OID_PIN_SECRET
   // and reset OID_PIN_HMAC_CTR.
-  optiga_result res = optiga_set_auto_state(
-      OPTIGA_OID_SESSION_CTX, OID_STRETCHED_PIN, digest, sizeof(digest));
-  if (res != OPTIGA_SUCCESS) {
-    uint8_t error_code = 0;
-    if (res != OPTIGA_ERR_CMD ||
-        optiga_get_error_code(&error_code) != OPTIGA_SUCCESS) {
-      ret = OPTIGA_PIN_ERROR;
-      goto end;
-    }
-
-    switch (error_code) {
-      case OPTIGA_ERR_CODE_CTR_LIMIT:
-        ret = OPTIGA_PIN_COUNTER_EXCEEDED;
-        break;
-      case OPTIGA_ERR_CODE_AUTH_FAIL:
-        ret = OPTIGA_PIN_INVALID;
-        break;
-      default:
-        ret = OPTIGA_PIN_ERROR;
-    }
+  ret = optiga_auth_strethed_pin(digest);
+  if (ret != OPTIGA_PIN_SUCCESS) {
     goto end;
   }
 
