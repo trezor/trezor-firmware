@@ -63,7 +63,7 @@ int display_orientation(int degrees);
 int display_get_orientation(void);
 int display_backlight(int val);
 
-void display_init(void);
+void display_init_all(void);
 void display_reinit(void);
 void display_sync(void);
 void display_refresh(void);
@@ -76,6 +76,31 @@ uint32_t *display_get_fb_addr(void);
 uint8_t *display_get_wr_addr(void);
 void display_shift_window(uint16_t pixels);
 uint16_t display_get_window_offset(void);
+
+typedef enum {
+  // Clear the display content
+  DISPLAY_RESET_CONTENT,
+  // Keeps the display without any changes
+  DISPLAY_RETAIN_CONTENT
+} display_content_mode_t;
+
+static inline void display_init(display_content_mode_t mode) {
+  if (mode == DISPLAY_RESET_CONTENT) {
+    display_init_all();
+  } else {
+    display_reinit();
+  }
+}
+
+static inline void display_deinit(display_content_mode_t mode) {
+
+#ifdef TREZOR_MODEL_T
+  if (mode == DISPLAY_RESET_CONTENT) {
+    display_orientation(0);
+  }
+#endif
+  display_finish_actions();
+}
 
 #endif  // NEW_RENDERING
 #endif  // TREZORHAL_DISPLAY_H

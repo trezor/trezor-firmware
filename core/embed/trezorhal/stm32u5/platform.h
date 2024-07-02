@@ -34,13 +34,11 @@ typedef enum {
 } clock_settings_t;
 
 void set_core_clock(clock_settings_t settings);
-void ensure_compatible_settings(void);
 void drop_privileges(void);
 
 // the following functions are defined in util.s
 void memset_reg(volatile void *start, volatile void *stop, uint32_t val);
 void jump_to(uint32_t address);
-void jump_to_unprivileged(uint32_t address);
 void jump_to_with_flag(uint32_t address, uint32_t register_flag);
 
 extern uint32_t __stack_chk_guard;

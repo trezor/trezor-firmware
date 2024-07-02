@@ -58,6 +58,9 @@
 #ifdef USE_HASH_PROCESSOR
 #include "hash_processor.h"
 #endif
+#ifdef STM32U5
+#include "irq.h"
+#endif
 
 #include "model.h"
 #include "usb.h"
@@ -345,11 +348,11 @@ void real_jump_to_firmware(void) {
     ui_screen_boot_stage_1(false);
   }
 
-  display_finish_actions();
-  ensure_compatible_settings();
+  display_deinit(DISPLAY_RETAIN_CONTENT);
 
-  // mpu_config_firmware();
-  // jump_to_unprivileged(FIRMWARE_START + vhdr.hdrlen + IMAGE_HEADER_SIZE);
+#ifdef ENSURE_COMPATIBLE_SETTINGS
+  ensure_compatible_settings();
+#endif
 
   mpu_config_off();
   jump_to(FIRMWARE_START + vhdr.hdrlen + IMAGE_HEADER_SIZE);
@@ -357,10 +360,9 @@ void real_jump_to_firmware(void) {
 
 #ifdef STM32U5
 __attribute__((noreturn)) void jump_to_fw_through_reset(void) {
-  display_finish_actions();
   display_fade(display_backlight(-1), 0, 200);
 
-  __disable_irq();
+  disable_irq();
   delete_secrets();
   NVIC_SystemReset();
   for (;;)
@@ -389,7 +391,7 @@ int bootloader_main(void) {
   i2c_init();
 #endif
 
-  display_reinit();
+  display_init(DISPLAY_RETAIN_CONTENT);
 
 #ifdef USE_DMA2D
   dma2d_init();

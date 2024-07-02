@@ -384,12 +384,12 @@ void display_setup_te_interrupt(void) {
   HAL_EXTI_SetConfigLine(&EXTI_Handle, &EXTI_Config);
 
   // setup interrupt for tearing effect pin
-  HAL_NVIC_SetPriority(DISPLAY_TE_INTERRUPT_NUM, IRQ_PRI_DMA, 0);
+  NVIC_SetPriority(DISPLAY_TE_INTERRUPT_NUM, IRQ_PRI_NORMAL);
 #endif
 }
 #endif
 
-void display_init(void) {
+void display_init_all(void) {
   // init peripherals
   __HAL_RCC_GPIOE_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
@@ -397,7 +397,7 @@ void display_init(void) {
   __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_FMC_CLK_ENABLE();
 
-  backlight_pwm_init();
+  backlight_pwm_init(BACKLIGHT_RESET);
 
 #ifdef STM32F4
 #define DISPLAY_GPIO_SPEED GPIO_SPEED_FREQ_VERY_HIGH
@@ -477,7 +477,7 @@ void display_reinit(void) {
   DISPLAY_ORIENTATION = 0;
   panel_set_window(0, 0, DISPLAY_RESX - 1, DISPLAY_RESY - 1);
 
-  backlight_pwm_reinit();
+  backlight_pwm_init(BACKLIGHT_RETAIN);
 
 #ifdef TREZOR_MODEL_T
   uint32_t id = display_identify();
@@ -562,7 +562,7 @@ void display_sync(void) {}
 
 #ifndef BOARDLOADER
 void DISPLAY_TE_INTERRUPT_HANDLER(void) {
-  HAL_NVIC_DisableIRQ(DISPLAY_TE_INTERRUPT_NUM);
+  NVIC_DisableIRQ(DISPLAY_TE_INTERRUPT_NUM);
 
   if (act_frame_buffer == 1) {
     bg_copy_start_const_out_8((uint8_t *)PhysFrameBuffer1,
@@ -721,6 +721,7 @@ void display_finish_actions(void) {
 #ifndef BOARDLOADER
   bg_copy_wait();
 #endif
+  backlight_pwm_deinit(BACKLIGHT_RETAIN);
 }
 #else
 //  NOT FRAMEBUFFER
@@ -753,6 +754,11 @@ uint16_t display_get_window_offset(void) { return 0; }
 
 void display_shift_window(uint16_t pixels) {}
 
-void display_finish_actions(void) {}
+void display_finish_actions(void) {
+  backlight_pwm_deinit(BACKLIGHT_RETAIN);
+#ifdef TREZOR_MODEL_T
+  display_set_big_endian();
+#endif
+}
 
 #endif

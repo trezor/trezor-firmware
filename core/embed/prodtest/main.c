@@ -619,8 +619,8 @@ void cpuid_read(void) {
 #define BACKLIGHT_NORMAL 150
 
 int main(void) {
-  display_reinit();
-  display_orientation(0);
+  svc_init();
+  display_init(DISPLAY_RETAIN_CONTENT);
   random_delays_init();
 #ifdef STM32U5
   secure_aes_init();

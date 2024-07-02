@@ -125,6 +125,8 @@ static void optiga_log_hex(const char *prefix, const uint8_t *data,
 #endif
 
 int main(void) {
+  svc_init();
+
   random_delays_init();
 
 #ifdef RDI
@@ -148,7 +150,7 @@ int main(void) {
   dma2d_init();
 #endif
 
-  display_reinit();
+  display_init(DISPLAY_RETAIN_CONTENT);
 
 #ifdef STM32U5
   check_oem_keys();
@@ -182,7 +184,6 @@ int main(void) {
 #endif
 
   // Init peripherals
-  pendsv_init();
 
   fault_handlers_init();
 

@@ -281,7 +281,7 @@ int main(void) {
   hash_processor_init();
 #endif
 
-  display_init();
+  display_init(DISPLAY_RESET_CONTENT);
   display_clear();
   display_refresh();
 
@@ -335,7 +335,11 @@ int main(void) {
   write_bootloader_min_version(hdr->monotonic);
 #endif
 
+  display_deinit(DISPLAY_RETAIN_CONTENT);
+
+#ifdef ENSURE_COMPATIBLE_SETTINGS
   ensure_compatible_settings();
+#endif
 
   mpu_config_off();
 

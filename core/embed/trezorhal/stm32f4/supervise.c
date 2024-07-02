@@ -5,22 +5,36 @@
 #include "../mpu.h"
 #include "common.h"
 #include "display.h"
+#include "irq.h"
 #include "supervise.h"
 
 #ifdef ARM_USER_MODE
+
+void svc_init(void) {
+  NVIC_SetPriority(SVCall_IRQn, IRQ_PRI_LOWEST);
+
+  // We need to ensure that SysTick has the expected priority.
+  // The SysTick priority is configured in the boardloader,
+  // and some early versions didn't set this properly.
+  NVIC_SetPriority(SysTick_IRQn, IRQ_PRI_HIGHEST);
+}
 
 #ifdef STM32U5
 extern uint32_t g_boot_command;
 __attribute__((noreturn)) static void _reboot_to_bootloader(
     boot_command_t boot_command) {
   g_boot_command = boot_command;
-  __disable_irq();
+  disable_irq();
   delete_secrets();
   NVIC_SystemReset();
 }
 #else
 __attribute__((noreturn)) static void _reboot_to_bootloader(
     boot_command_t boot_command) {
+  display_deinit(DISPLAY_RESET_CONTENT);
+#ifdef ENSURE_COMPATIBLE_SETTINGS
+  ensure_compatible_settings();
+#endif
   mpu_config_bootloader();
   jump_to_with_flag(BOOTLOADER_START + IMAGE_HEADER_SIZE, boot_command);
   for (;;)
@@ -29,14 +43,12 @@ __attribute__((noreturn)) static void _reboot_to_bootloader(
 #endif
 
 void svc_reboot_to_bootloader(void) {
-  display_finish_actions();
   boot_command_t boot_command = bootargs_get_command();
   if (is_mode_unprivileged() && !is_mode_handler()) {
     register uint32_t r0 __asm__("r0") = boot_command;
     __asm__ __volatile__("svc %0" ::"i"(SVC_REBOOT_TO_BOOTLOADER), "r"(r0)
                          : "memory");
   } else {
-    ensure_compatible_settings();
     _reboot_to_bootloader(boot_command);
   }
 }
@@ -53,10 +65,10 @@ void SVC_C_Handler(uint32_t *stack) {
   uint8_t svc_number = ((uint8_t *)stack[6])[-2];
   switch (svc_number) {
     case SVC_ENABLE_IRQ:
-      HAL_NVIC_EnableIRQ(stack[0]);
+      NVIC_EnableIRQ(stack[0]);
       break;
     case SVC_DISABLE_IRQ:
-      HAL_NVIC_DisableIRQ(stack[0]);
+      NVIC_DisableIRQ(stack[0]);
       break;
     case SVC_SET_PRIORITY:
       NVIC_SetPriority(stack[0], stack[1]);
@@ -72,7 +84,6 @@ void SVC_C_Handler(uint32_t *stack) {
         ;
       break;
     case SVC_REBOOT_TO_BOOTLOADER:
-      ensure_compatible_settings();
 
       __asm__ volatile("msr control, %0" ::"r"(0x0));
       __asm__ volatile("isb");
@@ -105,7 +116,7 @@ void SVC_C_Handler(uint32_t *stack) {
 __attribute__((naked)) void SVC_Handler(void) {
   __asm volatile(
       " tst lr, #4    \n"    // Test Bit 3 to see which stack pointer we should
-                             // use.
+                             // use
       " ite eq        \n"    // Tell the assembler that the nest 2 instructions
                              // are if-then-else
       " mrseq r0, msp \n"    // Make R0 point to main stack pointer

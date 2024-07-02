@@ -473,7 +473,7 @@ MP_NOINLINE int main_(int argc, char **argv) {
 
   pre_process_options(argc, argv);
 
-  display_init();
+  display_init(DISPLAY_RESET_CONTENT);
 
 #if USE_TOUCH
   touch_init();

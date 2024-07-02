@@ -58,7 +58,7 @@ jump_to:
   bl memset_reg
 
   mov lr, r4
-  // clear out the general purpose registers before the next stage's except the register with flag R11
+  // clear out the general purpose registers before the next stage's code can run
   ldr r0, =0
   mov r1, r0
   mov r2, r0
@@ -83,74 +83,6 @@ jump_to:
   mov r0, r1            // zero out r0
   // go on to the next stage
   ldr lr, [lr, 4]       // set lr to the next stage's reset_handler
-  bx lr
-
-  .global jump_to_unprivileged
-  .type jump_to_unprivileged, STT_FUNC
-jump_to_unprivileged:
-  mov r4, r0            // save input argument r0 (the address of the next stage's vector table) (r4 is callee save)
-  // this subroutine re-points the exception handlers before the C code
-  // that comprises them has been given a good environment to run.
-  // therefore, this code needs to disable interrupts before the VTOR
-  // update. then, the reset_handler of the next stage needs to re-enable interrupts.
-  // the following prevents activation of all exceptions except Non-Maskable Interrupt (NMI).
-  // according to "ARM Cortex-M Programming Guide to Memory Barrier Instructions" Application Note 321, section 4.8:
-  // "there is no requirement to insert memory barrier instructions after CPSID".
-  cpsid f
-  // wipe memory at the end of the current stage of code
-  ldr r2, =0             // r2 - the word-sized value to be written
-  ldr r0, =sram1_start   // r0 - point to beginning of SRAM
-  ldr r1, =sram1_end     // r1 - point to byte after the end of SRAM
-  bl memset_reg
-  ldr r0, =sram2_start   // r0 - point to beginning of SRAM
-  ldr r1, =sram2_end     // r1 - point to byte after the end of SRAM
-  bl memset_reg
-  ldr r0, =sram4_start   // r0 - point to beginning of SRAM
-  ldr r1, =sram4_end     // r1 - point to byte after the end of SRAM
-  bl memset_reg
-  ldr r0, =sram6_start   // r0 - point to beginning of SRAM
-  ldr r1, =sram6_end     // r1 - point to byte after the end of SRAM
-  bl memset_reg
-  ldr r0, =boot_args_start   // r0 - point to beginning of boot args
-  ldr r1, =boot_args_end     // r1 - point to byte after the end of boot args
-  bl memset_reg
-  ldr r0, =sram3_start   // r0 - point to beginning of SRAM
-  ldr r1, =__fb_start    // r1 - point to beginning of framebuffer
-  bl memset_reg
-  ldr r0, =__fb_end      // r0 - point to end of framebuffer
-  ldr r1, =sram5_end     // r1 - point to byte after the end of SRAM
-  bl memset_reg
-  mov lr, r4
-  // clear out the general purpose registers before the next stage's code can run (even the NMI exception handler)
-  ldr r0, =0
-  mov r1, r0
-  mov r2, r0
-  mov r3, r0
-  mov r4, r0
-  mov r5, r0
-  mov r6, r0
-  mov r7, r0
-  mov r8, r0
-  mov r9, r0
-  mov r10, r0
-  mov r11, r0
-  mov r12, r0
-  // give the next stage a fresh main stack pointer
-  ldr r0, [lr]          // set r0 to the main stack pointer in the next stage's vector table
-  msr msp, r0           // give the next stage its main stack pointer
-  // point to the next stage's exception handlers
-  // AN321, section 4.11: "a memory barrier is not required after a VTOR update"
-  .set SCB_VTOR, 0xE000ED08 // reference "Cortex-M4 Devices Generic User Guide" section 4.3
-  ldr r0, =SCB_VTOR
-  str lr, [r0]
-  mov r0, r1            // zero out r0
-  // go on to the next stage
-  ldr lr, [lr, 4]       // set lr to the next stage's reset_handler
-  // switch to unprivileged mode
-  ldr r0, =1
-  msr control, r0
-  isb
-  // jump
   bx lr
 
   .global shutdown_privileged

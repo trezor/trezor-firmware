@@ -55,7 +55,7 @@ extern __IO uint32_t uwTick;
 // and works when interrupts are disabled.  This function is intended to be
 // used only by the ST HAL functions.
 void HAL_Delay(uint32_t Delay) {
-    if (query_irq() == IRQ_STATE_ENABLED) {
+    if (IS_IRQ_ENABLED(query_irq())) {
         // IRQs enabled, so can use systick counter to do the delay
         uint32_t start = uwTick;
         // Wraparound of tick is taken care of by 2's complement arithmetic.
@@ -72,7 +72,7 @@ void HAL_Delay(uint32_t Delay) {
 // Core delay function that does an efficient sleep and may switch thread context.
 // If IRQs are enabled then we must have the GIL.
 void mp_hal_delay_ms(mp_uint_t Delay) {
-    if (query_irq() == IRQ_STATE_ENABLED) {
+    if (IS_IRQ_ENABLED(query_irq())) {
         // IRQs enabled, so can use systick counter to do the delay
         uint32_t start = uwTick;
         // Wraparound of tick is taken care of by 2's complement arithmetic.
@@ -95,7 +95,7 @@ void mp_hal_delay_ms(mp_uint_t Delay) {
 
 // delay for given number of microseconds
 void mp_hal_delay_us(mp_uint_t usec) {
-    if (query_irq() == IRQ_STATE_ENABLED) {
+    if (IS_IRQ_ENABLED(query_irq())) {
         // IRQs enabled, so can use systick counter to do the delay
         uint32_t start = mp_hal_ticks_us();
         while (mp_hal_ticks_us() - start < usec) {
