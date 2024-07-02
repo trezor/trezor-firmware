@@ -129,7 +129,7 @@ void ensure_compatible_settings(void) {
 #endif
   display_orientation(0);
   set_core_clock(CLOCK_168_MHZ);
-  backlight_pwm_set_slow();
+  backlight_pwm_deinit(BACKLIGHT_RETAIN);
 #endif
 }
 

@@ -51,7 +51,7 @@ void display_init(void) {
   display_io_init_fmc();
   display_panel_init();
   display_panel_set_little_endian();
-  backlight_pwm_init();
+  backlight_pwm_init(BACKLIGHT_RESET);
 
 #ifdef XFRAMEBUFFER
   display_io_init_te_interrupt();
@@ -69,7 +69,7 @@ void display_reinit(void) {
   // Important for model T as this is not set in boardloader
   display_panel_set_little_endian();
   display_panel_init_gamma();
-  backlight_pwm_reinit();
+  backlight_pwm_init(BACKLIGHT_RETAIN);
 
 #ifdef XFRAMEBUFFER
   display_io_init_te_interrupt();
