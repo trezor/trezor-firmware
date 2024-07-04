@@ -172,21 +172,6 @@ class Context:
 CURRENT_CONTEXT: Context | None = None
 
 
-def wait(task: Awaitable[T]) -> Awaitable[T]:
-    """
-    Wait until the passed in task finishes, and return the result, while servicing the
-    wire context.
-
-    Used to make sure the device is responsive on USB while waiting for user
-    interaction. If a message is received before the task finishes, it raises an
-    `UnexpectedMessage` exception, returning control to the session handler.
-    """
-    if CURRENT_CONTEXT is None:
-        return task
-    else:
-        return loop.race(CURRENT_CONTEXT.read(()), task)
-
-
 async def call(
     msg: protobuf.MessageType,
     expected_type: type[LoadedMessageType],
