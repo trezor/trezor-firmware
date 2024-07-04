@@ -1075,10 +1075,10 @@ class LayoutObj(Generic[T]):
     """Representation of a Rust-based layout object.
     see `trezor::ui::layout::obj::LayoutObj`.
     """
-    def attach_timer_fn(self, fn: Callable[[int, int], None], attach_type: AttachType | None) -> None:
+    def attach_timer_fn(self, fn: Callable[[int, int], None], attach_type: AttachType | None) -> LayoutState | None:
         """Attach a timer setter function.
         The layout object can call the timer setter with two arguments,
-        `token` and `duration`. When `duration` elapses, the layout object
+        `token` and `duration_ms`. When `duration_ms` elapses, the layout object
         expects a callback to `self.timer(token)`.
         """
     if utils.USE_TOUCH:

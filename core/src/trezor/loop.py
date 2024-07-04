@@ -671,24 +671,3 @@ class spawn(Syscall):
         is True, it would be calling close on self, which will result in a ValueError.
         """
         return self.task is this_task
-
-
-class Timer(Syscall):
-    def __init__(self) -> None:
-        self.task: Task | None = None
-        # Event::Attach is evaluated before task is set. Use this list to
-        # buffer timers until task is set.
-        self.before_task: list[tuple[int, Any]] = []
-
-    def handle(self, task: Task) -> None:
-        self.task = task
-        for deadline, value in self.before_task:
-            schedule(self.task, value, deadline)
-        self.before_task.clear()
-
-    def schedule(self, deadline: int, value: Any) -> None:
-        deadline = utime.ticks_add(utime.ticks_ms(), deadline)
-        if self.task is not None:
-            schedule(self.task, value, deadline)
-        else:
-            self.before_task.append((deadline, value))

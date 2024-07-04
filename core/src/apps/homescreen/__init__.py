@@ -14,7 +14,7 @@ from apps.common.authorization import is_set_any_session
 async def busyscreen() -> None:
     obj = Busyscreen(busy_expiry_ms())
     try:
-        await obj
+        await obj.get_result()
     finally:
         obj.__del__()
 
@@ -53,7 +53,7 @@ async def homescreen() -> None:
         hold_to_lock=config.has_pin(),
     )
     try:
-        await obj
+        await obj.get_result()
     finally:
         obj.__del__()
 
@@ -72,7 +72,7 @@ async def _lockscreen(screensaver: bool = False) -> None:
             coinjoin_authorized=is_set_any_session(MessageType.AuthorizeCoinJoin),
         )
         try:
-            await obj
+            await obj.get_result()
         finally:
             obj.__del__()
     # Otherwise proceed directly to unlock() call. If the device is already unlocked,

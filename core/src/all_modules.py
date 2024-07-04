@@ -107,6 +107,8 @@ trezor.enums.DebugPhysicalButton
 import trezor.enums.DebugPhysicalButton
 trezor.enums.DebugSwipeDirection
 import trezor.enums.DebugSwipeDirection
+trezor.enums.DebugWaitType
+import trezor.enums.DebugWaitType
 trezor.enums.DecredStakingSpendType
 import trezor.enums.DecredStakingSpendType
 trezor.enums.FailureType
@@ -167,8 +169,6 @@ trezor.ui.layouts.mercury
 import trezor.ui.layouts.mercury
 trezor.ui.layouts.mercury.fido
 import trezor.ui.layouts.mercury.fido
-trezor.ui.layouts.mercury.homescreen
-import trezor.ui.layouts.mercury.homescreen
 trezor.ui.layouts.mercury.recovery
 import trezor.ui.layouts.mercury.recovery
 trezor.ui.layouts.mercury.reset
@@ -183,8 +183,6 @@ trezor.ui.layouts.tr
 import trezor.ui.layouts.tr
 trezor.ui.layouts.tr.fido
 import trezor.ui.layouts.tr.fido
-trezor.ui.layouts.tr.homescreen
-import trezor.ui.layouts.tr.homescreen
 trezor.ui.layouts.tr.recovery
 import trezor.ui.layouts.tr.recovery
 trezor.ui.layouts.tr.reset
@@ -193,8 +191,6 @@ trezor.ui.layouts.tt
 import trezor.ui.layouts.tt
 trezor.ui.layouts.tt.fido
 import trezor.ui.layouts.tt.fido
-trezor.ui.layouts.tt.homescreen
-import trezor.ui.layouts.tt.homescreen
 trezor.ui.layouts.tt.recovery
 import trezor.ui.layouts.tt.recovery
 trezor.ui.layouts.tt.reset

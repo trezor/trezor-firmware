@@ -1634,7 +1634,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///         """Attach a timer setter function.
     ///
     ///         The layout object can call the timer setter with two arguments,
-    ///         `token` and `duration`. When `duration` elapses, the layout object
+    ///         `token` and `duration_ms`. When `duration_ms` elapses, the layout object
     ///         expects a callback to `self.timer(token)`.
     ///         """
     ///

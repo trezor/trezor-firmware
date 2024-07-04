@@ -1127,7 +1127,7 @@ pub struct DebugLinkGetState {
     // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkGetState.wait_word_pos)
     pub wait_word_pos: ::std::option::Option<bool>,
     // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkGetState.wait_layout)
-    pub wait_layout: ::std::option::Option<bool>,
+    pub wait_layout: ::std::option::Option<::protobuf::EnumOrUnknown<debug_link_get_state::DebugWaitType>>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.debug.DebugLinkGetState.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -1182,10 +1182,13 @@ impl DebugLinkGetState {
         self.wait_word_pos = ::std::option::Option::Some(v);
     }
 
-    // optional bool wait_layout = 3;
+    // optional .hw.trezor.messages.debug.DebugLinkGetState.DebugWaitType wait_layout = 3;
 
-    pub fn wait_layout(&self) -> bool {
-        self.wait_layout.unwrap_or(false)
+    pub fn wait_layout(&self) -> debug_link_get_state::DebugWaitType {
+        match self.wait_layout {
+            Some(e) => e.enum_value_or(debug_link_get_state::DebugWaitType::IMMEDIATE),
+            None => debug_link_get_state::DebugWaitType::IMMEDIATE,
+        }
     }
 
     pub fn clear_wait_layout(&mut self) {
@@ -1197,8 +1200,8 @@ impl DebugLinkGetState {
     }
 
     // Param is passed by value, moved
-    pub fn set_wait_layout(&mut self, v: bool) {
-        self.wait_layout = ::std::option::Option::Some(v);
+    pub fn set_wait_layout(&mut self, v: debug_link_get_state::DebugWaitType) {
+        self.wait_layout = ::std::option::Option::Some(::protobuf::EnumOrUnknown::new(v));
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
@@ -1244,7 +1247,7 @@ impl ::protobuf::Message for DebugLinkGetState {
                     self.wait_word_pos = ::std::option::Option::Some(is.read_bool()?);
                 },
                 24 => {
-                    self.wait_layout = ::std::option::Option::Some(is.read_bool()?);
+                    self.wait_layout = ::std::option::Option::Some(is.read_enum_or_unknown()?);
                 },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
@@ -1265,7 +1268,7 @@ impl ::protobuf::Message for DebugLinkGetState {
             my_size += 1 + 1;
         }
         if let Some(v) = self.wait_layout {
-            my_size += 1 + 1;
+            my_size += ::protobuf::rt::int32_size(3, v.value());
         }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
@@ -1280,7 +1283,7 @@ impl ::protobuf::Message for DebugLinkGetState {
             os.write_bool(2, v)?;
         }
         if let Some(v) = self.wait_layout {
-            os.write_bool(3, v)?;
+            os.write_enum(3, ::protobuf::EnumOrUnknown::value(&v))?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -1331,6 +1334,76 @@ impl ::std::fmt::Display for DebugLinkGetState {
 
 impl ::protobuf::reflect::ProtobufValue for DebugLinkGetState {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+/// Nested message and enums of message `DebugLinkGetState`
+pub mod debug_link_get_state {
+    #[derive(Clone,Copy,PartialEq,Eq,Debug,Hash)]
+    // @@protoc_insertion_point(enum:hw.trezor.messages.debug.DebugLinkGetState.DebugWaitType)
+    pub enum DebugWaitType {
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.debug.DebugLinkGetState.DebugWaitType.IMMEDIATE)
+        IMMEDIATE = 0,
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.debug.DebugLinkGetState.DebugWaitType.NEXT_LAYOUT)
+        NEXT_LAYOUT = 1,
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.debug.DebugLinkGetState.DebugWaitType.CURRENT_LAYOUT)
+        CURRENT_LAYOUT = 2,
+    }
+
+    impl ::protobuf::Enum for DebugWaitType {
+        const NAME: &'static str = "DebugWaitType";
+
+        fn value(&self) -> i32 {
+            *self as i32
+        }
+
+        fn from_i32(value: i32) -> ::std::option::Option<DebugWaitType> {
+            match value {
+                0 => ::std::option::Option::Some(DebugWaitType::IMMEDIATE),
+                1 => ::std::option::Option::Some(DebugWaitType::NEXT_LAYOUT),
+                2 => ::std::option::Option::Some(DebugWaitType::CURRENT_LAYOUT),
+                _ => ::std::option::Option::None
+            }
+        }
+
+        fn from_str(str: &str) -> ::std::option::Option<DebugWaitType> {
+            match str {
+                "IMMEDIATE" => ::std::option::Option::Some(DebugWaitType::IMMEDIATE),
+                "NEXT_LAYOUT" => ::std::option::Option::Some(DebugWaitType::NEXT_LAYOUT),
+                "CURRENT_LAYOUT" => ::std::option::Option::Some(DebugWaitType::CURRENT_LAYOUT),
+                _ => ::std::option::Option::None
+            }
+        }
+
+        const VALUES: &'static [DebugWaitType] = &[
+            DebugWaitType::IMMEDIATE,
+            DebugWaitType::NEXT_LAYOUT,
+            DebugWaitType::CURRENT_LAYOUT,
+        ];
+    }
+
+    impl ::protobuf::EnumFull for DebugWaitType {
+        fn enum_descriptor() -> ::protobuf::reflect::EnumDescriptor {
+            static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::EnumDescriptor> = ::protobuf::rt::Lazy::new();
+            descriptor.get(|| super::file_descriptor().enum_by_package_relative_name("DebugLinkGetState.DebugWaitType").unwrap()).clone()
+        }
+
+        fn descriptor(&self) -> ::protobuf::reflect::EnumValueDescriptor {
+            let index = *self as usize;
+            Self::enum_descriptor().value_by_index(index)
+        }
+    }
+
+    impl ::std::default::Default for DebugWaitType {
+        fn default() -> Self {
+            DebugWaitType::IMMEDIATE
+        }
+    }
+
+    impl DebugWaitType {
+        pub(in super) fn generated_enum_descriptor_data() -> ::protobuf::reflect::GeneratedEnumDescriptorData {
+            ::protobuf::reflect::GeneratedEnumDescriptorData::new::<DebugWaitType>("DebugLinkGetState.DebugWaitType")
+        }
+    }
 }
 
 // @@protoc_insertion_point(message:hw.trezor.messages.debug.DebugLinkState)
@@ -3560,53 +3633,56 @@ impl ::protobuf::reflect::ProtobufValue for DebugLinkOptigaSetSecMax {
 static file_descriptor_proto_data: &'static [u8] = b"\
     \n\x14messages-debug.proto\x12\x18hw.trezor.messages.debug\x1a\x15messag\
     es-common.proto\x1a\x19messages-management.proto\x1a\roptions.proto\"\
-    \xb0\x04\n\x11DebugLinkDecision\x12O\n\x06button\x18\x01\x20\x01(\x0e27.\
+    \xb4\x04\n\x11DebugLinkDecision\x12O\n\x06button\x18\x01\x20\x01(\x0e27.\
     hw.trezor.messages.debug.DebugLinkDecision.DebugButtonR\x06button\x12U\n\
     \x05swipe\x18\x02\x20\x01(\x0e2?.hw.trezor.messages.debug.DebugLinkDecis\
     ion.DebugSwipeDirectionR\x05swipe\x12\x14\n\x05input\x18\x03\x20\x01(\tR\
     \x05input\x12\x0c\n\x01x\x18\x04\x20\x01(\rR\x01x\x12\x0c\n\x01y\x18\x05\
-    \x20\x01(\rR\x01y\x12\x12\n\x04wait\x18\x06\x20\x01(\x08R\x04wait\x12\
-    \x17\n\x07hold_ms\x18\x07\x20\x01(\rR\x06holdMs\x12h\n\x0fphysical_butto\
-    n\x18\x08\x20\x01(\x0e2?.hw.trezor.messages.debug.DebugLinkDecision.Debu\
-    gPhysicalButtonR\x0ephysicalButton\"<\n\x13DebugSwipeDirection\x12\x06\n\
-    \x02UP\x10\0\x12\x08\n\x04DOWN\x10\x01\x12\x08\n\x04LEFT\x10\x02\x12\t\n\
-    \x05RIGHT\x10\x03\"(\n\x0bDebugButton\x12\x06\n\x02NO\x10\0\x12\x07\n\
-    \x03YES\x10\x01\x12\x08\n\x04INFO\x10\x02\"B\n\x13DebugPhysicalButton\
-    \x12\x0c\n\x08LEFT_BTN\x10\0\x12\x0e\n\nMIDDLE_BTN\x10\x01\x12\r\n\tRIGH\
-    T_BTN\x10\x02\")\n\x0fDebugLinkLayout\x12\x16\n\x06tokens\x18\x01\x20\
-    \x03(\tR\x06tokens\"-\n\x15DebugLinkReseedRandom\x12\x14\n\x05value\x18\
-    \x01\x20\x01(\rR\x05value\"j\n\x15DebugLinkRecordScreen\x12)\n\x10target\
-    _directory\x18\x01\x20\x01(\tR\x0ftargetDirectory\x12&\n\rrefresh_index\
-    \x18\x02\x20\x01(\r:\x010R\x0crefreshIndex\"~\n\x11DebugLinkGetState\x12\
-    $\n\x0ewait_word_list\x18\x01\x20\x01(\x08R\x0cwaitWordList\x12\"\n\rwai\
-    t_word_pos\x18\x02\x20\x01(\x08R\x0bwaitWordPos\x12\x1f\n\x0bwait_layout\
-    \x18\x03\x20\x01(\x08R\nwaitLayout\"\x97\x04\n\x0eDebugLinkState\x12\x16\
-    \n\x06layout\x18\x01\x20\x01(\x0cR\x06layout\x12\x10\n\x03pin\x18\x02\
-    \x20\x01(\tR\x03pin\x12\x16\n\x06matrix\x18\x03\x20\x01(\tR\x06matrix\
-    \x12'\n\x0fmnemonic_secret\x18\x04\x20\x01(\x0cR\x0emnemonicSecret\x129\
-    \n\x04node\x18\x05\x20\x01(\x0b2%.hw.trezor.messages.common.HDNodeTypeR\
-    \x04node\x123\n\x15passphrase_protection\x18\x06\x20\x01(\x08R\x14passph\
-    raseProtection\x12\x1d\n\nreset_word\x18\x07\x20\x01(\tR\tresetWord\x12#\
-    \n\rreset_entropy\x18\x08\x20\x01(\x0cR\x0cresetEntropy\x12,\n\x12recove\
-    ry_fake_word\x18\t\x20\x01(\tR\x10recoveryFakeWord\x12*\n\x11recovery_wo\
-    rd_pos\x18\n\x20\x01(\rR\x0frecoveryWordPos\x12$\n\x0ereset_word_pos\x18\
-    \x0b\x20\x01(\rR\x0cresetWordPos\x12N\n\rmnemonic_type\x18\x0c\x20\x01(\
-    \x0e2).hw.trezor.messages.management.BackupTypeR\x0cmnemonicType\x12\x16\
-    \n\x06tokens\x18\r\x20\x03(\tR\x06tokens\"\x0f\n\rDebugLinkStop\"P\n\x0c\
-    DebugLinkLog\x12\x14\n\x05level\x18\x01\x20\x01(\rR\x05level\x12\x16\n\
-    \x06bucket\x18\x02\x20\x01(\tR\x06bucket\x12\x12\n\x04text\x18\x03\x20\
-    \x01(\tR\x04text\"G\n\x13DebugLinkMemoryRead\x12\x18\n\x07address\x18\
-    \x01\x20\x01(\rR\x07address\x12\x16\n\x06length\x18\x02\x20\x01(\rR\x06l\
-    ength\")\n\x0fDebugLinkMemory\x12\x16\n\x06memory\x18\x01\x20\x01(\x0cR\
-    \x06memory\"^\n\x14DebugLinkMemoryWrite\x12\x18\n\x07address\x18\x01\x20\
-    \x01(\rR\x07address\x12\x16\n\x06memory\x18\x02\x20\x01(\x0cR\x06memory\
-    \x12\x14\n\x05flash\x18\x03\x20\x01(\x08R\x05flash\"-\n\x13DebugLinkFlas\
-    hErase\x12\x16\n\x06sector\x18\x01\x20\x01(\rR\x06sector\".\n\x14DebugLi\
-    nkEraseSdCard\x12\x16\n\x06format\x18\x01\x20\x01(\x08R\x06format\",\n\
-    \x14DebugLinkWatchLayout\x12\x14\n\x05watch\x18\x01\x20\x01(\x08R\x05wat\
-    ch\"\x1b\n\x19DebugLinkResetDebugEvents\"\x1a\n\x18DebugLinkOptigaSetSec\
-    MaxB=\n#com.satoshilabs.trezor.lib.protobufB\x12TrezorMessageDebug\x80\
-    \xa6\x1d\x01\
+    \x20\x01(\rR\x01y\x12\x16\n\x04wait\x18\x06\x20\x01(\x08R\x04waitB\x02\
+    \x18\x01\x12\x17\n\x07hold_ms\x18\x07\x20\x01(\rR\x06holdMs\x12h\n\x0fph\
+    ysical_button\x18\x08\x20\x01(\x0e2?.hw.trezor.messages.debug.DebugLinkD\
+    ecision.DebugPhysicalButtonR\x0ephysicalButton\"<\n\x13DebugSwipeDirecti\
+    on\x12\x06\n\x02UP\x10\0\x12\x08\n\x04DOWN\x10\x01\x12\x08\n\x04LEFT\x10\
+    \x02\x12\t\n\x05RIGHT\x10\x03\"(\n\x0bDebugButton\x12\x06\n\x02NO\x10\0\
+    \x12\x07\n\x03YES\x10\x01\x12\x08\n\x04INFO\x10\x02\"B\n\x13DebugPhysica\
+    lButton\x12\x0c\n\x08LEFT_BTN\x10\0\x12\x0e\n\nMIDDLE_BTN\x10\x01\x12\r\
+    \n\tRIGHT_BTN\x10\x02\"-\n\x0fDebugLinkLayout\x12\x16\n\x06tokens\x18\
+    \x01\x20\x03(\tR\x06tokens:\x02\x18\x01\"-\n\x15DebugLinkReseedRandom\
+    \x12\x14\n\x05value\x18\x01\x20\x01(\rR\x05value\"j\n\x15DebugLinkRecord\
+    Screen\x12)\n\x10target_directory\x18\x01\x20\x01(\tR\x0ftargetDirectory\
+    \x12&\n\rrefresh_index\x18\x02\x20\x01(\r:\x010R\x0crefreshIndex\"\x91\
+    \x02\n\x11DebugLinkGetState\x12(\n\x0ewait_word_list\x18\x01\x20\x01(\
+    \x08R\x0cwaitWordListB\x02\x18\x01\x12&\n\rwait_word_pos\x18\x02\x20\x01\
+    (\x08R\x0bwaitWordPosB\x02\x18\x01\x12e\n\x0bwait_layout\x18\x03\x20\x01\
+    (\x0e29.hw.trezor.messages.debug.DebugLinkGetState.DebugWaitType:\tIMMED\
+    IATER\nwaitLayout\"C\n\rDebugWaitType\x12\r\n\tIMMEDIATE\x10\0\x12\x0f\n\
+    \x0bNEXT_LAYOUT\x10\x01\x12\x12\n\x0eCURRENT_LAYOUT\x10\x02\"\x97\x04\n\
+    \x0eDebugLinkState\x12\x16\n\x06layout\x18\x01\x20\x01(\x0cR\x06layout\
+    \x12\x10\n\x03pin\x18\x02\x20\x01(\tR\x03pin\x12\x16\n\x06matrix\x18\x03\
+    \x20\x01(\tR\x06matrix\x12'\n\x0fmnemonic_secret\x18\x04\x20\x01(\x0cR\
+    \x0emnemonicSecret\x129\n\x04node\x18\x05\x20\x01(\x0b2%.hw.trezor.messa\
+    ges.common.HDNodeTypeR\x04node\x123\n\x15passphrase_protection\x18\x06\
+    \x20\x01(\x08R\x14passphraseProtection\x12\x1d\n\nreset_word\x18\x07\x20\
+    \x01(\tR\tresetWord\x12#\n\rreset_entropy\x18\x08\x20\x01(\x0cR\x0creset\
+    Entropy\x12,\n\x12recovery_fake_word\x18\t\x20\x01(\tR\x10recoveryFakeWo\
+    rd\x12*\n\x11recovery_word_pos\x18\n\x20\x01(\rR\x0frecoveryWordPos\x12$\
+    \n\x0ereset_word_pos\x18\x0b\x20\x01(\rR\x0cresetWordPos\x12N\n\rmnemoni\
+    c_type\x18\x0c\x20\x01(\x0e2).hw.trezor.messages.management.BackupTypeR\
+    \x0cmnemonicType\x12\x16\n\x06tokens\x18\r\x20\x03(\tR\x06tokens\"\x0f\n\
+    \rDebugLinkStop\"P\n\x0cDebugLinkLog\x12\x14\n\x05level\x18\x01\x20\x01(\
+    \rR\x05level\x12\x16\n\x06bucket\x18\x02\x20\x01(\tR\x06bucket\x12\x12\n\
+    \x04text\x18\x03\x20\x01(\tR\x04text\"G\n\x13DebugLinkMemoryRead\x12\x18\
+    \n\x07address\x18\x01\x20\x01(\rR\x07address\x12\x16\n\x06length\x18\x02\
+    \x20\x01(\rR\x06length\")\n\x0fDebugLinkMemory\x12\x16\n\x06memory\x18\
+    \x01\x20\x01(\x0cR\x06memory\"^\n\x14DebugLinkMemoryWrite\x12\x18\n\x07a\
+    ddress\x18\x01\x20\x01(\rR\x07address\x12\x16\n\x06memory\x18\x02\x20\
+    \x01(\x0cR\x06memory\x12\x14\n\x05flash\x18\x03\x20\x01(\x08R\x05flash\"\
+    -\n\x13DebugLinkFlashErase\x12\x16\n\x06sector\x18\x01\x20\x01(\rR\x06se\
+    ctor\".\n\x14DebugLinkEraseSdCard\x12\x16\n\x06format\x18\x01\x20\x01(\
+    \x08R\x06format\"0\n\x14DebugLinkWatchLayout\x12\x14\n\x05watch\x18\x01\
+    \x20\x01(\x08R\x05watch:\x02\x18\x01\"\x1f\n\x19DebugLinkResetDebugEvent\
+    s:\x02\x18\x01\"\x1a\n\x18DebugLinkOptigaSetSecMaxB=\n#com.satoshilabs.t\
+    rezor.lib.protobufB\x12TrezorMessageDebug\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -3644,10 +3720,11 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             messages.push(DebugLinkWatchLayout::generated_message_descriptor_data());
             messages.push(DebugLinkResetDebugEvents::generated_message_descriptor_data());
             messages.push(DebugLinkOptigaSetSecMax::generated_message_descriptor_data());
-            let mut enums = ::std::vec::Vec::with_capacity(3);
+            let mut enums = ::std::vec::Vec::with_capacity(4);
             enums.push(debug_link_decision::DebugSwipeDirection::generated_enum_descriptor_data());
             enums.push(debug_link_decision::DebugButton::generated_enum_descriptor_data());
             enums.push(debug_link_decision::DebugPhysicalButton::generated_enum_descriptor_data());
+            enums.push(debug_link_get_state::DebugWaitType::generated_enum_descriptor_data());
             ::protobuf::reflect::GeneratedFileDescriptor::new_generated(
                 file_descriptor_proto(),
                 deps,

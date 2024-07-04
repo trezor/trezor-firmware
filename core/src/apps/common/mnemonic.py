@@ -7,7 +7,7 @@ from . import backup_types
 
 if TYPE_CHECKING:
     from trezor.enums import BackupType
-    from trezor.ui.layouts.common import ProgressLayout
+    from trezor.ui import ProgressLayout
 
 
 def get() -> tuple[bytes | None, BackupType]:

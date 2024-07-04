@@ -8,7 +8,8 @@ import storage.device as storage_device
 from trezor import TR, config, io, log, loop, utils, wire, workflow
 from trezor.crypto import hashlib
 from trezor.crypto.curve import nist256p1
-from trezor.ui.layouts import show_error_popup
+from trezor.ui import Layout
+from trezor.ui.layouts import error_popup
 
 from apps.base import set_homescreen
 from apps.common import cbor
@@ -615,16 +616,36 @@ async def _confirm_fido(title: str, credential: Credential) -> bool:
         return False
 
 
+async def _show_error_popup(
+    title: str,
+    description: str,
+    subtitle: str | None = None,
+    description_param: str = "",
+    *,
+    button: str = "",
+    timeout_ms: int = 0,
+) -> None:
+    popup = error_popup(
+        title,
+        description,
+        subtitle,
+        description_param,
+        button=button,
+        timeout_ms=timeout_ms,
+    )
+    await Layout(popup).get_result()
+
+
 async def _confirm_bogus_app(title: str) -> None:
     if _last_auth_valid:
-        await show_error_popup(
+        await _show_error_popup(
             title,
             TR.fido__device_already_registered,
             TR.fido__already_registered,
             timeout_ms=_POPUP_TIMEOUT_MS,
         )
     else:
-        await show_error_popup(
+        await _show_error_popup(
             title,
             TR.fido__device_not_registered,
             TR.fido__not_registered,
@@ -841,7 +862,7 @@ class Fido2ConfirmExcluded(Fido2ConfirmMakeCredential):
         await send_cmd(cmd, self.iface)
         self.finished = True
 
-        await show_error_popup(
+        await _show_error_popup(
             TR.fido__title_register,
             TR.fido__device_already_registered_with_template,
             TR.fido__already_registered,
@@ -924,7 +945,7 @@ class Fido2ConfirmNoPin(State):
         await send_cmd(cmd, self.iface)
         self.finished = True
 
-        await show_error_popup(
+        await _show_error_popup(
             TR.fido__title_verify_user,
             TR.fido__please_enable_pin_protection,
             TR.fido__unable_to_verify_user,
@@ -947,7 +968,7 @@ class Fido2ConfirmNoCredentials(Fido2ConfirmGetAssertion):
         await send_cmd(cmd, self.iface)
         self.finished = True
 
-        await show_error_popup(
+        await _show_error_popup(
             TR.fido__title_authenticate,
             TR.fido__not_registered_with_template,
             TR.fido__not_registered,
@@ -1059,6 +1080,7 @@ class DialogManager:
 
         try:
             while self.result is _RESULT_NONE:
+                workflow.close_others()
                 result = await self.state.confirm_dialog()
                 if isinstance(result, State):
                     self.state = result
