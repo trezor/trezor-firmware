@@ -110,7 +110,7 @@ async def get_public_key(
             account=account,
             path=path,
             mismatch_title=TR.addr_mismatch__xpub_mismatch,
-            br_type="show_xpub",
+            br_name="show_xpub",
         )
 
     return PublicKey(

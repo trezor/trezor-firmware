@@ -301,9 +301,7 @@ impl LayoutObjInner {
     fn obj_button_request(&mut self) -> Result<Obj, Error> {
         match self.event_ctx.button_request() {
             None => Ok(Obj::const_none()),
-            Some(ButtonRequest { code, br_type }) => {
-                (code.num().into(), br_type.try_into()?).try_into()
-            }
+            Some(ButtonRequest { code, name }) => (code.num().into(), name.try_into()?).try_into(),
         }
     }
 

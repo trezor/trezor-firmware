@@ -79,7 +79,7 @@ impl ConfirmSummary {
         let items: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
         let account_items: Obj = kwargs.get(Qstr::MP_QSTR_account_items)?;
         let fee_items: Obj = kwargs.get(Qstr::MP_QSTR_fee_items)?;
-        let br_type: TString = kwargs.get(Qstr::MP_QSTR_br_type)?.try_into()?;
+        let br_name: TString = kwargs.get(Qstr::MP_QSTR_br_name)?.try_into()?;
         let br_code: u16 = kwargs.get(Qstr::MP_QSTR_br_code)?.try_into()?;
 
         // Summary
@@ -93,7 +93,7 @@ impl ConfirmSummary {
         }
         let content_summary = summary
             .into_layout()?
-            .one_button_request(ButtonRequest::from_num(br_code, br_type))
+            .one_button_request(ButtonRequest::from_num(br_code, br_name))
             // Summary(1) + Hold(1)
             .with_pages(|summary_pages| summary_pages + 1);
 

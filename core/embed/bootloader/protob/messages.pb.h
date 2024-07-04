@@ -328,7 +328,7 @@ extern const pb_msgdesc_t UnlockBootloader_msg;
 /* Maximum encoded size of messages (where known) */
 /* FirmwareUpload_size depends on runtime parameters */
 #define ButtonAck_size                           0
-#define ButtonRequest_size                       2
+#define ButtonRequest_size                       8
 #define Failure_size                             260
 #define Features_size                            497
 #define FirmwareErase_size                       6

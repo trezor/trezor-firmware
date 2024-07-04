@@ -36,12 +36,12 @@ is_last = False
 # Because icon and br_code are almost always the same
 # (and also calling with positional arguments takes less space)
 async def _confirm_properties(
-    br_type: str,
+    br_name: str,
     title: str,
     props: Iterable[PropertyType],
 ) -> None:
     await confirm_properties(
-        br_type,
+        br_name,
         title,
         props,
         hold=is_last,

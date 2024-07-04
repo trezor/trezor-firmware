@@ -269,7 +269,7 @@ async def confirm_system_transfer(
         title=TR.words__recipient,
         value=base58.encode(transfer_instruction.recipient_account[0]),
         description="",
-        br_type="confirm_recipient",
+        br_name="confirm_recipient",
         br_code=ButtonRequestType.ConfirmOutput,
         verb=TR.buttons__continue,
     )
@@ -298,7 +298,7 @@ async def confirm_token_transfer(
         title=TR.words__recipient,
         value=base58.encode(destination_account),
         description="",
-        br_type="confirm_recipient",
+        br_name="confirm_recipient",
         br_code=ButtonRequestType.ConfirmOutput,
         verb=TR.buttons__continue,
         info_items=(
@@ -312,7 +312,7 @@ async def confirm_token_transfer(
         title=TR.solana__token_address,
         value=base58.encode(token_mint),
         description="",
-        br_type="confirm_token_address",
+        br_name="confirm_token_address",
         br_code=ButtonRequestType.ConfirmOutput,
         verb=TR.buttons__continue,
     )

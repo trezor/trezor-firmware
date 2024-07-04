@@ -107,11 +107,11 @@ async def continue_recovery(
 
 
 async def show_recovery_warning(
-    br_type: str,
+    br_name: str,
     content: str,
     subheader: str | None = None,
     button: str | None = None,
     br_code: ButtonRequestType = ButtonRequestType.Warning,
 ) -> None:
     button = button or TR.buttons__try_again  # def_arg
-    await show_warning(br_type, content, subheader, button, br_code)
+    await show_warning(br_name, content, subheader, button, br_code)

@@ -17,7 +17,7 @@ async def show_share_words(
     group_index: int | None = None,
 ) -> None:
     # Showing words, asking for write down confirmation and preparing for check
-    br_type = "backup_words"
+    br_name = "backup_words"
     br_code = ButtonRequestType.ResetDevice
 
     if share_index is None:
@@ -36,7 +36,7 @@ async def show_share_words(
     # (by sending CANCELLED)
     while True:
         await confirm_action(
-            br_type,
+            br_name,
             title,
             description=TR.reset__write_down_words_template.format(len(share_words)),
             verb=TR.buttons__show_words,
@@ -50,14 +50,14 @@ async def show_share_words(
                     share_words=share_words,  # type: ignore [No parameter named "share_words"]
                 )
             ),
-            br_type,
+            br_name,
             br_code,
         )
         if result is CONFIRMED:
             break
 
     await confirm_action(
-        br_type,
+        br_name,
         check_title,
         description=TR.reset__select_correct_word,
         verb=TR.buttons__continue,
@@ -290,7 +290,7 @@ async def show_success_backup() -> None:
 
 
 async def show_reset_warning(
-    br_type: str,
+    br_name: str,
     content: str,
     subheader: str | None = None,
     button: str | None = None,
@@ -299,7 +299,7 @@ async def show_reset_warning(
     button = button or TR.buttons__try_again  # def_arg
 
     await show_warning(
-        br_type,
+        br_name,
         subheader or "",
         content,
         button,

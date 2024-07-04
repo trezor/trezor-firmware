@@ -13,3 +13,5 @@ Deprecated_PassphraseStateRequest.state max_size:1
 HDNodeType.chain_code   max_size:32
 HDNodeType.private_key  max_size:32
 HDNodeType.public_key   max_size:33
+
+ButtonRequest.name      max_size:32

@@ -105,7 +105,7 @@ impl GetAddress {
         let path: Option<TString> = kwargs.get(Qstr::MP_QSTR_path)?.try_into_option()?;
         let xpubs: Obj = kwargs.get(Qstr::MP_QSTR_xpubs)?;
 
-        let br_type: TString = kwargs.get(Qstr::MP_QSTR_br_type)?.try_into()?;
+        let br_name: TString = kwargs.get(Qstr::MP_QSTR_br_name)?.try_into()?;
         let br_code: u16 = kwargs.get(Qstr::MP_QSTR_br_code)?.try_into()?;
 
         // Address
@@ -132,7 +132,7 @@ impl GetAddress {
                 .with_swipe(SwipeDirection::Left, SwipeSettings::default())
                 .with_vertical_pages()
                 .map(|msg| matches!(msg, FrameMsg::Button(_)).then_some(FlowMsg::Info))
-                .one_button_request(ButtonRequest::from_num(br_code, br_type))
+                .one_button_request(ButtonRequest::from_num(br_code, br_name))
                 // Count tap-to-confirm screen towards page count
                 .with_pages(|address_pages| address_pages + 1);
 

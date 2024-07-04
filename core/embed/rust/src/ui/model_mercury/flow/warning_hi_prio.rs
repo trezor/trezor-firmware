@@ -87,7 +87,7 @@ impl WarningHiPrio {
             .with_swipe(SwipeDirection::Up, SwipeSettings::default())
             .with_swipe(SwipeDirection::Left, SwipeSettings::default())
             .map(|msg| matches!(msg, FrameMsg::Button(_)).then_some(FlowMsg::Info));
-        // .one_button_request(ButtonRequestCode::Warning, br_type);
+        // .one_button_request(ButtonRequestCode::Warning, br_name);
 
         // Menu
         let content_menu = Frame::left_aligned(

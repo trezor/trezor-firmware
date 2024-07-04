@@ -294,7 +294,7 @@ async def confirm_reference_script(
 
 
 async def _confirm_data_chunk(
-    br_type: str, title: str, first_chunk: bytes, data_size: int
+    br_name: str, title: str, first_chunk: bytes, data_size: int
 ) -> None:
     MAX_DISPLAYED_SIZE = 56
     displayed_bytes = first_chunk[:MAX_DISPLAYED_SIZE]
@@ -308,7 +308,7 @@ async def _confirm_data_chunk(
     if data_size > MAX_DISPLAYED_SIZE:
         props.append(("...", None))
     await confirm_properties(
-        br_type,
+        br_name,
         title=TR.cardano__confirm_transaction,
         props=props,
         br_code=BRT_Other,

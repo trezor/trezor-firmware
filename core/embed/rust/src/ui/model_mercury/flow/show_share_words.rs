@@ -98,7 +98,7 @@ impl ShowShareWords {
         .with_footer(TR::instructions__swipe_up.into(), description)
         .with_swipe(SwipeDirection::Up, SwipeSettings::default())
         .map(|msg| matches!(msg, FrameMsg::Content(_)).then_some(FlowMsg::Confirmed))
-        .one_button_request(ButtonRequestCode::ResetDevice.with_type("share_words"))
+        .one_button_request(ButtonRequestCode::ResetDevice.with_name("share_words"))
         .with_pages(move |_| nwords + 2);
 
         let content_words =

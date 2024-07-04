@@ -32,8 +32,8 @@ impl ButtonRequestCode {
         *self as u16
     }
 
-    pub fn with_type(self, br_type: &'static str) -> ButtonRequest {
-        ButtonRequest::new(self, br_type.into())
+    pub fn with_name(self, name: &'static str) -> ButtonRequest {
+        ButtonRequest::new(self, name.into())
     }
 
     pub fn from(i: u16) -> Self {
@@ -44,15 +44,15 @@ impl ButtonRequestCode {
 #[derive(Clone)]
 pub struct ButtonRequest {
     pub code: ButtonRequestCode,
-    pub br_type: TString<'static>,
+    pub name: TString<'static>,
 }
 
 impl ButtonRequest {
-    pub fn new(code: ButtonRequestCode, br_type: TString<'static>) -> Self {
-        ButtonRequest { code, br_type }
+    pub fn new(code: ButtonRequestCode, name: TString<'static>) -> Self {
+        ButtonRequest { code, name }
     }
 
-    pub fn from_num(code: u16, br_type: TString<'static>) -> Self {
-        ButtonRequest::new(ButtonRequestCode::from(code), br_type)
+    pub fn from_num(code: u16, name: TString<'static>) -> Self {
+        ButtonRequest::new(ButtonRequestCode::from(code), name)
     }
 }
