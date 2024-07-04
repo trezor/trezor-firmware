@@ -20,7 +20,6 @@ from ..keychain import address_n_to_name
 if TYPE_CHECKING:
     from trezor.enums import AmountUnit
     from trezor.messages import TxAckPaymentRequest, TxOutput
-    from trezor.ui.layouts import LayoutType
 
     from apps.common.coininfo import CoinInfo
     from apps.common.paths import Bip32Path
@@ -73,7 +72,7 @@ async def confirm_output(
         assert data is not None
         if omni.is_valid(data):
             # OMNI transaction
-            layout: LayoutType = confirm_metadata(
+            layout = confirm_metadata(
                 "omni_transaction",
                 "OMNI transaction",
                 omni.parse(data),
