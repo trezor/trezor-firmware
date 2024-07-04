@@ -546,11 +546,16 @@ def format_message(
         return printable / len(bytes) > 0.8
 
     def pformat(name: str, value: t.Any, indent: int) -> str:
+        from . import messages
+
         level = sep * indent
         leadin = sep * (indent + 1)
 
         if isinstance(value, MessageType):
             return format_message(value, indent, sep)
+
+        if isinstance(pb, messages.DebugLinkState) and name == "tokens":
+            return "".join(value)
 
         if isinstance(value, list):
             # short list of simple values

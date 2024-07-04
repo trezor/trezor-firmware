@@ -2,6 +2,7 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import TYPE_CHECKING, Any, Callable
 
 from trezorlib.client import PASSPHRASE_ON_DEVICE
+from trezorlib.messages import DebugWaitType
 from trezorlib.transport import udp
 
 if TYPE_CHECKING:
@@ -42,6 +43,7 @@ class BackgroundDeviceHandler:
         self.client = client
         self.client.ui = NullUI  # type: ignore [NullUI is OK UI]
         self.client.watch_layout(True)
+        self.client.debug.input_wait_type = DebugWaitType.CURRENT_LAYOUT
 
     def run(self, function: Callable[..., Any], *args: Any, **kwargs: Any) -> None:
         """Runs some function that interacts with a device.
@@ -50,8 +52,14 @@ class BackgroundDeviceHandler:
         """
         if self.task is not None:
             raise RuntimeError("Wait for previous task first")
-        self.task = self._pool.submit(function, self.client, *args, **kwargs)
-        self.debuglink().wait_layout(wait_for_external_change=True)
+
+        # make sure we start the wait while a layout is up
+        # TODO should this be part of "wait_for_layout_change"?
+        self.debuglink().read_layout()
+        # from the displayed layout, wait for the first UI change triggered by the
+        # task running in the background
+        with self.debuglink().wait_for_layout_change():
+            self.task = self._pool.submit(function, self.client, *args, **kwargs)
 
     def kill_task(self) -> None:
         if self.task is not None:
