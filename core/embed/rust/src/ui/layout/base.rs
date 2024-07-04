@@ -12,7 +12,6 @@ pub enum LayoutState {
 }
 
 pub trait Layout<T> {
-    //fn attach(&mut self, ctx: &mut EventCtx, attach_type: AttachType);
     fn place(&mut self);
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<LayoutState>;
     fn value(&self) -> Option<&T>;

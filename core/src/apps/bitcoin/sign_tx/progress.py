@@ -122,10 +122,6 @@ class Progress:
         self.progress_layout = progress_layout(text)
 
     def report(self) -> None:
-        from trezor import utils
-
-        if utils.DISABLE_ANIMATION:
-            return
         p = int(1000 * self.progress / self.steps)
         self.progress_layout.report(p)
 
