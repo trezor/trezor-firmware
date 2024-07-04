@@ -5,7 +5,7 @@ from . import config
 if TYPE_CHECKING:
     from typing import Any, Container
 
-    from trezor.ui.layouts.common import ProgressLayout
+    from trezor.ui import ProgressLayout
 
 _previous_seconds: int | None = None
 _previous_remaining: str | None = None

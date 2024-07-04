@@ -23,12 +23,11 @@ if TYPE_CHECKING:
 async def request_mnemonic(
     word_count: int, backup_type: BackupType | None
 ) -> str | None:
-    from trezor.ui.layouts.common import button_request
     from trezor.ui.layouts.recovery import request_word
 
     from . import word_validity
 
-    await button_request("mnemonic", code=ButtonRequestType.MnemonicInput)
+    send_button_request = True
 
     # Pre-allocate the list to enable going back and overwriting words.
     words: list[str] = [""] * word_count
@@ -43,8 +42,10 @@ async def request_mnemonic(
             i,
             word_count,
             is_slip39=backup_types.is_slip39_word_count(word_count),
+            send_button_request=send_button_request,
             prefill_word=words[i],
         )
+        send_button_request = False
 
         if not word:
             # User has decided to go back
