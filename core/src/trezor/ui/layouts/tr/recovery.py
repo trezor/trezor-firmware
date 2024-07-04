@@ -1,20 +1,22 @@
-from typing import TYPE_CHECKING, Iterable
+from typing import TYPE_CHECKING
 
 import trezorui2
-from trezor import TR
+from trezor import TR, ui
 from trezor.enums import ButtonRequestType, RecoveryType
 
 from ..common import interact
-from . import RustLayout, raise_if_not_confirmed, show_warning
+from . import show_warning
 
 if TYPE_CHECKING:
+    from typing import Awaitable, Iterable
+
     from apps.management.recovery_device.layout import RemainingSharesInfo
 
 
 async def request_word_count(recovery_type: RecoveryType) -> int:
     count = await interact(
-        RustLayout(trezorui2.select_word_count(recovery_type=recovery_type)),
-        "word_count",
+        trezorui2.select_word_count(recovery_type=recovery_type),
+        "recovery_word_count",
         ButtonRequestType.MnemonicWordCount,
     )
     # It can be returning a string (for example for __debug__ in tests)
@@ -22,26 +24,31 @@ async def request_word_count(recovery_type: RecoveryType) -> int:
 
 
 async def request_word(
-    word_index: int, word_count: int, is_slip39: bool, prefill_word: str = ""
+    word_index: int,
+    word_count: int,
+    is_slip39: bool,
+    send_button_request: bool,
+    prefill_word: str = "",
 ) -> str:
     prompt = TR.recovery__word_x_of_y_template.format(word_index + 1, word_count)
 
     can_go_back = word_index > 0
 
     if is_slip39:
-        word_choice = RustLayout(
-            trezorui2.request_slip39(
-                prompt=prompt, prefill_word=prefill_word, can_go_back=can_go_back
-            )
-        )
-    else:
-        word_choice = RustLayout(
-            trezorui2.request_bip39(
-                prompt=prompt, prefill_word=prefill_word, can_go_back=can_go_back
-            )
+        keyboard = trezorui2.request_slip39(
+            prompt=prompt, prefill_word=prefill_word, can_go_back=can_go_back
         )
 
-    word: str = await word_choice
+    else:
+        keyboard = trezorui2.request_bip39(
+            prompt=prompt, prefill_word=prefill_word, can_go_back=can_go_back
+        )
+
+    word: str = await interact(
+        keyboard,
+        "mnemonic" if send_button_request else None,
+        ButtonRequestType.MnemonicInput,
+    )
     return word
 
 
@@ -53,22 +60,20 @@ async def show_remaining_shares(
     raise NotImplementedError
 
 
-async def show_group_share_success(share_index: int, group_index: int) -> None:
-    await raise_if_not_confirmed(
-        interact(
-            RustLayout(
-                trezorui2.show_group_share_success(
-                    lines=[
-                        TR.recovery__you_have_entered,
-                        TR.recovery__share_num_template.format(share_index + 1),
-                        TR.words__from,
-                        TR.recovery__group_num_template.format(group_index + 1),
-                    ],
-                )
-            ),
-            "share_success",
-            ButtonRequestType.Other,
-        )
+def show_group_share_success(
+    share_index: int, group_index: int
+) -> Awaitable[ui.UiResult]:
+    return interact(
+        trezorui2.show_group_share_success(
+            lines=[
+                TR.recovery__you_have_entered,
+                TR.recovery__share_num_template.format(share_index + 1),
+                TR.words__from,
+                TR.recovery__group_num_template.format(group_index + 1),
+            ],
+        ),
+        "share_success",
+        ButtonRequestType.Other,
     )
 
 
@@ -117,26 +122,24 @@ async def continue_recovery(
     if subtext:
         text += f"\n\n{subtext}"
 
+    homepage = trezorui2.confirm_recovery(
+        title="",
+        description=text,
+        button=button_label,
+        recovery_type=recovery_type,
+        info_button=False,
+        show_info=show_info,  # type: ignore [No parameter named "show_info"]
+    )
     while True:
-        homepage = RustLayout(
-            trezorui2.confirm_recovery(
-                title="",
-                description=text,
-                button=button_label,
-                recovery_type=recovery_type,
-                info_button=False,
-                show_info=show_info,  # type: ignore [No parameter named "show_info"]
-            )
-        )
         result = await interact(
             homepage,
             "recovery",
             ButtonRequestType.RecoveryHomepage,
+            raise_on_cancel=None,
         )
         if result is trezorui2.CONFIRMED:
             return True
 
-        # user has chosen to abort, confirm the choice
         try:
             await _confirm_abort(recovery_type != RecoveryType.NormalRecovery)
         except ActionCancelled:
@@ -145,12 +148,12 @@ async def continue_recovery(
             return False
 
 
-async def show_recovery_warning(
+def show_recovery_warning(
     br_name: str,
     content: str,
     subheader: str | None = None,
     button: str | None = None,
     br_code: ButtonRequestType = ButtonRequestType.Warning,
-) -> None:
+) -> Awaitable[ui.UiResult]:
     button = button or TR.buttons__try_again  # def_arg
-    await show_warning(br_name, content, subheader, button, br_code)
+    return show_warning(br_name, content, subheader, button, br_code)
