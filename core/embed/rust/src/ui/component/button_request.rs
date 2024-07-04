@@ -34,7 +34,7 @@ impl<T: Component> Component for OneButtonRequest<T> {
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         if matches!(event, Event::Attach(_)) {
             if let Some(button_request) = self.button_request.take() {
-                ctx.send_button_request(button_request.code, button_request.br_type)
+                ctx.send_button_request(button_request.code, button_request.name)
             }
         }
         self.inner.event(ctx, event)

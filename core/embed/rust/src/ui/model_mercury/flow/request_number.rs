@@ -76,7 +76,7 @@ impl RequestNumber {
         let info: Obj = kwargs.get(Qstr::MP_QSTR_info)?;
         assert!(description != Obj::const_none());
         assert!(info != Obj::const_none());
-        let br_type: TString = kwargs.get(Qstr::MP_QSTR_br_type)?.try_into()?;
+        let br_name: TString = kwargs.get(Qstr::MP_QSTR_br_name)?.try_into()?;
         let br_code: u16 = kwargs.get(Qstr::MP_QSTR_br_code)?.try_into()?;
 
         let description_cb = move |i: u32| {
@@ -103,7 +103,7 @@ impl RequestNumber {
                     FrameMsg::Button(_) => Some(FlowMsg::Info),
                     FrameMsg::Content(NumberInputDialogMsg(n)) => Some(FlowMsg::Choice(n as usize)),
                 })
-                .one_button_request(ButtonRequest::from_num(br_code, br_type));
+                .one_button_request(ButtonRequest::from_num(br_code, br_name));
 
         let content_menu = Frame::left_aligned(
             "".into(),

@@ -536,6 +536,8 @@ pub struct ButtonRequest {
     pub code: ::std::option::Option<::protobuf::EnumOrUnknown<button_request::ButtonRequestType>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.common.ButtonRequest.pages)
     pub pages: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.common.ButtonRequest.name)
+    pub name: ::std::option::Option<::std::string::String>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.common.ButtonRequest.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -593,8 +595,44 @@ impl ButtonRequest {
         self.pages = ::std::option::Option::Some(v);
     }
 
+    // optional string name = 4;
+
+    pub fn name(&self) -> &str {
+        match self.name.as_ref() {
+            Some(v) => v,
+            None => "",
+        }
+    }
+
+    pub fn clear_name(&mut self) {
+        self.name = ::std::option::Option::None;
+    }
+
+    pub fn has_name(&self) -> bool {
+        self.name.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_name(&mut self, v: ::std::string::String) {
+        self.name = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_name(&mut self) -> &mut ::std::string::String {
+        if self.name.is_none() {
+            self.name = ::std::option::Option::Some(::std::string::String::new());
+        }
+        self.name.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_name(&mut self) -> ::std::string::String {
+        self.name.take().unwrap_or_else(|| ::std::string::String::new())
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut fields = ::std::vec::Vec::with_capacity(3);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "code",
@@ -605,6 +643,11 @@ impl ButtonRequest {
             "pages",
             |m: &ButtonRequest| { &m.pages },
             |m: &mut ButtonRequest| { &mut m.pages },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "name",
+            |m: &ButtonRequest| { &m.name },
+            |m: &mut ButtonRequest| { &mut m.name },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<ButtonRequest>(
             "ButtonRequest",
@@ -630,6 +673,9 @@ impl ::protobuf::Message for ButtonRequest {
                 16 => {
                     self.pages = ::std::option::Option::Some(is.read_uint32()?);
                 },
+                34 => {
+                    self.name = ::std::option::Option::Some(is.read_string()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -648,6 +694,9 @@ impl ::protobuf::Message for ButtonRequest {
         if let Some(v) = self.pages {
             my_size += ::protobuf::rt::uint32_size(2, v);
         }
+        if let Some(v) = self.name.as_ref() {
+            my_size += ::protobuf::rt::string_size(4, &v);
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -659,6 +708,9 @@ impl ::protobuf::Message for ButtonRequest {
         }
         if let Some(v) = self.pages {
             os.write_uint32(2, v)?;
+        }
+        if let Some(v) = self.name.as_ref() {
+            os.write_string(4, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -679,6 +731,7 @@ impl ::protobuf::Message for ButtonRequest {
     fn clear(&mut self) {
         self.code = ::std::option::Option::None;
         self.pages = ::std::option::Option::None;
+        self.name = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -686,6 +739,7 @@ impl ::protobuf::Message for ButtonRequest {
         static instance: ButtonRequest = ButtonRequest {
             code: ::std::option::Option::None,
             pages: ::std::option::Option::None,
+            name: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -2438,43 +2492,44 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     essError\x10\t\x12\x1a\n\x16Failure_NotEnoughFunds\x10\n\x12\x1a\n\x16Fa\
     ilure_NotInitialized\x10\x0b\x12\x17\n\x13Failure_PinMismatch\x10\x0c\
     \x12\x1c\n\x18Failure_WipeCodeMismatch\x10\r\x12\x1a\n\x16Failure_Invali\
-    dSession\x10\x0e\x12\x19\n\x15Failure_FirmwareError\x10c\"\x91\x06\n\rBu\
+    dSession\x10\x0e\x12\x19\n\x15Failure_FirmwareError\x10c\"\xab\x06\n\rBu\
     ttonRequest\x12N\n\x04code\x18\x01\x20\x01(\x0e2:.hw.trezor.messages.com\
     mon.ButtonRequest.ButtonRequestTypeR\x04code\x12\x14\n\x05pages\x18\x02\
-    \x20\x01(\rR\x05pages\"\x99\x05\n\x11ButtonRequestType\x12\x17\n\x13Butt\
-    onRequest_Other\x10\x01\x12\"\n\x1eButtonRequest_FeeOverThreshold\x10\
-    \x02\x12\x1f\n\x1bButtonRequest_ConfirmOutput\x10\x03\x12\x1d\n\x19Butto\
-    nRequest_ResetDevice\x10\x04\x12\x1d\n\x19ButtonRequest_ConfirmWord\x10\
-    \x05\x12\x1c\n\x18ButtonRequest_WipeDevice\x10\x06\x12\x1d\n\x19ButtonRe\
-    quest_ProtectCall\x10\x07\x12\x18\n\x14ButtonRequest_SignTx\x10\x08\x12\
-    \x1f\n\x1bButtonRequest_FirmwareCheck\x10\t\x12\x19\n\x15ButtonRequest_A\
-    ddress\x10\n\x12\x1b\n\x17ButtonRequest_PublicKey\x10\x0b\x12#\n\x1fButt\
-    onRequest_MnemonicWordCount\x10\x0c\x12\x1f\n\x1bButtonRequest_MnemonicI\
-    nput\x10\r\x120\n(_Deprecated_ButtonRequest_PassphraseType\x10\x0e\x1a\
-    \x02\x08\x01\x12'\n#ButtonRequest_UnknownDerivationPath\x10\x0f\x12\"\n\
-    \x1eButtonRequest_RecoveryHomepage\x10\x10\x12\x19\n\x15ButtonRequest_Su\
-    ccess\x10\x11\x12\x19\n\x15ButtonRequest_Warning\x10\x12\x12!\n\x1dButto\
-    nRequest_PassphraseEntry\x10\x13\x12\x1a\n\x16ButtonRequest_PinEntry\x10\
-    \x14\"\x0b\n\tButtonAck\"\xbb\x02\n\x10PinMatrixRequest\x12T\n\x04type\
-    \x18\x01\x20\x01(\x0e2@.hw.trezor.messages.common.PinMatrixRequest.PinMa\
-    trixRequestTypeR\x04type\"\xd0\x01\n\x14PinMatrixRequestType\x12\x20\n\
-    \x1cPinMatrixRequestType_Current\x10\x01\x12!\n\x1dPinMatrixRequestType_\
-    NewFirst\x10\x02\x12\"\n\x1ePinMatrixRequestType_NewSecond\x10\x03\x12&\
-    \n\"PinMatrixRequestType_WipeCodeFirst\x10\x04\x12'\n#PinMatrixRequestTy\
-    pe_WipeCodeSecond\x10\x05\"\x20\n\x0cPinMatrixAck\x12\x10\n\x03pin\x18\
-    \x01\x20\x02(\tR\x03pin\"5\n\x11PassphraseRequest\x12\x20\n\n_on_device\
-    \x18\x01\x20\x01(\x08R\x08OnDeviceB\x02\x18\x01\"g\n\rPassphraseAck\x12\
-    \x1e\n\npassphrase\x18\x01\x20\x01(\tR\npassphrase\x12\x19\n\x06_state\
-    \x18\x02\x20\x01(\x0cR\x05StateB\x02\x18\x01\x12\x1b\n\ton_device\x18\
-    \x03\x20\x01(\x08R\x08onDevice\"=\n!Deprecated_PassphraseStateRequest\
-    \x12\x14\n\x05state\x18\x01\x20\x01(\x0cR\x05state:\x02\x18\x01\"#\n\x1d\
-    Deprecated_PassphraseStateAck:\x02\x18\x01\"\xc0\x01\n\nHDNodeType\x12\
-    \x14\n\x05depth\x18\x01\x20\x02(\rR\x05depth\x12\x20\n\x0bfingerprint\
-    \x18\x02\x20\x02(\rR\x0bfingerprint\x12\x1b\n\tchild_num\x18\x03\x20\x02\
-    (\rR\x08childNum\x12\x1d\n\nchain_code\x18\x04\x20\x02(\x0cR\tchainCode\
-    \x12\x1f\n\x0bprivate_key\x18\x05\x20\x01(\x0cR\nprivateKey\x12\x1d\n\np\
-    ublic_key\x18\x06\x20\x02(\x0cR\tpublicKeyB>\n#com.satoshilabs.trezor.li\
-    b.protobufB\x13TrezorMessageCommon\x80\xa6\x1d\x01\
+    \x20\x01(\rR\x05pages\x12\x12\n\x04name\x18\x04\x20\x01(\tR\x04name\"\
+    \x99\x05\n\x11ButtonRequestType\x12\x17\n\x13ButtonRequest_Other\x10\x01\
+    \x12\"\n\x1eButtonRequest_FeeOverThreshold\x10\x02\x12\x1f\n\x1bButtonRe\
+    quest_ConfirmOutput\x10\x03\x12\x1d\n\x19ButtonRequest_ResetDevice\x10\
+    \x04\x12\x1d\n\x19ButtonRequest_ConfirmWord\x10\x05\x12\x1c\n\x18ButtonR\
+    equest_WipeDevice\x10\x06\x12\x1d\n\x19ButtonRequest_ProtectCall\x10\x07\
+    \x12\x18\n\x14ButtonRequest_SignTx\x10\x08\x12\x1f\n\x1bButtonRequest_Fi\
+    rmwareCheck\x10\t\x12\x19\n\x15ButtonRequest_Address\x10\n\x12\x1b\n\x17\
+    ButtonRequest_PublicKey\x10\x0b\x12#\n\x1fButtonRequest_MnemonicWordCoun\
+    t\x10\x0c\x12\x1f\n\x1bButtonRequest_MnemonicInput\x10\r\x120\n(_Depreca\
+    ted_ButtonRequest_PassphraseType\x10\x0e\x1a\x02\x08\x01\x12'\n#ButtonRe\
+    quest_UnknownDerivationPath\x10\x0f\x12\"\n\x1eButtonRequest_RecoveryHom\
+    epage\x10\x10\x12\x19\n\x15ButtonRequest_Success\x10\x11\x12\x19\n\x15Bu\
+    ttonRequest_Warning\x10\x12\x12!\n\x1dButtonRequest_PassphraseEntry\x10\
+    \x13\x12\x1a\n\x16ButtonRequest_PinEntry\x10\x14J\x04\x08\x03\x10\x04\"\
+    \x0b\n\tButtonAck\"\xbb\x02\n\x10PinMatrixRequest\x12T\n\x04type\x18\x01\
+    \x20\x01(\x0e2@.hw.trezor.messages.common.PinMatrixRequest.PinMatrixRequ\
+    estTypeR\x04type\"\xd0\x01\n\x14PinMatrixRequestType\x12\x20\n\x1cPinMat\
+    rixRequestType_Current\x10\x01\x12!\n\x1dPinMatrixRequestType_NewFirst\
+    \x10\x02\x12\"\n\x1ePinMatrixRequestType_NewSecond\x10\x03\x12&\n\"PinMa\
+    trixRequestType_WipeCodeFirst\x10\x04\x12'\n#PinMatrixRequestType_WipeCo\
+    deSecond\x10\x05\"\x20\n\x0cPinMatrixAck\x12\x10\n\x03pin\x18\x01\x20\
+    \x02(\tR\x03pin\"5\n\x11PassphraseRequest\x12\x20\n\n_on_device\x18\x01\
+    \x20\x01(\x08R\x08OnDeviceB\x02\x18\x01\"g\n\rPassphraseAck\x12\x1e\n\np\
+    assphrase\x18\x01\x20\x01(\tR\npassphrase\x12\x19\n\x06_state\x18\x02\
+    \x20\x01(\x0cR\x05StateB\x02\x18\x01\x12\x1b\n\ton_device\x18\x03\x20\
+    \x01(\x08R\x08onDevice\"=\n!Deprecated_PassphraseStateRequest\x12\x14\n\
+    \x05state\x18\x01\x20\x01(\x0cR\x05state:\x02\x18\x01\"#\n\x1dDeprecated\
+    _PassphraseStateAck:\x02\x18\x01\"\xc0\x01\n\nHDNodeType\x12\x14\n\x05de\
+    pth\x18\x01\x20\x02(\rR\x05depth\x12\x20\n\x0bfingerprint\x18\x02\x20\
+    \x02(\rR\x0bfingerprint\x12\x1b\n\tchild_num\x18\x03\x20\x02(\rR\x08chil\
+    dNum\x12\x1d\n\nchain_code\x18\x04\x20\x02(\x0cR\tchainCode\x12\x1f\n\
+    \x0bprivate_key\x18\x05\x20\x01(\x0cR\nprivateKey\x12\x1d\n\npublic_key\
+    \x18\x06\x20\x02(\x0cR\tpublicKeyB>\n#com.satoshilabs.trezor.lib.protobu\
+    fB\x13TrezorMessageCommon\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

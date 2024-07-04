@@ -49,8 +49,14 @@ message Failure {
  * @next ButtonAck
  */
 message ButtonRequest {
-    optional ButtonRequestType code = 1;  // enum identifier of the screen
+    optional ButtonRequestType code = 1;  // enum identifier of the screen (deprecated)
     optional uint32 pages = 2;            // if the screen is paginated, number of pages
+
+    // this existed briefly: https://github.com/trezor/trezor-firmware/commit/1012ee8497b241e8ca559e386d936fa549bc0357
+    reserved 3;
+
+    optional string name = 4;             // name of the screen
+
     /**
     * Type of button request
     */

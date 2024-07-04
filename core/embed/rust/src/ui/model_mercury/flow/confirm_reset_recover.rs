@@ -81,7 +81,7 @@ impl ConfirmResetRecover {
         .with_swipe(SwipeDirection::Up, SwipeSettings::default())
         .with_swipe(SwipeDirection::Left, SwipeSettings::default())
         .map(|msg| matches!(msg, FrameMsg::Button(_)).then_some(FlowMsg::Info))
-        .one_button_request(ButtonRequestCode::ProtectCall.with_type("recover_device"));
+        .one_button_request(ButtonRequestCode::ProtectCall.with_name("recover_device"));
 
         let content_menu = Frame::left_aligned(
             "".into(),

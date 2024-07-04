@@ -174,7 +174,7 @@ async def _prompt_number(
             max_count=max_count,
             info=info,
             br_code=ButtonRequestType.ResetDevice,
-            br_type=br_name,
+            br_name=br_name,
         )
     )
 
@@ -352,7 +352,7 @@ async def show_success_backup() -> None:
 
 
 async def show_reset_warning(
-    br_type: str,
+    br_name: str,
     content: str,
     subheader: str | None = None,
     button: str | None = None,
@@ -369,7 +369,7 @@ async def show_reset_warning(
                     allow_cancel=False,
                 )
             ),
-            br_type,
+            br_name,
             br_code,
         )
     )

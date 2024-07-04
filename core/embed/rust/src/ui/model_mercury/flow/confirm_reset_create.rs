@@ -85,7 +85,7 @@ impl ConfirmResetCreate {
             .with_swipe(SwipeDirection::Up, SwipeSettings::default())
             .with_swipe(SwipeDirection::Left, SwipeSettings::default())
             .map(|msg| matches!(msg, FrameMsg::Button(_)).then_some(FlowMsg::Info))
-            .one_button_request(ButtonRequestCode::ResetDevice.with_type("setup_device"));
+            .one_button_request(ButtonRequestCode::ResetDevice.with_name("setup_device"));
 
         // FIXME: TR::reset__cancel_create_wallet should be used but Button text on
         // multiple lines not supported yet
@@ -112,7 +112,7 @@ impl ConfirmResetCreate {
             FrameMsg::Content(()) => Some(FlowMsg::Confirmed),
             FrameMsg::Button(_) => Some(FlowMsg::Info),
         })
-        .one_button_request(ButtonRequestCode::ResetDevice.with_type("confirm_setup_device"));
+        .one_button_request(ButtonRequestCode::ResetDevice.with_name("confirm_setup_device"));
 
         let res = SwipeFlow::new(&ConfirmResetCreate::Intro)?
             .with_page(&ConfirmResetCreate::Intro, content_intro)?

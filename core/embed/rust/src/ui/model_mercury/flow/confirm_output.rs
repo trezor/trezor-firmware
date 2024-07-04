@@ -82,7 +82,7 @@ impl ConfirmOutput {
         let account: Option<TString> = kwargs.get(Qstr::MP_QSTR_account)?.try_into_option()?;
         let account_path: Option<TString> =
             kwargs.get(Qstr::MP_QSTR_account_path)?.try_into_option()?;
-        let br_type: TString = kwargs.get(Qstr::MP_QSTR_br_type)?.try_into()?;
+        let br_name: TString = kwargs.get(Qstr::MP_QSTR_br_name)?.try_into()?;
         let br_code: u16 = kwargs.get(Qstr::MP_QSTR_br_code)?.try_into()?;
 
         let address: Obj = kwargs.get(Qstr::MP_QSTR_address)?;
@@ -99,7 +99,7 @@ impl ConfirmOutput {
             .with_chunkify(chunkify)
             .with_text_mono(text_mono)
             .into_layout()?
-            .one_button_request(ButtonRequest::from_num(br_code, br_type));
+            .one_button_request(ButtonRequest::from_num(br_code, br_name));
 
         // Amount
         let content_amount = ConfirmBlobParams::new(TR::words__amount.into(), amount, None)
@@ -109,7 +109,7 @@ impl ConfirmOutput {
             .with_text_mono(text_mono)
             .with_swipe_down()
             .into_layout()?
-            .one_button_request(ButtonRequest::from_num(br_code, br_type));
+            .one_button_request(ButtonRequest::from_num(br_code, br_name));
 
         // Menu
         let content_menu = Frame::left_aligned(

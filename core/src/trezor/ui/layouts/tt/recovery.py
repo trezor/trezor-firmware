@@ -147,7 +147,7 @@ async def continue_recovery(
 
 
 async def show_recovery_warning(
-    br_type: str,
+    br_name: str,
     content: str,
     subheader: str | None = None,
     button: str | None = None,
@@ -164,7 +164,7 @@ async def show_recovery_warning(
                     allow_cancel=False,
                 )
             ),
-            br_type,
+            br_name,
             br_code,
         )
     )
