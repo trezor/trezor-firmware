@@ -17,7 +17,7 @@ use super::bumps;
 
 use static_alloc::Bump;
 
-type ConcreteRenderer<'a, 'alloc> =
+pub type ConcreteRenderer<'a, 'alloc> =
     ProgressiveRenderer<'a, 'alloc, Bump<[u8; bumps::BUMP_A_SIZE]>, DisplayCanvas>;
 
 /// Creates the `Renderer` object for drawing on a display and invokes a

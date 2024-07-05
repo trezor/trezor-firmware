@@ -10,7 +10,7 @@ use super::bumps;
 
 use crate::trezorhal::display;
 
-type ConcreteRenderer<'a, 'alloc> = DirectRenderer<'a, 'alloc, Rgba8888Canvas<'alloc>>;
+pub type ConcreteRenderer<'a, 'alloc> = DirectRenderer<'a, 'alloc, Rgba8888Canvas<'alloc>>;
 
 /// Creates the `Renderer` object for drawing on a display and invokes a
 /// user-defined function that takes a single argument `target`. The user's
