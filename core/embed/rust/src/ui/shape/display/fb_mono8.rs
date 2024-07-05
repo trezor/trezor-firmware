@@ -10,7 +10,7 @@ use crate::trezorhal::display;
 
 use static_alloc::Bump;
 
-type ConcreteRenderer<'a, 'alloc> = DirectRenderer<'a, 'alloc, Mono8Canvas<'alloc>>;
+pub type ConcreteRenderer<'a, 'alloc> = DirectRenderer<'a, 'alloc, Mono8Canvas<'alloc>>;
 
 /// Creates the `Renderer` object for drawing on a display and invokes a
 /// user-defined function that takes a single argument `target`. The user's
