@@ -79,6 +79,7 @@ trezor_message_impl! {
     DebugLinkEraseSdCard => MessageType_DebugLinkEraseSdCard,
     DebugLinkWatchLayout => MessageType_DebugLinkWatchLayout,
     DebugLinkResetDebugEvents => MessageType_DebugLinkResetDebugEvents,
+    DebugLinkOptigaSetSecMax => MessageType_DebugLinkOptigaSetSecMax,
 }
 
 #[cfg(feature = "binance")]

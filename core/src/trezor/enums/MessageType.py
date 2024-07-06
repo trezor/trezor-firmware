@@ -94,6 +94,7 @@ DebugLinkRecordScreen = 9003
 DebugLinkEraseSdCard = 9005
 DebugLinkWatchLayout = 9006
 DebugLinkResetDebugEvents = 9007
+DebugLinkOptigaSetSecMax = 9008
 if not utils.BITCOIN_ONLY:
     SetU2FCounter = 63
     GetNextU2FCounter = 80
