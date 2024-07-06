@@ -237,6 +237,7 @@ def test_set_similar(nc_class):
 def test_set_locked(nc_class):
     sc, sp = common.init(nc_class)
     for s in (sc, sp):
+        s.lock()
         with pytest.raises(RuntimeError):
             s.set(0x0303, b"test")
         with pytest.raises(RuntimeError):
