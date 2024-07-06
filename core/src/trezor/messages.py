@@ -3001,6 +3001,12 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["DebugLinkResetDebugEvents"]:
             return isinstance(msg, cls)
 
+    class DebugLinkOptigaSetSecMax(protobuf.MessageType):
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["DebugLinkOptigaSetSecMax"]:
+            return isinstance(msg, cls)
+
     class EosGetPublicKey(protobuf.MessageType):
         address_n: "list[int]"
         show_display: "bool | None"

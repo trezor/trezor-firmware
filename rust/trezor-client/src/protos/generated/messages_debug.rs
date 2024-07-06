@@ -3454,6 +3454,109 @@ impl ::protobuf::reflect::ProtobufValue for DebugLinkResetDebugEvents {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
+// @@protoc_insertion_point(message:hw.trezor.messages.debug.DebugLinkOptigaSetSecMax)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct DebugLinkOptigaSetSecMax {
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.debug.DebugLinkOptigaSetSecMax.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a DebugLinkOptigaSetSecMax {
+    fn default() -> &'a DebugLinkOptigaSetSecMax {
+        <DebugLinkOptigaSetSecMax as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl DebugLinkOptigaSetSecMax {
+    pub fn new() -> DebugLinkOptigaSetSecMax {
+        ::std::default::Default::default()
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(0);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<DebugLinkOptigaSetSecMax>(
+            "DebugLinkOptigaSetSecMax",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for DebugLinkOptigaSetSecMax {
+    const NAME: &'static str = "DebugLinkOptigaSetSecMax";
+
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> DebugLinkOptigaSetSecMax {
+        DebugLinkOptigaSetSecMax::new()
+    }
+
+    fn clear(&mut self) {
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static DebugLinkOptigaSetSecMax {
+        static instance: DebugLinkOptigaSetSecMax = DebugLinkOptigaSetSecMax {
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for DebugLinkOptigaSetSecMax {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("DebugLinkOptigaSetSecMax").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for DebugLinkOptigaSetSecMax {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for DebugLinkOptigaSetSecMax {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
 static file_descriptor_proto_data: &'static [u8] = b"\
     \n\x14messages-debug.proto\x12\x18hw.trezor.messages.debug\x1a\x0emessag\
     es.proto\x1a\x15messages-common.proto\x1a\x19messages-management.proto\"\
@@ -3501,8 +3604,9 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     hErase\x12\x16\n\x06sector\x18\x01\x20\x01(\rR\x06sector\".\n\x14DebugLi\
     nkEraseSdCard\x12\x16\n\x06format\x18\x01\x20\x01(\x08R\x06format\",\n\
     \x14DebugLinkWatchLayout\x12\x14\n\x05watch\x18\x01\x20\x01(\x08R\x05wat\
-    ch\"\x1b\n\x19DebugLinkResetDebugEventsB=\n#com.satoshilabs.trezor.lib.p\
-    rotobufB\x12TrezorMessageDebug\x80\xa6\x1d\x01\
+    ch\"\x1b\n\x19DebugLinkResetDebugEvents\"\x1a\n\x18DebugLinkOptigaSetSec\
+    MaxB=\n#com.satoshilabs.trezor.lib.protobufB\x12TrezorMessageDebug\x80\
+    \xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -3523,7 +3627,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             deps.push(super::messages::file_descriptor().clone());
             deps.push(super::messages_common::file_descriptor().clone());
             deps.push(super::messages_management::file_descriptor().clone());
-            let mut messages = ::std::vec::Vec::with_capacity(15);
+            let mut messages = ::std::vec::Vec::with_capacity(16);
             messages.push(DebugLinkDecision::generated_message_descriptor_data());
             messages.push(DebugLinkLayout::generated_message_descriptor_data());
             messages.push(DebugLinkReseedRandom::generated_message_descriptor_data());
@@ -3539,6 +3643,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             messages.push(DebugLinkEraseSdCard::generated_message_descriptor_data());
             messages.push(DebugLinkWatchLayout::generated_message_descriptor_data());
             messages.push(DebugLinkResetDebugEvents::generated_message_descriptor_data());
+            messages.push(DebugLinkOptigaSetSecMax::generated_message_descriptor_data());
             let mut enums = ::std::vec::Vec::with_capacity(3);
             enums.push(debug_link_decision::DebugSwipeDirection::generated_enum_descriptor_data());
             enums.push(debug_link_decision::DebugButton::generated_enum_descriptor_data());
