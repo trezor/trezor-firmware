@@ -779,7 +779,11 @@ static void init_wiped_storage(void) {
          "set_wipe_code failed");
 
   ui_progress_init(STORAGE_PIN_OP_SET);
-  ui_message = PROCESSING_MSG;
+  if (ui_message == NO_MSG) {
+    ui_message = STARTING_MSG;
+  } else {
+    ui_message = PROCESSING_MSG;
+  }
   ensure(set_pin(PIN_EMPTY, PIN_EMPTY_LEN, NULL), "init_pin failed");
   ui_progress_finish();
 }
