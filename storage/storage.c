@@ -792,6 +792,7 @@ void storage_init(PIN_UI_WAIT_CALLBACK callback, const uint8_t *salt,
                   const uint16_t salt_len) {
   initialized = secfalse;
   unlocked = secfalse;
+  memzero(cached_keys, sizeof(cached_keys));
   norcow_init(&norcow_active_version);
   initialized = sectrue;
   ui_callback = callback;
@@ -810,9 +811,7 @@ void storage_init(PIN_UI_WAIT_CALLBACK callback, const uint8_t *salt,
   uint16_t len = 0;
   if (secfalse == norcow_get(EDEK_PVC_KEY, &val, &len)) {
     init_wiped_storage();
-    storage_lock();
   }
-  memzero(cached_keys, sizeof(cached_keys));
 }
 
 secbool storage_pin_fails_increase(void) {
