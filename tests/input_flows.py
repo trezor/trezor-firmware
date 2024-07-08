@@ -2293,3 +2293,30 @@ class InputFlowConfirmAllWarnings(InputFlowBase):
             else:
                 self.debug.press_yes()
             br = yield
+
+
+class InputFlowTutorial(InputFlowBase):
+    def __init__(self, client: Client, cancel: bool = False):
+        super().__init__(client)
+        self.cancel = cancel
+
+    def input_flow_t3t1(self) -> BRGeneratorType:
+        yield
+        self.debug.click(buttons.TAP_TO_CONFIRM, wait=True)
+        self.debug.swipe_up(wait=True)
+        self.debug.swipe_up(wait=True)
+        if self.cancel:
+            self.debug.click(buttons.CORNER_BUTTON, wait=True)
+            self.debug.click(buttons.VERTICAL_MENU[0], wait=True)
+            self.debug.click(buttons.CORNER_BUTTON, wait=True)
+            self.debug.click(buttons.VERTICAL_MENU[1], wait=True)
+            self.debug.swipe_up(wait=True)
+            self.debug.swipe_up(wait=True)
+            self.debug.click(buttons.CORNER_BUTTON, wait=True)
+            self.debug.click(buttons.VERTICAL_MENU[2], wait=True)
+            self.debug.click(buttons.TAP_TO_CONFIRM, wait=True)
+            self.debug.swipe_up(wait=True)
+        else:
+            self.debug.swipe_up(wait=True)
+            self.debug.click(buttons.TAP_TO_CONFIRM, wait=True)
+            self.debug.swipe_up(wait=True)
