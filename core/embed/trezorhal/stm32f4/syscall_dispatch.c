@@ -336,13 +336,13 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       args[0] = haptic_get_enabled();
     } break;
     case SYSCALL_HAPTIC_TEST: {
-      args[0] = haptic_test(args[0]);
+      args[0] = ts_to_u32(haptic_test(args[0]));
     } break;
     case SYSCALL_HAPTIC_PLAY: {
-      args[0] = haptic_play(args[0]);
+      args[0] = ts_to_u32(haptic_play(args[0]));
     } break;
     case SYSCALL_HAPTIC_PLAY_CUSTOM: {
-      args[0] = haptic_play_custom(args[0], args[1]);
+      args[0] = ts_to_u32(haptic_play_custom(args[0], args[1]));
     } break;
 #endif
 

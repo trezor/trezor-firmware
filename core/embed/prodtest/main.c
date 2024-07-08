@@ -653,7 +653,7 @@ static void test_haptic(const char *args) {
     return;
   }
 
-  if (haptic_test(duration_ms)) {
+  if (ts_ok(haptic_test(duration_ms))) {
     vcp_println("OK");
 
   } else {

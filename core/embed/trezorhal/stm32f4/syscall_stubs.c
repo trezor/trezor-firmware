@@ -421,25 +421,26 @@ uint32_t touch_get_event(void) {
 
 #include "haptic.h"
 
-void haptic_set_enabled(bool enabled) {
-  syscall_invoke1((uint32_t)enabled, SYSCALL_HAPTIC_SET_ENABLED);
+ts_t haptic_set_enabled(bool enabled) {
+  return ts_from_u32(
+      syscall_invoke1((uint32_t)enabled, SYSCALL_HAPTIC_SET_ENABLED));
 }
 
 bool haptic_get_enabled(void) {
   return (bool)syscall_invoke0(SYSCALL_HAPTIC_GET_ENABLED);
 }
 
-bool haptic_test(uint16_t duration_ms) {
-  return (bool)syscall_invoke1(duration_ms, SYSCALL_HAPTIC_TEST);
+ts_t haptic_test(uint16_t duration_ms) {
+  return ts_from_u32(syscall_invoke1(duration_ms, SYSCALL_HAPTIC_TEST));
 }
 
-bool haptic_play(haptic_effect_t effect) {
-  return (bool)syscall_invoke1((uint32_t)effect, SYSCALL_HAPTIC_PLAY);
+ts_t haptic_play(haptic_effect_t effect) {
+  return ts_from_u32(syscall_invoke1((uint32_t)effect, SYSCALL_HAPTIC_PLAY));
 }
 
-bool haptic_play_custom(int8_t amplitude_pct, uint16_t duration_ms) {
-  return (bool)syscall_invoke2((uint32_t)amplitude_pct, duration_ms,
-                               SYSCALL_HAPTIC_PLAY_CUSTOM);
+ts_t haptic_play_custom(int8_t amplitude_pct, uint16_t duration_ms) {
+  return ts_from_u32(syscall_invoke2((uint32_t)amplitude_pct, duration_ms,
+                                     SYSCALL_HAPTIC_PLAY_CUSTOM));
 }
 
 // =============================================================================
