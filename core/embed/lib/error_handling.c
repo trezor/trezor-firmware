@@ -31,6 +31,26 @@ void __attribute__((noreturn, used)) __stack_chk_fail(void) {
   error_shutdown("(SS)");
 }
 
+const char *ts_string(ts_t status) {
+  if (ts_eq(status, TS_OK)) {
+    return "OK";
+  } else if (ts_eq(status, TS_ERROR)) {
+    return "ERROR";
+  } else if (ts_eq(status, TS_ERROR_BUSY)) {
+    return "ERROR_BUSY";
+  } else if (ts_eq(status, TS_ERROR_TIMEOUT)) {
+    return "ERROR_TIMEOUT";
+  } else if (ts_eq(status, TS_ERROR_NOTINIT)) {
+    return "ERROR_NOTINIT";
+  } else if (ts_eq(status, TS_ERROR_ARG)) {
+    return "ERROR_ARG";
+  } else if (ts_eq(status, TS_ERROR_IO)) {
+    return "ERROR_IO";
+  } else {
+    return "UNKNOWN";
+  }
+}
+
 void __attribute__((noreturn))
 error_shutdown_ex(const char *title, const char *message, const char *footer) {
   system_exit_error(title, message, footer);
