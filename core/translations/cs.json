@@ -647,7 +647,7 @@
     "reset__check_wallet_backup_title": "Zkontrolovat seed",
     "reset__continue_with_next_share": "Pokračujte další částí.",
     "reset__continue_with_share_template": "Pokračujte částí #{0}.",
-    "reset__create_x_of_y_multi_share_backup_template": "Chcete vytvořit vícedílnou zálohu s {0} díly z celkových {1}?",
+    "reset__create_x_of_y_multi_share_backup_template": "Chcete vytvořit vícedílnou zálohu s {0} díly z celkových {1}?",
     "reset__finished_verifying_group_template": "Ověřili jste části zálohy skupiny {0}.",
     "reset__finished_verifying_shares": "Dokončili jste ověření částí zálohy.",
     "reset__finished_verifying_wallet_backup": "Dokončili jste ověření zálohy.",
