@@ -1362,3 +1362,8 @@ def record_screen(
 def _is_emulator(debug_client: "TrezorClientDebugLink") -> bool:
     """Check if we are connected to emulator, in contrast to hardware device."""
     return debug_client.features.fw_vendor == "EMULATOR"
+
+
+@expect(messages.Success, field="message", ret_type=str)
+def optiga_set_sec_max(client: "TrezorClient") -> protobuf.MessageType:
+    return client.call(messages.DebugLinkOptigaSetSecMax())
