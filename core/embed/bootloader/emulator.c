@@ -62,20 +62,20 @@ bool load_firmware(const char *filename, uint8_t *hash) {
   size_t read = fread(buffer, 1, sizeof(buffer), file);
   fclose(file);
   if (read != sizeof(buffer)) {
-    printf("File '%s' does not contain a valid firmware image.\n");
+    printf("File '%s' does not contain a valid firmware image.\n", filename);
     return false;
   }
 
   // read vendor and image header
   vendor_header vhdr;
   if (sectrue != read_vendor_header(buffer, &vhdr)) {
-    printf("File '%s' does not contain a valid vendor header.\n");
+    printf("File '%s' does not contain a valid vendor header.\n", filename);
     return false;
   }
   const image_header *hdr = read_image_header(
       buffer + vhdr.hdrlen, FIRMWARE_IMAGE_MAGIC, FIRMWARE_IMAGE_MAXSIZE);
   if (hdr != (const image_header *)(buffer + vhdr.hdrlen)) {
-    printf("File '%s' does not contain a valid firmware image.\n");
+    printf("File '%s' does not contain a valid firmware image.\n", filename);
     return false;
   }
 
