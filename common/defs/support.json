@@ -204,12 +204,7 @@
       "misc:XRP": "2.6.1",
       "misc:XTZ": "2.6.1",
       "misc:tADA": "2.6.1",
-      "misc:tXRP": "2.6.1",
-      "nem:BREEZE": "2.6.1",
-      "nem:DIM": "2.6.1",
-      "nem:DIMTOK": "2.6.1",
-      "nem:PAC:CHS": "2.6.1",
-      "nem:PAC:HRT": "2.6.1"
+      "misc:tXRP": "2.6.1"
     },
     "unsupported": {
       "bitcoin:BTG": "not for T2B1 (#2793)",
@@ -226,7 +221,12 @@
       "bitcoin:tPART": "incompatible fork",
       "misc:EOS": "not for T2B1 (#2793)",
       "misc:LSK": "Incompatible mainnet hard-fork",
-      "nem:XEM": "not for T2B1 (#2793)"
+      "nem:XEM": "not for T2B1 (#2793)",
+      "nem:BREEZE": "not for T2B1 (#2793)",
+      "nem:DIM": "not for T2B1 (#2793)",
+      "nem:DIMTOK": "not for T2B1 (#2793)",
+      "nem:PAC:CHS": "not for T2B1 (#2793)",
+      "nem:PAC:HRT": "not for T2B1 (#2793)"
     }
   },
   "T2T1": {
@@ -434,12 +434,7 @@
       "misc:XRP": "2.6.1",
       "misc:XTZ": "2.6.1",
       "misc:tADA": "2.6.1",
-      "misc:tXRP": "2.6.1",
-      "nem:BREEZE": "2.6.1",
-      "nem:DIM": "2.6.1",
-      "nem:DIMTOK": "2.6.1",
-      "nem:PAC:CHS": "2.6.1",
-      "nem:PAC:HRT": "2.6.1"
+      "misc:tXRP": "2.6.1"
     },
     "unsupported": {
       "bitcoin:BTG": "not for T3T1 (#2793)",
@@ -456,7 +451,12 @@
       "bitcoin:tPART": "incompatible fork",
       "misc:EOS": "not for T3T1 (#2793)",
       "misc:LSK": "Incompatible mainnet hard-fork",
-      "nem:XEM": "not for T3T1 (#2793)"
+      "nem:XEM": "not for T3T1 (#2793)",
+      "nem:BREEZE": "not for T3T1 (#2793)",
+      "nem:DIM": "not for T3T1 (#2793)",
+      "nem:DIMTOK": "not for T3T1 (#2793)",
+      "nem:PAC:CHS": "not for T3T1 (#2793)",
+      "nem:PAC:HRT": "not for T3T1 (#2793)"
     }
   },
   "connect": {
