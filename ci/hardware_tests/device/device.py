@@ -42,7 +42,7 @@ class Device:
         else:
             return f"-l {self.uhub_location}"
 
-     def power_on(self):
+    def power_on(self):
         self.now()
         self.log("[hardware/usb] Turning power on...")
         run(
