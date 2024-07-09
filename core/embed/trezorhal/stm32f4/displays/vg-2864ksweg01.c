@@ -255,8 +255,8 @@ static inline uint8_t reverse_byte(uint8_t b) {
 static void rotate_oled_buffer(void) {
   for (int i = 0; i < OLED_BUFSIZE / 2; i++) {
     uint8_t b = OLED_BUFFER[i];
-    OLED_BUFFER[i] = reverse_byte(OLED_BUFFER[OLED_BUFSIZE - i]);
-    OLED_BUFFER[OLED_BUFSIZE - i] = reverse_byte(b);
+    OLED_BUFFER[i] = reverse_byte(OLED_BUFFER[OLED_BUFSIZE - i - 1]);
+    OLED_BUFFER[OLED_BUFSIZE - i - 1] = reverse_byte(b);
   }
 }
 
