@@ -83,14 +83,6 @@ impl Component for NumberInputSliderDialog {
         self.cancel_button.render(target);
         self.confirm_button.render(target);
     }
-
-    #[cfg(feature = "ui_bounds")]
-    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
-        sink(self.area);
-        self.input.bounds(sink);
-        self.cancel_button.bounds(sink);
-        self.confirm_button.bounds(sink);
-    }
 }
 
 #[cfg(feature = "ui_debug")]
@@ -188,11 +180,6 @@ impl Component for NumberInputSlider {
             .with_radius(1)
             .with_bg(theme::FG)
             .render(target);
-    }
-
-    #[cfg(feature = "ui_bounds")]
-    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
-        sink(self.area)
     }
 }
 

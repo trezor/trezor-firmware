@@ -55,14 +55,6 @@ impl Component for Image {
             .with_align(Alignment2D::CENTER)
             .render(target);
     }
-
-    #[cfg(feature = "ui_bounds")]
-    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
-        sink(Rect::from_center_and_size(
-            self.area.center(),
-            self.toif.size(),
-        ));
-    }
 }
 
 #[cfg(feature = "ui_debug")]
@@ -145,14 +137,6 @@ impl Component for BlendedImage {
         shape::ToifImage::new(self.bg_top_left + self.fg_offset, self.fg.toif)
             .with_fg(self.fg_color)
             .render(target);
-    }
-
-    #[cfg(feature = "ui_bounds")]
-    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
-        sink(Rect::from_top_left_and_size(
-            self.bg_top_left,
-            self.bg.toif.size(),
-        ));
     }
 }
 

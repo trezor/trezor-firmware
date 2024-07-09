@@ -116,11 +116,4 @@ impl Component for Menu {
         self.reboot.render(target);
         self.reset.render(target);
     }
-
-    #[cfg(feature = "ui_bounds")]
-    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
-        self.close.bounds(sink);
-        self.reboot.bounds(sink);
-        self.reset.bounds(sink);
-    }
 }

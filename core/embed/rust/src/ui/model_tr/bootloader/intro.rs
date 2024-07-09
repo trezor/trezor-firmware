@@ -126,12 +126,4 @@ impl<'a> Component for Intro<'a> {
         self.text.render(target);
         self.buttons.render(target);
     }
-
-    #[cfg(feature = "ui_bounds")]
-    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
-        self.title.bounds(sink);
-        self.warn.bounds(sink);
-        self.text.bounds(sink);
-        self.buttons.bounds(sink);
-    }
 }

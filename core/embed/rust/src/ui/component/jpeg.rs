@@ -54,11 +54,6 @@ impl Component for Jpeg {
             .with_scale(self.scale)
             .render(target);
     }
-
-    #[cfg(feature = "ui_bounds")]
-    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
-        sink(self.area)
-    }
 }
 
 #[cfg(feature = "ui_debug")]

@@ -76,12 +76,6 @@ where
         self.content.render(target);
         self.controls.render(target);
     }
-
-    #[cfg(feature = "ui_bounds")]
-    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
-        self.content.bounds(sink);
-        self.controls.bounds(sink);
-    }
 }
 
 #[cfg(feature = "ui_debug")]
@@ -206,13 +200,6 @@ where
         self.image.render(target);
         self.paragraphs.render(target);
         self.controls.render(target);
-    }
-
-    #[cfg(feature = "ui_bounds")]
-    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
-        self.image.bounds(sink);
-        self.paragraphs.bounds(sink);
-        self.controls.bounds(sink);
     }
 }
 

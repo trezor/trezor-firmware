@@ -272,12 +272,6 @@ impl Component for Confirm<'_> {
             }
         }
     }
-
-    #[cfg(feature = "ui_bounds")]
-    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
-        self.left_button.bounds(sink);
-        self.right_button.bounds(sink);
-    }
 }
 
 #[cfg(feature = "ui_debug")]

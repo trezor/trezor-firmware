@@ -148,13 +148,6 @@ impl Component for Progress {
         self.description_pad.render(target);
         self.description.render(target);
     }
-
-    #[cfg(feature = "ui_bounds")]
-    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
-        sink(Self::AREA);
-        self.title.bounds(sink);
-        self.description.bounds(sink);
-    }
 }
 
 #[cfg(feature = "ui_debug")]

@@ -445,17 +445,6 @@ where
             display::fade_backlight(val);
         }
     }
-
-    #[cfg(feature = "ui_bounds")]
-    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
-        sink(self.pad.area);
-        self.scrollbar.bounds(sink);
-        self.content.bounds(sink);
-        self.button_cancel.bounds(sink);
-        self.button_confirm.bounds(sink);
-        self.button_prev.bounds(sink);
-        self.button_next.bounds(sink);
-    }
 }
 
 #[cfg(feature = "ui_debug")]

@@ -188,9 +188,4 @@ impl Component for Menu {
         self.pad.render(target);
         self.choice_page.render(target);
     }
-
-    #[cfg(feature = "ui_bounds")]
-    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
-        self.choice_page.bounds(sink)
-    }
 }

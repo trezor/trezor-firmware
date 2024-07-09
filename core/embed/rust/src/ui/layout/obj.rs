@@ -110,11 +110,6 @@ where
             });
         }
     }
-
-    #[cfg(feature = "ui_bounds")]
-    fn obj_bounds(&self, sink: &mut dyn FnMut(Rect)) {
-        self.bounds(sink)
-    }
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -300,21 +295,6 @@ impl LayoutObjInner {
     fn obj_get_transition_out(&self) -> Obj {
         self.transition_out.to_obj()
     }
-
-    #[cfg(feature = "ui_debug")]
-    fn obj_bounds(&self) {
-        // Sink for `Trace::bounds` that draws the boundaries using pseudorandom color.
-        fn wireframe(r: Rect) {
-            let w = r.width() as u16;
-            let h = r.height() as u16;
-            let color = display::Color::from_u16(w.rotate_right(w.into()).wrapping_add(h * 8));
-            display::rect_stroke(r, color)
-        }
-
-        // use crate::ui::model_tt::theme;
-        // wireframe(theme::borders());
-        self.root().obj_bounds(&mut wireframe);
-    }
 }
 
 impl LayoutObj {
@@ -346,7 +326,6 @@ impl LayoutObj {
                 Qstr::MP_QSTR_paint => obj_fn_1!(ui_layout_paint).as_obj(),
                 Qstr::MP_QSTR_request_complete_repaint => obj_fn_1!(ui_layout_request_complete_repaint).as_obj(),
                 Qstr::MP_QSTR_trace => obj_fn_2!(ui_layout_trace).as_obj(),
-                Qstr::MP_QSTR_bounds => obj_fn_1!(ui_layout_bounds).as_obj(),
                 Qstr::MP_QSTR___del__ => obj_fn_1!(ui_layout_delete).as_obj(),
                 Qstr::MP_QSTR_page_count => obj_fn_1!(ui_layout_page_count).as_obj(),
                 Qstr::MP_QSTR_button_request => obj_fn_1!(ui_layout_button_request).as_obj(),
@@ -579,21 +558,6 @@ extern "C" fn ui_layout_trace(this: Obj, callback: Obj) -> Obj {
 
 #[cfg(not(feature = "ui_debug"))]
 extern "C" fn ui_layout_trace(_this: Obj, _callback: Obj) -> Obj {
-    Obj::const_none()
-}
-
-#[cfg(feature = "ui_bounds")]
-extern "C" fn ui_layout_bounds(this: Obj) -> Obj {
-    let block = || {
-        let this: Gc<LayoutObj> = this.try_into()?;
-        this.inner_mut().obj_bounds();
-        Ok(Obj::const_none())
-    };
-    unsafe { util::try_or_raise(block) }
-}
-
-#[cfg(not(feature = "ui_bounds"))]
-extern "C" fn ui_layout_bounds(_this: Obj) -> Obj {
     Obj::const_none()
 }
 

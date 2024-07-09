@@ -101,12 +101,6 @@ where
             self.inner.render(target);
         }
     }
-
-    #[cfg(feature = "ui_bounds")]
-    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
-        sink(self.pad.area);
-        self.inner.bounds(sink);
-    }
 }
 
 pub trait PaintOverlapping {

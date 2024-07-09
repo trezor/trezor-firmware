@@ -337,12 +337,6 @@ impl Component for Homescreen {
             }
         }
     }
-
-    #[cfg(feature = "ui_bounds")]
-    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
-        self.loader.bounds(sink);
-        sink(self.pad.area);
-    }
 }
 
 #[cfg(feature = "ui_debug")]

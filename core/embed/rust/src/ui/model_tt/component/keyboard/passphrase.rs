@@ -314,17 +314,6 @@ impl Component for PassphraseKeyboard {
             display::fade_backlight(theme::backlight::get_backlight_normal());
         }
     }
-
-    #[cfg(feature = "ui_bounds")]
-    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
-        self.input.bounds(sink);
-        self.scrollbar.bounds(sink);
-        self.confirm.bounds(sink);
-        self.back.bounds(sink);
-        for btn in &self.keys {
-            btn.bounds(sink)
-        }
-    }
 }
 
 struct Input {
@@ -427,11 +416,6 @@ impl Component for Input {
                 style.text_color,
             );
         }
-    }
-
-    #[cfg(feature = "ui_bounds")]
-    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
-        sink(self.area)
     }
 }
 

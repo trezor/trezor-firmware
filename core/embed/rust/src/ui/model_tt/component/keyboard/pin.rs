@@ -286,19 +286,6 @@ impl Component for PinKeyboard<'_> {
             btn.render(target);
         }
     }
-
-    #[cfg(feature = "ui_bounds")]
-    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
-        self.major_prompt.bounds(sink);
-        self.minor_prompt.bounds(sink);
-        self.erase_btn.bounds(sink);
-        self.cancel_btn.bounds(sink);
-        self.confirm_btn.bounds(sink);
-        self.textbox.bounds(sink);
-        for b in &self.digit_btns {
-            b.bounds(sink)
-        }
-    }
 }
 
 struct PinDots {
@@ -541,12 +528,6 @@ impl Component for PinDots {
         } else {
             self.render_dots(dot_area, target)
         }
-    }
-
-    #[cfg(feature = "ui_bounds")]
-    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
-        sink(self.area);
-        sink(self.area.inset(HEADER_PADDING));
     }
 }
 

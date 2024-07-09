@@ -190,11 +190,6 @@ impl Component for Slip39Input {
             );
         }
     }
-
-    #[cfg(feature = "ui_bounds")]
-    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
-        self.button.bounds(sink);
-    }
 }
 
 impl Slip39Input {

@@ -106,13 +106,6 @@ where
         self.paragraphs_pad.render(target);
         self.paragraphs.render(target);
     }
-
-    #[cfg(feature = "ui_bounds")]
-    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
-        sink(self.area);
-        self.input.bounds(sink);
-        self.paragraphs.bounds(sink);
-    }
 }
 
 #[cfg(feature = "ui_debug")]
@@ -213,13 +206,6 @@ impl Component for NumberInput {
 
         self.dec.render(target);
         self.inc.render(target);
-    }
-
-    #[cfg(feature = "ui_bounds")]
-    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
-        self.dec.bounds(sink);
-        self.inc.bounds(sink);
-        sink(self.area)
     }
 }
 

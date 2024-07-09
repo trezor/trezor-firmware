@@ -72,13 +72,6 @@ impl Component for SelectWordCount {
             btn.render(target)
         }
     }
-
-    #[cfg(feature = "ui_bounds")]
-    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
-        for btn in self.button.iter() {
-            btn.bounds(sink)
-        }
-    }
 }
 
 #[cfg(feature = "ui_debug")]

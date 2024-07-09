@@ -37,11 +37,6 @@ where
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.inner.render(target);
     }
-
-    #[cfg(feature = "ui_bounds")]
-    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
-        self.inner.bounds(sink);
-    }
 }
 
 #[cfg(all(feature = "micropython", feature = "touch", feature = "new_rendering"))]
@@ -101,11 +96,6 @@ where
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.inner.render(target);
-    }
-
-    #[cfg(feature = "ui_bounds")]
-    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
-        self.inner.bounds(sink);
     }
 }
 

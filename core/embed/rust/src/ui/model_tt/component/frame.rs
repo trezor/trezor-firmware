@@ -182,14 +182,6 @@ where
         self.button.render(target);
         self.content.render(target);
     }
-
-    #[cfg(feature = "ui_bounds")]
-    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
-        self.title.bounds(sink);
-        self.subtitle.bounds(sink);
-        self.button.bounds(sink);
-        self.content.bounds(sink);
-    }
 }
 
 #[cfg(feature = "ui_debug")]
