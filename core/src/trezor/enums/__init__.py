@@ -117,6 +117,7 @@ if TYPE_CHECKING:
         DebugLinkEraseSdCard = 9005
         DebugLinkWatchLayout = 9006
         DebugLinkResetDebugEvents = 9007
+        DebugLinkOptigaSetSecMax = 9008
         EthereumGetPublicKey = 450
         EthereumPublicKey = 451
         EthereumGetAddress = 56

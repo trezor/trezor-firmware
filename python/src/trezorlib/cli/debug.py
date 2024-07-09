@@ -21,6 +21,7 @@ import click
 from .. import mapping, messages, protobuf
 from ..client import TrezorClient
 from ..debuglink import TrezorClientDebugLink
+from ..debuglink import optiga_set_sec_max as debuglink_optiga_set_sec_max
 from ..debuglink import prodtest_t1 as debuglink_prodtest_t1
 from ..debuglink import record_screen
 from . import with_client
@@ -112,3 +113,10 @@ def prodtest_t1(client: "TrezorClient") -> str:
     Only available on PRODTEST firmware and on T1B1. Formerly named self-test.
     """
     return debuglink_prodtest_t1(client)
+
+
+@cli.command()
+@with_client
+def optiga_set_sec_max(client: "TrezorClient") -> str:
+    """Set Optiga's security event counter to maximum."""
+    return debuglink_optiga_set_sec_max(client)

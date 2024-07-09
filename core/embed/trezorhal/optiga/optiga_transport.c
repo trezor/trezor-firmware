@@ -114,6 +114,7 @@ static uint8_t frame_num_out = 0xff;
 static uint8_t frame_num_in = 0xff;
 static uint8_t frame_buffer[1 + OPTIGA_DATA_REG_LEN];
 static size_t frame_size = 0;  // Set by optiga_read().
+static optiga_ui_progress_t ui_progress = NULL;
 
 // Secure channel constants.
 #define SEC_CHAN_SCTR_SIZE 1
@@ -168,6 +169,8 @@ void optiga_transport_set_log_hex(optiga_log_hex_t f) { log_hex = f; }
     }                                                                        \
   }
 #endif
+
+void optiga_set_ui_progress(optiga_ui_progress_t f) { ui_progress = f; }
 
 static uint16_t calc_crc_byte(uint16_t seed, uint8_t c) {
   uint16_t h1 = (seed ^ c) & 0xFF;
@@ -429,6 +432,10 @@ static optiga_result optiga_read(void) {
         return OPTIGA_ERR_UNEXPECTED;
       }
       not_busy_count += 1;
+    }
+
+    if (ui_progress != NULL) {
+      ui_progress();
     }
   } while (hal_ticks_ms() < deadline);
 

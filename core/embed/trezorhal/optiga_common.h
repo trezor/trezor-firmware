@@ -20,6 +20,8 @@
 #ifndef TREZORHAL_OPTIGA_COMMON_H
 #define TREZORHAL_OPTIGA_COMMON_H
 
+#include "secbool.h"
+
 typedef enum _optiga_result {
   OPTIGA_SUCCESS = 0,     // Operation completed successfully.
   OPTIGA_ERR_I2C_WRITE,   // HAL failed on I2C write.
@@ -33,6 +35,8 @@ typedef enum _optiga_result {
   OPTIGA_ERR_PARAM,       // Invalid command parameters.
   OPTIGA_ERR_CMD,         // Command error. See error code data object 0xF1C2.
 } optiga_result;
+
+typedef secbool (*optiga_ui_progress_t)(void);
 
 #if !PRODUCTION
 typedef void (*optiga_log_hex_t)(const char *prefix, const uint8_t *data,

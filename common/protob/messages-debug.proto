@@ -204,3 +204,12 @@ message DebugLinkWatchLayout {
  */
 message DebugLinkResetDebugEvents {
 }
+
+
+/**
+ * Request: Set Optiga's security even counter to maximum
+ * @start
+ * @next Success
+ */
+message DebugLinkOptigaSetSecMax {
+}

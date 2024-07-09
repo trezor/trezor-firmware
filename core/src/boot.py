@@ -20,6 +20,9 @@ from trezor.ui.layouts.homescreen import Lockscreen
 
 from apps.common.request_pin import can_lock_device, verify_user_pin
 
+if utils.USE_OPTIGA:
+    from trezor.crypto import optiga
+
 # have to use "==" over "in (list)" so that it can be statically replaced
 # with the correct value during the build process
 # pylint: disable-next=consider-using-in
@@ -68,7 +71,9 @@ async def bootscreen() -> None:
                 allow_all_loader_messages()
                 return
             else:
-                await verify_user_pin()
+                # Even if PIN is not configured, storage needs to be unlocked, unless it has just been initialized.
+                if not config.is_unlocked():
+                    await verify_user_pin()
                 storage.init_unlocked()
                 enforce_welcome_screen_duration()
                 rotation = storage.device.get_rotation()
@@ -94,8 +99,9 @@ async def bootscreen() -> None:
             utils.halt(e.__class__.__name__)
 
 
-# Ignoring all non-PIN messages in the boot-phase (turned off in `bootscreen()`).
-ignore_nonpin_loader_messages()
+# Ignore all automated PIN messages in the boot-phase (turned off in `bootscreen()`), unless Optiga throttling delays are active.
+if not utils.USE_OPTIGA or (optiga.get_sec() or 0) < 150:
+    ignore_nonpin_loader_messages()
 
 config.init(show_pin_timeout)
 translations.init()
