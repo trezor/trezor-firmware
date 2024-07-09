@@ -107,7 +107,7 @@ def _resolve_path_to_texts(
 
     if lower:
         texts = [t.lower() for t in texts]
-    texts = [t.strip() for t in texts]
+    texts = [t.replace("\xa0", " ").strip() for t in texts]
     return texts
 
 

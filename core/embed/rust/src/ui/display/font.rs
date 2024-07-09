@@ -285,6 +285,12 @@ impl Font {
     }
 
     pub fn get_glyph(self, ch: char) -> Glyph {
+        /* have the non-breaking space counted for width but not counted as a
+         * breaking point */
+        let ch = match ch {
+            '\u{00a0}' => '\u{0020}',
+            c => c,
+        };
         let gl_data = display::get_char_glyph(ch as u16, self.into());
 
         ensure!(!gl_data.is_null(), "Failed to load glyph");
