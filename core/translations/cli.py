@@ -133,6 +133,7 @@ class TranslationsDir:
                 data,
                 indent=2,
                 ensure_ascii=False,
+                sort_keys=True,
             )
             + "\n"
         )
@@ -363,6 +364,28 @@ def sign(signature_hex: str, force: bool | None, version_str: str | None) -> Non
 
     SIGNATURES_JSON.write_text(json.dumps(signature_file, indent=2) + "\n")
     build_all_blobs(all_blobs, tree, sigmask, signature, production=True)
+
+
+def _dict_merge(a: dict, b: dict) -> None:
+    for k, v in b.items():
+        if k in a and isinstance(a[k], dict) and isinstance(v, dict):
+            _dict_merge(a[k], v)
+        else:
+            a[k] = v
+
+
+@cli.command()
+@click.argument("update_json", type=click.File("r"), nargs=-1)
+def merge(update_json: t.Tuple[t.TextIO, ...]) -> None:
+    """Update translations from JSON files."""
+    tdir = TranslationsDir()
+    for f in update_json:
+        new_data = json.load(f)
+        lang = new_data["header"]["language"][:2]
+        orig_data = tdir.load_lang(lang)
+        _dict_merge(orig_data, new_data)
+        tdir.save_lang(lang, orig_data)
+        click.echo(f"Updated {lang}")
 
 
 if __name__ == "__main__":
