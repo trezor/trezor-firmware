@@ -106,9 +106,6 @@ impl<'a> Component for ShareWords<'a> {
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.frame.render(target);
     }
-
-    #[cfg(feature = "ui_bounds")]
-    fn bounds(&self, _sink: &mut dyn FnMut(Rect)) {}
 }
 
 #[cfg(feature = "micropython")]
@@ -293,9 +290,6 @@ impl<'a> Component for ShareWordsInner<'a> {
             self.render_word(self.page_index, target, self.area_word);
         };
     }
-
-    #[cfg(feature = "ui_bounds")]
-    fn bounds(&self, _sink: &mut dyn FnMut(Rect)) {}
 }
 
 impl InternallySwipable for ShareWordsInner<'_> {

@@ -188,14 +188,6 @@ impl Component for AddressDetails {
             _ => self.xpub_view.render(target),
         }
     }
-
-    #[cfg(feature = "ui_bounds")]
-    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
-        match self.current_page {
-            0 => self.details.bounds(sink),
-            _ => self.xpub_view.bounds(sink),
-        }
-    }
 }
 
 impl Swipable for AddressDetails {

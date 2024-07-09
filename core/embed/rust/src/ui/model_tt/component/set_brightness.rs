@@ -58,11 +58,6 @@ impl Component for SetBrightnessDialog {
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.0.render(target);
     }
-
-    #[cfg(feature = "ui_bounds")]
-    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
-        self.0.bounds(sink);
-    }
 }
 
 #[cfg(feature = "ui_debug")]

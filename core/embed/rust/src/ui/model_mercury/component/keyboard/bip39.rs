@@ -165,11 +165,6 @@ impl Component for Bip39Input {
             render_pending_marker(target, text_base, text, style.font, style.text_color);
         }
     }
-
-    #[cfg(feature = "ui_bounds")]
-    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
-        self.button.bounds(sink);
-    }
 }
 
 impl Bip39Input {

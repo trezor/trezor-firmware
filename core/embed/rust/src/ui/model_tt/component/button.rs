@@ -382,11 +382,6 @@ impl Component for Button {
         self.render_background(target, style);
         self.render_content(target, style);
     }
-
-    #[cfg(feature = "ui_bounds")]
-    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
-        sink(self.area);
-    }
 }
 
 #[cfg(feature = "ui_debug")]

@@ -137,11 +137,6 @@ impl Component for FormattedText {
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.layout_content(&mut TextRenderer2::new(target));
     }
-
-    #[cfg(feature = "ui_bounds")]
-    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
-        sink(self.op_layout.layout.bounds)
-    }
 }
 
 // DEBUG-ONLY SECTION BELOW

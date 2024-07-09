@@ -70,11 +70,6 @@ impl<T: Swipable + Component> Component for SwipeUpScreen<T> {
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.content.render(target);
     }
-
-    #[cfg(feature = "ui_bounds")]
-    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
-        self.content.bounds(sink);
-    }
 }
 
 #[cfg(feature = "ui_debug")]

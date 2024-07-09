@@ -198,14 +198,6 @@ where
             },
         )
     }
-
-    #[cfg(feature = "ui_bounds")]
-    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
-        sink(self.area);
-        for layout in &self.visible {
-            sink(layout.bounds)
-        }
-    }
 }
 
 impl<'a, T> Paginate for Paragraphs<T>
@@ -715,12 +707,6 @@ where
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.paragraphs.render(target);
         self.render_left_column(target);
-    }
-
-    #[cfg(feature = "ui_bounds")]
-    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
-        sink(self.area);
-        self.paragraphs.bounds(sink);
     }
 }
 

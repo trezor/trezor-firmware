@@ -115,9 +115,4 @@ impl<'a> Component for Intro<'a> {
         self.host.render(target);
         self.menu.render(target);
     }
-
-    #[cfg(feature = "ui_bounds")]
-    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
-        self.menu.bounds(sink);
-    }
 }

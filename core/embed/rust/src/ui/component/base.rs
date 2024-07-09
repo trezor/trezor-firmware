@@ -66,10 +66,6 @@ pub trait Component {
     fn paint(&mut self);
 
     fn render<'s>(&'s self, _target: &mut impl Renderer<'s>);
-
-    #[cfg(feature = "ui_bounds")]
-    /// Report current paint bounds of this component. Used for debugging.
-    fn bounds(&self, _sink: &mut dyn FnMut(Rect)) {}
 }
 
 /// Components should always avoid unnecessary overpaint to prevent obvious
@@ -164,11 +160,6 @@ where
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.component.render(target);
     }
-
-    #[cfg(feature = "ui_bounds")]
-    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
-        self.component.bounds(sink)
-    }
 }
 
 impl<T: Paginate> Paginate for Child<T> {
@@ -233,12 +224,6 @@ where
         self.0.render(target);
         self.1.render(target);
     }
-
-    #[cfg(feature = "ui_bounds")]
-    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
-        self.0.bounds(sink);
-        self.1.bounds(sink);
-    }
 }
 
 #[cfg(feature = "ui_debug")]
@@ -288,13 +273,6 @@ where
         self.1.render(target);
         self.2.render(target);
     }
-
-    #[cfg(feature = "ui_bounds")]
-    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
-        self.0.bounds(sink);
-        self.1.bounds(sink);
-        self.2.bounds(sink);
-    }
 }
 
 impl<T> Component for Option<T>
@@ -326,13 +304,6 @@ where
         match self {
             Some(ref mut c) => c.place(bounds),
             _ => bounds.with_size(Offset::zero()),
-        }
-    }
-
-    #[cfg(feature = "ui_bounds")]
-    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
-        if let Some(ref c) = self {
-            c.bounds(sink)
         }
     }
 }

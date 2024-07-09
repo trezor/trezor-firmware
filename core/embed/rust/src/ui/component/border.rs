@@ -45,11 +45,6 @@ where
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.inner.render(target);
     }
-
-    #[cfg(feature = "ui_bounds")]
-    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
-        self.inner.bounds(sink);
-    }
 }
 
 #[cfg(feature = "ui_debug")]

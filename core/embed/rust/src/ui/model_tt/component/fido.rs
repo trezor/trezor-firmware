@@ -242,13 +242,6 @@ where
             display::fade_backlight(theme::backlight::get_backlight_normal());
         }
     }
-
-    #[cfg(feature = "ui_bounds")]
-    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
-        self.icon.bounds(sink);
-        self.app_name.bounds(sink);
-        self.account_name.bounds(sink);
-    }
 }
 
 #[cfg(feature = "ui_debug")]

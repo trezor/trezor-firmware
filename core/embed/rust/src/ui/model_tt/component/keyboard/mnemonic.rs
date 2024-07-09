@@ -196,16 +196,6 @@ where
             btn.render(target);
         }
     }
-
-    #[cfg(feature = "ui_bounds")]
-    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
-        self.prompt.bounds(sink);
-        self.input.bounds(sink);
-        self.back.bounds(sink);
-        for btn in &self.keys {
-            btn.bounds(sink)
-        }
-    }
 }
 
 pub trait MnemonicInput: Component<Msg = MnemonicInputMsg> {

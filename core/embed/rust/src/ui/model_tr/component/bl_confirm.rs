@@ -243,11 +243,6 @@ impl Component for Confirm<'_> {
         }
         self.buttons.render(target);
     }
-
-    #[cfg(feature = "ui_bounds")]
-    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
-        self.buttons.bounds(sink);
-    }
 }
 
 #[cfg(feature = "ui_debug")]

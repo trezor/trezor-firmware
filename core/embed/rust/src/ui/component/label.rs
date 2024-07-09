@@ -143,11 +143,6 @@ impl Component for Label<'_> {
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.text.map(|c| self.layout.render_text2(c, target));
     }
-
-    #[cfg(feature = "ui_bounds")]
-    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
-        sink(self.layout.bounds)
-    }
 }
 
 #[cfg(feature = "ui_debug")]

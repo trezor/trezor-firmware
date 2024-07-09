@@ -112,7 +112,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_bitcoin__valid_signature;
   MP_QSTR_bitcoin__voting_rights;
   MP_QSTR_bootscreen;
-  MP_QSTR_bounds;
   MP_QSTR_br_code;
   MP_QSTR_br_type;
   MP_QSTR_brightness__title;

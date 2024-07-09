@@ -199,11 +199,6 @@ impl Component for Bip39Input {
                 .render(target);
         }
     }
-
-    #[cfg(feature = "ui_bounds")]
-    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
-        self.button.bounds(sink);
-    }
 }
 
 impl Bip39Input {
