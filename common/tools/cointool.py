@@ -371,7 +371,7 @@ def check_backends(coins: Coins) -> bool:
             print("checking", backend, "... ", end="", flush=True)
             try:
                 assert requests is not None
-                j = requests.get(backend + "/api/block-index/0").json()
+                j = requests.get(backend + "/api/block-index/0", timeout=10).json()
                 if j["blockHash"] != genesis_block:
                     raise RuntimeError("genesis block mismatch")
             except Exception as e:

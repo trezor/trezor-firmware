@@ -467,7 +467,7 @@ def latest_releases() -> dict[str, Any]:
     for model in VERSIONED_SUPPORT_INFO:
         # TODO: support new UPPERCASE model names in RELEASES_URL
         url_model = model.lower()  # need to be e.g. t1b1 for now
-        releases = requests.get(RELEASES_URL.format(url_model)).json()
+        releases = requests.get(RELEASES_URL.format(url_model), timeout=10).json()
         latest[model] = max(tuple(r["version"]) for r in releases)
     return latest
 
