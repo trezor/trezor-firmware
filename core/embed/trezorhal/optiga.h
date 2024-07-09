@@ -57,6 +57,8 @@ bool __wur optiga_read_cert(uint8_t index, uint8_t *cert, size_t max_cert_size,
 
 bool __wur optiga_read_sec(uint8_t *sec);
 
+void optiga_set_sec_max(void);
+
 bool __wur optiga_random_buffer(uint8_t *dest, size_t size);
 
 bool __wur optiga_pin_set(optiga_ui_progress_t ui_progress,

@@ -88,6 +88,8 @@ bool optiga_read_sec(uint8_t *sec) {
   return true;
 }
 
+void optiga_set_sec_max(void) {}
+
 uint32_t optiga_estimate_time_ms(storage_pin_op_t op) { return 0; }
 
 bool optiga_random_buffer(uint8_t *dest, size_t size) {
