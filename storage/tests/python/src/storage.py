@@ -42,7 +42,7 @@ class Storage:
         self.pin_log.init()
         self._set_wipe_code(consts.WIPE_CODE_EMPTY)
         self._set_pin(consts.PIN_EMPTY)
-        self.unlocked = False
+        self.unlocked = True
 
     def _set_pin(self, pin: str):
         random_salt = prng.random_buffer(consts.PIN_SALT_SIZE)
@@ -220,6 +220,8 @@ class Storage:
 
     def _decrypt(self, key: int) -> bytes:
         data = self.nc.get(key)
+        if data is None:
+            raise RuntimeError("Key not found")
         iv = data[: consts.CHACHA_IV_SIZE]
         # cipher text with MAC
 

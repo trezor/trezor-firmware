@@ -22,6 +22,7 @@ if __debug__:
             DebugLinkDecision,
             DebugLinkEraseSdCard,
             DebugLinkGetState,
+            DebugLinkOptigaSetSecMax,
             DebugLinkRecordScreen,
             DebugLinkReseedRandom,
             DebugLinkResetDebugEvents,
@@ -274,7 +275,21 @@ if __debug__:
         register(
             MessageType.DebugLinkResetDebugEvents, dispatch_DebugLinkResetDebugEvents
         )
+        register(
+            MessageType.DebugLinkOptigaSetSecMax, dispatch_DebugLinkOptigaSetSecMax
+        )
 
         loop.schedule(debuglink_decision_dispatcher())
         if storage.layout_watcher is not LAYOUT_WATCHER_NONE:
             loop.schedule(return_layout_change())
+
+    async def dispatch_DebugLinkOptigaSetSecMax(
+        msg: DebugLinkOptigaSetSecMax,
+    ) -> Success:
+        if utils.USE_OPTIGA:
+            from trezor.crypto import optiga
+
+            optiga.set_sec_max()
+            return Success()
+        else:
+            raise wire.UnexpectedMessage("Optiga not supported")

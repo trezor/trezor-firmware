@@ -125,6 +125,7 @@ class MessageType(IntEnum):
     DebugLinkEraseSdCard = 9005
     DebugLinkWatchLayout = 9006
     DebugLinkResetDebugEvents = 9007
+    DebugLinkOptigaSetSecMax = 9008
     EthereumGetPublicKey = 450
     EthereumPublicKey = 451
     EthereumGetAddress = 56
@@ -4208,6 +4209,10 @@ class DebugLinkWatchLayout(protobuf.MessageType):
 
 class DebugLinkResetDebugEvents(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 9007
+
+
+class DebugLinkOptigaSetSecMax(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9008
 
 
 class EosGetPublicKey(protobuf.MessageType):

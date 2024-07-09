@@ -17,32 +17,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include "time_estimate.h"
 
-#include "common.h"
+// The number of CPU cycles required to execute one iteration of PBKDF2.
+#define PIN_PBKDF2_CYCLES_PER_ITER 11100
 
-static uint32_t ticks_ms = 0;
-
-void __shutdown(void) {
-  printf("SHUTDOWN\n");
-  exit(3);
+uint32_t time_estimate_pbkdf2_ms(uint32_t iterations) {
+  extern uint32_t SystemCoreClock;
+  return PIN_PBKDF2_CYCLES_PER_ITER * iterations / (SystemCoreClock / 1000);
 }
-
-void __fatal_error(const char *msg, const char *file, int line) {
-  printf("\nFATAL ERROR:\n");
-  if (msg) {
-    printf("msg : %s\n", msg);
-  }
-  if (file) {
-    printf("file: %s:%d\n", file, line);
-  }
-  __shutdown();
-}
-
-void show_wipe_code_screen(void) {}
-void show_pin_too_many_screen(void) {}
-
-void hal_delay(uint32_t delay_ms) { ticks_ms += delay_ms; }
-uint32_t hal_ticks_ms(void) { return ticks_ms; }
