@@ -4,204 +4,104 @@
         "shortcut": "LSK",
         "slip44": 134,
         "curve": "ed25519",
-        "decimals": 8,
-        "links": {
-            "Homepage": "https://lisk.io/",
-            "Github": "https://github.com/LiskHQ/lisk"
-        },
-        "wallet": {
-            "Liskish Wallet": "https://github.com/hirishh/liskish-wallet/releases"
-        }
+        "decimals": 8
     },
     {
         "name": "Stellar",
         "slip44": 148,
         "curve": "ed25519",
         "shortcut": "XLM",
-        "decimals": 7,
-        "links": {
-            "Homepage": "https://www.stellar.org",
-            "Github": "https://github.com/stellar/stellar-core"
-        },
-        "wallet": {
-            "Account Viewer": "https://accountviewer.stellar.org/",
-            "Exodus": "https://www.exodus.io",
-            "Stellarport": "https://stellarport.io/"
-        }
+        "decimals": 7
     },
     {
         "name": "Monero",
         "shortcut": "XMR",
         "slip44": 128,
         "curve": "ed25519",
-        "decimals": 12,
-        "links": {
-            "Homepage": "https://getmonero.org",
-            "Github": "https://github.com/monero-project/monero"
-        },
-        "wallet": {
-            "Monero CLI/GUI": "https://www.getmonero.org/downloads/"
-        }
+        "decimals": 12
     },
     {
         "name": "Ripple",
         "shortcut": "XRP",
         "slip44": 144,
         "curve": "secp256k1",
-        "decimals": 6,
-        "links": {
-            "Homepage": "https://ripple.com",
-            "Github": "https://github.com/ripple/rippled"
-        },
-        "wallet": {
-            "Trezor Suite": "https://suite.trezor.io",
-            "Exodus": "https://www.exodus.io"
-        }
+        "decimals": 6
     },
     {
         "name": "Ripple Testnet",
         "shortcut": "tXRP",
         "slip44": 1,
         "curve": "secp256k1",
-        "decimals": 6,
-        "links": {
-            "Homepage": "https://ripple.com",
-            "Github": "https://github.com/ripple/rippled"
-        },
-        "wallet": {
-            "Trezor Suite": "https://suite.trezor.io"
-        }
+        "decimals": 6
     },
     {
         "name": "Cardano",
         "shortcut": "ADA",
         "slip44": 1815,
         "curve": "ed25519",
-        "decimals": 6,
-        "links": {
-            "Homepage": "https://www.cardano.org",
-            "Github": "https://github.com/input-output-hk/cardano-node"
-        },
-        "wallet": {
-            "Trezor Suite": "https://suite.trezor.io"
-        }
+        "decimals": 6
     },
     {
         "name": "Cardano Preview Testnet",
         "shortcut": "tADA",
         "slip44": 1815,
         "curve": "ed25519",
-        "decimals": 6,
-        "links": {
-            "Homepage": "https://www.cardano.org",
-            "Github": "https://github.com/input-output-hk/cardano-node"
-        },
-        "wallet": {
-            "Trezor Suite": "https://suite.trezor.io"
-        }
+        "decimals": 6
     },
     {
         "name": "Tezos",
         "shortcut": "XTZ",
         "slip44": 1729,
         "curve": "ed25519",
-        "decimals": 6,
-        "links": {
-            "Homepage": "https://tezos.com",
-            "Github": "https://github.com/tezos/tezos"
-        },
-        "wallet": {
-            "Briskett": "https://briskett.app"
-        }
+        "decimals": 6
     },
     {
         "name": "EOS",
         "shortcut": "EOS",
         "slip44": 194,
         "curve": "secp256k1",
-        "decimals": 4,
-        "links": {
-            "Homepage": "https://eos.io",
-            "Github": "https://github.com/EOSIO/eos"
-        },
-        "wallet": {
-            "Bloks.io": "https://bloks.io/wallet"
-        }
+        "decimals": 4
     },
     {
         "name": "Omni",
         "shortcut": "OMNI",
         "slip44": 0,
         "curve": "secp256k1",
-        "decimals": 2,
-        "links": {
-            "Homepage": "https://www.omnilayer.org",
-            "Github": "https://github.com/OmniLayer"
-        },
-        "wallet": {}
+        "decimals": 2
     },
     {
         "name": "MaidSafeCoin",
         "shortcut": "MAID",
         "slip44": 0,
         "curve": "secp256k1",
-        "decimals": 8,
-        "links": {
-            "Homepage": "https://maidsafe.net",
-            "Github": "https://github.com/maidsafe"
-        },
-        "wallet": {}
+        "decimals": 8
     },
     {
         "name": "Binance Chain",
         "shortcut": "BNB",
         "slip44": 714,
         "curve": "secp256k1",
-        "decimals": 8,
-        "links": {
-            "Homepage": "https://binance.org"
-        },
-        "wallet": {
-            "Binance Wallet": "https://binance.org/unlock"
-        }
+        "decimals": 8
     },
     {
         "name": "Tether",
         "shortcut": "USDT",
         "slip44": 0,
         "curve": "secp256k1",
-        "decimals": 2,
-        "links": {
-            "Homepage": "https://tether.to"
-        },
-        "wallet": {}
+        "decimals": 2
     },
     {
         "name": "Solana",
         "shortcut": "SOL",
         "slip44": 501,
         "curve": "ed25519",
-        "decimals": 9,
-        "links": {
-            "Homepage": "https://solana.com",
-            "Github": "https://github.com/solana-labs"
-        },
-        "wallet": {
-            "Trezor Suite": "https://suite.trezor.io"
-        }
+        "decimals": 9
     },
     {
         "name": "Solana Devnet",
         "shortcut": "DSOL",
         "slip44": 501,
         "curve": "ed25519",
-        "decimals": 9,
-        "links": {
-            "Homepage": "https://solana.com",
-            "Github": "https://github.com/solana-labs"
-        },
-        "wallet": {
-            "Trezor Suite": "https://suite.trezor.io"
-        }
+        "decimals": 9
     }
 ]
