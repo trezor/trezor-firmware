@@ -274,7 +274,7 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     } break;
 #ifdef USE_SD_CARD
     case SYSCALL_SDCARD_POWER_ON: {
-      args[0] = sdcard_power_on();
+      args[0] = ts_to_u32(sdcard_power_on());
     } break;
     case SYSCALL_SDCARD_POWER_OFF: {
       sdcard_power_off();
@@ -286,11 +286,12 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       args[0] = sdcard_get_capacity_in_bytes();
     } break;
     case SYSCALL_SDCARD_READ_BLOCKS: {
-      args[0] = sdcard_read_blocks((uint32_t *)args[0], args[1], args[2]);
+      args[0] =
+          ts_to_u32(sdcard_read_blocks((uint32_t *)args[0], args[1], args[2]));
     } break;
     case SYSCALL_SDCARD_WRITE_BLOCKS: {
-      args[0] =
-          sdcard_write_blocks((const uint32_t *)args[0], args[1], args[2]);
+      args[0] = ts_to_u32(
+          sdcard_write_blocks((const uint32_t *)args[0], args[1], args[2]));
     } break;
 #endif
 

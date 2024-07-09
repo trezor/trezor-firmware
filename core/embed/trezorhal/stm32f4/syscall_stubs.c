@@ -333,8 +333,8 @@ int usb_webusb_write_blocking(uint8_t iface_num, const uint8_t *buf,
 
 #include "sdcard.h"
 
-secbool sdcard_power_on(void) {
-  return (secbool)syscall_invoke0(SYSCALL_SDCARD_POWER_ON);
+ts_t sdcard_power_on(void) {
+  return ts_from_u32(syscall_invoke0(SYSCALL_SDCARD_POWER_ON));
 }
 
 void sdcard_power_off(void) { syscall_invoke0(SYSCALL_SDCARD_POWER_OFF); }
@@ -347,16 +347,16 @@ uint64_t sdcard_get_capacity_in_bytes(void) {
   return syscall_invoke0_ret64(SYSCALL_SDCARD_GET_CAPACITY);
 }
 
-secbool __wur sdcard_read_blocks(uint32_t *dest, uint32_t block_num,
-                                 uint32_t num_blocks) {
-  return (secbool)syscall_invoke3((uint32_t)dest, block_num, num_blocks,
-                                  SYSCALL_SDCARD_READ_BLOCKS);
+ts_t __wur sdcard_read_blocks(uint32_t *dest, uint32_t block_num,
+                              uint32_t num_blocks) {
+  return ts_from_u32(syscall_invoke3((uint32_t)dest, block_num, num_blocks,
+                                     SYSCALL_SDCARD_READ_BLOCKS));
 }
 
-secbool __wur sdcard_write_blocks(const uint32_t *src, uint32_t block_num,
-                                  uint32_t num_blocks) {
-  return (secbool)syscall_invoke3((uint32_t)src, block_num, num_blocks,
-                                  SYSCALL_SDCARD_WRITE_BLOCKS);
+ts_t __wur sdcard_write_blocks(const uint32_t *src, uint32_t block_num,
+                               uint32_t num_blocks) {
+  return ts_from_u32(syscall_invoke3((uint32_t)src, block_num, num_blocks,
+                                     SYSCALL_SDCARD_WRITE_BLOCKS));
 }
 
 // =============================================================================

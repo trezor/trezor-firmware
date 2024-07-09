@@ -26,6 +26,7 @@
 #include <unistd.h>
 
 #include "common.h"
+#include "error_handling.h"
 #include "profile.h"
 #include "sdcard.h"
 
@@ -87,13 +88,13 @@ void sdcard_init(void) {
 
 secbool sdcard_is_present(void) { return sectrue; }
 
-secbool sdcard_power_on_unchecked(bool _low_speed) {
+ts_t sdcard_power_on_unchecked(bool _low_speed) {
   sdcard_init();
   sdcard_powered = sectrue;
-  return sectrue;
+  return TS_OK;
 }
 
-secbool sdcard_power_on(void) { return sdcard_power_on_unchecked(false); }
+ts_t sdcard_power_on(void) { return sdcard_power_on_unchecked(false); }
 
 void sdcard_power_off(void) { sdcard_powered = secfalse; }
 
@@ -101,34 +102,34 @@ uint64_t sdcard_get_capacity_in_bytes(void) {
   return sdcard_powered == sectrue ? SDCARD_SIZE : 0;
 }
 
-secbool sdcard_read_blocks(uint32_t *dest, uint32_t block_num,
-                           uint32_t num_blocks) {
-  if (sectrue != sdcard_powered) {
-    return secfalse;
-  }
-  if (block_num >= SDCARD_BLOCKS) {
-    return secfalse;
-  }
-  if (num_blocks > SDCARD_BLOCKS - block_num) {
-    return secfalse;
-  }
+ts_t sdcard_read_blocks(uint32_t *dest, uint32_t block_num,
+                        uint32_t num_blocks) {
+  TS_INIT;
+
+  TS_CHECK_ARG(block_num < SDCARD_BLOCKS);
+  TS_CHECK_ARG(num_blocks <= SDCARD_BLOCKS - block_num);
+
+  TS_CHECK_SEC(sdcard_powered, TS_ERROR_NOTINIT);
+
   memcpy(dest, sdcard_buffer + block_num * SDCARD_BLOCK_SIZE,
          num_blocks * SDCARD_BLOCK_SIZE);
-  return sectrue;
+
+cleanup:
+  TS_RETURN;
 }
 
-secbool sdcard_write_blocks(const uint32_t *src, uint32_t block_num,
-                            uint32_t num_blocks) {
-  if (sectrue != sdcard_powered) {
-    return secfalse;
-  }
-  if (block_num >= SDCARD_BLOCKS) {
-    return secfalse;
-  }
-  if (num_blocks > SDCARD_BLOCKS - block_num) {
-    return secfalse;
-  }
+ts_t sdcard_write_blocks(const uint32_t *src, uint32_t block_num,
+                         uint32_t num_blocks) {
+  TS_INIT;
+
+  TS_CHECK_ARG(block_num < SDCARD_BLOCKS);
+  TS_CHECK_ARG(num_blocks <= SDCARD_BLOCKS - block_num);
+
+  TS_CHECK_SEC(sdcard_powered, TS_ERROR_NOTINIT);
+
   memcpy(sdcard_buffer + block_num * SDCARD_BLOCK_SIZE, src,
          num_blocks * SDCARD_BLOCK_SIZE);
-  return sectrue;
+
+cleanup:
+  TS_RETURN;
 }

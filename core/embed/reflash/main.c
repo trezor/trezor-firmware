@@ -59,8 +59,8 @@ static void flash_from_sdcard(const flash_area_t *area, uint32_t source,
   for (uint32_t i = 0; i < length / SDCARD_BLOCK_SIZE; i++) {
     term_printf("read %d\n", (unsigned int)(i + source / SDCARD_BLOCK_SIZE));
 
-    ensure(sdcard_read_blocks(buf, i + source / SDCARD_BLOCK_SIZE, 1),
-           "sdcard_read_blocks");
+    ensure_ok(sdcard_read_blocks(buf, i + source / SDCARD_BLOCK_SIZE, 1),
+              "sdcard_read_blocks");
 
     for (uint32_t j = 0; j < SDCARD_BLOCK_SIZE / FLASH_BLOCK_SIZE; j++) {
       ensure(flash_area_write_block(
@@ -99,7 +99,7 @@ int main(void) {
 
   ensure(flash_unlock_write(), NULL);
 
-  ensure(sdcard_power_on(), NULL);
+  ensure_ok(sdcard_power_on(), NULL);
 
 #define BOARDLOADER_CHUNK_SIZE (16 * 1024)
 #define BOARDLOADER_TOTAL_SIZE (3 * BOARDLOADER_CHUNK_SIZE)

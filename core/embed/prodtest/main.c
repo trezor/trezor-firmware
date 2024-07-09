@@ -556,11 +556,11 @@ static void test_sd(void) {
   low_speed = true;
 #endif
 
-  if (sectrue != sdcard_power_on_unchecked(low_speed)) {
+  if (ts_error(sdcard_power_on_unchecked(low_speed))) {
     vcp_println("ERROR POWER ON");
     return;
   }
-  if (sectrue != sdcard_read_blocks(buf1, 0, BLOCK_SIZE / SDCARD_BLOCK_SIZE)) {
+  if (ts_error(sdcard_read_blocks(buf1, 0, BLOCK_SIZE / SDCARD_BLOCK_SIZE))) {
     vcp_println("ERROR sdcard_read_blocks (0)");
     goto power_off;
   }
@@ -568,14 +568,13 @@ static void test_sd(void) {
     for (int i = 0; i < BLOCK_SIZE / sizeof(uint32_t); i++) {
       buf1[i] ^= 0xFFFFFFFF;
     }
-    if (sectrue !=
-        sdcard_write_blocks(buf1, 0, BLOCK_SIZE / SDCARD_BLOCK_SIZE)) {
+    if (ts_error(
+            sdcard_write_blocks(buf1, 0, BLOCK_SIZE / SDCARD_BLOCK_SIZE))) {
       vcp_println("ERROR sdcard_write_blocks (%d)", j);
       goto power_off;
     }
     HAL_Delay(1000);
-    if (sectrue !=
-        sdcard_read_blocks(buf2, 0, BLOCK_SIZE / SDCARD_BLOCK_SIZE)) {
+    if (ts_error(sdcard_read_blocks(buf2, 0, BLOCK_SIZE / SDCARD_BLOCK_SIZE))) {
       vcp_println("ERROR sdcard_read_blocks (%d)", j);
       goto power_off;
     }
