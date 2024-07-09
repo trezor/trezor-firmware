@@ -1,12 +1,31 @@
 use crate::ui::lerp::Lerp;
 
+#[cfg(not(feature = "ui_color_32bit"))]
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub struct Color(u16);
+#[cfg(feature = "ui_color_32bit")]
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub struct Color {
+    r: u8,
+    g: u8,
+    b: u8,
+}
 
 impl Color {
+    #[cfg(not(feature = "ui_color_32bit"))]
     pub const fn from_u16(val: u16) -> Self {
         Self(val)
     }
+
+    #[cfg(feature = "ui_color_32bit")]
+    pub const fn from_u16(val: u16) -> Self {
+        Self {
+            r: ((((val) & 0xF800) >> 8) | (((val) & 0xF800) >> 13)) as u8,
+            g: ((((val) & 0x07E0) >> 3) | (((val) & 0x07E0) >> 9)) as u8,
+            b: ((((val) & 0x001F) << 3) | (((val) & 0x001F) >> 2)) as u8,
+        }
+    }
+
     pub const fn from_u32(val: u32) -> Self {
         Self::rgb(
             ((val >> 16) & 0xFF) as u8,
@@ -15,11 +34,16 @@ impl Color {
         )
     }
 
+    #[cfg(not(feature = "ui_color_32bit"))]
     pub const fn rgb(r: u8, g: u8, b: u8) -> Self {
         let r = (r as u16 & 0xF8) << 8;
         let g = (g as u16 & 0xFC) << 3;
         let b = (b as u16 & 0xF8) >> 3;
         Self(r | g | b)
+    }
+    #[cfg(feature = "ui_color_32bit")]
+    pub const fn rgb(r: u8, g: u8, b: u8) -> Self {
+        Self { r, g, b }
     }
 
     pub const fn luminance(self) -> u32 {
@@ -33,34 +57,54 @@ impl Color {
         let g_u16 = g as u16;
         let b_u16 = b as u16;
 
-        let r = ((256 - alpha) * bg.r() as u16 + alpha * r_u16) >> 8;
-        let g = ((256 - alpha) * bg.g() as u16 + alpha * g_u16) >> 8;
-        let b = ((256 - alpha) * bg.b() as u16 + alpha * b_u16) >> 8;
+        let r = (((256 - alpha) * bg.r() as u16 + alpha * r_u16) >> 8) as u8;
+        let g = (((256 - alpha) * bg.g() as u16 + alpha * g_u16) >> 8) as u8;
+        let b = (((256 - alpha) * bg.b() as u16 + alpha * b_u16) >> 8) as u8;
 
-        let r = (r & 0xF8) << 8;
-        let g = (g & 0xFC) << 3;
-        let b = (b & 0xF8) >> 3;
-        Self(r | g | b)
+        Self::rgb(r, g, b)
     }
 
     pub const fn alpha(bg: Color, alpha: u16) -> Self {
         Self::rgba(bg, 0xFF, 0xFF, 0xFF, alpha)
     }
 
+    #[cfg(not(feature = "ui_color_32bit"))]
     pub const fn r(self) -> u8 {
         (self.0 >> 8) as u8 & 0xF8
     }
 
+    #[cfg(not(feature = "ui_color_32bit"))]
     pub const fn g(self) -> u8 {
         (self.0 >> 3) as u8 & 0xFC
     }
 
+    #[cfg(not(feature = "ui_color_32bit"))]
     pub const fn b(self) -> u8 {
         (self.0 << 3) as u8 & 0xF8
     }
+    #[cfg(feature = "ui_color_32bit")]
+    pub const fn r(self) -> u8 {
+        self.r
+    }
+    #[cfg(feature = "ui_color_32bit")]
+    pub const fn g(self) -> u8 {
+        self.g
+    }
+    #[cfg(feature = "ui_color_32bit")]
+    pub const fn b(self) -> u8 {
+        self.b
+    }
 
+    #[cfg(not(feature = "ui_color_32bit"))]
     pub fn to_u16(self) -> u16 {
         self.0
+    }
+
+    #[cfg(feature = "ui_color_32bit")]
+    pub fn to_u16(self) -> u16 {
+        (((self.r() & 0xF8) as u16) << 8)
+            | (((self.g() & 0xFC) as u16) << 3)
+            | ((self.b() & 0xF8) as u16 >> 3)
     }
 
     pub fn to_u32(self) -> u32 {
@@ -75,8 +119,18 @@ impl Color {
         (self.to_u16() & 0xFF) as u8
     }
 
+    #[cfg(not(feature = "ui_color_32bit"))]
     pub fn negate(self) -> Self {
         Self(!self.0)
+    }
+
+    #[cfg(feature = "ui_color_32bit")]
+    pub fn negate(self) -> Self {
+        Self {
+            r: 255 - self.r,
+            g: 255 - self.g,
+            b: 255 - self.b,
+        }
     }
 
     pub const fn white() -> Self {
@@ -113,7 +167,7 @@ impl Lerp for Color {
 
 impl From<u16> for Color {
     fn from(val: u16) -> Self {
-        Self(val)
+        Self::from_u16(val)
     }
 }
 

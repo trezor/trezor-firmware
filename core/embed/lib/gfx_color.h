@@ -22,8 +22,11 @@
 
 #include <stdint.h>
 
+#ifdef UI_COLOR_32BIT
+#define GFX_COLOR_32BIT
+#else
 #define GFX_COLOR_16BIT
-// #define GFX_COLOR_32BIT
+#endif
 
 // Color in RGB565 format
 //
@@ -51,7 +54,7 @@ typedef uint32_t gfx_color32_t;
 #define gfx_color_to_color32(c) (gfx_color16_to_color32(c))
 #define gfx_color32_to_color(c) (gfx_color32_to_color16(c))
 #define gfx_color_lum(c) (gfx_color16_lum(c))
-#elif GFX_COLOR_32BIT
+#elif defined GFX_COLOR_32BIT
 #define gfx_color_t gfx_color32_t
 #define gfx_color_to_color16(c) (gfx_color32_to_color16(c))
 #define gfx_color16_to_color(c) (gfx_color16_to_color32(c))
@@ -132,7 +135,7 @@ static inline uint8_t gfx_color16_lum(gfx_color16_t color) {
 }
 
 // Converts 32-bit color into luminance (ranging from 0 to 255)
-static inline uint8_t gfx_color32_lum(gfx_color16_t color) {
+static inline uint8_t gfx_color32_lum(gfx_color32_t color) {
   uint32_t r = gfx_color32_to_r(color);
   uint32_t g = gfx_color32_to_g(color);
   uint32_t b = gfx_color32_to_b(color);
@@ -237,7 +240,7 @@ static inline gfx_color32_t gfx_color32_blend_a8(gfx_color16_t fg,
   return gfx_color32_rgb(r, g, b);
 }
 
-#elif GFX_COLOR_32BIT
+#elif defined GFX_COLOR_32BIT
 
 // Blends foreground and background colors with 4-bit alpha
 //
