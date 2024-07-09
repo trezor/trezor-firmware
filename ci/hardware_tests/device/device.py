@@ -15,9 +15,10 @@ class Device:
         print(msg, flush=True, file=sys.stderr)
 
     def run_trezorctl(self, cmd: str, **kwargs):
-        full_cmd = ["trezorctl"] + cmd.split()
-        self.log(f"[software/trezorctl] Running '{' '.join(full_cmd)}'")
-        return subprocess.run(full_cmd, check=True, **kwargs)
+        full_cmd = "trezorctl "
+        full_cmd += cmd
+        self.log(f"[software/trezorctl] Running '{full_cmd}'")
+        return run(full_cmd, shell=True, check=True, **kwargs)
 
     def check_model(self, model=None):
         res = self.run_trezorctl("list", capture_output=True, text=True)
@@ -41,18 +42,24 @@ class Device:
         else:
             return f"-l {self.uhub_location}"
 
-    def power_on(self):
+     def power_on(self):
         self.now()
         self.log("[hardware/usb] Turning power on...")
-        hub_command = ["uhubctl", self._hub(), "-p", str(self.device_port), "-a", "on"]
-        subprocess.run(hub_command, check=True)
+        run(
+            f"uhubctl {self._hub()} -p {self.device_port} -a on",
+            shell=True,
+            check=True,
+        )
         self.wait(3)
 
     def power_off(self):
         self.now()
         self.log("[hardware/usb] Turning power off...")
-        hub_command = ["uhubctl", self._hub(), "-p", str(self.device_port), "-r", "5", "-a", "off"]
-        subprocess.run(hub_command, check=True)
+        run(
+            f"uhubctl {self._hub()} -p {self.device_port} -r 5 -a off",
+            shell=True,
+            check=True,
+        )
         self.wait(3)
 
     def touch(self, location, action):
