@@ -22,6 +22,9 @@ uint8_t *FIRMWARE_START = 0;
 
 void set_core_clock(int) {}
 
+// used in fw emulator to raise python exception on exit
+void __attribute__((noreturn)) main_clean_exit() { exit(3); }
+
 int bootloader_main(void);
 
 // assuming storage is single subarea

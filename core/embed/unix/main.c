@@ -408,6 +408,19 @@ STATIC void set_sys_argv(char *argv[], int argc, int start_arg) {
   }
 }
 
+// Inject SystemExit exception. This is primarily needed by prof.py to run the
+// atexit() handler.
+void __attribute__((noreturn)) main_clean_exit() {
+  const int status = 3;
+  fflush(stdout);
+  fflush(stderr);
+  // sys.exit is disabled, so raise a SystemExit exception directly
+  nlr_raise(mp_obj_new_exception_arg1(&mp_type_SystemExit,
+                                      MP_OBJ_NEW_SMALL_INT(status)));
+  // the above shouldn't return, but make sure we exit just in case
+  exit(status);
+}
+
 #ifdef _WIN32
 #define PATHLIST_SEP_CHAR ';'
 #else
@@ -682,7 +695,9 @@ MP_NOINLINE int main_(int argc, char **argv) {
 #if !MICROPY_VFS
 
 #ifdef TREZOR_EMULATOR_FROZEN
-mp_import_stat_t mp_import_stat(const char *path) { return MP_IMPORT_STAT_NO_EXIST; }
+mp_import_stat_t mp_import_stat(const char *path) {
+  return MP_IMPORT_STAT_NO_EXIST;
+}
 #else
 mp_import_stat_t mp_import_stat(const char *path) {
   struct stat st;
