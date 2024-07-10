@@ -35,6 +35,9 @@
 
 #define FIRMWARE_IMAGE_MAGIC 0x465A5254  // TRZF
 
+#define IMAGE_CODE_ALIGN(addr) \
+  ((((uint32_t)(uintptr_t)addr) + (CODE_ALIGNMENT - 1)) & ~(CODE_ALIGNMENT - 1))
+
 typedef struct {
   uint32_t magic;
   uint32_t hdrlen;

@@ -103,18 +103,31 @@ class FirmwareImage(Struct):
 
     Consists of firmware header and code block.
     This is the expected format of firmware binaries for Trezor One, or bootloader images
-    for Trezor T."""
+    for Trezor core models."""
 
     header: FirmwareHeader = subcon(FirmwareHeader)
+    _header_end: int
     _code_offset: int
     code: bytes
 
     SUBCON = c.Struct(
         "header" / FirmwareHeader.SUBCON,
+        "_header_end" / c.Tell,
+        "padding"
+        / c.Padding(
+            lambda this: FirmwareImage.calc_padding(
+                this.header.hw_model, this._header_end
+            )
+        ),
         "_code_offset" / c.Tell,
         "code" / c.Bytes(c.this.header.code_length),
         c.Terminated,
     )
+
+    @staticmethod
+    def calc_padding(hw_model: bytes, len: int) -> int:
+        alignment = Model.from_hw_model(hw_model).code_alignment()
+        return ((len + alignment - 1) & ~(alignment - 1)) - len
 
     def get_hash_params(self) -> "util.FirmwareHashParameters":
         return Model.from_hw_model(self.header.hw_model).hash_params()
@@ -167,7 +180,7 @@ class FirmwareImage(Struct):
 class VendorFirmware(Struct):
     """Firmware image prefixed by a vendor header.
 
-    This is the expected format of firmware binaries for Trezor T."""
+    This is the expected format of firmware binaries for Trezor core models."""
 
     vendor_header: VendorHeader = subcon(VendorHeader)
     firmware: FirmwareImage = subcon(FirmwareImage)

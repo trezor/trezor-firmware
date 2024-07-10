@@ -46,7 +46,7 @@ boot_args_start = ORIGIN(BOOT_ARGS);
 boot_args_end = ORIGIN(BOOT_ARGS) + LENGTH(BOOT_ARGS);
 
 SECTIONS {
-  .vector_table : ALIGN(512) {
+  .vector_table : ALIGN(1024) {
     KEEP(*(.vector_table));
   } >FLASH AT>FLASH
 

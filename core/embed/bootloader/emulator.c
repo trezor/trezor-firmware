@@ -167,14 +167,14 @@ __attribute__((noreturn)) int main(int argc, char **argv) {
 
   bootloader_main();
   hal_delay(3000);
-  jump_to(NULL);
+  jump_to(0);
 }
 
 void mpu_config_bootloader(void) {}
 
 void mpu_config_off(void) {}
 
-__attribute__((noreturn)) void jump_to(void *addr) {
+__attribute__((noreturn)) void jump_to(uint32_t address) {
   bool storage_is_erased =
       storage_empty(&STORAGE_AREAS[0]) && storage_empty(&STORAGE_AREAS[1]);
 
