@@ -22,7 +22,8 @@ __attribute__((noreturn)) static void _reboot_to_bootloader(
 __attribute__((noreturn)) static void _reboot_to_bootloader(
     boot_command_t boot_command) {
   mpu_config_bootloader();
-  jump_to_with_flag(BOOTLOADER_START + IMAGE_HEADER_SIZE, boot_command);
+  jump_to_with_flag(IMAGE_CODE_ALIGN(BOOTLOADER_START + IMAGE_HEADER_SIZE),
+                    boot_command);
   for (;;)
     ;
 }

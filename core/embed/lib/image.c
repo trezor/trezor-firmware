@@ -245,8 +245,18 @@ secbool check_image_contents(const image_header *const hdr, uint32_t firstskip,
   }
 
   // Check the firmware integrity, calculate and compare hashes
-  size_t offset = firstskip;
+  size_t offset = IMAGE_CODE_ALIGN(firstskip);
   size_t end_offset = offset + hdr->codelen;
+
+  // Check area between headers and code
+  uint32_t padding_size = offset - firstskip;
+  const uint8_t *addr =
+      (uint8_t *)flash_area_get_address(area, firstskip, padding_size);
+  for (size_t i = 0; i < padding_size; i++) {
+    if (*addr != 0) {
+      return secfalse;
+    }
+  }
 
   while (offset < end_offset) {
     size_t bytes_to_check = MIN(IMAGE_CHUNK_SIZE - (offset % IMAGE_CHUNK_SIZE),

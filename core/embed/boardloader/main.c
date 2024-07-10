@@ -340,7 +340,7 @@ int main(void) {
   mpu_config_off();
 
   // g_boot_command is preserved on STM32U5
-  jump_to(BOOTLOADER_START + IMAGE_HEADER_SIZE);
+  jump_to(IMAGE_CODE_ALIGN(BOOTLOADER_START + IMAGE_HEADER_SIZE));
 
   return 0;
 }

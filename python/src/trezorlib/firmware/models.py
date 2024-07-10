@@ -65,6 +65,9 @@ class Model(Enum):
     def hash_params(self) -> "FirmwareHashParameters":
         return MODEL_HASH_PARAMS_MAP[self]
 
+    def code_alignment(self) -> int:
+        return MODEL_CODE_ALIGNMENT_MAP[self]
+
 
 @dataclass
 class ModelKeys:
@@ -329,6 +332,17 @@ MODEL_HASH_PARAMS_MAP = {
     Model.T3B1: T3B1_HASH_PARAMS,
     Model.D001: T2T1_HASH_PARAMS,
     Model.D002: D002_HASH_PARAMS,
+}
+
+
+MODEL_CODE_ALIGNMENT_MAP = {
+    Model.T1B1: 0x200,
+    Model.T2T1: 0x200,
+    Model.T2B1: 0x200,
+    Model.T3T1: 0x200,
+    Model.T3B1: 0x200,
+    Model.D001: 0x200,
+    Model.D002: 0x400,
 }
 
 # aliases

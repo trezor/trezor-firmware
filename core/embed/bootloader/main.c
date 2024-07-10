@@ -349,7 +349,7 @@ void real_jump_to_firmware(void) {
   ensure_compatible_settings();
 
   mpu_config_off();
-  jump_to(FIRMWARE_START + vhdr.hdrlen + IMAGE_HEADER_SIZE);
+  jump_to(IMAGE_CODE_ALIGN(FIRMWARE_START + vhdr.hdrlen + IMAGE_HEADER_SIZE));
 }
 
 #ifdef STM32U5

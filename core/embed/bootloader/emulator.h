@@ -16,7 +16,7 @@ void set_core_clock(int);
 void mpu_config_bootloader(void);
 void mpu_config_off(void);
 void display_set_little_endian(void);
-void jump_to(void *addr);
+void jump_to(uint32_t address);
 void ensure_compatible_settings(void);
 
 #endif
