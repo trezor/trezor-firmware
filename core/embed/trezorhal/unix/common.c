@@ -28,6 +28,8 @@
 #include "display.h"
 #include "memzero.h"
 
+void __attribute__((noreturn)) main_clean_exit();
+
 void __attribute__((noreturn)) trezor_shutdown(void) {
   printf("SHUTDOWN\n");
 
@@ -49,7 +51,7 @@ uint32_t hal_ticks_ms() {
 static int SDLCALL emulator_event_filter(void *userdata, SDL_Event *event) {
   switch (event->type) {
     case SDL_QUIT:
-      exit(3);
+      main_clean_exit();
       return 0;
     case SDL_KEYUP:
       if (event->key.repeat) {
@@ -57,7 +59,7 @@ static int SDLCALL emulator_event_filter(void *userdata, SDL_Event *event) {
       }
       switch (event->key.keysym.sym) {
         case SDLK_ESCAPE:
-          exit(3);
+          main_clean_exit();
           return 0;
         case SDLK_p:
           display_save("emu");
