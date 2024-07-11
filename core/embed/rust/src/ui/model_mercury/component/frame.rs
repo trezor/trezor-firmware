@@ -2,7 +2,6 @@ use crate::{
     strutil::TString,
     ui::{
         component::{
-            label::Label,
             swipe_detect::{SwipeConfig, SwipeSettings},
             text::TextStyle,
             Component, Event,
@@ -19,19 +18,15 @@ use crate::{
     },
 };
 
-use super::{theme, Button, ButtonMsg, ButtonStyleSheet, CancelInfoConfirmMsg, Footer};
-
-const BUTTON_EXPAND_BORDER: i16 = 32;
+use super::{theme, ButtonMsg, ButtonStyleSheet, CancelInfoConfirmMsg, Footer, Header};
 
 #[derive(Clone)]
 pub struct Frame<T> {
     border: Insets,
     bounds: Rect,
-    title: Label<'static>,
-    subtitle: Option<Label<'static>>,
-    button: Option<Button>,
     button_msg: CancelInfoConfirmMsg,
     content: T,
+    header: Header,
     footer: Option<Footer<'static>>,
     swipe: SwipeConfig,
     internal_page_cnt: usize,
@@ -50,13 +45,11 @@ where
 {
     pub const fn new(alignment: Alignment, title: TString<'static>, content: T) -> Self {
         Self {
-            title: Label::new(title, alignment, theme::label_title_main()).vertically_centered(),
             bounds: Rect::zero(),
-            subtitle: None,
             border: theme::borders(),
-            button: None,
             button_msg: CancelInfoConfirmMsg::Cancelled,
             content,
+            header: Header::new(alignment, title),
             footer: None,
             swipe: SwipeConfig::new(),
             internal_page_cnt: 1,
@@ -88,21 +81,13 @@ where
 
     #[inline(never)]
     pub fn with_subtitle(mut self, subtitle: TString<'static>) -> Self {
-        let style = theme::TEXT_SUB_GREY;
-        self.title = self.title.top_aligned();
-        self.subtitle = Some(Label::new(subtitle, self.title.alignment(), style));
+        self.header = self.header.with_subtitle(subtitle);
         self
     }
 
     #[inline(never)]
     fn with_button(mut self, icon: Icon, msg: CancelInfoConfirmMsg, enabled: bool) -> Self {
-        let touch_area = Insets::uniform(BUTTON_EXPAND_BORDER);
-        self.button = Some(
-            Button::with_icon(icon)
-                .with_expanded_touch_area(touch_area)
-                .initially_enabled(enabled)
-                .styled(theme::button_default()),
-        );
+        self.header = self.header.with_button(icon, enabled);
         self.button_msg = msg;
         self
     }
@@ -121,21 +106,17 @@ where
     }
 
     pub fn title_styled(mut self, style: TextStyle) -> Self {
-        self.title = self.title.styled(style);
+        self.header = self.header.styled(style);
         self
     }
 
     pub fn subtitle_styled(mut self, style: TextStyle) -> Self {
-        if let Some(subtitle) = self.subtitle.take() {
-            self.subtitle = Some(subtitle.styled(style))
-        }
+        self.header = self.header.subtitle_styled(style);
         self
     }
 
     pub fn button_styled(mut self, style: ButtonStyleSheet) -> Self {
-        if self.button.is_some() {
-            self.button = Some(self.button.unwrap().styled(style));
-        }
+        self.header = self.header.button_styled(style);
         self
     }
 
@@ -169,7 +150,7 @@ where
     }
 
     pub fn update_title(&mut self, ctx: &mut EventCtx, new_title: TString<'static>) {
-        self.title.set_text(new_title);
+        self.header.update_title(new_title);
         ctx.request_paint();
     }
 
@@ -179,16 +160,7 @@ where
         new_subtitle: TString<'static>,
         new_style: Option<TextStyle>,
     ) {
-        let style = new_style.unwrap_or(theme::TEXT_SUB_GREY);
-        match &mut self.subtitle {
-            Some(subtitle) => {
-                subtitle.set_style(style);
-                subtitle.set_text(new_subtitle);
-            }
-            None => {
-                self.subtitle = Some(Label::new(new_subtitle, self.title.alignment(), style));
-            }
-        }
+        self.header.update_subtitle(new_subtitle, new_style);
         ctx.request_paint();
     }
 
@@ -245,19 +217,7 @@ where
         content_area = content_area.inset(Insets::top(theme::SPACING));
         header_area = header_area.inset(Insets::sides(theme::SPACING));
 
-        if let Some(b) = &mut self.button {
-            let (rest, button_area) = header_area.split_right(TITLE_HEIGHT);
-            header_area = rest;
-            b.place(button_area);
-        }
-
-        if self.subtitle.is_some() {
-            let title_area = self.title.place(header_area);
-            let remaining = header_area.inset(Insets::top(title_area.height()));
-            let _subtitle_area = self.subtitle.place(remaining);
-        } else {
-            self.title.place(header_area);
-        }
+        self.header.place(header_area);
 
         if let Some(footer) = &mut self.footer {
             // FIXME: spacer at the bottom might be applied also for usage without footer
@@ -290,8 +250,6 @@ where
             }
         }
 
-        self.title.event(ctx, event);
-        self.subtitle.event(ctx, event);
         self.footer.event(ctx, event);
         let msg = self.content.event(ctx, event).map(FrameMsg::Content);
         if let Some(count) = ctx.page_count() {
@@ -301,23 +259,19 @@ where
         if msg.is_some() {
             return msg;
         }
-        if let Some(ButtonMsg::Clicked) = self.button.event(ctx, event) {
+        if let Some(ButtonMsg::Clicked) = self.header.event(ctx, event) {
             return Some(FrameMsg::Button(self.button_msg));
         }
         None
     }
 
     fn paint(&mut self) {
-        self.title.paint();
-        self.subtitle.paint();
-        self.button.paint();
+        self.header.paint();
         self.footer.paint();
         self.content.paint();
     }
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        self.title.render(target);
-        self.subtitle.render(target);
-        self.button.render(target);
+        self.header.render(target);
         self.footer.render(target);
         self.content.render(target);
 
@@ -367,14 +321,9 @@ where
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("Frame");
-        t.child("title", &self.title);
+        t.child("header", &self.header);
         t.child("content", &self.content);
-        if let Some(subtitle) = &self.subtitle {
-            t.child("subtitle", subtitle);
-        }
-        if let Some(button) = &self.button {
-            t.child("button", button);
-        }
+
         if let Some(footer) = &self.footer {
             t.child("footer", footer);
         }
