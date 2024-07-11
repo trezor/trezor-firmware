@@ -11,6 +11,7 @@ mod vertical_menu;
 mod fido_icons;
 mod error;
 mod frame;
+mod header;
 #[cfg(feature = "translations")]
 mod hold_to_confirm;
 #[cfg(feature = "translations")]
@@ -49,6 +50,7 @@ pub use error::ErrorScreen;
 pub use fido::{FidoConfirm, FidoMsg};
 pub use footer::Footer;
 pub use frame::{Frame, FrameMsg};
+pub use header::Header;
 #[cfg(feature = "translations")]
 pub use hold_to_confirm::HoldToConfirm;
 #[cfg(feature = "micropython")]
