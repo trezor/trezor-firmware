@@ -938,6 +938,7 @@ class TR:
     words__sign: str = "Sign"
     words__signer: str = "Signer"
     words__title_check: str = "Check"
+    words__title_done: str = "Done"
     words__title_group: str = "Group"
     words__title_information: str = "Information"
     words__title_remember: str = "Remember"

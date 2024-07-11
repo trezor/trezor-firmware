@@ -104,10 +104,13 @@ impl WarningHiPrio {
         });
 
         // Cancelled
-        let content_cancelled =
-            Frame::left_aligned(done_title, StatusScreen::new_neutral_timeout())
-                .with_footer(TR::instructions__continue_in_app.into(), None)
-                .map(|_| Some(FlowMsg::Cancelled));
+        let content_cancelled = Frame::left_aligned(
+            TR::words__title_done.into(),
+            StatusScreen::new_neutral_timeout(done_title),
+        )
+        .with_footer(TR::instructions__continue_in_app.into(), None)
+        .with_result_icon(theme::ICON_BULLET_CHECKMARK, theme::GREY_DARK)
+        .map(|_| Some(FlowMsg::Cancelled));
 
         let res = SwipeFlow::new(&WarningHiPrio::Message)?
             .with_page(&WarningHiPrio::Message, content_message)?

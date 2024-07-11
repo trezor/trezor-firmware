@@ -1354,6 +1354,7 @@ pub enum TranslatedString {
     setting__apply = 953,  // "Apply"
     brightness__changed_title = 954,  // "Display brightness changed"
     brightness__change_title = 955,  // "Change display brightness"
+    words__title_done = 956,  // "Done"
 }
 
 impl TranslatedString {
@@ -2702,6 +2703,7 @@ impl TranslatedString {
             Self::setting__apply => "Apply",
             Self::brightness__changed_title => "Display brightness changed",
             Self::brightness__change_title => "Change display brightness",
+            Self::words__title_done => "Done",
         }
     }
 
@@ -4051,6 +4053,7 @@ impl TranslatedString {
             Qstr::MP_QSTR_setting__apply => Some(Self::setting__apply),
             Qstr::MP_QSTR_brightness__changed_title => Some(Self::brightness__changed_title),
             Qstr::MP_QSTR_brightness__change_title => Some(Self::brightness__change_title),
+            Qstr::MP_QSTR_words__title_done => Some(Self::words__title_done),
             _ => None,
         }
     }
