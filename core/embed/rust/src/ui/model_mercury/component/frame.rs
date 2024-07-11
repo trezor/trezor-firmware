@@ -21,6 +21,67 @@ use crate::{
 use super::{theme, ButtonMsg, ButtonStyleSheet, CancelInfoConfirmMsg, Footer, Header};
 
 #[derive(Clone)]
+pub struct HorizontalSwipe {
+    progress: i16,
+    dir: SwipeDirection,
+}
+
+impl HorizontalSwipe {
+    const fn new() -> Self {
+        Self {
+            progress: 0,
+            dir: SwipeDirection::Up,
+        }
+    }
+
+    fn event(&mut self, event: Event, swipe: SwipeConfig) {
+        if let Event::Attach(_) = event {
+            self.progress = 0;
+        }
+
+        if let Swipe(SwipeEvent::Move(dir, progress)) = event {
+            if swipe.is_allowed(dir) {
+                match dir {
+                    SwipeDirection::Left | SwipeDirection::Right => {
+                        self.progress = progress;
+                        self.dir = dir;
+                    }
+                    _ => {}
+                }
+            }
+        }
+    }
+
+    fn render_swipe_cover<'s>(&self, target: &mut impl Renderer<'s>, bounds: Rect) {
+        if self.progress > 0 {
+            match self.dir {
+                SwipeDirection::Left => {
+                    let shift = pareen::constant(0.0).seq_ease_out(
+                        0.0,
+                        easer::functions::Circ,
+                        1.0,
+                        pareen::constant(1.0),
+                    );
+
+                    let p = Point::lerp(
+                        bounds.top_right(),
+                        bounds.top_left(),
+                        shift.eval(self.progress as f32 / SwipeDetect::PROGRESS_MAX as f32),
+                    );
+
+                    shape::Bar::new(Rect::new(p, bounds.bottom_right()))
+                        .with_fg(theme::BLACK)
+                        .with_bg(theme::BLACK)
+                        .render(target);
+                }
+                SwipeDirection::Right => {}
+                _ => {}
+            }
+        }
+    }
+}
+
+#[derive(Clone)]
 pub struct Frame<T> {
     border: Insets,
     bounds: Rect,
@@ -30,8 +91,7 @@ pub struct Frame<T> {
     footer: Option<Footer<'static>>,
     swipe: SwipeConfig,
     internal_page_cnt: usize,
-    progress: i16,
-    dir: SwipeDirection,
+    horizontal_swipe: HorizontalSwipe,
 }
 
 pub enum FrameMsg<T> {
@@ -53,8 +113,7 @@ where
             footer: None,
             swipe: SwipeConfig::new(),
             internal_page_cnt: 1,
-            progress: 0,
-            dir: SwipeDirection::Up,
+            horizontal_swipe: HorizontalSwipe::new(),
         }
     }
 
@@ -234,21 +293,7 @@ where
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        if let Event::Attach(_) = event {
-            self.progress = 0;
-        }
-
-        if let Swipe(SwipeEvent::Move(dir, progress)) = event {
-            if self.swipe.is_allowed(dir) {
-                match dir {
-                    SwipeDirection::Left | SwipeDirection::Right => {
-                        self.progress = progress;
-                        self.dir = dir;
-                    }
-                    _ => {}
-                }
-            }
-        }
+        self.horizontal_swipe.event(event, self.swipe);
 
         self.footer.event(ctx, event);
         let msg = self.content.event(ctx, event).map(FrameMsg::Content);
@@ -275,31 +320,8 @@ where
         self.footer.render(target);
         self.content.render(target);
 
-        if self.progress > 0 {
-            match self.dir {
-                SwipeDirection::Left => {
-                    let shift = pareen::constant(0.0).seq_ease_out(
-                        0.0,
-                        easer::functions::Circ,
-                        1.0,
-                        pareen::constant(1.0),
-                    );
-
-                    let p = Point::lerp(
-                        self.bounds.top_right(),
-                        self.bounds.top_left(),
-                        shift.eval(self.progress as f32 / SwipeDetect::PROGRESS_MAX as f32),
-                    );
-
-                    shape::Bar::new(Rect::new(p, self.bounds.bottom_right()))
-                        .with_fg(theme::BLACK)
-                        .with_bg(theme::BLACK)
-                        .render(target);
-                }
-                SwipeDirection::Right => {}
-                _ => {}
-            }
-        }
+        self.horizontal_swipe
+            .render_swipe_cover(target, self.bounds);
     }
 }
 
