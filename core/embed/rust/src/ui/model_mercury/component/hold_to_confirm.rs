@@ -366,7 +366,7 @@ impl Component for HoldToConfirm {
 #[cfg(feature = "ui_debug")]
 impl crate::trace::Trace for HoldToConfirm {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        t.component("StatusScreen");
+        t.component("HoldToConfirm");
         t.child("button", &self.button);
     }
 }
