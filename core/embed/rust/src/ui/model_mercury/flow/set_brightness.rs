@@ -121,8 +121,11 @@ impl SetBrightness {
         });
 
         let content_confirmed = Frame::left_aligned(
-            TR::brightness__changed_title.into(),
-            SwipeContent::new(StatusScreen::new_success()).with_no_attach_anim(),
+            TR::words__title_success.into(),
+            SwipeContent::new(StatusScreen::new_success(
+                TR::brightness__changed_title.into(),
+            ))
+            .with_no_attach_anim(),
         )
         .with_footer(TR::instructions__swipe_up.into(), None)
         .with_swipe(SwipeDirection::Up, SwipeSettings::default())

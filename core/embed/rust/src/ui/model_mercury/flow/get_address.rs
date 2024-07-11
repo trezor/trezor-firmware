@@ -148,10 +148,11 @@ impl GetAddress {
                 });
 
         let content_confirmed = Frame::left_aligned(
-            TR::address__confirmed.into(),
-            StatusScreen::new_success_timeout(),
+            TR::words__title_success.into(),
+            StatusScreen::new_success_timeout(TR::address__confirmed.into()),
         )
         .with_footer(TR::instructions__continue_in_app.into(), None)
+        .with_result_icon(theme::ICON_BULLET_CHECKMARK, theme::GREEN_LIGHT)
         .map(|_| Some(FlowMsg::Confirmed));
 
         // Menu

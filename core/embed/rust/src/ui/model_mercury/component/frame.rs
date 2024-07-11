@@ -1,3 +1,4 @@
+use super::{theme, ButtonMsg, ButtonStyleSheet, CancelInfoConfirmMsg, Footer, Header};
 use crate::{
     strutil::TString,
     ui::{
@@ -8,7 +9,7 @@ use crate::{
             Event::Swipe,
             EventCtx, SwipeDetect, SwipeDirection,
         },
-        display::Icon,
+        display::{Color, Icon},
         event::SwipeEvent,
         geometry::{Alignment, Insets, Point, Rect},
         lerp::Lerp,
@@ -17,8 +18,6 @@ use crate::{
         shape::Renderer,
     },
 };
-
-use super::{theme, ButtonMsg, ButtonStyleSheet, CancelInfoConfirmMsg, Footer, Header};
 
 #[derive(Clone)]
 pub struct HorizontalSwipe {
@@ -176,6 +175,11 @@ where
 
     pub fn button_styled(mut self, style: ButtonStyleSheet) -> Self {
         self.header = self.header.button_styled(style);
+        self
+    }
+
+    pub fn with_result_icon(mut self, icon: Icon, color: Color) -> Self {
+        self.header = self.header.with_result_icon(icon, color);
         self
     }
 

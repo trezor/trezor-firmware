@@ -54,6 +54,7 @@ use crate::{
         model_mercury::{
             component::{check_homescreen_format, SwipeContent},
             flow::new_confirm_action_simple,
+            theme::ICON_BULLET_CHECKMARK,
         },
     },
 };
@@ -799,11 +800,15 @@ extern "C" fn new_show_success(n_args: usize, args: *const Obj, kwargs: *mut Map
             .try_into_option()?
             .and_then(|desc: TString| if desc.is_empty() { None } else { Some(desc) });
 
-        let content = StatusScreen::new_success();
+        let content = StatusScreen::new_success(title);
         let obj = LayoutObj::new(SwipeUpScreen::new(
-            Frame::left_aligned(title, SwipeContent::new(content).with_no_attach_anim())
-                .with_footer(TR::instructions__swipe_up.into(), description)
-                .with_swipe(SwipeDirection::Up, SwipeSettings::default()),
+            Frame::left_aligned(
+                TR::words__title_success.into(),
+                SwipeContent::new(content).with_no_attach_anim(),
+            )
+            .with_footer(TR::instructions__swipe_up.into(), description)
+            .with_result_icon(ICON_BULLET_CHECKMARK, theme::GREEN_LIGHT)
+            .with_swipe(SwipeDirection::Up, SwipeSettings::default()),
         ))?;
         Ok(obj.into())
     };
