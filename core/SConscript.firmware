@@ -4,6 +4,7 @@
 import os
 import shlex
 import tools, models, ui
+import random
 
 BITCOIN_ONLY = ARGUMENTS.get('BITCOIN_ONLY', '0')
 PRODUCTION = ARGUMENTS.get('PRODUCTION', '0') == '1'
@@ -15,6 +16,7 @@ CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 PYOPT = ARGUMENTS.get('PYOPT', '1')
 DISABLE_OPTIGA = ARGUMENTS.get('DISABLE_OPTIGA', '0') == '1'
 HW_REVISION = ARGUMENTS.get('HW_REVISION', None)
+SCM_REVISION = ARGUMENTS.get('SCM_REVISION', None)
 THP = ARGUMENTS.get('THP', '0') == '1' # Trezor-Host Protocol
 MODEL_IDENTIFIER = models.get_model_identifier(TREZOR_MODEL)
 BENCHMARK = ARGUMENTS.get('BENCHMARK', '0') == '1'
@@ -219,6 +221,7 @@ SOURCE_MOD += [
     'embed/util/image/image.c',
     'embed/util/translations/translations.c',
     'embed/util/rsod/rsod.c',
+    'embed/util/scm_revision/scm_revision.c',
     'embed/rtl/error_handling.c',
     'embed/rtl/mini_printf.c',
     'vendor/micropython/lib/uzlib/adler32.c',
@@ -438,6 +441,7 @@ ALLPATHS = [
         'embed/sys/bsp/inc',
         'embed/util/image/inc',
         'embed/util/rsod/inc',
+        'embed/util/scm_revision/inc',
         'embed/util/translations/inc',
         'embed/upymod/modtrezorui',
         'vendor/micropython',
@@ -721,6 +725,8 @@ obj_program.extend(env.Object(source=SOURCE_MICROPYTHON_SPEED, COPT='-O3'))
 obj_program.extend(env.Object(source=SOURCE_HAL))
 if FROZEN:
     obj_program.extend(env.Object(source=source_mpyc))
+
+random.Random(SCM_REVISION).shuffle(obj_program)
 
 env.Replace(
     ALLSOURCES=source_files,
