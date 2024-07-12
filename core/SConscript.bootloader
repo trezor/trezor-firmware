@@ -76,6 +76,7 @@ SOURCE_MOD += [
     'embed/util/flash/flash_utils.c',
     'embed/util/image/image.c',
     'embed/util/rsod/rsod.c',
+    'embed/util/scm_revision/scm_revision.c',
     'embed/rtl/error_handling.c',
     'embed/rtl/mini_printf.c',
     'vendor/micropython/lib/uzlib/adler32.c',
@@ -142,6 +143,7 @@ ALLPATHS = [
         'embed/util/translations/inc',
         'embed/util/image/inc',
         'embed/util/rsod/inc',
+        'embed/util/scm_revision/inc',
         'embed/upymod/modtrezorui',
         'vendor/nanopb',
     ] + CPPPATH_MOD + PATH_HAL

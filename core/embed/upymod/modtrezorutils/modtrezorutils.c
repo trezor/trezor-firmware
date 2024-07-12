@@ -34,6 +34,7 @@
 #include <io/usb.h>
 #include <sys/bootutils.h>
 #include <util/fwutils.h>
+#include <util/scm_revision.h>
 #include <util/unit_properties.h>
 #include "blake2s.h"
 
@@ -347,7 +348,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_bootloader_locked_obj,
                                  mod_trezorutils_bootloader_locked);
 
 STATIC mp_obj_str_t mod_trezorutils_revision_obj = {
-    {&mp_type_bytes}, 0, sizeof(SCM_REVISION) - 1, (const byte *)SCM_REVISION};
+    {&mp_type_bytes}, 0, sizeof(SCM_REVISION), (const byte *)SCM_REVISION};
 
 STATIC mp_obj_str_t mod_trezorutils_model_name_obj = {
     {&mp_type_str}, 0, sizeof(MODEL_NAME) - 1, (const byte *)MODEL_NAME};

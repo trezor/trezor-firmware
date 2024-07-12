@@ -24,6 +24,10 @@
 #include <sys/system.h>
 #include <util/rsod.h>
 
+#ifdef SCM_REVISION_INIT
+#include <util/scm_revision.h>
+#endif
+
 #define RSOD_DEFAULT_TITLE "INTERNAL ERROR";
 #define RSOD_DEFAULT_MESSAGE "UNSPECIFIED";
 #define RSOD_DEFAULT_FOOTER "PLEASE VISIT TREZOR.IO/RSOD";
@@ -89,8 +93,8 @@ void rsod_terminal(const systask_postmortem_t* pminfo) {
     term_printf("file: %s:%d\n", file, line);
   }
 
-#ifdef SCM_REVISION
-  const uint8_t* rev = (const uint8_t*)SCM_REVISION;
+#ifdef SCM_REVISION_INIT
+  const uint8_t* rev = SCM_REVISION;
   term_printf("rev : %02x%02x%02x%02x%02x\n", rev[0], rev[1], rev[2], rev[3],
               rev[4]);
 #endif

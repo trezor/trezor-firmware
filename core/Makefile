@@ -116,7 +116,8 @@ STORAGE_2_OFFSET := $(shell expr $(STORAGE_2_START) - $(FLASH_START))
 
 OPENOCD = openocd -f interface/$(OPENOCD_INTERFACE).cfg -c "transport select $(OPENOCD_TRANSPORT)" -f $(OPENOCD_TARGET)
 
-CFLAGS += -DSCM_REVISION='\"$(shell git rev-parse HEAD | sed 's:\(..\):\\x\1:g')\"'
+SCM_REVISION = '$(shell git rev-parse HEAD)'
+CFLAGS += -DSCM_REVISION_INIT='{$(shell echo ${SCM_REVISION} | sed 's:\(..\):0x\1,:g')}'
 
 TESTPATH = $(CURDIR)/../tests
 
@@ -145,6 +146,7 @@ SCONS_VARS = \
 	PRODUCTION="$(PRODUCTION)" \
 	PYOPT="$(PYOPT)" \
 	QUIET_MODE="$(QUIET_MODE)" \
+	SCM_REVISION="$(SCM_REVISION)" \
 	STORAGE_INSECURE_TESTING_MODE="$(STORAGE_INSECURE_TESTING_MODE)" \
 	THP="$(THP)" \
 	TREZOR_DISABLE_ANIMATION="$(TREZOR_DISABLE_ANIMATION)" \
