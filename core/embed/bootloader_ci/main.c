@@ -176,7 +176,10 @@ static secbool check_vendor_header_lock(const vendor_header *const vhdr) {
 }
 
 int main(void) {
-  random_delays_init();
+  systick_init();
+  systimer_init();
+
+  rdi_init();
 #ifdef USE_TOUCH
   touch_init();
 #endif

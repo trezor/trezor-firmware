@@ -33,6 +33,7 @@
 #include "random_delays.h"
 #include "secbool.h"
 #include "secret.h"
+#include "systimer.h"
 
 #ifdef USE_DMA2D
 #ifdef NEW_RENDERING
@@ -359,7 +360,10 @@ int bootloader_main(void) {
 #endif
   secbool stay_in_bootloader = secfalse;
 
-  random_delays_init();
+  systick_init();
+  systimer_init();
+
+  rdi_init();
 
 #if defined TREZOR_MODEL_T
   set_core_clock(CLOCK_180_MHZ);

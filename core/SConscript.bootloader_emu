@@ -154,6 +154,8 @@ SOURCE_TREZORHAL = [
     'embed/trezorhal/unix/random_delays.c',
     'embed/trezorhal/unix/rng.c',
     'embed/trezorhal/unix/secret.c',
+    'embed/trezorhal/unix/systick.c',
+    'embed/trezorhal/unix/systimer.c',
     'embed/trezorhal/unix/usb.c',
 ]
 

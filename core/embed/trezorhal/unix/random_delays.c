@@ -21,4 +21,4 @@
 
 void wait_random(void) {}
 
-void random_delays_init(void) {}
+void rdi_init(void) {}
