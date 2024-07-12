@@ -2,6 +2,7 @@ use crate::{
     time::{Duration, Stopwatch},
     ui::{
         component::{base::AttachType, Component, Event, EventCtx, SwipeDirection},
+        constant::screen,
         display::Color,
         event::SwipeEvent,
         geometry::{Offset, Rect},
@@ -15,10 +16,21 @@ use crate::{
 #[derive(Default, Clone)]
 struct AttachAnimation {
     pub timer: Stopwatch,
+    pub attach_type: Option<AttachType>,
+    pub show_attach_anim: bool,
 }
 
 impl AttachAnimation {
     const DURATION_MS: u32 = 500;
+
+    pub fn new() -> Self {
+        Self {
+            timer: Stopwatch::new_stopped(),
+            attach_type: None,
+            show_attach_anim: true,
+        }
+    }
+
     pub fn is_active(&self) -> bool {
         if animation_disabled() {
             return false;
@@ -36,7 +48,7 @@ impl AttachAnimation {
         self.timer.elapsed().to_millis() as f32 / 1000.0
     }
 
-    pub fn get_offset(&self, t: f32, attach_type: Option<AttachType>) -> Offset {
+    pub fn get_offset(&self, t: f32) -> Offset {
         let value = pareen::constant(0.0).seq_ease_in(
             0.0,
             easer::functions::Linear,
@@ -44,7 +56,7 @@ impl AttachAnimation {
             pareen::constant(1.0),
         );
 
-        match attach_type {
+        match self.attach_type {
             Some(AttachType::Initial) => {
                 Offset::lerp(Offset::new(0, -20), Offset::zero(), value.eval(t))
             }
@@ -61,14 +73,14 @@ impl AttachAnimation {
         }
     }
 
-    pub fn get_opacity(&self, t: f32, attach_type: Option<AttachType>) -> u8 {
+    pub fn get_opacity(&self, t: f32) -> u8 {
         let value = pareen::constant(0.0).seq_ease_in_out(
             0.0,
             easer::functions::Cubic,
             0.2,
             pareen::constant(1.0),
         );
-        match attach_type {
+        match self.attach_type {
             Some(AttachType::Initial)
             | Some(AttachType::Swipe(SwipeDirection::Up))
             | Some(AttachType::Swipe(SwipeDirection::Down)) => {}
@@ -86,61 +98,98 @@ impl AttachAnimation {
     pub fn reset(&mut self) {
         self.timer = Stopwatch::new_stopped();
     }
-}
 
-pub struct SwipeContent<T> {
-    inner: T,
-    bounds: Rect,
-    progress: i16,
-    dir: SwipeDirection,
-    attach_animation: AttachAnimation,
-    attach_type: Option<AttachType>,
-    show_attach_anim: bool,
-}
-
-impl<T: Component> SwipeContent<T> {
-    pub fn new(inner: T) -> Self {
-        Self {
-            inner,
-            bounds: Rect::zero(),
-            progress: 0,
-            dir: SwipeDirection::Up,
-            attach_animation: AttachAnimation::default(),
-            attach_type: None,
-            show_attach_anim: true,
-        }
-    }
-
-    pub fn with_no_attach_anim(mut self) -> Self {
-        self.show_attach_anim = false;
-        self
-    }
-
-    pub fn inner(&self) -> &T {
-        &self.inner
-    }
-
-    fn process_event(&mut self, ctx: &mut EventCtx, event: Event, animate: bool) -> Option<T::Msg> {
+    pub fn lazy_start(&mut self, ctx: &mut EventCtx, event: Event, animate: bool) -> bool {
         if let Event::Attach(attach_type) = event {
-            self.progress = 0;
             if self.show_attach_anim && animate {
                 self.attach_type = Some(attach_type);
             } else {
                 self.attach_type = None;
             }
-            self.attach_animation.reset();
+            self.reset();
             ctx.request_anim_frame();
         }
         if let Event::Timer(EventCtx::ANIM_FRAME_TIMER) = event {
             if !animation_disabled() {
-                if !self.attach_animation.timer.is_running() {
-                    self.attach_animation.timer.start();
+                if !self.timer.is_running() {
+                    self.timer.start();
                 }
-                if self.attach_animation.is_active() {
+                if self.is_active() {
                     ctx.request_anim_frame();
                     ctx.request_paint();
                 }
             }
+        }
+        match event {
+            Event::Touch(_) => !self.is_active(),
+            _ => true,
+        }
+    }
+}
+
+struct SwipeContext {
+    progress: i16,
+    dir: SwipeDirection,
+    attach_animation: AttachAnimation,
+}
+
+impl SwipeContext {
+    fn new() -> Self {
+        Self {
+            progress: 0,
+            dir: SwipeDirection::Up,
+            attach_animation: AttachAnimation::new(),
+        }
+    }
+
+    fn get_params(&self, bounds: Rect) -> (Offset, Rect, u8) {
+        let progress = self.progress as f32 / 1000.0;
+
+        let shift = pareen::constant(0.0).seq_ease_out(
+            0.0,
+            easer::functions::Cubic,
+            1.0,
+            pareen::constant(1.0),
+        );
+
+        let y_offset = i16::lerp(0, 50, shift.eval(progress));
+
+        let mut offset = Offset::zero();
+        let mut clip = bounds;
+        let mut mask = 0;
+
+        if self.progress > 0 {
+            match self.dir {
+                SwipeDirection::Up => {
+                    offset = Offset::y(-y_offset);
+                    mask = u8::lerp(0, 255, shift.eval(progress));
+                }
+                SwipeDirection::Down => {
+                    offset = Offset::y(y_offset);
+                    clip = screen();
+                    mask = u8::lerp(0, 255, shift.eval(progress));
+                }
+                _ => {}
+            }
+        } else {
+            let t = self.attach_animation.eval();
+            let opacity = self.attach_animation.get_opacity(t);
+            offset = self.attach_animation.get_offset(t);
+            mask = 255 - opacity;
+
+            if offset.x == 0 && offset.y == 0 {
+                clip = screen();
+            }
+        }
+
+        (offset, clip, mask)
+    }
+
+    fn process_event(&mut self, ctx: &mut EventCtx, event: Event, animate: bool) -> bool {
+        let inner_event = self.attach_animation.lazy_start(ctx, event, animate);
+
+        if let Event::Attach(_) = event {
+            self.progress = 0;
         }
 
         if let Event::Swipe(SwipeEvent::Move(dir, progress)) = event {
@@ -156,15 +205,41 @@ impl<T: Component> SwipeContent<T> {
             ctx.request_paint();
         }
 
-        match event {
-            Event::Touch(_) => {
-                if self.attach_animation.is_active() {
-                    None
-                } else {
-                    self.inner.event(ctx, event)
-                }
-            }
-            _ => self.inner.event(ctx, event),
+        inner_event
+    }
+}
+
+pub struct SwipeContent<T> {
+    inner: T,
+    bounds: Rect,
+    swipe_context: SwipeContext,
+}
+
+impl<T: Component> SwipeContent<T> {
+    pub fn new(inner: T) -> Self {
+        Self {
+            inner,
+            bounds: Rect::zero(),
+            swipe_context: SwipeContext::new(),
+        }
+    }
+
+    pub fn with_no_attach_anim(mut self) -> Self {
+        self.swipe_context.attach_animation.show_attach_anim = false;
+        self
+    }
+
+    pub fn inner(&self) -> &T {
+        &self.inner
+    }
+
+    fn process_event(&mut self, ctx: &mut EventCtx, event: Event, animate: bool) -> Option<T::Msg> {
+        let inner_event = self.swipe_context.process_event(ctx, event, animate);
+
+        if inner_event {
+            self.inner.event(ctx, event)
+        } else {
+            None
         }
     }
 }
@@ -186,74 +261,18 @@ impl<T: Component> Component for SwipeContent<T> {
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        let progress = self.progress as f32 / 1000.0;
+        let (offset, clip, mask) = self.swipe_context.get_params(self.bounds);
 
-        let shift = pareen::constant(0.0).seq_ease_out(
-            0.0,
-            easer::functions::Cubic,
-            1.0,
-            pareen::constant(1.0),
-        );
-
-        let offset = i16::lerp(0, 50, shift.eval(progress));
-
-        let mask = u8::lerp(0, 255, shift.eval(progress));
-
-        if self.progress > 0 {
-            match self.dir {
-                SwipeDirection::Up => {
-                    let offset = Offset::y(-offset);
-                    target.in_clip(self.bounds, &|target| {
-                        target.with_origin(offset, &|target| {
-                            self.inner.render(target);
-                            shape::Bar::new(self.bounds)
-                                .with_alpha(mask)
-                                .with_fg(Color::black())
-                                .with_bg(Color::black())
-                                .render(target);
-                        });
-                    });
-                }
-                SwipeDirection::Down => {
-                    let offset = Offset::y(offset);
-                    target.with_origin(offset, &|target| {
-                        self.inner.render(target);
-                        shape::Bar::new(self.bounds)
-                            .with_alpha(mask)
-                            .with_fg(Color::black())
-                            .with_bg(Color::black())
-                            .render(target);
-                    });
-                }
-                _ => {}
-            };
-        } else {
-            let t = self.attach_animation.eval();
-            let offset = self.attach_animation.get_offset(t, self.attach_type);
-            let opacity = self.attach_animation.get_opacity(t, self.attach_type);
-
-            if offset.x != 0 || offset.y != 0 {
-                target.in_clip(self.bounds, &|target| {
-                    target.with_origin(offset, &|target| {
-                        self.inner.render(target);
-                        shape::Bar::new(self.bounds)
-                            .with_alpha(255 - opacity)
-                            .with_fg(Color::black())
-                            .with_bg(Color::black())
-                            .render(target);
-                    });
-                });
-            } else {
-                // some components draw outside their bounds during animations
-                // let them do that unless we are animating here
+        target.in_clip(clip, &|target| {
+            target.with_origin(offset, &|target| {
                 self.inner.render(target);
                 shape::Bar::new(self.bounds)
-                    .with_alpha(255 - opacity)
+                    .with_alpha(mask)
                     .with_fg(Color::black())
                     .with_bg(Color::black())
                     .render(target);
-            }
-        }
+            });
+        });
     }
 }
 
@@ -305,7 +324,7 @@ where
         let is_swipe_up = matches!(attach_type, AttachType::Swipe(SwipeDirection::Up));
         let is_swipe_down = matches!(attach_type, AttachType::Swipe(SwipeDirection::Down));
 
-        if !self.content.show_attach_anim {
+        if !self.content.swipe_context.attach_animation.show_attach_anim {
             return false;
         }
 
