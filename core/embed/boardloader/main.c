@@ -32,6 +32,7 @@
 #include "model.h"
 #include "mpu.h"
 #include "rng.h"
+#include "systimer.h"
 #include "terminal.h"
 
 #ifdef USE_SD_CARD
@@ -232,6 +233,9 @@ static secbool copy_sdcard(void) {
 #endif
 
 int main(void) {
+  systick_init();
+  systimer_init();
+
   reset_flags_reset();
 
   // need the systick timer running before many HAL operations.

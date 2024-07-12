@@ -42,6 +42,7 @@
 #include "sdcard.h"
 #include "secbool.h"
 #include "supervise.h"
+#include "systimer.h"
 #include "touch.h"
 #include "usb.h"
 #include "version.h"
@@ -777,8 +778,11 @@ void cpuid_read(void) {
 
 int main(void) {
   svc_init();
+  systick_init();
+  systimer_init();
+  rdi_init();
   display_init(DISPLAY_RETAIN_CONTENT);
-  random_delays_init();
+
 #ifdef STM32U5
   secure_aes_init();
 #endif

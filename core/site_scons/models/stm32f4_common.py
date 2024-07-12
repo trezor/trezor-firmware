@@ -53,6 +53,7 @@ def stm32f4_common_files(env, defines, sources, paths):
         "embed/trezorhal/stm32f4/platform.c",
         "embed/trezorhal/stm32f4/secret.c",
         "embed/trezorhal/stm32f4/systick.c",
+        "embed/trezorhal/stm32f4/systimer.c",
         "embed/trezorhal/stm32f4/supervise.c",
         "embed/trezorhal/stm32f4/time_estimate.c",
         "embed/trezorhal/stm32f4/random_delays.c",

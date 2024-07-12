@@ -17,10 +17,36 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __TREZORHAL_RANDOM_DELAYS_H__
-#define __TREZORHAL_RANDOM_DELAYS_H__
+#include <string.h>
 
-void rdi_init(void);
-void wait_random(void);
+#include "systimer.h"
 
-#endif
+// systimer driver state
+typedef struct {
+  // Set if the driver is initialized
+  bool initialized;
+} systimer_driver_t;
+
+static systimer_driver_t g_systimer_driver = {
+    .initialized = false,
+};
+
+void systimer_init(void) {
+  systimer_driver_t* drv = &g_systimer_driver;
+
+  if (drv->initialized) {
+    return;
+  }
+
+  memset(&drv, 0, sizeof(systimer_driver_t));
+  drv->initialized = true;
+}
+
+void systimer_deinit(void) {
+  systimer_driver_t* drv = &g_systimer_driver;
+
+  drv->initialized = false;
+}
+
+// Timer driver is not fully implemented for unix platform
+// since not neeeded for the emulator
