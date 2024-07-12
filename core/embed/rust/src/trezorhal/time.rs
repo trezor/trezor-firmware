@@ -3,11 +3,11 @@ use crate::time::Duration;
 use super::ffi;
 
 pub fn ticks_ms() -> u32 {
-    unsafe { ffi::hal_ticks_ms() as _ }
+    unsafe { ffi::systick_ms() as _ }
 }
 
 pub fn sleep(delay: Duration) {
     unsafe {
-        ffi::hal_delay(delay.to_millis() as _);
+        ffi::systick_delay_ms(delay.to_millis() as _);
     }
 }

@@ -60,6 +60,10 @@ static inline uint32_t disable_irq(void) {
 // HardFault can preempt exceptions at this priority level)
 #define IRQ_PRI_HIGHEST NVIC_EncodePriority(NVIC_PRIORITYGROUP_4, 0, 0)
 
+// Highest priority for interrupt handlers
+// (can be still preempted by faults handlers that run at the highest priority)
+#define IRQ_PRI_HIGH NVIC_EncodePriority(NVIC_PRIORITYGROUP_4, 1, 0)
+
 // Standard priority for common interrupt handlers
 #define IRQ_PRI_NORMAL NVIC_EncodePriority(NVIC_PRIORITYGROUP_4, 8, 0)
 

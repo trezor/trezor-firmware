@@ -399,9 +399,9 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("random_uniform")
         // rgb led
         .allowlist_function("rgb_led_set_color")
-        // time
-        .allowlist_function("hal_delay")
-        .allowlist_function("hal_ticks_ms")
+        // systick
+        .allowlist_function("systick_delay_ms")
+        .allowlist_function("systick_ms")
         // toif
         .allowlist_type("toif_format_t")
         // dma2d
