@@ -44,6 +44,7 @@ https://link.springer.com/content/pdf/10.1007%2F978-3-540-72354-7_3.pdf
 #include "common.h"
 #include "memzero.h"
 #include "rand.h"
+#include "systimer.h"
 
 // from util.s
 extern void shutdown_privileged(void);
@@ -151,7 +152,16 @@ static void wait(uint32_t delay) {
       : "r0", "r1");
 }
 
-void random_delays_init() { drbg_init(); }
+// forward declaration
+static void rdi_handler(void *context);
+
+void rdi_init() {
+  drbg_init();
+
+  systimer_t *timer = systimer_create(rdi_handler, NULL);
+  ensure(sectrue * (timer != NULL), "rdi_init failed");
+  systimer_set_periodic(timer, 1);
+}
 
 void rdi_start(void) {
   ensure(drbg_initialized, NULL);
@@ -174,7 +184,7 @@ void rdi_refresh_session_delay(void) {
     refresh_session_delay = true;
 }
 
-void rdi_handler(uint32_t uw_tick) {
+static void rdi_handler(void *context) {
   if (rdi_disabled == secfalse) {  // if rdi enabled
     if (refresh_session_delay) {
       session_delay = drbg_random8();

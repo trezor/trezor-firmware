@@ -40,14 +40,6 @@ void __attribute__((noreturn)) trezor_shutdown(void) {
   exit(3);
 }
 
-void hal_delay(uint32_t ms) { usleep(1000 * ms); }
-
-uint32_t hal_ticks_ms() {
-  struct timeval tv;
-  gettimeofday(&tv, NULL);
-  return tv.tv_sec * 1000 + tv.tv_usec / 1000;
-}
-
 static int SDLCALL emulator_event_filter(void *userdata, SDL_Event *event) {
   switch (event->type) {
     case SDL_QUIT:

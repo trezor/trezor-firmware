@@ -33,6 +33,7 @@
 #include "sbu.h"
 #include "sdcard.h"
 #include "secbool.h"
+#include "systimer.h"
 #include "terminal.h"
 #include "touch.h"
 
@@ -68,6 +69,9 @@ static void flash_from_sdcard(const flash_area_t* area, uint32_t source,
 }
 
 int main(void) {
+  systick_init();
+  systimer_init();
+
   sdcard_init();
   touch_init();
 

@@ -48,26 +48,9 @@
 #include "py/runtime.h"
 #include "py/mphal.h"
 #include "irq.h"
+#include "systick.h"
 
 extern __IO uint32_t uwTick;
-
-// We provide our own version of HAL_Delay that calls __WFI while waiting,
-// and works when interrupts are disabled.  This function is intended to be
-// used only by the ST HAL functions.
-void HAL_Delay(uint32_t Delay) {
-    if (IS_IRQ_ENABLED(query_irq())) {
-        // IRQs enabled, so can use systick counter to do the delay
-        uint32_t start = uwTick;
-        // Wraparound of tick is taken care of by 2's complement arithmetic.
-        while (uwTick - start < Delay) {
-            // Enter sleep mode, waiting for (at least) the SysTick interrupt.
-            __WFI();
-        }
-    } else {
-        // IRQs disabled, use mp_hal_delay_ms routine.
-        mp_hal_delay_ms(Delay);
-    }
-}
 
 // Core delay function that does an efficient sleep and may switch thread context.
 // If IRQs are enabled then we must have the GIL.
@@ -110,9 +93,9 @@ void mp_hal_delay_us(mp_uint_t usec) {
 }
 
 mp_uint_t mp_hal_ticks_ms(void) {
-    return uwTick;
+    return systick_ms();
 }
 
 mp_uint_t mp_hal_ticks_us(void) {
-    return uwTick * 1000;
+    return systick_ms() * 1000;
 }

@@ -21,6 +21,7 @@
 
 #include "platform.h"
 #include "rng.h"
+#include "systick.h"
 #include TREZOR_BOARD
 
 const uint8_t AHBPrescTable[16] = {0, 0, 0, 0, 0, 0, 0, 0,
@@ -193,7 +194,7 @@ void set_core_clock(clock_settings_t settings) {
   /* Enable PLL as main clock */
   RCC->CFGR = (RCC->CFGR & ~(RCC_CFGR_SW)) | RCC_CFGR_SW_PLL;
 
-  HAL_InitTick(TICK_INT_PRIORITY);
+  systick_update_freq();
 
   // turn off the HSI as it is now unused (it will be turned on again
   // automatically if a clock security failure occurs)

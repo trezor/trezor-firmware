@@ -51,6 +51,7 @@
 #include "random_delays.h"
 #include "rust_ui.h"
 #include "secure_aes.h"
+#include "systimer.h"
 
 #include TREZOR_BOARD
 
@@ -132,8 +133,10 @@ static void optiga_log_hex(const char *prefix, const uint8_t *data,
 
 int main(void) {
   svc_init();
+  systick_init();
+  systimer_init();
 
-  random_delays_init();
+  rdi_init();
 
 #ifdef RDI
   rdi_start();

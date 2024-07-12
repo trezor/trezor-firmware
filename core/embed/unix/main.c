@@ -53,6 +53,7 @@
 #include "py/repl.h"
 #include "py/runtime.h"
 #include "py/stackctrl.h"
+#include "systimer.h"
 #include "touch.h"
 
 #include "common.h"
@@ -485,6 +486,9 @@ MP_NOINLINE int main_(int argc, char **argv) {
   mp_stack_set_limit(600000 * (sizeof(void *) / 4));
 
   pre_process_options(argc, argv);
+
+  systick_init();
+  systimer_init();
 
   display_init(DISPLAY_RESET_CONTENT);
 

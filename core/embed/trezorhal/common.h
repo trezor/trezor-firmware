@@ -26,6 +26,7 @@
 
 #include "error_handling.h"
 #include "platform.h"
+#include "systick.h"
 
 #ifndef MIN_8bits
 #define MIN_8bits(a, b)                  \
@@ -53,10 +54,6 @@
 #endif
 
 void __attribute__((noreturn)) trezor_shutdown(void);
-
-void hal_delay(uint32_t ms);
-uint32_t hal_ticks_ms();
-void hal_delay_us(uint16_t delay_us);
 
 // Invalidates firmware on the device
 // Note: only works when write access to firmware area is enabled by MPU

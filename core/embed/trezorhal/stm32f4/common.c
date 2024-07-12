@@ -36,8 +36,6 @@
 #include "backlight_pwm.h"
 #endif
 
-uint32_t systick_val_copy = 0;
-
 // from util.s
 extern void shutdown_privileged(void);
 
@@ -52,20 +50,6 @@ void __attribute__((noreturn)) trezor_shutdown(void) {
 
   for (;;)
     ;
-}
-
-void hal_delay(uint32_t ms) { HAL_Delay(ms); }
-uint32_t hal_ticks_ms() { return HAL_GetTick(); }
-void hal_delay_us(uint16_t delay_us) {
-  uint32_t val = svc_get_systick_val();
-  uint32_t t = hal_ticks_ms() * 1000 +
-               (((SystemCoreClock / 1000) - val) / (SystemCoreClock / 1000000));
-  uint32_t t2 = t;
-  do {
-    val = svc_get_systick_val();
-    t2 = hal_ticks_ms() * 1000 +
-         (((SystemCoreClock / 1000) - val) / (SystemCoreClock / 1000000));
-  } while ((t2 - t) < delay_us);
 }
 
 // reference RM0090 section 35.12.1 Figure 413
