@@ -22,12 +22,11 @@
 
 #include <stdint.h>
 
-void random_delays_init(void);
+void rdi_init(void);
 
 void rdi_start(void);
 void rdi_stop(void);
 void rdi_refresh_session_delay(void);
-void rdi_handler(uint32_t uw_tick);
 
 void wait_random(void);
 #endif
