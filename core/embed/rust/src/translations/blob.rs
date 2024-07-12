@@ -405,6 +405,7 @@ impl<'a> TranslationsHeader<'a> {
     }
 
     pub fn verify(&self) -> Result<(), Error> {
+        #[allow(unused_mut)]
         let mut result = self.verify_with_keys(&public_keys::PUBLIC_KEYS);
         #[cfg(feature = "debug")]
         if result.is_err() {
