@@ -1,5 +1,10 @@
+use super::super::{
+    component::{Frame, FrameMsg, PromptScreen, SwipeContent, VerticalMenu, VerticalMenuChoiceMsg},
+    theme,
+};
 use crate::{
     error,
+    error::Error,
     maybe_trace::MaybeTrace,
     micropython::{map::Map, obj::Obj, qstr::Qstr, util},
     strutil::TString,
@@ -17,14 +22,6 @@ use crate::{
         layout::obj::LayoutObj,
     },
 };
-
-use super::super::{
-    component::{Frame, FrameMsg, PromptScreen, SwipeContent, VerticalMenu, VerticalMenuChoiceMsg},
-    theme,
-};
-
-// TODO: merge with code from https://github.com/trezor/trezor-firmware/pull/3805
-// when ready
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum ConfirmAction {
@@ -160,6 +157,8 @@ pub fn new_confirm_action_uni<T: Component + MaybeTrace + 'static>(
     hold: bool,
     info: bool,
 ) -> Result<Obj, error::Error> {
+    let (prompt_screen, prompt_pages, flow, page) = create_flow(title, prompt_screen, hold);
+
     let mut content_intro = Frame::left_aligned(title, content)
         .with_menu_button()
         .with_footer(TR::instructions__swipe_up.into(), None)
@@ -171,8 +170,6 @@ pub fn new_confirm_action_uni<T: Component + MaybeTrace + 'static>(
         content_intro = content_intro.with_subtitle(subtitle);
     }
 
-    let prompt_screen = prompt_screen.or_else(|| hold.then_some(title));
-    let prompt_pages: usize = prompt_screen.is_some().into();
     let content_intro = content_intro
         .map(move |msg| match msg {
             FrameMsg::Button(_) => Some(FlowMsg::Info),
@@ -180,6 +177,60 @@ pub fn new_confirm_action_uni<T: Component + MaybeTrace + 'static>(
         })
         .with_pages(move |intro_pages| intro_pages + prompt_pages);
 
+    let flow = flow?.with_page(page, content_intro)?;
+
+    create_menu_and_confirm(subtitle, verb_cancel, hold, info, prompt_screen, flow)
+}
+
+fn create_flow(
+    title: TString<'static>,
+    prompt_screen: Option<TString<'static>>,
+    hold: bool,
+) -> (
+    Option<TString<'static>>,
+    usize,
+    Result<SwipeFlow, Error>,
+    &'static dyn FlowState,
+) {
+    let prompt_screen = prompt_screen.or_else(|| hold.then_some(title));
+    let prompt_pages: usize = prompt_screen.is_some().into();
+
+    let flow = if prompt_screen.is_some() {
+        SwipeFlow::new(&ConfirmAction::Intro)
+    } else {
+        SwipeFlow::new(&ConfirmActionSimple::Intro)
+    };
+
+    let page: &dyn FlowState = if prompt_screen.is_some() {
+        &ConfirmAction::Intro
+    } else {
+        &ConfirmActionSimple::Intro
+    };
+
+    (prompt_screen, prompt_pages, flow, page)
+}
+
+fn create_menu_and_confirm(
+    subtitle: Option<TString<'static>>,
+    verb_cancel: Option<TString<'static>>,
+    hold: bool,
+    info: bool,
+    prompt_screen: Option<TString<'static>>,
+    flow: SwipeFlow,
+) -> Result<Obj, Error> {
+    let flow = create_menu(flow, verb_cancel, info, prompt_screen)?;
+
+    let flow = create_confirm(flow, subtitle, hold, prompt_screen)?;
+
+    Ok(LayoutObj::new(flow)?.into())
+}
+
+fn create_menu(
+    flow: SwipeFlow,
+    verb_cancel: Option<TString<'static>>,
+    info: bool,
+    prompt_screen: Option<TString<'static>>,
+) -> Result<SwipeFlow, Error> {
     let mut menu_choices = VerticalMenu::empty().danger(
         theme::ICON_CANCEL,
         verb_cancel.unwrap_or(TR::buttons__cancel.into()),
@@ -192,12 +243,26 @@ pub fn new_confirm_action_uni<T: Component + MaybeTrace + 'static>(
     }
     let content_menu = Frame::left_aligned("".into(), menu_choices)
         .with_cancel_button()
-        .with_swipe(SwipeDirection::Right, SwipeSettings::immediate())
-        .map(move |msg| match msg {
-            FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => Some(FlowMsg::Choice(i)),
-            FrameMsg::Button(_) => Some(FlowMsg::Cancelled),
-        });
+        .with_swipe(SwipeDirection::Right, SwipeSettings::immediate());
 
+    let content_menu = content_menu.map(move |msg| match msg {
+        FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => Some(FlowMsg::Choice(i)),
+        FrameMsg::Button(_) => Some(FlowMsg::Cancelled),
+    });
+
+    if prompt_screen.is_some() {
+        flow.with_page(&ConfirmAction::Menu, content_menu)
+    } else {
+        flow.with_page(&ConfirmActionSimple::Menu, content_menu)
+    }
+}
+
+fn create_confirm(
+    flow: SwipeFlow,
+    subtitle: Option<TString<'static>>,
+    hold: bool,
+    prompt_screen: Option<TString<'static>>,
+) -> Result<SwipeFlow, Error> {
     if let Some(prompt_title) = prompt_screen {
         let (prompt, prompt_action) = if hold {
             (
@@ -226,16 +291,9 @@ pub fn new_confirm_action_uni<T: Component + MaybeTrace + 'static>(
             FrameMsg::Button(_) => Some(FlowMsg::Info),
         });
 
-        let res = SwipeFlow::new(&ConfirmAction::Intro)?
-            .with_page(&ConfirmAction::Intro, content_intro)?
-            .with_page(&ConfirmAction::Menu, content_menu)?
-            .with_page(&ConfirmAction::Confirm, content_confirm)?;
-        Ok(LayoutObj::new(res)?.into())
+        flow.with_page(&ConfirmAction::Confirm, content_confirm)
     } else {
-        let res = SwipeFlow::new(&ConfirmActionSimple::Intro)?
-            .with_page(&ConfirmActionSimple::Intro, content_intro)?
-            .with_page(&ConfirmActionSimple::Menu, content_menu)?;
-        Ok(LayoutObj::new(res)?.into())
+        Ok(flow)
     }
 }
 
