@@ -1,3 +1,4 @@
+use super::{theme, Footer};
 use crate::{
     strutil::{ShortString, TString},
     translations::TR,
@@ -10,8 +11,6 @@ use crate::{
         shape::{self, Renderer},
     },
 };
-
-use super::{theme, Footer};
 
 pub enum NumberInputSliderDialogMsg {
     Changed(u16),
@@ -32,8 +31,10 @@ impl NumberInputSliderDialog {
         Self {
             area: Rect::zero(),
             input: NumberInputSlider::new(min, max, init_value).into_child(),
-            footer: Footer::new::<TString<'static>>(TR::instructions__swipe_horizontally.into())
-                .with_description::<TString<'static>>(TR::setting__adjust.into()),
+            footer: Footer::new::<TString<'static>>(
+                TR::instructions__swipe_horizontally.into(),
+                Some(TR::setting__adjust.into()),
+            ),
             min,
             max,
             val: init_value,

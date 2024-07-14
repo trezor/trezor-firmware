@@ -45,22 +45,18 @@ impl<'a> Footer<'a> {
     const STYLE_INSTRUCTION: &'static TextStyle = &theme::TEXT_SUB_GREY;
     const STYLE_DESCRIPTION: &'static TextStyle = &theme::TEXT_SUB_GREY_LIGHT;
 
-    pub fn new<T: Into<TString<'a>>>(instruction: T) -> Self {
+    pub fn new<T: Into<TString<'a>>>(
+        instruction: T,
+        description: Option<TString<'static>>,
+    ) -> Self {
         Self {
             area: Rect::zero(),
             instruction: instruction.into(),
-            content: None,
+            content: description.map(FooterContent::Description),
             swipe_allow_down: false,
             swipe_allow_up: false,
             progress: 0,
             dir: SwipeDirection::Up,
-        }
-    }
-
-    pub fn with_description<T: Into<TString<'a>>>(self, description: T) -> Self {
-        Self {
-            content: Some(FooterContent::Description(description.into())),
-            ..self
         }
     }
 
@@ -110,16 +106,17 @@ impl<'a> Footer<'a> {
         }
     }
 
-    pub fn with_swipe_up(self) -> Self {
-        Self {
-            swipe_allow_up: true,
-            ..self
-        }
-    }
-    pub fn with_swipe_down(self) -> Self {
-        Self {
-            swipe_allow_down: true,
-            ..self
+    pub fn with_swipe(self, swipe_direction: SwipeDirection) -> Self {
+        match swipe_direction {
+            SwipeDirection::Up => Self {
+                swipe_allow_up: true,
+                ..self
+            },
+            SwipeDirection::Down => Self {
+                swipe_allow_down: true,
+                ..self
+            },
+            _ => self,
         }
     }
 }
