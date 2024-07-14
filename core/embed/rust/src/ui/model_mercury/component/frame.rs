@@ -1,4 +1,4 @@
-use super::{theme, ButtonMsg, ButtonStyleSheet, CancelInfoConfirmMsg, Footer, Header};
+use super::{theme, ButtonStyleSheet, CancelInfoConfirmMsg, Footer, Header};
 use crate::{
     strutil::TString,
     ui::{
@@ -84,7 +84,6 @@ impl HorizontalSwipe {
 pub struct Frame<T> {
     border: Insets,
     bounds: Rect,
-    button_msg: CancelInfoConfirmMsg,
     content: T,
     header: Header,
     footer: Option<Footer<'static>>,
@@ -106,7 +105,6 @@ where
         Self {
             bounds: Rect::zero(),
             border: theme::borders(),
-            button_msg: CancelInfoConfirmMsg::Cancelled,
             content,
             header: Header::new(alignment, title),
             footer: None,
@@ -145,8 +143,7 @@ where
 
     #[inline(never)]
     fn with_button(mut self, icon: Icon, msg: CancelInfoConfirmMsg, enabled: bool) -> Self {
-        self.header = self.header.with_button(icon, enabled);
-        self.button_msg = msg;
+        self.header = self.header.with_button(icon, enabled, msg);
         self
     }
 
@@ -189,17 +186,13 @@ where
         instruction: TString<'static>,
         description: Option<TString<'static>>,
     ) -> Self {
-        let mut footer = Footer::new(instruction);
-        if let Some(description_text) = description {
-            footer = footer.with_description(description_text);
-        }
-        self.footer = Some(footer);
+        self.footer = Some(Footer::new(instruction, description));
         self
     }
 
     #[inline(never)]
     pub fn with_footer_counter(mut self, instruction: TString<'static>, max_value: u8) -> Self {
-        self.footer = Some(Footer::new(instruction).with_page_counter(max_value));
+        self.footer = Some(Footer::new(instruction, None).with_page_counter(max_value));
         self
     }
 
@@ -213,8 +206,7 @@ where
     }
 
     pub fn update_title(&mut self, ctx: &mut EventCtx, new_title: TString<'static>) {
-        self.header.update_title(new_title);
-        ctx.request_paint();
+        self.header.update_title(ctx, new_title);
     }
 
     pub fn update_subtitle(
@@ -223,8 +215,7 @@ where
         new_subtitle: TString<'static>,
         new_style: Option<TextStyle>,
     ) {
-        self.header.update_subtitle(new_subtitle, new_style);
-        ctx.request_paint();
+        self.header.update_subtitle(ctx, new_subtitle, new_style);
     }
 
     pub fn update_content<F, R>(&mut self, ctx: &mut EventCtx, update_fn: F) -> R
@@ -244,11 +235,7 @@ where
 
     #[inline(never)]
     pub fn with_swipe(mut self, dir: SwipeDirection, settings: SwipeSettings) -> Self {
-        self.footer = self.footer.map(|f| match dir {
-            SwipeDirection::Up => f.with_swipe_up(),
-            SwipeDirection::Down => f.with_swipe_down(),
-            _ => f,
-        });
+        self.footer = self.footer.map(|f| f.with_swipe(dir));
         self.swipe = self.swipe.with_swipe(dir, settings);
         self
     }
@@ -275,21 +262,7 @@ where
 
     fn place(&mut self, bounds: Rect) -> Rect {
         self.bounds = bounds;
-
-        let (mut header_area, mut content_area) = bounds.split_top(TITLE_HEIGHT);
-        content_area = content_area.inset(Insets::top(theme::SPACING));
-        header_area = header_area.inset(Insets::sides(theme::SPACING));
-
-        self.header.place(header_area);
-
-        if let Some(footer) = &mut self.footer {
-            // FIXME: spacer at the bottom might be applied also for usage without footer
-            // but not for VerticalMenu
-            content_area = content_area.inset(Insets::bottom(theme::SPACING));
-            let (remaining, footer_area) = content_area.split_bottom(footer.height());
-            footer.place(footer_area);
-            content_area = remaining;
-        }
+        let content_area = frame_place(&mut self.header, &mut self.footer, bounds);
 
         self.content.place(content_area);
 
@@ -297,9 +270,17 @@ where
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        self.horizontal_swipe.event(event, self.swipe);
+        if let Some(value) = frame_event(
+            &mut self.horizontal_swipe,
+            self.swipe,
+            &mut self.header,
+            &mut self.footer,
+            ctx,
+            event,
+        ) {
+            return Some(FrameMsg::Button(value));
+        }
 
-        self.footer.event(ctx, event);
         let msg = self.content.event(ctx, event).map(FrameMsg::Content);
         if let Some(count) = ctx.page_count() {
             self.internal_page_cnt = count;
@@ -308,9 +289,7 @@ where
         if msg.is_some() {
             return msg;
         }
-        if let Some(ButtonMsg::Clicked) = self.header.event(ctx, event) {
-            return Some(FrameMsg::Button(self.button_msg));
-        }
+
         None
     }
 
@@ -327,6 +306,37 @@ where
         self.horizontal_swipe
             .render_swipe_cover(target, self.bounds);
     }
+}
+fn frame_event(
+    horizontal_swipe: &mut HorizontalSwipe,
+    swipe_config: SwipeConfig,
+    header: &mut Header,
+    footer: &mut Option<Footer>,
+    ctx: &mut EventCtx,
+    event: Event,
+) -> Option<CancelInfoConfirmMsg> {
+    horizontal_swipe.event(event, swipe_config);
+
+    footer.event(ctx, event);
+
+    header.event(ctx, event)
+}
+fn frame_place(header: &mut Header, footer: &mut Option<Footer>, bounds: Rect) -> Rect {
+    let (mut header_area, mut content_area) = bounds.split_top(TITLE_HEIGHT);
+    content_area = content_area.inset(Insets::top(theme::SPACING));
+    header_area = header_area.inset(Insets::sides(theme::SPACING));
+
+    header.place(header_area);
+
+    if let Some(footer) = footer {
+        // FIXME: spacer at the bottom might be applied also for usage without footer
+        // but not for VerticalMenu
+        content_area = content_area.inset(Insets::bottom(theme::SPACING));
+        let (remaining, footer_area) = content_area.split_bottom(footer.height());
+        footer.place(footer_area);
+        content_area = remaining;
+    }
+    content_area
 }
 
 #[cfg(feature = "micropython")]

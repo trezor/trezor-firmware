@@ -7,7 +7,7 @@ use crate::{
         geometry::{Alignment, Alignment2D, Insets, Offset, Rect},
         lerp::Lerp,
         model_mercury::{
-            component::{Button, ButtonMsg, ButtonStyleSheet},
+            component::{Button, ButtonMsg, ButtonStyleSheet, CancelInfoConfirmMsg},
             theme,
             theme::TITLE_HEIGHT,
         },
@@ -71,6 +71,7 @@ pub struct Header {
     icon: Option<Icon>,
     color: Option<Color>,
     title_style: TextStyle,
+    button_msg: CancelInfoConfirmMsg,
 }
 
 impl Header {
@@ -84,6 +85,7 @@ impl Header {
             icon: None,
             color: None,
             title_style: theme::label_title_main(),
+            button_msg: CancelInfoConfirmMsg::Cancelled,
         }
     }
     #[inline(never)]
@@ -107,12 +109,14 @@ impl Header {
         self
     }
     #[inline(never)]
-    pub fn update_title(&mut self, title: TString<'static>) {
+    pub fn update_title(&mut self, ctx: &mut EventCtx, title: TString<'static>) {
         self.title.set_text(title);
+        ctx.request_paint();
     }
     #[inline(never)]
     pub fn update_subtitle(
         &mut self,
+        ctx: &mut EventCtx,
         new_subtitle: TString<'static>,
         new_style: Option<TextStyle>,
     ) {
@@ -126,10 +130,11 @@ impl Header {
                 self.subtitle = Some(Label::new(new_subtitle, self.title.alignment(), style));
             }
         }
+        ctx.request_paint();
     }
 
     #[inline(never)]
-    pub fn with_button(mut self, icon: Icon, enabled: bool) -> Self {
+    pub fn with_button(mut self, icon: Icon, enabled: bool, msg: CancelInfoConfirmMsg) -> Self {
         let touch_area = Insets::uniform(BUTTON_EXPAND_BORDER);
         self.button = Some(
             Button::with_icon(icon)
@@ -137,6 +142,7 @@ impl Header {
                 .initially_enabled(enabled)
                 .styled(theme::button_default()),
         );
+        self.button_msg = msg;
         self
     }
     #[inline(never)]
@@ -160,7 +166,7 @@ impl Header {
 }
 
 impl Component for Header {
-    type Msg = ButtonMsg;
+    type Msg = CancelInfoConfirmMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
         let header_area = if let Some(b) = &mut self.button {
@@ -201,7 +207,11 @@ impl Component for Header {
             }
         }
 
-        self.button.event(ctx, event)
+        if let Some(ButtonMsg::Clicked) = self.button.event(ctx, event) {
+            return Some(self.button_msg);
+        };
+
+        None
     }
 
     fn paint(&mut self) {
