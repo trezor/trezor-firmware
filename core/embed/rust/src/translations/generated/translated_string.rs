@@ -1330,7 +1330,7 @@ pub enum TranslatedString {
     words__settings = 929,  // "Settings"
     words__try_again = 930,  // "Try again."
     reset__slip39_checklist_num_groups_x_template = 931,  // "Number of groups: {0}"
-    brightness__title = 932,  // "Change display brightness"
+    brightness__title = 932,  // "Display brightness"
     recovery__title_unlock_repeated_backup = 933,  // "Multi-share backup"
     recovery__unlock_repeated_backup = 934,  // "Create additional backup?"
     recovery__unlock_repeated_backup_verb = 935,  // "Create backup"
@@ -1349,6 +1349,11 @@ pub enum TranslatedString {
     tutorial__title_well_done = 948,  // "Well done!"
     tutorial__lets_begin = 949,  // "Learn how to use and navigate this device with ease."
     tutorial__get_started = 950,  // "Get started!"
+    instructions__swipe_horizontally = 951,  // "Swipe horizontally"
+    setting__adjust = 952,  // "Adjust"
+    setting__apply = 953,  // "Apply"
+    brightness__changed_title = 954,  // "Display brightness changed"
+    brightness__change_title = 955,  // "Change display brightness"
 }
 
 impl TranslatedString {
@@ -2673,7 +2678,7 @@ impl TranslatedString {
             Self::words__settings => "Settings",
             Self::words__try_again => "Try again.",
             Self::reset__slip39_checklist_num_groups_x_template => "Number of groups: {0}",
-            Self::brightness__title => "Change display brightness",
+            Self::brightness__title => "Display brightness",
             Self::recovery__title_unlock_repeated_backup => "Multi-share backup",
             Self::recovery__unlock_repeated_backup => "Create additional backup?",
             Self::recovery__unlock_repeated_backup_verb => "Create backup",
@@ -2692,6 +2697,11 @@ impl TranslatedString {
             Self::tutorial__title_well_done => "Well done!",
             Self::tutorial__lets_begin => "Learn how to use and navigate this device with ease.",
             Self::tutorial__get_started => "Get started!",
+            Self::instructions__swipe_horizontally => "Swipe horizontally",
+            Self::setting__adjust => "Adjust",
+            Self::setting__apply => "Apply",
+            Self::brightness__changed_title => "Display brightness changed",
+            Self::brightness__change_title => "Change display brightness",
         }
     }
 
@@ -4036,6 +4046,11 @@ impl TranslatedString {
             Qstr::MP_QSTR_tutorial__title_well_done => Some(Self::tutorial__title_well_done),
             Qstr::MP_QSTR_tutorial__lets_begin => Some(Self::tutorial__lets_begin),
             Qstr::MP_QSTR_tutorial__get_started => Some(Self::tutorial__get_started),
+            Qstr::MP_QSTR_instructions__swipe_horizontally => Some(Self::instructions__swipe_horizontally),
+            Qstr::MP_QSTR_setting__adjust => Some(Self::setting__adjust),
+            Qstr::MP_QSTR_setting__apply => Some(Self::setting__apply),
+            Qstr::MP_QSTR_brightness__changed_title => Some(Self::brightness__changed_title),
+            Qstr::MP_QSTR_brightness__change_title => Some(Self::brightness__change_title),
             _ => None,
         }
     }

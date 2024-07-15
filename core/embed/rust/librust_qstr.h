@@ -121,6 +121,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_bootscreen;
   MP_QSTR_br_code;
   MP_QSTR_br_type;
+  MP_QSTR_brightness__change_title;
+  MP_QSTR_brightness__changed_title;
   MP_QSTR_brightness__title;
   MP_QSTR_button;
   MP_QSTR_button_event;
@@ -295,6 +297,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_instructions__learn_more;
   MP_QSTR_instructions__shares_continue_with_x_template;
   MP_QSTR_instructions__shares_start_with_1;
+  MP_QSTR_instructions__swipe_horizontally;
   MP_QSTR_instructions__swipe_up;
   MP_QSTR_instructions__tap_to_confirm;
   MP_QSTR_instructions__tap_to_start;
@@ -618,6 +621,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_send__transaction_signed;
   MP_QSTR_send__you_are_contributing;
   MP_QSTR_set_brightness;
+  MP_QSTR_setting__adjust;
+  MP_QSTR_setting__apply;
   MP_QSTR_share_words;
   MP_QSTR_share_words__words_in_order;
   MP_QSTR_share_words__wrote_down_all;

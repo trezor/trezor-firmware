@@ -9,8 +9,8 @@ use crate::{
     ui::{
         component::{base::ComponentExt, swipe_detect::SwipeSettings, SwipeDirection},
         flow::{
-            base::{Decision, FlowMsg},
-            flow_store, FlowState, FlowStore, SwipeFlow,
+            base::{DecisionBuilder as _, FlowMsg, StateChange},
+            FlowState, SwipeFlow,
         },
         layout::obj::LayoutObj,
         model_mercury::component::{
@@ -21,7 +21,7 @@ use crate::{
 };
 
 use super::super::{
-    component::{Frame, FrameMsg, PromptScreen, VerticalMenu, VerticalMenuChoiceMsg},
+    component::{Frame, FrameMsg, PromptScreen, StatusScreen, VerticalMenu, VerticalMenuChoiceMsg},
     theme,
 };
 
@@ -30,41 +30,35 @@ pub enum SetBrightness {
     Slider,
     Menu,
     Confirm,
+    Confirmed,
 }
 
 impl FlowState for SetBrightness {
-    fn handle_swipe(&self, direction: SwipeDirection) -> Decision<Self> {
+    #[inline]
+    fn index(&'static self) -> usize {
+        *self as usize
+    }
+
+    fn handle_swipe(&'static self, direction: SwipeDirection) -> StateChange {
         match (self, direction) {
-            (SetBrightness::Menu, SwipeDirection::Right) => {
-                Decision::Goto(SetBrightness::Slider, direction)
-            }
-            (SetBrightness::Slider, SwipeDirection::Up) => {
-                Decision::Goto(SetBrightness::Confirm, direction)
-            }
-            (SetBrightness::Confirm, SwipeDirection::Down) => {
-                Decision::Goto(SetBrightness::Slider, direction)
-            }
-            (SetBrightness::Confirm, SwipeDirection::Left) => {
-                Decision::Goto(SetBrightness::Menu, direction)
-            }
-            _ => Decision::Nothing,
+            (Self::Menu, SwipeDirection::Right) => Self::Slider.swipe(direction),
+            (Self::Slider, SwipeDirection::Up) => Self::Confirm.swipe(direction),
+            (Self::Confirm, SwipeDirection::Down) => Self::Slider.swipe(direction),
+            (Self::Confirm, SwipeDirection::Left) => Self::Menu.swipe(direction),
+            (Self::Confirmed, SwipeDirection::Up) => self.return_msg(FlowMsg::Confirmed),
+            _ => self.do_nothing(),
         }
     }
 
-    fn handle_event(&self, msg: FlowMsg) -> Decision<Self> {
+    fn handle_event(&'static self, msg: FlowMsg) -> StateChange {
         match (self, msg) {
-            (SetBrightness::Slider, FlowMsg::Info) => {
-                Decision::Goto(SetBrightness::Menu, SwipeDirection::Left)
-            }
-            (SetBrightness::Menu, FlowMsg::Cancelled) => {
-                Decision::Goto(SetBrightness::Slider, SwipeDirection::Right)
-            }
-            (SetBrightness::Menu, FlowMsg::Choice(0)) => Decision::Return(FlowMsg::Cancelled),
-            (SetBrightness::Confirm, FlowMsg::Confirmed) => Decision::Return(FlowMsg::Confirmed),
-            (SetBrightness::Confirm, FlowMsg::Info) => {
-                Decision::Goto(SetBrightness::Menu, SwipeDirection::Left)
-            }
-            _ => Decision::Nothing,
+            (Self::Slider, FlowMsg::Info) => Self::Menu.swipe_left(),
+            (Self::Menu, FlowMsg::Cancelled) => Self::Slider.swipe_right(),
+            (Self::Menu, FlowMsg::Choice(0)) => self.return_msg(FlowMsg::Cancelled),
+            (Self::Confirm, FlowMsg::Confirmed) => Self::Confirmed.swipe_up(),
+            (Self::Confirm, FlowMsg::Info) => Self::Menu.swipe_left(),
+            (Self::Confirmed, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Confirmed),
+            _ => self.do_nothing(),
         }
     }
 }
@@ -87,8 +81,8 @@ impl SetBrightness {
                 current.unwrap_or(theme::backlight::get_backlight_normal()),
             ),
         )
+        .with_subtitle(TR::homescreen__settings_subtitle.into())
         .with_menu_button()
-        .with_footer(TR::instructions__swipe_up.into(), None)
         .with_swipe(SwipeDirection::Up, SwipeSettings::default())
         .map(|msg| match msg {
             FrameMsg::Content(NumberInputSliderDialogMsg::Changed(n)) => {
@@ -111,7 +105,7 @@ impl SetBrightness {
         });
 
         let content_confirm = Frame::left_aligned(
-            TR::brightness__title.into(),
+            TR::brightness__change_title.into(),
             SwipeContent::new(PromptScreen::new_tap_to_confirm()),
         )
         .with_footer(TR::instructions__tap_to_confirm.into(), None)
@@ -126,12 +120,19 @@ impl SetBrightness {
             FrameMsg::Button(_) => Some(FlowMsg::Info),
         });
 
-        let store = flow_store()
-            .add(content_slider)?
-            .add(content_menu)?
-            .add(content_confirm)?;
+        let content_confirmed = Frame::left_aligned(
+            TR::brightness__changed_title.into(),
+            SwipeContent::new(StatusScreen::new_success()).with_no_attach_anim(),
+        )
+        .with_footer(TR::instructions__swipe_up.into(), None)
+        .with_swipe(SwipeDirection::Up, SwipeSettings::default())
+        .map(move |_msg| Some(FlowMsg::Confirmed));
 
-        let res = SwipeFlow::new(SetBrightness::Slider, store)?;
+        let res = SwipeFlow::new(&SetBrightness::Slider)?
+            .with_page(&SetBrightness::Slider, content_slider)?
+            .with_page(&SetBrightness::Menu, content_menu)?
+            .with_page(&SetBrightness::Confirm, content_confirm)?
+            .with_page(&SetBrightness::Confirmed, content_confirmed)?;
 
         Ok(LayoutObj::new(res)?.into())
     }

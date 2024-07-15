@@ -949,5 +949,10 @@
   "947": "tutorial__title_hold",
   "948": "tutorial__title_well_done",
   "949": "tutorial__lets_begin",
-  "950": "tutorial__get_started"
+  "950": "tutorial__get_started",
+  "951": "instructions__swipe_horizontally",
+  "952": "setting__adjust",
+  "953": "setting__apply",
+  "954": "brightness__changed_title",
+  "955": "brightness__change_title"
 }
