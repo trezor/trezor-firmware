@@ -20,6 +20,7 @@ mod keyboard;
 mod loader;
 #[cfg(feature = "translations")]
 mod number_input;
+#[cfg(feature = "translations")]
 pub mod number_input_slider;
 mod progress;
 #[cfg(feature = "translations")]
