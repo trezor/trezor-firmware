@@ -876,7 +876,7 @@ env.Append(LINKFLAGS=f' -l{RUST_LIB}')
 
 MODEL_IDENTIFIER = models.get_model_identifier(TREZOR_MODEL)
 BOOTLOADER_SUFFIX = MODEL_IDENTIFIER
-if BOOTLOADER_QA:
+if BOOTLOADER_QA or BOOTLOADER_DEVEL:
     BOOTLOADER_SUFFIX += '_qa'
 
 # select vendor header
