@@ -28,8 +28,9 @@ VENDOR_HEADER = (
     HERE.parent.parent
     / "core"
     / "embed"
-    / "vendorheader"
+    / "models"
     / "T2T1"
+    / "vendorheader"
     / "vendorheader_satoshilabs_signed_prod.bin"
 )
 

@@ -143,10 +143,10 @@ docs_summary_check: ## check if there are unlinked documentation files
 	python3 tools/check_docs_summary.py
 
 vendorheader: ## generate vendor header
-	./core/embed/vendorheader/generate.sh --quiet
+	./core/tools/generate_vendorheader.sh --quiet
 
 vendorheader_check: ## check that vendor header is up to date
-	./core/embed/vendorheader/generate.sh --quiet --check
+	./core/tools/generate_vendorheader.sh --quiet --check
 
 gen:  templates mocks icons protobuf ci_docs vendorheader solana_templates ## regenerate auto-generated files from sources
 
