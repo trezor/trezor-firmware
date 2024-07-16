@@ -892,7 +892,7 @@ else:
     else:
         vendor = "trezor_signed_prod"
 
-VENDORHEADER = f'embed/vendorheader/{MODEL_IDENTIFIER}/vendorheader_{vendor}.bin'
+VENDORHEADER = f'embed/models/{MODEL_IDENTIFIER}/vendorheader/vendorheader_{vendor}.bin'
 
 
 if TREZOR_MODEL not in ('1',):
