@@ -1,7 +1,6 @@
 from micropython import const
 from typing import TYPE_CHECKING
 
-import storage.cache as storage_cache
 from storage import common
 from trezor import utils
 
@@ -329,22 +328,12 @@ def set_safety_check_level(level: StorageSafetyCheckLevel) -> None:
     common.set_uint8(_NAMESPACE, _SAFETY_CHECK_LEVEL, level)
 
 
-@storage_cache.stored(storage_cache.STORAGE_DEVICE_EXPERIMENTAL_FEATURES)
-def _get_experimental_features() -> bytes:
-    if common.get_bool(_NAMESPACE, _EXPERIMENTAL_FEATURES):
-        return b"\x01"
-    else:
-        return b""
-
-
 def get_experimental_features() -> bool:
-    return bool(_get_experimental_features())
+    return common.get_bool(_NAMESPACE, _EXPERIMENTAL_FEATURES, True)
 
 
 def set_experimental_features(enabled: bool) -> None:
-    cached_bytes = b"\x01" if enabled else b""
-    storage_cache.set(storage_cache.STORAGE_DEVICE_EXPERIMENTAL_FEATURES, cached_bytes)
-    common.set_true_or_delete(_NAMESPACE, _EXPERIMENTAL_FEATURES, enabled)
+    common.set_true_or_delete(_NAMESPACE, _EXPERIMENTAL_FEATURES, enabled, True)
 
 
 def set_hide_passphrase_from_host(hide: bool) -> None:
