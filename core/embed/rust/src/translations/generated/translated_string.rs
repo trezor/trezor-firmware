@@ -1355,6 +1355,8 @@ pub enum TranslatedString {
     brightness__changed_title = 954,  // "Display brightness changed"
     brightness__change_title = 955,  // "Change display brightness"
     words__title_done = 956,  // "Done"
+    reset__slip39_checklist_more_info_threshold = 957,  // "The threshold sets the minumum number of shares needed to recover your wallet."
+    reset__slip39_checklist_more_info_threshold_example_template = 958,  // "If you set {0} out of {1} shares, you'll need {2} backup shares to recover your wallet."
 }
 
 impl TranslatedString {
@@ -2704,6 +2706,8 @@ impl TranslatedString {
             Self::brightness__changed_title => "Display brightness changed",
             Self::brightness__change_title => "Change display brightness",
             Self::words__title_done => "Done",
+            Self::reset__slip39_checklist_more_info_threshold => "The threshold sets the minumum number of shares needed to recover your wallet.",
+            Self::reset__slip39_checklist_more_info_threshold_example_template => "If you set {0} out of {1} shares, you'll need {2} backup shares to recover your wallet.",
         }
     }
 
@@ -4054,6 +4058,8 @@ impl TranslatedString {
             Qstr::MP_QSTR_brightness__changed_title => Some(Self::brightness__changed_title),
             Qstr::MP_QSTR_brightness__change_title => Some(Self::brightness__change_title),
             Qstr::MP_QSTR_words__title_done => Some(Self::words__title_done),
+            Qstr::MP_QSTR_reset__slip39_checklist_more_info_threshold => Some(Self::reset__slip39_checklist_more_info_threshold),
+            Qstr::MP_QSTR_reset__slip39_checklist_more_info_threshold_example_template => Some(Self::reset__slip39_checklist_more_info_threshold_example_template),
             _ => None,
         }
     }

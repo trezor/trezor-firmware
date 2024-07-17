@@ -955,5 +955,7 @@
   "953": "setting__apply",
   "954": "brightness__changed_title",
   "955": "brightness__change_title",
-  "956": "words__title_done"
+  "956": "words__title_done",
+  "957": "reset__slip39_checklist_more_info_threshold",
+  "958": "reset__slip39_checklist_more_info_threshold_example_template"
 }

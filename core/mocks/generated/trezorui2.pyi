@@ -420,7 +420,7 @@ def flow_request_number(
     count: int,
     min_count: int,
     max_count: int,
-    description: Callable[[int], str] | None = None,
+    description: str,
     info: Callable[[int], str] | None = None,
     br_code: ButtonRequestType,
     br_name: str,

@@ -36,6 +36,7 @@ mod swipe_content;
 mod swipe_up_screen;
 #[cfg(feature = "translations")]
 mod tap_to_confirm;
+mod updatable_more_info;
 mod welcome_screen;
 
 #[cfg(feature = "translations")]
@@ -82,6 +83,7 @@ pub use swipe_content::{InternallySwipable, InternallySwipableContent, SwipeCont
 pub use swipe_up_screen::{SwipeUpScreen, SwipeUpScreenMsg};
 #[cfg(feature = "translations")]
 pub use tap_to_confirm::TapToConfirm;
+pub use updatable_more_info::UpdatableMoreInfo;
 pub use vertical_menu::{VerticalMenu, VerticalMenuChoiceMsg};
 pub use welcome_screen::WelcomeScreen;
 

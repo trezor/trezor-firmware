@@ -652,6 +652,8 @@ class TR:
     reset__share_checked_successfully_template: str = "Share #{0} checked successfully."
     reset__share_completed_template: str = "Share #{0} completed"
     reset__share_words_title: str = "Standard backup"
+    reset__slip39_checklist_more_info_threshold: str = "The threshold sets the minumum number of shares needed to recover your wallet."
+    reset__slip39_checklist_more_info_threshold_example_template: str = "If you set {0} out of {1} shares, you'll need {2} backup shares to recover your wallet."
     reset__slip39_checklist_num_groups: str = "Number of groups"
     reset__slip39_checklist_num_groups_x_template: str = "Number of groups: {0}"
     reset__slip39_checklist_num_shares: str = "Number of shares"
