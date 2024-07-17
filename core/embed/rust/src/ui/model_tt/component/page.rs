@@ -43,7 +43,7 @@ pub struct ButtonPage<T> {
     /// Whether to pass-through right swipe to parent component.
     swipe_right: bool,
     /// Fade to given backlight level on next paint().
-    fade: Cell<Option<u16>>,
+    fade: Cell<Option<u8>>,
 }
 
 impl<T> ButtonPage<T>

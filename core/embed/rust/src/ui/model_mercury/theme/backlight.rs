@@ -10,43 +10,41 @@ const BACKLIGHT_MIN: u8 = 10;
 const BACKLIGHT_MAX: u8 = 255;
 
 #[cfg(feature = "bootloader")]
-pub fn get_backlight_normal() -> u16 {
-    BACKLIGHT_NORMAL.into()
+pub fn get_backlight_normal() -> u8 {
+    BACKLIGHT_NORMAL
 }
 
 #[cfg(not(feature = "bootloader"))]
-pub fn get_backlight_normal() -> u16 {
+pub fn get_backlight_normal() -> u8 {
     storage::get_brightness()
         .unwrap_or(BACKLIGHT_NORMAL)
         .clamp(BACKLIGHT_MIN, BACKLIGHT_MAX)
-        .into()
 }
 
 #[cfg(feature = "bootloader")]
-pub fn get_backlight_low() -> u16 {
-    BACKLIGHT_LOW.into()
+pub fn get_backlight_low() -> u8 {
+    BACKLIGHT_LOW
 }
 
 #[cfg(not(feature = "bootloader"))]
-pub fn get_backlight_low() -> u16 {
+pub fn get_backlight_low() -> u8 {
     storage::get_brightness()
         .unwrap_or(BACKLIGHT_LOW)
         .clamp(BACKLIGHT_MIN, BACKLIGHT_LOW)
-        .into()
 }
 
-pub fn get_backlight_dim() -> u16 {
-    BACKLIGHT_DIM.into()
+pub fn get_backlight_dim() -> u8 {
+    BACKLIGHT_DIM
 }
 
-pub fn get_backlight_none() -> u16 {
-    BACKLIGHT_NONE.into()
+pub fn get_backlight_none() -> u8 {
+    BACKLIGHT_NONE
 }
 
-pub fn get_backlight_max() -> u16 {
-    BACKLIGHT_MAX.into()
+pub fn get_backlight_max() -> u8 {
+    BACKLIGHT_MAX
 }
 
-pub fn get_backlight_min() -> u16 {
-    BACKLIGHT_MIN.into()
+pub fn get_backlight_min() -> u8 {
+    BACKLIGHT_MIN
 }

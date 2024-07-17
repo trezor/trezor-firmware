@@ -49,44 +49,44 @@ use crate::trezorhal::{
 };
 use crate::ui::constant::WIDTH;
 
-pub fn backlight() -> u16 {
-    display::backlight(-1) as u16
+pub fn backlight() -> u8 {
+    display::backlight(-1) as u8
 }
 
 #[cfg(feature = "backlight")]
-pub fn set_backlight(val: u16) {
+pub fn set_backlight(val: u8) {
     display::backlight(val as i32);
 }
 
 #[cfg(feature = "backlight")]
-pub fn fade_backlight(target: u16) {
+pub fn fade_backlight(target: u8) {
     const FADE_DURATION_MS: u32 = 50;
     fade_backlight_duration(target, FADE_DURATION_MS);
 }
 
 #[cfg(feature = "backlight")]
-pub fn fade_backlight_duration(target: u16, duration_ms: u32) {
+pub fn fade_backlight_duration(target: u8, duration_ms: u32) {
     let target = target as i32;
     let duration_ms = duration_ms as i32;
     let current = backlight() as i32;
 
     for i in 0..duration_ms {
         let val = i32::lerp(current, target, i as f32 / duration_ms as f32);
-        set_backlight(val as u16);
+        set_backlight(val as u8);
         time::sleep(Duration::from_millis(1));
     }
     //account for imprecise rounding
-    set_backlight(target as u16);
+    set_backlight(target as u8);
 }
 
 #[cfg(not(feature = "backlight"))]
-pub fn set_backlight(_: u16) {}
+pub fn set_backlight(_: u8) {}
 
 #[cfg(not(feature = "backlight"))]
-pub fn fade_backlight(_: u16) {}
+pub fn fade_backlight(_: u8) {}
 
 #[cfg(not(feature = "backlight"))]
-pub fn fade_backlight_duration(_: u16, _: u32) {}
+pub fn fade_backlight_duration(_: u8, _: u32) {}
 
 #[cfg(not(feature = "framebuffer"))]
 /// Fill a whole rectangle with a specific color.
