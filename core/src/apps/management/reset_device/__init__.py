@@ -183,11 +183,13 @@ async def _backup_slip39_advanced(
     groups_count = await layout.slip39_advanced_prompt_number_of_groups()
 
     # get group threshold
-    await layout.slip39_show_checklist(1, advanced=True)
+    await layout.slip39_show_checklist(1, advanced=True, count=groups_count)
     group_threshold = await layout.slip39_advanced_prompt_group_threshold(groups_count)
 
     # get shares and thresholds
-    await layout.slip39_show_checklist(2, advanced=True)
+    await layout.slip39_show_checklist(
+        2, advanced=True, count=groups_count, threshold=group_threshold
+    )
     groups = []
     for i in range(groups_count):
         share_count = await layout.slip39_prompt_number_of_shares(i)

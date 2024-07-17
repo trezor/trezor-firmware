@@ -1704,7 +1704,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     count: int,
     ///     min_count: int,
     ///     max_count: int,
-    ///     description: Callable[[int], str] | None = None,
+    ///     description: str,
     ///     info: Callable[[int], str] | None = None,
     ///     br_code: ButtonRequestType,
     ///     br_name: str,

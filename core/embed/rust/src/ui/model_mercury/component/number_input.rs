@@ -4,7 +4,6 @@ use crate::{
     ui::{
         component::{
             base::ComponentExt,
-            paginated::Paginate,
             text::paragraphs::{Paragraph, Paragraphs},
             Child, Component, Event, EventCtx, Pad, SwipeDirection,
         },
@@ -17,28 +16,22 @@ use crate::{
 
 use super::{theme, Button, ButtonMsg};
 
-pub struct NumberInputDialogMsg(pub u32);
+pub enum NumberInputDialogMsg {
+    Confirmed(u32),
+    Changed(u32),
+}
 
-pub struct NumberInputDialog<F>
-where
-    F: Fn(u32) -> TString<'static>,
-{
+pub struct NumberInputDialog {
     area: Rect,
-    description_func: F,
     input: Child<NumberInput>,
     paragraphs: Child<Paragraphs<Paragraph<'static>>>,
     paragraphs_pad: Pad,
 }
 
-impl<F> NumberInputDialog<F>
-where
-    F: Fn(u32) -> TString<'static>,
-{
-    pub fn new(min: u32, max: u32, init_value: u32, description_func: F) -> Result<Self, Error> {
-        let text = description_func(init_value);
+impl NumberInputDialog {
+    pub fn new(min: u32, max: u32, init_value: u32, text: TString<'static>) -> Result<Self, Error> {
         Ok(Self {
             area: Rect::zero(),
-            description_func,
             input: NumberInput::new(min, max, init_value).into_child(),
             paragraphs: Paragraphs::new(Paragraph::new(&theme::TEXT_MAIN_GREY_LIGHT, text))
                 .into_child(),
@@ -46,27 +39,12 @@ where
         })
     }
 
-    fn update_text(&mut self, ctx: &mut EventCtx, value: u32) {
-        let text = (self.description_func)(value);
-        self.paragraphs.mutate(ctx, move |ctx, para| {
-            para.inner_mut().update(text);
-            // Recompute bounding box.
-            para.change_page(0);
-            ctx.request_paint()
-        });
-        self.paragraphs_pad.clear();
-        ctx.request_paint();
-    }
-
     pub fn value(&self) -> u32 {
         self.input.inner().value
     }
 }
 
-impl<F> Component for NumberInputDialog<F>
-where
-    F: Fn(u32) -> TString<'static>,
-{
+impl Component for NumberInputDialog {
     type Msg = NumberInputDialogMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -87,11 +65,11 @@ where
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         if let Some(NumberInputMsg::Changed(i)) = self.input.event(ctx, event) {
-            self.update_text(ctx, i);
+            return Some(NumberInputDialogMsg::Changed(i));
         }
 
         if let Event::Swipe(SwipeEvent::End(SwipeDirection::Up)) = event {
-            return Some(NumberInputDialogMsg(self.input.inner().value));
+            return Some(NumberInputDialogMsg::Confirmed(self.input.inner().value));
         }
         self.paragraphs.event(ctx, event);
         None
@@ -109,10 +87,7 @@ where
 }
 
 #[cfg(feature = "ui_debug")]
-impl<F> crate::trace::Trace for NumberInputDialog<F>
-where
-    F: Fn(u32) -> TString<'static>,
-{
+impl crate::trace::Trace for NumberInputDialog {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("NumberInputDialog");
         t.child("input", &self.input);

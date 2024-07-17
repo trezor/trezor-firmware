@@ -157,7 +157,7 @@ def _slip_39_checklist_items(
 
 async def _prompt_number(
     title: str,
-    description: Callable[[int], str],
+    description: str,
     info: Callable[[int], str],
     count: int,
     min_count: int,
@@ -200,38 +200,20 @@ async def slip39_prompt_threshold(
     min_count = min(2, num_of_shares)
     max_count = num_of_shares
 
-    def description(count: int) -> str:
-        if group_id is None:
-            return TR.reset__select_threshold
-        else:
-            return TR.reset__num_shares_for_group_template.format(group_id + 1)
+    description = (
+        TR.reset__select_threshold
+        if group_id is None
+        else TR.reset__num_shares_for_group_template.format(group_id + 1)
+    )
 
     def info(count: int) -> str:
-        # TODO: this is madness...
-        text = TR.reset__the_threshold_sets_the_number_of_shares
-        if group_id is None:
-            # FIXME: need to propagate the argument in rust, temporary hack to show plausible value
-            count = num_of_shares - 1
-            text += TR.reset__needed_to_recover_your_wallet
-            text += TR.reset__set_it_to_count_template.format(count)
-            if num_of_shares == 1:
-                text += TR.reset__one_share
-            elif num_of_shares == count:
-                text += TR.reset__all_x_of_y_template.format(count, num_of_shares)
-            else:
-                text += TR.reset__any_x_of_y_template.format(count, num_of_shares)
-            text += "."
-        else:
-            text += TR.reset__needed_to_form_a_group
-            text += TR.reset__set_it_to_count_template.format(count)
-            if num_of_shares == 1:
-                text += TR.reset__one_share + " "
-            elif num_of_shares == count:
-                text += TR.reset__all_x_of_y_template.format(count, num_of_shares)
-            else:
-                text += TR.reset__any_x_of_y_template.format(count, num_of_shares)
-            text += " " + TR.reset__to_form_group_template.format(group_id + 1)
-        return text
+        return (
+            TR.reset__slip39_checklist_more_info_threshold
+            + "\n"
+            + TR.reset__slip39_checklist_more_info_threshold_example_template.format(
+                count, num_of_shares, count
+            )
+        )
 
     return await _prompt_number(
         TR.reset__title_set_threshold,
@@ -249,13 +231,11 @@ async def slip39_prompt_number_of_shares(group_id: int | None = None) -> int:
     min_count = 1
     max_count = 16
 
-    def description(i: int):
-        if group_id is None:
-            return TR.reset__num_of_shares_how_many
-        else:
-            return TR.reset__total_number_of_shares_in_group_template.format(
-                group_id + 1
-            )
+    description = (
+        TR.reset__num_of_shares_how_many
+        if group_id is None
+        else TR.reset__total_number_of_shares_in_group_template.format(group_id + 1)
+    )
 
     if group_id is None:
         info = TR.reset__num_of_shares_long_info
@@ -282,7 +262,7 @@ async def slip39_advanced_prompt_number_of_groups() -> int:
 
     return await _prompt_number(
         TR.reset__title_set_number_of_groups,
-        lambda i: description,
+        description,
         lambda i: info,
         count,
         min_count,
@@ -300,7 +280,7 @@ async def slip39_advanced_prompt_group_threshold(num_of_groups: int) -> int:
 
     return await _prompt_number(
         TR.reset__title_set_group_threshold,
-        lambda i: description,
+        description,
         lambda i: info,
         count,
         min_count,
