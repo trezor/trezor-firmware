@@ -1,4 +1,4 @@
-use core::sync::atomic::{AtomicU16, Ordering};
+use core::sync::atomic::{AtomicU8, Ordering};
 
 use crate::{
     error::Error,
@@ -63,7 +63,7 @@ impl FlowState for SetBrightness {
     }
 }
 
-static BRIGHTNESS: AtomicU16 = AtomicU16::new(0);
+static BRIGHTNESS: AtomicU8 = AtomicU8::new(0);
 
 #[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub extern "C" fn new_set_brightness(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
@@ -72,13 +72,13 @@ pub extern "C" fn new_set_brightness(n_args: usize, args: *const Obj, kwargs: *m
 
 impl SetBrightness {
     fn new_obj(_args: &[Obj], kwargs: &Map) -> Result<Obj, Error> {
-        let current: Option<u16> = kwargs.get(Qstr::MP_QSTR_current)?.try_into_option()?;
+        let current: Option<u8> = kwargs.get(Qstr::MP_QSTR_current)?.try_into_option()?;
         let content_slider = Frame::left_aligned(
             TR::brightness__title.into(),
             NumberInputSliderDialog::new(
-                theme::backlight::get_backlight_min(),
-                theme::backlight::get_backlight_max(),
-                current.unwrap_or(theme::backlight::get_backlight_normal()),
+                theme::backlight::get_backlight_min() as u16,
+                theme::backlight::get_backlight_max() as u16,
+                current.unwrap_or(theme::backlight::get_backlight_normal()) as u16,
             ),
         )
         .with_subtitle(TR::homescreen__settings_subtitle.into())
@@ -87,7 +87,7 @@ impl SetBrightness {
         .map(|msg| match msg {
             FrameMsg::Content(NumberInputSliderDialogMsg::Changed(n)) => {
                 display::backlight(n as _);
-                BRIGHTNESS.store(n, Ordering::Relaxed);
+                BRIGHTNESS.store(n as u8, Ordering::Relaxed);
                 None
             }
             FrameMsg::Button(_) => Some(FlowMsg::Info),
@@ -114,7 +114,7 @@ impl SetBrightness {
         .with_swipe(SwipeDirection::Left, SwipeSettings::default())
         .map(move |msg| match msg {
             FrameMsg::Content(()) => {
-                let _ = storage::set_brightness(BRIGHTNESS.load(Ordering::Relaxed) as u8);
+                let _ = storage::set_brightness(BRIGHTNESS.load(Ordering::Relaxed));
                 Some(FlowMsg::Confirmed)
             }
             FrameMsg::Button(_) => Some(FlowMsg::Info),

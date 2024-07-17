@@ -11,19 +11,19 @@ pub trait UIFeaturesCommon {
     fn fadeout() {}
     fn backlight_on() {}
 
-    fn get_backlight_none() -> u16 {
+    fn get_backlight_none() -> u8 {
         0
     }
-    fn get_backlight_normal() -> u16 {
+    fn get_backlight_normal() -> u8 {
         0
     }
-    fn get_backlight_low() -> u16 {
+    fn get_backlight_low() -> u8 {
         0
     }
-    fn get_backlight_dim() -> u16 {
+    fn get_backlight_dim() -> u8 {
         0
     }
-    fn get_backlight_max() -> u16 {
+    fn get_backlight_max() -> u8 {
         0
     }
 

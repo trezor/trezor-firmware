@@ -1316,7 +1316,7 @@ extern "C" fn new_request_number(n_args: usize, args: *const Obj, kwargs: *mut M
 
 extern "C" fn new_set_brightness(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let current: Option<u16> = kwargs.get(Qstr::MP_QSTR_current)?.try_into_option()?;
+        let current: Option<u8> = kwargs.get(Qstr::MP_QSTR_current)?.try_into_option()?;
         let obj = LayoutObj::new(Frame::centered(
             theme::label_title(),
             TR::brightness__title.into(),

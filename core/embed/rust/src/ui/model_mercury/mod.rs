@@ -33,27 +33,27 @@ impl UIFeaturesCommon for ModelMercuryFeatures {
     }
 
     #[cfg(feature = "backlight")]
-    fn get_backlight_none() -> u16 {
+    fn get_backlight_none() -> u8 {
         backlight::get_backlight_none()
     }
 
     #[cfg(feature = "backlight")]
-    fn get_backlight_normal() -> u16 {
+    fn get_backlight_normal() -> u8 {
         backlight::get_backlight_normal()
     }
 
     #[cfg(feature = "backlight")]
-    fn get_backlight_low() -> u16 {
+    fn get_backlight_low() -> u8 {
         backlight::get_backlight_low()
     }
 
     #[cfg(feature = "backlight")]
-    fn get_backlight_dim() -> u16 {
+    fn get_backlight_dim() -> u8 {
         backlight::get_backlight_dim()
     }
 
     #[cfg(feature = "backlight")]
-    fn get_backlight_max() -> u16 {
+    fn get_backlight_max() -> u8 {
         backlight::get_backlight_max()
     }
 

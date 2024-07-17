@@ -20,8 +20,8 @@ pub struct Swipe {
     pub allow_down: bool,
     pub allow_left: bool,
     pub allow_right: bool,
-    backlight_start: u16,
-    backlight_end: u16,
+    backlight_start: u8,
+    backlight_end: u8,
     origin: Option<Point>,
 }
 
@@ -82,7 +82,7 @@ impl Swipe {
         let start = self.backlight_start as f32;
         let end = self.backlight_end as f32;
         let value = start + ratio * (end - start);
-        display::set_backlight(value as u16);
+        display::set_backlight(value as u8);
     }
 }
 

@@ -18,7 +18,7 @@ pub struct SimplePage<T> {
     scrollbar: ScrollBar,
     axis: Axis,
     swipe_right_to_go_back: bool,
-    fade: Cell<Option<u16>>,
+    fade: Cell<Option<u8>>,
 }
 
 impl<T> SimplePage<T>
