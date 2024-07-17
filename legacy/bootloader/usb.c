@@ -129,10 +129,15 @@ static void check_and_write_chunk(void) {
 }
 
 // read protobuf integer and advance pointer
-static secbool readprotobufint(const uint8_t **ptr, uint32_t *result) {
+static secbool readprotobufint(const uint8_t **ptr, const uint8_t *end,
+                               uint32_t *result) {
   *result = 0;
 
   for (int i = 0; i <= 3; ++i) {
+    if (*ptr == end) {
+      *result = 0;
+      return secfalse;
+    }
     *result += (**ptr & 0x7F) << (7 * i);
     if ((**ptr & 0x80) == 0) {
       (*ptr)++;
@@ -141,13 +146,14 @@ static secbool readprotobufint(const uint8_t **ptr, uint32_t *result) {
     (*ptr)++;
   }
 
+  if (*ptr == end) {
+    *result = 0;
+    return secfalse;
+  }
+
   if (**ptr & 0xF0) {
     // result does not fit into uint32_t
     *result = 0;
-
-    // skip over the rest of the integer
-    while (**ptr & 0x80) (*ptr)++;
-    (*ptr)++;
     return secfalse;
   }
 
@@ -308,8 +314,9 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
       }
       // read payload length
       const uint8_t *p = buf + 10;
-      if (readprotobufint(&p, &flash_len) != sectrue) {  // integer too large
-        send_msg_failure(dev, 9);                        // Failure_ProcessError
+      if (readprotobufint(&p, buf + sizeof(buf), &flash_len) != sectrue) {
+        // integer too large
+        send_msg_failure(dev, 9);  // Failure_ProcessError
         flash_state = STATE_END;
         show_halt("Firmware is", "too big.");
         return;
