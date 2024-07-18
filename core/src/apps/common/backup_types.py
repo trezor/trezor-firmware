@@ -65,3 +65,22 @@ def infer_backup_type(is_slip39: bool, share: Share | None = None) -> BackupType
             return BackupType.Slip39_Advanced_Extendable
         else:
             return BackupType.Slip39_Advanced
+
+
+def get_num_of_words_per_share(
+    backup_type: BackupType, secret_length_bytes: int
+) -> int:
+    if is_slip39_backup_type(backup_type):
+        if secret_length_bytes == 16:
+            return 20
+        elif secret_length_bytes == 32:
+            return 33
+    else:
+        if secret_length_bytes == 16:
+            return 12
+        elif secret_length_bytes == 24:
+            return 18
+        elif secret_length_bytes == 32:
+            return 24
+    # Invalid backup type and secret length combination
+    raise RuntimeError
