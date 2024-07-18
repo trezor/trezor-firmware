@@ -196,7 +196,9 @@ async def slip39_prompt_threshold(
     )
 
 
-async def slip39_prompt_number_of_shares(group_id: int | None = None) -> int:
+async def slip39_prompt_number_of_shares(
+    _num_words: int, group_id: int | None = None
+) -> int:
     await confirm_action(
         "slip39_shares",
         TR.reset__title_number_of_shares,

@@ -845,8 +845,8 @@ pub enum TranslatedString {
     reset__needed_to_recover_your_wallet = 557,  // "needed to recover your wallet. "
     reset__never_make_digital_copy = 558,  // "Never put your backup anywhere digital."
     reset__num_of_share_holders_template = 559,  // "{0} people or locations will each hold one share."
-    reset__num_of_shares_advanced_info_template = 560,  // "Each recovery share is a sequence of 20 words. Next you will choose the threshold number of shares needed to form Group {0}."
-    reset__num_of_shares_basic_info = 561,  // "Each recovery share is a sequence of 20 words. Next you will choose how many shares you need to recover your wallet."
+    reset__num_of_shares_advanced_info_template = 560,  // "Each recovery share is a sequence of {0} words. Next you will choose the threshold number of shares needed to form Group {1}."
+    reset__num_of_shares_basic_info_template = 561,  // "Each recovery share is a sequence of {0} words. Next you will choose how many shares you need to recover your wallet."
     reset__num_shares_for_group_template = 562,  // "The required number of shares to form Group {0}."
     reset__number_of_shares_info = 563,  // "= total number of unique word lists used for wallet backup."
     reset__one_share = 564,  // "1 share"
@@ -1308,7 +1308,7 @@ pub enum TranslatedString {
     reset__incorrect_word_selected = 907,  // "Incorrect word selected"
     reset__more_at = 908,  // "More at"
     reset__num_of_shares_how_many = 909,  // "How many wallet backup shares do you want to create?"
-    reset__num_of_shares_long_info = 910,  // "Each backup share is a sequence of 20 words. Store each wordlist in a separate, safe location or share with trusted individuals. Collect as needed to recover your wallet."
+    reset__num_of_shares_long_info_template = 910,  // "Each backup share is a sequence of {0} words. Store each wordlist in a separate, safe location or share with trusted individuals. Collect as needed to recover your wallet."
     reset__select_threshold = 911,  // "Select the minimum shares required to recover your wallet."
     reset__share_completed_template = 912,  // "Share #{0} completed"
     reset__slip39_checklist_num_shares_x_template = 913,  // "Number of shares: {0}"
@@ -2196,8 +2196,8 @@ impl TranslatedString {
             Self::reset__needed_to_recover_your_wallet => "needed to recover your wallet. ",
             Self::reset__never_make_digital_copy => "Never put your backup anywhere digital.",
             Self::reset__num_of_share_holders_template => "{0} people or locations will each hold one share.",
-            Self::reset__num_of_shares_advanced_info_template => "Each recovery share is a sequence of 20 words. Next you will choose the threshold number of shares needed to form Group {0}.",
-            Self::reset__num_of_shares_basic_info => "Each recovery share is a sequence of 20 words. Next you will choose how many shares you need to recover your wallet.",
+            Self::reset__num_of_shares_advanced_info_template => "Each recovery share is a sequence of {0} words. Next you will choose the threshold number of shares needed to form Group {1}.",
+            Self::reset__num_of_shares_basic_info_template => "Each recovery share is a sequence of {0} words. Next you will choose how many shares you need to recover your wallet.",
             Self::reset__num_shares_for_group_template => "The required number of shares to form Group {0}.",
             Self::reset__number_of_shares_info => "= total number of unique word lists used for wallet backup.",
             Self::reset__one_share => "1 share",
@@ -2659,7 +2659,7 @@ impl TranslatedString {
             Self::reset__incorrect_word_selected => "Incorrect word selected",
             Self::reset__more_at => "More at",
             Self::reset__num_of_shares_how_many => "How many wallet backup shares do you want to create?",
-            Self::reset__num_of_shares_long_info => "Each backup share is a sequence of 20 words. Store each wordlist in a separate, safe location or share with trusted individuals. Collect as needed to recover your wallet.",
+            Self::reset__num_of_shares_long_info_template => "Each backup share is a sequence of {0} words. Store each wordlist in a separate, safe location or share with trusted individuals. Collect as needed to recover your wallet.",
             Self::reset__select_threshold => "Select the minimum shares required to recover your wallet.",
             Self::reset__share_completed_template => "Share #{0} completed",
             Self::reset__slip39_checklist_num_shares_x_template => "Number of shares: {0}",
@@ -3549,7 +3549,7 @@ impl TranslatedString {
             Qstr::MP_QSTR_reset__never_make_digital_copy => Some(Self::reset__never_make_digital_copy),
             Qstr::MP_QSTR_reset__num_of_share_holders_template => Some(Self::reset__num_of_share_holders_template),
             Qstr::MP_QSTR_reset__num_of_shares_advanced_info_template => Some(Self::reset__num_of_shares_advanced_info_template),
-            Qstr::MP_QSTR_reset__num_of_shares_basic_info => Some(Self::reset__num_of_shares_basic_info),
+            Qstr::MP_QSTR_reset__num_of_shares_basic_info_template => Some(Self::reset__num_of_shares_basic_info_template),
             Qstr::MP_QSTR_reset__num_shares_for_group_template => Some(Self::reset__num_shares_for_group_template),
             Qstr::MP_QSTR_reset__number_of_shares_info => Some(Self::reset__number_of_shares_info),
             Qstr::MP_QSTR_reset__one_share => Some(Self::reset__one_share),
@@ -4011,7 +4011,7 @@ impl TranslatedString {
             Qstr::MP_QSTR_reset__incorrect_word_selected => Some(Self::reset__incorrect_word_selected),
             Qstr::MP_QSTR_reset__more_at => Some(Self::reset__more_at),
             Qstr::MP_QSTR_reset__num_of_shares_how_many => Some(Self::reset__num_of_shares_how_many),
-            Qstr::MP_QSTR_reset__num_of_shares_long_info => Some(Self::reset__num_of_shares_long_info),
+            Qstr::MP_QSTR_reset__num_of_shares_long_info_template => Some(Self::reset__num_of_shares_long_info_template),
             Qstr::MP_QSTR_reset__select_threshold => Some(Self::reset__select_threshold),
             Qstr::MP_QSTR_reset__share_completed_template => Some(Self::reset__share_completed_template),
             Qstr::MP_QSTR_reset__slip39_checklist_num_shares_x_template => Some(Self::reset__slip39_checklist_num_shares_x_template),

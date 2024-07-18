@@ -506,9 +506,9 @@ static void _librust_qstrs(void) {
   MP_QSTR_reset__never_make_digital_copy;
   MP_QSTR_reset__num_of_share_holders_template;
   MP_QSTR_reset__num_of_shares_advanced_info_template;
-  MP_QSTR_reset__num_of_shares_basic_info;
+  MP_QSTR_reset__num_of_shares_basic_info_template;
   MP_QSTR_reset__num_of_shares_how_many;
-  MP_QSTR_reset__num_of_shares_long_info;
+  MP_QSTR_reset__num_of_shares_long_info_template;
   MP_QSTR_reset__num_shares_for_group_template;
   MP_QSTR_reset__number_of_shares_info;
   MP_QSTR_reset__one_share;

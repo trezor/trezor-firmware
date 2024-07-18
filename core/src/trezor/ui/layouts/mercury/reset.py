@@ -226,7 +226,9 @@ async def slip39_prompt_threshold(
     )
 
 
-async def slip39_prompt_number_of_shares(group_id: int | None = None) -> int:
+async def slip39_prompt_number_of_shares(
+    num_words: int, group_id: int | None = None
+) -> int:
     count = 5
     min_count = 1
     max_count = 16
@@ -238,9 +240,11 @@ async def slip39_prompt_number_of_shares(group_id: int | None = None) -> int:
     )
 
     if group_id is None:
-        info = TR.reset__num_of_shares_long_info
+        info = TR.reset__num_of_shares_long_info_template.format(num_words)
     else:
-        info = TR.reset__num_of_shares_advanced_info_template.format(group_id + 1)
+        info = TR.reset__num_of_shares_advanced_info_template.format(
+            num_words, group_id + 1
+        )
 
     return await _prompt_number(
         TR.reset__title_set_number_of_shares,

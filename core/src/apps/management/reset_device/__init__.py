@@ -144,7 +144,7 @@ async def _backup_slip39_single(
 
 
 async def _backup_slip39_basic(
-    encrypted_master_secret: bytes, extendable: bool
+    encrypted_master_secret: bytes, num_of_words: int, extendable: bool
 ) -> None:
     group_threshold = 1
 
@@ -152,7 +152,7 @@ async def _backup_slip39_basic(
 
     # get number of shares
     await layout.slip39_show_checklist(0, advanced=False)
-    share_count = await layout.slip39_prompt_number_of_shares()
+    share_count = await layout.slip39_prompt_number_of_shares(num_of_words)
 
     # get threshold
     await layout.slip39_show_checklist(1, advanced=False, count=share_count)
@@ -173,9 +173,8 @@ async def _backup_slip39_basic(
 
 
 async def _backup_slip39_advanced(
-    encrypted_master_secret: bytes, extendable: bool
+    encrypted_master_secret: bytes, num_of_words: int, extendable: bool
 ) -> None:
-
     await layout.show_backup_intro(single_share=False)
 
     # get number of groups
@@ -192,7 +191,7 @@ async def _backup_slip39_advanced(
     )
     groups = []
     for i in range(groups_count):
-        share_count = await layout.slip39_prompt_number_of_shares(i)
+        share_count = await layout.slip39_prompt_number_of_shares(num_of_words, i)
         share_threshold = await layout.slip39_prompt_threshold(share_count, i)
         groups.append((share_threshold, share_count))
 
@@ -294,12 +293,15 @@ def _compute_secret_from_entropy(
 
 async def backup_seed(backup_type: BackupType, mnemonic_secret: bytes) -> None:
     if backup_types.is_slip39_backup_type(backup_type):
+        num_of_words = backup_types.get_num_of_words_per_share(
+            backup_type, len(mnemonic_secret)
+        )
         extendable = backup_types.is_extendable_backup_type(backup_type)
         if backup_types.is_slip39_advanced_backup_type(backup_type):
-            await _backup_slip39_advanced(mnemonic_secret, extendable)
+            await _backup_slip39_advanced(mnemonic_secret, num_of_words, extendable)
         elif backup_type == BAK_T_SLIP39_SINGLE_EXT:
             await _backup_slip39_single(mnemonic_secret, extendable)
         else:
-            await _backup_slip39_basic(mnemonic_secret, extendable)
+            await _backup_slip39_basic(mnemonic_secret, num_of_words, extendable)
     else:
         await _backup_bip39(mnemonic_secret.decode())
