@@ -6,9 +6,7 @@ use crate::{
     strutil::TString,
     translations::TR,
     ui::{
-        component::{
-            base::Never, Bar, Child, Component, ComponentExt, Empty, Event, EventCtx, Label, Split,
-        },
+        component::{base::Never, Bar, Component, Empty, Event, EventCtx, Label, Split},
         display::loader::{loader_circular_uncompress, LoaderDimensions},
         geometry::{Insets, Offset, Rect},
         model_mercury::constant,
@@ -30,7 +28,7 @@ const LOADER_SPEED: u16 = 5;
 pub struct CoinJoinProgress<U> {
     value: u16,
     indeterminate: bool,
-    content: Child<Frame<Split<Empty, U>>>,
+    content: Frame<Split<Empty, U>>,
     // Label is not a child since circular loader paints large black rectangle which overlaps it.
     // To work around this, draw label every time loader is drawn.
     label: Label<'static>,
@@ -65,8 +63,7 @@ where
             content: Frame::centered(
                 TR::coinjoin__title_progress.into(),
                 Split::bottom(RECTANGLE_HEIGHT, 0, Empty, inner),
-            )
-            .into_child(),
+            ),
             label: Label::centered(text, theme::TEXT_NORMAL),
         })
     }

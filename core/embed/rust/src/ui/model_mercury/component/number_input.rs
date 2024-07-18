@@ -3,9 +3,8 @@ use crate::{
     strutil::{self, TString},
     ui::{
         component::{
-            base::ComponentExt,
             text::paragraphs::{Paragraph, Paragraphs},
-            Child, Component, Event, EventCtx, Pad, SwipeDirection,
+            Component, Event, EventCtx, Pad, SwipeDirection,
         },
         display::Font,
         event::SwipeEvent,
@@ -23,8 +22,8 @@ pub enum NumberInputDialogMsg {
 
 pub struct NumberInputDialog {
     area: Rect,
-    input: Child<NumberInput>,
-    paragraphs: Child<Paragraphs<Paragraph<'static>>>,
+    input: NumberInput,
+    paragraphs: Paragraphs<Paragraph<'static>>,
     paragraphs_pad: Pad,
 }
 
@@ -32,15 +31,14 @@ impl NumberInputDialog {
     pub fn new(min: u32, max: u32, init_value: u32, text: TString<'static>) -> Result<Self, Error> {
         Ok(Self {
             area: Rect::zero(),
-            input: NumberInput::new(min, max, init_value).into_child(),
-            paragraphs: Paragraphs::new(Paragraph::new(&theme::TEXT_MAIN_GREY_LIGHT, text))
-                .into_child(),
+            input: NumberInput::new(min, max, init_value),
+            paragraphs: Paragraphs::new(Paragraph::new(&theme::TEXT_MAIN_GREY_LIGHT, text)),
             paragraphs_pad: Pad::with_background(theme::BG),
         })
     }
 
     pub fn value(&self) -> u32 {
-        self.input.inner().value
+        self.input.value
     }
 }
 
@@ -69,7 +67,7 @@ impl Component for NumberInputDialog {
         }
 
         if let Event::Swipe(SwipeEvent::End(SwipeDirection::Up)) = event {
-            return Some(NumberInputDialogMsg::Confirmed(self.input.inner().value));
+            return Some(NumberInputDialogMsg::Confirmed(self.input.value));
         }
         self.paragraphs.event(ctx, event);
         None
@@ -101,8 +99,8 @@ pub enum NumberInputMsg {
 
 pub struct NumberInput {
     area: Rect,
-    dec: Child<Button>,
-    inc: Child<Button>,
+    dec: Button,
+    inc: Button,
     min: u32,
     max: u32,
     value: u32,
@@ -110,12 +108,8 @@ pub struct NumberInput {
 
 impl NumberInput {
     pub fn new(min: u32, max: u32, value: u32) -> Self {
-        let dec = Button::with_icon(theme::ICON_MINUS)
-            .styled(theme::button_counter())
-            .into_child();
-        let inc = Button::with_icon(theme::ICON_PLUS)
-            .styled(theme::button_counter())
-            .into_child();
+        let dec = Button::with_icon(theme::ICON_MINUS).styled(theme::button_counter());
+        let inc = Button::with_icon(theme::ICON_PLUS).styled(theme::button_counter());
         let value = value.clamp(min, max);
         Self {
             area: Rect::zero(),
@@ -150,10 +144,8 @@ impl Component for NumberInput {
             changed = true;
         };
         if changed {
-            self.dec
-                .mutate(ctx, |ctx, btn| btn.enable_if(ctx, self.value > self.min));
-            self.inc
-                .mutate(ctx, |ctx, btn| btn.enable_if(ctx, self.value < self.max));
+            self.dec.enable_if(ctx, self.value > self.min);
+            self.inc.enable_if(ctx, self.value < self.max);
             ctx.request_paint();
             return Some(NumberInputMsg::Changed(self.value));
         }

@@ -3,7 +3,7 @@ use crate::{
     strutil::{ShortString, TString},
     translations::TR,
     ui::{
-        component::{base::ComponentExt, Child, Component, Event, EventCtx},
+        component::{Component, Event, EventCtx},
         constant::screen,
         display,
         event::TouchEvent,
@@ -18,7 +18,7 @@ pub enum NumberInputSliderDialogMsg {
 
 pub struct NumberInputSliderDialog {
     area: Rect,
-    input: Child<NumberInputSlider>,
+    input: NumberInputSlider,
     footer: Footer<'static>,
     min: u16,
     max: u16,
@@ -30,7 +30,7 @@ impl NumberInputSliderDialog {
     pub fn new(min: u16, max: u16, init_value: u16) -> Self {
         Self {
             area: Rect::zero(),
-            input: NumberInputSlider::new(min, max, init_value).into_child(),
+            input: NumberInputSlider::new(min, max, init_value),
             footer: Footer::new::<TString<'static>>(
                 TR::instructions__swipe_horizontally.into(),
                 Some(TR::setting__adjust.into()),
@@ -43,7 +43,7 @@ impl NumberInputSliderDialog {
     }
 
     pub fn value(&self) -> u16 {
-        self.input.inner().value
+        self.input.value
     }
 }
 
@@ -79,7 +79,7 @@ impl Component for NumberInputSliderDialog {
         if let Some(value) = self.input.event(ctx, event) {
             self.val = value;
 
-            if self.val == self.init_val || self.input.inner().touching {
+            if self.val == self.init_val || self.input.touching {
                 self.footer
                     .update_instruction(ctx, TR::instructions__swipe_horizontally);
                 self.footer.update_description(ctx, TR::setting__adjust);
