@@ -8,10 +8,13 @@ use crate::{
         },
         display,
         geometry::{Alignment, Grid, Insets, Offset, Rect},
-        model_mercury::component::{
-            button::{Button, ButtonContent, ButtonMsg},
-            keyboard::common::{render_pending_marker, MultiTapKeyboard},
-            theme,
+        model_mercury::{
+            component::{
+                button::{Button, ButtonContent, ButtonMsg},
+                keyboard::common::{render_pending_marker, MultiTapKeyboard},
+                theme,
+            },
+            cshape,
         },
         shape,
         shape::Renderer,
@@ -78,6 +81,7 @@ pub struct PassphraseKeyboard {
     cancel_btn: Child<Maybe<Button>>,
     confirm_btn: Child<Button>,
     next_btn: Child<Button>,
+    keypad_area: Rect,
     keys: [Child<Button>; KEY_COUNT],
     active_layout: KeyboardLayout,
     fade: Cell<bool>,
@@ -131,6 +135,7 @@ impl PassphraseKeyboard {
             cancel_btn,
             confirm_btn,
             next_btn,
+            keypad_area: Rect::zero(),
             keys: KEYBOARD[active_layout.to_usize().unwrap()].map(|text| {
                 Child::new(
                     Button::new(Self::key_content(text))
@@ -261,15 +266,16 @@ impl Component for PassphraseKeyboard {
         const CONFIRM_BTN_INSETS: Insets = Insets::new(5, 0, 5, 0);
 
         let bounds = bounds.inset(theme::borders());
-        let (top_area, key_grid_area) =
+        let (top_area, keypad_area) =
             bounds.split_bottom(4 * theme::PASSPHRASE_BUTTON_HEIGHT + 3 * theme::BUTTON_SPACING);
+        self.keypad_area = keypad_area;
         let (input_area, confirm_btn_area) = top_area.split_right(CONFIRM_BTN_WIDTH);
 
         let top_area = top_area.inset(INPUT_INSETS);
         let input_area = input_area.inset(INPUT_INSETS);
         let confirm_btn_area = confirm_btn_area.inset(CONFIRM_BTN_INSETS);
 
-        let key_grid = Grid::new(key_grid_area, 4, 3).with_spacing(theme::BUTTON_SPACING);
+        let key_grid = Grid::new(keypad_area, 4, 3).with_spacing(theme::BUTTON_SPACING);
         let next_btn_area = key_grid.cell(11);
         let erase_cancel_area = key_grid.cell(9);
 
@@ -389,6 +395,8 @@ impl Component for PassphraseKeyboard {
             // Note that this is blocking and takes some time.
             display::fade_backlight(theme::backlight::get_backlight_normal());
         }
+
+        cshape::KeyboardOverlay::new(self.keypad_area).render(target);
     }
 }
 
