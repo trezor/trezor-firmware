@@ -1289,7 +1289,7 @@ pub enum TranslatedString {
     instructions__continue_holding = 888,  // "Continue\nholding"
     instructions__enter_next_share = 889,  // "Enter next share"
     instructions__hold_to_continue = 890,  // "Hold to continue"
-    instructions__exit_tutorial = 891,  // "Exit tutorial"
+    instructions__hold_to_exit_tutorial = 891,  // "Hold to exit tutorial"
     instructions__hold_to_finish_tutorial = 892,  // "\"\""
     instructions__learn_more = 893,  // "Learn more"
     instructions__shares_continue_with_x_template = 894,  // "Continue with Share #{0}"
@@ -2638,7 +2638,7 @@ impl TranslatedString {
             Self::instructions__continue_holding => "Continue\nholding",
             Self::instructions__enter_next_share => "Enter next share",
             Self::instructions__hold_to_continue => "Hold to continue",
-            Self::instructions__exit_tutorial => "Exit tutorial",
+            Self::instructions__hold_to_exit_tutorial => "Hold to exit tutorial",
             Self::instructions__hold_to_finish_tutorial => "\"\"",
             Self::instructions__learn_more => "Learn more",
             Self::instructions__shares_continue_with_x_template => "Continue with Share #{0}",
@@ -3988,7 +3988,7 @@ impl TranslatedString {
             Qstr::MP_QSTR_instructions__continue_holding => Some(Self::instructions__continue_holding),
             Qstr::MP_QSTR_instructions__enter_next_share => Some(Self::instructions__enter_next_share),
             Qstr::MP_QSTR_instructions__hold_to_continue => Some(Self::instructions__hold_to_continue),
-            Qstr::MP_QSTR_instructions__exit_tutorial => Some(Self::instructions__exit_tutorial),
+            Qstr::MP_QSTR_instructions__hold_to_exit_tutorial => Some(Self::instructions__hold_to_exit_tutorial),
             Qstr::MP_QSTR_instructions__hold_to_finish_tutorial => Some(Self::instructions__hold_to_finish_tutorial),
             Qstr::MP_QSTR_instructions__learn_more => Some(Self::instructions__learn_more),
             Qstr::MP_QSTR_instructions__shares_continue_with_x_template => Some(Self::instructions__shares_continue_with_x_template),
