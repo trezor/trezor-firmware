@@ -8,7 +8,7 @@ use crate::{
         geometry::{Alignment, Grid, Insets, Rect},
         model_mercury::{
             component::{Button, ButtonMsg},
-            theme,
+            cshape, theme,
         },
         shape::Renderer,
     },
@@ -31,6 +31,8 @@ pub struct MnemonicKeyboard<T> {
     back: Child<Maybe<Button>>,
     /// Input area, acting as the auto-complete and confirm button.
     input: Child<Maybe<T>>,
+    /// Area with keypads - used for rounded overlay
+    keypad_area: Rect,
     /// Key buttons.
     keys: [Child<Button>; MNEMONIC_KEY_COUNT],
     /// Swipe controller - allowing for going to the previous word.
@@ -66,6 +68,7 @@ where
                 prompt_visible && can_go_back,
             )),
             input: Child::new(Maybe::new(theme::BG, input, !prompt_visible)),
+            keypad_area: Rect::zero(),
             keys: T::keys()
                 .map(|t| {
                     Button::with_text(t.into())
@@ -126,8 +129,9 @@ where
         let height_input_area: i16 = 38;
         let padding_top: i16 = 6;
         let back_btn_area_width: i16 = 32;
-        let (remaining, keyboard_area) =
+        let (remaining, keypad_area) =
             bounds.split_bottom(3 * theme::MNEMONIC_BUTTON_HEIGHT + 2 * theme::KEYBOARD_SPACING);
+        self.keypad_area = keypad_area;
         let prompt_area = remaining
             .split_top(padding_top)
             .1
@@ -137,7 +141,7 @@ where
 
         let (back_btn_area, input_area) = prompt_area.split_left(back_btn_area_width);
         let input_area = input_area.inset(Insets::left(BACK_BUTTON_RIGHT_EXPAND));
-        let keyboard_grid = Grid::new(keyboard_area, 3, 3).with_spacing(theme::KEYBOARD_SPACING);
+        let keyboard_grid = Grid::new(keypad_area, 3, 3).with_spacing(theme::KEYBOARD_SPACING);
 
         self.swipe.place(bounds);
         self.prompt.place(prompt_area);
@@ -222,6 +226,8 @@ where
         for btn in &self.keys {
             btn.render(target);
         }
+
+        cshape::KeyboardOverlay::new(self.keypad_area).render(target);
     }
 }
 
