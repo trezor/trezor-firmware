@@ -384,7 +384,7 @@
     "instructions__enter_next_share": "Enter next share",
     "instructions__hold_to_confirm": "Hold to confirm",
     "instructions__hold_to_continue": "Hold to continue",
-    "instructions__exit_tutorial": "Exit tutorial",
+    "instructions__hold_to_exit_tutorial": "Hold to exit tutorial",
     "instructions__hold_to_sign": "Hold to sign",
     "instructions__learn_more": "Learn more",
     "instructions__shares_continue_with_x_template": "Continue with Share #{0}",

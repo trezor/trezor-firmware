@@ -890,7 +890,7 @@
   "888": "instructions__continue_holding",
   "889": "instructions__enter_next_share",
   "890": "instructions__hold_to_continue",
-  "891": "instructions__exit_tutorial",
+  "891": "instructions__hold_to_exit_tutorial",
   "892": "instructions__hold_to_finish_tutorial",
   "893": "instructions__learn_more",
   "894": "instructions__shares_continue_with_x_template",

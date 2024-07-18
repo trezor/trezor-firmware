@@ -137,7 +137,7 @@ impl ShowTutorial {
             TR::tutorial__title_hold.into(),
             SwipeContent::new(PromptScreen::new_hold_to_confirm()),
         )
-        .with_footer(TR::instructions__exit_tutorial.into(), None)
+        .with_footer(TR::instructions__hold_to_exit_tutorial.into(), None)
         .map(|msg| matches!(msg, FrameMsg::Content(())).then_some(FlowMsg::Confirmed));
 
         let content_step_done = Frame::left_aligned(
@@ -181,7 +181,7 @@ impl ShowTutorial {
             TR::tutorial__title_hold.into(),
             SwipeContent::new(PromptScreen::new_hold_to_confirm_danger()),
         )
-        .with_footer(TR::instructions__exit_tutorial.into(), None)
+        .with_footer(TR::instructions__hold_to_exit_tutorial.into(), None)
         .map(|msg| matches!(msg, FrameMsg::Content(())).then_some(FlowMsg::Confirmed));
 
         let res = SwipeFlow::new(&ShowTutorial::StepWelcome)?

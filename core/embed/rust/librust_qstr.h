@@ -289,9 +289,9 @@ static void _librust_qstrs(void) {
   MP_QSTR_instructions__continue_holding;
   MP_QSTR_instructions__continue_in_app;
   MP_QSTR_instructions__enter_next_share;
-  MP_QSTR_instructions__exit_tutorial;
   MP_QSTR_instructions__hold_to_confirm;
   MP_QSTR_instructions__hold_to_continue;
+  MP_QSTR_instructions__hold_to_exit_tutorial;
   MP_QSTR_instructions__hold_to_finish_tutorial;
   MP_QSTR_instructions__hold_to_sign;
   MP_QSTR_instructions__learn_more;
