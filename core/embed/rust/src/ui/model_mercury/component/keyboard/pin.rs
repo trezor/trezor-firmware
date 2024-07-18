@@ -8,7 +8,7 @@ use crate::{
         component::{
             base::{AttachType, ComponentExt},
             text::TextStyle,
-            Child, Component, Event, EventCtx, Label, Never, Pad, SwipeDirection, TimerToken,
+            Component, Event, EventCtx, Label, Never, Pad, SwipeDirection, TimerToken,
         },
         display::Font,
         event::TouchEvent,
@@ -246,12 +246,12 @@ pub struct PinKeyboard<'a> {
     allow_cancel: bool,
     show_erase: bool,
     show_cancel: bool,
-    major_prompt: Child<Label<'a>>,
-    minor_prompt: Child<Label<'a>>,
-    major_warning: Option<Child<Label<'a>>>,
+    major_prompt: Label<'a>,
+    minor_prompt: Label<'a>,
+    major_warning: Option<Label<'a>>,
     keypad_area: Rect,
     textbox_area: Rect,
-    textbox: Child<PinDots>,
+    textbox: PinDots,
     erase_btn: Button,
     cancel_btn: Button,
     confirm_btn: Button,
@@ -282,15 +282,13 @@ impl<'a> PinKeyboard<'a> {
             allow_cancel,
             show_erase: false,
             show_cancel: allow_cancel,
-            major_prompt: Label::left_aligned(major_prompt, theme::label_keyboard()).into_child(),
-            minor_prompt: Label::right_aligned(minor_prompt, theme::label_keyboard_minor())
-                .into_child(),
-            major_warning: major_warning.map(|text| {
-                Label::left_aligned(text, theme::label_keyboard_warning()).into_child()
-            }),
+            major_prompt: Label::left_aligned(major_prompt, theme::label_keyboard()),
+            minor_prompt: Label::right_aligned(minor_prompt, theme::label_keyboard_minor()),
+            major_warning: major_warning
+                .map(|text| Label::left_aligned(text, theme::label_keyboard_warning())),
             keypad_area: Rect::zero(),
             textbox_area: Rect::zero(),
-            textbox: PinDots::new(theme::label_default()).into_child(),
+            textbox: PinDots::new(theme::label_default()),
             erase_btn,
             cancel_btn,
             confirm_btn: Button::with_icon(theme::ICON_SIMPLE_CHECKMARK24)
@@ -318,8 +316,8 @@ impl<'a> PinKeyboard<'a> {
     }
 
     fn pin_modified(&mut self, ctx: &mut EventCtx) {
-        let is_full = self.textbox.inner().is_full();
-        let is_empty = self.textbox.inner().is_empty();
+        let is_full = self.textbox.is_full();
+        let is_empty = self.textbox.is_empty();
 
         self.textbox.request_complete_repaint(ctx);
 
@@ -343,7 +341,7 @@ impl<'a> PinKeyboard<'a> {
     }
 
     pub fn pin(&self) -> &str {
-        self.textbox.inner().pin()
+        self.textbox.pin()
     }
 
     fn get_button_alpha(&self, x: usize, y: usize, attach_time: f32, close_time: f32) -> u8 {
@@ -454,12 +452,12 @@ impl Component for PinKeyboard<'_> {
         }
         match self.erase_btn.event(ctx, event) {
             Some(ButtonMsg::Clicked) => {
-                self.textbox.mutate(ctx, |ctx, t| t.pop(ctx));
+                self.textbox.pop(ctx);
                 self.pin_modified(ctx);
                 return None;
             }
             Some(ButtonMsg::LongPressed) => {
-                self.textbox.mutate(ctx, |ctx, t| t.clear(ctx));
+                self.textbox.clear(ctx);
                 self.pin_modified(ctx);
                 return None;
             }
@@ -469,7 +467,7 @@ impl Component for PinKeyboard<'_> {
             if let Some(Clicked) = btn.0.event(ctx, event) {
                 if let ButtonContent::Text(text) = btn.0.content() {
                     text.map(|text| {
-                        self.textbox.mutate(ctx, |ctx, t| t.push(ctx, text));
+                        self.textbox.push(ctx, text);
                     });
                     self.pin_modified(ctx);
                     return None;
@@ -493,7 +491,7 @@ impl Component for PinKeyboard<'_> {
             self.erase_btn.render_with_alpha(target, erase_alpha);
         }
 
-        if self.textbox.inner().is_empty() {
+        if self.textbox.is_empty() {
             if let Some(ref w) = self.major_warning {
                 w.render(target);
             } else {
@@ -710,7 +708,7 @@ impl crate::trace::Trace for PinKeyboard<'_> {
             }
         }
         t.string("digits_order", digits_order.as_str().into());
-        t.string("pin", self.textbox.inner().pin().into());
-        t.bool("display_digits", self.textbox.inner().display_digits);
+        t.string("pin", self.textbox.pin().into());
+        t.bool("display_digits", self.textbox.display_digits);
     }
 }

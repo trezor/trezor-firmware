@@ -1,9 +1,7 @@
 use crate::{
     strutil::TString,
     ui::{
-        component::{
-            image::Image, Child, Component, Event, EventCtx, Label, Swipe, SwipeDirection,
-        },
+        component::{image::Image, Component, Event, EventCtx, Label, Swipe, SwipeDirection},
         display,
         geometry::{Insets, Rect},
         model_mercury::component::{fido_icons::get_fido_icon_data, theme, ScrollBar},
@@ -30,7 +28,7 @@ pub struct FidoConfirm<F: Fn(usize) -> TString<'static>, U> {
     page_swipe: Swipe,
     app_name: Label<'static>,
     account_name: Label<'static>,
-    icon: Child<Image>,
+    icon: Image,
     /// Function/closure that will return appropriate page on demand.
     get_account: F,
     scrollbar: ScrollBar,
@@ -79,7 +77,7 @@ where
             app_name: Label::centered(app_name, theme::TEXT_DEMIBOLD),
             account_name: Label::centered(current_account, theme::TEXT_DEMIBOLD),
             page_swipe,
-            icon: Child::new(Image::new(icon_data)),
+            icon: Image::new(icon_data),
             get_account,
             scrollbar,
             fade: Cell::new(false),

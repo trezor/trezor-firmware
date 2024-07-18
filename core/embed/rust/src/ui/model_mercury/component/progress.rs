@@ -4,10 +4,9 @@ use crate::{
     strutil::TString,
     ui::{
         component::{
-            base::ComponentExt,
             paginated::Paginate,
             text::paragraphs::{Paragraph, Paragraphs},
-            Child, Component, Event, EventCtx, Label, Never, Pad,
+            Component, Event, EventCtx, Label, Never, Pad,
         },
         display::{self, Font, LOADER_MAX},
         geometry::{Insets, Offset, Rect},
@@ -23,11 +22,11 @@ use crate::{
 use super::theme;
 
 pub struct Progress {
-    title: Child<Label<'static>>,
+    title: Label<'static>,
     value: u16,
     loader_y_offset: i16,
     indeterminate: bool,
-    description: Child<Paragraphs<Paragraph<'static>>>,
+    description: Paragraphs<Paragraph<'static>>,
     description_pad: Pad,
 }
 
@@ -40,14 +39,13 @@ impl Progress {
         description: TString<'static>,
     ) -> Self {
         Self {
-            title: Label::centered(title, theme::label_progress()).into_child(),
+            title: Label::centered(title, theme::label_progress()),
             value: 0,
             loader_y_offset: 0,
             indeterminate,
             description: Paragraphs::new(
                 Paragraph::new(&theme::TEXT_NORMAL, description).centered(),
-            )
-            .into_child(),
+            ),
             description_pad: Pad::with_background(theme::BG),
         }
     }
@@ -60,10 +58,9 @@ impl Component for Progress {
         let description_lines = 1 + self
             .description
             .inner()
-            .inner()
             .content()
             .map(|t| t.chars().filter(|c| *c == '\n').count() as i16);
-        let (title, rest) = Self::AREA.split_top(self.title.inner().max_size().y);
+        let (title, rest) = Self::AREA.split_top(self.title.max_size().y);
         let (loader, description) =
             rest.split_bottom(Font::NORMAL.line_height() * description_lines);
         let loader = loader.inset(Insets::top(theme::CONTENT_BORDER));
@@ -80,14 +77,12 @@ impl Component for Progress {
                 if !animation_disabled() {
                     ctx.request_paint();
                 }
-                self.description.mutate(ctx, |ctx, para| {
-                    if para.inner_mut().content() != &new_description {
-                        para.inner_mut().update(new_description);
-                        para.change_page(0); // Recompute bounding box.
-                        ctx.request_paint();
-                        self.description_pad.clear();
-                    }
-                });
+                if self.description.inner_mut().content() != &new_description {
+                    self.description.inner_mut().update(new_description);
+                    self.description.change_page(0); // Recompute bounding box.
+                    ctx.request_paint();
+                    self.description_pad.clear();
+                }
             }
         }
         None
