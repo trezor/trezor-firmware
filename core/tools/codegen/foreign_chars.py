@@ -84,6 +84,7 @@ spanish_chars = (
     "ú",
     "ü",
     "¿",
+    "¡",
 )
 
 german_chars = (
