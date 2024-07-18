@@ -214,6 +214,7 @@ async def handle_session(iface: WireInterface, session_id: int) -> None:
                 msg = next_msg
                 next_msg = None
 
+            do_not_restart = False
             try:
                 do_not_restart = await _handle_single_message(ctx, msg)
             except context.UnexpectedMessage as unexpected:
