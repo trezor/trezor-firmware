@@ -46,7 +46,7 @@ def test_2of3_dryrun(client: Client):
             passphrase_protection=False,
             pin_protection=False,
             label="label",
-            dry_run=True,
+            type=messages.RecoveryType.DryRun,
         )
 
     # Dry run was successful
@@ -70,5 +70,5 @@ def test_2of3_invalid_seed_dryrun(client: Client):
             passphrase_protection=False,
             pin_protection=False,
             label="label",
-            dry_run=True,
+            type=messages.RecoveryType.DryRun,
         )

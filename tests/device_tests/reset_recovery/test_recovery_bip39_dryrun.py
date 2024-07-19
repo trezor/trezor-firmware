@@ -92,7 +92,10 @@ def test_invalid_seed_core(client: Client):
         IF = InputFlowBip39RecoveryDryRunInvalid(client)
         client.set_input_flow(IF.get())
         with pytest.raises(exceptions.Cancelled):
-            return device.recover(client, dry_run=True)
+            return device.recover(
+                client,
+                type=messages.RecoveryType.DryRun,
+            )
 
 
 @pytest.mark.setup_client(uninitialized=True)
