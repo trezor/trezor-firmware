@@ -228,11 +228,17 @@ int main(void) {
 #endif
 
   optiga_init();
-  optiga_open_application();
   if (sectrue == secret_ok) {
-    optiga_sec_chan_handshake(secret, sizeof(secret));
+    // If the shielded connection cannot be established, reset Optiga and
+    // continue without it. In this case, OID_KEY_FIDO and OID_KEY_DEV cannot be
+    // used, which means device and FIDO attestation will not work.
+    if (optiga_sec_chan_handshake(secret, sizeof(secret)) != OPTIGA_SUCCESS) {
+      optiga_soft_reset();
+    }
   }
   memzero(secret, sizeof(secret));
+  ensure(sectrue * (optiga_open_application() == OPTIGA_SUCCESS),
+         "Cannot initialize optiga.");
 #endif
 
 #if !defined TREZOR_MODEL_1
