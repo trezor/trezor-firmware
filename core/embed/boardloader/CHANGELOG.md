@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2.1.3 [July 2024]
+
+### Added
+- [T3B1] Added support for T3B1.
+
+
 ## 2.1.2 [April 2024]
 
 ### Added
