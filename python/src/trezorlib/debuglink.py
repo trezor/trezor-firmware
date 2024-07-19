@@ -48,7 +48,7 @@ from .client import TrezorClient
 from .exceptions import TrezorFailure
 from .log import DUMP_BYTES
 from .messages import DebugWaitType
-from .tools import expect
+from .tools import expect, session
 
 if TYPE_CHECKING:
     from typing_extensions import Protocol
@@ -1013,8 +1013,11 @@ class TrezorClientDebugLink(TrezorClient):
             else:
                 raise
 
-        self.reset_debug_features()
+        # set transport explicitly so that sync_responses can work
+        self.transport = transport
 
+        self.reset_debug_features()
+        self.sync_responses()
         super().__init__(transport, ui=self.ui)
 
         # So that we can choose right screenshotting logic (T1 vs TT)
@@ -1299,14 +1302,23 @@ class TrezorClientDebugLink(TrezorClient):
 
         # Start by canceling whatever is on screen. This will work to cancel T1 PIN
         # prompt, which is in TINY mode and does not respond to `Ping`.
-        # go to super() to avoid message filtering
-        super()._raw_write(messages.Cancel())
+        cancel_msg = mapping.DEFAULT_MAPPING.encode(messages.Cancel())
+        self.transport.begin_session()
+        try:
+            self.transport.write(*cancel_msg)
 
-        message = "SYNC" + secrets.token_hex(8)
-        super()._raw_write(messages.Ping(message=message))
-        resp = None
-        while resp != messages.Success(message=message):
-            resp = super()._raw_read()
+            message = "SYNC" + secrets.token_hex(8)
+            ping_msg = mapping.DEFAULT_MAPPING.encode(messages.Ping(message=message))
+            self.transport.write(*ping_msg)
+            resp = None
+            while resp != messages.Success(message=message):
+                msg_id, msg_bytes = self.transport.read()
+                try:
+                    resp = mapping.DEFAULT_MAPPING.decode(msg_id, msg_bytes)
+                except Exception:
+                    pass
+        finally:
+            self.transport.end_session()
 
     def mnemonic_callback(self, _) -> str:
         word, pos = self.debug.read_recovery_word()
