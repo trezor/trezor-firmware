@@ -1,4 +1,13 @@
 
+## 0.2.8 [19th July 2024]
+
+### Added
+- [T3B1] Added support for T3B1.
+
+### Fixed
+- Fix TOUCH VERSION command  [#3900]
+
+
 ## 0.2.7 [10th June 2024]
 
 ### Added
@@ -54,4 +63,5 @@
 [#3370]: https://github.com/trezor/trezor-firmware/pull/3370
 [#3769]: https://github.com/trezor/trezor-firmware/pull/3769
 [#3770]: https://github.com/trezor/trezor-firmware/pull/3770
+[#3900]: https://github.com/trezor/trezor-firmware/pull/3900
 [#3932]: https://github.com/trezor/trezor-firmware/pull/3932
