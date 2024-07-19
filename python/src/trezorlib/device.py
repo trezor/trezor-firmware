@@ -175,6 +175,7 @@ def recover(
         warnings.warn(
             "Use type=RecoveryType.DryRun instead!",
             DeprecationWarning,
+            stacklevel=3,
         )
 
         if type is not None:
