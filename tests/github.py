@@ -19,7 +19,7 @@ LIST_RUNS_TEMPLATE = "https://api.github.com/repos/trezor/trezor-firmware/action
 FIXTURES_TEMPLATE = "https://data.trezor.io/dev/firmware/ui_report/{run}/{model}-{lang}-{job}/fixtures.results.json"
 
 MODELS = ["T2T1", "T2B1", "T3T1"]
-LANGUAGES = ["en", "cs", "de", "es", "fr"]
+LANGUAGES = ["en", "cs", "de", "es", "fr", "it", "pt", "tr"]
 JOBS = ["core_device_test", "core_click_test", "core_persistence_test"]
 
 
