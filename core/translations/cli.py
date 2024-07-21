@@ -387,6 +387,17 @@ def merge(update_json: t.Tuple[t.TextIO, ...]) -> None:
         tdir.save_lang(lang, orig_data)
         click.echo(f"Updated {lang}")
 
+@cli.command()
+@click.argument("lang_file", type=click.File("r"), nargs=1)
+def characters(lang_file: t.TextIO) -> None:
+    """Extract all non-ASCII characters."""
+    all_chars = set(lang_file.read())
+    chars = filter(lambda c: ord(c) > 127, all_chars)
+    print("(")
+    for c in sorted(chars):
+        print(f"    \"{c}\"")
+    print(")")
+
 
 if __name__ == "__main__":
     cli()
