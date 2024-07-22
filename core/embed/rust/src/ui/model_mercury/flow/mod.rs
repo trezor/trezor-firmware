@@ -1,4 +1,5 @@
 pub mod confirm_action;
+pub mod confirm_firmware_update;
 pub mod confirm_output;
 pub mod confirm_reset_create;
 pub mod confirm_reset_recover;
@@ -15,6 +16,7 @@ pub mod warning_hi_prio;
 pub use confirm_action::{new_confirm_action, new_confirm_action_simple};
 mod util;
 
+pub use confirm_firmware_update::new_confirm_firmware_update;
 pub use confirm_output::new_confirm_output;
 pub use confirm_reset_create::ConfirmResetCreate;
 pub use confirm_reset_recover::ConfirmResetRecover;

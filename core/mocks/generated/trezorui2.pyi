@@ -538,7 +538,7 @@ def confirm_firmware_update(
     description: str,
     fingerprint: str,
 ) -> LayoutObj[UiResult]:
-    """Ask whether to update firmware, optionally show fingerprint. Shared with bootloader."""
+    """Ask whether to update firmware, optionally show fingerprint."""
 
 
 # rust/src/ui/model_mercury/layout.rs
@@ -1079,7 +1079,7 @@ def confirm_firmware_update(
     *,
     description: str,
     fingerprint: str,
-) -> None:
+) -> LayoutObj[UiResult]:
     """Ask whether to update firmware, optionally show fingerprint. Shared with bootloader."""
 
 

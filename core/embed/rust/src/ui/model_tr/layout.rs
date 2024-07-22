@@ -2044,7 +2044,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     *,
     ///     description: str,
     ///     fingerprint: str,
-    /// ) -> None:
+    /// ) -> LayoutObj[UiResult]:
     ///     """Ask whether to update firmware, optionally show fingerprint. Shared with bootloader."""
     Qstr::MP_QSTR_confirm_firmware_update => obj_fn_kw!(0, new_confirm_firmware_update).as_obj(),
 
