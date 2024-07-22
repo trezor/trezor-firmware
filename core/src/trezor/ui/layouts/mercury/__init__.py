@@ -363,14 +363,9 @@ def confirm_single(
 
 
 def confirm_reset_device(_title: str, recovery: bool = False) -> Awaitable[None]:
-    if recovery:
-        return raise_if_not_confirmed(
-            RustLayout(trezorui2.flow_confirm_reset_recover()),
-        )
-    else:
-        return raise_if_not_confirmed(
-            RustLayout(trezorui2.flow_confirm_reset_create()),
-        )
+    return raise_if_not_confirmed(
+        RustLayout(trezorui2.flow_confirm_reset(recovery=recovery))
+    )
 
 
 async def show_wallet_created_success() -> None:

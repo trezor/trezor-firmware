@@ -1422,13 +1422,9 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     the value is to be rendered as binary with monospace font, False otherwise."""
     Qstr::MP_QSTR_confirm_properties => obj_fn_kw!(0, new_confirm_properties).as_obj(),
 
-    /// def flow_confirm_reset_recover() -> LayoutObj[UiResult]:
-    ///     """Confirm TOS before recovery process."""
-    Qstr::MP_QSTR_flow_confirm_reset_recover => obj_fn_kw!(0, flow::confirm_reset_recover::new_confirm_reset_recover).as_obj(),
-
-    /// def flow_confirm_reset_create() -> LayoutObj[UiResult]:
-    ///     """Confirm TOS before creating a wallet and have a user hold to confirm creation."""
-    Qstr::MP_QSTR_flow_confirm_reset_create => obj_fn_kw!(0, flow::confirm_reset_create::new_confirm_reset_create).as_obj(),
+    /// def flow_confirm_reset(recovery: bool) -> LayoutObj[UiResult]:
+    ///     """Confirm TOS before creating wallet creation or wallet recovery."""
+    Qstr::MP_QSTR_flow_confirm_reset => obj_fn_kw!(0, flow::confirm_reset::new_confirm_reset).as_obj(),
 
     // TODO: supply more arguments for Wipe code setting when figma done
     /// def flow_confirm_set_new_pin(

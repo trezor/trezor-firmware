@@ -1,8 +1,7 @@
 pub mod confirm_action;
 pub mod confirm_firmware_update;
 pub mod confirm_output;
-pub mod confirm_reset_create;
-pub mod confirm_reset_recover;
+pub mod confirm_reset;
 pub mod confirm_set_new_pin;
 pub mod confirm_summary;
 pub mod get_address;
@@ -18,8 +17,7 @@ mod util;
 
 pub use confirm_firmware_update::new_confirm_firmware_update;
 pub use confirm_output::new_confirm_output;
-pub use confirm_reset_create::ConfirmResetCreate;
-pub use confirm_reset_recover::ConfirmResetRecover;
+pub use confirm_reset::new_confirm_reset;
 pub use confirm_set_new_pin::SetNewPin;
 pub use confirm_summary::new_confirm_summary;
 pub use get_address::GetAddress;
