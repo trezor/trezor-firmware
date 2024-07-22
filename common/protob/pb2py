@@ -133,7 +133,9 @@ WIRETYPE_ENTRY = c.Sequence(
 )
 
 # QDEF(MP_QSTR_copysign, 5171, 8, "copysign")
-QDEF_RE = re.compile(r'^QDEF\(MP_QSTR(\S+), ([0-9]+), ([0-9])+, "(.*)"\)$')
+QDEF_RE = re.compile(
+    r'^QDEF\(MP_QSTR(\S+), ([0-9]+), ([0-9])+, "(.*)"\)$'
+)
 
 
 @dataclass
