@@ -1,4 +1,3 @@
-from ubinascii import hexlify
 import ustruct
 from micropython import const
 from typing import TYPE_CHECKING
@@ -20,9 +19,9 @@ from .thp.channel import Channel
 from .thp.checksum import CHECKSUM_LENGTH
 from .thp.thp_messages import CHANNEL_ALLOCATION_REQ, CODEC_V1, PacketHeader
 from .thp.writer import (
+    INIT_HEADER_LENGTH,
     MAX_PAYLOAD_LEN,
     PACKET_LENGTH,
-    INIT_HEADER_LENGTH,
     write_payload_to_wire_and_add_checksum,
 )
 
@@ -118,7 +117,7 @@ async def _handle_allocated(
 ) -> None:
     channel = _CHANNELS[cid]
     if channel is None:
-        _handle_unallocated(iface, cid)
+        await _handle_unallocated(iface, cid)
         raise ThpError("Invalid state of a channel")
     if channel.iface is not iface:
         # TODO send error message to wire
