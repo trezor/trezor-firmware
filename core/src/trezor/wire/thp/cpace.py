@@ -11,19 +11,22 @@ class Cpace:
     CPace, a balanced composable PAKE: https://datatracker.ietf.org/doc/draft-irtf-cfrg-cpace/
     """
 
-    def __init__(self, cpace_host_public_key: bytes) -> None:
+    def __init__(self, cpace_host_public_key: bytes, handshake_hash: bytes) -> None:
+        self.handshake_hash: bytes = handshake_hash
         self.host_public_key: bytes = cpace_host_public_key
+        self.shared_secret: bytes
         self.trezor_private_key: bytes
         self.trezor_public_key: bytes
-        self.shared_secret: bytes
 
     def generate_keys_and_secret(self, code_code_entry: bytes) -> None:
         """
         Generate ephemeral key pair and a shared secret using Elligator2 with X25519.
         """
-        pregenerator = sha512(_PREFIX + code_code_entry + _PADDING).digest()[
-            :32
-        ]  # TODO add handshake hash
+        sha_ctx = sha512(_PREFIX)
+        sha_ctx.update(code_code_entry)
+        sha_ctx.update(_PADDING)
+        sha_ctx.update(self.handshake_hash)
+        pregenerator = sha_ctx.digest()[:32]
         generator = elligator2.map_to_curve25519(pregenerator)
         self.trezor_private_key = random.bytes(32)
         if __debug__:

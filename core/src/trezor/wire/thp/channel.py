@@ -76,6 +76,9 @@ class Channel:
             log.debug(__name__, "get_channel_state: %s", state_to_str(state))
         return state
 
+    def get_handshake_hash(self) -> bytes:
+        return self.channel_cache.get(CHANNEL_HANDSHAKE_HASH) or b""
+
     def set_channel_state(self, state: ChannelState) -> None:
         self.channel_cache.state = bytearray(state.to_bytes(1, "big"))
         if __debug__:
@@ -178,7 +181,7 @@ class Channel:
         else:
             key_receive = self.channel_cache.get(CHANNEL_KEY_RECEIVE)
             nonce_receive = self.channel_cache.get_int(CHANNEL_NONCE_RECEIVE)
-            auth_data = self.channel_cache.get(CHANNEL_HANDSHAKE_HASH)
+            auth_data = self.get_handshake_hash()
 
             assert key_receive is not None
             assert nonce_receive is not None
@@ -212,7 +215,7 @@ class Channel:
         else:
             key_send = self.channel_cache.get(CHANNEL_KEY_SEND)
             nonce_send = self.channel_cache.get_int(CHANNEL_NONCE_SEND)
-            auth_data = self.channel_cache.get(CHANNEL_HANDSHAKE_HASH)
+            auth_data = self.get_handshake_hash()
 
             assert key_send is not None
             assert nonce_send is not None

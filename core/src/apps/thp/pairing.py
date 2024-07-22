@@ -132,7 +132,7 @@ async def show_display_data(ctx: PairingContext, expected_types: Container[int] 
     if cancel_task in race.finished:
         raise ActionCancelled
     else:
-        return Exception("Should not happen")  # TODO
+        return Exception("Should not happen")  # TODO what to do here?
 
 
 @check_state_and_log(ChannelState.TP1)
@@ -149,12 +149,11 @@ async def _handle_code_entry_is_included(ctx: PairingContext) -> None:
 
     if challenge_message.challenge is None:
         raise Exception("Invalid message")
-
-    code_code_entry_hash = sha256(
-        challenge_message.challenge
-        + ctx.secret
-        + bytes("PairingMethod_CodeEntry", "utf-8")
-    ).digest()  # TODO add handshake hash
+    sha_ctx = sha256(ctx.channel_ctx.get_handshake_hash())
+    sha_ctx.update(ctx.secret)
+    sha_ctx.update(challenge_message.challenge)
+    sha_ctx.update(bytes("PairingMethod_CodeEntry", "utf-8"))
+    code_code_entry_hash = sha_ctx.digest()
     ctx.display_data.code_code_entry = (
         int.from_bytes(code_code_entry_hash, "big") % 1000000
     )
@@ -163,21 +162,19 @@ async def _handle_code_entry_is_included(ctx: PairingContext) -> None:
 
 @check_state_and_log(ChannelState.TP1, ChannelState.TP2)
 def _handle_qr_code_is_included(ctx: PairingContext) -> None:
-    ctx.display_data.code_qr_code = sha256(
-        ctx.secret + bytes("PairingMethod_QrCode", "utf-8")
-    ).digest()[
-        :16
-    ]  # TODO add handshake hash
+    sha_ctx = sha256(ctx.channel_ctx.get_handshake_hash())
+    sha_ctx.update(ctx.secret)
+    sha_ctx.update(bytes("PairingMethod_QrCode", "utf-8"))
+    ctx.display_data.code_qr_code = sha_ctx.digest()[:16]
     ctx.display_data.display_qr_code = True
 
 
 @check_state_and_log(ChannelState.TP1, ChannelState.TP2)
 def _handle_nfc_unidirectional_is_included(ctx: PairingContext) -> None:
-    ctx.display_data.code_nfc_unidirectional = sha256(
-        ctx.secret + bytes("PairingMethod_NfcUnidirectional", "utf-8")
-    ).digest()[
-        :16
-    ]  # TODO add handshake hash
+    sha_ctx = sha256(ctx.channel_ctx.get_handshake_hash())
+    sha_ctx.update(ctx.secret)
+    sha_ctx.update(bytes("PairingMethod_NfcUnidirectional", "utf-8"))
+    ctx.display_data.code_nfc_unidirectional = sha_ctx.digest()[:16]
     ctx.display_data.display_nfc_unidirectional = True
 
 
@@ -208,7 +205,10 @@ async def _handle_code_entry_cpace(
     if message.cpace_host_public_key is None:
         raise ThpError("Message ThpCodeEntryCpaceHost has no public key")
 
-    ctx.cpace = Cpace(message.cpace_host_public_key)
+    ctx.cpace = Cpace(
+        message.cpace_host_public_key,
+        ctx.channel_ctx.get_handshake_hash(),
+    )
     assert ctx.display_data.code_code_entry is not None
     ctx.cpace.generate_keys_and_secret(
         ctx.display_data.code_code_entry.to_bytes(6, "big")
