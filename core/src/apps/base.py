@@ -1,11 +1,15 @@
 from typing import TYPE_CHECKING
 
-import storage.cache as storage_cache
+import storage.cache_codec as cache_codec
 import storage.device as storage_device
+from storage.cache import check_thp_is_not_used
+from storage.cache_common import APP_COMMON_BUSY_DEADLINE_MS, APP_COMMON_SEED
 from trezor import TR, config, utils, wire, workflow
 from trezor.enums import HomescreenFormat, MessageType
 from trezor.messages import Success, UnlockPath
 from trezor.ui.layouts import confirm_action
+from trezor.wire import context
+from trezor.wire.message_handler import filters, remove_filter
 
 from . import workflow_handlers
 
@@ -34,7 +38,7 @@ def busy_expiry_ms() -> int:
     Returns the time left until the busy state expires or 0 if the device is not in the busy state.
     """
 
-    busy_deadline_ms = storage_cache.get_int(storage_cache.APP_COMMON_BUSY_DEADLINE_MS)
+    busy_deadline_ms = context.cache_get_int(APP_COMMON_BUSY_DEADLINE_MS)
     if busy_deadline_ms is None:
         return 0
 
@@ -202,13 +206,20 @@ def get_features() -> Features:
     return f
 
 
-async def handle_Initialize(msg: Initialize) -> Features:
-    session_id = storage_cache.start_session(msg.session_id)
+@check_thp_is_not_used
+async def handle_Initialize(
+    msg: Initialize,
+) -> Features:
+    session_id = cache_codec.start_session(msg.session_id)
+
+    # TODO change cardano derivation
+    # ctx = context.get_context()
 
     if not utils.BITCOIN_ONLY:
-        derive_cardano = storage_cache.get_bool(storage_cache.APP_COMMON_DERIVE_CARDANO)
-        have_seed = storage_cache.is_set(storage_cache.APP_COMMON_SEED)
+        from storage.cache_common import APP_COMMON_DERIVE_CARDANO
 
+        derive_cardano = context.cache_get_bool(APP_COMMON_DERIVE_CARDANO)
+        have_seed = context.cache_is_set(APP_COMMON_SEED)
         if (
             have_seed
             and msg.derive_cardano is not None
@@ -216,14 +227,12 @@ async def handle_Initialize(msg: Initialize) -> Features:
         ):
             # seed is already derived, and host wants to change derive_cardano setting
             # => create a new session
-            storage_cache.end_current_session()
-            session_id = storage_cache.start_session()
+            cache_codec.end_current_session()
+            session_id = cache_codec.start_session()
             have_seed = False
 
         if not have_seed:
-            storage_cache.set_bool(
-                storage_cache.APP_COMMON_DERIVE_CARDANO, bool(msg.derive_cardano)
-            )
+            context.cache_set_bool(APP_COMMON_DERIVE_CARDANO, bool(msg.derive_cardano))
 
     features = get_features()
     features.session_id = session_id
@@ -252,16 +261,16 @@ async def handle_SetBusy(msg: SetBusy) -> Success:
         import utime
 
         deadline = utime.ticks_add(utime.ticks_ms(), msg.expiry_ms)
-        storage_cache.set_int(storage_cache.APP_COMMON_BUSY_DEADLINE_MS, deadline)
+        context.cache_set_int(APP_COMMON_BUSY_DEADLINE_MS, deadline)
     else:
-        storage_cache.delete(storage_cache.APP_COMMON_BUSY_DEADLINE_MS)
+        context.cache_delete(APP_COMMON_BUSY_DEADLINE_MS)
     set_homescreen()
     workflow.close_others()
     return Success()
 
 
 async def handle_EndSession(msg: EndSession) -> Success:
-    storage_cache.end_current_session()
+    cache_codec.end_current_session()
     return Success()
 
 
@@ -276,7 +285,7 @@ async def handle_Ping(msg: Ping) -> Success:
 
 async def handle_DoPreauthorized(msg: DoPreauthorized) -> protobuf.MessageType:
     from trezor.messages import PreauthorizedRequest
-    from trezor.wire.context import call_any, get_context
+    from trezor.wire.context import call_any
 
     from apps.common import authorization
 
@@ -289,11 +298,9 @@ async def handle_DoPreauthorized(msg: DoPreauthorized) -> protobuf.MessageType:
     req = await call_any(PreauthorizedRequest(), *wire_types)
 
     assert req.MESSAGE_WIRE_TYPE is not None
-    handler = workflow_handlers.find_registered_handler(
-        get_context().iface, req.MESSAGE_WIRE_TYPE
-    )
+    handler = workflow_handlers.find_registered_handler(req.MESSAGE_WIRE_TYPE)
     if handler is None:
-        return wire.unexpected_message()
+        return wire.message_handler.unexpected_message()
 
     return await handler(req, authorization.get())  # type: ignore [Expected 1 positional argument]
 
@@ -301,7 +308,7 @@ async def handle_DoPreauthorized(msg: DoPreauthorized) -> protobuf.MessageType:
 async def handle_UnlockPath(msg: UnlockPath) -> protobuf.MessageType:
     from trezor.crypto import hmac
     from trezor.messages import UnlockedPathRequest
-    from trezor.wire.context import call_any, get_context
+    from trezor.wire.context import call_any
 
     from apps.common.paths import SLIP25_PURPOSE
     from apps.common.seed import Slip21Node, get_seed
@@ -342,9 +349,7 @@ async def handle_UnlockPath(msg: UnlockPath) -> protobuf.MessageType:
     req = await call_any(UnlockedPathRequest(mac=expected_mac), *wire_types)
 
     assert req.MESSAGE_WIRE_TYPE in wire_types
-    handler = workflow_handlers.find_registered_handler(
-        get_context().iface, req.MESSAGE_WIRE_TYPE
-    )
+    handler = workflow_handlers.find_registered_handler(req.MESSAGE_WIRE_TYPE)
     assert handler is not None
     return await handler(req, msg)  # type: ignore [Expected 1 positional argument]
 
@@ -364,7 +369,7 @@ def set_homescreen() -> None:
 
     set_default = workflow.set_default  # local_cache_attribute
 
-    if storage_cache.is_set(storage_cache.APP_COMMON_BUSY_DEADLINE_MS):
+    if context.cache_is_set(APP_COMMON_BUSY_DEADLINE_MS):
         from apps.homescreen import busyscreen
 
         set_default(busyscreen)
@@ -393,7 +398,7 @@ def set_homescreen() -> None:
 def lock_device(interrupt_workflow: bool = True) -> None:
     if config.has_pin():
         config.lock()
-        wire.filters.append(_pinlock_filter)
+        filters.append(_pinlock_filter)
         set_homescreen()
         if interrupt_workflow:
             workflow.close_others()
@@ -429,7 +434,7 @@ async def unlock_device() -> None:
 
     _SCREENSAVER_IS_ON = False
     set_homescreen()
-    wire.remove_filter(_pinlock_filter)
+    remove_filter(_pinlock_filter)
 
 
 def _pinlock_filter(msg_type: int, prev_handler: Handler[Msg]) -> Handler[Msg]:
@@ -450,7 +455,9 @@ def reload_settings_from_storage() -> None:
     workflow.idle_timer.set(
         storage_device.get_autolock_delay_ms(), lock_device_if_unlocked
     )
-    wire.EXPERIMENTAL_ENABLED = storage_device.get_experimental_features()
+    wire.message_handler.EXPERIMENTAL_ENABLED = (
+        storage_device.get_experimental_features()
+    )
     if ui.display.orientation() != storage_device.get_rotation():
         ui.backlight_fade(ui.BacklightLevels.DIM)
         ui.display.orientation(storage_device.get_rotation())
@@ -482,4 +489,4 @@ def boot() -> None:
         backup.activate_repeated_backup()
     if not config.is_unlocked():
         # pinlocked handler should always be the last one
-        wire.filters.append(_pinlock_filter)
+        filters.append(_pinlock_filter)

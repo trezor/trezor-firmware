@@ -1,12 +1,19 @@
 from typing import TYPE_CHECKING
 
+from trezor.wire.context import get_context
+
 if TYPE_CHECKING:
-    from trezor.messages import Success, WipeDevice
+    from typing import NoReturn
+
+    from trezor.messages import WipeDevice
+
+if __debug__:
+    from trezor import log
 
 
-async def wipe_device(msg: WipeDevice) -> Success:
+async def wipe_device(msg: WipeDevice) -> NoReturn:
     import storage
-    from trezor import TR, config, translations
+    from trezor import TR, config, loop, translations
     from trezor.enums import ButtonRequestType
     from trezor.messages import Success
     from trezor.pin import render_empty_loader
@@ -27,8 +34,11 @@ async def wipe_device(msg: WipeDevice) -> Success:
     )
 
     # start an empty progress screen so that the screen is not blank while waiting
-    render_empty_loader(config.StorageMessage.PROCESSING_MSG)
 
+    await get_context().write_force(Success(message="Device wiped"))
+    if __debug__:
+        log.debug(__name__, "Device wipe - start")
+    render_empty_loader(config.StorageMessage.PROCESSING_MSG)
     # wipe storage
     storage.wipe()
     # erase translations
@@ -37,5 +47,7 @@ async def wipe_device(msg: WipeDevice) -> Success:
 
     # reload settings
     reload_settings_from_storage()
+    loop.clear()
 
-    return Success(message="Device wiped")
+    if __debug__:
+        log.debug(__name__, "Device wipe - finished")

@@ -1,4 +1,4 @@
-from typing import Awaitable, Sequence
+from typing import TYPE_CHECKING
 
 import trezorui2
 from trezor import TR
@@ -8,6 +8,9 @@ from ..common import interact, raise_if_not_confirmed
 from . import confirm_action, show_success, show_warning
 
 CONFIRMED = trezorui2.CONFIRMED  # global_import_cache
+
+if TYPE_CHECKING:
+    from typing import Awaitable, Sequence
 
 
 async def show_share_words(

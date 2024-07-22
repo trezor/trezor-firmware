@@ -112,7 +112,7 @@ class Emulator:
         start = time.monotonic()
         try:
             while True:
-                if transport._ping():
+                if transport.ping():
                     break
                 if self.process.poll() is not None:
                     raise RuntimeError("Emulator process died")

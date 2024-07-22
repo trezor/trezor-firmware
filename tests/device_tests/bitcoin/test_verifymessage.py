@@ -19,12 +19,12 @@ import base64
 import pytest
 
 from trezorlib import btc
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 
 
-def test_message_long(client: Client):
+def test_message_long(session: Session):
     ret = btc.verify_message(
-        client,
+        session,
         "Bitcoin",
         "14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e",
         bytes.fromhex(
@@ -35,9 +35,9 @@ def test_message_long(client: Client):
     assert ret is True
 
 
-def test_message_testnet(client: Client):
+def test_message_testnet(session: Session):
     ret = btc.verify_message(
-        client,
+        session,
         "Testnet",
         "mirio8q3gtv7fhdnmb3TpZ4EuafdzSs7zL",
         bytes.fromhex(
@@ -49,9 +49,9 @@ def test_message_testnet(client: Client):
 
 
 @pytest.mark.altcoin
-def test_message_grs(client: Client):
+def test_message_grs(session: Session):
     ret = btc.verify_message(
-        client,
+        session,
         "Groestlcoin",
         "Fj62rBJi8LvbmWu2jzkaUX1NFXLEqDLoZM",
         base64.b64decode(
@@ -62,9 +62,9 @@ def test_message_grs(client: Client):
     assert ret is True
 
 
-def test_message_verify(client: Client):
+def test_message_verify(session: Session):
     res = btc.verify_message(
-        client,
+        session,
         "Bitcoin",
         "1JwSSubhmg6iPtRjtyqhUYYH7bZg3Lfy1T",
         bytes.fromhex(
@@ -76,7 +76,7 @@ def test_message_verify(client: Client):
 
     # uncompressed pubkey - FAIL - wrong sig
     res = btc.verify_message(
-        client,
+        session,
         "Bitcoin",
         "1JwSSubhmg6iPtRjtyqhUYYH7bZg3Lfy1T",
         bytes.fromhex(
@@ -88,7 +88,7 @@ def test_message_verify(client: Client):
 
     # uncompressed pubkey - FAIL - wrong msg
     res = btc.verify_message(
-        client,
+        session,
         "Bitcoin",
         "1JwSSubhmg6iPtRjtyqhUYYH7bZg3Lfy1T",
         bytes.fromhex(
@@ -100,7 +100,7 @@ def test_message_verify(client: Client):
 
     # compressed pubkey - OK
     res = btc.verify_message(
-        client,
+        session,
         "Bitcoin",
         "1C7zdTfnkzmr13HfA2vNm5SJYRK6nEKyq8",
         bytes.fromhex(
@@ -112,7 +112,7 @@ def test_message_verify(client: Client):
 
     # compressed pubkey - FAIL - wrong sig
     res = btc.verify_message(
-        client,
+        session,
         "Bitcoin",
         "1C7zdTfnkzmr13HfA2vNm5SJYRK6nEKyq8",
         bytes.fromhex(
@@ -124,7 +124,7 @@ def test_message_verify(client: Client):
 
     # compressed pubkey - FAIL - wrong msg
     res = btc.verify_message(
-        client,
+        session,
         "Bitcoin",
         "1C7zdTfnkzmr13HfA2vNm5SJYRK6nEKyq8",
         bytes.fromhex(
@@ -136,7 +136,7 @@ def test_message_verify(client: Client):
 
     # trezor pubkey - OK
     res = btc.verify_message(
-        client,
+        session,
         "Bitcoin",
         "14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e",
         bytes.fromhex(
@@ -148,7 +148,7 @@ def test_message_verify(client: Client):
 
     # trezor pubkey - FAIL - wrong sig
     res = btc.verify_message(
-        client,
+        session,
         "Bitcoin",
         "14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e",
         bytes.fromhex(
@@ -160,7 +160,7 @@ def test_message_verify(client: Client):
 
     # trezor pubkey - FAIL - wrong msg
     res = btc.verify_message(
-        client,
+        session,
         "Bitcoin",
         "14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e",
         bytes.fromhex(
@@ -172,9 +172,9 @@ def test_message_verify(client: Client):
 
 
 @pytest.mark.altcoin
-def test_message_verify_bcash(client: Client):
+def test_message_verify_bcash(session: Session):
     res = btc.verify_message(
-        client,
+        session,
         "Bcash",
         "bitcoincash:qqj22md58nm09vpwsw82fyletkxkq36zxyxh322pru",
         bytes.fromhex(
@@ -185,9 +185,9 @@ def test_message_verify_bcash(client: Client):
     assert res is True
 
 
-def test_verify_bitcoind(client: Client):
+def test_verify_bitcoind(session: Session):
     res = btc.verify_message(
-        client,
+        session,
         "Bitcoin",
         "1KzXE97kV7DrpxCViCN3HbGbiKhzzPM7TQ",
         bytes.fromhex(
@@ -199,12 +199,12 @@ def test_verify_bitcoind(client: Client):
     assert res is True
 
 
-def test_verify_utf(client: Client):
+def test_verify_utf(session: Session):
     words_nfkd = "Pr\u030ci\u0301s\u030cerne\u030c z\u030clut\u030couc\u030cky\u0301 ku\u030an\u030c u\u0301pe\u030cl d\u030ca\u0301belske\u0301 o\u0301dy za\u0301ker\u030cny\u0301 uc\u030cen\u030c be\u030cz\u030ci\u0301 pode\u0301l zo\u0301ny u\u0301lu\u030a"
     words_nfc = "P\u0159\xed\u0161ern\u011b \u017elu\u0165ou\u010dk\xfd k\u016f\u0148 \xfap\u011bl \u010f\xe1belsk\xe9 \xf3dy z\xe1ke\u0159n\xfd u\u010de\u0148 b\u011b\u017e\xed pod\xe9l z\xf3ny \xfal\u016f"
 
     res_nfkd = btc.verify_message(
-        client,
+        session,
         "Bitcoin",
         "14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e",
         bytes.fromhex(
@@ -214,7 +214,7 @@ def test_verify_utf(client: Client):
     )
 
     res_nfc = btc.verify_message(
-        client,
+        session,
         "Bitcoin",
         "14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e",
         bytes.fromhex(

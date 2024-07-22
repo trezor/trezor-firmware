@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import device, messages
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.messages import SdProtectOperationType as Op
 
@@ -27,101 +27,105 @@ pytestmark = pytest.mark.models("core", skip="safe3")
 
 
 @pytest.mark.sd_card(formatted=False)
-def test_sd_format(client: Client):
-    device.sd_protect(client, Op.ENABLE)
-    assert client.features.sd_protection is True
+def test_sd_format(session: Session):
+    device.sd_protect(session, Op.ENABLE)
+    assert session.features.sd_protection is True
 
 
 @pytest.mark.sd_card(formatted=False)
-def test_sd_no_format(client: Client):
+def test_sd_no_format(session: Session):
+    debug = session.client.debug
+
     def input_flow():
         yield  # enable SD protection?
-        client.debug.press_yes()
+        debug.press_yes()
 
         yield  # format SD card
-        client.debug.press_no()
+        debug.press_no()
 
-    with pytest.raises(TrezorFailure) as e, client:
+    with session, session.client as client, pytest.raises(TrezorFailure) as e:
         client.set_input_flow(input_flow)
-        device.sd_protect(client, Op.ENABLE)
+        device.sd_protect(session, Op.ENABLE)
 
     assert e.value.code == messages.FailureType.ProcessError
 
 
 @pytest.mark.sd_card
 @pytest.mark.setup_client(pin="1234")
-def test_sd_protect_unlock(client: Client):
-    layout = client.debug.read_layout
+def test_sd_protect_unlock(session: Session):
+    raise Exception("FAILS, NOT SURE WHY")
+    debug = session.client.debug
+    layout = debug.read_layout
 
     def input_flow_enable_sd_protect():
+        # debug.press_yes()
         yield  # Enter PIN to unlock device
         assert "PinKeyboard" in layout().all_components()
-        client.debug.input("1234")
+        debug.input("1234")
 
         yield  # do you really want to enable SD protection
         TR.assert_in(layout().text_content(), "sd_card__enable")
-        client.debug.press_yes()
+        debug.press_yes()
 
         yield  # enter current PIN
         assert "PinKeyboard" in layout().all_components()
-        client.debug.input("1234")
+        debug.input("1234")
 
         yield  # you have successfully enabled SD protection
         TR.assert_in(layout().text_content(), "sd_card__enabled")
-        client.debug.press_yes()
+        debug.press_yes()
 
-    with client:
+    with session, session.client as client:
         client.watch_layout()
         client.set_input_flow(input_flow_enable_sd_protect)
-        device.sd_protect(client, Op.ENABLE)
+        device.sd_protect(session, Op.ENABLE)
 
     def input_flow_change_pin():
         yield  # do you really want to change PIN?
         TR.assert_equals(layout().title(), "pin__title_settings")
-        client.debug.press_yes()
+        debug.press_yes()
 
         yield  # enter current PIN
         assert "PinKeyboard" in layout().all_components()
-        client.debug.input("1234")
+        debug.input("1234")
 
         yield  # enter new PIN
         assert "PinKeyboard" in layout().all_components()
-        client.debug.input("1234")
+        debug.input("1234")
 
         yield  # enter new PIN again
         assert "PinKeyboard" in layout().all_components()
-        client.debug.input("1234")
+        debug.input("1234")
 
         yield  # Pin change successful
         TR.assert_in(layout().text_content(), "pin__changed")
-        client.debug.press_yes()
+        debug.press_yes()
 
-    with client:
+    with session.client as client:
         client.watch_layout()
         client.set_input_flow(input_flow_change_pin)
-        device.change_pin(client)
+        device.change_pin(session)
 
-    client.debug.erase_sd_card(format=False)
+    debug.erase_sd_card(format=False)
 
     def input_flow_change_pin_format():
         yield  # do you really want to change PIN?
         TR.assert_equals(layout().title(), "pin__title_settings")
-        client.debug.press_yes()
-
+        debug.press_yes()
         yield  # enter current PIN
         assert "PinKeyboard" in layout().all_components()
-        client.debug.input("1234")
+        debug.input("1234")
 
         yield  # SD card problem
         TR.assert_in_multiple(
             layout().text_content(),
             ["sd_card__unplug_and_insert_correct", "sd_card__insert_correct_card"],
         )
-        client.debug.press_no()  # close
+        debug.press_no()  # close
 
-    with client, pytest.raises(TrezorFailure) as e:
+    with session, session.client as client, pytest.raises(TrezorFailure) as e:
         client.watch_layout()
         client.set_input_flow(input_flow_change_pin_format)
-        device.change_pin(client)
+        device.change_pin(session)
 
     assert e.value.code == messages.FailureType.ProcessError

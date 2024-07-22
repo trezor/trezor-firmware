@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import btc, device, messages
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import H_, parse_path
 
@@ -36,7 +36,7 @@ PREV_TXES = {PREV_HASH: PREV_TX}
 # Litecoin does not have strong replay protection using SIGHASH_FORKID,
 # spending from Bitcoin path should fail.
 @pytest.mark.altcoin
-def test_invalid_path_fail(client: Client):
+def test_invalid_path_fail(session: Session):
     inp1 = messages.TxInputType(
         address_n=parse_path("m/44h/0h/0h/0/0"),
         amount=390_000,
@@ -52,7 +52,7 @@ def test_invalid_path_fail(client: Client):
     )
 
     with pytest.raises(TrezorFailure) as exc:
-        btc.sign_tx(client, "Litecoin", [inp1], [out1], prev_txes=PREV_TXES)
+        btc.sign_tx(session, "Litecoin", [inp1], [out1], prev_txes=PREV_TXES)
 
     assert exc.value.code == messages.FailureType.DataError
     assert exc.value.message.endswith("Forbidden key path")
@@ -61,7 +61,7 @@ def test_invalid_path_fail(client: Client):
 # Litecoin does not have strong replay protection using SIGHASH_FORKID, but
 # spending from Bitcoin path should pass with safety checks set to prompt.
 @pytest.mark.altcoin
-def test_invalid_path_prompt(client: Client):
+def test_invalid_path_prompt(session: Session):
     inp1 = messages.TxInputType(
         address_n=parse_path("m/44h/0h/0h/0/0"),
         amount=390_000,
@@ -77,21 +77,21 @@ def test_invalid_path_prompt(client: Client):
     )
 
     device.apply_settings(
-        client, safety_checks=messages.SafetyCheckLevel.PromptTemporarily
+        session, safety_checks=messages.SafetyCheckLevel.PromptTemporarily
     )
 
-    with client:
-        if is_core(client):
+    with session.client as client:
+        if is_core(session):
             IF = InputFlowConfirmAllWarnings(client)
             client.set_input_flow(IF.get())
 
-        btc.sign_tx(client, "Litecoin", [inp1], [out1], prev_txes=PREV_TXES)
+        btc.sign_tx(session, "Litecoin", [inp1], [out1], prev_txes=PREV_TXES)
 
 
 # Bcash does have strong replay protection using SIGHASH_FORKID,
 # spending from Bitcoin path should work.
 @pytest.mark.altcoin
-def test_invalid_path_pass_forkid(client: Client):
+def test_invalid_path_pass_forkid(session: Session):
     inp1 = messages.TxInputType(
         address_n=parse_path("m/44h/0h/0h/0/0"),
         amount=390_000,
@@ -106,32 +106,32 @@ def test_invalid_path_pass_forkid(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with client:
-        if is_core(client):
+    with session.client as client:
+        if is_core(session):
             IF = InputFlowConfirmAllWarnings(client)
             client.set_input_flow(IF.get())
 
-        btc.sign_tx(client, "Bcash", [inp1], [out1], prev_txes=PREV_TXES)
+        btc.sign_tx(session, "Bcash", [inp1], [out1], prev_txes=PREV_TXES)
 
 
-def test_attack_path_segwit(client: Client):
+def test_attack_path_segwit(session: Session):
     # Scenario: The attacker falsely claims that the transaction uses Testnet paths to
     # avoid the path warning dialog, but in step6_sign_segwit_inputs() uses Bitcoin paths
     # to get a valid signature.
 
     device.apply_settings(
-        client, safety_checks=messages.SafetyCheckLevel.PromptTemporarily
+        session, safety_checks=messages.SafetyCheckLevel.PromptTemporarily
     )
 
     # Generate keys
     address_a = btc.get_address(
-        client,
+        session,
         "Testnet",
         parse_path("m/84h/0h/0h/0/0"),
         script_type=messages.InputScriptType.SPENDWITNESS,
     )
     address_b = btc.get_address(
-        client,
+        session,
         "Testnet",
         parse_path("m/84h/0h/1h/0/1"),
         script_type=messages.InputScriptType.SPENDWITNESS,
@@ -178,15 +178,15 @@ def test_attack_path_segwit(client: Client):
 
         return msg
 
-    with client:
-        client.set_filter(messages.TxAck, attack_processor)
+    with session:
+        session.set_filter(messages.TxAck, attack_processor)
         with pytest.raises(TrezorFailure):
             btc.sign_tx(
-                client, "Testnet", [inp1, inp2], [out1], prev_txes={prev_hash: prev_tx}
+                session, "Testnet", [inp1, inp2], [out1], prev_txes={prev_hash: prev_tx}
             )
 
 
-def test_invalid_path_fail_asap(client: Client):
+def test_invalid_path_fail_asap(session: Session):
     inp1 = messages.TxInputType(
         address_n=parse_path("m/0"),
         amount=1_000_000,
@@ -202,14 +202,14 @@ def test_invalid_path_fail_asap(client: Client):
         script_type=messages.OutputScriptType.PAYTOWITNESS,
     )
 
-    with client:
-        client.set_expected_responses(
+    with session:
+        session.set_expected_responses(
             [
                 request_input(0),
                 messages.Failure(code=messages.FailureType.DataError),
             ]
         )
         try:
-            btc.sign_tx(client, "Testnet", [inp1], [out1])
+            btc.sign_tx(session, "Testnet", [inp1], [out1])
         except TrezorFailure:
             pass

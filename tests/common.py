@@ -34,8 +34,8 @@ if TYPE_CHECKING:
     from _pytest.mark.structures import MarkDecorator
 
     from trezorlib.debuglink import DebugLink
-    from trezorlib.debuglink import TrezorClientDebugLink as Client
     from trezorlib.messages import ButtonRequest
+    from trezorlib.transport.session import Session
 
 PRIVATE_KEYS_DEV = [byte * 32 for byte in (b"\xdd", b"\xde", b"\xdf")]
 
@@ -338,10 +338,10 @@ def check_pin_backoff_time(attempts: int, start: float) -> None:
     assert got >= expected
 
 
-def get_test_address(client: "Client") -> str:
+def get_test_address(session: "Session") -> str:
     """Fetch a testnet address on a fixed path. Useful to make a pin/passphrase
     protected call, or to identify the root secret (seed+passphrase)"""
-    return btc.get_address(client, "Testnet", TEST_ADDRESS_N)
+    return btc.get_address(session, "Testnet", TEST_ADDRESS_N)
 
 
 def compact_size(n: int) -> bytes:
@@ -380,5 +380,5 @@ def swipe_till_the_end(debug: "DebugLink", br: messages.ButtonRequest) -> None:
             debug.swipe_up()
 
 
-def is_core(client: "Client") -> bool:
-    return client.model is not models.T1B1
+def is_core(session: "Session") -> bool:
+    return session.model is not models.T1B1

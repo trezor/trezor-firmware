@@ -15,32 +15,35 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 from trezorlib import device, messages, models
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 
 
-def test_features(client: Client):
-    f0 = client.features
-    # client erases session_id from its features
-    f0.session_id = client.session_id
-    f1 = client.call(messages.Initialize(session_id=f0.session_id))
+def test_features(session: Session):
+    raise Exception("TEST NEEDS TO BE REMADE")
+    f0 = session.features
+    # session erases session_id from its features
+    f0.session_id = session.session_id
+    f1 = session.call(messages.Initialize(session_id=f0.session_id))
     assert f0 == f1
 
 
-def test_capabilities(client: Client):
-    assert (messages.Capability.Translations in client.features.capabilities) == (
-        client.model is not models.T1B1
+def test_capabilities(session: Session):
+    assert (messages.Capability.Translations in session.features.capabilities) == (
+        session.model is not models.T1B1
     )
 
 
-def test_ping(client: Client):
-    ping = client.call(messages.Ping(message="ahoj!"))
+def test_ping(session: Session):
+    ping = session.call(messages.Ping(message="ahoj!"))
     assert ping == messages.Success(message="ahoj!")
 
 
-def test_device_id_same(client: Client):
-    id1 = client.get_device_id()
-    client.init_device()
-    id2 = client.get_device_id()
+def test_device_id_same(session: Session):
+    raise Exception("TEST NEEDS TO BE REMADE")
+
+    id1 = session.client.get_device_id()
+    # session.init_device()
+    id2 = session.client.get_device_id()
 
     # ID must be at least 12 characters
     assert len(id1) >= 12
@@ -49,10 +52,11 @@ def test_device_id_same(client: Client):
     assert id1 == id2
 
 
-def test_device_id_different(client: Client):
-    id1 = client.get_device_id()
-    device.wipe(client)
-    id2 = client.get_device_id()
+def test_device_id_different(session: Session):
+    raise Exception("TEST NEEDS TO BE REMADE")
+    id1 = session.get_device_id()
+    device.wipe(session)
+    id2 = session.get_device_id()
 
     # Device ID must be fresh after every reset
     assert id1 != id2

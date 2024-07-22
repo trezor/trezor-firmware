@@ -57,7 +57,7 @@ def raise_if_not_confirmed(
     exc: ExceptionType = ActionCancelled,
 ) -> Awaitable[None]:
     action = interact(layout_obj, br_name, br_code, exc)
-    return action  # type: ignore ["UiResult" is incompatible with "None"]
+    return action  # type: ignore [Expression of type "Coroutine[Any, Any, UiResult]" is incompatible with return type "Awaitable[None]"]
 
 
 async def with_info(

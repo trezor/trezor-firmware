@@ -1,19 +1,43 @@
 from common import *  # isort:skip
 
 from mock_storage import mock_storage
-from storage import cache
-from trezor import wire
+from storage import cache, cache_common
+from trezor import utils, wire
 from trezor.crypto import bip39
 from trezor.enums import SafetyCheckLevel
+from trezor.wire import context
 
 from apps.common import safety_checks
 from apps.common.keychain import Keychain, LRUCache, get_keychain, with_slip44_keychain
 from apps.common.paths import PATTERN_SEP5, PathSchema
 
+if utils.USE_THP:
+    import thp_common
+if not utils.USE_THP:
+    from storage import cache_codec
+
 
 class TestKeychain(unittest.TestCase):
-    def setUp(self):
-        cache.start_session()
+
+    if utils.USE_THP:
+
+        def __init__(self):
+            if __debug__:
+                thp_common.suppres_debug_log()
+            thp_common.prepare_context()
+            super().__init__()
+
+    else:
+
+        def __init__(self):
+            context.CURRENT_CONTEXT = context.CodecContext(None, bytearray(64))
+            super().__init__()
+
+        def setUp(self):
+            cache_codec.start_session()
+
+    def cache_set(self, key: int, value: bytes) -> None:
+        context.cache_set(key, value)
 
     def tearDown(self):
         cache.clear_all()
@@ -71,7 +95,7 @@ class TestKeychain(unittest.TestCase):
 
     def test_get_keychain(self):
         seed = bip39.seed(" ".join(["all"] * 12), "")
-        cache.set(cache.APP_COMMON_SEED, seed)
+        self.cache_set(cache_common.APP_COMMON_SEED, seed)
 
         schema = PathSchema.parse("m/44'/1'", 0)
         keychain = await_result(get_keychain("secp256k1", [schema]))
@@ -85,7 +109,7 @@ class TestKeychain(unittest.TestCase):
 
     def test_with_slip44(self):
         seed = bip39.seed(" ".join(["all"] * 12), "")
-        cache.set(cache.APP_COMMON_SEED, seed)
+        self.cache_set(cache_common.APP_COMMON_SEED, seed)
 
         slip44_id = 42
         valid_path = [H_(44), H_(slip44_id), H_(0)]

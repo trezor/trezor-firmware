@@ -7,7 +7,7 @@ from trezor.messages import (
     ThpCredentialMetadata,
     ThpPairingCredential,
 )
-from trezor.wire import wrap_protobuf_load
+from trezor.wire import message_handler
 
 if TYPE_CHECKING:
     from apps.common.paths import Slip21Path
@@ -72,7 +72,9 @@ def validate_credential(
     """
     cred_auth_key = derive_cred_auth_key()
     expected_type = protobuf.type_for_name("ThpPairingCredential")
-    credential = wrap_protobuf_load(encoded_pairing_credential_message, expected_type)
+    credential = message_handler.wrap_protobuf_load(
+        encoded_pairing_credential_message, expected_type
+    )
     assert ThpPairingCredential.is_type_of(credential)
     proto_msg = ThpAuthenticatedCredentialData(
         host_static_pubkey=host_static_pubkey,

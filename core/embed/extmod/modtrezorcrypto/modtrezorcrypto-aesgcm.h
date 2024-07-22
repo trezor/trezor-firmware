@@ -111,9 +111,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_AesGcm_encrypt_obj,
                                  mod_trezorcrypto_AesGcm_encrypt);
 
 /// def encrypt_in_place(self, data: bytearray | memoryview) -> int:
-///    """
-///    Encrypt data chunk in place. Returns the length of the encrypted data.
-///    """
+///     """
+///     Encrypt data chunk in place. Returns the length of the encrypted data.
+///     """
 STATIC mp_obj_t mod_trezorcrypto_AesGcm_encrypt_in_place(mp_obj_t self,
                                                          mp_obj_t data) {
   mp_obj_AesGcm_t *o = MP_OBJ_TO_PTR(self);
@@ -158,9 +158,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_AesGcm_decrypt_obj,
                                  mod_trezorcrypto_AesGcm_decrypt);
 
 /// def decrypt_in_place(self, data: bytearray | memoryview) -> int:
-///   """
-///   Decrypt data chunk in place. Returns the length of the decrypted data.
-///   """
+///     """
+///     Decrypt data chunk in place. Returns the length of the decrypted data.
+///     """
 STATIC mp_obj_t mod_trezorcrypto_AesGcm_decrypt_in_place(mp_obj_t self,
                                                          mp_obj_t data) {
   mp_obj_AesGcm_t *o = MP_OBJ_TO_PTR(self);

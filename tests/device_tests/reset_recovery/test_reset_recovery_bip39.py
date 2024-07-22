@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import btc, device, messages
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.messages import BackupType
 from trezorlib.tools import parse_path
 
@@ -27,24 +27,24 @@ from ...input_flows import InputFlowBip39Recovery, InputFlowBip39ResetBackup
 
 @pytest.mark.models("core")
 @pytest.mark.setup_client(uninitialized=True)
-def test_reset_recovery(client: Client):
-    mnemonic = reset(client)
-    address_before = btc.get_address(client, "Bitcoin", parse_path("m/44h/0h/0h/0/0"))
+def test_reset_recovery(session: Session):
+    mnemonic = reset(session)
+    address_before = btc.get_address(session, "Bitcoin", parse_path("m/44h/0h/0h/0/0"))
 
-    device.wipe(client)
-    recover(client, mnemonic)
-    address_after = btc.get_address(client, "Bitcoin", parse_path("m/44h/0h/0h/0/0"))
+    device.wipe(session)
+    recover(session, mnemonic)
+    address_after = btc.get_address(session, "Bitcoin", parse_path("m/44h/0h/0h/0/0"))
     assert address_before == address_after
 
 
-def reset(client: Client, strength: int = 128, skip_backup: bool = False) -> str:
-    with WITH_MOCK_URANDOM, client:
+def reset(session: Session, strength: int = 128, skip_backup: bool = False) -> str:
+    with WITH_MOCK_URANDOM, session.client as client:
         IF = InputFlowBip39ResetBackup(client)
         client.set_input_flow(IF.get())
 
         # No PIN, no passphrase, don't display random
         device.reset(
-            client,
+            session,
             strength=strength,
             passphrase_protection=False,
             pin_protection=False,
@@ -53,26 +53,26 @@ def reset(client: Client, strength: int = 128, skip_backup: bool = False) -> str
         )
 
     # Check if device is properly initialized
-    assert client.features.initialized is True
+    assert session.features.initialized is True
     assert (
-        client.features.backup_availability == messages.BackupAvailability.NotAvailable
+        session.features.backup_availability == messages.BackupAvailability.NotAvailable
     )
-    assert client.features.pin_protection is False
-    assert client.features.passphrase_protection is False
+    assert session.features.pin_protection is False
+    assert session.features.passphrase_protection is False
 
     assert IF.mnemonic is not None
     return IF.mnemonic
 
 
-def recover(client: Client, mnemonic: str):
+def recover(session: Session, mnemonic: str):
     words = mnemonic.split(" ")
-    with client:
+    with session.client as client:
         IF = InputFlowBip39Recovery(client, words)
         client.set_input_flow(IF.get())
         client.watch_layout()
-        ret = device.recover(client, pin_protection=False, label="label")
+        ret = device.recover(session, pin_protection=False, label="label")
 
     # Workflow successfully ended
     assert ret == messages.Success(message="Device recovered")
-    assert client.features.pin_protection is False
-    assert client.features.passphrase_protection is False
+    assert session.features.pin_protection is False
+    assert session.features.passphrase_protection is False

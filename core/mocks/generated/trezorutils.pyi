@@ -151,4 +151,4 @@ BITCOIN_ONLY: bool
 UI_LAYOUT: str
 """UI layout identifier ("tt" for model T, "tr" for models One and R)."""
 USE_THP: bool
-"""Whether the firmware supports Trezor-Host Protocol (version 3)."""
+"""Whether the firmware supports the Trezor-Host Protocol."""

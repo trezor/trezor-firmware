@@ -17,13 +17,13 @@
 import pytest
 
 from trezorlib import messages, misc
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 
 from ...common import MNEMONIC12
 
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-def test_ecdh(client: Client):
+def test_ecdh(session: Session):
     identity = messages.IdentityType(
         proto="gpg",
         user="",
@@ -37,7 +37,7 @@ def test_ecdh(client: Client):
         "0407f2c6e5becf3213c1d07df0cfbe8e39f70a8c643df7575e5c56859ec52c45ca950499c019719dae0fda04248d851e52cf9d66eeb211d89a77be40de22b6c89d"
     )
     result = misc.get_ecdh_session_key(
-        client,
+        session,
         identity=identity,
         peer_public_key=peer_public_key,
         ecdsa_curve_name="secp256k1",
@@ -55,7 +55,7 @@ def test_ecdh(client: Client):
         "04811a6c2bd2a547d0dd84747297fec47719e7c3f9b0024f027c2b237be99aac39a9230acbd163d0cb1524a0f5ea4bfed6058cec6f18368f72a12aa0c4d083ff64"
     )
     result = misc.get_ecdh_session_key(
-        client,
+        session,
         identity=identity,
         peer_public_key=peer_public_key,
         ecdsa_curve_name="nist256p1",
@@ -73,7 +73,7 @@ def test_ecdh(client: Client):
         "40a8cf4b6a64c4314e80f15a8ea55812bd735fbb365936a48b2d78807b575fa17a"
     )
     result = misc.get_ecdh_session_key(
-        client,
+        session,
         identity=identity,
         peer_public_key=peer_public_key,
         ecdsa_curve_name="curve25519",

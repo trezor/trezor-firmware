@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import device, exceptions, messages
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 
 from ...common import (
     MNEMONIC_SLIP39_BASIC_20_3of6,
@@ -70,32 +70,32 @@ VECTORS = (
 @pytest.mark.setup_client(uninitialized=True)
 @pytest.mark.parametrize("shares, secret, backup_type", VECTORS)
 def test_secret(
-    client: Client, shares: list[str], secret: str, backup_type: messages.BackupType
+    session: Session, shares: list[str], secret: str, backup_type: messages.BackupType
 ):
-    with client:
+    with session.client as client:
         IF = InputFlowSlip39BasicRecovery(client, shares)
         client.set_input_flow(IF.get())
-        ret = device.recover(client, pin_protection=False, label="label")
+        ret = device.recover(session, pin_protection=False, label="label")
 
     # Workflow successfully ended
     assert ret == messages.Success(message="Device recovered")
-    assert client.features.pin_protection is False
-    assert client.features.passphrase_protection is False
-    assert client.features.backup_type is backup_type
+    assert session.features.pin_protection is False
+    assert session.features.passphrase_protection is False
+    assert session.features.backup_type is backup_type
 
     # Check mnemonic
-    assert client.debug.state().mnemonic_secret.hex() == secret
+    assert session.client.debug.state().mnemonic_secret.hex() == secret
 
 
 @pytest.mark.setup_client(uninitialized=True)
-def test_recover_with_pin_passphrase(client: Client):
-    with client:
+def test_recover_with_pin_passphrase(session: Session):
+    with session.client as client:
         IF = InputFlowSlip39BasicRecovery(
             client, MNEMONIC_SLIP39_BASIC_20_3of6, pin="654"
         )
         client.set_input_flow(IF.get())
         ret = device.recover(
-            client,
+            session,
             pin_protection=True,
             passphrase_protection=True,
             label="label",
@@ -103,99 +103,99 @@ def test_recover_with_pin_passphrase(client: Client):
 
     # Workflow successfully ended
     assert ret == messages.Success(message="Device recovered")
-    assert client.features.pin_protection is True
-    assert client.features.passphrase_protection is True
-    assert client.features.backup_type is messages.BackupType.Slip39_Basic
+    assert session.features.pin_protection is True
+    assert session.features.passphrase_protection is True
+    assert session.features.backup_type is messages.BackupType.Slip39_Basic
 
 
 @pytest.mark.setup_client(uninitialized=True)
-def test_abort(client: Client):
-    with client:
+def test_abort(session: Session):
+    with session.client as client:
         IF = InputFlowSlip39BasicRecoveryAbort(client)
         client.set_input_flow(IF.get())
         with pytest.raises(exceptions.Cancelled):
-            device.recover(client, pin_protection=False, label="label")
-        client.init_device()
-        assert client.features.initialized is False
-        assert client.features.recovery_status is messages.RecoveryStatus.Nothing
+            device.recover(session, pin_protection=False, label="label")
+        # TODO remove? session.init_device()
+        assert session.features.initialized is False
+        assert session.features.recovery_status is messages.RecoveryStatus.Nothing
 
 
 @pytest.mark.setup_client(uninitialized=True)
-def test_abort_between_shares(client: Client):
-    with client:
+def test_abort_between_shares(session: Session):
+    with session.client as client:
         IF = InputFlowSlip39BasicRecoveryAbortBetweenShares(
             client, MNEMONIC_SLIP39_BASIC_20_3of6
         )
         client.set_input_flow(IF.get())
         with pytest.raises(exceptions.Cancelled):
-            device.recover(client, pin_protection=False, label="label")
-        client.init_device()
-        assert client.features.initialized is False
-        assert client.features.recovery_status is messages.RecoveryStatus.Nothing
+            device.recover(session, pin_protection=False, label="label")
+        # TODO remove? session.init_device()
+        assert session.features.initialized is False
+        assert session.features.recovery_status is messages.RecoveryStatus.Nothing
 
 
 @pytest.mark.setup_client(uninitialized=True)
-def test_noabort(client: Client):
-    with client:
+def test_noabort(session: Session):
+    with session.client as client:
         IF = InputFlowSlip39BasicRecoveryNoAbort(client, MNEMONIC_SLIP39_BASIC_20_3of6)
         client.set_input_flow(IF.get())
-        device.recover(client, pin_protection=False, label="label")
-        client.init_device()
-        assert client.features.initialized is True
+        device.recover(session, pin_protection=False, label="label")
+        # TODO remove? session.init_device()
+        assert session.features.initialized is True
 
 
 @pytest.mark.setup_client(uninitialized=True)
-def test_invalid_mnemonic_first_share(client: Client):
-    with client:
+def test_invalid_mnemonic_first_share(session: Session):
+    with session.client as client:
         IF = InputFlowSlip39BasicRecoveryInvalidFirstShare(client)
         client.set_input_flow(IF.get())
         with pytest.raises(exceptions.Cancelled):
-            device.recover(client, pin_protection=False, label="label")
-        client.init_device()
-        assert client.features.initialized is False
+            device.recover(session, pin_protection=False, label="label")
+        # TODO remove? session.init_device()
+        assert session.features.initialized is False
 
 
 @pytest.mark.setup_client(uninitialized=True)
-def test_invalid_mnemonic_second_share(client: Client):
-    with client:
+def test_invalid_mnemonic_second_share(session: Session):
+    with session.client as client:
         IF = InputFlowSlip39BasicRecoveryInvalidSecondShare(
             client, MNEMONIC_SLIP39_BASIC_20_3of6
         )
         client.set_input_flow(IF.get())
         with pytest.raises(exceptions.Cancelled):
-            device.recover(client, pin_protection=False, label="label")
-        client.init_device()
-        assert client.features.initialized is False
+            device.recover(session, pin_protection=False, label="label")
+        # TODO remove? session.init_device()
+        assert session.features.initialized is False
 
 
 @pytest.mark.setup_client(uninitialized=True)
 @pytest.mark.parametrize("nth_word", range(3))
-def test_wrong_nth_word(client: Client, nth_word: int):
+def test_wrong_nth_word(session: Session, nth_word: int):
     share = MNEMONIC_SLIP39_BASIC_20_3of6[0].split(" ")
-    with client:
+    with session.client as client:
         IF = InputFlowSlip39BasicRecoveryWrongNthWord(client, share, nth_word)
         client.set_input_flow(IF.get())
         with pytest.raises(exceptions.Cancelled):
-            device.recover(client, pin_protection=False, label="label")
+            device.recover(session, pin_protection=False, label="label")
 
 
 @pytest.mark.setup_client(uninitialized=True)
-def test_same_share(client: Client):
+def test_same_share(session: Session):
     share = MNEMONIC_SLIP39_BASIC_20_3of6[0].split(" ")
-    with client:
+    with session.client as client:
         IF = InputFlowSlip39BasicRecoverySameShare(client, share)
         client.set_input_flow(IF.get())
         with pytest.raises(exceptions.Cancelled):
-            device.recover(client, pin_protection=False, label="label")
+            device.recover(session, pin_protection=False, label="label")
 
 
 @pytest.mark.setup_client(uninitialized=True)
-def test_1of1(client: Client):
-    with client:
+def test_1of1(session: Session):
+    with session.client as client:
         IF = InputFlowSlip39BasicRecovery(client, MNEMONIC_SLIP39_BASIC_20_1of1)
         client.set_input_flow(IF.get())
         ret = device.recover(
-            client,
+            session,
             pin_protection=False,
             passphrase_protection=False,
             label="label",
@@ -203,7 +203,7 @@ def test_1of1(client: Client):
 
     # Workflow successfully ended
     assert ret == messages.Success(message="Device recovered")
-    assert client.features.initialized is True
-    assert client.features.pin_protection is False
-    assert client.features.passphrase_protection is False
-    assert client.features.backup_type is messages.BackupType.Slip39_Basic
+    assert session.features.initialized is True
+    assert session.features.pin_protection is False
+    assert session.features.passphrase_protection is False
+    assert session.features.backup_type is messages.BackupType.Slip39_Basic

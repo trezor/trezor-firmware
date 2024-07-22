@@ -482,7 +482,7 @@ if ARGUMENTS.get('TREZOR_EMULATOR_DEBUGGABLE', '0') == '1':
 
 if ARGUMENTS.get('TREZOR_MEMPERF', '0') == '1':
     CPPDEFINES_MOD += [
-        ('MICROPY_TREZOR_MEMPERF', '\(1\)')
+        ('MICROPY_TREZOR_MEMPERF', '1')
     ]
 
 env.Replace(
@@ -633,6 +633,8 @@ if FROZEN:
         ] if not EVERYTHING else []
     ))
 
+    if THP:
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/wire/thp/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/wire/*.py'))
 
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'storage/*.py',

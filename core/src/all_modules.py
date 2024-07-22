@@ -47,6 +47,12 @@ storage
 import storage
 storage.cache
 import storage.cache
+storage.cache_codec
+import storage.cache_codec
+storage.cache_common
+import storage.cache_common
+storage.cache_thp
+import storage.cache_thp
 storage.common
 import storage.common
 storage.debug
@@ -205,6 +211,10 @@ trezor.wire.context
 import trezor.wire.context
 trezor.wire.errors
 import trezor.wire.errors
+trezor.wire.message_handler
+import trezor.wire.message_handler
+trezor.wire.protocol_common
+import trezor.wire.protocol_common
 trezor.workflow
 import trezor.workflow
 apps
@@ -289,6 +299,8 @@ apps.common.backup
 import apps.common.backup
 apps.common.backup_types
 import apps.common.backup_types
+apps.common.cache
+import apps.common.cache
 apps.common.cbor
 import apps.common.cbor
 apps.common.coininfo
@@ -381,10 +393,52 @@ apps.workflow_handlers
 import apps.workflow_handlers
 
 if utils.USE_THP:
+    trezor.enums.ThpPairingMethod
+    import trezor.enums.ThpPairingMethod
+    trezor.wire.thp
+    import trezor.wire.thp
+    trezor.wire.thp.alternating_bit_protocol
+    import trezor.wire.thp.alternating_bit_protocol
+    trezor.wire.thp.channel
+    import trezor.wire.thp.channel
+    trezor.wire.thp.channel_manager
+    import trezor.wire.thp.channel_manager
+    trezor.wire.thp.checksum
+    import trezor.wire.thp.checksum
+    trezor.wire.thp.control_byte
+    import trezor.wire.thp.control_byte
+    trezor.wire.thp.cpace
+    import trezor.wire.thp.cpace
+    trezor.wire.thp.crypto
+    import trezor.wire.thp.crypto
+    trezor.wire.thp.interface_manager
+    import trezor.wire.thp.interface_manager
+    trezor.wire.thp.memory_manager
+    import trezor.wire.thp.memory_manager
+    trezor.wire.thp.pairing_context
+    import trezor.wire.thp.pairing_context
+    trezor.wire.thp.received_message_handler
+    import trezor.wire.thp.received_message_handler
+    trezor.wire.thp.session_context
+    import trezor.wire.thp.session_context
+    trezor.wire.thp.session_manager
+    import trezor.wire.thp.session_manager
+    trezor.wire.thp.thp_messages
+    import trezor.wire.thp.thp_messages
+    trezor.wire.thp.transmission_loop
+    import trezor.wire.thp.transmission_loop
+    trezor.wire.thp.writer
+    import trezor.wire.thp.writer
+    trezor.wire.thp_main
+    import trezor.wire.thp_main
     apps.thp
     import apps.thp
+    apps.thp.create_new_session
+    import apps.thp.create_new_session
     apps.thp.credential_manager
     import apps.thp.credential_manager
+    apps.thp.pairing
+    import apps.thp.pairing
 
 if not utils.BITCOIN_ONLY:
     trezor.enums.BinanceOrderSide

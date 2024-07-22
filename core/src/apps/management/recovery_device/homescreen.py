@@ -5,6 +5,7 @@ import storage.recovery as storage_recovery
 import storage.recovery_shares as storage_recovery_shares
 from trezor import TR, wire
 from trezor.messages import Success
+from trezor.wire import message_handler
 
 from apps.common import backup_types
 
@@ -38,7 +39,7 @@ async def recovery_process() -> Success:
 
     recovery_type = storage_recovery.get_type()
 
-    wire.AVOID_RESTARTING_FOR = (
+    message_handler.AVOID_RESTARTING_FOR = (
         MessageType.Initialize,
         MessageType.GetFeatures,
         MessageType.EndSession,
@@ -59,7 +60,7 @@ async def _continue_repeated_backup() -> None:
     from apps.common import backup
     from apps.management.backup_device import perform_backup
 
-    wire.AVOID_RESTARTING_FOR = (
+    message_handler.AVOID_RESTARTING_FOR = (
         MessageType.Initialize,
         MessageType.GetFeatures,
         MessageType.EndSession,
