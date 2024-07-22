@@ -270,6 +270,24 @@ class MessageType(IntEnum):
     SolanaAddress = 903
     SolanaSignTx = 904
     SolanaTxSignature = 905
+    ThpCreateNewSession = 1000
+    ThpNewSession = 1001
+    ThpStartPairingRequest = 1008
+    ThpPairingPreparationsFinished = 1009
+    ThpCredentialRequest = 1010
+    ThpCredentialResponse = 1011
+    ThpEndRequest = 1012
+    ThpEndResponse = 1013
+    ThpCodeEntryCommitment = 1016
+    ThpCodeEntryChallenge = 1017
+    ThpCodeEntryCpaceHost = 1018
+    ThpCodeEntryCpaceTrezor = 1019
+    ThpCodeEntryTag = 1020
+    ThpCodeEntrySecret = 1021
+    ThpQrCodeTag = 1024
+    ThpQrCodeSecret = 1025
+    ThpNfcUnidirectionalTag = 1032
+    ThpNfcUnidirectionalSecret = 1033
 
 
 class FailureType(IntEnum):
@@ -287,6 +305,7 @@ class FailureType(IntEnum):
     PinMismatch = 12
     WipeCodeMismatch = 13
     InvalidSession = 14
+    ThpUnallocatedSession = 15
     FirmwareError = 99
 
 
@@ -624,6 +643,13 @@ class TezosBallotType(IntEnum):
     Yay = 0
     Nay = 1
     Pass = 2
+
+
+class ThpPairingMethod(IntEnum):
+    NoMethod = 1
+    CodeEntry = 2
+    QrCode = 3
+    NFC_Unidirectional = 4
 
 
 class BinanceGetAddress(protobuf.MessageType):
@@ -7751,6 +7777,328 @@ class TezosManagerTransfer(protobuf.MessageType):
     ) -> None:
         self.destination = destination
         self.amount = amount
+
+
+class ThpDeviceProperties(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("internal_model", "string", repeated=False, required=False, default=None),
+        2: protobuf.Field("model_variant", "uint32", repeated=False, required=False, default=None),
+        3: protobuf.Field("bootloader_mode", "bool", repeated=False, required=False, default=None),
+        4: protobuf.Field("protocol_version", "uint32", repeated=False, required=False, default=None),
+        5: protobuf.Field("pairing_methods", "ThpPairingMethod", repeated=True, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        pairing_methods: Optional[Sequence["ThpPairingMethod"]] = None,
+        internal_model: Optional["str"] = None,
+        model_variant: Optional["int"] = None,
+        bootloader_mode: Optional["bool"] = None,
+        protocol_version: Optional["int"] = None,
+    ) -> None:
+        self.pairing_methods: Sequence["ThpPairingMethod"] = pairing_methods if pairing_methods is not None else []
+        self.internal_model = internal_model
+        self.model_variant = model_variant
+        self.bootloader_mode = bootloader_mode
+        self.protocol_version = protocol_version
+
+
+class ThpHandshakeCompletionReqNoisePayload(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("host_pairing_credential", "bytes", repeated=False, required=False, default=None),
+        2: protobuf.Field("pairing_methods", "ThpPairingMethod", repeated=True, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        pairing_methods: Optional[Sequence["ThpPairingMethod"]] = None,
+        host_pairing_credential: Optional["bytes"] = None,
+    ) -> None:
+        self.pairing_methods: Sequence["ThpPairingMethod"] = pairing_methods if pairing_methods is not None else []
+        self.host_pairing_credential = host_pairing_credential
+
+
+class ThpCreateNewSession(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 1000
+    FIELDS = {
+        1: protobuf.Field("passphrase", "string", repeated=False, required=False, default=None),
+        2: protobuf.Field("on_device", "bool", repeated=False, required=False, default=None),
+        3: protobuf.Field("derive_cardano", "bool", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        passphrase: Optional["str"] = None,
+        on_device: Optional["bool"] = None,
+        derive_cardano: Optional["bool"] = None,
+    ) -> None:
+        self.passphrase = passphrase
+        self.on_device = on_device
+        self.derive_cardano = derive_cardano
+
+
+class ThpNewSession(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 1001
+    FIELDS = {
+        1: protobuf.Field("new_session_id", "uint32", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        new_session_id: Optional["int"] = None,
+    ) -> None:
+        self.new_session_id = new_session_id
+
+
+class ThpStartPairingRequest(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 1008
+    FIELDS = {
+        1: protobuf.Field("host_name", "string", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        host_name: Optional["str"] = None,
+    ) -> None:
+        self.host_name = host_name
+
+
+class ThpPairingPreparationsFinished(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 1009
+
+
+class ThpCodeEntryCommitment(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 1016
+    FIELDS = {
+        1: protobuf.Field("commitment", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        commitment: Optional["bytes"] = None,
+    ) -> None:
+        self.commitment = commitment
+
+
+class ThpCodeEntryChallenge(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 1017
+    FIELDS = {
+        1: protobuf.Field("challenge", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        challenge: Optional["bytes"] = None,
+    ) -> None:
+        self.challenge = challenge
+
+
+class ThpCodeEntryCpaceHost(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 1018
+    FIELDS = {
+        1: protobuf.Field("cpace_host_public_key", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        cpace_host_public_key: Optional["bytes"] = None,
+    ) -> None:
+        self.cpace_host_public_key = cpace_host_public_key
+
+
+class ThpCodeEntryCpaceTrezor(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 1019
+    FIELDS = {
+        1: protobuf.Field("cpace_trezor_public_key", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        cpace_trezor_public_key: Optional["bytes"] = None,
+    ) -> None:
+        self.cpace_trezor_public_key = cpace_trezor_public_key
+
+
+class ThpCodeEntryTag(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 1020
+    FIELDS = {
+        2: protobuf.Field("tag", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        tag: Optional["bytes"] = None,
+    ) -> None:
+        self.tag = tag
+
+
+class ThpCodeEntrySecret(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 1021
+    FIELDS = {
+        1: protobuf.Field("secret", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        secret: Optional["bytes"] = None,
+    ) -> None:
+        self.secret = secret
+
+
+class ThpQrCodeTag(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 1024
+    FIELDS = {
+        1: protobuf.Field("tag", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        tag: Optional["bytes"] = None,
+    ) -> None:
+        self.tag = tag
+
+
+class ThpQrCodeSecret(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 1025
+    FIELDS = {
+        1: protobuf.Field("secret", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        secret: Optional["bytes"] = None,
+    ) -> None:
+        self.secret = secret
+
+
+class ThpNfcUnidirectionalTag(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 1032
+    FIELDS = {
+        1: protobuf.Field("tag", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        tag: Optional["bytes"] = None,
+    ) -> None:
+        self.tag = tag
+
+
+class ThpNfcUnidirectionalSecret(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 1033
+    FIELDS = {
+        1: protobuf.Field("secret", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        secret: Optional["bytes"] = None,
+    ) -> None:
+        self.secret = secret
+
+
+class ThpCredentialRequest(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 1010
+    FIELDS = {
+        1: protobuf.Field("host_static_pubkey", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        host_static_pubkey: Optional["bytes"] = None,
+    ) -> None:
+        self.host_static_pubkey = host_static_pubkey
+
+
+class ThpCredentialResponse(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 1011
+    FIELDS = {
+        1: protobuf.Field("trezor_static_pubkey", "bytes", repeated=False, required=False, default=None),
+        2: protobuf.Field("credential", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        trezor_static_pubkey: Optional["bytes"] = None,
+        credential: Optional["bytes"] = None,
+    ) -> None:
+        self.trezor_static_pubkey = trezor_static_pubkey
+        self.credential = credential
+
+
+class ThpEndRequest(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 1012
+
+
+class ThpEndResponse(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 1013
+
+
+class ThpCredentialMetadata(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("host_name", "string", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        host_name: Optional["str"] = None,
+    ) -> None:
+        self.host_name = host_name
+
+
+class ThpPairingCredential(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("cred_metadata", "ThpCredentialMetadata", repeated=False, required=False, default=None),
+        2: protobuf.Field("mac", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        cred_metadata: Optional["ThpCredentialMetadata"] = None,
+        mac: Optional["bytes"] = None,
+    ) -> None:
+        self.cred_metadata = cred_metadata
+        self.mac = mac
+
+
+class ThpAuthenticatedCredentialData(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("host_static_pubkey", "bytes", repeated=False, required=False, default=None),
+        2: protobuf.Field("cred_metadata", "ThpCredentialMetadata", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        host_static_pubkey: Optional["bytes"] = None,
+        cred_metadata: Optional["ThpCredentialMetadata"] = None,
+    ) -> None:
+        self.host_static_pubkey = host_static_pubkey
+        self.cred_metadata = cred_metadata
 
 
 class WebAuthnListResidentCredentials(protobuf.MessageType):

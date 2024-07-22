@@ -16,4 +16,5 @@ NotInitialized = 11
 PinMismatch = 12
 WipeCodeMismatch = 13
 InvalidSession = 14
+ThpUnallocatedSession = 15
 FirmwareError = 99

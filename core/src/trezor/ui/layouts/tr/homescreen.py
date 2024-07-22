@@ -1,8 +1,9 @@
 from typing import TYPE_CHECKING
 
-import storage.cache as storage_cache
+import storage.cache_common as cache_common
 import trezorui2
 from trezor import TR, ui
+from trezor.wire import context
 
 from . import RustLayout
 
@@ -23,15 +24,15 @@ class HomescreenBase(RustLayout):
             ui.refresh()
 
     def _first_paint(self) -> None:
-        if storage_cache.homescreen_shown is not self.RENDER_INDICATOR:
+        if cache_common.homescreen_shown is not self.RENDER_INDICATOR:
             super()._first_paint()
-            storage_cache.homescreen_shown = self.RENDER_INDICATOR
+            cache_common.homescreen_shown = self.RENDER_INDICATOR
         else:
             self._paint()
 
 
 class Homescreen(HomescreenBase):
-    RENDER_INDICATOR = storage_cache.HOMESCREEN_ON
+    RENDER_INDICATOR = cache_common.HOMESCREEN_ON
 
     def __init__(
         self,
@@ -47,7 +48,7 @@ class Homescreen(HomescreenBase):
             elif notification_is_error:
                 level = 0
 
-        skip = storage_cache.homescreen_shown is self.RENDER_INDICATOR
+        skip = cache_common.homescreen_shown is self.RENDER_INDICATOR
         super().__init__(
             layout=trezorui2.show_homescreen(
                 label=label,
@@ -73,7 +74,7 @@ class Homescreen(HomescreenBase):
 
 
 class Lockscreen(HomescreenBase):
-    RENDER_INDICATOR = storage_cache.LOCKSCREEN_ON
+    RENDER_INDICATOR = cache_common.LOCKSCREEN_ON
 
     def __init__(
         self,
@@ -82,9 +83,7 @@ class Lockscreen(HomescreenBase):
         coinjoin_authorized: bool = False,
     ) -> None:
         self.bootscreen = bootscreen
-        skip = (
-            not bootscreen and storage_cache.homescreen_shown is self.RENDER_INDICATOR
-        )
+        skip = not bootscreen and cache_common.homescreen_shown is self.RENDER_INDICATOR
         super().__init__(
             layout=trezorui2.show_lockscreen(
                 label=label,
@@ -102,12 +101,12 @@ class Lockscreen(HomescreenBase):
 
 
 class Busyscreen(HomescreenBase):
-    RENDER_INDICATOR = storage_cache.BUSYSCREEN_ON
+    RENDER_INDICATOR = cache_common.BUSYSCREEN_ON
 
     def __init__(self, delay_ms: int) -> None:
         from trezor import TR
 
-        skip = storage_cache.homescreen_shown is self.RENDER_INDICATOR
+        skip = cache_common.homescreen_shown is self.RENDER_INDICATOR
         super().__init__(
             layout=trezorui2.show_progress_coinjoin(
                 title=TR.coinjoin__waiting_for_others,
@@ -123,6 +122,6 @@ class Busyscreen(HomescreenBase):
         # Handle timeout.
         result = await super().__iter__()
         assert result == trezorui2.CANCELLED
-        storage_cache.delete(storage_cache.APP_COMMON_BUSY_DEADLINE_MS)
+        context.cache_delete(cache_common.APP_COMMON_BUSY_DEADLINE_MS)
         set_homescreen()
         return result

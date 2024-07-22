@@ -36,7 +36,7 @@ async def recovery_process() -> Success:
 
     recovery_type = storage_recovery.get_type()
 
-    wire.AVOID_RESTARTING_FOR = (
+    wire.message_handler.AVOID_RESTARTING_FOR = (
         MessageType.Initialize,
         MessageType.GetFeatures,
         MessageType.EndSession,
@@ -57,7 +57,7 @@ async def _continue_repeated_backup() -> None:
     from apps.common import backup
     from apps.management.backup_device import perform_backup
 
-    wire.AVOID_RESTARTING_FOR = (
+    wire.message_handler.AVOID_RESTARTING_FOR = (
         MessageType.Initialize,
         MessageType.GetFeatures,
         MessageType.EndSession,

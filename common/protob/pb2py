@@ -133,9 +133,7 @@ WIRETYPE_ENTRY = c.Sequence(
 )
 
 # QDEF(MP_QSTR_copysign, 5171, 8, "copysign")
-QDEF_RE = re.compile(
-    r'^QDEF\(MP_QSTR(\S+), ([0-9]+), ([0-9])+, "(.*)"\)$'
-)
+QDEF_RE = re.compile(r'^QDEF\(MP_QSTR(\S+), ([0-9]+), ([0-9])+, "(.*)"\)$')
 
 
 @dataclass
@@ -558,6 +556,8 @@ class RustBlobRenderer:
         enums = []
         cursor = 0
         for enum in sorted(self.descriptor.enums, key=lambda e: e.name):
+            if enum.name == "MessageType":
+                continue
             self.enum_map[enum.name] = cursor
             enum_blob = ENUM_ENTRY.build(sorted(v.number for v in enum.value))
             enums.append(enum_blob)

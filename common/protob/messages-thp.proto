@@ -1,0 +1,216 @@
+syntax = "proto2";
+package hw.trezor.messages.thp;
+
+// Sugar for easier handling in Java
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
+option java_outer_classname = "TrezorMessageThp";
+
+
+/**
+ * Numeric identifiers of pairing methods.
+ * @embed
+ */
+enum ThpPairingMethod {
+    NoMethod = 1;             // Trust without MITM protection.
+    CodeEntry = 2;            // User types code diplayed on Trezor into the host application.
+    QrCode = 3;               // User scans code displayed on Trezor into host application.
+    NFC_Unidirectional = 4;   // Trezor transmits an authentication key to the host device via NFC.
+}
+
+/**
+ * @embed
+ */
+message ThpDeviceProperties {
+    optional string internal_model = 1;               // Internal model name e.g. "T2B1".
+    optional uint32 model_variant = 2;                // Encodes the device properties such as color.
+    optional bool bootloader_mode = 3;                // Indicates whether the device is in bootloader or firmware mode.
+    optional uint32 protocol_version = 4;             // The communication protocol version supported by the firmware.
+    repeated ThpPairingMethod pairing_methods = 5;    // The pairing methods supported by the Trezor.
+}
+
+/**
+ * @embed
+ */
+message ThpHandshakeCompletionReqNoisePayload {
+    optional bytes host_pairing_credential = 1;       // Host's pairing credential
+    repeated ThpPairingMethod pairing_methods = 2;    // The pairing methods chosen by the host
+}
+
+/**
+ * Request: Ask device for a new session with given passphrase.
+ * @start
+ * @next ThpNewSession
+ */
+message ThpCreateNewSession{
+    optional string passphrase = 1;
+    optional bool on_device = 2;       // User wants to enter passphrase on the device
+    optional bool derive_cardano = 3;  // If True, Cardano keys will be derived. Ignored with BTC-only
+}
+
+/**
+ * Response: Contains session_id of the newly created session.
+ * @end
+ */
+message ThpNewSession{
+    optional uint32 new_session_id = 1;
+}
+
+/**
+ * Request: Start pairing process.
+ * @start
+ * @next ThpCodeEntryCommitment
+ * @next ThpPairingPreparationsFinished
+ */
+message ThpStartPairingRequest{
+    optional string host_name = 1;      // Human-readable host name
+}
+
+/**
+ * Response: Pairing is ready for user input / OOB communication.
+ * @next ThpCodeEntryCpace
+ * @next ThpQrCodeTag
+ * @next ThpNfcUnidirectionalTag
+ */
+ message ThpPairingPreparationsFinished{
+}
+
+/**
+ * Response: If Code Entry is an allowed pairing option, Trezor responds with a commitment.
+ * @next ThpCodeEntryChallenge
+ */
+message ThpCodeEntryCommitment {
+    optional bytes commitment = 1;     // SHA-256 of Trezor's random 32-byte secret
+}
+
+/**
+ * Response: Host responds to Trezor's Code Entry commitment with a challenge.
+ * @next ThpPairingPreparationsFinished
+ */
+message ThpCodeEntryChallenge {
+    optional bytes challenge = 1;      // host's random 32-byte challenge
+}
+
+/**
+ * Request: User selected Code Entry option in Host. Host starts CPACE protocol with Trezor.
+ * @next ThpCodeEntryCpaceTrezor
+ */
+message ThpCodeEntryCpaceHost {
+    optional bytes cpace_host_public_key = 1;    // Host's ephemeral CPace public key
+}
+
+/**
+ * Response: Trezor continues with the CPACE protocol.
+ * @next ThpCodeEntryTag
+ */
+message ThpCodeEntryCpaceTrezor {
+    optional bytes cpace_trezor_public_key = 1;  // Trezor's ephemeral CPace public key
+}
+
+/**
+ * Response: Host continues with the CPACE protocol.
+ * @next ThpCodeEntrySecret
+ */
+message ThpCodeEntryTag {
+    optional bytes tag = 2;       // SHA-256 of shared secret
+}
+
+/**
+ * Response: Trezor finishes the CPACE protocol.
+ * @next ThpCredentialRequest
+ * @next ThpEndRequest
+ */
+message ThpCodeEntrySecret {
+    optional bytes secret = 1;    // Trezor's secret
+}
+
+/**
+ * Request: User selected QR Code pairing option. Host sends a QR Tag.
+ * @next ThpQrCodeSecret
+ */
+message ThpQrCodeTag {
+    optional bytes tag = 1;       // SHA-256 of shared secret
+}
+
+/**
+ * Response: Trezor sends the QR secret.
+ * @next ThpCredentialRequest
+ * @next ThpEndRequest
+ */
+message ThpQrCodeSecret {
+    optional bytes secret = 1;    // Trezor's secret
+}
+
+/**
+ * Request: User selected Unidirectional NFC pairing option. Host sends an Unidirectional NFC Tag.
+ * @next ThpNfcUnidirectionalSecret
+ */
+message ThpNfcUnidirectionalTag {
+    optional bytes tag = 1;       // SHA-256 of shared secret
+}
+
+/**
+ * Response: Trezor sends the Unidirectioal NFC secret.
+ * @next ThpCredentialRequest
+ * @next ThpEndRequest
+ */
+message ThpNfcUnidirectionalSecret {
+    optional bytes secret = 1;    // Trezor's secret
+}
+
+/**
+ * Request: Host requests issuance of a new pairing credential.
+ * @start
+ * @next ThpCredentialResponse
+ */
+message ThpCredentialRequest {
+    optional bytes host_static_pubkey = 1;       // Host's static public key used in the handshake.
+}
+
+/**
+ * Response: Trezor issues a new pairing credential.
+ * @next ThpCredentialRequest
+ * @next ThpEndRequest
+ */
+message ThpCredentialResponse {
+    optional bytes trezor_static_pubkey = 1;     // Trezor's static public key used in the handshake.
+    optional bytes credential = 2;               // The pairing credential issued by the Trezor to the host.
+}
+
+/**
+ * Request: Host requests transition to the encrypted traffic phase.
+ * @start
+ * @next ThpEndResponse
+ */
+message ThpEndRequest {}
+
+/**
+ * Response: Trezor approves transition to the encrypted traffic phase
+ * @end
+ */
+message ThpEndResponse {}
+
+/**
+ * Only for internal use.
+ * @embed
+ */
+ message ThpCredentialMetadata {
+    optional string host_name = 1;     // Human-readable host name
+}
+
+/**
+ * Only for internal use.
+ * @embed
+ */
+ message ThpPairingCredential {
+    optional ThpCredentialMetadata cred_metadata = 1; // Credential metadata
+    optional bytes mac = 2;                           // Message authentication code generated by the Trezor
+}
+
+/**
+ * Only for internal use.
+ * @embed
+ */
+ message ThpAuthenticatedCredentialData {
+    optional bytes host_static_pubkey = 1;            // Host's static public key used in the handshake
+    optional ThpCredentialMetadata cred_metadata = 2; // Credential metadata
+}
