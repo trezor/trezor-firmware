@@ -16,6 +16,7 @@ from typing import Callable, Generator
 
 from trezorlib import messages
 from trezorlib.debuglink import DebugLink, LayoutContent, LayoutType
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.debuglink import multipage_content
 
@@ -155,13 +156,15 @@ class InputFlowNewCodeMismatch(InputFlowBase):
 
 
 class InputFlowCodeChangeFail(InputFlowBase):
+
     def __init__(
-        self, client: Client, current_pin: str, new_pin_1: str, new_pin_2: str
+        self, session: Session, current_pin: str, new_pin_1: str, new_pin_2: str
     ):
-        super().__init__(client)
+        super().__init__(session.client)
         self.current_pin = current_pin
         self.new_pin_1 = new_pin_1
         self.new_pin_2 = new_pin_2
+        self.session = session
 
     def input_flow_common(self) -> BRGeneratorType:
         yield  # do you want to change pin?
@@ -176,7 +179,7 @@ class InputFlowCodeChangeFail(InputFlowBase):
 
         # failed retry
         yield  # enter current pin again
-        self.client.cancel()
+        self.session.cancel()
 
 
 class InputFlowWrongPIN(InputFlowBase):

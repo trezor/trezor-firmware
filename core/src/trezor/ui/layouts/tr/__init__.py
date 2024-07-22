@@ -1199,7 +1199,7 @@ def pin_mismatch_popup(is_wipe_code: bool = False) -> Awaitable[None]:
         TR.buttons__check_again,
         BR_CODE_OTHER,
     )
-    return layout  # type: ignore ["UiResult" is incompatible with "None"]
+    return layout  # type: ignore [Expression of type "Awaitable[UiResult]" is incompatible with return type "Awaitable[None]"]
 
 
 def wipe_code_same_as_pin_popup() -> Awaitable[None]:

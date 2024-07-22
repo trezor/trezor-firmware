@@ -18,16 +18,15 @@ from typing import TYPE_CHECKING, Union
 
 import click
 
-from .. import mapping, messages, protobuf
-from ..client import TrezorClient
 from ..debuglink import TrezorClientDebugLink
 from ..debuglink import optiga_set_sec_max as debuglink_optiga_set_sec_max
 from ..debuglink import prodtest_t1 as debuglink_prodtest_t1
 from ..debuglink import record_screen
-from . import with_client
+from ..transport.session import Session
+from . import with_management_session
 
 if TYPE_CHECKING:
-    from . import TrezorConnection
+    from . import NewTrezorConnection
 
 
 @click.group(name="debug")
@@ -35,58 +34,58 @@ def cli() -> None:
     """Miscellaneous debug features."""
 
 
-@cli.command()
-@click.argument("message_name_or_type")
-@click.argument("hex_data")
-@click.pass_obj
-def send_bytes(
-    obj: "TrezorConnection", message_name_or_type: str, hex_data: str
-) -> None:
-    """Send raw bytes to Trezor.
+# @cli.command()
+# @click.argument("message_name_or_type")
+# @click.argument("hex_data")
+# @click.pass_obj
+# def send_bytes(
+#     obj: "NewTrezorConnection", message_name_or_type: str, hex_data: str
+# ) -> None:
+#     """Send raw bytes to Trezor.
 
-    Message type and message data must be specified separately, due to how message
-    chunking works on the transport level. Message length is calculated and sent
-    automatically, and it is currently impossible to explicitly specify invalid length.
+#     Message type and message data must be specified separately, due to how message
+#     chunking works on the transport level. Message length is calculated and sent
+#     automatically, and it is currently impossible to explicitly specify invalid length.
 
-    MESSAGE_NAME_OR_TYPE can either be a number, or a name from the MessageType enum,
-    in which case the value of that enum is used.
-    """
-    if message_name_or_type.isdigit():
-        message_type = int(message_name_or_type)
-    else:
-        message_type = getattr(messages.MessageType, message_name_or_type)
+#     MESSAGE_NAME_OR_TYPE can either be a number, or a name from the MessageType enum,
+#     in which case the value of that enum is used.
+#     """
+#     if message_name_or_type.isdigit():
+#         message_type = int(message_name_or_type)
+#     else:
+#         message_type = getattr(messages.MessageType, message_name_or_type)
 
-    if not isinstance(message_type, int):
-        raise click.ClickException("Invalid message type.")
+#     if not isinstance(message_type, int):
+#         raise click.ClickException("Invalid message type.")
 
-    try:
-        message_data = bytes.fromhex(hex_data)
-    except Exception as e:
-        raise click.ClickException("Invalid hex data.") from e
+#     try:
+#         message_data = bytes.fromhex(hex_data)
+#     except Exception as e:
+#         raise click.ClickException("Invalid hex data.") from e
 
-    transport = obj.get_transport()
-    transport.begin_session()
-    transport.write(message_type, message_data)
+#     transport = obj.get_transport()
+#     transport.deprecated_begin_session()
+#     transport.write(message_type, message_data)
 
-    response_type, response_data = transport.read()
-    transport.end_session()
+#     response_type, response_data = transport.read()
+#     transport.deprecated_end_session()
 
-    click.echo(f"Response type: {response_type}")
-    click.echo(f"Response data: {response_data.hex()}")
+#     click.echo(f"Response type: {response_type}")
+#     click.echo(f"Response data: {response_data.hex()}")
 
-    try:
-        msg = mapping.DEFAULT_MAPPING.decode(response_type, response_data)
-        click.echo("Parsed message:")
-        click.echo(protobuf.format_message(msg))
-    except Exception as e:
-        click.echo(f"Could not parse response: {e}")
+#     try:
+#         msg = mapping.DEFAULT_MAPPING.decode(response_type, response_data)
+#         click.echo("Parsed message:")
+#         click.echo(protobuf.format_message(msg))
+#     except Exception as e:
+#         click.echo(f"Could not parse response: {e}")
 
 
 @cli.command()
 @click.argument("directory", required=False)
 @click.option("-s", "--stop", is_flag=True, help="Stop the recording")
 @click.pass_obj
-def record(obj: "TrezorConnection", directory: Union[str, None], stop: bool) -> None:
+def record(obj: "NewTrezorConnection", directory: Union[str, None], stop: bool) -> None:
     """Record screen changes into a specified directory.
 
     Recording can be stopped with `-s / --stop` option.
@@ -95,7 +94,7 @@ def record(obj: "TrezorConnection", directory: Union[str, None], stop: bool) -> 
 
 
 def record_screen_from_connection(
-    obj: "TrezorConnection", directory: Union[str, None]
+    obj: "NewTrezorConnection", directory: Union[str, None]
 ) -> None:
     """Record screen helper to transform TrezorConnection into TrezorClientDebugLink."""
     transport = obj.get_transport()
@@ -106,17 +105,17 @@ def record_screen_from_connection(
 
 
 @cli.command()
-@with_client
-def prodtest_t1(client: "TrezorClient") -> str:
+@with_management_session
+def prodtest_t1(session: "Session") -> str:
     """Perform a prodtest on Model One.
 
     Only available on PRODTEST firmware and on T1B1. Formerly named self-test.
     """
-    return debuglink_prodtest_t1(client)
+    return debuglink_prodtest_t1(session)
 
 
 @cli.command()
-@with_client
-def optiga_set_sec_max(client: "TrezorClient") -> str:
+@with_management_session
+def optiga_set_sec_max(session: "Session") -> str:
     """Set Optiga's security event counter to maximum."""
-    return debuglink_optiga_set_sec_max(client)
+    return debuglink_optiga_set_sec_max(session)

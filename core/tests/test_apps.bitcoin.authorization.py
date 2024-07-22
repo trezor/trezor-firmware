@@ -1,16 +1,35 @@
-from common import H_, unittest  # isort:skip
+from common import *  # isort:skip
 
 import storage.cache
 from trezor.enums import InputScriptType
 from trezor.messages import AuthorizeCoinJoin, GetOwnershipProof, SignTx
+from trezor.wire import context
 
 from apps.bitcoin.authorization import CoinJoinAuthorization
 from apps.common import coins
 
 _ROUND_ID_LEN = 32
 
+if utils.USE_THP:
+    import thp_common
+else:
+    import storage.cache_codec
+
 
 class TestAuthorization(unittest.TestCase):
+    if utils.USE_THP:
+
+        def __init__(self):
+            if __debug__:
+                thp_common.suppres_debug_log()
+            thp_common.prepare_context()
+            super().__init__()
+
+    else:
+
+        def __init__(self):
+            context.CURRENT_CONTEXT = context.CodecContext(None, bytearray(64))
+            super().__init__()
 
     coin = coins.by_name("Bitcoin")
 
@@ -26,7 +45,8 @@ class TestAuthorization(unittest.TestCase):
         )
 
         self.authorization = CoinJoinAuthorization(self.msg_auth)
-        storage.cache.start_session()
+        if not utils.USE_THP:
+            storage.cache_codec.start_session()
 
     def test_ownership_proof_account_depth_mismatch(self):
         # Account depth mismatch.

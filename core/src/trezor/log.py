@@ -60,7 +60,7 @@ def exception(name: str, exc: BaseException) -> None:
             name,
             _DEBUG,
             "ui.Result: %s",
-            exc.value,  # type: ignore[Cannot access attribute "value" for class "BaseException"]
+            exc.value,  # type: ignore [Cannot access attribute "value" for class "BaseException"]
         )
     elif exc.__class__.__name__ == "Cancelled":
         _log(name, _DEBUG, "ui.Cancelled")

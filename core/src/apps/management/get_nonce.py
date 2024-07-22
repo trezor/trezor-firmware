@@ -5,10 +5,11 @@ if TYPE_CHECKING:
 
 
 async def get_nonce(msg: GetNonce) -> Nonce:
-    from storage import cache
+    from storage.cache_common import APP_COMMON_NONCE
     from trezor.crypto import random
     from trezor.messages import Nonce
+    from trezor.wire.context import cache_set
 
     nonce = random.bytes(32)
-    cache.set(cache.APP_COMMON_NONCE, nonce)
+    cache_set(APP_COMMON_NONCE, nonce)
     return Nonce(nonce=nonce)

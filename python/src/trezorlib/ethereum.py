@@ -18,12 +18,12 @@ import re
 from typing import TYPE_CHECKING, Any, AnyStr, Dict, List, Optional, Tuple
 
 from . import definitions, exceptions, messages
-from .tools import expect, prepare_message_bytes, session, unharden
+from .tools import expect, prepare_message_bytes, unharden
 
 if TYPE_CHECKING:
-    from .client import TrezorClient
     from .protobuf import MessageType
     from .tools import Address
+    from .transport.session import Session
 
 
 def int_to_big_endian(value: int) -> bytes:
@@ -163,13 +163,13 @@ def network_from_address_n(
 
 @expect(messages.EthereumAddress, field="address", ret_type=str)
 def get_address(
-    client: "TrezorClient",
+    session: "Session",
     n: "Address",
     show_display: bool = False,
     encoded_network: Optional[bytes] = None,
     chunkify: bool = False,
 ) -> "MessageType":
-    return client.call(
+    return session.call(
         messages.EthereumGetAddress(
             address_n=n,
             show_display=show_display,
@@ -181,16 +181,15 @@ def get_address(
 
 @expect(messages.EthereumPublicKey)
 def get_public_node(
-    client: "TrezorClient", n: "Address", show_display: bool = False
+    session: "Session", n: "Address", show_display: bool = False
 ) -> "MessageType":
-    return client.call(
+    return session.call(
         messages.EthereumGetPublicKey(address_n=n, show_display=show_display)
     )
 
 
-@session
 def sign_tx(
-    client: "TrezorClient",
+    session: "Session",
     n: "Address",
     nonce: int,
     gas_price: int,
@@ -226,13 +225,13 @@ def sign_tx(
     data, chunk = data[1024:], data[:1024]
     msg.data_initial_chunk = chunk
 
-    response = client.call(msg)
+    response = session.call(msg)
     assert isinstance(response, messages.EthereumTxRequest)
 
     while response.data_length is not None:
         data_length = response.data_length
         data, chunk = data[data_length:], data[:data_length]
-        response = client.call(messages.EthereumTxAck(data_chunk=chunk))
+        response = session.call(messages.EthereumTxAck(data_chunk=chunk))
         assert isinstance(response, messages.EthereumTxRequest)
 
     assert response.signature_v is not None
@@ -247,9 +246,8 @@ def sign_tx(
     return response.signature_v, response.signature_r, response.signature_s
 
 
-@session
 def sign_tx_eip1559(
-    client: "TrezorClient",
+    session: "Session",
     n: "Address",
     *,
     nonce: int,
@@ -282,13 +280,13 @@ def sign_tx_eip1559(
         chunkify=chunkify,
     )
 
-    response = client.call(msg)
+    response = session.call(msg)
     assert isinstance(response, messages.EthereumTxRequest)
 
     while response.data_length is not None:
         data_length = response.data_length
         data, chunk = data[data_length:], data[:data_length]
-        response = client.call(messages.EthereumTxAck(data_chunk=chunk))
+        response = session.call(messages.EthereumTxAck(data_chunk=chunk))
         assert isinstance(response, messages.EthereumTxRequest)
 
     assert response.signature_v is not None
@@ -299,13 +297,13 @@ def sign_tx_eip1559(
 
 @expect(messages.EthereumMessageSignature)
 def sign_message(
-    client: "TrezorClient",
+    session: "Session",
     n: "Address",
     message: AnyStr,
     encoded_network: Optional[bytes] = None,
     chunkify: bool = False,
 ) -> "MessageType":
-    return client.call(
+    return session.call(
         messages.EthereumSignMessage(
             address_n=n,
             message=prepare_message_bytes(message),
@@ -317,7 +315,7 @@ def sign_message(
 
 @expect(messages.EthereumTypedDataSignature)
 def sign_typed_data(
-    client: "TrezorClient",
+    session: "Session",
     n: "Address",
     data: Dict[str, Any],
     *,
@@ -333,7 +331,7 @@ def sign_typed_data(
         metamask_v4_compat=metamask_v4_compat,
         definitions=definitions,
     )
-    response = client.call(request)
+    response = session.call(request)
 
     # Sending all the types
     while isinstance(response, messages.EthereumTypedDataStructRequest):
@@ -349,7 +347,7 @@ def sign_typed_data(
             members.append(struct_member)
 
         request = messages.EthereumTypedDataStructAck(members=members)
-        response = client.call(request)
+        response = session.call(request)
 
     # Sending the whole message that should be signed
     while isinstance(response, messages.EthereumTypedDataValueRequest):
@@ -362,7 +360,7 @@ def sign_typed_data(
             member_typename = data["primaryType"]
             member_data = data["message"]
         else:
-            client.cancel()
+            # TODO session.cancel()
             raise exceptions.TrezorException("Root index can only be 0 or 1")
 
         # It can be asking for a nested structure (the member path being [X, Y, Z, ...])
@@ -385,20 +383,20 @@ def sign_typed_data(
             encoded_data = encode_data(member_data, member_typename)
 
         request = messages.EthereumTypedDataValueAck(value=encoded_data)
-        response = client.call(request)
+        response = session.call(request)
 
     return response
 
 
 def verify_message(
-    client: "TrezorClient",
+    session: "Session",
     address: str,
     signature: bytes,
     message: AnyStr,
     chunkify: bool = False,
 ) -> bool:
     try:
-        resp = client.call(
+        resp = session.call(
             messages.EthereumVerifyMessage(
                 address=address,
                 signature=signature,
@@ -413,13 +411,13 @@ def verify_message(
 
 @expect(messages.EthereumTypedDataSignature)
 def sign_typed_data_hash(
-    client: "TrezorClient",
+    session: "Session",
     n: "Address",
     domain_hash: bytes,
     message_hash: Optional[bytes],
     encoded_network: Optional[bytes] = None,
 ) -> "MessageType":
-    return client.call(
+    return session.call(
         messages.EthereumSignTypedHash(
             address_n=n,
             domain_separator_hash=domain_hash,

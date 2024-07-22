@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import btc, messages, models
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
@@ -54,12 +54,12 @@ pytestmark = pytest.mark.multisig
 
 @pytest.mark.multisig
 @pytest.mark.parametrize("chunkify", (True, False))
-def test_2_of_3(client: Client, chunkify: bool):
+def test_2_of_3(session: Session, chunkify: bool):
     # input tx: 6b07c1321b52d9c85743f9695e13eb431b41708cdf4e1585258d51208e5b93fc
 
     nodes = [
         btc.get_public_node(
-            client, parse_path(f"m/48h/1h/{index}h/0h"), coin_name="Testnet"
+            session, parse_path(f"m/48h/1h/{index}h/0h"), coin_name="Testnet"
         ).node
         for index in range(1, 4)
     ]
@@ -88,7 +88,7 @@ def test_2_of_3(client: Client, chunkify: bool):
         request_input(0),
         request_output(0),
         messages.ButtonRequest(code=B.ConfirmOutput),
-        (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
+        (is_core(session), messages.ButtonRequest(code=B.ConfirmOutput)),
         messages.ButtonRequest(code=B.SignTx),
         request_input(0),
         request_meta(TXHASH_6b07c1),
@@ -100,12 +100,12 @@ def test_2_of_3(client: Client, chunkify: bool):
         request_finished(),
     ]
 
-    with client:
-        client.set_expected_responses(expected_responses)
+    with session:
+        session.set_expected_responses(expected_responses)
 
         # Now we have first signature
         signatures1, _ = btc.sign_tx(
-            client,
+            session,
             "Testnet",
             [inp1],
             [out1],
@@ -142,10 +142,10 @@ def test_2_of_3(client: Client, chunkify: bool):
         multisig=multisig,
     )
 
-    with client:
-        client.set_expected_responses(expected_responses)
+    with session:
+        session.set_expected_responses(expected_responses)
         signatures2, serialized_tx = btc.sign_tx(
-            client, "Testnet", [inp3], [out1], prev_txes=TX_API_TESTNET
+            session, "Testnet", [inp3], [out1], prev_txes=TX_API_TESTNET
         )
 
     assert (
@@ -161,11 +161,11 @@ def test_2_of_3(client: Client, chunkify: bool):
 
 
 @pytest.mark.multisig
-def test_15_of_15(client: Client):
+def test_15_of_15(session: Session):
     # input tx: 0d5b5648d47b5650edea1af3d47bbe5624213abb577cf1b1c96f98321f75cdbc
 
     node = btc.get_public_node(
-        client, parse_path("m/48h/1h/1h/0h"), coin_name="Testnet"
+        session, parse_path("m/48h/1h/1h/0h"), coin_name="Testnet"
     ).node
     pubs = [messages.HDNodePathType(node=node, address_n=[0, x]) for x in range(15)]
 
@@ -191,9 +191,9 @@ def test_15_of_15(client: Client):
             multisig=multisig,
         )
 
-        with client:
+        with session:
             sig, serialized_tx = btc.sign_tx(
-                client, "Testnet", [inp1], [out1], prev_txes=TX_API_TESTNET
+                session, "Testnet", [inp1], [out1], prev_txes=TX_API_TESTNET
             )
             signatures[x] = sig[0]
 
@@ -205,9 +205,9 @@ def test_15_of_15(client: Client):
 
 @pytest.mark.multisig
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-def test_missing_pubkey(client: Client):
+def test_missing_pubkey(session: Session):
     node = btc.get_public_node(
-        client, parse_path("m/48h/0h/1h/0h/0"), coin_name="Bitcoin"
+        session, parse_path("m/48h/0h/1h/0h/0"), coin_name="Bitcoin"
     ).node
 
     multisig = messages.MultisigRedeemScriptType(
@@ -237,16 +237,16 @@ def test_missing_pubkey(client: Client):
     )
 
     with pytest.raises(TrezorFailure) as exc:
-        btc.sign_tx(client, "Bitcoin", [inp1], [out1], prev_txes=TX_API)
+        btc.sign_tx(session, "Bitcoin", [inp1], [out1], prev_txes=TX_API)
 
-    if client.model is models.T1B1:
+    if session.model is models.T1B1:
         assert exc.value.message.endswith("Failed to derive scriptPubKey")
     else:
         assert exc.value.message.endswith("Pubkey not found in multisig script")
 
 
 @pytest.mark.multisig
-def test_attack_change_input(client: Client):
+def test_attack_change_input(session: Session):
     """
     In Phases 1 and 2 the attacker replaces a non-multisig input
     `input_real` with a multisig input `input_fake`, which allows the
@@ -269,7 +269,7 @@ def test_attack_change_input(client: Client):
     multisig_fake = messages.MultisigRedeemScriptType(
         m=1,
         nodes=[
-            btc.get_public_node(client, address_n, coin_name="Testnet").node,
+            btc.get_public_node(session, address_n, coin_name="Testnet").node,
             messages.HDNodeType(
                 depth=0,
                 fingerprint=0,
@@ -304,12 +304,12 @@ def test_attack_change_input(client: Client):
     )
 
     # Transaction can be signed without the attack processor
-    with client:
-        if is_core(client):
+    with session.client as client:
+        if is_core(session):
             IF = InputFlowConfirmAllWarnings(client)
             client.set_input_flow(IF.get())
         btc.sign_tx(
-            client,
+            session,
             "Testnet",
             [input_real],
             [output_payee, output_change],
@@ -326,11 +326,11 @@ def test_attack_change_input(client: Client):
             attack_count -= 1
         return msg
 
-    with client:
-        client.set_filter(messages.TxAck, attack_processor)
+    with session:
+        session.set_filter(messages.TxAck, attack_processor)
         with pytest.raises(TrezorFailure):
             btc.sign_tx(
-                client,
+                session,
                 "Testnet",
                 [input_real],
                 [output_payee, output_change],

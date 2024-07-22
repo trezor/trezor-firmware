@@ -1,3 +1,5 @@
+from trezor.wire import message_handler
+
 if not __debug__:
     from trezor.utils import halt
 
@@ -246,7 +248,11 @@ if __debug__:
         # If no exception was raised, the layout did not shut down. That means that it
         # just updated itself. The update is already live for the caller to retrieve.
 
-    def _state() -> DebugLinkState:
+    def _state(
+        thp_pairing_code_entry_code: int | None = None,
+        thp_pairing_code_qr_code: bytes | None = None,
+        thp_pairing_code_nfc_unidirectional: bytes | None = None,
+    ) -> DebugLinkState:
         from trezor.messages import DebugLinkState
 
         from apps.common import mnemonic, passphrase
@@ -265,13 +271,45 @@ if __debug__:
             passphrase_protection=passphrase.is_enabled(),
             reset_entropy=storage.reset_internal_entropy,
             tokens=tokens,
+            thp_pairing_code_entry_code=thp_pairing_code_entry_code,
+            thp_pairing_code_qr_code=thp_pairing_code_qr_code,
+            thp_pairing_code_nfc_unidirectional=thp_pairing_code_nfc_unidirectional,
         )
 
     async def dispatch_DebugLinkGetState(
         msg: DebugLinkGetState,
     ) -> DebugLinkState | None:
+
+        thp_pairing_code_entry_code: int | None = None
+        thp_pairing_code_qr_code: bytes | None = None
+        thp_pairing_code_nfc_unidirectional: bytes | None = None
+        if utils.USE_THP and msg.thp_channel_id is not None:
+            channel_id = int.from_bytes(msg.thp_channel_id, "big")
+
+            from trezor.wire.thp.channel import Channel
+            from trezor.wire.thp.pairing_context import PairingContext
+            from trezor.wire.thp_main import _CHANNELS
+
+            channel: Channel | None = None
+            ctx: PairingContext | None = None
+            try:
+                channel = _CHANNELS[channel_id]
+                ctx = channel.connection_context
+            except KeyError:
+                pass
+            if ctx is not None and isinstance(ctx, PairingContext):
+                thp_pairing_code_entry_code = ctx.display_data.code_code_entry
+                thp_pairing_code_qr_code = ctx.display_data.code_qr_code
+                thp_pairing_code_nfc_unidirectional = (
+                    ctx.display_data.code_nfc_unidirectional
+                )
+
         if msg.wait_layout == DebugWaitType.IMMEDIATE:
-            return _state()
+            return _state(
+                thp_pairing_code_entry_code,
+                thp_pairing_code_qr_code,
+                thp_pairing_code_nfc_unidirectional,
+            )
 
         assert DEBUG_CONTEXT is not None
         if msg.wait_layout == DebugWaitType.NEXT_LAYOUT:
@@ -282,7 +320,11 @@ if __debug__:
         if not layout_is_ready():
             return await return_layout_change(DEBUG_CONTEXT, detect_deadlock=True)
         else:
-            return _state()
+            return _state(
+                thp_pairing_code_entry_code,
+                thp_pairing_code_qr_code,
+                thp_pairing_code_nfc_unidirectional,
+            )
 
     async def dispatch_DebugLinkRecordScreen(msg: DebugLinkRecordScreen) -> Success:
         if msg.target_directory:
@@ -362,7 +404,7 @@ if __debug__:
 
         global DEBUG_CONTEXT
 
-        DEBUG_CONTEXT = ctx = context.Context(iface, 0, WIRE_BUFFER_DEBUG)
+        DEBUG_CONTEXT = ctx = context.CodecContext(iface, WIRE_BUFFER_DEBUG)
 
         if storage.layout_watcher:
             try:
@@ -387,14 +429,13 @@ if __debug__:
                     msg_type = f"{msg.type} - unknown message type"
                 log.debug(
                     __name__,
-                    "%s:%x receive: <%s>",
+                    "%s receive: <%s>",
                     ctx.iface.iface_num(),
-                    ctx.sid,
                     msg_type,
                 )
 
                 if msg.type not in WORKFLOW_HANDLERS:
-                    await ctx.write(wire.unexpected_message())
+                    await ctx.write(message_handler.unexpected_message())
                     continue
 
                 elif req_type is None:
@@ -405,7 +446,7 @@ if __debug__:
                     await ctx.write(Success())
                     continue
 
-                req_msg = wire.wrap_protobuf_load(msg.data, req_type)
+                req_msg = message_handler.wrap_protobuf_load(msg.data, req_type)
                 try:
                     res_msg = await WORKFLOW_HANDLERS[msg.type](req_msg)
                 except Exception as exc:

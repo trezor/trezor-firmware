@@ -18,22 +18,22 @@ from typing import TYPE_CHECKING
 
 from . import messages
 from .protobuf import dict_to_proto
-from .tools import expect, session
+from .tools import expect
 
 if TYPE_CHECKING:
-    from .client import TrezorClient
     from .protobuf import MessageType
     from .tools import Address
+    from .transport.session import Session
 
 
 @expect(messages.BinanceAddress, field="address", ret_type=str)
 def get_address(
-    client: "TrezorClient",
+    session: "Session",
     address_n: "Address",
     show_display: bool = False,
     chunkify: bool = False,
 ) -> "MessageType":
-    return client.call(
+    return session.call(
         messages.BinanceGetAddress(
             address_n=address_n, show_display=show_display, chunkify=chunkify
         )
@@ -42,16 +42,15 @@ def get_address(
 
 @expect(messages.BinancePublicKey, field="public_key", ret_type=bytes)
 def get_public_key(
-    client: "TrezorClient", address_n: "Address", show_display: bool = False
+    session: "Session", address_n: "Address", show_display: bool = False
 ) -> "MessageType":
-    return client.call(
+    return session.call(
         messages.BinanceGetPublicKey(address_n=address_n, show_display=show_display)
     )
 
 
-@session
 def sign_tx(
-    client: "TrezorClient", address_n: "Address", tx_json: dict, chunkify: bool = False
+    session: "Session", address_n: "Address", tx_json: dict, chunkify: bool = False
 ) -> messages.BinanceSignedTx:
     msg = tx_json["msgs"][0]
     tx_msg = tx_json.copy()
@@ -60,7 +59,7 @@ def sign_tx(
     tx_msg["chunkify"] = chunkify
     envelope = dict_to_proto(messages.BinanceSignTx, tx_msg)
 
-    response = client.call(envelope)
+    response = session.call(envelope)
 
     if not isinstance(response, messages.BinanceTxRequest):
         raise RuntimeError(
@@ -77,7 +76,7 @@ def sign_tx(
     else:
         raise ValueError("can not determine msg type")
 
-    response = client.call(msg)
+    response = session.call(msg)
 
     if not isinstance(response, messages.BinanceSignedTx):
         raise RuntimeError(

@@ -1,4 +1,4 @@
-from common import H_, await_result, unittest  # isort:skip
+from common import *  # isort:skip
 
 import storage.cache
 from trezor import wire
@@ -11,6 +11,7 @@ from trezor.messages import (
     TxInput,
     TxOutput,
 )
+from trezor.wire import context
 
 from apps.bitcoin.authorization import FEE_RATE_DECIMALS, CoinJoinAuthorization
 from apps.bitcoin.sign_tx.approvers import CoinJoinApprover
@@ -18,8 +19,26 @@ from apps.bitcoin.sign_tx.bitcoin import Bitcoin
 from apps.bitcoin.sign_tx.tx_info import TxInfo
 from apps.common import coins
 
+if utils.USE_THP:
+    import thp_common
+else:
+    import storage.cache_codec
 
 class TestApprover(unittest.TestCase):
+    if utils.USE_THP:
+
+        def __init__(self):
+            if __debug__:
+                thp_common.suppres_debug_log()
+            thp_common.prepare_context()
+            super().__init__()
+
+    else:
+
+        def __init__(self):
+            context.CURRENT_CONTEXT = context.CodecContext(None, bytearray(64))
+            super().__init__()
+
     def setUp(self):
         self.coin = coins.by_name("Bitcoin")
         self.fee_rate_percent = 0.3
@@ -47,7 +66,8 @@ class TestApprover(unittest.TestCase):
             coin_name=self.coin.coin_name,
             script_type=InputScriptType.SPENDTAPROOT,
         )
-        storage.cache.start_session()
+        if not utils.USE_THP:
+            storage.cache_codec.start_session()
 
     def make_coinjoin_request(self, inputs):
         return CoinJoinRequest(

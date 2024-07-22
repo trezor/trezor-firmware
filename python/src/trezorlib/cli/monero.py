@@ -19,10 +19,10 @@ from typing import TYPE_CHECKING, Dict
 import click
 
 from .. import messages, monero, tools
-from . import ChoiceType, with_client
+from . import ChoiceType, with_session
 
 if TYPE_CHECKING:
-    from ..client import TrezorClient
+    from ..transport.session import Session
 
 PATH_HELP = "BIP-32 path, e.g. m/44h/128h/0h"
 
@@ -42,9 +42,9 @@ def cli() -> None:
     default=messages.MoneroNetworkType.MAINNET,
 )
 @click.option("-C", "--chunkify", is_flag=True)
-@with_client
+@with_session
 def get_address(
-    client: "TrezorClient",
+    session: "Session",
     address: str,
     show_display: bool,
     network_type: messages.MoneroNetworkType,
@@ -52,7 +52,7 @@ def get_address(
 ) -> bytes:
     """Get Monero address for specified path."""
     address_n = tools.parse_path(address)
-    return monero.get_address(client, address_n, show_display, network_type, chunkify)
+    return monero.get_address(session, address_n, show_display, network_type, chunkify)
 
 
 @cli.command()
@@ -63,13 +63,13 @@ def get_address(
     type=ChoiceType({m.name: m for m in messages.MoneroNetworkType}),
     default=messages.MoneroNetworkType.MAINNET,
 )
-@with_client
+@with_session
 def get_watch_key(
-    client: "TrezorClient", address: str, network_type: messages.MoneroNetworkType
+    session: "Session", address: str, network_type: messages.MoneroNetworkType
 ) -> Dict[str, str]:
     """Get Monero watch key for specified path."""
     address_n = tools.parse_path(address)
-    res = monero.get_watch_key(client, address_n, network_type)
+    res = monero.get_watch_key(session, address_n, network_type)
     # TODO: could be made required in MoneroWatchKey
     assert res.address is not None
     assert res.watch_key is not None

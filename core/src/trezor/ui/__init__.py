@@ -320,7 +320,7 @@ class Layout(Generic[T]):
 
     def _paint(self) -> None:
         """Paint the layout and ensure that homescreen cache is properly invalidated."""
-        import storage.cache as storage_cache
+        import storage.cache_common as storage_cache
 
         painted = self.layout.paint()
         if painted:

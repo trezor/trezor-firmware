@@ -20,19 +20,19 @@ from . import messages
 from .tools import expect
 
 if TYPE_CHECKING:
-    from .client import TrezorClient
     from .protobuf import MessageType
     from .tools import Address
+    from .transport.session import Session
 
 
 @expect(messages.TezosAddress, field="address", ret_type=str)
 def get_address(
-    client: "TrezorClient",
+    session: "Session",
     address_n: "Address",
     show_display: bool = False,
     chunkify: bool = False,
 ) -> "MessageType":
-    return client.call(
+    return session.call(
         messages.TezosGetAddress(
             address_n=address_n, show_display=show_display, chunkify=chunkify
         )
@@ -41,12 +41,12 @@ def get_address(
 
 @expect(messages.TezosPublicKey, field="public_key", ret_type=str)
 def get_public_key(
-    client: "TrezorClient",
+    session: "Session",
     address_n: "Address",
     show_display: bool = False,
     chunkify: bool = False,
 ) -> "MessageType":
-    return client.call(
+    return session.call(
         messages.TezosGetPublicKey(
             address_n=address_n, show_display=show_display, chunkify=chunkify
         )
@@ -55,11 +55,11 @@ def get_public_key(
 
 @expect(messages.TezosSignedTx)
 def sign_tx(
-    client: "TrezorClient",
+    session: "Session",
     address_n: "Address",
     sign_tx_msg: messages.TezosSignTx,
     chunkify: bool = False,
 ) -> "MessageType":
     sign_tx_msg.address_n = address_n
     sign_tx_msg.chunkify = chunkify
-    return client.call(sign_tx_msg)
+    return session.call(sign_tx_msg)

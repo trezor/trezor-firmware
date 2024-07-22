@@ -356,7 +356,7 @@ pub static mp_module_trezorproto: Module = obj_module! {
     ///     """Calculate length of encoding of the specified message."""
     Qstr::MP_QSTR_encoded_length => obj_fn_1!(protobuf_len).as_obj(),
 
-    /// def encode(buffer: bytearray, msg: MessageType) -> int:
+    /// def encode(buffer: bytearray | memoryview, msg: MessageType) -> int:
     ///     """Encode the message into the specified buffer. Return length of
     ///     encoding."""
     Qstr::MP_QSTR_encode => obj_fn_2!(protobuf_encode).as_obj()
