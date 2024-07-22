@@ -240,8 +240,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_firmware_update__title;
   MP_QSTR_firmware_update__title_fingerprint;
   MP_QSTR_flow_confirm_output;
-  MP_QSTR_flow_confirm_reset_create;
-  MP_QSTR_flow_confirm_reset_recover;
+  MP_QSTR_flow_confirm_reset;
   MP_QSTR_flow_confirm_set_new_pin;
   MP_QSTR_flow_confirm_summary;
   MP_QSTR_flow_get_address;
@@ -417,6 +416,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_reboot_to_bootloader__restart;
   MP_QSTR_reboot_to_bootloader__title;
   MP_QSTR_reboot_to_bootloader__version_by_template;
+  MP_QSTR_recovery;
   MP_QSTR_recovery__cancel_dry_run;
   MP_QSTR_recovery__check_dry_run;
   MP_QSTR_recovery__cursor_will_change;

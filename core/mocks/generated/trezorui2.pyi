@@ -154,13 +154,8 @@ def confirm_properties(
 
 
 # rust/src/ui/model_mercury/layout.rs
-def flow_confirm_reset_recover() -> LayoutObj[UiResult]:
-    """Confirm TOS before recovery process."""
-
-
-# rust/src/ui/model_mercury/layout.rs
-def flow_confirm_reset_create() -> LayoutObj[UiResult]:
-    """Confirm TOS before creating a wallet and have a user hold to confirm creation."""
+def flow_confirm_reset(recovery: bool) -> LayoutObj[UiResult]:
+    """Confirm TOS before creating wallet creation or wallet recovery."""
 
 
 # rust/src/ui/model_mercury/layout.rs
