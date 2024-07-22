@@ -104,7 +104,10 @@ def get_channel_allocation_response(nonce: bytes, new_cid: bytes) -> bytes:
 
 
 def get_codec_v1_error_message() -> bytes:
-    return b"?##"  # TODO add unsupported codec_v1 error message
+    # Codec_v1 magic constant "?##" + Failure message type + msg_size
+    # + msg_data (code = "Failure_UnexpectedMessage", message = "Invalid protocol")
+    ERROR_MSG = b"\x3f\x23\x23\x00\x03\x00\x00\x00\x14\x08\x01\x12\x10\x49\x6e\x76\x61\x6c\x69\x64\x20\x70\x72\x6f\x74\x6f\x63\x6f\x6c"
+    return ERROR_MSG
 
 
 def decode_message(
