@@ -98,6 +98,16 @@ async def handle_pairing_request(
     await ctx.write(ThpPairingPreparationsFinished())
     ctx.channel_ctx.set_channel_state(ChannelState.TP3)
     response = await show_display_data(ctx, _get_possible_pairing_methods(ctx))
+    if __debug__:
+        from trezor.messages import DebugLinkGetState
+
+        while DebugLinkGetState.is_type_of(response):
+            from apps.debug import dispatch_DebugLinkGetState
+
+            dl_state = await dispatch_DebugLinkGetState(response)
+            assert dl_state is not None
+            await ctx.write(dl_state)
+            response = await show_display_data(ctx, _get_possible_pairing_methods(ctx))
 
     # TODO disable NFC (if enabled)
     response = await _handle_different_pairing_methods(ctx, response)
@@ -363,10 +373,16 @@ def _is_method_included(ctx: PairingContext, method: ThpPairingMethod) -> bool:
 
 
 def _get_possible_pairing_methods(ctx: PairingContext) -> Tuple[int, ...]:
-    return tuple(
+    r = tuple(
         _get_message_type_for_method(method)
         for method in ctx.channel_ctx.selected_pairing_methods
     )
+    if __debug__:
+        from trezor.messages import DebugLinkGetState
+
+        mtype = DebugLinkGetState.MESSAGE_WIRE_TYPE
+        return r + ((mtype,) if mtype is not None else ())
+    return r
 
 
 def _get_message_type_for_method(method: int) -> int:

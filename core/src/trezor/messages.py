@@ -2860,6 +2860,8 @@ if TYPE_CHECKING:
         reset_word_pos: "int | None"
         mnemonic_type: "BackupType | None"
         tokens: "list[str]"
+        thp_pairing_code_entry_code: "int | None"
+        thp_pairing_secret: "bytes | None"
 
         def __init__(
             self,
@@ -2877,6 +2879,8 @@ if TYPE_CHECKING:
             recovery_word_pos: "int | None" = None,
             reset_word_pos: "int | None" = None,
             mnemonic_type: "BackupType | None" = None,
+            thp_pairing_code_entry_code: "int | None" = None,
+            thp_pairing_secret: "bytes | None" = None,
         ) -> None:
             pass
 

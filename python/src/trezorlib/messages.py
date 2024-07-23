@@ -4085,6 +4085,8 @@ class DebugLinkState(protobuf.MessageType):
         11: protobuf.Field("reset_word_pos", "uint32", repeated=False, required=False, default=None),
         12: protobuf.Field("mnemonic_type", "BackupType", repeated=False, required=False, default=None),
         13: protobuf.Field("tokens", "string", repeated=True, required=False, default=None),
+        14: protobuf.Field("thp_pairing_code_entry_code", "uint32", repeated=False, required=False, default=None),
+        15: protobuf.Field("thp_pairing_secret", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -4103,6 +4105,8 @@ class DebugLinkState(protobuf.MessageType):
         recovery_word_pos: Optional["int"] = None,
         reset_word_pos: Optional["int"] = None,
         mnemonic_type: Optional["BackupType"] = None,
+        thp_pairing_code_entry_code: Optional["int"] = None,
+        thp_pairing_secret: Optional["bytes"] = None,
     ) -> None:
         self.tokens: Sequence["str"] = tokens if tokens is not None else []
         self.layout = layout
@@ -4117,6 +4121,8 @@ class DebugLinkState(protobuf.MessageType):
         self.recovery_word_pos = recovery_word_pos
         self.reset_word_pos = reset_word_pos
         self.mnemonic_type = mnemonic_type
+        self.thp_pairing_code_entry_code = thp_pairing_code_entry_code
+        self.thp_pairing_secret = thp_pairing_secret
 
 
 class DebugLinkStop(protobuf.MessageType):
