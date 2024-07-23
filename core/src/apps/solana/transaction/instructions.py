@@ -109,149 +109,179 @@ MEMO_LEGACY_PROGRAM_ID_INS_MEMO = None
 def __getattr__(name: str) -> Type[Instruction]:
     def get_id(name: str) -> tuple[str, InstructionId]:
         if name == "SystemProgramCreateAccountInstruction":
-            return ("11111111111111111111111111111111", 0)
+            return (SYSTEM_PROGRAM_ID, SYSTEM_PROGRAM_ID_INS_CREATE_ACCOUNT)
         if name == "SystemProgramAssignInstruction":
-            return ("11111111111111111111111111111111", 1)
+            return (SYSTEM_PROGRAM_ID, SYSTEM_PROGRAM_ID_INS_ASSIGN)
         if name == "SystemProgramTransferInstruction":
-            return ("11111111111111111111111111111111", 2)
+            return (SYSTEM_PROGRAM_ID, SYSTEM_PROGRAM_ID_INS_TRANSFER)
         if name == "SystemProgramCreateAccountWithSeedInstruction":
-            return ("11111111111111111111111111111111", 3)
+            return (SYSTEM_PROGRAM_ID, SYSTEM_PROGRAM_ID_INS_CREATE_ACCOUNT_WITH_SEED)
         if name == "SystemProgramAdvanceNonceAccountInstruction":
-            return ("11111111111111111111111111111111", 4)
+            return (SYSTEM_PROGRAM_ID, SYSTEM_PROGRAM_ID_INS_ADVANCE_NONCE_ACCOUNT)
         if name == "SystemProgramWithdrawNonceAccountInstruction":
-            return ("11111111111111111111111111111111", 5)
+            return (SYSTEM_PROGRAM_ID, SYSTEM_PROGRAM_ID_INS_WITHDRAW_NONCE_ACCOUNT)
         if name == "SystemProgramInitializeNonceAccountInstruction":
-            return ("11111111111111111111111111111111", 6)
+            return (SYSTEM_PROGRAM_ID, SYSTEM_PROGRAM_ID_INS_INITIALIZE_NONCE_ACCOUNT)
         if name == "SystemProgramAuthorizeNonceAccountInstruction":
-            return ("11111111111111111111111111111111", 7)
+            return (SYSTEM_PROGRAM_ID, SYSTEM_PROGRAM_ID_INS_AUTHORIZE_NONCE_ACCOUNT)
         if name == "SystemProgramAllocateInstruction":
-            return ("11111111111111111111111111111111", 8)
+            return (SYSTEM_PROGRAM_ID, SYSTEM_PROGRAM_ID_INS_ALLOCATE)
         if name == "SystemProgramAllocateWithSeedInstruction":
-            return ("11111111111111111111111111111111", 9)
+            return (SYSTEM_PROGRAM_ID, SYSTEM_PROGRAM_ID_INS_ALLOCATE_WITH_SEED)
         if name == "SystemProgramAssignWithSeedInstruction":
-            return ("11111111111111111111111111111111", 10)
+            return (SYSTEM_PROGRAM_ID, SYSTEM_PROGRAM_ID_INS_ASSIGN_WITH_SEED)
         if name == "SystemProgramTransferWithSeedInstruction":
-            return ("11111111111111111111111111111111", 11)
+            return (SYSTEM_PROGRAM_ID, SYSTEM_PROGRAM_ID_INS_TRANSFER_WITH_SEED)
         if name == "SystemProgramUpgradeNonceAccountInstruction":
-            return ("11111111111111111111111111111111", 12)
+            return (SYSTEM_PROGRAM_ID, SYSTEM_PROGRAM_ID_INS_UPGRADE_NONCE_ACCOUNT)
         if name == "StakeProgramInitializeInstruction":
-            return ("Stake11111111111111111111111111111111111111", 0)
+            return (STAKE_PROGRAM_ID, STAKE_PROGRAM_ID_INS_INITIALIZE)
         if name == "StakeProgramAuthorizeInstruction":
-            return ("Stake11111111111111111111111111111111111111", 1)
+            return (STAKE_PROGRAM_ID, STAKE_PROGRAM_ID_INS_AUTHORIZE)
         if name == "StakeProgramDelegateStakeInstruction":
-            return ("Stake11111111111111111111111111111111111111", 2)
+            return (STAKE_PROGRAM_ID, STAKE_PROGRAM_ID_INS_DELEGATE_STAKE)
         if name == "StakeProgramSplitInstruction":
-            return ("Stake11111111111111111111111111111111111111", 3)
+            return (STAKE_PROGRAM_ID, STAKE_PROGRAM_ID_INS_SPLIT)
         if name == "StakeProgramWithdrawInstruction":
-            return ("Stake11111111111111111111111111111111111111", 4)
+            return (STAKE_PROGRAM_ID, STAKE_PROGRAM_ID_INS_WITHDRAW)
         if name == "StakeProgramDeactivateInstruction":
-            return ("Stake11111111111111111111111111111111111111", 5)
+            return (STAKE_PROGRAM_ID, STAKE_PROGRAM_ID_INS_DEACTIVATE)
         if name == "StakeProgramSetLockupInstruction":
-            return ("Stake11111111111111111111111111111111111111", 6)
+            return (STAKE_PROGRAM_ID, STAKE_PROGRAM_ID_INS_SET_LOCKUP)
         if name == "StakeProgramMergeInstruction":
-            return ("Stake11111111111111111111111111111111111111", 7)
+            return (STAKE_PROGRAM_ID, STAKE_PROGRAM_ID_INS_MERGE)
         if name == "StakeProgramAuthorizeWithSeedInstruction":
-            return ("Stake11111111111111111111111111111111111111", 8)
+            return (STAKE_PROGRAM_ID, STAKE_PROGRAM_ID_INS_AUTHORIZE_WITH_SEED)
         if name == "StakeProgramInitializeCheckedInstruction":
-            return ("Stake11111111111111111111111111111111111111", 9)
+            return (STAKE_PROGRAM_ID, STAKE_PROGRAM_ID_INS_INITIALIZE_CHECKED)
         if name == "StakeProgramAuthorizeCheckedInstruction":
-            return ("Stake11111111111111111111111111111111111111", 10)
+            return (STAKE_PROGRAM_ID, STAKE_PROGRAM_ID_INS_AUTHORIZE_CHECKED)
         if name == "StakeProgramAuthorizeCheckedWithSeedInstruction":
-            return ("Stake11111111111111111111111111111111111111", 11)
+            return (STAKE_PROGRAM_ID, STAKE_PROGRAM_ID_INS_AUTHORIZE_CHECKED_WITH_SEED)
         if name == "StakeProgramSetLockupCheckedInstruction":
-            return ("Stake11111111111111111111111111111111111111", 12)
+            return (STAKE_PROGRAM_ID, STAKE_PROGRAM_ID_INS_SET_LOCKUP_CHECKED)
         if name == "ComputeBudgetProgramRequestHeapFrameInstruction":
-            return ("ComputeBudget111111111111111111111111111111", 1)
+            return (
+                COMPUTE_BUDGET_PROGRAM_ID,
+                COMPUTE_BUDGET_PROGRAM_ID_INS_REQUEST_HEAP_FRAME,
+            )
         if name == "ComputeBudgetProgramSetComputeUnitLimitInstruction":
-            return ("ComputeBudget111111111111111111111111111111", 2)
+            return (
+                COMPUTE_BUDGET_PROGRAM_ID,
+                COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_LIMIT,
+            )
         if name == "ComputeBudgetProgramSetComputeUnitPriceInstruction":
-            return ("ComputeBudget111111111111111111111111111111", 3)
+            return (
+                COMPUTE_BUDGET_PROGRAM_ID,
+                COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_PRICE,
+            )
         if name == "TokenProgramInitializeAccountInstruction":
-            return ("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", 1)
+            return (TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID_INS_INITIALIZE_ACCOUNT)
         if name == "TokenProgramInitializeMultisigInstruction":
-            return ("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", 2)
+            return (TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID_INS_INITIALIZE_MULTISIG)
         if name == "TokenProgramTransferInstruction":
-            return ("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", 3)
+            return (TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID_INS_TRANSFER)
         if name == "TokenProgramApproveInstruction":
-            return ("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", 4)
+            return (TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID_INS_APPROVE)
         if name == "TokenProgramRevokeInstruction":
-            return ("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", 5)
+            return (TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID_INS_REVOKE)
         if name == "TokenProgramSetAuthorityInstruction":
-            return ("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", 6)
+            return (TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID_INS_SET_AUTHORITY)
         if name == "TokenProgramMintToInstruction":
-            return ("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", 7)
+            return (TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID_INS_MINT_TO)
         if name == "TokenProgramBurnInstruction":
-            return ("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", 8)
+            return (TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID_INS_BURN)
         if name == "TokenProgramCloseAccountInstruction":
-            return ("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", 9)
+            return (TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID_INS_CLOSE_ACCOUNT)
         if name == "TokenProgramFreezeAccountInstruction":
-            return ("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", 10)
+            return (TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID_INS_FREEZE_ACCOUNT)
         if name == "TokenProgramThawAccountInstruction":
-            return ("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", 11)
+            return (TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID_INS_THAW_ACCOUNT)
         if name == "TokenProgramTransferCheckedInstruction":
-            return ("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", 12)
+            return (TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID_INS_TRANSFER_CHECKED)
         if name == "TokenProgramApproveCheckedInstruction":
-            return ("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", 13)
+            return (TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID_INS_APPROVE_CHECKED)
         if name == "TokenProgramMinttoCheckedInstruction":
-            return ("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", 14)
+            return (TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID_INS_MINT_TO_CHECKED)
         if name == "TokenProgramBurnCheckedInstruction":
-            return ("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", 15)
+            return (TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID_INS_BURN_CHECKED)
         if name == "TokenProgramInitializeAccount2Instruction":
-            return ("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", 16)
+            return (TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID_INS_INITIALIZE_ACCOUNT_2)
         if name == "TokenProgramSyncNativeInstruction":
-            return ("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", 17)
+            return (TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID_INS_SYNC_NATIVE)
         if name == "TokenProgramInitializeAccount3Instruction":
-            return ("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", 18)
+            return (TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID_INS_INITIALIZE_ACCOUNT_3)
         if name == "TokenProgramInitializeImmutableOwnerInstruction":
-            return ("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", 22)
+            return (TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID_INS_INITIALIZE_IMMUTABLE_OWNER)
         if name == "Token2022ProgramInitializeAccountInstruction":
-            return ("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb", 1)
+            return (TOKEN_2022_PROGRAM_ID, TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_ACCOUNT)
         if name == "Token2022ProgramInitializeMultisigInstruction":
-            return ("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb", 2)
+            return (
+                TOKEN_2022_PROGRAM_ID,
+                TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_MULTISIG,
+            )
         if name == "Token2022ProgramTransferInstruction":
-            return ("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb", 3)
+            return (TOKEN_2022_PROGRAM_ID, TOKEN_2022_PROGRAM_ID_INS_TRANSFER)
         if name == "Token2022ProgramApproveInstruction":
-            return ("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb", 4)
+            return (TOKEN_2022_PROGRAM_ID, TOKEN_2022_PROGRAM_ID_INS_APPROVE)
         if name == "Token2022ProgramRevokeInstruction":
-            return ("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb", 5)
+            return (TOKEN_2022_PROGRAM_ID, TOKEN_2022_PROGRAM_ID_INS_REVOKE)
         if name == "Token2022ProgramSetAuthorityInstruction":
-            return ("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb", 6)
+            return (TOKEN_2022_PROGRAM_ID, TOKEN_2022_PROGRAM_ID_INS_SET_AUTHORITY)
         if name == "Token2022ProgramMinttoInstruction":
-            return ("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb", 7)
+            return (TOKEN_2022_PROGRAM_ID, TOKEN_2022_PROGRAM_ID_INS_MINT_TO)
         if name == "Token2022ProgramBurnInstruction":
-            return ("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb", 8)
+            return (TOKEN_2022_PROGRAM_ID, TOKEN_2022_PROGRAM_ID_INS_BURN)
         if name == "Token2022ProgramCloseAccountInstruction":
-            return ("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb", 9)
+            return (TOKEN_2022_PROGRAM_ID, TOKEN_2022_PROGRAM_ID_INS_CLOSE_ACCOUNT)
         if name == "Token2022ProgramFreezeAccountInstruction":
-            return ("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb", 10)
+            return (TOKEN_2022_PROGRAM_ID, TOKEN_2022_PROGRAM_ID_INS_FREEZE_ACCOUNT)
         if name == "Token2022ProgramThawAccountInstruction":
-            return ("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb", 11)
+            return (TOKEN_2022_PROGRAM_ID, TOKEN_2022_PROGRAM_ID_INS_THAW_ACCOUNT)
         if name == "Token2022ProgramTransferCheckedInstruction":
-            return ("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb", 12)
+            return (TOKEN_2022_PROGRAM_ID, TOKEN_2022_PROGRAM_ID_INS_TRANSFER_CHECKED)
         if name == "Token2022ProgramApproveCheckedInstruction":
-            return ("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb", 13)
+            return (TOKEN_2022_PROGRAM_ID, TOKEN_2022_PROGRAM_ID_INS_APPROVE_CHECKED)
         if name == "Token2022ProgramMinttoCheckedInstruction":
-            return ("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb", 14)
+            return (TOKEN_2022_PROGRAM_ID, TOKEN_2022_PROGRAM_ID_INS_MINT_TO_CHECKED)
         if name == "Token2022ProgramBurnCheckedInstruction":
-            return ("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb", 15)
+            return (TOKEN_2022_PROGRAM_ID, TOKEN_2022_PROGRAM_ID_INS_BURN_CHECKED)
         if name == "Token2022ProgramInitializeAccount2Instruction":
-            return ("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb", 16)
+            return (
+                TOKEN_2022_PROGRAM_ID,
+                TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_ACCOUNT_2,
+            )
         if name == "Token2022ProgramSyncNativeInstruction":
-            return ("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb", 17)
+            return (TOKEN_2022_PROGRAM_ID, TOKEN_2022_PROGRAM_ID_INS_SYNC_NATIVE)
         if name == "Token2022ProgramInitializeAccount3Instruction":
-            return ("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb", 18)
+            return (
+                TOKEN_2022_PROGRAM_ID,
+                TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_ACCOUNT_3,
+            )
         if name == "Token2022ProgramInitializeImmutableOwnerInstruction":
-            return ("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb", 22)
+            return (
+                TOKEN_2022_PROGRAM_ID,
+                TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_IMMUTABLE_OWNER,
+            )
         if name == "AssociatedTokenAccountProgramCreateInstruction":
-            return ("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL", None)
+            return (
+                ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID,
+                ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE,
+            )
         if name == "AssociatedTokenAccountProgramCreateIdempotentInstruction":
-            return ("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL", 1)
+            return (
+                ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID,
+                ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE_IDEMPOTENT,
+            )
         if name == "AssociatedTokenAccountProgramRecoverNestedInstruction":
-            return ("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL", 2)
+            return (
+                ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID,
+                ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_RECOVER_NESTED,
+            )
         if name == "MemoProgramMemoInstruction":
-            return ("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr", None)
+            return (MEMO_PROGRAM_ID, MEMO_PROGRAM_ID_INS_MEMO)
         if name == "MemoLegacyProgramMemoInstruction":
-            return ("Memo1UhkJRfHyvLMcVucJwxXeuD728EqVDDwQDxFMNo", None)
+            return (MEMO_LEGACY_PROGRAM_ID, MEMO_LEGACY_PROGRAM_ID_INS_MEMO)
         raise AttributeError  # Unknown instruction
 
     id = get_id(name)

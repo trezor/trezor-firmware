@@ -70,7 +70,7 @@ def __getattr__(name: str) -> Type[Instruction]:
     %for program in programs["programs"]:
         %for instruction in program["instructions"]:
         if name == "${getClassName(program, instruction)}":
-            return ("${program["id"]}", ${instruction["id"]})
+            return (${getProgramId(program)}, ${getInstructionIdText(program, instruction)})
         %endfor
     %endfor
         raise AttributeError # Unknown instruction
