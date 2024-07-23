@@ -6,17 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [2.8.0] (9th July 2024)
 
-### Added
-- Expose value of the Optiga SEC counter in `Features` message.
-
 ### Changed
 - Reworked PIN processing.
 
 ### Removed
 - CoSi functionality.  [#3442]
-
-### Fixed
-- Increase Optiga read timeout to avoid spurious RSODs.
 
 
 ## [2.7.2] (14th June 2024)
