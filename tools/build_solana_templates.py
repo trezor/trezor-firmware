@@ -15,6 +15,7 @@ ROOT = HERE.parent.resolve()
 TEMPLATES = (
     ROOT / "core" / "src" / "apps" / "solana" / "transaction" / "instructions.py.mako",
     ROOT / "tests" / "device_tests" / "solana" / "construct" / "instructions.py.mako",
+    ROOT / "core" / "tests" / "test_apps.solana.predefined_transaction.py.mako",
 )
 
 PROGRAMS_JSON = ROOT / "common" / "defs" / "solana" / "programs.json"
