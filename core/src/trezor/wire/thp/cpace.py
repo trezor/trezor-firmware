@@ -29,8 +29,6 @@ class Cpace:
         pregenerator = sha_ctx.digest()[:32]
         generator = elligator2.map_to_curve25519(pregenerator)
         self.trezor_private_key = random.bytes(32)
-        if __debug__:
-            self.trezor_private_key = b"\xf8\xb9\xa1\x3a\xe1\x30\xb3\xe1\x5b\x8e\xd5\x80\x85\x4f\xfc\xaf\x63\x4d\x6b\x0a\x10\xfd\xe7\xba\xde\xfd\xc3\xd1\x8d\x1a\x83\xf5"
         self.trezor_public_key = curve25519.multiply(self.trezor_private_key, generator)
         self.shared_secret = curve25519.multiply(
             self.trezor_private_key, self.host_public_key
