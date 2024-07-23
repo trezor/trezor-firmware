@@ -10,7 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - [T3T1] Animated device label on homescreen/lockscreen.  [#3895]
 - [T3T1] Improved change homescreen flow.  [#3907]
 - [T3T1] Added word counter during wallet creation.  [#3917]
-- Expose value of the Optiga SEC counter in `Features` message.
+- [T2B1,T3T1] Expose value of the Optiga SEC counter in `Features` message.
 
 ### Changed
 - Reworked PIN processing.
@@ -22,7 +22,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - [T3T1] Fixed swipe back from address QR code screen.  [#3919]
 - [T3T1] Fixed device authenticity check.  [#3922]
 - [T3T1] Improve swipe behavior and animations.  [#3965]
-- Increase Optiga read timeout to avoid spurious RSODs.
+- [T2B1,T3T1] Increase Optiga read timeout to avoid spurious RSODs.
 
 
 ## [2.7.2] (14th June 2024)
