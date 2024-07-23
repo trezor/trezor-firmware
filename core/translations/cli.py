@@ -387,6 +387,7 @@ def merge(update_json: t.Tuple[t.TextIO, ...]) -> None:
         tdir.save_lang(lang, orig_data)
         click.echo(f"Updated {lang}")
 
+
 @cli.command()
 @click.argument("lang_file", type=click.File("r"), nargs=1)
 def characters(lang_file: t.TextIO) -> None:
@@ -395,9 +396,30 @@ def characters(lang_file: t.TextIO) -> None:
     chars = filter(lambda c: ord(c) > 127, all_chars)
     print("(")
     for c in sorted(chars):
-        print(f"    \"{c}\"")
+        print(f"    \"{c}\",")
     print(")")
 
+
+@cli.command()
+@click.argument("lang_file", type=click.Path(), nargs=1)
+def lowercase(lang_file: Path) -> None:
+    """Convert strings to lowercase."""
+    with open(lang_file, "r") as fh:
+        data = json.load(fh)
+    new_translations = {}
+
+    def f(s: str) -> str:
+        if not all(map(lambda c: c.isupper() or not c.isalpha(), s)):
+            return s
+        else:
+            return s[0] + s[1:].lower()
+
+    for k, v in data['translations'].items():
+        new_translations[k] = f(v)
+
+    data["translations"] = new_translations
+    with open(lang_file, "w") as fh:
+        json.dump(data, fh, indent=2, ensure_ascii=False)
 
 if __name__ == "__main__":
     cli()
