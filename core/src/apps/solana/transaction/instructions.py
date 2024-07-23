@@ -1,5 +1,6 @@
 # generated from instructions.py.mako
 # do not edit manually!
+from micropython import const
 from typing import TYPE_CHECKING
 
 from trezor.wire import DataError
@@ -23,265 +24,279 @@ if TYPE_CHECKING:
 
     from ..types import Account, InstructionData, InstructionId
 
-SYSTEM_PROGRAM_ID = "11111111111111111111111111111111"
-STAKE_PROGRAM_ID = "Stake11111111111111111111111111111111111111"
-COMPUTE_BUDGET_PROGRAM_ID = "ComputeBudget111111111111111111111111111111"
-TOKEN_PROGRAM_ID = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-TOKEN_2022_PROGRAM_ID = "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
-ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID = "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
-MEMO_PROGRAM_ID = "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"
-MEMO_LEGACY_PROGRAM_ID = "Memo1UhkJRfHyvLMcVucJwxXeuD728EqVDDwQDxFMNo"
+_SYSTEM_PROGRAM_ID = "11111111111111111111111111111111"
+_STAKE_PROGRAM_ID = "Stake11111111111111111111111111111111111111"
+_COMPUTE_BUDGET_PROGRAM_ID = "ComputeBudget111111111111111111111111111111"
+_TOKEN_PROGRAM_ID = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+_TOKEN_2022_PROGRAM_ID = "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID = "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+_MEMO_PROGRAM_ID = "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"
+_MEMO_LEGACY_PROGRAM_ID = "Memo1UhkJRfHyvLMcVucJwxXeuD728EqVDDwQDxFMNo"
 
-SYSTEM_PROGRAM_ID_INS_CREATE_ACCOUNT = 0
-SYSTEM_PROGRAM_ID_INS_ASSIGN = 1
-SYSTEM_PROGRAM_ID_INS_TRANSFER = 2
-SYSTEM_PROGRAM_ID_INS_CREATE_ACCOUNT_WITH_SEED = 3
-SYSTEM_PROGRAM_ID_INS_ADVANCE_NONCE_ACCOUNT = 4
-SYSTEM_PROGRAM_ID_INS_WITHDRAW_NONCE_ACCOUNT = 5
-SYSTEM_PROGRAM_ID_INS_INITIALIZE_NONCE_ACCOUNT = 6
-SYSTEM_PROGRAM_ID_INS_AUTHORIZE_NONCE_ACCOUNT = 7
-SYSTEM_PROGRAM_ID_INS_ALLOCATE = 8
-SYSTEM_PROGRAM_ID_INS_ALLOCATE_WITH_SEED = 9
-SYSTEM_PROGRAM_ID_INS_ASSIGN_WITH_SEED = 10
-SYSTEM_PROGRAM_ID_INS_TRANSFER_WITH_SEED = 11
-SYSTEM_PROGRAM_ID_INS_UPGRADE_NONCE_ACCOUNT = 12
-STAKE_PROGRAM_ID_INS_INITIALIZE = 0
-STAKE_PROGRAM_ID_INS_AUTHORIZE = 1
-STAKE_PROGRAM_ID_INS_DELEGATE_STAKE = 2
-STAKE_PROGRAM_ID_INS_SPLIT = 3
-STAKE_PROGRAM_ID_INS_WITHDRAW = 4
-STAKE_PROGRAM_ID_INS_DEACTIVATE = 5
-STAKE_PROGRAM_ID_INS_SET_LOCKUP = 6
-STAKE_PROGRAM_ID_INS_MERGE = 7
-STAKE_PROGRAM_ID_INS_AUTHORIZE_WITH_SEED = 8
-STAKE_PROGRAM_ID_INS_INITIALIZE_CHECKED = 9
-STAKE_PROGRAM_ID_INS_AUTHORIZE_CHECKED = 10
-STAKE_PROGRAM_ID_INS_AUTHORIZE_CHECKED_WITH_SEED = 11
-STAKE_PROGRAM_ID_INS_SET_LOCKUP_CHECKED = 12
-COMPUTE_BUDGET_PROGRAM_ID_INS_REQUEST_HEAP_FRAME = 1
-COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_LIMIT = 2
-COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_PRICE = 3
-TOKEN_PROGRAM_ID_INS_INITIALIZE_ACCOUNT = 1
-TOKEN_PROGRAM_ID_INS_INITIALIZE_MULTISIG = 2
-TOKEN_PROGRAM_ID_INS_TRANSFER = 3
-TOKEN_PROGRAM_ID_INS_APPROVE = 4
-TOKEN_PROGRAM_ID_INS_REVOKE = 5
-TOKEN_PROGRAM_ID_INS_SET_AUTHORITY = 6
-TOKEN_PROGRAM_ID_INS_MINT_TO = 7
-TOKEN_PROGRAM_ID_INS_BURN = 8
-TOKEN_PROGRAM_ID_INS_CLOSE_ACCOUNT = 9
-TOKEN_PROGRAM_ID_INS_FREEZE_ACCOUNT = 10
-TOKEN_PROGRAM_ID_INS_THAW_ACCOUNT = 11
-TOKEN_PROGRAM_ID_INS_TRANSFER_CHECKED = 12
-TOKEN_PROGRAM_ID_INS_APPROVE_CHECKED = 13
-TOKEN_PROGRAM_ID_INS_MINT_TO_CHECKED = 14
-TOKEN_PROGRAM_ID_INS_BURN_CHECKED = 15
-TOKEN_PROGRAM_ID_INS_INITIALIZE_ACCOUNT_2 = 16
-TOKEN_PROGRAM_ID_INS_SYNC_NATIVE = 17
-TOKEN_PROGRAM_ID_INS_INITIALIZE_ACCOUNT_3 = 18
-TOKEN_PROGRAM_ID_INS_INITIALIZE_IMMUTABLE_OWNER = 22
-TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_ACCOUNT = 1
-TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_MULTISIG = 2
-TOKEN_2022_PROGRAM_ID_INS_TRANSFER = 3
-TOKEN_2022_PROGRAM_ID_INS_APPROVE = 4
-TOKEN_2022_PROGRAM_ID_INS_REVOKE = 5
-TOKEN_2022_PROGRAM_ID_INS_SET_AUTHORITY = 6
-TOKEN_2022_PROGRAM_ID_INS_MINT_TO = 7
-TOKEN_2022_PROGRAM_ID_INS_BURN = 8
-TOKEN_2022_PROGRAM_ID_INS_CLOSE_ACCOUNT = 9
-TOKEN_2022_PROGRAM_ID_INS_FREEZE_ACCOUNT = 10
-TOKEN_2022_PROGRAM_ID_INS_THAW_ACCOUNT = 11
-TOKEN_2022_PROGRAM_ID_INS_TRANSFER_CHECKED = 12
-TOKEN_2022_PROGRAM_ID_INS_APPROVE_CHECKED = 13
-TOKEN_2022_PROGRAM_ID_INS_MINT_TO_CHECKED = 14
-TOKEN_2022_PROGRAM_ID_INS_BURN_CHECKED = 15
-TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_ACCOUNT_2 = 16
-TOKEN_2022_PROGRAM_ID_INS_SYNC_NATIVE = 17
-TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_ACCOUNT_3 = 18
-TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_IMMUTABLE_OWNER = 22
-ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE = None
-ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE_IDEMPOTENT = 1
-ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_RECOVER_NESTED = 2
-MEMO_PROGRAM_ID_INS_MEMO = None
-MEMO_LEGACY_PROGRAM_ID_INS_MEMO = None
+_SYSTEM_PROGRAM_ID_INS_CREATE_ACCOUNT = const(0)
+_SYSTEM_PROGRAM_ID_INS_ASSIGN = const(1)
+_SYSTEM_PROGRAM_ID_INS_TRANSFER = const(2)
+_SYSTEM_PROGRAM_ID_INS_CREATE_ACCOUNT_WITH_SEED = const(3)
+_SYSTEM_PROGRAM_ID_INS_ADVANCE_NONCE_ACCOUNT = const(4)
+_SYSTEM_PROGRAM_ID_INS_WITHDRAW_NONCE_ACCOUNT = const(5)
+_SYSTEM_PROGRAM_ID_INS_INITIALIZE_NONCE_ACCOUNT = const(6)
+_SYSTEM_PROGRAM_ID_INS_AUTHORIZE_NONCE_ACCOUNT = const(7)
+_SYSTEM_PROGRAM_ID_INS_ALLOCATE = const(8)
+_SYSTEM_PROGRAM_ID_INS_ALLOCATE_WITH_SEED = const(9)
+_SYSTEM_PROGRAM_ID_INS_ASSIGN_WITH_SEED = const(10)
+_SYSTEM_PROGRAM_ID_INS_TRANSFER_WITH_SEED = const(11)
+_SYSTEM_PROGRAM_ID_INS_UPGRADE_NONCE_ACCOUNT = const(12)
+_STAKE_PROGRAM_ID_INS_INITIALIZE = const(0)
+_STAKE_PROGRAM_ID_INS_AUTHORIZE = const(1)
+_STAKE_PROGRAM_ID_INS_DELEGATE_STAKE = const(2)
+_STAKE_PROGRAM_ID_INS_SPLIT = const(3)
+_STAKE_PROGRAM_ID_INS_WITHDRAW = const(4)
+_STAKE_PROGRAM_ID_INS_DEACTIVATE = const(5)
+_STAKE_PROGRAM_ID_INS_SET_LOCKUP = const(6)
+_STAKE_PROGRAM_ID_INS_MERGE = const(7)
+_STAKE_PROGRAM_ID_INS_AUTHORIZE_WITH_SEED = const(8)
+_STAKE_PROGRAM_ID_INS_INITIALIZE_CHECKED = const(9)
+_STAKE_PROGRAM_ID_INS_AUTHORIZE_CHECKED = const(10)
+_STAKE_PROGRAM_ID_INS_AUTHORIZE_CHECKED_WITH_SEED = const(11)
+_STAKE_PROGRAM_ID_INS_SET_LOCKUP_CHECKED = const(12)
+_COMPUTE_BUDGET_PROGRAM_ID_INS_REQUEST_HEAP_FRAME = const(1)
+_COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_LIMIT = const(2)
+_COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_PRICE = const(3)
+_TOKEN_PROGRAM_ID_INS_INITIALIZE_ACCOUNT = const(1)
+_TOKEN_PROGRAM_ID_INS_INITIALIZE_MULTISIG = const(2)
+_TOKEN_PROGRAM_ID_INS_TRANSFER = const(3)
+_TOKEN_PROGRAM_ID_INS_APPROVE = const(4)
+_TOKEN_PROGRAM_ID_INS_REVOKE = const(5)
+_TOKEN_PROGRAM_ID_INS_SET_AUTHORITY = const(6)
+_TOKEN_PROGRAM_ID_INS_MINT_TO = const(7)
+_TOKEN_PROGRAM_ID_INS_BURN = const(8)
+_TOKEN_PROGRAM_ID_INS_CLOSE_ACCOUNT = const(9)
+_TOKEN_PROGRAM_ID_INS_FREEZE_ACCOUNT = const(10)
+_TOKEN_PROGRAM_ID_INS_THAW_ACCOUNT = const(11)
+_TOKEN_PROGRAM_ID_INS_TRANSFER_CHECKED = const(12)
+_TOKEN_PROGRAM_ID_INS_APPROVE_CHECKED = const(13)
+_TOKEN_PROGRAM_ID_INS_MINT_TO_CHECKED = const(14)
+_TOKEN_PROGRAM_ID_INS_BURN_CHECKED = const(15)
+_TOKEN_PROGRAM_ID_INS_INITIALIZE_ACCOUNT_2 = const(16)
+_TOKEN_PROGRAM_ID_INS_SYNC_NATIVE = const(17)
+_TOKEN_PROGRAM_ID_INS_INITIALIZE_ACCOUNT_3 = const(18)
+_TOKEN_PROGRAM_ID_INS_INITIALIZE_IMMUTABLE_OWNER = const(22)
+_TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_ACCOUNT = const(1)
+_TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_MULTISIG = const(2)
+_TOKEN_2022_PROGRAM_ID_INS_TRANSFER = const(3)
+_TOKEN_2022_PROGRAM_ID_INS_APPROVE = const(4)
+_TOKEN_2022_PROGRAM_ID_INS_REVOKE = const(5)
+_TOKEN_2022_PROGRAM_ID_INS_SET_AUTHORITY = const(6)
+_TOKEN_2022_PROGRAM_ID_INS_MINT_TO = const(7)
+_TOKEN_2022_PROGRAM_ID_INS_BURN = const(8)
+_TOKEN_2022_PROGRAM_ID_INS_CLOSE_ACCOUNT = const(9)
+_TOKEN_2022_PROGRAM_ID_INS_FREEZE_ACCOUNT = const(10)
+_TOKEN_2022_PROGRAM_ID_INS_THAW_ACCOUNT = const(11)
+_TOKEN_2022_PROGRAM_ID_INS_TRANSFER_CHECKED = const(12)
+_TOKEN_2022_PROGRAM_ID_INS_APPROVE_CHECKED = const(13)
+_TOKEN_2022_PROGRAM_ID_INS_MINT_TO_CHECKED = const(14)
+_TOKEN_2022_PROGRAM_ID_INS_BURN_CHECKED = const(15)
+_TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_ACCOUNT_2 = const(16)
+_TOKEN_2022_PROGRAM_ID_INS_SYNC_NATIVE = const(17)
+_TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_ACCOUNT_3 = const(18)
+_TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_IMMUTABLE_OWNER = const(22)
+_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE = None
+_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE_IDEMPOTENT = const(1)
+_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_RECOVER_NESTED = const(2)
+_MEMO_PROGRAM_ID_INS_MEMO = None
+_MEMO_LEGACY_PROGRAM_ID_INS_MEMO = None
+
+COMPUTE_BUDGET_PROGRAM_ID = _COMPUTE_BUDGET_PROGRAM_ID
+COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_LIMIT = (
+    _COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_LIMIT
+)
+COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_PRICE = (
+    _COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_PRICE
+)
 
 
 def __getattr__(name: str) -> Type[Instruction]:
     def get_id(name: str) -> tuple[str, InstructionId]:
         if name == "SystemProgramCreateAccountInstruction":
-            return (SYSTEM_PROGRAM_ID, SYSTEM_PROGRAM_ID_INS_CREATE_ACCOUNT)
+            return (_SYSTEM_PROGRAM_ID, _SYSTEM_PROGRAM_ID_INS_CREATE_ACCOUNT)
         if name == "SystemProgramAssignInstruction":
-            return (SYSTEM_PROGRAM_ID, SYSTEM_PROGRAM_ID_INS_ASSIGN)
+            return (_SYSTEM_PROGRAM_ID, _SYSTEM_PROGRAM_ID_INS_ASSIGN)
         if name == "SystemProgramTransferInstruction":
-            return (SYSTEM_PROGRAM_ID, SYSTEM_PROGRAM_ID_INS_TRANSFER)
+            return (_SYSTEM_PROGRAM_ID, _SYSTEM_PROGRAM_ID_INS_TRANSFER)
         if name == "SystemProgramCreateAccountWithSeedInstruction":
-            return (SYSTEM_PROGRAM_ID, SYSTEM_PROGRAM_ID_INS_CREATE_ACCOUNT_WITH_SEED)
+            return (_SYSTEM_PROGRAM_ID, _SYSTEM_PROGRAM_ID_INS_CREATE_ACCOUNT_WITH_SEED)
         if name == "SystemProgramAdvanceNonceAccountInstruction":
-            return (SYSTEM_PROGRAM_ID, SYSTEM_PROGRAM_ID_INS_ADVANCE_NONCE_ACCOUNT)
+            return (_SYSTEM_PROGRAM_ID, _SYSTEM_PROGRAM_ID_INS_ADVANCE_NONCE_ACCOUNT)
         if name == "SystemProgramWithdrawNonceAccountInstruction":
-            return (SYSTEM_PROGRAM_ID, SYSTEM_PROGRAM_ID_INS_WITHDRAW_NONCE_ACCOUNT)
+            return (_SYSTEM_PROGRAM_ID, _SYSTEM_PROGRAM_ID_INS_WITHDRAW_NONCE_ACCOUNT)
         if name == "SystemProgramInitializeNonceAccountInstruction":
-            return (SYSTEM_PROGRAM_ID, SYSTEM_PROGRAM_ID_INS_INITIALIZE_NONCE_ACCOUNT)
+            return (_SYSTEM_PROGRAM_ID, _SYSTEM_PROGRAM_ID_INS_INITIALIZE_NONCE_ACCOUNT)
         if name == "SystemProgramAuthorizeNonceAccountInstruction":
-            return (SYSTEM_PROGRAM_ID, SYSTEM_PROGRAM_ID_INS_AUTHORIZE_NONCE_ACCOUNT)
+            return (_SYSTEM_PROGRAM_ID, _SYSTEM_PROGRAM_ID_INS_AUTHORIZE_NONCE_ACCOUNT)
         if name == "SystemProgramAllocateInstruction":
-            return (SYSTEM_PROGRAM_ID, SYSTEM_PROGRAM_ID_INS_ALLOCATE)
+            return (_SYSTEM_PROGRAM_ID, _SYSTEM_PROGRAM_ID_INS_ALLOCATE)
         if name == "SystemProgramAllocateWithSeedInstruction":
-            return (SYSTEM_PROGRAM_ID, SYSTEM_PROGRAM_ID_INS_ALLOCATE_WITH_SEED)
+            return (_SYSTEM_PROGRAM_ID, _SYSTEM_PROGRAM_ID_INS_ALLOCATE_WITH_SEED)
         if name == "SystemProgramAssignWithSeedInstruction":
-            return (SYSTEM_PROGRAM_ID, SYSTEM_PROGRAM_ID_INS_ASSIGN_WITH_SEED)
+            return (_SYSTEM_PROGRAM_ID, _SYSTEM_PROGRAM_ID_INS_ASSIGN_WITH_SEED)
         if name == "SystemProgramTransferWithSeedInstruction":
-            return (SYSTEM_PROGRAM_ID, SYSTEM_PROGRAM_ID_INS_TRANSFER_WITH_SEED)
+            return (_SYSTEM_PROGRAM_ID, _SYSTEM_PROGRAM_ID_INS_TRANSFER_WITH_SEED)
         if name == "SystemProgramUpgradeNonceAccountInstruction":
-            return (SYSTEM_PROGRAM_ID, SYSTEM_PROGRAM_ID_INS_UPGRADE_NONCE_ACCOUNT)
+            return (_SYSTEM_PROGRAM_ID, _SYSTEM_PROGRAM_ID_INS_UPGRADE_NONCE_ACCOUNT)
         if name == "StakeProgramInitializeInstruction":
-            return (STAKE_PROGRAM_ID, STAKE_PROGRAM_ID_INS_INITIALIZE)
+            return (_STAKE_PROGRAM_ID, _STAKE_PROGRAM_ID_INS_INITIALIZE)
         if name == "StakeProgramAuthorizeInstruction":
-            return (STAKE_PROGRAM_ID, STAKE_PROGRAM_ID_INS_AUTHORIZE)
+            return (_STAKE_PROGRAM_ID, _STAKE_PROGRAM_ID_INS_AUTHORIZE)
         if name == "StakeProgramDelegateStakeInstruction":
-            return (STAKE_PROGRAM_ID, STAKE_PROGRAM_ID_INS_DELEGATE_STAKE)
+            return (_STAKE_PROGRAM_ID, _STAKE_PROGRAM_ID_INS_DELEGATE_STAKE)
         if name == "StakeProgramSplitInstruction":
-            return (STAKE_PROGRAM_ID, STAKE_PROGRAM_ID_INS_SPLIT)
+            return (_STAKE_PROGRAM_ID, _STAKE_PROGRAM_ID_INS_SPLIT)
         if name == "StakeProgramWithdrawInstruction":
-            return (STAKE_PROGRAM_ID, STAKE_PROGRAM_ID_INS_WITHDRAW)
+            return (_STAKE_PROGRAM_ID, _STAKE_PROGRAM_ID_INS_WITHDRAW)
         if name == "StakeProgramDeactivateInstruction":
-            return (STAKE_PROGRAM_ID, STAKE_PROGRAM_ID_INS_DEACTIVATE)
+            return (_STAKE_PROGRAM_ID, _STAKE_PROGRAM_ID_INS_DEACTIVATE)
         if name == "StakeProgramSetLockupInstruction":
-            return (STAKE_PROGRAM_ID, STAKE_PROGRAM_ID_INS_SET_LOCKUP)
+            return (_STAKE_PROGRAM_ID, _STAKE_PROGRAM_ID_INS_SET_LOCKUP)
         if name == "StakeProgramMergeInstruction":
-            return (STAKE_PROGRAM_ID, STAKE_PROGRAM_ID_INS_MERGE)
+            return (_STAKE_PROGRAM_ID, _STAKE_PROGRAM_ID_INS_MERGE)
         if name == "StakeProgramAuthorizeWithSeedInstruction":
-            return (STAKE_PROGRAM_ID, STAKE_PROGRAM_ID_INS_AUTHORIZE_WITH_SEED)
+            return (_STAKE_PROGRAM_ID, _STAKE_PROGRAM_ID_INS_AUTHORIZE_WITH_SEED)
         if name == "StakeProgramInitializeCheckedInstruction":
-            return (STAKE_PROGRAM_ID, STAKE_PROGRAM_ID_INS_INITIALIZE_CHECKED)
+            return (_STAKE_PROGRAM_ID, _STAKE_PROGRAM_ID_INS_INITIALIZE_CHECKED)
         if name == "StakeProgramAuthorizeCheckedInstruction":
-            return (STAKE_PROGRAM_ID, STAKE_PROGRAM_ID_INS_AUTHORIZE_CHECKED)
+            return (_STAKE_PROGRAM_ID, _STAKE_PROGRAM_ID_INS_AUTHORIZE_CHECKED)
         if name == "StakeProgramAuthorizeCheckedWithSeedInstruction":
-            return (STAKE_PROGRAM_ID, STAKE_PROGRAM_ID_INS_AUTHORIZE_CHECKED_WITH_SEED)
+            return (
+                _STAKE_PROGRAM_ID,
+                _STAKE_PROGRAM_ID_INS_AUTHORIZE_CHECKED_WITH_SEED,
+            )
         if name == "StakeProgramSetLockupCheckedInstruction":
-            return (STAKE_PROGRAM_ID, STAKE_PROGRAM_ID_INS_SET_LOCKUP_CHECKED)
+            return (_STAKE_PROGRAM_ID, _STAKE_PROGRAM_ID_INS_SET_LOCKUP_CHECKED)
         if name == "ComputeBudgetProgramRequestHeapFrameInstruction":
             return (
-                COMPUTE_BUDGET_PROGRAM_ID,
-                COMPUTE_BUDGET_PROGRAM_ID_INS_REQUEST_HEAP_FRAME,
+                _COMPUTE_BUDGET_PROGRAM_ID,
+                _COMPUTE_BUDGET_PROGRAM_ID_INS_REQUEST_HEAP_FRAME,
             )
         if name == "ComputeBudgetProgramSetComputeUnitLimitInstruction":
             return (
-                COMPUTE_BUDGET_PROGRAM_ID,
-                COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_LIMIT,
+                _COMPUTE_BUDGET_PROGRAM_ID,
+                _COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_LIMIT,
             )
         if name == "ComputeBudgetProgramSetComputeUnitPriceInstruction":
             return (
-                COMPUTE_BUDGET_PROGRAM_ID,
-                COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_PRICE,
+                _COMPUTE_BUDGET_PROGRAM_ID,
+                _COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_PRICE,
             )
         if name == "TokenProgramInitializeAccountInstruction":
-            return (TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID_INS_INITIALIZE_ACCOUNT)
+            return (_TOKEN_PROGRAM_ID, _TOKEN_PROGRAM_ID_INS_INITIALIZE_ACCOUNT)
         if name == "TokenProgramInitializeMultisigInstruction":
-            return (TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID_INS_INITIALIZE_MULTISIG)
+            return (_TOKEN_PROGRAM_ID, _TOKEN_PROGRAM_ID_INS_INITIALIZE_MULTISIG)
         if name == "TokenProgramTransferInstruction":
-            return (TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID_INS_TRANSFER)
+            return (_TOKEN_PROGRAM_ID, _TOKEN_PROGRAM_ID_INS_TRANSFER)
         if name == "TokenProgramApproveInstruction":
-            return (TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID_INS_APPROVE)
+            return (_TOKEN_PROGRAM_ID, _TOKEN_PROGRAM_ID_INS_APPROVE)
         if name == "TokenProgramRevokeInstruction":
-            return (TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID_INS_REVOKE)
+            return (_TOKEN_PROGRAM_ID, _TOKEN_PROGRAM_ID_INS_REVOKE)
         if name == "TokenProgramSetAuthorityInstruction":
-            return (TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID_INS_SET_AUTHORITY)
+            return (_TOKEN_PROGRAM_ID, _TOKEN_PROGRAM_ID_INS_SET_AUTHORITY)
         if name == "TokenProgramMintToInstruction":
-            return (TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID_INS_MINT_TO)
+            return (_TOKEN_PROGRAM_ID, _TOKEN_PROGRAM_ID_INS_MINT_TO)
         if name == "TokenProgramBurnInstruction":
-            return (TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID_INS_BURN)
+            return (_TOKEN_PROGRAM_ID, _TOKEN_PROGRAM_ID_INS_BURN)
         if name == "TokenProgramCloseAccountInstruction":
-            return (TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID_INS_CLOSE_ACCOUNT)
+            return (_TOKEN_PROGRAM_ID, _TOKEN_PROGRAM_ID_INS_CLOSE_ACCOUNT)
         if name == "TokenProgramFreezeAccountInstruction":
-            return (TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID_INS_FREEZE_ACCOUNT)
+            return (_TOKEN_PROGRAM_ID, _TOKEN_PROGRAM_ID_INS_FREEZE_ACCOUNT)
         if name == "TokenProgramThawAccountInstruction":
-            return (TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID_INS_THAW_ACCOUNT)
+            return (_TOKEN_PROGRAM_ID, _TOKEN_PROGRAM_ID_INS_THAW_ACCOUNT)
         if name == "TokenProgramTransferCheckedInstruction":
-            return (TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID_INS_TRANSFER_CHECKED)
+            return (_TOKEN_PROGRAM_ID, _TOKEN_PROGRAM_ID_INS_TRANSFER_CHECKED)
         if name == "TokenProgramApproveCheckedInstruction":
-            return (TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID_INS_APPROVE_CHECKED)
+            return (_TOKEN_PROGRAM_ID, _TOKEN_PROGRAM_ID_INS_APPROVE_CHECKED)
         if name == "TokenProgramMinttoCheckedInstruction":
-            return (TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID_INS_MINT_TO_CHECKED)
+            return (_TOKEN_PROGRAM_ID, _TOKEN_PROGRAM_ID_INS_MINT_TO_CHECKED)
         if name == "TokenProgramBurnCheckedInstruction":
-            return (TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID_INS_BURN_CHECKED)
+            return (_TOKEN_PROGRAM_ID, _TOKEN_PROGRAM_ID_INS_BURN_CHECKED)
         if name == "TokenProgramInitializeAccount2Instruction":
-            return (TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID_INS_INITIALIZE_ACCOUNT_2)
+            return (_TOKEN_PROGRAM_ID, _TOKEN_PROGRAM_ID_INS_INITIALIZE_ACCOUNT_2)
         if name == "TokenProgramSyncNativeInstruction":
-            return (TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID_INS_SYNC_NATIVE)
+            return (_TOKEN_PROGRAM_ID, _TOKEN_PROGRAM_ID_INS_SYNC_NATIVE)
         if name == "TokenProgramInitializeAccount3Instruction":
-            return (TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID_INS_INITIALIZE_ACCOUNT_3)
+            return (_TOKEN_PROGRAM_ID, _TOKEN_PROGRAM_ID_INS_INITIALIZE_ACCOUNT_3)
         if name == "TokenProgramInitializeImmutableOwnerInstruction":
-            return (TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID_INS_INITIALIZE_IMMUTABLE_OWNER)
+            return (_TOKEN_PROGRAM_ID, _TOKEN_PROGRAM_ID_INS_INITIALIZE_IMMUTABLE_OWNER)
         if name == "Token2022ProgramInitializeAccountInstruction":
-            return (TOKEN_2022_PROGRAM_ID, TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_ACCOUNT)
+            return (
+                _TOKEN_2022_PROGRAM_ID,
+                _TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_ACCOUNT,
+            )
         if name == "Token2022ProgramInitializeMultisigInstruction":
             return (
-                TOKEN_2022_PROGRAM_ID,
-                TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_MULTISIG,
+                _TOKEN_2022_PROGRAM_ID,
+                _TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_MULTISIG,
             )
         if name == "Token2022ProgramTransferInstruction":
-            return (TOKEN_2022_PROGRAM_ID, TOKEN_2022_PROGRAM_ID_INS_TRANSFER)
+            return (_TOKEN_2022_PROGRAM_ID, _TOKEN_2022_PROGRAM_ID_INS_TRANSFER)
         if name == "Token2022ProgramApproveInstruction":
-            return (TOKEN_2022_PROGRAM_ID, TOKEN_2022_PROGRAM_ID_INS_APPROVE)
+            return (_TOKEN_2022_PROGRAM_ID, _TOKEN_2022_PROGRAM_ID_INS_APPROVE)
         if name == "Token2022ProgramRevokeInstruction":
-            return (TOKEN_2022_PROGRAM_ID, TOKEN_2022_PROGRAM_ID_INS_REVOKE)
+            return (_TOKEN_2022_PROGRAM_ID, _TOKEN_2022_PROGRAM_ID_INS_REVOKE)
         if name == "Token2022ProgramSetAuthorityInstruction":
-            return (TOKEN_2022_PROGRAM_ID, TOKEN_2022_PROGRAM_ID_INS_SET_AUTHORITY)
+            return (_TOKEN_2022_PROGRAM_ID, _TOKEN_2022_PROGRAM_ID_INS_SET_AUTHORITY)
         if name == "Token2022ProgramMinttoInstruction":
-            return (TOKEN_2022_PROGRAM_ID, TOKEN_2022_PROGRAM_ID_INS_MINT_TO)
+            return (_TOKEN_2022_PROGRAM_ID, _TOKEN_2022_PROGRAM_ID_INS_MINT_TO)
         if name == "Token2022ProgramBurnInstruction":
-            return (TOKEN_2022_PROGRAM_ID, TOKEN_2022_PROGRAM_ID_INS_BURN)
+            return (_TOKEN_2022_PROGRAM_ID, _TOKEN_2022_PROGRAM_ID_INS_BURN)
         if name == "Token2022ProgramCloseAccountInstruction":
-            return (TOKEN_2022_PROGRAM_ID, TOKEN_2022_PROGRAM_ID_INS_CLOSE_ACCOUNT)
+            return (_TOKEN_2022_PROGRAM_ID, _TOKEN_2022_PROGRAM_ID_INS_CLOSE_ACCOUNT)
         if name == "Token2022ProgramFreezeAccountInstruction":
-            return (TOKEN_2022_PROGRAM_ID, TOKEN_2022_PROGRAM_ID_INS_FREEZE_ACCOUNT)
+            return (_TOKEN_2022_PROGRAM_ID, _TOKEN_2022_PROGRAM_ID_INS_FREEZE_ACCOUNT)
         if name == "Token2022ProgramThawAccountInstruction":
-            return (TOKEN_2022_PROGRAM_ID, TOKEN_2022_PROGRAM_ID_INS_THAW_ACCOUNT)
+            return (_TOKEN_2022_PROGRAM_ID, _TOKEN_2022_PROGRAM_ID_INS_THAW_ACCOUNT)
         if name == "Token2022ProgramTransferCheckedInstruction":
-            return (TOKEN_2022_PROGRAM_ID, TOKEN_2022_PROGRAM_ID_INS_TRANSFER_CHECKED)
+            return (_TOKEN_2022_PROGRAM_ID, _TOKEN_2022_PROGRAM_ID_INS_TRANSFER_CHECKED)
         if name == "Token2022ProgramApproveCheckedInstruction":
-            return (TOKEN_2022_PROGRAM_ID, TOKEN_2022_PROGRAM_ID_INS_APPROVE_CHECKED)
+            return (_TOKEN_2022_PROGRAM_ID, _TOKEN_2022_PROGRAM_ID_INS_APPROVE_CHECKED)
         if name == "Token2022ProgramMinttoCheckedInstruction":
-            return (TOKEN_2022_PROGRAM_ID, TOKEN_2022_PROGRAM_ID_INS_MINT_TO_CHECKED)
+            return (_TOKEN_2022_PROGRAM_ID, _TOKEN_2022_PROGRAM_ID_INS_MINT_TO_CHECKED)
         if name == "Token2022ProgramBurnCheckedInstruction":
-            return (TOKEN_2022_PROGRAM_ID, TOKEN_2022_PROGRAM_ID_INS_BURN_CHECKED)
+            return (_TOKEN_2022_PROGRAM_ID, _TOKEN_2022_PROGRAM_ID_INS_BURN_CHECKED)
         if name == "Token2022ProgramInitializeAccount2Instruction":
             return (
-                TOKEN_2022_PROGRAM_ID,
-                TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_ACCOUNT_2,
+                _TOKEN_2022_PROGRAM_ID,
+                _TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_ACCOUNT_2,
             )
         if name == "Token2022ProgramSyncNativeInstruction":
-            return (TOKEN_2022_PROGRAM_ID, TOKEN_2022_PROGRAM_ID_INS_SYNC_NATIVE)
+            return (_TOKEN_2022_PROGRAM_ID, _TOKEN_2022_PROGRAM_ID_INS_SYNC_NATIVE)
         if name == "Token2022ProgramInitializeAccount3Instruction":
             return (
-                TOKEN_2022_PROGRAM_ID,
-                TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_ACCOUNT_3,
+                _TOKEN_2022_PROGRAM_ID,
+                _TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_ACCOUNT_3,
             )
         if name == "Token2022ProgramInitializeImmutableOwnerInstruction":
             return (
-                TOKEN_2022_PROGRAM_ID,
-                TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_IMMUTABLE_OWNER,
+                _TOKEN_2022_PROGRAM_ID,
+                _TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_IMMUTABLE_OWNER,
             )
         if name == "AssociatedTokenAccountProgramCreateInstruction":
             return (
-                ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID,
-                ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE,
+                _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID,
+                _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE,
             )
         if name == "AssociatedTokenAccountProgramCreateIdempotentInstruction":
             return (
-                ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID,
-                ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE_IDEMPOTENT,
+                _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID,
+                _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE_IDEMPOTENT,
             )
         if name == "AssociatedTokenAccountProgramRecoverNestedInstruction":
             return (
-                ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID,
-                ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_RECOVER_NESTED,
+                _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID,
+                _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_RECOVER_NESTED,
             )
         if name == "MemoProgramMemoInstruction":
-            return (MEMO_PROGRAM_ID, MEMO_PROGRAM_ID_INS_MEMO)
+            return (_MEMO_PROGRAM_ID, _MEMO_PROGRAM_ID_INS_MEMO)
         if name == "MemoLegacyProgramMemoInstruction":
-            return (MEMO_LEGACY_PROGRAM_ID, MEMO_LEGACY_PROGRAM_ID_INS_MEMO)
+            return (_MEMO_LEGACY_PROGRAM_ID, _MEMO_LEGACY_PROGRAM_ID_INS_MEMO)
         raise AttributeError  # Unknown instruction
 
     id = get_id(name)
@@ -806,21 +821,21 @@ if TYPE_CHECKING:
 
 
 def get_instruction_id_length(program_id: str) -> int:
-    if program_id == SYSTEM_PROGRAM_ID:
+    if program_id == _SYSTEM_PROGRAM_ID:
         return 4
-    if program_id == STAKE_PROGRAM_ID:
+    if program_id == _STAKE_PROGRAM_ID:
         return 4
-    if program_id == COMPUTE_BUDGET_PROGRAM_ID:
+    if program_id == _COMPUTE_BUDGET_PROGRAM_ID:
         return 1
-    if program_id == TOKEN_PROGRAM_ID:
+    if program_id == _TOKEN_PROGRAM_ID:
         return 1
-    if program_id == TOKEN_2022_PROGRAM_ID:
+    if program_id == _TOKEN_2022_PROGRAM_ID:
         return 1
-    if program_id == ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID:
+    if program_id == _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID:
         return 1
-    if program_id == MEMO_PROGRAM_ID:
+    if program_id == _MEMO_PROGRAM_ID:
         return 0
-    if program_id == MEMO_LEGACY_PROGRAM_ID:
+    if program_id == _MEMO_LEGACY_PROGRAM_ID:
         return 0
 
     return 0
@@ -852,13 +867,13 @@ def get_instruction(
     instruction_accounts: list[Account],
     instruction_data: InstructionData,
 ) -> Instruction:
-    if program_id == SYSTEM_PROGRAM_ID:
-        if instruction_id == SYSTEM_PROGRAM_ID_INS_CREATE_ACCOUNT:
+    if program_id == _SYSTEM_PROGRAM_ID:
+        if instruction_id == _SYSTEM_PROGRAM_ID_INS_CREATE_ACCOUNT:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                SYSTEM_PROGRAM_ID_INS_CREATE_ACCOUNT,
+                _SYSTEM_PROGRAM_ID_INS_CREATE_ACCOUNT,
                 [
                     PropertyTemplate(
                         "lamports",
@@ -924,12 +939,12 @@ def get_instruction(
                 False,
                 None,
             )
-        if instruction_id == SYSTEM_PROGRAM_ID_INS_ASSIGN:
+        if instruction_id == _SYSTEM_PROGRAM_ID_INS_ASSIGN:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                SYSTEM_PROGRAM_ID_INS_ASSIGN,
+                _SYSTEM_PROGRAM_ID_INS_ASSIGN,
                 [
                     PropertyTemplate(
                         "owner",
@@ -969,12 +984,12 @@ def get_instruction(
                 False,
                 None,
             )
-        if instruction_id == SYSTEM_PROGRAM_ID_INS_TRANSFER:
+        if instruction_id == _SYSTEM_PROGRAM_ID_INS_TRANSFER:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                SYSTEM_PROGRAM_ID_INS_TRANSFER,
+                _SYSTEM_PROGRAM_ID_INS_TRANSFER,
                 [
                     PropertyTemplate(
                         "lamports",
@@ -1026,12 +1041,12 @@ def get_instruction(
                 False,
                 None,
             )
-        if instruction_id == SYSTEM_PROGRAM_ID_INS_CREATE_ACCOUNT_WITH_SEED:
+        if instruction_id == _SYSTEM_PROGRAM_ID_INS_CREATE_ACCOUNT_WITH_SEED:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                SYSTEM_PROGRAM_ID_INS_CREATE_ACCOUNT_WITH_SEED,
+                _SYSTEM_PROGRAM_ID_INS_CREATE_ACCOUNT_WITH_SEED,
                 [
                     PropertyTemplate(
                         "base",
@@ -1116,12 +1131,12 @@ def get_instruction(
                 False,
                 None,
             )
-        if instruction_id == SYSTEM_PROGRAM_ID_INS_ADVANCE_NONCE_ACCOUNT:
+        if instruction_id == _SYSTEM_PROGRAM_ID_INS_ADVANCE_NONCE_ACCOUNT:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                SYSTEM_PROGRAM_ID_INS_ADVANCE_NONCE_ACCOUNT,
+                _SYSTEM_PROGRAM_ID_INS_ADVANCE_NONCE_ACCOUNT,
                 [],
                 [
                     AccountTemplate(
@@ -1163,12 +1178,12 @@ def get_instruction(
                 False,
                 None,
             )
-        if instruction_id == SYSTEM_PROGRAM_ID_INS_WITHDRAW_NONCE_ACCOUNT:
+        if instruction_id == _SYSTEM_PROGRAM_ID_INS_WITHDRAW_NONCE_ACCOUNT:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                SYSTEM_PROGRAM_ID_INS_WITHDRAW_NONCE_ACCOUNT,
+                _SYSTEM_PROGRAM_ID_INS_WITHDRAW_NONCE_ACCOUNT,
                 [
                     PropertyTemplate(
                         "lamports",
@@ -1242,12 +1257,12 @@ def get_instruction(
                 False,
                 None,
             )
-        if instruction_id == SYSTEM_PROGRAM_ID_INS_INITIALIZE_NONCE_ACCOUNT:
+        if instruction_id == _SYSTEM_PROGRAM_ID_INS_INITIALIZE_NONCE_ACCOUNT:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                SYSTEM_PROGRAM_ID_INS_INITIALIZE_NONCE_ACCOUNT,
+                _SYSTEM_PROGRAM_ID_INS_INITIALIZE_NONCE_ACCOUNT,
                 [
                     PropertyTemplate(
                         "nonce_authority",
@@ -1297,12 +1312,12 @@ def get_instruction(
                 False,
                 None,
             )
-        if instruction_id == SYSTEM_PROGRAM_ID_INS_AUTHORIZE_NONCE_ACCOUNT:
+        if instruction_id == _SYSTEM_PROGRAM_ID_INS_AUTHORIZE_NONCE_ACCOUNT:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                SYSTEM_PROGRAM_ID_INS_AUTHORIZE_NONCE_ACCOUNT,
+                _SYSTEM_PROGRAM_ID_INS_AUTHORIZE_NONCE_ACCOUNT,
                 [
                     PropertyTemplate(
                         "nonce_authority",
@@ -1354,12 +1369,12 @@ def get_instruction(
                 False,
                 None,
             )
-        if instruction_id == SYSTEM_PROGRAM_ID_INS_ALLOCATE:
+        if instruction_id == _SYSTEM_PROGRAM_ID_INS_ALLOCATE:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                SYSTEM_PROGRAM_ID_INS_ALLOCATE,
+                _SYSTEM_PROGRAM_ID_INS_ALLOCATE,
                 [
                     PropertyTemplate(
                         "space",
@@ -1399,12 +1414,12 @@ def get_instruction(
                 False,
                 None,
             )
-        if instruction_id == SYSTEM_PROGRAM_ID_INS_ALLOCATE_WITH_SEED:
+        if instruction_id == _SYSTEM_PROGRAM_ID_INS_ALLOCATE_WITH_SEED:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                SYSTEM_PROGRAM_ID_INS_ALLOCATE_WITH_SEED,
+                _SYSTEM_PROGRAM_ID_INS_ALLOCATE_WITH_SEED,
                 [
                     PropertyTemplate(
                         "base",
@@ -1470,12 +1485,12 @@ def get_instruction(
                 False,
                 None,
             )
-        if instruction_id == SYSTEM_PROGRAM_ID_INS_ASSIGN_WITH_SEED:
+        if instruction_id == _SYSTEM_PROGRAM_ID_INS_ASSIGN_WITH_SEED:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                SYSTEM_PROGRAM_ID_INS_ASSIGN_WITH_SEED,
+                _SYSTEM_PROGRAM_ID_INS_ASSIGN_WITH_SEED,
                 [
                     PropertyTemplate(
                         "base",
@@ -1534,12 +1549,12 @@ def get_instruction(
                 False,
                 None,
             )
-        if instruction_id == SYSTEM_PROGRAM_ID_INS_TRANSFER_WITH_SEED:
+        if instruction_id == _SYSTEM_PROGRAM_ID_INS_TRANSFER_WITH_SEED:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                SYSTEM_PROGRAM_ID_INS_TRANSFER_WITH_SEED,
+                _SYSTEM_PROGRAM_ID_INS_TRANSFER_WITH_SEED,
                 [
                     PropertyTemplate(
                         "lamports",
@@ -1610,12 +1625,12 @@ def get_instruction(
                 False,
                 None,
             )
-        if instruction_id == SYSTEM_PROGRAM_ID_INS_UPGRADE_NONCE_ACCOUNT:
+        if instruction_id == _SYSTEM_PROGRAM_ID_INS_UPGRADE_NONCE_ACCOUNT:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                SYSTEM_PROGRAM_ID_INS_UPGRADE_NONCE_ACCOUNT,
+                _SYSTEM_PROGRAM_ID_INS_UPGRADE_NONCE_ACCOUNT,
                 [],
                 [
                     AccountTemplate(
@@ -1654,13 +1669,13 @@ def get_instruction(
             False,
             False,
         )
-    if program_id == STAKE_PROGRAM_ID:
-        if instruction_id == STAKE_PROGRAM_ID_INS_INITIALIZE:
+    if program_id == _STAKE_PROGRAM_ID:
+        if instruction_id == _STAKE_PROGRAM_ID_INS_INITIALIZE:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                STAKE_PROGRAM_ID_INS_INITIALIZE,
+                _STAKE_PROGRAM_ID_INS_INITIALIZE,
                 [
                     PropertyTemplate(
                         "staker",
@@ -1761,12 +1776,12 @@ def get_instruction(
                 False,
                 None,
             )
-        if instruction_id == STAKE_PROGRAM_ID_INS_AUTHORIZE:
+        if instruction_id == _STAKE_PROGRAM_ID_INS_AUTHORIZE:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                STAKE_PROGRAM_ID_INS_AUTHORIZE,
+                _STAKE_PROGRAM_ID_INS_AUTHORIZE,
                 [
                     PropertyTemplate(
                         "pubkey",
@@ -1849,12 +1864,12 @@ def get_instruction(
                 False,
                 None,
             )
-        if instruction_id == STAKE_PROGRAM_ID_INS_DELEGATE_STAKE:
+        if instruction_id == _STAKE_PROGRAM_ID_INS_DELEGATE_STAKE:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                STAKE_PROGRAM_ID_INS_DELEGATE_STAKE,
+                _STAKE_PROGRAM_ID_INS_DELEGATE_STAKE,
                 [],
                 [
                     AccountTemplate(
@@ -1918,12 +1933,12 @@ def get_instruction(
                 False,
                 None,
             )
-        if instruction_id == STAKE_PROGRAM_ID_INS_SPLIT:
+        if instruction_id == _STAKE_PROGRAM_ID_INS_SPLIT:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                STAKE_PROGRAM_ID_INS_SPLIT,
+                _STAKE_PROGRAM_ID_INS_SPLIT,
                 [
                     PropertyTemplate(
                         "lamports",
@@ -1987,12 +2002,12 @@ def get_instruction(
                 False,
                 None,
             )
-        if instruction_id == STAKE_PROGRAM_ID_INS_WITHDRAW:
+        if instruction_id == _STAKE_PROGRAM_ID_INS_WITHDRAW:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                STAKE_PROGRAM_ID_INS_WITHDRAW,
+                _STAKE_PROGRAM_ID_INS_WITHDRAW,
                 [
                     PropertyTemplate(
                         "lamports",
@@ -2071,12 +2086,12 @@ def get_instruction(
                 False,
                 None,
             )
-        if instruction_id == STAKE_PROGRAM_ID_INS_DEACTIVATE:
+        if instruction_id == _STAKE_PROGRAM_ID_INS_DEACTIVATE:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                STAKE_PROGRAM_ID_INS_DEACTIVATE,
+                _STAKE_PROGRAM_ID_INS_DEACTIVATE,
                 [],
                 [
                     AccountTemplate(
@@ -2118,12 +2133,12 @@ def get_instruction(
                 False,
                 None,
             )
-        if instruction_id == STAKE_PROGRAM_ID_INS_SET_LOCKUP:
+        if instruction_id == _STAKE_PROGRAM_ID_INS_SET_LOCKUP:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                STAKE_PROGRAM_ID_INS_SET_LOCKUP,
+                _STAKE_PROGRAM_ID_INS_SET_LOCKUP,
                 [
                     PropertyTemplate(
                         "unix_timestamp",
@@ -2203,12 +2218,12 @@ def get_instruction(
                 False,
                 None,
             )
-        if instruction_id == STAKE_PROGRAM_ID_INS_MERGE:
+        if instruction_id == _STAKE_PROGRAM_ID_INS_MERGE:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                STAKE_PROGRAM_ID_INS_MERGE,
+                _STAKE_PROGRAM_ID_INS_MERGE,
                 [],
                 [
                     AccountTemplate(
@@ -2267,12 +2282,12 @@ def get_instruction(
                 False,
                 None,
             )
-        if instruction_id == STAKE_PROGRAM_ID_INS_AUTHORIZE_WITH_SEED:
+        if instruction_id == _STAKE_PROGRAM_ID_INS_AUTHORIZE_WITH_SEED:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                STAKE_PROGRAM_ID_INS_AUTHORIZE_WITH_SEED,
+                _STAKE_PROGRAM_ID_INS_AUTHORIZE_WITH_SEED,
                 [
                     PropertyTemplate(
                         "new_authorized_pubkey",
@@ -2369,12 +2384,12 @@ def get_instruction(
                 False,
                 None,
             )
-        if instruction_id == STAKE_PROGRAM_ID_INS_INITIALIZE_CHECKED:
+        if instruction_id == _STAKE_PROGRAM_ID_INS_INITIALIZE_CHECKED:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                STAKE_PROGRAM_ID_INS_INITIALIZE_CHECKED,
+                _STAKE_PROGRAM_ID_INS_INITIALIZE_CHECKED,
                 [],
                 [
                     AccountTemplate(
@@ -2428,12 +2443,12 @@ def get_instruction(
                 False,
                 None,
             )
-        if instruction_id == STAKE_PROGRAM_ID_INS_AUTHORIZE_CHECKED:
+        if instruction_id == _STAKE_PROGRAM_ID_INS_AUTHORIZE_CHECKED:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                STAKE_PROGRAM_ID_INS_AUTHORIZE_CHECKED,
+                _STAKE_PROGRAM_ID_INS_AUTHORIZE_CHECKED,
                 [
                     PropertyTemplate(
                         "stake_authorize",
@@ -2514,12 +2529,12 @@ def get_instruction(
                 False,
                 None,
             )
-        if instruction_id == STAKE_PROGRAM_ID_INS_AUTHORIZE_CHECKED_WITH_SEED:
+        if instruction_id == _STAKE_PROGRAM_ID_INS_AUTHORIZE_CHECKED_WITH_SEED:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                STAKE_PROGRAM_ID_INS_AUTHORIZE_CHECKED_WITH_SEED,
+                _STAKE_PROGRAM_ID_INS_AUTHORIZE_CHECKED_WITH_SEED,
                 [
                     PropertyTemplate(
                         "stake_authorize",
@@ -2614,12 +2629,12 @@ def get_instruction(
                 False,
                 None,
             )
-        if instruction_id == STAKE_PROGRAM_ID_INS_SET_LOCKUP_CHECKED:
+        if instruction_id == _STAKE_PROGRAM_ID_INS_SET_LOCKUP_CHECKED:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                STAKE_PROGRAM_ID_INS_SET_LOCKUP_CHECKED,
+                _STAKE_PROGRAM_ID_INS_SET_LOCKUP_CHECKED,
                 [
                     PropertyTemplate(
                         "unix_timestamp",
@@ -2711,13 +2726,13 @@ def get_instruction(
             False,
             False,
         )
-    if program_id == COMPUTE_BUDGET_PROGRAM_ID:
-        if instruction_id == COMPUTE_BUDGET_PROGRAM_ID_INS_REQUEST_HEAP_FRAME:
+    if program_id == _COMPUTE_BUDGET_PROGRAM_ID:
+        if instruction_id == _COMPUTE_BUDGET_PROGRAM_ID_INS_REQUEST_HEAP_FRAME:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                COMPUTE_BUDGET_PROGRAM_ID_INS_REQUEST_HEAP_FRAME,
+                _COMPUTE_BUDGET_PROGRAM_ID_INS_REQUEST_HEAP_FRAME,
                 [
                     PropertyTemplate(
                         "bytes",
@@ -2744,12 +2759,12 @@ def get_instruction(
                 False,
                 None,
             )
-        if instruction_id == COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_LIMIT:
+        if instruction_id == _COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_LIMIT:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_LIMIT,
+                _COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_LIMIT,
                 [
                     PropertyTemplate(
                         "units",
@@ -2776,12 +2791,12 @@ def get_instruction(
                 False,
                 None,
             )
-        if instruction_id == COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_PRICE:
+        if instruction_id == _COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_PRICE:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_PRICE,
+                _COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_PRICE,
                 [
                     PropertyTemplate(
                         "lamports",
@@ -2822,13 +2837,13 @@ def get_instruction(
             False,
             False,
         )
-    if program_id == TOKEN_PROGRAM_ID:
-        if instruction_id == TOKEN_PROGRAM_ID_INS_INITIALIZE_ACCOUNT:
+    if program_id == _TOKEN_PROGRAM_ID:
+        if instruction_id == _TOKEN_PROGRAM_ID_INS_INITIALIZE_ACCOUNT:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                TOKEN_PROGRAM_ID_INS_INITIALIZE_ACCOUNT,
+                _TOKEN_PROGRAM_ID_INS_INITIALIZE_ACCOUNT,
                 [],
                 [
                     AccountTemplate(
@@ -2882,12 +2897,12 @@ def get_instruction(
                 False,
                 None,
             )
-        if instruction_id == TOKEN_PROGRAM_ID_INS_INITIALIZE_MULTISIG:
+        if instruction_id == _TOKEN_PROGRAM_ID_INS_INITIALIZE_MULTISIG:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                TOKEN_PROGRAM_ID_INS_INITIALIZE_MULTISIG,
+                _TOKEN_PROGRAM_ID_INS_INITIALIZE_MULTISIG,
                 [
                     PropertyTemplate(
                         "number_of_signers",
@@ -2937,12 +2952,12 @@ def get_instruction(
                 True,
                 None,
             )
-        if instruction_id == TOKEN_PROGRAM_ID_INS_TRANSFER:
+        if instruction_id == _TOKEN_PROGRAM_ID_INS_TRANSFER:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                TOKEN_PROGRAM_ID_INS_TRANSFER,
+                _TOKEN_PROGRAM_ID_INS_TRANSFER,
                 [
                     PropertyTemplate(
                         "amount",
@@ -3006,12 +3021,12 @@ def get_instruction(
                 True,
                 "Warning: Instruction is deprecated. Token decimals unknown.",
             )
-        if instruction_id == TOKEN_PROGRAM_ID_INS_APPROVE:
+        if instruction_id == _TOKEN_PROGRAM_ID_INS_APPROVE:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                TOKEN_PROGRAM_ID_INS_APPROVE,
+                _TOKEN_PROGRAM_ID_INS_APPROVE,
                 [
                     PropertyTemplate(
                         "amount",
@@ -3068,12 +3083,12 @@ def get_instruction(
                 True,
                 "Warning: Instruction is deprecated. Token decimals unknown.",
             )
-        if instruction_id == TOKEN_PROGRAM_ID_INS_REVOKE:
+        if instruction_id == _TOKEN_PROGRAM_ID_INS_REVOKE:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                TOKEN_PROGRAM_ID_INS_REVOKE,
+                _TOKEN_PROGRAM_ID_INS_REVOKE,
                 [],
                 [
                     AccountTemplate(
@@ -3110,12 +3125,12 @@ def get_instruction(
                 True,
                 None,
             )
-        if instruction_id == TOKEN_PROGRAM_ID_INS_SET_AUTHORITY:
+        if instruction_id == _TOKEN_PROGRAM_ID_INS_SET_AUTHORITY:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                TOKEN_PROGRAM_ID_INS_SET_AUTHORITY,
+                _TOKEN_PROGRAM_ID_INS_SET_AUTHORITY,
                 [
                     PropertyTemplate(
                         "authority_type",
@@ -3181,12 +3196,12 @@ def get_instruction(
                 True,
                 None,
             )
-        if instruction_id == TOKEN_PROGRAM_ID_INS_MINT_TO:
+        if instruction_id == _TOKEN_PROGRAM_ID_INS_MINT_TO:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                TOKEN_PROGRAM_ID_INS_MINT_TO,
+                _TOKEN_PROGRAM_ID_INS_MINT_TO,
                 [
                     PropertyTemplate(
                         "amount",
@@ -3243,12 +3258,12 @@ def get_instruction(
                 True,
                 "Warning: Instruction is deprecated. Token decimals unknown.",
             )
-        if instruction_id == TOKEN_PROGRAM_ID_INS_BURN:
+        if instruction_id == _TOKEN_PROGRAM_ID_INS_BURN:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                TOKEN_PROGRAM_ID_INS_BURN,
+                _TOKEN_PROGRAM_ID_INS_BURN,
                 [
                     PropertyTemplate(
                         "amount",
@@ -3305,12 +3320,12 @@ def get_instruction(
                 True,
                 "Warning: Instruction is deprecated. Token decimals unknown.",
             )
-        if instruction_id == TOKEN_PROGRAM_ID_INS_CLOSE_ACCOUNT:
+        if instruction_id == _TOKEN_PROGRAM_ID_INS_CLOSE_ACCOUNT:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                TOKEN_PROGRAM_ID_INS_CLOSE_ACCOUNT,
+                _TOKEN_PROGRAM_ID_INS_CLOSE_ACCOUNT,
                 [],
                 [
                     AccountTemplate(
@@ -3359,12 +3374,12 @@ def get_instruction(
                 True,
                 None,
             )
-        if instruction_id == TOKEN_PROGRAM_ID_INS_FREEZE_ACCOUNT:
+        if instruction_id == _TOKEN_PROGRAM_ID_INS_FREEZE_ACCOUNT:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                TOKEN_PROGRAM_ID_INS_FREEZE_ACCOUNT,
+                _TOKEN_PROGRAM_ID_INS_FREEZE_ACCOUNT,
                 [],
                 [
                     AccountTemplate(
@@ -3406,12 +3421,12 @@ def get_instruction(
                 True,
                 None,
             )
-        if instruction_id == TOKEN_PROGRAM_ID_INS_THAW_ACCOUNT:
+        if instruction_id == _TOKEN_PROGRAM_ID_INS_THAW_ACCOUNT:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                TOKEN_PROGRAM_ID_INS_THAW_ACCOUNT,
+                _TOKEN_PROGRAM_ID_INS_THAW_ACCOUNT,
                 [],
                 [
                     AccountTemplate(
@@ -3453,12 +3468,12 @@ def get_instruction(
                 True,
                 None,
             )
-        if instruction_id == TOKEN_PROGRAM_ID_INS_TRANSFER_CHECKED:
+        if instruction_id == _TOKEN_PROGRAM_ID_INS_TRANSFER_CHECKED:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                TOKEN_PROGRAM_ID_INS_TRANSFER_CHECKED,
+                _TOKEN_PROGRAM_ID_INS_TRANSFER_CHECKED,
                 [
                     PropertyTemplate(
                         "amount",
@@ -3541,12 +3556,12 @@ def get_instruction(
                 True,
                 None,
             )
-        if instruction_id == TOKEN_PROGRAM_ID_INS_APPROVE_CHECKED:
+        if instruction_id == _TOKEN_PROGRAM_ID_INS_APPROVE_CHECKED:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                TOKEN_PROGRAM_ID_INS_APPROVE_CHECKED,
+                _TOKEN_PROGRAM_ID_INS_APPROVE_CHECKED,
                 [
                     PropertyTemplate(
                         "amount",
@@ -3629,12 +3644,12 @@ def get_instruction(
                 True,
                 None,
             )
-        if instruction_id == TOKEN_PROGRAM_ID_INS_MINT_TO_CHECKED:
+        if instruction_id == _TOKEN_PROGRAM_ID_INS_MINT_TO_CHECKED:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                TOKEN_PROGRAM_ID_INS_MINT_TO_CHECKED,
+                _TOKEN_PROGRAM_ID_INS_MINT_TO_CHECKED,
                 [
                     PropertyTemplate(
                         "amount",
@@ -3705,12 +3720,12 @@ def get_instruction(
                 True,
                 None,
             )
-        if instruction_id == TOKEN_PROGRAM_ID_INS_BURN_CHECKED:
+        if instruction_id == _TOKEN_PROGRAM_ID_INS_BURN_CHECKED:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                TOKEN_PROGRAM_ID_INS_BURN_CHECKED,
+                _TOKEN_PROGRAM_ID_INS_BURN_CHECKED,
                 [
                     PropertyTemplate(
                         "amount",
@@ -3781,12 +3796,12 @@ def get_instruction(
                 True,
                 None,
             )
-        if instruction_id == TOKEN_PROGRAM_ID_INS_INITIALIZE_ACCOUNT_2:
+        if instruction_id == _TOKEN_PROGRAM_ID_INS_INITIALIZE_ACCOUNT_2:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                TOKEN_PROGRAM_ID_INS_INITIALIZE_ACCOUNT_2,
+                _TOKEN_PROGRAM_ID_INS_INITIALIZE_ACCOUNT_2,
                 [
                     PropertyTemplate(
                         "owner",
@@ -3843,12 +3858,12 @@ def get_instruction(
                 False,
                 None,
             )
-        if instruction_id == TOKEN_PROGRAM_ID_INS_SYNC_NATIVE:
+        if instruction_id == _TOKEN_PROGRAM_ID_INS_SYNC_NATIVE:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                TOKEN_PROGRAM_ID_INS_SYNC_NATIVE,
+                _TOKEN_PROGRAM_ID_INS_SYNC_NATIVE,
                 [],
                 [
                     AccountTemplate(
@@ -3873,12 +3888,12 @@ def get_instruction(
                 False,
                 None,
             )
-        if instruction_id == TOKEN_PROGRAM_ID_INS_INITIALIZE_ACCOUNT_3:
+        if instruction_id == _TOKEN_PROGRAM_ID_INS_INITIALIZE_ACCOUNT_3:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                TOKEN_PROGRAM_ID_INS_INITIALIZE_ACCOUNT_3,
+                _TOKEN_PROGRAM_ID_INS_INITIALIZE_ACCOUNT_3,
                 [
                     PropertyTemplate(
                         "owner",
@@ -3930,12 +3945,12 @@ def get_instruction(
                 False,
                 None,
             )
-        if instruction_id == TOKEN_PROGRAM_ID_INS_INITIALIZE_IMMUTABLE_OWNER:
+        if instruction_id == _TOKEN_PROGRAM_ID_INS_INITIALIZE_IMMUTABLE_OWNER:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                TOKEN_PROGRAM_ID_INS_INITIALIZE_IMMUTABLE_OWNER,
+                _TOKEN_PROGRAM_ID_INS_INITIALIZE_IMMUTABLE_OWNER,
                 [],
                 [
                     AccountTemplate(
@@ -3974,13 +3989,13 @@ def get_instruction(
             False,
             False,
         )
-    if program_id == TOKEN_2022_PROGRAM_ID:
-        if instruction_id == TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_ACCOUNT:
+    if program_id == _TOKEN_2022_PROGRAM_ID:
+        if instruction_id == _TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_ACCOUNT:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_ACCOUNT,
+                _TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_ACCOUNT,
                 [],
                 [
                     AccountTemplate(
@@ -4034,12 +4049,12 @@ def get_instruction(
                 False,
                 None,
             )
-        if instruction_id == TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_MULTISIG:
+        if instruction_id == _TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_MULTISIG:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_MULTISIG,
+                _TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_MULTISIG,
                 [
                     PropertyTemplate(
                         "number_of_signers",
@@ -4089,12 +4104,12 @@ def get_instruction(
                 True,
                 None,
             )
-        if instruction_id == TOKEN_2022_PROGRAM_ID_INS_TRANSFER:
+        if instruction_id == _TOKEN_2022_PROGRAM_ID_INS_TRANSFER:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                TOKEN_2022_PROGRAM_ID_INS_TRANSFER,
+                _TOKEN_2022_PROGRAM_ID_INS_TRANSFER,
                 [
                     PropertyTemplate(
                         "amount",
@@ -4158,12 +4173,12 @@ def get_instruction(
                 True,
                 "Warning: Instruction is deprecated. Token decimals unknown.",
             )
-        if instruction_id == TOKEN_2022_PROGRAM_ID_INS_APPROVE:
+        if instruction_id == _TOKEN_2022_PROGRAM_ID_INS_APPROVE:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                TOKEN_2022_PROGRAM_ID_INS_APPROVE,
+                _TOKEN_2022_PROGRAM_ID_INS_APPROVE,
                 [
                     PropertyTemplate(
                         "amount",
@@ -4220,12 +4235,12 @@ def get_instruction(
                 True,
                 "Warning: Instruction is deprecated. Token decimals unknown.",
             )
-        if instruction_id == TOKEN_2022_PROGRAM_ID_INS_REVOKE:
+        if instruction_id == _TOKEN_2022_PROGRAM_ID_INS_REVOKE:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                TOKEN_2022_PROGRAM_ID_INS_REVOKE,
+                _TOKEN_2022_PROGRAM_ID_INS_REVOKE,
                 [],
                 [
                     AccountTemplate(
@@ -4262,12 +4277,12 @@ def get_instruction(
                 True,
                 None,
             )
-        if instruction_id == TOKEN_2022_PROGRAM_ID_INS_SET_AUTHORITY:
+        if instruction_id == _TOKEN_2022_PROGRAM_ID_INS_SET_AUTHORITY:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                TOKEN_2022_PROGRAM_ID_INS_SET_AUTHORITY,
+                _TOKEN_2022_PROGRAM_ID_INS_SET_AUTHORITY,
                 [
                     PropertyTemplate(
                         "authority_type",
@@ -4333,12 +4348,12 @@ def get_instruction(
                 True,
                 None,
             )
-        if instruction_id == TOKEN_2022_PROGRAM_ID_INS_MINT_TO:
+        if instruction_id == _TOKEN_2022_PROGRAM_ID_INS_MINT_TO:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                TOKEN_2022_PROGRAM_ID_INS_MINT_TO,
+                _TOKEN_2022_PROGRAM_ID_INS_MINT_TO,
                 [
                     PropertyTemplate(
                         "amount",
@@ -4395,12 +4410,12 @@ def get_instruction(
                 True,
                 "Warning: Instruction is deprecated. Token decimals unknown.",
             )
-        if instruction_id == TOKEN_2022_PROGRAM_ID_INS_BURN:
+        if instruction_id == _TOKEN_2022_PROGRAM_ID_INS_BURN:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                TOKEN_2022_PROGRAM_ID_INS_BURN,
+                _TOKEN_2022_PROGRAM_ID_INS_BURN,
                 [
                     PropertyTemplate(
                         "amount",
@@ -4457,12 +4472,12 @@ def get_instruction(
                 True,
                 "Warning: Instruction is deprecated. Token decimals unknown.",
             )
-        if instruction_id == TOKEN_2022_PROGRAM_ID_INS_CLOSE_ACCOUNT:
+        if instruction_id == _TOKEN_2022_PROGRAM_ID_INS_CLOSE_ACCOUNT:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                TOKEN_2022_PROGRAM_ID_INS_CLOSE_ACCOUNT,
+                _TOKEN_2022_PROGRAM_ID_INS_CLOSE_ACCOUNT,
                 [],
                 [
                     AccountTemplate(
@@ -4511,12 +4526,12 @@ def get_instruction(
                 True,
                 None,
             )
-        if instruction_id == TOKEN_2022_PROGRAM_ID_INS_FREEZE_ACCOUNT:
+        if instruction_id == _TOKEN_2022_PROGRAM_ID_INS_FREEZE_ACCOUNT:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                TOKEN_2022_PROGRAM_ID_INS_FREEZE_ACCOUNT,
+                _TOKEN_2022_PROGRAM_ID_INS_FREEZE_ACCOUNT,
                 [],
                 [
                     AccountTemplate(
@@ -4558,12 +4573,12 @@ def get_instruction(
                 True,
                 None,
             )
-        if instruction_id == TOKEN_2022_PROGRAM_ID_INS_THAW_ACCOUNT:
+        if instruction_id == _TOKEN_2022_PROGRAM_ID_INS_THAW_ACCOUNT:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                TOKEN_2022_PROGRAM_ID_INS_THAW_ACCOUNT,
+                _TOKEN_2022_PROGRAM_ID_INS_THAW_ACCOUNT,
                 [],
                 [
                     AccountTemplate(
@@ -4605,12 +4620,12 @@ def get_instruction(
                 True,
                 None,
             )
-        if instruction_id == TOKEN_2022_PROGRAM_ID_INS_TRANSFER_CHECKED:
+        if instruction_id == _TOKEN_2022_PROGRAM_ID_INS_TRANSFER_CHECKED:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                TOKEN_2022_PROGRAM_ID_INS_TRANSFER_CHECKED,
+                _TOKEN_2022_PROGRAM_ID_INS_TRANSFER_CHECKED,
                 [
                     PropertyTemplate(
                         "amount",
@@ -4693,12 +4708,12 @@ def get_instruction(
                 True,
                 None,
             )
-        if instruction_id == TOKEN_2022_PROGRAM_ID_INS_APPROVE_CHECKED:
+        if instruction_id == _TOKEN_2022_PROGRAM_ID_INS_APPROVE_CHECKED:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                TOKEN_2022_PROGRAM_ID_INS_APPROVE_CHECKED,
+                _TOKEN_2022_PROGRAM_ID_INS_APPROVE_CHECKED,
                 [
                     PropertyTemplate(
                         "amount",
@@ -4781,12 +4796,12 @@ def get_instruction(
                 True,
                 None,
             )
-        if instruction_id == TOKEN_2022_PROGRAM_ID_INS_MINT_TO_CHECKED:
+        if instruction_id == _TOKEN_2022_PROGRAM_ID_INS_MINT_TO_CHECKED:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                TOKEN_2022_PROGRAM_ID_INS_MINT_TO_CHECKED,
+                _TOKEN_2022_PROGRAM_ID_INS_MINT_TO_CHECKED,
                 [
                     PropertyTemplate(
                         "amount",
@@ -4857,12 +4872,12 @@ def get_instruction(
                 True,
                 None,
             )
-        if instruction_id == TOKEN_2022_PROGRAM_ID_INS_BURN_CHECKED:
+        if instruction_id == _TOKEN_2022_PROGRAM_ID_INS_BURN_CHECKED:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                TOKEN_2022_PROGRAM_ID_INS_BURN_CHECKED,
+                _TOKEN_2022_PROGRAM_ID_INS_BURN_CHECKED,
                 [
                     PropertyTemplate(
                         "amount",
@@ -4933,12 +4948,12 @@ def get_instruction(
                 True,
                 None,
             )
-        if instruction_id == TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_ACCOUNT_2:
+        if instruction_id == _TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_ACCOUNT_2:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_ACCOUNT_2,
+                _TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_ACCOUNT_2,
                 [
                     PropertyTemplate(
                         "owner",
@@ -4995,12 +5010,12 @@ def get_instruction(
                 False,
                 None,
             )
-        if instruction_id == TOKEN_2022_PROGRAM_ID_INS_SYNC_NATIVE:
+        if instruction_id == _TOKEN_2022_PROGRAM_ID_INS_SYNC_NATIVE:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                TOKEN_2022_PROGRAM_ID_INS_SYNC_NATIVE,
+                _TOKEN_2022_PROGRAM_ID_INS_SYNC_NATIVE,
                 [],
                 [
                     AccountTemplate(
@@ -5025,12 +5040,12 @@ def get_instruction(
                 False,
                 None,
             )
-        if instruction_id == TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_ACCOUNT_3:
+        if instruction_id == _TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_ACCOUNT_3:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_ACCOUNT_3,
+                _TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_ACCOUNT_3,
                 [
                     PropertyTemplate(
                         "owner",
@@ -5082,12 +5097,12 @@ def get_instruction(
                 False,
                 None,
             )
-        if instruction_id == TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_IMMUTABLE_OWNER:
+        if instruction_id == _TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_IMMUTABLE_OWNER:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_IMMUTABLE_OWNER,
+                _TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_IMMUTABLE_OWNER,
                 [],
                 [
                     AccountTemplate(
@@ -5126,13 +5141,13 @@ def get_instruction(
             False,
             False,
         )
-    if program_id == ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID:
-        if instruction_id == ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE:
+    if program_id == _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID:
+        if instruction_id == _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE,
+                _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE,
                 [],
                 [
                     AccountTemplate(
@@ -5208,12 +5223,12 @@ def get_instruction(
                 False,
                 None,
             )
-        if instruction_id == ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE_IDEMPOTENT:
+        if instruction_id == _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE_IDEMPOTENT:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE_IDEMPOTENT,
+                _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE_IDEMPOTENT,
                 [],
                 [
                     AccountTemplate(
@@ -5284,12 +5299,12 @@ def get_instruction(
                 False,
                 None,
             )
-        if instruction_id == ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_RECOVER_NESTED:
+        if instruction_id == _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_RECOVER_NESTED:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_RECOVER_NESTED,
+                _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_RECOVER_NESTED,
                 [],
                 [
                     AccountTemplate(
@@ -5372,13 +5387,13 @@ def get_instruction(
             False,
             False,
         )
-    if program_id == MEMO_PROGRAM_ID:
-        if instruction_id == MEMO_PROGRAM_ID_INS_MEMO:
+    if program_id == _MEMO_PROGRAM_ID:
+        if instruction_id == _MEMO_PROGRAM_ID_INS_MEMO:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                MEMO_PROGRAM_ID_INS_MEMO,
+                _MEMO_PROGRAM_ID_INS_MEMO,
                 [
                     PropertyTemplate(
                         "memo",
@@ -5432,13 +5447,13 @@ def get_instruction(
             False,
             False,
         )
-    if program_id == MEMO_LEGACY_PROGRAM_ID:
-        if instruction_id == MEMO_LEGACY_PROGRAM_ID_INS_MEMO:
+    if program_id == _MEMO_LEGACY_PROGRAM_ID:
+        if instruction_id == _MEMO_LEGACY_PROGRAM_ID_INS_MEMO:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                MEMO_LEGACY_PROGRAM_ID_INS_MEMO,
+                _MEMO_LEGACY_PROGRAM_ID_INS_MEMO,
                 [
                     PropertyTemplate(
                         "memo",

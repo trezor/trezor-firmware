@@ -4,17 +4,15 @@ from trezor.crypto import base58
 
 from apps.solana.predefined_transaction import is_predefined_token_transfer
 from apps.solana.transaction.instruction import Instruction
-from apps.solana.transaction.instructions import (
-    ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID,
-    ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE,
-    SYSTEM_PROGRAM_ID,
-    SYSTEM_PROGRAM_ID_INS_TRANSFER,
-    TOKEN_2022_PROGRAM_ID,
-    TOKEN_2022_PROGRAM_ID_INS_TRANSFER_CHECKED,
-    TOKEN_PROGRAM_ID,
-    TOKEN_PROGRAM_ID_INS_TRANSFER_CHECKED,
-)
 
+ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID = "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE = None
+SYSTEM_PROGRAM_ID = "11111111111111111111111111111111"
+SYSTEM_PROGRAM_ID_INS_TRANSFER = 2
+TOKEN_2022_PROGRAM_ID =  "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+TOKEN_2022_PROGRAM_ID_INS_TRANSFER_CHECKED = 12
+TOKEN_PROGRAM_ID = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+TOKEN_PROGRAM_ID_INS_TRANSFER_CHECKED = 12
 
 def create_mock_instruction(
     program_id: str, instruction_id: int, parsed_data: dict[str, Any]

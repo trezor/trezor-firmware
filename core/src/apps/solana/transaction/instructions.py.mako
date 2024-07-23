@@ -1,6 +1,6 @@
 # generated from instructions.py.mako
 # do not edit manually!
-<%def name="getProgramId(program)">${"_".join(program["name"].upper().split(" ") + ["ID"])}</%def>\
+<%def name="getProgramId(program)">${"_" + "_".join(program["name"].upper().split(" ") + ["ID"])}</%def>\
 <%def name="getInstructionIdText(program, instruction)">${"_".join([getProgramId(program)] + ["INS"] + instruction["name"].upper().split(" "))}</%def>\
 <%def name="getClassName(program, instruction)">${program["name"].replace(" ", "")}${instruction["name"].replace(" ", "")}Instruction</%def>\
 <%def name="getReferenceName(reference)">${"_".join(reference["name"].lower().split(" "))}</%def>\
@@ -27,6 +27,7 @@ str\
 int\
 % endif
 </%def>\
+from micropython import const
 from typing import TYPE_CHECKING
 
 from trezor.wire import DataError
@@ -61,9 +62,17 @@ ${getProgramId(program)} = "${program["id"]}"
 
 % for program in programs["programs"]:
     % for instruction in program["instructions"]:
+      % if isinstance(instruction["id"], int):
+${getInstructionIdText(program, instruction)} = const(${instruction["id"]})
+      % else:
 ${getInstructionIdText(program, instruction)} = ${instruction["id"]}
+      % endif
     % endfor
 % endfor
+
+COMPUTE_BUDGET_PROGRAM_ID = _COMPUTE_BUDGET_PROGRAM_ID
+COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_LIMIT = _COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_LIMIT
+COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_PRICE = _COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_PRICE
 
 def __getattr__(name: str) -> Type[Instruction]:
     def get_id(name: str) -> tuple[str, InstructionId]:
