@@ -3,6 +3,7 @@ from ubinascii import hexlify
 
 import trezorui2
 from trezor import loop, protobuf, workflow
+from trezor.crypto import random
 from trezor.ui.layouts.tt import RustLayout
 from trezor.wire import context, message_handler, protocol_common
 from trezor.wire.context import UnexpectedMessageException
@@ -65,9 +66,7 @@ class PairingContext(Context):
         super().__init__(channel_ctx.iface, channel_ctx.channel_id)
         self.channel_ctx: Channel = channel_ctx
         self.incoming_message = loop.chan()
-        self.secret: bytes = (
-            b"\xBA\xDA\x55\xBA\xDA\x55\xBA\xDA\x55\xBA\xDA\x55\xDE\xAD\xBE\xEF"  # TODO generate randomly
-        )
+        self.secret: bytes = random.bytes(16)
 
         self.display_data: PairingDisplayData = PairingDisplayData()
         self.cpace: Cpace
