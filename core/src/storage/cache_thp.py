@@ -1,12 +1,12 @@
 import builtins
-from micropython import const  # pyright: ignore[reportMissingModuleSource]
-from typing import TYPE_CHECKING  # pyright: ignore[reportShadowedImports]
+from micropython import const
+from typing import TYPE_CHECKING
 
 from storage.cache_common import DataCache
 from trezor import utils
 
 if TYPE_CHECKING:
-    from typing import TypeVar  # pyright: ignore[reportShadowedImports]
+    from typing import TypeVar
 
     T = TypeVar("T")
 
