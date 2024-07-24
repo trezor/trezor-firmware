@@ -234,14 +234,10 @@ def _get_unallocated_session_index() -> int | None:
 
 
 def _get_channel_state(channel: ChannelCache) -> int:
-    if channel is None:
-        return _UNALLOCATED_STATE
     return int.from_bytes(channel.state, "big")
 
 
 def _get_session_state(session: SessionThpCache) -> int:
-    if session is None:
-        return _UNALLOCATED_STATE
     return int.from_bytes(session.state, "big")
 
 
