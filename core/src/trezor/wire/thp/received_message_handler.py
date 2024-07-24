@@ -8,7 +8,13 @@ from storage.cache_common import (
     CHANNEL_NONCE_RECEIVE,
     CHANNEL_NONCE_SEND,
 )
-from storage.cache_thp import KEY_LENGTH, SESSION_ID_LENGTH, TAG_LENGTH
+from storage.cache_thp import (
+    KEY_LENGTH,
+    SESSION_ID_LENGTH,
+    TAG_LENGTH,
+    update_channel_last_used,
+    update_session_last_used,
+)
 from trezor import log, loop, utils
 from trezor.enums import FailureType
 from trezor.messages import Failure
@@ -72,6 +78,8 @@ async def handle_received_message(
             seq_bit,
             ack_bit,
         )
+    # 0: Update "last-time used"
+    update_channel_last_used(ctx.channel_id)
 
     # 1: Handle ACKs
     if control_byte.is_ack(ctrl_byte):
@@ -331,7 +339,7 @@ async def _handle_state_ENCRYPTED_TRANSPORT(ctx: Channel, message_length: int) -
     session_state = ctx.sessions[session_id].get_session_state()
     if session_state is SessionState.UNALLOCATED:
         raise ThpUnallocatedSessionError(session_id)
-
+    update_session_last_used(ctx.channel_id, session_id)
     ctx.sessions[session_id].incoming_message.publish(
         Message(
             message_type,

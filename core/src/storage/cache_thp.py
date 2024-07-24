@@ -144,6 +144,21 @@ def get_new_unauthenticated_channel(iface: bytes) -> ChannelCache:
     return _CHANNELS[index]
 
 
+def update_channel_last_used(channel_id):
+    for channel in _CHANNELS:
+        if channel.channel_id == channel_id:
+            channel.last_usage = _get_usage_counter_and_increment()
+            return
+
+
+def update_session_last_used(channel_id, session_id):
+    for session in _SESSIONS:
+        if session.channel_id == channel_id and session.session_id == session_id:
+            session.last_usage = _get_usage_counter_and_increment()
+            update_channel_last_used(channel_id)
+            return
+
+
 def get_all_allocated_channels() -> list[ChannelCache]:
     _list: list[ChannelCache] = []
     for channel in _CHANNELS:
