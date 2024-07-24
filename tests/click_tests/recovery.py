@@ -10,10 +10,9 @@ if TYPE_CHECKING:
     from trezorlib.debuglink import DebugLink, LayoutContent
 
 
-DELETE_BTN_TEXTS = (
-    get_possible_btn_texts("inputs__delete")
-    + get_possible_btn_texts("inputs__previous")
-).upper()
+DELETE_BTN_TEXTS = get_possible_btn_texts("inputs__delete") + get_possible_btn_texts(
+    "inputs__previous"
+)
 
 
 def enter_word(
