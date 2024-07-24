@@ -66,9 +66,6 @@ def initialize() -> None:
         session.clear()
 
 
-initialize()
-
-
 _active_session_idx: int | None = None
 _session_usage_counter = 0
 

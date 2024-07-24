@@ -115,9 +115,6 @@ def initialize() -> None:
         session.clear()
 
 
-initialize()
-
-
 # THP vars
 _next_unauthenicated_session_index: int = 0  # TODO remove
 
