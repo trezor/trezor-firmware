@@ -242,8 +242,14 @@ class Channel:
     # CALLED BY WORKFLOW / SESSION CONTEXT
 
     async def write(self, msg: protobuf.MessageType, session_id: int = 0) -> None:
-        if __debug__:
-            log.debug(__name__, "write message: %s", msg.MESSAGE_NAME)
+        if __debug__ and utils.EMULATOR:
+            log.debug(
+                __name__,
+                "write message: %s\n%s",
+                msg.MESSAGE_NAME,
+                utils.dump_protobuf(msg),
+            )
+
         self.buffer = memory_manager.get_write_buffer(self.buffer, msg)
         noise_payload_len = memory_manager.encode_into_buffer(
             self.buffer, msg, session_id
