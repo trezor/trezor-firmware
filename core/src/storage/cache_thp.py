@@ -115,9 +115,6 @@ def initialize() -> None:
         session.clear()
 
 
-# THP vars
-_next_unauthenicated_session_index: int = 0  # TODO remove
-
 # First unauthenticated channel will have index 0
 _usage_counter = 0
 
