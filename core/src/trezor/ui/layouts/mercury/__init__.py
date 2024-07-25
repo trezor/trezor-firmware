@@ -980,17 +980,6 @@ if not utils.BITCOIN_ONLY:
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
         chunkify: bool = False,
     ) -> None:
-        total_layout = RustLayout(
-            trezorui2.confirm_total(
-                title=TR.words__title_summary,
-                items=[
-                    (f"{TR.words__amount}:", total_amount),
-                    (TR.send__maximum_fee, maximum_fee),
-                ],
-                info_button=True,
-                cancel_arrow=True,
-            )
-        )
         info_layout = RustLayout(
             trezorui2.show_info_with_cancel(
                 title=TR.confirm_total__title_fee,
@@ -1010,6 +999,17 @@ if not utils.BITCOIN_ONLY:
             )
 
             try:
+                total_layout = RustLayout(
+                    trezorui2.confirm_total(
+                        title=TR.words__title_summary,
+                        items=[
+                            (f"{TR.words__amount}:", total_amount),
+                            (TR.send__maximum_fee, maximum_fee),
+                        ],
+                        info_button=True,
+                        cancel_arrow=True,
+                    )
+                )
                 total_layout.request_complete_repaint()
                 await raise_if_not_confirmed(
                     with_info(total_layout, info_layout, br_name, br_code)
