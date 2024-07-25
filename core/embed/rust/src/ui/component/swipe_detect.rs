@@ -162,8 +162,10 @@ impl SwipeDetect {
     const TRIGGER_THRESHOLD: f32 = 0.3;
     const DETECT_THRESHOLD: f32 = 0.1;
 
-    const MIN_LOCK: u16 = (Self::DISTANCE as f32 * Self::DETECT_THRESHOLD) as u16;
-    const MIN_TRIGGER: u16 = (Self::DISTANCE as f32 * Self::TRIGGER_THRESHOLD) as u16;
+    const VERTICAL_PREFERENCE: f32 = 2.0;
+
+    const MIN_LOCK: f32 = Self::DISTANCE as f32 * Self::DETECT_THRESHOLD;
+    const MIN_TRIGGER: f32 = Self::DISTANCE as f32 * Self::TRIGGER_THRESHOLD;
 
     pub fn new() -> Self {
         Self {
@@ -174,12 +176,22 @@ impl SwipeDetect {
         }
     }
 
-    const fn min_lock(&self) -> u16 {
-        Self::MIN_LOCK
+    fn min_lock(&self, dir: SwipeDirection) -> u16 {
+        match dir {
+            SwipeDirection::Up | SwipeDirection::Down => Self::MIN_LOCK as u16,
+            SwipeDirection::Left | SwipeDirection::Right => {
+                (Self::MIN_LOCK * Self::VERTICAL_PREFERENCE) as u16
+            }
+        }
     }
 
-    const fn min_trigger(&self) -> u16 {
-        Self::MIN_TRIGGER
+    fn min_trigger(&self, dir: SwipeDirection) -> u16 {
+        match dir {
+            SwipeDirection::Up | SwipeDirection::Down => Self::MIN_TRIGGER as u16,
+            SwipeDirection::Left | SwipeDirection::Right => {
+                (Self::MIN_TRIGGER * Self::VERTICAL_PREFERENCE) as u16
+            }
+        }
     }
 
     fn is_lockable(&self, dir: SwipeDirection) -> bool {
@@ -187,7 +199,7 @@ impl SwipeDetect {
             return false;
         };
 
-        let min_distance = self.min_trigger() as i16;
+        let min_distance = self.min_trigger(dir) as i16;
 
         match dir {
             SwipeDirection::Up => origin.y > min_distance,
@@ -289,13 +301,13 @@ impl SwipeDetect {
                     let res = match self.locked {
                         Some(locked) => {
                             // advance in locked direction only
-                            let moved = config.progress(locked, ofs, self.min_lock());
+                            let moved = config.progress(locked, ofs, self.min_lock(locked));
                             Some(SwipeDetectMsg::Move(locked, self.progress(moved)))
                         }
                         None => {
                             let mut res = None;
                             for dir in SwipeDirection::iter() {
-                                let progress = config.progress(dir, ofs, self.min_lock());
+                                let progress = config.progress(dir, ofs, self.min_lock(dir));
                                 if progress > 0 && self.is_lockable(dir) {
                                     self.locked = Some(dir);
                                     res = Some(SwipeDetectMsg::Start(dir));
@@ -331,7 +343,9 @@ impl SwipeDetect {
                     let final_value = match self.locked {
                         // advance in locked direction only trigger animation towards ending
                         // position
-                        Some(locked) if config.progress(locked, ofs, self.min_trigger()) > 0 => {
+                        Some(locked)
+                            if config.progress(locked, ofs, self.min_trigger(locked)) > 0 =>
+                        {
                             Self::PROGRESS_MAX
                         }
                         // advance in direction other than locked trigger animation towards starting
