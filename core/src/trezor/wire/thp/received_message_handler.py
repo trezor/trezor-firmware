@@ -113,8 +113,7 @@ async def handle_received_message(
         print(e)
     except ThpDecryptionError as e:
         await ctx.write_error(ThpErrorType.DECRYPTION_FAILED)
-        # TODO ctx.write_error, i.e., ctx.send_channelClosed_error
-        # ctx.clear
+        ctx.clear()
         print(e)
     if __debug__:
         log.debug(__name__, "handle_received_message - end")
