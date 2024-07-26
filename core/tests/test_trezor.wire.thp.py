@@ -68,9 +68,6 @@ class TestTrezorHostProtocol(unittest.TestCase):
         thp_v3.set_buffer(buffer)
         interface_manager.decode_iface = dummy_decode_iface
 
-    def test_simple(self):
-        self.assertTrue(True)
-
     def test_channel_allocation(self):
         cid_req = (
             b"\x40\xff\xff\x00\x0c\x00\x11\x22\x33\x44\x55\x66\x77\x96\x64\x3c\x6c"
