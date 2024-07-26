@@ -62,7 +62,7 @@ class BusyDecoder:
         return computed_tag == tag
 
 
-PROTOCOL_NAME = bytes("Noise_XX_25519_AESGCM_SHA256", "ascii")
+PROTOCOL_NAME = b"Noise_XX_25519_AESGCM_SHA256\x00\x00\x00\x00"
 IV_1 = b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
 IV_2 = b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01"
 
