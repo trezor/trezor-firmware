@@ -61,15 +61,15 @@ async def _request_on_host() -> str:
         if storage_device.get_hide_passphrase_from_host():
             await confirm_action(
                 "passphrase_host1_hidden",
-                TR.passphrase__hidden_wallet,
+                TR.passphrase__wallet,
                 description=TR.passphrase__from_host_not_shown,
                 prompt_screen=True,
-                prompt_title=TR.passphrase__access_hidden_wallet,
+                prompt_title=TR.passphrase__access_wallet,
             )
         else:
             await confirm_action(
                 "passphrase_host1",
-                TR.passphrase__hidden_wallet,
+                TR.passphrase__wallet,
                 description=TR.passphrase__next_screen_will_show_passphrase,
                 verb=TR.buttons__continue,
             )
