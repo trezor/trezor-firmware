@@ -23,8 +23,8 @@ fi
 
 # When updating URL and sha256sum also update the URL in ci/shell.nix.
 error=1
-: "${TREZOR_MONERO_TESTS_URL:=https://github.com/ph4r05/monero/releases/download/v0.18.1.1-dev-tests-u18.04-02/trezor_tests}"
-: "${TREZOR_MONERO_TESTS_SHA256SUM:=81424cfc3965abdc24de573274bf631337b52fd25cefc895513214c613fe05c9}"
+: "${TREZOR_MONERO_TESTS_URL:=https://github.com/ph4r05/monero/releases/download/v0.18.3.1-dev-tests-u18.04-01/trezor_tests}"
+: "${TREZOR_MONERO_TESTS_SHA256SUM:=d8938679b69f53132ddacea1de4b38b225b06b37b3309aa17911cfbe09b70b4a}"
 : "${TREZOR_MONERO_TESTS_PATH:=$CORE_DIR/tests/trezor_monero_tests}"
 : "${TREZOR_MONERO_TESTS_LOG:=$CORE_DIR/tests/trezor_monero_tests.log}"
 : "${TREZOR_MONERO_TESTS_CHAIN:=$CORE_DIR/tests/trezor_monero_tests.chain}"
