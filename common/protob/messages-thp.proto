@@ -5,6 +5,9 @@ package hw.trezor.messages.thp;
 option java_package = "com.satoshilabs.trezor.lib.protobuf";
 option java_outer_classname = "TrezorMessageThp";
 
+option (include_in_bitcoin_only) = true;
+
+import "messages.proto";
 
 /**
  * Numeric identifiers of pairing methods.

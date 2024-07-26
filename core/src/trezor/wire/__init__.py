@@ -26,7 +26,10 @@ reads the message's header. When the message type is known the first handler is 
 from typing import TYPE_CHECKING
 
 from trezor import log, loop, protobuf, utils
-from trezor.wire import context, message_handler, protocol_common, thp_v3
+from trezor.wire import context, message_handler, protocol_common
+
+if utils.USE_THP:
+    from trezor.wire import thp_v3
 from trezor.wire.context import UnexpectedMessageException
 from trezor.wire.message_handler import (
     WIRE_BUFFER,
@@ -62,36 +65,38 @@ def setup(iface: WireInterface, is_debug_session: bool = False) -> None:
         loop.schedule(handle_session(iface, is_debug_session))
 
 
-async def handle_thp_session(iface: WireInterface, is_debug_session: bool = False):
-    if __debug__ and is_debug_session:
-        ctx_buffer = WIRE_BUFFER_DEBUG
-    else:
-        ctx_buffer = WIRE_BUFFER
+if utils.USE_THP:
 
-    thp_v3.set_buffer(ctx_buffer)
+    async def handle_thp_session(iface: WireInterface, is_debug_session: bool = False):
+        if __debug__ and is_debug_session:
+            ctx_buffer = WIRE_BUFFER_DEBUG
+        else:
+            ctx_buffer = WIRE_BUFFER
 
-    # Take a mark of modules that are imported at this point, so we can
-    # roll back and un-import any others.
-    modules = utils.unimport_begin()
+        thp_v3.set_buffer(ctx_buffer)
 
-    while True:
-        try:
-            await thp_v3.thp_main_loop(iface, is_debug_session)
+        # Take a mark of modules that are imported at this point, so we can
+        # roll back and un-import any others.
+        modules = utils.unimport_begin()
 
-            if not __debug__ or not is_debug_session:
-                # Unload modules imported by the workflow.  Should not raise.
-                # This is not done for the debug session because the snapshot taken
-                # in a debug session would clear modules which are in use by the
-                # workflow running on wire.
-                utils.unimport_end(modules)
-                loop.clear()
-                return
+        while True:
+            try:
+                await thp_v3.thp_main_loop(iface, is_debug_session)
 
-        except Exception as exc:
-            # Log and try again. The session handler can only exit explicitly via
-            # loop.clear() above.
-            if __debug__:
-                log.exception(__name__, exc)
+                if not __debug__ or not is_debug_session:
+                    # Unload modules imported by the workflow.  Should not raise.
+                    # This is not done for the debug session because the snapshot taken
+                    # in a debug session would clear modules which are in use by the
+                    # workflow running on wire.
+                    utils.unimport_end(modules)
+                    loop.clear()
+                    return
+
+            except Exception as exc:
+                # Log and try again. The session handler can only exit explicitly via
+                # loop.clear() above.
+                if __debug__:
+                    log.exception(__name__, exc)
 
 
 async def handle_session(iface: WireInterface, is_debug_session: bool = False) -> None:

@@ -55,9 +55,9 @@ class aesgcm:
         """
 
     def encrypt_in_place(self, data: bytearray | memoryview) -> int:
-       """
-       Encrypt data chunk in place. Returns the length of the encrypted data.
-       """
+        """
+        Encrypt data chunk in place. Returns the length of the encrypted data.
+        """
 
     def decrypt(self, data: bytes) -> bytes:
         """
@@ -65,9 +65,9 @@ class aesgcm:
         """
 
     def decrypt_in_place(self, data: bytearray | memoryview) -> int:
-      """
-      Decrypt data chunk in place. Returns the length of the decrypted data.
-      """
+        """
+        Decrypt data chunk in place. Returns the length of the decrypted data.
+        """
 
     def auth(self, data: bytes) -> None:
         """

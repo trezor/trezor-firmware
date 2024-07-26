@@ -17,14 +17,20 @@ HW_REVISION = ARGUMENTS.get('HW_REVISION', None)
 THP = ARGUMENTS.get('THP', '0') == '1' # Trezor-Host Protocol
 NEW_RENDERING = ARGUMENTS.get('NEW_RENDERING', '1') == '1' or TREZOR_MODEL in ('T3T1',)
 
-
-FEATURE_FLAGS = {
-    "RDI": True,
-    "SECP256K1_ZKP": True,  # required for trezor.crypto.curve.bip340 (BIP340/Taproot)
-    "SYSTEM_VIEW": False,
-    "AES_GCM": False,
-}
-
+if THP:
+    FEATURE_FLAGS = {
+        "RDI": True,
+        "SECP256K1_ZKP": True,  # required for trezor.crypto.curve.bip340 (BIP340/Taproot)
+        "SYSTEM_VIEW": False,
+        "AES_GCM": True, # Required for THP encryption
+    }
+else:
+    FEATURE_FLAGS = {
+        "RDI": True,
+        "SECP256K1_ZKP": True,  # required for trezor.crypto.curve.bip340 (BIP340/Taproot)
+        "SYSTEM_VIEW": False,
+        "AES_GCM": False,
+    }
 FEATURES_WANTED = ["input", "sbu", "sd_card", "rgb_led", "dma2d", "consumption_mask", "usb" ,"optiga", "haptic"]
 if DISABLE_OPTIGA and PYOPT == '0':
     FEATURES_WANTED.remove("optiga")

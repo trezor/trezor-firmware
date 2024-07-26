@@ -3,11 +3,7 @@ from typing import TYPE_CHECKING
 import storage.cache_codec as cache_codec
 import storage.device as storage_device
 from storage.cache import check_thp_is_not_used
-from storage.cache_common import (
-    APP_COMMON_BUSY_DEADLINE_MS,
-    APP_COMMON_DERIVE_CARDANO,
-    APP_COMMON_SEED,
-)
+from storage.cache_common import APP_COMMON_BUSY_DEADLINE_MS, APP_COMMON_SEED
 from trezor import TR, config, utils, wire, workflow
 from trezor.enums import HomescreenFormat, MessageType
 from trezor.messages import Success, UnlockPath
@@ -217,6 +213,8 @@ async def handle_Initialize(
     # ctx = context.get_context()
 
     if not utils.BITCOIN_ONLY:
+        from storage.cache_common import APP_COMMON_DERIVE_CARDANO
+
         derive_cardano = context.cache_get_bool(APP_COMMON_DERIVE_CARDANO)
         have_seed = context.cache_is_set(APP_COMMON_SEED)
         if (
