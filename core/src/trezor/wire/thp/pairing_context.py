@@ -23,10 +23,8 @@ if __debug__:
 
 
 class PairingDisplayData:
+
     def __init__(self) -> None:
-        self.display_code_entry: bool = False
-        self.display_qr_code: bool = False
-        self.display_nfc_unidirectional: bool = False
         self.code_code_entry: int | None = None
         self.code_qr_code: bytes | None = None
         self.code_nfc_unidirectional: bytes | None = None
@@ -45,19 +43,19 @@ class PairingDisplayData:
         )
 
     def _get_code_code_entry_str(self) -> str:
-        if self.display_code_entry and self.code_code_entry is not None:
+        if self.code_code_entry is not None:
             code_str = str(self.code_code_entry)
             print("code_code_entry:", code_str)
 
             return code_str[:3] + " " + code_str[3:]
-        return "NOT ALLOWED"
+        raise Exception("Code entry string is not available")
 
     def _get_code_qr_code_str(self) -> str:
-        if self.display_qr_code and self.code_qr_code is not None:
+        if self.code_qr_code is not None:
             code_str = (hexlify(self.code_qr_code)).decode("utf-8")
             print("code_qr_code_hexlified:", code_str)
             return code_str
-        return "QR CODE IS NOT SUPPOSED TO BE DISPLAYED!!!!"
+        raise Exception("QR code string is not available")
 
 
 class PairingContext(Context):

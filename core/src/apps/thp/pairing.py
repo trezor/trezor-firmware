@@ -167,7 +167,6 @@ async def _handle_code_entry_is_included(ctx: PairingContext) -> None:
     ctx.display_data.code_code_entry = (
         int.from_bytes(code_code_entry_hash, "big") % 1000000
     )
-    ctx.display_data.display_code_entry = True
 
 
 @check_state_and_log(ChannelState.TP1, ChannelState.TP2)
@@ -176,7 +175,6 @@ def _handle_qr_code_is_included(ctx: PairingContext) -> None:
     sha_ctx.update(ctx.secret)
     sha_ctx.update(bytes("PairingMethod_QrCode", "utf-8"))
     ctx.display_data.code_qr_code = sha_ctx.digest()[:16]
-    ctx.display_data.display_qr_code = True
 
 
 @check_state_and_log(ChannelState.TP1, ChannelState.TP2)
@@ -185,7 +183,6 @@ def _handle_nfc_unidirectional_is_included(ctx: PairingContext) -> None:
     sha_ctx.update(ctx.secret)
     sha_ctx.update(bytes("PairingMethod_NfcUnidirectional", "utf-8"))
     ctx.display_data.code_nfc_unidirectional = sha_ctx.digest()[:16]
-    ctx.display_data.display_nfc_unidirectional = True
 
 
 @check_state_and_log(ChannelState.TP3)

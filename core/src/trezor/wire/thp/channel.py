@@ -77,7 +77,9 @@ class Channel:
         return state
 
     def get_handshake_hash(self) -> bytes:
-        return self.channel_cache.get(CHANNEL_HANDSHAKE_HASH) or b""
+        h = self.channel_cache.get(CHANNEL_HANDSHAKE_HASH)
+        assert h is not None
+        return h
 
     def set_channel_state(self, state: ChannelState) -> None:
         self.channel_cache.state = bytearray(state.to_bytes(1, "big"))
