@@ -342,10 +342,9 @@ static void _librust_qstrs(void) {
   MP_QSTR_page_count;
   MP_QSTR_pages;
   MP_QSTR_paint;
-  MP_QSTR_passphrase__access_hidden_wallet;
+  MP_QSTR_passphrase__access_wallet;
   MP_QSTR_passphrase__always_on_device;
   MP_QSTR_passphrase__from_host_not_shown;
-  MP_QSTR_passphrase__hidden_wallet;
   MP_QSTR_passphrase__hide;
   MP_QSTR_passphrase__next_screen_will_show_passphrase;
   MP_QSTR_passphrase__please_enter;
@@ -358,6 +357,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_passphrase__title_source;
   MP_QSTR_passphrase__turn_off;
   MP_QSTR_passphrase__turn_on;
+  MP_QSTR_passphrase__wallet;
   MP_QSTR_path;
   MP_QSTR_pin__cancel_description;
   MP_QSTR_pin__cancel_info;
