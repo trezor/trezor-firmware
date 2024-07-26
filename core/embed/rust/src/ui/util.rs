@@ -1,6 +1,5 @@
 use crate::{
     strutil::{ShortString, TString},
-    time::Duration,
     ui::{
         component::text::TextStyle,
         display,
@@ -190,32 +189,6 @@ macro_rules! include_res {
     };
 }
 pub(crate) use include_res;
-
-pub const SLIDE_DURATION_MS: Duration = Duration::from_millis(333);
-
-#[cfg(feature = "new_rendering")]
-pub fn render_slide<'s, F0, F1, R>(
-    render_old: F0,
-    render_new: F1,
-    progress: f32,
-    direction: crate::ui::component::SwipeDirection,
-    target: &mut R,
-) where
-    R: crate::ui::shape::Renderer<'s>,
-    F0: Fn(&mut R),
-    F1: Fn(&mut R),
-{
-    let bounds = target.viewport().clip;
-    let full_offset = direction.as_offset(bounds.size());
-    let current_offset = full_offset * progress;
-
-    target.with_origin(current_offset, &|target| {
-        render_old(target);
-    });
-    target.with_origin(current_offset - full_offset, &|target| {
-        render_new(target);
-    });
-}
 
 #[cfg(test)]
 mod tests {

@@ -14,13 +14,13 @@ use crate::{
 };
 
 #[derive(Default, Clone)]
-struct AttachAnimation {
+pub struct SwipeAttachAnimation {
     pub timer: Stopwatch,
     pub attach_type: Option<AttachType>,
     pub show_attach_anim: bool,
 }
 
-impl AttachAnimation {
+impl SwipeAttachAnimation {
     const DURATION_MS: u32 = 500;
 
     pub fn new() -> Self {
@@ -48,7 +48,7 @@ impl AttachAnimation {
         self.timer.elapsed().to_millis() as f32 / 1000.0
     }
 
-    pub fn get_offset(&self, t: f32) -> Offset {
+    pub fn get_offset(&self, t: f32, max_offset: i16) -> Offset {
         let value = pareen::constant(0.0).seq_ease_in(
             0.0,
             easer::functions::Linear,
@@ -58,14 +58,14 @@ impl AttachAnimation {
 
         match self.attach_type {
             Some(AttachType::Initial) => {
-                Offset::lerp(Offset::new(0, -20), Offset::zero(), value.eval(t))
+                Offset::lerp(Offset::new(0, -max_offset), Offset::zero(), value.eval(t))
             }
             Some(AttachType::Swipe(dir)) => match dir {
                 SwipeDirection::Up => {
-                    Offset::lerp(Offset::new(0, 20), Offset::zero(), value.eval(t))
+                    Offset::lerp(Offset::new(0, max_offset), Offset::zero(), value.eval(t))
                 }
                 SwipeDirection::Down => {
-                    Offset::lerp(Offset::new(0, -20), Offset::zero(), value.eval(t))
+                    Offset::lerp(Offset::new(0, -max_offset), Offset::zero(), value.eval(t))
                 }
                 _ => Offset::zero(),
             },
@@ -130,7 +130,7 @@ impl AttachAnimation {
 struct SwipeContext {
     progress: i16,
     dir: SwipeDirection,
-    attach_animation: AttachAnimation,
+    attach_animation: SwipeAttachAnimation,
 }
 
 impl SwipeContext {
@@ -138,7 +138,7 @@ impl SwipeContext {
         Self {
             progress: 0,
             dir: SwipeDirection::Up,
-            attach_animation: AttachAnimation::new(),
+            attach_animation: SwipeAttachAnimation::new(),
         }
     }
 
@@ -174,7 +174,7 @@ impl SwipeContext {
         } else {
             let t = self.attach_animation.eval();
             let opacity = self.attach_animation.get_opacity(t);
-            offset = self.attach_animation.get_offset(t);
+            offset = self.attach_animation.get_offset(t, 20);
             mask = 255 - opacity;
 
             if offset.x == 0 && offset.y == 0 {

@@ -1,25 +1,25 @@
 use super::{theme, InternallySwipableContent};
 use crate::{
     strutil::TString,
-    time::Duration,
     translations::TR,
     ui::{
-        animation::Animation,
         component::{
+            base::AttachType,
             swipe_detect::{SwipeConfig, SwipeSettings},
             Component, Event, EventCtx, Never, SwipeDirection,
         },
         event::SwipeEvent,
         geometry::{Alignment, Alignment2D, Insets, Offset, Rect},
-        model_mercury::component::{Frame, FrameMsg, InternallySwipable},
+        model_mercury::component::{
+            swipe_content::SwipeAttachAnimation, Frame, FrameMsg, InternallySwipable,
+        },
         shape::{self, Renderer},
-        util,
     },
 };
 use heapless::Vec;
 
 const MAX_WORDS: usize = 33; // super-shamir has 33 words, all other have less
-const ANIMATION_DURATION_MS: Duration = Duration::from_millis(166);
+
 type IndexVec = Vec<u8, MAX_WORDS>;
 
 /// Component showing mnemonic/share words during backup procedure. Model T3T1
@@ -133,9 +133,9 @@ struct ShareWordsInner<'a> {
     next_index: i16,
     /// Area reserved for a shown word from mnemonic/share
     area_word: Rect,
-    /// `Some` when transition animation is in progress
-    animation: Option<Animation<f32>>,
     progress: i16,
+    attach_animation: SwipeAttachAnimation,
+    wait_for_attach: bool,
 }
 
 impl<'a> ShareWordsInner<'a> {
@@ -147,8 +147,9 @@ impl<'a> ShareWordsInner<'a> {
             page_index: 0,
             next_index: 0,
             area_word: Rect::zero(),
-            animation: None,
             progress: 0,
+            attach_animation: SwipeAttachAnimation::new(),
+            wait_for_attach: false,
         }
     }
 
@@ -175,6 +176,27 @@ impl<'a> ShareWordsInner<'a> {
                 .render(target);
         });
     }
+
+    fn should_animate_progress(&self) -> (SwipeDirection, bool) {
+        let (dir, should_animate) = if self.page_index < self.next_index {
+            (SwipeDirection::Up, !self.is_final_page())
+        } else {
+            (SwipeDirection::Down, !self.is_first_page())
+        };
+        (dir, should_animate)
+    }
+
+    fn should_animate_attach(&self, event: Event) -> (SwipeDirection, bool) {
+        match event {
+            Event::Attach(AttachType::Swipe(SwipeDirection::Up)) => {
+                (SwipeDirection::Up, !self.is_first_page())
+            }
+            Event::Attach(AttachType::Swipe(SwipeDirection::Down)) => {
+                (SwipeDirection::Down, !self.is_final_page())
+            }
+            _ => (SwipeDirection::Up, false),
+        }
+    }
 }
 
 impl<'a> Component for ShareWordsInner<'a> {
@@ -197,19 +219,29 @@ impl<'a> Component for ShareWordsInner<'a> {
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         ctx.set_page_count(self.share_words.len());
 
+        let (_, should_animate) = self.should_animate_attach(event);
+
+        self.attach_animation.lazy_start(ctx, event, should_animate);
+
         match event {
             Event::Attach(_) => {
                 self.progress = 0;
+
+                if !should_animate {
+                    self.wait_for_attach = false;
+                }
             }
             Event::Swipe(SwipeEvent::End(dir)) => match dir {
                 SwipeDirection::Up if !self.is_final_page() => {
                     self.progress = 0;
                     self.page_index = (self.page_index + 1).min(self.share_words.len() as i16 - 1);
+                    self.wait_for_attach = true;
                     ctx.request_paint();
                 }
                 SwipeDirection::Down if !self.is_first_page() => {
                     self.progress = 0;
                     self.page_index = self.page_index.saturating_sub(1);
+                    self.wait_for_attach = true;
                     ctx.request_paint();
                 }
                 _ => {}
@@ -260,35 +292,34 @@ impl<'a> Component for ShareWordsInner<'a> {
             .with_fg(theme::GREY)
             .render(target);
 
-        let (dir, should_animate) = if self.page_index < self.next_index {
-            (
-                SwipeDirection::Up,
-                self.page_index < self.share_words.len() as i16 - 1,
-            )
-        } else {
-            (SwipeDirection::Down, self.page_index > 0)
-        };
+        let (dir, should_animate_progress) = self.should_animate_progress();
 
-        if self.progress > 0 && should_animate {
+        if self.progress > 0 && should_animate_progress {
             target.in_clip(self.area_word, &|target| {
-                let progress = pareen::constant(0.0).seq_ease_out(
-                    0.0,
-                    easer::functions::Cubic,
-                    1.0,
-                    pareen::constant(1.0),
-                );
+                let bounds = target.viewport().clip;
+                let full_offset = dir.as_offset(bounds.size());
+                let current_offset = full_offset * (self.progress as f32 / 1000.0);
 
-                util::render_slide(
-                    |target| self.render_word(self.page_index, target, target.viewport().clip),
-                    |target| self.render_word(self.next_index, target, target.viewport().clip),
-                    progress.eval(self.progress as f32 / 1000.0),
-                    dir,
-                    target,
-                )
+                target.with_origin(current_offset, &|target| {
+                    self.render_word(self.page_index, target, target.viewport().clip)
+                });
+            });
+        } else if (self.attach_animation.is_active() || self.wait_for_attach) && self.progress == 0
+        {
+            let t = self.attach_animation.eval();
+
+            let offset = self
+                .attach_animation
+                .get_offset(t, ShareWordsInner::AREA_WORD_HEIGHT);
+
+            target.in_clip(self.area_word, &|target| {
+                target.with_origin(offset, &|target| {
+                    self.render_word(self.page_index, target, target.viewport().clip)
+                });
             });
         } else {
             self.render_word(self.page_index, target, self.area_word);
-        };
+        }
     }
 }
 
