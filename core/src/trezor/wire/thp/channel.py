@@ -183,15 +183,13 @@ class Channel:
         else:
             key_receive = self.channel_cache.get(CHANNEL_KEY_RECEIVE)
             nonce_receive = self.channel_cache.get_int(CHANNEL_NONCE_RECEIVE)
-            auth_data = self.get_handshake_hash()
 
             assert key_receive is not None
             assert nonce_receive is not None
-            assert auth_data is not None
 
             print("Buffer before decryption:", hexlify(noise_buffer))
             is_tag_valid = crypto.dec(
-                noise_buffer, tag, key_receive, nonce_receive, auth_data
+                noise_buffer, tag, key_receive, nonce_receive, b""
             )
             print("Buffer after decryption:", hexlify(noise_buffer))
 
@@ -217,13 +215,11 @@ class Channel:
         else:
             key_send = self.channel_cache.get(CHANNEL_KEY_SEND)
             nonce_send = self.channel_cache.get_int(CHANNEL_NONCE_SEND)
-            auth_data = self.get_handshake_hash()
 
             assert key_send is not None
             assert nonce_send is not None
-            assert auth_data is not None
 
-            tag = crypto.enc(noise_buffer, key_send, nonce_send, auth_data)
+            tag = crypto.enc(noise_buffer, key_send, nonce_send, b"")
 
             self.channel_cache.set_int(CHANNEL_NONCE_SEND, nonce_send + 1)
             if __debug__:
