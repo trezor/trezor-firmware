@@ -1,5 +1,6 @@
 import ustruct
 from micropython import const
+from typing import TYPE_CHECKING
 
 from storage.cache_thp import BROADCAST_CHANNEL_ID
 from trezor import protobuf, utils
@@ -30,6 +31,9 @@ TREZOR_STATE_PAIRED = b"\x01"
 
 if __debug__:
     from trezor import log
+
+if TYPE_CHECKING:
+    from trezor.wire import WireInterface
 
 
 class PacketHeader:
@@ -70,17 +74,28 @@ class PacketHeader:
 
 _ENCODED_DEVICE_PROPERTIES: bytes | None = None
 
-_ENABLED_PAIRING_METHODS = [
+_DEFAULT_ENABLED_PAIRING_METHODS = [
     ThpPairingMethod.CodeEntry,
     ThpPairingMethod.QrCode,
     ThpPairingMethod.NFC_Unidirectional,
 ]
 
 
-def _get_device_properties() -> ThpDeviceProperties:
+def get_enabled_pairing_methods(
+    iface: WireInterface | None = None,
+) -> list[ThpPairingMethod]:
+    import usb
+
+    l = _DEFAULT_ENABLED_PAIRING_METHODS.copy()
+    if iface is not None and iface is usb.iface_wire:
+        l.append(ThpPairingMethod.NoMethod)
+    return l
+
+
+def _get_device_properties(iface: WireInterface | None = None) -> ThpDeviceProperties:
     # TODO define model variants
     return ThpDeviceProperties(
-        pairing_methods=_ENABLED_PAIRING_METHODS,
+        pairing_methods=get_enabled_pairing_methods(iface),
         internal_model=utils.INTERNAL_MODEL,
         model_variant=0,
         bootloader_mode=False,
