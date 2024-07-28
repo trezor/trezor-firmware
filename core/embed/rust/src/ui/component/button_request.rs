@@ -8,23 +8,36 @@ use crate::ui::{
 use crate::ui::component::swipe_detect::SwipeConfig;
 
 /// Component that sends a ButtonRequest after receiving Event::Attach. The
-/// request is only sent once.
+/// request is either sent only once or on every Event::Attach configured by
+/// `policy`.
 #[derive(Clone)]
-pub struct OneButtonRequest<T> {
+pub struct SendButtonRequest<T> {
     button_request: Option<ButtonRequest>,
     pub inner: T,
+    policy: SendButtonRequestPolicy,
 }
 
-impl<T> OneButtonRequest<T> {
-    pub const fn new(button_request: ButtonRequest, inner: T) -> Self {
+#[derive(Clone)]
+pub enum SendButtonRequestPolicy {
+    OnAttachOnce,
+    OnAttachAlways,
+}
+
+impl<T> SendButtonRequest<T> {
+    pub const fn new(
+        button_request: ButtonRequest,
+        inner: T,
+        policy: SendButtonRequestPolicy,
+    ) -> Self {
         Self {
             button_request: Some(button_request),
             inner,
+            policy,
         }
     }
 }
 
-impl<T: Component> Component for OneButtonRequest<T> {
+impl<T: Component> Component for SendButtonRequest<T> {
     type Msg = T::Msg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -33,8 +46,17 @@ impl<T: Component> Component for OneButtonRequest<T> {
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         if matches!(event, Event::Attach(_)) {
-            if let Some(button_request) = self.button_request.take() {
-                ctx.send_button_request(button_request.code, button_request.name)
+            match self.policy {
+                SendButtonRequestPolicy::OnAttachOnce => {
+                    if let Some(br) = self.button_request.take() {
+                        ctx.send_button_request(br.code, br.name)
+                    }
+                }
+                SendButtonRequestPolicy::OnAttachAlways => {
+                    if let Some(br) = self.button_request.clone() {
+                        ctx.send_button_request(br.code, br.name);
+                    }
+                }
             }
         }
         self.inner.event(ctx, event)
@@ -50,7 +72,7 @@ impl<T: Component> Component for OneButtonRequest<T> {
 }
 
 #[cfg(all(feature = "micropython", feature = "touch", feature = "new_rendering"))]
-impl<T: crate::ui::flow::Swipable> crate::ui::flow::Swipable for OneButtonRequest<T> {
+impl<T: crate::ui::flow::Swipable> crate::ui::flow::Swipable for SendButtonRequest<T> {
     fn get_swipe_config(&self) -> SwipeConfig {
         self.inner.get_swipe_config()
     }
@@ -61,18 +83,25 @@ impl<T: crate::ui::flow::Swipable> crate::ui::flow::Swipable for OneButtonReques
 }
 
 #[cfg(feature = "ui_debug")]
-impl<T: crate::trace::Trace> crate::trace::Trace for OneButtonRequest<T> {
+impl<T: crate::trace::Trace> crate::trace::Trace for SendButtonRequest<T> {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         self.inner.trace(t)
     }
 }
 
 pub trait ButtonRequestExt {
-    fn one_button_request(self, br: ButtonRequest) -> OneButtonRequest<Self>
+    fn one_button_request(self, br: ButtonRequest) -> SendButtonRequest<Self>
     where
         Self: Sized,
     {
-        OneButtonRequest::new(br, self)
+        SendButtonRequest::new(br, self, SendButtonRequestPolicy::OnAttachOnce)
+    }
+
+    fn repeated_button_request(self, br: ButtonRequest) -> SendButtonRequest<Self>
+    where
+        Self: Sized,
+    {
+        SendButtonRequest::new(br, self, SendButtonRequestPolicy::OnAttachAlways)
     }
 }
 
