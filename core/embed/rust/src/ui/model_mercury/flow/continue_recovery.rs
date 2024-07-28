@@ -6,6 +6,7 @@ use crate::{
     ui::{
         button_request::{ButtonRequest, ButtonRequestCode},
         component::{
+            button_request::ButtonRequestExt,
             swipe_detect::SwipeSettings,
             text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs, VecExt},
             ComponentExt, SwipeDirection,

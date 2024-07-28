@@ -112,6 +112,7 @@ async def continue_recovery(
     # in the context menu
 
     # NOTE: show_info can be understood as first screen before any shares
+    # NOTE: button request sent from the flow
     homepage = RustLayout(
         trezorui2.flow_continue_recovery(
             first_screen=show_info,
@@ -120,8 +121,7 @@ async def continue_recovery(
             subtext=subtext,
         )
     )
-    # TODO: the button request might go to rust
-    result = await interact(homepage, "recovery", ButtonRequestType.RecoveryHomepage)
+    result = await homepage
     return result is CONFIRMED
 
 
