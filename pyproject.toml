@@ -13,9 +13,9 @@ protobuf = "*"
 nanopb = "^0.4.3"
 
 ## test tools
-pytest = "^6.1.0"
+pytest = "^8"
 coverage = "<5"  # coverage 5+ uses binary sqlite format
-flaky = "^3.6.1"  # https://github.com/box/flaky/issues/156
+flaky = ">3.6.1"  # https://github.com/box/flaky/issues/156
 pytest-ordering = "*"
 pytest-random-order = "*"
 pytest-timeout = "*"
