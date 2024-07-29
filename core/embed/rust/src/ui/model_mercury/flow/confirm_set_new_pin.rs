@@ -6,7 +6,7 @@ use crate::{
     ui::{
         component::{
             swipe_detect::SwipeSettings,
-            text::paragraphs::{Paragraph, Paragraphs},
+            text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs},
             ComponentExt, SwipeDirection,
         },
         flow::{
@@ -76,9 +76,7 @@ impl SetNewPin {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let description: TString = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
 
-        let par_array: [Paragraph<'static>; 1] =
-            [Paragraph::new(&theme::TEXT_MAIN_GREY_LIGHT, description)];
-        let paragraphs = Paragraphs::new(par_array);
+        let paragraphs = Paragraphs::new(Paragraph::new(&theme::TEXT_MAIN_GREY_LIGHT, description));
         let content_intro = Frame::left_aligned(title, SwipeContent::new(paragraphs))
             .with_menu_button()
             .with_footer(TR::instructions__swipe_up.into(), None)
@@ -100,11 +98,11 @@ impl SetNewPin {
             FrameMsg::Button(_) => None,
         });
 
-        let par_array_cancel_intro: [Paragraph<'static>; 2] = [
+        let paragraphs_cancel_intro = ParagraphVecShort::from_iter([
             Paragraph::new(&theme::TEXT_WARNING, TR::words__not_recommended),
             Paragraph::new(&theme::TEXT_MAIN_GREY_LIGHT, TR::pin__cancel_info),
-        ];
-        let paragraphs_cancel_intro = Paragraphs::new(par_array_cancel_intro);
+        ])
+        .into_paragraphs();
         let content_cancel_intro = Frame::left_aligned(
             TR::pin__cancel_setup.into(),
             SwipeContent::new(paragraphs_cancel_intro),
