@@ -66,7 +66,25 @@ async def get_seed() -> bytes:
     return common_seed
 
 
-if not utils.BITCOIN_ONLY:
+if utils.BITCOIN_ONLY:
+    # === Bitcoin_only variant ===
+    # We want to derive the normal seed ONLY
+
+    async def derive_and_store_roots(ctx: Context, msg: ThpCreateNewSession) -> None:
+
+        if msg.passphrase is not None and msg.on_device:
+            raise DataError("Passphrase provided when it shouldn't be!")
+
+        from trezor import wire
+
+        if not storage_device.is_initialized():
+            raise wire.NotInitialized("Device is not initialized")
+
+        passphrase = await get_passphrase(msg)
+        common_seed = mnemonic.get_seed(passphrase)
+        ctx.cache.set(APP_COMMON_SEED, common_seed)
+
+else:
     # === Cardano variant ===
     # We want to derive both the normal seed and the Cardano seed together, AND
     # expose a method for Cardano to do the same
