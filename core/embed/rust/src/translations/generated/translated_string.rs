@@ -1358,6 +1358,17 @@ pub enum TranslatedString {
     reset__slip39_checklist_more_info_threshold = 957,  // "The threshold sets the minumum number of shares needed to recover your wallet."
     reset__slip39_checklist_more_info_threshold_example_template = 958,  // "If you set {0} out of {1} shares, you'll need {2} backup shares to recover your wallet."
     passphrase__continue_with_empty_passphrase = 959,  // "Continue with empty passphrase?"
+    #[cfg(feature = "universal_fw")]
+    fido__more_credentials = 960,  // "More credentials"
+    #[cfg(feature = "universal_fw")]
+    fido__select_intro = 961,  // "Select the credential that you would like to use for authentication."
+    #[cfg(feature = "universal_fw")]
+    fido__title_for_authentication = 962,  // "for authentication"
+    #[cfg(feature = "universal_fw")]
+    fido__title_select_credential = 963,  // "Select credential"
+    instructions__swipe_down = 964,  // "Swipe down"
+    #[cfg(feature = "universal_fw")]
+    fido__title_credential_details = 965,  // "Credential details"
 }
 
 impl TranslatedString {
@@ -2710,6 +2721,17 @@ impl TranslatedString {
             Self::reset__slip39_checklist_more_info_threshold => "The threshold sets the minumum number of shares needed to recover your wallet.",
             Self::reset__slip39_checklist_more_info_threshold_example_template => "If you set {0} out of {1} shares, you'll need {2} backup shares to recover your wallet.",
             Self::passphrase__continue_with_empty_passphrase => "Continue with empty passphrase?",
+            #[cfg(feature = "universal_fw")]
+            Self::fido__more_credentials => "More credentials",
+            #[cfg(feature = "universal_fw")]
+            Self::fido__select_intro => "Select the credential that you would like to use for authentication.",
+            #[cfg(feature = "universal_fw")]
+            Self::fido__title_for_authentication => "for authentication",
+            #[cfg(feature = "universal_fw")]
+            Self::fido__title_select_credential => "Select credential",
+            Self::instructions__swipe_down => "Swipe down",
+            #[cfg(feature = "universal_fw")]
+            Self::fido__title_credential_details => "Credential details",
         }
     }
 
@@ -4063,6 +4085,17 @@ impl TranslatedString {
             Qstr::MP_QSTR_reset__slip39_checklist_more_info_threshold => Some(Self::reset__slip39_checklist_more_info_threshold),
             Qstr::MP_QSTR_reset__slip39_checklist_more_info_threshold_example_template => Some(Self::reset__slip39_checklist_more_info_threshold_example_template),
             Qstr::MP_QSTR_passphrase__continue_with_empty_passphrase => Some(Self::passphrase__continue_with_empty_passphrase),
+            #[cfg(feature = "universal_fw")]
+            Qstr::MP_QSTR_fido__more_credentials => Some(Self::fido__more_credentials),
+            #[cfg(feature = "universal_fw")]
+            Qstr::MP_QSTR_fido__select_intro => Some(Self::fido__select_intro),
+            #[cfg(feature = "universal_fw")]
+            Qstr::MP_QSTR_fido__title_for_authentication => Some(Self::fido__title_for_authentication),
+            #[cfg(feature = "universal_fw")]
+            Qstr::MP_QSTR_fido__title_select_credential => Some(Self::fido__title_select_credential),
+            Qstr::MP_QSTR_instructions__swipe_down => Some(Self::instructions__swipe_down),
+            #[cfg(feature = "universal_fw")]
+            Qstr::MP_QSTR_fido__title_credential_details => Some(Self::fido__title_credential_details),
             _ => None,
         }
     }

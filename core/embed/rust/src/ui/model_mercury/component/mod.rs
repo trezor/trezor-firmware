@@ -46,13 +46,12 @@ pub use address_details::AddressDetails;
 #[cfg(feature = "ui_overlay")]
 pub use binary_selection::{BinarySelection, BinarySelectionMsg};
 pub use button::{
-    Button, ButtonContent, ButtonMsg, ButtonStyle, ButtonStyleSheet, CancelConfirmMsg,
-    CancelInfoConfirmMsg, IconText,
+    Button, ButtonContent, ButtonMsg, ButtonStyle, ButtonStyleSheet, CancelInfoConfirmMsg, IconText,
 };
 #[cfg(feature = "translations")]
 pub use coinjoin_progress::CoinJoinProgress;
 pub use error::ErrorScreen;
-pub use fido::{FidoConfirm, FidoMsg};
+pub use fido::FidoCredential;
 pub use footer::Footer;
 pub use frame::{Frame, FrameMsg};
 pub use header::Header;
@@ -88,7 +87,7 @@ pub use swipe_up_screen::{SwipeUpScreen, SwipeUpScreenMsg};
 #[cfg(feature = "translations")]
 pub use tap_to_confirm::TapToConfirm;
 pub use updatable_more_info::UpdatableMoreInfo;
-pub use vertical_menu::{VerticalMenu, VerticalMenuChoiceMsg};
+pub use vertical_menu::{PagedVerticalMenu, VerticalMenu, VerticalMenuChoiceMsg};
 pub use welcome_screen::WelcomeScreen;
 
 use super::{constant, theme};

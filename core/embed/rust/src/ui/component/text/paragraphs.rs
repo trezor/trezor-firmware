@@ -90,6 +90,19 @@ where
         &mut self.source
     }
 
+    pub fn area(&self) -> Rect {
+        let mut result: Option<Rect> = None;
+        Self::foreach_visible(
+            &self.source,
+            &self.visible,
+            self.offset,
+            &mut |layout, _content| {
+                result = result.map_or(Some(layout.bounds), |r| Some(r.union(layout.bounds)));
+            },
+        );
+        result.unwrap_or(self.area)
+    }
+
     /// Update bounding boxes of paragraphs on the current page. First determine
     /// the number of visible paragraphs and their sizes. These are then
     /// arranged according to the layout.

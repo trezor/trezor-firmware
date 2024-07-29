@@ -7,13 +7,13 @@ use crate::{
     ui::{
         component::{
             base::{AttachType, Component},
-            Event, EventCtx, SwipeDirection,
+            Event, EventCtx, Paginate, SwipeDirection,
         },
         constant::screen,
         display::{Color, Icon},
         geometry::{Offset, Rect},
         lerp::Lerp,
-        model_mercury::component::button::{Button, ButtonMsg, IconText},
+        model_mercury::component::button::{Button, ButtonContent, ButtonMsg, IconText},
         shape::{Bar, Renderer},
         util::animation_disabled,
     },
@@ -25,11 +25,7 @@ pub enum VerticalMenuChoiceMsg {
 
 /// Number of buttons.
 /// Presently, VerticalMenu holds only fixed number of buttons.
-/// TODO: for scrollable menu, the implementation must change.
-const N_ITEMS: usize = 3;
-
-/// Number of visual separators between buttons.
-const N_SEPS: usize = N_ITEMS - 1;
+const MAX_ITEMS: usize = 3;
 
 /// Fixed height of each menu button.
 const MENU_BUTTON_HEIGHT: i16 = 64;
@@ -37,8 +33,7 @@ const MENU_BUTTON_HEIGHT: i16 = 64;
 /// Fixed height of a separator.
 const MENU_SEP_HEIGHT: i16 = 2;
 
-type VerticalMenuButtons = Vec<Button, N_ITEMS>;
-type AreasForSeparators = Vec<Rect, N_SEPS>;
+type VerticalMenuButtons = Vec<Button, MAX_ITEMS>;
 
 #[derive(Default, Clone)]
 struct AttachAnimation {
@@ -174,11 +169,10 @@ impl AttachAnimation {
 
 #[derive(Clone)]
 pub struct VerticalMenu {
-    area: Rect,
     /// buttons placed vertically from top to bottom
     buttons: VerticalMenuButtons,
-    /// areas for visual separators between buttons
-    areas_sep: AreasForSeparators,
+    /// length of `buttons` prefix that is currently active, set by `place()`
+    n_items: usize,
 
     attach_animation: AttachAnimation,
 }
@@ -186,9 +180,8 @@ pub struct VerticalMenu {
 impl VerticalMenu {
     fn new(buttons: VerticalMenuButtons) -> Self {
         Self {
-            area: Rect::zero(),
             buttons,
-            areas_sep: AreasForSeparators::new(),
+            n_items: MAX_ITEMS,
             attach_animation: AttachAnimation::default(),
         }
     }
@@ -226,26 +219,23 @@ impl Component for VerticalMenu {
 
     fn place(&mut self, bounds: Rect) -> Rect {
         // VerticalMenu is supposed to be used in Frame, the remaining space is just
-        // enought to fit 3 buttons separated by thin bars
-        let height_bounds_expected = 3 * MENU_BUTTON_HEIGHT + 2 * MENU_SEP_HEIGHT;
-        assert!(bounds.height() == height_bounds_expected);
+        // enought to fit 3 buttons separated by thin bars. If there's footer only 2
+        // buttons fit.
+        let n_items = (bounds.height() + MENU_SEP_HEIGHT) / (MENU_BUTTON_HEIGHT + MENU_SEP_HEIGHT);
+        self.n_items = n_items as usize;
 
-        self.area = bounds;
-        self.areas_sep.clear();
         let mut remaining = bounds;
         let n_seps = self.buttons.len() - 1;
-        for (i, button) in self.buttons.iter_mut().enumerate() {
+        for (i, button) in self.buttons.iter_mut().take(self.n_items).enumerate() {
             let (area_button, new_remaining) = remaining.split_top(MENU_BUTTON_HEIGHT);
             button.place(area_button);
             remaining = new_remaining;
             if i < n_seps {
-                let (area_sep, new_remaining) = remaining.split_top(MENU_SEP_HEIGHT);
-                unwrap!(self.areas_sep.push(area_sep));
+                let (_area_sep, new_remaining) = remaining.split_top(MENU_SEP_HEIGHT);
                 remaining = new_remaining;
             }
         }
-
-        self.area
+        bounds
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
@@ -278,7 +268,7 @@ impl Component for VerticalMenu {
 
         target.with_origin(offset, &|target| {
             // render buttons separated by thin bars
-            for (i, button) in (&self.buttons).into_iter().enumerate() {
+            for (i, button) in (&self.buttons).into_iter().take(self.n_items).enumerate() {
                 button.render(target);
 
                 Bar::new(button.area())
@@ -286,18 +276,22 @@ impl Component for VerticalMenu {
                     .with_bg(Color::black())
                     .with_alpha(opacities[i])
                     .render(target);
-            }
-            for (i, area) in self.areas_sep.iter().enumerate() {
-                Bar::new(*area)
-                    .with_thickness(MENU_SEP_HEIGHT)
-                    .with_fg(theme::GREY_EXTRA_DARK)
-                    .render(target);
 
-                Bar::new(*area)
-                    .with_fg(Color::black())
-                    .with_bg(Color::black())
-                    .with_alpha(opacities[i])
-                    .render(target);
+                if i + 1 < self.buttons.len().min(self.n_items) {
+                    let area = button
+                        .area()
+                        .translate(Offset::y(MENU_BUTTON_HEIGHT))
+                        .with_height(MENU_SEP_HEIGHT);
+                    Bar::new(area)
+                        .with_thickness(MENU_SEP_HEIGHT)
+                        .with_fg(theme::GREY_EXTRA_DARK)
+                        .render(target);
+                    Bar::new(area)
+                        .with_fg(Color::black())
+                        .with_bg(Color::black())
+                        .with_alpha(opacities[i])
+                        .render(target);
+                }
             }
 
             // todo screen here is incorrect
@@ -320,5 +314,92 @@ impl crate::trace::Trace for VerticalMenu {
                 button_list.child(button);
             }
         });
+    }
+}
+
+// Polymorphic struct, avoid adding code as it gets duplicated, prefer
+// extending VerticalMenu instead.
+pub struct PagedVerticalMenu<F: Fn(usize) -> TString<'static>> {
+    inner: VerticalMenu,
+    page: usize,
+    item_count: usize,
+    label_fn: F,
+}
+
+impl<F: Fn(usize) -> TString<'static>> PagedVerticalMenu<F> {
+    pub fn new(item_count: usize, label_fn: F) -> Self {
+        let mut result = Self {
+            inner: VerticalMenu::select_word(["".into(), "".into(), "".into()]),
+            page: 0,
+            item_count,
+            label_fn,
+        };
+        result.change_page(0);
+        result
+    }
+}
+
+impl<F: Fn(usize) -> TString<'static>> Paginate for PagedVerticalMenu<F> {
+    fn page_count(&mut self) -> usize {
+        self.num_pages()
+    }
+
+    fn change_page(&mut self, active_page: usize) {
+        for b in 0..self.inner.n_items {
+            let i = active_page * self.inner.n_items + b;
+            let text = if i < self.item_count {
+                (self.label_fn)(i)
+            } else {
+                "".into()
+            };
+            let mut dummy_ctx = EventCtx::new();
+            self.inner.buttons[b].enable_if(&mut dummy_ctx, !text.is_empty());
+            self.inner.buttons[b].set_content(ButtonContent::Text(text));
+        }
+
+        self.page = active_page
+    }
+}
+
+impl<F: Fn(usize) -> TString<'static>> Component for PagedVerticalMenu<F> {
+    type Msg = VerticalMenuChoiceMsg;
+
+    fn place(&mut self, bounds: Rect) -> Rect {
+        self.inner.place(bounds)
+    }
+
+    fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        let msg = self.inner.event(ctx, event);
+        if let Some(VerticalMenuChoiceMsg::Selected(i)) = msg {
+            return Some(VerticalMenuChoiceMsg::Selected(
+                self.inner.n_items * self.page + i,
+            ));
+        }
+        msg
+    }
+
+    fn paint(&mut self) {
+        // TODO remove when ui-t3t1 done
+    }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        self.inner.render(target)
+    }
+}
+
+impl<F: Fn(usize) -> TString<'static>> InternallySwipable for PagedVerticalMenu<F> {
+    fn current_page(&self) -> usize {
+        self.page
+    }
+
+    fn num_pages(&self) -> usize {
+        (self.item_count / self.inner.n_items) + (self.item_count % self.inner.n_items).min(1)
+    }
+}
+
+#[cfg(feature = "ui_debug")]
+impl<F: Fn(usize) -> TString<'static>> crate::trace::Trace for PagedVerticalMenu<F> {
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        self.inner.trace(t)
     }
 }

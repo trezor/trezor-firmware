@@ -288,12 +288,13 @@ impl Slip39Input {
             // Confirm button.
             self.button.enable(ctx);
             self.button
-                .set_content(ctx, ButtonContent::Icon(theme::ICON_SIMPLE_CHECKMARK24));
+                .set_content(ButtonContent::Icon(theme::ICON_SIMPLE_CHECKMARK24));
         } else {
             // Disabled button.
             self.button.disable(ctx);
-            self.button.set_content(ctx, ButtonContent::Text("".into()));
+            self.button.set_content(ButtonContent::Text("".into()));
         }
+        ctx.request_paint();
     }
 
     fn input_sequence(&self) -> Option<u16> {
