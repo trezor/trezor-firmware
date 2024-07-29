@@ -74,6 +74,34 @@ jobs:
             legacy/firmware/trezor-emu-legacy*
           retention-days: 7
 
+  legacy_emu_arm:
+    if: github.event_name == 'schedule'
+    name: Emulator arm
+    runs-on: ubuntu-latest-arm64
+    strategy:
+      matrix:
+        coins: [universal]
+        type: [debuglink]
+        asan: ${{ fromJSON(github.event_name == 'schedule' && '["noasan", "asan"]' || '["noasan"]') }}
+    env:
+      EMULATOR: 1
+      BITCOIN_ONLY: ${{ matrix.coins == 'universal' && '0' || '1' }}
+      DEBUG_LINK: ${{ matrix.type == 'debuglink' && '1' || '0' }}
+      ADDRESS_SANITIZER: ${{ matrix.asan == 'asan' && '1' || '0' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "poetry run legacy/script/cibuild"
+      - run: mv legacy/firmware/trezor.elf legacy/firmware/trezor-emu-arm-legacy-T1B1-${{ matrix.coins }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: legacy-emu-arm-${{ matrix.coins }}-${{ matrix.type }}-${{ matrix.asan }}
+          path: |
+            legacy/firmware/trezor-emu-arm-legacy*
+          retention-days: 7
+
   legacy_device_test:
     name: Device test
     runs-on: ubuntu-latest
@@ -202,11 +230,13 @@ jobs:
         # TODO: always run if comment already exists
         if: ${{ steps.check-fixtures-changed.outputs.FIXTURES_CHANGED == '1' }}
 
-  core_upload_emu:
+  legacy_upload_emu:
     name: Upload emulator binaries
     if: github.event_name == 'schedule'
     runs-on: ubuntu-latest
-    needs: legacy_emu
+    needs:
+      - legacy_emu
+      - legacy_emu_arm
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -220,5 +250,5 @@ jobs:
         continue-on-error: true
       - run: |
           mkdir emulators
-          cp trezor-emu-legacy* emulators
+          cp trezor-emu-* emulators
           aws s3 sync --no-progress emulators s3://data.trezor.io/dev/firmware/emu-nightly

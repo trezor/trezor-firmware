@@ -126,6 +126,44 @@ jobs:
             core/build/bootloader_emu/bootloader.elf
           retention-days: 7
 
+  core_emu_arm:
+    if: github.event_name == 'schedule'
+    name: Build emu arm
+    runs-on: ubuntu-latest-arm64
+    needs: param
+    strategy:
+      fail-fast: false
+      matrix:
+        model: [T2T1, T2B1, T3T1]
+        coins: [universal]
+        type: [debuglink]
+        asan: [noasan]
+        exclude:
+          - type: normal
+            asan: asan
+    env:
+      TREZOR_MODEL: ${{ matrix.model == 'T2T1' && 'T' || matrix.model == 'T2B1' && 'R' || matrix.model }}
+      BITCOIN_ONLY: ${{ matrix.coins == 'universal' && '0' || '1' }}
+      PYOPT: ${{ matrix.type == 'debuglink' && '0' || '1' }}
+      ADDRESS_SANITIZER: ${{ matrix.asan == 'asan' && '1' || '0' }}
+      LSAN_OPTIONS: "suppressions=../../asan_suppressions.txt"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "poetry run make -C core build_bootloader_emu"
+        if: matrix.coins == 'universal'
+      - run: nix-shell --run "poetry run make -C core build_unix_frozen"
+      - run: mv core/build/unix/trezor-emu-core core/build/unix/trezor-emu-arm-core-${{ matrix.model }}-${{ matrix.coins }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: core-emu-arm-${{ matrix.model }}-${{ matrix.coins }}-${{ matrix.type }}-${{ matrix.asan }}
+          path: |
+            core/build/unix/trezor-emu-*
+            core/build/bootloader_emu/bootloader.elf
+          retention-days: 2
+
   core_unit_python_test:
     name: Python unit tests
     runs-on: ubuntu-latest
@@ -708,7 +746,9 @@ jobs:
     name: Upload emulator binaries
     if: github.event_name == 'schedule'
     runs-on: ubuntu-latest
-    needs: core_emu
+    needs:
+      - core_emu
+      - core_emu_arm
     steps:
       - uses: actions/download-artifact@v4
         with:
