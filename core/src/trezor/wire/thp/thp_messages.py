@@ -99,7 +99,7 @@ def _get_device_properties(iface: WireInterface | None = None) -> ThpDevicePrope
         internal_model=utils.INTERNAL_MODEL,
         model_variant=0,
         bootloader_mode=False,
-        protocol_version=3,
+        protocol_version=2,
     )
 
 

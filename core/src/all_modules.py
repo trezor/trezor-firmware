@@ -257,8 +257,8 @@ trezor.wire.thp.transmission_loop
 import trezor.wire.thp.transmission_loop
 trezor.wire.thp.writer
 import trezor.wire.thp.writer
-trezor.wire.thp_v3
-import trezor.wire.thp_v3
+trezor.wire.thp_v2
+import trezor.wire.thp_v2
 trezor.workflow
 import trezor.workflow
 apps

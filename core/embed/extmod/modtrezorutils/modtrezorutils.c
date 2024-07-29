@@ -437,7 +437,7 @@ STATIC mp_obj_tuple_t mod_trezorutils_version_obj = {
 /// UI_LAYOUT: str
 /// """UI layout identifier ("tt" for model T, "tr" for models One and R)."""
 /// USE_THP: bool
-/// """Whether the firmware supports Trezor-Host Protocol (version 3)."""
+/// """Whether the firmware supports Trezor-Host Protocol (version 2)."""
 
 STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_trezorutils)},
