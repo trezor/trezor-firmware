@@ -45,12 +45,12 @@ enum CapabilityTag {
   TAG_BOARDLOADER_VERSION = 0x03
 };
 
-struct __attribute__((packed)) BoardloaderVersion {
+typedef struct __attribute__((packed)) BoardloaderVersion {
   uint8_t version_major;
   uint8_t version_minor;
   uint8_t version_patch;
   uint8_t version_build;
-};
+} boardloader_version_t;
 
 /*
  * Structure of current boardloader. Older boardloaders can have it missing,
@@ -75,6 +75,6 @@ struct __attribute__((packed)) BoardCapabilities {
 void parse_boardloader_capabilities();
 
 const uint32_t get_board_name();
-const struct BoardloaderVersion* get_boardloader_version();
+const boardloader_version_t* get_boardloader_version();
 
 #endif

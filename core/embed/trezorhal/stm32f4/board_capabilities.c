@@ -28,7 +28,7 @@ static struct BoardloaderVersion boardloader_version;
 
 const uint32_t get_board_name() { return board_name; }
 
-const struct BoardloaderVersion *get_boardloader_version() {
+const boardloader_version_t *get_boardloader_version() {
   return &boardloader_version;
 }
 
