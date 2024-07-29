@@ -1363,6 +1363,10 @@ pub struct DebugLinkState {
     pub mnemonic_type: ::std::option::Option<::protobuf::EnumOrUnknown<super::messages_management::BackupType>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkState.tokens)
     pub tokens: ::std::vec::Vec<::std::string::String>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkState.thp_pairing_code_entry_code)
+    pub thp_pairing_code_entry_code: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkState.thp_pairing_secret)
+    pub thp_pairing_secret: ::std::option::Option<::std::vec::Vec<u8>>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.debug.DebugLinkState.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -1710,8 +1714,63 @@ impl DebugLinkState {
         self.mnemonic_type = ::std::option::Option::Some(::protobuf::EnumOrUnknown::new(v));
     }
 
+    // optional uint32 thp_pairing_code_entry_code = 14;
+
+    pub fn thp_pairing_code_entry_code(&self) -> u32 {
+        self.thp_pairing_code_entry_code.unwrap_or(0)
+    }
+
+    pub fn clear_thp_pairing_code_entry_code(&mut self) {
+        self.thp_pairing_code_entry_code = ::std::option::Option::None;
+    }
+
+    pub fn has_thp_pairing_code_entry_code(&self) -> bool {
+        self.thp_pairing_code_entry_code.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_thp_pairing_code_entry_code(&mut self, v: u32) {
+        self.thp_pairing_code_entry_code = ::std::option::Option::Some(v);
+    }
+
+    // optional bytes thp_pairing_secret = 15;
+
+    pub fn thp_pairing_secret(&self) -> &[u8] {
+        match self.thp_pairing_secret.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_thp_pairing_secret(&mut self) {
+        self.thp_pairing_secret = ::std::option::Option::None;
+    }
+
+    pub fn has_thp_pairing_secret(&self) -> bool {
+        self.thp_pairing_secret.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_thp_pairing_secret(&mut self, v: ::std::vec::Vec<u8>) {
+        self.thp_pairing_secret = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_thp_pairing_secret(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.thp_pairing_secret.is_none() {
+            self.thp_pairing_secret = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.thp_pairing_secret.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_thp_pairing_secret(&mut self) -> ::std::vec::Vec<u8> {
+        self.thp_pairing_secret.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(13);
+        let mut fields = ::std::vec::Vec::with_capacity(15);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "layout",
@@ -1778,6 +1837,16 @@ impl DebugLinkState {
             |m: &DebugLinkState| { &m.tokens },
             |m: &mut DebugLinkState| { &mut m.tokens },
         ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "thp_pairing_code_entry_code",
+            |m: &DebugLinkState| { &m.thp_pairing_code_entry_code },
+            |m: &mut DebugLinkState| { &mut m.thp_pairing_code_entry_code },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "thp_pairing_secret",
+            |m: &DebugLinkState| { &m.thp_pairing_secret },
+            |m: &mut DebugLinkState| { &mut m.thp_pairing_secret },
+        ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<DebugLinkState>(
             "DebugLinkState",
             fields,
@@ -1840,6 +1909,12 @@ impl ::protobuf::Message for DebugLinkState {
                 106 => {
                     self.tokens.push(is.read_string()?);
                 },
+                112 => {
+                    self.thp_pairing_code_entry_code = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                122 => {
+                    self.thp_pairing_secret = ::std::option::Option::Some(is.read_bytes()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -1892,6 +1967,12 @@ impl ::protobuf::Message for DebugLinkState {
         for value in &self.tokens {
             my_size += ::protobuf::rt::string_size(13, &value);
         };
+        if let Some(v) = self.thp_pairing_code_entry_code {
+            my_size += ::protobuf::rt::uint32_size(14, v);
+        }
+        if let Some(v) = self.thp_pairing_secret.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(15, &v);
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -1937,6 +2018,12 @@ impl ::protobuf::Message for DebugLinkState {
         for v in &self.tokens {
             os.write_string(13, &v)?;
         };
+        if let Some(v) = self.thp_pairing_code_entry_code {
+            os.write_uint32(14, v)?;
+        }
+        if let Some(v) = self.thp_pairing_secret.as_ref() {
+            os.write_bytes(15, v)?;
+        }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
     }
@@ -1967,6 +2054,8 @@ impl ::protobuf::Message for DebugLinkState {
         self.reset_word_pos = ::std::option::Option::None;
         self.mnemonic_type = ::std::option::Option::None;
         self.tokens.clear();
+        self.thp_pairing_code_entry_code = ::std::option::Option::None;
+        self.thp_pairing_secret = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -1985,6 +2074,8 @@ impl ::protobuf::Message for DebugLinkState {
             reset_word_pos: ::std::option::Option::None,
             mnemonic_type: ::std::option::Option::None,
             tokens: ::std::vec::Vec::new(),
+            thp_pairing_code_entry_code: ::std::option::Option::None,
+            thp_pairing_secret: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -3580,7 +3671,7 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x18\x02\x20\x01(\r:\x010R\x0crefreshIndex\"~\n\x11DebugLinkGetState\x12\
     $\n\x0ewait_word_list\x18\x01\x20\x01(\x08R\x0cwaitWordList\x12\"\n\rwai\
     t_word_pos\x18\x02\x20\x01(\x08R\x0bwaitWordPos\x12\x1f\n\x0bwait_layout\
-    \x18\x03\x20\x01(\x08R\nwaitLayout\"\x97\x04\n\x0eDebugLinkState\x12\x16\
+    \x18\x03\x20\x01(\x08R\nwaitLayout\"\x83\x05\n\x0eDebugLinkState\x12\x16\
     \n\x06layout\x18\x01\x20\x01(\x0cR\x06layout\x12\x10\n\x03pin\x18\x02\
     \x20\x01(\tR\x03pin\x12\x16\n\x06matrix\x18\x03\x20\x01(\tR\x06matrix\
     \x12'\n\x0fmnemonic_secret\x18\x04\x20\x01(\x0cR\x0emnemonicSecret\x129\
@@ -3592,21 +3683,23 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     rd_pos\x18\n\x20\x01(\rR\x0frecoveryWordPos\x12$\n\x0ereset_word_pos\x18\
     \x0b\x20\x01(\rR\x0cresetWordPos\x12N\n\rmnemonic_type\x18\x0c\x20\x01(\
     \x0e2).hw.trezor.messages.management.BackupTypeR\x0cmnemonicType\x12\x16\
-    \n\x06tokens\x18\r\x20\x03(\tR\x06tokens\"\x0f\n\rDebugLinkStop\"P\n\x0c\
-    DebugLinkLog\x12\x14\n\x05level\x18\x01\x20\x01(\rR\x05level\x12\x16\n\
-    \x06bucket\x18\x02\x20\x01(\tR\x06bucket\x12\x12\n\x04text\x18\x03\x20\
-    \x01(\tR\x04text\"G\n\x13DebugLinkMemoryRead\x12\x18\n\x07address\x18\
-    \x01\x20\x01(\rR\x07address\x12\x16\n\x06length\x18\x02\x20\x01(\rR\x06l\
-    ength\")\n\x0fDebugLinkMemory\x12\x16\n\x06memory\x18\x01\x20\x01(\x0cR\
-    \x06memory\"^\n\x14DebugLinkMemoryWrite\x12\x18\n\x07address\x18\x01\x20\
-    \x01(\rR\x07address\x12\x16\n\x06memory\x18\x02\x20\x01(\x0cR\x06memory\
-    \x12\x14\n\x05flash\x18\x03\x20\x01(\x08R\x05flash\"-\n\x13DebugLinkFlas\
-    hErase\x12\x16\n\x06sector\x18\x01\x20\x01(\rR\x06sector\".\n\x14DebugLi\
-    nkEraseSdCard\x12\x16\n\x06format\x18\x01\x20\x01(\x08R\x06format\",\n\
-    \x14DebugLinkWatchLayout\x12\x14\n\x05watch\x18\x01\x20\x01(\x08R\x05wat\
-    ch\"\x1b\n\x19DebugLinkResetDebugEvents\"\x1a\n\x18DebugLinkOptigaSetSec\
-    MaxB=\n#com.satoshilabs.trezor.lib.protobufB\x12TrezorMessageDebug\x80\
-    \xa6\x1d\x01\
+    \n\x06tokens\x18\r\x20\x03(\tR\x06tokens\x12<\n\x1bthp_pairing_code_entr\
+    y_code\x18\x0e\x20\x01(\rR\x17thpPairingCodeEntryCode\x12,\n\x12thp_pair\
+    ing_secret\x18\x0f\x20\x01(\x0cR\x10thpPairingSecret\"\x0f\n\rDebugLinkS\
+    top\"P\n\x0cDebugLinkLog\x12\x14\n\x05level\x18\x01\x20\x01(\rR\x05level\
+    \x12\x16\n\x06bucket\x18\x02\x20\x01(\tR\x06bucket\x12\x12\n\x04text\x18\
+    \x03\x20\x01(\tR\x04text\"G\n\x13DebugLinkMemoryRead\x12\x18\n\x07addres\
+    s\x18\x01\x20\x01(\rR\x07address\x12\x16\n\x06length\x18\x02\x20\x01(\rR\
+    \x06length\")\n\x0fDebugLinkMemory\x12\x16\n\x06memory\x18\x01\x20\x01(\
+    \x0cR\x06memory\"^\n\x14DebugLinkMemoryWrite\x12\x18\n\x07address\x18\
+    \x01\x20\x01(\rR\x07address\x12\x16\n\x06memory\x18\x02\x20\x01(\x0cR\
+    \x06memory\x12\x14\n\x05flash\x18\x03\x20\x01(\x08R\x05flash\"-\n\x13Deb\
+    ugLinkFlashErase\x12\x16\n\x06sector\x18\x01\x20\x01(\rR\x06sector\".\n\
+    \x14DebugLinkEraseSdCard\x12\x16\n\x06format\x18\x01\x20\x01(\x08R\x06fo\
+    rmat\",\n\x14DebugLinkWatchLayout\x12\x14\n\x05watch\x18\x01\x20\x01(\
+    \x08R\x05watch\"\x1b\n\x19DebugLinkResetDebugEvents\"\x1a\n\x18DebugLink\
+    OptigaSetSecMaxB=\n#com.satoshilabs.trezor.lib.protobufB\x12TrezorMessag\
+    eDebug\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

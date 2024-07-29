@@ -57,14 +57,14 @@ class RustLayout(LayoutParentType[T]):
         assert msg is None
 
     def _paint(self) -> None:
-        import storage.cache as storage_cache
+        import storage.cache_common as cache_common
 
         painted = self.layout.paint()
 
         if painted:
             ui.refresh()
-        if storage_cache.homescreen_shown is not None and painted:
-            storage_cache.homescreen_shown = None
+        if cache_common.homescreen_shown is not None and painted:
+            cache_common.homescreen_shown = None
 
     if __debug__:
 

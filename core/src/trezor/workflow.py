@@ -1,7 +1,7 @@
 import utime
 from typing import TYPE_CHECKING
 
-import storage.cache
+import storage.cache_common as cache_common
 from trezor import log, loop
 from trezor.enums import MessageType
 
@@ -152,7 +152,7 @@ def close_others() -> None:
         if not task.is_running():
             task.close()
 
-    storage.cache.homescreen_shown = None
+    cache_common.homescreen_shown = None
 
     # if tasks were running, closing the last of them will run start_default
 
@@ -210,11 +210,11 @@ class IdleTimer:
         time and saves it to storage.cache. This is done to avoid losing an
         active timer when workflow restart happens and tasks are lost.
         """
-        if _restore_from_cache and storage.cache.autolock_last_touch is not None:
-            now = storage.cache.autolock_last_touch
+        if _restore_from_cache and cache_common.autolock_last_touch is not None:
+            now = cache_common.autolock_last_touch
         else:
             now = utime.ticks_ms()
-        storage.cache.autolock_last_touch = now
+        cache_common.autolock_last_touch = now
 
         for callback, task in self.tasks.items():
             timeout_us = self.timeouts[callback]

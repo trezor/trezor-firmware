@@ -17,14 +17,20 @@ HW_REVISION = ARGUMENTS.get('HW_REVISION', None)
 THP = ARGUMENTS.get('THP', '0') == '1' # Trezor-Host Protocol
 NEW_RENDERING = ARGUMENTS.get('NEW_RENDERING', '1') == '1' or TREZOR_MODEL in ('T3T1',)
 
-
-FEATURE_FLAGS = {
-    "RDI": True,
-    "SECP256K1_ZKP": True,  # required for trezor.crypto.curve.bip340 (BIP340/Taproot)
-    "SYSTEM_VIEW": False,
-    "AES_GCM": False,
-}
-
+if THP:
+    FEATURE_FLAGS = {
+        "RDI": True,
+        "SECP256K1_ZKP": True,  # required for trezor.crypto.curve.bip340 (BIP340/Taproot)
+        "SYSTEM_VIEW": False,
+        "AES_GCM": True, # Required for THP encryption
+    }
+else:
+    FEATURE_FLAGS = {
+        "RDI": True,
+        "SECP256K1_ZKP": True,  # required for trezor.crypto.curve.bip340 (BIP340/Taproot)
+        "SYSTEM_VIEW": False,
+        "AES_GCM": False,
+    }
 FEATURES_WANTED = ["input", "sbu", "sd_card", "rgb_led", "dma2d", "consumption_mask", "usb" ,"optiga", "haptic"]
 if DISABLE_OPTIGA and PYOPT == '0':
     FEATURES_WANTED.remove("optiga")
@@ -653,6 +659,8 @@ if FROZEN:
     else:
         raise ValueError('Unknown layout')
 
+    if THP:
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/wire/thp/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/wire/*.py'))
 
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'storage/*.py',
@@ -702,6 +710,8 @@ if FROZEN:
             SOURCE_PY_DIR + 'apps/bitcoin/sign_tx/zcash_v4.py',
         ])
     )
+    if THP:
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/thp/*.py'))
 
     if EVERYTHING:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/binance/*.py'))
@@ -777,7 +787,7 @@ if FROZEN:
 source_files = SOURCE_MOD + SOURCE_MOD_CRYPTO + SOURCE_FIRMWARE + SOURCE_MICROPYTHON + SOURCE_MICROPYTHON_SPEED + SOURCE_HAL
 obj_program = []
 obj_program.extend(env.Object(source=SOURCE_MOD))
-obj_program.extend(env.Object(source=SOURCE_MOD_CRYPTO, CCFLAGS='$CCFLAGS -ftrivial-auto-var-init=zero'))
+obj_program.extend(env.Object(source=SOURCE_MOD_CRYPTO))
 if FEATURE_FLAGS["SECP256K1_ZKP"]:
     obj_program.extend(env.Object(source=SOURCE_MOD_SECP256K1_ZKP, CCFLAGS='$CCFLAGS -Wno-unused-function'))
     source_files.extend(SOURCE_MOD_SECP256K1_ZKP)

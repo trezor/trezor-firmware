@@ -14,9 +14,9 @@ from typing import TYPE_CHECKING
 from trezor import io, log
 
 if TYPE_CHECKING:
-    from typing import Any, Awaitable, Callable, Coroutine, Generator
+    from typing import Any, Awaitable, Callable, Coroutine, Generator, Union
 
-    Task = Coroutine | Generator
+    Task = Union[Coroutine, Generator, "wait"]
     AwaitableTask = Task | Awaitable
     Finalizer = Callable[[Task, Any], None]
 
@@ -202,6 +202,13 @@ class Syscall:
         pass
 
 
+class Timeout(Exception):
+    pass
+
+
+_TIMEOUT_ERROR = Timeout()
+
+
 class sleep(Syscall):
     """Pause current task and resume it after given delay.
 
@@ -233,11 +240,39 @@ class wait(Syscall):
     >>> event, x, y = await loop.wait(io.TOUCH)  # await touch event
     """
 
-    def __init__(self, msg_iface: int) -> None:
+    _DO_NOT_RESCHEDULE = Syscall()
+
+    def __init__(self, msg_iface: int, timeout_ms: int | None = None) -> None:
         self.msg_iface = msg_iface
+        self.timeout_ms = timeout_ms
+        self.task: Task | None = None
 
     def handle(self, task: Task) -> None:
-        pause(task, self.msg_iface)
+        self.task = task
+        pause(self, self.msg_iface)
+        if self.timeout_ms is not None:
+            deadline = utime.ticks_add(utime.ticks_ms(), self.timeout_ms)
+            schedule(self, _TIMEOUT_ERROR, deadline)
+
+    def send(self, __value: Any) -> Any:
+        assert self.task is not None
+        self.close()
+        _step(self.task, __value)
+        return self._DO_NOT_RESCHEDULE
+
+    throw = send
+
+    def close(self) -> None:
+        _queue.discard(self)
+        if self.msg_iface in _paused:
+            _paused[self.msg_iface].discard(self)
+
+    def __iter__(self) -> Generator:
+        try:
+            return (yield self)
+        finally:
+            # whichever way we got here, we must be removed from the paused list
+            self.close()
 
 
 _type_gen: type[Generator] = type((lambda: (yield))())

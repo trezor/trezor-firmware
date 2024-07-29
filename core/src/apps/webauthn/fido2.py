@@ -374,6 +374,7 @@ async def _read_cmd(iface: HID) -> Cmd | None:
     desc_cont = frame_cont()
     read = loop.wait(iface.iface_num() | io.POLL_READ)
 
+    # wait for incoming command indefinitely
     buf = await read
     while True:
         ifrm = overlay_struct(bytearray(buf), desc_init)
@@ -409,9 +410,12 @@ async def _read_cmd(iface: HID) -> Cmd | None:
         else:
             data = data[:bcnt]
 
+        # set a timeout for subsequent reads
+        read.timeout_ms = _CTAP_HID_TIMEOUT_MS
         while datalen < bcnt:
-            buf = await loop.race(read, loop.sleep(_CTAP_HID_TIMEOUT_MS))
-            if not isinstance(buf, bytes):
+            try:
+                buf = await read
+            except loop.Timeout:
                 if __debug__:
                     warning(__name__, "_ERR_MSG_TIMEOUT")
                 await send_cmd(cmd_error(ifrm_cid, _ERR_MSG_TIMEOUT), iface)
@@ -494,7 +498,9 @@ async def send_cmd(cmd: Cmd, iface: HID) -> None:
     if offset < datalen:
         frm = overlay_struct(buf, cont_desc)
 
-    write = loop.wait(iface.iface_num() | io.POLL_WRITE)
+    write = loop.wait(
+        iface.iface_num() | io.POLL_WRITE, timeout_ms=_CTAP_HID_TIMEOUT_MS
+    )
     while offset < datalen:
         frm.seq = seq
         copied = utils.memcpy(frm.data, 0, cmd.data, offset, datalen)
@@ -502,10 +508,7 @@ async def send_cmd(cmd: Cmd, iface: HID) -> None:
         if copied < _FRAME_CONT_SIZE:
             frm.data[copied:] = bytearray(_FRAME_CONT_SIZE - copied)
         while True:
-            ret = await loop.race(write, loop.sleep(_CTAP_HID_TIMEOUT_MS))
-            if ret is not None:
-                raise TimeoutError
-
+            await write
             if iface.write(buf) > 0:
                 break
         seq += 1

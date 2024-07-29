@@ -1,20 +1,31 @@
-from common import *  # isort:skip
+from common import *  # isort:skip # noqa: F403
 
 from mock_storage import mock_storage
-from storage import cache
-from trezor.messages import EndSession, Initialize
+
+from storage import cache, cache_codec, cache_thp
+from storage.cache_common import InvalidSessionError
+from trezor import utils
+from trezor.messages import Initialize
+from trezor.messages import EndSession
 
 from apps.base import handle_EndSession, handle_Initialize
 
 KEY = 0
 
+if utils.USE_THP:
+    _PROTOCOL_CACHE = cache_thp
+else:
+    _PROTOCOL_CACHE = cache_codec
+
 
 # Function moved from cache.py, as it was not used there
 def is_session_started() -> bool:
-    return cache._active_session_idx is not None
+    return _PROTOCOL_CACHE.get_active_session() is not None
 
 
-class TestStorageCache(unittest.TestCase):
+class TestStorageCache(
+    unittest.TestCase
+):  # noqa: F405 # pyright: ignore[reportUndefinedVariable]
     def setUp(self):
         cache.clear_all()
 
@@ -25,9 +36,9 @@ class TestStorageCache(unittest.TestCase):
         self.assertNotEqual(session_id_a, session_id_b)
 
         cache.clear_all()
-        with self.assertRaises(cache.InvalidSessionError):
+        with self.assertRaises(InvalidSessionError):
             cache.set(KEY, "something")
-        with self.assertRaises(cache.InvalidSessionError):
+        with self.assertRaises(InvalidSessionError):
             cache.get(KEY)
 
     def test_end_session(self):
@@ -36,7 +47,7 @@ class TestStorageCache(unittest.TestCase):
         cache.set(KEY, b"A")
         cache.end_current_session()
         self.assertFalse(is_session_started())
-        self.assertRaises(cache.InvalidSessionError, cache.get, KEY)
+        self.assertRaises(InvalidSessionError, cache.get, KEY)
 
         # ending an ended session should be a no-op
         cache.end_current_session()
@@ -63,7 +74,7 @@ class TestStorageCache(unittest.TestCase):
         session_id = cache.start_session()
         self.assertEqual(cache.start_session(session_id), session_id)
         cache.set(KEY, b"A")
-        for i in range(cache._MAX_SESSIONS_COUNT):
+        for i in range(_PROTOCOL_CACHE._MAX_SESSIONS_COUNT):
             cache.start_session()
         self.assertNotEqual(cache.start_session(session_id), session_id)
         self.assertIsNone(cache.get(KEY))
@@ -83,7 +94,7 @@ class TestStorageCache(unittest.TestCase):
         self.assertEqual(cache.get(KEY), b"hello")
 
         cache.clear_all()
-        with self.assertRaises(cache.InvalidSessionError):
+        with self.assertRaises(InvalidSessionError):
             cache.get(KEY)
 
     def test_get_set_int(self):
@@ -101,7 +112,7 @@ class TestStorageCache(unittest.TestCase):
         self.assertEqual(cache.get_int(KEY), 1234)
 
         cache.clear_all()
-        with self.assertRaises(cache.InvalidSessionError):
+        with self.assertRaises(InvalidSessionError):
             cache.get_int(KEY)
 
     def test_delete(self):
@@ -186,6 +197,9 @@ class TestStorageCache(unittest.TestCase):
 
     @mock_storage
     def test_Initialize(self):
+        if utils.USE_THP:  # INITIALIZE SHOULD NOT BE IN THP!!! TODO
+            return
+
         def call_Initialize(**kwargs):
             msg = Initialize(**kwargs)
             return await_result(handle_Initialize(msg))
@@ -210,7 +224,7 @@ class TestStorageCache(unittest.TestCase):
         self.assertEqual(cache.get(KEY), b"hello")
 
         # supplying a different session ID starts a new cache
-        call_Initialize(session_id=b"A" * cache._SESSION_ID_LENGTH)
+        call_Initialize(session_id=b"A" * _PROTOCOL_CACHE.SESSION_ID_LENGTH)
         self.assertIsNone(cache.get(KEY))
 
         # but resuming a session loads the previous one
@@ -218,13 +232,14 @@ class TestStorageCache(unittest.TestCase):
         self.assertEqual(cache.get(KEY), b"hello")
 
     def test_EndSession(self):
-        self.assertRaises(cache.InvalidSessionError, cache.get, KEY)
-        cache.start_session()
+
+        self.assertRaises(InvalidSessionError, cache.get, KEY)
+        session_id = cache.start_session()
         self.assertTrue(is_session_started())
         self.assertIsNone(cache.get(KEY))
         await_result(handle_EndSession(EndSession()))
         self.assertFalse(is_session_started())
-        self.assertRaises(cache.InvalidSessionError, cache.get, KEY)
+        self.assertRaises(InvalidSessionError, cache.get, KEY)
 
 
 if __name__ == "__main__":

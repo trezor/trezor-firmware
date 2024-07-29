@@ -112,6 +112,8 @@ message DebugLinkState {
     optional uint32 reset_word_pos = 11;                    // index of mnemonic word the device is expecting during ResetDevice workflow
     optional management.BackupType mnemonic_type = 12;      // current mnemonic type (BIP-39/SLIP-39)
     repeated string tokens = 13;                            // current layout represented as a list of string tokens
+    optional uint32 thp_pairing_code_entry_code = 14;
+    optional bytes thp_pairing_secret = 15;
 }
 
 /**

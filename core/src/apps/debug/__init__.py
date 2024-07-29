@@ -44,7 +44,7 @@ if __debug__:
 
     layout_change_chan = loop.chan()
 
-    DEBUG_CONTEXT: context.Context | None = None
+    DEBUG_CONTEXT: context.CodecContext | None = None
 
     LAYOUT_WATCHER_NONE = 0
     LAYOUT_WATCHER_STATE = 1
@@ -205,6 +205,15 @@ if __debug__:
         m.mnemonic_type = mnemonic.get_type()
         m.passphrase_protection = passphrase.is_enabled()
         m.reset_entropy = storage.reset_internal_entropy
+
+        if utils.USE_THP:
+            from trezor.wire.context import get_context
+            from trezor.wire.thp.pairing_context import PairingContext
+
+            ctx = get_context()
+            if isinstance(ctx, PairingContext):
+                m.thp_pairing_secret = ctx.secret
+                m.thp_pairing_code_entry_code = ctx.display_data.code_code_entry
 
         if msg.wait_layout:
             if not storage.watch_layout_changes:
