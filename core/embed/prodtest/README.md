@@ -88,7 +88,7 @@ OK
 ```
 
 ### TOUCH
-The `TOUCH` command test the functionality of the display's touch screen.
+The `TOUCH` command tests the functionality of the display's touch screen.
 It draws a filled rectangle in one of the four display quadrants and waits for user interaction.
 
 The command requires two input parameters:
@@ -104,6 +104,48 @@ Example (to draw a rectangle in the top-left quadrant and wait for 9 seconds for
 ```
 TOUCH 09
 OK 50 90
+```
+
+
+### TOUCH_CUSTOM
+The `TOUCH_CUSTOM` command tests the functionality of the display's touch screen.
+It draws a filled rectangle on custom coordinates and waits for user interaction.
+
+The command requires five input parameters:
+
+* X position of the top-left corner of the rectangle
+* Y position of the top-left corner of the rectangle
+* Width of the rectangle
+* Height of the rectangle
+* The timeout in seconds
+
+If the display is not touched within the specified timeout, the command will return an `ERROR TIMEOUT`.
+
+The device report touch events, coordinates and timestamps (in ms), correctness of the touch point is not checked and is left to the test equipment.
+
+The test ends with first lift-up event.
+
+Example (to draw a 100x100 rectangle in the top-left (10,10) position and wait for 15 seconds for touch input):
+```
+TOUCH_CUSTOM 10 10 100 100 15
+TOUCH D 69 35 357300
+TOUCH U 69 35 357328
+OK
+```
+
+### TOUCH_IDLE
+The `TOUCH_IDLE` command tests the functionality of the display's touch screen.
+It waits for a specific time period without any touch input.
+
+The command requires one input parameter:
+* The timeout in seconds
+
+If a touch activity is detected within the specified timeout, the command will return an `ERROR TOUCH DETECTED`.
+
+Example - wait ten seconds for no touch input:
+```
+TOUCH_IDLE 10
+OK
 ```
 
 ### SENS
