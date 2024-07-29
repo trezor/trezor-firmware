@@ -27,6 +27,7 @@ from . import (
     ThpDecryptionError,
     ThpError,
     ThpErrorType,
+    ThpInvalidDataError,
     ThpUnallocatedSessionError,
 )
 from . import alternating_bit_protocol as ABP
@@ -113,6 +114,10 @@ async def handle_received_message(
         print(e)
     except ThpDecryptionError as e:
         await ctx.write_error(ThpErrorType.DECRYPTION_FAILED)
+        ctx.clear()
+        print(e)
+    except ThpInvalidDataError as e:
+        await ctx.write_error(ThpErrorType.INVALID_DATA)
         ctx.clear()
         print(e)
     if __debug__:
@@ -282,7 +287,9 @@ async def _handle_state_TH2(ctx: Channel, message_length: int, ctrl_byte: int) -
         assert ThpHandshakeCompletionReqNoisePayload.is_type_of(noise_payload)
     enabled_methods = thp_messages.get_enabled_pairing_methods(ctx.iface)
     for method in noise_payload.pairing_methods:
-        if method in enabled_methods and method not in ctx.selected_pairing_methods:
+        if method not in enabled_methods:
+            raise ThpInvalidDataError()
+        if method not in ctx.selected_pairing_methods:
             ctx.selected_pairing_methods.append(method)
     if __debug__:
         log.debug(

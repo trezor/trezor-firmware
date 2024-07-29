@@ -11,6 +11,10 @@ class ThpDecryptionError(ThpError):
     pass
 
 
+class ThpInvalidDataError(ThpError):
+    pass
+
+
 class ThpUnallocatedSessionError(ThpError):
     def __init__(self, session_id: int):
         self.session_id = session_id
@@ -26,6 +30,7 @@ class ThpErrorType(IntEnum):
     TRANSPORT_BUSY = 1
     UNALLOCATED_CHANNEL = 2
     DECRYPTION_FAILED = 3
+    INVALID_DATA = 4
 
 
 class ChannelState(IntEnum):
