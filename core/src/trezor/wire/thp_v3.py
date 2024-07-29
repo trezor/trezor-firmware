@@ -56,6 +56,7 @@ async def thp_main_loop(iface: WireInterface, is_debug_session=False):
 
             if ctrl_byte == CODEC_V1:
                 await _handle_codec_v1(iface, packet)
+                continue
 
             if cid == BROADCAST_CHANNEL_ID:
                 await _handle_broadcast(iface, ctrl_byte, packet)
