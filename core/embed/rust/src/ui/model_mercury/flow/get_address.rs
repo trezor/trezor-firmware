@@ -21,8 +21,8 @@ use crate::{
 
 use super::super::{
     component::{
-        AddressDetails, CancelInfoConfirmMsg, Frame, FrameMsg, PromptScreen, StatusScreen,
-        VerticalMenu, VerticalMenuChoiceMsg,
+        AddressDetails, Frame, FrameMsg, PromptScreen, StatusScreen, VerticalMenu,
+        VerticalMenuChoiceMsg,
     },
     theme,
 };
@@ -217,7 +217,7 @@ impl GetAddress {
         .with_swipe(SwipeDirection::Right, SwipeSettings::immediate())
         .map(|msg| match msg {
             FrameMsg::Content(()) => Some(FlowMsg::Confirmed),
-            FrameMsg::Button(CancelInfoConfirmMsg::Cancelled) => Some(FlowMsg::Cancelled),
+            FrameMsg::Button(FlowMsg::Cancelled) => Some(FlowMsg::Cancelled),
             _ => None,
         });
 

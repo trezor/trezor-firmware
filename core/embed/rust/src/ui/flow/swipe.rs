@@ -9,11 +9,11 @@ use crate::{
         component::{
             base::{AttachType, AttachType::Swipe},
             swipe_detect::SwipeSettings,
-            Component, Event, EventCtx, SwipeDetect, SwipeDetectMsg, SwipeDirection,
+            Component, Event, EventCtx, FlowMsg, SwipeDetect, SwipeDetectMsg, SwipeDirection,
         },
         display::Color,
         event::{SwipeEvent, TouchEvent},
-        flow::{base::Decision, FlowMsg, FlowState},
+        flow::{base::Decision, FlowState},
         geometry::Rect,
         layout::obj::ObjComponent,
         shape::{render_on_display, ConcreteRenderer, Renderer, ScopedRenderer},
@@ -355,16 +355,13 @@ impl ObjComponent for SwipeFlow {
     }
 
     fn obj_event(&mut self, ctx: &mut EventCtx, event: Event) -> Result<Obj, Error> {
-        match self.event(ctx, event) {
-            None => Ok(Obj::const_none()),
-            Some(FlowMsg::Confirmed) => Ok(crate::ui::layout::result::CONFIRMED.as_obj()),
-            Some(FlowMsg::Cancelled) => Ok(crate::ui::layout::result::CANCELLED.as_obj()),
-            Some(FlowMsg::Info) => Ok(crate::ui::layout::result::INFO.as_obj()),
-            Some(FlowMsg::Choice(i)) => {
-                Ok((crate::ui::layout::result::CONFIRMED.as_obj(), i.try_into()?).try_into()?)
-            }
+        if let Some(msg) = self.event(ctx, event) {
+            msg.try_into()
+        } else {
+            Ok(Obj::const_none())
         }
     }
+
     fn obj_paint(&mut self) {
         render_on_display(None, Some(Color::black()), |target| {
             self.render_state(self.state.index(), target);
