@@ -17,6 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
@@ -158,6 +159,30 @@ static void usb_init_all(void) {
   ensure(usb_init(&dev_info), NULL);
   ensure(usb_vcp_add(&vcp_info), "usb_vcp_add");
   ensure(usb_start(), NULL);
+}
+
+void extract_params(const char *str, int *numbers, int *count, int max_count) {
+  int i = 0;
+  int num_index = 0;
+  int len = strlen(str);
+  char buffer[20];  // buffer to hold the current number string
+
+  while (i < len && num_index < max_count) {
+    if (isdigit((int)str[i])) {
+      int buffer_index = 0;
+      // Extract the number
+      while (isdigit((int)str[i]) && i < len) {
+        buffer[buffer_index++] = str[i++];
+      }
+      buffer[buffer_index] = '\0';  // null-terminate the string
+
+      // Convert the extracted string to an integer
+      numbers[num_index++] = atoi(buffer);
+    } else {
+      i++;
+    }
+  }
+  *count = num_index;
 }
 
 static void draw_border(int width, int padding) {
@@ -331,19 +356,22 @@ static void test_touch(const char *args) {
   int column = args[0] - '0';
   int timeout = args[1] - '0';
 
+  const int width = DISPLAY_RESX / 2;
+  const int height = DISPLAY_RESY / 2;
+
   display_clear();
   switch (column) {
     case 1:
-      display_bar(0, 0, 120, 120, 0xFFFF);
+      display_bar(0, 0, width, height, 0xFFFF);
       break;
     case 2:
-      display_bar(120, 0, 120, 120, 0xFFFF);
+      display_bar(width, 0, width, height, 0xFFFF);
       break;
     case 3:
-      display_bar(120, 120, 120, 120, 0xFFFF);
+      display_bar(width, height, width, height, 0xFFFF);
       break;
     default:
-      display_bar(0, 120, 120, 120, 0xFFFF);
+      display_bar(0, height, width, height, 0xFFFF);
       break;
   }
   display_refresh();
@@ -358,6 +386,108 @@ static void test_touch(const char *args) {
   } else {
     vcp_println("ERROR TIMEOUT");
   }
+  display_clear();
+  display_refresh();
+
+  touch_deinit();
+}
+
+static void test_touch_custom(const char *args) {
+  static const int expected_params = 5;
+
+  int params[expected_params];
+  int num_params = 0;
+
+  extract_params(args, params, &num_params, expected_params);
+
+  if (num_params != expected_params) {
+    vcp_println("ERROR PARAM");
+    return;
+  }
+
+#undef NUM_PARAMS
+
+  int x = params[0];
+  int y = params[1];
+  int width = params[2];
+  int height = params[3];
+  int timeout = params[4];
+
+  uint32_t ticks_start = hal_ticks_ms();
+
+  display_clear();
+  display_bar(x, y, width, height, 0xFFFF);
+  display_refresh();
+
+  touch_init();
+
+  while (true) {
+    if (hal_ticks_ms() - ticks_start > timeout * 1000) {
+      vcp_println("ERROR TIMEOUT");
+      break;
+    }
+
+    uint32_t touch_event = touch_get_event();
+    if (touch_event != 0) {
+      uint16_t touch_x = touch_unpack_x(touch_event);
+      uint16_t touch_y = touch_unpack_y(touch_event);
+
+      if (touch_event & TOUCH_START) {
+        vcp_println("TOUCH D %d %d %d", touch_x, touch_y, hal_ticks_ms());
+      }
+      if (touch_event & TOUCH_MOVE) {
+        vcp_println("TOUCH C %d %d %d", touch_x, touch_y, hal_ticks_ms());
+      }
+      if (touch_event & TOUCH_END) {
+        vcp_println("TOUCH U %d %d %d", touch_x, touch_y, hal_ticks_ms());
+        vcp_println("OK");
+        break;
+      }
+    }
+  }
+
+  display_clear();
+  display_refresh();
+
+  touch_deinit();
+}
+
+static void test_touch_idle(const char *args) {
+  static const int expected_params = 5;
+  int num_params = 0;
+
+  int params[expected_params];
+
+  extract_params(args, params, &num_params, expected_params);
+
+  if (num_params != expected_params) {
+    vcp_println("ERROR PARAM");
+    return;
+  }
+
+  int timeout = params[0];
+
+  uint32_t ticks_start = hal_ticks_ms();
+
+  display_clear();
+  display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY / 2, "DON'T TOUCH", -1,
+                      FONT_BOLD, COLOR_WHITE, COLOR_BLACK);
+  display_refresh();
+
+  touch_init();
+
+  while (true) {
+    if (hal_ticks_ms() - ticks_start > timeout * 1000) {
+      vcp_println("OK");
+      break;
+    }
+
+    if (touch_activity() == sectrue) {
+      vcp_println("ERROR TOUCH DETECTED");
+      break;
+    }
+  }
+
   display_clear();
   display_refresh();
 
@@ -702,6 +832,12 @@ int main(void) {
 
     } else if (startswith(line, "TOUCH ")) {
       test_touch(line + 6);
+
+    } else if (startswith(line, "TOUCH_CUSTOM ")) {
+      test_touch_custom(line + 13);
+
+    } else if (startswith(line, "TOUCH_IDLE ")) {
+      test_touch_idle(line + 11);
 
     } else if (startswith(line, "SENS ")) {
       test_sensitivity(line + 5);
