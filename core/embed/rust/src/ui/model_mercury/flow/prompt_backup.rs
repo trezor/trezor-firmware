@@ -6,7 +6,7 @@ use crate::{
     ui::{
         component::{
             swipe_detect::SwipeSettings,
-            text::paragraphs::{Paragraph, Paragraphs},
+            text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs},
             ComponentExt, SwipeDirection,
         },
         flow::{
@@ -99,14 +99,14 @@ impl PromptBackup {
             FrameMsg::Button(_) => None,
         });
 
-        let par_array_skip_intro: [Paragraph<'static>; 2] = [
+        let paragraphs_skip_intro = ParagraphVecShort::from_iter([
             Paragraph::new(&theme::TEXT_WARNING, TR::words__not_recommended),
             Paragraph::new(
                 &theme::TEXT_MAIN_GREY_LIGHT,
                 TR::backup__create_backup_to_prevent_loss,
             ),
-        ];
-        let paragraphs_skip_intro = Paragraphs::new(par_array_skip_intro);
+        ])
+        .into_paragraphs();
         let content_skip_intro = Frame::left_aligned(
             TR::backup__title_skip.into(),
             SwipeContent::new(paragraphs_skip_intro),
