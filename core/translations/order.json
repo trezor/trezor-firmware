@@ -958,5 +958,11 @@
   "956": "words__title_done",
   "957": "reset__slip39_checklist_more_info_threshold",
   "958": "reset__slip39_checklist_more_info_threshold_example_template",
-  "959": "passphrase__continue_with_empty_passphrase"
+  "959": "passphrase__continue_with_empty_passphrase",
+  "960": "fido__more_credentials",
+  "961": "fido__select_intro",
+  "962": "fido__title_for_authentication",
+  "963": "fido__title_select_credential",
+  "964": "instructions__swipe_down",
+  "965": "fido__title_credential_details"
 }

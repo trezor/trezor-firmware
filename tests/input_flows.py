@@ -2335,3 +2335,23 @@ class InputFlowTutorial(InputFlowBase):
             self.debug.swipe_up(wait=True)
             self.debug.click(buttons.TAP_TO_CONFIRM, wait=True)
             self.debug.swipe_up(wait=True)
+
+
+class InputFlowFidoConfirm(InputFlowBase):
+    def __init__(self, client: Client, cancel: bool = False):
+        super().__init__(client)
+        self.cancel = cancel
+
+    def input_flow_tt(self) -> BRGeneratorType:
+        while True:
+            yield
+            self.debug.press_yes()
+
+    def input_flow_tr(self) -> BRGeneratorType:
+        yield from self.input_flow_tt()
+
+    def input_flow_t3t1(self) -> BRGeneratorType:
+        while True:
+            yield
+            self.debug.swipe_up(wait=True)
+            self.debug.click(buttons.TAP_TO_CONFIRM, wait=True)

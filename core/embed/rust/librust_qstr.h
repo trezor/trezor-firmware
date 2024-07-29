@@ -301,6 +301,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_instructions__learn_more;
   MP_QSTR_instructions__shares_continue_with_x_template;
   MP_QSTR_instructions__shares_start_with_1;
+  MP_QSTR_instructions__swipe_down;
   MP_QSTR_instructions__swipe_horizontally;
   MP_QSTR_instructions__swipe_up;
   MP_QSTR_instructions__tap_to_confirm;
@@ -1008,15 +1009,20 @@ static void _librust_qstrs(void) {
   MP_QSTR_fido__does_not_belong;
   MP_QSTR_fido__erase_credentials;
   MP_QSTR_fido__export_credentials;
+  MP_QSTR_fido__more_credentials;
   MP_QSTR_fido__not_registered;
   MP_QSTR_fido__not_registered_with_template;
   MP_QSTR_fido__please_enable_pin_protection;
+  MP_QSTR_fido__select_intro;
   MP_QSTR_fido__title_authenticate;
+  MP_QSTR_fido__title_credential_details;
+  MP_QSTR_fido__title_for_authentication;
   MP_QSTR_fido__title_import_credential;
   MP_QSTR_fido__title_list_credentials;
   MP_QSTR_fido__title_register;
   MP_QSTR_fido__title_remove_credential;
   MP_QSTR_fido__title_reset;
+  MP_QSTR_fido__title_select_credential;
   MP_QSTR_fido__title_u2f_auth;
   MP_QSTR_fido__title_u2f_register;
   MP_QSTR_fido__title_verify_user;

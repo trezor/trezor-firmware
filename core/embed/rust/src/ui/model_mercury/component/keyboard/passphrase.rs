@@ -198,14 +198,14 @@ impl PassphraseKeyboard {
     }
 
     fn replace_keys_contents(&mut self, ctx: &mut EventCtx) {
-        self.next_btn
-            .set_content(ctx, self.active_layout.next().into());
+        self.next_btn.set_content(self.active_layout.next().into());
         for (i, btn) in self.keys.iter_mut().enumerate() {
             let text = KEYBOARD[self.active_layout.to_usize().unwrap()][i];
             let content = Self::key_content(text);
-            btn.set_content(ctx, content);
+            btn.set_content(content);
             btn.request_complete_repaint(ctx);
         }
+        ctx.request_paint();
     }
 
     /// Possibly changing the buttons' state after change of the input.

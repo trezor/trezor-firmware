@@ -14,9 +14,7 @@ use crate::{
     error::{value_error, Error},
     io::BinaryData,
     micropython::{
-        gc::Gc,
         iter::IterBuf,
-        list::List,
         macros::{obj_fn_1, obj_fn_kw, obj_module},
         map::Map,
         module::Module,
@@ -58,17 +56,6 @@ use crate::{
     },
 };
 
-impl TryFrom<CancelConfirmMsg> for Obj {
-    type Error = Error;
-
-    fn try_from(value: CancelConfirmMsg) -> Result<Self, Self::Error> {
-        match value {
-            CancelConfirmMsg::Cancelled => Ok(CANCELLED.as_obj()),
-            CancelConfirmMsg::Confirmed => Ok(CONFIRMED.as_obj()),
-        }
-    }
-}
-
 impl TryFrom<CancelInfoConfirmMsg> for Obj {
     type Error = Error;
 
@@ -97,19 +84,6 @@ impl TryFrom<VerticalMenuChoiceMsg> for Obj {
     fn try_from(value: VerticalMenuChoiceMsg) -> Result<Self, Self::Error> {
         match value {
             VerticalMenuChoiceMsg::Selected(i) => i.try_into(),
-        }
-    }
-}
-
-impl<F, U> ComponentMsgObj for FidoConfirm<F, U>
-where
-    F: Fn(usize) -> TString<'static>,
-    U: Component<Msg = CancelConfirmMsg>,
-{
-    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
-        match msg {
-            FidoMsg::Confirmed(page) => Ok((page as u8).into()),
-            FidoMsg::Cancelled => Ok(CANCELLED.as_obj()),
         }
     }
 }
@@ -716,37 +690,6 @@ extern "C" fn new_show_error(n_args: usize, args: *const Obj, kwargs: *mut Map) 
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
-extern "C" fn new_confirm_fido(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
-    let block = move |_args: &[Obj], kwargs: &Map| {
-        let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
-        let app_name: TString = kwargs.get(Qstr::MP_QSTR_app_name)?.try_into()?;
-        let icon: Option<TString> = kwargs.get(Qstr::MP_QSTR_icon_name)?.try_into_option()?;
-        let accounts: Gc<List> = kwargs.get(Qstr::MP_QSTR_accounts)?.try_into()?;
-
-        // Cache the page count so that we can move `accounts` into the closure.
-        let page_count = accounts.len();
-        // Closure to lazy-load the information on given page index.
-        // Done like this to allow arbitrarily many pages without
-        // the need of any allocation here in Rust.
-        let get_page = move |page_index| {
-            let account = unwrap!(accounts.get(page_index));
-            account.try_into().unwrap_or_else(|_| "".into())
-        };
-
-        let controls = Button::cancel_confirm(
-            Button::with_icon(theme::ICON_CANCEL),
-            Button::with_text(TR::buttons__confirm.into()).styled(theme::button_confirm()),
-            true,
-        );
-
-        let fido_page = FidoConfirm::new(app_name, get_page, page_count, icon, controls);
-
-        let obj = LayoutObj::new(Frame::centered(title, fido_page))?;
-        Ok(obj.into())
-    };
-    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
-}
-
 extern "C" fn new_show_warning(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
@@ -1211,6 +1154,13 @@ extern "C" fn new_show_wait_text(message: Obj) -> Obj {
     };
 
     unsafe { util::try_or_raise(block) }
+}
+
+extern "C" fn new_confirm_fido(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    #[cfg(feature = "universal_fw")]
+    return flow::confirm_fido::new_confirm_fido(n_args, args, kwargs);
+    #[cfg(not(feature = "universal_fw"))]
+    panic!();
 }
 
 #[no_mangle]
