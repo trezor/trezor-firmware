@@ -45,9 +45,7 @@ mod welcome_screen;
 pub use address_details::AddressDetails;
 #[cfg(feature = "ui_overlay")]
 pub use binary_selection::{BinarySelection, BinarySelectionMsg};
-pub use button::{
-    Button, ButtonContent, ButtonMsg, ButtonStyle, ButtonStyleSheet, CancelInfoConfirmMsg, IconText,
-};
+pub use button::{Button, ButtonContent, ButtonMsg, ButtonStyle, ButtonStyleSheet, IconText};
 #[cfg(feature = "translations")]
 pub use coinjoin_progress::CoinJoinProgress;
 pub use error::ErrorScreen;

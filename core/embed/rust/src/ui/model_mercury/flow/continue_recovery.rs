@@ -21,8 +21,7 @@ use crate::{
 
 use super::super::{
     component::{
-        CancelInfoConfirmMsg, Frame, FrameMsg, PromptMsg, PromptScreen, SwipeContent, VerticalMenu,
-        VerticalMenuChoiceMsg,
+        Frame, FrameMsg, PromptMsg, PromptScreen, SwipeContent, VerticalMenu, VerticalMenuChoiceMsg,
     },
     theme,
 };
@@ -184,7 +183,7 @@ impl ContinueRecoveryBeforeShares {
                 .with_swipe(SwipeDirection::Up, SwipeSettings::default())
                 .with_swipe(SwipeDirection::Right, SwipeSettings::immediate())
                 .map(|msg| match msg {
-                    FrameMsg::Button(CancelInfoConfirmMsg::Cancelled) => Some(FlowMsg::Cancelled),
+                    FrameMsg::Button(FlowMsg::Cancelled) => Some(FlowMsg::Cancelled),
                     _ => None,
                 })
                 .repeated_button_request(ButtonRequest::new(
@@ -202,7 +201,7 @@ impl ContinueRecoveryBeforeShares {
         .with_swipe(SwipeDirection::Right, SwipeSettings::immediate())
         .map(|msg| match msg {
             FrameMsg::Content(PromptMsg::Confirmed) => Some(FlowMsg::Confirmed),
-            FrameMsg::Button(CancelInfoConfirmMsg::Cancelled) => Some(FlowMsg::Cancelled),
+            FrameMsg::Button(FlowMsg::Cancelled) => Some(FlowMsg::Cancelled),
             _ => None,
         });
 

@@ -451,13 +451,6 @@ pub struct ButtonStyle {
     pub background_color: Color,
 }
 
-#[derive(Clone, Copy)]
-pub enum CancelInfoConfirmMsg {
-    Cancelled,
-    Info,
-    Confirmed,
-}
-
 #[derive(PartialEq, Eq, Clone)]
 pub struct IconText {
     text: TString<'static>,

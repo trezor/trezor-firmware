@@ -2,8 +2,7 @@ use core::{cmp::Ordering, convert::TryInto};
 
 use super::{
     component::{
-        AddressDetails, Bip39Input, Button, CancelConfirmMsg, CancelInfoConfirmMsg,
-        CoinJoinProgress, FidoConfirm, FidoMsg, Frame, FrameMsg, Homescreen, HomescreenMsg,
+        AddressDetails, Bip39Input, CoinJoinProgress, Frame, FrameMsg, Homescreen, HomescreenMsg,
         Lockscreen, MnemonicInput, MnemonicKeyboard, MnemonicKeyboardMsg, PinKeyboard,
         PinKeyboardMsg, Progress, PromptScreen, SelectWordCount, SelectWordCountMsg, Slip39Input,
         StatusScreen, SwipeUpScreen, SwipeUpScreenMsg, VerticalMenu, VerticalMenuChoiceMsg,
@@ -55,18 +54,6 @@ use crate::{
         },
     },
 };
-
-impl TryFrom<CancelInfoConfirmMsg> for Obj {
-    type Error = Error;
-
-    fn try_from(value: CancelInfoConfirmMsg) -> Result<Self, Self::Error> {
-        match value {
-            CancelInfoConfirmMsg::Cancelled => Ok(CANCELLED.as_obj()),
-            CancelInfoConfirmMsg::Info => Ok(INFO.as_obj()),
-            CancelInfoConfirmMsg::Confirmed => Ok(CONFIRMED.as_obj()),
-        }
-    }
-}
 
 impl TryFrom<SelectWordCountMsg> for Obj {
     type Error = Error;

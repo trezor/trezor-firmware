@@ -9,11 +9,11 @@ use crate::{
         component::{
             base::{AttachType, AttachType::Swipe},
             swipe_detect::SwipeSettings,
-            Component, Event, EventCtx, SwipeDetect, SwipeDetectMsg, SwipeDirection,
+            Component, Event, EventCtx, FlowMsg, SwipeDetect, SwipeDetectMsg, SwipeDirection,
         },
         display::Color,
         event::{SwipeEvent, TouchEvent},
-        flow::{base::Decision, FlowMsg, FlowState},
+        flow::{base::Decision, FlowState},
         geometry::Rect,
         layout::obj::ObjComponent,
         shape::{render_on_display, ConcreteRenderer, Renderer, ScopedRenderer},
@@ -370,6 +370,7 @@ impl ObjComponent for SwipeFlow {
                 .try_into()?),
         }
     }
+
     fn obj_paint(&mut self) {
         render_on_display(None, Some(Color::black()), |target| {
             self.render_state(self.state.index(), target);
