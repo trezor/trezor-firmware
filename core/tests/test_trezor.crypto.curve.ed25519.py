@@ -69,12 +69,6 @@ class TestCryptoEd25519(unittest.TestCase):
             )
             pass
 
-    def test_generate_secret(self):
-        for _ in range(100):
-            sk = ed25519.generate_secret()
-            self.assertTrue(len(sk) == 32)
-            self.assertTrue(sk[0] & 7 == 0 and sk[31] & 128 == 0 and sk[31] & 64 == 64)
-
     def test_sign_verify_random(self):
         for l in range(1, 300):
             sk = ed25519.generate_secret()

@@ -34,10 +34,6 @@ STATIC mp_obj_t mod_trezorcrypto_ed25519_generate_secret() {
   vstr_t sk = {0};
   vstr_init_len(&sk, 32);
   random_buffer((uint8_t *)sk.buf, sk.len);
-  // taken from https://cr.yp.to/ecdh.html
-  sk.buf[0] &= 248;
-  sk.buf[31] &= 127;
-  sk.buf[31] |= 64;
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &sk);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorcrypto_ed25519_generate_secret_obj,
