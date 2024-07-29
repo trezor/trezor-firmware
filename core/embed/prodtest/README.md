@@ -282,6 +282,26 @@ FIRMWARE VERSION
 OK 0.2.6
 ```
 
+### BOOTLOADER VERSION
+Returns the version of the bootlaoder.
+The command returns `OK` followed by the version in the format `<major>.<minor>.<patch>`.
+
+Example:
+```
+BOOTLOADER_VERSION
+OK 2.1.7
+```
+
+### BOARDLOADER VERSION
+Returns the version of the boardloader.
+The command returns `OK` followed by the version in the format `<major>.<minor>.<patch>`.
+
+Example:
+```
+FIRMWARE VERSION
+OK 0.2.6
+```
+
 ### WIPE
 This command invalidates the current firmware in the flash memory by erasing its beginning, including metadata.
 After performing this operation, it displays the text "WIPED" on the screen and returns the response OK.

@@ -24,6 +24,7 @@
 
 #include STM32_HAL_H
 
+#include "board_capabilities.h"
 #include "button.h"
 #include "common.h"
 #include "display.h"
@@ -591,6 +592,32 @@ static void test_firmware_version(void) {
   vcp_println("OK %d.%d.%d", VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH);
 }
 
+static uint32_t read_bootloader_version(void) {
+  const image_header *header = read_image_header(
+      (const uint8_t *)BOOTLOADER_START, BOOTLOADER_IMAGE_MAGIC, 0xffffffff);
+
+  if (secfalse == header) {
+    return 0;
+  }
+
+  return header->version;
+}
+
+static void test_bootloader_version(uint32_t version) {
+  vcp_println("OK %d.%d.%d", version & 0xFF, (version >> 8) & 0xFF,
+              (version >> 16) & 0xFF);
+}
+
+static const boardloader_version_t *read_boardloader_version(void) {
+  parse_boardloader_capabilities();
+  return get_boardloader_version();
+}
+
+static void test_boardloader_version(const boardloader_version_t *version) {
+  vcp_println("OK %d.%d.%d", version->version_major, version->version_minor,
+              version->version_patch);
+}
+
 static void test_wipe(void) {
   invalidate_firmware();
   display_clear();
@@ -778,6 +805,9 @@ int main(void) {
 #endif
   usb_init_all();
 
+  uint32_t bootloader_version = read_bootloader_version();
+  const boardloader_version_t *boardloader_version = read_boardloader_version();
+
   mpu_config_prodtest_initial();
 
 #ifdef USE_OPTIGA
@@ -897,7 +927,10 @@ int main(void) {
 
     } else if (startswith(line, "FIRMWARE VERSION")) {
       test_firmware_version();
-
+    } else if (startswith(line, "BOOTLOADER VERSION")) {
+      test_bootloader_version(bootloader_version);
+    } else if (startswith(line, "BOARDLOADER VERSION")) {
+      test_boardloader_version(boardloader_version);
     } else if (startswith(line, "WIPE")) {
       test_wipe();
     } else if (startswith(line, "REBOOT")) {
