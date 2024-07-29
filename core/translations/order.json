@@ -957,5 +957,11 @@
   "955": "brightness__change_title",
   "956": "words__title_done",
   "957": "reset__slip39_checklist_more_info_threshold",
-  "958": "reset__slip39_checklist_more_info_threshold_example_template"
+  "958": "reset__slip39_checklist_more_info_threshold_example_template",
+  "959": "fido__more_credentials",
+  "960": "fido__select_intro",
+  "961": "fido__title_for_authentication",
+  "962": "fido__title_select_credential",
+  "963": "instructions__swipe_down",
+  "964": "fido__title_credential_details"
 }
