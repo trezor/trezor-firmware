@@ -3,7 +3,7 @@ use core::mem;
 use heapless::Vec;
 
 use crate::{
-    strutil::TString,
+    strutil::{ShortString, TString},
     time::Duration,
     ui::{
         button_request::{ButtonRequest, ButtonRequestCode},
@@ -576,5 +576,36 @@ impl EventCtx {
 
     pub fn get_transition_out(&self) -> Option<AttachType> {
         self.transition_out
+    }
+}
+
+/// Component::Msg for component parts of a swipe flow. Converting results of
+/// different screens to a shared type makes things easier to work with.
+///
+/// Also currently the type for message emitted by Flow::event to
+/// micropython. They don't need to be the same.
+#[derive(Clone)]
+pub enum FlowMsg {
+    Confirmed,
+    Cancelled,
+    Info,
+    Choice(usize),
+    Text(ShortString),
+}
+
+#[cfg(feature = "micropython")]
+impl TryFrom<FlowMsg> for crate::micropython::obj::Obj {
+    type Error = crate::error::Error;
+
+    fn try_from(val: FlowMsg) -> Result<crate::micropython::obj::Obj, Self::Error> {
+        match val {
+            FlowMsg::Confirmed => Ok(crate::ui::layout::result::CONFIRMED.as_obj()),
+            FlowMsg::Cancelled => Ok(crate::ui::layout::result::CANCELLED.as_obj()),
+            FlowMsg::Info => Ok(crate::ui::layout::result::INFO.as_obj()),
+            FlowMsg::Choice(i) => {
+                Ok((crate::ui::layout::result::CONFIRMED.as_obj(), i.try_into()?).try_into()?)
+            }
+            FlowMsg::Text(_s) => panic!(),
+        }
     }
 }

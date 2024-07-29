@@ -171,8 +171,9 @@ impl ConfirmFido {
             .with_swipe(SwipeDirection::Down, SwipeSettings::default())
             .with_swipe(SwipeDirection::Right, SwipeSettings::immediate())
             .map(|msg| match msg {
-                FrameMsg::Content(()) => Some(FlowMsg::Confirmed),
+                FrameMsg::Content(PromptMsg::Confirmed) => Some(FlowMsg::Confirmed),
                 FrameMsg::Button(_) => Some(FlowMsg::Info),
+                _ => None,
             });
 
         let content_menu = Frame::left_aligned(

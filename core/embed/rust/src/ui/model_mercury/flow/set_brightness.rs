@@ -7,9 +7,9 @@ use crate::{
     translations::TR,
     trezorhal::display,
     ui::{
-        component::{base::ComponentExt, swipe_detect::SwipeSettings, SwipeDirection},
+        component::{base::ComponentExt, swipe_detect::SwipeSettings, FlowMsg, SwipeDirection},
         flow::{
-            base::{DecisionBuilder as _, FlowMsg, StateChange},
+            base::{DecisionBuilder as _, StateChange},
             FlowState, SwipeFlow,
         },
         layout::obj::LayoutObj,

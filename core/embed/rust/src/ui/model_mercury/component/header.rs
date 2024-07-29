@@ -2,17 +2,15 @@ use crate::{
     strutil::TString,
     time::{Duration, Stopwatch},
     ui::{
-        component::{text::TextStyle, Component, Event, EventCtx, Label},
+        component::{text::TextStyle, Component, Event, EventCtx, FlowMsg, Label},
         display::{Color, Icon},
         geometry::{Alignment, Alignment2D, Insets, Offset, Rect},
         lerp::Lerp,
         model_mercury::{
-            component::{Button, ButtonMsg, ButtonStyleSheet, CancelInfoConfirmMsg},
-            theme,
-            theme::TITLE_HEIGHT,
+            component::{Button, ButtonMsg, ButtonStyleSheet},
+            theme::{self, TITLE_HEIGHT},
         },
-        shape,
-        shape::Renderer,
+        shape::{self, Renderer},
         util::animation_disabled,
     },
 };
@@ -71,7 +69,7 @@ pub struct Header {
     icon: Option<Icon>,
     color: Option<Color>,
     title_style: TextStyle,
-    button_msg: CancelInfoConfirmMsg,
+    button_msg: FlowMsg,
 }
 
 impl Header {
@@ -85,7 +83,7 @@ impl Header {
             icon: None,
             color: None,
             title_style: theme::label_title_main(),
-            button_msg: CancelInfoConfirmMsg::Cancelled,
+            button_msg: FlowMsg::Cancelled,
         }
     }
     #[inline(never)]
@@ -134,7 +132,7 @@ impl Header {
     }
 
     #[inline(never)]
-    pub fn with_button(mut self, icon: Icon, enabled: bool, msg: CancelInfoConfirmMsg) -> Self {
+    pub fn with_button(mut self, icon: Icon, enabled: bool, msg: FlowMsg) -> Self {
         let touch_area = Insets::uniform(BUTTON_EXPAND_BORDER);
         self.button = Some(
             Button::with_icon(icon)
@@ -166,7 +164,7 @@ impl Header {
 }
 
 impl Component for Header {
-    type Msg = CancelInfoConfirmMsg;
+    type Msg = FlowMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
         let header_area = if let Some(b) = &mut self.button {
@@ -208,7 +206,7 @@ impl Component for Header {
         }
 
         if let Some(ButtonMsg::Clicked) = self.button.event(ctx, event) {
-            return Some(self.button_msg);
+            return Some(self.button_msg.clone());
         };
 
         None
