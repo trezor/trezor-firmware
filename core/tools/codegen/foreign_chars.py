@@ -97,9 +97,62 @@ german_chars = (
     "ü",
 )
 
+italian_chars = (
+    "À",
+    "à",
+    "è",
+    "é",
+    "ì",
+    "ò",
+    "ù",
+)
+
+
+portugese_chars = (
+    "º",
+    "Á",
+    "Ã",
+    "Ç",
+    "Í",
+    "Ó",
+    "Õ",
+    "Ú",
+    "à",
+    "á",
+    "ã",
+    "ç",
+    "é",
+    "ê",
+    "í",
+    "ó",
+    "ô",
+    "õ",
+    "ú",
+)
+
+
+turkish_chars = (
+    "Ç",
+    "Ö",
+    "Ü",
+    "ç",
+    "ö",
+    "ü",
+    "Ğ",
+    "ğ",
+    "İ",
+    "ı",
+    "Ş",
+    "ş",
+)
+
+
 all_languages = {
     "cs": czech_chars,
     "fr": french_chars,
     "es": spanish_chars,
     "de": german_chars,
+    "it": italian_chars,
+    "pt": portugese_chars,
+    "tr": turkish_chars,
 }

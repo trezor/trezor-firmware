@@ -19,8 +19,6 @@ from typing_extensions import Self
 
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 
-LANGUAGES = ["cs", "de", "en", "es", "fr"]
-
 UI_TESTS_DIR = Path(__file__).resolve().parent
 SCREENS_DIR = UI_TESTS_DIR / "screens"
 IMAGES_DIR = SCREENS_DIR / "all_images"
