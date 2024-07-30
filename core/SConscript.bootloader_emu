@@ -256,7 +256,7 @@ cmake_gen = env.Command(
 # Rust library
 #
 
-RUST_TARGET = 'x86_64-unknown-linux-gnu'
+RUST_TARGET = os.popen("rustc -vV | sed -n 's/host: //p'").read().strip()
 RUST_LIB = 'trezor_lib'
 
 if ARGUMENTS.get('TREZOR_EMULATOR_DEBUGGABLE', '0') == '1':
