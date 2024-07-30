@@ -1,35 +1,36 @@
-from common import *
-
-from apps.thp import pairing
-from storage.cache_common import (
-    CHANNEL_HANDSHAKE_HASH,
-    CHANNEL_KEY_RECEIVE,
-    CHANNEL_KEY_SEND,
-    CHANNEL_NONCE_RECEIVE,
-    CHANNEL_NONCE_SEND,
-)
-from trezor.enums import ThpPairingMethod, MessageType
+from common import *  # isort:skip
+from storage import cache_thp
+from trezor import config, io, log, protobuf, utils
+from trezor.crypto.curve import curve25519
+from trezor.enums import MessageType
+from trezor.loop import wait
 from trezor.wire.errors import UnexpectedMessage
 from trezor.wire.protocol_common import Message
-from trezor.wire.thp.crypto import Handshake
-from trezor.wire.thp.pairing_context import PairingContext
-from trezor.messages import (
-    ThpCodeEntryChallenge,
-    ThpCodeEntryCpaceHost,
-    ThpCodeEntryTag,
-    ThpCredentialRequest,
-    ThpEndRequest,
-    ThpStartPairingRequest,
-)
-from trezor import io, config, log, protobuf
-from trezor.loop import wait
-from trezor.wire import thp_main
-from trezor.wire.thp import interface_manager
-from storage import cache_thp
-from trezor.wire.thp import ChannelState
-from trezor.crypto import elligator2
-from trezor.crypto.curve import curve25519
 
+if utils.USE_THP:
+    from storage.cache_common import (
+        CHANNEL_HANDSHAKE_HASH,
+        CHANNEL_KEY_RECEIVE,
+        CHANNEL_KEY_SEND,
+        CHANNEL_NONCE_RECEIVE,
+        CHANNEL_NONCE_SEND,
+    )
+    from trezor.crypto import elligator2
+    from trezor.enums import ThpPairingMethod
+    from trezor.messages import (
+        ThpCodeEntryChallenge,
+        ThpCodeEntryCpaceHost,
+        ThpCodeEntryTag,
+        ThpCredentialRequest,
+        ThpEndRequest,
+        ThpStartPairingRequest,
+    )
+    from trezor.wire import thp_main
+    from trezor.wire.thp import ChannelState, interface_manager
+    from trezor.wire.thp.crypto import Handshake
+    from trezor.wire.thp.pairing_context import PairingContext
+
+    from apps.thp import pairing
 
 # Disable log.debug for the test
 log.debug = lambda name, msg, *args: None
@@ -61,6 +62,7 @@ def get_dummy_key() -> bytes:
     return b"\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x10\x01\x02\x03\x04\x05\x06\x07\x08\x09\x20\x01\x02\x03\x04\x05\x06\x07\x08\x09\x30\x31"
 
 
+@unittest.skipUnless(utils.USE_THP, "only needed for THP")
 class TestTrezorHostProtocol(unittest.TestCase):
     def setUp(self):
         self.interface = MockHID(0xDEADBEEF)

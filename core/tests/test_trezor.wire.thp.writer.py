@@ -1,32 +1,31 @@
-from common import *
+from common import *  # isort:skip
 from trezor import utils
 
 if utils.USE_THP:
     from trezor.wire.thp import writer
-    from trezor.wire.thp.thp_messages import PacketHeader, ENCRYPTED_TRANSPORT
+    from trezor.wire.thp.thp_messages import ENCRYPTED_TRANSPORT, PacketHeader
+
+    class MockHID:
+        def __init__(self, num):
+            self.num = num
+            self.data = []
+
+        def iface_num(self):
+            return self.num
+
+        def write(self, msg):
+            self.data.append(bytearray(msg))
+            return len(msg)
+
+        def wait_object(self, mode):
+            return wait(mode | self.num)
+
 
 if __debug__:
     # Disable log.debug for the test
     from trezor import log
 
     log.debug = lambda name, msg, *args: None
-
-
-class MockHID:
-    def __init__(self, num):
-        self.num = num
-        self.data = []
-
-    def iface_num(self):
-        return self.num
-
-    def write(self, msg):
-        self.data.append(bytearray(msg))
-        return len(msg)
-
-    def wait_object(self, mode):
-        return wait(mode | self.num)
-
 
 @unittest.skipUnless(utils.USE_THP, "only needed for THP")
 class TestTrezorHostProtocolWriter(unittest.TestCase):
@@ -85,6 +84,15 @@ class TestTrezorHostProtocolWriter(unittest.TestCase):
 
     def setUp(self):
         self.interface = MockHID(0xDEADBEEF)
+
+    def test_write_empty_packet(self):
+        gen = writer.write_packet_to_wire(self.interface, b"")
+        with self.assertRaises(StopIteration):
+            gen.send(None)
+            gen.send(None)
+        print(self.interface.data[0])
+        self.assertEqual(len(self.interface.data), 1)
+        self.assertEqual(self.interface.data[0], b"")
 
     def test_write_empty_payload(self):
         header = PacketHeader(ENCRYPTED_TRANSPORT, 4660, 4)

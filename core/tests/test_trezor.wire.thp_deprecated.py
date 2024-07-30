@@ -1,22 +1,24 @@
-from common import *
-from typing import TYPE_CHECKING
-from storage.cache_thp import BROADCAST_CHANNEL_ID
-import trezor.wire.thp
-from trezor.wire.thp import alternating_bit_protocol as ABP
-from trezor.wire.thp.writer import PACKET_LENGTH
-from ubinascii import hexlify
+from common import *  # isort:skip
 import ustruct
+from typing import TYPE_CHECKING
+from ubinascii import hexlify
 
+import trezor.wire.thp
+from storage.cache_thp import BROADCAST_CHANNEL_ID
 from trezor import io, log, utils
 from trezor.loop import wait
 from trezor.utils import chunks
-from trezor.wire import thp_main
 from trezor.wire.protocol_common import Message
-from trezor.wire.thp import checksum
-from trezor.wire.thp.checksum import CHECKSUM_LENGTH
 
-# Disable log.debug for the test
-log.debug = lambda name, msg, *args: None
+if utils.USE_THP:
+    from trezor.wire import thp_main
+    from trezor.wire.thp import alternating_bit_protocol as ABP
+    from trezor.wire.thp import checksum
+    from trezor.wire.thp.checksum import CHECKSUM_LENGTH
+    from trezor.wire.thp.writer import PACKET_LENGTH
+if __debug__:
+    # Disable log.debug for the test
+    log.debug = lambda name, msg, *args: None
 
 if TYPE_CHECKING:
     from trezorio import WireInterface
@@ -47,7 +49,8 @@ CONT = 0x80
 
 HEADER_INIT_LENGTH = 5
 HEADER_CONT_LENGTH = 3
-INIT_MESSAGE_DATA_LENGTH = PACKET_LENGTH - HEADER_INIT_LENGTH - _MESSAGE_TYPE_LEN
+if utils.USE_THP:
+    INIT_MESSAGE_DATA_LENGTH = PACKET_LENGTH - HEADER_INIT_LENGTH - _MESSAGE_TYPE_LEN
 
 
 def make_header(ctrl_byte, cid, length):
@@ -89,6 +92,7 @@ async def deprecated_write_message(
 
 
 # This test suite is an adaptation of test_trezor.wire.codec_v1
+@unittest.skipUnless(utils.USE_THP, "only needed for THP")
 class TestWireTrezorHostProtocolV1(unittest.TestCase):
     def setUp(self):
         self.interface = MockHID(0xDEADBEEF)
