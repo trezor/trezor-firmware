@@ -228,20 +228,23 @@ class Channel:
 
             assert key_receive is not None
             assert nonce_receive is not None
-
-            print(
-                "(cid: %s) Buffer before decryption: %s",
-                utils.get_bytes_as_str(self.channel_id),
-                hexlify(noise_buffer),
-            )
+            if __debug__:
+                log.debug(
+                    __name__,
+                    "(cid: %s) Buffer before decryption: %s",
+                    utils.get_bytes_as_str(self.channel_id),
+                    hexlify(noise_buffer),
+                )
             is_tag_valid = crypto.dec(
                 noise_buffer, tag, key_receive, nonce_receive, b""
             )
-            print(
-                "(cid: %s) Buffer after decryption: %s",
-                utils.get_bytes_as_str(self.channel_id),
-                hexlify(noise_buffer),
-            )
+            if __debug__:
+                log.debug(
+                    __name__,
+                    "(cid: %s) Buffer after decryption: %s",
+                    utils.get_bytes_as_str(self.channel_id),
+                    hexlify(noise_buffer),
+                )
 
             self.channel_cache.set_int(CHANNEL_NONCE_RECEIVE, nonce_receive + 1)
 
