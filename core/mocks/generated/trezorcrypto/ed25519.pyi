@@ -24,10 +24,10 @@ def sign(secret_key: bytes, message: bytes, hasher: str = "") -> bytes:
 
 # extmod/modtrezorcrypto/modtrezorcrypto-ed25519.h
 def sign_ext(
-    secret_key: bytes, secret_extension: bytes, message: bytes
+    secret_scalar: bytes, secret_extension: bytes, message: bytes
 ) -> bytes:
     """
-    Uses secret key to produce the cardano signature of message.
+    Uses extended secret key to produce the cardano signature of message.
     """
 
 

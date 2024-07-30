@@ -101,23 +101,17 @@ ED25519_FN(ed25519_cosi_sign) (const unsigned char *m, size_t mlen, const ed2551
 }
 
 void
-ED25519_FN(ed25519_sign_ext) (const unsigned char *m, size_t mlen, const ed25519_secret_key sk, const ed25519_secret_key skext, ed25519_signature RS) {
+ED25519_FN(ed25519_sign_ext) (const unsigned char *m, size_t mlen, const ed25519_secret_key secret_scalar, const ed25519_secret_key skext, ed25519_signature RS) {
 	ed25519_hash_context ctx;
 	bignum256modm r = {0}, S = {0}, a = {0};
 	ge25519 ALIGN(16) R = {0};
 	ge25519 ALIGN(16) A = {0};
 	ed25519_public_key pk = {0};
-	hash_512bits extsk = {0}, hashr = {0}, hram = {0};
-
-	/* we don't stretch the key through hashing first since its already 64 bytes */
-
-	memcpy(extsk, sk, 32);
-	memcpy(extsk+32, skext, 32);
-
+	hash_512bits hashr = {0}, hram = {0};
 
 	/* r = H(aExt[32..64], m) */
 	ed25519_hash_init(&ctx);
-	ed25519_hash_update(&ctx, extsk + 32, 32);
+	ed25519_hash_update(&ctx, skext, 32);
 	ed25519_hash_update(&ctx, m, mlen);
 	ed25519_hash_final(&ctx, hashr);
 	expand256_modm(r, hashr, 64);
@@ -128,8 +122,7 @@ ED25519_FN(ed25519_sign_ext) (const unsigned char *m, size_t mlen, const ed25519
 	ge25519_pack(RS, &R);
 
 	/* a = aExt[0..31] */
-	expand256_modm(a, extsk, 32);
-	memzero(&extsk, sizeof(extsk));
+	expand256_modm(a, secret_scalar, 32);
 
 	/* A = aB */
 	ge25519_scalarmult_base_niels(&A, ge25519_niels_base_multiples, a);
