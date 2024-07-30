@@ -30,6 +30,12 @@ def wrap_protobuf_load(
     expected_type: type[LoadedMessageType],
 ) -> LoadedMessageType:
     try:
+        if __debug__:
+            log.debug(
+                __name__,
+                "Buffer to be parsed to a LoadedMessage: %s",
+                utils.get_bytes_as_str(buffer),
+            )
         msg = protobuf.decode(buffer, expected_type, EXPERIMENTAL_ENABLED)
         if __debug__ and utils.EMULATOR:
             log.debug(
