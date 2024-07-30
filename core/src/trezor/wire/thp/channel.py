@@ -73,7 +73,12 @@ class Channel:
     def get_channel_state(self) -> int:
         state = int.from_bytes(self.channel_cache.state, "big")
         if __debug__:
-            log.debug(__name__, "get_channel_state: %s", state_to_str(state))
+            log.debug(
+                __name__,
+                "(cid: %s) get_channel_state: %s",
+                utils.get_bytes_as_str(self.channel_id),
+                state_to_str(state),
+            )
         return state
 
     def get_handshake_hash(self) -> bytes:
@@ -84,12 +89,22 @@ class Channel:
     def set_channel_state(self, state: ChannelState) -> None:
         self.channel_cache.state = bytearray(state.to_bytes(1, "big"))
         if __debug__:
-            log.debug(__name__, "set_channel_state: %s", state_to_str(state))
+            log.debug(
+                __name__,
+                "(cid: %s) set_channel_state: %s",
+                utils.get_bytes_as_str(self.channel_id),
+                state_to_str(state),
+            )
 
     def set_buffer(self, buffer: utils.BufferType) -> None:
         self.buffer = buffer
         if __debug__:
-            log.debug(__name__, "set_buffer: %s", type(self.buffer))
+            log.debug(
+                __name__,
+                "(cid: %s) set_buffer: %s",
+                utils.get_bytes_as_str(self.channel_id),
+                type(self.buffer),
+            )
 
     def _create_management_session(self) -> None:
         session = session_manager.create_new_management_session(self)
@@ -100,12 +115,21 @@ class Channel:
 
     async def receive_packet(self, packet: utils.BufferType):
         if __debug__:
-            log.debug(__name__, "receive_packet")
+            log.debug(
+                __name__,
+                "(cid: %s) receive_packet",
+                utils.get_bytes_as_str(self.channel_id),
+            )
 
         await self._handle_received_packet(packet)
 
         if __debug__:
-            log.debug(__name__, "self.buffer: %s", utils.get_bytes_as_str(self.buffer))
+            log.debug(
+                __name__,
+                "(cid: %s) self.buffer: %s",
+                utils.get_bytes_as_str(self.channel_id),
+                utils.get_bytes_as_str(self.buffer),
+            )
 
         if self.expected_payload_length + INIT_HEADER_LENGTH == self.bytes_read:
             self._finish_message()
@@ -126,7 +150,11 @@ class Channel:
 
     async def _handle_init_packet(self, packet: utils.BufferType) -> None:
         if __debug__:
-            log.debug(__name__, "handle_init_packet")
+            log.debug(
+                __name__,
+                "(cid: %s) handle_init_packet",
+                utils.get_bytes_as_str(self.channel_id),
+            )
         # ctrl_byte, _, payload_length = ustruct.unpack(">BHH", packet) # TODO use this with single packet decryption
         _, _, payload_length = ustruct.unpack(">BHH", packet)
         self.expected_payload_length = payload_length
@@ -150,12 +178,26 @@ class Channel:
         await self._buffer_packet_data(self.buffer, packet, 0)
 
         if __debug__:
-            log.debug(__name__, "handle_init_packet - payload len: %d", payload_length)
-            log.debug(__name__, "handle_init_packet - buffer len: %d", len(self.buffer))
+            log.debug(
+                __name__,
+                "(cid: %s) handle_init_packet - payload len: %d",
+                utils.get_bytes_as_str(self.channel_id),
+                payload_length,
+            )
+            log.debug(
+                __name__,
+                "(cid: %s) handle_init_packet - buffer len: %d",
+                utils.get_bytes_as_str(self.channel_id),
+                len(self.buffer),
+            )
 
     async def _handle_cont_packet(self, packet: utils.BufferType) -> None:
         if __debug__:
-            log.debug(__name__, "handle_cont_packet")
+            log.debug(
+                __name__,
+                "(cid: %s) handle_cont_packet",
+                utils.get_bytes_as_str(self.channel_id),
+            )
         if not self.is_cont_packet_expected:
             raise ThpError("Continuation packet is not expected, ignoring")
         await self._buffer_packet_data(self.buffer, packet, CONT_HEADER_LENGTH)
@@ -187,25 +229,50 @@ class Channel:
             assert key_receive is not None
             assert nonce_receive is not None
 
-            print("Buffer before decryption:", hexlify(noise_buffer))
+            print(
+                "(cid: %s) Buffer before decryption: %s",
+                utils.get_bytes_as_str(self.channel_id),
+                hexlify(noise_buffer),
+            )
             is_tag_valid = crypto.dec(
                 noise_buffer, tag, key_receive, nonce_receive, b""
             )
-            print("Buffer after decryption:", hexlify(noise_buffer))
+            print(
+                "(cid: %s) Buffer after decryption: %s",
+                utils.get_bytes_as_str(self.channel_id),
+                hexlify(noise_buffer),
+            )
 
             self.channel_cache.set_int(CHANNEL_NONCE_RECEIVE, nonce_receive + 1)
 
         if __debug__:
-            log.debug(__name__, "Is decrypted tag valid? %s", str(is_tag_valid))
-            log.debug(__name__, "Received tag: %s", (hexlify(tag).decode()))
-            log.debug(__name__, "New nonce_receive: %i", nonce_receive + 1)
+            log.debug(
+                __name__,
+                "(cid: %s) Is decrypted tag valid? %s",
+                utils.get_bytes_as_str(self.channel_id),
+                str(is_tag_valid),
+            )
+            log.debug(
+                __name__,
+                "(cid: %s) Received tag: %s",
+                utils.get_bytes_as_str(self.channel_id),
+                (hexlify(tag).decode()),
+            )
+            log.debug(
+                __name__,
+                "(cid: %s) New nonce_receive: %i",
+                utils.get_bytes_as_str(self.channel_id),
+                nonce_receive + 1,
+            )
 
         if not is_tag_valid:
             raise ThpDecryptionError()
 
     def _encrypt(self, buffer: utils.BufferType, noise_payload_len: int) -> None:
         if __debug__:
-            log.debug(__name__, "encrypt")
+            log.debug(
+                __name__, "(cid: %s) encrypt", utils.get_bytes_as_str(self.channel_id)
+            )
         assert len(buffer) >= noise_payload_len + TAG_LENGTH + CHECKSUM_LENGTH
 
         noise_buffer = memoryview(buffer)[0:noise_payload_len]
@@ -243,7 +310,8 @@ class Channel:
         if __debug__ and utils.EMULATOR:
             log.debug(
                 __name__,
-                "write message: %s\n%s",
+                "(cid: %s) write message: %s\n%s",
+                utils.get_bytes_as_str(self.channel_id),
                 msg.MESSAGE_NAME,
                 utils.dump_protobuf(msg),
             )
@@ -292,7 +360,11 @@ class Channel:
         self, ctrl_byte: int, payload: bytes
     ) -> None:
         if __debug__:
-            log.debug(__name__, "write_encrypted_payload_loop")
+            log.debug(
+                __name__,
+                "(cid %s) write_encrypted_payload_loop",
+                utils.get_bytes_as_str(self.channel_id),
+            )
         payload_len = len(payload) + CHECKSUM_LENGTH
         sync_bit = ABP.get_send_seq_bit(self.channel_cache)
         ctrl_byte = control_byte.add_seq_bit_to_ctrl_byte(ctrl_byte, sync_bit)
@@ -306,7 +378,11 @@ class Channel:
         # workflow and the state is ENCRYPTED_TRANSPORT
         if self._can_clear_loop():
             if __debug__:
-                log.debug(__name__, "clearing loop from channel")
+                log.debug(
+                    __name__,
+                    "(cid: %s) clearing loop from channel",
+                    utils.get_bytes_as_str(self.channel_id),
+                )
             loop.clear()
 
     def _can_clear_loop(self) -> bool:
