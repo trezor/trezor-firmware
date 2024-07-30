@@ -30,13 +30,21 @@ class PairingDisplayData:
         self.code_nfc_unidirectional: bytes | None = None
 
     def get_display_layout(self) -> RustLayout:
+        # TODO have different layouts when there is only QR code or only Code Entry
+        qr_str = ""
+        code_str = ""
+        if self.code_qr_code is not None:
+            qr_str = self._get_code_qr_code_str()
+        if self.code_code_entry is not None:
+            code_str = self._get_code_code_entry_str()
+
         return RustLayout(
             trezorui2.show_address_details(  # noqa
                 qr_title="Scan QR code to pair",
-                address=self._get_code_qr_code_str(),
+                address=qr_str,
                 case_sensitive=True,
                 details_title="",
-                account="Code to rewrite:\n" + self._get_code_code_entry_str(),
+                account="Code to rewrite:\n" + code_str,
                 path="",
                 xpubs=[],
             )
