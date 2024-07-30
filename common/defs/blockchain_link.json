@@ -252,5 +252,29 @@
     "url": [
       "https://solana-dev.trezor.io"
     ]
+  },
+  "eth:ETH:1": {
+    "type": "blockbook",
+    "url": ["https://eth1.trezor.io", "https://eth2.trezor.io"]
+  },
+  "eth:BNB:56": {
+    "type": "blockbook",
+    "url": ["https://bsc1.trezor.io"]
+  },
+  "eth:ETC:61": {
+    "type": "blockbook",
+    "url": ["https://etc1.trezor.io", "https://etc2.trezor.io"]
+  },
+  "eth:MATIC:137": {
+    "type": "blockbook",
+    "url": ["https://matic1.trezor.io", "https://matic2.trezor.io"]
+  },
+  "eth:tHOL:17000": {
+    "type": "blockbook",
+    "url": ["https://holesky1.trezor.io", "https://holesky2.trezor.io"]
+  },
+  "eth:tSEP:11155111": {
+    "type": "blockbook",
+    "url": ["https://sepolia1.trezor.io"]
   }
 }
