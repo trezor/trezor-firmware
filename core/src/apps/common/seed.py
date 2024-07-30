@@ -75,6 +75,9 @@ if utils.BITCOIN_ONLY:
         if msg.passphrase is not None and msg.on_device:
             raise DataError("Passphrase provided when it shouldn't be!")
 
+        if ctx.cache.is_set(APP_COMMON_SEED):
+            raise Exception("Seed is already set!")
+
         from trezor import wire
 
         if not storage_device.is_initialized():
@@ -98,9 +101,6 @@ else:
 
         if not storage_device.is_initialized():
             raise wire.NotInitialized("Device is not initialized")
-
-        if ctx.cache.is_set(APP_COMMON_SEED):
-            raise Exception("Seed is already set!")
 
         if ctx.cache.is_set(APP_CARDANO_ICARUS_SECRET):
             raise Exception("Cardano icarus secret is already set!")
