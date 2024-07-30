@@ -5,7 +5,7 @@ Handles on-the-wire communication with a host computer. The communication is:
 
 - Request / response.
 - Protobuf-encoded, see `protobuf.py`.
-- Wrapped in a simple envelope format, see `trezor/wire/codec_v1.py` or `trezor/wire/thp_v2.py`.
+- Wrapped in a simple envelope format, see `trezor/wire/codec_v1.py` or `trezor/wire/thp_main.py`.
 - Transferred over USB interface, or UDP in case of Unix emulation.
 
 This module:
@@ -29,7 +29,7 @@ from trezor import log, loop, protobuf, utils
 from trezor.wire import context, message_handler, protocol_common
 
 if utils.USE_THP:
-    from trezor.wire import thp_v2
+    from trezor.wire import thp_main
 from trezor.wire.context import UnexpectedMessageException
 from trezor.wire.message_handler import (
     WIRE_BUFFER,
@@ -73,7 +73,7 @@ if utils.USE_THP:
         else:
             ctx_buffer = WIRE_BUFFER
 
-        thp_v2.set_buffer(ctx_buffer)
+        thp_main.set_buffer(ctx_buffer)
 
         # Take a mark of modules that are imported at this point, so we can
         # roll back and un-import any others.
@@ -81,7 +81,7 @@ if utils.USE_THP:
 
         while True:
             try:
-                await thp_v2.thp_main_loop(iface, is_debug_session)
+                await thp_main.thp_main_loop(iface, is_debug_session)
 
                 if not __debug__ or not is_debug_session:
                     # Unload modules imported by the workflow.  Should not raise.

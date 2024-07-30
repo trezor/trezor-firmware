@@ -23,7 +23,7 @@ from trezor.messages import (
 )
 from trezor import io, config, log, protobuf
 from trezor.loop import wait
-from trezor.wire import thp_v2
+from trezor.wire import thp_main
 from trezor.wire.thp import interface_manager
 from storage import cache_thp
 from trezor.wire.thp import ChannelState
@@ -65,7 +65,7 @@ class TestTrezorHostProtocol(unittest.TestCase):
     def setUp(self):
         self.interface = MockHID(0xDEADBEEF)
         buffer = bytearray(64)
-        thp_v2.set_buffer(buffer)
+        thp_main.set_buffer(buffer)
         interface_manager.decode_iface = dummy_decode_iface
 
     def test_channel_allocation(self):
@@ -74,9 +74,9 @@ class TestTrezorHostProtocol(unittest.TestCase):
         )
         expected_response = "41ffff0020001122334455667712340a04543254311000180020032802280328048ed892b3000000000000000000000000000000000000000000000000000000"
         test_counter = cache_thp.cid_counter + 1
-        self.assertEqual(len(thp_v2._CHANNELS), 0)
-        self.assertFalse(test_counter in thp_v2._CHANNELS)
-        gen = thp_v2.thp_main_loop(self.interface, is_debug_session=True)
+        self.assertEqual(len(thp_main._CHANNELS), 0)
+        self.assertFalse(test_counter in thp_main._CHANNELS)
+        gen = thp_main.thp_main_loop(self.interface, is_debug_session=True)
         query = gen.send(None)
         self.assertObjectEqual(query, self.interface.wait_object(io.POLL_READ))
         gen.send(cid_req)
@@ -85,18 +85,18 @@ class TestTrezorHostProtocol(unittest.TestCase):
             getBytes(self.interface.data[-1]),
             expected_response,
         )
-        self.assertTrue(test_counter in thp_v2._CHANNELS)
-        self.assertEqual(len(thp_v2._CHANNELS), 1)
+        self.assertTrue(test_counter in thp_main._CHANNELS)
+        self.assertEqual(len(thp_main._CHANNELS), 1)
         gen.send(cid_req)
         gen.send(None)
         gen.send(cid_req)
         gen.send(None)
 
     def test_channel_default_state_is_TH1(self):
-        self.assertEqual(thp_v2._CHANNELS[4660].get_channel_state(), ChannelState.TH1)
+        self.assertEqual(thp_main._CHANNELS[4660].get_channel_state(), ChannelState.TH1)
 
     def test_channel_errors(self):
-        gen = thp_v2.thp_main_loop(self.interface, is_debug_session=True)
+        gen = thp_main.thp_main_loop(self.interface, is_debug_session=True)
         query = gen.send(None)
         self.assertObjectEqual(query, self.interface.wait_object(io.POLL_READ))
         message_to_channel_789a = (
@@ -111,7 +111,7 @@ class TestTrezorHostProtocol(unittest.TestCase):
         )
         config.init()
         config.wipe()
-        channel = thp_v2._CHANNELS[4661]
+        channel = thp_main._CHANNELS[4661]
         channel.iface = self.interface
         channel.set_channel_state(ChannelState.ENCRYPTED_TRANSPORT)
         message_with_invalid_tag = b"\x04\x12\x35\x00\x14\x00\x11\x22\x33\x44\x55\x66\x77\x00\x11\x22\x33\x44\x55\x66\x77\xe1\xfc\xc6\xe0"
@@ -134,7 +134,7 @@ class TestTrezorHostProtocol(unittest.TestCase):
             decryption_failed_error_on_channel_1235,
         )
 
-        channel = thp_v2._CHANNELS[4662]
+        channel = thp_main._CHANNELS[4662]
         channel.iface = self.interface
 
         channel.set_channel_state(ChannelState.TH2)
@@ -154,7 +154,7 @@ class TestTrezorHostProtocol(unittest.TestCase):
     def test_skip_pairing(self):
         config.init()
         config.wipe()
-        channel = thp_v2._CHANNELS[4660]
+        channel = thp_main._CHANNELS[4660]
         channel.selected_pairing_methods = [
             ThpPairingMethod.NoMethod,
             ThpPairingMethod.CodeEntry,
@@ -176,7 +176,7 @@ class TestTrezorHostProtocol(unittest.TestCase):
     def test_pairing(self):
         config.init()
         config.wipe()
-        channel = thp_v2._CHANNELS[4660]
+        channel = thp_main._CHANNELS[4660]
         channel.selected_pairing_methods = [
             ThpPairingMethod.CodeEntry,
             ThpPairingMethod.NFC_Unidirectional,

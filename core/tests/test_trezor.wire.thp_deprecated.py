@@ -10,7 +10,7 @@ import ustruct
 from trezor import io, log, utils
 from trezor.loop import wait
 from trezor.utils import chunks
-from trezor.wire import thp_v2
+from trezor.wire import thp_main
 from trezor.wire.protocol_common import Message
 from trezor.wire.thp import checksum
 from trezor.wire.thp.checksum import CHECKSUM_LENGTH
@@ -212,7 +212,7 @@ class TestWireTrezorHostProtocolV1(unittest.TestCase):
         )
 
         # make sure we fit into one packet, to make this easier
-        self.assertTrue(len(packet) <= thp_v2.PACKET_LENGTH)
+        self.assertTrue(len(packet) <= thp_main.PACKET_LENGTH)
 
         buffer = bytearray(1)
         self.assertTrue(len(buffer) <= len(packet))
@@ -298,7 +298,7 @@ class TestWireTrezorHostProtocolV1(unittest.TestCase):
             cont_header + chunk
             for chunk in chunks(
                 message.data[INIT_MESSAGE_DATA_LENGTH:] + chksum,
-                thp_v2.PACKET_LENGTH - HEADER_CONT_LENGTH,
+                thp_main.PACKET_LENGTH - HEADER_CONT_LENGTH,
             )
         ]
 
@@ -329,7 +329,7 @@ class TestWireTrezorHostProtocolV1(unittest.TestCase):
 
         # ensure that a message this big won't fit into memory
         # Note: this control is changed, because THP has only 2 byte length field
-        self.assertTrue(message_size > thp_v2.MAX_PAYLOAD_LEN)
+        self.assertTrue(message_size > thp_main.MAX_PAYLOAD_LEN)
         # self.assertRaises(MemoryError, bytearray, message_size)
         header = make_header(PLAINTEXT_1, COMMON_CID, message_size)
         packet = header + MESSAGE_TYPE_BYTES + (b"\x00" * INIT_MESSAGE_DATA_LENGTH)
