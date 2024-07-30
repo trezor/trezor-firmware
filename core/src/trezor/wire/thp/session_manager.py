@@ -33,7 +33,7 @@ def load_cached_sessions(
     if __debug__:
         log.debug(__name__, "load_cached_sessions")
     sessions: dict[int, GenericSessionContext] = {}
-    cached_sessions = cache_thp.get_all_allocated_sessions()
+    cached_sessions = cache_thp.get_allocated_sessions(channel_ctx.channel_id)
     if __debug__:
         log.debug(
             __name__,
