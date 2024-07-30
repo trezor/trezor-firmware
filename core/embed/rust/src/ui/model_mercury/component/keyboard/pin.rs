@@ -7,6 +7,7 @@ use crate::{
     ui::{
         component::{
             base::{AttachType, ComponentExt},
+            swipe_detect::SwipeConfig,
             text::TextStyle,
             Component, Event, EventCtx, Label, Never, Pad, SwipeDirection, TimerToken,
         },
@@ -158,6 +159,7 @@ struct CloseAnimation {
     pub timer: Stopwatch,
     pub duration: Duration,
 }
+
 impl CloseAnimation {
     const DURATION_MS: u32 = 350;
     fn is_active(&self) -> bool {
@@ -260,6 +262,8 @@ pub struct PinKeyboard<'a> {
     attach_animation: AttachAnimation,
     close_animation: CloseAnimation,
     close_confirm: bool,
+    swipe: SwipeConfig,
+    internal_page_cnt: usize,
 }
 
 impl<'a> PinKeyboard<'a> {
@@ -299,6 +303,8 @@ impl<'a> PinKeyboard<'a> {
             attach_animation: AttachAnimation::default(),
             close_animation: CloseAnimation::default(),
             close_confirm: false,
+            swipe: SwipeConfig::new(),
+            internal_page_cnt: 1,
         }
     }
 
@@ -408,6 +414,7 @@ impl Component for PinKeyboard<'_> {
             return Some(if self.close_confirm {
                 PinKeyboardMsg::Confirmed
             } else {
+                self.close_animation.reset();
                 PinKeyboardMsg::Cancelled
             });
         }
@@ -690,6 +697,17 @@ impl Component for PinDots {
         } else {
             self.render_dots(dot_area, target)
         }
+    }
+}
+
+#[cfg(feature = "micropython")]
+impl crate::ui::flow::Swipable for PinKeyboard<'_> {
+    fn get_swipe_config(&self) -> SwipeConfig {
+        self.swipe
+    }
+
+    fn get_internal_page_count(&self) -> usize {
+        self.internal_page_cnt
     }
 }
 
