@@ -52,7 +52,7 @@ class PairingDisplayData:
 
     def _get_code_code_entry_str(self) -> str:
         if self.code_code_entry is not None:
-            code_str = str(self.code_code_entry)
+            code_str = f"{self.code_code_entry:06}"
             print("code_code_entry:", code_str)
 
             return code_str[:3] + " " + code_str[3:]
