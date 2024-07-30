@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from concurrent.futures import ThreadPoolExecutor
 from typing import TYPE_CHECKING, Any, Callable
 
@@ -69,7 +71,7 @@ class BackgroundDeviceHandler:
             while self.client.session_counter > 0:
                 self.client.close()
             try:
-                self.task.result()
+                self.task.result(timeout=1)
             except Exception:
                 pass
         self.task = None
@@ -80,11 +82,11 @@ class BackgroundDeviceHandler:
         emulator.restart()
         self._configure_client(emulator.client)  # type: ignore [client cannot be None]
 
-    def result(self):
+    def result(self, timeout: float | None = None) -> Any:
         if self.task is None:
             raise RuntimeError("No task running")
         try:
-            return self.task.result()
+            return self.task.result(timeout=timeout)
         finally:
             self.task = None
 
