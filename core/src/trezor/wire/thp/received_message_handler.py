@@ -111,15 +111,12 @@ async def handle_received_message(
     except ThpUnallocatedSessionError as e:
         error_message = Failure(code=FailureType.ThpUnallocatedSession)
         await ctx.write(error_message, e.session_id)
-        print(e)
-    except ThpDecryptionError as e:
+    except ThpDecryptionError:
         await ctx.write_error(ThpErrorType.DECRYPTION_FAILED)
         ctx.clear()
-        print(e)
-    except ThpInvalidDataError as e:
+    except ThpInvalidDataError:
         await ctx.write_error(ThpErrorType.INVALID_DATA)
         ctx.clear()
-        print(e)
     if __debug__:
         log.debug(__name__, "handle_received_message - end")
 

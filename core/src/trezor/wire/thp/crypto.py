@@ -2,7 +2,7 @@ from micropython import const
 from trezorcrypto import aesgcm, bip32, curve25519, hmac
 
 from storage import device
-from trezor import utils
+from trezor import log, utils
 from trezor.crypto.hashlib import sha256
 from trezor.wire.thp import ThpDecryptionError
 
@@ -22,8 +22,8 @@ def enc(buffer: utils.BufferType, key: bytes, nonce: int, auth_data: bytes) -> b
     Encrypts the provided `buffer` with AES-GCM (in place).
     Returns a 16-byte long encryption tag.
     """
-    print("ENCRYPT-------------> used key:  ", hexlify(key))
-    print("ENCRYPT-------------> used nonce:", nonce)
+    if __debug__:
+        log.debug(__name__, "enc (key: %s, nonce: %d)", hexlify(key), nonce)
     iv = _get_iv_from_nonce(nonce)
     aes_ctx = aesgcm(key, iv)
     aes_ctx.auth(auth_data)
@@ -39,8 +39,8 @@ def dec(
     the tag computed in decryption, otherwise it returns `False`.
     """
     iv = _get_iv_from_nonce(nonce)
-    print("DECRYPT-------------> used key:  ", hexlify(key))
-    print("DECRYPT-------------> used nonce:", nonce)
+    if __debug__:
+        log.debug(__name__, "dec (key: %s, nonce: %d)", hexlify(key), nonce)
     aes_ctx = aesgcm(key, iv)
     aes_ctx.auth(auth_data)
     aes_ctx.decrypt_in_place(buffer)
@@ -104,8 +104,8 @@ class Handshake:
         trezor_masked_static_pubkey = curve25519.multiply(mask, trezor_static_pubkey)
         aes_ctx = aesgcm(self.k, IV_1)
         encrypted_trezor_static_pubkey = aes_ctx.encrypt(trezor_masked_static_pubkey)
-        print("TH1-ENCRYPT---------> used key:  ", hexlify(self.k))
-        print("TH1-ENCRYPT---------> used nonce:", 0)
+        if __debug__:
+            log.debug(__name__, "th1 - enc (key: %s, nonce: %d)", hexlify(self.k), 0)
         aes_ctx.auth(self.h)
         tag_to_encrypted_key = aes_ctx.finish()
         encrypted_trezor_static_pubkey = (
@@ -136,8 +136,8 @@ class Handshake:
         aes_ctx.decrypt_in_place(
             memoryview(encrypted_host_static_pubkey)[:PUBKEY_LENGTH]
         )
-        print("TH2-DECRYPT---------> used key:  ", hexlify(self.k))
-        print("TH2-DECRYPT---------> used nonce:", 1)
+        if __debug__:
+            log.debug(__name__, "th2 - dec (key: %s, nonce: %d)", hexlify(self.k), 1)
         host_static_pubkey = memoryview(encrypted_host_static_pubkey)[:PUBKEY_LENGTH]
         tag = aes_ctx.finish()
         if tag != encrypted_host_static_pubkey[-16:]:
@@ -150,16 +150,21 @@ class Handshake:
         aes_ctx = aesgcm(self.k, IV_1)
         aes_ctx.auth(self.h)
         aes_ctx.decrypt_in_place(memoryview(encrypted_payload)[:-16])
-        print("TH2-DECRYPT---------> used key:  ", hexlify(self.k))
-        print("TH2-DECRYPT---------> used nonce:", 0)
+        if __debug__:
+            log.debug(__name__, "th2 - dec (key: %s, nonce: %d)", hexlify(self.k), 0)
         tag = aes_ctx.finish()
         if tag != encrypted_payload[-16:]:
             raise ThpDecryptionError()
 
         self.h = _hash_of_two(self.h, memoryview(encrypted_payload)[:-16])
         self.key_receive, self.key_send = _hkdf(self.ck, b"")
-        print("TREZOR_KEY_RECEIVE:", hexlify(self.key_receive))
-        print("TREZOR_KEY_SEND:   ", hexlify(self.key_send))
+        if __debug__:
+            log.debug(
+                __name__,
+                "(key_receive: %s, key_send: %d)",
+                hexlify(self.key_receive),
+                hexlify(self.key_send),
+            )
 
     def get_handshake_completion_response(self, trezor_state: bytes) -> bytes:
         aes_ctx = aesgcm(self.key_send, IV_1)

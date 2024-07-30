@@ -118,7 +118,6 @@ async def handle_single_message(
     if handler is None:
         # If no handler is found, we can skip decoding and directly
         # respond with failure.
-        print("handler is none")
         await ctx.write(unexpected_message())
         return True
 

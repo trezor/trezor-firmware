@@ -53,7 +53,8 @@ class PairingDisplayData:
     def _get_code_code_entry_str(self) -> str:
         if self.code_code_entry is not None:
             code_str = f"{self.code_code_entry:06}"
-            print("code_code_entry:", code_str)
+            if __debug__:
+                log.debug(__name__, "code_code_entry: %s", code_str)
 
             return code_str[:3] + " " + code_str[3:]
         raise Exception("Code entry string is not available")
@@ -61,7 +62,8 @@ class PairingDisplayData:
     def _get_code_qr_code_str(self) -> str:
         if self.code_qr_code is not None:
             code_str = (hexlify(self.code_qr_code)).decode("utf-8")
-            print("code_qr_code_hexlified:", code_str)
+            if __debug__:
+                log.debug(__name__, "code_qr_code_hexlified: %s", code_str)
             return code_str
         raise Exception("QR code string is not available")
 
