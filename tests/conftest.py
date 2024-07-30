@@ -18,10 +18,12 @@ from __future__ import annotations
 
 import os
 import typing as t
+from enum import IntEnum
 from pathlib import Path
 
 import pytest
 import xdist
+from _pytest.python import IdMaker
 from _pytest.reports import TestReport
 
 from trezorlib import debuglink, log, models
@@ -463,6 +465,15 @@ def pytest_configure(config: "Config") -> None:
     # enable debug
     if config.getoption("verbose"):
         log.enable_debug_output()
+
+    idval_orig = IdMaker._idval_from_value
+
+    def idval_from_value(self: IdMaker, val: object) -> str | None:
+        if isinstance(val, IntEnum):
+            return f"{type(val).__name__}.{val.name}"
+        return idval_orig(self, val)
+
+    IdMaker._idval_from_value = idval_from_value
 
 
 def pytest_runtest_setup(item: pytest.Item) -> None:
