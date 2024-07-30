@@ -66,8 +66,8 @@ async def confirm_fido(
 
     # The Rust side returns either an int or `CANCELLED`. We detect the int situation
     # and assume cancellation otherwise.
-    if isinstance(result, int):
-        return result
+    if isinstance(result, tuple):
+        return result[1]
 
     # Late import won't get executed on the happy path.
     from trezor.wire import ActionCancelled

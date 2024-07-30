@@ -18,10 +18,7 @@ use crate::{
 };
 
 use super::super::{
-    component::{
-        CancelInfoConfirmMsg, Frame, FrameMsg, PromptScreen, SwipeContent, VerticalMenu,
-        VerticalMenuChoiceMsg,
-    },
+    component::{Frame, FrameMsg, PromptScreen, SwipeContent, VerticalMenu, VerticalMenuChoiceMsg},
     theme,
 };
 
@@ -88,9 +85,7 @@ impl ConfirmFirmwareUpdate {
         .with_footer(TR::instructions__swipe_up.into(), None)
         .with_swipe(SwipeDirection::Up, SwipeSettings::default())
         .with_swipe(SwipeDirection::Left, SwipeSettings::default())
-        .map(|msg| {
-            matches!(msg, FrameMsg::Button(CancelInfoConfirmMsg::Info)).then_some(FlowMsg::Info)
-        });
+        .map(|msg| matches!(msg, FrameMsg::Button(FlowMsg::Info)).then_some(FlowMsg::Info));
 
         let content_menu = Frame::left_aligned(
             TString::empty(),
@@ -117,8 +112,7 @@ impl ConfirmFirmwareUpdate {
         .with_cancel_button()
         .with_swipe(SwipeDirection::Right, SwipeSettings::default())
         .map(|msg| {
-            matches!(msg, FrameMsg::Button(CancelInfoConfirmMsg::Cancelled))
-                .then_some(FlowMsg::Cancelled)
+            matches!(msg, FrameMsg::Button(FlowMsg::Cancelled)).then_some(FlowMsg::Cancelled)
         });
 
         let content_confirm = Frame::left_aligned(

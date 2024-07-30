@@ -18,8 +18,8 @@ use core::sync::atomic::{AtomicU16, Ordering};
 
 use super::super::{
     component::{
-        CancelInfoConfirmMsg, Frame, FrameMsg, NumberInputDialog, NumberInputDialogMsg,
-        SwipeContent, UpdatableMoreInfo, VerticalMenu, VerticalMenuChoiceMsg,
+        Frame, FrameMsg, NumberInputDialog, NumberInputDialogMsg, SwipeContent, UpdatableMoreInfo,
+        VerticalMenu, VerticalMenuChoiceMsg,
     },
     theme,
 };
@@ -114,7 +114,7 @@ impl RequestNumber {
         .with_swipe(SwipeDirection::Right, SwipeSettings::immediate())
         .map(|msg| match msg {
             FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => Some(FlowMsg::Choice(i)),
-            FrameMsg::Button(CancelInfoConfirmMsg::Cancelled) => Some(FlowMsg::Cancelled),
+            FrameMsg::Button(FlowMsg::Cancelled) => Some(FlowMsg::Cancelled),
             FrameMsg::Button(_) => None,
         });
 
@@ -123,7 +123,7 @@ impl RequestNumber {
             .with_cancel_button()
             .with_swipe(SwipeDirection::Right, SwipeSettings::immediate())
             .map(|msg| match msg {
-                FrameMsg::Button(CancelInfoConfirmMsg::Cancelled) => Some(FlowMsg::Cancelled),
+                FrameMsg::Button(FlowMsg::Cancelled) => Some(FlowMsg::Cancelled),
                 _ => None,
             });
 
