@@ -1,4 +1,7 @@
-use crate::ui::component::{base::AttachType, swipe_detect::SwipeConfig, SwipeDirection};
+use crate::{
+    strutil::ShortString,
+    ui::component::{base::AttachType, swipe_detect::SwipeConfig, SwipeDirection},
+};
 
 pub trait Swipable {
     fn get_swipe_config(&self) -> SwipeConfig;
@@ -11,16 +14,17 @@ pub trait Swipable {
 ///
 /// Also currently the type for message emitted by Flow::event to
 /// micropython. They don't need to be the same.
-#[derive(Copy, Clone)]
+#[derive(Clone)]
 pub enum FlowMsg {
     Confirmed,
     Cancelled,
     Info,
     Choice(usize),
+    Text(ShortString),
 }
 
 /// Composable event handler result.
-#[derive(Copy, Clone)]
+#[derive(Clone)]
 pub enum Decision {
     /// Do nothing, continue with processing next handler.
     Nothing,
