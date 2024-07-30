@@ -72,7 +72,7 @@ class TestTrezorHostProtocol(unittest.TestCase):
         cid_req = (
             b"\x40\xff\xff\x00\x0c\x00\x11\x22\x33\x44\x55\x66\x77\x96\x64\x3c\x6c"
         )
-        expected_response = "41ffff0020001122334455667712340a04543254311000180020032802280328048ed892b3000000000000000000000000000000000000000000000000000000"
+        expected_response = "41ffff0020001122334455667712340a045432543110001800200228022803280428af9907000000000000000000000000000000000000000000000000000000"
         test_counter = cache_thp.cid_counter + 1
         self.assertEqual(len(thp_main._CHANNELS), 0)
         self.assertFalse(test_counter in thp_main._CHANNELS)
@@ -226,7 +226,7 @@ class TestTrezorHostProtocol(unittest.TestCase):
         user_message = Message(MessageType.ThpCodeEntryCpaceHost, buffer)
         gen.send(user_message)
 
-        tag_ent = b"\xf5\x20\xee\xae\xb8\xa9\x65\x3e\x77\x89\x8f\x81\x8d\x03\x4d\xaa\x93\x79\xc3\xe4\x89\x3c\xb8\x31\x42\xdc\x01\x57\x2d\x5d\x11\xb5"
+        tag_ent = b"\x56\x34\xc5\x36\x60\xcc\x75\xbc\x58\x24\x76\x87\x74\xd2\x5f\x48\x80\xc0\x8c\x65\xab\x00\xe9\xf7\x0e\xb0\x10\x15\xe5\x8b\x4f\x6a"
 
         msg = ThpCodeEntryTag(tag=tag_ent)
 
