@@ -1181,6 +1181,12 @@ extern "C" fn new_show_wait_text(message: Obj) -> Obj {
     unsafe { util::try_or_raise(block) }
 }
 
+extern "C" fn new_confirm_fido(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    #[cfg(feature = "universal_fw")]
+    return flow::confirm_fido::new_confirm_fido(n_args, args, kwargs);
+    panic!("unreachable");
+}
+
 #[no_mangle]
 pub static mp_module_trezorui2: Module = obj_module! {
     /// from trezor import utils
@@ -1432,7 +1438,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///
     ///     Returns page index in case of confirmation and CANCELLED otherwise.
     ///     """
-    Qstr::MP_QSTR_confirm_fido => obj_fn_kw!(0, flow::confirm_fido::new_confirm_fido).as_obj(),
+    Qstr::MP_QSTR_confirm_fido => obj_fn_kw!(0, new_confirm_fido).as_obj(),
 
     /// def show_error(
     ///     *,
