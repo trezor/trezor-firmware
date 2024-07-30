@@ -338,7 +338,7 @@ def confirm_coinjoin(
 
 
 # rust/src/ui/model_mercury/layout.rs
-def request_pin(
+def flow_request_pin(
     *,
     prompt: str,
     subprompt: str,

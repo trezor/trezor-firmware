@@ -30,7 +30,7 @@ use crate::{
 };
 
 pub enum PinKeyboardMsg {
-    Confirmed,
+    Confirmed(ShortString),
     Cancelled,
 }
 
@@ -412,7 +412,7 @@ impl Component for PinKeyboard<'_> {
         self.close_animation.process(ctx, event);
         if self.close_animation.is_finished() && !animation_disabled() {
             return Some(if self.close_confirm {
-                PinKeyboardMsg::Confirmed
+                PinKeyboardMsg::Confirmed(unwrap!(ShortString::try_from(self.pin())))
             } else {
                 self.close_animation.reset();
                 PinKeyboardMsg::Cancelled
@@ -443,7 +443,9 @@ impl Component for PinKeyboard<'_> {
         self.textbox.event(ctx, event);
         if let Some(Clicked) = self.confirm_btn.event(ctx, event) {
             if animation_disabled() {
-                return Some(PinKeyboardMsg::Confirmed);
+                return Some(PinKeyboardMsg::Confirmed(unwrap!(ShortString::try_from(
+                    self.pin()
+                ))));
             } else {
                 self.close_animation.start(ctx);
                 self.close_confirm = true;

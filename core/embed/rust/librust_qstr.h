@@ -246,6 +246,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_flow_get_address;
   MP_QSTR_flow_prompt_backup;
   MP_QSTR_flow_request_number;
+  MP_QSTR_flow_request_pin;
   MP_QSTR_flow_show_share_words;
   MP_QSTR_flow_warning_hi_prio;
   MP_QSTR_get_language;

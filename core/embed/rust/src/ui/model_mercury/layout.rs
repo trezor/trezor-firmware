@@ -5,9 +5,9 @@ use super::{
         AddressDetails, Bip39Input, Button, CancelConfirmMsg, CancelInfoConfirmMsg,
         CoinJoinProgress, FidoConfirm, FidoMsg, Frame, FrameMsg, Homescreen, HomescreenMsg,
         Lockscreen, MnemonicInput, MnemonicKeyboard, MnemonicKeyboardMsg, PassphraseKeyboard,
-        PassphraseKeyboardMsg, PinKeyboard, PinKeyboardMsg, Progress, PromptScreen,
-        SelectWordCount, SelectWordCountMsg, Slip39Input, StatusScreen, SwipeUpScreen,
-        SwipeUpScreenMsg, VerticalMenu, VerticalMenuChoiceMsg,
+        PassphraseKeyboardMsg, Progress, PromptScreen, SelectWordCount, SelectWordCountMsg,
+        Slip39Input, StatusScreen, SwipeUpScreen, SwipeUpScreenMsg, VerticalMenu,
+        VerticalMenuChoiceMsg,
     },
     flow, theme,
 };
@@ -111,15 +111,6 @@ where
         match msg {
             FidoMsg::Confirmed(page) => Ok((page as u8).into()),
             FidoMsg::Cancelled => Ok(CANCELLED.as_obj()),
-        }
-    }
-}
-
-impl ComponentMsgObj for PinKeyboard<'_> {
-    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
-        match msg {
-            PinKeyboardMsg::Confirmed => self.pin().try_into(),
-            PinKeyboardMsg::Cancelled => Ok(CANCELLED.as_obj()),
         }
     }
 }
@@ -940,23 +931,6 @@ extern "C" fn new_confirm_coinjoin(n_args: usize, args: *const Obj, kwargs: *mut
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
-extern "C" fn new_request_pin(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
-    let block = move |_args: &[Obj], kwargs: &Map| {
-        let prompt: TString = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
-        let subprompt: TString = kwargs.get(Qstr::MP_QSTR_subprompt)?.try_into()?;
-        let allow_cancel: bool = kwargs.get_or(Qstr::MP_QSTR_allow_cancel, true)?;
-        let warning: bool = kwargs.get_or(Qstr::MP_QSTR_wrong_pin, false)?;
-        let warning = if warning {
-            Some(TR::pin__wrong_pin.into())
-        } else {
-            None
-        };
-        let obj = LayoutObj::new(PinKeyboard::new(prompt, subprompt, warning, allow_cancel))?;
-        Ok(obj.into())
-    };
-    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
-}
-
 extern "C" fn new_request_passphrase(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let _prompt: TString = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
@@ -1591,7 +1565,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     """Confirm coinjoin authorization."""
     Qstr::MP_QSTR_confirm_coinjoin => obj_fn_kw!(0, new_confirm_coinjoin).as_obj(),
 
-    /// def request_pin(
+    /// def flow_request_pin(
     ///     *,
     ///     prompt: str,
     ///     subprompt: str,
@@ -1599,7 +1573,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     wrong_pin: bool = False,
     /// ) -> LayoutObj[str | UiResult]:
     ///     """Request pin on device."""
-    Qstr::MP_QSTR_request_pin => obj_fn_kw!(0, new_request_pin).as_obj(),
+    Qstr::MP_QSTR_flow_request_pin => obj_fn_kw!(0, flow::request_pin::new_request_pin).as_obj(),
 
     /// def request_passphrase(
     ///     *,
