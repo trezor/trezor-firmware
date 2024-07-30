@@ -4,6 +4,7 @@ use core::{
     marker::PhantomData,
     ops::{Deref, DerefMut},
 };
+#[cfg(feature = "touch")]
 use num_traits::{FromPrimitive, ToPrimitive};
 
 #[cfg(feature = "button")]
