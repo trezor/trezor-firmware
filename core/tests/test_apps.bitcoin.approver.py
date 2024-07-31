@@ -1,4 +1,4 @@
-from common import H_, await_result, unittest  # isort:skip
+from common import *  # isort:skip
 
 import storage.cache
 from trezor import wire
@@ -18,8 +18,20 @@ from apps.bitcoin.sign_tx.bitcoin import Bitcoin
 from apps.bitcoin.sign_tx.tx_info import TxInfo
 from apps.common import coins
 
+if not utils.USE_THP:
+    import storage.cache_codec
 
 class TestApprover(unittest.TestCase):
+    if not utils.USE_THP:
+
+        def __init__(self):
+            # Context is needed to test decorators and handleInitialize
+            # It allows access to codec cache from different parts of the code
+            from trezor.wire import context
+
+            context.CURRENT_CONTEXT = context.CodecContext(None, bytearray(64))
+            super().__init__()
+
     def setUp(self):
         self.coin = coins.by_name("Bitcoin")
         self.fee_rate_percent = 0.3
@@ -47,7 +59,8 @@ class TestApprover(unittest.TestCase):
             coin_name=self.coin.coin_name,
             script_type=InputScriptType.SPENDTAPROOT,
         )
-        storage.cache.start_session()
+        if not utils.USE_THP:
+            storage.cache_codec.start_session()
 
     def make_coinjoin_request(self, inputs):
         return CoinJoinRequest(

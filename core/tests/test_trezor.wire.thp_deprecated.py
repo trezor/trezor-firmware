@@ -1,10 +1,9 @@
 from common import *  # isort:skip
 import ustruct
 from typing import TYPE_CHECKING
-from ubinascii import hexlify
 
 from storage.cache_thp import BROADCAST_CHANNEL_ID
-from trezor import io, log, utils
+from trezor import io, log
 from trezor.loop import wait
 from trezor.utils import chunks
 from trezor.wire.protocol_common import Message

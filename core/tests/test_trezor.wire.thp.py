@@ -1,6 +1,6 @@
 from common import *  # isort:skip
 from storage import cache_thp
-from trezor import config, io, log, protobuf, utils
+from trezor import config, io, log, protobuf
 from trezor.crypto.curve import curve25519
 from trezor.enums import MessageType
 from trezor.loop import wait

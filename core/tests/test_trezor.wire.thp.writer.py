@@ -1,5 +1,4 @@
 from common import *  # isort:skip
-from trezor import utils
 
 if utils.USE_THP:
     from trezor.wire.thp import writer

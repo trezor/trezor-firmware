@@ -1,4 +1,4 @@
-from common import H_, unittest  # isort:skip
+from common import *  # isort:skip
 
 import storage.cache
 from trezor.enums import InputScriptType
@@ -9,8 +9,20 @@ from apps.common import coins
 
 _ROUND_ID_LEN = 32
 
+if not utils.USE_THP:
+    import storage.cache_codec
+
 
 class TestAuthorization(unittest.TestCase):
+    if not utils.USE_THP:
+
+        def __init__(self):
+            # Context is needed to test decorators and handleInitialize
+            # It allows access to codec cache from different parts of the code
+            from trezor.wire import context
+
+            context.CURRENT_CONTEXT = context.CodecContext(None, bytearray(64))
+            super().__init__()
 
     coin = coins.by_name("Bitcoin")
 
@@ -26,7 +38,8 @@ class TestAuthorization(unittest.TestCase):
         )
 
         self.authorization = CoinJoinAuthorization(self.msg_auth)
-        storage.cache.start_session()
+        if not utils.USE_THP:
+            storage.cache_codec.start_session()
 
     def test_ownership_proof_account_depth_mismatch(self):
         # Account depth mismatch.

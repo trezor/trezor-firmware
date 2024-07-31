@@ -1,5 +1,5 @@
 from common import *  # isort:skip
-from trezor import config, log, utils
+from trezor import config, log
 
 if utils.USE_THP:
     from trezor.messages import ThpCredentialMetadata
