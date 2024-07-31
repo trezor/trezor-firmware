@@ -161,7 +161,7 @@ class Handshake:
         if __debug__:
             log.debug(
                 __name__,
-                "(key_receive: %s, key_send: %d)",
+                "(key_receive: %s, key_send: %s)",
                 hexlify(self.key_receive),
                 hexlify(self.key_send),
             )
