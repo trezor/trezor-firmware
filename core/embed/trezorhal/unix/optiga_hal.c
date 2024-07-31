@@ -17,10 +17,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-void optiga_hal_init(void) {
-  // nothing to do
+void optiga_hal_init(void)
+{
+    // nothing to do
 }
 
-void optiga_reset(void) {
-  // nothing to do
+void optiga_reset(void)
+{
+    // nothing to do
 }

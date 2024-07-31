@@ -25,9 +25,9 @@
 #include "bip32.h"
 
 typedef struct _mp_obj_HDNode_t {
-  mp_obj_base_t base;
-  uint32_t fingerprint;
-  HDNode hdnode;
+    mp_obj_base_t base;
+    uint32_t fingerprint;
+    HDNode hdnode;
 } mp_obj_HDNode_t;
 
 extern const mp_obj_type_t mod_trezorcrypto_HDNode_type;

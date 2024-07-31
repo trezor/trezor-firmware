@@ -108,190 +108,193 @@ extern void shutdown_privileged(void);
 #if !PYOPT
 #include <inttypes.h>
 #if 1  // color log
-#define OPTIGA_LOG_FORMAT \
-  "%" PRIu32 " \x1b[35moptiga\x1b[0m \x1b[32mDEBUG\x1b[0m %s: "
+#define OPTIGA_LOG_FORMAT "%" PRIu32 " \x1b[35moptiga\x1b[0m \x1b[32mDEBUG\x1b[0m %s: "
 #else
 #define OPTIGA_LOG_FORMAT "%" PRIu32 " optiga DEBUG %s: "
 #endif
-static void optiga_log_hex(const char *prefix, const uint8_t *data,
-                           size_t data_size) {
-  printf(OPTIGA_LOG_FORMAT, hal_ticks_ms() * 1000, prefix);
-  for (size_t i = 0; i < data_size; i++) {
-    printf("%02x", data[i]);
-  }
-  printf("\n");
+static void optiga_log_hex(const char *prefix, const uint8_t *data, size_t data_size)
+{
+    printf(OPTIGA_LOG_FORMAT, hal_ticks_ms() * 1000, prefix);
+    for (size_t i = 0; i < data_size; i++) {
+        printf("%02x", data[i]);
+    }
+    printf("\n");
 }
 #endif
 #endif
 
-int main(void) {
-  random_delays_init();
+int main(void)
+{
+    random_delays_init();
 
 #ifdef RDI
-  rdi_start();
+    rdi_start();
 #endif
 
-  // reinitialize HAL for Trezor One
+    // reinitialize HAL for Trezor One
 #if defined TREZOR_MODEL_1
-  HAL_Init();
+    HAL_Init();
 #endif
 
 #ifdef SYSTEM_VIEW
-  enable_systemview();
+    enable_systemview();
 #endif
 
 #ifdef USE_HASH_PROCESSOR
-  hash_processor_init();
+    hash_processor_init();
 #endif
 
 #ifdef USE_DMA2D
-  dma2d_init();
+    dma2d_init();
 #endif
 
-  display_reinit();
+    display_reinit();
 
 #ifdef STM32U5
-  check_oem_keys();
+    check_oem_keys();
 #endif
 
-  screen_boot_stage_2();
+    screen_boot_stage_2();
 
 #if !defined TREZOR_MODEL_1
-  parse_boardloader_capabilities();
+    parse_boardloader_capabilities();
 
-  unit_variant_init();
+    unit_variant_init();
 
 #ifdef STM32U5
-  secure_aes_init();
+    secure_aes_init();
 #endif
 
 #ifdef USE_OPTIGA
-  uint8_t secret[SECRET_OPTIGA_KEY_LEN] = {0};
-  secbool secret_ok = secret_optiga_get(secret);
+    uint8_t secret[SECRET_OPTIGA_KEY_LEN] = {0};
+    secbool secret_ok = secret_optiga_get(secret);
 #endif
 
-  mpu_config_firmware_initial();
+    mpu_config_firmware_initial();
 
-  collect_hw_entropy();
+    collect_hw_entropy();
 
 #if PRODUCTION || BOOTLOADER_QA
-  check_and_replace_bootloader();
+    check_and_replace_bootloader();
 #endif
-  // Enable MPU
-  mpu_config_firmware();
+    // Enable MPU
+    mpu_config_firmware();
 #endif
 
-  // Init peripherals
-  pendsv_init();
+    // Init peripherals
+    pendsv_init();
 
-  fault_handlers_init();
+    fault_handlers_init();
 
 #if defined TREZOR_MODEL_T
-  set_core_clock(CLOCK_180_MHZ);
+    set_core_clock(CLOCK_180_MHZ);
 #endif
 
 #ifdef USE_BUTTON
-  button_init();
+    button_init();
 #endif
 
 #ifdef USE_RGB_LED
-  rgb_led_init();
+    rgb_led_init();
 #endif
 
 #ifdef USE_CONSUMPTION_MASK
-  consumption_mask_init();
+    consumption_mask_init();
 #endif
 
 #ifdef USE_I2C
-  i2c_init();
+    i2c_init();
 #endif
 
 #ifdef USE_TOUCH
-  touch_init();
+    touch_init();
 #endif
 
 #ifdef USE_SD_CARD
-  sdcard_init();
+    sdcard_init();
 #endif
 
 #ifdef USE_HAPTIC
-  haptic_init();
+    haptic_init();
 #endif
 
 #ifdef USE_OPTIGA
 
 #if !PYOPT
-  // command log is relatively quiet so we enable it in debug builds
-  optiga_command_set_log_hex(optiga_log_hex);
-  // transport log can be spammy, uncomment if you want it:
-  // optiga_transport_set_log_hex(optiga_log_hex);
+    // command log is relatively quiet so we enable it in debug builds
+    optiga_command_set_log_hex(optiga_log_hex);
+    // transport log can be spammy, uncomment if you want it:
+    // optiga_transport_set_log_hex(optiga_log_hex);
 #endif
 
-  optiga_init();
-  optiga_open_application();
-  if (sectrue == secret_ok) {
-    optiga_sec_chan_handshake(secret, sizeof(secret));
-  }
-  memzero(secret, sizeof(secret));
+    optiga_init();
+    optiga_open_application();
+    if (sectrue == secret_ok) {
+        optiga_sec_chan_handshake(secret, sizeof(secret));
+    }
+    memzero(secret, sizeof(secret));
 #endif
 
 #if !defined TREZOR_MODEL_1
-  drop_privileges();
+    drop_privileges();
 #endif
 
 #ifdef USE_SECP256K1_ZKP
-  ensure(sectrue * (zkp_context_init() == 0), NULL);
+    ensure(sectrue * (zkp_context_init() == 0), NULL);
 #endif
 
-  printf("CORE: Preparing stack\n");
-  // Stack limit should be less than real stack size, so we have a chance
-  // to recover from limit hit.
-  mp_stack_set_top(&_estack);
-  mp_stack_set_limit((char *)&_estack - (char *)&_sstack - 1024);
+    printf("CORE: Preparing stack\n");
+    // Stack limit should be less than real stack size, so we have a chance
+    // to recover from limit hit.
+    mp_stack_set_top(&_estack);
+    mp_stack_set_limit((char *)&_estack - (char *)&_sstack - 1024);
 
 #if MICROPY_ENABLE_PYSTACK
-  static mp_obj_t pystack[1024];
-  mp_pystack_init(pystack, &pystack[MP_ARRAY_SIZE(pystack)]);
+    static mp_obj_t pystack[1024];
+    mp_pystack_init(pystack, &pystack[MP_ARRAY_SIZE(pystack)]);
 #endif
 
-  // GC init
-  printf("CORE: Starting GC\n");
-  gc_init(&_heap_start, &_heap_end);
+    // GC init
+    printf("CORE: Starting GC\n");
+    gc_init(&_heap_start, &_heap_end);
 
-  // Interpreter init
-  printf("CORE: Starting interpreter\n");
-  mp_init();
-  mp_obj_list_init(mp_sys_argv, 0);
-  mp_obj_list_init(mp_sys_path, 0);
-  mp_obj_list_append(mp_sys_path, MP_OBJ_NEW_QSTR(MP_QSTR__dot_frozen));
+    // Interpreter init
+    printf("CORE: Starting interpreter\n");
+    mp_init();
+    mp_obj_list_init(mp_sys_argv, 0);
+    mp_obj_list_init(mp_sys_path, 0);
+    mp_obj_list_append(mp_sys_path, MP_OBJ_NEW_QSTR(MP_QSTR__dot_frozen));
 
-  // Execute the main script
-  printf("CORE: Executing main script\n");
-  pyexec_frozen_module("main.py");
+    // Execute the main script
+    printf("CORE: Executing main script\n");
+    pyexec_frozen_module("main.py");
 
-  // Clean up
-  printf("CORE: Main script finished, cleaning up\n");
-  mp_deinit();
+    // Clean up
+    printf("CORE: Main script finished, cleaning up\n");
+    mp_deinit();
 
-  // Python code shouldn't ever exit, avoid black screen if it does
-  error_shutdown("(PE)");
+    // Python code shouldn't ever exit, avoid black screen if it does
+    error_shutdown("(PE)");
 
-  return 0;
+    return 0;
 }
 
 // MicroPython default exception handler
 
-void __attribute__((noreturn)) nlr_jump_fail(void *val) {
-  error_shutdown("(UE)");
+void __attribute__((noreturn)) nlr_jump_fail(void *val)
+{
+    error_shutdown("(UE)");
 }
 
 // MicroPython builtin stubs
 
-mp_import_stat_t mp_import_stat(const char *path) {
-  return MP_IMPORT_STAT_NO_EXIST;
+mp_import_stat_t mp_import_stat(const char *path)
+{
+    return MP_IMPORT_STAT_NO_EXIST;
 }
 
-mp_obj_t mp_builtin_open(uint n_args, const mp_obj_t *args, mp_map_t *kwargs) {
-  return mp_const_none;
+mp_obj_t mp_builtin_open(uint n_args, const mp_obj_t *args, mp_map_t *kwargs)
+{
+    return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_KW(mp_builtin_open_obj, 1, mp_builtin_open);

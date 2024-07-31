@@ -58,31 +58,31 @@
 #endif
 
 typedef __attribute__((aligned(4))) struct {
-  uint8_t buffer[LINE_BUFFER_16BPP_SIZE];
+    uint8_t buffer[LINE_BUFFER_16BPP_SIZE];
 } buffer_line_16bpp_t;
 
 typedef __attribute__((aligned(4))) struct {
-  uint8_t buffer[LINE_BUFFER_4BPP_SIZE];
+    uint8_t buffer[LINE_BUFFER_4BPP_SIZE];
 } buffer_line_4bpp_t;
 
 typedef __attribute__((aligned(4))) struct {
-  uint8_t buffer[TEXT_BUFFER_SIZE];
+    uint8_t buffer[TEXT_BUFFER_SIZE];
 } buffer_text_t;
 
 typedef __attribute__((aligned(4))) struct {
-  uint16_t buffer[JPEG_BUFFER_SIZE];
+    uint16_t buffer[JPEG_BUFFER_SIZE];
 } buffer_jpeg_t;
 
 typedef __attribute__((aligned(4))) struct {
-  uint8_t buffer[JPEG_WORK_SIZE];
+    uint8_t buffer[JPEG_WORK_SIZE];
 } buffer_jpeg_work_t;
 
 typedef __attribute__((aligned(4))) struct {
-  uint16_t buffer[10][3][BUFFER_PIXELS];
+    uint16_t buffer[10][3][BUFFER_PIXELS];
 } buffer_blurring_t;
 
 typedef __attribute__((aligned(4))) struct {
-  uint16_t buffer[3][BUFFER_PIXELS];
+    uint16_t buffer[3][BUFFER_PIXELS];
 } buffer_blurring_totals_t;
 
 extern const int32_t text_buffer_height;

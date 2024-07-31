@@ -21,12 +21,15 @@
 
 #include "timer.h"
 
-void timer_init(void) {}
+void timer_init(void)
+{
+}
 
-uint32_t timer_ms(void) {
-  struct timespec t = {0};
-  clock_gettime(CLOCK_MONOTONIC, &t);
+uint32_t timer_ms(void)
+{
+    struct timespec t = {0};
+    clock_gettime(CLOCK_MONOTONIC, &t);
 
-  uint32_t msec = t.tv_sec * 1000 + (t.tv_nsec / 1000000);
-  return msec;
+    uint32_t msec = t.tv_sec * 1000 + (t.tv_nsec / 1000000);
+    return msec;
 }

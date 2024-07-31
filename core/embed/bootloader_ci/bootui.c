@@ -50,71 +50,86 @@
 
 // welcome UI
 
-void ui_screen_welcome_third(void) {
-  display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, COLOR_WELCOME_BG);
-  display_text_center(120, 220, "Go to trezor.io/start", -1, FONT_NORMAL,
-                      COLOR_WELCOME_FG, COLOR_WELCOME_BG);
+void ui_screen_welcome_third(void)
+{
+    display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, COLOR_WELCOME_BG);
+    display_text_center(
+        120, 220, "Go to trezor.io/start", -1, FONT_NORMAL, COLOR_WELCOME_FG, COLOR_WELCOME_BG);
 }
 
 // install UI
 
-void ui_screen_install_start(void) {
-  display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, COLOR_BL_BG);
-  display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 24,
-                      "Installing firmware", -1, FONT_NORMAL, COLOR_BL_FG,
-                      COLOR_BL_BG);
+void ui_screen_install_start(void)
+{
+    display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, COLOR_BL_BG);
+    display_text_center(
+        DISPLAY_RESX / 2, DISPLAY_RESY - 24, "Installing firmware", -1, FONT_NORMAL, COLOR_BL_FG,
+        COLOR_BL_BG);
 }
 
-void ui_screen_install_progress_erase(int pos, int len) {}
+void ui_screen_install_progress_erase(int pos, int len)
+{
+}
 
-void ui_screen_install_progress_upload(int pos) {}
+void ui_screen_install_progress_upload(int pos)
+{
+}
 
 // wipe UI
 
-void ui_screen_wipe(void) {
-  display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, COLOR_BL_BG);
-  display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 24, "Wiping device", -1,
-                      FONT_NORMAL, COLOR_BL_FG, COLOR_BL_BG);
+void ui_screen_wipe(void)
+{
+    display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, COLOR_BL_BG);
+    display_text_center(
+        DISPLAY_RESX / 2, DISPLAY_RESY - 24, "Wiping device", -1, FONT_NORMAL, COLOR_BL_FG,
+        COLOR_BL_BG);
 }
 
-void ui_screen_wipe_progress(int pos, int len) {}
+void ui_screen_wipe_progress(int pos, int len)
+{
+}
 
 // done UI
 
-void ui_screen_done(int restart_seconds, secbool full_redraw) {
-  const char *str;
-  char count_str[24];
-  if (restart_seconds >= 1) {
-    mini_snprintf(count_str, sizeof(count_str), "Done! Restarting in %d s",
-                  restart_seconds);
-    str = count_str;
-  } else {
-    str = "Done! Unplug the device.";
-  }
-  if (sectrue == full_redraw) {
-    display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, COLOR_BL_BG);
-  }
-  if (secfalse == full_redraw) {
-    display_bar(0, DISPLAY_RESY - 24 - 18, 240, 23, COLOR_BL_BG);
-  }
-  display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 24, str, -1, FONT_NORMAL,
-                      COLOR_BL_FG, COLOR_BL_BG);
+void ui_screen_done(int restart_seconds, secbool full_redraw)
+{
+    const char *str;
+    char count_str[24];
+    if (restart_seconds >= 1) {
+        mini_snprintf(count_str, sizeof(count_str), "Done! Restarting in %d s", restart_seconds);
+        str = count_str;
+    } else {
+        str = "Done! Unplug the device.";
+    }
+    if (sectrue == full_redraw) {
+        display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, COLOR_BL_BG);
+    }
+    if (secfalse == full_redraw) {
+        display_bar(0, DISPLAY_RESY - 24 - 18, 240, 23, COLOR_BL_BG);
+    }
+    display_text_center(
+        DISPLAY_RESX / 2, DISPLAY_RESY - 24, str, -1, FONT_NORMAL, COLOR_BL_FG, COLOR_BL_BG);
 }
 
 // error UI
 
-void ui_screen_fail(void) {
-  display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, COLOR_BL_BG);
-  display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 24,
-                      "Failed! Please, reconnect.", -1, FONT_NORMAL,
-                      COLOR_BL_FG, COLOR_BL_BG);
+void ui_screen_fail(void)
+{
+    display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, COLOR_BL_BG);
+    display_text_center(
+        DISPLAY_RESX / 2, DISPLAY_RESY - 24, "Failed! Please, reconnect.", -1, FONT_NORMAL,
+        COLOR_BL_FG, COLOR_BL_BG);
 }
 
 // general functions
 
-void ui_fadein(void) { display_fade(0, BACKLIGHT_NORMAL, 1000); }
+void ui_fadein(void)
+{
+    display_fade(0, BACKLIGHT_NORMAL, 1000);
+}
 
-void ui_fadeout(void) {
-  display_fade(BACKLIGHT_NORMAL, 0, 500);
-  display_clear();
+void ui_fadeout(void)
+{
+    display_fade(BACKLIGHT_NORMAL, 0, 500);
+    display_clear();
 }

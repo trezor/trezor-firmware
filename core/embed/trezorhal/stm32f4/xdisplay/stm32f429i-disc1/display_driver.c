@@ -33,122 +33,137 @@
 
 // Display driver context.
 typedef struct {
-  // Pointer to the frame buffer
-  uint16_t *framebuf;
-  // Current display orientation (0, 90, 180, 270)
-  int orientation_angle;
-  // Current backlight level ranging from 0 to 255
-  int backlight_level;
+    // Pointer to the frame buffer
+    uint16_t *framebuf;
+    // Current display orientation (0, 90, 180, 270)
+    int orientation_angle;
+    // Current backlight level ranging from 0 to 255
+    int backlight_level;
 } display_driver_t;
 
 // Display driver instance
 static display_driver_t g_display_driver;
 
-void display_init(void) {
-  display_driver_t *drv = &g_display_driver;
-  memset(drv, 0, sizeof(display_driver_t));
-  drv->framebuf = (uint16_t *)FRAME_BUFFER_ADDR;
+void display_init(void)
+{
+    display_driver_t *drv = &g_display_driver;
+    memset(drv, 0, sizeof(display_driver_t));
+    drv->framebuf = (uint16_t *)FRAME_BUFFER_ADDR;
 
-  // Initialize LTDC controller
-  BSP_LCD_Init();
-  // Initialize external display controller
-  ili9341_init();
+    // Initialize LTDC controller
+    BSP_LCD_Init();
+    // Initialize external display controller
+    ili9341_init();
 }
 
-void display_reinit(void) {
-  display_driver_t *drv = &g_display_driver;
-  memset(drv, 0, sizeof(display_driver_t));
-  drv->framebuf = (uint16_t *)FRAME_BUFFER_ADDR;
+void display_reinit(void)
+{
+    display_driver_t *drv = &g_display_driver;
+    memset(drv, 0, sizeof(display_driver_t));
+    drv->framebuf = (uint16_t *)FRAME_BUFFER_ADDR;
 }
 
-void display_finish_actions(void) {
-  // Not used and intentionally left empty
+void display_finish_actions(void)
+{
+    // Not used and intentionally left empty
 }
 
-int display_set_backlight(int level) {
-  display_driver_t *drv = &g_display_driver;
+int display_set_backlight(int level)
+{
+    display_driver_t *drv = &g_display_driver;
 
-  // Just emulation, not doing anything
-  drv->backlight_level = level;
-  return level;
-}
-
-int display_get_backlight(void) {
-  display_driver_t *drv = &g_display_driver;
-
-  return drv->backlight_level;
-}
-
-int display_set_orientation(int angle) {
-  display_driver_t *drv = &g_display_driver;
-
-  if (angle == 0 || angle == 90 || angle == 180 || angle == 270) {
     // Just emulation, not doing anything
-    drv->orientation_angle = angle;
-  }
-
-  return drv->orientation_angle;
+    drv->backlight_level = level;
+    return level;
 }
 
-int display_get_orientation(void) {
-  display_driver_t *drv = &g_display_driver;
+int display_get_backlight(void)
+{
+    display_driver_t *drv = &g_display_driver;
 
-  return drv->orientation_angle;
+    return drv->backlight_level;
 }
 
-display_fb_info_t display_get_frame_buffer(void) {
-  display_driver_t *drv = &g_display_driver;
+int display_set_orientation(int angle)
+{
+    display_driver_t *drv = &g_display_driver;
 
-  display_fb_info_t fb = {
-      .ptr = (void *)drv->framebuf,
-      .stride = DISPLAY_RESX * sizeof(uint16_t),
-  };
+    if (angle == 0 || angle == 90 || angle == 180 || angle == 270) {
+        // Just emulation, not doing anything
+        drv->orientation_angle = angle;
+    }
 
-  return fb;
+    return drv->orientation_angle;
 }
 
-void display_refresh(void) {
-  // Do nothing as using just a single frame buffer
+int display_get_orientation(void)
+{
+    display_driver_t *drv = &g_display_driver;
+
+    return drv->orientation_angle;
 }
 
-void display_set_compatible_settings() {}
+display_fb_info_t display_get_frame_buffer(void)
+{
+    display_driver_t *drv = &g_display_driver;
 
-void display_fill(const gfx_bitblt_t *bb) {
-  display_driver_t *drv = &g_display_driver;
+    display_fb_info_t fb = {
+        .ptr = (void *)drv->framebuf,
+        .stride = DISPLAY_RESX * sizeof(uint16_t),
+    };
 
-  gfx_bitblt_t bb_new = *bb;
-  bb_new.dst_row = drv->framebuf + (DISPLAY_RESX * bb_new.dst_y);
-  bb_new.dst_stride = DISPLAY_RESX * sizeof(uint16_t);
-
-  gfx_rgb565_fill(&bb_new);
+    return fb;
 }
 
-void display_copy_rgb565(const gfx_bitblt_t *bb) {
-  display_driver_t *drv = &g_display_driver;
-
-  gfx_bitblt_t bb_new = *bb;
-  bb_new.dst_row = drv->framebuf + (DISPLAY_RESX * bb_new.dst_y);
-  bb_new.dst_stride = DISPLAY_RESX * sizeof(uint16_t);
-
-  gfx_rgb565_copy_rgb565(&bb_new);
+void display_refresh(void)
+{
+    // Do nothing as using just a single frame buffer
 }
 
-void display_copy_mono1p(const gfx_bitblt_t *bb) {
-  display_driver_t *drv = &g_display_driver;
-
-  gfx_bitblt_t bb_new = *bb;
-  bb_new.dst_row = drv->framebuf + (DISPLAY_RESX * bb_new.dst_y);
-  bb_new.dst_stride = DISPLAY_RESX * sizeof(uint16_t);
-
-  gfx_rgb565_copy_mono1p(&bb_new);
+void display_set_compatible_settings()
+{
 }
 
-void display_copy_mono4(const gfx_bitblt_t *bb) {
-  display_driver_t *drv = &g_display_driver;
+void display_fill(const gfx_bitblt_t *bb)
+{
+    display_driver_t *drv = &g_display_driver;
 
-  gfx_bitblt_t bb_new = *bb;
-  bb_new.dst_row = drv->framebuf + (DISPLAY_RESX * bb_new.dst_y);
-  bb_new.dst_stride = DISPLAY_RESX * sizeof(uint16_t);
+    gfx_bitblt_t bb_new = *bb;
+    bb_new.dst_row = drv->framebuf + (DISPLAY_RESX * bb_new.dst_y);
+    bb_new.dst_stride = DISPLAY_RESX * sizeof(uint16_t);
 
-  gfx_rgb565_copy_mono4(&bb_new);
+    gfx_rgb565_fill(&bb_new);
+}
+
+void display_copy_rgb565(const gfx_bitblt_t *bb)
+{
+    display_driver_t *drv = &g_display_driver;
+
+    gfx_bitblt_t bb_new = *bb;
+    bb_new.dst_row = drv->framebuf + (DISPLAY_RESX * bb_new.dst_y);
+    bb_new.dst_stride = DISPLAY_RESX * sizeof(uint16_t);
+
+    gfx_rgb565_copy_rgb565(&bb_new);
+}
+
+void display_copy_mono1p(const gfx_bitblt_t *bb)
+{
+    display_driver_t *drv = &g_display_driver;
+
+    gfx_bitblt_t bb_new = *bb;
+    bb_new.dst_row = drv->framebuf + (DISPLAY_RESX * bb_new.dst_y);
+    bb_new.dst_stride = DISPLAY_RESX * sizeof(uint16_t);
+
+    gfx_rgb565_copy_mono1p(&bb_new);
+}
+
+void display_copy_mono4(const gfx_bitblt_t *bb)
+{
+    display_driver_t *drv = &g_display_driver;
+
+    gfx_bitblt_t bb_new = *bb;
+    bb_new.dst_row = drv->framebuf + (DISPLAY_RESX * bb_new.dst_y);
+    bb_new.dst_stride = DISPLAY_RESX * sizeof(uint16_t);
+
+    gfx_rgb565_copy_mono4(&bb_new);
 }

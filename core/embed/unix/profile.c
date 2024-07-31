@@ -23,52 +23,57 @@
 
 #include "profile.h"
 
-#define SVAR(varname)   \
-  static char *varname; \
-  if (varname) {        \
-    return varname;     \
-  }
+#define SVAR(varname)     \
+    static char *varname; \
+    if (varname) {        \
+        return varname;   \
+    }
 
 #define GETENV(varname, envname, fallback) \
-  varname = getenv(envname);               \
-  if (!varname) {                          \
-    varname = fallback;                    \
-  }
+    varname = getenv(envname);             \
+    if (!varname) {                        \
+        varname = fallback;                \
+    }
 
-#define FILE_PATH(varname, filename)                           \
-  if (asprintf(&varname, "%s/" filename, profile_dir()) < 0) { \
-    varname = NULL;                                            \
-  }                                                            \
-  if (!varname) {                                              \
-    varname = PROFILE_DIR_DEFAULT filename;                    \
-  }
+#define FILE_PATH(varname, filename)                             \
+    if (asprintf(&varname, "%s/" filename, profile_dir()) < 0) { \
+        varname = NULL;                                          \
+    }                                                            \
+    if (!varname) {                                              \
+        varname = PROFILE_DIR_DEFAULT filename;                  \
+    }
 
-const char *profile_name(void) {
-  SVAR(_profile_name);
-  GETENV(_profile_name, "TREZOR_PROFILE_NAME", PROFILE_NAME_DEFAULT);
-  return _profile_name;
+const char *profile_name(void)
+{
+    SVAR(_profile_name);
+    GETENV(_profile_name, "TREZOR_PROFILE_NAME", PROFILE_NAME_DEFAULT);
+    return _profile_name;
 }
 
-const char *profile_dir(void) {
-  SVAR(_profile_dir);
-  GETENV(_profile_dir, "TREZOR_PROFILE_DIR", PROFILE_DIR_DEFAULT);
-  return _profile_dir;
+const char *profile_dir(void)
+{
+    SVAR(_profile_dir);
+    GETENV(_profile_dir, "TREZOR_PROFILE_DIR", PROFILE_DIR_DEFAULT);
+    return _profile_dir;
 }
 
-const char *profile_flash_path(void) {
-  SVAR(_flash_path);
-  FILE_PATH(_flash_path, "/trezor.flash");
-  return _flash_path;
+const char *profile_flash_path(void)
+{
+    SVAR(_flash_path);
+    FILE_PATH(_flash_path, "/trezor.flash");
+    return _flash_path;
 }
 
-const char *profile_sdcard_path(void) {
-  SVAR(_sdcard_path);
-  FILE_PATH(_sdcard_path, "/trezor.sdcard");
-  return _sdcard_path;
+const char *profile_sdcard_path(void)
+{
+    SVAR(_sdcard_path);
+    FILE_PATH(_sdcard_path, "/trezor.sdcard");
+    return _sdcard_path;
 }
 
-const char *profile_usb_disconnect_path(void) {
-  SVAR(_disconnect_path);
-  FILE_PATH(_disconnect_path, "/trezor.usb_data_disconnected");
-  return _disconnect_path;
+const char *profile_usb_disconnect_path(void)
+{
+    SVAR(_disconnect_path);
+    FILE_PATH(_disconnect_path, "/trezor.usb_data_disconnected");
+    return _disconnect_path;
 }

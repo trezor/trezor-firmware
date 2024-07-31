@@ -38,26 +38,26 @@ int signatures_old_ok(void);
 // immediately following the chunk hashes
 
 typedef struct {
-  uint32_t magic;
-  uint32_t hdrlen;
-  uint32_t expiry;
-  uint32_t codelen;
-  uint32_t version;
-  uint32_t fix_version;
-  uint32_t hw_model;
-  uint8_t hw_revision;
-  uint8_t monotonic;
-  uint8_t __reserved1[2];
-  uint8_t hashes[512];
-  uint8_t sig1[64];
-  uint8_t sig2[64];
-  uint8_t sig3[64];
-  uint8_t sigindex1;
-  uint8_t sigindex2;
-  uint8_t sigindex3;
-  uint8_t __reserved2[220];
-  uint8_t __sigmask;
-  uint8_t __sig[64];
+    uint32_t magic;
+    uint32_t hdrlen;
+    uint32_t expiry;
+    uint32_t codelen;
+    uint32_t version;
+    uint32_t fix_version;
+    uint32_t hw_model;
+    uint8_t hw_revision;
+    uint8_t monotonic;
+    uint8_t __reserved1[2];
+    uint8_t hashes[512];
+    uint8_t sig1[64];
+    uint8_t sig2[64];
+    uint8_t sig3[64];
+    uint8_t sigindex1;
+    uint8_t sigindex2;
+    uint8_t sigindex3;
+    uint8_t __reserved2[220];
+    uint8_t __sigmask;
+    uint8_t __sig[64];
 } __attribute__((packed)) image_header;
 
 #define FW_CHUNK_SIZE 65536
@@ -92,8 +92,7 @@ void compute_firmware_fingerprint(const image_header *hdr, uint8_t hash[32]);
  * @param hdr header
  * @param hash store resulting hash here
  */
-void compute_firmware_fingerprint_for_verifymessage(const image_header *hdr,
-                                                    uint8_t hash[32]);
+void compute_firmware_fingerprint_for_verifymessage(const image_header *hdr, uint8_t hash[32]);
 
 /**
  * Check if header is signed by v2 or v3 scheme based on `use_verifymessage`.
@@ -108,8 +107,8 @@ void compute_firmware_fingerprint_for_verifymessage(const image_header *hdr,
  * SignMessage/VerifyMessage scheme
  * @return SIG_OK or SIG_FAIL
  */
-int signatures_ok(const image_header *hdr, uint8_t store_fingerprint[32],
-                  secbool use_verifymessage);
+int signatures_ok(
+    const image_header *hdr, uint8_t store_fingerprint[32], secbool use_verifymessage);
 
 /**
  * Check if either v2 or v3 signature of header is valid.

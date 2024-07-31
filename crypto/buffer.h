@@ -31,16 +31,16 @@
 
 // Buffer reader struct, wraps a pointer to const data.
 typedef struct {
-  const uint8_t *data;
-  size_t size;
-  size_t pos;
+    const uint8_t *data;
+    size_t size;
+    size_t pos;
 } BUFFER_READER;
 
 // Buffer writer struct, wraps a pointer to non-const data.
 typedef struct {
-  uint8_t *data;
-  size_t size;
-  size_t pos;
+    uint8_t *data;
+    size_t size;
+    size_t pos;
 } BUFFER_WRITER;
 
 void buffer_reader_init(BUFFER_READER *buf, const uint8_t *data, size_t size);
@@ -50,12 +50,10 @@ bool __wur buffer_ptr(BUFFER_READER *buf, const uint8_t **ptr);
 bool __wur buffer_peek(const BUFFER_READER *buf, uint8_t *byte);
 bool __wur buffer_get(BUFFER_READER *buf, uint8_t *byte);
 bool __wur buffer_seek(BUFFER_READER *buf, size_t pos);
-bool __wur buffer_read_buffer(BUFFER_READER *src, BUFFER_READER *dest,
-                              size_t size);
+bool __wur buffer_read_buffer(BUFFER_READER *src, BUFFER_READER *dest, size_t size);
 void buffer_lstrip(BUFFER_READER *buf, uint8_t byte);
 bool __wur buffer_put(BUFFER_WRITER *writer, uint8_t byte);
-bool __wur buffer_write_array(BUFFER_WRITER *writer, const uint8_t *src,
-                              size_t size);
+bool __wur buffer_write_array(BUFFER_WRITER *writer, const uint8_t *src, size_t size);
 bool __wur buffer_write_buffer(BUFFER_WRITER *dest, BUFFER_READER *src);
 size_t __wur buffer_written_size(BUFFER_WRITER *writer);
 

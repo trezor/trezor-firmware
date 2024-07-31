@@ -42,29 +42,30 @@ MP_DEFINE_EXCEPTION(SigningInaccessible, OptigaError)
 ///     """
 ///     Return the certificate stored at the given index.
 ///     """
-STATIC mp_obj_t mod_trezorcrypto_optiga_get_certificate(mp_obj_t cert_index) {
-  mp_int_t idx = mp_obj_get_int(cert_index);
-  if (idx < 0 || idx >= OPTIGA_CERT_COUNT) {
-    mp_raise_ValueError("Invalid index.");
-  }
+STATIC mp_obj_t mod_trezorcrypto_optiga_get_certificate(mp_obj_t cert_index)
+{
+    mp_int_t idx = mp_obj_get_int(cert_index);
+    if (idx < 0 || idx >= OPTIGA_CERT_COUNT) {
+        mp_raise_ValueError("Invalid index.");
+    }
 
-  size_t cert_size = 0;
-  if (!optiga_cert_size(idx, &cert_size)) {
-    mp_raise_msg(&mp_type_OptigaError, "Failed to get certificate size.");
-  }
+    size_t cert_size = 0;
+    if (!optiga_cert_size(idx, &cert_size)) {
+        mp_raise_msg(&mp_type_OptigaError, "Failed to get certificate size.");
+    }
 
-  vstr_t cert = {0};
-  vstr_init_len(&cert, cert_size);
-  if (!optiga_read_cert(idx, (uint8_t *)cert.buf, cert.alloc, &cert_size)) {
-    vstr_clear(&cert);
-    mp_raise_msg(&mp_type_OptigaError, "Failed to read certificate.");
-  }
+    vstr_t cert = {0};
+    vstr_init_len(&cert, cert_size);
+    if (!optiga_read_cert(idx, (uint8_t *)cert.buf, cert.alloc, &cert_size)) {
+        vstr_clear(&cert);
+        mp_raise_msg(&mp_type_OptigaError, "Failed to read certificate.");
+    }
 
-  cert.len = cert_size;
-  return mp_obj_new_str_from_vstr(&mp_type_bytes, &cert);
+    cert.len = cert_size;
+    return mp_obj_new_str_from_vstr(&mp_type_bytes, &cert);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_optiga_get_certificate_obj,
-                                 mod_trezorcrypto_optiga_get_certificate);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(
+    mod_trezorcrypto_optiga_get_certificate_obj, mod_trezorcrypto_optiga_get_certificate);
 
 /// def sign(
 ///     key_index: int,
@@ -74,65 +75,65 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_optiga_get_certificate_obj,
 ///     Uses the private key at key_index to produce a DER-encoded signature of
 ///     the digest.
 ///     """
-STATIC mp_obj_t mod_trezorcrypto_optiga_sign(mp_obj_t key_index,
-                                             mp_obj_t digest) {
-  mp_int_t idx = mp_obj_get_int(key_index);
-  if (idx < 0 || idx >= OPTIGA_ECC_KEY_COUNT) {
-    mp_raise_ValueError("Invalid index.");
-  }
-
-  mp_buffer_info_t dig = {0};
-  mp_get_buffer_raise(digest, &dig, MP_BUFFER_READ);
-  if (dig.len != 32) {
-    mp_raise_ValueError("Invalid length of digest.");
-  }
-
-  vstr_t sig = {0};
-  vstr_init_len(&sig, MAX_DER_SIGNATURE_SIZE);
-  size_t sig_size = 0;
-  optiga_sign_result ret =
-      optiga_sign(idx, (const uint8_t *)dig.buf, dig.len, ((uint8_t *)sig.buf),
-                  sig.alloc, &sig_size);
-  if (ret != OPTIGA_SIGN_SUCCESS) {
-    vstr_clear(&sig);
-    if (ret == OPTIGA_SIGN_INACCESSIBLE) {
-      mp_raise_msg(&mp_type_SigningInaccessible, "Signing inaccessible.");
-    } else {
-      mp_raise_msg(&mp_type_OptigaError, "Signing failed.");
+STATIC mp_obj_t mod_trezorcrypto_optiga_sign(mp_obj_t key_index, mp_obj_t digest)
+{
+    mp_int_t idx = mp_obj_get_int(key_index);
+    if (idx < 0 || idx >= OPTIGA_ECC_KEY_COUNT) {
+        mp_raise_ValueError("Invalid index.");
     }
-  }
 
-  sig.len = sig_size;
-  return mp_obj_new_str_from_vstr(&mp_type_bytes, &sig);
+    mp_buffer_info_t dig = {0};
+    mp_get_buffer_raise(digest, &dig, MP_BUFFER_READ);
+    if (dig.len != 32) {
+        mp_raise_ValueError("Invalid length of digest.");
+    }
+
+    vstr_t sig = {0};
+    vstr_init_len(&sig, MAX_DER_SIGNATURE_SIZE);
+    size_t sig_size = 0;
+    optiga_sign_result ret = optiga_sign(
+        idx, (const uint8_t *)dig.buf, dig.len, ((uint8_t *)sig.buf), sig.alloc, &sig_size);
+    if (ret != OPTIGA_SIGN_SUCCESS) {
+        vstr_clear(&sig);
+        if (ret == OPTIGA_SIGN_INACCESSIBLE) {
+            mp_raise_msg(&mp_type_SigningInaccessible, "Signing inaccessible.");
+        } else {
+            mp_raise_msg(&mp_type_OptigaError, "Signing failed.");
+        }
+    }
+
+    sig.len = sig_size;
+    return mp_obj_new_str_from_vstr(&mp_type_bytes, &sig);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_optiga_sign_obj,
-                                 mod_trezorcrypto_optiga_sign);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_optiga_sign_obj, mod_trezorcrypto_optiga_sign);
 
 /// def get_sec() -> int | None:
 ///     """
 ///     Returns the value of Optiga's security event counter.
 ///     """
-STATIC mp_obj_t mod_trezorcrypto_optiga_get_sec() {
-  uint8_t sec = 0;
-  if (optiga_read_sec(&sec)) {
-    return mp_obj_new_int_from_uint(sec);
-  }
-  return mp_const_none;
+STATIC mp_obj_t mod_trezorcrypto_optiga_get_sec()
+{
+    uint8_t sec = 0;
+    if (optiga_read_sec(&sec)) {
+        return mp_obj_new_int_from_uint(sec);
+    }
+    return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorcrypto_optiga_get_sec_obj,
-                                 mod_trezorcrypto_optiga_get_sec);
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(
+    mod_trezorcrypto_optiga_get_sec_obj, mod_trezorcrypto_optiga_get_sec);
 
 #if PYOPT == 0
 /// def set_sec_max() -> None:
 ///     """
 ///     Set Optiga's security event counter to maximum.
 ///     """
-STATIC mp_obj_t mod_trezorcrypto_optiga_set_sec_max() {
-  optiga_set_sec_max();
-  return mp_const_none;
+STATIC mp_obj_t mod_trezorcrypto_optiga_set_sec_max()
+{
+    optiga_set_sec_max();
+    return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorcrypto_optiga_set_sec_max_obj,
-                                 mod_trezorcrypto_optiga_set_sec_max);
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(
+    mod_trezorcrypto_optiga_set_sec_max_obj, mod_trezorcrypto_optiga_set_sec_max);
 #endif
 
 /// DEVICE_CERT_INDEX: int
@@ -143,21 +144,15 @@ STATIC const mp_rom_map_elem_t mod_trezorcrypto_optiga_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_get_certificate),
      MP_ROM_PTR(&mod_trezorcrypto_optiga_get_certificate_obj)},
     {MP_ROM_QSTR(MP_QSTR_sign), MP_ROM_PTR(&mod_trezorcrypto_optiga_sign_obj)},
-    {MP_ROM_QSTR(MP_QSTR_get_sec),
-     MP_ROM_PTR(&mod_trezorcrypto_optiga_get_sec_obj)},
+    {MP_ROM_QSTR(MP_QSTR_get_sec), MP_ROM_PTR(&mod_trezorcrypto_optiga_get_sec_obj)},
 #if PYOPT == 0
-    {MP_ROM_QSTR(MP_QSTR_set_sec_max),
-     MP_ROM_PTR(&mod_trezorcrypto_optiga_set_sec_max_obj)},
+    {MP_ROM_QSTR(MP_QSTR_set_sec_max), MP_ROM_PTR(&mod_trezorcrypto_optiga_set_sec_max_obj)},
 #endif
-    {MP_ROM_QSTR(MP_QSTR_DEVICE_CERT_INDEX),
-     MP_ROM_INT(OPTIGA_DEVICE_CERT_INDEX)},
-    {MP_ROM_QSTR(MP_QSTR_DEVICE_ECC_KEY_INDEX),
-     MP_ROM_INT(OPTIGA_DEVICE_ECC_KEY_INDEX)},
+    {MP_ROM_QSTR(MP_QSTR_DEVICE_CERT_INDEX), MP_ROM_INT(OPTIGA_DEVICE_CERT_INDEX)},
+    {MP_ROM_QSTR(MP_QSTR_DEVICE_ECC_KEY_INDEX), MP_ROM_INT(OPTIGA_DEVICE_ECC_KEY_INDEX)},
     {MP_ROM_QSTR(MP_QSTR_OptigaError), MP_ROM_PTR(&mp_type_OptigaError)},
-    {MP_ROM_QSTR(MP_QSTR_SigningInaccessible),
-     MP_ROM_PTR(&mp_type_SigningInaccessible)}};
-STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_optiga_globals,
-                            mod_trezorcrypto_optiga_globals_table);
+    {MP_ROM_QSTR(MP_QSTR_SigningInaccessible), MP_ROM_PTR(&mp_type_SigningInaccessible)}};
+STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_optiga_globals, mod_trezorcrypto_optiga_globals_table);
 
 STATIC const mp_obj_module_t mod_trezorcrypto_optiga_module = {
     .base = {&mp_type_module},

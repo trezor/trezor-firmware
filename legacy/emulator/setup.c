@@ -40,40 +40,44 @@ uint32_t __stack_chk_guard;
 
 static void setup_flash(void);
 
-void setup(void) { setup_flash(); }
-
-void __attribute__((noreturn)) shutdown(void) {
-  sleep(5);
-  exit(4);
+void setup(void)
+{
+    setup_flash();
 }
 
-static void setup_flash(void) {
-  int fd = open(EMULATOR_FLASH_FILE, O_RDWR | O_SYNC | O_CREAT, 0644);
-  if (fd < 0) {
-    perror("Failed to open flash emulation file");
-    exit(1);
-  }
+void __attribute__((noreturn)) shutdown(void)
+{
+    sleep(5);
+    exit(4);
+}
 
-  off_t length = lseek(fd, 0, SEEK_END);
-  if (length < 0) {
-    perror("Failed to read length of flash emulation file");
-    exit(1);
-  }
-
-  emulator_flash_base =
-      mmap(NULL, FLASH_TOTAL_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-  if (emulator_flash_base == MAP_FAILED) {
-    perror("Failed to map flash emulation file");
-    exit(1);
-  }
-
-  if (length < FLASH_TOTAL_SIZE) {
-    if (ftruncate(fd, FLASH_TOTAL_SIZE) != 0) {
-      perror("Failed to initialize flash emulation file");
-      exit(1);
+static void setup_flash(void)
+{
+    int fd = open(EMULATOR_FLASH_FILE, O_RDWR | O_SYNC | O_CREAT, 0644);
+    if (fd < 0) {
+        perror("Failed to open flash emulation file");
+        exit(1);
     }
 
-    /* Initialize the flash */
-    flash_erase_all_sectors(FLASH_CR_PROGRAM_X32);
-  }
+    off_t length = lseek(fd, 0, SEEK_END);
+    if (length < 0) {
+        perror("Failed to read length of flash emulation file");
+        exit(1);
+    }
+
+    emulator_flash_base = mmap(NULL, FLASH_TOTAL_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    if (emulator_flash_base == MAP_FAILED) {
+        perror("Failed to map flash emulation file");
+        exit(1);
+    }
+
+    if (length < FLASH_TOTAL_SIZE) {
+        if (ftruncate(fd, FLASH_TOTAL_SIZE) != 0) {
+            perror("Failed to initialize flash emulation file");
+            exit(1);
+        }
+
+        /* Initialize the flash */
+        flash_erase_all_sectors(FLASH_CR_PROGRAM_X32);
+    }
 }

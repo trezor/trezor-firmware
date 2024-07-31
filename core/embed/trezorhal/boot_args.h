@@ -6,22 +6,22 @@
 
 // Defines boot command for 'svc_reboot_to_bootloader()' function
 typedef enum {
-  // Normal boot sequence
-  BOOT_COMMAND_NONE = 0x00000000,
-  // Stop and wait for further instructions
-  BOOT_COMMAND_STOP_AND_WAIT = 0x0FC35A96,
-  // Do not ask anything, install an upgrade
-  BOOT_COMMAND_INSTALL_UPGRADE = 0xFA4A5C8D,
+    // Normal boot sequence
+    BOOT_COMMAND_NONE = 0x00000000,
+    // Stop and wait for further instructions
+    BOOT_COMMAND_STOP_AND_WAIT = 0x0FC35A96,
+    // Do not ask anything, install an upgrade
+    BOOT_COMMAND_INSTALL_UPGRADE = 0xFA4A5C8D,
 } boot_command_t;
 
 // Maximum size boot_args array
 #define BOOT_ARGS_MAX_SIZE (256 - 8)
 
 typedef union {
-  uint8_t raw[BOOT_ARGS_MAX_SIZE];
+    uint8_t raw[BOOT_ARGS_MAX_SIZE];
 
-  // firmware header hash, BOOT_COMMAND_INSTALL_UPGRADE
-  uint8_t hash[32];
+    // firmware header hash, BOOT_COMMAND_INSTALL_UPGRADE
+    uint8_t hash[32];
 
 } boot_args_t;
 

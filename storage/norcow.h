@@ -48,8 +48,7 @@ secbool norcow_get(uint16_t key, const void **val, uint16_t *len);
  * Reads the next entry in the storage starting at offset. Returns secfalse if
  * there is none.
  */
-secbool norcow_get_next(uint32_t *offset, uint16_t *key, const void **val,
-                        uint16_t *len);
+secbool norcow_get_next(uint32_t *offset, uint16_t *key, const void **val, uint16_t *len);
 
 /*
  * Sets the given key, returns status of the operation. If NULL is passed
@@ -57,8 +56,7 @@ secbool norcow_get_next(uint32_t *offset, uint16_t *key, const void **val,
  * then be written using norcow_update_bytes().
  */
 secbool norcow_set(uint16_t key, const void *val, uint16_t len);
-secbool norcow_set_ex(uint16_t key, const void *val, uint16_t len,
-                      secbool *found);
+secbool norcow_set_ex(uint16_t key, const void *val, uint16_t len, secbool *found);
 
 /*
  * Deletes the given key, returns status of the operation.
@@ -76,8 +74,7 @@ secbool norcow_next_counter(uint16_t key, uint32_t *count);
  * It is only allowed to update bytes of pristine items, i.e. items that were
  * not yet set after allocating them with norcow_set(key, NULL, len).
  */
-secbool norcow_update_bytes(const uint16_t key, const uint8_t *data,
-                            const uint16_t len);
+secbool norcow_update_bytes(const uint16_t key, const uint8_t *data, const uint16_t len);
 
 /*
  * Complete storage version upgrade

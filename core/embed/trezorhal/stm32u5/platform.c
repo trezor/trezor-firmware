@@ -23,19 +23,17 @@
 #include "rng.h"
 #include TREZOR_BOARD
 
-const uint8_t AHBPrescTable[16] = {0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U,
-                                   1U, 2U, 3U, 4U, 6U, 7U, 8U, 9U};
+const uint8_t AHBPrescTable[16] = {0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 1U, 2U, 3U, 4U, 6U, 7U, 8U, 9U};
 const uint8_t APBPrescTable[8] = {0U, 0U, 0U, 0U, 1U, 2U, 3U, 4U};
-const uint32_t MSIRangeTable[16] = {48000000U, 24000000U, 16000000U, 12000000U,
-                                    4000000U,  2000000U,  1330000U,  1000000U,
-                                    3072000U,  1536000U,  1024000U,  768000U,
+const uint32_t MSIRangeTable[16] = {48000000U, 24000000U, 16000000U, 12000000U, 4000000U, 2000000U,
+                                    1330000U,  1000000U,  3072000U,  1536000U,  1024000U, 768000U,
                                     400000U,   200000U,   133000U,   100000U};
 typedef struct {
-  uint32_t freq;
-  uint32_t pllq;
-  uint32_t pllp;
-  uint32_t pllm;
-  uint32_t plln;
+    uint32_t freq;
+    uint32_t pllq;
+    uint32_t pllp;
+    uint32_t pllm;
+    uint32_t plln;
 } clock_conf_t;
 
 #if defined STM32U5
@@ -74,157 +72,159 @@ clock_conf_t clock_conf[1] = {
     },
 };
 
-#pragma GCC optimize( \
-    "no-stack-protector")  // applies to all functions in this file
+#pragma GCC optimize("no-stack-protector")  // applies to all functions in this file
 
-void SystemInit(void) {
-  // set flash wait states for an increasing HCLK frequency
+void SystemInit(void)
+{
+    // set flash wait states for an increasing HCLK frequency
 
-  FLASH->ACR = FLASH_ACR_LATENCY_5WS;
-  // wait until the new wait state config takes effect -- per section 3.5.1
-  // guidance
-  while ((FLASH->ACR & FLASH_ACR_LATENCY) != FLASH_ACR_LATENCY_5WS)
-    ;
+    FLASH->ACR = FLASH_ACR_LATENCY_5WS;
+    // wait until the new wait state config takes effect -- per section 3.5.1
+    // guidance
+    while ((FLASH->ACR & FLASH_ACR_LATENCY) != FLASH_ACR_LATENCY_5WS)
+        ;
 
-  /* Reset the RCC clock configuration to the default reset state ------------*/
-  /* Set MSION bit */
-  RCC->CR = RCC_CR_MSISON;
+    /* Reset the RCC clock configuration to the default reset state ------------*/
+    /* Set MSION bit */
+    RCC->CR = RCC_CR_MSISON;
 
-  /* Reset CFGR register */
-  RCC->CFGR1 = 0U;
-  RCC->CFGR2 = 0U;
-  RCC->CFGR3 = 0U;
+    /* Reset CFGR register */
+    RCC->CFGR1 = 0U;
+    RCC->CFGR2 = 0U;
+    RCC->CFGR3 = 0U;
 
-  /* Reset HSEON, CSSON , HSION, PLLxON bits */
-  RCC->CR &= ~(RCC_CR_HSEON | RCC_CR_CSSON | RCC_CR_PLL1ON | RCC_CR_PLL2ON |
-               RCC_CR_PLL3ON | RCC_CR_HSI48ON);
+    /* Reset HSEON, CSSON , HSION, PLLxON bits */
+    RCC->CR &=
+        ~(RCC_CR_HSEON | RCC_CR_CSSON | RCC_CR_PLL1ON | RCC_CR_PLL2ON | RCC_CR_PLL3ON |
+          RCC_CR_HSI48ON);
 
-  /* Reset PLLCFGR register */
-  RCC->PLL1CFGR = 0U;
+    /* Reset PLLCFGR register */
+    RCC->PLL1CFGR = 0U;
 
-  /* Reset HSEBYP bit */
-  RCC->CR &= ~(RCC_CR_HSEBYP);
+    /* Reset HSEBYP bit */
+    RCC->CR &= ~(RCC_CR_HSEBYP);
 
-  /* Disable all interrupts */
-  RCC->CIER = 0U;
+    /* Disable all interrupts */
+    RCC->CIER = 0U;
 
-  __HAL_RCC_PWR_CLK_ENABLE();
+    __HAL_RCC_PWR_CLK_ENABLE();
 
-  MODIFY_REG(PWR->VOSR, (PWR_VOSR_VOS | PWR_VOSR_BOOSTEN),
-             PWR_REGULATOR_VOLTAGE_SCALE1);
-  while (HAL_IS_BIT_CLR(PWR->VOSR, PWR_VOSR_VOSRDY))
-    ;
-  while (HAL_IS_BIT_CLR(PWR->SVMSR, PWR_SVMSR_ACTVOSRDY))
-    ;
+    MODIFY_REG(PWR->VOSR, (PWR_VOSR_VOS | PWR_VOSR_BOOSTEN), PWR_REGULATOR_VOLTAGE_SCALE1);
+    while (HAL_IS_BIT_CLR(PWR->VOSR, PWR_VOSR_VOSRDY))
+        ;
+    while (HAL_IS_BIT_CLR(PWR->SVMSR, PWR_SVMSR_ACTVOSRDY))
+        ;
 
 #ifndef HSI_ONLY
-  __HAL_RCC_HSE_CONFIG(RCC_HSE_ON);
-  while (READ_BIT(RCC->CR, RCC_CR_HSERDY) == 0U)
-    ;
-  __HAL_RCC_PLL_CONFIG(RCC_PLLSOURCE_HSE, RCC_PLLMBOOST_DIV1, DEFAULT_PLLM,
-                       DEFAULT_PLLN, DEFAULT_PLLP, DEFAULT_PLLQ, DEFAULT_PLLR);
+    __HAL_RCC_HSE_CONFIG(RCC_HSE_ON);
+    while (READ_BIT(RCC->CR, RCC_CR_HSERDY) == 0U)
+        ;
+    __HAL_RCC_PLL_CONFIG(
+        RCC_PLLSOURCE_HSE, RCC_PLLMBOOST_DIV1, DEFAULT_PLLM, DEFAULT_PLLN, DEFAULT_PLLP,
+        DEFAULT_PLLQ, DEFAULT_PLLR);
 #else
-  RCC->CR |= RCC_CR_HSION;
-  // wait until the HSI is on
-  while ((RCC->CR & RCC_CR_HSION) != RCC_CR_HSION)
-    ;
+    RCC->CR |= RCC_CR_HSION;
+    // wait until the HSI is on
+    while ((RCC->CR & RCC_CR_HSION) != RCC_CR_HSION)
+        ;
 
-  __HAL_RCC_PLL_CONFIG(RCC_PLLSOURCE_HSI, RCC_PLLMBOOST_DIV1, DEFAULT_PLLM,
-                       DEFAULT_PLLN, DEFAULT_PLLP, DEFAULT_PLLQ, DEFAULT_PLLR);
+    __HAL_RCC_PLL_CONFIG(
+        RCC_PLLSOURCE_HSI, RCC_PLLMBOOST_DIV1, DEFAULT_PLLM, DEFAULT_PLLN, DEFAULT_PLLP,
+        DEFAULT_PLLQ, DEFAULT_PLLR);
 #endif
 
-  __HAL_RCC_PLL_FRACN_DISABLE();
+    __HAL_RCC_PLL_FRACN_DISABLE();
 
-  __HAL_RCC_PLL_VCIRANGE(RCC_PLLVCIRANGE_1);
+    __HAL_RCC_PLL_VCIRANGE(RCC_PLLVCIRANGE_1);
 
-  __HAL_RCC_PLLCLKOUT_ENABLE(RCC_PLL1_DIVR);
+    __HAL_RCC_PLLCLKOUT_ENABLE(RCC_PLL1_DIVR);
 
-  __HAL_RCC_PLL_ENABLE();
-  while (READ_BIT(RCC->CR, RCC_CR_PLL1RDY) == 0U)
-    ;
+    __HAL_RCC_PLL_ENABLE();
+    while (READ_BIT(RCC->CR, RCC_CR_PLL1RDY) == 0U)
+        ;
 
-  __HAL_RCC_HSI48_ENABLE();
-  while (READ_BIT(RCC->CR, RCC_CR_HSI48RDY) == 0U)
-    ;
+    __HAL_RCC_HSI48_ENABLE();
+    while (READ_BIT(RCC->CR, RCC_CR_HSI48RDY) == 0U)
+        ;
 
-  /** Initializes the CPU, AHB and APB buses clocks
-   */
-  FLASH->ACR = FLASH_ACR_LATENCY_4WS;
-  // wait until the new wait state config takes effect -- per section 3.5.1
-  // guidance
-  while ((FLASH->ACR & FLASH_ACR_LATENCY) != FLASH_ACR_LATENCY_4WS)
-    ;
-  MODIFY_REG(RCC->CFGR3, RCC_CFGR3_PPRE3, RCC_HCLK_DIV1);
-  MODIFY_REG(RCC->CFGR2, RCC_CFGR2_PPRE2, ((RCC_HCLK_DIV1) << 4));
-  MODIFY_REG(RCC->CFGR2, RCC_CFGR2_PPRE1, RCC_HCLK_DIV1);
-  MODIFY_REG(RCC->CFGR2, RCC_CFGR2_HPRE, RCC_SYSCLK_DIV1);
+    /** Initializes the CPU, AHB and APB buses clocks
+     */
+    FLASH->ACR = FLASH_ACR_LATENCY_4WS;
+    // wait until the new wait state config takes effect -- per section 3.5.1
+    // guidance
+    while ((FLASH->ACR & FLASH_ACR_LATENCY) != FLASH_ACR_LATENCY_4WS)
+        ;
+    MODIFY_REG(RCC->CFGR3, RCC_CFGR3_PPRE3, RCC_HCLK_DIV1);
+    MODIFY_REG(RCC->CFGR2, RCC_CFGR2_PPRE2, ((RCC_HCLK_DIV1) << 4));
+    MODIFY_REG(RCC->CFGR2, RCC_CFGR2_PPRE1, RCC_HCLK_DIV1);
+    MODIFY_REG(RCC->CFGR2, RCC_CFGR2_HPRE, RCC_SYSCLK_DIV1);
 
-  MODIFY_REG(RCC->CFGR1, RCC_CFGR1_SW, RCC_SYSCLKSOURCE_PLLCLK);
+    MODIFY_REG(RCC->CFGR1, RCC_CFGR1_SW, RCC_SYSCLKSOURCE_PLLCLK);
 
-  /*
-   * Disable the internal Pull-Up in Dead Battery pins of UCPD peripheral
-   */
-  HAL_PWREx_DisableUCPDDeadBattery();
+    /*
+     * Disable the internal Pull-Up in Dead Battery pins of UCPD peripheral
+     */
+    HAL_PWREx_DisableUCPDDeadBattery();
 
 #ifdef USE_SMPS
-  /*
-   * Switch to SMPS regulator instead of LDO
-   */
-  SET_BIT(PWR->CR3, PWR_CR3_REGSEL);
-  /* Wait until system switch on new regulator */
-  while (HAL_IS_BIT_CLR(PWR->SVMSR, PWR_SVMSR_REGS))
-    ;
+    /*
+     * Switch to SMPS regulator instead of LDO
+     */
+    SET_BIT(PWR->CR3, PWR_CR3_REGSEL);
+    /* Wait until system switch on new regulator */
+    while (HAL_IS_BIT_CLR(PWR->SVMSR, PWR_SVMSR_REGS))
+        ;
 #endif
 
-  // enable power supply for GPIOG 2 to 15
-  PWR->SVMCR |= PWR_SVMCR_IO2SV;
+    // enable power supply for GPIOG 2 to 15
+    PWR->SVMCR |= PWR_SVMCR_IO2SV;
 
-  __HAL_RCC_PWR_CLK_DISABLE();
+    __HAL_RCC_PWR_CLK_DISABLE();
 
-  // this will be overriden by static initialization
-  SystemCoreClock = DEFAULT_FREQ * 1000000U;
+    // this will be overriden by static initialization
+    SystemCoreClock = DEFAULT_FREQ * 1000000U;
 
 #ifndef HSI_ONLY
-  // enable clock security system
-  RCC->CR |= RCC_CR_CSSON;
+    // enable clock security system
+    RCC->CR |= RCC_CR_CSSON;
 
-  // turn off the HSI as it is now unused (it will be turned on again
-  // automatically if a clock security failure occurs)
-  RCC->CR &= ~RCC_CR_HSION;
-  // wait until the HSI is off
-  while ((RCC->CR & RCC_CR_HSION) == RCC_CR_HSION)
-    ;
+    // turn off the HSI as it is now unused (it will be turned on again
+    // automatically if a clock security failure occurs)
+    RCC->CR &= ~RCC_CR_HSION;
+    // wait until the HSI is off
+    while ((RCC->CR & RCC_CR_HSION) == RCC_CR_HSION)
+        ;
 #endif
 
-  // TODO turn off MSI?
+    // TODO turn off MSI?
 
-  // init the TRNG peripheral
-  rng_init();
+    // init the TRNG peripheral
+    rng_init();
 
-  // set CP10 and CP11 to enable full access to the fpu coprocessor;
-  SCB->CPACR |=
-      ((3UL << 20U) | (3UL << 22U)); /* set CP10 and CP11 Full Access */
+    // set CP10 and CP11 to enable full access to the fpu coprocessor;
+    SCB->CPACR |= ((3UL << 20U) | (3UL << 22U)); /* set CP10 and CP11 Full Access */
 
 #if defined(__ARM_FEATURE_CMSE) && (__ARM_FEATURE_CMSE == 3U)
-  SCB_NS->CPACR |=
-      ((3UL << 20U) | (3UL << 22U)); /* set CP10 and CP11 Full Access */
+    SCB_NS->CPACR |= ((3UL << 20U) | (3UL << 22U)); /* set CP10 and CP11 Full Access */
 #endif
 
-  // enable instruction cache in default 2-way mode
-  ICACHE->CR = ICACHE_CR_EN;
+    // enable instruction cache in default 2-way mode
+    ICACHE->CR = ICACHE_CR_EN;
 }
 
-void drop_privileges(void) {
-  // jump to unprivileged mode
-  // http://infocenter.arm.com/help/topic/com.arm.doc.dui0552a/CHDBIBGJ.html
-  __asm__ volatile("msr control, %0" ::"r"(0x1));
-  __asm__ volatile("isb");
+void drop_privileges(void)
+{
+    // jump to unprivileged mode
+    // http://infocenter.arm.com/help/topic/com.arm.doc.dui0552a/CHDBIBGJ.html
+    __asm__ volatile("msr control, %0" ::"r"(0x1));
+    __asm__ volatile("isb");
 }
 
 // from util.s
 extern void shutdown_privileged(void);
 
-void PVD_PVM_IRQHandler(void) {
-  TIM1->CCR1 = 0;  // turn off display backlight
-  shutdown_privileged();
+void PVD_PVM_IRQHandler(void)
+{
+    TIM1->CCR1 = 0;  // turn off display backlight
+    shutdown_privileged();
 }

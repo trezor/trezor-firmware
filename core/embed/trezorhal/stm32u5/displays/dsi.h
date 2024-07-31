@@ -16,11 +16,11 @@ extern uint8_t* const DISPLAY_DATA_ADDRESS;
 
 uint32_t rgb565_to_rgb888(uint16_t color);
 
-static inline void display_pixel(uint8_t* fb, int16_t x, int16_t y,
-                                 uint16_t color) {
-  uint32_t p = 4 * ((y + 120) * DISPLAY_FRAMEBUFFER_WIDTH + (x + 120));
-  uint32_t c = rgb565_to_rgb888(color);
-  *((uint32_t*)(fb + p)) = c;
+static inline void display_pixel(uint8_t* fb, int16_t x, int16_t y, uint16_t color)
+{
+    uint32_t p = 4 * ((y + 120) * DISPLAY_FRAMEBUFFER_WIDTH + (x + 120));
+    uint32_t c = rgb565_to_rgb888(color);
+    *((uint32_t*)(fb + p)) = c;
 }
 
 #endif

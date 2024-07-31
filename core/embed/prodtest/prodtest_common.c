@@ -21,82 +21,88 @@
 #include "mini_printf.h"
 #include "usb.h"
 
-void vcp_puts(const char *s, size_t len) {
-  int r = usb_vcp_write_blocking(VCP_IFACE, (const uint8_t *)s, len, -1);
-  (void)r;
+void vcp_puts(const char *s, size_t len)
+{
+    int r = usb_vcp_write_blocking(VCP_IFACE, (const uint8_t *)s, len, -1);
+    (void)r;
 }
 
-void vcp_print(const char *fmt, ...) {
-  static char buf[128];
-  va_list va;
-  va_start(va, fmt);
-  int r = mini_vsnprintf(buf, sizeof(buf), fmt, va);
-  va_end(va);
-  vcp_puts(buf, r);
+void vcp_print(const char *fmt, ...)
+{
+    static char buf[128];
+    va_list va;
+    va_start(va, fmt);
+    int r = mini_vsnprintf(buf, sizeof(buf), fmt, va);
+    va_end(va);
+    vcp_puts(buf, r);
 }
 
-void vcp_println(const char *fmt, ...) {
-  static char buf[128];
-  va_list va;
-  va_start(va, fmt);
-  int r = mini_vsnprintf(buf, sizeof(buf), fmt, va);
-  va_end(va);
-  vcp_puts(buf, r);
-  vcp_puts("\r\n", 2);
+void vcp_println(const char *fmt, ...)
+{
+    static char buf[128];
+    va_list va;
+    va_start(va, fmt);
+    int r = mini_vsnprintf(buf, sizeof(buf), fmt, va);
+    va_end(va);
+    vcp_puts(buf, r);
+    vcp_puts("\r\n", 2);
 }
 
-void vcp_println_hex(const uint8_t *data, uint16_t len) {
-  for (int i = 0; i < len; i++) {
-    vcp_print("%02X", data[i]);
-  }
-  vcp_puts("\r\n", 2);
-}
-
-static uint16_t get_byte_from_hex(const char **hex) {
-  uint8_t result = 0;
-
-  // Skip whitespace.
-  while (**hex == ' ') {
-    *hex += 1;
-  }
-
-  for (int i = 0; i < 2; i++) {
-    result <<= 4;
-    char c = **hex;
-    if (c >= '0' && c <= '9') {
-      result |= c - '0';
-    } else if (c >= 'A' && c <= 'F') {
-      result |= c - 'A' + 10;
-    } else if (c >= 'a' && c <= 'f') {
-      result |= c - 'a' + 10;
-    } else if (c == '\0') {
-      return 0x100;
-    } else {
-      return 0xFFFF;
+void vcp_println_hex(const uint8_t *data, uint16_t len)
+{
+    for (int i = 0; i < len; i++) {
+        vcp_print("%02X", data[i]);
     }
-    *hex += 1;
-  }
-  return result;
+    vcp_puts("\r\n", 2);
 }
 
-int get_from_hex(uint8_t *buf, uint16_t buf_len, const char *hex) {
-  int len = 0;
-  uint16_t b = get_byte_from_hex(&hex);
-  for (len = 0; len < buf_len && b <= 0xff; ++len) {
-    buf[len] = b;
-    b = get_byte_from_hex(&hex);
-  }
+static uint16_t get_byte_from_hex(const char **hex)
+{
+    uint8_t result = 0;
 
-  if (b == 0x100) {
-    // Success.
-    return len;
-  }
+    // Skip whitespace.
+    while (**hex == ' ') {
+        *hex += 1;
+    }
 
-  if (b > 0xff) {
-    // Non-hexadecimal character.
-    return -1;
-  }
+    for (int i = 0; i < 2; i++) {
+        result <<= 4;
+        char c = **hex;
+        if (c >= '0' && c <= '9') {
+            result |= c - '0';
+        } else if (c >= 'A' && c <= 'F') {
+            result |= c - 'A' + 10;
+        } else if (c >= 'a' && c <= 'f') {
+            result |= c - 'a' + 10;
+        } else if (c == '\0') {
+            return 0x100;
+        } else {
+            return 0xFFFF;
+        }
+        *hex += 1;
+    }
+    return result;
+}
 
-  // Buffer too small.
-  return -2;
+int get_from_hex(uint8_t *buf, uint16_t buf_len, const char *hex)
+{
+    int len = 0;
+    uint16_t b = get_byte_from_hex(&hex);
+    for (len = 0; len < buf_len && b <= 0xff; ++len) {
+        buf[len] = b;
+        b = get_byte_from_hex(&hex);
+    }
+
+    if (b == 0x100) {
+        // Success.
+        return len;
+    }
+
+    if (b > 0xff) {
+        // Non-hexadecimal character.
+        return -1;
+    }
+
+    // Buffer too small.
+    return -2;
 }

@@ -24,29 +24,32 @@
 #include "display_io.h"
 #include "display_panel.h"
 
-void display_refresh(void) {
-  // If the framebuffer is not used the, we do not need
-  // to refresh the display explicitly as we write the data
-  // directly to the display internal RAM.
+void display_refresh(void)
+{
+    // If the framebuffer is not used the, we do not need
+    // to refresh the display explicitly as we write the data
+    // directly to the display internal RAM.
 }
 
-void display_wait_for_sync(void) {
+void display_wait_for_sync(void)
+{
 #ifdef DISPLAY_TE_PIN
-  uint32_t id = display_panel_identify();
-  if (id && (id != DISPLAY_ID_GC9307)) {
-    // synchronize with the panel synchronization signal
-    // in order to avoid visual tearing effects
-    while (GPIO_PIN_SET == HAL_GPIO_ReadPin(DISPLAY_TE_PORT, DISPLAY_TE_PIN))
-      ;
-    while (GPIO_PIN_RESET == HAL_GPIO_ReadPin(DISPLAY_TE_PORT, DISPLAY_TE_PIN))
-      ;
-  }
+    uint32_t id = display_panel_identify();
+    if (id && (id != DISPLAY_ID_GC9307)) {
+        // synchronize with the panel synchronization signal
+        // in order to avoid visual tearing effects
+        while (GPIO_PIN_SET == HAL_GPIO_ReadPin(DISPLAY_TE_PORT, DISPLAY_TE_PIN))
+            ;
+        while (GPIO_PIN_RESET == HAL_GPIO_ReadPin(DISPLAY_TE_PORT, DISPLAY_TE_PIN))
+            ;
+    }
 #endif
 }
 
-static inline void set_window(const gfx_bitblt_t* bb) {
-  display_panel_set_window(bb->dst_x, bb->dst_y, bb->dst_x + bb->width - 1,
-                           bb->dst_y + bb->height + 1);
+static inline void set_window(const gfx_bitblt_t* bb)
+{
+    display_panel_set_window(
+        bb->dst_x, bb->dst_y, bb->dst_x + bb->width - 1, bb->dst_y + bb->height + 1);
 }
 
 // For future notice, if we ever want to do a new model using progressive
@@ -57,64 +60,67 @@ static inline void set_window(const gfx_bitblt_t* bb) {
 // needed, we could use double-slice similarly to double-framebuffer and render
 // to one with DMA2D while copying the other to the display with DMA.
 
-void display_fill(const gfx_bitblt_t* bb) {
-  set_window(bb);
+void display_fill(const gfx_bitblt_t* bb)
+{
+    set_window(bb);
 
-  uint16_t height = bb->height;
+    uint16_t height = bb->height;
 
-  while (height-- > 0) {
-    for (int x = 0; x < bb->width; x++) {
-      ISSUE_PIXEL_DATA(bb->src_fg);
+    while (height-- > 0) {
+        for (int x = 0; x < bb->width; x++) {
+            ISSUE_PIXEL_DATA(bb->src_fg);
+        }
     }
-  }
 }
 
-void display_copy_rgb565(const gfx_bitblt_t* bb) {
-  set_window(bb);
+void display_copy_rgb565(const gfx_bitblt_t* bb)
+{
+    set_window(bb);
 
-  uint16_t* src_ptr = (uint16_t*)bb->src_row + bb->src_x;
-  uint16_t height = bb->height;
+    uint16_t* src_ptr = (uint16_t*)bb->src_row + bb->src_x;
+    uint16_t height = bb->height;
 
-  while (height-- > 0) {
-    for (int x = 0; x < bb->width; x++) {
-      ISSUE_PIXEL_DATA(src_ptr[x]);
+    while (height-- > 0) {
+        for (int x = 0; x < bb->width; x++) {
+            ISSUE_PIXEL_DATA(src_ptr[x]);
+        }
+        src_ptr += bb->src_stride / sizeof(*src_ptr);
     }
-    src_ptr += bb->src_stride / sizeof(*src_ptr);
-  }
 }
 
-void display_copy_mono1p(const gfx_bitblt_t* bb) {
-  set_window(bb);
+void display_copy_mono1p(const gfx_bitblt_t* bb)
+{
+    set_window(bb);
 
-  uint8_t* src = (uint8_t*)bb->src_row;
-  uint16_t src_ofs = bb->src_stride * bb->src_y + bb->src_x;
-  uint16_t height = bb->height;
+    uint8_t* src = (uint8_t*)bb->src_row;
+    uint16_t src_ofs = bb->src_stride * bb->src_y + bb->src_x;
+    uint16_t height = bb->height;
 
-  while (height-- > 0) {
-    for (int x = 0; x < bb->width; x++) {
-      uint8_t mask = 1 << (7 - ((src_ofs + x) & 7));
-      uint8_t data = src[(src_ofs + x) / 8];
-      ISSUE_PIXEL_DATA((data & mask) ? bb->src_fg : bb->src_bg);
+    while (height-- > 0) {
+        for (int x = 0; x < bb->width; x++) {
+            uint8_t mask = 1 << (7 - ((src_ofs + x) & 7));
+            uint8_t data = src[(src_ofs + x) / 8];
+            ISSUE_PIXEL_DATA((data & mask) ? bb->src_fg : bb->src_bg);
+        }
+        src_ofs += bb->src_stride;
     }
-    src_ofs += bb->src_stride;
-  }
 }
 
-void display_copy_mono4(const gfx_bitblt_t* bb) {
-  set_window(bb);
+void display_copy_mono4(const gfx_bitblt_t* bb)
+{
+    set_window(bb);
 
-  const gfx_color16_t* gradient =
-      gfx_color16_gradient_a4(bb->src_fg, bb->src_bg);
+    const gfx_color16_t* gradient = gfx_color16_gradient_a4(bb->src_fg, bb->src_bg);
 
-  uint8_t* src_row = (uint8_t*)bb->src_row;
-  uint16_t height = bb->height;
+    uint8_t* src_row = (uint8_t*)bb->src_row;
+    uint16_t height = bb->height;
 
-  while (height-- > 0) {
-    for (int x = 0; x < bb->width; x++) {
-      uint8_t fg_data = src_row[(x + bb->src_x) / 2];
-      uint8_t fg_lum = (x + bb->src_x) & 1 ? fg_data >> 4 : fg_data & 0xF;
-      ISSUE_PIXEL_DATA(gradient[fg_lum]);
+    while (height-- > 0) {
+        for (int x = 0; x < bb->width; x++) {
+            uint8_t fg_data = src_row[(x + bb->src_x) / 2];
+            uint8_t fg_lum = (x + bb->src_x) & 1 ? fg_data >> 4 : fg_data & 0xF;
+            ISSUE_PIXEL_DATA(gradient[fg_lum]);
+        }
+        src_row += bb->src_stride / sizeof(*src_row);
     }
-    src_row += bb->src_stride / sizeof(*src_row);
-  }
 }

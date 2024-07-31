@@ -37,12 +37,12 @@
 
 // Struct representing a DER-encoded ASN.1 data value.
 typedef struct {
-  // Single-octet identifier encoding the ASN.1 class, type and tag number.
-  uint8_t id;
-  // A buffer containing the entire DER encoding of the data value including the
-  // tag and length, but with the position indicator initialized to the offset
-  // of the contents octets.
-  BUFFER_READER buf;
+    // Single-octet identifier encoding the ASN.1 class, type and tag number.
+    uint8_t id;
+    // A buffer containing the entire DER encoding of the data value including the
+    // tag and length, but with the position indicator initialized to the offset
+    // of the contents octets.
+    BUFFER_READER buf;
 } DER_ITEM;
 
 bool __wur der_read_length(BUFFER_READER *buf, size_t *len);

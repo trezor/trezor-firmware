@@ -20,30 +20,28 @@
 #include "gfx_color.h"
 #include "colors.h"
 
-const gfx_color16_t* gfx_color16_gradient_a4(gfx_color_t fg_color,
-                                             gfx_color_t bg_color) {
-  static gfx_color16_t cache[16] = {0};
+const gfx_color16_t* gfx_color16_gradient_a4(gfx_color_t fg_color, gfx_color_t bg_color)
+{
+    static gfx_color16_t cache[16] = {0};
 
-  if (gfx_color_to_color16(bg_color) != cache[0] ||
-      gfx_color_to_color16(fg_color) != cache[15]) {
-    for (int alpha = 0; alpha < 16; alpha++) {
-      cache[alpha] = gfx_color16_blend_a4(fg_color, bg_color, alpha);
+    if (gfx_color_to_color16(bg_color) != cache[0] || gfx_color_to_color16(fg_color) != cache[15]) {
+        for (int alpha = 0; alpha < 16; alpha++) {
+            cache[alpha] = gfx_color16_blend_a4(fg_color, bg_color, alpha);
+        }
     }
-  }
 
-  return cache;
+    return cache;
 }
 
-const gfx_color32_t* gfx_color32_gradient_a4(gfx_color_t fg_color,
-                                             gfx_color_t bg_color) {
-  static gfx_color32_t cache[16] = {0};
+const gfx_color32_t* gfx_color32_gradient_a4(gfx_color_t fg_color, gfx_color_t bg_color)
+{
+    static gfx_color32_t cache[16] = {0};
 
-  if (bg_color != gfx_color32_to_color(cache[0]) ||
-      fg_color != gfx_color32_to_color(cache[15])) {
-    for (int alpha = 0; alpha < 16; alpha++) {
-      cache[alpha] = gfx_color32_blend_a4(fg_color, bg_color, alpha);
+    if (bg_color != gfx_color32_to_color(cache[0]) || fg_color != gfx_color32_to_color(cache[15])) {
+        for (int alpha = 0; alpha < 16; alpha++) {
+            cache[alpha] = gfx_color32_blend_a4(fg_color, bg_color, alpha);
+        }
     }
-  }
 
-  return cache;
+    return cache;
 }

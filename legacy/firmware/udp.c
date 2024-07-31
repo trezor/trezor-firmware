@@ -28,7 +28,10 @@
 
 static volatile char tiny = 0;
 
-void usbInit(void) { emulatorSocketInit(); }
+void usbInit(void)
+{
+    emulatorSocketInit();
+}
 
 #if DEBUG_LINK
 #define _ISDBG (((iface == 1) ? 'd' : 'n'))
@@ -36,46 +39,52 @@ void usbInit(void) { emulatorSocketInit(); }
 #define _ISDBG ('n')
 #endif
 
-void waitAndProcessUSBRequests(uint32_t millis) {
-  emulatorPoll();
+void waitAndProcessUSBRequests(uint32_t millis)
+{
+    emulatorPoll();
 
-  static uint8_t buffer[USB_PACKET_SIZE];
+    static uint8_t buffer[USB_PACKET_SIZE];
 
-  int iface = 0;
-  if (emulatorSocketRead(&iface, buffer, sizeof(buffer), millis) > 0) {
-    if (!tiny) {
-      do {
-        msg_read_common(_ISDBG, buffer, sizeof(buffer));
-      } while (emulatorSocketRead(&iface, buffer, sizeof(buffer), 0) > 0);
-    } else {
-      msg_read_tiny(buffer, sizeof(buffer));
+    int iface = 0;
+    if (emulatorSocketRead(&iface, buffer, sizeof(buffer), millis) > 0) {
+        if (!tiny) {
+            do {
+                msg_read_common(_ISDBG, buffer, sizeof(buffer));
+            } while (emulatorSocketRead(&iface, buffer, sizeof(buffer), 0) > 0);
+        } else {
+            msg_read_tiny(buffer, sizeof(buffer));
+        }
     }
-  }
 
-  const uint8_t *data;
-  while ((data = msg_out_data()) != NULL) {
-    emulatorSocketWrite(0, data, USB_PACKET_SIZE);
-  }
+    const uint8_t *data;
+    while ((data = msg_out_data()) != NULL) {
+        emulatorSocketWrite(0, data, USB_PACKET_SIZE);
+    }
 
 #if DEBUG_LINK
-  while ((data = msg_debug_out_data()) != NULL) {
-    emulatorSocketWrite(1, data, USB_PACKET_SIZE);
-  }
+    while ((data = msg_debug_out_data()) != NULL) {
+        emulatorSocketWrite(1, data, USB_PACKET_SIZE);
+    }
 #endif
 }
 
-void usbPoll(void) { waitAndProcessUSBRequests(0); }
-
-char usbTiny(char set) {
-  char old = tiny;
-  tiny = set;
-  return old;
+void usbPoll(void)
+{
+    waitAndProcessUSBRequests(0);
 }
 
-void usbFlush(uint32_t millis) {
-  const uint8_t *data;
-  while ((data = msg_out_data()) != NULL) {
-    emulatorSocketWrite(0, data, USB_PACKET_SIZE);
-  }
-  usleep(millis * 1000);
+char usbTiny(char set)
+{
+    char old = tiny;
+    tiny = set;
+    return old;
+}
+
+void usbFlush(uint32_t millis)
+{
+    const uint8_t *data;
+    while ((data = msg_out_data()) != NULL) {
+        emulatorSocketWrite(0, data, USB_PACKET_SIZE);
+    }
+    usleep(millis * 1000);
 }

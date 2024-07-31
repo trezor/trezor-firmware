@@ -21,16 +21,17 @@
 
 #include <SDL.h>
 
-uint16_t buttonRead(void) {
-  uint16_t state = 0;
+uint16_t buttonRead(void)
+{
+    uint16_t state = 0;
 
-  const uint8_t *scancodes = SDL_GetKeyboardState(NULL);
-  if (scancodes[SDL_SCANCODE_LEFT]) {
-    state |= BTN_PIN_NO;
-  }
-  if (scancodes[SDL_SCANCODE_RIGHT]) {
-    state |= BTN_PIN_YES;
-  }
+    const uint8_t *scancodes = SDL_GetKeyboardState(NULL);
+    if (scancodes[SDL_SCANCODE_LEFT]) {
+        state |= BTN_PIN_NO;
+    }
+    if (scancodes[SDL_SCANCODE_RIGHT]) {
+        state |= BTN_PIN_YES;
+    }
 
-  return ~state;
+    return ~state;
 }

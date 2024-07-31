@@ -24,10 +24,10 @@
 #include <stdint.h>
 
 typedef enum {
-  // Effect at the start of a button press
-  HAPTIC_BUTTON_PRESS = 0,
-  // Effect at the and of hold-to-confirm action
-  HAPTIC_HOLD_TO_CONFIRM = 1,
+    // Effect at the start of a button press
+    HAPTIC_BUTTON_PRESS = 0,
+    // Effect at the and of hold-to-confirm action
+    HAPTIC_HOLD_TO_CONFIRM = 1,
 } haptic_effect_t;
 
 // Initializes the haptic driver

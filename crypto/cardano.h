@@ -41,13 +41,12 @@ int secret_from_entropy_cardano_icarus(
     const uint8_t *pass, int pass_len, const uint8_t *entropy, int entropy_len,
     uint8_t secret_out[CARDANO_SECRET_LENGTH],
     void (*progress_callback)(uint32_t current, uint32_t total));
-int secret_from_seed_cardano_ledger(const uint8_t *seed, int seed_len,
-                                    uint8_t secret_out[CARDANO_SECRET_LENGTH]);
-int secret_from_seed_cardano_slip23(const uint8_t *seed, int seed_len,
-                                    uint8_t secret_out[CARDANO_SECRET_LENGTH]);
+int secret_from_seed_cardano_ledger(
+    const uint8_t *seed, int seed_len, uint8_t secret_out[CARDANO_SECRET_LENGTH]);
+int secret_from_seed_cardano_slip23(
+    const uint8_t *seed, int seed_len, uint8_t secret_out[CARDANO_SECRET_LENGTH]);
 
-int hdnode_from_secret_cardano(const uint8_t secret[CARDANO_SECRET_LENGTH],
-                               HDNode *out);
+int hdnode_from_secret_cardano(const uint8_t secret[CARDANO_SECRET_LENGTH], HDNode *out);
 
 #endif  // USE_CARDANO
 

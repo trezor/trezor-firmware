@@ -36,11 +36,9 @@ extern "C" {
 
 #ifndef NDEBUG
 
-void __attribute__((noreturn))
-__fatal_error(const char *msg, const char *file, int line);
+void __attribute__((noreturn)) __fatal_error(const char *msg, const char *file, int line);
 
-#define assert(expr) \
-  ((expr) ? (void)0 : __fatal_error("Assert", __FILE_NAME__, __LINE__))
+#define assert(expr) ((expr) ? (void)0 : __fatal_error("Assert", __FILE_NAME__, __LINE__))
 
 #else
 

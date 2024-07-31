@@ -28,23 +28,21 @@
 
 #define CHAIN_ID_UNKNOWN UINT64_MAX
 
-void ethereum_signing_init(const EthereumSignTx *msg, const HDNode *node,
-                           const EthereumDefinitionsDecoded *defs);
-void ethereum_signing_init_eip1559(const EthereumSignTxEIP1559 *msg,
-                                   const HDNode *node,
-                                   const EthereumDefinitionsDecoded *defs);
+void ethereum_signing_init(
+    const EthereumSignTx *msg, const HDNode *node, const EthereumDefinitionsDecoded *defs);
+void ethereum_signing_init_eip1559(
+    const EthereumSignTxEIP1559 *msg, const HDNode *node, const EthereumDefinitionsDecoded *defs);
 void ethereum_signing_abort(void);
 void ethereum_signing_txack(const EthereumTxAck *msg);
 
-void ethereum_message_sign(const EthereumSignMessage *msg, const HDNode *node,
-                           EthereumMessageSignature *resp);
+void ethereum_message_sign(
+    const EthereumSignMessage *msg, const HDNode *node, EthereumMessageSignature *resp);
 int ethereum_message_verify(const EthereumVerifyMessage *msg);
-void ethereum_typed_hash_sign(const EthereumSignTypedHash *msg,
-                              const HDNode *node,
-                              EthereumTypedDataSignature *resp);
+void ethereum_typed_hash_sign(
+    const EthereumSignTypedHash *msg, const HDNode *node, EthereumTypedDataSignature *resp);
 bool ethereum_parse(const char *address, uint8_t pubkeyhash[20]);
 
-bool ethereum_path_check(uint32_t address_n_count, const uint32_t *address_n,
-                         bool pubkey_export,
-                         const EthereumNetworkInfo *network);
+bool ethereum_path_check(
+    uint32_t address_n_count, const uint32_t *address_n, bool pubkey_export,
+    const EthereumNetworkInfo *network);
 #endif

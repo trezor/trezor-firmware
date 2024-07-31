@@ -41,38 +41,38 @@
 
 // Represents a set of parameters for a bit block transfer operation.
 typedef struct {
-  // Pointer to the destination bitmap's first row
-  void* dst_row;
-  // Number of bytes per line in the destination bitmap
-  uint16_t dst_stride;
-  // X-coordinate of the top-left corner inside the destination
-  uint16_t dst_x;
-  // Y-coordinate of the top-left corner inside the destination
-  uint16_t dst_y;
-  // Height of the filled/copied/blended area
-  uint16_t height;
-  // Width of the filled/copied/blended area
-  uint16_t width;
+    // Pointer to the destination bitmap's first row
+    void* dst_row;
+    // Number of bytes per line in the destination bitmap
+    uint16_t dst_stride;
+    // X-coordinate of the top-left corner inside the destination
+    uint16_t dst_x;
+    // Y-coordinate of the top-left corner inside the destination
+    uint16_t dst_y;
+    // Height of the filled/copied/blended area
+    uint16_t height;
+    // Width of the filled/copied/blended area
+    uint16_t width;
 
-  // Pointer to the source bitmap's first row
-  // (unused for fill operations)
-  void* src_row;
-  // Number of bytes per line in the source bitmap
-  // (unused for fill operations)
-  uint16_t src_stride;
-  // X-coordinate of the origin in the source bitmap
-  // (unused for fill operations)
-  uint16_t src_x;
-  // Y-coordinate of the origin in the source bitmap
-  // (unused for fill operations)
-  uint16_t src_y;
+    // Pointer to the source bitmap's first row
+    // (unused for fill operations)
+    void* src_row;
+    // Number of bytes per line in the source bitmap
+    // (unused for fill operations)
+    uint16_t src_stride;
+    // X-coordinate of the origin in the source bitmap
+    // (unused for fill operations)
+    uint16_t src_x;
+    // Y-coordinate of the origin in the source bitmap
+    // (unused for fill operations)
+    uint16_t src_y;
 
-  // Foreground color used when copying/blending/filling
-  gfx_color_t src_fg;
-  // Background color used when copying mono bitmaps
-  gfx_color_t src_bg;
-  // Alpha value for fill operation (255 => normal fill, 0 => noop)
-  uint8_t src_alpha;
+    // Foreground color used when copying/blending/filling
+    gfx_color_t src_fg;
+    // Background color used when copying mono bitmaps
+    gfx_color_t src_bg;
+    // Alpha value for fill operation (255 => normal fill, 0 => noop)
+    uint8_t src_alpha;
 
 } gfx_bitblt_t;
 

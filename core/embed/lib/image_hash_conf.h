@@ -11,11 +11,9 @@
 #include "hash_processor.h"
 #define IMAGE_HASH_CTX hash_sha265_context_t
 #define IMAGE_HASH_INIT(ctx) hash_processor_sha256_init(ctx)
-#define IMAGE_HASH_UPDATE(ctx, data, len) \
-  hash_processor_sha256_update(ctx, data, len)
+#define IMAGE_HASH_UPDATE(ctx, data, len) hash_processor_sha256_update(ctx, data, len)
 #define IMAGE_HASH_FINAL(ctx, output) hash_processor_sha256_final(ctx, output)
-#define IMAGE_HASH_CALC(data, len, output) \
-  hash_processor_sha256_calc(data, len, output)
+#define IMAGE_HASH_CALC(data, len, output) hash_processor_sha256_calc(data, len, output)
 #else
 #define IMAGE_HASH_CTX SHA256_CTX
 #define IMAGE_HASH_INIT(ctx) sha256_Init(ctx)
@@ -30,10 +28,8 @@
 #define IMAGE_HASH_CTX BLAKE2S_CTX
 #define IMAGE_HASH_INIT(ctx) blake2s_Init(ctx, BLAKE2S_DIGEST_LENGTH)
 #define IMAGE_HASH_UPDATE(ctx, data, len) blake2s_Update(ctx, data, len)
-#define IMAGE_HASH_FINAL(ctx, output) \
-  blake2s_Final(ctx, output, BLAKE2S_DIGEST_LENGTH)
-#define IMAGE_HASH_CALC(data, len, output) \
-  blake2s(data, len, output, BLAKE2S_DIGEST_LENGTH)
+#define IMAGE_HASH_FINAL(ctx, output) blake2s_Final(ctx, output, BLAKE2S_DIGEST_LENGTH)
+#define IMAGE_HASH_CALC(data, len, output) blake2s(data, len, output, BLAKE2S_DIGEST_LENGTH)
 #else
 #error "IMAGE_HASH_SHA256 or IMAGE_HASH_BLAKE2S must be defined"
 #endif

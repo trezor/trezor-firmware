@@ -19,4 +19,6 @@
 
 #include "dma2d_bitblt.h"
 
-void dma2d_wait(void) {}
+void dma2d_wait(void)
+{
+}

@@ -26,8 +26,8 @@ typedef EthereumDefinitions_encoded_network_t EncodedNetwork;
 typedef EthereumDefinitions_encoded_token_t EncodedToken;
 
 typedef struct {
-  const EthereumNetworkInfo *network;
-  const EthereumTokenInfo *token;
+    const EthereumNetworkInfo *network;
+    const EthereumTokenInfo *token;
 } EthereumDefinitionsDecoded;
 
 const EthereumDefinitionsDecoded *ethereum_get_definitions(

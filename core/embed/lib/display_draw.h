@@ -35,14 +35,14 @@ void display_clear(void);
 
 void display_bar(int x, int y, int w, int h, uint16_t c);
 
-void display_text(int x, int y, const char *text, int textlen, int font,
-                  uint16_t fgcolor, uint16_t bgcolor);
-void display_text_center(int x, int y, const char *text, int textlen, int font,
-                         uint16_t fgcolor, uint16_t bgcolor);
-void display_text_right(int x, int y, const char *text, int textlen, int font,
-                        uint16_t fgcolor, uint16_t bgcolor);
-void display_text_render_buffer(const char *text, int textlen, int font,
-                                buffer_text_t *buffer, int text_offset);
+void display_text(
+    int x, int y, const char *text, int textlen, int font, uint16_t fgcolor, uint16_t bgcolor);
+void display_text_center(
+    int x, int y, const char *text, int textlen, int font, uint16_t fgcolor, uint16_t bgcolor);
+void display_text_right(
+    int x, int y, const char *text, int textlen, int font, uint16_t fgcolor, uint16_t bgcolor);
+void display_text_render_buffer(
+    const char *text, int textlen, int font, buffer_text_t *buffer, int text_offset);
 
 void display_qrcode(int x, int y, const char *data, uint8_t scale);
 

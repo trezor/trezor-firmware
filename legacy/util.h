@@ -31,24 +31,24 @@
 #endif
 
 // Statement expressions make these macros side-effect safe
-#define MIN_8bits(a, b)                  \
-  ({                                     \
-    typeof(a) _a = (a);                  \
-    typeof(b) _b = (b);                  \
-    _a < _b ? (_a & 0xFF) : (_b & 0xFF); \
-  })
-#define MIN(a, b)       \
-  ({                    \
-    typeof(a) _a = (a); \
-    typeof(b) _b = (b); \
-    _a < _b ? _a : _b;  \
-  })
-#define MAX(a, b)       \
-  ({                    \
-    typeof(a) _a = (a); \
-    typeof(b) _b = (b); \
-    _a > _b ? _a : _b;  \
-  })
+#define MIN_8bits(a, b)                      \
+    ({                                       \
+        typeof(a) _a = (a);                  \
+        typeof(b) _b = (b);                  \
+        _a < _b ? (_a & 0xFF) : (_b & 0xFF); \
+    })
+#define MIN(a, b)           \
+    ({                      \
+        typeof(a) _a = (a); \
+        typeof(b) _b = (b); \
+        _a < _b ? _a : _b;  \
+    })
+#define MAX(a, b)           \
+    ({                      \
+        typeof(a) _a = (a); \
+        typeof(b) _b = (b); \
+        _a > _b ? _a : _b;  \
+    })
 
 void delay(uint32_t wait);
 
@@ -71,45 +71,50 @@ extern void memset_reg(void *start, void *stop, uint32_t val);
 #define FW_SIGNED 0x5A3CA5C3
 #define FW_UNTRUSTED 0x00000000
 
-static inline void __attribute__((noreturn))
-jump_to_firmware(const vector_table_t *ivt, int trust) {
-  if (FW_SIGNED == trust) {    // trusted signed firmware
-    SCB_VTOR = (uint32_t)ivt;  // * relocate vector table
-    // Set stack pointer
-    __asm__ volatile("msr msp, %0" ::"r"(ivt->initial_sp_value));
-  } else {  // untrusted firmware
-    timer_init();
-    mpu_config_firmware();  // * configure MPU for the firmware
+static inline void __attribute__((noreturn)) jump_to_firmware(const vector_table_t *ivt, int trust)
+{
+    if (FW_SIGNED == trust) {      // trusted signed firmware
+        SCB_VTOR = (uint32_t)ivt;  // * relocate vector table
+        // Set stack pointer
+        __asm__ volatile("msr msp, %0" ::"r"(ivt->initial_sp_value));
+    } else {  // untrusted firmware
+        timer_init();
+        mpu_config_firmware();  // * configure MPU for the firmware
 
-    // Setup stack in unprivileged mode (MSR works only for privileged)
-    // This syntax will use _stack as immediate value to put into SP
-    // instead of dereferencing it
-    __asm__ volatile("mov sp, %[input]" ::[input] "r"(&_stack));
-  }
+        // Setup stack in unprivileged mode (MSR works only for privileged)
+        // This syntax will use _stack as immediate value to put into SP
+        // instead of dereferencing it
+        __asm__ volatile("mov sp, %[input]" ::[input] "r"(&_stack));
+    }
 
-  // Jump to address
-  ivt->reset();
+    // Jump to address
+    ivt->reset();
 
-  // Prevent compiler from generating stack protector code (which causes CPU
-  // fault because the stack is moved)
-  for (;;)
-    ;
+    // Prevent compiler from generating stack protector code (which causes CPU
+    // fault because the stack is moved)
+    for (;;)
+        ;
 }
 
-static inline void set_mode_unprivileged(void) {
-  // http://infocenter.arm.com/help/topic/com.arm.doc.dui0552a/CHDBIBGJ.html
-  __asm__ volatile("msr control, %0" ::"r"(0x1));
+static inline void set_mode_unprivileged(void)
+{
+    // http://infocenter.arm.com/help/topic/com.arm.doc.dui0552a/CHDBIBGJ.html
+    __asm__ volatile("msr control, %0" ::"r"(0x1));
 }
 
-static inline bool is_mode_unprivileged(void) {
-  uint32_t r0;
-  __asm__ volatile("mrs %0, control" : "=r"(r0));
-  return r0 & 1;
+static inline bool is_mode_unprivileged(void)
+{
+    uint32_t r0;
+    __asm__ volatile("mrs %0, control" : "=r"(r0));
+    return r0 & 1;
 }
 
 #else /* EMULATOR */
 
-static inline bool is_mode_unprivileged(void) { return true; }
+static inline bool is_mode_unprivileged(void)
+{
+    return true;
+}
 #endif
 
 #endif

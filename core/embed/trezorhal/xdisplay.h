@@ -89,10 +89,10 @@ int display_get_orientation(void);
 #ifdef XFRAMEBUFFER
 
 typedef struct {
-  // Pointer to the top-left pixel
-  void *ptr;
-  // Stride in bytes
-  size_t stride;
+    // Pointer to the top-left pixel
+    void *ptr;
+    // Stride in bytes
+    size_t stride;
 
 } display_fb_info_t;
 

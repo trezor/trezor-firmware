@@ -42,14 +42,14 @@
 
 // Display driver context.
 typedef struct {
-  // SPI driver instance
-  SPI_HandleTypeDef spi;
-  // Frame buffer (8-bit Mono)
-  uint8_t framebuf[DISPLAY_RESX * DISPLAY_RESY];
-  // Current display orientation (0 or 180)
-  int orientation_angle;
-  // Current backlight level ranging from 0 to 255
-  int backlight_level;
+    // SPI driver instance
+    SPI_HandleTypeDef spi;
+    // Frame buffer (8-bit Mono)
+    uint8_t framebuf[DISPLAY_RESX * DISPLAY_RESY];
+    // Current display orientation (0 or 180)
+    int orientation_angle;
+    // Current backlight level ranging from 0 to 255
+    int backlight_level;
 } display_driver_t;
 
 // Display driver instance
@@ -79,301 +79,312 @@ static display_driver_t g_display_driver;
 #define OLED_CHARGEPUMP 0x8D
 
 // Display controller initialization sequence
-static const uint8_t vg_2864ksweg01_init_seq[] = {OLED_DISPLAYOFF,
-                                                  OLED_SETDISPLAYCLOCKDIV,
-                                                  0x80,
-                                                  OLED_SETMULTIPLEX,
-                                                  0x3F,  // 128x64
-                                                  OLED_SETDISPLAYOFFSET,
-                                                  0x00,
-                                                  OLED_SETSTARTLINE | 0x00,
-                                                  OLED_CHARGEPUMP,
-                                                  0x14,
-                                                  OLED_MEMORYMODE,
-                                                  0x00,
-                                                  OLED_SEGREMAP | 0x01,
-                                                  OLED_COMSCANDEC,
-                                                  OLED_SETCOMPINS,
-                                                  0x12,  // 128x64
-                                                  OLED_SETCONTRAST,
-                                                  0xCF,
-                                                  OLED_SETPRECHARGE,
-                                                  0xF1,
-                                                  OLED_SETVCOMDETECT,
-                                                  0x40,
-                                                  OLED_DISPLAYALLON_RESUME,
-                                                  OLED_NORMALDISPLAY,
-                                                  OLED_DISPLAYON};
+static const uint8_t vg_2864ksweg01_init_seq[] = {
+    OLED_DISPLAYOFF,
+    OLED_SETDISPLAYCLOCKDIV,
+    0x80,
+    OLED_SETMULTIPLEX,
+    0x3F,  // 128x64
+    OLED_SETDISPLAYOFFSET,
+    0x00,
+    OLED_SETSTARTLINE | 0x00,
+    OLED_CHARGEPUMP,
+    0x14,
+    OLED_MEMORYMODE,
+    0x00,
+    OLED_SEGREMAP | 0x01,
+    OLED_COMSCANDEC,
+    OLED_SETCOMPINS,
+    0x12,  // 128x64
+    OLED_SETCONTRAST,
+    0xCF,
+    OLED_SETPRECHARGE,
+    0xF1,
+    OLED_SETVCOMDETECT,
+    0x40,
+    OLED_DISPLAYALLON_RESUME,
+    OLED_NORMALDISPLAY,
+    OLED_DISPLAYON};
 
 // Configures SPI driver/controller
-static bool display_init_spi(display_driver_t *drv) {
-  drv->spi.Instance = OLED_SPI;
-  drv->spi.State = HAL_SPI_STATE_RESET;
-  drv->spi.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_16;
-  drv->spi.Init.Direction = SPI_DIRECTION_2LINES;
-  drv->spi.Init.CLKPhase = SPI_PHASE_1EDGE;
-  drv->spi.Init.CLKPolarity = SPI_POLARITY_LOW;
-  drv->spi.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
-  drv->spi.Init.CRCPolynomial = 7;
-  drv->spi.Init.DataSize = SPI_DATASIZE_8BIT;
-  drv->spi.Init.FirstBit = SPI_FIRSTBIT_MSB;
-  drv->spi.Init.NSS = SPI_NSS_HARD_OUTPUT;
-  drv->spi.Init.TIMode = SPI_TIMODE_DISABLE;
-  drv->spi.Init.Mode = SPI_MODE_MASTER;
+static bool display_init_spi(display_driver_t *drv)
+{
+    drv->spi.Instance = OLED_SPI;
+    drv->spi.State = HAL_SPI_STATE_RESET;
+    drv->spi.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_16;
+    drv->spi.Init.Direction = SPI_DIRECTION_2LINES;
+    drv->spi.Init.CLKPhase = SPI_PHASE_1EDGE;
+    drv->spi.Init.CLKPolarity = SPI_POLARITY_LOW;
+    drv->spi.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+    drv->spi.Init.CRCPolynomial = 7;
+    drv->spi.Init.DataSize = SPI_DATASIZE_8BIT;
+    drv->spi.Init.FirstBit = SPI_FIRSTBIT_MSB;
+    drv->spi.Init.NSS = SPI_NSS_HARD_OUTPUT;
+    drv->spi.Init.TIMode = SPI_TIMODE_DISABLE;
+    drv->spi.Init.Mode = SPI_MODE_MASTER;
 
-  return (HAL_OK == HAL_SPI_Init(&drv->spi)) ? true : false;
+    return (HAL_OK == HAL_SPI_Init(&drv->spi)) ? true : false;
 }
 
 // Sends specified number of bytes to the display via SPI interface
-static void display_send_bytes(display_driver_t *drv, const uint8_t *data,
-                               size_t len) {
-  volatile int32_t timeout = 1000;
-  for (int i = 0; i < timeout; i++)
-    ;
+static void display_send_bytes(display_driver_t *drv, const uint8_t *data, size_t len)
+{
+    volatile int32_t timeout = 1000;
+    for (int i = 0; i < timeout; i++)
+        ;
 
-  if (HAL_OK != HAL_SPI_Transmit(&drv->spi, (uint8_t *)data, len, 1000)) {
-    // TODO: error
-    return;
-  }
-  while (HAL_SPI_STATE_READY != HAL_SPI_GetState(&drv->spi)) {
-  }
+    if (HAL_OK != HAL_SPI_Transmit(&drv->spi, (uint8_t *)data, len, 1000)) {
+        // TODO: error
+        return;
+    }
+    while (HAL_SPI_STATE_READY != HAL_SPI_GetState(&drv->spi)) {
+    }
 }
 
-#define COLLECT_ROW_BYTE(src)                           \
-  (0 | (*(src + (0 * DISPLAY_RESX)) >= 128 ? 128 : 0) | \
-   (*(src + (1 * DISPLAY_RESX)) >= 128 ? 64 : 0) |      \
-   (*(src + (2 * DISPLAY_RESX)) >= 128 ? 32 : 0) |      \
-   (*(src + (3 * DISPLAY_RESX)) >= 128 ? 16 : 0) |      \
-   (*(src + (4 * DISPLAY_RESX)) >= 128 ? 8 : 0) |       \
-   (*(src + (5 * DISPLAY_RESX)) >= 128 ? 4 : 0) |       \
-   (*(src + (6 * DISPLAY_RESX)) >= 128 ? 2 : 0) |       \
-   (*(src + (7 * DISPLAY_RESX)) >= 128 ? 1 : 0))
+#define COLLECT_ROW_BYTE(src)                                                                      \
+    (0 | (*(src + (0 * DISPLAY_RESX)) >= 128 ? 128 : 0) |                                          \
+     (*(src + (1 * DISPLAY_RESX)) >= 128 ? 64 : 0) |                                               \
+     (*(src + (2 * DISPLAY_RESX)) >= 128 ? 32 : 0) |                                               \
+     (*(src + (3 * DISPLAY_RESX)) >= 128 ? 16 : 0) |                                               \
+     (*(src + (4 * DISPLAY_RESX)) >= 128 ? 8 : 0) | (*(src + (5 * DISPLAY_RESX)) >= 128 ? 4 : 0) | \
+     (*(src + (6 * DISPLAY_RESX)) >= 128 ? 2 : 0) | (*(src + (7 * DISPLAY_RESX)) >= 128 ? 1 : 0))
 
-#define COLLECT_ROW_BYTE_REV(src)                     \
-  (0 | (*(src + (0 * DISPLAY_RESX)) >= 128 ? 1 : 0) | \
-   (*(src + (1 * DISPLAY_RESX)) >= 128 ? 2 : 0) |     \
-   (*(src + (2 * DISPLAY_RESX)) >= 128 ? 4 : 0) |     \
-   (*(src + (3 * DISPLAY_RESX)) >= 128 ? 8 : 0) |     \
-   (*(src + (4 * DISPLAY_RESX)) >= 128 ? 16 : 0) |    \
-   (*(src + (5 * DISPLAY_RESX)) >= 128 ? 32 : 0) |    \
-   (*(src + (6 * DISPLAY_RESX)) >= 128 ? 64 : 0) |    \
-   (*(src + (7 * DISPLAY_RESX)) >= 128 ? 128 : 0))
+#define COLLECT_ROW_BYTE_REV(src)                                                                  \
+    (0 | (*(src + (0 * DISPLAY_RESX)) >= 128 ? 1 : 0) |                                            \
+     (*(src + (1 * DISPLAY_RESX)) >= 128 ? 2 : 0) | (*(src + (2 * DISPLAY_RESX)) >= 128 ? 4 : 0) | \
+     (*(src + (3 * DISPLAY_RESX)) >= 128 ? 8 : 0) |                                                \
+     (*(src + (4 * DISPLAY_RESX)) >= 128 ? 16 : 0) |                                               \
+     (*(src + (5 * DISPLAY_RESX)) >= 128 ? 32 : 0) |                                               \
+     (*(src + (6 * DISPLAY_RESX)) >= 128 ? 64 : 0) |                                               \
+     (*(src + (7 * DISPLAY_RESX)) >= 128 ? 128 : 0))
 
 // Copies the framebuffer to the display via SPI interface
-static void display_sync_with_fb(display_driver_t *drv) {
-  static const uint8_t cursor_set_seq[3] = {OLED_SETLOWCOLUMN | 0x00,
-                                            OLED_SETHIGHCOLUMN | 0x00,
-                                            OLED_SETSTARTLINE | 0x00};
+static void display_sync_with_fb(display_driver_t *drv)
+{
+    static const uint8_t cursor_set_seq[3] = {
+        OLED_SETLOWCOLUMN | 0x00, OLED_SETHIGHCOLUMN | 0x00, OLED_SETSTARTLINE | 0x00};
 
-  // SPI select
-  HAL_GPIO_WritePin(OLED_CS_PORT, OLED_CS_PIN, GPIO_PIN_RESET);
-  // Set the cursor to the screen top-left corner
-  display_send_bytes(drv, &cursor_set_seq[0], sizeof(cursor_set_seq));
+    // SPI select
+    HAL_GPIO_WritePin(OLED_CS_PORT, OLED_CS_PIN, GPIO_PIN_RESET);
+    // Set the cursor to the screen top-left corner
+    display_send_bytes(drv, &cursor_set_seq[0], sizeof(cursor_set_seq));
 
-  // SPI deselect
-  HAL_GPIO_WritePin(OLED_CS_PORT, OLED_CS_PIN, GPIO_PIN_SET);
-  // Set to DATA
-  HAL_GPIO_WritePin(OLED_DC_PORT, OLED_DC_PIN, GPIO_PIN_SET);
-  // SPI select
-  HAL_GPIO_WritePin(OLED_CS_PORT, OLED_CS_PIN, GPIO_PIN_RESET);
+    // SPI deselect
+    HAL_GPIO_WritePin(OLED_CS_PORT, OLED_CS_PIN, GPIO_PIN_SET);
+    // Set to DATA
+    HAL_GPIO_WritePin(OLED_DC_PORT, OLED_DC_PIN, GPIO_PIN_SET);
+    // SPI select
+    HAL_GPIO_WritePin(OLED_CS_PORT, OLED_CS_PIN, GPIO_PIN_RESET);
 
-  // Send whole framebuffer to the display
+    // Send whole framebuffer to the display
 
-  if (drv->orientation_angle == 0) {
-    for (int y = DISPLAY_RESY / 8 - 1; y >= 0; y--) {
-      uint8_t buff[DISPLAY_RESX];
-      uint8_t *src = &drv->framebuf[y * DISPLAY_RESX * 8];
+    if (drv->orientation_angle == 0) {
+        for (int y = DISPLAY_RESY / 8 - 1; y >= 0; y--) {
+            uint8_t buff[DISPLAY_RESX];
+            uint8_t *src = &drv->framebuf[y * DISPLAY_RESX * 8];
 
-      for (int x = DISPLAY_RESX - 1; x >= 0; x--) {
-        buff[x] = COLLECT_ROW_BYTE(src);
-        src++;
-      }
+            for (int x = DISPLAY_RESX - 1; x >= 0; x--) {
+                buff[x] = COLLECT_ROW_BYTE(src);
+                src++;
+            }
 
-      if (HAL_OK != HAL_SPI_Transmit(&drv->spi, &buff[0], sizeof(buff), 1000)) {
-        // TODO: error
-        return;
-      }
+            if (HAL_OK != HAL_SPI_Transmit(&drv->spi, &buff[0], sizeof(buff), 1000)) {
+                // TODO: error
+                return;
+            }
+        }
+    } else {
+        for (int y = 0; y < DISPLAY_RESY / 8; y++) {
+            uint8_t buff[DISPLAY_RESX];
+            uint8_t *src = &drv->framebuf[y * DISPLAY_RESX * 8];
+
+            for (int x = 0; x < DISPLAY_RESX; x++) {
+                buff[x] = COLLECT_ROW_BYTE_REV(src);
+                src++;
+            }
+
+            if (HAL_OK != HAL_SPI_Transmit(&drv->spi, &buff[0], sizeof(buff), 1000)) {
+                // TODO: error
+                return;
+            }
+        }
     }
-  } else {
-    for (int y = 0; y < DISPLAY_RESY / 8; y++) {
-      uint8_t buff[DISPLAY_RESX];
-      uint8_t *src = &drv->framebuf[y * DISPLAY_RESX * 8];
 
-      for (int x = 0; x < DISPLAY_RESX; x++) {
-        buff[x] = COLLECT_ROW_BYTE_REV(src);
-        src++;
-      }
-
-      if (HAL_OK != HAL_SPI_Transmit(&drv->spi, &buff[0], sizeof(buff), 1000)) {
-        // TODO: error
-        return;
-      }
+    while (HAL_SPI_STATE_READY != HAL_SPI_GetState(&drv->spi)) {
     }
-  }
 
-  while (HAL_SPI_STATE_READY != HAL_SPI_GetState(&drv->spi)) {
-  }
-
-  // SPI deselect
-  HAL_GPIO_WritePin(OLED_CS_PORT, OLED_CS_PIN, GPIO_PIN_SET);
-  // Set to CMD
-  HAL_GPIO_WritePin(OLED_DC_PORT, OLED_DC_PIN, GPIO_PIN_RESET);
+    // SPI deselect
+    HAL_GPIO_WritePin(OLED_CS_PORT, OLED_CS_PIN, GPIO_PIN_SET);
+    // Set to CMD
+    HAL_GPIO_WritePin(OLED_DC_PORT, OLED_DC_PIN, GPIO_PIN_RESET);
 }
 
-void display_init(void) {
-  display_driver_t *drv = &g_display_driver;
+void display_init(void)
+{
+    display_driver_t *drv = &g_display_driver;
 
-  memset(drv, 0, sizeof(display_driver_t));
-  drv->backlight_level = 255;
+    memset(drv, 0, sizeof(display_driver_t));
+    drv->backlight_level = 255;
 
-  OLED_DC_CLK_ENA();
-  OLED_CS_CLK_ENA();
-  OLED_RST_CLK_ENA();
-  OLED_SPI_SCK_CLK_ENA();
-  OLED_SPI_MOSI_CLK_ENA();
-  OLED_SPI_CLK_ENA();
+    OLED_DC_CLK_ENA();
+    OLED_CS_CLK_ENA();
+    OLED_RST_CLK_ENA();
+    OLED_SPI_SCK_CLK_ENA();
+    OLED_SPI_MOSI_CLK_ENA();
+    OLED_SPI_CLK_ENA();
 
-  GPIO_InitTypeDef GPIO_InitStructure;
+    GPIO_InitTypeDef GPIO_InitStructure;
 
-  // Set GPIO for OLED display
-  GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStructure.Pull = GPIO_NOPULL;
-  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  GPIO_InitStructure.Alternate = 0;
-  GPIO_InitStructure.Pin = OLED_CS_PIN;
-  HAL_GPIO_WritePin(OLED_CS_PORT, OLED_CS_PIN, GPIO_PIN_RESET);
-  HAL_GPIO_Init(OLED_CS_PORT, &GPIO_InitStructure);
-  GPIO_InitStructure.Pin = OLED_DC_PIN;
-  HAL_GPIO_WritePin(OLED_DC_PORT, OLED_DC_PIN, GPIO_PIN_RESET);
-  HAL_GPIO_Init(OLED_DC_PORT, &GPIO_InitStructure);
-  GPIO_InitStructure.Pin = OLED_RST_PIN;
-  HAL_GPIO_WritePin(OLED_RST_PORT, OLED_RST_PIN, GPIO_PIN_RESET);
-  HAL_GPIO_Init(OLED_RST_PORT, &GPIO_InitStructure);
+    // Set GPIO for OLED display
+    GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStructure.Pull = GPIO_NOPULL;
+    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+    GPIO_InitStructure.Alternate = 0;
+    GPIO_InitStructure.Pin = OLED_CS_PIN;
+    HAL_GPIO_WritePin(OLED_CS_PORT, OLED_CS_PIN, GPIO_PIN_RESET);
+    HAL_GPIO_Init(OLED_CS_PORT, &GPIO_InitStructure);
+    GPIO_InitStructure.Pin = OLED_DC_PIN;
+    HAL_GPIO_WritePin(OLED_DC_PORT, OLED_DC_PIN, GPIO_PIN_RESET);
+    HAL_GPIO_Init(OLED_DC_PORT, &GPIO_InitStructure);
+    GPIO_InitStructure.Pin = OLED_RST_PIN;
+    HAL_GPIO_WritePin(OLED_RST_PORT, OLED_RST_PIN, GPIO_PIN_RESET);
+    HAL_GPIO_Init(OLED_RST_PORT, &GPIO_InitStructure);
 
-  // Enable SPI 1 for OLED display
-  GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStructure.Pull = GPIO_NOPULL;
-  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  GPIO_InitStructure.Alternate = OLED_SPI_AF;
-  GPIO_InitStructure.Pin = OLED_SPI_SCK_PIN;
-  HAL_GPIO_Init(OLED_SPI_SCK_PORT, &GPIO_InitStructure);
-  GPIO_InitStructure.Pin = OLED_SPI_MOSI_PIN;
-  HAL_GPIO_Init(OLED_SPI_MOSI_PORT, &GPIO_InitStructure);
+    // Enable SPI 1 for OLED display
+    GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStructure.Pull = GPIO_NOPULL;
+    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+    GPIO_InitStructure.Alternate = OLED_SPI_AF;
+    GPIO_InitStructure.Pin = OLED_SPI_SCK_PIN;
+    HAL_GPIO_Init(OLED_SPI_SCK_PORT, &GPIO_InitStructure);
+    GPIO_InitStructure.Pin = OLED_SPI_MOSI_PIN;
+    HAL_GPIO_Init(OLED_SPI_MOSI_PORT, &GPIO_InitStructure);
 
-  // Initialize SPI controller
-  display_init_spi(drv);
+    // Initialize SPI controller
+    display_init_spi(drv);
 
-  // Set to CMD
-  HAL_GPIO_WritePin(OLED_DC_PORT, OLED_DC_PIN, GPIO_PIN_RESET);
-  // SPI deselect
-  HAL_GPIO_WritePin(OLED_CS_PORT, OLED_CS_PIN, GPIO_PIN_SET);
+    // Set to CMD
+    HAL_GPIO_WritePin(OLED_DC_PORT, OLED_DC_PIN, GPIO_PIN_RESET);
+    // SPI deselect
+    HAL_GPIO_WritePin(OLED_CS_PORT, OLED_CS_PIN, GPIO_PIN_SET);
 
-  // Reset the LCD
-  HAL_GPIO_WritePin(OLED_RST_PORT, OLED_RST_PIN, GPIO_PIN_SET);
-  HAL_Delay(1);
-  HAL_GPIO_WritePin(OLED_RST_PORT, OLED_RST_PIN, GPIO_PIN_RESET);
-  HAL_Delay(1);
-  HAL_GPIO_WritePin(OLED_RST_PORT, OLED_RST_PIN, GPIO_PIN_SET);
+    // Reset the LCD
+    HAL_GPIO_WritePin(OLED_RST_PORT, OLED_RST_PIN, GPIO_PIN_SET);
+    HAL_Delay(1);
+    HAL_GPIO_WritePin(OLED_RST_PORT, OLED_RST_PIN, GPIO_PIN_RESET);
+    HAL_Delay(1);
+    HAL_GPIO_WritePin(OLED_RST_PORT, OLED_RST_PIN, GPIO_PIN_SET);
 
-  // SPI select
-  HAL_GPIO_WritePin(OLED_CS_PORT, OLED_CS_PIN, GPIO_PIN_RESET);
-  // Send initialization command sequence
-  display_send_bytes(drv, &vg_2864ksweg01_init_seq[0],
-                     sizeof(vg_2864ksweg01_init_seq));
-  // SPI deselect
-  HAL_GPIO_WritePin(OLED_CS_PORT, OLED_CS_PIN, GPIO_PIN_SET);
+    // SPI select
+    HAL_GPIO_WritePin(OLED_CS_PORT, OLED_CS_PIN, GPIO_PIN_RESET);
+    // Send initialization command sequence
+    display_send_bytes(drv, &vg_2864ksweg01_init_seq[0], sizeof(vg_2864ksweg01_init_seq));
+    // SPI deselect
+    HAL_GPIO_WritePin(OLED_CS_PORT, OLED_CS_PIN, GPIO_PIN_SET);
 
-  // Clear display internal framebuffer
-  display_sync_with_fb(drv);
+    // Clear display internal framebuffer
+    display_sync_with_fb(drv);
 }
 
-void display_reinit(void) {
-  display_driver_t *drv = &g_display_driver;
+void display_reinit(void)
+{
+    display_driver_t *drv = &g_display_driver;
 
-  memset(drv, 0, sizeof(display_driver_t));
-  drv->backlight_level = 255;
+    memset(drv, 0, sizeof(display_driver_t));
+    drv->backlight_level = 255;
 
-  display_init_spi(drv);
+    display_init_spi(drv);
 }
 
-void display_finish_actions(void) {
-  /// Not used and intentionally left empty
+void display_finish_actions(void)
+{
+    /// Not used and intentionally left empty
 }
 
-int display_set_backlight(int level) {
-  display_driver_t *drv = &g_display_driver;
+int display_set_backlight(int level)
+{
+    display_driver_t *drv = &g_display_driver;
 
-  drv->backlight_level = 255;
-  return drv->backlight_level;
+    drv->backlight_level = 255;
+    return drv->backlight_level;
 }
 
-int display_get_backlight(void) {
-  display_driver_t *drv = &g_display_driver;
+int display_get_backlight(void)
+{
+    display_driver_t *drv = &g_display_driver;
 
-  return drv->backlight_level;
+    return drv->backlight_level;
 }
 
-int display_set_orientation(int angle) {
-  display_driver_t *drv = &g_display_driver;
+int display_set_orientation(int angle)
+{
+    display_driver_t *drv = &g_display_driver;
 
-  if (angle != drv->orientation_angle) {
-    if (angle == 0 || angle == 180) {
-      drv->orientation_angle = angle;
-      display_sync_with_fb(drv);
+    if (angle != drv->orientation_angle) {
+        if (angle == 0 || angle == 180) {
+            drv->orientation_angle = angle;
+            display_sync_with_fb(drv);
+        }
     }
-  }
 
-  return drv->orientation_angle;
+    return drv->orientation_angle;
 }
 
-int display_get_orientation(void) {
-  display_driver_t *drv = &g_display_driver;
+int display_get_orientation(void)
+{
+    display_driver_t *drv = &g_display_driver;
 
-  return drv->orientation_angle;
+    return drv->orientation_angle;
 }
 
-display_fb_info_t display_get_frame_buffer(void) {
-  display_driver_t *drv = &g_display_driver;
+display_fb_info_t display_get_frame_buffer(void)
+{
+    display_driver_t *drv = &g_display_driver;
 
-  display_fb_info_t fb = {
-      .ptr = &drv->framebuf[0],
-      .stride = DISPLAY_RESX,
-  };
+    display_fb_info_t fb = {
+        .ptr = &drv->framebuf[0],
+        .stride = DISPLAY_RESX,
+    };
 
-  return fb;
+    return fb;
 }
 
-void display_refresh(void) {
-  display_driver_t *drv = &g_display_driver;
+void display_refresh(void)
+{
+    display_driver_t *drv = &g_display_driver;
 
 #if defined USE_CONSUMPTION_MASK && !defined BOARDLOADER
-  // This is an intentional randomization of the consumption masking algorithm
-  // after every change on the display
-  consumption_mask_randomize();
+    // This is an intentional randomization of the consumption masking algorithm
+    // after every change on the display
+    consumption_mask_randomize();
 #endif
 
-  // Sends the current frame buffer to the display
-  display_sync_with_fb(drv);
+    // Sends the current frame buffer to the display
+    display_sync_with_fb(drv);
 }
 
-void display_set_compatible_settings() {}
-
-void display_fill(const gfx_bitblt_t *bb) {
-  display_driver_t *drv = &g_display_driver;
-
-  gfx_bitblt_t bb_new = *bb;
-  bb_new.dst_row = &drv->framebuf[DISPLAY_RESX * bb_new.dst_y];
-  bb_new.dst_stride = DISPLAY_RESX;
-
-  gfx_mono8_fill(&bb_new);
+void display_set_compatible_settings()
+{
 }
 
-void display_copy_mono1p(const gfx_bitblt_t *bb) {
-  display_driver_t *drv = &g_display_driver;
+void display_fill(const gfx_bitblt_t *bb)
+{
+    display_driver_t *drv = &g_display_driver;
 
-  gfx_bitblt_t bb_new = *bb;
-  bb_new.dst_row = &drv->framebuf[DISPLAY_RESX * bb_new.dst_y];
-  bb_new.dst_stride = DISPLAY_RESX;
+    gfx_bitblt_t bb_new = *bb;
+    bb_new.dst_row = &drv->framebuf[DISPLAY_RESX * bb_new.dst_y];
+    bb_new.dst_stride = DISPLAY_RESX;
 
-  gfx_mono8_copy_mono1p(&bb_new);
+    gfx_mono8_fill(&bb_new);
+}
+
+void display_copy_mono1p(const gfx_bitblt_t *bb)
+{
+    display_driver_t *drv = &g_display_driver;
+
+    gfx_bitblt_t bb_new = *bb;
+    bb_new.dst_row = &drv->framebuf[DISPLAY_RESX * bb_new.dst_y];
+    bb_new.dst_stride = DISPLAY_RESX;
+
+    gfx_mono8_copy_mono1p(&bb_new);
 }

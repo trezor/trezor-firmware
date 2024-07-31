@@ -34,8 +34,8 @@
 #define FLASH_SR_RDERR 0
 #endif
 
-#define FLASH_STATUS_ALL_FLAGS                                            \
-  (FLASH_SR_RDERR | FLASH_SR_PGSERR | FLASH_SR_PGPERR | FLASH_SR_PGAERR | \
-   FLASH_SR_WRPERR | FLASH_SR_SOP | FLASH_SR_EOP)
+#define FLASH_STATUS_ALL_FLAGS                                                                \
+    (FLASH_SR_RDERR | FLASH_SR_PGSERR | FLASH_SR_PGPERR | FLASH_SR_PGAERR | FLASH_SR_WRPERR | \
+     FLASH_SR_SOP | FLASH_SR_EOP)
 
 #endif  // FLASH_H

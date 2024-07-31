@@ -26,55 +26,59 @@ static uint32_t board_name = 0;
 
 static struct BoardloaderVersion boardloader_version;
 
-const uint32_t get_board_name() { return board_name; }
-
-const struct BoardloaderVersion *get_boardloader_version() {
-  return &boardloader_version;
+const uint32_t get_board_name()
+{
+    return board_name;
 }
 
-void parse_boardloader_capabilities() {
-  const uint8_t *pos = (const uint8_t *)BOARD_CAPABILITIES_ADDR;
-  const uint8_t *end =
-      (const uint8_t *)(BOARD_CAPABILITIES_ADDR + BOARD_CAPABILITIES_SIZE);
+const struct BoardloaderVersion *get_boardloader_version()
+{
+    return &boardloader_version;
+}
 
-  if (memcmp(pos, CAPABILITIES_HEADER, 4) != 0) {
-    return;
-  }
+void parse_boardloader_capabilities()
+{
+    const uint8_t *pos = (const uint8_t *)BOARD_CAPABILITIES_ADDR;
+    const uint8_t *end = (const uint8_t *)(BOARD_CAPABILITIES_ADDR + BOARD_CAPABILITIES_SIZE);
 
-  pos += 4;
-
-  // -2 for possible tag without any data
-  while (pos <= end - 2) {
-    enum CapabilityTag tag = pos[0];
-    uint8_t length = pos[1];
-    pos += 2;
-
-    if (pos + length > end) {
-      error_shutdown("Bad capabilities format");
-    }
-
-    switch (tag) {
-      case TAG_CAPABILITY:
-        // not used yet, just advance pointer
-        break;
-      case TAG_MODEL_NAME:
-        if (length != sizeof(uint32_t)) {
-          break;
-        }
-        memcpy((uint8_t *)&board_name, pos, sizeof(uint32_t));
-        break;
-      case TAG_BOARDLOADER_VERSION:
-        if (length != sizeof(boardloader_version)) {
-          break;
-        }
-        memcpy(&boardloader_version, pos, length);
-        break;
-      case TAG_TERMINATOR:
+    if (memcmp(pos, CAPABILITIES_HEADER, 4) != 0) {
         return;
-      default:
-        break;
     }
 
-    pos += length;
-  }
+    pos += 4;
+
+    // -2 for possible tag without any data
+    while (pos <= end - 2) {
+        enum CapabilityTag tag = pos[0];
+        uint8_t length = pos[1];
+        pos += 2;
+
+        if (pos + length > end) {
+            error_shutdown("Bad capabilities format");
+        }
+
+        switch (tag) {
+            case TAG_CAPABILITY:
+                // not used yet, just advance pointer
+                break;
+            case TAG_MODEL_NAME:
+                if (length != sizeof(uint32_t)) {
+                    break;
+                }
+                memcpy((uint8_t *)&board_name, pos, sizeof(uint32_t));
+                break;
+            case TAG_BOARDLOADER_VERSION:
+                if (length != sizeof(boardloader_version)) {
+                    break;
+                }
+                memcpy(&boardloader_version, pos, length);
+                break;
+            case TAG_TERMINATOR:
+                return;
+            default:
+                break;
+        }
+
+        pos += length;
+    }
 }

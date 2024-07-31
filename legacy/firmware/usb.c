@@ -66,18 +66,18 @@
 #define ENDPOINT_ADDRESS_U2F_OUT (0x03)
 #endif
 
-#define USB_STRINGS                                 \
-  X(MANUFACTURER, "SatoshiLabs")                    \
-  X(PRODUCT, "TREZOR")                              \
-  X(SERIAL_NUMBER, config_uuid_str)                 \
-  X(INTERFACE_MAIN, "TREZOR Interface")             \
-  X(INTERFACE_DEBUG, "TREZOR Debug Link Interface") \
-  X(INTERFACE_U2F, "TREZOR U2F Interface")
+#define USB_STRINGS                                   \
+    X(MANUFACTURER, "SatoshiLabs")                    \
+    X(PRODUCT, "TREZOR")                              \
+    X(SERIAL_NUMBER, config_uuid_str)                 \
+    X(INTERFACE_MAIN, "TREZOR Interface")             \
+    X(INTERFACE_DEBUG, "TREZOR Debug Link Interface") \
+    X(INTERFACE_U2F, "TREZOR U2F Interface")
 
 #define X(name, value) USB_STRING_##name,
 enum {
-  USB_STRING_LANGID_CODES,  // LANGID code array
-  USB_STRINGS
+    USB_STRING_LANGID_CODES,  // LANGID code array
+    USB_STRINGS
 };
 #undef X
 
@@ -124,24 +124,24 @@ static const uint8_t hid_report_descriptor_u2f[] = {
 };
 
 static const struct {
-  struct usb_hid_descriptor hid_descriptor_u2f;
-  struct {
-    uint8_t bReportDescriptorType;
-    uint16_t wDescriptorLength;
-  } __attribute__((packed)) hid_report_u2f;
-} __attribute__((packed))
-hid_function_u2f = {.hid_descriptor_u2f =
-                        {
-                            .bLength = sizeof(hid_function_u2f),
-                            .bDescriptorType = USB_DT_HID,
-                            .bcdHID = 0x0111,
-                            .bCountryCode = 0,
-                            .bNumDescriptors = 1,
-                        },
-                    .hid_report_u2f = {
-                        .bReportDescriptorType = USB_DT_REPORT,
-                        .wDescriptorLength = sizeof(hid_report_descriptor_u2f),
-                    }};
+    struct usb_hid_descriptor hid_descriptor_u2f;
+    struct {
+        uint8_t bReportDescriptorType;
+        uint16_t wDescriptorLength;
+    } __attribute__((packed)) hid_report_u2f;
+} __attribute__((packed)) hid_function_u2f = {
+    .hid_descriptor_u2f =
+        {
+            .bLength = sizeof(hid_function_u2f),
+            .bDescriptorType = USB_DT_HID,
+            .bcdHID = 0x0111,
+            .bCountryCode = 0,
+            .bNumDescriptors = 1,
+        },
+    .hid_report_u2f = {
+        .bReportDescriptorType = USB_DT_REPORT,
+        .wDescriptorLength = sizeof(hid_report_descriptor_u2f),
+    }};
 
 static const struct usb_endpoint_descriptor hid_endpoints_u2f[2] = {
     {
@@ -286,90 +286,92 @@ static volatile char tiny = 0;
 
 static enum usbd_request_return_codes hid_control_request(
     usbd_device *dev, struct usb_setup_data *req, uint8_t **buf, uint16_t *len,
-    usbd_control_complete_callback *complete) {
-  (void)complete;
-  (void)dev;
+    usbd_control_complete_callback *complete)
+{
+    (void)complete;
+    (void)dev;
 
-  wait_random();
+    wait_random();
 
-  if ((req->bmRequestType != 0x81) ||
-      (req->bRequest != USB_REQ_GET_DESCRIPTOR) || (req->wValue != 0x2200))
-    return 0;
+    if ((req->bmRequestType != 0x81) || (req->bRequest != USB_REQ_GET_DESCRIPTOR) ||
+        (req->wValue != 0x2200))
+        return 0;
 
-  debugLog(0, "", "hid_control_request u2f");
-  *buf = (uint8_t *)hid_report_descriptor_u2f;
-  *len = MIN_8bits(*len, sizeof(hid_report_descriptor_u2f));
-  return 1;
+    debugLog(0, "", "hid_control_request u2f");
+    *buf = (uint8_t *)hid_report_descriptor_u2f;
+    *len = MIN_8bits(*len, sizeof(hid_report_descriptor_u2f));
+    return 1;
 }
 
-static void u2f_rx_callback(usbd_device *dev, uint8_t ep) {
-  (void)ep;
-  static CONFIDENTIAL uint8_t buf[USB_PACKET_SIZE] __attribute__((aligned(4)));
+static void u2f_rx_callback(usbd_device *dev, uint8_t ep)
+{
+    (void)ep;
+    static CONFIDENTIAL uint8_t buf[USB_PACKET_SIZE] __attribute__((aligned(4)));
 
-  debugLog(0, "", "u2f_rx_callback");
-  if (usbd_ep_read_packet(dev, ENDPOINT_ADDRESS_U2F_OUT, buf, sizeof(buf)) !=
-      USB_PACKET_SIZE)
-    return;
-  u2fhid_read(tiny, (const U2FHID_FRAME *)(void *)buf);
+    debugLog(0, "", "u2f_rx_callback");
+    if (usbd_ep_read_packet(dev, ENDPOINT_ADDRESS_U2F_OUT, buf, sizeof(buf)) != USB_PACKET_SIZE)
+        return;
+    u2fhid_read(tiny, (const U2FHID_FRAME *)(void *)buf);
 }
 
 #endif
 
-static void main_rx_callback(usbd_device *dev, uint8_t ep) {
-  (void)ep;
-  static CONFIDENTIAL uint8_t buf[USB_PACKET_SIZE] __attribute__((aligned(4)));
-  if (usbd_ep_read_packet(dev, ENDPOINT_ADDRESS_MAIN_OUT, buf, sizeof(buf)) !=
-      USB_PACKET_SIZE)
-    return;
-  debugLog(0, "", "main_rx_callback");
-  if (!tiny) {
-    msg_read(buf, sizeof(buf));
-  } else {
-    msg_read_tiny(buf, sizeof(buf));
-  }
+static void main_rx_callback(usbd_device *dev, uint8_t ep)
+{
+    (void)ep;
+    static CONFIDENTIAL uint8_t buf[USB_PACKET_SIZE] __attribute__((aligned(4)));
+    if (usbd_ep_read_packet(dev, ENDPOINT_ADDRESS_MAIN_OUT, buf, sizeof(buf)) != USB_PACKET_SIZE)
+        return;
+    debugLog(0, "", "main_rx_callback");
+    if (!tiny) {
+        msg_read(buf, sizeof(buf));
+    } else {
+        msg_read_tiny(buf, sizeof(buf));
+    }
 }
 
 #if DEBUG_LINK
 
-static void debug_rx_callback(usbd_device *dev, uint8_t ep) {
-  (void)ep;
-  static uint8_t buf[USB_PACKET_SIZE] __attribute__((aligned(4)));
-  if (usbd_ep_read_packet(dev, ENDPOINT_ADDRESS_DEBUG_OUT, buf, sizeof(buf)) !=
-      USB_PACKET_SIZE)
-    return;
-  debugLog(0, "", "debug_rx_callback");
-  if (!tiny) {
-    msg_debug_read(buf, sizeof(buf));
-  } else {
-    msg_read_tiny(buf, sizeof(buf));
-  }
+static void debug_rx_callback(usbd_device *dev, uint8_t ep)
+{
+    (void)ep;
+    static uint8_t buf[USB_PACKET_SIZE] __attribute__((aligned(4)));
+    if (usbd_ep_read_packet(dev, ENDPOINT_ADDRESS_DEBUG_OUT, buf, sizeof(buf)) != USB_PACKET_SIZE)
+        return;
+    debugLog(0, "", "debug_rx_callback");
+    if (!tiny) {
+        msg_debug_read(buf, sizeof(buf));
+    } else {
+        msg_read_tiny(buf, sizeof(buf));
+    }
 }
 
 #endif
 
-static void set_config(usbd_device *dev, uint16_t wValue) {
-  (void)wValue;
+static void set_config(usbd_device *dev, uint16_t wValue)
+{
+    (void)wValue;
 
-  usbd_ep_setup(dev, ENDPOINT_ADDRESS_MAIN_IN, USB_ENDPOINT_ATTR_INTERRUPT,
-                USB_PACKET_SIZE, 0);
-  usbd_ep_setup(dev, ENDPOINT_ADDRESS_MAIN_OUT, USB_ENDPOINT_ATTR_INTERRUPT,
-                USB_PACKET_SIZE, main_rx_callback);
+    usbd_ep_setup(dev, ENDPOINT_ADDRESS_MAIN_IN, USB_ENDPOINT_ATTR_INTERRUPT, USB_PACKET_SIZE, 0);
+    usbd_ep_setup(
+        dev, ENDPOINT_ADDRESS_MAIN_OUT, USB_ENDPOINT_ATTR_INTERRUPT, USB_PACKET_SIZE,
+        main_rx_callback);
 #if U2F_ENABLED
-  usbd_ep_setup(dev, ENDPOINT_ADDRESS_U2F_IN, USB_ENDPOINT_ATTR_INTERRUPT,
-                USB_PACKET_SIZE, 0);
-  usbd_ep_setup(dev, ENDPOINT_ADDRESS_U2F_OUT, USB_ENDPOINT_ATTR_INTERRUPT,
-                USB_PACKET_SIZE, u2f_rx_callback);
+    usbd_ep_setup(dev, ENDPOINT_ADDRESS_U2F_IN, USB_ENDPOINT_ATTR_INTERRUPT, USB_PACKET_SIZE, 0);
+    usbd_ep_setup(
+        dev, ENDPOINT_ADDRESS_U2F_OUT, USB_ENDPOINT_ATTR_INTERRUPT, USB_PACKET_SIZE,
+        u2f_rx_callback);
 #endif
 #if DEBUG_LINK
-  usbd_ep_setup(dev, ENDPOINT_ADDRESS_DEBUG_IN, USB_ENDPOINT_ATTR_INTERRUPT,
-                USB_PACKET_SIZE, 0);
-  usbd_ep_setup(dev, ENDPOINT_ADDRESS_DEBUG_OUT, USB_ENDPOINT_ATTR_INTERRUPT,
-                USB_PACKET_SIZE, debug_rx_callback);
+    usbd_ep_setup(dev, ENDPOINT_ADDRESS_DEBUG_IN, USB_ENDPOINT_ATTR_INTERRUPT, USB_PACKET_SIZE, 0);
+    usbd_ep_setup(
+        dev, ENDPOINT_ADDRESS_DEBUG_OUT, USB_ENDPOINT_ATTR_INTERRUPT, USB_PACKET_SIZE,
+        debug_rx_callback);
 #endif
 #if U2F_ENABLED
-  usbd_register_control_callback(
-      dev, USB_REQ_TYPE_STANDARD | USB_REQ_TYPE_INTERFACE,
-      USB_REQ_TYPE_TYPE | USB_REQ_TYPE_RECIPIENT, hid_control_request);
+    usbd_register_control_callback(
+        dev, USB_REQ_TYPE_STANDARD | USB_REQ_TYPE_INTERFACE,
+        USB_REQ_TYPE_TYPE | USB_REQ_TYPE_RECIPIENT, hid_control_request);
 #endif
 }
 
@@ -387,93 +389,100 @@ static const struct usb_bos_descriptor bos_descriptor = {
     .bNumDeviceCaps = sizeof(capabilities) / sizeof(capabilities[0]),
     .capabilities = capabilities};
 
-void usbInit(void) {
-  usbd_dev = usbd_init(&otgfs_usb_driver, &dev_descr, &config, usb_strings,
-                       sizeof(usb_strings) / sizeof(*usb_strings),
-                       usbd_control_buffer, sizeof(usbd_control_buffer));
-  usbd_register_set_config_callback(usbd_dev, set_config);
-  usb21_setup(usbd_dev, &bos_descriptor);
-  static const char *origin_url = "trezor.io/start";
-  webusb_setup(usbd_dev, origin_url);
-  // Debug link interface does not have WinUSB set;
-  // if you really need debug link on windows, edit the descriptor in winusb.c
-  winusb_setup(usbd_dev, USB_INTERFACE_INDEX_MAIN);
+void usbInit(void)
+{
+    usbd_dev = usbd_init(
+        &otgfs_usb_driver, &dev_descr, &config, usb_strings,
+        sizeof(usb_strings) / sizeof(*usb_strings), usbd_control_buffer,
+        sizeof(usbd_control_buffer));
+    usbd_register_set_config_callback(usbd_dev, set_config);
+    usb21_setup(usbd_dev, &bos_descriptor);
+    static const char *origin_url = "trezor.io/start";
+    webusb_setup(usbd_dev, origin_url);
+    // Debug link interface does not have WinUSB set;
+    // if you really need debug link on windows, edit the descriptor in winusb.c
+    winusb_setup(usbd_dev, USB_INTERFACE_INDEX_MAIN);
 }
 
-void usbPoll(void) {
-  if (usbd_dev == NULL) {
-    return;
-  }
+void usbPoll(void)
+{
+    if (usbd_dev == NULL) {
+        return;
+    }
 
-  static const uint8_t *data;
-  // poll read buffer
-  usbd_poll(usbd_dev);
-  // write pending data
-  data = msg_out_data();
-  if (data) {
-    while (usbd_ep_write_packet(usbd_dev, ENDPOINT_ADDRESS_MAIN_IN, data,
-                                USB_PACKET_SIZE) != USB_PACKET_SIZE) {
+    static const uint8_t *data;
+    // poll read buffer
+    usbd_poll(usbd_dev);
+    // write pending data
+    data = msg_out_data();
+    if (data) {
+        while (usbd_ep_write_packet(usbd_dev, ENDPOINT_ADDRESS_MAIN_IN, data, USB_PACKET_SIZE) !=
+               USB_PACKET_SIZE) {
+        }
     }
-  }
 #if U2F_ENABLED
-  data = u2f_out_data();
-  if (data) {
-    while (usbd_ep_write_packet(usbd_dev, ENDPOINT_ADDRESS_U2F_IN, data,
-                                USB_PACKET_SIZE) != USB_PACKET_SIZE) {
+    data = u2f_out_data();
+    if (data) {
+        while (usbd_ep_write_packet(usbd_dev, ENDPOINT_ADDRESS_U2F_IN, data, USB_PACKET_SIZE) !=
+               USB_PACKET_SIZE) {
+        }
     }
-  }
 #endif
 #if DEBUG_LINK
-  // write pending debug data
-  data = msg_debug_out_data();
-  if (data) {
-    while (usbd_ep_write_packet(usbd_dev, ENDPOINT_ADDRESS_DEBUG_IN, data,
-                                USB_PACKET_SIZE) != USB_PACKET_SIZE) {
+    // write pending debug data
+    data = msg_debug_out_data();
+    if (data) {
+        while (usbd_ep_write_packet(usbd_dev, ENDPOINT_ADDRESS_DEBUG_IN, data, USB_PACKET_SIZE) !=
+               USB_PACKET_SIZE) {
+        }
     }
-  }
 #endif
 }
 
-void usbReconnect(void) {
-  if (usbd_dev != NULL) {
-    usbd_disconnect(usbd_dev, 1);
-    delay(120000);
-    usbd_disconnect(usbd_dev, 0);
-  }
-}
-
-char usbTiny(char set) {
-  char old = tiny;
-  tiny = set;
-  return old;
-}
-
-void waitAndProcessUSBRequests(uint32_t millis) {
-  uint32_t start = timer_ms();
-
-  while ((timer_ms() - start) < millis) {
+void usbReconnect(void)
+{
     if (usbd_dev != NULL) {
-      usbd_poll(usbd_dev);
+        usbd_disconnect(usbd_dev, 1);
+        delay(120000);
+        usbd_disconnect(usbd_dev, 0);
     }
-  }
 }
 
-void usbFlush(uint32_t millis) {
-  if (usbd_dev == NULL) {
-    return;
-  }
+char usbTiny(char set)
+{
+    char old = tiny;
+    tiny = set;
+    return old;
+}
 
-  static const uint8_t *data;
-  data = msg_out_data();
-  if (data) {
-    while (usbd_ep_write_packet(usbd_dev, ENDPOINT_ADDRESS_MAIN_IN, data,
-                                USB_PACKET_SIZE) != USB_PACKET_SIZE) {
+void waitAndProcessUSBRequests(uint32_t millis)
+{
+    uint32_t start = timer_ms();
+
+    while ((timer_ms() - start) < millis) {
+        if (usbd_dev != NULL) {
+            usbd_poll(usbd_dev);
+        }
     }
-  }
+}
 
-  uint32_t start = timer_ms();
+void usbFlush(uint32_t millis)
+{
+    if (usbd_dev == NULL) {
+        return;
+    }
 
-  while ((timer_ms() - start) < millis) {
-    asm("nop");
-  }
+    static const uint8_t *data;
+    data = msg_out_data();
+    if (data) {
+        while (usbd_ep_write_packet(usbd_dev, ENDPOINT_ADDRESS_MAIN_IN, data, USB_PACKET_SIZE) !=
+               USB_PACKET_SIZE) {
+        }
+    }
+
+    uint32_t start = timer_ms();
+
+    while ((timer_ms() - start) < millis) {
+        asm("nop");
+    }
 }

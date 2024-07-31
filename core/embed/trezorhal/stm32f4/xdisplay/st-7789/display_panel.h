@@ -34,8 +34,8 @@
 #define DISPLAY_ID_ILI9341V 0x009341U
 
 typedef struct {
-  uint16_t x;
-  uint16_t y;
+    uint16_t x;
+    uint16_t y;
 } display_padding_t;
 
 // Identifies the connected display panel and
@@ -50,8 +50,7 @@ void display_panel_set_big_endian(void);
 
 void display_panel_sleep(void);
 void display_panel_unsleep(void);
-void display_panel_set_window(uint16_t x0, uint16_t y0, uint16_t x1,
-                              uint16_t y1);
+void display_panel_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1);
 void display_panel_rotate(int angle);
 
 #endif  // TREZORHAL_ST7789_PANEL_H

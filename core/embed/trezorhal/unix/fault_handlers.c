@@ -19,4 +19,6 @@
 
 #include <fault_handlers.h>
 
-void fault_handlers_init(void) {}
+void fault_handlers_init(void)
+{
+}

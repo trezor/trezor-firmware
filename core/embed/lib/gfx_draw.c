@@ -24,152 +24,156 @@
 #include "gfx_draw.h"
 
 typedef struct {
-  int16_t dst_x;
-  int16_t dst_y;
-  int16_t src_x;
-  int16_t src_y;
-  int16_t width;
-  int16_t height;
+    int16_t dst_x;
+    int16_t dst_y;
+    int16_t src_x;
+    int16_t src_y;
+    int16_t width;
+    int16_t height;
 } gfx_clip_t;
 
-static inline gfx_clip_t gfx_clip(gfx_rect_t dst, const gfx_bitmap_t* bitmap) {
-  int16_t dst_x = dst.x0;
-  int16_t dst_y = dst.y0;
+static inline gfx_clip_t gfx_clip(gfx_rect_t dst, const gfx_bitmap_t* bitmap)
+{
+    int16_t dst_x = dst.x0;
+    int16_t dst_y = dst.y0;
 
-  int16_t src_x = 0;
-  int16_t src_y = 0;
+    int16_t src_x = 0;
+    int16_t src_y = 0;
 
-  if (bitmap != NULL) {
-    src_x += bitmap->offset.x;
-    src_y += bitmap->offset.y;
+    if (bitmap != NULL) {
+        src_x += bitmap->offset.x;
+        src_y += bitmap->offset.y;
 
-    // Normalize negative x-offset of bitmap
-    if (src_x < 0) {
-      dst_x -= src_x;
-      src_x = 0;
+        // Normalize negative x-offset of bitmap
+        if (src_x < 0) {
+            dst_x -= src_x;
+            src_x = 0;
+        }
+
+        // Normalize negative y-offset of src bitmap
+        if (src_y < 0) {
+            dst_y -= src_y;
+            src_y = 0;
+        }
     }
 
-    // Normalize negative y-offset of src bitmap
-    if (src_y < 0) {
-      dst_y -= src_y;
-      src_y = 0;
+    // Normalize negative top-left of destination rectangle
+    if (dst_x < 0) {
+        src_x -= dst_x;
+        dst_x = 0;
     }
-  }
 
-  // Normalize negative top-left of destination rectangle
-  if (dst_x < 0) {
-    src_x -= dst_x;
-    dst_x = 0;
-  }
+    if (dst_y < 0) {
+        src_y -= dst_y;
+        dst_y = 0;
+    }
 
-  if (dst_y < 0) {
-    src_y -= dst_y;
-    dst_y = 0;
-  }
+    // Calculate dimension of effective rectangle
+    int16_t width = MIN(DISPLAY_RESX, dst.x1) - dst_x;
+    int16_t height = MIN(DISPLAY_RESY, dst.y1) - dst_y;
 
-  // Calculate dimension of effective rectangle
-  int16_t width = MIN(DISPLAY_RESX, dst.x1) - dst_x;
-  int16_t height = MIN(DISPLAY_RESY, dst.y1) - dst_y;
+    if (bitmap != NULL) {
+        width = MIN(width, bitmap->size.x - src_x);
+        height = MIN(height, bitmap->size.y - src_y);
+    }
 
-  if (bitmap != NULL) {
-    width = MIN(width, bitmap->size.x - src_x);
-    height = MIN(height, bitmap->size.y - src_y);
-  }
+    gfx_clip_t clip = {
+        .dst_x = dst_x,
+        .dst_y = dst_y,
+        .src_x = src_x,
+        .src_y = src_y,
+        .width = width,
+        .height = height,
+    };
 
-  gfx_clip_t clip = {
-      .dst_x = dst_x,
-      .dst_y = dst_y,
-      .src_x = src_x,
-      .src_y = src_y,
-      .width = width,
-      .height = height,
-  };
-
-  return clip;
+    return clip;
 }
 
-void gfx_clear(void) {
-  gfx_bitblt_t bb = {
-      // Destination bitmap
-      .height = DISPLAY_RESX,
-      .width = DISPLAY_RESY,
-      .dst_row = NULL,
-      .dst_x = 0,
-      .dst_y = 0,
-      .dst_stride = 0,
+void gfx_clear(void)
+{
+    gfx_bitblt_t bb = {
+        // Destination bitmap
+        .height = DISPLAY_RESX,
+        .width = DISPLAY_RESY,
+        .dst_row = NULL,
+        .dst_x = 0,
+        .dst_y = 0,
+        .dst_stride = 0,
 
-      // Source bitmap
-      .src_fg = 0,
-      .src_alpha = 255,
-  };
+        // Source bitmap
+        .src_fg = 0,
+        .src_alpha = 255,
+    };
 
-  display_fill(&bb);
+    display_fill(&bb);
 }
 
-void gfx_draw_bar(gfx_rect_t rect, gfx_color_t color) {
-  gfx_clip_t clip = gfx_clip(rect, NULL);
+void gfx_draw_bar(gfx_rect_t rect, gfx_color_t color)
+{
+    gfx_clip_t clip = gfx_clip(rect, NULL);
 
-  if (clip.width <= 0 || clip.height <= 0) {
-    return;
-  }
+    if (clip.width <= 0 || clip.height <= 0) {
+        return;
+    }
 
-  gfx_bitblt_t bb = {
-      // Destination bitmap
-      .height = clip.height,
-      .width = clip.width,
-      .dst_row = NULL,
-      .dst_x = clip.dst_x,
-      .dst_y = clip.dst_y,
-      .dst_stride = 0,
+    gfx_bitblt_t bb = {
+        // Destination bitmap
+        .height = clip.height,
+        .width = clip.width,
+        .dst_row = NULL,
+        .dst_x = clip.dst_x,
+        .dst_y = clip.dst_y,
+        .dst_stride = 0,
 
-      // Source bitmap
-      .src_fg = color,
-      .src_alpha = 255,
-  };
+        // Source bitmap
+        .src_fg = color,
+        .src_alpha = 255,
+    };
 
-  display_fill(&bb);
+    display_fill(&bb);
 }
 
-void gfx_draw_bitmap(gfx_rect_t rect, const gfx_bitmap_t* bitmap) {
-  gfx_clip_t clip = gfx_clip(rect, bitmap);
+void gfx_draw_bitmap(gfx_rect_t rect, const gfx_bitmap_t* bitmap)
+{
+    gfx_clip_t clip = gfx_clip(rect, bitmap);
 
-  if (clip.width <= 0 || clip.height <= 0) {
-    return;
-  }
+    if (clip.width <= 0 || clip.height <= 0) {
+        return;
+    }
 
-  gfx_bitblt_t bb = {
-      // Destination bitmap
-      .height = clip.height,
-      .width = clip.width,
-      .dst_row = NULL,
-      .dst_x = clip.dst_x,
-      .dst_y = clip.dst_y,
-      .dst_stride = 0,
+    gfx_bitblt_t bb = {
+        // Destination bitmap
+        .height = clip.height,
+        .width = clip.width,
+        .dst_row = NULL,
+        .dst_x = clip.dst_x,
+        .dst_y = clip.dst_y,
+        .dst_stride = 0,
 
-      // Source bitmap
-      .src_row = (uint8_t*)bitmap->ptr + bitmap->stride * clip.src_y,
-      .src_x = clip.src_x,
-      .src_y = clip.src_y,
-      .src_stride = bitmap->stride,
-      .src_fg = bitmap->fg_color,
-      .src_bg = bitmap->bg_color,
-      .src_alpha = 255,
-  };
+        // Source bitmap
+        .src_row = (uint8_t*)bitmap->ptr + bitmap->stride * clip.src_y,
+        .src_x = clip.src_x,
+        .src_y = clip.src_y,
+        .src_stride = bitmap->stride,
+        .src_fg = bitmap->fg_color,
+        .src_bg = bitmap->bg_color,
+        .src_alpha = 255,
+    };
 
-  // Currently, we use `gfx_draw_bitmap` exclusively for text rendering.
-  // Therefore, we are including the variant of `display_copy_xxx()` that is
-  // specifically needed for drawing glyphs in the format we are using
-  // to save some space in the flash memory.
+    // Currently, we use `gfx_draw_bitmap` exclusively for text rendering.
+    // Therefore, we are including the variant of `display_copy_xxx()` that is
+    // specifically needed for drawing glyphs in the format we are using
+    // to save some space in the flash memory.
 
 #if TREZOR_FONT_BPP == 1
-  if (bitmap->format == GFX_FORMAT_MONO1P) {
-    display_copy_mono1p(&bb);
-  }
+    if (bitmap->format == GFX_FORMAT_MONO1P) {
+        display_copy_mono1p(&bb);
+    }
 #endif
 #if TREZOR_FONT_BPP == 4
-  if (bitmap->format == GFX_FORMAT_MONO4) {
-    display_copy_mono4(&bb);
-  }
+    if (bitmap->format == GFX_FORMAT_MONO4) {
+        display_copy_mono4(&bb);
+    }
 #endif
 }
 
@@ -198,79 +202,84 @@ void gfx_draw_bitmap(gfx_rect_t rect, const gfx_bitmap_t* bitmap) {
 #define GLYPH_BEARING_Y(g) ((g)[4])
 #define GLYPH_DATA(g) ((void*)&(g)[5])
 
-void gfx_draw_text(gfx_offset_t pos, const char* text, size_t maxlen,
-                   const gfx_text_attr_t* attr) {
-  if (text == NULL) {
-    return;
-  }
-
-  gfx_bitmap_t bitmap = {
-      .format = GLYPH_FORMAT,
-      .fg_color = attr->fg_color,
-      .bg_color = attr->bg_color,
-  };
-
-  int max_height = font_max_height(attr->font);
-  int baseline = font_baseline(attr->font);
-
-  for (int i = 0; i < maxlen; i++) {
-    uint8_t ch = (uint8_t)text[i];
-
-    if (ch == 0 || pos.x >= DISPLAY_RESX) {
-      break;
+void gfx_draw_text(gfx_offset_t pos, const char* text, size_t maxlen, const gfx_text_attr_t* attr)
+{
+    if (text == NULL) {
+        return;
     }
 
-    const uint8_t* glyph = font_get_glyph(attr->font, ch);
+    gfx_bitmap_t bitmap = {
+        .format = GLYPH_FORMAT,
+        .fg_color = attr->fg_color,
+        .bg_color = attr->bg_color,
+    };
 
-    if (glyph == NULL) {
-      continue;
+    int max_height = font_max_height(attr->font);
+    int baseline = font_baseline(attr->font);
+
+    for (int i = 0; i < maxlen; i++) {
+        uint8_t ch = (uint8_t)text[i];
+
+        if (ch == 0 || pos.x >= DISPLAY_RESX) {
+            break;
+        }
+
+        const uint8_t* glyph = font_get_glyph(attr->font, ch);
+
+        if (glyph == NULL) {
+            continue;
+        }
+
+        bitmap.ptr = GLYPH_DATA(glyph);
+        bitmap.stride = GLYPH_STRIDE(GLYPH_WIDTH(glyph));
+        bitmap.size.x = GLYPH_WIDTH(glyph);
+        bitmap.size.y = GLYPH_HEIGHT(glyph);
+
+        bitmap.offset.x = -GLYPH_BEARING_X(glyph);
+        bitmap.offset.y = -(max_height - baseline - GLYPH_BEARING_Y(glyph));
+
+        gfx_draw_bitmap(gfx_rect(pos.x, pos.y, DISPLAY_RESX, DISPLAY_RESY), &bitmap);
+
+        pos.x += GLYPH_ADVANCE(glyph);
     }
-
-    bitmap.ptr = GLYPH_DATA(glyph);
-    bitmap.stride = GLYPH_STRIDE(GLYPH_WIDTH(glyph));
-    bitmap.size.x = GLYPH_WIDTH(glyph);
-    bitmap.size.y = GLYPH_HEIGHT(glyph);
-
-    bitmap.offset.x = -GLYPH_BEARING_X(glyph);
-    bitmap.offset.y = -(max_height - baseline - GLYPH_BEARING_Y(glyph));
-
-    gfx_draw_bitmap(gfx_rect(pos.x, pos.y, DISPLAY_RESX, DISPLAY_RESY),
-                    &bitmap);
-
-    pos.x += GLYPH_ADVANCE(glyph);
-  }
 }
 
 // ===============================================================
 // emulation of legacy functions
 
-void display_clear(void) { gfx_clear(); }
-
-void display_bar(int x, int y, int w, int h, uint16_t c) {
-  gfx_draw_bar(gfx_rect_wh(x, y, w, h), c);
+void display_clear(void)
+{
+    gfx_clear();
 }
 
-void display_text(int x, int y, const char* text, int textlen, int font,
-                  uint16_t fg_color, uint16_t bg_color) {
-  gfx_text_attr_t attr = {
-      .font = font,
-      .fg_color = fg_color,
-      .bg_color = bg_color,
-  };
-
-  size_t maxlen = textlen < 0 ? UINT32_MAX : textlen;
-  gfx_draw_text(gfx_offset(x, y), text, maxlen, &attr);
+void display_bar(int x, int y, int w, int h, uint16_t c)
+{
+    gfx_draw_bar(gfx_rect_wh(x, y, w, h), c);
 }
 
-void display_text_center(int x, int y, const char* text, int textlen, int font,
-                         uint16_t fg_color, uint16_t bg_color) {
-  gfx_text_attr_t attr = {
-      .font = font,
-      .fg_color = fg_color,
-      .bg_color = bg_color,
-  };
+void display_text(
+    int x, int y, const char* text, int textlen, int font, uint16_t fg_color, uint16_t bg_color)
+{
+    gfx_text_attr_t attr = {
+        .font = font,
+        .fg_color = fg_color,
+        .bg_color = bg_color,
+    };
 
-  size_t maxlen = textlen < 0 ? UINT32_MAX : textlen;
-  int w = font_text_width(font, text, textlen);
-  gfx_draw_text(gfx_offset(x - w / 2, y), text, maxlen, &attr);
+    size_t maxlen = textlen < 0 ? UINT32_MAX : textlen;
+    gfx_draw_text(gfx_offset(x, y), text, maxlen, &attr);
+}
+
+void display_text_center(
+    int x, int y, const char* text, int textlen, int font, uint16_t fg_color, uint16_t bg_color)
+{
+    gfx_text_attr_t attr = {
+        .font = font,
+        .fg_color = fg_color,
+        .bg_color = bg_color,
+    };
+
+    size_t maxlen = textlen < 0 ? UINT32_MAX : textlen;
+    int w = font_text_width(font, text, textlen);
+    gfx_draw_text(gfx_offset(x - w / 2, y), text, maxlen, &attr);
 }
