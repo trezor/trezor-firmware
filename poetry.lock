@@ -1553,10 +1553,10 @@ testing = ["flaky (>=3.4.0)", "freezegun (>=0.3.11)", "pathlib2 (>=2.3.3)", "psu
 
 [[package]]
 name = "trezor"
-version = "0.13.9"
+version = "0.13.10"
 description = "Python library for communicating with Trezor Hardware Wallet"
 optional = false
-python-versions = ">=3.6"
+python-versions = ">=3.8"
 files = []
 develop = true
 
@@ -1568,12 +1568,13 @@ ecdsa = ">=0.9"
 libusb1 = ">=1.6.4"
 mnemonic = ">=0.20"
 requests = ">=2.4.0"
-typing_extensions = ">=3.10"
+typing_extensions = ">=4.7.1"
 
 [package.extras]
-ethereum = ["rlp (>=1.1.0)", "web3 (>=5)"]
+authentication = ["cryptography (>=41)"]
+ethereum = ["web3 (>=5)"]
 extra = ["Pillow (>=10)"]
-full = ["Pillow (>=10)", "PyQt5", "hidapi (>=0.7.99.post20)", "rlp (>=1.1.0)", "stellar-sdk (>=6)", "web3 (>=5)"]
+full = ["Pillow (>=10)", "PyQt5", "cryptography (>=41)", "hidapi (>=0.7.99.post20)", "stellar-sdk (>=6)", "web3 (>=5)"]
 hidapi = ["hidapi (>=0.7.99.post20)"]
 qt-widgets = ["PyQt5"]
 stellar = ["stellar-sdk (>=6)"]
@@ -1581,6 +1582,22 @@ stellar = ["stellar-sdk (>=6)"]
 [package.source]
 type = "directory"
 url = "python"
+
+[[package]]
+name = "trezor-core-tools"
+version = "0.1.0"
+description = "Collection of CLI tools for trezor-core development"
+optional = false
+python-versions = "^3.8"
+files = []
+develop = true
+
+[package.dependencies]
+trezor = "^0.13.9"
+
+[package.source]
+type = "directory"
+url = "core/tools"
 
 [[package]]
 name = "trezor-pylint-plugin"
@@ -1783,4 +1800,4 @@ testing = ["func-timeout", "jaraco.itertools", "pytest (>=6)", "pytest-black (>=
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8.1"
-content-hash = "08f0edb51d2d41a2e333b7f8b5ae0a06730f9aa362136c49fd262d823ed5d59a"
+content-hash = "6e63e1ae52fbff76a8e45b5c4bc58938a5537bce7b0eee7993bb55342e47b74a"
