@@ -3,24 +3,16 @@ from __future__ import annotations
 
 import datetime
 import io
+import sys
 from pathlib import Path
-import os
-import subprocess
 
 import click
 
-def get_layout_params(layout: Path, name: str) -> int:
-    directory = os.path.dirname(os.path.realpath(__file__))
-    with subprocess.Popen(args=["python", Path(directory, "layout_parser.py"), str(layout), name],
-                          stdout=subprocess.PIPE) as script:
-        return int(script.stdout.read().decode().strip())
+from .layout_parser import find_all_values
+
 
 @click.command()
-@click.argument(
-    "layout",
-    type=click.Path(dir_okay=False, writable=True, path_type=Path),
-    required=True,
-)
+@click.argument("model")
 @click.argument(
     "outfile",
     type=click.Path(dir_okay=False, writable=True, path_type=Path),
@@ -32,37 +24,59 @@ def get_layout_params(layout: Path, name: str) -> int:
     type=(str, click.Path(exists=True, dir_okay=False, readable=True, path_type=Path)),
     multiple=True,
 )
-def main(
-        layout: Path,
-        bin: List[Tuple[Path, str]],
-        outfile: Path | None,
+def main(model: str, bin: list[tuple[str, Path]], outfile: Path | None) -> None:
+    """Create a combined.bin file from components.
 
-) -> None:
+    MODEL is the internal model name (e.g. T1B1, T2T1, T2B1).
 
+    BIN is a list of tuples with the type and path to the binary file. The usual types
+    are:
+
+    \b
+     * BOARDLOADER
+     * BOOTLOADER
+     * FIRMWARE
+
+    For example:
+
+    \b
+    $ combine_firmware T3T1 -b boardloader build/boardloader.bin -b bootloader build/bootloader.bin -b firmware build/firmware.bin
+    """
     if outfile is None:
         today = datetime.date.today().strftime(r"%Y-%m-%d")
         outfile = Path(f"combined-{today}.bin")
 
-    first_bin = bin[0]
-    (name, bin_path) = first_bin
+    offset = 0
+    out_buf = io.BytesIO()
 
-    start_offset = get_layout_params(layout, name+ "_START")
+    all_values = find_all_values(model)
 
-    offset = start_offset
-    out_bytes = io.BytesIO()
+    def find_value(name: str) -> int:
+        value_name = f"{name.upper()}_START"
+        if value_name not in all_values:
+            click.echo(f"ERROR: component {name} not found in layout for model {model}")
+            click.echo("Try one of: boardloader, bootloader, firmware")
+            sys.exit(1)
+        return all_values[value_name]
 
-    for (name, bin_path) in bin:
-        bin_start = get_layout_params(layout, name + "_START")
-        # zero-pad until next section:
-        offset += out_bytes.write(b"\x00" * (bin_start - offset))
+    for name, bin_path in bin:
+        bin_start = find_value(name)
+
+        if not offset:
+            # initialize offset
+            offset = bin_start
+        else:
+            # pad until next section
+            offset += out_buf.write(b"\x00" * (bin_start - offset))
         assert offset == bin_start
 
         # write binary
-        offset += out_bytes.write(bin_path.read_bytes())
+        offset += out_buf.write(bin_path.read_bytes())
 
     # write out contents
-    click.echo(f"Writing {outfile} ({offset - start_offset} bytes)")
-    outfile.write_bytes(out_bytes.getvalue())
+    out_bytes = out_buf.getvalue()
+    click.echo(f"Writing {outfile} ({len(out_bytes)} bytes)")
+    outfile.write_bytes(out_bytes)
 
 
 if __name__ == "__main__":
