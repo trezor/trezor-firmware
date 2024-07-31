@@ -30,51 +30,61 @@
 
 void __attribute__((noreturn)) main_clean_exit();
 
-void __attribute__((noreturn)) trezor_shutdown(void) {
-  printf("SHUTDOWN\n");
+void __attribute__((noreturn)) trezor_shutdown(void)
+{
+    printf("SHUTDOWN\n");
 
-  // Wait some time to let the user see the displayed
-  // message before shutting down
-  hal_delay(3000);
+    // Wait some time to let the user see the displayed
+    // message before shutting down
+    hal_delay(3000);
 
-  exit(3);
+    exit(3);
 }
 
-void hal_delay(uint32_t ms) { usleep(1000 * ms); }
-
-uint32_t hal_ticks_ms() {
-  struct timeval tv;
-  gettimeofday(&tv, NULL);
-  return tv.tv_sec * 1000 + tv.tv_usec / 1000;
+void hal_delay(uint32_t ms)
+{
+    usleep(1000 * ms);
 }
 
-static int SDLCALL emulator_event_filter(void *userdata, SDL_Event *event) {
-  switch (event->type) {
-    case SDL_QUIT:
-      main_clean_exit();
-      return 0;
-    case SDL_KEYUP:
-      if (event->key.repeat) {
-        return 0;
-      }
-      switch (event->key.keysym.sym) {
-        case SDLK_ESCAPE:
-          main_clean_exit();
-          return 0;
-        case SDLK_p:
-          display_save("emu");
-          return 0;
-      }
-      break;
-  }
-  return 1;
+uint32_t hal_ticks_ms()
+{
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return tv.tv_sec * 1000 + tv.tv_usec / 1000;
 }
 
-void emulator_poll_events(void) {
-  SDL_PumpEvents();
-  SDL_FilterEvents(emulator_event_filter, NULL);
+static int SDLCALL emulator_event_filter(void *userdata, SDL_Event *event)
+{
+    switch (event->type) {
+        case SDL_QUIT:
+            main_clean_exit();
+            return 0;
+        case SDL_KEYUP:
+            if (event->key.repeat) {
+                return 0;
+            }
+            switch (event->key.keysym.sym) {
+                case SDLK_ESCAPE:
+                    main_clean_exit();
+                    return 0;
+                case SDLK_p:
+                    display_save("emu");
+                    return 0;
+            }
+            break;
+    }
+    return 1;
+}
+
+void emulator_poll_events(void)
+{
+    SDL_PumpEvents();
+    SDL_FilterEvents(emulator_event_filter, NULL);
 }
 
 uint8_t HW_ENTROPY_DATA[HW_ENTROPY_LEN];
 
-void collect_hw_entropy(void) { memzero(HW_ENTROPY_DATA, HW_ENTROPY_LEN); }
+void collect_hw_entropy(void)
+{
+    memzero(HW_ENTROPY_DATA, HW_ENTROPY_LEN);
+}

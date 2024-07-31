@@ -25,10 +25,8 @@
 // Arbitrary
 #define WEBUSB_VENDOR_CODE 0x01
 
-extern const struct webusb_platform_descriptor
-    webusb_platform_capability_descriptor_landing;
-extern const struct webusb_platform_descriptor
-    webusb_platform_capability_descriptor_no_landing;
+extern const struct webusb_platform_descriptor webusb_platform_capability_descriptor_landing;
+extern const struct webusb_platform_descriptor webusb_platform_capability_descriptor_no_landing;
 
 extern void webusb_setup(usbd_device* usbd_dev, const char* https_url);
 

@@ -19,6 +19,10 @@
 
 #include "random_delays.h"
 
-void wait_random(void) {}
+void wait_random(void)
+{
+}
 
-void random_delays_init(void) {}
+void random_delays_init(void)
+{
+}

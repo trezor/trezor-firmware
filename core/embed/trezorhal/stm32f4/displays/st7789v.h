@@ -4,8 +4,8 @@
 #include STM32_HAL_H
 
 typedef struct {
-  uint16_t x;
-  uint16_t y;
+    uint16_t x;
+    uint16_t y;
 } display_padding_t;
 
 #include TREZOR_BOARD
@@ -42,10 +42,10 @@ void display_set_slow_pwm(void);
 
 #define DISPLAY_EFFICIENT_CLEAR 1
 
-static inline void display_pixel(uint8_t *fb, int16_t x, int16_t y,
-                                 uint16_t color) {
-  uint32_t p = 2 * (y * DISPLAY_FRAMEBUFFER_WIDTH + x);
-  *((uint16_t *)(fb + p)) = color;
+static inline void display_pixel(uint8_t *fb, int16_t x, int16_t y, uint16_t color)
+{
+    uint32_t p = 2 * (y * DISPLAY_FRAMEBUFFER_WIDTH + x);
+    *((uint16_t *)(fb + p)) = color;
 }
 void display_efficient_clear(void);
 
@@ -54,9 +54,9 @@ void display_efficient_clear(void);
 #ifdef USE_DISP_I8080_16BIT_DW
 #define PIXELDATA(X) DATA(X)
 #elif USE_DISP_I8080_8BIT_DW
-#define PIXELDATA(X) \
-  DATA((X) & 0xFF);  \
-  DATA((X) >> 8)
+#define PIXELDATA(X)  \
+    DATA((X) & 0xFF); \
+    DATA((X) >> 8)
 #endif
 
 #endif

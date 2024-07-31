@@ -54,45 +54,40 @@ extern const uint8_t *PIN_EMPTY;
 #endif
 
 enum storage_ui_message_t {
-  NO_MSG = 0,
-  VERIFYING_PIN_MSG,
-  PROCESSING_MSG,
-  STARTING_MSG,
-  WRONG_PIN_MSG,
+    NO_MSG = 0,
+    VERIFYING_PIN_MSG,
+    PROCESSING_MSG,
+    STARTING_MSG,
+    WRONG_PIN_MSG,
 };
 
 typedef enum {
-  STORAGE_PIN_OP_SET = 0,
-  STORAGE_PIN_OP_VERIFY,
-  STORAGE_PIN_OP_CHANGE,
+    STORAGE_PIN_OP_SET = 0,
+    STORAGE_PIN_OP_VERIFY,
+    STORAGE_PIN_OP_CHANGE,
 } storage_pin_op_t;
 
-typedef secbool (*PIN_UI_WAIT_CALLBACK)(uint32_t wait, uint32_t progress,
-                                        enum storage_ui_message_t message);
+typedef secbool (*PIN_UI_WAIT_CALLBACK)(
+    uint32_t wait, uint32_t progress, enum storage_ui_message_t message);
 
-void storage_init(PIN_UI_WAIT_CALLBACK callback, const uint8_t *salt,
-                  const uint16_t salt_len);
+void storage_init(PIN_UI_WAIT_CALLBACK callback, const uint8_t *salt, const uint16_t salt_len);
 void storage_wipe(void);
 secbool storage_is_unlocked(void);
 void storage_lock(void);
-secbool storage_unlock(const uint8_t *pin, size_t pin_len,
-                       const uint8_t *ext_salt);
+secbool storage_unlock(const uint8_t *pin, size_t pin_len, const uint8_t *ext_salt);
 secbool storage_has_pin(void);
 secbool storage_pin_fails_increase(void);
 uint32_t storage_get_pin_rem(void);
-secbool storage_change_pin(const uint8_t *oldpin, size_t oldpin_len,
-                           const uint8_t *newpin, size_t newpin_len,
-                           const uint8_t *old_ext_salt,
-                           const uint8_t *new_ext_salt);
+secbool storage_change_pin(
+    const uint8_t *oldpin, size_t oldpin_len, const uint8_t *newpin, size_t newpin_len,
+    const uint8_t *old_ext_salt, const uint8_t *new_ext_salt);
 void storage_ensure_not_wipe_code(const uint8_t *pin, size_t pin_len);
 secbool storage_has_wipe_code(void);
-secbool storage_change_wipe_code(const uint8_t *pin, size_t pin_len,
-                                 const uint8_t *ext_salt,
-                                 const uint8_t *wipe_code,
-                                 size_t wipe_code_len);
+secbool storage_change_wipe_code(
+    const uint8_t *pin, size_t pin_len, const uint8_t *ext_salt, const uint8_t *wipe_code,
+    size_t wipe_code_len);
 secbool storage_has(const uint16_t key);
-secbool storage_get(const uint16_t key, void *val, const uint16_t max_len,
-                    uint16_t *len);
+secbool storage_get(const uint16_t key, void *val, const uint16_t max_len, uint16_t *len);
 secbool storage_set(const uint16_t key, const void *val, const uint16_t len);
 secbool storage_delete(const uint16_t key);
 secbool storage_set_counter(const uint16_t key, const uint32_t count);

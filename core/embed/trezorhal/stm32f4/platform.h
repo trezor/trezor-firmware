@@ -24,9 +24,9 @@
 #include <stdint.h>
 
 typedef enum {
-  CLOCK_180_MHZ = 0,
-  CLOCK_168_MHZ = 1,
-  CLOCK_120_MHZ = 2,
+    CLOCK_180_MHZ = 0,
+    CLOCK_168_MHZ = 1,
+    CLOCK_120_MHZ = 2,
 } clock_settings_t;
 
 void set_core_clock(clock_settings_t settings);

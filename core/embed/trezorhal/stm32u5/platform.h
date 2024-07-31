@@ -30,7 +30,7 @@
 #define FLASH_BURST_SIZE (FLASH_BURST_WORDS * sizeof(uint32_t))
 
 typedef enum {
-  CLOCK_160_MHZ = 0,
+    CLOCK_160_MHZ = 0,
 } clock_settings_t;
 
 void set_core_clock(clock_settings_t settings);
@@ -46,12 +46,13 @@ extern uint32_t __stack_chk_guard;
 
 // this deletes all secrets and SRAM2 where stack is located
 // to prevent stack smashing error, do not return from function calling this
-static inline void __attribute__((always_inline)) delete_secrets(void) {
-  // Disable SAES peripheral clock, so that we don't get tamper events
-  __HAL_RCC_SAES_CLK_DISABLE();
+static inline void __attribute__((always_inline)) delete_secrets(void)
+{
+    // Disable SAES peripheral clock, so that we don't get tamper events
+    __HAL_RCC_SAES_CLK_DISABLE();
 
-  // Erase all
-  TAMP->CR2 |= TAMP_CR2_BKERASE;
+    // Erase all
+    TAMP->CR2 |= TAMP_CR2_BKERASE;
 }
 
 void check_oem_keys(void);

@@ -43,16 +43,18 @@
 #endif
 
 #ifdef USE_SECP256K1_ZKP
-void secp256k1_default_illegal_callback_fn(const char *str, void *data) {
-  (void)data;
-  __fatal_error(str, __FILE__, __LINE__);
-  return;
+void secp256k1_default_illegal_callback_fn(const char *str, void *data)
+{
+    (void)data;
+    __fatal_error(str, __FILE__, __LINE__);
+    return;
 }
 
-void secp256k1_default_error_callback_fn(const char *str, void *data) {
-  (void)data;
-  __fatal_error(str, __FILE__, __LINE__);
-  return;
+void secp256k1_default_error_callback_fn(const char *str, void *data)
+{
+    (void)data;
+    __fatal_error(str, __FILE__, __LINE__);
+    return;
 }
 #endif
 
@@ -62,143 +64,143 @@ uint32_t system_millis_lock_start = 0;
 /* Busyscreen timeout */
 uint32_t system_millis_busy_deadline = 0;
 
-void check_lock_screen(void) {
-  buttonUpdate();
+void check_lock_screen(void)
+{
+    buttonUpdate();
 
-  // wake from screensaver on any button
-  if (layoutLast == layoutScreensaver && (button.NoUp || button.YesUp)) {
-    layoutHome();
-    return;
-  }
-
-  // button held for long enough (5 seconds)
-  if ((layoutLast == layoutHomescreen || layoutLast == layoutBusyscreen) &&
-      button.NoDown >= 114000 * 5) {
-    layoutDialog(&bmp_icon_question, _("Cancel"), _("Lock Device"), NULL,
-                 _("Do you really want to"), _("lock your Trezor?"), NULL, NULL,
-                 NULL, NULL);
-
-    // wait until NoButton is released
-    usbTiny(1);
-    do {
-      waitAndProcessUSBRequests(5);
-      buttonUpdate();
-    } while (!button.NoUp);
-
-    // wait for confirmation/cancellation of the dialog
-    do {
-      waitAndProcessUSBRequests(5);
-      buttonUpdate();
-    } while (!button.YesUp && !button.NoUp);
-    usbTiny(0);
-
-    if (button.YesUp) {
-      // lock the screen
-      config_lockDevice();
-      layoutScreensaver();
-    } else {
-      // resume homescreen
-      layoutHome();
+    // wake from screensaver on any button
+    if (layoutLast == layoutScreensaver && (button.NoUp || button.YesUp)) {
+        layoutHome();
+        return;
     }
-  }
 
-  // if homescreen is shown for too long
-  if (layoutLast == layoutHomescreen) {
-    if ((timer_ms() - system_millis_lock_start) >=
-        config_getAutoLockDelayMs()) {
-      // lock the screen
-      config_lockDevice();
-      layoutScreensaver();
+    // button held for long enough (5 seconds)
+    if ((layoutLast == layoutHomescreen || layoutLast == layoutBusyscreen) &&
+        button.NoDown >= 114000 * 5) {
+        layoutDialog(
+            &bmp_icon_question, _("Cancel"), _("Lock Device"), NULL, _("Do you really want to"),
+            _("lock your Trezor?"), NULL, NULL, NULL, NULL);
+
+        // wait until NoButton is released
+        usbTiny(1);
+        do {
+            waitAndProcessUSBRequests(5);
+            buttonUpdate();
+        } while (!button.NoUp);
+
+        // wait for confirmation/cancellation of the dialog
+        do {
+            waitAndProcessUSBRequests(5);
+            buttonUpdate();
+        } while (!button.YesUp && !button.NoUp);
+        usbTiny(0);
+
+        if (button.YesUp) {
+            // lock the screen
+            config_lockDevice();
+            layoutScreensaver();
+        } else {
+            // resume homescreen
+            layoutHome();
+        }
     }
-  }
+
+    // if homescreen is shown for too long
+    if (layoutLast == layoutHomescreen) {
+        if ((timer_ms() - system_millis_lock_start) >= config_getAutoLockDelayMs()) {
+            // lock the screen
+            config_lockDevice();
+            layoutScreensaver();
+        }
+    }
 }
 
-void check_busy_screen(void) {
-  // Clear the busy screen once it expires.
-  if (system_millis_busy_deadline != 0 &&
-      system_millis_busy_deadline < timer_ms()) {
-    system_millis_busy_deadline = 0;
-    layoutHome();
-  }
+void check_busy_screen(void)
+{
+    // Clear the busy screen once it expires.
+    if (system_millis_busy_deadline != 0 && system_millis_busy_deadline < timer_ms()) {
+        system_millis_busy_deadline = 0;
+        layoutHome();
+    }
 }
 
-static void collect_hw_entropy(bool privileged) {
+static void collect_hw_entropy(bool privileged)
+{
 #if EMULATOR
-  (void)privileged;
-  memzero(HW_ENTROPY_DATA, HW_ENTROPY_LEN);
+    (void)privileged;
+    memzero(HW_ENTROPY_DATA, HW_ENTROPY_LEN);
 #else
-  if (privileged) {
-    desig_get_unique_id((uint32_t *)HW_ENTROPY_DATA);
-    // set entropy in the OTP randomness block
-    if (!flash_otp_is_locked(FLASH_OTP_BLOCK_RANDOMNESS)) {
-      uint8_t entropy[FLASH_OTP_BLOCK_SIZE] = {0};
-      random_buffer(entropy, FLASH_OTP_BLOCK_SIZE);
-      flash_otp_write(FLASH_OTP_BLOCK_RANDOMNESS, 0, entropy,
-                      FLASH_OTP_BLOCK_SIZE);
-      flash_otp_lock(FLASH_OTP_BLOCK_RANDOMNESS);
+    if (privileged) {
+        desig_get_unique_id((uint32_t *)HW_ENTROPY_DATA);
+        // set entropy in the OTP randomness block
+        if (!flash_otp_is_locked(FLASH_OTP_BLOCK_RANDOMNESS)) {
+            uint8_t entropy[FLASH_OTP_BLOCK_SIZE] = {0};
+            random_buffer(entropy, FLASH_OTP_BLOCK_SIZE);
+            flash_otp_write(FLASH_OTP_BLOCK_RANDOMNESS, 0, entropy, FLASH_OTP_BLOCK_SIZE);
+            flash_otp_lock(FLASH_OTP_BLOCK_RANDOMNESS);
+        }
+        // collect entropy from OTP randomness block
+        flash_otp_read(FLASH_OTP_BLOCK_RANDOMNESS, 0, HW_ENTROPY_DATA + 12, FLASH_OTP_BLOCK_SIZE);
+    } else {
+        // unprivileged mode => use fixed HW_ENTROPY
+        memset(HW_ENTROPY_DATA, 0x3C, HW_ENTROPY_LEN);
     }
-    // collect entropy from OTP randomness block
-    flash_otp_read(FLASH_OTP_BLOCK_RANDOMNESS, 0, HW_ENTROPY_DATA + 12,
-                   FLASH_OTP_BLOCK_SIZE);
-  } else {
-    // unprivileged mode => use fixed HW_ENTROPY
-    memset(HW_ENTROPY_DATA, 0x3C, HW_ENTROPY_LEN);
-  }
 #endif
 }
 
-int main(void) {
+int main(void)
+{
 #ifndef APPVER
-  setup();
-  __stack_chk_guard = random32();  // this supports compiler provided
-                                   // unpredictable stack protection checks
-  oledInit();
+    setup();
+    __stack_chk_guard = random32();  // this supports compiler provided
+                                     // unpredictable stack protection checks
+    oledInit();
 #else
-  check_and_replace_bootloader(true);
-  setupApp();
-  __stack_chk_guard = random32();  // this supports compiler provided
-                                   // unpredictable stack protection checks
+    check_and_replace_bootloader(true);
+    setupApp();
+    __stack_chk_guard = random32();  // this supports compiler provided
+                                     // unpredictable stack protection checks
 #endif
 
-  drbg_init();
+    drbg_init();
 
-  if (!is_mode_unprivileged()) {
-    collect_hw_entropy(true);
-    timer_init();
+    if (!is_mode_unprivileged()) {
+        collect_hw_entropy(true);
+        timer_init();
 #ifdef APPVER
-    // enable MPU (Memory Protection Unit)
-    mpu_config_firmware();
+        // enable MPU (Memory Protection Unit)
+        mpu_config_firmware();
 #endif
-  } else {
-    collect_hw_entropy(false);
-  }
+    } else {
+        collect_hw_entropy(false);
+    }
 
 #ifdef USE_SECP256K1_ZKP
-  ensure(sectrue * (zkp_context_init() == 0), NULL);
+    ensure(sectrue * (zkp_context_init() == 0), NULL);
 #endif
 
 #if DEBUG_LINK
 #if !EMULATOR
-  config_wipe();
+    config_wipe();
 #endif
 #endif
 
-  oledDrawBitmap(40, 0, &bmp_logo64_half);
-  oledDrawBitmapFlip(40 + 24, 0, &bmp_logo64_half);
-  oledRefresh();
+    oledDrawBitmap(40, 0, &bmp_logo64_half);
+    oledDrawBitmapFlip(40 + 24, 0, &bmp_logo64_half);
+    oledRefresh();
 
-  config_init();
-  layoutHome();
-  usbInit();
-  for (;;) {
+    config_init();
+    layoutHome();
+    usbInit();
+    for (;;) {
 #if EMULATOR
-    waitAndProcessUSBRequests(10);
+        waitAndProcessUSBRequests(10);
 #else
-    usbPoll();
+        usbPoll();
 #endif
-    check_lock_screen();
-    check_busy_screen();
-  }
+        check_lock_screen();
+        check_busy_screen();
+    }
 
-  return 0;
+    return 0;
 }

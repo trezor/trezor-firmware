@@ -75,19 +75,16 @@ secbool __wur flash_write_word(uint16_t sector, uint32_t offset, uint32_t data);
 #endif
 
 // Writes a 16-byte block to specified 'offset' inside a flash 'sector'
-secbool __wur flash_write_quadword(uint16_t sector, uint32_t offset,
-                                   const uint32_t *data);
+secbool __wur flash_write_quadword(uint16_t sector, uint32_t offset, const uint32_t *data);
 
 // Writes a 128-byte burst to specified 'offset' inside a flash 'sector'
-secbool __wur flash_write_burst(uint16_t sector, uint32_t offset,
-                                const uint32_t *data);
+secbool __wur flash_write_burst(uint16_t sector, uint32_t offset, const uint32_t *data);
 
 // Erases a single sector/page of flash memory
 secbool __wur flash_sector_erase(uint16_t sector);
 
 // Writes a block to specified 'offset' inside a flash 'sector'
 // Block represents a natural unit of the given flash memory
-secbool flash_write_block(uint16_t sector, uint32_t offset,
-                          const flash_block_t block);
+secbool flash_write_block(uint16_t sector, uint32_t offset, const flash_block_t block);
 
 #endif  // FLASH_LL_H

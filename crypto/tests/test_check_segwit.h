@@ -1,8 +1,8 @@
 #include "segwit_addr.h"
 
 struct checksum_vectors_data {
-  const char* str;
-  bech32_encoding spec;
+    const char* str;
+    bech32_encoding spec;
 };
 
 static struct checksum_vectors_data checksum_vectors[] = {
@@ -16,8 +16,7 @@ static struct checksum_vectors_data checksum_vectors[] = {
     {"11qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq"
      "qqqqqqqqqqqc8247j",
      BECH32_ENCODING_BECH32},
-    {"split1checkupstagehandshakeupstreamerranterredcaperred2y9e3w",
-     BECH32_ENCODING_BECH32},
+    {"split1checkupstagehandshakeupstreamerranterredcaperred2y9e3w", BECH32_ENCODING_BECH32},
     {"?1ezyfcl", BECH32_ENCODING_BECH32},
     // BIP-350 valid
     {"A1LQFN3A", BECH32_ENCODING_BECH32M},
@@ -29,8 +28,7 @@ static struct checksum_vectors_data checksum_vectors[] = {
     {"11lllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllll"
      "lllllllllllludsr8",
      BECH32_ENCODING_BECH32M},
-    {"split1checkupstagehandshakeupstreamerranterredcaperredlc445v",
-     BECH32_ENCODING_BECH32M},
+    {"split1checkupstagehandshakeupstreamerranterredcaperredlc445v", BECH32_ENCODING_BECH32M},
     {"?1v759aa", BECH32_ENCODING_BECH32M},
     // BIP-173 invalid
     {" 1nwldj5", BECH32_ENCODING_NONE},
@@ -76,15 +74,15 @@ static struct checksum_vectors_data checksum_vectors[] = {
 };
 
 struct valid_address_data {
-  const char* address;
-  size_t scriptPubKeyLen;
-  const uint8_t scriptPubKey[42];
+    const char* address;
+    size_t scriptPubKeyLen;
+    const uint8_t scriptPubKey[42];
 };
 
 struct invalid_address_data {
-  const char* hrp;
-  int version;
-  size_t program_length;
+    const char* hrp;
+    int version;
+    size_t program_length;
 };
 
 static struct valid_address_data valid_address[] = {
@@ -116,15 +114,14 @@ static struct valid_address_data valid_address[] = {
     {"bc1pw508d6qejxtdg4y5r3zarvary0c5xw7kw508d6qejxtdg4y5r3zarvary0c5xw7kt5nd6"
      "y",
      42,
-     {0x51, 0x28, 0x75, 0x1e, 0x76, 0xe8, 0x19, 0x91, 0x96, 0xd4, 0x54,
-      0x94, 0x1c, 0x45, 0xd1, 0xb3, 0xa3, 0x23, 0xf1, 0x43, 0x3b, 0xd6,
-      0x75, 0x1e, 0x76, 0xe8, 0x19, 0x91, 0x96, 0xd4, 0x54, 0x94, 0x1c,
-      0x45, 0xd1, 0xb3, 0xa3, 0x23, 0xf1, 0x43, 0x3b, 0xd6}},
+     {0x51, 0x28, 0x75, 0x1e, 0x76, 0xe8, 0x19, 0x91, 0x96, 0xd4, 0x54, 0x94, 0x1c, 0x45,
+      0xd1, 0xb3, 0xa3, 0x23, 0xf1, 0x43, 0x3b, 0xd6, 0x75, 0x1e, 0x76, 0xe8, 0x19, 0x91,
+      0x96, 0xd4, 0x54, 0x94, 0x1c, 0x45, 0xd1, 0xb3, 0xa3, 0x23, 0xf1, 0x43, 0x3b, 0xd6}},
     {"BC1SW50QGDZ25J", 4, {0x60, 0x02, 0x75, 0x1e}},
     {"bc1zw508d6qejxtdg4y5r3zarvaryvaxxpcs",
      18,
-     {0x52, 0x10, 0x75, 0x1e, 0x76, 0xe8, 0x19, 0x91, 0x96, 0xd4, 0x54, 0x94,
-      0x1c, 0x45, 0xd1, 0xb3, 0xa3, 0x23}},
+     {0x52, 0x10, 0x75, 0x1e, 0x76, 0xe8, 0x19, 0x91, 0x96, 0xd4, 0x54, 0x94, 0x1c, 0x45, 0xd1,
+      0xb3, 0xa3, 0x23}},
     {"tb1qqqqqp399et2xygdj5xreqhjjvcmzhxw4aywxecjdzew6hylgvsesrxh6hy",
      34,
      {0x00, 0x20, 0x00, 0x00, 0x00, 0xc4, 0xa5, 0xca, 0xd4, 0x62, 0x21, 0xb2,
@@ -178,77 +175,69 @@ static struct invalid_address_data invalid_address_enc[] = {
     {"BC", 0, 20}, {"bc", 0, 21}, {"bc", 17, 32}, {"bc", 1, 1}, {"bc", 16, 41},
 };
 
-static void segwit_scriptpubkey(uint8_t* scriptpubkey, size_t* scriptpubkeylen,
-                                int witver, const uint8_t* witprog,
-                                size_t witprog_len) {
-  scriptpubkey[0] = witver ? (0x50 + witver) : 0;
-  scriptpubkey[1] = witprog_len;
-  memcpy(scriptpubkey + 2, witprog, witprog_len);
-  *scriptpubkeylen = witprog_len + 2;
+static void segwit_scriptpubkey(
+    uint8_t* scriptpubkey, size_t* scriptpubkeylen, int witver, const uint8_t* witprog,
+    size_t witprog_len)
+{
+    scriptpubkey[0] = witver ? (0x50 + witver) : 0;
+    scriptpubkey[1] = witprog_len;
+    memcpy(scriptpubkey + 2, witprog, witprog_len);
+    *scriptpubkeylen = witprog_len + 2;
 }
 
-START_TEST(test_segwit) {
-  size_t i;
-  for (i = 0; i < sizeof(checksum_vectors) / sizeof(checksum_vectors[0]); ++i) {
-    uint8_t data[82];
-    char hrp[84];
-    size_t data_len;
-    bech32_encoding res =
-        bech32_decode(hrp, data, &data_len, checksum_vectors[i].str);
-    ck_assert_int_eq(res, checksum_vectors[i].spec);
-    if (checksum_vectors[i].spec == BECH32_ENCODING_NONE) {
-      continue;
+START_TEST(test_segwit)
+{
+    size_t i;
+    for (i = 0; i < sizeof(checksum_vectors) / sizeof(checksum_vectors[0]); ++i) {
+        uint8_t data[82];
+        char hrp[84];
+        size_t data_len;
+        bech32_encoding res = bech32_decode(hrp, data, &data_len, checksum_vectors[i].str);
+        ck_assert_int_eq(res, checksum_vectors[i].spec);
+        if (checksum_vectors[i].spec == BECH32_ENCODING_NONE) {
+            continue;
+        }
+        // the following check makes only sense for valid addresses
+        char rebuild[92];
+        int resi = bech32_encode(rebuild, hrp, data, data_len, checksum_vectors[i].spec);
+        ck_assert_int_eq(resi, 1);
+        ck_assert_int_eq(my_strncasecmp(rebuild, checksum_vectors[i].str, 92), 0);
     }
-    // the following check makes only sense for valid addresses
-    char rebuild[92];
-    int resi =
-        bech32_encode(rebuild, hrp, data, data_len, checksum_vectors[i].spec);
-    ck_assert_int_eq(resi, 1);
-    ck_assert_int_eq(my_strncasecmp(rebuild, checksum_vectors[i].str, 92), 0);
-  }
-  for (i = 0; i < sizeof(valid_address) / sizeof(valid_address[0]); ++i) {
-    uint8_t witprog[40];
-    size_t witprog_len;
-    int witver;
-    const char* hrp = "bc";
-    if (memcmp(valid_address[i].address, "tb1", 3) == 0) {
-      hrp = "tb";
+    for (i = 0; i < sizeof(valid_address) / sizeof(valid_address[0]); ++i) {
+        uint8_t witprog[40];
+        size_t witprog_len;
+        int witver;
+        const char* hrp = "bc";
+        if (memcmp(valid_address[i].address, "tb1", 3) == 0) {
+            hrp = "tb";
+        }
+        uint8_t scriptpubkey[42];
+        size_t scriptpubkey_len;
+        char rebuild[93];
+        int ret = segwit_addr_decode(&witver, witprog, &witprog_len, hrp, valid_address[i].address);
+        ck_assert_int_eq(ret, 1);
+        segwit_scriptpubkey(scriptpubkey, &scriptpubkey_len, witver, witprog, witprog_len);
+        ck_assert_uint_eq(scriptpubkey_len, valid_address[i].scriptPubKeyLen);
+        ck_assert_int_eq(memcmp(scriptpubkey, valid_address[i].scriptPubKey, scriptpubkey_len), 0);
+        ck_assert_int_eq(segwit_addr_encode(rebuild, hrp, witver, witprog, witprog_len), 1);
+        ck_assert_int_eq(my_strncasecmp(valid_address[i].address, rebuild, 93), 0);
     }
-    uint8_t scriptpubkey[42];
-    size_t scriptpubkey_len;
-    char rebuild[93];
-    int ret = segwit_addr_decode(&witver, witprog, &witprog_len, hrp,
-                                 valid_address[i].address);
-    ck_assert_int_eq(ret, 1);
-    segwit_scriptpubkey(scriptpubkey, &scriptpubkey_len, witver, witprog,
-                        witprog_len);
-    ck_assert_uint_eq(scriptpubkey_len, valid_address[i].scriptPubKeyLen);
-    ck_assert_int_eq(
-        memcmp(scriptpubkey, valid_address[i].scriptPubKey, scriptpubkey_len),
-        0);
-    ck_assert_int_eq(
-        segwit_addr_encode(rebuild, hrp, witver, witprog, witprog_len), 1);
-    ck_assert_int_eq(my_strncasecmp(valid_address[i].address, rebuild, 93), 0);
-  }
-  for (i = 0; i < sizeof(invalid_address) / sizeof(invalid_address[0]); ++i) {
-    uint8_t witprog[40];
-    size_t witprog_len;
-    int witver;
-    int ret = segwit_addr_decode(&witver, witprog, &witprog_len, "bc",
-                                 invalid_address[i]);
-    ck_assert_int_eq(ret, 0);
-    ret = segwit_addr_decode(&witver, witprog, &witprog_len, "tb",
-                             invalid_address[i]);
-    ck_assert_int_eq(ret, 0);
-  }
-  for (i = 0; i < sizeof(invalid_address_enc) / sizeof(invalid_address_enc[0]);
-       ++i) {
-    char rebuild[93];
-    static const uint8_t program[42] = {0};
-    int ret = segwit_addr_encode(rebuild, invalid_address_enc[i].hrp,
-                                 invalid_address_enc[i].version, program,
-                                 invalid_address_enc[i].program_length);
-    ck_assert_int_eq(ret, 0);
-  }
+    for (i = 0; i < sizeof(invalid_address) / sizeof(invalid_address[0]); ++i) {
+        uint8_t witprog[40];
+        size_t witprog_len;
+        int witver;
+        int ret = segwit_addr_decode(&witver, witprog, &witprog_len, "bc", invalid_address[i]);
+        ck_assert_int_eq(ret, 0);
+        ret = segwit_addr_decode(&witver, witprog, &witprog_len, "tb", invalid_address[i]);
+        ck_assert_int_eq(ret, 0);
+    }
+    for (i = 0; i < sizeof(invalid_address_enc) / sizeof(invalid_address_enc[0]); ++i) {
+        char rebuild[93];
+        static const uint8_t program[42] = {0};
+        int ret = segwit_addr_encode(
+            rebuild, invalid_address_enc[i].hrp, invalid_address_enc[i].version, program,
+            invalid_address_enc[i].program_length);
+        ck_assert_int_eq(ret, 0);
+    }
 }
 END_TEST

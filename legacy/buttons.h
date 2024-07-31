@@ -24,10 +24,10 @@
 #include <stdbool.h>
 
 struct buttonState {
-  volatile bool YesUp;
-  volatile int YesDown;
-  volatile bool NoUp;
-  volatile int NoDown;
+    volatile bool YesUp;
+    volatile int YesDown;
+    volatile bool NoUp;
+    volatile int NoDown;
 };
 
 extern struct buttonState button;

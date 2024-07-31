@@ -37,10 +37,10 @@ bool usb_connected_previously = true;
 
 uint32_t last_touch_sample_time = 0;
 
-#define CHECK_PARAM_RANGE(value, minimum, maximum)  \
-  if (value < minimum || value > maximum) {         \
-    mp_raise_ValueError(#value " is out of range"); \
-  }
+#define CHECK_PARAM_RANGE(value, minimum, maximum)      \
+    if (value < minimum || value > maximum) {           \
+        mp_raise_ValueError(#value " is out of range"); \
+    }
 
 // clang-format off
 #include "modtrezorio-flash.h"
@@ -106,10 +106,8 @@ STATIC const mp_rom_map_elem_t mp_module_trezorio_globals_table[] = {
 #endif
 #ifdef USE_BUTTON
     {MP_ROM_QSTR(MP_QSTR_BUTTON), MP_ROM_INT(BUTTON_IFACE)},
-    {MP_ROM_QSTR(MP_QSTR_BUTTON_PRESSED),
-     MP_ROM_INT((BTN_EVT_DOWN >> 24) & 0x3U)},
-    {MP_ROM_QSTR(MP_QSTR_BUTTON_RELEASED),
-     MP_ROM_INT((BTN_EVT_UP >> 24) & 0x3U)},
+    {MP_ROM_QSTR(MP_QSTR_BUTTON_PRESSED), MP_ROM_INT((BTN_EVT_DOWN >> 24) & 0x3U)},
+    {MP_ROM_QSTR(MP_QSTR_BUTTON_RELEASED), MP_ROM_INT((BTN_EVT_UP >> 24) & 0x3U)},
     {MP_ROM_QSTR(MP_QSTR_BUTTON_LEFT), MP_ROM_INT(BTN_LEFT)},
     {MP_ROM_QSTR(MP_QSTR_BUTTON_RIGHT), MP_ROM_INT(BTN_RIGHT)},
 #endif
@@ -128,8 +126,7 @@ STATIC const mp_rom_map_elem_t mp_module_trezorio_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_USB_CHECK), MP_ROM_INT(USB_DATA_IFACE)},
 };
 
-STATIC MP_DEFINE_CONST_DICT(mp_module_trezorio_globals,
-                            mp_module_trezorio_globals_table);
+STATIC MP_DEFINE_CONST_DICT(mp_module_trezorio_globals, mp_module_trezorio_globals_table);
 
 const mp_obj_module_t mp_module_trezorio = {
     .base = {&mp_type_module},

@@ -69,18 +69,21 @@ uint32_t touch_get_event(void);
 #define TOUCH_EVENT_MASK (0xFF << 24)
 
 // Returns x-coordinates from a packed touch event
-static inline uint16_t touch_unpack_x(uint32_t evt) {
-  return (evt >> 12) & 0xFFF;
+static inline uint16_t touch_unpack_x(uint32_t evt)
+{
+    return (evt >> 12) & 0xFFF;
 }
 
 // Returns y-coordinates from a packed touch event
-static inline uint16_t touch_unpack_y(uint32_t evt) {
-  return (evt >> 0) & 0xFFF;
+static inline uint16_t touch_unpack_y(uint32_t evt)
+{
+    return (evt >> 0) & 0xFFF;
 }
 
 // Creates packed touch event from x and y coordinates
-static inline uint32_t touch_pack_xy(uint16_t x, uint16_t y) {
-  return ((x & 0xFFF) << 12) | (y & 0xFFF);
+static inline uint32_t touch_pack_xy(uint16_t x, uint16_t y)
+{
+    return ((x & 0xFFF) << 12) | (y & 0xFFF);
 }
 
 // -------------------------

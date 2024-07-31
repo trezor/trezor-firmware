@@ -59,90 +59,99 @@ static const uint32_t FLASH_SECTOR_TABLE[FLASH_SECTOR_COUNT + 1] = {
 const uint32_t FLASH_SIZE = FLASH_END - FLASH_START;
 uint8_t *FLASH_BUFFER = NULL;
 
-secbool flash_unlock_write(void) { return sectrue; }
-
-secbool flash_lock_write(void) { return sectrue; }
-
-uint32_t flash_sector_size(uint16_t sector) {
-  if (sector >= FLASH_SECTOR_COUNT) {
-    return 0;
-  }
-  return FLASH_SECTOR_TABLE[sector + 1] - FLASH_SECTOR_TABLE[sector];
+secbool flash_unlock_write(void)
+{
+    return sectrue;
 }
 
-const void *flash_get_address(uint16_t sector, uint32_t offset, uint32_t size) {
-  if (sector >= FLASH_SECTOR_COUNT) {
-    return NULL;
-  }
-  const uint32_t addr = FLASH_SECTOR_TABLE[sector] + offset;
-  const uint32_t next = FLASH_SECTOR_TABLE[sector + 1];
-  if (addr + size > next) {
-    return NULL;
-  }
-  return FLASH_BUFFER + addr - FLASH_SECTOR_TABLE[0];
+secbool flash_lock_write(void)
+{
+    return sectrue;
 }
 
-secbool flash_area_erase_bulk(const flash_area_t *area, int count,
-                              void (*progress)(int pos, int len)) {
-  ensure(flash_unlock_write(), NULL);
-
-  int total_sectors = 0;
-  int done_sectors = 0;
-  for (int a = 0; a < count; a++) {
-    for (int i = 0; i < area[a].num_subareas; i++) {
-      total_sectors += area[a].subarea[i].num_sectors;
+uint32_t flash_sector_size(uint16_t sector)
+{
+    if (sector >= FLASH_SECTOR_COUNT) {
+        return 0;
     }
-  }
+    return FLASH_SECTOR_TABLE[sector + 1] - FLASH_SECTOR_TABLE[sector];
+}
 
-  if (progress) {
-    progress(0, total_sectors);
-  }
+const void *flash_get_address(uint16_t sector, uint32_t offset, uint32_t size)
+{
+    if (sector >= FLASH_SECTOR_COUNT) {
+        return NULL;
+    }
+    const uint32_t addr = FLASH_SECTOR_TABLE[sector] + offset;
+    const uint32_t next = FLASH_SECTOR_TABLE[sector + 1];
+    if (addr + size > next) {
+        return NULL;
+    }
+    return FLASH_BUFFER + addr - FLASH_SECTOR_TABLE[0];
+}
 
-  for (int a = 0; a < count; a++) {
-    for (int s = 0; s < area[a].num_subareas; s++) {
-      for (int i = 0; i < area[a].subarea[s].num_sectors; i++) {
-        int sector = area[a].subarea[s].first_sector + i;
+secbool flash_area_erase_bulk(
+    const flash_area_t *area, int count, void (*progress)(int pos, int len))
+{
+    ensure(flash_unlock_write(), NULL);
 
-        const uint32_t offset =
-            FLASH_SECTOR_TABLE[sector] - FLASH_SECTOR_TABLE[0];
-        const uint32_t size =
-            FLASH_SECTOR_TABLE[sector + 1] - FLASH_SECTOR_TABLE[sector];
-        memset(FLASH_BUFFER + offset, 0xFF, size);
-
-        done_sectors++;
-        if (progress) {
-          progress(done_sectors, total_sectors);
+    int total_sectors = 0;
+    int done_sectors = 0;
+    for (int a = 0; a < count; a++) {
+        for (int i = 0; i < area[a].num_subareas; i++) {
+            total_sectors += area[a].subarea[i].num_sectors;
         }
-      }
     }
-  }
-  ensure(flash_lock_write(), NULL);
-  return sectrue;
+
+    if (progress) {
+        progress(0, total_sectors);
+    }
+
+    for (int a = 0; a < count; a++) {
+        for (int s = 0; s < area[a].num_subareas; s++) {
+            for (int i = 0; i < area[a].subarea[s].num_sectors; i++) {
+                int sector = area[a].subarea[s].first_sector + i;
+
+                const uint32_t offset = FLASH_SECTOR_TABLE[sector] - FLASH_SECTOR_TABLE[0];
+                const uint32_t size = FLASH_SECTOR_TABLE[sector + 1] - FLASH_SECTOR_TABLE[sector];
+                memset(FLASH_BUFFER + offset, 0xFF, size);
+
+                done_sectors++;
+                if (progress) {
+                    progress(done_sectors, total_sectors);
+                }
+            }
+        }
+    }
+    ensure(flash_lock_write(), NULL);
+    return sectrue;
 }
 
-secbool flash_write_byte(uint16_t sector, uint32_t offset, uint8_t data) {
-  uint8_t *flash = (uint8_t *)flash_get_address(sector, offset, 1);
-  if (!flash) {
-    return secfalse;
-  }
-  if ((flash[0] & data) != data) {
-    return secfalse;  // we cannot change zeroes to ones
-  }
-  flash[0] = data;
-  return sectrue;
+secbool flash_write_byte(uint16_t sector, uint32_t offset, uint8_t data)
+{
+    uint8_t *flash = (uint8_t *)flash_get_address(sector, offset, 1);
+    if (!flash) {
+        return secfalse;
+    }
+    if ((flash[0] & data) != data) {
+        return secfalse;  // we cannot change zeroes to ones
+    }
+    flash[0] = data;
+    return sectrue;
 }
 
-secbool flash_write_word(uint16_t sector, uint32_t offset, uint32_t data) {
-  if (offset % 4) {  // we write only at 4-byte boundary
-    return secfalse;
-  }
-  uint32_t *flash = (uint32_t *)flash_get_address(sector, offset, sizeof(data));
-  if (!flash) {
-    return secfalse;
-  }
-  if ((flash[0] & data) != data) {
-    return secfalse;  // we cannot change zeroes to ones
-  }
-  flash[0] = data;
-  return sectrue;
+secbool flash_write_word(uint16_t sector, uint32_t offset, uint32_t data)
+{
+    if (offset % 4) {  // we write only at 4-byte boundary
+        return secfalse;
+    }
+    uint32_t *flash = (uint32_t *)flash_get_address(sector, offset, sizeof(data));
+    if (!flash) {
+        return secfalse;
+    }
+    if ((flash[0] & data) != data) {
+        return secfalse;  // we cannot change zeroes to ones
+    }
+    flash[0] = data;
+    return sectrue;
 }

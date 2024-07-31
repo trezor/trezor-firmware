@@ -27,16 +27,13 @@
 #define HW_ENTROPY_LEN (12 + 32)
 extern uint8_t HW_ENTROPY_DATA[HW_ENTROPY_LEN];
 
+void __attribute__((noreturn)) __fatal_error(const char *msg, const char *file, int line);
 void __attribute__((noreturn))
-__fatal_error(const char *msg, const char *file, int line);
-void __attribute__((noreturn))
-error_shutdown(const char *line1, const char *line2, const char *line3,
-               const char *line4);
+error_shutdown(const char *line1, const char *line2, const char *line3, const char *line4);
 void show_wipe_code_screen(void);
 void show_pin_too_many_screen(void);
 
-#define ensure(expr, msg) \
-  (((expr) == sectrue) ? (void)0 : __fatal_error(msg, __FILE__, __LINE__))
+#define ensure(expr, msg) (((expr) == sectrue) ? (void)0 : __fatal_error(msg, __FILE__, __LINE__))
 
 void hal_delay(uint32_t ms);
 uint32_t hal_ticks_ms(void);

@@ -39,13 +39,17 @@
 
 static uint32_t seed = 0;
 
-void random_reseed(const uint32_t value) { seed = value; }
+void random_reseed(const uint32_t value)
+{
+    seed = value;
+}
 
-uint32_t random32(void) {
-  // Linear congruential generator from Numerical Recipes
-  // https://en.wikipedia.org/wiki/Linear_congruential_generator
-  seed = 1664525 * seed + 1013904223;
-  return seed;
+uint32_t random32(void)
+{
+    // Linear congruential generator from Numerical Recipes
+    // https://en.wikipedia.org/wiki/Linear_congruential_generator
+    seed = 1664525 * seed + 1013904223;
+    return seed;
 }
 
 #endif /* USE_INSECURE_PRNG */
@@ -54,38 +58,42 @@ uint32_t random32(void) {
 // The following code is platform independent
 //
 
-void __attribute__((weak)) random_buffer(uint8_t *buf, size_t len) {
-  uint32_t r = 0;
-  for (size_t i = 0; i < len; i++) {
-    if (i % 4 == 0) {
-      r = random32();
+void __attribute__((weak)) random_buffer(uint8_t *buf, size_t len)
+{
+    uint32_t r = 0;
+    for (size_t i = 0; i < len; i++) {
+        if (i % 4 == 0) {
+            r = random32();
+        }
+        buf[i] = (r >> ((i % 4) * 8)) & 0xFF;
     }
-    buf[i] = (r >> ((i % 4) * 8)) & 0xFF;
-  }
 }
 
-void random_xor(uint8_t *buf, size_t len) {
-  uint8_t r[4] = {0};
-  for (size_t i = 0; i < len; i++) {
-    if (i % sizeof(r) == 0) {
-      random_buffer(r, sizeof(r));
+void random_xor(uint8_t *buf, size_t len)
+{
+    uint8_t r[4] = {0};
+    for (size_t i = 0; i < len; i++) {
+        if (i % sizeof(r) == 0) {
+            random_buffer(r, sizeof(r));
+        }
+        buf[i] ^= r[i % sizeof(r)];
     }
-    buf[i] ^= r[i % sizeof(r)];
-  }
 }
 
-uint32_t random_uniform(uint32_t n) {
-  uint32_t x = 0, max = 0xFFFFFFFF - (0xFFFFFFFF % n);
-  while ((x = random32()) >= max)
-    ;
-  return x / (max / n);
+uint32_t random_uniform(uint32_t n)
+{
+    uint32_t x = 0, max = 0xFFFFFFFF - (0xFFFFFFFF % n);
+    while ((x = random32()) >= max)
+        ;
+    return x / (max / n);
 }
 
-void random_permute(char *str, size_t len) {
-  for (int i = len - 1; i >= 1; i--) {
-    int j = random_uniform(i + 1);
-    char t = str[j];
-    str[j] = str[i];
-    str[i] = t;
-  }
+void random_permute(char *str, size_t len)
+{
+    for (int i = len - 1; i >= 1; i--) {
+        int j = random_uniform(i + 1);
+        char t = str[j];
+        str[j] = str[i];
+        str[i] = t;
+    }
 }

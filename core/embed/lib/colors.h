@@ -30,29 +30,24 @@
 #define COLOR_WHITE 0xFFFF
 #define COLOR_BLACK 0x0000
 
-static inline uint16_t interpolate_color(uint16_t color0, uint16_t color1,
-                                         uint8_t step) {
-  uint8_t cr = 0, cg = 0, cb = 0;
-  cr = (((color0 & 0xF800) >> 11) * step +
-        ((color1 & 0xF800) >> 11) * (15 - step)) /
-       15;
-  cg = (((color0 & 0x07E0) >> 5) * step +
-        ((color1 & 0x07E0) >> 5) * (15 - step)) /
-       15;
-  cb = ((color0 & 0x001F) * step + (color1 & 0x001F) * (15 - step)) / 15;
-  return (cr << 11) | (cg << 5) | cb;
+static inline uint16_t interpolate_color(uint16_t color0, uint16_t color1, uint8_t step)
+{
+    uint8_t cr = 0, cg = 0, cb = 0;
+    cr = (((color0 & 0xF800) >> 11) * step + ((color1 & 0xF800) >> 11) * (15 - step)) / 15;
+    cg = (((color0 & 0x07E0) >> 5) * step + ((color1 & 0x07E0) >> 5) * (15 - step)) / 15;
+    cb = ((color0 & 0x001F) * step + (color1 & 0x001F) * (15 - step)) / 15;
+    return (cr << 11) | (cg << 5) | cb;
 }
 
-static inline void set_color_table(uint16_t colortable[16], uint16_t fgcolor,
-                                   uint16_t bgcolor) {
-  for (int i = 0; i < 16; i++) {
-    colortable[i] = interpolate_color(fgcolor, bgcolor, i);
-  }
+static inline void set_color_table(uint16_t colortable[16], uint16_t fgcolor, uint16_t bgcolor)
+{
+    for (int i = 0; i < 16; i++) {
+        colortable[i] = interpolate_color(fgcolor, bgcolor, i);
+    }
 }
 
 uint32_t rgb565_to_rgb888(uint16_t color);
 
-uint32_t interpolate_rgb888_color(uint32_t color0, uint32_t color1,
-                                  uint8_t step);
+uint32_t interpolate_rgb888_color(uint32_t color0, uint32_t color1, uint8_t step);
 
 #endif  //_COLORS_H

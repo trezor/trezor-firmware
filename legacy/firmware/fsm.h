@@ -37,11 +37,10 @@
 void fsm_sendSuccess(const char *text);
 
 #if DEBUG_LINK
-void fsm_sendFailureDebug(FailureType code, const char *text,
-                          const char *source);
+void fsm_sendFailureDebug(FailureType code, const char *text, const char *source);
 
 #define fsm_sendFailure(code, text) \
-  fsm_sendFailureDebug((code), (text), __FILE__ ":" VERSTR(__LINE__) ":")
+    fsm_sendFailureDebug((code), (text), __FILE__ ":" VERSTR(__LINE__) ":")
 #else
 void fsm_sendFailure(FailureType code, const char *text);
 #endif
@@ -79,8 +78,7 @@ void fsm_msgSetBusy(const SetBusy *msg);
 // coin
 void fsm_msgGetPublicKey(const GetPublicKey *msg);
 void fsm_msgSignTx(const SignTx *msg);
-void fsm_msgTxAck(
-    TxAck *msg);  // not const because we mutate input/output scripts
+void fsm_msgTxAck(TxAck *msg);  // not const because we mutate input/output scripts
 void fsm_msgGetAddress(const GetAddress *msg);
 void fsm_msgSignMessage(const SignMessage *msg);
 void fsm_msgVerifyMessage(const VerifyMessage *msg);
@@ -118,26 +116,20 @@ void fsm_msgEthereumVerifyMessage(const EthereumVerifyMessage *msg);
 void fsm_msgEthereumSignTypedHash(const EthereumSignTypedHash *msg);
 
 // nem
-void fsm_msgNEMGetAddress(
-    NEMGetAddress *msg);  // not const because we mutate msg->network
-void fsm_msgNEMSignTx(
-    NEMSignTx *msg);  // not const because we mutate msg->network
-void fsm_msgNEMDecryptMessage(
-    NEMDecryptMessage *msg);  // not const because we mutate msg->payload
+void fsm_msgNEMGetAddress(NEMGetAddress *msg);          // not const because we mutate msg->network
+void fsm_msgNEMSignTx(NEMSignTx *msg);                  // not const because we mutate msg->network
+void fsm_msgNEMDecryptMessage(NEMDecryptMessage *msg);  // not const because we mutate msg->payload
 
 // stellar
 void fsm_msgStellarGetAddress(const StellarGetAddress *msg);
 void fsm_msgStellarSignTx(const StellarSignTx *msg);
 void fsm_msgStellarPaymentOp(const StellarPaymentOp *msg);
 void fsm_msgStellarCreateAccountOp(const StellarCreateAccountOp *msg);
-void fsm_msgStellarPathPaymentStrictReceiveOp(
-    const StellarPathPaymentStrictReceiveOp *msg);
-void fsm_msgStellarPathPaymentStrictSendOp(
-    const StellarPathPaymentStrictSendOp *msg);
+void fsm_msgStellarPathPaymentStrictReceiveOp(const StellarPathPaymentStrictReceiveOp *msg);
+void fsm_msgStellarPathPaymentStrictSendOp(const StellarPathPaymentStrictSendOp *msg);
 void fsm_msgStellarManageBuyOfferOp(const StellarManageBuyOfferOp *msg);
 void fsm_msgStellarManageSellOfferOp(const StellarManageSellOfferOp *msg);
-void fsm_msgStellarCreatePassiveSellOfferOp(
-    const StellarCreatePassiveSellOfferOp *msg);
+void fsm_msgStellarCreatePassiveSellOfferOp(const StellarCreatePassiveSellOfferOp *msg);
 void fsm_msgStellarSetOptionsOp(const StellarSetOptionsOp *msg);
 void fsm_msgStellarChangeTrustOp(const StellarChangeTrustOp *msg);
 void fsm_msgStellarAllowTrustOp(const StellarAllowTrustOp *msg);
@@ -151,13 +143,12 @@ bool fsm_layoutSignMessage(const uint8_t *msg, uint32_t len);
 bool fsm_layoutVerifyMessage(const uint8_t *msg, uint32_t len);
 
 bool fsm_layoutPathWarning(void);
-bool fsm_checkCoinPath(const CoinInfo *coin, InputScriptType script_type,
-                       uint32_t address_n_count, const uint32_t *address_n,
-                       bool has_multisig, MessageType message_type,
-                       bool show_warning);
+bool fsm_checkCoinPath(
+    const CoinInfo *coin, InputScriptType script_type, uint32_t address_n_count,
+    const uint32_t *address_n, bool has_multisig, MessageType message_type, bool show_warning);
 
-bool fsm_getOwnershipId(uint8_t *script_pubkey, size_t script_pubkey_size,
-                        uint8_t ownership_id[32]);
+bool fsm_getOwnershipId(
+    uint8_t *script_pubkey, size_t script_pubkey_size, uint8_t ownership_id[32]);
 
 void fsm_abortWorkflows(void);
 void fsm_postMsgCleanup(MessageType message_type);

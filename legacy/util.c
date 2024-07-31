@@ -19,23 +19,26 @@
 
 #include "util.h"
 
-inline void delay(uint32_t wait) {
-  while (--wait > 0) __asm__("nop");
+inline void delay(uint32_t wait)
+{
+    while (--wait > 0) __asm__("nop");
 }
 
 static const char *hexdigits = "0123456789ABCDEF";
 
-void uint32hex(uint32_t num, char *str) {
-  for (uint32_t i = 0; i < 8; i++) {
-    str[i] = hexdigits[(num >> (28 - i * 4)) & 0xF];
-  }
+void uint32hex(uint32_t num, char *str)
+{
+    for (uint32_t i = 0; i < 8; i++) {
+        str[i] = hexdigits[(num >> (28 - i * 4)) & 0xF];
+    }
 }
 
 // converts data to hexa
-void data2hex(const uint8_t *data, uint32_t len, char *str) {
-  for (uint32_t i = 0; i < len; i++) {
-    str[i * 2] = hexdigits[(data[i] >> 4) & 0xF];
-    str[i * 2 + 1] = hexdigits[data[i] & 0xF];
-  }
-  str[len * 2] = 0;
+void data2hex(const uint8_t *data, uint32_t len, char *str)
+{
+    for (uint32_t i = 0; i < len; i++) {
+        str[i * 2] = hexdigits[(data[i] >> 4) & 0xF];
+        str[i * 2 + 1] = hexdigits[data[i] & 0xF];
+    }
+    str[len * 2] = 0;
 }

@@ -39,84 +39,88 @@
 #endif
 
 void __attribute__((noreturn))
-error_shutdown_ex(const char *title, const char *message, const char *footer) {
-  if (title == NULL) {
-    title = "INTERNAL ERROR";
-  }
-  if (footer == NULL) {
-    footer = "PLEASE VISIT\nTREZOR.IO/RSOD";
-  }
+error_shutdown_ex(const char *title, const char *message, const char *footer)
+{
+    if (title == NULL) {
+        title = "INTERNAL ERROR";
+    }
+    if (footer == NULL) {
+        footer = "PLEASE VISIT\nTREZOR.IO/RSOD";
+    }
 
 #ifdef FANCY_FATAL_ERROR
-  error_shutdown_rust(title, message, footer);
+    error_shutdown_rust(title, message, footer);
 #else
-  display_orientation(0);
-  term_set_color(COLOR_WHITE, COLOR_FATAL_ERROR);
-  term_printf("%s\n", title);
-  if (message) {
-    term_printf("%s\n", message);
-  }
-  term_printf("\n%s\n", footer);
-  display_backlight(255);
-  trezor_shutdown();
+    display_orientation(0);
+    term_set_color(COLOR_WHITE, COLOR_FATAL_ERROR);
+    term_printf("%s\n", title);
+    if (message) {
+        term_printf("%s\n", message);
+    }
+    term_printf("\n%s\n", footer);
+    display_backlight(255);
+    trezor_shutdown();
 #endif
 }
 
-void __attribute__((noreturn)) error_shutdown(const char *message) {
-  error_shutdown_ex(NULL, message, NULL);
+void __attribute__((noreturn)) error_shutdown(const char *message)
+{
+    error_shutdown_ex(NULL, message, NULL);
 }
 
-void __attribute__((noreturn))
-__fatal_error(const char *msg, const char *file, int line) {
+void __attribute__((noreturn)) __fatal_error(const char *msg, const char *file, int line)
+{
 #ifdef TREZOR_EMULATOR
-  fprintf(stderr, "FATAL ERROR: %s\n", msg);
-  if (file) {
-    fprintf(stderr, "file: %s:%d\n", file, line);
-  }
-  fflush(stderr);
+    fprintf(stderr, "FATAL ERROR: %s\n", msg);
+    if (file) {
+        fprintf(stderr, "file: %s:%d\n", file, line);
+    }
+    fflush(stderr);
 #endif
 #ifdef FANCY_FATAL_ERROR
-  if (msg == NULL) {
-    char buf[128] = {0};
-    mini_snprintf(buf, sizeof(buf), "%s:%d", file, line);
-    msg = buf;
-  }
-  error_shutdown(msg);
+    if (msg == NULL) {
+        char buf[128] = {0};
+        mini_snprintf(buf, sizeof(buf), "%s:%d", file, line);
+        msg = buf;
+    }
+    error_shutdown(msg);
 #else
-  display_orientation(0);
-  term_set_color(COLOR_WHITE, COLOR_FATAL_ERROR);
-  term_printf("\nINTERNAL ERROR:\n");
-  if (msg) {
-    term_printf("msg : %s\n", msg);
-  }
-  if (file) {
-    term_printf("file: %s:%d\n", file, line);
-  }
+    display_orientation(0);
+    term_set_color(COLOR_WHITE, COLOR_FATAL_ERROR);
+    term_printf("\nINTERNAL ERROR:\n");
+    if (msg) {
+        term_printf("msg : %s\n", msg);
+    }
+    if (file) {
+        term_printf("file: %s:%d\n", file, line);
+    }
 #ifdef SCM_REVISION
-  const uint8_t *rev = (const uint8_t *)SCM_REVISION;
-  term_printf("rev : %02x%02x%02x%02x%02x\n", rev[0], rev[1], rev[2], rev[3],
-              rev[4]);
+    const uint8_t *rev = (const uint8_t *)SCM_REVISION;
+    term_printf("rev : %02x%02x%02x%02x%02x\n", rev[0], rev[1], rev[2], rev[3], rev[4]);
 #endif
-  term_printf("\nPlease contact Trezor support.\n");
-  display_backlight(255);
-  trezor_shutdown();
+    term_printf("\nPlease contact Trezor support.\n");
+    display_backlight(255);
+    trezor_shutdown();
 #endif
 }
 
-void __attribute__((noreturn)) show_wipe_code_screen(void) {
-  error_shutdown_ex("WIPE CODE ENTERED",
-                    "All data has been erased from the device",
-                    "PLEASE RECONNECT\nTHE DEVICE");
+void __attribute__((noreturn)) show_wipe_code_screen(void)
+{
+    error_shutdown_ex(
+        "WIPE CODE ENTERED", "All data has been erased from the device",
+        "PLEASE RECONNECT\nTHE DEVICE");
 }
 
-void __attribute__((noreturn)) show_pin_too_many_screen(void) {
-  error_shutdown_ex("TOO MANY PIN ATTEMPTS",
-                    "All data has been erased from the device",
-                    "PLEASE RECONNECT\nTHE DEVICE");
+void __attribute__((noreturn)) show_pin_too_many_screen(void)
+{
+    error_shutdown_ex(
+        "TOO MANY PIN ATTEMPTS", "All data has been erased from the device",
+        "PLEASE RECONNECT\nTHE DEVICE");
 }
 
-void __attribute__((noreturn)) show_install_restricted_screen(void) {
-  error_shutdown_ex("INSTALL RESTRICTED",
-                    "Installation of custom firmware is currently restricted.",
-                    "Please visit\ntrezor.io/bootloader");
+void __attribute__((noreturn)) show_install_restricted_screen(void)
+{
+    error_shutdown_ex(
+        "INSTALL RESTRICTED", "Installation of custom firmware is currently restricted.",
+        "Please visit\ntrezor.io/bootloader");
 }

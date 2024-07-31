@@ -37,42 +37,43 @@ const int32_t buffer_width = DISPLAY_RESX;
 #define FUNCTION_FREE(name) CONCAT(buffers_free_, name)
 #define VARNAME(name) CONCAT(buffers_, name)
 
-#define BUFFER(section, name, count)               \
-  typedef struct {                                 \
-    TYPE(name) buffers[count];                     \
-    uint8_t allocated[count];                      \
-  } STRUCT(name);                                  \
-  section STRUCT(name) VARNAME(name);              \
-                                                   \
-  TYPE(name) * FUNCTION(name)(bool clear) {        \
-    int idx = -1;                                  \
-    for (int i = 0; i < (count); i++) {            \
-      if (VARNAME(name).allocated[i] == 0) {       \
-        idx = i;                                   \
-        break;                                     \
-      }                                            \
-    }                                              \
-    if (idx < 0) {                                 \
-      return NULL;                                 \
-    }                                              \
-    if (clear) {                                   \
-      memzero(&VARNAME(name).buffers[idx],         \
-              sizeof(VARNAME(name).buffers[idx])); \
-    }                                              \
-    VARNAME(name).allocated[idx] = 1;              \
-    return &VARNAME(name).buffers[idx];            \
-  }                                                \
-  void FUNCTION_FREE(name)(TYPE(name) * buffer) {  \
-    if (buffer == NULL) {                          \
-      return;                                      \
-    }                                              \
-    for (uint16_t i = 0; i < (count); i++) {       \
-      if (buffer == &VARNAME(name).buffers[i]) {   \
-        VARNAME(name).allocated[i] = 0;            \
-        return;                                    \
-      }                                            \
-    }                                              \
-  }
+#define BUFFER(section, name, count)                                                  \
+    typedef struct {                                                                  \
+        TYPE(name) buffers[count];                                                    \
+        uint8_t allocated[count];                                                     \
+    } STRUCT(name);                                                                   \
+    section STRUCT(name) VARNAME(name);                                               \
+                                                                                      \
+    TYPE(name) * FUNCTION(name)(bool clear)                                           \
+    {                                                                                 \
+        int idx = -1;                                                                 \
+        for (int i = 0; i < (count); i++) {                                           \
+            if (VARNAME(name).allocated[i] == 0) {                                    \
+                idx = i;                                                              \
+                break;                                                                \
+            }                                                                         \
+        }                                                                             \
+        if (idx < 0) {                                                                \
+            return NULL;                                                              \
+        }                                                                             \
+        if (clear) {                                                                  \
+            memzero(&VARNAME(name).buffers[idx], sizeof(VARNAME(name).buffers[idx])); \
+        }                                                                             \
+        VARNAME(name).allocated[idx] = 1;                                             \
+        return &VARNAME(name).buffers[idx];                                           \
+    }                                                                                 \
+    void FUNCTION_FREE(name)(TYPE(name) * buffer)                                     \
+    {                                                                                 \
+        if (buffer == NULL) {                                                         \
+            return;                                                                   \
+        }                                                                             \
+        for (uint16_t i = 0; i < (count); i++) {                                      \
+            if (buffer == &VARNAME(name).buffers[i]) {                                \
+                VARNAME(name).allocated[i] = 0;                                       \
+                return;                                                               \
+            }                                                                         \
+        }                                                                             \
+    }
 
 BUFFER(BUFFER_SECTION, line_16bpp, 3);
 BUFFER(BUFFER_SECTION, line_4bpp, 3);

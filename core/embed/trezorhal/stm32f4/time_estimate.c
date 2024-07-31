@@ -22,7 +22,8 @@
 // The number of CPU cycles required to execute one iteration of PBKDF2.
 #define PIN_PBKDF2_CYCLES_PER_ITER 11100
 
-uint32_t time_estimate_pbkdf2_ms(uint32_t iterations) {
-  extern uint32_t SystemCoreClock;
-  return PIN_PBKDF2_CYCLES_PER_ITER * iterations / (SystemCoreClock / 1000);
+uint32_t time_estimate_pbkdf2_ms(uint32_t iterations)
+{
+    extern uint32_t SystemCoreClock;
+    return PIN_PBKDF2_CYCLES_PER_ITER * iterations / (SystemCoreClock / 1000);
 }

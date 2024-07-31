@@ -57,9 +57,9 @@
  * Input         : Register Address, length of buffer
  * Output        : pdata Read
  *******************************************************************************/
-int32_t sitronix_read_reg(uint8_t reg, uint8_t *pdata, uint16_t length) {
-  return i2c_mem_read(TOUCH_I2C_INSTANCE, TS_I2C_ADDRESS, reg, length, pdata,
-                      length, 1000);
+int32_t sitronix_read_reg(uint8_t reg, uint8_t *pdata, uint16_t length)
+{
+    return i2c_mem_read(TOUCH_I2C_INSTANCE, TS_I2C_ADDRESS, reg, length, pdata, length, 1000);
 }
 
 /*******************************************************************************
@@ -69,9 +69,9 @@ int32_t sitronix_read_reg(uint8_t reg, uint8_t *pdata, uint16_t length) {
  * Input         : Register Address, pdata to be written, length of buffer
  * Output        : None
  *******************************************************************************/
-int32_t sitronix_write_reg(uint8_t reg, uint8_t *pdata, uint16_t length) {
-  return i2c_mem_write(TOUCH_I2C_INSTANCE, TS_I2C_ADDRESS, reg, length, pdata,
-                       length, 1000);
+int32_t sitronix_write_reg(uint8_t reg, uint8_t *pdata, uint16_t length)
+{
+    return i2c_mem_write(TOUCH_I2C_INSTANCE, TS_I2C_ADDRESS, reg, length, pdata, length, 1000);
 }
 
 /*******************************************************************************
@@ -81,8 +81,9 @@ int32_t sitronix_write_reg(uint8_t reg, uint8_t *pdata, uint16_t length) {
  * Input         : Register Address, length of buffer
  * Output        : pdata Read
  *******************************************************************************/
-int32_t sitronix_read_data(uint8_t *pdata, uint16_t length) {
-  return i2c_receive(TOUCH_I2C_INSTANCE, TS_I2C_ADDRESS, pdata, length, 1000);
+int32_t sitronix_read_data(uint8_t *pdata, uint16_t length)
+{
+    return i2c_receive(TOUCH_I2C_INSTANCE, TS_I2C_ADDRESS, pdata, length, 1000);
 }
 
 /* Includes ------------------------------------------------------------------*/
@@ -128,72 +129,68 @@ int32_t sitronix_read_data(uint8_t *pdata, uint16_t length) {
  * @{
  */
 typedef struct {
-  uint32_t Radian;
-  uint32_t OffsetLeftRight;
-  uint32_t OffsetUpDown;
-  uint32_t DistanceLeftRight;
-  uint32_t DistanceUpDown;
-  uint32_t DistanceZoom;
+    uint32_t Radian;
+    uint32_t OffsetLeftRight;
+    uint32_t OffsetUpDown;
+    uint32_t DistanceLeftRight;
+    uint32_t DistanceUpDown;
+    uint32_t DistanceZoom;
 } SITRONIX_Gesture_Init_t;
 
 typedef struct {
-  uint32_t TouchDetected;
-  uint32_t TouchX;
-  uint32_t TouchY;
+    uint32_t TouchDetected;
+    uint32_t TouchX;
+    uint32_t TouchY;
 } SITRONIX_State_t;
 
 typedef struct {
-  uint32_t TouchDetected;
-  uint32_t TouchX[SITRONIX_MAX_DETECTABLE_TOUCH];
-  uint32_t TouchY[SITRONIX_MAX_DETECTABLE_TOUCH];
-  uint32_t TouchWeight[SITRONIX_MAX_DETECTABLE_TOUCH];
-  uint32_t TouchEvent[SITRONIX_MAX_DETECTABLE_TOUCH];
-  uint32_t TouchArea[SITRONIX_MAX_DETECTABLE_TOUCH];
+    uint32_t TouchDetected;
+    uint32_t TouchX[SITRONIX_MAX_DETECTABLE_TOUCH];
+    uint32_t TouchY[SITRONIX_MAX_DETECTABLE_TOUCH];
+    uint32_t TouchWeight[SITRONIX_MAX_DETECTABLE_TOUCH];
+    uint32_t TouchEvent[SITRONIX_MAX_DETECTABLE_TOUCH];
+    uint32_t TouchArea[SITRONIX_MAX_DETECTABLE_TOUCH];
 } SITRONIX_MultiTouch_State_t;
 
 typedef struct {
-  uint8_t IsInitialized;
+    uint8_t IsInitialized;
 } SITRONIX_Object_t;
 
 typedef struct {
-  uint8_t MultiTouch;
-  uint8_t Gesture;
-  uint8_t MaxTouch;
-  uint32_t MaxXl;
-  uint32_t MaxYl;
+    uint8_t MultiTouch;
+    uint8_t Gesture;
+    uint8_t MaxTouch;
+    uint32_t MaxXl;
+    uint32_t MaxYl;
 } SITRONIX_Capabilities_t;
 
 typedef struct {
-  int32_t (*Init)(SITRONIX_Object_t *);
-  int32_t (*DeInit)(SITRONIX_Object_t *);
-  int32_t (*GestureConfig)(SITRONIX_Object_t *, SITRONIX_Gesture_Init_t *);
-  int32_t (*ReadID)(SITRONIX_Object_t *, uint32_t *);
-  int32_t (*GetState)(SITRONIX_Object_t *, SITRONIX_State_t *);
-  int32_t (*GetMultiTouchState)(SITRONIX_Object_t *,
-                                SITRONIX_MultiTouch_State_t *);
-  int32_t (*GetGesture)(SITRONIX_Object_t *, uint8_t *);
-  int32_t (*GetCapabilities)(SITRONIX_Object_t *, SITRONIX_Capabilities_t *);
-  int32_t (*EnableIT)(SITRONIX_Object_t *);
-  int32_t (*DisableIT)(SITRONIX_Object_t *);
-  int32_t (*ClearIT)(SITRONIX_Object_t *);
-  int32_t (*ITStatus)(SITRONIX_Object_t *);
+    int32_t (*Init)(SITRONIX_Object_t *);
+    int32_t (*DeInit)(SITRONIX_Object_t *);
+    int32_t (*GestureConfig)(SITRONIX_Object_t *, SITRONIX_Gesture_Init_t *);
+    int32_t (*ReadID)(SITRONIX_Object_t *, uint32_t *);
+    int32_t (*GetState)(SITRONIX_Object_t *, SITRONIX_State_t *);
+    int32_t (*GetMultiTouchState)(SITRONIX_Object_t *, SITRONIX_MultiTouch_State_t *);
+    int32_t (*GetGesture)(SITRONIX_Object_t *, uint8_t *);
+    int32_t (*GetCapabilities)(SITRONIX_Object_t *, SITRONIX_Capabilities_t *);
+    int32_t (*EnableIT)(SITRONIX_Object_t *);
+    int32_t (*DisableIT)(SITRONIX_Object_t *);
+    int32_t (*ClearIT)(SITRONIX_Object_t *);
+    int32_t (*ITStatus)(SITRONIX_Object_t *);
 } SITRONIX_TS_Drv_t;
 
 int32_t SITRONIX_Init(SITRONIX_Object_t *pObj);
 int32_t SITRONIX_DeInit(SITRONIX_Object_t *pObj);
-int32_t SITRONIX_GestureConfig(SITRONIX_Object_t *pObj,
-                               SITRONIX_Gesture_Init_t *GestureInit);
+int32_t SITRONIX_GestureConfig(SITRONIX_Object_t *pObj, SITRONIX_Gesture_Init_t *GestureInit);
 int32_t SITRONIX_ReadID(SITRONIX_Object_t *pObj, uint32_t *Id);
 int32_t SITRONIX_GetState(SITRONIX_Object_t *pObj, SITRONIX_State_t *State);
-int32_t SITRONIX_GetMultiTouchState(SITRONIX_Object_t *pObj,
-                                    SITRONIX_MultiTouch_State_t *State);
+int32_t SITRONIX_GetMultiTouchState(SITRONIX_Object_t *pObj, SITRONIX_MultiTouch_State_t *State);
 int32_t SITRONIX_GetGesture(SITRONIX_Object_t *pObj, uint8_t *GestureId);
 int32_t SITRONIX_EnableIT(SITRONIX_Object_t *pObj);
 int32_t SITRONIX_DisableIT(SITRONIX_Object_t *pObj);
 int32_t SITRONIX_ITStatus(SITRONIX_Object_t *pObj);
 int32_t SITRONIX_ClearIT(SITRONIX_Object_t *pObj);
-int32_t SITRONIX_GetCapabilities(SITRONIX_Object_t *pObj,
-                                 SITRONIX_Capabilities_t *Capabilities);
+int32_t SITRONIX_GetCapabilities(SITRONIX_Object_t *pObj, SITRONIX_Capabilities_t *Capabilities);
 
 /* Touch screen driver structure initialization */
 SITRONIX_TS_Drv_t SITRONIX_TS_Driver = {
@@ -234,20 +231,19 @@ static int32_t SITRONIX_DetectTouch(SITRONIX_Object_t *pObj);
  * @param  Capabilities pointer to SITRONIX sensor capabilities
  * @retval Component status
  */
-int32_t SITRONIX_GetCapabilities(SITRONIX_Object_t *pObj,
-                                 SITRONIX_Capabilities_t *Capabilities) {
-  /* Prevent unused argument(s) compilation warning */
-  (void)(pObj);
+int32_t SITRONIX_GetCapabilities(SITRONIX_Object_t *pObj, SITRONIX_Capabilities_t *Capabilities)
+{
+    /* Prevent unused argument(s) compilation warning */
+    (void)(pObj);
 
-  /* Store component's capabilities */
-  Capabilities->MultiTouch = 1;
-  Capabilities->Gesture =
-      0; /* Gesture feature is currently not activated on FW chipset */
-  Capabilities->MaxTouch = SITRONIX_MAX_DETECTABLE_TOUCH;
-  Capabilities->MaxXl = SITRONIX_MAX_X_LENGTH;
-  Capabilities->MaxYl = SITRONIX_MAX_Y_LENGTH;
+    /* Store component's capabilities */
+    Capabilities->MultiTouch = 1;
+    Capabilities->Gesture = 0; /* Gesture feature is currently not activated on FW chipset */
+    Capabilities->MaxTouch = SITRONIX_MAX_DETECTABLE_TOUCH;
+    Capabilities->MaxXl = SITRONIX_MAX_X_LENGTH;
+    Capabilities->MaxYl = SITRONIX_MAX_Y_LENGTH;
 
-  return SITRONIX_OK;
+    return SITRONIX_OK;
 }
 
 /**
@@ -256,23 +252,24 @@ int32_t SITRONIX_GetCapabilities(SITRONIX_Object_t *pObj,
  * @param  pObj Component object pointer
  * @retval Component status
  */
-int32_t SITRONIX_Init(SITRONIX_Object_t *pObj) {
-  int32_t ret = SITRONIX_OK;
-  uint8_t data[28U];
+int32_t SITRONIX_Init(SITRONIX_Object_t *pObj)
+{
+    int32_t ret = SITRONIX_OK;
+    uint8_t data[28U];
 
-  if (pObj->IsInitialized == 0U) {
-    if (sitronix_read_data(data, (uint16_t)sizeof(data)) != SITRONIX_OK) {
-      ret = SITRONIX_ERROR;
+    if (pObj->IsInitialized == 0U) {
+        if (sitronix_read_data(data, (uint16_t)sizeof(data)) != SITRONIX_OK) {
+            ret = SITRONIX_ERROR;
+        }
+
+        pObj->IsInitialized = 1;
     }
 
-    pObj->IsInitialized = 1;
-  }
+    if (ret != SITRONIX_OK) {
+        ret = SITRONIX_ERROR;
+    }
 
-  if (ret != SITRONIX_OK) {
-    ret = SITRONIX_ERROR;
-  }
-
-  return ret;
+    return ret;
 }
 
 /**
@@ -281,12 +278,13 @@ int32_t SITRONIX_Init(SITRONIX_Object_t *pObj) {
  * @param  pObj Component object pointer
  * @retval Component status
  */
-int32_t SITRONIX_DeInit(SITRONIX_Object_t *pObj) {
-  if (pObj->IsInitialized == 1U) {
-    pObj->IsInitialized = 0;
-  }
+int32_t SITRONIX_DeInit(SITRONIX_Object_t *pObj)
+{
+    if (pObj->IsInitialized == 1U) {
+        pObj->IsInitialized = 0;
+    }
 
-  return SITRONIX_OK;
+    return SITRONIX_OK;
 }
 
 /**
@@ -296,9 +294,9 @@ int32_t SITRONIX_DeInit(SITRONIX_Object_t *pObj) {
  * @param  GestureInit Gesture init structure
  * @retval Component status
  */
-int32_t SITRONIX_GestureConfig(SITRONIX_Object_t *pObj,
-                               SITRONIX_Gesture_Init_t *GestureInit) {
-  return SITRONIX_ERROR;
+int32_t SITRONIX_GestureConfig(SITRONIX_Object_t *pObj, SITRONIX_Gesture_Init_t *GestureInit)
+{
+    return SITRONIX_ERROR;
 }
 
 /**
@@ -308,22 +306,23 @@ int32_t SITRONIX_GestureConfig(SITRONIX_Object_t *pObj,
  * @param  Id Pointer to component's ID
  * @retval Component status
  */
-int32_t SITRONIX_ReadID(SITRONIX_Object_t *pObj, uint32_t *Id) {
-  int32_t ret = SITRONIX_OK;
-  uint8_t data[28];
-  uint8_t trial = 0;
+int32_t SITRONIX_ReadID(SITRONIX_Object_t *pObj, uint32_t *Id)
+{
+    int32_t ret = SITRONIX_OK;
+    uint8_t data[28];
+    uint8_t trial = 0;
 
-  for (trial = 0; trial < 10; trial++) {
-    if (sitronix_read_data(data, 28) != SITRONIX_OK) {
-      ret = SITRONIX_ERROR;
-    } else {
-      if ((uint32_t)data[0] == SITRONIX_ID) {
-        *Id = (uint32_t)data[0];
-        return ret;
-      }
+    for (trial = 0; trial < 10; trial++) {
+        if (sitronix_read_data(data, 28) != SITRONIX_OK) {
+            ret = SITRONIX_ERROR;
+        } else {
+            if ((uint32_t)data[0] == SITRONIX_ID) {
+                *Id = (uint32_t)data[0];
+                return ret;
+            }
+        }
     }
-  }
-  return ret;
+    return ret;
 }
 
 uint8_t sitronix_touching = 0;
@@ -334,31 +333,32 @@ uint8_t sitronix_touching = 0;
  * @param  State Single Touch structure pointer
  * @retval Component status.
  */
-int32_t SITRONIX_GetState(SITRONIX_Object_t *pObj, SITRONIX_State_t *State) {
-  int32_t ret = SITRONIX_OK;
-  uint8_t data[64];
+int32_t SITRONIX_GetState(SITRONIX_Object_t *pObj, SITRONIX_State_t *State)
+{
+    int32_t ret = SITRONIX_OK;
+    uint8_t data[64];
 
-  State->TouchDetected = (uint32_t)SITRONIX_DetectTouch(pObj);
-  if (sitronix_read_data(data, (uint16_t)sizeof(data)) != SITRONIX_OK) {
-    ret = SITRONIX_ERROR;
-  } else {
-    if ((uint32_t)data[2] & 0x80) {
-      sitronix_touching = 1;
+    State->TouchDetected = (uint32_t)SITRONIX_DetectTouch(pObj);
+    if (sitronix_read_data(data, (uint16_t)sizeof(data)) != SITRONIX_OK) {
+        ret = SITRONIX_ERROR;
     } else {
-      sitronix_touching = 0;
+        if ((uint32_t)data[2] & 0x80) {
+            sitronix_touching = 1;
+        } else {
+            sitronix_touching = 0;
+        }
+
+        State->TouchX = (((uint32_t)data[2] & SITRONIX_TOUCH_POS_LSB_MASK) << 4);
+
+        /* Send back first ready X position to caller */
+        State->TouchX =
+            ((((uint32_t)data[2] & SITRONIX_TOUCH_POS_LSB_MASK) << 4) | ((uint32_t)data[3]));
+        /* Send back first ready Y position to caller */
+        State->TouchY =
+            (((uint32_t)data[2] & SITRONIX_TOUCH_POS_MSB_MASK) << 8) | ((uint32_t)data[4]);
     }
 
-    State->TouchX = (((uint32_t)data[2] & SITRONIX_TOUCH_POS_LSB_MASK) << 4);
-
-    /* Send back first ready X position to caller */
-    State->TouchX = ((((uint32_t)data[2] & SITRONIX_TOUCH_POS_LSB_MASK) << 4) |
-                     ((uint32_t)data[3]));
-    /* Send back first ready Y position to caller */
-    State->TouchY = (((uint32_t)data[2] & SITRONIX_TOUCH_POS_MSB_MASK) << 8) |
-                    ((uint32_t)data[4]);
-  }
-
-  return ret;
+    return ret;
 }
 /**
  * @brief  Get the touch screen Xn and Yn positions values in multi-touch mode
@@ -366,21 +366,20 @@ int32_t SITRONIX_GetState(SITRONIX_Object_t *pObj, SITRONIX_State_t *State) {
  * @param  State Multi Touch structure pointer
  * @retval Component status.
  */
-int32_t SITRONIX_GetMultiTouchState(SITRONIX_Object_t *pObj,
-                                    SITRONIX_MultiTouch_State_t *State) {
-  int32_t ret = SITRONIX_OK;
-  uint8_t data[28];
+int32_t SITRONIX_GetMultiTouchState(SITRONIX_Object_t *pObj, SITRONIX_MultiTouch_State_t *State)
+{
+    int32_t ret = SITRONIX_OK;
+    uint8_t data[28];
 
-  State->TouchDetected = (uint32_t)SITRONIX_DetectTouch(pObj);
+    State->TouchDetected = (uint32_t)SITRONIX_DetectTouch(pObj);
 
-  if (sitronix_read_reg(SITRONIX_P1_XH_REG, data, (uint16_t)sizeof(data)) !=
-      SITRONIX_OK) {
-    ret = SITRONIX_ERROR;
-  } else {
-    /* To be implemented */
-  }
+    if (sitronix_read_reg(SITRONIX_P1_XH_REG, data, (uint16_t)sizeof(data)) != SITRONIX_OK) {
+        ret = SITRONIX_ERROR;
+    } else {
+        /* To be implemented */
+    }
 
-  return ret;
+    return ret;
 }
 
 /**
@@ -389,12 +388,13 @@ int32_t SITRONIX_GetMultiTouchState(SITRONIX_Object_t *pObj,
  * @param  GestureId gesture ID
  * @retval Component status
  */
-int32_t SITRONIX_GetGesture(SITRONIX_Object_t *pObj, uint8_t *GestureId) {
-  /* Prevent unused argument(s) compilation warning */
-  (void)(pObj);
+int32_t SITRONIX_GetGesture(SITRONIX_Object_t *pObj, uint8_t *GestureId)
+{
+    /* Prevent unused argument(s) compilation warning */
+    (void)(pObj);
 
-  /* Always return SITRONIX_OK as feature not supported by SITRONIX */
-  return SITRONIX_ERROR;
+    /* Always return SITRONIX_OK as feature not supported by SITRONIX */
+    return SITRONIX_ERROR;
 }
 
 /**
@@ -403,12 +403,13 @@ int32_t SITRONIX_GetGesture(SITRONIX_Object_t *pObj, uint8_t *GestureId) {
  * @param  pObj Component object pointer
  * @retval Component status
  */
-int32_t SITRONIX_EnableIT(SITRONIX_Object_t *pObj) {
-  /* Prevent unused argument(s) compilation warning */
-  (void)(pObj);
+int32_t SITRONIX_EnableIT(SITRONIX_Object_t *pObj)
+{
+    /* Prevent unused argument(s) compilation warning */
+    (void)(pObj);
 
-  /* Always return SITRONIX_OK as feature not supported by SITRONIX */
-  return SITRONIX_ERROR;
+    /* Always return SITRONIX_OK as feature not supported by SITRONIX */
+    return SITRONIX_ERROR;
 }
 
 /**
@@ -417,12 +418,13 @@ int32_t SITRONIX_EnableIT(SITRONIX_Object_t *pObj) {
  * @param  pObj Component object pointer
  * @retval Component status
  */
-int32_t SITRONIX_DisableIT(SITRONIX_Object_t *pObj) {
-  /* Prevent unused argument(s) compilation warning */
-  (void)(pObj);
+int32_t SITRONIX_DisableIT(SITRONIX_Object_t *pObj)
+{
+    /* Prevent unused argument(s) compilation warning */
+    (void)(pObj);
 
-  /* Always return SITRONIX_OK as feature not supported by SITRONIX */
-  return SITRONIX_ERROR;
+    /* Always return SITRONIX_OK as feature not supported by SITRONIX */
+    return SITRONIX_ERROR;
 }
 
 /**
@@ -433,12 +435,13 @@ int32_t SITRONIX_DisableIT(SITRONIX_Object_t *pObj) {
  * @param  pObj Component object pointer
  * @retval Component status
  */
-int32_t SITRONIX_ITStatus(SITRONIX_Object_t *pObj) {
-  /* Prevent unused argument(s) compilation warning */
-  (void)(pObj);
+int32_t SITRONIX_ITStatus(SITRONIX_Object_t *pObj)
+{
+    /* Prevent unused argument(s) compilation warning */
+    (void)(pObj);
 
-  /* Always return SITRONIX_OK as feature not supported by SITRONIX */
-  return SITRONIX_ERROR;
+    /* Always return SITRONIX_OK as feature not supported by SITRONIX */
+    return SITRONIX_ERROR;
 }
 
 /**
@@ -448,12 +451,13 @@ int32_t SITRONIX_ITStatus(SITRONIX_Object_t *pObj) {
  * @param  pObj Component object pointer
  * @retval Component status
  */
-int32_t SITRONIX_ClearIT(SITRONIX_Object_t *pObj) {
-  /* Prevent unused argument(s) compilation warning */
-  (void)(pObj);
+int32_t SITRONIX_ClearIT(SITRONIX_Object_t *pObj)
+{
+    /* Prevent unused argument(s) compilation warning */
+    (void)(pObj);
 
-  /* Always return SITRONIX_OK as feature not supported by SITRONIX */
-  return SITRONIX_ERROR;
+    /* Always return SITRONIX_OK as feature not supported by SITRONIX */
+    return SITRONIX_ERROR;
 }
 
 /**
@@ -472,34 +476,34 @@ int32_t SITRONIX_ClearIT(SITRONIX_Object_t *pObj) {
  * @retval Number of active touches detected (can be between 0 and10) or
  * SITRONIX_ERROR in case of error
  */
-__attribute__((optimize("-O0"))) int32_t SITRONIX_DetectTouch(
-    SITRONIX_Object_t *pObj) {
-  int32_t ret;
-  uint8_t nb_touch = 0;
-  static uint8_t first_event = 0;
-  uint8_t data[28];
+__attribute__((optimize("-O0"))) int32_t SITRONIX_DetectTouch(SITRONIX_Object_t *pObj)
+{
+    int32_t ret;
+    uint8_t nb_touch = 0;
+    static uint8_t first_event = 0;
+    uint8_t data[28];
 
-  if (sitronix_read_data((uint8_t *)&data, 28) != SITRONIX_OK) {
-    ret = SITRONIX_ERROR;
-  } else {
-    if (first_event == 0) {
-      if ((data[0] == 0x09)) {
-        nb_touch = 1;
-        first_event = 1;
-      } else {
-        nb_touch = 0;
-      }
+    if (sitronix_read_data((uint8_t *)&data, 28) != SITRONIX_OK) {
+        ret = SITRONIX_ERROR;
     } else {
-      if (data[8] == 0x60) {
-        nb_touch = 0;
-      } else {
-        nb_touch = 1;
-      }
+        if (first_event == 0) {
+            if ((data[0] == 0x09)) {
+                nb_touch = 1;
+                first_event = 1;
+            } else {
+                nb_touch = 0;
+            }
+        } else {
+            if (data[8] == 0x60) {
+                nb_touch = 0;
+            } else {
+                nb_touch = 1;
+            }
+        }
+        ret = (int32_t)nb_touch;
     }
-    ret = (int32_t)nb_touch;
-  }
 
-  return ret;
+    return ret;
 }
 //
 ///**
@@ -607,69 +611,69 @@ __attribute__((optimize("-O0"))) int32_t SITRONIX_DetectTouch(
  * @{
  */
 typedef struct {
-  uint32_t Width;       /* Screen width */
-  uint32_t Height;      /* Screen height */
-  uint32_t Orientation; /* Touch screen orientation */
-  uint32_t Accuracy;    /* Expressed in pixel and means the x or y difference vs
-                         old    position to consider the new values valid */
+    uint32_t Width;       /* Screen width */
+    uint32_t Height;      /* Screen height */
+    uint32_t Orientation; /* Touch screen orientation */
+    uint32_t Accuracy;    /* Expressed in pixel and means the x or y difference vs
+                           old    position to consider the new values valid */
 } TS_Init_t;
 
 typedef struct {
-  uint8_t MultiTouch;
-  uint8_t Gesture;
-  uint8_t MaxTouch;
-  uint32_t MaxXl;
-  uint32_t MaxYl;
+    uint8_t MultiTouch;
+    uint8_t Gesture;
+    uint8_t MaxTouch;
+    uint32_t MaxXl;
+    uint32_t MaxYl;
 } TS_Capabilities_t;
 
 typedef struct {
-  uint32_t TouchDetected;
-  uint32_t TouchX;
-  uint32_t TouchY;
+    uint32_t TouchDetected;
+    uint32_t TouchX;
+    uint32_t TouchY;
 } TS_State_t;
 
 typedef struct {
-  uint32_t TouchDetected;
-  uint32_t TouchX[2];
-  uint32_t TouchY[2];
-  uint32_t TouchWeight[2];
-  uint32_t TouchEvent[2];
-  uint32_t TouchArea[2];
+    uint32_t TouchDetected;
+    uint32_t TouchX[2];
+    uint32_t TouchY[2];
+    uint32_t TouchWeight[2];
+    uint32_t TouchEvent[2];
+    uint32_t TouchArea[2];
 } TS_MultiTouch_State_t;
 
 typedef struct {
-  uint32_t Radian;
-  uint32_t OffsetLeftRight;
-  uint32_t OffsetUpDown;
-  uint32_t DistanceLeftRight;
-  uint32_t DistanceUpDown;
-  uint32_t DistanceZoom;
+    uint32_t Radian;
+    uint32_t OffsetLeftRight;
+    uint32_t OffsetUpDown;
+    uint32_t DistanceLeftRight;
+    uint32_t DistanceUpDown;
+    uint32_t DistanceZoom;
 } TS_Gesture_Config_t;
 
 typedef struct {
-  uint32_t Width;
-  uint32_t Height;
-  uint32_t Orientation;
-  uint32_t Accuracy;
-  uint32_t MaxX;
-  uint32_t MaxY;
-  uint32_t PreviousX[TS_TOUCH_NBR];
-  uint32_t PreviousY[TS_TOUCH_NBR];
+    uint32_t Width;
+    uint32_t Height;
+    uint32_t Orientation;
+    uint32_t Accuracy;
+    uint32_t MaxX;
+    uint32_t MaxY;
+    uint32_t PreviousX[TS_TOUCH_NBR];
+    uint32_t PreviousY[TS_TOUCH_NBR];
 } TS_Ctx_t;
 
 typedef struct {
-  int32_t (*Init)(void *);
-  int32_t (*DeInit)(void *);
-  int32_t (*GestureConfig)(void *, void *);
-  int32_t (*ReadID)(void *, uint32_t *);
-  int32_t (*GetState)(void *, void *);
-  int32_t (*GetMultiTouchState)(void *, void *);
-  int32_t (*GetGesture)(void *, void *);
-  int32_t (*GetCapabilities)(void *, void *);
-  int32_t (*EnableIT)(void *);
-  int32_t (*DisableIT)(void *);
-  int32_t (*ClearIT)(void *);
-  int32_t (*ITStatus)(void *);
+    int32_t (*Init)(void *);
+    int32_t (*DeInit)(void *);
+    int32_t (*GestureConfig)(void *, void *);
+    int32_t (*ReadID)(void *, uint32_t *);
+    int32_t (*GetState)(void *, void *);
+    int32_t (*GetMultiTouchState)(void *, void *);
+    int32_t (*GetGesture)(void *, void *);
+    int32_t (*GetCapabilities)(void *, void *);
+    int32_t (*EnableIT)(void *);
+    int32_t (*DisableIT)(void *);
+    int32_t (*ClearIT)(void *);
+    int32_t (*ITStatus)(void *);
 } TS_Drv_t;
 
 /* DSI TS INT pin */
@@ -743,43 +747,41 @@ static int32_t SITRONIX_Probe(uint32_t Instance);
  * @param  TS_Init  Pointer to TS initialization structure.
  * @retval BSP status.
  */
-int32_t BSP_TS_Init(uint32_t Instance, TS_Init_t *TS_Init) {
-  int32_t status = BSP_ERROR_NONE;
+int32_t BSP_TS_Init(uint32_t Instance, TS_Init_t *TS_Init)
+{
+    int32_t status = BSP_ERROR_NONE;
 
-  if ((TS_Init == NULL) || (Instance >= TS_INSTANCES_NBR)) {
-    status = BSP_ERROR_WRONG_PARAM;
-  } else {
-    /* Probe the TS driver */
-    if (SITRONIX_Probe(Instance) != BSP_ERROR_NONE) {
-      status = BSP_ERROR_COMPONENT_FAILURE;
+    if ((TS_Init == NULL) || (Instance >= TS_INSTANCES_NBR)) {
+        status = BSP_ERROR_WRONG_PARAM;
     } else {
-      TS_Capabilities_t Capabilities;
-      uint32_t i;
-      /* Store parameters on TS context */
-      Ts_Ctx[Instance].Width = TS_Init->Width;
-      Ts_Ctx[Instance].Height = TS_Init->Height;
-      Ts_Ctx[Instance].Orientation = TS_Init->Orientation;
-      Ts_Ctx[Instance].Accuracy = TS_Init->Accuracy;
-      /* Get capabilities to retrieve maximum values of X and Y */
-      if (Ts_Drv[Instance]->GetCapabilities(Ts_CompObj[Instance],
-                                            &Capabilities) < 0) {
-        status = BSP_ERROR_COMPONENT_FAILURE;
-      } else {
-        /* Store maximum X and Y on context */
-        Ts_Ctx[Instance].MaxX = Capabilities.MaxXl;
-        Ts_Ctx[Instance].MaxY = Capabilities.MaxYl;
-        /* Initialize previous position in order to always detect first touch */
-        for (i = 0; i < TS_TOUCH_NBR; i++) {
-          Ts_Ctx[Instance].PreviousX[i] =
-              TS_Init->Width + TS_Init->Accuracy + 1U;
-          Ts_Ctx[Instance].PreviousY[i] =
-              TS_Init->Height + TS_Init->Accuracy + 1U;
+        /* Probe the TS driver */
+        if (SITRONIX_Probe(Instance) != BSP_ERROR_NONE) {
+            status = BSP_ERROR_COMPONENT_FAILURE;
+        } else {
+            TS_Capabilities_t Capabilities;
+            uint32_t i;
+            /* Store parameters on TS context */
+            Ts_Ctx[Instance].Width = TS_Init->Width;
+            Ts_Ctx[Instance].Height = TS_Init->Height;
+            Ts_Ctx[Instance].Orientation = TS_Init->Orientation;
+            Ts_Ctx[Instance].Accuracy = TS_Init->Accuracy;
+            /* Get capabilities to retrieve maximum values of X and Y */
+            if (Ts_Drv[Instance]->GetCapabilities(Ts_CompObj[Instance], &Capabilities) < 0) {
+                status = BSP_ERROR_COMPONENT_FAILURE;
+            } else {
+                /* Store maximum X and Y on context */
+                Ts_Ctx[Instance].MaxX = Capabilities.MaxXl;
+                Ts_Ctx[Instance].MaxY = Capabilities.MaxYl;
+                /* Initialize previous position in order to always detect first touch */
+                for (i = 0; i < TS_TOUCH_NBR; i++) {
+                    Ts_Ctx[Instance].PreviousX[i] = TS_Init->Width + TS_Init->Accuracy + 1U;
+                    Ts_Ctx[Instance].PreviousY[i] = TS_Init->Height + TS_Init->Accuracy + 1U;
+                }
+            }
         }
-      }
     }
-  }
 
-  return status;
+    return status;
 }
 
 /**
@@ -787,19 +789,20 @@ int32_t BSP_TS_Init(uint32_t Instance, TS_Init_t *TS_Init) {
  * @param  Instance TS Instance.
  * @retval BSP status.
  */
-int32_t BSP_TS_DeInit(uint32_t Instance) {
-  int32_t status = BSP_ERROR_NONE;
+int32_t BSP_TS_DeInit(uint32_t Instance)
+{
+    int32_t status = BSP_ERROR_NONE;
 
-  if (Instance >= TS_INSTANCES_NBR) {
-    status = BSP_ERROR_WRONG_PARAM;
-  } else {
-    /* De-Init the TS driver */
-    if (Ts_Drv[Instance]->DeInit(Ts_CompObj[Instance]) < 0) {
-      status = BSP_ERROR_COMPONENT_FAILURE;
+    if (Instance >= TS_INSTANCES_NBR) {
+        status = BSP_ERROR_WRONG_PARAM;
+    } else {
+        /* De-Init the TS driver */
+        if (Ts_Drv[Instance]->DeInit(Ts_CompObj[Instance]) < 0) {
+            status = BSP_ERROR_COMPONENT_FAILURE;
+        }
     }
-  }
 
-  return status;
+    return status;
 }
 
 /**
@@ -807,26 +810,27 @@ int32_t BSP_TS_DeInit(uint32_t Instance) {
  * @param  Instance TS Instance.
  * @retval BSP status.
  */
-int32_t BSP_TS_EnableIT(uint32_t Instance) {
-  /* Prevent unused argument(s) compilation warning */
-  UNUSED(Instance);
+int32_t BSP_TS_EnableIT(uint32_t Instance)
+{
+    /* Prevent unused argument(s) compilation warning */
+    UNUSED(Instance);
 
-  GPIO_InitTypeDef gpio_init_structure = {0};
+    GPIO_InitTypeDef gpio_init_structure = {0};
 
-  __HAL_RCC_GPIOE_CLK_ENABLE();
+    __HAL_RCC_GPIOE_CLK_ENABLE();
 
-  /* Configure Interrupt mode for TS detection pin */
-  gpio_init_structure.Pin = TS_INT_PIN;
-  gpio_init_structure.Pull = GPIO_PULLUP;
-  gpio_init_structure.Speed = GPIO_SPEED_FREQ_HIGH;
-  gpio_init_structure.Mode = GPIO_MODE_IT_FALLING;
-  HAL_GPIO_Init(TS_INT_GPIO_PORT, &gpio_init_structure);
+    /* Configure Interrupt mode for TS detection pin */
+    gpio_init_structure.Pin = TS_INT_PIN;
+    gpio_init_structure.Pull = GPIO_PULLUP;
+    gpio_init_structure.Speed = GPIO_SPEED_FREQ_HIGH;
+    gpio_init_structure.Mode = GPIO_MODE_IT_FALLING;
+    HAL_GPIO_Init(TS_INT_GPIO_PORT, &gpio_init_structure);
 
-  /* Enable and set Touch screen EXTI Interrupt to the lowest priority */
-  HAL_NVIC_SetPriority((IRQn_Type)(TS_INT_EXTI_IRQn), 0x0F, 0x00);
-  HAL_NVIC_EnableIRQ((IRQn_Type)(TS_INT_EXTI_IRQn));
+    /* Enable and set Touch screen EXTI Interrupt to the lowest priority */
+    HAL_NVIC_SetPriority((IRQn_Type)(TS_INT_EXTI_IRQn), 0x0F, 0x00);
+    HAL_NVIC_EnableIRQ((IRQn_Type)(TS_INT_EXTI_IRQn));
 
-  return BSP_ERROR_NONE;
+    return BSP_ERROR_NONE;
 }
 
 /**
@@ -834,12 +838,13 @@ int32_t BSP_TS_EnableIT(uint32_t Instance) {
  * @param  Instance TS Instance.
  * @retval BSP status.
  */
-int32_t BSP_TS_DisableIT(uint32_t Instance) {
-  /* Prevent unused argument(s) compilation warning */
-  UNUSED(Instance);
+int32_t BSP_TS_DisableIT(uint32_t Instance)
+{
+    /* Prevent unused argument(s) compilation warning */
+    UNUSED(Instance);
 
-  /* To be Implemented */
-  return BSP_ERROR_NONE;
+    /* To be Implemented */
+    return BSP_ERROR_NONE;
 }
 
 /**
@@ -848,46 +853,45 @@ int32_t BSP_TS_DisableIT(uint32_t Instance) {
  * @param  Orientation TS orientation.
  * @retval BSP status.
  */
-int32_t BSP_TS_Set_Orientation(uint32_t Instance, uint32_t Orientation) {
-  int32_t status = BSP_ERROR_NONE;
-  uint32_t temp;
-  uint32_t i;
+int32_t BSP_TS_Set_Orientation(uint32_t Instance, uint32_t Orientation)
+{
+    int32_t status = BSP_ERROR_NONE;
+    uint32_t temp;
+    uint32_t i;
 
-  if ((Instance >= TS_INSTANCES_NBR) ||
-      (Orientation > TS_ORIENTATION_LANDSCAPE_ROT180)) {
-    status = BSP_ERROR_WRONG_PARAM;
-  } else {
-    /* Update TS context if orientation is changed from/to portrait to/from
-     * landscape */
-    if ((((Ts_Ctx[Instance].Orientation == TS_ORIENTATION_LANDSCAPE) ||
-          (Ts_Ctx[Instance].Orientation == TS_ORIENTATION_LANDSCAPE_ROT180)) &&
-         ((Orientation == TS_ORIENTATION_PORTRAIT) ||
-          (Orientation == TS_ORIENTATION_PORTRAIT_ROT180))) ||
-        (((Ts_Ctx[Instance].Orientation == TS_ORIENTATION_PORTRAIT) ||
-          (Ts_Ctx[Instance].Orientation == TS_ORIENTATION_PORTRAIT_ROT180)) &&
-         ((Orientation == TS_ORIENTATION_LANDSCAPE) ||
-          (Orientation == TS_ORIENTATION_LANDSCAPE_ROT180)))) {
-      /* Invert width and height */
-      temp = Ts_Ctx[Instance].Width;
-      Ts_Ctx[Instance].Width = Ts_Ctx[Instance].Height;
-      Ts_Ctx[Instance].Height = temp;
-      /* Invert MaxX and MaxY */
-      temp = Ts_Ctx[Instance].MaxX;
-      Ts_Ctx[Instance].MaxX = Ts_Ctx[Instance].MaxY;
-      Ts_Ctx[Instance].MaxY = temp;
+    if ((Instance >= TS_INSTANCES_NBR) || (Orientation > TS_ORIENTATION_LANDSCAPE_ROT180)) {
+        status = BSP_ERROR_WRONG_PARAM;
+    } else {
+        /* Update TS context if orientation is changed from/to portrait to/from
+         * landscape */
+        if ((((Ts_Ctx[Instance].Orientation == TS_ORIENTATION_LANDSCAPE) ||
+              (Ts_Ctx[Instance].Orientation == TS_ORIENTATION_LANDSCAPE_ROT180)) &&
+             ((Orientation == TS_ORIENTATION_PORTRAIT) ||
+              (Orientation == TS_ORIENTATION_PORTRAIT_ROT180))) ||
+            (((Ts_Ctx[Instance].Orientation == TS_ORIENTATION_PORTRAIT) ||
+              (Ts_Ctx[Instance].Orientation == TS_ORIENTATION_PORTRAIT_ROT180)) &&
+             ((Orientation == TS_ORIENTATION_LANDSCAPE) ||
+              (Orientation == TS_ORIENTATION_LANDSCAPE_ROT180)))) {
+            /* Invert width and height */
+            temp = Ts_Ctx[Instance].Width;
+            Ts_Ctx[Instance].Width = Ts_Ctx[Instance].Height;
+            Ts_Ctx[Instance].Height = temp;
+            /* Invert MaxX and MaxY */
+            temp = Ts_Ctx[Instance].MaxX;
+            Ts_Ctx[Instance].MaxX = Ts_Ctx[Instance].MaxY;
+            Ts_Ctx[Instance].MaxY = temp;
+        }
+        /* Store orientation on TS context */
+        Ts_Ctx[Instance].Orientation = Orientation;
+        /* Reset previous position */
+        for (i = 0; i < TS_TOUCH_NBR; i++) {
+            Ts_Ctx[Instance].PreviousX[i] = Ts_Ctx[Instance].Width + Ts_Ctx[Instance].Accuracy + 1U;
+            Ts_Ctx[Instance].PreviousY[i] =
+                Ts_Ctx[Instance].Height + Ts_Ctx[Instance].Accuracy + 1U;
+        }
     }
-    /* Store orientation on TS context */
-    Ts_Ctx[Instance].Orientation = Orientation;
-    /* Reset previous position */
-    for (i = 0; i < TS_TOUCH_NBR; i++) {
-      Ts_Ctx[Instance].PreviousX[i] =
-          Ts_Ctx[Instance].Width + Ts_Ctx[Instance].Accuracy + 1U;
-      Ts_Ctx[Instance].PreviousY[i] =
-          Ts_Ctx[Instance].Height + Ts_Ctx[Instance].Accuracy + 1U;
-    }
-  }
 
-  return status;
+    return status;
 }
 
 /**
@@ -896,17 +900,18 @@ int32_t BSP_TS_Set_Orientation(uint32_t Instance, uint32_t Orientation) {
  * @param  Orientation Pointer to TS orientation.
  * @retval BSP status.
  */
-int32_t BSP_TS_Get_Orientation(uint32_t Instance, uint32_t *Orientation) {
-  int32_t status = BSP_ERROR_NONE;
+int32_t BSP_TS_Get_Orientation(uint32_t Instance, uint32_t *Orientation)
+{
+    int32_t status = BSP_ERROR_NONE;
 
-  if ((Instance >= TS_INSTANCES_NBR) || (Orientation == NULL)) {
-    status = BSP_ERROR_WRONG_PARAM;
-  } else {
-    /* Get orientation from TS context */
-    *Orientation = Ts_Ctx[Instance].Orientation;
-  }
+    if ((Instance >= TS_INSTANCES_NBR) || (Orientation == NULL)) {
+        status = BSP_ERROR_WRONG_PARAM;
+    } else {
+        /* Get orientation from TS context */
+        *Orientation = Ts_Ctx[Instance].Orientation;
+    }
 
-  return status;
+    return status;
 }
 
 /**
@@ -915,60 +920,58 @@ int32_t BSP_TS_Get_Orientation(uint32_t Instance, uint32_t *Orientation) {
  * @param  TS_State Pointer to single touch structure.
  * @retval BSP status.
  */
-int32_t BSP_TS_GetState(uint32_t Instance, TS_State_t *TS_State) {
-  int32_t status = BSP_ERROR_NONE;
-  uint32_t x_oriented;
-  uint32_t y_oriented;
-  uint32_t x_diff;
-  uint32_t y_diff;
+int32_t BSP_TS_GetState(uint32_t Instance, TS_State_t *TS_State)
+{
+    int32_t status = BSP_ERROR_NONE;
+    uint32_t x_oriented;
+    uint32_t y_oriented;
+    uint32_t x_diff;
+    uint32_t y_diff;
 
-  if (Instance >= TS_INSTANCES_NBR) {
-    status = BSP_ERROR_WRONG_PARAM;
-  } else {
-    SITRONIX_State_t state;
-
-    /* Get each touch coordinates */
-    if (Ts_Drv[Instance]->GetState(Ts_CompObj[Instance], &state) < 0) {
-      status = BSP_ERROR_COMPONENT_FAILURE;
-    } /* Check and update the number of touches active detected */
-    else if (state.TouchDetected != 0U) {
-      x_oriented = /*Ts_Ctx[Instance].MaxX -*/ state.TouchX;
-      y_oriented = /*Ts_Ctx[Instance].MaxY -*/ state.TouchY;
-
-      /* Apply boundary */
-      TS_State->TouchX =
-          (x_oriented * Ts_Ctx[Instance].Width) / (Ts_Ctx[Instance].MaxX);
-      TS_State->TouchY =
-          (y_oriented * Ts_Ctx[Instance].Height) / (Ts_Ctx[Instance].MaxY);
-      /* Store Current TS state */
-      TS_State->TouchDetected = state.TouchDetected;
-
-      /* Check accuracy */
-      x_diff = (TS_State->TouchX > Ts_Ctx[Instance].PreviousX[0])
-                   ? (TS_State->TouchX - Ts_Ctx[Instance].PreviousX[0])
-                   : (Ts_Ctx[Instance].PreviousX[0] - TS_State->TouchX);
-
-      y_diff = (TS_State->TouchY > Ts_Ctx[Instance].PreviousY[0])
-                   ? (TS_State->TouchY - Ts_Ctx[Instance].PreviousY[0])
-                   : (Ts_Ctx[Instance].PreviousY[0] - TS_State->TouchY);
-
-      if ((x_diff > Ts_Ctx[Instance].Accuracy) ||
-          (y_diff > Ts_Ctx[Instance].Accuracy)) {
-        /* New touch detected */
-        Ts_Ctx[Instance].PreviousX[0] = TS_State->TouchX;
-        Ts_Ctx[Instance].PreviousY[0] = TS_State->TouchY;
-      } else {
-        TS_State->TouchX = Ts_Ctx[Instance].PreviousX[0];
-        TS_State->TouchY = Ts_Ctx[Instance].PreviousY[0];
-      }
+    if (Instance >= TS_INSTANCES_NBR) {
+        status = BSP_ERROR_WRONG_PARAM;
     } else {
-      TS_State->TouchDetected = 0U;
-      TS_State->TouchX = Ts_Ctx[Instance].PreviousX[0];
-      TS_State->TouchY = Ts_Ctx[Instance].PreviousY[0];
-    }
-  }
+        SITRONIX_State_t state;
 
-  return status;
+        /* Get each touch coordinates */
+        if (Ts_Drv[Instance]->GetState(Ts_CompObj[Instance], &state) < 0) {
+            status = BSP_ERROR_COMPONENT_FAILURE;
+        } /* Check and update the number of touches active detected */
+        else if (state.TouchDetected != 0U) {
+            x_oriented = /*Ts_Ctx[Instance].MaxX -*/ state.TouchX;
+            y_oriented = /*Ts_Ctx[Instance].MaxY -*/ state.TouchY;
+
+            /* Apply boundary */
+            TS_State->TouchX = (x_oriented * Ts_Ctx[Instance].Width) / (Ts_Ctx[Instance].MaxX);
+            TS_State->TouchY = (y_oriented * Ts_Ctx[Instance].Height) / (Ts_Ctx[Instance].MaxY);
+            /* Store Current TS state */
+            TS_State->TouchDetected = state.TouchDetected;
+
+            /* Check accuracy */
+            x_diff = (TS_State->TouchX > Ts_Ctx[Instance].PreviousX[0])
+                         ? (TS_State->TouchX - Ts_Ctx[Instance].PreviousX[0])
+                         : (Ts_Ctx[Instance].PreviousX[0] - TS_State->TouchX);
+
+            y_diff = (TS_State->TouchY > Ts_Ctx[Instance].PreviousY[0])
+                         ? (TS_State->TouchY - Ts_Ctx[Instance].PreviousY[0])
+                         : (Ts_Ctx[Instance].PreviousY[0] - TS_State->TouchY);
+
+            if ((x_diff > Ts_Ctx[Instance].Accuracy) || (y_diff > Ts_Ctx[Instance].Accuracy)) {
+                /* New touch detected */
+                Ts_Ctx[Instance].PreviousX[0] = TS_State->TouchX;
+                Ts_Ctx[Instance].PreviousY[0] = TS_State->TouchY;
+            } else {
+                TS_State->TouchX = Ts_Ctx[Instance].PreviousX[0];
+                TS_State->TouchY = Ts_Ctx[Instance].PreviousY[0];
+            }
+        } else {
+            TS_State->TouchDetected = 0U;
+            TS_State->TouchX = Ts_Ctx[Instance].PreviousX[0];
+            TS_State->TouchY = Ts_Ctx[Instance].PreviousY[0];
+        }
+    }
+
+    return status;
 }
 
 /**
@@ -977,20 +980,20 @@ int32_t BSP_TS_GetState(uint32_t Instance, TS_State_t *TS_State) {
  * @param  TS_State Pointer to multiple touch structure.
  * @retval BSP status.
  */
-int32_t BSP_TS_Get_MultiTouchState(const uint32_t Instance,
-                                   TS_MultiTouch_State_t *TS_State) {
-  int32_t status;
+int32_t BSP_TS_Get_MultiTouchState(const uint32_t Instance, TS_MultiTouch_State_t *TS_State)
+{
+    int32_t status;
 
-  UNUSED(TS_State);
+    UNUSED(TS_State);
 
-  if (Instance >= TS_INSTANCES_NBR) {
-    status = BSP_ERROR_WRONG_PARAM;
-  } else {
-    /* Feature not supported in this release */
-    status = BSP_ERROR_FEATURE_NOT_SUPPORTED;
-  }
+    if (Instance >= TS_INSTANCES_NBR) {
+        status = BSP_ERROR_WRONG_PARAM;
+    } else {
+        /* Feature not supported in this release */
+        status = BSP_ERROR_FEATURE_NOT_SUPPORTED;
+    }
 
-  return status;
+    return status;
 }
 
 /**
@@ -999,18 +1002,18 @@ int32_t BSP_TS_Get_MultiTouchState(const uint32_t Instance,
  * @param  GestureConfig Pointer to gesture configuration structure.
  * @retval BSP status.
  */
-int32_t BSP_TS_GestureConfig(const uint32_t Instance,
-                             TS_Gesture_Config_t *GestureConfig) {
-  int32_t status;
+int32_t BSP_TS_GestureConfig(const uint32_t Instance, TS_Gesture_Config_t *GestureConfig)
+{
+    int32_t status;
 
-  if ((Instance >= TS_INSTANCES_NBR) || (GestureConfig == NULL)) {
-    status = BSP_ERROR_WRONG_PARAM;
-  } else {
-    /* Feature not supported */
-    status = BSP_ERROR_FEATURE_NOT_SUPPORTED;
-  }
+    if ((Instance >= TS_INSTANCES_NBR) || (GestureConfig == NULL)) {
+        status = BSP_ERROR_WRONG_PARAM;
+    } else {
+        /* Feature not supported */
+        status = BSP_ERROR_FEATURE_NOT_SUPPORTED;
+    }
 
-  return status;
+    return status;
 }
 
 /**
@@ -1019,17 +1022,18 @@ int32_t BSP_TS_GestureConfig(const uint32_t Instance,
  * @param  GestureId Pointer to gesture.
  * @retval BSP status.
  */
-int32_t BSP_TS_GetGestureId(const uint32_t Instance, uint32_t *GestureId) {
-  int32_t status;
+int32_t BSP_TS_GetGestureId(const uint32_t Instance, uint32_t *GestureId)
+{
+    int32_t status;
 
-  if ((Instance >= TS_INSTANCES_NBR) || (GestureId == NULL)) {
-    status = BSP_ERROR_WRONG_PARAM;
-  } else {
-    /* Feature not supported */
-    status = BSP_ERROR_FEATURE_NOT_SUPPORTED;
-  }
+    if ((Instance >= TS_INSTANCES_NBR) || (GestureId == NULL)) {
+        status = BSP_ERROR_WRONG_PARAM;
+    } else {
+        /* Feature not supported */
+        status = BSP_ERROR_FEATURE_NOT_SUPPORTED;
+    }
 
-  return status;
+    return status;
 }
 
 /**
@@ -1038,30 +1042,29 @@ int32_t BSP_TS_GetGestureId(const uint32_t Instance, uint32_t *GestureId) {
  * @param  Capabilities Pointer to TS capabilities structure.
  * @retval BSP status.
  */
-int32_t BSP_TS_GetCapabilities(uint32_t Instance,
-                               TS_Capabilities_t *Capabilities) {
-  int32_t status = BSP_ERROR_NONE;
+int32_t BSP_TS_GetCapabilities(uint32_t Instance, TS_Capabilities_t *Capabilities)
+{
+    int32_t status = BSP_ERROR_NONE;
 
-  if ((Instance >= TS_INSTANCES_NBR) || (Capabilities == NULL)) {
-    status = BSP_ERROR_WRONG_PARAM;
-  } else {
-    /* Get the TS driver capabilities */
-    if (Ts_Drv[Instance]->GetCapabilities(Ts_CompObj[Instance], Capabilities) <
-        0) {
-      status = BSP_ERROR_COMPONENT_FAILURE;
+    if ((Instance >= TS_INSTANCES_NBR) || (Capabilities == NULL)) {
+        status = BSP_ERROR_WRONG_PARAM;
     } else {
-      /* Update maximum X and Y according orientation */
-      if ((Ts_Ctx[Instance].Orientation == TS_ORIENTATION_LANDSCAPE) ||
-          (Ts_Ctx[Instance].Orientation == TS_ORIENTATION_LANDSCAPE_ROT180)) {
-        uint32_t tmp;
-        tmp = Capabilities->MaxXl;
-        Capabilities->MaxXl = Capabilities->MaxYl;
-        Capabilities->MaxYl = tmp;
-      }
+        /* Get the TS driver capabilities */
+        if (Ts_Drv[Instance]->GetCapabilities(Ts_CompObj[Instance], Capabilities) < 0) {
+            status = BSP_ERROR_COMPONENT_FAILURE;
+        } else {
+            /* Update maximum X and Y according orientation */
+            if ((Ts_Ctx[Instance].Orientation == TS_ORIENTATION_LANDSCAPE) ||
+                (Ts_Ctx[Instance].Orientation == TS_ORIENTATION_LANDSCAPE_ROT180)) {
+                uint32_t tmp;
+                tmp = Capabilities->MaxXl;
+                Capabilities->MaxXl = Capabilities->MaxYl;
+                Capabilities->MaxYl = tmp;
+            }
+        }
     }
-  }
 
-  return status;
+    return status;
 }
 
 /**
@@ -1069,12 +1072,13 @@ int32_t BSP_TS_GetCapabilities(uint32_t Instance,
  * @param  Instance TS Instance.
  * @retval None.
  */
-__weak void BSP_TS_Callback(uint32_t Instance) {
-  /* Prevent unused argument(s) compilation warning */
-  UNUSED(Instance);
+__weak void BSP_TS_Callback(uint32_t Instance)
+{
+    /* Prevent unused argument(s) compilation warning */
+    UNUSED(Instance);
 
-  /* This function should be implemented by the user application.
-     It is called into this driver when an event on TS touch detection */
+    /* This function should be implemented by the user application.
+       It is called into this driver when an event on TS touch detection */
 }
 
 /**
@@ -1082,11 +1086,12 @@ __weak void BSP_TS_Callback(uint32_t Instance) {
  * @param  Instance TS Instance.
  * @retval None.
  */
-void BSP_TS_IRQHandler(uint32_t Instance) {
-  /* Prevent unused argument(s) compilation warning */
-  UNUSED(Instance);
+void BSP_TS_IRQHandler(uint32_t Instance)
+{
+    /* Prevent unused argument(s) compilation warning */
+    UNUSED(Instance);
 
-  /* To be implemented */
+    /* To be implemented */
 }
 /**
  * @}
@@ -1100,19 +1105,20 @@ void BSP_TS_IRQHandler(uint32_t Instance) {
  * @param  Instance TS Instance.
  * @retval BSP status.
  */
-static int32_t SITRONIX_Probe(uint32_t Instance) {
-  int32_t status;
-  static SITRONIX_Object_t SITRONIXObj;
+static int32_t SITRONIX_Probe(uint32_t Instance)
+{
+    int32_t status;
+    static SITRONIX_Object_t SITRONIXObj;
 
-  Ts_CompObj[Instance] = &SITRONIXObj;
-  Ts_Drv[Instance] = (TS_Drv_t *)&SITRONIX_TS_Driver;
-  if (Ts_Drv[Instance]->Init(Ts_CompObj[Instance]) < 0) {
-    status = BSP_ERROR_COMPONENT_FAILURE;
-  } else {
-    status = BSP_ERROR_NONE;
-  }
+    Ts_CompObj[Instance] = &SITRONIXObj;
+    Ts_Drv[Instance] = (TS_Drv_t *)&SITRONIX_TS_Driver;
+    if (Ts_Drv[Instance]->Init(Ts_CompObj[Instance]) < 0) {
+        status = BSP_ERROR_COMPONENT_FAILURE;
+    } else {
+        status = BSP_ERROR_NONE;
+    }
 
-  return status;
+    return status;
 }
 
 /**
@@ -1136,10 +1142,10 @@ static int32_t SITRONIX_Probe(uint32_t Instance) {
 
 // Touch driver
 typedef struct {
-  // Set if driver is initialized
-  secbool initialized;
-  // Last lower-level driver state
-  TS_State_t prev_state;
+    // Set if driver is initialized
+    secbool initialized;
+    // Last lower-level driver state
+    TS_State_t prev_state;
 
 } touch_driver_t;
 
@@ -1148,95 +1154,101 @@ static touch_driver_t g_touch_driver = {
     .initialized = secfalse,
 };
 
-secbool touch_init(void) {
-  touch_driver_t *driver = &g_touch_driver;
+secbool touch_init(void)
+{
+    touch_driver_t *driver = &g_touch_driver;
 
-  if (sectrue != driver->initialized) {
-    TS_Init_t TsInit;
+    if (sectrue != driver->initialized) {
+        TS_Init_t TsInit;
 
-    /* Initialize the TouchScreen */
-    TsInit.Width = 480;
-    TsInit.Height = 480;
-    TsInit.Orientation = 0;
-    TsInit.Accuracy = 10;
+        /* Initialize the TouchScreen */
+        TsInit.Width = 480;
+        TsInit.Height = 480;
+        TsInit.Orientation = 0;
+        TsInit.Accuracy = 10;
 
-    BSP_TS_Init(0, &TsInit);
+        BSP_TS_Init(0, &TsInit);
 
-    driver->initialized = sectrue;
-  }
-
-  return driver->initialized;
-}
-
-void touch_deinit(void) {
-  touch_driver_t *driver = &g_touch_driver;
-
-  if (sectrue == driver->initialized) {
-    BSP_TS_DeInit(0);
-    memset(driver, 0, sizeof(touch_driver_t));
-  }
-}
-
-secbool touch_ready(void) {
-  touch_driver_t *driver = &g_touch_driver;
-  return driver->initialized;
-}
-
-secbool touch_set_sensitivity(uint8_t value) {
-  // Not implemented for the discovery kit
-  return sectrue;
-}
-
-uint8_t touch_get_version(void) {
-  // Not implemented for the discovery kit
-  return 0;
-}
-
-secbool touch_activity(void) {
-  touch_driver_t *driver = &g_touch_driver;
-
-  if (sectrue != driver->initialized) {
-    return secfalse;
-  }
-
-  TS_State_t new_state = {0};
-  BSP_TS_GetState(0, &new_state);
-
-  return sitronix_touching ? sectrue : secfalse;
-}
-
-uint32_t touch_get_event(void) {
-  touch_driver_t *driver = &g_touch_driver;
-
-  if (sectrue != driver->initialized) {
-    return 0;
-  }
-
-  TS_State_t new_state = {0};
-  BSP_TS_GetState(0, &new_state);
-
-  new_state.TouchDetected = (sitronix_touching != 0);
-  new_state.TouchX = new_state.TouchX > 120 ? new_state.TouchX - 120 : 0;
-  new_state.TouchY = new_state.TouchY > 120 ? new_state.TouchY - 120 : 0;
-
-  uint32_t event = 0;
-
-  if (new_state.TouchDetected && !driver->prev_state.TouchDetected) {
-    uint32_t xy = touch_pack_xy(new_state.TouchX, new_state.TouchY);
-    event = TOUCH_START | xy;
-  } else if (!new_state.TouchDetected && driver->prev_state.TouchDetected) {
-    uint32_t xy =
-        touch_pack_xy(driver->prev_state.TouchX, driver->prev_state.TouchY);
-    event = TOUCH_END | xy;
-  } else if (new_state.TouchDetected) {
-    if ((new_state.TouchX != driver->prev_state.TouchX) ||
-        (new_state.TouchY != driver->prev_state.TouchY)) {
-      uint32_t xy = touch_pack_xy(new_state.TouchX, new_state.TouchY);
-      event = TOUCH_MOVE | xy;
+        driver->initialized = sectrue;
     }
-  }
 
-  driver->prev_state = new_state;
+    return driver->initialized;
+}
 
-  return event;
+void touch_deinit(void)
+{
+    touch_driver_t *driver = &g_touch_driver;
+
+    if (sectrue == driver->initialized) {
+        BSP_TS_DeInit(0);
+        memset(driver, 0, sizeof(touch_driver_t));
+    }
+}
+
+secbool touch_ready(void)
+{
+    touch_driver_t *driver = &g_touch_driver;
+    return driver->initialized;
+}
+
+secbool touch_set_sensitivity(uint8_t value)
+{
+    // Not implemented for the discovery kit
+    return sectrue;
+}
+
+uint8_t touch_get_version(void)
+{
+    // Not implemented for the discovery kit
+    return 0;
+}
+
+secbool touch_activity(void)
+{
+    touch_driver_t *driver = &g_touch_driver;
+
+    if (sectrue != driver->initialized) {
+        return secfalse;
+    }
+
+    TS_State_t new_state = {0};
+    BSP_TS_GetState(0, &new_state);
+
+    return sitronix_touching ? sectrue : secfalse;
+}
+
+uint32_t touch_get_event(void)
+{
+    touch_driver_t *driver = &g_touch_driver;
+
+    if (sectrue != driver->initialized) {
+        return 0;
+    }
+
+    TS_State_t new_state = {0};
+    BSP_TS_GetState(0, &new_state);
+
+    new_state.TouchDetected = (sitronix_touching != 0);
+    new_state.TouchX = new_state.TouchX > 120 ? new_state.TouchX - 120 : 0;
+    new_state.TouchY = new_state.TouchY > 120 ? new_state.TouchY - 120 : 0;
+
+    uint32_t event = 0;
+
+    if (new_state.TouchDetected && !driver->prev_state.TouchDetected) {
+        uint32_t xy = touch_pack_xy(new_state.TouchX, new_state.TouchY);
+        event = TOUCH_START | xy;
+    } else if (!new_state.TouchDetected && driver->prev_state.TouchDetected) {
+        uint32_t xy = touch_pack_xy(driver->prev_state.TouchX, driver->prev_state.TouchY);
+        event = TOUCH_END | xy;
+    } else if (new_state.TouchDetected) {
+        if ((new_state.TouchX != driver->prev_state.TouchX) ||
+            (new_state.TouchY != driver->prev_state.TouchY)) {
+            uint32_t xy = touch_pack_xy(new_state.TouchX, new_state.TouchY);
+            event = TOUCH_MOVE | xy;
+        }
+    }
+
+    driver->prev_state = new_state;
+
+    return event;
 }

@@ -60,18 +60,18 @@
 // clang-format on
 
 typedef struct {
-  uint8_t device_class;
-  uint8_t device_subclass;
-  uint8_t device_protocol;
-  uint16_t vendor_id;
-  uint16_t product_id;
-  uint16_t release_num;
-  const char *manufacturer;
-  const char *product;
-  const char *serial_number;
-  const char *interface;
-  secbool usb21_enabled;
-  secbool usb21_landing;
+    uint8_t device_class;
+    uint8_t device_subclass;
+    uint8_t device_protocol;
+    uint16_t vendor_id;
+    uint16_t product_id;
+    uint16_t release_num;
+    const char *manufacturer;
+    const char *product;
+    const char *serial_number;
+    const char *interface;
+    secbool usb21_enabled;
+    secbool usb21_landing;
 } usb_dev_info_t;
 
 // Initializes USB stack

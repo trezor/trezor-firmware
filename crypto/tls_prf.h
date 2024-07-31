@@ -26,8 +26,8 @@
 #include <stdint.h>
 #include "hmac.h"
 
-void tls_prf_sha256(const uint8_t *secret, size_t secret_len,
-                    const uint8_t *label, size_t label_len, const uint8_t *seed,
-                    size_t seed_len, uint8_t *output, size_t out_len);
+void tls_prf_sha256(
+    const uint8_t *secret, size_t secret_len, const uint8_t *label, size_t label_len,
+    const uint8_t *seed, size_t seed_len, uint8_t *output, size_t out_len);
 
 #endif

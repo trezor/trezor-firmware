@@ -22,9 +22,10 @@
 
 #include <stdint.h>
 
-uint32_t time_estimate_pbkdf2_ms(uint32_t iterations) {
-  (void)iterations;
-  return 500;
+uint32_t time_estimate_pbkdf2_ms(uint32_t iterations)
+{
+    (void)iterations;
+    return 500;
 }
 
 #endif

@@ -120,156 +120,155 @@ static const uint8_t * const pubkey_v2[PUBKEYS_V2] = {
  * See `core/src/apps/bitcoin/sign_message.py`.
  */
 #define VERIFYMESSAGE_PREFIX \
-  ("\x18"                    \
-   "Bitcoin Signed Message:\n\x20")
+    ("\x18"                  \
+     "Bitcoin Signed Message:\n\x20")
 #define PREFIX_LENGTH (sizeof(VERIFYMESSAGE_PREFIX) - 1)
 #define SIGNED_LENGTH (PREFIX_LENGTH + 32)
 
-void compute_firmware_fingerprint(const image_header *hdr, uint8_t hash[32]) {
-  image_header copy = {0};
-  memcpy(&copy, hdr, sizeof(image_header));
-  memzero(copy.sig1, sizeof(copy.sig1));
-  memzero(copy.sig2, sizeof(copy.sig2));
-  memzero(copy.sig3, sizeof(copy.sig3));
-  copy.sigindex1 = 0;
-  copy.sigindex2 = 0;
-  copy.sigindex3 = 0;
-  sha256_Raw((const uint8_t *)&copy, sizeof(image_header), hash);
+void compute_firmware_fingerprint(const image_header *hdr, uint8_t hash[32])
+{
+    image_header copy = {0};
+    memcpy(&copy, hdr, sizeof(image_header));
+    memzero(copy.sig1, sizeof(copy.sig1));
+    memzero(copy.sig2, sizeof(copy.sig2));
+    memzero(copy.sig3, sizeof(copy.sig3));
+    copy.sigindex1 = 0;
+    copy.sigindex2 = 0;
+    copy.sigindex3 = 0;
+    sha256_Raw((const uint8_t *)&copy, sizeof(image_header), hash);
 }
 
-void compute_firmware_fingerprint_for_verifymessage(const image_header *hdr,
-                                                    uint8_t hash[32]) {
-  uint8_t prefixed_header[SIGNED_LENGTH] = VERIFYMESSAGE_PREFIX;
-  uint8_t header_hash[32];
-  uint8_t hash_before_double_hashing[32];
-  compute_firmware_fingerprint(hdr, header_hash);
-  memcpy(prefixed_header + PREFIX_LENGTH, header_hash, sizeof(header_hash));
-  sha256_Raw(prefixed_header, sizeof(prefixed_header),
-             hash_before_double_hashing);
-  // We need to do hash the previous result again because SignMessage
-  // computes it this way, see `core/src/apps/bitcoin/sign_message.py`
-  sha256_Raw(hash_before_double_hashing, sizeof(hash_before_double_hashing),
-             hash);
+void compute_firmware_fingerprint_for_verifymessage(const image_header *hdr, uint8_t hash[32])
+{
+    uint8_t prefixed_header[SIGNED_LENGTH] = VERIFYMESSAGE_PREFIX;
+    uint8_t header_hash[32];
+    uint8_t hash_before_double_hashing[32];
+    compute_firmware_fingerprint(hdr, header_hash);
+    memcpy(prefixed_header + PREFIX_LENGTH, header_hash, sizeof(header_hash));
+    sha256_Raw(prefixed_header, sizeof(prefixed_header), hash_before_double_hashing);
+    // We need to do hash the previous result again because SignMessage
+    // computes it this way, see `core/src/apps/bitcoin/sign_message.py`
+    sha256_Raw(hash_before_double_hashing, sizeof(hash_before_double_hashing), hash);
 }
 
-bool firmware_present_new(void) {
-  const image_header *hdr =
-      (const image_header *)FLASH_PTR(FLASH_FWHEADER_START);
-  if (hdr->magic != FIRMWARE_MAGIC_NEW) return false;
-  // we need to ignore hdrlen for now
-  // because we keep reset_handler ptr there
-  // for compatibility with older bootloaders
-  // after this is no longer necessary, let's uncomment the line below:
-  // if (hdr->hdrlen != FLASH_FWHEADER_LEN) return false;
-  if (hdr->codelen > FLASH_APP_LEN) return false;
-  if (hdr->codelen < 4096) return false;
+bool firmware_present_new(void)
+{
+    const image_header *hdr = (const image_header *)FLASH_PTR(FLASH_FWHEADER_START);
+    if (hdr->magic != FIRMWARE_MAGIC_NEW) return false;
+    // we need to ignore hdrlen for now
+    // because we keep reset_handler ptr there
+    // for compatibility with older bootloaders
+    // after this is no longer necessary, let's uncomment the line below:
+    // if (hdr->hdrlen != FLASH_FWHEADER_LEN) return false;
+    if (hdr->codelen > FLASH_APP_LEN) return false;
+    if (hdr->codelen < 4096) return false;
 
-  return true;
+    return true;
 }
 
-int signatures_ok(const image_header *hdr, uint8_t store_fingerprint[32],
-                  secbool use_verifymessage) {
-  uint8_t hash[32] = {0};
-  // which set of public keys depend on scheme
-  const uint8_t *const *pubkey_ptr = NULL;
-  uint8_t pubkeys = 0;
-  if (use_verifymessage == sectrue) {
-    pubkey_ptr = pubkey_v3;
-    compute_firmware_fingerprint_for_verifymessage(hdr, hash);
-    pubkeys = PUBKEYS_V3;
-  } else {
-    pubkey_ptr = pubkey_v2;
-    compute_firmware_fingerprint(hdr, hash);
-    pubkeys = PUBKEYS_V2;
-  }
-
-  if (store_fingerprint) {
-    memcpy(store_fingerprint, hash, 32);
-  }
-
-  if (hdr->sigindex1 < 1 || hdr->sigindex1 > pubkeys)
-    return SIG_FAIL;  // invalid index
-  if (hdr->sigindex2 < 1 || hdr->sigindex2 > pubkeys)
-    return SIG_FAIL;  // invalid index
-  if (use_verifymessage != sectrue) {
-    if (hdr->sigindex3 < 1 || hdr->sigindex3 > pubkeys) {
-      return SIG_FAIL;  // invalid index
+int signatures_ok(const image_header *hdr, uint8_t store_fingerprint[32], secbool use_verifymessage)
+{
+    uint8_t hash[32] = {0};
+    // which set of public keys depend on scheme
+    const uint8_t *const *pubkey_ptr = NULL;
+    uint8_t pubkeys = 0;
+    if (use_verifymessage == sectrue) {
+        pubkey_ptr = pubkey_v3;
+        compute_firmware_fingerprint_for_verifymessage(hdr, hash);
+        pubkeys = PUBKEYS_V3;
+    } else {
+        pubkey_ptr = pubkey_v2;
+        compute_firmware_fingerprint(hdr, hash);
+        pubkeys = PUBKEYS_V2;
     }
-  } else if (hdr->sigindex3 != 0) {
-    return SIG_FAIL;
-  }
 
-  if (hdr->sigindex1 == hdr->sigindex2) return SIG_FAIL;  // duplicate use
-  if (hdr->sigindex1 == hdr->sigindex3) return SIG_FAIL;  // duplicate use
-  if (hdr->sigindex2 == hdr->sigindex3) return SIG_FAIL;  // duplicate use
-
-  if (0 != ecdsa_verify_digest(&secp256k1, pubkey_ptr[hdr->sigindex1 - 1],
-                               hdr->sig1, hash)) {  // failure
-    return SIG_FAIL;
-  }
-  if (0 != ecdsa_verify_digest(&secp256k1, pubkey_ptr[hdr->sigindex2 - 1],
-                               hdr->sig2, hash)) {  // failure
-    return SIG_FAIL;
-  }
-  if (use_verifymessage != sectrue) {
-    if (0 != ecdsa_verify_digest(&secp256k1, pubkey_ptr[hdr->sigindex3 - 1],
-                                 hdr->sig3, hash))  // failure
-    {
-      return SIG_FAIL;
+    if (store_fingerprint) {
+        memcpy(store_fingerprint, hash, 32);
     }
-  } else {
-    for (unsigned int i = 0; i < sizeof(hdr->sig3); i++) {
-      if (hdr->sig3[i] != 0) {
+
+    if (hdr->sigindex1 < 1 || hdr->sigindex1 > pubkeys) return SIG_FAIL;  // invalid index
+    if (hdr->sigindex2 < 1 || hdr->sigindex2 > pubkeys) return SIG_FAIL;  // invalid index
+    if (use_verifymessage != sectrue) {
+        if (hdr->sigindex3 < 1 || hdr->sigindex3 > pubkeys) {
+            return SIG_FAIL;  // invalid index
+        }
+    } else if (hdr->sigindex3 != 0) {
         return SIG_FAIL;
-      }
     }
-  }
 
-  return SIG_OK;
+    if (hdr->sigindex1 == hdr->sigindex2) return SIG_FAIL;  // duplicate use
+    if (hdr->sigindex1 == hdr->sigindex3) return SIG_FAIL;  // duplicate use
+    if (hdr->sigindex2 == hdr->sigindex3) return SIG_FAIL;  // duplicate use
+
+    if (0 != ecdsa_verify_digest(
+                 &secp256k1, pubkey_ptr[hdr->sigindex1 - 1], hdr->sig1, hash)) {  // failure
+        return SIG_FAIL;
+    }
+    if (0 != ecdsa_verify_digest(
+                 &secp256k1, pubkey_ptr[hdr->sigindex2 - 1], hdr->sig2, hash)) {  // failure
+        return SIG_FAIL;
+    }
+    if (use_verifymessage != sectrue) {
+        if (0 != ecdsa_verify_digest(
+                     &secp256k1, pubkey_ptr[hdr->sigindex3 - 1], hdr->sig3, hash))  // failure
+        {
+            return SIG_FAIL;
+        }
+    } else {
+        for (unsigned int i = 0; i < sizeof(hdr->sig3); i++) {
+            if (hdr->sig3[i] != 0) {
+                return SIG_FAIL;
+            }
+        }
+    }
+
+    return SIG_OK;
 }
 
-int signatures_match(const image_header *hdr, uint8_t store_fingerprint[32]) {
-  int result = 0;
-  // Return success if v3 ("verify message") or the v2 ("new") style matches.
-  // Use XOR to always force computing both signatures to avoid potential
-  // timing side channels.
-  // Return only the hash for the v2 computation so that it is
-  // the same shown in previous bootloader.
-  result ^= signatures_ok(hdr, store_fingerprint, secfalse);
-  result ^= signatures_ok(hdr, NULL, sectrue);
-  if (result != SIG_OK) {
-    return SIG_FAIL;
-  }
-  return SIG_OK;
+int signatures_match(const image_header *hdr, uint8_t store_fingerprint[32])
+{
+    int result = 0;
+    // Return success if v3 ("verify message") or the v2 ("new") style matches.
+    // Use XOR to always force computing both signatures to avoid potential
+    // timing side channels.
+    // Return only the hash for the v2 computation so that it is
+    // the same shown in previous bootloader.
+    result ^= signatures_ok(hdr, store_fingerprint, secfalse);
+    result ^= signatures_ok(hdr, NULL, sectrue);
+    if (result != SIG_OK) {
+        return SIG_FAIL;
+    }
+    return SIG_OK;
 }
 
-int mem_is_empty(const uint8_t *src, uint32_t len) {
-  for (uint32_t i = 0; i < len; i++) {
-    if (src[i]) return 0;
-  }
-  return 1;
+int mem_is_empty(const uint8_t *src, uint32_t len)
+{
+    for (uint32_t i = 0; i < len; i++) {
+        if (src[i]) return 0;
+    }
+    return 1;
 }
 
-int check_firmware_hashes(const image_header *hdr) {
-  uint8_t hash[32] = {0};
-  // check hash of the first code chunk
-  sha256_Raw(FLASH_PTR(FLASH_APP_START), (64 - 1) * 1024, hash);
-  if (0 != memcmp(hash, hdr->hashes, 32)) return SIG_FAIL;
-  // check remaining used chunks
-  uint32_t total_len = FLASH_FWHEADER_LEN + hdr->codelen;
-  int used_chunks = total_len / FW_CHUNK_SIZE;
-  if (total_len % FW_CHUNK_SIZE > 0) {
-    used_chunks++;
-  }
-  for (int i = 1; i < used_chunks; i++) {
-    sha256_Raw(FLASH_PTR(FLASH_FWHEADER_START + (64 * i) * 1024), 64 * 1024,
-               hash);
-    if (0 != memcmp(hdr->hashes + 32 * i, hash, 32)) return SIG_FAIL;
-  }
-  // check unused chunks
-  for (int i = used_chunks; i < 16; i++) {
-    if (!mem_is_empty(hdr->hashes + 32 * i, 32)) return SIG_FAIL;
-  }
-  // all OK
-  return SIG_OK;
+int check_firmware_hashes(const image_header *hdr)
+{
+    uint8_t hash[32] = {0};
+    // check hash of the first code chunk
+    sha256_Raw(FLASH_PTR(FLASH_APP_START), (64 - 1) * 1024, hash);
+    if (0 != memcmp(hash, hdr->hashes, 32)) return SIG_FAIL;
+    // check remaining used chunks
+    uint32_t total_len = FLASH_FWHEADER_LEN + hdr->codelen;
+    int used_chunks = total_len / FW_CHUNK_SIZE;
+    if (total_len % FW_CHUNK_SIZE > 0) {
+        used_chunks++;
+    }
+    for (int i = 1; i < used_chunks; i++) {
+        sha256_Raw(FLASH_PTR(FLASH_FWHEADER_START + (64 * i) * 1024), 64 * 1024, hash);
+        if (0 != memcmp(hdr->hashes + 32 * i, hash, 32)) return SIG_FAIL;
+    }
+    // check unused chunks
+    for (int i = used_chunks; i < 16; i++) {
+        if (!mem_is_empty(hdr->hashes + 32 * i, 32)) return SIG_FAIL;
+    }
+    // all OK
+    return SIG_OK;
 }

@@ -23,70 +23,68 @@
 #include "common.h"
 #include "flash.h"
 
-void flash_otp_init() {
-  // intentionally left empty
+void flash_otp_init()
+{
+    // intentionally left empty
 }
 
-secbool flash_otp_read(uint8_t block, uint8_t offset, uint8_t *data,
-                       uint8_t datalen) {
-  if (block >= FLASH_OTP_NUM_BLOCKS ||
-      offset + datalen > FLASH_OTP_BLOCK_SIZE) {
-    return secfalse;
-  }
-  for (uint8_t i = 0; i < datalen; i++) {
-    data[i] = *(__IO uint8_t *)(FLASH_OTP_BASE + block * FLASH_OTP_BLOCK_SIZE +
-                                offset + i);
-  }
-  return sectrue;
-}
-
-secbool flash_otp_write(uint8_t block, uint8_t offset, const uint8_t *data,
-                        uint8_t datalen) {
-  if (datalen % 16 != 0) {
-    return secfalse;
-  }
-  if (block >= FLASH_OTP_NUM_BLOCKS ||
-      offset + datalen > FLASH_OTP_BLOCK_SIZE) {
-    return secfalse;
-  }
-  ensure(flash_unlock_write(), NULL);
-  for (uint8_t i = 0; i < datalen; i += 16) {
-    uint32_t address =
-        FLASH_OTP_BASE + block * FLASH_OTP_BLOCK_SIZE + offset + i;
-    ensure(sectrue * (HAL_OK == HAL_FLASH_Program(FLASH_TYPEPROGRAM_QUADWORD_NS,
-                                                  address, (uint32_t)&data[i])),
-           NULL);
-  }
-  ensure(flash_lock_write(), NULL);
-  return sectrue;
-}
-
-secbool flash_otp_lock(uint8_t block) {
-  // check that all quadwords in the block have been written to
-  volatile uint8_t *addr =
-      (__IO uint8_t *)(FLASH_OTP_BASE + block * FLASH_OTP_BLOCK_SIZE);
-
-  secbool qw_locked = secfalse;
-  for (uint8_t i = 0; i < FLASH_OTP_BLOCK_SIZE; i++) {
-    if (addr[i] != 0xFF) {
-      qw_locked = sectrue;
+secbool flash_otp_read(uint8_t block, uint8_t offset, uint8_t *data, uint8_t datalen)
+{
+    if (block >= FLASH_OTP_NUM_BLOCKS || offset + datalen > FLASH_OTP_BLOCK_SIZE) {
+        return secfalse;
     }
-    if (i % 16 == 15 && qw_locked == secfalse) {
-      return secfalse;
+    for (uint8_t i = 0; i < datalen; i++) {
+        data[i] = *(__IO uint8_t *)(FLASH_OTP_BASE + block * FLASH_OTP_BLOCK_SIZE + offset + i);
     }
-  }
-  return sectrue;
+    return sectrue;
 }
 
-secbool flash_otp_is_locked(uint8_t block) {
-  // considering block locked if any quadword in the block is non-0xFF
-  volatile uint8_t *addr =
-      (__IO uint8_t *)(FLASH_OTP_BASE + block * FLASH_OTP_BLOCK_SIZE);
-
-  for (uint8_t i = 0; i < FLASH_OTP_BLOCK_SIZE; i++) {
-    if (addr[i] != 0xFF) {
-      return sectrue;
+secbool flash_otp_write(uint8_t block, uint8_t offset, const uint8_t *data, uint8_t datalen)
+{
+    if (datalen % 16 != 0) {
+        return secfalse;
     }
-  }
-  return secfalse;
+    if (block >= FLASH_OTP_NUM_BLOCKS || offset + datalen > FLASH_OTP_BLOCK_SIZE) {
+        return secfalse;
+    }
+    ensure(flash_unlock_write(), NULL);
+    for (uint8_t i = 0; i < datalen; i += 16) {
+        uint32_t address = FLASH_OTP_BASE + block * FLASH_OTP_BLOCK_SIZE + offset + i;
+        ensure(
+            sectrue * (HAL_OK == HAL_FLASH_Program(
+                                     FLASH_TYPEPROGRAM_QUADWORD_NS, address, (uint32_t)&data[i])),
+            NULL);
+    }
+    ensure(flash_lock_write(), NULL);
+    return sectrue;
+}
+
+secbool flash_otp_lock(uint8_t block)
+{
+    // check that all quadwords in the block have been written to
+    volatile uint8_t *addr = (__IO uint8_t *)(FLASH_OTP_BASE + block * FLASH_OTP_BLOCK_SIZE);
+
+    secbool qw_locked = secfalse;
+    for (uint8_t i = 0; i < FLASH_OTP_BLOCK_SIZE; i++) {
+        if (addr[i] != 0xFF) {
+            qw_locked = sectrue;
+        }
+        if (i % 16 == 15 && qw_locked == secfalse) {
+            return secfalse;
+        }
+    }
+    return sectrue;
+}
+
+secbool flash_otp_is_locked(uint8_t block)
+{
+    // considering block locked if any quadword in the block is non-0xFF
+    volatile uint8_t *addr = (__IO uint8_t *)(FLASH_OTP_BASE + block * FLASH_OTP_BLOCK_SIZE);
+
+    for (uint8_t i = 0; i < FLASH_OTP_BLOCK_SIZE; i++) {
+        if (addr[i] != 0xFF) {
+            return sectrue;
+        }
+    }
+    return secfalse;
 }

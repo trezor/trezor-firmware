@@ -48,8 +48,8 @@ void display_pixeldata(uint16_t c);
 uint32_t* display_get_fb_addr(void);
 
 void display_clear(void);
-void display_text_render_buffer(const char* text, int textlen, int font,
-                                buffer_text_t* buffer, int text_offset);
+void display_text_render_buffer(
+    const char* text, int textlen, int font, buffer_text_t* buffer, int text_offset);
 
 #define PIXELDATA(c) display_pixeldata(c)
 

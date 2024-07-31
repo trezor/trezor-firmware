@@ -24,24 +24,27 @@
 // removed after final cleanup of display drivers when the legacy code
 // is removed.
 
-int display_orientation(int angle) {
-  if (angle >= 0) {
-    return display_set_orientation(angle);
-  } else {
-    return display_get_orientation();
-  }
+int display_orientation(int angle)
+{
+    if (angle >= 0) {
+        return display_set_orientation(angle);
+    } else {
+        return display_get_orientation();
+    }
 }
 
-int display_backlight(int level) {
-  if (level >= 0) {
-    return display_set_backlight(level);
-  } else {
-    return display_get_backlight();
-  }
+int display_backlight(int level)
+{
+    if (level >= 0) {
+        return display_set_backlight(level);
+    } else {
+        return display_get_backlight();
+    }
 }
 
-void display_sync(void) {
+void display_sync(void)
+{
 #ifndef XFRAMEBUFFER
-  display_wait_for_sync();
+    display_wait_for_sync();
 #endif
 }

@@ -29,31 +29,35 @@ extern volatile uint32_t system_millis;
 /*
  * Initialise the Cortex-M3 SysTick timer
  */
-void timer_init(void) {
-  system_millis = 0;
+void timer_init(void)
+{
+    system_millis = 0;
 
-  /*
-   * MCU clock (120 MHz) as source
-   *
-   *     (120 MHz / 8) = 15 clock pulses
-   *
-   */
-  systick_set_clocksource(STK_CSR_CLKSOURCE_AHB_DIV8);
-  STK_CVR = 0;
+    /*
+     * MCU clock (120 MHz) as source
+     *
+     *     (120 MHz / 8) = 15 clock pulses
+     *
+     */
+    systick_set_clocksource(STK_CSR_CLKSOURCE_AHB_DIV8);
+    STK_CVR = 0;
 
-  /*
-   * 1 tick = 1 ms @ 120 MHz
-   *
-   *     (15 clock pulses * 1000 ms) = 15000 clock pulses
-   *
-   * Send an interrupt every (N - 1) clock pulses
-   */
-  systick_set_reload(14999);
+    /*
+     * 1 tick = 1 ms @ 120 MHz
+     *
+     *     (15 clock pulses * 1000 ms) = 15000 clock pulses
+     *
+     * Send an interrupt every (N - 1) clock pulses
+     */
+    systick_set_reload(14999);
 
-  /* SysTick as interrupt */
-  systick_interrupt_enable();
+    /* SysTick as interrupt */
+    systick_interrupt_enable();
 
-  systick_counter_enable();
+    systick_counter_enable();
 }
 
-void sys_tick_handler(void) { system_millis++; }
+void sys_tick_handler(void)
+{
+    system_millis++;
+}

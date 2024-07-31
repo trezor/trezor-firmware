@@ -28,9 +28,9 @@
 #define U2F_KEY_PATH 0x80553246
 
 typedef struct {
-  uint8_t cla, ins, p1, p2;
-  uint8_t lc1, lc2, lc3;
-  uint8_t data[];
+    uint8_t cla, ins, p1, p2;
+    uint8_t lc1, lc2, lc3;
+    uint8_t data[];
 } APDU;
 
 #define APDU_LEN(A) (uint32_t)(((A).lc1 << 16) + ((A).lc2 << 8) + ((A).lc3))
@@ -55,8 +55,7 @@ void u2f_authenticate(const APDU *a);
 void send_u2f_msg(const uint8_t *data, uint32_t len);
 void send_u2f_error(uint16_t err);
 
-void send_u2fhid_msg(const uint8_t cmd, const uint8_t *data,
-                     const uint32_t len);
+void send_u2fhid_msg(const uint8_t cmd, const uint8_t *data, const uint32_t len);
 void send_u2fhid_error(uint32_t fcid, uint8_t err);
 
 #endif

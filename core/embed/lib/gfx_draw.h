@@ -27,105 +27,107 @@
 // `x0`, `y0` - top-left coordinates
 // `x1`, `y1` - bottom-right coordinates point (not included)
 typedef struct {
-  int16_t x0;
-  int16_t y0;
-  int16_t x1;
-  int16_t y1;
+    int16_t x0;
+    int16_t y0;
+    int16_t x1;
+    int16_t y1;
 } gfx_rect_t;
 
 // Builds a rectangle (`gfx_rect_t`) from top-left coordinates and dimensions
-static inline gfx_rect_t gfx_rect_wh(int16_t x, int16_t y, int16_t w,
-                                     int16_t h) {
-  gfx_rect_t rect = {
-      .x0 = x,
-      .y0 = y,
-      .x1 = x + w,
-      .y1 = y + h,
-  };
+static inline gfx_rect_t gfx_rect_wh(int16_t x, int16_t y, int16_t w, int16_t h)
+{
+    gfx_rect_t rect = {
+        .x0 = x,
+        .y0 = y,
+        .x1 = x + w,
+        .y1 = y + h,
+    };
 
-  return rect;
+    return rect;
 }
 
 // Builds a rectangle (`gfx_rect_t`) from top-left and bottom-right coordinates
-static inline gfx_rect_t gfx_rect(int16_t x0, int16_t y0, int16_t x1,
-                                  int16_t y1) {
-  gfx_rect_t rect = {
-      .x0 = x0,
-      .y0 = y0,
-      .x1 = x1,
-      .y1 = y1,
-  };
+static inline gfx_rect_t gfx_rect(int16_t x0, int16_t y0, int16_t x1, int16_t y1)
+{
+    gfx_rect_t rect = {
+        .x0 = x0,
+        .y0 = y0,
+        .x1 = x1,
+        .y1 = y1,
+    };
 
-  return rect;
+    return rect;
 }
 
 // 2D offset/ coordinates
 typedef struct {
-  int16_t x;
-  int16_t y;
+    int16_t x;
+    int16_t y;
 } gfx_offset_t;
 
 // Builds a `gfx_offset_t` structure
-static inline gfx_offset_t gfx_offset(int16_t x, int16_t y) {
-  gfx_offset_t offset = {
-      .x = x,
-      .y = y,
-  };
+static inline gfx_offset_t gfx_offset(int16_t x, int16_t y)
+{
+    gfx_offset_t offset = {
+        .x = x,
+        .y = y,
+    };
 
-  return offset;
+    return offset;
 }
 
 // 2D size in pixels
 typedef struct {
-  int16_t x;
-  int16_t y;
+    int16_t x;
+    int16_t y;
 } gfx_size_t;
 
 // Builds a `gfx_size_t` structure
-static inline gfx_size_t gfx_size(int16_t x, int16_t y) {
-  gfx_size_t size = {
-      .x = x,
-      .y = y,
-  };
+static inline gfx_size_t gfx_size(int16_t x, int16_t y)
+{
+    gfx_size_t size = {
+        .x = x,
+        .y = y,
+    };
 
-  return size;
+    return size;
 }
 
 // Format of pixels in a bitmap
 typedef enum {
-  GFX_FORMAT_UNKNOWN,   //
-  GFX_FORMAT_MONO1P,    // 1-bpp per pixel (packed)
-  GFX_FORMAT_MONO4,     // 4-bpp per pixel
-  GFX_FORMAT_RGB565,    // 16-bpp per pixel
-  GFX_FORMAT_RGBA8888,  // 32-bpp
+    GFX_FORMAT_UNKNOWN,   //
+    GFX_FORMAT_MONO1P,    // 1-bpp per pixel (packed)
+    GFX_FORMAT_MONO4,     // 4-bpp per pixel
+    GFX_FORMAT_RGB565,    // 16-bpp per pixel
+    GFX_FORMAT_RGBA8888,  // 32-bpp
 } gfx_format_t;
 
 // 2D bitmap reference
 typedef struct {
-  // pointer to top-left pixel
-  void* ptr;
-  // stride in bytes
-  size_t stride;
-  // size in pixels
-  gfx_size_t size;
-  // format of pixels, GFX_FORMAT_xxx
-  uint8_t format;
-  // offset used when bitmap is drawed using gfx_draw_bitmap()
-  gfx_offset_t offset;
-  // foreground color (used with MONOx formats)
-  gfx_color_t fg_color;
-  // background color (used with MONOx formats)
-  gfx_color_t bg_color;
+    // pointer to top-left pixel
+    void* ptr;
+    // stride in bytes
+    size_t stride;
+    // size in pixels
+    gfx_size_t size;
+    // format of pixels, GFX_FORMAT_xxx
+    uint8_t format;
+    // offset used when bitmap is drawed using gfx_draw_bitmap()
+    gfx_offset_t offset;
+    // foreground color (used with MONOx formats)
+    gfx_color_t fg_color;
+    // background color (used with MONOx formats)
+    gfx_color_t bg_color;
 } gfx_bitmap_t;
 
 // Text attributes (font and color)
 typedef struct {
-  // Font identifier
-  int font;
-  // Foreground color
-  gfx_color_t fg_color;
-  // Background color
-  gfx_color_t bg_color;
+    // Font identifier
+    int font;
+    // Foreground color
+    gfx_color_t fg_color;
+    // Background color
+    gfx_color_t bg_color;
 } gfx_text_attr_t;
 
 // Fills a rectangle with a specified color.
@@ -147,7 +149,7 @@ void gfx_draw_bitmap(gfx_rect_t rect, const gfx_bitmap_t* bitmap);
 // `text` - utf-8 text
 // `maxlen` - maximum number of characters displayed (use SIZE_MAX when not
 // specified) `attr` - font & text color
-void gfx_draw_text(gfx_offset_t offset, const char* text, size_t maxlen,
-                   const gfx_text_attr_t* attr);
+void gfx_draw_text(
+    gfx_offset_t offset, const char* text, size_t maxlen, const gfx_text_attr_t* attr);
 
 #endif  // GFX_DRAW_H

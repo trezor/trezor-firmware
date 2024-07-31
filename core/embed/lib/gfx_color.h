@@ -84,63 +84,68 @@ typedef uint32_t gfx_color32_t;
 // 4-bit linear interpolation between `fg` and `bg`
 #define a4_lerp(fg, bg, alpha) (((fg) * (alpha) + ((bg) * (15 - (alpha)))) / 15)
 // 8-bit linear interpolation between `fg` and `bg`
-#define a8_lerp(fg, bg, alpha) \
-  (((fg) * (alpha) + ((bg) * (255 - (alpha)))) / 255)
+#define a8_lerp(fg, bg, alpha) (((fg) * (alpha) + ((bg) * (255 - (alpha)))) / 255)
 
 // Constructs a 16-bit color from the given red (r),
 // green (g), and blue (b) values in the range 0..255
-static inline gfx_color16_t gfx_color16_rgb(uint8_t r, uint8_t g, uint8_t b) {
-  return ((r & 0xF8U) << 8) | ((g & 0xFCU) << 3) | ((b & 0xF8U) >> 3);
+static inline gfx_color16_t gfx_color16_rgb(uint8_t r, uint8_t g, uint8_t b)
+{
+    return ((r & 0xF8U) << 8) | ((g & 0xFCU) << 3) | ((b & 0xF8U) >> 3);
 }
 
 // Constructs a 32-bit color from the given red (r),
 // green (g), and blue (b) values in the range 0..255.
 // Alpha is set to 255.
-static inline gfx_color32_t gfx_color32_rgb(uint8_t r, uint8_t g, uint8_t b) {
-  return (0xFFU << 24) | ((uint32_t)r << 16) | ((uint32_t)g << 8) | b;
+static inline gfx_color32_t gfx_color32_rgb(uint8_t r, uint8_t g, uint8_t b)
+{
+    return (0xFFU << 24) | ((uint32_t)r << 16) | ((uint32_t)g << 8) | b;
 }
 
 // Constructs a 32-bit color from the given red (r),
 // green (g), blue (b) and alhpa (a) values in the range 0..255.
-static inline gfx_color32_t gfx_color32_rgba(uint8_t r, uint8_t g, uint8_t b,
-                                             uint8_t a) {
-  return (a << 24) | ((uint32_t)r << 16) | ((uint32_t)g << 8) | b;
+static inline gfx_color32_t gfx_color32_rgba(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
+{
+    return (a << 24) | ((uint32_t)r << 16) | ((uint32_t)g << 8) | b;
 }
 
 // Converts a 16-bit color to a 32-bit color; alpha is set to 255
-static inline gfx_color32_t gfx_color16_to_color32(gfx_color16_t color) {
-  uint32_t r = gfx_color16_to_r(color);
-  uint32_t g = gfx_color16_to_g(color);
-  uint32_t b = gfx_color16_to_b(color);
+static inline gfx_color32_t gfx_color16_to_color32(gfx_color16_t color)
+{
+    uint32_t r = gfx_color16_to_r(color);
+    uint32_t g = gfx_color16_to_g(color);
+    uint32_t b = gfx_color16_to_b(color);
 
-  return gfx_color32_rgb(r, g, b);
+    return gfx_color32_rgb(r, g, b);
 }
 
 // Converts 32-bit color to 16-bit color, alpha is ignored
-static inline gfx_color16_t gfx_color32_to_color16(gfx_color32_t color) {
-  uint16_t r = (color & 0x00F80000) >> 8;
-  uint16_t g = (color & 0x0000FC00) >> 5;
-  uint16_t b = (color & 0x000000F8) >> 3;
+static inline gfx_color16_t gfx_color32_to_color16(gfx_color32_t color)
+{
+    uint16_t r = (color & 0x00F80000) >> 8;
+    uint16_t g = (color & 0x0000FC00) >> 5;
+    uint16_t b = (color & 0x000000F8) >> 3;
 
-  return r | g | b;
+    return r | g | b;
 }
 
 // Converts 16-bit color into luminance (ranging from 0 to 255)
-static inline uint8_t gfx_color16_lum(gfx_color16_t color) {
-  uint32_t r = gfx_color16_to_r(color);
-  uint32_t g = gfx_color16_to_g(color);
-  uint32_t b = gfx_color16_to_b(color);
+static inline uint8_t gfx_color16_lum(gfx_color16_t color)
+{
+    uint32_t r = gfx_color16_to_r(color);
+    uint32_t g = gfx_color16_to_g(color);
+    uint32_t b = gfx_color16_to_b(color);
 
-  return (r + g + b) / 3;
+    return (r + g + b) / 3;
 }
 
 // Converts 32-bit color into luminance (ranging from 0 to 255)
-static inline uint8_t gfx_color32_lum(gfx_color32_t color) {
-  uint32_t r = gfx_color32_to_r(color);
-  uint32_t g = gfx_color32_to_g(color);
-  uint32_t b = gfx_color32_to_b(color);
+static inline uint8_t gfx_color32_lum(gfx_color32_t color)
+{
+    uint32_t r = gfx_color32_to_r(color);
+    uint32_t g = gfx_color32_to_g(color);
+    uint32_t b = gfx_color32_to_b(color);
 
-  return (r + g + b) / 3;
+    return (r + g + b) / 3;
 }
 
 #ifdef GFX_COLOR_16BIT
@@ -150,22 +155,21 @@ static inline uint8_t gfx_color32_lum(gfx_color32_t color) {
 //
 // If `alpha` is 0, the function returns the background color
 // If `alpha` is 15, the function returns the foreground color
-static inline gfx_color16_t gfx_color16_blend_a4(gfx_color16_t fg,
-                                                 gfx_color16_t bg,
-                                                 uint8_t alpha) {
-  uint16_t fg_r = (fg & 0xF800) >> 11;
-  uint16_t bg_r = (bg & 0xF800) >> 11;
-  uint16_t r = a4_lerp(fg_r, bg_r, alpha);
+static inline gfx_color16_t gfx_color16_blend_a4(gfx_color16_t fg, gfx_color16_t bg, uint8_t alpha)
+{
+    uint16_t fg_r = (fg & 0xF800) >> 11;
+    uint16_t bg_r = (bg & 0xF800) >> 11;
+    uint16_t r = a4_lerp(fg_r, bg_r, alpha);
 
-  uint16_t fg_g = (fg & 0x07E0) >> 5;
-  uint16_t bg_g = (bg & 0x07E0) >> 5;
-  uint16_t g = a4_lerp(fg_g, bg_g, alpha);
+    uint16_t fg_g = (fg & 0x07E0) >> 5;
+    uint16_t bg_g = (bg & 0x07E0) >> 5;
+    uint16_t g = a4_lerp(fg_g, bg_g, alpha);
 
-  uint16_t fg_b = (fg & 0x001F) >> 0;
-  uint16_t bg_b = (bg & 0x001F) >> 0;
-  uint16_t b = a4_lerp(fg_b, bg_b, alpha);
+    uint16_t fg_b = (fg & 0x001F) >> 0;
+    uint16_t bg_b = (bg & 0x001F) >> 0;
+    uint16_t b = a4_lerp(fg_b, bg_b, alpha);
 
-  return (r << 11) | (g << 5) | b;
+    return (r << 11) | (g << 5) | b;
 }
 
 // Blends foreground and background colors with 8-bit alpha
@@ -174,22 +178,21 @@ static inline gfx_color16_t gfx_color16_blend_a4(gfx_color16_t fg,
 //
 // If `alpha` is 0, the function returns the background color
 // If `alpha` is 15, the function returns the foreground color
-static inline gfx_color16_t gfx_color16_blend_a8(gfx_color16_t fg,
-                                                 gfx_color16_t bg,
-                                                 uint8_t alpha) {
-  uint16_t fg_r = (fg & 0xF800) >> 11;
-  uint16_t bg_r = (bg & 0xF800) >> 11;
-  uint16_t r = a8_lerp(fg_r, bg_r, alpha);
+static inline gfx_color16_t gfx_color16_blend_a8(gfx_color16_t fg, gfx_color16_t bg, uint8_t alpha)
+{
+    uint16_t fg_r = (fg & 0xF800) >> 11;
+    uint16_t bg_r = (bg & 0xF800) >> 11;
+    uint16_t r = a8_lerp(fg_r, bg_r, alpha);
 
-  uint16_t fg_g = (fg & 0x07E0) >> 5;
-  uint16_t bg_g = (bg & 0x07E0) >> 5;
-  uint16_t g = a8_lerp(fg_g, bg_g, alpha);
+    uint16_t fg_g = (fg & 0x07E0) >> 5;
+    uint16_t bg_g = (bg & 0x07E0) >> 5;
+    uint16_t g = a8_lerp(fg_g, bg_g, alpha);
 
-  uint16_t fg_b = (fg & 0x001F) >> 0;
-  uint16_t bg_b = (bg & 0x001F) >> 0;
-  uint16_t b = a8_lerp(fg_b, bg_b, alpha);
+    uint16_t fg_b = (fg & 0x001F) >> 0;
+    uint16_t bg_b = (bg & 0x001F) >> 0;
+    uint16_t b = a8_lerp(fg_b, bg_b, alpha);
 
-  return (r << 11) | (g << 5) | b;
+    return (r << 11) | (g << 5) | b;
 }
 
 // Blends foreground and background colors with 4-bit alpha
@@ -198,22 +201,21 @@ static inline gfx_color16_t gfx_color16_blend_a8(gfx_color16_t fg,
 //
 // If alpha is 0, the function returns the background color
 // If alpha is 15, the function returns the foreground color
-static inline gfx_color32_t gfx_color32_blend_a4(gfx_color16_t fg,
-                                                 gfx_color16_t bg,
-                                                 uint8_t alpha) {
-  uint16_t fg_r = gfx_color16_to_r(fg);
-  uint16_t bg_r = gfx_color16_to_r(bg);
-  uint16_t r = a4_lerp(fg_r, bg_r, alpha);
+static inline gfx_color32_t gfx_color32_blend_a4(gfx_color16_t fg, gfx_color16_t bg, uint8_t alpha)
+{
+    uint16_t fg_r = gfx_color16_to_r(fg);
+    uint16_t bg_r = gfx_color16_to_r(bg);
+    uint16_t r = a4_lerp(fg_r, bg_r, alpha);
 
-  uint16_t fg_g = gfx_color16_to_g(fg);
-  uint16_t bg_g = gfx_color16_to_g(bg);
-  uint16_t g = a4_lerp(fg_g, bg_g, alpha);
+    uint16_t fg_g = gfx_color16_to_g(fg);
+    uint16_t bg_g = gfx_color16_to_g(bg);
+    uint16_t g = a4_lerp(fg_g, bg_g, alpha);
 
-  uint16_t fg_b = gfx_color16_to_b(fg);
-  uint16_t bg_b = gfx_color16_to_b(bg);
-  uint16_t b = a4_lerp(fg_b, bg_b, alpha);
+    uint16_t fg_b = gfx_color16_to_b(fg);
+    uint16_t bg_b = gfx_color16_to_b(bg);
+    uint16_t b = a4_lerp(fg_b, bg_b, alpha);
 
-  return gfx_color32_rgb(r, g, b);
+    return gfx_color32_rgb(r, g, b);
 }
 
 // Blends foreground and background colors with 8-bit alpha
@@ -222,22 +224,21 @@ static inline gfx_color32_t gfx_color32_blend_a4(gfx_color16_t fg,
 //
 // If `alpha` is 0, the function returns the background color
 // If `alpha` is 255, the function returns the foreground color
-static inline gfx_color32_t gfx_color32_blend_a8(gfx_color16_t fg,
-                                                 gfx_color16_t bg,
-                                                 uint8_t alpha) {
-  uint16_t fg_r = gfx_color16_to_r(fg);
-  uint16_t bg_r = gfx_color16_to_r(bg);
-  uint16_t r = a8_lerp(fg_r, bg_r, alpha);
+static inline gfx_color32_t gfx_color32_blend_a8(gfx_color16_t fg, gfx_color16_t bg, uint8_t alpha)
+{
+    uint16_t fg_r = gfx_color16_to_r(fg);
+    uint16_t bg_r = gfx_color16_to_r(bg);
+    uint16_t r = a8_lerp(fg_r, bg_r, alpha);
 
-  uint16_t fg_g = gfx_color16_to_g(fg);
-  uint16_t bg_g = gfx_color16_to_g(bg);
-  uint16_t g = a8_lerp(fg_g, bg_g, alpha);
+    uint16_t fg_g = gfx_color16_to_g(fg);
+    uint16_t bg_g = gfx_color16_to_g(bg);
+    uint16_t g = a8_lerp(fg_g, bg_g, alpha);
 
-  uint16_t fg_b = gfx_color16_to_b(fg);
-  uint16_t bg_b = gfx_color16_to_b(bg);
-  uint16_t b = a8_lerp(fg_b, bg_b, alpha);
+    uint16_t fg_b = gfx_color16_to_b(fg);
+    uint16_t bg_b = gfx_color16_to_b(bg);
+    uint16_t b = a8_lerp(fg_b, bg_b, alpha);
 
-  return gfx_color32_rgb(r, g, b);
+    return gfx_color32_rgb(r, g, b);
 }
 
 #elif defined GFX_COLOR_32BIT
@@ -248,22 +249,21 @@ static inline gfx_color32_t gfx_color32_blend_a8(gfx_color16_t fg,
 //
 // If `alpha` is 0, the function returns the background color
 // If `alpha` is 15, the function returns the foreground color
-static inline gfx_color16_t gfx_color16_blend_a4(gfx_color32_t fg,
-                                                 gfx_color32_t bg,
-                                                 uint8_t alpha) {
-  uint16_t fg_r = gfx_color32_to_r(fg);
-  uint16_t bg_r = gfx_color32_to_r(bg);
-  uint16_t r = a4_lerp(fg_r, bg_r, alpha);
+static inline gfx_color16_t gfx_color16_blend_a4(gfx_color32_t fg, gfx_color32_t bg, uint8_t alpha)
+{
+    uint16_t fg_r = gfx_color32_to_r(fg);
+    uint16_t bg_r = gfx_color32_to_r(bg);
+    uint16_t r = a4_lerp(fg_r, bg_r, alpha);
 
-  uint16_t fg_g = gfx_color32_to_g(fg);
-  uint16_t bg_g = gfx_color32_to_g(bg);
-  uint16_t g = a4_lerp(fg_g, bg_g, alpha);
+    uint16_t fg_g = gfx_color32_to_g(fg);
+    uint16_t bg_g = gfx_color32_to_g(bg);
+    uint16_t g = a4_lerp(fg_g, bg_g, alpha);
 
-  uint16_t fg_b = gfx_color32_to_b(fg);
-  uint16_t bg_b = gfx_color32_to_b(bg);
-  uint16_t b = a4_lerp(fg_b, bg_b, alpha);
+    uint16_t fg_b = gfx_color32_to_b(fg);
+    uint16_t bg_b = gfx_color32_to_b(bg);
+    uint16_t b = a4_lerp(fg_b, bg_b, alpha);
 
-  return gfx_color16_rgb(r, g, b);
+    return gfx_color16_rgb(r, g, b);
 }
 
 // Blends foreground and background colors with 8-bit alpha
@@ -272,22 +272,21 @@ static inline gfx_color16_t gfx_color16_blend_a4(gfx_color32_t fg,
 //
 // If `alpha` is 0, the function returns the background color
 // If `alpha` is 255, the function returns the foreground color
-static inline gfx_color16_t gfx_color16_blend_a8(gfx_color32_t fg,
-                                                 gfx_color32_t bg,
-                                                 uint8_t alpha) {
-  uint16_t fg_r = gfx_color32_to_r(fg);
-  uint16_t bg_r = gfx_color32_to_r(bg);
-  uint16_t r = a8_lerp(fg_r, bg_r, alpha);
+static inline gfx_color16_t gfx_color16_blend_a8(gfx_color32_t fg, gfx_color32_t bg, uint8_t alpha)
+{
+    uint16_t fg_r = gfx_color32_to_r(fg);
+    uint16_t bg_r = gfx_color32_to_r(bg);
+    uint16_t r = a8_lerp(fg_r, bg_r, alpha);
 
-  uint16_t fg_g = gfx_color32_to_g(fg);
-  uint16_t bg_g = gfx_color32_to_g(bg);
-  uint16_t g = a8_lerp(fg_g, bg_g, alpha);
+    uint16_t fg_g = gfx_color32_to_g(fg);
+    uint16_t bg_g = gfx_color32_to_g(bg);
+    uint16_t g = a8_lerp(fg_g, bg_g, alpha);
 
-  uint16_t fg_b = gfx_color32_to_b(fg);
-  uint16_t bg_b = gfx_color32_to_b(bg);
-  uint16_t b = g = a8_lerp(fg_b, bg_b, alpha);
+    uint16_t fg_b = gfx_color32_to_b(fg);
+    uint16_t bg_b = gfx_color32_to_b(bg);
+    uint16_t b = g = a8_lerp(fg_b, bg_b, alpha);
 
-  return gfx_color16_rgb(r, g, b);
+    return gfx_color16_rgb(r, g, b);
 }
 
 // Blends foreground and background colors with 4-bit alpha
@@ -296,22 +295,21 @@ static inline gfx_color16_t gfx_color16_blend_a8(gfx_color32_t fg,
 //
 // If `alpha` is 0, the function returns the background color
 // If `alpha` is 15, the function returns the foreground color
-static inline gfx_color32_t gfx_color32_blend_a4(gfx_color32_t fg,
-                                                 gfx_color32_t bg,
-                                                 uint8_t alpha) {
-  uint16_t fg_r = gfx_color32_to_r(fg);
-  uint16_t bg_r = gfx_color32_to_r(bg);
-  uint16_t r = a4_lerp(fg_r, bg_r, alpha);
+static inline gfx_color32_t gfx_color32_blend_a4(gfx_color32_t fg, gfx_color32_t bg, uint8_t alpha)
+{
+    uint16_t fg_r = gfx_color32_to_r(fg);
+    uint16_t bg_r = gfx_color32_to_r(bg);
+    uint16_t r = a4_lerp(fg_r, bg_r, alpha);
 
-  uint16_t fg_g = gfx_color32_to_g(fg);
-  uint16_t bg_g = gfx_color32_to_g(bg);
-  uint16_t g = a4_lerp(fg_g, bg_g, alpha);
+    uint16_t fg_g = gfx_color32_to_g(fg);
+    uint16_t bg_g = gfx_color32_to_g(bg);
+    uint16_t g = a4_lerp(fg_g, bg_g, alpha);
 
-  uint16_t fg_b = gfx_color32_to_b(fg);
-  uint16_t bg_b = gfx_color32_to_b(bg);
-  uint16_t b = a4_lerp(fg_b, bg_b, alpha);
+    uint16_t fg_b = gfx_color32_to_b(fg);
+    uint16_t bg_b = gfx_color32_to_b(bg);
+    uint16_t b = a4_lerp(fg_b, bg_b, alpha);
 
-  return gfx_color32_rgb(r, g, b);
+    return gfx_color32_rgb(r, g, b);
 }
 
 // Blends foreground and background colors with 8-bit alpha
@@ -320,22 +318,21 @@ static inline gfx_color32_t gfx_color32_blend_a4(gfx_color32_t fg,
 //
 // If `alpha` is 0, the function returns the background color
 // If `alpha` is 15, the function returns the foreground color
-static inline gfx_color32_t gfx_color32_blend_a8(gfx_color32_t fg,
-                                                 gfx_color32_t bg,
-                                                 uint8_t alpha) {
-  uint16_t fg_r = gfx_color32_to_r(fg);
-  uint16_t bg_r = gfx_color32_to_r(bg);
-  uint16_t r = a8_lerp(fg_r, bg_r, alpha);
+static inline gfx_color32_t gfx_color32_blend_a8(gfx_color32_t fg, gfx_color32_t bg, uint8_t alpha)
+{
+    uint16_t fg_r = gfx_color32_to_r(fg);
+    uint16_t bg_r = gfx_color32_to_r(bg);
+    uint16_t r = a8_lerp(fg_r, bg_r, alpha);
 
-  uint16_t fg_g = gfx_color32_to_g(fg);
-  uint16_t bg_g = gfx_color32_to_g(bg);
-  uint16_t g = a8_lerp(fg_g, bg_g, alpha);
+    uint16_t fg_g = gfx_color32_to_g(fg);
+    uint16_t bg_g = gfx_color32_to_g(bg);
+    uint16_t g = a8_lerp(fg_g, bg_g, alpha);
 
-  uint16_t fg_b = gfx_color32_to_b(fg);
-  uint16_t bg_b = gfx_color32_to_b(bg);
-  uint16_t b = a8_lerp(fg_b, bg_b, alpha);
+    uint16_t fg_b = gfx_color32_to_b(fg);
+    uint16_t bg_b = gfx_color32_to_b(bg);
+    uint16_t b = a8_lerp(fg_b, bg_b, alpha);
 
-  return gfx_color32_rgb(r, g, b);
+    return gfx_color32_rgb(r, g, b);
 }
 
 #else
@@ -357,9 +354,9 @@ const gfx_color32_t* gfx_color32_gradient_a4(gfx_color_t fg, gfx_color_t bg);
 // Returns a color with alpha channel set
 //
 // The original color is not modified
-static inline gfx_color32_t gfx_color32_set_alpha(gfx_color32_t c,
-                                                  uint8_t alpha) {
-  return (c & 0xFFFFFF) | (alpha << 24);
+static inline gfx_color32_t gfx_color32_set_alpha(gfx_color32_t c, uint8_t alpha)
+{
+    return (c & 0xFFFFFF) | (alpha << 24);
 }
 
 #endif  // GFX_COLOR_H

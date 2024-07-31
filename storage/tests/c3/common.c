@@ -23,21 +23,27 @@
 
 #include "common.h"
 
-void __shutdown(void) {
-  printf("SHUTDOWN\n");
-  exit(3);
+void __shutdown(void)
+{
+    printf("SHUTDOWN\n");
+    exit(3);
 }
 
-void __fatal_error(const char *msg, const char *file, int line) {
-  printf("\nFATAL ERROR:\n");
-  if (msg) {
-    printf("msg : %s\n", msg);
-  }
-  if (file) {
-    printf("file: %s:%d\n", file, line);
-  }
-  __shutdown();
+void __fatal_error(const char *msg, const char *file, int line)
+{
+    printf("\nFATAL ERROR:\n");
+    if (msg) {
+        printf("msg : %s\n", msg);
+    }
+    if (file) {
+        printf("file: %s:%d\n", file, line);
+    }
+    __shutdown();
 }
 
-void show_wipe_code_screen(void) {}
-void show_pin_too_many_screen(void) {}
+void show_wipe_code_screen(void)
+{
+}
+void show_pin_too_many_screen(void)
+{
+}

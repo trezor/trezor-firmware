@@ -39,17 +39,17 @@ Last tag must be terminator or all space used.
 #define CAPABILITIES_HEADER "TRZC"
 
 enum CapabilityTag {
-  TAG_TERMINATOR = 0x00,
-  TAG_CAPABILITY = 0x01,
-  TAG_MODEL_NAME = 0x02,
-  TAG_BOARDLOADER_VERSION = 0x03
+    TAG_TERMINATOR = 0x00,
+    TAG_CAPABILITY = 0x01,
+    TAG_MODEL_NAME = 0x02,
+    TAG_BOARDLOADER_VERSION = 0x03
 };
 
 struct __attribute__((packed)) BoardloaderVersion {
-  uint8_t version_major;
-  uint8_t version_minor;
-  uint8_t version_patch;
-  uint8_t version_build;
+    uint8_t version_major;
+    uint8_t version_minor;
+    uint8_t version_patch;
+    uint8_t version_build;
 };
 
 /*
@@ -57,15 +57,15 @@ struct __attribute__((packed)) BoardloaderVersion {
  * reordered.
  */
 struct __attribute__((packed)) BoardCapabilities {
-  uint8_t header[4];
-  uint8_t model_tag;
-  uint8_t model_length;
-  uint32_t model_name;
-  uint8_t version_tag;
-  uint8_t version_length;
-  struct BoardloaderVersion version;
-  enum CapabilityTag terminator_tag;
-  uint8_t terminator_length;
+    uint8_t header[4];
+    uint8_t model_tag;
+    uint8_t model_length;
+    uint32_t model_name;
+    uint8_t version_tag;
+    uint8_t version_length;
+    struct BoardloaderVersion version;
+    enum CapabilityTag terminator_tag;
+    uint8_t terminator_length;
 };
 
 /*

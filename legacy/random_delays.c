@@ -23,19 +23,20 @@
 #include "rng.h"
 #include "util.h"
 
-void wait_random(void) {
-  int wait = random32() & 0xff;
-  volatile int i = 0;
-  volatile int j = wait;
-  while (i < wait) {
-    if (i + j != wait) {
-      shutdown();
+void wait_random(void)
+{
+    int wait = random32() & 0xff;
+    volatile int i = 0;
+    volatile int j = wait;
+    while (i < wait) {
+        if (i + j != wait) {
+            shutdown();
+        }
+        ++i;
+        --j;
     }
-    ++i;
-    --j;
-  }
-  // Double-check loop completion.
-  if (i != wait || j != 0) {
-    shutdown();
-  }
+    // Double-check loop completion.
+    if (i != wait || j != 0) {
+        shutdown();
+    }
 }

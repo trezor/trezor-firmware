@@ -33,99 +33,108 @@ uint8_t HW_ENTROPY_DATA[HW_ENTROPY_LEN];
 
 static HMAC_DRBG_CTX drbg_ctx;
 
-void __attribute__((noreturn))
-__fatal_error(const char *msg, const char *file, int line_num) {
-  const BITMAP *icon = &bmp_icon_error;
-  char line[128] = {0};
-  int y = icon->height + 3;
-  oledClear();
+void __attribute__((noreturn)) __fatal_error(const char *msg, const char *file, int line_num)
+{
+    const BITMAP *icon = &bmp_icon_error;
+    char line[128] = {0};
+    int y = icon->height + 3;
+    oledClear();
 
-  oledDrawBitmap(0, 0, icon);
-  oledDrawStringCenter(OLED_WIDTH / 2, (icon->height - FONT_HEIGHT) / 2 + 1,
-                       "FATAL  ERROR", FONT_STANDARD);
+    oledDrawBitmap(0, 0, icon);
+    oledDrawStringCenter(
+        OLED_WIDTH / 2, (icon->height - FONT_HEIGHT) / 2 + 1, "FATAL  ERROR", FONT_STANDARD);
 
-  snprintf(line, sizeof(line), "Expr: %s", "(null)");
-  oledDrawString(0, y, line, FONT_STANDARD);
-  y += FONT_HEIGHT + 1;
+    snprintf(line, sizeof(line), "Expr: %s", "(null)");
+    oledDrawString(0, y, line, FONT_STANDARD);
+    y += FONT_HEIGHT + 1;
 
-  snprintf(line, sizeof(line), "Msg: %s", msg ? msg : "(null)");
-  oledDrawString(0, y, line, FONT_STANDARD);
-  y += FONT_HEIGHT + 1;
+    snprintf(line, sizeof(line), "Msg: %s", msg ? msg : "(null)");
+    oledDrawString(0, y, line, FONT_STANDARD);
+    y += FONT_HEIGHT + 1;
 
-  const char *label = "File: ";
-  snprintf(line, sizeof(line), "%s:%d", file ? file : "(null)", line_num);
-  oledDrawStringRight(OLED_WIDTH - 1, y, line, FONT_STANDARD);
-  oledBox(0, y, oledStringWidth(label, FONT_STANDARD), y + FONT_HEIGHT, false);
-  oledDrawString(0, y, label, FONT_STANDARD);
-  y += FONT_HEIGHT + 1;
+    const char *label = "File: ";
+    snprintf(line, sizeof(line), "%s:%d", file ? file : "(null)", line_num);
+    oledDrawStringRight(OLED_WIDTH - 1, y, line, FONT_STANDARD);
+    oledBox(0, y, oledStringWidth(label, FONT_STANDARD), y + FONT_HEIGHT, false);
+    oledDrawString(0, y, label, FONT_STANDARD);
+    y += FONT_HEIGHT + 1;
 
-  snprintf(line, sizeof(line), "Func: %s", "(null)");
-  oledDrawString(0, y, line, FONT_STANDARD);
-  y += FONT_HEIGHT + 1;
+    snprintf(line, sizeof(line), "Func: %s", "(null)");
+    oledDrawString(0, y, line, FONT_STANDARD);
+    y += FONT_HEIGHT + 1;
 
-  oledDrawString(0, y, "Contact Trezor support.", FONT_STANDARD);
-  oledRefresh();
+    oledDrawString(0, y, "Contact Trezor support.", FONT_STANDARD);
+    oledRefresh();
 
-  shutdown();
+    shutdown();
 }
 
 void __attribute__((noreturn))
-error_shutdown(const char *line1, const char *line2, const char *line3,
-               const char *line4) {
-  layoutDialog(&bmp_icon_error, NULL, NULL, NULL, line1, line2, line3, line4,
-               "Please unplug", "the device.");
-  shutdown();
+error_shutdown(const char *line1, const char *line2, const char *line3, const char *line4)
+{
+    layoutDialog(
+        &bmp_icon_error, NULL, NULL, NULL, line1, line2, line3, line4, "Please unplug",
+        "the device.");
+    shutdown();
 }
 
 #ifndef NDEBUG
-void __assert_func(const char *file, int line, const char *func,
-                   const char *expr) {
-  (void)func;
-  (void)expr;
+void __assert_func(const char *file, int line, const char *func, const char *expr)
+{
+    (void)func;
+    (void)expr;
 
-  __fatal_error("assert failed", file, line);
+    __fatal_error("assert failed", file, line);
 }
 #endif
 
-void hal_delay(uint32_t ms) {
+void hal_delay(uint32_t ms)
+{
 #if EMULATOR
-  usleep(ms * 1000);
+    usleep(ms * 1000);
 #else
-  uint32_t start = timer_ms();
+    uint32_t start = timer_ms();
 
-  while ((timer_ms() - start) < ms) {
-    asm("nop");
-  }
+    while ((timer_ms() - start) < ms) {
+        asm("nop");
+    }
 #endif
 }
 
-uint32_t hal_ticks_ms(void) { return timer_ms(); }
-
-void drbg_init(void) {
-  uint8_t entropy[48] = {0};
-  random_buffer(entropy, sizeof(entropy));
-  hmac_drbg_init(&drbg_ctx, entropy, sizeof(entropy), NULL, 0);
+uint32_t hal_ticks_ms(void)
+{
+    return timer_ms();
 }
 
-void drbg_reseed(const uint8_t *entropy, size_t len) {
-  hmac_drbg_reseed(&drbg_ctx, entropy, len, NULL, 0);
+void drbg_init(void)
+{
+    uint8_t entropy[48] = {0};
+    random_buffer(entropy, sizeof(entropy));
+    hmac_drbg_init(&drbg_ctx, entropy, sizeof(entropy), NULL, 0);
 }
 
-void drbg_generate(uint8_t *buf, size_t len) {
-  hmac_drbg_generate(&drbg_ctx, buf, len);
+void drbg_reseed(const uint8_t *entropy, size_t len)
+{
+    hmac_drbg_reseed(&drbg_ctx, entropy, len, NULL, 0);
 }
 
-uint32_t drbg_random32(void) {
-  uint32_t value = 0;
-  drbg_generate((uint8_t *)&value, sizeof(value));
-  return value;
+void drbg_generate(uint8_t *buf, size_t len)
+{
+    hmac_drbg_generate(&drbg_ctx, buf, len);
 }
 
-void show_wipe_code_screen(void) {
-  error_shutdown("You have entered the", "wipe code. All private",
-                 "data has been erased.", NULL);
+uint32_t drbg_random32(void)
+{
+    uint32_t value = 0;
+    drbg_generate((uint8_t *)&value, sizeof(value));
+    return value;
 }
-void show_pin_too_many_screen(void) {
-  error_shutdown("Too many wrong PIN", "attempts. Storage has", "been wiped.",
-                 NULL);
+
+void show_wipe_code_screen(void)
+{
+    error_shutdown("You have entered the", "wipe code. All private", "data has been erased.", NULL);
+}
+void show_pin_too_many_screen(void)
+{
+    error_shutdown("Too many wrong PIN", "attempts. Storage has", "been wiped.", NULL);
 }

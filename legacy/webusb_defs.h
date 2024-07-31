@@ -32,33 +32,32 @@
 #define WEBUSB_URL_SCHEME_HTTPS 1
 
 struct webusb_platform_descriptor {
-  uint8_t bLength;
-  uint8_t bDescriptorType;
-  uint8_t bDevCapabilityType;
-  uint8_t bReserved;
-  uint8_t platformCapabilityUUID[16];
-  uint16_t bcdVersion;
-  uint8_t bVendorCode;
-  uint8_t iLandingPage;
+    uint8_t bLength;
+    uint8_t bDescriptorType;
+    uint8_t bDevCapabilityType;
+    uint8_t bReserved;
+    uint8_t platformCapabilityUUID[16];
+    uint16_t bcdVersion;
+    uint8_t bVendorCode;
+    uint8_t iLandingPage;
 } __attribute__((packed));
 
-#define WEBUSB_PLATFORM_DESCRIPTOR_SIZE \
-  sizeof(struct webusb_platform_descriptor)
+#define WEBUSB_PLATFORM_DESCRIPTOR_SIZE sizeof(struct webusb_platform_descriptor)
 
 // from https://wicg.github.io/webusb/#webusb-platform-capability-descriptor
 // see also this (for endianness explanation)
 // https://github.com/WICG/webusb/issues/115#issuecomment-352206549
-#define WEBUSB_UUID                                                         \
-  {                                                                         \
-    0x38, 0xB6, 0x08, 0x34, 0xA9, 0x09, 0xA0, 0x47, 0x8B, 0xFD, 0xA0, 0x76, \
-        0x88, 0x15, 0xB6, 0x65                                              \
-  }
+#define WEBUSB_UUID                                                                               \
+    {                                                                                             \
+        0x38, 0xB6, 0x08, 0x34, 0xA9, 0x09, 0xA0, 0x47, 0x8B, 0xFD, 0xA0, 0x76, 0x88, 0x15, 0xB6, \
+            0x65                                                                                  \
+    }
 
 struct webusb_url_descriptor {
-  uint8_t bLength;
-  uint8_t bDescriptorType;
-  uint8_t bScheme;
-  char URL[];
+    uint8_t bLength;
+    uint8_t bDescriptorType;
+    uint8_t bScheme;
+    char URL[];
 } __attribute__((packed));
 
 #define WEBUSB_DT_URL_DESCRIPTOR_SIZE 3

@@ -62,9 +62,9 @@ extern "C" {
  * @brief  FMC SDRAM Bank address
  */
 #define SDRAM_DEVICE_ADDR ((uint32_t)0xD0000000)
-#define SDRAM_DEVICE_SIZE                            \
-  ((uint32_t)0x800000) /* SDRAM device size in Bytes \
-                        */
+#define SDRAM_DEVICE_SIZE                              \
+    ((uint32_t)0x800000) /* SDRAM device size in Bytes \
+                          */
 
 /**
  * @brief  FMC SDRAM Memory Width
@@ -81,15 +81,13 @@ extern "C" {
 /**
  * @brief  FMC SDRAM Memory clock period
  */
-#define SDCLOCK_PERIOD \
-  FMC_SDRAM_CLOCK_PERIOD_2 /* Default configuration used with LCD */
+#define SDCLOCK_PERIOD FMC_SDRAM_CLOCK_PERIOD_2 /* Default configuration used with LCD */
 /* #define SDCLOCK_PERIOD       FMC_SDRAM_CLOCK_PERIOD_3 */
 
 /**
  * @brief  FMC SDRAM Memory Read Burst feature
  */
-#define SDRAM_READBURST \
-  FMC_SDRAM_RBURST_DISABLE /* Default configuration used with LCD */
+#define SDRAM_READBURST FMC_SDRAM_RBURST_DISABLE /* Default configuration used with LCD */
 /* #define SDRAM_READBURST      FMC_SDRAM_RBURST_ENABLE */
 
 /**
@@ -141,14 +139,10 @@ extern "C" {
  */
 uint8_t BSP_SDRAM_Init(void);
 void BSP_SDRAM_Initialization_sequence(uint32_t RefreshCount);
-uint8_t BSP_SDRAM_ReadData(uint32_t uwStartAddress, uint32_t* pData,
-                           uint32_t uwDataSize);
-uint8_t BSP_SDRAM_ReadData_DMA(uint32_t uwStartAddress, uint32_t* pData,
-                               uint32_t uwDataSize);
-uint8_t BSP_SDRAM_WriteData(uint32_t uwStartAddress, uint32_t* pData,
-                            uint32_t uwDataSize);
-uint8_t BSP_SDRAM_WriteData_DMA(uint32_t uwStartAddress, uint32_t* pData,
-                                uint32_t uwDataSize);
+uint8_t BSP_SDRAM_ReadData(uint32_t uwStartAddress, uint32_t* pData, uint32_t uwDataSize);
+uint8_t BSP_SDRAM_ReadData_DMA(uint32_t uwStartAddress, uint32_t* pData, uint32_t uwDataSize);
+uint8_t BSP_SDRAM_WriteData(uint32_t uwStartAddress, uint32_t* pData, uint32_t uwDataSize);
+uint8_t BSP_SDRAM_WriteData_DMA(uint32_t uwStartAddress, uint32_t* pData, uint32_t uwDataSize);
 uint8_t BSP_SDRAM_Sendcmd(FMC_SDRAM_CommandTypeDef* SdramCmd);
 void BSP_SDRAM_DMA_IRQHandler(void);
 

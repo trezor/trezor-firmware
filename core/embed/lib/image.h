@@ -36,23 +36,23 @@
 #define FIRMWARE_IMAGE_MAGIC 0x465A5254  // TRZF
 
 #define IMAGE_CODE_ALIGN(addr) \
-  ((((uint32_t)(uintptr_t)addr) + (CODE_ALIGNMENT - 1)) & ~(CODE_ALIGNMENT - 1))
+    ((((uint32_t)(uintptr_t)addr) + (CODE_ALIGNMENT - 1)) & ~(CODE_ALIGNMENT - 1))
 
 typedef struct {
-  uint32_t magic;
-  uint32_t hdrlen;
-  uint32_t expiry;
-  uint32_t codelen;
-  uint32_t version;
-  uint32_t fix_version;
-  uint32_t hw_model;
-  uint8_t hw_revision;
-  uint8_t monotonic;
-  uint8_t reserved_0[2];
-  uint8_t hashes[512];
-  uint8_t reserved_1[415];
-  uint8_t sigmask;
-  uint8_t sig[64];
+    uint32_t magic;
+    uint32_t hdrlen;
+    uint32_t expiry;
+    uint32_t codelen;
+    uint32_t version;
+    uint32_t fix_version;
+    uint32_t hw_model;
+    uint8_t hw_revision;
+    uint8_t monotonic;
+    uint8_t reserved_0[2];
+    uint8_t hashes[512];
+    uint8_t reserved_1[415];
+    uint8_t sigmask;
+    uint8_t sig[64];
 } image_header;
 
 #define MAX_VENDOR_PUBLIC_KEYS 8
@@ -77,74 +77,67 @@ typedef struct {
 #define VTRUST_SECRET_MASK 0x0180
 #define VTRUST_SECRET_ALLOW 0x0100
 
-#define VTRUST_NO_WARNING \
-  (VTRUST_WAIT_MASK | VTRUST_NO_RED | VTRUST_NO_CLICK | VTRUST_NO_STRING)
+#define VTRUST_NO_WARNING (VTRUST_WAIT_MASK | VTRUST_NO_RED | VTRUST_NO_CLICK | VTRUST_NO_STRING)
 
 typedef struct {
-  uint32_t magic;
-  uint32_t hdrlen;
-  uint32_t expiry;
-  uint16_t version;
-  uint8_t vsig_m;
-  uint8_t vsig_n;
-  uint16_t vtrust;
-  // uint8_t reserved[14];
-  const uint8_t *vpub[MAX_VENDOR_PUBLIC_KEYS];
-  uint8_t vstr_len;
-  const char *vstr;
-  const uint8_t *vimg;
-  uint8_t sigmask;
-  uint8_t sig[64];
-  const uint8_t *origin;  // pointer to the underlying data
+    uint32_t magic;
+    uint32_t hdrlen;
+    uint32_t expiry;
+    uint16_t version;
+    uint8_t vsig_m;
+    uint8_t vsig_n;
+    uint16_t vtrust;
+    // uint8_t reserved[14];
+    const uint8_t *vpub[MAX_VENDOR_PUBLIC_KEYS];
+    uint8_t vstr_len;
+    const char *vstr;
+    const uint8_t *vimg;
+    uint8_t sigmask;
+    uint8_t sig[64];
+    const uint8_t *origin;  // pointer to the underlying data
 } vendor_header;
 
 typedef struct {
-  // vendor string
-  uint8_t vstr[64];
-  // vendor string length
-  size_t vstr_len;
-  // firmware version
-  uint8_t ver_major;
-  uint8_t ver_minor;
-  uint8_t ver_patch;
-  uint8_t ver_build;
-  // firmware fingerprint
-  uint8_t fingerprint[IMAGE_HASH_DIGEST_LENGTH];
-  // hash of vendor and image header
-  uint8_t hash[IMAGE_HASH_DIGEST_LENGTH];
+    // vendor string
+    uint8_t vstr[64];
+    // vendor string length
+    size_t vstr_len;
+    // firmware version
+    uint8_t ver_major;
+    uint8_t ver_minor;
+    uint8_t ver_patch;
+    uint8_t ver_build;
+    // firmware fingerprint
+    uint8_t fingerprint[IMAGE_HASH_DIGEST_LENGTH];
+    // hash of vendor and image header
+    uint8_t hash[IMAGE_HASH_DIGEST_LENGTH];
 } firmware_header_info_t;
 
-const image_header *read_image_header(const uint8_t *const data,
-                                      const uint32_t magic,
-                                      const uint32_t maxsize);
+const image_header *read_image_header(
+    const uint8_t *const data, const uint32_t magic, const uint32_t maxsize);
 
 secbool __wur check_image_model(const image_header *const hdr);
 
-secbool __wur check_image_header_sig(const image_header *const hdr,
-                                     uint8_t key_m, uint8_t key_n,
-                                     const uint8_t *const *keys);
+secbool __wur check_image_header_sig(
+    const image_header *const hdr, uint8_t key_m, uint8_t key_n, const uint8_t *const *keys);
 
-secbool __wur read_vendor_header(const uint8_t *const data,
-                                 vendor_header *const vhdr);
+secbool __wur read_vendor_header(const uint8_t *const data, vendor_header *const vhdr);
 
-secbool __wur check_vendor_header_sig(const vendor_header *const vhdr,
-                                      uint8_t key_m, uint8_t key_n,
-                                      const uint8_t *const *keys);
+secbool __wur check_vendor_header_sig(
+    const vendor_header *const vhdr, uint8_t key_m, uint8_t key_n, const uint8_t *const *keys);
 
 secbool check_vendor_header_keys(const vendor_header *const vhdr);
 
 void vendor_header_hash(const vendor_header *const vhdr, uint8_t *hash);
 
-secbool __wur check_single_hash(const uint8_t *const hash,
-                                const uint8_t *const data, int len);
+secbool __wur check_single_hash(const uint8_t *const hash, const uint8_t *const data, int len);
 
-secbool __wur check_image_contents(const image_header *const hdr,
-                                   uint32_t firstskip,
-                                   const flash_area_t *area);
+secbool __wur
+check_image_contents(const image_header *const hdr, uint32_t firstskip, const flash_area_t *area);
 
 void get_image_fingerprint(const image_header *const hdr, uint8_t *const out);
 
-secbool check_firmware_header(const uint8_t *header, size_t header_size,
-                              firmware_header_info_t *info);
+secbool check_firmware_header(
+    const uint8_t *header, size_t header_size, firmware_header_info_t *info);
 
 #endif

@@ -30,30 +30,29 @@
 #define OPTIGA_DEVICE_ECC_KEY_INDEX 0
 
 typedef enum _optiga_pin_result {
-  OPTIGA_PIN_SUCCESS = 0,       // The operation completed successfully.
-  OPTIGA_PIN_INVALID,           // The PIN is invalid.
-  OPTIGA_PIN_COUNTER_EXCEEDED,  // The PIN try counter limit was exceeded.
-  OPTIGA_PIN_ERROR,             // Optiga processing or communication error.
+    OPTIGA_PIN_SUCCESS = 0,       // The operation completed successfully.
+    OPTIGA_PIN_INVALID,           // The PIN is invalid.
+    OPTIGA_PIN_COUNTER_EXCEEDED,  // The PIN try counter limit was exceeded.
+    OPTIGA_PIN_ERROR,             // Optiga processing or communication error.
 } optiga_pin_result;
 
 typedef enum _optiga_sign_result {
-  OPTIGA_SIGN_SUCCESS = 0,   // The operation completed successfully.
-  OPTIGA_SIGN_INACCESSIBLE,  // The signing key is inaccessible.
-  OPTIGA_SIGN_ERROR,         // Invalid parameters or Optiga processing or
-                             // communication error.
+    OPTIGA_SIGN_SUCCESS = 0,   // The operation completed successfully.
+    OPTIGA_SIGN_INACCESSIBLE,  // The signing key is inaccessible.
+    OPTIGA_SIGN_ERROR,         // Invalid parameters or Optiga processing or
+                               // communication error.
 } optiga_sign_result;
 
 // Size of secrets used in PIN processing, e.g. salted PIN, master secret etc.
 #define OPTIGA_PIN_SECRET_SIZE 32
 
-optiga_sign_result __wur optiga_sign(uint8_t index, const uint8_t *digest,
-                                     size_t digest_size, uint8_t *signature,
-                                     size_t max_sig_size, size_t *sig_size);
+optiga_sign_result __wur optiga_sign(
+    uint8_t index, const uint8_t *digest, size_t digest_size, uint8_t *signature,
+    size_t max_sig_size, size_t *sig_size);
 
 bool __wur optiga_cert_size(uint8_t index, size_t *cert_size);
 
-bool __wur optiga_read_cert(uint8_t index, uint8_t *cert, size_t max_cert_size,
-                            size_t *cert_size);
+bool __wur optiga_read_cert(uint8_t index, uint8_t *cert, size_t max_cert_size, size_t *cert_size);
 
 bool __wur optiga_read_sec(uint8_t *sec);
 
@@ -61,19 +60,17 @@ void optiga_set_sec_max(void);
 
 bool __wur optiga_random_buffer(uint8_t *dest, size_t size);
 
-bool __wur optiga_pin_set(optiga_ui_progress_t ui_progress,
-                          uint8_t stretched_pin[OPTIGA_PIN_SECRET_SIZE]);
+bool __wur
+optiga_pin_set(optiga_ui_progress_t ui_progress, uint8_t stretched_pin[OPTIGA_PIN_SECRET_SIZE]);
 
 uint32_t optiga_estimate_time_ms(storage_pin_op_t op);
 
 optiga_pin_result __wur
-optiga_pin_verify(optiga_ui_progress_t ui_progress,
-                  uint8_t stretched_pin[OPTIGA_PIN_SECRET_SIZE]);
+optiga_pin_verify(optiga_ui_progress_t ui_progress, uint8_t stretched_pin[OPTIGA_PIN_SECRET_SIZE]);
 
-optiga_pin_result __wur
-optiga_pin_verify_v4(optiga_ui_progress_t ui_progress,
-                     const uint8_t pin_secret[OPTIGA_PIN_SECRET_SIZE],
-                     uint8_t out_secret[OPTIGA_PIN_SECRET_SIZE]);
+optiga_pin_result __wur optiga_pin_verify_v4(
+    optiga_ui_progress_t ui_progress, const uint8_t pin_secret[OPTIGA_PIN_SECRET_SIZE],
+    uint8_t out_secret[OPTIGA_PIN_SECRET_SIZE]);
 
 bool __wur optiga_pin_get_rem_v4(uint32_t *ctr);
 

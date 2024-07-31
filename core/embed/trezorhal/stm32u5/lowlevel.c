@@ -25,8 +25,7 @@
 #include "model.h"
 #include TREZOR_BOARD
 
-#pragma GCC optimize( \
-    "no-stack-protector")  // applies to all functions in this file
+#pragma GCC optimize("no-stack-protector")  // applies to all functions in this file
 
 #if PRODUCTION
 #define WANT_RDP_LEVEL (OB_RDP_LEVEL_2)
@@ -69,244 +68,244 @@
 #error Unknown MCU
 #endif
 
-#define WRP_LOCKED_VALUE                                       \
-  ((WRP_DEFAULT_VALUE &                                        \
-    ~(FLASH_WRP1AR_UNLOCK_Msk | FLASH_WRP1AR_WRP1A_PSTRT_Msk | \
-      FLASH_WRP1AR_WRP1A_PEND_Msk)) |                          \
-   (WANT_WRP_PAGE_START << FLASH_WRP1AR_WRP1A_PSTRT_Pos) |     \
-   (WANT_WRP_PAGE_END << FLASH_WRP1AR_WRP1A_PEND_Pos))
+#define WRP_LOCKED_VALUE                                                                         \
+    ((WRP_DEFAULT_VALUE &                                                                        \
+      ~(FLASH_WRP1AR_UNLOCK_Msk | FLASH_WRP1AR_WRP1A_PSTRT_Msk | FLASH_WRP1AR_WRP1A_PEND_Msk)) | \
+     (WANT_WRP_PAGE_START << FLASH_WRP1AR_WRP1A_PSTRT_Pos) |                                     \
+     (WANT_WRP_PAGE_END << FLASH_WRP1AR_WRP1A_PEND_Pos))
 
-#define FLASH_OPTR_VALUE                                                \
-  (FLASH_OPTR_TZEN | FLASH_OPTR_PA15_PUPEN | FLASH_OPTR_nBOOT0 |        \
-   FLASH_OPTR_SRAM3_ECC | FLASH_OPTR_BKPRAM_ECC | FLASH_OPTR_DUALBANK | \
-   FLASH_OPTR_WWDG_SW | FLASH_OPTR_IWDG_STOP | FLASH_OPTR_IWDG_STDBY |  \
-   FLASH_OPTR_IWDG_SW | FLASH_OPTR_SRAM_RST | FLASH_OPTR_nRST_SHDW |    \
-   FLASH_OPTR_nRST_STDBY | FLASH_OPTR_nRST_STOP | WANT_BOR_LEVEL |      \
-   (WANT_RDP_LEVEL << FLASH_OPTR_RDP_Pos))
+#define FLASH_OPTR_VALUE                                                                       \
+    (FLASH_OPTR_TZEN | FLASH_OPTR_PA15_PUPEN | FLASH_OPTR_nBOOT0 | FLASH_OPTR_SRAM3_ECC |      \
+     FLASH_OPTR_BKPRAM_ECC | FLASH_OPTR_DUALBANK | FLASH_OPTR_WWDG_SW | FLASH_OPTR_IWDG_STOP | \
+     FLASH_OPTR_IWDG_STDBY | FLASH_OPTR_IWDG_SW | FLASH_OPTR_SRAM_RST | FLASH_OPTR_nRST_SHDW | \
+     FLASH_OPTR_nRST_STDBY | FLASH_OPTR_nRST_STOP | WANT_BOR_LEVEL |                           \
+     (WANT_RDP_LEVEL << FLASH_OPTR_RDP_Pos))
 
 #define FALSH_SECBOOTADD0R_VALUE \
-  ((BOARDLOADER_START & 0xFFFFFF80) | FLASH_SECBOOTADD0R_BOOT_LOCK | 0x7C)
+    ((BOARDLOADER_START & 0xFFFFFF80) | FLASH_SECBOOTADD0R_BOOT_LOCK | 0x7C)
 
-#define FLASH_SECWM1R1_VALUE                                  \
-  (SEC_AREA_1_PAGE_START << FLASH_SECWM1R1_SECWM1_PSTRT_Pos | \
-   SEC_AREA_1_PAGE_END << FLASH_SECWM1R1_SECWM1_PEND_Pos |    \
-   SEC_WM1R1_DEFAULT_VALUE)
-#define FLASH_SECWM1R2_VALUE                             \
-  (HDP_AREA_1_PAGE_END << FLASH_SECWM1R2_HDP1_PEND_Pos | \
-   FLASH_SECWM1R2_HDP1EN | SEC_WM1R2_DEFAULT_VALUE)
+#define FLASH_SECWM1R1_VALUE                                    \
+    (SEC_AREA_1_PAGE_START << FLASH_SECWM1R1_SECWM1_PSTRT_Pos | \
+     SEC_AREA_1_PAGE_END << FLASH_SECWM1R1_SECWM1_PEND_Pos | SEC_WM1R1_DEFAULT_VALUE)
+#define FLASH_SECWM1R2_VALUE                                                       \
+    (HDP_AREA_1_PAGE_END << FLASH_SECWM1R2_HDP1_PEND_Pos | FLASH_SECWM1R2_HDP1EN | \
+     SEC_WM1R2_DEFAULT_VALUE)
 
-#define FLASH_SECWM2R1_VALUE                                  \
-  (SEC_AREA_2_PAGE_START << FLASH_SECWM1R1_SECWM1_PSTRT_Pos | \
-   SEC_AREA_2_PAGE_END << FLASH_SECWM1R1_SECWM1_PEND_Pos |    \
-   SEC_WM1R1_DEFAULT_VALUE)
+#define FLASH_SECWM2R1_VALUE                                    \
+    (SEC_AREA_2_PAGE_START << FLASH_SECWM1R1_SECWM1_PSTRT_Pos | \
+     SEC_AREA_2_PAGE_END << FLASH_SECWM1R1_SECWM1_PEND_Pos | SEC_WM1R1_DEFAULT_VALUE)
 #define FLASH_SECWM2R2_VALUE (SEC_WM1R2_DEFAULT_VALUE)
 
 #define FLASH_STATUS_ALL_FLAGS \
-  (FLASH_NSSR_PGSERR | FLASH_NSSR_PGAERR | FLASH_NSSR_WRPERR | FLASH_NSSR_EOP)
+    (FLASH_NSSR_PGSERR | FLASH_NSSR_PGAERR | FLASH_NSSR_WRPERR | FLASH_NSSR_EOP)
 
-static uint32_t flash_wait_and_clear_status_flags(void) {
-  while (FLASH->NSSR & FLASH_NSSR_BSY)
-    ;  // wait for all previous flash operations to complete
+static uint32_t flash_wait_and_clear_status_flags(void)
+{
+    while (FLASH->NSSR & FLASH_NSSR_BSY)
+        ;  // wait for all previous flash operations to complete
 
-  uint32_t result =
-      FLASH->NSSR & FLASH_STATUS_ALL_FLAGS;  // get the current status flags
-  FLASH->NSSR |= FLASH_STATUS_ALL_FLAGS;     // clear all status flags
+    uint32_t result = FLASH->NSSR & FLASH_STATUS_ALL_FLAGS;  // get the current status flags
+    FLASH->NSSR |= FLASH_STATUS_ALL_FLAGS;                   // clear all status flags
 
 #if defined(__ARM_FEATURE_CMSE) && (__ARM_FEATURE_CMSE == 3U)
-  while (FLASH->SECSR & FLASH_SECSR_BSY)
-    ;  // wait for all previous flash operations to complete
-  result |=
-      FLASH->SECSR & FLASH_STATUS_ALL_FLAGS;  // get the current status flags
-  FLASH->SECSR |= FLASH_STATUS_ALL_FLAGS;     // clear all status flags
+    while (FLASH->SECSR & FLASH_SECSR_BSY)
+        ;  // wait for all previous flash operations to complete
+    result |= FLASH->SECSR & FLASH_STATUS_ALL_FLAGS;  // get the current status flags
+    FLASH->SECSR |= FLASH_STATUS_ALL_FLAGS;           // clear all status flags
 #endif
-  return result;
+    return result;
 }
 
-secbool flash_check_option_bytes(void) {
-  flash_wait_and_clear_status_flags();
-  // check values stored in flash interface registers
-  if (FLASH->OPTR !=
-      FLASH_OPTR_VALUE) {  // ignore bits 0 and 1 because they are control bits
-    return secfalse;
-  }
+secbool flash_check_option_bytes(void)
+{
+    flash_wait_and_clear_status_flags();
+    // check values stored in flash interface registers
+    if (FLASH->OPTR != FLASH_OPTR_VALUE) {  // ignore bits 0 and 1 because they are control bits
+        return secfalse;
+    }
 
-  if (FLASH->SECBOOTADD0R != FALSH_SECBOOTADD0R_VALUE) {
-    return secfalse;
-  }
+    if (FLASH->SECBOOTADD0R != FALSH_SECBOOTADD0R_VALUE) {
+        return secfalse;
+    }
 
 #if PRODUCTION
-  if (FLASH->WRP1AR != WRP_LOCKED_VALUE) {
-    return secfalse;
-  }
+    if (FLASH->WRP1AR != WRP_LOCKED_VALUE) {
+        return secfalse;
+    }
 #else
-  if (FLASH->WRP1AR != WRP_DEFAULT_VALUE) {
-    return secfalse;
-  }
+    if (FLASH->WRP1AR != WRP_DEFAULT_VALUE) {
+        return secfalse;
+    }
 #endif
 
-  if (FLASH->WRP1BR != WRP_DEFAULT_VALUE) {
-    return secfalse;
-  }
-  if (FLASH->WRP2AR != WRP_DEFAULT_VALUE) {
-    return secfalse;
-  }
-  if (FLASH->WRP2BR != WRP_DEFAULT_VALUE) {
-    return secfalse;
-  }
+    if (FLASH->WRP1BR != WRP_DEFAULT_VALUE) {
+        return secfalse;
+    }
+    if (FLASH->WRP2AR != WRP_DEFAULT_VALUE) {
+        return secfalse;
+    }
+    if (FLASH->WRP2BR != WRP_DEFAULT_VALUE) {
+        return secfalse;
+    }
 
-  if (FLASH->SECWM1R1 != FLASH_SECWM1R1_VALUE) {
-    return secfalse;
-  }
-  if (FLASH->SECWM1R2 != FLASH_SECWM1R2_VALUE) {
-    return secfalse;
-  }
-  if (FLASH->SECWM2R1 != FLASH_SECWM2R1_VALUE) {
-    return secfalse;
-  }
-  if (FLASH->SECWM2R2 != FLASH_SECWM2R2_VALUE) {
-    return secfalse;
-  }
+    if (FLASH->SECWM1R1 != FLASH_SECWM1R1_VALUE) {
+        return secfalse;
+    }
+    if (FLASH->SECWM1R2 != FLASH_SECWM1R2_VALUE) {
+        return secfalse;
+    }
+    if (FLASH->SECWM2R1 != FLASH_SECWM2R1_VALUE) {
+        return secfalse;
+    }
+    if (FLASH->SECWM2R2 != FLASH_SECWM2R2_VALUE) {
+        return secfalse;
+    }
 
-  return sectrue;
+    return sectrue;
 }
 
-void flash_lock_option_bytes(void) {
-  FLASH->NSCR |= FLASH_NSCR_OPTLOCK;  // lock the option bytes
+void flash_lock_option_bytes(void)
+{
+    FLASH->NSCR |= FLASH_NSCR_OPTLOCK;  // lock the option bytes
 }
 
-void flash_unlock_option_bytes(void) {
-  if ((FLASH->NSCR & FLASH_NSCR_OPTLOCK) == 0) {
-    return;  // already unlocked
-  }
-  // reference RM0090 section 3.7.2
-  // write the special sequence to unlock
-  FLASH->OPTKEYR = FLASH_OPTKEY1;
-  FLASH->OPTKEYR = FLASH_OPTKEY2;
-  while (FLASH->NSCR & FLASH_NSCR_OPTLOCK)
-    ;  // wait until the flash option control register is unlocked
+void flash_unlock_option_bytes(void)
+{
+    if ((FLASH->NSCR & FLASH_NSCR_OPTLOCK) == 0) {
+        return;  // already unlocked
+    }
+    // reference RM0090 section 3.7.2
+    // write the special sequence to unlock
+    FLASH->OPTKEYR = FLASH_OPTKEY1;
+    FLASH->OPTKEYR = FLASH_OPTKEY2;
+    while (FLASH->NSCR & FLASH_NSCR_OPTLOCK)
+        ;  // wait until the flash option control register is unlocked
 }
 
-uint32_t flash_set_option_bytes(void) {
-  if (flash_unlock_write() != sectrue) {
-    return 0;
-  }
-  flash_wait_and_clear_status_flags();
-  flash_unlock_option_bytes();
-  flash_wait_and_clear_status_flags();
+uint32_t flash_set_option_bytes(void)
+{
+    if (flash_unlock_write() != sectrue) {
+        return 0;
+    }
+    flash_wait_and_clear_status_flags();
+    flash_unlock_option_bytes();
+    flash_wait_and_clear_status_flags();
 
-  FLASH->SECBOOTADD0R = FALSH_SECBOOTADD0R_VALUE;
+    FLASH->SECBOOTADD0R = FALSH_SECBOOTADD0R_VALUE;
 
-  FLASH->SECWM1R1 = FLASH_SECWM1R1_VALUE;
-  FLASH->SECWM1R2 = FLASH_SECWM1R2_VALUE;
+    FLASH->SECWM1R1 = FLASH_SECWM1R1_VALUE;
+    FLASH->SECWM1R2 = FLASH_SECWM1R2_VALUE;
 
-  FLASH->SECWM2R1 = FLASH_SECWM2R1_VALUE;
-  FLASH->SECWM2R2 = FLASH_SECWM2R2_VALUE;
+    FLASH->SECWM2R1 = FLASH_SECWM2R1_VALUE;
+    FLASH->SECWM2R2 = FLASH_SECWM2R2_VALUE;
 
 #if PRODUCTION
-  FLASH->WRP1AR = WRP_LOCKED_VALUE;
+    FLASH->WRP1AR = WRP_LOCKED_VALUE;
 #else
-  FLASH->WRP1AR = WRP_DEFAULT_VALUE;
+    FLASH->WRP1AR = WRP_DEFAULT_VALUE;
 #endif
-  FLASH->WRP1BR = WRP_DEFAULT_VALUE;
-  FLASH->WRP2AR = WRP_DEFAULT_VALUE;
-  FLASH->WRP2BR = WRP_DEFAULT_VALUE;
+    FLASH->WRP1BR = WRP_DEFAULT_VALUE;
+    FLASH->WRP2AR = WRP_DEFAULT_VALUE;
+    FLASH->WRP2BR = WRP_DEFAULT_VALUE;
 
-  // Set the OEM keys to the default value
-  // In case these are for any reason set, we will reset them to the default
-  // while locking the device, to ensure that there is no ability to reverse the
-  // RDP. These keys are write-only, so the only way to check that the keys are
-  // not set is through OEMxLOCK bits in FLASH->NSSR register. These bits are
-  // unset only if the keys are written to 0xFFFFFFFF.
-  FLASH->OEM1KEYR1 = 0xFFFFFFFF;
-  FLASH->OEM1KEYR2 = 0xFFFFFFFF;
-  FLASH->OEM2KEYR1 = 0xFFFFFFFF;
-  FLASH->OEM2KEYR2 = 0xFFFFFFFF;
+    // Set the OEM keys to the default value
+    // In case these are for any reason set, we will reset them to the default
+    // while locking the device, to ensure that there is no ability to reverse the
+    // RDP. These keys are write-only, so the only way to check that the keys are
+    // not set is through OEMxLOCK bits in FLASH->NSSR register. These bits are
+    // unset only if the keys are written to 0xFFFFFFFF.
+    FLASH->OEM1KEYR1 = 0xFFFFFFFF;
+    FLASH->OEM1KEYR2 = 0xFFFFFFFF;
+    FLASH->OEM2KEYR1 = 0xFFFFFFFF;
+    FLASH->OEM2KEYR2 = 0xFFFFFFFF;
 
-  FLASH->OPTR =
-      FLASH_OPTR_VALUE;  // WARNING: dev board safe unless you compile for
-  // PRODUCTION or change this value!!!
+    FLASH->OPTR = FLASH_OPTR_VALUE;  // WARNING: dev board safe unless you compile for
+    // PRODUCTION or change this value!!!
 
-  FLASH_WaitForLastOperation(HAL_MAX_DELAY);
+    FLASH_WaitForLastOperation(HAL_MAX_DELAY);
 
-  FLASH->NSCR |= FLASH_NSCR_OPTSTRT;
-  uint32_t result =
-      flash_wait_and_clear_status_flags();  // wait until changes are committed
+    FLASH->NSCR |= FLASH_NSCR_OPTSTRT;
+    uint32_t result = flash_wait_and_clear_status_flags();  // wait until changes are committed
 
-  FLASH_WaitForLastOperation(HAL_MAX_DELAY);
+    FLASH_WaitForLastOperation(HAL_MAX_DELAY);
 
-  FLASH->NSCR |= FLASH_NSCR_OBL_LAUNCH;  // begin committing changes to flash
-  result =
-      flash_wait_and_clear_status_flags();  // wait until changes are committed
-  flash_lock_option_bytes();
+    FLASH->NSCR |= FLASH_NSCR_OBL_LAUNCH;          // begin committing changes to flash
+    result = flash_wait_and_clear_status_flags();  // wait until changes are committed
+    flash_lock_option_bytes();
 
-  if (flash_lock_write() != sectrue) {
-    return 0;
-  }
-  return result;
+    if (flash_lock_write() != sectrue) {
+        return 0;
+    }
+    return result;
 }
 
-void check_oem_keys(void) {
-  ensure(((FLASH->NSSR & FLASH_NSSR_OEM1LOCK) == 0) * sectrue, "OEM1 KEY SET");
-  ensure(((FLASH->NSSR & FLASH_NSSR_OEM2LOCK) == 0) * sectrue, "OEM2 KEY SET");
+void check_oem_keys(void)
+{
+    ensure(((FLASH->NSSR & FLASH_NSSR_OEM1LOCK) == 0) * sectrue, "OEM1 KEY SET");
+    ensure(((FLASH->NSSR & FLASH_NSSR_OEM2LOCK) == 0) * sectrue, "OEM2 KEY SET");
 }
 
-secbool flash_configure_option_bytes(void) {
-  if (sectrue == flash_check_option_bytes()) {
-    return sectrue;  // we DID NOT have to change the option bytes
-  }
+secbool flash_configure_option_bytes(void)
+{
+    if (sectrue == flash_check_option_bytes()) {
+        return sectrue;  // we DID NOT have to change the option bytes
+    }
 
-  do {
-    flash_set_option_bytes();
-  } while (sectrue != flash_check_option_bytes());
+    do {
+        flash_set_option_bytes();
+    } while (sectrue != flash_check_option_bytes());
 
-  check_oem_keys();
+    check_oem_keys();
 
-  return secfalse;  // notify that we DID have to change the option bytes
+    return secfalse;  // notify that we DID have to change the option bytes
 }
 
-void periph_init(void) {
-  // STM32U5xx HAL library initialization:
-  //  - configure the Flash prefetch, instruction and data caches
-  //  - configure the Systick to generate an interrupt each 1 msec
-  //  - set NVIC Group Priority to 4
-  //  - global MSP (MCU Support Package) initialization
-  HAL_Init();
+void periph_init(void)
+{
+    // STM32U5xx HAL library initialization:
+    //  - configure the Flash prefetch, instruction and data caches
+    //  - configure the Systick to generate an interrupt each 1 msec
+    //  - set NVIC Group Priority to 4
+    //  - global MSP (MCU Support Package) initialization
+    HAL_Init();
 
-  // Enable GPIO clocks
-  __HAL_RCC_GPIOA_CLK_ENABLE();
-  __HAL_RCC_GPIOB_CLK_ENABLE();
-  __HAL_RCC_GPIOC_CLK_ENABLE();
-  __HAL_RCC_GPIOD_CLK_ENABLE();
+    // Enable GPIO clocks
+    __HAL_RCC_GPIOA_CLK_ENABLE();
+    __HAL_RCC_GPIOB_CLK_ENABLE();
+    __HAL_RCC_GPIOC_CLK_ENABLE();
+    __HAL_RCC_GPIOD_CLK_ENABLE();
 
 #ifdef USE_PVD
-  // enable the PVD (programmable voltage detector).
-  // select the "2.8V" threshold (level 5).
-  // this detector will be active regardless of the
-  // flash option byte BOR setting.
-  __HAL_RCC_PWR_CLK_ENABLE();
-  PWR_PVDTypeDef pvd_config = {0};
-  pvd_config.PVDLevel = PWR_PVDLEVEL_5;
-  pvd_config.Mode = PWR_PVD_MODE_IT_RISING_FALLING;
-  HAL_PWR_ConfigPVD(&pvd_config);
-  HAL_PWR_EnablePVD();
-  NVIC_EnableIRQ(PVD_PVM_IRQn);
+    // enable the PVD (programmable voltage detector).
+    // select the "2.8V" threshold (level 5).
+    // this detector will be active regardless of the
+    // flash option byte BOR setting.
+    __HAL_RCC_PWR_CLK_ENABLE();
+    PWR_PVDTypeDef pvd_config = {0};
+    pvd_config.PVDLevel = PWR_PVDLEVEL_5;
+    pvd_config.Mode = PWR_PVD_MODE_IT_RISING_FALLING;
+    HAL_PWR_ConfigPVD(&pvd_config);
+    HAL_PWR_EnablePVD();
+    NVIC_EnableIRQ(PVD_PVM_IRQn);
 #endif
 }
 
-secbool reset_flags_check(void) {
+secbool reset_flags_check(void)
+{
 #if PRODUCTION
-  // this is effective enough that it makes development painful, so only use it
-  // for production. check the reset flags to assure that we arrive here due to
-  // a regular full power-on event, and not as a result of a lesser reset.
-  if ((RCC->CSR & (RCC_CSR_LPWRRSTF | RCC_CSR_WWDGRSTF | RCC_CSR_IWDGRSTF |
-                   RCC_CSR_SFTRSTF | RCC_CSR_PINRSTF | RCC_CSR_BORRSTF |
-                   RCC_CSR_OBLRSTF)) != (RCC_CSR_PINRSTF | RCC_CSR_BORRSTF)) {
-    return secfalse;
-  }
+    // this is effective enough that it makes development painful, so only use it
+    // for production. check the reset flags to assure that we arrive here due to
+    // a regular full power-on event, and not as a result of a lesser reset.
+    if ((RCC->CSR & (RCC_CSR_LPWRRSTF | RCC_CSR_WWDGRSTF | RCC_CSR_IWDGRSTF | RCC_CSR_SFTRSTF |
+                     RCC_CSR_PINRSTF | RCC_CSR_BORRSTF | RCC_CSR_OBLRSTF)) !=
+        (RCC_CSR_PINRSTF | RCC_CSR_BORRSTF)) {
+        return secfalse;
+    }
 #endif
-  return sectrue;
+    return sectrue;
 }
 
-void reset_flags_reset(void) {
-  RCC->CSR |= RCC_CSR_RMVF;  // clear the reset flags
+void reset_flags_reset(void)
+{
+    RCC->CSR |= RCC_CSR_RMVF;  // clear the reset flags
 }

@@ -58,244 +58,271 @@ static int DISPLAY_ORIENTATION = -1;
 static uint8_t OLED_BUFFER[OLED_BUFSIZE];
 
 static struct {
-  struct {
-    uint16_t x, y;
-  } start;
-  struct {
-    uint16_t x, y;
-  } end;
-  struct {
-    uint16_t x, y;
-  } pos;
+    struct {
+        uint16_t x, y;
+    } start;
+    struct {
+        uint16_t x, y;
+    } end;
+    struct {
+        uint16_t x, y;
+    } pos;
 } PIXELWINDOW;
 
 static bool pixeldata_dirty_flag = true;
 
-void display_pixeldata(uint16_t c) {
-  if (PIXELWINDOW.pos.x <= PIXELWINDOW.end.x &&
-      PIXELWINDOW.pos.y <= PIXELWINDOW.end.y) {
-    // set to white if highest bits of all R, G, B values are set to 1
-    // bin(10000 100000 10000) = hex(0x8410)
-    // otherwise set to black
-    if (c & 0x8410) {
-      OLED_BUFFER[OLED_OFFSET(PIXELWINDOW.pos.x, PIXELWINDOW.pos.y)] |=
-          OLED_MASK(PIXELWINDOW.pos.x, PIXELWINDOW.pos.y);
-    } else {
-      OLED_BUFFER[OLED_OFFSET(PIXELWINDOW.pos.x, PIXELWINDOW.pos.y)] &=
-          ~OLED_MASK(PIXELWINDOW.pos.x, PIXELWINDOW.pos.y);
+void display_pixeldata(uint16_t c)
+{
+    if (PIXELWINDOW.pos.x <= PIXELWINDOW.end.x && PIXELWINDOW.pos.y <= PIXELWINDOW.end.y) {
+        // set to white if highest bits of all R, G, B values are set to 1
+        // bin(10000 100000 10000) = hex(0x8410)
+        // otherwise set to black
+        if (c & 0x8410) {
+            OLED_BUFFER[OLED_OFFSET(PIXELWINDOW.pos.x, PIXELWINDOW.pos.y)] |=
+                OLED_MASK(PIXELWINDOW.pos.x, PIXELWINDOW.pos.y);
+        } else {
+            OLED_BUFFER[OLED_OFFSET(PIXELWINDOW.pos.x, PIXELWINDOW.pos.y)] &=
+                ~OLED_MASK(PIXELWINDOW.pos.x, PIXELWINDOW.pos.y);
+        }
     }
-  }
-  PIXELWINDOW.pos.x++;
-  if (PIXELWINDOW.pos.x > PIXELWINDOW.end.x) {
-    PIXELWINDOW.pos.x = PIXELWINDOW.start.x;
-    PIXELWINDOW.pos.y++;
-  }
-}
-
-void display_reset_state() {}
-
-void display_pixeldata_dirty(void) { pixeldata_dirty_flag = true; }
-
-void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1) {
-  PIXELWINDOW.start.x = x0;
-  PIXELWINDOW.start.y = y0;
-  PIXELWINDOW.end.x = x1;
-  PIXELWINDOW.end.y = y1;
-  PIXELWINDOW.pos.x = x0;
-  PIXELWINDOW.pos.y = y0;
-}
-
-int display_orientation(int degrees) {
-  if (degrees != DISPLAY_ORIENTATION) {
-    if (degrees == 0 || degrees == 180) {
-      DISPLAY_ORIENTATION = degrees;
-      display_refresh();
+    PIXELWINDOW.pos.x++;
+    if (PIXELWINDOW.pos.x > PIXELWINDOW.end.x) {
+        PIXELWINDOW.pos.x = PIXELWINDOW.start.x;
+        PIXELWINDOW.pos.y++;
     }
-  }
-  return DISPLAY_ORIENTATION;
 }
 
-int display_get_orientation(void) { return DISPLAY_ORIENTATION; }
+void display_reset_state()
+{
+}
 
-int display_backlight(int val) {
-  DISPLAY_BACKLIGHT = 255;
-  return DISPLAY_BACKLIGHT;
+void display_pixeldata_dirty(void)
+{
+    pixeldata_dirty_flag = true;
+}
+
+void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
+{
+    PIXELWINDOW.start.x = x0;
+    PIXELWINDOW.start.y = y0;
+    PIXELWINDOW.end.x = x1;
+    PIXELWINDOW.end.y = y1;
+    PIXELWINDOW.pos.x = x0;
+    PIXELWINDOW.pos.y = y0;
+}
+
+int display_orientation(int degrees)
+{
+    if (degrees != DISPLAY_ORIENTATION) {
+        if (degrees == 0 || degrees == 180) {
+            DISPLAY_ORIENTATION = degrees;
+            display_refresh();
+        }
+    }
+    return DISPLAY_ORIENTATION;
+}
+
+int display_get_orientation(void)
+{
+    return DISPLAY_ORIENTATION;
+}
+
+int display_backlight(int val)
+{
+    DISPLAY_BACKLIGHT = 255;
+    return DISPLAY_BACKLIGHT;
 }
 
 SPI_HandleTypeDef spi_handle;
 
-static inline void spi_send(const uint8_t *data, int len) {
-  volatile int32_t timeout = 1000;
-  for (int i = 0; i < timeout; i++)
-    ;
+static inline void spi_send(const uint8_t *data, int len)
+{
+    volatile int32_t timeout = 1000;
+    for (int i = 0; i < timeout; i++)
+        ;
 
-  if (HAL_OK != HAL_SPI_Transmit(&spi_handle, (uint8_t *)data, len, 1000)) {
-    // TODO: error
-    return;
-  }
-  while (HAL_SPI_STATE_READY != HAL_SPI_GetState(&spi_handle)) {
-  }
+    if (HAL_OK != HAL_SPI_Transmit(&spi_handle, (uint8_t *)data, len, 1000)) {
+        // TODO: error
+        return;
+    }
+    while (HAL_SPI_STATE_READY != HAL_SPI_GetState(&spi_handle)) {
+    }
 }
 
-void display_handle_init(void) {
-  spi_handle.Instance = OLED_SPI;
-  spi_handle.State = HAL_SPI_STATE_RESET;
-  spi_handle.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_16;
-  spi_handle.Init.Direction = SPI_DIRECTION_2LINES;
-  spi_handle.Init.CLKPhase = SPI_PHASE_1EDGE;
-  spi_handle.Init.CLKPolarity = SPI_POLARITY_LOW;
-  spi_handle.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
-  spi_handle.Init.CRCPolynomial = 7;
-  spi_handle.Init.DataSize = SPI_DATASIZE_8BIT;
-  spi_handle.Init.FirstBit = SPI_FIRSTBIT_MSB;
-  spi_handle.Init.NSS = SPI_NSS_HARD_OUTPUT;
-  spi_handle.Init.TIMode = SPI_TIMODE_DISABLE;
-  spi_handle.Init.Mode = SPI_MODE_MASTER;
+void display_handle_init(void)
+{
+    spi_handle.Instance = OLED_SPI;
+    spi_handle.State = HAL_SPI_STATE_RESET;
+    spi_handle.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_16;
+    spi_handle.Init.Direction = SPI_DIRECTION_2LINES;
+    spi_handle.Init.CLKPhase = SPI_PHASE_1EDGE;
+    spi_handle.Init.CLKPolarity = SPI_POLARITY_LOW;
+    spi_handle.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+    spi_handle.Init.CRCPolynomial = 7;
+    spi_handle.Init.DataSize = SPI_DATASIZE_8BIT;
+    spi_handle.Init.FirstBit = SPI_FIRSTBIT_MSB;
+    spi_handle.Init.NSS = SPI_NSS_HARD_OUTPUT;
+    spi_handle.Init.TIMode = SPI_TIMODE_DISABLE;
+    spi_handle.Init.Mode = SPI_MODE_MASTER;
 }
 
-void display_init(void) {
-  OLED_DC_CLK_ENA();
-  OLED_CS_CLK_ENA();
-  OLED_RST_CLK_ENA();
-  OLED_SPI_SCK_CLK_ENA();
-  OLED_SPI_MOSI_CLK_ENA();
-  OLED_SPI_CLK_ENA();
+void display_init(void)
+{
+    OLED_DC_CLK_ENA();
+    OLED_CS_CLK_ENA();
+    OLED_RST_CLK_ENA();
+    OLED_SPI_SCK_CLK_ENA();
+    OLED_SPI_MOSI_CLK_ENA();
+    OLED_SPI_CLK_ENA();
 
-  GPIO_InitTypeDef GPIO_InitStructure = {0};
+    GPIO_InitTypeDef GPIO_InitStructure = {0};
 
-  // set GPIO for OLED display
-  GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStructure.Pull = GPIO_NOPULL;
-  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  GPIO_InitStructure.Alternate = 0;
-  GPIO_InitStructure.Pin = OLED_CS_PIN;
-  HAL_GPIO_WritePin(OLED_CS_PORT, OLED_CS_PIN, GPIO_PIN_RESET);
-  HAL_GPIO_Init(OLED_CS_PORT, &GPIO_InitStructure);
-  GPIO_InitStructure.Pin = OLED_DC_PIN;
-  HAL_GPIO_WritePin(OLED_DC_PORT, OLED_DC_PIN, GPIO_PIN_RESET);
-  HAL_GPIO_Init(OLED_DC_PORT, &GPIO_InitStructure);
-  GPIO_InitStructure.Pin = OLED_RST_PIN;
-  HAL_GPIO_WritePin(OLED_RST_PORT, OLED_RST_PIN, GPIO_PIN_RESET);
-  HAL_GPIO_Init(OLED_RST_PORT, &GPIO_InitStructure);
+    // set GPIO for OLED display
+    GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStructure.Pull = GPIO_NOPULL;
+    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+    GPIO_InitStructure.Alternate = 0;
+    GPIO_InitStructure.Pin = OLED_CS_PIN;
+    HAL_GPIO_WritePin(OLED_CS_PORT, OLED_CS_PIN, GPIO_PIN_RESET);
+    HAL_GPIO_Init(OLED_CS_PORT, &GPIO_InitStructure);
+    GPIO_InitStructure.Pin = OLED_DC_PIN;
+    HAL_GPIO_WritePin(OLED_DC_PORT, OLED_DC_PIN, GPIO_PIN_RESET);
+    HAL_GPIO_Init(OLED_DC_PORT, &GPIO_InitStructure);
+    GPIO_InitStructure.Pin = OLED_RST_PIN;
+    HAL_GPIO_WritePin(OLED_RST_PORT, OLED_RST_PIN, GPIO_PIN_RESET);
+    HAL_GPIO_Init(OLED_RST_PORT, &GPIO_InitStructure);
 
-  // enable SPI 1 for OLED display
-  GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStructure.Pull = GPIO_NOPULL;
-  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  GPIO_InitStructure.Alternate = OLED_SPI_AF;
-  GPIO_InitStructure.Pin = OLED_SPI_SCK_PIN;
-  HAL_GPIO_Init(OLED_SPI_SCK_PORT, &GPIO_InitStructure);
-  GPIO_InitStructure.Pin = OLED_SPI_MOSI_PIN;
-  HAL_GPIO_Init(OLED_SPI_MOSI_PORT, &GPIO_InitStructure);
+    // enable SPI 1 for OLED display
+    GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStructure.Pull = GPIO_NOPULL;
+    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+    GPIO_InitStructure.Alternate = OLED_SPI_AF;
+    GPIO_InitStructure.Pin = OLED_SPI_SCK_PIN;
+    HAL_GPIO_Init(OLED_SPI_SCK_PORT, &GPIO_InitStructure);
+    GPIO_InitStructure.Pin = OLED_SPI_MOSI_PIN;
+    HAL_GPIO_Init(OLED_SPI_MOSI_PORT, &GPIO_InitStructure);
 
-  display_handle_init();
-  if (HAL_OK != HAL_SPI_Init(&spi_handle)) {
-    // TODO: error
-    return;
-  }
+    display_handle_init();
+    if (HAL_OK != HAL_SPI_Init(&spi_handle)) {
+        // TODO: error
+        return;
+    }
 
-  // initialize display
+    // initialize display
 
-  static const uint8_t s[25] = {OLED_DISPLAYOFF,
-                                OLED_SETDISPLAYCLOCKDIV,
-                                0x80,
-                                OLED_SETMULTIPLEX,
-                                0x3F,  // 128x64
-                                OLED_SETDISPLAYOFFSET,
-                                0x00,
-                                OLED_SETSTARTLINE | 0x00,
-                                OLED_CHARGEPUMP,
-                                0x14,
-                                OLED_MEMORYMODE,
-                                0x00,
-                                OLED_SEGREMAP | 0x01,
-                                OLED_COMSCANDEC,
-                                OLED_SETCOMPINS,
-                                0x12,  // 128x64
-                                OLED_SETCONTRAST,
-                                0xCF,
-                                OLED_SETPRECHARGE,
-                                0xF1,
-                                OLED_SETVCOMDETECT,
-                                0x40,
-                                OLED_DISPLAYALLON_RESUME,
-                                OLED_NORMALDISPLAY,
-                                OLED_DISPLAYON};
+    static const uint8_t s[25] = {
+        OLED_DISPLAYOFF,
+        OLED_SETDISPLAYCLOCKDIV,
+        0x80,
+        OLED_SETMULTIPLEX,
+        0x3F,  // 128x64
+        OLED_SETDISPLAYOFFSET,
+        0x00,
+        OLED_SETSTARTLINE | 0x00,
+        OLED_CHARGEPUMP,
+        0x14,
+        OLED_MEMORYMODE,
+        0x00,
+        OLED_SEGREMAP | 0x01,
+        OLED_COMSCANDEC,
+        OLED_SETCOMPINS,
+        0x12,  // 128x64
+        OLED_SETCONTRAST,
+        0xCF,
+        OLED_SETPRECHARGE,
+        0xF1,
+        OLED_SETVCOMDETECT,
+        0x40,
+        OLED_DISPLAYALLON_RESUME,
+        OLED_NORMALDISPLAY,
+        OLED_DISPLAYON};
 
-  HAL_GPIO_WritePin(OLED_DC_PORT, OLED_DC_PIN, GPIO_PIN_RESET);  // set to CMD
-  HAL_GPIO_WritePin(OLED_CS_PORT, OLED_CS_PIN, GPIO_PIN_SET);    // SPI deselect
+    HAL_GPIO_WritePin(OLED_DC_PORT, OLED_DC_PIN, GPIO_PIN_RESET);  // set to CMD
+    HAL_GPIO_WritePin(OLED_CS_PORT, OLED_CS_PIN, GPIO_PIN_SET);    // SPI deselect
 
-  // Reset the LCD
-  HAL_GPIO_WritePin(OLED_RST_PORT, OLED_RST_PIN, GPIO_PIN_SET);
-  HAL_Delay(1);
-  HAL_GPIO_WritePin(OLED_RST_PORT, OLED_RST_PIN, GPIO_PIN_RESET);
-  HAL_Delay(1);
-  HAL_GPIO_WritePin(OLED_RST_PORT, OLED_RST_PIN, GPIO_PIN_SET);
+    // Reset the LCD
+    HAL_GPIO_WritePin(OLED_RST_PORT, OLED_RST_PIN, GPIO_PIN_SET);
+    HAL_Delay(1);
+    HAL_GPIO_WritePin(OLED_RST_PORT, OLED_RST_PIN, GPIO_PIN_RESET);
+    HAL_Delay(1);
+    HAL_GPIO_WritePin(OLED_RST_PORT, OLED_RST_PIN, GPIO_PIN_SET);
 
-  // init
-  HAL_GPIO_WritePin(OLED_CS_PORT, OLED_CS_PIN, GPIO_PIN_RESET);  // SPI select
-  spi_send(s, 25);
-  HAL_GPIO_WritePin(OLED_CS_PORT, OLED_CS_PIN, GPIO_PIN_SET);  // SPI deselect
+    // init
+    HAL_GPIO_WritePin(OLED_CS_PORT, OLED_CS_PIN, GPIO_PIN_RESET);  // SPI select
+    spi_send(s, 25);
+    HAL_GPIO_WritePin(OLED_CS_PORT, OLED_CS_PIN, GPIO_PIN_SET);  // SPI deselect
 
-  display_refresh();
+    display_refresh();
 }
 
-void display_reinit(void) {
-  display_handle_init();
-  HAL_SPI_Init(&spi_handle);
+void display_reinit(void)
+{
+    display_handle_init();
+    HAL_SPI_Init(&spi_handle);
 }
 
-static inline uint8_t reverse_byte(uint8_t b) {
-  b = (b & 0xF0) >> 4 | (b & 0x0F) << 4;
-  b = (b & 0xCC) >> 2 | (b & 0x33) << 2;
-  b = (b & 0xAA) >> 1 | (b & 0x55) << 1;
-  return b;
+static inline uint8_t reverse_byte(uint8_t b)
+{
+    b = (b & 0xF0) >> 4 | (b & 0x0F) << 4;
+    b = (b & 0xCC) >> 2 | (b & 0x33) << 2;
+    b = (b & 0xAA) >> 1 | (b & 0x55) << 1;
+    return b;
 }
 
-static void rotate_oled_buffer(void) {
-  for (int i = 0; i < OLED_BUFSIZE / 2; i++) {
-    uint8_t b = OLED_BUFFER[i];
-    OLED_BUFFER[i] = reverse_byte(OLED_BUFFER[OLED_BUFSIZE - i - 1]);
-    OLED_BUFFER[OLED_BUFSIZE - i - 1] = reverse_byte(b);
-  }
+static void rotate_oled_buffer(void)
+{
+    for (int i = 0; i < OLED_BUFSIZE / 2; i++) {
+        uint8_t b = OLED_BUFFER[i];
+        OLED_BUFFER[i] = reverse_byte(OLED_BUFFER[OLED_BUFSIZE - i - 1]);
+        OLED_BUFFER[OLED_BUFSIZE - i - 1] = reverse_byte(b);
+    }
 }
 
-void display_sync(void) {}
+void display_sync(void)
+{
+}
 
-void display_refresh(void) {
-  static const uint8_t s[3] = {OLED_SETLOWCOLUMN | 0x00,
-                               OLED_SETHIGHCOLUMN | 0x00,
-                               OLED_SETSTARTLINE | 0x00};
+void display_refresh(void)
+{
+    static const uint8_t s[3] = {
+        OLED_SETLOWCOLUMN | 0x00, OLED_SETHIGHCOLUMN | 0x00, OLED_SETSTARTLINE | 0x00};
 
-  if (!pixeldata_dirty_flag) {
-    return;
-  }
-  pixeldata_dirty_flag = false;
+    if (!pixeldata_dirty_flag) {
+        return;
+    }
+    pixeldata_dirty_flag = false;
 
-  HAL_GPIO_WritePin(OLED_CS_PORT, OLED_CS_PIN, GPIO_PIN_RESET);  // SPI select
-  spi_send(s, 3);
+    HAL_GPIO_WritePin(OLED_CS_PORT, OLED_CS_PIN, GPIO_PIN_RESET);  // SPI select
+    spi_send(s, 3);
 
 #if defined USE_CONSUMPTION_MASK && !defined BOARDLOADER
-  consumption_mask_randomize();
+    consumption_mask_randomize();
 #endif
 
-  HAL_GPIO_WritePin(OLED_CS_PORT, OLED_CS_PIN, GPIO_PIN_SET);  // SPI deselect
+    HAL_GPIO_WritePin(OLED_CS_PORT, OLED_CS_PIN, GPIO_PIN_SET);  // SPI deselect
 
-  HAL_GPIO_WritePin(OLED_DC_PORT, OLED_DC_PIN, GPIO_PIN_SET);    // set to DATA
-  HAL_GPIO_WritePin(OLED_CS_PORT, OLED_CS_PIN, GPIO_PIN_RESET);  // SPI select
-  if (DISPLAY_ORIENTATION == 180) {  // rotate buffer if needed
-    rotate_oled_buffer();
-  }
-  spi_send(OLED_BUFFER, OLED_BUFSIZE);
-  if (DISPLAY_ORIENTATION == 180) {  // rotate buffer back to original position
-    rotate_oled_buffer();
-  }
-  HAL_GPIO_WritePin(OLED_CS_PORT, OLED_CS_PIN, GPIO_PIN_SET);    // SPI deselect
-  HAL_GPIO_WritePin(OLED_DC_PORT, OLED_DC_PIN, GPIO_PIN_RESET);  // set to CMD
+    HAL_GPIO_WritePin(OLED_DC_PORT, OLED_DC_PIN, GPIO_PIN_SET);    // set to DATA
+    HAL_GPIO_WritePin(OLED_CS_PORT, OLED_CS_PIN, GPIO_PIN_RESET);  // SPI select
+    if (DISPLAY_ORIENTATION == 180) {                              // rotate buffer if needed
+        rotate_oled_buffer();
+    }
+    spi_send(OLED_BUFFER, OLED_BUFSIZE);
+    if (DISPLAY_ORIENTATION == 180) {  // rotate buffer back to original position
+        rotate_oled_buffer();
+    }
+    HAL_GPIO_WritePin(OLED_CS_PORT, OLED_CS_PIN, GPIO_PIN_SET);    // SPI deselect
+    HAL_GPIO_WritePin(OLED_DC_PORT, OLED_DC_PIN, GPIO_PIN_RESET);  // set to CMD
 }
 
-const char *display_save(const char *prefix) { return NULL; }
+const char *display_save(const char *prefix)
+{
+    return NULL;
+}
 
-void display_clear_save(void) {}
+void display_clear_save(void)
+{
+}
 
-void display_finish_actions(void) {}
+void display_finish_actions(void)
+{
+}

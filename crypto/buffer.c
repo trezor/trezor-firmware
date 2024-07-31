@@ -25,118 +25,131 @@
 
 #include "buffer.h"
 
-void buffer_reader_init(BUFFER_READER *reader, const uint8_t *data,
-                        size_t size) {
-  reader->data = data;
-  reader->size = size;
-  reader->pos = 0;
+void buffer_reader_init(BUFFER_READER *reader, const uint8_t *data, size_t size)
+{
+    reader->data = data;
+    reader->size = size;
+    reader->pos = 0;
 }
 
-void buffer_writer_init(BUFFER_WRITER *writer, uint8_t *data, size_t size) {
-  writer->data = data;
-  writer->size = size;
-  writer->pos = 0;
+void buffer_writer_init(BUFFER_WRITER *writer, uint8_t *data, size_t size)
+{
+    writer->data = data;
+    writer->size = size;
+    writer->pos = 0;
 }
 
-size_t buffer_remaining(BUFFER_READER *buf) {
-  if ((buf->data == NULL) || (buf->pos > buf->size)) {
-    return 0;
-  }
+size_t buffer_remaining(BUFFER_READER *buf)
+{
+    if ((buf->data == NULL) || (buf->pos > buf->size)) {
+        return 0;
+    }
 
-  return buf->size - buf->pos;
+    return buf->size - buf->pos;
 }
 
-bool buffer_ptr(BUFFER_READER *buf, const uint8_t **ptr) {
-  if ((buf->data == NULL) || (buf->pos > buf->size)) {
-    return false;
-  }
+bool buffer_ptr(BUFFER_READER *buf, const uint8_t **ptr)
+{
+    if ((buf->data == NULL) || (buf->pos > buf->size)) {
+        return false;
+    }
 
-  *ptr = &buf->data[buf->pos];
+    *ptr = &buf->data[buf->pos];
 
-  return true;
+    return true;
 }
 
-bool buffer_peek(const BUFFER_READER *buf, uint8_t *byte) {
-  if ((buf->data == NULL) || (buf->pos >= buf->size)) {
-    return false;
-  }
+bool buffer_peek(const BUFFER_READER *buf, uint8_t *byte)
+{
+    if ((buf->data == NULL) || (buf->pos >= buf->size)) {
+        return false;
+    }
 
-  *byte = buf->data[buf->pos];
-  return true;
+    *byte = buf->data[buf->pos];
+    return true;
 }
 
-bool buffer_get(BUFFER_READER *buf, uint8_t *byte) {
-  if (!buffer_peek(buf, byte)) {
-    return false;
-  }
+bool buffer_get(BUFFER_READER *buf, uint8_t *byte)
+{
+    if (!buffer_peek(buf, byte)) {
+        return false;
+    }
 
-  buf->pos += 1;
-  return true;
-}
-
-bool buffer_seek(BUFFER_READER *buf, size_t pos) {
-  if ((buf->data == NULL) || (pos > buf->size)) {
-    return false;
-  }
-
-  buf->pos = pos;
-
-  return true;
-}
-
-bool buffer_read_buffer(BUFFER_READER *src, BUFFER_READER *dest, size_t size) {
-  if ((src->data == NULL) || (src->pos + size > src->size)) {
-    return false;
-  }
-
-  buffer_reader_init(dest, &src->data[src->pos], size);
-  src->pos += size;
-  return true;
-}
-
-void buffer_lstrip(BUFFER_READER *buf, uint8_t byte) {
-  if (buf->data == NULL) {
-    return;
-  }
-
-  while ((buf->pos < buf->size) && (buf->data[buf->pos] == byte)) {
     buf->pos += 1;
-  }
-  return;
+    return true;
 }
 
-bool buffer_put(BUFFER_WRITER *writer, uint8_t byte) {
-  if ((writer->data == NULL) || (writer->pos >= writer->size)) {
-    return false;
-  }
+bool buffer_seek(BUFFER_READER *buf, size_t pos)
+{
+    if ((buf->data == NULL) || (pos > buf->size)) {
+        return false;
+    }
 
-  writer->data[writer->pos] = byte;
-  writer->pos += 1;
-  return true;
+    buf->pos = pos;
+
+    return true;
 }
 
-bool buffer_write_array(BUFFER_WRITER *writer, const uint8_t *src,
-                        size_t size) {
-  if ((writer->data == NULL) || (writer->pos + size > writer->size)) {
-    return false;
-  }
+bool buffer_read_buffer(BUFFER_READER *src, BUFFER_READER *dest, size_t size)
+{
+    if ((src->data == NULL) || (src->pos + size > src->size)) {
+        return false;
+    }
 
-  memcpy(&writer->data[writer->pos], src, size);
-  writer->pos += size;
-  return true;
+    buffer_reader_init(dest, &src->data[src->pos], size);
+    src->pos += size;
+    return true;
 }
 
-bool buffer_write_buffer(BUFFER_WRITER *dest, BUFFER_READER *src) {
-  if ((src->data == NULL) || (src->pos > src->size)) {
-    return false;
-  }
+void buffer_lstrip(BUFFER_READER *buf, uint8_t byte)
+{
+    if (buf->data == NULL) {
+        return;
+    }
 
-  if (!buffer_write_array(dest, &src->data[src->pos], src->size - src->pos)) {
-    return false;
-  }
-
-  src->pos = src->size;
-  return true;
+    while ((buf->pos < buf->size) && (buf->data[buf->pos] == byte)) {
+        buf->pos += 1;
+    }
+    return;
 }
 
-size_t buffer_written_size(BUFFER_WRITER *writer) { return writer->pos; }
+bool buffer_put(BUFFER_WRITER *writer, uint8_t byte)
+{
+    if ((writer->data == NULL) || (writer->pos >= writer->size)) {
+        return false;
+    }
+
+    writer->data[writer->pos] = byte;
+    writer->pos += 1;
+    return true;
+}
+
+bool buffer_write_array(BUFFER_WRITER *writer, const uint8_t *src, size_t size)
+{
+    if ((writer->data == NULL) || (writer->pos + size > writer->size)) {
+        return false;
+    }
+
+    memcpy(&writer->data[writer->pos], src, size);
+    writer->pos += size;
+    return true;
+}
+
+bool buffer_write_buffer(BUFFER_WRITER *dest, BUFFER_READER *src)
+{
+    if ((src->data == NULL) || (src->pos > src->size)) {
+        return false;
+    }
+
+    if (!buffer_write_array(dest, &src->data[src->pos], src->size - src->pos)) {
+        return false;
+    }
+
+    src->pos = src->size;
+    return true;
+}
+
+size_t buffer_written_size(BUFFER_WRITER *writer)
+{
+    return writer->pos;
+}

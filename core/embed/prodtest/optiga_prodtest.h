@@ -33,9 +33,9 @@
 #define OID_TRUST_ANCHOR (OPTIGA_OID_CA_CERT + 0)
 
 typedef enum {
-  OPTIGA_LOCKED_TRUE,
-  OPTIGA_LOCKED_FALSE,
-  OPTIGA_LOCKED_ERROR,
+    OPTIGA_LOCKED_TRUE,
+    OPTIGA_LOCKED_FALSE,
+    OPTIGA_LOCKED_ERROR,
 } optiga_locked_status;
 
 void pair_optiga(void);

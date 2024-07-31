@@ -23,8 +23,8 @@
 // Action to be taken when initializing or
 // deinitializing the backlight driver
 typedef enum {
-  BACKLIGHT_RESET,
-  BACKLIGHT_RETAIN,
+    BACKLIGHT_RESET,
+    BACKLIGHT_RETAIN,
 } backlight_action_t;
 
 // Initialize the backlight driver

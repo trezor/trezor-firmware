@@ -59,9 +59,9 @@ extern __IO DISP_MEM_TYPE *const DISPLAY_DATA_ADDRESS;
 #ifdef USE_DISP_I8080_16BIT_DW
 #define ISSUE_PIXEL_DATA(X) DATA(X)
 #elif USE_DISP_I8080_8BIT_DW
-#define ISSUE_PIXEL_DATA(X)    \
-  ISSUE_DATA_BYTE((X) & 0xFF); \
-  ISSUE_DATA_BYTE((X) >> 8)
+#define ISSUE_PIXEL_DATA(X)      \
+    ISSUE_DATA_BYTE((X) & 0xFF); \
+    ISSUE_DATA_BYTE((X) >> 8)
 #endif
 
 #endif  // TREZORHAL_DISPLAY_IO_H

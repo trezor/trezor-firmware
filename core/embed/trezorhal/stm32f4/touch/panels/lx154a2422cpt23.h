@@ -29,7 +29,6 @@
 // In case of LX154A2422CPT23, this correction means to shift X coordinate
 // towards the edge of the screen, proportionally to the distance from the
 // center of the screen.
-void lx154a2422cpt23_touch_correction(uint16_t x, uint16_t y, uint16_t *x_new,
-                                      uint16_t *y_new);
+void lx154a2422cpt23_touch_correction(uint16_t x, uint16_t y, uint16_t *x_new, uint16_t *y_new);
 
 #endif

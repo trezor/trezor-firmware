@@ -1,8 +1,15 @@
 ---
 BasedOnStyle: Google
-# Google style has a default of 80 lines, but clang-format 7 disregards it in
-# a weird case in modtrezorio-fatfs.h. Setting it explicitly helps.
-ColumnLimit: 80
-# This setting differs between clang-format 7 and 9.
-# Let's set it explicitly to v7 value
+
+# Increase indentation from 2 to 4 characters
+IndentWidth: 4
+# Increase column limit from 80 to 100 characters
+ColumnLimit: 100
+# Sort each #include blocks separately
 IncludeBlocks: Preserve
+# Break before braces on function, namespace and class definition
+BreakBeforeBraces: Linux
+# Always break after an open bracket, if the parameters don’t fit on a single line
+AlignAfterOpenBracket: AlwaysBreak
+# Disable short functions on single line
+AllowShortFunctionsOnASingleLine: None

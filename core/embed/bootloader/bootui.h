@@ -26,12 +26,12 @@
 #include TREZOR_BOARD
 
 typedef enum {
-  SCREEN_INTRO = 0,
-  SCREEN_MENU = 1,
-  SCREEN_WIPE_CONFIRM = 2,
-  SCREEN_FINGER_PRINT = 3,
-  SCREEN_WAIT_FOR_HOST = 4,
-  SCREEN_WELCOME = 5,
+    SCREEN_INTRO = 0,
+    SCREEN_MENU = 1,
+    SCREEN_WIPE_CONFIRM = 2,
+    SCREEN_FINGER_PRINT = 3,
+    SCREEN_WAIT_FOR_HOST = 4,
+    SCREEN_WELCOME = 5,
 } screen_t;
 
 // Displays a warning screeen before jumping to the untrusted firmware
@@ -43,8 +43,7 @@ typedef enum {
 //   0 do not show any message
 //   > 0 show a message like "starting in %d s"
 //   < 0 show a message like "press button to continue"
-void ui_screen_boot(const vendor_header* const vhdr,
-                    const image_header* const hdr, int wait);
+void ui_screen_boot(const vendor_header* const vhdr, const image_header* const hdr, int wait);
 
 // Waits until the user confirms the untrusted firmware
 //
@@ -54,15 +53,14 @@ void ui_click(void);
 
 void ui_screen_welcome(void);
 
-uint32_t ui_screen_intro(const vendor_header* const vhdr,
-                         const image_header* const hdr, bool fw_ok);
+uint32_t ui_screen_intro(
+    const vendor_header* const vhdr, const image_header* const hdr, bool fw_ok);
 
 uint32_t ui_screen_menu(secbool firmware_present);
 
-uint32_t ui_screen_install_confirm(const vendor_header* const vhdr,
-                                   const image_header* const hdr,
-                                   secbool shold_keep_seed,
-                                   secbool is_newvendor, int version_cmp);
+uint32_t ui_screen_install_confirm(
+    const vendor_header* const vhdr, const image_header* const hdr, secbool shold_keep_seed,
+    secbool is_newvendor, int version_cmp);
 void ui_screen_install_start();
 void ui_screen_install_progress_erase(int pos, int len);
 void ui_screen_install_progress_upload(int pos);

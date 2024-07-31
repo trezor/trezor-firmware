@@ -23,24 +23,23 @@
 #include "secbool.h"
 
 typedef enum _optiga_result {
-  OPTIGA_SUCCESS = 0,     // Operation completed successfully.
-  OPTIGA_ERR_I2C_WRITE,   // HAL failed on I2C write.
-  OPTIGA_ERR_I2C_READ,    // HAL failed on I2C read.
-  OPTIGA_ERR_BUSY,        // Optiga is busy processing another command.
-  OPTIGA_ERR_TIMEOUT,     // Optiga did not return data within the time limit.
-  OPTIGA_ERR_SIZE,        // Input or output exceeds buffer size.
-  OPTIGA_ERR_CRC,         // Invalid CRC.
-  OPTIGA_ERR_UNEXPECTED,  // Optiga returned unexpected data.
-  OPTIGA_ERR_PROCESS,     // Processing error.
-  OPTIGA_ERR_PARAM,       // Invalid command parameters.
-  OPTIGA_ERR_CMD,         // Command error. See error code data object 0xF1C2.
+    OPTIGA_SUCCESS = 0,     // Operation completed successfully.
+    OPTIGA_ERR_I2C_WRITE,   // HAL failed on I2C write.
+    OPTIGA_ERR_I2C_READ,    // HAL failed on I2C read.
+    OPTIGA_ERR_BUSY,        // Optiga is busy processing another command.
+    OPTIGA_ERR_TIMEOUT,     // Optiga did not return data within the time limit.
+    OPTIGA_ERR_SIZE,        // Input or output exceeds buffer size.
+    OPTIGA_ERR_CRC,         // Invalid CRC.
+    OPTIGA_ERR_UNEXPECTED,  // Optiga returned unexpected data.
+    OPTIGA_ERR_PROCESS,     // Processing error.
+    OPTIGA_ERR_PARAM,       // Invalid command parameters.
+    OPTIGA_ERR_CMD,         // Command error. See error code data object 0xF1C2.
 } optiga_result;
 
 typedef secbool (*optiga_ui_progress_t)(void);
 
 #if !PRODUCTION
-typedef void (*optiga_log_hex_t)(const char *prefix, const uint8_t *data,
-                                 size_t data_size);
+typedef void (*optiga_log_hex_t)(const char *prefix, const uint8_t *data, size_t data_size);
 #endif
 
 #endif

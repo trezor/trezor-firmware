@@ -34,13 +34,12 @@ error_shutdown_ex(const char *title, const char *message, const char *footer);
 void __attribute__((noreturn)) error_shutdown(const char *message);
 
 // Do not use this function directly, use the `ensure()` macro instead.
-void __attribute__((noreturn))
-__fatal_error(const char *msg, const char *file, int line);
+void __attribute__((noreturn)) __fatal_error(const char *msg, const char *file, int line);
 
 // Checks for an expression and if it is false, shows an error message
 // and shuts down the device.
 #define ensure(expr, msg) \
-  (((expr) == sectrue) ? (void)0 : __fatal_error(msg, __FILE_NAME__, __LINE__))
+    (((expr) == sectrue) ? (void)0 : __fatal_error(msg, __FILE_NAME__, __LINE__))
 
 // Shows WIPE CODE ENTERED screeen and shuts down the device.
 void __attribute__((noreturn)) show_wipe_code_screen(void);
