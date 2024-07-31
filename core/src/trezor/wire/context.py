@@ -16,7 +16,7 @@ for ButtonRequests. Of course, `context.wait()` transparently works in such situ
 from typing import TYPE_CHECKING
 
 from storage import cache, cache_codec
-from storage.cache_common import SESSIONLESS_FLAG
+from storage.cache_common import SESSIONLESS_FLAG, InvalidSessionError
 from trezor import log, loop, protobuf
 from trezor.wire import codec_v1
 
@@ -168,7 +168,7 @@ class CodecContext(Context):
     def cache(self) -> DataCache:
         c = cache_codec.get_active_session()
         if c is None:
-            raise Exception("There is no active session")
+            raise InvalidSessionError()
         return c
 
 
