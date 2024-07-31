@@ -122,7 +122,7 @@ _usage_counter = 0
 cid_counter: int = 4659  # TODO change to random value on start
 
 
-def get_new_unauthenticated_channel(iface: bytes) -> ChannelCache:
+def get_new_channel(iface: bytes) -> ChannelCache:
     if len(iface) != _WIRE_INTERFACE_LENGTH:
         raise Exception("Invalid WireInterface (encoded) length")
 

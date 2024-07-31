@@ -14,9 +14,7 @@ def create_new_channel(iface: WireInterface, buffer: utils.BufferType) -> Channe
     """
     Creates a new channel for the interface `iface` with the buffer `buffer`.
     """
-    channel_cache = cache_thp.get_new_unauthenticated_channel(
-        interface_manager.encode_iface(iface)
-    )
+    channel_cache = cache_thp.get_new_channel(interface_manager.encode_iface(iface))
     r = Channel(channel_cache)
     r.set_buffer(buffer)
     r.set_channel_state(ChannelState.TH1)
