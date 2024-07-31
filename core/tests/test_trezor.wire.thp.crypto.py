@@ -3,6 +3,12 @@ from trezorcrypto import aesgcm, curve25519
 
 import storage
 
+if __debug__:
+    # Disable log.debug for the test
+    from trezor import log
+
+    log.debug = lambda name, msg, *args: None
+
 if utils.USE_THP:
     from trezor.wire.thp import crypto
     from trezor.wire.thp.crypto import IV_1, IV_2, Handshake
