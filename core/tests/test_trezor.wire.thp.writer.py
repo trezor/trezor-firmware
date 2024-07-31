@@ -3,23 +3,9 @@ from common import *  # isort:skip
 from typing import Any, Awaitable
 
 if utils.USE_THP:
+    from mock_wire_interface import MockHID
     from trezor.wire.thp import writer
     from trezor.wire.thp.thp_messages import ENCRYPTED_TRANSPORT, PacketHeader
-
-    class MockHID:
-        def __init__(self, num):
-            self.num = num
-            self.data = []
-
-        def iface_num(self):
-            return self.num
-
-        def write(self, msg):
-            self.data.append(bytearray(msg))
-            return len(msg)
-
-        def wait_object(self, mode):
-            return wait(mode | self.num)
 
 
 if __debug__:

@@ -3,24 +3,30 @@ from common import *  # isort:skip
 import storage.cache
 from trezor.enums import InputScriptType
 from trezor.messages import AuthorizeCoinJoin, GetOwnershipProof, SignTx
+from trezor.wire import context
 
 from apps.bitcoin.authorization import CoinJoinAuthorization
 from apps.common import coins
 
 _ROUND_ID_LEN = 32
 
-if not utils.USE_THP:
+if utils.USE_THP:
+    from thp_common import prepare_context, suppres_debug_log
+else:
     import storage.cache_codec
 
 
 class TestAuthorization(unittest.TestCase):
-    if not utils.USE_THP:
+    if utils.USE_THP:
 
         def __init__(self):
-            # Context is needed to test decorators and handleInitialize
-            # It allows access to codec cache from different parts of the code
-            from trezor.wire import context
+            suppres_debug_log()
+            prepare_context()
+            super().__init__()
 
+    else:
+
+        def __init__(self):
             context.CURRENT_CONTEXT = context.CodecContext(None, bytearray(64))
             super().__init__()
 

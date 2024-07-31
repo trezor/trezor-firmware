@@ -5,11 +5,14 @@ import unittest
 from storage import cache_common
 from trezor import wire
 from trezor.crypto import bip39
+from trezor.wire import context
 
 from apps.common.keychain import get_keychain
 from apps.common.paths import HARDENED
 
-if not utils.USE_THP:
+if utils.USE_THP:
+    from thp_common import prepare_context, suppres_debug_log
+else:
     from storage import cache_codec
 
 
@@ -74,13 +77,20 @@ class TestEthereumKeychain(unittest.TestCase):
                 keychain.derive,
                 addr,
             )
-    if not utils.USE_THP:
+
+    if utils.USE_THP:
+        def __init__(self):
+            suppres_debug_log()
+            prepare_context()
+            super().__init__()
+
+        def setUp(self):
+            seed = bip39.seed(" ".join(["all"] * 12), "")
+            context.cache_set(cache_common.APP_COMMON_SEED, seed)
+
+    else:
 
         def __init__(self):
-            # Context is needed to test decorators and handleInitialize
-            # It allows access to codec cache from different parts of the code
-            from trezor.wire import context
-
             context.CURRENT_CONTEXT = context.CodecContext(None, bytearray(64))
             super().__init__()
 

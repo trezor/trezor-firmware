@@ -2,9 +2,9 @@ from common import *  # isort:skip
 import ustruct
 from typing import TYPE_CHECKING
 
+from mock_wire_interface import MockHID
 from storage.cache_thp import BROADCAST_CHANNEL_ID
 from trezor import io, log
-from trezor.loop import wait
 from trezor.utils import chunks
 from trezor.wire.protocol_common import Message
 
@@ -21,21 +21,6 @@ if __debug__:
 
 if TYPE_CHECKING:
     from trezorio import WireInterface
-
-class MockHID:
-    def __init__(self, num):
-        self.num = num
-        self.data = []
-
-    def iface_num(self):
-        return self.num
-
-    def write(self, msg):
-        self.data.append(bytearray(msg))
-        return len(msg)
-
-    def wait_object(self, mode):
-        return wait(mode | self.num)
 
 
 MESSAGE_TYPE = 0x4242

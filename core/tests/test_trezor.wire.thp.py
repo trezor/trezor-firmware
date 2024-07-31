@@ -1,9 +1,9 @@
 from common import *  # isort:skip
+from mock_wire_interface import MockHID
 from storage import cache_thp
 from trezor import config, io, log, protobuf
 from trezor.crypto.curve import curve25519
 from trezor.enums import MessageType
-from trezor.loop import wait
 from trezor.wire.errors import UnexpectedMessage
 from trezor.wire.protocol_common import Message
 
@@ -34,20 +34,6 @@ if utils.USE_THP:
 
 # Disable log.debug for the test
 log.debug = lambda name, msg, *args: None
-class MockHID:
-    def __init__(self, num):
-        self.num = num
-        self.data = []
-
-    def iface_num(self):
-        return self.num
-
-    def write(self, msg):
-        self.data.append(bytearray(msg))
-        return len(msg)
-
-    def wait_object(self, mode):
-        return wait(mode | self.num)
 
 
 def dummy_decode_iface(cached_iface: bytes):

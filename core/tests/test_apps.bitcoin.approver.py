@@ -11,6 +11,7 @@ from trezor.messages import (
     TxInput,
     TxOutput,
 )
+from trezor.wire import context
 
 from apps.bitcoin.authorization import FEE_RATE_DECIMALS, CoinJoinAuthorization
 from apps.bitcoin.sign_tx.approvers import CoinJoinApprover
@@ -18,17 +19,22 @@ from apps.bitcoin.sign_tx.bitcoin import Bitcoin
 from apps.bitcoin.sign_tx.tx_info import TxInfo
 from apps.common import coins
 
-if not utils.USE_THP:
+if utils.USE_THP:
+    from thp_common import prepare_context, suppres_debug_log
+else:
     import storage.cache_codec
 
 class TestApprover(unittest.TestCase):
-    if not utils.USE_THP:
+    if utils.USE_THP:
 
         def __init__(self):
-            # Context is needed to test decorators and handleInitialize
-            # It allows access to codec cache from different parts of the code
-            from trezor.wire import context
+            suppres_debug_log()
+            prepare_context()
+            super().__init__()
 
+    else:
+
+        def __init__(self):
             context.CURRENT_CONTEXT = context.CodecContext(None, bytearray(64))
             super().__init__()
 
