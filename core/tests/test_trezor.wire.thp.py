@@ -120,7 +120,6 @@ class TestTrezorHostProtocol(unittest.TestCase):
 
         channel.channel_cache.set(CHANNEL_KEY_RECEIVE, get_dummy_key())
         channel.channel_cache.set_int(CHANNEL_NONCE_RECEIVE, 0)
-        channel.channel_cache.set(CHANNEL_HANDSHAKE_HASH, b"")
 
         gen.send(message_with_invalid_tag)
         gen.send(None)
