@@ -5,7 +5,7 @@ set -e
 cd $(dirname $0)
 
 BUILDVH=$(realpath ./build_vendorheader)
-BINCTL=$(realpath ./headertool.py)
+BINCTL=headertool
 
 for arg in "$@"; do
     if [ "$arg" == "--check" ]; then

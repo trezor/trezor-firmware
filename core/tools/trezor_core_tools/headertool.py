@@ -107,14 +107,14 @@ def cli(
 
     To insert an external signature:
 
-      ./headertool.py firmware.bin -s 1:2:3 ABCDEF<...signature in hex format>
+      headertool firmware.bin -s 1:2:3 ABCDEF<...signature in hex format>
 
     The string "1:2:3" is a list of 1-based indexes of keys used to generate the signature.
 
     To sign with local private keys:
 
     \b
-      ./headertool.py firmware.bin -S 1:ABCDEF<...hex private key> -S 2:1234<..hex private key>
+      headertool firmware.bin -S 1:ABCDEF<...hex private key> -S 2:1234<..hex private key>
 
     Each instance of -S is in the form "index:privkey", where index is the same as
     above. Instead of specifying the keys manually, use -D to substitue known

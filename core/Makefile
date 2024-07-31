@@ -46,66 +46,59 @@ OPENOCD_TRANSPORT ?= hla_swd
 
 ifeq ($(TREZOR_MODEL), 1)
 MCU = STM32F2
-LAYOUT_FILE = embed/models/T1B1/model_T1B1.h
 OPENOCD_TARGET = target/stm32f2x.cfg
 else ifeq ($(TREZOR_MODEL),$(filter $(TREZOR_MODEL),T))
 MCU = STM32F4
-LAYOUT_FILE = embed/models/T2T1/model_T2T1.h
 OPENOCD_TARGET = target/stm32f4x.cfg
 MODEL_FEATURE = model_tt
 else ifeq ($(TREZOR_MODEL),$(filter $(TREZOR_MODEL),R))
 MCU = STM32F4
-LAYOUT_FILE = embed/models/T2B1/model_T2B1.h
 OPENOCD_TARGET = target/stm32f4x.cfg
 MODEL_FEATURE = model_tr
 else ifeq ($(TREZOR_MODEL),$(filter $(TREZOR_MODEL),T3T1))
 MCU = STM32U5
 OPENOCD_TARGET = target/stm32u5x.cfg
-LAYOUT_FILE = embed/models/T3T1/model_T3T1.h
 MODEL_FEATURE = model_mercury
 else ifeq ($(TREZOR_MODEL),$(filter $(TREZOR_MODEL),T3B1))
 MCU = STM32U5
 OPENOCD_TARGET = target/stm32u5x.cfg
-LAYOUT_FILE = embed/models/T3B1/model_T3B1.h
 MODEL_FEATURE = model_tr
 else ifeq ($(TREZOR_MODEL),$(filter $(TREZOR_MODEL),DISC1))
 MCU = STM32F4
-LAYOUT_FILE = embed/models/D001/model_D001.h
 OPENOCD_TARGET = target/stm32f4x.cfg
 else ifeq ($(TREZOR_MODEL),$(filter $(TREZOR_MODEL),DISC2))
 MCU = STM32U5
-LAYOUT_FILE = embed/models/D002/model_D002.h
 OPENOCD_TARGET = target/stm32u5x.cfg
 else
 $(error Unknown TREZOR_MODEL: $(TREZOR_MODEL))
 endif
 
 
-FLASH_START              = $(shell python ./tools/layout_parser.py ${LAYOUT_FILE} FLASH_START)
-BOARDLOADER_START        = $(shell python ./tools/layout_parser.py ${LAYOUT_FILE} BOARDLOADER_START)
-BOOTLOADER_START         = $(shell python ./tools/layout_parser.py ${LAYOUT_FILE} BOOTLOADER_START)
-FIRMWARE_START           = $(shell python ./tools/layout_parser.py ${LAYOUT_FILE} FIRMWARE_START)
-FIRMWARE_P2_START        = $(shell python ./tools/layout_parser.py ${LAYOUT_FILE} FIRMWARE_P2_START)
-STORAGE_1_OFFSET         = $(shell python ./tools/layout_parser.py ${LAYOUT_FILE} STORAGE_1_OFFSET)
-STORAGE_2_OFFSET         = $(shell python ./tools/layout_parser.py ${LAYOUT_FILE} STORAGE_2_OFFSET)
-STORAGE_SIZE             = $(shell python ./tools/layout_parser.py ${LAYOUT_FILE} NORCOW_SECTOR_SIZE)
-BOARDLOADER_MAXSIZE      = $(shell python ./tools/layout_parser.py ${LAYOUT_FILE} BOARDLOADER_IMAGE_MAXSIZE)
-BOOTLOADER_MAXSIZE       = $(shell python ./tools/layout_parser.py ${LAYOUT_FILE} BOOTLOADER_IMAGE_MAXSIZE)
-FIRMWARE_MAXSIZE         = $(shell python ./tools/layout_parser.py ${LAYOUT_FILE} FIRMWARE_IMAGE_MAXSIZE)
-FIRMWARE_P1_MAXSIZE      = $(shell python ./tools/layout_parser.py ${LAYOUT_FILE} FIRMWARE_P1_IMAGE_MAXSIZE)
-FIRMWARE_P2_MAXSIZE      = $(shell python ./tools/layout_parser.py ${LAYOUT_FILE} FIRMWARE_P2_IMAGE_MAXSIZE)
-BOARDLOADER_SECTOR_START = $(shell python ./tools/layout_parser.py ${LAYOUT_FILE} BOARDLOADER_SECTOR_START)
-BOARDLOADER_SECTOR_END   = $(shell python ./tools/layout_parser.py ${LAYOUT_FILE} BOARDLOADER_SECTOR_END)
-BOOTLOADER_SECTOR_START  = $(shell python ./tools/layout_parser.py ${LAYOUT_FILE} BOOTLOADER_SECTOR_START)
-BOOTLOADER_SECTOR_END    = $(shell python ./tools/layout_parser.py ${LAYOUT_FILE} BOOTLOADER_SECTOR_END)
-FIRMWARE_SECTOR_START    = $(shell python ./tools/layout_parser.py ${LAYOUT_FILE} FIRMWARE_SECTOR_START)
-FIRMWARE_SECTOR_END      = $(shell python ./tools/layout_parser.py ${LAYOUT_FILE} FIRMWARE_SECTOR_END)
-FIRMWARE_P2_SECTOR_START = $(shell python ./tools/layout_parser.py ${LAYOUT_FILE} FIRMWARE_P2_SECTOR_START)
-FIRMWARE_P2_SECTOR_END   = $(shell python ./tools/layout_parser.py ${LAYOUT_FILE} FIRMWARE_P2_SECTOR_END)
-STORAGE_1_SECTOR_START   = $(shell python ./tools/layout_parser.py ${LAYOUT_FILE} STORAGE_1_SECTOR_START)
-STORAGE_1_SECTOR_END     = $(shell python ./tools/layout_parser.py ${LAYOUT_FILE} STORAGE_1_SECTOR_END)
-STORAGE_2_SECTOR_START   = $(shell python ./tools/layout_parser.py ${LAYOUT_FILE} STORAGE_2_SECTOR_START)
-STORAGE_2_SECTOR_END     = $(shell python ./tools/layout_parser.py ${LAYOUT_FILE} STORAGE_2_SECTOR_END)
+FLASH_START              = $(shell layout_parser ${TREZOR_MODEL} FLASH_START)
+BOARDLOADER_START        = $(shell layout_parser ${TREZOR_MODEL} BOARDLOADER_START)
+BOOTLOADER_START         = $(shell layout_parser ${TREZOR_MODEL} BOOTLOADER_START)
+FIRMWARE_START           = $(shell layout_parser ${TREZOR_MODEL} FIRMWARE_START)
+FIRMWARE_P2_START        = $(shell layout_parser ${TREZOR_MODEL} FIRMWARE_P2_START)
+STORAGE_1_OFFSET         = $(shell layout_parser ${TREZOR_MODEL} STORAGE_1_OFFSET)
+STORAGE_2_OFFSET         = $(shell layout_parser ${TREZOR_MODEL} STORAGE_2_OFFSET)
+STORAGE_SIZE             = $(shell layout_parser ${TREZOR_MODEL} NORCOW_SECTOR_SIZE)
+BOARDLOADER_MAXSIZE      = $(shell layout_parser ${TREZOR_MODEL} BOARDLOADER_IMAGE_MAXSIZE)
+BOOTLOADER_MAXSIZE       = $(shell layout_parser ${TREZOR_MODEL} BOOTLOADER_IMAGE_MAXSIZE)
+FIRMWARE_MAXSIZE         = $(shell layout_parser ${TREZOR_MODEL} FIRMWARE_IMAGE_MAXSIZE)
+FIRMWARE_P1_MAXSIZE      = $(shell layout_parser ${TREZOR_MODEL} FIRMWARE_P1_IMAGE_MAXSIZE)
+FIRMWARE_P2_MAXSIZE      = $(shell layout_parser ${TREZOR_MODEL} FIRMWARE_P2_IMAGE_MAXSIZE)
+BOARDLOADER_SECTOR_START = $(shell layout_parser ${TREZOR_MODEL} BOARDLOADER_SECTOR_START)
+BOARDLOADER_SECTOR_END   = $(shell layout_parser ${TREZOR_MODEL} BOARDLOADER_SECTOR_END)
+BOOTLOADER_SECTOR_START  = $(shell layout_parser ${TREZOR_MODEL} BOOTLOADER_SECTOR_START)
+BOOTLOADER_SECTOR_END    = $(shell layout_parser ${TREZOR_MODEL} BOOTLOADER_SECTOR_END)
+FIRMWARE_SECTOR_START    = $(shell layout_parser ${TREZOR_MODEL} FIRMWARE_SECTOR_START)
+FIRMWARE_SECTOR_END      = $(shell layout_parser ${TREZOR_MODEL} FIRMWARE_SECTOR_END)
+FIRMWARE_P2_SECTOR_START = $(shell layout_parser ${TREZOR_MODEL} FIRMWARE_P2_SECTOR_START)
+FIRMWARE_P2_SECTOR_END   = $(shell layout_parser ${TREZOR_MODEL} FIRMWARE_P2_SECTOR_END)
+STORAGE_1_SECTOR_START   = $(shell layout_parser ${TREZOR_MODEL} STORAGE_1_SECTOR_START)
+STORAGE_1_SECTOR_END     = $(shell layout_parser ${TREZOR_MODEL} STORAGE_1_SECTOR_END)
+STORAGE_2_SECTOR_START   = $(shell layout_parser ${TREZOR_MODEL} STORAGE_2_SECTOR_START)
+STORAGE_2_SECTOR_END     = $(shell layout_parser ${TREZOR_MODEL} STORAGE_2_SECTOR_END)
 
 OPENOCD = openocd -f interface/$(OPENOCD_INTERFACE).cfg -c "transport select $(OPENOCD_TRANSPORT)" -f $(OPENOCD_TARGET)
 
@@ -439,8 +432,8 @@ sizecheck: ## check sizes of binary files
 	test $(FIRMWARE_MAXSIZE) -ge $(shell wc -c < $(FIRMWARE_BUILD_DIR)/firmware.bin)
 
 combine: ## combine boardloader + bootloader + prodtest into one combined image
-	./tools/combine_firmware \
-		$(LAYOUT_FILE) \
+	combine_firmware \
+		$(TREZOR_MODEL) \
 		$(PRODTEST_BUILD_DIR)/combined.bin \
 		-b BOARDLOADER $(BOARDLOADER_BUILD_DIR)/boardloader.bin \
 		-b BOOTLOADER $(BOOTLOADER_BUILD_DIR)/bootloader.bin \
@@ -448,8 +441,8 @@ combine: ## combine boardloader + bootloader + prodtest into one combined image
 
 ifeq  ($(MCU),$(filter $(MCU),STM32F4))
 combine_fw: ## combine boardloader + bootloader + firmware into one combined image
-	./tools/combine_firmware \
-		$(LAYOUT_FILE) \
+	combine_firmware \
+		$(TREZOR_MODEL) \
 		$(PRODTEST_BUILD_DIR)/combined.bin \
 		-b BOARDLOADER $(BOARDLOADER_BUILD_DIR)/boardloader.bin \
 		-b BOOTLOADER $(BOOTLOADER_BUILD_DIR)/bootloader.bin \
@@ -457,8 +450,8 @@ combine_fw: ## combine boardloader + bootloader + firmware into one combined ima
 		-b FIRMWARE_P2 $(FIRMWARE_BUILD_DIR)/firmware.bin.p2
 else ifeq ($(MCU),$(filter $(MCU),STM32U5))
 combine_fw: ## combine boardloader + bootloader + firmware into one combined image
-	./tools/combine_firmware \
-		$(LAYOUT_FILE) \
+	combine_firmware \
+		$(TREZOR_MODEL) \
 		$(PRODTEST_BUILD_DIR)/combined.bin \
 		-b BOARDLOADER $(BOARDLOADER_BUILD_DIR)/boardloader.bin \
 		-b BOOTLOADER $(BOOTLOADER_BUILD_DIR)/bootloader.bin \
