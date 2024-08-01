@@ -22,7 +22,7 @@ if utils.USE_THP:
 
 
 if __debug__:
-    # Disable log.debug for the test
+    # Disable log.debug
     def suppres_debug_log() -> None:
         from trezor import log
 

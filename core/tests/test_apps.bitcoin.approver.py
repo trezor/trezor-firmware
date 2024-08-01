@@ -20,7 +20,7 @@ from apps.bitcoin.sign_tx.tx_info import TxInfo
 from apps.common import coins
 
 if utils.USE_THP:
-    from thp_common import prepare_context, suppres_debug_log
+    import thp_common
 else:
     import storage.cache_codec
 
@@ -28,8 +28,9 @@ class TestApprover(unittest.TestCase):
     if utils.USE_THP:
 
         def __init__(self):
-            suppres_debug_log()
-            prepare_context()
+            if __debug__:
+                thp_common.suppres_debug_log()
+            thp_common.prepare_context()
             super().__init__()
 
     else:

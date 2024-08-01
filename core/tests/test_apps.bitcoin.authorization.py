@@ -11,7 +11,7 @@ from apps.common import coins
 _ROUND_ID_LEN = 32
 
 if utils.USE_THP:
-    from thp_common import prepare_context, suppres_debug_log
+    import thp_common
 else:
     import storage.cache_codec
 
@@ -20,8 +20,9 @@ class TestAuthorization(unittest.TestCase):
     if utils.USE_THP:
 
         def __init__(self):
-            suppres_debug_log()
-            prepare_context()
+            if __debug__:
+                thp_common.suppres_debug_log()
+            thp_common.prepare_context()
             super().__init__()
 
     else:

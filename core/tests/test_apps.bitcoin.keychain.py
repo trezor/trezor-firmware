@@ -8,7 +8,7 @@ from trezor.wire import context
 from apps.bitcoin.keychain import _get_coin_by_name, _get_keychain_for_coin
 
 if utils.USE_THP:
-    from thp_common import prepare_context, suppres_debug_log
+    import thp_common
 else:
     from storage import cache_codec
 
@@ -17,8 +17,9 @@ class TestBitcoinKeychain(unittest.TestCase):
     if utils.USE_THP:
 
         def __init__(self):
-            suppres_debug_log()
-            prepare_context()
+            if __debug__:
+                thp_common.suppres_debug_log()
+            thp_common.prepare_context()
             super().__init__()
 
         def setUp(self):

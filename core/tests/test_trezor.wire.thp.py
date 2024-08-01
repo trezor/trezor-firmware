@@ -1,13 +1,14 @@
 from common import *  # isort:skip
 from mock_wire_interface import MockHID
-from storage import cache_thp
-from trezor import config, io, log, protobuf
+from trezor import config, io, protobuf
 from trezor.crypto.curve import curve25519
 from trezor.enums import MessageType
 from trezor.wire.errors import UnexpectedMessage
 from trezor.wire.protocol_common import Message
 
 if utils.USE_THP:
+    import thp_common
+    from storage import cache_thp
     from storage.cache_common import (
         CHANNEL_HANDSHAKE_HASH,
         CHANNEL_KEY_RECEIVE,
@@ -32,17 +33,6 @@ if utils.USE_THP:
 
     from apps.thp import pairing
 
-# Disable log.debug for the test
-log.debug = lambda name, msg, *args: None
-
-
-def dummy_decode_iface(cached_iface: bytes):
-    return MockHID(0xDEADBEEF)
-
-
-def getBytes(a):
-    return hexlify(a).decode("utf-8")
-
 
 def get_dummy_key() -> bytes:
     return b"\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x10\x01\x02\x03\x04\x05\x06\x07\x08\x09\x20\x01\x02\x03\x04\x05\x06\x07\x08\x09\x30\x31"
@@ -50,11 +40,17 @@ def get_dummy_key() -> bytes:
 
 @unittest.skipUnless(utils.USE_THP, "only needed for THP")
 class TestTrezorHostProtocol(unittest.TestCase):
+
+    def __init__(self):
+        if __debug__:
+            thp_common.suppres_debug_log()
+        super().__init__()
+
     def setUp(self):
         self.interface = MockHID(0xDEADBEEF)
         buffer = bytearray(64)
         thp_main.set_buffer(buffer)
-        interface_manager.decode_iface = dummy_decode_iface
+        interface_manager.decode_iface = thp_common.dummy_decode_iface
 
     def test_channel_allocation(self):
         cid_req = (
@@ -70,7 +66,7 @@ class TestTrezorHostProtocol(unittest.TestCase):
         gen.send(cid_req)
         gen.send(None)
         self.assertEqual(
-            getBytes(self.interface.data[-1]),
+            utils.get_bytes_as_str(self.interface.data[-1]),
             expected_response,
         )
         self.assertTrue(test_counter in thp_main._CHANNELS)
@@ -94,7 +90,7 @@ class TestTrezorHostProtocol(unittest.TestCase):
         gen.send(None)
         unallocated_chanel_error_on_channel_789a = "42789a0005027b743563000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
         self.assertEqual(
-            getBytes(self.interface.data[-1]),
+            utils.get_bytes_as_str(self.interface.data[-1]),
             unallocated_chanel_error_on_channel_789a,
         )
         config.init()
@@ -111,13 +107,13 @@ class TestTrezorHostProtocol(unittest.TestCase):
         gen.send(None)
         ack_on_received_message = "2012350004d83ea46f00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
         self.assertEqual(
-            getBytes(self.interface.data[-1]),
+            utils.get_bytes_as_str(self.interface.data[-1]),
             ack_on_received_message,
         )
         gen.send(None)
         decryption_failed_error_on_channel_1235 = "421235000503caf9634a000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
         self.assertEqual(
-            getBytes(self.interface.data[-1]),
+            utils.get_bytes_as_str(self.interface.data[-1]),
             decryption_failed_error_on_channel_1235,
         )
 
@@ -136,7 +132,7 @@ class TestTrezorHostProtocol(unittest.TestCase):
         # gen.send(None)
         # gen.send(None)
         for i in self.interface.data:
-            print(hexlify(i))
+            print(utils.get_bytes_as_str(i))
 
     def test_skip_pairing(self):
         config.init()

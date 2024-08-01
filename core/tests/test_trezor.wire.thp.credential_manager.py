@@ -1,7 +1,9 @@
 from common import *  # isort:skip
-from trezor import config, log
+
 
 if utils.USE_THP:
+    import thp_common
+    from trezor import config
     from trezor.messages import ThpCredentialMetadata
 
     from apps.thp import credential_manager
@@ -10,14 +12,15 @@ if utils.USE_THP:
         metadata = ThpCredentialMetadata(host_name=host_name)
         return credential_manager.issue_credential(host_static_pubkey, metadata)
 
-    def _dummy_log(name: str, msg: str, *args):
-        pass
-
-    log.debug = _dummy_log
-
 
 @unittest.skipUnless(utils.USE_THP, "only needed for THP")
 class TestTrezorHostProtocolCredentialManager(unittest.TestCase):
+
+    def __init__(self):
+        if __debug__:
+            thp_common.suppres_debug_log()
+        super().__init__()
+
     def setUp(self):
         config.init()
         config.wipe()

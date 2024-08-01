@@ -11,7 +11,7 @@ from apps.common.keychain import get_keychain
 from apps.common.paths import HARDENED
 
 if utils.USE_THP:
-    from thp_common import prepare_context, suppres_debug_log
+    import thp_common
 else:
     from storage import cache_codec
 
@@ -80,8 +80,9 @@ class TestEthereumKeychain(unittest.TestCase):
 
     if utils.USE_THP:
         def __init__(self):
-            suppres_debug_log()
-            prepare_context()
+            if __debug__:
+                thp_common.suppres_debug_log()
+            thp_common.prepare_context()
             super().__init__()
 
         def setUp(self):

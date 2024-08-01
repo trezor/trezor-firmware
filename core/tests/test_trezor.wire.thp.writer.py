@@ -3,16 +3,10 @@ from common import *  # isort:skip
 from typing import Any, Awaitable
 
 if utils.USE_THP:
+    import thp_common
     from mock_wire_interface import MockHID
     from trezor.wire.thp import writer
     from trezor.wire.thp.thp_messages import ENCRYPTED_TRANSPORT, PacketHeader
-
-
-if __debug__:
-    # Disable log.debug for the test
-    from trezor import log
-
-    log.debug = lambda name, msg, *args: None
 
 
 @unittest.skipUnless(utils.USE_THP, "only needed for THP")
@@ -69,10 +63,16 @@ class TestTrezorHostProtocolWriter(unittest.TestCase):
         b"801234b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1",
         b"801234f2f3f4f5f6f7f8f9fafbfcfdfefff40c65ee00000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
     ]
+
     def await_until_result(self, task: Awaitable) -> Any:
         with self.assertRaises(StopIteration):
             while True:
                 task.send(None)
+
+    def __init__(self):
+        if __debug__:
+            thp_common.suppres_debug_log()
+        super().__init__()
 
     def setUp(self):
         self.interface = MockHID(0xDEADBEEF)

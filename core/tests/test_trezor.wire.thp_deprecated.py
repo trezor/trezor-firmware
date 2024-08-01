@@ -4,20 +4,18 @@ from typing import TYPE_CHECKING
 
 from mock_wire_interface import MockHID
 from storage.cache_thp import BROADCAST_CHANNEL_ID
-from trezor import io, log
+from trezor import io
 from trezor.utils import chunks
 from trezor.wire.protocol_common import Message
 
 if utils.USE_THP:
+    import thp_common
     import trezor.wire.thp
     from trezor.wire import thp_main
     from trezor.wire.thp import alternating_bit_protocol as ABP
     from trezor.wire.thp import checksum
     from trezor.wire.thp.checksum import CHECKSUM_LENGTH
     from trezor.wire.thp.writer import PACKET_LENGTH
-if __debug__:
-    # Disable log.debug for the test
-    log.debug = lambda name, msg, *args: None
 
 if TYPE_CHECKING:
     from trezorio import WireInterface
@@ -74,6 +72,12 @@ async def deprecated_write_message(
 # This test suite is an adaptation of test_trezor.wire.codec_v1
 @unittest.skipUnless(utils.USE_THP, "only needed for THP")
 class TestWireTrezorHostProtocolV1(unittest.TestCase):
+
+    def __init__(self):
+        if __debug__:
+            thp_common.suppres_debug_log()
+        super().__init__()
+
     def setUp(self):
         self.interface = MockHID(0xDEADBEEF)
 

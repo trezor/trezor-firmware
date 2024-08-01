@@ -3,13 +3,8 @@ from trezorcrypto import aesgcm, curve25519
 
 import storage
 
-if __debug__:
-    # Disable log.debug for the test
-    from trezor import log
-
-    log.debug = lambda name, msg, *args: None
-
 if utils.USE_THP:
+    import thp_common
     from trezor.wire.thp import crypto
     from trezor.wire.thp.crypto import IV_1, IV_2, Handshake
 
@@ -80,6 +75,11 @@ class TestTrezorHostProtocolCrypto(unittest.TestCase):
             (4294967295, b"\x00\x00\x00\x00\x00\x00\x00\x00\xff\xff\xff\xff"),
             (0xFFFFFFFFFFFFFFFF, b"\x00\x00\x00\x00\xff\xff\xff\xff\xff\xff\xff\xff"),
         ]
+
+    def __init__(self):
+        if __debug__:
+            thp_common.suppres_debug_log()
+        super().__init__()
 
     def setUp(self):
         utils.DISABLE_ENCRYPTION = False
