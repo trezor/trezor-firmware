@@ -17,6 +17,11 @@ def configure(
     hw_model = get_hw_model_as_number("T3B1")
     hw_revision = "B"
 
+    if "new_rendering" in features_wanted:
+        defines += ["XFRAMEBUFFER"]
+        features_available.append("xframebuffer")
+        features_available.append("display_mono")
+
     mcu = "STM32U585xx"
     linker_script = "stm32u58"
 
@@ -37,7 +42,12 @@ def configure(
     sources += [
         "embed/models/T3B1/model_T3B1_layout.c",
     ]
-    sources += [f"embed/trezorhal/stm32u5/displays/{display}"]
+
+    if "new_rendering" in features_wanted:
+        sources += ["embed/trezorhal/xdisplay_legacy.c"]
+        sources += ["embed/trezorhal/stm32u5/xdisplay/vg-2864/display_driver.c"]
+    else:
+        sources += [f"embed/trezorhal/stm32u5/displays/{display}"]
 
     if "input" in features_wanted:
         sources += ["embed/trezorhal/stm32u5/button.c"]
