@@ -3,8 +3,8 @@ use crate::{
     translations::TR,
     ui::{
         component::{
-            base::ComponentExt, text::common::TextBox, Component, Event, EventCtx, Label, Maybe,
-            Never, Swipe, SwipeDirection,
+            base::ComponentExt, swipe_detect::SwipeConfig, text::common::TextBox, Component, Event,
+            EventCtx, Label, Maybe, Never, Swipe, SwipeDirection,
         },
         display,
         geometry::{Alignment, Grid, Insets, Offset, Rect},
@@ -85,6 +85,8 @@ pub struct PassphraseKeyboard {
     keys: [Button; KEY_COUNT],
     active_layout: KeyboardLayout,
     fade: Cell<bool>,
+    swipe_config: SwipeConfig, // FIXME: how about page_swipe
+    internal_page_cnt: usize,
 }
 
 const PAGE_COUNT: usize = 4;
@@ -140,6 +142,8 @@ impl PassphraseKeyboard {
             }),
             active_layout,
             fade: Cell::new(false),
+            swipe_config: SwipeConfig::new(),
+            internal_page_cnt: 1,
         }
     }
 
@@ -444,6 +448,17 @@ impl Component for Input {
                 style.text_color,
             );
         }
+    }
+}
+
+#[cfg(feature = "micropython")]
+impl crate::ui::flow::Swipable for PassphraseKeyboard {
+    fn get_swipe_config(&self) -> SwipeConfig {
+        self.swipe_config
+    }
+
+    fn get_internal_page_count(&self) -> usize {
+        self.internal_page_cnt
     }
 }
 
