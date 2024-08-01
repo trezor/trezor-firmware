@@ -7,7 +7,7 @@ from trezor.crypto import random
 from trezor.ui.layouts.tt import RustLayout
 from trezor.wire import context, message_handler, protocol_common
 from trezor.wire.context import UnexpectedMessageException
-from trezor.wire.errors import ActionCancelled
+from trezor.wire.errors import ActionCancelled, SilentError
 from trezor.wire.protocol_common import Context, Message
 
 if TYPE_CHECKING:
@@ -233,7 +233,9 @@ async def handle_pairing_request_message(
         # We might handle only the few common cases here, like
         # Initialize and Cancel.
         return exc.msg
-
+    except SilentError as exc:
+        if __debug__:
+            log.error(__name__, "SilentError: %s", exc.message)
     except BaseException as exc:
         # Either:
         # - the message had a type that has a registered handler, but does not have

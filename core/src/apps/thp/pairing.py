@@ -5,6 +5,7 @@ from trezor import loop, protobuf
 from trezor.crypto.hashlib import sha256
 from trezor.enums import MessageType, ThpPairingMethod
 from trezor.messages import (
+    Cancel,
     ThpCodeEntryChallenge,
     ThpCodeEntryCommitment,
     ThpCodeEntryCpaceHost,
@@ -23,7 +24,7 @@ from trezor.messages import (
     ThpQrCodeTag,
     ThpStartPairingRequest,
 )
-from trezor.wire.errors import ActionCancelled, UnexpectedMessage
+from trezor.wire.errors import ActionCancelled, SilentError, UnexpectedMessage
 from trezor.wire.thp import ChannelState, ThpError, crypto
 from trezor.wire.thp.pairing_context import PairingContext
 
@@ -97,7 +98,9 @@ async def handle_pairing_request(
     await _prepare_pairing(ctx)
     await ctx.write(ThpPairingPreparationsFinished())
     ctx.channel_ctx.set_channel_state(ChannelState.TP3)
-    response = await show_display_data(ctx, _get_possible_pairing_methods(ctx))
+    response = await show_display_data(
+        ctx, _get_possible_pairing_methods_and_cancel(ctx)
+    )
     if __debug__:
         from trezor.messages import DebugLinkGetState
 
@@ -107,8 +110,12 @@ async def handle_pairing_request(
             dl_state = await dispatch_DebugLinkGetState(response)
             assert dl_state is not None
             await ctx.write(dl_state)
-            response = await show_display_data(ctx, _get_possible_pairing_methods(ctx))
-
+            response = await show_display_data(
+                ctx, _get_possible_pairing_methods_and_cancel(ctx)
+            )
+    if Cancel.is_type_of(response):
+        ctx.channel_ctx.clear()
+        raise SilentError("Action was cancelled by the Host")
     # TODO disable NFC (if enabled)
     response = await _handle_different_pairing_methods(ctx, response)
 
@@ -367,6 +374,12 @@ def _is_method_included(ctx: PairingContext, method: ThpPairingMethod) -> bool:
 
 #
 # Helpers - getters
+
+
+def _get_possible_pairing_methods_and_cancel(ctx: PairingContext) -> Tuple[int, ...]:
+    r = _get_possible_pairing_methods(ctx)
+    mtype = Cancel.MESSAGE_WIRE_TYPE
+    return r + ((mtype,) if mtype is not None else ())
 
 
 def _get_possible_pairing_methods(ctx: PairingContext) -> Tuple[int, ...]:
