@@ -1,5 +1,5 @@
 use crate::{
-    strutil::TString,
+    strutil::{ShortString, TString},
     translations::TR,
     ui::{
         component::{
@@ -26,7 +26,7 @@ use core::cell::Cell;
 use num_traits::ToPrimitive;
 
 pub enum PassphraseKeyboardMsg {
-    Confirmed,
+    Confirmed(ShortString),
     Cancelled,
 }
 

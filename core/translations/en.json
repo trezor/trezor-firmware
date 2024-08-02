@@ -489,6 +489,7 @@
     "nem__unknown_mosaic": "Unknown mosaic!",
     "passphrase__access_wallet": "Access passphrase wallet?",
     "passphrase__always_on_device": "Always enter your passphrase on Trezor?",
+    "passphrase__continue_with_empty_passphrase": "Continue with empty passphrase?",
     "passphrase__from_host_not_shown": "Passphrase provided by host will be used but will not be displayed due to the device settings.",
     "passphrase__wallet": "Passphrase wallet",
     "passphrase__hide": "Hide passphrase coming from host?",

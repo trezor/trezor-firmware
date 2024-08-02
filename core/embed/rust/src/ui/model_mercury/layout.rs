@@ -4,10 +4,9 @@ use super::{
     component::{
         AddressDetails, Bip39Input, Button, CancelConfirmMsg, CancelInfoConfirmMsg,
         CoinJoinProgress, FidoConfirm, FidoMsg, Frame, FrameMsg, Homescreen, HomescreenMsg,
-        Lockscreen, MnemonicInput, MnemonicKeyboard, MnemonicKeyboardMsg, PassphraseKeyboard,
-        PassphraseKeyboardMsg, PinKeyboard, PinKeyboardMsg, Progress, PromptScreen,
-        SelectWordCount, SelectWordCountMsg, Slip39Input, StatusScreen, SwipeUpScreen,
-        SwipeUpScreenMsg, VerticalMenu, VerticalMenuChoiceMsg,
+        Lockscreen, MnemonicInput, MnemonicKeyboard, MnemonicKeyboardMsg, PinKeyboard,
+        PinKeyboardMsg, Progress, PromptScreen, SelectWordCount, SelectWordCountMsg, Slip39Input,
+        StatusScreen, SwipeUpScreen, SwipeUpScreenMsg, VerticalMenu, VerticalMenuChoiceMsg,
     },
     flow, theme,
 };
@@ -120,15 +119,6 @@ impl ComponentMsgObj for PinKeyboard<'_> {
         match msg {
             PinKeyboardMsg::Confirmed => self.pin().try_into(),
             PinKeyboardMsg::Cancelled => Ok(CANCELLED.as_obj()),
-        }
-    }
-}
-
-impl ComponentMsgObj for PassphraseKeyboard {
-    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
-        match msg {
-            PassphraseKeyboardMsg::Confirmed => self.passphrase().try_into(),
-            PassphraseKeyboardMsg::Cancelled => Ok(CANCELLED.as_obj()),
         }
     }
 }
@@ -954,16 +944,6 @@ extern "C" fn new_request_pin(n_args: usize, args: *const Obj, kwargs: *mut Map)
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
-extern "C" fn new_request_passphrase(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
-    let block = move |_args: &[Obj], kwargs: &Map| {
-        let _prompt: TString = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
-        let _max_len: u32 = kwargs.get(Qstr::MP_QSTR_max_len)?.try_into()?;
-        let obj = LayoutObj::new(PassphraseKeyboard::new())?;
-        Ok(obj.into())
-    };
-    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
-}
-
 extern "C" fn new_request_bip39(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let prompt: TString = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
@@ -1570,13 +1550,13 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     """Request pin on device."""
     Qstr::MP_QSTR_request_pin => obj_fn_kw!(0, new_request_pin).as_obj(),
 
-    /// def request_passphrase(
+    /// def flow_request_passphrase(
     ///     *,
     ///     prompt: str,
     ///     max_len: int,
     /// ) -> LayoutObj[str | UiResult]:
     ///     """Passphrase input keyboard."""
-    Qstr::MP_QSTR_request_passphrase => obj_fn_kw!(0, new_request_passphrase).as_obj(),
+    Qstr::MP_QSTR_flow_request_passphrase => obj_fn_kw!(0, flow::request_passphrase::new_request_passphrase).as_obj(),
 
     /// def request_bip39(
     ///     *,
