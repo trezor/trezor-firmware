@@ -35,6 +35,9 @@ from itertools import zip_longest
 
 import typing_extensions as tx
 
+if t.TYPE_CHECKING:
+    from IPython.lib.pretty import RepresentationPrinter  # noqa: I900
+
 T = t.TypeVar("T", bound=type)
 MT = t.TypeVar("MT", bound="MessageType")
 
@@ -270,6 +273,39 @@ class MessageType:
                 continue
             d[key] = value
         return f"<{self.__class__.__name__}: {d}>"
+
+    def _repr_pretty_(self, p: RepresentationPrinter, cycle: bool) -> None:
+        """prettier version of __repr__ for IPython
+
+        This pretty-prints/indents the object when displayed in IPython,
+        for example:
+
+            <PrevInput: {'prev_hash': b'xyzasdf',
+                         'prev_index': 1,
+                         'script_sig': b'abcdef',
+                         'sequence': 42,
+                         'decred_tree': 21}>
+
+        The API is for this method is described in the IPython docs:
+        https://ipython.readthedocs.io/en/8.26.0/api/generated/IPython.lib.pretty.html
+        """
+        prefix = f"<{self.__class__.__name__}: {{"
+        if cycle:
+            p.text(f"{prefix} ...>")
+            return
+        with p.group(len(prefix), prefix, f"}}>"):  # noqa: F541
+            itemsiter = (
+                (key, value)
+                for key, value in self.__dict__.items()
+                if not (value is None or value == [])
+            )
+            for i, (key, value) in enumerate(itemsiter):
+                if i:
+                    p.text(",")
+                    p.breakable()
+                subprefix = f"{key!r}: "
+                with p.group(len(subprefix), subprefix, ""):
+                    p.pretty(value)
 
     def ByteSize(self) -> int:
         data = BytesIO()
