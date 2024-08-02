@@ -32,6 +32,26 @@
 #include "terminal.h"
 #endif
 
+const char *ts_string(ts_t status) {
+  if (ts_eq(status, TS_OK)) {
+    return "OK";
+  } else if (ts_eq(status, TS_ERROR)) {
+    return "ERROR";
+  } else if (ts_eq(status, TS_ERROR_BUSY)) {
+    return "ERROR_BUSY";
+  } else if (ts_eq(status, TS_ERROR_TIMEOUT)) {
+    return "ERROR_TIMEOUT";
+  } else if (ts_eq(status, TS_ERROR_NOTINIT)) {
+    return "ERROR_NOTINIT";
+  } else if (ts_eq(status, TS_ERROR_ARG)) {
+    return "ERROR_ARG";
+  } else if (ts_eq(status, TS_ERROR_IO)) {
+    return "ERROR_IO";
+  } else {
+    return "UNKNOWN";
+  }
+}
+
 #ifdef RGB16
 #define COLOR_FATAL_ERROR RGB16(0x7F, 0x00, 0x00)
 #else
