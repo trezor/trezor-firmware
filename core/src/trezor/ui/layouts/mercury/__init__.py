@@ -1405,7 +1405,7 @@ async def request_pin_on_device(
 
     result = await interact(
         RustLayout(
-            trezorui2.request_pin(
+            trezorui2.flow_request_pin(
                 prompt=prompt,
                 subprompt=subprompt,
                 allow_cancel=allow_cancel,
@@ -1417,8 +1417,18 @@ async def request_pin_on_device(
     )
     if result is CANCELLED:
         raise PinCancelled
-    assert isinstance(result, str)
-    return result
+
+    if __debug__:
+        if not isinstance(result, tuple):
+            # TODO: DebugLink problem, better comment or solution?
+            result = (CONFIRMED, str(result))
+    status, value = result
+    if status == CONFIRMED:
+        assert isinstance(value, str)
+        return value
+    else:
+        # flow_request_pin returns either CANCELLED or (CONFIRMED, str) so this branch shouldn't be taken
+        raise PinCancelled
 
 
 async def confirm_reenter_pin(
