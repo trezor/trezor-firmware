@@ -27,4 +27,6 @@ int zkp_ecdsa_verify_digest(const ecdsa_curve *curve,
 int zkp_ecdsa_verify(const ecdsa_curve *curve, HasherType hasher_sign,
                      const uint8_t *pub_key, const uint8_t *sig,
                      const uint8_t *msg, uint32_t msg_len);
+int zkp_ecdh_multiply(const ecdsa_curve *curve, const uint8_t *priv_key,
+                      const uint8_t *pub_key, uint8_t *session_key);
 #endif

@@ -4426,6 +4426,90 @@ START_TEST(test_aes) {
 }
 END_TEST
 
+static void test_ecdh_multiply_helper(
+    int (*ecdh_multiply_fn)(const ecdsa_curve *curve, const uint8_t *priv_key,
+                            const uint8_t *pub_key, uint8_t *session_key)) {
+  static struct {
+    const char *priv_key;
+    const char *pub_key;
+    int res;
+    const char *session_key;
+  } tests[] = {
+      // Compressed public key
+      {"1618cc490a4a5b38d9f877759a2c312026fe9f459edb9ba49e91b6de4a237cad",
+       "0322c16706cd0d80dbb4e314799ba1323420e7ffa859a0cf0c82a444192bb6c997", 0,
+       "047b27ebb15e8197c9a560afc1bd45e2a78b864829fc1257333a1a2d7d30d79eed17889"
+       "8ad4960f756cf155cf46d22f2e3b21df10ee5bad560c467ae0d79427a70"},
+      // Uncompressed public key
+      {"55b57f9ffc79d206eaa2b25dd5fe5a0be2d9d880ddfa777a3a0f9c0b2d3a191e",
+       "04816c5bb10c97b96a0b02382b8f8c1a8876218af04396976dace353a139752c6baef57"
+       "449121650cefca54cf9ac4e304890ada667512b5d98171b54a5a8347b09",
+       0,
+       "049b3ab299d119eb89b632ff63ed0b3790508a0020fd729bbc35f39d221101ac5edc3be"
+       "e252886ea8f68c835ed410b715d41e967d0bd10a01a4b01eaa2320a7f4d"},
+      // Invalid compressed public key
+      {"d2ffd4daa78a7fb253edb315e27f5841df00a581ab2c3330ffded22be98b7c96",
+       "026a575a9f3d4e945366a78e7961b312018451df8485ee1210767a0575225c2764", 1,
+       ""},
+      // Invalid uncompressed public key
+      {"7da05844e870b1674c14a9a80b45ef36d221680707b727a7b6c70b2a25e99717",
+       "71ebf221ab355d070a570525e4c4bff94b27ca97e67fcdfb993f6546e7e1ead0ea09ed1"
+       "f7e55282f2787c7fc54cc5815660641cd95148a4b56f15818a04c7f72",
+       1, ""},
+      // Invalid compressed public key - the point at infinity
+      {"6753537e70935a9c85b0bad5b2aa54fb565b50bcf086acc7836a94318bc442d4",
+       "000000000000000000000000000000000000000000000000000000000000000000", 1,
+       ""},
+      // Invalid uncompressed public key - the point at infinity
+      {"6753537e70935a9c85b0bad5b2aa54fb565b50bcf086acc7836a94318bc442d4",
+       "0000000000000000000000000000000000000000000000000000000000000000000000"
+       "0"
+       "00000000000000000000000000000000000000000000000000000000000",
+       1, ""},
+      // Invalid private key - the group order
+      {"fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141",
+       "02e38ad3515c21358659ef113864b26e6caaa6bb780ce02daaf1c13f4fe24bb632", 2,
+       ""},
+      // Invalid private key - zero
+      {"0000000000000000000000000000000000000000000000000000000000000000",
+       "038325242a489e883afdc86da5a714e4ffc86530e1b6660ac87ffb87c0045e486c", 2,
+       ""},
+  };
+
+  const ecdsa_curve *curve = &secp256k1;
+  uint8_t priv_key[32] = {0};
+  uint8_t pub_key[65] = {0};
+  uint8_t session_key[65] = {0};
+  uint8_t expected_session_key[65] = {0};
+  int expected_res = 0;
+  int res = 0;
+
+  for (size_t i = 0; i < sizeof(tests) / sizeof(*tests); i++) {
+    memcpy(priv_key, fromhex(tests[i].priv_key), 32);
+    memcpy(pub_key, fromhex(tests[i].pub_key), 65);
+    expected_res = tests[i].res;
+    if (expected_res == 0) {
+      memcpy(expected_session_key, fromhex(tests[i].session_key), 65);
+    }
+
+    res = ecdh_multiply_fn(curve, priv_key, pub_key, session_key);
+    ck_assert_int_eq(expected_res, res);
+    if (expected_res == 0) {
+      ck_assert_mem_eq(expected_session_key, session_key, 65);
+    }
+  }
+}
+
+START_TEST(test_tc_ecdh_multiply) {
+  test_ecdh_multiply_helper(tc_ecdh_multiply);
+}
+END_TEST
+
+START_TEST(test_zkp_ecdh_multiply) {
+  test_ecdh_multiply_helper(zkp_ecdh_multiply);
+}
+END_TEST
+
 // test vectors from
 // https://datatracker.ietf.org/doc/html/rfc3610
 // https://doi.org/10.6028/NIST.SP.800-38C
@@ -11351,10 +11435,12 @@ Suite *test_suite(void) {
   tcase_add_test(tc, test_tc_ecdsa_get_public_key65);
   tcase_add_test(tc, test_tc_ecdsa_recover_pub_from_sig);
   tcase_add_test(tc, test_tc_ecdsa_verify_digest);
+  tcase_add_test(tc, test_tc_ecdh_multiply);
   tcase_add_test(tc, test_zkp_ecdsa_get_public_key33);
   tcase_add_test(tc, test_zkp_ecdsa_get_public_key65);
   tcase_add_test(tc, test_zkp_ecdsa_recover_pub_from_sig);
   tcase_add_test(tc, test_zkp_ecdsa_verify_digest);
+  tcase_add_test(tc, test_zkp_ecdh_multiply);
 #if USE_RFC6979
   tcase_add_test(tc, test_tc_ecdsa_sign_digest_deterministic);
   tcase_add_test(tc, test_zkp_ecdsa_sign_digest_deterministic);
