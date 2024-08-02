@@ -300,8 +300,12 @@ int hdnode_public_ckd_cp(const ecdsa_curve *curve, const curve_point *parent,
     hmac_sha512(parent_chain_code, 32, data, sizeof(data), I);
     bn_read_be(I, &c);
     if (bn_is_less(&c, &curve->order)) {  // < order
-      scalar_multiply(curve, &c, child);  // b = c * G
-      point_add(curve, parent, child);    // b = a + b
+      // b = c * G
+      uint8_t child_pubkey[65] = {0};
+      ecdsa_get_public_key65(curve, I, child_pubkey);
+      ecdsa_read_pubkey(curve, child_pubkey, child);
+
+      point_add(curve, parent, child);  // b = a + b
       if (!point_is_infinity(child)) {
         if (child_chain_code) {
           memcpy(child_chain_code, I + 32, 32);
