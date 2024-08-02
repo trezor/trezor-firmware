@@ -487,6 +487,7 @@ class TR:
     nem__unknown_mosaic: str = "Unknown mosaic!"
     passphrase__access_wallet: str = "Access passphrase wallet?"
     passphrase__always_on_device: str = "Always enter your passphrase on Trezor?"
+    passphrase__continue_with_empty_passphrase: str = "Continue with empty passphrase?"
     passphrase__from_host_not_shown: str = "Passphrase provided by host will be used but will not be displayed due to the device settings."
     passphrase__hide: str = "Hide passphrase coming from host?"
     passphrase__next_screen_will_show_passphrase: str = "The next screen shows your passphrase."

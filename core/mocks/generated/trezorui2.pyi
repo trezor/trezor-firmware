@@ -349,7 +349,7 @@ def request_pin(
 
 
 # rust/src/ui/model_mercury/layout.rs
-def request_passphrase(
+def flow_request_passphrase(
     *,
     prompt: str,
     max_len: int,

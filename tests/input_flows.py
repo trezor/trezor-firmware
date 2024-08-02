@@ -1597,7 +1597,7 @@ class InputFlowSlip39BasicResetRecovery(InputFlowBase):
         # Mnemonic phrases
         self.mnemonics = yield from load_N_shares(self.debug, 5)
 
-        br = yield  # safety warning
+        br = yield  # success screen
         assert br.code == B.Success
         self.debug.press_yes()
 
