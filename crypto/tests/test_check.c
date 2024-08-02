@@ -4115,6 +4115,88 @@ START_TEST(test_aes) {
 }
 END_TEST
 
+static void test_ecdh_multiply_helper(
+    int (*ecdh_multiply_fn)(const ecdsa_curve *curve, const uint8_t *priv_key,
+                            const uint8_t *pub_key, uint8_t *session_key)) {
+  static struct {
+    const char *priv_key;
+    const char *pub_key;
+    int res;
+    const char *session_key;
+  } tests[] = {
+      // Compressed public key
+      {"1618cc490a4a5b38d9f877759a2c312026fe9f459edb9ba49e91b6de4a237cad",
+       "0322c16706cd0d80dbb4e314799ba1323420e7ffa859a0cf0c82a444192bb6c997", 0,
+       "047b27ebb15e8197c9a560afc1bd45e2a78b864829fc1257333a1a2d7d30d79eed17889"
+       "8ad4960f756cf155cf46d22f2e3b21df10ee5bad560c467ae0d79427a70"},
+      // Uncompressed public key
+      {"d56e61dea5c8412292c8a645f20846109a228532b475ff33b7c32663ddb66600",
+       "0282dc03a182e2613a9d2e3f2dc1bdd9e6b541708a719f610c06d1a09be62d3aa2", 0,
+       "0496d82e44fc23e9e8b8f7fabe95fcaff6073b66341324320a7bde5fdb3c7a7990c762c"
+       "c7ce477ca97c4e650a7f9297d240579d46630abbdb6d938732e864f8280"},
+      // Invalid compressed public key
+      {"d2ffd4daa78a7fb253edb315e27f5841df00a581ab2c3330ffded22be98b7c96",
+       "026a575a9f3d4e945366a78e7961b312018451df8485ee1210767a0575225c2764", 1,
+       ""},
+      // Invalid uncompressed public key
+      {"7da05844e870b1674c14a9a80b45ef36d221680707b727a7b6c70b2a25e99717",
+       "71ebf221ab355d070a570525e4c4bff94b27ca97e67fcdfb993f6546e7e1ead0ea09ed1"
+       "f7e55282f2787c7fc54cc5815660641cd95148a4b56f15818a04c7f72",
+       1, ""},
+      // Invalid compressed public key - the point at infinity
+      {"6753537e70935a9c85b0bad5b2aa54fb565b50bcf086acc7836a94318bc442d4",
+       "000000000000000000000000000000000000000000000000000000000000000000", 1,
+       ""},
+      // Invalid uncompressed public key - the point at infinity
+      {"6753537e70935a9c85b0bad5b2aa54fb565b50bcf086acc7836a94318bc442d4",
+       "0000000000000000000000000000000000000000000000000000000000000000000000"
+       "0"
+       "00000000000000000000000000000000000000000000000000000000000",
+       1, ""},
+      // Invalid private key - the group order
+      {"fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141",
+       "02e38ad3515c21358659ef113864b26e6caaa6bb780ce02daaf1c13f4fe24bb632", 2,
+       ""},
+      // Invalid private key - zero
+      {"0000000000000000000000000000000000000000000000000000000000000000",
+       "038325242a489e883afdc86da5a714e4ffc86530e1b6660ac87ffb87c0045e486c", 2,
+       ""},
+  };
+
+  const ecdsa_curve *curve = &secp256k1;
+  uint8_t priv_key[32] = {0};
+  uint8_t pub_key[33] = {0};
+  uint8_t session_key[65] = {0};
+  uint8_t expected_session_key[65] = {0};
+  int expected_res = 0;
+  int res = 0;
+
+  for (size_t i = 0; i < sizeof(tests) / sizeof(*tests); i++) {
+    memcpy(priv_key, fromhex(tests[i].priv_key), 32);
+    memcpy(pub_key, fromhex(tests[i].pub_key), 33);
+    if (expected_res == 0) {
+      memcpy(expected_session_key, fromhex(tests[i].session_key), 65);
+    }
+    expected_res = tests[i].res;
+
+    res = ecdh_multiply_fn(curve, priv_key, pub_key, session_key);
+    ck_assert_int_eq(expected_res, res);
+    if (expected_res == 0) {
+      ck_assert_mem_eq(expected_session_key, session_key, 65);
+    }
+  }
+}
+
+START_TEST(test_tc_ecdh_multiply) {
+  test_ecdh_multiply_helper(tc_ecdh_multiply);
+}
+END_TEST
+
+START_TEST(test_zkp_ecdh_multiply) {
+  test_ecdh_multiply_helper(zkp_ecdh_multiply);
+}
+END_TEST
+
 // test vectors from
 // https://datatracker.ietf.org/doc/html/rfc3610
 // https://doi.org/10.6028/NIST.SP.800-38C
@@ -7074,6 +7156,7 @@ START_TEST(test_ecdsa_der) {
 }
 END_TEST
 
+#if USE_PRECOMPUTED_CP
 static void test_codepoints_curve(const ecdsa_curve *curve) {
   int i, j;
   bignum256 a;
@@ -7111,6 +7194,7 @@ START_TEST(test_codepoints_secp256k1) { test_codepoints_curve(&secp256k1); }
 END_TEST
 START_TEST(test_codepoints_nist256p1) { test_codepoints_curve(&nist256p1); }
 END_TEST
+#endif
 
 static void test_mult_border_cases_curve(const ecdsa_curve *curve) {
   bignum256 a;
@@ -11033,10 +11117,12 @@ Suite *test_suite(void) {
   tcase_add_test(tc, test_tc_ecdsa_get_public_key65);
   tcase_add_test(tc, test_tc_ecdsa_recover_pub_from_sig);
   tcase_add_test(tc, test_tc_ecdsa_verify_digest);
+  tcase_add_test(tc, test_tc_ecdh_multiply);
   tcase_add_test(tc, test_zkp_ecdsa_get_public_key33);
   tcase_add_test(tc, test_zkp_ecdsa_get_public_key65);
   tcase_add_test(tc, test_zkp_ecdsa_recover_pub_from_sig);
   tcase_add_test(tc, test_zkp_ecdsa_verify_digest);
+  tcase_add_test(tc, test_zkp_ecdh_multiply);
 #if USE_RFC6979
   tcase_add_test(tc, test_tc_ecdsa_sign_digest_deterministic);
   tcase_add_test(tc, test_zkp_ecdsa_sign_digest_deterministic);
@@ -11150,10 +11236,12 @@ Suite *test_suite(void) {
   tcase_add_test(tc, test_pubkey_uncompress);
   suite_add_tcase(s, tc);
 
+#if USE_PRECOMPUTED_CP
   tc = tcase_create("codepoints");
   tcase_add_test(tc, test_codepoints_secp256k1);
   tcase_add_test(tc, test_codepoints_nist256p1);
   suite_add_tcase(s, tc);
+#endif
 
   tc = tcase_create("mult_border_cases");
   tcase_add_test(tc, test_mult_border_cases_secp256k1);

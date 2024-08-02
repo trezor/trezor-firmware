@@ -29,6 +29,7 @@
 #include "zkp_context.h"
 
 #include "vendor/secp256k1-zkp/include/secp256k1.h"
+#include "vendor/secp256k1-zkp/include/secp256k1_ecdh.h"
 #include "vendor/secp256k1-zkp/include/secp256k1_extrakeys.h"
 #include "vendor/secp256k1-zkp/include/secp256k1_preallocated.h"
 #include "vendor/secp256k1-zkp/include/secp256k1_recovery.h"
@@ -38,6 +39,16 @@
 static bool is_zero_digest(const uint8_t *digest) {
   const uint8_t zeroes[32] = {0};
   return memcmp(digest, zeroes, 32) == 0;
+}
+
+static size_t get_public_key_length(const uint8_t *public_key_bytes) {
+  if (public_key_bytes[0] == 0x04) {
+    return 65;
+  } else if (public_key_bytes[0] == 0x02 || public_key_bytes[0] == 0x03) {
+    return 33;
+  } else {
+    return 0;
+  }
 }
 
 // ECDSA compressed public key derivation
@@ -321,16 +332,9 @@ int zkp_ecdsa_verify_digest(const ecdsa_curve *curve,
 
   int result = 0;
 
-  int public_key_length = 0;
-
-  if (result == 0) {
-    if (public_key_bytes[0] == 0x04) {
-      public_key_length = 65;
-    } else if (public_key_bytes[0] == 0x02 || public_key_bytes[0] == 0x03) {
-      public_key_length = 33;
-    } else {
-      result = 1;
-    }
+  size_t public_key_length = get_public_key_length(public_key_bytes);
+  if (public_key_length == 0) {
+    result = 1;
   }
 
   if (result == 0) {
@@ -401,5 +405,75 @@ int zkp_ecdsa_verify(const ecdsa_curve *curve, HasherType hasher_type,
   int result =
       zkp_ecdsa_verify_digest(curve, public_key_bytes, signature_bytes, hash);
   memzero(hash, sizeof(hash));
+  return result;
+}
+
+static int plain_hash_function(unsigned char *output, const unsigned char *x32,
+                               const unsigned char *y32, void *data) {
+  (void)data;
+  output[0] = 0x04;
+  memcpy(output + 1, x32, 32);
+  memcpy(output + 33, y32, 32);
+  return 1;
+}
+
+// ECDH multiplication
+// curve has to be &secp256k1
+// private_key_bytes has 32 bytes
+// public_key_bytes has 33 or 65 bytes
+// session key has 65 bytes
+// returns 0 on success
+int zkp_ecdh_multiply(const ecdsa_curve *curve,
+                      const uint8_t *private_key_bytes,
+                      const uint8_t *public_key_bytes, uint8_t *session_key) {
+  assert(curve == &secp256k1);
+  if (curve != &secp256k1) {
+    return 1;
+  }
+
+  int result = 0;
+
+  size_t public_key_length = get_public_key_length(public_key_bytes);
+  if (public_key_length == 0) {
+    result = 1;
+  }
+
+  const secp256k1_context *context_read_only = zkp_context_get_read_only();
+  secp256k1_pubkey public_key = {0};
+
+  if (result == 0) {
+    if (secp256k1_ec_pubkey_parse(context_read_only, &public_key,
+                                  public_key_bytes, public_key_length) != 1) {
+      result = 1;
+    }
+  }
+
+  secp256k1_context *context_writable = NULL;
+  if (result == 0) {
+    context_writable = zkp_context_acquire_writable();
+    if (context_writable == NULL) {
+      result = 1;
+    }
+  }
+  if (result == 0) {
+    if (secp256k1_context_writable_randomize(context_writable) != 0) {
+      result = 1;
+    }
+  }
+
+  if (result == 0) {
+    if (secp256k1_ecdh(context_writable, session_key, &public_key,
+                       private_key_bytes, plain_hash_function, NULL) != 1) {
+      result = 1;
+    }
+  }
+
+  if (context_writable) {
+    zkp_context_release_writable();
+    context_writable = NULL;
+  }
+
+  memzero(&public_key, sizeof(public_key));
+
   return result;
 }
