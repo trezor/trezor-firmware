@@ -1374,7 +1374,7 @@ def show_wait_text(message: str) -> None:
 async def request_passphrase_on_device(max_len: int) -> str:
     result = await interact(
         RustLayout(
-            trezorui2.request_passphrase(
+            trezorui2.flow_request_passphrase(
                 prompt=TR.passphrase__title_enter, max_len=max_len
             )
         ),
@@ -1384,8 +1384,18 @@ async def request_passphrase_on_device(max_len: int) -> str:
     if result is CANCELLED:
         raise ActionCancelled("Passphrase entry cancelled")
 
-    assert isinstance(result, str)
-    return result
+    if __debug__:
+        if not isinstance(result, tuple):
+            # TODO: DebugLink problem, better comment or solution?
+            result = (CONFIRMED, str(result))
+
+    status, value = result
+    if status == CONFIRMED:
+        assert isinstance(value, str)
+        return value
+    else:
+        # flow_request_pin returns either CANCELLED or (CONFIRMED, str) so this branch shouldn't be taken
+        raise ActionCancelled("Passphrase entry cancelled")
 
 
 async def request_pin_on_device(
