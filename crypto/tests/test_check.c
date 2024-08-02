@@ -7385,6 +7385,7 @@ START_TEST(test_ecdsa_der) {
 }
 END_TEST
 
+#if USE_PRECOMPUTED_CP
 static void test_codepoints_curve(const ecdsa_curve *curve) {
   int i, j;
   bignum256 a;
@@ -7422,6 +7423,7 @@ START_TEST(test_codepoints_secp256k1) { test_codepoints_curve(&secp256k1); }
 END_TEST
 START_TEST(test_codepoints_nist256p1) { test_codepoints_curve(&nist256p1); }
 END_TEST
+#endif
 
 static void test_mult_border_cases_curve(const ecdsa_curve *curve) {
   bignum256 a;
@@ -11466,10 +11468,12 @@ Suite *test_suite(void) {
   tcase_add_test(tc, test_pubkey_uncompress);
   suite_add_tcase(s, tc);
 
+#if USE_PRECOMPUTED_CP
   tc = tcase_create("codepoints");
   tcase_add_test(tc, test_codepoints_secp256k1);
   tcase_add_test(tc, test_codepoints_nist256p1);
   suite_add_tcase(s, tc);
+#endif
 
   tc = tcase_create("mult_border_cases");
   tcase_add_test(tc, test_mult_border_cases_secp256k1);
