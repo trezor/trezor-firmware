@@ -20,8 +20,8 @@
 #include STM32_HAL_H
 #include "rng.h"
 
-#define SAMPLES 110
-#define TIMER_PERIOD 16640  // cca 10 KHz @ 160MHz
+#define SAMPLES 119
+#define TIMER_PERIOD 16000  // cca 10 KHz @ 160MHz
 
 uint32_t pwm_data[SAMPLES] = {0};
 
