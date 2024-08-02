@@ -188,6 +188,7 @@ if FEATURE_FLAGS["SECP256K1_ZKP"]:
         'ENABLE_MODULE_RECOVERY',
         'ENABLE_MODULE_SCHNORRSIG',
         'ENABLE_MODULE_EXTRAKEYS',
+        'ENABLE_MODULE_ECDH',
     ]
     SOURCE_MOD_SECP256K1_ZKP = [
         'vendor/secp256k1-zkp/src/secp256k1.c',
@@ -779,7 +780,7 @@ obj_program = []
 obj_program.extend(env.Object(source=SOURCE_MOD))
 obj_program.extend(env.Object(source=SOURCE_MOD_CRYPTO, CCFLAGS='$CCFLAGS -ftrivial-auto-var-init=zero'))
 if FEATURE_FLAGS["SECP256K1_ZKP"]:
-    obj_program.extend(env.Object(source=SOURCE_MOD_SECP256K1_ZKP, CCFLAGS='$CCFLAGS -Wno-unused-function'))
+    obj_program.extend(env.Object(source=SOURCE_MOD_SECP256K1_ZKP, CCFLAGS='$CCFLAGS -Wno-unused-function -Wno-maybe-uninitialized'))
     source_files.extend(SOURCE_MOD_SECP256K1_ZKP)
 obj_program.extend(env.Object(source=SOURCE_FIRMWARE))
 obj_program.extend(env.Object(source=SOURCE_MICROPYTHON))

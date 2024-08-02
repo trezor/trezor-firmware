@@ -4115,6 +4115,48 @@ START_TEST(test_aes) {
 }
 END_TEST
 
+static void test_ecdh_multiply_helper(
+    int (*ecdh_multiply_fn)(const ecdsa_curve *curve, const uint8_t *priv_key,
+                            const uint8_t *pub_key, uint8_t *session_key)) {
+  static struct {
+    const char *priv_key;
+    const char *pub_key;
+    const char *session_key;
+  } tests[] = {
+      {"1618cc490a4a5b38d9f877759a2c312026fe9f459edb9ba49e91b6de4a237cad",
+       "0322c16706cd0d80dbb4e314799ba1323420e7ffa859a0cf0c82a444192bb6c997",
+       "047b27ebb15e8197c9a560afc1bd45e2a78b864829fc1257333a1a2d7d30d79eed17889"
+       "8ad4960f756cf155cf46d22f2e3b21df10ee5bad560c467ae0d79427a70"},
+  };
+
+  const ecdsa_curve *curve = &secp256k1;
+  uint8_t priv_key[32] = {0};
+  uint8_t pub_key[33] = {0};
+  uint8_t session_key[65] = {0};
+  uint8_t expected_session_key[65] = {0};
+  int res = 0;
+
+  for (size_t i = 0; i < sizeof(tests) / sizeof(*tests); i++) {
+    memcpy(priv_key, fromhex(tests[i].priv_key), 32);
+    memcpy(pub_key, fromhex(tests[i].pub_key), 33);
+    memcpy(expected_session_key, fromhex(tests[i].session_key), 65);
+
+    res = ecdh_multiply_fn(curve, priv_key, pub_key, session_key);
+    ck_assert_int_eq(res, 0);
+    ck_assert_mem_eq(expected_session_key, session_key, 65);
+  }
+}
+
+START_TEST(test_tc_ecdh_multiply) {
+  test_ecdh_multiply_helper(tc_ecdh_multiply);
+}
+END_TEST
+
+START_TEST(test_zkp_ecdh_multiply) {
+  test_ecdh_multiply_helper(zkp_ecdh_multiply);
+}
+END_TEST
+
 // test vectors from
 // https://datatracker.ietf.org/doc/html/rfc3610
 // https://doi.org/10.6028/NIST.SP.800-38C
@@ -11035,10 +11077,12 @@ Suite *test_suite(void) {
   tcase_add_test(tc, test_tc_ecdsa_get_public_key65);
   tcase_add_test(tc, test_tc_ecdsa_recover_pub_from_sig);
   tcase_add_test(tc, test_tc_ecdsa_verify_digest);
+  tcase_add_test(tc, test_tc_ecdh_multiply);
   tcase_add_test(tc, test_zkp_ecdsa_get_public_key33);
   tcase_add_test(tc, test_zkp_ecdsa_get_public_key65);
   tcase_add_test(tc, test_zkp_ecdsa_recover_pub_from_sig);
   tcase_add_test(tc, test_zkp_ecdsa_verify_digest);
+  tcase_add_test(tc, test_zkp_ecdh_multiply);
 #if USE_RFC6979
   tcase_add_test(tc, test_tc_ecdsa_sign_digest_deterministic);
   tcase_add_test(tc, test_zkp_ecdsa_sign_digest_deterministic);

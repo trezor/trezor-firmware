@@ -39,5 +39,6 @@ int tc_ecdsa_verify_digest(const ecdsa_curve *curve, const uint8_t *pub_key,
 int tc_ecdsa_recover_pub_from_sig(const ecdsa_curve *curve, uint8_t *pub_key,
                                   const uint8_t *sig, const uint8_t *digest,
                                   int recid);
-
+int tc_ecdh_multiply(const ecdsa_curve *curve, const uint8_t *priv_key,
+                     const uint8_t *pub_key, uint8_t *session_key);
 #endif
