@@ -91,8 +91,8 @@ static inline gfx_clip_t gfx_clip(gfx_rect_t dst, const gfx_bitmap_t* bitmap) {
 void gfx_clear(void) {
   gfx_bitblt_t bb = {
       // Destination bitmap
-      .height = DISPLAY_RESX,
-      .width = DISPLAY_RESY,
+      .height = DISPLAY_RESY,
+      .width = DISPLAY_RESX,
       .dst_row = NULL,
       .dst_x = 0,
       .dst_y = 0,
