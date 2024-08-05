@@ -35,7 +35,11 @@
 #include "secret.h"
 
 #ifdef USE_DMA2D
+#ifdef NEW_RENDERING
+#include "dma2d_bitblt.h"
+#else
 #include "dma2d.h"
+#endif
 #endif
 #ifdef USE_I2C
 #include "i2c.h"

@@ -22,6 +22,9 @@
 
 #include "gfx_bitblt.h"
 
+// Initializes DMA2D peripheral
+void dma2d_init(void);
+
 // Waits until any pending DMA2D operation is finished
 void dma2d_wait(void);
 
