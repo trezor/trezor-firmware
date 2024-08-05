@@ -27,6 +27,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - [T3T1] Fix More info screen during multi-share backup creation.  [#4006]
 - [T3T1] Fixed title sometimes not fitting into result screen.  [#4023]
 - [T3T1] Adjusted detection of swipes: vertical swipes are preferred over horizontal swipes.  [#4060]
+- Solana: added support for deprecated AToken Create `rent_sysvar` argument.  [#3976]
 
 ## [2.8.0] (9th July 2024)
 
@@ -965,6 +966,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#3965]: https://github.com/trezor/trezor-firmware/pull/3965
 [#3969]: https://github.com/trezor/trezor-firmware/pull/3969
 [#3972]: https://github.com/trezor/trezor-firmware/pull/3972
+[#3976]: https://github.com/trezor/trezor-firmware/pull/3976
 [#3987]: https://github.com/trezor/trezor-firmware/pull/3987
 [#3990]: https://github.com/trezor/trezor-firmware/pull/3990
 [#3992]: https://github.com/trezor/trezor-firmware/pull/3992
