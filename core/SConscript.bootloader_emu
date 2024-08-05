@@ -158,7 +158,6 @@ SOURCE_TREZORHAL = [
 if NEW_RENDERING:
     SOURCE_TREZORHAL += [
         'embed/trezorhal/unix/display_driver.c',
-        'embed/trezorhal/unix/dma2d_bitblt.c',
         'embed/trezorhal/xdisplay_legacy.c',
     ]
 else:

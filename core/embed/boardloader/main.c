@@ -44,6 +44,14 @@
 #include "hash_processor.h"
 #endif
 
+#ifdef USE_DMA2D
+#ifdef NEW_RENDERING
+#include "dma2d_bitblt.h"
+#else
+#include "dma2d.h"
+#endif
+#endif
+
 #include "lowlevel.h"
 #include "model.h"
 #include "version.h"
@@ -279,6 +287,10 @@ int main(void) {
 
 #ifdef USE_HASH_PROCESSOR
   hash_processor_init();
+#endif
+
+#ifdef USE_DMA2D
+  dma2d_init();
 #endif
 
   display_init();

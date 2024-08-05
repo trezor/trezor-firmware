@@ -92,10 +92,10 @@ def configure(
         features_available.append("usb")
 
     defines += ["USE_DMA2D", "FRAMEBUFFER", "FRAMEBUFFER32BIT", "UI_COLOR_32BIT"]
-    sources += [
-        "embed/trezorhal/stm32u5/dma2d.c",
-        "embed/trezorhal/stm32u5/dma2d_bitblt.c",
-    ]
+    if "new_rendering" in features_wanted:
+        sources += ["embed/trezorhal/stm32u5/dma2d_bitblt.c"]
+    else:
+        sources += ["embed/trezorhal/stm32u5/dma2d.c"]
     features_available.append("dma2d")
     features_available.append("framebuffer")
     features_available.append("framebuffer32bit")

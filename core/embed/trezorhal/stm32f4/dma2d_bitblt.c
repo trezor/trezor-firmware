@@ -40,6 +40,8 @@ static inline bool dma2d_accessible(const void* ptr) {
 #endif
 }
 
+void dma2d_init(void) { __HAL_RCC_DMA2D_CLK_ENABLE(); }
+
 void dma2d_wait(void) {
   while (HAL_DMA2D_PollForTransfer(&dma2d_handle, 10) != HAL_OK)
     ;

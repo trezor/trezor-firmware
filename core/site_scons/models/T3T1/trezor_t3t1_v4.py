@@ -115,8 +115,10 @@ def configure(
 
     if "dma2d" in features_wanted:
         defines += ["USE_DMA2D"]
-        sources += ["embed/trezorhal/stm32u5/dma2d.c"]
-        sources += ["embed/trezorhal/stm32u5/dma2d_bitblt.c"]
+        if "new_rendering" in features_wanted:
+            sources += ["embed/trezorhal/stm32u5/dma2d_bitblt.c"]
+        else:
+            sources += ["embed/trezorhal/stm32u5/dma2d.c"]
         features_available.append("dma2d")
 
     if "optiga" in features_wanted:

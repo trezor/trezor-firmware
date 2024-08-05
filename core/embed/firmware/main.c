@@ -60,8 +60,13 @@
 #include "consumption_mask.h"
 #endif
 #ifdef USE_DMA2D
+#ifdef NEW_RENDERING
+#include "dma2d_bitblt.h"
+#else
 #include "dma2d.h"
 #endif
+#endif
+
 #ifdef USE_BUTTON
 #include "button.h"
 #endif
