@@ -7,6 +7,8 @@ from trezor.wire.errors import UnexpectedMessage
 from trezor.wire.protocol_common import Message
 
 if utils.USE_THP:
+    from typing import TYPE_CHECKING
+
     import thp_common
     from storage import cache_thp
     from storage.cache_common import (
@@ -27,15 +29,56 @@ if utils.USE_THP:
         ThpStartPairingRequest,
     )
     from trezor.wire import thp_main
-    from trezor.wire.thp import ChannelState, interface_manager
+    from trezor.wire.thp import ChannelState, checksum, interface_manager
     from trezor.wire.thp.crypto import Handshake
     from trezor.wire.thp.pairing_context import PairingContext
 
     from apps.thp import pairing
 
+    if TYPE_CHECKING:
+        from trezor.wire import WireInterface
 
-def get_dummy_key() -> bytes:
-    return b"\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x10\x01\x02\x03\x04\x05\x06\x07\x08\x09\x20\x01\x02\x03\x04\x05\x06\x07\x08\x09\x30\x31"
+    def get_dummy_key() -> bytes:
+        return b"\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x10\x01\x02\x03\x04\x05\x06\x07\x08\x09\x20\x01\x02\x03\x04\x05\x06\x07\x08\x09\x30\x31"
+
+    def send_channel_allocation_request(
+        interface: WireInterface, nonce: bytes | None = None
+    ) -> bytes:
+        if nonce is None or len(nonce) != 8:
+            nonce = b"\x00\x11\x22\x33\x44\x55\x66\x77"
+        header = b"\x40\xff\xff\x00\x0c"
+        chksum = checksum.compute(header + nonce)
+        cid_req = header + nonce + chksum
+        gen = thp_main.thp_main_loop(interface, is_debug_session=True)
+        gen.send(None)
+        gen.send(cid_req)
+        gen.send(None)
+        response_data = (
+            b"\x0a\x04\x54\x32\x54\x31\x10\x00\x18\x00\x20\x02\x28\x02\x28\x03\x28\x04"
+        )
+        response_without_crc = (
+            b"\x41\xff\xff\x00\x20"
+            + nonce
+            + cache_thp.cid_counter.to_bytes(2, "big")
+            + response_data
+        )
+        chkcsum = checksum.compute(response_without_crc)
+        expected_response = response_without_crc + chkcsum + b"\x00" * 27
+        return expected_response
+
+    def get_channel_id_from_response(channel_allocation_response: bytes) -> int:
+        return int.from_bytes(channel_allocation_response[13:15], "big")
+
+    def get_ack(channel_id: bytes) -> bytes:
+        if len(channel_id) != 2:
+            raise Exception("Channel id should by two bytes long")
+        return (
+            b"\x20"
+            + channel_id
+            + b"\x00\x04"
+            + checksum.compute(b"\x20" + channel_id + b"\x00\x04")
+            + b"\x00" * 55
+        )
 
 
 @unittest.skipUnless(utils.USE_THP, "only needed for THP")
@@ -52,34 +95,33 @@ class TestTrezorHostProtocol(unittest.TestCase):
         thp_main.set_buffer(buffer)
         interface_manager.decode_iface = thp_common.dummy_decode_iface
 
-    def test_channel_allocation(self):
-        cid_req = (
-            b"\x40\xff\xff\x00\x0c\x00\x11\x22\x33\x44\x55\x66\x77\x96\x64\x3c\x6c"
-        )
-        expected_response = "41ffff0020001122334455667712340a045432543110001800200228022803280428af9907000000000000000000000000000000000000000000000000000000"
-        test_counter = cache_thp.cid_counter + 1
-        self.assertEqual(len(thp_main._CHANNELS), 0)
-        self.assertFalse(test_counter in thp_main._CHANNELS)
+    def test_codec_message(self):
+        self.assertEqual(len(self.interface.data), 0)
         gen = thp_main.thp_main_loop(self.interface, is_debug_session=True)
-        query = gen.send(None)
-        self.assertObjectEqual(query, self.interface.wait_object(io.POLL_READ))
-        gen.send(cid_req)
         gen.send(None)
-        self.assertEqual(
-            utils.get_bytes_as_str(self.interface.data[-1]),
-            expected_response,
+
+        # There should be a failiure response to received init packet (starts with "?##")
+        test_codec_message = b"?## Some data"
+        gen.send(test_codec_message)
+        gen.send(None)
+        self.assertEqual(len(self.interface.data), 1)
+
+        expected_response = (
+            b"?##\x00\x03\x00\x00\x00\x14\x08\x01\x12\x10Invalid protocol"
         )
-        self.assertTrue(test_counter in thp_main._CHANNELS)
-        self.assertEqual(len(thp_main._CHANNELS), 1)
-        gen.send(cid_req)
-        gen.send(None)
-        gen.send(cid_req)
-        gen.send(None)
+        self.assertEqual(
+            self.interface.data[-1][: len(expected_response)], expected_response
+        )
 
-    def test_channel_default_state_is_TH1(self):
-        self.assertEqual(thp_main._CHANNELS[4660].get_channel_state(), ChannelState.TH1)
+        # There should be no response for continuation packet (starts with "?" only)
+        test_codec_message_2 = b"? Cont packet"
+        gen.send(test_codec_message_2)
+        with self.assertRaises(TypeError) as e:
+            gen.send(None)
+        self.assertEqual(e.value.value, "object with buffer protocol required")
+        self.assertEqual(len(self.interface.data), 1)
 
-    def test_channel_errors(self):
+    def test_message_on_unallocated_channel(self):
         gen = thp_main.thp_main_loop(self.interface, is_debug_session=True)
         query = gen.send(None)
         self.assertObjectEqual(query, self.interface.wait_object(io.POLL_READ))
@@ -93,31 +135,118 @@ class TestTrezorHostProtocol(unittest.TestCase):
             utils.get_bytes_as_str(self.interface.data[-1]),
             unallocated_chanel_error_on_channel_789a,
         )
+
+    def test_channel_allocation(self):
+        test_counter = cache_thp.cid_counter + 1
+        self.assertEqual(len(thp_main._CHANNELS), 0)
+        self.assertFalse(test_counter in thp_main._CHANNELS)
+
+        expected_response = send_channel_allocation_request(self.interface)
+        self.assertEqual(self.interface.data[-1], expected_response)
+
+        self.assertTrue(test_counter in thp_main._CHANNELS)
+        self.assertEqual(len(thp_main._CHANNELS), 1)
+
+        # test channel's default state is TH1:
+        cid = get_channel_id_from_response(self.interface.data[-1])
+        self.assertEqual(thp_main._CHANNELS[cid].get_channel_state(), ChannelState.TH1)
+
+    def test_invalid_encrypted_tag(self):
+        gen = thp_main.thp_main_loop(self.interface, is_debug_session=True)
+        gen.send(None)
+        # prepare 2 new channels
+        expected_response_1 = send_channel_allocation_request(self.interface)
+        expected_response_2 = send_channel_allocation_request(self.interface)
+        self.assertEqual(self.interface.data[-2], expected_response_1)
+        self.assertEqual(self.interface.data[-1], expected_response_2)
+
+        # test invalid encryption tag
         config.init()
         config.wipe()
-        channel = thp_main._CHANNELS[4661]
+        cid_1 = get_channel_id_from_response(expected_response_1)
+        channel = thp_main._CHANNELS[cid_1]
         channel.iface = self.interface
         channel.set_channel_state(ChannelState.ENCRYPTED_TRANSPORT)
-        message_with_invalid_tag = b"\x04\x12\x35\x00\x14\x00\x11\x22\x33\x44\x55\x66\x77\x00\x11\x22\x33\x44\x55\x66\x77\xe1\xfc\xc6\xe0"
+        header = b"\x04" + channel.channel_id + b"\x00\x14"
+
+        tag = b"\x00" * 16
+        chksum = checksum.compute(header + tag)
+        message_with_invalid_tag = header + tag + chksum
 
         channel.channel_cache.set(CHANNEL_KEY_RECEIVE, get_dummy_key())
         channel.channel_cache.set_int(CHANNEL_NONCE_RECEIVE, 0)
 
+        cid_1_bytes = int.to_bytes(cid_1, 2, "big")
+        expected_ack_on_received_message = get_ack(cid_1_bytes)
+
         gen.send(message_with_invalid_tag)
         gen.send(None)
-        ack_on_received_message = "2012350004d83ea46f00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+
         self.assertEqual(
-            utils.get_bytes_as_str(self.interface.data[-1]),
-            ack_on_received_message,
+            self.interface.data[-1],
+            expected_ack_on_received_message,
         )
+        error_without_crc = b"\x42" + cid_1_bytes + b"\x00\x05\x03"
+        chksum_err = checksum.compute(error_without_crc)
         gen.send(None)
-        decryption_failed_error_on_channel_1235 = "421235000503caf9634a000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+
+        decryption_failed_error = error_without_crc + chksum_err + b"\x00" * 54
+
         self.assertEqual(
-            utils.get_bytes_as_str(self.interface.data[-1]),
-            decryption_failed_error_on_channel_1235,
+            self.interface.data[-1],
+            decryption_failed_error,
         )
 
-        channel = thp_main._CHANNELS[4662]
+    def test_channel_errors(self):
+        gen = thp_main.thp_main_loop(self.interface, is_debug_session=True)
+        gen.send(None)
+        # prepare 2 new channels
+        expected_response_1 = send_channel_allocation_request(self.interface)
+        expected_response_2 = send_channel_allocation_request(self.interface)
+        self.assertEqual(self.interface.data[-2], expected_response_1)
+        self.assertEqual(self.interface.data[-1], expected_response_2)
+
+        # test invalid encryption tag
+        config.init()
+        config.wipe()
+        cid_1 = get_channel_id_from_response(expected_response_1)
+        channel = thp_main._CHANNELS[cid_1]
+        channel.iface = self.interface
+        channel.set_channel_state(ChannelState.ENCRYPTED_TRANSPORT)
+        header = b"\x04" + channel.channel_id + b"\x00\x14"
+
+        tag = b"\x00" * 16
+        chksum = checksum.compute(header + tag)
+        message_with_invalid_tag = header + tag + chksum
+
+        channel.channel_cache.set(CHANNEL_KEY_RECEIVE, get_dummy_key())
+        channel.channel_cache.set_int(CHANNEL_NONCE_RECEIVE, 0)
+
+        cid_1_bytes = int.to_bytes(cid_1, 2, "big")
+        expected_ack_on_received_message = get_ack(cid_1_bytes)
+
+        gen.send(message_with_invalid_tag)
+        gen.send(None)
+
+        self.assertEqual(
+            self.interface.data[-1],
+            expected_ack_on_received_message,
+        )
+        error_without_crc = b"\x42" + cid_1_bytes + b"\x00\x05\x03"
+        chksum_err = checksum.compute(error_without_crc)
+        gen.send(None)
+
+        decryption_failed_error = error_without_crc + chksum_err + b"\x00" * 54
+
+        self.assertEqual(
+            self.interface.data[-1],
+            decryption_failed_error,
+        )
+
+        # test invalid tag in handshake phase
+        cid_2 = get_channel_id_from_response(expected_response_1)
+        cid_2_bytes = cid_2.to_bytes(2, "big")
+        channel = thp_main._CHANNELS[cid_2]
         channel.iface = self.interface
 
         channel.set_channel_state(ChannelState.TH2)
@@ -126,13 +255,12 @@ class TestTrezorHostProtocol(unittest.TestCase):
 
         channel.channel_cache.set(CHANNEL_KEY_RECEIVE, get_dummy_key())
         channel.channel_cache.set_int(CHANNEL_NONCE_RECEIVE, 0)
-        channel.channel_cache.set(CHANNEL_HANDSHAKE_HASH, b"")
 
         # gen.send(message_with_invalid_tag)
         # gen.send(None)
         # gen.send(None)
-        for i in self.interface.data:
-            print(utils.get_bytes_as_str(i))
+        # for i in self.interface.data:
+        #    print(utils.get_bytes_as_str(i))
 
     def test_skip_pairing(self):
         config.init()
@@ -159,7 +287,10 @@ class TestTrezorHostProtocol(unittest.TestCase):
     def test_pairing(self):
         config.init()
         config.wipe()
-        channel = thp_main._CHANNELS[4660]
+        cid = get_channel_id_from_response(
+            send_channel_allocation_request(self.interface)
+        )
+        channel = thp_main._CHANNELS[cid]
         channel.selected_pairing_methods = [
             ThpPairingMethod.CodeEntry,
             ThpPairingMethod.NFC_Unidirectional,
@@ -209,8 +340,7 @@ class TestTrezorHostProtocol(unittest.TestCase):
         user_message = Message(MessageType.ThpCodeEntryCpaceHost, buffer)
         gen.send(user_message)
 
-        tag_ent = b"\x56\x34\xc5\x36\x60\xcc\x75\xbc\x58\x24\x76\x87\x74\xd2\x5f\x48\x80\xc0\x8c\x65\xab\x00\xe9\xf7\x0e\xb0\x10\x15\xe5\x8b\x4f\x6a"
-
+        tag_ent = b"\xd0\x15\xd6\x72\x7c\xa6\x9b\x2a\x07\xfa\x30\xee\x03\xf0\x2d\x04\xdc\x96\x06\x77\x0c\xbd\xb4\xaa\x77\xc7\x68\x6f\xae\xa9\xdd\x81"
         msg = ThpCodeEntryTag(tag=tag_ent)
 
         buffer: bytearray = bytearray(protobuf.encoded_length(msg))

@@ -105,7 +105,7 @@ class DataCache:
 
     def set_bool(self, key: int, value: bool) -> None:
         utils.ensure(
-            self._get_length(key) == 0
+            self._get_length(key) == 0, "Field does not have zero length!"
         )  # skipping get_length in production build
         if value:
             self.set(key, b"")
