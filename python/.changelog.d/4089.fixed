@@ -1,0 +1,1 @@
+It is now possible to interrupt USB communication (via Ctrl+C, or a signal, or any other way).
