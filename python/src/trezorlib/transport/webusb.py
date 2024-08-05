@@ -40,6 +40,9 @@ ENDPOINT = 1
 DEBUG_INTERFACE = 1
 DEBUG_ENDPOINT = 2
 
+USB_COMM_TIMEOUT_MS = 300
+WEBUSB_CHUNK_SIZE = 64
+
 
 class WebUsbHandle:
     def __init__(self, device: "usb1.USBDevice", debug: bool = False) -> None:
@@ -64,28 +67,53 @@ class WebUsbHandle:
 
     def close(self) -> None:
         if self.handle is not None:
-            self.handle.releaseInterface(self.interface)
-            self.handle.close()
+            try:
+                self.handle.releaseInterface(self.interface)
+                self.handle.close()
+            except Exception as e:
+                raise TransportException(f"USB close failed: {e}") from e
         self.handle = None
 
     def write_chunk(self, chunk: bytes) -> None:
         assert self.handle is not None
-        if len(chunk) != 64:
+        if len(chunk) != WEBUSB_CHUNK_SIZE:
             raise TransportException(f"Unexpected chunk size: {len(chunk)}")
         LOG.log(DUMP_PACKETS, f"writing packet: {chunk.hex()}")
-        self.handle.interruptWrite(self.endpoint, chunk)
+        while True:
+            try:
+                bytes_written = self.handle.interruptWrite(
+                    self.endpoint, chunk, USB_COMM_TIMEOUT_MS
+                )
+            except usb1.USBErrorTimeout as e:
+                bytes_written = e.transferred
+            except Exception as e:
+                raise TransportException(f"USB write failed: {e}") from e
+            if bytes_written == 0:
+                continue
+            if bytes_written != len(chunk):
+                raise TransportException(
+                    f"USB partial write: {bytes_written} out of {WEBUSB_CHUNK_SIZE}"
+                )
+            return
 
     def read_chunk(self) -> bytes:
         assert self.handle is not None
         endpoint = 0x80 | self.endpoint
         while True:
-            chunk = self.handle.interruptRead(endpoint, 64)
-            if chunk:
-                break
-            else:
-                time.sleep(0.001)
+            try:
+                chunk = self.handle.interruptRead(
+                    endpoint, WEBUSB_CHUNK_SIZE, USB_COMM_TIMEOUT_MS
+                )
+                if chunk:
+                    break
+                else:
+                    time.sleep(0.001)
+            except usb1.USBErrorTimeout:
+                pass
+            except Exception as e:
+                raise TransportException(f"USB read failed: {e}") from e
         LOG.log(DUMP_PACKETS, f"read packet: {chunk.hex()}")
-        if len(chunk) != 64:
+        if len(chunk) != WEBUSB_CHUNK_SIZE:
             raise TransportException(f"Unexpected chunk size: {len(chunk)}")
         return chunk
 
