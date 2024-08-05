@@ -330,3 +330,5 @@ def clear_sessions_with_channel_id(channel_id: bytes):
 def clear_all() -> None:
     for session in _SESSIONS:
         session.clear()
+    for channel in _CHANNELS:
+        channel.clear()
