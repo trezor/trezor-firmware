@@ -30,7 +30,7 @@ impl PromptScreen {
             theme::GREEN,
             theme::GREY_EXTRA_DARK,
             theme::GREEN_LIGHT,
-            theme::ICON_SIMPLE_CHECKMARK,
+            theme::ICON_SIMPLE_CHECKMARK30,
         ))
     }
 
@@ -40,7 +40,7 @@ impl PromptScreen {
             theme::ORANGE_LIGHT,
             theme::GREY_EXTRA_DARK,
             theme::ORANGE_DIMMED,
-            theme::ICON_SIMPLE_CHECKMARK,
+            theme::ICON_SIMPLE_CHECKMARK30,
         ))
     }
 

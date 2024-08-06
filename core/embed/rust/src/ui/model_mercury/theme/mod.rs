@@ -78,7 +78,7 @@ include_icon!(ICON_CONFIRM_INPUT, "model_mercury/res/confirm_input30.toif");
 include_icon!(ICON_DELETE, "model_mercury/res/delete30.toif");
 include_icon!(ICON_MENU, "model_mercury/res/menu30.toif");
 include_icon!(
-    ICON_SIMPLE_CHECKMARK,
+    ICON_SIMPLE_CHECKMARK30,
     "model_mercury/res/simple_checkmark30.toif"
 );
 include_icon!(ICON_SIGN, "model_mercury/res/sign30.toif");
@@ -301,33 +301,6 @@ pub const fn button_confirm() -> ButtonStyleSheet {
     }
 }
 
-// TODO: delete
-pub const fn button_cancel() -> ButtonStyleSheet {
-    ButtonStyleSheet {
-        normal: &ButtonStyle {
-            font: Font::BOLD,
-            text_color: FG,
-            button_color: ORANGE_LIGHT,
-            icon_color: GREY_LIGHT,
-            background_color: BG,
-        },
-        active: &ButtonStyle {
-            font: Font::BOLD,
-            text_color: FG,
-            button_color: ORANGE_DIMMED,
-            icon_color: GREY_LIGHT,
-            background_color: BG,
-        },
-        disabled: &ButtonStyle {
-            font: Font::BOLD,
-            text_color: GREY_LIGHT,
-            button_color: ORANGE_DIMMED,
-            icon_color: GREY_LIGHT,
-            background_color: BG,
-        },
-    }
-}
-
 pub const fn button_danger() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
@@ -478,6 +451,33 @@ pub const fn button_passphrase_confirm() -> ButtonStyleSheet {
             button_color: GREEN_LIGHT,
             icon_color: GREEN_DARK,
             background_color: GREEN_LIGHT,
+        },
+        // not used
+        disabled: &ButtonStyle {
+            font: Font::DEMIBOLD,
+            text_color: BG,
+            button_color: BG,
+            icon_color: BG,
+            background_color: BG,
+        },
+    }
+}
+
+pub const fn button_passphrase_confirm_empty() -> ButtonStyleSheet {
+    ButtonStyleSheet {
+        normal: &ButtonStyle {
+            font: Font::DEMIBOLD,
+            text_color: GREY,
+            button_color: GREY_EXTRA_DARK,
+            icon_color: GREY,
+            background_color: BG,
+        },
+        active: &ButtonStyle {
+            font: Font::DEMIBOLD,
+            text_color: BG,
+            button_color: GREY_LIGHT,
+            icon_color: BG,
+            background_color: GREY_LIGHT,
         },
         // not used
         disabled: &ButtonStyle {
