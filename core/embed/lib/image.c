@@ -270,7 +270,7 @@ secbool check_image_contents(const image_header *const hdr, uint32_t firstskip,
   const uint8_t *addr =
       (uint8_t *)flash_area_get_address(area, firstskip, padding_size);
   for (size_t i = 0; i < padding_size; i++) {
-    if (*addr != 0) {
+    if (*addr++ != 0) {
       return secfalse;
     }
   }
