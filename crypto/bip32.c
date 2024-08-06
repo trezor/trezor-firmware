@@ -209,6 +209,7 @@ int hdnode_private_ckd_bip32(HDNode *inout, uint32_t i) {
     memcpy(data + 1, inout->private_key, 32);
   } else {  // public derivation
     if (!inout->curve->params) {
+      // SLIP-10 doesn't support public derivation for ed25519 and curve25519
       return 0;
     }
     if (hdnode_fill_public_key(inout) != 0) {
@@ -320,6 +321,11 @@ int hdnode_public_ckd_cp(const ecdsa_curve *curve, const curve_point *parent,
 
 int hdnode_public_ckd(HDNode *inout, uint32_t i) {
   curve_point parent = {0}, child = {0};
+
+  if (!inout->curve->params) {
+    // SLIP-10 doesn't support public derivation for ed25519 and curve25519
+    return 0;
+  }
 
   if (!ecdsa_read_pubkey(inout->curve->params, inout->public_key, &parent)) {
     return 0;
