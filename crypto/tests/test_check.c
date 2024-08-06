@@ -2916,6 +2916,289 @@ START_TEST(test_bip32_ed25519_vector_2) {
 }
 END_TEST
 
+// https://github.com/satoshilabs/slips/blob/master/slip-0010.md#test-vector-1-for-curve25519
+START_TEST(test_bip32_curve25519_vector_1) {
+  HDNode node;
+  uint32_t fingerprint;
+  int r;
+
+  // init m
+  hdnode_from_seed(fromhex("000102030405060708090a0b0c0d0e0f"), 16,
+                   CURVE25519_NAME, &node);
+
+  // [Chain m]
+  ck_assert_mem_eq(
+      node.chain_code,
+      fromhex(
+          "77997ca3588a1a34f3589279ea2962247abfe5277d52770a44c706378c710768"),
+      32);
+  ck_assert_mem_eq(
+      node.private_key,
+      fromhex(
+          "d70a59c2e68b836cc4bbe8bcae425169b9e2384f3905091e3d60b890e90cd92c"),
+      32);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
+  ck_assert_mem_eq(
+      node.public_key,
+      fromhex(
+          "015c7289dc9f7f3ea1c8c2de7323b9fb0781f69c9ecd6de4f095ac89a02dc80577"),
+      33);
+
+  // [Chain m/0']
+  fingerprint = hdnode_fingerprint(&node);
+  ck_assert_uint_eq(fingerprint, 0x6f5a9c0d);
+  r = hdnode_private_ckd_prime(&node, 0);
+  ck_assert_int_eq(r, 1);
+  ck_assert_mem_eq(
+      node.chain_code,
+      fromhex(
+          "349a3973aad771c628bf1f1b4d5e071f18eff2e492e4aa7972a7e43895d6597f"),
+      32);
+  ck_assert_mem_eq(
+      node.private_key,
+      fromhex(
+          "cd7630d7513cbe80515f7317cdb9a47ad4a56b63c3f1dc29583ab8d4cc25a9b2"),
+      32);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
+  ck_assert_mem_eq(
+      node.public_key,
+      fromhex(
+          "01cb8be6b256ce509008b43ae0dccd69960ad4f7ff2e2868c1fbc9e19ec3ad544b"),
+      33);
+
+  // [Chain m/0'/1']
+  fingerprint = hdnode_fingerprint(&node);
+  ck_assert_uint_eq(fingerprint, 0xfde474d7);
+  r = hdnode_private_ckd_prime(&node, 1);
+  ck_assert_int_eq(r, 1);
+  ck_assert_mem_eq(
+      node.chain_code,
+      fromhex(
+          "2ee5ba14faf2fe9d7ab532451c2be3a0a5375c5e8c44fb31d9ad7edc25cda000"),
+      32);
+  ck_assert_mem_eq(
+      node.private_key,
+      fromhex(
+          "a95f97cfc1a61dd833b882c89d36a78a030ea6b2fbe3ae2a70e4f1fc9008d6b1"),
+      32);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
+  ck_assert_mem_eq(
+      node.public_key,
+      fromhex(
+          "01e9506455dce2526df42e5e4eb5585eaef712e5f9c6a28bf9fb175d96595ea872"),
+      33);
+
+  // [Chain m/0'/1'/2']
+  fingerprint = hdnode_fingerprint(&node);
+  ck_assert_uint_eq(fingerprint, 0x6569dde7);
+  r = hdnode_private_ckd_prime(&node, 2);
+  ck_assert_int_eq(r, 1);
+  ck_assert_mem_eq(
+      node.chain_code,
+      fromhex(
+          "e1897d5a96459ce2a3d294cb2a6a59050ee61255818c50e03ac4263ef17af084"),
+      32);
+  ck_assert_mem_eq(
+      node.private_key,
+      fromhex(
+          "3d6cce04a9175929da907a90b02176077b9ae050dcef9b959fed978bb2200cdc"),
+      32);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
+  ck_assert_mem_eq(
+      node.public_key,
+      fromhex(
+          "0118f008fcbc6d1cd8b4fe7a9eba00f6570a9da02a9b0005028cb2731b12ee4118"),
+      33);
+
+  // [Chain m/0'/1'/2'/2']
+  fingerprint = hdnode_fingerprint(&node);
+  ck_assert_uint_eq(fingerprint, 0x1b7cce71);
+  r = hdnode_private_ckd_prime(&node, 2);
+  ck_assert_int_eq(r, 1);
+  ck_assert_mem_eq(
+      node.chain_code,
+      fromhex(
+          "1cccc84e2737cfe81b51fbe4c97bbdb000f6a76eddffb9ed03108fbff3ff7e4f"),
+      32);
+  ck_assert_mem_eq(
+      node.private_key,
+      fromhex(
+          "7ae7437efe0a3018999e6f00d72e810ebc50578dbf6728bfa1c7fe73501081a7"),
+      32);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
+  ck_assert_mem_eq(
+      node.public_key,
+      fromhex(
+          "01512e288a8ef4d869620dc4b06bb06ad2524b350dee5a39fcfeb708dbac65c25c"),
+      33);
+
+  // [Chain m/0'/1'/2'/2'/1000000000']
+  fingerprint = hdnode_fingerprint(&node);
+  ck_assert_uint_eq(fingerprint, 0xde5dcb65);
+  r = hdnode_private_ckd_prime(&node, 1000000000);
+  ck_assert_int_eq(r, 1);
+  ck_assert_mem_eq(
+      node.chain_code,
+      fromhex(
+          "8ccf15d55b1dda246b0c1bf3e979a471a82524c1bd0c1eaecccf00dde72168bb"),
+      32);
+  ck_assert_mem_eq(
+      node.private_key,
+      fromhex(
+          "7a59954d387abde3bc703f531f67d659ec2b8a12597ae82824547d7e27991e26"),
+      32);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
+  ck_assert_mem_eq(
+      node.public_key,
+      fromhex(
+          "01a077fcf5af53d210257d44a86eb2031233ac7237da220434ac01a0bebccc1919"),
+      33);
+}
+END_TEST
+
+// https://github.com/satoshilabs/slips/blob/master/slip-0010.md#test-vector-2-for-curve25519
+START_TEST(test_bip32_curve25519_vector_2) {
+  HDNode node;
+  uint32_t fingerprint;
+  int r;
+
+  // init m
+  hdnode_from_seed(
+      fromhex(
+          "fffcf9f6f3f0edeae7e4e1dedbd8d5d2cfccc9c6c3c0bdbab7b4b1aeaba8a5a29f9c"
+          "999693908d8a8784817e7b7875726f6c696663605d5a5754514e4b484542"),
+      64, CURVE25519_NAME, &node);
+
+  // [Chain m]
+  ck_assert_mem_eq(
+      node.chain_code,
+      fromhex(
+          "b62c0c81a80a0ee16b977abb3677eb47549d0eef090f7a6c2b2010e739875e34"),
+      32);
+  ck_assert_mem_eq(
+      node.private_key,
+      fromhex(
+          "088491f5b4dfafbe956de471f3db10e02d784bc76050ee3b7c3f11b9706d3730"),
+      32);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
+  ck_assert_mem_eq(
+      node.public_key,
+      fromhex(
+          "0160cc3b40567729af08757e1efe62536dc864a57ec582f98b96f484201a260c7a"),
+      33);
+
+  // [Chain m/0']
+  fingerprint = hdnode_fingerprint(&node);
+  ck_assert_uint_eq(fingerprint, 0x75edaf13);
+  r = hdnode_private_ckd_prime(&node, 0);
+  ck_assert_int_eq(r, 1);
+  ck_assert_mem_eq(
+      node.chain_code,
+      fromhex(
+          "341f386e571229e8adc52b82e824532817a31a35ba49ae334424e7228d020eed"),
+      32);
+  ck_assert_mem_eq(
+      node.private_key,
+      fromhex(
+          "8e73218a1ba5c7b95e94b6e7cf7b37fb6240fb3b2ecd801402a4439da7067ee2"),
+      32);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
+  ck_assert_mem_eq(
+      node.public_key,
+      fromhex(
+          "017992b3f270ef15f266785fffb73246ad7f40d1fe8679b737fed0970d92cc5f39"),
+      33);
+
+  // [Chain m/0'/2147483647']
+  fingerprint = hdnode_fingerprint(&node);
+  ck_assert_uint_eq(fingerprint, 0x5b26da66);
+  r = hdnode_private_ckd_prime(&node, 2147483647);
+  ck_assert_int_eq(r, 1);
+  ck_assert_mem_eq(
+      node.chain_code,
+      fromhex(
+          "942cbec088b4ae92e8db9336025e9185fec0985a3da89d7a408bc2a4e18a8134"),
+      32);
+  ck_assert_mem_eq(
+      node.private_key,
+      fromhex(
+          "29262b215c961bae20274588b33955c36f265c1f626df9feebb51034ce63c19d"),
+      32);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
+  ck_assert_mem_eq(
+      node.public_key,
+      fromhex(
+          "012372feac417c38b833e1aba75f2420278122d698605b995cafc2fed7bb453d41"),
+      33);
+
+  // [Chain m/0'/2147483647'/1']
+  fingerprint = hdnode_fingerprint(&node);
+  ck_assert_uint_eq(fingerprint, 0xf701c832);
+  r = hdnode_private_ckd_prime(&node, 1);
+  ck_assert_int_eq(r, 1);
+  ck_assert_mem_eq(
+      node.chain_code,
+      fromhex(
+          "fe02397ae2ca71efe455f470fb23928baf026360a9e9090e21958f6fba9efc30"),
+      32);
+  ck_assert_mem_eq(
+      node.private_key,
+      fromhex(
+          "a4d2474bd98c5e9ff416f536697b89949627d6d2c384b81a86d29f1136f4c2d1"),
+      32);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
+  ck_assert_mem_eq(
+      node.public_key,
+      fromhex(
+          "01eca4fd0458d3f729b6218eda871b350fa8870a744caf6d30cd84dad2b9dd9c2d"),
+      33);
+
+  // [Chain m/0'/2147483647'/1'/2147483646']
+  fingerprint = hdnode_fingerprint(&node);
+  ck_assert_uint_eq(fingerprint, 0x6063347b);
+  r = hdnode_private_ckd_prime(&node, 2147483646);
+  ck_assert_int_eq(r, 1);
+  ck_assert_mem_eq(
+      node.chain_code,
+      fromhex(
+          "b3b49d550e732ee629f4aeb4bf7213c3ae0f239fd10add513253cddbb8efb868"),
+      32);
+  ck_assert_mem_eq(
+      node.private_key,
+      fromhex(
+          "d3500d9b30529c51d92497eded1d68d29f60c630c45c61a481c185e574c6e5cf"),
+      32);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
+  ck_assert_mem_eq(
+      node.public_key,
+      fromhex(
+          "01edaa3d381a2b02f40a80d69b2ce7ba7c3c4a9421744808857cd48c50d29b5868"),
+      33);
+
+  // [Chain m/0'/2147483647'/1'/2147483646'/2']
+  fingerprint = hdnode_fingerprint(&node);
+  ck_assert_uint_eq(fingerprint, 0x86bf4fed);
+  r = hdnode_private_ckd_prime(&node, 2);
+  ck_assert_int_eq(r, 1);
+  ck_assert_mem_eq(
+      node.chain_code,
+      fromhex(
+          "f6ded904046e9758b9388dbf95ea5db837ab98b03b00e4db7009a8e3ac077685"),
+      32);
+  ck_assert_mem_eq(
+      node.private_key,
+      fromhex(
+          "e20fecd59312b63b37eee27714465aae1caa1c87840abd0d685ea88b3d598fdf"),
+      32);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
+  ck_assert_mem_eq(
+      node.public_key,
+      fromhex(
+          "01aa705de68066e9534a238af35ea77c48016462a8aff358d22eaa6c7d5b034354"),
+      33);
+}
+END_TEST
+
 // test vector 1 from
 // https://github.com/decred/dcrd/blob/master/hdkeychain/extendedkey_test.go
 START_TEST(test_bip32_decred_vector_1) {
@@ -11043,6 +11326,11 @@ Suite *test_suite(void) {
   tc = tcase_create("bip32-ed25519");
   tcase_add_test(tc, test_bip32_ed25519_vector_1);
   tcase_add_test(tc, test_bip32_ed25519_vector_2);
+  suite_add_tcase(s, tc);
+
+  tc = tcase_create("bip32-curve25519");
+  tcase_add_test(tc, test_bip32_curve25519_vector_1);
+  tcase_add_test(tc, test_bip32_curve25519_vector_2);
   suite_add_tcase(s, tc);
 
   tc = tcase_create("bip32-ecdh");
