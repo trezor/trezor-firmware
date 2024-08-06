@@ -79,7 +79,8 @@ pub struct PassphraseKeyboard {
     input_prompt: Label<'static>,
     erase_btn: Maybe<Button>,
     cancel_btn: Maybe<Button>,
-    confirm_btn: Button,
+    confirm_btn: Maybe<Button>,
+    confirm_empty_btn: Maybe<Button>,
     next_btn: Button,
     keypad_area: Rect,
     keys: [Button; KEY_COUNT],
@@ -101,13 +102,26 @@ const KEYBOARD: [[&str; KEY_COUNT]; PAGE_COUNT] = [
 
 const MAX_LENGTH: usize = 50;
 
+const CONFIRM_BTN_INSETS: Insets = Insets::new(5, 0, 5, 0);
+const CONFIRM_EMPTY_BTN_MARGIN_RIGHT: i16 = 7;
+const CONFIRM_EMPTY_BTN_INSETS: Insets = Insets::new(5, CONFIRM_EMPTY_BTN_MARGIN_RIGHT, 5, 0);
+
 impl PassphraseKeyboard {
     pub fn new() -> Self {
         let active_layout = KeyboardLayout::LettersLower;
 
         let confirm_btn = Button::with_icon(theme::ICON_SIMPLE_CHECKMARK24)
             .styled(theme::button_passphrase_confirm())
-            .with_radius(15);
+            .with_radius(14)
+            .with_expanded_touch_area(CONFIRM_BTN_INSETS)
+            .initially_enabled(false);
+        let confirm_btn = Maybe::hidden(theme::BG, confirm_btn);
+
+        let confirm_empty_btn = Button::with_icon(theme::ICON_SIMPLE_CHECKMARK24)
+            .styled(theme::button_passphrase_confirm_empty())
+            .with_radius(14)
+            .with_expanded_touch_area(CONFIRM_EMPTY_BTN_INSETS);
+        let confirm_empty_btn = Maybe::visible(theme::BG, confirm_empty_btn);
 
         let next_btn = Button::new(active_layout.next().into())
             .styled(theme::button_passphrase_next())
@@ -133,6 +147,7 @@ impl PassphraseKeyboard {
             erase_btn,
             cancel_btn,
             confirm_btn,
+            confirm_empty_btn,
             next_btn,
             keypad_area: Rect::zero(),
             keys: KEYBOARD[active_layout.to_usize().unwrap()].map(|text| {
@@ -199,6 +214,10 @@ impl PassphraseKeyboard {
         // When the input is empty, enable cancel button. Otherwise show erase and
         // confirm button.
         let is_empty = self.input.textbox.is_empty();
+        self.confirm_btn.show_if(ctx, !is_empty);
+        self.confirm_btn.inner_mut().enable_if(ctx, !is_empty);
+        self.confirm_empty_btn.show_if(ctx, is_empty);
+        self.confirm_empty_btn.inner_mut().enable_if(ctx, is_empty);
         self.erase_btn.show_if(ctx, !is_empty);
         self.erase_btn.inner_mut().enable_if(ctx, !is_empty);
         self.cancel_btn.show_if(ctx, is_empty);
@@ -253,18 +272,22 @@ impl Component for PassphraseKeyboard {
 
     fn place(&mut self, bounds: Rect) -> Rect {
         const CONFIRM_BTN_WIDTH: i16 = 78;
+        const CONFIRM_EMPTY_BTN_WIDTH: i16 = 32;
         const INPUT_INSETS: Insets = Insets::new(10, 2, 10, 4);
-        const CONFIRM_BTN_INSETS: Insets = Insets::new(5, 0, 5, 0);
 
         let bounds = bounds.inset(theme::borders());
         let (top_area, keypad_area) =
             bounds.split_bottom(4 * theme::PASSPHRASE_BUTTON_HEIGHT + 3 * theme::BUTTON_SPACING);
         self.keypad_area = keypad_area;
         let (input_area, confirm_btn_area) = top_area.split_right(CONFIRM_BTN_WIDTH);
+        let confirm_empty_btn_area = confirm_btn_area
+            .split_right(CONFIRM_EMPTY_BTN_WIDTH + CONFIRM_EMPTY_BTN_MARGIN_RIGHT)
+            .1;
 
         let top_area = top_area.inset(INPUT_INSETS);
         let input_area = input_area.inset(INPUT_INSETS);
         let confirm_btn_area = confirm_btn_area.inset(CONFIRM_BTN_INSETS);
+        let confirm_empty_btn_area = confirm_empty_btn_area.inset(CONFIRM_EMPTY_BTN_INSETS);
 
         let key_grid = Grid::new(keypad_area, 4, 3).with_spacing(theme::BUTTON_SPACING);
         let next_btn_area = key_grid.cell(11);
@@ -276,6 +299,7 @@ impl Component for PassphraseKeyboard {
 
         // control buttons
         self.confirm_btn.place(confirm_btn_area);
+        self.confirm_empty_btn.place(confirm_empty_btn_area);
         self.next_btn.place(next_btn_area);
         self.erase_btn.place(erase_cancel_area);
         self.cancel_btn.place(erase_cancel_area);
@@ -310,9 +334,17 @@ impl Component for PassphraseKeyboard {
         if let Some(ButtonMsg::Clicked) = self.next_btn.event(ctx, event) {
             self.on_page_change(ctx, SwipeDirection::Left);
         }
+
+        // Confirm button was clicked, we're done.
+        if let Some(ButtonMsg::Clicked) = self.confirm_empty_btn.event(ctx, event) {
+            return Some(PassphraseKeyboardMsg::Confirmed(unwrap!(
+                ShortString::try_from(self.passphrase())
+            )));
+        }
         if let Some(ButtonMsg::Clicked) = self.confirm_btn.event(ctx, event) {
-            // Confirm button was clicked, we're done.
-            return Some(PassphraseKeyboardMsg::Confirmed);
+            return Some(PassphraseKeyboardMsg::Confirmed(unwrap!(
+                ShortString::try_from(self.passphrase())
+            )));
         }
         if let Some(ButtonMsg::Clicked) = self.cancel_btn.event(ctx, event) {
             // Cancel button is visible and clicked, cancel
@@ -365,12 +397,13 @@ impl Component for PassphraseKeyboard {
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.input.render(target);
         self.next_btn.render(target);
-        self.erase_btn.render(target);
-        self.confirm_btn.render(target);
         if self.input.textbox.is_empty() {
+            self.confirm_empty_btn.render(target);
             self.cancel_btn.render(target);
-            // FIXME: when prompt fixed in Figma
-            // self.input_prompt.render(target);
+            self.input_prompt.render(target);
+        } else {
+            self.confirm_btn.render(target);
+            self.erase_btn.render(target);
         }
         for btn in &self.keys {
             btn.render(target);
