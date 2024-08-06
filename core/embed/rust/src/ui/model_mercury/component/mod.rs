@@ -1,5 +1,7 @@
 #[cfg(feature = "translations")]
 mod address_details;
+#[cfg(feature = "ui_overlay")]
+mod binary_selection;
 pub mod bl_confirm;
 mod button;
 #[cfg(feature = "translations")]
@@ -41,6 +43,8 @@ mod welcome_screen;
 
 #[cfg(feature = "translations")]
 pub use address_details::AddressDetails;
+#[cfg(feature = "ui_overlay")]
+pub use binary_selection::{BinarySelection, BinarySelectionMsg};
 pub use button::{
     Button, ButtonContent, ButtonMsg, ButtonStyle, ButtonStyleSheet, CancelConfirmMsg,
     CancelInfoConfirmMsg, IconText,
