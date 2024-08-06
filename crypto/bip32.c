@@ -186,6 +186,11 @@ uint32_t hdnode_fingerprint(HDNode *node) {
   uint32_t fingerprint = 0;
 
   hdnode_fill_public_key(node);
+  if (node->public_key[0] == 0x01) {
+    // The prefix 0x01 indicates curve25519 or ed25519
+    // In this case, SLIP-10 uses the prefix 0x00 to calculate the fingerprint
+    node->public_key[0] = 0x00;
+  }
   hasher_Raw(node->curve->hasher_pubkey, node->public_key, 33, digest);
   fingerprint = ((uint32_t)digest[0] << 24) + (digest[1] << 16) +
                 (digest[2] << 8) + digest[3];
