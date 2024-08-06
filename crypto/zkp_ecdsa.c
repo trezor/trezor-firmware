@@ -41,6 +41,16 @@ static bool is_zero_digest(const uint8_t *digest) {
   return memcmp(digest, zeroes, 32) == 0;
 }
 
+static size_t get_public_key_length(const uint8_t *public_key_bytes) {
+  if (public_key_bytes[0] == 0x04) {
+    return 65;
+  } else if (public_key_bytes[0] == 0x02 || public_key_bytes[0] == 0x03) {
+    return 33;
+  } else {
+    return 0;
+  }
+}
+
 // ECDSA compressed public key derivation
 // curve has to be &secp256k1
 // private_key_bytes has 32 bytes
@@ -322,16 +332,9 @@ int zkp_ecdsa_verify_digest(const ecdsa_curve *curve,
 
   int result = 0;
 
-  int public_key_length = 0;
-
-  if (result == 0) {
-    if (public_key_bytes[0] == 0x04) {
-      public_key_length = 65;
-    } else if (public_key_bytes[0] == 0x02 || public_key_bytes[0] == 0x03) {
-      public_key_length = 33;
-    } else {
-      result = 1;
-    }
+  size_t public_key_length = get_public_key_length(public_key_bytes);
+  if (public_key_length == 0) {
+    result = 1;
   }
 
   if (result == 0) {
@@ -430,16 +433,9 @@ int zkp_ecdh_multiply(const ecdsa_curve *curve,
 
   int result = 0;
 
-  int public_key_length = 0;
-
-  if (result == 0) {
-    if (public_key_bytes[0] == 0x04) {
-      public_key_length = 65;
-    } else if (public_key_bytes[0] == 0x02 || public_key_bytes[0] == 0x03) {
-      public_key_length = 33;
-    } else {
-      result = 1;
-    }
+  size_t public_key_length = get_public_key_length(public_key_bytes);
+  if (public_key_length == 0) {
+    result = 1;
   }
 
   const secp256k1_context *context_read_only = zkp_context_get_read_only();
