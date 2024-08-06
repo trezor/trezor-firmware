@@ -23,7 +23,7 @@ from typing import Iterable, List, Optional
 from ..log import DUMP_PACKETS
 from ..models import TREZORS, TrezorModel
 from . import UDEV_RULES_STR, DeviceIsBusy, TransportException
-from .protocol import ProtocolBasedTransport, ProtocolV1
+from .protocol import Handle, ProtocolBasedTransport, ProtocolV1
 
 LOG = logging.getLogger(__name__)
 
@@ -112,7 +112,10 @@ class WebUsbTransport(ProtocolBasedTransport):
         self.handle = handle
         self.debug = debug
 
-        super().__init__(protocol=ProtocolV1(handle))
+        super().__init__(protocol=ProtocolV1())
+
+    def get_handle(self) -> Handle:
+        return self.handle
 
     def get_path(self) -> str:
         return f"{self.PATH_PREFIX}:{dev_to_str(self.device)}"

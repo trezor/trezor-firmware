@@ -21,6 +21,7 @@ from typing import Any, Dict, Iterable, List, Optional
 
 from ..log import DUMP_PACKETS
 from ..models import TREZOR_ONE, TrezorModel
+from ..transport.protocol import Handle
 from . import UDEV_RULES_STR, TransportException
 from .protocol import ProtocolBasedTransport, ProtocolV1
 
@@ -127,7 +128,10 @@ class HidTransport(ProtocolBasedTransport):
         self.device = device
         self.handle = HidHandle(device["path"], device["serial_number"])
 
-        super().__init__(protocol=ProtocolV1(self.handle))
+        super().__init__(protocol=ProtocolV1())
+
+    def get_handle(self) -> Handle:
+        return self.handle
 
     def get_path(self) -> str:
         return f"{self.PATH_PREFIX}:{self.device['path'].decode()}"

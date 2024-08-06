@@ -20,6 +20,7 @@ import time
 from typing import TYPE_CHECKING, Iterable, Optional
 
 from ..log import DUMP_PACKETS
+from ..transport.protocol import Handle
 from . import TransportException
 from .protocol import ProtocolBasedTransport, ProtocolV1
 
@@ -49,7 +50,10 @@ class UdpTransport(ProtocolBasedTransport):
         self.device = (host, port)
         self.socket: Optional[socket.socket] = None
 
-        super().__init__(protocol=ProtocolV1(self))
+        super().__init__(protocol=ProtocolV1())
+
+    def get_handle(self) -> Handle:
+        return self
 
     def get_path(self) -> str:
         return "{}:{}:{}".format(self.PATH_PREFIX, *self.device)
