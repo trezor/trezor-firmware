@@ -167,9 +167,11 @@ static uint32_t check_sdcard(void) {
     _Static_assert(IMAGE_CHUNK_SIZE >= BOOTLOADER_IMAGE_MAXSIZE,
                    "BOOTLOADER IMAGE MAXSIZE too large for IMAGE_CHUNK_SIZE");
 
-    if (sectrue != (check_single_hash(
-                       hdr->hashes, ((const uint8_t *)sdcard_buf) + hdr->hdrlen,
-                       hdr->codelen))) {
+    if (sectrue !=
+        (check_single_hash(hdr->hashes,
+                           (const uint8_t *)IMAGE_CODE_ALIGN(
+                               ((const uint8_t *)sdcard_buf) + hdr->hdrlen),
+                           hdr->codelen))) {
       return 0;
     }
 
