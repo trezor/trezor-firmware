@@ -103,6 +103,7 @@ int hdnode_from_xpub(uint32_t depth, uint32_t child_num,
   memzero(out->private_key, 32);
   memzero(out->private_key_extension, 32);
   memcpy(out->public_key, public_key, 33);
+  out->is_public_key_set = true;
   return 1;
 }
 
@@ -136,6 +137,7 @@ int hdnode_from_xprv(uint32_t depth, uint32_t child_num,
   memcpy(out->chain_code, chain_code, 32);
   memcpy(out->private_key, private_key, 32);
   memzero(out->public_key, sizeof(out->public_key));
+  out->is_public_key_set = false;
   memzero(out->private_key_extension, sizeof(out->private_key_extension));
   return 1;
 }
@@ -174,6 +176,7 @@ int hdnode_from_seed(const uint8_t *seed, int seed_len, const char *curve,
   memcpy(out->private_key, I, 32);
   memcpy(out->chain_code, I + 32, 32);
   memzero(out->public_key, sizeof(out->public_key));
+  out->is_public_key_set = false;
   memzero(I, sizeof(I));
   return 1;
 }
@@ -255,6 +258,7 @@ int hdnode_private_ckd_bip32(HDNode *inout, uint32_t i) {
   inout->depth++;
   inout->child_num = i;
   memzero(inout->public_key, sizeof(inout->public_key));
+  inout->is_public_key_set = false;
 
   // making sure to wipe our memory
   memzero(&a, sizeof(a));
@@ -329,6 +333,7 @@ int hdnode_public_ckd(HDNode *inout, uint32_t i) {
   inout->child_num = i;
   inout->public_key[0] = 0x02 | (child.y.val[0] & 0x01);
   bn_write_be(&child.x, inout->public_key + 1);
+  inout->is_public_key_set = true;
 
   // Wipe all stack data.
   memzero(&parent, sizeof(parent));
@@ -468,7 +473,9 @@ int hdnode_get_address(HDNode *node, uint32_t version, char *addr,
 }
 
 int hdnode_fill_public_key(HDNode *node) {
-  if (node->public_key[0] != 0) return 0;
+  if (node->is_public_key_set) {
+    return 0;
+  }
 
 #if USE_BIP32_25519_CURVES
   if (node->curve->params) {
@@ -501,6 +508,7 @@ int hdnode_fill_public_key(HDNode *node) {
     return 1;
   }
 #endif
+  node->is_public_key_set = true;
   return 0;
 }
 
@@ -750,9 +758,11 @@ static int hdnode_deserialize(const char *str, uint32_t version,
     }
     memcpy(node->private_key, node_data + 46, 32);
     memzero(node->public_key, sizeof(node->public_key));
+    node->is_public_key_set = false;
   } else {
     memzero(node->private_key, sizeof(node->private_key));
     memcpy(node->public_key, node_data + 45, 33);
+    node->is_public_key_set = true;
   }
   node->depth = node_data[4];
   if (fingerprint) {
