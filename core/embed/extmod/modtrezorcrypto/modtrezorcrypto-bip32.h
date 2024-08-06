@@ -131,8 +131,10 @@ STATIC mp_obj_t mod_trezorcrypto_HDNode_make_new(const mp_obj_type_t *type,
   }
   if (33 == public_key.len) {
     memcpy(o->hdnode.public_key, public_key.buf, 33);
+    o->hdnode.is_public_key_set = true;
   } else {
     memzero(o->hdnode.public_key, 33);
+    o->hdnode.is_public_key_set = false;
   }
   o->hdnode.curve = curve;
 
