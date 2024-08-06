@@ -2633,9 +2633,11 @@ START_TEST(test_bip32_nist_repeat) {
 }
 END_TEST
 
-// test vector 1 from https://en.bitcoin.it/wiki/BIP_0032_TestVectors
+// https://github.com/satoshilabs/slips/blob/master/slip-0010.md#test-vector-1-for-ed25519
 START_TEST(test_bip32_ed25519_vector_1) {
   HDNode node;
+  uint32_t fingerprint;
+  int r;
 
   // init m
   hdnode_from_seed(fromhex("000102030405060708090a0b0c0d0e0f"), 16,
@@ -2660,7 +2662,10 @@ START_TEST(test_bip32_ed25519_vector_1) {
       33);
 
   // [Chain m/0']
-  hdnode_private_ckd_prime(&node, 0);
+  fingerprint = hdnode_fingerprint(&node);
+  ck_assert_uint_eq(fingerprint, 0xddebc675);
+  r = hdnode_private_ckd_prime(&node, 0);
+  ck_assert_int_eq(r, 1);
   ck_assert_mem_eq(
       node.chain_code,
       fromhex(
@@ -2679,7 +2684,10 @@ START_TEST(test_bip32_ed25519_vector_1) {
       33);
 
   // [Chain m/0'/1']
-  hdnode_private_ckd_prime(&node, 1);
+  fingerprint = hdnode_fingerprint(&node);
+  ck_assert_uint_eq(fingerprint, 0x13dab143);
+  r = hdnode_private_ckd_prime(&node, 1);
+  ck_assert_int_eq(r, 1);
   ck_assert_mem_eq(
       node.chain_code,
       fromhex(
@@ -2698,7 +2706,10 @@ START_TEST(test_bip32_ed25519_vector_1) {
       33);
 
   // [Chain m/0'/1'/2']
-  hdnode_private_ckd_prime(&node, 2);
+  fingerprint = hdnode_fingerprint(&node);
+  ck_assert_uint_eq(fingerprint, 0xebe4cb29);
+  r = hdnode_private_ckd_prime(&node, 2);
+  ck_assert_int_eq(r, 1);
   ck_assert_mem_eq(
       node.chain_code,
       fromhex(
@@ -2717,7 +2728,10 @@ START_TEST(test_bip32_ed25519_vector_1) {
       33);
 
   // [Chain m/0'/1'/2'/2']
-  hdnode_private_ckd_prime(&node, 2);
+  fingerprint = hdnode_fingerprint(&node);
+  ck_assert_uint_eq(fingerprint, 0x316ec1c6);
+  r = hdnode_private_ckd_prime(&node, 2);
+  ck_assert_int_eq(r, 1);
   ck_assert_mem_eq(
       node.chain_code,
       fromhex(
@@ -2736,7 +2750,10 @@ START_TEST(test_bip32_ed25519_vector_1) {
       33);
 
   // [Chain m/0'/1'/2'/2'/1000000000']
-  hdnode_private_ckd_prime(&node, 1000000000);
+  fingerprint = hdnode_fingerprint(&node);
+  ck_assert_uint_eq(fingerprint, 0xd6322ccd);
+  r = hdnode_private_ckd_prime(&node, 1000000000);
+  ck_assert_int_eq(r, 1);
   ck_assert_mem_eq(
       node.chain_code,
       fromhex(
@@ -2756,9 +2773,10 @@ START_TEST(test_bip32_ed25519_vector_1) {
 }
 END_TEST
 
-// test vector 2 from https://en.bitcoin.it/wiki/BIP_0032_TestVectors
+// https://github.com/satoshilabs/slips/blob/master/slip-0010.md#test-vector-2-for-ed25519
 START_TEST(test_bip32_ed25519_vector_2) {
   HDNode node;
+  uint32_t fingerprint;
   int r;
 
   // init m
@@ -2787,6 +2805,8 @@ START_TEST(test_bip32_ed25519_vector_2) {
       33);
 
   // [Chain m/0']
+  fingerprint = hdnode_fingerprint(&node);
+  ck_assert_uint_eq(fingerprint, 0x31981b50);
   r = hdnode_private_ckd_prime(&node, 0);
   ck_assert_int_eq(r, 1);
   ck_assert_mem_eq(
@@ -2807,6 +2827,8 @@ START_TEST(test_bip32_ed25519_vector_2) {
       33);
 
   // [Chain m/0'/2147483647']
+  fingerprint = hdnode_fingerprint(&node);
+  ck_assert_uint_eq(fingerprint, 0x1e9411b1);
   r = hdnode_private_ckd_prime(&node, 2147483647);
   ck_assert_int_eq(r, 1);
   ck_assert_mem_eq(
@@ -2827,6 +2849,8 @@ START_TEST(test_bip32_ed25519_vector_2) {
       33);
 
   // [Chain m/0'/2147483647'/1']
+  fingerprint = hdnode_fingerprint(&node);
+  ck_assert_uint_eq(fingerprint, 0xfcadf38c);
   r = hdnode_private_ckd_prime(&node, 1);
   ck_assert_int_eq(r, 1);
   ck_assert_mem_eq(
@@ -2847,6 +2871,8 @@ START_TEST(test_bip32_ed25519_vector_2) {
       33);
 
   // [Chain m/0'/2147483647'/1'/2147483646']
+  fingerprint = hdnode_fingerprint(&node);
+  ck_assert_uint_eq(fingerprint, 0xaca70953);
   r = hdnode_private_ckd_prime(&node, 2147483646);
   ck_assert_int_eq(r, 1);
   ck_assert_mem_eq(
@@ -2867,6 +2893,8 @@ START_TEST(test_bip32_ed25519_vector_2) {
       33);
 
   // [Chain m/0'/2147483647'/1'/2147483646'/2']
+  fingerprint = hdnode_fingerprint(&node);
+  ck_assert_uint_eq(fingerprint, 0x422c654b);
   r = hdnode_private_ckd_prime(&node, 2);
   ck_assert_int_eq(r, 1);
   ck_assert_mem_eq(
