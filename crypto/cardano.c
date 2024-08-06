@@ -143,6 +143,7 @@ int hdnode_private_ckd_cardano(HDNode *inout, uint32_t index) {
   inout->depth++;
   inout->child_num = index;
   memzero(inout->public_key, sizeof(inout->public_key));
+  inout->is_public_key_set = false;
 
   // making sure to wipe our memory
   memzero(z, sizeof(z));
@@ -164,7 +165,7 @@ int hdnode_from_secret_cardano(const uint8_t secret[CARDANO_SECRET_LENGTH],
 
   cardano_ed25519_tweak_bits(out->private_key);
 
-  out->public_key[0] = 0;
+  out->is_public_key_set = false;
   if (hdnode_fill_public_key(out) != 0) {
     return 0;
   }
