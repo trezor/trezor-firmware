@@ -2658,7 +2658,7 @@ START_TEST(test_bip32_ed25519_vector_1) {
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
-          "01a4b2856bfec510abab89753fac1ac0e1112364e7d250545963f135f2a33188ed"),
+          "00a4b2856bfec510abab89753fac1ac0e1112364e7d250545963f135f2a33188ed"),
       33);
 
   // [Chain m/0']
@@ -2680,7 +2680,7 @@ START_TEST(test_bip32_ed25519_vector_1) {
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
-          "018c8a13df77a28f3445213a0f432fde644acaa215fc72dcdf300d5efaa85d350c"),
+          "008c8a13df77a28f3445213a0f432fde644acaa215fc72dcdf300d5efaa85d350c"),
       33);
 
   // [Chain m/0'/1']
@@ -2702,7 +2702,7 @@ START_TEST(test_bip32_ed25519_vector_1) {
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
-          "011932a5270f335bed617d5b935c80aedb1a35bd9fc1e31acafd5372c30f5c1187"),
+          "001932a5270f335bed617d5b935c80aedb1a35bd9fc1e31acafd5372c30f5c1187"),
       33);
 
   // [Chain m/0'/1'/2']
@@ -2724,7 +2724,7 @@ START_TEST(test_bip32_ed25519_vector_1) {
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
-          "01ae98736566d30ed0e9d2f4486a64bc95740d89c7db33f52121f8ea8f76ff0fc1"),
+          "00ae98736566d30ed0e9d2f4486a64bc95740d89c7db33f52121f8ea8f76ff0fc1"),
       33);
 
   // [Chain m/0'/1'/2'/2']
@@ -2746,7 +2746,7 @@ START_TEST(test_bip32_ed25519_vector_1) {
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
-          "018abae2d66361c879b900d204ad2cc4984fa2aa344dd7ddc46007329ac76c429c"),
+          "008abae2d66361c879b900d204ad2cc4984fa2aa344dd7ddc46007329ac76c429c"),
       33);
 
   // [Chain m/0'/1'/2'/2'/1000000000']
@@ -2768,7 +2768,7 @@ START_TEST(test_bip32_ed25519_vector_1) {
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
-          "013c24da049451555d51a7014a37337aa4e12d41e485abccfa46b47dfb2af54b7a"),
+          "003c24da049451555d51a7014a37337aa4e12d41e485abccfa46b47dfb2af54b7a"),
       33);
 }
 END_TEST
@@ -2801,7 +2801,7 @@ START_TEST(test_bip32_ed25519_vector_2) {
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
-          "018fe9693f8fa62a4305a140b9764c5ee01e455963744fe18204b4fb948249308a"),
+          "008fe9693f8fa62a4305a140b9764c5ee01e455963744fe18204b4fb948249308a"),
       33);
 
   // [Chain m/0']
@@ -2823,7 +2823,7 @@ START_TEST(test_bip32_ed25519_vector_2) {
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
-          "0186fab68dcb57aa196c77c5f264f215a112c22a912c10d123b0d03c3c28ef1037"),
+          "0086fab68dcb57aa196c77c5f264f215a112c22a912c10d123b0d03c3c28ef1037"),
       33);
 
   // [Chain m/0'/2147483647']
@@ -2845,7 +2845,7 @@ START_TEST(test_bip32_ed25519_vector_2) {
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
-          "015ba3b9ac6e90e83effcd25ac4e58a1365a9e35a3d3ae5eb07b9e4d90bcf7506d"),
+          "005ba3b9ac6e90e83effcd25ac4e58a1365a9e35a3d3ae5eb07b9e4d90bcf7506d"),
       33);
 
   // [Chain m/0'/2147483647'/1']
@@ -2867,7 +2867,7 @@ START_TEST(test_bip32_ed25519_vector_2) {
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
-          "012e66aa57069c86cc18249aecf5cb5a9cebbfd6fadeab056254763874a9352b45"),
+          "002e66aa57069c86cc18249aecf5cb5a9cebbfd6fadeab056254763874a9352b45"),
       33);
 
   // [Chain m/0'/2147483647'/1'/2147483646']
@@ -2889,7 +2889,7 @@ START_TEST(test_bip32_ed25519_vector_2) {
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
-          "01e33c0f7d81d843c572275f287498e8d408654fdf0d1e065b84e2e6f157aab09b"),
+          "00e33c0f7d81d843c572275f287498e8d408654fdf0d1e065b84e2e6f157aab09b"),
       33);
 
   // [Chain m/0'/2147483647'/1'/2147483646'/2']
@@ -2911,7 +2911,7 @@ START_TEST(test_bip32_ed25519_vector_2) {
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
-          "0147150c75db263559a70d5778bf36abbab30fb061ad69f69ece61a72b0cfa4fc0"),
+          "0047150c75db263559a70d5778bf36abbab30fb061ad69f69ece61a72b0cfa4fc0"),
       33);
 }
 END_TEST
@@ -2941,7 +2941,7 @@ START_TEST(test_bip32_curve25519_vector_1) {
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
-          "015c7289dc9f7f3ea1c8c2de7323b9fb0781f69c9ecd6de4f095ac89a02dc80577"),
+          "005c7289dc9f7f3ea1c8c2de7323b9fb0781f69c9ecd6de4f095ac89a02dc80577"),
       33);
 
   // [Chain m/0']
@@ -2963,7 +2963,7 @@ START_TEST(test_bip32_curve25519_vector_1) {
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
-          "01cb8be6b256ce509008b43ae0dccd69960ad4f7ff2e2868c1fbc9e19ec3ad544b"),
+          "00cb8be6b256ce509008b43ae0dccd69960ad4f7ff2e2868c1fbc9e19ec3ad544b"),
       33);
 
   // [Chain m/0'/1']
@@ -2985,7 +2985,7 @@ START_TEST(test_bip32_curve25519_vector_1) {
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
-          "01e9506455dce2526df42e5e4eb5585eaef712e5f9c6a28bf9fb175d96595ea872"),
+          "00e9506455dce2526df42e5e4eb5585eaef712e5f9c6a28bf9fb175d96595ea872"),
       33);
 
   // [Chain m/0'/1'/2']
@@ -3007,7 +3007,7 @@ START_TEST(test_bip32_curve25519_vector_1) {
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
-          "0118f008fcbc6d1cd8b4fe7a9eba00f6570a9da02a9b0005028cb2731b12ee4118"),
+          "0018f008fcbc6d1cd8b4fe7a9eba00f6570a9da02a9b0005028cb2731b12ee4118"),
       33);
 
   // [Chain m/0'/1'/2'/2']
@@ -3029,7 +3029,7 @@ START_TEST(test_bip32_curve25519_vector_1) {
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
-          "01512e288a8ef4d869620dc4b06bb06ad2524b350dee5a39fcfeb708dbac65c25c"),
+          "00512e288a8ef4d869620dc4b06bb06ad2524b350dee5a39fcfeb708dbac65c25c"),
       33);
 
   // [Chain m/0'/1'/2'/2'/1000000000']
@@ -3051,7 +3051,7 @@ START_TEST(test_bip32_curve25519_vector_1) {
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
-          "01a077fcf5af53d210257d44a86eb2031233ac7237da220434ac01a0bebccc1919"),
+          "00a077fcf5af53d210257d44a86eb2031233ac7237da220434ac01a0bebccc1919"),
       33);
 }
 END_TEST
@@ -3084,7 +3084,7 @@ START_TEST(test_bip32_curve25519_vector_2) {
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
-          "0160cc3b40567729af08757e1efe62536dc864a57ec582f98b96f484201a260c7a"),
+          "0060cc3b40567729af08757e1efe62536dc864a57ec582f98b96f484201a260c7a"),
       33);
 
   // [Chain m/0']
@@ -3106,7 +3106,7 @@ START_TEST(test_bip32_curve25519_vector_2) {
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
-          "017992b3f270ef15f266785fffb73246ad7f40d1fe8679b737fed0970d92cc5f39"),
+          "007992b3f270ef15f266785fffb73246ad7f40d1fe8679b737fed0970d92cc5f39"),
       33);
 
   // [Chain m/0'/2147483647']
@@ -3128,7 +3128,7 @@ START_TEST(test_bip32_curve25519_vector_2) {
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
-          "012372feac417c38b833e1aba75f2420278122d698605b995cafc2fed7bb453d41"),
+          "002372feac417c38b833e1aba75f2420278122d698605b995cafc2fed7bb453d41"),
       33);
 
   // [Chain m/0'/2147483647'/1']
@@ -3150,7 +3150,7 @@ START_TEST(test_bip32_curve25519_vector_2) {
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
-          "01eca4fd0458d3f729b6218eda871b350fa8870a744caf6d30cd84dad2b9dd9c2d"),
+          "00eca4fd0458d3f729b6218eda871b350fa8870a744caf6d30cd84dad2b9dd9c2d"),
       33);
 
   // [Chain m/0'/2147483647'/1'/2147483646']
@@ -3172,7 +3172,7 @@ START_TEST(test_bip32_curve25519_vector_2) {
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
-          "01edaa3d381a2b02f40a80d69b2ce7ba7c3c4a9421744808857cd48c50d29b5868"),
+          "00edaa3d381a2b02f40a80d69b2ce7ba7c3c4a9421744808857cd48c50d29b5868"),
       33);
 
   // [Chain m/0'/2147483647'/1'/2147483646'/2']
@@ -3194,7 +3194,7 @@ START_TEST(test_bip32_curve25519_vector_2) {
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
-          "01aa705de68066e9534a238af35ea77c48016462a8aff358d22eaa6c7d5b034354"),
+          "00aa705de68066e9534a238af35ea77c48016462a8aff358d22eaa6c7d5b034354"),
       33);
 }
 END_TEST
@@ -8235,7 +8235,7 @@ static void test_bip32_ecdh_init_node(HDNode *node, const char *seed_str,
   hdnode_from_seed((const uint8_t *)seed_str, strlen(seed_str), curve_name,
                    node);
   ck_assert_int_eq(hdnode_fill_public_key(node), 0);
-  if (node->public_key[0] == 1) {
+  if (node->public_key[0] == 0) {
     node->public_key[0] = 0x40;  // Curve25519 public keys start with 0x40 byte
   }
 }

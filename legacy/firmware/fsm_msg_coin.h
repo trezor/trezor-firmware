@@ -76,10 +76,6 @@ void fsm_msgGetPublicKey(const GetPublicKey *msg) {
   resp->node.has_private_key = false;
   resp->node.public_key.size = 33;
   memcpy(resp->node.public_key.bytes, node->public_key, 33);
-  if (node->public_key[0] == 1) {
-    /* ed25519 public key */
-    resp->node.public_key.bytes[0] = 0;
-  }
 
   if (coin->xpub_magic && (script_type == InputScriptType_SPENDADDRESS ||
                            script_type == InputScriptType_SPENDMULTISIG)) {
