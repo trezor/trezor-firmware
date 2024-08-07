@@ -1581,6 +1581,22 @@ type = "directory"
 url = "python"
 
 [[package]]
+name = "trezor-core-tools"
+version = "0.1.0"
+description = "Collection of CLI tools for trezor-core development"
+optional = false
+python-versions = "^3.8"
+files = []
+develop = true
+
+[package.dependencies]
+trezor = "^0.13.9"
+
+[package.source]
+type = "directory"
+url = "core/tools"
+
+[[package]]
 name = "trezor-pylint-plugin"
 version = "0.1.0"
 description = ""
@@ -1781,4 +1797,4 @@ test = ["big-O", "jaraco.functools", "jaraco.itertools", "jaraco.test", "more-it
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8.1"
-content-hash = "08f0edb51d2d41a2e333b7f8b5ae0a06730f9aa362136c49fd262d823ed5d59a"
+content-hash = "6e63e1ae52fbff76a8e45b5c4bc58938a5537bce7b0eee7993bb55342e47b74a"
