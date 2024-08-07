@@ -33,7 +33,7 @@
   },
   "header": {
     "language": "de-DE",
-    "version": "2.8.1"
+    "version": "2.8.2"
   },
   "translations": {
     "addr_mismatch__contact_support_at": "Kontaktiere den Trezor Support unter",
@@ -519,7 +519,6 @@
     "passphrase__access_wallet": "Passphr. Wall. öffnen?",
     "passphrase__always_on_device": "Deine Passphrase immer auf dem Trezor eingeben?",
     "passphrase__from_host_not_shown": "Passphrase vom Host wird verwendet, wegen Geräteeinstellungen aber nicht angezeigt.",
-    "passphrase__wallet": "Passphrase Wallet",
     "passphrase__hide": "Passphrase vom Host ausblenden?",
     "passphrase__next_screen_will_show_passphrase": "Der nächste Bildschirm zeigt deine Passphrase.",
     "passphrase__please_enter": "Gib deine Passphrase ein.",
@@ -532,6 +531,7 @@
     "passphrase__title_source": "Passphrasen-quelle",
     "passphrase__turn_off": "Passphrasenschutz deaktivieren?",
     "passphrase__turn_on": "Passphrasenschutz aktivieren?",
+    "passphrase__wallet": "Passphrase Wallet",
     "pin__cancel_description": "Ohne PIN fortfahren",
     "pin__cancel_info": "Ohne PIN kann jeder auf dieses Gerät zugreifen.",
     "pin__cancel_setup": "PIN-Einrichtung abbrechen",
