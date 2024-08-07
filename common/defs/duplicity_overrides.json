@@ -3,9 +3,6 @@
     "erc20:eth:USDT": false,
     "eth:BNB:56": false,
     "eth:MATIC:137": false,
-    "eth:tETH:3": false,
-    "eth:tETH:4": false,
-    "eth:tETH:5": false,
     "misc:BNB": false,
     "misc:USDT": false
 }

@@ -9,35 +9,27 @@
         "slip44": 60
     },
     {
-        "chain": "rop",
-        "chain_id": 3,
+        "chain": "hol",
+        "chain_id": 17000,
         "is_testnet": true,
-        "name": "Ropsten",
-        "shortcut": "tETH",
+        "name": "Holesky",
+        "shortcut": "tHOL",
         "slip44": 1
     },
     {
-        "chain": "rin",
-        "chain_id": 4,
+        "chain": "sep",
+        "chain_id": 11155111,
         "is_testnet": true,
-        "name": "Rinkeby",
-        "shortcut": "tETH",
+        "name": "Sepolia",
+        "shortcut": "tSEP",
         "slip44": 1
     },
     {
-        "chain": "gor",
-        "chain_id": 5,
-        "is_testnet": true,
-        "name": "Görli",
-        "shortcut": "tETH",
-        "slip44": 1
-    },
-    {
-        "chain": "bnb",
+        "chain": "bsc",
         "chain_id": 56,
         "coingecko_id": "binance-smart-chain",
         "is_testnet": false,
-        "name": "Binance Smart Chain",
+        "name": "BNB Smart Chain",
         "shortcut": "BNB",
         "slip44": 714
     },
