@@ -46,8 +46,6 @@ async def sign_identity(msg: SignIdentity) -> SignedIdentity:
     else:
         address = None
     pubkey = node.public_key()
-    if pubkey[0] == 0x01:
-        pubkey = b"\x00" + pubkey[1:]
     seckey = node.private_key()
 
     if msg_identity_proto in ("gpg", "signify", "ssh"):

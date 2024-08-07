@@ -121,6 +121,10 @@ def bip340_sign(node: bip32.HDNode, digest: bytes) -> bytes:
 def ecdsa_hash_pubkey(pubkey: bytes, coin: CoinInfo) -> bytes:
     from trezor.utils import ensure
 
+    ensure(
+        coin.curve_name.startswith("secp256k1")
+    )  # The following code makes sense only for Weiersrass curves
+
     if pubkey[0] == 0x04:
         ensure(len(pubkey) == 65)  # uncompressed format
     elif pubkey[0] == 0x00:

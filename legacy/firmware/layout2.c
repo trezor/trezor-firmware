@@ -963,14 +963,8 @@ void layoutAddress(const char *address, const char *desc, bool qrcode,
 }
 
 void layoutPublicKey(const uint8_t *pubkey) {
-  char desc[16] = {0};
-  strlcpy(desc, "Public Key: 00", sizeof(desc));
-  if (pubkey[0] == 1) {
-    /* ed25519 public key */
-    // pass - leave 00
-  } else {
-    data2hex(pubkey, 1, desc + 12);
-  }
+  char desc[] = "Public Key: 00";
+  data2hex(pubkey, 1, desc + 12);
   const char **str = split_message_hex(pubkey + 1, 32 * 2);
   layoutDialogSwipe(&bmp_icon_question, NULL, _("Continue"), NULL, desc, str[0],
                     str[1], str[2], str[3], NULL);
