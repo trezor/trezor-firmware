@@ -76,7 +76,7 @@ pub use number_input::{NumberInputDialog, NumberInputDialogMsg};
 pub use number_input_slider::NumberInputSliderDialog;
 pub use progress::Progress;
 #[cfg(feature = "translations")]
-pub use prompt_screen::PromptScreen;
+pub use prompt_screen::{PromptMsg, PromptScreen};
 pub use result::{ResultFooter, ResultScreen, ResultStyle};
 pub use scroll::ScrollBar;
 #[cfg(feature = "translations")]

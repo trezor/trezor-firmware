@@ -11,14 +11,14 @@ use crate::{
             FlowMsg, FlowState, SwipeFlow,
         },
         layout::obj::LayoutObj,
-        model_mercury::component::SwipeContent,
     },
 };
 
 use super::{
     super::{
         component::{
-            AddressDetails, Frame, FrameMsg, PromptScreen, VerticalMenu, VerticalMenuChoiceMsg,
+            AddressDetails, Frame, FrameMsg, PromptMsg, PromptScreen, SwipeContent, VerticalMenu,
+            VerticalMenuChoiceMsg,
         },
         theme,
     },
@@ -139,8 +139,9 @@ impl ConfirmOutput {
         .with_swipe(SwipeDirection::Down, SwipeSettings::default())
         .with_swipe(SwipeDirection::Left, SwipeSettings::default())
         .map(|msg| match msg {
-            FrameMsg::Content(()) => Some(FlowMsg::Confirmed),
+            FrameMsg::Content(PromptMsg::Confirmed) => Some(FlowMsg::Confirmed),
             FrameMsg::Button(_) => Some(FlowMsg::Cancelled),
+            _ => None,
         });
 
         let res = SwipeFlow::new(&ConfirmOutput::Address)?

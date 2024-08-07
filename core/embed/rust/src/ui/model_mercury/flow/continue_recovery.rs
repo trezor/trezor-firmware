@@ -16,12 +16,14 @@ use crate::{
             FlowMsg, FlowState, SwipeFlow,
         },
         layout::obj::LayoutObj,
-        model_mercury::component::{CancelInfoConfirmMsg, PromptScreen, SwipeContent},
     },
 };
 
 use super::super::{
-    component::{Frame, FrameMsg, VerticalMenu, VerticalMenuChoiceMsg},
+    component::{
+        CancelInfoConfirmMsg, Frame, FrameMsg, PromptMsg, PromptScreen, SwipeContent, VerticalMenu,
+        VerticalMenuChoiceMsg,
+    },
     theme,
 };
 
@@ -206,7 +208,7 @@ impl ContinueRecoveryBeforeShares {
         .with_swipe(SwipeDirection::Down, SwipeSettings::default())
         .with_swipe(SwipeDirection::Right, SwipeSettings::immediate())
         .map(|msg| match msg {
-            FrameMsg::Content(()) => Some(FlowMsg::Confirmed),
+            FrameMsg::Content(PromptMsg::Confirmed) => Some(FlowMsg::Confirmed),
             FrameMsg::Button(CancelInfoConfirmMsg::Cancelled) => Some(FlowMsg::Cancelled),
             _ => None,
         });

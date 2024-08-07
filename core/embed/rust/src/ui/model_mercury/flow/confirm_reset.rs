@@ -15,12 +15,13 @@ use crate::{
             FlowMsg, FlowState, SwipeFlow,
         },
         layout::obj::LayoutObj,
-        model_mercury::component::{PromptScreen, SwipeContent},
     },
 };
 
 use super::super::{
-    component::{Frame, FrameMsg, VerticalMenu, VerticalMenuChoiceMsg},
+    component::{
+        Frame, FrameMsg, PromptMsg, PromptScreen, SwipeContent, VerticalMenu, VerticalMenuChoiceMsg,
+    },
     theme,
 };
 
@@ -155,8 +156,9 @@ fn new_confirm_reset_obj(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Erro
         .with_swipe(SwipeDirection::Down, SwipeSettings::default())
         .with_swipe(SwipeDirection::Left, SwipeSettings::default())
         .map(|msg| match msg {
-            FrameMsg::Content(()) => Some(FlowMsg::Confirmed),
+            FrameMsg::Content(PromptMsg::Confirmed) => Some(FlowMsg::Confirmed),
             FrameMsg::Button(_) => Some(FlowMsg::Info),
+            _ => None,
         })
         .one_button_request(ButtonRequestCode::ResetDevice.with_name("confirm_setup_device"));
 
