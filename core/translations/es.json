@@ -33,7 +33,7 @@
   },
   "header": {
     "language": "es-ES",
-    "version": "2.8.1"
+    "version": "2.8.2"
   },
   "translations": {
     "addr_mismatch__contact_support_at": "Contacta con atención al cliente de Trezor en",
@@ -519,7 +519,6 @@
     "passphrase__access_wallet": "¿Ir al monedero frase contr.?",
     "passphrase__always_on_device": "¿Introduces siempre la frase de contraseña en Trezor?",
     "passphrase__from_host_not_shown": "Se usará la frase de contraseña dada por el host, pero no se verá debido a la configuración.",
-    "passphrase__wallet": "Monedero frase contr.",
     "passphrase__hide": "¿Ocultar la frase de contraseña del host?",
     "passphrase__next_screen_will_show_passphrase": "La siguiente pantalla muestra la frase de contraseña.",
     "passphrase__please_enter": "Escribe la frase de contraseña.",
@@ -532,6 +531,7 @@
     "passphrase__title_source": "Origen frase contr.",
     "passphrase__turn_off": "¿Desactivar la protección por frase de contraseña?",
     "passphrase__turn_on": "¿Activar la protección por frase de contraseña?",
+    "passphrase__wallet": "Monedero frase contr.",
     "pin__cancel_description": "Continuar sin PIN",
     "pin__cancel_info": "Sin un PIN, cualquiera puede acceder al dispositivo.",
     "pin__cancel_setup": "Cancelar configuración de PIN",
