@@ -13,15 +13,15 @@ use crate::{
             FlowState, SwipeFlow,
         },
         layout::obj::LayoutObj,
-        model_mercury::component::{
-            number_input_slider::{NumberInputSliderDialog, NumberInputSliderDialogMsg},
-            SwipeContent,
-        },
     },
 };
 
 use super::super::{
-    component::{Frame, FrameMsg, PromptScreen, StatusScreen, VerticalMenu, VerticalMenuChoiceMsg},
+    component::{
+        number_input_slider::{NumberInputSliderDialog, NumberInputSliderDialogMsg},
+        Frame, FrameMsg, PromptMsg, PromptScreen, StatusScreen, SwipeContent, VerticalMenu,
+        VerticalMenuChoiceMsg,
+    },
     theme,
 };
 
@@ -113,11 +113,12 @@ impl SetBrightness {
         .with_swipe(SwipeDirection::Down, SwipeSettings::default())
         .with_swipe(SwipeDirection::Left, SwipeSettings::default())
         .map(move |msg| match msg {
-            FrameMsg::Content(()) => {
+            FrameMsg::Content(PromptMsg::Confirmed) => {
                 let _ = storage::set_brightness(BRIGHTNESS.load(Ordering::Relaxed));
                 Some(FlowMsg::Confirmed)
             }
             FrameMsg::Button(_) => Some(FlowMsg::Info),
+            _ => None,
         });
 
         let content_confirmed = Frame::left_aligned(
