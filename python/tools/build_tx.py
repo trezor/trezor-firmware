@@ -75,11 +75,14 @@ def _get_inputs_interactive(
     while True:
         echo()
         prev = prompt(
-            "Previous output to spend (txid:vout)", type=parse_vin, default=""
+            "Previous output to spend (txid:vout / empty string to skip)", default=""
         )
         if not prev:
             break
-        prev_hash, prev_index = prev
+        try:
+            prev_hash, prev_index = parse_vin(prev)
+        except Exception:
+            continue
 
         txhash = prev_hash.hex()
         tx_url = blockbook_url + txhash
@@ -140,17 +143,21 @@ def _get_outputs_interactive() -> List[messages.TxOutputType]:
     outputs: List[messages.TxOutputType] = []
     while True:
         echo()
-        address = prompt("Output address (for non-change output)", default="")
+        address = prompt("Output address for non-change output", default="")
         if address:
             address_n = None
             script_type = messages.OutputScriptType.PAYTOADDRESS
         else:
             address = None
             address_n = prompt(
-                "BIP-32 path (for change output)", type=tools.parse_path, default=""
+                "BIP-32 path for change output (empty string to skip)", default=""
             )
             if not address_n:
                 break
+            try:
+                address_n = tools.parse_path(address_n)
+            except Exception:
+                continue
             script_type = prompt(
                 "Output type",
                 type=ChoiceType(OUTPUT_SCRIPTS),
