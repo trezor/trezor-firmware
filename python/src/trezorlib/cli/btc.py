@@ -380,10 +380,10 @@ def sign_tx(client: "TrezorClient", json_file: TextIO, chunkify: bool) -> None:
     """Sign transaction.
 
     Transaction data must be provided in a JSON file. See `transaction-format.md` for
-    description. You can use `tools/build_tx.py` from the source distribution to build
+    description. You can use `python/tools/build_tx.py` from the source distribution to build
     the required JSON file interactively:
 
-    $ python3 tools/build_tx.py | trezorctl btc sign-tx -
+    $ python3 python/tools/build_tx.py | trezorctl btc sign-tx -
     """
     data = json.load(json_file)
     coin = data.get("coin_name", DEFAULT_COIN)

@@ -72,7 +72,7 @@ After authenticating, open the "Send" tab, fill-out all details, then open the "
 
 .. code::
 
-  $ python3 tools/build_tx.py | trezorctl btc sign-tx -
+  $ python3 python/tools/build_tx.py | trezorctl btc sign-tx -
 
   Coin name [Bitcoin]: Bitcoin
 
