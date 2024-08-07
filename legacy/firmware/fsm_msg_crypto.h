@@ -161,10 +161,6 @@ void fsm_msgSignIdentity(const SignIdentity *msg) {
     }
     resp->public_key.size = 33;
     memcpy(resp->public_key.bytes, node->public_key, 33);
-    if (node->public_key[0] == 1) {
-      /* ed25519 public key */
-      resp->public_key.bytes[0] = 0;
-    }
     resp->signature.size = 65;
     msg_write(MessageType_MessageType_SignedIdentity, resp);
   } else {
@@ -225,6 +221,9 @@ void fsm_msgGetECDHSessionKey(const GetECDHSessionKey *msg) {
       return;
     }
     memcpy(resp->public_key.bytes, node->public_key, 33);
+    if (strcmp(curve, CURVE25519_NAME) == 0) {
+      resp->public_key.bytes[0] = 0x01;
+    }
     resp->public_key.size = 33;
     resp->has_public_key = true;
     msg_write(MessageType_MessageType_ECDHSessionKey, resp);

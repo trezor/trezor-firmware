@@ -35,6 +35,7 @@
 #include "pbkdf2.h"
 #include "sha2.h"
 
+#define USE_CARDANO 1
 #if USE_CARDANO
 
 #define CARDANO_MAX_NODE_DEPTH 1048576
@@ -142,6 +143,7 @@ int hdnode_private_ckd_cardano(HDNode *inout, uint32_t index) {
   memcpy(inout->chain_code, z + 32, 32);
   inout->depth++;
   inout->child_num = index;
+  inout->is_public_key_set = false;
   memzero(inout->public_key, sizeof(inout->public_key));
 
   // making sure to wipe our memory
@@ -158,13 +160,13 @@ int hdnode_from_secret_cardano(const uint8_t secret[CARDANO_SECRET_LENGTH],
   out->depth = 0;
   out->child_num = 0;
   out->curve = &ed25519_cardano_info;
+  out->is_public_key_set = false;
   memcpy(out->private_key, secret, 32);
   memcpy(out->private_key_extension, secret + 32, 32);
   memcpy(out->chain_code, secret + 64, 32);
 
   cardano_ed25519_tweak_bits(out->private_key);
 
-  out->public_key[0] = 0;
   if (hdnode_fill_public_key(out) != 0) {
     return 0;
   }

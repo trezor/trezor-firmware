@@ -56,6 +56,7 @@ typedef struct {
   uint8_t private_key_extension[32];
 
   uint8_t public_key[33];
+  bool is_public_key_set;
   const curve_info *curve;
 } HDNode;
 
