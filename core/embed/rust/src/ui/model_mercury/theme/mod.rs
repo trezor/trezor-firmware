@@ -274,28 +274,56 @@ pub const fn button_warning_low() -> ButtonStyleSheet {
     }
 }
 
-// TODO: delete
+// TODO: somehow merge with button_passphrase_confirm?
 pub const fn button_confirm() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
-            font: Font::BOLD,
-            text_color: FG,
-            button_color: GREEN,
-            icon_color: GREY_LIGHT,
-            background_color: BG,
+            font: Font::DEMIBOLD,
+            text_color: GREEN_LIME,
+            button_color: GREEN_DARK,
+            icon_color: GREEN_LIME,
+            background_color: GREEN_DARK,
         },
         active: &ButtonStyle {
-            font: Font::BOLD,
-            text_color: FG,
-            button_color: GREEN_DARK,
-            icon_color: GREY_LIGHT,
+            font: Font::DEMIBOLD,
+            text_color: GREEN_LIME,
+            button_color: GREEN_LIGHT,
+            icon_color: GREEN_DARK,
+            background_color: GREEN_LIGHT,
+        },
+        // not used
+        disabled: &ButtonStyle {
+            font: Font::DEMIBOLD,
+            text_color: BG,
+            button_color: BG,
+            icon_color: BG,
             background_color: BG,
         },
+    }
+}
+
+pub const fn button_cancel() -> ButtonStyleSheet {
+    ButtonStyleSheet {
+        normal: &ButtonStyle {
+            font: Font::DEMIBOLD,
+            text_color: ORANGE_LIGHT,
+            button_color: ORANGE_DARK,
+            icon_color: ORANGE_LIGHT,
+            background_color: GREEN_DARK,
+        },
+        active: &ButtonStyle {
+            font: Font::DEMIBOLD,
+            text_color: ORANGE_DARK,
+            button_color: ORANGE_LIGHT,
+            icon_color: ORANGE_DARK,
+            background_color: ORANGE_LIGHT,
+        },
+        // not used
         disabled: &ButtonStyle {
-            font: Font::BOLD,
-            text_color: GREY_LIGHT,
-            button_color: GREEN_DARK,
-            icon_color: GREY_LIGHT,
+            font: Font::DEMIBOLD,
+            text_color: BG,
+            button_color: BG,
+            icon_color: BG,
             background_color: BG,
         },
     }

@@ -17,7 +17,9 @@ use crate::{
 
 use super::{
     super::{
-        component::{Frame, FrameMsg, PromptScreen, VerticalMenu, VerticalMenuChoiceMsg},
+        component::{
+            Frame, FrameMsg, PromptMsg, PromptScreen, VerticalMenu, VerticalMenuChoiceMsg,
+        },
         theme,
     },
     util::ShowInfoParams,
@@ -107,8 +109,9 @@ impl ConfirmSummary {
         .with_swipe(SwipeDirection::Down, SwipeSettings::default())
         .with_swipe(SwipeDirection::Left, SwipeSettings::default())
         .map(|msg| match msg {
-            FrameMsg::Content(()) => Some(FlowMsg::Confirmed),
+            FrameMsg::Content(PromptMsg::Confirmed) => Some(FlowMsg::Confirmed),
             FrameMsg::Button(_) => Some(FlowMsg::Info),
+            _ => None,
         });
 
         // Menu
@@ -151,8 +154,9 @@ impl ConfirmSummary {
         .with_footer(TR::instructions__tap_to_confirm.into(), None)
         .with_swipe(SwipeDirection::Right, SwipeSettings::immediate())
         .map(|msg| match msg {
-            FrameMsg::Content(()) => Some(FlowMsg::Confirmed),
+            FrameMsg::Content(PromptMsg::Confirmed) => Some(FlowMsg::Confirmed),
             FrameMsg::Button(_) => Some(FlowMsg::Cancelled),
+            _ => None,
         });
 
         let res = SwipeFlow::new(&ConfirmSummary::Summary)?

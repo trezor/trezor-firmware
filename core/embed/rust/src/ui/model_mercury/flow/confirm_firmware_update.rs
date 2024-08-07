@@ -19,7 +19,7 @@ use crate::{
 
 use super::super::{
     component::{
-        CancelInfoConfirmMsg, Frame, FrameMsg, PromptScreen, SwipeContent, VerticalMenu,
+        CancelInfoConfirmMsg, Frame, FrameMsg, PromptMsg, PromptScreen, SwipeContent, VerticalMenu,
         VerticalMenuChoiceMsg,
     },
     theme,
@@ -130,8 +130,9 @@ impl ConfirmFirmwareUpdate {
         .with_swipe(SwipeDirection::Down, SwipeSettings::default())
         .with_swipe(SwipeDirection::Left, SwipeSettings::default())
         .map(|msg| match msg {
-            FrameMsg::Content(()) => Some(FlowMsg::Confirmed),
+            FrameMsg::Content(PromptMsg::Confirmed) => Some(FlowMsg::Confirmed),
             FrameMsg::Button(_) => Some(FlowMsg::Info),
+            _ => None,
         });
 
         let res = SwipeFlow::new(&ConfirmFirmwareUpdate::Intro)?

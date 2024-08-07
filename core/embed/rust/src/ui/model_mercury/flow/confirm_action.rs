@@ -1,7 +1,3 @@
-use super::super::{
-    component::{Frame, FrameMsg, PromptScreen, SwipeContent, VerticalMenu, VerticalMenuChoiceMsg},
-    theme,
-};
 use crate::{
     error,
     error::Error,
@@ -21,6 +17,13 @@ use crate::{
         },
         layout::obj::LayoutObj,
     },
+};
+
+use super::super::{
+    component::{
+        Frame, FrameMsg, PromptMsg, PromptScreen, SwipeContent, VerticalMenu, VerticalMenuChoiceMsg,
+    },
+    theme,
 };
 
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -287,8 +290,9 @@ fn create_confirm(
         }
 
         let content_confirm = content_confirm.map(move |msg| match msg {
-            FrameMsg::Content(()) => Some(FlowMsg::Confirmed),
+            FrameMsg::Content(PromptMsg::Confirmed) => Some(FlowMsg::Confirmed),
             FrameMsg::Button(_) => Some(FlowMsg::Info),
+            _ => None,
         });
 
         flow.with_page(&ConfirmAction::Confirm, content_confirm)
