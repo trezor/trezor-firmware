@@ -213,18 +213,3 @@ void SystemInit(void) {
   // enable instruction cache in default 2-way mode
   ICACHE->CR = ICACHE_CR_EN;
 }
-
-void drop_privileges(void) {
-  // jump to unprivileged mode
-  // http://infocenter.arm.com/help/topic/com.arm.doc.dui0552a/CHDBIBGJ.html
-  __asm__ volatile("msr control, %0" ::"r"(0x1));
-  __asm__ volatile("isb");
-}
-
-// from util.s
-extern void shutdown_privileged(void);
-
-void PVD_PVM_IRQHandler(void) {
-  TIM1->CCR1 = 0;  // turn off display backlight
-  shutdown_privileged();
-}

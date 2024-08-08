@@ -51,7 +51,6 @@
 #include "irq.h"
 #include "sdcard-set_clr_card_detect.h"
 #include "sdcard.h"
-#include "supervise.h"
 
 #define SDMMC_CLK_ENABLE() __HAL_RCC_SDMMC1_CLK_ENABLE()
 #define SDMMC_CLK_DISABLE() __HAL_RCC_SDMMC1_CLK_DISABLE()
@@ -134,8 +133,8 @@ void HAL_SD_MspInit(SD_HandleTypeDef *hsd) {
     SDMMC_CLK_ENABLE();
 
     // NVIC configuration for SDIO interrupts
-    svc_setpriority(SDMMC_IRQn, IRQ_PRI_NORMAL);
-    svc_enableIRQ(SDMMC_IRQn);
+    NVIC_SetPriority(SDMMC_IRQn, IRQ_PRI_NORMAL);
+    NVIC_EnableIRQ(SDMMC_IRQn);
   }
 
   // GPIO have already been initialised by sdcard_init
@@ -143,7 +142,7 @@ void HAL_SD_MspInit(SD_HandleTypeDef *hsd) {
 
 void HAL_SD_MspDeInit(SD_HandleTypeDef *hsd) {
   if (hsd->Instance == sd_handle.Instance) {
-    svc_disableIRQ(SDMMC_IRQn);
+    NVIC_DisableIRQ(SDMMC_IRQn);
     SDMMC_CLK_DISABLE();
   }
 }
@@ -324,7 +323,7 @@ secbool sdcard_read_blocks(uint32_t *dest, uint32_t block_num,
   DMA_HandleTypeDef dummy_dma = {0};
   sd_handle.hdmatx = &dummy_dma;
 
-  svc_enableIRQ(DMA2_Stream3_IRQn);
+  NVIC_EnableIRQ(DMA2_Stream3_IRQn);
 
   sdcard_reset_periph();
   err =
@@ -333,7 +332,7 @@ secbool sdcard_read_blocks(uint32_t *dest, uint32_t block_num,
     err = sdcard_wait_finished(&sd_handle, 5000);
   }
 
-  svc_disableIRQ(DMA2_Stream3_IRQn);
+  NVIC_DisableIRQ(DMA2_Stream3_IRQn);
   HAL_DMA_DeInit(&sd_dma);
   sd_handle.hdmarx = NULL;
 
@@ -380,7 +379,7 @@ secbool sdcard_write_blocks(const uint32_t *src, uint32_t block_num,
   DMA_HandleTypeDef dummy_dma = {0};
   sd_handle.hdmarx = &dummy_dma;
 
-  svc_enableIRQ(DMA2_Stream3_IRQn);
+  NVIC_EnableIRQ(DMA2_Stream3_IRQn);
 
   sdcard_reset_periph();
   err =
@@ -389,9 +388,11 @@ secbool sdcard_write_blocks(const uint32_t *src, uint32_t block_num,
     err = sdcard_wait_finished(&sd_handle, 5000);
   }
 
-  svc_disableIRQ(DMA2_Stream3_IRQn);
+  NVIC_DisableIRQ(DMA2_Stream3_IRQn);
   HAL_DMA_DeInit(&sd_dma);
   sd_handle.hdmatx = NULL;
 
   return sectrue * (err == HAL_OK);
 }
+
+#endif  // KERNEL_MODE
