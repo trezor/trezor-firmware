@@ -376,4 +376,10 @@ enum MessageType {
     MessageType_SolanaAddress = 903 [(wire_out) = true];
     MessageType_SolanaSignTx = 904 [(wire_in) = true];
     MessageType_SolanaTxSignature = 905 [(wire_out) = true];
+
+    // Benchmark
+    MessageType_BenchmarkListNames = 9100 [(bitcoin_only) = true];
+    MessageType_BenchmarkNames = 9101 [(bitcoin_only) = true];
+    MessageType_BenchmarkRun = 9102 [(bitcoin_only) = true];
+    MessageType_BenchmarkResult = 9103 [(bitcoin_only) = true];
 }
