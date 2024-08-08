@@ -100,16 +100,12 @@
 #endif
 #include "platform.h"
 #include "rng.h"
-#include "supervise.h"
 #ifdef USE_SECP256K1_ZKP
 #include "zkp_context.h"
 #endif
 #ifdef USE_HAPTIC
 #include "haptic.h"
 #endif
-
-// from util.s
-extern void shutdown_privileged(void);
 
 #ifdef USE_OPTIGA
 #if !PYOPT
@@ -132,7 +128,6 @@ static void optiga_log_hex(const char *prefix, const uint8_t *data,
 #endif
 
 int main(void) {
-  svc_init();
   systick_init();
   systimer_init();
 
@@ -249,10 +244,6 @@ int main(void) {
   memzero(secret, sizeof(secret));
   ensure(sectrue * (optiga_open_application() == OPTIGA_SUCCESS),
          "Cannot initialize optiga.");
-#endif
-
-#if !defined TREZOR_MODEL_1
-  drop_privileges();
 #endif
 
 #ifdef USE_SECP256K1_ZKP
