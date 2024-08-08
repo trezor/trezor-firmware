@@ -1,0 +1,42 @@
+syntax = "proto2";
+package hw.trezor.messages.bitcoin;
+
+// Sugar for easier handling in Java
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
+option java_outer_classname = "TrezorMessageBenchmark";
+
+/**
+ * Request: Ask device for a list of names of all supported benchmarks
+ * @start
+ * @next Benchmarks
+ * @next Failure
+ */
+message BenchmarkListNames {
+}
+
+/**
+ * Response: Contains the list of names of all supported benchmarks
+ * @end
+ */
+message BenchmarkNames {
+    repeated string names = 1;
+}
+
+/**
+ * Request: Ask device to run a benchmark
+ * @start
+ * @next BenchmarkResult
+ * @next Failure
+ */
+message BenchmarkRun {
+    optional string name = 1;
+}
+
+/**
+ * Response: Contains the result of the benchmark
+ * @end
+ */
+message BenchmarkResult {
+    optional string value = 1;
+    optional string unit = 3;
+}

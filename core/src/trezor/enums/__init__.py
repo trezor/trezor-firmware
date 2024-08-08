@@ -266,6 +266,10 @@ if TYPE_CHECKING:
         SolanaAddress = 903
         SolanaSignTx = 904
         SolanaTxSignature = 905
+        BenchmarkListNames = 9100
+        BenchmarkNames = 9101
+        BenchmarkRun = 9102
+        BenchmarkResult = 9103
 
     class FailureType(IntEnum):
         UnexpectedMessage = 1
