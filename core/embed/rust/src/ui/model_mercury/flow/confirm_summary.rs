@@ -1,3 +1,5 @@
+use heapless::Vec;
+
 use crate::{
     error,
     micropython::{iter::IterBuf, map::Map, obj::Obj, qstr::Qstr, util},
@@ -24,6 +26,10 @@ use super::{
     },
     util::ShowInfoParams,
 };
+
+const MENU_ITEM_CANCEL: usize = 0;
+const MENU_ITEM_FEE_INFO: usize = 1;
+const MENU_ITEM_ACCOUNT_INFO: usize = 2;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum ConfirmSummary {
@@ -59,9 +65,9 @@ impl FlowState for ConfirmSummary {
         match (self, msg) {
             (_, FlowMsg::Info) => Self::Menu.transit(),
             (Self::Hold, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Confirmed),
-            (Self::Menu, FlowMsg::Choice(0)) => Self::FeeInfo.swipe_left(),
-            (Self::Menu, FlowMsg::Choice(1)) => Self::AccountInfo.swipe_left(),
-            (Self::Menu, FlowMsg::Choice(2)) => Self::CancelTap.swipe_left(),
+            (Self::Menu, FlowMsg::Choice(MENU_ITEM_CANCEL)) => Self::CancelTap.swipe_left(),
+            (Self::Menu, FlowMsg::Choice(MENU_ITEM_FEE_INFO)) => Self::FeeInfo.swipe_left(),
+            (Self::Menu, FlowMsg::Choice(MENU_ITEM_ACCOUNT_INFO)) => Self::AccountInfo.swipe_left(),
             (Self::Menu, FlowMsg::Cancelled) => Self::Summary.swipe_right(),
             (Self::CancelTap, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Cancelled),
             (_, FlowMsg::Cancelled) => Self::Menu.transit(),
@@ -83,6 +89,8 @@ impl ConfirmSummary {
         let fee_items: Obj = kwargs.get(Qstr::MP_QSTR_fee_items)?;
         let br_name: TString = kwargs.get(Qstr::MP_QSTR_br_name)?.try_into()?;
         let br_code: u16 = kwargs.get(Qstr::MP_QSTR_br_code)?.try_into()?;
+        let cancel_text: Option<TString> =
+            kwargs.get(Qstr::MP_QSTR_cancel_text)?.try_into_option()?;
 
         // Summary
         let mut summary = ShowInfoParams::new(title)
@@ -114,36 +122,58 @@ impl ConfirmSummary {
             _ => None,
         });
 
-        // Menu
-        let content_menu = Frame::left_aligned(
-            "".into(),
-            VerticalMenu::empty()
-                .item(theme::ICON_CHEVRON_RIGHT, "Fee info".into())
-                .item(theme::ICON_CHEVRON_RIGHT, "Account info".into())
-                .danger(theme::ICON_CANCEL, "Cancel sign".into()),
-        )
-        .with_cancel_button()
-        .with_swipe(SwipeDirection::Right, SwipeSettings::immediate())
-        .map(|msg| match msg {
-            FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => Some(FlowMsg::Choice(i)),
-            FrameMsg::Button(_) => Some(FlowMsg::Cancelled),
-        });
-
         // FeeInfo
+        let mut has_fee_info = false;
         let mut fee = ShowInfoParams::new(TR::confirm_total__title_fee.into()).with_cancel_button();
         for pair in IterBuf::new().try_iterate(fee_items)? {
             let [label, value]: [TString; 2] = util::iter_into_array(pair)?;
             fee = unwrap!(fee.add(label, value));
+            has_fee_info = true;
         }
         let content_fee = fee.into_layout()?;
 
         // AccountInfo
+        let mut has_account_info = false;
         let mut account = ShowInfoParams::new(TR::send__send_from.into()).with_cancel_button();
         for pair in IterBuf::new().try_iterate(account_items)? {
             let [label, value]: [TString; 2] = util::iter_into_array(pair)?;
             account = unwrap!(account.add(label, value));
+            has_account_info = true;
         }
         let content_account = account.into_layout()?;
+
+        // Menu
+        let mut menu = VerticalMenu::empty();
+        let mut menu_items = Vec::<usize, 3>::new();
+        if has_fee_info {
+            menu = menu.item(
+                theme::ICON_CHEVRON_RIGHT,
+                TR::confirm_total__title_fee.into(),
+            );
+            menu_items.push(MENU_ITEM_FEE_INFO);
+        }
+        if has_account_info {
+            menu = menu.item(
+                theme::ICON_CHEVRON_RIGHT,
+                TR::address_details__account_info.into(),
+            );
+            menu_items.push(MENU_ITEM_ACCOUNT_INFO);
+        }
+        menu = menu.danger(
+            theme::ICON_CANCEL,
+            cancel_text.unwrap_or(TR::send__cancel_sign.into()),
+        );
+        unwrap!(menu_items.push(MENU_ITEM_CANCEL));
+        let content_menu = Frame::left_aligned(TString::empty(), menu)
+            .with_cancel_button()
+            .with_swipe(SwipeDirection::Right, SwipeSettings::immediate())
+            .map(move |msg| match msg {
+                FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => {
+                    let selected_item = menu_items[i];
+                    Some(FlowMsg::Choice(selected_item))
+                }
+                FrameMsg::Button(_) => Some(FlowMsg::Cancelled),
+            });
 
         // CancelTap
         let content_cancel_tap = Frame::left_aligned(

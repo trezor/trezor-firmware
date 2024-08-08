@@ -1054,7 +1054,7 @@ def confirm_total(
     if fee_rate_amount:
         info_items.append((TR.confirm_total__fee_rate_colon, fee_rate_amount))
 
-    return confirm_summary(
+    return _confirm_summary(
         items,
         TR.words__title_summary,
         info_items=info_items,
@@ -1063,7 +1063,7 @@ def confirm_total(
     )
 
 
-def confirm_summary(
+def _confirm_summary(
     items: Iterable[tuple[str, str]],
     title: str | None = None,
     info_items: Iterable[tuple[str, str]] | None = None,
@@ -1098,7 +1098,7 @@ if not utils.BITCOIN_ONLY:
         recipient: str,
         total_amount: str,
         maximum_fee: str,
-        items: Iterable[tuple[str, str]],
+        fee_info_items: Iterable[tuple[str, str]],
         br_name: str = "confirm_ethereum_tx",
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
         chunkify: bool = False,
@@ -1108,7 +1108,7 @@ if not utils.BITCOIN_ONLY:
                 title=TR.words__title_summary,
                 items=[
                     (f"{TR.words__amount}:", total_amount),
-                    (TR.send__maximum_fee, maximum_fee),
+                    (f"{TR.send__maximum_fee}:", maximum_fee),
                 ],
                 info_button=True,
                 cancel_arrow=True,
@@ -1117,7 +1117,7 @@ if not utils.BITCOIN_ONLY:
         info_layout = RustLayout(
             trezorui2.show_info_with_cancel(
                 title=TR.confirm_total__title_fee,
-                items=items,
+                items=[(f"{k}:", v) for (k, v) in fee_info_items],
             )
         )
 
@@ -1169,17 +1169,17 @@ if not utils.BITCOIN_ONLY:
 
         # confirmation
         if verb == TR.ethereum__staking_claim:
-            items = ((TR.send__maximum_fee, maximum_fee),)
+            items = ((f"{TR.send__maximum_fee}:", maximum_fee),)
         else:
             items = (
-                (TR.words__amount + ":", total_amount),
-                (TR.send__maximum_fee, maximum_fee),
+                (f"{TR.words__amount}:", total_amount),
+                (f"{TR.send__maximum_fee}:", maximum_fee),
             )
-        await confirm_summary(
+        await _confirm_summary(
             items,  # items
             title=title,
             info_title=TR.confirm_total__title_fee,
-            info_items=info_items,
+            info_items=[(f"{k}:", v) for (k, v) in info_items],
             br_name=br_name,
             br_code=br_code,
         )
@@ -1197,7 +1197,7 @@ if not utils.BITCOIN_ONLY:
             amount_title if amount_title is not None else f"{TR.words__amount}:"
         )  # def_arg
         fee_title = fee_title or TR.words__fee  # def_arg
-        return confirm_summary(
+        return _confirm_summary(
             ((amount_title, amount), (fee_title, fee)),
             info_items=items,
             br_name=br_name,

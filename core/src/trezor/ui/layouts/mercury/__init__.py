@@ -625,7 +625,7 @@ def show_success(
 
 async def confirm_output(
     address: str,
-    amount: str,
+    amount: str | None = None,
     title: str | None = None,
     hold: bool = False,
     br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
@@ -634,6 +634,7 @@ async def confirm_output(
     chunkify: bool = False,
     source_account: str | None = None,
     source_account_path: str | None = None,
+    cancel_text: str | None = None,
 ) -> None:
     if address_label is not None:
         title = address_label
@@ -655,6 +656,7 @@ async def confirm_output(
                 account_path=source_account_path,
                 br_code=br_code,
                 br_name="confirm_output",
+                cancel_text=cancel_text,
             )
         )
     )
@@ -976,18 +978,21 @@ def confirm_total(
                 account_items=account_items,
                 br_name=br_name,
                 br_code=br_code,
+                cancel_text=TR.send__cancel_sign,
             )
         )
     )
 
 
-def confirm_summary(
-    items: Iterable[tuple[str, str]],
+def _confirm_summary(
+    items: Iterable[tuple[str, str]] | None = None,
     title: str | None = None,
     info_items: Iterable[tuple[str, str]] | None = None,
     info_title: str | None = None,
+    fee_items: Iterable[tuple[str, str]] | None = None,
     br_name: str = "confirm_total",
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
+    cancel_text: str | None = None,
 ) -> Awaitable[None]:
     # TODO: info_title
     title = title or TR.words__title_summary  # def_arg
@@ -997,10 +1002,11 @@ def confirm_summary(
             trezorui2.flow_confirm_summary(
                 title=title,
                 items=items or (),
-                fee_items=(),
+                fee_items=fee_items or (),
                 account_items=info_items or (),
                 br_name=br_name,
                 br_code=br_code,
+                cancel_text=cancel_text,
             )
         )
     )
@@ -1012,48 +1018,26 @@ if not utils.BITCOIN_ONLY:
         recipient: str,
         total_amount: str,
         maximum_fee: str,
-        items: Iterable[tuple[str, str]],
+        fee_info_items: Iterable[tuple[str, str]],
         br_name: str = "confirm_ethereum_tx",
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
         chunkify: bool = False,
     ) -> None:
-        info_layout = RustLayout(
-            trezorui2.show_info_with_cancel(
-                title=TR.confirm_total__title_fee,
-                items=items,
-            )
+        await confirm_output(
+            recipient,
+            title=TR.words__recipient,
+            chunkify=chunkify,
+            cancel_text=TR.buttons__cancel,
         )
 
-        while True:
-            # Allowing going back and forth between recipient and summary/details
-            await confirm_blob(
-                br_name,
-                TR.words__recipient,
-                recipient,
-                verb=TR.buttons__continue,
-                chunkify=chunkify,
-                prompt_screen=False,
-            )
-
-            try:
-                total_layout = RustLayout(
-                    trezorui2.confirm_total(
-                        title=TR.words__title_summary,
-                        items=[
-                            (f"{TR.words__amount}:", total_amount),
-                            (TR.send__maximum_fee, maximum_fee),
-                        ],
-                        info_button=True,
-                        cancel_arrow=True,
-                    )
-                )
-                total_layout.request_complete_repaint()
-                await raise_if_not_confirmed(
-                    with_info(total_layout, info_layout, br_name, br_code)
-                )
-                break
-            except ActionCancelled:
-                continue
+        await _confirm_summary(
+            items=(
+                (TR.words__amount, total_amount),
+                (TR.send__maximum_fee, maximum_fee),
+            ),
+            fee_items=fee_info_items,
+            cancel_text=TR.buttons__cancel,
+        )
 
     async def confirm_ethereum_staking_tx(
         title: str,
@@ -1088,11 +1072,11 @@ if not utils.BITCOIN_ONLY:
             items = ((TR.send__maximum_fee, maximum_fee),)
         else:
             items = (
-                (TR.words__amount + ":", total_amount),
+                (TR.words__amount, total_amount),
                 (TR.send__maximum_fee, maximum_fee),
             )
-        await confirm_summary(
-            items,  # items
+        await _confirm_summary(
+            items=items,
             title=title,
             info_title=TR.confirm_total__title_fee,
             info_items=info_items,
@@ -1113,8 +1097,8 @@ if not utils.BITCOIN_ONLY:
             amount_title if amount_title is not None else f"{TR.words__amount}:"
         )  # def_arg
         fee_title = fee_title or TR.words__fee  # def_arg
-        return confirm_summary(
-            ((amount_title, amount), (fee_title, fee)),
+        return _confirm_summary(
+            items=((amount_title, amount), (fee_title, fee)),
             info_items=items,
             br_name=br_name,
             br_code=br_code,
@@ -1122,11 +1106,11 @@ if not utils.BITCOIN_ONLY:
 
 
 def confirm_joint_total(spending_amount: str, total_amount: str) -> Awaitable[None]:
-    return confirm_summary(
-        items=[
+    return _confirm_summary(
+        items=(
             (TR.send__you_are_contributing, spending_amount),
             (TR.send__to_the_total_amount, total_amount),
-        ],
+        ),
         title=TR.send__title_joint_transaction,
         br_name="confirm_joint_total",
         br_code=ButtonRequestType.SignTx,
