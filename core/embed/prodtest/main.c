@@ -25,6 +25,7 @@
 #include STM32_HAL_H
 
 #include "board_capabilities.h"
+#include "boot_args.h"
 #include "button.h"
 #include "common.h"
 #include "display.h"
@@ -34,6 +35,7 @@
 #include "flash.h"
 #include "flash_otp.h"
 #include "i2c.h"
+#include "image.h"
 #include "model.h"
 #include "mpu.h"
 #include "prodtest_common.h"
@@ -41,7 +43,6 @@
 #include "sbu.h"
 #include "sdcard.h"
 #include "secbool.h"
-#include "supervise.h"
 #include "systimer.h"
 #include "touch.h"
 #include "usb.h"
@@ -777,7 +778,6 @@ void cpuid_read(void) {
 #define BACKLIGHT_NORMAL 150
 
 int main(void) {
-  svc_init();
   systick_init();
   systimer_init();
   rdi_init();
@@ -822,8 +822,6 @@ int main(void) {
 
   mpu_config_prodtest();
   fault_handlers_init();
-
-  drop_privileges();
 
   display_clear();
   draw_welcome_screen();

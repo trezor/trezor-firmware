@@ -59,4 +59,10 @@ typedef struct {
 // Display driver instance
 extern display_driver_t g_display_driver;
 
+static inline uint32_t is_mode_exception(void) {
+  uint32_t r0;
+  __asm__ volatile("mrs %0, ipsr" : "=r"(r0));
+  return (r0 & 0x1FF) < 11;
+}
+
 #endif  // TREZORHAL_DISPLAY_INTERNAL_H

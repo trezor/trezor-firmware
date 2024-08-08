@@ -32,7 +32,6 @@
 
 #include "gfx_bitblt.h"
 #include "irq.h"
-#include "supervise.h"
 
 #ifndef BOARDLOADER
 #include "bg_copy.h"
@@ -210,7 +209,7 @@ void display_refresh(void) {
   }
 
 #ifndef BOARDLOADER
-  if (is_mode_handler()) {
+  if (is_mode_exception()) {
     // Disable scheduling of any new background copying
     NVIC_DisableIRQ(DISPLAY_TE_INTERRUPT_NUM);
     // Wait for next TE signal. During this time the
@@ -250,7 +249,7 @@ void display_ensure_refreshed(void) {
     return;
   }
 
-  if (!is_mode_handler()) {
+  if (!is_mode_exception()) {
     bool copy_pending;
 
     // Wait until all frame buffers are written to the display

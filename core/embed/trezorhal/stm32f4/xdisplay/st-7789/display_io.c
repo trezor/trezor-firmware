@@ -22,7 +22,6 @@
 
 #include "display_io.h"
 #include "irq.h"
-#include "supervise.h"
 
 __IO DISP_MEM_TYPE *const DISPLAY_CMD_ADDRESS =
     (__IO DISP_MEM_TYPE *const)((uint32_t)DISPLAY_MEMORY_BASE);

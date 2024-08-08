@@ -1,3 +1,4 @@
+#include TREZOR_BOARD
 #include "common.h"
 
 void fault_handlers_init(void) {
@@ -20,4 +21,14 @@ void NMI_Handler(void) {
   if ((RCC->CIR & RCC_CIR_CSSF) != 0) {
     error_shutdown("(CS)");
   }
+}
+
+// from util.s
+extern void shutdown_privileged(void);
+
+void PVD_IRQHandler(void) {
+#ifdef BACKLIGHT_PWM_TIM
+  BACKLIGHT_PWM_TIM->BACKLIGHT_PWM_TIM_CCR = 0;  // turn off display backlight
+#endif
+  shutdown_privileged();
 }

@@ -36,4 +36,8 @@ boot_command_t bootargs_get_command();
 // Returns the pointer to boot arguments
 const boot_args_t* bootargs_get_args();
 
+void __attribute__((noreturn)) trezor_shutdown(void);
+void __attribute__((noreturn)) svc_reboot_to_bootloader(void);
+void __attribute__((noreturn)) svc_reboot(void);
+
 #endif  // TREZORHAL_BOOT_ARGS_H

@@ -53,8 +53,6 @@
   })
 #endif
 
-void __attribute__((noreturn)) trezor_shutdown(void);
-
 // Invalidates firmware on the device
 // Note: only works when write access to firmware area is enabled by MPU
 void invalidate_firmware(void);

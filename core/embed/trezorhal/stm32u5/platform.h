@@ -34,7 +34,6 @@ typedef enum {
 } clock_settings_t;
 
 void set_core_clock(clock_settings_t settings);
-void drop_privileges(void);
 
 // the following functions are defined in util.s
 void memset_reg(volatile void *start, volatile void *stop, uint32_t val);
