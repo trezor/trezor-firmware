@@ -34,3 +34,11 @@ void NMI_Handler(void) {
     error_shutdown("(CS)");
   }
 }
+
+// from util.s
+extern void shutdown_privileged(void);
+
+void PVD_PVM_IRQHandler(void) {
+  TIM1->CCR1 = 0;  // turn off display backlight
+  shutdown_privileged();
+}

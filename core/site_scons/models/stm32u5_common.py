@@ -65,7 +65,6 @@ def stm32u5_common_files(env, defines, sources, paths):
         "embed/trezorhal/stm32u5/secure_aes.c",
         "embed/trezorhal/stm32u5/systick.c",
         "embed/trezorhal/stm32f4/systimer.c",
-        "embed/trezorhal/stm32f4/supervise.c",
         "embed/trezorhal/stm32u5/random_delays.c",
         "embed/trezorhal/stm32u5/rng.c",
         "embed/trezorhal/stm32u5/tamper.c",

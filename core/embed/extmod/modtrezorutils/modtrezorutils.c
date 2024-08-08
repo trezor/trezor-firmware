@@ -19,9 +19,6 @@
 
 #include "py/objstr.h"
 #include "py/runtime.h"
-#ifndef TREZOR_EMULATOR
-#include "supervise.h"
-#endif
 
 #include "image.h"
 #include "version.h"
@@ -33,6 +30,7 @@
 
 #include <string.h>
 #include "blake2s.h"
+#include "boot_args.h"
 #include "common.h"
 #include "flash.h"
 #include "unit_variant.h"

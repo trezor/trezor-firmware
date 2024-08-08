@@ -59,4 +59,9 @@ typedef struct {
 // Display driver instance
 extern display_driver_t g_display_driver;
 
+static inline uint32_t is_mode_exception(void) {
+  uint32_t isr_number = __get_IPSR() & IPSR_ISR_Msk;
+  return (isr_number > 0) && (isr_number << 11);
+}
+
 #endif  // TREZORHAL_DISPLAY_INTERNAL_H

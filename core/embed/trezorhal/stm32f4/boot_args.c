@@ -3,6 +3,10 @@
 #include <common.h>
 #include <string.h>
 
+#include "display.h"
+#include "irq.h"
+#include "mpu.h"
+
 // The 'g_boot_command_shadow' shadows a real boot command passed
 // to the bootloader.
 // 1. In the bootloader, its value is set in the startup code.
@@ -42,3 +46,41 @@ void bootargs_set(boot_command_t command, const void* args, size_t args_size) {
 boot_command_t bootargs_get_command() { return g_boot_command_shadow; }
 
 const boot_args_t* bootargs_get_args() { return &g_boot_args; }
+
+void __attribute__((noreturn)) trezor_shutdown(void) {
+  display_deinit(DISPLAY_RETAIN_CONTENT);
+
+#if defined(STM32U5)
+  __HAL_RCC_SAES_CLK_DISABLE();
+  // Erase all secrets
+  TAMP->CR2 |= TAMP_CR2_BKERASE;
+#endif
+  // from util.s
+  extern void shutdown_privileged(void);
+  shutdown_privileged();
+
+  for (;;)
+    ;
+}
+
+void svc_reboot_to_bootloader(void) {
+  boot_command_t boot_command = bootargs_get_command();
+  display_deinit(DISPLAY_RESET_CONTENT);
+#ifdef ENSURE_COMPATIBLE_SETTINGS
+  ensure_compatible_settings();
+#endif
+#ifdef STM32U5
+  // extern uint32_t g_boot_command;
+  g_boot_command = boot_command;
+  disable_irq();
+  delete_secrets();
+  NVIC_SystemReset();
+#else
+  mpu_config_bootloader();
+  jump_to_with_flag(BOOTLOADER_START + IMAGE_HEADER_SIZE, boot_command);
+  for (;;)
+    ;
+#endif
+}
+
+void svc_reboot(void) { NVIC_SystemReset(); }

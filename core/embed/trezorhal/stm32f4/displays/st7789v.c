@@ -26,7 +26,6 @@
 #include "irq.h"
 #include "memzero.h"
 #include "st7789v.h"
-#include "supervise.h"
 #include STM32_HAL_H
 
 #ifdef TREZOR_MODEL_T
@@ -252,6 +251,12 @@ int display_orientation(int degrees) {
 }
 
 int display_get_orientation(void) { return DISPLAY_ORIENTATION; }
+
+static inline uint32_t is_mode_handler(void) {
+  uint32_t r0;
+  __asm__ volatile("mrs %0, ipsr" : "=r"(r0));
+  return (r0 & 0x1FF) != 0;
+}
 
 int display_backlight(int val) {
 #ifdef FRAMEBUFFER
@@ -624,14 +629,14 @@ static void switch_fb_in_backround(void) {
 
     pending_fb_switch = true;
     __HAL_GPIO_EXTI_CLEAR_FLAG(DISPLAY_TE_PIN);
-    svc_enableIRQ(DISPLAY_TE_INTERRUPT_NUM);
+    NVIC_EnableIRQ(DISPLAY_TE_INTERRUPT_NUM);
   } else {
     act_frame_buffer = 0;
     memcpy(PhysFrameBuffer1, PhysFrameBuffer0, sizeof(PhysFrameBuffer1));
 
     pending_fb_switch = true;
     __HAL_GPIO_EXTI_CLEAR_FLAG(DISPLAY_TE_PIN);
-    svc_enableIRQ(DISPLAY_TE_INTERRUPT_NUM);
+    NVIC_EnableIRQ(DISPLAY_TE_INTERRUPT_NUM);
   }
 }
 #endif
