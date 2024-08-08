@@ -132,6 +132,6 @@ impl RequestNumber {
             .with_page(&RequestNumber::Number, content_number_input)?
             .with_page(&RequestNumber::Menu, content_menu)?
             .with_page(&RequestNumber::Info, content_info)?;
-        Ok(LayoutObj::new(res)?.into())
+        Ok(LayoutObj::new_root(res)?.into())
     }
 }

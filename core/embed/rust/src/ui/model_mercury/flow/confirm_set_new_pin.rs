@@ -138,6 +138,6 @@ impl SetNewPin {
             .with_page(&SetNewPin::Menu, content_menu)?
             .with_page(&SetNewPin::CancelPinIntro, content_cancel_intro)?
             .with_page(&SetNewPin::CancelPinConfirm, content_cancel_confirm)?;
-        Ok(LayoutObj::new(res)?.into())
+        Ok(LayoutObj::new_root(res)?.into())
     }
 }
