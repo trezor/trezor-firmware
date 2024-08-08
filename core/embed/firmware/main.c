@@ -41,6 +41,7 @@
 #include "common.h"
 #include "compiler_traits.h"
 #include "display.h"
+#include "entropy.h"
 #include "fault_handlers.h"
 #include "flash.h"
 #include "image.h"
@@ -179,7 +180,7 @@ int main(void) {
 
   mpu_config_firmware_initial();
 
-  collect_hw_entropy();
+  entropy_init();
 
 #if PRODUCTION || BOOTLOADER_QA
   check_and_replace_bootloader();
