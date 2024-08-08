@@ -139,6 +139,6 @@ impl SetBrightness {
             .with_page(&SetBrightness::Confirm, content_confirm)?
             .with_page(&SetBrightness::Confirmed, content_confirmed)?;
 
-        Ok(LayoutObj::new(res)?.into())
+        Ok(LayoutObj::new_root(res)?.into())
     }
 }
