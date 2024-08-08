@@ -52,6 +52,7 @@ def stm32u5_common_files(env, defines, sources, paths):
         "embed/trezorhal/stm32u5/board_capabilities.c",
         "embed/trezorhal/stm32u5/boot_args.c",
         "embed/trezorhal/stm32u5/common.c",
+        "embed/trezorhal/stm32u5/entropy.c",
         "embed/trezorhal/stm32u5/fault_handlers.c",
         "embed/trezorhal/stm32u5/flash.c",
         "embed/trezorhal/stm32u5/flash_otp.c",

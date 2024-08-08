@@ -43,6 +43,7 @@ def stm32f4_common_files(env, defines, sources, paths):
         "embed/trezorhal/stm32f4/board_capabilities.c",
         "embed/trezorhal/stm32f4/boot_args.c",
         "embed/trezorhal/stm32f4/common.c",
+        "embed/trezorhal/stm32f4/entropy.c",
         "embed/trezorhal/stm32f4/fault_handlers.c",
         "embed/trezorhal/stm32f4/flash.c",
         "embed/trezorhal/stm32f4/flash_otp.c",
