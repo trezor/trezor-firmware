@@ -47,9 +47,7 @@ use crate::{
         },
         geometry,
         layout::{
-            obj::{ComponentMsgObj, LayoutObj, ATTACH_TYPE_OBJ},
-            result::{CANCELLED, CONFIRMED, INFO},
-            util::{upy_disable_animation, ConfirmBlob, RecoveryType},
+            base::LAYOUT_STATE, obj::{ComponentMsgObj, LayoutObj, ATTACH_TYPE_OBJ}, result::{CANCELLED, CONFIRMED, INFO}, util::{upy_disable_animation, ConfirmBlob, RecoveryType}
         },
         model_tr::component::check_homescreen_format,
     },
@@ -2075,4 +2073,12 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     SWIPE_LEFT: ClassVar[int]
     ///     SWIPE_RIGHT: ClassVar[int]
     Qstr::MP_QSTR_AttachType => ATTACH_TYPE_OBJ.as_obj(),
+
+    /// class LayoutState:
+    ///     """Layout state."""
+    ///     INITIAL: "ClassVar[LayoutState]"
+    ///     ATTACHED: "ClassVar[LayoutState]"
+    ///     TRANSITIONING: "ClassVar[LayoutState]"
+    ///     DONE: "ClassVar[LayoutState]"
+    Qstr::MP_QSTR_LayoutState => LAYOUT_STATE.as_obj(),
 };

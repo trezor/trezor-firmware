@@ -137,6 +137,6 @@ impl ConfirmFirmwareUpdate {
             .with_page(&ConfirmFirmwareUpdate::Menu, content_menu)?
             .with_page(&ConfirmFirmwareUpdate::Fingerprint, content_fingerprint)?
             .with_page(&ConfirmFirmwareUpdate::Confirm, content_confirm)?;
-        Ok(LayoutObj::new(res)?.into())
+        Ok(LayoutObj::new_root(res)?.into())
     }
 }
