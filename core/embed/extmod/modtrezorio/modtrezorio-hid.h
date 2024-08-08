@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "embed/extmod/trezorobj.h"
+
 /// package: trezorio.__init__
 
 /// class HID:
