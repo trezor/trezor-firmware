@@ -271,7 +271,7 @@ fn new_confirm_action_uni<T: Component + MaybeTrace + 'static>(
 
     let flow = create_confirm(flow, strings.subtitle, hold, prompt_screen)?;
 
-    Ok(LayoutObj::new(flow)?.into())
+    Ok(LayoutObj::new_root(flow)?.into())
 }
 
 fn create_flow(

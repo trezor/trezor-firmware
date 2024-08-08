@@ -360,5 +360,5 @@ fn new_obj(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Error> {
                 content_remaining_shares,
             )?
     };
-    Ok(LayoutObj::new(res)?.into())
+    Ok(LayoutObj::new_root(res)?.into())
 }
