@@ -143,6 +143,7 @@ test: ## run unit tests
 	cd tests ; ./run_tests.sh $(TESTOPTS)
 
 test_rust: ## run rs unit tests
+	export BUILD_DIR=$(abspath $(UNIX_BUILD_DIR)) ; \
 	cd embed/rust ; cargo test $(TESTOPTS) --target=$(RUST_TARGET) \
 		--no-default-features --features $(MODEL_FEATURE),test \
 		-- --test-threads=1 --nocapture
@@ -212,6 +213,7 @@ pyright:
 	python ../tools/pyright_tool.py
 
 clippy:
+	export BUILD_DIR=$(abspath $(UNIX_BUILD_DIR)) ; \
 	cd embed/rust ; cargo clippy $(TESTOPTS) --all-features --target=$(RUST_TARGET)
 
 ## code generation:
