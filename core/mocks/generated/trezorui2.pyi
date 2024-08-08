@@ -579,12 +579,13 @@ def flow_confirm_output(
     *,
     title: str | None,
     address: str,
-    amount: str,
+    amount: str | None,
     chunkify: bool,
     account: str | None,
     account_path: str | None,
     br_code: ButtonRequestType,
     br_name: str,
+    cancel_text: str | None = None,
 ) -> LayoutObj[UiResult]:
     """Confirm recipient."""
 
@@ -598,6 +599,7 @@ def flow_confirm_summary(
     fee_items: Iterable[tuple[str, str]],
     br_code: ButtonRequestType,
     br_name: str,
+    cancel_text: str | None = None,
 ) -> LayoutObj[UiResult]:
     """Total summary and hold to confirm."""
 

@@ -1758,12 +1758,13 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     *,
     ///     title: str | None,
     ///     address: str,
-    ///     amount: str,
+    ///     amount: str | None,
     ///     chunkify: bool,
     ///     account: str | None,
     ///     account_path: str | None,
     ///     br_code: ButtonRequestType,
     ///     br_name: str,
+    ///     cancel_text: str | None = None,
     /// ) -> LayoutObj[UiResult]:
     ///     """Confirm recipient."""
     Qstr::MP_QSTR_flow_confirm_output => obj_fn_kw!(0, flow::new_confirm_output).as_obj(),
@@ -1776,6 +1777,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     fee_items: Iterable[tuple[str, str]],
     ///     br_code: ButtonRequestType,
     ///     br_name: str,
+    ///     cancel_text: str | None = None,
     /// ) -> LayoutObj[UiResult]:
     ///     """Total summary and hold to confirm."""
     Qstr::MP_QSTR_flow_confirm_summary => obj_fn_kw!(0, flow::new_confirm_summary).as_obj(),

@@ -1216,7 +1216,7 @@ if not utils.BITCOIN_ONLY:
             amount_title = verb
             amount_value = ""
         else:
-            amount_title = TR.words__amount + ":"
+            amount_title = f"{TR.words__amount}:"
             amount_value = total_amount
         await raise_if_not_confirmed(
             interact(
@@ -1224,9 +1224,9 @@ if not utils.BITCOIN_ONLY:
                     trezorui2.altcoin_tx_summary(
                         amount_title=amount_title,
                         amount_value=amount_value,
-                        fee_title=TR.send__maximum_fee,
+                        fee_title=f"{TR.send__maximum_fee}:",
                         fee_value=maximum_fee,
-                        items=info_items,
+                        items=[(f"{k}:", v) for (k, v) in info_items],
                         cancel_cross=True,
                     )
                 ),
@@ -1269,7 +1269,7 @@ if not utils.BITCOIN_ONLY:
         recipient: str,
         total_amount: str,
         maximum_fee: str,
-        items: Iterable[tuple[str, str]],
+        fee_info_items: Iterable[tuple[str, str]],
         br_name: str = "confirm_ethereum_tx",
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
         chunkify: bool = False,
@@ -1278,9 +1278,9 @@ if not utils.BITCOIN_ONLY:
             trezorui2.altcoin_tx_summary(
                 amount_title=f"{TR.words__amount}:",
                 amount_value=total_amount,
-                fee_title=TR.send__maximum_fee,
+                fee_title=f"{TR.send__maximum_fee}:",
                 fee_value=maximum_fee,
-                items=items,
+                items=[(f"{k}:", v) for (k, v) in fee_info_items],
             )
         )
 

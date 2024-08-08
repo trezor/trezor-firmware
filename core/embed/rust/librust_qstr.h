@@ -168,6 +168,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_can_go_back;
   MP_QSTR_cancel_arrow;
   MP_QSTR_cancel_cross;
+  MP_QSTR_cancel_text;
   MP_QSTR_case_sensitive;
   MP_QSTR_check_homescreen_format;
   MP_QSTR_chunkify;

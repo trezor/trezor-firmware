@@ -449,11 +449,11 @@ pub enum TranslatedString {
     #[cfg(feature = "universal_fw")]
     ethereum__data_size_template = 273,  // "Size: {0} bytes"
     #[cfg(feature = "universal_fw")]
-    ethereum__gas_limit = 274,  // "Gas limit:"
+    ethereum__gas_limit = 274,  // "Gas limit"
     #[cfg(feature = "universal_fw")]
-    ethereum__gas_price = 275,  // "Gas price:"
+    ethereum__gas_price = 275,  // "Gas price"
     #[cfg(feature = "universal_fw")]
-    ethereum__max_gas_price = 276,  // "Max gas price:"
+    ethereum__max_gas_price = 276,  // "Max gas price"
     #[cfg(feature = "universal_fw")]
     ethereum__name_and_version = 277,  // "Name and version"
     #[cfg(feature = "universal_fw")]
@@ -461,7 +461,7 @@ pub enum TranslatedString {
     #[cfg(feature = "universal_fw")]
     ethereum__no_message_field = 279,  // "No message field"
     #[cfg(feature = "universal_fw")]
-    ethereum__priority_fee = 280,  // "Priority fee:"
+    ethereum__priority_fee = 280,  // "Priority fee"
     #[cfg(feature = "universal_fw")]
     ethereum__show_full_array = 281,  // "Show full array"
     #[cfg(feature = "universal_fw")]
@@ -931,7 +931,7 @@ pub enum TranslatedString {
     send__confirm_sending = 641,  // "Sending amount"
     send__from_multiple_accounts = 642,  // "Sending from multiple accounts."
     send__including_fee = 643,  // "Including fee:"
-    send__maximum_fee = 644,  // "Maximum fee:"
+    send__maximum_fee = 644,  // "Maximum fee"
     send__receiving_to_multisig = 645,  // "Receiving to a multisig address."
     send__title_confirm_sending = 646,  // "Confirm sending"
     send__title_joint_transaction = 647,  // "Joint transaction"
@@ -1801,11 +1801,11 @@ impl TranslatedString {
             #[cfg(feature = "universal_fw")]
             Self::ethereum__data_size_template => "Size: {0} bytes",
             #[cfg(feature = "universal_fw")]
-            Self::ethereum__gas_limit => "Gas limit:",
+            Self::ethereum__gas_limit => "Gas limit",
             #[cfg(feature = "universal_fw")]
-            Self::ethereum__gas_price => "Gas price:",
+            Self::ethereum__gas_price => "Gas price",
             #[cfg(feature = "universal_fw")]
-            Self::ethereum__max_gas_price => "Max gas price:",
+            Self::ethereum__max_gas_price => "Max gas price",
             #[cfg(feature = "universal_fw")]
             Self::ethereum__name_and_version => "Name and version",
             #[cfg(feature = "universal_fw")]
@@ -1813,7 +1813,7 @@ impl TranslatedString {
             #[cfg(feature = "universal_fw")]
             Self::ethereum__no_message_field => "No message field",
             #[cfg(feature = "universal_fw")]
-            Self::ethereum__priority_fee => "Priority fee:",
+            Self::ethereum__priority_fee => "Priority fee",
             #[cfg(feature = "universal_fw")]
             Self::ethereum__show_full_array => "Show full array",
             #[cfg(feature = "universal_fw")]
@@ -2283,7 +2283,7 @@ impl TranslatedString {
             Self::send__confirm_sending => "Sending amount",
             Self::send__from_multiple_accounts => "Sending from multiple accounts.",
             Self::send__including_fee => "Including fee:",
-            Self::send__maximum_fee => "Maximum fee:",
+            Self::send__maximum_fee => "Maximum fee",
             Self::send__receiving_to_multisig => "Receiving to a multisig address.",
             Self::send__title_confirm_sending => "Confirm sending",
             Self::send__title_joint_transaction => "Joint transaction",

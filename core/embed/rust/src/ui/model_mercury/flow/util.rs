@@ -15,7 +15,7 @@ use crate::{
             Component, SwipeDirection,
         },
         flow::{FlowMsg, Swipable, SwipePage},
-        layout::util::ConfirmBlob,
+        layout::util::{ConfirmBlob, StrOrBytes},
         model_mercury::component::SwipeContent,
     },
 };
@@ -102,7 +102,11 @@ impl ConfirmBlobParams {
         let paragraphs = ConfirmBlob {
             description: self.description.unwrap_or("".into()),
             extra: self.extra.unwrap_or("".into()),
-            data: self.data.try_into()?,
+            data: if self.data != Obj::const_none() {
+                self.data.try_into()?
+            } else {
+                StrOrBytes::Str("".into())
+            },
             description_font: &theme::TEXT_NORMAL,
             extra_font: &theme::TEXT_DEMIBOLD,
             data_font: if self.chunkify {

@@ -489,7 +489,7 @@ class EthereumFlow:
             if info:
                 self.debug.press_right(wait=True)
                 TR.assert_equals_multiple(
-                    self.debug.wait_layout().title(),
+                    self.debug.wait_layout().title().rstrip(":"),
                     [
                         "ethereum__staking_stake_address",
                         "ethereum__staking_claim_address",
