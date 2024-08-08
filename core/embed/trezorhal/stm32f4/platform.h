@@ -36,7 +36,6 @@ void memset_reg(volatile void *start, volatile void *stop, uint32_t val);
 void jump_to(uint32_t address);
 void jump_to_with_flag(uint32_t address, uint32_t register_flag);
 void clear_otg_hs_memory(void);
-void drop_privileges(void);
 
 extern uint32_t __stack_chk_guard;
 
