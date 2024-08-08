@@ -233,6 +233,6 @@ impl GetAddress {
             .with_page(&GetAddress::AccountInfo, content_account)?
             .with_page(&GetAddress::Cancel, content_cancel_info)?
             .with_page(&GetAddress::CancelTap, content_cancel_tap)?;
-        Ok(LayoutObj::new(res)?.into())
+        Ok(LayoutObj::new_root(res)?.into())
     }
 }

@@ -450,5 +450,5 @@ fn new_confirm_output_obj(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Err
             .with_page(&ConfirmOutput::CancelTap, get_cancel_page())?
     };
 
-    Ok(LayoutObj::new(res)?.into())
+    Ok(LayoutObj::new_root(res)?.into())
 }
