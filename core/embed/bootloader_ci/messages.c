@@ -558,7 +558,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
 
       // no user confirmations, go directly to upload
 
-      headers_offset = IMAGE_HEADER_SIZE + vhdr.hdrlen;
+      headers_offset = IMAGE_CODE_ALIGN(IMAGE_HEADER_SIZE + vhdr.hdrlen);
       read_offset = IMAGE_INIT_CHUNK_SIZE;
 
       // request the rest of the first chunk
