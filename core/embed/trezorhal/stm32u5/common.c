@@ -23,35 +23,14 @@
 
 #include "common.h"
 #include "display.h"
+#include "error_handling.h"
 #include "flash_otp.h"
 #include "model.h"
 #include "platform.h"
 #include "rand.h"
 #include "secret.h"
-#include "supervise.h"
 
 #include "stm32u5xx_ll_utils.h"
-
-// from util.s
-extern void shutdown_privileged(void);
-
-void __attribute__((noreturn)) trezor_shutdown(void) {
-  display_deinit(DISPLAY_RETAIN_CONTENT);
-
-  __HAL_RCC_SAES_CLK_DISABLE();
-  // Erase all secrets
-  TAMP->CR2 |= TAMP_CR2_BKERASE;
-
-#ifdef USE_SVC_SHUTDOWN
-  svc_shutdown();
-#else
-  // It won't work properly unless called from the privileged mode
-  shutdown_privileged();
-#endif
-
-  for (;;)
-    ;
-}
 
 uint32_t __stack_chk_guard = 0;
 

@@ -27,7 +27,6 @@
 #include "display_panel.h"
 
 #include "backlight_pwm.h"
-#include "supervise.h"
 
 #ifndef BOARDLOADER
 #include "bg_copy.h"
@@ -93,7 +92,7 @@ void display_deinit(display_content_mode_t mode) {
   // the display controller
   display_ensure_refreshed();
   // Disable periodical interrupt
-  svc_disableIRQ(DISPLAY_TE_INTERRUPT_NUM);
+  NVIC_DisableIRQ(DISPLAY_TE_INTERRUPT_NUM);
 #endif
 #endif
 
@@ -122,7 +121,7 @@ int display_set_backlight(int level) {
 #ifdef XFRAMEBUFFER
 #ifndef BOARDLOADER
   // if turning on the backlight, wait until the panel is refreshed
-  if (backlight_pwm_get() < level && !is_mode_handler()) {
+  if (backlight_pwm_get() < level && !is_mode_exception()) {
     display_ensure_refreshed();
   }
 #endif

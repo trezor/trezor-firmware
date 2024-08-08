@@ -6,7 +6,6 @@
 #include <string.h>
 #include "irq.h"
 #include "mpconfigport.h"
-#include "supervise.h"
 
 #include "SEGGER_SYSVIEW.h"
 #include "SEGGER_SYSVIEW_Conf.h"
@@ -51,6 +50,12 @@ typedef struct {
 } SCS_REGS;
 
 extern uint32_t SystemCoreClock;
+
+static inline uint32_t is_mode_unprivileged(void) {
+  uint32_t r0;
+  __asm__ volatile("mrs %0, control" : "=r"(r0));
+  return r0 & 1;
+}
 
 uint32_t svc_get_dwt_cyccnt() {
   if (is_mode_unprivileged()) {
