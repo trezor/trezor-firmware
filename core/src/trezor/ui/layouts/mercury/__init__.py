@@ -446,6 +446,48 @@ def confirm_homescreen(
     )
 
 
+def confirm_change_passphrase(use: bool) -> Awaitable[None]:
+    description = TR.passphrase__turn_on if use else TR.passphrase__turn_off
+
+    return confirm_action(
+        "set_passphrase",
+        TR.passphrase__title_passphrase,
+        subtitle=TR.words__settings,
+        description=description,
+        br_code=ButtonRequestType.ProtectCall,
+        prompt_screen=True,
+    )
+
+
+def confirm_hide_passphrase_from_host() -> Awaitable[None]:
+    return confirm_action(
+        "set_hide_passphrase_from_host",
+        TR.passphrase__title_passphrase,
+        subtitle=TR.words__settings,
+        description=TR.passphrase__hide,
+        br_code=ButtonRequestType.ProtectCall,
+        prompt_screen=True,
+    )
+
+
+def confirm_change_passphrase_source(
+    passphrase_always_on_device: bool,
+) -> Awaitable[None]:
+    description = (
+        TR.passphrase__always_on_device
+        if passphrase_always_on_device
+        else TR.passphrase__revoke_on_device
+    )
+    return confirm_action(
+        "set_passphrase_source",
+        TR.passphrase__title_passphrase,
+        subtitle=TR.words__settings,
+        description=description,
+        br_code=ButtonRequestType.ProtectCall,
+        prompt_screen=True,
+    )
+
+
 async def show_address(
     address: str,
     *,

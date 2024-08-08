@@ -303,7 +303,7 @@ def confirm_action(
     reverse: bool = False,
     exc: ExceptionType = ActionCancelled,
     br_code: ButtonRequestType = BR_CODE_OTHER,
-    prompt_screen: bool = False,
+    prompt_screen: bool = False,  # unused on TT
     prompt_title: str | None = None,
 ) -> Awaitable[None]:
     if description is not None and description_param is not None:
@@ -466,6 +466,44 @@ def confirm_homescreen(image: bytes) -> Awaitable[None]:
             "set_homesreen",
             ButtonRequestType.ProtectCall,
         )
+    )
+
+
+def confirm_change_passphrase(use: bool) -> Awaitable[None]:
+    description = TR.passphrase__turn_on if use else TR.passphrase__turn_off
+    verb = TR.buttons__turn_on if use else TR.buttons__turn_off
+
+    return confirm_action(
+        "set_passphrase",
+        TR.passphrase__title_settings,
+        description=description,
+        verb=verb,
+        br_code=ButtonRequestType.ProtectCall,
+    )
+
+
+def confirm_hide_passphrase_from_host() -> Awaitable[None]:
+    return confirm_action(
+        "set_hide_passphrase_from_host",
+        TR.passphrase__title_hide,
+        description=TR.passphrase__hide,
+        br_code=ButtonRequestType.ProtectCall,
+    )
+
+
+def confirm_change_passphrase_source(
+    passphrase_always_on_device: bool,
+) -> Awaitable[None]:
+    description = (
+        TR.passphrase__always_on_device
+        if passphrase_always_on_device
+        else TR.passphrase__revoke_on_device
+    )
+    return confirm_action(
+        "set_passphrase_source",
+        TR.passphrase__title_source,
+        description=description,
+        br_code=ButtonRequestType.ProtectCall,
     )
 
 
