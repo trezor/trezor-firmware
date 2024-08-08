@@ -7,6 +7,7 @@
 #include "display_draw.h"
 #include "dma2d.h"
 #include "dma2d_bitblt.h"
+#include "entropy.h"
 #include "flash.h"
 #include "fonts/fonts.h"
 #include "gfx_bitblt.h"

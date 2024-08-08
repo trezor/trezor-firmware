@@ -74,7 +74,3 @@ void emulator_poll_events(void) {
   SDL_PumpEvents();
   SDL_FilterEvents(emulator_event_filter, NULL);
 }
-
-uint8_t HW_ENTROPY_DATA[HW_ENTROPY_LEN];
-
-void collect_hw_entropy(void) { memzero(HW_ENTROPY_DATA, HW_ENTROPY_LEN); }

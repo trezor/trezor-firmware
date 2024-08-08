@@ -306,8 +306,9 @@ fn generate_trezorhal_bindings() {
         // model
         .allowlist_var("MODEL_INTERNAL_NAME")
         .allowlist_var("MODEL_FULL_NAME")
-        // common
-        .allowlist_var("HW_ENTROPY_DATA")
+        // entropy
+        .allowlist_var("HW_ENTROPY_LEN")
+        .allowlist_function("entropy_get")
         // secbool
         .allowlist_type("secbool")
         .must_use_type("secbool")

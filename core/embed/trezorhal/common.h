@@ -58,10 +58,6 @@ void hal_delay(uint32_t ms);
 uint32_t hal_ticks_ms();
 void hal_delay_us(uint16_t delay_us);
 
-void collect_hw_entropy(void);
-#define HW_ENTROPY_LEN (12 + 32)
-extern uint8_t HW_ENTROPY_DATA[HW_ENTROPY_LEN];
-
 // Invalidates firmware on the device
 // Note: only works when write access to firmware area is enabled by MPU
 void invalidate_firmware(void);

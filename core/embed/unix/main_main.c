@@ -6,11 +6,12 @@
 #endif
 
 #include "common.h"
+#include "entropy.h"
 
 MP_NOINLINE int main_(int argc, char **argv);
 
 int main(int argc, char **argv) {
-  collect_hw_entropy();
+  entropy_init();
 
 #ifdef USE_SECP256K1_ZKP
   ensure(sectrue * (zkp_context_init() == 0), NULL);
