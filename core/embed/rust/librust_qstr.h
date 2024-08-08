@@ -350,6 +350,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_passphrase__continue_with_empty_passphrase;
   MP_QSTR_passphrase__from_host_not_shown;
   MP_QSTR_passphrase__hide;
+  MP_QSTR_passphrase__hide_your;
   MP_QSTR_passphrase__next_screen_will_show_passphrase;
   MP_QSTR_passphrase__please_enter;
   MP_QSTR_passphrase__revoke_on_device;

@@ -147,33 +147,24 @@ async def _require_confirm_change_label(label: str) -> None:
 
 
 async def _require_confirm_change_passphrase(use: bool) -> None:
-    description = TR.passphrase__turn_on if use else TR.passphrase__turn_off
-    verb = TR.buttons__turn_on if use else TR.buttons__turn_off
-    await confirm_action(
-        "set_passphrase",
-        TR.passphrase__title_settings,
-        description=description,
-        verb=verb,
-        br_code=BRT_PROTECT_CALL,
-        prompt_screen=True,
-    )
+    from trezor.ui.layouts import confirm_change_passphrase
+
+    await confirm_change_passphrase(use)
+
+
+async def _require_confirm_hide_passphrase_from_host(enable: bool) -> None:
+    from trezor.ui.layouts import confirm_hide_passphrase_from_host
+
+    if enable:
+        await confirm_hide_passphrase_from_host()
 
 
 async def _require_confirm_change_passphrase_source(
     passphrase_always_on_device: bool,
 ) -> None:
-    description = (
-        TR.passphrase__always_on_device
-        if passphrase_always_on_device
-        else TR.passphrase__revoke_on_device
-    )
-    await confirm_action(
-        "set_passphrase_source",
-        TR.passphrase__title_source,
-        description=description,
-        br_code=BRT_PROTECT_CALL,
-        prompt_screen=True,
-    )
+    from trezor.ui.layouts import confirm_change_passphrase_source
+
+    await confirm_change_passphrase_source(passphrase_always_on_device)
 
 
 async def _require_confirm_change_display_rotation(rotation: int) -> None:
@@ -258,17 +249,6 @@ async def _require_confirm_experimental_features(enable: bool) -> None:
             TR.experimental_mode__only_for_dev,
             TR.experimental_mode__enable,
             reverse=True,
-            br_code=BRT_PROTECT_CALL,
-            prompt_screen=True,
-        )
-
-
-async def _require_confirm_hide_passphrase_from_host(enable: bool) -> None:
-    if enable:
-        await confirm_action(
-            "set_hide_passphrase_from_host",
-            TR.passphrase__title_hide,
-            description=TR.passphrase__hide,
             br_code=BRT_PROTECT_CALL,
             prompt_screen=True,
         )

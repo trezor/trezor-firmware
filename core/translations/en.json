@@ -492,6 +492,7 @@
     "passphrase__continue_with_empty_passphrase": "Continue with empty passphrase?",
     "passphrase__from_host_not_shown": "Passphrase provided by host will be used but will not be displayed due to the device settings.",
     "passphrase__hide": "Hide passphrase coming from host?",
+    "passphrase__hide_your": "Hide your passphrase on Trezor entered on host device?",
     "passphrase__next_screen_will_show_passphrase": "The next screen shows your passphrase.",
     "passphrase__please_enter": "Please enter your passphrase.",
     "passphrase__revoke_on_device": "Do you want to revoke the passphrase on device setting?",
