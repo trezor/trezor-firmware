@@ -25,6 +25,8 @@
 #include "norcow.h"
 #include "storage_utils.h"
 
+#ifdef KERNEL_MODE
+
 // NRC2 = 4e524332
 #define NORCOW_MAGIC ((uint32_t)0x3243524e)
 // NRCW = 4e524357
@@ -450,3 +452,5 @@ secbool norcow_upgrade_finish(void) {
   norcow_active_version = NORCOW_VERSION;
   return sectrue;
 }
+
+#endif  // KERNEL_MODE

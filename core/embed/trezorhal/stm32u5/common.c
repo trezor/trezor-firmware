@@ -38,6 +38,7 @@ void __attribute__((noreturn)) __stack_chk_fail(void) {
   error_shutdown("(SS)");
 }
 
+#ifdef KERNEL_MODE
 
 void invalidate_firmware(void) {
   // on stm32u5, we need to disable the instruction cache before erasing the
@@ -53,3 +54,5 @@ void invalidate_firmware(void) {
   }
   ensure(flash_lock_write(), NULL);
 }
+
+#endif

@@ -33,6 +33,8 @@
 #include "optiga_transport.h"
 #include "sha2.h"
 
+#ifdef KERNEL_MODE
+
 // Static buffer for commands and responses.
 static uint8_t tx_buffer[OPTIGA_MAX_APDU_SIZE] = {0};
 static size_t tx_size = 0;
@@ -959,3 +961,5 @@ optiga_result optiga_set_priv_key(uint16_t oid, const uint8_t priv_key[32]) {
 
   return process_output_fixedlen(NULL, 0);
 }
+
+#endif  // KERNEL_MODE

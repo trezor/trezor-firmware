@@ -42,6 +42,8 @@ void __attribute__((noreturn)) __stack_chk_fail(void) {
   error_shutdown("(SS)");
 }
 
+#ifdef KERNEL_MODE
+
 // reference RM0090 section 35.12.1 Figure 413
 #define USB_OTG_HS_DATA_FIFO_RAM (USB_OTG_HS_PERIPH_BASE + 0x20000U)
 #define USB_OTG_HS_DATA_FIFO_SIZE (4096U)
@@ -69,3 +71,5 @@ void invalidate_firmware(void) {
   }
   ensure(flash_lock_write(), NULL);
 }
+
+#endif  // KERNEL_MODE

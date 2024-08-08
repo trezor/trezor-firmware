@@ -41,6 +41,8 @@
 #error Framebuffer only supported on STM32U5 for now
 #endif
 
+#ifdef KERNEL_MODE
+
 // The following code supports only 1 or 2 frame buffers
 _Static_assert(FRAME_BUFFER_COUNT == 1 || FRAME_BUFFER_COUNT == 2);
 
@@ -276,6 +278,8 @@ void display_ensure_refreshed(void) {
   }
 #endif
 }
+
+#endif  // KERNEL_MODE
 
 void display_fill(const gfx_bitblt_t *bb) {
   display_fb_info_t fb = display_get_frame_buffer();

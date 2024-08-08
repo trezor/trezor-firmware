@@ -20,6 +20,8 @@
 #include STM32_HAL_H
 #include "rng.h"
 
+#ifdef KERNEL_MODE
+
 #define SAMPLES 119
 #define TIMER_PERIOD 16000  // cca 10 KHz @ 160MHz
 
@@ -138,3 +140,5 @@ void consumption_mask_init(void) {
 
   HAL_DMAEx_List_Start(&dma_handle);
 }
+
+#endif  // KERNEL_MODE

@@ -4,7 +4,12 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#ifdef KERNEL_MODE
+
 void unit_variant_init(void);
+
+#endif  // KERNEL_MODE
+
 bool unit_variant_present(void);
 uint8_t unit_variant_get_color(void);
 uint8_t unit_variant_get_packaging(void);

@@ -5,6 +5,8 @@
 #include "i2c.h"
 #include "common.h"
 
+#ifdef KERNEL_MODE
+
 static I2C_HandleTypeDef i2c_handle[I2C_COUNT];
 
 typedef struct {
@@ -197,3 +199,5 @@ HAL_StatusTypeDef i2c_mem_read(uint16_t idx, uint8_t addr, uint16_t mem_addr,
   return HAL_I2C_Mem_Read(&i2c_handle[idx], addr, mem_addr, mem_addr_size, data,
                           len, timeout);
 }
+
+#endif  // #ifdef KERNEL_MODE

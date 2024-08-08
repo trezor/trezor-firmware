@@ -23,6 +23,8 @@
 #include "model.h"
 #include "stm32u5xx_ll_cortex.h"
 
+#ifdef KERNEL_MODE
+
 // region type
 #define MPUX_TYPE_FLASH_CODE 0
 #define MPUX_TYPE_SRAM 1
@@ -255,3 +257,5 @@ void mpu_config_prodtest(void) {
 }
 
 void mpu_config_off(void) { HAL_MPU_Disable(); }
+
+#endif  // KERNEL_MODE

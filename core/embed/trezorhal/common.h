@@ -53,8 +53,12 @@
   })
 #endif
 
+#ifdef KERNEL_MODE
+
 // Invalidates firmware on the device
 // Note: only works when write access to firmware area is enabled by MPU
 void invalidate_firmware(void);
+
+#endif  // KERNEL_MODE
 
 #endif

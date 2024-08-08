@@ -1,6 +1,8 @@
 #include TREZOR_BOARD
 #include "common.h"
 
+#ifdef KERNEL_MODE
+
 void fault_handlers_init(void) {
   // Enable BUS fault and USAGE fault handlers
   SCB->SHCSR |= (SCB_SHCSR_USGFAULTENA_Msk | SCB_SHCSR_BUSFAULTENA_Msk);
@@ -32,3 +34,5 @@ void PVD_IRQHandler(void) {
 #endif
   shutdown_privileged();
 }
+
+#endif  // KERNEL_MODE

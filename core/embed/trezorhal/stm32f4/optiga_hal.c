@@ -2,6 +2,8 @@
 #include "common.h"
 #include TREZOR_BOARD
 
+#ifdef KERNEL_MODE
+
 void optiga_hal_init(void) {
   OPTIGA_RST_CLK_EN();
   // init reset pin
@@ -27,3 +29,5 @@ void optiga_reset(void) {
   // warm reset startup time min 15ms
   hal_delay(20);
 }
+
+#endif  // KERNEL_MODE

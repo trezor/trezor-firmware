@@ -5,6 +5,8 @@
 #include "flash.h"
 #include "model.h"
 
+#ifdef KERNEL_MODE
+
 #ifdef FANCY_FATAL_ERROR
 #include "rust_ui.h"
 #endif
@@ -106,3 +108,5 @@ void secret_prepare_fw(secbool allow_run_with_secret, secbool _trust_all) {
   }
 #endif
 }
+
+#endif  // KERNEL_MODE

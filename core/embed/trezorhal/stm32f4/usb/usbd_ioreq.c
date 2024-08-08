@@ -27,6 +27,8 @@
   ******************************************************************************
   */
 
+#ifdef KERNEL_MODE
+
 /* Includes ------------------------------------------------------------------*/
 #include "usbd_ioreq.h"
 
@@ -234,5 +236,7 @@ uint16_t  USBD_GetRxCount (USBD_HandleTypeDef  *pdev , uint8_t ep_addr)
 /**
   * @}
   */
+
+#endif  // KERNEL_MODE
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

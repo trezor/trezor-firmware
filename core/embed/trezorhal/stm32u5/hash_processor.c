@@ -6,6 +6,8 @@
 #include "memzero.h"
 #include "sha2.h"
 
+#ifdef KERNEL_MODE
+
 HASH_HandleTypeDef hhash = {0};
 DMA_HandleTypeDef DMA_Handle = {0};
 
@@ -125,3 +127,5 @@ void hash_processor_sha256_final(hash_sha265_context_t *ctx, uint8_t *output) {
   memcpy(output, tmp_out, SHA256_DIGEST_LENGTH);
   memzero(tmp_out, sizeof(tmp_out));
 }
+
+#endif

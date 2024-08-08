@@ -25,6 +25,8 @@
 #include <string.h>
 #include "memzero.h"
 
+#ifdef KERNEL_MODE
+
 #define AES_BLOCK_SIZE 16
 
 secbool secure_aes_init(void) {
@@ -199,3 +201,5 @@ secbool secure_aes_ecb_decrypt_hw(const uint8_t* input, size_t size,
 
   return sectrue;
 }
+
+#endif  // KERNEL_MODE

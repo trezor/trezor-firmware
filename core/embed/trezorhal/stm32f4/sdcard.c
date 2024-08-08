@@ -52,6 +52,8 @@
 #include "sdcard-set_clr_card_detect.h"
 #include "sdcard.h"
 
+#ifdef KERNEL_MODE
+
 #define SDMMC_CLK_ENABLE() __HAL_RCC_SDMMC1_CLK_ENABLE()
 #define SDMMC_CLK_DISABLE() __HAL_RCC_SDMMC1_CLK_DISABLE()
 #define SDMMC_IRQn SDMMC1_IRQn

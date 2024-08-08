@@ -22,6 +22,8 @@
 #include <tamper.h>
 #include STM32_HAL_H
 
+#ifdef KERNEL_MODE
+
 // Fixes a typo in CMSIS Device library for STM32U5
 #undef TAMP_CR3_ITAMP7NOER_Msk
 #undef TAMP_CR3_ITAMP7NOER
@@ -271,3 +273,5 @@ void TAMP_IRQHandler(void) {
   error_shutdown_ex("INTERNAL TAMPER", reason, NULL);
 #endif
 }
+
+#endif  // KERNEL_MODE

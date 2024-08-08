@@ -46,6 +46,8 @@ https://link.springer.com/content/pdf/10.1007%2F978-3-540-72354-7_3.pdf
 #include "rand.h"
 #include "systimer.h"
 
+#ifdef KERNEL_MODE
+
 // from util.s
 extern void shutdown_privileged(void);
 
@@ -220,3 +222,5 @@ void wait_random(void) {
   }
 #endif
 }
+
+#endif  // KERNEL_MODE

@@ -57,6 +57,10 @@ elif TREZOR_MODEL in ('T3T1',):
     FONT_BOLD_UPPER=None
     FONT_SUB=None
 
+CPPDEFINES_MOD += [
+    'KERNEL_MODE',
+]
+
 # modtrezorcrypto
 CPPPATH_MOD += [
     'vendor/trezor-crypto',

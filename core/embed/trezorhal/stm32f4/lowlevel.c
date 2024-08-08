@@ -22,6 +22,8 @@
 #include "lowlevel.h"
 #include "flash_otp.h"
 
+#ifdef KERNEL_MODE
+
 #pragma GCC optimize( \
     "no-stack-protector")  // applies to all functions in this file
 
@@ -186,3 +188,5 @@ secbool reset_flags_check(void) {
 void reset_flags_reset(void) {
   RCC->CSR |= RCC_CSR_RMVF;  // clear the reset flags
 }
+
+#endif  // #ifdef KERNEL_MODE

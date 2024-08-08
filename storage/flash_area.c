@@ -22,6 +22,8 @@
 #include <stddef.h>
 #include <string.h>
 
+#ifdef KERNEL_MODE
+
 uint32_t flash_area_get_size(const flash_area_t *area) {
   uint32_t size = 0;
   for (int i = 0; i < area->num_subareas; i++) {
@@ -307,3 +309,5 @@ secbool flash_area_erase_partial(const flash_area_t *area, uint32_t offset,
 
   return secfalse;
 }
+
+#endif  // KERNEL_MODE

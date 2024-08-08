@@ -22,6 +22,8 @@
 #include "common.h"
 #include "model.h"
 
+#ifdef KERNEL_MODE
+
 static uint32_t board_name = 0;
 
 static struct BoardloaderVersion boardloader_version;
@@ -78,3 +80,5 @@ void parse_boardloader_capabilities() {
     pos += length;
   }
 }
+
+#endif  // KERNEL_MODE

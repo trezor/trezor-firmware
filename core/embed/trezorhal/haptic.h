@@ -30,6 +30,8 @@ typedef enum {
   HAPTIC_HOLD_TO_CONFIRM = 1,
 } haptic_effect_t;
 
+#ifdef KERNEL_MODE
+
 // Initializes the haptic driver
 //
 // The function initializes the GPIO pins and the hardware
@@ -43,6 +45,8 @@ bool haptic_init(void);
 // The function deinitializes the hardware peripherals used by the
 // haptic driver so the device can be eventually put into a low-power mode.
 void haptic_deinit(void);
+
+#endif  // KERNEL_MODE
 
 // Enables or disables the haptic driver
 //

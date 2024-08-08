@@ -2,6 +2,8 @@
 
   .text
 
+#ifdef KERNEL_MODE
+
   .global default_handler
   .type default_handler, STT_FUNC
 default_handler:
@@ -173,5 +175,14 @@ vector_table:
     add_handler	LTDC_ER_IRQHandler
     add_handler	DSI_IRQHandler
     add_handler	DCACHE2_IRQHandler
+
+#else
+
+  .section .vector_table, "a"
+vector_table:
+  .word main_stack_base // defined in linker script
+  .word reset_handler
+
+#endif
 
   .end

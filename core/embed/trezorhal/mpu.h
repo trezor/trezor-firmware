@@ -20,6 +20,8 @@
 #ifndef __MPU_H__
 #define __MPU_H__
 
+#ifdef KERNEL_MODE
+
 void mpu_config_off(void);
 void mpu_config_boardloader(void);
 void mpu_config_bootloader(void);
@@ -27,5 +29,7 @@ void mpu_config_firmware_initial(void);
 void mpu_config_firmware(void);
 void mpu_config_prodtest_initial(void);
 void mpu_config_prodtest(void);
+
+#endif  // KERNEL_MODE
 
 #endif

@@ -24,6 +24,8 @@
 #include "display_io.h"
 #include "display_panel.h"
 
+#ifdef KERNEL_MODE
+
 void display_refresh(void) {
   // If the framebuffer is not used the, we do not need
   // to refresh the display explicitly as we write the data
@@ -48,6 +50,8 @@ static inline void set_window(const gfx_bitblt_t* bb) {
   display_panel_set_window(bb->dst_x, bb->dst_y, bb->dst_x + bb->width - 1,
                            bb->dst_y + bb->height + 1);
 }
+
+#endif  // KERNEL_MODE
 
 // For future notice, if we ever want to do a new model using progressive
 // rendering.

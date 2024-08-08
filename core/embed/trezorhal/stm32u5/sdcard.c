@@ -55,6 +55,8 @@
 #define SDMMC_CLK_DISABLE() __HAL_RCC_SDMMC1_CLK_DISABLE()
 #define SDMMC_IRQn SDMMC1_IRQn
 
+#ifdef KERNEL_MODE
+
 static SD_HandleTypeDef sd_handle = {0};
 
 // this function is inspired by functions in stm32f4xx_ll_sdmmc.c
@@ -333,3 +335,5 @@ secbool sdcard_write_blocks(const uint32_t *src, uint32_t block_num,
 
   return sectrue * (err == HAL_OK);
 }
+
+#endif  // KERNEL_MODE

@@ -26,6 +26,8 @@
 #include "flash.h"
 #include "model.h"
 
+#ifdef KERNEL_MODE
+
 #ifdef STM32U585xx
 #define FLASH_BANK_PAGES 128
 #define FLASH_SECTOR_COUNT (FLASH_BANK_PAGES * 2)
@@ -213,3 +215,5 @@ secbool flash_write_block(uint16_t sector, uint32_t offset,
                           const flash_block_t block) {
   return flash_write_quadword(sector, offset, block);
 }
+
+#endif  // KERNEL_MODE

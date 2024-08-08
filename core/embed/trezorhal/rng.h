@@ -22,8 +22,14 @@
 
 #include <stdint.h>
 
+#ifdef KERNEL_MODE
+
 void rng_init(void);
+
 uint32_t rng_read(const uint32_t previous, const uint32_t compare_previous);
+
+#endif  // KERNEL_MODE
+
 uint32_t rng_get(void);
 
 #endif

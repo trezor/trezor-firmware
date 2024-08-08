@@ -23,6 +23,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#ifdef KERNEL_MODE
+
 // Initializes systick subsystem
 //
 // Before calling this function, none of the other functions
@@ -41,35 +43,58 @@ void systick_deinit(void);
 // has been changed.
 void systick_update_freq(void);
 
+#endif  // KERNEL_MODE
+
 // ----------------------------------------------------------------------------
 // Tick functions
 
-// Number of ticks (milliseconds)
-typedef uint32_t ticks_t;
+// Returns number of system clock cycles since the system start.
+//
+// Read monotonic counter with high resolution (Cortex-M SysTick clock)
+// (On 160MHz CPU, 1 cycles is 1 / 160MHz = 6.25ns)
+uint64_t systick_cycles(void);
+
+// Returns number of microseconds since the system start.
+uint64_t systick_us(void);
 
 // Returns number of ticks (milliseconds) since the system start.
 //
 // The returned value is a 32-bit unsigned integer that wraps
 // around every 49.7 days.
-ticks_t hal_ticks_ms(void);
+uint32_t systick_ms(void);
+
+// Converts microseconds to system clock cycles
+uint64_t systick_us_to_cycles(uint64_t us);
+
+// Number of ticks (milliseconds)
+typedef uint32_t ticks_t;
+
+//
+#define ticks() systick_ms()
 
 // Helper function for building expiration time
-#define ticks_timeout(timeout) (hal_ticks() + (timeout))
+#define ticks_timeout(timeout) (systick_ms() + (timeout))
 
 // Helper function for checking ticks expiration
 //
 // It copes with the wrap-around of the `ticks_t` type but
 // still assumes that the difference between the two ticks
 // is less than half of the `ticks_t` range.
-#define ticks_expired(ticks) ((int32_t)(hal_ticks() - (ticks)) >= 0)
+#define ticks_expired(ticks) ((int32_t)(systick_ms() - (ticks)) >= 0)
 
 // ----------------------------------------------------------------------------
 // Delay functions
 
 // Waits for at least `ms` milliseconds
-void hal_delay(uint32_t ms);
+void systick_delay_ms(uint32_t ms);
 
 // Waits for at least `us` microseconds
-void hal_delay_us(uint64_t us);
+void systick_delay_us(uint64_t us);
+
+// legacy functions
+
+static inline uint32_t hal_ticks_ms(void) { return systick_ms(); }
+static inline void hal_delay(uint32_t ms) { systick_delay_ms(ms); }
+static inline void hal_delay_us(uint64_t us) { systick_delay_us(us); }
 
 #endif  // TREZORHAL_SYSTICK_H

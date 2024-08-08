@@ -26,8 +26,12 @@
 #include "platform.h"
 #include "secbool.h"
 
+#ifdef KERNEL_MODE
+
 #include "flash_ll.h"
 
 void flash_init(void);
+
+#endif
 
 #endif  // TREZORHAL_FLASH_H

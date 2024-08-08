@@ -50,6 +50,9 @@
   *
   ******************************************************************************
   */
+
+#ifdef KERNEL_MODE
+
 /* Includes ------------------------------------------------------------------*/
 #include STM32_HAL_H
 #include "usbd_core.h"
@@ -882,5 +885,7 @@ void OTG_HS_WKUP_IRQHandler(void) {
 }
 #endif
 #endif
+
+#endif  // KERNEL_MODE
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

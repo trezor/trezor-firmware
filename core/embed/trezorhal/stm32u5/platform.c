@@ -23,6 +23,8 @@
 #include "rng.h"
 #include TREZOR_BOARD
 
+#ifdef KERNEL_MODE
+
 const uint8_t AHBPrescTable[16] = {0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U,
                                    1U, 2U, 3U, 4U, 6U, 7U, 8U, 9U};
 const uint8_t APBPrescTable[8] = {0U, 0U, 0U, 0U, 1U, 2U, 3U, 4U};
@@ -214,3 +216,4 @@ void SystemInit(void) {
   ICACHE->CR = ICACHE_CR_EN;
 }
 
+#endif  // #ifdef KERNEL_MODE

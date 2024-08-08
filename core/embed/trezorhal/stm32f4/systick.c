@@ -28,6 +28,8 @@
 #include "systick_internal.h"
 #include "systimer.h"
 
+#ifdef KERNEL_MODE
+
 // SysTick driver state
 typedef struct {
   // Set if the driver is initialized
@@ -165,6 +167,8 @@ void SysTick_Handler(void) {
 
   SEGGER_SYSVIEW_RecordExitISR();
 }
+
+#endif  // KERNEL_MODE
 
 void systick_delay_us(uint64_t us) {
   uint64_t delay_cycles = systick_us_to_cycles(us);

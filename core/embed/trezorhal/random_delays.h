@@ -17,16 +17,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __TREZORHAL_RANDOM_DELAYS_H__
-#define __TREZORHAL_RANDOM_DELAYS_H__
+#ifndef TREZORHAL_RANDOM_DELAYS_H
+#define TREZORHAL_RANDOM_DELAYS_H
 
 #include <stdint.h>
+
+#ifdef KERNEL_MODE
 
 void rdi_init(void);
 
 void rdi_start(void);
 void rdi_stop(void);
+
+#endif
+
 void rdi_refresh_session_delay(void);
 
 void wait_random(void);
-#endif
+
+#endif  // TREZORHAL_RANDOM_DELAYS_H
