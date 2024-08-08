@@ -109,24 +109,9 @@ struct NameDef {
     msg_offset: u16,
 }
 
-#[cfg(target_arch = "arm")]
 macro_rules! proto_def_path {
     ($filename:expr) => {
-        concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "/../../build/firmware/rust/",
-            $filename
-        )
-    };
-}
-#[cfg(not(target_arch = "arm"))]
-macro_rules! proto_def_path {
-    ($filename:expr) => {
-        concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "/../../build/unix/rust/",
-            $filename
-        )
+        concat!(env!("BUILD_DIR"), "/rust/", $filename)
     };
 }
 
