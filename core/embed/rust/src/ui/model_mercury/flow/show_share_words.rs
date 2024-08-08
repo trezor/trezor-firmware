@@ -160,6 +160,6 @@ impl ShowShareWords {
                 &ShowShareWords::CheckBackupIntro,
                 content_check_backup_intro,
             )?;
-        Ok(LayoutObj::new(res)?.into())
+        Ok(LayoutObj::new_root(res)?.into())
     }
 }
