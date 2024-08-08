@@ -168,8 +168,11 @@ def input_passphrase(debug: "DebugLink", passphrase: str, check: bool = True) ->
 
 def enter_passphrase(debug: "DebugLink") -> None:
     """Enter a passphrase"""
-    coords = buttons.grid35(2, 0)  # top-right corner
+    is_empty: bool = len(debug.read_layout().passphrase()) == 0
+    coords = buttons.CORNER_BUTTON  # top-right corner
     debug.click(coords, wait=True)
+    if is_empty:
+        debug.click(buttons.MERCURY_YES)
 
 
 def delete_char(debug: "DebugLink") -> None:
