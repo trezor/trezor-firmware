@@ -168,6 +168,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_can_go_back;
   MP_QSTR_cancel_arrow;
   MP_QSTR_cancel_cross;
+  MP_QSTR_cancel_text;
   MP_QSTR_case_sensitive;
   MP_QSTR_check_homescreen_format;
   MP_QSTR_chunkify;
@@ -418,6 +419,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_reboot_to_bootloader__restart;
   MP_QSTR_reboot_to_bootloader__title;
   MP_QSTR_reboot_to_bootloader__version_by_template;
+  MP_QSTR_recipient;
   MP_QSTR_recovery;
   MP_QSTR_recovery__cancel_dry_run;
   MP_QSTR_recovery__check_dry_run;
