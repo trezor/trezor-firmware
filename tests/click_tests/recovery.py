@@ -65,42 +65,63 @@ def select_number_of_words(
     wait: bool = True,
     unlock_repeated_backup=False,
 ) -> None:
-    if wait:
-        debug.wait_layout()
-    if debug.model in (models.T2T1,):
-        TR.assert_equals(debug.read_layout().text_content(), "recovery__num_of_words")
-        # click the number
-        word_option_offset = 6
-        word_options = (12, 18, 20, 24, 33)
-        index = word_option_offset + word_options.index(
-            num_of_words
-        )  # raises if num of words is invalid
-        coords = buttons.grid34(index % 3, index // 3)
-        layout = debug.click(coords, wait=True)
-    elif debug.model in (models.T2B1,):
-        layout = debug.press_right(wait=True)
-        TR.assert_equals(layout.title(), "word_count__title")
+    def select_tt() -> "LayoutContent":
+        # click the button from ValuePad
+        if unlock_repeated_backup:
+            coords_map = {20: buttons.grid34(0, 2), 33: buttons.grid34(1, 2)}
+        else:
+            coords_map = {
+                12: buttons.grid34(0, 2),
+                18: buttons.grid34(1, 2),
+                20: buttons.grid34(2, 2),
+                24: buttons.grid34(0, 3),
+                33: buttons.grid34(1, 3),
+            }
+        coords = coords_map.get(num_of_words)
+        if coords is None:
+            raise ValueError("Invalid num_of_words")
+        return debug.click(coords, wait=True)
 
+    def select_tr() -> "LayoutContent":
         # navigate to the number and confirm it
-        word_options = (12, 18, 20, 24, 33)
+        word_options = (20, 33) if unlock_repeated_backup else (12, 18, 20, 24, 33)
         index = word_options.index(num_of_words)
         for _ in range(index):
             debug.press_right(wait=True)
-        layout = debug.press_middle(wait=True)
-    elif debug.model in (models.T3T1,):
-        if num_of_words == 12:
-            coords = buttons.grid34(0, 1)
-        elif num_of_words == 18:
-            coords = buttons.grid34(2, 1)
-        elif num_of_words == 20:
-            coords = buttons.grid34(0, 2)
-        elif num_of_words == 24:
-            coords = buttons.grid34(2, 2)
-        elif num_of_words == 33:
-            coords = buttons.grid34(1, 3)
+        return debug.press_middle(wait=True)
+
+    def select_mercury() -> "LayoutContent":
+        # click the button from ValuePad
+        if unlock_repeated_backup:
+            coords_map = {20: buttons.MERCURY_NO, 33: buttons.MERCURY_YES}
         else:
+            coords_map = {
+                12: buttons.grid34(0, 1),
+                18: buttons.grid34(2, 1),
+                20: buttons.grid34(0, 2),
+                24: buttons.grid34(2, 2),
+                33: buttons.grid34(1, 3),
+            }
+        coords = coords_map.get(num_of_words)
+        if coords is None:
             raise ValueError("Invalid num_of_words")
-        layout = debug.click(coords, wait=True)
+        return debug.click(coords, wait=True)
+
+    if wait:
+        debug.wait_layout()
+
+    if debug.model in (models.T2T1,):
+        TR.assert_equals(debug.read_layout().text_content(), "recovery__num_of_words")
+        layout = select_tt()
+    elif debug.model in (
+        models.T2B1,
+        models.T3B1,
+    ):
+        layout = debug.press_right(wait=True)
+        TR.assert_equals(layout.title(), "word_count__title")
+        layout = select_tr()
+    elif debug.model in (models.T3T1,):
+        layout = select_mercury()
     else:
         raise ValueError("Unknown model")
 

@@ -49,7 +49,7 @@ use crate::{
         layout::{
             obj::{ComponentMsgObj, LayoutObj, ATTACH_TYPE_OBJ},
             result::{CANCELLED, CONFIRMED, INFO},
-            util::{upy_disable_animation, ConfirmBlob},
+            util::{upy_disable_animation, ConfirmBlob, RecoveryType},
         },
         model_tr::component::check_homescreen_format,
     },
@@ -233,9 +233,6 @@ impl ComponentMsgObj for super::component::bl_confirm::Confirm<'_> {
         }
     }
 }
-
-const RECOVERY_TYPE_DRY_RUN: u32 = 1;
-const RECOVERY_TYPE_UNLOCK_REPEATED_BACKUP: u32 = 2;
 
 /// Function to create and call a `ButtonPage` dialog based on paginable content
 /// (e.g. `Paragraphs` or `FormattedText`).
@@ -1404,7 +1401,7 @@ extern "C" fn new_confirm_recovery(n_args: usize, args: *const Obj, kwargs: *mut
     let block = move |_args: &[Obj], kwargs: &Map| {
         let description: TString = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
         let button: TString<'static> = kwargs.get(Qstr::MP_QSTR_button)?.try_into()?;
-        let recovery_type: u32 = kwargs.get(Qstr::MP_QSTR_recovery_type)?.try_into()?;
+        let recovery_type: RecoveryType = kwargs.get(Qstr::MP_QSTR_recovery_type)?.try_into()?;
         let show_info: bool = kwargs.get(Qstr::MP_QSTR_show_info)?.try_into()?;
 
         let mut paragraphs = ParagraphVecShort::new();
@@ -1422,8 +1419,8 @@ extern "C" fn new_confirm_recovery(n_args: usize, args: *const Obj, kwargs: *mut
         }
 
         let title = match recovery_type {
-            RECOVERY_TYPE_DRY_RUN => TR::recovery__title_dry_run,
-            RECOVERY_TYPE_UNLOCK_REPEATED_BACKUP => TR::recovery__title_dry_run,
+            RecoveryType::DryRun => TR::recovery__title_dry_run,
+            RecoveryType::UnlockRepeatedBackup => TR::recovery__title_dry_run,
             _ => TR::recovery__title,
         };
 
@@ -1439,13 +1436,19 @@ extern "C" fn new_confirm_recovery(n_args: usize, args: *const Obj, kwargs: *mut
 }
 
 extern "C" fn new_select_word_count(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
-    let block = |_args: &[Obj], _kwargs: &Map| {
+    let block = |_args: &[Obj], kwargs: &Map| {
         let title: TString = TR::word_count__title.into();
+        let recovery_type: RecoveryType = kwargs.get(Qstr::MP_QSTR_recovery_type)?.try_into()?;
 
-        let choices: Vec<TString<'static>, 5> = ["12", "18", "20", "24", "33"]
-            .map(|num| num.into())
-            .into_iter()
-            .collect();
+        let choices: Vec<TString<'static>, 5> = {
+            let nums: &[&str] = if matches!(recovery_type, RecoveryType::UnlockRepeatedBackup) {
+                &["20", "33"]
+            } else {
+                &["12", "18", "20", "24", "33"]
+            };
+
+            nums.iter().map(|&num| num.into()).collect()
+        };
 
         let obj = LayoutObj::new(
             Frame::new(title, SimpleChoice::new(choices, false)).with_title_centered(),
@@ -1985,9 +1988,10 @@ pub static mp_module_trezorui2: Module = obj_module! {
 
     /// def select_word_count(
     ///     *,
-    ///     recovery_type: RecoveryType,  # unused on TR
-    /// ) -> LayoutObj[int | str]:
-    ///    """Select mnemonic word count from (12, 18, 20, 24, 33)."""
+    ///     recovery_type: RecoveryType,
+    /// ) -> LayoutObj[int | str]:  # TR returns str
+    ///     """Select a mnemonic word count from the options: 12, 18, 20, 24, or 33.
+    ///     For unlocking a repeated backup, select from 20 or 33."""
     Qstr::MP_QSTR_select_word_count => obj_fn_kw!(0, new_select_word_count).as_obj(),
 
     /// def show_group_share_success(

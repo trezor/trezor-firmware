@@ -1,5 +1,5 @@
 use crate::{
-    error::Error,
+    error::{value_error, Error},
     io::BinaryData,
     micropython::{
         buffer::{hexlify_bytes, StrBuffer},
@@ -159,6 +159,41 @@ impl ParagraphSource<'static> for PropsList {
 
     fn size(&self) -> usize {
         2 * self.items.len()
+    }
+}
+
+/// RecoveryType as defined in `common/protob/messages-management.proto`,
+/// used as arguments coming from micropython into rust world for layouts or
+/// flows.
+pub enum RecoveryType {
+    Normal = 0,
+    DryRun = 1,
+    UnlockRepeatedBackup = 2,
+}
+
+// Converting `Obj` into `RecoveryType` enum
+#[cfg(feature = "micropython")]
+impl TryFrom<Obj> for RecoveryType {
+    type Error = Error;
+
+    fn try_from(obj: Obj) -> Result<Self, Self::Error> {
+        let val = u32::try_from(obj)?;
+        let this = Self::try_from(val)?;
+        Ok(this)
+    }
+}
+
+// Converting `u32` to `RecoveryType`
+impl TryFrom<u32> for RecoveryType {
+    type Error = Error;
+
+    fn try_from(value: u32) -> Result<Self, Self::Error> {
+        match value {
+            0 => Ok(RecoveryType::Normal),
+            1 => Ok(RecoveryType::DryRun),
+            2 => Ok(RecoveryType::UnlockRepeatedBackup),
+            _ => Err(value_error!(c"Invalid RecoveryType")),
+        }
     }
 }
 
