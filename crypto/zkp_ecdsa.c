@@ -472,7 +472,6 @@ int zkp_ecdh_multiply(const ecdsa_curve *curve,
     zkp_context_release_writable();
     context_writable = NULL;
   }
-
   memzero(&public_key, sizeof(public_key));
 
   return result;
