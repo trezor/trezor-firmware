@@ -295,7 +295,7 @@ int hdnode_public_ckd_cp(const ecdsa_curve *curve, const curve_point *parent,
     bn_read_be(I, &c);
     if (bn_is_less(&c, &curve->order)) {  // < order
       // b = c * G
-      uint8_t child_pubkey[65] = {};
+      uint8_t child_pubkey[65] = {0};
       ecdsa_get_public_key65(curve, I, child_pubkey);
       ecdsa_read_pubkey(curve, child_pubkey, child);
 
