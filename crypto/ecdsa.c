@@ -635,8 +635,8 @@ int scalar_multiply(const ecdsa_curve *curve, const bignum256 *k,
 
 #endif
 
-int ecdh_multiply(const ecdsa_curve *curve, const uint8_t *priv_key,
-                  const uint8_t *pub_key, uint8_t *session_key) {
+int tc_ecdh_multiply(const ecdsa_curve *curve, const uint8_t *priv_key,
+                     const uint8_t *pub_key, uint8_t *session_key) {
   curve_point point = {0};
   if (!ecdsa_read_pubkey(curve, pub_key, &point)) {
     return 1;
@@ -1311,4 +1311,14 @@ int ecdsa_recover_pub_from_sig(const ecdsa_curve *curve, uint8_t *pub_key,
   }
 #endif
   return tc_ecdsa_recover_pub_from_sig(curve, pub_key, sig, digest, recid);
+}
+
+int ecdh_multiply(const ecdsa_curve *curve, const uint8_t *priv_key,
+                  const uint8_t *pub_key, uint8_t *session_key) {
+#ifdef USE_SECP256K1_ZKP_ECDSA
+  if (curve == &secp256k1) {
+    return zkp_ecdh_multiply(curve, priv_key, pub_key, session_key);
+  }
+#endif
+  return tc_ecdh_multiply(curve, priv_key, pub_key, session_key);
 }
