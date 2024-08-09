@@ -1358,7 +1358,6 @@ pub enum TranslatedString {
     reset__slip39_checklist_more_info_threshold = 957,  // "The threshold sets the minumum number of shares needed to recover your wallet."
     reset__slip39_checklist_more_info_threshold_example_template = 958,  // "If you set {0} out of {1} shares, you'll need {2} backup shares to recover your wallet."
     passphrase__continue_with_empty_passphrase = 959,  // "Continue with empty passphrase?"
-    passphrase__hide_your = 960,  // "Hide your passphrase on Trezor entered on host device?"
 }
 
 impl TranslatedString {
@@ -2711,7 +2710,6 @@ impl TranslatedString {
             Self::reset__slip39_checklist_more_info_threshold => "The threshold sets the minumum number of shares needed to recover your wallet.",
             Self::reset__slip39_checklist_more_info_threshold_example_template => "If you set {0} out of {1} shares, you'll need {2} backup shares to recover your wallet.",
             Self::passphrase__continue_with_empty_passphrase => "Continue with empty passphrase?",
-            Self::passphrase__hide_your => "Hide your passphrase on Trezor entered on host device?",
         }
     }
 
@@ -4065,7 +4063,6 @@ impl TranslatedString {
             Qstr::MP_QSTR_reset__slip39_checklist_more_info_threshold => Some(Self::reset__slip39_checklist_more_info_threshold),
             Qstr::MP_QSTR_reset__slip39_checklist_more_info_threshold_example_template => Some(Self::reset__slip39_checklist_more_info_threshold_example_template),
             Qstr::MP_QSTR_passphrase__continue_with_empty_passphrase => Some(Self::passphrase__continue_with_empty_passphrase),
-            Qstr::MP_QSTR_passphrase__hide_your => Some(Self::passphrase__hide_your),
             _ => None,
         }
     }

@@ -490,7 +490,6 @@ class TR:
     passphrase__continue_with_empty_passphrase: str = "Continue with empty passphrase?"
     passphrase__from_host_not_shown: str = "Passphrase provided by host will be used but will not be displayed due to the device settings."
     passphrase__hide: str = "Hide passphrase coming from host?"
-    passphrase__hide_your: str = "Hide your passphrase on Trezor entered on host device?"
     passphrase__next_screen_will_show_passphrase: str = "The next screen shows your passphrase."
     passphrase__please_enter: str = "Please enter your passphrase."
     passphrase__revoke_on_device: str = "Do you want to revoke the passphrase on device setting?"

@@ -464,7 +464,7 @@ def confirm_hide_passphrase_from_host() -> Awaitable[None]:
         "set_hide_passphrase_from_host",
         TR.passphrase__title_passphrase,
         subtitle=TR.words__settings,
-        description=TR.passphrase__hide_your,
+        description=TR.passphrase__hide,
         br_code=ButtonRequestType.ProtectCall,
         prompt_screen=True,
     )
