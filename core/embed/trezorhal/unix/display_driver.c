@@ -32,6 +32,8 @@
 #define EMULATOR_BORDER 16
 
 typedef struct {
+  // Set if the driver is initialized
+  bool initialized;
   // Current display orientation (0 or 180)
   int orientation_angle;
   // Current backlight level ranging from 0 to 255
@@ -52,40 +54,30 @@ typedef struct {
 
 } display_driver_t;
 
-static display_driver_t g_display_driver;
+static display_driver_t g_display_driver = {
+    .initialized = false,
+};
 
 //!@# TODO get rid of this...
 int sdl_display_res_x = DISPLAY_RESX, sdl_display_res_y = DISPLAY_RESY;
 int sdl_touch_offset_x, sdl_touch_offset_y;
 
-void display_deinit(void) {
-  display_driver_t *drv = &g_display_driver;
-
-  SDL_FreeSurface(drv->prev_saved);
-  SDL_FreeSurface(drv->buffer);
-  if (drv->background != NULL) {
-    SDL_DestroyTexture(drv->background);
-  }
-  if (drv->texture != NULL) {
-    SDL_DestroyTexture(drv->texture);
-  }
-  if (drv->renderer != NULL) {
-    SDL_DestroyRenderer(drv->renderer);
-  }
-  if (drv->window != NULL) {
-    SDL_DestroyWindow(drv->window);
-  }
-  SDL_Quit();
+static void display_exit_handler(void) {
+  display_deinit(DISPLAY_RESET_CONTENT);
 }
 
-void display_init(void) {
+void display_init(display_content_mode_t mode) {
   display_driver_t *drv = &g_display_driver;
+
+  if (drv->initialized) {
+    return;
+  }
 
   if (SDL_Init(SDL_INIT_VIDEO) != 0) {
     printf("%s\n", SDL_GetError());
     error_shutdown("SDL_Init error");
   }
-  atexit(display_deinit);
+  atexit(display_exit_handler);
 
   char *window_title = NULL;
   char *window_title_alloc = NULL;
@@ -160,18 +152,41 @@ void display_init(void) {
 #else
   drv->orientation_angle = 0;
 #endif
+  drv->initialized = true;
 }
 
-void display_reinit(void) {
-  // not used
-}
+void display_deinit(display_content_mode_t mode) {
+  display_driver_t *drv = &g_display_driver;
 
-void display_finish_actions(void) {
-  // not used
+  if (!drv->initialized) {
+    return;
+  }
+
+  SDL_FreeSurface(drv->prev_saved);
+  SDL_FreeSurface(drv->buffer);
+  if (drv->background != NULL) {
+    SDL_DestroyTexture(drv->background);
+  }
+  if (drv->texture != NULL) {
+    SDL_DestroyTexture(drv->texture);
+  }
+  if (drv->renderer != NULL) {
+    SDL_DestroyRenderer(drv->renderer);
+  }
+  if (drv->window != NULL) {
+    SDL_DestroyWindow(drv->window);
+  }
+  SDL_Quit();
+
+  drv->initialized = false;
 }
 
 int display_set_backlight(int level) {
   display_driver_t *drv = &g_display_driver;
+
+  if (!drv->initialized) {
+    return 0;
+  }
 
 #if !USE_BACKLIGHT
   level = 255;
@@ -187,11 +202,21 @@ int display_set_backlight(int level) {
 
 int display_get_backlight(void) {
   display_driver_t *drv = &g_display_driver;
+
+  if (!drv->initialized) {
+    return 0;
+  }
+
   return drv->backlight_level;
 }
 
 int display_set_orientation(int angle) {
   display_driver_t *drv = &g_display_driver;
+
+  if (!drv->initialized) {
+    return 0;
+  }
+
   if (angle != drv->orientation_angle) {
 #if defined ORIENTATION_NSEW
     if (angle == 0 || angle == 90 || angle == 180 || angle == 270) {
@@ -209,6 +234,11 @@ int display_set_orientation(int angle) {
 
 int display_get_orientation(void) {
   display_driver_t *drv = &g_display_driver;
+
+  if (!drv->initialized) {
+    return 0;
+  }
+
   return drv->orientation_angle;
 }
 
@@ -216,25 +246,32 @@ int display_get_orientation(void) {
 display_fb_info_t display_get_frame_buffer(void) {
   display_driver_t *drv = &g_display_driver;
 
+  if (!drv->initialized) {
+    display_fb_info_t fb = {
+        .ptr = NULL,
+        .stride = 0,
+    };
+    return fb;
+  } else {
 #ifdef DISPLAY_MONO
-  display_fb_info_t fb = {
-      .ptr = drv->mono_framebuf,
-      .stride = DISPLAY_RESX,
-  };
+    display_fb_info_t fb = {
+        .ptr = drv->mono_framebuf,
+        .stride = DISPLAY_RESX,
+    };
 #else
-  display_fb_info_t fb = {
-      .ptr = drv->buffer->pixels,
-      .stride = DISPLAY_RESX * sizeof(uint16_t),
-  };
+    display_fb_info_t fb = {
+        .ptr = drv->buffer->pixels,
+        .stride = DISPLAY_RESX * sizeof(uint16_t),
+    };
 #endif
-
-  return fb;
+    return fb;
+  }
 }
 
 #else  // XFRAMEBUFFER
 
 void display_wait_for_sync(void) {
-  // not used
+  // not implemented in the emulator
 }
 #endif
 
@@ -257,8 +294,8 @@ static void copy_mono_framebuf(display_driver_t *drv) {
 void display_refresh(void) {
   display_driver_t *drv = &g_display_driver;
 
-  if (!drv->renderer) {
-    display_init();
+  if (!drv->initialized) {
+    return;
   }
 
 #ifdef DISPLAY_MONO
@@ -291,14 +328,14 @@ void display_refresh(void) {
   SDL_RenderPresent(drv->renderer);
 }
 
-void display_set_compatible_settings(void) {
-  // not used
-}
-
 #ifndef DISPLAY_MONO
 
 void display_fill(const gfx_bitblt_t *bb) {
   display_driver_t *drv = &g_display_driver;
+
+  if (!drv->initialized) {
+    return;
+  }
 
   gfx_bitblt_t bb_new = *bb;
   bb_new.dst_row =
@@ -311,6 +348,10 @@ void display_fill(const gfx_bitblt_t *bb) {
 void display_copy_rgb565(const gfx_bitblt_t *bb) {
   display_driver_t *drv = &g_display_driver;
 
+  if (!drv->initialized) {
+    return;
+  }
+
   gfx_bitblt_t bb_new = *bb;
   bb_new.dst_row =
       (uint8_t *)drv->buffer->pixels + (drv->buffer->pitch * bb_new.dst_y);
@@ -322,6 +363,10 @@ void display_copy_rgb565(const gfx_bitblt_t *bb) {
 void display_copy_mono1p(const gfx_bitblt_t *bb) {
   display_driver_t *drv = &g_display_driver;
 
+  if (!drv->initialized) {
+    return;
+  }
+
   gfx_bitblt_t bb_new = *bb;
   bb_new.dst_row =
       (uint8_t *)drv->buffer->pixels + (drv->buffer->pitch * bb_new.dst_y);
@@ -332,6 +377,10 @@ void display_copy_mono1p(const gfx_bitblt_t *bb) {
 
 void display_copy_mono4(const gfx_bitblt_t *bb) {
   display_driver_t *drv = &g_display_driver;
+
+  if (!drv->initialized) {
+    return;
+  }
 
   gfx_bitblt_t bb_new = *bb;
   bb_new.dst_row =
@@ -346,6 +395,10 @@ void display_copy_mono4(const gfx_bitblt_t *bb) {
 void display_fill(const gfx_bitblt_t *bb) {
   display_driver_t *drv = &g_display_driver;
 
+  if (!drv->initialized) {
+    return;
+  }
+
   gfx_bitblt_t bb_new = *bb;
   bb_new.dst_row = drv->mono_framebuf + (DISPLAY_RESX * bb_new.dst_y);
   bb_new.dst_stride = DISPLAY_RESX;
@@ -355,6 +408,10 @@ void display_fill(const gfx_bitblt_t *bb) {
 
 void display_copy_mono1p(const gfx_bitblt_t *bb) {
   display_driver_t *drv = &g_display_driver;
+
+  if (!drv->initialized) {
+    return;
+  }
 
   gfx_bitblt_t bb_new = *bb;
   bb_new.dst_row = drv->mono_framebuf + (DISPLAY_RESX * bb_new.dst_y);
@@ -368,8 +425,8 @@ void display_copy_mono1p(const gfx_bitblt_t *bb) {
 const char *display_save(const char *prefix) {
   display_driver_t *drv = &g_display_driver;
 
-  if (!drv->renderer) {
-    display_init();
+  if (!drv->initialized) {
+    return NULL;
   }
 
 #ifdef DISPLAY_MONO
@@ -403,6 +460,10 @@ const char *display_save(const char *prefix) {
 
 void display_clear_save(void) {
   display_driver_t *drv = &g_display_driver;
+
+  if (!drv->initialized) {
+    return;
+  }
 
   SDL_FreeSurface(drv->prev_saved);
   drv->prev_saved = NULL;

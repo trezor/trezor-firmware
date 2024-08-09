@@ -92,7 +92,7 @@ bool load_firmware(const char *filename, uint8_t *hash) {
 }
 
 __attribute__((noreturn)) int main(int argc, char **argv) {
-  display_init();
+  display_init(DISPLAY_RESET_CONTENT);
   flash_init();
   flash_otp_init();
 
@@ -188,5 +188,3 @@ __attribute__((noreturn)) void jump_to(uint32_t address) {
                       "STORAGE WAS RETAINED");
   }
 }
-
-void ensure_compatible_settings(void) {}

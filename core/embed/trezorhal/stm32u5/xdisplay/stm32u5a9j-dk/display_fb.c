@@ -39,6 +39,16 @@ __attribute__((section(".framebuffer_select"))) uint32_t current_frame_buffer =
     0;
 
 display_fb_info_t display_get_frame_buffer(void) {
+  display_driver_t *drv = &g_display_driver;
+
+  if (!drv->initialized) {
+    display_fb_info_t fb = {
+        .ptr = NULL,
+        .stride = 0,
+    };
+    return fb;
+  }
+
   uintptr_t addr;
 
   if (current_frame_buffer == 0) {
@@ -63,6 +73,12 @@ display_fb_info_t display_get_frame_buffer(void) {
 }
 
 void display_refresh(void) {
+  display_driver_t *drv = &g_display_driver;
+
+  if (!drv->initialized) {
+    return;
+  }
+
   if (current_frame_buffer == 0) {
     current_frame_buffer = 1;
     BSP_LCD_SetFrameBuffer(0, GFXMMU_VIRTUAL_BUFFER1_BASE_S);

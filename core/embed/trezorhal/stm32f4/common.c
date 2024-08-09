@@ -42,7 +42,7 @@ uint32_t systick_val_copy = 0;
 extern void shutdown_privileged(void);
 
 void __attribute__((noreturn)) trezor_shutdown(void) {
-  display_finish_actions();
+  display_deinit(DISPLAY_RETAIN_CONTENT);
 #ifdef USE_SVC_SHUTDOWN
   svc_shutdown();
 #else
@@ -115,22 +115,6 @@ void collect_hw_entropy(void) {
   ensure(flash_otp_read(FLASH_OTP_BLOCK_RANDOMNESS, 0, HW_ENTROPY_DATA + 12,
                         FLASH_OTP_BLOCK_SIZE),
          NULL);
-}
-
-// this function resets settings changed in one layer (bootloader/firmware),
-// which might be incompatible with the other layers older versions,
-// where this setting might be unknown
-void ensure_compatible_settings(void) {
-#ifdef TREZOR_MODEL_T
-#ifdef NEW_RENDERING
-  display_set_compatible_settings();
-#else
-  display_set_big_endian();
-#endif
-  display_orientation(0);
-  set_core_clock(CLOCK_168_MHZ);
-  backlight_pwm_deinit(BACKLIGHT_RETAIN);
-#endif
 }
 
 void invalidate_firmware(void) {

@@ -38,7 +38,7 @@ uint32_t systick_val_copy = 0;
 extern void shutdown_privileged(void);
 
 void __attribute__((noreturn)) trezor_shutdown(void) {
-  display_finish_actions();
+  display_deinit(DISPLAY_RETAIN_CONTENT);
 
   __HAL_RCC_SAES_CLK_DISABLE();
   // Erase all secrets
@@ -100,11 +100,6 @@ void collect_hw_entropy(void) {
                         FLASH_OTP_BLOCK_SIZE),
          NULL);
 }
-
-// this function resets settings changed in one layer (bootloader/firmware),
-// which might be incompatible with the other layers older versions,
-// where this setting might be unknown
-void ensure_compatible_settings(void) {}
 
 void invalidate_firmware(void) {
   // on stm32u5, we need to disable the instruction cache before erasing the
