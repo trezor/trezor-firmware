@@ -4130,10 +4130,12 @@ static void test_ecdh_multiply_helper(
        "047b27ebb15e8197c9a560afc1bd45e2a78b864829fc1257333a1a2d7d30d79eed17889"
        "8ad4960f756cf155cf46d22f2e3b21df10ee5bad560c467ae0d79427a70"},
       // Uncompressed public key
-      {"d56e61dea5c8412292c8a645f20846109a228532b475ff33b7c32663ddb66600",
-       "0282dc03a182e2613a9d2e3f2dc1bdd9e6b541708a719f610c06d1a09be62d3aa2", 0,
-       "0496d82e44fc23e9e8b8f7fabe95fcaff6073b66341324320a7bde5fdb3c7a7990c762c"
-       "c7ce477ca97c4e650a7f9297d240579d46630abbdb6d938732e864f8280"},
+      {"55b57f9ffc79d206eaa2b25dd5fe5a0be2d9d880ddfa777a3a0f9c0b2d3a191e",
+       "04816c5bb10c97b96a0b02382b8f8c1a8876218af04396976dace353a139752c6baef57"
+       "449121650cefca54cf9ac4e304890ada667512b5d98171b54a5a8347b09",
+       0,
+       "049b3ab299d119eb89b632ff63ed0b3790508a0020fd729bbc35f39d221101ac5edc3be"
+       "e252886ea8f68c835ed410b715d41e967d0bd10a01a4b01eaa2320a7f4d"},
       // Invalid compressed public key
       {"d2ffd4daa78a7fb253edb315e27f5841df00a581ab2c3330ffded22be98b7c96",
        "026a575a9f3d4e945366a78e7961b312018451df8485ee1210767a0575225c2764", 1,
@@ -4165,7 +4167,7 @@ static void test_ecdh_multiply_helper(
 
   const ecdsa_curve *curve = &secp256k1;
   uint8_t priv_key[32] = {0};
-  uint8_t pub_key[33] = {0};
+  uint8_t pub_key[65] = {0};
   uint8_t session_key[65] = {0};
   uint8_t expected_session_key[65] = {0};
   int expected_res = 0;
@@ -4173,7 +4175,7 @@ static void test_ecdh_multiply_helper(
 
   for (size_t i = 0; i < sizeof(tests) / sizeof(*tests); i++) {
     memcpy(priv_key, fromhex(tests[i].priv_key), 32);
-    memcpy(pub_key, fromhex(tests[i].pub_key), 33);
+    memcpy(pub_key, fromhex(tests[i].pub_key), 65);
     if (expected_res == 0) {
       memcpy(expected_session_key, fromhex(tests[i].session_key), 65);
     }

@@ -464,7 +464,7 @@ int zkp_ecdh_multiply(const ecdsa_curve *curve,
   if (result == 0) {
     if (secp256k1_ecdh(context_writable, session_key, &public_key,
                        private_key_bytes, plain_hash_function, NULL) != 1) {
-      result = 1;
+      result = 2;
     }
   }
 
