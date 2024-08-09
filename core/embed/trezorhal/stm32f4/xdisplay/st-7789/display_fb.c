@@ -200,7 +200,7 @@ void display_refresh(void) {
 #ifndef BOARDLOADER
   if (is_mode_handler()) {
     // Disable scheduling of any new background copying
-    HAL_NVIC_DisableIRQ(DISPLAY_TE_INTERRUPT_NUM);
+    NVIC_DisableIRQ(DISPLAY_TE_INTERRUPT_NUM);
     // Wait for next TE signal. During this time the
     // display might be updated in the background
     wait_for_te_signal();
@@ -216,7 +216,7 @@ void display_refresh(void) {
       drv->queue.entry[i] = FB_STATE_EMPTY;
     }
     // Enable normal processing again
-    HAL_NVIC_EnableIRQ(DISPLAY_TE_INTERRUPT_NUM);
+    NVIC_EnableIRQ(DISPLAY_TE_INTERRUPT_NUM);
   } else {
     // Mark the buffer ready to switch to
     drv->queue.entry[drv->queue.wix] = FB_STATE_READY;

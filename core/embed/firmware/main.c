@@ -130,6 +130,8 @@ static void optiga_log_hex(const char *prefix, const uint8_t *data,
 #endif
 
 int main(void) {
+  svc_init();
+
   random_delays_init();
 
 #ifdef RDI
@@ -187,7 +189,6 @@ int main(void) {
 #endif
 
   // Init peripherals
-  pendsv_init();
 
   fault_handlers_init();
 

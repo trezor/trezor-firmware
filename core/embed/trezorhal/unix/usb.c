@@ -280,8 +280,6 @@ int usb_webusb_write_blocking(uint8_t iface_num, const uint8_t *buf,
   return usb_webusb_write(iface_num, buf, len);
 }
 
-void pendsv_kbd_intr(void) {}
-
 void mp_hal_set_vcp_iface(int iface_num) {}
 
 secbool usb_configured(void) {

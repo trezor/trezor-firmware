@@ -66,6 +66,7 @@
 #include STM32_HAL_H
 
 #include "display_internal.h"
+#include "irq.h"
 
 /* Common Error codes */
 #define BSP_ERROR_NONE 0
@@ -86,15 +87,6 @@
 #define BSP_BUTTON_USER_IT_PRIORITY \
   0x0FUL /* Default is lowest priority level */
 
-/* LCD interrupt priorities */
-#define BSP_LCD_GFXMMU_IT_PRIORITY                                          \
-  0x0FUL                                /* Default is lowest priority level \
-                                         */
-#define BSP_LCD_LTDC_IT_PRIORITY 0x0FUL /* Default is lowest priority level */
-#define BSP_LCD_DSI_IT_PRIORITY 0x0FUL  /* Default is lowest priority level */
-
-/* HSPI RAM interrupt priority */
-#define BSP_HSPI_RAM_IT_PRIORITY 0x0FUL /* Default is lowest priority level */
 #define LCD_PIXEL_FORMAT_ARGB8888                                           \
   0x00000000U                               /*!< ARGB8888 LTDC pixel format \
                                              */
@@ -1336,8 +1328,8 @@ static void GFXMMU_MspInit(GFXMMU_HandleTypeDef *hgfxmmu) {
   __HAL_RCC_GFXMMU_CLK_ENABLE();
 
   /* Enable GFXMMU interrupt */
-  HAL_NVIC_SetPriority(GFXMMU_IRQn, BSP_LCD_GFXMMU_IT_PRIORITY, 0);
-  HAL_NVIC_EnableIRQ(GFXMMU_IRQn);
+  NVIC_SetPriority(GFXMMU_IRQn, IRQ_PRI_NORMAL);
+  NVIC_EnableIRQ(GFXMMU_IRQn);
 }
 
 /**
@@ -1350,7 +1342,7 @@ static void GFXMMU_MspDeInit(GFXMMU_HandleTypeDef *hgfxmmu) {
   UNUSED(hgfxmmu);
 
   /* Disable GFXMMU interrupt */
-  HAL_NVIC_DisableIRQ(GFXMMU_IRQn);
+  NVIC_DisableIRQ(GFXMMU_IRQn);
 
   /* GFXMMU clock disable */
   __HAL_RCC_GFXMMU_CLK_DISABLE();
@@ -1369,11 +1361,11 @@ static void LTDC_MspInit(LTDC_HandleTypeDef *hltdc) {
   __HAL_RCC_LTDC_CLK_ENABLE();
 
   /* Enable LTDC interrupt */
-  HAL_NVIC_SetPriority(LTDC_IRQn, BSP_LCD_LTDC_IT_PRIORITY, 0);
-  HAL_NVIC_EnableIRQ(LTDC_IRQn);
+  NVIC_SetPriority(LTDC_IRQn, IRQ_PRI_NORMAL);
+  NVIC_EnableIRQ(LTDC_IRQn);
 
-  HAL_NVIC_SetPriority(LTDC_ER_IRQn, BSP_LCD_LTDC_IT_PRIORITY, 0);
-  HAL_NVIC_EnableIRQ(LTDC_ER_IRQn);
+  NVIC_SetPriority(LTDC_ER_IRQn, IRQ_PRI_NORMAL);
+  NVIC_EnableIRQ(LTDC_ER_IRQn);
 }
 
 /**
@@ -1386,8 +1378,8 @@ static void LTDC_MspDeInit(LTDC_HandleTypeDef *hltdc) {
   UNUSED(hltdc);
 
   /* Disable LTDC interrupts */
-  HAL_NVIC_DisableIRQ(LTDC_ER_IRQn);
-  HAL_NVIC_DisableIRQ(LTDC_IRQn);
+  NVIC_DisableIRQ(LTDC_ER_IRQn);
+  NVIC_DisableIRQ(LTDC_IRQn);
 
   /* LTDC clock disable */
   __HAL_RCC_LTDC_CLK_DISABLE();
@@ -1494,8 +1486,8 @@ static void DSI_MspInit(DSI_HandleTypeDef *hdsi) {
 
   /* Enable DSI NVIC interrupt */
   /* Default is lowest priority level */
-  HAL_NVIC_SetPriority(DSI_IRQn, 0x0FUL, 0);
-  HAL_NVIC_EnableIRQ(DSI_IRQn);
+  NVIC_SetPriority(DSI_IRQn, IRQ_PRI_NORMAL);
+  NVIC_EnableIRQ(DSI_IRQn);
 }
 
 /**
@@ -1530,7 +1522,7 @@ static void DSI_MspDeInit(DSI_HandleTypeDef *hdsi) {
   __HAL_RCC_DSI_RELEASE_RESET();
 
   /* Disable DSI interrupts */
-  HAL_NVIC_DisableIRQ(DSI_IRQn);
+  NVIC_DisableIRQ(DSI_IRQn);
 }
 
 int32_t BSP_LCD_SetFrameBuffer(uint32_t Instance, uint32_t fb_addr) {

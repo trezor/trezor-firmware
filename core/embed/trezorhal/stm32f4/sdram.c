@@ -19,6 +19,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "sdram.h"
+#include "irq.h"
 
 /** @addtogroup BSP
  * @{
@@ -397,8 +398,8 @@ void BSP_SDRAM_MspInit(SDRAM_HandleTypeDef *hsdram, void *Params) {
     HAL_DMA_Init(&dmaHandle);
 
     /* NVIC configuration for DMA transfer complete interrupt */
-    HAL_NVIC_SetPriority(SDRAM_DMAx_IRQn, 0x0F, 0);
-    HAL_NVIC_EnableIRQ(SDRAM_DMAx_IRQn);
+    NVIC_SetPriority(SDRAM_DMAx_IRQn, IRQ_PRI_NORMAL);
+    NVIC_EnableIRQ(SDRAM_DMAx_IRQn);
   } /* of if(hsdram != (SDRAM_HandleTypeDef  *)NULL) */
 }
 
@@ -413,7 +414,7 @@ void BSP_SDRAM_MspDeInit(SDRAM_HandleTypeDef *hsdram, void *Params) {
 
   if (hsdram != (SDRAM_HandleTypeDef *)NULL) {
     /* Disable NVIC configuration for DMA interrupt */
-    HAL_NVIC_DisableIRQ(SDRAM_DMAx_IRQn);
+    NVIC_DisableIRQ(SDRAM_DMAx_IRQn);
 
     /* Deinitialize the stream for new transfer */
     dma_handle.Instance = SDRAM_DMAx_STREAM;

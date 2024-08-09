@@ -142,7 +142,7 @@ void display_io_init_te_interrupt(void) {
   HAL_EXTI_SetConfigLine(&EXTI_Handle, &EXTI_Config);
 
   // setup interrupt for tearing effect pin
-  HAL_NVIC_SetPriority(DISPLAY_TE_INTERRUPT_NUM, IRQ_PRI_DMA, 0);
-  svc_enableIRQ(DISPLAY_TE_INTERRUPT_NUM);
+  NVIC_SetPriority(DISPLAY_TE_INTERRUPT_NUM, IRQ_PRI_NORMAL);
+  NVIC_EnableIRQ(DISPLAY_TE_INTERRUPT_NUM);
 }
 #endif

@@ -192,9 +192,8 @@ extern "C" {
  * @brief This is the HAL system configuration section
  */
 
-#define VDD_VALUE 3300UL /*!< Value of VDD in mv */
-#define TICK_INT_PRIORITY \
-  (15UL) /*!< tick interrupt priority (lowest by default)  */
+#define VDD_VALUE 3300UL      /*!< Value of VDD in mv */
+#define TICK_INT_PRIORITY 0UL /*!< tick interrupt priority */
 #define USE_RTOS 0U
 #define PREFETCH_ENABLE 1U /*!< Enable prefetch */
 
@@ -554,7 +553,8 @@ extern "C" {
  */
 #define assert_param(expr) \
   ((expr) ? (void)0U : assert_failed((uint8_t *)__FILE__, __LINE__))
-/* Exported functions ------------------------------------------------------- */
+/* Exported functions
+   ------------------------------------------------------- */
 void assert_failed(uint8_t *file, uint32_t line);
 #else
 #define assert_param(expr) ((void)0U)
