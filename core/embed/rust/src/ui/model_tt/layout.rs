@@ -52,7 +52,7 @@ use crate::{
         layout::{
             obj::{ComponentMsgObj, LayoutObj, ATTACH_TYPE_OBJ},
             result::{CANCELLED, CONFIRMED, INFO},
-            util::{upy_disable_animation, ConfirmBlob, PropsList},
+            util::{upy_disable_animation, ConfirmBlob, PropsList, RecoveryType},
         },
         model_tt::component::check_homescreen_format,
     },
@@ -316,9 +316,6 @@ impl ComponentMsgObj for super::component::bl_confirm::Confirm<'_> {
         }
     }
 }
-
-const RECOVERY_TYPE_DRY_RUN: u32 = 1;
-const RECOVERY_TYPE_UNLOCK_REPEATED_BACKUP: u32 = 2;
 
 extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
@@ -1375,7 +1372,7 @@ extern "C" fn new_confirm_recovery(n_args: usize, args: *const Obj, kwargs: *mut
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let description: TString = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
         let button: TString = kwargs.get(Qstr::MP_QSTR_button)?.try_into()?;
-        let recovery_type: u32 = kwargs.get(Qstr::MP_QSTR_recovery_type)?.try_into()?;
+        let recovery_type: RecoveryType = kwargs.get(Qstr::MP_QSTR_recovery_type)?.try_into()?;
         let info_button: bool = kwargs.get_or(Qstr::MP_QSTR_info_button, false)?;
 
         let paragraphs = Paragraphs::new([
@@ -1385,8 +1382,8 @@ extern "C" fn new_confirm_recovery(n_args: usize, args: *const Obj, kwargs: *mut
         .with_spacing(theme::RECOVERY_SPACING);
 
         let notification = match recovery_type {
-            RECOVERY_TYPE_DRY_RUN => TR::recovery__title_dry_run.into(),
-            RECOVERY_TYPE_UNLOCK_REPEATED_BACKUP => TR::recovery__title_dry_run.into(),
+            RecoveryType::DryRun => TR::recovery__title_dry_run.into(),
+            RecoveryType::UnlockRepeatedBackup => TR::recovery__title_dry_run.into(),
             _ => TR::recovery__title.into(),
         };
 
@@ -1416,10 +1413,10 @@ extern "C" fn new_confirm_recovery(n_args: usize, args: *const Obj, kwargs: *mut
 
 extern "C" fn new_select_word_count(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let recovery_type: u32 = kwargs.get(Qstr::MP_QSTR_recovery_type)?.try_into()?;
+        let recovery_type: RecoveryType = kwargs.get(Qstr::MP_QSTR_recovery_type)?.try_into()?;
         let title: TString = match recovery_type {
-            RECOVERY_TYPE_DRY_RUN => TR::recovery__title_dry_run.into(),
-            RECOVERY_TYPE_UNLOCK_REPEATED_BACKUP => TR::recovery__title_dry_run.into(),
+            RecoveryType::DryRun => TR::recovery__title_dry_run.into(),
+            RecoveryType::UnlockRepeatedBackup => TR::recovery__title_dry_run.into(),
             _ => TR::recovery__title.into(),
         };
 
@@ -1428,10 +1425,16 @@ extern "C" fn new_select_word_count(n_args: usize, args: *const Obj, kwargs: *mu
             TR::recovery__num_of_words,
         ));
 
+        let content = if matches!(recovery_type, RecoveryType::UnlockRepeatedBackup) {
+            SelectWordCount::new_multishare()
+        } else {
+            SelectWordCount::new_all()
+        };
+
         let obj = LayoutObj::new(Frame::left_aligned(
             theme::label_title(),
             title,
-            Dialog::new(paragraphs, SelectWordCount::new()),
+            Dialog::new(paragraphs, content),
         ))?;
         Ok(obj.into())
     };
@@ -2068,7 +2071,8 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     *,
     ///     recovery_type: RecoveryType,
     /// ) -> LayoutObj[int | str]:  # TT returns int
-    ///     """Select mnemonic word count from (12, 18, 20, 24, 33)."""
+    ///     """Select a mnemonic word count from the options: 12, 18, 20, 24, or 33.
+    ///     For unlocking a repeated backup, select from 20 or 33."""
     Qstr::MP_QSTR_select_word_count => obj_fn_kw!(0, new_select_word_count).as_obj(),
 
     /// def show_group_share_success(

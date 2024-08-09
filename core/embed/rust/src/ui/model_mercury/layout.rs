@@ -48,7 +48,7 @@ use crate::{
         layout::{
             obj::{ComponentMsgObj, LayoutObj, ATTACH_TYPE_OBJ},
             result::{CANCELLED, CONFIRMED, INFO},
-            util::{upy_disable_animation, ConfirmBlob, PropsList},
+            util::{upy_disable_animation, ConfirmBlob, PropsList, RecoveryType},
         },
         model_mercury::{
             component::{check_homescreen_format, SwipeContent},
@@ -1038,10 +1038,16 @@ extern "C" fn new_show_checklist(n_args: usize, args: *const Obj, kwargs: *mut M
 }
 
 extern "C" fn new_select_word_count(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
-    let block = move |_args: &[Obj], _kwargs: &Map| {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let recovery_type: RecoveryType = kwargs.get(Qstr::MP_QSTR_recovery_type)?.try_into()?;
+        let content = if matches!(recovery_type, RecoveryType::UnlockRepeatedBackup) {
+            SelectWordCount::new_multishare()
+        } else {
+            SelectWordCount::new_all()
+        };
         let obj = LayoutObj::new(Frame::left_aligned(
             TR::recovery__num_of_words.into(),
-            SelectWordCount::new(),
+            content,
         ))?;
         Ok(obj.into())
     };
@@ -1658,8 +1664,9 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// def select_word_count(
     ///     *,
     ///     recovery_type: RecoveryType,
-    /// ) -> LayoutObj[int | str]:  # TT returns int
-    ///     """Select mnemonic word count from (12, 18, 20, 24, 33)."""
+    /// ) -> LayoutObj[int | str]:  # merucry returns int
+    ///     """Select a mnemonic word count from the options: 12, 18, 20, 24, or 33.
+    ///     For unlocking a repeated backup, select from 20 or 33."""
     Qstr::MP_QSTR_select_word_count => obj_fn_kw!(0, new_select_word_count).as_obj(),
 
     /// def show_group_share_success(

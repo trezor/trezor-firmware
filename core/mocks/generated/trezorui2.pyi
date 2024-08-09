@@ -460,8 +460,9 @@ def flow_continue_recovery(
 def select_word_count(
     *,
     recovery_type: RecoveryType,
-) -> LayoutObj[int | str]:  # TT returns int
-    """Select mnemonic word count from (12, 18, 20, 24, 33)."""
+) -> LayoutObj[int | str]:  # merucry returns int
+    """Select a mnemonic word count from the options: 12, 18, 20, 24, or 33.
+    For unlocking a repeated backup, select from 20 or 33."""
 
 
 # rust/src/ui/model_mercury/layout.rs
@@ -1016,9 +1017,10 @@ def confirm_recovery(
 # rust/src/ui/model_tr/layout.rs
 def select_word_count(
     *,
-    recovery_type: RecoveryType,  # unused on TR
-) -> LayoutObj[int | str]:
-   """Select mnemonic word count from (12, 18, 20, 24, 33)."""
+    recovery_type: RecoveryType,
+) -> LayoutObj[int | str]:  # TR returns str
+    """Select a mnemonic word count from the options: 12, 18, 20, 24, or 33.
+    For unlocking a repeated backup, select from 20 or 33."""
 
 
 # rust/src/ui/model_tr/layout.rs
@@ -1567,7 +1569,8 @@ def select_word_count(
     *,
     recovery_type: RecoveryType,
 ) -> LayoutObj[int | str]:  # TT returns int
-    """Select mnemonic word count from (12, 18, 20, 24, 33)."""
+    """Select a mnemonic word count from the options: 12, 18, 20, 24, or 33.
+    For unlocking a repeated backup, select from 20 or 33."""
 
 
 # rust/src/ui/model_tt/layout.rs

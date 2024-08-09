@@ -15,7 +15,7 @@ use crate::{
             base::{DecisionBuilder as _, StateChange},
             FlowMsg, FlowState, SwipeFlow,
         },
-        layout::obj::LayoutObj,
+        layout::{obj::LayoutObj, util::RecoveryType},
     },
 };
 
@@ -26,10 +26,6 @@ use super::super::{
     },
     theme,
 };
-
-const RECOVERY_TYPE_NORMAL: u32 = 0;
-const RECOVERY_TYPE_DRY_RUN: u32 = 1;
-const RECOVERY_TYPE_UNLOCK_REPEATED_BACKUP: u32 = 2;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum ContinueRecoveryBeforeShares {
@@ -111,27 +107,24 @@ pub extern "C" fn new_continue_recovery(n_args: usize, args: *const Obj, kwargs:
 impl ContinueRecoveryBeforeShares {
     fn new_obj(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Error> {
         let first_screen: bool = kwargs.get(Qstr::MP_QSTR_first_screen)?.try_into()?;
-        let recovery_type: u32 = kwargs.get(Qstr::MP_QSTR_recovery_type)?.try_into()?;
+        let recovery_type: RecoveryType = kwargs.get(Qstr::MP_QSTR_recovery_type)?.try_into()?;
         let text: TString = kwargs.get(Qstr::MP_QSTR_text)?.try_into()?; // #shares entered
         let subtext: Option<TString> = kwargs.get(Qstr::MP_QSTR_subtext)?.try_into_option()?; // #shares remaining
 
-        let (title, cancel_btn, cancel_title, cancel_intro) =
-            if recovery_type == RECOVERY_TYPE_NORMAL {
-                (
-                    TR::recovery__title,
-                    TR::recovery__title_cancel_recovery,
-                    TR::recovery__title_cancel_recovery,
-                    TR::recovery__wanna_cancel_recovery,
-                )
-            } else {
-                // dry-run
-                (
-                    TR::recovery__title_dry_run,
-                    TR::recovery__cancel_dry_run,
-                    TR::recovery__title_cancel_dry_run,
-                    TR::recovery__wanna_cancel_dry_run,
-                )
-            };
+        let (title, cancel_btn, cancel_title, cancel_intro) = match recovery_type {
+            RecoveryType::Normal => (
+                TR::recovery__title,
+                TR::recovery__title_cancel_recovery,
+                TR::recovery__title_cancel_recovery,
+                TR::recovery__wanna_cancel_recovery,
+            ),
+            _ => (
+                TR::recovery__title_dry_run,
+                TR::recovery__cancel_dry_run,
+                TR::recovery__title_cancel_dry_run,
+                TR::recovery__wanna_cancel_dry_run,
+            ),
+        };
 
         let mut pars = ParagraphVecShort::new();
         let footer_instruction;

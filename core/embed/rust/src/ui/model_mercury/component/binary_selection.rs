@@ -1,6 +1,6 @@
 use crate::ui::{
     component::{Component, Event, EventCtx},
-    geometry::{Alignment2D, Offset, Rect},
+    geometry::{Alignment, Alignment2D, Offset, Rect},
     shape::Renderer,
 };
 
@@ -29,8 +29,12 @@ impl BinarySelection {
     ) -> Self {
         Self {
             buttons_area: Rect::zero(),
-            button_left: Button::new(left_content).styled(left_style),
-            button_right: Button::new(right_content).styled(right_style),
+            button_left: Button::new(left_content)
+                .styled(left_style)
+                .with_text_align(Alignment::Center),
+            button_right: Button::new(right_content)
+                .styled(right_style)
+                .with_text_align(Alignment::Center),
         }
     }
 }
