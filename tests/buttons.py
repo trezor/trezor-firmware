@@ -13,6 +13,20 @@ def grid(dim: int, grid_cells: int, cell: int) -> int:
     return cell * step + ofs
 
 
+def grid35(x: int, y: int) -> Coords:
+    return grid(DISPLAY_WIDTH, 3, x), grid(DISPLAY_HEIGHT, 5, y)
+
+
+def grid34(x: int, y: int) -> Coords:
+    return grid(DISPLAY_WIDTH, 3, x), grid(DISPLAY_HEIGHT, 4, y)
+
+
+def _grid34_from_index(idx: int) -> Coords:
+    grid_x = idx % 3
+    grid_y = idx // 3 + 1  # first line is empty
+    return grid34(grid_x, grid_y)
+
+
 LEFT = grid(DISPLAY_WIDTH, 3, 0)
 MID = grid(DISPLAY_WIDTH, 3, 1)
 RIGHT = grid(DISPLAY_WIDTH, 3, 2)
@@ -30,6 +44,9 @@ CORNER_BUTTON = (215, 25)
 
 CONFIRM_WORD = (MID, TOP)
 TOP_ROW = (MID, TOP)
+
+MERCURY_YES = grid34(2, 2)
+MERCURY_NO = grid34(0, 2)
 
 
 def reset_minus(model_internal_name: str) -> Coords:
@@ -107,20 +124,6 @@ def pin_passphrase_grid(idx: int) -> Coords:
     grid_x = idx % 3
     grid_y = idx // 3 + 1  # first line is empty
     return grid35(grid_x, grid_y)
-
-
-def grid35(x: int, y: int) -> Coords:
-    return grid(DISPLAY_WIDTH, 3, x), grid(DISPLAY_HEIGHT, 5, y)
-
-
-def grid34(x: int, y: int) -> Coords:
-    return grid(DISPLAY_WIDTH, 3, x), grid(DISPLAY_HEIGHT, 4, y)
-
-
-def _grid34_from_index(idx: int) -> Coords:
-    grid_x = idx % 3
-    grid_y = idx // 3 + 1  # first line is empty
-    return grid34(grid_x, grid_y)
 
 
 def type_word(word: str, is_slip39: bool = False) -> Iterator[Coords]:

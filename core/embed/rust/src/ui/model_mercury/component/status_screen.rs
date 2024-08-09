@@ -167,7 +167,7 @@ impl StatusScreen {
 
     pub fn new_success(msg: TString<'static>) -> Self {
         Self::new(
-            theme::ICON_SIMPLE_CHECKMARK,
+            theme::ICON_SIMPLE_CHECKMARK30,
             theme::GREEN_LIME,
             theme::GREEN_LIGHT,
             DismissType::SwipeUp,
@@ -177,7 +177,7 @@ impl StatusScreen {
 
     pub fn new_success_timeout(msg: TString<'static>) -> Self {
         Self::new(
-            theme::ICON_SIMPLE_CHECKMARK,
+            theme::ICON_SIMPLE_CHECKMARK30,
             theme::GREEN_LIME,
             theme::GREEN_LIGHT,
             DismissType::Timeout(Timeout::new(TIMEOUT_MS)),
@@ -187,7 +187,7 @@ impl StatusScreen {
 
     pub fn new_neutral(msg: TString<'static>) -> Self {
         Self::new(
-            theme::ICON_SIMPLE_CHECKMARK,
+            theme::ICON_SIMPLE_CHECKMARK30,
             theme::GREY_EXTRA_LIGHT,
             theme::GREY_DARK,
             DismissType::SwipeUp,
@@ -197,7 +197,7 @@ impl StatusScreen {
 
     pub fn new_neutral_timeout(msg: TString<'static>) -> Self {
         Self::new(
-            theme::ICON_SIMPLE_CHECKMARK,
+            theme::ICON_SIMPLE_CHECKMARK30,
             theme::GREY_EXTRA_LIGHT,
             theme::GREY_DARK,
             DismissType::Timeout(Timeout::new(TIMEOUT_MS)),

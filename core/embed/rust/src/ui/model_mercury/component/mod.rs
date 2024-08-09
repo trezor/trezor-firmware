@@ -1,5 +1,6 @@
 #[cfg(feature = "translations")]
 mod address_details;
+mod binary_selection;
 pub mod bl_confirm;
 mod button;
 #[cfg(feature = "translations")]
@@ -41,6 +42,7 @@ mod welcome_screen;
 
 #[cfg(feature = "translations")]
 pub use address_details::AddressDetails;
+pub use binary_selection::{BinarySelection, BinarySelectionMsg};
 pub use button::{
     Button, ButtonContent, ButtonMsg, ButtonStyle, ButtonStyleSheet, CancelConfirmMsg,
     CancelInfoConfirmMsg, IconText,
@@ -72,7 +74,7 @@ pub use number_input::{NumberInputDialog, NumberInputDialogMsg};
 pub use number_input_slider::NumberInputSliderDialog;
 pub use progress::Progress;
 #[cfg(feature = "translations")]
-pub use prompt_screen::PromptScreen;
+pub use prompt_screen::{PromptMsg, PromptScreen};
 pub use result::{ResultFooter, ResultScreen, ResultStyle};
 pub use scroll::ScrollBar;
 #[cfg(feature = "translations")]

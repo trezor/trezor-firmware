@@ -33,7 +33,7 @@
   },
   "header": {
     "language": "fr-FR",
-    "version": "2.8.1"
+    "version": "2.8.2"
   },
   "translations": {
     "addr_mismatch__contact_support_at": "Contactez l'assistance Trezor à l'adr.",
@@ -519,7 +519,6 @@
     "passphrase__access_wallet": "Accès portef. phrase secr. ?",
     "passphrase__always_on_device": "Saisissez toujours votre phrase secrète sur Trezor ?",
     "passphrase__from_host_not_shown": "La phrase secrète fournie par l'hôte sera utilisée, mais pas affichée en raison des paramètres du disp.",
-    "passphrase__wallet": "Portef. phrase secr.",
     "passphrase__hide": "Masq. phrase secrète de l'hôte ?",
     "passphrase__next_screen_will_show_passphrase": "L'écran suivant affiche votre phrase secrète.",
     "passphrase__please_enter": "Saisissez votre phrase secrète.",
@@ -532,6 +531,7 @@
     "passphrase__title_source": "Source phrase secr.",
     "passphrase__turn_off": "Désactiver la prot. par phrase secrète ?",
     "passphrase__turn_on": "Activer la prot. par phrase secrète ?",
+    "passphrase__wallet": "Portef. phrase secr.",
     "pin__cancel_description": "Continuer sans PIN",
     "pin__cancel_info": "Sans PIN, tout le monde peut accéder à ce dispositif.",
     "pin__cancel_setup": "Annuler la configuration du PIN",

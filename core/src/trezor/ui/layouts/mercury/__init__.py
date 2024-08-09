@@ -446,6 +446,48 @@ def confirm_homescreen(
     )
 
 
+def confirm_change_passphrase(use: bool) -> Awaitable[None]:
+    description = TR.passphrase__turn_on if use else TR.passphrase__turn_off
+
+    return confirm_action(
+        "set_passphrase",
+        TR.passphrase__title_passphrase,
+        subtitle=TR.words__settings,
+        description=description,
+        br_code=ButtonRequestType.ProtectCall,
+        prompt_screen=True,
+    )
+
+
+def confirm_hide_passphrase_from_host() -> Awaitable[None]:
+    return confirm_action(
+        "set_hide_passphrase_from_host",
+        TR.passphrase__title_passphrase,
+        subtitle=TR.words__settings,
+        description=TR.passphrase__hide,
+        br_code=ButtonRequestType.ProtectCall,
+        prompt_screen=True,
+    )
+
+
+def confirm_change_passphrase_source(
+    passphrase_always_on_device: bool,
+) -> Awaitable[None]:
+    description = (
+        TR.passphrase__always_on_device
+        if passphrase_always_on_device
+        else TR.passphrase__revoke_on_device
+    )
+    return confirm_action(
+        "set_passphrase_source",
+        TR.passphrase__title_passphrase,
+        subtitle=TR.words__settings,
+        description=description,
+        br_code=ButtonRequestType.ProtectCall,
+        prompt_screen=True,
+    )
+
+
 async def show_address(
     address: str,
     *,
@@ -1374,7 +1416,7 @@ def show_wait_text(message: str) -> None:
 async def request_passphrase_on_device(max_len: int) -> str:
     result = await interact(
         RustLayout(
-            trezorui2.request_passphrase(
+            trezorui2.flow_request_passphrase(
                 prompt=TR.passphrase__title_enter, max_len=max_len
             )
         ),
@@ -1384,8 +1426,18 @@ async def request_passphrase_on_device(max_len: int) -> str:
     if result is CANCELLED:
         raise ActionCancelled("Passphrase entry cancelled")
 
-    assert isinstance(result, str)
-    return result
+    if __debug__:
+        if not isinstance(result, tuple):
+            # TODO: DebugLink problem, better comment or solution?
+            result = (CONFIRMED, str(result))
+
+    status, value = result
+    if status == CONFIRMED:
+        assert isinstance(value, str)
+        return value
+    else:
+        # flow_request_pin returns either CANCELLED or (CONFIRMED, str) so this branch shouldn't be taken
+        raise ActionCancelled("Passphrase entry cancelled")
 
 
 async def request_pin_on_device(

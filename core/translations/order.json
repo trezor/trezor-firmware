@@ -957,5 +957,6 @@
   "955": "brightness__change_title",
   "956": "words__title_done",
   "957": "reset__slip39_checklist_more_info_threshold",
-  "958": "reset__slip39_checklist_more_info_threshold_example_template"
+  "958": "reset__slip39_checklist_more_info_threshold_example_template",
+  "959": "passphrase__continue_with_empty_passphrase"
 }

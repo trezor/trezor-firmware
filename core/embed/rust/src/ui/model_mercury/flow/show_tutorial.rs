@@ -13,12 +13,13 @@ use crate::{
             FlowMsg, FlowState, SwipeFlow,
         },
         layout::obj::LayoutObj,
-        model_mercury::component::SwipeContent,
     },
 };
 
 use super::super::{
-    component::{Frame, FrameMsg, PromptScreen, VerticalMenu, VerticalMenuChoiceMsg},
+    component::{
+        Frame, FrameMsg, PromptMsg, PromptScreen, SwipeContent, VerticalMenu, VerticalMenuChoiceMsg,
+    },
     theme,
 };
 
@@ -85,7 +86,9 @@ impl ShowTutorial {
             SwipeContent::new(PromptScreen::new_tap_to_start()),
         )
         .with_footer(TR::instructions__tap_to_start.into(), None)
-        .map(|msg| matches!(msg, FrameMsg::Content(())).then_some(FlowMsg::Confirmed));
+        .map(|msg| {
+            matches!(msg, FrameMsg::Content(PromptMsg::Confirmed)).then_some(FlowMsg::Confirmed)
+        });
 
         let content_step_begin = Frame::left_aligned(
             TR::tutorial__title_lets_begin.into(),
@@ -138,7 +141,9 @@ impl ShowTutorial {
             SwipeContent::new(PromptScreen::new_hold_to_confirm()),
         )
         .with_footer(TR::instructions__hold_to_exit_tutorial.into(), None)
-        .map(|msg| matches!(msg, FrameMsg::Content(())).then_some(FlowMsg::Confirmed));
+        .map(|msg| {
+            matches!(msg, FrameMsg::Content(PromptMsg::Confirmed)).then_some(FlowMsg::Confirmed)
+        });
 
         let content_step_done = Frame::left_aligned(
             TR::tutorial__title_well_done.into(),
@@ -182,7 +187,9 @@ impl ShowTutorial {
             SwipeContent::new(PromptScreen::new_hold_to_confirm_danger()),
         )
         .with_footer(TR::instructions__hold_to_exit_tutorial.into(), None)
-        .map(|msg| matches!(msg, FrameMsg::Content(())).then_some(FlowMsg::Confirmed));
+        .map(|msg| {
+            matches!(msg, FrameMsg::Content(PromptMsg::Confirmed)).then_some(FlowMsg::Confirmed)
+        });
 
         let res = SwipeFlow::new(&ShowTutorial::StepWelcome)?
             .with_page(&ShowTutorial::StepWelcome, content_step_welcome)?

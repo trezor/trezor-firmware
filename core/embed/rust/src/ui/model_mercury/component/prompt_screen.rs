@@ -1,18 +1,26 @@
 use crate::ui::{
     component::{Component, Event, EventCtx},
     geometry::Rect,
-    model_mercury::theme,
     shape::Renderer,
 };
 
-use super::{HoldToConfirm, TapToConfirm};
+use super::{super::theme, BinarySelection, ButtonContent, HoldToConfirm, TapToConfirm};
 
 /// Component requesting an action from a user. Most typically embedded as a
-/// content of a Frame and promptin "Tap to confirm" or "Hold to XYZ".
+/// content of a Frame. Options are:
+///     - Tap to confirm
+///     - Hold to confirm
+///     - Yes/No selection
 #[derive(Clone)]
 pub enum PromptScreen {
     Tap(TapToConfirm),
     Hold(HoldToConfirm),
+    Choose(BinarySelection),
+}
+
+pub enum PromptMsg {
+    Confirmed,
+    Cancelled,
 }
 
 impl PromptScreen {
@@ -30,7 +38,7 @@ impl PromptScreen {
             theme::GREEN,
             theme::GREY_EXTRA_DARK,
             theme::GREEN_LIGHT,
-            theme::ICON_SIMPLE_CHECKMARK,
+            theme::ICON_SIMPLE_CHECKMARK30,
         ))
     }
 
@@ -40,7 +48,7 @@ impl PromptScreen {
             theme::ORANGE_LIGHT,
             theme::GREY_EXTRA_DARK,
             theme::ORANGE_DIMMED,
-            theme::ICON_SIMPLE_CHECKMARK,
+            theme::ICON_SIMPLE_CHECKMARK30,
         ))
     }
 
@@ -53,23 +61,50 @@ impl PromptScreen {
             theme::ICON_CHEVRON_RIGHT,
         ))
     }
+
+    pub fn new_yes_or_no() -> Self {
+        PromptScreen::Choose(BinarySelection::new(
+            ButtonContent::Icon(theme::ICON_CLOSE),
+            ButtonContent::Icon(theme::ICON_SIMPLE_CHECKMARK30),
+            theme::button_cancel(),
+            theme::button_confirm(),
+        ))
+    }
 }
 
 impl Component for PromptScreen {
-    type Msg = ();
+    type Msg = PromptMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
         match self {
             PromptScreen::Tap(t) => t.place(bounds),
             PromptScreen::Hold(h) => h.place(bounds),
+            PromptScreen::Choose(c) => c.place(bounds),
         }
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         match self {
-            PromptScreen::Tap(t) => t.event(ctx, event),
-            PromptScreen::Hold(h) => h.event(ctx, event),
+            PromptScreen::Tap(_) | PromptScreen::Hold(_) => {
+                let res = match self {
+                    PromptScreen::Tap(t) => t.event(ctx, event),
+                    PromptScreen::Hold(h) => h.event(ctx, event),
+                    _ => None,
+                };
+                if res.is_some() {
+                    return Some(PromptMsg::Confirmed);
+                }
+            }
+            PromptScreen::Choose(c) => {
+                if let Some(res) = c.event(ctx, event) {
+                    match res {
+                        super::BinarySelectionMsg::Left => return Some(PromptMsg::Cancelled),
+                        super::BinarySelectionMsg::Right => return Some(PromptMsg::Confirmed),
+                    }
+                }
+            }
         }
+        None
     }
 
     fn paint(&mut self) {
@@ -80,6 +115,7 @@ impl Component for PromptScreen {
         match self {
             PromptScreen::Tap(t) => t.render(target),
             PromptScreen::Hold(h) => h.render(target),
+            PromptScreen::Choose(c) => c.render(target),
         }
     }
 }
@@ -90,7 +126,8 @@ impl crate::trace::Trace for PromptScreen {
         t.component("PromptScreen");
         match self {
             PromptScreen::Tap(c) => t.child("TapToConfirm", c),
-            PromptScreen::Hold(c) => t.child("HoldToConfirm", c),
+            PromptScreen::Hold(h) => t.child("HoldToConfirm", h),
+            PromptScreen::Choose(c) => t.child("ChooseBinarySelection", c),
         }
     }
 }

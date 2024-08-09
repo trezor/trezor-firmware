@@ -33,7 +33,7 @@
   },
   "header": {
     "language": "cs-CZ",
-    "version": "2.8.1"
+    "version": "2.8.2"
   },
   "translations": {
     "addr_mismatch__contact_support_at": "Kontaktujte naši podporu na",
@@ -519,7 +519,6 @@
     "passphrase__access_wallet": "Otev. passphrase pen.?",
     "passphrase__always_on_device": "Vždy zadávat passphrase na Trezoru?",
     "passphrase__from_host_not_shown": "Použije se passphrase zadaná hostitelem, ale vzhledem k nastavení zařízení se nezobrazí.",
-    "passphrase__wallet": "Passphrase pen.",
     "passphrase__hide": "Skrýt passphrase od hostitele?",
     "passphrase__next_screen_will_show_passphrase": "Na další obrazovce se zobrazí vaše passphrase.",
     "passphrase__please_enter": "Zadejte passphrase.",
@@ -532,6 +531,7 @@
     "passphrase__title_source": "Zdroj passphrase",
     "passphrase__turn_off": "Vypnout ochranu s passphrase?",
     "passphrase__turn_on": "Zapnout ochranu s passphrase?",
+    "passphrase__wallet": "Passphrase pen.",
     "pin__cancel_description": "Pokračovat bez PIN kódu",
     "pin__cancel_info": "Bez PIN kódu může k tomuto zařízení přistupovat kdokoli.",
     "pin__cancel_setup": "Zrušit nastavení PIN kódu",

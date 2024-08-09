@@ -20,7 +20,8 @@ use crate::{
 
 use super::super::{
     component::{
-        CancelInfoConfirmMsg, Frame, FrameMsg, PromptScreen, VerticalMenu, VerticalMenuChoiceMsg,
+        CancelInfoConfirmMsg, Frame, FrameMsg, PromptMsg, PromptScreen, VerticalMenu,
+        VerticalMenuChoiceMsg,
     },
     theme,
 };
@@ -128,7 +129,7 @@ impl SetNewPin {
         .with_swipe(SwipeDirection::Down, SwipeSettings::default())
         .with_swipe(SwipeDirection::Right, SwipeSettings::immediate())
         .map(|msg| match msg {
-            FrameMsg::Content(()) => Some(FlowMsg::Confirmed),
+            FrameMsg::Content(PromptMsg::Confirmed) => Some(FlowMsg::Confirmed),
             FrameMsg::Button(CancelInfoConfirmMsg::Cancelled) => Some(FlowMsg::Cancelled),
             _ => None,
         });
