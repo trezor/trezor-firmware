@@ -16,7 +16,6 @@ const ZLIB_CACHE_SLOTS: usize = 1;
 #[cfg(not(feature = "xframebuffer"))]
 const ZLIB_CACHE_SLOTS: usize = 3;
 
-#[cfg(not(feature = "xframebuffer"))]
 const RENDER_BUFF_SIZE: usize = (240 * 2 * 16) + ALIGN_PAD;
 
 #[cfg(feature = "ui_overlay")]
@@ -25,13 +24,9 @@ const IMAGE_BUFF_SIZE: usize = 240 * 240 + ALIGN_PAD;
 const IMAGE_BUFF_SIZE: usize = 2048 + ALIGN_PAD;
 
 pub type ImageBuff = [u8; IMAGE_BUFF_SIZE];
-
-#[cfg(not(feature = "xframebuffer"))]
 pub type RenderBuff = [u8; RENDER_BUFF_SIZE];
 
 pub type ImageBuffRef<'a> = RefMut<'a, ImageBuff>;
-
-#[cfg(not(feature = "xframebuffer"))]
 pub type RenderBuffRef<'a> = RefMut<'a, RenderBuff>;
 
 pub struct DrawingCache<'a> {
@@ -95,8 +90,10 @@ impl<'a> DrawingCache<'a> {
     }
 
     /// Returns a buffer used for ProgressiveRenderer slice
-    #[cfg(not(feature = "xframebuffer"))]
     pub fn render_buff(&self) -> Option<RenderBuffRef<'a>> {
+        #[cfg(feature = "xframebuffer")]
+        return None;
+        #[cfg(not(feature = "xframebuffer"))]
         self.render_buff.try_borrow_mut().ok()
     }
 

@@ -10,7 +10,6 @@ mod corner_highlight;
 mod display;
 #[cfg(feature = "ui_jpeg_decoder")]
 mod jpeg;
-#[cfg(not(feature = "xframebuffer"))]
 mod progressive_render;
 mod qrcode;
 mod rawimage;
@@ -33,7 +32,6 @@ pub use corner_highlight::CornerHighlight;
 pub use display::{render_on_canvas, render_on_display, unlock_bumps_on_failure, ConcreteRenderer};
 #[cfg(feature = "ui_jpeg_decoder")]
 pub use jpeg::JpegImage;
-#[cfg(not(feature = "xframebuffer"))]
 pub use progressive_render::ProgressiveRenderer;
 pub use qrcode::QrImage;
 pub use rawimage::RawImage;
