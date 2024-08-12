@@ -432,42 +432,39 @@ int zkp_ecdh_multiply(const ecdsa_curve *curve,
   }
 
   int result = 0;
+  secp256k1_context *context_writable = NULL;
+  const secp256k1_context *context_read_only = zkp_context_get_read_only();
+  secp256k1_pubkey public_key = {0};
 
   size_t public_key_length = get_public_key_length(public_key_bytes);
   if (public_key_length == 0) {
     result = 1;
+    goto end;
   }
 
-  const secp256k1_context *context_read_only = zkp_context_get_read_only();
-  secp256k1_pubkey public_key = {0};
-
-  if (result == 0) {
-    if (secp256k1_ec_pubkey_parse(context_read_only, &public_key,
-                                  public_key_bytes, public_key_length) != 1) {
-      result = 1;
-    }
+  if (secp256k1_ec_pubkey_parse(context_read_only, &public_key,
+                                public_key_bytes, public_key_length) != 1) {
+    result = 1;
+    goto end;
   }
 
-  secp256k1_context *context_writable = NULL;
-  if (result == 0) {
-    context_writable = zkp_context_acquire_writable();
-    if (context_writable == NULL) {
-      result = 1;
-    }
+  context_writable = zkp_context_acquire_writable();
+  if (context_writable == NULL) {
+    result = 3;
+    goto end;
   }
-  if (result == 0) {
-    if (secp256k1_context_writable_randomize(context_writable) != 0) {
-      result = 1;
-    }
+  if (secp256k1_context_writable_randomize(context_writable) != 0) {
+    result = 3;
+    goto end;
   }
 
-  if (result == 0) {
-    if (secp256k1_ecdh(context_writable, session_key, &public_key,
-                       private_key_bytes, plain_hash_function, NULL) != 1) {
-      result = 2;
-    }
+  if (secp256k1_ecdh(context_writable, session_key, &public_key,
+                     private_key_bytes, plain_hash_function, NULL) != 1) {
+    result = 2;
+    goto end;
   }
 
+end:
   if (context_writable) {
     zkp_context_release_writable();
     context_writable = NULL;
