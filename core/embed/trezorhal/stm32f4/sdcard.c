@@ -49,8 +49,11 @@
 #include <string.h>
 
 #include "irq.h"
+#include "mpu.h"
 #include "sdcard-set_clr_card_detect.h"
 #include "sdcard.h"
+
+#ifdef KERNEL_MODE
 
 #define SDMMC_CLK_ENABLE() __HAL_RCC_SDMMC1_CLK_ENABLE()
 #define SDMMC_CLK_DISABLE() __HAL_RCC_SDMMC1_CLK_DISABLE()
@@ -61,9 +64,9 @@ static DMA_HandleTypeDef sd_dma = {0};
 
 void DMA2_Stream3_IRQHandler(void) {
   IRQ_ENTER(DMA2_Stream3_IRQn);
-
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DEFAULT);
   HAL_DMA_IRQHandler(&sd_dma);
-
+  mpu_restore(mpu_mode);
   IRQ_EXIT(DMA2_Stream3_IRQn);
 }
 
@@ -231,9 +234,11 @@ uint64_t sdcard_get_capacity_in_bytes(void) {
 
 void SDIO_IRQHandler(void) {
   IRQ_ENTER(SDIO_IRQn);
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DEFAULT);
   if (sd_handle.Instance) {
     HAL_SD_IRQHandler(&sd_handle);
   }
+  mpu_restore(mpu_mode);
   IRQ_EXIT(SDIO_IRQn);
 }
 

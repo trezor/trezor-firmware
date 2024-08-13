@@ -20,6 +20,8 @@
 #ifndef TREZORHAL_MONOCTR
 #define TREZORHAL_MONOCTR
 
+#ifdef KERNEL_MODE
+
 // Monoctr module provides monotonic counter functionality
 
 #define MONOCTR_MAX_VALUE 63
@@ -39,5 +41,7 @@ secbool monoctr_write(monoctr_type_t type, uint8_t value);
 
 // Read the current value of the monotonic counter
 secbool monoctr_read(monoctr_type_t type, uint8_t* value);
+
+#endif  // KERNEL_MODE
 
 #endif

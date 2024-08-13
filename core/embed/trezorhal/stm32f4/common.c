@@ -36,6 +36,8 @@
 #include "backlight_pwm.h"
 #endif
 
+#ifdef KERNEL_MODE
+
 // reference RM0090 section 35.12.1 Figure 413
 #define USB_OTG_HS_DATA_FIFO_RAM (USB_OTG_HS_PERIPH_BASE + 0x20000U)
 #define USB_OTG_HS_DATA_FIFO_SIZE (4096U)
@@ -52,3 +54,5 @@ void clear_otg_hs_memory(void) {
   __HAL_RCC_USB_OTG_HS_CLK_DISABLE();  // disable USB OTG_HS peripheral clock as
                                        // the peripheral is not needed right now
 }
+
+#endif  // KERNEL_MODE

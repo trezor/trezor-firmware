@@ -20,6 +20,8 @@
 #include STM32_HAL_H
 #include "rng.h"
 
+#ifdef KERNEL_MODE
+
 #define SAMPLES 110
 #define TIMER_PERIOD 16640  // cca 10 KHz @ 180MHz
 
@@ -106,3 +108,5 @@ void consumption_mask_init(void) {
   HAL_TIM_Base_Start(&TIM8_Handle);
   HAL_TIM_PWM_Start(&TIM8_Handle, TIM_CHANNEL_1);
 }
+
+#endif  // KERNEL_MODE

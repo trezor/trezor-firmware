@@ -41,6 +41,8 @@
 #include "secure_aes.h"
 #endif
 
+#ifdef KERNEL_MODE
+
 // The APP namespace which is reserved for storage related values.
 #define APP_STORAGE 0x00
 
@@ -1765,3 +1767,5 @@ static secbool storage_upgrade_unlocked(const uint8_t *pin, size_t pin_len,
 
   return ret;
 }
+
+#endif  // KERNEL_MODE

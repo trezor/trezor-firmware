@@ -27,6 +27,8 @@
 #include "image.h"
 #include "model.h"
 
+#ifdef KERNEL_MODE
+
 #define FW_HASHING_CHUNK_SIZE 1024
 
 secbool firmware_calc_hash(const uint8_t* challenge, size_t challenge_len,
@@ -110,3 +112,5 @@ void firmware_invalidate_header(void) {
   }
   ensure(flash_lock_write(), NULL);
 }
+
+#endif  // KERNEL_MODE

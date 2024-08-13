@@ -49,11 +49,14 @@
 #include <string.h>
 
 #include "irq.h"
+#include "mpu.h"
 #include "sdcard.h"
 
 #define SDMMC_CLK_ENABLE() __HAL_RCC_SDMMC1_CLK_ENABLE()
 #define SDMMC_CLK_DISABLE() __HAL_RCC_SDMMC1_CLK_DISABLE()
 #define SDMMC_IRQn SDMMC1_IRQn
+
+#ifdef KERNEL_MODE
 
 static SD_HandleTypeDef sd_handle = {0};
 
@@ -234,9 +237,11 @@ uint64_t sdcard_get_capacity_in_bytes(void) {
 
 void SDMMC1_IRQHandler(void) {
   IRQ_ENTER(SDIO_IRQn);
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DEFAULT);
   if (sd_handle.Instance) {
     HAL_SD_IRQHandler(&sd_handle);
   }
+  mpu_restore(mpu_mode);
   IRQ_EXIT(SDIO_IRQn);
 }
 
@@ -333,3 +338,5 @@ secbool sdcard_write_blocks(const uint32_t *src, uint32_t block_num,
 
   return sectrue * (err == HAL_OK);
 }
+
+#endif  // KERNEL_MODE

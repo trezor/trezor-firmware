@@ -2,6 +2,8 @@
 
   .text
 
+#ifdef KERNEL_MODE
+
   .global memset_reg
   .type memset_reg, STT_FUNC
 memset_reg:
@@ -133,5 +135,7 @@ shutdown_privileged:
   msr control, r0 // jump to unprivileged mode
   ldr r0, =0
   b . // loop forever
+
+#endif
 
   .end

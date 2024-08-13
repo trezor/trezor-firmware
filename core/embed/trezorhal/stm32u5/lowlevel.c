@@ -19,6 +19,8 @@
 
 #include STM32_HAL_H
 
+#ifdef KERNEL_MODE
+
 #include "lowlevel.h"
 #include "common.h"
 #include "flash.h"
@@ -310,3 +312,5 @@ secbool reset_flags_check(void) {
 void reset_flags_reset(void) {
   RCC->CSR |= RCC_CSR_RMVF;  // clear the reset flags
 }
+
+#endif  // #ifdef KERNEL_MODE

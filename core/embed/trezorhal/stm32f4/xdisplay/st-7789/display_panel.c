@@ -34,6 +34,8 @@
 #include "panels/lx154a2482.h"
 #endif
 
+#ifdef KERNEL_MODE
+
 // using const volatile instead of #define results in binaries that change
 // only in 1-byte when the flag changes.
 // using #define leads compiler to over-optimize the code leading to bigger
@@ -248,3 +250,5 @@ void display_panel_rotate(int angle) {
   lx154a2482_rotate(angle, &g_window_padding);
 #endif
 }
+
+#endif  // KERNEL_MODE

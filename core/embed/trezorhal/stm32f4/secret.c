@@ -6,9 +6,7 @@
 #include "model.h"
 #include "mpu.h"
 
-#ifdef FANCY_FATAL_ERROR
-#include "rust_ui.h"
-#endif
+#ifdef KERNEL_MODE
 
 static secbool bootloader_locked_set = secfalse;
 static secbool bootloader_locked = secfalse;
@@ -134,3 +132,5 @@ void secret_prepare_fw(secbool allow_run_with_secret, secbool _trust_all) {
   }
 #endif
 }
+
+#endif  // KERNEL_MODE

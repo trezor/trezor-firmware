@@ -53,12 +53,15 @@ def stm32f4_common_files(env, defines, sources, paths):
         "embed/trezorhal/stm32f4/mpu.c",
         "embed/trezorhal/stm32f4/platform.c",
         "embed/trezorhal/stm32f4/secret.c",
+        "embed/trezorhal/stm32f4/syscall.c",
+        "embed/trezorhal/stm32f4/syscall_dispatch.c",
+        "embed/trezorhal/stm32f4/syscall_stubs.c",
         "embed/trezorhal/stm32f4/systick.c",
         "embed/trezorhal/stm32f4/systimer.c",
         "embed/trezorhal/stm32f4/time_estimate.c",
         "embed/trezorhal/stm32f4/random_delays.c",
         "embed/trezorhal/stm32f4/rng.c",
-        "embed/trezorhal/stm32f4/vectortable.s",
+        "embed/trezorhal/stm32f4/vectortable.S",
     ]
 
     # boardloader needs separate assembler for some function unencumbered by various FW+bootloader hacks
@@ -66,11 +69,11 @@ def stm32f4_common_files(env, defines, sources, paths):
     env_constraints = env.get("CONSTRAINTS")
     if env_constraints and "limited_util_s" in env_constraints:
         sources += [
-            "embed/trezorhal/stm32f4/limited_util.s",
+            "embed/trezorhal/stm32f4/limited_util.S",
         ]
     else:
         sources += [
-            "embed/trezorhal/stm32f4/util.s",
+            "embed/trezorhal/stm32f4/util.S",
         ]
 
     env.get("ENV")["SUFFIX"] = "stm32f4"

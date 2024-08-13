@@ -27,6 +27,8 @@
   ******************************************************************************
   */
 
+#ifdef KERNEL_MODE
+
 /* Includes ------------------------------------------------------------------*/
 #include "usbd_ctlreq.h"
 #include "usbd_ioreq.h"
@@ -783,5 +785,7 @@ static uint8_t USBD_GetLen(const uint8_t *buf)
 /**
   * @}
   */
+
+#endif  // KERNEL_MODE
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
