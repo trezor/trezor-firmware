@@ -20,9 +20,13 @@
 #ifndef TREZORHAL_FWUTILS_H
 #define TREZORHAL_FWUTILS_H
 
+#ifdef KERNEL_MODE
+
 // Invalidates the firmware by erasing the first 1KB of the firmware area.
 //
 // Note: only works when write access to firmware area is enabled by MPU
 void invalidate_firmware(void);
+
+#endif  // KERNEL_MODE
 
 #endif  // TREZORHAL_FWUTILS_H

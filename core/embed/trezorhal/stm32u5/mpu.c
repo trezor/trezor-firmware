@@ -18,10 +18,14 @@
  */
 
 #include STM32_HAL_H
+#include "mpu.h"
 #include <stdbool.h>
 #include "common.h"
+#include "irq.h"
 #include "model.h"
 #include "stm32u5xx_ll_cortex.h"
+
+#ifdef KERNEL_MODE
 
 // region type
 #define MPUX_TYPE_FLASH_CODE 0
@@ -112,6 +116,7 @@ static void mpu_set_attributes(void) {
 #define BOARDLOADER_SIZE SIZE_48K
 #define BOOTLOADER_SIZE BOOTLOADER_IMAGE_MAXSIZE
 #define FIRMWARE_SIZE FIRMWARE_IMAGE_MAXSIZE
+#define COREAPP_SIZE (FIRMWARE_IMAGE_MAXSIZE - KERNEL_SIZE)
 #define STORAGE_START \
   (FLASH_BASE + SECRET_SIZE + BOARDLOADER_SIZE + BOOTLOADER_SIZE)
 #define STORAGE_SIZE NORCOW_SECTOR_SIZE* STORAGE_AREAS_COUNT
@@ -254,4 +259,133 @@ void mpu_config_prodtest(void) {
   HAL_MPU_Enable(LL_MPU_CTRL_HARDFAULT_NMI);
 }
 
-void mpu_config_off(void) { HAL_MPU_Disable(); }
+#define KERNEL_RAM_START (SRAM2_BASE - SIZE_16K)
+#define KERNEL_RAM_SIZE (SIZE_24K)
+
+#define COREAPP_RAM1_START SRAM1_BASE
+#define COREAPP_RAM1_SIZE (SIZE_192K - SIZE_16K)
+
+#define COREAPP_RAM2_START (SRAM2_BASE + SIZE_8K)
+#define COREAPP_RAM2_SIZE (SRAM_SIZE - (SIZE_192K + SIZE_8K))
+
+typedef struct {
+  // Set if the driver is initialized
+  bool initialized;
+  // Current mode
+  mpu_mode_t mode;
+
+} mpu_driver_t;
+
+mpu_driver_t g_mpu_driver = {
+    .initialized = false,
+    .mode = MPU_MODE_DISABLED,
+};
+
+void mpu_init(void) {
+  mpu_driver_t* drv = &g_mpu_driver;
+
+  if (drv->initialized) {
+    return;
+  }
+
+  uint32_t irq_state = disable_irq();
+
+  HAL_MPU_Disable();
+
+  mpu_set_attributes();
+
+  // clang-format off
+  //   REGION    ADDRESS                   SIZE                TYPE       WRITE   UNPRIV
+  //SET_REGION( 0, KERNEL_START,             KERNEL_SIZE,        FLASH_CODE,   NO,    NO ); // Kernel Code
+  SET_REGION( 0, KERNEL_START,             KERNEL_SIZE,        FLASH_CODE,   NO,   YES ); // Kernel Code
+  SET_REGION( 1, KERNEL_RAM_START,         KERNEL_RAM_SIZE,    SRAM,        YES,    NO ); // Kernel RAM
+  SET_REGION( 2, COREAPP_START,            COREAPP_SIZE,       FLASH_CODE,   NO,   YES ); // CoreApp Code
+  SET_REGION( 3, GRAPHICS_START,           GRAPHICS_SIZE,      SRAM,        YES,   YES ); // Frame buffer or display interface
+  SET_REGION( 4, COREAPP_RAM1_START,       COREAPP_RAM1_SIZE,  SRAM,        YES,   YES ); // SRAM1
+  SET_REGION( 5, COREAPP_RAM2_START,       COREAPP_RAM2_SIZE,  SRAM,        YES,   YES ); // SRAM2/3/5
+  DIS_REGION( 6 );
+  DIS_REGION( 7 );
+  // clang-format on
+
+  drv->mode = MPU_MODE_DISABLED;
+  drv->initialized = true;
+
+  enable_irq(irq_state);
+}
+
+mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
+  mpu_driver_t* drv = &g_mpu_driver;
+
+  if (!drv->initialized) {
+    // Solves the issue when some IRQ handler tries to reconfigure
+    // MPU before it is initialized
+    return MPU_MODE_DISABLED;
+  }
+
+  uint32_t irq_state = disable_irq();
+
+  HAL_MPU_Disable();
+
+  // clang-format off
+  switch (mode) {
+    case MPU_MODE_DISABLED:
+      break;
+    case MPU_MODE_ASSETS:
+       //     REGION   ADDRESS                 SIZE                TYPE       WRITE   UNPRIV
+      SET_REGION( 6, ASSETS_START,             ASSETS_SIZE,        FLASH_DATA,  YES,    NO ); // Assets
+      SET_REGION( 7, PERIPH_BASE_NS,           SIZE_512M,          PERIPHERAL,  YES,    NO ); // Peripherals
+      break;
+    case MPU_MODE_STORAGE:
+      SET_REGION( 6, STORAGE_START,            STORAGE_SIZE,       FLASH_DATA,  YES,    NO ); // Storage
+      SET_REGION( 7, PERIPH_BASE_NS,           SIZE_512M,          PERIPHERAL,  YES,    NO ); // Peripherals
+      break;
+    case MPU_MODE_OTP:
+      SET_REGION( 6, FLASH_OTP_BASE,           OTP_AND_ID_SIZE,    FLASH_DATA,   NO,    NO ); // OTP + device ID
+      SET_REGION( 7, PERIPH_BASE_NS,           SIZE_512M,          PERIPHERAL,  YES,    NO ); // Peripherals
+      break;
+    case MPU_MODE_BOARDLOADER:
+      SET_REGION( 6, BOARDLOADER_START,        BOARDLOADER_SIZE,   FLASH_DATA,   NO,    NO ); // Boardloader
+      SET_REGION( 7, PERIPH_BASE_NS,           SIZE_512M,          PERIPHERAL,  YES,    NO ); // Peripherals
+      break;
+    case MPU_MODE_BOOTLOADER:
+      SET_REGION( 6, BOOTLOADER_START,         L3_PREV_SIZE_BLD,   FLASH_DATA,  YES,    NO ); // Bootloader + Storage
+      SET_REGION( 7, PERIPH_BASE_NS,           SIZE_512M,          PERIPHERAL,  YES,    NO ); // Peripherals
+      break;
+    case MPU_MODE_APP:
+      SET_REGION( 6, ASSETS_START,             ASSETS_SIZE,        FLASH_DATA,   NO,   YES ); // Assets
+      SET_REGION( 7, 0x5002B000,               SIZE_3K,            PERIPHERAL,  YES,   YES ); // Peripherals (DMA2D)
+      break;
+    case MPU_MODE_DEFAULT:
+    default:
+      SET_REGION( 6, SRAM4_BASE,               SIZE_16K,           SRAM,        YES,    NO ); // SRAM4
+      SET_REGION( 7, PERIPH_BASE_NS,           SIZE_512M,          PERIPHERAL,  YES,    NO ); // Peripherals
+      break;
+  }
+  // clang-format on
+
+  if (mode != MPU_MODE_DISABLED) {
+    HAL_MPU_Enable(LL_MPU_CTRL_HARDFAULT_NMI);
+  }
+
+  mpu_mode_t prev_mode = drv->mode;
+  drv->mode = mode;
+
+  enable_irq(irq_state);
+
+  return prev_mode;
+}
+
+void mpu_restore(mpu_mode_t mode) { mpu_reconfig(mode); }
+
+void mpu_config_off(void) {
+  mpu_driver_t* drv = &g_mpu_driver;
+
+  uint32_t irq_state = disable_irq();
+
+  HAL_MPU_Disable();
+  drv->mode = MPU_MODE_DISABLED;
+
+  enable_irq(irq_state);
+}
+
+#endif  // KERNEL_MODE

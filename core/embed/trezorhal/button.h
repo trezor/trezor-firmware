@@ -28,7 +28,12 @@
 #define BTN_LEFT 0
 #define BTN_RIGHT 1
 
+#ifdef KERNEL_MODE
+
 void button_init(void);
+
+#endif
+
 uint32_t button_read(void);
 char button_state_left(void);
 char button_state_right(void);

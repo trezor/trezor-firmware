@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef KERNEL_MODE
+
 #include "common.h"
 
 #include "usb_internal.h"
@@ -586,3 +588,5 @@ static const USBD_ClassTypeDef usb_vcp_class = {
 };
 
 static const USBD_ClassTypeDef usb_vcp_data_class = {};
+
+#endif  // KERNEL_MODE

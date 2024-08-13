@@ -21,6 +21,8 @@
 #include TREZOR_BOARD
 #include "stm32f4xx_ll_cortex.h"
 
+#ifdef KERNEL_MODE
+
 // http://infocenter.arm.com/help/topic/com.arm.doc.dui0552a/BABDJJGF.html
 #define MPU_RASR_ATTR_FLASH (MPU_RASR_C_Msk)
 #define MPU_RASR_ATTR_SRAM (MPU_RASR_C_Msk | MPU_RASR_S_Msk)
@@ -308,3 +310,5 @@ void mpu_config_prodtest(void) {
   __asm__ volatile("dsb");
   __asm__ volatile("isb");
 }
+
+#endif  // KERNEL_MODE

@@ -1,7 +1,10 @@
 #include "bg_copy.h"
 #include "irq.h"
+#include "mpu.h"
 
 #include STM32_HAL_H
+
+#ifdef KERNEL_MODE
 
 #define MAX_DATA_SIZE 0xFFF0
 
@@ -33,6 +36,8 @@ void HAL_DMA_XferCpltCallback(DMA_HandleTypeDef *hdma) {
 }
 
 void GPDMA1_Channel0_IRQHandler(void) {
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DEFAULT);
+
   if ((DMA_Handle.Instance->CSR & DMA_CSR_TCF) == 0) {
     // error, abort the transfer and allow the next one to start
     dma_data_transferred = 0;
@@ -53,6 +58,8 @@ void GPDMA1_Channel0_IRQHandler(void) {
       bg_copy_callback();
     }
   }
+
+  mpu_restore(mpu_mode);
 }
 
 bool bg_copy_pending(void) { return dma_transfer_remaining > 0; }
@@ -116,3 +123,5 @@ void bg_copy_abort(void) {
   data_src = NULL;
   data_dst = NULL;
 }
+
+#endif  // KERNEL_MODE

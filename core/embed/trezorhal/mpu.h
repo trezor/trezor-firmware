@@ -20,6 +20,8 @@
 #ifndef __MPU_H__
 #define __MPU_H__
 
+#ifdef KERNEL_MODE
+
 void mpu_config_off(void);
 void mpu_config_boardloader(void);
 void mpu_config_bootloader(void);
@@ -27,5 +29,24 @@ void mpu_config_firmware_initial(void);
 void mpu_config_firmware(void);
 void mpu_config_prodtest_initial(void);
 void mpu_config_prodtest(void);
+
+typedef enum {
+  MPU_MODE_DISABLED,
+  MPU_MODE_DEFAULT,
+  MPU_MODE_ASSETS,
+  MPU_MODE_STORAGE,
+  MPU_MODE_OTP,
+  MPU_MODE_BOOTLOADER,
+  MPU_MODE_BOARDLOADER,
+  MPU_MODE_APP,
+} mpu_mode_t;
+
+void mpu_init(void);
+
+mpu_mode_t mpu_reconfig(mpu_mode_t mode);
+
+void mpu_restore(mpu_mode_t mode);
+
+#endif  // KERNEL_MODE
 
 #endif

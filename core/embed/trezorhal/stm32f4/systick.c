@@ -21,12 +21,15 @@
 #include <stddef.h>
 
 #include "irq.h"
+#include "mpu.h"
 #include "platform.h"
 #include "systemview.h"
 
 #include "systick.h"
 #include "systick_internal.h"
 #include "systimer.h"
+
+#ifdef KERNEL_MODE
 
 // SysTick driver state
 typedef struct {
@@ -145,6 +148,7 @@ uint64_t systick_us(void) {
 
 void SysTick_Handler(void) {
   SEGGER_SYSVIEW_RecordEnterISR();
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DEFAULT);
 
   systick_driver_t* drv = &g_systick_driver;
 
@@ -165,8 +169,11 @@ void SysTick_Handler(void) {
     systimer_dispatch_expired_timers(drv->cycles);
   }
 
+  mpu_restore(mpu_mode);
   SEGGER_SYSVIEW_RecordExitISR();
 }
+
+#endif  // KERNEL_MODE
 
 void systick_delay_us(uint64_t us) {
   uint64_t delay_cycles = systick_us_to_cycles(us);

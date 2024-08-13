@@ -32,6 +32,7 @@
 
 #include "gfx_bitblt.h"
 #include "irq.h"
+#include "mpu.h"
 
 #ifndef BOARDLOADER
 #include "bg_copy.h"
@@ -40,6 +41,8 @@
 #ifndef STM32U5
 #error Framebuffer only supported on STM32U5 for now
 #endif
+
+#ifdef KERNEL_MODE
 
 // The following code supports only 1 or 2 frame buffers
 _Static_assert(FRAME_BUFFER_COUNT == 1 || FRAME_BUFFER_COUNT == 2);
@@ -95,7 +98,7 @@ static void bg_copy_callback(void) {
 }
 
 // Interrupt routing handling TE signal
-void DISPLAY_TE_INTERRUPT_HANDLER(void) {
+static void display_te_interrupt_handler(void) {
   display_driver_t *drv = &g_display_driver;
 
   __HAL_GPIO_EXTI_CLEAR_FLAG(DISPLAY_TE_PIN);
@@ -132,6 +135,12 @@ void DISPLAY_TE_INTERRUPT_HANDLER(void) {
       // This is an invalid state and we should never get here
       break;
   }
+}
+
+void DISPLAY_TE_INTERRUPT_HANDLER(void) {
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DEFAULT);
+  display_te_interrupt_handler();
+  mpu_restore(mpu_mode);
 }
 #endif
 
@@ -276,6 +285,8 @@ void display_ensure_refreshed(void) {
   }
 #endif
 }
+
+#endif  // KERNEL_MODE
 
 void display_fill(const gfx_bitblt_t *bb) {
   display_fb_info_t fb = display_get_frame_buffer();

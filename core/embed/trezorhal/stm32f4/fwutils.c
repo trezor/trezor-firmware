@@ -25,6 +25,8 @@
 #include "flash_area.h"
 #include "model.h"
 
+#ifdef KERNEL_MODE
+
 void invalidate_firmware(void) {
 #ifdef STM32U5
   // on stm32u5, we need to disable the instruction cache before erasing the
@@ -41,3 +43,5 @@ void invalidate_firmware(void) {
   }
   ensure(flash_lock_write(), NULL);
 }
+
+#endif  // KERNEL_MODE

@@ -47,6 +47,8 @@ boot_command_t bootargs_get_command() { return g_boot_command_shadow; }
 
 const boot_args_t* bootargs_get_args() { return &g_boot_args; }
 
+#ifdef KERNEL_MODE
+
 void __attribute__((noreturn)) secure_shutdown(void) {
   display_deinit(DISPLAY_RETAIN_CONTENT);
 
@@ -84,3 +86,5 @@ void reboot_to_bootloader(void) {
 }
 
 void reboot(void) { NVIC_SystemReset(); }
+
+#endif  // KERNEL_MODE

@@ -39,6 +39,8 @@
 #error "Incompatible display resolution"
 #endif
 
+#ifdef KERNEL_MODE
+
 // Display driver instance
 display_driver_t g_display_driver = {
     .initialized = false,
@@ -170,3 +172,5 @@ int display_get_orientation(void) {
 
   return drv->orientation_angle;
 }
+
+#endif  // KERNEL_MODE
