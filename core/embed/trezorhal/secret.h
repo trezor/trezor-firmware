@@ -1,6 +1,10 @@
+#ifndef TREZORHAL_SECRET_H
+#define TREZORHAL_SECRET_H
 
 #include <stdint.h>
 #include "secbool.h"
+
+#ifdef KERNEL_MODE
 
 #define SECRET_HEADER_MAGIC "TRZS"
 #define SECRET_HEADER_LEN 16
@@ -13,11 +17,6 @@
 
 #define SECRET_BHK_OFFSET (1024 * 8)
 #define SECRET_BHK_LEN 32
-
-// Checks if bootloader is locked, that is the secret storage contains optiga
-// pairing secret on platforms where access to the secret storage cannot be
-// restricted for unofficial firmware
-secbool secret_bootloader_locked(void);
 
 // Writes data to the secret storage
 void secret_write(const uint8_t* data, uint32_t offset, uint32_t len);
@@ -70,3 +69,12 @@ void secret_bhk_regenerate(void);
 // Disables access to the secret storage until next reset, if possible
 // This function is called by the bootloader before starting the firmware
 void secret_prepare_fw(secbool allow_run_with_secret, secbool trust_all);
+
+#endif  // KERNEL_MODE
+
+// Checks if bootloader is locked, that is the secret storage contains optiga
+// pairing secret on platforms where access to the secret storage cannot be
+// restricted for unofficial firmware
+secbool secret_bootloader_locked(void);
+
+#endif  // TREZORHAL_SECRET_H

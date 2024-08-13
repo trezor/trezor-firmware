@@ -24,6 +24,8 @@
 #include "common.h"
 #include "flash.h"
 
+#ifdef KERNEL_MODE
+
 #if defined STM32F427xx || defined STM32F429xx
 #define FLASH_SECTOR_COUNT 24
 #elif defined STM32F405x
@@ -198,3 +200,5 @@ secbool flash_write_block(uint16_t sector, uint32_t offset,
                           const flash_block_t block) {
   return flash_write_word(sector, offset, block[0]);
 }
+
+#endif  // KERNEL_MODE

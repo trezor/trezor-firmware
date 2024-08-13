@@ -31,6 +31,8 @@
 #include "optiga_hal.h"
 #include "tls_prf.h"
 
+#ifdef KERNEL_MODE
+
 #include TREZOR_BOARD
 
 // Maximum possible packet size that can be transmitted.
@@ -812,3 +814,5 @@ optiga_result optiga_sec_chan_handshake(const uint8_t *secret,
   sec_chan_established = true;
   return OPTIGA_SUCCESS;
 }
+
+#endif  // KERNEL_MODE

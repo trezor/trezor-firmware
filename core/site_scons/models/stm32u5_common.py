@@ -64,14 +64,17 @@ def stm32u5_common_files(env, defines, sources, paths):
         "embed/trezorhal/stm32u5/platform.c",
         "embed/trezorhal/stm32u5/secret.c",
         "embed/trezorhal/stm32u5/secure_aes.c",
+        "embed/trezorhal/stm32u5/syscall.c",
+        "embed/trezorhal/stm32u5/syscall_dispatch.c",
+        "embed/trezorhal/stm32u5/syscall_stubs.c",
         "embed/trezorhal/stm32u5/systick.c",
-        "embed/trezorhal/stm32f4/systimer.c",
+        "embed/trezorhal/stm32u5/systimer.c",
         "embed/trezorhal/stm32u5/random_delays.c",
         "embed/trezorhal/stm32u5/rng.c",
         "embed/trezorhal/stm32u5/tamper.c",
         "embed/trezorhal/stm32u5/time_estimate.c",
         "embed/trezorhal/stm32u5/trustzone.c",
-        "embed/trezorhal/stm32u5/vectortable.s",
+        "embed/trezorhal/stm32u5/vectortable.S",
     ]
 
     # boardloader needs separate assembler for some function unencumbered by various FW+bootloader hacks
@@ -79,11 +82,11 @@ def stm32u5_common_files(env, defines, sources, paths):
     env_constraints = env.get("CONSTRAINTS")
     if env_constraints and "limited_util_s" in env_constraints:
         sources += [
-            "embed/trezorhal/stm32u5/limited_util.s",
+            "embed/trezorhal/stm32u5/limited_util.S",
         ]
     else:
         sources += [
-            "embed/trezorhal/stm32u5/util.s",
+            "embed/trezorhal/stm32u5/util.S",
         ]
 
     env.get("ENV")["SUFFIX"] = "stm32u5"

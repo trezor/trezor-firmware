@@ -23,6 +23,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#ifdef KERNEL_MODE
+
 // Initializes systick subsystem
 //
 // Before calling this function, none of the other functions
@@ -40,6 +42,8 @@ void systick_deinit(void);
 // The function should be called after the system clock frequency
 // has been changed.
 void systick_update_freq(void);
+
+#endif  // KERNEL_MODE
 
 // ----------------------------------------------------------------------------
 // Tick functions

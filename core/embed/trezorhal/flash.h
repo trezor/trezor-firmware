@@ -23,10 +23,9 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#include "flash_ll.h"
 #include "platform.h"
 #include "secbool.h"
-
-#include "flash_ll.h"
 
 void flash_init(void);
 

@@ -23,6 +23,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#ifdef KERNEL_MODE
+
 // Initializes systimer subsystem
 //
 // Before calling this function, none of the other functions
@@ -89,5 +91,7 @@ systimer_key_t systimer_suspend(systimer_t* timer);
 // The timer callback invocation is resumed. The `key` should
 // be the same as returned by `timer_suspend()`.
 void systimer_resume(systimer_t* timer, systimer_key_t key);
+
+#endif  // KERNEL_MODE
 
 #endif  // TREZORHAL_SYSTIMER_H

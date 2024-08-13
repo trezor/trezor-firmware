@@ -23,8 +23,12 @@
 #include "bootutils.h"
 #include "common.h"
 #include "display.h"
+#include "image.h"
 #include "irq.h"
+#include "model.h"
 #include "mpu.h"
+
+#ifdef KERNEL_MODE
 
 #ifdef STM32U5
 // Persistent variable that holds the 'command' for the next reboot.
@@ -131,3 +135,5 @@ void __attribute__((noreturn)) secure_shutdown(void) {
   for (;;)
     ;
 }
+
+#endif  // KERNEL_MODE

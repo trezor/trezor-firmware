@@ -29,6 +29,8 @@
 
 #include "stm32f4xx_ll_cortex.h"
 
+#ifdef KERNEL_MODE
+
 // http://infocenter.arm.com/help/topic/com.arm.doc.dui0552a/BABDJJGF.html
 #define MPU_RASR_ATTR_FLASH_CODE (MPU_RASR_C_Msk)
 #define MPU_RASR_ATTR_FLASH_DATA (MPU_RASR_C_Msk | MPU_RASR_XN_Msk)
@@ -354,3 +356,5 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
 }
 
 void mpu_restore(mpu_mode_t mode) { mpu_reconfig(mode); }
+
+#endif  // KERNEL_MODE
