@@ -29,6 +29,8 @@
 
 #include STM32_HAL_H
 
+#ifdef KERNEL_MODE
+
 // Maximum amplitude of the vibration effect
 // (DRV2625 supports 7-bit amplitude)
 #define MAX_AMPLITUDE 127
@@ -324,3 +326,5 @@ bool haptic_play_custom(int8_t amplitude_pct, uint16_t duration_ms) {
 bool haptic_test(uint16_t duration_ms) {
   return haptic_play_rtp(PRODTEST_EFFECT_AMPLITUDE, duration_ms);
 }
+
+#endif  // KERNEL_MODE

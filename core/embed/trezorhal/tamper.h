@@ -22,6 +22,8 @@
 
 #include <stdint.h>
 
+#ifdef KERNEL_MODE
+
 // Tamper module enables the internal tamper detection on STM32 microcontroller
 // as well as external tamper input if it's available on the device
 
@@ -34,5 +36,7 @@ void tamper_init(void);
 // Only TAMP_CR1_ITAMP5E (RTC) and TAMP_CR1_ITAMP8E (monotonic counter)
 // are supported
 void tamper_test(uint32_t tamper_type);
+
+#endif  // KERNEL_MODE
 
 #endif  // TREZOR_HAL_TAMPER_H

@@ -19,8 +19,11 @@
 
 #include <error_handling.h>
 #include <irq.h>
+#include <mpu.h>
 #include <tamper.h>
 #include STM32_HAL_H
+
+#ifdef KERNEL_MODE
 
 // Fixes a typo in CMSIS Device library for STM32U5
 #undef TAMP_CR3_ITAMP7NOER_Msk
@@ -234,6 +237,8 @@ void tamper_init(void) {
 // Interrupt handle for all tamper events
 // It displays an error message
 void TAMP_IRQHandler(void) {
+  mpu_reconfig(MPU_MODE_DEFAULT);
+
   uint32_t sr = TAMP->SR;
   TAMP->SCR = sr;
 
@@ -271,3 +276,5 @@ void TAMP_IRQHandler(void) {
   error_shutdown_ex("INTERNAL TAMPER", reason, NULL);
 #endif
 }
+
+#endif  // KERNEL_MODE

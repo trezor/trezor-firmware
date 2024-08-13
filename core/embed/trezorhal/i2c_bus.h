@@ -24,6 +24,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#ifdef KERNEL_MODE
+
 // I2C bus abstraction
 typedef struct i2c_bus i2c_bus_t;
 // I2C packet (series of I2C operations)
@@ -181,5 +183,7 @@ void example() {
     i2c_bus_close(&bus);
 }
 */
+
+#endif  // KERNEL_MODE
 
 #endif  // TREZORHAL_I2C_BUS_H

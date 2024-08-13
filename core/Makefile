@@ -18,6 +18,8 @@ BOOTLOADER_CI_BUILD_DIR   = $(BUILD_DIR)/bootloader_ci
 BOOTLOADER_EMU_BUILD_DIR  = $(BUILD_DIR)/bootloader_emu
 PRODTEST_BUILD_DIR    = $(BUILD_DIR)/prodtest
 REFLASH_BUILD_DIR     = $(BUILD_DIR)/reflash
+KERNEL_BUILD_DIR      = $(BUILD_DIR)/kernel
+COREAPP_BUILD_DIR     = $(BUILD_DIR)/coreapp
 FIRMWARE_BUILD_DIR    = $(BUILD_DIR)/firmware
 UNIX_BUILD_DIR        = $(BUILD_DIR)/unix
 RUST_BUILD_DIR        = $(BUILD_DIR)/rust
@@ -77,6 +79,9 @@ endif
 FLASH_START              = $(shell layout_parser ${TREZOR_MODEL} FLASH_START)
 BOARDLOADER_START        = $(shell layout_parser ${TREZOR_MODEL} BOARDLOADER_START)
 BOOTLOADER_START         = $(shell layout_parser ${TREZOR_MODEL} BOOTLOADER_START)
+KERNEL_START             = $(shell layout_parser ${TREZOR_MODEL} KERNEL_START)
+COREAPP_START            = $(shell layout_parser ${TREZOR_MODEL} COREAPP_START)
+COREAPP_P2_START         = $(shell layout_parser ${TREZOR_MODEL} COREAPP_P2_START)
 FIRMWARE_START           = $(shell layout_parser ${TREZOR_MODEL} FIRMWARE_START)
 FIRMWARE_P2_START        = $(shell layout_parser ${TREZOR_MODEL} FIRMWARE_P2_START)
 STORAGE_1_OFFSET         = $(shell layout_parser ${TREZOR_MODEL} STORAGE_1_OFFSET)
@@ -267,6 +272,20 @@ build_reflash: ## build reflash firmware + reflash image
 	dd if=build/boardloader/boardloader.bin of=$(REFLASH_BUILD_DIR)/sdimage.bin bs=1 seek=0
 	dd if=build/bootloader/bootloader.bin of=$(REFLASH_BUILD_DIR)/sdimage.bin bs=1 seek=49152
 
+build_kernel: ## build kernel image
+	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" \
+		TREZOR_MODEL="$(TREZOR_MODEL)" \
+		BOOTLOADER_QA="$(BOOTLOADER_QA)" BOOTLOADER_DEVEL="$(BOOTLOADER_DEVEL)" \
+		$(KERNEL_BUILD_DIR)/kernel.bin
+
+build_coreapp: templates build_cross ## build coreapp with frozen modules
+	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" \
+		TREZOR_MODEL="$(TREZOR_MODEL)" CMAKELISTS="$(CMAKELISTS)" \
+		PYOPT="$(PYOPT)" BITCOIN_ONLY="$(BITCOIN_ONLY)" \
+		BOOTLOADER_QA="$(BOOTLOADER_QA)" BOOTLOADER_DEVEL="$(BOOTLOADER_DEVEL)" \
+		DISABLE_OPTIGA="$(DISABLE_OPTIGA)" THP="$(THP)" NEW_RENDERING="$(NEW_RENDERING)" \
+		$(COREAPP_BUILD_DIR)/coreapp.bin
+
 build_firmware: templates build_cross ## build firmware with frozen modules
 	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" \
 		TREZOR_MODEL="$(TREZOR_MODEL)" CMAKELISTS="$(CMAKELISTS)" \
@@ -319,6 +338,12 @@ clean_prodtest: ## clean prodtest build
 clean_reflash: ## clean reflash build
 	rm -rf $(REFLASH_BUILD_DIR)
 
+clean_kernel: ## clean kernel build
+	rm -rf $(KERNEL_BUILD_DIR)
+
+clean_coreapp: ## clean coreapp build
+	rm -rf $(COREAPP_BUILD_DIR) $(RUST_BUILD_DIR)
+
 clean_firmware: ## clean firmware build
 	rm -rf $(FIRMWARE_BUILD_DIR) $(RUST_BUILD_DIR)
 
@@ -343,6 +368,17 @@ flash_bootloader_ci: $(BOOTLOADER_CI_BUILD_DIR)/bootloader.bin ## flash CI bootl
 
 flash_prodtest: $(PRODTEST_BUILD_DIR)/prodtest.bin ## flash prodtest using OpenOCD
 	$(OPENOCD) -c "init; reset halt; flash write_image erase $< $(FIRMWARE_START); exit"
+
+flash_kernel: $(KERNEL_BUILD_DIR)/kernel.bin ## flash kernel using OpenOCD
+	$(OPENOCD) -c "init; reset halt; flash write_image erase $< $(KERNEL_START); exit"
+
+flash_coreapp: $(COREAPP_BUILD_DIR)/coreapp.bin ## flash coreapp using OpenOCD
+ifeq ($(MCU),$(filter $(MCU),STM32F4))
+	$(OPENOCD) -c "init; reset halt; flash write_image erase $<.p1 $(COREAPP_START); flash write_image erase $<.p2 $(COREAPP_P2_START); exit"
+
+else
+	$(OPENOCD) -c "init; reset halt; flash write_image erase $< $(COREAPP_START); exit"
+endif
 
 flash_firmware: $(FIRMWARE_BUILD_DIR)/firmware.bin ## flash firmware using OpenOCD
 ifeq ($(MCU),$(filter $(MCU),STM32F4))

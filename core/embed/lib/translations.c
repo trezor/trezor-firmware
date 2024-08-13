@@ -7,6 +7,8 @@
 #include "model.h"
 #include "mpu.h"
 
+#ifdef KERNEL_MODE
+
 bool translations_write(const uint8_t* data, uint32_t offset, uint32_t len) {
   uint32_t size = translations_area_bytesize();
   if (offset > size || size - offset < len) {
@@ -44,3 +46,5 @@ void translations_erase(void) {
 uint32_t translations_area_bytesize(void) {
   return flash_area_get_size(&TRANSLATIONS_AREA);
 }
+
+#endif  // KERNEL_MODE

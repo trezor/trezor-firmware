@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include "secbool.h"
 
+#ifdef KERNEL_MODE
+
 // Initializes the touch driver
 //
 // Powers on and initializes touch driver controller.
@@ -47,6 +49,8 @@ secbool touch_set_sensitivity(uint8_t value);
 //
 // The function should not be used together with `touch_get_event()`.
 secbool touch_activity(void);
+
+#endif  // KERNEL_MODE
 
 // Returns the last event in packed 32-bit format
 //

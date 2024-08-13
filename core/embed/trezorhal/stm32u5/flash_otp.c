@@ -24,6 +24,8 @@
 #include "flash.h"
 #include "mpu.h"
 
+#ifdef KERNEL_MODE
+
 void flash_otp_init() {
   // intentionally left empty
 }
@@ -125,3 +127,5 @@ secbool flash_otp_is_locked(uint8_t block) {
 
   return is_locked;
 }
+
+#endif  // KERNEL_MODE

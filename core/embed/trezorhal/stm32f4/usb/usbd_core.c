@@ -27,6 +27,8 @@
   ******************************************************************************
   */
 
+#ifdef KERNEL_MODE
+
 /* Includes ------------------------------------------------------------------*/
 #include "usbd_core.h"
 
@@ -575,6 +577,8 @@ USBD_StatusTypeDef USBD_LL_DevDisconnected(USBD_HandleTypeDef  *pdev)
 /**
 * @}
 */
+
+#endif  // KERNEL_MODE
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
 

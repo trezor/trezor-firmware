@@ -2,6 +2,8 @@
 #include "button.h"
 #include TREZOR_BOARD
 
+#ifdef KERNEL_MODE
+
 static char last_left = 0, last_right = 0;
 
 void button_init(void) {
@@ -45,3 +47,5 @@ uint32_t button_read(void) {
 char button_state_left(void) { return last_left; }
 
 char button_state_right(void) { return last_right; }
+
+#endif  // KERNEL_MODE

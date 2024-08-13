@@ -10,8 +10,12 @@ typedef struct {
   uint8_t buffer[HASH_SHA256_BUFFER_SIZE]; /*!< data being processed */
 } hash_sha265_context_t;
 
+#ifdef KERNEL_MODE
+
 // Initialize the hash processor
 void hash_processor_init(void);
+
+#endif
 
 // Calculate SHA256 hash of data
 // for best performance, data should be 32-bit aligned - as this allows DMA to

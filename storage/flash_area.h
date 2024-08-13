@@ -56,10 +56,12 @@ typedef struct {
 
 uint32_t flash_area_get_size(const flash_area_t *area);
 
-uint16_t flash_area_total_sectors(const flash_area_t *area);
-
 const void *flash_area_get_address(const flash_area_t *area, uint32_t offset,
                                    uint32_t size);
+
+#ifdef KERNEL_MODE
+
+uint16_t flash_area_total_sectors(const flash_area_t *area);
 
 #if defined FLASH_BIT_ACCESS
 secbool __wur flash_area_write_byte(const flash_area_t *area, uint32_t offset,
@@ -105,5 +107,7 @@ secbool __wur flash_area_erase_bulk(const flash_area_t *area, int count,
 // the erased sector
 secbool __wur flash_area_erase_partial(const flash_area_t *area,
                                        uint32_t offset, uint32_t *bytes_erased);
+
+#endif  // KERNEL_MODE
 
 #endif  // FLASH_AREA_H

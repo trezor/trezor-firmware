@@ -20,6 +20,8 @@
 #include <stdbool.h>
 #include "flash_area.h"
 
+#ifdef KERNEL_MODE
+
 #define COUNTER_TAIL_WORDS 0
 // Small items are encoded more efficiently.
 #define NORCOW_SMALL_ITEM_SIZE \
@@ -325,3 +327,5 @@ secbool norcow_update_bytes(const uint16_t key, const uint8_t *data,
   ensure(flash_lock_write(), NULL);
   return sectrue;
 }
+
+#endif  // KERNEL_MODE
