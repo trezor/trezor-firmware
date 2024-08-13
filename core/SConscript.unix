@@ -94,6 +94,7 @@ CPPPATH_MOD += [
     'vendor/trezor-crypto',
 ]
 CPPDEFINES_MOD += [
+    'KERNEL_MODE',
     'AES_128',
     'AES_192',
     'USE_INSECURE_PRNG',
@@ -420,6 +421,7 @@ SOURCE_MICROPYTHON = [
 SOURCE_UNIX = [
     'embed/trezorhal/unix/bootutils.c',
     'embed/trezorhal/unix/common.c',
+    'embed/trezorhal/unix/entropy.c',
     'embed/trezorhal/unix/flash_otp.c',
     'embed/trezorhal/unix/flash.c',
     'embed/trezorhal/unix/fwutils.c',

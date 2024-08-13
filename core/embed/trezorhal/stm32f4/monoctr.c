@@ -23,6 +23,8 @@
 #include "mpu.h"
 #include "string.h"
 
+#ifdef KERNEL_MODE
+
 #if !PRODUCTION
 // we don't want to override OTP on development boards
 // lets mock this functionality
@@ -139,3 +141,5 @@ secbool monoctr_read(monoctr_type_t type, uint8_t* value) {
 
   return sectrue;
 }
+
+#endif  // KERNEL_MODE

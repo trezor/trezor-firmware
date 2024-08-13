@@ -39,6 +39,8 @@
 
 #include "common.h"
 
+#ifdef KERNEL_MODE
+
 #include STM32_HAL_H
 
 #define RESET_DATA_LEN 18  // >80us no pulse before sending data
@@ -166,3 +168,5 @@ void rgb_led_init(void) {
   // turns off the LED
   rgb_led_set_color(0x000000);
 }
+
+#endif  // KERNEL_MODE

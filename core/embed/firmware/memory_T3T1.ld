@@ -100,7 +100,6 @@ SECTIONS {
    __fb_start = .;
     *(.fb1*);
     *(.fb2*);
-    *(.framebuffer_select*);
    __fb_end = .;
     . = ALIGN(4);
   } >SRAM3

@@ -23,6 +23,8 @@
 #include "mpu.h"
 #include "secret.h"
 
+#ifdef KERNEL_MODE
+
 static int32_t get_offset(monoctr_type_t type) {
   switch (type) {
     case MONOCTR_BOOTLOADER_VERSION:
@@ -129,3 +131,5 @@ secbool monoctr_read(monoctr_type_t type, uint8_t *value) {
 
   return sectrue;
 }
+
+#endif  // KERNEL_MODE

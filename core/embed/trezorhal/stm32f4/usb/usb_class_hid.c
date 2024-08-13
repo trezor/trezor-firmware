@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef KERNEL_MODE
+
 #include "common.h"
 #include "random_delays.h"
 
@@ -444,3 +446,5 @@ static const USBD_ClassTypeDef usb_hid_class = {
     .GetDeviceQualifierDescriptor = NULL,
     .GetUsrStrDescriptor = NULL,
 };
+
+#endif  // KERNEL_MODE

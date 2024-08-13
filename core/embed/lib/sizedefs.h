@@ -2,7 +2,10 @@
 #define SIZEDEFS_H_
 
 #define SIZE_2K (2 * 1024)
+#define SIZE_3K (3 * 1024)
+#define SIZE_8K (8 * 1024)
 #define SIZE_16K (16 * 1024)
+#define SIZE_24K (24 * 1024)
 #define SIZE_48K (48 * 1024)
 #define SIZE_64K (64 * 1024)
 #define SIZE_128K (128 * 1024)

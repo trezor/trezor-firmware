@@ -50,11 +50,15 @@
   *
   ******************************************************************************
   */
+
+#ifdef KERNEL_MODE
+
 /* Includes ------------------------------------------------------------------*/
 #include STM32_HAL_H
 #include "usbd_core.h"
 #include "usb.h"
 #include "irq.h"
+#include "mpu.h"
 #include "systemview.h"
 
 /* Private typedef -----------------------------------------------------------*/
@@ -796,9 +800,11 @@ void OTG_FS_IRQHandler(void) {
 #endif
     SEGGER_SYSVIEW_RecordEnterISR();
     IRQ_ENTER(OTG_FS_IRQn);
+    mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DEFAULT);
     if (pcd_fs_handle.Instance) {
         HAL_PCD_IRQHandler(&pcd_fs_handle);
     }
+    mpu_restore(mpu_mode);
     IRQ_EXIT(OTG_FS_IRQn);
     SEGGER_SYSVIEW_RecordExitISR();
 }
@@ -807,9 +813,11 @@ void OTG_FS_IRQHandler(void) {
 void OTG_HS_IRQHandler(void) {
     SEGGER_SYSVIEW_RecordEnterISR();
     IRQ_ENTER(OTG_HS_IRQn);
+    mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DEFAULT);
     if (pcd_hs_handle.Instance) {
         HAL_PCD_IRQHandler(&pcd_hs_handle);
     }
+    mpu_restore(mpu_mode);
     IRQ_EXIT(OTG_HS_IRQn);
     SEGGER_SYSVIEW_RecordExitISR();
 }
@@ -862,25 +870,31 @@ static void OTG_CMD_WKUP_Handler(PCD_HandleTypeDef *pcd_handle) {
 #if defined(USE_USB_FS)
 void OTG_FS_WKUP_IRQHandler(void) {
     IRQ_ENTER(OTG_FS_WKUP_IRQn);
+    mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DEFAULT);
     if (pcd_fs_handle.Instance) {
         OTG_CMD_WKUP_Handler(&pcd_fs_handle);
     }
     /* Clear EXTI pending Bit*/
     __HAL_USB_OTG_FS_WAKEUP_EXTI_CLEAR_FLAG();
+    mpu_restore(mpu_mode);
     IRQ_EXIT(OTG_FS_WKUP_IRQn);
 }
 #endif
 #if defined(USE_USB_HS)
 void OTG_HS_WKUP_IRQHandler(void) {
     IRQ_ENTER(OTG_HS_WKUP_IRQn);
+    mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DEFAULT);
     if (pcd_hs_handle.Instance) {
         OTG_CMD_WKUP_Handler(&pcd_hs_handle);
     }
     /* Clear EXTI pending Bit*/
     __HAL_USB_HS_EXTI_CLEAR_FLAG();
+    mpu_restore(mpu_mode);
     IRQ_EXIT(OTG_HS_WKUP_IRQn);
 }
 #endif
 #endif
+
+#endif  // KERNEL_MODE
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

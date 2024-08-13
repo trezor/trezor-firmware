@@ -27,6 +27,8 @@
 #include "rand.h"
 #include "storage.h"
 
+#ifdef KERNEL_MODE
+
 // Counter-protected PIN secret and reset key for OID_STRETCHED_PIN_CTR (OID
 // 0xF1D0).
 #define OID_PIN_SECRET (OPTIGA_OID_DATA + 0)
@@ -973,3 +975,5 @@ bool optiga_pin_decrease_rem(uint32_t count) {
          optiga_count_data_object(OID_STRETCHED_PIN_CTR, count) ==
              OPTIGA_SUCCESS;
 }
+
+#endif  // KERNEL_MODE

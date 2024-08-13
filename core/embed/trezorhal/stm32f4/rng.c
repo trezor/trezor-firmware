@@ -21,6 +21,8 @@
 
 #include "rng.h"
 
+#if KERNEL_MODE
+
 #pragma GCC optimize( \
     "no-stack-protector")  // applies to all functions in this file
 
@@ -56,3 +58,5 @@ uint32_t rng_get(void) {
   current = rng_read(previous, 1);
   return current;
 }
+
+#endif  // KERNEL_MODE
