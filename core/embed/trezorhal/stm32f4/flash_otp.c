@@ -23,6 +23,8 @@
 #include "common.h"
 #include "flash.h"
 
+#ifdef KERNEL_MODE
+
 #define FLASH_OTP_LOCK_BASE 0x1FFF7A00U
 
 void flash_otp_init() {
@@ -74,3 +76,5 @@ secbool flash_otp_lock(uint8_t block) {
 secbool flash_otp_is_locked(uint8_t block) {
   return sectrue * (0x00 == *(__IO uint8_t *)(FLASH_OTP_LOCK_BASE + block));
 }
+
+#endif  // KERNEL_MODE

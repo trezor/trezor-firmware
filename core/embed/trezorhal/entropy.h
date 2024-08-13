@@ -22,7 +22,11 @@
 
 #include <stdint.h>
 
+#ifdef KERNEL_MODE
+
 void entropy_init(void);
+
+#endif
 
 #define HW_ENTROPY_LEN (12 + 32)
 

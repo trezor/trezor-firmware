@@ -21,10 +21,13 @@
 #include <stdbool.h>
 
 #include "common.h"
+#include "irq.h"
 #include "model.h"
 #include "mpu.h"
 
 #include "stm32u5xx_ll_cortex.h"
+
+#ifdef KERNEL_MODE
 
 // region type
 #define MPUX_TYPE_FLASH_CODE 0
@@ -115,6 +118,7 @@ static void mpu_set_attributes(void) {
 #define BOARDLOADER_SIZE SIZE_48K
 #define BOOTLOADER_SIZE BOOTLOADER_IMAGE_MAXSIZE
 #define FIRMWARE_SIZE FIRMWARE_IMAGE_MAXSIZE
+#define COREAPP_SIZE (FIRMWARE_IMAGE_MAXSIZE - KERNEL_SIZE)
 #define STORAGE_START \
   (FLASH_BASE + SECRET_SIZE + BOARDLOADER_SIZE + BOOTLOADER_SIZE)
 #define STORAGE_SIZE NORCOW_SECTOR_SIZE* STORAGE_AREAS_COUNT
@@ -344,3 +348,5 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
 }
 
 void mpu_restore(mpu_mode_t mode) { mpu_reconfig(mode); }
+
+#endif  // KERNEL_MODE

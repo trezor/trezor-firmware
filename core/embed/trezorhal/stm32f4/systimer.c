@@ -25,6 +25,8 @@
 #include "systick_internal.h"
 #include "systimer.h"
 
+#ifdef KERNEL_MODE
+
 // Maximum number of registerd user timer
 //
 // Consider different implementation (i.e. priority queue
@@ -229,3 +231,5 @@ void systimer_dispatch_expired_timers(uint64_t cycles) {
     }
   }
 }
+
+#endif  // KERNEL_MODE

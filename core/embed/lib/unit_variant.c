@@ -6,6 +6,8 @@
 #include "unit_variant.h"
 #include TREZOR_BOARD
 
+#ifdef KERNEL_MODE
+
 static uint8_t unit_variant_color = 0;
 static uint8_t unit_variant_packaging = 0;
 static bool unit_variant_btconly = false;
@@ -98,3 +100,5 @@ bool unit_variant_is_sd_hotswap_enabled(void) {
 #endif
 #endif
 }
+
+#endif  // KERNEL_MODE

@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef KERNEL_MODE
+
 #include STM32_HAL_H
 
 #include "usb.h"
@@ -736,3 +738,5 @@ static const USBD_ClassTypeDef usb_class = {
     .GetDeviceQualifierDescriptor = NULL,
     .GetUsrStrDescriptor = usb_class_get_usrstr_desc,
 };
+
+#endif  // KERNEL_MODE

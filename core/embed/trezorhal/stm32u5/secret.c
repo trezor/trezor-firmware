@@ -10,6 +10,8 @@
 #include "rng.h"
 #include "secure_aes.h"
 
+#ifdef KERNEL_MODE
+
 static secbool bootloader_locked = secfalse;
 
 secbool secret_verify_header(void) {
@@ -352,3 +354,5 @@ void secret_prepare_fw(secbool allow_run_with_secret, secbool trust_all) {
     secret_disable_access();
   }
 }
+
+#endif  // KERNEL_MODE

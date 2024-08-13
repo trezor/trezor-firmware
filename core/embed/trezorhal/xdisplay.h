@@ -46,6 +46,8 @@
 // MIPI            -
 //                 - STM32U5A9J-DK Discovery Board
 
+#ifdef KERNEL_MODE
+
 // Specifies how display content should be handled during
 // initialization or deinitialization.
 typedef enum {
@@ -67,6 +69,8 @@ void display_init(display_content_mode_t mode);
 // complete and disable interrupts, so the application can safely proceed to
 // the next boot stage and call `display_init(DISPLAY_RETAIN_CONTENT)`.
 void display_deinit(display_content_mode_t mode);
+
+#endif  // KERNEL_MODE
 
 // Sets display backlight level ranging from 0 (off)..255 (maximum).
 //

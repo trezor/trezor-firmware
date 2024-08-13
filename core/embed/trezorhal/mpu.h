@@ -20,6 +20,8 @@
 #ifndef TREZORHAL_MPU_H
 #define TREZORHAL_MPU_H
 
+#ifdef KERNEL_MODE
+
 // The MPU driver can be set to on of the following modes.
 //
 // In each mode, the MPU is configured to allow access to specific
@@ -60,5 +62,7 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode);
 //
 // Same as `mpu_reconfig()`, but with a more descriptive name.
 void mpu_restore(mpu_mode_t mode);
+
+#endif  // KERNEL_MODE
 
 #endif  // TREZORHAL_MPU_H

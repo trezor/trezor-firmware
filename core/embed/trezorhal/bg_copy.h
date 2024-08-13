@@ -6,6 +6,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#ifdef KERNEL_MODE
+
 /**
  * Callback function invoked from the IRQ context
  * when the transfer is complete
@@ -37,5 +39,7 @@ void bg_copy_wait(void);
  */
 
 void bg_copy_abort(void);
+
+#endif  // KERNEL_MODE
 
 #endif

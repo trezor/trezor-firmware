@@ -23,6 +23,8 @@
 #include "common.h"
 #include "flash.h"
 
+#ifdef KERNEL_MODE
+
 void flash_otp_init() {
   // intentionally left empty
 }
@@ -90,3 +92,5 @@ secbool flash_otp_is_locked(uint8_t block) {
   }
   return secfalse;
 }
+
+#endif  // KERNEL_MODE

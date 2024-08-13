@@ -24,6 +24,8 @@
 #include "irq.h"
 #include "mpu.h"
 
+#ifdef KERNEL_MODE
+
 __IO DISP_MEM_TYPE *const DISPLAY_CMD_ADDRESS =
     (__IO DISP_MEM_TYPE *const)((uint32_t)DISPLAY_MEMORY_BASE);
 __IO DISP_MEM_TYPE *const DISPLAY_DATA_ADDRESS =
@@ -148,3 +150,5 @@ void display_io_init_te_interrupt(void) {
   NVIC_EnableIRQ(DISPLAY_TE_INTERRUPT_NUM);
 }
 #endif
+
+#endif  // KERNEL_MODE

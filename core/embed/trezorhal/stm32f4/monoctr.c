@@ -23,6 +23,8 @@
 #include "mpu.h"
 #include "string.h"
 
+#ifdef KERNEL_MODE
+
 #if PRODUCTION
 static int get_otp_block(monoctr_type_t type) {
   switch (type) {
@@ -136,3 +138,5 @@ secbool monoctr_read(monoctr_type_t type, uint8_t* value) {
 
   return sectrue;
 }
+
+#endif  // KERNEL_MODE
