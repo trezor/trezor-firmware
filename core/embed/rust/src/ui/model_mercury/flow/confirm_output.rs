@@ -151,7 +151,7 @@ fn new_confirm_output_obj(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Err
             theme::ICON_CHEVRON_RIGHT,
             TR::address_details__account_info.into(),
         );
-        menu_items.push(MENU_ITEM_ACCOUNT_INFO);
+        unwrap!(menu_items.push(MENU_ITEM_ACCOUNT_INFO));
     }
     menu = menu.danger(
         theme::ICON_CANCEL,

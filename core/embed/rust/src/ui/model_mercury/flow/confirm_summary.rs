@@ -150,14 +150,14 @@ impl ConfirmSummary {
                 theme::ICON_CHEVRON_RIGHT,
                 TR::confirm_total__title_fee.into(),
             );
-            menu_items.push(MENU_ITEM_FEE_INFO);
+            unwrap!(menu_items.push(MENU_ITEM_FEE_INFO));
         }
         if has_account_info {
             menu = menu.item(
                 theme::ICON_CHEVRON_RIGHT,
                 TR::address_details__account_info.into(),
             );
-            menu_items.push(MENU_ITEM_ACCOUNT_INFO);
+            unwrap!(menu_items.push(MENU_ITEM_ACCOUNT_INFO));
         }
         menu = menu.danger(
             theme::ICON_CANCEL,

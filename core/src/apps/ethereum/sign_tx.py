@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 
+from trezor import utils
 from trezor.crypto import rlp
 from trezor.messages import EthereumTxRequest
 from trezor.utils import BufferReader
@@ -19,6 +20,7 @@ if TYPE_CHECKING:
         EthereumTokenInfo,
         EthereumTxAck,
     )
+    from trezor.ui.layouts.common import ProgressLayout
 
     from apps.common.keychain import Keychain
 
@@ -67,6 +69,10 @@ async def sign_tx(
     )
     await confirm_tx_data(msg, defs, address_bytes, maximum_fee, fee_items, data_total)
 
+    _start_progress()
+
+    _render_progress(30)
+
     # sign
     data = bytearray()
     data += msg.data_initial_chunk
@@ -89,6 +95,8 @@ async def sign_tx(
         rlp.write_header(sha, data_total, rlp.STRING_HEADER_BYTE, data)
         sha.extend(data)
 
+    _render_progress(60)
+
     while data_left > 0:
         resp = await send_request_chunk(data_left)
         data_left -= len(resp.data_chunk)
@@ -101,6 +109,8 @@ async def sign_tx(
 
     digest = sha.get_digest()
     result = _sign_digest(msg, keychain, digest)
+
+    _finish_progress()
 
     return result
 
@@ -376,3 +386,30 @@ async def _handle_staking_tx_claim(
         raise DataError("Invalid staking transaction call")
 
     await require_confirm_claim(staking_addr, maximum_fee, fee_items, network, chunkify)
+
+
+_progress_obj: ProgressLayout | None = None
+
+
+def _start_progress() -> None:
+    from trezor import TR, workflow
+    from trezor.ui.layouts.progress import progress
+
+    global _progress_obj
+
+    if not utils.DISABLE_ANIMATION:
+        # Because we are drawing to the screen manually, without a layout, we
+        # should make sure that no other layout is running.
+        workflow.close_others()
+        _progress_obj = progress(title=TR.progress__signing_transaction)
+
+
+def _render_progress(progress: int) -> None:
+    global _progress_obj
+    if _progress_obj is not None:
+        _progress_obj.report(progress)
+
+
+def _finish_progress() -> None:
+    global _progress_obj
+    _progress_obj = None
