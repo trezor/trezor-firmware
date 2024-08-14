@@ -61,6 +61,7 @@ async def sign_identity(msg: SignIdentity) -> SignedIdentity:
         curve_name,
     )
 
+    # For ed25519, the public key has the prefix 0x00, as specified by SLIP-10. However, since this prefix is non-standard, it may be removed in the future.
     return SignedIdentity(address=address, public_key=pubkey, signature=signature)
 
 

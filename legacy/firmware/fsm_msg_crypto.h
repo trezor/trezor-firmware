@@ -160,6 +160,9 @@ void fsm_msgSignIdentity(const SignIdentity *msg) {
       }
     }
     resp->public_key.size = 33;
+    // For ed25519, the public key has the prefix 0x00, as specified by SLIP-10.
+    // However, since this prefix is non-standard, it may be removed in the
+    // future.
     memcpy(resp->public_key.bytes, node->public_key, 33);
     resp->signature.size = 65;
     msg_write(MessageType_MessageType_SignedIdentity, resp);
@@ -220,6 +223,9 @@ void fsm_msgGetECDHSessionKey(const GetECDHSessionKey *msg) {
       layoutHome();
       return;
     }
+    // For curve25519, the public key has the prefix 0x00, as specified by
+    // SLIP-10. However, since this prefix is non-standard, it may be removed in
+    // the future.
     memcpy(resp->public_key.bytes, node->public_key, 33);
     resp->public_key.size = 33;
     resp->has_public_key = true;

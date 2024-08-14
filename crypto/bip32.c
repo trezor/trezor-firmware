@@ -701,6 +701,8 @@ int hdnode_get_shared_key(const HDNode *node, const uint8_t *peer_public_key,
     *result_size = 65;
     return 0;
   } else if (node->curve == &curve25519_info) {
+    // The prefix 0x04 doesn't make sense here, and may be changed or removed in
+    // the future
     session_key[0] = 0x04;
     if (peer_public_key[0] != 0x40) {
       return 1;  // Curve25519 public key should start with 0x40 byte.
