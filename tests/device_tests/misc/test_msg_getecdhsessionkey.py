@@ -84,5 +84,5 @@ def test_ecdh(client: Client):
     )
     assert (
         result.public_key.hex()
-        == "019753a0738c55c7ba7c17dd4a9a975ce9b0d2b62e8a1ecef4a76767fad99d3c71"
+        == "009753a0738c55c7ba7c17dd4a9a975ce9b0d2b62e8a1ecef4a76767fad99d3c71"
     )

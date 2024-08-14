@@ -1,0 +1,1 @@
+Changed prefix of public key returned by `get_ecdh_session_key` for curve25519.
