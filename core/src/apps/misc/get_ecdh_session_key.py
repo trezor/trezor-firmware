@@ -46,12 +46,10 @@ async def get_ecdh_session_key(msg: GetECDHSessionKey) -> ECDHSessionKey:
         from trezor.crypto.curve import secp256k1
 
         session_key = secp256k1.multiply(node.private_key(), peer_public_key)
-        public_key = node.public_key()
     elif curve_name == "nist256p1":
         from trezor.crypto.curve import nist256p1
 
         session_key = nist256p1.multiply(node.private_key(), peer_public_key)
-        public_key = node.public_key()
     elif curve_name == "curve25519":
         from trezor.crypto.curve import curve25519
 
@@ -60,9 +58,8 @@ async def get_ecdh_session_key(msg: GetECDHSessionKey) -> ECDHSessionKey:
         session_key = b"\x04" + curve25519.multiply(
             node.private_key(), peer_public_key[1:]
         )
-        public_key = b"\x01" + node.public_key()[1:]
     else:
         raise DataError("Unsupported curve for ECDH: " + curve_name)
     # END ecdh
 
-    return ECDHSessionKey(session_key=session_key, public_key=public_key)
+    return ECDHSessionKey(session_key=session_key, public_key=node.public_key())

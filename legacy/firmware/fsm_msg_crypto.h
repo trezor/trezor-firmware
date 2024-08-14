@@ -221,9 +221,6 @@ void fsm_msgGetECDHSessionKey(const GetECDHSessionKey *msg) {
       return;
     }
     memcpy(resp->public_key.bytes, node->public_key, 33);
-    if (strcmp(curve, CURVE25519_NAME) == 0) {
-      resp->public_key.bytes[0] = 0x01;
-    }
     resp->public_key.size = 33;
     resp->has_public_key = true;
     msg_write(MessageType_MessageType_ECDHSessionKey, resp);
