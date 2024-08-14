@@ -1028,6 +1028,7 @@ if not utils.BITCOIN_ONLY:
             title=TR.words__recipient,
             chunkify=chunkify,
             cancel_text=TR.buttons__cancel,
+            br_code=ButtonRequestType.Other,
         )
 
         await _confirm_summary(

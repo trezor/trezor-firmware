@@ -125,6 +125,7 @@ def test_signtx_fee_info(client: Client):
 
 
 @pytest.mark.skip_t1b1("T1 does not support input flows")
+@pytest.mark.skip_t3t1("Cancel on Summary means Cancel Sign. No going back here!")
 def test_signtx_go_back_from_summary(client: Client):
     input_flow = InputFlowEthereumSignTxGoBackFromSummary(client).get()
     _do_test_signtx(
