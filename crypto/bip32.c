@@ -281,52 +281,7 @@ int hdnode_private_ckd(HDNode *inout, uint32_t i) {
   }
 }
 
-int hdnode_public_ckd_cp(const ecdsa_curve *curve, const curve_point *parent,
-                         const uint8_t *parent_chain_code, uint32_t i,
-                         curve_point *child, uint8_t *child_chain_code) {
-  uint8_t data[(1 + 32) + 4] = {0};
-  uint8_t I[32 + 32] = {0};
-  bignum256 c = {0};
-
-  if (i & 0x80000000) {  // private derivation
-    return 0;
-  }
-
-  data[0] = 0x02 | (parent->y.val[0] & 0x01);
-  bn_write_be(&parent->x, data + 1);
-  write_be(data + 33, i);
-
-  while (true) {
-    hmac_sha512(parent_chain_code, 32, data, sizeof(data), I);
-    bn_read_be(I, &c);
-    if (bn_is_less(&c, &curve->order)) {  // < order
-      // b = c * G
-      uint8_t child_pubkey[65] = {0};
-      ecdsa_get_public_key65(curve, I, child_pubkey);
-      ecdsa_read_pubkey(curve, child_pubkey, child);
-
-      point_add(curve, parent, child);  // b = a + b
-      if (!point_is_infinity(child)) {
-        if (child_chain_code) {
-          memcpy(child_chain_code, I + 32, 32);
-        }
-
-        // Wipe all stack data.
-        memzero(data, sizeof(data));
-        memzero(I, sizeof(I));
-        memzero(&c, sizeof(c));
-        return 1;
-      }
-    }
-
-    data[0] = 1;
-    memcpy(data + 1, I + 32, 32);
-  }
-}
-
 int hdnode_public_ckd(HDNode *inout, uint32_t i) {
-  curve_point parent = {0}, child = {0};
-
   if (!inout->curve->params) {
     // SLIP-10 doesn't support public key to public key derivation for
     // curve25519 and ed25519, Cardano BIP32-ed22519 public key to public key
@@ -334,25 +289,43 @@ int hdnode_public_ckd(HDNode *inout, uint32_t i) {
     return 0;
   }
 
-  if (!ecdsa_read_pubkey(inout->curve->params, inout->public_key, &parent)) {
+  uint8_t data[33 + 4] = {0};
+  uint8_t digest[32 + 32] = {0};
+  int result = 0;
+
+  if (i & 0x80000000) {  // private derivation
     return 0;
   }
-  if (!hdnode_public_ckd_cp(inout->curve->params, &parent, inout->chain_code, i,
-                            &child, inout->chain_code)) {
-    return 0;
+
+  memcpy(data, inout->public_key, 33);
+  write_be(data + 33, i);
+
+  while (true) {
+    hmac_sha512(inout->chain_code, 32, data, sizeof(data), digest);
+
+    result = ecdsa_tweak_pubkey(inout->curve->params, inout->public_key, digest,
+                                inout->public_key);
+    if (result == ECDSA_TWEAK_PUBKEY_SUCCESS) {
+      memcpy(inout->chain_code, digest + 32, 32);
+      inout->depth++;
+      inout->child_num = i;
+      memzero(inout->private_key, 32);
+      break;
+    }
+    if (result != ECDSA_TWEAK_PUBKEY_INVALID_TWEAK_OR_RESULT_ERR) {
+      break;
+    }
+
+    // The tweak is less than the order of the curve or the tweaked public key
+    // is the point at infinity
+    data[0] = 1;
+    memcpy(data + 1, digest + 32, 32);
   }
-  memzero(inout->private_key, 32);
-  inout->depth++;
-  inout->child_num = i;
-  inout->public_key[0] = 0x02 | (child.y.val[0] & 0x01);
-  bn_write_be(&child.x, inout->public_key + 1);
-  inout->is_public_key_set = true;
 
-  // Wipe all stack data.
-  memzero(&parent, sizeof(parent));
-  memzero(&child, sizeof(child));
+  memzero(digest, sizeof(digest));
+  memzero(data, sizeof(data));
 
-  return 1;
+  return result == ECDSA_TWEAK_PUBKEY_SUCCESS;
 }
 
 #if USE_BIP32_CACHE

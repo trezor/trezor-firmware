@@ -75,11 +75,6 @@ int hdnode_from_seed(const uint8_t *seed, int seed_len, const char *curve,
   hdnode_private_ckd((X), ((I) | 0x80000000))
 
 int hdnode_private_ckd(HDNode *inout, uint32_t i);
-
-int hdnode_public_ckd_cp(const ecdsa_curve *curve, const curve_point *parent,
-                         const uint8_t *parent_chain_code, uint32_t i,
-                         curve_point *child, uint8_t *child_chain_code);
-
 int hdnode_public_ckd(HDNode *inout, uint32_t i);
 
 #if USE_BIP32_CACHE
