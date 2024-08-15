@@ -528,6 +528,14 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
         return UPLOAD_ERR_INVALID_VENDOR_HEADER;
       }
 
+      if (sectrue != check_vendor_header_model(&vhdr)) {
+        MSG_SEND_INIT(Failure);
+        MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
+        MSG_SEND_ASSIGN_STRING(message, "Wrong model");
+        MSG_SEND(Failure);
+        return UPLOAD_ERR_INVALID_VENDOR_HEADER_MODEL;
+      }
+
       if (sectrue != check_vendor_header_keys(&vhdr)) {
         MSG_SEND_INIT(Failure);
         MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
