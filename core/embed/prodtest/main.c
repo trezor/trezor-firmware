@@ -454,7 +454,7 @@ static void test_touch_custom(const char *args) {
 }
 
 static void test_touch_idle(const char *args) {
-  static const int expected_params = 5;
+  static const int expected_params = 1;
   int num_params = 0;
 
   int params[expected_params];
