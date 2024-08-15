@@ -26,6 +26,8 @@
 #include "image.h"
 #include "model.h"
 
+_Static_assert(VENDOR_HEADER_MAX_SIZE + IMAGE_HEADER_SIZE <= IMAGE_CHUNK_SIZE);
+
 const uint8_t BOOTLOADER_KEY_M = 2;
 const uint8_t BOOTLOADER_KEY_N = 3;
 static const uint8_t * const BOOTLOADER_KEYS[] = {
@@ -150,7 +152,7 @@ secbool __wur read_vendor_header(const uint8_t *const data,
   if (vhdr->magic != 0x565A5254) return secfalse;  // TRZV
 
   memcpy(&vhdr->hdrlen, data + 4, 4);
-  if (vhdr->hdrlen > 64 * 1024) return secfalse;
+  if (vhdr->hdrlen > VENDOR_HEADER_MAX_SIZE) return secfalse;
 
   memcpy(&vhdr->expiry, data + 8, 4);
   if (vhdr->expiry != 0) return secfalse;
@@ -162,6 +164,7 @@ secbool __wur read_vendor_header(const uint8_t *const data,
   memcpy(&vhdr->vsig_m, data + 14, 1);
   memcpy(&vhdr->vsig_n, data + 15, 1);
   memcpy(&vhdr->vtrust, data + 16, 2);
+  memcpy(&vhdr->hw_model, data + 18, 4);
 
   if (vhdr->vsig_n > MAX_VENDOR_PUBLIC_KEYS) {
     return secfalse;
@@ -188,6 +191,20 @@ secbool __wur read_vendor_header(const uint8_t *const data,
          IMAGE_SIG_SIZE - 1);
 
   return sectrue;
+}
+
+secbool check_vendor_header_model(const vendor_header *const vhdr) {
+#ifdef TREZOR_MODEL_T
+  if (vhdr->hw_model == 0) {
+    // vendor headers for model T have this field set to 0
+    return sectrue;
+  }
+#endif
+  if (vhdr->hw_model == HW_MODEL) {
+    return sectrue;
+  }
+
+  return secfalse;
 }
 
 secbool check_vendor_header_sig(const vendor_header *const vhdr, uint8_t key_m,

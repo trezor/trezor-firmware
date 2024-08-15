@@ -27,6 +27,7 @@
 #include "model.h"
 #include "secbool.h"
 
+#define VENDOR_HEADER_MAX_SIZE (64 * 1024)
 #define IMAGE_HEADER_SIZE 0x400  // size of the bootloader or firmware header
 #define IMAGE_SIG_SIZE 65
 #define IMAGE_INIT_CHUNK_SIZE (16 * 1024)
@@ -88,7 +89,8 @@ typedef struct {
   uint8_t vsig_m;
   uint8_t vsig_n;
   uint16_t vtrust;
-  // uint8_t reserved[14];
+  uint32_t hw_model;
+  // uint8_t reserved[10];
   const uint8_t *vpub[MAX_VENDOR_PUBLIC_KEYS];
   uint8_t vstr_len;
   const char *vstr;
@@ -126,6 +128,8 @@ secbool __wur check_image_header_sig(const image_header *const hdr,
 
 secbool __wur read_vendor_header(const uint8_t *const data,
                                  vendor_header *const vhdr);
+
+secbool __wur check_vendor_header_model(const vendor_header *const vhdr);
 
 secbool __wur check_vendor_header_sig(const vendor_header *const vhdr,
                                       uint8_t key_m, uint8_t key_n,
