@@ -125,4 +125,17 @@ int ecdsa_recover_pub_from_sig(const ecdsa_curve *curve, uint8_t *pub_key,
 int ecdsa_sig_to_der(const uint8_t *sig, uint8_t *der);
 int ecdsa_sig_from_der(const uint8_t *der, size_t der_len, uint8_t sig[64]);
 
+typedef enum {
+  ECDSA_TWEAK_PUBKEY_SUCCESS = 0,
+  ECDSA_TWEAK_PUBKEY_INVALID_CURVE_ERR,
+  ECDSA_TWEAK_PUBKEY_CONTEXT_ERR,
+  ECDSA_TWEAK_PUBKEY_INVALID_PUBKEY_ERR,
+  ECDSA_TWEAK_PUBKEY_INVALID_TWEAK_OR_RESULT_ERR,
+  ECDSA_TWEAK_PUBKEY_UNSPECIFIED_ERR,
+} ecdsa_tweak_pubkey_result;
+
+ecdsa_tweak_pubkey_result ecdsa_tweak_pubkey(const ecdsa_curve *curve,
+                                             const uint8_t *pub_key,
+                                             const uint8_t *tweak,
+                                             uint8_t *tweaked_pub_key);
 #endif

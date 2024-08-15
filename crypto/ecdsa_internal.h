@@ -41,4 +41,7 @@ int tc_ecdsa_recover_pub_from_sig(const ecdsa_curve *curve, uint8_t *pub_key,
                                   int recid);
 int tc_ecdh_multiply(const ecdsa_curve *curve, const uint8_t *priv_key,
                      const uint8_t *pub_key, uint8_t *session_key);
+ecdsa_tweak_pubkey_result tc_ecdsa_tweak_pubkey(
+    const ecdsa_curve *curve, const uint8_t *public_key_bytes,
+    const uint8_t *tweak_bytes, uint8_t *tweaked_public_key_bytes);
 #endif

@@ -1142,6 +1142,49 @@ int tc_ecdsa_verify_digest(const ecdsa_curve *curve, const uint8_t *pub_key,
   return result;
 }
 
+ecdsa_tweak_pubkey_result tc_ecdsa_tweak_pubkey(
+    const ecdsa_curve *curve, const uint8_t *public_key_bytes,
+    const uint8_t *tweak_bytes, uint8_t *tweaked_public_key_bytes) {
+  int result = ECDSA_TWEAK_PUBKEY_SUCCESS;
+  curve_point public_key = {0};
+  bignum256 tweak = {0};
+  curve_point public_tweak = {0};
+
+  if (public_key_bytes[0] != 0x02 && public_key_bytes[0] != 0x03) {
+    result = ECDSA_TWEAK_PUBKEY_INVALID_PUBKEY_ERR;
+    goto end;
+  }
+
+  if (!ecdsa_read_pubkey(curve, public_key_bytes, &public_key)) {
+    result = ECDSA_TWEAK_PUBKEY_INVALID_PUBKEY_ERR;
+    goto end;
+  }
+
+  bn_read_be(tweak_bytes, &tweak);
+  if (!bn_is_less(&tweak, &curve->order)) {
+    result = ECDSA_TWEAK_PUBKEY_INVALID_TWEAK_OR_RESULT_ERR;
+    goto end;
+  }
+
+  (void)scalar_multiply(curve, &tweak, &public_tweak);
+  point_add(curve, &public_tweak, &public_key);
+
+  if (point_is_infinity(&public_key)) {
+    result = ECDSA_TWEAK_PUBKEY_INVALID_TWEAK_OR_RESULT_ERR;
+    goto end;
+  }
+
+  tweaked_public_key_bytes[0] = 0x02 | (public_key.y.val[0] & 0x01);
+  bn_write_be(&public_key.x, tweaked_public_key_bytes + 1);
+
+end:
+  memzero(&public_key, sizeof(public_key));
+  memzero(&tweak, sizeof(tweak));
+  memzero(&public_tweak, sizeof(public_tweak));
+
+  return result;
+}
+
 int ecdsa_sig_to_der(const uint8_t *sig, uint8_t *der) {
   int i = 0;
   uint8_t *p = der, *len = NULL, *len1 = NULL, *len2 = NULL;
@@ -1321,4 +1364,16 @@ int ecdh_multiply(const ecdsa_curve *curve, const uint8_t *priv_key,
   }
 #endif
   return tc_ecdh_multiply(curve, priv_key, pub_key, session_key);
+}
+
+ecdsa_tweak_pubkey_result ecdsa_tweak_pubkey(const ecdsa_curve *curve,
+                                             const uint8_t *pub_key,
+                                             const uint8_t *tweak,
+                                             uint8_t *tweaked_pub_key) {
+#ifdef USE_SECP256K1_ZKP_ECDSA
+  if (curve == &secp256k1) {
+    return zkp_ecdsa_tweak_pubkey(curve, pub_key, tweak, tweaked_pub_key);
+  }
+#endif
+  return tc_ecdsa_tweak_pubkey(curve, pub_key, tweak, tweaked_pub_key);
 }

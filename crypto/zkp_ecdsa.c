@@ -24,6 +24,7 @@
 #include <stdbool.h>
 #include <string.h>
 
+#include "ecdsa.h"
 #include "memzero.h"
 #include "secp256k1.h"
 #include "zkp_context.h"
@@ -461,6 +462,72 @@ int zkp_ecdh_multiply(const ecdsa_curve *curve,
   if (secp256k1_ecdh(context_writable, session_key, &public_key,
                      private_key_bytes, plain_hash_function, NULL) != 1) {
     result = 2;
+    goto end;
+  }
+
+end:
+  if (context_writable) {
+    zkp_context_release_writable();
+    context_writable = NULL;
+  }
+  memzero(&public_key, sizeof(public_key));
+
+  return result;
+}
+
+// ECDSA public key tweak
+// tweaked_public_key = public_key + tweak * G
+// curve has to be &secp256k1
+// public_key_bytes has 33 bytes
+// tweak_bytes has 32 bytes
+// tweaked_public_key_bytes has 33 bytes
+ecdsa_tweak_pubkey_result zkp_ecdsa_tweak_pubkey(
+    const ecdsa_curve *curve, const uint8_t *public_key_bytes,
+    const uint8_t *tweak_bytes, uint8_t *tweaked_public_key_bytes) {
+  assert(curve == &secp256k1);
+  if (curve != &secp256k1) {
+    return ECDSA_TWEAK_PUBKEY_INVALID_CURVE_ERR;
+  }
+
+  int result = ECDSA_TWEAK_PUBKEY_SUCCESS;
+  secp256k1_context *context_writable = NULL;
+  const secp256k1_context *context_read_only = zkp_context_get_read_only();
+  secp256k1_pubkey public_key = {0};
+
+  size_t public_key_length = get_public_key_length(public_key_bytes);
+  if (public_key_length != 33) {
+    result = ECDSA_TWEAK_PUBKEY_INVALID_PUBKEY_ERR;
+    goto end;
+  }
+  if (secp256k1_ec_pubkey_parse(context_read_only, &public_key,
+                                public_key_bytes, public_key_length) != 1) {
+    result = ECDSA_TWEAK_PUBKEY_INVALID_PUBKEY_ERR;
+    goto end;
+  }
+
+  context_writable = zkp_context_acquire_writable();
+  if (context_writable == NULL) {
+    result = ECDSA_TWEAK_PUBKEY_CONTEXT_ERR;
+    goto end;
+  }
+  if (secp256k1_context_writable_randomize(context_writable) != 0) {
+    result = ECDSA_TWEAK_PUBKEY_CONTEXT_ERR;
+    goto end;
+  }
+
+  if (secp256k1_ec_pubkey_tweak_add(context_writable, &public_key,
+                                    tweak_bytes) != 1) {
+    // The tweak is not less than the group order, or the resulting public key
+    // is the point at infinity.
+    result = ECDSA_TWEAK_PUBKEY_INVALID_TWEAK_OR_RESULT_ERR;
+    goto end;
+  }
+
+  public_key_length = 33;
+  if (secp256k1_ec_pubkey_serialize(context_read_only, tweaked_public_key_bytes,
+                                    &public_key_length, &public_key,
+                                    SECP256K1_EC_COMPRESSED) != 1) {
+    result = ECDSA_TWEAK_PUBKEY_UNSPECIFIED_ERR;
     goto end;
   }
 

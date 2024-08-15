@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 
+#include "ecdsa.h"
 #include "hasher.h"
 
 int zkp_ecdsa_get_public_key33(const ecdsa_curve *curve,
@@ -29,4 +30,7 @@ int zkp_ecdsa_verify(const ecdsa_curve *curve, HasherType hasher_sign,
                      const uint8_t *msg, uint32_t msg_len);
 int zkp_ecdh_multiply(const ecdsa_curve *curve, const uint8_t *priv_key,
                       const uint8_t *pub_key, uint8_t *session_key);
+ecdsa_tweak_pubkey_result zkp_ecdsa_tweak_pubkey(
+    const ecdsa_curve *curve, const uint8_t *public_key_bytes,
+    const uint8_t *tweak_bytes, uint8_t *tweaked_public_key_bytes);
 #endif
