@@ -2014,34 +2014,6 @@ START_TEST(test_bip32_compare) {
 }
 END_TEST
 
-START_TEST(test_bip32_optimized) {
-  HDNode root;
-  hdnode_from_seed((uint8_t *)"NothingToSeeHere", 16, SECP256K1_NAME, &root);
-  ck_assert_int_eq(hdnode_fill_public_key(&root), 0);
-
-  curve_point pub;
-  ecdsa_read_pubkey(&secp256k1, root.public_key, &pub);
-
-  HDNode node;
-  char addr1[MAX_ADDR_SIZE], addr2[MAX_ADDR_SIZE];
-
-  for (int i = 0; i < 40; i++) {
-    // unoptimized
-    memcpy(&node, &root, sizeof(HDNode));
-    hdnode_public_ckd(&node, i);
-    ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
-    ecdsa_get_address(node.public_key, 0, HASHER_SHA2_RIPEMD, HASHER_SHA2D,
-                      addr1, sizeof(addr1));
-    // optimized
-    hdnode_public_ckd_address_optimized(&pub, root.chain_code, i, 0,
-                                        HASHER_SHA2_RIPEMD, HASHER_SHA2D, addr2,
-                                        sizeof(addr2), 0);
-    // check
-    ck_assert_str_eq(addr1, addr2);
-  }
-}
-END_TEST
-
 START_TEST(test_bip32_cache_1) {
   HDNode node1, node2;
   int i, r;
@@ -11471,7 +11443,6 @@ Suite *test_suite(void) {
   tcase_add_test(tc, test_bip32_vector_3);
   tcase_add_test(tc, test_bip32_vector_4);
   tcase_add_test(tc, test_bip32_compare);
-  tcase_add_test(tc, test_bip32_optimized);
   tcase_add_test(tc, test_bip32_cache_1);
   tcase_add_test(tc, test_bip32_cache_2);
   suite_add_tcase(s, tc);

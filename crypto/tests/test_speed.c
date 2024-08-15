@@ -174,7 +174,7 @@ void prepare_node(void) {
   hdnode_fill_public_key(&root);
 }
 
-void bench_ckd_normal(int iterations) {
+void bench_ckd(int iterations) {
   char addr[MAX_ADDR_SIZE];
   HDNode node;
   for (int i = 0; i < iterations; i++) {
@@ -183,17 +183,6 @@ void bench_ckd_normal(int iterations) {
     hdnode_fill_public_key(&node);
     ecdsa_get_address(node.public_key, HASHER_SHA2, HASHER_SHA2D, 0, addr,
                       sizeof(addr));
-  }
-}
-
-void bench_ckd_optimized(int iterations) {
-  char addr[MAX_ADDR_SIZE];
-  curve_point pub;
-  ecdsa_read_pubkey(&secp256k1, root.public_key, &pub);
-  for (int i = 0; i < iterations; i++) {
-    hdnode_public_ckd_address_optimized(&pub, root.chain_code, i, 0,
-                                        HASHER_SHA2, HASHER_SHA2D, addr,
-                                        sizeof(addr), false);
   }
 }
 
@@ -224,8 +213,7 @@ int main(void) {
 
   prepare_node();
 
-  BENCH(bench_ckd_normal, 1000);
-  BENCH(bench_ckd_optimized, 1000);
+  BENCH(bench_ckd, 1000);
 
   return 0;
 }
