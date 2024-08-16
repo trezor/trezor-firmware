@@ -1,7 +1,7 @@
 mod ffi {
     extern "C" {
-        // trezorhal/common.c
-        pub fn trezor_shutdown() -> !;
+        // trezorhal/bootuils.c
+        pub fn secure_shutdown() -> !;
     }
 }
 
@@ -11,7 +11,7 @@ use crate::ui::{
 };
 
 fn shutdown() -> ! {
-    unsafe { ffi::trezor_shutdown() }
+    unsafe { ffi::secure_shutdown() }
 }
 
 /// Shows an error message and shuts down the device.
