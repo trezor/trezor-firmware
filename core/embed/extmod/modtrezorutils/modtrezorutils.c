@@ -308,7 +308,7 @@ STATIC mp_obj_t mod_trezorutils_reboot_to_bootloader(size_t n_args,
   }
 
   bootargs_set(boot_command, boot_args.buf, boot_args.len);
-  svc_reboot_to_bootloader();
+  reboot_to_bootloader();
 #endif
   return mp_const_none;
 }
