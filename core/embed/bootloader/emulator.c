@@ -2,8 +2,8 @@
 #include <unistd.h>
 
 #include TREZOR_BOARD
-#include "boot_args.h"
 #include "bootui.h"
+#include "bootutils.h"
 #include "common.h"
 #include "display.h"
 #include "flash.h"
