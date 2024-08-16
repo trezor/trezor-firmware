@@ -58,5 +58,22 @@
         "name": "Polygon",
         "shortcut": "MATIC",
         "slip44": 966
+    },
+    {
+        "chain": "pulsechain",
+        "chain_id": 369,
+        "coingecko_id": "pulsechain",
+        "is_testnet": false,
+        "name": "PulseChain",
+        "shortcut": "PLS",
+        "slip44": 60
+    },
+    {
+        "chain": "pulsechain-testnet",
+        "chain_id": 943,
+        "is_testnet": true,
+        "name": "PulseChain Testnet",
+        "shortcut": "tPLS",
+        "slip44": 60
     }
 ]
