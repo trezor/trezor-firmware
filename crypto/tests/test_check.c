@@ -5682,8 +5682,6 @@ START_TEST(test_blake2s) {
 }
 END_TEST
 
-#include <stdio.h>
-
 START_TEST(test_chacha_drbg) {
   char entropy[] =
       "06032cd5eed33f39265f49ecb142c511da9aff2af71203bffaf34a9ca5bd9c0d";
