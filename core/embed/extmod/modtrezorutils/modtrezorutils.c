@@ -30,7 +30,7 @@
 
 #include <string.h>
 #include "blake2s.h"
-#include "boot_args.h"
+#include "bootutils.h"
 #include "common.h"
 #include "flash.h"
 #include "unit_variant.h"

@@ -25,7 +25,7 @@
 #include STM32_HAL_H
 
 #include "board_capabilities.h"
-#include "boot_args.h"
+#include "bootutils.h"
 #include "button.h"
 #include "common.h"
 #include "display.h"

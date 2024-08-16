@@ -24,7 +24,7 @@
 #include <pb_encode.h>
 #include "messages.pb.h"
 
-#include "boot_args.h"
+#include "bootutils.h"
 #include "common.h"
 #include "flash.h"
 #include "image.h"
