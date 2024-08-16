@@ -1,5 +1,5 @@
-#ifndef TREZORHAL_BOOT_ARGS_H
-#define TREZORHAL_BOOT_ARGS_H
+#ifndef TREZORHAL_BOOTUTILS_H
+#define TREZORHAL_BOOTUTILS_H
 
 #include <stddef.h>
 #include <stdint.h>
@@ -40,4 +40,4 @@ void __attribute__((noreturn)) trezor_shutdown(void);
 void __attribute__((noreturn)) svc_reboot_to_bootloader(void);
 void __attribute__((noreturn)) svc_reboot(void);
 
-#endif  // TREZORHAL_BOOT_ARGS_H
+#endif  // TREZORHAL_BOOTUTILS_H

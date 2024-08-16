@@ -1,5 +1,5 @@
 
-#include "../boot_args.h"
+#include "../bootutils.h"
 #include <common.h>
 #include <string.h>
 

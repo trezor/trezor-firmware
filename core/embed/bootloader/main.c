@@ -20,7 +20,7 @@
 #include <string.h>
 #include <sys/types.h>
 
-#include "boot_args.h"
+#include "bootutils.h"
 #include "common.h"
 #include "display.h"
 #include "display_utils.h"
