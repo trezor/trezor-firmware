@@ -1,6 +1,8 @@
 
 #include "../bootutils.h"
 #include <common.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 // The 'g_boot_command_shadow' variable stores the 'command' for the next
@@ -42,3 +44,13 @@ void bootargs_clear() {
 boot_command_t bootargs_get_command() { return g_boot_command_shadow; }
 
 const boot_args_t* bootargs_get_args() { return &g_boot_args; }
+
+void __attribute__((noreturn)) secure_shutdown(void) {
+  printf("SHUTDOWN\n");
+
+  // Wait some time to let the user see the displayed
+  // message before shutting down
+  hal_delay(3000);
+
+  exit(3);
+}
