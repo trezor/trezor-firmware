@@ -16,17 +16,22 @@ const ZLIB_CACHE_SLOTS: usize = 1;
 #[cfg(not(feature = "xframebuffer"))]
 const ZLIB_CACHE_SLOTS: usize = 3;
 
+#[cfg(not(feature = "xframebuffer"))]
 const RENDER_BUFF_SIZE: usize = (240 * 2 * 16) + ALIGN_PAD;
 
-#[cfg(feature = "model_mercury")]
+#[cfg(feature = "ui_overlay")]
 const IMAGE_BUFF_SIZE: usize = 240 * 240 + ALIGN_PAD;
-#[cfg(not(feature = "model_mercury"))]
+#[cfg(not(feature = "ui_overlay"))]
 const IMAGE_BUFF_SIZE: usize = 2048 + ALIGN_PAD;
 
 pub type ImageBuff = [u8; IMAGE_BUFF_SIZE];
+
+#[cfg(not(feature = "xframebuffer"))]
 pub type RenderBuff = [u8; RENDER_BUFF_SIZE];
 
 pub type ImageBuffRef<'a> = RefMut<'a, ImageBuff>;
+
+#[cfg(not(feature = "xframebuffer"))]
 pub type RenderBuffRef<'a> = RefMut<'a, RenderBuff>;
 
 pub struct DrawingCache<'a> {

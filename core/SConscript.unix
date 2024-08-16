@@ -888,6 +888,7 @@ def cargo_build():
 
     if NEW_RENDERING and TREZOR_MODEL in ('T3T1', ):
         features.append('ui_image_buffer')
+        features.append('ui_overlay')
 
     if NEW_RENDERING:
         features.append('new_rendering')
