@@ -58,7 +58,7 @@ error_shutdown_ex(const char *title, const char *message, const char *footer) {
   }
   term_printf("\n%s\n", footer);
   display_backlight(255);
-  trezor_shutdown();
+  secure_shutdown();
 #endif
 }
 
@@ -99,7 +99,7 @@ __fatal_error(const char *msg, const char *file, int line) {
 #endif
   term_printf("\nPlease contact Trezor support.\n");
   display_backlight(255);
-  trezor_shutdown();
+  secure_shutdown();
 #endif
 }
 
