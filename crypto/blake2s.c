@@ -18,6 +18,7 @@
 #include "blake2s.h"
 #include "blake2_common.h"
 #include "memzero.h"
+#include "options.h"
 
 typedef struct blake2s_param__
 {
@@ -182,28 +183,37 @@ int blake2s_InitKey( blake2s_state *S, size_t outlen, const void *key, size_t ke
   return 0;
 }
 
-#define G(r,i,a,b,c,d)                      \
-  do {                                      \
-    a = a + b + m[blake2s_sigma[r][2*i+0]]; \
-    d = rotr32(d ^ a, 16);                  \
-    c = c + d;                              \
-    b = rotr32(b ^ c, 12);                  \
-    a = a + b + m[blake2s_sigma[r][2*i+1]]; \
-    d = rotr32(d ^ a, 8);                   \
-    c = c + d;                              \
-    b = rotr32(b ^ c, 7);                   \
+#define G(m,r,i,a,b,c,d)                             \
+  do {                                               \
+    *(a) = *(a) + *(b) + m[blake2s_sigma[r][2*i+0]]; \
+    *(d) = rotr32(*(d) ^ *(a), 16);                  \
+    *(c) = *(c) + *(d);                              \
+    *(b) = rotr32(*(b) ^ *(c), 12);                  \
+    *(a) = *(a) + *(b) + m[blake2s_sigma[r][2*i+1]]; \
+    *(d) = rotr32(*(d) ^ *(a), 8);                   \
+    *(c) = *(c) + *(d);                              \
+    *(b) = rotr32(*(b) ^ *(c), 7);                   \
   } while(0)
 
-#define ROUND(r)                    \
-  do {                              \
-    G(r,0,v[ 0],v[ 4],v[ 8],v[12]); \
-    G(r,1,v[ 1],v[ 5],v[ 9],v[13]); \
-    G(r,2,v[ 2],v[ 6],v[10],v[14]); \
-    G(r,3,v[ 3],v[ 7],v[11],v[15]); \
-    G(r,4,v[ 0],v[ 5],v[10],v[15]); \
-    G(r,5,v[ 1],v[ 6],v[11],v[12]); \
-    G(r,6,v[ 2],v[ 7],v[ 8],v[13]); \
-    G(r,7,v[ 3],v[ 4],v[ 9],v[14]); \
+#if OPTIMIZE_SIZE_BLAKE2S
+static void g(uint32_t *m, int r, int i, uint32_t *a, uint32_t *b, uint32_t *c,
+              uint32_t *d) {
+  G(m,r,i,a,b,c,d);
+}
+#else
+#define g(m,r,i,a,b,c,d) G(m,r,i,a,b,c,d)
+#endif
+
+#define ROUND(m,v,r)                      \
+  do {                                    \
+    g(m,r,0,v +  0,v +  4,v +  8,v + 12); \
+    g(m,r,1,v +  1,v +  5,v +  9,v + 13); \
+    g(m,r,2,v +  2,v +  6,v + 10,v + 14); \
+    g(m,r,3,v +  3,v +  7,v + 11,v + 15); \
+    g(m,r,4,v +  0,v +  5,v + 10,v + 15); \
+    g(m,r,5,v +  1,v +  6,v + 11,v + 12); \
+    g(m,r,6,v +  2,v +  7,v +  8,v + 13); \
+    g(m,r,7,v +  3,v +  4,v +  9,v + 14); \
   } while(0)
 
 static void blake2s_compress( blake2s_state *S, const uint8_t in[BLAKE2S_BLOCKBYTES] )
@@ -229,16 +239,22 @@ static void blake2s_compress( blake2s_state *S, const uint8_t in[BLAKE2S_BLOCKBY
   v[14] = S->f[0] ^ blake2s_IV[6];
   v[15] = S->f[1] ^ blake2s_IV[7];
 
-  ROUND( 0 );
-  ROUND( 1 );
-  ROUND( 2 );
-  ROUND( 3 );
-  ROUND( 4 );
-  ROUND( 5 );
-  ROUND( 6 );
-  ROUND( 7 );
-  ROUND( 8 );
-  ROUND( 9 );
+#if OPTIMIZE_SIZE_BLAKE2S
+  for (int r = 0; r < 10; r++) {
+    ROUND(m, v, r);
+  }
+#else
+  ROUND( m, v, 0 );
+  ROUND( m, v, 1 );
+  ROUND( m, v, 2 );
+  ROUND( m, v, 3 );
+  ROUND( m, v, 4 );
+  ROUND( m, v, 5 );
+  ROUND( m, v, 6 );
+  ROUND( m, v, 7 );
+  ROUND( m, v, 8 );
+  ROUND( m, v, 9 );
+#endif
 
   for( i = 0; i < 8; ++i ) {
     S->h[i] = S->h[i] ^ v[i] ^ v[i + 8];
