@@ -62,6 +62,7 @@
 #include "ed25519-donna/ed25519-keccak.h"
 #include "ed25519-donna/ed25519.h"
 #include "elligator2.h"
+#include "groestl.h"
 #include "hash_to_curve.h"
 #include "hmac_drbg.h"
 #include "memzero.h"
@@ -6501,6 +6502,37 @@ START_TEST(test_mnemonic) {
 }
 END_TEST
 
+START_TEST(test_groestl512) {
+  static struct {
+    const char *msg;
+    const char *hash;
+  } tests[] = {
+      {"",
+       "6d3ad29d279110eef3adbd66de2a0345a77baede1557f5d099fce0c03d6dc2ba8e6d4a6"
+       "633dfbd66053c20faa87d1a11f39a7fbe4a6c2f009801370308fc4ad8"},
+      // abc
+      {"616263",
+       "70e1c68c60df3b655339d67dc291cc3f1dde4ef343f11b23fdd44957693815a75a8339c"
+       "682fc28322513fd1f283c18e53cff2b264e06bf83a2f0ac8c1f6fbff6"},
+      // 64 bytes
+      {"000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+       "202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f",
+       "6e8c9b90e36cea68c029a7d8b95b718c84205d81be227ba61510f567d46b83edd11f301"
+       "bf1e7041be991b22fdbee82dbdce7ab0e0ee42a795ca965a439532a39"},
+  };
+
+  uint8_t hash[64];
+  GROESTL512_CTX ctx;
+
+  for (size_t i = 0; i < sizeof(tests) / sizeof(*tests); i++) {
+    groestl512_Init(&ctx);
+    groestl512_Update(&ctx, fromhex(tests[i].msg), strlen(tests[i].msg) / 2);
+    groestl512_Final(&ctx, hash);
+    ck_assert_mem_eq(hash, fromhex(tests[i].hash), 64);
+  }
+}
+END_TEST
+
 START_TEST(test_mnemonic_check) {
   static const char *vectors_ok[] = {
       "abandon abandon abandon abandon abandon abandon abandon abandon abandon "
@@ -11556,6 +11588,10 @@ Suite *test_suite(void) {
   tcase_add_test(tc, test_blake2b);
   tcase_add_test(tc, test_blake2bp);
   tcase_add_test(tc, test_blake2s);
+  suite_add_tcase(s, tc);
+
+  tc = tcase_create("groestl");
+  tcase_add_test(tc, test_groestl512);
   suite_add_tcase(s, tc);
 
   tc = tcase_create("chacha_drbg");
