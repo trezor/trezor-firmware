@@ -30,16 +30,6 @@
 
 void __attribute__((noreturn)) main_clean_exit();
 
-void __attribute__((noreturn)) trezor_shutdown(void) {
-  printf("SHUTDOWN\n");
-
-  // Wait some time to let the user see the displayed
-  // message before shutting down
-  hal_delay(3000);
-
-  exit(3);
-}
-
 static int SDLCALL emulator_event_filter(void *userdata, SDL_Event *event) {
   switch (event->type) {
     case SDL_QUIT:

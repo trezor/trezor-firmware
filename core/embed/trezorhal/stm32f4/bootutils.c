@@ -11,13 +11,13 @@
 // to the bootloader.
 // 1. In the bootloader, its value is set in the startup code.
 // 2. In the firmware it holds command for the next boot and it is used
-//    when svc_reboot_to_bootloader() is called
+//    when reboot_to_bootloader() is called
 boot_command_t g_boot_command_shadow;
 
 #ifdef STM32U5
 // The 'g_boot_command' is persistent variable that holds the 'command'
 // for the next reboot/jump to the bootloader. Its value is set to
-// g_boot_command_shadow when 'svc_reboot_to_bootloader()' is called.
+// g_boot_command_shadow when 'reboot_to_bootloader()' is called.
 boot_command_t __attribute__((section(".boot_command"))) g_boot_command;
 #endif
 
@@ -47,7 +47,7 @@ boot_command_t bootargs_get_command() { return g_boot_command_shadow; }
 
 const boot_args_t* bootargs_get_args() { return &g_boot_args; }
 
-void __attribute__((noreturn)) trezor_shutdown(void) {
+void __attribute__((noreturn)) secure_shutdown(void) {
   display_deinit(DISPLAY_RETAIN_CONTENT);
 
 #if defined(STM32U5)
@@ -63,7 +63,7 @@ void __attribute__((noreturn)) trezor_shutdown(void) {
     ;
 }
 
-void svc_reboot_to_bootloader(void) {
+void reboot_to_bootloader(void) {
   boot_command_t boot_command = bootargs_get_command();
   display_deinit(DISPLAY_RESET_CONTENT);
 #ifdef ENSURE_COMPATIBLE_SETTINGS
@@ -83,4 +83,4 @@ void svc_reboot_to_bootloader(void) {
 #endif
 }
 
-void svc_reboot(void) { NVIC_SystemReset(); }
+void reboot(void) { NVIC_SystemReset(); }

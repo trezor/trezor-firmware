@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-// Defines boot command for 'svc_reboot_to_bootloader()' function
+// Defines boot command for 'reboot_to_bootloader()' function
 typedef enum {
   // Normal boot sequence
   BOOT_COMMAND_NONE = 0x00000000,
@@ -36,8 +36,15 @@ boot_command_t bootargs_get_command();
 // Returns the pointer to boot arguments
 const boot_args_t* bootargs_get_args();
 
-void __attribute__((noreturn)) trezor_shutdown(void);
-void __attribute__((noreturn)) svc_reboot_to_bootloader(void);
-void __attribute__((noreturn)) svc_reboot(void);
+// Reboots the device into the bootloader.
+// The bootloader will read the command set by `bootargs_set()`.
+void __attribute__((noreturn)) reboot_to_bootloader(void);
+
+// Causes immediate reset of the device.
+void __attribute__((noreturn)) reboot(void);
+
+// Safely shuts down the device (clears secrets, memory, etc.).
+// This function is called when the device is in an unrecoverable state.
+void __attribute__((noreturn)) secure_shutdown(void);
 
 #endif  // TREZORHAL_BOOTUTILS_H
