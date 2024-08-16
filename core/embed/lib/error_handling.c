@@ -22,7 +22,7 @@
 #include <stdio.h>
 #endif
 
-#include "boot_args.h"
+#include "bootutils.h"
 #include "display.h"
 #include "error_handling.h"
 #include "mini_printf.h"
