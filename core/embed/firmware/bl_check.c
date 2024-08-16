@@ -225,6 +225,65 @@ void check_and_replace_bootloader(void) {
     error_shutdown("Incompatible embedded bootloader");
   }
 
+  ensure(check_image_header_sig(new_bld_hdr, BOARDLOADER_KEY_M,
+                                BOARDLOADER_KEY_N, BOARDLOADER_KEYS),
+         "Invalid embedded bootloader signature");
+
+  uint8_t hdr_hash[IMAGE_HASH_DIGEST_LENGTH];
+  uint8_t data_hash[IMAGE_HASH_DIGEST_LENGTH];
+  memcpy(hdr_hash, new_bld_hdr->hashes, IMAGE_HASH_DIGEST_LENGTH);
+
+  uint32_t code_start_offset = IMAGE_CODE_ALIGN(IMAGE_HEADER_SIZE);
+  uint32_t padding_size = code_start_offset - IMAGE_HEADER_SIZE;
+
+  IMAGE_HASH_CTX ctx;
+  IMAGE_HASH_INIT(&ctx);
+  decomp.dest = (uint8_t *)decomp_out;
+
+  while (uzlib_uncompress(&decomp) >= 0) {
+    int code_offset = 0;
+
+    // in case we need to align the code, check if the padding between the
+    // header and the code
+    if (padding_size > 0) {
+      uint32_t check_size =
+          padding_size >= IMAGE_HEADER_SIZE ? IMAGE_HEADER_SIZE : padding_size;
+
+      // Check the padding bytes
+      for (uint32_t i = 0; i < check_size; i++) {
+        if (((uint8_t *)decomp_out)[i] != 0) {
+          error_shutdown("Wrong embedded bootloader padding");
+        }
+      }
+
+      // Update padding_size and other variables based on the check
+      if (padding_size >= IMAGE_HEADER_SIZE) {
+        padding_size -= IMAGE_HEADER_SIZE;
+        decomp.dest = (uint8_t *)decomp_out;
+        continue;
+      } else {
+        code_offset = padding_size;
+        padding_size = 0;
+      }
+    }
+
+    IMAGE_HASH_UPDATE(&ctx, (uint8_t *)&decomp_out[code_offset],
+                      decomp.dest - (uint8_t *)&decomp_out[code_offset]);
+    decomp.dest = (uint8_t *)decomp_out;
+  }
+
+  IMAGE_HASH_FINAL(&ctx, data_hash);
+
+  if (0 != memcmp(hdr_hash, data_hash, IMAGE_HASH_DIGEST_LENGTH)) {
+    error_shutdown("Wrong embedded bootloader hash");
+  }
+
+  uzlib_prepare(&decomp, decomp_window, data, len, decomp_out,
+                sizeof(decomp_out));
+
+  ensure((uzlib_uncompress(&decomp) == TINF_OK) ? sectrue : secfalse,
+         "Bootloader header decompression failed");
+
   ensure(flash_area_erase(&BOOTLOADER_AREA, NULL), NULL);
   ensure(flash_unlock_write(), NULL);
 

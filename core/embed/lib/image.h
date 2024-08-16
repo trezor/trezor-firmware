@@ -116,6 +116,10 @@ typedef struct {
   uint8_t hash[IMAGE_HASH_DIGEST_LENGTH];
 } firmware_header_info_t;
 
+extern const uint8_t BOARDLOADER_KEY_M;
+extern const uint8_t BOARDLOADER_KEY_N;
+extern const uint8_t *const BOARDLOADER_KEYS[];
+
 const image_header *read_image_header(const uint8_t *const data,
                                       const uint32_t magic,
                                       const uint32_t maxsize);
