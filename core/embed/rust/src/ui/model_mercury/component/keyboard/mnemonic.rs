@@ -55,6 +55,18 @@ where
         let back_btn = Button::with_icon(theme::ICON_CHEVRON_LEFT)
             .styled(theme::button_default())
             .with_expanded_touch_area(Insets::right(BACK_BUTTON_RIGHT_EXPAND));
+        let keys = {
+            const EMPTY_BTN: Button = Button::empty();
+            let mut array = [EMPTY_BTN; MNEMONIC_KEY_COUNT];
+            for (key, t) in T::keys().iter().enumerate() {
+                array[key] = Button::with_text((*t).into())
+                    .styled(theme::button_keyboard())
+                    .with_text_align(Alignment::Center)
+                    .initially_enabled(input.can_key_press_lead_to_a_valid_word(key));
+            }
+            array
+        };
+
         Self {
             prompt: Maybe::new(
                 theme::BG,
@@ -65,11 +77,7 @@ where
             back: Maybe::new(theme::BG, back_btn, prompt_visible && can_go_back),
             input: Maybe::new(theme::BG, input, !prompt_visible),
             keypad_area: Rect::zero(),
-            keys: T::keys().map(|t| {
-                Button::with_text(t.into())
-                    .styled(theme::button_keyboard())
-                    .with_text_align(Alignment::Center)
-            }),
+            keys,
             swipe: Swipe::new().right(),
             can_go_back,
         }
