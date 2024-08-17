@@ -27,14 +27,14 @@ async def request_mnemonic(
 
     await button_request("mnemonic", code=ButtonRequestType.MnemonicInput)
 
-    # Allowing to go back to previous words, therefore cannot use just loop over range(word_count)
+    # Pre-allocate the list to enable going back and overwriting words.
     words: list[str] = [""] * word_count
     i = 0
-    while True:
-        # All the words have been entered
-        if i >= word_count:
-            break
 
+    def all_words_entered() -> bool:
+        return i >= word_count
+
+    while not all_words_entered():
         # Prefilling the previously inputted word in case of going back
         word = await request_word(
             i,
@@ -43,9 +43,10 @@ async def request_mnemonic(
             prefill_word=words[i],
         )
 
-        # User has decided to go back
         if not word:
+            # User has decided to go back
             if i > 0:
+                words[i] = ""
                 i -= 1
             continue
 

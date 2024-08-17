@@ -1,10 +1,7 @@
 use crate::{
     strutil::TString,
     ui::{
-        component::{
-            maybe::paint_overlapping, Component, Event, EventCtx, Label, Maybe, Swipe,
-            SwipeDirection,
-        },
+        component::{maybe::paint_overlapping, Component, Event, EventCtx, Label, Maybe},
         geometry::{Alignment, Grid, Insets, Rect},
         model_mercury::{
             component::{Button, ButtonMsg},
@@ -35,8 +32,6 @@ pub struct MnemonicKeyboard<T> {
     keypad_area: Rect,
     /// Key buttons.
     keys: [Button; MNEMONIC_KEY_COUNT],
-    /// Swipe controller - allowing for going to the previous word.
-    swipe: Swipe,
     /// Whether going back is allowed (is not on the very first word).
     can_go_back: bool,
 }
@@ -78,7 +73,6 @@ where
             input: Maybe::new(theme::BG, input, !prompt_visible),
             keypad_area: Rect::zero(),
             keys,
-            swipe: Swipe::new().right(),
             can_go_back,
         }
     }
@@ -136,7 +130,6 @@ where
         let input_area = input_area.inset(Insets::left(BACK_BUTTON_RIGHT_EXPAND));
         let keyboard_grid = Grid::new(keypad_area, 3, 3).with_spacing(theme::KEYBOARD_SPACING);
 
-        self.swipe.place(bounds);
         self.prompt.place(prompt_area);
         self.erase.place(back_btn_area);
         self.back.place(back_btn_area);
@@ -149,12 +142,9 @@ where
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        // Back button or swipe will cause going back to the previous word when allowed.
+        // Back button will cause going back to the previous word when allowed.
         if self.can_go_back {
             if let Some(ButtonMsg::Clicked) = self.back.event(ctx, event) {
-                return Some(MnemonicKeyboardMsg::Previous);
-            }
-            if let Some(SwipeDirection::Right) = self.swipe.event(ctx, event) {
                 return Some(MnemonicKeyboardMsg::Previous);
             }
         }

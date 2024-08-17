@@ -222,7 +222,7 @@ def enter_seed_previous_correct(
 
         if go_back:
             go_back = False
-            if debug.model in (models.T2T1, models.T3T1):
+            if debug.model in (models.T2T1,):
                 debug.swipe_right(wait=True)
                 for _ in range(len(bad_word)):
                     debug.click(buttons.RECOVERY_DELETE, wait=True)
@@ -237,6 +237,10 @@ def enter_seed_previous_correct(
                     while layout.get_middle_choice() not in DELETE_BTN_TEXTS:
                         layout = debug.press_left(wait=True)
                     layout = debug.press_middle(wait=True)
+            elif debug.model in (models.T3T1,):
+                debug.click(buttons.RECOVERY_DELETE, wait=True)  # Top-left
+                for _ in range(len(bad_word)):
+                    debug.click(buttons.RECOVERY_DELETE, wait=True)
             continue
 
         if i in bad_indexes:
