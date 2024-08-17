@@ -40,6 +40,16 @@ where
     pub fn new(input: T, prompt: TString<'static>, can_go_back: bool) -> Self {
         // Input might be already pre-filled
         let prompt_visible = input.is_empty();
+        let keys = {
+            const EMPTY_BTN: Button = Button::empty();
+            let mut array = [EMPTY_BTN; MNEMONIC_KEY_COUNT];
+            for (key, t) in T::keys().iter().enumerate() {
+                array[key] = Button::with_text((*t).into())
+                    .styled(theme::button_pin())
+                    .initially_enabled(input.can_key_press_lead_to_a_valid_word(key));
+            }
+            array.map(Child::new)
+        };
 
         Self {
             prompt: Child::new(Maybe::new(
@@ -59,9 +69,7 @@ where
                 !prompt_visible,
             )),
             input: Child::new(Maybe::new(theme::BG, input, !prompt_visible)),
-            keys: T::keys()
-                .map(|t| Button::with_text(t.into()).styled(theme::button_pin()))
-                .map(Child::new),
+            keys,
             swipe: Swipe::new().right(),
             can_go_back,
         }
