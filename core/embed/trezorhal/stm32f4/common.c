@@ -52,14 +52,3 @@ void clear_otg_hs_memory(void) {
   __HAL_RCC_USB_OTG_HS_CLK_DISABLE();  // disable USB OTG_HS peripheral clock as
                                        // the peripheral is not needed right now
 }
-
-void invalidate_firmware(void) {
-  // erase start of the firmware (metadata) -> invalidate FW
-  ensure(flash_unlock_write(), NULL);
-  for (int i = 0; i < (1024 / FLASH_BLOCK_SIZE); i += FLASH_BLOCK_SIZE) {
-    flash_block_t data = {0};
-    ensure(flash_area_write_block(&FIRMWARE_AREA, i * FLASH_BLOCK_SIZE, data),
-           NULL);
-  }
-  ensure(flash_lock_write(), NULL);
-}

@@ -34,6 +34,7 @@
 #include "fault_handlers.h"
 #include "flash.h"
 #include "flash_otp.h"
+#include "fwutils.h"
 #include "i2c.h"
 #include "image.h"
 #include "model.h"

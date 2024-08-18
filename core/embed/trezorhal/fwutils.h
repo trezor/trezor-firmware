@@ -17,17 +17,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include STM32_HAL_H
+#ifndef TREZORHAL_FWUTILS_H
+#define TREZORHAL_FWUTILS_H
 
-#include <string.h>
+// Invalidates the firmware by erasing the first 1KB of the firmware area.
+//
+// Note: only works when write access to firmware area is enabled by MPU
+void invalidate_firmware(void);
 
-#include "common.h"
-#include "display.h"
-#include "error_handling.h"
-#include "flash_otp.h"
-#include "model.h"
-#include "platform.h"
-#include "rand.h"
-#include "secret.h"
-
-#include "stm32u5xx_ll_utils.h"
+#endif  // TREZORHAL_FWUTILS_H
