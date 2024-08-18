@@ -56,6 +56,7 @@ def stm32u5_common_files(env, defines, sources, paths):
         "embed/trezorhal/stm32u5/fault_handlers.c",
         "embed/trezorhal/stm32u5/flash.c",
         "embed/trezorhal/stm32u5/flash_otp.c",
+        "embed/trezorhal/stm32u5/fwutils.c",
         "embed/trezorhal/stm32u5/lowlevel.c",
         "embed/trezorhal/stm32u5/hash_processor.c",
         "embed/trezorhal/stm32u5/monoctr.c",

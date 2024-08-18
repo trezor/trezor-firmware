@@ -19,15 +19,25 @@
 
 #include STM32_HAL_H
 
-#include <string.h>
-
-#include "common.h"
-#include "display.h"
+#include "fwutils.h"
 #include "error_handling.h"
-#include "flash_otp.h"
+#include "flash.h"
+#include "flash_area.h"
 #include "model.h"
-#include "platform.h"
-#include "rand.h"
-#include "secret.h"
 
-#include "stm32u5xx_ll_utils.h"
+void invalidate_firmware(void) {
+#ifdef STM32U5
+  // on stm32u5, we need to disable the instruction cache before erasing the
+  // firmware - otherwise, the write check will fail
+  ICACHE->CR &= ~ICACHE_CR_EN;
+#endif
+
+  // erase start of the firmware (metadata) -> invalidate FW
+  ensure(flash_unlock_write(), NULL);
+  for (int i = 0; i < (1024 / FLASH_BLOCK_SIZE); i += FLASH_BLOCK_SIZE) {
+    flash_block_t data = {0};
+    ensure(flash_area_write_block(&FIRMWARE_AREA, i * FLASH_BLOCK_SIZE, data),
+           NULL);
+  }
+  ensure(flash_lock_write(), NULL);
+}
