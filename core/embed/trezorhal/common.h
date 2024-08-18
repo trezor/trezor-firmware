@@ -53,8 +53,4 @@
   })
 #endif
 
-// Invalidates firmware on the device
-// Note: only works when write access to firmware area is enabled by MPU
-void invalidate_firmware(void);
-
 #endif
