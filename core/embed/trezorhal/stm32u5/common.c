@@ -32,12 +32,6 @@
 
 #include "stm32u5xx_ll_utils.h"
 
-uint32_t __stack_chk_guard = 0;
-
-void __attribute__((noreturn)) __stack_chk_fail(void) {
-  error_shutdown("(SS)");
-}
-
 void invalidate_firmware(void) {
   // on stm32u5, we need to disable the instruction cache before erasing the
   // firmware - otherwise, the write check will fail

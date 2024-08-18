@@ -38,6 +38,14 @@
 #define COLOR_FATAL_ERROR COLOR_BLACK
 #endif
 
+uint32_t __stack_chk_guard = 0;
+
+// Calls to this function are inserted by the compiler
+// when stack protection is enabled.
+void __attribute__((noreturn, used)) __stack_chk_fail(void) {
+  error_shutdown("(SS)");
+}
+
 void __attribute__((noreturn))
 error_shutdown_ex(const char *title, const char *message, const char *footer) {
   if (title == NULL) {
