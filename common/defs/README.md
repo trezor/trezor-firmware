@@ -81,7 +81,7 @@ added to the dataset.
 # Support Information
 
 We keep track of support status of each built-in coin over our devices. That is
-`T1B1` for Trezor One, `T2T1` for Trezor T, `T2B1` for Trezor R, `connect` for [Connect](https://github.com/trezor/connect)
+`T1B1` for Trezor One, `T2T1` for Trezor T, `T2B1` for Trezor Safe 3, `T3T1` for Trezor Safe 5, `connect` for [Connect](https://github.com/trezor/connect)
 and `suite` for [Trezor Suite](https://suite.trezor.io/). In further description, the word "device"
 applies to Connect and Suite as well.
 
