@@ -5,7 +5,16 @@ void fault_handlers_init(void) {
   SCB->SHCSR |= (SCB_SHCSR_USGFAULTENA_Msk | SCB_SHCSR_BUSFAULTENA_Msk);
 }
 
-void HardFault_Handler(void) { error_shutdown("(HF)"); }
+void HardFault_Handler(void) {
+  // A HardFault may also be caused by exception escalation.
+  // To ensure we have enough space to handle the exception,
+  // we set the stack pointer to the end of the stack.
+  extern uint8_t _estack;  // linker script symbol
+  // Fix stack pointer
+  __set_MSP((uint32_t)&_estack);
+
+  error_shutdown("(HF)");
+}
 
 void MemManage_Handler(void) { error_shutdown("(MM)"); }
 
