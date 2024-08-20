@@ -648,14 +648,19 @@ async def confirm_output(
     await raise_if_not_confirmed(
         RustLayout(
             trezorui2.flow_confirm_output(
+                title=title,
                 address=address,
                 amount=amount,
-                title=title,
                 chunkify=chunkify,
                 account=source_account,
                 account_path=source_account_path,
                 br_code=br_code,
                 br_name="confirm_output",
+                summary_items=None,
+                fee_items=None,
+                summary_title=None,
+                summary_br_name=None,
+                summary_br_code=None,
                 cancel_text=cancel_text,
             )
         )
@@ -1023,21 +1028,28 @@ if not utils.BITCOIN_ONLY:
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
         chunkify: bool = False,
     ) -> None:
-        await confirm_output(
-            recipient,
-            title=TR.words__recipient,
-            chunkify=chunkify,
-            cancel_text=TR.buttons__cancel,
-            br_code=ButtonRequestType.Other,
-        )
-
-        await _confirm_summary(
-            items=(
-                (TR.words__amount, total_amount),
-                (TR.send__maximum_fee, maximum_fee),
-            ),
-            fee_items=fee_info_items,
-            cancel_text=TR.buttons__cancel,
+        await raise_if_not_confirmed(
+            RustLayout(
+                trezorui2.flow_confirm_output(
+                    title=TR.words__recipient,
+                    address=recipient,
+                    amount=None,
+                    chunkify=chunkify,
+                    account=None,
+                    account_path=None,
+                    br_code=ButtonRequestType.Other,
+                    br_name="confirm_output",
+                    summary_items=(
+                        (TR.words__amount, total_amount),
+                        (TR.send__maximum_fee, maximum_fee),
+                    ),
+                    fee_items=fee_info_items,
+                    summary_title=TR.words__title_summary,
+                    summary_br_name="confirm_total",
+                    summary_br_code=ButtonRequestType.SignTx,
+                    cancel_text=TR.buttons__cancel,
+                )
+            )
         )
 
     async def confirm_ethereum_staking_tx(

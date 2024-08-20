@@ -53,7 +53,6 @@ impl FlowState for ConfirmSummary {
             (Self::Summary, SwipeDirection::Up) => Self::Hold.swipe(direction),
             (Self::Hold, SwipeDirection::Down) => Self::Summary.swipe(direction),
             (Self::Menu, SwipeDirection::Right) => Self::Summary.swipe(direction),
-            (Self::Menu, SwipeDirection::Left) => Self::FeeInfo.swipe(direction),
             (Self::AccountInfo | Self::FeeInfo | Self::CancelTap, SwipeDirection::Right) => {
                 Self::Menu.swipe(direction)
             }
