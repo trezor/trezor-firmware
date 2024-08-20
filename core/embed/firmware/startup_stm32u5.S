@@ -7,7 +7,7 @@
 reset_handler:
   // set the stack protection
   ldr r0, =_sstack
-  add r0, r0, #16        // padding
+  add r0, r0, #128       // safety margin for the exception frame
   msr MSPLIM, r0
 
   // setup environment for subsequent stage of code
