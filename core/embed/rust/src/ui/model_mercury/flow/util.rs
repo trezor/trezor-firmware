@@ -153,6 +153,7 @@ pub struct ShowInfoParams {
     footer_description: Option<TString<'static>>,
     chunkify: bool,
     swipe_up: bool,
+    swipe_down: bool,
     items: Vec<(TString<'static>, TString<'static>), 4>,
 }
 
@@ -167,6 +168,7 @@ impl ShowInfoParams {
             footer_description: None,
             chunkify: false,
             swipe_up: false,
+            swipe_down: false,
             items: Vec::new(),
         }
     }
@@ -218,6 +220,11 @@ impl ShowInfoParams {
         self
     }
 
+    pub const fn with_swipe_down(mut self) -> Self {
+        self.swipe_down = true;
+        self
+    }
+
     #[inline(never)]
     pub fn into_layout(
         self,
@@ -266,6 +273,10 @@ impl ShowInfoParams {
 
         if self.swipe_up {
             frame = frame.with_swipe(SwipeDirection::Up, SwipeSettings::default());
+        }
+
+        if self.swipe_down {
+            frame = frame.with_swipe(SwipeDirection::Down, SwipeSettings::default());
         }
 
         frame = frame.with_vertical_pages();

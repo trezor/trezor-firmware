@@ -666,6 +666,10 @@ static void _librust_qstrs(void) {
   MP_QSTR_subprompt;
   MP_QSTR_subtext;
   MP_QSTR_subtitle;
+  MP_QSTR_summary_br_code;
+  MP_QSTR_summary_br_name;
+  MP_QSTR_summary_items;
+  MP_QSTR_summary_title;
   MP_QSTR_text;
   MP_QSTR_text_confirm;
   MP_QSTR_text_info;

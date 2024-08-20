@@ -454,7 +454,7 @@ class EthereumFlow:
             if cancel:
                 self.debug.press_no()
             else:
-                self.debug.press_yes()
+                self.debug.swipe_up()
                 yield
                 TR.assert_equals(
                     self.debug.wait_layout().title(), "words__title_summary"

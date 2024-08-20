@@ -1764,9 +1764,14 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     account_path: str | None,
     ///     br_code: ButtonRequestType,
     ///     br_name: str,
+    ///     summary_items: Iterable[tuple[str, str]] | None = None,
+    ///     fee_items: Iterable[tuple[str, str]] | None = None,
+    ///     summary_title: str | None = None,
+    ///     summary_br_code: ButtonRequestType | None = None,
+    ///     summary_br_name: str | None = None,
     ///     cancel_text: str | None = None,
     /// ) -> LayoutObj[UiResult]:
-    ///     """Confirm recipient."""
+    ///     """Confirm the recipient, (optionally) confirm the amount and (optionally) confirm the summary and present a Hold to Sign page."""
     Qstr::MP_QSTR_flow_confirm_output => obj_fn_kw!(0, flow::new_confirm_output).as_obj(),
 
     /// def flow_confirm_summary(
