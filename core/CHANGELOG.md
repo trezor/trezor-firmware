@@ -23,7 +23,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - [T2T1,T3T1] Added a progress indicator for the formatting operation.  [#3035]
 - [T3T1] Improved screen brightness settings.  [#3969]
 - [T3T1] Improve touch layer precision.  [#3972]
-- [T2B1] Fix display orientation "south".  [#3990]
 - [T3T1] Fix More info screen during multi-share backup creation.  [#4006]
 - [T3T1] Fixed title sometimes not fitting into result screen.  [#4023]
 - [T3T1] Adjusted detection of swipes: vertical swipes are preferred over horizontal swipes.  [#4060]
@@ -968,7 +967,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#3972]: https://github.com/trezor/trezor-firmware/pull/3972
 [#3976]: https://github.com/trezor/trezor-firmware/pull/3976
 [#3987]: https://github.com/trezor/trezor-firmware/pull/3987
-[#3990]: https://github.com/trezor/trezor-firmware/pull/3990
 [#3992]: https://github.com/trezor/trezor-firmware/pull/3992
 [#4000]: https://github.com/trezor/trezor-firmware/pull/4000
 [#4006]: https://github.com/trezor/trezor-firmware/pull/4006

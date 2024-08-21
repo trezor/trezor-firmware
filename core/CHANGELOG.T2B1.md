@@ -4,13 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [2.8.1] (21st August 2024)
+## [2.8.1] (unreleased)
 
 ### Added
 - Improve precision of PIN timeout countdown.  [#4000]
 
 ### Fixed
-- Fix display orientation "south".  [#3990]
 - Solana: added support for deprecated AToken Create `rent_sysvar` argument.  [#3976]
 
 
@@ -935,7 +934,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#3972]: https://github.com/trezor/trezor-firmware/pull/3972
 [#3976]: https://github.com/trezor/trezor-firmware/pull/3976
 [#3987]: https://github.com/trezor/trezor-firmware/pull/3987
-[#3990]: https://github.com/trezor/trezor-firmware/pull/3990
 [#3992]: https://github.com/trezor/trezor-firmware/pull/3992
 [#4000]: https://github.com/trezor/trezor-firmware/pull/4000
 [#4006]: https://github.com/trezor/trezor-firmware/pull/4006
