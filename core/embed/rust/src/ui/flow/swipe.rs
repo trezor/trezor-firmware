@@ -363,6 +363,11 @@ impl ObjComponent for SwipeFlow {
             Some(FlowMsg::Choice(i)) => {
                 Ok((crate::ui::layout::result::CONFIRMED.as_obj(), i.try_into()?).try_into()?)
             }
+            Some(FlowMsg::Text(s)) => Ok((
+                crate::ui::layout::result::CONFIRMED.as_obj(),
+                s.as_str().try_into()?,
+            )
+                .try_into()?),
         }
     }
     fn obj_paint(&mut self) {
