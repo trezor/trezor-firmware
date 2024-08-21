@@ -71,10 +71,6 @@ impl Button {
         Self::new(ButtonContent::IconAndText(content))
     }
 
-    pub const fn with_icon_blend(bg: Icon, fg: Icon, fg_offset: Offset) -> Self {
-        Self::new(ButtonContent::IconBlend(bg, fg, fg_offset))
-    }
-
     pub const fn empty() -> Self {
         Self::new(ButtonContent::Empty)
     }
@@ -181,12 +177,7 @@ impl Button {
     }
 
     pub fn paint_background(&self, style: &ButtonStyle) {
-        match &self.content {
-            ButtonContent::IconBlend(_, _, _) => {}
-            _ => {
-                display::rect_fill(self.area, style.button_color);
-            }
-        }
+        display::rect_fill(self.area, style.button_color);
     }
 
     pub fn render_background<'s>(
@@ -195,25 +186,20 @@ impl Button {
         style: &ButtonStyle,
         alpha: u8,
     ) {
-        match &self.content {
-            ButtonContent::IconBlend(_, _, _) => {}
-            _ => {
-                if self.radius.is_some() {
-                    shape::Bar::new(self.area)
-                        .with_bg(style.background_color)
-                        .with_radius(self.radius.unwrap() as i16)
-                        .with_thickness(2)
-                        .with_fg(style.button_color)
-                        .with_alpha(alpha)
-                        .render(target);
-                } else {
-                    shape::Bar::new(self.area)
-                        .with_bg(style.button_color)
-                        .with_fg(style.button_color)
-                        .with_alpha(alpha)
-                        .render(target);
-                }
-            }
+        if self.radius.is_some() {
+            shape::Bar::new(self.area)
+                .with_bg(style.background_color)
+                .with_radius(self.radius.unwrap() as i16)
+                .with_thickness(2)
+                .with_fg(style.button_color)
+                .with_alpha(alpha)
+                .render(target);
+        } else {
+            shape::Bar::new(self.area)
+                .with_bg(style.button_color)
+                .with_fg(style.button_color)
+                .with_alpha(alpha)
+                .render(target);
         }
     }
 
@@ -243,12 +229,6 @@ impl Button {
             ButtonContent::IconAndText(child) => {
                 child.paint(self.area, self.style(), Self::BASELINE_OFFSET);
             }
-            ButtonContent::IconBlend(bg, fg, offset) => display::icon_over_icon(
-                Some(self.area),
-                (*bg, Offset::zero(), style.button_color),
-                (*fg, *offset, style.text_color),
-                style.background_color,
-            ),
         }
     }
 
@@ -293,20 +273,6 @@ impl Button {
                     Self::BASELINE_OFFSET,
                     alpha,
                 );
-            }
-            ButtonContent::IconBlend(bg, fg, offset) => {
-                shape::Bar::new(self.area)
-                    .with_bg(style.background_color)
-                    .with_alpha(alpha)
-                    .render(target);
-                shape::ToifImage::new(self.area.top_left(), bg.toif)
-                    .with_fg(style.button_color)
-                    .with_alpha(alpha)
-                    .render(target);
-                shape::ToifImage::new(self.area.top_left() + *offset, fg.toif)
-                    .with_fg(style.icon_color)
-                    .with_alpha(alpha)
-                    .render(target);
             }
         }
     }
@@ -452,7 +418,6 @@ impl crate::trace::Trace for Button {
                 t.string("text", content.text);
                 t.bool("icon", true);
             }
-            ButtonContent::IconBlend(_, _, _) => t.bool("icon", true),
         }
     }
 }
@@ -471,7 +436,6 @@ pub enum ButtonContent {
     Text(TString<'static>),
     Icon(Icon),
     IconAndText(IconText),
-    IconBlend(Icon, Icon, Offset),
 }
 
 #[derive(PartialEq, Eq, Clone, Copy)]
