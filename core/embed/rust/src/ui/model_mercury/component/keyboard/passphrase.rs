@@ -150,7 +150,6 @@ impl PassphraseKeyboard {
             ButtonContent::Icon(_) => " ".into(),
             ButtonContent::IconAndText(_) => " ".into(),
             ButtonContent::Empty => "".into(),
-            ButtonContent::IconBlend(_, _, _) => "".into(),
         }
     }
 
