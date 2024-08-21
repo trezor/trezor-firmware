@@ -4,6 +4,31 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.8.1] (21st August 2024)
+
+### Added
+- [T3B1] Added support for T3B1.  [#3728]
+- [T3T1] Added PIN keyboard animation.  [#3885]
+- [T3T1] Added menu entry animation.  [#3896]
+- Improve precision of PIN timeout countdown.  [#4000]
+- [T3T1] New UI of confirming interaction-less firmware update.  [#4030]
+
+### Changed
+- [T3T1] Smoothened screen transitions by removing backlight fading.
+- [T3T1] Improved resuming of interrupted animations.  [#3987]
+- [T3T1] Improve instruction screens during multi-share recovery process.  [#3992]
+- [T3T1] Improve share words swiping animation.  [#4063]
+
+### Fixed
+- [T2T1,T3T1] Added a progress indicator for the formatting operation.  [#3035]
+- [T3T1] Improved screen brightness settings.  [#3969]
+- [T3T1] Improve touch layer precision.  [#3972]
+- [T2B1] Fix display orientation "south".  [#3990]
+- [T3T1] Fix More info screen during multi-share backup creation.  [#4006]
+- [T3T1] Fixed title sometimes not fitting into result screen.  [#4023]
+- [T3T1] Adjusted detection of swipes: vertical swipes are preferred over horizontal swipes.  [#4060]
+- Solana: added support for deprecated AToken Create `rent_sysvar` argument.  [#3976]
+
 ## [2.8.0] (9th July 2024)
 
 ### Added
@@ -891,6 +916,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#2937]: https://github.com/trezor/trezor-firmware/pull/2937
 [#2955]: https://github.com/trezor/trezor-firmware/pull/2955
 [#2989]: https://github.com/trezor/trezor-firmware/pull/2989
+[#3035]: https://github.com/trezor/trezor-firmware/pull/3035
 [#3047]: https://github.com/trezor/trezor-firmware/pull/3047
 [#3048]: https://github.com/trezor/trezor-firmware/pull/3048
 [#3205]: https://github.com/trezor/trezor-firmware/pull/3205
@@ -924,8 +950,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#3539]: https://github.com/trezor/trezor-firmware/pull/3539
 [#3636]: https://github.com/trezor/trezor-firmware/pull/3636
 [#3640]: https://github.com/trezor/trezor-firmware/pull/3640
+[#3728]: https://github.com/trezor/trezor-firmware/pull/3728
 [#3855]: https://github.com/trezor/trezor-firmware/pull/3855
+[#3885]: https://github.com/trezor/trezor-firmware/pull/3885
 [#3895]: https://github.com/trezor/trezor-firmware/pull/3895
+[#3896]: https://github.com/trezor/trezor-firmware/pull/3896
 [#3907]: https://github.com/trezor/trezor-firmware/pull/3907
 [#3911]: https://github.com/trezor/trezor-firmware/pull/3911
 [#3916]: https://github.com/trezor/trezor-firmware/pull/3916
@@ -935,3 +964,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#3925]: https://github.com/trezor/trezor-firmware/pull/3925
 [#3940]: https://github.com/trezor/trezor-firmware/pull/3940
 [#3965]: https://github.com/trezor/trezor-firmware/pull/3965
+[#3969]: https://github.com/trezor/trezor-firmware/pull/3969
+[#3972]: https://github.com/trezor/trezor-firmware/pull/3972
+[#3976]: https://github.com/trezor/trezor-firmware/pull/3976
+[#3987]: https://github.com/trezor/trezor-firmware/pull/3987
+[#3990]: https://github.com/trezor/trezor-firmware/pull/3990
+[#3992]: https://github.com/trezor/trezor-firmware/pull/3992
+[#4000]: https://github.com/trezor/trezor-firmware/pull/4000
+[#4006]: https://github.com/trezor/trezor-firmware/pull/4006
+[#4023]: https://github.com/trezor/trezor-firmware/pull/4023
+[#4030]: https://github.com/trezor/trezor-firmware/pull/4030
+[#4060]: https://github.com/trezor/trezor-firmware/pull/4060
+[#4063]: https://github.com/trezor/trezor-firmware/pull/4063
