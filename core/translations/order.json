@@ -964,5 +964,6 @@
   "962": "fido__title_for_authentication",
   "963": "fido__title_select_credential",
   "964": "instructions__swipe_down",
-  "965": "fido__title_credential_details"
+  "965": "fido__title_credential_details",
+  "966": "label_with_colon_template"
 }

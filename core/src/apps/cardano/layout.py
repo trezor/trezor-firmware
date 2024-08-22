@@ -564,7 +564,10 @@ async def confirm_certificate(
     assert certificate.type != CardanoCertificateType.STAKE_POOL_REGISTRATION
 
     props: list[PropertyType] = [
-        (TR.cardano__confirm, CERTIFICATE_TYPE_NAMES[certificate.type]),
+        (
+            TR.label_with_colon_template.format(TR.words__confirm),
+            CERTIFICATE_TYPE_NAMES[certificate.type],
+        ),
         _format_stake_credential(
             certificate.path, certificate.script_hash, certificate.key_hash
         ),
