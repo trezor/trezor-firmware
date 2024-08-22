@@ -311,6 +311,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_joint__to_the_total_amount;
   MP_QSTR_joint__you_are_contributing;
   MP_QSTR_label;
+  MP_QSTR_label_with_colon_template;
   MP_QSTR_language;
   MP_QSTR_language__change_to_template;
   MP_QSTR_language__changed;

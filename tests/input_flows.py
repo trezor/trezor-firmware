@@ -458,7 +458,7 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
         layout = self.debug.swipe_left(wait=True)
         # address details
         assert "Multisig 2 of 3" in layout.screen_content()
-        TR.assert_in(layout.screen_content(), "address_details__derivation_path_colon")
+        TR.assert_in(layout.screen_content(), "address_details__derivation_path")
 
         # Three xpub pages with the same testing logic
         for xpub_num in range(3):

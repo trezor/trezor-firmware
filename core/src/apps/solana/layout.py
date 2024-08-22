@@ -36,8 +36,14 @@ def _format_path(path: list[int]) -> str:
 def _get_address_reference_props(address: AddressReference, display_name: str):
     return (
         (TR.solana__is_provided_via_lookup_table_template.format(display_name), ""),
-        (f"{TR.solana__lookup_table_address}:", base58.encode(address[0])),
-        (f"{TR.solana__account_index}:", f"{address[1]}"),
+        (
+            TR.label_with_colon_template.format(TR.solana__lookup_table_address),
+            base58.encode(address[0]),
+        ),
+        (
+            TR.label_with_colon_template.format(TR.solana__account_index),
+            f"{address[1]}",
+        ),
     )
 
 
@@ -143,7 +149,9 @@ async def confirm_instruction(
 
             signers.append(
                 (
-                    f"{TR.words__signer} {i}{path_str}:",
+                    TR.label_with_colon_template.format(
+                        f"{TR.words__signer} {i}{path_str}"
+                    ),
                     base58.encode(multisig_signer[0]),
                 )
             )
@@ -194,7 +202,12 @@ async def confirm_unsupported_instruction_details(
         await confirm_properties(
             "instruction_data",
             title,
-            ((f"{TR.solana__instruction_data}:", bytes(instruction.instruction_data)),),
+            (
+                (
+                    TR.label_with_colon_template.format(TR.solana__instruction_data),
+                    bytes(instruction.instruction_data),
+                ),
+            ),
         )
 
         accounts = []
@@ -209,7 +222,9 @@ async def confirm_unsupported_instruction_details(
 
                 accounts.append(
                     (
-                        f"{TR.words__account} {i}{path_str} {address_type}:",
+                        TR.label_with_colon_template.format(
+                            f"{TR.words__account} {i}{path_str} {address_type}"
+                        ),
                         base58.encode(account_public_key),
                     )
                 )
@@ -302,7 +317,14 @@ async def confirm_token_transfer(
         br_code=ButtonRequestType.ConfirmOutput,
         verb=TR.buttons__continue,
         info_items=(
-            ((f"{TR.solana__associated_token_account}:", base58.encode(token_account)),)
+            (
+                (
+                    TR.label_with_colon_template.format(
+                        TR.solana__associated_token_account
+                    ),
+                    base58.encode(token_account),
+                ),
+            )
             if token_account != destination_account
             else None
         ),
@@ -338,10 +360,16 @@ async def confirm_custom_transaction(
     await confirm_solana_tx(
         amount=f"{format_amount(amount, decimals)} {unit}",
         fee=f"{format_amount(fee, 9)} SOL",
-        fee_title=f"{TR.solana__expected_fee}:",
+        fee_title=TR.label_with_colon_template.format(TR.solana__expected_fee),
         items=(
-            (f"{TR.words__account}:", _format_path(signer_path)),
-            (f"{TR.words__blockhash}:", base58.encode(blockhash)),
+            (
+                TR.label_with_colon_template.format(TR.words__account),
+                _format_path(signer_path),
+            ),
+            (
+                TR.label_with_colon_template.format(TR.words__blockhash),
+                base58.encode(blockhash),
+            ),
         ),
     )
 
@@ -353,9 +381,15 @@ async def confirm_transaction(
         amount="",
         amount_title="",
         fee=f"{format_amount(fee, 9)} SOL",
-        fee_title=f"{TR.solana__expected_fee}:",
+        fee_title=TR.label_with_colon_template.format(TR.solana__expected_fee),
         items=(
-            (f"{TR.words__account}:", _format_path(signer_path)),
-            (f"{TR.words__blockhash}:", base58.encode(blockhash)),
+            (
+                TR.label_with_colon_template.format(TR.words__account),
+                _format_path(signer_path),
+            ),
+            (
+                TR.label_with_colon_template.format(TR.words__blockhash),
+                base58.encode(blockhash),
+            ),
         ),
     )

@@ -56,7 +56,10 @@ async def confirm_action_buyram(msg: EosActionBuyRam) -> None:
         (
             (TR.eos__payer, eos_name_to_string(msg.payer)),
             (TR.eos__receiver, eos_name_to_string(msg.receiver)),
-            (f"{TR.words__amount}:", eos_asset_to_string(msg.quantity)),
+            (
+                TR.label_with_colon_template.format(TR.words__amount),
+                eos_asset_to_string(msg.quantity),
+            ),
         ),
     )
 
@@ -164,7 +167,10 @@ async def confirm_action_transfer(msg: EosActionTransfer, account: str) -> None:
     props = [
         (TR.eos__from, eos_name_to_string(msg.sender)),
         (TR.eos__to, eos_name_to_string(msg.receiver)),
-        (f"{TR.words__amount}:", eos_asset_to_string(msg.quantity)),
+        (
+            TR.label_with_colon_template.format(TR.words__amount),
+            eos_asset_to_string(msg.quantity),
+        ),
         (TR.eos__contract, account),
     ]
     if msg.memo is not None:
@@ -178,7 +184,10 @@ async def confirm_action_transfer(msg: EosActionTransfer, account: str) -> None:
 
 async def confirm_action_updateauth(msg: EosActionUpdateAuth) -> None:
     props: list[PropertyType] = [
-        (f"{TR.words__account}:", eos_name_to_string(msg.account)),
+        (
+            TR.label_with_colon_template.format(TR.words__account),
+            eos_name_to_string(msg.account),
+        ),
         (TR.eos__permission, eos_name_to_string(msg.permission)),
         (TR.eos__parent, eos_name_to_string(msg.parent)),
     ]
@@ -195,7 +204,10 @@ async def confirm_action_deleteauth(msg: EosActionDeleteAuth) -> None:
         "confirm_deleteauth",
         TR.eos__delete_auth,
         (
-            (f"{TR.words__account}:", eos_name_to_string(msg.account)),
+            (
+                TR.label_with_colon_template.format(TR.words__account),
+                eos_name_to_string(msg.account),
+            ),
             (TR.eos__permission, eos_name_to_string(msg.permission)),
         ),
     )
@@ -206,7 +218,10 @@ async def confirm_action_linkauth(msg: EosActionLinkAuth) -> None:
         "confirm_linkauth",
         TR.eos__link_auth,
         (
-            (f"{TR.words__account}:", eos_name_to_string(msg.account)),
+            (
+                TR.label_with_colon_template.format(TR.words__account),
+                eos_name_to_string(msg.account),
+            ),
             (TR.eos__code, eos_name_to_string(msg.code)),
             (TR.eos__type, eos_name_to_string(msg.type)),
             (TR.eos__requirement, eos_name_to_string(msg.requirement)),
@@ -219,7 +234,10 @@ async def confirm_action_unlinkauth(msg: EosActionUnlinkAuth) -> None:
         "confirm_unlinkauth",
         TR.eos__unlink_auth,
         (
-            (f"{TR.words__account}:", eos_name_to_string(msg.account)),
+            (
+                TR.label_with_colon_template.format(TR.words__account),
+                eos_name_to_string(msg.account),
+            ),
             (TR.eos__code, eos_name_to_string(msg.code)),
             (TR.eos__type, eos_name_to_string(msg.type)),
         ),
@@ -273,8 +291,8 @@ def authorization_fields(auth: EosAuthorization) -> list[PropertyType]:
         _key = public_key_to_wif(bytes(key.key))
         _weight = str(key.weight)
 
-        header = "Key #" + str(i) + ":"
-        w_header = "Key #" + str(i) + " Weight:"
+        header = TR.label_with_colon_template.format(f"Key #{i}")
+        w_header = TR.label_with_colon_template.format(f"Key #{i} Weight")
 
         append((header, _key))
         append((w_header, _weight))
@@ -285,9 +303,9 @@ def authorization_fields(auth: EosAuthorization) -> list[PropertyType]:
 
         i = str(i)
         # TODO: handle translation
-        a_header = "Account #" + i + ":"
-        p_header = "Acc Permission #" + i + ":"
-        w_header = "Account #" + i + " weight:"
+        a_header = TR.label_with_colon_template.format(f"Account #{i}")
+        p_header = TR.label_with_colon_template.format(f"Acc Permission #{i}")
+        w_header = TR.label_with_colon_template.format(f"Account #{i} weight")
 
         append((a_header, _account))
         append((p_header, _permission))
@@ -298,7 +316,7 @@ def authorization_fields(auth: EosAuthorization) -> list[PropertyType]:
         _weight = str(wait.weight)
 
         header = "Delay #" + str(i)
-        w_header = header + " weight:"
+        w_header = TR.label_with_colon_template.format(header + " weight")
         append((header, _wait + " sec"))
         append((w_header, _weight))
 

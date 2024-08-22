@@ -171,7 +171,7 @@ pub enum TranslatedString {
     #[cfg(feature = "universal_fw")]
     cardano__collateral_return = 124,  // "Collateral return"
     #[cfg(feature = "universal_fw")]
-    cardano__confirm = 125,  // "Confirm:"
+    cardano__confirm = 125,  // "\"\""
     #[cfg(feature = "universal_fw")]
     cardano__confirm_signing_stake_pool = 126,  // "Confirm signing the stake pool registration as an owner."
     #[cfg(feature = "universal_fw")]
@@ -940,7 +940,7 @@ pub enum TranslatedString {
     send__title_sending_amount = 650,  // "Sending amount"
     send__title_sending_to = 651,  // "Sending to"
     send__to_the_total_amount = 652,  // "To the total amount:"
-    send__total_amount_colon = 653,  // "Total amount:"
+    send__total_amount_colon = 653,  // "\"\""
     send__transaction_id = 654,  // "Transaction ID:"
     send__you_are_contributing = 655,  // "You are contributing:"
     share_words__words_in_order = 656,  // " words in order."
@@ -1369,6 +1369,7 @@ pub enum TranslatedString {
     instructions__swipe_down = 964,  // "Swipe down"
     #[cfg(feature = "universal_fw")]
     fido__title_credential_details = 965,  // "Credential details"
+    label_with_colon_template = 966,  // "{0}:"
 }
 
 impl TranslatedString {
@@ -1534,7 +1535,7 @@ impl TranslatedString {
             #[cfg(feature = "universal_fw")]
             Self::cardano__collateral_return => "Collateral return",
             #[cfg(feature = "universal_fw")]
-            Self::cardano__confirm => "Confirm:",
+            Self::cardano__confirm => "\"\"",
             #[cfg(feature = "universal_fw")]
             Self::cardano__confirm_signing_stake_pool => "Confirm signing the stake pool registration as an owner.",
             #[cfg(feature = "universal_fw")]
@@ -2303,7 +2304,7 @@ impl TranslatedString {
             Self::send__title_sending_amount => "Sending amount",
             Self::send__title_sending_to => "Sending to",
             Self::send__to_the_total_amount => "To the total amount:",
-            Self::send__total_amount_colon => "Total amount:",
+            Self::send__total_amount_colon => "\"\"",
             Self::send__transaction_id => "Transaction ID:",
             Self::send__you_are_contributing => "You are contributing:",
             Self::share_words__words_in_order => " words in order.",
@@ -2732,6 +2733,7 @@ impl TranslatedString {
             Self::instructions__swipe_down => "Swipe down",
             #[cfg(feature = "universal_fw")]
             Self::fido__title_credential_details => "Credential details",
+            Self::label_with_colon_template => "{0}:",
         }
     }
 
@@ -4096,6 +4098,7 @@ impl TranslatedString {
             Qstr::MP_QSTR_instructions__swipe_down => Some(Self::instructions__swipe_down),
             #[cfg(feature = "universal_fw")]
             Qstr::MP_QSTR_fido__title_credential_details => Some(Self::fido__title_credential_details),
+            Qstr::MP_QSTR_label_with_colon_template => Some(Self::label_with_colon_template),
             _ => None,
         }
     }
