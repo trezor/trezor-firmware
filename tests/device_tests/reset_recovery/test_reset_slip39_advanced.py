@@ -41,7 +41,6 @@ def test_reset_device_slip39_advanced(client: Client):
         # No PIN, no passphrase, don't display random
         device.reset(
             client,
-            display_random=False,
             strength=strength,
             passphrase_protection=False,
             pin_protection=False,

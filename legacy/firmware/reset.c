@@ -38,22 +38,14 @@ static bool awaiting_entropy = false;
 static bool skip_backup = false;
 static bool no_backup = false;
 
-void reset_init(bool display_random, uint32_t _strength,
-                bool passphrase_protection, bool pin_protection,
-                const char *language, const char *label, uint32_t u2f_counter,
-                bool _skip_backup, bool _no_backup) {
+void reset_init(uint32_t _strength, bool passphrase_protection,
+                bool pin_protection, const char *language, const char *label,
+                uint32_t u2f_counter, bool _skip_backup, bool _no_backup) {
   if (_strength != 128 && _strength != 192 && _strength != 256) return;
 
   strength = _strength;
   skip_backup = _skip_backup;
   no_backup = _no_backup;
-
-  if (display_random && (skip_backup || no_backup)) {
-    fsm_sendFailure(FailureType_Failure_ProcessError,
-                    "Can't show internal entropy when backup is skipped");
-    layoutHome();
-    return;
-  }
 
   layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
                     _("Do you really want to"), _("create a new wallet?"), NULL,
@@ -65,39 +57,6 @@ void reset_init(bool display_random, uint32_t _strength,
   }
 
   random_buffer(int_entropy, 32);
-
-  if (display_random) {
-    for (int start = 0; start < 2; start++) {
-      char ent_str[4][17] = {0};
-      char desc[] = "Internal entropy _/2:";
-      data2hex(int_entropy + start * 16, 4, ent_str[0]);
-      data2hex(int_entropy + start * 16 + 4, 4, ent_str[1]);
-      data2hex(int_entropy + start * 16 + 8, 4, ent_str[2]);
-      data2hex(int_entropy + start * 16 + 12, 4, ent_str[3]);
-      layoutLast = layoutDialogSwipe;
-      layoutSwipe();
-      desc[17] = '1' + start;
-      oledDrawStringCenter(OLED_WIDTH / 2, 0, desc, FONT_STANDARD);
-      oledDrawStringCenter(OLED_WIDTH / 2, 2 + 1 * 9, ent_str[0], FONT_FIXED);
-      oledDrawStringCenter(OLED_WIDTH / 2, 2 + 2 * 9, ent_str[1], FONT_FIXED);
-      oledDrawStringCenter(OLED_WIDTH / 2, 2 + 3 * 9, ent_str[2], FONT_FIXED);
-      oledDrawStringCenter(OLED_WIDTH / 2, 2 + 4 * 9, ent_str[3], FONT_FIXED);
-      oledHLine(OLED_HEIGHT - 13);
-      layoutButtonNo(_("Cancel"), &bmp_btn_cancel);
-      layoutButtonYes(_("Continue"), &bmp_btn_confirm);
-      // 40 is the maximum pixels used for a row
-      oledSCA(2 + 1 * 9, 2 + 1 * 9 + 6, 40);
-      oledSCA(2 + 2 * 9, 2 + 2 * 9 + 6, 40);
-      oledSCA(2 + 3 * 9, 2 + 3 * 9 + 6, 40);
-      oledSCA(2 + 4 * 9, 2 + 4 * 9 + 6, 40);
-      oledRefresh();
-      if (!protectButton(ButtonRequestType_ButtonRequest_ResetDevice, false)) {
-        fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
-        layoutHome();
-        return;
-      }
-    }
-  }
 
   if (pin_protection && !protectChangePin(false)) {
     layoutHome();

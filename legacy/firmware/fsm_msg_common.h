@@ -321,8 +321,7 @@ void fsm_msgResetDevice(const ResetDevice *msg) {
                   msg->strength == 192 || msg->strength == 256,
               _("Invalid seed strength"));
 
-  reset_init(msg->has_display_random && msg->display_random,
-             msg->has_strength ? msg->strength : 128,
+  reset_init(msg->has_strength ? msg->strength : 128,
              msg->has_passphrase_protection && msg->passphrase_protection,
              msg->has_pin_protection && msg->pin_protection,
              msg->has_language ? msg->language : 0,

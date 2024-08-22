@@ -31,7 +31,6 @@ STRENGTH = 128
 def test_reset_device_skip_backup(client: Client):
     ret = client.call_raw(
         messages.ResetDevice(
-            display_random=False,
             strength=STRENGTH,
             passphrase_protection=False,
             pin_protection=False,
@@ -99,7 +98,6 @@ def test_reset_device_skip_backup(client: Client):
 def test_reset_device_skip_backup_break(client: Client):
     ret = client.call_raw(
         messages.ResetDevice(
-            display_random=False,
             strength=STRENGTH,
             passphrase_protection=False,
             pin_protection=False,
@@ -150,19 +148,4 @@ def test_reset_device_skip_backup_break(client: Client):
 
 def test_initialized_device_backup_fail(client: Client):
     ret = client.call_raw(messages.BackupDevice())
-    assert isinstance(ret, messages.Failure)
-
-
-@pytest.mark.setup_client(uninitialized=True)
-def test_reset_device_skip_backup_show_entropy_fail(client: Client):
-    ret = client.call_raw(
-        messages.ResetDevice(
-            display_random=True,
-            strength=STRENGTH,
-            passphrase_protection=False,
-            pin_protection=False,
-            label="test",
-            skip_backup=True,
-        )
-    )
     assert isinstance(ret, messages.Failure)

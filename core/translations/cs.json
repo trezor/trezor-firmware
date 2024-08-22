@@ -285,7 +285,6 @@
     "device_name__change_template": "Změnit název zařízení na {0}?",
     "device_name__title": "Název zařízení",
     "entropy__send": "Opravdu chcete odeslat entropii?",
-    "entropy__title": "Interní entropie",
     "entropy__title_confirm": "Potvrdit entropii",
     "eos__about_to_sign_template": "Chystáte se podepsat {0}.",
     "eos__action_name": "Název akce:",

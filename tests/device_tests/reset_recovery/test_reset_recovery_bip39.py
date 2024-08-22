@@ -45,7 +45,6 @@ def reset(client: Client, strength: int = 128, skip_backup: bool = False) -> str
         # No PIN, no passphrase, don't display random
         device.reset(
             client,
-            display_random=False,
             strength=strength,
             passphrase_protection=False,
             pin_protection=False,

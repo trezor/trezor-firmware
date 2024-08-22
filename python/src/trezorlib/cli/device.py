@@ -206,7 +206,6 @@ def recover(
 
 
 @cli.command()
-@click.option("-e", "--show-entropy", is_flag=True)
 @click.option("-t", "--strength", type=click.Choice(["128", "192", "256"]))
 @click.option("-r", "--passphrase-protection", is_flag=True)
 @click.option("-p", "--pin-protection", is_flag=True)
@@ -218,7 +217,6 @@ def recover(
 @with_client
 def setup(
     client: "TrezorClient",
-    show_entropy: bool,
     strength: int | None,
     passphrase_protection: bool,
     pin_protection: bool,
@@ -257,7 +255,6 @@ def setup(
 
     return device.reset(
         client,
-        display_random=show_entropy,
         strength=strength,
         passphrase_protection=passphrase_protection,
         pin_protection=pin_protection,

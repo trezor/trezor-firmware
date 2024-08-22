@@ -40,7 +40,6 @@ def reset_device(client: Client, strength: int):
         # No PIN, no passphrase, don't display random
         device.reset(
             client,
-            display_random=False,
             strength=strength,
             passphrase_protection=False,
             pin_protection=False,

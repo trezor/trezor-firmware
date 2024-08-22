@@ -224,14 +224,19 @@ def test_reset_device(client: Client):
             + [messages.ButtonRequest] * 24
             + [messages.Success, messages.Features]
         )
-        device.reset(client, False, 128, True, False, "label")
+        device.reset(
+            client,
+            strength=128,
+            passphrase_protection=True,
+            pin_protection=False,
+            label="label",
+        )
 
     with pytest.raises(TrezorFailure):
         # This must fail, because device is already initialized
         # Using direct call because `device.reset` has its own check
         client.call(
             messages.ResetDevice(
-                display_random=False,
                 strength=128,
                 passphrase_protection=True,
                 pin_protection=False,

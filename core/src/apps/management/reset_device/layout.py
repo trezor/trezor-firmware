@@ -1,8 +1,6 @@
 from micropython import const
 from typing import Sequence
 
-from trezor import TR
-from trezor.enums import ButtonRequestType
 from trezor.ui.layouts.reset import (  # noqa: F401
     show_share_words,
     slip39_advanced_prompt_group_threshold,
@@ -13,17 +11,6 @@ from trezor.ui.layouts.reset import (  # noqa: F401
 )
 
 _NUM_OF_CHOICES = const(3)
-
-
-async def show_internal_entropy(entropy: bytes) -> None:
-    from trezor.ui.layouts import confirm_blob
-
-    await confirm_blob(
-        "entropy",
-        TR.entropy__title,
-        entropy,
-        br_code=ButtonRequestType.ResetDevice,
-    )
 
 
 async def _confirm_word(

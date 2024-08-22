@@ -285,7 +285,6 @@
     "device_name__change_template": "¿Cambiar el nombre del dispositivo a {0}?",
     "device_name__title": "Nombre dispositivo",
     "entropy__send": "¿Quieres enviar la entropía?",
-    "entropy__title": "Entropía interna",
     "entropy__title_confirm": "Validar entropía",
     "eos__about_to_sign_template": "Estás a punto de firmar {0}.",
     "eos__action_name": "Nombre de acción:",

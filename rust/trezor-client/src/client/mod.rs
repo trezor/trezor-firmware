@@ -183,7 +183,6 @@ impl Trezor {
     #[allow(clippy::too_many_arguments)]
     pub fn reset_device(
         &mut self,
-        display_random: bool,
         strength: usize,
         passphrase_protection: bool,
         pin_protection: bool,
@@ -192,7 +191,6 @@ impl Trezor {
         no_backup: bool,
     ) -> Result<TrezorResponse<'_, EntropyRequest<'_>, protos::EntropyRequest>> {
         let mut req = protos::ResetDevice::new();
-        req.set_display_random(display_random);
         req.set_strength(strength as u32);
         req.set_passphrase_protection(passphrase_protection);
         req.set_pin_protection(pin_protection);

@@ -193,20 +193,3 @@ def test_interrupt_backup_fails(client: Client):
     # Second attempt at backup should fail
     with pytest.raises(TrezorFailure, match=r".*Seed already backed up"):
         device.backup(client)
-
-
-# we only test this with bip39 because the code path is always the same
-@pytest.mark.setup_client(uninitialized=True)
-def test_no_backup_show_entropy_fails(client: Client):
-    with pytest.raises(
-        TrezorFailure, match=r".*Can't show internal entropy when backup is skipped"
-    ):
-        device.reset(
-            client,
-            display_random=True,
-            strength=128,
-            passphrase_protection=False,
-            pin_protection=False,
-            label="test",
-            no_backup=True,
-        )

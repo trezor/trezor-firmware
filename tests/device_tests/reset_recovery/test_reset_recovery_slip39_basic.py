@@ -55,7 +55,6 @@ def reset(client: Client, strength: int = 128) -> list[str]:
         # No PIN, no passphrase, don't display random
         device.reset(
             client,
-            display_random=False,
             strength=strength,
             passphrase_protection=False,
             pin_protection=False,
