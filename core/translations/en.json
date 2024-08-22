@@ -255,7 +255,6 @@
     "device_name__change_template": "Change device name to {0}?",
     "device_name__title": "Device name",
     "entropy__send": "Do you really want to send entropy?",
-    "entropy__title": "Internal entropy",
     "entropy__title_confirm": "Confirm entropy",
     "eos__about_to_sign_template": "You are about to sign {0}.",
     "eos__action_name": "Action Name:",

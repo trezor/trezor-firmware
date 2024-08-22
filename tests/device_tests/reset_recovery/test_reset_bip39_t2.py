@@ -39,7 +39,6 @@ def reset_device(client: Client, strength: int):
         # No PIN, no passphrase, don't display random
         device.reset(
             client,
-            display_random=False,
             strength=strength,
             passphrase_protection=False,
             pin_protection=False,
@@ -88,7 +87,6 @@ def test_reset_device_pin(client: Client):
         # PIN, passphrase, display random
         device.reset(
             client,
-            display_random=True,
             strength=strength,
             passphrase_protection=True,
             pin_protection=True,
@@ -122,7 +120,6 @@ def test_reset_failed_check(client: Client):
         # PIN, passphrase, display random
         device.reset(
             client,
-            display_random=False,
             strength=strength,
             passphrase_protection=False,
             pin_protection=False,
@@ -185,4 +182,10 @@ def test_failed_pin(client: Client):
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
 def test_already_initialized(client: Client):
     with pytest.raises(Exception):
-        device.reset(client, False, 128, True, True, "label")
+        device.reset(
+            client,
+            strength=128,
+            passphrase_protection=True,
+            pin_protection=True,
+            label="label",
+        )

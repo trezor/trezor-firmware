@@ -361,7 +361,7 @@ pub enum TranslatedString {
     device_name__change_template = 226,  // "Change device name to {0}?"
     device_name__title = 227,  // "Device name"
     entropy__send = 228,  // "Do you really want to send entropy?"
-    entropy__title = 229,  // "Internal entropy"
+    entropy__title = 229,  // "\"\""
     entropy__title_confirm = 230,  // "Confirm entropy"
     #[cfg(feature = "universal_fw")]
     eos__about_to_sign_template = 231,  // "You are about to sign {0}."
@@ -1713,7 +1713,7 @@ impl TranslatedString {
             Self::device_name__change_template => "Change device name to {0}?",
             Self::device_name__title => "Device name",
             Self::entropy__send => "Do you really want to send entropy?",
-            Self::entropy__title => "Internal entropy",
+            Self::entropy__title => "\"\"",
             Self::entropy__title_confirm => "Confirm entropy",
             #[cfg(feature = "universal_fw")]
             Self::eos__about_to_sign_template => "You are about to sign {0}.",

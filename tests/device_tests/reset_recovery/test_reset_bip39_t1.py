@@ -30,7 +30,6 @@ def reset_device(client: Client, strength: int):
     # No PIN, no passphrase
     ret = client.call_raw(
         messages.ResetDevice(
-            display_random=False,
             strength=strength,
             passphrase_protection=False,
             pin_protection=False,
@@ -105,7 +104,6 @@ def test_reset_device_256_pin(client: Client):
 
     ret = client.call_raw(
         messages.ResetDevice(
-            display_random=True,
             strength=strength,
             passphrase_protection=True,
             pin_protection=True,
@@ -114,16 +112,6 @@ def test_reset_device_256_pin(client: Client):
     )
 
     # Do you want ... ?
-    assert isinstance(ret, messages.ButtonRequest)
-    client.debug.press_yes()
-    ret = client.call_raw(messages.ButtonAck())
-
-    # Entropy screen #1
-    assert isinstance(ret, messages.ButtonRequest)
-    client.debug.press_yes()
-    ret = client.call_raw(messages.ButtonAck())
-
-    # Entropy screen #2
     assert isinstance(ret, messages.ButtonRequest)
     client.debug.press_yes()
     ret = client.call_raw(messages.ButtonAck())
@@ -193,7 +181,6 @@ def test_failed_pin(client: Client):
 
     ret = client.call_raw(
         messages.ResetDevice(
-            display_random=True,
             strength=strength,
             passphrase_protection=True,
             pin_protection=True,
@@ -202,16 +189,6 @@ def test_failed_pin(client: Client):
     )
 
     # Do you want ... ?
-    assert isinstance(ret, messages.ButtonRequest)
-    client.debug.press_yes()
-    ret = client.call_raw(messages.ButtonAck())
-
-    # Entropy screen #1
-    assert isinstance(ret, messages.ButtonRequest)
-    client.debug.press_yes()
-    ret = client.call_raw(messages.ButtonAck())
-
-    # Entropy screen #2
     assert isinstance(ret, messages.ButtonRequest)
     client.debug.press_yes()
     ret = client.call_raw(messages.ButtonAck())
@@ -232,4 +209,10 @@ def test_failed_pin(client: Client):
 
 def test_already_initialized(client: Client):
     with pytest.raises(Exception):
-        device.reset(client, False, 128, True, True, "label")
+        device.reset(
+            client,
+            strength=128,
+            passphrase_protection=True,
+            pin_protection=True,
+            label="label",
+        )

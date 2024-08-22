@@ -244,6 +244,12 @@ def reset(
     no_backup: bool = False,
     backup_type: messages.BackupType = messages.BackupType.Bip39,
 ) -> "MessageType":
+    if display_random:
+        warnings.warn(
+            "display_random ignored. The feature is deprecated.",
+            DeprecationWarning,
+        )
+
     if language is not None:
         warnings.warn(
             "language ignored. Use change_language() to set device language.",
@@ -263,7 +269,6 @@ def reset(
 
     # Begin with device reset workflow
     msg = messages.ResetDevice(
-        display_random=bool(display_random),
         strength=strength,
         passphrase_protection=bool(passphrase_protection),
         pin_protection=bool(pin_protection),

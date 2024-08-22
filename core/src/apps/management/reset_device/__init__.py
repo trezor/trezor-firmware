@@ -73,8 +73,6 @@ async def reset_device(msg: ResetDevice) -> Success:
     int_entropy = random.bytes(32, True)
     if __debug__:
         storage.debug.reset_internal_entropy = int_entropy
-    if msg.display_random:
-        await layout.show_internal_entropy(int_entropy)
 
     # request external entropy and compute the master secret
     entropy_ack = await call(EntropyRequest(), EntropyAck)
@@ -269,8 +267,6 @@ def _validate_reset_device(msg: ResetDevice) -> None:
     else:
         raise ProcessError("Backup type not implemented")
 
-    if msg.display_random and (msg.skip_backup or msg.no_backup):
-        raise ProcessError("Can't show internal entropy when backup is skipped")
     if storage_device.is_initialized():
         raise UnexpectedMessage("Already initialized")
 

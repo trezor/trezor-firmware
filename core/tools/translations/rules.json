@@ -228,7 +228,6 @@
   "device_name__change_template": "text,3",
   "device_name__title": "title,1",
   "entropy__send": "text,2",
-  "entropy__title": "title,1",
   "entropy__title_confirm": "title,1",
   "eos__about_to_sign_template": "text,2",
   "eos__action_name": "text,1",

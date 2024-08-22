@@ -1333,10 +1333,6 @@ class InputFlowBip39ResetPIN(InputFlowBase):
 
         yield from self.PIN.setup_new_pin("654")
 
-        br = yield  # Confirm entropy
-        assert br.code == B.ResetDevice
-        self.debug.press_yes()
-
         if self.debug.model is models.T3T1:
             br = yield  # Wallet created
             assert br.code == B.ResetDevice

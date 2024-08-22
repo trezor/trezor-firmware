@@ -253,7 +253,6 @@ class TR:
     device_name__change_template: str = "Change device name to {0}?"
     device_name__title: str = "Device name"
     entropy__send: str = "Do you really want to send entropy?"
-    entropy__title: str = "Internal entropy"
     entropy__title_confirm: str = "Confirm entropy"
     eos__about_to_sign_template: str = "You are about to sign {0}."
     eos__action_name: str = "Action Name:"

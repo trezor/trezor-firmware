@@ -210,7 +210,6 @@ def test_upgrade_reset(gen: str, tag: str):
     with EmulatorWrapper(gen, tag) as emu:
         device.reset(
             emu.client,
-            display_random=False,
             strength=STRENGTH,
             passphrase_protection=False,
             pin_protection=False,
@@ -241,7 +240,6 @@ def test_upgrade_reset_skip_backup(gen: str, tag: str):
     with EmulatorWrapper(gen, tag) as emu:
         device.reset(
             emu.client,
-            display_random=False,
             strength=STRENGTH,
             passphrase_protection=False,
             pin_protection=False,
@@ -273,7 +271,6 @@ def test_upgrade_reset_no_backup(gen: str, tag: str):
     with EmulatorWrapper(gen, tag) as emu:
         device.reset(
             emu.client,
-            display_random=False,
             strength=STRENGTH,
             passphrase_protection=False,
             pin_protection=False,
