@@ -103,7 +103,7 @@ void gfx_mono8_blend_mono4(const gfx_bitblt_t* bb) {
       uint8_t src_data = src_row[(x + bb->src_x) / 2];
       uint8_t src_alpha = (x + bb->src_x) & 1 ? src_data >> 4 : src_data & 0x0F;
       src_alpha = src_alpha * bb->src_alpha / 15;
-      dst_ptr[x] = (fg * src_alpha + dst_ptr[x] * (255 - src_alpha));
+      dst_ptr[x] = (fg * src_alpha + dst_ptr[x] * (255 - src_alpha)) / 255;
     }
     dst_ptr += bb->dst_stride / sizeof(*dst_ptr);
     src_row += bb->src_stride / sizeof(*src_row);
