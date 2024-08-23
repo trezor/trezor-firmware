@@ -88,31 +88,60 @@ def _to_rgb(data: bytes, little_endian: bool) -> bytes:
     return bytes(res)
 
 
-def _from_pil_grayscale(pixels: Sequence[int], right_hi: bool) -> bytes:
+def _from_pil_grayscale(
+    pixels: Sequence[int], right_hi: bool, width: int, height: int
+) -> bytes:
     data = bytearray()
-    for i in range(0, len(pixels), 2):
-        left, right = pixels[i], pixels[i + 1]
-        if right_hi:
-            c = (right & 0xF0) | ((left & 0xF0) >> 4)
-        else:
-            c = (left & 0xF0) | ((right & 0xF0) >> 4)
-        data += struct.pack(">B", c)
+
+    for y in range(0, height):
+        for x in range(0, width & (width - 1), 2):
+            i = y * width + x
+
+            left, right = pixels[i], pixels[i + 1]
+            if right_hi:
+                c = (right & 0xF0) | ((left & 0xF0) >> 4)
+            else:
+                c = (left & 0xF0) | ((right & 0xF0) >> 4)
+            data += struct.pack(">B", c)
+
+        if width % 2:
+            i = y * width + width - 1
+            left, right = pixels[i], 0
+            if right_hi:
+                c = (right & 0xF0) | ((left & 0xF0) >> 4)
+            else:
+                c = (left & 0xF0) | ((right & 0xF0) >> 4)
+            data += struct.pack(">B", c)
+
     return bytes(data)
 
 
 def _from_pil_grayscale_alpha(
-    pixels: Sequence[Tuple[int, int]], right_hi: bool
+    pixels: Sequence[Tuple[int, int]], right_hi: bool, width: int, height: int
 ) -> bytes:
     data = bytearray()
-    for i in range(0, len(pixels), 2):
-        left_w_alpha, right_w_alpha = pixels[i], pixels[i + 1]
-        left = int((left_w_alpha[0] * left_w_alpha[1]) / 255)
-        right = int((right_w_alpha[0] * right_w_alpha[1]) / 255)
-        if right_hi:
-            c = (right & 0xF0) | ((left & 0xF0) >> 4)
-        else:
-            c = (left & 0xF0) | ((right & 0xF0) >> 4)
-        data += struct.pack(">B", c)
+    for y in range(0, height):
+        for x in range(0, width & (width - 1), 2):
+            i = y * width + x
+            left_w_alpha, right_w_alpha = pixels[i], pixels[i + 1]
+            left = int((left_w_alpha[0] * left_w_alpha[1]) / 255)
+            right = int((right_w_alpha[0] * right_w_alpha[1]) / 255)
+            if right_hi:
+                c = (right & 0xF0) | ((left & 0xF0) >> 4)
+            else:
+                c = (left & 0xF0) | ((right & 0xF0) >> 4)
+            data += struct.pack(">B", c)
+        if width % 2:
+            i = y * width + width - 1
+            left_w_alpha, right_w_alpha = pixels[i], (0, 255)
+            left = int((left_w_alpha[0] * left_w_alpha[1]) / 255)
+            right = int((right_w_alpha[0] * right_w_alpha[1]) / 255)
+            if right_hi:
+                c = (right & 0xF0) | ((left & 0xF0) >> 4)
+            else:
+                c = (left & 0xF0) | ((right & 0xF0) >> 4)
+            data += struct.pack(">B", c)
+
     return bytes(data)
 
 
@@ -139,7 +168,10 @@ class Toif:
         # checking the data size
         width, height = self.size
         if self.mode is ToifMode.grayscale or self.mode is ToifMode.grayscale_eh:
-            expected_size = width * height // 2
+            if width % 2:
+                expected_size = (width + 1) * height // 2
+            else:
+                expected_size = width * height // 2
         else:
             expected_size = width * height * 2
         uncompressed = _decompress(self.data)
@@ -215,24 +247,27 @@ def from_image(
         image = image.convert("L")
 
     if image.mode == "L":
-        # if image.size[0] % 2 != 0:
-        #    raise ValueError("Only even-width grayscale images are supported")
         if not legacy_format:
             toif_mode = ToifMode.grayscale_eh
-            toif_data = _from_pil_grayscale(image.getdata(), right_hi=True)
+            toif_data = _from_pil_grayscale(
+                image.getdata(), right_hi=True, width=image.width, height=image.height
+            )
         else:
             toif_mode = ToifMode.grayscale
-            toif_data = _from_pil_grayscale(image.getdata(), right_hi=False)
+            toif_data = _from_pil_grayscale(
+                image.getdata(), right_hi=False, width=image.width, height=image.height
+            )
     elif image.mode == "LA":
-        toif_mode = ToifMode.grayscale
-        if image.size[0] % 2 != 0:
-            raise ValueError("Only even-width grayscale images are supported")
         if not legacy_format:
             toif_mode = ToifMode.grayscale_eh
-            toif_data = _from_pil_grayscale_alpha(image.getdata(), right_hi=True)
+            toif_data = _from_pil_grayscale_alpha(
+                image.getdata(), right_hi=True, width=image.width, height=image.height
+            )
         else:
             toif_mode = ToifMode.grayscale
-            toif_data = _from_pil_grayscale_alpha(image.getdata(), right_hi=False)
+            toif_data = _from_pil_grayscale_alpha(
+                image.getdata(), right_hi=False, width=image.width, height=image.height
+            )
     elif image.mode == "RGB":
         if not legacy_format:
             toif_mode = ToifMode.full_color_le
