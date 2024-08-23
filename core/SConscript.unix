@@ -10,7 +10,7 @@ TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 HW_REVISION ='emulator'
 THP = ARGUMENTS.get('THP', '0') == '1' # Trezor-Host Protocol
-NEW_RENDERING = ARGUMENTS.get('NEW_RENDERING', '1') == '1' or TREZOR_MODEL in ('T3T1',)
+NEW_RENDERING = ARGUMENTS.get('NEW_RENDERING', '1') == '1'
 
 
 FEATURES_WANTED = ["input", "sd_card", "dma2d", "optiga", "sbu"]

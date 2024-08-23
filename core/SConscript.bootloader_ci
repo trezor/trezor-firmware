@@ -22,6 +22,9 @@ if TREZOR_MODEL in ('1', 'DISC1', 'DISC2'):
 
 FEATURES_WANTED = ["input", "rgb_led", "consumption_mask", "usb", "optiga"]
 
+if NEW_RENDERING:
+    FEATURES_WANTED.append("new_rendering")
+
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
 CPPDEFINES_MOD = []
@@ -96,11 +99,14 @@ CPPPATH_MOD += [
 SOURCE_MOD += [
     'embed/extmod/modtrezorcrypto/rand.c',
     'embed/lib/colors.c',
-    'embed/lib/display_draw.c',
     'embed/lib/display_utils.c',
     'embed/lib/error_handling.c',
     'embed/lib/fonts/font_bitmap.c',
     'embed/lib/fonts/fonts.c',
+    'embed/lib/gfx_color.c',
+    'embed/lib/gfx_bitblt_mono8.c',
+    'embed/lib/gfx_bitblt_rgb565.c',
+    'embed/lib/gfx_bitblt_rgba8888.c',
     'embed/lib/image.c',
     'embed/lib/mini_printf.c',
     'embed/lib/terminal.c',
@@ -108,6 +114,18 @@ SOURCE_MOD += [
     'vendor/micropython/lib/uzlib/crc32.c',
     'vendor/micropython/lib/uzlib/tinflate.c',
 ]
+
+
+if NEW_RENDERING:
+    CPPDEFINES_MOD += ['NEW_RENDERING']
+    SOURCE_MOD += [
+        'embed/lib/gfx_draw.c',
+    ]
+else:
+    SOURCE_MOD += [
+        'embed/lib/display_draw.c',
+    ]
+
 
 SOURCE_NANOPB = [
     'vendor/nanopb/pb_common.c',
