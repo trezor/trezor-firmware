@@ -37,6 +37,7 @@ ADDRESS_SANITIZER ?= 0
 CMAKELISTS ?= 0
 PYTEST_TIMEOUT ?= 500
 TEST_LANG ?= "en"
+NEW_RENDERING ?= 1
 THP ?= 0
 
 # OpenOCD interface default. Alternative: ftdi/olimex-arm-usb-tiny-h

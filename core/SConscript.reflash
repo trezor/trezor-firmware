@@ -6,6 +6,7 @@ import tools, models
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 HW_REVISION = ARGUMENTS.get('HW_REVISION', None)
+NEW_RENDERING = ARGUMENTS.get('NEW_RENDERING', '1') == '1'
 
 if TREZOR_MODEL in ('DISC1', 'DISC2'):
     # skip reflash build
@@ -19,6 +20,9 @@ if TREZOR_MODEL in ('DISC1', 'DISC2'):
     Return()
 
 FEATURES_WANTED = ["input", "sd_card"]
+
+if NEW_RENDERING:
+    FEATURES_WANTED.append("new_rendering")
 
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
@@ -72,11 +76,14 @@ CPPPATH_MOD += [
 ]
 SOURCE_MOD += [
     'embed/lib/colors.c',
-    'embed/lib/display_draw.c',
     'embed/lib/display_utils.c',
     'embed/lib/error_handling.c',
     'embed/lib/fonts/font_bitmap.c',
     'embed/lib/fonts/fonts.c',
+    'embed/lib/gfx_color.c',
+    'embed/lib/gfx_bitblt_mono8.c',
+    'embed/lib/gfx_bitblt_rgb565.c',
+    'embed/lib/gfx_bitblt_rgba8888.c',
     'embed/lib/image.c',
     'embed/lib/mini_printf.c',
     'embed/lib/terminal.c',
@@ -85,6 +92,17 @@ SOURCE_MOD += [
     'vendor/micropython/lib/uzlib/tinflate.c',
     'vendor/trezor-storage/flash_area.c',
 ]
+
+if NEW_RENDERING:
+    CPPDEFINES_MOD += ['NEW_RENDERING']
+    SOURCE_MOD += [
+        'embed/lib/gfx_draw.c',
+    ]
+else:
+    SOURCE_MOD += [
+        'embed/lib/display_draw.c',
+    ]
+
 
 # fonts
 tools.add_font('NORMAL', FONT_NORMAL, CPPDEFINES_MOD, SOURCE_MOD)
