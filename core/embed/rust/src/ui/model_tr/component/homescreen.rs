@@ -232,17 +232,6 @@ impl Homescreen {
         rect_fill(AREA.split_top(NOTIFICATION_HEIGHT).0, theme::BG);
     }
 
-    fn paint_warning_icons_in_top_corners(&self) {
-        let warning_icon = theme::ICON_WARNING;
-        warning_icon.draw(AREA.top_left(), Alignment2D::TOP_LEFT, theme::FG, theme::BG);
-        warning_icon.draw(
-            AREA.top_right(),
-            Alignment2D::TOP_RIGHT,
-            theme::FG,
-            theme::BG,
-        );
-    }
-
     fn event_usb(&mut self, ctx: &mut EventCtx, event: Event) {
         if let Event::USB(USBEvent::Connected(_)) = event {
             ctx.request_paint();
