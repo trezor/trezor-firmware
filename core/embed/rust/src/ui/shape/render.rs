@@ -51,6 +51,13 @@ pub trait Renderer<'a> {
         inner(self);
         self.set_viewport(original);
     }
+
+    fn with_translate(&mut self, offset: Offset, inner: &dyn Fn(&mut Self)) {
+        let original = self.viewport();
+        self.set_viewport(self.viewport().translate(offset));
+        inner(self);
+        self.set_viewport(original);
+    }
 }
 
 // ==========================================================================

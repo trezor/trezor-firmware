@@ -7,8 +7,7 @@ use crate::{
         event::SwipeEvent,
         geometry::{Offset, Rect},
         lerp::Lerp,
-        shape,
-        shape::Renderer,
+        shape::{self, Renderer},
         util::animation_disabled,
     },
 };

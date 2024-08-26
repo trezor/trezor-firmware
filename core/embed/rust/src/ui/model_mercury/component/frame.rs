@@ -196,7 +196,24 @@ where
 
     #[inline(never)]
     pub fn with_footer_counter(mut self, instruction: TString<'static>, max_value: u8) -> Self {
-        self.footer = Some(Footer::new(instruction, None).with_page_counter(max_value));
+        self.footer = Some(Footer::with_page_counter(max_value, instruction));
+        self
+    }
+
+    #[inline(never)]
+    pub fn with_footer_page_hint(
+        mut self,
+        description: TString<'static>,
+        description_last: TString<'static>,
+        instruction: TString<'static>,
+        instruction_last: TString<'static>,
+    ) -> Self {
+        self.footer = Some(Footer::with_page_hint(
+            description,
+            description_last,
+            instruction,
+            instruction_last,
+        ));
         self
     }
 
@@ -231,9 +248,14 @@ where
         res
     }
 
-    pub fn update_footer_counter(&mut self, ctx: &mut EventCtx, new_val: u8) {
+    pub fn update_footer_counter(
+        &mut self,
+        ctx: &mut EventCtx,
+        current: usize,
+        max: Option<usize>,
+    ) {
         if let Some(footer) = &mut self.footer {
-            footer.update_page_counter(ctx, new_val);
+            footer.update_page_counter(ctx, current, max);
         }
     }
 

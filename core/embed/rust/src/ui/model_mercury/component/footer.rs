@@ -22,8 +22,7 @@ use crate::{
 #[derive(Clone)]
 pub struct Footer<'a> {
     area: Rect,
-    instruction: TString<'a>,
-    content: Option<FooterContent<'a>>,
+    content: FooterContent<'a>,
     swipe_allow_up: bool,
     swipe_allow_down: bool,
     progress: i16,
@@ -32,8 +31,10 @@ pub struct Footer<'a> {
 
 #[derive(Clone)]
 enum FooterContent<'a> {
-    Description(TString<'a>),
+    Instruction(TString<'a>),
+    InstructionDescription(TString<'a>, TString<'a>),
     PageCounter(PageCounter),
+    PageHint(PageHint),
 }
 
 impl<'a> Footer<'a> {
@@ -45,14 +46,10 @@ impl<'a> Footer<'a> {
     const STYLE_INSTRUCTION: &'static TextStyle = &theme::TEXT_SUB_GREY;
     const STYLE_DESCRIPTION: &'static TextStyle = &theme::TEXT_SUB_GREY_LIGHT;
 
-    pub fn new<T: Into<TString<'a>>>(
-        instruction: T,
-        description: Option<TString<'static>>,
-    ) -> Self {
+    fn from_content(content: FooterContent<'a>) -> Self {
         Self {
             area: Rect::zero(),
-            instruction: instruction.into(),
-            content: description.map(FooterContent::Description),
+            content,
             swipe_allow_down: false,
             swipe_allow_up: false,
             progress: 0,
@@ -60,38 +57,79 @@ impl<'a> Footer<'a> {
         }
     }
 
-    pub fn with_page_counter(self, max_pages: u8) -> Self {
-        Self {
-            content: Some(FooterContent::PageCounter(PageCounter::new(max_pages))),
-            ..self
-        }
+    pub fn new<T: Into<TString<'a>>>(
+        instruction: T,
+        description: Option<TString<'static>>,
+    ) -> Self {
+        let instruction = instruction.into();
+        Self::from_content(
+            description
+                .map(|d| FooterContent::InstructionDescription(instruction, d))
+                .unwrap_or(FooterContent::Instruction(instruction)),
+        )
     }
 
-    pub fn update_instruction<T: Into<TString<'a>>>(&mut self, ctx: &mut EventCtx, s: T) {
-        self.instruction = s.into();
+    pub fn with_page_counter(max_pages: u8, instruction: TString<'static>) -> Self {
+        Self::from_content(FooterContent::PageCounter(PageCounter::new(
+            max_pages,
+            instruction,
+        )))
+    }
+
+    pub fn with_page_hint(
+        description: TString<'static>,
+        description_last: TString<'static>,
+        instruction: TString<'static>,
+        instruction_last: TString<'static>,
+    ) -> Self {
+        Self::from_content(FooterContent::PageHint(PageHint {
+            description,
+            description_last,
+            instruction,
+            instruction_last,
+            page_curr: 0,
+            page_num: 1,
+        }))
+    }
+
+    pub fn update_instruction<T: Into<TString<'static>>>(&mut self, ctx: &mut EventCtx, s: T) {
+        match &mut self.content {
+            FooterContent::Instruction(i) => *i = s.into(),
+            FooterContent::InstructionDescription(i, _d) => *i = s.into(),
+            FooterContent::PageCounter(page_counter) => page_counter.instruction = s.into(),
+            _ => {
+                #[cfg(feature = "ui_debug")]
+                panic!("not supported")
+            }
+        }
         ctx.request_paint();
     }
 
     pub fn update_description<T: Into<TString<'a>>>(&mut self, ctx: &mut EventCtx, s: T) {
-        if let Some(ref mut content) = self.content {
-            if let Some(text) = content.as_description_mut() {
-                *text = s.into();
-                ctx.request_paint();
-            } else {
-                #[cfg(feature = "ui_debug")]
-                panic!("footer does not have description")
-            }
+        if let FooterContent::InstructionDescription(_i, d) = &mut self.content {
+            *d = s.into();
+            ctx.request_paint();
+        } else {
+            #[cfg(feature = "ui_debug")]
+            panic!("footer does not have description")
         }
     }
 
-    pub fn update_page_counter(&mut self, ctx: &mut EventCtx, n: u8) {
-        if let Some(ref mut content) = self.content {
-            if let Some(counter) = content.as_page_counter_mut() {
-                counter.update_current_page(n);
+    pub fn update_page_counter(&mut self, ctx: &mut EventCtx, current: usize, max: Option<usize>) {
+        match &mut self.content {
+            FooterContent::PageCounter(counter) => {
+                counter.update_current_page(current);
                 self.swipe_allow_down = counter.is_first_page();
                 self.swipe_allow_up = counter.is_last_page();
                 ctx.request_paint();
-            } else {
+            }
+            FooterContent::PageHint(page_hint) => {
+                page_hint.update_current_page(current, max);
+                self.swipe_allow_down = page_hint.is_first_page();
+                self.swipe_allow_up = page_hint.is_last_page();
+                ctx.request_paint();
+            }
+            _ => {
                 #[cfg(feature = "ui_debug")]
                 panic!("footer does not have counter")
             }
@@ -99,11 +137,7 @@ impl<'a> Footer<'a> {
     }
 
     pub fn height(&self) -> i16 {
-        if self.content.is_some() {
-            Footer::HEIGHT_DEFAULT
-        } else {
-            Footer::HEIGHT_SIMPLE
-        }
+        self.content.height()
     }
 
     pub fn with_swipe(self, swipe_direction: SwipeDirection) -> Self {
@@ -125,15 +159,7 @@ impl<'a> Component for Footer<'a> {
     type Msg = Never;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        let h = bounds.height();
-        assert!(h == Footer::HEIGHT_SIMPLE || h == Footer::HEIGHT_DEFAULT);
-        if let Some(content) = &mut self.content {
-            if let Some(counter) = content.as_page_counter_mut() {
-                if h == Footer::HEIGHT_DEFAULT {
-                    counter.place(bounds.split_top(Footer::HEIGHT_SIMPLE).0);
-                }
-            }
-        }
+        assert!(bounds.height() == self.content.height());
         self.area = bounds;
         self.area
     }
@@ -189,49 +215,7 @@ impl<'a> Component for Footer<'a> {
         };
 
         target.with_origin(offset, &|target| {
-            // show description/counter only if there is space for it
-            if self.area.height() == Footer::HEIGHT_DEFAULT {
-                if let Some(content) = &self.content {
-                    match content {
-                        FooterContent::Description(text) => {
-                            let area_description = self.area.split_top(Footer::HEIGHT_SIMPLE).0;
-                            let text_description_font_descent = Footer::STYLE_DESCRIPTION
-                                .text_font
-                                .visible_text_height_ex("Ay")
-                                .1;
-                            let text_description_baseline = area_description.bottom_center()
-                                - Offset::y(text_description_font_descent);
-
-                            text.map(|t| {
-                                Text::new(text_description_baseline, t)
-                                    .with_font(Footer::STYLE_DESCRIPTION.text_font)
-                                    .with_fg(Footer::STYLE_DESCRIPTION.text_color)
-                                    .with_align(Alignment::Center)
-                                    .render(target);
-                            });
-                        }
-                        FooterContent::PageCounter(counter) => {
-                            counter.render(target);
-                        }
-                    }
-                }
-            }
-
-            let area_instruction = self.area.split_bottom(Footer::HEIGHT_SIMPLE).1;
-            let text_instruction_font_descent = Footer::STYLE_INSTRUCTION
-                .text_font
-                .visible_text_height_ex("Ay")
-                .1;
-            let text_instruction_baseline =
-                area_instruction.bottom_center() - Offset::y(text_instruction_font_descent);
-            self.instruction.map(|t| {
-                Text::new(text_instruction_baseline, t)
-                    .with_font(Footer::STYLE_INSTRUCTION.text_font)
-                    .with_fg(Footer::STYLE_INSTRUCTION.text_color)
-                    .with_align(Alignment::Center)
-                    .render(target);
-            });
-
+            self.content.render(self.area, target);
             shape::Bar::new(self.area)
                 .with_alpha(mask)
                 .with_fg(Color::black())
@@ -245,29 +229,93 @@ impl<'a> Component for Footer<'a> {
 impl crate::trace::Trace for Footer<'_> {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("Footer");
-        if let Some(content) = &self.content {
-            match content {
-                FooterContent::Description(text) => t.string("description", *text),
-                FooterContent::PageCounter(counter) => counter.trace(t),
+        match &self.content {
+            FooterContent::Instruction(i) => {
+                t.string("instruction", *i);
+            }
+            FooterContent::InstructionDescription(i, d) => {
+                t.string("description", *d);
+                t.string("instruction", *i);
+            }
+            FooterContent::PageCounter(counter) => counter.trace(t),
+            FooterContent::PageHint(page_hint) => {
+                t.string("description", page_hint.description());
+                t.string("instruction", page_hint.instruction());
             }
         }
-        t.string("instruction", self.instruction);
     }
 }
 
 impl<'a> FooterContent<'a> {
-    pub fn as_description_mut(&mut self) -> Option<&mut TString<'a>> {
-        match self {
-            FooterContent::Description(ref mut text) => Some(text),
-            _ => None,
+    fn height(&self) -> i16 {
+        if matches!(self, FooterContent::Instruction(_)) {
+            Footer::HEIGHT_SIMPLE
+        } else {
+            Footer::HEIGHT_DEFAULT
         }
     }
 
-    pub fn as_page_counter_mut(&mut self) -> Option<&mut PageCounter> {
+    fn render<'s>(&'s self, area: Rect, target: &mut impl Renderer<'s>)
+    where
+        's: 'a,
+    {
         match self {
-            FooterContent::PageCounter(ref mut counter) => Some(counter),
-            _ => None,
+            FooterContent::Instruction(instruction) => {
+                Self::render_instruction(target, area, instruction);
+            }
+            FooterContent::InstructionDescription(instruction, description) => {
+                Self::render_description(target, area, description);
+                Self::render_instruction(target, area, instruction);
+            }
+            FooterContent::PageCounter(page_counter) => page_counter.render(target, area),
+            FooterContent::PageHint(page_hint) => {
+                Self::render_description(target, area, &page_hint.description());
+                Self::render_instruction(target, area, &page_hint.instruction());
+            }
         }
+    }
+
+    fn render_description<'s>(
+        target: &mut impl Renderer<'s>,
+        area: Rect,
+        description: &TString<'a>,
+    ) {
+        let area_description = area.split_top(Footer::HEIGHT_SIMPLE).0;
+        let text_description_font_descent = Footer::STYLE_DESCRIPTION
+            .text_font
+            .visible_text_height_ex("Ay")
+            .1;
+        let text_description_baseline =
+            area_description.bottom_center() - Offset::y(text_description_font_descent);
+
+        description.map(|t| {
+            Text::new(text_description_baseline, t)
+                .with_font(Footer::STYLE_DESCRIPTION.text_font)
+                .with_fg(Footer::STYLE_DESCRIPTION.text_color)
+                .with_align(Alignment::Center)
+                .render(target)
+        });
+    }
+
+    fn render_instruction<'s>(
+        target: &mut impl Renderer<'s>,
+        area: Rect,
+        instruction: &TString<'a>,
+    ) {
+        let area_instruction = area.split_bottom(Footer::HEIGHT_SIMPLE).1;
+        let text_instruction_font_descent = Footer::STYLE_INSTRUCTION
+            .text_font
+            .visible_text_height_ex("Ay")
+            .1;
+        let text_instruction_baseline =
+            area_instruction.bottom_center() - Offset::y(text_instruction_font_descent);
+        instruction.map(|t| {
+            Text::new(text_instruction_baseline, t)
+                .with_font(Footer::STYLE_INSTRUCTION.text_font)
+                .with_fg(Footer::STYLE_INSTRUCTION.text_color)
+                .with_align(Alignment::Center)
+                .render(target)
+        });
     }
 }
 
@@ -275,59 +323,44 @@ impl<'a> FooterContent<'a> {
 /// indication, rendered e.g. as: '1 / 20'.
 #[derive(Clone)]
 struct PageCounter {
-    area: Rect,
+    pub instruction: TString<'static>,
     font: Font,
     page_curr: u8,
     page_max: u8,
 }
 
 impl PageCounter {
-    fn new(page_max: u8) -> Self {
+    fn new(page_max: u8, instruction: TString<'static>) -> Self {
         Self {
-            area: Rect::zero(),
-            page_curr: 1,
+            instruction,
+            page_curr: 0,
             page_max,
             font: Font::SUB,
         }
     }
 
-    fn update_current_page(&mut self, new_value: u8) {
-        self.page_curr = new_value.clamp(1, self.page_max);
+    fn update_current_page(&mut self, new_value: usize) {
+        self.page_curr = (new_value as u8).clamp(0, self.page_max.saturating_sub(1));
     }
 
     fn is_first_page(&self) -> bool {
-        self.page_curr == 1
+        self.page_curr == 0
     }
 
     fn is_last_page(&self) -> bool {
-        self.page_curr == self.page_max
+        self.page_curr + 1 == self.page_max
     }
 }
 
-impl Component for PageCounter {
-    type Msg = Never;
-
-    fn place(&mut self, bounds: Rect) -> Rect {
-        self.area = bounds;
-        self.area
-    }
-
-    fn event(&mut self, _ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {
-        None
-    }
-
-    fn paint(&mut self) {
-        todo!("remove when ui-t3t1 done")
-    }
-
-    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        let color = if self.page_curr == self.page_max {
+impl PageCounter {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>, area: Rect) {
+        let color = if self.is_last_page() {
             theme::GREEN_LIGHT
         } else {
             theme::GREY_LIGHT
         };
 
-        let string_curr = uformat!("{}", self.page_curr);
+        let string_curr = uformat!("{}", self.page_curr + 1);
         let string_max = uformat!("{}", self.page_max);
 
         // center the whole counter "x / yz"
@@ -337,8 +370,9 @@ impl Component for PageCounter {
         let width_num_max = self.font.text_width(&string_max);
         let width_total = width_num_curr + width_foreslash + width_num_max + 2 * offset_x.x;
 
-        let center_x = self.area.center().x;
-        let counter_y = self.font.vert_center(self.area.y0, self.area.y1, "0");
+        let counter_area = area.split_top(Footer::HEIGHT_SIMPLE).0;
+        let center_x = counter_area.center().x;
+        let counter_y = self.font.vert_center(counter_area.y0, counter_area.y1, "0");
         let counter_start_x = center_x - width_total / 2;
         let counter_end_x = center_x + width_total / 2;
         let base_num_curr = Point::new(counter_start_x, counter_y);
@@ -359,6 +393,8 @@ impl Component for PageCounter {
             .with_fg(color)
             .with_font(self.font)
             .render(target);
+
+        FooterContent::render_instruction(target, area, &self.instruction);
     }
 }
 
@@ -368,5 +404,60 @@ impl crate::trace::Trace for PageCounter {
         t.component("PageCounter");
         t.int("page current", self.page_curr.into());
         t.int("page max", self.page_max.into());
+    }
+}
+
+#[derive(Clone)]
+struct PageHint {
+    pub description: TString<'static>,
+    pub description_last: TString<'static>,
+    pub instruction: TString<'static>,
+    pub instruction_last: TString<'static>,
+    pub page_curr: u8,
+    pub page_num: u8,
+}
+
+impl PageHint {
+    fn update_current_page(&mut self, current: usize, max: Option<usize>) {
+        self.page_curr = (current as u8).clamp(0, self.page_num.saturating_sub(1));
+        if let Some(max) = max {
+            self.page_num = max as u8;
+        }
+    }
+
+    fn update_max_page(&mut self, max: usize) {
+        self.page_num = max as u8;
+    }
+
+    fn is_single_page(&self) -> bool {
+        self.page_num <= 1
+    }
+
+    fn is_first_page(&self) -> bool {
+        self.page_curr == 0
+    }
+
+    fn is_last_page(&self) -> bool {
+        self.page_curr + 1 == self.page_num
+    }
+
+    fn description(&self) -> TString<'static> {
+        if self.is_single_page() {
+            TString::empty()
+        } else if self.is_last_page() {
+            self.description_last
+        } else {
+            self.description
+        }
+    }
+
+    fn instruction(&self) -> TString<'static> {
+        if self.is_single_page() {
+            TString::empty()
+        } else if self.is_last_page() {
+            self.instruction_last
+        } else {
+            self.instruction
+        }
     }
 }

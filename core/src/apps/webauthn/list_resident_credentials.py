@@ -18,6 +18,7 @@ async def list_resident_credentials(
         TR.fido__title_list_credentials,
         description=TR.fido__export_credentials,
         verb=TR.buttons__export,
+        prompt_screen=True,
     )
     creds = [
         WebAuthnCredential(

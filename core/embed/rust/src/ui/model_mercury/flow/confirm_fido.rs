@@ -11,16 +11,16 @@ use crate::{
         },
         flow::{
             base::{DecisionBuilder as _, StateChange},
-            FlowMsg, FlowState, SwipeFlow, SwipePage,
+            FlowMsg, FlowState, SwipeFlow,
         },
         layout::obj::LayoutObj,
-        model_mercury::component::{FidoCredential, SwipeContent},
     },
 };
 
 use super::super::{
     component::{
-        Frame, FrameMsg, PagedVerticalMenu, PromptScreen, VerticalMenu, VerticalMenuChoiceMsg,
+        ChooseCredential, FidoCredential, Frame, FrameMsg, PromptMsg, PromptScreen, SwipeContent,
+        VerticalMenu, VerticalMenuChoiceMsg,
     },
     theme,
 };
@@ -49,6 +49,7 @@ impl FlowState for ConfirmFido {
         match (self, direction) {
             (Self::Intro, SwipeDirection::Left) => Self::Menu.swipe(direction),
             (Self::Intro, SwipeDirection::Up) => Self::ChooseCredential.swipe(direction),
+            (Self::ChooseCredential, SwipeDirection::Down) => Self::Intro.swipe(direction),
             (Self::Details, SwipeDirection::Up) => Self::Tap.swipe(direction),
             (Self::Tap, SwipeDirection::Down) => Self::Details.swipe(direction),
             _ => self.do_nothing(),
@@ -122,26 +123,11 @@ impl ConfirmFido {
                 .try_into()
                 .unwrap_or_else(|_| TString::from_str("-"))
         };
-        let content_choose_credential = Frame::left_aligned(
-            TR::fido__title_select_credential.into(),
-            SwipeContent::new(SwipePage::vertical(PagedVerticalMenu::new(
-                num_accounts,
-                label_fn,
-            ))),
-        )
-        .with_subtitle(TR::fido__title_for_authentication.into())
-        .with_menu_button()
-        .with_footer(
-            TR::instructions__swipe_up.into(),
-            (num_accounts > 2).then_some(TR::fido__more_credentials.into()),
-        )
-        .with_swipe(SwipeDirection::Down, SwipeSettings::default())
-        .with_swipe(SwipeDirection::Right, SwipeSettings::immediate())
-        .with_vertical_pages()
-        .map(|msg| match msg {
-            FrameMsg::Button(_) => Some(FlowMsg::Info),
-            FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => Some(FlowMsg::Choice(i)),
-        });
+        let content_choose_credential =
+            ChooseCredential::new(label_fn, num_accounts).map(|msg| match msg {
+                FrameMsg::Button(_) => Some(FlowMsg::Info),
+                FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => Some(FlowMsg::Choice(i)),
+            });
 
         let get_account = move || {
             let current = CRED_SELECTED.load(Ordering::Relaxed);

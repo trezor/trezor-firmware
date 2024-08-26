@@ -35,6 +35,10 @@ impl<T: Component + Paginate> SwipePage<T> {
             current: 0,
         }
     }
+
+    pub fn inner(&self) -> &T {
+        &self.inner
+    }
 }
 
 impl<T: Component + Paginate> Component for SwipePage<T> {
