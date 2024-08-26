@@ -262,6 +262,7 @@ def show_warning(
     description: str = "",
     allow_cancel: bool = False,
     time_ms: int = 0,
+    danger: bool = False,
 ) -> LayoutObj[UiResult]:
     """Warning modal. No buttons shown when `button` is empty string."""
 
@@ -1381,6 +1382,7 @@ def show_warning(
     description: str = "",
     allow_cancel: bool = False,
     time_ms: int = 0,
+    danger: bool = False,  # unused on TT
 ) -> LayoutObj[UiResult]:
     """Warning modal. No buttons shown when `button` is empty string."""
 

@@ -155,7 +155,12 @@ where
         self.with_button(theme::ICON_MENU, CancelInfoConfirmMsg::Info, true)
     }
 
-    pub fn with_warning_button(self) -> Self {
+    pub fn with_warning_low_icon(self) -> Self {
+        self.with_button(theme::ICON_WARNING, CancelInfoConfirmMsg::Info, false)
+            .button_styled(theme::button_warning_low())
+    }
+
+    pub fn with_danger_icon(self) -> Self {
         self.with_button(theme::ICON_WARNING, CancelInfoConfirmMsg::Info, false)
             .button_styled(theme::button_danger())
     }

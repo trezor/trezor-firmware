@@ -319,6 +319,7 @@ async def show_warning_backup() -> None:
                 value=TR.reset__never_make_digital_copy,
                 button="",
                 allow_cancel=False,
+                danger=False,  # Use a less severe icon color
             )
         ),
         "backup_warning",
@@ -351,6 +352,7 @@ async def show_reset_warning(
                     value="",
                     button="",
                     allow_cancel=False,
+                    danger=True,
                 )
             ),
             br_name,

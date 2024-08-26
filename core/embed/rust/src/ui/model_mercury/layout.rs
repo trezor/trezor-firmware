@@ -753,18 +753,25 @@ extern "C" fn new_show_warning(n_args: usize, args: *const Obj, kwargs: *mut Map
         let description: TString = kwargs.get_or(Qstr::MP_QSTR_description, "".into())?;
         let value: TString = kwargs.get_or(Qstr::MP_QSTR_value, "".into())?;
         let action: Option<TString> = kwargs.get(Qstr::MP_QSTR_button)?.try_into_option()?;
+        let danger: bool = kwargs.get_or(Qstr::MP_QSTR_danger, false)?;
 
         let content = ParagraphVecShort::from_iter([
             Paragraph::new(&theme::TEXT_MAIN_GREY_LIGHT, description),
             Paragraph::new(&theme::TEXT_MAIN_GREY_EXTRA_LIGHT, value),
         ])
         .into_paragraphs();
-        let obj = LayoutObj::new(SwipeUpScreen::new(
-            Frame::left_aligned(title, SwipeContent::new(content))
-                .with_warning_button()
-                .with_footer(TR::instructions__swipe_up.into(), action)
-                .with_swipe(SwipeDirection::Up, SwipeSettings::default()),
-        ))?;
+
+        let frame = Frame::left_aligned(title, SwipeContent::new(content))
+            .with_footer(TR::instructions__swipe_up.into(), action)
+            .with_swipe(SwipeDirection::Up, SwipeSettings::default());
+
+        let frame_with_icon = if danger {
+            frame.with_danger_icon()
+        } else {
+            frame.with_warning_low_icon()
+        };
+
+        let obj = LayoutObj::new(SwipeUpScreen::new(frame_with_icon))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -1472,6 +1479,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     description: str = "",
     ///     allow_cancel: bool = False,
     ///     time_ms: int = 0,
+    ///     danger: bool = False,
     /// ) -> LayoutObj[UiResult]:
     ///     """Warning modal. No buttons shown when `button` is empty string."""
     Qstr::MP_QSTR_show_warning => obj_fn_kw!(0, new_show_warning).as_obj(),
