@@ -24,44 +24,6 @@
             }
         },
         {
-            "name": "Ropsten",
-            "parameters": {
-                "chain_id": 3,
-                "path": "m/44'/1'/0'/0/0",
-                "nonce": "0x0",
-                "gas_price": "0x4a817c800",
-                "gas_limit": "0x5208",
-                "value": "0x2540be400",
-                "to_address": "0x8eA7a3fccC211ED48b763b4164884DDbcF3b0A98",
-                "tx_type": null,
-                "data": ""
-            },
-            "result": {
-                "sig_v": 42,
-                "sig_r": "9d49a5c234a134bc56d00a7cf0c208c97d746f002c1fd3609b643eb8ef99d07d",
-                "sig_s": "3f064e133624cb59f8103fd5de76c089d8754e3da233a59d2ab2ca47fc306837"
-            }
-        },
-        {
-            "name": "Rinkeby",
-            "parameters": {
-                "chain_id": 4,
-                "path": "m/44'/1'/0'/0/0",
-                "nonce": "0x0",
-                "gas_price": "0x4a817c800",
-                "gas_limit": "0x5208",
-                "value": "0x2540be400",
-                "to_address": "0x8eA7a3fccC211ED48b763b4164884DDbcF3b0A98",
-                "tx_type": null,
-                "data": ""
-            },
-            "result": {
-                "sig_v": 43,
-                "sig_r": "79a9fd0391f027ed518f3d796a598bf33eef0fb30ef22568a140d674d6b0b76c",
-                "sig_s": "408cd459abafcdb7f2e415b269c85a308aad4c53e63c01d3431d3db6ab6292dd"
-            }
-        },
-        {
             "name": "ETC",
             "parameters": {
                 "chain_id": 61,
