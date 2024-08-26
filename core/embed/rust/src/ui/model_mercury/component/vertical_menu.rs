@@ -1,6 +1,6 @@
 use heapless::Vec;
 
-use super::theme;
+use super::{theme, InternallySwipable};
 use crate::{
     strutil::TString,
     time::{Duration, Stopwatch},
@@ -266,7 +266,7 @@ impl Component for VerticalMenu {
 
         let opacities = [item1_opacity, item2_opacity, item3_opacity];
 
-        target.with_origin(offset, &|target| {
+        target.with_translate(offset, &|target| {
             // render buttons separated by thin bars
             for (i, button) in (&self.buttons).into_iter().take(self.n_items).enumerate() {
                 button.render(target);

@@ -84,9 +84,9 @@ impl<'a> Component for ShareWords<'a> {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        let page_index = self.frame.inner().inner().page_index as u8;
+        let page_index = self.frame.inner().inner().page_index;
         if let Some(repeated_indices) = &self.repeated_indices {
-            if repeated_indices.contains(&page_index) {
+            if repeated_indices.contains(&(page_index as u8)) {
                 let updated_subtitle = TString::from_translation(TR::reset__the_word_is_repeated);
                 self.frame
                     .update_subtitle(ctx, updated_subtitle, Some(theme::TEXT_SUB_GREEN_LIME));
@@ -95,7 +95,8 @@ impl<'a> Component for ShareWords<'a> {
                     .update_subtitle(ctx, self.subtitle, Some(theme::TEXT_SUB_GREY));
             }
         }
-        self.frame.update_footer_counter(ctx, page_index + 1);
+        self.frame
+            .update_footer_counter(ctx, page_index as usize, None);
         self.frame.event(ctx, event)
     }
 
