@@ -971,5 +971,6 @@
   "969": "ethereum__token_contract",
   "970": "buttons__view_all_data",
   "971": "instructions__view_all_data",
-  "972": "ethereum__interaction_contract"
+  "972": "ethereum__interaction_contract",
+  "973": "misc__enable_labeling"
 }

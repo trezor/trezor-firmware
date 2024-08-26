@@ -459,6 +459,7 @@
     "misc__decrypt_value": "Decrittogr. valore",
     "misc__encrypt_value": "Crittogr. valore",
     "misc__title_suite_labeling": "Etichett. suite",
+    "misc__enable_labeling": "Abilitare etichettatura?",
     "modify_amount__decrease_amount": "Riduci importo di:",
     "modify_amount__increase_amount": "Aumenta importo di:",
     "modify_amount__new_amount": "Nuovo importo:",
