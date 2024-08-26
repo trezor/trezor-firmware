@@ -452,6 +452,7 @@ def flow_continue_recovery(
     recovery_type: RecoveryType,
     text: str,
     subtext: str | None = None,
+    pages: Iterable[tuple[str, str]] | None = None,
 ) -> LayoutObj[UiResult]:
     """Device recovery homescreen."""
 
@@ -471,14 +472,6 @@ def show_group_share_success(
     lines: Iterable[str]
 ) -> LayoutObj[UiResult]:
     """Shown after successfully finishing a group."""
-
-
-# rust/src/ui/model_mercury/layout.rs
-def show_remaining_shares(
-    *,
-    pages: Iterable[tuple[str, str]],
-) -> LayoutObj[UiResult]:
-    """Shows SLIP39 state after info button is pressed on `confirm_recovery`."""
 
 
 # rust/src/ui/model_mercury/layout.rs
