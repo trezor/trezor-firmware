@@ -148,6 +148,12 @@ vendorheader: ## generate vendor header
 vendorheader_check: ## check that vendor header is up to date
 	./core/tools/generate_vendorheader.sh --quiet --check
 
-gen:  templates mocks icons protobuf ci_docs vendorheader solana_templates ## regenerate auto-generated files from sources
+bootloader_hashes: ## generate bootloader hashes
+	./core/tools/bootloader_hashes.py
 
-gen_check: templates_check mocks_check icons_check protobuf_check ci_docs_check vendorheader_check solana_templates_check ## check validity of auto-generated files
+bootloader_hashes_check: ## check generated bootloader hashes
+	./core/tools/bootloader_hashes.py --check
+
+gen:  templates mocks icons protobuf ci_docs vendorheader solana_templates bootloader_hashes ## regenerate auto-generated files from sources
+
+gen_check: templates_check mocks_check icons_check protobuf_check ci_docs_check vendorheader_check solana_templates_check bootloader_hashes_check ## check validity of auto-generated files
