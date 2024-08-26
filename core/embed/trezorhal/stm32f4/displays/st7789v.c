@@ -35,7 +35,7 @@
 #include "displays/panels/lx154a2422.h"
 #include "displays/panels/tf15411a.h"
 #else
-#include "displays/panels/lx154a2422.h"
+#include "displays/panels/lx154a2482.h"
 #endif
 
 // using const volatile instead of #define results in binaries that change
@@ -243,7 +243,7 @@ int display_orientation(int degrees) {
         lx154a2422_rotate(degrees, &DISPLAY_PADDING);
       }
 #else
-      lx154a2422_rotate(degrees, &DISPLAY_PADDING);
+      lx154a2482_rotate(degrees, &DISPLAY_PADDING);
 #endif
       panel_set_window(0, 0, DISPLAY_RESX - 1, DISPLAY_RESY - 1);
     }
@@ -294,7 +294,7 @@ void display_init_seq(void) {
     _154a_init_seq();
   }
 #else
-  lx154a2422_init_seq();
+  lx154a2482_init_seq();
 #endif
 
   display_unsleep();
@@ -474,9 +474,6 @@ void display_reinit(void) {
   // important for model T as this is not set in boardloader
   display_set_little_endian();
 
-  DISPLAY_ORIENTATION = 0;
-  panel_set_window(0, 0, DISPLAY_RESX - 1, DISPLAY_RESY - 1);
-
   backlight_pwm_init(BACKLIGHT_RETAIN);
 
 #ifdef TREZOR_MODEL_T
@@ -487,7 +484,12 @@ void display_reinit(void) {
   } else if (id == DISPLAY_ID_ST7789V) {
     lx154a2411_gamma();
   }
+#else
+  lx154a2482_init_seq();
 #endif
+
+  DISPLAY_ORIENTATION = 0;
+  panel_set_window(0, 0, DISPLAY_RESX - 1, DISPLAY_RESY - 1);
 
 #ifdef FRAMEBUFFER
   display_setup_te_interrupt();

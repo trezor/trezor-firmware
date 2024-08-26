@@ -44,7 +44,9 @@ uint32_t display_panel_identify(void);
 bool display_panel_is_inverted();
 
 void display_panel_init(void);
-void display_panel_init_gamma(void);
+// Due to inability to change display setting in boardlaoder,
+// we need to reinitialize the display when bootloader or firmware runs
+void display_panel_reinit(void);
 void display_panel_set_little_endian(void);
 void display_panel_set_big_endian(void);
 
