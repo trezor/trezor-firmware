@@ -1,6 +1,8 @@
 #ifndef MODELS_MODEL_T2B1_H_
 #define MODELS_MODEL_T2B1_H_
 
+#include "bootloaders/bootloader_hashes.h"
+
 #define MODEL_NAME "Safe 3"
 #define MODEL_FULL_NAME "Trezor Safe 3"
 #define MODEL_INTERNAL_NAME "T2B1"

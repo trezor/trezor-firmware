@@ -1,6 +1,8 @@
 #ifndef MODELS_MODEL_T2T1_H_
 #define MODELS_MODEL_T2T1_H_
 
+#include "bootloaders/bootloader_hashes.h"
+
 #define MODEL_NAME "T"
 #define MODEL_FULL_NAME "Trezor Model T"
 #define MODEL_INTERNAL_NAME "T2T1"

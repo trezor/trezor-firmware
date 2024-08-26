@@ -912,7 +912,7 @@ if TREZOR_MODEL not in ('DISC1', 'DISC2'):
             env,
             'bootloader',
             'embed/firmware/bootloaders/bootloader.o',
-            f'embed/firmware/bootloaders/bootloader_{BOOTLOADER_SUFFIX}.bin',
+            f'embed/models/{MODEL_IDENTIFIER}/bootloaders/bootloader_{BOOTLOADER_SUFFIX}.bin',
             )
 
 

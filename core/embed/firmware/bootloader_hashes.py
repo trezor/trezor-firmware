@@ -7,7 +7,7 @@ from trezorlib.firmware.core import FirmwareImage
 ALIGNED_SIZE = 128 * 1024
 
 HERE = Path(__file__).parent
-BOOTLOADERS = HERE / "bootloaders"
+BOOTLOADERS = HERE / ".." / "models"
 
 BL_CHECK = HERE / "bl_check.c"
 
@@ -74,29 +74,38 @@ def bootloader_str(file: Path) -> str:
 
 
 def main():
-    bl_check_new = []
-    with open(BL_CHECK) as f:
-        # read up to auto-begin
-        for line in f:
-            bl_check_new.append(line)
-            if line == BL_CHECK_AUTO_BEGIN:
-                break
 
-        # write bootloader definitions
-        for file in sorted(BOOTLOADERS.glob("bootloader*.bin")):
-            bl_check_new.append(bootloader_str(file))
+    models = list(BOOTLOADERS.iterdir())
 
-        # consume up to auto-end
-        for line in f:
-            if line == BL_CHECK_AUTO_END:
-                bl_check_new.append(line)
-                break
+    models = [model for model in models if model.is_dir()]
 
-        # read the rest
-        bl_check_new.extend(f)
+    for model in models:
 
-    # write the file
-    BL_CHECK.write_text("".join(bl_check_new))
+        path = model / "bootloaders"
+
+        if path.is_dir():
+
+            header_file = path / "bootloader_hashes.h"
+
+            content = []
+            content.append("#ifndef BOOTLOADER_HASHES_H\n")
+            content.append("#define BOOTLOADER_HASHES_H\n")
+            content.append("\n")
+            content.append("// Auto-generated file, do not edit.\n")
+            content.append("\n")
+            content.append("// clang-format off\n")
+
+            bootloaders = sorted(path.glob("bootloader*.bin"))
+            for bootloader in bootloaders:
+                if bootloader.is_file():
+                    print(f"Processing {bootloader}")
+                    content.append(bootloader_str(bootloader))
+
+            content.append("// clang-format on\n")
+            content.append("\n")
+            content.append("#endif\n")
+
+            header_file.write_text("".join(content))
 
 
 if __name__ == "__main__":

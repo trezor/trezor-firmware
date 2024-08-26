@@ -1,6 +1,8 @@
 #ifndef MODELS_MODEL_T3T1_H_
 #define MODELS_MODEL_T3T1_H_
 
+#include "bootloaders/bootloader_hashes.h"
+
 #include "sizedefs.h"
 
 #define MODEL_NAME "Safe 5"
