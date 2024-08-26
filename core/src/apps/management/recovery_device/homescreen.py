@@ -13,6 +13,8 @@ from . import layout, recover
 if TYPE_CHECKING:
     from trezor.enums import BackupType, RecoveryType
 
+    from .layout import RemainingSharesInfo
+
 
 async def recovery_homescreen() -> None:
     from trezor import workflow
@@ -297,7 +299,7 @@ async def _request_share_next_screen() -> None:
         await layout.homescreen_dialog(
             TR.buttons__enter,
             TR.recovery__more_shares_needed,
-            info_func=_show_remaining_groups_and_shares,
+            remaining_shares_info=_get_remaining_groups_and_shares(),
         )
     else:
         still_needed_shares = remaining[0]
@@ -315,21 +317,21 @@ async def _request_share_next_screen() -> None:
         await layout.homescreen_dialog(TR.buttons__enter_share, entered, needed)
 
 
-async def _show_remaining_groups_and_shares() -> None:
+def _get_remaining_groups_and_shares() -> "RemainingSharesInfo":
     """
-    Show info dialog for Slip39 Advanced - what shares are to be entered.
+    Prepare data for Slip39 Advanced - what shares are to be entered.
     """
     from trezor.crypto import slip39
 
     shares_remaining = storage_recovery.fetch_slip39_remaining_shares()
-    # should be stored at this point
-    assert shares_remaining
+    assert shares_remaining  # should be stored at this point
 
     groups = set()
     first_entered_index = -1
     for i, group_count in enumerate(shares_remaining):
         if group_count < slip39.MAX_SHARE_COUNT:
             first_entered_index = i
+            break
 
     share = None
     for index, remaining in enumerate(shares_remaining):
@@ -337,15 +339,15 @@ async def _show_remaining_groups_and_shares() -> None:
             m = storage_recovery_shares.fetch_group(index)[0]
             if not share:
                 share = slip39.decode_mnemonic(m)
-            identifier = m.split(" ")[0:3]
-            groups.add((remaining, tuple(identifier)))
+            identifier = tuple(m.split(" ")[0:3])
+            groups.add(identifier)
         elif remaining == slip39.MAX_SHARE_COUNT:  # no shares yet
-            identifier = storage_recovery_shares.fetch_group(first_entered_index)[
-                0
-            ].split(" ")[0:2]
-            groups.add((remaining, tuple(identifier)))
+            identifier = tuple(
+                storage_recovery_shares.fetch_group(first_entered_index)[0].split(" ")[
+                    0:2
+                ]
+            )
+            groups.add(identifier)
 
     assert share  # share needs to be set
-    return await layout.show_remaining_shares(
-        groups, shares_remaining, share.group_threshold
-    )
+    return groups, shares_remaining, share.group_threshold

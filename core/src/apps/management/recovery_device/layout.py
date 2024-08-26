@@ -6,15 +6,18 @@ from trezor.ui.layouts.recovery import (  # noqa: F401
     request_word_count,
     show_group_share_success,
     show_recovery_warning,
-    show_remaining_shares,
 )
 
 from apps.common import backup_types
 
 if TYPE_CHECKING:
-    from typing import Callable
-
     from trezor.enums import BackupType
+
+    # RemainingSharesInfo represents the data structure for remaining shares in SLIP-39 recovery:
+    # - Set of tuples, each containing 2 or 3 words identifying a group
+    # - List of remaining share counts for each group
+    # - Group threshold (minimum number of groups required)
+    RemainingSharesInfo = tuple[set[tuple[str, ...]], list[int], int]
 
 
 async def request_mnemonic(
@@ -123,8 +126,8 @@ async def homescreen_dialog(
     button_label: str,
     text: str,
     subtext: str | None = None,
-    info_func: Callable | None = None,
     show_info: bool = False,
+    remaining_shares_info: "RemainingSharesInfo | None" = None,
 ) -> None:
     import storage.recovery as storage_recovery
     from trezor.ui.layouts.recovery import continue_recovery
@@ -133,6 +136,11 @@ async def homescreen_dialog(
 
     recovery_type = storage_recovery.get_type()
     if not await continue_recovery(
-        button_label, text, subtext, info_func, recovery_type, show_info
+        button_label,
+        text,
+        subtext,
+        recovery_type,
+        show_info,
+        remaining_shares_info,
     ):
         raise RecoveryAborted

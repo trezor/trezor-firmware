@@ -304,7 +304,7 @@ class RecoveryFlow:
                     if self.client.model is models.T2T1:
                         yield from self.tt_click_info()
                     elif self.client.model is models.T3T1:
-                        self.mercury_click_info()
+                        yield from self.mercury_click_info()
                 yield from self.success_more_shares_needed()
 
     def tt_click_info(
@@ -316,10 +316,19 @@ class RecoveryFlow:
         self.debug.swipe_up()
         self.debug.press_yes()
 
-    def mercury_click_info(self):
+    def mercury_click_info(self) -> BRGeneratorType:
+        # Starting on the homepage, handle the repeated button request
+        br = yield
+        assert br.name == "recovery"
+        assert br.code == B.RecoveryHomepage
+        # Moving through the menu into the show_shares screen
         self.debug.click(buttons.CORNER_BUTTON, wait=True)
         self.debug.synchronize_at("VerticalMenu")
         self.debug.click(buttons.VERTICAL_MENU[0], wait=True)
+        br = yield
+        assert br.name == "show_shares"
+        assert br.code == B.Other
+        # Getting back to the homepage
         self.debug.click(buttons.CORNER_BUTTON, wait=True)
         self.debug.click(buttons.CORNER_BUTTON, wait=True)
 

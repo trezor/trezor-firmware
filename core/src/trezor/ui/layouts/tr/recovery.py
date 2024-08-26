@@ -1,4 +1,4 @@
-from typing import Callable, Iterable
+from typing import TYPE_CHECKING, Iterable
 
 import trezorui2
 from trezor import TR
@@ -6,6 +6,9 @@ from trezor.enums import ButtonRequestType, RecoveryType
 
 from ..common import interact
 from . import RustLayout, raise_if_not_confirmed, show_warning
+
+if TYPE_CHECKING:
+    from apps.management.recovery_device.layout import RemainingSharesInfo
 
 
 async def request_word_count(recovery_type: RecoveryType) -> int:
@@ -97,9 +100,9 @@ async def continue_recovery(
     button_label: str,
     text: str,
     subtext: str | None,
-    info_func: Callable | None,
     recovery_type: RecoveryType,
     show_info: bool = False,
+    remaining_shares_info: "RemainingSharesInfo | None" = None,  # unused on TR
 ) -> bool:
     # TODO: implement info_func?
     # There is very limited space on the screen

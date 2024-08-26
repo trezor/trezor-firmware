@@ -1,4 +1,4 @@
-from typing import Callable, Iterable
+from typing import TYPE_CHECKING
 
 import trezorui2
 from trezor import TR
@@ -10,6 +10,9 @@ from . import RustLayout, raise_if_not_confirmed
 CONFIRMED = trezorui2.CONFIRMED  # global_import_cache
 CANCELLED = trezorui2.CANCELLED  # global_import_cache
 INFO = trezorui2.INFO  # global_import_cache
+
+if TYPE_CHECKING:
+    from apps.management.recovery_device.layout import RemainingSharesInfo
 
 
 async def request_word_count(recovery_type: RecoveryType) -> int:
@@ -40,16 +43,18 @@ async def request_word(
     return word
 
 
-async def show_remaining_shares(
-    groups: Iterable[tuple[int, tuple[str, ...]]],  # remaining + list 3 words
-    shares_remaining: list[int],
-    group_threshold: int,
-) -> None:
+def format_remaining_shares_info(
+    remaining_shares_info: "RemainingSharesInfo",
+) -> list[tuple[str, str]]:
     from trezor import strings
     from trezor.crypto.slip39 import MAX_SHARE_COUNT
 
+    groups, shares_remaining, group_threshold = remaining_shares_info
+
     pages: list[tuple[str, str]] = []
-    for remaining, group in groups:
+    completed_groups = shares_remaining.count(0)
+
+    for group, remaining in zip(groups, shares_remaining):
         if 0 < remaining < MAX_SHARE_COUNT:
             title = strings.format_plural(
                 TR.recovery__x_more_items_starting_template_plural,
@@ -58,10 +63,8 @@ async def show_remaining_shares(
             )
             words = "\n".join(group)
             pages.append((title, words))
-        elif (
-            remaining == MAX_SHARE_COUNT and shares_remaining.count(0) < group_threshold
-        ):
-            groups_remaining = group_threshold - shares_remaining.count(0)
+        elif remaining == MAX_SHARE_COUNT and completed_groups < group_threshold:
+            groups_remaining = group_threshold - completed_groups
             title = strings.format_plural(
                 TR.recovery__x_more_items_starting_template_plural,
                 groups_remaining,
@@ -70,13 +73,7 @@ async def show_remaining_shares(
             words = "\n".join(group)
             pages.append((title, words))
 
-    await raise_if_not_confirmed(
-        interact(
-            RustLayout(trezorui2.show_remaining_shares(pages=pages)),
-            "show_shares",
-            ButtonRequestType.Other,
-        )
-    )
+    return pages
 
 
 async def show_group_share_success(share_index: int, group_index: int) -> None:
@@ -102,26 +99,25 @@ async def continue_recovery(
     button_label: str,  # unused on mercury
     text: str,
     subtext: str | None,
-    info_func: Callable | None,  # TODO: see below
     recovery_type: RecoveryType,
     show_info: bool = False,
+    remaining_shares_info: "RemainingSharesInfo | None" = None,
 ) -> bool:
-    # TODO: info_func should be changed to return data to be shown (and not show
-    # them) so that individual models can implement showing logic on their own.
-    # T3T1 should move the data to `flow_continue_recovery` and hide them
-    # in the context menu
-
     # NOTE: show_info can be understood as first screen before any shares
     # NOTE: button request sent from the flow
-    homepage = RustLayout(
+    result = await RustLayout(
         trezorui2.flow_continue_recovery(
             first_screen=show_info,
             recovery_type=recovery_type,
             text=text,
             subtext=subtext,
+            pages=(
+                format_remaining_shares_info(remaining_shares_info)
+                if remaining_shares_info
+                else None
+            ),
         )
     )
-    result = await homepage
     return result is CONFIRMED
 
 

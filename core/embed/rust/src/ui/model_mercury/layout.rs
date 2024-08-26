@@ -1013,31 +1013,6 @@ extern "C" fn new_show_group_share_success(
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
-extern "C" fn new_show_remaining_shares(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
-    let block = move |_args: &[Obj], kwargs: &Map| {
-        let pages_iterable: Obj = kwargs.get(Qstr::MP_QSTR_pages)?;
-
-        let mut paragraphs = ParagraphVecLong::new();
-        for page in IterBuf::new().try_iterate(pages_iterable)? {
-            let [title, description]: [TString; 2] = util::iter_into_array(page)?;
-            paragraphs
-                .add(Paragraph::new(&theme::TEXT_DEMIBOLD, title))
-                .add(Paragraph::new(&theme::TEXT_NORMAL, description).break_after());
-        }
-
-        let obj = LayoutObj::new(SwipeUpScreen::new(
-            Frame::left_aligned(
-                TR::recovery__title_remaining_shares.into(),
-                SwipeContent::new(paragraphs.into_paragraphs()),
-            )
-            .with_footer(TR::instructions__swipe_up.into(), None)
-            .with_swipe(SwipeDirection::Up, SwipeSettings::default()),
-        ))?;
-        Ok(obj.into())
-    };
-    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
-}
-
 extern "C" fn new_show_progress(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let description: TString = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
@@ -1594,6 +1569,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     recovery_type: RecoveryType,
     ///     text: str,
     ///     subtext: str | None = None,
+    ///     pages: Iterable[tuple[str, str]] | None = None,
     /// ) -> LayoutObj[UiResult]:
     ///     """Device recovery homescreen."""
     Qstr::MP_QSTR_flow_continue_recovery => obj_fn_kw!(0, flow::continue_recovery::new_continue_recovery).as_obj(),
@@ -1612,13 +1588,6 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// ) -> LayoutObj[UiResult]:
     ///     """Shown after successfully finishing a group."""
     Qstr::MP_QSTR_show_group_share_success => obj_fn_kw!(0, new_show_group_share_success).as_obj(),
-
-    /// def show_remaining_shares(
-    ///     *,
-    ///     pages: Iterable[tuple[str, str]],
-    /// ) -> LayoutObj[UiResult]:
-    ///     """Shows SLIP39 state after info button is pressed on `confirm_recovery`."""
-    Qstr::MP_QSTR_show_remaining_shares => obj_fn_kw!(0, new_show_remaining_shares).as_obj(),
 
     /// def show_progress(
     ///     *,
