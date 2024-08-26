@@ -68,7 +68,7 @@ void display_reinit(void) {
 
   // Important for model T as this is not set in boardloader
   display_panel_set_little_endian();
-  display_panel_init_gamma();
+  display_panel_reinit();
   backlight_pwm_init(BACKLIGHT_RETAIN);
 
 #ifdef XFRAMEBUFFER

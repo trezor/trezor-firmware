@@ -31,7 +31,7 @@
 #include "panels/lx154a2422.h"
 #include "panels/tf15411a.h"
 #else
-#include "panels/lx154a2422.h"
+#include "panels/lx154a2482.h"
 #endif
 
 // using const volatile instead of #define results in binaries that change
@@ -212,14 +212,17 @@ void display_panel_init(void) {
     _154a_init_seq();
   }
 #else
-  lx154a2422_init_seq();
+  lx154a2482_init_seq();
 #endif
 
   display_panel_unsleep();
 }
 
-void display_panel_init_gamma(void) {
+void display_panel_reinit(void) {
+  // reinitialization is needed due to original sequence is unchangable in
+  // boardloader
 #ifdef TREZOR_MODEL_T
+  // model TT has new gamma settings
   uint32_t id = display_panel_identify();
   if (id == DISPLAY_ID_ST7789V && display_panel_is_inverted()) {
     // newest TT display - set proper gamma
@@ -227,6 +230,9 @@ void display_panel_init_gamma(void) {
   } else if (id == DISPLAY_ID_ST7789V) {
     lx154a2411_gamma();
   }
+#else
+  // reduced touch-display interference in T3T1
+  lx154a2482_init_seq();
 #endif
 }
 
@@ -239,6 +245,6 @@ void display_panel_rotate(int angle) {
     lx154a2422_rotate(angle, &g_window_padding);
   }
 #else
-  lx154a2422_rotate(angle, &g_window_padding);
+  lx154a2482_rotate(angle, &g_window_padding);
 #endif
 }

@@ -55,13 +55,13 @@ def configure(
         sources += ["embed/trezorhal/stm32u5/xdisplay/st-7789/display_io.c"]
         sources += ["embed/trezorhal/stm32u5/xdisplay/st-7789/display_panel.c"]
         sources += [
-            "embed/trezorhal/stm32u5/xdisplay/st-7789/panels/lx154a2422.c",
+            "embed/trezorhal/stm32u5/xdisplay/st-7789/panels/lx154a2482.c",
         ]
 
     else:
         sources += [f"embed/trezorhal/stm32u5/displays/{display}"]
         sources += [
-            "embed/trezorhal/stm32u5/displays/panels/lx154a2422.c",
+            "embed/trezorhal/stm32u5/displays/panels/lx154a2482.c",
         ]
 
     sources += ["embed/trezorhal/stm32u5/backlight_pwm.c"]
