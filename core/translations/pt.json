@@ -458,6 +458,7 @@
     "misc__decrypt_value": "Descript. quantia",
     "misc__encrypt_value": "Criptografar quantia",
     "misc__title_suite_labeling": "Rotulagem da suite",
+    "misc__enable_labeling": "Ativar rotulagem?",
     "modify_amount__decrease_amount": "Diminuir a quantia em:",
     "modify_amount__increase_amount": "Aumentar a quantia em:",
     "modify_amount__new_amount": "Nova quantia:",

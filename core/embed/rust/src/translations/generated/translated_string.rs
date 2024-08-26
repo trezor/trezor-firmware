@@ -1379,6 +1379,7 @@ pub enum TranslatedString {
     instructions__view_all_data = 971,  // "View all data in the menu."
     #[cfg(feature = "universal_fw")]
     ethereum__interaction_contract = 972,  // "Interaction contract"
+    misc__enable_labeling = 973,  // "Enable labeling?"
 }
 
 impl TranslatedString {
@@ -2752,6 +2753,7 @@ impl TranslatedString {
             Self::instructions__view_all_data => "View all data in the menu.",
             #[cfg(feature = "universal_fw")]
             Self::ethereum__interaction_contract => "Interaction contract",
+            Self::misc__enable_labeling => "Enable labeling?",
         }
     }
 
@@ -4126,6 +4128,7 @@ impl TranslatedString {
             Qstr::MP_QSTR_instructions__view_all_data => Some(Self::instructions__view_all_data),
             #[cfg(feature = "universal_fw")]
             Qstr::MP_QSTR_ethereum__interaction_contract => Some(Self::ethereum__interaction_contract),
+            Qstr::MP_QSTR_misc__enable_labeling => Some(Self::misc__enable_labeling),
             _ => None,
         }
     }
