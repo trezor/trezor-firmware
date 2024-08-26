@@ -40,7 +40,7 @@ impl<L: Link> Protocol for ProtocolV2<L> {
         let resp = self.link.read_chunk()?;
         if resp[0] != 0x03 {
             println!("bad magic in v2 session_begin: {:x} instead of 0x03", resp[0]);
-            return Err(Error::DeviceBadMagic)
+            return Err(Error::DeviceBadMagic);
         }
         self.session_id = BigEndian::read_u32(&resp[1..5]);
         Ok(())
@@ -55,7 +55,7 @@ impl<L: Link> Protocol for ProtocolV2<L> {
         let resp = self.link.read_chunk()?;
         if resp[0] != 0x04 {
             println!("bad magic in v2 session_end: {:x} instead of 0x04", resp[0]);
-            return Err(Error::DeviceBadMagic)
+            return Err(Error::DeviceBadMagic);
         }
         self.session_id = 0;
         Ok(())
@@ -107,10 +107,10 @@ impl<L: Link> Protocol for ProtocolV2<L> {
         let chunk = self.link.read_chunk()?;
         if chunk[0] != 0x01 {
             println!("bad magic in v2 read: {:x} instead of 0x01", chunk[0]);
-            return Err(Error::DeviceBadMagic)
+            return Err(Error::DeviceBadMagic);
         }
         if BigEndian::read_u32(&chunk[1..5]) != self.session_id {
-            return Err(Error::DeviceBadSessionId)
+            return Err(Error::DeviceBadSessionId);
         }
         let message_type_id = BigEndian::read_u32(&chunk[5..9]);
         let message_type = MessageType::from_i32(message_type_id as i32)
@@ -123,13 +123,13 @@ impl<L: Link> Protocol for ProtocolV2<L> {
             let chunk = self.link.read_chunk()?;
             if chunk[0] != 0x02 {
                 println!("bad magic in v2 session_begin: {:x} instead of 0x02", chunk[0]);
-                return Err(Error::DeviceBadMagic)
+                return Err(Error::DeviceBadMagic);
             }
             if BigEndian::read_u32(&chunk[1..5]) != self.session_id {
-                return Err(Error::DeviceBadSessionId)
+                return Err(Error::DeviceBadSessionId);
             }
             if BigEndian::read_u32(&chunk[5..9]) != seq as u32 {
-                return Err(Error::DeviceUnexpectedSequenceNumber)
+                return Err(Error::DeviceUnexpectedSequenceNumber);
             }
             seq += 1;
 
@@ -185,7 +185,7 @@ impl<L: Link> Protocol for ProtocolV1<L> {
                 "bad magic in v1 read: {:x}{:x}{:x} instead of 0x3f2323",
                 chunk[0], chunk[1], chunk[2]
             );
-            return Err(Error::DeviceBadMagic)
+            return Err(Error::DeviceBadMagic);
         }
         let message_type_id = BigEndian::read_u16(&chunk[3..5]) as u32;
         let message_type = MessageType::from_i32(message_type_id as i32)
@@ -197,7 +197,7 @@ impl<L: Link> Protocol for ProtocolV1<L> {
             let chunk = self.link.read_chunk()?;
             if chunk[0] != 0x3f {
                 println!("bad magic in v1 read: {:x} instead of 0x3f", chunk[0]);
-                return Err(Error::DeviceBadMagic)
+                return Err(Error::DeviceBadMagic);
             }
 
             data.extend(&chunk[1..]);

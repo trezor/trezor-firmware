@@ -159,7 +159,7 @@ mod tests {
     #[serial]
     fn test_emulator_find() {
         let trezors = find_devices(false);
-        assert!(trezors.len() > 0);
+        assert!(!trezors.is_empty());
         assert!(trezors.iter().any(|t| t.model == Model::TrezorEmulator));
     }
 
@@ -169,12 +169,12 @@ mod tests {
         let emulator = init_emulator();
         let features = emulator.features().expect("Failed to get features");
         assert_eq!(features.vendor(), "trezor.io");
-        assert_eq!(features.initialized(), true);
-        assert_eq!(features.firmware_present(), false);
-        assert_eq!(features.initialized(), true);
-        assert_eq!(features.pin_protection(), false);
-        assert_eq!(features.passphrase_protection(), false);
-        assert!(["T", "Safe 3"].contains(&features.model()));
+        assert!(features.initialized());
+        assert!(!features.firmware_present());
+        assert!(features.initialized());
+        assert!(!features.pin_protection());
+        assert!(!features.passphrase_protection());
+        assert!(["T", "Safe 3", "Safe 5"].contains(&features.model()));
     }
 
     #[test]

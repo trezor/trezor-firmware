@@ -22,7 +22,7 @@ use tracing::trace;
 /// Fulfill a TxRequest for TXINPUT.
 fn ack_input_request(req: &protos::TxRequest, psbt: &psbt::Psbt) -> Result<protos::TxAck> {
     if req.details.is_none() || !req.details.has_request_index() {
-        return Err(Error::MalformedTxRequest(req.clone()))
+        return Err(Error::MalformedTxRequest(req.clone()));
     }
 
     // Choose either the tx we are signing or a dependent tx.
@@ -63,7 +63,7 @@ fn ack_input_request(req: &protos::TxRequest, psbt: &psbt::Psbt) -> Result<proto
                 Error::InvalidPsbt(format!("invalid utxo for PSBT input {}", input_index))
             })?
         } else {
-            return Err(Error::InvalidPsbt(format!("no utxo for PSBT input {}", input_index)))
+            return Err(Error::InvalidPsbt(format!("no utxo for PSBT input {}", input_index)));
         };
 
         // If there is exactly 1 HD keypath known, we can provide it.  If more it's multisig.
@@ -108,7 +108,7 @@ fn ack_output_request(
     network: Network,
 ) -> Result<protos::TxAck> {
     if req.details.is_none() || !req.details.has_request_index() {
-        return Err(Error::MalformedTxRequest(req.clone()))
+        return Err(Error::MalformedTxRequest(req.clone()));
     }
 
     // For outputs, the Trezor only needs bin_outputs to be set for dependent txs and full outputs
@@ -127,7 +127,7 @@ fn ack_output_request(
         } else if let Some(ref utxo) = inp.witness_utxo {
             utxo
         } else {
-            return Err(Error::InvalidPsbt("not all inputs have utxo data".to_owned()))
+            return Err(Error::InvalidPsbt("not all inputs have utxo data".to_owned()));
         };
 
         let mut bin_output = TxOutputBinType::new();
@@ -187,7 +187,7 @@ fn ack_output_request(
 /// Fulfill a TxRequest for TXMETA.
 fn ack_meta_request(req: &protos::TxRequest, psbt: &psbt::Psbt) -> Result<protos::TxAck> {
     if req.details.is_none() {
-        return Err(Error::MalformedTxRequest(req.clone()))
+        return Err(Error::MalformedTxRequest(req.clone()));
     }
 
     // Choose either the tx we are signing or a dependent tx.
@@ -312,9 +312,9 @@ impl<'a> SignTxProgress<'a> {
             TxRequestType::TXOUTPUT => ack_output_request(&self.req, psbt, network),
             TxRequestType::TXMETA => ack_meta_request(&self.req, psbt),
             TxRequestType::TXEXTRADATA => unimplemented!(), //TODO(stevenroose) implement
-            TxRequestType::TXORIGINPUT |
-            TxRequestType::TXORIGOUTPUT |
-            TxRequestType::TXPAYMENTREQ => unimplemented!(),
+            TxRequestType::TXORIGINPUT
+            | TxRequestType::TXORIGOUTPUT
+            | TxRequestType::TXPAYMENTREQ => unimplemented!(),
             TxRequestType::TXFINISHED => unreachable!(),
         }?;
         self.ack_msg(ack)
