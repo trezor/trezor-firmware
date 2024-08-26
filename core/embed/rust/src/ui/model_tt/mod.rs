@@ -26,7 +26,7 @@ impl UIFeaturesCommon for ModelTTFeatures {
     }
     #[cfg(feature = "backlight")]
     fn fadeout() {
-        crate::ui::display::fade_backlight_duration(backlight::get_backlight_normal(), 150);
+        crate::ui::display::fade_backlight_duration(backlight::get_backlight_dim(), 150);
     }
     #[cfg(feature = "backlight")]
     fn backlight_on() {
