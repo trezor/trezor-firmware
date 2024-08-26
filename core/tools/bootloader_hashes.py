@@ -1,18 +1,29 @@
 #!/usr/bin/env python3
+
+import click
+
 from pathlib import Path
 from hashlib import blake2s
 
-from trezorlib.firmware.core import FirmwareImage
+from trezorlib.firmware.core import FirmwareImage, Model
 
 ALIGNED_SIZE = 128 * 1024
 
 HERE = Path(__file__).parent
-BOOTLOADERS = HERE / ".." / "models"
+BOOTLOADERS = HERE / ".." / "embed" / "models"
 
-BL_CHECK = HERE / "bl_check.c"
+TEMPLATE = """\
+#ifndef BOOTLOADER_HASHES_H
+#define BOOTLOADER_HASHES_H
 
-BL_CHECK_AUTO_BEGIN = "// --- BEGIN GENERATED BOOTLOADER SECTION ---\n"
-BL_CHECK_AUTO_END = "// --- END GENERATED BOOTLOADER SECTION ---\n"
+// Auto-generated file, do not edit.
+
+// clang-format off
+{patterns}
+// clang-format on
+
+#endif
+"""
 
 PATTERN = """\
 // {name} version {version}
@@ -21,7 +32,7 @@ PATTERN = """\
 """
 
 
-def aligned_digest(data: bytes, padding: bytes) -> bytes:
+def aligned_digest(fn: Path, data: bytes, padding: bytes) -> bytes:
     """Calculate digest of data, aligned to ALIGNED_SIZE with
     the specified padding.
 
@@ -46,7 +57,7 @@ def to_uint_array(data: bytes) -> str:
     return ", ".join([f"0x{i:02x}" for i in data])
 
 
-def bootloader_str(file: Path) -> str:
+def bootloader_str(file: Path, model: str) -> str:
     """From a given file, generate the relevant C definition strings from PATTERN.
 
     Calculates the two padded hashes, one with 0x00 and the other 0xFF, and returns
@@ -55,14 +66,19 @@ def bootloader_str(file: Path) -> str:
     data = file.read_bytes()
 
     suffix = file.stem[len("bootloader_") :].upper()
-    bytes_00 = to_uint_array(aligned_digest(data, b"\x00"))
-    bytes_ff = to_uint_array(aligned_digest(data, b"\xff"))
+    bytes_00 = to_uint_array(aligned_digest(file, data, b"\x00"))
+    bytes_ff = to_uint_array(aligned_digest(file, data, b"\xff"))
 
-    try:
-        bl = FirmwareImage.parse(data)
-        version_str = ".".join(str(x) for x in bl.header.version)
-    except Exception:
-        version_str = "<unknown>"
+    bl = FirmwareImage.parse(data)
+    version_str = ".".join(str(x) for x in bl.header.version)
+    if not isinstance(bl.header.hw_model, Model):
+        raise ValueError(
+            f"Model mismatch: {file.name} {model} (found {bytes(bl.header.hw_model).decode()})"
+        )
+    elif bl.header.hw_model.value != model.encode():
+        raise ValueError(
+            f"Model mismatch: {file.name} {model} (found {bl.header.hw_model.value})"
+        )
 
     return PATTERN.format(
         name=file.name,
@@ -73,7 +89,9 @@ def bootloader_str(file: Path) -> str:
     )
 
 
-def main():
+@click.command()
+@click.option("-c", "--check", is_flag=True, help="Do not write, only check.")
+def bootloader_hashes(check):
 
     models = list(BOOTLOADERS.iterdir())
 
@@ -87,26 +105,22 @@ def main():
 
             header_file = path / "bootloader_hashes.h"
 
-            content = []
-            content.append("#ifndef BOOTLOADER_HASHES_H\n")
-            content.append("#define BOOTLOADER_HASHES_H\n")
-            content.append("\n")
-            content.append("// Auto-generated file, do not edit.\n")
-            content.append("\n")
-            content.append("// clang-format off\n")
+            patterns = []
 
             bootloaders = sorted(path.glob("bootloader*.bin"))
             for bootloader in bootloaders:
-                if bootloader.is_file():
-                    print(f"Processing {bootloader}")
-                    content.append(bootloader_str(bootloader))
+                print(f"Processing {bootloader}")
+                patterns.append(bootloader_str(bootloader, model.name))
 
-            content.append("// clang-format on\n")
-            content.append("\n")
-            content.append("#endif\n")
+            content = TEMPLATE.format(patterns="\n".join(patterns))
 
-            header_file.write_text("".join(content))
+            if not check:
+                header_file.write_text(content)
+            else:
+                actual = header_file.read_text()
+                if content != actual:
+                    raise click.ClickException(f"{header_file} differs from expected")
 
 
 if __name__ == "__main__":
-    main()
+    bootloader_hashes()
