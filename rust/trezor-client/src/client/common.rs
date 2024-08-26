@@ -237,7 +237,7 @@ impl<'a> EntropyRequest<'a> {
     /// Provide exactly 32 bytes or entropy.
     pub fn ack_entropy(self, entropy: Vec<u8>) -> Result<TrezorResponse<'a, (), protos::Success>> {
         if entropy.len() != 32 {
-            return Err(Error::InvalidEntropy)
+            return Err(Error::InvalidEntropy);
         }
 
         let mut req = protos::EntropyAck::new();

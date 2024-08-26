@@ -48,7 +48,7 @@ impl Link for UdpLink {
         let timeout = Duration::from_millis(WRITE_TIMEOUT_MS);
         self.socket.set_write_timeout(Some(timeout))?;
         if let Err(e) = self.socket.send(&chunk) {
-            return Err(e.into())
+            return Err(e.into());
         }
         Ok(())
     }

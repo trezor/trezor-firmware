@@ -45,7 +45,7 @@ impl Trezor {
             Box::new(|_, m: protos::EthereumMessageSignature| {
                 let signature = m.signature();
                 if signature.len() != 65 {
-                    return Err(Error::MalformedSignature)
+                    return Err(Error::MalformedSignature);
                 }
                 let r = signature[0..32].try_into().unwrap();
                 let s = signature[32..64].try_into().unwrap();

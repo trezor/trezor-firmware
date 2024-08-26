@@ -45,7 +45,7 @@ pub fn parse_recoverable_signature(
     sig: &[u8],
 ) -> Result<RecoverableSignature, bitcoin::secp256k1::Error> {
     if sig.len() != 65 {
-        return Err(bitcoin::secp256k1::Error::InvalidSignature)
+        return Err(bitcoin::secp256k1::Error::InvalidSignature);
     }
 
     // Bitcoin Core sets the first byte to `27 + rec + (fCompressed ? 4 : 0)`.

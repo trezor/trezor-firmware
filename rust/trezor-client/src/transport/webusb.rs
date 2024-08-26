@@ -53,7 +53,7 @@ impl Link for WebUsbLink {
         debug_assert_eq!(CHUNK_SIZE, chunk.len());
         let timeout = Duration::from_millis(WRITE_TIMEOUT_MS);
         if let Err(e) = self.handle.write_interrupt(self.endpoint, &chunk, timeout) {
-            return Err(e.into())
+            return Err(e.into());
         }
         Ok(())
     }
@@ -101,7 +101,7 @@ impl WebUsbTransport {
                 .ok_or(rusb::Error::Other)?
                 .class_code();
             if class_code != constants::LIBUSB_CLASS_VENDOR_SPEC {
-                continue
+                continue;
             }
 
             devices.push(AvailableDevice {
@@ -137,9 +137,9 @@ impl WebUsbTransport {
         let dev_desc = dev.device_descriptor()?;
         let dev_id = (dev_desc.vendor_id(), dev_desc.product_id());
         if derive_model(dev_id).as_ref() != Some(&device.model) {
-            return Err(Error::DeviceDisconnected)
+            return Err(Error::DeviceDisconnected);
         }
-        let mut handle = dev.open()?;
+        let handle = dev.open()?;
         handle.claim_interface(interface)?;
 
         Ok(Box::new(WebUsbTransport {
