@@ -1,12 +1,14 @@
-use crate::ui::{
-    display::Color,
-    geometry::Offset,
-    shape::{
-        render::ScopedRenderer, BasicCanvas, DirectRenderer, DrawingCache, Mono8Canvas, Viewport,
+use crate::{
+    trezorhal::display,
+    ui::{
+        display::Color,
+        geometry::Offset,
+        shape::{
+            render::ScopedRenderer, BasicCanvas, DirectRenderer, DrawingCache, Mono8Canvas,
+            Viewport,
+        },
     },
 };
-
-use crate::trezorhal::display;
 
 use static_alloc::Bump;
 
@@ -30,6 +32,7 @@ where
 
     static mut BUMP: Bump<[u8; BUMP_SIZE]> = Bump::uninit();
 
+    let mut fb = XFrameBuffer::lock();
     let bump = unsafe { &mut *core::ptr::addr_of_mut!(BUMP) };
     {
         let width = display::DISPLAY_RESX as i16;
@@ -39,13 +42,11 @@ where
 
         let cache = DrawingCache::new(bump, bump);
 
-        let (fb, fb_stride) = display::get_frame_buffer();
-
         let mut canvas = unwrap!(Mono8Canvas::new(
             Offset::new(width, height),
-            Some(fb_stride),
+            Some(fb.stride()),
             None,
-            fb
+            fb.buf()
         ));
 
         if let Some(viewport) = viewport {

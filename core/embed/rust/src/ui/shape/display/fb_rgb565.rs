@@ -1,14 +1,16 @@
-use crate::ui::{
-    display::Color,
-    geometry::Offset,
-    shape::{
-        render::ScopedRenderer, BasicCanvas, DirectRenderer, DrawingCache, Rgb565Canvas, Viewport,
+use crate::{
+    trezorhal::{display, display::XFrameBuffer},
+    ui::{
+        display::Color,
+        geometry::Offset,
+        shape::{
+            render::ScopedRenderer, BasicCanvas, DirectRenderer, DrawingCache, Rgb565Canvas,
+            Viewport,
+        },
     },
 };
 
 use super::bumps;
-
-use crate::trezorhal::display;
 
 pub type ConcreteRenderer<'a, 'alloc> = DirectRenderer<'a, 'alloc, Rgb565Canvas<'alloc>>;
 
@@ -26,19 +28,18 @@ pub fn render_on_display<'env, F>(viewport: Option<Viewport>, bg_color: Option<C
 where
     F: for<'alloc> FnOnce(&mut ScopedRenderer<'alloc, 'env, ConcreteRenderer<'_, 'alloc>>),
 {
+    let mut fb = XFrameBuffer::lock();
     bumps::run_with_bumps(|bump_a, bump_b| {
         let width = display::DISPLAY_RESX as i16;
         let height = display::DISPLAY_RESY as i16;
 
         let cache = DrawingCache::new(bump_a, bump_b);
 
-        let (fb, fb_stride) = display::get_frame_buffer();
-
         let mut canvas = unwrap!(Rgb565Canvas::new(
             Offset::new(width, height),
-            Some(fb_stride),
+            Some(fb.stride()),
             None,
-            fb
+            fb.buf()
         ));
 
         if let Some(viewport) = viewport {

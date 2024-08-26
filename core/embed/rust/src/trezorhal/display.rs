@@ -1,8 +1,9 @@
 use super::ffi;
 use core::{ops::DerefMut, ptr};
 use cty::c_int;
+use spin::MutexGuard;
 
-use crate::trezorhal::buffers::BufferText;
+use crate::{trezorhal::buffers::BufferText, util::Lock};
 
 pub use ffi::{DISPLAY_RESX, DISPLAY_RESY};
 
@@ -181,16 +182,52 @@ pub fn clear() {
     }
 }
 
-#[cfg(feature = "xframebuffer")]
-pub fn get_frame_buffer() -> (&'static mut [u8], usize) {
-    let fb_info = unsafe { ffi::display_get_frame_buffer() };
+static X_FRAMEBUFFER_LOCK: Lock<()> = Lock::new(());
 
-    let fb = unsafe {
-        core::slice::from_raw_parts_mut(
-            fb_info.ptr as *mut u8,
-            DISPLAY_RESY as usize * fb_info.stride,
-        )
-    };
+pub struct XFrameBuffer<'a> {
+    guard: MutexGuard<'a, ()>,
+    buf: &'a mut [u8],
+    stride: usize,
+}
 
-    (fb, fb_info.stride)
+impl XFrameBuffer<'_> {
+    pub fn lock() -> Self {
+        let guard = X_FRAMEBUFFER_LOCK.lock();
+
+        #[cfg(not(feature = "xframebuffer"))]
+        return Self {
+            guard,
+            buf: &[],
+            stride: 0,
+        };
+
+        #[cfg(feature = "xframebuffer")]
+        {
+            let fb_info = unsafe { ffi::display_get_frame_buffer() };
+
+            let fb = unsafe {
+                core::slice::from_raw_parts_mut(
+                    fb_info.ptr as *mut u8,
+                    DISPLAY_RESY as usize * fb_info.stride,
+                )
+            };
+            Self {
+                guard,
+                buf: fb,
+                stride: fb_info.stride,
+            }
+        }
+    }
+
+    pub unsafe fn force_unlock() {
+        unsafe { X_FRAMEBUFFER_LOCK.force_unlock() };
+    }
+
+    pub fn buf(&mut self) -> &mut [u8] {
+        self.buf
+    }
+
+    pub fn stride(&self) -> usize {
+        self.stride
+    }
 }

@@ -34,6 +34,7 @@ mod trace;
 #[cfg(feature = "translations")]
 mod translations;
 mod trezorhal;
+mod util;
 
 // mod ui is `pub` because of the re-export pattern in individual models, which
 // would trigger a brickload of "unused symbol" warnings otherwise.
