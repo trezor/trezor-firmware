@@ -209,6 +209,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_confirm_with_info;
   MP_QSTR_count;
   MP_QSTR_current;
+  MP_QSTR_danger;
   MP_QSTR_data;
   MP_QSTR_data_hash;
   MP_QSTR_data_len;

@@ -595,6 +595,7 @@ def show_warning(
                     title=TR.words__important,
                     value=content,
                     button=subheader or TR.words__continue_anyway,
+                    danger=True,
                 )
             ),
             br_name,

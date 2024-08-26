@@ -1901,6 +1901,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     description: str = "",
     ///     allow_cancel: bool = False,
     ///     time_ms: int = 0,
+    ///     danger: bool = False,  # unused on TT
     /// ) -> LayoutObj[UiResult]:
     ///     """Warning modal. No buttons shown when `button` is empty string."""
     Qstr::MP_QSTR_show_warning => obj_fn_kw!(0, new_show_warning).as_obj(),

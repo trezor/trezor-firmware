@@ -141,6 +141,7 @@ async def show_recovery_warning(
                     value=subheader or "",
                     button=button,
                     description="",
+                    danger=True,
                 )
             ),
             br_name,
