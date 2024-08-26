@@ -9,6 +9,7 @@ pub mod theme;
 #[cfg(feature = "backlight")]
 use crate::ui::model_tt::theme::backlight;
 
+pub mod cshape;
 #[cfg(feature = "micropython")]
 pub mod layout;
 
