@@ -52,6 +52,11 @@ use super::theme::bootloader::BLD_WARN_COLOR;
 use intro::Intro;
 use menu::Menu;
 
+#[cfg(feature = "new_rendering")]
+use super::cshape::{render_loader, LoaderRange};
+#[cfg(feature = "new_rendering")]
+use crate::ui::display::LOADER_MAX;
+
 pub mod intro;
 pub mod menu;
 pub mod welcome;
@@ -113,25 +118,21 @@ impl ModelTTFeatures {
                 .render(target);
 
             let center = SCREEN.center() + Offset::y(-20);
-
             let inactive_color = bg_color.blend(fg_color, 85);
+            let end = 360.0 * progress as f32 / 1000.0;
 
-            shape::Circle::new(center, constant::LOADER_OUTER)
-                .with_bg(inactive_color)
-                .render(target);
-
-            shape::Circle::new(center, constant::LOADER_OUTER)
-                .with_bg(fg_color)
-                .with_end_angle(360.0 * progress as f32 / 1000.0)
-                .render(target);
-
-            shape::Circle::new(center, constant::LOADER_INNER + 2)
-                .with_bg(fg_color)
-                .render(target);
-
-            shape::Circle::new(center, constant::LOADER_INNER)
-                .with_bg(bg_color)
-                .render(target);
+            render_loader(
+                center,
+                inactive_color,
+                fg_color,
+                bg_color,
+                if progress >= LOADER_MAX {
+                    LoaderRange::Full
+                } else {
+                    LoaderRange::FromTo(0.0, end)
+                },
+                target,
+            );
 
             if let Some((icon, color)) = icon {
                 shape::ToifImage::new(center, icon.toif)

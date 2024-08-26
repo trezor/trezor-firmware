@@ -1,5 +1,9 @@
 use core::mem;
 
+use super::{
+    super::cshape::{render_loader, LoaderRange},
+    theme,
+};
 use crate::{
     strutil::TString,
     ui::{
@@ -9,16 +13,13 @@ use crate::{
             text::paragraphs::{Paragraph, Paragraphs},
             Child, Component, Event, EventCtx, Label, Never, Pad,
         },
-        display::{self, Font},
+        display::{self, Font, LOADER_MAX},
         geometry::{Insets, Offset, Rect},
         model_tt::constant,
-        shape,
         shape::Renderer,
         util::animation_disabled,
     },
 };
-
-use super::theme;
 
 pub struct Progress {
     title: Child<Label<'static>>,
@@ -116,34 +117,29 @@ impl Component for Progress {
         let background_color = theme::BG;
         let inactive_color = background_color.blend(active_color, 85);
 
-        let (start, end) = if self.indeterminate {
+        let range = if self.indeterminate {
             let start = (self.value as i16 - 100) % 1000;
             let end = (self.value as i16 + 100) % 1000;
             let start = 360.0 * start as f32 / 1000.0;
             let end = 360.0 * end as f32 / 1000.0;
-            (start, end)
+            LoaderRange::FromTo(start, end)
         } else {
             let end = 360.0 * self.value as f32 / 1000.0;
-            (0.0, end)
+            if self.value >= LOADER_MAX {
+                LoaderRange::Full
+            } else {
+                LoaderRange::FromTo(0.0, end)
+            }
         };
 
-        shape::Circle::new(center, constant::LOADER_OUTER)
-            .with_bg(inactive_color)
-            .render(target);
-
-        shape::Circle::new(center, constant::LOADER_OUTER)
-            .with_bg(active_color)
-            .with_start_angle(start)
-            .with_end_angle(end)
-            .render(target);
-
-        shape::Circle::new(center, constant::LOADER_INNER + 2)
-            .with_bg(active_color)
-            .render(target);
-
-        shape::Circle::new(center, constant::LOADER_INNER)
-            .with_bg(background_color)
-            .render(target);
+        render_loader(
+            center,
+            inactive_color,
+            active_color,
+            background_color,
+            range,
+            target,
+        );
 
         self.description_pad.render(target);
         self.description.render(target);
