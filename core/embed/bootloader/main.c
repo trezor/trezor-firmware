@@ -220,7 +220,7 @@ static usb_result_t bootloader_usb_loop(const vendor_header *const vhdr,
       case MessageType_MessageType_GetFeatures:
         process_msg_GetFeatures(USB_IFACE_NUM, msg_size, buf, vhdr, hdr);
         break;
-#if defined USE_OPTIGA && !defined STM32U5
+#if defined USE_OPTIGA
       case MessageType_MessageType_UnlockBootloader:
         response = ui_screen_unlock_bootloader_confirm();
         if (INPUT_CANCEL == response) {

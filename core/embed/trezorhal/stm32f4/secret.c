@@ -98,6 +98,12 @@ secbool secret_optiga_get(uint8_t dest[SECRET_OPTIGA_KEY_LEN]) {
   return secret_read(dest, SECRET_OPTIGA_KEY_OFFSET, SECRET_OPTIGA_KEY_LEN);
 }
 
+secbool secret_optiga_present(void) {
+  return (sectrue != secret_wiped()) * sectrue;
+}
+
+void secret_optiga_erase(void) { secret_erase(); }
+
 void secret_prepare_fw(secbool allow_run_with_secret, secbool _trust_all) {
 #ifdef USE_OPTIGA
   if (sectrue != allow_run_with_secret && sectrue != secret_wiped()) {

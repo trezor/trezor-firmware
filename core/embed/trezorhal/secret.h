@@ -52,6 +52,12 @@ secbool secret_optiga_set(const uint8_t secret[SECRET_OPTIGA_KEY_LEN]);
 // was made unavailable by calling secret_optiga_hide
 secbool secret_optiga_get(uint8_t dest[SECRET_OPTIGA_KEY_LEN]);
 
+// Checks if the optiga pairing secret is present in the secret storage
+secbool secret_optiga_present(void);
+
+// Erases optiga pairing secret from the secret storage
+void secret_optiga_erase(void);
+
 // Regenerates the BHK and writes it to the secret storage
 void secret_bhk_regenerate(void);
 

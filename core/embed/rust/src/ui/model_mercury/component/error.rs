@@ -17,7 +17,7 @@ use super::{
 
 const ICON_TOP: i16 = 23;
 const TITLE_AREA_START: i16 = 70;
-const MESSAGE_AREA_START: i16 = 116;
+const MESSAGE_AREA_START: i16 = 90;
 
 #[cfg(feature = "bootloader")]
 const STYLE: &ResultStyle = &crate::ui::model_mercury::theme::bootloader::RESULT_WIPE;
@@ -34,7 +34,7 @@ pub struct ErrorScreen<'a> {
 impl<'a> ErrorScreen<'a> {
     pub fn new(title: TString<'a>, message: TString<'a>, footer: TString<'a>) -> Self {
         let title = Label::centered(title, STYLE.title_style());
-        let message = Label::centered(message, STYLE.message_style());
+        let message = Label::centered(message, STYLE.message_style()).vertically_centered();
         let footer = ResultFooter::new(
             Label::centered(footer, STYLE.title_style()).vertically_centered(),
             STYLE,

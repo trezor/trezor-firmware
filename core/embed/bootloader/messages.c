@@ -662,8 +662,8 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
         is_ilu = sectrue;
       }
 
-#if defined USE_OPTIGA && !defined STM32U5
-      if (sectrue != secret_wiped() &&
+#if defined USE_OPTIGA
+      if (secfalse != secret_optiga_present() &&
           ((vhdr.vtrust & VTRUST_SECRET_MASK) != VTRUST_SECRET_ALLOW)) {
         MSG_SEND_INIT(Failure);
         MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
@@ -868,10 +868,10 @@ void process_msg_unknown(uint8_t iface_num, uint32_t msg_size, uint8_t *buf) {
   MSG_SEND(Failure);
 }
 
-#if defined USE_OPTIGA && !defined STM32U5
+#if defined USE_OPTIGA
 void process_msg_UnlockBootloader(uint8_t iface_num, uint32_t msg_size,
                                   uint8_t *buf) {
-  secret_erase();
+  secret_optiga_erase();
   MSG_SEND_INIT(Success);
   MSG_SEND(Success);
 }

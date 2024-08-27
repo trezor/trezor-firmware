@@ -102,7 +102,9 @@ static secbool secret_present(uint32_t offset, uint32_t len) {
   int secret_empty_bytes = 0;
 
   for (int i = 0; i < len; i++) {
-    if (secret[i] == 0xFF) {
+    // 0xFF being the default value of the flash memory (before any write)
+    // 0x00 being the value of the flash memory after manual erase
+    if (secret[i] == 0xFF || secret[i] == 0x00) {
       secret_empty_bytes++;
     }
   }
@@ -164,7 +166,7 @@ void secret_bhk_regenerate(void) {
 // This functions only works when software has access to the secret storage,
 // i.e. in bootloader. Access to secret storage is restricted by calling
 // secret_hide.
-static secbool secret_optiga_present(void) {
+secbool secret_optiga_present(void) {
   return secret_present(SECRET_OPTIGA_KEY_OFFSET, SECRET_OPTIGA_KEY_LEN);
 }
 
@@ -235,6 +237,11 @@ static void secret_optiga_uncache(void) {
 }
 #endif
 
+void secret_optiga_erase(void) {
+  uint8_t value[SECRET_OPTIGA_KEY_LEN] = {0};
+  secret_write(value, SECRET_OPTIGA_KEY_OFFSET, SECRET_OPTIGA_KEY_LEN);
+}
+
 void secret_erase(void) {
   ensure(flash_area_erase(&SECRET_AREA, NULL), "secret erase");
 }
@@ -263,6 +270,9 @@ void secret_prepare_fw(secbool allow_run_with_secret, secbool trust_all) {
       secret_disable_access();
     }
   } else {
+    if (secfalse != secret_optiga_present()) {
+      show_install_restricted_screen();
+    }
     secret_disable_access();
   }
 #else
