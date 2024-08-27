@@ -111,6 +111,8 @@ trezor.enums.DebugWaitType
 import trezor.enums.DebugWaitType
 trezor.enums.DecredStakingSpendType
 import trezor.enums.DecredStakingSpendType
+trezor.enums.DisplayRotation
+import trezor.enums.DisplayRotation
 trezor.enums.FailureType
 import trezor.enums.FailureType
 trezor.enums.HomescreenFormat

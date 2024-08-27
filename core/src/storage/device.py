@@ -5,7 +5,7 @@ from storage import common
 from trezor import utils
 
 if TYPE_CHECKING:
-    from trezor.enums import BackupType
+    from trezor.enums import BackupType, DisplayRotation
     from typing_extensions import Literal
 
 # Namespace:
@@ -95,16 +95,27 @@ def get_device_id() -> str:
     return dev_id.decode()
 
 
-def get_rotation() -> int:
+def get_rotation() -> DisplayRotation:
+    from trezor.enums import DisplayRotation
+
     rotation = common.get(_NAMESPACE, _ROTATION, public=True)
     if not rotation:
-        return 0
-    return int.from_bytes(rotation, "big")
+        return DisplayRotation.North  # Default to North if no rotation is set
+
+    value = int.from_bytes(rotation, "big")
+    if value == 90:
+        rotation = DisplayRotation.East
+    elif value == 180:
+        rotation = DisplayRotation.South
+    elif value == 270:
+        rotation = DisplayRotation.West
+    else:
+        rotation = DisplayRotation.North
+
+    return rotation
 
 
-def set_rotation(value: int) -> None:
-    if value not in (0, 90, 180, 270):
-        raise ValueError  # unsupported display rotation
+def set_rotation(value: DisplayRotation) -> None:
     common.set(_NAMESPACE, _ROTATION, value.to_bytes(2, "big"), True)  # public
 
 
