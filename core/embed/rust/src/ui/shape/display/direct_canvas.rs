@@ -18,6 +18,6 @@ where
 {
     let bumps = Bumps::lock();
     let cache = DrawingCache::new(&bumps);
-    let mut target = ScopedRenderer::new(DirectRenderer::new(canvas, bg_color, &cache));
+    let mut target = ScopedRenderer::new(DirectRenderer::new(canvas, bg_color, cache));
     func(&mut target);
 }

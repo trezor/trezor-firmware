@@ -47,7 +47,7 @@ where
         canvas.set_viewport(viewport);
     }
 
-    let mut target = ScopedRenderer::new(DirectRenderer::new(&mut canvas, bg_color, &cache));
+    let mut target = ScopedRenderer::new(DirectRenderer::new(&mut canvas, bg_color, cache));
 
     func(&mut target);
 }

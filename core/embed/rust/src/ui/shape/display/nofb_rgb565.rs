@@ -12,10 +12,45 @@ use crate::{
 
 use super::{
     super::{BasicCanvas, BitmapView, DrawingCache, ProgressiveRenderer, Viewport},
+    base::Display,
     bumps,
 };
 
 use static_alloc::Bump;
+
+pub struct NoFbRgb565;
+
+impl Display for NoFbRgb565 {
+    type Canvas<'canvas> = DisplayCanvas;
+
+    type Renderer<'env, 'canvas, 'bump> = ProgressiveRenderer<'env, 'bump, Bump<[u8; bumps::BUMP_NODMA_SIZE]>, DisplayCanvas>
+    where
+        'canvas: 'env;
+
+    fn display_canvas<'canvas, 'fb>(
+        _framebuffer: &'canvas mut display::XFrameBuffer<'fb>,
+    ) -> Self::Canvas<'canvas> {
+        DisplayCanvas::new()
+    }
+
+    fn renderer<'env, 'canvas, 'bumps>(
+        bumps: &'bumps bumps::Bumps<'bumps>,
+        canvas: &'env mut Self::Canvas<'canvas>,
+        bg_color: Color,
+    ) -> Self::Renderer<'env, 'canvas, 'bumps>
+    where
+        'canvas: 'env,
+    {
+        let cache = DrawingCache::new(bumps);
+        ProgressiveRenderer::new(
+            canvas,
+            Some(bg_color),
+            cache,
+            bumps.nodma,
+            bumps::SHAPE_MAX_COUNT,
+        )
+    }
+}
 
 pub type ConcreteRenderer<'a, 'alloc> =
     ProgressiveRenderer<'a, 'alloc, Bump<[u8; bumps::BUMP_NODMA_SIZE]>, DisplayCanvas>;
@@ -46,7 +81,7 @@ where
     let mut target = ScopedRenderer::new(ProgressiveRenderer::new(
         &mut canvas,
         bg_color,
-        &cache,
+        cache,
         bumps.nodma,
         bumps::SHAPE_MAX_COUNT,
     ));

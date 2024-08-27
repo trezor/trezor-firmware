@@ -1,5 +1,5 @@
 use crate::{
-    trezorhal::{display, display::XFrameBuffer},
+    trezorhal::display::{self, XFrameBuffer},
     ui::{
         display::Color,
         geometry::Offset,
@@ -10,7 +10,7 @@ use crate::{
     },
 };
 
-use super::bumps;
+use super::{base::Display, bumps};
 
 pub type ConcreteRenderer<'a, 'alloc> = DirectRenderer<'a, 'alloc, Rgb565Canvas<'alloc>>;
 
@@ -47,7 +47,7 @@ where
         canvas.set_viewport(viewport);
     }
 
-    let mut target = ScopedRenderer::new(DirectRenderer::new(&mut canvas, bg_color, &cache));
+    let mut target = ScopedRenderer::new(DirectRenderer::new(&mut canvas, bg_color, cache));
 
     func(&mut target);
 }

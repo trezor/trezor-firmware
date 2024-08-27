@@ -1,5 +1,9 @@
+pub mod base;
 pub mod bumps;
 mod direct_canvas;
+
+#[cfg(feature = "xframebuffer")]
+pub mod fb_display;
 
 pub use direct_canvas::render_on_canvas;
 

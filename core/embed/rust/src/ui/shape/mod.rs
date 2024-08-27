@@ -7,7 +7,7 @@ mod cache;
 mod canvas;
 mod circle;
 mod corner_highlight;
-mod display;
+pub mod display;
 #[cfg(feature = "ui_jpeg_decoder")]
 mod jpeg;
 mod progressive_render;

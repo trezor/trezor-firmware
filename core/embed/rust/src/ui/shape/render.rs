@@ -58,25 +58,25 @@ pub trait Renderer<'a> {
 // ==========================================================================
 
 /// A simple implementation of a Renderer that draws directly onto the CanvasEx
-pub struct DirectRenderer<'a, 'alloc, C>
+pub struct DirectRenderer<'canvas, 'alloc, C>
 where
     C: Canvas,
 {
     /// Target canvas
-    canvas: &'a mut C,
+    canvas: &'canvas mut C,
     /// Drawing cache (decompression context, scratch-pad memory)
-    cache: &'a DrawingCache<'alloc>,
+    cache: DrawingCache<'alloc>,
 }
 
-impl<'a, 'alloc, C> DirectRenderer<'a, 'alloc, C>
+impl<'canvas, 'alloc, C> DirectRenderer<'canvas, 'alloc, C>
 where
     C: Canvas,
 {
     /// Creates a new DirectRenderer instance with the given canvas
     pub fn new(
-        canvas: &'a mut C,
+        canvas: &'canvas mut C,
         bg_color: Option<Color>,
-        cache: &'a DrawingCache<'alloc>,
+        cache: DrawingCache<'alloc>,
     ) -> Self {
         if let Some(color) = bg_color {
             canvas.fill_background(color);
@@ -89,7 +89,7 @@ where
     }
 }
 
-impl<'a, 'alloc, C> Renderer<'alloc> for DirectRenderer<'a, 'alloc, C>
+impl<'canvas, 'alloc, C> Renderer<'alloc> for DirectRenderer<'canvas, 'alloc, C>
 where
     C: Canvas,
 {
@@ -106,8 +106,8 @@ where
         S: Shape<'alloc> + ShapeClone<'alloc>,
     {
         if self.canvas.viewport().contains(shape.bounds()) {
-            shape.draw(self.canvas, self.cache);
-            shape.cleanup(self.cache);
+            shape.draw(self.canvas, &self.cache);
+            shape.cleanup(&self.cache);
         }
     }
 }
