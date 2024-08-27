@@ -74,6 +74,7 @@ def configure(
     if "optiga" in features_wanted:
         defines += ["USE_OPTIGA=1"]
         sources += ["embed/trezorhal/stm32u5/i2c.c"]
+        sources += ["embed/trezorhal/stm32u5/i2c_bus.c"]
         sources += ["embed/trezorhal/stm32u5/optiga_hal.c"]
         sources += ["embed/trezorhal/optiga/optiga.c"]
         sources += ["embed/trezorhal/optiga/optiga_commands.c"]
