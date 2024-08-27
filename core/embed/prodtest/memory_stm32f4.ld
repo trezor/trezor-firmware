@@ -54,7 +54,11 @@ SECTIONS {
     . = ALIGN(4);
     *(.rodata*);
     . = ALIGN(128K);
-  } >FLASH AT>FLASH
+  } >FLASH
+
+  /DISCARD/ : {
+    *(.ARM.exidx*);
+  }
 
   .data : ALIGN(4) {
     *(.data*);
