@@ -266,10 +266,12 @@ static secbool check_vendor_header_lock(const vendor_header *const vhdr) {
 #if PRODUCTION && !defined STM32U5
 
 static void check_bootloader_version(void) {
-  ensure(monoctr_write(MONOCTR_BOOTLOADER_VERSION, VERSION_MONOTONIC), NULL);
+  ensure(
+      monoctr_write(MONOCTR_BOOTLOADER_VERSION, BOOTLOADER_MONOTONIC_VERSION),
+      NULL);
   uint8_t val = 0;
   ensure(monoctr_read(MONOCTR_BOOTLOADER_VERSION, &val), NULL);
-  ensure(sectrue * (val == VERSION_MONOTONIC),
+  ensure(sectrue * (val == BOOTLOADER_MONOTONIC_VERSION),
          "Bootloader downgrade protection");
 }
 
