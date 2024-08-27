@@ -48,7 +48,10 @@ def configure(
     else:
         sources += [f"embed/trezorhal/stm32f4/displays/{display}"]
 
-    sources += ["embed/trezorhal/stm32f4/i2c.c"]
+    sources += [
+        "embed/trezorhal/stm32f4/i2c.c",
+        "embed/trezorhal/stm32f4/i2c_bus.c",
+    ]
 
     if "input" in features_wanted:
         sources += ["embed/trezorhal/stm32f4/button.c"]
