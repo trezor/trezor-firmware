@@ -437,7 +437,7 @@ pub struct Features {
     // @@protoc_insertion_point(field:hw.trezor.messages.management.Features.auto_lock_delay_ms)
     pub auto_lock_delay_ms: ::std::option::Option<u32>,
     // @@protoc_insertion_point(field:hw.trezor.messages.management.Features.display_rotation)
-    pub display_rotation: ::std::option::Option<u32>,
+    pub display_rotation: ::std::option::Option<::protobuf::EnumOrUnknown<DisplayRotation>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.management.Features.experimental_features)
     pub experimental_features: ::std::option::Option<bool>,
     // @@protoc_insertion_point(field:hw.trezor.messages.management.Features.busy)
@@ -1314,10 +1314,13 @@ impl Features {
         self.auto_lock_delay_ms = ::std::option::Option::Some(v);
     }
 
-    // optional uint32 display_rotation = 39;
+    // optional .hw.trezor.messages.management.DisplayRotation display_rotation = 39;
 
-    pub fn display_rotation(&self) -> u32 {
-        self.display_rotation.unwrap_or(0)
+    pub fn display_rotation(&self) -> DisplayRotation {
+        match self.display_rotation {
+            Some(e) => e.enum_value_or(DisplayRotation::North),
+            None => DisplayRotation::North,
+        }
     }
 
     pub fn clear_display_rotation(&mut self) {
@@ -1329,8 +1332,8 @@ impl Features {
     }
 
     // Param is passed by value, moved
-    pub fn set_display_rotation(&mut self, v: u32) {
-        self.display_rotation = ::std::option::Option::Some(v);
+    pub fn set_display_rotation(&mut self, v: DisplayRotation) {
+        self.display_rotation = ::std::option::Option::Some(::protobuf::EnumOrUnknown::new(v));
     }
 
     // optional bool experimental_features = 40;
@@ -2043,7 +2046,7 @@ impl ::protobuf::Message for Features {
                     self.auto_lock_delay_ms = ::std::option::Option::Some(is.read_uint32()?);
                 },
                 312 => {
-                    self.display_rotation = ::std::option::Option::Some(is.read_uint32()?);
+                    self.display_rotation = ::std::option::Option::Some(is.read_enum_or_unknown()?);
                 },
                 320 => {
                     self.experimental_features = ::std::option::Option::Some(is.read_bool()?);
@@ -2211,7 +2214,7 @@ impl ::protobuf::Message for Features {
             my_size += ::protobuf::rt::uint32_size(38, v);
         }
         if let Some(v) = self.display_rotation {
-            my_size += ::protobuf::rt::uint32_size(39, v);
+            my_size += ::protobuf::rt::int32_size(39, v.value());
         }
         if let Some(v) = self.experimental_features {
             my_size += 2 + 1;
@@ -2373,7 +2376,7 @@ impl ::protobuf::Message for Features {
             os.write_uint32(38, v)?;
         }
         if let Some(v) = self.display_rotation {
-            os.write_uint32(39, v)?;
+            os.write_enum(39, ::protobuf::EnumOrUnknown::value(&v))?;
         }
         if let Some(v) = self.experimental_features {
             os.write_bool(40, v)?;
@@ -3250,7 +3253,7 @@ pub struct ApplySettings {
     // @@protoc_insertion_point(field:hw.trezor.messages.management.ApplySettings.auto_lock_delay_ms)
     pub auto_lock_delay_ms: ::std::option::Option<u32>,
     // @@protoc_insertion_point(field:hw.trezor.messages.management.ApplySettings.display_rotation)
-    pub display_rotation: ::std::option::Option<u32>,
+    pub display_rotation: ::std::option::Option<::protobuf::EnumOrUnknown<DisplayRotation>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.management.ApplySettings.passphrase_always_on_device)
     pub passphrase_always_on_device: ::std::option::Option<bool>,
     // @@protoc_insertion_point(field:hw.trezor.messages.management.ApplySettings.safety_checks)
@@ -3442,10 +3445,13 @@ impl ApplySettings {
         self.auto_lock_delay_ms = ::std::option::Option::Some(v);
     }
 
-    // optional uint32 display_rotation = 7;
+    // optional .hw.trezor.messages.management.DisplayRotation display_rotation = 7;
 
-    pub fn display_rotation(&self) -> u32 {
-        self.display_rotation.unwrap_or(0)
+    pub fn display_rotation(&self) -> DisplayRotation {
+        match self.display_rotation {
+            Some(e) => e.enum_value_or(DisplayRotation::North),
+            None => DisplayRotation::North,
+        }
     }
 
     pub fn clear_display_rotation(&mut self) {
@@ -3457,8 +3463,8 @@ impl ApplySettings {
     }
 
     // Param is passed by value, moved
-    pub fn set_display_rotation(&mut self, v: u32) {
-        self.display_rotation = ::std::option::Option::Some(v);
+    pub fn set_display_rotation(&mut self, v: DisplayRotation) {
+        self.display_rotation = ::std::option::Option::Some(::protobuf::EnumOrUnknown::new(v));
     }
 
     // optional bool passphrase_always_on_device = 8;
@@ -3659,7 +3665,7 @@ impl ::protobuf::Message for ApplySettings {
                     self.auto_lock_delay_ms = ::std::option::Option::Some(is.read_uint32()?);
                 },
                 56 => {
-                    self.display_rotation = ::std::option::Option::Some(is.read_uint32()?);
+                    self.display_rotation = ::std::option::Option::Some(is.read_enum_or_unknown()?);
                 },
                 64 => {
                     self.passphrase_always_on_device = ::std::option::Option::Some(is.read_bool()?);
@@ -3707,7 +3713,7 @@ impl ::protobuf::Message for ApplySettings {
             my_size += ::protobuf::rt::uint32_size(6, v);
         }
         if let Some(v) = self.display_rotation {
-            my_size += ::protobuf::rt::uint32_size(7, v);
+            my_size += ::protobuf::rt::int32_size(7, v.value());
         }
         if let Some(v) = self.passphrase_always_on_device {
             my_size += 1 + 1;
@@ -3749,7 +3755,7 @@ impl ::protobuf::Message for ApplySettings {
             os.write_uint32(6, v)?;
         }
         if let Some(v) = self.display_rotation {
-            os.write_uint32(7, v)?;
+            os.write_enum(7, ::protobuf::EnumOrUnknown::value(&v))?;
         }
         if let Some(v) = self.passphrase_always_on_device {
             os.write_bool(8, v)?;
@@ -10946,6 +10952,83 @@ impl SafetyCheckLevel {
 }
 
 #[derive(Clone,Copy,PartialEq,Eq,Debug,Hash)]
+// @@protoc_insertion_point(enum:hw.trezor.messages.management.DisplayRotation)
+pub enum DisplayRotation {
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.management.DisplayRotation.North)
+    North = 0,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.management.DisplayRotation.East)
+    East = 90,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.management.DisplayRotation.South)
+    South = 180,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.management.DisplayRotation.West)
+    West = 270,
+}
+
+impl ::protobuf::Enum for DisplayRotation {
+    const NAME: &'static str = "DisplayRotation";
+
+    fn value(&self) -> i32 {
+        *self as i32
+    }
+
+    fn from_i32(value: i32) -> ::std::option::Option<DisplayRotation> {
+        match value {
+            0 => ::std::option::Option::Some(DisplayRotation::North),
+            90 => ::std::option::Option::Some(DisplayRotation::East),
+            180 => ::std::option::Option::Some(DisplayRotation::South),
+            270 => ::std::option::Option::Some(DisplayRotation::West),
+            _ => ::std::option::Option::None
+        }
+    }
+
+    fn from_str(str: &str) -> ::std::option::Option<DisplayRotation> {
+        match str {
+            "North" => ::std::option::Option::Some(DisplayRotation::North),
+            "East" => ::std::option::Option::Some(DisplayRotation::East),
+            "South" => ::std::option::Option::Some(DisplayRotation::South),
+            "West" => ::std::option::Option::Some(DisplayRotation::West),
+            _ => ::std::option::Option::None
+        }
+    }
+
+    const VALUES: &'static [DisplayRotation] = &[
+        DisplayRotation::North,
+        DisplayRotation::East,
+        DisplayRotation::South,
+        DisplayRotation::West,
+    ];
+}
+
+impl ::protobuf::EnumFull for DisplayRotation {
+    fn enum_descriptor() -> ::protobuf::reflect::EnumDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::EnumDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().enum_by_package_relative_name("DisplayRotation").unwrap()).clone()
+    }
+
+    fn descriptor(&self) -> ::protobuf::reflect::EnumValueDescriptor {
+        let index = match self {
+            DisplayRotation::North => 0,
+            DisplayRotation::East => 1,
+            DisplayRotation::South => 2,
+            DisplayRotation::West => 3,
+        };
+        Self::enum_descriptor().value_by_index(index)
+    }
+}
+
+impl ::std::default::Default for DisplayRotation {
+    fn default() -> Self {
+        DisplayRotation::North
+    }
+}
+
+impl DisplayRotation {
+    fn generated_enum_descriptor_data() -> ::protobuf::reflect::GeneratedEnumDescriptorData {
+        ::protobuf::reflect::GeneratedEnumDescriptorData::new::<DisplayRotation>("DisplayRotation")
+    }
+}
+
+#[derive(Clone,Copy,PartialEq,Eq,Debug,Hash)]
 // @@protoc_insertion_point(enum:hw.trezor.messages.management.HomescreenFormat)
 pub enum HomescreenFormat {
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.management.HomescreenFormat.Toif)
@@ -11089,7 +11172,7 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \roptions.proto\"\x80\x01\n\nInitialize\x12\x1d\n\nsession_id\x18\x01\
     \x20\x01(\x0cR\tsessionId\x12,\n\x10_skip_passphrase\x18\x02\x20\x01(\
     \x08R\x0eSkipPassphraseB\x02\x18\x01\x12%\n\x0ederive_cardano\x18\x03\
-    \x20\x01(\x08R\rderiveCardano\"\r\n\x0bGetFeatures\"\xd6\x17\n\x08Featur\
+    \x20\x01(\x08R\rderiveCardano\"\r\n\x0bGetFeatures\"\x86\x18\n\x08Featur\
     es\x12\x16\n\x06vendor\x18\x01\x20\x01(\tR\x06vendor\x12#\n\rmajor_versi\
     on\x18\x02\x20\x02(\rR\x0cmajorVersion\x12#\n\rminor_version\x18\x03\x20\
     \x02(\rR\x0cminorVersion\x12#\n\rpatch_version\x18\x04\x20\x02(\rR\x0cpa\
@@ -11124,49 +11207,50 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x18$\x20\x01(\x08R\x18passphraseAlwaysOnDevice\x12T\n\rsafety_checks\
     \x18%\x20\x01(\x0e2/.hw.trezor.messages.management.SafetyCheckLevelR\x0c\
     safetyChecks\x12+\n\x12auto_lock_delay_ms\x18&\x20\x01(\rR\x0fautoLockDe\
-    layMs\x12)\n\x10display_rotation\x18'\x20\x01(\rR\x0fdisplayRotation\x12\
-    3\n\x15experimental_features\x18(\x20\x01(\x08R\x14experimentalFeatures\
-    \x12\x12\n\x04busy\x18)\x20\x01(\x08R\x04busy\x12\\\n\x11homescreen_form\
-    at\x18*\x20\x01(\x0e2/.hw.trezor.messages.management.HomescreenFormatR\
-    \x10homescreenFormat\x129\n\x19hide_passphrase_from_host\x18+\x20\x01(\
-    \x08R\x16hidePassphraseFromHost\x12%\n\x0einternal_model\x18,\x20\x01(\t\
-    R\rinternalModel\x12\x1d\n\nunit_color\x18-\x20\x01(\rR\tunitColor\x12!\
-    \n\x0cunit_btconly\x18.\x20\x01(\x08R\x0bunitBtconly\x12)\n\x10homescree\
-    n_width\x18/\x20\x01(\rR\x0fhomescreenWidth\x12+\n\x11homescreen_height\
-    \x180\x20\x01(\rR\x10homescreenHeight\x12+\n\x11bootloader_locked\x181\
-    \x20\x01(\x08R\x10bootloaderLocked\x12>\n\x18language_version_matches\
-    \x182\x20\x01(\x08:\x04trueR\x16languageVersionMatches\x12%\n\x0eunit_pa\
-    ckaging\x183\x20\x01(\rR\runitPackaging\x12'\n\x0fhaptic_feedback\x184\
-    \x20\x01(\x08R\x0ehapticFeedback\x12P\n\rrecovery_type\x185\x20\x01(\x0e\
-    2+.hw.trezor.messages.management.RecoveryTypeR\x0crecoveryType\x12\x1d\n\
-    \noptiga_sec\x186\x20\x01(\rR\toptigaSec\"C\n\x12BackupAvailability\x12\
-    \x10\n\x0cNotAvailable\x10\0\x12\x0c\n\x08Required\x10\x01\x12\r\n\tAvai\
-    lable\x10\x02\"7\n\x0eRecoveryStatus\x12\x0b\n\x07Nothing\x10\0\x12\x0c\
-    \n\x08Recovery\x10\x01\x12\n\n\x06Backup\x10\x02\"\xc2\x04\n\nCapability\
-    \x12\x1c\n\x12Capability_Bitcoin\x10\x01\x1a\x04\x80\xa6\x1d\x01\x12\x1b\
-    \n\x17Capability_Bitcoin_like\x10\x02\x12\x16\n\x12Capability_Binance\
-    \x10\x03\x12\x16\n\x12Capability_Cardano\x10\x04\x12\x1b\n\x11Capability\
-    _Crypto\x10\x05\x1a\x04\x80\xa6\x1d\x01\x12\x12\n\x0eCapability_EOS\x10\
-    \x06\x12\x17\n\x13Capability_Ethereum\x10\x07\x12\x17\n\x0fCapability_Li\
-    sk\x10\x08\x1a\x02\x08\x01\x12\x15\n\x11Capability_Monero\x10\t\x12\x12\
-    \n\x0eCapability_NEM\x10\n\x12\x15\n\x11Capability_Ripple\x10\x0b\x12\
-    \x16\n\x12Capability_Stellar\x10\x0c\x12\x14\n\x10Capability_Tezos\x10\r\
-    \x12\x12\n\x0eCapability_U2F\x10\x0e\x12\x1b\n\x11Capability_Shamir\x10\
-    \x0f\x1a\x04\x80\xa6\x1d\x01\x12!\n\x17Capability_ShamirGroups\x10\x10\
-    \x1a\x04\x80\xa6\x1d\x01\x12$\n\x1aCapability_PassphraseEntry\x10\x11\
-    \x1a\x04\x80\xa6\x1d\x01\x12\x15\n\x11Capability_Solana\x10\x12\x12!\n\
-    \x17Capability_Translations\x10\x13\x1a\x04\x80\xa6\x1d\x01\x12\x1f\n\
-    \x15Capability_Brightness\x10\x14\x1a\x04\x80\xa6\x1d\x01\x12\x1b\n\x11C\
-    apability_Haptic\x10\x15\x1a\x04\x80\xa6\x1d\x01\x1a\x04\xc8\xf3\x18\x01\
-    \"\x0c\n\nLockDevice\"&\n\x07SetBusy\x12\x1b\n\texpiry_ms\x18\x01\x20\
-    \x01(\rR\x08expiryMs\"\x0c\n\nEndSession\"\xc4\x04\n\rApplySettings\x12\
-    \x1e\n\x08language\x18\x01\x20\x01(\tR\x08languageB\x02\x18\x01\x12\x14\
-    \n\x05label\x18\x02\x20\x01(\tR\x05label\x12%\n\x0euse_passphrase\x18\
-    \x03\x20\x01(\x08R\rusePassphrase\x12\x1e\n\nhomescreen\x18\x04\x20\x01(\
-    \x0cR\nhomescreen\x120\n\x12_passphrase_source\x18\x05\x20\x01(\rR\x10Pa\
-    ssphraseSourceB\x02\x18\x01\x12+\n\x12auto_lock_delay_ms\x18\x06\x20\x01\
-    (\rR\x0fautoLockDelayMs\x12)\n\x10display_rotation\x18\x07\x20\x01(\rR\
-    \x0fdisplayRotation\x12=\n\x1bpassphrase_always_on_device\x18\x08\x20\
+    layMs\x12Y\n\x10display_rotation\x18'\x20\x01(\x0e2..hw.trezor.messages.\
+    management.DisplayRotationR\x0fdisplayRotation\x123\n\x15experimental_fe\
+    atures\x18(\x20\x01(\x08R\x14experimentalFeatures\x12\x12\n\x04busy\x18)\
+    \x20\x01(\x08R\x04busy\x12\\\n\x11homescreen_format\x18*\x20\x01(\x0e2/.\
+    hw.trezor.messages.management.HomescreenFormatR\x10homescreenFormat\x129\
+    \n\x19hide_passphrase_from_host\x18+\x20\x01(\x08R\x16hidePassphraseFrom\
+    Host\x12%\n\x0einternal_model\x18,\x20\x01(\tR\rinternalModel\x12\x1d\n\
+    \nunit_color\x18-\x20\x01(\rR\tunitColor\x12!\n\x0cunit_btconly\x18.\x20\
+    \x01(\x08R\x0bunitBtconly\x12)\n\x10homescreen_width\x18/\x20\x01(\rR\
+    \x0fhomescreenWidth\x12+\n\x11homescreen_height\x180\x20\x01(\rR\x10home\
+    screenHeight\x12+\n\x11bootloader_locked\x181\x20\x01(\x08R\x10bootloade\
+    rLocked\x12>\n\x18language_version_matches\x182\x20\x01(\x08:\x04trueR\
+    \x16languageVersionMatches\x12%\n\x0eunit_packaging\x183\x20\x01(\rR\run\
+    itPackaging\x12'\n\x0fhaptic_feedback\x184\x20\x01(\x08R\x0ehapticFeedba\
+    ck\x12P\n\rrecovery_type\x185\x20\x01(\x0e2+.hw.trezor.messages.manageme\
+    nt.RecoveryTypeR\x0crecoveryType\x12\x1d\n\noptiga_sec\x186\x20\x01(\rR\
+    \toptigaSec\"C\n\x12BackupAvailability\x12\x10\n\x0cNotAvailable\x10\0\
+    \x12\x0c\n\x08Required\x10\x01\x12\r\n\tAvailable\x10\x02\"7\n\x0eRecove\
+    ryStatus\x12\x0b\n\x07Nothing\x10\0\x12\x0c\n\x08Recovery\x10\x01\x12\n\
+    \n\x06Backup\x10\x02\"\xc2\x04\n\nCapability\x12\x1c\n\x12Capability_Bit\
+    coin\x10\x01\x1a\x04\x80\xa6\x1d\x01\x12\x1b\n\x17Capability_Bitcoin_lik\
+    e\x10\x02\x12\x16\n\x12Capability_Binance\x10\x03\x12\x16\n\x12Capabilit\
+    y_Cardano\x10\x04\x12\x1b\n\x11Capability_Crypto\x10\x05\x1a\x04\x80\xa6\
+    \x1d\x01\x12\x12\n\x0eCapability_EOS\x10\x06\x12\x17\n\x13Capability_Eth\
+    ereum\x10\x07\x12\x17\n\x0fCapability_Lisk\x10\x08\x1a\x02\x08\x01\x12\
+    \x15\n\x11Capability_Monero\x10\t\x12\x12\n\x0eCapability_NEM\x10\n\x12\
+    \x15\n\x11Capability_Ripple\x10\x0b\x12\x16\n\x12Capability_Stellar\x10\
+    \x0c\x12\x14\n\x10Capability_Tezos\x10\r\x12\x12\n\x0eCapability_U2F\x10\
+    \x0e\x12\x1b\n\x11Capability_Shamir\x10\x0f\x1a\x04\x80\xa6\x1d\x01\x12!\
+    \n\x17Capability_ShamirGroups\x10\x10\x1a\x04\x80\xa6\x1d\x01\x12$\n\x1a\
+    Capability_PassphraseEntry\x10\x11\x1a\x04\x80\xa6\x1d\x01\x12\x15\n\x11\
+    Capability_Solana\x10\x12\x12!\n\x17Capability_Translations\x10\x13\x1a\
+    \x04\x80\xa6\x1d\x01\x12\x1f\n\x15Capability_Brightness\x10\x14\x1a\x04\
+    \x80\xa6\x1d\x01\x12\x1b\n\x11Capability_Haptic\x10\x15\x1a\x04\x80\xa6\
+    \x1d\x01\x1a\x04\xc8\xf3\x18\x01\"\x0c\n\nLockDevice\"&\n\x07SetBusy\x12\
+    \x1b\n\texpiry_ms\x18\x01\x20\x01(\rR\x08expiryMs\"\x0c\n\nEndSession\"\
+    \xf4\x04\n\rApplySettings\x12\x1e\n\x08language\x18\x01\x20\x01(\tR\x08l\
+    anguageB\x02\x18\x01\x12\x14\n\x05label\x18\x02\x20\x01(\tR\x05label\x12\
+    %\n\x0euse_passphrase\x18\x03\x20\x01(\x08R\rusePassphrase\x12\x1e\n\nho\
+    mescreen\x18\x04\x20\x01(\x0cR\nhomescreen\x120\n\x12_passphrase_source\
+    \x18\x05\x20\x01(\rR\x10PassphraseSourceB\x02\x18\x01\x12+\n\x12auto_loc\
+    k_delay_ms\x18\x06\x20\x01(\rR\x0fautoLockDelayMs\x12Y\n\x10display_rota\
+    tion\x18\x07\x20\x01(\x0e2..hw.trezor.messages.management.DisplayRotatio\
+    nR\x0fdisplayRotation\x12=\n\x1bpassphrase_always_on_device\x18\x08\x20\
     \x01(\x08R\x18passphraseAlwaysOnDevice\x12T\n\rsafety_checks\x18\t\x20\
     \x01(\x0e2/.hw.trezor.messages.management.SafetyCheckLevelR\x0csafetyChe\
     cks\x123\n\x15experimental_features\x18\n\x20\x01(\x08R\x14experimentalF\
@@ -11253,12 +11337,13 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x10\x02\x12\x1c\n\x18Slip39_Single_Extendable\x10\x03\x12\x1b\n\x17Slip\
     39_Basic_Extendable\x10\x04\x12\x1e\n\x1aSlip39_Advanced_Extendable\x10\
     \x05*G\n\x10SafetyCheckLevel\x12\n\n\x06Strict\x10\0\x12\x10\n\x0cPrompt\
-    Always\x10\x01\x12\x15\n\x11PromptTemporarily\x10\x02*0\n\x10HomescreenF\
-    ormat\x12\x08\n\x04Toif\x10\x01\x12\x08\n\x04Jpeg\x10\x02\x12\x08\n\x04T\
-    oiG\x10\x03*H\n\x0cRecoveryType\x12\x12\n\x0eNormalRecovery\x10\0\x12\n\
-    \n\x06DryRun\x10\x01\x12\x18\n\x14UnlockRepeatedBackup\x10\x02BB\n#com.s\
-    atoshilabs.trezor.lib.protobufB\x17TrezorMessageManagement\x80\xa6\x1d\
-    \x01\
+    Always\x10\x01\x12\x15\n\x11PromptTemporarily\x10\x02*=\n\x0fDisplayRota\
+    tion\x12\t\n\x05North\x10\0\x12\x08\n\x04East\x10Z\x12\n\n\x05South\x10\
+    \xb4\x01\x12\t\n\x04West\x10\x8e\x02*0\n\x10HomescreenFormat\x12\x08\n\
+    \x04Toif\x10\x01\x12\x08\n\x04Jpeg\x10\x02\x12\x08\n\x04ToiG\x10\x03*H\n\
+    \x0cRecoveryType\x12\x12\n\x0eNormalRecovery\x10\0\x12\n\n\x06DryRun\x10\
+    \x01\x12\x18\n\x14UnlockRepeatedBackup\x10\x02BB\n#com.satoshilabs.trezo\
+    r.lib.protobufB\x17TrezorMessageManagement\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -11324,9 +11409,10 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             messages.push(UnlockBootloader::generated_message_descriptor_data());
             messages.push(SetBrightness::generated_message_descriptor_data());
             messages.push(backup_device::Slip39Group::generated_message_descriptor_data());
-            let mut enums = ::std::vec::Vec::with_capacity(11);
+            let mut enums = ::std::vec::Vec::with_capacity(12);
             enums.push(BackupType::generated_enum_descriptor_data());
             enums.push(SafetyCheckLevel::generated_enum_descriptor_data());
+            enums.push(DisplayRotation::generated_enum_descriptor_data());
             enums.push(HomescreenFormat::generated_enum_descriptor_data());
             enums.push(RecoveryType::generated_enum_descriptor_data());
             enums.push(features::BackupAvailability::generated_enum_descriptor_data());

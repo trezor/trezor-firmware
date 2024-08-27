@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 import storage.device as storage_device
 import trezorui2
 from trezor import TR, utils
-from trezor.enums import ButtonRequestType
+from trezor.enums import ButtonRequestType, DisplayRotation
 from trezor.ui.layouts import confirm_action
 from trezor.wire import DataError
 
@@ -167,17 +167,17 @@ async def _require_confirm_change_passphrase_source(
     await confirm_change_passphrase_source(passphrase_always_on_device)
 
 
-async def _require_confirm_change_display_rotation(rotation: int) -> None:
-    if rotation == 0:
+async def _require_confirm_change_display_rotation(rotation: DisplayRotation) -> None:
+    if rotation == DisplayRotation.North:
         label = TR.rotation__north
-    elif rotation == 90:
+    elif rotation == DisplayRotation.East:
         label = TR.rotation__east
-    elif rotation == 180:
+    elif rotation == DisplayRotation.South:
         label = TR.rotation__south
-    elif rotation == 270:
+    elif rotation == DisplayRotation.West:
         label = TR.rotation__west
     else:
-        raise DataError("Unsupported display rotation")
+        raise RuntimeError  # Unsupported display rotation
 
     await confirm_action(
         "set_rotation",
