@@ -43,6 +43,10 @@ def configure(
         "embed/models/T3B1/model_T3B1_layout.c",
     ]
 
+    sources += [
+        "embed/trezorhal/stm32u5/i2c_bus.c",
+    ]
+
     if "new_rendering" in features_wanted:
         sources += ["embed/trezorhal/xdisplay_legacy.c"]
         sources += ["embed/trezorhal/stm32u5/xdisplay/vg-2864/display_driver.c"]
