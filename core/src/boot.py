@@ -25,8 +25,11 @@ if utils.USE_OPTIGA:
 
 # have to use "==" over "in (list)" so that it can be statically replaced
 # with the correct value during the build process
-# pylint: disable-next=consider-using-in
-if utils.INTERNAL_MODEL == "T2T1" or utils.INTERNAL_MODEL == "T2B1":
+if (  # pylint: disable-next=consider-using-in
+    utils.INTERNAL_MODEL == "T2T1"
+    or utils.INTERNAL_MODEL == "T2B1"
+    or utils.INTERNAL_MODEL == "T3B1"
+):
     _WELCOME_SCREEN_MS = 1000  # how long do we want to show welcome screen (minimum)
 else:
     _WELCOME_SCREEN_MS = 0

@@ -93,7 +93,11 @@ def get_features() -> Features:
         bootloader_locked=utils.bootloader_locked(),
     )
 
-    if utils.INTERNAL_MODEL in ("T1B1", "T2B1"):
+    if (
+        utils.INTERNAL_MODEL == "T1B1"  # pylint: disable=consider-using-in
+        or utils.INTERNAL_MODEL == "T2B1"
+        or utils.INTERNAL_MODEL == "T3B1"
+    ):
         f.homescreen_format = HomescreenFormat.ToiG
     else:
         f.homescreen_format = HomescreenFormat.Jpeg

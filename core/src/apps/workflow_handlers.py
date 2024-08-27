@@ -56,9 +56,11 @@ def _find_message_handler_module(msg_type: int) -> str:
         return "apps.management.reboot_to_bootloader"
 
     if (
-        utils.INTERNAL_MODEL in ("T2B1", "T3T1")
-        and msg_type == MessageType.ShowDeviceTutorial
-    ):
+        # pylint: disable-next=consider-using-in
+        utils.INTERNAL_MODEL == "T2B1"
+        or utils.INTERNAL_MODEL == "T3B1"
+        or utils.INTERNAL_MODEL == "T3T1"
+    ) and msg_type == MessageType.ShowDeviceTutorial:
         return "apps.management.show_tutorial"
 
     if utils.USE_BACKLIGHT and msg_type == MessageType.SetBrightness:
