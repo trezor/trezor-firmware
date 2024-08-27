@@ -46,7 +46,10 @@ def configure(
     sources += [
         "embed/models/T3T1/model_T3T1_layout.c",
     ]
-    sources += [f"embed/trezorhal/stm32u5/displays/{display}"]
+    sources += [
+        f"embed/trezorhal/stm32u5/displays/{display}",
+        "embed/trezorhal/stm32u5/i2c_bus.c"
+    ]
 
     if "new_rendering" in features_wanted:
         sources += ["embed/trezorhal/xdisplay_legacy.c"]

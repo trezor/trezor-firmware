@@ -25,7 +25,7 @@ i2c_instance_t i2c_defs[I2C_COUNT] = {
         .SclPin = I2C_INSTANCE_0_SCL_PIN,
         .SdaPin = I2C_INSTANCE_0_SDA_PIN,
         .PinAF = I2C_INSTANCE_0_PIN_AF,
-        .Reset = I2C_INSTANCE_0_RESET_FLG,
+        .Reset = I2C_INSTANCE_0_RESET_BIT,
     },
 #ifdef I2C_INSTANCE_1
     {
@@ -35,7 +35,7 @@ i2c_instance_t i2c_defs[I2C_COUNT] = {
         .SclPin = I2C_INSTANCE_1_SCL_PIN,
         .SdaPin = I2C_INSTANCE_1_SDA_PIN,
         .PinAF = I2C_INSTANCE_1_PIN_AF,
-        .Reset = I2C_INSTANCE_1_RESET_FLG,
+        .Reset = I2C_INSTANCE_1_RESET_BIT,
     },
 #endif
 
