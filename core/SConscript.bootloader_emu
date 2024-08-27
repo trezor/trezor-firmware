@@ -6,7 +6,7 @@ import tools, models
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 HW_REVISION = 'emulator'
-NEW_RENDERING = ARGUMENTS.get('NEW_RENDERING', '1') == '1'
+NEW_RENDERING = ARGUMENTS.get('NEW_RENDERING', '1') == '1' or TREZOR_MODEL in ('T3T1',)
 
 if TREZOR_MODEL in ('1', 'DISC1', 'DISC2'):
     # skip bootloader build

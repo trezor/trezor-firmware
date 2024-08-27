@@ -44,7 +44,11 @@ impl<'a> Intro<'a> {
                     .styled(button_bld_menu())
                     .with_expanded_touch_area(Insets::uniform(13)),
             ),
-            host: Child::new(Button::with_text("INSTALL FIRMWARE".into()).styled(button_bld())),
+            host: Child::new(
+                Button::with_text("INSTALL FIRMWARE".into())
+                    .styled(button_bld())
+                    .with_text_align(Alignment::Center),
+            ),
             text: Child::new(Label::left_aligned(content, TEXT_NORMAL).vertically_centered()),
             warn: (!fw_ok).then_some(Child::new(
                 Label::new("FIRMWARE CORRUPTED".into(), Alignment::Start, TEXT_WARNING)
