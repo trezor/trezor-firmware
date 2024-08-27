@@ -37,6 +37,7 @@
 #include "bootui.h"
 #include "messages.h"
 #include "rust_ui.h"
+#include "version_check.h"
 
 #include "memzero.h"
 #include "model.h"
@@ -472,6 +473,10 @@ static void detect_installation(const vendor_header *current_vhdr,
     *is_new = sectrue;
     return;
   }
+  if (sectrue != check_firmware_min_version(current_hdr->monotonic)) {
+    *is_new = sectrue;
+    return;
+  }
   if (sectrue != check_image_header_sig(current_hdr, current_vhdr->vsig_m,
                                         current_vhdr->vsig_n,
                                         current_vhdr->vpub)) {
@@ -572,6 +577,14 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
         MSG_SEND_ASSIGN_STRING(message, "Invalid firmware signature");
         MSG_SEND(Failure);
         return UPLOAD_ERR_INVALID_IMAGE_HEADER_SIG;
+      }
+
+      if (sectrue != check_firmware_min_version(received_hdr->monotonic)) {
+        MSG_SEND_INIT(Failure);
+        MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
+        MSG_SEND_ASSIGN_STRING(message, "Cannot downgrade to this version");
+        MSG_SEND(Failure);
+        return UPLOAD_ERR_INVALID_IMAGE_HEADER_VERSION;
       }
 
       memcpy(&hdr, received_hdr, sizeof(hdr));

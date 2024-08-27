@@ -17,27 +17,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TREZORHAL_MONOCTR
-#define TREZORHAL_MONOCTR
-
-// Monoctr module provides monotonic counter functionality
-
-#define MONOCTR_MAX_VALUE 63
+#pragma once
 
 #include <stdint.h>
 #include "secbool.h"
 
-typedef enum {
-  MONOCTR_BOOTLOADER_VERSION = 0,
-  MONOCTR_FIRMWARE_VERSION = 1,
-} monoctr_type_t;
+// Protection against bootloader downgrade
 
-// Write a new value to the monotonic counter
-// Returns sectrue on success, when value is lower than the current value
-// the write fails and returns secfalse
-secbool monoctr_write(monoctr_type_t type, uint8_t value);
+// Ensures bootloader version is stored in monotonic counter
+// If the version cannot be written, the function will shutdown the device
+void ensure_bootloader_min_version(void);
 
-// Read the current value of the monotonic counter
-secbool monoctr_read(monoctr_type_t type, uint8_t* value);
+// Protection against firmware downgrade
 
-#endif
+// This functions checks if the firmware version is at least the minimum
+// required version, returns sectrue if check_version is higher or equal to the
+// stored version
+secbool check_firmware_min_version(uint8_t check_version);
+
+// Ensures firmware version is stored in monotonic counter
+// If the version cannot be written, the function will shutdown the device
+void ensure_firmware_min_version(uint8_t version);

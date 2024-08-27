@@ -140,6 +140,7 @@ SOURCE_BOOTLOADER = [
     'embed/bootloader/main.c',
     'embed/bootloader/messages.c',
     'embed/bootloader/emulator.c',
+    'embed/bootloader/version_check.c',
     'embed/bootloader/protob/messages.pb.c',
 ]
 
