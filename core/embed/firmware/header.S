@@ -29,7 +29,7 @@ g_header:
     .byte FIX_VERSION_BUILD          // fix_vbuild
     .word HW_MODEL                   // type of the designated hardware
     .byte HW_REVISION                // revision of the designated hardware
-    .byte VERSION_MONOTONIC          // monotonic version of the binary
+    .byte FIRMWARE_MONOTONIC_VERSION // monotonic version of the binary
     . = . + 2                        // reserved
     . = . + 512                      // hash1 ... hash16
 
