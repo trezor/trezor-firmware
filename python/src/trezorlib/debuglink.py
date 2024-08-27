@@ -156,8 +156,8 @@ class LayoutContent(UnstructuredJSONReader):
             ********************
             ICON_CANCEL, -, CONFIRM
         """
-        title_separator = f"\n{20*'-'}\n"
-        btn_separator = f"\n{20*'*'}\n"
+        title_separator = f"\n{20 * '-'}\n"
+        btn_separator = f"\n{20 * '*'}\n"
 
         visible = ""
         if self.title():
