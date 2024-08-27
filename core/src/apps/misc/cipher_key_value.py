@@ -28,18 +28,17 @@ async def cipher_key_value(msg: CipherKeyValue) -> CipheredKeyValue:
         # Special case for Trezor Suite, which asks for setting up labels
         if msg.key == "Enable labeling?":
             title = TR.misc__title_suite_labeling
+            description = TR.misc__enable_labeling
             verb = TR.buttons__enable
         else:
-            if encrypt:
-                title = TR.misc__encrypt_value
-            else:
-                title = TR.misc__decrypt_value
+            title = TR.misc__encrypt_value if encrypt else TR.misc__decrypt_value
+            description = msg.key
             verb = TR.buttons__confirm
 
         await confirm_action(
             "cipher_key_value",
             title,
-            description=msg.key,
+            description=description,
             verb=verb,
             prompt_screen=True,
         )
