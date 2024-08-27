@@ -5,7 +5,7 @@ use crate::{
     ui::{
         component::{connect::Connect, Label},
         display::{self, Color, Font, Icon},
-        geometry::{Offset, Point, Rect},
+        geometry::{Alignment, Offset, Point, Rect},
         layout::simplified::{run, show},
     },
 };
@@ -37,7 +37,7 @@ use super::theme::BLACK;
 #[cfg(feature = "new_rendering")]
 use crate::ui::{
     display::{toif::Toif, LOADER_MAX},
-    geometry::{Alignment, Alignment2D},
+    geometry::Alignment2D,
     model_mercury::cshape::{render_loader, LoaderRange},
     shape,
     shape::render_on_display,
@@ -258,12 +258,20 @@ impl UIFeaturesBootloader for ModelMercuryFeatures {
         ));
 
         let (left, right) = if should_keep_seed {
-            let l = Button::with_text("CANCEL".into()).styled(button_bld());
-            let r = Button::with_text("INSTALL".into()).styled(button_confirm());
+            let l = Button::with_text("CANCEL".into())
+                .styled(button_bld())
+                .with_text_align(Alignment::Center);
+            let r = Button::with_text("INSTALL".into())
+                .styled(button_confirm())
+                .with_text_align(Alignment::Center);
             (l, r)
         } else {
-            let l = Button::with_icon(Icon::new(X24)).styled(button_bld());
-            let r = Button::with_icon(Icon::new(CHECK24)).styled(button_confirm());
+            let l = Button::with_icon(Icon::new(X24))
+                .styled(button_bld())
+                .with_text_align(Alignment::Center);
+            let r = Button::with_icon(Icon::new(CHECK24))
+                .styled(button_confirm())
+                .with_text_align(Alignment::Center);
             (l, r)
         };
 
@@ -290,8 +298,12 @@ impl UIFeaturesBootloader for ModelMercuryFeatures {
         );
         let alert = Label::centered("SEED AND FIRMWARE\nWILL BE ERASED!".into(), TEXT_WIPE_BOLD);
 
-        let right = Button::with_text("RESET".into()).styled(button_wipe_confirm());
-        let left = Button::with_text("CANCEL".into()).styled(button_wipe_cancel());
+        let right = Button::with_text("RESET".into())
+            .styled(button_wipe_confirm())
+            .with_text_align(Alignment::Center);
+        let left = Button::with_text("CANCEL".into())
+            .styled(button_wipe_cancel())
+            .with_text_align(Alignment::Center);
 
         let mut frame = Confirm::new(BLD_WIPE_COLOR, left, right, ConfirmTitle::Icon(icon), msg)
             .with_alert(alert);
