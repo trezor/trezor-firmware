@@ -69,6 +69,7 @@
 
 #include "bootui.h"
 #include "messages.h"
+#include "monoctr.h"
 #include "rust_ui.h"
 #include "unit_variant.h"
 
@@ -265,24 +266,10 @@ static secbool check_vendor_header_lock(const vendor_header *const vhdr) {
 #if PRODUCTION && !defined STM32U5
 
 static void check_bootloader_version(void) {
-  uint8_t bits[FLASH_OTP_BLOCK_SIZE];
-  for (int i = 0; i < FLASH_OTP_BLOCK_SIZE * 8; i++) {
-    if (i < VERSION_MONOTONIC) {
-      bits[i / 8] &= ~(1 << (7 - (i % 8)));
-    } else {
-      bits[i / 8] |= (1 << (7 - (i % 8)));
-    }
-  }
-  ensure(flash_otp_write(FLASH_OTP_BLOCK_BOOTLOADER_VERSION, 0, bits,
-                         FLASH_OTP_BLOCK_SIZE),
-         NULL);
-
-  uint8_t bits2[FLASH_OTP_BLOCK_SIZE];
-  ensure(flash_otp_read(FLASH_OTP_BLOCK_BOOTLOADER_VERSION, 0, bits2,
-                        FLASH_OTP_BLOCK_SIZE),
-         NULL);
-
-  ensure(sectrue * (0 == memcmp(bits, bits2, FLASH_OTP_BLOCK_SIZE)),
+  ensure(monoctr_write(MONOCTR_BOOTLOADER_VERSION, VERSION_MONOTONIC), NULL);
+  uint8_t val = 0;
+  ensure(monoctr_read(MONOCTR_BOOTLOADER_VERSION, &val), NULL);
+  ensure(sectrue * (val == VERSION_MONOTONIC),
          "Bootloader downgrade protection");
 }
 
