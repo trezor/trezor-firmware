@@ -3,22 +3,22 @@ use crate::{
         bitblt::{BitBltCopy, BitBltFill},
         display,
     },
-    ui::shape::render::ScopedRenderer,
+    ui::{
+        display::Color,
+        geometry::{Offset, Rect},
+        shape::render::ScopedRenderer,
+    },
 };
 
-use crate::ui::{
-    display::Color,
-    geometry::{Offset, Rect},
+use super::{
+    super::{BasicCanvas, BitmapView, DrawingCache, ProgressiveRenderer, Viewport},
+    bumps,
 };
-
-use super::super::{BasicCanvas, BitmapView, DrawingCache, ProgressiveRenderer, Viewport};
-
-use super::bumps;
 
 use static_alloc::Bump;
 
 pub type ConcreteRenderer<'a, 'alloc> =
-    ProgressiveRenderer<'a, 'alloc, Bump<[u8; bumps::BUMP_A_SIZE]>, DisplayCanvas>;
+    ProgressiveRenderer<'a, 'alloc, Bump<[u8; bumps::BUMP_NODMA_SIZE]>, DisplayCanvas>;
 
 /// Creates the `Renderer` object for drawing on a display and invokes a
 /// user-defined function that takes a single argument `target`. The user's
@@ -34,26 +34,26 @@ pub fn render_on_display<'env, F>(viewport: Option<Viewport>, bg_color: Option<C
 where
     F: for<'alloc> FnOnce(&mut ScopedRenderer<'alloc, 'env, ConcreteRenderer<'_, 'alloc>>),
 {
-    bumps::run_with_bumps(|bump_a, bump_b| {
-        let cache = DrawingCache::new(bump_a, bump_b);
-        let mut canvas = DisplayCanvas::new();
+    let bumps = bumps::Bumps::lock();
 
-        if let Some(viewport) = viewport {
-            canvas.set_viewport(viewport);
-        }
+    let cache = DrawingCache::new(&bumps);
+    let mut canvas = DisplayCanvas::new();
 
-        let mut target = ScopedRenderer::new(ProgressiveRenderer::new(
-            &mut canvas,
-            bg_color,
-            &cache,
-            bump_a,
-            bumps::SHAPE_MAX_COUNT,
-        ));
+    if let Some(viewport) = viewport {
+        canvas.set_viewport(viewport);
+    }
 
-        func(&mut target);
+    let mut target = ScopedRenderer::new(ProgressiveRenderer::new(
+        &mut canvas,
+        bg_color,
+        &cache,
+        bumps.nodma,
+        bumps::SHAPE_MAX_COUNT,
+    ));
 
-        target.into_inner().render(16);
-    });
+    func(&mut target);
+
+    target.into_inner().render(16);
 }
 
 /// A simple display canvas allowing just two bitblt operations:

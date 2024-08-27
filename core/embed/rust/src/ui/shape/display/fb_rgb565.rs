@@ -29,25 +29,25 @@ where
     F: for<'alloc> FnOnce(&mut ScopedRenderer<'alloc, 'env, ConcreteRenderer<'_, 'alloc>>),
 {
     let mut fb = XFrameBuffer::lock();
-    bumps::run_with_bumps(|bump_a, bump_b| {
-        let width = display::DISPLAY_RESX as i16;
-        let height = display::DISPLAY_RESY as i16;
+    let bumps = bumps::Bumps::lock();
 
-        let cache = DrawingCache::new(bump_a, bump_b);
+    let width = display::DISPLAY_RESX as i16;
+    let height = display::DISPLAY_RESY as i16;
 
-        let mut canvas = unwrap!(Rgb565Canvas::new(
-            Offset::new(width, height),
-            Some(fb.stride()),
-            None,
-            fb.buf()
-        ));
+    let cache = DrawingCache::new(&bumps);
 
-        if let Some(viewport) = viewport {
-            canvas.set_viewport(viewport);
-        }
+    let mut canvas = unwrap!(Rgb565Canvas::new(
+        Offset::new(width, height),
+        Some(fb.stride()),
+        None,
+        fb.buf()
+    ));
 
-        let mut target = ScopedRenderer::new(DirectRenderer::new(&mut canvas, bg_color, &cache));
+    if let Some(viewport) = viewport {
+        canvas.set_viewport(viewport);
+    }
 
-        func(&mut target);
-    });
+    let mut target = ScopedRenderer::new(DirectRenderer::new(&mut canvas, bg_color, &cache));
+
+    func(&mut target);
 }

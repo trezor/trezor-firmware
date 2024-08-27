@@ -1,4 +1,4 @@
-mod bumps;
+pub mod bumps;
 mod direct_canvas;
 
 pub use direct_canvas::render_on_canvas;

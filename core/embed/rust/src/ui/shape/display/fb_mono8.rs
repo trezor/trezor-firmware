@@ -1,5 +1,5 @@
 use crate::{
-    trezorhal::display,
+    trezorhal::display::{self, XFrameBuffer},
     ui::{
         display::Color,
         geometry::Offset,
@@ -10,7 +10,7 @@ use crate::{
     },
 };
 
-use static_alloc::Bump;
+use super::bumps::Bumps;
 
 pub type ConcreteRenderer<'a, 'alloc> = DirectRenderer<'a, 'alloc, Mono8Canvas<'alloc>>;
 
@@ -28,33 +28,26 @@ pub fn render_on_display<'env, F>(viewport: Option<Viewport>, bg_color: Option<C
 where
     F: for<'alloc> FnOnce(&mut ScopedRenderer<'alloc, 'env, ConcreteRenderer<'_, 'alloc>>),
 {
-    const BUMP_SIZE: usize = DrawingCache::get_bump_a_size() + DrawingCache::get_bump_b_size();
-
-    static mut BUMP: Bump<[u8; BUMP_SIZE]> = Bump::uninit();
-
     let mut fb = XFrameBuffer::lock();
-    let bump = unsafe { &mut *core::ptr::addr_of_mut!(BUMP) };
-    {
-        let width = display::DISPLAY_RESX as i16;
-        let height = display::DISPLAY_RESY as i16;
+    let bumps = Bumps::lock();
 
-        bump.reset();
+    let width = display::DISPLAY_RESX as i16;
+    let height = display::DISPLAY_RESY as i16;
 
-        let cache = DrawingCache::new(bump, bump);
+    let cache = DrawingCache::new(&bumps);
 
-        let mut canvas = unwrap!(Mono8Canvas::new(
-            Offset::new(width, height),
-            Some(fb.stride()),
-            None,
-            fb.buf()
-        ));
+    let mut canvas = unwrap!(Mono8Canvas::new(
+        Offset::new(width, height),
+        Some(fb.stride()),
+        None,
+        fb.buf()
+    ));
 
-        if let Some(viewport) = viewport {
-            canvas.set_viewport(viewport);
-        }
-
-        let mut target = ScopedRenderer::new(DirectRenderer::new(&mut canvas, bg_color, &cache));
-
-        func(&mut target);
+    if let Some(viewport) = viewport {
+        canvas.set_viewport(viewport);
     }
+
+    let mut target = ScopedRenderer::new(DirectRenderer::new(&mut canvas, bg_color, &cache));
+
+    func(&mut target);
 }

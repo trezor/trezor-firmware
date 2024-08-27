@@ -3,7 +3,7 @@ use crate::ui::{
     shape::{render::ScopedRenderer, Canvas, DirectRenderer, DrawingCache},
 };
 
-use super::bumps::run_with_bumps;
+use super::bumps::Bumps;
 
 /// Creates the `Renderer` object for drawing on a specified canvas and invokes
 /// a user-defined function that takes a single argument `target`. The user's
@@ -16,9 +16,8 @@ pub fn render_on_canvas<'env, C: Canvas, F>(canvas: &mut C, bg_color: Option<Col
 where
     F: for<'alloc> FnOnce(&mut ScopedRenderer<'alloc, 'env, DirectRenderer<'_, 'alloc, C>>),
 {
-    run_with_bumps(|bump_a, bump_b| {
-        let cache = DrawingCache::new(bump_a, bump_b);
-        let mut target = ScopedRenderer::new(DirectRenderer::new(canvas, bg_color, &cache));
-        func(&mut target);
-    });
+    let bumps = Bumps::lock();
+    let cache = DrawingCache::new(&bumps);
+    let mut target = ScopedRenderer::new(DirectRenderer::new(canvas, bg_color, &cache));
+    func(&mut target);
 }

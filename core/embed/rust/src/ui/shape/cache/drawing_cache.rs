@@ -1,3 +1,5 @@
+use crate::ui::shape::display::bumps::Bumps;
+
 use super::zlib_cache::ZlibCache;
 
 #[cfg(feature = "ui_blurring")]
@@ -51,24 +53,20 @@ where
 }
 
 impl<'a> DrawingCache<'a> {
-    pub fn new<TA, TB>(bump_a: &'a TA, bump_b: &'a TB) -> Self
-    where
-        TA: LocalAllocLeakExt<'a>,
-        TB: LocalAllocLeakExt<'a>,
-    {
+    pub fn new(bumps: &'a Bumps<'a>) -> Self {
         Self {
-            image_buff: unwrap!(alloc_buf(bump_b), "Toif buff alloc"),
+            image_buff: unwrap!(alloc_buf(bumps.dma), "Toif buff alloc"),
             zlib_cache: RefCell::new(unwrap!(
-                ZlibCache::new(bump_a, ZLIB_CACHE_SLOTS),
+                ZlibCache::new(bumps.nodma, ZLIB_CACHE_SLOTS),
                 "ZLIB cache alloc"
             )),
             #[cfg(feature = "ui_jpeg_decoder")]
-            jpeg_cache: RefCell::new(unwrap!(JpegCache::new(bump_a), "JPEG cache alloc")),
+            jpeg_cache: RefCell::new(unwrap!(JpegCache::new(bumps.nodma), "JPEG cache alloc")),
             #[cfg(feature = "ui_blurring")]
-            blur_cache: RefCell::new(unwrap!(BlurCache::new(bump_a), "Blur cache alloc")),
+            blur_cache: RefCell::new(unwrap!(BlurCache::new(bumps.nodma), "Blur cache alloc")),
 
             #[cfg(not(feature = "xframebuffer"))]
-            render_buff: unwrap!(alloc_buf(bump_b), "Render buff alloc"),
+            render_buff: unwrap!(alloc_buf(bumps.dma), "Render buff alloc"),
         }
     }
 
@@ -103,7 +101,7 @@ impl<'a> DrawingCache<'a> {
         self.image_buff.try_borrow_mut().ok()
     }
 
-    pub const fn get_bump_a_size() -> usize {
+    pub const fn get_bump_nodma_size() -> usize {
         let mut size = 0;
 
         size += ZlibCache::get_bump_size(ZLIB_CACHE_SLOTS);
@@ -121,7 +119,7 @@ impl<'a> DrawingCache<'a> {
         size
     }
 
-    pub const fn get_bump_b_size() -> usize {
+    pub const fn get_bump_dma_size() -> usize {
         let mut size = 0;
 
         #[cfg(not(feature = "xframebuffer"))]
