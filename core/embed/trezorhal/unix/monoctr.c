@@ -38,6 +38,26 @@ secbool monoctr_write(monoctr_type_t type, uint8_t value) {
     return secfalse;
   }
 
+  int block = get_otp_block(type);
+
+  if (block < 0) {
+    return secfalse;
+  }
+
+  uint8_t current_value = 0;
+
+  if (sectrue != monoctr_read(type, &current_value)) {
+    return secfalse;
+  }
+
+  if (value < current_value) {
+    return secfalse;
+  }
+
+  if (value == current_value) {
+    return sectrue;
+  }
+
   uint8_t bits[FLASH_OTP_BLOCK_SIZE];
   for (int i = 0; i < FLASH_OTP_BLOCK_SIZE * 8; i++) {
     if (i < value) {
@@ -45,12 +65,6 @@ secbool monoctr_write(monoctr_type_t type, uint8_t value) {
     } else {
       bits[i / 8] |= (1 << (7 - (i % 8)));
     }
-  }
-
-  int block = get_otp_block(type);
-
-  if (block < 0) {
-    return secfalse;
   }
 
   ensure(flash_otp_write(block, 0, bits, FLASH_OTP_BLOCK_SIZE), NULL);
