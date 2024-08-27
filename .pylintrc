@@ -35,3 +35,4 @@ enable=
     useless-else-on-loop,
     useless-object-inheritance,
     async-awaitable-return,
+    internal-model-tuple-comparison,
