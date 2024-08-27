@@ -74,9 +74,9 @@ def test_apply_settings_rotation(client: Client):
 
     with client:
         _set_expected_responses(client)
-        device.apply_settings(client, display_rotation=270)
+        device.apply_settings(client, display_rotation=messages.DisplayRotation.West)
 
-    assert client.features.display_rotation == 270
+    assert client.features.display_rotation == messages.DisplayRotation.West
 
 
 @pytest.mark.setup_client(pin=PIN4, passphrase=False)
