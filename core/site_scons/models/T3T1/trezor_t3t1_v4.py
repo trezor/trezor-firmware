@@ -46,7 +46,9 @@ def configure(
     sources += [
         "embed/models/T3T1/model_T3T1_layout.c",
     ]
-    sources += [f"embed/trezorhal/stm32u5/displays/{display}"]
+    sources += [
+        f"embed/trezorhal/stm32u5/displays/{display}",
+    ]
 
     if "new_rendering" in features_wanted:
         sources += ["embed/trezorhal/xdisplay_legacy.c"]
@@ -74,6 +76,7 @@ def configure(
 
     if "input" in features_wanted:
         sources += ["embed/trezorhal/stm32u5/i2c.c"]
+        sources += ["embed/trezorhal/stm32u5/i2c_bus.c"]
         sources += ["embed/trezorhal/stm32u5/touch/ft6x36.c"]
         features_available.append("touch")
 

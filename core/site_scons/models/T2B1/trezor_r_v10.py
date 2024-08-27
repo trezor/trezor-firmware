@@ -48,7 +48,10 @@ def configure(
     else:
         sources += [f"embed/trezorhal/stm32f4/displays/{display}"]
 
-    sources += ["embed/trezorhal/stm32f4/i2c.c"]
+    sources += [
+        "embed/trezorhal/stm32f4/i2c.c",
+        "embed/trezorhal/stm32f4/i2c_bus.c",
+    ]
 
     if "input" in features_wanted:
         sources += ["embed/trezorhal/stm32f4/button.c"]
@@ -79,6 +82,7 @@ def configure(
 
     if "optiga" in features_wanted:
         defines += ["USE_OPTIGA=1"]
+        sources += ["embed/trezorhal/stm32f4/i2c_bus.c"]
         sources += ["embed/trezorhal/stm32f4/optiga_hal.c"]
         sources += ["embed/trezorhal/optiga/optiga.c"]
         sources += ["embed/trezorhal/optiga/optiga_commands.c"]
