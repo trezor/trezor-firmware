@@ -425,6 +425,15 @@ where
         &self.choices
     }
 
+    /// Check possibility of going left/right.
+    fn can_move(&self, button: ButtonPos) -> bool {
+        match button {
+            ButtonPos::Left => self.has_previous_choice() || self.is_carousel,
+            ButtonPos::Right => self.has_next_choice() || self.is_carousel,
+            _ => false,
+        }
+    }
+
     /// Go to the choice visually on the left.
     fn move_left(&mut self, ctx: &mut EventCtx) {
         if self.has_previous_choice() {
@@ -509,10 +518,14 @@ where
 
         // Possible automatic movement when user is holding left or right button.
         if let Some(auto_move_direction) = self.holding_mover.event(ctx, event) {
-            match auto_move_direction {
-                ButtonPos::Left => self.move_left(ctx),
-                ButtonPos::Right => self.move_right(ctx),
-                _ => {}
+            if self.can_move(auto_move_direction) {
+                match auto_move_direction {
+                    ButtonPos::Left => self.move_left(ctx),
+                    ButtonPos::Right => self.move_right(ctx),
+                    _ => {}
+                }
+            } else {
+                self.holding_mover.stop_moving();
             }
             return None;
         }
@@ -535,8 +548,8 @@ where
                 }
             }
         } else if let Some(ButtonControllerMsg::Pressed(pos)) = button_event {
-            // Starting the movement when left/right button is pressed.
-            if matches!(pos, ButtonPos::Left | ButtonPos::Right) {
+            // Starting the movement when required movement can be done.
+            if self.can_move(pos) {
                 self.holding_mover.start_moving(ctx, pos);
             }
         }
