@@ -30,6 +30,15 @@ enum SafetyCheckLevel {
     PromptTemporarily = 2;  // like PromptAlways but reverts to Strict after reboot
 }
 
+/**
+ * Allowed display rotation angles (in degrees from North)
+ */
+ enum DisplayRotation {
+    North = 0;
+    East = 90;
+    South = 180;
+    West = 270;
+}
 
 /**
  * Format of the homescreen image
@@ -101,7 +110,7 @@ message Features {
     optional bool passphrase_always_on_device = 36;  // device enforces passphrase entry on Trezor
     optional SafetyCheckLevel safety_checks = 37;            // safety check level, set to Prompt to limit path namespace enforcement
     optional uint32 auto_lock_delay_ms = 38;    // number of milliseconds after which the device locks itself
-    optional uint32 display_rotation = 39;      // in degrees from North
+    optional DisplayRotation display_rotation = 39; // rotation of display (in degrees from North)
     optional bool experimental_features = 40;   // are experimental message types enabled?
     optional bool busy = 41;                    // is the device busy, showing "Do not disconnect"?
     optional HomescreenFormat homescreen_format = 42;   // format of the homescreen, 1 = TOIf, 2 = jpg, 3 = TOIG
@@ -200,7 +209,7 @@ message ApplySettings {
     optional bytes homescreen = 4;
     optional uint32 _passphrase_source = 5 [deprecated=true];   // ASK = 0; DEVICE = 1; HOST = 2;
     optional uint32 auto_lock_delay_ms = 6;
-    optional uint32 display_rotation = 7;  // in degrees from North
+    optional DisplayRotation display_rotation = 7;  // rotation of display (in degrees from North)
     optional bool passphrase_always_on_device = 8;  // do not prompt for passphrase, enforce device entry
     optional SafetyCheckLevel safety_checks = 9;  // Safety check level, set to Prompt to limit path namespace enforcement
     optional bool experimental_features = 10;  // enable experimental message types
