@@ -1116,9 +1116,7 @@ if not utils.BITCOIN_ONLY:
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
     ) -> Awaitable[None]:
         amount_title = (
-            amount_title
-            if amount_title is not None
-            else TR.label_with_colon_template.format(TR.words__amount)
+            amount_title if amount_title is not None else f"{TR.words__amount}:"
         )  # def_arg
         fee_title = fee_title or TR.words__fee  # def_arg
         return _confirm_summary(

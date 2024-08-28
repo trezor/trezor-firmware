@@ -1027,9 +1027,7 @@ def confirm_amount(
     br_name: str = "confirm_amount",
     br_code: ButtonRequestType = BR_CODE_OTHER,
 ) -> Awaitable[None]:
-    description = description or TR.label_with_colon_template.format(
-        TR.words__amount
-    )  # def_arg
+    description = description or f"{TR.words__amount}:"  # def_arg
     return confirm_blob(
         br_name,
         title,
@@ -1165,9 +1163,7 @@ def confirm_total(
     br_name: str = "confirm_total",
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
 ) -> Awaitable[None]:
-    total_label = total_label or TR.label_with_colon_template.format(
-        TR.send__total_amount
-    )  # def_arg
+    total_label = total_label or f"{TR.send__total_amount}:"  # def_arg
     fee_label = fee_label or TR.send__including_fee  # def_arg
     return raise_if_not_confirmed(
         interact(
@@ -1220,7 +1216,7 @@ if not utils.BITCOIN_ONLY:
             amount_title = verb
             amount_value = ""
         else:
-            amount_title = TR.label_with_colon_template.format(TR.words__amount)
+            amount_title = f"{TR.words__amount}:"
             amount_value = total_amount
         await raise_if_not_confirmed(
             interact(
@@ -1228,14 +1224,9 @@ if not utils.BITCOIN_ONLY:
                     trezorui2.altcoin_tx_summary(
                         amount_title=amount_title,
                         amount_value=amount_value,
-                        fee_title=TR.label_with_colon_template.format(
-                            TR.send__maximum_fee
-                        ),
+                        fee_title=f"{TR.send__maximum_fee}:",
                         fee_value=maximum_fee,
-                        items=[
-                            (TR.label_with_colon_template.format(k), v)
-                            for (k, v) in info_items
-                        ],
+                        items=[(f"{k}:", v) for (k, v) in info_items],
                         cancel_cross=True,
                     )
                 ),
@@ -1254,9 +1245,7 @@ if not utils.BITCOIN_ONLY:
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
     ) -> Awaitable[None]:
         amount_title = (
-            amount_title
-            if amount_title is not None
-            else TR.label_with_colon_template.format(TR.words__amount)
+            amount_title if amount_title is not None else f"{TR.words__amount}:"
         )  # def_arg
         fee_title = fee_title or TR.words__fee  # def_arg
         return raise_if_not_confirmed(
@@ -1287,14 +1276,11 @@ if not utils.BITCOIN_ONLY:
     ) -> None:
         summary_layout = RustLayout(
             trezorui2.altcoin_tx_summary(
-                amount_title=TR.label_with_colon_template.format(TR.words__amount),
+                amount_title=f"{TR.words__amount}:",
                 amount_value=total_amount,
-                fee_title=TR.label_with_colon_template.format(TR.send__maximum_fee),
+                fee_title=f"{TR.send__maximum_fee}:",
                 fee_value=maximum_fee,
-                items=[
-                    (TR.label_with_colon_template.format(k), v)
-                    for (k, v) in fee_info_items
-                ],
+                items=[(f"{k}:", v) for (k, v) in fee_info_items],
             )
         )
 
@@ -1377,7 +1363,7 @@ async def confirm_modify_output(
             data=address,
             verb=TR.buttons__continue,
             verb_cancel=None,
-            description=TR.label_with_colon_template.format(TR.words__address),
+            description=f"{TR.words__address}:",
             extra=None,
         )
     )

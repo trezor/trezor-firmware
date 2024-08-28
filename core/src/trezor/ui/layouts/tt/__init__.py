@@ -942,9 +942,7 @@ def confirm_amount(
     br_name: str = "confirm_amount",
     br_code: ButtonRequestType = BR_CODE_OTHER,
 ) -> Awaitable[None]:
-    description = description or TR.label_with_colon_template.format(
-        TR.words__amount
-    )  # def_arg
+    description = description or f"{TR.words__amount}:"  # def_arg
     return confirm_value(
         title,
         amount,
@@ -1043,9 +1041,7 @@ def confirm_total(
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
 ) -> Awaitable[None]:
     title = title or TR.words__title_summary  # def_arg
-    total_label = total_label or TR.label_with_colon_template.format(
-        TR.send__total_amount
-    )  # def_arg
+    total_label = total_label or f"{TR.send__total_amount}:"  # def_arg
     fee_label = fee_label or TR.send__including_fee  # def_arg
 
     items = [
@@ -1056,12 +1052,7 @@ def confirm_total(
     if source_account:
         info_items.append((TR.confirm_total__sending_from_account, source_account))
     if fee_rate_amount:
-        info_items.append(
-            (
-                TR.label_with_colon_template.format(TR.confirm_total__fee_rate),
-                fee_rate_amount,
-            )
-        )
+        info_items.append((f"{TR.confirm_total__fee_rate}:", fee_rate_amount))
 
     return _confirm_summary(
         items,
@@ -1116,14 +1107,8 @@ if not utils.BITCOIN_ONLY:
             trezorui2.confirm_total(
                 title=TR.words__title_summary,
                 items=[
-                    (
-                        TR.label_with_colon_template.format(TR.words__amount),
-                        total_amount,
-                    ),
-                    (
-                        TR.label_with_colon_template.format(TR.send__maximum_fee),
-                        maximum_fee,
-                    ),
+                    (f"{TR.words__amount}:", total_amount),
+                    (f"{TR.send__maximum_fee}:", maximum_fee),
                 ],
                 info_button=True,
                 cancel_arrow=True,
@@ -1132,10 +1117,7 @@ if not utils.BITCOIN_ONLY:
         info_layout = RustLayout(
             trezorui2.show_info_with_cancel(
                 title=TR.confirm_total__title_fee,
-                items=[
-                    (TR.label_with_colon_template.format(k), v)
-                    for (k, v) in fee_info_items
-                ],
+                items=[(f"{k}:", v) for (k, v) in fee_info_items],
             )
         )
 
@@ -1187,27 +1169,17 @@ if not utils.BITCOIN_ONLY:
 
         # confirmation
         if verb == TR.ethereum__staking_claim:
-            items = (
-                (
-                    TR.label_with_colon_template.format(TR.send__maximum_fee),
-                    maximum_fee,
-                ),
-            )
+            items = ((f"{TR.send__maximum_fee}:", maximum_fee),)
         else:
             items = (
-                (TR.label_with_colon_template.format(TR.words__amount), total_amount),
-                (
-                    TR.label_with_colon_template.format(TR.send__maximum_fee),
-                    maximum_fee,
-                ),
+                (f"{TR.words__amount}:", total_amount),
+                (f"{TR.send__maximum_fee}:", maximum_fee),
             )
         await _confirm_summary(
             items,  # items
             title=title,
             info_title=TR.confirm_total__title_fee,
-            info_items=[
-                (TR.label_with_colon_template.format(k), v) for (k, v) in info_items
-            ],
+            info_items=[(f"{k}:", v) for (k, v) in info_items],
             br_name=br_name,
             br_code=br_code,
         )
@@ -1222,9 +1194,7 @@ if not utils.BITCOIN_ONLY:
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
     ) -> Awaitable[None]:
         amount_title = (
-            amount_title
-            if amount_title is not None
-            else TR.label_with_colon_template.format(TR.words__amount)
+            amount_title if amount_title is not None else f"{TR.words__amount}:"
         )  # def_arg
         fee_title = fee_title or TR.words__fee  # def_arg
         return _confirm_summary(
@@ -1298,7 +1268,7 @@ async def confirm_modify_output(
             data=address,
             verb=TR.buttons__continue,
             verb_cancel=None,
-            description=TR.label_with_colon_template.format(TR.words__address),
+            description=f"{TR.words__address}:",
             extra=None,
         )
     )
@@ -1442,16 +1412,9 @@ async def confirm_signverify(
 
     items: list[tuple[str, str]] = []
     if account is not None:
-        items.append((TR.label_with_colon_template.format(TR.words__account), account))
+        items.append((f"{TR.words__account}:", account))
     if path is not None:
-        items.append(
-            (
-                TR.label_with_colon_template.format(
-                    TR.address_details__derivation_path
-                ),
-                path,
-            )
-        )
+        items.append((f"{TR.address_details__derivation_path}:", path))
     items.append(
         (
             TR.sign_message__message_size,

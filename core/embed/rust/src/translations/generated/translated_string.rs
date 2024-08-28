@@ -1369,7 +1369,6 @@ pub enum TranslatedString {
     instructions__swipe_down = 964,  // "Swipe down"
     #[cfg(feature = "universal_fw")]
     fido__title_credential_details = 965,  // "Credential details"
-    label_with_colon_template = 966,  // "{0}:"
 }
 
 impl TranslatedString {
@@ -2733,7 +2732,6 @@ impl TranslatedString {
             Self::instructions__swipe_down => "Swipe down",
             #[cfg(feature = "universal_fw")]
             Self::fido__title_credential_details => "Credential details",
-            Self::label_with_colon_template => "{0}:",
         }
     }
 
@@ -4098,7 +4096,6 @@ impl TranslatedString {
             Qstr::MP_QSTR_instructions__swipe_down => Some(Self::instructions__swipe_down),
             #[cfg(feature = "universal_fw")]
             Qstr::MP_QSTR_fido__title_credential_details => Some(Self::fido__title_credential_details),
-            Qstr::MP_QSTR_label_with_colon_template => Some(Self::label_with_colon_template),
             _ => None,
         }
     }
