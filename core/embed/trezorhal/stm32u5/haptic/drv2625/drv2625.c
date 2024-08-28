@@ -25,7 +25,7 @@
 #include "common.h"
 #include "drv2625.h"
 #include "haptic.h"
-#include "i2c.h"
+#include "i2c_bus.h"
 
 #include STM32_HAL_H
 
@@ -64,6 +64,8 @@
 typedef struct {
   // Set if driver is initialized
   bool initialized;
+  // I2c bus where the touch controller is connected
+  i2c_bus_t *i2c_bus;
   // Set if driver is enabled
   bool enabled;
   // Set to if real-time playing is activated.
@@ -78,10 +80,26 @@ static haptic_driver_t g_haptic_driver = {
     .initialized = false,
 };
 
-static bool drv2625_set_reg(uint8_t addr, uint8_t value) {
-  uint8_t data[] = {addr, value};
-  return i2c_transmit(DRV2625_I2C_INSTANCE, DRV2625_I2C_ADDRESS, data,
-                      sizeof(data), 1) == HAL_OK;
+static bool drv2625_set_reg(i2c_bus_t *bus, uint8_t addr, uint8_t value) {
+  i2c_op_t ops[] = {
+      {
+          .flags = I2C_FLAG_TX | I2C_FLAG_EMBED,
+          .size = 2,
+          .data = {addr, value},
+      },
+  };
+
+  i2c_packet_t pkt = {
+      .address = DRV2625_I2C_ADDRESS,
+      .op_count = ARRAY_LENGTH(ops),
+      .ops = ops,
+  };
+
+  if (I2C_STATUS_OK != i2c_bus_submit_and_wait(bus, &pkt)) {
+    return false;
+  }
+
+  return true;
 }
 
 bool haptic_init(void) {
@@ -93,34 +111,41 @@ bool haptic_init(void) {
 
   memset(driver, 0, sizeof(haptic_driver_t));
 
+  driver->i2c_bus = i2c_bus_open(DRV2625_I2C_INSTANCE);
+  if (driver->i2c_bus == NULL) {
+    goto cleanup;
+  }
+
   // select library
-  if (!drv2625_set_reg(DRV2625_REG_LIBRARY,
+  if (!drv2625_set_reg(driver->i2c_bus, DRV2625_REG_LIBRARY,
                        LIB_SEL | DRV2625_REG_LIBRARY_GAIN_25)) {
-    return false;
+    goto cleanup;
   }
 
   if (!drv2625_set_reg(
-          DRV2625_REG_LRAERM,
+          driver->i2c_bus, DRV2625_REG_LRAERM,
           LRA_ERM_SEL | LOOP_SEL | DRV2625_REG_LRAERM_AUTO_BRK_OL)) {
+    goto cleanup;
   }
 
-  if (!drv2625_set_reg(DRV2625_REG_OD_CLAMP, ACTUATOR_OD_CLAMP)) {
-    return false;
+  if (!drv2625_set_reg(driver->i2c_bus, DRV2625_REG_OD_CLAMP,
+                       ACTUATOR_OD_CLAMP)) {
+    goto cleanup;
   }
 
-  if (!drv2625_set_reg(DRV2625_REG_LRA_WAVE_SHAPE,
+  if (!drv2625_set_reg(driver->i2c_bus, DRV2625_REG_LRA_WAVE_SHAPE,
                        DRV2625_REG_LRA_WAVE_SHAPE_SINE)) {
-    return false;
+    goto cleanup;
   }
 
-  if (!drv2625_set_reg(DRV2625_REG_OL_LRA_PERIOD_LO,
+  if (!drv2625_set_reg(driver->i2c_bus, DRV2625_REG_OL_LRA_PERIOD_LO,
                        ACTUATOR_LRA_PERIOD & 0xFF)) {
-    return false;
+    goto cleanup;
   }
 
-  if (!drv2625_set_reg(DRV2625_REG_OL_LRA_PERIOD_HI,
+  if (!drv2625_set_reg(driver->i2c_bus, DRV2625_REG_OL_LRA_PERIOD_HI,
                        ACTUATOR_LRA_PERIOD >> 8)) {
-    return false;
+    goto cleanup;
   }
 
   GPIO_InitTypeDef GPIO_InitStructure = {0};
@@ -158,6 +183,11 @@ bool haptic_init(void) {
   driver->enabled = true;
 
   return true;
+
+cleanup:
+  i2c_bus_close(driver->i2c_bus);
+  memset(driver, 0, sizeof(haptic_driver_t));
+  return false;
 }
 
 void haptic_deinit(void) {
@@ -166,6 +196,8 @@ void haptic_deinit(void) {
   if (!driver->initialized) {
     return;
   }
+
+  i2c_bus_close(driver->i2c_bus);
 
   // TODO: deinitialize GPIOs and the TIMER
 
@@ -197,7 +229,7 @@ static bool haptic_play_rtp(int8_t amplitude, uint16_t duration_ms) {
 
   if (!driver->playing_rtp) {
     if (!drv2625_set_reg(
-            DRV2625_REG_MODE,
+            driver->i2c_bus, DRV2625_REG_MODE,
             DRV2625_REG_MODE_RTP | DRV2625_REG_MODE_TRGFUNC_ENABLE)) {
       return false;
     }
@@ -205,7 +237,7 @@ static bool haptic_play_rtp(int8_t amplitude, uint16_t duration_ms) {
     driver->playing_rtp = true;
   }
 
-  if (!drv2625_set_reg(DRV2625_REG_RTP, (uint8_t)amplitude)) {
+  if (!drv2625_set_reg(driver->i2c_bus, DRV2625_REG_RTP, (uint8_t)amplitude)) {
     return false;
   }
 
@@ -233,19 +265,20 @@ static bool haptic_play_lib(drv2625_lib_effect_t effect) {
 
   driver->playing_rtp = false;
 
-  if (!drv2625_set_reg(DRV2625_REG_MODE, DRV2625_REG_MODE_WAVEFORM)) {
+  if (!drv2625_set_reg(driver->i2c_bus, DRV2625_REG_MODE,
+                       DRV2625_REG_MODE_WAVEFORM)) {
     return false;
   }
 
-  if (!drv2625_set_reg(DRV2625_REG_WAVESEQ1, effect)) {
+  if (!drv2625_set_reg(driver->i2c_bus, DRV2625_REG_WAVESEQ1, effect)) {
     return false;
   }
 
-  if (!drv2625_set_reg(DRV2625_REG_WAVESEQ2, 0)) {
+  if (!drv2625_set_reg(driver->i2c_bus, DRV2625_REG_WAVESEQ2, 0)) {
     return false;
   }
 
-  if (!drv2625_set_reg(DRV2625_REG_GO, DRV2625_REG_GO_GO)) {
+  if (!drv2625_set_reg(driver->i2c_bus, DRV2625_REG_GO, DRV2625_REG_GO_GO)) {
     return false;
   }
 
