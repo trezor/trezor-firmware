@@ -27,7 +27,7 @@
 #include "common.h"
 
 #include "ft6x36.h"
-#include "i2c.h"
+#include "i2c_bus.h"
 #include "touch.h"
 
 #ifdef TOUCH_PANEL_LX154A2422CPT23
@@ -40,6 +40,8 @@
 typedef struct {
   // Set if the driver is initialized
   secbool initialized;
+  // I2c bus where the touch controller is connected
+  i2c_bus_t* i2c_bus;
   // Set if the driver is ready to report touches.
   // FT6X36 needs about 300ms after power-up to stabilize.
   secbool ready;
@@ -71,30 +73,32 @@ static touch_driver_t g_touch_driver = {
 //
 // If the I2C bus is busy, the function will cycle the
 // bus and retry the operation.
-static secbool ft6x36_read_regs(uint8_t reg, uint8_t* value, size_t count) {
-  uint16_t i2c_bus = TOUCH_I2C_INSTANCE;
-  uint8_t i2c_addr = FT6X36_I2C_ADDR;
-  uint8_t txdata[] = {reg};
-  uint8_t retries = 3;
+static secbool ft6x36_read_regs(i2c_bus_t* bus, uint8_t reg, uint8_t* value,
+                                size_t count) {
+  i2c_op_t ops[] = {
+      {
+          .flags = I2C_FLAG_TX | I2C_FLAG_EMBED,
+          .size = 1,
+          .data = {reg},
+      },
+      {
+          .flags = I2C_FLAG_RX,
+          .size = count,
+          .ptr = value,
+      },
+  };
 
-  do {
-    int result = i2c_transmit(i2c_bus, i2c_addr, txdata, sizeof(txdata), 10);
-    if (HAL_OK == result) {
-      result = i2c_receive(i2c_bus, i2c_addr, value, count, 10);
-    }
+  i2c_packet_t pkt = {
+      .address = FT6X36_I2C_ADDR,
+      .op_count = ARRAY_LENGTH(ops),
+      .ops = ops,
+  };
 
-    if (HAL_OK == result) {
-      // success
-      return sectrue;
-    } else if (HAL_BUSY == result && retries > 0) {
-      // I2C bus is busy, cycle it and try again
-      i2c_cycle(i2c_bus);
-      retries--;
-    } else {
-      // Aother error or retries exhausted
-      return secfalse;
-    }
-  } while (1);
+  if (I2C_STATUS_OK != i2c_bus_submit_and_wait(bus, &pkt)) {
+    return secfalse;
+  }
+
+  return sectrue;
 }
 
 // Writes a register to the FT6X36.
@@ -104,26 +108,26 @@ static secbool ft6x36_read_regs(uint8_t reg, uint8_t* value, size_t count) {
 //
 // If the I2C bus is busy, the function will cycle the
 // bus and retry the operation.
-static secbool ft6x36_write_reg(uint8_t reg, uint8_t value) {
-  uint16_t i2c_bus = TOUCH_I2C_INSTANCE;
-  uint8_t i2c_addr = FT6X36_I2C_ADDR;
-  uint8_t txdata[] = {reg, value};
-  uint8_t retries = 3;
+static secbool ft6x36_write_reg(i2c_bus_t* bus, uint8_t reg, uint8_t value) {
+  i2c_op_t ops[] = {
+      {
+          .flags = I2C_FLAG_TX | I2C_FLAG_EMBED,
+          .size = 2,
+          .data = {reg, value},
+      },
+  };
 
-  do {
-    int result = i2c_transmit(i2c_bus, i2c_addr, txdata, sizeof(txdata), 10);
-    if (HAL_OK == result) {
-      // success
-      return sectrue;
-    } else if (HAL_BUSY == result && retries > 0) {
-      // I2C bus is busy, cycle it and try again
-      i2c_cycle(i2c_bus);
-      retries--;
-    } else {
-      // Another error or retries exhausted
-      return secfalse;
-    }
-  } while (1);
+  i2c_packet_t pkt = {
+      .address = FT6X36_I2C_ADDR,
+      .op_count = ARRAY_LENGTH(ops),
+      .ops = ops,
+  };
+
+  if (I2C_STATUS_OK != i2c_bus_submit_and_wait(bus, &pkt)) {
+    return secfalse;
+  }
+
+  return sectrue;
 }
 
 // Powers down the touch controller and puts all
@@ -208,7 +212,7 @@ static bool ft6x36_test_and_clear_interrupt(void) {
 }
 
 // Configures the touch controller to the funtional state.
-static secbool ft6x36_configure(void) {
+static secbool ft6x36_configure(i2c_bus_t* i2c_bus) {
   const static uint8_t config[] = {
       // Set touch controller to the interrupt trigger mode.
       // Basically, CTPM generates a pulse when new data is available.
@@ -224,7 +228,7 @@ static secbool ft6x36_configure(void) {
     uint8_t reg = config[i];
     uint8_t value = config[i + 1];
 
-    if (sectrue != ft6x36_write_reg(reg, value)) {
+    if (sectrue != ft6x36_write_reg(i2c_bus, reg, value)) {
       return secfalse;
     }
   }
@@ -250,6 +254,8 @@ secbool touch_init(void) {
     return sectrue;
   }
 
+  memset(driver, 0, sizeof(touch_driver_t));
+
   // Initialize GPIO to the default configuration
   // (touch controller is powered down)
   ft6x36_power_down();
@@ -257,10 +263,14 @@ secbool touch_init(void) {
   // Power up the touch controller and perform the reset sequence
   ft6x36_power_up();
 
+  driver->i2c_bus = i2c_bus_open(TOUCH_I2C_INSTANCE);
+  if (driver->i2c_bus == NULL) {
+    goto cleanup;
+  }
+
   // Configure the touch controller
-  if (sectrue != ft6x36_configure()) {
-    ft6x36_power_down();
-    return secfalse;
+  if (sectrue != ft6x36_configure(driver->i2c_bus)) {
+    goto cleanup;
   }
 
   driver->init_ticks = hal_ticks_ms();
@@ -269,16 +279,20 @@ secbool touch_init(void) {
   driver->initialized = sectrue;
 
   return sectrue;
+
+cleanup:
+  i2c_bus_close(driver->i2c_bus);
+  ft6x36_power_down();
+  memset(driver, 0, sizeof(touch_driver_t));
+  return secfalse;
 }
 
 void touch_deinit(void) {
   touch_driver_t* driver = &g_touch_driver;
 
   if (sectrue == driver->initialized) {
-    // Do not need to deinitialized the controller
-    // just power it off
+    i2c_bus_close(driver->i2c_bus);
     ft6x36_power_down();
-
     memset(driver, 0, sizeof(touch_driver_t));
   }
 }
@@ -301,7 +315,7 @@ secbool touch_set_sensitivity(uint8_t value) {
   touch_driver_t* driver = &g_touch_driver;
 
   if (sectrue == driver->initialized) {
-    return ft6x36_write_reg(FT6X36_REG_TH_GROUP, value);
+    return ft6x36_write_reg(driver->i2c_bus, FT6X36_REG_TH_GROUP, value);
   } else {
     return secfalse;
   }
@@ -324,7 +338,8 @@ uint8_t touch_get_version(void) {
 
   uint8_t fw_version = 0;
 
-  if (sectrue != ft6x36_read_regs(FT6X36_REG_FIRMID, &fw_version, 1)) {
+  if (sectrue !=
+      ft6x36_read_regs(driver->i2c_bus, FT6X36_REG_FIRMID, &fw_version, 1)) {
     ft6x36_power_down();
     return secfalse;
   }
@@ -432,7 +447,7 @@ uint32_t touch_get_event(void) {
   driver->read_ticks = ticks;
 
   // Read the set of registers containing touch event and coordinates
-  if (sectrue != ft6x36_read_regs(0x00, regs, sizeof(regs))) {
+  if (sectrue != ft6x36_read_regs(driver->i2c_bus, 0x00, regs, sizeof(regs))) {
     // Failed to read the touch registers
     return 0;
   }
