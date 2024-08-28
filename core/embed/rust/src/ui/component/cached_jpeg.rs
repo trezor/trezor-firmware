@@ -31,7 +31,7 @@ impl CachedJpeg {
 
         let mut buf = unwrap!(ImageBuffer::new(size), "no image buf");
 
-        render_on_canvas(buf.canvas(), None, |target| {
+        render_on_canvas!(buf.canvas(), None, |target| {
             shape::JpegImage::new_image(Point::zero(), image)
                 .with_scale(scale)
                 .render(target);

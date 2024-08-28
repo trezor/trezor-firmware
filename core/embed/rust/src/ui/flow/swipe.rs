@@ -16,10 +16,8 @@ use crate::{
         flow::{base::Decision, FlowMsg, FlowState},
         geometry::Rect,
         layout::obj::ObjComponent,
-        model_mercury::ModelMercuryFeatures,
-        shape::{render_on_display, Display, Renderer},
+        shape::{render_on_display, Display},
         util::animation_disabled,
-        UIFeaturesCommon,
     },
 };
 
