@@ -106,7 +106,7 @@ void systick_update_freq(void) {
 uint64_t systick_cycles(void) {
   systick_driver_t* drv = &g_systick_driver;
 
-  uint32_t irq_state = disable_irq();
+  irq_key_t irq_key = irq_lock();
 
   // Current value of the SysTick counter
   uint32_t val = SysTick->VAL;
@@ -125,7 +125,7 @@ uint64_t systick_cycles(void) {
 
   uint64_t cycles = drv->cycles + ((val > 0) ? (drv->cycles_per_ms - val) : 0);
 
-  enable_irq(irq_state);
+  irq_unlock(irq_key);
 
   return cycles;
 }
