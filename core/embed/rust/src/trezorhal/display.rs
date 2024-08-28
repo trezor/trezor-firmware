@@ -195,11 +195,15 @@ impl XFrameBuffer<'_> {
         let guard = X_FRAMEBUFFER_LOCK.lock();
 
         #[cfg(not(feature = "xframebuffer"))]
-        return Self {
-            guard,
-            buf: &[],
-            stride: 0,
-        };
+        {
+            static mut EMPTY: [u8; 0] = [];
+            let buf = unsafe { &mut *ptr::addr_of_mut!(EMPTY) };
+            return Self {
+                guard,
+                buf: &mut buf[..],
+                stride: 0,
+            };
+        }
 
         #[cfg(feature = "xframebuffer")]
         {
