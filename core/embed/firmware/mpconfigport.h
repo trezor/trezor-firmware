@@ -194,8 +194,8 @@ typedef long mp_off_t;
 
 #include "irq.h"
 
-#define MICROPY_BEGIN_ATOMIC_SECTION()     disable_irq()
-#define MICROPY_END_ATOMIC_SECTION(state)  enable_irq(state)
+#define MICROPY_BEGIN_ATOMIC_SECTION()     irq_lock()
+#define MICROPY_END_ATOMIC_SECTION(state)  irq_unlock(state)
 #define MICROPY_EVENT_POLL_HOOK \
     do { \
         extern void mp_handle_pending(bool); \

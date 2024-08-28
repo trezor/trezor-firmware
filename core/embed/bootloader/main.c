@@ -345,7 +345,7 @@ void real_jump_to_firmware(void) {
 __attribute__((noreturn)) void jump_to_fw_through_reset(void) {
   display_fade(display_backlight(-1), 0, 200);
 
-  disable_irq();
+  __disable_irq();
   delete_secrets();
   NVIC_SystemReset();
   for (;;)

@@ -72,7 +72,7 @@ void reboot_to_bootloader(void) {
 #ifdef STM32U5
   // extern uint32_t g_boot_command;
   g_boot_command = boot_command;
-  disable_irq();
+  __disable_irq();
   delete_secrets();
   NVIC_SystemReset();
 #else
