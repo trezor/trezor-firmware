@@ -25,7 +25,7 @@
 #include "common.h"
 #include "secbool.h"
 
-#include "i2c.h"
+#include "i2c_bus.h"
 #include "stmpe811.h"
 #include "touch.h"
 
@@ -180,10 +180,7 @@
 uint32_t I2cxTimeout =
     I2Cx_TIMEOUT_MAX; /*<! Value of Timeout when I2C communication fails */
 
-/**
- * @brief  I2Cx error treatment function
- */
-static void I2Cx_Error(void) { i2c_cycle(TOUCH_I2C_INSTANCE); }
+static i2c_bus_t *i2c_bus = NULL;
 
 /**
  * @brief  Writes a value in a register of the device through BUS.
@@ -192,16 +189,24 @@ static void I2Cx_Error(void) { i2c_cycle(TOUCH_I2C_INSTANCE); }
  * @param  Value: The target register value to be written
  */
 static void I2Cx_WriteData(uint8_t Addr, uint8_t Reg, uint8_t Value) {
-  HAL_StatusTypeDef status = HAL_OK;
+  i2c_op_t ops[] = {
+      {
+          .flags = I2C_FLAG_TX | I2C_FLAG_EMBED,
+          .size = 2,
+          .data = {Reg, Value},
+      },
+  };
 
-  status = i2c_mem_write(TOUCH_I2C_INSTANCE, Addr, (uint16_t)Reg,
-                         I2C_MEMADD_SIZE_8BIT, &Value, 1, I2cxTimeout);
+  i2c_packet_t pkt = {
+      .address = TS_I2C_ADDRESS,
+      .timeout = I2cxTimeout,
+      .op_count = ARRAY_LENGTH(ops),
+      .ops = ops,
+  };
 
-  /* Check the communication status */
-  if (status != HAL_OK) {
-    /* Re-Initialize the BUS */
-    I2Cx_Error();
-  }
+  i2c_status_t status = i2c_bus_submit_and_wait(i2c_bus, &pkt);
+
+  (void)status;
 }
 
 /**
@@ -213,16 +218,29 @@ static void I2Cx_WriteData(uint8_t Addr, uint8_t Reg, uint8_t Value) {
  */
 static void I2Cx_WriteBuffer(uint8_t Addr, uint8_t Reg, uint8_t *pBuffer,
                              uint16_t Length) {
-  HAL_StatusTypeDef status = HAL_OK;
+  i2c_op_t ops[] = {
+      {
+          .flags = I2C_FLAG_TX | I2C_FLAG_EMBED,
+          .size = 1,
+          .data = {Reg},
+      },
+      {
+          .flags = I2C_FLAG_TX,
+          .size = Length,
+          .ptr = pBuffer,
+      },
+  };
 
-  status = i2c_mem_write(TOUCH_I2C_INSTANCE, Addr, (uint16_t)Reg,
-                         I2C_MEMADD_SIZE_8BIT, pBuffer, Length, I2cxTimeout);
+  i2c_packet_t pkt = {
+      .address = TS_I2C_ADDRESS,
+      .timeout = I2cxTimeout,
+      .op_count = ARRAY_LENGTH(ops),
+      .ops = ops,
+  };
 
-  /* Check the communication status */
-  if (status != HAL_OK) {
-    /* Re-Initialize the BUS */
-    I2Cx_Error();
-  }
+  i2c_status_t status = i2c_bus_submit_and_wait(i2c_bus, &pkt);
+
+  (void)status;
 }
 
 /**
@@ -232,17 +250,32 @@ static void I2Cx_WriteBuffer(uint8_t Addr, uint8_t Reg, uint8_t *pBuffer,
  * @retval Data read at register address
  */
 static uint8_t I2Cx_ReadData(uint8_t Addr, uint8_t Reg) {
-  HAL_StatusTypeDef status = HAL_OK;
   uint8_t value = 0;
 
-  status = i2c_mem_read(TOUCH_I2C_INSTANCE, Addr, Reg, I2C_MEMADD_SIZE_8BIT,
-                        &value, 1, I2cxTimeout);
+  i2c_op_t ops[] = {
+      {
+          .flags = I2C_FLAG_TX | I2C_FLAG_EMBED,
+          .size = 1,
+          .data = {Reg},
+      },
+      {
+          .flags = I2C_FLAG_RX,
+          .size = 1,
+          .ptr = &value,
+      },
+  };
 
-  /* Check the communication status */
-  if (status != HAL_OK) {
-    /* Re-Initialize the BUS */
-    I2Cx_Error();
-  }
+  i2c_packet_t pkt = {
+      .address = TS_I2C_ADDRESS,
+      .timeout = I2cxTimeout,
+      .op_count = ARRAY_LENGTH(ops),
+      .ops = ops,
+  };
+
+  i2c_status_t status = i2c_bus_submit_and_wait(i2c_bus, &pkt);
+
+  (void)status;
+
   return value;
 }
 
@@ -256,21 +289,31 @@ static uint8_t I2Cx_ReadData(uint8_t Addr, uint8_t Reg) {
  */
 static uint8_t I2Cx_ReadBuffer(uint8_t Addr, uint8_t Reg, uint8_t *pBuffer,
                                uint16_t Length) {
-  HAL_StatusTypeDef status = HAL_OK;
+  i2c_op_t ops[] = {
+      {
+          .flags = I2C_FLAG_TX | I2C_FLAG_EMBED,
+          .size = 1,
+          .data = {Reg},
+      },
+      {
+          .flags = I2C_FLAG_RX,
+          .size = Length,
+          .ptr = pBuffer,
+      },
+  };
 
-  status = i2c_mem_read(TOUCH_I2C_INSTANCE, Addr, (uint16_t)Reg,
-                        I2C_MEMADD_SIZE_8BIT, pBuffer, Length, I2cxTimeout);
+  i2c_packet_t pkt = {
+      .address = TS_I2C_ADDRESS,
+      .timeout = I2cxTimeout,
+      .op_count = ARRAY_LENGTH(ops),
+      .ops = ops,
+  };
 
-  /* Check the communication status */
-  if (status == HAL_OK) {
-    return 0;
-  } else {
-    /* Re-Initialize the BUS */
-    I2Cx_Error();
+  i2c_status_t status = i2c_bus_submit_and_wait(i2c_bus, &pkt);
 
-    return 1;
-  }
+  return status == I2C_STATUS_OK ? 0 : 1;
 }
+
 /**
  * @brief  IOE Writes single data operation.
  * @param  Addr: I2C Address
@@ -574,6 +617,11 @@ secbool touch_init(void) {
   touch_driver_t *driver = &g_touch_driver;
 
   if (driver->initialized != sectrue) {
+    i2c_bus = i2c_bus_open(TOUCH_I2C_INSTANCE);
+    if (i2c_bus == NULL) {
+      return secfalse;
+    }
+
     stmpe811_Reset();
     touch_set_mode();
 
@@ -589,6 +637,7 @@ void touch_deinit(void) {
   if (driver->initialized == sectrue) {
     // Not implemented properly
 
+    i2c_bus_close(i2c_bus);
     memset(driver, 0, sizeof(touch_driver_t));
   }
 }
