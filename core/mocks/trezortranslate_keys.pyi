@@ -398,7 +398,6 @@ class TR:
     joint__title: str = "Joint transaction"
     joint__to_the_total_amount: str = "To the total amount:"
     joint__you_are_contributing: str = "You are contributing:"
-    label_with_colon_template: str = "{0}:"
     language__change_to_template: str = "Change language to {0}?"
     language__changed: str = "Language changed successfully"
     language__progress: str = "Changing language"
