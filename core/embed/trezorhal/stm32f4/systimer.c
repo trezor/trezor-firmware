@@ -97,7 +97,7 @@ systimer_t* systimer_create(systimer_callback_t callback, void* context) {
     return NULL;
   }
 
-  uint32_t irq_state = disable_irq();
+  irq_key_t irq_key = irq_lock();
 
   // Find a free timer entry
   for (int i = 0; i < MAX_SYSTIMERS; i++) {
@@ -109,13 +109,13 @@ systimer_t* systimer_create(systimer_callback_t callback, void* context) {
       timer->context = context;
       timer->callback = callback;
 
-      enable_irq(irq_state);
+      irq_unlock(irq_key);
       return timer;
     }
   }
 
   // No free timer entry found
-  enable_irq(irq_state);
+  irq_unlock(irq_key);
   return NULL;
 }
 
@@ -138,11 +138,11 @@ void systimer_set(systimer_t* timer, uint32_t delay_ms) {
   uint64_t delay = systick_us_to_cycles((uint64_t)delay_ms * 1000);
   uint64_t expiration = systick_cycles() + delay;
 
-  uint32_t irq_state = disable_irq();
+  irq_key_t irq_key = irq_lock();
   timer->expiration = expiration;
   timer->period = 0;
   timer->scheduled = true;
-  enable_irq(irq_state);
+  irq_unlock(irq_key);
 }
 
 void systimer_set_periodic(systimer_t* timer, uint32_t period_ms) {
@@ -155,11 +155,11 @@ void systimer_set_periodic(systimer_t* timer, uint32_t period_ms) {
   uint64_t period = systick_us_to_cycles((uint64_t)period_ms * 1000);
   uint64_t expiration = systick_cycles() + period;
 
-  uint32_t irq_state = disable_irq();
+  irq_key_t irq_key = irq_lock();
   timer->expiration = expiration;
   timer->period = period;
   timer->scheduled = true;
-  enable_irq(irq_state);
+  irq_unlock(irq_key);
 }
 
 bool systimer_unset(systimer_t* timer) {
@@ -169,10 +169,10 @@ bool systimer_unset(systimer_t* timer) {
     return false;
   }
 
-  uint32_t irq_state = disable_irq();
+  irq_key_t irq_key = irq_lock();
   bool was_scheduled = timer->scheduled;
   timer->scheduled = false;
-  enable_irq(irq_state);
+  irq_unlock(irq_key);
   return was_scheduled;
 }
 
@@ -183,10 +183,10 @@ systimer_key_t systimer_suspend(systimer_t* timer) {
     return false;
   }
 
-  uint32_t irq_state = disable_irq();
+  irq_key_t irq_key = irq_lock();
   bool was_suspended = timer->suspended;
   timer->suspended = true;
-  enable_irq(irq_state);
+  irq_unlock(irq_key);
   return was_suspended;
 }
 
