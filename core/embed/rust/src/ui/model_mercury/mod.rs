@@ -1,4 +1,4 @@
-use super::{geometry::Rect, UIFeaturesCommon};
+use super::{geometry::Rect, shape::display::fb_display, UIFeaturesCommon};
 use crate::ui::model_mercury::theme::backlight;
 
 #[cfg(feature = "bootloader")]
@@ -17,6 +17,8 @@ pub mod screens;
 pub struct ModelMercuryFeatures;
 
 impl UIFeaturesCommon for ModelMercuryFeatures {
+    type Display = fb_display::Rgb565;
+
     #[cfg(feature = "backlight")]
     fn fadein() {
         crate::ui::display::fade_backlight_duration(backlight::get_backlight_normal(), 150);

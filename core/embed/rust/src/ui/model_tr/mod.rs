@@ -1,4 +1,4 @@
-use super::{geometry::Rect, UIFeaturesCommon};
+use super::{geometry::Rect, shape::display::fb_display, UIFeaturesCommon};
 
 #[cfg(feature = "bootloader")]
 pub mod bootloader;
@@ -14,6 +14,8 @@ pub mod theme;
 pub struct ModelTRFeatures {}
 
 impl UIFeaturesCommon for ModelTRFeatures {
+    type Display = fb_display::Mono8;
+
     const SCREEN: Rect = constant::SCREEN;
 
     fn screen_fatal_error(title: &str, msg: &str, footer: &str) {

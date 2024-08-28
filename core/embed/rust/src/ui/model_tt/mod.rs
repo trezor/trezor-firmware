@@ -1,4 +1,4 @@
-use super::{geometry::Rect, UIFeaturesCommon};
+use super::{geometry::Rect, shape::display::nofb_rgb565::NoFbRgb565, UIFeaturesCommon};
 
 #[cfg(feature = "bootloader")]
 pub mod bootloader;
@@ -20,6 +20,8 @@ use crate::ui::{
 pub struct ModelTTFeatures;
 
 impl UIFeaturesCommon for ModelTTFeatures {
+    type Display = NoFbRgb565;
+
     #[cfg(feature = "backlight")]
     fn fadein() {
         crate::ui::display::fade_backlight_duration(backlight::get_backlight_normal(), 150);
