@@ -360,9 +360,9 @@ void i2c_bus_close(i2c_bus_t* bus) {
 }
 
 i2c_status_t i2c_packet_status(i2c_packet_t* packet) {
-  uint32_t irq_state = disable_irq();
+  irq_key_t irq_key = irq_lock();
   i2c_status_t status = packet->status;
-  enable_irq(irq_state);
+  irq_unlock(irq_key);
   return status;
 }
 
@@ -499,14 +499,14 @@ i2c_status_t i2c_bus_submit(i2c_bus_t* bus, i2c_packet_t* packet) {
   packet->status = I2C_STATUS_PENDING;
 
   // Insert packet into the queue
-  uint32_t irq_state = disable_irq();
+  irq_key_t irq_key = irq_lock();
   if (i2c_bus_add_packet(bus, packet)) {
     // The queue was empty, start the operation
     if (!bus->callback_executed && !bus->abort_pending) {
       i2c_bus_head_continue(bus);
     }
   }
-  enable_irq(irq_state);
+  irq_unlock(irq_key);
 
   return I2C_STATUS_OK;
 }
@@ -517,7 +517,7 @@ void i2c_bus_abort(i2c_bus_t* bus, i2c_packet_t* packet) {
     return;
   }
 
-  uint32_t irq_state = disable_irq();
+  irq_key_t irq_key = irq_lock();
 
   if (packet->status == I2C_STATUS_PENDING) {
     if (i2c_bus_remove_packet(bus, packet) && bus->next_op > 0) {
@@ -546,7 +546,7 @@ void i2c_bus_abort(i2c_bus_t* bus, i2c_packet_t* packet) {
     packet->status = I2C_STATUS_ABORTED;
   }
 
-  enable_irq(irq_state);
+  irq_unlock(irq_key);
 }
 
 // Completes the current packet by removing it from the queue

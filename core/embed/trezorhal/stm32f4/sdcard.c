@@ -253,13 +253,13 @@ static HAL_StatusTypeDef sdcard_wait_finished(SD_HandleTypeDef *sd,
   uint32_t start = HAL_GetTick();
   for (;;) {
     // Do an atomic check of the state; WFI will exit even if IRQs are disabled
-    uint32_t irq_state = disable_irq();
+    irq_key_t irq_key = irq_lock();
     if (sd->State != HAL_SD_STATE_BUSY) {
-      enable_irq(irq_state);
+      irq_unlock(irq_key);
       break;
     }
     __WFI();
-    enable_irq(irq_state);
+    irq_unlock(irq_key);
     if (HAL_GetTick() - start >= timeout) {
       return HAL_TIMEOUT;
     }
