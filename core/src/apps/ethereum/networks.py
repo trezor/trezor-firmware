@@ -67,28 +67,10 @@ def _networks_iterator() -> Iterator[NetworkInfoTuple]:
             "Ethereum",  # name
         )
         yield (
-            3,  # chain_id
-            1,  # slip44
-            "tETH",  # symbol
-            "Ropsten",  # name
-        )
-        yield (
-            4,  # chain_id
-            1,  # slip44
-            "tETH",  # symbol
-            "Rinkeby",  # name
-        )
-        yield (
-            5,  # chain_id
-            1,  # slip44
-            "tETH",  # symbol
-            "Görli",  # name
-        )
-        yield (
             56,  # chain_id
             714,  # slip44
             "BNB",  # symbol
-            "Binance Smart Chain",  # name
+            "BNB Smart Chain",  # name
         )
         yield (
             61,  # chain_id
@@ -101,6 +83,18 @@ def _networks_iterator() -> Iterator[NetworkInfoTuple]:
             966,  # slip44
             "MATIC",  # symbol
             "Polygon",  # name
+        )
+        yield (
+            17000,  # chain_id
+            1,  # slip44
+            "tHOL",  # symbol
+            "Holesky",  # name
+        )
+        yield (
+            11155111,  # chain_id
+            1,  # slip44
+            "tSEP",  # symbol
+            "Sepolia",  # name
         )
     if utils.INTERNAL_MODEL == "T3T1":
         yield (
@@ -110,28 +104,10 @@ def _networks_iterator() -> Iterator[NetworkInfoTuple]:
             "Ethereum",  # name
         )
         yield (
-            3,  # chain_id
-            1,  # slip44
-            "tETH",  # symbol
-            "Ropsten",  # name
-        )
-        yield (
-            4,  # chain_id
-            1,  # slip44
-            "tETH",  # symbol
-            "Rinkeby",  # name
-        )
-        yield (
-            5,  # chain_id
-            1,  # slip44
-            "tETH",  # symbol
-            "Görli",  # name
-        )
-        yield (
             56,  # chain_id
             714,  # slip44
             "BNB",  # symbol
-            "Binance Smart Chain",  # name
+            "BNB Smart Chain",  # name
         )
         yield (
             61,  # chain_id
@@ -144,6 +120,18 @@ def _networks_iterator() -> Iterator[NetworkInfoTuple]:
             966,  # slip44
             "MATIC",  # symbol
             "Polygon",  # name
+        )
+        yield (
+            17000,  # chain_id
+            1,  # slip44
+            "tHOL",  # symbol
+            "Holesky",  # name
+        )
+        yield (
+            11155111,  # chain_id
+            1,  # slip44
+            "tSEP",  # symbol
+            "Sepolia",  # name
         )
     if utils.INTERNAL_MODEL == "T2T1":
         yield (
@@ -153,28 +141,10 @@ def _networks_iterator() -> Iterator[NetworkInfoTuple]:
             "Ethereum",  # name
         )
         yield (
-            3,  # chain_id
-            1,  # slip44
-            "tETH",  # symbol
-            "Ropsten",  # name
-        )
-        yield (
-            4,  # chain_id
-            1,  # slip44
-            "tETH",  # symbol
-            "Rinkeby",  # name
-        )
-        yield (
-            5,  # chain_id
-            1,  # slip44
-            "tETH",  # symbol
-            "Görli",  # name
-        )
-        yield (
             56,  # chain_id
             714,  # slip44
             "BNB",  # symbol
-            "Binance Smart Chain",  # name
+            "BNB Smart Chain",  # name
         )
         yield (
             61,  # chain_id
@@ -187,4 +157,16 @@ def _networks_iterator() -> Iterator[NetworkInfoTuple]:
             966,  # slip44
             "MATIC",  # symbol
             "Polygon",  # name
+        )
+        yield (
+            17000,  # chain_id
+            1,  # slip44
+            "tHOL",  # symbol
+            "Holesky",  # name
+        )
+        yield (
+            11155111,  # chain_id
+            1,  # slip44
+            "tSEP",  # symbol
+            "Sepolia",  # name
         )
