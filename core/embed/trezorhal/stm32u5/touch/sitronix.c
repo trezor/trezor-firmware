@@ -1,7 +1,8 @@
 #include STM32_HAL_H
 #include TREZOR_BOARD
 
-#include "i2c.h"
+#include "common.h"
+#include "i2c_bus.h"
 #include "irq.h"
 
 /** @addtogroup STM32U5x9J_DISCOVERY
@@ -49,7 +50,12 @@
 #define BSP_ERROR_BUS_DMA_FAILURE -107
 
 /* TS I2C address */
-#define TS_I2C_ADDRESS 0xE0U
+#define TS_I2C_ADDRESS 0x70U
+
+#define SITRONIX_OK (0)
+#define SITRONIX_ERROR (-1)
+
+static i2c_bus_t *i2c_bus = NULL;
 
 /*******************************************************************************
  * Function Name : sitronix_read_reg
@@ -59,8 +65,29 @@
  * Output        : pdata Read
  *******************************************************************************/
 int32_t sitronix_read_reg(uint8_t reg, uint8_t *pdata, uint16_t length) {
-  return i2c_mem_read(TOUCH_I2C_INSTANCE, TS_I2C_ADDRESS, reg, length, pdata,
-                      length, 1000);
+  i2c_op_t ops[] = {
+      {
+          .flags = I2C_FLAG_TX | I2C_FLAG_EMBED,
+          .size = 1,
+          .data = {reg},
+      },
+      {
+          .flags = I2C_FLAG_RX,
+          .size = length,
+          .ptr = pdata,
+      },
+  };
+
+  i2c_packet_t pkt = {
+      .address = TS_I2C_ADDRESS,
+      .timeout = 100,
+      .op_count = ARRAY_LENGTH(ops),
+      .ops = ops,
+  };
+
+  i2c_status_t status = i2c_bus_submit_and_wait(i2c_bus, &pkt);
+
+  return (status == I2C_STATUS_OK) ? SITRONIX_OK : SITRONIX_ERROR;
 }
 
 /*******************************************************************************
@@ -71,8 +98,29 @@ int32_t sitronix_read_reg(uint8_t reg, uint8_t *pdata, uint16_t length) {
  * Output        : None
  *******************************************************************************/
 int32_t sitronix_write_reg(uint8_t reg, uint8_t *pdata, uint16_t length) {
-  return i2c_mem_write(TOUCH_I2C_INSTANCE, TS_I2C_ADDRESS, reg, length, pdata,
-                       length, 1000);
+  i2c_op_t ops[] = {
+      {
+          .flags = I2C_FLAG_TX | I2C_FLAG_EMBED,
+          .size = 1,
+          .data = {reg},
+      },
+      {
+          .flags = I2C_FLAG_TX,
+          .size = length,
+          .ptr = pdata,
+      },
+  };
+
+  i2c_packet_t pkt = {
+      .address = TS_I2C_ADDRESS,
+      .timeout = 100,
+      .op_count = ARRAY_LENGTH(ops),
+      .ops = ops,
+  };
+
+  i2c_status_t status = i2c_bus_submit_and_wait(i2c_bus, &pkt);
+
+  return (status == I2C_STATUS_OK) ? SITRONIX_OK : SITRONIX_ERROR;
 }
 
 /*******************************************************************************
@@ -83,7 +131,24 @@ int32_t sitronix_write_reg(uint8_t reg, uint8_t *pdata, uint16_t length) {
  * Output        : pdata Read
  *******************************************************************************/
 int32_t sitronix_read_data(uint8_t *pdata, uint16_t length) {
-  return i2c_receive(TOUCH_I2C_INSTANCE, TS_I2C_ADDRESS, pdata, length, 1000);
+  i2c_op_t ops[] = {
+      {
+          .flags = I2C_FLAG_RX,
+          .size = length,
+          .ptr = pdata,
+      },
+  };
+
+  i2c_packet_t pkt = {
+      .address = TS_I2C_ADDRESS,
+      .timeout = 100,
+      .op_count = ARRAY_LENGTH(ops),
+      .ops = ops,
+  };
+
+  i2c_status_t status = i2c_bus_submit_and_wait(i2c_bus, &pkt);
+
+  return (status == I2C_STATUS_OK) ? SITRONIX_OK : SITRONIX_ERROR;
 }
 
 /* Includes ------------------------------------------------------------------*/
@@ -96,8 +161,6 @@ int32_t sitronix_read_data(uint8_t *pdata, uint16_t length) {
 /** @defgroup SITRONIX_Exported_Constants SITRONIX Exported Constants
  * @{
  */
-#define SITRONIX_OK (0)
-#define SITRONIX_ERROR (-1)
 
 /* Max detectable simultaneous touches */
 #define SITRONIX_MAX_DETECTABLE_TOUCH 10U
@@ -747,6 +810,11 @@ static int32_t SITRONIX_Probe(uint32_t Instance);
 int32_t BSP_TS_Init(uint32_t Instance, TS_Init_t *TS_Init) {
   int32_t status = BSP_ERROR_NONE;
 
+  i2c_bus = i2c_bus_open(TOUCH_I2C_INSTANCE);
+  if (i2c_bus == NULL) {
+    return BSP_ERROR_COMPONENT_FAILURE;
+  }
+
   if ((TS_Init == NULL) || (Instance >= TS_INSTANCES_NBR)) {
     status = BSP_ERROR_WRONG_PARAM;
   } else {
@@ -797,6 +865,11 @@ int32_t BSP_TS_DeInit(uint32_t Instance) {
     /* De-Init the TS driver */
     if (Ts_Drv[Instance]->DeInit(Ts_CompObj[Instance]) < 0) {
       status = BSP_ERROR_COMPONENT_FAILURE;
+    }
+
+    if (i2c_bus != NULL) {
+      i2c_bus_close(i2c_bus);
+      i2c_bus = NULL;
     }
   }
 
