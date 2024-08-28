@@ -249,7 +249,6 @@
   "eth:ETH:1": {
     "type": "blockbook",
     "url": ["https://eth1.trezor.io", "https://eth2.trezor.io"]
-  
   },
   "eth:BNB:56": {
     "type": "blockbook",
