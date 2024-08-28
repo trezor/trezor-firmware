@@ -26,7 +26,7 @@
 #include <string.h>
 #include "aes/aesccm.h"
 #include "common.h"
-#include "i2c.h"
+#include "i2c_bus.h"
 #include "memzero.h"
 #include "optiga_hal.h"
 #include "tls_prf.h"
@@ -57,9 +57,6 @@ static const uint8_t I2C_STATE_BYTE1_RESP_RDY = 0x40;
 
 // I2C base address of Optiga.
 static const uint8_t BASE_ADDR = 0x30;
-
-// Address of Optiga use by our HAL which requires it to be shifted by one bit.
-static const uint16_t OPTIGA_ADDRESS = (BASE_ADDR << 1);
 
 // Constants for our I2C HAL.
 static const uint32_t I2C_TIMEOUT_MS = 25;
@@ -109,6 +106,8 @@ enum {
   SCTR_FINISHED = 0x08,   // Handshake finished message.
   SCTR_PROTECTED = 0x23,  // Record exchange message. Fully protected.
 };
+
+static i2c_bus_t *i2c_bus = NULL;
 
 static uint8_t frame_num_out = 0xff;
 static uint8_t frame_num_in = 0xff;
@@ -190,35 +189,73 @@ static uint16_t calc_crc(uint8_t *data, size_t data_size) {
 
 optiga_result optiga_init(void) {
   optiga_hal_init();
+
+  i2c_bus = i2c_bus_open(OPTIGA_I2C_INSTANCE);
+  if (i2c_bus == NULL) {
+    return OPTIGA_ERR_I2C_OPEN;
+  }
+
   return optiga_set_data_reg_len(OPTIGA_DATA_REG_LEN);
 }
 
 static optiga_result optiga_i2c_write(const uint8_t *data, uint16_t data_size) {
   OPTIGA_LOG(">>>", data, data_size)
 
+  i2c_op_t ops[] = {
+      {
+          .flags = I2C_FLAG_TX,
+          .size = data_size,
+          .ptr = (void *)data,
+      },
+  };
+
+  i2c_packet_t pkt = {
+      .address = BASE_ADDR,
+      .timeout = I2C_TIMEOUT_MS,
+      .op_count = ARRAY_LENGTH(ops),
+      .ops = ops,
+  };
+
   for (int try_count = 0; try_count <= I2C_MAX_RETRY_COUNT; ++try_count) {
     if (try_count != 0) {
-      hal_delay(1);
+      systick_delay_ms(1);
     }
-    if (HAL_OK == i2c_transmit(OPTIGA_I2C_INSTANCE, OPTIGA_ADDRESS,
-                               (uint8_t *)data, data_size, I2C_TIMEOUT_MS)) {
-      hal_delay_us(1000);
+
+    if (I2C_STATUS_OK == i2c_bus_submit_and_wait(i2c_bus, &pkt)) {
+      systick_delay_ms(1);
       return OPTIGA_SUCCESS;
     }
-    hal_delay_us(1000);
+
+    systick_delay_ms(1);
   }
   return OPTIGA_ERR_I2C_WRITE;
 }
 
 static optiga_result optiga_i2c_read(uint8_t *buffer, uint16_t buffer_size) {
+  i2c_op_t ops[] = {
+      {
+          .flags = I2C_FLAG_RX,
+          .size = buffer_size,
+          .ptr = buffer,
+      },
+  };
+
+  i2c_packet_t pkt = {
+      .address = BASE_ADDR,
+      .timeout = I2C_TIMEOUT_MS,
+      .op_count = ARRAY_LENGTH(ops),
+      .ops = ops,
+  };
+
   for (int try_count = 0; try_count <= I2C_MAX_RETRY_COUNT; ++try_count) {
-    HAL_Delay(1);
-    if (HAL_OK == i2c_receive(OPTIGA_I2C_INSTANCE, OPTIGA_ADDRESS, buffer,
-                              buffer_size, I2C_TIMEOUT_MS)) {
+    systick_delay_ms(1);
+
+    if (I2C_STATUS_OK == i2c_bus_submit_and_wait(i2c_bus, &pkt)) {
       OPTIGA_LOG("<<<", buffer, buffer_size)
       return OPTIGA_SUCCESS;
     }
   }
+
   return OPTIGA_ERR_I2C_READ;
 }
 

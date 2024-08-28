@@ -24,6 +24,7 @@
 
 typedef enum _optiga_result {
   OPTIGA_SUCCESS = 0,     // Operation completed successfully.
+  OPTIGA_ERR_I2C_OPEN,    // HAL failed to open I2C driver.
   OPTIGA_ERR_I2C_WRITE,   // HAL failed on I2C write.
   OPTIGA_ERR_I2C_READ,    // HAL failed on I2C read.
   OPTIGA_ERR_BUSY,        // Optiga is busy processing another command.
