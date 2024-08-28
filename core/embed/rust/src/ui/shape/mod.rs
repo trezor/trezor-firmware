@@ -29,7 +29,7 @@ pub use canvas::{
 };
 pub use circle::Circle;
 pub use corner_highlight::CornerHighlight;
-pub use display::{render_on_canvas, render_on_display, unlock_bumps_on_failure, ConcreteRenderer};
+pub(crate) use display::{render_on_canvas, render_on_display, unlock_bumps_on_failure, Display};
 #[cfg(feature = "ui_jpeg_decoder")]
 pub use jpeg::JpegImage;
 pub use progressive_render::ProgressiveRenderer;
