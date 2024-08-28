@@ -2,8 +2,7 @@
 #define TREZOR_HAL_DRV_2625_H
 
 // I2C address of the DRV2625 on the I2C bus.
-// `<< 1` is required because the HAL expects the address to be shifted by 1.
-#define DRV2625_I2C_ADDRESS (0x5A << 1)
+#define DRV2625_I2C_ADDRESS 0x5A
 
 // ------------------------------------------------------------
 // DRV2625 registers
