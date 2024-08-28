@@ -35,7 +35,7 @@ pub use jpeg::JpegImage;
 pub use progressive_render::ProgressiveRenderer;
 pub use qrcode::QrImage;
 pub use rawimage::RawImage;
-pub use render::{DirectRenderer, Renderer, ScopedRenderer};
+pub use render::{DirectRenderer, Renderer};
 
 pub use text::Text;
 pub use toif::ToifImage;

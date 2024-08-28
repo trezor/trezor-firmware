@@ -53,3 +53,15 @@ macro_rules! render_on_display {
     }};
 }
 pub(crate) use render_on_display;
+
+macro_rules! render_on_canvas {
+    ($canvas:expr, $color:expr, $closure:expr) => {{
+        use $crate::ui::shape::{display::bumps::Bumps, DirectRenderer, DrawingCache};
+
+        let bumps = Bumps::lock();
+        let cache = DrawingCache::new(&bumps);
+        let mut renderer = DirectRenderer::new($canvas, $color, cache);
+        $closure(&mut renderer);
+    }};
+}
+pub(crate) use render_on_canvas;
