@@ -1,4 +1,4 @@
-use super::{geometry::Rect, shape::display::nofb_rgb565::NoFbRgb565, UIFeaturesCommon};
+use super::{geometry::Rect, UIFeaturesCommon};
 
 #[cfg(feature = "bootloader")]
 pub mod bootloader;
@@ -20,7 +20,8 @@ use crate::ui::{
 pub struct ModelTTFeatures;
 
 impl UIFeaturesCommon for ModelTTFeatures {
-    type Display = NoFbRgb565;
+    #[cfg(feature = "new_rendering")]
+    type Display = crate::ui::shape::display::nofb_rgb565::NoFbRgb565;
 
     #[cfg(feature = "backlight")]
     fn fadein() {

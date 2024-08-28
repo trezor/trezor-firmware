@@ -1,4 +1,4 @@
-use super::{geometry::Rect, shape::display::fb_display, UIFeaturesCommon};
+use super::{geometry::Rect, UIFeaturesCommon};
 
 #[cfg(feature = "bootloader")]
 pub mod bootloader;
@@ -14,7 +14,8 @@ pub mod theme;
 pub struct ModelTRFeatures {}
 
 impl UIFeaturesCommon for ModelTRFeatures {
-    type Display = fb_display::Mono8;
+    #[cfg(feature = "new_rendering")]
+    type Display = crate::ui::shape::display::fb_display::Mono8;
 
     const SCREEN: Rect = constant::SCREEN;
 

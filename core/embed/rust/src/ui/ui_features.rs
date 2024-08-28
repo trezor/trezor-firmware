@@ -7,6 +7,7 @@ use crate::trezorhal::secbool::secbool;
 use crate::ui::display::Color;
 
 pub trait UIFeaturesCommon {
+    #[cfg(feature = "new_rendering")]
     type Display: Display;
 
     fn fadein() {}
