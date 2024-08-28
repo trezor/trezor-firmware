@@ -21,8 +21,7 @@
 #define _TOUCH_FT6X36_H
 
 // I2C address of the FT6X36 on the I2C bus.
-// `<< 1` is required because the HAL expects the address to be shifted by 1.
-#define FT6X36_I2C_ADDR (0x38 << 1)
+#define FT6X36_I2C_ADDR 0x38
 
 // ------------------------------------------------------------
 // FT6X36 registers
