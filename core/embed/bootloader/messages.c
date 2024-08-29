@@ -577,10 +577,11 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
       memcpy(&hdr, received_hdr, sizeof(hdr));
 
       size_t headers_end = IMAGE_HEADER_SIZE + vhdr.hdrlen;
-      headers_offset = IMAGE_CODE_ALIGN(IMAGE_HEADER_SIZE + vhdr.hdrlen);
+      size_t tmp_headers_offset =
+          IMAGE_CODE_ALIGN(IMAGE_HEADER_SIZE + vhdr.hdrlen);
 
       // check padding between headers and the code
-      for (size_t i = headers_end; i < headers_offset; i++) {
+      for (size_t i = headers_end; i < tmp_headers_offset; i++) {
         if (CHUNK_BUFFER_PTR[i] != 0) {
           MSG_SEND_INIT(Failure);
           MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
@@ -705,6 +706,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
                NULL);
       }
 
+      headers_offset = IMAGE_CODE_ALIGN(IMAGE_HEADER_SIZE + vhdr.hdrlen);
       read_offset = IMAGE_INIT_CHUNK_SIZE;
 
       // request the rest of the first chunk
