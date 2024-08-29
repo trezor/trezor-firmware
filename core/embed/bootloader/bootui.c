@@ -60,6 +60,8 @@
 #define BOOT_WAIT_Y_TOP (DISPLAY_RESY - BOOT_WAIT_HEIGHT)
 #endif
 
+#define TOIF_LENGTH(ptr) ((*(uint32_t *)((ptr) + 8)) + 12)
+
 // common shared functions
 
 static void format_ver(const char *format, uint32_t version, char *buffer,
@@ -99,8 +101,8 @@ static void ui_screen_boot_old(const vendor_header *const vhdr,
   int image_top = show_string ? 30 : (DISPLAY_RESY - 120) / 2;
   // check whether vendor image is 120x120
   if (memcmp(vimg, "TOIF\x78\x00\x78\x00", 8) == 0) {
-    uint32_t datalen = *(uint32_t *)(vimg + 8);
-    display_image((DISPLAY_RESX - 120) / 2, image_top, vimg, datalen + 12);
+    uint32_t datalen = TOIF_LENGTH(vimg);
+    display_image((DISPLAY_RESX - 120) / 2, image_top, vimg, datalen);
   }
 
   if (show_string) {
@@ -115,8 +117,8 @@ static void ui_screen_boot_old(const vendor_header *const vhdr,
 #else
   // check whether vendor image is 24x24
   if (memcmp(vimg, "TOIG\x18\x00\x18\x00", 8) == 0) {
-    uint32_t datalen = *(uint32_t *)(vimg + 8);
-    display_icon((DISPLAY_RESX - 22) / 2, 0, vimg, datalen + 12, COLOR_BL_BG,
+    uint32_t datalen = TOIF_LENGTH(vimg);
+    display_icon((DISPLAY_RESX - 22) / 2, 0, vimg, datalen, COLOR_BL_BG,
                  boot_background);
   }
 
@@ -207,7 +209,7 @@ void ui_screen_boot(const vendor_header *const vhdr,
   const char *vendor_str = show_string ? vhdr->vstr : NULL;
   const size_t vendor_str_len = show_string ? vhdr->vstr_len : 0;
   bool red_screen = ((vhdr->vtrust & VTRUST_NO_RED) == 0);
-  uint32_t vimg_len = *(uint32_t *)(vhdr->vimg + 8);
+  uint32_t vimg_len = TOIF_LENGTH(vhdr->vimg);
 
   screen_boot(red_screen, vendor_str, vendor_str_len, hdr->version, vhdr->vimg,
               vimg_len, wait);
