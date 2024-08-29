@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-GH_USER="$GH_TREZOR_BOT"
-GH_TOKEN="$GH_TOKEN_COMMON_SYNC"
+GH_USER="$GITHUB_BOT_USERNAME"
+GH_TOKEN="$GITHUB_BOT_TOKEN"
 
 # checkout to temporary branch
 git checkout -B tmp

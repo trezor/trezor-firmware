@@ -1,0 +1,24 @@
+name: "[Bot] sync to trezor-common repository"
+
+on:
+  schedule:
+    - cron: "0 0 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  sync-common:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Sync trezor-common repository
+        env:
+          GITHUB_BOT_USERNAME: ${{ secrets.TREZOR_BOT_USERNAME }}
+          GITHUB_BOT_TOKEN: ${{ secrets.GH_BOT_TOKEN }}
+        run: |
+          echo "Synchronizing common with the trezor-common repository"
+          ./ci/common_sync/common_repo_sync.sh
