@@ -422,6 +422,7 @@ SOURCE_UNIX = [
     'embed/trezorhal/unix/common.c',
     'embed/trezorhal/unix/flash_otp.c',
     'embed/trezorhal/unix/flash.c',
+    'embed/trezorhal/unix/fwutils.c',
     'embed/trezorhal/unix/random_delays.c',
     'embed/trezorhal/unix/rng.c',
     'embed/trezorhal/unix/systick.c',
