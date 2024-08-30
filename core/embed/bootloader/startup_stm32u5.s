@@ -57,7 +57,7 @@ reset_handler:
   // copy & clear g_boot_command
   ldr r0, =g_boot_command
   ldr r1, [r0]
-  ldr r0, =g_boot_command_shadow
+  ldr r0, =g_boot_command_saved
   str r1, [r0]
   ldr r0, =g_boot_command
   mov r1, #0

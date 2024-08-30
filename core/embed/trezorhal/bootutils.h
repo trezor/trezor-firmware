@@ -1,50 +1,49 @@
+/*
+ * This file is part of the Trezor project, https://trezor.io/
+ *
+ * Copyright (c) SatoshiLabs
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #ifndef TREZORHAL_BOOTUTILS_H
 #define TREZORHAL_BOOTUTILS_H
 
 #include <stddef.h>
 #include <stdint.h>
 
-// Defines boot command for 'reboot_to_bootloader()' function
-typedef enum {
-  // Normal boot sequence
-  BOOT_COMMAND_NONE = 0x00000000,
-  // Stop and wait for further instructions
-  BOOT_COMMAND_STOP_AND_WAIT = 0x0FC35A96,
-  // Do not ask anything, install an upgrade
-  BOOT_COMMAND_INSTALL_UPGRADE = 0xFA4A5C8D,
-} boot_command_t;
-
-// Maximum size boot_args array
-#define BOOT_ARGS_MAX_SIZE (256 - 8)
-
-typedef union {
-  uint8_t raw[BOOT_ARGS_MAX_SIZE];
-
-  // firmware header hash, BOOT_COMMAND_INSTALL_UPGRADE
-  uint8_t hash[32];
-
-} boot_args_t;
-
-// Sets boot command and arguments for the next reboot
-// arguments have too respect boot_args_t structure layout
-// (function can be called multiple times before reboting)
-void bootargs_set(boot_command_t command, const void* args, size_t args_size);
-
-// Returns the last boot command set by bootargs_set_command()
-boot_command_t bootargs_get_command();
-
-// Returns the pointer to boot arguments
-const boot_args_t* bootargs_get_args();
-
-// Reboots the device into the bootloader.
-// The bootloader will read the command set by `bootargs_set()`.
-void __attribute__((noreturn)) reboot_to_bootloader(void);
-
-// Causes immediate reset of the device.
+// Immediately resets the device and initiates the normal boot sequence.
 void __attribute__((noreturn)) reboot(void);
 
-// Safely shuts down the device (clears secrets, memory, etc.).
-// This function is called when the device is in an unrecoverable state.
+// Resets the device and enters the bootloader,
+// halting there and waiting for further user instructions.
+void __attribute__((noreturn)) reboot_to_bootloader(void);
+
+// Resets the device into the bootloader and automatically continues
+// with the installation of new firmware (also known as an
+// interaction-less upgrade).
+//
+// If the provided hash is NULL or invalid, the device will stop
+// at the bootloader and will require user acknowledgment to proceed
+// with the firmware installation.
+void __attribute__((noreturn)) reboot_and_upgrade(const uint8_t hash[32]);
+
+// Allows the user to see the displayed error message and then
+// safely shuts down the device (clears secrets, memory, etc.).
+//
+// This function is called when the device eneters an
+// unrecoverable error state.
 void __attribute__((noreturn)) secure_shutdown(void);
 
 #endif  // TREZORHAL_BOOTUTILS_H

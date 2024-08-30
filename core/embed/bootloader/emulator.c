@@ -2,8 +2,8 @@
 #include <unistd.h>
 
 #include TREZOR_BOARD
+#include "bootargs.h"
 #include "bootui.h"
-#include "bootutils.h"
 #include "common.h"
 #include "display.h"
 #include "flash.h"
@@ -174,7 +174,7 @@ void mpu_config_bootloader(void) {}
 
 void mpu_config_off(void) {}
 
-__attribute__((noreturn)) void jump_to(uint32_t address) {
+void jump_to(uint32_t address) {
   bool storage_is_erased =
       storage_empty(&STORAGE_AREAS[0]) && storage_empty(&STORAGE_AREAS[1]);
 
