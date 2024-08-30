@@ -35,7 +35,7 @@ reset_handler:
 
   // r11 contains the command passed to bootargs_set()
   // function called when the firmware rebooted to the bootloader
-  ldr r0, =g_boot_command_shadow
+  ldr r0, =g_boot_command_saved
   str r11, [r0]
 
   // enter the application code

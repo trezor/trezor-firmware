@@ -42,16 +42,6 @@ void jump_to_with_flag(uint32_t address, uint32_t register_flag);
 
 extern uint32_t __stack_chk_guard;
 
-// this deletes all secrets and SRAM2 where stack is located
-// to prevent stack smashing error, do not return from function calling this
-static inline void __attribute__((always_inline)) delete_secrets(void) {
-  // Disable SAES peripheral clock, so that we don't get tamper events
-  __HAL_RCC_SAES_CLK_DISABLE();
-
-  // Erase all
-  TAMP->CR2 |= TAMP_CR2_BKERASE;
-}
-
 void check_oem_keys(void);
 
 #endif  // TREZORHAL_STM32_H
