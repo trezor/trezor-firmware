@@ -31,7 +31,8 @@ use super::{
 
 const MENU_ITEM_CANCEL: usize = 0;
 const MENU_ITEM_FEE_INFO: usize = 1;
-const MENU_ITEM_ACCOUNT_INFO: usize = 2;
+const MENU_ITEM_ADDRESS_INFO: usize = 2;
+const MENU_ITEM_ACCOUNT_INFO: usize = 3;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum ConfirmOutput {
@@ -117,9 +118,10 @@ impl FlowState for ConfirmOutputWithAmount {
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum ConfirmOutputWithSummary {
-    Address,
-    AddressMenu,
-    AddressMenuCancel,
+    Main,
+    MainMenu,
+    MainMenuCancel,
+    AddressInfo,
     Summary,
     SummaryMenu,
     SummaryMenuCancel,
@@ -138,12 +140,13 @@ impl FlowState for ConfirmOutputWithSummary {
 
     fn handle_swipe(&'static self, direction: SwipeDirection) -> StateChange {
         match (self, direction) {
-            (Self::Address, SwipeDirection::Left) => Self::AddressMenu.swipe(direction),
-            (Self::Address, SwipeDirection::Up) => Self::Summary.swipe(direction),
-            (Self::AccountInfo, SwipeDirection::Right) => Self::AddressMenu.swipe(direction),
+            (Self::Main, SwipeDirection::Left) => Self::MainMenu.swipe(direction),
+            (Self::Main, SwipeDirection::Up) => Self::Summary.swipe(direction),
+            (Self::AddressInfo, SwipeDirection::Right) => Self::MainMenu.swipe(direction),
+            (Self::AccountInfo, SwipeDirection::Right) => Self::MainMenu.swipe(direction),
             (Self::Summary, SwipeDirection::Left) => Self::SummaryMenu.swipe(direction),
             (Self::Summary, SwipeDirection::Up) => Self::Hold.swipe(direction),
-            (Self::Summary, SwipeDirection::Down) => Self::Address.swipe(direction),
+            (Self::Summary, SwipeDirection::Down) => Self::Main.swipe(direction),
             (Self::FeeInfo, SwipeDirection::Right) => Self::SummaryMenu.swipe(direction),
             (Self::Hold, SwipeDirection::Left) => Self::HoldMenu.swipe(direction),
             (Self::Hold, SwipeDirection::Down) => Self::Summary.swipe(direction),
@@ -153,11 +156,12 @@ impl FlowState for ConfirmOutputWithSummary {
 
     fn handle_event(&'static self, msg: FlowMsg) -> StateChange {
         match (self, msg) {
-            (Self::Address, FlowMsg::Info) => Self::AddressMenu.transit(),
-            (Self::AddressMenu, FlowMsg::Choice(MENU_ITEM_CANCEL)) => {
-                Self::AddressMenuCancel.swipe_left()
+            (Self::Main, FlowMsg::Info) => Self::MainMenu.transit(),
+            (Self::MainMenu, FlowMsg::Choice(MENU_ITEM_CANCEL)) => {
+                Self::MainMenuCancel.swipe_left()
             }
-            (Self::AddressMenuCancel, FlowMsg::Cancelled) => Self::AddressMenu.swipe_right(),
+            (Self::MainMenuCancel, FlowMsg::Cancelled) => Self::MainMenu.swipe_right(),
+            (Self::AddressInfo, FlowMsg::Info) => Self::MainMenu.transit(),
             (Self::Summary, FlowMsg::Info) => Self::SummaryMenu.transit(),
             (Self::SummaryMenu, FlowMsg::Choice(MENU_ITEM_CANCEL)) => {
                 Self::SummaryMenuCancel.swipe_left()
@@ -169,18 +173,21 @@ impl FlowState for ConfirmOutputWithSummary {
             }
             (Self::HoldMenuCancel, FlowMsg::Cancelled) => Self::HoldMenu.swipe_right(),
             (Self::SummaryMenu, FlowMsg::Choice(MENU_ITEM_FEE_INFO)) => Self::FeeInfo.swipe_left(),
-            (Self::AddressMenu, FlowMsg::Choice(MENU_ITEM_ACCOUNT_INFO)) => {
+            (Self::MainMenu, FlowMsg::Choice(MENU_ITEM_ADDRESS_INFO)) => {
+                Self::AddressInfo.swipe_left()
+            }
+            (Self::MainMenu, FlowMsg::Choice(MENU_ITEM_ACCOUNT_INFO)) => {
                 Self::AccountInfo.swipe_left()
             }
-            (Self::AddressMenu, FlowMsg::Cancelled) => Self::Address.swipe_right(),
+            (Self::MainMenu, FlowMsg::Cancelled) => Self::Main.swipe_right(),
             (Self::SummaryMenu, FlowMsg::Cancelled) => Self::Summary.swipe_right(),
             (Self::FeeInfo, FlowMsg::Cancelled) => Self::SummaryMenu.swipe_right(),
             (Self::HoldMenu, FlowMsg::Cancelled) => Self::Hold.swipe_right(),
             (
-                Self::AddressMenuCancel | Self::SummaryMenuCancel | Self::HoldMenuCancel,
+                Self::MainMenuCancel | Self::SummaryMenuCancel | Self::HoldMenuCancel,
                 FlowMsg::Confirmed,
             ) => self.return_msg(FlowMsg::Cancelled),
-            (Self::Address, FlowMsg::Cancelled) => Self::AddressMenu.transit(),
+            (Self::Main, FlowMsg::Cancelled) => Self::MainMenu.transit(),
             (Self::Summary, FlowMsg::Cancelled) => Self::SummaryMenu.transit(),
             (Self::Hold, FlowMsg::Cancelled) => Self::HoldMenu.transit(),
             (Self::Hold, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Confirmed),
@@ -213,6 +220,7 @@ pub extern "C" fn new_confirm_output(n_args: usize, args: *const Obj, kwargs: *m
 
 fn new_confirm_output_obj(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Error> {
     let title: Option<TString> = kwargs.get(Qstr::MP_QSTR_title)?.try_into_option()?;
+    let subtitle: Option<TString> = kwargs.get(Qstr::MP_QSTR_subtitle)?.try_into_option()?;
 
     let account: Option<TString> = kwargs.get(Qstr::MP_QSTR_account)?.try_into_option()?;
     let account_path: Option<TString> =
@@ -221,11 +229,15 @@ fn new_confirm_output_obj(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Err
     let br_name: TString = kwargs.get(Qstr::MP_QSTR_br_name)?.try_into()?;
     let br_code: u16 = kwargs.get(Qstr::MP_QSTR_br_code)?.try_into()?;
 
-    let address: Obj = kwargs.get(Qstr::MP_QSTR_address)?;
+    let message: Obj = kwargs.get(Qstr::MP_QSTR_message)?;
     let amount: Option<Obj> = kwargs.get(Qstr::MP_QSTR_amount)?.try_into_option()?;
 
     let chunkify: bool = kwargs.get_or(Qstr::MP_QSTR_chunkify, false)?;
     let text_mono: bool = kwargs.get_or(Qstr::MP_QSTR_text_mono, true)?;
+
+    let address: Option<Obj> = kwargs.get(Qstr::MP_QSTR_address)?.try_into_option()?;
+    let address_title: Option<TString> =
+        kwargs.get(Qstr::MP_QSTR_address_title)?.try_into_option()?;
 
     let summary_items: Obj = kwargs.get(Qstr::MP_QSTR_summary_items)?;
     let fee_items: Obj = kwargs.get(Qstr::MP_QSTR_fee_items)?;
@@ -241,9 +253,9 @@ fn new_confirm_output_obj(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Err
 
     let cancel_text: Option<TString> = kwargs.get(Qstr::MP_QSTR_cancel_text)?.try_into_option()?;
 
-    // Address
-    let content_address = ConfirmBlobParams::new(TR::words__address.into(), address, None)
-        .with_subtitle(title)
+    // Main
+    let main_content = ConfirmBlobParams::new(title.unwrap_or(TString::empty()), message, None)
+        .with_subtitle(subtitle)
         .with_menu_button()
         .with_footer(TR::instructions__swipe_up.into(), None)
         .with_chunkify(chunkify)
@@ -251,55 +263,59 @@ fn new_confirm_output_obj(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Err
         .into_layout()?
         .one_button_request(ButtonRequest::from_num(br_code, br_name));
 
-    // AddressMenu
-    let mut address_menu = VerticalMenu::empty();
-    let mut address_menu_items = Vec::<usize, 2>::new();
+    // MainMenu
+    let mut main_menu = VerticalMenu::empty();
+    let mut main_menu_items = Vec::<usize, 3>::new();
+    if address.is_some() {
+        main_menu = main_menu.item(
+            theme::ICON_CHEVRON_RIGHT,
+            address_title.unwrap_or(TR::words__address.into()),
+        );
+        unwrap!(main_menu_items.push(MENU_ITEM_ADDRESS_INFO));
+    }
     if account.is_some() && account_path.is_some() {
-        address_menu = address_menu.item(
+        main_menu = main_menu.item(
             theme::ICON_CHEVRON_RIGHT,
             TR::address_details__account_info.into(),
         );
-        unwrap!(address_menu_items.push(MENU_ITEM_ACCOUNT_INFO));
+        unwrap!(main_menu_items.push(MENU_ITEM_ACCOUNT_INFO));
     }
-    address_menu = address_menu.danger(
+    main_menu = main_menu.danger(
         theme::ICON_CANCEL,
         cancel_text.unwrap_or(TR::send__cancel_sign.into()),
     );
-    unwrap!(address_menu_items.push(MENU_ITEM_CANCEL));
-    let content_address_menu = Frame::left_aligned(TString::empty(), address_menu)
+    unwrap!(main_menu_items.push(MENU_ITEM_CANCEL));
+    let content_main_menu = Frame::left_aligned(TString::empty(), main_menu)
         .with_cancel_button()
         .with_swipe(SwipeDirection::Right, SwipeSettings::immediate())
         .map(move |msg| match msg {
             FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => {
-                let selected_item = address_menu_items[i];
+                let selected_item = main_menu_items[i];
                 Some(FlowMsg::Choice(selected_item))
             }
             FrameMsg::Button(_) => Some(FlowMsg::Cancelled),
         });
 
     // AccountInfo
-    let ad = AddressDetails::new(TR::send__send_from.into(), account, account_path)?;
-    let content_account = ad.map(|_| Some(FlowMsg::Cancelled));
+    let ac = AddressDetails::new(TR::send__send_from.into(), account, account_path)?;
+    let account_content = ac.map(|_| Some(FlowMsg::Cancelled));
 
     let res = if amount.is_some() {
-        let content_amount = ConfirmBlobParams::new(
-            TR::words__amount.into(),
-            amount.unwrap_or(Obj::const_none()),
-            None,
-        )
-        .with_subtitle(title)
-        .with_menu_button()
-        .with_footer(TR::instructions__swipe_up.into(), None)
-        .with_text_mono(text_mono)
-        .with_swipe_down()
-        .into_layout()?
-        .one_button_request(ButtonRequest::from_num(br_code, br_name));
+        let content_amount =
+            ConfirmBlobParams::new(TR::words__amount.into(), amount.unwrap(), None)
+                .with_subtitle(subtitle)
+                .with_menu_button()
+                .with_footer(TR::instructions__swipe_up.into(), None)
+                .with_text_mono(text_mono)
+                .with_swipe_down()
+                .into_layout()?
+                .one_button_request(ButtonRequest::from_num(br_code, br_name));
 
         SwipeFlow::new(&ConfirmOutputWithAmount::Address)?
-            .with_page(&ConfirmOutputWithAmount::Address, content_address)?
+            .with_page(&ConfirmOutputWithAmount::Address, main_content)?
             .with_page(&ConfirmOutputWithAmount::Amount, content_amount)?
-            .with_page(&ConfirmOutputWithAmount::Menu, content_address_menu)?
-            .with_page(&ConfirmOutputWithAmount::AccountInfo, content_account)?
+            .with_page(&ConfirmOutputWithAmount::Menu, content_main_menu)?
+            .with_page(&ConfirmOutputWithAmount::AccountInfo, account_content)?
             .with_page(&ConfirmOutputWithAmount::CancelTap, get_cancel_page())?
     } else if summary_items != Obj::const_none() {
         // Summary
@@ -389,14 +405,31 @@ fn new_confirm_output_obj(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Err
                 FrameMsg::Button(_) => Some(FlowMsg::Cancelled),
             });
 
-        SwipeFlow::new(&ConfirmOutputWithSummary::Address)?
-            .with_page(&ConfirmOutputWithSummary::Address, content_address)?
-            .with_page(&ConfirmOutputWithSummary::AddressMenu, content_address_menu)?
-            .with_page(
-                &ConfirmOutputWithSummary::AddressMenuCancel,
-                get_cancel_page(),
-            )?
-            .with_page(&ConfirmOutputWithSummary::Summary, content_summary)?
+        let mut flow = SwipeFlow::new(&ConfirmOutputWithSummary::Main)?
+            .with_page(&ConfirmOutputWithSummary::Main, main_content)?
+            .with_page(&ConfirmOutputWithSummary::MainMenu, content_main_menu)?
+            .with_page(&ConfirmOutputWithSummary::MainMenuCancel, get_cancel_page())?;
+        if address.is_some() {
+            let address_content = ConfirmBlobParams::new(
+                address_title.unwrap_or(TR::words__address.into()),
+                address.unwrap(),
+                None,
+            )
+            .with_cancel_button()
+            .with_chunkify(true)
+            .with_text_mono(true)
+            .into_layout()?;
+            flow = flow.with_page(&ConfirmOutputWithSummary::AddressInfo, address_content)?;
+        } else {
+            // dummy page - this will never be shown since there is no menu item pointing to
+            // it, but the page has to exist in the flow
+            flow = flow.with_page(
+                &ConfirmOutputWithSummary::AddressInfo,
+                Frame::left_aligned(TString::empty(), VerticalMenu::empty())
+                    .map(|_| Some(FlowMsg::Cancelled)),
+            )?;
+        }
+        flow.with_page(&ConfirmOutputWithSummary::Summary, content_summary)?
             .with_page(&ConfirmOutputWithSummary::SummaryMenu, content_summary_menu)?
             .with_page(
                 &ConfirmOutputWithSummary::SummaryMenuCancel,
@@ -406,12 +439,12 @@ fn new_confirm_output_obj(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Err
             .with_page(&ConfirmOutputWithSummary::Hold, content_hold)?
             .with_page(&ConfirmOutputWithSummary::HoldMenu, content_hold_menu)?
             .with_page(&ConfirmOutputWithSummary::HoldMenuCancel, get_cancel_page())?
-            .with_page(&ConfirmOutputWithSummary::AccountInfo, content_account)?
+            .with_page(&ConfirmOutputWithSummary::AccountInfo, account_content)?
     } else {
         SwipeFlow::new(&ConfirmOutput::Address)?
-            .with_page(&ConfirmOutput::Address, content_address)?
-            .with_page(&ConfirmOutput::Menu, content_address_menu)?
-            .with_page(&ConfirmOutput::AccountInfo, content_account)?
+            .with_page(&ConfirmOutput::Address, main_content)?
+            .with_page(&ConfirmOutput::Menu, content_main_menu)?
+            .with_page(&ConfirmOutput::AccountInfo, account_content)?
             .with_page(&ConfirmOutput::CancelTap, get_cancel_page())?
     };
 

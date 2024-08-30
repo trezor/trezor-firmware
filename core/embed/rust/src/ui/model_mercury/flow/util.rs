@@ -30,6 +30,7 @@ pub struct ConfirmBlobParams {
     description: Option<TString<'static>>,
     extra: Option<TString<'static>>,
     menu_button: bool,
+    cancel_button: bool,
     chunkify: bool,
     text_mono: bool,
     swipe_down: bool,
@@ -50,6 +51,7 @@ impl ConfirmBlobParams {
             description,
             extra: None,
             menu_button: false,
+            cancel_button: false,
             chunkify: false,
             text_mono: true,
             swipe_down: false,
@@ -68,6 +70,11 @@ impl ConfirmBlobParams {
 
     pub const fn with_menu_button(mut self) -> Self {
         self.menu_button = true;
+        self
+    }
+
+    pub const fn with_cancel_button(mut self) -> Self {
+        self.cancel_button = true;
         self
     }
 
@@ -127,6 +134,9 @@ impl ConfirmBlobParams {
         }
         if self.menu_button {
             frame = frame.with_menu_button();
+        }
+        if self.cancel_button {
+            frame = frame.with_cancel_button();
         }
         if let Some(instruction) = self.footer_instruction {
             frame = frame.with_footer(instruction, self.footer_description);
