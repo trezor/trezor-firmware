@@ -261,6 +261,10 @@ def cargo_build():
         features = ["model_mercury"]
     else:
         features = ["model_tt"]
+
+    if TREZOR_MODEL in ("R",):
+        features.append("ui_empty_lock")
+
     features.append("ui")
     features.append("bootloader")
     features.extend(FEATURES_AVAILABLE)
