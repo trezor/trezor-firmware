@@ -1,26 +1,39 @@
+/*
+ * This file is part of the Trezor project, https://trezor.io/
+ *
+ * Copyright (c) SatoshiLabs
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
-#include "../bootutils.h"
-#include <common.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-// The 'g_boot_command_shadow' variable stores the 'command' for the next
-// reboot/jumping to the bootloadeer. It may be one of the
-// 'BOOT_COMMAND_xxx' values defined in the enumeration, or it could
-// be any other value that should be treated as a non-special action,
-// in which case the bootloader should behave as if the device was
-// just powered up.
+#include <common.h>
+#include "bootargs.h"
+#include "bootutils.h"
 
-static boot_command_t g_boot_command_shadow;
+// Holds the 'command' for the next reboot.
+static boot_command_t g_boot_command;
 
-// The 'g_boot_args' array stores extra arguments passed
-// function boot_args. It sits at section that persists jump to the bootloader.
+// Holds extra arguments for the command passed to the bootloader.
 static boot_args_t g_boot_args;
 
 void bootargs_set(boot_command_t command, const void* args, size_t args_size) {
   // save boot command
-  g_boot_command_shadow = command;
+  g_boot_command = command;
 
   size_t copy_size = 0;
   // copy arguments up to BOOT_ARGS_MAX_SIZE
@@ -36,12 +49,7 @@ void bootargs_set(boot_command_t command, const void* args, size_t args_size) {
   }
 }
 
-void bootargs_clear() {
-  g_boot_command_shadow = BOOT_COMMAND_NONE;
-  memset(&g_boot_args, 0, sizeof(g_boot_args));
-}
-
-boot_command_t bootargs_get_command() { return g_boot_command_shadow; }
+boot_command_t bootargs_get_command() { return g_boot_command; }
 
 const boot_args_t* bootargs_get_args() { return &g_boot_args; }
 
