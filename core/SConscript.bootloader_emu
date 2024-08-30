@@ -277,6 +277,9 @@ def cargo_build():
     else:
         features = ["model_tt"]
 
+    if TREZOR_MODEL in ("R",):
+        features.append("ui_empty_lock")
+
     if NEW_RENDERING:
         features.append('new_rendering')
 

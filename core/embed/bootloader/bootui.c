@@ -52,7 +52,7 @@
 #define COLOR_BL_GRAY COLOR_BL_FG
 #endif
 
-#ifndef TREZOR_MODEL_R
+#if !defined TREZOR_MODEL_R && !defined TREZOR_MODEL_T3B1
 #define BOOT_WAIT_HEIGHT 25
 #define BOOT_WAIT_Y_TOP (DISPLAY_RESY - BOOT_WAIT_HEIGHT)
 #else
@@ -95,7 +95,7 @@ static void ui_screen_boot_old(const vendor_header *const vhdr,
 
   display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, boot_background);
 
-#ifndef TREZOR_MODEL_R
+#if !defined TREZOR_MODEL_R && !defined TREZOR_MODEL_T3B1
   int image_top = show_string ? 30 : (DISPLAY_RESY - 120) / 2;
   // check whether vendor image is 120x120
   if (memcmp(vimg, "TOIF\x78\x00\x78\x00", 8) == 0) {

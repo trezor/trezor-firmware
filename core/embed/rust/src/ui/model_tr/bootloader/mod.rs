@@ -321,7 +321,7 @@ impl UIFeaturesBootloader for ModelTRFeatures {
         #[cfg(not(feature = "new_rendering"))]
         display::rect_fill(SCREEN, BLD_BG);
 
-        let mut frame = WelcomeScreen::new(true);
+        let mut frame = WelcomeScreen::new(cfg!(ui_empty_lock));
         show(&mut frame, false);
     }
 
