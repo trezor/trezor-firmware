@@ -31,25 +31,20 @@
 #include <string.h>
 #include "blake2s.h"
 #include "bootutils.h"
-#include "common.h"
-#include "flash.h"
+#include "error_handling.h"
+#include "fwutils.h"
 #include "unit_variant.h"
 #include "usb.h"
 #include TREZOR_BOARD
 #include "model.h"
 
-#ifndef TREZOR_EMULATOR
-#include "image.h"
-#endif
-
 #if USE_OPTIGA && !defined(TREZOR_EMULATOR)
 #include "secret.h"
 #endif
 
-#define FW_HASHING_CHUNK_SIZE 1024
+static void ui_progress(void *context, uint32_t current, uint32_t total) {
+  mp_obj_t ui_wait_callback = (mp_obj_t)context;
 
-static void ui_progress(mp_obj_t ui_wait_callback, uint32_t current,
-                        uint32_t total) {
   if (mp_obj_is_callable(ui_wait_callback)) {
     mp_call_function_2_protected(ui_wait_callback, mp_obj_new_int(current),
                                  mp_obj_new_int(total));
@@ -153,18 +148,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorutils_halt_obj, 0, 1,
 ///     """
 STATIC mp_obj_t mod_trezorutils_firmware_hash(size_t n_args,
                                               const mp_obj_t *args) {
-  BLAKE2S_CTX ctx;
   mp_buffer_info_t chal = {0};
   if (n_args > 0 && args[0] != mp_const_none) {
     mp_get_buffer_raise(args[0], &chal, MP_BUFFER_READ);
-  }
-
-  if (chal.len != 0) {
-    if (blake2s_InitKey(&ctx, BLAKE2S_DIGEST_LENGTH, chal.buf, chal.len) != 0) {
-      mp_raise_msg(&mp_type_ValueError, "Invalid challenge.");
-    }
-  } else {
-    blake2s_Init(&ctx, BLAKE2S_DIGEST_LENGTH);
   }
 
   mp_obj_t ui_wait_callback = mp_const_none;
@@ -172,32 +158,13 @@ STATIC mp_obj_t mod_trezorutils_firmware_hash(size_t n_args,
     ui_wait_callback = args[1];
   }
 
-  uint32_t firmware_size = flash_area_get_size(&FIRMWARE_AREA);
-  uint32_t chunks = firmware_size / FW_HASHING_CHUNK_SIZE;
-
-  ensure((firmware_size % FW_HASHING_CHUNK_SIZE == 0) * sectrue,
-         "Cannot compute FW hash.");
-
-  ui_progress(ui_wait_callback, 0, chunks);
-  for (int i = 0; i < chunks; i++) {
-    const void *data = flash_area_get_address(
-        &FIRMWARE_AREA, i * FW_HASHING_CHUNK_SIZE, FW_HASHING_CHUNK_SIZE);
-    if (data == NULL) {
-      mp_raise_msg(&mp_type_RuntimeError, "Failed to read firmware.");
-    }
-    blake2s_Update(&ctx, data, FW_HASHING_CHUNK_SIZE);
-    if (i % 128 == 0) {
-      ui_progress(ui_wait_callback, i + 1, chunks);
-    }
-  }
-
-  ui_progress(ui_wait_callback, chunks, chunks);
-
   vstr_t vstr = {0};
   vstr_init_len(&vstr, BLAKE2S_DIGEST_LENGTH);
-  if (blake2s_Final(&ctx, vstr.buf, vstr.len) != 0) {
+
+  if (sectrue != firmware_calc_hash(chal.buf, chal.len, (uint8_t *)vstr.buf,
+                                    vstr.len, ui_progress, ui_wait_callback)) {
     vstr_clear(&vstr);
-    mp_raise_msg(&mp_type_RuntimeError, "Failed to finalize firmware hash.");
+    mp_raise_msg(&mp_type_RuntimeError, "Failed to calculate firmware hash.");
   }
 
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
@@ -213,13 +180,11 @@ STATIC mp_obj_t mod_trezorutils_firmware_vendor(void) {
 #ifdef TREZOR_EMULATOR
   return mp_obj_new_str_copy(&mp_type_str, (const uint8_t *)"EMULATOR", 8);
 #else
-  vendor_header vhdr = {0};
-  const void *data = flash_area_get_address(&FIRMWARE_AREA, 0, 0);
-  if (data == NULL || sectrue != read_vendor_header(data, &vhdr)) {
+  char vendor[64] = {0};
+  if (sectrue != firmware_get_vendor(vendor, sizeof(vendor))) {
     mp_raise_msg(&mp_type_RuntimeError, "Failed to read vendor header.");
   }
-  return mp_obj_new_str_copy(&mp_type_str, (const uint8_t *)vhdr.vstr,
-                             vhdr.vstr_len);
+  return mp_obj_new_str_copy(&mp_type_str, (byte *)vendor, strlen(vendor));
 #endif
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_firmware_vendor_obj,

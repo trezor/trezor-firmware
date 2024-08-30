@@ -622,7 +622,7 @@ static void test_boardloader_version(const boardloader_version_t *version) {
 }
 
 static void test_wipe(void) {
-  invalidate_firmware();
+  firmware_invalidate_header();
   display_clear();
   display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY / 2 + 10, "WIPED", -1,
                       FONT_BOLD, COLOR_WHITE, COLOR_BLACK);
