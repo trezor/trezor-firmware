@@ -649,12 +649,16 @@ async def confirm_output(
     await raise_if_not_confirmed(
         RustLayout(
             trezorui2.flow_confirm_output(
-                title=title,
-                address=address,
+                title=TR.words__address,
+                subtitle=title,
+                message=address,
                 amount=amount,
                 chunkify=chunkify,
+                text_mono=True,
                 account=source_account,
                 account_path=source_account_path,
+                address=None,
+                address_title=None,
                 br_code=br_code,
                 br_name="confirm_output",
                 summary_items=None,
@@ -1032,12 +1036,16 @@ if not utils.BITCOIN_ONLY:
         await raise_if_not_confirmed(
             RustLayout(
                 trezorui2.flow_confirm_output(
-                    title=TR.words__recipient,
-                    address=recipient,
+                    title=TR.words__address,
+                    subtitle=TR.words__recipient,
+                    message=recipient,
                     amount=None,
                     chunkify=chunkify,
+                    text_mono=True,
                     account=None,
                     account_path=None,
+                    address=None,
+                    address_title=None,
                     br_code=ButtonRequestType.Other,
                     br_name="confirm_output",
                     summary_items=(
@@ -1066,36 +1074,36 @@ if not utils.BITCOIN_ONLY:
         br_name: str = "confirm_ethereum_staking_tx",
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
     ) -> None:
-
-        # intro
-        await confirm_value(
-            title,
-            intro_question,
-            "",
-            br_name,
-            br_code,
-            verb=verb,
-            value_text_mono=False,
-            info_items=(("", address),),
-            info_title=address_title,
-            chunkify_info=chunkify,
-        )
-
-        # confirmation
         if verb == TR.ethereum__staking_claim:
-            items = ((TR.send__maximum_fee, maximum_fee),)
+            summary_items = ((TR.send__maximum_fee, maximum_fee),)
         else:
-            items = (
+            summary_items = (
                 (TR.words__amount, total_amount),
                 (TR.send__maximum_fee, maximum_fee),
             )
-        await _confirm_summary(
-            items=items,
-            title=title,
-            info_title=TR.confirm_total__title_fee,
-            info_items=info_items,
-            br_name=br_name,
-            br_code=br_code,
+        await raise_if_not_confirmed(
+            RustLayout(
+                trezorui2.flow_confirm_output(
+                    title=verb,
+                    subtitle=None,
+                    message=intro_question,
+                    amount=None,
+                    chunkify=False,
+                    text_mono=False,
+                    account=None,
+                    account_path=None,
+                    br_code=br_code,
+                    br_name=br_name,
+                    address=address,
+                    address_title=address_title,
+                    summary_items=summary_items,
+                    fee_items=info_items,
+                    summary_title=verb,
+                    summary_br_name="confirm_total",
+                    summary_br_code=ButtonRequestType.SignTx,
+                    cancel_text=TR.buttons__cancel,  # cancel staking
+                )
+            )
         )
 
     def confirm_solana_tx(
