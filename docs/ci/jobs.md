@@ -308,7 +308,7 @@ Consists of **2 jobs** below:
 ---
 ## DEPLOY stage - [deploy.yml](https://github.com/trezor/trezor-firmware/blob/master/ci/deploy.yml)
 
-Consists of **14 jobs** below:
+Consists of **13 jobs** below:
 
 ### [release core fw regular deploy](https://github.com/trezor/trezor-firmware/blob/master/ci/deploy.yml#L5)
 
@@ -335,7 +335,5 @@ Consists of **14 jobs** below:
 ### [ui tests fixtures deploy nonenglish](https://github.com/trezor/trezor-firmware/blob/master/ci/deploy.yml#L264)
 
 ### [sync emulators to aws](https://github.com/trezor/trezor-firmware/blob/master/ci/deploy.yml#L304)
-
-### [common sync](https://github.com/trezor/trezor-firmware/blob/master/ci/deploy.yml#L330)
 
 ---
