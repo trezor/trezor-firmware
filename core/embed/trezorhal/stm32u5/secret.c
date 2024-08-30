@@ -1,6 +1,7 @@
 #include "secret.h"
 #include <stdbool.h>
 #include <string.h>
+#include "bootutils.h"
 #include "common.h"
 #include "flash.h"
 #include "memzero.h"
@@ -122,8 +123,7 @@ static secbool secret_present(uint32_t offset, uint32_t len) {
 // read access to it.
 static void secret_bhk_load(void) {
   if (sectrue == secret_bhk_locked()) {
-    delete_secrets();
-    NVIC_SystemReset();
+    reboot();
   }
 
   uint32_t secret[SECRET_BHK_LEN / sizeof(uint32_t)] = {0};
