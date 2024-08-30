@@ -284,31 +284,37 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_sd_hotswap_enabled_obj,
 STATIC mp_obj_t mod_trezorutils_reboot_to_bootloader(size_t n_args,
                                                      const mp_obj_t *args) {
 #ifndef TREZOR_EMULATOR
-  boot_command_t boot_command = BOOT_COMMAND_NONE;
-  mp_buffer_info_t boot_args = {0};
-
   if (n_args > 0 && args[0] != mp_const_none) {
     mp_int_t value = mp_obj_get_int(args[0]);
 
     switch (value) {
       case 0:
-        boot_command = BOOT_COMMAND_STOP_AND_WAIT;
+        // Reboot and stay in bootloader
+        reboot_to_bootloader();
         break;
       case 1:
-        boot_command = BOOT_COMMAND_INSTALL_UPGRADE;
+        // Reboot and continue with the firmware upgrade
+        mp_buffer_info_t hash = {0};
+
+        if (n_args > 1 && args[1] != mp_const_none) {
+          mp_get_buffer_raise(args[1], &hash, MP_BUFFER_READ);
+        }
+
+        if (hash.len != 32) {
+          mp_raise_ValueError("Invalid value.");
+        }
+
+        reboot_and_upgrade((uint8_t *)hash.buf);
         break;
       default:
         mp_raise_ValueError("Invalid value.");
         break;
     }
+  } else {
+    // Just reboot and go through the normal boot sequence
+    reboot();
   }
 
-  if (n_args > 1 && args[1] != mp_const_none) {
-    mp_get_buffer_raise(args[1], &boot_args, MP_BUFFER_READ);
-  }
-
-  bootargs_set(boot_command, boot_args.buf, boot_args.len);
-  reboot_to_bootloader();
 #endif
   return mp_const_none;
 }
