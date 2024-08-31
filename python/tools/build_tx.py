@@ -69,7 +69,7 @@ def parse_vin(s: str) -> Tuple[bytes, int]:
 
 def _get_inputs_interactive(
     blockbook_url: str,
-) -> Tuple[List[messages.TxInputType], Dict[str, messages.TransactionType]]:
+) -> Tuple[List[messages.TxInputType], Dict[str, Dict[str, Any]]]:
     inputs: List[messages.TxInputType] = []
     txes: Dict[str, messages.TransactionType] = {}
     while True:
@@ -92,7 +92,7 @@ def _get_inputs_interactive(
             raise click.ClickException(f"Transaction not found: {txhash}")
 
         tx = btc.from_json(tx_json)
-        txes[txhash] = tx
+        txes[txhash] = to_dict(tx, hexlify_bytes=True)
         try:
             from_address = tx_json["vout"][prev_index]["scriptPubKey"]["address"]
             echo(f"From address: {from_address}")
@@ -197,10 +197,7 @@ def sign_interactive() -> None:
             "version": version,
             "lock_time": lock_time,
         },
-        "prev_txes": {
-            txhash: to_dict(txdata, hexlify_bytes=True)
-            for txhash, txdata in txes.items()
-        },
+        "prev_txes": txes,
     }
 
     print(json.dumps(result, sort_keys=True, indent=2))
