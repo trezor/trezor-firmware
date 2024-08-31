@@ -25,8 +25,17 @@ import requests
 
 from trezorlib import btc, messages, tools
 from trezorlib.cli import ChoiceType
-from trezorlib.cli.btc import INPUT_SCRIPTS, OUTPUT_SCRIPTS
+from trezorlib.cli.btc import messages, INPUT_SCRIPTS, OUTPUT_SCRIPTS
 from trezorlib.protobuf import to_dict
+
+try:
+    from bitcoin.core import CTransaction
+    from bitcoin.core.script import OP_DUP, OP_HASH160, OP_EQUALVERIFY, OP_CHECKSIG, OP_1
+    python_bitcoinlib_installed = True
+except ImportError:
+    OP_DUP = OP_HASH160  = OP_EQUALVERIFY = OP_CHECKSIG = OP_1 = CTransaction = None
+    python_bitcoinlib_installed = False
+
 
 SESSION = requests.Session()
 SESSION.headers.update({"User-Agent": "trezorlib"})
@@ -62,59 +71,110 @@ def _default_script_type(address_n: Optional[List[int]], script_types: Any) -> s
     # return script_types[script_type]
 
 
-def parse_vin(s: str) -> Tuple[bytes, int]:
-    txid, vout = s.split(":")
-    return bytes.fromhex(txid), int(vout)
+def parse_vin(s: str, try_parsing_raw_tx: bool) -> Tuple[CTransaction | None, bytes, int] | None:
+    if not s:
+        return None
+    tx_or_txid, vout = s.split(":")
+    tx_or_txid_bytes = bytes.fromhex(tx_or_txid)
+    if len(tx_or_txid_bytes) == 32:
+        return None, tx_or_txid_bytes, int(vout)
+    if not try_parsing_raw_tx:
+        raise click.ClickException("Unexpected transaction id length")
+    tx = CTransaction.deserialize(tx_or_txid_bytes)
+    return tx, tx.GetTxid()[::-1], int(vout)
 
+def parse_tx(s: str) -> CTransaction:
+    return CTransaction.deserialize(bytes.fromhex(s))
 
 def _get_inputs_interactive(
-    blockbook_url: str,
-) -> Tuple[List[messages.TxInputType], Dict[str, Dict[str, Any]]]:
+    blockbook_url: str | None,
+    coin: str
+) -> Tuple[List[messages.TxInputType], Dict[str, messages.TransactionType]]:
     inputs: List[messages.TxInputType] = []
     txes: Dict[str, messages.TransactionType] = {}
+    try_parsing_raw_tx = python_bitcoinlib_installed and coin == "Bitcoin"
     while True:
         echo()
         prev = prompt(
-            "Previous output to spend (txid:vout)", type=parse_vin, default=""
+            "Previous output to spend (txid:vout or raw_tx:vout)"
+            if try_parsing_raw_tx else
+            "Previous output to spend (txid:vout)",
+            type=lambda s: parse_vin(s, try_parsing_raw_tx),
+            default=""
         )
         if not prev:
             break
-        prev_txid, prev_index = prev
-
+        prev_tx, prev_txid, prev_index = prev
         txid_hex = prev_txid.hex()
-        tx_url = blockbook_url + txid_hex
-        r = SESSION.get(tx_url)
-        if not r.ok:
-            raise click.ClickException(f"Failed to fetch URL: {tx_url}")
+        script_type = None
+        tx_found = False
 
-        tx_json = r.json(parse_float=decimal.Decimal)
-        if "error" in tx_json:
-            raise click.ClickException(f"Transaction not found: {txid_hex}")
+        if prev_tx is None and blockbook_url is not None:
+            tx_url = blockbook_url + txid_hex
+            r = SESSION.get(tx_url)
+            if r.ok:
+                tx_json = r.json(parse_float=decimal.Decimal)
+                if "error" in tx_json:
+                    raise click.ClickException(f"Transaction not found: {txid_hex}")
+                tx = btc.from_json(tx_json)
+                txes[txid_hex] = to_dict(tx, hexlify_bytes=True)
+                try:
+                    from_address = tx_json["vout"][prev_index]["scriptPubKey"]["address"]
+                    echo(f"From address: {from_address}")
+                except Exception:
+                    pass
+                amount = tx.bin_outputs[prev_index].amount
+                reported_type = tx_json["vout"][prev_index]["scriptPubKey"].get("type")
+                if reported_type in BITCOIN_CORE_INPUT_TYPES:
+                    script_type = BITCOIN_CORE_INPUT_TYPES[reported_type]
+                tx_found = True
+            elif r.status_code < 400 or 500 <= r.status_code:
+                raise click.ClickException(f"Failed to fetch URL: {tx_url}")
 
-        tx = btc.from_json(tx_json)
-        txes[txid_hex] = to_dict(tx, hexlify_bytes=True)
-        try:
-            from_address = tx_json["vout"][prev_index]["scriptPubKey"]["address"]
-            echo(f"From address: {from_address}")
-        except Exception:
-            pass
-        amount = tx.bin_outputs[prev_index].amount
-        echo(f"Input amount: {amount}")
+        if not tx_found and try_parsing_raw_tx:
+            if not prev_tx:
+                prev_tx = prompt("Transaction not found in the blockchain or the mempool, please enter the raw transaction", type=parse_tx)
+                if prev_tx.GetTxid()[::-1] != prev_txid:
+                    raise click.ClickException("The id of the raw transaction does not match the id of the previous output to spend")
+            txes[txid_hex] = {
+                "version": prev_tx.nVersion,
+                "lock_time": prev_tx.nLockTime,
+                "bin_outputs": [
+                    {"amount": tx_output.nValue, "script_pubkey": tx_output.scriptPubKey.hex()}
+                    for tx_output in prev_tx.vout
+                ],
+                "inputs": [
+                    {"prev_hash": tx_input.prevout.hash[::-1].hex(), "prev_index": tx_input.prevout.n, "sequence": tx_input.nSequence}
+                    for tx_input in prev_tx.vin
+                ]
+            }
+            amount = prev_tx.vout[prev_index].nValue
+            script_pub_key = prev_tx.vout[prev_index].scriptPubKey
+            if len(script_pub_key) == 25 and s[0] == OP_DUP and s[1] == OP_HASH160 and s[2] == 20 and s[-2] == OP_EQUALVERIFY and s[-1] == OP_CHECKSIG:
+                script_type = messages.InputScriptType.SPENDADDRESS
+            elif script_pub_key.is_p2sh():
+                script_type = messages.InputScriptType.SPENDP2SHWITNESS
+            elif script_pub_key.is_witness_v0_keyhash():
+                script_type = messages.InputScriptType.SPENDWITNESS
+            elif script_pub_key.is_witness_scriptpubkey() and len(script_pub_key) == 34 and script_pub_key[0] == OP_1:
+                script_type = messages.InputScriptType.SPENDTAPROOT
+            tx_found = True
 
-        address_n = prompt("BIP-32 path to derive the key", type=tools.parse_path)
+        if not tx_found:
+            raise click.ClickException(f"Failed to fetch details for transaction: {txid_hex}")
 
-        reported_type = tx_json["vout"][prev_index]["scriptPubKey"].get("type")
-        if reported_type in BITCOIN_CORE_INPUT_TYPES:
-            script_type = BITCOIN_CORE_INPUT_TYPES[reported_type]
-            click.echo(f"Script type: {script_type.name}")
-        else:
-            script_type = prompt(
+        if script_type is None:
+            script_type = INPUT_SCRIPTS[prompt(
                 "Input type",
                 type=ChoiceType(INPUT_SCRIPTS),
                 default=_default_script_type(address_n, INPUT_SCRIPTS),
-            )
-        if isinstance(script_type, str):
-            script_type = INPUT_SCRIPTS[script_type]
+            )]
+        else:
+            click.echo(f"Script type: {script_type.name}")
+
+        echo(f"Input amount: {amount}")
+
+        address_n = prompt("BIP-32 path to derive the key", type=tools.parse_path)
 
         sequence = prompt(
             "Sequence Number to use (RBF opt-in enabled by default)",
@@ -176,14 +236,14 @@ def _get_outputs_interactive() -> List[messages.TxOutputType]:
 @click.command()
 def sign_interactive() -> None:
     coin = prompt("Coin name", default="Bitcoin")
-    blockbook_host = prompt("Blockbook server", default="btc1.trezor.io")
+    blockbook_host = prompt("Blockbook server (use '.' to avoid web requests)", default="btc1.trezor.io")
 
-    if not SESSION.get(f"https://{blockbook_host}/api/block/1").ok:
+    if blockbook_host != "." and not SESSION.get(f"https://{blockbook_host}/api/block/1").ok:
         raise click.ClickException("Could not connect to blockbook")
 
-    blockbook_url = f"https://{blockbook_host}/api/tx-specific/"
+    blockbook_url = f"https://{blockbook_host}/api/tx-specific/" if blockbook_host != "." else None
 
-    inputs, txes = _get_inputs_interactive(blockbook_url)
+    inputs, txes = _get_inputs_interactive(blockbook_url, coin)
     outputs = _get_outputs_interactive()
 
     version = prompt("Transaction version", type=int, default=2)
