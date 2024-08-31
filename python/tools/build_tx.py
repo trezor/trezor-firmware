@@ -79,20 +79,20 @@ def _get_inputs_interactive(
         )
         if not prev:
             break
-        prev_hash, prev_index = prev
+        prev_txid, prev_index = prev
 
-        txhash = prev_hash.hex()
-        tx_url = blockbook_url + txhash
+        txid_hex = prev_txid.hex()
+        tx_url = blockbook_url + txid_hex
         r = SESSION.get(tx_url)
         if not r.ok:
             raise click.ClickException(f"Failed to fetch URL: {tx_url}")
 
         tx_json = r.json(parse_float=decimal.Decimal)
         if "error" in tx_json:
-            raise click.ClickException(f"Transaction not found: {txhash}")
+            raise click.ClickException(f"Transaction not found: {txid_hex}")
 
         tx = btc.from_json(tx_json)
-        txes[txhash] = to_dict(tx, hexlify_bytes=True)
+        txes[txid_hex] = to_dict(tx, hexlify_bytes=True)
         try:
             from_address = tx_json["vout"][prev_index]["scriptPubKey"]["address"]
             echo(f"From address: {from_address}")
@@ -124,7 +124,7 @@ def _get_inputs_interactive(
 
         new_input = messages.TxInputType(
             address_n=address_n,
-            prev_hash=prev_hash,
+            prev_hash=prev_txid,
             prev_index=prev_index,
             amount=amount,
             script_type=script_type,
