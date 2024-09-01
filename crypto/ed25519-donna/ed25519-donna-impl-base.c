@@ -1,6 +1,7 @@
 #include <assert.h>
 #include "ed25519-donna.h"
 #include "memzero.h"
+#include "options.h"
 
 /* sqrt(x) is such an integer y that 0 <= y <= p - 1, y % 2 = 0, and y^2 = x (mod p). */
 /* d = -121665 / 121666 */
@@ -726,5 +727,9 @@ int ge25519_unpack_vartime(ge25519 *r, const unsigned char *s){
 }
 
 void ge25519_scalarmult_base_wrapper(ge25519 *r, const bignum256modm s){
+#if OPTIMIZE_SIZE_ED25519
+        ge25519_scalarmult(r, &ge25519_basepoint, s);
+#else
 	ge25519_scalarmult_base_niels(r, ge25519_niels_base_multiples, s);
+#endif
 }
