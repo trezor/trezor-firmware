@@ -1,9 +1,8 @@
-#define _RIPEMD160_C_ 1
-
 #include "ripemd160.h"
 #include <assert.h>
+#include "memzero.h"
 
-#define NDEBUG
+// Downlaoded from https://github.com/sipa/Coin25519/blob/master/src/crypto/ripemd160.c
 
 // adapted by Pieter Wuille in 2012; all changes are in the public domain
 
@@ -56,8 +55,7 @@
 
 #include <string.h>
 
-#define RIPEMD160_DIGEST_SIZE 20
-#define BLOCK_SIZE 64
+#define RIPEMD160_DIGEST_SIZE RIPEMD160_DIGEST_LENGTH
 
 /* cyclic left-shift the 32-bit word n left by s bits */
 #define ROL(s, n) (((n) << (s)) | ((n) >> (32-(s))))
@@ -155,9 +153,10 @@ void ripemd160_init(ripemd160_state *self)
     self->bufpos = 0;
 }
 
+#ifdef PCT_BIG_ENDIAN
 static inline void byteswap32(uint32_t *v)
 {
-    union { uint32_t w; uint8_t b[4]; } x, y;
+    union { uint32_t w; uint8_t b[4]; } x = {0}, y = {0};
 
     x.w = *v;
     y.b[0] = x.b[3];
@@ -172,7 +171,7 @@ static inline void byteswap32(uint32_t *v)
 
 static inline void byteswap_digest(uint32_t *p)
 {
-    unsigned int i;
+    unsigned int i = 0;
 
     for (i = 0; i < 4; i++) {
         byteswap32(p++);
@@ -181,14 +180,15 @@ static inline void byteswap_digest(uint32_t *p)
         byteswap32(p++);
     }
 }
+#endif
 
 /* The RIPEMD160 compression function.  Operates on self->buf */
 static void ripemd160_compress(ripemd160_state *self)
 {
-    uint8_t w, round;
-    uint32_t T;
-    uint32_t AL, BL, CL, DL, EL;    /* left line */
-    uint32_t AR, BR, CR, DR, ER;    /* right line */
+    uint8_t w = 0, round = 0;
+    uint32_t T = 0;
+    uint32_t AL = 0, BL = 0, CL = 0, DL = 0, EL = 0;    /* left line */
+    uint32_t AR = 0, BR = 0, CR = 0, DR = 0, ER = 0;    /* right line */
 
     /* Sanity check */
     assert(self->bufpos == 64);
@@ -269,17 +269,27 @@ static void ripemd160_compress(ripemd160_state *self)
     self->h[0] = T;
 
     /* Clear the buffer and wipe the temporary variables */
-    T = AL = BL = CL = DL = EL = AR = BR = CR = DR = ER = 0;
-    memset(&self->buf, 0, sizeof(self->buf));
+    memzero(&self->buf, sizeof(self->buf));
+    memzero(&T, sizeof(T));
+    memzero(&AL, sizeof(AL));
+    memzero(&BL, sizeof(BL));
+    memzero(&CL, sizeof(CL));
+    memzero(&DL, sizeof(DL));
+    memzero(&EL, sizeof(EL));
+    memzero(&AR, sizeof(AR));
+    memzero(&BR, sizeof(BR));
+    memzero(&CR, sizeof(CR));
+    memzero(&DR, sizeof(DR));
+    memzero(&ER, sizeof(ER));
     self->bufpos = 0;
 }
 
-void ripemd160_process(ripemd160_state *self, const unsigned char *p, unsigned long length)
+void ripemd160_process(ripemd160_state * self, const uint8_t *p, size_t length)
 {
-    unsigned long bytes_needed;
+    unsigned long bytes_needed = 0;
 
     /* Some assertions */
-    assert(p != NULL && length >= 0);
+    assert(p != NULL);
 
     /* We never leave a full buffer */
     assert(self->bufpos < 64);
@@ -309,7 +319,7 @@ void ripemd160_process(ripemd160_state *self, const unsigned char *p, unsigned l
     }
 }
 
-void ripemd160_done(ripemd160_state *self, unsigned char *out)
+void ripemd160_done(ripemd160_state * self, uint8_t out[RIPEMD160_DIGEST_LENGTH])
 {
     /* Append the padding */
     self->buf.b[self->bufpos++] = 0x80;
@@ -334,11 +344,12 @@ void ripemd160_done(ripemd160_state *self, unsigned char *out)
     byteswap_digest(self->h);
 #endif
     memcpy(out, &self->h, RIPEMD160_DIGEST_SIZE);
+    memzero(self, sizeof(ripemd160_state));
 }
 
-void ripemd160(const void* in, unsigned long length, void* out)
+void ripemd160(const uint8_t *in, size_t length, uint8_t out[RIPEMD160_DIGEST_LENGTH])
 {
-  ripemd160_state md;
+  ripemd160_state md = {0};
   ripemd160_init(&md);
   ripemd160_process(&md, in, length);
   ripemd160_done(&md, out);
