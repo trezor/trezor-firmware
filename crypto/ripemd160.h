@@ -1,7 +1,11 @@
-#ifndef _RIPEMD160_H_
-#define _RIPEMD160_H_
+#ifndef __RIPEMD160_H__
+#define __RIPEMD160_H__
 
 #include <stdint.h>
+#include <stddef.h>
+
+#define RIPEMD160_BLOCK_LENGTH 64
+#define RIPEMD160_DIGEST_LENGTH 20
 
 typedef struct {
   uint64_t length;
@@ -13,11 +17,8 @@ typedef struct {
   uint8_t bufpos;
 } ripemd160_state;
 
-#ifndef _RIPEMD160_C_
-void ripemd160_init(ripemd160_state * md);
-void ripemd160_process(ripemd160_state * md, const void *in, unsigned long inlen);
-void ripemd160_done(ripemd160_state * md, void *out);
-void ripemd160(const void *in, unsigned long inlen, void *out);
-#endif
-
+void ripemd160_init(ripemd160_state * self);
+void ripemd160_process(ripemd160_state * self, const uint8_t *in, size_t length);
+void ripemd160_done(ripemd160_state * self, uint8_t out[RIPEMD160_DIGEST_LENGTH]);
+void ripemd160(const uint8_t *in, size_t length, uint8_t out[RIPEMD160_DIGEST_LENGTH]);
 #endif

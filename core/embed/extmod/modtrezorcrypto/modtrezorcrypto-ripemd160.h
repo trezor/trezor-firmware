@@ -32,7 +32,7 @@
 ///     digest_size: int
 typedef struct _mp_obj_Ripemd160_t {
   mp_obj_base_t base;
-  RIPEMD160_CTX ctx;
+  ripemd160_state ctx;
 } mp_obj_Ripemd160_t;
 
 STATIC mp_obj_t mod_trezorcrypto_Ripemd160_update(mp_obj_t self, mp_obj_t data);
@@ -47,7 +47,7 @@ STATIC mp_obj_t mod_trezorcrypto_Ripemd160_make_new(const mp_obj_type_t *type,
   mp_arg_check_num(n_args, n_kw, 0, 1, false);
   mp_obj_Ripemd160_t *o = m_new_obj_with_finaliser(mp_obj_Ripemd160_t);
   o->base.type = type;
-  ripemd160_Init(&(o->ctx));
+  ripemd160_init(&(o->ctx));
   // constructor called with bytes/str as first parameter
   if (n_args == 1) {
     mod_trezorcrypto_Ripemd160_update(MP_OBJ_FROM_PTR(o), args[0]);
@@ -65,7 +65,7 @@ STATIC mp_obj_t mod_trezorcrypto_Ripemd160_update(mp_obj_t self,
   mp_buffer_info_t msg = {0};
   mp_get_buffer_raise(data, &msg, MP_BUFFER_READ);
   if (msg.len > 0) {
-    ripemd160_Update(&(o->ctx), msg.buf, msg.len);
+    ripemd160_process(&(o->ctx), msg.buf, msg.len);
   }
   return mp_const_none;
 }
@@ -80,10 +80,10 @@ STATIC mp_obj_t mod_trezorcrypto_Ripemd160_digest(mp_obj_t self) {
   mp_obj_Ripemd160_t *o = MP_OBJ_TO_PTR(self);
   vstr_t hash = {0};
   vstr_init_len(&hash, RIPEMD160_DIGEST_LENGTH);
-  RIPEMD160_CTX ctx = {0};
-  memcpy(&ctx, &(o->ctx), sizeof(RIPEMD160_CTX));
-  ripemd160_Final(&ctx, (uint8_t *)hash.buf);
-  memzero(&ctx, sizeof(RIPEMD160_CTX));
+  ripemd160_state ctx = {0};
+  memcpy(&ctx, &(o->ctx), sizeof(ripemd160_state));
+  ripemd160_done(&ctx, (uint8_t *)hash.buf);
+  memzero(&ctx, sizeof(ripemd160_state));
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &hash);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Ripemd160_digest_obj,
@@ -91,7 +91,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Ripemd160_digest_obj,
 
 STATIC mp_obj_t mod_trezorcrypto_Ripemd160___del__(mp_obj_t self) {
   mp_obj_Ripemd160_t *o = MP_OBJ_TO_PTR(self);
-  memzero(&(o->ctx), sizeof(RIPEMD160_CTX));
+  memzero(&(o->ctx), sizeof(ripemd160_state));
   return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Ripemd160___del___obj,
