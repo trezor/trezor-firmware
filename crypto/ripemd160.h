@@ -1,22 +1,23 @@
-#ifndef __RIPEMD160_H__
-#define __RIPEMD160_H__
+#ifndef _RIPEMD160_H_
+#define _RIPEMD160_H_
 
 #include <stdint.h>
 
-#define RIPEMD160_BLOCK_LENGTH 64
-#define RIPEMD160_DIGEST_LENGTH 20
+typedef struct {
+  uint64_t length;
+  union {
+    uint32_t w[16];
+    uint8_t  b[64];
+  } buf;
+  uint32_t h[5];
+  uint8_t bufpos;
+} ripemd160_state;
 
-typedef struct _RIPEMD160_CTX {
-  uint32_t total[2];                      /*!< number of bytes processed  */
-  uint32_t state[5];                      /*!< intermediate digest state  */
-  uint8_t buffer[RIPEMD160_BLOCK_LENGTH]; /*!< data block being processed */
-} RIPEMD160_CTX;
-
-void ripemd160_Init(RIPEMD160_CTX *ctx);
-void ripemd160_Update(RIPEMD160_CTX *ctx, const uint8_t *input, uint32_t ilen);
-void ripemd160_Final(RIPEMD160_CTX *ctx,
-                     uint8_t output[RIPEMD160_DIGEST_LENGTH]);
-void ripemd160(const uint8_t *msg, uint32_t msg_len,
-               uint8_t hash[RIPEMD160_DIGEST_LENGTH]);
+#ifndef _RIPEMD160_C_
+void ripemd160_init(ripemd160_state * md);
+void ripemd160_process(ripemd160_state * md, const void *in, unsigned long inlen);
+void ripemd160_done(ripemd160_state * md, void *out);
+void ripemd160(const void *in, unsigned long inlen, void *out);
+#endif
 
 #endif
