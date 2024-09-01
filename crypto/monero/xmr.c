@@ -86,7 +86,7 @@ void xmr_derive_public_key(ge25519 *r, const ge25519 *deriv, uint32_t idx,
   ge25519 p2 = {0};
 
   xmr_derivation_to_scalar(s, deriv, idx);
-  ge25519_scalarmult_base_niels(&p2, ge25519_niels_base_multiples, s);
+  ge25519_scalarmult_base_wrapper(&p2, s);
   ge25519_add(r, base, &p2, 0);
 }
 
@@ -94,7 +94,7 @@ void xmr_add_keys2(ge25519 *r, const bignum256modm a, const bignum256modm b,
                    const ge25519 *B) {
   // aG + bB, G is basepoint
   ge25519 aG = {0}, bB = {0};
-  ge25519_scalarmult_base_niels(&aG, ge25519_niels_base_multiples, a);
+  ge25519_scalarmult_base_wrapper(&aG, a);
   ge25519_scalarmult(&bB, B, b);
   ge25519_add(r, &aG, &bB, 0);
 }
