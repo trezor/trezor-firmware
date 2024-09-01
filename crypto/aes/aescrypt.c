@@ -149,7 +149,7 @@ AES_RETURN aes_xi(encrypt)(const unsigned char *in, unsigned char *out, const ae
         kp += N_COLS;
         round(fwd_rnd,  b1, b0, kp);
 #else
-    {   uint32_t    rnd = 0;
+    {   int    rnd = 0;
         for(rnd = 0; rnd < (cx->inf.b[0] >> 4) - 1; ++rnd)
         {
             kp += N_COLS;
@@ -283,7 +283,7 @@ AES_RETURN aes_xi(decrypt)(const unsigned char *in, unsigned char *out, const ae
         kp = rnd_key(1);
         round(inv_rnd, b1, b0, kp);
 #else
-    {   uint32_t    rnd = 0;
+    {   int    rnd = 0;
         for(rnd = 0; rnd < (cx->inf.b[0] >> 4) - 1; ++rnd)
         {
             kp = rnd_key(1);
