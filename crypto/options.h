@@ -35,6 +35,10 @@
 #define OPTIMIZE_SIZE_BLAKE2B OPTIMIZE_SIZE
 #endif
 
+#ifndef OPTIMIZE_SIZE_ED25519
+#define OPTIMIZE_SIZE_ED25519 OPTIMIZE_SIZE
+#endif
+
 // use precomputed Curve Points (some scalar multiples of curve base point G)
 #ifndef USE_PRECOMPUTED_CP
 #define USE_PRECOMPUTED_CP 0
