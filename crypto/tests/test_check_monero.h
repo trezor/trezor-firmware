@@ -522,8 +522,8 @@ START_TEST(test_xmr_ge25519_ops) {
     set256_modm(s3, 8);
     set256_modm(s4, 2);
 
-    ge25519_scalarmult_base_niels(&a, ge25519_niels_base_multiples, s1);
-    ge25519_scalarmult_base_niels(&b, ge25519_niels_base_multiples, s2);
+    ge25519_scalarmult_base_wrapper(&a, s1);
+    ge25519_scalarmult_base_wrapper(&b, s2);
     ge25519_scalarmult(&c, &a, s4);
     ge25519_scalarmult(&c, &c, s4);
     ge25519_scalarmult(&c, &c, s4);

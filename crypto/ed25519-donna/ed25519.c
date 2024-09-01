@@ -63,7 +63,7 @@ ED25519_FN(ed25519_cosi_commit) (ed25519_secret_key nonce, ed25519_public_key co
 	contract256_modm(nonce, r);
 
 	/* R = rB */
-	ge25519_scalarmult_base_niels(&R, ge25519_niels_base_multiples, r);
+	ge25519_scalarmult_base_wrapper(&R, r);
 	memzero(&r, sizeof(r));
 	ge25519_pack(commitment, &R);
 }
@@ -118,14 +118,14 @@ ED25519_FN(ed25519_sign_ext) (const unsigned char *m, size_t mlen, const ed25519
 	memzero(&hashr, sizeof(hashr));
 
 	/* R = rB */
-	ge25519_scalarmult_base_niels(&R, ge25519_niels_base_multiples, r);
+	ge25519_scalarmult_base_wrapper(&R, r);
 	ge25519_pack(RS, &R);
 
 	/* a = aExt[0..31] */
 	expand256_modm(a, secret_scalar, 32);
 
 	/* A = aB */
-	ge25519_scalarmult_base_niels(&A, ge25519_niels_base_multiples, a);
+	ge25519_scalarmult_base_wrapper(&A, a);
 	ge25519_pack(pk, &A);
 
 	/* S = H(R,A,m).. */
@@ -213,7 +213,7 @@ ed25519_publickey_ext(const ed25519_secret_key extsk, ed25519_public_key pk) {
 	expand256_modm(a, extsk, 32);
 
 	/* A = aB */
-	ge25519_scalarmult_base_niels(&A, ge25519_niels_base_multiples, a);
+	ge25519_scalarmult_base_wrapper(&A, a);
 	memzero(&a, sizeof(a));
 	ge25519_pack(pk, &A);
 }
@@ -284,7 +284,7 @@ curve25519_scalarmult_basepoint(curve25519_key pk, const curve25519_key e) {
 	memzero(&ec, sizeof(ec));
 
 	/* scalar * basepoint */
-	ge25519_scalarmult_base_niels(&p, ge25519_niels_base_multiples, s);
+	ge25519_scalarmult_base_wrapper(&p, s);
 	memzero(&s, sizeof(s));
 
 	/* u = (y + z) / (z - y) */
