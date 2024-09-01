@@ -23,6 +23,18 @@
 #ifndef __OPTIONS_H__
 #define __OPTIONS_H__
 
+#ifndef OPTIMIZE_SIZE
+#define OPTIMIZE_SIZE 1
+#endif
+
+#ifndef OPTIMIZE_SIZE_BLAKE2S
+#define OPTIMIZE_SIZE_BLAKE2S 0
+#endif
+
+#ifndef OPTIMIZE_SIZE_BLAKE2B
+#define OPTIMIZE_SIZE_BLAKE2B OPTIMIZE_SIZE
+#endif
+
 // use precomputed Curve Points (some scalar multiples of curve base point G)
 #ifndef USE_PRECOMPUTED_CP
 #define USE_PRECOMPUTED_CP 1
