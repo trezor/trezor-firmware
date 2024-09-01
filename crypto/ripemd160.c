@@ -1,343 +1,345 @@
-/*
- *  RIPE MD-160 implementation
- *
- *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- *
- *  This file is part of mbed TLS (https://tls.mbed.org)
- */
+#define _RIPEMD160_C_ 1
+
+#include "ripemd160.h"
+#include <assert.h>
+
+#define NDEBUG
+
+// adapted by Pieter Wuille in 2012; all changes are in the public domain
 
 /*
- *  The RIPEMD-160 algorithm was designed by RIPE in 1996
- *  http://homes.esat.kuleuven.be/~bosselae/ripemd160.html
- *  http://ehash.iaik.tugraz.at/wiki/RIPEMD-160
+ *
+ *  RIPEMD160.c : RIPEMD-160 implementation
+ *
+ * Written in 2008 by Dwayne C. Litzenberger <dlitz@dlitz.net>
+ *
+ * ===================================================================
+ * The contents of this file are dedicated to the public domain.  To
+ * the extent that dedication to the public domain is not available,
+ * everyone is granted a worldwide, perpetual, royalty-free,
+ * non-exclusive license to exercise all rights associated with the
+ * contents of this file for any purpose whatsoever.
+ * No rights are reserved.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ * ===================================================================
+ *
+ * Country of origin: Canada
+ *
+ * This implementation (written in C) is based on an implementation the author
+ * wrote in Python.
+ *
+ * This implementation was written with reference to the RIPEMD-160
+ * specification, which is available at:
+ * http://homes.esat.kuleuven.be/~cosicart/pdf/AB-9601/
+ *
+ * It is also documented in the _Handbook of Applied Cryptography_, as
+ * Algorithm 9.55.  It's on page 30 of the following PDF file:
+ * http://www.cacr.math.uwaterloo.ca/hac/about/chap9.pdf
+ *
+ * The RIPEMD-160 specification doesn't really tell us how to do padding, but
+ * since RIPEMD-160 is inspired by MD4, you can use the padding algorithm from
+ * RFC 1320.
+ *
+ * According to http://www.users.zetnet.co.uk/hopwood/crypto/scan/md.html:
+ *   "RIPEMD-160 is big-bit-endian, little-byte-endian, and left-justified."
  */
+
+#include <stdint.h>
 
 #include <string.h>
 
-#include "ripemd160.h"
-#include "memzero.h"
+#define RIPEMD160_DIGEST_SIZE 20
+#define BLOCK_SIZE 64
 
-/*
- * 32-bit integer manipulation macros (little endian)
+/* cyclic left-shift the 32-bit word n left by s bits */
+#define ROL(s, n) (((n) << (s)) | ((n) >> (32-(s))))
+
+/* Initial values for the chaining variables.
+ * This is just 0123456789ABCDEFFEDCBA9876543210F0E1D2C3 in little-endian. */
+static const uint32_t initial_h[5] = { 0x67452301u, 0xEFCDAB89u, 0x98BADCFEu, 0x10325476u, 0xC3D2E1F0u };
+
+/* Ordering of message words.  Based on the permutations rho(i) and pi(i), defined as follows:
+ *
+ *  rho(i) := { 7, 4, 13, 1, 10, 6, 15, 3, 12, 0, 9, 5, 2, 14, 11, 8 }[i]  0 <= i <= 15
+ *
+ *  pi(i) := 9*i + 5 (mod 16)
+ *
+ *  Line  |  Round 1  |  Round 2  |  Round 3  |  Round 4  |  Round 5
+ * -------+-----------+-----------+-----------+-----------+-----------
+ *  left  |    id     |    rho    |   rho^2   |   rho^3   |   rho^4
+ *  right |    pi     |   rho pi  |  rho^2 pi |  rho^3 pi |  rho^4 pi
  */
-#ifndef GET_UINT32_LE
-#define GET_UINT32_LE(n,b,i)                            \
-{                                                       \
-    (n) = ( (uint32_t) (b)[(i)    ]       )             \
-        | ( (uint32_t) (b)[(i) + 1] <<  8 )             \
-        | ( (uint32_t) (b)[(i) + 2] << 16 )             \
-        | ( (uint32_t) (b)[(i) + 3] << 24 );            \
-}
-#endif
 
-#ifndef PUT_UINT32_LE
-#define PUT_UINT32_LE(n,b,i)                                    \
-{                                                               \
-    (b)[(i)    ] = (uint8_t) ( ( (n)       ) & 0xFF );    \
-    (b)[(i) + 1] = (uint8_t) ( ( (n) >>  8 ) & 0xFF );    \
-    (b)[(i) + 2] = (uint8_t) ( ( (n) >> 16 ) & 0xFF );    \
-    (b)[(i) + 3] = (uint8_t) ( ( (n) >> 24 ) & 0xFF );    \
-}
-#endif
+/* Left line */
+static const uint8_t RL[5][16] = {
+    { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 },   /* Round 1: id */
+    { 7, 4, 13, 1, 10, 6, 15, 3, 12, 0, 9, 5, 2, 14, 11, 8 },   /* Round 2: rho */
+    { 3, 10, 14, 4, 9, 15, 8, 1, 2, 7, 0, 6, 13, 11, 5, 12 },   /* Round 3: rho^2 */
+    { 1, 9, 11, 10, 0, 8, 12, 4, 13, 3, 7, 15, 14, 5, 6, 2 },   /* Round 4: rho^3 */
+    { 4, 0, 5, 9, 7, 12, 2, 10, 14, 1, 3, 8, 11, 6, 15, 13 }    /* Round 5: rho^4 */
+};
 
-/*
- * RIPEMD-160 context setup
- */
-void ripemd160_Init(RIPEMD160_CTX *ctx)
-{
-    memzero(ctx, sizeof(RIPEMD160_CTX));
-    ctx->total[0] = 0;
-    ctx->total[1] = 0;
-    ctx->state[0] = 0x67452301;
-    ctx->state[1] = 0xEFCDAB89;
-    ctx->state[2] = 0x98BADCFE;
-    ctx->state[3] = 0x10325476;
-    ctx->state[4] = 0xC3D2E1F0;
-}
-
-#if !defined(MBEDTLS_RIPEMD160_PROCESS_ALT)
-/*
- * Process one block
- */
-void ripemd160_process( RIPEMD160_CTX *ctx, const uint8_t data[RIPEMD160_BLOCK_LENGTH] )
-{
-    uint32_t A = 0, B = 0, C = 0, D = 0, E = 0, Ap = 0, Bp = 0, Cp = 0, Dp = 0, Ep = 0, X[16] = {0};
-
-    GET_UINT32_LE( X[ 0], data,  0 );
-    GET_UINT32_LE( X[ 1], data,  4 );
-    GET_UINT32_LE( X[ 2], data,  8 );
-    GET_UINT32_LE( X[ 3], data, 12 );
-    GET_UINT32_LE( X[ 4], data, 16 );
-    GET_UINT32_LE( X[ 5], data, 20 );
-    GET_UINT32_LE( X[ 6], data, 24 );
-    GET_UINT32_LE( X[ 7], data, 28 );
-    GET_UINT32_LE( X[ 8], data, 32 );
-    GET_UINT32_LE( X[ 9], data, 36 );
-    GET_UINT32_LE( X[10], data, 40 );
-    GET_UINT32_LE( X[11], data, 44 );
-    GET_UINT32_LE( X[12], data, 48 );
-    GET_UINT32_LE( X[13], data, 52 );
-    GET_UINT32_LE( X[14], data, 56 );
-    GET_UINT32_LE( X[15], data, 60 );
-
-    A = Ap = ctx->state[0];
-    B = Bp = ctx->state[1];
-    C = Cp = ctx->state[2];
-    D = Dp = ctx->state[3];
-    E = Ep = ctx->state[4];
-
-#define F1( x, y, z )   ( x ^ y ^ z )
-#define F2( x, y, z )   ( ( x & y ) | ( ~x & z ) )
-#define F3( x, y, z )   ( ( x | ~y ) ^ z )
-#define F4( x, y, z )   ( ( x & z ) | ( y & ~z ) )
-#define F5( x, y, z )   ( x ^ ( y | ~z ) )
-
-#define S( x, n ) ( ( x << n ) | ( x >> (32 - n) ) )
-
-#define P( a, b, c, d, e, r, s, f, k )      \
-    a += f( b, c, d ) + X[r] + k;           \
-    a = S( a, s ) + e;                      \
-    c = S( c, 10 );
-
-#define P2( a, b, c, d, e, r, s, rp, sp )   \
-    P( a, b, c, d, e, r, s, F, K );         \
-    P( a ## p, b ## p, c ## p, d ## p, e ## p, rp, sp, Fp, Kp );
-
-#define F   F1
-#define K   0x00000000
-#define Fp  F5
-#define Kp  0x50A28BE6
-    P2( A, B, C, D, E,  0, 11,  5,  8 );
-    P2( E, A, B, C, D,  1, 14, 14,  9 );
-    P2( D, E, A, B, C,  2, 15,  7,  9 );
-    P2( C, D, E, A, B,  3, 12,  0, 11 );
-    P2( B, C, D, E, A,  4,  5,  9, 13 );
-    P2( A, B, C, D, E,  5,  8,  2, 15 );
-    P2( E, A, B, C, D,  6,  7, 11, 15 );
-    P2( D, E, A, B, C,  7,  9,  4,  5 );
-    P2( C, D, E, A, B,  8, 11, 13,  7 );
-    P2( B, C, D, E, A,  9, 13,  6,  7 );
-    P2( A, B, C, D, E, 10, 14, 15,  8 );
-    P2( E, A, B, C, D, 11, 15,  8, 11 );
-    P2( D, E, A, B, C, 12,  6,  1, 14 );
-    P2( C, D, E, A, B, 13,  7, 10, 14 );
-    P2( B, C, D, E, A, 14,  9,  3, 12 );
-    P2( A, B, C, D, E, 15,  8, 12,  6 );
-#undef F
-#undef K
-#undef Fp
-#undef Kp
-
-#define F   F2
-#define K   0x5A827999
-#define Fp  F4
-#define Kp  0x5C4DD124
-    P2( E, A, B, C, D,  7,  7,  6,  9 );
-    P2( D, E, A, B, C,  4,  6, 11, 13 );
-    P2( C, D, E, A, B, 13,  8,  3, 15 );
-    P2( B, C, D, E, A,  1, 13,  7,  7 );
-    P2( A, B, C, D, E, 10, 11,  0, 12 );
-    P2( E, A, B, C, D,  6,  9, 13,  8 );
-    P2( D, E, A, B, C, 15,  7,  5,  9 );
-    P2( C, D, E, A, B,  3, 15, 10, 11 );
-    P2( B, C, D, E, A, 12,  7, 14,  7 );
-    P2( A, B, C, D, E,  0, 12, 15,  7 );
-    P2( E, A, B, C, D,  9, 15,  8, 12 );
-    P2( D, E, A, B, C,  5,  9, 12,  7 );
-    P2( C, D, E, A, B,  2, 11,  4,  6 );
-    P2( B, C, D, E, A, 14,  7,  9, 15 );
-    P2( A, B, C, D, E, 11, 13,  1, 13 );
-    P2( E, A, B, C, D,  8, 12,  2, 11 );
-#undef F
-#undef K
-#undef Fp
-#undef Kp
-
-#define F   F3
-#define K   0x6ED9EBA1
-#define Fp  F3
-#define Kp  0x6D703EF3
-    P2( D, E, A, B, C,  3, 11, 15,  9 );
-    P2( C, D, E, A, B, 10, 13,  5,  7 );
-    P2( B, C, D, E, A, 14,  6,  1, 15 );
-    P2( A, B, C, D, E,  4,  7,  3, 11 );
-    P2( E, A, B, C, D,  9, 14,  7,  8 );
-    P2( D, E, A, B, C, 15,  9, 14,  6 );
-    P2( C, D, E, A, B,  8, 13,  6,  6 );
-    P2( B, C, D, E, A,  1, 15,  9, 14 );
-    P2( A, B, C, D, E,  2, 14, 11, 12 );
-    P2( E, A, B, C, D,  7,  8,  8, 13 );
-    P2( D, E, A, B, C,  0, 13, 12,  5 );
-    P2( C, D, E, A, B,  6,  6,  2, 14 );
-    P2( B, C, D, E, A, 13,  5, 10, 13 );
-    P2( A, B, C, D, E, 11, 12,  0, 13 );
-    P2( E, A, B, C, D,  5,  7,  4,  7 );
-    P2( D, E, A, B, C, 12,  5, 13,  5 );
-#undef F
-#undef K
-#undef Fp
-#undef Kp
-
-#define F   F4
-#define K   0x8F1BBCDC
-#define Fp  F2
-#define Kp  0x7A6D76E9
-    P2( C, D, E, A, B,  1, 11,  8, 15 );
-    P2( B, C, D, E, A,  9, 12,  6,  5 );
-    P2( A, B, C, D, E, 11, 14,  4,  8 );
-    P2( E, A, B, C, D, 10, 15,  1, 11 );
-    P2( D, E, A, B, C,  0, 14,  3, 14 );
-    P2( C, D, E, A, B,  8, 15, 11, 14 );
-    P2( B, C, D, E, A, 12,  9, 15,  6 );
-    P2( A, B, C, D, E,  4,  8,  0, 14 );
-    P2( E, A, B, C, D, 13,  9,  5,  6 );
-    P2( D, E, A, B, C,  3, 14, 12,  9 );
-    P2( C, D, E, A, B,  7,  5,  2, 12 );
-    P2( B, C, D, E, A, 15,  6, 13,  9 );
-    P2( A, B, C, D, E, 14,  8,  9, 12 );
-    P2( E, A, B, C, D,  5,  6,  7,  5 );
-    P2( D, E, A, B, C,  6,  5, 10, 15 );
-    P2( C, D, E, A, B,  2, 12, 14,  8 );
-#undef F
-#undef K
-#undef Fp
-#undef Kp
-
-#define F   F5
-#define K   0xA953FD4E
-#define Fp  F1
-#define Kp  0x00000000
-    P2( B, C, D, E, A,  4,  9, 12,  8 );
-    P2( A, B, C, D, E,  0, 15, 15,  5 );
-    P2( E, A, B, C, D,  5,  5, 10, 12 );
-    P2( D, E, A, B, C,  9, 11,  4,  9 );
-    P2( C, D, E, A, B,  7,  6,  1, 12 );
-    P2( B, C, D, E, A, 12,  8,  5,  5 );
-    P2( A, B, C, D, E,  2, 13,  8, 14 );
-    P2( E, A, B, C, D, 10, 12,  7,  6 );
-    P2( D, E, A, B, C, 14,  5,  6,  8 );
-    P2( C, D, E, A, B,  1, 12,  2, 13 );
-    P2( B, C, D, E, A,  3, 13, 13,  6 );
-    P2( A, B, C, D, E,  8, 14, 14,  5 );
-    P2( E, A, B, C, D, 11, 11,  0, 15 );
-    P2( D, E, A, B, C,  6,  8,  3, 13 );
-    P2( C, D, E, A, B, 15,  5,  9, 11 );
-    P2( B, C, D, E, A, 13,  6, 11, 11 );
-#undef F
-#undef K
-#undef Fp
-#undef Kp
-
-    C             = ctx->state[1] + C + Dp;
-    ctx->state[1] = ctx->state[2] + D + Ep;
-    ctx->state[2] = ctx->state[3] + E + Ap;
-    ctx->state[3] = ctx->state[4] + A + Bp;
-    ctx->state[4] = ctx->state[0] + B + Cp;
-    ctx->state[0] = C;
-}
-#endif /* !MBEDTLS_RIPEMD160_PROCESS_ALT */
-
-/*
- * RIPEMD-160 process buffer
- */
-void ripemd160_Update( RIPEMD160_CTX *ctx, const uint8_t *input, uint32_t ilen )
-{
-    uint32_t fill = 0;
-    uint32_t left = 0;
-
-    if( ilen == 0 )
-        return;
-
-    left = ctx->total[0] & 0x3F;
-    fill = RIPEMD160_BLOCK_LENGTH - left;
-
-    ctx->total[0] += (uint32_t) ilen;
-    ctx->total[0] &= 0xFFFFFFFF;
-
-    if( ctx->total[0] < (uint32_t) ilen )
-        ctx->total[1]++;
-
-    if( left && ilen >= fill )
-    {
-        memcpy( (void *) (ctx->buffer + left), input, fill );
-        ripemd160_process( ctx, ctx->buffer );
-        input += fill;
-        ilen  -= fill;
-        left = 0;
-    }
-
-    while( ilen >= RIPEMD160_BLOCK_LENGTH )
-    {
-        ripemd160_process( ctx, input );
-        input += RIPEMD160_BLOCK_LENGTH;
-        ilen  -= RIPEMD160_BLOCK_LENGTH;
-    }
-
-    if( ilen > 0 )
-    {
-        memcpy( (void *) (ctx->buffer + left), input, ilen );
-    }
-}
-
-static const uint8_t ripemd160_padding[RIPEMD160_BLOCK_LENGTH] =
-{
- 0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+/* Right line */
+static const uint8_t RR[5][16] = {
+    { 5, 14, 7, 0, 9, 2, 11, 4, 13, 6, 15, 8, 1, 10, 3, 12 },   /* Round 1: pi */
+    { 6, 11, 3, 7, 0, 13, 5, 10, 14, 15, 8, 12, 4, 9, 1, 2 },   /* Round 2: rho pi */
+    { 15, 5, 1, 3, 7, 14, 6, 9, 11, 8, 12, 2, 10, 0, 4, 13 },   /* Round 3: rho^2 pi */
+    { 8, 6, 4, 1, 3, 11, 15, 0, 5, 12, 2, 13, 9, 7, 10, 14 },   /* Round 4: rho^3 pi */
+    { 12, 15, 10, 4, 1, 5, 8, 7, 6, 2, 13, 14, 0, 3, 9, 11 }    /* Round 5: rho^4 pi */
 };
 
 /*
- * RIPEMD-160 final digest
+ * Shifts - Since we don't actually re-order the message words according to
+ * the permutations above (we could, but it would be slower), these tables
+ * come with the permutations pre-applied.
  */
-void ripemd160_Final( RIPEMD160_CTX *ctx, uint8_t output[RIPEMD160_DIGEST_LENGTH] )
+
+/* Shifts, left line */
+static const uint8_t SL[5][16] = {
+    { 11, 14, 15, 12, 5, 8, 7, 9, 11, 13, 14, 15, 6, 7, 9, 8 }, /* Round 1 */
+    { 7, 6, 8, 13, 11, 9, 7, 15, 7, 12, 15, 9, 11, 7, 13, 12 }, /* Round 2 */
+    { 11, 13, 6, 7, 14, 9, 13, 15, 14, 8, 13, 6, 5, 12, 7, 5 }, /* Round 3 */
+    { 11, 12, 14, 15, 14, 15, 9, 8, 9, 14, 5, 6, 8, 6, 5, 12 }, /* Round 4 */
+    { 9, 15, 5, 11, 6, 8, 13, 12, 5, 12, 13, 14, 11, 8, 5, 6 }  /* Round 5 */
+};
+
+/* Shifts, right line */
+static const uint8_t SR[5][16] = {
+    { 8, 9, 9, 11, 13, 15, 15, 5, 7, 7, 8, 11, 14, 14, 12, 6 }, /* Round 1 */
+    { 9, 13, 15, 7, 12, 8, 9, 11, 7, 7, 12, 7, 6, 15, 13, 11 }, /* Round 2 */
+    { 9, 7, 15, 11, 8, 6, 6, 14, 12, 13, 5, 14, 13, 13, 7, 5 }, /* Round 3 */
+    { 15, 5, 8, 11, 14, 14, 6, 14, 6, 9, 12, 9, 12, 5, 15, 8 }, /* Round 4 */
+    { 8, 5, 12, 9, 12, 5, 14, 6, 8, 13, 6, 5, 15, 13, 11, 11 }  /* Round 5 */
+};
+
+/* Boolean functions */
+
+#define F1(x, y, z) ((x) ^ (y) ^ (z))
+#define F2(x, y, z) (((x) & (y)) | (~(x) & (z)))
+#define F3(x, y, z) (((x) | ~(y)) ^ (z))
+#define F4(x, y, z) (((x) & (z)) | ((y) & ~(z)))
+#define F5(x, y, z) ((x) ^ ((y) | ~(z)))
+
+/* Round constants, left line */
+static const uint32_t KL[5] = {
+    0x00000000u,    /* Round 1: 0 */
+    0x5A827999u,    /* Round 2: floor(2**30 * sqrt(2)) */
+    0x6ED9EBA1u,    /* Round 3: floor(2**30 * sqrt(3)) */
+    0x8F1BBCDCu,    /* Round 4: floor(2**30 * sqrt(5)) */
+    0xA953FD4Eu     /* Round 5: floor(2**30 * sqrt(7)) */
+};
+
+/* Round constants, right line */
+static const uint32_t KR[5] = {
+    0x50A28BE6u,    /* Round 1: floor(2**30 * cubert(2)) */
+    0x5C4DD124u,    /* Round 2: floor(2**30 * cubert(3)) */
+    0x6D703EF3u,    /* Round 3: floor(2**30 * cubert(5)) */
+    0x7A6D76E9u,    /* Round 4: floor(2**30 * cubert(7)) */
+    0x00000000u     /* Round 5: 0 */
+};
+
+void ripemd160_init(ripemd160_state *self)
 {
-    uint32_t last = 0; uint32_t padn = 0;
-    uint32_t high = 0; uint32_t low = 0;
-    uint8_t msglen[8] = {0};
 
-    high = ( ctx->total[0] >> 29 )
-         | ( ctx->total[1] <<  3 );
-    low  = ( ctx->total[0] <<  3 );
-
-    PUT_UINT32_LE( low,  msglen, 0 );
-    PUT_UINT32_LE( high, msglen, 4 );
-
-    last = ctx->total[0] & 0x3F;
-    padn = ( last < 56 ) ? ( 56 - last ) : ( 120 - last );
-
-    ripemd160_Update( ctx, ripemd160_padding, padn );
-    ripemd160_Update( ctx, msglen, 8 );
-
-    PUT_UINT32_LE( ctx->state[0], output,  0 );
-    PUT_UINT32_LE( ctx->state[1], output,  4 );
-    PUT_UINT32_LE( ctx->state[2], output,  8 );
-    PUT_UINT32_LE( ctx->state[3], output, 12 );
-    PUT_UINT32_LE( ctx->state[4], output, 16 );
-
-    memzero(ctx, sizeof(RIPEMD160_CTX));
+    memcpy(self->h, initial_h, RIPEMD160_DIGEST_SIZE);
+    memset(&self->buf, 0, sizeof(self->buf));
+    self->length = 0;
+    self->bufpos = 0;
 }
 
-/*
- * output = RIPEMD-160( input buffer )
- */
-void ripemd160(const uint8_t *msg, uint32_t msg_len, uint8_t hash[RIPEMD160_DIGEST_LENGTH])
+static inline void byteswap32(uint32_t *v)
 {
-    RIPEMD160_CTX ctx = {0};
-    ripemd160_Init( &ctx );
-    ripemd160_Update( &ctx, msg, msg_len );
-    ripemd160_Final( &ctx, hash );
+    union { uint32_t w; uint8_t b[4]; } x, y;
+
+    x.w = *v;
+    y.b[0] = x.b[3];
+    y.b[1] = x.b[2];
+    y.b[2] = x.b[1];
+    y.b[3] = x.b[0];
+    *v = y.w;
+
+    /* Wipe temporary variables */
+    x.w = y.w = 0;
+}
+
+static inline void byteswap_digest(uint32_t *p)
+{
+    unsigned int i;
+
+    for (i = 0; i < 4; i++) {
+        byteswap32(p++);
+        byteswap32(p++);
+        byteswap32(p++);
+        byteswap32(p++);
+    }
+}
+
+/* The RIPEMD160 compression function.  Operates on self->buf */
+static void ripemd160_compress(ripemd160_state *self)
+{
+    uint8_t w, round;
+    uint32_t T;
+    uint32_t AL, BL, CL, DL, EL;    /* left line */
+    uint32_t AR, BR, CR, DR, ER;    /* right line */
+
+    /* Sanity check */
+    assert(self->bufpos == 64);
+
+    /* Byte-swap the buffer if we're on a big-endian machine */
+#ifdef PCT_BIG_ENDIAN
+    byteswap_digest(self->buf.w);
+#endif
+
+    /* Load the left and right lines with the initial state */
+    AL = AR = self->h[0];
+    BL = BR = self->h[1];
+    CL = CR = self->h[2];
+    DL = DR = self->h[3];
+    EL = ER = self->h[4];
+
+    /* Round 1 */
+    round = 0;
+    for (w = 0; w < 16; w++) { /* left line */
+        T = ROL(SL[round][w], AL + F1(BL, CL, DL) + self->buf.w[RL[round][w]] + KL[round]) + EL;
+        AL = EL; EL = DL; DL = ROL(10, CL); CL = BL; BL = T;
+    }
+    for (w = 0; w < 16; w++) { /* right line */
+        T = ROL(SR[round][w], AR + F5(BR, CR, DR) + self->buf.w[RR[round][w]] + KR[round]) + ER;
+        AR = ER; ER = DR; DR = ROL(10, CR); CR = BR; BR = T;
+    }
+
+    /* Round 2 */
+    round++;
+    for (w = 0; w < 16; w++) { /* left line */
+        T = ROL(SL[round][w], AL + F2(BL, CL, DL) + self->buf.w[RL[round][w]] + KL[round]) + EL;
+        AL = EL; EL = DL; DL = ROL(10, CL); CL = BL; BL = T;
+    }
+    for (w = 0; w < 16; w++) { /* right line */
+        T = ROL(SR[round][w], AR + F4(BR, CR, DR) + self->buf.w[RR[round][w]] + KR[round]) + ER;
+        AR = ER; ER = DR; DR = ROL(10, CR); CR = BR; BR = T;
+    }
+
+    /* Round 3 */
+    round++;
+    for (w = 0; w < 16; w++) { /* left line */
+        T = ROL(SL[round][w], AL + F3(BL, CL, DL) + self->buf.w[RL[round][w]] + KL[round]) + EL;
+        AL = EL; EL = DL; DL = ROL(10, CL); CL = BL; BL = T;
+    }
+    for (w = 0; w < 16; w++) { /* right line */
+        T = ROL(SR[round][w], AR + F3(BR, CR, DR) + self->buf.w[RR[round][w]] + KR[round]) + ER;
+        AR = ER; ER = DR; DR = ROL(10, CR); CR = BR; BR = T;
+    }
+
+    /* Round 4 */
+    round++;
+    for (w = 0; w < 16; w++) { /* left line */
+        T = ROL(SL[round][w], AL + F4(BL, CL, DL) + self->buf.w[RL[round][w]] + KL[round]) + EL;
+        AL = EL; EL = DL; DL = ROL(10, CL); CL = BL; BL = T;
+    }
+    for (w = 0; w < 16; w++) { /* right line */
+        T = ROL(SR[round][w], AR + F2(BR, CR, DR) + self->buf.w[RR[round][w]] + KR[round]) + ER;
+        AR = ER; ER = DR; DR = ROL(10, CR); CR = BR; BR = T;
+    }
+
+    /* Round 5 */
+    round++;
+    for (w = 0; w < 16; w++) { /* left line */
+        T = ROL(SL[round][w], AL + F5(BL, CL, DL) + self->buf.w[RL[round][w]] + KL[round]) + EL;
+        AL = EL; EL = DL; DL = ROL(10, CL); CL = BL; BL = T;
+    }
+    for (w = 0; w < 16; w++) { /* right line */
+        T = ROL(SR[round][w], AR + F1(BR, CR, DR) + self->buf.w[RR[round][w]] + KR[round]) + ER;
+        AR = ER; ER = DR; DR = ROL(10, CR); CR = BR; BR = T;
+    }
+
+    /* Final mixing stage */
+    T = self->h[1] + CL + DR;
+    self->h[1] = self->h[2] + DL + ER;
+    self->h[2] = self->h[3] + EL + AR;
+    self->h[3] = self->h[4] + AL + BR;
+    self->h[4] = self->h[0] + BL + CR;
+    self->h[0] = T;
+
+    /* Clear the buffer and wipe the temporary variables */
+    T = AL = BL = CL = DL = EL = AR = BR = CR = DR = ER = 0;
+    memset(&self->buf, 0, sizeof(self->buf));
+    self->bufpos = 0;
+}
+
+void ripemd160_process(ripemd160_state *self, const unsigned char *p, unsigned long length)
+{
+    unsigned long bytes_needed;
+
+    /* Some assertions */
+    assert(p != NULL && length >= 0);
+
+    /* We never leave a full buffer */
+    assert(self->bufpos < 64);
+
+    while (length > 0) {
+        /* Figure out how many bytes we need to fill the internal buffer. */
+        bytes_needed = 64 - self->bufpos;
+
+        if ((unsigned long) length >= bytes_needed) {
+            /* We have enough bytes, so copy them into the internal buffer and run
+             * the compression function. */
+            memcpy(&self->buf.b[self->bufpos], p, bytes_needed);
+            self->bufpos += bytes_needed;
+            self->length += bytes_needed << 3;    /* length is in bits */
+            p += bytes_needed;
+            ripemd160_compress(self);
+            length -= bytes_needed;
+            continue;
+        }
+
+        /* We do not have enough bytes to fill the internal buffer.
+         * Copy what's there and return. */
+        memcpy(&self->buf.b[self->bufpos], p, length);
+        self->bufpos += length;
+        self->length += length << 3;    /* length is in bits */
+        return;
+    }
+}
+
+void ripemd160_done(ripemd160_state *self, unsigned char *out)
+{
+    /* Append the padding */
+    self->buf.b[self->bufpos++] = 0x80;
+
+    if (self->bufpos > 56) {
+        self->bufpos = 64;
+        ripemd160_compress(self);
+    }
+
+    /* Append the length */
+    self->buf.w[14] = (uint32_t) (self->length & 0xFFFFffffu);
+    self->buf.w[15] = (uint32_t) ((self->length >> 32) & 0xFFFFffffu);
+#ifdef PCT_BIG_ENDIAN
+    byteswap32(&self->buf.w[14]);
+    byteswap32(&self->buf.w[15]);
+#endif
+    self->bufpos = 64;
+    ripemd160_compress(self);
+
+    /* Copy the final state into the output buffer */
+#ifdef PCT_BIG_ENDIAN
+    byteswap_digest(self->h);
+#endif
+    memcpy(out, &self->h, RIPEMD160_DIGEST_SIZE);
+}
+
+void ripemd160(const void* in, unsigned long length, void* out)
+{
+  ripemd160_state md;
+  ripemd160_init(&md);
+  ripemd160_process(&md, in, length);
+  ripemd160_done(&md, out);
 }
