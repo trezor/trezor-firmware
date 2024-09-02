@@ -59,7 +59,7 @@ def by_slip44(slip44: int) -> EthereumNetworkInfo:
 
 # fmt: off
 def _networks_iterator() -> Iterator[NetworkInfoTuple]:
-% for model in ["T2B1", "T3T1", "T2T1"]:
+% for model in ALL_MODELS:
     if utils.INTERNAL_MODEL == "${model}":
 % for n in sorted(supported_on(model, eth), key=lambda network: (int(network.chain_id), network.name)):
         yield (

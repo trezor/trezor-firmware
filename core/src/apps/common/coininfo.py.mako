@@ -134,17 +134,15 @@ ATTRIBUTES = (
     ("confidential_assets", optional_dict),
 )
 
-models = ["T2B1", "T3T1", "T2T1"]
-
 btc_names = ["Bitcoin", "Testnet", "Regtest"]
 
 coins = {}
-for model in models:
+for model in ALL_MODELS:
     coins.setdefault('btc', {})[model] = [c for c in supported_on(model, bitcoin) if c.name in btc_names]
     coins.setdefault('alt', {})[model] = [c for c in supported_on(model, bitcoin) if c.name not in btc_names]
 %>\
 def by_name(name: str) -> CoinInfo:
-% for model in models:
+% for model in ALL_MODELS:
     if utils.INTERNAL_MODEL == "${model}":
 % for coin in coins['btc'][model]:
         if name == ${black_repr(coin["coin_name"])}:
