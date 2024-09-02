@@ -70,7 +70,11 @@ def set_language(client: Client, lang: str):
 
 def get_lang_json(lang: str) -> translations.JsonDef:
     assert lang in LANGUAGES
-    return json.loads((TRANSLATIONS / f"{lang}.json").read_text())
+    lang_json = json.loads((TRANSLATIONS / f"{lang}.json").read_text())
+    if (fonts_safe3 := lang_json.get("fonts", {}).get("##Safe3")) is not None:
+        lang_json["fonts"]["T2B1"] = fonts_safe3
+        lang_json["fonts"]["T3B1"] = fonts_safe3
+    return lang_json
 
 
 def _get_all_language_data() -> list[dict[str, str]]:
