@@ -18,7 +18,8 @@ import time
 
 import pytest
 
-from trezorlib import btc, device, models
+from trezorlib import btc, device
+from trezorlib.debuglink import LayoutType
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.tools import parse_path
 
@@ -27,7 +28,7 @@ PIN = "1234"
 
 def _assert_busy(client: Client, should_be_busy: bool, screen: str = "Homescreen"):
     assert client.features.busy is should_be_busy
-    if client.model in (models.T2T1, models.T2B1, models.T3T1):
+    if client.layout_type is not LayoutType.T1:
         if should_be_busy:
             assert "CoinJoinProgress" in client.debug.read_layout().all_components()
         else:

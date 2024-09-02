@@ -27,7 +27,7 @@ from trezorlib.messages import BackupAvailability, BackupType
 from ...common import EXTERNAL_ENTROPY, WITH_MOCK_URANDOM, generate_entropy
 from ...input_flows import InputFlowSlip39BasicResetRecovery
 
-pytestmark = [pytest.mark.skip_t1b1]
+pytestmark = pytest.mark.models("core")
 
 
 def reset_device(client: Client, strength: int):

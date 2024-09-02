@@ -17,7 +17,7 @@
 import pytest
 
 import trezorlib.messages as m
-from trezorlib import models
+from trezorlib.debuglink import LayoutType
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import Cancelled
 
@@ -71,7 +71,7 @@ def test_cancel_message_via_initialize(client: Client, message):
     assert isinstance(resp, m.Features)
 
 
-@pytest.mark.skip_t1b1
+@pytest.mark.models("core")
 def test_cancel_on_paginated(client: Client):
     """Check that device is responsive on paginated screen. See #1708."""
     # In #1708, the device would ignore USB (or UDP) events while waiting for the user
@@ -94,7 +94,7 @@ def test_cancel_on_paginated(client: Client):
 
     # In T2B1, confirm message is no longer paginated by default,
     # user needs to click info button
-    if client.model is models.T2B1:
+    if client.layout_type is LayoutType.TR:
         client._raw_write(m.ButtonAck())
         client.debug.press_right()
         resp = client._raw_read()

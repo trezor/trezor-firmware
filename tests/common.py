@@ -24,6 +24,7 @@ from unittest import mock
 import pytest
 
 from trezorlib import btc, messages, models, tools
+from trezorlib.debuglink import LayoutType
 
 from . import buttons
 
@@ -99,16 +100,22 @@ def parametrize_using_common_fixtures(*paths: str) -> "MarkDecorator":
                     test_id = test_id.lower().replace(" ", "_")
 
             skip_models = test.get("skip_models", [])
-            skip_marks = []
+            skiplist = []
+            # TODO: genericify this
             for skip_model in skip_models:
                 if skip_model in ("t1", "t1b1"):
-                    skip_marks.append(pytest.mark.skip_t1b1)
+                    skiplist.append(models.T1B1)
                 if skip_model in ("t2", "t2t1"):
-                    skip_marks.append(pytest.mark.skip_t2t1)
+                    skiplist.append(models.T2T1)
                 if skip_model in ("tr", "t2b1"):
-                    skip_marks.append(pytest.mark.skip_t2b1)
+                    skiplist.append(models.T2B1)
+                    skiplist.append(models.T3B1)
                 if skip_model == "t3t1":
-                    skip_marks.append(pytest.mark.skip_t3t1)
+                    skiplist.append(models.T3T1)
+            if skiplist:
+                skip_marks = [pytest.mark.models(skip=skiplist)]
+            else:
+                skip_marks = []
 
             tests.append(
                 pytest.param(
@@ -198,14 +205,14 @@ def read_and_confirm_mnemonic(
 
         mnemonic = yield from read_and_confirm_mnemonic(client.debug)
     """
-    if debug.model is models.T2T1:
+    if debug.layout_type is LayoutType.TT:
         mnemonic = yield from read_mnemonic_from_screen_tt(debug)
-    elif debug.model is models.T2B1:
+    elif debug.layout_type is LayoutType.TR:
         mnemonic = yield from read_mnemonic_from_screen_tr(debug)
-    elif debug.model is models.T3T1:
+    elif debug.layout_type is LayoutType.Mercury:
         mnemonic = yield from read_mnemonic_from_screen_mercury(debug)
     else:
-        raise ValueError(f"Unknown model: {debug.model}")
+        raise ValueError(f"Unknown model: {debug.layout_type}")
 
     if not check_share(debug, mnemonic, choose_wrong):
         return None
@@ -282,15 +289,15 @@ def check_share(
     """
     re_num_of_word = r"\d+"
     for _ in range(3):
-        if debug.model is models.T2T1:
+        if debug.layout_type is LayoutType.TT:
             # T2T1 has position as the first number in the text
             word_pos_match = re.search(
                 re_num_of_word, debug.wait_layout().text_content()
             )
-        elif debug.model is models.T2B1:
+        elif debug.layout_type is LayoutType.TR:
             # other models have the instruction in the title/subtitle
             word_pos_match = re.search(re_num_of_word, debug.wait_layout().title())
-        elif debug.model is models.T3T1:
+        elif debug.layout_type is LayoutType.Mercury:
             word_pos_match = re.search(re_num_of_word, debug.wait_layout().subtitle())
         else:
             word_pos_match = None

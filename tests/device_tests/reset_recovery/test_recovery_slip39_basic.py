@@ -36,7 +36,7 @@ from ...input_flows import (
     InputFlowSlip39BasicRecoveryWrongNthWord,
 )
 
-pytestmark = pytest.mark.skip_t1b1
+pytestmark = pytest.mark.models("core")
 
 MNEMONIC_SLIP39_BASIC_20_1of1 = [
     "academic academic academic academic academic academic academic academic academic academic academic academic academic academic academic academic academic rebuild aquatic spew"

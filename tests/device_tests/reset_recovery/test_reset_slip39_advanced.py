@@ -25,7 +25,7 @@ from trezorlib.messages import BackupAvailability, BackupType
 from ...common import EXTERNAL_ENTROPY, WITH_MOCK_URANDOM, generate_entropy
 from ...input_flows import InputFlowSlip39AdvancedResetRecovery
 
-pytestmark = [pytest.mark.skip_t1b1]
+pytestmark = pytest.mark.models("core")
 
 
 # TODO: test with different options

@@ -16,7 +16,7 @@
 
 import pytest
 
-from trezorlib import device
+from trezorlib import device, exceptions
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 
 from ..input_flows import InputFlowTutorial
@@ -24,14 +24,23 @@ from ..input_flows import InputFlowTutorial
 
 # TODO not initialized?
 @pytest.mark.setup_client(uninitialized=True)
-@pytest.mark.skip_t1b1
-@pytest.mark.skip_t2b1
-@pytest.mark.skip_t2t1
-@pytest.mark.parametrize("cancel", (True, False))
-def test_tutorial_t3t1(client: Client, cancel: bool):
+@pytest.mark.models("safe")
+def test_tutorial(client: Client):
     with client:
-        IF = InputFlowTutorial(client, cancel=cancel)
+        IF = InputFlowTutorial(client, cancel=False)
         client.set_input_flow(IF.get())
         device.show_device_tutorial(client)
+
+    assert client.features.initialized is False
+
+
+@pytest.mark.setup_client(uninitialized=True)
+@pytest.mark.models("safe")
+def test_tutorial_cancel(client: Client):
+    with client:
+        IF = InputFlowTutorial(client, cancel=True)
+        client.set_input_flow(IF.get())
+        with pytest.raises(exceptions.Cancelled):
+            device.show_device_tutorial(client)
 
     assert client.features.initialized is False

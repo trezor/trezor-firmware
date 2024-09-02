@@ -27,7 +27,7 @@ from .data_webauthn import CRED1, CRED2, CRED3, CREDS
 RK_CAPACITY = 100
 
 
-@pytest.mark.skip_t1b1
+@pytest.mark.models("core")
 @pytest.mark.altcoin
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
 def test_add_remove(client: Client):

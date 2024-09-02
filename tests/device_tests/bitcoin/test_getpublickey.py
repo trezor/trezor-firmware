@@ -116,7 +116,7 @@ def test_get_public_node(client: Client, coin_name, xpub_magic, path, xpub):
     assert bip32.serialize(res.node, xpub_magic) == xpub
 
 
-@pytest.mark.skip_t1b1
+@pytest.mark.models("core")
 @pytest.mark.parametrize("coin_name, xpub_magic, path, xpub", VECTORS_BITCOIN)
 def test_get_public_node_show(client: Client, coin_name, xpub_magic, path, xpub):
     with client:

@@ -24,17 +24,13 @@ from trezorlib.transport import udp
 from ..common import MNEMONIC12
 
 
-@pytest.mark.skip_t2t1
-@pytest.mark.skip_t2b1
-@pytest.mark.skip_t3t1
+@pytest.mark.models("legacy")
 def test_layout(client: Client):
     layout = client.debug.state().layout
     assert len(layout) == 1024
 
 
-@pytest.mark.skip_t2t1
-@pytest.mark.skip_t2b1
-@pytest.mark.skip_t3t1
+@pytest.mark.models("legacy")
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
 def test_mnemonic(client: Client):
     client.ensure_unlocked()
@@ -42,9 +38,7 @@ def test_mnemonic(client: Client):
     assert mnemonic == MNEMONIC12.encode()
 
 
-@pytest.mark.skip_t2t1
-@pytest.mark.skip_t2b1
-@pytest.mark.skip_t3t1
+@pytest.mark.models("legacy")
 @pytest.mark.setup_client(mnemonic=MNEMONIC12, pin="1234", passphrase="")
 def test_pin(client: Client):
     resp = client.call_raw(messages.GetAddress(address_n=parse_path("m/44'/0'/0'/0/0")))
@@ -62,7 +56,7 @@ def test_pin(client: Client):
     assert isinstance(resp, messages.Address)
 
 
-@pytest.mark.skip_t1b1
+@pytest.mark.models("core")
 def test_softlock_instability(client: Client):
     def load_device():
         debuglink.load_device(

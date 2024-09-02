@@ -30,8 +30,9 @@ if TYPE_CHECKING:
     from ..device_handler import BackgroundDeviceHandler
 
 
-# T2B1-only
-pytestmark = [pytest.mark.skip_t1b1, pytest.mark.skip_t2t1, pytest.mark.skip_t3t1]
+# Safe3 only
+# TODO extend to T3T1
+pytestmark = pytest.mark.models("safe3")
 
 
 @contextmanager

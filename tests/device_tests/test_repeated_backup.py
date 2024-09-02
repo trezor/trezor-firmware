@@ -30,9 +30,10 @@ from ..common import (
 )
 from ..input_flows import InputFlowSlip39BasicBackup, InputFlowSlip39BasicRecoveryDryRun
 
+pytestmark = pytest.mark.models("core")
+
 
 @pytest.mark.setup_client(needs_backup=True, mnemonic=MNEMONIC_SLIP39_BASIC_20_3of6)
-@pytest.mark.skip_t1b1
 @WITH_MOCK_URANDOM
 def test_repeated_backup(client: Client):
     assert client.features.backup_availability == messages.BackupAvailability.Required
@@ -85,7 +86,6 @@ def test_repeated_backup(client: Client):
 
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC_SLIP39_SINGLE_EXT_20)
-@pytest.mark.skip_t1b1
 @WITH_MOCK_URANDOM
 def test_repeated_backup_upgrade_single(client: Client):
     assert (
@@ -125,7 +125,6 @@ def test_repeated_backup_upgrade_single(client: Client):
 
 
 @pytest.mark.setup_client(needs_backup=True, mnemonic=MNEMONIC_SLIP39_BASIC_20_3of6)
-@pytest.mark.skip_t1b1
 @WITH_MOCK_URANDOM
 def test_repeated_backup_cancel(client: Client):
     assert client.features.backup_availability == messages.BackupAvailability.Required
@@ -181,7 +180,6 @@ def test_repeated_backup_cancel(client: Client):
 
 
 @pytest.mark.setup_client(needs_backup=True, mnemonic=MNEMONIC_SLIP39_BASIC_20_3of6)
-@pytest.mark.skip_t1b1
 @WITH_MOCK_URANDOM
 def test_repeated_backup_send_disallowed_message(client: Client):
     assert client.features.backup_availability == messages.BackupAvailability.Required

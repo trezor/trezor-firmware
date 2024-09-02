@@ -25,7 +25,7 @@ from ...common import WITH_MOCK_URANDOM
 from ...input_flows import InputFlowBip39Recovery, InputFlowBip39ResetBackup
 
 
-@pytest.mark.skip_t1b1
+@pytest.mark.models("core")
 @pytest.mark.setup_client(uninitialized=True)
 def test_reset_recovery(client: Client):
     mnemonic = reset(client)

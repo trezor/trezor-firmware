@@ -52,9 +52,7 @@ VECTORS = (  # path, script_type, address
 )
 
 
-@pytest.mark.skip_t2t1
-@pytest.mark.skip_t2b1
-@pytest.mark.skip_t3t1
+@pytest.mark.models("legacy")
 @pytest.mark.parametrize("path, script_type, address", VECTORS)
 def test_show_t1(
     client: Client, path: str, script_type: messages.InputScriptType, address: str
@@ -80,7 +78,7 @@ def test_show_t1(
         )
 
 
-@pytest.mark.skip_t1b1
+@pytest.mark.models("core")
 @pytest.mark.parametrize("chunkify", (True, False))
 @pytest.mark.parametrize("path, script_type, address", VECTORS)
 def test_show_tt(
@@ -106,7 +104,7 @@ def test_show_tt(
         )
 
 
-@pytest.mark.skip_t1b1
+@pytest.mark.models("core")
 @pytest.mark.parametrize("path, script_type, address", VECTORS)
 def test_show_cancel(
     client: Client, path: str, script_type: messages.InputScriptType, address: str
@@ -237,7 +235,7 @@ VECTORS_MULTISIG = (  # script_type, bip48_type, address, xpubs, ignore_xpub_mag
 )
 
 
-@pytest.mark.skip_t1b1
+@pytest.mark.models("core")
 @pytest.mark.multisig
 @pytest.mark.parametrize(
     "script_type, bip48_type, address, xpubs, ignore_xpub_magic", VECTORS_MULTISIG

@@ -17,6 +17,7 @@
 import pytest
 
 from trezorlib import btc, device, messages, misc, models
+from trezorlib.debuglink import LayoutType
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
@@ -69,7 +70,7 @@ def test_initialize(client: Client):
         client.init_device()
 
 
-@pytest.mark.skip_t1b1
+@pytest.mark.models("core")
 @pytest.mark.setup_client(pin=PIN4)
 @pytest.mark.parametrize("passphrase", (True, False))
 def test_passphrase_reporting(client: Client, passphrase):
@@ -110,9 +111,7 @@ def test_apply_settings(client: Client):
         device.apply_settings(client, label="nazdar")
 
 
-@pytest.mark.skip_t2t1
-@pytest.mark.skip_t2b1
-@pytest.mark.skip_t3t1
+@pytest.mark.models("legacy")
 def test_change_pin_t1(client: Client):
     _assert_protection(client)
     with client:
@@ -130,7 +129,7 @@ def test_change_pin_t1(client: Client):
         device.change_pin(client)
 
 
-@pytest.mark.skip_t1b1
+@pytest.mark.models("core")
 def test_change_pin_t2(client: Client):
     _assert_protection(client)
     with client:
@@ -141,7 +140,7 @@ def test_change_pin_t2(client: Client):
                 messages.ButtonRequest,
                 _pin_request(client),
                 _pin_request(client),
-                (client.model is models.T2B1, messages.ButtonRequest),
+                (client.layout_type is LayoutType.TR, messages.ButtonRequest),
                 _pin_request(client),
                 messages.ButtonRequest,
                 messages.Success,
@@ -211,9 +210,7 @@ def test_wipe_device(client: Client):
 
 
 @pytest.mark.setup_client(uninitialized=True)
-@pytest.mark.skip_t2t1
-@pytest.mark.skip_t2b1
-@pytest.mark.skip_t3t1
+@pytest.mark.models("legacy")
 def test_reset_device(client: Client):
     assert client.features.pin_protection is False
     assert client.features.passphrase_protection is False
@@ -246,9 +243,7 @@ def test_reset_device(client: Client):
 
 
 @pytest.mark.setup_client(uninitialized=True)
-@pytest.mark.skip_t2t1
-@pytest.mark.skip_t2b1
-@pytest.mark.skip_t3t1
+@pytest.mark.models("legacy")
 def test_recovery_device(client: Client):
     assert client.features.pin_protection is False
     assert client.features.passphrase_protection is False
@@ -300,9 +295,7 @@ def test_sign_message(client: Client):
         )
 
 
-@pytest.mark.skip_t2t1
-@pytest.mark.skip_t2b1
-@pytest.mark.skip_t3t1
+@pytest.mark.models("legacy")
 def test_verify_message_t1(client: Client):
     _assert_protection(client)
     with client:
@@ -325,7 +318,7 @@ def test_verify_message_t1(client: Client):
         )
 
 
-@pytest.mark.skip_t1b1
+@pytest.mark.models("core")
 def test_verify_message_t2(client: Client):
     _assert_protection(client)
     with client:

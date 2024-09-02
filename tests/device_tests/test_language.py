@@ -35,13 +35,14 @@ from ..translations import (
     sign_blob,
 )
 
-pytestmark = pytest.mark.skip_t1b1
+pytestmark = pytest.mark.models("core")
 
 
 MAX_DATA_LENGTH = {
     models.T2T1: 48 * 1024,
     models.T2B1: 32 * 1024,
     models.T3T1: 256 * 1024,
+    models.T3B1: 256 * 1024,
 }
 
 

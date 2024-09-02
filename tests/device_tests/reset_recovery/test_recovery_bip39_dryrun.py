@@ -79,15 +79,13 @@ def test_seed_mismatch(client: Client):
         do_recover(client, ["all"] * 12, mismatch=True)
 
 
-@pytest.mark.skip_t2t1
-@pytest.mark.skip_t2b1
-@pytest.mark.skip_t3t1
+@pytest.mark.models("legacy")
 def test_invalid_seed_t1(client: Client):
     with pytest.raises(exceptions.TrezorFailure, match="Invalid seed"):
         do_recover(client, ["stick"] * 12)
 
 
-@pytest.mark.skip_t1b1
+@pytest.mark.models("core")
 def test_invalid_seed_core(client: Client):
     with client:
         client.watch_layout()

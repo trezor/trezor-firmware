@@ -71,7 +71,7 @@ VECTORS = [
 ]
 
 
-@pytest.mark.skip_t1b1
+@pytest.mark.models("core")
 @pytest.mark.parametrize("backup_type, backup_flow", VECTORS)
 @pytest.mark.setup_client(uninitialized=True)
 def test_skip_backup_msg(client: Client, backup_type, backup_flow):
@@ -104,7 +104,7 @@ def test_skip_backup_msg(client: Client, backup_type, backup_flow):
     assert state.mnemonic_secret == secret
 
 
-@pytest.mark.skip_t1b1
+@pytest.mark.models("core")
 @pytest.mark.parametrize("backup_type, backup_flow", VECTORS)
 @pytest.mark.setup_client(uninitialized=True)
 def test_skip_backup_manual(client: Client, backup_type: BackupType, backup_flow):

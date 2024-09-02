@@ -22,7 +22,7 @@ from trezorlib.exceptions import TrezorFailure
 
 from ...input_flows import InputFlowSlip39BasicRecoveryDryRun
 
-pytestmark = pytest.mark.skip_t1b1
+pytestmark = pytest.mark.models("core")
 
 SHARES_20_2of3 = [
     "crush merchant academic acid dream decision orbit smug trend trust painting slice glad crunch veteran lunch friar satoshi engage aquatic",

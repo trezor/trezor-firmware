@@ -25,7 +25,7 @@ from ...common import MNEMONIC12
 PIN4 = "1234"
 PIN6 = "789456"
 
-pytestmark = [pytest.mark.skip_t2t1, pytest.mark.skip_t2b1, pytest.mark.skip_t3t1]
+pytestmark = pytest.mark.models("legacy")
 
 
 @pytest.mark.setup_client(uninitialized=True)

@@ -57,16 +57,14 @@ def test_correct_pin(client: Client):
         get_test_address(client)
 
 
-@pytest.mark.skip_t2t1
-@pytest.mark.skip_t2b1
-@pytest.mark.skip_t3t1
+@pytest.mark.models("legacy")
 def test_incorrect_pin_t1(client: Client):
     with pytest.raises(PinException):
         client.use_pin_sequence([BAD_PIN])
         get_test_address(client)
 
 
-@pytest.mark.skip_t1b1
+@pytest.mark.models("core")
 def test_incorrect_pin_t2(client: Client):
     with client:
         # After first incorrect attempt, TT will not raise an error, but instead ask for another attempt
@@ -81,9 +79,7 @@ def test_incorrect_pin_t2(client: Client):
         get_test_address(client)
 
 
-@pytest.mark.skip_t2t1
-@pytest.mark.skip_t2b1
-@pytest.mark.skip_t3t1
+@pytest.mark.models("legacy")
 def test_exponential_backoff_t1(client: Client):
     for attempt in range(3):
         start = time.time()
@@ -93,7 +89,7 @@ def test_exponential_backoff_t1(client: Client):
         check_pin_backoff_time(attempt, start)
 
 
-@pytest.mark.skip_t1b1
+@pytest.mark.models("core")
 def test_exponential_backoff_t2(client: Client):
     with client:
         IF = InputFlowPINBackoff(client, BAD_PIN, PIN4)

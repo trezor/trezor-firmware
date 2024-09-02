@@ -41,7 +41,7 @@ TEST_VECTORS = [
 pytestmark = [
     pytest.mark.altcoin,
     pytest.mark.monero,
-    pytest.mark.skip_t1b1,
+    pytest.mark.models("core"),
     pytest.mark.setup_client(mnemonic=MNEMONIC12),
 ]
 

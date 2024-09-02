@@ -111,7 +111,7 @@ def test_apply_auto_lock_delay_out_of_range(client: Client, seconds):
             device.apply_settings(client, auto_lock_delay_ms=delay)
 
 
-@pytest.mark.skip_t1b1
+@pytest.mark.models("core")
 def test_autolock_cancels_ui(client: Client):
     set_autolock_delay(client, 10 * 1000)
 
