@@ -51,7 +51,7 @@ def token_by_chain_address(chain_id: int, address: bytes) -> EthereumTokenInfo |
 
 
 def _token_iterator(chain_id: int) -> Iterator[tuple[bytes, str, int, str]]:
-% for model in ["T2B1", "T3T1", "T2T1"]:
+% for model in ALL_MODELS:
     if utils.INTERNAL_MODEL == "${model}":
 % for token_chain_id, tokens in group_tokens(supported_on(model, erc20)).items():
         if chain_id == ${token_chain_id}:  # ${tokens[0].chain}
