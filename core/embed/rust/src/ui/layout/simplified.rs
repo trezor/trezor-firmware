@@ -67,7 +67,7 @@ fn touch_eval() -> Option<TouchEvent> {
     TouchEvent::new(event_type, ex as _, ey as _).ok()
 }
 
-fn render(frame: &mut impl Component) {
+fn render<U: UIFeaturesCommon>(frame: &mut impl Component) {
     #[cfg(not(feature = "new_rendering"))]
     {
         display::sync();
@@ -78,7 +78,7 @@ fn render(frame: &mut impl Component) {
     #[cfg(feature = "new_rendering")]
     {
         display::sync();
-        render_on_display(None, Some(Color::black()), |target| {
+        render_on_display!(U::Display, Color::black(), |target| {
             frame.render(target);
         });
         display::refresh();
@@ -88,7 +88,7 @@ fn render(frame: &mut impl Component) {
 pub fn run(frame: &mut impl Component<Msg = impl ReturnToC>) -> u32 {
     frame.place(ModelUI::SCREEN);
     ModelUI::fadeout();
-    render(frame);
+    render::<ModelUI>(frame);
     ModelUI::fadein();
 
     #[cfg(feature = "button")]
@@ -109,7 +109,7 @@ pub fn run(frame: &mut impl Component<Msg = impl ReturnToC>) -> u32 {
             if let Some(message) = msg {
                 return message.return_to_c();
             }
-            render(frame);
+            render::<ModelUI>(frame);
         }
     }
 }
@@ -121,7 +121,7 @@ pub fn show(frame: &mut impl Component, fading: bool) {
         ModelUI::fadeout()
     };
 
-    render(frame);
+    render::<ModelUI>(frame);
 
     if fading {
         ModelUI::fadein()

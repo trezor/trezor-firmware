@@ -1,5 +1,6 @@
-use crate::ui::shape::DrawingCache;
+use crate::{ui::shape::DrawingCache, util::Lock};
 
+use spin::MutexGuard;
 use static_alloc::Bump;
 
 /// Memory reserved for `ProgressiveRenderer`s shape storage.
@@ -17,53 +18,55 @@ pub const SHAPE_MAX_COUNT: usize = 45;
 #[cfg(feature = "xframebuffer")]
 pub const SHAPE_MAX_COUNT: usize = 0;
 
-/// Size of `bump_a` memory that might not be accessible by DMA
-pub const BUMP_A_SIZE: usize = DrawingCache::get_bump_a_size() + SHAPE_MEM_SIZE;
-/// Size of `bump_b` memory that must be accessible by DMA
-pub const BUMP_B_SIZE: usize = DrawingCache::get_bump_b_size();
+/// Size of bump memory that might not be accessible by DMA
+pub const BUMP_NODMA_SIZE: usize = DrawingCache::get_bump_nodma_size() + SHAPE_MEM_SIZE;
+/// Bump allocator that doesn't need DMA.
+#[cfg_attr(not(target_os = "macos"), link_section = ".no_dma_buffers")]
+static mut BUMP_NODMA: Bump<[u8; BUMP_NODMA_SIZE]> = Bump::uninit();
 
-//
-static mut LOCKED: bool = false;
+/// Size of bump memory that must be accessible by DMA
+pub const BUMP_DMA_SIZE: usize = DrawingCache::get_bump_dma_size();
+/// Bump allocator B that needs DMA.
+#[cfg_attr(not(target_os = "macos"), link_section = ".buf")]
+static mut BUMP_DMA: Bump<[u8; BUMP_DMA_SIZE]> = Bump::uninit();
 
-/// Runs a user-defined function with two bump allocators.
-///
-/// The function is passed two bump allocators, `bump_a` and `bump_b`, which
-/// can be used to allocate memory for temporary objects.
-///
-/// The function calls cannot be nested. The function panics if that happens.
-pub fn run_with_bumps<F>(func: F)
-where
-    F: for<'a> FnOnce(&'a mut Bump<[u8; BUMP_A_SIZE]>, &'a mut Bump<[u8; BUMP_B_SIZE]>),
-{
-    // SAFETY:
-    // The application is single-threaded, so we can safely use a
-    // static variable as a lock against nested calls.
-    ensure!(unsafe { !LOCKED }, "nested run_with_bumps!");
+pub struct Bumps<'a> {
+    /// Mutex guard ensuring that we are the only ones holding the bump
+    /// allocators. Note that the lifetime argument 'a unifies with the &'a
+    /// mut Bump, forcing the lifetime of those mut refs to not outlive the
+    /// guard.
+    guard: MutexGuard<'a, ()>,
+    pub nodma: &'a mut Bump<[u8; BUMP_NODMA_SIZE]>,
+    pub dma: &'a mut Bump<[u8; BUMP_DMA_SIZE]>,
+}
 
-    unsafe {
-        LOCKED = true;
-    };
+static BUMPS_LOCK: Lock<()> = Lock::new(());
 
-    #[cfg_attr(not(target_os = "macos"), link_section = ".no_dma_buffers")]
-    static mut BUMP_A: Bump<[u8; BUMP_A_SIZE]> = Bump::uninit();
+impl<'a> Bumps<'a> {
+    /// Lock the bump allocator memory and gain access to it through the
+    /// returned guard.
+    pub fn lock() -> Self {
+        let guard = BUMPS_LOCK.lock();
 
-    #[cfg_attr(not(target_os = "macos"), link_section = ".buf")]
-    static mut BUMP_B: Bump<[u8; BUMP_B_SIZE]> = Bump::uninit();
+        // SAFETY:
+        // Guard is locked so no other mut refs to bump allocators exist
+        let nodma = unsafe { &mut *core::ptr::addr_of_mut!(BUMP_NODMA) };
+        let dma = unsafe { &mut *core::ptr::addr_of_mut!(BUMP_DMA) };
 
-    // SAFETY:
-    // The function cannot be nested, so we can safely
-    // use the static bump allocators.
-    let bump_a = unsafe { &mut *core::ptr::addr_of_mut!(BUMP_A) };
-    let bump_b = unsafe { &mut *core::ptr::addr_of_mut!(BUMP_B) };
+        nodma.reset();
+        dma.reset();
 
-    bump_a.reset();
-    bump_b.reset();
+        Self { guard, nodma, dma }
+    }
 
-    func(bump_a, bump_b);
-
-    unsafe {
-        LOCKED = false;
-    };
+    /// Force unlock the bump allocator memory.
+    ///
+    /// # Safety
+    ///
+    /// This function must be invoked exclusively in failure scenarios.
+    pub unsafe fn force_unlock() {
+        unsafe { BUMPS_LOCK.force_unlock() };
+    }
 }
 
 /// This function enables nested invocations of `run_with_bumps()`,
@@ -79,6 +82,6 @@ pub unsafe fn unlock_bumps_on_failure() {
     // The application is single-threaded, so we can safely use a
     // static variable as a lock against nested calls.
     unsafe {
-        LOCKED = false;
+        Bumps::force_unlock();
     };
 }

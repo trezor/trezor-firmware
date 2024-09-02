@@ -441,7 +441,7 @@ impl Homescreen {
         let image = get_homescreen_image();
         let mut buf = unwrap!(ImageBuffer::new(AREA.size()), "no image buf");
 
-        render_on_canvas(buf.canvas(), None, |target| {
+        render_on_canvas!(buf.canvas(), None, |target| {
             if let Some(image) = image {
                 shape::JpegImage::new_image(Point::zero(), image).render(target);
             } else {
@@ -735,7 +735,7 @@ impl Lockscreen {
         let image = get_homescreen_image();
         let mut buf = unwrap!(ImageBuffer::new(AREA.size()), "no image buf");
 
-        render_on_canvas(buf.canvas(), None, |target| {
+        render_on_canvas!(buf.canvas(), None, |target| {
             if let Some(image) = image {
                 shape::JpegImage::new_image(Point::zero(), image).render(target);
             } else {

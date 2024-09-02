@@ -58,25 +58,25 @@ pub trait Renderer<'a> {
 // ==========================================================================
 
 /// A simple implementation of a Renderer that draws directly onto the CanvasEx
-pub struct DirectRenderer<'a, 'alloc, C>
+pub struct DirectRenderer<'canvas, 'alloc, C>
 where
     C: Canvas,
 {
     /// Target canvas
-    canvas: &'a mut C,
+    canvas: &'canvas mut C,
     /// Drawing cache (decompression context, scratch-pad memory)
-    cache: &'a DrawingCache<'alloc>,
+    cache: DrawingCache<'alloc>,
 }
 
-impl<'a, 'alloc, C> DirectRenderer<'a, 'alloc, C>
+impl<'canvas, 'alloc, C> DirectRenderer<'canvas, 'alloc, C>
 where
     C: Canvas,
 {
     /// Creates a new DirectRenderer instance with the given canvas
     pub fn new(
-        canvas: &'a mut C,
+        canvas: &'canvas mut C,
         bg_color: Option<Color>,
-        cache: &'a DrawingCache<'alloc>,
+        cache: DrawingCache<'alloc>,
     ) -> Self {
         if let Some(color) = bg_color {
             canvas.fill_background(color);
@@ -89,7 +89,7 @@ where
     }
 }
 
-impl<'a, 'alloc, C> Renderer<'alloc> for DirectRenderer<'a, 'alloc, C>
+impl<'canvas, 'alloc, C> Renderer<'alloc> for DirectRenderer<'canvas, 'alloc, C>
 where
     C: Canvas,
 {
@@ -106,55 +106,8 @@ where
         S: Shape<'alloc> + ShapeClone<'alloc>,
     {
         if self.canvas.viewport().contains(shape.bounds()) {
-            shape.draw(self.canvas, self.cache);
-            shape.cleanup(self.cache);
+            shape.draw(self.canvas, &self.cache);
+            shape.cleanup(&self.cache);
         }
-    }
-}
-
-pub struct ScopedRenderer<'alloc, 'env, T>
-where
-    'env: 'alloc,
-    T: Renderer<'alloc>,
-{
-    pub renderer: T,
-    _env: core::marker::PhantomData<&'env mut &'env ()>,
-    _alloc: core::marker::PhantomData<&'alloc ()>,
-}
-
-impl<'alloc, T> ScopedRenderer<'alloc, '_, T>
-where
-    T: Renderer<'alloc>,
-{
-    pub fn new(renderer: T) -> Self {
-        Self {
-            renderer,
-            _env: core::marker::PhantomData,
-            _alloc: core::marker::PhantomData,
-        }
-    }
-
-    pub fn into_inner(self) -> T {
-        self.renderer
-    }
-}
-
-impl<'alloc, T> Renderer<'alloc> for ScopedRenderer<'alloc, '_, T>
-where
-    T: Renderer<'alloc>,
-{
-    fn viewport(&self) -> Viewport {
-        self.renderer.viewport()
-    }
-
-    fn set_viewport(&mut self, viewport: Viewport) {
-        self.renderer.set_viewport(viewport);
-    }
-
-    fn render_shape<S>(&mut self, shape: S)
-    where
-        S: Shape<'alloc> + ShapeClone<'alloc>,
-    {
-        self.renderer.render_shape(shape);
     }
 }

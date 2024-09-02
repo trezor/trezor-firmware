@@ -7,7 +7,7 @@ use crate::{
     },
     ui::{
         component::{
-            base::{AttachType, AttachType::Swipe},
+            base::AttachType::{self, Swipe},
             swipe_detect::SwipeSettings,
             Component, Event, EventCtx, SwipeDetect, SwipeDetectMsg, SwipeDirection,
         },
@@ -16,7 +16,7 @@ use crate::{
         flow::{base::Decision, FlowMsg, FlowState},
         geometry::Rect,
         layout::obj::ObjComponent,
-        shape::{render_on_display, ConcreteRenderer, Renderer, ScopedRenderer},
+        shape::{render_on_display, Display},
         util::animation_disabled,
     },
 };
@@ -29,10 +29,10 @@ use heapless::Vec;
 ///
 /// This copies the Component interface, but it is parametrized by a concrete
 /// Renderer type, making it object-safe.
-pub trait FlowComponentTrait<'s, R: Renderer<'s>>: Swipable {
+pub trait FlowComponentTrait<D: Display>: Swipable {
     fn place(&mut self, bounds: Rect) -> Rect;
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<FlowMsg>;
-    fn render(&'s self, target: &mut R);
+    fn render<'s>(&'s self, target: &mut D::Renderer<'_, '_, 's>);
 
     #[cfg(feature = "ui_debug")]
     fn trace(&self, t: &mut dyn crate::trace::Tracer);
@@ -44,10 +44,10 @@ pub trait FlowComponentTrait<'s, R: Renderer<'s>>: Swipable {
 /// * also implement Swipable, required by FlowComponentTrait,
 /// * use FlowMsg as their Msg type,
 /// * implement MaybeTrace to be able to conform to ObjComponent.
-impl<'s, R, C> FlowComponentTrait<'s, R> for C
+impl<C, D> FlowComponentTrait<D> for C
 where
     C: Component<Msg = FlowMsg> + MaybeTrace + Swipable,
-    R: Renderer<'s>,
+    D: Display,
 {
     fn place(&mut self, bounds: Rect) -> Rect {
         <Self as Component>::place(self, bounds)
@@ -57,7 +57,7 @@ where
         <Self as Component>::event(self, ctx, event)
     }
 
-    fn render(&'s self, target: &mut R) {
+    fn render<'bumps>(&'bumps self, target: &mut D::Renderer<'_, '_, 'bumps>) {
         <Self as Component>::render(self, target)
     }
 
@@ -65,25 +65,6 @@ where
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         <Self as crate::trace::Trace>::trace(self, t)
     }
-}
-
-/// Shortcut type for the concrete renderer passed into `render()` method.
-type RendererImpl<'a, 'alloc, 'env> = ScopedRenderer<'alloc, 'env, ConcreteRenderer<'a, 'alloc>>;
-
-/// Fully object-safe component-like trait for flow components.
-///
-/// This trait has no generic parameters:
-/// * it is instantiated with a concrete Renderer type, and
-/// * it requires the `FlowComponentTrait` trait to be implemented for _any_
-///   lifetimes.
-pub trait FlowComponentDynTrait:
-    for<'a, 'alloc, 'env> FlowComponentTrait<'alloc, RendererImpl<'a, 'alloc, 'env>>
-{
-}
-
-impl<T> FlowComponentDynTrait for T where
-    T: for<'a, 'alloc, 'env> FlowComponentTrait<'alloc, RendererImpl<'a, 'alloc, 'env>>
-{
 }
 
 /// Swipe flow consisting of multiple screens.
@@ -94,11 +75,11 @@ impl<T> FlowComponentDynTrait for T where
 /// If a swipe is detected:
 /// - currently active component is asked to handle the event,
 /// - if it can't then FlowState::handle_swipe is consulted.
-pub struct SwipeFlow {
+pub struct SwipeFlow<D: Display> {
     /// Current state of the flow.
     state: &'static dyn FlowState,
     /// Store of all screens which are part of the flow.
-    store: Vec<GcBox<dyn FlowComponentDynTrait>, 12>,
+    store: Vec<GcBox<dyn FlowComponentTrait<D>>, 12>,
     /// Swipe detector.
     swipe: SwipeDetect,
     /// Swipe allowed
@@ -112,7 +93,7 @@ pub struct SwipeFlow {
     decision_override: Option<StateChange>,
 }
 
-impl SwipeFlow {
+impl<D: Display> SwipeFlow<D> {
     pub fn new(initial_state: &'static dyn FlowState) -> Result<Self, error::Error> {
         Ok(Self {
             state: initial_state,
@@ -131,20 +112,20 @@ impl SwipeFlow {
     pub fn with_page(
         mut self,
         state: &'static dyn FlowState,
-        page: impl FlowComponentDynTrait + 'static,
+        page: impl FlowComponentTrait<D> + 'static,
     ) -> Result<Self, error::Error> {
         debug_assert!(self.store.len() == state.index());
         let alloc = GcBox::new(page)?;
-        let page = gc::coerce!(FlowComponentDynTrait, alloc);
+        let page = gc::coerce!(FlowComponentTrait<D>, alloc);
         unwrap!(self.store.push(page));
         Ok(self)
     }
 
-    fn current_page(&self) -> &GcBox<dyn FlowComponentDynTrait> {
+    fn current_page(&self) -> &GcBox<dyn FlowComponentTrait<D>> {
         &self.store[self.state.index()]
     }
 
-    fn current_page_mut(&mut self) -> &mut GcBox<dyn FlowComponentDynTrait> {
+    fn current_page_mut(&mut self) -> &mut GcBox<dyn FlowComponentTrait<D>> {
         &mut self.store[self.state.index()]
     }
 
@@ -170,7 +151,7 @@ impl SwipeFlow {
         ctx.request_paint();
     }
 
-    fn render_state<'s>(&'s self, state: usize, target: &mut RendererImpl<'_, 's, '_>) {
+    fn render_state<'s>(&'s self, state: usize, target: &mut D::Renderer<'_, '_, 's>) {
         self.store[state].render(target);
     }
 
@@ -346,7 +327,7 @@ impl SwipeFlow {
 /// `FlowMsg` as their `Component::Msg` (provided by `impl FlowComponentTrait`
 /// earlier in this file).
 #[cfg(feature = "micropython")]
-impl ObjComponent for SwipeFlow {
+impl<D: Display> ObjComponent for SwipeFlow<D> {
     fn obj_place(&mut self, bounds: Rect) -> Rect {
         for elem in self.store.iter_mut() {
             elem.place(bounds);
@@ -371,14 +352,14 @@ impl ObjComponent for SwipeFlow {
         }
     }
     fn obj_paint(&mut self) {
-        render_on_display(None, Some(Color::black()), |target| {
+        render_on_display!(D, Color::black(), |target| {
             self.render_state(self.state.index(), target);
         });
     }
 }
 
 #[cfg(feature = "ui_debug")]
-impl crate::trace::Trace for SwipeFlow {
+impl<D: Display> crate::trace::Trace for SwipeFlow<D> {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         self.current_page().trace(t)
     }

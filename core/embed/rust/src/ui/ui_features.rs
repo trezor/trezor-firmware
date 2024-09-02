@@ -1,4 +1,4 @@
-use crate::ui::geometry::Rect;
+use crate::ui::{geometry::Rect, shape::Display};
 
 #[cfg(feature = "bootloader")]
 use crate::trezorhal::secbool::secbool;
@@ -7,6 +7,9 @@ use crate::trezorhal::secbool::secbool;
 use crate::ui::display::Color;
 
 pub trait UIFeaturesCommon {
+    #[cfg(feature = "new_rendering")]
+    type Display: Display;
+
     fn fadein() {}
     fn fadeout() {}
     fn backlight_on() {}

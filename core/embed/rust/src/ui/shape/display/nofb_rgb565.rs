@@ -3,57 +3,52 @@ use crate::{
         bitblt::{BitBltCopy, BitBltFill},
         display,
     },
-    ui::shape::render::ScopedRenderer,
+    ui::{
+        display::Color,
+        geometry::{Offset, Rect},
+    },
 };
 
-use crate::ui::{
-    display::Color,
-    geometry::{Offset, Rect},
+use super::{
+    super::{BasicCanvas, BitmapView, DrawingCache, ProgressiveRenderer, Viewport},
+    base::Display,
+    bumps,
 };
-
-use super::super::{BasicCanvas, BitmapView, DrawingCache, ProgressiveRenderer, Viewport};
-
-use super::bumps;
 
 use static_alloc::Bump;
 
-pub type ConcreteRenderer<'a, 'alloc> =
-    ProgressiveRenderer<'a, 'alloc, Bump<[u8; bumps::BUMP_A_SIZE]>, DisplayCanvas>;
+pub struct NoFbRgb565;
 
-/// Creates the `Renderer` object for drawing on a display and invokes a
-/// user-defined function that takes a single argument `target`. The user's
-/// function can utilize the `target` for drawing on the display.
-///
-/// `clip` specifies a rectangle area that the user will draw to.
-/// If no clip is specified, the entire display area is used.
-///
-/// `bg_color` specifies a background color with which the clip is filled before
-/// the drawing starts. If the background color is None, the background
-/// is undefined, and the user has to fill it themselves.
-pub fn render_on_display<'env, F>(viewport: Option<Viewport>, bg_color: Option<Color>, func: F)
-where
-    F: for<'alloc> FnOnce(&mut ScopedRenderer<'alloc, 'env, ConcreteRenderer<'_, 'alloc>>),
-{
-    bumps::run_with_bumps(|bump_a, bump_b| {
-        let cache = DrawingCache::new(bump_a, bump_b);
-        let mut canvas = DisplayCanvas::new();
+impl Display for NoFbRgb565 {
+    type Canvas<'canvas> = DisplayCanvas;
 
-        if let Some(viewport) = viewport {
-            canvas.set_viewport(viewport);
-        }
+    type Renderer<'env, 'canvas, 'bump> = ProgressiveRenderer<'env, 'bump, Bump<[u8; bumps::BUMP_NODMA_SIZE]>, DisplayCanvas>
+    where
+        'canvas: 'env;
 
-        let mut target = ScopedRenderer::new(ProgressiveRenderer::new(
-            &mut canvas,
-            bg_color,
-            &cache,
-            bump_a,
+    fn display_canvas<'canvas, 'fb>(
+        _framebuffer: &'canvas mut display::XFrameBuffer<'fb>,
+    ) -> Self::Canvas<'canvas> {
+        DisplayCanvas::new()
+    }
+
+    fn renderer<'env, 'canvas, 'bumps>(
+        bumps: &'bumps bumps::Bumps<'bumps>,
+        canvas: &'env mut Self::Canvas<'canvas>,
+        bg_color: Color,
+    ) -> Self::Renderer<'env, 'canvas, 'bumps>
+    where
+        'canvas: 'env,
+    {
+        let cache = DrawingCache::new(bumps);
+        ProgressiveRenderer::new(
+            canvas,
+            Some(bg_color),
+            cache,
+            bumps.nodma,
             bumps::SHAPE_MAX_COUNT,
-        ));
-
-        func(&mut target);
-
-        target.into_inner().render(16);
-    });
+        )
+    }
 }
 
 /// A simple display canvas allowing just two bitblt operations:

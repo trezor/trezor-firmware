@@ -113,49 +113,53 @@ impl ModelMercuryFeatures {
         }
         display::sync();
 
-        render_on_display(None, Some(bg_color), |target| {
-            shape::Text::new(PROGRESS_TEXT_ORIGIN, text)
-                .with_font(Font::NORMAL)
-                .with_fg(BLD_FG)
-                .render(target);
-
-            let loader_offset: i16 = 19;
-            let center_text_offset: i16 = 10;
-            let center = SCREEN.center() + Offset::y(loader_offset);
-            let inactive_color = bg_color.blend(fg_color, 85);
-            let end = 360.0 * progress as f32 / 1000.0;
-
-            render_loader(
-                center,
-                inactive_color,
-                fg_color,
-                bg_color,
-                if progress >= LOADER_MAX {
-                    LoaderRange::Full
-                } else {
-                    LoaderRange::FromTo(0.0, end)
-                },
-                target,
-            );
-
-            if let Some((icon, color)) = icon {
-                shape::ToifImage::new(center, icon.toif)
-                    .with_align(Alignment2D::CENTER)
-                    .with_fg(color)
+        render_on_display!(
+            <Self as UIFeaturesCommon>::Display,
+            bg_color,
+            |target: &mut _| {
+                shape::Text::new(PROGRESS_TEXT_ORIGIN, text)
+                    .with_font(Font::NORMAL)
+                    .with_fg(BLD_FG)
                     .render(target);
-            }
 
-            if let Some(center_text) = center_text {
-                shape::Text::new(
-                    SCREEN.center() + Offset::y(loader_offset + center_text_offset),
-                    center_text,
-                )
-                .with_align(Alignment::Center)
-                .with_font(Font::NORMAL)
-                .with_fg(GREY)
-                .render(target);
+                let loader_offset: i16 = 19;
+                let center_text_offset: i16 = 10;
+                let center = SCREEN.center() + Offset::y(loader_offset);
+                let inactive_color = bg_color.blend(fg_color, 85);
+                let end = 360.0 * progress as f32 / 1000.0;
+
+                render_loader(
+                    center,
+                    inactive_color,
+                    fg_color,
+                    bg_color,
+                    if progress >= LOADER_MAX {
+                        LoaderRange::Full
+                    } else {
+                        LoaderRange::FromTo(0.0, end)
+                    },
+                    target,
+                );
+
+                if let Some((icon, color)) = icon {
+                    shape::ToifImage::new(center, icon.toif)
+                        .with_align(Alignment2D::CENTER)
+                        .with_fg(color)
+                        .render(target);
+                }
+
+                if let Some(center_text) = center_text {
+                    shape::Text::new(
+                        SCREEN.center() + Offset::y(loader_offset + center_text_offset),
+                        center_text,
+                    )
+                    .with_align(Alignment::Center)
+                    .with_font(Font::NORMAL)
+                    .with_fg(GREY)
+                    .render(target);
+                }
             }
-        });
+        );
 
         display::refresh();
         if initialize {
@@ -431,75 +435,79 @@ impl UIFeaturesBootloader for ModelMercuryFeatures {
 
         display::sync();
 
-        render_on_display(None, Some(bg_color), |target| {
-            // Draw vendor image if it's valid and has size of 120x120
-            if let Ok(toif) = Toif::new(vendor_img) {
-                if (toif.width() == 120) && (toif.height() == 120) {
-                    // Image position depends on the vendor string presence
-                    let pos = if vendor_str.is_some() {
-                        Point::new(SCREEN.width() / 2, 30)
-                    } else {
-                        Point::new(SCREEN.width() / 2, 60)
-                    };
+        render_on_display!(
+            <Self as UIFeaturesCommon>::Display,
+            bg_color,
+            |target: &mut _| {
+                // Draw vendor image if it's valid and has size of 120x120
+                if let Ok(toif) = Toif::new(vendor_img) {
+                    if (toif.width() == 120) && (toif.height() == 120) {
+                        // Image position depends on the vendor string presence
+                        let pos = if vendor_str.is_some() {
+                            Point::new(SCREEN.width() / 2, 30)
+                        } else {
+                            Point::new(SCREEN.width() / 2, 60)
+                        };
 
-                    shape::ToifImage::new(pos, toif)
-                        .with_align(Alignment2D::TOP_CENTER)
-                        .with_fg(BLD_FG)
-                        .render(target);
+                        shape::ToifImage::new(pos, toif)
+                            .with_align(Alignment2D::TOP_CENTER)
+                            .with_fg(BLD_FG)
+                            .render(target);
+                    }
                 }
-            }
 
-            // Draw vendor string if present
-            if let Some(text) = vendor_str {
-                let pos = Point::new(SCREEN.width() / 2, SCREEN.height() - 5 - 50);
-                shape::Text::new(pos, text)
-                    .with_align(Alignment::Center)
-                    .with_font(Font::NORMAL)
-                    .with_fg(BLD_FG) //COLOR_BL_BG
-                    .render(target);
+                // Draw vendor string if present
+                if let Some(text) = vendor_str {
+                    let pos = Point::new(SCREEN.width() / 2, SCREEN.height() - 5 - 50);
+                    shape::Text::new(pos, text)
+                        .with_align(Alignment::Center)
+                        .with_font(Font::NORMAL)
+                        .with_fg(BLD_FG) //COLOR_BL_BG
+                        .render(target);
 
-                let pos = Point::new(SCREEN.width() / 2, SCREEN.height() - 5 - 25);
+                    let pos = Point::new(SCREEN.width() / 2, SCREEN.height() - 5 - 25);
 
-                let mut version_text: BootloaderString = String::new();
-                unwrap!(uwrite!(
-                    version_text,
-                    "{}.{}.{}",
-                    version[0],
-                    version[1],
-                    version[2]
-                ));
+                    let mut version_text: BootloaderString = String::new();
+                    unwrap!(uwrite!(
+                        version_text,
+                        "{}.{}.{}",
+                        version[0],
+                        version[1],
+                        version[2]
+                    ));
 
-                shape::Text::new(pos, version_text.as_str())
-                    .with_align(Alignment::Center)
-                    .with_font(Font::NORMAL)
-                    .with_fg(BLD_FG)
-                    .render(target);
-            }
-
-            // Draw a message
-            match wait.cmp(&0) {
-                core::cmp::Ordering::Equal => {}
-                core::cmp::Ordering::Greater => {
-                    let mut text: BootloaderString = String::new();
-                    unwrap!(uwrite!(text, "starting in {} s", wait));
-
-                    let pos = Point::new(SCREEN.width() / 2, SCREEN.height() - 5);
-                    shape::Text::new(pos, text.as_str())
+                    shape::Text::new(pos, version_text.as_str())
                         .with_align(Alignment::Center)
                         .with_font(Font::NORMAL)
                         .with_fg(BLD_FG)
                         .render(target);
                 }
-                core::cmp::Ordering::Less => {
-                    let pos = Point::new(SCREEN.width() / 2, SCREEN.height() - 5);
-                    shape::Text::new(pos, "click to continue ...")
-                        .with_align(Alignment::Center)
-                        .with_font(Font::NORMAL)
-                        .with_fg(BLD_FG)
-                        .render(target);
+
+                // Draw a message
+                match wait.cmp(&0) {
+                    core::cmp::Ordering::Equal => {}
+                    core::cmp::Ordering::Greater => {
+                        let mut text: BootloaderString = String::new();
+                        unwrap!(uwrite!(text, "starting in {} s", wait));
+
+                        let pos = Point::new(SCREEN.width() / 2, SCREEN.height() - 5);
+                        shape::Text::new(pos, text.as_str())
+                            .with_align(Alignment::Center)
+                            .with_font(Font::NORMAL)
+                            .with_fg(BLD_FG)
+                            .render(target);
+                    }
+                    core::cmp::Ordering::Less => {
+                        let pos = Point::new(SCREEN.width() / 2, SCREEN.height() - 5);
+                        shape::Text::new(pos, "click to continue ...")
+                            .with_align(Alignment::Center)
+                            .with_font(Font::NORMAL)
+                            .with_fg(BLD_FG)
+                            .render(target);
+                    }
                 }
             }
-        });
+        );
 
         display::refresh();
     }

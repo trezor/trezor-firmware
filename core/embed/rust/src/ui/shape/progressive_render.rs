@@ -13,13 +13,13 @@ struct ShapeHolder<'a> {
 }
 
 /// A more advanced Renderer implementation that supports deferred rendering.
-pub struct ProgressiveRenderer<'a, 'alloc, T, C>
+pub struct ProgressiveRenderer<'canvas, 'alloc, T, C>
 where
     T: LocalAllocLeakExt<'alloc>,
     C: BasicCanvas,
 {
     /// Target canvas
-    canvas: &'a mut C,
+    canvas: &'canvas mut C,
     /// Bump for cloning shapes
     bump: &'alloc T,
     /// List of rendered shapes
@@ -29,19 +29,19 @@ where
     // Default background color
     bg_color: Option<Color>,
     /// Drawing cache (decompression context, scratch-pad memory)
-    cache: &'a DrawingCache<'alloc>,
+    cache: DrawingCache<'alloc>,
 }
 
-impl<'a, 'alloc, T, C> ProgressiveRenderer<'a, 'alloc, T, C>
+impl<'canvas, 'alloc, T, C> ProgressiveRenderer<'canvas, 'alloc, T, C>
 where
     T: LocalAllocLeakExt<'alloc>,
     C: BasicCanvas,
 {
     /// Creates a new ProgressiveRenderer instance
     pub fn new(
-        canvas: &'a mut C,
+        canvas: &'canvas mut C,
         bg_color: Option<Color>,
-        cache: &'a DrawingCache<'alloc>,
+        cache: DrawingCache<'alloc>,
         bump: &'alloc T,
         max_shapes: usize,
     ) -> Self {
@@ -100,11 +100,11 @@ where
                 // Is the shape overlapping the current slice?
                 if shape_viewport.contains(shape_bounds) {
                     slice.set_viewport(shape_viewport.translate((-slice_r.top_left()).into()));
-                    holder.shape.draw(&mut slice, self.cache);
+                    holder.shape.draw(&mut slice, &self.cache);
 
                     if shape_bounds.y1 + shape_viewport.origin.y <= shape_viewport.clip.y1 {
                         // The shape will never be drawn again
-                        holder.shape.cleanup(self.cache);
+                        holder.shape.cleanup(&self.cache);
                     }
                 }
             }
@@ -113,7 +113,7 @@ where
     }
 }
 
-impl<'a, 'alloc, T, C> Renderer<'alloc> for ProgressiveRenderer<'a, 'alloc, T, C>
+impl<'canvas, 'alloc, T, C> Renderer<'alloc> for ProgressiveRenderer<'canvas, 'alloc, T, C>
 where
     T: LocalAllocLeakExt<'alloc>,
     C: BasicCanvas,

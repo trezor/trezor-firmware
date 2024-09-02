@@ -32,6 +32,8 @@ use crate::{
         constant, display,
         event::USBEvent,
         geometry::Rect,
+        ui_features::ModelUI,
+        UIFeaturesCommon,
     },
 };
 
@@ -120,9 +122,13 @@ where
 
         #[cfg(feature = "new_rendering")]
         {
-            render_on_display(None, Some(Color::black()), |target| {
-                self.render(target);
-            });
+            render_on_display!(
+                <ModelUI as UIFeaturesCommon>::Display,
+                Color::black(),
+                |target| {
+                    self.render(target);
+                }
+            );
         }
     }
 }

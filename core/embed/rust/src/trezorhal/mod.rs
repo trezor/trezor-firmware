@@ -1,6 +1,7 @@
 pub mod bip39;
 #[macro_use]
 #[allow(unused_macros)]
+#[cfg(feature = "ui")]
 pub mod fatal_error;
 #[cfg(feature = "ui")]
 pub mod bitblt;

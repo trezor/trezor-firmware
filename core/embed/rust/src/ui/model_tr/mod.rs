@@ -14,6 +14,9 @@ pub mod theme;
 pub struct ModelTRFeatures {}
 
 impl UIFeaturesCommon for ModelTRFeatures {
+    #[cfg(feature = "new_rendering")]
+    type Display = crate::ui::shape::display::fb_display::Mono8;
+
     const SCREEN: Rect = constant::SCREEN;
 
     fn screen_fatal_error(title: &str, msg: &str, footer: &str) {

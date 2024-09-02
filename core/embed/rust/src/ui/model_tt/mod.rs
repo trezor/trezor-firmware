@@ -20,6 +20,9 @@ use crate::ui::{
 pub struct ModelTTFeatures;
 
 impl UIFeaturesCommon for ModelTTFeatures {
+    #[cfg(feature = "new_rendering")]
+    type Display = crate::ui::shape::display::nofb_rgb565::NoFbRgb565;
+
     #[cfg(feature = "backlight")]
     fn fadein() {
         crate::ui::display::fade_backlight_duration(backlight::get_backlight_normal(), 150);
