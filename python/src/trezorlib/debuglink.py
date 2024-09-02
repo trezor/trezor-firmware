@@ -21,7 +21,7 @@ import textwrap
 import time
 from copy import deepcopy
 from datetime import datetime
-from enum import IntEnum
+from enum import Enum, IntEnum, auto
 from itertools import zip_longest
 from pathlib import Path
 from typing import (
@@ -63,6 +63,25 @@ if TYPE_CHECKING:
 EXPECTED_RESPONSES_CONTEXT_LINES = 3
 
 LOG = logging.getLogger(__name__)
+
+
+class LayoutType(Enum):
+    T1 = auto()
+    TT = auto()
+    TR = auto()
+    Mercury = auto()
+
+    @classmethod
+    def from_model(cls, model: models.TrezorModel) -> "LayoutType":
+        if model in (models.T2T1,):
+            return cls.TT
+        if model in (models.T2B1, models.T3B1):
+            return cls.TR
+        if model in (models.T3T1,):
+            return cls.Mercury
+        if model in (models.T1B1,):
+            return cls.T1
+        raise ValueError(f"Unknown model: {model}")
 
 
 class UnstructuredJSONReader:
@@ -403,6 +422,11 @@ class DebugLink:
     def legacy_debug(self) -> bool:
         """Differences in handling debug events and LayoutContent."""
         return self.version < (2, 6, 1)
+
+    @property
+    def layout_type(self) -> LayoutType:
+        assert self.model is not None
+        return LayoutType.from_model(self.model)
 
     def set_screen_text_file(self, file_path: Optional[Path]) -> None:
         if file_path is not None:
@@ -994,6 +1018,10 @@ class TrezorClientDebugLink(TrezorClient):
         # and know the supported debug capabilities
         self.debug.model = self.model
         self.debug.version = self.version
+
+    @property
+    def layout_type(self) -> LayoutType:
+        return self.debug.layout_type
 
     def reset_debug_features(self) -> None:
         """Prepare the debugging client for a new testcase.
