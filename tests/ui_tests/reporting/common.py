@@ -31,7 +31,8 @@ if not MASTER_CACHE_DIR.exists():
 LEGACY_MODEL_NAMES = {
     "T1": "T1B1",
     "TT": "T2T1",
-    "TR": "T2B1",
+    "TR": "T3B1",
+    "T2B1": "T3B1",
 }
 
 
