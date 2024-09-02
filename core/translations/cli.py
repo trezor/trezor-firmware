@@ -16,7 +16,7 @@ from trezorlib._internal.translations import VersionTuple
 HERE = Path(__file__).parent.resolve()
 LOG = logging.getLogger(__name__)
 
-ALL_MODELS = {models.T2B1, models.T2T1, models.T3T1}
+ALL_MODELS = {models.T2B1, models.T2T1, models.T3T1, models.T3B1}
 
 PRIVATE_KEYS_DEV = [byte * 32 for byte in (b"\xdd", b"\xde", b"\xdf")]
 
@@ -125,7 +125,13 @@ class TranslationsDir:
         return self.path / f"{lang}.json"
 
     def load_lang(self, lang: str) -> translations.JsonDef:
-        return json.loads(self._lang_path(lang).read_text())
+        json_def = json.loads(self._lang_path(lang).read_text())
+        # special-case for T2B1 and T3B1, so that we keep the info in one place instead
+        # of duplicating it in two entries, risking a desync
+        if (fonts_safe3 := json_def.get("fonts", {}).get("##Safe3")) is not None:
+            json_def["fonts"]["T2B1"] = fonts_safe3
+            json_def["fonts"]["T3B1"] = fonts_safe3
+        return json_def
 
     def save_lang(self, lang: str, data: translations.JsonDef) -> None:
         self._lang_path(lang).write_text(
