@@ -11,6 +11,7 @@ import click
 import coin_info
 
 SUPPORT_INFO = coin_info.get_support_data()
+MODELS = coin_info.get_models()
 
 VERSION_RE = re.compile(r"\d+.\d+.\d+")
 
@@ -64,7 +65,7 @@ def set_unsupported(device, key, value):
 
 
 def print_support(coin):
-    def support_value(where, key, missing_means_no=False):
+    def support_value(where, key):
         if "supported" in where and key in where["supported"]:
             val = where["supported"][key]
             if val is True:
@@ -76,8 +77,6 @@ def print_support(coin):
         elif "unsupported" in where and key in where["unsupported"]:
             val = where["unsupported"][key]
             return f"NO (reason: {val})"
-        elif missing_means_no:
-            return "NO"
         else:
             return "support info missing"
 
@@ -86,8 +85,7 @@ def print_support(coin):
     if coin.get("duplicate"):
         print(" * DUPLICATE SYMBOL")
     for dev, where in SUPPORT_INFO.items():
-        missing_means_no = dev in coin_info.MISSING_SUPPORT_MEANS_NO
-        print(" *", dev, ":", support_value(where, key, missing_means_no))
+        print(" *", dev, ":", support_value(where, key))
 
 
 # ====== validation functions ====== #
@@ -111,12 +109,7 @@ def check_support_values():
         else:
             for key, value in supported.items():
                 try:
-                    if device in coin_info.VERSIONED_SUPPORT_INFO:
-                        _check_value_version_soon(value)
-                    else:
-                        if value is not True:
-                            raise ValueError(f"only allowed is True, but found {value}")
-
+                    _check_value_version_soon(value)
                     if key in unsupported:
                         raise ValueError(f"{key} is both supported and unsupported")
 
@@ -135,7 +128,7 @@ def check_support_values():
 
 def find_unsupported_coins(coins_dict):
     result = {}
-    for device in coin_info.VERSIONED_SUPPORT_INFO:
+    for device in MODELS:
         supported, unsupported = support_dicts(device)
         support_set = set(supported.keys())
         support_set.update(unsupported.keys())
@@ -253,10 +246,8 @@ def release(
         key: val for key, val in (release.split("=") for release in releases)
     }
     for key in user_releases_dict:
-        if key not in coin_info.VERSIONED_SUPPORT_INFO:
-            raise click.ClickException(
-                f"Unknown device: {key} - allowed are: {coin_info.VERSIONED_SUPPORT_INFO}"
-            )
+        if key not in MODELS:
+            raise click.ClickException(f"Unknown device: {key} - allowed are: {MODELS}")
 
     def bump_version(version_tuple: tuple[int]) -> str:
         version_list = list(version_tuple)
@@ -267,7 +258,7 @@ def release(
 
     # Take version either from user or guess it from latest releases info
     device_release_version: dict[str, str] = {}
-    for device in coin_info.VERSIONED_SUPPORT_INFO:
+    for device in MODELS:
         if device in user_releases_dict:
             device_release_version[device] = user_releases_dict[device]
         else:
@@ -355,15 +346,18 @@ def set_support_value(key, entries, reason):
     """Set a support info variable.
 
     Examples:
-    support.py set coin:BTC T1B1=1.10.5 T2T1=2.4.7 suite=yes connect=no
-    support.py set coin:LTC T1B1=yes connect=
+    support.py set coin:BTC T1B1=1.10.5 T2T1=2.4.7 T2B1=no
 
-    Setting a variable to "yes", "true" or "1" sets support to true.
-    Setting a variable to "no", "false" or "0" sets support to false.
-    (or null, in case of T1B1/T2T1)
-    Setting variable to empty ("T1B1=") will set to null, or clear the entry.
     Setting a variable to a particular version string (e.g., "2.4.7") will set that
-    particular version.
+    particular version as the earliest supported.
+
+    Setting a variable to "yes", "true" or "1" sets support to the upcoming release,
+    as fetched via `coin_info.latest_releases()`.
+
+    Setting a variable to "no", "false" or "0" sets support to false. You will need to
+    provide a reason for unsupporting, either via the `-r` option, or interactively.
+
+    Setting variable to empty ("T1B1=") will set to null, or clear the entry.
     """
     defs, _ = coin_info.coin_info_with_duplicates()
     coins = defs.as_dict()
@@ -371,6 +365,11 @@ def set_support_value(key, entries, reason):
         click.echo(f"Failed to find key {key}")
         click.echo("Use 'support.py show' to search for the right one.")
         sys.exit(1)
+
+    latest_releases = coin_info.latest_releases()
+    next_releases = {
+        k: (maj, min, pat + 1) for k, (maj, min, pat) in latest_releases.items()
+    }
 
     for entry in entries:
         try:
@@ -383,11 +382,8 @@ def set_support_value(key, entries, reason):
             raise click.ClickException(f"unknown device: {device}")
 
         if value in ("yes", "true", "1"):
-            set_supported(device, key, True)
+            set_supported(device, key, next_releases[device])
         elif value in ("no", "false", "0"):
-            if device in coin_info.MISSING_SUPPORT_MEANS_NO:
-                click.echo(f"Setting explicitly unsupported for {device}.")
-                click.echo(f"Perhaps you meant removing support, i.e., '{device}=' ?")
             if not reason:
                 reason = click.prompt(f"Enter reason for not supporting on {device}:")
             set_unsupported(device, key, reason)

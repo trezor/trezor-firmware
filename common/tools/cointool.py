@@ -160,6 +160,7 @@ def render_file(
         ROOT=ROOT,
         **coins,
         **MAKO_FILTERS,
+        ALL_MODELS=coin_info.get_models(),
     )
     dst.write_text(str(result))
     src_stat = src.stat()

@@ -26,32 +26,13 @@ ROOT = Path(__file__).resolve().parent.parent
 DEFS_DIR = ROOT / "defs"
 
 
-class SupportItemBool(TypedDict):
-    supported: dict[str, bool]
-    unsupported: dict[str, bool]
-
-
 class SupportItemVersion(TypedDict):
     supported: dict[str, str]
     unsupported: dict[str, str]
 
 
-class SupportData(TypedDict):
-    connect: SupportItemBool
-    suite: SupportItemBool
-    t1b1: SupportItemVersion
-    t2t1: SupportItemVersion
-    t2b1: SupportItemVersion
-
-
-class SupportInfoItem(TypedDict):
-    connect: bool
-    suite: bool
-    t1b1: Literal[False] | str
-    t2t1: Literal[False] | str
-    t2b1: Literal[False] | str
-
-
+SupportData = Dict[str, SupportItemVersion]
+SupportInfoItem = Dict[str, Literal[False] | str]
 SupportInfo = Dict[str, SupportInfoItem]
 
 
@@ -449,13 +430,16 @@ def _load_fido_apps() -> FidoApps:
 # ====== support info ======
 
 RELEASES_URL = "https://data.trezor.io/firmware/{}/releases.json"
-MISSING_SUPPORT_MEANS_NO = ("connect", "suite")
-VERSIONED_SUPPORT_INFO = ("T1B1", "T2T1", "T2B1", "T3T1", "T3B1")
 
 
 def get_support_data() -> SupportData:
     """Get raw support data from `support.json`."""
     return load_json("support.json")
+
+
+def get_models() -> list[str]:
+    """Get all models from `support.json`."""
+    return list(get_support_data().keys())
 
 
 def latest_releases() -> dict[str, Any]:
@@ -464,8 +448,7 @@ def latest_releases() -> dict[str, Any]:
         raise RuntimeError("requests library is required for getting release info")
 
     latest: dict[str, Any] = {}
-    for model in VERSIONED_SUPPORT_INFO:
-        # TODO: support new UPPERCASE model names in RELEASES_URL
+    for model in get_models():
         url_model = model.lower()  # need to be e.g. t1b1 for now
         releases = requests.get(RELEASES_URL.format(url_model)).json()
         latest[model] = max(tuple(r["version"]) for r in releases)
@@ -492,8 +475,6 @@ def support_info_single(support_data: SupportData, coin: Coin) -> SupportInfoIte
             support_value: Any = False
         elif key in values["supported"]:
             support_value = values["supported"][key]
-        elif device in MISSING_SUPPORT_MEANS_NO:
-            support_value = False
         else:
             support_value = None
         support_info_item[device] = support_value
