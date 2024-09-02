@@ -354,7 +354,7 @@ def test_p2wpkh_finalize(client: Client):
     )
 
 
-@pytest.mark.skip_t1b1
+@pytest.mark.models("core")
 @pytest.mark.parametrize(
     "out1_amount, out2_amount, copayer_witness, fee_confirm, expected_tx",
     (
@@ -648,7 +648,7 @@ def test_p2wpkh_in_p2sh_fee_bump_from_external(client: Client):
     )
 
 
-@pytest.mark.skip_t1b1
+@pytest.mark.models("core")
 def test_tx_meld(client: Client):
     # Meld two original transactions into one, joining the change-outputs into a different one.
 
@@ -869,7 +869,7 @@ def test_attack_steal_change(client: Client):
         )
 
 
-@pytest.mark.skip_t1b1
+@pytest.mark.models("core")
 def test_attack_false_internal(client: Client):
     # Falsely claim that an external input is internal in the original transaction.
     # If this were possible, it would allow an attacker to make it look like the
@@ -976,7 +976,7 @@ def test_attack_fake_int_input_amount(client: Client):
         )
 
 
-@pytest.mark.skip_t1b1
+@pytest.mark.models("core")
 def test_attack_fake_ext_input_amount(client: Client):
     # Give a fake input amount for an original external input while giving the correct
     # amount for the replacement input. If an attacker could decrease the amount of an

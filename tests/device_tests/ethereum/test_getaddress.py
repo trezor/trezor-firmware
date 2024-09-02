@@ -34,7 +34,7 @@ def test_getaddress(client: Client, parameters, result):
     )
 
 
-@pytest.mark.skip_t1b1("No input flow for T1")
+@pytest.mark.models("core", reason="No input flow for T1")
 @parametrize_using_common_fixtures("ethereum/getaddress.json")
 def test_getaddress_chunkify_details(client: Client, parameters, result):
     with client:

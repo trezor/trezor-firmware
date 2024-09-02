@@ -24,7 +24,7 @@ from trezorlib.tools import parse_path
 pytestmark = [
     pytest.mark.altcoin,
     pytest.mark.ripple,
-    pytest.mark.skip_t1b1,  # T1 support is not planned
+    pytest.mark.models("core"),
 ]
 
 

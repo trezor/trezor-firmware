@@ -22,7 +22,7 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 
 from ...common import EXTERNAL_ENTROPY, generate_entropy
 
-pytestmark = [pytest.mark.skip_t2t1, pytest.mark.skip_t2b1, pytest.mark.skip_t3t1]
+pytestmark = pytest.mark.models("legacy")
 
 STRENGTH = 128
 

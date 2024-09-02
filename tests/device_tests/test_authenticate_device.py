@@ -9,7 +9,7 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 
 from ..common import compact_size
 
-pytestmark = [pytest.mark.skip_t1b1, pytest.mark.skip_t2t1]
+pytestmark = pytest.mark.models("safe")
 
 ROOT_PUBLIC_KEY = {
     models.T2B1: bytes.fromhex(
@@ -17,6 +17,9 @@ ROOT_PUBLIC_KEY = {
     ),
     models.T3T1: bytes.fromhex(
         "04e48b69cd7962068d3cca3bcc6b1747ef496c1e28b5529e34ad7295215ea161dbe8fb08ae0479568f9d2cb07630cb3e52f4af0692102da5873559e45e9fa72959"
+    ),
+    models.T3B1: bytes.fromhex(
+        "047f77368dea2d4d61e989f474a56723c3212dacf8a808d8795595ef38441427c4389bc454f02089d7f08b873005e4c28d432468997871c0bf286fd3861e21e96a"
     ),
 }
 
@@ -75,7 +78,12 @@ def test_authenticate_device(client: Client, challenge: bytes) -> None:
 
     # Verify that the common name matches the Trezor model.
     common_name = cert.subject.get_attributes_for_oid(x509.oid.NameOID.COMMON_NAME)[0]
-    assert common_name.value.startswith(client.features.internal_model)
+    if client.model == models.T3B1:
+        # XXX TODO replace as soon as we have T3B1 staging
+        internal_model = "T2B1"
+    else:
+        internal_model = client.model.internal_name
+    assert common_name.value.startswith(internal_model)
 
     # Verify the signature of the challenge.
     data = b"\x13AuthenticateDevice:" + compact_size(len(challenge)) + challenge

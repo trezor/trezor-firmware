@@ -23,7 +23,7 @@ from trezorlib.messages import SdProtectOperationType as Op
 
 from ..common import MNEMONIC12
 
-pytestmark = [pytest.mark.skip_t1b1, pytest.mark.skip_t2b1, pytest.mark.sd_card]
+pytestmark = [pytest.mark.models("core", skip="safe3"), pytest.mark.sd_card]
 
 
 def test_enable_disable(client: Client):

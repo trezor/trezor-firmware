@@ -467,7 +467,7 @@ def test_send_bch_multisig_change(client: Client):
     )
 
 
-@pytest.mark.skip_t1b1
+@pytest.mark.models("core")
 def test_send_bch_external_presigned(client: Client):
     inp1 = messages.TxInputType(
         # address_n=parse_path("44'/145'/0'/1/0"),

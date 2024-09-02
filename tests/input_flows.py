@@ -14,8 +14,8 @@ from __future__ import annotations
 import time
 from typing import Callable, Generator
 
-from trezorlib import messages, models
-from trezorlib.debuglink import DebugLink, LayoutContent
+from trezorlib import messages
+from trezorlib.debuglink import DebugLink, LayoutContent, LayoutType
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.debuglink import multipage_content
 
@@ -45,20 +45,17 @@ class InputFlowBase:
         self.BAK = BackupFlow(self.client)
         self.ETH = EthereumFlow(self.client)
 
-    def model(self) -> str | models.TrezorModel:
-        return self.client.model
-
     def get(self) -> Callable[[], BRGeneratorType]:
         self.client.watch_layout(True)
 
         # There could be one common input flow for all models
         if hasattr(self, "input_flow_common"):
             return getattr(self, "input_flow_common")
-        elif self.model() is models.T2T1:
+        elif self.client.layout_type is LayoutType.TT:
             return self.input_flow_tt
-        elif self.model() is models.T2B1:
+        elif self.client.layout_type is LayoutType.TR:
             return self.input_flow_tr
-        elif self.model() is models.T3T1:
+        elif self.client.layout_type is LayoutType.Mercury:
             return self.input_flow_t3t1
         else:
             raise ValueError("Unknown model")
@@ -98,7 +95,7 @@ class InputFlowSetupDevicePINWIpeCode(InputFlowBase):
         yield  # do you want to set/change the wipe code?
         self.debug.press_yes()
 
-        if self.model() is models.T2B1:
+        if self.client.layout_type is LayoutType.TR:
             yield from swipe_if_necessary(self.debug)  # wipe code info
             self.debug.press_yes()
 
@@ -127,7 +124,7 @@ class InputFlowNewCodeMismatch(InputFlowBase):
         yield  # do you want to set/change the pin/wipe code?
         self.debug.press_yes()
 
-        if self.model() is models.T2B1:
+        if self.client.layout_type is LayoutType.TR:
             yield from swipe_if_necessary(self.debug)  # code info
             self.debug.press_yes()
 
@@ -1124,10 +1121,12 @@ class InputFlowEIP712ShowMore(InputFlowBase):
 
     def _confirm_show_more(self) -> None:
         """Model-specific, either clicks a screen or presses a button."""
-        if self.model() in (models.T2T1, models.T3T1):
+        if self.client.layout_type in (LayoutType.TT, LayoutType.Mercury):
             self.debug.click(self.SHOW_MORE)
-        elif self.model() is models.T2B1:
+        elif self.client.layout_type is LayoutType.TR:
             self.debug.press_right()
+        else:
+            raise NotImplementedError
 
     def input_flow_common(self) -> BRGeneratorType:
         """Triggers show more wherever possible"""
@@ -1256,7 +1255,7 @@ def get_mnemonic_and_confirm_success(
     mnemonic = yield from read_and_confirm_mnemonic(debug)
 
     is_slip39 = len(mnemonic.split()) in (20, 33)
-    if debug.model in (models.T2T1, models.T2B1) or is_slip39:
+    if debug.layout_type in (LayoutType.TT, LayoutType.TR) or is_slip39:
         br = yield  # confirm recovery share check
         assert br.code == B.Success
         debug.press_yes()
@@ -1333,7 +1332,7 @@ class InputFlowBip39ResetPIN(InputFlowBase):
 
         yield from self.PIN.setup_new_pin("654")
 
-        if self.debug.model is models.T3T1:
+        if self.debug.layout_type is LayoutType.Mercury:
             br = yield  # Wallet created
             assert br.code == B.ResetDevice
             self.debug.press_yes()
@@ -1368,7 +1367,7 @@ class InputFlowBip39ResetFailedCheck(InputFlowBase):
         self.mnemonic = None
 
     def input_flow_common(self) -> BRGeneratorType:
-        screens = 5 if self.debug.model is models.T3T1 else 4
+        screens = 5 if self.debug.layout_type is LayoutType.Mercury else 4
         # 1. Confirm Reset
         # 1a. (T3T1) Walet Creation done
         # 2. Confirm backup prompt
@@ -1975,7 +1974,7 @@ class InputFlowSlip39AdvancedRecoveryAbort(InputFlowBase):
 
     def input_flow_common(self) -> BRGeneratorType:
         yield from self.REC.confirm_recovery()
-        if self.model() in (models.T2T1, models.T3T1):
+        if self.client.layout_type in (LayoutType.TT, LayoutType.Mercury):
             yield from self.REC.input_number_of_words(20)
         yield from self.REC.abort_recovery(True)
 
@@ -1988,7 +1987,7 @@ class InputFlowSlip39AdvancedRecoveryNoAbort(InputFlowBase):
 
     def input_flow_common(self) -> BRGeneratorType:
         yield from self.REC.confirm_recovery()
-        if self.model() in (models.T2T1, models.T3T1):
+        if self.client.layout_type in (LayoutType.TT, LayoutType.Mercury):
             yield from self.REC.input_number_of_words(self.word_count)
             yield from self.REC.abort_recovery(False)
         else:
@@ -2097,7 +2096,7 @@ class InputFlowSlip39BasicRecoveryAbort(InputFlowBase):
 
     def input_flow_common(self) -> BRGeneratorType:
         yield from self.REC.confirm_recovery()
-        if self.model() in (models.T2T1, models.T3T1):
+        if self.client.layout_type in (LayoutType.TT, LayoutType.Mercury):
             yield from self.REC.input_number_of_words(20)
         yield from self.REC.abort_recovery(True)
 
@@ -2110,7 +2109,7 @@ class InputFlowSlip39BasicRecoveryAbortBetweenShares(InputFlowBase):
 
     def input_flow_common(self) -> BRGeneratorType:
         yield from self.REC.confirm_recovery()
-        if self.model() in (models.T2T1, models.T3T1):
+        if self.client.layout_type in (LayoutType.TT, LayoutType.Mercury):
             yield from self.REC.input_number_of_words(20)
         else:
             yield from self.REC.tr_recovery_homescreen()
@@ -2130,7 +2129,7 @@ class InputFlowSlip39BasicRecoveryNoAbort(InputFlowBase):
     def input_flow_common(self) -> BRGeneratorType:
         yield from self.REC.confirm_recovery()
 
-        if self.model() in (models.T2T1, models.T3T1):
+        if self.client.layout_type in (LayoutType.TT, LayoutType.Mercury):
             yield from self.REC.input_number_of_words(self.word_count)
             yield from self.REC.abort_recovery(False)
         else:

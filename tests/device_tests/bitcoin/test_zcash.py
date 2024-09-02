@@ -228,7 +228,7 @@ def test_spend_old_versions(client: Client):
     )
 
 
-@pytest.mark.skip_t1b1
+@pytest.mark.models("core")
 def test_external_presigned(client: Client):
     inp1 = messages.TxInputType(
         # tmQoJ3PTXgQLaRRZZYT6xk8XtjRbr2kCqwu

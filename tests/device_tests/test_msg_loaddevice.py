@@ -68,7 +68,7 @@ def test_load_device_2(client: Client):
     assert address == "mx77VZjTVixVsU7nCtAKHnGFdsyNCnsWWw"
 
 
-@pytest.mark.skip_t1b1
+@pytest.mark.models("core")
 def test_load_device_slip39_basic(client: Client):
     debuglink.load_device(
         client,
@@ -80,7 +80,7 @@ def test_load_device_slip39_basic(client: Client):
     assert client.features.backup_type == BackupType.Slip39_Basic
 
 
-@pytest.mark.skip_t1b1
+@pytest.mark.models("core")
 def test_load_device_slip39_advanced(client: Client):
     debuglink.load_device(
         client,

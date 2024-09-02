@@ -18,7 +18,8 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from trezorlib import device, messages, models
+from trezorlib import device, messages
+from trezorlib.debuglink import LayoutType
 
 from ..common import EXTERNAL_ENTROPY, WITH_MOCK_URANDOM, generate_entropy
 from . import reset
@@ -27,7 +28,7 @@ if TYPE_CHECKING:
     from ..device_handler import BackgroundDeviceHandler
 
 
-pytestmark = [pytest.mark.skip_t1b1]
+pytestmark = pytest.mark.models("core")
 
 
 @pytest.mark.parametrize(
@@ -96,9 +97,9 @@ def test_backup_slip39_custom(
         all_words.append(" ".join(words))
 
     # confirm backup done
-    if debug.model is models.T3T1 and share_count > 1:
+    if debug.layout_type is LayoutType.Mercury and share_count > 1:
         reset.confirm_read(debug)
-    elif debug.model != models.T3T1:
+    elif debug.layout_type is not LayoutType.Mercury:
         reset.confirm_read(debug)
 
     # generate secret locally

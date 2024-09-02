@@ -28,7 +28,7 @@ from .construct.transaction import Message, RawInstruction
 pytestmark = [
     pytest.mark.altcoin,
     pytest.mark.solana,
-    pytest.mark.skip_t1b1,
+    pytest.mark.models("core"),
 ]
 
 

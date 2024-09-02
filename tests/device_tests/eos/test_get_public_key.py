@@ -26,9 +26,7 @@ from ...input_flows import InputFlowShowXpubQRCode
 
 @pytest.mark.altcoin
 @pytest.mark.eos
-@pytest.mark.skip_t1b1
-@pytest.mark.skip_t2b1  # coin not supported
-@pytest.mark.skip_t3t1
+@pytest.mark.models("t2t1")
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
 def test_eos_get_public_key(client: Client):
     with client:

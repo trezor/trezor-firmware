@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     from ..device_handler import BackgroundDeviceHandler
 
 
-pytestmark = [pytest.mark.skip_t1b1]
+pytestmark = pytest.mark.models("core")
 
 
 @pytest.mark.parametrize(

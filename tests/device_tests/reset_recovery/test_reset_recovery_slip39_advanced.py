@@ -28,7 +28,7 @@ from ...input_flows import (
 )
 
 
-@pytest.mark.skip_t1b1
+@pytest.mark.models("core")
 @pytest.mark.setup_client(uninitialized=True)
 def test_reset_recovery(client: Client):
     mnemonics = reset(client)

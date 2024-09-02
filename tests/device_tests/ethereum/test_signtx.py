@@ -113,7 +113,7 @@ example_input_data = {
 }
 
 
-@pytest.mark.skip_t1b1("T1 does not support input flows")
+@pytest.mark.models("core", reason="T1 does not support input flows")
 def test_signtx_fee_info(client: Client):
     input_flow = InputFlowEthereumSignTxShowFeeInfo(client).get()
     _do_test_signtx(
@@ -124,8 +124,11 @@ def test_signtx_fee_info(client: Client):
     )
 
 
-@pytest.mark.skip_t1b1("T1 does not support input flows")
-@pytest.mark.skip_t3t1("Cancel on Summary means Cancel Sign. No going back here!")
+@pytest.mark.models(
+    "core",
+    skip="mercury",
+    reason="T1 does not support input flows; Mercury can't send Cancel on Summary",
+)
 def test_signtx_go_back_from_summary(client: Client):
     input_flow = InputFlowEthereumSignTxGoBackFromSummary(client).get()
     _do_test_signtx(
@@ -431,8 +434,7 @@ HEXDATA = "0123456789abcd000023456789abcd010003456789abcd020000456789abcd0300000
 @pytest.mark.parametrize(
     "flow", (input_flow_data_skip, input_flow_data_scroll_down, input_flow_data_go_back)
 )
-@pytest.mark.skip_t3t1(reason="Not yet implemented in new UI")
-@pytest.mark.skip_t1b1
+@pytest.mark.models("core", skip="mercury", reason="Not yet implemented in new UI")
 def test_signtx_data_pagination(client: Client, flow):
     def _sign_tx_call():
         ethereum.sign_tx(
@@ -459,7 +461,7 @@ def test_signtx_data_pagination(client: Client, flow):
         _sign_tx_call()
 
 
-@pytest.mark.skip_t1b1("T1 does not support Everstake")
+@pytest.mark.models("core")
 @parametrize_using_common_fixtures("ethereum/sign_tx_staking.json")
 @pytest.mark.parametrize("chunkify", (True, False))
 def test_signtx_staking(client: Client, chunkify: bool, parameters: dict, result: dict):
@@ -469,7 +471,7 @@ def test_signtx_staking(client: Client, chunkify: bool, parameters: dict, result
     )
 
 
-@pytest.mark.skip_t1b1("T1 does not support Everstake")
+@pytest.mark.models("core")
 @parametrize_using_common_fixtures("ethereum/sign_tx_staking_data_error.json")
 def test_signtx_staking_bad_inputs(client: Client, parameters: dict, result: dict):
     # result not needed
@@ -490,7 +492,7 @@ def test_signtx_staking_bad_inputs(client: Client, parameters: dict, result: dic
         )
 
 
-@pytest.mark.skip_t1b1("T1 does not support Everstake")
+@pytest.mark.models("core")
 @parametrize_using_common_fixtures("ethereum/sign_tx_staking_eip1559.json")
 def test_signtx_staking_eip1559(client: Client, parameters: dict, result: dict):
     with client:

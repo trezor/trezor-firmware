@@ -32,7 +32,7 @@ if TYPE_CHECKING:
     from ..device_handler import BackgroundDeviceHandler
 
 
-pytestmark = [pytest.mark.skip_t1b1, pytest.mark.skip_t2b1, pytest.mark.skip_t2t1]
+pytestmark = pytest.mark.models("mercury")
 
 PASSPHRASE_CANCELLED = pytest.raises(exceptions.Cancelled, match="")
 

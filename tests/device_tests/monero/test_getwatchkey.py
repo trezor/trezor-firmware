@@ -25,7 +25,7 @@ from ...common import MNEMONIC12
 
 @pytest.mark.altcoin
 @pytest.mark.monero
-@pytest.mark.skip_t1b1
+@pytest.mark.models("core")
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
 def test_monero_getwatchkey(client: Client):
     res = monero.get_watch_key(client, parse_path("m/44h/128h/0h"))

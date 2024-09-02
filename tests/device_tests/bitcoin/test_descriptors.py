@@ -161,7 +161,7 @@ def _address_n(purpose, coin, account, script_type):
     return res
 
 
-@pytest.mark.skip_t1b1
+@pytest.mark.models("core")
 @pytest.mark.parametrize(
     "coin, account, purpose, script_type, descriptors", VECTORS_DESCRIPTORS
 )

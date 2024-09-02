@@ -32,7 +32,7 @@ from ...input_flows import InputFlowShowXpubQRCode
 pytestmark = [
     pytest.mark.altcoin,
     pytest.mark.cardano,
-    pytest.mark.skip_t1b1,
+    pytest.mark.models("core"),
 ]
 
 

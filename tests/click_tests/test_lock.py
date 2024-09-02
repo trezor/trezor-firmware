@@ -20,6 +20,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from trezorlib import models
+from trezorlib.debuglink import LayoutType
 
 from .. import buttons, common
 
@@ -37,18 +38,20 @@ def test_hold_to_lock(device_handler: "BackgroundDeviceHandler"):
     short_duration = {
         models.T1B1: 500,
         models.T2B1: 500,
+        models.T3B1: 500,
         models.T2T1: 1000,
         models.T3T1: 1000,
     }[debug.model]
     lock_duration = {
         models.T1B1: 1200,
         models.T2B1: 1200,
+        models.T3B1: 1200,
         models.T2T1: 3500,
         models.T3T1: 3500,
     }[debug.model]
 
     def hold(duration: int, wait: bool = True) -> None:
-        if debug.model in (models.T2B1,):
+        if debug.layout_type is LayoutType.TR:
             debug.press_right_htc(hold_ms=duration)
         else:
             debug.input(x=13, y=37, hold_ms=duration, wait=wait)
@@ -75,7 +78,7 @@ def test_hold_to_lock(device_handler: "BackgroundDeviceHandler"):
     assert device_handler.features().unlocked is False
 
     # unlock by touching
-    if debug.model in (models.T2B1,):
+    if debug.layout_type is LayoutType.TR:
         # Doing a short HTC to simulate a click
         debug.press_right_htc(hold_ms=100)
         layout = debug.wait_layout()

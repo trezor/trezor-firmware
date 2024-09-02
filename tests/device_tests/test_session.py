@@ -159,7 +159,7 @@ def test_session_recycling(client: Client):
 
 @pytest.mark.altcoin
 @pytest.mark.cardano
-@pytest.mark.skip_t1b1
+@pytest.mark.models("core")
 def test_derive_cardano_empty_session(client: Client):
     # start new session
     client.init_device(new_session=True)
@@ -178,7 +178,7 @@ def test_derive_cardano_empty_session(client: Client):
 
 @pytest.mark.altcoin
 @pytest.mark.cardano
-@pytest.mark.skip_t1b1
+@pytest.mark.models("core")
 def test_derive_cardano_running_session(client: Client):
     # start new session
     client.init_device(new_session=True)

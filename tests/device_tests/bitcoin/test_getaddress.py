@@ -138,7 +138,7 @@ def test_elements(client: Client):
     )
 
 
-@pytest.mark.skip_t1b1
+@pytest.mark.models("core")
 def test_address_mac(client: Client):
     resp = btc.get_authenticated_address(
         client, "Bitcoin", parse_path("m/44h/0h/0h/1/0")
@@ -165,7 +165,7 @@ def test_address_mac(client: Client):
     assert resp.mac is None
 
 
-@pytest.mark.skip_t1b1
+@pytest.mark.models("core")
 @pytest.mark.altcoin
 def test_altcoin_address_mac(client: Client):
     resp = btc.get_authenticated_address(

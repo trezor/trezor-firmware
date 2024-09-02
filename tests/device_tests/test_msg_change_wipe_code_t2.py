@@ -16,8 +16,9 @@
 
 import pytest
 
-from trezorlib import btc, device, messages, models
+from trezorlib import btc, device, messages
 from trezorlib.client import MAX_PIN_LENGTH, PASSPHRASE_TEST_PATH
+from trezorlib.debuglink import LayoutType
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 
@@ -28,7 +29,7 @@ WIPE_CODE4 = "4321"
 WIPE_CODE6 = "456789"
 WIPE_CODE_MAX = "".join(chr((i % 10) + ord("0")) for i in range(MAX_PIN_LENGTH))
 
-pytestmark = pytest.mark.skip_t1b1
+pytestmark = pytest.mark.models("core")
 
 
 def _check_wipe_code(client: Client, pin: str, wipe_code: str):
@@ -38,11 +39,10 @@ def _check_wipe_code(client: Client, pin: str, wipe_code: str):
     # Try to change the PIN to the current wipe code value. The operation should fail.
     with client, pytest.raises(TrezorFailure):
         client.use_pin_sequence([pin, wipe_code, wipe_code])
-        br_count = {
-            models.T2T1: 5,
-            models.T2B1: 6,
-            models.T3T1: 5,
-        }[client.model]
+        if client.layout_type is LayoutType.TR:
+            br_count = 6
+        else:
+            br_count = 5
         client.set_expected_responses(
             [messages.ButtonRequest()] * br_count
             + [messages.Failure(code=messages.FailureType.PinInvalid)]
@@ -66,11 +66,10 @@ def test_set_remove_wipe_code(client: Client):
     _ensure_unlocked(client, PIN4)
     assert client.features.wipe_code_protection is False
 
-    br_count = {
-        models.T2T1: 5,
-        models.T2B1: 6,
-        models.T3T1: 5,
-    }[client.model]
+    if client.layout_type is LayoutType.TR:
+        br_count = 6
+    else:
+        br_count = 5
 
     with client:
         client.set_expected_responses(
@@ -126,11 +125,10 @@ def test_set_wipe_code_to_pin(client: Client):
     _ensure_unlocked(client, PIN4)
 
     with client:
-        br_count = {
-            models.T2T1: 7,
-            models.T2B1: 8,
-            models.T3T1: 7,
-        }[client.model]
+        if client.layout_type is LayoutType.TR:
+            br_count = 8
+        else:
+            br_count = 7
         client.set_expected_responses(
             [messages.ButtonRequest()] * br_count
             + [messages.Success, messages.Features],
@@ -146,11 +144,10 @@ def test_set_wipe_code_to_pin(client: Client):
 def test_set_pin_to_wipe_code(client: Client):
     # Set wipe code.
     with client:
-        br_count = {
-            models.T2T1: 4,
-            models.T2B1: 5,
-            models.T3T1: 4,
-        }[client.model]
+        if client.layout_type is LayoutType.TR:
+            br_count = 5
+        else:
+            br_count = 4
         client.set_expected_responses(
             [messages.ButtonRequest()] * br_count
             + [messages.Success, messages.Features]
@@ -160,11 +157,10 @@ def test_set_pin_to_wipe_code(client: Client):
 
     # Try to set the PIN to the current wipe code value.
     with client, pytest.raises(TrezorFailure):
-        br_count = {
-            models.T2T1: 4,
-            models.T2B1: 6,
-            models.T3T1: 4,
-        }[client.model]
+        if client.layout_type is LayoutType.TR:
+            br_count = 6
+        else:
+            br_count = 4
         client.set_expected_responses(
             [messages.ButtonRequest()] * br_count
             + [messages.Failure(code=messages.FailureType.PinInvalid)]

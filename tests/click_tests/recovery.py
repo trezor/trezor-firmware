@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from trezorlib import models
+from trezorlib.debuglink import LayoutType
 
 from .. import buttons
 from .. import translations as TR
@@ -18,15 +18,15 @@ DELETE_BTN_TEXTS = get_possible_btn_texts("inputs__delete") + get_possible_btn_t
 def enter_word(
     debug: "DebugLink", word: str, is_slip39: bool = False
 ) -> "LayoutContent":
-    if debug.model in (models.T2T1, models.T3T1):
+    if debug.layout_type in (LayoutType.TT, LayoutType.Mercury):
         typed_word = word[:4]
         for coords in buttons.type_word(typed_word, is_slip39=is_slip39):
             debug.click(coords)
-        if debug.model is models.T3T1 and not is_slip39 and len(word) > 4:
+        if debug.layout_type is LayoutType.Mercury and not is_slip39 and len(word) > 4:
             # T3T1 (mercury) BIP39 keyboard allows to "confirm" only if the word is fully written, you need to click the word to auto-complete
             debug.click(buttons.CONFIRM_WORD, wait=True)
         return debug.click(buttons.CONFIRM_WORD, wait=True)
-    elif debug.model in (models.T2B1,):
+    elif debug.layout_type is LayoutType.TR:
         letter_index = 0
         layout = debug.read_layout()
 
@@ -51,11 +51,11 @@ def enter_word(
 def confirm_recovery(debug: "DebugLink", title: str = "recovery__title") -> None:
     layout = debug.wait_layout()
     TR.assert_equals(layout.title(), title)
-    if debug.model in (models.T2T1,):
+    if debug.layout_type is LayoutType.TT:
         debug.click(buttons.OK, wait=True)
-    elif debug.model in (models.T3T1,):
+    elif debug.layout_type is LayoutType.Mercury:
         debug.swipe_up(wait=True)
-    elif debug.model in (models.T2B1,):
+    elif debug.layout_type is LayoutType.TR:
         debug.press_right(wait=True)
 
 
@@ -110,23 +110,20 @@ def select_number_of_words(
     if wait:
         debug.wait_layout()
 
-    if debug.model in (models.T2T1,):
+    if debug.layout_type is LayoutType.TT:
         TR.assert_equals(debug.read_layout().text_content(), "recovery__num_of_words")
         layout = select_tt()
-    elif debug.model in (
-        models.T2B1,
-        models.T3B1,
-    ):
+    elif debug.layout_type is LayoutType.TR:
         layout = debug.press_right(wait=True)
         TR.assert_equals(layout.title(), "word_count__title")
         layout = select_tr()
-    elif debug.model in (models.T3T1,):
+    elif debug.layout_type is LayoutType.Mercury:
         layout = select_mercury()
     else:
         raise ValueError("Unknown model")
 
     if unlock_repeated_backup:
-        if debug.model in (models.T2B1,):
+        if debug.layout_type is LayoutType.TR:
             TR.assert_in(layout.text_content(), "recovery__enter_backup")
         else:
             TR.assert_in_multiple(
@@ -160,12 +157,12 @@ def enter_share(
     is_first: bool = True,
     before_title: str = "recovery__title_recover",
 ) -> "LayoutContent":
-    if debug.model in (models.T2B1,):
+    if debug.layout_type is LayoutType.TR:
         TR.assert_in(debug.read_layout().title(), before_title)
         layout = debug.wait_layout()
         for _ in range(layout.page_count()):
             layout = debug.press_right(wait=True)
-    elif debug.model in (models.T3T1,):
+    elif debug.layout_type is LayoutType.Mercury:
         layout = debug.swipe_up(wait=True)
     else:
         TR.assert_in(debug.read_layout().title(), before_title)
@@ -243,11 +240,11 @@ def enter_seed_previous_correct(
 
         if go_back:
             go_back = False
-            if debug.model in (models.T2T1,):
+            if debug.layout_type is LayoutType.TT:
                 debug.swipe_right(wait=True)
                 for _ in range(len(bad_word)):
                     debug.click(buttons.RECOVERY_DELETE, wait=True)
-            elif debug.model in (models.T2B1,):
+            elif debug.layout_type is LayoutType.TR:
                 layout = debug.read_layout()
 
                 while layout.get_middle_choice() not in DELETE_BTN_TEXTS:
@@ -258,7 +255,7 @@ def enter_seed_previous_correct(
                     while layout.get_middle_choice() not in DELETE_BTN_TEXTS:
                         layout = debug.press_left(wait=True)
                     layout = debug.press_middle(wait=True)
-            elif debug.model in (models.T3T1,):
+            elif debug.layout_type is LayoutType.Mercury:
                 debug.click(buttons.RECOVERY_DELETE, wait=True)  # Top-left
                 for _ in range(len(bad_word)):
                     debug.click(buttons.RECOVERY_DELETE, wait=True)
@@ -288,12 +285,12 @@ def prepare_enter_seed(
             layout_text,
         ],
     )
-    if debug.model in (models.T2T1,):
+    if debug.layout_type is LayoutType.TT:
         debug.click(buttons.OK, wait=True)
-    elif debug.model in (models.T3T1,):
+    elif debug.layout_type is LayoutType.Mercury:
         debug.swipe_up(wait=True)
         debug.swipe_up(wait=True)
-    elif debug.model in (models.T2B1,):
+    elif debug.layout_type is LayoutType.TR:
         debug.press_right(wait=True)
         debug.press_right()
         layout = debug.press_right(wait=True)

@@ -17,8 +17,8 @@
 from __future__ import annotations
 
 import os
+import typing as t
 from pathlib import Path
-from typing import TYPE_CHECKING, Generator, Iterator
 
 import pytest
 import xdist
@@ -38,9 +38,11 @@ from . import translations, ui_tests
 from .device_handler import BackgroundDeviceHandler
 from .emulators import EmulatorWrapper
 
-if TYPE_CHECKING:
+if t.TYPE_CHECKING:
     from _pytest.config import Config
     from _pytest.config.argparsing import Parser
+    from _pytest.mark import Mark
+    from _pytest.nodes import Node
     from _pytest.terminal import TerminalReporter
 
     from trezorlib._internal.emulator import Emulator
@@ -64,7 +66,7 @@ def _emulator_wrapper_main_args() -> list[str]:
 
 
 @pytest.fixture
-def core_emulator(request: pytest.FixtureRequest) -> Iterator[Emulator]:
+def core_emulator(request: pytest.FixtureRequest) -> t.Iterator[Emulator]:
     """Fixture returning default core emulator with possibility of screen recording."""
     with EmulatorWrapper("core", main_args=_emulator_wrapper_main_args()) as emu:
         # Modifying emu.client to add screen recording (when --ui=test is used)
@@ -73,7 +75,7 @@ def core_emulator(request: pytest.FixtureRequest) -> Iterator[Emulator]:
 
 
 @pytest.fixture(scope="session")
-def emulator(request: pytest.FixtureRequest) -> Generator["Emulator", None, None]:
+def emulator(request: pytest.FixtureRequest) -> t.Generator["Emulator", None, None]:
     """Fixture for getting emulator connection in case tests should operate it on their own.
 
     Is responsible for starting it at the start of the session and stopping
@@ -139,13 +141,6 @@ def _raw_client(request: pytest.FixtureRequest) -> Client:
         else:
             client = _find_client(request, interact)
 
-    # Setting the appropriate language
-    # Not doing it for T1
-    if client.model is not models.T1B1:
-        lang = request.session.config.getoption("lang") or "en"
-        assert isinstance(lang, str)
-        translations.set_language(client, lang)
-
     return client
 
 
@@ -172,10 +167,78 @@ def _find_client(request: pytest.FixtureRequest, interact: bool) -> Client:
     raise RuntimeError("No debuggable device found")
 
 
+class ModelsFilter:
+    MODEL_SHORTCUTS = {
+        "core": models.TREZORS - {models.T1B1},
+        "legacy": {models.T1B1},
+        "t1": {models.T1B1},
+        "t2": {models.T2T1},
+        "tt": {models.T2T1},
+        "safe": {models.T2B1, models.T3T1, models.T3B1},
+        "safe3": {models.T2B1, models.T3B1},
+        "safe5": {models.T3T1},
+        "mercury": {models.T3T1},
+    }
+
+    def __init__(self, node: Node) -> None:
+        markers = node.iter_markers("models")
+        self.models = set(models.TREZORS)
+        for marker in markers:
+            self._refine_by_marker(marker)
+
+    def __contains__(self, model: models.TrezorModel) -> bool:
+        return model in self.models
+
+    def __bool__(self) -> bool:
+        return bool(self.models)
+
+    def _refine_by_marker(self, marker: Mark) -> None:
+        """Apply the marker selector to the current models selection."""
+        if marker.args:
+            self.models &= self._set_from_marker_list(marker.args)
+        if "skip" in marker.kwargs:
+            self.models -= self._set_from_marker_list(marker.kwargs["skip"])
+
+    @classmethod
+    def _set_from_marker_list(
+        cls, marker_list: str | t.Sequence[str] | t.Sequence[models.TrezorModel]
+    ) -> set[models.TrezorModel]:
+        """Given either a possible value of pytest.mark.models positional args,
+        or a value of the `skip` kwarg, return a set of models specified by that value.
+        """
+        if not marker_list:
+            raise ValueError("No models specified")
+
+        if isinstance(marker_list[0], models.TrezorModel):
+            # raw list of TrezorModels
+            return set(marker_list)  # type: ignore [incompatible with return type]
+
+        if len(marker_list) == 1:
+            # @pytest.mark.models("t2t1,t2b1") -> ("t2t1,t2b1",) -> "t2t1,t2b1"
+            marker_list = marker_list[0]
+
+        if isinstance(marker_list, str):
+            # either a single model / shortcut, or a comma-separated text list
+            # @pytest.mark.models("t2t1,t2b1") -> "t2t1,t2b1" -> ["t2t1", "t2b1"]
+            marker_list = [s.strip() for s in marker_list.split(",")]
+
+        selected_models = set()
+        for marker in marker_list:
+            assert isinstance(marker, str)
+            if marker in cls.MODEL_SHORTCUTS:
+                selected_models |= cls.MODEL_SHORTCUTS[marker]
+            elif (model := models.by_internal_name(marker.upper())) is not None:
+                selected_models.add(model)
+            else:
+                raise ValueError(f"Unknown model: {marker}")
+
+        return selected_models
+
+
 @pytest.fixture(scope="function")
 def client(
     request: pytest.FixtureRequest, _raw_client: Client
-) -> Generator[Client, None, None]:
+) -> t.Generator[Client, None, None]:
     """Client fixture.
 
     Every test function that requires a client instance will get it from here.
@@ -199,26 +262,9 @@ def client(
 
     @pytest.mark.experimental
     """
-    if (
-        request.node.get_closest_marker("skip_t2t1")
-        and _raw_client.model is models.T2T1
-    ):
-        pytest.skip("Test excluded on Trezor T")
-    if (
-        request.node.get_closest_marker("skip_t1b1")
-        and _raw_client.model is models.T1B1
-    ):
-        pytest.skip("Test excluded on Trezor 1")
-    if (
-        request.node.get_closest_marker("skip_t2b1")
-        and _raw_client.model is models.T2B1
-    ):
-        pytest.skip("Test excluded on Trezor T2B1")
-    if (
-        request.node.get_closest_marker("skip_t3t1")
-        and _raw_client.model is models.T3T1
-    ):
-        pytest.skip("Test excluded on Trezor T3T1")
+    models_filter = ModelsFilter(request.node)
+    if _raw_client.model not in models_filter:
+        pytest.skip(f"Skipping test for model {_raw_client.model.internal_name}")
 
     sd_marker = request.node.get_closest_marker("sd_card")
     if sd_marker and not _raw_client.features.sd_card_present:
@@ -399,10 +445,10 @@ def pytest_configure(config: "Config") -> None:
     Registers known markers, enables verbose output if requested.
     """
     # register known markers
-    config.addinivalue_line("markers", "skip_t1b1: skip the test on Trezor One")
-    config.addinivalue_line("markers", "skip_t2t1: skip the test on Trezor T")
-    config.addinivalue_line("markers", "skip_t2b1: skip the test on Trezor T2B1")
-    config.addinivalue_line("markers", "skip_t3t1: skip the test on Trezor T3T1")
+    config.addinivalue_line(
+        "markers",
+        'models("core", "t1b1", ..., skip=[...], reason="..."): select which models or families to run the test on',
+    )
     config.addinivalue_line(
         "markers", "experimental: enable experimental features on Trezor"
     )
@@ -424,10 +470,8 @@ def pytest_runtest_setup(item: pytest.Item) -> None:
 
     Ensures that altcoin tests are skipped, and that no test is skipped for all models.
     """
-    if all(
-        item.get_closest_marker(marker)
-        for marker in ("skip_t1b1", "skip_t2t1", "skip_t2b1", "skip_t3t1")
-    ):
+    models_filter = ModelsFilter(item)
+    if not models_filter:
         raise RuntimeError("Don't skip tests for all trezor models!")
 
     skip_altcoins = int(os.environ.get("TREZOR_PYTEST_SKIP_ALTCOINS", 0))
@@ -436,7 +480,7 @@ def pytest_runtest_setup(item: pytest.Item) -> None:
 
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
-def pytest_runtest_makereport(item: pytest.Item, call) -> Generator:
+def pytest_runtest_makereport(item: pytest.Item, call) -> t.Generator:
     # Make test results available in fixtures.
     # See https://docs.pytest.org/en/latest/example/simple.html#making-test-result-information-available-in-fixtures
     # The device_handler fixture uses this as 'request.node.rep_call.passed' attribute,
@@ -461,7 +505,7 @@ def pytest_report_teststatus(
 
 
 @pytest.fixture
-def device_handler(client: Client, request: pytest.FixtureRequest) -> Generator:
+def device_handler(client: Client, request: pytest.FixtureRequest) -> t.Generator:
     device_handler = BackgroundDeviceHandler(client)
     yield device_handler
 

@@ -119,7 +119,7 @@ def test_get_address(client: Client, parameters, result):
     assert address == result["address"]
 
 
-@pytest.mark.skip_t1b1("No input flow for T1")
+@pytest.mark.models("core")
 @parametrize_using_common_fixtures("stellar/get_address.json")
 def test_get_address_chunkify_details(client: Client, parameters, result):
     with client:

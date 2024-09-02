@@ -105,12 +105,28 @@ the following marker:
 
 This marker must be registered in `REGISTERED_MARKERS` file in `tests` folder.
 
-Tests can be run only for specific models - it is done by disallowing the tests for the other models.
-`@pytest.mark.skip_t1b1`
-`@pytest.mark.skip_t2t1`
-`@pytest.mark.skip_t2b1`
-`@pytest.mark.skip_t3t1`
-are valid markers to skip current test for Model 1, Model T, Safe 3, and T3T1 respectively.
+Tests can be run only for specific models. The marker `@pytest.mark.models()` can be
+used to narrow the selection:
+
+* `@pytest.mark.models("t3b1", "t2t1)` - only for Safe 3 rev2 and Trezor T
+* `@pytest.mark.models("core")` - only for trezor-core models (skip Trezor One)
+* `@pytest.mark.models(skip="t3t1")` - for all models except Safe 5
+* `@pytest.mark.models("core", skip="t3t1")` - for all trezor-core models except Safe 5
+
+Arguments can be a list of internal model names, or one of the following shortcuts:
+
+* `core` - all trezor-core models
+* `legacy` - just Trezor One
+* `safe` - Trezor Safe family
+* `safe3` - Trezor Safe 3 (covers T2B1 and T2T1)
+* `mercury` - covers the `mercury` layout (currently T3T1 only)
+
+You can specify a list as positional arguments, and exclude from it via `skip` keyword argument.
+
+You can provide a list of strings, a list of `TrezorModel` instances, or a
+comma-separated string of model names or shortcuts.
+
+You can specify a skip reason as `reason="TODO implement for Mercury too"`.
 
 [pytest-random-order]: https://pypi.org/project/pytest-random-order/
 

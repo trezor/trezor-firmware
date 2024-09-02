@@ -23,7 +23,7 @@ from trezorlib.exceptions import TrezorFailure
 from ...common import MNEMONIC_SLIP39_ADVANCED_20
 from ...input_flows import InputFlowSlip39AdvancedRecoveryDryRun
 
-pytestmark = pytest.mark.skip_t1b1
+pytestmark = pytest.mark.models("core")
 
 INVALID_SHARES_SLIP39_ADVANCED_20 = [
     "chest garlic acrobat leaf diploma thank soul predator grant laundry camera license language likely slim twice amount rich total carve",

@@ -641,7 +641,7 @@ def test_fee_high_warning(client: Client):
     )
 
 
-@pytest.mark.skip_t1b1
+@pytest.mark.models("core")
 def test_fee_high_hardfail(client: Client):
     # input tx: 25fee583181847cbe9d9fd9a483a8b8626c99854a72d01de848ef40508d0f3bc
     # (The "25fee" tx hash is very suitable for testing high fees)
@@ -1445,7 +1445,7 @@ def test_lock_time(client: Client, lock_time: int, sequence: int):
         )
 
 
-@pytest.mark.skip_t1b1(reason="Cannot test layouts on T1")
+@pytest.mark.models("core", reason="Cannot test layouts on T1")
 def test_lock_time_blockheight(client: Client):
     # input tx: 0dac366fd8a67b2a89fbb0d31086e7acded7a5bbf9ef9daa935bc873229ef5b5
 
@@ -1477,7 +1477,7 @@ def test_lock_time_blockheight(client: Client):
         )
 
 
-@pytest.mark.skip_t1b1(reason="Cannot test layouts on T1")
+@pytest.mark.models("core", reason="Cannot test layouts on T1")
 @pytest.mark.parametrize(
     "lock_time_str", ("1985-11-05 00:53:20", "2048-08-16 22:14:00")
 )
@@ -1516,7 +1516,7 @@ def test_lock_time_datetime(client: Client, lock_time_str: str):
         )
 
 
-@pytest.mark.skip_t1b1(reason="Cannot test layouts on T1")
+@pytest.mark.models("core", reason="Cannot test layouts on T1")
 def test_information(client: Client):
     # input tx: 0dac366fd8a67b2a89fbb0d31086e7acded7a5bbf9ef9daa935bc873229ef5b5
 
@@ -1547,7 +1547,7 @@ def test_information(client: Client):
         )
 
 
-@pytest.mark.skip_t1b1(reason="Cannot test layouts on T1")
+@pytest.mark.models("core", reason="Cannot test layouts on T1")
 def test_information_mixed(client: Client):
     inp1 = messages.TxInputType(
         address_n=parse_path("m/44h/1h/0h/0/0"),  # mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q
@@ -1582,7 +1582,7 @@ def test_information_mixed(client: Client):
         )
 
 
-@pytest.mark.skip_t1b1(reason="Cannot test layouts on T1")
+@pytest.mark.models("core", reason="Cannot test layouts on T1")
 def test_information_cancel(client: Client):
     # input tx: 0dac366fd8a67b2a89fbb0d31086e7acded7a5bbf9ef9daa935bc873229ef5b5
 
@@ -1613,8 +1613,11 @@ def test_information_cancel(client: Client):
         )
 
 
-@pytest.mark.skip_t3t1(reason="Not yet implemented in new UI")
-@pytest.mark.skip_t1b1(reason="Cannot test layouts on T1")
+@pytest.mark.models(
+    "core",
+    skip="mercury",
+    reason="Cannot test layouts on T1, not implemented in mercury UI",
+)
 def test_information_replacement(client: Client):
     # Use the change output and an external output to bump the fee.
     # Originally fee was 3780, now 108060 (94280 from change and 10000 from external).

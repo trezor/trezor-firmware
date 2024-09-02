@@ -53,8 +53,7 @@ FAKE_TXHASH_1f00fc = bytes.fromhex(
 pytestmark = [
     pytest.mark.altcoin,
     pytest.mark.decred,
-    pytest.mark.skip_t2b1,
-    pytest.mark.skip_t3t1,
+    pytest.mark.models("t1b1", "t2t1"),
 ]
 
 
@@ -105,7 +104,7 @@ def test_send_decred(client: Client):
     )
 
 
-@pytest.mark.skip_t1b1
+@pytest.mark.models("core")
 def test_purchase_ticket_decred(client: Client):
     # NOTE: fake input tx used
 
@@ -168,7 +167,7 @@ def test_purchase_ticket_decred(client: Client):
     )
 
 
-@pytest.mark.skip_t1b1
+@pytest.mark.models("core")
 def test_spend_from_stake_generation_and_revocation_decred(client: Client):
     # NOTE: fake input tx used
 

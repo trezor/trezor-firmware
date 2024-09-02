@@ -26,7 +26,7 @@ from ..common import (
 
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC_SLIP39_ADVANCED_20, passphrase=True)
-@pytest.mark.skip_t1b1
+@pytest.mark.models("core")
 def test_128bit_passphrase(client: Client):
     """
     BIP32 Root Key for passphrase TREZOR:
@@ -45,7 +45,7 @@ def test_128bit_passphrase(client: Client):
 
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC_SLIP39_ADVANCED_33, passphrase=True)
-@pytest.mark.skip_t1b1
+@pytest.mark.models("core")
 def test_256bit_passphrase(client: Client):
     """
     BIP32 Root Key for passphrase TREZOR:

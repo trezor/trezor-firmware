@@ -276,7 +276,7 @@ def test_one_two(client: Client):
         )
 
 
-@pytest.mark.skip_t1b1
+@pytest.mark.models("core")
 def test_unified_address(client: Client):
     # identical to the test_one_two
     # but receiver address is unified with an orchard address
@@ -334,7 +334,7 @@ def test_unified_address(client: Client):
         )
 
 
-@pytest.mark.skip_t1b1
+@pytest.mark.models("core")
 def test_external_presigned(client: Client):
     inp1 = messages.TxInputType(
         # tmQoJ3PTXgQLaRRZZYT6xk8XtjRbr2kCqwu
