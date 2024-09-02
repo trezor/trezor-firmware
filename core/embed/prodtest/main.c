@@ -195,7 +195,7 @@ static void draw_border(int width, int padding) {
 }
 
 static void draw_welcome_screen(void) {
-#if TREZOR_MODEL_R
+#if defined TREZOR_MODEL_R || defined TREZOR_MODEL_T3B1
   display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, 0xFFFF);
   display_refresh();
 #else
