@@ -109,7 +109,7 @@ TREZOR_SAFE5 = T3T1
 TREZOR_DISC1 = DISC1
 TREZOR_DISC2 = DISC2
 
-TREZORS = {T1B1, T2T1, T2B1, T3T1, T3B1, DISC1, DISC2}
+TREZORS = frozenset({T1B1, T2T1, T2B1, T3T1, T3B1, DISC1, DISC2})
 
 
 def by_name(name: Optional[str]) -> Optional[TrezorModel]:
