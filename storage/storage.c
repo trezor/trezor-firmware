@@ -477,7 +477,7 @@ static void ui_progress_add(uint32_t added_ms) { ui_total += added_ms; }
 
 static secbool ui_progress(void) {
   uint32_t now = hal_ticks_ms();
-  if (ui_callback == NULL || ui_message == 0 || now < ui_next_update) {
+  if (ui_callback == NULL || ui_message == NO_MSG || now < ui_next_update) {
     return secfalse;
   }
 
@@ -496,7 +496,7 @@ static secbool ui_progress(void) {
 #ifndef TREZOR_EMULATOR
   uint32_t progress = 0;
   if (ui_total < 1000000) {
-    progress = 1000 * ui_elapsed / ui_total;
+    progress = ui_total > 0 ? (1000 * ui_elapsed / ui_total) : 1000;
   } else {
     // Avoid uint32 overflow. Precise enough.
     progress = ui_elapsed / (ui_total / 1000);
@@ -505,7 +505,8 @@ static secbool ui_progress(void) {
   // In the emulator we derive the progress from the number of remaining seconds
   // to avoid flaky UI tests.
   uint32_t ui_total_sec = (ui_total + 500) / 1000;
-  uint32_t progress = 1000 - 1000 * ui_rem_sec / ui_total_sec;
+  uint32_t progress =
+      ui_total_sec > 0 ? (1000 - 1000 * ui_rem_sec / ui_total_sec) : 1000;
 #endif
 
   // Avoid reaching progress = 1000 or overflowing the total time, since calling
@@ -521,6 +522,13 @@ static secbool ui_progress(void) {
 static void ui_progress_finish(void) {
   // The UI dialog is terminated by calling ui_callback() with progress = 1000.
   if (ui_callback != NULL && ui_message != 0) {
+#ifdef TREZOR_EMULATOR
+    // the ui_progress function might not have been called if the whole process
+    // was faster than MIN_PROGRESS_UPDATE_MS, and since the ui_progress renders
+    // the progress bar with 999 max, we need to call the ui_callback with 999
+    // to ensure consistent results during tests
+    ui_callback(0, 999, ui_message);
+#endif
     ui_callback(0, 1000, ui_message);
   }
 }
