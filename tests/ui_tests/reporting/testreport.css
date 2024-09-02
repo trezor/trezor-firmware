@@ -64,12 +64,14 @@ tr.bad a:visited {
 }
 
 .model-T1B1 img,
-.model-T2B1 img {
+.model-T2B1 img,
+.model-T3B1 img {
     image-rendering: pixelated;
     width: 256px;
 }
 
-.model-T2B1 canvas {
+.model-T2B1 canvas
+.model-T3B1 canvas {
     image-rendering: pixelated;
     width: 256px;
 }
