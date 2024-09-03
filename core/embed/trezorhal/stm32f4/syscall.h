@@ -22,17 +22,15 @@
 
 #include <stdint.h>
 
+#include "applet.h"
 #include "syscall_numbers.h"
 
 // Reserved SVC numbers
 #define SVC_SYSCALL 0
-#define SVC_START_APP 1
+#define SVC_SYSTASK_YIELD 1
 #define SVC_CALLBACK_RETURN 2
 
 #ifdef KERNEL_MODE
-
-// Initializes the SVC/Syscall handlers
-void syscall_init(void);
 
 // Handles all syscall requests.
 //
@@ -44,14 +42,13 @@ void syscall_init(void);
 //
 // Return values must be copied to `args[0]` and
 // `args[1]` (if returning a 64-bit value).
-void syscall_handler(uint32_t *args, uint32_t syscall);
+void syscall_handler(uint32_t* args, uint32_t syscall);
 
 // Invokes application callback from the syscall handler
 uint32_t invoke_app_callback(uint32_t args1, uint32_t arg2, uint32_t arg3,
-                             void *callback);
+                             void* callback);
 
-// Jumps to reset vector in the unprivileged application
-void __attribute__((noreturn)) start_unprivileged_app(void);
+void return_from_app_callback(uint32_t retval, uint32_t* msp);
 
 #else  // KERNEL_MODE
 

@@ -126,9 +126,7 @@ secbool monoctr_read(monoctr_type_t type, uint8_t* value) {
     return secfalse;
   }
 #else
-
-  *value = 0;
-
+  *value = dummy_version;
 #endif
 
   return sectrue;

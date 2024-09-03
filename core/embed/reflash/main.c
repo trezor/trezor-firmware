@@ -23,6 +23,7 @@
 
 #include STM32_HAL_H
 
+#include "bootutils.h"
 #include "common.h"
 #include "display.h"
 #include "display_draw.h"
@@ -30,9 +31,11 @@
 #include "image.h"
 #include "model.h"
 #include "rng.h"
+#include "rsod.h"
 #include "sbu.h"
 #include "sdcard.h"
 #include "secbool.h"
+#include "system.h"
 #include "systimer.h"
 #include "terminal.h"
 #include "touch.h"
@@ -43,7 +46,7 @@
 
 static void progress_callback(int pos, int len) { term_printf("."); }
 
-static void flash_from_sdcard(const flash_area_t* area, uint32_t source,
+static void flash_from_sdcard(const flash_area_t *area, uint32_t source,
                               uint32_t length) {
   static uint32_t buf[SDCARD_BLOCK_SIZE / sizeof(uint32_t)];
 
@@ -68,9 +71,34 @@ static void flash_from_sdcard(const flash_area_t* area, uint32_t source,
   }
 }
 
+// Initializes system in emergency mode and shows RSOD
+static void enter_emergency_mode(const systask_postmortem_t *pminfo) {
+  // Initialize the system's core services
+  // (If the kernel crashes in emergency mode, we are out of options
+  // and show the RSOD without attempting to re-enter emergency mode)
+  system_init(&rsod_terminal);
+
+  // Initialize necessary drivers
+  display_init(DISPLAY_RESET_CONTENT);
+
+  // Show RSOD using the terminal
+  rsod_terminal(pminfo);
+
+  // Wait for the user to manually power off the device
+  secure_shutdown();
+}
+
+// Kernel panic handler
+// (may be called from interrupt context)
+static void kernel_panic(const systask_postmortem_t *pminfo) {
+  // Since the system state is unreliable, enter emergency mode
+  // and show the RSOD.
+  system_emergency_rescue(&enter_emergency_mode, pminfo);
+  // The previous function call never returns
+}
+
 int main(void) {
-  systick_init();
-  systimer_init();
+  system_init(&kernel_panic);
 
   sdcard_init();
   touch_init();
