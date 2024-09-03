@@ -81,7 +81,7 @@ def _networks_iterator() -> Iterator[NetworkInfoTuple]:
         yield (
             137,  # chain_id
             966,  # slip44
-            "MATIC",  # symbol
+            "POL",  # symbol
             "Polygon",  # name
         )
         yield (
@@ -118,7 +118,7 @@ def _networks_iterator() -> Iterator[NetworkInfoTuple]:
         yield (
             137,  # chain_id
             966,  # slip44
-            "MATIC",  # symbol
+            "POL",  # symbol
             "Polygon",  # name
         )
         yield (
@@ -155,7 +155,7 @@ def _networks_iterator() -> Iterator[NetworkInfoTuple]:
         yield (
             137,  # chain_id
             966,  # slip44
-            "MATIC",  # symbol
+            "POL",  # symbol
             "Polygon",  # name
         )
         yield (
@@ -192,7 +192,7 @@ def _networks_iterator() -> Iterator[NetworkInfoTuple]:
         yield (
             137,  # chain_id
             966,  # slip44
-            "MATIC",  # symbol
+            "POL",  # symbol
             "Polygon",  # name
         )
         yield (
@@ -229,7 +229,7 @@ def _networks_iterator() -> Iterator[NetworkInfoTuple]:
         yield (
             137,  # chain_id
             966,  # slip44
-            "MATIC",  # symbol
+            "POL",  # symbol
             "Polygon",  # name
         )
         yield (

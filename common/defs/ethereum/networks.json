@@ -48,7 +48,7 @@
         "coingecko_id": "polygon-pos",
         "is_testnet": false,
         "name": "Polygon",
-        "shortcut": "MATIC",
+        "shortcut": "POL",
         "slip44": 966
     }
 ]
