@@ -518,7 +518,7 @@ class EthereumFlow:
                 "ethereum__staking_claim_intro",
             ],
         )
-        if self.client.model in (models.T2T1, ):
+        if self.client.model in (models.T2T1,):
             # confirm intro
             if info:
                 self.debug.click(buttons.CORNER_BUTTON, wait=True)
@@ -586,7 +586,10 @@ class EthereumFlow:
 
             self.debug.press_yes()
 
-        elif self.client.model in (models.T2B1, models.T3B1, ):
+        elif self.client.model in (
+            models.T2B1,
+            models.T3B1,
+        ):
             # confirm intro
             if info:
                 self.debug.press_right(wait=True)
