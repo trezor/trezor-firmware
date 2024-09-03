@@ -17,6 +17,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <fault_handlers.h>
+#ifndef LIB_RSOD_H
+#define LIB_RSOD_H
 
-void fault_handlers_init(void) {}
+#include "systask.h"
+
+void rsod_terminal(const systask_postmortem_t* info);
+
+void rsod_gui(const systask_postmortem_t* info);
+
+#endif  // LIB_RSOD_H

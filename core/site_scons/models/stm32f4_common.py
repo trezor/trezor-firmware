@@ -40,11 +40,11 @@ def stm32f4_common_files(env, defines, sources, paths):
     ]
 
     sources += [
+        "embed/trezorhal/stm32f4/applet.c",
         "embed/trezorhal/stm32f4/board_capabilities.c",
         "embed/trezorhal/stm32f4/bootutils.c",
         "embed/trezorhal/stm32f4/common.c",
         "embed/trezorhal/stm32f4/entropy.c",
-        "embed/trezorhal/stm32f4/fault_handlers.c",
         "embed/trezorhal/stm32f4/flash.c",
         "embed/trezorhal/stm32f4/flash_otp.c",
         "embed/trezorhal/stm32f4/fwutils.c",
@@ -56,11 +56,14 @@ def stm32f4_common_files(env, defines, sources, paths):
         "embed/trezorhal/stm32f4/syscall.c",
         "embed/trezorhal/stm32f4/syscall_dispatch.c",
         "embed/trezorhal/stm32f4/syscall_stubs.c",
+        "embed/trezorhal/stm32f4/system.c",
+        "embed/trezorhal/stm32f4/systask.c",
         "embed/trezorhal/stm32f4/systick.c",
         "embed/trezorhal/stm32f4/systimer.c",
         "embed/trezorhal/stm32f4/time_estimate.c",
         "embed/trezorhal/stm32f4/random_delays.c",
         "embed/trezorhal/stm32f4/rng.c",
+
         "embed/trezorhal/stm32f4/vectortable.S",
     ]
 

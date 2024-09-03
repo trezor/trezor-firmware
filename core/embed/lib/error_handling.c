@@ -18,25 +18,10 @@
  */
 
 #include <stddef.h>
-#ifdef TREZOR_EMULATOR
-#include <stdio.h>
-#endif
+#include <stdint.h>
 
-#include "bootutils.h"
-#include "display.h"
 #include "error_handling.h"
-#include "mini_printf.h"
-#ifdef FANCY_FATAL_ERROR
-#include "rust_ui.h"
-#else
-#include "terminal.h"
-#endif
-
-#ifdef RGB16
-#define COLOR_FATAL_ERROR RGB16(0x7F, 0x00, 0x00)
-#else
-#define COLOR_FATAL_ERROR COLOR_BLACK
-#endif
+#include "system.h"
 
 uint32_t __stack_chk_guard = 0;
 
@@ -48,26 +33,16 @@ void __attribute__((noreturn, used)) __stack_chk_fail(void) {
 
 void __attribute__((noreturn))
 error_shutdown_ex(const char *title, const char *message, const char *footer) {
-  if (title == NULL) {
+  if (title == NULL) {  // !@# remove
     title = "INTERNAL ERROR";
   }
-  if (footer == NULL) {
+  if (footer == NULL) {  // !@# remove
     footer = "PLEASE VISIT\nTREZOR.IO/RSOD";
   }
 
-#ifdef FANCY_FATAL_ERROR
-  error_shutdown_rust(title, message, footer);
-#else
-  display_orientation(0);
-  term_set_color(COLOR_WHITE, COLOR_FATAL_ERROR);
-  term_printf("%s\n", title);
-  if (message) {
-    term_printf("%s\n", message);
-  }
-  term_printf("\n%s\n", footer);
-  display_backlight(255);
-  secure_shutdown();
-#endif
+  system_exit_error(title, message, footer);
+  while (1)
+    ;
 }
 
 void __attribute__((noreturn)) error_shutdown(const char *message) {
@@ -76,39 +51,9 @@ void __attribute__((noreturn)) error_shutdown(const char *message) {
 
 void __attribute__((noreturn))
 __fatal_error(const char *msg, const char *file, int line) {
-#ifdef TREZOR_EMULATOR
-  fprintf(stderr, "FATAL ERROR: %s\n", msg);
-  if (file) {
-    fprintf(stderr, "file: %s:%d\n", file, line);
-  }
-  fflush(stderr);
-#endif
-#ifdef FANCY_FATAL_ERROR
-  if (msg == NULL) {
-    char buf[128] = {0};
-    mini_snprintf(buf, sizeof(buf), "%s:%d", file, line);
-    msg = buf;
-  }
-  error_shutdown(msg);
-#else
-  display_orientation(0);
-  term_set_color(COLOR_WHITE, COLOR_FATAL_ERROR);
-  term_printf("\nINTERNAL ERROR:\n");
-  if (msg) {
-    term_printf("msg : %s\n", msg);
-  }
-  if (file) {
-    term_printf("file: %s:%d\n", file, line);
-  }
-#ifdef SCM_REVISION
-  const uint8_t *rev = (const uint8_t *)SCM_REVISION;
-  term_printf("rev : %02x%02x%02x%02x%02x\n", rev[0], rev[1], rev[2], rev[3],
-              rev[4]);
-#endif
-  term_printf("\nPlease contact Trezor support.\n");
-  display_backlight(255);
-  secure_shutdown();
-#endif
+  system_exit_fatal(msg, file, line);
+  while (1)
+    ;
 }
 
 void __attribute__((noreturn)) show_wipe_code_screen(void) {

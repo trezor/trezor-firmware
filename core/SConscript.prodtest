@@ -115,6 +115,7 @@ SOURCE_MOD += [
     'embed/lib/gfx_bitblt_mono8.c',
     'embed/lib/image.c',
     'embed/lib/mini_printf.c',
+    'embed/lib/rsod.c',
     'embed/lib/qr-code-generator/qrcodegen.c',
     'embed/lib/terminal.c',
     'vendor/micropython/lib/uzlib/adler32.c',

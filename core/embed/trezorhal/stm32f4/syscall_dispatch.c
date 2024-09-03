@@ -34,6 +34,8 @@
 #include "rng.h"
 #include "sdcard.h"
 #include "secret.h"
+#include "systask.h"
+#include "system.h"
 #include "systick.h"
 #include "touch.h"
 #include "translations.h"
@@ -63,6 +65,17 @@ static void firmware_hash_callback_wrapper(void *context, uint32_t progress,
 
 void syscall_handler(uint32_t *args, uint32_t syscall) {
   switch (syscall) {
+    case SYSCALL_SYSTEM_EXIT: {
+      system_exit((int)args[0]);
+    } break;
+    case SYSCALL_SYSTEM_EXIT_ERROR: {
+      system_exit_error((const char *)args[0], (const char *)args[1],
+                        (const char *)args[2]);
+    } break;
+    case SYSCALL_SYSTEM_EXIT_FATAL: {
+      system_exit_fatal((const char *)args[0], (const char *)args[1],
+                        (int)args[2]);
+    } break;
     case SYSCALL_SYSTICK_CYCLES: {
       uint64_t cycles = systick_cycles();
       args[0] = cycles & 0xFFFFFFFF;

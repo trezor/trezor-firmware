@@ -19,27 +19,29 @@
 
 #include STM32_HAL_H
 
-#include "image.h"
-#include "irq.h"
-#include "syscall.h"
+#include <string.h>
 
+#include "applet.h"
 #include "board_capabilities.h"
+#include "bootutils.h"
 #include "display.h"
 #include "dma2d.h"
 #include "entropy.h"
-#include "fault_handlers.h"
 #include "haptic.h"
 #include "i2c.h"
+#include "image.h"
+#include "irq.h"
 #include "memzero.h"
 #include "mpu.h"
 #include "optiga_commands.h"
 #include "optiga_transport.h"
 #include "random_delays.h"
+#include "rsod.h"
 #include "sdcard.h"
 #include "secret.h"
 #include "secure_aes.h"
+#include "system.h"
 #include "systick.h"
-#include "systimer.h"
 #include "tamper.h"
 #include "touch.h"
 #include "unit_variant.h"
@@ -65,15 +67,6 @@ static void optiga_log_hex(const char *prefix, const uint8_t *data,
 #endif
 
 void drivers_init() {
-  syscall_init();
-
-  systick_init();
-  systimer_init();
-
-  fault_handlers_init();
-
-  systick_delay_ms(10);
-
 #if defined TREZOR_MODEL_T
   set_core_clock(CLOCK_180_MHZ);
 #endif
@@ -178,14 +171,88 @@ void drivers_init() {
 #endif
 }
 
+// Initializes coreapp applet
+static void coreapp_init(applet_t *applet) {
+  applet_header_t *coreapp_header =
+      (applet_header_t *)(COREAPP_START + IMAGE_HEADER_SIZE + 0x0400);
+
+  applet_layout_t coreapp_layout = {
+      0
+      /*  .data1_start = COREAPP_RAM1_START,
+        .data1_size = COREAPP_RAM1_SIZE,
+        .data2_start = COREAPP_RAM2_START,
+        .data2_size = COREAPP_RAM2_SIZE,*/
+  };
+
+  applet_init(applet, coreapp_header, &coreapp_layout);
+}
+
+// Shows RSOD (Red Screen of Death)
+static void show_rsod(const systask_postmortem_t *pminfo) {
+#ifdef FANCY_FATAL_ERROR
+  applet_t coreapp;
+  coreapp_init(&coreapp);
+
+  // Reset and run the coreapp in RSOD mode
+  applet_reset(&coreapp, 1, pminfo, sizeof(systask_postmortem_t));
+  systask_yield_to(&coreapp.task);
+
+  if (coreapp.task.pminfo.reason == TASK_TERM_REASON_EXIT) {
+    // If the RSOD was shown successfully, proceed to shutdown
+    secure_shutdown();
+  }
+#endif
+
+  // If coreapp crashed, fallback to showing the error using a terminal
+  rsod_terminal(pminfo);
+}
+
+// Initializes system in emergency mode and shows RSOD
+static void enter_emergency_mode(const systask_postmortem_t *pminfo) {
+  // Initialize the system's core services
+  // (If the kernel crashes in emergency mode, we are out of options
+  // and show the RSOD without attempting to re-enter emergency mode)
+  system_init(&rsod_terminal);
+
+  // Initialize necessary drivers
+  display_init(DISPLAY_RESET_CONTENT);
+
+  // Show RSOD
+  show_rsod(pminfo);
+
+  // Wait for the user to manually power off the device
+  secure_shutdown();
+}
+
+// Kernel panic handler
+// (may be called from interrupt context)
+static void kernel_panic(const systask_postmortem_t *pminfo) {
+  // Since the system state is unreliable, enter emergency mode
+  // and show the RSOD.
+  system_emergency_rescue(&enter_emergency_mode, pminfo);
+  // The previous function call never returns
+}
+
 int main(void) {
-  mpu_init();
+  // Initialize system's core services
+  system_init(&kernel_panic);
 
   // Initialize hardware drivers
   drivers_init();
 
-  // Start unprivileged application
-  start_unprivileged_app();
+  // Initialize coreapp task
+  applet_t coreapp;
+  coreapp_init(&coreapp);
+
+  // Reset and run the coreapp
+  applet_reset(&coreapp, 0, NULL, 0);
+  systask_yield_to(&coreapp.task);
+
+  // Coreapp crashed, show RSOD
+  show_rsod(&coreapp.task.pminfo);
+
+  // Wait for the user to manually power off the device
+  secure_shutdown();
 
   return 0;
 }

@@ -76,7 +76,6 @@ secbool monoctr_write(monoctr_type_t type, uint8_t value) {
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_OTP);
   ensure(flash_otp_write(block, 0, bits, FLASH_OTP_BLOCK_SIZE), NULL);
   mpu_restore(mpu_mode);
-
 #endif
   return sectrue;
 }
@@ -131,9 +130,7 @@ secbool monoctr_read(monoctr_type_t type, uint8_t* value) {
     return secfalse;
   }
 #else
-
-  *value = 0;
-
+  *value = dummy_version;
 #endif
 
   return sectrue;

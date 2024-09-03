@@ -117,6 +117,7 @@ SOURCE_MOD += [
     'embed/lib/gfx_bitblt_rgba8888.c',
     'embed/lib/image.c',
     'embed/lib/mini_printf.c',
+    'embed/lib/rsod.c',
     'embed/lib/terminal.c',
     'embed/lib/unit_variant.c',
     'vendor/micropython/lib/uzlib/adler32.c',

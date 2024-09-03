@@ -78,6 +78,7 @@ SOURCE_MOD += [
     'embed/lib/gfx_bitblt_mono8.c',
     'embed/lib/image.c',
     'embed/lib/mini_printf.c',
+    'embed/lib/rsod.c',
     'embed/lib/terminal.c',
 ]
 if NEW_RENDERING:

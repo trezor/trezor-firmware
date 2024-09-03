@@ -40,6 +40,8 @@ sram5_start = ORIGIN(SRAM5);
 sram5_end = ORIGIN(SRAM5) + LENGTH(SRAM5);
 sram6_start = ORIGIN(SRAM6);
 sram6_end = ORIGIN(SRAM6) + LENGTH(SRAM6);
+bss_start = ADDR(.bss);
+bss_end = ADDR(.bss) + SIZEOF(.bss);
 
 /* reserve 256 bytes for bootloader arguments */
 boot_args_start = ORIGIN(BOOT_ARGS);

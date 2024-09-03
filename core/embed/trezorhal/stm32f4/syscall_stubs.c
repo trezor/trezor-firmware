@@ -22,6 +22,33 @@
 #ifndef KERNEL_MODE
 
 // =============================================================================
+// system.h
+// =============================================================================
+
+#include "system.h"
+
+void system_exit(int exit_code) {
+  syscall_invoke1(exit_code, SYSCALL_SYSTEM_EXIT);
+  while (1)
+    ;
+}
+
+void system_exit_error(const char *title, const char *message,
+                       const char *footer) {
+  syscall_invoke3((uint32_t)title, (uint32_t)message, (uint32_t)footer,
+                  SYSCALL_SYSTEM_EXIT_ERROR);
+  while (1)
+    ;
+}
+
+void system_exit_fatal(const char *message, const char *file, int line) {
+  syscall_invoke3((uint32_t)message, (uint32_t)file, line,
+                  SYSCALL_SYSTEM_EXIT_FATAL);
+  while (1)
+    ;
+}
+
+// =============================================================================
 // systick.h
 // =============================================================================
 

@@ -112,6 +112,7 @@ SOURCE_MOD += [
     'embed/lib/gfx_bitblt_rgba8888.c',
     'embed/lib/image.c',
     'embed/lib/mini_printf.c',
+    'embed/lib/rsod.c',
     'embed/lib/terminal.c',
     'embed/lib/unit_variant.c',
     'vendor/micropython/lib/uzlib/adler32.c',
@@ -148,7 +149,6 @@ SOURCE_BOOTLOADER = [
 SOURCE_TREZORHAL = [
     'embed/trezorhal/unix/bootutils.c',
     'embed/trezorhal/unix/common.c',
-    'embed/trezorhal/unix/fault_handlers.c',
     'embed/trezorhal/unix/flash.c',
     'embed/trezorhal/unix/flash_otp.c',
     'embed/trezorhal/unix/mpu.c',
@@ -156,6 +156,7 @@ SOURCE_TREZORHAL = [
     'embed/trezorhal/unix/random_delays.c',
     'embed/trezorhal/unix/rng.c',
     'embed/trezorhal/unix/secret.c',
+    'embed/trezorhal/unix/system.c',
     'embed/trezorhal/unix/systick.c',
     'embed/trezorhal/unix/systimer.c',
     'embed/trezorhal/unix/usb.c',

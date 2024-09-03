@@ -42,15 +42,16 @@
 #include "compiler_traits.h"
 #include "display.h"
 #include "entropy.h"
-#include "fault_handlers.h"
 #include "flash.h"
 #include "image.h"
 #include "memzero.h"
 #include "model.h"
 #include "mpu.h"
 #include "random_delays.h"
+#include "rsod.h"
 #include "rust_ui.h"
 #include "secure_aes.h"
+#include "system.h"
 #include "systimer.h"
 
 #include TREZOR_BOARD
@@ -128,8 +129,7 @@ static void optiga_log_hex(const char *prefix, const uint8_t *data,
 #endif
 
 int main(void) {
-  systick_init();
-  systimer_init();
+  system_init(&rsod_gui);
 
   rdi_init();
 
@@ -185,8 +185,6 @@ int main(void) {
 #endif
 
   // Init peripherals
-
-  fault_handlers_init();
 
 #if defined TREZOR_MODEL_T
   set_core_clock(CLOCK_180_MHZ);

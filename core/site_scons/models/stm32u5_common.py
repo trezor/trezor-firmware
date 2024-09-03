@@ -49,11 +49,11 @@ def stm32u5_common_files(env, defines, sources, paths):
     ]
 
     sources += [
+        "embed/trezorhal/stm32u5/applet.c",
         "embed/trezorhal/stm32u5/board_capabilities.c",
         "embed/trezorhal/stm32u5/bootutils.c",
         "embed/trezorhal/stm32u5/common.c",
         "embed/trezorhal/stm32u5/entropy.c",
-        "embed/trezorhal/stm32u5/fault_handlers.c",
         "embed/trezorhal/stm32u5/flash.c",
         "embed/trezorhal/stm32u5/flash_otp.c",
         "embed/trezorhal/stm32u5/fwutils.c",
@@ -67,6 +67,8 @@ def stm32u5_common_files(env, defines, sources, paths):
         "embed/trezorhal/stm32u5/syscall.c",
         "embed/trezorhal/stm32u5/syscall_dispatch.c",
         "embed/trezorhal/stm32u5/syscall_stubs.c",
+        "embed/trezorhal/stm32u5/system.c",
+        "embed/trezorhal/stm32u5/systask.c",
         "embed/trezorhal/stm32u5/systick.c",
         "embed/trezorhal/stm32u5/systimer.c",
         "embed/trezorhal/stm32u5/random_delays.c",

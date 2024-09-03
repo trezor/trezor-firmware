@@ -31,7 +31,6 @@
 #include "display.h"
 #include "display_draw.h"
 #include "display_utils.h"
-#include "fault_handlers.h"
 #include "flash.h"
 #include "flash_otp.h"
 #include "fwutils.h"
@@ -41,9 +40,11 @@
 #include "mpu.h"
 #include "prodtest_common.h"
 #include "random_delays.h"
+#include "rsod.h"
 #include "sbu.h"
 #include "sdcard.h"
 #include "secbool.h"
+#include "system.h"
 #include "systimer.h"
 #include "touch.h"
 #include "usb.h"
@@ -778,10 +779,35 @@ void cpuid_read(void) {
 
 #define BACKLIGHT_NORMAL 150
 
+// Initializes system in emergency mode and shows RSOD
+static void enter_emergency_mode(const systask_postmortem_t *pminfo) {
+  // Initialize the system's core services
+  // (If the kernel crashes in emergency mode, we are out of options
+  // and show the RSOD without attempting to re-enter emergency mode)
+  system_init(&rsod_terminal);
+
+  // Initialize necessary drivers
+  display_init(DISPLAY_RESET_CONTENT);
+
+  // Show RSOD
+  rsod_terminal(pminfo);
+
+  // Wait for the user to manually power off the device
+  secure_shutdown();
+}
+
+// Kernel panic handler
+// (may be called from interrupt context)
+static void kernel_panic(const systask_postmortem_t *pminfo) {
+  // Since the system state is unreliable, enter emergency mode
+  // and show the RSOD.
+  system_emergency_rescue(&enter_emergency_mode, pminfo);
+  // The previous function call never returns
+}
+
 int main(void) {
-  systick_init();
-  systimer_init();
-  rdi_init();
+  system_init(&kernel_panic);
+
   display_init(DISPLAY_RETAIN_CONTENT);
 
 #ifdef STM32U5
@@ -818,8 +844,6 @@ int main(void) {
   optiga_open_application();
   pair_optiga();
 #endif
-
-  fault_handlers_init();
 
   display_clear();
   draw_welcome_screen();

@@ -37,15 +37,27 @@
 #include "ports/stm32/pendsv.h"
 
 #include "error_handling.h"
+#include "rsod.h"
 #include "rust_ui_common.h"
 #include "secbool.h"
+#include "systask.h"
+#include "system.h"
 
 #ifdef USE_SECP256K1_ZKP
 #include "zkp_context.h"
 #endif
 
-int main(void) {
+int main(uint32_t cmd, void *arg) {
+  if (cmd == 1) {
+    systask_postmortem_t *info = (systask_postmortem_t *)arg;
+    rsod_gui(info);
+    system_exit(0);
+  }
+
   screen_boot_stage_2();
+
+  // uint32_t *p = 0;
+  // *p = 0;
 
 #ifdef USE_SECP256K1_ZKP
   ensure(sectrue * (zkp_context_init() == 0), NULL);

@@ -6,21 +6,17 @@
   .type reset_handler, STT_FUNC
 reset_handler:
 
-  // setup environment for subsequent stage of code
-  ldr r0, =ccmram_start // r0 - point to beginning of CCMRAM
-  ldr r1, =ccmram_end   // r1 - point to byte after the end of CCMRAM
-  ldr r2, =0            // r2 - the word-sized value to be written
-  bl memset_reg
+  push {r0, r1}
 
-  ldr r0, =boot_args_start // r0 - point to beginning of BOOT_ARGS
-  ldr r1, =boot_args_end   // r1 - point to byte after the end of BOOT_ARGS
-  ldr r2, =0            // r2 - the word-sized value to be written
-  bl memset_reg
+  // setup the stack protector with provided random value
+  ldr r0, = __stack_chk_guard
+  str r2, [r0]
 
-  ldr r0, =sram_start   // r0 - point to beginning of SRAM
-  ldr r1, =sram_end     // r1 - point to byte after the end of SRAM
-  ldr r2, =0            // r2 - the word-sized value to be written
-  bl memset_reg
+  ldr r0, =bss_start
+  ldr r1, =0
+  ldr r2, =bss_end
+  sub r2, r2, r0
+  bl memset
 
   // copy data in from flash
   ldr r0, =data_vma     // dst addr
@@ -28,15 +24,14 @@ reset_handler:
   ldr r2, =data_size    // size in bytes
   bl memcpy
 
-  // setup the stack protector (see build script "-fstack-protector-all") with an unpredictable value
-  bl rng_get
-  ldr r1, = __stack_chk_guard
-  str r0, [r1]
+  pop {r0, r1}
 
   // enter the application code
+  // returns exit code in r0
   bl main
 
-  b secure_shutdown
-
+  // terminate the application
+  // pass exit code in r0
+  b system_exit
 
   .end
