@@ -180,7 +180,8 @@ vector_table:
 
   .section .vector_table, "a"
 vector_table:
-  .word main_stack_base // defined in linker script
+  .word _sstack
+  .word _stack_size
   .word reset_handler
 
 #endif

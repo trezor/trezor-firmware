@@ -25,7 +25,6 @@
 #include "common.h"
 #include "display.h"
 #include "display_utils.h"
-#include "fault_handlers.h"
 #include "flash.h"
 #include "flash_otp.h"
 #include "flash_utils.h"
@@ -33,8 +32,10 @@
 #include "lowlevel.h"
 #include "messages.pb.h"
 #include "random_delays.h"
+#include "rsod.h"
 #include "secbool.h"
 #include "secret.h"
+#include "system.h"
 #include "systimer.h"
 
 #ifdef USE_DMA2D
@@ -349,6 +350,35 @@ __attribute__((noreturn)) void jump_to_fw_through_reset(void) {
 }
 #endif
 
+// Initializes system in emergency mode and shows RSOD
+static void enter_emergency_mode(const systask_postmortem_t *pminfo) {
+  // Initialize the system's core services
+  // (If the kernel crashes in emergency mode, we are out of options
+  // and show the RSOD without attempting to re-enter emergency mode)
+  system_init(&rsod_terminal);
+
+  // Initialize necessary drivers
+  display_init(DISPLAY_RESET_CONTENT);
+
+#ifdef FANCY_FATAL_ERROR
+  rsod_gui(pminfo);
+#else
+  rsod_terminal(pminfo);
+#endif
+
+  // Wait for the user to manually power off the device
+  secure_shutdown();
+}
+
+// Kernel panic handler
+// (may be called from interrupt context)
+static void kernel_panic(const systask_postmortem_t *pminfo) {
+  // Since the system state is unreliable, enter emergency mode
+  // and show the RSOD.
+  system_emergency_rescue(&enter_emergency_mode, pminfo);
+  // The previous function call never returns
+}
+
 #ifndef TREZOR_EMULATOR
 int main(void) {
 #else
@@ -356,8 +386,7 @@ int bootloader_main(void) {
 #endif
   secbool stay_in_bootloader = secfalse;
 
-  systick_init();
-  systimer_init();
+  system_init(&kernel_panic);
 
   rdi_init();
 
@@ -392,8 +421,6 @@ int bootloader_main(void) {
 #endif
 
   ui_screen_boot_stage_1(false);
-
-  fault_handlers_init();
 
 #ifdef TREZOR_EMULATOR
   // wait a bit so that the empty lock icon is visible
