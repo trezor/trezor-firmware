@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [2.8.2] (18th September 2024)
+## [2.8.2] (unreleased)
 
 ### Added
 - Reduce the choices to select wordcount when unlocking repeated backup to 20 or 33.  [#4099]

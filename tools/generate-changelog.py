@@ -14,7 +14,7 @@ VERSION_HEADER_RE = re.compile(r"## \[([.0-9]+)\]")
 DIFF_LINK = "[{new}]: https://github.com/trezor/trezor-firmware/compare/{tag_prefix}{old}...{tag_prefix}{new}\n"
 
 MODELS_RE = re.compile(r"\[([A-Z0-9]{4})(,[A-Z0-9]{4})*\][ ]?")
-INTERNAL_MODELS = ("T2T1", "T2B1", "T3T1", "D001")
+INTERNAL_MODELS = ("T2T1", "T2B1", "T3B1", "T3T1", "D001")
 INTERNAL_MODELS_SKIP = ("D001",)
 
 
