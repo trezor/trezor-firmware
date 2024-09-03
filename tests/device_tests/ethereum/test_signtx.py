@@ -459,7 +459,6 @@ def test_signtx_data_pagination(client: Client, flow):
         _sign_tx_call()
 
 
-@pytest.mark.skip_t3t1(reason="Not yet implemented in new UI")
 @pytest.mark.skip_t1b1("T1 does not support Everstake")
 @parametrize_using_common_fixtures("ethereum/sign_tx_staking.json")
 @pytest.mark.parametrize("chunkify", (True, False))
