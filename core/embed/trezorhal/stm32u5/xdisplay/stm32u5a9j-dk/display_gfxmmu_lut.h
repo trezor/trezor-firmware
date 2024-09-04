@@ -29,7 +29,7 @@ extern "C" {
 #define GFXMMU_LUT_LAST 479
 #define GFXMMU_LUT_SIZE 480
 
-uint32_t gfxmmu_lut[2 * GFXMMU_LUT_SIZE] = {
+static const uint32_t gfxmmu_lut_config[2 * GFXMMU_LUT_SIZE] = {
     0x00413601,  // GFXMMU_LUT0L
     0x003FFCA0,  // GFXMMU_LUT0H
     0x00433401,  // GFXMMU_LUT1L

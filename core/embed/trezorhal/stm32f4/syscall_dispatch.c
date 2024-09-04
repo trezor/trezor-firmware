@@ -19,6 +19,8 @@
 
 #include STM32_HAL_H
 
+#include TREZOR_BOARD
+
 #include "syscall.h"
 
 #include "bootutils.h"
@@ -161,6 +163,16 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
 #else
     case SYSCALL_DISPLAY_WAIT_FOR_SYNC: {
       display_wait_for_sync();
+    } break;
+#endif
+    case SYSCALL_DISPLAY_FILL: {
+      const gfx_bitblt_t *bb = (const gfx_bitblt_t *)args[0];
+      display_fill(bb);
+    } break;
+#ifdef USE_RGB_COLORS
+    case SYSCALL_DISPLAY_COPY_RGB565: {
+      const gfx_bitblt_t *bb = (const gfx_bitblt_t *)args[0];
+      display_copy_rgb565(bb);
     } break;
 #endif
     case SYSCALL_DISPLAY_REFRESH: {

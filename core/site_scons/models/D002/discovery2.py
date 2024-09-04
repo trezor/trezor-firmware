@@ -18,7 +18,7 @@ def configure(
     hw_revision = 0
 
     mcu = "STM32U5A9xx"
-    linker_script = "stm32u5a"
+    linker_script = """embed/trezorhal/stm32u5/linker/u5a/{target}.ld"""
 
     stm32u5_common_files(env, defines, sources, paths)
 
