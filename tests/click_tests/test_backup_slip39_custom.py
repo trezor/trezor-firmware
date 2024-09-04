@@ -21,8 +21,8 @@ import pytest
 from trezorlib import device, messages
 from trezorlib.debuglink import LayoutType
 
-from ..common import EXTERNAL_ENTROPY, WITH_MOCK_URANDOM, generate_entropy
 from .. import translations as TR
+from ..common import EXTERNAL_ENTROPY, WITH_MOCK_URANDOM, generate_entropy
 from . import reset
 
 if TYPE_CHECKING:
@@ -74,12 +74,16 @@ def test_backup_slip39_custom(
         groups=[(share_threshold, share_count)],
     )
 
-
     # confirm backup configuration
     if share_count > 1:
-        TR.assert_template(debug.read_layout().text_content(), "reset__create_x_of_y_multi_share_backup_template")
+        TR.assert_template(
+            debug.read_layout().text_content(),
+            "reset__create_x_of_y_multi_share_backup_template",
+        )
     else:
-        TR.assert_template(debug.read_layout().text_content(), "backup__info_single_share_backup")
+        TR.assert_template(
+            debug.read_layout().text_content(), "backup__info_single_share_backup"
+        )
     reset.confirm_read(debug)
 
     # confirm backup intro
