@@ -557,7 +557,7 @@ static void derive_kek_v4(const uint8_t *pin, size_t pin_len,
   uint8_t pre_kek[SHA256_DIGEST_LENGTH] = {0};
   pbkdf2_hmac_sha256_Final(&ctx, pre_kek);
   ensure(secure_aes_ecb_encrypt_hw(pre_kek, SHA256_DIGEST_LENGTH, kek,
-                                   SECURE_AES_KEY_XORK),
+                                   SECURE_AES_KEY_XORK_SN),
          "secure_aes derive kek failed");
   memzero(pre_kek, sizeof(pre_kek));
 #else
@@ -615,7 +615,7 @@ static void stretch_pin(const uint8_t *pin, size_t pin_len,
   uint8_t stretched_pin_tmp[SHA256_DIGEST_LENGTH] = {0};
   pbkdf2_hmac_sha256_Final(&ctx, stretched_pin_tmp);
   ensure(secure_aes_ecb_encrypt_hw(stretched_pin_tmp, SHA256_DIGEST_LENGTH,
-                                   stretched_pin, SECURE_AES_KEY_XORK),
+                                   stretched_pin, SECURE_AES_KEY_XORK_SN),
          "secure_aes pin stretch failed");
   memzero(stretched_pin_tmp, sizeof(stretched_pin_tmp));
 #else

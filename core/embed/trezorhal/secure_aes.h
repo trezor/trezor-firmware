@@ -24,10 +24,12 @@
 #include <stddef.h>
 #include <stdint.h>
 
+// only some of the keys are supported depending on execution environment
 typedef enum {
-  SECURE_AES_KEY_DHUK,
+  SECURE_AES_KEY_DHUK_SP,  // secure-privileged
   SECURE_AES_KEY_BHK,
-  SECURE_AES_KEY_XORK,
+  SECURE_AES_KEY_XORK_SP,  // secure-privileged
+  SECURE_AES_KEY_XORK_SN,  // secure-nonprivileged
 } secure_aes_keysel_t;
 
 // Initializes secure AES module
