@@ -7,8 +7,7 @@ use crate::{
     },
     ui::{
         component::{
-            base::{AttachType, AttachType::Swipe},
-            swipe_detect::SwipeSettings,
+            base::AttachType::{self, Swipe},
             Component, Event, EventCtx, FlowMsg, SwipeDetect, SwipeDetectMsg, SwipeDirection,
         },
         display::Color,
@@ -204,25 +203,11 @@ impl SwipeFlow {
 
         let e = if self.allow_swipe {
             let page = self.current_page();
-            let mut config = page.get_swipe_config();
+            let config = page
+                .get_swipe_config()
+                .with_pagination(self.internal_state, self.internal_pages);
 
             self.internal_pages = page.get_internal_page_count() as u16;
-
-            // add additional swipe directions if there are more internal pages
-            // todo can we get internal settings from config somehow?
-            // might wanna different duration or something
-            if config.vertical_pages && self.internal_state > 0 {
-                config = config.with_swipe(SwipeDirection::Down, SwipeSettings::default())
-            }
-            if config.horizontal_pages && self.internal_state > 0 {
-                config = config.with_swipe(SwipeDirection::Right, SwipeSettings::default())
-            }
-            if config.vertical_pages && self.internal_state < self.internal_pages - 1 {
-                config = config.with_swipe(SwipeDirection::Up, SwipeSettings::default())
-            }
-            if config.horizontal_pages && self.internal_state < self.internal_pages - 1 {
-                config = config.with_swipe(SwipeDirection::Left, SwipeSettings::default())
-            }
 
             match self.swipe.event(ctx, event, config) {
                 Some(SwipeDetectMsg::Trigger(dir)) => {
@@ -234,41 +219,20 @@ impl SwipeFlow {
 
                     return_transition = AttachType::Swipe(dir);
 
-                    let states_num = self.internal_pages;
-                    if states_num > 0 {
-                        if config.has_horizontal_pages() {
-                            let current_state = self.internal_state;
-                            if dir == SwipeDirection::Left && current_state < states_num - 1 {
-                                self.internal_state += 1;
-                                state_change = self.state_unchanged();
-                                attach = true;
-                            } else if dir == SwipeDirection::Right && current_state > 0 {
-                                self.internal_state -= 1;
-                                state_change = self.state_unchanged();
-                                attach = true;
-                            }
-                        }
-                        if config.has_vertical_pages() {
-                            let current_state = self.internal_state;
-                            if dir == SwipeDirection::Up && current_state < states_num - 1 {
-                                self.internal_state += 1;
-                                state_change = self.state_unchanged();
-                                attach = true;
-                            } else if dir == SwipeDirection::Down && current_state > 0 {
-                                self.internal_state -= 1;
-                                state_change = self.state_unchanged();
-                                attach = true;
-                            }
-                        }
+                    let new_internal_state =
+                        config.paging_event(dir, self.internal_state, self.internal_pages);
+                    if new_internal_state != self.internal_state {
+                        self.internal_state = new_internal_state;
+                        state_change = self.state_unchanged();
+                        attach = true;
                     }
-
                     Event::Swipe(SwipeEvent::End(dir))
                 }
                 Some(SwipeDetectMsg::Move(dir, progress)) => {
                     Event::Swipe(SwipeEvent::Move(dir, progress as i16))
                 }
                 Some(SwipeDetectMsg::Start(_)) => Event::Touch(TouchEvent::TouchAbort),
-                _ => event,
+                None => event,
             }
         } else {
             event
