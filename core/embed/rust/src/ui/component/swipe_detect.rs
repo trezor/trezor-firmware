@@ -5,7 +5,7 @@ use crate::{
         component::{Event, EventCtx, SwipeDirection},
         constant::screen,
         event::TouchEvent,
-        geometry::{Offset, Point},
+        geometry::{Axis, Offset, Point},
         util::animation_disabled,
     },
 };
@@ -35,8 +35,7 @@ impl SwipeSettings {
 
 #[derive(Copy, Clone, Default)]
 pub struct SwipeConfig {
-    pub horizontal_pages: bool,
-    pub vertical_pages: bool,
+    pub page_axis: Option<Axis>,
     pub up: Option<SwipeSettings>,
     pub down: Option<SwipeSettings>,
     pub left: Option<SwipeSettings>,
@@ -46,8 +45,7 @@ pub struct SwipeConfig {
 impl SwipeConfig {
     pub const fn new() -> Self {
         Self {
-            horizontal_pages: false,
-            vertical_pages: false,
+            page_axis: None,
             up: None,
             down: None,
             left: None,
@@ -97,22 +95,52 @@ impl SwipeConfig {
     pub fn duration(&self, dir: SwipeDirection) -> Option<Duration> {
         self[dir].as_ref().map(|s| s.duration)
     }
-    pub fn has_horizontal_pages(&self) -> bool {
-        self.horizontal_pages
-    }
-
-    pub fn has_vertical_pages(&self) -> bool {
-        self.vertical_pages
-    }
 
     pub fn with_horizontal_pages(mut self) -> Self {
-        self.horizontal_pages = true;
+        self.page_axis = Some(Axis::Horizontal);
         self
     }
 
     pub fn with_vertical_pages(mut self) -> Self {
-        self.vertical_pages = true;
+        self.page_axis = Some(Axis::Vertical);
         self
+    }
+
+    pub fn with_pagination(mut self, current_page: u16, total_pages: u16) -> Self {
+        let has_prev = current_page > 0;
+        let has_next = current_page < total_pages.saturating_sub(1);
+        match self.page_axis {
+            Some(Axis::Horizontal) => {
+                if has_prev {
+                    self.right = Some(SwipeSettings::default());
+                }
+                if has_next {
+                    self.left = Some(SwipeSettings::default());
+                }
+            }
+            Some(Axis::Vertical) => {
+                if has_prev {
+                    self.down = Some(SwipeSettings::default());
+                }
+                if has_next {
+                    self.up = Some(SwipeSettings::default());
+                }
+            }
+            _ => {}
+        }
+        self
+    }
+
+    pub fn paging_event(&self, dir: SwipeDirection, current_page: u16, total_pages: u16) -> u16 {
+        let prev_page = current_page.saturating_sub(1);
+        let next_page = (current_page + 1).min(total_pages.saturating_sub(1));
+        match (self.page_axis, dir) {
+            (Some(Axis::Horizontal), SwipeDirection::Right) => prev_page,
+            (Some(Axis::Horizontal), SwipeDirection::Left) => next_page,
+            (Some(Axis::Vertical), SwipeDirection::Down) => prev_page,
+            (Some(Axis::Vertical), SwipeDirection::Up) => next_page,
+            _ => current_page,
+        }
     }
 }
 
