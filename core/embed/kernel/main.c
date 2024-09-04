@@ -22,8 +22,11 @@
 #include <string.h>
 
 #include "applet.h"
+#include "bl_check.h"
 #include "board_capabilities.h"
 #include "bootutils.h"
+#include "button.h"
+#include "consumption_mask.h"
 #include "display.h"
 #include "dma2d.h"
 #include "entropy.h"
@@ -114,7 +117,7 @@ void drivers_init() {
   entropy_init();
 
 #if PRODUCTION || BOOTLOADER_QA
-  // check_and_replace_bootloader();
+  check_and_replace_bootloader();
 #endif
 
 #ifdef USE_BUTTON
@@ -166,10 +169,13 @@ void drivers_init() {
 #endif
 }
 
+extern uint32_t _codelen;
+#define KERNEL_SIZE (uint32_t) & _codelen
+
 // Initializes coreapp applet
 static void coreapp_init(applet_t *applet) {
   applet_header_t *coreapp_header =
-      (applet_header_t *)(COREAPP_START + IMAGE_HEADER_SIZE + 0x0400);
+      (applet_header_t *)COREAPP_CODE_ALIGN(KERNEL_START + KERNEL_SIZE);
 
   applet_layout_t coreapp_layout = {
       0

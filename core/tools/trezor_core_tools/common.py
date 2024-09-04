@@ -19,3 +19,7 @@ MODELS_DICT = {
 def get_layout_for_model(model: str) -> Path:
     model = MODELS_DICT.get(model, model)
     return MODELS_DIR / model / f"model_{model}.h"
+
+def get_linkerscript_for_model(model: str) -> Path:
+    model = MODELS_DICT.get(model, model)
+    return MODELS_DIR / model / f"memory.ld"

@@ -26,6 +26,8 @@
 #include <xdisplay.h>
 #include "display_internal.h"
 
+#ifdef KERNEL_MODE
+
 // Physical frame buffers in internal SRAM memory
 __attribute__((section(".fb1")))
 ALIGN_32BYTES(uint32_t physical_frame_buffer_0[PHYSICAL_FRAME_BUFFER_SIZE]);
@@ -91,3 +93,5 @@ void display_refresh(void) {
            sizeof(physical_frame_buffer_1));
   }
 }
+
+#endif

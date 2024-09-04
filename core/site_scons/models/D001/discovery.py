@@ -37,9 +37,7 @@ def configure(
         "embed/models/D001/model_D001_layout.c",
     ]
 
-    sources += [
-        "embed/trezorhal/stm32f4/i2c_bus.c"
-    ]
+    sources += ["embed/trezorhal/stm32f4/i2c_bus.c"]
 
     if "new_rendering" in features_wanted:
         sources += [

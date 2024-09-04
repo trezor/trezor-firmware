@@ -19,7 +19,12 @@ SEARCH_PATTERN = r"#define (\w+) (.+?)(?:\s*//.*)?$"
 def find_all_values(model: str) -> dict[str, int]:
     layout = get_layout_for_model(model)
     values = {}
+    begin = False
     for line in open(layout):
+        if not begin:
+            if line.startswith("// SHARED"):
+                begin = True
+            continue
         match = re.match(SEARCH_PATTERN, line)
         if match is not None:
             name, value = match.groups()

@@ -68,6 +68,8 @@
 #include "display_internal.h"
 #include "irq.h"
 
+#ifdef KERNEL_MODE
+
 /* Common Error codes */
 #define BSP_ERROR_NONE 0
 #define BSP_ERROR_NO_INIT -1
@@ -1557,3 +1559,5 @@ int32_t BSP_LCD_Reinit(uint32_t Instance) {
 
   return status;
 }
+
+#endif

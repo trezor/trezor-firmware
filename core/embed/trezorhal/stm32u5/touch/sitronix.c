@@ -1,6 +1,8 @@
 #include STM32_HAL_H
 #include TREZOR_BOARD
 
+#ifdef KERNEL_MODE
+
 #include "common.h"
 #include "i2c_bus.h"
 #include "irq.h"
@@ -1314,3 +1316,5 @@ uint32_t touch_get_event(void) {
 
   return event;
 }
+
+#endif

@@ -31,6 +31,7 @@
 #include "consumption_mask.h"
 #endif
 
+#ifdef KERNEL_MODE
 #if (DISPLAY_RESX != 128) || (DISPLAY_RESY != 64)
 #error "Incompatible display resolution"
 #endif
@@ -38,7 +39,9 @@
 // This file implements display driver for monochromatic display V-2864KSWEG01
 // with 128x64 resolution connected to CPU via SPI interface.
 //
-// This type of display is used with T3T1 model (Trezor TS3)
+// This type of display is used with T3B1 model (Trezor TS3)
+
+__attribute__((section(".fb1"))) uint8_t framebuf[DISPLAY_RESX * DISPLAY_RESY];
 
 // Display driver context.
 typedef struct {
@@ -47,7 +50,7 @@ typedef struct {
   // SPI driver instance
   SPI_HandleTypeDef spi;
   // Frame buffer (8-bit Mono)
-  uint8_t framebuf[DISPLAY_RESX * DISPLAY_RESY];
+  uint8_t *framebuf;
   // Current display orientation (0 or 180)
   int orientation_angle;
   // Current backlight level ranging from 0 to 255
@@ -233,6 +236,7 @@ void display_init(display_content_mode_t mode) {
 
   memset(drv, 0, sizeof(display_driver_t));
   drv->backlight_level = 255;
+  drv->framebuf = framebuf;
 
   if (mode == DISPLAY_RESET_CONTENT) {
     OLED_DC_CLK_ENA();
@@ -390,29 +394,31 @@ void display_refresh(void) {
   display_sync_with_fb(drv);
 }
 
-void display_fill(const gfx_bitblt_t *bb) {
-  display_driver_t *drv = &g_display_driver;
+#endif
 
-  if (!drv->initialized) {
+void display_fill(const gfx_bitblt_t *bb) {
+  display_fb_info_t fb = display_get_frame_buffer();
+
+  if (fb.ptr != NULL) {
     return;
   }
 
   gfx_bitblt_t bb_new = *bb;
-  bb_new.dst_row = &drv->framebuf[DISPLAY_RESX * bb_new.dst_y];
+  bb_new.dst_row = &(((uint8_t *)fb.ptr)[DISPLAY_RESX * bb_new.dst_y]);
   bb_new.dst_stride = DISPLAY_RESX;
 
   gfx_mono8_fill(&bb_new);
 }
 
 void display_copy_mono1p(const gfx_bitblt_t *bb) {
-  display_driver_t *drv = &g_display_driver;
+  display_fb_info_t fb = display_get_frame_buffer();
 
-  if (!drv->initialized) {
+  if (fb.ptr != NULL) {
     return;
   }
 
   gfx_bitblt_t bb_new = *bb;
-  bb_new.dst_row = &drv->framebuf[DISPLAY_RESX * bb_new.dst_y];
+  bb_new.dst_row = &(((uint8_t *)fb.ptr)[DISPLAY_RESX * bb_new.dst_y]);
   bb_new.dst_stride = DISPLAY_RESX;
 
   gfx_mono8_copy_mono1p(&bb_new);

@@ -1,15 +1,15 @@
-/* Trezor v2 bootloader linker script */
+/* TREZORv2 firmware linker script */
 
 ENTRY(reset_handler)
 
 MEMORY {
-  FLASH  (rx)  : ORIGIN = 0x0C010000, LENGTH = 128K
-  SRAM1  (wal) : ORIGIN = 0x30000000, LENGTH =  192K - 0x100
-  BOOT_ARGS  (wal) : ORIGIN = 0x3002FF00, LENGTH =  0x100
-  SRAM2  (wal) : ORIGIN = 0x30030000, LENGTH =  64K
-  SRAM3  (wal) : ORIGIN = 0x30040000, LENGTH =  512K
-  SRAM5  (wal) : ORIGIN = 0x30080000, LENGTH =  0K  /* SRAM5 is not available */
-  SRAM6  (wal) : ORIGIN = 0x30080000, LENGTH =  0K  /* SRAM6 is not available */
+  FLASH  (rx)  : ORIGIN = 0x0C050000, LENGTH = 3648K
+  SRAM1  (wal) : ORIGIN = 0x30000000, LENGTH =  768K - 0x100
+  BOOT_ARGS  (wal) : ORIGIN = 0x300BFF00, LENGTH =  0x100
+  SRAM2  (wal) : ORIGIN = 0x300C0000, LENGTH =  64K
+  SRAM3  (wal) : ORIGIN = 0x300D0000, LENGTH =  832K
+  SRAM5  (wal) : ORIGIN = 0x301A0000, LENGTH =  832K
+  SRAM6  (wal) : ORIGIN = 0x30270000, LENGTH =  0
   SRAM4  (wal) : ORIGIN = 0x38000000, LENGTH =  16K
 }
 
@@ -21,6 +21,8 @@ _estack = main_stack_base;
 data_lma = LOADADDR(.data);
 data_vma = ADDR(.data);
 data_size = SIZEOF(.data);
+bss_start = ADDR(.bss);
+bss_end = ADDR(.bss) + SIZEOF(.bss);
 
 /* used by the startup code to populate variables used by the C code */
 confidential_lma = LOADADDR(.confidential);
@@ -40,26 +42,34 @@ sram5_start = ORIGIN(SRAM5);
 sram5_end = ORIGIN(SRAM5) + LENGTH(SRAM5);
 sram6_start = ORIGIN(SRAM6);
 sram6_end = ORIGIN(SRAM6) + LENGTH(SRAM6);
-bss_start = ADDR(.bss);
-bss_end = ADDR(.bss) + SIZEOF(.bss);
 
 /* reserve 256 bytes for bootloader arguments */
 boot_args_start = ORIGIN(BOOT_ARGS);
 boot_args_end = ORIGIN(BOOT_ARGS) + LENGTH(BOOT_ARGS);
-
 _codelen = SIZEOF(.flash) + SIZEOF(.data) + SIZEOF(.confidential);
+_flash_start = ORIGIN(FLASH);
+_flash_end = ORIGIN(FLASH) + LENGTH(FLASH);
+_heap_start = ADDR(.heap);
+_heap_end = ADDR(.heap) + SIZEOF(.heap);
 
 SECTIONS {
+  .vendorheader : ALIGN(4) {
+    KEEP(*(.vendorheader))
+  } >FLASH AT>FLASH
+
   .header : ALIGN(4) {
     KEEP(*(.header));
   } >FLASH AT>FLASH
 
-  .flash : ALIGN(512) {
+  .flash : ALIGN(1024) {
     KEEP(*(.vector_table));
     . = ALIGN(4);
     *(.text*);
     . = ALIGN(4);
     *(.rodata*);
+    . = ALIGN(4);
+    KEEP(*(.bootloader));
+    *(.bootloader*);
     . = ALIGN(512);
   } >FLASH AT>FLASH
 
@@ -77,13 +87,18 @@ SECTIONS {
     . = ALIGN(4);
   } >SRAM1
 
-  .buf : ALIGN(4) {
-    *(.buf*);
+  .data_ccm : ALIGN(4) {
+    *(.no_dma_buffers*);
     . = ALIGN(4);
   } >SRAM1
 
+  .heap : ALIGN(4) {
+    . = 37K; /* this acts as a build time assertion that at least this much memory is available for heap use */
+    . = ABSOLUTE(sram1_end); /* this explicitly sets the end of the heap */
+  } >SRAM1
+
   .stack : ALIGN(8) {
-    . = 16K; /* Exactly 16K allocated for stack. Overflow causes Usage fault. */
+    . = 16K; /* Overflow causes UsageFault */
   } >SRAM2
 
   .confidential : ALIGN(512) {
@@ -91,13 +106,19 @@ SECTIONS {
     . = ALIGN(512);
   } >SRAM2 AT>FLASH
 
-  .fb : ALIGN(4) {
+  .fb1 : ALIGN(4) {
    __fb_start = .;
     *(.fb1*);
+    *(.gfxmmu_table*);
+    *(.framebuffer_select*);
+    . = ALIGN(4);
+  } >SRAM3
+
+  .fb2 : ALIGN(4) {
     *(.fb2*);
    __fb_end = .;
     . = ALIGN(4);
-  } >SRAM3
+  } >SRAM5
 
   .boot_args : ALIGN(8) {
     *(.boot_command*);
