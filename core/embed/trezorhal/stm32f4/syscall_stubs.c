@@ -159,7 +159,16 @@ display_fb_info_t display_get_frame_buffer(void) {
 void display_wait_for_sync(void) {
   syscall_invoke0(SYSCALL_DISPLAY_WAIT_FOR_SYNC);
 }
+
 #endif
+
+void display_fill(const gfx_bitblt_t *bb) {
+  syscall_invoke1((uint32_t)bb, SYSCALL_DISPLAY_FILL);
+}
+
+void display_copy_rgb565(const gfx_bitblt_t *bb) {
+  syscall_invoke1((uint32_t)bb, SYSCALL_DISPLAY_COPY_RGB565);
+}
 
 void display_refresh(void) { syscall_invoke0(SYSCALL_DISPLAY_REFRESH); }
 

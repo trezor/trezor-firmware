@@ -23,6 +23,8 @@
 #include TREZOR_BOARD
 #include STM32_HAL_H
 
+#ifdef KERNEL_MODE
+
 #include "display_internal.h"
 #include "ili9341_spi.h"
 #include "xdisplay.h"
@@ -198,3 +200,5 @@ void display_copy_mono4(const gfx_bitblt_t *bb) {
 
   gfx_rgb565_copy_mono4(&bb_new);
 }
+
+#endif

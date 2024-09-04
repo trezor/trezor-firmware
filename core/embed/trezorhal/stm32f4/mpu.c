@@ -69,6 +69,14 @@ mpu_driver_t g_mpu_driver = {
     .mode = MPU_MODE_DISABLED,
 };
 
+#define SRAM_SIZE (192 * 1024)
+
+#define KERNEL_STACK_START (CCMDATARAM_BASE)
+#define KERNEL_CCMRAM_START (CCMDATARAM_END + 1 - KERNEL_CCMRAM_SIZE)
+#define KERNEL_SRAM_START (SRAM1_BASE + SRAM_SIZE - KERNEL_SRAM_SIZE)
+
+#define KERNEL_CCMRAM_FB_START (KERNEL_CCMRAM_START - KERNEL_FRAMEBUFFER_SIZE)
+
 static void mpu_init_fixed_regions(void) {
   // Regions #0 to #4 are fixed for all targets
 
@@ -121,10 +129,9 @@ static void mpu_init_fixed_regions(void) {
   // All SRAM (Unprivileged, Read-Write, Non-Executable)
   // Subregion:  192KB = 256KB except 2/8 at end
   SET_REGION( 3, SRAM_BASE,             SIZE_256KB, 0xC0, SRAM,       FULL_ACCESS );
-  // Kernel RAM (Privileged, Read-Write, Non-Executable)
-  // TODO: !@#
-  // SET_REGION( 4, ...,                   SIZE_xxx,   0xXX, ATTR_SRAM,   PRIV_RW );
-  DIS_REGION( 4 );
+  // Kernel CCMRAM (Privileged, Read-Write, Non-Executable)
+  // SubRegion: 8KB at the beginning + 16KB at the end of 64KB CCMRAM
+  SET_REGION( 4, CCMDATARAM_BASE,       SIZE_64KB,  0x3E, SRAM,       PRIV_RW );
   // clang-format on
 #endif
 #ifdef FIRMWARE
@@ -266,6 +273,20 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
       SET_REGION( 6, 0x1FFEC000,            SIZE_1KB,  0x00, FLASH_DATA, PRIV_RO );
       break;
 
+    case MPU_MODE_STORAGE:
+      // Storage in the Flash Bank #1 (Privileged, Read-Write, Non-Executable)
+      SET_REGION( 5, FLASH_BASE + 0x10000,  SIZE_64KB, 0x00, FLASH_DATA, PRIV_RW );
+      // Storage in the Flash Bank #2 (Privileged, Read-Write, Non-Executable)
+      SET_REGION( 6, FLASH_BASE + 0x110000, SIZE_64KB, 0x00, FLASH_DATA, PRIV_RW );
+      break;
+
+    case MPU_MODE_KERNEL_SRAM:
+      DIS_REGION( 5 );
+      // Kernel data in DMA accessible SRAM (Privileged, Read-Write, Non-Executable)
+      // (overlaps with unprivileged SRAM region)
+      SET_REGION( 6, SRAM_BASE,             SIZE_1KB,  0x00, SRAM, PRIV_RW );
+      break;
+
     case MPU_MODE_UNUSED_FLASH:
       // Unused Flash Area #1 (Privileged, Read-Write, Non-Executable)
       SET_REGION( 5, FLASH_BASE + 0x00C000, SIZE_16KB, 0x00, FLASH_DATA, PRIV_RW );
@@ -284,14 +305,17 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
     case MPU_MODE_ASSETS:
       DIS_REGION( 5 );
       // Assets (Privileged, Read-Write, Non-Executable)
-      SET_REGION( 6, FLASH_BASE + 0x108000, SIZE_32KB, 0x00, FLASH_DATA, PRIV_RW );
+      // Subregion: 32KB = 64KB except 2/8 at start and 2/8 at end
+      SET_REGION( 6, FLASH_BASE + 0x104000, SIZE_64KB, 0xC3, FLASH_DATA, PRIV_RW );
       break;
 
     case MPU_MODE_APP:
-      // Unused (maybe privileged kernel code in the future)
-      DIS_REGION( 5 );
+      // Kernel data in DMA accessible SRAM (Privileged, Read-Write, Non-Executable)
+      // (overlaps with unprivileged SRAM region)
+      SET_REGION( 5, SRAM_BASE,             SIZE_1KB,  0x00, SRAM, PRIV_RW );
       // Assets (Unprivileged, Read-Only, Non-Executable)
-      SET_REGION( 6, FLASH_BASE + 0x108000, SIZE_32KB, 0x00, FLASH_DATA, PRIV_RO_URO );
+      // Subregion: 32KB = 64KB except 2/8 at start and 2/8 at end
+      SET_REGION( 6, FLASH_BASE + 0x104000, SIZE_64KB, 0xC3, FLASH_DATA, PRIV_RO_URO );
       break;
 
 #else
@@ -304,21 +328,15 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
       break;
 
     case MPU_MODE_APP:
-      // Unused (maybe privileged kernel code in the future)
-      DIS_REGION( 5 );
+      // Kernel data in DMA accessible SRAM (Privileged, Read-Write, Non-Executable)
+      // (overlaps with unprivileged SRAM region)
+      SET_REGION( 5, SRAM_BASE,             SIZE_1KB,  0x00, SRAM, PRIV_RW );
       // Assets (Unprivileged, Read-Only, Non-Executable)
       // Subregion: 48KB = 64KB except 2/8 at end
       SET_REGION( 6, FLASH_BASE + 0x100000, SIZE_64KB, 0xC0, FLASH_DATA, PRIV_RO_URO );
       break;
 
 #endif
-
-    case MPU_MODE_STORAGE:
-      // Storage in the Flash Bank #1 (Privileged, Read-Write, Non-Executable)
-      SET_REGION( 5, FLASH_BASE + 0x10000,  SIZE_64KB, 0x00, FLASH_DATA, PRIV_RW );
-      // Storage in the Flash Bank #2 (Privileged, Read-Write, Non-Executable)
-      SET_REGION( 6, FLASH_BASE + 0x110000, SIZE_64KB, 0x00, FLASH_DATA, PRIV_RW );
-      break;
 
     default:
       DIS_REGION( 5 );
@@ -331,6 +349,13 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
 
   // clang-format off
   switch (mode) {
+#ifdef TREZOR_MODEL_DISC1
+    default:
+      // All Peripherals (Unprivileged, Read-Write, Non-Executable)
+      // SDRAM
+      SET_REGION( 7, 0x00000000,            SIZE_4GB,  0xBB, SRAM,     FULL_ACCESS );
+    break;
+#else
     case MPU_MODE_APP:
       // Dma2D (Unprivileged, Read-Write, Non-Executable)
       // 3KB = 4KB except 1/4 at end
@@ -340,6 +365,7 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
       // All Peripherals (Privileged, Read-Write, Non-Executable)
       SET_REGION( 7, PERIPH_BASE,           SIZE_1GB,  0x00, PERIPH,     PRIV_RW );
       break;
+#endif
   }
   // clang-format on
 

@@ -51,8 +51,6 @@ static inline void set_window(const gfx_bitblt_t* bb) {
                            bb->dst_y + bb->height + 1);
 }
 
-#endif  // KERNEL_MODE
-
 // For future notice, if we ever want to do a new model using progressive
 // rendering.
 //
@@ -122,3 +120,5 @@ void display_copy_mono4(const gfx_bitblt_t* bb) {
     src_row += bb->src_stride / sizeof(*src_row);
   }
 }
+
+#endif  // KERNEL_MODE

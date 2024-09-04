@@ -1,19 +1,23 @@
-/* Trezor v2 boardloader linker script */
+INCLUDE "./embed/trezorhal/stm32f4/linker/memory.ld";
 
 ENTRY(reset_handler)
 
 MEMORY {
-  FLASH  (rx)     : ORIGIN = 0x08000000, LENGTH = 48K
-  CCMRAM (wal)    : ORIGIN = 0x10000000, LENGTH = 64K
-  SRAM   (wal)    : ORIGIN = 0x20000000, LENGTH = 192K
+  FLASH  (rx)     : ORIGIN = MCU_FLASH_ORIGIN, LENGTH = BOARDLOADER_IMAGE_MAXSIZE
+  CCMRAM (wal)    : ORIGIN = MCU_CCMRAM, LENGTH = MCU_CCMRAM_SIZE
+  SRAM   (wal)    : ORIGIN = MCU_SRAM, LENGTH = MCU_SRAM_SIZE
 }
 
 main_stack_base = ORIGIN(CCMRAM) + LENGTH(CCMRAM); /* 8-byte aligned full descending stack */
+_sstack = ORIGIN(CCMRAM);
+_estack = main_stack_base;
 
 /* used by the startup code to populate variables used by the C code */
 data_lma = LOADADDR(.data);
 data_vma = ADDR(.data);
 data_size = SIZEOF(.data);
+bss_start = ADDR(.bss);
+bss_end = ADDR(.bss) + SIZEOF(.bss);
 
 /* used by the startup code to wipe memory */
 ccmram_start = ORIGIN(CCMRAM);
@@ -24,7 +28,7 @@ sram_start = ORIGIN(SRAM);
 sram_end = ORIGIN(SRAM) + LENGTH(SRAM);
 
 SECTIONS {
-  .vector_table : ALIGN(512) {
+  .vector_table : ALIGN(CODE_ALIGNMENT) {
     KEEP(*(.vector_table));
   } >FLASH AT>FLASH
 
@@ -54,7 +58,7 @@ SECTIONS {
   } >SRAM
 
   /* Hard-coded address for capabilities structure */
-  .capabilities 0x0800BF00 : {KEEP(*(.capabilities_section))}
+  .capabilities BOARD_CAPABILITIES_ADDR : {KEEP(*(.capabilities_section))}
 
   .stack : ALIGN(8) {
     . = 4K; /* this acts as a build time assertion that at least this much memory is available for stack use */

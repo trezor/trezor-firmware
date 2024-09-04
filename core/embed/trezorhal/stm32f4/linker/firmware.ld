@@ -1,13 +1,13 @@
-/* TREZORv2 firmware linker script */
+INCLUDE "./embed/trezorhal/stm32f4/linker/memory.ld";
 
 ENTRY(reset_handler)
 
 MEMORY {
-  FLASH  (rx)     : ORIGIN = 0x08040000, LENGTH = 768K
-  FLASH2 (r)      : ORIGIN = 0x08120000, LENGTH = 896K
-  CCMRAM (wal)    : ORIGIN = 0x10000000, LENGTH = 64K - 0x100
-  BOOT_ARGS (wal) : ORIGIN = 0x1000FF00, LENGTH = 0x100
-  SRAM   (wal)    : ORIGIN = 0x20000000, LENGTH = 192K
+  FLASH  (rx)     : ORIGIN = FIRMWARE_START, LENGTH = FIRMWARE_P1_IMAGE_MAXSIZE
+  FLASH2 (r)      : ORIGIN = FIRMWARE_P2_START, LENGTH = FIRMWARE_P2_IMAGE_MAXSIZE
+  CCMRAM (wal)    : ORIGIN = MCU_CCMRAM, LENGTH = MCU_CCMRAM_SIZE - BOOTARGS_SIZE
+  BOOT_ARGS (wal) : ORIGIN = MCU_CCMRAM + MCU_CCMRAM_SIZE - BOOTARGS_SIZE, LENGTH = BOOTARGS_SIZE
+  SRAM   (wal)    : ORIGIN = MCU_SRAM, LENGTH = MCU_SRAM_SIZE
 }
 
 main_stack_base = ORIGIN(SRAM) + SIZEOF(.stack); /* 8-byte aligned full descending stack */
@@ -18,6 +18,8 @@ _estack = main_stack_base;
 data_lma = LOADADDR(.data);
 data_vma = ADDR(.data);
 data_size = SIZEOF(.data);
+bss_start = ADDR(.bss);
+bss_end = ADDR(.bss) + SIZEOF(.bss);
 
 /* used by the startup code to wipe memory */
 ccmram_start = ORIGIN(CCMRAM);
@@ -61,7 +63,7 @@ SECTIONS {
     . = ALIGN(512);
   } >FLASH2 AT>FLASH2
 
-  .flash : ALIGN(512) {
+  .flash : ALIGN(CODE_ALIGNMENT) {
     KEEP(*(.vector_table));
     . = ALIGN(4);
     *(.text*);

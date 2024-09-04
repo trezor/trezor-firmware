@@ -99,12 +99,12 @@ def get_bindgen_defines(
     return ",".join(rest_defs)
 
 
-def embed_binary(obj_program, env, section, target_, file):
+def embed_compressed_binary(obj_program, env, section, target_, file, build):
     _in = f"embedded_{section}.bin.deflated"
 
     def redefine_sym(name):
         src = (
-            "_binary_build_firmware_"
+            f"_binary_build_{build}_"
             + _in.replace("/", "_").replace(".", "_")
             + "_"
             + name
@@ -140,3 +140,14 @@ def embed_binary(obj_program, env, section, target_, file):
     )
 
     env.Depends(obj_program, compress)
+
+
+def embed_raw_binary(obj_program, env, section, target_, file):
+    obj_program.extend(
+        env.Command(
+            target=target_,
+            source=file,
+            action="$OBJCOPY -I binary -O elf32-littlearm -B arm"
+            f" --rename-section .data=.{section}" + " $SOURCE $TARGET",
+        )
+    )

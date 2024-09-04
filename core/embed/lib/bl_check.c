@@ -29,10 +29,8 @@
 #include "uzlib.h"
 
 // symbols from bootloader.bin => bootloader.o
-extern const void
-    _binary_embed_firmware_bootloaders_bootloader_bin_deflated_start;
-extern const void
-    _binary_embed_firmware_bootloaders_bootloader_bin_deflated_size;
+extern const void _binary_embed_bootloaders_bootloader_bin_deflated_start;
+extern const void _binary_embed_bootloaders_bootloader_bin_deflated_size;
 
 #define CONCAT_NAME_HELPER(prefix, name, suffix) prefix##name##suffix
 #define CONCAT_NAME(name, var) CONCAT_NAME_HELPER(BOOTLOADER_, name, var)
@@ -82,6 +80,7 @@ static void uzlib_prepare(struct uzlib_uncomp *decomp, uint8_t *window,
 
 void check_and_replace_bootloader(void) {
 #if PRODUCTION || BOOTLOADER_QA
+  mpu_mode_t mode = mpu_reconfig(MPU_MODE_BOOTLOADER);
 
   // compute current bootloader hash
   uint8_t hash[BLAKE2S_DIGEST_LENGTH];
@@ -95,15 +94,16 @@ void check_and_replace_bootloader(void) {
 
   // do we have the latest bootloader?
   if (sectrue == latest_bootloader(hash, BLAKE2S_DIGEST_LENGTH)) {
+    mpu_reconfig(mode);
     return;
   }
 
   // replace bootloader with the latest one
   const uint32_t *data =
       (const uint32_t
-           *)&_binary_embed_firmware_bootloaders_bootloader_bin_deflated_start;
+           *)&_binary_embed_bootloaders_bootloader_bin_deflated_start;
   const uint32_t len =
-      (const uint32_t)&_binary_embed_firmware_bootloaders_bootloader_bin_deflated_size;
+      (const uint32_t)&_binary_embed_bootloaders_bootloader_bin_deflated_size;
 
   struct uzlib_uncomp decomp = {0};
   uint8_t decomp_window[UZLIB_WINDOW_SIZE] = {0};
@@ -134,6 +134,7 @@ void check_and_replace_bootloader(void) {
 
   if (new_bld_hdr->monotonic < current_bld_hdr->monotonic) {
     // reject downgrade
+    mpu_reconfig(mode);
     return;
   }
 
@@ -180,5 +181,7 @@ void check_and_replace_bootloader(void) {
   }
 
   ensure(flash_lock_write(), NULL);
+
+  mpu_reconfig(mode);
 #endif
 }

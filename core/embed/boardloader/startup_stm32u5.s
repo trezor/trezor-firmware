@@ -27,59 +27,31 @@ reset_handler:
 
 
 fill_ram:
-  ldr r0, =sram1_start   // r0 - point to beginning of SRAM
-  ldr r1, =sram1_end     // r1 - point to byte after the end of SRAM
-  mov r2, r4             // r2 - the word-sized value to be written
-  bl memset_reg
 
-  ldr r0, =sram2_start   // r0 - point to beginning of SRAM
-  ldr r1, =sram2_end     // r1 - point to byte after the end of SRAM
   mov r2, r4             // r2 - the word-sized value to be written
+  ldr r0, =_jump_clean_ram_0_start
+  ldr r1, =_jump_clean_ram_0_end
   bl memset_reg
-
-  ldr r0, =sram3_start   // r0 - point to beginning of SRAM
-  ldr r1, =sram3_end     // r1 - point to byte after the end of SRAM
-  mov r2, r4             // r2 - the word-sized value to be written
+  ldr r0, =_jump_clean_ram_1_start
+  ldr r1, =_jump_clean_ram_1_end
   bl memset_reg
-
-  ldr r0, =sram4_start   // r0 - point to beginning of SRAM
-  ldr r1, =sram4_end     // r1 - point to byte after the end of SRAM
-  mov r2, r4             // r2 - the word-sized value to be written
+  ldr r0, =_jump_clean_ram_2_start
+  ldr r1, =_jump_clean_ram_2_end
   bl memset_reg
-
-  ldr r0, =sram5_start   // r0 - point to beginning of SRAM
-  ldr r1, =sram5_end     // r1 - point to byte after the end of SRAM
-  mov r2, r4             // r2 - the word-sized value to be written
-  bl memset_reg
-
-  ldr r0, =sram6_start   // r0 - point to beginning of SRAM
-  ldr r1, =sram6_end     // r1 - point to byte after the end of SRAM
-  mov r2, r4             // r2 - the word-sized value to be written
-  bl memset_reg
-
 
   // setup environment for subsequent stage of code
 
 
 clear_ram:
   ldr r2, =0             // r2 - the word-sized value to be written
-  ldr r0, =sram1_start   // r0 - point to beginning of SRAM
-  ldr r1, =sram1_end     // r1 - point to byte after the end of SRAM
+  ldr r0, =_jump_clean_ram_0_start
+  ldr r1, =_jump_clean_ram_0_end
   bl memset_reg
-  ldr r0, =sram2_start   // r0 - point to beginning of SRAM
-  ldr r1, =sram2_end     // r1 - point to byte after the end of SRAM
+  ldr r0, =_jump_clean_ram_1_start
+  ldr r1, =_jump_clean_ram_1_end
   bl memset_reg
-  ldr r0, =sram3_start   // r0 - point to beginning of SRAM
-  ldr r1, =sram3_end     // r1 - point to byte after the end of SRAM
-  bl memset_reg
-  ldr r0, =sram4_start   // r0 - point to beginning of SRAM
-  ldr r1, =sram4_end     // r1 - point to byte after the end of SRAM
-  bl memset_reg
-  ldr r0, =sram5_start   // r0 - point to beginning of SRAM
-  ldr r1, =sram5_end     // r1 - point to byte after the end of SRAM
-  bl memset_reg
-  ldr r0, =sram6_start   // r0 - point to beginning of SRAM
-  ldr r1, =sram6_end     // r1 - point to byte after the end of SRAM
+  ldr r0, =_jump_clean_ram_2_start
+  ldr r1, =_jump_clean_ram_2_end
   bl memset_reg
 
   // copy data in from flash

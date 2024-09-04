@@ -163,6 +163,14 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       display_wait_for_sync();
     } break;
 #endif
+    case SYSCALL_DISPLAY_FILL: {
+      const gfx_bitblt_t *bb = (const gfx_bitblt_t *)args[0];
+      display_fill(bb);
+    } break;
+    case SYSCALL_DISPLAY_COPY_RGB565: {
+      const gfx_bitblt_t *bb = (const gfx_bitblt_t *)args[0];
+      display_copy_rgb565(bb);
+    } break;
     case SYSCALL_DISPLAY_REFRESH: {
       display_refresh();
     } break;

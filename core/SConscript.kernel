@@ -42,38 +42,11 @@ PATH_HAL = []
 
 FROZEN = True
 
-if TREZOR_MODEL in ('1', 'R'):
-    FONT_NORMAL='Font_PixelOperator_Regular_8'
-    FONT_DEMIBOLD='Font_Unifont_Bold_16'
-    FONT_BOLD='Font_PixelOperator_Bold_8'
-    FONT_MONO='Font_PixelOperatorMono_Regular_8'
-    FONT_BIG='Font_Unifont_Regular_16'
-    FONT_NORMAL_UPPER='Font_PixelOperator_Regular_8_upper'
-    FONT_BOLD_UPPER='Font_PixelOperator_Bold_8_upper'
-    FONT_SUB=None
-elif TREZOR_MODEL in ('T', 'DISC1', 'DISC2'):
-    FONT_NORMAL='Font_TTHoves_Regular_21'
-    FONT_DEMIBOLD='Font_TTHoves_DemiBold_21'
-    FONT_BOLD=None
-    FONT_MONO='Font_RobotoMono_Medium_20'
-    FONT_BIG=None
-    FONT_NORMAL_UPPER=None
-    FONT_BOLD_UPPER='Font_TTHoves_Bold_17_upper'
-    FONT_SUB=None
-elif TREZOR_MODEL in ('T3T1',):
-    FONT_NORMAL='Font_TTSatoshi_DemiBold_21'
-    FONT_DEMIBOLD='Font_TTSatoshi_DemiBold_21'
-    FONT_BOLD='Font_TTSatoshi_DemiBold_21'
-    FONT_MONO='Font_RobotoMono_Medium_21'
-    FONT_BIG='Font_TTSatoshi_DemiBold_42'
-    FONT_NORMAL_UPPER=None
-    FONT_BOLD_UPPER=None
-    FONT_SUB='Font_TTSatoshi_DemiBold_18'
-
 # modtrezorconfig
 CPPPATH_MOD += [
     'embed/extmod/modtrezorconfig',
     'vendor/trezor-storage',
+    'vendor/micropython/lib/uzlib',
 ]
 SOURCE_MOD += [
 #    'embed/extmod/modtrezorconfig/modtrezorconfig.c',
@@ -210,6 +183,7 @@ if FEATURE_FLAGS["AES_GCM"]:
     ]
 
 SOURCE_MOD += [
+    'embed/lib/bl_check.c',
 #    'embed/lib/buffers.c',
 #    'embed/lib/colors.c',
 #    'embed/lib/display_utils.c',
@@ -227,6 +201,9 @@ SOURCE_MOD += [
     'embed/lib/translations.c',
     'embed/lib/unit_variant.c',
     'embed/extmod/modtrezorcrypto/rand.c',
+    'vendor/micropython/lib/uzlib/adler32.c',
+    'vendor/micropython/lib/uzlib/crc32.c',
+    'vendor/micropython/lib/uzlib/tinflate.c',
 ]
 
 if NEW_RENDERING:
@@ -241,7 +218,6 @@ else:
 
 
 CPPDEFINES_MOD += [
-    'TREZOR_UI2',
     'TRANSLATIONS',
 ]
 
@@ -282,15 +258,6 @@ if THP:
         'vendor/trezor-crypto/elligator2.c',
     ]
 
-# fonts
-tools.add_font('NORMAL', FONT_NORMAL, CPPDEFINES_MOD, SOURCE_MOD)
-tools.add_font('BOLD', FONT_BOLD, CPPDEFINES_MOD, SOURCE_MOD)
-tools.add_font('DEMIBOLD', FONT_DEMIBOLD, CPPDEFINES_MOD, SOURCE_MOD)
-tools.add_font('MONO', FONT_MONO, CPPDEFINES_MOD, SOURCE_MOD)
-tools.add_font('BIG', FONT_BIG, CPPDEFINES_MOD, SOURCE_MOD)
-tools.add_font('NORMAL_UPPER', FONT_NORMAL_UPPER, CPPDEFINES_MOD, SOURCE_MOD)
-tools.add_font('BOLD_UPPER', FONT_BOLD_UPPER, CPPDEFINES_MOD, SOURCE_MOD)
-tools.add_font('SUB', FONT_SUB, CPPDEFINES_MOD, SOURCE_MOD)
 
 env = Environment(
     ENV=os.environ,
@@ -303,23 +270,9 @@ FEATURES_AVAILABLE = models.configure_board(TREZOR_MODEL, HW_REVISION, FEATURES_
 FILE_SUFFIX= env.get('ENV')['SUFFIX']
 
 SOURCE_FIRMWARE = [
-    'embed/kernel/header.S',
     'embed/kernel/main.c',
     f'embed/kernel/startup_{FILE_SUFFIX}.S',
 ]
-
-
-if TREZOR_MODEL in ('T', 'DISC1', 'DISC2'):
-    UI_LAYOUT = 'UI_LAYOUT_TT'
-    ui_layout_feature = 'model_tt'
-elif TREZOR_MODEL in ('1', 'R'):
-    UI_LAYOUT = 'UI_LAYOUT_TR'
-    ui_layout_feature = 'model_tr'
-elif TREZOR_MODEL in ('T3T1',):
-    UI_LAYOUT = 'UI_LAYOUT_MERCURY'
-    ui_layout_feature = 'model_mercury'
-else:
-    raise ValueError('Unknown Trezor model')
 
 if 'sd_card' in FEATURES_AVAILABLE:
     SDCARD = True
@@ -342,11 +295,6 @@ env.Replace(
 env.Replace(
     TREZOR_MODEL=TREZOR_MODEL,)
 
-if TREZOR_MODEL in ('1',):
-    LD_VARIANT  = '' if EVERYTHING else '_min'
-else:
-    LD_VARIANT  = ''
-
 ALLPATHS = [
         '.',
         'embed/firmware',
@@ -365,14 +313,13 @@ env.Replace(
     '-ffreestanding '
     '-fstack-protector-all '
     +  env.get('ENV')["CPU_CCFLAGS"] + CCFLAGS_MOD,
-    LINKFLAGS='-T embed/kernel/memory_${TREZOR_MODEL}%s.ld -Wl,--gc-sections  -Wl,--print-memory-usage -Wl,-Map=build/kernel/kernel.map -Wl,--warn-common' % LD_VARIANT,
+    LINKFLAGS='-T build/kernel/memory.ld -Wl,--gc-sections  -Wl,--print-memory-usage -Wl,-Map=build/kernel/kernel.map -Wl,--warn-common',
     CPPPATH=ALLPATHS,
     CPPDEFINES=[
         'KERNEL',
         'TREZOR_MODEL_'+TREZOR_MODEL,
         'USE_HAL_DRIVER',
         'ARM_USER_MODE',
-        UI_LAYOUT,
     ] + CPPDEFINES_MOD + CPPDEFINES_HAL,
     ASFLAGS=env.get('ENV')['CPU_ASFLAGS'],
     ASPPFLAGS='$CFLAGS $CCFLAGS',
@@ -381,8 +328,6 @@ env.Replace(
 env.Replace(
     HEADERTOOL='headertool',
     PYTHON='python',
-    MAKEVERSIONHDR='$PYTHON vendor/micropython/py/makeversionhdr.py',
-    MAKEMODULEDEFS='$PYTHON vendor/micropython/py/makemoduledefs.py',
     MAKECMAKELISTS='$PYTHON tools/make_cmakelists.py',
 )
 
@@ -433,24 +378,29 @@ else:
 VENDORHEADER = f'embed/models/{MODEL_IDENTIFIER}/vendorheader/vendorheader_{vendor}.bin'
 
 
-if TREZOR_MODEL not in ('1',):
-    obj_program.extend(
-        env.Command(
-            target='embed/kernel/vendorheader.o',
-            source=VENDORHEADER,
-            action='$OBJCOPY -I binary -O elf32-littlearm -B arm'
-            ' --rename-section .data=.vendorheader,alloc,load,readonly,contents'
-            ' $SOURCE $TARGET', ))
+obj_program.extend(
+    env.Command(
+        target='embed/kernel/vendorheader.o',
+        source=VENDORHEADER,
+        action='$OBJCOPY -I binary -O elf32-littlearm -B arm'
+        ' --rename-section .data=.vendorheader,alloc,load,readonly,contents'
+        ' $SOURCE $TARGET', ))
 
-if False: # TREZOR_MODEL not in ('DISC1', 'DISC2'):
-    tools.embed_binary(
+if TREZOR_MODEL not in ('DISC1', 'DISC2'):
+    tools.embed_compressed_binary(
             obj_program,
             env,
             'bootloader',
-            'embed/firmware/bootloaders/bootloader.o',
-            f'embed/firmware/bootloaders/bootloader_{BOOTLOADER_SUFFIX}.bin',
+            'embed/bootloaders/bootloader.o',
+            f'embed/models/{MODEL_IDENTIFIER}/bootloaders/bootloader_{BOOTLOADER_SUFFIX}.bin',
+            'kernel'
             )
 
+linkerscript_gen = env.Command(
+    target='memory.ld',
+    source=[f'embed/models/{MODEL_IDENTIFIER}/memory.ld', env.get('ENV')['LINKER_SCRIPT'].format(target='kernel')],
+    action='$CAT $SOURCES > $TARGET',
+)
 
 program_elf = env.Command(
     target='kernel.elf',
@@ -458,6 +408,8 @@ program_elf = env.Command(
     action=
     '$LINK -o $TARGET $CCFLAGS $CFLAGS $SOURCES $LINKFLAGS -lc_nano -lm -lgcc',
 )
+
+env.Depends(program_elf, linkerscript_gen)
 
 if CMAKELISTS != 0:
     env.Depends(program_elf, cmake_gen)
@@ -470,31 +422,10 @@ BINARY_NAME += "-" + tools.get_git_revision_short_hash()
 BINARY_NAME += "-dirty" if tools.get_git_modified() else ""
 BINARY_NAME += ".bin"
 
-
-if TREZOR_MODEL in ('1'):
-    action_bin=[
-        '$OBJCOPY -O binary -j .header -j .flash -j .data -j .confidential $SOURCE $TARGET',
-        '../legacy/bootloader/firmware_sign.py -f $TARGET',
-        '$CP $TARGET ' + BINARY_NAME,
-    ]
-else:
-    if 'STM32F427xx' in CPPDEFINES_HAL or 'STM32F429xx' in CPPDEFINES_HAL:
-        action_bin=[
-            '$OBJCOPY -O binary -j .vendorheader -j .header -j .flash -j .data -j .confidential --pad-to 0x08100000 $SOURCE ${TARGET}.p1',
-            '$OBJCOPY -O binary -j .flash2 $SOURCE ${TARGET}.p2',
-            '$CAT ${TARGET}.p1 ${TARGET}.p2 > $TARGET',
-            '$HEADERTOOL -h $TARGET ' + ('-D' if not PRODUCTION else ''),
-            '$DD if=$TARGET of=${TARGET}.p1 skip=0 bs=128k count=6',
-            '$CP $TARGET ' + BINARY_NAME,
-        ]
-    elif 'STM32U5A9xx' in CPPDEFINES_HAL or 'STM32U585xx' in CPPDEFINES_HAL:
-        action_bin=[
-            '$OBJCOPY -O binary -j .vendorheader -j .header -j .flash -j .data -j .confidential $SOURCE ${TARGET}',
-            '$HEADERTOOL -h $TARGET ' + ('-D' if not PRODUCTION else ''),
-            '$CP $TARGET ' + BINARY_NAME,
-            ]
-    else:
-        raise Exception("Unknown MCU")
+action_bin=[
+    '$OBJCOPY -O binary -j .flash -j .uflash  -j .data -j .confidential $SOURCE ${TARGET}',
+    '$CP $TARGET ' + BINARY_NAME,
+]
 
 program_bin = env.Command(
     target='kernel.bin',
