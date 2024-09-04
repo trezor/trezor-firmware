@@ -23,7 +23,6 @@ async def show_share_words(
 ) -> None:
 
     title = TR.reset__recovery_wallet_backup_title
-    highlight_repeated = True
     if share_index is None:
         subtitle = ""
     elif group_index is None:
@@ -52,7 +51,6 @@ async def show_share_words(
             description=description,
             text_info=text_info,
             text_confirm=text_confirm,
-            highlight_repeated=highlight_repeated,
         )
     )
 

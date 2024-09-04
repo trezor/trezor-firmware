@@ -7,11 +7,11 @@ use crate::{
         component::{
             swipe_detect::SwipeSettings,
             text::paragraphs::{Paragraph, Paragraphs},
-            ComponentExt, SwipeDirection,
+            ComponentExt, EventCtx, SwipeDirection,
         },
         flow::{
             base::{DecisionBuilder as _, StateChange},
-            FlowMsg, FlowState, SwipeFlow,
+            FlowMsg, FlowState, SwipeFlow, SwipePage,
         },
         layout::obj::LayoutObj,
     },
@@ -19,8 +19,8 @@ use crate::{
 
 use super::super::{
     component::{
-        ChooseCredential, FidoCredential, Frame, FrameMsg, PromptMsg, PromptScreen, SwipeContent,
-        VerticalMenu, VerticalMenuChoiceMsg,
+        FidoCredential, Footer, Frame, FrameMsg, InternallySwipable, PagedVerticalMenu, PromptMsg,
+        PromptScreen, SwipeContent, VerticalMenu, VerticalMenuChoiceMsg,
     },
     theme,
 };
@@ -85,6 +85,16 @@ pub extern "C" fn new_confirm_fido(n_args: usize, args: *const Obj, kwargs: *mut
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, ConfirmFido::new_obj) }
 }
 
+fn footer_update_fn(
+    content: &SwipeContent<SwipePage<PagedVerticalMenu<impl Fn(usize) -> TString<'static>>>>,
+    ctx: &mut EventCtx,
+    footer: &mut Footer,
+) {
+    let current_page = content.inner().inner().current_page();
+    let total_pages = content.inner().inner().num_pages();
+    footer.update_page_counter(ctx, current_page, Some(total_pages));
+}
+
 impl ConfirmFido {
     const EXTRA_PADDING: i16 = 6;
 
@@ -123,11 +133,30 @@ impl ConfirmFido {
                 .try_into()
                 .unwrap_or_else(|_| TString::from_str("-"))
         };
-        let content_choose_credential =
-            ChooseCredential::new(label_fn, num_accounts).map(|msg| match msg {
-                FrameMsg::Button(_) => Some(FlowMsg::Info),
-                FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => Some(FlowMsg::Choice(i)),
-            });
+
+        let content_choose_credential = Frame::left_aligned(
+            TR::fido__title_select_credential.into(),
+            SwipeContent::new(SwipePage::vertical(PagedVerticalMenu::new(
+                num_accounts,
+                label_fn,
+            ))),
+        )
+        .with_subtitle(TR::fido__title_for_authentication.into())
+        .with_menu_button()
+        .with_footer_page_hint(
+            TR::fido__more_credentials.into(),
+            TR::buttons__go_back.into(),
+            TR::instructions__swipe_up.into(),
+            TR::instructions__swipe_down.into(),
+        )
+        .register_footer_update_fn(footer_update_fn)
+        .with_swipe(SwipeDirection::Down, SwipeSettings::default())
+        .with_swipe(SwipeDirection::Right, SwipeSettings::immediate())
+        .with_vertical_pages()
+        .map(|msg| match msg {
+            FrameMsg::Button(_) => Some(FlowMsg::Info),
+            FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => Some(FlowMsg::Choice(i)),
+        });
 
         let get_account = move || {
             let current = CRED_SELECTED.load(Ordering::Relaxed);

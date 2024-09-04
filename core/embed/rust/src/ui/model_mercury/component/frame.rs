@@ -85,7 +85,9 @@ pub struct Frame<T> {
     bounds: Rect,
     content: T,
     header: Header,
+    header_update_fn: Option<fn(&T, &mut EventCtx, &mut Header)>,
     footer: Option<Footer<'static>>,
+    footer_update_fn: Option<fn(&T, &mut EventCtx, &mut Footer)>,
     swipe: SwipeConfig,
     internal_page_cnt: usize,
     horizontal_swipe: HorizontalSwipe,
@@ -106,7 +108,9 @@ where
             border: theme::borders(),
             content,
             header: Header::new(alignment, title),
+            header_update_fn: None,
             footer: None,
+            footer_update_fn: None,
             swipe: SwipeConfig::new(),
             internal_page_cnt: 1,
             horizontal_swipe: HorizontalSwipe::new(),
@@ -217,6 +221,16 @@ where
         self
     }
 
+    pub fn register_header_update_fn(mut self, f: fn(&T, &mut EventCtx, &mut Header)) -> Self {
+        self.header_update_fn = Some(f);
+        self
+    }
+
+    pub fn register_footer_update_fn(mut self, f: fn(&T, &mut EventCtx, &mut Footer)) -> Self {
+        self.footer_update_fn = Some(f);
+        self
+    }
+
     pub fn with_danger(self) -> Self {
         self.button_styled(theme::button_danger())
             .title_styled(theme::label_title_danger())
@@ -230,15 +244,6 @@ where
         self.header.update_title(ctx, new_title);
     }
 
-    pub fn update_subtitle(
-        &mut self,
-        ctx: &mut EventCtx,
-        new_subtitle: TString<'static>,
-        new_style: Option<TextStyle>,
-    ) {
-        self.header.update_subtitle(ctx, new_subtitle, new_style);
-    }
-
     pub fn update_content<F, R>(&mut self, ctx: &mut EventCtx, update_fn: F) -> R
     where
         F: Fn(&mut EventCtx, &mut T) -> R,
@@ -246,17 +251,6 @@ where
         let res = update_fn(ctx, &mut self.content);
         ctx.request_paint();
         res
-    }
-
-    pub fn update_footer_counter(
-        &mut self,
-        ctx: &mut EventCtx,
-        current: usize,
-        max: Option<usize>,
-    ) {
-        if let Some(footer) = &mut self.footer {
-            footer.update_page_counter(ctx, current, max);
-        }
     }
 
     #[inline(never)]
@@ -314,6 +308,16 @@ where
 
         if msg.is_some() {
             return msg;
+        }
+
+        if let Some(header_update_fn) = self.header_update_fn {
+            header_update_fn(&self.content, ctx, &mut self.header);
+        }
+
+        if let Some(footer_update_fn) = self.footer_update_fn {
+            if let Some(footer) = &mut self.footer {
+                footer_update_fn(&self.content, ctx, footer);
+            }
         }
 
         None

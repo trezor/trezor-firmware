@@ -4,8 +4,6 @@ mod address_details;
 mod binary_selection;
 pub mod bl_confirm;
 mod button;
-#[cfg(feature = "universal_fw")]
-mod choose_credential;
 #[cfg(feature = "translations")]
 mod coinjoin_progress;
 mod fido;
@@ -48,8 +46,6 @@ pub use address_details::AddressDetails;
 #[cfg(feature = "ui_overlay")]
 pub use binary_selection::{BinarySelection, BinarySelectionMsg};
 pub use button::{Button, ButtonContent, ButtonMsg, ButtonStyle, ButtonStyleSheet, IconText};
-#[cfg(feature = "universal_fw")]
-pub use choose_credential::ChooseCredential;
 #[cfg(feature = "translations")]
 pub use coinjoin_progress::CoinJoinProgress;
 pub use error::ErrorScreen;
