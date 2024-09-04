@@ -529,7 +529,9 @@ class EthereumFlow:
         if self.client.layout_type is LayoutType.TT:
             # confirm intro
             if info:
-                self.debug.click(buttons.CORNER_BUTTON, )
+                self.debug.click(
+                    buttons.CORNER_BUTTON,
+                )
                 TR.assert_equals_multiple(
                     self.debug.read_layout().title(),
                     [
