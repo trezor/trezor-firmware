@@ -23,7 +23,7 @@ def configure(
         features_available.append("display_mono")
 
     mcu = "STM32U585xx"
-    linker_script = "stm32u58"
+    linker_script = """embed/trezorhal/stm32u5/linker/u58/{target}.ld"""
 
     stm32u5_common_files(env, defines, sources, paths)
 

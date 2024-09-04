@@ -7,6 +7,7 @@ TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 HW_REVISION = ARGUMENTS.get('HW_REVISION', None)
 NEW_RENDERING = ARGUMENTS.get('NEW_RENDERING', '1') == '1' or TREZOR_MODEL in ('T3T1',)
+MODEL_IDENTIFIER = models.get_model_identifier(TREZOR_MODEL)
 
 if TREZOR_MODEL in ('1', 'DISC1', 'DISC2'):
     # skip bootloader_ci build
@@ -134,7 +135,6 @@ env = Environment(
 FEATURES_AVAILABLE = models.configure_board(TREZOR_MODEL, HW_REVISION, FEATURES_WANTED, env, CPPDEFINES_HAL, SOURCE_HAL, PATH_HAL)
 
 FILE_SUFFIX= env.get('ENV')['SUFFIX']
-LINKER_SCRIPT_SUFFIX= env.get('ENV')['LINKER_SCRIPT']
 
 SOURCE_BOOTLOADER = [
     f'embed/bootloader_ci/startup_{FILE_SUFFIX}.s',
@@ -171,7 +171,7 @@ env.Replace(
     '-fstack-protector-strong '
     +  env.get('ENV')["CPU_CCFLAGS"] + CCFLAGS_MOD,
     CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB',
-    LINKFLAGS=f'-T embed/bootloader_ci/memory_{LINKER_SCRIPT_SUFFIX}.ld -Wl,--gc-sections -Wl,-Map=build/bootloader_ci/bootloader.map -Wl,--warn-common',
+    LINKFLAGS=f'-T build/bootloader_ci/memory.ld -Wl,--gc-sections -Wl,-Map=build/bootloader_ci/bootloader.map -Wl,--warn-common',
     CPPPATH=[
         'embed/bootloader_ci',
         'embed/bootloader_ci/nanopb',
@@ -220,12 +220,20 @@ obj_program += env.Object(source=SOURCE_BOOTLOADER)
 obj_program += env.Object(source=SOURCE_NANOPB)
 obj_program += env.Object(source=SOURCE_HAL)
 
+linkerscript_gen = env.Command(
+    target='memory.ld',
+    source=[f'embed/models/{MODEL_IDENTIFIER}/memory.ld', env.get('ENV')['LINKER_SCRIPT'].format(target='bootloader')],
+    action='$CAT $SOURCES > $TARGET',
+)
+
 program_elf = env.Command(
     target='bootloader.elf',
     source=obj_program,
     action=
     '$LINK -o $TARGET $CCFLAGS $CFLAGS $LINKFLAGS $SOURCES -lc_nano -lgcc',
 )
+
+env.Depends(program_elf, linkerscript_gen)
 
 BINARY_NAME = f"build/bootloader_ci/bootloader_ci-{models.get_model_identifier(TREZOR_MODEL)}"
 BINARY_NAME += "-" + tools.get_version('embed/bootloader_ci/version.h')

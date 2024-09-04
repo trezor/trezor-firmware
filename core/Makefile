@@ -274,11 +274,11 @@ build_reflash: ## build reflash firmware + reflash image
 
 build_kernel: ## build kernel image
 	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" \
-		TREZOR_MODEL="$(TREZOR_MODEL)" \
+		TREZOR_MODEL="$(TREZOR_MODEL)"  CMAKELISTS="$(CMAKELISTS)" \
 		BOOTLOADER_QA="$(BOOTLOADER_QA)" BOOTLOADER_DEVEL="$(BOOTLOADER_DEVEL)" \
 		$(KERNEL_BUILD_DIR)/kernel.bin
 
-build_coreapp: templates build_cross ## build coreapp with frozen modules
+build_coreapp: templates build_cross build_kernel ## build coreapp with frozen modules
 	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" \
 		TREZOR_MODEL="$(TREZOR_MODEL)" CMAKELISTS="$(CMAKELISTS)" \
 		PYOPT="$(PYOPT)" BITCOIN_ONLY="$(BITCOIN_ONLY)" \
@@ -369,15 +369,12 @@ flash_bootloader_ci: $(BOOTLOADER_CI_BUILD_DIR)/bootloader.bin ## flash CI bootl
 flash_prodtest: $(PRODTEST_BUILD_DIR)/prodtest.bin ## flash prodtest using OpenOCD
 	$(OPENOCD) -c "init; reset halt; flash write_image erase $< $(FIRMWARE_START); exit"
 
-flash_kernel: $(KERNEL_BUILD_DIR)/kernel.bin ## flash kernel using OpenOCD
-	$(OPENOCD) -c "init; reset halt; flash write_image erase $< $(KERNEL_START); exit"
-
 flash_coreapp: $(COREAPP_BUILD_DIR)/coreapp.bin ## flash coreapp using OpenOCD
 ifeq ($(MCU),$(filter $(MCU),STM32F4))
-	$(OPENOCD) -c "init; reset halt; flash write_image erase $<.p1 $(COREAPP_START); flash write_image erase $<.p2 $(COREAPP_P2_START); exit"
+	$(OPENOCD) -c "init; reset halt; flash write_image erase $<.p1 $(FIRMWARE_START); flash write_image erase $<.p2 $(FIRMWARE_P2_START); exit"
 
 else
-	$(OPENOCD) -c "init; reset halt; flash write_image erase $< $(COREAPP_START); exit"
+	$(OPENOCD) -c "init; reset halt; flash write_image erase $< $(FIRMWARE_START); exit"
 endif
 
 flash_firmware: $(FIRMWARE_BUILD_DIR)/firmware.bin ## flash firmware using OpenOCD

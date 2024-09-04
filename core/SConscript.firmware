@@ -225,6 +225,7 @@ CPPPATH_MOD += [
 ]
 SOURCE_MOD += [
     'embed/extmod/modtrezorui/modtrezorui.c',
+    'embed/lib/bl_check.c',
     'embed/lib/buffers.c',
     'embed/lib/colors.c',
     'embed/lib/display_utils.c',
@@ -453,7 +454,6 @@ FEATURES_AVAILABLE = models.configure_board(TREZOR_MODEL, HW_REVISION, FEATURES_
 FILE_SUFFIX= env.get('ENV')['SUFFIX']
 
 SOURCE_FIRMWARE = [
-    'embed/firmware/bl_check.c',
     'embed/firmware/delay.c',
     'embed/firmware/header.S',
     'embed/firmware/main.c',
@@ -498,11 +498,6 @@ env.Replace(
 env.Replace(
     TREZOR_MODEL=TREZOR_MODEL,)
 
-if TREZOR_MODEL in ('1',):
-    LD_VARIANT  = '' if EVERYTHING else '_min'
-else:
-    LD_VARIANT  = ''
-
 ALLPATHS = [
         '.',
         'embed/rust',
@@ -525,7 +520,7 @@ env.Replace(
     '-fstack-protector-all '
     +  env.get('ENV')["CPU_CCFLAGS"] + CCFLAGS_MOD,
     CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB',
-    LINKFLAGS='-T embed/firmware/memory_${TREZOR_MODEL}%s.ld -Wl,--gc-sections  -Wl,--print-memory-usage -Wl,-Map=build/firmware/firmware.map -Wl,--warn-common' % LD_VARIANT,
+    LINKFLAGS='-T build/firmware/memory.ld -Wl,--gc-sections  -Wl,--print-memory-usage -Wl,-Map=build/firmware/firmware.map -Wl,--warn-common',
     CPPPATH=ALLPATHS,
     CPPDEFINES=[
         'FIRMWARE',
@@ -909,16 +904,23 @@ if TREZOR_MODEL not in ('1',):
             ' $SOURCE $TARGET', ))
 
 if TREZOR_MODEL not in ('DISC1', 'DISC2'):
-    tools.embed_binary(
+    tools.embed_compressed_binary(
             obj_program,
             env,
             'bootloader',
-            'embed/firmware/bootloaders/bootloader.o',
+            'embed/bootloaders/bootloader.o',
             f'embed/models/{MODEL_IDENTIFIER}/bootloaders/bootloader_{BOOTLOADER_SUFFIX}.bin',
+            'firmware'
             )
 
 
 env.Depends(obj_program, qstr_generated)
+
+linkerscript_gen = env.Command(
+    target='memory.ld',
+    source=[f'embed/models/{MODEL_IDENTIFIER}/memory.ld',  env.get('ENV')['LINKER_SCRIPT'].format(target='firmware')],
+    action='$CAT $SOURCES > $TARGET',
+)
 
 program_elf = env.Command(
     target='firmware.elf',
@@ -926,6 +928,8 @@ program_elf = env.Command(
     action=
     '$LINK -o $TARGET $CCFLAGS $CFLAGS $SOURCES $LINKFLAGS -lc_nano -lm -lgcc',
 )
+
+env.Depends(program_elf, linkerscript_gen)
 
 if CMAKELISTS != 0:
     env.Depends(program_elf, cmake_gen)

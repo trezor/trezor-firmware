@@ -27,7 +27,7 @@ def configure(
         defines += ["XFRAMEBUFFER"]
 
     mcu = "STM32U585xx"
-    linker_script = "stm32u58"
+    linker_script = """embed/trezorhal/stm32u5/linker/u58/{target}.ld"""
 
     stm32u5_common_files(env, defines, sources, paths)
 
@@ -48,7 +48,7 @@ def configure(
     ]
     sources += [
         f"embed/trezorhal/stm32u5/displays/{display}",
-        "embed/trezorhal/stm32u5/i2c_bus.c"
+        "embed/trezorhal/stm32u5/i2c_bus.c",
     ]
 
     if "new_rendering" in features_wanted:

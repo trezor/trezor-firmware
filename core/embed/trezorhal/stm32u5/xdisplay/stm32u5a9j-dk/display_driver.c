@@ -30,6 +30,8 @@
 #error "Incompatible display resolution"
 #endif
 
+#ifdef KERNEL_MODE
+
 // Display driver instance
 display_driver_t g_display_driver = {
     .initialized = false,
@@ -142,6 +144,8 @@ int display_get_orientation(void) {
 
   return drv->orientation_angle;
 }
+
+#endif
 
 void display_fill(const gfx_bitblt_t *bb) {
   display_fb_info_t fb = display_get_frame_buffer();

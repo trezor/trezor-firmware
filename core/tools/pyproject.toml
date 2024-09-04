@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "trezor_core_tools"
-version = "0.1.0"
+version = "0.1.1"
 description = "Collection of CLI tools for trezor-core development"
 authors = ["matejcik <jan.matejek@satoshilabs.com>"]
 license = "GPLv3+"
@@ -17,4 +17,5 @@ build-backend = "poetry.core.masonry.api"
 [tool.poetry.scripts]
 headertool = "trezor_core_tools.headertool:cli"
 layout_parser = "trezor_core_tools.layout_parser:main"
+lsgen = "trezor_core_tools.lsgen:main"
 combine_firmware = "trezor_core_tools.combine_firmware:main"

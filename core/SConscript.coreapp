@@ -16,7 +16,7 @@ DISABLE_OPTIGA = ARGUMENTS.get('DISABLE_OPTIGA', '0') == '1'
 HW_REVISION = ARGUMENTS.get('HW_REVISION', None)
 THP = ARGUMENTS.get('THP', '0') == '1' # Trezor-Host Protocol
 NEW_RENDERING = ARGUMENTS.get('NEW_RENDERING', '1') == '1' or TREZOR_MODEL in ('T3T1',)
-
+MODEL_IDENTIFIER = models.get_model_identifier(TREZOR_MODEL)
 
 FEATURE_FLAGS = {
     "RDI": True,
@@ -478,11 +478,6 @@ env.Replace(
 env.Replace(
     TREZOR_MODEL=TREZOR_MODEL,)
 
-if TREZOR_MODEL in ('1',):
-    LD_VARIANT  = '' if EVERYTHING else '_min'
-else:
-    LD_VARIANT  = ''
-
 ALLPATHS = [
         '.',
         'embed/rust',
@@ -505,7 +500,7 @@ env.Replace(
     '-fstack-protector-all '
     +  env.get('ENV')["CPU_CCFLAGS"] + CCFLAGS_MOD,
     CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB',
-    LINKFLAGS='-T embed/coreapp/memory_${TREZOR_MODEL}%s.ld -Wl,--gc-sections  -Wl,--print-memory-usage -Wl,-Map=build/coreapp/coreapp.map -Wl,--warn-common' % LD_VARIANT,
+    LINKFLAGS='-T build/coreapp/memory.ld -Wl,--gc-sections  -Wl,--print-memory-usage -Wl,-Map=build/coreapp/coreapp.map -Wl,--warn-common',
     CPPPATH=ALLPATHS,
     CPPDEFINES=[
         'FIRMWARE',
@@ -879,16 +874,32 @@ else:
 VENDORHEADER = f'embed/models/{MODEL_IDENTIFIER}/vendorheader/vendorheader_{vendor}.bin'
 
 
-if TREZOR_MODEL not in ('1',):
-    obj_program.extend(
-        env.Command(
-            target='embed/coreapp/vendorheader.o',
-            source=VENDORHEADER,
-            action='$OBJCOPY -I binary -O elf32-littlearm -B arm'
-            ' --rename-section .data=.vendorheader,alloc,load,readonly,contents'
-            ' $SOURCE $TARGET', ))
+obj_program.extend(
+    env.Command(
+        target='embed/coreapp/vendorheader.o',
+        source=VENDORHEADER,
+        action='$OBJCOPY -I binary -O elf32-littlearm -B arm'
+        ' --rename-section .data=.vendorheader,alloc,load,readonly,contents'
+        ' $SOURCE $TARGET', ))
+
+
+tools.embed_raw_binary(
+        obj_program,
+        env,
+        'kernel',
+        'build/kernel/kernel.o',
+        f'build/kernel/kernel.bin',
+        )
+
+
 
 env.Depends(obj_program, qstr_generated)
+
+linkerscript_gen = env.Command(
+    target='memory.ld',
+    source=[f'embed/models/{MODEL_IDENTIFIER}/memory.ld',  env.get('ENV')['LINKER_SCRIPT'].format(target='coreapp')],
+    action='$CAT $SOURCES > $TARGET',
+)
 
 program_elf = env.Command(
     target='coreapp.elf',
@@ -897,11 +908,13 @@ program_elf = env.Command(
     '$LINK -o $TARGET $CCFLAGS $CFLAGS $SOURCES $LINKFLAGS -lc_nano -lm -lgcc',
 )
 
+env.Depends(program_elf, linkerscript_gen)
+
 if CMAKELISTS != 0:
     env.Depends(program_elf, cmake_gen)
 env.Depends(program_elf, rust)
 
-BINARY_NAME = f"build/coreapp/coreapp-{models.get_model_identifier(TREZOR_MODEL)}"
+BINARY_NAME = f"build/coreapp/coreapp-{MODEL_IDENTIFIER}"
 if not EVERYTHING:
     BINARY_NAME += "-btconly"
 BINARY_NAME += "-" + tools.get_version('embed/coreapp/version.h')
@@ -910,30 +923,23 @@ BINARY_NAME += "-dirty" if tools.get_git_modified() else ""
 BINARY_NAME += ".bin"
 
 
-if TREZOR_MODEL in ('1'):
+if 'STM32F427xx' in CPPDEFINES_HAL or 'STM32F429xx' in CPPDEFINES_HAL:
     action_bin=[
-        '$OBJCOPY -O binary -j .header -j .flash -j .data -j .confidential $SOURCE $TARGET',
-        '../legacy/bootloader/firmware_sign.py -f $TARGET',
+        '$OBJCOPY -O binary -j .vendorheader -j .header -j .flash -j .data -j .confidential --pad-to 0x08100000 $SOURCE ${TARGET}.p1',
+        '$OBJCOPY -O binary -j .flash2 $SOURCE ${TARGET}.p2',
+        '$CAT ${TARGET}.p1 ${TARGET}.p2 > $TARGET',
+        '$HEADERTOOL -h $TARGET ' + ('-D' if not PRODUCTION else ''),
+        '$DD if=$TARGET of=${TARGET}.p1 skip=0 bs=128k count=6',
         '$CP $TARGET ' + BINARY_NAME,
     ]
-else:
-    if 'STM32F427xx' in CPPDEFINES_HAL or 'STM32F429xx' in CPPDEFINES_HAL:
-        action_bin=[
-            '$OBJCOPY -O binary -j .vendorheader -j .header -j .flash -j .data -j .confidential --pad-to 0x08100000 $SOURCE ${TARGET}.p1',
-            '$OBJCOPY -O binary -j .flash2 $SOURCE ${TARGET}.p2',
-            '$CAT ${TARGET}.p1 ${TARGET}.p2 > $TARGET',
-            '$HEADERTOOL -h $TARGET ' + ('-D' if not PRODUCTION else ''),
-            '$DD if=$TARGET of=${TARGET}.p1 skip=0 bs=128k count=6',
-            '$CP $TARGET ' + BINARY_NAME,
+elif 'STM32U5A9xx' in CPPDEFINES_HAL or 'STM32U585xx' in CPPDEFINES_HAL:
+    action_bin=[
+        '$OBJCOPY -O binary -j .vendorheader -j .header -j .flash -j .data -j .confidential $SOURCE ${TARGET}',
+        '$HEADERTOOL -h $TARGET ' + ('-D' if not PRODUCTION else ''),
+        '$CP $TARGET ' + BINARY_NAME,
         ]
-    elif 'STM32U5A9xx' in CPPDEFINES_HAL or 'STM32U585xx' in CPPDEFINES_HAL:
-        action_bin=[
-            '$OBJCOPY -O binary -j .vendorheader -j .header -j .flash -j .data -j .confidential $SOURCE ${TARGET}',
-            '$HEADERTOOL -h $TARGET ' + ('-D' if not PRODUCTION else ''),
-            '$CP $TARGET ' + BINARY_NAME,
-            ]
-    else:
-        raise Exception("Unknown MCU")
+else:
+    raise Exception("Unknown MCU")
 
 program_bin = env.Command(
     target='coreapp.bin',

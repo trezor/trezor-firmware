@@ -7,6 +7,7 @@ TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 HW_REVISION = ARGUMENTS.get('HW_REVISION', None)
 NEW_RENDERING = ARGUMENTS.get('NEW_RENDERING', '1') == '1'
+MODEL_IDENTIFIER = models.get_model_identifier(TREZOR_MODEL)
 
 if TREZOR_MODEL in ('1', ):
     # skip boardloader build
@@ -102,7 +103,6 @@ env = Environment(ENV=os.environ,
 FEATURES_AVAILABLE = models.configure_board(TREZOR_MODEL, HW_REVISION, FEATURES_WANTED, env, CPPDEFINES_HAL, SOURCE_HAL, PATH_HAL)
 
 FILE_SUFFIX= env.get('ENV')['SUFFIX']
-LINKER_SCRIPT_SUFFIX= env.get('ENV')['LINKER_SCRIPT']
 
 SOURCE_BOARDLOADER = [
     f"embed/boardloader/startup_{FILE_SUFFIX}.s",
@@ -111,6 +111,7 @@ SOURCE_BOARDLOADER = [
 
 
 env.Replace(
+    CAT='cat',
     CP='cp',
     AS='arm-none-eabi-as',
     AR='arm-none-eabi-ar',
@@ -136,7 +137,7 @@ env.Replace(
     '-fstack-protector-strong '
     + env.get('ENV')["CPU_CCFLAGS"] + CCFLAGS_MOD,
     CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB',
-    LINKFLAGS=f"-T embed/boardloader/memory_{LINKER_SCRIPT_SUFFIX}.ld -Wl,--gc-sections -Wl,-Map=build/boardloader/boardloader.map -Wl,--warn-common  -Wl,--print-memory-usage",
+    LINKFLAGS="-T build/boardloader/memory.ld -Wl,--gc-sections -Wl,-Map=build/boardloader/boardloader.map -Wl,--warn-common  -Wl,--print-memory-usage",
     CPPPATH=[
         'embed/boardloader',
         'embed/lib',
@@ -174,12 +175,20 @@ obj_program += env.Object(source=SOURCE_MOD_CRYPTO, CCFLAGS='$CCFLAGS -ftrivial-
 obj_program += env.Object(source=SOURCE_BOARDLOADER)
 obj_program += env.Object(source=SOURCE_HAL)
 
+linkerscript_gen = env.Command(
+    target='memory.ld',
+    source=[f'embed/models/{MODEL_IDENTIFIER}/memory.ld', env.get('ENV')['LINKER_SCRIPT'].format(target='boardloader')],
+    action='$CAT $SOURCES > $TARGET',
+)
+
 program_elf = env.Command(
     target='boardloader.elf',
     source=obj_program,
     action=
     '$LINK -o $TARGET $CCFLAGS $CFLAGS $LINKFLAGS $SOURCES -lc_nano -lgcc',
 )
+
+env.Depends(program_elf, linkerscript_gen)
 
 BINARY_NAME = f"build/boardloader/boardloader-{models.get_model_identifier(TREZOR_MODEL)}"
 BINARY_NAME += "-" + tools.get_version('embed/boardloader/version.h')

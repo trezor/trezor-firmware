@@ -1,18 +1,18 @@
-/* TREZORv2 firmware linker script */
+INCLUDE "./embed/trezorhal/stm32f4/linker/memory.ld";
 
 ENTRY(reset_handler)
 
 MEMORY {
-  FLASH  (rx)     : ORIGIN = 0x08040000, LENGTH = 768K
-  FLASH2 (r)      : ORIGIN = 0x08120000, LENGTH = 896K
-  CCMRAM (wal)    : ORIGIN = 0x10000000, LENGTH = 64K - 0x100
-  BOOT_ARGS (wal) : ORIGIN = 0x1000FF00, LENGTH = 0x100
-  SRAM   (wal)    : ORIGIN = 0x20000000, LENGTH = 192K
+  FLASH  (rx)     : ORIGIN = FIRMWARE_START, LENGTH = FIRMWARE_P1_IMAGE_MAXSIZE
+  FLASH2 (r)      : ORIGIN = FIRMWARE_P2_START, LENGTH = FIRMWARE_P2_IMAGE_MAXSIZE
+  CCMRAM (wal)    : ORIGIN = MCU_CCMRAM, LENGTH = MCU_CCMRAM_SIZE - KERNEL_CCMRAM_SIZE
+  SRAM   (wal)    : ORIGIN = MCU_SRAM, LENGTH = MCU_SRAM_SIZE - KERNEL_SRAM_SIZE
 }
 
 main_stack_base = ORIGIN(SRAM) + SIZEOF(.stack); /* 8-byte aligned full descending stack */
 _sstack = ORIGIN(SRAM);
 _estack = main_stack_base;
+_stack_size = SIZEOF(.stack);
 
 /* used by the startup code to populate variables used by the C code */
 data_lma = LOADADDR(.data);
@@ -23,15 +23,14 @@ data_size = SIZEOF(.data);
 ccmram_start = ORIGIN(CCMRAM);
 ccmram_end = ORIGIN(CCMRAM) + LENGTH(CCMRAM);
 
-/* reserve 256 bytes for bootloader arguments */
-boot_args_start = ORIGIN(BOOT_ARGS);
-boot_args_end = ORIGIN(BOOT_ARGS) + LENGTH(BOOT_ARGS);
-
 /* used by the startup code to wipe memory */
 sram_start = ORIGIN(SRAM);
 sram_end = ORIGIN(SRAM) + LENGTH(SRAM);
 _ram_start = sram_start;
 _ram_end = sram_end;
+
+bss_start = ADDR(.bss);
+bss_end = ADDR(.bss) + SIZEOF(.bss);
 
 _codelen = LENGTH(FLASH) - SIZEOF(.vendorheader) - SIZEOF(.header) + SIZEOF(.flash2);
 _flash_start = ORIGIN(FLASH);
@@ -48,12 +47,12 @@ SECTIONS {
     KEEP(*(.header));
   } >FLASH AT>FLASH
 
-  .flash2 : ALIGN(512) {
-    build/firmware/frozen_mpy.o(.rodata*);
-    build/firmware/vendor/secp256k1-zkp/src/secp256k1.o(.rodata*);
-    build/firmware/vendor/secp256k1-zkp/src/precomputed_ecmult.o(.rodata*);
-    build/firmware/vendor/secp256k1-zkp/src/precomputed_ecmult_gen.o(.rodata*);
-    build/firmware/vendor/trezor-crypto/aes/aestab.o(.rodata*);
+  .flash2 : ALIGN(CODE_ALIGNMENT) {
+    build/coreapp/frozen_mpy.o(.rodata*);
+    build/coreapp/vendor/secp256k1-zkp/src/secp256k1.o(.rodata*);
+    build/coreapp/vendor/secp256k1-zkp/src/precomputed_ecmult.o(.rodata*);
+    build/coreapp/vendor/secp256k1-zkp/src/precomputed_ecmult_gen.o(.rodata*);
+    build/coreapp/vendor/trezor-crypto/aes/aestab.o(.rodata*);
     . = ALIGN(4);
     */libtrezor_lib.a:(.text*);
     . = ALIGN(4);
@@ -62,14 +61,14 @@ SECTIONS {
   } >FLASH2 AT>FLASH2
 
   .flash : ALIGN(512) {
+    KEEP(*(.kernel));
+    . = ALIGN(512);
     KEEP(*(.vector_table));
     . = ALIGN(4);
     *(.text*);
     . = ALIGN(4);
     *(.rodata*);
     . = ALIGN(4);
-    KEEP(*(.bootloader));
-    *(.bootloader*);
     . = ALIGN(512);
   } >FLASH AT>FLASH
 
@@ -102,8 +101,9 @@ SECTIONS {
     . = ALIGN(4);
   } >CCMRAM
 
-  .boot_args : ALIGN(8) {
-    *(.boot_args*);
-    . = ALIGN(8);
-  } >BOOT_ARGS
+
+  /DISCARD/ : {
+    *(.ARM.exidx*);
+  }
+
 }

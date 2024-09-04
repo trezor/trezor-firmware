@@ -1582,7 +1582,7 @@ url = "python"
 
 [[package]]
 name = "trezor-core-tools"
-version = "0.1.0"
+version = "0.1.1"
 description = "Collection of CLI tools for trezor-core development"
 optional = false
 python-versions = "^3.8"

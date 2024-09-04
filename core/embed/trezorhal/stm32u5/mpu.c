@@ -115,20 +115,19 @@ static void mpu_set_attributes(void) {
 
 #define SECRET_START FLASH_BASE
 #define SECRET_SIZE SIZE_16K
-#define BOARDLOADER_SIZE SIZE_48K
+#define BOARDLOADER_SIZE BOARDLOADER_IMAGE_MAXSIZE
 #define BOOTLOADER_SIZE BOOTLOADER_IMAGE_MAXSIZE
 #define FIRMWARE_SIZE FIRMWARE_IMAGE_MAXSIZE
-#define COREAPP_SIZE (FIRMWARE_IMAGE_MAXSIZE - KERNEL_SIZE)
 #define STORAGE_START \
   (FLASH_BASE + SECRET_SIZE + BOARDLOADER_SIZE + BOOTLOADER_SIZE)
 #define STORAGE_SIZE NORCOW_SECTOR_SIZE* STORAGE_AREAS_COUNT
 
 #if defined STM32U5A9xx
-#define SRAM_SIZE SIZE_2496K
+#define SRAM_SIZE SRAM1_SIZE + SRAM2_SIZE + SRAM3_SIZE + SRAM5_SIZE
 #elif defined STM32U5G9xx
-#define SRAM_SIZE (SIZE_2496K + SIZE_512K)
+#define SRAM_SIZE SRAM1_SIZE + SRAM2_SIZE + SRAM3_SIZE + SRAM5_SIZE + SRAM6_SIZE
 #elif defined STM32U585xx
-#define SRAM_SIZE SIZE_768K
+#define SRAM_SIZE SRAM1_SIZE + SRAM2_SIZE + SRAM3_SIZE
 #else
 #error "Unknown MCU"
 #endif
@@ -161,14 +160,38 @@ static void mpu_set_attributes(void) {
 
 // clang-format on
 
-#define KERNEL_RAM_START (SRAM2_BASE - SIZE_16K)
-#define KERNEL_RAM_SIZE (SIZE_24K)
+#define KERNEL_RAM_START (SRAM2_BASE - KERNEL_SRAM1_SIZE)
+#define KERNEL_RAM_SIZE \
+  ((KERNEL_SRAM1_SIZE + KERNEL_SRAM2_SIZE) - KERNEL_U_RAM_SIZE)
+
+#ifdef SYSCALL_DISPATCH
+extern uint32_t _uflash_start;
+extern uint32_t _uflash_end;
+#define KERNEL_RAM_U_START (KERNEL_RAM_START + KERNEL_RAM_SIZE)
+#define KERNEL_RAM_U_SIZE KERNEL_U_RAM_SIZE
+#define KERNEL_FLASH_U_START (uint32_t) & _uflash_start
+#define KERNEL_FLASH_U_SIZE ((uint32_t) & _uflash_end - KERNEL_FLASH_U_START)
+#else
+#define KERNEL_RAM_U_START 0
+#define KERNEL_RAM_U_SIZE 0
+#define KERNEL_FLASH_U_START 0
+#define KERNEL_FLASH_U_SIZE 0
+#endif
+
+extern uint32_t _codelen;
+#define KERNEL_SIZE (uint32_t) & _codelen
+
+#define KERNEL_FLASH_START KERNEL_START
+#define KERNEL_FLASH_SIZE (KERNEL_SIZE - KERNEL_U_FLASH_SIZE)
+
+#define COREAPP_FLASH_START (KERNEL_FLASH_START + KERNEL_SIZE)
+#define COREAPP_FLASH_SIZE (FIRMWARE_IMAGE_MAXSIZE - KERNEL_SIZE)
 
 #define COREAPP_RAM1_START SRAM1_BASE
-#define COREAPP_RAM1_SIZE (SIZE_192K - SIZE_16K)
+#define COREAPP_RAM1_SIZE (SRAM1_SIZE - KERNEL_SRAM1_SIZE)
 
-#define COREAPP_RAM2_START (SRAM2_BASE + SIZE_8K)
-#define COREAPP_RAM2_SIZE (SRAM_SIZE - (SIZE_192K + SIZE_8K))
+#define COREAPP_RAM2_START (SRAM2_BASE + KERNEL_SRAM2_SIZE)
+#define COREAPP_RAM2_SIZE (SRAM_SIZE - (SRAM1_SIZE + KERNEL_SRAM2_SIZE))
 
 typedef struct {
   // Set if the driver is initialized
@@ -207,12 +230,12 @@ static void mpu_init_fixed_regions(void) {
 #endif
 #if defined(KERNEL)
   //   REGION    ADDRESS                   SIZE                TYPE       WRITE   UNPRIV
-  SET_REGION( 0, KERNEL_START,             KERNEL_SIZE,        FLASH_CODE,   NO,    NO );
-  SET_REGION( 1, KERNEL_RAM_START,         KERNEL_RAM_SIZE,    SRAM,        YES,    NO );
-  SET_REGION( 2, COREAPP_START,            COREAPP_SIZE,       FLASH_CODE,   NO,   YES );
-  SET_REGION( 3, COREAPP_RAM1_START,       COREAPP_RAM1_SIZE,  SRAM,        YES,   YES );
-  SET_REGION( 4, COREAPP_RAM2_START,       COREAPP_RAM2_SIZE,  SRAM,        YES,   YES );
-  SET_REGION( 5, GRAPHICS_START,           GRAPHICS_SIZE,      SRAM,        YES,   YES );
+  SET_REGION( 0, KERNEL_FLASH_START,       KERNEL_FLASH_SIZE,  FLASH_CODE,   NO,    NO ); // Kernel Code
+  SET_REGION( 1, KERNEL_RAM_START,         KERNEL_RAM_SIZE,    SRAM,        YES,    NO ); // Kernel RAM
+  SET_REGION( 2, COREAPP_FLASH_START,      COREAPP_FLASH_SIZE, FLASH_CODE,   NO,   YES ); // CoreApp Code
+  SET_REGION( 3, COREAPP_RAM1_START,       COREAPP_RAM1_SIZE,  SRAM,        YES,   YES ); // SRAM1
+  SET_REGION( 4, COREAPP_RAM2_START,       COREAPP_RAM2_SIZE,  SRAM,        YES,   YES ); // SRAM2/3/5
+  SET_REGION( 5, GRAPHICS_START,           GRAPHICS_SIZE,      SRAM,        YES,   YES ); // Frame buffer or display interface
 #endif
 #if defined(FIRMWARE)
   //   REGION    ADDRESS                   SIZE                TYPE       WRITE   UNPRIV
@@ -282,6 +305,16 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
   irq_key_t irq_key = irq_lock();
 
   HAL_MPU_Disable();
+
+  // Region #5 is banked
+
+  // clang-format off
+  switch (mode) {
+    default:
+      SET_REGION( 5, GRAPHICS_START,           GRAPHICS_SIZE,      SRAM,  YES,    YES ); // Peripherals
+    break;
+  }
+  // clang-format on
 
   // Region #6 is banked
 
