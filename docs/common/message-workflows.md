@@ -239,34 +239,80 @@ example, by using PKCS7. See
 
 ## ResetDevice
 
-Reset device message performs Trezor device
-setup and generates new wallet with new recovery
-seed. The device must be in unitialized
-state, the firmware is already installed but it has not been initialized
-yet. If it is initialized and the user wants to perform a reset device,
+The ResetDevice message performs Trezor device
+setup and generates a new wallet with a new recovery
+seed. The device must be in unitialized state, meaning that
+the firmware is already installed but it has not been initialized
+yet. If it is initialized and the user wants to perform a device reset,
 the device must be wiped first. If the Trezor is prepared for its
-initialization the screen is showing "Go to trezor.io". The reset device
-can be done in Trezor Wallet interface (https://trezor.io/start) and
-also with Python trezorctl command. After sending
-message to the device, device warn us to never make a digital copy of
-your recovery seed and never upload it online, this message has to be
-confirmed by pressing on "I understand" on the device. After confirmed,
-the device produces internal entropy which is random of 32 bytes,
-requests external entropy which is produced in computer and computes
-mnemonic (recovery seed) using internal, external entropy and given
-strength (12, 18 or 24 words). Trezor Wallet
-interface doesn't provide option to choose how many words there should
+initialization, the screen is showing "Go to trezor.io". The device reset
+can be done in the Trezor Suite interface (https://trezor.io/start) or
+using Python trezorctl command. After sending the ResetDevice
+message to the device, the device warns the user to never make a digital copy
+of their recovery seed and never upload it online, this message has to be
+confirmed by pressing "I understand" on the device. After confirmation,
+the device produces internal entropy which is a random value of 32 bytes,
+requests external entropy which is produced in the host computer and computes
+the mnemonic (recovery seed) using internal, external entropy and the given
+strength (12, 18 or 24 words). Trezor Suite
+interface doesn't provide an option to choose how many words there should
 be in the generated mnemonic (recovery seed). It is hardcoded to 12
 words for Trezor Model T but if done with python's trezorctl command it
 can be chosen (for initialization with python's trezorctl command, 24
 words mnemonic is default). After showing mnemonic on the Trezor device,
-Trezor Model T requires 2 random words to
-be entered to the device to confirm the user has written down the
-mnemonic properly. If there are errors in entered words, the device
+Trezor Model T requires the user to enter several words at random positions
+in the mnemonic to confirm that the user has written down the
+mnemonic properly. If there are errors in the entered words, the device
 shows the recovery seed again. If the backup check is successful, the
-setup is finished. If the Trezor Wallet interface is used, user is asked
-to set the label and pin (setting up the pin can be skipped) for the
+setup is finished. If the Trezor Wallet interface is used, the user is asked
+to set the label and PIN (setting up the PIN can be skipped) for the
 wallet, this is optional when using python trezorctl command.
+
+The ResetDevice command supports two types of workflows.
+
+### Simple ResetDevice workflow
+
+1. H -> T `ResetDevice` (Host specifies strength, backup type, etc.)
+2. H <- T `EntropyRequest` (No parameters.)
+3. H -> T `EntropyAck` (Host provides external entropy.)
+4. H <- T `Success`
+
+###  Entropy check workflow
+
+The purpose of this workflow is for the host to verify that when Trezor
+generates the seed, it correctly includes the external entropy from the host.
+The host performs a randomized test asking Trezor to generate several seeds,
+checking that they were generated correctly and using the last one as the final
+seed. The workflow is triggered by setting `ResetDevice.entropy_check` to true.
+
+The host chooses a small random number *n*, e.g. from 1 to 5, and proceeds as follows:
+1. H -> T `ResetDevice` (Host specifies strength, backup type, etc.)
+2. H <- T `EntropyRequest` (Trezor commits to an internal entropy value.)
+3. H -> T `EntropyAck` (Host provides external entropy.)
+4. H <- T `EntropyCheckReady` (Trezor stores the seed in storage cache.)
+5. Host obtains the XPUBs for several accounts that the user intends to use:
+    1. H -> T `GetPublicKey`
+    2. H <- T `PublicKey`
+6. If this step was executed less than *n* times, then:
+    1. H -> T `EntropyCheckContinue(finish=False)` (Host instructs Trezor to prove seed correctness.)
+    2. H <- T `EntropyRequest` (Trezor reveals previous internal entropy and commits to a new internal entropy value.)
+    3. The host verifies that the entropy commitment is valid, derives the seed and checks that it produces the same XPUBs as Trezor provided in step 5.
+    4. Go to step 3.
+7. Host instructs trezor to store the current seed in flash memory.
+    1. H -> T `EntropyCheckContinue(finish=True)`
+    2. H <- T `Success`
+
+The host should record the XPUBs that it received in the last repetition of
+step 5. Every time the user connects the Trezor to the host, it should verify
+that the XPUBs for the given accounts remain the same in order to prevent a
+fake malicious Trezor from changing the seed.
+
+The purpose of Trezor's commitment to internal entropy is to enforce that
+Trezor chooses its internal entropy before the host provides the external
+entropy. This ensures that Trezor cannot choose its internal entropy based on
+the external entropy and manipulate the value of the resulting seed. The
+commitment is computed as
+`entropy_commitment=HMAC-SHA256(key=internal_entropy, msg="")`.
 
 ## RecoveryDevice
 
