@@ -40,6 +40,7 @@ typedef enum {
   MPU_MODE_SECRET,      // + secret area (priviledeg RW)
   MPU_MODE_STORAGE,     // + both storage areas (privilehed RW)
   MPU_MODE_ASSETS,      // + assets (privileged RW)
+  MPU_MODE_SAES,        // + unprivileged SAES code
   MPU_MODE_APP,         // + unprivileged DMA2D (RW) & Assets (RO)
 } mpu_mode_t;
 

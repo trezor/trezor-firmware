@@ -255,7 +255,8 @@ static void secret_optiga_cache(void) {
 secbool secret_optiga_set(const uint8_t secret[SECRET_OPTIGA_KEY_LEN]) {
   uint8_t secret_enc[SECRET_OPTIGA_KEY_LEN] = {0};
   if (sectrue != secure_aes_ecb_encrypt_hw(secret, sizeof(secret_enc),
-                                           secret_enc, SECURE_AES_KEY_DHUK)) {
+                                           secret_enc,
+                                           SECURE_AES_KEY_DHUK_SP)) {
     return secfalse;
   }
   secret_write(secret_enc, SECRET_OPTIGA_KEY_OFFSET, SECRET_OPTIGA_KEY_LEN);
@@ -282,7 +283,7 @@ secbool secret_optiga_get(uint8_t dest[SECRET_OPTIGA_KEY_LEN]) {
   }
 
   secbool res = secure_aes_ecb_decrypt_hw(
-      (uint8_t *)secret, SECRET_OPTIGA_KEY_LEN, dest, SECURE_AES_KEY_DHUK);
+      (uint8_t *)secret, SECRET_OPTIGA_KEY_LEN, dest, SECURE_AES_KEY_DHUK_SP);
 
   memzero(secret, sizeof(secret));
   return res;

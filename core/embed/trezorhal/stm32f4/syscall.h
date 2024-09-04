@@ -50,6 +50,9 @@ uint32_t invoke_app_callback(uint32_t args1, uint32_t arg2, uint32_t arg3,
 
 void return_from_app_callback(uint32_t retval, uint32_t* msp);
 
+// Invokes unprivileged function run
+uint32_t invoke_unpriv(void* func);
+
 #else  // KERNEL_MODE
 
 static inline uint32_t __attribute__((no_stack_protector))
