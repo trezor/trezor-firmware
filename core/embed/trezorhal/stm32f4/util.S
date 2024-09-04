@@ -2,6 +2,8 @@
 
   .text
 
+#ifdef KERNEL_MODE
+
   .global memset_reg
   .type memset_reg, STT_FUNC
 memset_reg:
@@ -10,10 +12,13 @@ memset_reg:
   // r1 - address of first word following the address in r0 to NOT write (exclusive)
   // r2 - word value to be written
   // both addresses in r0 and r1 needs to be divisible by 4!
+  cmp r0, r1
+  beq .L_loop_end
   .L_loop_begin:
     str r2, [r0], 4 // store the word in r2 to the address in r0, post-indexed
     cmp r0, r1
   bne .L_loop_begin
+  .L_loop_end:
   bx lr
 
   // Jump to address given in first argument R0 that points to next's stage's VTOR
@@ -42,13 +47,12 @@ jump_to_with_flag:
   cpsid f
   // wipe memory at the end of the current stage of code
   bl clear_otg_hs_memory
-  ldr r0, =ccmram_start // r0 - point to beginning of CCMRAM
-  ldr r1, =boot_args_start // r1 - point to byte after the end of CCMRAM
-  ldr r2, =0            // r2 - the word-sized value to be written
+  ldr r2, =0             // r2 - the word-sized value to be written
+  ldr r0, =_handoff_clear_ram_0_start
+  ldr r1, =_handoff_clear_ram_0_end
   bl memset_reg
-  ldr r0, =sram_start   // r0 - point to beginning of SRAM
-  ldr r1, =sram_end     // r1 - point to byte after the end of SRAM
-  ldr r2, =0            // r2 - the word-sized value to be written
+  ldr r0, =_handoff_clear_ram_1_start
+  ldr r1, =_handoff_clear_ram_1_end
   bl memset_reg
   mov lr, r4
   // clear out the general purpose registers before the next stage's except the register with flag R11
@@ -98,18 +102,19 @@ shutdown_privileged:
   mov r11, r0
   mov r12, r0
   ldr lr, =0xffffffff
-  ldr r0, =ccmram_start
-  ldr r1, =ccmram_end
-  // set to value in r2
+
+  ldr r0, =_shutdown_clear_ram_0_start
+  ldr r1, =_shutdown_clear_ram_0_end
   bl memset_reg
-  ldr r0, =sram_start
-  ldr r1, =sram_end
-  // set to value in r2
+  ldr r0, =_shutdown_clear_ram_1_start
+  ldr r1, =_shutdown_clear_ram_1_end
   bl memset_reg
   bl clear_otg_hs_memory
   ldr r0, =1
   msr control, r0 // jump to unprivileged mode
   ldr r0, =0
   b . // loop forever
+
+#endif
 
   .end

@@ -22,8 +22,11 @@
 #include <string.h>
 
 #include "applet.h"
+#include "bl_check.h"
 #include "board_capabilities.h"
 #include "bootutils.h"
+#include "button.h"
+#include "consumption_mask.h"
 #include "display.h"
 #include "dma2d.h"
 #include "entropy.h"
@@ -92,7 +95,7 @@ void drivers_init() {
   dma2d_init();
 #endif
 
-  display_init(DISPLAY_RETAIN_CONTENT);
+  display_init(DISPLAY_JUMP_BEHAVIOR);
 
 #ifdef STM32U5
   check_oem_keys();
@@ -114,7 +117,7 @@ void drivers_init() {
   entropy_init();
 
 #if PRODUCTION || BOOTLOADER_QA
-  // check_and_replace_bootloader();
+  check_and_replace_bootloader();
 #endif
 
 #ifdef USE_BUTTON
@@ -166,17 +169,24 @@ void drivers_init() {
 #endif
 }
 
+// defined in linker script
+extern uint32_t _codelen;
+extern uint32_t _coreapp_clear_ram_0_start;
+extern uint32_t _coreapp_clear_ram_0_size;
+extern uint32_t _coreapp_clear_ram_1_start;
+extern uint32_t _coreapp_clear_ram_1_size;
+#define KERNEL_SIZE (uint32_t) & _codelen
+
 // Initializes coreapp applet
 static void coreapp_init(applet_t *applet) {
   applet_header_t *coreapp_header =
-      (applet_header_t *)(COREAPP_START + IMAGE_HEADER_SIZE + 0x0400);
+      (applet_header_t *)COREAPP_CODE_ALIGN(KERNEL_START + KERNEL_SIZE);
 
   applet_layout_t coreapp_layout = {
-      0
-      /*  .data1_start = COREAPP_RAM1_START,
-        .data1_size = COREAPP_RAM1_SIZE,
-        .data2_start = COREAPP_RAM2_START,
-        .data2_size = COREAPP_RAM2_SIZE,*/
+      .data1_start = (uint32_t)&_coreapp_clear_ram_0_start,
+      .data1_size = (uint32_t)&_coreapp_clear_ram_0_size,
+      .data2_start = (uint32_t)&_coreapp_clear_ram_1_start,
+      .data2_size = (uint32_t)&_coreapp_clear_ram_1_size,
   };
 
   applet_init(applet, coreapp_header, &coreapp_layout);

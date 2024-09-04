@@ -76,8 +76,9 @@ A Python package that exposes certain functionalities as CLI commands.
 
 `headertool` and `combine_firmware` live here, more may be moved or added.
 
-One additional tool is `layout_parser`, which is used to extract memory layout
-information from a model `.h` file.
+Additional tools are `layout_parser`, which is used to extract memory layout
+information from a model `.h` file, and related tool `lsgen` to generate linker script files
+from the model `.h`.
 
 ### `alloc.py`
 

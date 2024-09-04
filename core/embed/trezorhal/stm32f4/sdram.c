@@ -16,10 +16,12 @@
  *
  ******************************************************************************
  */
+#ifdef KERNEL_MODE
 
 /* Includes ------------------------------------------------------------------*/
 #include "sdram.h"
 #include "irq.h"
+#include "mpu.h"
 
 /** @addtogroup BSP
  * @{
@@ -90,6 +92,8 @@ void BSP_SDRAM_MspInit(SDRAM_HandleTypeDef *hsdram, void *Params);
 void sdram_init(void) {
   static uint8_t sdramstatus = SDRAM_ERROR;
 
+  mpu_mode_t mode = mpu_reconfig(MPU_MODE_FSMC_REGS);
+
   /* SDRAM device configuration */
   SdramHandle.Instance = FMC_SDRAM_DEVICE;
 
@@ -136,6 +140,8 @@ void sdram_init(void) {
 
   /* SDRAM initialization sequence */
   BSP_SDRAM_Initialization_sequence(REFRESH_COUNT);
+
+  mpu_restore(mode);
 
   (void)sdramstatus;
 }
@@ -444,3 +450,5 @@ void BSP_SDRAM_MspDeInit(SDRAM_HandleTypeDef *hsdram, void *Params) {
 /**
  * @}
  */
+
+#endif

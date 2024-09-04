@@ -286,8 +286,6 @@ void display_ensure_refreshed(void) {
 #endif
 }
 
-#endif  // KERNEL_MODE
-
 void display_fill(const gfx_bitblt_t *bb) {
   display_fb_info_t fb = display_get_frame_buffer();
 
@@ -343,3 +341,5 @@ void display_copy_mono4(const gfx_bitblt_t *bb) {
 
   gfx_rgb565_copy_mono4(&bb_new);
 }
+
+#endif  // KERNEL_MODE
