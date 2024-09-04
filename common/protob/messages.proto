@@ -45,6 +45,8 @@ enum MessageType {
     MessageType_BackupDevice = 34 [(bitcoin_only) = true, (wire_in) = true];
     MessageType_EntropyRequest = 35 [(bitcoin_only) = true, (wire_out) = true];
     MessageType_EntropyAck = 36 [(bitcoin_only) = true, (wire_in) = true];
+    MessageType_EntropyCheckReady = 994 [(bitcoin_only) = true, (wire_out) = true];
+    MessageType_EntropyCheckContinue = 995 [(bitcoin_only) = true, (wire_in) = true];
     MessageType_PassphraseRequest = 41 [(bitcoin_only) = true, (wire_out) = true];
     MessageType_PassphraseAck = 42 [(bitcoin_only) = true, (wire_in) = true, (wire_tiny) = true, (wire_no_fsm) = true];
     MessageType_RecoveryDevice = 45 [(bitcoin_only) = true, (wire_in) = true];
