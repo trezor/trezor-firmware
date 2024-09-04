@@ -206,7 +206,6 @@ static void mpu_init_fixed_regions(void) {
   SET_REGION( 2, BOOTLOADER_START,         BOOTLOADER_SIZE,    FLASH_DATA,  YES,    NO );
   SET_REGION( 3, FIRMWARE_START,           FIRMWARE_SIZE,      FLASH_DATA,  YES,    NO );
   DIS_REGION( 4 );
-  SET_REGION( 5, GRAPHICS_START,           GRAPHICS_SIZE,      SRAM,        YES,    NO );
 #endif
 #if defined(BOOTLOADER)
   //   REGION    ADDRESS                   SIZE                TYPE       WRITE   UNPRIV
@@ -215,7 +214,6 @@ static void mpu_init_fixed_regions(void) {
   SET_REGION( 2, FIRMWARE_START,           FIRMWARE_SIZE,      FLASH_DATA,  YES,    NO );
   DIS_REGION( 3 );
   DIS_REGION( 4 );
-  SET_REGION( 5, GRAPHICS_START,           GRAPHICS_SIZE,      SRAM,        YES,    NO );
 #endif
 #if defined(KERNEL)
   //   REGION    ADDRESS                   SIZE                TYPE       WRITE   UNPRIV
@@ -224,7 +222,6 @@ static void mpu_init_fixed_regions(void) {
   SET_REGION( 2, COREAPP_FLASH_START,      COREAPP_FLASH_SIZE, FLASH_CODE,   NO,   YES ); // CoreApp Code
   SET_REGION( 3, COREAPP_RAM1_START,       COREAPP_RAM1_SIZE,  SRAM,        YES,   YES ); // SRAM1
   SET_REGION( 4, COREAPP_RAM2_START,       COREAPP_RAM2_SIZE,  SRAM,        YES,   YES ); // SRAM2/3/5
-  SET_REGION( 5, GRAPHICS_START,           GRAPHICS_SIZE,      SRAM,        YES,   YES ); // Frame buffer or display interface
 #endif
 #if defined(FIRMWARE)
   //   REGION    ADDRESS                   SIZE                TYPE       WRITE   UNPRIV
@@ -233,7 +230,6 @@ static void mpu_init_fixed_regions(void) {
   DIS_REGION( 2 );
   DIS_REGION( 3 );
   DIS_REGION( 4 );
-  SET_REGION( 5, GRAPHICS_START,           GRAPHICS_SIZE,      SRAM,        YES,    NO );
 #endif
 #if defined(TREZOR_PRODTEST)
   SET_REGION( 0, FIRMWARE_START,         1024,                 FLASH_DATA,  YES,    NO );
@@ -241,11 +237,11 @@ static void mpu_init_fixed_regions(void) {
   SET_REGION( 2, SRAM1_BASE,               SRAM_SIZE,          SRAM,        YES,    NO );
   DIS_REGION( 3 );
   DIS_REGION( 4 );
-  SET_REGION( 5, GRAPHICS_START,           GRAPHICS_SIZE,      SRAM,        YES,    NO );
 #endif
 
   // Regions #6 and #7 are banked
 
+  DIS_REGION( 5 );
   DIS_REGION( 6 );
   DIS_REGION( 7 );
   // clang-format on
@@ -299,9 +295,12 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
 
   // clang-format off
   switch (mode) {
+    case MPU_MODE_SAES:
+      SET_REGION( 5, PERIPH_BASE_NS,           SIZE_512M,          PERIPHERAL,  YES,   YES ); // Peripherals - SAES, TAMP
+      break;
     default:
-      SET_REGION( 5, GRAPHICS_START,           GRAPHICS_SIZE,      SRAM,  YES,    YES ); // Peripherals
-    break;
+      SET_REGION( 5, GRAPHICS_START,           GRAPHICS_SIZE,      SRAM,  YES,    YES ); // Frame buffer or display interface
+      break;
   }
   // clang-format on
 
@@ -334,6 +333,9 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
     case MPU_MODE_ASSETS:
       SET_REGION( 6, ASSETS_START,             ASSETS_SIZE,        FLASH_DATA,  YES,    NO );
       break;
+    case MPU_MODE_SAES:
+      SET_REGION( 6, KERNEL_FLASH_U_START,     KERNEL_FLASH_U_SIZE,FLASH_CODE,   NO,   YES ); // Unprivileged kernal flash
+      break;
     case MPU_MODE_APP:
       SET_REGION( 6, ASSETS_START,             ASSETS_SIZE,        FLASH_DATA,   NO,   YES );
       break;
@@ -347,8 +349,11 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
 
   // clang-format off
   switch (mode) {
-    case MPU_MODE_APP:
       //      REGION   ADDRESS                 SIZE                TYPE       WRITE   UNPRIV
+    case MPU_MODE_SAES:
+      SET_REGION( 7, KERNEL_RAM_U_START,       KERNEL_RAM_U_SIZE,  SRAM,        YES,   YES ); // Unprivileged kernel SRAM
+      break;
+    case MPU_MODE_APP:
       // DMA2D peripherals (Uprivileged, Read-Write, Non-Executable)
       SET_REGION( 7, 0x5002B000,               SIZE_3K,            PERIPHERAL,  YES,   YES );
       break;
