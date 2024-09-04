@@ -106,7 +106,6 @@ def select_number_of_words(
             raise ValueError("Invalid num_of_words")
         return debug.click(coords)
 
-
     if debug.layout_type is LayoutType.TT:
         TR.assert_equals(debug.read_layout().text_content(), "recovery__num_of_words")
         layout = select_tt()

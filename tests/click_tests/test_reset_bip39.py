@@ -20,8 +20,8 @@ import pytest
 
 from trezorlib import device, messages
 
-from ..common import WITH_MOCK_URANDOM
 from .. import translations as TR
+from ..common import WITH_MOCK_URANDOM
 from . import reset
 from .common import go_next
 
