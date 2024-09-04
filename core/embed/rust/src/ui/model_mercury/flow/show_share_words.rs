@@ -8,20 +8,20 @@ use crate::{
         component::{
             swipe_detect::SwipeSettings,
             text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs, VecExt},
-            ButtonRequestExt, ComponentExt, SwipeDirection,
+            ButtonRequestExt, ComponentExt, EventCtx, SwipeDirection,
         },
         flow::{
             base::{DecisionBuilder as _, StateChange},
             FlowMsg, FlowState, SwipeFlow,
         },
         layout::obj::LayoutObj,
-        model_mercury::component::SwipeContent,
+        model_mercury::component::{InternallySwipable, InternallySwipableContent, SwipeContent},
     },
 };
 use heapless::Vec;
 
 use super::super::{
-    component::{Frame, FrameMsg, PromptScreen, ShareWords},
+    component::{Footer, Frame, FrameMsg, Header, PromptScreen, ShareWords},
     theme,
 };
 
@@ -65,6 +65,24 @@ pub extern "C" fn new_show_share_words(n_args: usize, args: *const Obj, kwargs: 
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, ShowShareWords::new_obj) }
 }
 
+fn header_updating_func(
+    content: &InternallySwipableContent<ShareWords>,
+    ctx: &mut EventCtx,
+    header: &mut Header,
+) {
+    let (subtitle, subtitle_style) = content.inner().subtitle();
+    header.update_subtitle(ctx, subtitle, Some(*subtitle_style));
+}
+fn footer_updating_func(
+    content: &InternallySwipableContent<ShareWords>,
+    ctx: &mut EventCtx,
+    footer: &mut Footer,
+) {
+    let current_page = content.inner().current_page();
+    let total_pages = content.inner().num_pages();
+    footer.update_page_counter(ctx, current_page, Some(total_pages));
+}
+
 impl ShowShareWords {
     fn new_obj(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Error> {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
@@ -77,7 +95,6 @@ impl ShowShareWords {
             .and_then(|desc: TString| if desc.is_empty() { None } else { Some(desc) });
         let text_info: Obj = kwargs.get(Qstr::MP_QSTR_text_info)?;
         let text_confirm: TString = kwargs.get(Qstr::MP_QSTR_text_confirm)?.try_into()?;
-        let highlight_repeated: bool = kwargs.get(Qstr::MP_QSTR_highlight_repeated)?.try_into()?;
         let nwords = share_words_vec.len();
 
         let mut instructions_paragraphs = ParagraphVecShort::new();
@@ -101,8 +118,19 @@ impl ShowShareWords {
         .one_button_request(ButtonRequestCode::ResetDevice.with_name("share_words"))
         .with_pages(move |_| nwords + 2);
 
-        let content_words =
-            ShareWords::new(title, subtitle, share_words_vec, highlight_repeated).map(|_| None);
+        let n_words = share_words_vec.len();
+        let content_words = Frame::left_aligned(
+            title,
+            InternallySwipableContent::new(ShareWords::new(share_words_vec, subtitle)),
+        )
+        .with_swipe(SwipeDirection::Up, SwipeSettings::default())
+        .with_swipe(SwipeDirection::Down, SwipeSettings::default())
+        .with_vertical_pages()
+        .with_subtitle(subtitle)
+        .register_header_update_fn(header_updating_func)
+        .with_footer_counter(TR::instructions__swipe_up.into(), n_words as u8)
+        .register_footer_update_fn(footer_updating_func)
+        .map(|_| None);
 
         let content_confirm = Frame::left_aligned(
             text_confirm,
