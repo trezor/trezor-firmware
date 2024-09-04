@@ -57,6 +57,13 @@ uint32_t invoke_app_callback(uint32_t args1, uint32_t arg2, uint32_t arg3,
 // the stack pointer and returns control to the privileged caller.
 void return_from_app_callback(uint32_t retval, uint32_t* msp);
 
+// Invokes an unprivileged function from privileged mode.
+//
+// This is a *temporary* helper function used to control the STM32 SAES
+// peripheral from unprivileged mode for backward compatibility (due to
+// different hardware keys being used in privileged and unprivileged modes).
+uint32_t invoke_unpriv(void* func);
+
 #else  // KERNEL_MODE
 
 static inline uint32_t __attribute__((no_stack_protector))
@@ -199,6 +206,8 @@ syscall_invoke6(uint32_t arg1, uint32_t arg2, uint32_t arg3, uint32_t arg4,
   return ret;
 }
 
+#endif  // KERNEL_MODE
+
 static inline void __attribute__((no_stack_protector))
 syscall_return_from_callback(uint32_t retval) {
   register uint32_t r0 __asm__("r0") = retval;
@@ -207,7 +216,5 @@ syscall_return_from_callback(uint32_t retval) {
                    : [svid] "i"(SVC_CALLBACK_RETURN), "r"(r0)
                    : "memory");
 }
-
-#endif  // KERNEL_MODE
 
 #endif  // TREZORHAL_SYSCALL_H
