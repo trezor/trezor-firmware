@@ -10,7 +10,7 @@ use crate::{
             ComponentExt, EventCtx, SwipeDirection,
         },
         flow::{
-            base::{DecisionBuilder as _, StateChange},
+            base::{Decision, DecisionBuilder as _},
             FlowController, FlowMsg, SwipeFlow, SwipePage,
         },
         layout::obj::LayoutObj,
@@ -45,7 +45,7 @@ impl FlowController for ConfirmFido {
         *self as usize
     }
 
-    fn handle_swipe(&'static self, direction: SwipeDirection) -> StateChange {
+    fn handle_swipe(&'static self, direction: SwipeDirection) -> Decision {
         match (self, direction) {
             (Self::Intro, SwipeDirection::Left) => Self::Menu.swipe(direction),
             (Self::Intro, SwipeDirection::Up) => Self::ChooseCredential.swipe(direction),
@@ -56,9 +56,9 @@ impl FlowController for ConfirmFido {
         }
     }
 
-    fn handle_event(&'static self, msg: FlowMsg) -> StateChange {
+    fn handle_event(&'static self, msg: FlowMsg) -> Decision {
         match (self, msg) {
-            (_, FlowMsg::Info) => Self::Menu.transit(),
+            (_, FlowMsg::Info) => Self::Menu.goto(),
             (Self::Menu, FlowMsg::Choice(0)) => self.return_msg(FlowMsg::Cancelled),
             (Self::Menu, FlowMsg::Cancelled) => {
                 if Self::single_cred() {

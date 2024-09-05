@@ -14,8 +14,8 @@ use crate::{
             ComponentExt, EventCtx, SwipeDirection,
         },
         flow::{
-            base::{DecisionBuilder as _, StateChange},
-            FlowMsg, FlowController, SwipeFlow, SwipePage,
+            base::{Decision, DecisionBuilder as _},
+            FlowController, FlowMsg, SwipeFlow, SwipePage,
         },
         layout::{obj::LayoutObj, util::RecoveryType},
     },
@@ -58,7 +58,7 @@ impl FlowController for ContinueRecoveryBeforeShares {
         *self as usize
     }
 
-    fn handle_swipe(&'static self, direction: SwipeDirection) -> StateChange {
+    fn handle_swipe(&'static self, direction: SwipeDirection) -> Decision {
         match (self, direction) {
             (Self::Main, SwipeDirection::Left) => Self::Menu.swipe(direction),
             (Self::Menu, SwipeDirection::Right) => Self::Main.swipe(direction),
@@ -67,9 +67,9 @@ impl FlowController for ContinueRecoveryBeforeShares {
         }
     }
 
-    fn handle_event(&'static self, msg: FlowMsg) -> StateChange {
+    fn handle_event(&'static self, msg: FlowMsg) -> Decision {
         match (self, msg) {
-            (Self::Main, FlowMsg::Info) => Self::Menu.transit(),
+            (Self::Main, FlowMsg::Info) => Self::Menu.goto(),
             (Self::Menu, FlowMsg::Cancelled) => Self::Main.swipe_right(),
             (Self::Menu, FlowMsg::Choice(0)) => self.return_msg(FlowMsg::Cancelled),
             _ => self.do_nothing(),
@@ -83,7 +83,7 @@ impl FlowController for ContinueRecoveryBetweenShares {
         *self as usize
     }
 
-    fn handle_swipe(&'static self, direction: SwipeDirection) -> StateChange {
+    fn handle_swipe(&'static self, direction: SwipeDirection) -> Decision {
         match (self, direction) {
             (Self::Main, SwipeDirection::Left) => Self::Menu.swipe(direction),
             (Self::Menu, SwipeDirection::Right) => Self::Main.swipe(direction),
@@ -95,12 +95,12 @@ impl FlowController for ContinueRecoveryBetweenShares {
         }
     }
 
-    fn handle_event(&'static self, msg: FlowMsg) -> StateChange {
+    fn handle_event(&'static self, msg: FlowMsg) -> Decision {
         match (self, msg) {
-            (Self::Main, FlowMsg::Info) => Self::Menu.transit(),
+            (Self::Main, FlowMsg::Info) => Self::Menu.goto(),
             (Self::Menu, FlowMsg::Choice(0)) => Self::CancelIntro.swipe_left(),
             (Self::Menu, FlowMsg::Cancelled) => Self::Main.swipe_right(),
-            (Self::CancelIntro, FlowMsg::Cancelled) => Self::Menu.transit(),
+            (Self::CancelIntro, FlowMsg::Cancelled) => Self::Menu.goto(),
             (Self::CancelConfirm, FlowMsg::Cancelled) => Self::CancelIntro.swipe_right(),
             (Self::CancelConfirm, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Cancelled),
             _ => self.do_nothing(),
@@ -108,13 +108,13 @@ impl FlowController for ContinueRecoveryBetweenShares {
     }
 }
 
-impl FlowState for ContinueRecoveryBetweenSharesAdvanced {
+impl FlowController for ContinueRecoveryBetweenSharesAdvanced {
     #[inline]
     fn index(&'static self) -> usize {
         *self as usize
     }
 
-    fn handle_swipe(&'static self, direction: SwipeDirection) -> StateChange {
+    fn handle_swipe(&'static self, direction: SwipeDirection) -> Decision {
         match (self, direction) {
             (Self::Main, SwipeDirection::Left) => Self::Menu.swipe(direction),
             (Self::Menu, SwipeDirection::Right) => Self::Main.swipe(direction),
@@ -127,16 +127,16 @@ impl FlowState for ContinueRecoveryBetweenSharesAdvanced {
         }
     }
 
-    fn handle_event(&'static self, msg: FlowMsg) -> StateChange {
+    fn handle_event(&'static self, msg: FlowMsg) -> Decision {
         match (self, msg) {
-            (Self::Main, FlowMsg::Info) => Self::Menu.transit(),
-            (Self::Menu, FlowMsg::Choice(0)) => Self::RemainingShares.transit(),
+            (Self::Main, FlowMsg::Info) => Self::Menu.goto(),
+            (Self::Menu, FlowMsg::Choice(0)) => Self::RemainingShares.goto(),
             (Self::Menu, FlowMsg::Choice(1)) => Self::CancelIntro.swipe_left(),
             (Self::Menu, FlowMsg::Cancelled) => Self::Main.swipe_right(),
-            (Self::CancelIntro, FlowMsg::Cancelled) => Self::Menu.transit(),
+            (Self::CancelIntro, FlowMsg::Cancelled) => Self::Menu.goto(),
             (Self::CancelConfirm, FlowMsg::Cancelled) => Self::CancelIntro.swipe_right(),
             (Self::CancelConfirm, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Cancelled),
-            (Self::RemainingShares, FlowMsg::Cancelled) => Self::Menu.transit(),
+            (Self::RemainingShares, FlowMsg::Cancelled) => Self::Menu.goto(),
             _ => self.do_nothing(),
         }
     }

@@ -11,8 +11,8 @@ use crate::{
             ButtonRequestExt, ComponentExt, Qr, SwipeDirection,
         },
         flow::{
-            base::{DecisionBuilder as _, StateChange},
-            FlowMsg, FlowController, SwipeFlow, SwipePage,
+            base::{Decision, DecisionBuilder as _},
+            FlowController, FlowMsg, SwipeFlow, SwipePage,
         },
         layout::{obj::LayoutObj, util::ConfirmBlob},
     },
@@ -46,7 +46,7 @@ impl FlowController for GetAddress {
         *self as usize
     }
 
-    fn handle_swipe(&'static self, direction: SwipeDirection) -> StateChange {
+    fn handle_swipe(&'static self, direction: SwipeDirection) -> Decision {
         match (self, direction) {
             (Self::Address, SwipeDirection::Left) => Self::Menu.swipe(direction),
             (Self::Address, SwipeDirection::Up) => Self::Tap.swipe(direction),
@@ -63,9 +63,9 @@ impl FlowController for GetAddress {
         }
     }
 
-    fn handle_event(&'static self, msg: FlowMsg) -> StateChange {
+    fn handle_event(&'static self, msg: FlowMsg) -> Decision {
         match (self, msg) {
-            (Self::Address, FlowMsg::Info) => Self::Menu.transit(),
+            (Self::Address, FlowMsg::Info) => Self::Menu.goto(),
             (Self::Tap, FlowMsg::Confirmed) => Self::Confirmed.swipe_up(),
             (Self::Tap, FlowMsg::Info) => Self::Menu.swipe_left(),
             (Self::Confirmed, _) => self.return_msg(FlowMsg::Confirmed),
@@ -73,11 +73,11 @@ impl FlowController for GetAddress {
             (Self::Menu, FlowMsg::Choice(1)) => Self::AccountInfo.swipe_left(),
             (Self::Menu, FlowMsg::Choice(2)) => Self::Cancel.swipe_left(),
             (Self::Menu, FlowMsg::Cancelled) => Self::Address.swipe_right(),
-            (Self::QrCode, FlowMsg::Cancelled) => Self::Menu.transit(),
-            (Self::AccountInfo, FlowMsg::Cancelled) => Self::Menu.transit(),
-            (Self::Cancel, FlowMsg::Cancelled) => Self::Menu.transit(),
+            (Self::QrCode, FlowMsg::Cancelled) => Self::Menu.goto(),
+            (Self::AccountInfo, FlowMsg::Cancelled) => Self::Menu.goto(),
+            (Self::Cancel, FlowMsg::Cancelled) => Self::Menu.goto(),
             (Self::CancelTap, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Cancelled),
-            (Self::CancelTap, FlowMsg::Cancelled) => Self::Menu.transit(),
+            (Self::CancelTap, FlowMsg::Cancelled) => Self::Menu.goto(),
             _ => self.do_nothing(),
         }
     }

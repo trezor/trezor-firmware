@@ -10,8 +10,8 @@ use crate::{
             ComponentExt, SwipeDirection,
         },
         flow::{
-            base::{DecisionBuilder as _, StateChange},
-            FlowMsg, FlowController, SwipeFlow,
+            base::{Decision, DecisionBuilder as _},
+            FlowController, FlowMsg, SwipeFlow,
         },
         layout::obj::LayoutObj,
     },
@@ -38,7 +38,7 @@ impl FlowController for ConfirmFirmwareUpdate {
         *self as usize
     }
 
-    fn handle_swipe(&'static self, direction: SwipeDirection) -> StateChange {
+    fn handle_swipe(&'static self, direction: SwipeDirection) -> Decision {
         match (self, direction) {
             (Self::Intro, SwipeDirection::Left) => Self::Menu.swipe(direction),
             (Self::Intro, SwipeDirection::Up) => Self::Confirm.swipe(direction),
@@ -50,15 +50,15 @@ impl FlowController for ConfirmFirmwareUpdate {
         }
     }
 
-    fn handle_event(&'static self, msg: FlowMsg) -> StateChange {
+    fn handle_event(&'static self, msg: FlowMsg) -> Decision {
         match (self, msg) {
-            (Self::Intro, FlowMsg::Info) => Self::Menu.transit(),
+            (Self::Intro, FlowMsg::Info) => Self::Menu.goto(),
             (Self::Menu, FlowMsg::Cancelled) => Self::Intro.swipe_right(),
-            (Self::Menu, FlowMsg::Choice(0)) => Self::Fingerprint.transit(),
+            (Self::Menu, FlowMsg::Choice(0)) => Self::Fingerprint.goto(),
             (Self::Menu, FlowMsg::Choice(1)) => self.return_msg(FlowMsg::Cancelled),
-            (Self::Fingerprint, FlowMsg::Cancelled) => Self::Menu.transit(),
+            (Self::Fingerprint, FlowMsg::Cancelled) => Self::Menu.goto(),
             (Self::Confirm, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Confirmed),
-            (Self::Confirm, FlowMsg::Info) => Self::Menu.transit(),
+            (Self::Confirm, FlowMsg::Info) => Self::Menu.goto(),
             _ => self.do_nothing(),
         }
     }

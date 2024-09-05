@@ -10,8 +10,8 @@ use crate::{
             ComponentExt, SwipeDirection,
         },
         flow::{
-            base::{DecisionBuilder as _, StateChange},
-            FlowMsg, FlowController, SwipeFlow,
+            base::{Decision, DecisionBuilder as _},
+            FlowController, FlowMsg, SwipeFlow,
         },
         layout::obj::LayoutObj,
     },
@@ -38,7 +38,7 @@ impl FlowController for PromptBackup {
         *self as usize
     }
 
-    fn handle_swipe(&'static self, direction: SwipeDirection) -> StateChange {
+    fn handle_swipe(&'static self, direction: SwipeDirection) -> Decision {
         match (self, direction) {
             (Self::Intro, SwipeDirection::Left) => Self::Menu.swipe(direction),
             (Self::Intro, SwipeDirection::Up) => self.return_msg(FlowMsg::Confirmed),
@@ -53,12 +53,12 @@ impl FlowController for PromptBackup {
         }
     }
 
-    fn handle_event(&'static self, msg: FlowMsg) -> StateChange {
+    fn handle_event(&'static self, msg: FlowMsg) -> Decision {
         match (self, msg) {
-            (Self::Intro, FlowMsg::Info) => Self::Menu.transit(),
+            (Self::Intro, FlowMsg::Info) => Self::Menu.goto(),
             (Self::Menu, FlowMsg::Choice(0)) => Self::SkipBackupIntro.swipe_left(),
             (Self::Menu, FlowMsg::Cancelled) => Self::Intro.swipe_right(),
-            (Self::SkipBackupIntro, FlowMsg::Cancelled) => Self::Menu.transit(),
+            (Self::SkipBackupIntro, FlowMsg::Cancelled) => Self::Menu.goto(),
             (Self::SkipBackupConfirm, FlowMsg::Cancelled) => Self::SkipBackupIntro.swipe_right(),
             (Self::SkipBackupConfirm, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Cancelled),
             _ => self.do_nothing(),
