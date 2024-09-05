@@ -85,6 +85,27 @@ def multisig_get_pubkey(n: HDNodeType, p: paths.Bip32Path) -> bytes:
     return node.public_key()
 
 
+def multisig_get_dummy_pubkey(multisig: MultisigRedeemScriptType) -> bytes:
+    from trezor.crypto import bip32
+
+    # The following encodes this xpub into an HDNode. It is the NUMS point suggested
+    # in BIP341, with a chaincode of 32 0 bytes. Deriving a pubkey from this node
+    # results in a provably unspendable pubkey.
+    # https://delvingbitcoin.org/t/unspendable-keys-in-descriptors/304
+    # xpub661MyMwAqRbcEYS8w7XLSVeEsBXy79zSzH1J8vCdxAZningWLdN3zgtU6QgnecKFpJFPpdzxKrwoaZoV44qAJewsc4kX9vGaCaBExuvJH57
+    node = bip32.HDNode(
+        depth=0,
+        fingerprint=2084970077,
+        child_num=0,
+        chain_code=b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00",
+        public_key=b"\x02P\x92\x9bt\xc1\xa0IT\xb7\x8bK`5\xe9z^\x07\x8aZ\x0f(\xec\x96\xd5G\xbf\xee\x9a\xce\x80:\xc0",
+    )
+
+    for i in multisig.address_n:
+        node.derive(i, True)
+    return node.public_key()
+
+
 def multisig_get_pubkeys(multisig: MultisigRedeemScriptType) -> list[bytes]:
     validate_multisig(multisig)
     if multisig.nodes:

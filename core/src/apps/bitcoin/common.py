@@ -60,6 +60,9 @@ BIP32_WALLET_DEPTH = const(2)
 # Bitcoin opcodes
 OP_0 = const(0x00)
 OP_1 = const(0x51)
+OP_CHECKSIG = const(0xAC)
+OP_CHECKSIGADD = const(0xBA)
+OP_NUMEQUAL = const(0x9C)
 
 # supported witness versions for bech32 addresses
 _BECH32_WITVERS = (0, 1)
@@ -103,6 +106,8 @@ NONSEGWIT_INPUT_SCRIPT_TYPES = (
     InputScriptType.SPENDMULTISIG,
 )
 
+LEAF_VERSION = const(0xC0)
+
 
 def ecdsa_sign(node: bip32.HDNode, digest: bytes) -> bytes:
     from trezor.crypto import der
@@ -117,6 +122,25 @@ def bip340_sign(node: bip32.HDNode, digest: bytes) -> bytes:
     internal_private_key = node.private_key()
     output_private_key = bip340.tweak_secret_key(internal_private_key)
     return bip340.sign(output_private_key, digest)
+
+
+def p2tr_multisig_leaf_hash(pubkeys: list[bytes], m: int) -> bytes:
+    from .scripts import write_output_script_multisig_taproot
+
+    hash_writer = tagged_hashwriter(b"TapLeaf")
+    hash_writer.append(LEAF_VERSION)
+
+    write_output_script_multisig_taproot(hash_writer, pubkeys, m)
+
+    return hash_writer.get_digest()
+
+
+def p2tr_multisig_tweaked_pubkey(
+    pubkeys: list[bytes], internal_pubkey: bytes, m: int
+) -> tuple[int, bytes]:
+    leaf_hash = p2tr_multisig_leaf_hash(pubkeys, m)
+
+    return bip340.tweak_public_key(internal_pubkey[1:], leaf_hash)
 
 
 def ecdsa_hash_pubkey(pubkey: bytes, coin: CoinInfo) -> bytes:
