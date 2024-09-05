@@ -289,9 +289,9 @@ void real_jump_to_firmware(void) {
   ensure(check_image_header_sig(hdr, vhdr.vsig_m, vhdr.vsig_n, vhdr.vpub),
          "Firmware is corrupted");
 
-  ensure(check_firmware_min_version(hdr->version),
+  ensure(check_firmware_min_version(hdr->monotonic),
          "Firmware downgrade protection");
-  ensure_firmware_min_version(hdr->version);
+  ensure_firmware_min_version(hdr->monotonic);
 
   ensure(check_image_contents(hdr, IMAGE_HEADER_SIZE + vhdr.hdrlen,
                               &FIRMWARE_AREA),
