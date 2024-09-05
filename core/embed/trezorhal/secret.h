@@ -56,6 +56,9 @@ secbool secret_optiga_get(uint8_t dest[SECRET_OPTIGA_KEY_LEN]);
 // Checks if the optiga pairing secret is present in the secret storage
 secbool secret_optiga_present(void);
 
+// Checks if the optiga pairing secret can be written to the secret storage
+secbool secret_optiga_writable(void);
+
 // Erases optiga pairing secret from the secret storage
 void secret_optiga_erase(void);
 

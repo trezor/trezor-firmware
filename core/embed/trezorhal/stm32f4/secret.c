@@ -102,6 +102,8 @@ secbool secret_optiga_present(void) {
   return (sectrue != secret_wiped()) * sectrue;
 }
 
+secbool secret_optiga_writable(void) { return secret_wiped(); }
+
 void secret_optiga_erase(void) { secret_erase(); }
 
 void secret_prepare_fw(secbool allow_run_with_secret, secbool _trust_all) {
