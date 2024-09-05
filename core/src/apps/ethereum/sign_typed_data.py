@@ -374,7 +374,6 @@ class TypedDataEnvelope:
         for i in range(array_size):
             field_member_path[-1] = i
 
-            # TODO: we do not support arrays of arrays, check if we should
             if entry_type.data_type == EthereumDataType.STRUCT:
                 assert entry_type.struct_name is not None  # validate_field_type
 
@@ -385,6 +384,17 @@ class TypedDataEnvelope:
                     show_array,
                     current_parent_objects,
                     is_array_member=True,
+                )
+
+            elif entry_type.data_type == EthereumDataType.ARRAY:
+                await self.encode_array(
+                    arr_w,
+                    array_name,
+                    entry_type,
+                    field_member_path,
+                    show_array,
+                    parent_objects,
+                    current_parent_objects,
                 )
 
             else:
