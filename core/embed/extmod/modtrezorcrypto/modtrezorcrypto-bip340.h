@@ -164,9 +164,10 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorcrypto_bip340_verify_obj,
 /// def tweak_public_key(
 ///     public_key: bytes,
 ///     root_hash: bytes | None = None,
-/// ) -> bytes:
+/// ) -> tuple[int, bytes]:
 ///     """
 ///     Tweaks the public key with the specified root_hash.
+///     First element of tuple is the parity, second is the tweaked public key.
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_bip340_tweak_public_key(size_t n_args,
                                                          const mp_obj_t *args) {
@@ -188,13 +189,19 @@ STATIC mp_obj_t mod_trezorcrypto_bip340_tweak_public_key(size_t n_args,
 
   vstr_t tpk = {0};
   vstr_init_len(&tpk, 32);
+  int parity = 0;
   int ret = zkp_bip340_tweak_public_key((const uint8_t *)pk.buf, rh_ptr,
-                                        (uint8_t *)tpk.buf);
+                                        (uint8_t *)tpk.buf, &parity);
   if (ret != 0) {
     vstr_clear(&tpk);
     mp_raise_ValueError("Failed to tweak public key");
   }
-  return mp_obj_new_str_from_vstr(&mp_type_bytes, &tpk);
+
+  mp_obj_t result[2];
+  result[0] = mp_obj_new_int(parity);
+  result[1] = mp_obj_new_str_from_vstr(&mp_type_bytes, &tpk);
+
+  return mp_obj_new_tuple(2, result);
 }
 
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(

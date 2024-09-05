@@ -10587,7 +10587,7 @@ START_TEST(test_zkp_bip340_tweak) {
     ck_assert_int_eq(res, 0);
     ck_assert_mem_eq(output_priv, result, 32);
 
-    res = zkp_bip340_tweak_public_key(internal_pub, root_hash, result);
+    res = zkp_bip340_tweak_public_key(internal_pub, root_hash, result, NULL);
     ck_assert_int_eq(res, 0);
     ck_assert_mem_eq(output_pub, result, 32);
   }
