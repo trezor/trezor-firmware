@@ -6,6 +6,9 @@ on:
   schedule:
     - cron: '13 23 * * *'  # every day @ 23:13
 
+env:
+  CARGOLOCK_COMMENT: Looks like you changed `Cargo.lock`. Please make sure to review the dependencies and update [internal version list](https://www.notion.so/satoshilabs/Rust-dependencies-a9cc6e8dab934def8eb27896c001e6e2).
+
 jobs:
   block-fixup:
     name: Block fixup
@@ -79,3 +82,38 @@ jobs:
       - uses: ./.github/actions/environment
       - name: "Check release commit message format"
         run: ./ci/check_release_commit_messages.sh
+
+  # Warn if core/embed/rust/Cargo.lock changed
+  cargolock_check:
+    name: Cargo.lock check
+    if: ${{ github.ref != 'main' && github.event_name == 'pull_request' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Ask git
+        run: |
+          git diff --exit-code origin/main -- core/embed/rust/Cargo.lock || echo cargo_modified=1 > $GITHUB_ENV
+          cat $GITHUB_OUTPUT
+
+      - name: Find Comment
+        uses: peter-evans/find-comment@v3
+        if: ${{ env.cargo_modified == '1' }}
+        id: fc
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: cargolock-comment-${{ github.workflow }}
+
+      - name: Create comment
+        uses: peter-evans/create-or-update-comment@v4
+        if: ${{ env.cargo_modified == '1' && steps.fc.outputs.comment-id == '' }}
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            <!-- cargolock-comment-${{ github.workflow }} -->
+            ${{ env.CARGOLOCK_COMMENT }}
+          edit-mode: replace
