@@ -1,4 +1,14 @@
 
+## 0.2.9 [18th September 2024]
+
+### Added
+- Added commands to read bootloader and boardloader versions.  [#3752]
+- Added TOUCH_CUSTOM and TOUCH_IDLE commands.  [#4064]
+
+### Changed
+- [T3B1] Changed welcome screen to show full white display.  [#4140]
+
+
 ## 0.2.8 [19th July 2024]
 
 ### Added
@@ -61,7 +71,10 @@
 
 [#3325]: https://github.com/trezor/trezor-firmware/pull/3325
 [#3370]: https://github.com/trezor/trezor-firmware/pull/3370
+[#3752]: https://github.com/trezor/trezor-firmware/pull/3752
 [#3769]: https://github.com/trezor/trezor-firmware/pull/3769
 [#3770]: https://github.com/trezor/trezor-firmware/pull/3770
 [#3900]: https://github.com/trezor/trezor-firmware/pull/3900
 [#3932]: https://github.com/trezor/trezor-firmware/pull/3932
+[#4064]: https://github.com/trezor/trezor-firmware/pull/4064
+[#4140]: https://github.com/trezor/trezor-firmware/pull/4140

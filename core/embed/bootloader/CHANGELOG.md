@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2.1.8 [September 2024]
+
+### Added
+- Added firmware downgrade protection.  [#4133]
+
+### Changed
+- Require confirmation when installing non-full trust firmware image on empty device.  [#3709]
+- Fix incorrect error message when installing firmware for different model.  [#4081]
+- [T3B1, T3T1] Added bootloader unlock mechanism to U5 models.  [#4133]
+
+### Fixed
+- [T3B1] UI adjustments: fix icon on warning screen, replace empty logo with full during boot.  [#4140]
+
 ## 2.1.7 [July 2024]
 
 ### Added
@@ -144,5 +157,9 @@ Internal only release for Model R prototypes.
 [#3303]: https://github.com/trezor/trezor-firmware/pull/3303
 [#3370]: https://github.com/trezor/trezor-firmware/pull/3370
 [#3429]: https://github.com/trezor/trezor-firmware/pull/3429
+[#3709]: https://github.com/trezor/trezor-firmware/pull/3709
 [#3711]: https://github.com/trezor/trezor-firmware/pull/3711
 [#3770]: https://github.com/trezor/trezor-firmware/pull/3770
+[#4081]: https://github.com/trezor/trezor-firmware/pull/4081
+[#4133]: https://github.com/trezor/trezor-firmware/pull/4133
+[#4140]: https://github.com/trezor/trezor-firmware/pull/4140
