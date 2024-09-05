@@ -209,10 +209,11 @@ int zkp_bip340_verify_publickey(const uint8_t *public_key_bytes) {
 // internal_public_key has 32 bytes
 // root_hash has 32 bytes or is empty (NULL)
 // output_public_key has 32 bytes
+// pk_parity will be set to the parity if not NULL
 // returns 0 on success
 int zkp_bip340_tweak_public_key(const uint8_t *internal_public_key,
                                 const uint8_t *root_hash,
-                                uint8_t *output_public_key) {
+                                uint8_t *output_public_key, int *pk_parity) {
   int result = 0;
 
   uint8_t tweak[SHA256_DIGEST_LENGTH] = {0};
@@ -250,7 +251,7 @@ int zkp_bip340_tweak_public_key(const uint8_t *internal_public_key,
   secp256k1_xonly_pubkey xonly_output_pubkey = {0};
   if (result == 0) {
     if (secp256k1_xonly_pubkey_from_pubkey(context_read_only,
-                                           &xonly_output_pubkey, NULL,
+                                           &xonly_output_pubkey, pk_parity,
                                            &output_pubkey) != 1) {
       result = -1;
     }

@@ -153,7 +153,7 @@ def _address_p2tr(pubkey: bytes, coin: CoinInfo) -> str:
     from trezor.crypto.curve import bip340
 
     assert coin.bech32_prefix is not None
-    output_pubkey = bip340.tweak_public_key(pubkey[1:])
+    _, output_pubkey = bip340.tweak_public_key(pubkey[1:])
     return encode_bech32_address(coin.bech32_prefix, 1, output_pubkey)
 
 
