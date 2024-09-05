@@ -12,7 +12,7 @@ use crate::{
         },
         flow::{
             base::{DecisionBuilder as _, StateChange},
-            FlowMsg, FlowState, SwipeFlow,
+            FlowMsg, FlowController, SwipeFlow,
         },
         layout::obj::LayoutObj,
     },
@@ -32,7 +32,7 @@ pub enum ConfirmResetCreate {
     Confirm,
 }
 
-impl FlowState for ConfirmResetCreate {
+impl FlowController for ConfirmResetCreate {
     #[inline]
     fn index(&'static self) -> usize {
         *self as usize
@@ -67,7 +67,7 @@ pub enum ConfirmResetRecover {
     Menu,
 }
 
-impl FlowState for ConfirmResetRecover {
+impl FlowController for ConfirmResetRecover {
     #[inline]
     fn index(&'static self) -> usize {
         *self as usize

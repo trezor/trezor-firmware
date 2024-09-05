@@ -15,7 +15,7 @@ use crate::{
         },
         flow::{
             base::{DecisionBuilder as _, StateChange},
-            FlowMsg, FlowState, SwipeFlow, SwipePage,
+            FlowMsg, FlowController, SwipeFlow, SwipePage,
         },
         layout::{obj::LayoutObj, util::RecoveryType},
     },
@@ -52,7 +52,7 @@ pub enum ContinueRecoveryBetweenSharesAdvanced {
     RemainingShares,
 }
 
-impl FlowState for ContinueRecoveryBeforeShares {
+impl FlowController for ContinueRecoveryBeforeShares {
     #[inline]
     fn index(&'static self) -> usize {
         *self as usize
@@ -77,7 +77,7 @@ impl FlowState for ContinueRecoveryBeforeShares {
     }
 }
 
-impl FlowState for ContinueRecoveryBetweenShares {
+impl FlowController for ContinueRecoveryBetweenShares {
     #[inline]
     fn index(&'static self) -> usize {
         *self as usize

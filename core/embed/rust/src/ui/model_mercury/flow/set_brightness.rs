@@ -10,7 +10,7 @@ use crate::{
         component::{base::ComponentExt, swipe_detect::SwipeSettings, FlowMsg, SwipeDirection},
         flow::{
             base::{DecisionBuilder as _, StateChange},
-            FlowState, SwipeFlow,
+            FlowController, SwipeFlow,
         },
         layout::obj::LayoutObj,
     },
@@ -33,7 +33,7 @@ pub enum SetBrightness {
     Confirmed,
 }
 
-impl FlowState for SetBrightness {
+impl FlowController for SetBrightness {
     #[inline]
     fn index(&'static self) -> usize {
         *self as usize

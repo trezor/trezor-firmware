@@ -10,7 +10,7 @@ use crate::{
         },
         flow::{
             base::{DecisionBuilder as _, StateChange},
-            FlowMsg, FlowState, SwipeFlow,
+            FlowMsg, FlowController, SwipeFlow,
         },
         layout::obj::LayoutObj,
     },
@@ -36,7 +36,7 @@ pub enum ShowTutorial {
     HoldToExit,
 }
 
-impl FlowState for ShowTutorial {
+impl FlowController for ShowTutorial {
     #[inline]
     fn index(&'static self) -> usize {
         *self as usize

@@ -12,7 +12,7 @@ use crate::{
         },
         flow::{
             base::{DecisionBuilder as _, StateChange},
-            FlowMsg, FlowState, SwipeFlow,
+            FlowMsg, FlowController, SwipeFlow,
         },
         layout::obj::LayoutObj,
         model_mercury::component::{InternallySwipable, InternallySwipableContent, SwipeContent},
@@ -33,7 +33,7 @@ pub enum ShowShareWords {
     CheckBackupIntro,
 }
 
-impl FlowState for ShowShareWords {
+impl FlowController for ShowShareWords {
     #[inline]
     fn index(&'static self) -> usize {
         *self as usize

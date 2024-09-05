@@ -11,7 +11,7 @@ use crate::{
         },
         flow::{
             base::{DecisionBuilder as _, StateChange},
-            FlowMsg, FlowState, SwipeFlow,
+            FlowMsg, FlowController, SwipeFlow,
         },
         layout::obj::LayoutObj,
         model_mercury::component::SwipeContent,
@@ -30,7 +30,7 @@ pub enum WarningHiPrio {
     Cancelled,
 }
 
-impl FlowState for WarningHiPrio {
+impl FlowController for WarningHiPrio {
     #[inline]
     fn index(&'static self) -> usize {
         *self as usize

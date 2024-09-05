@@ -36,11 +36,11 @@ impl Decision {
 ///
 /// Contains a new state (by convention it must be of the same concrete type as
 /// the current one) and a Decision object that tells the flow what to do next.
-pub type StateChange = (&'static dyn FlowState, Decision);
+pub type StateChange = (&'static dyn FlowController, Decision);
 
 /// Encodes the flow logic as a set of states, and transitions between them
 /// triggered by events and swipes.
-pub trait FlowState {
+pub trait FlowController {
     /// What to do when user swipes on screen and current component doesn't
     /// respond to swipe of that direction.
     ///
@@ -62,7 +62,7 @@ pub trait FlowState {
 }
 
 /// Helper trait for writing nicer flow logic.
-pub trait DecisionBuilder: FlowState + Sized {
+pub trait DecisionBuilder: FlowController + Sized {
     #[inline]
     fn swipe(&'static self, direction: SwipeDirection) -> StateChange {
         (self, Decision::Transition(AttachType::Swipe(direction)))
@@ -104,4 +104,4 @@ pub trait DecisionBuilder: FlowState + Sized {
     }
 }
 
-impl<T: FlowState> DecisionBuilder for T {}
+impl<T: FlowController> DecisionBuilder for T {}
