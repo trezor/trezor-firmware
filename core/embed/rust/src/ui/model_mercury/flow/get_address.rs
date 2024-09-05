@@ -12,7 +12,7 @@ use crate::{
         },
         flow::{
             base::{DecisionBuilder as _, StateChange},
-            FlowMsg, FlowState, SwipeFlow, SwipePage,
+            FlowMsg, FlowController, SwipeFlow, SwipePage,
         },
         layout::{obj::LayoutObj, util::ConfirmBlob},
     },
@@ -40,7 +40,7 @@ pub enum GetAddress {
     CancelTap,
 }
 
-impl FlowState for GetAddress {
+impl FlowController for GetAddress {
     #[inline]
     fn index(&'static self) -> usize {
         *self as usize

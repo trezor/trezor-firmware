@@ -10,7 +10,7 @@ use crate::{
         component::{swipe_detect::SwipeSettings, ButtonRequestExt, ComponentExt, SwipeDirection},
         flow::{
             base::{DecisionBuilder as _, StateChange},
-            FlowMsg, FlowState, SwipeFlow,
+            FlowMsg, FlowController, SwipeFlow,
         },
         layout::obj::LayoutObj,
         model_mercury::component::SwipeContent,
@@ -41,7 +41,7 @@ pub enum ConfirmSummary {
     CancelTap,
 }
 
-impl FlowState for ConfirmSummary {
+impl FlowController for ConfirmSummary {
     #[inline]
     fn index(&'static self) -> usize {
         *self as usize

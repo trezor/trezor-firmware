@@ -11,7 +11,7 @@ use crate::{
         },
         flow::{
             base::{DecisionBuilder as _, StateChange},
-            FlowMsg, FlowState, SwipeFlow,
+            FlowMsg, FlowController, SwipeFlow,
         },
         layout::obj::LayoutObj,
     },
@@ -32,7 +32,7 @@ pub enum PromptBackup {
     SkipBackupConfirm,
 }
 
-impl FlowState for PromptBackup {
+impl FlowController for PromptBackup {
     #[inline]
     fn index(&'static self) -> usize {
         *self as usize
