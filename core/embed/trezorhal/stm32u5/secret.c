@@ -37,10 +37,16 @@ secbool secret_ensure_initialized(void) {
 }
 
 secbool secret_bootloader_locked(void) {
-#ifdef FIRMWARE
-  return (TAMP->BKP8R != 0) * sectrue;
+#if defined BOOTLOADER || defined BOARDLOADER
+  return secret_optiga_present();
 #else
-  return sectrue;
+  const volatile uint32_t *reg1 = &TAMP->BKP8R;
+  for (int i = 0; i < 8; i++) {
+    if (reg1[i] != 0) {
+      return sectrue;
+    }
+  }
+  return secfalse;
 #endif
 }
 
