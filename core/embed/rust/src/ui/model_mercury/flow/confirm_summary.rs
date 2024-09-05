@@ -9,8 +9,8 @@ use crate::{
         button_request::ButtonRequest,
         component::{swipe_detect::SwipeSettings, ButtonRequestExt, ComponentExt, SwipeDirection},
         flow::{
-            base::{DecisionBuilder as _, StateChange},
-            FlowMsg, FlowController, SwipeFlow,
+            base::{Decision, DecisionBuilder as _},
+            FlowController, FlowMsg, SwipeFlow,
         },
         layout::obj::LayoutObj,
         model_mercury::component::SwipeContent,
@@ -47,7 +47,7 @@ impl FlowController for ConfirmSummary {
         *self as usize
     }
 
-    fn handle_swipe(&'static self, direction: SwipeDirection) -> StateChange {
+    fn handle_swipe(&'static self, direction: SwipeDirection) -> Decision {
         match (self, direction) {
             (Self::Summary | Self::Hold, SwipeDirection::Left) => Self::Menu.swipe(direction),
             (Self::Summary, SwipeDirection::Up) => Self::Hold.swipe(direction),
@@ -60,16 +60,16 @@ impl FlowController for ConfirmSummary {
         }
     }
 
-    fn handle_event(&'static self, msg: FlowMsg) -> StateChange {
+    fn handle_event(&'static self, msg: FlowMsg) -> Decision {
         match (self, msg) {
-            (_, FlowMsg::Info) => Self::Menu.transit(),
+            (_, FlowMsg::Info) => Self::Menu.goto(),
             (Self::Hold, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Confirmed),
             (Self::Menu, FlowMsg::Choice(MENU_ITEM_CANCEL)) => Self::CancelTap.swipe_left(),
             (Self::Menu, FlowMsg::Choice(MENU_ITEM_FEE_INFO)) => Self::FeeInfo.swipe_left(),
             (Self::Menu, FlowMsg::Choice(MENU_ITEM_ACCOUNT_INFO)) => Self::AccountInfo.swipe_left(),
             (Self::Menu, FlowMsg::Cancelled) => Self::Summary.swipe_right(),
             (Self::CancelTap, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Cancelled),
-            (_, FlowMsg::Cancelled) => Self::Menu.transit(),
+            (_, FlowMsg::Cancelled) => Self::Menu.goto(),
             _ => self.do_nothing(),
         }
     }

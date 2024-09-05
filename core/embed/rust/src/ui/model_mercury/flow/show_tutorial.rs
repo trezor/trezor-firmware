@@ -9,8 +9,8 @@ use crate::{
             ComponentExt, SwipeDirection,
         },
         flow::{
-            base::{DecisionBuilder as _, StateChange},
-            FlowMsg, FlowController, SwipeFlow,
+            base::{Decision, DecisionBuilder as _},
+            FlowController, FlowMsg, SwipeFlow,
         },
         layout::obj::LayoutObj,
     },
@@ -42,7 +42,7 @@ impl FlowController for ShowTutorial {
         *self as usize
     }
 
-    fn handle_swipe(&'static self, direction: SwipeDirection) -> StateChange {
+    fn handle_swipe(&'static self, direction: SwipeDirection) -> Decision {
         match (self, direction) {
             (Self::StepBegin, SwipeDirection::Up) => Self::StepNavigation.swipe(direction),
             (Self::StepNavigation, SwipeDirection::Up) => Self::StepMenu.swipe(direction),
@@ -58,15 +58,15 @@ impl FlowController for ShowTutorial {
         }
     }
 
-    fn handle_event(&'static self, msg: FlowMsg) -> StateChange {
+    fn handle_event(&'static self, msg: FlowMsg) -> Decision {
         match (self, msg) {
             (Self::StepWelcome, FlowMsg::Confirmed) => Self::StepBegin.swipe_up(),
-            (Self::StepMenu, FlowMsg::Info) => Self::Menu.transit(),
+            (Self::StepMenu, FlowMsg::Info) => Self::Menu.goto(),
             (Self::Menu, FlowMsg::Choice(0)) => Self::DidYouKnow.swipe_left(),
             (Self::Menu, FlowMsg::Choice(1)) => Self::StepBegin.swipe_right(),
             (Self::Menu, FlowMsg::Choice(2)) => Self::HoldToExit.swipe_up(),
             (Self::Menu, FlowMsg::Cancelled) => Self::StepMenu.swipe_right(),
-            (Self::DidYouKnow, FlowMsg::Cancelled) => Self::Menu.transit(),
+            (Self::DidYouKnow, FlowMsg::Cancelled) => Self::Menu.goto(),
             (Self::StepHold, FlowMsg::Confirmed) => Self::StepDone.swipe_up(),
             (Self::HoldToExit, FlowMsg::Confirmed) => Self::StepDone.swipe_up(),
             _ => self.do_nothing(),

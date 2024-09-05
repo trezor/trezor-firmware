@@ -11,8 +11,8 @@ use crate::{
             ButtonRequestExt, ComponentExt, SwipeDirection,
         },
         flow::{
-            base::{DecisionBuilder as _, StateChange},
-            FlowMsg, FlowController, SwipeFlow,
+            base::{Decision, DecisionBuilder as _},
+            FlowController, FlowMsg, SwipeFlow,
         },
         layout::obj::LayoutObj,
     },
@@ -38,7 +38,7 @@ impl FlowController for ConfirmResetCreate {
         *self as usize
     }
 
-    fn handle_swipe(&'static self, direction: SwipeDirection) -> StateChange {
+    fn handle_swipe(&'static self, direction: SwipeDirection) -> Decision {
         match (self, direction) {
             (Self::Intro, SwipeDirection::Left) => Self::Menu.swipe(direction),
             (Self::Intro, SwipeDirection::Up) => Self::Confirm.swipe(direction),
@@ -49,13 +49,13 @@ impl FlowController for ConfirmResetCreate {
         }
     }
 
-    fn handle_event(&'static self, msg: FlowMsg) -> StateChange {
+    fn handle_event(&'static self, msg: FlowMsg) -> Decision {
         match (self, msg) {
-            (Self::Intro, FlowMsg::Info) => Self::Menu.transit(),
+            (Self::Intro, FlowMsg::Info) => Self::Menu.goto(),
             (Self::Menu, FlowMsg::Cancelled) => Self::Intro.swipe_right(),
             (Self::Menu, FlowMsg::Choice(0)) => self.return_msg(FlowMsg::Cancelled),
             (Self::Confirm, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Confirmed),
-            (Self::Confirm, FlowMsg::Info) => Self::Menu.transit(),
+            (Self::Confirm, FlowMsg::Info) => Self::Menu.goto(),
             _ => self.do_nothing(),
         }
     }
@@ -73,7 +73,7 @@ impl FlowController for ConfirmResetRecover {
         *self as usize
     }
 
-    fn handle_swipe(&'static self, direction: SwipeDirection) -> StateChange {
+    fn handle_swipe(&'static self, direction: SwipeDirection) -> Decision {
         match (self, direction) {
             (Self::Intro, SwipeDirection::Left) => Self::Menu.swipe(direction),
             (Self::Menu, SwipeDirection::Right) => Self::Intro.swipe(direction),
@@ -82,9 +82,9 @@ impl FlowController for ConfirmResetRecover {
         }
     }
 
-    fn handle_event(&'static self, msg: FlowMsg) -> StateChange {
+    fn handle_event(&'static self, msg: FlowMsg) -> Decision {
         match (self, msg) {
-            (Self::Intro, FlowMsg::Info) => Self::Menu.transit(),
+            (Self::Intro, FlowMsg::Info) => Self::Menu.goto(),
             (Self::Menu, FlowMsg::Cancelled) => Self::Intro.swipe_right(),
             (Self::Menu, FlowMsg::Choice(0)) => self.return_msg(FlowMsg::Cancelled),
             _ => self.do_nothing(),
