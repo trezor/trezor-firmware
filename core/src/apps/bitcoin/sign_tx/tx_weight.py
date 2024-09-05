@@ -35,6 +35,8 @@ _TXSIZE_DER_SIGNATURE = const(72)
 _TXSIZE_SCHNORR_SIGNATURE = const(64)
 # size of a multiscript without pubkey (1 M, 1 N, 1 checksig)
 _TXSIZE_MULTISIGSCRIPT = const(3)
+# size of a taproot multiscript without pubkey (1 M, 1 numequal, 1 + 33 control block)
+_TXSIZE_MULTISIGSCRIPT_TAPROOT = const(36)
 # size of a p2wpkh script (1 version, 1 push, 20 hash)
 _TXSIZE_WITNESSPKHASH = const(22)
 # size of a p2wsh script (1 version, 1 push, 32 hash)
@@ -72,10 +74,18 @@ class TxWeightCalculator:
                 pass
 
         if multisig:
-            if script_type == IST.SPENDTAPROOT:
-                raise wire.ProcessError("Multisig not supported for taproot")
-
             n = len(multisig.nodes) if multisig.nodes else len(multisig.pubkeys)
+            if script_type == IST.SPENDTAPROOT:
+                multisig_script_size = _TXSIZE_MULTISIGSCRIPT_TAPROOT + n * (
+                    1 + 1 + _TXSIZE_PUBKEY
+                )
+                multisig_script_size += cls.compact_size_len(multisig_script_size)
+                return (
+                    multisig_script_size
+                    + multisig.m * (1 + _TXSIZE_SCHNORR_SIGNATURE)
+                    + (n - multisig.m)
+                )
+
             multisig_script_size = _TXSIZE_MULTISIGSCRIPT + n * (1 + _TXSIZE_PUBKEY)
             if script_type in common.SEGWIT_INPUT_SCRIPT_TYPES:
                 multisig_script_size += cls.compact_size_len(multisig_script_size)
