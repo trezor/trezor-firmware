@@ -103,6 +103,12 @@ where
         result.unwrap_or(self.area)
     }
 
+    pub fn current_page(&self) -> usize {
+        self.break_pages()
+            .position(|offset| offset == self.offset)
+            .unwrap_or(0)
+    }
+
     /// Update bounding boxes of paragraphs on the current page. First determine
     /// the number of visible paragraphs and their sizes. These are then
     /// arranged according to the layout.

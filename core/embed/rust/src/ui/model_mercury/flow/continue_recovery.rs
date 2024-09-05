@@ -9,9 +9,9 @@ use crate::{
             button_request::ButtonRequestExt,
             swipe_detect::SwipeSettings,
             text::paragraphs::{
-                Paragraph, ParagraphSource, ParagraphVecLong, ParagraphVecShort, VecExt,
+                Paragraph, ParagraphSource, ParagraphVecLong, ParagraphVecShort, Paragraphs, VecExt,
             },
-            ComponentExt, SwipeDirection,
+            ComponentExt, EventCtx, SwipeDirection,
         },
         flow::{
             base::{DecisionBuilder as _, StateChange},
@@ -23,7 +23,8 @@ use crate::{
 
 use super::super::{
     component::{
-        Frame, FrameMsg, PromptMsg, PromptScreen, SwipeContent, VerticalMenu, VerticalMenuChoiceMsg,
+        Footer, Frame, FrameMsg, PromptMsg, PromptScreen, SwipeContent, VerticalMenu,
+        VerticalMenuChoiceMsg,
     },
     theme,
 };
@@ -144,6 +145,17 @@ impl FlowState for ContinueRecoveryBetweenSharesAdvanced {
 #[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub extern "C" fn new_continue_recovery(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, new_obj) }
+}
+fn footer_update_fn(
+    content: &SwipeContent<SwipePage<Paragraphs<ParagraphVecLong>>>,
+    ctx: &mut EventCtx,
+    footer: &mut Footer,
+) {
+    // FIXME: current_page is implemented for Paragraphs and we have to use Vec::len
+    // to get total pages instead of using Paginate because it borrows mutably
+    let current_page = content.inner().inner().current_page();
+    let total_pages = content.inner().inner().inner().len() / 2; // 2 paragraphs per page
+    footer.update_page_counter(ctx, current_page, Some(total_pages));
 }
 
 fn new_obj(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Error> {
@@ -304,13 +316,23 @@ fn new_obj(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Error> {
             FrameMsg::Button(_) => Some(FlowMsg::Cancelled),
         });
 
-        let n_remaining_shares = pars_show_shares.len();
+        let (footer_instruction, footer_description) = (
+            TR::instructions__swipe_up.into(),
+            TR::recovery__more_shares_needed.into(),
+        );
+        let n_remaining_shares = pars_show_shares.len() / 2;
         let content_remaining_shares = Frame::left_aligned(
             TR::recovery__title_remaining_shares.into(),
             SwipeContent::new(SwipePage::vertical(pars_show_shares.into_paragraphs())),
         )
         .with_cancel_button()
-        // .with_footer(TR::instructions__swipe_up.into(), None)
+        .with_footer_page_hint(
+            footer_description,
+            TString::empty(),
+            footer_instruction,
+            TR::instructions__swipe_down.into(),
+        )
+        .register_footer_update_fn(footer_update_fn)
         .with_swipe(SwipeDirection::Up, SwipeSettings::default())
         .with_swipe(SwipeDirection::Left, SwipeSettings::default())
         .with_vertical_pages()
