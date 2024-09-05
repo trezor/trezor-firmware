@@ -12,7 +12,7 @@ use crate::{
         },
         flow::{
             base::{DecisionBuilder as _, StateChange},
-            FlowMsg, FlowState, SwipeFlow,
+            FlowMsg, FlowController, SwipeFlow,
         },
         layout::obj::LayoutObj,
     },
@@ -42,7 +42,7 @@ pub enum ConfirmOutput {
     CancelTap,
 }
 
-impl FlowState for ConfirmOutput {
+impl FlowController for ConfirmOutput {
     #[inline]
     fn index(&'static self) -> usize {
         *self as usize
@@ -83,7 +83,7 @@ pub enum ConfirmOutputWithAmount {
     CancelTap,
 }
 
-impl FlowState for ConfirmOutputWithAmount {
+impl FlowController for ConfirmOutputWithAmount {
     #[inline]
     fn index(&'static self) -> usize {
         *self as usize
@@ -132,7 +132,7 @@ pub enum ConfirmOutputWithSummary {
     AccountInfo,
 }
 
-impl FlowState for ConfirmOutputWithSummary {
+impl FlowController for ConfirmOutputWithSummary {
     #[inline]
     fn index(&'static self) -> usize {
         *self as usize

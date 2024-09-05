@@ -11,7 +11,7 @@ use crate::{
         },
         flow::{
             base::{DecisionBuilder as _, StateChange},
-            FlowMsg, FlowState, SwipeFlow, SwipePage,
+            FlowController, FlowMsg, SwipeFlow, SwipePage,
         },
         layout::obj::LayoutObj,
     },
@@ -39,7 +39,7 @@ pub enum ConfirmFido {
 static CRED_SELECTED: AtomicUsize = AtomicUsize::new(0);
 static SINGLE_CRED: AtomicBool = AtomicBool::new(false);
 
-impl FlowState for ConfirmFido {
+impl FlowController for ConfirmFido {
     #[inline]
     fn index(&'static self) -> usize {
         *self as usize

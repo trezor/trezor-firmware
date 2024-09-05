@@ -7,7 +7,7 @@ use crate::{
         component::{ComponentExt, SwipeDirection},
         flow::{
             base::{DecisionBuilder as _, StateChange},
-            FlowMsg, FlowState, SwipeFlow,
+            FlowMsg, FlowController, SwipeFlow,
         },
         layout::obj::LayoutObj,
     },
@@ -23,7 +23,7 @@ pub enum RequestPassphrase {
     ConfirmEmpty,
 }
 
-impl FlowState for RequestPassphrase {
+impl FlowController for RequestPassphrase {
     #[inline]
     fn index(&'static self) -> usize {
         *self as usize

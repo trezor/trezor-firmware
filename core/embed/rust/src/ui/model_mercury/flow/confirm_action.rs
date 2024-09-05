@@ -13,7 +13,7 @@ use crate::{
         },
         flow::{
             base::{DecisionBuilder as _, StateChange},
-            FlowMsg, FlowState, SwipeFlow, SwipePage,
+            FlowMsg, FlowController, SwipeFlow, SwipePage,
         },
         layout::obj::LayoutObj,
     },
@@ -33,7 +33,7 @@ pub enum ConfirmAction {
     Confirm,
 }
 
-impl FlowState for ConfirmAction {
+impl FlowController for ConfirmAction {
     fn index(&'static self) -> usize {
         *self as usize
     }
@@ -70,7 +70,7 @@ pub enum ConfirmActionSimple {
     Menu,
 }
 
-impl FlowState for ConfirmActionSimple {
+impl FlowController for ConfirmActionSimple {
     #[inline]
     fn index(&'static self) -> usize {
         *self as usize
@@ -193,7 +193,7 @@ fn create_flow(
     Option<TString<'static>>,
     usize,
     Result<SwipeFlow, Error>,
-    &'static dyn FlowState,
+    &'static dyn FlowController,
 ) {
     let prompt_screen = prompt_screen.or_else(|| hold.then_some(title));
     let prompt_pages: usize = prompt_screen.is_some().into();
@@ -204,7 +204,7 @@ fn create_flow(
         SwipeFlow::new(&ConfirmActionSimple::Intro)
     };
 
-    let page: &dyn FlowState = if prompt_screen.is_some() {
+    let page: &dyn FlowController = if prompt_screen.is_some() {
         &ConfirmAction::Intro
     } else {
         &ConfirmActionSimple::Intro

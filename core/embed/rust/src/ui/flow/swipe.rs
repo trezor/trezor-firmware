@@ -12,7 +12,7 @@ use crate::{
         },
         display::Color,
         event::{SwipeEvent, TouchEvent},
-        flow::{base::Decision, FlowState},
+        flow::{base::Decision, FlowController},
         geometry::Rect,
         layout::obj::ObjComponent,
         shape::{render_on_display, ConcreteRenderer, Renderer, ScopedRenderer},
@@ -95,7 +95,7 @@ impl<T> FlowComponentDynTrait for T where
 /// - if it can't then FlowState::handle_swipe is consulted.
 pub struct SwipeFlow {
     /// Current state of the flow.
-    state: &'static dyn FlowState,
+    state: &'static dyn FlowController,
     /// Store of all screens which are part of the flow.
     store: Vec<GcBox<dyn FlowComponentDynTrait>, 12>,
     /// Swipe detector.
@@ -112,7 +112,7 @@ pub struct SwipeFlow {
 }
 
 impl SwipeFlow {
-    pub fn new(initial_state: &'static dyn FlowState) -> Result<Self, error::Error> {
+    pub fn new(initial_state: &'static dyn FlowController) -> Result<Self, error::Error> {
         Ok(Self {
             state: initial_state,
             swipe: SwipeDetect::new(),
@@ -129,7 +129,7 @@ impl SwipeFlow {
     /// Pages must be inserted in the order of the flow state index.
     pub fn with_page(
         mut self,
-        state: &'static dyn FlowState,
+        state: &'static dyn FlowController,
         page: impl FlowComponentDynTrait + 'static,
     ) -> Result<Self, error::Error> {
         debug_assert!(self.store.len() == state.index());

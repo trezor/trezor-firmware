@@ -11,7 +11,7 @@ use crate::{
         },
         flow::{
             base::{DecisionBuilder as _, StateChange},
-            FlowMsg, FlowState, SwipeFlow,
+            FlowMsg, FlowController, SwipeFlow,
         },
         layout::obj::LayoutObj,
     },
@@ -32,7 +32,7 @@ pub enum ConfirmFirmwareUpdate {
     Confirm,
 }
 
-impl FlowState for ConfirmFirmwareUpdate {
+impl FlowController for ConfirmFirmwareUpdate {
     #[inline]
     fn index(&'static self) -> usize {
         *self as usize
