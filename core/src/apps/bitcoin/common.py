@@ -71,11 +71,13 @@ MULTISIG_INPUT_SCRIPT_TYPES = (
     InputScriptType.SPENDMULTISIG,
     InputScriptType.SPENDP2SHWITNESS,
     InputScriptType.SPENDWITNESS,
+    InputScriptType.SPENDTAPROOT,
 )
 MULTISIG_OUTPUT_SCRIPT_TYPES = (
     OutputScriptType.PAYTOMULTISIG,
     OutputScriptType.PAYTOP2SHWITNESS,
     OutputScriptType.PAYTOWITNESS,
+    OutputScriptType.PAYTOTAPROOT,
 )
 
 CHANGE_OUTPUT_TO_INPUT_SCRIPT_TYPES: dict[OutputScriptType, InputScriptType] = {
@@ -118,9 +120,11 @@ def ecdsa_sign(node: bip32.HDNode, digest: bytes) -> bytes:
     return sigder
 
 
-def bip340_sign(node: bip32.HDNode, digest: bytes) -> bytes:
+def bip340_sign(node: bip32.HDNode, digest: bytes, tweak: bool = True) -> bytes:
     internal_private_key = node.private_key()
-    output_private_key = bip340.tweak_secret_key(internal_private_key)
+    output_private_key = (
+        bip340.tweak_secret_key(internal_private_key) if tweak else internal_private_key
+    )
     return bip340.sign(output_private_key, digest)
 
 
