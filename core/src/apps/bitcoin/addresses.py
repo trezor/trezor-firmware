@@ -7,8 +7,16 @@ from trezor.wire import ProcessError
 
 from apps.common import address_type
 
-from .common import ecdsa_hash_pubkey, encode_bech32_address
-from .scripts import output_script_native_segwit, write_output_script_multisig
+from .common import (
+    ecdsa_hash_pubkey,
+    encode_bech32_address,
+    p2tr_multisig_tweaked_pubkey,
+)
+from .multisig import multisig_get_dummy_pubkey
+from .scripts import (
+    output_script_native_segwit,
+    write_output_script_multisig,
+)
 
 if TYPE_CHECKING:
     from trezor.crypto import bip32
@@ -69,7 +77,11 @@ def get_address(
             raise ProcessError("Taproot not enabled on this coin")
 
         if multisig is not None:
-            raise ProcessError("Multisig not supported for taproot")
+            pubkeys = multisig_get_pubkeys(multisig)
+            dummy_pubkey = multisig_get_dummy_pubkey(multisig)
+            return _address_multisig_p2tr(
+                pubkeys, dummy_pubkey, multisig.m, coin.bech32_prefix
+            )
 
         return _address_p2tr(node_public_key, coin)
 
@@ -114,6 +126,13 @@ def _address_multisig_p2wsh(pubkeys: list[bytes], m: int, hrp: str) -> str:
     witness_script_h = HashWriter(sha256())
     write_output_script_multisig(witness_script_h, pubkeys, m)
     return _address_p2wsh(witness_script_h.get_digest(), hrp)
+
+
+def _address_multisig_p2tr(
+    pubkeys: list[bytes], dummy_pubkey: bytes, m: int, hrp: str
+) -> str:
+    _, output_pubkey = p2tr_multisig_tweaked_pubkey(pubkeys, dummy_pubkey, m)
+    return encode_bech32_address(hrp, 1, output_pubkey)
 
 
 def address_pkh(pubkey: bytes, coin: CoinInfo) -> str:

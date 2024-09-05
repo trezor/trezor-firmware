@@ -9,8 +9,16 @@ from apps.common.readers import read_compact_size
 from apps.common.writers import write_compact_size
 
 from . import common
-from .common import SigHashType
-from .multisig import multisig_get_pubkeys, multisig_pubkey_index
+from .common import (
+    SigHashType,
+    OP_CHECKSIG,
+    OP_CHECKSIGADD,
+    OP_NUMEQUAL,
+)
+from .multisig import (
+    multisig_get_pubkeys,
+    multisig_pubkey_index,
+)
 from .readers import read_memoryview_prefixed, read_op_push
 from .writers import (
     write_bytes_fixed,
@@ -589,6 +597,40 @@ def parse_output_script_multisig(script: bytes) -> tuple[list[memoryview], int]:
         raise DataError("Invalid multisig script")
 
     return public_keys, threshold
+
+
+# Taproot Multisig
+# ===
+
+
+def write_output_script_multisig_taproot(
+    w: Writer,
+    pubkeys: Sequence[bytes | memoryview],
+    m: int,
+) -> None:
+    n = len(pubkeys)
+    if n < 1 or n > 15 or m < 1 or m > 15 or m > n:
+        raise DataError("Invalid multisig parameters")
+    for pubkey in pubkeys:
+        if len(pubkey) != 33:
+            raise DataError("Invalid multisig parameters")
+
+    write_compact_size(w, output_script_multisig_taproot_length(pubkeys))
+
+    iterator = iter(pubkeys)
+    append_pubkey(w, next(iterator)[1:])
+    w.append(OP_CHECKSIG)
+    for p in iterator:
+        append_pubkey(w, p[1:])
+        w.append(OP_CHECKSIGADD)
+    w.append(0x50 + m)  # numbers 1 to 16 are pushed as 0x50 + value
+    w.append(OP_NUMEQUAL)
+
+
+def output_script_multisig_taproot_length(pubkeys: Sequence[bytes | memoryview]) -> int:
+    return (
+        len(pubkeys) * (1 + 32 + 1) + 1 + 1
+    )  # see write_output_script_multisig_taproot
 
 
 # OP_RETURN
