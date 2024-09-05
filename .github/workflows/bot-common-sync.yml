@@ -3,6 +3,7 @@ name: "[Bot] sync to trezor-common repository"
 on:
   schedule:
     - cron: "0 0 * * *"
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -10,15 +11,32 @@ permissions:
 jobs:
   sync-common:
     runs-on: ubuntu-latest
+    env:
+      GITHUB_BOT_USERNAME: ${{ secrets.TREZOR_BOT_USERNAME }}
+      GITHUB_BOT_TOKEN: ${{ secrets.GH_BOT_TOKEN }}
+      GITHUB_BOT_EMAIL: ${{ secrets.TREZOR_BOT_EMAIL }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Copy git-filter and script to temporary directory
+        run: |
+          cp ./ci/common_sync/git-filter-repo/git-filter-repo ${{runner.temp}}/common_repo_sync.sh
+          cp ./ci/common_sync/git-filter-repo/git-filter-repo ${{runner.temp}}/git-filter-repo
+
+      - name: Add git-filter-repo to PATH
+        run: |
+          echo "Adding git-filter-repo to PATH"
+          echo '${{ runner.temp }}/ci/common_sync/git-filter-repo' >> $GITHUB_PATH
+
+      - name: Configure git user
+        run: |
+          git config --global user.name $GITHUB_BOT_USERNAME
+          git config --global user.email $GITHUB_BOT_EMAIL
+
       - name: Sync trezor-common repository
-        env:
-          GITHUB_BOT_USERNAME: ${{ secrets.TREZOR_BOT_USERNAME }}
-          GITHUB_BOT_TOKEN: ${{ secrets.GH_BOT_TOKEN }}
         run: |
           echo "Synchronizing common with the trezor-common repository"
-          ./ci/common_sync/common_repo_sync.sh
+          .${{ runner.temp }}/common_repo_sync.sh
