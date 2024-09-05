@@ -9,7 +9,7 @@ use crate::{
     ui::{
         component::{base::ComponentExt, swipe_detect::SwipeSettings, FlowMsg, SwipeDirection},
         flow::{
-            base::{DecisionBuilder as _, StateChange},
+            base::{Decision, DecisionBuilder as _},
             FlowController, SwipeFlow,
         },
         layout::obj::LayoutObj,
@@ -39,7 +39,7 @@ impl FlowController for SetBrightness {
         *self as usize
     }
 
-    fn handle_swipe(&'static self, direction: SwipeDirection) -> StateChange {
+    fn handle_swipe(&'static self, direction: SwipeDirection) -> Decision {
         match (self, direction) {
             (Self::Menu, SwipeDirection::Right) => Self::Slider.swipe(direction),
             (Self::Slider, SwipeDirection::Up) => Self::Confirm.swipe(direction),
@@ -50,7 +50,7 @@ impl FlowController for SetBrightness {
         }
     }
 
-    fn handle_event(&'static self, msg: FlowMsg) -> StateChange {
+    fn handle_event(&'static self, msg: FlowMsg) -> Decision {
         match (self, msg) {
             (Self::Slider, FlowMsg::Info) => Self::Menu.swipe_left(),
             (Self::Menu, FlowMsg::Cancelled) => Self::Slider.swipe_right(),

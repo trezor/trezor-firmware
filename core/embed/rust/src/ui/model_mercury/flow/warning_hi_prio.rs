@@ -10,8 +10,8 @@ use crate::{
             ComponentExt, SwipeDirection,
         },
         flow::{
-            base::{DecisionBuilder as _, StateChange},
-            FlowMsg, FlowController, SwipeFlow,
+            base::{Decision, DecisionBuilder as _},
+            FlowController, FlowMsg, SwipeFlow,
         },
         layout::obj::LayoutObj,
         model_mercury::component::SwipeContent,
@@ -36,7 +36,7 @@ impl FlowController for WarningHiPrio {
         *self as usize
     }
 
-    fn handle_swipe(&'static self, direction: SwipeDirection) -> StateChange {
+    fn handle_swipe(&'static self, direction: SwipeDirection) -> Decision {
         match (self, direction) {
             (Self::Message, SwipeDirection::Left) => Self::Menu.swipe(direction),
             (Self::Message, SwipeDirection::Up) => Self::Cancelled.swipe(direction),
@@ -45,9 +45,9 @@ impl FlowController for WarningHiPrio {
         }
     }
 
-    fn handle_event(&'static self, msg: FlowMsg) -> StateChange {
+    fn handle_event(&'static self, msg: FlowMsg) -> Decision {
         match (self, msg) {
-            (Self::Message, FlowMsg::Info) => Self::Menu.transit(),
+            (Self::Message, FlowMsg::Info) => Self::Menu.goto(),
             (Self::Menu, FlowMsg::Choice(1)) => self.return_msg(FlowMsg::Confirmed),
             (Self::Menu, FlowMsg::Choice(_)) => Self::Cancelled.swipe_up(),
             (Self::Menu, FlowMsg::Cancelled) => Self::Message.swipe_right(),

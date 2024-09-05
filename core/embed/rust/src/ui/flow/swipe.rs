@@ -20,7 +20,7 @@ use crate::{
     },
 };
 
-use super::{base::StateChange, Swipable};
+use super::{base::FlowState, Swipable};
 
 use heapless::Vec;
 
@@ -95,7 +95,7 @@ impl<T> FlowComponentDynTrait for T where
 /// - if it can't then FlowState::handle_swipe is consulted.
 pub struct SwipeFlow {
     /// Current state of the flow.
-    state: &'static dyn FlowController,
+    state: FlowState,
     /// Store of all screens which are part of the flow.
     store: Vec<GcBox<dyn FlowComponentDynTrait>, 12>,
     /// Swipe detector.
@@ -108,7 +108,7 @@ pub struct SwipeFlow {
     internal_pages: u16,
     /// If triggering swipe by event, make this decision instead of default
     /// after the swipe.
-    decision_override: Option<StateChange>,
+    decision_override: Option<Decision>,
 }
 
 impl SwipeFlow {
@@ -173,30 +173,22 @@ impl SwipeFlow {
         self.store[state].render(target);
     }
 
-    fn handle_swipe_child(
-        &mut self,
-        _ctx: &mut EventCtx,
-        direction: SwipeDirection,
-    ) -> StateChange {
+    fn handle_swipe_child(&mut self, _ctx: &mut EventCtx, direction: SwipeDirection) -> Decision {
         self.state.handle_swipe(direction)
     }
 
-    fn handle_event_child(&mut self, ctx: &mut EventCtx, event: Event) -> StateChange {
+    fn handle_event_child(&mut self, ctx: &mut EventCtx, event: Event) -> Decision {
         let msg = self.current_page_mut().event(ctx, event);
 
         if let Some(msg) = msg {
             self.state.handle_event(msg)
         } else {
-            (self.state, Decision::Nothing)
+            Decision::Nothing
         }
     }
 
-    fn state_unchanged(&self) -> StateChange {
-        (self.state, Decision::Nothing)
-    }
-
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<FlowMsg> {
-        let mut state_change = self.state_unchanged();
+        let mut decision = Decision::Nothing;
         let mut return_transition: AttachType = AttachType::Initial;
 
         let mut attach = false;
@@ -212,9 +204,9 @@ impl SwipeFlow {
             match self.swipe.event(ctx, event, config) {
                 Some(SwipeDetectMsg::Trigger(dir)) => {
                     if let Some(override_decision) = self.decision_override.take() {
-                        state_change = override_decision;
+                        decision = override_decision;
                     } else {
-                        state_change = self.handle_swipe_child(ctx, dir);
+                        decision = self.handle_swipe_child(ctx, dir);
                     }
 
                     return_transition = AttachType::Swipe(dir);
@@ -223,7 +215,7 @@ impl SwipeFlow {
                         config.paging_event(dir, self.internal_state, self.internal_pages);
                     if new_internal_state != self.internal_state {
                         self.internal_state = new_internal_state;
-                        state_change = self.state_unchanged();
+                        decision = Decision::Nothing;
                         attach = true;
                     }
                     Event::Swipe(SwipeEvent::End(dir))
@@ -238,9 +230,9 @@ impl SwipeFlow {
             event
         };
 
-        match state_change {
-            (_, Decision::Nothing) => {
-                state_change = self.handle_event_child(ctx, e);
+        match decision {
+            Decision::Nothing => {
+                decision = self.handle_event_child(ctx, e);
 
                 // when doing internal transition, pass attach event to the child after sending
                 // swipe end.
@@ -262,12 +254,12 @@ impl SwipeFlow {
 
                 let config = self.current_page().get_swipe_config();
 
-                if let (_, Decision::Transition(Swipe(direction))) = state_change {
+                if let Decision::Transition(_, Swipe(direction)) = decision {
                     if config.is_allowed(direction) {
                         if !animation_disabled() {
                             self.swipe.trigger(ctx, direction, config);
-                            self.decision_override = Some(state_change);
-                            state_change = self.state_unchanged();
+                            self.decision_override = Some(decision);
+                            decision = Decision::Nothing;
                         }
                         self.allow_swipe = true;
                     }
@@ -279,10 +271,8 @@ impl SwipeFlow {
             }
         }
 
-        let (new_state, decision) = state_change;
-        self.state = new_state;
         match decision {
-            Decision::Transition(attach) => {
+            Decision::Transition(new_state, attach) => {
                 self.state = new_state;
                 self.goto(ctx, attach);
                 None

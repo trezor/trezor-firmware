@@ -7,8 +7,8 @@ use crate::{
         button_request::ButtonRequest,
         component::{swipe_detect::SwipeSettings, ButtonRequestExt, ComponentExt, SwipeDirection},
         flow::{
-            base::{DecisionBuilder as _, StateChange},
-            FlowMsg, FlowController, SwipeFlow,
+            base::{Decision, DecisionBuilder as _},
+            FlowController, FlowMsg, SwipeFlow,
         },
         layout::obj::LayoutObj,
     },
@@ -37,7 +37,7 @@ impl FlowController for RequestNumber {
         *self as usize
     }
 
-    fn handle_swipe(&'static self, direction: SwipeDirection) -> StateChange {
+    fn handle_swipe(&'static self, direction: SwipeDirection) -> Decision {
         match (self, direction) {
             (Self::Number, SwipeDirection::Left) => Self::Menu.swipe(direction),
             (Self::Menu, SwipeDirection::Right) => Self::Number.swipe(direction),
@@ -46,12 +46,12 @@ impl FlowController for RequestNumber {
         }
     }
 
-    fn handle_event(&'static self, msg: FlowMsg) -> StateChange {
+    fn handle_event(&'static self, msg: FlowMsg) -> Decision {
         match (self, msg) {
-            (Self::Number, FlowMsg::Info) => Self::Menu.transit(),
+            (Self::Number, FlowMsg::Info) => Self::Menu.goto(),
             (Self::Menu, FlowMsg::Choice(0)) => Self::Info.swipe_left(),
             (Self::Menu, FlowMsg::Cancelled) => Self::Number.swipe_right(),
-            (Self::Info, FlowMsg::Cancelled) => Self::Menu.transit(),
+            (Self::Info, FlowMsg::Cancelled) => Self::Menu.goto(),
             (Self::Number, FlowMsg::Choice(n)) => self.return_msg(FlowMsg::Choice(n)),
             _ => self.do_nothing(),
         }

@@ -11,8 +11,8 @@ use crate::{
             ButtonRequestExt, ComponentExt, EventCtx, SwipeDirection,
         },
         flow::{
-            base::{DecisionBuilder as _, StateChange},
-            FlowMsg, FlowController, SwipeFlow,
+            base::{Decision, DecisionBuilder as _},
+            FlowController, FlowMsg, SwipeFlow,
         },
         layout::obj::LayoutObj,
         model_mercury::component::{InternallySwipable, InternallySwipableContent, SwipeContent},
@@ -39,7 +39,7 @@ impl FlowController for ShowShareWords {
         *self as usize
     }
 
-    fn handle_swipe(&'static self, direction: SwipeDirection) -> StateChange {
+    fn handle_swipe(&'static self, direction: SwipeDirection) -> Decision {
         match (self, direction) {
             (Self::Instruction, SwipeDirection::Up) => Self::Words.swipe(direction),
             (Self::Confirm, SwipeDirection::Down) => Self::Words.swipe(direction),
@@ -50,7 +50,7 @@ impl FlowController for ShowShareWords {
         }
     }
 
-    fn handle_event(&'static self, msg: FlowMsg) -> StateChange {
+    fn handle_event(&'static self, msg: FlowMsg) -> Decision {
         match (self, msg) {
             (Self::Words, FlowMsg::Cancelled) => Self::Instruction.swipe_down(),
             (Self::Words, FlowMsg::Confirmed) => Self::Confirm.swipe_up(),
