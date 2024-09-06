@@ -102,8 +102,8 @@ pub struct SwipeFlow {
     swipe: SwipeDetect,
     /// Swipe allowed
     allow_swipe: bool,
-    /// Current internal state
-    internal_state: u16,
+    /// Current page index
+    internal_page_idx: u16,
     /// Internal pages count
     internal_pages: u16,
     /// If triggering swipe by event, make this decision instead of default
@@ -118,7 +118,7 @@ impl SwipeFlow {
             swipe: SwipeDetect::new(),
             store: Vec::new(),
             allow_swipe: true,
-            internal_state: 0,
+            internal_page_idx: 0,
             internal_pages: 1,
             decision_override: None,
         })
@@ -147,25 +147,35 @@ impl SwipeFlow {
         &mut self.store[self.state.index()]
     }
 
-    fn goto(&mut self, ctx: &mut EventCtx, attach_type: AttachType) {
+    fn update_page_count(&mut self, attach_type: AttachType) {
+        // update page count
+        self.internal_pages = self.current_page_mut().get_internal_page_count() as u16;
+        // reset internal state:
+        self.internal_page_idx = if let Swipe(Direction::Down) = attach_type {
+            // if coming from below, set to the last page
+            self.internal_pages.saturating_sub(1)
+        } else {
+            // else reset to the first page
+            0
+        };
+    }
+
+    /// Transition to a different state.
+    ///
+    /// This is the only way to change the current flow state.
+    fn goto(&mut self, ctx: &mut EventCtx, new_state: FlowState, attach_type: AttachType) {
+        // update current page
+        self.state = new_state;
+
+        // reset and unlock swipe config
         self.swipe = SwipeDetect::new();
         self.allow_swipe = true;
 
+        // send an Attach event to the new page
         self.current_page_mut()
             .event(ctx, Event::Attach(attach_type));
 
-        self.internal_pages = self.current_page_mut().get_internal_page_count() as u16;
-
-        match attach_type {
-            Swipe(Direction::Up) => {
-                self.internal_state = 0;
-            }
-            Swipe(Direction::Down) => {
-                self.internal_state = self.internal_pages.saturating_sub(1);
-            }
-            _ => {}
-        }
-
+        self.update_page_count(attach_type);
         ctx.request_paint();
     }
 
@@ -191,15 +201,17 @@ impl SwipeFlow {
         let mut decision = Decision::Nothing;
         let mut return_transition: AttachType = AttachType::Initial;
 
+        if let Event::Attach(attach_type) = event {
+            self.update_page_count(attach_type);
+        }
+
         let mut attach = false;
 
         let e = if self.allow_swipe {
             let page = self.current_page();
             let config = page
                 .get_swipe_config()
-                .with_pagination(self.internal_state, self.internal_pages);
-
-            self.internal_pages = page.get_internal_page_count() as u16;
+                .with_pagination(self.internal_page_idx, self.internal_pages);
 
             match self.swipe.event(ctx, event, config) {
                 Some(SwipeEvent::End(dir)) => {
@@ -211,10 +223,10 @@ impl SwipeFlow {
 
                     return_transition = AttachType::Swipe(dir);
 
-                    let new_internal_state =
-                        config.paging_event(dir, self.internal_state, self.internal_pages);
-                    if new_internal_state != self.internal_state {
-                        self.internal_state = new_internal_state;
+                    let new_internal_page_idx =
+                        config.paging_event(dir, self.internal_page_idx, self.internal_pages);
+                    if new_internal_page_idx != self.internal_page_idx {
+                        self.internal_page_idx = new_internal_page_idx;
                         decision = Decision::Nothing;
                         attach = true;
                     }
@@ -270,8 +282,7 @@ impl SwipeFlow {
 
         match decision {
             Decision::Transition(new_state, attach) => {
-                self.state = new_state;
-                self.goto(ctx, attach);
+                self.goto(ctx, new_state, attach);
                 None
             }
             Decision::Return(msg) => {
