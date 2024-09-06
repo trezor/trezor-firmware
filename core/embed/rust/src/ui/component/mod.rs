@@ -46,7 +46,7 @@ pub use qr_code::Qr;
 #[cfg(feature = "touch")]
 pub use swipe::Swipe;
 #[cfg(feature = "touch")]
-pub use swipe_detect::{SwipeDetect, SwipeDetectMsg};
+pub use swipe_detect::SwipeDetect;
 pub use text::{
     formatted::FormattedText,
     layout::{LineBreaking, PageBreaking, TextLayout},

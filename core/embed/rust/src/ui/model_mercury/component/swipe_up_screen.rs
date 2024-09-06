@@ -1,6 +1,6 @@
 use crate::ui::{
-    component::{base::AttachType, Component, Event, EventCtx, SwipeDetect, SwipeDetectMsg},
-    event::{SwipeEvent, TouchEvent},
+    component::{base::AttachType, Component, Event, EventCtx, SwipeDetect},
+    event::SwipeEvent,
     flow::Swipable,
     geometry::Rect,
     shape::Renderer,
@@ -49,14 +49,11 @@ impl<T: Swipable + Component> Component for SwipeUpScreen<T> {
             .swipe
             .event(ctx, event, self.content.get_swipe_config())
         {
-            Some(SwipeDetectMsg::Trigger(dir)) => {
+            Some(SwipeEvent::End(dir)) => {
                 ctx.set_transition_out(AttachType::Swipe(dir));
                 return Some(SwipeUpScreenMsg::Swiped);
             }
-            Some(SwipeDetectMsg::Move(dir, progress)) => {
-                Event::Swipe(SwipeEvent::Move(dir, progress as i16))
-            }
-            Some(SwipeDetectMsg::Start(dir)) => Event::Swipe(SwipeEvent::Start(dir)),
+            Some(e) => Event::Swipe(e),
             _ => event,
         };
 
