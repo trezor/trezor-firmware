@@ -8,7 +8,7 @@ use crate::{
     ui::{
         component::{
             base::AttachType::{self, Swipe},
-            Component, Event, EventCtx, FlowMsg, SwipeDetect, SwipeDetectMsg,
+            Component, Event, EventCtx, FlowMsg, SwipeDetect,
         },
         display::Color,
         event::{SwipeEvent, TouchEvent},
@@ -202,7 +202,7 @@ impl SwipeFlow {
             self.internal_pages = page.get_internal_page_count() as u16;
 
             match self.swipe.event(ctx, event, config) {
-                Some(SwipeDetectMsg::Trigger(dir)) => {
+                Some(SwipeEvent::End(dir)) => {
                     if let Some(override_decision) = self.decision_override.take() {
                         decision = override_decision;
                     } else {
@@ -220,10 +220,7 @@ impl SwipeFlow {
                     }
                     Event::Swipe(SwipeEvent::End(dir))
                 }
-                Some(SwipeDetectMsg::Move(dir, progress)) => {
-                    Event::Swipe(SwipeEvent::Move(dir, progress as i16))
-                }
-                Some(SwipeDetectMsg::Start(dir)) => Event::Swipe(SwipeEvent::Start(dir)),
+                Some(e) => Event::Swipe(e),
                 None => event,
             }
         } else {
