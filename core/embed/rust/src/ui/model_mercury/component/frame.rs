@@ -81,7 +81,6 @@ impl HorizontalSwipe {
 
 #[derive(Clone)]
 pub struct Frame<T> {
-    border: Insets,
     bounds: Rect,
     content: T,
     header: Header,
@@ -105,7 +104,6 @@ where
     pub const fn new(alignment: Alignment, title: TString<'static>, content: T) -> Self {
         Self {
             bounds: Rect::zero(),
-            border: theme::borders(),
             content,
             header: Header::new(alignment, title),
             header_update_fn: None,
@@ -130,12 +128,6 @@ where
     #[inline(never)]
     pub const fn centered(title: TString<'static>, content: T) -> Self {
         Self::new(Alignment::Center, title, content)
-    }
-
-    #[inline(never)]
-    pub const fn with_border(mut self, border: Insets) -> Self {
-        self.border = border;
-        self
     }
 
     #[inline(never)]

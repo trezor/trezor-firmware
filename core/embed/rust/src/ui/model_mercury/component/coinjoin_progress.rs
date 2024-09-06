@@ -60,7 +60,7 @@ where
         Ok(Self {
             value: 0,
             indeterminate,
-            content: Frame::centered(
+            content: Frame::left_aligned(
                 TR::coinjoin__title_progress.into(),
                 Split::bottom(RECTANGLE_HEIGHT, 0, Empty, inner),
             ),
