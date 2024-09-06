@@ -4,7 +4,7 @@ use crate::{
         animation::Animation,
         component::{Event, EventCtx},
         constant::screen,
-        event::TouchEvent,
+        event::{SwipeEvent, TouchEvent},
         geometry::{Axis, Direction, Offset, Point},
         util::animation_disabled,
     },
@@ -168,18 +168,11 @@ impl core::ops::IndexMut<Direction> for SwipeConfig {
     }
 }
 
-#[derive(Copy, Clone, Eq, PartialEq)]
-pub enum SwipeDetectMsg {
-    Start(Direction),
-    Move(Direction, u16),
-    Trigger(Direction),
-}
-
 pub struct SwipeDetect {
     origin: Option<Point>,
     locked: Option<Direction>,
     final_animation: Option<Animation<i16>>,
-    moved: u16,
+    moved: i16,
 }
 
 impl SwipeDetect {
@@ -237,20 +230,20 @@ impl SwipeDetect {
         }
     }
 
-    fn progress(&self, val: u16) -> u16 {
-        ((val as f32 / Self::DISTANCE as f32) * Self::PROGRESS_MAX as f32) as u16
+    fn progress(&self, val: u16) -> i16 {
+        ((val as f32 / Self::DISTANCE as f32) * Self::PROGRESS_MAX as f32) as i16
     }
 
-    fn eval_anim_frame(&mut self, ctx: &mut EventCtx) -> Option<SwipeDetectMsg> {
+    fn eval_anim_frame(&mut self, ctx: &mut EventCtx) -> Option<SwipeEvent> {
         if let Some(locked) = self.locked {
             let mut finish = false;
             let res = if let Some(animation) = &self.final_animation {
                 if animation.finished(Instant::now()) {
                     finish = true;
                     if animation.to != 0 {
-                        Some(SwipeDetectMsg::Trigger(locked))
+                        Some(SwipeEvent::End(locked))
                     } else {
-                        Some(SwipeDetectMsg::Move(locked, 0))
+                        Some(SwipeEvent::Move(locked, 0))
                     }
                 } else {
                     ctx.request_anim_frame();
@@ -258,9 +251,9 @@ impl SwipeDetect {
                     if animation_disabled() {
                         None
                     } else {
-                        Some(SwipeDetectMsg::Move(
+                        Some(SwipeEvent::Move(
                             locked,
-                            animation.value(Instant::now()).max(0) as u16,
+                            animation.value(Instant::now()).max(0),
                         ))
                     }
                 }
@@ -310,7 +303,7 @@ impl SwipeDetect {
         ctx: &mut EventCtx,
         event: Event,
         config: SwipeConfig,
-    ) -> Option<SwipeDetectMsg> {
+    ) -> Option<SwipeEvent> {
         match (event, self.origin) {
             (Event::Touch(TouchEvent::TouchStart(pos)), _) => {
                 if self.final_animation.is_none() {
@@ -330,7 +323,7 @@ impl SwipeDetect {
                         Some(locked) => {
                             // advance in locked direction only
                             let moved = config.progress(locked, ofs, self.min_lock(locked));
-                            Some(SwipeDetectMsg::Move(locked, self.progress(moved)))
+                            Some(SwipeEvent::Move(locked, self.progress(moved)))
                         }
                         None => {
                             let mut res = None;
@@ -338,7 +331,7 @@ impl SwipeDetect {
                                 let progress = config.progress(dir, ofs, self.min_lock(dir));
                                 if progress > 0 && self.is_lockable(dir) {
                                     self.locked = Some(dir);
-                                    res = Some(SwipeDetectMsg::Start(dir));
+                                    res = Some(SwipeEvent::Start(dir));
                                     break;
                                 }
                             }
@@ -346,7 +339,7 @@ impl SwipeDetect {
                         }
                     };
 
-                    if let Some(SwipeDetectMsg::Move(_, progress)) = res {
+                    if let Some(SwipeEvent::Move(_, progress)) = res {
                         self.moved = progress;
                     }
 
@@ -400,7 +393,7 @@ impl SwipeDetect {
 
                         let duration = ((duration.to_millis() as f32 * ratio) as u32).max(0);
                         self.final_animation = Some(Animation::new(
-                            self.moved as i16,
+                            self.moved,
                             final_value,
                             Duration::from_millis(duration),
                             Instant::now(),
@@ -410,7 +403,7 @@ impl SwipeDetect {
                         self.final_animation = None;
                         self.moved = 0;
                         self.locked = None;
-                        return Some(SwipeDetectMsg::Trigger(locked));
+                        return Some(SwipeEvent::End(locked));
                     }
                     return None;
                 } else {
