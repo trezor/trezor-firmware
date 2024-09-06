@@ -8,6 +8,7 @@ BITCOIN_ONLY = ARGUMENTS.get('BITCOIN_ONLY', '0')
 EVERYTHING = BITCOIN_ONLY != '1'
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
+COMPILATION_DB = int(ARGUMENTS.get('COMPILATION_DB', 0))
 HW_REVISION ='emulator'
 THP = ARGUMENTS.get('THP', '0') == '1' # Trezor-Host Protocol
 NEW_RENDERING = ARGUMENTS.get('NEW_RENDERING', '1') == '1' or TREZOR_MODEL in ('T3T1',)
@@ -920,4 +921,16 @@ program = env.Command(
 
 if CMAKELISTS != 0:
     env.Depends(program, cmake_gen)
+
+    if COMPILATION_DB != 0:
+        # Generate compile_commands.json if the option is enabled
+        cmake_gen_commands = env.Command(
+            target='compile_commands.json',
+            source='CMakeLists.txt',
+            action='cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -S . -B build'
+        )
+        env.Depends(program, cmake_gen_commands)
+elif COMPILATION_DB != 0:
+    print("CMAKELISTS is not enabled; skipping COMPILATION_DB (compile_commands.json generation).")
+
 env.Depends(program, rust)
