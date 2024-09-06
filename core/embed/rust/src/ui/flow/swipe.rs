@@ -223,7 +223,7 @@ impl SwipeFlow {
                 Some(SwipeDetectMsg::Move(dir, progress)) => {
                     Event::Swipe(SwipeEvent::Move(dir, progress as i16))
                 }
-                Some(SwipeDetectMsg::Start(_)) => Event::Touch(TouchEvent::TouchAbort),
+                Some(SwipeDetectMsg::Start(dir)) => Event::Swipe(SwipeEvent::Start(dir)),
                 None => event,
             }
         } else {

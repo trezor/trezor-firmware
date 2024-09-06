@@ -14,8 +14,6 @@ pub enum TouchEvent {
     TouchMove(Point),
     /// Touch has ended at a point on the screen.
     TouchEnd(Point),
-    /// Touch event has been suppressed by more important event - i.e. Swipe.
-    TouchAbort,
 }
 
 impl TouchEvent {
@@ -34,6 +32,7 @@ impl TouchEvent {
 #[derive(Copy, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 pub enum SwipeEvent {
+    Start(Direction),
     Move(Direction, i16),
     End(Direction),
 }
