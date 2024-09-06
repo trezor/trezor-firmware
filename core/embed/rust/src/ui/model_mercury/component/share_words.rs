@@ -3,11 +3,9 @@ use crate::{
     strutil::TString,
     translations::TR,
     ui::{
-        component::{
-            base::AttachType, text::TextStyle, Component, Event, EventCtx, Never, SwipeDirection,
-        },
+        component::{base::AttachType, text::TextStyle, Component, Event, EventCtx, Never},
         event::SwipeEvent,
-        geometry::{Alignment, Alignment2D, Insets, Offset, Rect},
+        geometry::{Alignment, Alignment2D, Direction, Insets, Offset, Rect},
         model_mercury::component::{swipe_content::SwipeAttachAnimation, InternallySwipable},
         shape::{self, Renderer},
     },
@@ -99,24 +97,24 @@ impl<'a> ShareWords<'a> {
         });
     }
 
-    fn should_animate_progress(&self) -> (SwipeDirection, bool) {
+    fn should_animate_progress(&self) -> (Direction, bool) {
         let (dir, should_animate) = if self.page_index < self.next_index {
-            (SwipeDirection::Up, !self.is_final_page())
+            (Direction::Up, !self.is_final_page())
         } else {
-            (SwipeDirection::Down, !self.is_first_page())
+            (Direction::Down, !self.is_first_page())
         };
         (dir, should_animate)
     }
 
-    fn should_animate_attach(&self, event: Event) -> (SwipeDirection, bool) {
+    fn should_animate_attach(&self, event: Event) -> (Direction, bool) {
         match event {
-            Event::Attach(AttachType::Swipe(SwipeDirection::Up)) => {
-                (SwipeDirection::Up, !self.is_first_page())
+            Event::Attach(AttachType::Swipe(Direction::Up)) => {
+                (Direction::Up, !self.is_first_page())
             }
-            Event::Attach(AttachType::Swipe(SwipeDirection::Down)) => {
-                (SwipeDirection::Down, !self.is_final_page())
+            Event::Attach(AttachType::Swipe(Direction::Down)) => {
+                (Direction::Down, !self.is_final_page())
             }
-            _ => (SwipeDirection::Up, false),
+            _ => (Direction::Up, false),
         }
     }
 }
@@ -154,13 +152,13 @@ impl<'a> Component for ShareWords<'a> {
                 }
             }
             Event::Swipe(SwipeEvent::End(dir)) => match dir {
-                SwipeDirection::Up if !self.is_final_page() => {
+                Direction::Up if !self.is_final_page() => {
                     self.progress = 0;
                     self.page_index = (self.page_index + 1).min(self.share_words.len() as i16 - 1);
                     self.wait_for_attach = true;
                     ctx.request_paint();
                 }
-                SwipeDirection::Down if !self.is_first_page() => {
+                Direction::Down if !self.is_first_page() => {
                     self.progress = 0;
                     self.page_index = self.page_index.saturating_sub(1);
                     self.wait_for_attach = true;
@@ -170,11 +168,11 @@ impl<'a> Component for ShareWords<'a> {
             },
             Event::Swipe(SwipeEvent::Move(dir, progress)) => {
                 match dir {
-                    SwipeDirection::Up => {
+                    Direction::Up => {
                         self.next_index = self.page_index + 1;
                         self.progress = progress;
                     }
-                    SwipeDirection::Down => {
+                    Direction::Down => {
                         self.next_index = self.page_index - 1;
                         self.progress = progress;
                     }

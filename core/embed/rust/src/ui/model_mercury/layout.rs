@@ -38,10 +38,10 @@ use crate::{
                 },
                 TextStyle,
             },
-            Border, CachedJpeg, Component, FormattedText, Never, SwipeDirection, Timeout,
+            Border, CachedJpeg, Component, FormattedText, Never, Timeout,
         },
         flow::Swipable,
-        geometry,
+        geometry::{self, Direction},
         layout::{
             obj::{ComponentMsgObj, LayoutObj, ATTACH_TYPE_OBJ},
             result::{CANCELLED, CONFIRMED, INFO},
@@ -475,7 +475,7 @@ extern "C" fn new_confirm_homescreen(n_args: usize, args: *const Obj, kwargs: *m
                         TR::instructions__swipe_up.into(),
                         Some(TR::buttons__change.into()),
                     )
-                    .with_swipe(SwipeDirection::Up, SwipeSettings::default()),
+                    .with_swipe(Direction::Up, SwipeSettings::default()),
             ));
             Ok(obj?.into())
         };
@@ -599,7 +599,7 @@ extern "C" fn new_confirm_modify_output(n_args: usize, args: *const Obj, kwargs:
             Frame::left_aligned(TR::modify_amount__title.into(), paragraphs)
                 .with_cancel_button()
                 .with_footer(TR::instructions__swipe_up.into(), None)
-                .with_swipe(SwipeDirection::Up, SwipeSettings::default()),
+                .with_swipe(Direction::Up, SwipeSettings::default()),
         ))?;
         Ok(obj.into())
     };
@@ -643,7 +643,7 @@ extern "C" fn new_confirm_modify_fee(n_args: usize, args: *const Obj, kwargs: *m
             Frame::left_aligned(title, paragraphs)
                 .with_menu_button()
                 .with_footer(TR::instructions__swipe_up.into(), None)
-                .with_swipe(SwipeDirection::Up, SwipeSettings::default()),
+                .with_swipe(Direction::Up, SwipeSettings::default()),
         ))?;
         Ok(obj.into())
     };
@@ -662,12 +662,12 @@ extern "C" fn new_show_error(n_args: usize, args: *const Obj, kwargs: *mut Map) 
                 .with_cancel_button()
                 .with_danger()
                 .with_footer(TR::instructions__swipe_up.into(), None)
-                .with_swipe(SwipeDirection::Up, SwipeSettings::default())
+                .with_swipe(Direction::Up, SwipeSettings::default())
         } else {
             Frame::left_aligned(title, SwipeContent::new(content))
                 .with_danger()
                 .with_footer(TR::instructions__swipe_up.into(), None)
-                .with_swipe(SwipeDirection::Up, SwipeSettings::default())
+                .with_swipe(Direction::Up, SwipeSettings::default())
         };
 
         let frame = SwipeUpScreen::new(frame);
@@ -693,7 +693,7 @@ extern "C" fn new_show_warning(n_args: usize, args: *const Obj, kwargs: *mut Map
 
         let frame = Frame::left_aligned(title, SwipeContent::new(content))
             .with_footer(TR::instructions__swipe_up.into(), action)
-            .with_swipe(SwipeDirection::Up, SwipeSettings::default());
+            .with_swipe(Direction::Up, SwipeSettings::default());
 
         let frame_with_icon = if danger {
             frame.with_danger_icon()
@@ -723,7 +723,7 @@ extern "C" fn new_show_success(n_args: usize, args: *const Obj, kwargs: *mut Map
             )
             .with_footer(TR::instructions__swipe_up.into(), description)
             .with_result_icon(ICON_BULLET_CHECKMARK, theme::GREEN_LIGHT)
-            .with_swipe(SwipeDirection::Up, SwipeSettings::default()),
+            .with_swipe(Direction::Up, SwipeSettings::default()),
         ))?;
         Ok(obj.into())
     };
@@ -738,7 +738,7 @@ extern "C" fn new_show_info(n_args: usize, args: *const Obj, kwargs: *mut Map) -
         let obj = LayoutObj::new(SwipeUpScreen::new(
             Frame::left_aligned(title, SwipeContent::new(content))
                 .with_footer(TR::instructions__swipe_up.into(), None)
-                .with_swipe(SwipeDirection::Up, SwipeSettings::default()),
+                .with_swipe(Direction::Up, SwipeSettings::default()),
         ))?;
         Ok(obj.into())
     };
@@ -762,7 +762,7 @@ extern "C" fn new_show_mismatch(n_args: usize, args: *const Obj, kwargs: *mut Ma
             Frame::left_aligned(title, SwipeContent::new(paragraphs))
                 .with_cancel_button()
                 .with_footer(TR::instructions__swipe_up.into(), Some(button))
-                .with_swipe(SwipeDirection::Up, SwipeSettings::default()),
+                .with_swipe(Direction::Up, SwipeSettings::default()),
         ))?;
 
         Ok(obj.into())
@@ -806,7 +806,7 @@ extern "C" fn new_confirm_with_info(n_args: usize, args: *const Obj, kwargs: *mu
             Frame::left_aligned(title, SwipeContent::new(paragraphs.into_paragraphs()))
                 .with_menu_button()
                 .with_footer(TR::instructions__swipe_up.into(), Some(button))
-                .with_swipe(SwipeDirection::Up, SwipeSettings::default()),
+                .with_swipe(Direction::Up, SwipeSettings::default()),
         ))?;
         Ok(obj.into())
     };
@@ -831,7 +831,7 @@ extern "C" fn new_confirm_more(n_args: usize, args: *const Obj, kwargs: *mut Map
             Frame::left_aligned(title, SwipeContent::new(paragraphs.into_paragraphs()))
                 .with_cancel_button()
                 .with_footer(TR::instructions__swipe_up.into(), None)
-                .with_swipe(SwipeDirection::Up, SwipeSettings::default()),
+                .with_swipe(Direction::Up, SwipeSettings::default()),
         ))?;
         Ok(obj.into())
     };
@@ -960,7 +960,7 @@ extern "C" fn new_show_checklist(n_args: usize, args: *const Obj, kwargs: *mut M
         let obj = LayoutObj::new(SwipeUpScreen::new(
             Frame::left_aligned(title, SwipeContent::new(checklist_content))
                 .with_footer(TR::instructions__swipe_up.into(), None)
-                .with_swipe(SwipeDirection::Up, SwipeSettings::default()),
+                .with_swipe(Direction::Up, SwipeSettings::default()),
         ))?;
         Ok(obj.into())
     };
@@ -1005,7 +1005,7 @@ extern "C" fn new_show_group_share_success(
         let obj = LayoutObj::new(SwipeUpScreen::new(
             Frame::left_aligned("".into(), SwipeContent::new(paragraphs))
                 .with_footer(TR::instructions__swipe_up.into(), None)
-                .with_swipe(SwipeDirection::Up, SwipeSettings::default()),
+                .with_swipe(Direction::Up, SwipeSettings::default()),
         ))?;
 
         Ok(obj.into())

@@ -8,12 +8,13 @@ use crate::{
         component::{
             swipe_detect::SwipeSettings,
             text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, VecExt},
-            Component, ComponentExt, Paginate, SwipeDirection,
+            Component, ComponentExt, Paginate,
         },
         flow::{
             base::{Decision, DecisionBuilder as _},
             FlowController, FlowMsg, SwipeFlow, SwipePage,
         },
+        geometry::Direction,
         layout::obj::LayoutObj,
     },
 };
@@ -37,13 +38,13 @@ impl FlowController for ConfirmAction {
         *self as usize
     }
 
-    fn handle_swipe(&'static self, direction: SwipeDirection) -> Decision {
+    fn handle_swipe(&'static self, direction: Direction) -> Decision {
         match (self, direction) {
-            (Self::Intro, SwipeDirection::Left) => Self::Menu.swipe(direction),
-            (Self::Menu, SwipeDirection::Right) => Self::Intro.swipe(direction),
-            (Self::Intro, SwipeDirection::Up) => Self::Confirm.swipe(direction),
-            (Self::Confirm, SwipeDirection::Down) => Self::Intro.swipe(direction),
-            (Self::Confirm, SwipeDirection::Left) => Self::Menu.swipe(direction),
+            (Self::Intro, Direction::Left) => Self::Menu.swipe(direction),
+            (Self::Menu, Direction::Right) => Self::Intro.swipe(direction),
+            (Self::Intro, Direction::Up) => Self::Confirm.swipe(direction),
+            (Self::Confirm, Direction::Down) => Self::Intro.swipe(direction),
+            (Self::Confirm, Direction::Left) => Self::Menu.swipe(direction),
             _ => self.do_nothing(),
         }
     }
@@ -75,11 +76,11 @@ impl FlowController for ConfirmActionSimple {
         *self as usize
     }
 
-    fn handle_swipe(&'static self, direction: SwipeDirection) -> Decision {
+    fn handle_swipe(&'static self, direction: Direction) -> Decision {
         match (self, direction) {
-            (Self::Intro, SwipeDirection::Left) => Self::Menu.swipe(direction),
-            (Self::Menu, SwipeDirection::Right) => Self::Intro.swipe(direction),
-            (Self::Intro, SwipeDirection::Up) => self.return_msg(FlowMsg::Confirmed),
+            (Self::Intro, Direction::Left) => Self::Menu.swipe(direction),
+            (Self::Menu, Direction::Right) => Self::Intro.swipe(direction),
+            (Self::Intro, Direction::Up) => self.return_msg(FlowMsg::Confirmed),
             _ => self.do_nothing(),
         }
     }
@@ -164,8 +165,8 @@ pub fn new_confirm_action_uni<T: Component + MaybeTrace + 'static>(
     let mut content_intro = Frame::left_aligned(title, content)
         .with_menu_button()
         .with_footer(TR::instructions__swipe_up.into(), None)
-        .with_swipe(SwipeDirection::Up, SwipeSettings::default())
-        .with_swipe(SwipeDirection::Left, SwipeSettings::default())
+        .with_swipe(Direction::Up, SwipeSettings::default())
+        .with_swipe(Direction::Left, SwipeSettings::default())
         .with_vertical_pages();
 
     if let Some(subtitle) = subtitle {
@@ -245,7 +246,7 @@ fn create_menu(
     }
     let content_menu = Frame::left_aligned("".into(), menu_choices)
         .with_cancel_button()
-        .with_swipe(SwipeDirection::Right, SwipeSettings::immediate());
+        .with_swipe(Direction::Right, SwipeSettings::immediate());
 
     let content_menu = content_menu.map(move |msg| match msg {
         FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => Some(FlowMsg::Choice(i)),
@@ -281,8 +282,8 @@ fn create_confirm(
         let mut content_confirm = Frame::left_aligned(prompt_title, SwipeContent::new(prompt))
             .with_footer(prompt_action, None)
             .with_menu_button()
-            .with_swipe(SwipeDirection::Down, SwipeSettings::default())
-            .with_swipe(SwipeDirection::Left, SwipeSettings::default());
+            .with_swipe(Direction::Down, SwipeSettings::default())
+            .with_swipe(Direction::Left, SwipeSettings::default());
 
         if let Some(subtitle) = subtitle {
             content_confirm = content_confirm.with_subtitle(subtitle);

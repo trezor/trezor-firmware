@@ -7,12 +7,13 @@ use crate::{
         component::{
             swipe_detect::SwipeSettings,
             text::paragraphs::{Paragraph, ParagraphSource},
-            ComponentExt, SwipeDirection,
+            ComponentExt,
         },
         flow::{
             base::{Decision, DecisionBuilder as _},
             FlowController, FlowMsg, SwipeFlow,
         },
+        geometry::Direction,
         layout::obj::LayoutObj,
         model_mercury::component::SwipeContent,
     },
@@ -36,11 +37,11 @@ impl FlowController for WarningHiPrio {
         *self as usize
     }
 
-    fn handle_swipe(&'static self, direction: SwipeDirection) -> Decision {
+    fn handle_swipe(&'static self, direction: Direction) -> Decision {
         match (self, direction) {
-            (Self::Message, SwipeDirection::Left) => Self::Menu.swipe(direction),
-            (Self::Message, SwipeDirection::Up) => Self::Cancelled.swipe(direction),
-            (Self::Menu, SwipeDirection::Right) => Self::Message.swipe(direction),
+            (Self::Message, Direction::Left) => Self::Menu.swipe(direction),
+            (Self::Message, Direction::Up) => Self::Cancelled.swipe(direction),
+            (Self::Menu, Direction::Right) => Self::Message.swipe(direction),
             _ => self.do_nothing(),
         }
     }
@@ -84,8 +85,8 @@ impl WarningHiPrio {
             .with_menu_button()
             .with_footer(TR::instructions__swipe_up.into(), Some(cancel))
             .with_danger()
-            .with_swipe(SwipeDirection::Up, SwipeSettings::default())
-            .with_swipe(SwipeDirection::Left, SwipeSettings::default())
+            .with_swipe(Direction::Up, SwipeSettings::default())
+            .with_swipe(Direction::Left, SwipeSettings::default())
             .map(|msg| matches!(msg, FrameMsg::Button(_)).then_some(FlowMsg::Info));
         // .one_button_request(ButtonRequestCode::Warning, br_name);
 
@@ -97,7 +98,7 @@ impl WarningHiPrio {
                 .danger(theme::ICON_CHEVRON_RIGHT, confirm),
         )
         .with_cancel_button()
-        .with_swipe(SwipeDirection::Right, SwipeSettings::immediate())
+        .with_swipe(Direction::Right, SwipeSettings::immediate())
         .map(|msg| match msg {
             FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => Some(FlowMsg::Choice(i)),
             FrameMsg::Button(_) => Some(FlowMsg::Cancelled),

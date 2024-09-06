@@ -1,7 +1,7 @@
 use crate::ui::{
-    component::{Component, Event, EventCtx, Paginate, SwipeDirection},
+    component::{Component, Event, EventCtx, Paginate},
     event::SwipeEvent,
-    geometry::{Axis, Rect},
+    geometry::{Axis, Direction, Rect},
     shape::Renderer,
 };
 
@@ -55,22 +55,22 @@ impl<T: Component + Paginate> Component for SwipePage<T> {
 
         if let Event::Swipe(SwipeEvent::End(direction)) = event {
             match (self.axis, direction) {
-                (Axis::Vertical, SwipeDirection::Up) => {
+                (Axis::Vertical, Direction::Up) => {
                     self.current = (self.current + 1).min(self.pages - 1);
                     self.inner.change_page(self.current);
                     ctx.request_paint();
                 }
-                (Axis::Vertical, SwipeDirection::Down) => {
+                (Axis::Vertical, Direction::Down) => {
                     self.current = self.current.saturating_sub(1);
                     self.inner.change_page(self.current);
                     ctx.request_paint();
                 }
-                (Axis::Horizontal, SwipeDirection::Left) => {
+                (Axis::Horizontal, Direction::Left) => {
                     self.current = (self.current + 1).min(self.pages - 1);
                     self.inner.change_page(self.current);
                     ctx.request_paint();
                 }
-                (Axis::Horizontal, SwipeDirection::Right) => {
+                (Axis::Horizontal, Direction::Right) => {
                     self.current = self.current.saturating_sub(1);
                     self.inner.change_page(self.current);
                     ctx.request_paint();

@@ -1,10 +1,10 @@
 use crate::{
     strutil::TString,
     ui::{
-        component::{text::TextStyle, Component, Event, EventCtx, Never, SwipeDirection},
+        component::{text::TextStyle, Component, Event, EventCtx, Never},
         display::{Color, Font},
         event::SwipeEvent,
-        geometry::{Alignment, Alignment2D, Offset, Point, Rect},
+        geometry::{Alignment, Alignment2D, Direction, Offset, Point, Rect},
         lerp::Lerp,
         model_mercury::theme,
         shape,
@@ -26,7 +26,7 @@ pub struct Footer<'a> {
     swipe_allow_up: bool,
     swipe_allow_down: bool,
     progress: i16,
-    dir: SwipeDirection,
+    dir: Direction,
 }
 
 #[derive(Clone)]
@@ -53,7 +53,7 @@ impl<'a> Footer<'a> {
             swipe_allow_down: false,
             swipe_allow_up: false,
             progress: 0,
-            dir: SwipeDirection::Up,
+            dir: Direction::Up,
         }
     }
 
@@ -140,13 +140,13 @@ impl<'a> Footer<'a> {
         self.content.height()
     }
 
-    pub fn with_swipe(self, swipe_direction: SwipeDirection) -> Self {
+    pub fn with_swipe(self, swipe_direction: Direction) -> Self {
         match swipe_direction {
-            SwipeDirection::Up => Self {
+            Direction::Up => Self {
                 swipe_allow_up: true,
                 ..self
             },
-            SwipeDirection::Down => Self {
+            Direction::Down => Self {
                 swipe_allow_down: true,
                 ..self
             },
@@ -170,13 +170,13 @@ impl<'a> Component for Footer<'a> {
                 self.progress = 0;
             }
             Event::Swipe(SwipeEvent::Move(dir, progress)) => match dir {
-                SwipeDirection::Up => {
+                Direction::Up => {
                     if self.swipe_allow_up {
                         self.progress = progress;
                         self.dir = dir;
                     }
                 }
-                SwipeDirection::Down => {
+                Direction::Down => {
                     if self.swipe_allow_down {
                         self.progress = progress;
                         self.dir = dir;
@@ -209,8 +209,8 @@ impl<'a> Component for Footer<'a> {
         let mask = u8::lerp(0, 255, shift.eval(progress));
 
         let offset = match self.dir {
-            SwipeDirection::Up => Offset::y(-offset),
-            SwipeDirection::Down => Offset::y(3 * offset),
+            Direction::Up => Offset::y(-offset),
+            Direction::Down => Offset::y(3 * offset),
             _ => Offset::zero(),
         };
 

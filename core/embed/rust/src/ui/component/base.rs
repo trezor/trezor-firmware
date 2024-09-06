@@ -1,5 +1,3 @@
-use core::mem;
-
 use heapless::Vec;
 
 use crate::{
@@ -18,11 +16,12 @@ use crate::{
 use crate::ui::event::ButtonEvent;
 use crate::ui::event::USBEvent;
 #[cfg(feature = "touch")]
-use crate::ui::event::{SwipeEvent, TouchEvent};
+use crate::ui::{
+    event::{SwipeEvent, TouchEvent},
+    geometry::Direction,
+};
 
 use super::Paginate;
-#[cfg(feature = "touch")]
-use super::SwipeDirection;
 
 /// Type used by components that do not return any messages.
 ///
@@ -101,7 +100,7 @@ impl<T> Child<T> {
     where
         F: FnOnce(&mut EventCtx, &mut T) -> U,
     {
-        let prev_requested = mem::replace(&mut ctx.paint_requested, false);
+        let prev_requested = core::mem::replace(&mut ctx.paint_requested, false);
         let result = component_func(ctx, &mut self.component);
         if ctx.paint_requested {
             // If a paint was requested anywhere in the inner component tree, we need to
@@ -355,7 +354,7 @@ pub enum AttachType {
     /// in the given component.
     Resume,
     #[cfg(feature = "touch")]
-    Swipe(SwipeDirection),
+    Swipe(Direction),
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]

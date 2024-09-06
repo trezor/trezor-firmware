@@ -8,12 +8,12 @@ use crate::{
     ui::{
         component::{
             base::AttachType::{self, Swipe},
-            Component, Event, EventCtx, FlowMsg, SwipeDetect, SwipeDetectMsg, SwipeDirection,
+            Component, Event, EventCtx, FlowMsg, SwipeDetect, SwipeDetectMsg,
         },
         display::Color,
         event::{SwipeEvent, TouchEvent},
         flow::{base::Decision, FlowController},
-        geometry::Rect,
+        geometry::{Direction, Rect},
         layout::obj::ObjComponent,
         shape::{render_on_display, ConcreteRenderer, Renderer, ScopedRenderer},
         util::animation_disabled,
@@ -157,10 +157,10 @@ impl SwipeFlow {
         self.internal_pages = self.current_page_mut().get_internal_page_count() as u16;
 
         match attach_type {
-            Swipe(SwipeDirection::Up) => {
+            Swipe(Direction::Up) => {
                 self.internal_state = 0;
             }
-            Swipe(SwipeDirection::Down) => {
+            Swipe(Direction::Down) => {
                 self.internal_state = self.internal_pages.saturating_sub(1);
             }
             _ => {}
@@ -173,7 +173,7 @@ impl SwipeFlow {
         self.store[state].render(target);
     }
 
-    fn handle_swipe_child(&mut self, _ctx: &mut EventCtx, direction: SwipeDirection) -> Decision {
+    fn handle_swipe_child(&mut self, _ctx: &mut EventCtx, direction: Direction) -> Decision {
         self.state.handle_swipe(direction)
     }
 

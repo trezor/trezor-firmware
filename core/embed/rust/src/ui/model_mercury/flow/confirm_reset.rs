@@ -8,12 +8,13 @@ use crate::{
         component::{
             swipe_detect::SwipeSettings,
             text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort},
-            ButtonRequestExt, ComponentExt, SwipeDirection,
+            ButtonRequestExt, ComponentExt,
         },
         flow::{
             base::{Decision, DecisionBuilder as _},
             FlowController, FlowMsg, SwipeFlow,
         },
+        geometry::Direction,
         layout::obj::LayoutObj,
     },
 };
@@ -38,13 +39,13 @@ impl FlowController for ConfirmResetCreate {
         *self as usize
     }
 
-    fn handle_swipe(&'static self, direction: SwipeDirection) -> Decision {
+    fn handle_swipe(&'static self, direction: Direction) -> Decision {
         match (self, direction) {
-            (Self::Intro, SwipeDirection::Left) => Self::Menu.swipe(direction),
-            (Self::Intro, SwipeDirection::Up) => Self::Confirm.swipe(direction),
-            (Self::Menu, SwipeDirection::Right) => Self::Intro.swipe(direction),
-            (Self::Confirm, SwipeDirection::Down) => Self::Intro.swipe(direction),
-            (Self::Confirm, SwipeDirection::Left) => Self::Menu.swipe(direction),
+            (Self::Intro, Direction::Left) => Self::Menu.swipe(direction),
+            (Self::Intro, Direction::Up) => Self::Confirm.swipe(direction),
+            (Self::Menu, Direction::Right) => Self::Intro.swipe(direction),
+            (Self::Confirm, Direction::Down) => Self::Intro.swipe(direction),
+            (Self::Confirm, Direction::Left) => Self::Menu.swipe(direction),
             _ => self.do_nothing(),
         }
     }
@@ -73,11 +74,11 @@ impl FlowController for ConfirmResetRecover {
         *self as usize
     }
 
-    fn handle_swipe(&'static self, direction: SwipeDirection) -> Decision {
+    fn handle_swipe(&'static self, direction: Direction) -> Decision {
         match (self, direction) {
-            (Self::Intro, SwipeDirection::Left) => Self::Menu.swipe(direction),
-            (Self::Menu, SwipeDirection::Right) => Self::Intro.swipe(direction),
-            (Self::Intro, SwipeDirection::Up) => self.return_msg(FlowMsg::Confirmed),
+            (Self::Intro, Direction::Left) => Self::Menu.swipe(direction),
+            (Self::Menu, Direction::Right) => Self::Intro.swipe(direction),
+            (Self::Intro, Direction::Up) => self.return_msg(FlowMsg::Confirmed),
             _ => self.do_nothing(),
         }
     }
@@ -126,8 +127,8 @@ fn new_confirm_reset_obj(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Erro
     let content_intro = Frame::left_aligned(title, SwipeContent::new(paragraphs))
         .with_menu_button()
         .with_footer(TR::instructions__swipe_up.into(), None)
-        .with_swipe(SwipeDirection::Up, SwipeSettings::default())
-        .with_swipe(SwipeDirection::Left, SwipeSettings::default())
+        .with_swipe(Direction::Up, SwipeSettings::default())
+        .with_swipe(Direction::Left, SwipeSettings::default())
         .map(|msg| matches!(msg, FrameMsg::Button(_)).then_some(FlowMsg::Info))
         .one_button_request(br);
 
@@ -136,7 +137,7 @@ fn new_confirm_reset_obj(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Erro
         VerticalMenu::empty().danger(theme::ICON_CANCEL, cancel_btn_text),
     )
     .with_cancel_button()
-    .with_swipe(SwipeDirection::Right, SwipeSettings::immediate())
+    .with_swipe(Direction::Right, SwipeSettings::immediate())
     .map(|msg| match msg {
         FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => Some(FlowMsg::Choice(i)),
         FrameMsg::Button(_) => Some(FlowMsg::Cancelled),
@@ -153,8 +154,8 @@ fn new_confirm_reset_obj(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Erro
         )
         .with_menu_button()
         .with_footer(TR::instructions__hold_to_confirm.into(), None)
-        .with_swipe(SwipeDirection::Down, SwipeSettings::default())
-        .with_swipe(SwipeDirection::Left, SwipeSettings::default())
+        .with_swipe(Direction::Down, SwipeSettings::default())
+        .with_swipe(Direction::Left, SwipeSettings::default())
         .map(|msg| match msg {
             FrameMsg::Content(PromptMsg::Confirmed) => Some(FlowMsg::Confirmed),
             FrameMsg::Button(_) => Some(FlowMsg::Info),

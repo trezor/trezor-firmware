@@ -44,7 +44,7 @@ pub use paginated::{PageMsg, Paginate};
 pub use placed::{FixedHeightBar, Floating, GridPlaced, Split};
 pub use qr_code::Qr;
 #[cfg(feature = "touch")]
-pub use swipe::{Swipe, SwipeDirection};
+pub use swipe::Swipe;
 #[cfg(feature = "touch")]
 pub use swipe_detect::{SwipeDetect, SwipeDetectMsg};
 pub use text::{

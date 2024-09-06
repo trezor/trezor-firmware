@@ -2,7 +2,7 @@ use crate::{error, ui::geometry::Point};
 use core::convert::TryInto;
 
 #[cfg(feature = "touch")]
-use crate::ui::component::SwipeDirection;
+use crate::ui::geometry::Direction;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
@@ -79,6 +79,6 @@ pub enum USBEvent {
 #[derive(Copy, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 pub enum SwipeEvent {
-    Move(SwipeDirection, i16),
-    End(SwipeDirection),
+    Move(Direction, i16),
+    End(Direction),
 }

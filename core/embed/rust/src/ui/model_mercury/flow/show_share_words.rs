@@ -8,12 +8,13 @@ use crate::{
         component::{
             swipe_detect::SwipeSettings,
             text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs, VecExt},
-            ButtonRequestExt, ComponentExt, EventCtx, SwipeDirection,
+            ButtonRequestExt, ComponentExt, EventCtx,
         },
         flow::{
             base::{Decision, DecisionBuilder as _},
             FlowController, FlowMsg, SwipeFlow,
         },
+        geometry::Direction,
         layout::obj::LayoutObj,
         model_mercury::component::{InternallySwipable, InternallySwipableContent, SwipeContent},
     },
@@ -39,13 +40,13 @@ impl FlowController for ShowShareWords {
         *self as usize
     }
 
-    fn handle_swipe(&'static self, direction: SwipeDirection) -> Decision {
+    fn handle_swipe(&'static self, direction: Direction) -> Decision {
         match (self, direction) {
-            (Self::Instruction, SwipeDirection::Up) => Self::Words.swipe(direction),
-            (Self::Confirm, SwipeDirection::Down) => Self::Words.swipe(direction),
-            (Self::Words, SwipeDirection::Up) => Self::Confirm.swipe(direction),
-            (Self::Words, SwipeDirection::Down) => Self::Instruction.swipe(direction),
-            (Self::CheckBackupIntro, SwipeDirection::Up) => self.return_msg(FlowMsg::Confirmed),
+            (Self::Instruction, Direction::Up) => Self::Words.swipe(direction),
+            (Self::Confirm, Direction::Down) => Self::Words.swipe(direction),
+            (Self::Words, Direction::Up) => Self::Confirm.swipe(direction),
+            (Self::Words, Direction::Down) => Self::Instruction.swipe(direction),
+            (Self::CheckBackupIntro, Direction::Up) => self.return_msg(FlowMsg::Confirmed),
             _ => self.do_nothing(),
         }
     }
@@ -113,7 +114,7 @@ impl ShowShareWords {
         )
         .with_subtitle(TR::words__instructions.into())
         .with_footer(TR::instructions__swipe_up.into(), description)
-        .with_swipe(SwipeDirection::Up, SwipeSettings::default())
+        .with_swipe(Direction::Up, SwipeSettings::default())
         .map(|msg| matches!(msg, FrameMsg::Content(_)).then_some(FlowMsg::Confirmed))
         .one_button_request(ButtonRequestCode::ResetDevice.with_name("share_words"))
         .with_pages(move |_| nwords + 2);
@@ -123,8 +124,8 @@ impl ShowShareWords {
             title,
             InternallySwipableContent::new(ShareWords::new(share_words_vec, subtitle)),
         )
-        .with_swipe(SwipeDirection::Up, SwipeSettings::default())
-        .with_swipe(SwipeDirection::Down, SwipeSettings::default())
+        .with_swipe(Direction::Up, SwipeSettings::default())
+        .with_swipe(Direction::Down, SwipeSettings::default())
         .with_vertical_pages()
         .with_subtitle(subtitle)
         .register_header_update_fn(header_updating_func)
@@ -137,7 +138,7 @@ impl ShowShareWords {
             SwipeContent::new(PromptScreen::new_hold_to_confirm()),
         )
         .with_footer(TR::instructions__hold_to_confirm.into(), None)
-        .with_swipe(SwipeDirection::Down, SwipeSettings::default())
+        .with_swipe(Direction::Down, SwipeSettings::default())
         .map(|_| Some(FlowMsg::Confirmed));
 
         let content_check_backup_intro = Frame::left_aligned(
@@ -148,7 +149,7 @@ impl ShowShareWords {
             ))),
         )
         .with_footer(TR::instructions__swipe_up.into(), None)
-        .with_swipe(SwipeDirection::Up, SwipeSettings::default())
+        .with_swipe(Direction::Up, SwipeSettings::default())
         .map(|_| Some(FlowMsg::Confirmed));
 
         let res = SwipeFlow::new(&ShowShareWords::Instruction)?
