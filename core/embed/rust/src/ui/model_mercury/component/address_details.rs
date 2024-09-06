@@ -8,11 +8,11 @@ use crate::{
         component::{
             swipe_detect::{SwipeConfig, SwipeSettings},
             text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs, VecExt},
-            Component, Event, EventCtx, Paginate, SwipeDirection,
+            Component, Event, EventCtx, Paginate,
         },
         event::SwipeEvent,
         flow::Swipable,
-        geometry::Rect,
+        geometry::{Direction, Rect},
         shape::Renderer,
     },
 };
@@ -60,7 +60,7 @@ impl AddressDetails {
         let result = Self {
             details: Frame::left_aligned(details_title, para.into_paragraphs())
                 .with_cancel_button()
-                .with_swipe(SwipeDirection::Right, SwipeSettings::immediate())
+                .with_swipe(Direction::Right, SwipeSettings::immediate())
                 .with_horizontal_pages(),
             xpub_view: Frame::left_aligned(
                 " \n ".into(),
@@ -151,11 +151,11 @@ impl Component for AddressDetails {
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         ctx.set_page_count(self.page_count());
         match event {
-            Event::Swipe(SwipeEvent::End(SwipeDirection::Right)) => {
+            Event::Swipe(SwipeEvent::End(Direction::Right)) => {
                 let to_page = self.current_page.saturating_sub(1);
                 self.change_page(to_page);
             }
-            Event::Swipe(SwipeEvent::End(SwipeDirection::Left)) => {
+            Event::Swipe(SwipeEvent::End(Direction::Left)) => {
                 let to_page = self
                     .current_page
                     .saturating_add(1)

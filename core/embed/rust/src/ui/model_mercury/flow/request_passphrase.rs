@@ -4,11 +4,12 @@ use crate::{
     strutil::{ShortString, TString},
     translations::TR,
     ui::{
-        component::{ComponentExt, SwipeDirection},
+        component::ComponentExt,
         flow::{
             base::{Decision, DecisionBuilder as _},
             FlowController, FlowMsg, SwipeFlow,
         },
+        geometry::Direction,
         layout::obj::LayoutObj,
     },
 };
@@ -29,7 +30,7 @@ impl FlowController for RequestPassphrase {
         *self as usize
     }
 
-    fn handle_swipe(&'static self, _direction: SwipeDirection) -> Decision {
+    fn handle_swipe(&'static self, _direction: Direction) -> Decision {
         self.do_nothing()
     }
 

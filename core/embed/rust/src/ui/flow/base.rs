@@ -1,4 +1,7 @@
-use crate::ui::component::{base::AttachType, swipe_detect::SwipeConfig, SwipeDirection};
+use crate::ui::{
+    component::{base::AttachType, swipe_detect::SwipeConfig},
+    geometry::Direction,
+};
 
 pub use crate::ui::component::FlowMsg;
 
@@ -34,11 +37,12 @@ impl Decision {
 
 /// Flow state type
 ///
-/// It is a static dyn reference to a FlowController, which, due to this, is required to
-/// be a plain enum type. Its concrete values then are individual states.
+/// It is a static dyn reference to a FlowController, which, due to this, is
+/// required to be a plain enum type. Its concrete values then are individual
+/// states.
 ///
-/// By convention, a Decision emitted by a controller must embed a reference to the same
-/// type of controller.
+/// By convention, a Decision emitted by a controller must embed a reference to
+/// the same type of controller.
 pub type FlowState = &'static dyn FlowController;
 
 /// Encodes the flow logic as a set of states, and transitions between them
@@ -50,7 +54,7 @@ pub trait FlowController {
     /// By convention, the type of the new state inside the state change must be
     /// Self. This can't be enforced by the type system unfortunately, because
     /// this trait must remain object-safe and so can't refer to Self.
-    fn handle_swipe(&'static self, direction: SwipeDirection) -> Decision;
+    fn handle_swipe(&'static self, direction: Direction) -> Decision;
 
     /// What to do when the current component emits a message in response to an
     /// event.
@@ -67,28 +71,28 @@ pub trait FlowController {
 /// Helper trait for writing nicer flow logic.
 pub trait DecisionBuilder: FlowController + Sized {
     #[inline]
-    fn swipe(&'static self, direction: SwipeDirection) -> Decision {
+    fn swipe(&'static self, direction: Direction) -> Decision {
         Decision::Transition(self, AttachType::Swipe(direction))
     }
 
     #[inline]
     fn swipe_left(&'static self) -> Decision {
-        self.swipe(SwipeDirection::Left)
+        self.swipe(Direction::Left)
     }
 
     #[inline]
     fn swipe_right(&'static self) -> Decision {
-        self.swipe(SwipeDirection::Right)
+        self.swipe(Direction::Right)
     }
 
     #[inline]
     fn swipe_up(&'static self) -> Decision {
-        self.swipe(SwipeDirection::Up)
+        self.swipe(Direction::Up)
     }
 
     #[inline]
     fn swipe_down(&'static self) -> Decision {
-        self.swipe(SwipeDirection::Down)
+        self.swipe(Direction::Down)
     }
 
     #[inline]

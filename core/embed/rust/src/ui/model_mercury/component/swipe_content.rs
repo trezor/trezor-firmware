@@ -1,11 +1,11 @@
 use crate::{
     time::{Duration, Stopwatch},
     ui::{
-        component::{base::AttachType, Component, Event, EventCtx, SwipeDirection},
+        component::{base::AttachType, Component, Event, EventCtx},
         constant::screen,
         display::Color,
         event::SwipeEvent,
-        geometry::{Offset, Rect},
+        geometry::{Direction, Offset, Rect},
         lerp::Lerp,
         shape::{self, Renderer},
         util::animation_disabled,
@@ -60,10 +60,10 @@ impl SwipeAttachAnimation {
                 Offset::lerp(Offset::new(0, -max_offset), Offset::zero(), value.eval(t))
             }
             Some(AttachType::Swipe(dir)) => match dir {
-                SwipeDirection::Up => {
+                Direction::Up => {
                     Offset::lerp(Offset::new(0, max_offset), Offset::zero(), value.eval(t))
                 }
-                SwipeDirection::Down => {
+                Direction::Down => {
                     Offset::lerp(Offset::new(0, -max_offset), Offset::zero(), value.eval(t))
                 }
                 _ => Offset::zero(),
@@ -81,8 +81,8 @@ impl SwipeAttachAnimation {
         );
         match self.attach_type {
             Some(AttachType::Initial)
-            | Some(AttachType::Swipe(SwipeDirection::Up))
-            | Some(AttachType::Swipe(SwipeDirection::Down)) => {}
+            | Some(AttachType::Swipe(Direction::Up))
+            | Some(AttachType::Swipe(Direction::Down)) => {}
             _ => {
                 return 255;
             }
@@ -128,7 +128,7 @@ impl SwipeAttachAnimation {
 
 struct SwipeContext {
     progress: i16,
-    dir: SwipeDirection,
+    dir: Direction,
     attach_animation: SwipeAttachAnimation,
 }
 
@@ -136,7 +136,7 @@ impl SwipeContext {
     fn new() -> Self {
         Self {
             progress: 0,
-            dir: SwipeDirection::Up,
+            dir: Direction::Up,
             attach_animation: SwipeAttachAnimation::new(),
         }
     }
@@ -159,11 +159,11 @@ impl SwipeContext {
 
         if self.progress > 0 {
             match self.dir {
-                SwipeDirection::Up => {
+                Direction::Up => {
                     offset = Offset::y(-y_offset);
                     mask = u8::lerp(0, 255, shift.eval(progress));
                 }
-                SwipeDirection::Down => {
+                Direction::Down => {
                     offset = Offset::y(y_offset);
                     clip = screen();
                     mask = u8::lerp(0, 255, shift.eval(progress));
@@ -193,7 +193,7 @@ impl SwipeContext {
 
         if let Event::Swipe(SwipeEvent::Move(dir, progress)) = event {
             match dir {
-                SwipeDirection::Up | SwipeDirection::Down => {
+                Direction::Up | Direction::Down => {
                     if animate {
                         self.dir = dir;
                         self.progress = progress;
@@ -320,8 +320,8 @@ where
         let is_last_page =
             self.content.inner.current_page() == (self.content.inner.num_pages() - 1);
 
-        let is_swipe_up = matches!(attach_type, AttachType::Swipe(SwipeDirection::Up));
-        let is_swipe_down = matches!(attach_type, AttachType::Swipe(SwipeDirection::Down));
+        let is_swipe_up = matches!(attach_type, AttachType::Swipe(Direction::Up));
+        let is_swipe_down = matches!(attach_type, AttachType::Swipe(Direction::Down));
 
         if !self.content.swipe_context.attach_animation.show_attach_anim {
             return false;
@@ -338,13 +338,13 @@ where
         false
     }
 
-    fn should_animate_swipe(&self, swipe_direction: SwipeDirection) -> bool {
+    fn should_animate_swipe(&self, swipe_direction: Direction) -> bool {
         let is_first_page = self.content.inner.current_page() == 0;
         let is_last_page =
             self.content.inner.current_page() == (self.content.inner.num_pages() - 1);
 
-        let is_swipe_up = matches!(swipe_direction, SwipeDirection::Up);
-        let is_swipe_down = matches!(swipe_direction, SwipeDirection::Down);
+        let is_swipe_up = matches!(swipe_direction, Direction::Up);
+        let is_swipe_down = matches!(swipe_direction, Direction::Down);
 
         if is_last_page && is_swipe_up {
             return true;

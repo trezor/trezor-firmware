@@ -7,11 +7,11 @@ use crate::{
     ui::{
         component::{
             base::{AttachType, Component},
-            Event, EventCtx, Paginate, SwipeDirection,
+            Event, EventCtx, Paginate,
         },
         constant::screen,
         display::{Color, Icon},
-        geometry::{Offset, Rect},
+        geometry::{Direction, Offset, Rect},
         lerp::Lerp,
         model_mercury::component::button::{Button, ButtonContent, ButtonMsg, IconText},
         shape::{Bar, Renderer},
@@ -138,8 +138,8 @@ impl AttachAnimation {
 
     fn lazy_start(&mut self, ctx: &mut EventCtx, event: Event) {
         if let Event::Attach(_) = event {
-            if let Event::Attach(AttachType::Swipe(SwipeDirection::Up))
-            | Event::Attach(AttachType::Swipe(SwipeDirection::Down))
+            if let Event::Attach(AttachType::Swipe(Direction::Up))
+            | Event::Attach(AttachType::Swipe(Direction::Down))
             | Event::Attach(AttachType::Initial) = event
             {
                 self.attach_top = true;

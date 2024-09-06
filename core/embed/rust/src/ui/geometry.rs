@@ -804,3 +804,55 @@ pub trait Dimensions {
     fn fit(&mut self, bounds: Rect);
     fn area(&self) -> Rect;
 }
+
+#[derive(Copy, Clone, Eq, PartialEq, ToPrimitive, FromPrimitive)]
+#[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
+pub enum Direction {
+    Up,
+    Down,
+    Left,
+    Right,
+}
+
+impl Direction {
+    pub fn as_offset(self, size: Offset) -> Offset {
+        match self {
+            Direction::Up => Offset::y(-size.y),
+            Direction::Down => Offset::y(size.y),
+            Direction::Left => Offset::x(-size.x),
+            Direction::Right => Offset::x(size.x),
+        }
+    }
+
+    pub fn iter() -> DirectionIterator {
+        DirectionIterator::new()
+    }
+}
+
+pub struct DirectionIterator {
+    current: Option<Direction>,
+}
+
+impl DirectionIterator {
+    pub fn new() -> Self {
+        DirectionIterator {
+            current: Some(Direction::Up),
+        }
+    }
+}
+
+impl Iterator for DirectionIterator {
+    type Item = Direction;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let next_state = match self.current {
+            Some(Direction::Up) => Some(Direction::Down),
+            Some(Direction::Down) => Some(Direction::Left),
+            Some(Direction::Left) => Some(Direction::Right),
+            Some(Direction::Right) => None,
+            None => None,
+        };
+
+        core::mem::replace(&mut self.current, next_state)
+    }
+}

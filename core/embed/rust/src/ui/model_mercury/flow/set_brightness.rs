@@ -7,11 +7,12 @@ use crate::{
     translations::TR,
     trezorhal::display,
     ui::{
-        component::{base::ComponentExt, swipe_detect::SwipeSettings, FlowMsg, SwipeDirection},
+        component::{base::ComponentExt, swipe_detect::SwipeSettings, FlowMsg},
         flow::{
             base::{Decision, DecisionBuilder as _},
             FlowController, SwipeFlow,
         },
+        geometry::Direction,
         layout::obj::LayoutObj,
     },
 };
@@ -39,13 +40,13 @@ impl FlowController for SetBrightness {
         *self as usize
     }
 
-    fn handle_swipe(&'static self, direction: SwipeDirection) -> Decision {
+    fn handle_swipe(&'static self, direction: Direction) -> Decision {
         match (self, direction) {
-            (Self::Menu, SwipeDirection::Right) => Self::Slider.swipe(direction),
-            (Self::Slider, SwipeDirection::Up) => Self::Confirm.swipe(direction),
-            (Self::Confirm, SwipeDirection::Down) => Self::Slider.swipe(direction),
-            (Self::Confirm, SwipeDirection::Left) => Self::Menu.swipe(direction),
-            (Self::Confirmed, SwipeDirection::Up) => self.return_msg(FlowMsg::Confirmed),
+            (Self::Menu, Direction::Right) => Self::Slider.swipe(direction),
+            (Self::Slider, Direction::Up) => Self::Confirm.swipe(direction),
+            (Self::Confirm, Direction::Down) => Self::Slider.swipe(direction),
+            (Self::Confirm, Direction::Left) => Self::Menu.swipe(direction),
+            (Self::Confirmed, Direction::Up) => self.return_msg(FlowMsg::Confirmed),
             _ => self.do_nothing(),
         }
     }
@@ -83,7 +84,7 @@ impl SetBrightness {
         )
         .with_subtitle(TR::homescreen__settings_subtitle.into())
         .with_menu_button()
-        .with_swipe(SwipeDirection::Up, SwipeSettings::default())
+        .with_swipe(Direction::Up, SwipeSettings::default())
         .map(|msg| match msg {
             FrameMsg::Content(NumberInputSliderDialogMsg::Changed(n)) => {
                 display::backlight(n as _);
@@ -98,7 +99,7 @@ impl SetBrightness {
             VerticalMenu::empty().danger(theme::ICON_CANCEL, TR::buttons__cancel.into()),
         )
         .with_cancel_button()
-        .with_swipe(SwipeDirection::Right, SwipeSettings::immediate())
+        .with_swipe(Direction::Right, SwipeSettings::immediate())
         .map(move |msg| match msg {
             FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => Some(FlowMsg::Choice(i)),
             FrameMsg::Button(_) => Some(FlowMsg::Cancelled),
@@ -110,8 +111,8 @@ impl SetBrightness {
         )
         .with_footer(TR::instructions__tap_to_confirm.into(), None)
         .with_menu_button()
-        .with_swipe(SwipeDirection::Down, SwipeSettings::default())
-        .with_swipe(SwipeDirection::Left, SwipeSettings::default())
+        .with_swipe(Direction::Down, SwipeSettings::default())
+        .with_swipe(Direction::Left, SwipeSettings::default())
         .map(move |msg| match msg {
             FrameMsg::Content(PromptMsg::Confirmed) => {
                 let _ = storage::set_brightness(BRIGHTNESS.load(Ordering::Relaxed));
@@ -129,7 +130,7 @@ impl SetBrightness {
             .with_no_attach_anim(),
         )
         .with_footer(TR::instructions__swipe_up.into(), None)
-        .with_swipe(SwipeDirection::Up, SwipeSettings::default())
+        .with_swipe(Direction::Up, SwipeSettings::default())
         .map(move |_msg| Some(FlowMsg::Confirmed));
 
         let res = SwipeFlow::new(&SetBrightness::Slider)?

@@ -5,11 +5,12 @@ use crate::{
     translations::TR,
     ui::{
         button_request::ButtonRequest,
-        component::{swipe_detect::SwipeSettings, ButtonRequestExt, ComponentExt, SwipeDirection},
+        component::{swipe_detect::SwipeSettings, ButtonRequestExt, ComponentExt},
         flow::{
             base::{Decision, DecisionBuilder as _},
             FlowController, FlowMsg, SwipeFlow,
         },
+        geometry::Direction,
         layout::obj::LayoutObj,
     },
 };
@@ -37,11 +38,11 @@ impl FlowController for RequestNumber {
         *self as usize
     }
 
-    fn handle_swipe(&'static self, direction: SwipeDirection) -> Decision {
+    fn handle_swipe(&'static self, direction: Direction) -> Decision {
         match (self, direction) {
-            (Self::Number, SwipeDirection::Left) => Self::Menu.swipe(direction),
-            (Self::Menu, SwipeDirection::Right) => Self::Number.swipe(direction),
-            (Self::Info, SwipeDirection::Right) => Self::Menu.swipe(direction),
+            (Self::Number, Direction::Left) => Self::Menu.swipe(direction),
+            (Self::Menu, Direction::Right) => Self::Number.swipe(direction),
+            (Self::Info, Direction::Right) => Self::Menu.swipe(direction),
             _ => self.do_nothing(),
         }
     }
@@ -91,8 +92,8 @@ impl RequestNumber {
             Frame::left_aligned(title, SwipeContent::new(number_input_dialog))
                 .with_menu_button()
                 .with_footer(TR::instructions__swipe_up.into(), None)
-                .with_swipe(SwipeDirection::Up, SwipeSettings::default())
-                .with_swipe(SwipeDirection::Left, SwipeSettings::default())
+                .with_swipe(Direction::Up, SwipeSettings::default())
+                .with_swipe(Direction::Left, SwipeSettings::default())
                 .map(|msg| match msg {
                     FrameMsg::Button(_) => Some(FlowMsg::Info),
                     FrameMsg::Content(NumberInputDialogMsg::Changed(n)) => {
@@ -111,7 +112,7 @@ impl RequestNumber {
             VerticalMenu::empty().item(theme::ICON_CHEVRON_RIGHT, TR::buttons__more_info.into()),
         )
         .with_cancel_button()
-        .with_swipe(SwipeDirection::Right, SwipeSettings::immediate())
+        .with_swipe(Direction::Right, SwipeSettings::immediate())
         .map(|msg| match msg {
             FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => Some(FlowMsg::Choice(i)),
             FrameMsg::Button(FlowMsg::Cancelled) => Some(FlowMsg::Cancelled),
@@ -121,7 +122,7 @@ impl RequestNumber {
         let updatable_info = UpdatableMoreInfo::new(info_cb);
         let content_info = Frame::left_aligned(TString::empty(), SwipeContent::new(updatable_info))
             .with_cancel_button()
-            .with_swipe(SwipeDirection::Right, SwipeSettings::immediate())
+            .with_swipe(Direction::Right, SwipeSettings::immediate())
             .map(|msg| match msg {
                 FrameMsg::Button(FlowMsg::Cancelled) => Some(FlowMsg::Cancelled),
                 _ => None,

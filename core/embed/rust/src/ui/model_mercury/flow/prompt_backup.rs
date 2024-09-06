@@ -7,12 +7,13 @@ use crate::{
         component::{
             swipe_detect::SwipeSettings,
             text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs},
-            ComponentExt, SwipeDirection,
+            ComponentExt,
         },
         flow::{
             base::{Decision, DecisionBuilder as _},
             FlowController, FlowMsg, SwipeFlow,
         },
+        geometry::Direction,
         layout::obj::LayoutObj,
     },
 };
@@ -38,17 +39,15 @@ impl FlowController for PromptBackup {
         *self as usize
     }
 
-    fn handle_swipe(&'static self, direction: SwipeDirection) -> Decision {
+    fn handle_swipe(&'static self, direction: Direction) -> Decision {
         match (self, direction) {
-            (Self::Intro, SwipeDirection::Left) => Self::Menu.swipe(direction),
-            (Self::Intro, SwipeDirection::Up) => self.return_msg(FlowMsg::Confirmed),
-            (Self::Menu, SwipeDirection::Right) => Self::Intro.swipe(direction),
-            (Self::SkipBackupIntro, SwipeDirection::Up) => Self::SkipBackupConfirm.swipe(direction),
-            (Self::SkipBackupIntro, SwipeDirection::Right) => Self::Intro.swipe(direction),
-            (Self::SkipBackupConfirm, SwipeDirection::Down) => {
-                Self::SkipBackupIntro.swipe(direction)
-            }
-            (Self::SkipBackupConfirm, SwipeDirection::Right) => Self::Intro.swipe(direction),
+            (Self::Intro, Direction::Left) => Self::Menu.swipe(direction),
+            (Self::Intro, Direction::Up) => self.return_msg(FlowMsg::Confirmed),
+            (Self::Menu, Direction::Right) => Self::Intro.swipe(direction),
+            (Self::SkipBackupIntro, Direction::Up) => Self::SkipBackupConfirm.swipe(direction),
+            (Self::SkipBackupIntro, Direction::Right) => Self::Intro.swipe(direction),
+            (Self::SkipBackupConfirm, Direction::Down) => Self::SkipBackupIntro.swipe(direction),
+            (Self::SkipBackupConfirm, Direction::Right) => Self::Intro.swipe(direction),
             _ => self.do_nothing(),
         }
     }
@@ -80,8 +79,8 @@ impl PromptBackup {
         let content_intro = Frame::left_aligned(title, SwipeContent::new(paragraphs))
             .with_menu_button()
             .with_footer(TR::instructions__swipe_up.into(), None)
-            .with_swipe(SwipeDirection::Up, SwipeSettings::default())
-            .with_swipe(SwipeDirection::Left, SwipeSettings::default())
+            .with_swipe(Direction::Up, SwipeSettings::default())
+            .with_swipe(Direction::Left, SwipeSettings::default())
             .map(|msg| match msg {
                 FrameMsg::Button(bm) => Some(bm),
                 _ => None,
@@ -92,7 +91,7 @@ impl PromptBackup {
             VerticalMenu::empty().danger(theme::ICON_CANCEL, TR::backup__title_skip.into()),
         )
         .with_cancel_button()
-        .with_swipe(SwipeDirection::Right, SwipeSettings::immediate())
+        .with_swipe(Direction::Right, SwipeSettings::immediate())
         .map(|msg| match msg {
             FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => Some(FlowMsg::Choice(i)),
             FrameMsg::Button(FlowMsg::Cancelled) => Some(FlowMsg::Cancelled),
@@ -116,8 +115,8 @@ impl PromptBackup {
             TR::instructions__swipe_up.into(),
             Some(TR::words__continue_anyway.into()),
         )
-        .with_swipe(SwipeDirection::Up, SwipeSettings::default())
-        .with_swipe(SwipeDirection::Right, SwipeSettings::immediate())
+        .with_swipe(Direction::Up, SwipeSettings::default())
+        .with_swipe(Direction::Right, SwipeSettings::immediate())
         .map(|msg| match msg {
             FrameMsg::Button(FlowMsg::Cancelled) => Some(FlowMsg::Cancelled),
             _ => None,
@@ -129,8 +128,8 @@ impl PromptBackup {
         )
         .with_cancel_button()
         .with_footer(TR::instructions__tap_to_confirm.into(), None)
-        .with_swipe(SwipeDirection::Down, SwipeSettings::default())
-        .with_swipe(SwipeDirection::Right, SwipeSettings::immediate())
+        .with_swipe(Direction::Down, SwipeSettings::default())
+        .with_swipe(Direction::Right, SwipeSettings::immediate())
         .map(|msg| match msg {
             FrameMsg::Content(PromptMsg::Confirmed) => Some(FlowMsg::Confirmed),
             FrameMsg::Button(FlowMsg::Cancelled) => Some(FlowMsg::Cancelled),
