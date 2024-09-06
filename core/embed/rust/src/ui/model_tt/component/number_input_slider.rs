@@ -147,7 +147,6 @@ impl Component for NumberInputSlider {
                 TouchEvent::TouchStart(pos) => self.slider_eval(pos, ctx),
                 TouchEvent::TouchMove(pos) => self.slider_eval(pos, ctx),
                 TouchEvent::TouchEnd(pos) => self.slider_eval(pos, ctx),
-                TouchEvent::TouchAbort => None,
             };
         }
         None

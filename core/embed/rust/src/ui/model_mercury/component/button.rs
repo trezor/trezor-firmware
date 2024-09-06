@@ -353,7 +353,8 @@ impl Component for Button {
                     }
                 }
             }
-            Event::Touch(TouchEvent::TouchAbort) => {
+            Event::Swipe(_) => {
+                // When a swipe is detected, abort any ongoing touch.
                 match self.state {
                     State::Initial | State::Disabled => {
                         // Do nothing.
