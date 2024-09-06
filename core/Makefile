@@ -36,6 +36,7 @@ TREZOR_MODEL ?= T
 TREZOR_MEMPERF ?= 0
 ADDRESS_SANITIZER ?= 0
 CMAKELISTS ?= 0
+COMPILATION_DB ?= 0
 PYTEST_TIMEOUT ?= 500
 TEST_LANG ?= "en"
 THP ?= 0
@@ -311,7 +312,7 @@ build_firmware: templates build_cross build_kernel ## build firmware with frozen
 	$(SCONS) $(FIRMWARE_BUILD_DIR)/firmware.bin
 
 build_unix: templates ## build unix port
-	$(SCONS) PYOPT=0 $(UNIX_BUILD_DIR)/trezor-emu-core $(UNIX_PORT_OPTS)
+	$(SCONS) PYOPT=0 COMPILATION_DB=1 $(UNIX_BUILD_DIR)/trezor-emu-core $(UNIX_PORT_OPTS)
 
 build_unix_frozen: templates build_cross ## build unix port with frozen modules
 	$(SCONS) $(UNIX_BUILD_DIR)/trezor-emu-core $(UNIX_PORT_OPTS) TREZOR_EMULATOR_FROZEN=1
