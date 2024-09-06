@@ -56,7 +56,7 @@ impl<T: Swipable + Component> Component for SwipeUpScreen<T> {
             Some(SwipeDetectMsg::Move(dir, progress)) => {
                 Event::Swipe(SwipeEvent::Move(dir, progress as i16))
             }
-            Some(SwipeDetectMsg::Start(_)) => Event::Touch(TouchEvent::TouchAbort),
+            Some(SwipeDetectMsg::Start(dir)) => Event::Swipe(SwipeEvent::Start(dir)),
             _ => event,
         };
 

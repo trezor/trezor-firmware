@@ -185,7 +185,6 @@ impl Component for NumberInputSlider {
                     ctx.request_paint();
                     self.touch_eval(pos, ctx, true)
                 }
-                TouchEvent::TouchAbort => None,
             };
         }
         None
