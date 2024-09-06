@@ -8,11 +8,11 @@ use crate::{
         component::{
             base::{AttachType, ComponentExt},
             text::TextStyle,
-            Component, Event, EventCtx, Label, Never, Pad, SwipeDirection, TimerToken,
+            Component, Event, EventCtx, Label, Never, Pad, TimerToken,
         },
         display::Font,
         event::TouchEvent,
-        geometry::{Alignment, Alignment2D, Grid, Insets, Offset, Rect},
+        geometry::{Alignment, Alignment2D, Direction, Grid, Insets, Offset, Rect},
         model_mercury::{
             component::{
                 button::{
@@ -124,8 +124,8 @@ impl AttachAnimation {
 
     fn lazy_start(&mut self, ctx: &mut EventCtx, event: Event) {
         if let Event::Attach(_) = event {
-            if let Event::Attach(AttachType::Swipe(SwipeDirection::Up))
-            | Event::Attach(AttachType::Swipe(SwipeDirection::Down))
+            if let Event::Attach(AttachType::Swipe(Direction::Up))
+            | Event::Attach(AttachType::Swipe(Direction::Down))
             | Event::Attach(AttachType::Initial) = event
             {
                 self.attach_top = true;

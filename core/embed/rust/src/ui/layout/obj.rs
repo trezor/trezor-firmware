@@ -7,10 +7,10 @@ use num_traits::{FromPrimitive, ToPrimitive};
 
 #[cfg(feature = "button")]
 use crate::ui::event::ButtonEvent;
-#[cfg(feature = "touch")]
-use crate::ui::{component::SwipeDirection, event::TouchEvent};
 #[cfg(feature = "new_rendering")]
 use crate::ui::{display::Color, shape::render_on_display};
+#[cfg(feature = "touch")]
+use crate::ui::{event::TouchEvent, geometry::Direction};
 use crate::{
     error::Error,
     maybe_trace::MaybeTrace,
@@ -55,7 +55,7 @@ impl AttachType {
             1 => Ok(Self::Resume),
             #[cfg(feature = "touch")]
             2..=5 => Ok(Self::Swipe(
-                SwipeDirection::from_u8(val - 2).ok_or(Error::TypeError)?,
+                Direction::from_u8(val - 2).ok_or(Error::TypeError)?,
             )),
             _ => Err(Error::TypeError),
         }

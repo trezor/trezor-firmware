@@ -6,12 +6,13 @@ use crate::{
         component::{
             swipe_detect::SwipeSettings,
             text::paragraphs::{Paragraph, Paragraphs},
-            ComponentExt, SwipeDirection,
+            ComponentExt,
         },
         flow::{
             base::{Decision, DecisionBuilder as _},
             FlowController, FlowMsg, SwipeFlow,
         },
+        geometry::Direction,
         layout::obj::LayoutObj,
     },
 };
@@ -42,18 +43,18 @@ impl FlowController for ShowTutorial {
         *self as usize
     }
 
-    fn handle_swipe(&'static self, direction: SwipeDirection) -> Decision {
+    fn handle_swipe(&'static self, direction: Direction) -> Decision {
         match (self, direction) {
-            (Self::StepBegin, SwipeDirection::Up) => Self::StepNavigation.swipe(direction),
-            (Self::StepNavigation, SwipeDirection::Up) => Self::StepMenu.swipe(direction),
-            (Self::StepNavigation, SwipeDirection::Down) => Self::StepBegin.swipe(direction),
-            (Self::StepMenu, SwipeDirection::Up) => Self::StepHold.swipe(direction),
-            (Self::StepMenu, SwipeDirection::Down) => Self::StepNavigation.swipe(direction),
-            (Self::StepMenu, SwipeDirection::Left) => Self::Menu.swipe(direction),
-            (Self::Menu, SwipeDirection::Left) => Self::DidYouKnow.swipe(direction),
-            (Self::Menu, SwipeDirection::Right) => Self::StepBegin.swipe(direction),
-            (Self::DidYouKnow, SwipeDirection::Right) => Self::Menu.swipe(direction),
-            (Self::StepDone, SwipeDirection::Up) => self.return_msg(FlowMsg::Confirmed),
+            (Self::StepBegin, Direction::Up) => Self::StepNavigation.swipe(direction),
+            (Self::StepNavigation, Direction::Up) => Self::StepMenu.swipe(direction),
+            (Self::StepNavigation, Direction::Down) => Self::StepBegin.swipe(direction),
+            (Self::StepMenu, Direction::Up) => Self::StepHold.swipe(direction),
+            (Self::StepMenu, Direction::Down) => Self::StepNavigation.swipe(direction),
+            (Self::StepMenu, Direction::Left) => Self::Menu.swipe(direction),
+            (Self::Menu, Direction::Left) => Self::DidYouKnow.swipe(direction),
+            (Self::Menu, Direction::Right) => Self::StepBegin.swipe(direction),
+            (Self::DidYouKnow, Direction::Right) => Self::Menu.swipe(direction),
+            (Self::StepDone, Direction::Up) => self.return_msg(FlowMsg::Confirmed),
             _ => self.do_nothing(),
         }
     }
@@ -101,7 +102,7 @@ impl ShowTutorial {
             TR::instructions__swipe_up.into(),
             Some(TR::tutorial__get_started.into()),
         )
-        .with_swipe(SwipeDirection::Up, SwipeSettings::default())
+        .with_swipe(Direction::Up, SwipeSettings::default())
         .map(|_| None);
 
         let content_step_navigation = Frame::left_aligned(
@@ -115,8 +116,8 @@ impl ShowTutorial {
             TR::instructions__swipe_up.into(),
             Some(TR::tutorial__continue.into()),
         )
-        .with_swipe(SwipeDirection::Up, SwipeSettings::default())
-        .with_swipe(SwipeDirection::Down, SwipeSettings::default())
+        .with_swipe(Direction::Up, SwipeSettings::default())
+        .with_swipe(Direction::Down, SwipeSettings::default())
         .map(|_| None);
 
         let content_step_menu = Frame::left_aligned(
@@ -132,8 +133,8 @@ impl ShowTutorial {
             TR::instructions__swipe_up.into(),
             Some(TR::buttons__continue.into()),
         )
-        .with_swipe(SwipeDirection::Up, SwipeSettings::default())
-        .with_swipe(SwipeDirection::Down, SwipeSettings::default())
+        .with_swipe(Direction::Up, SwipeSettings::default())
+        .with_swipe(Direction::Down, SwipeSettings::default())
         .map(|msg| matches!(msg, FrameMsg::Button(_)).then_some(FlowMsg::Info));
 
         let content_step_hold = Frame::left_aligned(
@@ -153,7 +154,7 @@ impl ShowTutorial {
             ))),
         )
         .with_footer(TR::instructions__swipe_up.into(), None)
-        .with_swipe(SwipeDirection::Up, SwipeSettings::default())
+        .with_swipe(Direction::Up, SwipeSettings::default())
         .map(|_| None);
 
         let content_menu = Frame::left_aligned(
@@ -164,8 +165,8 @@ impl ShowTutorial {
                 .danger(theme::ICON_CANCEL, TR::tutorial__exit.into()),
         )
         .with_cancel_button()
-        .with_swipe(SwipeDirection::Right, SwipeSettings::immediate())
-        .with_swipe(SwipeDirection::Left, SwipeSettings::immediate())
+        .with_swipe(Direction::Right, SwipeSettings::immediate())
+        .with_swipe(Direction::Left, SwipeSettings::immediate())
         .map(|msg| match msg {
             FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => Some(FlowMsg::Choice(i)),
             FrameMsg::Button(_) => Some(FlowMsg::Cancelled),
@@ -179,7 +180,7 @@ impl ShowTutorial {
             ))),
         )
         .with_cancel_button()
-        .with_swipe(SwipeDirection::Right, SwipeSettings::immediate())
+        .with_swipe(Direction::Right, SwipeSettings::immediate())
         .map(|msg| matches!(msg, FrameMsg::Button(_)).then_some(FlowMsg::Cancelled));
 
         let content_hold_to_exit = Frame::left_aligned(

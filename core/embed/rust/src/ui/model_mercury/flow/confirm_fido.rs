@@ -7,12 +7,13 @@ use crate::{
         component::{
             swipe_detect::SwipeSettings,
             text::paragraphs::{Paragraph, Paragraphs},
-            ComponentExt, EventCtx, SwipeDirection,
+            ComponentExt, EventCtx,
         },
         flow::{
             base::{Decision, DecisionBuilder as _},
             FlowController, FlowMsg, SwipeFlow, SwipePage,
         },
+        geometry::Direction,
         layout::obj::LayoutObj,
     },
 };
@@ -45,13 +46,13 @@ impl FlowController for ConfirmFido {
         *self as usize
     }
 
-    fn handle_swipe(&'static self, direction: SwipeDirection) -> Decision {
+    fn handle_swipe(&'static self, direction: Direction) -> Decision {
         match (self, direction) {
-            (Self::Intro, SwipeDirection::Left) => Self::Menu.swipe(direction),
-            (Self::Intro, SwipeDirection::Up) => Self::ChooseCredential.swipe(direction),
-            (Self::ChooseCredential, SwipeDirection::Down) => Self::Intro.swipe(direction),
-            (Self::Details, SwipeDirection::Up) => Self::Tap.swipe(direction),
-            (Self::Tap, SwipeDirection::Down) => Self::Details.swipe(direction),
+            (Self::Intro, Direction::Left) => Self::Menu.swipe(direction),
+            (Self::Intro, Direction::Up) => Self::ChooseCredential.swipe(direction),
+            (Self::ChooseCredential, Direction::Down) => Self::Intro.swipe(direction),
+            (Self::Details, Direction::Up) => Self::Tap.swipe(direction),
+            (Self::Tap, Direction::Down) => Self::Details.swipe(direction),
             _ => self.do_nothing(),
         }
     }
@@ -120,8 +121,8 @@ impl ConfirmFido {
         )
         .with_menu_button()
         .with_footer(TR::instructions__swipe_up.into(), None)
-        .with_swipe(SwipeDirection::Up, SwipeSettings::default())
-        .with_swipe(SwipeDirection::Right, SwipeSettings::immediate())
+        .with_swipe(Direction::Up, SwipeSettings::default())
+        .with_swipe(Direction::Right, SwipeSettings::immediate())
         .map(|msg| matches!(msg, FrameMsg::Button(_)).then_some(FlowMsg::Info));
 
         // Closure to lazy-load the information on given page index.
@@ -150,8 +151,8 @@ impl ConfirmFido {
             TR::instructions__swipe_down.into(),
         )
         .register_footer_update_fn(footer_update_fn)
-        .with_swipe(SwipeDirection::Down, SwipeSettings::default())
-        .with_swipe(SwipeDirection::Right, SwipeSettings::immediate())
+        .with_swipe(Direction::Down, SwipeSettings::default())
+        .with_swipe(Direction::Right, SwipeSettings::immediate())
         .with_vertical_pages()
         .map(|msg| match msg {
             FrameMsg::Button(_) => Some(FlowMsg::Info),
@@ -168,8 +169,8 @@ impl ConfirmFido {
             SwipeContent::new(FidoCredential::new(icon_name, app_name, get_account)),
         )
         .with_footer(TR::instructions__swipe_up.into(), Some(title))
-        .with_swipe(SwipeDirection::Up, SwipeSettings::default())
-        .with_swipe(SwipeDirection::Right, SwipeSettings::immediate());
+        .with_swipe(Direction::Up, SwipeSettings::default())
+        .with_swipe(Direction::Right, SwipeSettings::immediate());
         let content_details = if Self::single_cred() {
             content_details.with_menu_button()
         } else {
@@ -183,8 +184,8 @@ impl ConfirmFido {
         let content_tap = Frame::left_aligned(title, PromptScreen::new_tap_to_confirm())
             .with_menu_button()
             .with_footer(TR::instructions__tap_to_confirm.into(), None)
-            .with_swipe(SwipeDirection::Down, SwipeSettings::default())
-            .with_swipe(SwipeDirection::Right, SwipeSettings::immediate())
+            .with_swipe(Direction::Down, SwipeSettings::default())
+            .with_swipe(Direction::Right, SwipeSettings::immediate())
             .map(|msg| match msg {
                 FrameMsg::Content(PromptMsg::Confirmed) => Some(FlowMsg::Confirmed),
                 FrameMsg::Button(_) => Some(FlowMsg::Info),
@@ -196,7 +197,7 @@ impl ConfirmFido {
             VerticalMenu::empty().danger(theme::ICON_CANCEL, TR::buttons__cancel.into()),
         )
         .with_cancel_button()
-        .with_swipe(SwipeDirection::Right, SwipeSettings::immediate())
+        .with_swipe(Direction::Right, SwipeSettings::immediate())
         .map(|msg| match msg {
             FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => Some(FlowMsg::Choice(i)),
             FrameMsg::Button(_) => Some(FlowMsg::Cancelled),

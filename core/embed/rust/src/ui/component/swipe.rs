@@ -1,61 +1,9 @@
 use crate::ui::{
     component::{Component, Event, EventCtx},
     event::TouchEvent,
-    geometry::{Offset, Point, Rect},
+    geometry::{Direction, Point, Rect},
     shape::Renderer,
 };
-
-#[derive(Copy, Clone, Eq, PartialEq, ToPrimitive, FromPrimitive)]
-#[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
-pub enum SwipeDirection {
-    Up,
-    Down,
-    Left,
-    Right,
-}
-
-impl SwipeDirection {
-    pub fn as_offset(self, size: Offset) -> Offset {
-        match self {
-            SwipeDirection::Up => Offset::y(-size.y),
-            SwipeDirection::Down => Offset::y(size.y),
-            SwipeDirection::Left => Offset::x(-size.x),
-            SwipeDirection::Right => Offset::x(size.x),
-        }
-    }
-
-    pub fn iter() -> SwipeDirectionIterator {
-        SwipeDirectionIterator::new()
-    }
-}
-
-pub struct SwipeDirectionIterator {
-    current: Option<SwipeDirection>,
-}
-
-impl SwipeDirectionIterator {
-    pub fn new() -> Self {
-        SwipeDirectionIterator {
-            current: Some(SwipeDirection::Up),
-        }
-    }
-}
-
-impl Iterator for SwipeDirectionIterator {
-    type Item = SwipeDirection;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        let next_state = match self.current {
-            Some(SwipeDirection::Up) => Some(SwipeDirection::Down),
-            Some(SwipeDirection::Down) => Some(SwipeDirection::Left),
-            Some(SwipeDirection::Left) => Some(SwipeDirection::Right),
-            Some(SwipeDirection::Right) => None,
-            None => None,
-        };
-
-        core::mem::replace(&mut self.current, next_state)
-    }
-}
 
 #[derive(Clone)]
 pub struct Swipe {
@@ -119,7 +67,7 @@ impl Swipe {
 }
 
 impl Component for Swipe {
-    type Msg = SwipeDirection;
+    type Msg = Direction;
 
     fn place(&mut self, bounds: Rect) -> Rect {
         bounds
@@ -163,18 +111,18 @@ impl Component for Swipe {
                     // Horizontal direction.
                     if self.ratio(abs.x) >= Self::THRESHOLD {
                         if ofs.x < 0 && self.allow_left {
-                            return Some(SwipeDirection::Left);
+                            return Some(Direction::Left);
                         } else if ofs.x > 0 && self.allow_right {
-                            return Some(SwipeDirection::Right);
+                            return Some(Direction::Right);
                         }
                     }
                 } else if abs.x < abs.y && (self.allow_up || self.allow_down) {
                     // Vertical direction.
                     if self.ratio(abs.y) >= Self::THRESHOLD {
                         if ofs.y < 0 && self.allow_up {
-                            return Some(SwipeDirection::Up);
+                            return Some(Direction::Up);
                         } else if ofs.y > 0 && self.allow_down {
-                            return Some(SwipeDirection::Down);
+                            return Some(Direction::Down);
                         }
                     }
                 };

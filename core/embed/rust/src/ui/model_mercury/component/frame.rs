@@ -7,11 +7,11 @@ use crate::{
             text::TextStyle,
             Component,
             Event::{self, Swipe},
-            EventCtx, FlowMsg, SwipeDetect, SwipeDirection,
+            EventCtx, FlowMsg, SwipeDetect,
         },
         display::{Color, Icon},
         event::SwipeEvent,
-        geometry::{Alignment, Insets, Point, Rect},
+        geometry::{Alignment, Direction, Insets, Point, Rect},
         lerp::Lerp,
         model_mercury::theme::TITLE_HEIGHT,
         shape::{self, Renderer},
@@ -21,14 +21,14 @@ use crate::{
 #[derive(Clone)]
 pub struct HorizontalSwipe {
     progress: i16,
-    dir: SwipeDirection,
+    dir: Direction,
 }
 
 impl HorizontalSwipe {
     const fn new() -> Self {
         Self {
             progress: 0,
-            dir: SwipeDirection::Up,
+            dir: Direction::Up,
         }
     }
 
@@ -40,7 +40,7 @@ impl HorizontalSwipe {
         if let Swipe(SwipeEvent::Move(dir, progress)) = event {
             if swipe.is_allowed(dir) {
                 match dir {
-                    SwipeDirection::Left | SwipeDirection::Right => {
+                    Direction::Left | Direction::Right => {
                         self.progress = progress;
                         self.dir = dir;
                     }
@@ -53,7 +53,7 @@ impl HorizontalSwipe {
     fn render_swipe_cover<'s>(&self, target: &mut impl Renderer<'s>, bounds: Rect) {
         if self.progress > 0 {
             match self.dir {
-                SwipeDirection::Left => {
+                Direction::Left => {
                     let shift = pareen::constant(0.0).seq_ease_out(
                         0.0,
                         easer::functions::Circ,
@@ -72,7 +72,7 @@ impl HorizontalSwipe {
                         .with_bg(theme::BLACK)
                         .render(target);
                 }
-                SwipeDirection::Right => {}
+                Direction::Right => {}
                 _ => {}
             }
         }
@@ -246,7 +246,7 @@ where
     }
 
     #[inline(never)]
-    pub fn with_swipe(mut self, dir: SwipeDirection, settings: SwipeSettings) -> Self {
+    pub fn with_swipe(mut self, dir: Direction, settings: SwipeSettings) -> Self {
         self.footer = self.footer.map(|f| f.with_swipe(dir));
         self.swipe = self.swipe.with_swipe(dir, settings);
         self

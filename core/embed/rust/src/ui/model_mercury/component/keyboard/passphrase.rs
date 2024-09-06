@@ -4,10 +4,10 @@ use crate::{
     ui::{
         component::{
             base::ComponentExt, swipe_detect::SwipeConfig, text::common::TextBox, Component, Event,
-            EventCtx, Label, Maybe, Never, Swipe, SwipeDirection,
+            EventCtx, Label, Maybe, Never, Swipe,
         },
         display,
-        geometry::{Alignment, Grid, Insets, Offset, Rect},
+        geometry::{Alignment, Direction, Grid, Insets, Offset, Rect},
         model_mercury::{
             component::{
                 button::{Button, ButtonContent, ButtonMsg},
@@ -179,11 +179,11 @@ impl PassphraseKeyboard {
         }
     }
 
-    fn on_page_change(&mut self, ctx: &mut EventCtx, swipe: SwipeDirection) {
+    fn on_page_change(&mut self, ctx: &mut EventCtx, swipe: Direction) {
         // Change the keyboard layout.
         self.active_layout = match swipe {
-            SwipeDirection::Left => self.active_layout.next(),
-            SwipeDirection::Right => self.active_layout.prev(),
+            Direction::Left => self.active_layout.next(),
+            Direction::Right => self.active_layout.prev(),
             _ => self.active_layout,
         };
         // Clear the pending state.
@@ -331,7 +331,7 @@ impl Component for PassphraseKeyboard {
             return None;
         }
         if let Some(ButtonMsg::Clicked) = self.next_btn.event(ctx, event) {
-            self.on_page_change(ctx, SwipeDirection::Left);
+            self.on_page_change(ctx, Direction::Left);
         }
 
         // Confirm button was clicked, we're done.

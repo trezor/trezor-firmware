@@ -4,11 +4,11 @@ use crate::{
     ui::{
         component::{
             text::paragraphs::{Paragraph, Paragraphs},
-            Component, Event, EventCtx, Pad, SwipeDirection,
+            Component, Event, EventCtx, Pad,
         },
         display::Font,
         event::SwipeEvent,
-        geometry::{Alignment, Grid, Insets, Offset, Rect},
+        geometry::{Alignment, Direction, Grid, Insets, Offset, Rect},
         shape::{self, Renderer},
     },
 };
@@ -66,7 +66,7 @@ impl Component for NumberInputDialog {
             return Some(NumberInputDialogMsg::Changed(i));
         }
 
-        if let Event::Swipe(SwipeEvent::End(SwipeDirection::Up)) = event {
+        if let Event::Swipe(SwipeEvent::End(Direction::Up)) = event {
             return Some(NumberInputDialogMsg::Confirmed(self.input.value));
         }
         self.paragraphs.event(ctx, event);
