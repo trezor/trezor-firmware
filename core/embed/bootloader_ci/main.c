@@ -188,8 +188,6 @@ int main(void) {
   hash_processor_init();
 #endif
 
-  mpu_config_bootloader();
-
 #if PRODUCTION && !defined STM32U5
   // for STM32U5, this check is moved to boardloader
   ensure_bootloader_min_version();
@@ -270,7 +268,8 @@ int main(void) {
 
   // do not check any trust flags on header, proceed
 
-  mpu_config_off();
+  mpu_reconfig(MPU_MODE_DISABLED);
+
   jump_to(IMAGE_CODE_ALIGN(FIRMWARE_START + vhdr.hdrlen + IMAGE_HEADER_SIZE));
 
   return 0;

@@ -17,10 +17,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "board_capabilities.h"
 #include <string.h>
+
+#include "board_capabilities.h"
 #include "common.h"
 #include "model.h"
+#include "mpu.h"
 
 static uint32_t board_name = 0;
 
@@ -33,11 +35,14 @@ const boardloader_version_t *get_boardloader_version() {
 }
 
 void parse_boardloader_capabilities() {
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_BOARDCAPS);
+
   const uint8_t *pos = (const uint8_t *)BOARD_CAPABILITIES_ADDR;
   const uint8_t *end =
       (const uint8_t *)(BOARD_CAPABILITIES_ADDR + BOARD_CAPABILITIES_SIZE);
 
   if (memcmp(pos, CAPABILITIES_HEADER, 4) != 0) {
+    mpu_restore(mpu_mode);
     return;
   }
 
@@ -70,6 +75,7 @@ void parse_boardloader_capabilities() {
         memcpy(&boardloader_version, pos, length);
         break;
       case TAG_TERMINATOR:
+        mpu_restore(mpu_mode);
         return;
       default:
         break;
@@ -77,4 +83,6 @@ void parse_boardloader_capabilities() {
 
     pos += length;
   }
+
+  mpu_restore(mpu_mode);
 }

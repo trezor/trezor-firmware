@@ -5,6 +5,7 @@
 #include "common.h"
 #include "flash.h"
 #include "model.h"
+#include "mpu.h"
 
 bool translations_write(const uint8_t* data, uint32_t offset, uint32_t len) {
   uint32_t size = translations_area_bytesize();
@@ -12,12 +13,17 @@ bool translations_write(const uint8_t* data, uint32_t offset, uint32_t len) {
     return false;
   }
 
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_ASSETS);
+
   ensure(flash_unlock_write(), "translations_write unlock");
   // todo consider alignment
   ensure(flash_area_write_data_padded(&TRANSLATIONS_AREA, offset, data, len,
                                       0xFF, FLASH_ALIGN(len)),
          "translations_write write");
   ensure(flash_lock_write(), "translations_write lock");
+
+  mpu_restore(mpu_mode);
+
   return true;
 }
 
@@ -30,7 +36,9 @@ const uint8_t* translations_read(uint32_t* len, uint32_t offset) {
 }
 
 void translations_erase(void) {
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_ASSETS);
   ensure(flash_area_erase(&TRANSLATIONS_AREA, NULL), "translations erase");
+  mpu_restore(mpu_mode);
 }
 
 uint32_t translations_area_bytesize(void) {

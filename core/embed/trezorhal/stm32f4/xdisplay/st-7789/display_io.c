@@ -22,6 +22,7 @@
 
 #include "display_io.h"
 #include "irq.h"
+#include "mpu.h"
 
 __IO DISP_MEM_TYPE *const DISPLAY_CMD_ADDRESS =
     (__IO DISP_MEM_TYPE *const)((uint32_t)DISPLAY_MEMORY_BASE);
@@ -127,7 +128,9 @@ void display_io_init_fmc(void) {
   normal_mode_timing.DataLatency = 2;            // don't care
   normal_mode_timing.AccessMode = FMC_ACCESS_MODE_A;
 
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_FSMC_REGS);
   HAL_SRAM_Init(&external_display_data_sram, &normal_mode_timing, NULL);
+  mpu_restore(mpu_mode);
 }
 
 #ifdef DISPLAY_TE_INTERRUPT_HANDLER
