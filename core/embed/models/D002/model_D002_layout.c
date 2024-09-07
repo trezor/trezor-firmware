@@ -77,20 +77,6 @@ const flash_area_t TRANSLATIONS_AREA = {
         },
 };
 
-const flash_area_t WIPE_AREA = {
-    .num_subareas = 1,
-    .subarea[0] =
-        {
-            .first_sector = STORAGE_1_SECTOR_START,
-            .num_sectors = 488,
-        },
-};
-
-const flash_area_t ALL_WIPE_AREA = {
-    .num_subareas = 1,
-    .subarea[0] =
-        {
-            .first_sector = BOOTLOADER_SECTOR_START,
-            .num_sectors = 504,
-        },
+const flash_area_t UNUSED_AREA = {
+    .num_subareas = 0,
 };

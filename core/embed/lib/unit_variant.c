@@ -2,6 +2,7 @@
 
 #include "flash_otp.h"
 #include "model.h"
+#include "mpu.h"
 #include "unit_variant.h"
 #include TREZOR_BOARD
 

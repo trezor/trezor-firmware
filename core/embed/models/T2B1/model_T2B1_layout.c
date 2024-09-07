@@ -74,21 +74,16 @@ const flash_area_t FIRMWARE_AREA = {
         },
 };
 
-const flash_area_t WIPE_AREA = {
-    .num_subareas = 3,
+const flash_area_t UNUSED_AREA = {
+    .num_subareas = 2,
     .subarea[0] =
         {
-            .first_sector = 4,
+            .first_sector = 3,
             .num_sectors = 1,
         },
     .subarea[1] =
         {
-            .first_sector = 6,
-            .num_sectors = 6,
-        },
-    .subarea[2] =
-        {
-            .first_sector = 16,
-            .num_sectors = 8,
+            .first_sector = 15,
+            .num_sectors = 1,
         },
 };
