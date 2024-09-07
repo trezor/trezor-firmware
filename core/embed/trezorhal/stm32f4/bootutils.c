@@ -91,7 +91,9 @@ reboot_with_args(boot_command_t command, const void* args, size_t args_size) {
 #ifdef ENSURE_COMPATIBLE_SETTINGS
   ensure_compatible_settings();
 #endif
-  mpu_config_bootloader();
+
+  mpu_reconfig(MPU_MODE_DISABLED);
+
   jump_to_with_flag(BOOTLOADER_START + IMAGE_HEADER_SIZE, g_boot_command);
   for (;;)
     ;

@@ -20,6 +20,7 @@
 #include "monoctr.h"
 #include "flash_otp.h"
 #include "model.h"
+#include "mpu.h"
 #include "string.h"
 
 #if !PRODUCTION

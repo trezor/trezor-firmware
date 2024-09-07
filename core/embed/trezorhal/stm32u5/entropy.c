@@ -22,6 +22,7 @@
 #include "entropy.h"
 #include "flash_otp.h"
 #include "model.h"
+#include "mpu.h"
 #include "rand.h"
 
 #include "stm32u5xx_ll_utils.h"
@@ -29,6 +30,8 @@
 static uint8_t g_hw_entropy[HW_ENTROPY_LEN];
 
 void entropy_init(void) {
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_OTP);
+
   // collect entropy from UUID
   uint32_t w = LL_GetUID_Word0();
   memcpy(g_hw_entropy, &w, 4);
@@ -36,6 +39,8 @@ void entropy_init(void) {
   memcpy(g_hw_entropy + 4, &w, 4);
   w = LL_GetUID_Word2();
   memcpy(g_hw_entropy + 8, &w, 4);
+
+  mpu_restore(mpu_mode);
 
   // set entropy in the OTP randomness block
   if (secfalse == flash_otp_is_locked(FLASH_OTP_BLOCK_RANDOMNESS)) {
