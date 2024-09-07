@@ -20,7 +20,6 @@ extern const flash_area_t BHK_AREA;
 extern const flash_area_t TRANSLATIONS_AREA;
 extern const flash_area_t BOOTLOADER_AREA;
 extern const flash_area_t FIRMWARE_AREA;
-extern const flash_area_t WIPE_AREA;
-extern const flash_area_t ALL_WIPE_AREA;
+extern const flash_area_t UNUSED_AREA;
 
 #endif

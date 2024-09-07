@@ -13,8 +13,6 @@ extern uint8_t *FIRMWARE_START;
 
 void emulator_poll_events(void);
 void set_core_clock(int);
-void mpu_config_bootloader(void);
-void mpu_config_off(void);
 __attribute__((noreturn)) void jump_to(uint32_t address);
 
 #endif

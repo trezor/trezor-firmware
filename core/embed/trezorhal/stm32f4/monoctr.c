@@ -20,6 +20,7 @@
 #include "monoctr.h"
 #include "flash_otp.h"
 #include "model.h"
+#include "mpu.h"
 #include "string.h"
 
 #if PRODUCTION
@@ -71,7 +72,6 @@ secbool monoctr_write(monoctr_type_t type, uint8_t value) {
   }
 
   ensure(flash_otp_write(block, 0, bits, FLASH_OTP_BLOCK_SIZE), NULL);
-
 #endif
   return sectrue;
 }

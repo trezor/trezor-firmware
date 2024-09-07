@@ -28,6 +28,7 @@
 #include "fault_handlers.h"
 #include "flash.h"
 #include "flash_otp.h"
+#include "flash_utils.h"
 #include "image.h"
 #include "lowlevel.h"
 #include "messages.pb.h"
@@ -335,7 +336,8 @@ void real_jump_to_firmware(void) {
   ensure_compatible_settings();
 #endif
 
-  mpu_config_off();
+  mpu_reconfig(MPU_MODE_DISABLED);
+
   jump_to(IMAGE_CODE_ALIGN(FIRMWARE_START + vhdr.hdrlen + IMAGE_HEADER_SIZE));
 }
 
@@ -390,8 +392,6 @@ int bootloader_main(void) {
 #endif
 
   ui_screen_boot_stage_1(false);
-
-  mpu_config_bootloader();
 
   fault_handlers_init();
 
@@ -554,9 +554,7 @@ int bootloader_main(void) {
 #ifdef STM32U5
       secret_bhk_regenerate();
 #endif
-      // erase storage
-      ensure(flash_area_erase_bulk(STORAGE_AREAS, STORAGE_AREAS_COUNT, NULL),
-             NULL);
+      ensure(erase_storage(NULL), NULL);
 
       // keep the model screen up for a while
 #ifndef USE_BACKLIGHT
@@ -664,8 +662,7 @@ int bootloader_main(void) {
 #ifdef STM32U5
         secret_bhk_regenerate();
 #endif
-        ensure(flash_area_erase_bulk(STORAGE_AREAS, STORAGE_AREAS_COUNT, NULL),
-               NULL);
+        ensure(erase_storage(NULL), NULL);
       }
       ensure(dont_optimize_out_true *
                  (continue_to_firmware == continue_to_firmware_backup),

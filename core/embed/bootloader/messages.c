@@ -27,6 +27,7 @@
 #include "bootargs.h"
 #include "common.h"
 #include "flash.h"
+#include "flash_utils.h"
 #include "image.h"
 #include "secbool.h"
 #include "secret.h"
@@ -715,8 +716,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
 #ifdef STM32U5
         secret_bhk_regenerate();
 #endif
-        ensure(flash_area_erase_bulk(STORAGE_AREAS, STORAGE_AREAS_COUNT, NULL),
-               NULL);
+        ensure(erase_storage(NULL), NULL);
       }
 
       headers_offset = IMAGE_CODE_ALIGN(IMAGE_HEADER_SIZE + vhdr.hdrlen);
@@ -840,7 +840,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
 }
 
 secbool bootloader_WipeDevice(void) {
-  return flash_area_erase(&WIPE_AREA, ui_screen_wipe_progress);
+  return erase_device(ui_screen_wipe_progress);
 }
 
 int process_msg_WipeDevice(uint8_t iface_num, uint32_t msg_size, uint8_t *buf) {
