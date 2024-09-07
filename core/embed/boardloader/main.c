@@ -262,8 +262,6 @@ int main(void) {
   clear_otg_hs_memory();
 #endif
 
-  mpu_config_boardloader();
-
   fault_handlers_init();
 
 #ifdef USE_SDRAM
@@ -335,7 +333,7 @@ int main(void) {
   ensure_compatible_settings();
 #endif
 
-  mpu_config_off();
+  mpu_reconfig(MPU_MODE_DISABLED);
 
   // g_boot_command is preserved on STM32U5
   jump_to(IMAGE_CODE_ALIGN(BOOTLOADER_START + IMAGE_HEADER_SIZE));

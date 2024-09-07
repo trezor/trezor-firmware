@@ -251,6 +251,7 @@ static usb_result_t bootloader_usb_loop(const vendor_header *const vhdr,
 }
 
 static secbool check_vendor_header_lock(const vendor_header *const vhdr) {
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_OTP);
   uint8_t lock[FLASH_OTP_BLOCK_SIZE];
   ensure(flash_otp_read(FLASH_OTP_BLOCK_VENDOR_HEADER_LOCK, 0, lock,
                         FLASH_OTP_BLOCK_SIZE),
@@ -260,10 +261,12 @@ static secbool check_vendor_header_lock(const vendor_header *const vhdr) {
              "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF"
              "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF",
              FLASH_OTP_BLOCK_SIZE)) {
+    mpu_restore(mpu_mode);
     return sectrue;
   }
   uint8_t hash[32];
   vendor_header_hash(vhdr, hash);
+  mpu_restore(mpu_mode);
   return sectrue * (0 == memcmp(lock, hash, 32));
 }
 
@@ -338,7 +341,8 @@ void real_jump_to_firmware(void) {
   ensure_compatible_settings();
 #endif
 
-  mpu_config_off();
+  mpu_reconfig(MPU_MODE_DISABLED);
+
   jump_to(IMAGE_CODE_ALIGN(FIRMWARE_START + vhdr.hdrlen + IMAGE_HEADER_SIZE));
 }
 
@@ -397,8 +401,6 @@ int bootloader_main(void) {
 #endif
 
   ui_screen_boot_stage_1(false);
-
-  mpu_config_bootloader();
 
   fault_handlers_init();
 

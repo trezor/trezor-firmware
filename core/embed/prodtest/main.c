@@ -813,15 +813,12 @@ int main(void) {
   uint32_t bootloader_version = read_bootloader_version();
   const boardloader_version_t *boardloader_version = read_boardloader_version();
 
-  mpu_config_prodtest_initial();
-
 #ifdef USE_OPTIGA
   optiga_init();
   optiga_open_application();
   pair_optiga();
 #endif
 
-  mpu_config_prodtest();
   fault_handlers_init();
 
   display_clear();

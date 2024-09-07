@@ -176,15 +176,12 @@ int main(void) {
   secbool secret_ok = secret_optiga_get(secret);
 #endif
 
-  mpu_config_firmware_initial();
-
   entropy_init();
 
 #if PRODUCTION || BOOTLOADER_QA
   check_and_replace_bootloader();
 #endif
-  // Enable MPU
-  mpu_config_firmware();
+
 #endif
 
   // Init peripherals

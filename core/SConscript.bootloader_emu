@@ -150,6 +150,7 @@ SOURCE_TREZORHAL = [
     'embed/trezorhal/unix/fault_handlers.c',
     'embed/trezorhal/unix/flash.c',
     'embed/trezorhal/unix/flash_otp.c',
+    'embed/trezorhal/unix/mpu.c',
     'embed/trezorhal/unix/monoctr.c',
     'embed/trezorhal/unix/random_delays.c',
     'embed/trezorhal/unix/rng.c',

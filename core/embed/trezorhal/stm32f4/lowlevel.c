@@ -20,6 +20,9 @@
 #include STM32_HAL_H
 
 #include "lowlevel.h"
+
+#include <mpu.h>
+
 #include "flash_otp.h"
 
 #pragma GCC optimize( \
@@ -80,19 +83,27 @@ secbool flash_check_option_bytes(void) {
   if (FLASH->OPTCR1 != FLASH_OPTCR1_nWRP) {
     return secfalse;
   }
+
+  mpu_mode_t mode = mpu_reconfig(MPU_MODE_FLASHOB);
   // check values stored in flash memory
   if ((OPTION_BYTES_RDP_USER & ~3) !=
       OPTION_BYTES_RDP_USER_VALUE) {  // bits 0 and 1 are unused
+    mpu_reconfig(mode);
     return secfalse;
   }
   if ((OPTION_BYTES_BANK1_WRP & 0xCFFFU) !=
       OPTION_BYTES_BANK1_WRP_VALUE) {  // bits 12 and 13 are unused
+    mpu_reconfig(mode);
     return secfalse;
   }
   if ((OPTION_BYTES_BANK2_WRP & 0xFFFU) !=
       OPTION_BYTES_BANK2_WRP_VALUE) {  // bits 12, 13, 14, and 15 are unused
+    mpu_reconfig(mode);
     return secfalse;
   }
+
+  mpu_reconfig(mode);
+
   return sectrue;
 }
 

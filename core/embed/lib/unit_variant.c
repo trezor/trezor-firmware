@@ -2,6 +2,7 @@
 
 #include "flash_otp.h"
 #include "model.h"
+#include "mpu.h"
 #include "unit_variant.h"
 #include TREZOR_BOARD
 
@@ -51,6 +52,8 @@ static int16_t unit_variant_get_build_year(void) {
 }
 
 void unit_variant_init(void) {
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_OTP);
+
   uint8_t data[FLASH_OTP_BLOCK_SIZE];
 
   secbool result = flash_otp_read(FLASH_OTP_BLOCK_DEVICE_VARIANT, 0, data,
@@ -67,6 +70,8 @@ void unit_variant_init(void) {
         break;
     }
   }
+
+  mpu_restore(mpu_mode);
 }
 
 uint8_t unit_variant_get_color(void) { return unit_variant_color; }

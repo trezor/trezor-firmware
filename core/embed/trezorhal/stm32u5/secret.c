@@ -6,6 +6,7 @@
 #include "flash.h"
 #include "memzero.h"
 #include "model.h"
+#include "mpu.h"
 #include "rng.h"
 #include "secure_aes.h"
 
@@ -19,17 +20,25 @@ secbool secret_verify_header(void) {
     return secfalse;
   }
 
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_SECRET);
+
   bootloader_locked =
       memcmp(addr, SECRET_HEADER_MAGIC, sizeof(SECRET_HEADER_MAGIC)) == 0
           ? sectrue
           : secfalse;
+
+  mpu_restore(mpu_mode);
+
   return bootloader_locked;
 }
 
 secbool secret_ensure_initialized(void) {
   if (sectrue != secret_verify_header()) {
+    mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_STORAGE);
     ensure(flash_area_erase_bulk(STORAGE_AREAS, STORAGE_AREAS_COUNT, NULL),
            "erase storage failed");
+    mpu_restore(mpu_mode);
+
     secret_erase();
     secret_write_header();
     return secfalse;
@@ -58,6 +67,7 @@ void secret_write_header(void) {
 }
 
 void secret_write(const uint8_t *data, uint32_t offset, uint32_t len) {
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_SECRET);
   ensure(flash_unlock_write(), "secret write");
   for (int i = 0; i < len / 16; i++) {
     ensure(flash_area_write_quadword(&SECRET_AREA, offset + (i * 16),
@@ -65,6 +75,7 @@ void secret_write(const uint8_t *data, uint32_t offset, uint32_t len) {
            "secret write");
   }
   ensure(flash_lock_write(), "secret write");
+  mpu_restore(mpu_mode);
 }
 
 secbool secret_read(uint8_t *data, uint32_t offset, uint32_t len) {
@@ -76,7 +87,10 @@ secbool secret_read(uint8_t *data, uint32_t offset, uint32_t len) {
   if (addr == NULL) {
     return secfalse;
   }
+
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_SECRET);
   memcpy(data, addr, len);
+  mpu_restore(mpu_mode);
 
   return sectrue;
 }
@@ -106,6 +120,8 @@ static secbool secret_present(uint32_t offset, uint32_t len) {
     return secfalse;
   }
 
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_SECRET);
+
   int secret_empty_bytes = 0;
 
   for (int i = 0; i < len; i++) {
@@ -115,6 +131,9 @@ static secbool secret_present(uint32_t offset, uint32_t len) {
       secret_empty_bytes++;
     }
   }
+
+  mpu_restore(mpu_mode);
+
   return sectrue * (secret_empty_bytes != len);
 }
 
@@ -152,6 +171,8 @@ static void secret_bhk_load(void) {
 }
 
 void secret_bhk_regenerate(void) {
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_SECRET);
+
   ensure(flash_area_erase(&BHK_AREA, NULL), "Failed regenerating BHK");
   ensure(flash_unlock_write(), "Failed regenerating BHK");
   for (int i = 0; i < 2; i++) {
@@ -164,6 +185,9 @@ void secret_bhk_regenerate(void) {
     memzero(val, sizeof(val));
     ensure(res, "Failed regenerating BHK");
   }
+
+  mpu_restore(mpu_mode);
+
   ensure(flash_lock_write(), "Failed regenerating BHK");
 }
 
@@ -187,6 +211,8 @@ secbool secret_optiga_writable(void) {
     return secfalse;
   }
 
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_SECRET);
+
   int secret_empty_bytes = 0;
 
   for (int i = 0; i < len; i++) {
@@ -196,6 +222,9 @@ secbool secret_optiga_writable(void) {
       secret_empty_bytes++;
     }
   }
+
+  mpu_restore(mpu_mode);
+
   return sectrue * (secret_empty_bytes == len);
 }
 
@@ -272,7 +301,9 @@ void secret_optiga_erase(void) {
 }
 
 void secret_erase(void) {
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_SECRET);
   ensure(flash_area_erase(&SECRET_AREA, NULL), "secret erase");
+  mpu_restore(mpu_mode);
 }
 
 void secret_prepare_fw(secbool allow_run_with_secret, secbool trust_all) {
