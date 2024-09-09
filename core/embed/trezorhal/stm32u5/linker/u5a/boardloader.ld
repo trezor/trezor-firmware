@@ -5,11 +5,11 @@ ENTRY(reset_handler)
 MEMORY {
   FLASH  (rx)  : ORIGIN = BOARDLOADER_START, LENGTH = BOARDLOADER_IMAGE_MAXSIZE
   SRAM1  (wal) : ORIGIN = MCU_SRAM1, LENGTH = MCU_SRAM1_SIZE - BOOTARGS_SIZE
-  BOOT_ARGS  (wal) : ORIGIN = MCU_SRAM2 - BOOTARGS_SIZE, LENGTH =  BOOTARGS_SIZE
+  BOOT_ARGS  (wal) : ORIGIN = MCU_SRAM2 - BOOTARGS_SIZE, LENGTH = BOOTARGS_SIZE
   SRAM2  (wal) : ORIGIN = MCU_SRAM2, LENGTH =  MCU_SRAM2_SIZE
   SRAM3  (wal) : ORIGIN = MCU_SRAM3, LENGTH =  MCU_SRAM3_SIZE
   SRAM5  (wal) : ORIGIN = MCU_SRAM5, LENGTH =  MCU_SRAM5_SIZE
-  SRAM6  (wal) : ORIGIN = MCU_SRAM5, LENGTH =  MCU_SRAM6_SIZE
+  SRAM6  (wal) : ORIGIN = MCU_SRAM6, LENGTH =  MCU_SRAM6_SIZE
   SRAM4  (wal) : ORIGIN = MCU_SRAM4, LENGTH =  MCU_SRAM4_SIZE
 }
 
@@ -29,19 +29,23 @@ confidential_lma = LOADADDR(.confidential);
 confidential_vma = ADDR(.confidential);
 confidential_size = SIZEOF(.confidential);
 
-/* used by the startup code to wipe memory */
-sram1_start = ORIGIN(SRAM1);
-sram1_end = ORIGIN(SRAM1) + LENGTH(SRAM1);
-sram2_start = ORIGIN(SRAM2);
-sram2_end = ORIGIN(SRAM2) + LENGTH(SRAM2);
-sram3_start = ORIGIN(SRAM3);
-sram3_end = ORIGIN(SRAM3) + LENGTH(SRAM3);
-sram4_start = ORIGIN(SRAM4);
-sram4_end = ORIGIN(SRAM4) + LENGTH(SRAM4);
-sram5_start = ORIGIN(SRAM5);
-sram5_end = ORIGIN(SRAM5) + LENGTH(SRAM5);
-sram6_start = ORIGIN(SRAM6);
-sram6_end = ORIGIN(SRAM6) + LENGTH(SRAM6);
+/* used by the startup/jump code to wipe memory */
+_jump_clean_ram_0_start = ORIGIN(SRAM1);
+_jump_clean_ram_0_end = ORIGIN(BOOT_ARGS);
+_jump_clean_ram_1_start = ORIGIN(BOOT_ARGS) + LENGTH(BOOT_ARGS);
+_jump_clean_ram_1_end = ORIGIN(SRAM6)+ LENGTH(SRAM6);
+_jump_clean_ram_2_start = ORIGIN(SRAM4);
+_jump_clean_ram_2_end = ORIGIN(SRAM4) + LENGTH(SRAM4);
+
+/* used by the shutdown code to wipe memory */
+_sh_clean_ram_0_start = ORIGIN(SRAM1);
+_sh_clean_ram_0_end = ADDR(.fb1);
+_sh_clean_ram_1_start = ADDR(.fb1) + SIZEOF(.fb1);
+_sh_clean_ram_1_end = ADDR(.fb2);
+_sh_clean_ram_2_start = ADDR(.fb2) + SIZEOF(.fb2);
+_sh_clean_ram_2_end = ORIGIN(SRAM6)+ LENGTH(SRAM6);
+_sh_clean_ram_3_start = ORIGIN(SRAM4);
+_sh_clean_ram_3_end = ORIGIN(SRAM4) + LENGTH(SRAM4);
 
 /* reserve 256 bytes for bootloader arguments */
 boot_args_start = ORIGIN(BOOT_ARGS);
@@ -65,7 +69,7 @@ SECTIONS {
   .data : ALIGN(4) {
     *(.data*);
     . = ALIGN(8);
-  } >SRAM1 AT>FLASH
+  } >SRAM5 AT>FLASH
 
   /DISCARD/ : {
     *(.ARM.exidx*);
@@ -74,12 +78,12 @@ SECTIONS {
   .bss : ALIGN(4) {
     *(.bss*);
     . = ALIGN(4);
-  } >SRAM1
+  } >SRAM5
 
   .buf : ALIGN(4) {
     *(.buf*);
     . = ALIGN(4);
-  } >SRAM1
+  } >SRAM5
 
   .stack : ALIGN(8) {
     . = 16K; /* Overflow causes UsageFault */
@@ -91,18 +95,16 @@ SECTIONS {
   } >SRAM2 AT>FLASH
 
   .fb1 : ALIGN(4) {
-   __fb_start = .;
     *(.fb1*);
+    . = ALIGN(4);
+  } >SRAM1
+
+  .fb2 : ALIGN(4) {
+    *(.fb2*);
     *(.gfxmmu_table*);
     *(.framebuffer_select*);
     . = ALIGN(4);
   } >SRAM3
-
-  .fb2 : ALIGN(4) {
-    *(.fb2*);
-   __fb_end = .;
-    . = ALIGN(4);
-  } >SRAM5
 
   .boot_args : ALIGN(8) {
     *(.boot_command*);

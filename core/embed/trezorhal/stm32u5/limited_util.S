@@ -35,23 +35,14 @@ jump_to:
   cpsid f
   // wipe memory at the end of the current stage of code
   ldr r2, =0             // r2 - the word-sized value to be written
-  ldr r0, =sram1_start   // r0 - point to beginning of SRAM
-  ldr r1, =sram1_end     // r1 - point to byte after the end of SRAM
+  ldr r0, =_jump_clean_ram_0_start
+  ldr r1, =_jump_clean_ram_0_end
   bl memset_reg
-  ldr r0, =sram2_start   // r0 - point to beginning of SRAM
-  ldr r1, =sram2_end     // r1 - point to byte after the end of SRAM
+  ldr r0, =_jump_clean_ram_1_start
+  ldr r1, =_jump_clean_ram_1_end
   bl memset_reg
-  ldr r0, =sram4_start   // r0 - point to beginning of SRAM
-  ldr r1, =sram4_end     // r1 - point to byte after the end of SRAM
-  bl memset_reg
-  ldr r0, =sram6_start   // r0 - point to beginning of SRAM
-  ldr r1, =sram6_end     // r1 - point to byte after the end of SRAM
-  bl memset_reg
-  ldr r0, =sram3_start   // r0 - point to beginning of SRAM
-  ldr r1, =__fb_start    // r1 - point to beginning of framebuffer
-  bl memset_reg
-  ldr r0, =__fb_end      // r0 - point to end of framebuffer
-  ldr r1, =sram5_end     // r1 - point to byte after the end of SRAM
+  ldr r0, =_jump_clean_ram_2_start
+  ldr r1, =_jump_clean_ram_2_end
   bl memset_reg
 
   mov lr, r4
@@ -104,26 +95,17 @@ shutdown_privileged:
   mov r12, r0
   ldr lr, =0xffffffff
 
-  ldr r0, =sram1_start   // r0 - point to beginning of SRAM
-  ldr r1, =sram1_end     // r1 - point to byte after the end of SRAM
+  ldr r0, =_sh_clean_ram_0_start
+  ldr r1, =_sh_clean_ram_0_end
   bl memset_reg
-  ldr r0, =sram2_start   // r0 - point to beginning of SRAM
-  ldr r1, =sram2_end     // r1 - point to byte after the end of SRAM
+  ldr r0, =_sh_clean_ram_1_start
+  ldr r1, =_sh_clean_ram_1_end
   bl memset_reg
-  ldr r0, =sram4_start   // r0 - point to beginning of SRAM
-  ldr r1, =sram4_end     // r1 - point to byte after the end of SRAM
+  ldr r0, =_sh_clean_ram_2_start
+  ldr r1, =_sh_clean_ram_2_end
   bl memset_reg
-  ldr r0, =sram6_start   // r0 - point to beginning of SRAM
-  ldr r1, =sram6_end     // r1 - point to byte after the end of SRAM
-  bl memset_reg
-  ldr r0, =boot_args_start   // r0 - point to beginning of boot args
-  ldr r1, =boot_args_end     // r1 - point to byte after the end of boot args
-  bl memset_reg
-  ldr r0, =sram3_start   // r0 - point to beginning of SRAM
-  ldr r1, =__fb_start    // r1 - point to beginning of framebuffer
-  bl memset_reg
-  ldr r0, =__fb_end      // r0 - point to end of framebuffer
-  ldr r1, =sram5_end     // r1 - point to byte after the end of SRAM
+  ldr r0, =_sh_clean_ram_3_start
+  ldr r1, =_sh_clean_ram_3_end
   bl memset_reg
 
   ldr r0, =1

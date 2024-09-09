@@ -168,6 +168,9 @@ LTDC_HandleTypeDef hlcd_ltdc = {0};
 DSI_HandleTypeDef hlcd_dsi = {0};
 static DSI_VidCfgTypeDef DSIVidCfg = {0};
 
+__attribute__((section(".gfxmmu_table")))
+uint32_t gfxmmu_lut[2 * GFXMMU_LUT_SIZE];
+
 /**
  * @}
  */
@@ -208,6 +211,7 @@ int32_t BSP_LCD_Init(uint32_t Instance, uint32_t Orientation) {
   memset(&hlcd_ltdc, 0, sizeof(hlcd_ltdc));
   memset(&hlcd_dsi, 0, sizeof(hlcd_dsi));
   memset(&DSIVidCfg, 0, sizeof(DSIVidCfg));
+  memcpy(gfxmmu_lut, gfxmmu_lut_config, sizeof(gfxmmu_lut));
 
   int32_t status = BSP_ERROR_NONE;
 

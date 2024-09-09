@@ -45,6 +45,13 @@ void display_init(display_content_mode_t mode) {
   }
 
   if (mode == DISPLAY_RESET_CONTENT) {
+    __HAL_RCC_DSI_FORCE_RESET();
+    __HAL_RCC_LTDC_FORCE_RESET();
+    __HAL_RCC_GFXMMU_FORCE_RESET();
+    __HAL_RCC_DSI_RELEASE_RESET();
+    __HAL_RCC_LTDC_RELEASE_RESET();
+    __HAL_RCC_GFXMMU_RELEASE_RESET();
+
     RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
 
     // Initializes the common periph clock
@@ -86,6 +93,14 @@ void display_deinit(display_content_mode_t mode) {
   display_driver_t *drv = &g_display_driver;
 
   if (!drv->initialized) {
+    if (mode == DISPLAY_RESET_CONTENT) {
+      __HAL_RCC_DSI_FORCE_RESET();
+      __HAL_RCC_LTDC_FORCE_RESET();
+      __HAL_RCC_GFXMMU_FORCE_RESET();
+      __HAL_RCC_DSI_RELEASE_RESET();
+      __HAL_RCC_LTDC_RELEASE_RESET();
+      __HAL_RCC_GFXMMU_RELEASE_RESET();
+    }
     return;
   }
 

@@ -19,16 +19,6 @@ data_lma = LOADADDR(.data);
 data_vma = ADDR(.data);
 data_size = SIZEOF(.data);
 
-/* used by the startup code to wipe memory */
-ccmram_start = ORIGIN(CCMRAM);
-ccmram_end = ORIGIN(CCMRAM) + LENGTH(CCMRAM);
-
-/* used by the startup code to wipe memory */
-sram_start = ORIGIN(SRAM);
-sram_end = ORIGIN(SRAM) + LENGTH(SRAM);
-_ram_start = sram_start;
-_ram_end = sram_end;
-
 bss_start = ADDR(.bss);
 bss_end = ADDR(.bss) + SIZEOF(.bss);
 
@@ -93,7 +83,7 @@ SECTIONS {
 
   .heap : ALIGN(4) {
     . = 37K; /* this acts as a build time assertion that at least this much memory is available for heap use */
-    . = ABSOLUTE(sram_end); /* this explicitly sets the end of the heap */
+    . = ABSOLUTE(ORIGIN(SRAM) + LENGTH(SRAM)); /* this explicitly sets the end of the heap */
   } >SRAM
 
   .data_ccm : ALIGN(4) {

@@ -150,8 +150,8 @@ saes_invoke(void) {
   return 0;
 }
 
-extern uint32_t sram2_u_start;
-extern uint32_t sram2_u_end;
+extern uint32_t sram_u_start;
+extern uint32_t sram_u_end;
 
 secbool unpriv_encrypt(const uint8_t* input, size_t size, uint8_t* output,
                        secure_aes_keysel_t key) {
@@ -169,7 +169,7 @@ secbool unpriv_encrypt(const uint8_t* input, size_t size, uint8_t* output,
 
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_SAES);
 
-  for (uint32_t* m = &sram2_u_start; m < &sram2_u_end; m++) {
+  for (uint32_t* m = &sram_u_start; m < &sram_u_end; m++) {
     *m = 0;
   }
 
@@ -200,7 +200,7 @@ secbool unpriv_encrypt(const uint8_t* input, size_t size, uint8_t* output,
     ((uint8_t*)saes_output)[i] = 0;
   }
 
-  for (uint32_t* m = &sram2_u_start; m < &sram2_u_end; m++) {
+  for (uint32_t* m = &sram_u_start; m < &sram_u_end; m++) {
     *m = 0;
   }
 

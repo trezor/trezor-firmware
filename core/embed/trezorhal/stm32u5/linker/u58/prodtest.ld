@@ -30,19 +30,23 @@ confidential_lma = LOADADDR(.confidential);
 confidential_vma = ADDR(.confidential);
 confidential_size = SIZEOF(.confidential);
 
-/* used by the startup code to wipe memory */
-sram1_start = ORIGIN(SRAM1);
-sram1_end = ORIGIN(SRAM1) + LENGTH(SRAM1);
-sram2_start = ORIGIN(SRAM2);
-sram2_end = ORIGIN(SRAM2) + LENGTH(SRAM2);
-sram3_start = ORIGIN(SRAM3);
-sram3_end = ORIGIN(SRAM3) + LENGTH(SRAM3);
-sram4_start = ORIGIN(SRAM4);
-sram4_end = ORIGIN(SRAM4) + LENGTH(SRAM4);
-sram5_start = ORIGIN(SRAM5);
-sram5_end = ORIGIN(SRAM5) + LENGTH(SRAM5);
-sram6_start = ORIGIN(SRAM6);
-sram6_end = ORIGIN(SRAM6) + LENGTH(SRAM6);
+/* used by the startup/jump code to wipe memory */
+_jump_clean_ram_0_start = ORIGIN(SRAM1);
+_jump_clean_ram_0_end = ORIGIN(BOOT_ARGS);
+_jump_clean_ram_1_start = ORIGIN(BOOT_ARGS) + LENGTH(BOOT_ARGS);
+_jump_clean_ram_1_end = ORIGIN(SRAM6)+ LENGTH(SRAM6);
+_jump_clean_ram_2_start = ORIGIN(SRAM4);
+_jump_clean_ram_2_end = ORIGIN(SRAM4) + LENGTH(SRAM4);
+
+/* used by the shutdown code to wipe memory */
+_sh_clean_ram_0_start = ORIGIN(SRAM1);
+_sh_clean_ram_0_end = ORIGIN(SRAM6)+ LENGTH(SRAM6);
+_sh_clean_ram_1_start = ORIGIN(SRAM4);
+_sh_clean_ram_1_end = ORIGIN(SRAM4) + LENGTH(SRAM4);
+_sh_clean_ram_2_start = 0;
+_sh_clean_ram_2_end = 0;
+_sh_clean_ram_3_start = 0;
+_sh_clean_ram_3_end = 0;
 
 /* reserve 256 bytes for bootloader arguments */
 boot_args_start = ORIGIN(BOOT_ARGS);
