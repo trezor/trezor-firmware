@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 - Changed prefix of public key returned by `get_ecdh_session_key` for curve25519.  [#4093]
 - Renamed MATIC to POL, following a network upgrade.  [#4151]
+- [T3B1,T3T1] Included bootloader 2.1.8.
 
 ### Removed
 - Removed `display_random` feature.  [#4119]
