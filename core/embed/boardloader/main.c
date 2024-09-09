@@ -350,7 +350,7 @@ int main(void) {
   // This includes the version of bootloader potentially updated from SD card.
   write_bootloader_min_version(hdr->monotonic);
 
-  display_deinit(DISPLAY_RETAIN_CONTENT);
+  display_deinit(DISPLAY_JUMP_BEHAVIOR);
 
 #ifdef ENSURE_COMPATIBLE_SETTINGS
   ensure_compatible_settings();

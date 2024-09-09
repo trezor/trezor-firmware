@@ -334,7 +334,7 @@ void real_jump_to_firmware(void) {
     ui_screen_boot_stage_1(false);
   }
 
-  display_deinit(DISPLAY_RETAIN_CONTENT);
+  display_deinit(DISPLAY_JUMP_BEHAVIOR);
 
 #ifdef ENSURE_COMPATIBLE_SETTINGS
   ensure_compatible_settings();
@@ -401,7 +401,7 @@ int bootloader_main(void) {
   hash_processor_init();
 #endif
 
-  display_init(DISPLAY_RETAIN_CONTENT);
+  display_init(DISPLAY_JUMP_BEHAVIOR);
 
 #ifdef USE_DMA2D
   dma2d_init();

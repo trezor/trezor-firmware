@@ -807,7 +807,7 @@ static void kernel_panic(const systask_postmortem_t *pminfo) {
 int main(void) {
   system_init(&kernel_panic);
 
-  display_init(DISPLAY_RETAIN_CONTENT);
+  display_init(DISPLAY_JUMP_BEHAVIOR);
 
 #ifdef STM32U5
   secure_aes_init();

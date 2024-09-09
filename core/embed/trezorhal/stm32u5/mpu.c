@@ -149,9 +149,15 @@ static void mpu_set_attributes(void) {
 
 // clang-format on
 
+#ifdef STM32U585xx
 #define KERNEL_RAM_START (SRAM2_BASE - KERNEL_SRAM1_SIZE)
 #define KERNEL_RAM_SIZE \
   ((KERNEL_SRAM1_SIZE + KERNEL_SRAM2_SIZE) - KERNEL_U_RAM_SIZE)
+#else
+#define KERNEL_RAM_START (SRAM1_BASE)
+#define KERNEL_RAM_SIZE (SRAM1_SIZE + SRAM2_SIZE + SRAM3_SIZE - KERNEL_U_RAM_SIZE)
+#endif
+
 
 #ifdef SYSCALL_DISPATCH
 extern uint32_t _uflash_start;
@@ -176,11 +182,16 @@ extern uint32_t _codelen;
 #define COREAPP_FLASH_START (KERNEL_FLASH_START + KERNEL_SIZE)
 #define COREAPP_FLASH_SIZE (FIRMWARE_IMAGE_MAXSIZE - KERNEL_SIZE)
 
+#ifdef STM32U585xx
 #define COREAPP_RAM1_START SRAM1_BASE
 #define COREAPP_RAM1_SIZE (SRAM1_SIZE - KERNEL_SRAM1_SIZE)
 
 #define COREAPP_RAM2_START (SRAM2_BASE + KERNEL_SRAM2_SIZE)
 #define COREAPP_RAM2_SIZE (SRAM_SIZE - (SRAM1_SIZE + KERNEL_SRAM2_SIZE))
+#else
+#define COREAPP_RAM1_START SRAM5_BASE
+#define COREAPP_RAM1_SIZE SRAM5_SIZE
+#endif
 
 typedef struct {
   // Set if the driver is initialized
@@ -222,8 +233,12 @@ static void mpu_init_fixed_regions(void) {
   SET_REGION( 0, KERNEL_FLASH_START,       KERNEL_FLASH_SIZE,  FLASH_CODE,   NO,    NO ); // Kernel Code
   SET_REGION( 1, KERNEL_RAM_START,         KERNEL_RAM_SIZE,    SRAM,        YES,    NO ); // Kernel RAM
   SET_REGION( 2, COREAPP_FLASH_START,      COREAPP_FLASH_SIZE, FLASH_CODE,   NO,   YES ); // CoreApp Code
-  SET_REGION( 3, COREAPP_RAM1_START,       COREAPP_RAM1_SIZE,  SRAM,        YES,   YES ); // SRAM1
-  SET_REGION( 4, COREAPP_RAM2_START,       COREAPP_RAM2_SIZE,  SRAM,        YES,   YES ); // SRAM2/3/5
+  SET_REGION( 3, COREAPP_RAM1_START,       COREAPP_RAM1_SIZE,  SRAM,        YES,   YES ); // CoraApp RAM
+#ifdef STM32U585xx
+  SET_REGION( 4, COREAPP_RAM2_START,       COREAPP_RAM2_SIZE,  SRAM,        YES,   YES ); // CoraAPP RAM2
+#else
+  DIS_REGION( 4 );
+#endif
   SET_REGION( 5, GRAPHICS_START,           GRAPHICS_SIZE,      SRAM,        YES,   YES ); // Frame buffer or display interface
 #endif
 #if defined(FIRMWARE)
