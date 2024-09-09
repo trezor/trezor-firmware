@@ -22,6 +22,12 @@
 #include "model.h"
 #include "string.h"
 
+#if !PRODUCTION
+// we don't want to override OTP on development boards
+// lets mock this functionality
+static uint8_t dummy_version = 0;
+#endif
+
 #if PRODUCTION
 static int get_otp_block(monoctr_type_t type) {
   switch (type) {
@@ -71,7 +77,10 @@ secbool monoctr_write(monoctr_type_t type, uint8_t value) {
   }
 
   ensure(flash_otp_write(block, 0, bits, FLASH_OTP_BLOCK_SIZE), NULL);
-
+#else
+  if (value >= dummy_version) {
+    dummy_version = value;
+  }
 #endif
   return sectrue;
 }
@@ -124,9 +133,7 @@ secbool monoctr_read(monoctr_type_t type, uint8_t* value) {
     return secfalse;
   }
 #else
-
-  *value = 0;
-
+  *value = dummy_version;
 #endif
 
   return sectrue;
