@@ -57,9 +57,6 @@ def configure(
         ]
 
     if "input" in features_wanted:
-        sources += [
-            "embed/trezorhal/stm32u5/i2c.c",
-        ]
         sources += ["embed/trezorhal/stm32u5/i2c_bus.c"]
         sources += ["embed/trezorhal/stm32u5/touch/sitronix.c"]
         features_available.append("touch")
