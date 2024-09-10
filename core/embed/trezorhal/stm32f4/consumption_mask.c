@@ -29,10 +29,7 @@
 #error Not implemented for boardloader!
 #endif
 
-#if defined BOOTLOADER
-__attribute__((section(".buf")))
-#endif
-uint32_t pwm_data[SAMPLES] = {0};
+__attribute__((section(".buf"))) uint32_t pwm_data[SAMPLES] = {0};
 
 void consumption_mask_randomize() {
   for (int i = 0; i < SAMPLES; i++) {
