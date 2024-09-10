@@ -72,9 +72,6 @@
 #ifdef USE_BUTTON
 #include "button.h"
 #endif
-#ifdef USE_I2C
-#include "i2c.h"
-#endif
 #ifdef USE_TOUCH
 #include "touch.h"
 #endif
@@ -205,10 +202,6 @@ int main(void) {
 
 #ifdef USE_CONSUMPTION_MASK
   consumption_mask_init();
-#endif
-
-#ifdef USE_I2C
-  i2c_init();
 #endif
 
 #ifdef USE_TOUCH

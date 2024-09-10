@@ -42,9 +42,6 @@
 #include "dma2d.h"
 #endif
 #endif
-#ifdef USE_I2C
-#include "i2c.h"
-#endif
 #ifdef USE_OPTIGA
 #include "optiga_hal.h"
 #endif
@@ -371,10 +368,6 @@ int bootloader_main(void) {
 
 #ifdef USE_HASH_PROCESSOR
   hash_processor_init();
-#endif
-
-#ifdef USE_I2C
-  i2c_init();
 #endif
 
   display_init(DISPLAY_RETAIN_CONTENT);

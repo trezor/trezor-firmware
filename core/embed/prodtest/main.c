@@ -35,7 +35,6 @@
 #include "flash.h"
 #include "flash_otp.h"
 #include "fwutils.h"
-#include "i2c.h"
 #include "image.h"
 #include "model.h"
 #include "mpu.h"
@@ -795,9 +794,6 @@ int main(void) {
 #endif
 #ifdef USE_BUTTON
   button_init();
-#endif
-#ifdef USE_I2C
-  i2c_init();
 #endif
 #ifdef USE_TOUCH
   touch_init();
