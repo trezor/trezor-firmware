@@ -189,6 +189,41 @@ static inline bool i2c_bus_ptr_valid(i2c_bus_t* bus) {
 static void i2c_bus_timer_callback(void* context);
 static void i2c_bus_head_continue(i2c_bus_t* bus);
 
+static void i2c_bus_unlock(i2c_bus_t* bus) {
+  const i2c_bus_def_t* def = bus->def;
+
+  GPIO_InitTypeDef GPIO_InitStructure = {0};
+
+  // Set SDA and SCL high
+  HAL_GPIO_WritePin(def->sda_port, def->sda_pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(def->scl_port, def->scl_pin, GPIO_PIN_SET);
+
+  // Configure SDA and SCL as open-drain output
+  // and connect to the I2C peripheral
+  GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_OD;
+  GPIO_InitStructure.Pull = GPIO_NOPULL;
+  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
+
+  GPIO_InitStructure.Alternate = def->pin_af;
+  GPIO_InitStructure.Pin = def->scl_pin;
+  HAL_GPIO_Init(def->scl_port, &GPIO_InitStructure);
+
+  GPIO_InitStructure.Alternate = def->pin_af;
+  GPIO_InitStructure.Pin = def->sda_pin;
+  HAL_GPIO_Init(def->sda_port, &GPIO_InitStructure);
+
+  uint32_t clock_count = 16;
+
+  while ((HAL_GPIO_ReadPin(def->sda_port, def->sda_pin) == GPIO_PIN_RESET) &&
+         (clock_count-- > 0)) {
+    // Clock SCL
+    HAL_GPIO_WritePin(def->scl_port, def->scl_pin, GPIO_PIN_RESET);
+    systick_delay_us(10);
+    HAL_GPIO_WritePin(def->scl_port, def->scl_pin, GPIO_PIN_SET);
+    systick_delay_us(10);
+  }
+}
+
 static void i2c_bus_reset(i2c_bus_t* bus) {
   const i2c_bus_def_t* def = bus->def;
 
@@ -247,6 +282,10 @@ static bool i2c_bus_init(i2c_bus_t* bus, int bus_index) {
     default:
       return false;
   }
+
+  // Unlocks potentialy locked I2C bus by
+  // generating 9 clock pulses on SCL while SDA is low
+  i2c_bus_unlock(bus);
 
   GPIO_InitTypeDef GPIO_InitStructure = {0};
 
@@ -515,6 +554,17 @@ static void i2c_bus_head_continue(i2c_bus_t* bus) {
   if (bus->abort_pending) {
     systimer_unset(bus->timer);
     bus->abort_pending = false;
+  }
+
+  // Check if the bus is in a faulty state
+  if (bus->queue_head != NULL && bus->next_op == 0) {
+    uint32_t sr2 = regs->SR2;
+
+    if ((sr2 & I2C_SR2_BUSY) && ((sr2 & I2C_SR2_MSL) == 0)) {
+      // the bus is busy but not in master mode.
+      // It may happen if in case of noise or other issues.
+      i2c_bus_reset(bus);
+    }
   }
 
   uint32_t cr1 = regs->CR1;
