@@ -11,6 +11,8 @@ from typing import Any, Iterable, Iterator
 
 import requests
 
+from trezorlib import models
+
 AnyDict = dict[Any, Any]
 
 HERE = Path(__file__).parent
@@ -18,7 +20,7 @@ HERE = Path(__file__).parent
 LIST_RUNS_TEMPLATE = "https://api.github.com/repos/trezor/trezor-firmware/actions/workflows/{workflow}/runs?branch={branch}"
 FIXTURES_TEMPLATE = "https://data.trezor.io/dev/firmware/ui_report/{run}/{model}-{lang}-{job}/fixtures.results.json"
 
-MODELS = ["T2T1", "T2B1", "T3T1"]
+MODELS = [model.internal_name for model in models.TREZORS]
 LANGUAGES = ["en", "cs", "de", "es", "fr", "it", "pt", "tr"]
 JOBS = ["core_device_test", "core_click_test", "core_persistence_test"]
 
