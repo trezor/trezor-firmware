@@ -679,9 +679,5 @@ pub const fn borders_horizontal_scroll() -> Insets {
     Insets::new(6, 6, 0, 6)
 }
 
-pub const fn borders_notification() -> Insets {
-    Insets::new(48, 6, 6, 6)
-}
-
 pub const RESULT_ERROR: ResultStyle =
     ResultStyle::new(FG, FATAL_ERROR_COLOR, FATAL_ERROR_HIGHLIGHT_COLOR);

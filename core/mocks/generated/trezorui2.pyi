@@ -504,6 +504,7 @@ def show_homescreen(
     hold: bool,
     notification: str | None,
     notification_level: int = 0,
+    notification_clickable: bool = False,
     skip_first_paint: bool,
 ) -> LayoutObj[UiResult]:
     """Idle homescreen."""

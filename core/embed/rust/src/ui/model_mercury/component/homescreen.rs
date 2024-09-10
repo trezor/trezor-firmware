@@ -20,6 +20,9 @@ use crate::ui::{
     constant::{screen, HEIGHT, WIDTH},
     lerp::Lerp,
     model_mercury::{
+        component::Button,
+        component::ButtonContent,
+        component::ButtonMsg,
         cshape,
         cshape::UnlockOverlay,
         theme::{GREY_LIGHT, HOMESCREEN_ICON, ICON_KEY},
@@ -56,39 +59,7 @@ const NOTIFICATION_BORDER: i16 = 13;
 
 const NOTIFICATION_BG_ALPHA: u8 = 204;
 
-const NOTIFICATION_BG_RADIUS: i16 = 14;
-
-fn render_notif<'s>(notif: HomescreenNotification, top: i16, target: &mut impl Renderer<'s>) {
-    notif.text.map(|t| {
-        let style = theme::TEXT_BOLD;
-
-        let text_width = style.text_font.text_width(t);
-
-        let banner = Rect::new(
-            Point::new(AREA.center().x - NOTIFICATION_BORDER - text_width / 2, top),
-            Point::new(
-                AREA.center().x + NOTIFICATION_BORDER + text_width / 2,
-                top + NOTIFICATION_HEIGHT,
-            ),
-        );
-
-        let text_pos = Point::new(
-            style.text_font.horz_center(banner.x0, banner.x1, t),
-            style.text_font.vert_center(banner.y0, banner.y1, "A"),
-        );
-
-        shape::Bar::new(banner)
-            .with_radius(NOTIFICATION_BG_RADIUS)
-            .with_bg(notif.color_bg)
-            .with_alpha(NOTIFICATION_BG_ALPHA)
-            .render(target);
-
-        shape::Text::new(text_pos, t)
-            .with_font(style.text_font)
-            .with_fg(notif.color_text)
-            .render(target);
-    });
-}
+const NOTIFICATION_BG_RADIUS: u8 = 14;
 
 fn render_default_hs<'a>(target: &mut impl Renderer<'a>) {
     shape::Bar::new(AREA)
@@ -404,18 +375,12 @@ impl HideLabelAnimation {
     }
 }
 
-#[derive(Clone, Copy)]
-pub struct HomescreenNotification {
-    pub text: TString<'static>,
-    pub color_bg: Color,
-    pub color_text: Color,
-}
-
 pub struct Homescreen {
     label: Label<'static>,
     label_width: i16,
     label_height: i16,
-    notification: Option<(TString<'static>, u8)>,
+    notification_btn: Option<Button>,
+    notification_usb_not_connected: Button,
     image: Option<BinaryData<'static>>,
     bg_image: ImageBuffer<Rgb565Canvas<'static>>,
     hold_to_lock: bool,
@@ -427,6 +392,7 @@ pub struct Homescreen {
 
 pub enum HomescreenMsg {
     Dismissed,
+    NotificationClicked,
 }
 
 impl Homescreen {
@@ -434,6 +400,7 @@ impl Homescreen {
         label: TString<'static>,
         notification: Option<(TString<'static>, u8)>,
         hold_to_lock: bool,
+        notification_clickable: bool,
     ) -> Self {
         let label_width = label.map(|t| theme::TEXT_DEMIBOLD.text_font.text_width(t));
         let label_height = label.map(|t| theme::TEXT_DEMIBOLD.text_font.visible_text_height(t));
@@ -448,12 +415,24 @@ impl Homescreen {
                 render_default_hs(target);
             }
         });
+        let notification_btn = notification.map(|(text, level)| {
+            Button::with_text(text)
+                .styled(theme::button_notification(level))
+                .with_text_align(Alignment::Center)
+                .with_radius(NOTIFICATION_BG_RADIUS)
+                .initially_enabled(notification_clickable)
+        });
 
         Self {
             label: Label::new(label, Alignment::Center, theme::TEXT_DEMIBOLD).vertically_centered(),
             label_width,
             label_height,
-            notification,
+            notification_btn,
+            notification_usb_not_connected: Button::with_text(
+                TR::homescreen__title_no_usb_connection.into(),
+            )
+            .styled(theme::button_notification(0))
+            .initially_enabled(false),
             image,
             bg_image: buf,
             hold_to_lock,
@@ -461,33 +440,6 @@ impl Homescreen {
             delay: None,
             attach_animation: AttachAnimation::default(),
             label_anim: HideLabelAnimation::new(label_width),
-        }
-    }
-
-    fn level_to_style(level: u8) -> (Color, Color) {
-        match level {
-            3 => (theme::GREEN_DARK, theme::GREEN_LIME),
-            _ => (theme::ORANGE_DARK, theme::ORANGE_LIGHT),
-        }
-    }
-
-    fn get_notification(&self) -> Option<HomescreenNotification> {
-        if !usb_configured() {
-            let (color_bg, color_text) = Self::level_to_style(0);
-            Some(HomescreenNotification {
-                text: TR::homescreen__title_no_usb_connection.into(),
-                color_bg,
-                color_text,
-            })
-        } else if let Some((notification, level)) = self.notification {
-            let (color_bg, color_text) = Self::level_to_style(level);
-            Some(HomescreenNotification {
-                text: notification,
-                color_bg,
-                color_text,
-            })
-        } else {
-            None
         }
     }
 
@@ -555,6 +507,9 @@ impl Component for Homescreen {
         self.loader.place(AREA.translate(LOADER_OFFSET));
         self.label
             .place(bounds.split_top(32).0.with_width(self.label_width + 12));
+        if let Some(notification_btn) = &mut self.notification_btn {
+            place_homescreen_button(notification_btn, AREA, NOTIFICATION_TOP);
+        }
         bounds
     }
 
@@ -569,6 +524,11 @@ impl Component for Homescreen {
 
         self.label_anim.process_event(ctx, event, resume_label);
 
+        if let Some(notification_btn) = &mut self.notification_btn {
+            if let Some(ButtonMsg::Clicked) = notification_btn.event(ctx, event) {
+                return Some(HomescreenMsg::NotificationClicked);
+            }
+        }
         if self.hold_to_lock {
             Self::event_hold(self, ctx, event).then_some(HomescreenMsg::Dismissed)
         } else {
@@ -615,10 +575,13 @@ impl Component for Homescreen {
                 self.label.render(target);
             });
 
-            if let Some(notif) = self.get_notification() {
-                render_notif(notif, NOTIFICATION_TOP, target);
+            if !usb_configured() {
+                self.notification_usb_not_connected.render(target);
+            } else if let Some(notification_btn) = &self.notification_btn {
+                let notification_btn_style = notification_btn.style();
+                notification_btn.render_background(target, notification_btn.style(), NOTIFICATION_BG_ALPHA);
+                notification_btn.render_content(target, notification_btn_style, 255);
             }
-
             shape::Bar::new(AREA)
                 .with_bg(Color::black())
                 .with_alpha(255 - opacity)
@@ -723,9 +686,9 @@ pub struct Lockscreen {
     name_width: i16,
     label_width: i16,
     label_height: i16,
+    notification_btn: Option<Button>,
     image: Option<BinaryData<'static>>,
     bootscreen: bool,
-    coinjoin_authorized: bool,
     bg_image: ImageBuffer<Rgb565Canvas<'static>>,
     label_anim: HideLabelAnimation,
 }
@@ -754,6 +717,17 @@ impl Lockscreen {
         };
 
         let label_height = label.map(|t| theme::TEXT_DEMIBOLD.text_font.visible_text_height(t));
+        let notification_btn = if coinjoin_authorized {
+            Some(
+                Button::with_text(TR::homescreen__title_coinjoin_authorized.into())
+                    .styled(theme::button_confirm())
+                    .with_text_align(Alignment::Center)
+                    .with_radius(NOTIFICATION_BG_RADIUS)
+                    .initially_enabled(false),
+            )
+        } else {
+            None
+        };
 
         Lockscreen {
             anim: LockscreenAnim::default(),
@@ -762,9 +736,9 @@ impl Lockscreen {
             name_width,
             label_width,
             label_height,
+            notification_btn,
             image,
             bootscreen,
-            coinjoin_authorized,
             bg_image: buf,
             label_anim: HideLabelAnimation::new(label_width),
         }
@@ -777,6 +751,10 @@ impl Component for Lockscreen {
     fn place(&mut self, bounds: Rect) -> Rect {
         self.label
             .place(bounds.split_top(38).0.with_width(self.name_width + 12));
+
+        if let Some(notification_btn) = &mut self.notification_btn {
+            place_homescreen_button(notification_btn, AREA, NOTIFICATION_LOCKSCREEN_TOP);
+        }
         bounds
     }
 
@@ -886,14 +864,8 @@ impl Component for Lockscreen {
                 .render(target);
         });
 
-        if self.coinjoin_authorized {
-            let notif = HomescreenNotification {
-                text: TR::homescreen__title_coinjoin_authorized.into(),
-                color_bg: theme::GREEN_DARK,
-                color_text: theme::GREEN_LIME,
-            };
-
-            render_notif(notif, NOTIFICATION_LOCKSCREEN_TOP, target);
+        if let Some(notification_btn) = &self.notification_btn {
+            notification_btn.render(target);
         }
 
         let t = self.attach_animation.eval();
@@ -932,6 +904,28 @@ fn get_homescreen_image() -> Option<BinaryData<'static>> {
         }
     }
     None
+}
+
+fn place_homescreen_button(btn: &mut Button, bounds: Rect, top: i16) {
+    let calculate_button_area = |text: &str, top: i16| -> Rect {
+        let text_width = theme::TEXT_BOLD.text_font.text_width(text);
+        Rect::new(
+            Point::new(bounds.center().x - NOTIFICATION_BORDER - text_width / 2, top),
+            Point::new(
+                bounds.center().x + NOTIFICATION_BORDER + text_width / 2,
+                top + NOTIFICATION_HEIGHT,
+            ),
+        )
+    };
+    match btn.content() {
+        ButtonContent::Text(text) => {
+            let btn_area = text.map(|t| calculate_button_area(t, top));
+            btn.place(btn_area);
+        }
+        _ => {
+            // no other notification content supposed to be used
+        }
+    }
 }
 
 #[cfg(feature = "ui_debug")]

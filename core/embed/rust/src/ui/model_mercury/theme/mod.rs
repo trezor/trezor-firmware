@@ -683,6 +683,54 @@ pub const fn button_clear() -> ButtonStyleSheet {
     button_default()
 }
 
+static GREEN_NORMAL: ButtonStyle = ButtonStyle {
+    font: Font::BOLD,
+    text_color: GREEN_LIME,
+    button_color: GREEN_DARK,
+    icon_color: GREEN_LIME,
+    background_color: GREEN_DARK,
+};
+
+static GREEN_ACTIVE: ButtonStyle = ButtonStyle {
+    font: Font::BOLD,
+    text_color: GREEN_LIME,
+    button_color: GREEN_LIGHT,
+    icon_color: GREEN_DARK,
+    background_color: GREEN_LIGHT,
+};
+
+static ORANGE_NORMAL: ButtonStyle = ButtonStyle {
+    font: Font::BOLD,
+    text_color: ORANGE_LIGHT,
+    button_color: ORANGE_DARK,
+    icon_color: ORANGE_LIGHT,
+    background_color: ORANGE_DARK,
+};
+
+static ORANGE_ACTIVE: ButtonStyle = ButtonStyle {
+    font: Font::BOLD,
+    text_color: ORANGE_DARK,
+    button_color: ORANGE_LIGHT,
+    icon_color: ORANGE_DARK,
+    background_color: ORANGE_LIGHT,
+};
+
+pub fn button_notification(level: u8) -> ButtonStyleSheet {
+    match level {
+        3 => ButtonStyleSheet {
+            normal: &GREEN_NORMAL,
+            active: &GREEN_ACTIVE,
+            disabled: &GREEN_NORMAL,
+        },
+        _ => ButtonStyleSheet {
+            normal: &ORANGE_NORMAL,
+            active: &ORANGE_ACTIVE,
+            disabled: &ORANGE_NORMAL,
+        },
+    }
+}
+
+
 pub const fn loader_default() -> LoaderStyleSheet {
     LoaderStyleSheet {
         active: &LoaderStyle {
@@ -814,10 +862,6 @@ pub const fn button_bar<T>(inner: T) -> FixedHeightBar<T> {
 /// +----------+
 pub const fn borders() -> Insets {
     Insets::new(0, 0, 0, 0)
-}
-
-pub const fn borders_notification() -> Insets {
-    Insets::new(42, 0, 0, 0)
 }
 
 pub const RESULT_ERROR: ResultStyle =

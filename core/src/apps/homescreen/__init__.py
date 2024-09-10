@@ -29,8 +29,9 @@ async def homescreen() -> None:
 
     # TODO: add notification that translations are out of date
 
-    notification = None
-    notification_is_error = False
+    notification: str | None = None
+    notification_is_error: bool = False
+    notification_callback: Callable | None = None
     if is_set_any_session(MessageType.AuthorizeCoinJoin):
         notification = TR.homescreen__title_coinjoin_authorized
     elif storage.device.is_initialized() and storage.device.no_backup():
@@ -50,6 +51,7 @@ async def homescreen() -> None:
         label=label,
         notification=notification,
         notification_is_error=notification_is_error,
+        notification_clickable = notification_callback is not None,
         hold_to_lock=config.has_pin(),
     )
     try:
