@@ -381,6 +381,19 @@ pub enum Event {
     Swipe(SwipeEvent),
 }
 
+/// Result of an event processor.
+///
+/// Indicates whether to continue processing the event, propagate it further,
+/// or stop processing it.
+#[derive(Copy, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
+pub enum EventPropagation {
+    /// Event was not consumed by the component, propagate it further.
+    Continue,
+    /// Event was consumed by the component, do not propagate it further.
+    Stop,
+}
+
 #[derive(Copy, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 pub struct TimerToken(u32);
