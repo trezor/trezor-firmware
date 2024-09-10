@@ -53,7 +53,6 @@ class Homescreen(HomescreenBase):
         label: str | None,
         notification: str | None,
         notification_is_error: bool,
-        notification_clickable: bool,
         hold_to_lock: bool,
     ) -> None:
         level = 1
@@ -71,7 +70,6 @@ class Homescreen(HomescreenBase):
                 label=label,
                 notification=notification,
                 notification_level=level,
-                notification_clickable=notification_clickable,
                 hold=hold_to_lock,
                 skip_first_paint=skip,
             ),

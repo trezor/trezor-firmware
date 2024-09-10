@@ -20,9 +20,7 @@ use crate::ui::{
     constant::{screen, HEIGHT, WIDTH},
     lerp::Lerp,
     model_mercury::{
-        component::Button,
-        component::ButtonContent,
-        component::ButtonMsg,
+        component::{Button, ButtonContent, ButtonMsg},
         cshape,
         cshape::UnlockOverlay,
         theme::{GREY_LIGHT, HOMESCREEN_ICON, ICON_KEY},
@@ -425,11 +423,10 @@ impl Homescreen {
                 .with_radius(NOTIFICATION_BG_RADIUS)
                 .initially_enabled(notification_clickable)
         });
-        let notification_usb_not_connected = Button::with_text(
-                TR::homescreen__title_no_usb_connection.into(),
-            )
-            .styled(theme::button_notification(0))
-            .initially_enabled(false);
+        let notification_usb_not_connected =
+            Button::with_text(TR::homescreen__title_no_usb_connection.into())
+                .styled(theme::button_notification(0))
+                .initially_enabled(false);
         let menu_btn = Button::with_icon(theme::ICON_MENU)
             .with_expanded_touch_area(Insets::uniform(10))
             .initially_enabled(true)
@@ -518,7 +515,8 @@ impl Component for Homescreen {
         self.label
             .place(bounds.split_top(32).0.with_width(self.label_width + 12));
         // FIXME: proper placement
-        self.menu_btn.place(bounds.split_top(42).0.split_right(32).1);
+        self.menu_btn
+            .place(bounds.split_top(42).0.split_right(32).1);
         if let Some(notification_btn) = &mut self.notification_btn {
             place_homescreen_button(notification_btn, AREA, NOTIFICATION_TOP);
         }
@@ -598,7 +596,11 @@ impl Component for Homescreen {
                 self.notification_usb_not_connected.render(target);
             } else if let Some(notification_btn) = &self.notification_btn {
                 let notification_btn_style = notification_btn.style();
-                notification_btn.render_background(target, notification_btn.style(), NOTIFICATION_BG_ALPHA);
+                notification_btn.render_background(
+                    target,
+                    notification_btn.style(),
+                    NOTIFICATION_BG_ALPHA,
+                );
                 notification_btn.render_content(target, notification_btn_style, 255);
             }
             shape::Bar::new(AREA)
@@ -616,8 +618,7 @@ impl Component for Homescreen {
 }
 
 #[cfg(all(feature = "micropython", feature = "touch", feature = "new_rendering"))]
-impl crate::ui::flow::Swipable for Homescreen
-{
+impl crate::ui::flow::Swipable for Homescreen {
     fn get_swipe_config(&self) -> SwipeConfig {
         self.swipe
     }
@@ -939,7 +940,10 @@ fn place_homescreen_button(btn: &mut Button, bounds: Rect, top: i16) {
     let calculate_button_area = |text: &str, top: i16| -> Rect {
         let text_width = theme::TEXT_BOLD.text_font.text_width(text);
         Rect::new(
-            Point::new(bounds.center().x - NOTIFICATION_BORDER - text_width / 2, top),
+            Point::new(
+                bounds.center().x - NOTIFICATION_BORDER - text_width / 2,
+                top,
+            ),
             Point::new(
                 bounds.center().x + NOTIFICATION_BORDER + text_width / 2,
                 top + NOTIFICATION_HEIGHT,

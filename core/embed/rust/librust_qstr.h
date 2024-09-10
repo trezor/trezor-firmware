@@ -217,6 +217,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_debug__loading_seed_not_recommended;
   MP_QSTR_decode;
   MP_QSTR_deinit;
+  MP_QSTR_demo_start;
   MP_QSTR_description;
   MP_QSTR_details_title;
   MP_QSTR_device_name__change_template;
@@ -344,7 +345,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_modify_fee__transaction_fee;
   MP_QSTR_multiple_pages_texts;
   MP_QSTR_notification;
-  MP_QSTR_notification_clickable;
   MP_QSTR_notification_level;
   MP_QSTR_page_count;
   MP_QSTR_pages;

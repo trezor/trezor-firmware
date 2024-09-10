@@ -1558,3 +1558,13 @@ def tutorial(br_code: ButtonRequestType = BR_CODE_OTHER) -> Awaitable[None]:
             br_code,
         )
     )
+
+
+async def demo_start(title: str) -> None:
+    await raise_if_not_confirmed(
+        interact(
+            RustLayout(trezorui2.demo_start(title=title)),
+            "demo_start",
+            BR_CODE_OTHER,
+        )
+    )

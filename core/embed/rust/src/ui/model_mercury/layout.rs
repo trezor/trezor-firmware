@@ -871,6 +871,18 @@ extern "C" fn new_confirm_coinjoin(n_args: usize, args: *const Obj, kwargs: *mut
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
+extern "C" fn new_demo_start(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let content = Frame::left_aligned(title, PromptScreen::new_tap_to_start())
+            .with_subtitle("Demo".into())
+            .with_footer(TR::instructions__tap_to_start.into(), None);
+        let obj = LayoutObj::new(content)?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
 extern "C" fn new_request_pin(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let prompt: TString = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
@@ -1071,8 +1083,7 @@ extern "C" fn new_show_homescreen(n_args: usize, args: *const Obj, kwargs: *mut 
         let notification: Option<TString<'static>> =
             kwargs.get(Qstr::MP_QSTR_notification)?.try_into_option()?;
         let notification_level: u8 = kwargs.get_or(Qstr::MP_QSTR_notification_level, 0)?;
-        let notification_clickable: bool =
-            kwargs.get_or(Qstr::MP_QSTR_notification_clickable, false)?;
+        let notification_clickable: bool = false;
         let hold: bool = kwargs.get_or(Qstr::MP_QSTR_hold, false)?;
         let skip_first_paint: bool = kwargs.get_or(Qstr::MP_QSTR_skip_first_paint, false)?;
 
@@ -1628,7 +1639,6 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     hold: bool,
     ///     notification: str | None,
     ///     notification_level: int = 0,
-    ///     notification_clickable: bool = False,
     ///     skip_first_paint: bool,
     /// ) -> LayoutObj[UiResult]:
     ///     """Idle homescreen."""
@@ -1655,6 +1665,10 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// def tutorial() -> LayoutObj[UiResult]:
     ///     """Show user how to interact with the device."""
     Qstr::MP_QSTR_tutorial => obj_fn_kw!(0, flow::show_tutorial::new_show_tutorial).as_obj(), // FIXME turn this into obj_fn_0, T2B1 as well
+
+    /// def demo_start(title: str) -> LayoutObj[UiResult]:
+    ///     """(DEMO) Intro to the chosen demo."""
+    Qstr::MP_QSTR_demo_start => obj_fn_kw!(0, new_demo_start).as_obj(),
 
     /// def show_wait_text(message: str, /) -> LayoutObj[None]:
     ///     """Show single-line text in the middle of the screen."""

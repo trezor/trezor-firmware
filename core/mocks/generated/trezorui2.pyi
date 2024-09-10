@@ -504,7 +504,6 @@ def show_homescreen(
     hold: bool,
     notification: str | None,
     notification_level: int = 0,
-    notification_clickable: bool = False,
     skip_first_paint: bool,
 ) -> LayoutObj[UiResult]:
     """Idle homescreen."""
@@ -533,6 +532,11 @@ def confirm_firmware_update(
 # rust/src/ui/model_mercury/layout.rs
 def tutorial() -> LayoutObj[UiResult]:
     """Show user how to interact with the device."""
+
+
+# rust/src/ui/model_mercury/layout.rs
+def demo_start(title: str) -> LayoutObj[UiResult]:
+    """(DEMO) Intro to the chosen demo."""
 
 
 # rust/src/ui/model_mercury/layout.rs

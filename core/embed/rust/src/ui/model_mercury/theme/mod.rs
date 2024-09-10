@@ -730,7 +730,6 @@ pub fn button_notification(level: u8) -> ButtonStyleSheet {
     }
 }
 
-
 pub const fn loader_default() -> LoaderStyleSheet {
     LoaderStyleSheet {
         active: &LoaderStyle {

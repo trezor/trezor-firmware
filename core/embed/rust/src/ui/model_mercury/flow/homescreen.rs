@@ -3,18 +3,18 @@ use crate::{
     strutil::TString,
     trezorhal::model,
     ui::{
-        component::{swipe_detect::SwipeSettings, ComponentExt, SwipeDirection},
+        component::{swipe_detect::SwipeSettings, ComponentExt, EventCtx, SwipeDirection},
         flow::{
             base::{DecisionBuilder as _, StateChange},
-            FlowMsg, FlowState, SwipeFlow,
+            FlowMsg, FlowState, SwipeFlow, SwipePage,
         },
     },
 };
 
 use super::super::component::{
-    Frame, FrameMsg, Homescreen, HomescreenMsg, VerticalMenu, VerticalMenuChoiceMsg,
+    Footer, Frame, FrameMsg, Homescreen, HomescreenMsg, InternallySwipable, PagedVerticalMenu,
+    SwipeContent, VerticalMenuChoiceMsg,
 };
-use super::super::theme;
 
 #[derive(Copy, Clone, ToPrimitive)]
 pub enum HomescreenFlow {
@@ -42,11 +42,31 @@ impl FlowState for HomescreenFlow {
             (Self::Homescreen, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Confirmed),
             (Self::Homescreen, FlowMsg::Cancelled) => self.return_msg(FlowMsg::Cancelled),
             (Self::Menu, FlowMsg::Cancelled) => Self::Homescreen.swipe_right(),
+            (Self::Menu, FlowMsg::Choice(0)) => self.return_msg(FlowMsg::Choice(0)),
+            (Self::Menu, FlowMsg::Choice(1)) => self.return_msg(FlowMsg::Choice(1)),
+            (Self::Menu, FlowMsg::Choice(2)) => self.return_msg(FlowMsg::Choice(2)),
+            (Self::Menu, FlowMsg::Choice(3)) => self.return_msg(FlowMsg::Choice(3)),
             _ => self.do_nothing(),
         }
     }
 }
 
+const DEMO_OPTIONS: &[&str] = &[
+    "Start tutorial",
+    "Set up a Wallet",
+    "Send Bitcoin",
+    "Recovery",
+];
+
+fn footer_update_fn(
+    content: &SwipeContent<SwipePage<PagedVerticalMenu<impl Fn(usize) -> TString<'static>>>>,
+    ctx: &mut EventCtx,
+    footer: &mut Footer,
+) {
+    let current_page = content.inner().inner().current_page();
+    let total_pages = content.inner().inner().num_pages();
+    footer.update_page_counter(ctx, current_page, Some(total_pages));
+}
 impl HomescreenFlow {
     pub fn new_homescreen_flow(
         label: Option<TString<'static>>,
@@ -57,17 +77,32 @@ impl HomescreenFlow {
     ) -> Result<SwipeFlow, error::Error> {
         let label = label.unwrap_or_else(|| model::FULL_NAME.into());
         let notification = notification.map(|w| (w, notification_level));
+        let label_fn =
+            move |page_index: usize| -> TString<'static> { DEMO_OPTIONS[page_index].into() };
 
-        let content_menu =
-            VerticalMenu::empty().item(theme::ICON_CHEVRON_RIGHT, "Set brightness".into());
-        let content_menu = Frame::left_aligned("".into(), content_menu)
-            .with_cancel_button()
-            .with_swipe(SwipeDirection::Down, SwipeSettings::default())
-            .with_swipe(SwipeDirection::Left, SwipeSettings::default())
-            .map(|msg| match msg {
-                FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => Some(FlowMsg::Choice(i)),
-                FrameMsg::Button(_) => Some(FlowMsg::Cancelled),
-            });
+        let content_menu = Frame::left_aligned(
+            "".into(),
+            SwipeContent::new(SwipePage::vertical(PagedVerticalMenu::new(
+                DEMO_OPTIONS.len(),
+                label_fn,
+            ))),
+        )
+        .with_cancel_button()
+        .with_footer_page_hint(
+            "More options".into(),
+            "".into(),
+            "Swipe up".into(),
+            "Swipe down".into(),
+        )
+        .register_footer_update_fn(footer_update_fn)
+        .with_swipe(SwipeDirection::Down, SwipeSettings::default())
+        .with_swipe(SwipeDirection::Right, SwipeSettings::immediate())
+        .with_vertical_pages()
+        .map(|msg| match msg {
+            FrameMsg::Button(_) => Some(FlowMsg::Cancelled),
+            FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => Some(FlowMsg::Choice(i)),
+        });
+
         let content_homescreen = Homescreen::new(label, notification, hold, notification_clickable)
             .map(|msg| match msg {
                 HomescreenMsg::Dismissed => Some(FlowMsg::Cancelled),
