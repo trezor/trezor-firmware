@@ -84,7 +84,6 @@ def configure(
     features_available.append("backlight")
 
     if "input" in features_wanted:
-        sources += ["embed/trezorhal/stm32f4/i2c.c"]
         sources += ["embed/trezorhal/stm32f4/touch/ft6x36.c"]
         features_available.append("touch")
 

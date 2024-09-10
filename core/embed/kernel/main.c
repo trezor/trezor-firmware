@@ -31,7 +31,6 @@
 #include "dma2d.h"
 #include "entropy.h"
 #include "haptic.h"
-#include "i2c.h"
 #include "image.h"
 #include "irq.h"
 #include "memzero.h"
@@ -131,10 +130,6 @@ void drivers_init() {
 
 #ifdef USE_CONSUMPTION_MASK
   consumption_mask_init();
-#endif
-
-#ifdef USE_I2C
-  i2c_init();
 #endif
 
 #ifdef USE_TOUCH
