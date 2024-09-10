@@ -1,7 +1,10 @@
 use crate::{
     time::{Duration, Stopwatch},
     ui::{
-        component::{base::AttachType, Component, Event, EventCtx},
+        component::{
+            base::{AttachType, EventPropagation},
+            Component, Event, EventCtx,
+        },
         constant::screen,
         display::Color,
         event::SwipeEvent,
@@ -98,7 +101,12 @@ impl SwipeAttachAnimation {
         self.timer = Stopwatch::new_stopped();
     }
 
-    pub fn lazy_start(&mut self, ctx: &mut EventCtx, event: Event, animate: bool) -> bool {
+    pub fn lazy_start(
+        &mut self,
+        ctx: &mut EventCtx,
+        event: Event,
+        animate: bool,
+    ) -> EventPropagation {
         if let Event::Attach(attach_type) = event {
             if self.show_attach_anim && animate {
                 self.attach_type = Some(attach_type);
@@ -120,8 +128,8 @@ impl SwipeAttachAnimation {
             }
         }
         match event {
-            Event::Touch(_) => !self.is_active(),
-            _ => true,
+            Event::Touch(_) if self.is_active() => EventPropagation::Stop,
+            _ => EventPropagation::Continue,
         }
     }
 }
@@ -184,8 +192,13 @@ impl SwipeContext {
         (offset, clip, mask)
     }
 
-    fn process_event(&mut self, ctx: &mut EventCtx, event: Event, animate: bool) -> bool {
-        let inner_event = self.attach_animation.lazy_start(ctx, event, animate);
+    fn process_event(
+        &mut self,
+        ctx: &mut EventCtx,
+        event: Event,
+        animate: bool,
+    ) -> EventPropagation {
+        let propagate = self.attach_animation.lazy_start(ctx, event, animate);
 
         if let Event::Attach(_) = event {
             self.progress = 0;
@@ -204,7 +217,7 @@ impl SwipeContext {
             ctx.request_paint();
         }
 
-        inner_event
+        propagate
     }
 }
 
@@ -233,9 +246,9 @@ impl<T: Component> SwipeContent<T> {
     }
 
     fn process_event(&mut self, ctx: &mut EventCtx, event: Event, animate: bool) -> Option<T::Msg> {
-        let inner_event = self.swipe_context.process_event(ctx, event, animate);
+        let propagate = self.swipe_context.process_event(ctx, event, animate);
 
-        if inner_event {
+        if matches!(propagate, EventPropagation::Continue) {
             self.inner.event(ctx, event)
         } else {
             None
