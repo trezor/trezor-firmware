@@ -49,7 +49,6 @@ def configure(
         sources += [f"embed/trezorhal/stm32f4/displays/{display}"]
 
     sources += [
-        "embed/trezorhal/stm32f4/i2c.c",
         "embed/trezorhal/stm32f4/i2c_bus.c",
     ]
 

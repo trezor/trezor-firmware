@@ -76,7 +76,6 @@ def configure(
         features_available.append("display_rgb565")
 
     if "input" in features_wanted:
-        sources += ["embed/trezorhal/stm32f4/i2c.c"]
         sources += ["embed/trezorhal/stm32f4/touch/stmpe811.c"]
         features_available.append("touch")
 
