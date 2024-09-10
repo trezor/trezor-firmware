@@ -9,7 +9,7 @@ MEMORY {
   SRAM   (wal)    : ORIGIN = MCU_SRAM + MCU_SRAM_SIZE - KERNEL_SRAM_SIZE, LENGTH = KERNEL_SRAM_SIZE
 }
 
-main_stack_base = ORIGIN(SRAM) + SIZEOF(.stack); /* 8-byte aligned full descending stack */
+main_stack_base = ORIGIN(CCMRAM) + SIZEOF(.stack); /* 8-byte aligned full descending stack */
 _sstack = ORIGIN(SRAM);
 _estack = main_stack_base;
 

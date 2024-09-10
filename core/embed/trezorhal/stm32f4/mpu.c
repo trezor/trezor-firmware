@@ -521,14 +521,14 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
     case MPU_MODE_ASSETS:
       DIS_REGION( 5 );
       // Assets (Privileged, Read-Write, Non-Executable)
-      SET_REGION( 6, FLASH_BASE + 0x108000, SIZE_32KB, 0x00, FLASH_DATA, PRIV_RW );
+      SET_REGION( 6, FLASH_BASE + 0x104000, SIZE_32KB, 0x00, FLASH_DATA, PRIV_RW );
       break;
 
     case MPU_MODE_APP:
       // Unused (maybe privileged kernel code in the future)
       DIS_REGION( 5 );
       // Assets (Unprivileged, Read-Only, Non-Executable)
-      SET_REGION( 6, FLASH_BASE + 0x108000, SIZE_32KB, 0x00, FLASH_DATA, PRIV_RO_URO );
+      SET_REGION( 6, FLASH_BASE + 0x104000, SIZE_32KB, 0x00, FLASH_DATA, PRIV_RO_URO );
       break;
 
 #else
