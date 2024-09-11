@@ -104,6 +104,7 @@ SOURCE_MOD += [
     'embed/lib/colors.c',
     'embed/lib/display_utils.c',
     'embed/lib/error_handling.c',
+    'embed/lib/flash_utils.c',
     'embed/lib/fonts/font_bitmap.c',
     'embed/lib/fonts/fonts.c',
     'embed/lib/gfx_color.c',

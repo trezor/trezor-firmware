@@ -28,6 +28,7 @@
 #include "display.h"
 #include "display_draw.h"
 #include "flash.h"
+#include "flash_utils.h"
 #include "image.h"
 #include "model.h"
 #include "mpu.h"
@@ -209,7 +210,7 @@ static secbool copy_sdcard(void) {
   term_printf("\n\nerasing flash:\n\n");
 
   // erase all flash (except boardloader)
-  if (sectrue != flash_area_erase(&ALL_WIPE_AREA, progress_callback)) {
+  if (sectrue != erase_device(progress_callback)) {
     term_printf(" failed\n");
     return secfalse;
   }
@@ -270,9 +271,7 @@ int main(void) {
 
   if (sectrue != flash_configure_option_bytes()) {
     // display is not initialized so don't call ensure
-    const secbool r =
-        flash_area_erase_bulk(STORAGE_AREAS, STORAGE_AREAS_COUNT, NULL);
-    (void)r;
+    erase_storage(NULL);
     return 2;
   }
 

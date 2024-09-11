@@ -132,21 +132,10 @@ static void mpu_set_attributes(void) {
 #error "Unknown MCU"
 #endif
 
-#define L1_REST_SIZE (FLASH_SIZE - (BOARDLOADER_SIZE + SECRET_SIZE))
-
-#define L2_PREV_SIZE (SECRET_SIZE + BOARDLOADER_SIZE)
-#define L2_REST_SIZE \
-  (FLASH_SIZE - (BOOTLOADER_SIZE + BOARDLOADER_SIZE + SECRET_SIZE))
-
-#define L3_PREV_SIZE \
-  (STORAGE_SIZE + BOOTLOADER_SIZE + BOARDLOADER_SIZE + SECRET_SIZE)
-
 #define ASSETS_START (FIRMWARE_START + FIRMWARE_SIZE)
 #define ASSETS_SIZE                                                   \
   (FLASH_SIZE - (FIRMWARE_SIZE + BOOTLOADER_SIZE + BOARDLOADER_SIZE + \
                  SECRET_SIZE + STORAGE_SIZE))
-
-#define L3_PREV_SIZE_BLD (STORAGE_SIZE + BOOTLOADER_SIZE)
 
 #ifdef STM32U585xx
 #define GRAPHICS_START FMC_BANK1
@@ -214,8 +203,8 @@ static void mpu_init_fixed_regions(void) {
   //   REGION    ADDRESS                   SIZE                TYPE       WRITE   UNPRIV
   SET_REGION( 0, BOARDLOADER_START,        BOARDLOADER_SIZE,   FLASH_CODE,   NO,    NO );
   SET_REGION( 1, SRAM1_BASE,               SRAM_SIZE,          SRAM,        YES,    NO );
-  DIS_REGION( 2 );
-  DIS_REGION( 3 );
+  SET_REGION( 2, BOOTLOADER_START,         BOOTLOADER_SIZE,    FLASH_DATA,  YES,    NO );
+  SET_REGION( 3, FIRMWARE_START,           FIRMWARE_SIZE,      FLASH_DATA,  YES,    NO );
   DIS_REGION( 4 );
   SET_REGION( 5, GRAPHICS_START,           GRAPHICS_SIZE,      SRAM,        YES,    NO );
 #endif
@@ -223,7 +212,7 @@ static void mpu_init_fixed_regions(void) {
   //   REGION    ADDRESS                   SIZE                TYPE       WRITE   UNPRIV
   SET_REGION( 0, BOOTLOADER_START,         BOOTLOADER_SIZE,    FLASH_CODE,  NO,     NO );
   SET_REGION( 1, SRAM1_BASE,               SRAM_SIZE,          SRAM,        YES,    NO );
-  DIS_REGION( 2 );
+  SET_REGION( 2, FIRMWARE_START,           FIRMWARE_SIZE,      FLASH_DATA,  YES,    NO );
   DIS_REGION( 3 );
   DIS_REGION( 4 );
   SET_REGION( 5, GRAPHICS_START,           GRAPHICS_SIZE,      SRAM,        YES,    NO );
@@ -325,13 +314,17 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
   switch (mode) {
     case MPU_MODE_DISABLED:
       break;
+#if !defined(BOARDLOADER)
     case MPU_MODE_BOARDCAPS:
       //      REGION   ADDRESS                 SIZE                TYPE       WRITE   UNPRIV
       SET_REGION( 6, BOARDLOADER_START,        BOARDLOADER_SIZE,   FLASH_DATA,   NO,    NO );
       break;
+#endif
+#if !defined(BOOTLOADER) && !defined(BOARDLOADER)
     case MPU_MODE_BOOTUPDATE:
       SET_REGION( 6, BOOTLOADER_START,         BOOTLOADER_SIZE,    FLASH_DATA,  YES,    NO );
       break;
+#endif
     case MPU_MODE_OTP:
       SET_REGION( 6, FLASH_OTP_BASE,           OTP_AND_ID_SIZE,    FLASH_DATA,   NO,    NO );
       break;
@@ -350,8 +343,6 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
     case MPU_MODE_APP:
       SET_REGION( 6, ASSETS_START,             ASSETS_SIZE,        FLASH_DATA,   NO,   YES );
       break;
-    case MPU_MODE_DEFAULT:
-    case MPU_MODE_FSMC_REGS:
     default:
       DIS_REGION( 6 );
       break;

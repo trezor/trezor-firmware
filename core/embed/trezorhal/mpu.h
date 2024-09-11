@@ -30,18 +30,19 @@
 // The `MPU_MODE_DEFAULT` mode is the most restrictive and serves as
 // a base for other modes.
 typedef enum {
-  MPU_MODE_DISABLED,    // MPU is disabled
-  MPU_MODE_DEFAULT,     // Default
-  MPU_MODE_BOARDCAPS,   // + boardloader capabilities (privileged RO)
-  MPU_MODE_BOOTUPDATE,  // + bootloader area (privileged RW)
-  MPU_MODE_OTP,         // + OTP (privileged RW)
-  MPU_MODE_FSMC_REGS,   // + FSMC control registers (privileged RW)
-  MPU_MODE_FLASHOB,     // + Option bytes mapping (privileged RW)
-  MPU_MODE_SECRET,      // + secret area (priviledeg RW)
-  MPU_MODE_STORAGE,     // + both storage areas (privilehed RW)
-  MPU_MODE_ASSETS,      // + assets (privileged RW)
-  MPU_MODE_SAES,        // + unprivileged SAES code
-  MPU_MODE_APP,         // + unprivileged DMA2D (RW) & Assets (RO)
+  MPU_MODE_DISABLED,      // MPU is disabled
+  MPU_MODE_DEFAULT,       // Default
+  MPU_MODE_BOARDCAPS,     // + boardloader capabilities (privileged RO)
+  MPU_MODE_BOOTUPDATE,    // + bootloader area (privileged RW)
+  MPU_MODE_OTP,           // + OTP (privileged RW)
+  MPU_MODE_FSMC_REGS,     // + FSMC control registers (privileged RW)
+  MPU_MODE_FLASHOB,       // + Option bytes mapping (privileged RW)
+  MPU_MODE_SECRET,        // + secret area (priviledeg RW)
+  MPU_MODE_STORAGE,       // + both storage areas (privilehed RW)
+  MPU_MODE_ASSETS,        // + assets (privileged RW)
+  MPU_MODE_SAES,          // + unprivileged SAES code
+  MPU_MODE_UNUSED_FLASH,  // + unused flash areas (privileged RW)
+  MPU_MODE_APP,           // + unprivileged DMA2D (RW) & Assets (RO)
 } mpu_mode_t;
 
 // Initializes the MPU and sets it to MPU_MODE_DISABLED.

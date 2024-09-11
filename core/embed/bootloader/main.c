@@ -27,6 +27,7 @@
 #include "display_utils.h"
 #include "flash.h"
 #include "flash_otp.h"
+#include "flash_utils.h"
 #include "image.h"
 #include "lowlevel.h"
 #include "messages.pb.h"
@@ -583,9 +584,7 @@ int bootloader_main(void) {
 #ifdef STM32U5
       secret_bhk_regenerate();
 #endif
-      // erase storage
-      ensure(flash_area_erase_bulk(STORAGE_AREAS, STORAGE_AREAS_COUNT, NULL),
-             NULL);
+      ensure(erase_storage(NULL), NULL);
 
       // keep the model screen up for a while
 #ifndef USE_BACKLIGHT
@@ -693,8 +692,7 @@ int bootloader_main(void) {
 #ifdef STM32U5
         secret_bhk_regenerate();
 #endif
-        ensure(flash_area_erase_bulk(STORAGE_AREAS, STORAGE_AREAS_COUNT, NULL),
-               NULL);
+        ensure(erase_storage(NULL), NULL);
       }
       ensure(dont_optimize_out_true *
                  (continue_to_firmware == continue_to_firmware_backup),

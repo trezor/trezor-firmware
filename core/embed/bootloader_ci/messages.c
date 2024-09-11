@@ -26,6 +26,7 @@
 
 #include "common.h"
 #include "flash.h"
+#include "flash_utils.h"
 #include "image.h"
 #include "model.h"
 #include "secbool.h"
@@ -648,14 +649,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
 }
 
 int process_msg_WipeDevice(uint8_t iface_num, uint32_t msg_size, uint8_t *buf) {
-  flash_area_t wipe_area[STORAGE_AREAS_COUNT + 1];
-  for (int i = 0; i < STORAGE_AREAS_COUNT; i++) {
-    memcpy(&wipe_area[i], &STORAGE_AREAS[i], sizeof(flash_area_t));
-  }
-  memcpy(&wipe_area[STORAGE_AREAS_COUNT], &FIRMWARE_AREA, sizeof(flash_area_t));
-
-  if (sectrue != flash_area_erase_bulk(wipe_area, STORAGE_AREAS_COUNT + 1,
-                                       ui_screen_wipe_progress)) {
+  if (sectrue != erase_device(ui_screen_wipe_progress)) {
     MSG_SEND_INIT(Failure);
     MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
     MSG_SEND_ASSIGN_STRING(message, "Could not erase flash");

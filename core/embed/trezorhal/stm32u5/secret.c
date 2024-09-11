@@ -4,6 +4,7 @@
 #include "bootutils.h"
 #include "common.h"
 #include "flash.h"
+#include "flash_utils.h"
 #include "memzero.h"
 #include "model.h"
 #include "mpu.h"
@@ -36,11 +37,7 @@ secbool secret_verify_header(void) {
 
 secbool secret_ensure_initialized(void) {
   if (sectrue != secret_verify_header()) {
-    mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_STORAGE);
-    ensure(flash_area_erase_bulk(STORAGE_AREAS, STORAGE_AREAS_COUNT, NULL),
-           "erase storage failed");
-    mpu_restore(mpu_mode);
-
+    ensure(erase_storage(NULL), "erase storage failed");
     secret_erase();
     secret_write_header();
     return secfalse;
