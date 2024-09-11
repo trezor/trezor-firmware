@@ -16,6 +16,7 @@ from trezorutils import (  # noqa: F401
     USE_BUTTON,
     USE_HAPTIC,
     USE_OPTIGA,
+    USE_TROPIC,
     USE_SD_CARD,
     USE_THP,
     USE_TOUCH,

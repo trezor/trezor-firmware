@@ -429,6 +429,8 @@ STATIC mp_obj_tuple_t mod_trezorutils_version_obj = {
 /// """Whether the hardware supports haptic feedback."""
 /// USE_OPTIGA: bool
 /// """Whether the hardware supports Optiga secure element."""
+/// USE_TROPIC: bool
+/// """Whether the hardware supports Tropic Square secure element."""
 /// USE_TOUCH: bool
 /// """Whether the hardware supports touch screen."""
 /// USE_BUTTON: bool
@@ -516,6 +518,11 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_USE_OPTIGA), mp_const_true},
 #else
     {MP_ROM_QSTR(MP_QSTR_USE_OPTIGA), mp_const_false},
+#endif
+#ifdef USE_TROPIC
+    {MP_ROM_QSTR(MP_QSTR_USE_TROPIC), mp_const_true},
+#else
+    {MP_ROM_QSTR(MP_QSTR_USE_TROPIC), mp_const_false},
 #endif
 #ifdef USE_TOUCH
     {MP_ROM_QSTR(MP_QSTR_USE_TOUCH), mp_const_true},
