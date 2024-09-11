@@ -27,7 +27,9 @@
 [submodule "vendor/cmsis_5"]
 	path = vendor/cmsis_5
 	url = https://github.com/ARM-software/CMSIS_5.git
-
 [submodule "vendor/stm32u5xx_hal_driver"]
 	path = vendor/stm32u5xx_hal_driver
 	url = https://github.com/trezor/stm32u5xx_hal_driver.git
+[submodule "vendor/libtropic"]
+	path = vendor/libtropic
+	url = https://github.com/tropicsquare/libtropic.git

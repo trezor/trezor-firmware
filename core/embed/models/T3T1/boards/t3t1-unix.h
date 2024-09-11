@@ -7,6 +7,7 @@
 #define USE_RGB_COLORS 1
 #define USE_BACKLIGHT 1
 #define USE_OPTIGA 1
+#define USE_TROPIC 1
 
 #define MAX_DISPLAY_RESX 240
 #define MAX_DISPLAY_RESY 240
