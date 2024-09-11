@@ -170,17 +170,13 @@ impl<'a> Component for Footer<'a> {
                 self.progress = 0;
             }
             Event::Swipe(SwipeEvent::Move(dir, progress)) => match dir {
-                Direction::Up => {
-                    if self.swipe_allow_up {
-                        self.progress = progress;
-                        self.dir = dir;
-                    }
+                Direction::Up if self.swipe_allow_up => {
+                    self.progress = progress;
+                    self.dir = dir;
                 }
-                Direction::Down => {
-                    if self.swipe_allow_down {
-                        self.progress = progress;
-                        self.dir = dir;
-                    }
+                Direction::Down if self.swipe_allow_down => {
+                    self.progress = progress;
+                    self.dir = dir;
                 }
                 _ => {}
             },
