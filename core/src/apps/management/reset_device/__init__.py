@@ -1,10 +1,11 @@
 from typing import TYPE_CHECKING, Sequence
 
 import storage
+import storage.cache as storage_cache
 import storage.device as storage_device
 from trezor import TR
-from trezor.crypto import slip39
-from trezor.enums import BackupType
+from trezor.crypto import hmac, slip39
+from trezor.enums import BackupType, MessageType
 from trezor.ui.layouts import confirm_action
 from trezor.wire import ProcessError
 
@@ -63,33 +64,52 @@ async def reset_device(msg: ResetDevice) -> Success:
     # wipe storage to make sure the device is in a clear state
     storage.reset()
 
+    # Check backup type, perform type-specific handling
+    if backup_types.is_slip39_backup_type(backup_type):
+        # set SLIP39 parameters
+        storage_device.set_slip39_iteration_exponent(slip39.DEFAULT_ITERATION_EXPONENT)
+    elif backup_type != BAK_T_BIP39:
+        # Unknown backup type.
+        raise RuntimeError
+
+    storage_device.set_backup_type(backup_type)
+
     # request and set new PIN
     if msg.pin_protection:
         newpin = await request_pin_confirm()
         if not config.change_pin("", newpin, None, None):
             raise ProcessError("Failed to set PIN")
 
-    # generate and display internal entropy
-    int_entropy = random.bytes(32, True)
-    if __debug__:
-        storage.debug.reset_internal_entropy = int_entropy
+    prev_int_entropy = None
+    while True:
+        # generate internal entropy
+        int_entropy = random.bytes(32, True)
+        if __debug__:
+            storage.debug.reset_internal_entropy = int_entropy
 
-    # request external entropy and compute the master secret
-    entropy_ack = await call(EntropyRequest(), EntropyAck)
-    ext_entropy = entropy_ack.entropy
-    # For SLIP-39 this is the Encrypted Master Secret
-    secret = _compute_secret_from_entropy(int_entropy, ext_entropy, msg.strength)
+        entropy_commitment = (
+            hmac(hmac.SHA256, int_entropy, b"").digest() if msg.entropy_check else None
+        )
 
-    # Check backup type, perform type-specific handling
-    if backup_type == BAK_T_BIP39:
-        # in BIP-39 we store mnemonic string instead of the secret
-        secret = bip39.from_data(secret).encode()
-    elif backup_types.is_slip39_backup_type(backup_type):
-        # generate and set SLIP39 parameters
-        storage_device.set_slip39_iteration_exponent(slip39.DEFAULT_ITERATION_EXPONENT)
-    else:
-        # Unknown backup type.
-        raise RuntimeError
+        # request external entropy and compute the master secret
+        entropy_ack = await call(
+            EntropyRequest(
+                entropy_commitment=entropy_commitment, prev_entropy=prev_int_entropy
+            ),
+            EntropyAck,
+        )
+        ext_entropy = entropy_ack.entropy
+        # For SLIP-39 this is the Encrypted Master Secret
+        secret = _compute_secret_from_entropy(int_entropy, ext_entropy, msg.strength)
+
+        if backup_type == BAK_T_BIP39:
+            # in BIP-39 we store mnemonic string instead of the secret
+            secret = bip39.from_data(secret).encode()
+
+        if not msg.entropy_check or not await _entropy_check(secret, backup_type):
+            break
+
+        prev_int_entropy = int_entropy
 
     # If either of skip_backup or no_backup is specified, we are not doing backup now.
     # Otherwise, we try to do it.
@@ -112,7 +132,6 @@ async def reset_device(msg: ResetDevice) -> Success:
     storage_device.set_passphrase_enabled(bool(msg.passphrase_protection))
     storage_device.store_mnemonic_secret(
         secret,  # for SLIP-39, this is the EMS
-        backup_type,
         needs_backup=not perform_backup,
         no_backup=bool(msg.no_backup),
     )
@@ -122,6 +141,45 @@ async def reset_device(msg: ResetDevice) -> Success:
         await layout.show_backup_success()
 
     return Success(message="Initialized")
+
+
+async def _entropy_check(secret: bytes, backup_type: BackupType) -> bool:
+    """Returns True to indicate that entropy check loop should continue."""
+    from trezor.messages import GetPublicKey, Success
+    from trezor.wire.context import call_any, get_context
+
+    from apps import workflow_handlers
+
+    try:
+        storage_cache.set(storage_cache.APP_STAGED_MNEMONIC_SECRET, secret)
+        storage_cache.start_session()
+        msg = Success()
+        while True:
+            req = await call_any(
+                msg,
+                MessageType.GetPublicKey,
+                MessageType.ResetDeviceContinue,
+                MessageType.ResetDeviceFinish,
+            )
+            assert req.MESSAGE_WIRE_TYPE is not None
+
+            if req.MESSAGE_WIRE_TYPE == MessageType.ResetDeviceContinue:
+                return True
+
+            if req.MESSAGE_WIRE_TYPE == MessageType.ResetDeviceFinish:
+                return False
+
+            assert GetPublicKey.is_type_of(req)
+            req.show_display = False
+
+            handler = workflow_handlers.find_registered_handler(
+                get_context().iface, req.MESSAGE_WIRE_TYPE
+            )
+            assert handler is not None
+            msg = await handler(req)
+    finally:
+        storage_cache.delete(storage_cache.APP_STAGED_MNEMONIC_SECRET)
+        storage_cache.end_current_session()
 
 
 async def _backup_bip39(mnemonic: str) -> None:
@@ -272,7 +330,7 @@ def _validate_reset_device(msg: ResetDevice) -> None:
 
 
 def _compute_secret_from_entropy(
-    int_entropy: bytes, ext_entropy: bytes, strength_in_bytes: int
+    int_entropy: bytes, ext_entropy: bytes, strength_bits: int
 ) -> bytes:
     from trezor.crypto import hashlib
 
@@ -282,7 +340,7 @@ def _compute_secret_from_entropy(
     ehash.update(ext_entropy)
     entropy = ehash.digest()
     # take a required number of bytes
-    strength = strength_in_bytes // 8
+    strength = strength_bits // 8
     secret = entropy[:strength]
     return secret
 

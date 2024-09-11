@@ -1,5 +1,7 @@
 ecdsa>=0.9
 mnemonic>=0.20
+shamir-mnemonic>=0.3.0
+slip10>=1.0.1
 requests>=2.4.0
 click>=7,<8.2
 libusb1>=1.6.4

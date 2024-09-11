@@ -27,7 +27,9 @@ dominate = "*"
 pyserial = "*"
 
 ## test requirements
+mnemonic = "^0.21"
 shamir-mnemonic = "^0.3.0"
+slip10 = "^1.0.1"
 fido2 = "^0.8.0"
 python-bitcoinlib = "^0.11.0"
 

@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 
+import storage.cache as storage_cache
 import storage.device as storage_device
 from trezor import utils
 
@@ -15,7 +16,9 @@ def get() -> tuple[bytes | None, BackupType]:
 
 
 def get_secret() -> bytes | None:
-    return storage_device.get_mnemonic_secret()
+    return storage_device.get_mnemonic_secret() or storage_cache.get(
+        storage_cache.APP_STAGED_MNEMONIC_SECRET
+    )
 
 
 def get_type() -> BackupType:

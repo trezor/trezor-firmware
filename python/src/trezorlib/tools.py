@@ -222,6 +222,23 @@ def parse_path(nstr: str) -> Address:
         raise ValueError("Invalid BIP32 path", nstr) from e
 
 
+def format_path(path: Address, flag: str = "h") -> str:
+    """
+    Convert BIP32 path list of uint32 integers with hardened flags to string.
+    Several conventions are supported to denote the hardened flag: 1', 1h
+
+    e.g.: [0, 0x80000001, 1] -> "m/0/1h/1"
+
+    :param path: list of integers
+    :return: path string
+    """
+    nstr = "m"
+    for i in path:
+        nstr += f"/{unharden(i)}{flag if is_hardened(i) else ''}"
+
+    return nstr
+
+
 def prepare_message_bytes(txt: AnyStr) -> bytes:
     """
     Make message suitable for protobuf.
