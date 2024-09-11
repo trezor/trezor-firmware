@@ -69,6 +69,9 @@ static void wrapped_ui_wait_callback(uint32_t current, uint32_t total) {
 #ifdef USE_OPTIGA
 #include "modtrezorcrypto-optiga.h"
 #endif
+#ifdef USE_TROPIC
+#include "modtrezorcrypto-tropic.h"
+#endif
 #if !BITCOIN_ONLY
 #include "modtrezorcrypto-cardano.h"
 #include "modtrezorcrypto-monero.h"
@@ -134,6 +137,9 @@ STATIC const mp_rom_map_elem_t mp_module_trezorcrypto_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_slip39), MP_ROM_PTR(&mod_trezorcrypto_slip39_module)},
 #if USE_OPTIGA
     {MP_ROM_QSTR(MP_QSTR_optiga), MP_ROM_PTR(&mod_trezorcrypto_optiga_module)},
+#endif
+#if USE_TROPIC
+    {MP_ROM_QSTR(MP_QSTR_tropic), MP_ROM_PTR(&mod_trezorcrypto_tropic_module)},
 #endif
 };
 STATIC MP_DEFINE_CONST_DICT(mp_module_trezorcrypto_globals,
