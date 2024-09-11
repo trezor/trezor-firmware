@@ -596,14 +596,19 @@ static void test_firmware_version(void) {
 }
 
 static uint32_t read_bootloader_version(void) {
+  uint32_t version = 0;
+
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_BOOTUPDATE);
+
   const image_header *header = read_image_header(
       (const uint8_t *)BOOTLOADER_START, BOOTLOADER_IMAGE_MAGIC, 0xffffffff);
 
-  if (secfalse == header) {
-    return 0;
+  if (header != NULL) {
+    version = header->version;
   }
 
-  return header->version;
+  mpu_restore(mpu_mode);
+  return version;
 }
 
 static void test_bootloader_version(uint32_t version) {

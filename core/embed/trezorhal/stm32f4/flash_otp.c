@@ -22,6 +22,7 @@
 #include "flash_otp.h"
 #include "common.h"
 #include "flash.h"
+#include "mpu.h"
 
 #ifdef KERNEL_MODE
 
@@ -37,10 +38,16 @@ secbool flash_otp_read(uint8_t block, uint8_t offset, uint8_t *data,
       offset + datalen > FLASH_OTP_BLOCK_SIZE) {
     return secfalse;
   }
+
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_OTP);
+
   for (uint8_t i = 0; i < datalen; i++) {
     data[i] = *(__IO uint8_t *)(FLASH_OTP_BASE + block * FLASH_OTP_BLOCK_SIZE +
                                 offset + i);
   }
+
+  mpu_restore(mpu_mode);
+
   return sectrue;
 }
 
@@ -50,6 +57,9 @@ secbool flash_otp_write(uint8_t block, uint8_t offset, const uint8_t *data,
       offset + datalen > FLASH_OTP_BLOCK_SIZE) {
     return secfalse;
   }
+
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_OTP);
+
   ensure(flash_unlock_write(), NULL);
   for (uint8_t i = 0; i < datalen; i++) {
     uint32_t address =
@@ -59,6 +69,9 @@ secbool flash_otp_write(uint8_t block, uint8_t offset, const uint8_t *data,
            NULL);
   }
   ensure(flash_lock_write(), NULL);
+
+  mpu_restore(mpu_mode);
+
   return sectrue;
 }
 
@@ -66,15 +79,30 @@ secbool flash_otp_lock(uint8_t block) {
   if (block >= FLASH_OTP_NUM_BLOCKS) {
     return secfalse;
   }
+
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_OTP);
+
   ensure(flash_unlock_write(), NULL);
   HAL_StatusTypeDef ret = HAL_FLASH_Program(FLASH_TYPEPROGRAM_BYTE,
                                             FLASH_OTP_LOCK_BASE + block, 0x00);
   ensure(flash_lock_write(), NULL);
+
+  mpu_restore(mpu_mode);
+
   return sectrue * (ret == HAL_OK);
 }
 
 secbool flash_otp_is_locked(uint8_t block) {
-  return sectrue * (0x00 == *(__IO uint8_t *)(FLASH_OTP_LOCK_BASE + block));
+  secbool is_locked;
+
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_OTP);
+
+  is_locked =
+      sectrue * (0x00 == *(__IO uint8_t *)(FLASH_OTP_LOCK_BASE + block));
+
+  mpu_restore(mpu_mode);
+
+  return is_locked;
 }
 
 #endif  // KERNEL_MODE

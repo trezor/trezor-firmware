@@ -128,10 +128,38 @@ static void mpu_init_fixed_regions(void) {
   // clang-format on
 #endif
 #ifdef FIRMWARE
-  // TODO
+  // clang-format off
+  // Code in the Flash Bank #1 (Unprivileged, Read-Only, Executable)
+  // Subregion: 768KB = 1024KB except 2/8 at start
+  SET_REGION( 0, FLASH_BASE,            SIZE_1MB,   0x03, FLASH_CODE, PRIV_RO_URO );
+  // Code in the Flash Bank #2 (Unprivileged, Read-Only, Executable)
+  // Subregion: 896KB = 1024KB except 1/8 at start
+  SET_REGION( 1, FLASH_BASE + 0x100000, SIZE_1MB,   0x01, FLASH_CODE, PRIV_RO_URO );
+  // All CCMRAM (Unprivileged, Read-Write, Non-Executable)
+  SET_REGION( 2, CCMDATARAM_BASE,       SIZE_64KB,  0x00, SRAM,       FULL_ACCESS );
+  // All SRAM (Unprivileged, Read-Write, Non-Executable)
+  // Subregion:  192KB = 256KB except 2/8 at end
+  SET_REGION( 3, SRAM_BASE,             SIZE_256KB, 0xC0, SRAM,       FULL_ACCESS );
+  DIS_REGION( 4 );
+  // clang-format on
 #endif
-#ifdef PRODTEST
-  // TODO
+#ifdef TREZOR_PRODTEST
+  // clang-format off
+  // Code in the Flash Bank #1 (Unprivileged, Read-Only, Executable)
+  // Subregion: 768KB = 1024KB except 2/8 at start
+  SET_REGION( 0, FLASH_BASE,            SIZE_1MB,   0x03, FLASH_CODE, PRIV_RO_URO );
+  // Code in the Flash Bank #2 (Unprivileged, Read-Only, Executable)
+  // Subregion: 896KB = 1024KB except 1/8 at start
+  SET_REGION( 1, FLASH_BASE + 0x100000, SIZE_1MB,   0x01, FLASH_CODE, PRIV_RO_URO );
+  // All CCMRAM (Unprivileged, Read-Write, Non-Executable)
+  SET_REGION( 2, CCMDATARAM_BASE,       SIZE_64KB,  0x00, SRAM,       FULL_ACCESS );
+  // All SRAM (Unprivileged, Read-Write, Non-Executable)
+  // Subregion:  192KB = 256KB except 2/8 at end
+  SET_REGION( 3, SRAM_BASE,             SIZE_256KB, 0xC0, SRAM,       FULL_ACCESS );
+  // Firmware header (Unprivileged, Read-Write, Non-Executable)
+  // (used in production test to invalidate the firmware)
+  SET_REGION( 4, FIRMWARE_START,        SIZE_1KB,   0x00, FLASH_DATA, PRIV_RW_URO );
+  // clang-format on
 #endif
 
   // Regions #5 to #7 are banked

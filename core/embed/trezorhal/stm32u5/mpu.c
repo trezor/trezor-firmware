@@ -235,10 +235,10 @@ static void mpu_init_fixed_regions(void) {
   DIS_REGION( 4 );
   SET_REGION( 5, GRAPHICS_START,           GRAPHICS_SIZE,      SRAM,        YES,    NO );
 #endif
-#if defined(PRODTEST)
-  SET_REGION( 0, FIRMWARE_START,           FIRMWARE_SIZE,      FLASH_CODE,   NO,    NO );
-  SET_REGION( 1, SRAM1_BASE,               SRAM_SIZE,          SRAM,        YES,    NO );
-  DIS_REGION( 2 );
+#if defined(TREZOR_PRODTEST)
+  SET_REGION( 0, FIRMWARE_START,         1024,                 FLASH_DATA,  YES,    NO );
+  SET_REGION( 1, FIRMWARE_START + 1024,  FIRMWARE_SIZE - 1024, FLASH_CODE,   NO,    NO );
+  SET_REGION( 2, SRAM1_BASE,               SRAM_SIZE,          SRAM,        YES,    NO );
   DIS_REGION( 3 );
   DIS_REGION( 4 );
   SET_REGION( 5, GRAPHICS_START,           GRAPHICS_SIZE,      SRAM,        YES,    NO );

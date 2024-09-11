@@ -250,7 +250,6 @@ static usb_result_t bootloader_usb_loop(const vendor_header *const vhdr,
 }
 
 static secbool check_vendor_header_lock(const vendor_header *const vhdr) {
-  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_OTP);
   uint8_t lock[FLASH_OTP_BLOCK_SIZE];
   ensure(flash_otp_read(FLASH_OTP_BLOCK_VENDOR_HEADER_LOCK, 0, lock,
                         FLASH_OTP_BLOCK_SIZE),
@@ -265,7 +264,6 @@ static secbool check_vendor_header_lock(const vendor_header *const vhdr) {
   }
   uint8_t hash[32];
   vendor_header_hash(vhdr, hash);
-  mpu_restore(mpu_mode);
   return sectrue * (0 == memcmp(lock, hash, 32));
 }
 

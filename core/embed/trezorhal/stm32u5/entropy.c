@@ -42,6 +42,8 @@ void entropy_init(void) {
   w = LL_GetUID_Word2();
   memcpy(g_hw_entropy + 8, &w, 4);
 
+  mpu_restore(mpu_mode);
+
   // set entropy in the OTP randomness block
   if (secfalse == flash_otp_is_locked(FLASH_OTP_BLOCK_RANDOMNESS)) {
     uint8_t entropy[FLASH_OTP_BLOCK_SIZE];
@@ -55,8 +57,6 @@ void entropy_init(void) {
   ensure(flash_otp_read(FLASH_OTP_BLOCK_RANDOMNESS, 0, g_hw_entropy + 12,
                         FLASH_OTP_BLOCK_SIZE),
          NULL);
-
-  mpu_restore(mpu_mode);
 }
 
 void entropy_get(uint8_t *buf) { memcpy(buf, g_hw_entropy, HW_ENTROPY_LEN); }

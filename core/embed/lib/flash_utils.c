@@ -32,7 +32,7 @@ typedef struct {
 // Erases the given list of flash areas.
 //
 // Invokes the progress_cb after each erased sector or page.
-static secbool erase_areas(flash_area_ref_t* areas, int area_count,
+static secbool erase_areas(const flash_area_ref_t* areas, int area_count,
                            flash_progress_callback_t progress_cb) {
   int total = 0;
   int progress = 0;
@@ -73,7 +73,7 @@ static secbool erase_areas(flash_area_ref_t* areas, int area_count,
 secbool erase_storage(flash_progress_callback_t progress_cb) {
   _Static_assert(STORAGE_AREAS_COUNT == 2);
 
-  flash_area_ref_t areas[] = {
+  static const flash_area_ref_t areas[] = {
       {.area = &STORAGE_AREAS[0], .mpu_mode = MPU_MODE_STORAGE},
       {.area = &STORAGE_AREAS[1], .mpu_mode = MPU_MODE_STORAGE},
   };
@@ -84,7 +84,7 @@ secbool erase_storage(flash_progress_callback_t progress_cb) {
 secbool erase_device(flash_progress_callback_t progress_cb) {
   _Static_assert(STORAGE_AREAS_COUNT == 2);
 
-  flash_area_ref_t areas[] = {
+  static const flash_area_ref_t areas[] = {
     {.area = &STORAGE_AREAS[0], .mpu_mode = MPU_MODE_STORAGE},
     {.area = &STORAGE_AREAS[1], .mpu_mode = MPU_MODE_STORAGE},
     {.area = &TRANSLATIONS_AREA, .mpu_mode = MPU_MODE_ASSETS},
