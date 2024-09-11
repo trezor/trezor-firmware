@@ -369,11 +369,11 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
       SET_REGION( 7, KERNEL_RAM_U_START,       KERNEL_RAM_U_SIZE,  SRAM,        YES,   YES ); // Unprivileged kernel SRAM
       break;
     case MPU_MODE_APP:
-      // DMA2D peripherals (Uprivileged, Read-Write, Non-Executable)
+      // DMA2D peripherals (Unprivileged, Read-Write, Non-Executable)
       SET_REGION( 7, 0x5002B000,               SIZE_3K,            PERIPHERAL,  YES,   YES );
       break;
     default:
-      // All peripherals (Pivileged, Read-Write, Non-Executable)
+      // All peripherals (Privileged, Read-Write, Non-Executable)
       SET_REGION( 7, PERIPH_BASE_NS,           SIZE_512M,          PERIPHERAL,  YES,    NO );
       break;
   }
