@@ -43,6 +43,7 @@ backlight = []
 usb = []
 optiga = []
 ble = []
+tropic = []
 translations = ["crypto"]
 test = [
     "backlight",

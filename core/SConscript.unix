@@ -21,7 +21,7 @@ if BENCHMARK and PYOPT != '0':
   print("BENCHMARK=1 works only with PYOPT=0.")
   exit(1)
 
-FEATURES_WANTED = ["input", "sd_card", "dma2d", "optiga"]
+FEATURES_WANTED = ["input", "sd_card", "dma2d", "optiga", "tropic"]
 
 if not models.has_emulator(TREZOR_MODEL):
     # skip unix build
@@ -48,6 +48,7 @@ SOURCE_MOD = [
     'vendor/micropython/extmod/vfs_posix_file.c',
 ]
 SOURCE_MOD_CRYPTO = []
+SOURCE_MOD_TROPIC = []
 RUST_UI_FEATURES = []
 
 # modtrezorconfig
@@ -250,6 +251,14 @@ SOURCE_MOD += [
 SOURCE_MOD += [
     'embed/upymod/modutime.c',
 ]
+
+SOURCE_MOD_TROPIC += [
+    'vendor/libtropic/src/libtropic.c',
+]
+
+CPPDEFINES_MOD += ['USE_TREZOR_CRYPTO']
+
+CPPPATH_MOD += ['vendor/libtropic/src/', 'vendor/libtropic/include/']
 
 SOURCE_MICROPYTHON = [
     'vendor/micropython/extmod/modubinascii.c',
@@ -485,6 +494,7 @@ ALLPATHS=['.',
          'embed/io/usb/inc',
          'embed/sec/entropy/inc',
          'embed/sec/random_delays/inc',
+         'embed/sec/secret/inc',
          'embed/sec/time_estimate/inc',
          'embed/sys/bsp/inc',
          'embed/sec/rng/inc',
@@ -758,6 +768,7 @@ if FROZEN:
         bitcoin_only=BITCOIN_ONLY,
         backlight='backlight' in FEATURES_AVAILABLE,
         optiga='optiga' in FEATURES_AVAILABLE,
+        tropic='tropic' in FEATURES_AVAILABLE,
         use_button='button' in FEATURES_AVAILABLE,
         use_touch='touch' in FEATURES_AVAILABLE,
         ui_layout=ui.get_ui_layout(TREZOR_MODEL),
@@ -775,7 +786,7 @@ if FROZEN:
 #
 
 obj_program = []
-source_files = SOURCE_MOD + SOURCE_MOD_CRYPTO + SOURCE_MICROPYTHON + SOURCE_UNIX
+source_files = SOURCE_MOD + SOURCE_MOD_CRYPTO + SOURCE_MOD_TROPIC + SOURCE_MICROPYTHON + SOURCE_UNIX
 obj_program.extend(env.Object(source=SOURCE_MOD))
 obj_program.extend(env.Object(source=SOURCE_MOD_CRYPTO, CCFLAGS='$CCFLAGS -ftrivial-auto-var-init=zero'))
 if FEATURE_FLAGS["SECP256K1_ZKP"]:
