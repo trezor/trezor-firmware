@@ -610,18 +610,14 @@ impl TryFrom<FlowMsg> for crate::micropython::obj::Obj {
     type Error = crate::error::Error;
 
     fn try_from(val: FlowMsg) -> Result<crate::micropython::obj::Obj, Self::Error> {
+        use crate::ui::layout::result;
+
         match val {
-            FlowMsg::Confirmed => Ok(crate::ui::layout::result::CONFIRMED.as_obj()),
-            FlowMsg::Cancelled => Ok(crate::ui::layout::result::CANCELLED.as_obj()),
-            FlowMsg::Info => Ok(crate::ui::layout::result::INFO.as_obj()),
-            FlowMsg::Choice(i) => {
-                Ok((crate::ui::layout::result::CONFIRMED.as_obj(), i.try_into()?).try_into()?)
-            }
-            FlowMsg::Text(s) => Ok((
-                crate::ui::layout::result::CONFIRMED.as_obj(),
-                s.as_str().try_into()?,
-            )
-                .try_into()?),
+            FlowMsg::Confirmed => Ok(result::CONFIRMED.as_obj()),
+            FlowMsg::Cancelled => Ok(result::CANCELLED.as_obj()),
+            FlowMsg::Info => Ok(result::INFO.as_obj()),
+            FlowMsg::Choice(i) => (result::CONFIRMED.as_obj(), i.try_into()?).try_into(),
+            FlowMsg::Text(s) => (result::CONFIRMED.as_obj(), s.as_str().try_into()?).try_into(),
         }
     }
 }
