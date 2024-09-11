@@ -206,7 +206,6 @@ static void mpu_init_fixed_regions(void) {
   SET_REGION( 2, BOOTLOADER_START,         BOOTLOADER_SIZE,    FLASH_DATA,  YES,    NO );
   SET_REGION( 3, FIRMWARE_START,           FIRMWARE_SIZE,      FLASH_DATA,  YES,    NO );
   DIS_REGION( 4 );
-  SET_REGION( 5, GRAPHICS_START,           GRAPHICS_SIZE,      SRAM,        YES,    NO );
 #endif
 #if defined(BOOTLOADER)
   //   REGION    ADDRESS                   SIZE                TYPE       WRITE   UNPRIV
@@ -215,7 +214,6 @@ static void mpu_init_fixed_regions(void) {
   SET_REGION( 2, FIRMWARE_START,           FIRMWARE_SIZE,      FLASH_DATA,  YES,    NO );
   DIS_REGION( 3 );
   DIS_REGION( 4 );
-  SET_REGION( 5, GRAPHICS_START,           GRAPHICS_SIZE,      SRAM,        YES,    NO );
 #endif
 #if defined(KERNEL)
   //   REGION    ADDRESS                   SIZE                TYPE       WRITE   UNPRIV
@@ -224,7 +222,6 @@ static void mpu_init_fixed_regions(void) {
   SET_REGION( 2, COREAPP_FLASH_START,      COREAPP_FLASH_SIZE, FLASH_CODE,   NO,   YES ); // CoreApp Code
   SET_REGION( 3, COREAPP_RAM1_START,       COREAPP_RAM1_SIZE,  SRAM,        YES,   YES ); // SRAM1
   SET_REGION( 4, COREAPP_RAM2_START,       COREAPP_RAM2_SIZE,  SRAM,        YES,   YES ); // SRAM2/3/5
-  SET_REGION( 5, GRAPHICS_START,           GRAPHICS_SIZE,      SRAM,        YES,   YES ); // Frame buffer or display interface
 #endif
 #if defined(FIRMWARE)
   //   REGION    ADDRESS                   SIZE                TYPE       WRITE   UNPRIV
@@ -233,7 +230,6 @@ static void mpu_init_fixed_regions(void) {
   DIS_REGION( 2 );
   DIS_REGION( 3 );
   DIS_REGION( 4 );
-  SET_REGION( 5, GRAPHICS_START,           GRAPHICS_SIZE,      SRAM,        YES,    NO );
 #endif
 #if defined(TREZOR_PRODTEST)
   SET_REGION( 0, FIRMWARE_START,         1024,                 FLASH_DATA,  YES,    NO );
@@ -241,11 +237,11 @@ static void mpu_init_fixed_regions(void) {
   SET_REGION( 2, SRAM1_BASE,               SRAM_SIZE,          SRAM,        YES,    NO );
   DIS_REGION( 3 );
   DIS_REGION( 4 );
-  SET_REGION( 5, GRAPHICS_START,           GRAPHICS_SIZE,      SRAM,        YES,    NO );
 #endif
 
   // Regions #6 and #7 are banked
 
+  DIS_REGION( 5 );
   DIS_REGION( 6 );
   DIS_REGION( 7 );
   // clang-format on
