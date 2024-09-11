@@ -33,7 +33,9 @@ pub struct ConfirmBlobParams {
     cancel_button: bool,
     chunkify: bool,
     text_mono: bool,
+    swipe_up: bool,
     swipe_down: bool,
+    swipe_right: bool,
 }
 
 impl ConfirmBlobParams {
@@ -54,7 +56,9 @@ impl ConfirmBlobParams {
             cancel_button: false,
             chunkify: false,
             text_mono: true,
+            swipe_up: false,
             swipe_down: false,
+            swipe_right: false,
         }
     }
 
@@ -78,8 +82,18 @@ impl ConfirmBlobParams {
         self
     }
 
+    pub const fn with_swipe_up(mut self) -> Self {
+        self.swipe_up = true;
+        self
+    }
+
     pub const fn with_swipe_down(mut self) -> Self {
         self.swipe_down = true;
+        self
+    }
+
+    pub const fn with_swipe_right(mut self) -> Self {
+        self.swipe_right = true;
         self
     }
 
@@ -143,11 +157,18 @@ impl ConfirmBlobParams {
             frame = frame.with_swipe(SwipeDirection::Left, SwipeSettings::default());
         }
 
+        if self.swipe_up {
+            frame = frame.with_swipe(SwipeDirection::Up, SwipeSettings::default());
+        }
+
         if self.swipe_down {
             frame = frame.with_swipe(SwipeDirection::Down, SwipeSettings::default());
         }
 
-        frame = frame.with_swipe(SwipeDirection::Up, SwipeSettings::default());
+        if self.swipe_right {
+            frame = frame.with_swipe(SwipeDirection::Right, SwipeSettings::default());
+        }
+
         frame = frame.with_vertical_pages();
 
         Ok(frame.map(|msg| matches!(msg, FrameMsg::Button(_)).then_some(FlowMsg::Info)))
