@@ -130,6 +130,8 @@ USE_HAPTIC: bool
 """Whether the hardware supports haptic feedback."""
 USE_OPTIGA: bool
 """Whether the hardware supports Optiga secure element."""
+USE_TROPIC: bool
+"""Whether the hardware supports Tropic Square secure element."""
 MODEL: str
 """Model name."""
 MODEL_FULL_NAME: str

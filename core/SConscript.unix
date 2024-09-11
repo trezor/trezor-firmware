@@ -13,7 +13,7 @@ THP = ARGUMENTS.get('THP', '0') == '1' # Trezor-Host Protocol
 NEW_RENDERING = ARGUMENTS.get('NEW_RENDERING', '1') == '1' or TREZOR_MODEL in ('T3T1',)
 
 
-FEATURES_WANTED = ["input", "sd_card", "dma2d", "optiga", "sbu"]
+FEATURES_WANTED = ["input", "sd_card", "dma2d", "optiga", "sbu", "tropic"]
 if NEW_RENDERING:
     FEATURES_WANTED.append("new_rendering")
 
@@ -42,6 +42,7 @@ SOURCE_MOD = [
     'vendor/micropython/extmod/vfs_posix_file.c',
 ]
 SOURCE_MOD_CRYPTO = []
+SOURCE_MOD_TROPIC = []
 
 PYOPT = ARGUMENTS.get('PYOPT', '1')
 FROZEN = ARGUMENTS.get('TREZOR_EMULATOR_FROZEN', 0)
@@ -290,6 +291,14 @@ SOURCE_MOD += [
     'embed/extmod/modutime.c',
 ]
 
+SOURCE_MOD_TROPIC += [
+    'vendor/libtropic/src/libtropic.c',
+]
+
+CPPDEFINES_MOD += ['USE_TS_CRYPTO']
+
+CPPPATH_MOD += ['vendor/libtropic/src/', 'vendor/libtropic/include/', 'vendor/trezor-crypto/ed25519-donna']
+
 SOURCE_MICROPYTHON = [
     'vendor/micropython/extmod/modubinascii.c',
     'vendor/micropython/extmod/moductypes.c',
@@ -496,6 +505,10 @@ if 'optiga' in FEATURES_AVAILABLE:
 else:
     OPTIGA = False
 
+if 'tropic' in FEATURES_AVAILABLE:
+    TROPIC = True
+else:
+    TROPIC = False
 
 env.Tool('micropython')
 
@@ -805,6 +818,7 @@ if FROZEN:
         bitcoin_only=BITCOIN_ONLY,
         backlight='backlight' in FEATURES_AVAILABLE,
         optiga=OPTIGA,
+        tropic=TROPIC,
         ui_layout=UI_LAYOUT,
         thp=THP,
         )
@@ -820,7 +834,7 @@ if FROZEN:
 #
 
 obj_program = []
-source_files = SOURCE_MOD + SOURCE_MOD_CRYPTO + SOURCE_MICROPYTHON + SOURCE_UNIX
+source_files = SOURCE_MOD + SOURCE_MOD_CRYPTO + SOURCE_MOD_TROPIC + SOURCE_MICROPYTHON + SOURCE_UNIX
 obj_program.extend(env.Object(source=SOURCE_MOD))
 obj_program.extend(env.Object(source=SOURCE_MOD_CRYPTO, CCFLAGS='$CCFLAGS -ftrivial-auto-var-init=zero'))
 if FEATURE_FLAGS["SECP256K1_ZKP"]:
