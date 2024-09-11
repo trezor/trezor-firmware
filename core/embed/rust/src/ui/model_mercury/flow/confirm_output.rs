@@ -142,14 +142,17 @@ impl FlowState for ConfirmOutputWithSummary {
         match (self, direction) {
             (Self::Main, SwipeDirection::Left) => Self::MainMenu.swipe(direction),
             (Self::Main, SwipeDirection::Up) => Self::Summary.swipe(direction),
+            (Self::MainMenu, SwipeDirection::Right) => Self::Main.swipe(direction),
             (Self::AddressInfo, SwipeDirection::Right) => Self::MainMenu.swipe(direction),
             (Self::AccountInfo, SwipeDirection::Right) => Self::MainMenu.swipe(direction),
             (Self::Summary, SwipeDirection::Left) => Self::SummaryMenu.swipe(direction),
             (Self::Summary, SwipeDirection::Up) => Self::Hold.swipe(direction),
             (Self::Summary, SwipeDirection::Down) => Self::Main.swipe(direction),
+            (Self::SummaryMenu, SwipeDirection::Right) => Self::Summary.swipe(direction),
             (Self::FeeInfo, SwipeDirection::Right) => Self::SummaryMenu.swipe(direction),
             (Self::Hold, SwipeDirection::Left) => Self::HoldMenu.swipe(direction),
             (Self::Hold, SwipeDirection::Down) => Self::Summary.swipe(direction),
+            (Self::HoldMenu, SwipeDirection::Right) => Self::Hold.swipe(direction),
             _ => self.do_nothing(),
         }
     }
@@ -260,6 +263,7 @@ fn new_confirm_output_obj(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Err
         .with_footer(TR::instructions__swipe_up.into(), None)
         .with_chunkify(chunkify)
         .with_text_mono(text_mono)
+        .with_swipe_up()
         .into_layout()?
         .one_button_request(ButtonRequest::from_num(br_code, br_name));
 
@@ -307,6 +311,7 @@ fn new_confirm_output_obj(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Err
                 .with_menu_button()
                 .with_footer(TR::instructions__swipe_up.into(), None)
                 .with_text_mono(text_mono)
+                .with_swipe_up()
                 .with_swipe_down()
                 .into_layout()?
                 .one_button_request(ButtonRequest::from_num(br_code, br_name));
@@ -418,6 +423,7 @@ fn new_confirm_output_obj(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Err
             .with_cancel_button()
             .with_chunkify(true)
             .with_text_mono(true)
+            .with_swipe_right()
             .into_layout()?;
             flow = flow.with_page(&ConfirmOutputWithSummary::AddressInfo, address_content)?;
         } else {
