@@ -20,6 +20,7 @@
 #include <string.h>
 #include <sys/types.h>
 
+#include "bootutils.h"
 #include "common.h"
 #include "display.h"
 #include "display_draw.h"
@@ -30,6 +31,7 @@
 #include "mpu.h"
 #include "random_delays.h"
 #include "rng.h"
+#include "rsod.h"
 #include "secbool.h"
 #include "system.h"
 #ifdef USE_TOUCH
@@ -202,8 +204,6 @@ static void check_bootloader_version(void) {
 }
 
 #endif
-
-static void error_handler(systask_t *task) { rsod_terminal(&task->pminfo); }
 
 // Initializes system in emergency mode and shows RSOD
 static void enter_emergency_mode(const systask_postmortem_t *pminfo) {
