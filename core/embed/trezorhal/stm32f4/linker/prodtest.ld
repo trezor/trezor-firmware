@@ -37,8 +37,6 @@ _ram_end = sram_end;
 _codelen = SIZEOF(.flash) + SIZEOF(.data);
 _flash_start = ORIGIN(FLASH);
 _flash_end = ORIGIN(FLASH) + LENGTH(FLASH);
-_heap_start = ADDR(.heap);
-_heap_end = ADDR(.heap) + SIZEOF(.heap);
 
 SECTIONS {
   .vendorheader : ALIGN(4) {
