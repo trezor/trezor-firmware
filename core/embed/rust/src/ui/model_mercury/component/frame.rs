@@ -329,6 +329,7 @@ where
             .render_swipe_cover(target, self.bounds);
     }
 }
+
 fn frame_event(
     horizontal_swipe: &mut HorizontalSwipe,
     swipe_config: SwipeConfig,
@@ -337,12 +338,16 @@ fn frame_event(
     ctx: &mut EventCtx,
     event: Event,
 ) -> Option<FlowMsg> {
+    // horizontal_swipe does not return any message
     horizontal_swipe.event(event, swipe_config);
+    // msg type of footer is Never, so this should never return a value
+    let none = footer.event(ctx, event);
+    debug_assert!(none.is_none());
 
-    footer.event(ctx, event);
-
+    // msg type of header is FlowMsg, which will be the return value
     header.event(ctx, event)
 }
+
 fn frame_place(header: &mut Header, footer: &mut Option<Footer>, bounds: Rect) -> Rect {
     let (mut header_area, mut content_area) = bounds.split_top(TITLE_HEIGHT);
     content_area = content_area.inset(Insets::top(theme::SPACING));
