@@ -394,8 +394,6 @@ void display_refresh(void) {
   display_sync_with_fb(drv);
 }
 
-#endif
-
 void display_fill(const gfx_bitblt_t *bb) {
   display_fb_info_t fb = display_get_frame_buffer();
 
@@ -423,3 +421,5 @@ void display_copy_mono1p(const gfx_bitblt_t *bb) {
 
   gfx_mono8_copy_mono1p(&bb_new);
 }
+
+#endif

@@ -158,6 +158,7 @@ void syscall_handler(uint32_t *args, uint32_t syscall) {
     case SYSCALL_DISPLAY_WAIT_FOR_SYNC: {
       display_wait_for_sync();
     } break;
+#endif
     case SYSCALL_DISPLAY_FILL: {
       const gfx_bitblt_t *bb = (const gfx_bitblt_t *)args[0];
       display_fill(bb);
@@ -166,7 +167,6 @@ void syscall_handler(uint32_t *args, uint32_t syscall) {
       const gfx_bitblt_t *bb = (const gfx_bitblt_t *)args[0];
       display_copy_rgb565(bb);
     } break;
-#endif
     case SYSCALL_DISPLAY_REFRESH: {
       display_refresh();
     } break;
