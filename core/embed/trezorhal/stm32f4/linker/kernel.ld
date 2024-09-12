@@ -4,7 +4,8 @@ ENTRY(reset_handler)
 
 MEMORY {
   FLASH  (rx)     : ORIGIN = KERNEL_START, LENGTH = KERNEL_IMAGE_MAXSIZE
-  CCMRAM (wal)    : ORIGIN = MCU_CCMRAM + MCU_CCMRAM_SIZE - KERNEL_CCMRAM_SIZE - BOOTARGS_SIZE, LENGTH = KERNEL_CCMRAM_SIZE - BOOTARGS_SIZE
+  CCMRAM_FB (wal) : ORIGIN = MCU_CCMRAM + MCU_CCMRAM_SIZE - KERNEL_CCMRAM_SIZE - KERNEL_FRAMEBUFFER_SIZE, LENGTH = KERNEL_FRAMEBUFFER_SIZE
+  CCMRAM (wal)    : ORIGIN = MCU_CCMRAM + MCU_CCMRAM_SIZE - KERNEL_CCMRAM_SIZE, LENGTH = KERNEL_CCMRAM_SIZE - BOOTARGS_SIZE
   BOOT_ARGS (wal) : ORIGIN = MCU_CCMRAM + MCU_CCMRAM_SIZE - BOOTARGS_SIZE, LENGTH = BOOTARGS_SIZE
   SRAM   (wal)    : ORIGIN = MCU_SRAM + MCU_SRAM_SIZE - KERNEL_SRAM_SIZE, LENGTH = KERNEL_SRAM_SIZE
 }
@@ -21,8 +22,8 @@ bss_start = ADDR(.bss);
 bss_end = ADDR(.bss) + SIZEOF(.bss);
 
 /* used by the startup code to wipe memory */
-ccmram_start = ORIGIN(CCMRAM);
-ccmram_end = ORIGIN(CCMRAM) + LENGTH(CCMRAM);
+ccmram_start = ORIGIN(CCMRAM_FB);
+ccmram_end = ORIGIN(CCMRAM_FB) + LENGTH(CCMRAM) + LENGTH(CCMRAM_FB);
 
 /* reserve 256 bytes for bootloader arguments */
 boot_args_start = ORIGIN(BOOT_ARGS);
@@ -78,6 +79,11 @@ SECTIONS {
     *(.buf*);
     . = ALIGN(4);
   } >SRAM
+
+  .fb : ALIGN(4) {
+    *(.fb1*);
+    . = ALIGN(4);
+  } >CCMRAM_FB
 
   .boot_args : ALIGN(8) {
     *(.boot_args*);

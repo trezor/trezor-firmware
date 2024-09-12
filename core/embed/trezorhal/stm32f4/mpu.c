@@ -69,6 +69,13 @@ mpu_driver_t g_mpu_driver = {
     .mode = MPU_MODE_DISABLED,
 };
 
+#define SRAM_SIZE (192 * 1024)
+
+#define KERNEL_CCMRAM_START (CCMDATARAM_END + 1 - KERNEL_CCMRAM_SIZE)
+#define KERNEL_SRAM_START (SRAM1_BASE + SRAM_SIZE - KERNEL_SRAM_SIZE)
+
+#define KERNEL_CCMRAM_FB_START (KERNEL_CCMRAM_START - KERNEL_FRAMEBUFFER_SIZE)
+
 static void mpu_init_fixed_regions(void) {
   // Regions #0 to #4 are fixed for all targets
 
