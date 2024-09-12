@@ -259,7 +259,6 @@ static secbool check_vendor_header_lock(const vendor_header *const vhdr) {
              "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF"
              "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF",
              FLASH_OTP_BLOCK_SIZE)) {
-    mpu_restore(mpu_mode);
     return sectrue;
   }
   uint8_t hash[32];
