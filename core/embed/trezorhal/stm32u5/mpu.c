@@ -155,9 +155,9 @@ static void mpu_set_attributes(void) {
   ((KERNEL_SRAM1_SIZE + KERNEL_SRAM2_SIZE) - KERNEL_U_RAM_SIZE)
 #else
 #define KERNEL_RAM_START (SRAM1_BASE)
-#define KERNEL_RAM_SIZE (SRAM1_SIZE + SRAM2_SIZE + SRAM3_SIZE - KERNEL_U_RAM_SIZE)
+#define KERNEL_RAM_SIZE \
+  (SRAM1_SIZE + SRAM2_SIZE + SRAM3_SIZE - KERNEL_U_RAM_SIZE)
 #endif
-
 
 #ifdef SYSCALL_DISPATCH
 extern uint32_t _uflash_start;
