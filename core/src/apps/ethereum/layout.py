@@ -9,7 +9,12 @@ from trezor.ui.layouts import (
     should_show_more,
 )
 
-from .helpers import address_from_bytes, decode_typed_data, format_ethereum_amount
+from .helpers import (
+    address_from_bytes,
+    decode_typed_data,
+    format_ethereum_amount,
+    get_account_and_path,
+)
 
 if TYPE_CHECKING:
     from typing import Awaitable, Iterable
@@ -25,6 +30,7 @@ if TYPE_CHECKING:
 async def require_confirm_tx(
     to_bytes: bytes,
     value: int,
+    address_n: list[int],
     maximum_fee: str,
     fee_info_items: Iterable[tuple[str, str]],
     network: EthereumNetworkInfo,
@@ -41,14 +47,23 @@ async def require_confirm_tx(
 
     total_amount = format_ethereum_amount(value, token, network)
 
+    account, account_path = get_account_and_path(address_n)
+
     await confirm_ethereum_tx(
-        to_str, total_amount, maximum_fee, fee_info_items, chunkify=chunkify
+        to_str,
+        total_amount,
+        account,
+        account_path,
+        maximum_fee,
+        fee_info_items,
+        chunkify=chunkify,
     )
 
 
 async def require_confirm_stake(
     addr_bytes: bytes,
     value: int,
+    address_n: list[int],
     maximum_fee: str,
     fee_info_items: Iterable[tuple[str, str]],
     network: EthereumNetworkInfo,
@@ -57,12 +72,16 @@ async def require_confirm_stake(
 
     addr_str = address_from_bytes(addr_bytes, network)
     total_amount = format_ethereum_amount(value, None, network)
+    account, account_path = get_account_and_path(address_n)
+
     await confirm_ethereum_staking_tx(
         TR.ethereum__staking_stake,  # title
         TR.ethereum__staking_stake_intro,  # intro_question
         TR.ethereum__staking_stake,  # verb
-        total_amount,  # total_amount
-        maximum_fee,  # maximum_fee
+        total_amount,
+        account,
+        account_path,
+        maximum_fee,
         addr_str,  # address
         TR.ethereum__staking_stake_address,  # address_title
         fee_info_items,  # info_items
@@ -73,6 +92,7 @@ async def require_confirm_stake(
 async def require_confirm_unstake(
     addr_bytes: bytes,
     value: int,
+    address_n: list[int],
     maximum_fee: str,
     fee_info_items: Iterable[tuple[str, str]],
     network: EthereumNetworkInfo,
@@ -81,13 +101,16 @@ async def require_confirm_unstake(
 
     addr_str = address_from_bytes(addr_bytes, network)
     total_amount = format_ethereum_amount(value, None, network)
+    account, account_path = get_account_and_path(address_n)
 
     await confirm_ethereum_staking_tx(
         TR.ethereum__staking_unstake,  # title
         TR.ethereum__staking_unstake_intro,  # intro_question
         TR.ethereum__staking_unstake,  # verb
-        total_amount,  # total_amount
-        maximum_fee,  # maximum_fee
+        total_amount,
+        account,
+        account_path,
+        maximum_fee,
         addr_str,  # address
         TR.ethereum__staking_stake_address,  # address_title
         fee_info_items,  # info_items
@@ -97,6 +120,7 @@ async def require_confirm_unstake(
 
 async def require_confirm_claim(
     addr_bytes: bytes,
+    address_n: list[int],
     maximum_fee: str,
     fee_info_items: Iterable[tuple[str, str]],
     network: EthereumNetworkInfo,
@@ -104,12 +128,16 @@ async def require_confirm_claim(
 ) -> None:
 
     addr_str = address_from_bytes(addr_bytes, network)
+    account, account_path = get_account_and_path(address_n)
+
     await confirm_ethereum_staking_tx(
         TR.ethereum__staking_claim,  # title
         TR.ethereum__staking_claim_intro,  # intro_question
         TR.ethereum__staking_claim,  # verb
         "",  # total_amount
-        maximum_fee,  # maximum_fee
+        account,
+        account_path,
+        maximum_fee,
         addr_str,  # address
         TR.ethereum__staking_claim_address,  # address_title
         fee_info_items,  # info_items

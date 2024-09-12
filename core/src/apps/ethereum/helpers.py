@@ -195,6 +195,22 @@ def format_ethereum_amount(
     return f"{amount} {suffix}"
 
 
+def get_account_and_path(address_n: list[int]) -> tuple[str | None, str | None]:
+    from apps.common import paths
+
+    from .keychain import PATTERNS_ADDRESS
+
+    if not address_n or len(address_n) < 2:
+        return (None, None)
+
+    slip44_id = address_n[1]  # it depends on the network (ETH vs ETC...)
+
+    account = paths.get_account_name("ETH", address_n, PATTERNS_ADDRESS, slip44_id)
+    account_path = paths.address_n_to_str(address_n)
+
+    return (account, account_path)
+
+
 def _from_bytes_bigendian_signed(b: bytes) -> int:
     negative = b[0] & 0x80
     if negative:

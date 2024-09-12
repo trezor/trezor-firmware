@@ -1191,6 +1191,8 @@ if not utils.BITCOIN_ONLY:
         intro_question: str,
         verb: str,
         total_amount: str,
+        _account: str | None,
+        _account_path: str | None,
         maximum_fee: str,
         address: str,
         address_title: str,
@@ -1268,6 +1270,8 @@ if not utils.BITCOIN_ONLY:
     async def confirm_ethereum_tx(
         recipient: str,
         total_amount: str,
+        _account: str | None,
+        _account_path: str | None,
         maximum_fee: str,
         fee_info_items: Iterable[tuple[str, str]],
         br_name: str = "confirm_ethereum_tx",

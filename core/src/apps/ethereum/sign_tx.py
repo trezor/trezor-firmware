@@ -138,6 +138,7 @@ async def confirm_tx_data(
     await require_confirm_tx(
         recipient,
         value,
+        msg.address_n,
         maximum_fee,
         fee_items,
         defs.network,
@@ -175,6 +176,7 @@ async def handle_staking(
         if func_sig == constants.SC_FUNC_SIG_CLAIM:
             await _handle_staking_tx_claim(
                 data_reader,
+                msg,
                 address_bytes,
                 maximum_fee,
                 fee_items,
@@ -325,6 +327,7 @@ async def _handle_staking_tx_stake(
     await require_confirm_stake(
         address_bytes,
         int.from_bytes(msg.value, "big"),
+        msg.address_n,
         maximum_fee,
         fee_items,
         network,
@@ -364,6 +367,7 @@ async def _handle_staking_tx_unstake(
     await require_confirm_unstake(
         address_bytes,
         value,
+        msg.address_n,
         maximum_fee,
         fee_items,
         network,
@@ -373,6 +377,7 @@ async def _handle_staking_tx_unstake(
 
 async def _handle_staking_tx_claim(
     data_reader: BufferReader,
+    msg: MsgInSignTx,
     staking_addr: bytes,
     maximum_fee: str,
     fee_items: Iterable[tuple[str, str]],
@@ -385,7 +390,9 @@ async def _handle_staking_tx_claim(
     if data_reader.remaining_count() != 0:
         raise DataError("Invalid staking transaction call")
 
-    await require_confirm_claim(staking_addr, maximum_fee, fee_items, network, chunkify)
+    await require_confirm_claim(
+        staking_addr, msg.address_n, maximum_fee, fee_items, network, chunkify
+    )
 
 
 _progress_obj: ProgressLayout | None = None
