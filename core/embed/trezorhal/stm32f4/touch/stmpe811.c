@@ -157,8 +157,6 @@
 #define STMPE811_TS_CTRL_ENABLE 0x01
 #define STMPE811_TS_CTRL_STATUS 0x80
 
-#define TOUCH_ADDRESS \
-  (0x38U << 1)  // the HAL requires the 7-bit address to be shifted by one bit
 #define TOUCH_PACKET_SIZE 7U
 #define EVENT_PRESS_DOWN 0x00U
 #define EVENT_CONTACT 0x80U
@@ -173,7 +171,7 @@
 #define EVENT_OLD_TIMEOUT_MS 50
 #define EVENT_MISSING_TIMEOUT_MS 50
 
-#define TS_I2C_ADDRESS 0x82
+#define TS_I2C_ADDRESS (0x82 >> 1)
 
 #define I2Cx_TIMEOUT_MAX \
   0x3000 /*<! The value of the maximal timeout for I2C waiting loops */
