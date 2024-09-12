@@ -20,6 +20,8 @@
 #include STM32_HAL_H
 #include TREZOR_BOARD
 
+#ifdef KERNEL_MODE
+
 #include <string.h>
 
 #include "common.h"
@@ -691,3 +693,5 @@ uint32_t touch_get_event(void) {
 
   return event;
 }
+
+#endif

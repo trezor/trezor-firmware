@@ -349,6 +349,13 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
 
   // clang-format off
   switch (mode) {
+#ifdef TREZOR_MODEL_DISC1
+    default:
+      // All Peripherals (Unprivileged, Read-Write, Non-Executable)
+      // SDRAM
+      SET_REGION( 7, 0x00000000,            SIZE_4GB,  0xBB, SRAM,     FULL_ACCESS );
+    break;
+#else
     case MPU_MODE_APP:
       // Dma2D (Unprivileged, Read-Write, Non-Executable)
       // 3KB = 4KB except 1/4 at end
@@ -358,6 +365,7 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
       // All Peripherals (Privileged, Read-Write, Non-Executable)
       SET_REGION( 7, PERIPH_BASE,           SIZE_1GB,  0x00, PERIPH,     PRIV_RW );
       break;
+#endif
   }
   // clang-format on
 
