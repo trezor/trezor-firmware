@@ -220,6 +220,45 @@ def test_show_multisig_3(client: Client):
 
 
 @pytest.mark.multisig
+def test_show_multisig_taproot_3(client: Client):
+    nodes = [
+        btc.get_public_node(
+            client, parse_path(f"m/86h/1h/{index}h"), coin_name="Testnet"
+        ).node
+        for index in range(1, 4)
+    ]
+    multisig1 = messages.MultisigRedeemScriptType(
+        nodes=nodes, address_n=[0, 0], signatures=[b"", b"", b""], m=2
+    )
+    multisig2 = messages.MultisigRedeemScriptType(
+        nodes=nodes, address_n=[0, 1], signatures=[b"", b"", b""], m=2
+    )
+    for i in [1, 2, 3]:
+        assert (
+            btc.get_address(
+                client,
+                "Testnet",
+                parse_path(f"m/86h/1h/{i}h/0/1"),
+                False,
+                multisig2,
+                script_type=messages.InputScriptType.SPENDTAPROOT,
+            )
+            == "tb1p8wk2er5shm22z5mqy3qn2al7gz62csw75uh4ag8wluzptgr387tqeynquu"
+        )
+        assert (
+            btc.get_address(
+                client,
+                "Testnet",
+                parse_path(f"m/86h/1h/{i}h/0/0"),
+                False,
+                multisig1,
+                script_type=messages.InputScriptType.SPENDTAPROOT,
+            )
+            == "tb1ph9e923j4w40nhr4v9fqz4pdn09tphdagrcx997qhe2fezgs2dqlqv9r8hl"
+        )
+
+
+@pytest.mark.multisig
 @pytest.mark.parametrize("show_display", (True, False))
 def test_multisig_missing(client: Client, show_display: bool):
     # Use account numbers 1, 2 and 3 to create a valid multisig,
