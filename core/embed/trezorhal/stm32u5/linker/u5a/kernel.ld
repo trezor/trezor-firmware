@@ -83,6 +83,10 @@ SECTIONS {
     . = ALIGN(512);
   } >FLASH AT>FLASH
 
+  .stack : ALIGN(8) {
+    . = 12K; /* Overflow causes UsageFault */
+  } >SRAM2
+
   .data : ALIGN(4) {
     *(.data*);
     . = ALIGN(512);
@@ -96,10 +100,6 @@ SECTIONS {
     *(.no_dma_buffers*);
     *(.bss*);
     . = ALIGN(4);
-  } >SRAM2
-
-  .stack : ALIGN(8) {
-    . = 12K; /* Overflow causes UsageFault */
   } >SRAM2
 
   /* unprivileged data and stack for SAES */
