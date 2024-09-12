@@ -37,10 +37,11 @@ typedef enum {
   MPU_MODE_OTP,           // + OTP (privileged RW)
   MPU_MODE_FSMC_REGS,     // + FSMC control registers (privileged RW)
   MPU_MODE_FLASHOB,       // + Option bytes mapping (privileged RW)
-  MPU_MODE_SECRET,        // + secret area (priviledeg RW)
-  MPU_MODE_STORAGE,       // + both storage areas (privilehed RW)
+  MPU_MODE_SECRET,        // + secret area (privileged RW)
+  MPU_MODE_STORAGE,       // + both storage areas (privileged RW)
   MPU_MODE_ASSETS,        // + assets (privileged RW)
   MPU_MODE_SAES,          // + unprivileged SAES code
+  MPU_MODE_KERNEL_SRAM,   // + extra kernel SRAM (STM32F4 Only) (privileged RW)
   MPU_MODE_UNUSED_FLASH,  // + unused flash areas (privileged RW)
   MPU_MODE_APP,           // + unprivileged DMA2D (RW) & Assets (RO)
 } mpu_mode_t;
