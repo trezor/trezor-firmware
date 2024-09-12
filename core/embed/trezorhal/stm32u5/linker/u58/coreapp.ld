@@ -5,7 +5,6 @@ ENTRY(reset_handler)
 MEMORY {
   FLASH  (rx)  : ORIGIN = KERNEL_START, LENGTH = FIRMWARE_IMAGE_MAXSIZE
   SRAM1  (wal) : ORIGIN = MCU_SRAM1, LENGTH =  MCU_SRAM1_SIZE - KERNEL_SRAM1_SIZE
-  BOOT_ARGS  (wal) : ORIGIN = MCU_SRAM2 - BOOTARGS_SIZE, LENGTH =  BOOTARGS_SIZE
   SRAM2  (wal) : ORIGIN = MCU_SRAM2 + KERNEL_SRAM2_SIZE, LENGTH =  MCU_SRAM2_SIZE - KERNEL_SRAM2_SIZE
   SRAM3  (wal) : ORIGIN = MCU_SRAM3 + KERNEL_SRAM3_SIZE, LENGTH =  MCU_SRAM3_SIZE - KERNEL_SRAM3_SIZE
   SRAM5  (wal) : ORIGIN = MCU_SRAM5, LENGTH =  0K  /* SRAM5 is not available */
@@ -43,10 +42,6 @@ sram5_start = ORIGIN(SRAM5);
 sram5_end = ORIGIN(SRAM5) + LENGTH(SRAM5);
 sram6_start = ORIGIN(SRAM6);
 sram6_end = ORIGIN(SRAM6) + LENGTH(SRAM6);
-
-/* reserve 256 bytes for bootloader arguments */
-boot_args_start = ORIGIN(BOOT_ARGS);
-boot_args_end = ORIGIN(BOOT_ARGS) + LENGTH(BOOT_ARGS);
 
 _codelen = SIZEOF(.flash) + SIZEOF(.data) + SIZEOF(.confidential);
 _flash_start = ORIGIN(FLASH);
@@ -108,11 +103,4 @@ SECTIONS {
     . = 37K; /* this acts as a build time assertion that at least this much memory is available for heap use */
     . = ABSOLUTE(sram3_end); /* this explicitly sets the end of the heap */
   } >SRAM3
-
-  .boot_args : ALIGN(8) {
-    *(.boot_command*);
-    . = ALIGN(8);
-    *(.boot_args*);
-    . = ALIGN(8);
-  } >BOOT_ARGS
 }
