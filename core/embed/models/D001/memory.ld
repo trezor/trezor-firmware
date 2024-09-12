@@ -1,3 +1,5 @@
+/* Auto-generated file, do not edit.*/
+
 FLASH_START = 0x8000000;
 BOARDLOADER_START = 0x8000000;
 BOOTLOADER_START = 0x8020000;

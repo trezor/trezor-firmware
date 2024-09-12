@@ -154,6 +154,12 @@ bootloader_hashes: ## generate bootloader hashes
 bootloader_hashes_check: ## check generated bootloader hashes
 	./core/tools/bootloader_hashes.py --check
 
-gen:  templates mocks icons protobuf ci_docs vendorheader solana_templates bootloader_hashes ## regenerate auto-generated files from sources
+lsgen: ## generate linker scripts hashes
+	lsgen
 
-gen_check: templates_check mocks_check icons_check protobuf_check ci_docs_check vendorheader_check solana_templates_check bootloader_hashes_check ## check validity of auto-generated files
+lsgen_check: ## check generated linker scripts
+	lsgen --check
+
+gen:  templates mocks icons protobuf ci_docs vendorheader solana_templates bootloader_hashes lsgen ## regenerate auto-generated files from sources
+
+gen_check: templates_check mocks_check icons_check protobuf_check ci_docs_check vendorheader_check solana_templates_check bootloader_hashes_check lsgen_check ## check validity of auto-generated files
