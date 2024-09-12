@@ -163,6 +163,7 @@ impl FlowState for ConfirmOutputWithSummary {
             (Self::MainMenu, FlowMsg::Choice(MENU_ITEM_CANCEL)) => {
                 Self::MainMenuCancel.swipe_left()
             }
+            (Self::AccountInfo, FlowMsg::Cancelled) => Self::MainMenu.swipe_right(),
             (Self::MainMenuCancel, FlowMsg::Cancelled) => Self::MainMenu.swipe_right(),
             (Self::AddressInfo, FlowMsg::Info) => Self::MainMenu.transit(),
             (Self::Summary, FlowMsg::Info) => Self::SummaryMenu.transit(),
