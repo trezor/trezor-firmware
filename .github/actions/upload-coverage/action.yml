@@ -1,0 +1,12 @@
+name: 'Upload coverage data'
+runs:
+  using: "composite"
+  steps:
+    - run: mv core/src/.coverage core/src/.coverage.${{ github.job }}${{ strategy.job-index }} || true
+      shell: sh
+    - uses: actions/upload-artifact@v4
+      with:
+        name: core-coverage-${{ matrix.model }}-${{ github.job }}-${{ strategy.job-index }}
+        path: core/src/.coverage.*
+        retention-days: 7
+        include-hidden-files: true
