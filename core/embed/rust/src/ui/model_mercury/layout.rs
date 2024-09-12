@@ -176,12 +176,11 @@ impl ComponentMsgObj for Progress {
 }
 
 impl ComponentMsgObj for Homescreen {
-    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
-        match msg {
-            HomescreenMsg::Dismissed => Ok(CANCELLED.as_obj()),
-            HomescreenMsg::NotificationClicked => Ok(CONFIRMED.as_obj()),
-            HomescreenMsg::MenuClicked => Ok(INFO.as_obj()),
+    fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
+        if cfg!(feature = "ui_debug") {
+            panic!("UI debug panic");
         }
+        Ok(CANCELLED.as_obj())
     }
 }
 
@@ -194,7 +193,7 @@ impl ComponentMsgObj for Lockscreen {
                     panic!("UI debug panic");
                 }
                 Ok(CANCELLED.as_obj())
-            },
+            }
         }
     }
 }
@@ -1068,25 +1067,23 @@ extern "C" fn new_show_progress_coinjoin(n_args: usize, args: *const Obj, kwargs
 
 extern "C" fn new_show_homescreen(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let label: TString<'static> = kwargs
-            .get(Qstr::MP_QSTR_label)?
-            .try_into_option()?
-            .unwrap_or_else(|| model::FULL_NAME.into());
+        let label: Option<TString<'static>> = kwargs.get(Qstr::MP_QSTR_label)?.try_into_option()?;
         let notification: Option<TString<'static>> =
             kwargs.get(Qstr::MP_QSTR_notification)?.try_into_option()?;
         let notification_level: u8 = kwargs.get_or(Qstr::MP_QSTR_notification_level, 0)?;
         let notification_clickable: bool =
             kwargs.get_or(Qstr::MP_QSTR_notification_clickable, false)?;
-        let hold: bool = kwargs.get(Qstr::MP_QSTR_hold)?.try_into()?;
-        let skip_first_paint: bool = kwargs.get(Qstr::MP_QSTR_skip_first_paint)?.try_into()?;
+        let hold: bool = kwargs.get_or(Qstr::MP_QSTR_hold, false)?;
+        let skip_first_paint: bool = kwargs.get_or(Qstr::MP_QSTR_skip_first_paint, false)?;
 
-        let notification = notification.map(|w| (w, notification_level));
-        let obj = LayoutObj::new(Homescreen::new(
+        let flow = flow::homescreen::HomescreenFlow::new_homescreen_flow(
             label,
             notification,
-            hold,
+            notification_level,
             notification_clickable,
-        ))?;
+            hold,
+        )?;
+        let obj = LayoutObj::new(flow)?;
         if skip_first_paint {
             obj.skip_first_paint();
         }

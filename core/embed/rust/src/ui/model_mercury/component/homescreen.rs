@@ -5,10 +5,10 @@ use crate::{
     translations::TR,
     trezorhal::usb::usb_configured,
     ui::{
-        component::{Component, Event, EventCtx, TimerToken},
+        component::{swipe_detect::SwipeConfig, Component, Event, EventCtx, TimerToken},
         display::{image::ImageInfo, Color, Font},
         event::{TouchEvent, USBEvent},
-        geometry::{Alignment, Alignment2D, Offset, Point, Insets, Rect},
+        geometry::{Alignment, Alignment2D, Insets, Offset, Point, Rect},
         layout::util::get_user_custom_image,
         model_mercury::constant,
         shape::{self, Renderer},
@@ -389,6 +389,7 @@ pub struct Homescreen {
     delay: Option<TimerToken>,
     attach_animation: AttachAnimation,
     label_anim: HideLabelAnimation,
+    swipe: SwipeConfig,
 }
 
 pub enum HomescreenMsg {
@@ -448,6 +449,7 @@ impl Homescreen {
             delay: None,
             attach_animation: AttachAnimation::default(),
             label_anim: HideLabelAnimation::new(label_width),
+            swipe: SwipeConfig::new(),
         }
     }
 
@@ -613,6 +615,16 @@ impl Component for Homescreen {
     }
 }
 
+#[cfg(all(feature = "micropython", feature = "touch", feature = "new_rendering"))]
+impl crate::ui::flow::Swipable for Homescreen
+{
+    fn get_swipe_config(&self) -> SwipeConfig {
+        self.swipe
+    }
+    fn get_internal_page_count(&self) -> usize {
+        1
+    }
+}
 #[cfg(feature = "ui_debug")]
 impl crate::trace::Trace for Homescreen {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
