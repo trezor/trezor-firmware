@@ -284,12 +284,7 @@ jobs:
         continue-on-error: true
       - uses: ./.github/actions/ui-comment
         if: ${{ failure() && env.ACTIONS_DO_UI_TEST == 'true' }}
-      - uses: actions/upload-artifact@v4
-        with:
-          name: core-coverage-${{ matrix.model }}-${{ matrix.lang }}-${{ github.job }}-${{ strategy.job-index }}
-          # there will be more coverage files (one per core)
-          path: core/src/.coverage.*
-          retention-days: 7
+      - uses: ./.github/actions/upload-coverage
 
   # Click tests - UI.
   # See [docs/tests/click-tests](../tests/click-tests.md) for more info.
@@ -338,12 +333,8 @@ jobs:
           status: ${{ job.status }}
         if: always()
         continue-on-error: true
-      - run: mv core/src/.coverage core/.coverage.test_click || true
-      - uses: actions/upload-artifact@v4
-        with:
-          name: core-coverage-${{ matrix.model }}-${{ github.job }}-${{ strategy.job-index }}
-          path: core/.coverage.*
-          retention-days: 7
+      - uses: ./.github/actions/upload-coverage
+
 
   # Upgrade tests.
   # See [docs/tests/upgrade-tests](../tests/upgrade-tests.md) for more info.
@@ -414,12 +405,7 @@ jobs:
           status: ${{ job.status }}
         if: always()
         continue-on-error: true
-      - run: mv core/src/.coverage core/.coverage.test_persistence || true
-      - uses: actions/upload-artifact@v4
-        with:
-          name: core-coverage-${{ matrix.model }}-${{ github.job }}-${{ strategy.job-index }}
-          path: core/.coverage.*
-          retention-days: 7
+      - uses: ./.github/actions/upload-coverage
 
   core_hwi_test:
     name: HWI tests
@@ -567,12 +553,8 @@ jobs:
             core/tests/trezor_monero_tests.log
           retention-days: 7
         if: always()
-      - run: mv core/src/.coverage core/.coverage.test_emu_monero || true
-      - uses: actions/upload-artifact@v4
-        with:
-          name: core-coverage-${{ matrix.model }}-${{ github.job }}-${{ strategy.job-index }}
-          path: core/.coverage.*
-          retention-days: 7
+      - uses: ./.github/actions/upload-coverage
+
 
   # Tests for U2F and HID.
   core_u2f_test:
@@ -607,12 +589,7 @@ jobs:
           path: tests/trezor.log
           retention-days: 7
         if: always()
-      - run: mv core/src/.coverage core/.coverage.test_emu_u2f || true
-      - uses: actions/upload-artifact@v4
-        with:
-          name: core-coverage-${{ matrix.model }}-${{ github.job }}-${{ strategy.job-index }}
-          path: core/.coverage.*
-          retention-days: 7
+      - uses: ./.github/actions/upload-coverage
 
   # FIDO2 device tests.
   core_fido2_test:
@@ -647,12 +624,7 @@ jobs:
             tests/trezor.log
           retention-days: 7
         if: always()
-      - run: mv core/src/.coverage core/.coverage.test_emu_fido2 || true
-      - uses: actions/upload-artifact@v4
-        with:
-          name: core-coverage-${{ matrix.model }}-${{ github.job }}-${{ strategy.job-index }}
-          path: core/.coverage.*
-          retention-days: 7
+      - uses: ./.github/actions/upload-coverage
 
   core_coverage_report:
     name: Coverage report
@@ -690,6 +662,7 @@ jobs:
           name: core-coverage-report-${{ matrix.model }}
           path: core/htmlcov
           retention-days: 7
+          include-hidden-files: true
 
   core_ui_main:
     name: UI diff from main branch
