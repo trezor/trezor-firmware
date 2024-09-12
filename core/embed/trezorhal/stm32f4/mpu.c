@@ -129,10 +129,9 @@ static void mpu_init_fixed_regions(void) {
   // All SRAM (Unprivileged, Read-Write, Non-Executable)
   // Subregion:  192KB = 256KB except 2/8 at end
   SET_REGION( 3, SRAM_BASE,             SIZE_256KB, 0xC0, SRAM,       FULL_ACCESS );
-  // Kernel RAM (Privileged, Read-Write, Non-Executable)
-  // TODO: !@#
-  // SET_REGION( 4, ...,                   SIZE_xxx,   0xXX, ATTR_SRAM,   PRIV_RW );
-  DIS_REGION( 4 );
+  // Kernel CCMRAM (Privileged, Read-Write, Non-Executable)
+  // SubRegion: 8KB at the beginning + 16KB at the end of 64KB CCMRAM
+  SET_REGION( 4, CCMDATARAM_BASE,       SIZE_64KB,  0x3E, SRAM,       PRIV_RW );
   // clang-format on
 #endif
 #ifdef FIRMWARE
