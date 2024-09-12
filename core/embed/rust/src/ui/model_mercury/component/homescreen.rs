@@ -8,7 +8,7 @@ use crate::{
         component::{Component, Event, EventCtx, TimerToken},
         display::{image::ImageInfo, Color, Font},
         event::{TouchEvent, USBEvent},
-        geometry::{Alignment, Alignment2D, Offset, Point, Rect},
+        geometry::{Alignment, Alignment2D, Offset, Point, Insets, Rect},
         layout::util::get_user_custom_image,
         model_mercury::constant,
         shape::{self, Renderer},
@@ -381,6 +381,7 @@ pub struct Homescreen {
     label_height: i16,
     notification_btn: Option<Button>,
     notification_usb_not_connected: Button,
+    menu_btn: Button,
     image: Option<BinaryData<'static>>,
     bg_image: ImageBuffer<Rgb565Canvas<'static>>,
     hold_to_lock: bool,
@@ -393,6 +394,7 @@ pub struct Homescreen {
 pub enum HomescreenMsg {
     Dismissed,
     NotificationClicked,
+    MenuClicked,
 }
 
 impl Homescreen {
@@ -422,17 +424,23 @@ impl Homescreen {
                 .with_radius(NOTIFICATION_BG_RADIUS)
                 .initially_enabled(notification_clickable)
         });
+        let notification_usb_not_connected = Button::with_text(
+                TR::homescreen__title_no_usb_connection.into(),
+            )
+            .styled(theme::button_notification(0))
+            .initially_enabled(false);
+        let menu_btn = Button::with_icon(theme::ICON_MENU)
+            .with_expanded_touch_area(Insets::uniform(10))
+            .initially_enabled(true)
+            .styled(theme::button_default());
 
         Self {
             label: Label::new(label, Alignment::Center, theme::TEXT_DEMIBOLD).vertically_centered(),
             label_width,
             label_height,
             notification_btn,
-            notification_usb_not_connected: Button::with_text(
-                TR::homescreen__title_no_usb_connection.into(),
-            )
-            .styled(theme::button_notification(0))
-            .initially_enabled(false),
+            notification_usb_not_connected,
+            menu_btn,
             image,
             bg_image: buf,
             hold_to_lock,
@@ -507,6 +515,8 @@ impl Component for Homescreen {
         self.loader.place(AREA.translate(LOADER_OFFSET));
         self.label
             .place(bounds.split_top(32).0.with_width(self.label_width + 12));
+        // FIXME: proper placement
+        self.menu_btn.place(bounds.split_top(42).0.split_right(32).1);
         if let Some(notification_btn) = &mut self.notification_btn {
             place_homescreen_button(notification_btn, AREA, NOTIFICATION_TOP);
         }
@@ -523,6 +533,10 @@ impl Component for Homescreen {
         let resume_label = unsafe { HOMESCREEN_STATE.label };
 
         self.label_anim.process_event(ctx, event, resume_label);
+
+        if let Some(ButtonMsg::Clicked) = self.menu_btn.event(ctx, event) {
+            return Some(HomescreenMsg::MenuClicked);
+        }
 
         if let Some(notification_btn) = &mut self.notification_btn {
             if let Some(ButtonMsg::Clicked) = notification_btn.event(ctx, event) {
@@ -573,6 +587,9 @@ impl Component for Homescreen {
                     .render(target);
 
                 self.label.render(target);
+            });
+            target.with_origin(y_offset.neg(), &|target| {
+                self.menu_btn.render(target);
             });
 
             if !usb_configured() {
