@@ -13,8 +13,7 @@ use crate::ui::{
 #[cfg(feature = "new_rendering")]
 use crate::ui::shape;
 
-
-use crate::{ui::util::from_c_str};
+use crate::ui::util::from_c_str;
 
 #[no_mangle]
 extern "C" fn display_rsod_rust(
@@ -32,7 +31,9 @@ extern "C" fn display_rsod_rust(
     // because after the error message is displayed, the application will
     // shut down.
     #[cfg(feature = "new_rendering")]
-    unsafe { shape::unlock_bumps_on_failure() };
+    unsafe {
+        shape::unlock_bumps_on_failure()
+    };
 
     ModelUI::screen_fatal_error(title, msg, footer);
     ModelUI::backlight_on();

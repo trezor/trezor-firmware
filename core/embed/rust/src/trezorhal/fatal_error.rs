@@ -11,7 +11,11 @@ pub fn error_shutdown(msg: &str) -> ! {
 
     // Copy the message to the buffer
     let msg_bytes = msg.as_bytes();
-    let len = if msg_bytes.len() < MAX_LEN { msg_bytes.len() } else { MAX_LEN };
+    let len = if msg_bytes.len() < MAX_LEN {
+        msg_bytes.len()
+    } else {
+        MAX_LEN
+    };
     buffer[..len].copy_from_slice(&msg_bytes[..len]);
 
     unsafe {
