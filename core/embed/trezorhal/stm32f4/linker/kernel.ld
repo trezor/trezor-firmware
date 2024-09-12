@@ -4,14 +4,15 @@ ENTRY(reset_handler)
 
 MEMORY {
   FLASH  (rx)     : ORIGIN = KERNEL_START, LENGTH = KERNEL_IMAGE_MAXSIZE
+  CCMRAM_STACK (wal) : ORIGIN = MCU_CCMRAM, LENGTH = KERNEL_STACK_SIZE
   CCMRAM_FB (wal) : ORIGIN = MCU_CCMRAM + MCU_CCMRAM_SIZE - KERNEL_CCMRAM_SIZE - KERNEL_FRAMEBUFFER_SIZE, LENGTH = KERNEL_FRAMEBUFFER_SIZE
   CCMRAM (wal)    : ORIGIN = MCU_CCMRAM + MCU_CCMRAM_SIZE - KERNEL_CCMRAM_SIZE, LENGTH = KERNEL_CCMRAM_SIZE - BOOTARGS_SIZE
   BOOT_ARGS (wal) : ORIGIN = MCU_CCMRAM + MCU_CCMRAM_SIZE - BOOTARGS_SIZE, LENGTH = BOOTARGS_SIZE
   SRAM   (wal)    : ORIGIN = MCU_SRAM + MCU_SRAM_SIZE - KERNEL_SRAM_SIZE, LENGTH = KERNEL_SRAM_SIZE
 }
 
-main_stack_base = ORIGIN(CCMRAM) + SIZEOF(.stack); /* 8-byte aligned full descending stack */
-_sstack = ORIGIN(SRAM);
+main_stack_base = ORIGIN(CCMRAM_STACK) + SIZEOF(.stack); /* 8-byte aligned full descending stack */
+_sstack = ORIGIN(CCMRAM_STACK);
 _estack = main_stack_base;
 
 /* used by the startup code to populate variables used by the C code */
@@ -62,8 +63,8 @@ SECTIONS {
   } >FLASH AT>FLASH
 
   .stack : ALIGN(8) {
-    . = 6K; /* Exactly 6k allocated for stack. Overflow causes MemManage fault (when using MPU). */
-  } >CCMRAM
+    . = 8K; /* Exactly 6k allocated for stack. Overflow causes MemManage fault (when using MPU). */
+  } >CCMRAM_STACK
 
   .data : ALIGN(4) {
     *(.data*);
