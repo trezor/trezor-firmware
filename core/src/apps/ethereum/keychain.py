@@ -49,10 +49,15 @@ if TYPE_CHECKING:
 # We believe Ethereum should use 44'/60'/a' for everything, because it is
 # account-based, rather than UTXO-based. Unfortunately, lot of Ethereum
 # tools (MEW, Metamask) do not use such scheme and set a = 0 and then
-# iterate the address index i. For compatibility, we allow this scheme as well.
+# iterate the address index i.
 # Also to support "Ledger Live" legacy paths we allow 44'/60'/0'/a paths.
 
+# https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki
+# The BIP44 pattern, overloaded to be used for ETH accounts, as described above
+PATTERN_BIP44_ETH = "m/44'/coin_type'/0'/0/account"
+
 PATTERNS_ADDRESS = (
+    PATTERN_BIP44_ETH,
     paths.PATTERN_BIP44,
     paths.PATTERN_SEP5,
     paths.PATTERN_SEP5_LEDGER_LIVE_LEGACY,
