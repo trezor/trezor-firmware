@@ -1,7 +1,6 @@
 use crate::{
     error::{self, Error},
     maybe_trace::MaybeTrace,
-    micropython::{map::Map, obj::Obj, qstr::Qstr, util},
     strutil::TString,
     translations::TR,
     ui::{
@@ -15,7 +14,6 @@ use crate::{
             FlowController, FlowMsg, SwipeFlow, SwipePage,
         },
         geometry::Direction,
-        layout::obj::LayoutObj,
     },
 };
 
@@ -139,33 +137,18 @@ impl ConfirmActionStrings {
     }
 }
 
-#[allow(clippy::not_unsafe_ptr_arg_deref)]
-pub extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
-    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, new_confirm_action_obj) }
-}
-
-fn new_confirm_action_obj(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Error> {
-    let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
-    let action: Option<TString> = kwargs.get(Qstr::MP_QSTR_action)?.try_into_option()?;
-    let description: Option<TString> = kwargs.get(Qstr::MP_QSTR_description)?.try_into_option()?;
-    let subtitle: Option<TString> = kwargs
-        .get(Qstr::MP_QSTR_subtitle)
-        .unwrap_or(Obj::const_none())
-        .try_into_option()?;
-    // let verb: Option<TString> = kwargs
-    //     .get(Qstr::MP_QSTR_verb)
-    //     .unwrap_or_else(|_| Obj::const_none())
-    //     .try_into_option()?;
-    let verb_cancel: Option<TString> = kwargs
-        .get(Qstr::MP_QSTR_verb_cancel)
-        .unwrap_or_else(|_| Obj::const_none())
-        .try_into_option()?;
-    let reverse: bool = kwargs.get_or(Qstr::MP_QSTR_reverse, false)?;
-    let hold: bool = kwargs.get_or(Qstr::MP_QSTR_hold, false)?;
-    // let hold_danger: bool = kwargs.get_or(Qstr::MP_QSTR_hold_danger, false)?;
-    let prompt_screen: bool = kwargs.get_or(Qstr::MP_QSTR_prompt_screen, false)?;
-    let prompt_title: TString = kwargs.get_or(Qstr::MP_QSTR_prompt_title, title)?;
-
+#[allow(clippy::too_many_arguments)]
+pub fn new_confirm_action(
+    title: TString<'static>,
+    action: Option<TString<'static>>,
+    description: Option<TString<'static>>,
+    subtitle: Option<TString<'static>>,
+    verb_cancel: Option<TString<'static>>,
+    reverse: bool,
+    hold: bool,
+    prompt_screen: bool,
+    prompt_title: TString<'static>,
+) -> Result<SwipeFlow, error::Error> {
     let paragraphs = {
         let action = action.unwrap_or("".into());
         let description = description.unwrap_or("".into());
@@ -197,7 +180,7 @@ fn new_confirm_action_uni<T: Component + MaybeTrace + 'static>(
     menu: ConfirmActionMenu,
     strings: ConfirmActionStrings,
     hold: bool,
-) -> Result<Obj, error::Error> {
+) -> Result<SwipeFlow, error::Error> {
     let (prompt_screen, prompt_pages, flow, page) =
         create_flow(strings.title, strings.prompt_screen, hold);
 
@@ -225,7 +208,7 @@ fn new_confirm_action_uni<T: Component + MaybeTrace + 'static>(
 
     let flow = create_confirm(flow, strings.subtitle, hold, prompt_screen)?;
 
-    Ok(LayoutObj::new_root(flow)?.into())
+    Ok(flow)
 }
 
 fn create_flow(
@@ -335,7 +318,7 @@ pub fn new_confirm_action_simple<T: Component + Paginate + MaybeTrace + 'static>
     strings: ConfirmActionStrings,
     hold: bool,
     page_limit: Option<usize>,
-) -> Result<Obj, error::Error> {
+) -> Result<SwipeFlow, error::Error> {
     new_confirm_action_uni(
         SwipeContent::new(SwipePage::vertical(content).with_limit(page_limit)),
         menu,

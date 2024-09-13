@@ -1,4 +1,5 @@
 use core::{cmp::Ordering, convert::TryInto};
+use heapless::Vec;
 
 use super::{
     component::{
@@ -15,7 +16,7 @@ use crate::{
     io::BinaryData,
     micropython::{
         iter::IterBuf,
-        macros::{obj_fn_1, obj_fn_kw, obj_module},
+        macros::{obj_fn_0, obj_fn_1, obj_fn_kw, obj_module},
         map::Map,
         module::Module,
         obj::Obj,
@@ -247,6 +248,8 @@ extern "C" fn new_confirm_emphasized(n_args: usize, args: *const Obj, kwargs: *m
             false,
             None,
         )
+        .and_then(LayoutObj::new_root)
+        .map(Into::into)
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
@@ -316,12 +319,46 @@ extern "C" fn new_confirm_blob(n_args: usize, args: *const Obj, kwargs: *mut Map
         .with_chunkify(chunkify)
         .with_page_limit(page_limit)
         .into_flow()
-        .and_then(LayoutObj::new)
+        .and_then(LayoutObj::new_root)
         .map(Into::into)
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
+extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let action: Option<TString> = kwargs.get(Qstr::MP_QSTR_action)?.try_into_option()?;
+        let description: Option<TString> =
+            kwargs.get(Qstr::MP_QSTR_description)?.try_into_option()?;
+        let subtitle: Option<TString> = kwargs
+            .get(Qstr::MP_QSTR_subtitle)
+            .unwrap_or(Obj::const_none())
+            .try_into_option()?;
+        let verb_cancel: Option<TString> = kwargs
+            .get(Qstr::MP_QSTR_verb_cancel)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
+        let reverse: bool = kwargs.get_or(Qstr::MP_QSTR_reverse, false)?;
+        let hold: bool = kwargs.get_or(Qstr::MP_QSTR_hold, false)?;
+        let prompt_screen: bool = kwargs.get_or(Qstr::MP_QSTR_prompt_screen, false)?;
+        let prompt_title: TString = kwargs.get_or(Qstr::MP_QSTR_prompt_title, title.clone())?;
+
+        let flow = flow::confirm_action::new_confirm_action(
+            title,
+            action,
+            description,
+            subtitle,
+            verb_cancel,
+            reverse,
+            hold,
+            prompt_screen,
+            prompt_title,
+        )?;
+        Ok(LayoutObj::new_root(flow)?.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
 extern "C" fn new_confirm_address(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
@@ -348,13 +385,31 @@ extern "C" fn new_confirm_address(n_args: usize, args: *const Obj, kwargs: *mut 
         }
         .into_paragraphs();
 
-        new_confirm_action_simple(
+        flow::new_confirm_action_simple(
             paragraphs,
             ConfirmActionMenu::new(None, false, None),
             ConfirmActionStrings::new(title, None, None, None),
             false,
             None,
         )
+        .and_then(LayoutObj::new_root)
+        .map(Into::into)
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_confirm_firmware_update(
+    n_args: usize,
+    args: *const Obj,
+    kwargs: *mut Map,
+) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let description: TString = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
+        let fingerprint: TString = kwargs.get(Qstr::MP_QSTR_fingerprint)?.try_into()?;
+
+        let flow =
+            flow::confirm_firmware_update::new_confirm_firmware_update(description, fingerprint)?;
+        Ok(LayoutObj::new_root(flow)?.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
@@ -379,6 +434,8 @@ extern "C" fn new_confirm_properties(n_args: usize, args: *const Obj, kwargs: *m
             hold,
             None,
         )
+        .and_then(LayoutObj::new_root)
+        .map(Into::into)
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
@@ -411,6 +468,8 @@ extern "C" fn new_confirm_homescreen(n_args: usize, args: *const Obj, kwargs: *m
                 false,
                 None,
             )
+            .and_then(LayoutObj::new_root)
+            .map(Into::into)
         } else {
             if !check_homescreen_format(jpeg) {
                 return Err(value_error!(c"Invalid image."));
@@ -430,6 +489,123 @@ extern "C" fn new_confirm_homescreen(n_args: usize, args: *const Obj, kwargs: *m
         obj
     };
 
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_confirm_reset(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let recovery: bool = kwargs.get(Qstr::MP_QSTR_recovery)?.try_into()?;
+
+        let flow = flow::confirm_reset::new_confirm_reset(recovery)?;
+        Ok(LayoutObj::new_root(flow)?.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_confirm_set_new_pin(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let description: TString = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
+
+        let flow = flow::confirm_set_new_pin::new_set_new_pin(title, description)?;
+        Ok(LayoutObj::new_root(flow)?.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_confirm_output(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let title: Option<TString> = kwargs.get(Qstr::MP_QSTR_title)?.try_into_option()?;
+        let subtitle: Option<TString> = kwargs.get(Qstr::MP_QSTR_subtitle)?.try_into_option()?;
+
+        let account: Option<TString> = kwargs.get(Qstr::MP_QSTR_account)?.try_into_option()?;
+        let account_path: Option<TString> =
+            kwargs.get(Qstr::MP_QSTR_account_path)?.try_into_option()?;
+
+        let br_name: TString = kwargs.get(Qstr::MP_QSTR_br_name)?.try_into()?;
+        let br_code: u16 = kwargs.get(Qstr::MP_QSTR_br_code)?.try_into()?;
+
+        let message: Obj = kwargs.get(Qstr::MP_QSTR_message)?;
+        let amount: Option<Obj> = kwargs.get(Qstr::MP_QSTR_amount)?.try_into_option()?;
+
+        let chunkify: bool = kwargs.get_or(Qstr::MP_QSTR_chunkify, false)?;
+        let text_mono: bool = kwargs.get_or(Qstr::MP_QSTR_text_mono, true)?;
+
+        let address: Option<Obj> = kwargs.get(Qstr::MP_QSTR_address)?.try_into_option()?;
+        let address_title: Option<TString> =
+            kwargs.get(Qstr::MP_QSTR_address_title)?.try_into_option()?;
+
+        let summary_items: Obj = kwargs.get(Qstr::MP_QSTR_summary_items)?;
+        let fee_items: Obj = kwargs.get(Qstr::MP_QSTR_fee_items)?;
+
+        let summary_title: Option<TString> =
+            kwargs.get(Qstr::MP_QSTR_summary_title)?.try_into_option()?;
+        let summary_br_name: Option<TString> = kwargs
+            .get(Qstr::MP_QSTR_summary_br_name)?
+            .try_into_option()?;
+        let summary_br_code: Option<u16> = kwargs
+            .get(Qstr::MP_QSTR_summary_br_code)?
+            .try_into_option()?;
+
+        let cancel_text: Option<TString> =
+            kwargs.get(Qstr::MP_QSTR_cancel_text)?.try_into_option()?;
+
+        let flow = flow::confirm_output::new_confirm_output(
+            title,
+            subtitle,
+            account,
+            account_path,
+            br_name,
+            br_code,
+            message,
+            amount,
+            chunkify,
+            text_mono,
+            address,
+            address_title,
+            summary_items,
+            fee_items,
+            summary_title,
+            summary_br_name,
+            summary_br_code,
+            cancel_text,
+        )?;
+        Ok(LayoutObj::new_root(flow)?.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_confirm_summary(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let items: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
+        let account_items: Obj = kwargs.get(Qstr::MP_QSTR_account_items)?;
+        let fee_items: Obj = kwargs.get(Qstr::MP_QSTR_fee_items)?;
+        let br_name: TString = kwargs.get(Qstr::MP_QSTR_br_name)?.try_into()?;
+        let br_code: u16 = kwargs.get(Qstr::MP_QSTR_br_code)?.try_into()?;
+        let cancel_text: Option<TString> =
+            kwargs.get(Qstr::MP_QSTR_cancel_text)?.try_into_option()?;
+
+        let flow = flow::confirm_summary::new_confirm_summary(
+            title,
+            items,
+            account_items,
+            fee_items,
+            br_name,
+            br_code,
+            cancel_text,
+        )?;
+        Ok(LayoutObj::new_root(flow)?.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_set_brightness(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let current: u8 = kwargs.get(Qstr::MP_QSTR_current)?.try_into()?;
+        let flow = flow::set_brightness::new_set_brightness(current)?;
+        Ok(LayoutObj::new_root(flow)?.into())
+    };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
@@ -475,7 +651,7 @@ extern "C" fn new_confirm_value(n_args: usize, args: *const Obj, kwargs: *mut Ma
         let value: Obj = kwargs.get(Qstr::MP_QSTR_value)?;
         let info_button: bool = kwargs.get_or(Qstr::MP_QSTR_info_button, false)?;
 
-        let _verb: Option<TString> = kwargs
+        let verb: Option<TString> = kwargs
             .get(Qstr::MP_QSTR_verb)
             .unwrap_or_else(|_| Obj::const_none())
             .try_into_option()?;
@@ -497,7 +673,7 @@ extern "C" fn new_confirm_value(n_args: usize, args: *const Obj, kwargs: *mut Ma
             .with_prompt(hold)
             .with_hold(hold)
             .into_flow()
-            .and_then(LayoutObj::new)
+            .and_then(LayoutObj::new_root)
             .map(Into::into)
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -523,6 +699,8 @@ extern "C" fn new_confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Ma
             true,
             None,
         )
+        .and_then(LayoutObj::new_root)
+        .map(Into::into)
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
@@ -623,8 +801,39 @@ extern "C" fn new_show_error(n_args: usize, args: *const Obj, kwargs: *mut Map) 
         };
 
         let frame = SwipeUpScreen::new(frame);
-        let obj = LayoutObj::new(frame)?;
-        Ok(obj.into())
+        Ok(LayoutObj::new(frame)?.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_show_share_words(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let subtitle: TString = kwargs.get(Qstr::MP_QSTR_subtitle)?.try_into()?;
+        let share_words_obj: Obj = kwargs.get(Qstr::MP_QSTR_words)?;
+        let share_words_vec: Vec<TString, 33> = util::iter_into_vec(share_words_obj)?;
+        let description: Option<TString> = kwargs
+            .get(Qstr::MP_QSTR_description)?
+            .try_into_option()?
+            .and_then(|desc: TString| if desc.is_empty() { None } else { Some(desc) });
+        let text_info: Obj = kwargs.get(Qstr::MP_QSTR_text_info)?;
+        let text_confirm: TString = kwargs.get(Qstr::MP_QSTR_text_confirm)?.try_into()?;
+
+        let mut instructions_paragraphs = ParagraphVecShort::new();
+        for item in IterBuf::new().try_iterate(text_info)? {
+            let text: TString = item.try_into()?;
+            instructions_paragraphs.add(Paragraph::new(&theme::TEXT_MAIN_GREY_LIGHT, text));
+        }
+
+        let flow = flow::show_share_words::new_show_share_words(
+            title,
+            subtitle,
+            share_words_vec,
+            description,
+            instructions_paragraphs,
+            text_confirm,
+        )?;
+        Ok(LayoutObj::new_root(flow)?.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
@@ -653,8 +862,7 @@ extern "C" fn new_show_warning(n_args: usize, args: *const Obj, kwargs: *mut Map
             frame.with_warning_low_icon()
         };
 
-        let obj = LayoutObj::new(SwipeUpScreen::new(frame_with_icon))?;
-        Ok(obj.into())
+        Ok(LayoutObj::new(SwipeUpScreen::new(frame_with_icon))?.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
@@ -812,6 +1020,130 @@ extern "C" fn new_confirm_coinjoin(n_args: usize, args: *const Obj, kwargs: *mut
             true,
             None,
         )
+        .and_then(LayoutObj::new_root)
+        .map(Into::into)
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_continue_recovery(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let first_screen: bool = kwargs.get(Qstr::MP_QSTR_first_screen)?.try_into()?;
+        let recovery_type: RecoveryType = kwargs.get(Qstr::MP_QSTR_recovery_type)?.try_into()?;
+        let text: TString = kwargs.get(Qstr::MP_QSTR_text)?.try_into()?; // #shares entered
+        let subtext: Option<TString> = kwargs.get(Qstr::MP_QSTR_subtext)?.try_into_option()?; // #shares remaining
+        let pages: Option<Obj> = kwargs.get(Qstr::MP_QSTR_pages)?.try_into_option()?; // info about remaining shares
+
+        let pages_vec = if let Some(pages_obj) = pages {
+            let mut vec = ParagraphVecLong::new();
+            for page in IterBuf::new().try_iterate(pages_obj)? {
+                let [title, description]: [TString; 2] = util::iter_into_array(page)?;
+                vec.add(Paragraph::new(&theme::TEXT_SUB_GREY, title))
+                    .add(Paragraph::new(&theme::TEXT_MONO_GREY_LIGHT, description).break_after());
+            }
+            Some(vec)
+        } else {
+            None
+        };
+
+        let flow = flow::continue_recovery::new_continue_recovery(
+            first_screen,
+            recovery_type,
+            text,
+            subtext,
+            pages_vec,
+        )?;
+        Ok(LayoutObj::new_root(flow)?.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_get_address(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let description: Option<TString> =
+            kwargs.get(Qstr::MP_QSTR_description)?.try_into_option()?;
+        let extra: Option<TString> = kwargs.get(Qstr::MP_QSTR_extra)?.try_into_option()?;
+        let address: Obj = kwargs.get(Qstr::MP_QSTR_address)?;
+        let chunkify: bool = kwargs.get_or(Qstr::MP_QSTR_chunkify, false)?;
+        let address_qr: TString = kwargs.get(Qstr::MP_QSTR_address_qr)?.try_into()?;
+        let case_sensitive: bool = kwargs.get(Qstr::MP_QSTR_case_sensitive)?.try_into()?;
+        let account: Option<TString> = kwargs.get(Qstr::MP_QSTR_account)?.try_into_option()?;
+        let path: Option<TString> = kwargs.get(Qstr::MP_QSTR_path)?.try_into_option()?;
+        let xpubs: Obj = kwargs.get(Qstr::MP_QSTR_xpubs)?;
+        let br_name: TString = kwargs.get(Qstr::MP_QSTR_br_name)?.try_into()?;
+        let br_code: u16 = kwargs.get(Qstr::MP_QSTR_br_code)?.try_into()?;
+
+        let flow = flow::get_address::new_get_address(
+            title,
+            description,
+            extra,
+            address,
+            chunkify,
+            address_qr,
+            case_sensitive,
+            account,
+            path,
+            xpubs,
+            br_code,
+            br_name,
+        )?;
+        Ok(LayoutObj::new_root(flow)?.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_prompt_backup() -> Obj {
+    let block = || {
+        let flow = flow::prompt_backup::new_prompt_backup()?;
+        let obj = LayoutObj::new_root(flow)?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+extern "C" fn new_request_number(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let count: u32 = kwargs.get(Qstr::MP_QSTR_count)?.try_into()?;
+        let min_count: u32 = kwargs.get(Qstr::MP_QSTR_min_count)?.try_into()?;
+        let max_count: u32 = kwargs.get(Qstr::MP_QSTR_max_count)?.try_into()?;
+        let description: TString = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
+        let info_cb: Obj = kwargs.get(Qstr::MP_QSTR_info)?;
+        assert!(info_cb != Obj::const_none());
+        let br_code: u16 = kwargs.get(Qstr::MP_QSTR_br_code)?.try_into()?;
+        let br_name: TString = kwargs.get(Qstr::MP_QSTR_br_name)?.try_into()?;
+
+        let mp_info_closure = move |num: u32| {
+            // TODO: Handle error
+            let text = info_cb
+                .call_with_n_args(&[num.try_into().unwrap()])
+                .unwrap();
+            TString::try_from(text).unwrap()
+        };
+
+        let flow = flow::request_number::new_request_number(
+            title,
+            count,
+            min_count,
+            max_count,
+            description,
+            mp_info_closure,
+            br_code,
+            br_name,
+        )?;
+        Ok(LayoutObj::new_root(flow)?.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_request_passphrase(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let _prompt: TString = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
+        let _max_len: usize = kwargs.get(Qstr::MP_QSTR_max_len)?.try_into()?;
+
+        let flow = flow::request_passphrase::new_request_passphrase()?;
+        Ok(LayoutObj::new_root(flow)?.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
@@ -827,8 +1159,7 @@ extern "C" fn new_request_pin(n_args: usize, args: *const Obj, kwargs: *mut Map)
         } else {
             None
         };
-        let obj = LayoutObj::new(PinKeyboard::new(prompt, subprompt, warning, allow_cancel))?;
-        Ok(obj.into())
+        Ok(LayoutObj::new(PinKeyboard::new(prompt, subprompt, warning, allow_cancel))?.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
@@ -872,8 +1203,7 @@ extern "C" fn new_select_word(n_args: usize, args: *const Obj, kwargs: *mut Map)
 
         let content = VerticalMenu::select_word(words);
         let frame_with_menu = Frame::left_aligned(title, content).with_subtitle(description);
-        let obj = LayoutObj::new(frame_with_menu)?;
-        Ok(obj.into())
+        Ok(LayoutObj::new(frame_with_menu)?.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
@@ -917,6 +1247,15 @@ extern "C" fn new_show_checklist(n_args: usize, args: *const Obj, kwargs: *mut M
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_show_tutorial() -> Obj {
+    let block = || {
+        let flow = flow::show_tutorial::new_show_tutorial()?;
+        let obj = LayoutObj::new_root(flow)?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_or_raise(block) }
 }
 
 extern "C" fn new_select_word_count(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
@@ -980,8 +1319,7 @@ extern "C" fn new_show_progress(n_args: usize, args: *const Obj, kwargs: *mut Ma
             (description, "".into())
         };
 
-        let obj = LayoutObj::new(Progress::new(title, indeterminate, description))?;
-        Ok(obj.into())
+        Ok(LayoutObj::new(Progress::new(title, indeterminate, description))?.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
@@ -1063,8 +1401,7 @@ pub extern "C" fn upy_check_homescreen_format(data: Obj) -> Obj {
 extern "C" fn new_show_wait_text(message: Obj) -> Obj {
     let block = || {
         let message: TString<'static> = message.try_into()?;
-        let obj = LayoutObj::new(Connect::new(message, theme::FG, theme::BG))?;
-        Ok(obj.into())
+        Ok(LayoutObj::new(Connect::new(message, theme::FG, theme::BG))?.into())
     };
 
     unsafe { util::try_or_raise(block) }
@@ -1075,6 +1412,22 @@ extern "C" fn new_confirm_fido(n_args: usize, args: *const Obj, kwargs: *mut Map
     return flow::confirm_fido::new_confirm_fido(n_args, args, kwargs);
     #[cfg(not(feature = "universal_fw"))]
     panic!();
+}
+
+extern "C" fn new_warning_hi_prio(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let description: TString = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
+        let value: TString = kwargs.get_or(Qstr::MP_QSTR_value, "".into())?;
+        let verb_cancel: Option<TString> = kwargs
+            .get(Qstr::MP_QSTR_verb_cancel)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
+
+        let flow = flow::warning_hi_prio::new_warning_hi_prio(title, description, value, verb_cancel)?;
+        Ok(LayoutObj::new_root(flow)?.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
 #[no_mangle]
@@ -1114,7 +1467,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     prompt_title: str | None = None,
     /// ) -> LayoutObj[UiResult]:
     ///     """Confirm action."""
-    Qstr::MP_QSTR_confirm_action => obj_fn_kw!(0, flow::confirm_action::new_confirm_action).as_obj(),
+    Qstr::MP_QSTR_confirm_action => obj_fn_kw!(0, new_confirm_action).as_obj(),
 
     /// def confirm_emphasized(
     ///     *,
@@ -1179,7 +1532,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
 
     /// def flow_confirm_reset(recovery: bool) -> LayoutObj[UiResult]:
     ///     """Confirm TOS before creating wallet creation or wallet recovery."""
-    Qstr::MP_QSTR_flow_confirm_reset => obj_fn_kw!(0, flow::confirm_reset::new_confirm_reset).as_obj(),
+    Qstr::MP_QSTR_flow_confirm_reset => obj_fn_kw!(0, new_confirm_reset).as_obj(),
 
     // TODO: supply more arguments for Wipe code setting when figma done
     /// def flow_confirm_set_new_pin(
@@ -1188,7 +1541,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     description: str,
     /// ) -> LayoutObj[UiResult]:
     ///     """Confirm new PIN setup with an option to cancel action."""
-    Qstr::MP_QSTR_flow_confirm_set_new_pin => obj_fn_kw!(0, flow::confirm_set_new_pin::new_set_new_pin).as_obj(),
+    Qstr::MP_QSTR_flow_confirm_set_new_pin => obj_fn_kw!(0, new_confirm_set_new_pin).as_obj(),
 
     /// def show_info_with_cancel(
     ///     *,
@@ -1363,7 +1716,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     max_len: int,
     /// ) -> LayoutObj[str | UiResult]:
     ///     """Passphrase input keyboard."""
-    Qstr::MP_QSTR_flow_request_passphrase => obj_fn_kw!(0, flow::request_passphrase::new_request_passphrase).as_obj(),
+    Qstr::MP_QSTR_flow_request_passphrase => obj_fn_kw!(0, new_request_passphrase).as_obj(),
 
     /// def request_bip39(
     ///     *,
@@ -1395,7 +1748,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
 
     /// def flow_prompt_backup() -> LayoutObj[UiResult]:
     ///     """Prompt a user to create backup with an option to skip."""
-    Qstr::MP_QSTR_flow_prompt_backup => obj_fn_kw!(0, flow::prompt_backup::new_prompt_backup).as_obj(),
+    Qstr::MP_QSTR_flow_prompt_backup => obj_fn_0!(new_prompt_backup).as_obj(),
 
     /// def flow_show_share_words(
     ///     *,
@@ -1408,7 +1761,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// ) -> LayoutObj[UiResult]:
     ///     """Show wallet backup words preceded by an instruction screen and followed by
     ///     confirmation."""
-    Qstr::MP_QSTR_flow_show_share_words => obj_fn_kw!(0, flow::show_share_words::new_show_share_words).as_obj(),
+    Qstr::MP_QSTR_flow_show_share_words => obj_fn_kw!(0, new_show_share_words).as_obj(),
 
     /// def flow_request_number(
     ///     *,
@@ -1421,16 +1774,16 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     br_code: ButtonRequestType,
     ///     br_name: str,
     /// ) -> LayoutObj[tuple[UiResult, int]]:
-    ///     """Numer input with + and - buttons, description, and context menu with cancel and
+    ///     """Number input with + and - buttons, description, and context menu with cancel and
     ///     info."""
-    Qstr::MP_QSTR_flow_request_number => obj_fn_kw!(0, flow::request_number::new_request_number).as_obj(),
+    Qstr::MP_QSTR_flow_request_number => obj_fn_kw!(0, new_request_number).as_obj(),
 
     /// def set_brightness(
     ///     *,
     ///     current: int | None = None
     /// ) -> LayoutObj[UiResult]:
     ///     """Show the brightness configuration dialog."""
-    Qstr::MP_QSTR_set_brightness => obj_fn_kw!(0, flow::set_brightness::new_set_brightness).as_obj(),
+    Qstr::MP_QSTR_set_brightness => obj_fn_kw!(0, new_set_brightness).as_obj(),
 
     /// def show_checklist(
     ///     *,
@@ -1452,7 +1805,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     pages: Iterable[tuple[str, str]] | None = None,
     /// ) -> LayoutObj[UiResult]:
     ///     """Device recovery homescreen."""
-    Qstr::MP_QSTR_flow_continue_recovery => obj_fn_kw!(0, flow::continue_recovery::new_continue_recovery).as_obj(),
+    Qstr::MP_QSTR_flow_continue_recovery => obj_fn_kw!(0, new_continue_recovery).as_obj(),
 
     /// def select_word_count(
     ///     *,
@@ -1518,11 +1871,11 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     fingerprint: str,
     /// ) -> LayoutObj[UiResult]:
     ///     """Ask whether to update firmware, optionally show fingerprint."""
-    Qstr::MP_QSTR_confirm_firmware_update => obj_fn_kw!(0, flow::confirm_firmware_update::new_confirm_firmware_update).as_obj(),
+    Qstr::MP_QSTR_confirm_firmware_update => obj_fn_kw!(0, new_confirm_firmware_update).as_obj(),
 
     /// def tutorial() -> LayoutObj[UiResult]:
     ///     """Show user how to interact with the device."""
-    Qstr::MP_QSTR_tutorial => obj_fn_kw!(0, flow::show_tutorial::new_show_tutorial).as_obj(), // FIXME turn this into obj_fn_0, T2B1 as well
+    Qstr::MP_QSTR_tutorial => obj_fn_0!(new_show_tutorial).as_obj(),
 
     /// def show_wait_text(message: str, /) -> LayoutObj[None]:
     ///     """Show single-line text in the middle of the screen."""
@@ -1545,7 +1898,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     br_name: str,
     /// ) -> LayoutObj[UiResult]:
     ///     """Get address / receive funds."""
-    Qstr::MP_QSTR_flow_get_address => obj_fn_kw!(0, flow::get_address::new_get_address).as_obj(),
+    Qstr::MP_QSTR_flow_get_address => obj_fn_kw!(0, new_get_address).as_obj(),
 
     /// def flow_warning_hi_prio(
     ///     *,
@@ -1555,7 +1908,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     verb_cancel: str | None = None,
     /// ) -> LayoutObj[UiResult]:
     ///     """Warning modal with multiple steps to confirm."""
-    Qstr::MP_QSTR_flow_warning_hi_prio => obj_fn_kw!(0, flow::warning_hi_prio::new_warning_hi_prio).as_obj(),
+    Qstr::MP_QSTR_flow_warning_hi_prio => obj_fn_kw!(0, new_warning_hi_prio).as_obj(),
 
     /// def flow_confirm_output(
     ///     *,
@@ -1579,7 +1932,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     cancel_text: str | None = None,
     /// ) -> LayoutObj[UiResult]:
     ///     """Confirm the recipient, (optionally) confirm the amount and (optionally) confirm the summary and present a Hold to Sign page."""
-    Qstr::MP_QSTR_flow_confirm_output => obj_fn_kw!(0, flow::new_confirm_output).as_obj(),
+    Qstr::MP_QSTR_flow_confirm_output => obj_fn_kw!(0, new_confirm_output).as_obj(),
 
     /// def flow_confirm_summary(
     ///     *,
@@ -1593,7 +1946,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     cancel_text: str | None = None,
     /// ) -> LayoutObj[UiResult]:
     ///     """Total summary and hold to confirm."""
-    Qstr::MP_QSTR_flow_confirm_summary => obj_fn_kw!(0, flow::new_confirm_summary).as_obj(),
+    Qstr::MP_QSTR_flow_confirm_summary => obj_fn_kw!(0, new_confirm_summary).as_obj(),
 
     /// class BacklightLevels:
     ///     """Backlight levels. Values dynamically update based on user settings."""
