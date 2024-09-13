@@ -605,7 +605,11 @@ impl TryFrom<FlowMsg> for crate::micropython::obj::Obj {
             FlowMsg::Choice(i) => {
                 Ok((crate::ui::layout::result::CONFIRMED.as_obj(), i.try_into()?).try_into()?)
             }
-            FlowMsg::Text(_s) => panic!(),
+            FlowMsg::Text(s) => Ok((
+                crate::ui::layout::result::CONFIRMED.as_obj(),
+                s.as_str().try_into()?,
+            )
+                .try_into()?),
         }
     }
 }
