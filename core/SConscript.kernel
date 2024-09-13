@@ -271,7 +271,7 @@ FILE_SUFFIX= env.get('ENV')['SUFFIX']
 
 SOURCE_FIRMWARE = [
     'embed/kernel/main.c',
-    f'embed/kernel/startup_{FILE_SUFFIX}.S',
+    f'embed/trezorhal/{FILE_SUFFIX}/startup_layer_2.S',
 ]
 
 if 'sd_card' in FEATURES_AVAILABLE:

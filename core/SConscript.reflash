@@ -112,7 +112,7 @@ FEATURES_AVAILABLE = models.configure_board(TREZOR_MODEL, HW_REVISION, FEATURES_
 FILE_SUFFIX= env.get('ENV')['SUFFIX']
 
 SOURCE_REFLASH = [
-    f'embed/reflash/startup_{FILE_SUFFIX}.s',
+    f'embed/trezorhal/{FILE_SUFFIX}/startup_layer_2.S',
     'embed/reflash/header.S',
     'embed/reflash/main.c',
 ]

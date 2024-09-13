@@ -137,7 +137,7 @@ FEATURES_AVAILABLE = models.configure_board(TREZOR_MODEL, HW_REVISION, FEATURES_
 FILE_SUFFIX= env.get('ENV')['SUFFIX']
 
 SOURCE_BOOTLOADER = [
-    f'embed/bootloader_ci/startup_{FILE_SUFFIX}.s',
+    f'embed/trezorhal/{FILE_SUFFIX}/startup_layer_1.s',
     'embed/bootloader_ci/header.S',
     'embed/bootloader_ci/bootui.c',
     'embed/bootloader_ci/main.c',

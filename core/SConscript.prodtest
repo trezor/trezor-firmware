@@ -156,7 +156,7 @@ FILE_SUFFIX= env.get('ENV')['SUFFIX']
 
 
 SOURCE_PRODTEST = [
-    f'embed/prodtest/startup_{FILE_SUFFIX}.s',
+    f'embed/trezorhal/{FILE_SUFFIX}/startup_layer_2.S',
     'embed/prodtest/header.S',
     'embed/prodtest/main.c',
     'embed/prodtest/prodtest_common.c',
