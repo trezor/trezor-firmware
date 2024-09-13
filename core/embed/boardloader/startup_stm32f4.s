@@ -20,25 +20,21 @@ reset_handler:
 
   // wipe memory to remove any possible vestiges of sensitive data
   // use unpredictable value as a defense against side-channels
-  ldr r0, =ccmram_start // r0 - point to beginning of CCMRAM
-  ldr r1, =ccmram_end   // r1 - point to byte after the end of CCMRAM
   mov r2, r4            // r2 - the word-sized value to be written
+  ldr r0, =_startup_clean_ram_0_start
+  ldr r1, =_startup_clean_ram_0_end
   bl memset_reg
-
-  ldr r0, =sram_start   // r0 - point to beginning of SRAM
-  ldr r1, =sram_end     // r1 - point to byte after the end of SRAM
-  mov r2, r4            // r2 - the word-sized value to be written
+  ldr r0, =_startup_clean_ram_1_start
+  ldr r1, =_startup_clean_ram_1_end
   bl memset_reg
 
   // setup environment for subsequent stage of code
-  ldr r0, =ccmram_start // r0 - point to beginning of CCMRAM
-  ldr r1, =ccmram_end   // r1 - point to byte after the end of CCMRAM
-  ldr r2, =0            // r2 - the word-sized value to be written
+  ldr r2, =0             // r2 - the word-sized value to be written
+  ldr r0, =_startup_clean_ram_0_start
+  ldr r1, =_startup_clean_ram_0_end
   bl memset_reg
-
-  ldr r0, =sram_start   // r0 - point to beginning of SRAM
-  ldr r1, =sram_end     // r1 - point to byte after the end of SRAM
-  ldr r2, =0            // r2 - the word-sized value to be written
+  ldr r0, =_startup_clean_ram_1_start
+  ldr r1, =_startup_clean_ram_1_end
   bl memset_reg
 
   // copy data in from flash

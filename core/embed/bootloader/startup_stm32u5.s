@@ -12,14 +12,14 @@ reset_handler:
 
   // setup environment for subsequent stage of code
   ldr r2, =0             // r2 - the word-sized value to be written
-  ldr r0, =_jump_clean_ram_0_start
-  ldr r1, =_jump_clean_ram_0_end
+  ldr r0, =_startup_clean_ram_0_start
+  ldr r1, =_startup_clean_ram_0_end
   bl memset_reg
-  ldr r0, =_jump_clean_ram_1_start
-  ldr r1, =_jump_clean_ram_1_end
+  ldr r0, =_startup_clean_ram_1_start
+  ldr r1, =_startup_clean_ram_1_end
   bl memset_reg
-  ldr r0, =_jump_clean_ram_2_start
-  ldr r1, =_jump_clean_ram_2_end
+  ldr r0, =_startup_clean_ram_2_start
+  ldr r1, =_startup_clean_ram_2_end
   bl memset_reg
 
   // copy data in from flash
