@@ -357,17 +357,7 @@ impl ObjComponent for SwipeFlow {
     fn obj_event(&mut self, ctx: &mut EventCtx, event: Event) -> Result<Obj, Error> {
         match self.event(ctx, event) {
             None => Ok(Obj::const_none()),
-            Some(FlowMsg::Confirmed) => Ok(crate::ui::layout::result::CONFIRMED.as_obj()),
-            Some(FlowMsg::Cancelled) => Ok(crate::ui::layout::result::CANCELLED.as_obj()),
-            Some(FlowMsg::Info) => Ok(crate::ui::layout::result::INFO.as_obj()),
-            Some(FlowMsg::Choice(i)) => {
-                Ok((crate::ui::layout::result::CONFIRMED.as_obj(), i.try_into()?).try_into()?)
-            }
-            Some(FlowMsg::Text(s)) => Ok((
-                crate::ui::layout::result::CONFIRMED.as_obj(),
-                s.as_str().try_into()?,
-            )
-                .try_into()?),
+            Some(msg) => msg.try_into(),
         }
     }
 
