@@ -366,7 +366,7 @@ def flow_request_number(
     br_code: ButtonRequestType,
     br_name: str,
 ) -> LayoutObj[tuple[UiResult, int]]:
-    """Numer input with + and - buttons, description, and context menu with cancel and
+    """Number input with + and - buttons, description, and context menu with cancel and
     info."""
 
 

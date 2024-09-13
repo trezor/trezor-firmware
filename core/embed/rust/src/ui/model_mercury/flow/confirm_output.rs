@@ -2,7 +2,7 @@ use heapless::Vec;
 
 use crate::{
     error,
-    micropython::{iter::IterBuf, map::Map, obj::Obj, qstr::Qstr, util},
+    micropython::{iter::IterBuf, obj::Obj, util},
     strutil::TString,
     translations::TR,
     ui::{
@@ -13,7 +13,6 @@ use crate::{
             FlowController, FlowMsg, SwipeFlow,
         },
         geometry::Direction,
-        layout::obj::LayoutObj,
     },
 };
 
@@ -212,46 +211,27 @@ fn get_cancel_page(
     })
 }
 
-#[allow(clippy::not_unsafe_ptr_arg_deref)]
-pub extern "C" fn new_confirm_output(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
-    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, new_confirm_output_obj) }
-}
-
-fn new_confirm_output_obj(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Error> {
-    let title: Option<TString> = kwargs.get(Qstr::MP_QSTR_title)?.try_into_option()?;
-    let subtitle: Option<TString> = kwargs.get(Qstr::MP_QSTR_subtitle)?.try_into_option()?;
-
-    let account: Option<TString> = kwargs.get(Qstr::MP_QSTR_account)?.try_into_option()?;
-    let account_path: Option<TString> =
-        kwargs.get(Qstr::MP_QSTR_account_path)?.try_into_option()?;
-
-    let br_name: TString = kwargs.get(Qstr::MP_QSTR_br_name)?.try_into()?;
-    let br_code: u16 = kwargs.get(Qstr::MP_QSTR_br_code)?.try_into()?;
-
-    let message: Obj = kwargs.get(Qstr::MP_QSTR_message)?;
-    let amount: Option<Obj> = kwargs.get(Qstr::MP_QSTR_amount)?.try_into_option()?;
-
-    let chunkify: bool = kwargs.get_or(Qstr::MP_QSTR_chunkify, false)?;
-    let text_mono: bool = kwargs.get_or(Qstr::MP_QSTR_text_mono, true)?;
-
-    let address: Option<Obj> = kwargs.get(Qstr::MP_QSTR_address)?.try_into_option()?;
-    let address_title: Option<TString> =
-        kwargs.get(Qstr::MP_QSTR_address_title)?.try_into_option()?;
-
-    let summary_items: Obj = kwargs.get(Qstr::MP_QSTR_summary_items)?;
-    let fee_items: Obj = kwargs.get(Qstr::MP_QSTR_fee_items)?;
-
-    let summary_title: Option<TString> =
-        kwargs.get(Qstr::MP_QSTR_summary_title)?.try_into_option()?;
-    let summary_br_name: Option<TString> = kwargs
-        .get(Qstr::MP_QSTR_summary_br_name)?
-        .try_into_option()?;
-    let summary_br_code: Option<u16> = kwargs
-        .get(Qstr::MP_QSTR_summary_br_code)?
-        .try_into_option()?;
-
-    let cancel_text: Option<TString> = kwargs.get(Qstr::MP_QSTR_cancel_text)?.try_into_option()?;
-
+#[allow(clippy::too_many_arguments)]
+pub fn new_confirm_output(
+    title: Option<TString<'static>>,
+    subtitle: Option<TString<'static>>,
+    account: Option<TString<'static>>,
+    account_path: Option<TString<'static>>,
+    br_name: TString<'static>,
+    br_code: u16,
+    message: Obj,
+    amount: Option<Obj>,
+    chunkify: bool,
+    text_mono: bool,
+    address: Option<Obj>,
+    address_title: Option<TString<'static>>,
+    summary_items: Obj,
+    fee_items: Obj,
+    summary_title: Option<TString<'static>>,
+    summary_br_name: Option<TString<'static>>,
+    summary_br_code: Option<u16>,
+    cancel_text: Option<TString<'static>>,
+) -> Result<SwipeFlow, error::Error> {
     // Main
     let main_content = ConfirmBlobParams::new(title.unwrap_or(TString::empty()), message, None)
         .with_subtitle(subtitle)
@@ -450,5 +430,5 @@ fn new_confirm_output_obj(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Err
             .with_page(&ConfirmOutput::CancelTap, get_cancel_page())?
     };
 
-    Ok(LayoutObj::new_root(res)?.into())
+    Ok(res)
 }
