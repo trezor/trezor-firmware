@@ -63,18 +63,22 @@ static void firmware_hash_callback_wrapper(void *context, uint32_t progress,
                       firmware_hash_callback);
 }
 
-void syscall_handler(uint32_t *args, uint32_t syscall) {
+__attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
+                                                       uint32_t syscall) {
   switch (syscall) {
     case SYSCALL_SYSTEM_EXIT: {
-      system_exit((int)args[0]);
+      systask_t *task = systask_active();
+      systask_exit(task, (int)args[0]);
     } break;
     case SYSCALL_SYSTEM_EXIT_ERROR: {
-      system_exit_error((const char *)args[0], (const char *)args[1],
-                        (const char *)args[2]);
+      systask_t *task = systask_active();
+      systask_exit_error(task, (const char *)args[0], (const char *)args[1],
+                         (const char *)args[2]);
     } break;
     case SYSCALL_SYSTEM_EXIT_FATAL: {
-      system_exit_fatal((const char *)args[0], (const char *)args[1],
-                        (int)args[2]);
+      systask_t *task = systask_active();
+      systask_exit_fatal(task, (const char *)args[0], (const char *)args[1],
+                         (int)args[2]);
     } break;
     case SYSCALL_SYSTICK_CYCLES: {
       uint64_t cycles = systick_cycles();

@@ -20,6 +20,7 @@
 #ifndef TREZORHAL_SYSTASK_H
 #define TREZORHAL_SYSTASK_H
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -27,7 +28,7 @@
 
 // Termination reason for the task
 typedef enum {
-  TASK_TERM_REASON_EXIT,
+  TASK_TERM_REASON_EXIT = 0,
   TASK_TERM_REASON_ERROR,
   TASK_TERM_REASON_FATAL,
   TASK_TERM_REASON_FAULT,
@@ -46,12 +47,22 @@ typedef struct {
   uint32_t mmfar;
   // Address associated with the BusFault
   uint32_t bfar;
+  // Stack pointer at the time of the fault
+  // (MSP or PSP depending on the privilege level)
+  uint32_t sp;
+#if !(defined(__ARM_ARCH_8M_MAIN__) || defined(__ARM_ARCH_8M_BASE__))
+  // Stack pointer limit (for the stack overflow detection)
+  uint32_t sp_lim;
+#endif
 
 } system_fault_t;
 
 // Task post-mortem information
 typedef struct {
+  // Reason for the task termination
   systask_term_reason_t reason;
+  // Whether the error occurred in privileged mode
+  bool privileged;
 
   union {
     // Argument passed to `systask_exit()`
@@ -91,7 +102,7 @@ typedef void (*systask_error_handler_t)(const systask_postmortem_t* pminfo);
 // Task context used by the kernel to save the state of each task
 // when switching between them
 typedef struct {
-  //  sp, sp_lim, exc_return should at the beginning
+  //  `sp`, `sp_lim`, `exc_return` and `killed` should at the beginning
   //  and in this order to be compatible with the PendSV_Handler
   // Stack pointer value
   uint32_t sp;
@@ -99,6 +110,9 @@ typedef struct {
   uint32_t sp_lim;
   // Exception return value
   uint32_t exc_return;
+  // Set to nonzero, if the task is killed
+  uint32_t killed;
+
   // MPU mode the task is running in
   mpu_mode_t mpu_mode;
   // Task post-mortem information
@@ -138,23 +152,27 @@ void systask_pop_data(systask_t* task, size_t size);
 void systask_push_call(systask_t* task, void* fn, uint32_t arg1, uint32_t arg2,
                        uint32_t arg3);
 
-// Terminates the current task with the given exit code
+// Terminates the task with the given exit code
 //
-// If the terminated task is the currently running task, the kernel task
-// will be scheduled next
+// If the task is not specified (NULL), it's automatically determined:
+//  1) If the function is called in thread mode, the active task will be
+//     terminated.
+//  2) If the function is called in handler mode, the kernel task will be
+//     terminated even if it is not the active task.
+//
+// If the terminated task is unprivileged, the kernel task will be scheduled
+// next.
 void systask_exit(systask_t* task, int exit_code);
 
-// Terminates the current task with an error message
+// Terminates the task with an error message
 //
-// If the terminated task is the currently running task, the kernel task
-// will be scheduled next
+// (see `systask_exit()` for more details)
 void systask_exit_error(systask_t* task, const char* title, const char* message,
                         const char* footer);
 
-// Terminates the current task with a fatal error message
+// Terminates the task with a fatal error message
 //
-// If the terminated task is the currently running task, the kernel task
-// will be scheduled next
+// (see `systask_exit()` for more details)
 void systask_exit_fatal(systask_t* task, const char* message, const char* file,
                         int line);
 

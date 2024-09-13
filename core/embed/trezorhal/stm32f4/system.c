@@ -36,15 +36,15 @@ void system_init(systask_error_handler_t error_handler) {
   systimer_init();
 }
 
-void system_exit(int exitcode) { systask_exit(systask_active(), exitcode); }
+void system_exit(int exitcode) { systask_exit(NULL, exitcode); }
 
 void system_exit_error(const char* title, const char* message,
                        const char* footer) {
-  systask_exit_error(systask_active(), title, message, footer);
+  systask_exit_error(NULL, title, message, footer);
 }
 
 void system_exit_fatal(const char* message, const char* file, int line) {
-  systask_exit_fatal(systask_active(), message, file, line);
+  systask_exit_fatal(NULL, message, file, line);
 }
 
 #endif  // KERNEL_MODE
@@ -57,12 +57,23 @@ const char* system_fault_message(const system_fault_t* fault) {
   switch (fault->irqn) {
     case HardFault_IRQn:
       return "(HF)";
+
     case MemoryManagement_IRQn:
+#if !(defined(__ARM_ARCH_8M_MAIN__) || defined(__ARM_ARCH_8M_BASE__))
+      if (fault->sp < fault->sp_lim) {
+        return "(SO)";
+      } else {
+        return "(MM)";
+      }
+#else
       return "(MM)";
+#endif
+
     case BusFault_IRQn:
       return "(BF)";
+
     case UsageFault_IRQn:
-#ifdef STM32U5
+#if defined(__ARM_ARCH_8M_MAIN__) || defined(__ARM_ARCH_8M_BASE__)
       if (fault->cfsr & SCB_CFSR_STKOF_Msk) {
         return "(SO)";
       } else {
@@ -71,29 +82,75 @@ const char* system_fault_message(const system_fault_t* fault) {
 #else
       return "(UF)";
 #endif
-#ifdef STM32U5
+
+#if defined(__ARM_ARCH_8M_MAIN__) || defined(__ARM_ARCH_8M_BASE__)
     case SecureFault_IRQn:
       return "(SF)";
+#endif
+
+#ifdef STM32U5
     case GTZC_IRQn:
       return "(IA)";
 #endif
+
     case NonMaskableInt_IRQn:
       return "(CS)";
   }
   return "(FAULT)";
 }
 
-// Disable all NVIC interrupts and clear pending flags
-// so later the global interrupt can be re-enabled
-__attribute__((used)) static void reset_nvic(void) {
+__attribute__((used)) static void emergency_reset(void) {
   // TODO: reset peripherals (at least DMA, DMA2D)
 
+  // Disable all NVIC interrupts and clear pending flags
+  // so later the global interrupt can be re-enabled without
+  // firing any pending interrupt
   for (int irqn = 0; irqn < 255; irqn++) {
     NVIC_DisableIRQ(irqn);
     NVIC_ClearPendingIRQ(irqn);
   }
 
-  __enable_irq();
+  // Disable SysTick
+  SysTick->CTRL = 0;
+
+  // Clear PENDSV flag to prevent the PendSV_Handler call
+  SCB->ICSR &= ~SCB_ICSR_PENDSVSET_Msk;
+
+  // Clear SCB->SHCSR exception flags so we can return back
+  // to thread mode without any exception active
+
+  uint32_t preserved_flag = 0;
+
+  switch ((__get_IPSR() & IPSR_ISR_Msk) - 16) {
+    case HardFault_IRQn:
+      break;
+    case MemoryManagement_IRQn:
+      preserved_flag = SCB_SHCSR_MEMFAULTACT_Msk;
+      break;
+    case BusFault_IRQn:
+      preserved_flag = SCB_SHCSR_BUSFAULTACT_Msk;
+      break;
+    case UsageFault_IRQn:
+      preserved_flag = SCB_SHCSR_USGFAULTACT_Msk;
+      break;
+    case PendSV_IRQn:
+      preserved_flag = SCB_SHCSR_PENDSVACT_Msk;
+      break;
+    case SysTick_IRQn:
+      preserved_flag = SCB_SHCSR_SYSTICKACT_Msk;
+      break;
+    case SVCall_IRQn:
+      preserved_flag = SCB_SHCSR_SVCALLACT_Msk;
+      break;
+  }
+
+  const uint32_t cleared_flags =
+      SCB_SHCSR_MEMFAULTACT_Msk | SCB_SHCSR_BUSFAULTACT_Msk |
+      SCB_SHCSR_USGFAULTACT_Msk | SCB_SHCSR_SVCALLACT_Msk |
+      SCB_SHCSR_MONITORACT_Msk | SCB_SHCSR_PENDSVACT_Msk |
+      SCB_SHCSR_SYSTICKACT_Msk;
+
+  SCB->SHCSR &= ~(cleared_flags & ~preserved_flag);
 }
 
 __attribute((naked, no_stack_protector)) void system_emergency_rescue(
@@ -116,14 +173,6 @@ __attribute((naked, no_stack_protector)) void system_emergency_rescue(
       "STR     R1, [R0]            \n"  // Disable MPU
 
       // --------------------------------------------------------------
-      // Disable SysTick
-      // --------------------------------------------------------------
-
-      "LDR     R0, =0xE000E010     \n"  // SysTick->CTRL
-      "MOV     R1, #0              \n"
-      "STR     R1, [R0]            \n"  // Disable SysTick
-
-      // --------------------------------------------------------------
       // Setup new stack
       // --------------------------------------------------------------
 
@@ -142,8 +191,8 @@ __attribute((naked, no_stack_protector)) void system_emergency_rescue(
       "LDR     R2, =%[PMINFO_SIZE] \n"  // Copy pminfo to new stack
       "SUB     SP, R2              \n"  // Allocate space for pminfo
       "MOV     R0, SP              \n"  // Destination
-      "MOV     R1, R5              \n"
-      "MOV     R5, R0              \n"  // R5 = pminfo on new stack
+      "MOV     R1, R5              \n"  // Source
+      "MOV     R5, R0              \n"  // R5 = pminfo on the new stack
       "BL      memcpy              \n"
 
       // --------------------------------------------------------------
@@ -186,7 +235,9 @@ __attribute((naked, no_stack_protector)) void system_emergency_rescue(
       // Disable NVIC interrupts and clear pending flags
       // --------------------------------------------------------------
 
-      "BL      reset_nvic          \n"  // Disable all NVIC interrupts
+      "BL      emergency_reset     \n"  // Reset critical hardware components
+                                        // so we can safely enter emergency mode
+
       "CPSIE   I                   \n"  // Re-enable interrupts
 
       // --------------------------------------------------------------
