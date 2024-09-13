@@ -169,7 +169,12 @@ void drivers_init() {
 #endif
 }
 
+// defined in linker script
 extern uint32_t _codelen;
+extern uint32_t _applet_clean_ram_0_start;
+extern uint32_t _applet_clean_ram_0_size;
+extern uint32_t _applet_clean_ram_1_start;
+extern uint32_t _applet_clean_ram_1_size;
 #define KERNEL_SIZE (uint32_t) & _codelen
 
 // Initializes coreapp applet
@@ -178,11 +183,10 @@ static void coreapp_init(applet_t *applet) {
       (applet_header_t *)COREAPP_CODE_ALIGN(KERNEL_START + KERNEL_SIZE);
 
   applet_layout_t coreapp_layout = {
-      0
-      /*  .data1_start = COREAPP_RAM1_START,
-        .data1_size = COREAPP_RAM1_SIZE,
-        .data2_start = COREAPP_RAM2_START,
-        .data2_size = COREAPP_RAM2_SIZE,*/
+      .data1_start = (uint32_t)&_applet_clean_ram_0_start,
+      .data1_size = (uint32_t)&_applet_clean_ram_0_size,
+      .data2_start = (uint32_t)&_applet_clean_ram_1_start,
+      .data2_size = (uint32_t)&_applet_clean_ram_1_size,
   };
 
   applet_init(applet, coreapp_header, &coreapp_layout);

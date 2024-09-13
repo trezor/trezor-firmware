@@ -60,6 +60,11 @@ _sh_clean_ram_2_end = ORIGIN(SRAM6)+ LENGTH(SRAM6);
 _sh_clean_ram_3_start = ORIGIN(SRAM4);
 _sh_clean_ram_3_end = ORIGIN(SRAM4) + LENGTH(SRAM4);
 
+/* used by applet cleaning code */
+_applet_clean_ram_0_start = MCU_SRAM5;
+_applet_clean_ram_0_size = MCU_SRAM5_SIZE;
+_applet_clean_ram_1_start = 0;
+_applet_clean_ram_1_size = 0;
 
 
 sram_u_start = ORIGIN(SRAM3_U);

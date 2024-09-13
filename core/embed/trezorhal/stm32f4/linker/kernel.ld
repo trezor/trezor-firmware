@@ -44,6 +44,12 @@ _sh_clean_ram_0_end = MCU_CCMRAM + MCU_CCMRAM_SIZE;
 _sh_clean_ram_1_start = MCU_SRAM;
 _sh_clean_ram_1_end = MCU_SRAM + MCU_SRAM_SIZE;
 
+/* used by applet cleaning code */
+_applet_clean_ram_0_start = MCU_CCMRAM + KERNEL_STACK_SIZE;
+_applet_clean_ram_0_size = MCU_CCMRAM_SIZE - KERNEL_CCMRAM_SIZE - KERNEL_FRAMEBUFFER_SIZE - KERNEL_STACK_SIZE;
+_applet_clean_ram_1_start = MCU_SRAM;
+_applet_clean_ram_1_size = MCU_SRAM_SIZE - KERNEL_SRAM_SIZE;
+
 
 _codelen = SIZEOF(.vendorheader) + SIZEOF(.header) + SIZEOF(.flash) + SIZEOF(.data) ;
 _flash_start = ORIGIN(FLASH);
