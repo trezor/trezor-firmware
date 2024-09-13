@@ -170,6 +170,10 @@ void display_copy_rgb565(const gfx_bitblt_t *bb) {
   syscall_invoke1((uint32_t)bb, SYSCALL_DISPLAY_COPY_RGB565);
 }
 
+void display_copy_mono1p(const gfx_bitblt_t *bb) {
+  syscall_invoke1((uint32_t)bb, SYSCALL_DISPLAY_COPY_MONO1P);
+}
+
 void display_refresh(void) { syscall_invoke0(SYSCALL_DISPLAY_REFRESH); }
 
 // =============================================================================
