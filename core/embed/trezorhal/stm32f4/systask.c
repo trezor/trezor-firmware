@@ -148,6 +148,13 @@ void systask_pop_data(systask_t* task, size_t size) { task->sp += size; }
 
 void systask_push_call(systask_t* task, void* entrypoint, uint32_t arg1,
                        uint32_t arg2, uint32_t arg3) {
+#if !(defined(__ARM_ARCH_8M_MAIN__) || defined(__ARM_ARCH_8M_BASE__))
+  if (SCB->CCR & SCB_CCR_STKALIGN_Msk) {
+    // Align stack pointer to 8 bytes
+    task->sp &= ~7;
+  }
+#endif
+
   // FP extension context
   systask_push_data(task, NULL, 0x48);
   // Standard exception frame
@@ -344,17 +351,23 @@ __attribute__((naked, no_stack_protector)) void PendSV_Handler(void) {
       "CMP     R0, #0              \n"
       "BEQ     1f                  \n"  // =0 => normal processing
 
-      "LDR     R1, = 0xE000EF34    \n"  // FPU->FPPCCR
+      // We are switching from a killed task to the kernel task.
+      // Since the reason might be a stack overflow, we must not
+      // attempt to save the task context.
+
+      "LDR     R1, = 0xE000EF34    \n"  // FPU->FPCCR
       "LDR     R0, [R1]            \n"
       "BIC     R0, R0, #1          \n"  // Clear LSPACT to suppress later lazy
       "STR     R0, [R1]            \n"  // stacking to the killed task stack
 
-      "MOV     R0, #0              \n"  // Skip register stacking if we
-      "MOV     R1, R0              \n"  // are switching from the killed task
-      "MOV     R2, R0              \n"  // to prevent potential stack overflow
-      "B       2f                  \n"  // or memory fault
+      "MOV     R0, #0              \n"  // Skip context save
+      "MOV     R1, R0              \n"  //
+      "MOV     R2, R0              \n"  //
+      "B       2f                  \n"  //
 
       "1:                          \n"
+
+      // Save the current task context on its stack before switching
 
       "TST      LR, #0x4           \n"  // Return stack (1=>PSP, 0=>MSP)
 
@@ -370,8 +383,8 @@ __attribute__((naked, no_stack_protector)) void PendSV_Handler(void) {
       "MRSNE    R0, PSP            \n"
       "MOV      R1, #0             \n"  // (fake SPLIM)
 #endif
-      "IT       EQ                 \n"  // Reserve space fo R4-11 and S16-S31
-      "SUBEQ    SP, SP, #0x60      \n"  // on main stack
+      "IT       EQ                 \n"  // If using main stack:
+      "SUBEQ    SP, SP, #0x60      \n"  // reserve space for R4-11 and S16-S31
 
       "MOV      R2, LR             \n"  // Get current EXC_RETURN
 
@@ -439,7 +452,6 @@ __attribute__((no_stack_protector, used)) static uint32_t svc_handler(
     case SVC_CALLBACK_RETURN:
       // g_return_value = args[0]
       // exc_return = return_from_callback;
-
       mpu_restore(mpu_mode);
       return_from_app_callback(args[0], msp);
       break;

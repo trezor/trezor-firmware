@@ -232,13 +232,35 @@ __attribute((naked, no_stack_protector)) void system_emergency_rescue(
       "STR     R7, [R0]            \n"
 
       // --------------------------------------------------------------
-      // Disable NVIC interrupts and clear pending flags
+      // Reset critical hardware so we can safely enable interrupts
       // --------------------------------------------------------------
 
-      "BL      emergency_reset     \n"  // Reset critical hardware components
-                                        // so we can safely enter emergency mode
+      "BL      emergency_reset     \n"
 
       "CPSIE   I                   \n"  // Re-enable interrupts
+
+      // --------------------------------------------------------------
+      // Clear all VFP registers
+      // --------------------------------------------------------------
+
+      "LDR     R1, = 0xE000EF34    \n"  // FPU->FPCCR
+      "LDR     R0, [R1]            \n"
+      "BIC     R0, R0, #1          \n"  // Clear LSPACT to suppress lazy
+                                        // stacking
+      "STR     R0, [R1]            \n"
+
+      // TODO: clear VFP registers (maybe for ARMV7-M only)
+
+      // --------------------------------------------------------------
+      // Clear R7-R11 registers
+      // --------------------------------------------------------------
+
+      "MOV     R0, #0              \n"
+      "MOV     R7, R0              \n"
+      "MOV     R8, R0              \n"
+      "MOV     R9, R0              \n"
+      "MOV     R10, R0             \n"
+      "MOV     R11, R0             \n"
 
       // --------------------------------------------------------------
       // Check if we are in thread mode and if yes, jump to error_handler
@@ -257,7 +279,10 @@ __attribute((naked, no_stack_protector)) void system_emergency_rescue(
       // Return from exception to thread mode
       // --------------------------------------------------------------
 
-      "SUB     SP, SP, #32         \n"  // Allocate space for exception frame
+      "MOV     R0, SP              \n"  // Align stack pointer to 8 bytes
+      "AND     R0, R0, #~7         \n"
+      "MOV     SP, R0              \n"
+      "SUB     SP, SP, #32         \n"  // Allocate space for the stack frame
 
       "MOV     R0, #0              \n"
       "STR     R5, [SP, #0]        \n"  // future R0 = pminfo
@@ -272,28 +297,13 @@ __attribute((naked, no_stack_protector)) void system_emergency_rescue(
       "LDR     R1, = 0x01000000    \n"  // THUMB bit set
       "STR     R1, [SP, #28]       \n"  // future xPSR
 
-      "MOV     R4, R0              \n"  // Clear registers R4-R11
-      "MOV     R5, R0              \n"
+      "MOV     R4, R0              \n"  // Clear registers R4-R6
+      "MOV     R5, R0              \n"  // (R7-R11 are already cleared)
       "MOV     R6, R0              \n"
-      "MOV     R7, R0              \n"
-      "MOV     R8, R0              \n"
-      "MOV     R9, R0              \n"
-      "MOV     R10, R0             \n"
-      "MOV     R11, R0             \n"
 
-      "MRS     R0, CONTROL         \n"
-      "BIC     R0, R0, #4          \n"  // Clear FPCA to suppress lazy stacking
-                                        // to avoid potential stack overwrite.
-      "BIC     R0, R0, #2          \n"  // Clear SPSEL to use MSP for thread
-                                        // mode
-      "BIC     R0, R0, #1          \n"  // Clear nPRIV to run in privileged mode
+      "MRS     R0, CONTROL         \n"  // Clear SPSEL to use MSP for thread
+      "BIC     R0, R0, #3          \n"  // Clear nPRIV to run in privileged mode
       "MSR     CONTROL, R1         \n"
-
-      "LDR     R1, = 0xE000EF34    \n"  // FPU->FPPCCR
-      "LDR     R0, [R1]            \n"
-      "BIC     R0, R0, #1          \n"  // Clear LSPACT to suppress lazy
-                                        // stacking to
-      "STR     R0, [R1]            \n"  // avoid potential stack overwrite.
 
       "LDR     LR, = 0xFFFFFFF9    \n"  // Return to Secure Thread mode, use MSP
       "BX      LR                  \n"

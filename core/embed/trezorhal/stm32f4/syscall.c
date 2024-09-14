@@ -60,14 +60,8 @@ __attribute__((naked, no_stack_protector)) static uint32_t _invoke_app_callback(
       "ldr r1, = 0x01000000   \n"
       "str r1, [r12, #28]     \n"  // xPSR
 
-      "ldr r1, = 0xE000EF34   \n"  // FPU->FPPCCR
-      "ldr r0, [r1]           \n"
-      "bic r0, r0, #1         \n"  // Clear LSPACT to suppress lazy stacking to
-      "str r0, [r1]           \n"  // avoid potential PSP stack overwrite.
-
-      "mrs r1, CONTROL        \n"
-      "bic r1, r1, #4         \n"  // Clear FPCA to suppress lazy stacking to
-      "msr CONTROL, r1        \n"  // avoid potential PSP stack overwrite.
+      "vmov r0, s0            \n"  // Use FPU instruction to ensure lazy
+                                   // stacking
 
       // return to Secure Thread mode (use Secure PSP)
       "ldr lr, = 0xFFFFFFFD   \n"
@@ -85,9 +79,17 @@ uint32_t invoke_app_callback(uint32_t args1, uint32_t arg2, uint32_t arg3,
 __attribute__((naked, no_stack_protector)) void return_from_app_callback(
     uint32_t retval, uint32_t* msp) {
   __asm__ volatile(
-      "MSR    MSP, R1         \n"
-      "POP    {R1}            \n"
-      "MSR    PSP, R1         \n"
+      "MSR    MSP, R1            \n"
+      "POP    {R1}               \n"
+      "MSR    PSP, R1            \n"
+      "POP    {R1}               \n"
+      "MSR    PSPLIM, R1         \n"
+
+      "LDR    R1, = 0xE000EF34   \n"  // FPU->FPCCR
+      "LDR    R2, [R1]           \n"
+      "BIC    R2, R2, #1         \n"  // Clear LSPACT to suppress repeated lazy
+      "STR    R2, [R1]           \n"  // stacking that was already done
+
       "POP    {R1-R12, LR}    \n"
       "BX     LR              \n");
 }
