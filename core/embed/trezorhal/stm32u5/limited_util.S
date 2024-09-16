@@ -35,14 +35,14 @@ jump_to:
   cpsid f
   // wipe memory at the end of the current stage of code
   ldr r2, =0             // r2 - the word-sized value to be written
-  ldr r0, =_jump_clean_ram_0_start
-  ldr r1, =_jump_clean_ram_0_end
+  ldr r0, =_handoff_clear_ram_0_start
+  ldr r1, =_handoff_clear_ram_0_end
   bl memset_reg
-  ldr r0, =_jump_clean_ram_1_start
-  ldr r1, =_jump_clean_ram_1_end
+  ldr r0, =_handoff_clear_ram_1_start
+  ldr r1, =_handoff_clear_ram_1_end
   bl memset_reg
-  ldr r0, =_jump_clean_ram_2_start
-  ldr r1, =_jump_clean_ram_2_end
+  ldr r0, =_handoff_clear_ram_2_start
+  ldr r1, =_handoff_clear_ram_2_end
   bl memset_reg
 
   mov lr, r4
@@ -95,17 +95,17 @@ shutdown_privileged:
   mov r12, r0
   ldr lr, =0xffffffff
 
-  ldr r0, =_sh_clean_ram_0_start
-  ldr r1, =_sh_clean_ram_0_end
+  ldr r0, =_shutdown_clear_ram_0_start
+  ldr r1, =_shutdown_clear_ram_0_end
   bl memset_reg
-  ldr r0, =_sh_clean_ram_1_start
-  ldr r1, =_sh_clean_ram_1_end
+  ldr r0, =_shutdown_clear_ram_1_start
+  ldr r1, =_shutdown_clear_ram_1_end
   bl memset_reg
-  ldr r0, =_sh_clean_ram_2_start
-  ldr r1, =_sh_clean_ram_2_end
+  ldr r0, =_shutdown_clear_ram_2_start
+  ldr r1, =_shutdown_clear_ram_2_end
   bl memset_reg
-  ldr r0, =_sh_clean_ram_3_start
-  ldr r1, =_sh_clean_ram_3_end
+  ldr r0, =_shutdown_clear_ram_3_start
+  ldr r1, =_shutdown_clear_ram_3_end
   bl memset_reg
 
   ldr r0, =1

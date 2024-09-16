@@ -34,11 +34,11 @@ jump_to:
   // wipe memory at the end of the current stage of code
   bl clear_otg_hs_memory
   ldr r2, =0             // r2 - the word-sized value to be written
-  ldr r0, =_jump_clean_ram_0_start
-  ldr r1, =_jump_clean_ram_0_end
+  ldr r0, =_handoff_clear_ram_0_start
+  ldr r1, =_handoff_clear_ram_0_end
   bl memset_reg
-  ldr r0, =_jump_clean_ram_1_start
-  ldr r1, =_jump_clean_ram_1_end
+  ldr r0, =_handoff_clear_ram_1_start
+  ldr r1, =_handoff_clear_ram_1_end
   bl memset_reg
   mov lr, r4
   // clear out the general purpose registers before the next stage's code can run (even the NMI exception handler)
@@ -90,11 +90,11 @@ shutdown_privileged:
   mov r12, r0
   ldr lr, =0xffffffff
 
-  ldr r0, =_sh_clean_ram_0_start
-  ldr r1, =_sh_clean_ram_0_end
+  ldr r0, =_shutdown_clear_ram_0_start
+  ldr r1, =_shutdown_clear_ram_0_end
   bl memset_reg
-  ldr r0, =_sh_clean_ram_1_start
-  ldr r1, =_sh_clean_ram_1_end
+  ldr r0, =_shutdown_clear_ram_1_start
+  ldr r1, =_shutdown_clear_ram_1_end
   bl memset_reg
   bl clear_otg_hs_memory
   ldr r0, =1

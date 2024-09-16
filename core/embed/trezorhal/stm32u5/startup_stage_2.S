@@ -12,14 +12,14 @@ reset_handler:
 
   // setup environment for subsequent stage of code
   ldr r2, =0             // r2 - the word-sized value to be written
-  ldr r0, =_startup_clean_ram_0_start
-  ldr r1, =_startup_clean_ram_0_end
+  ldr r0, =_startup_clear_ram_0_start
+  ldr r1, =_startup_clear_ram_0_end
   bl memset_reg
-  ldr r0, =_startup_clean_ram_1_start
-  ldr r1, =_startup_clean_ram_1_end
+  ldr r0, =_startup_clear_ram_1_start
+  ldr r1, =_startup_clear_ram_1_end
   bl memset_reg
-  ldr r0, =_startup_clean_ram_2_start
-  ldr r1, =_startup_clean_ram_2_end
+  ldr r0, =_startup_clear_ram_2_start
+  ldr r1, =_startup_clear_ram_2_end
   bl memset_reg
 
   // copy data in from flash
@@ -38,15 +38,6 @@ reset_handler:
   bl rng_get
   ldr r1, = __stack_chk_guard
   str r0, [r1]
-
-  // copy & clear g_boot_command
-  ldr r0, =g_boot_command
-  ldr r1, [r0]
-  ldr r0, =g_boot_command_saved
-  str r1, [r0]
-  ldr r0, =g_boot_command
-  mov r1, #0
-  str r1, [r0]
 
   // re-enable exceptions
   // according to "ARM Cortex-M Programming Guide to Memory Barrier Instructions" Application Note 321, section 4.7:

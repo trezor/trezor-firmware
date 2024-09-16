@@ -439,7 +439,7 @@ SOURCE_FIRMWARE = [
     'embed/coreapp/main.c',
     'embed/coreapp/mphalport.c',
     'embed/coreapp/nlrthumb.c',
-    f'embed/coreapp/startup_{FILE_SUFFIX}.S',
+    f'embed/trezorhal/{FILE_SUFFIX}/startup_stage_4.S',
 ]
 
 

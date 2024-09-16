@@ -106,7 +106,7 @@ FEATURES_AVAILABLE = models.configure_board(TREZOR_MODEL, HW_REVISION, FEATURES_
 FILE_SUFFIX= env.get('ENV')['SUFFIX']
 
 SOURCE_BOARDLOADER = [
-    f"embed/trezorhal/{FILE_SUFFIX}/startup_layer_0.s",
+    f"embed/trezorhal/{FILE_SUFFIX}/startup_stage_0.s",
     'embed/boardloader/main.c',
 ]
 

@@ -30,30 +30,30 @@ confidential_vma = ADDR(.confidential);
 confidential_size = SIZEOF(.confidential);
 
 /* used by the startup code to wipe memory */
-_startup_clean_ram_0_start = MCU_SRAM1;
-_startup_clean_ram_0_end = MCU_SRAM1 + MCU_SRAM1_SIZE - BOOTARGS_SIZE;
-_startup_clean_ram_1_start = MCU_SRAM2;
-_startup_clean_ram_1_end = MCU_SRAM6 + MCU_SRAM6_SIZE;
-_startup_clean_ram_2_start = MCU_SRAM4;
-_startup_clean_ram_2_end = MCU_SRAM4 + MCU_SRAM4_SIZE;
+_startup_clear_ram_0_start = MCU_SRAM1;
+_startup_clear_ram_0_end = MCU_SRAM1 + MCU_SRAM1_SIZE - BOOTARGS_SIZE;
+_startup_clear_ram_1_start = MCU_SRAM2;
+_startup_clear_ram_1_end = MCU_SRAM6 + MCU_SRAM6_SIZE;
+_startup_clear_ram_2_start = MCU_SRAM4;
+_startup_clear_ram_2_end = MCU_SRAM4 + MCU_SRAM4_SIZE;
 
 /* used by the jump code to wipe memory */
-_jump_clean_ram_0_start = MCU_SRAM1;
-_jump_clean_ram_0_end = MCU_SRAM1 + MCU_SRAM1_SIZE - BOOTARGS_SIZE;
-_jump_clean_ram_1_start = MCU_SRAM2;
-_jump_clean_ram_1_end = MCU_SRAM6 + MCU_SRAM6_SIZE;
-_jump_clean_ram_2_start = MCU_SRAM4;
-_jump_clean_ram_2_end = MCU_SRAM4 + MCU_SRAM4_SIZE;
+_handoff_clear_ram_0_start = MCU_SRAM1;
+_handoff_clear_ram_0_end = MCU_SRAM1 + MCU_SRAM1_SIZE - BOOTARGS_SIZE;
+_handoff_clear_ram_1_start = MCU_SRAM2;
+_handoff_clear_ram_1_end = MCU_SRAM6 + MCU_SRAM6_SIZE;
+_handoff_clear_ram_2_start = MCU_SRAM4;
+_handoff_clear_ram_2_end = MCU_SRAM4 + MCU_SRAM4_SIZE;
 
 /* used by the shutdown code to wipe memory */
-_sh_clean_ram_0_start = MCU_SRAM1;
-_sh_clean_ram_0_end = MCU_SRAM6 + MCU_SRAM6_SIZE;
-_sh_clean_ram_1_start = MCU_SRAM4;
-_sh_clean_ram_1_end = MCU_SRAM4 + MCU_SRAM4_SIZE;
-_sh_clean_ram_2_start = 0;
-_sh_clean_ram_2_end = 0;
-_sh_clean_ram_3_start = 0;
-_sh_clean_ram_3_end = 0;
+_shutdown_clear_ram_0_start = MCU_SRAM1;
+_shutdown_clear_ram_0_end = MCU_SRAM6 + MCU_SRAM6_SIZE;
+_shutdown_clear_ram_1_start = MCU_SRAM4;
+_shutdown_clear_ram_1_end = MCU_SRAM4 + MCU_SRAM4_SIZE;
+_shutdown_clear_ram_2_start = 0;
+_shutdown_clear_ram_2_end = 0;
+_shutdown_clear_ram_3_start = 0;
+_shutdown_clear_ram_3_end = 0;
 
 /* reserve 256 bytes for bootloader arguments */
 boot_args_start = ORIGIN(BOOT_ARGS);

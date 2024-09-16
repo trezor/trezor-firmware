@@ -35,36 +35,36 @@ confidential_vma = ADDR(.confidential);
 confidential_size = SIZEOF(.confidential);
 
 /* used by the startup code to wipe memory */
-_startup_clean_ram_0_start = MCU_SRAM1;
-_startup_clean_ram_0_end = MCU_SRAM1 + MCU_SRAM1_SIZE;
-_startup_clean_ram_1_start = MCU_SRAM2;
-_startup_clean_ram_1_end = MCU_SRAM6 + MCU_SRAM6_SIZE;
-_startup_clean_ram_2_start = MCU_SRAM4;
-_startup_clean_ram_2_end = MCU_SRAM4 + MCU_SRAM4_SIZE;
+_startup_clear_ram_0_start = MCU_SRAM1;
+_startup_clear_ram_0_end = MCU_SRAM1 + MCU_SRAM1_SIZE;
+_startup_clear_ram_1_start = MCU_SRAM2;
+_startup_clear_ram_1_end = MCU_SRAM6 + MCU_SRAM6_SIZE;
+_startup_clear_ram_2_start = MCU_SRAM4;
+_startup_clear_ram_2_end = MCU_SRAM4 + MCU_SRAM4_SIZE;
 
 /* used by the jump code to wipe memory */
-_jump_clean_ram_0_start = MCU_SRAM1;
-_jump_clean_ram_0_end = MCU_SRAM1 + MCU_SRAM1_SIZE - BOOTARGS_SIZE;
-_jump_clean_ram_1_start = MCU_SRAM2;
-_jump_clean_ram_1_end = MCU_SRAM6 + MCU_SRAM6_SIZE;
-_jump_clean_ram_2_start = MCU_SRAM4;
-_jump_clean_ram_2_end = MCU_SRAM4 + MCU_SRAM4_SIZE;
+_handoff_clear_ram_0_start = MCU_SRAM1;
+_handoff_clear_ram_0_end = MCU_SRAM1 + MCU_SRAM1_SIZE - BOOTARGS_SIZE;
+_handoff_clear_ram_1_start = MCU_SRAM2;
+_handoff_clear_ram_1_end = MCU_SRAM6 + MCU_SRAM6_SIZE;
+_handoff_clear_ram_2_start = MCU_SRAM4;
+_handoff_clear_ram_2_end = MCU_SRAM4 + MCU_SRAM4_SIZE;
 
 /* used by the shutdown code to wipe memory */
-_sh_clean_ram_0_start = MCU_SRAM1;
-_sh_clean_ram_0_end = MCU_SRAM6 + MCU_SRAM6_SIZE;
-_sh_clean_ram_1_start = MCU_SRAM4;
-_sh_clean_ram_1_end = MCU_SRAM4 + MCU_SRAM4_SIZE;
-_sh_clean_ram_2_start = 0;
-_sh_clean_ram_2_end = 0;
-_sh_clean_ram_3_start = 0;
-_sh_clean_ram_3_end = 0;
+_shutdown_clear_ram_0_start = MCU_SRAM1;
+_shutdown_clear_ram_0_end = MCU_SRAM6 + MCU_SRAM6_SIZE;
+_shutdown_clear_ram_1_start = MCU_SRAM4;
+_shutdown_clear_ram_1_end = MCU_SRAM4 + MCU_SRAM4_SIZE;
+_shutdown_clear_ram_2_start = 0;
+_shutdown_clear_ram_2_end = 0;
+_shutdown_clear_ram_3_start = 0;
+_shutdown_clear_ram_3_end = 0;
 
 /* used by applet cleaning code */
-_applet_clean_ram_0_start = MCU_SRAM2 + KERNEL_SRAM2_SIZE;
-_applet_clean_ram_0_size = MCU_SRAM2_SIZE - KERNEL_SRAM2_SIZE;
-_applet_clean_ram_1_start = MCU_SRAM3 + KERNEL_SRAM3_SIZE;
-_applet_clean_ram_1_size = MCU_SRAM3_SIZE - KERNEL_SRAM3_SIZE;
+_applet_clear_ram_0_start = MCU_SRAM2 + KERNEL_SRAM2_SIZE;
+_applet_clear_ram_0_size = MCU_SRAM2_SIZE - KERNEL_SRAM2_SIZE;
+_applet_clear_ram_1_start = MCU_SRAM3 + KERNEL_SRAM3_SIZE;
+_applet_clear_ram_1_size = MCU_SRAM3_SIZE - KERNEL_SRAM3_SIZE;
 
 sram_u_start = ORIGIN(SRAM2_U);
 sram_u_end = ORIGIN(SRAM2_U) + LENGTH(SRAM2_U);

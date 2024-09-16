@@ -7,11 +7,11 @@
 reset_handler:
   // setup environment for subsequent stage of code
   ldr r2, =0             // r2 - the word-sized value to be written
-  ldr r0, =_startup_clean_ram_0_start
-  ldr r1, =_startup_clean_ram_0_end
+  ldr r0, =_startup_clear_ram_0_start
+  ldr r1, =_startup_clear_ram_0_end
   bl memset_reg
-  ldr r0, =_startup_clean_ram_1_start
-  ldr r1, =_startup_clean_ram_1_end
+  ldr r0, =_startup_clear_ram_1_start
+  ldr r1, =_startup_clear_ram_1_end
   bl memset_reg
 
   // copy data in from flash
@@ -31,9 +31,15 @@ reset_handler:
   // subsequent operations, it is not necessary to insert a memory barrier instruction."
   cpsie f
 
+  // r11 contains the command passed to bootargs_set()
+  // function called when the firmware rebooted to the bootloader
+  ldr r0, =g_boot_command_saved
+  str r11, [r0]
+
   // enter the application code
   bl main
 
   b shutdown_privileged
 
   .end
+

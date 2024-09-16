@@ -27,28 +27,28 @@ boot_args_start = ORIGIN(BOOT_ARGS);
 boot_args_end = ORIGIN(BOOT_ARGS) + LENGTH(BOOT_ARGS);
 
 /* used by the startup code to wipe memory */
-_startup_clean_ram_0_start = MCU_CCMRAM;
-_startup_clean_ram_0_end = MCU_CCMRAM + MCU_CCMRAM_SIZE;
-_startup_clean_ram_1_start = MCU_SRAM;
-_startup_clean_ram_1_end = MCU_SRAM + MCU_SRAM_SIZE;
+_startup_clear_ram_0_start = MCU_CCMRAM;
+_startup_clear_ram_0_end = MCU_CCMRAM + MCU_CCMRAM_SIZE;
+_startup_clear_ram_1_start = MCU_SRAM;
+_startup_clear_ram_1_end = MCU_SRAM + MCU_SRAM_SIZE;
 
 /* used by the jump code to wipe memory */
-_jump_clean_ram_0_start = MCU_CCMRAM;
-_jump_clean_ram_0_end = MCU_CCMRAM + MCU_CCMRAM_SIZE - BOOTARGS_SIZE;
-_jump_clean_ram_1_start = MCU_SRAM;
-_jump_clean_ram_1_end = MCU_SRAM + MCU_SRAM_SIZE;
+_handoff_clear_ram_0_start = MCU_CCMRAM;
+_handoff_clear_ram_0_end = MCU_CCMRAM + MCU_CCMRAM_SIZE - BOOTARGS_SIZE;
+_handoff_clear_ram_1_start = MCU_SRAM;
+_handoff_clear_ram_1_end = MCU_SRAM + MCU_SRAM_SIZE;
 
 /* used by the shutdown code to wipe memory */
-_sh_clean_ram_0_start = MCU_CCMRAM;
-_sh_clean_ram_0_end = MCU_CCMRAM + MCU_CCMRAM_SIZE;
-_sh_clean_ram_1_start = MCU_SRAM;
-_sh_clean_ram_1_end = MCU_SRAM + MCU_SRAM_SIZE;
+_shutdown_clear_ram_0_start = MCU_CCMRAM;
+_shutdown_clear_ram_0_end = MCU_CCMRAM + MCU_CCMRAM_SIZE;
+_shutdown_clear_ram_1_start = MCU_SRAM;
+_shutdown_clear_ram_1_end = MCU_SRAM + MCU_SRAM_SIZE;
 
 /* used by applet cleaning code */
-_applet_clean_ram_0_start = MCU_CCMRAM + KERNEL_STACK_SIZE;
-_applet_clean_ram_0_size = MCU_CCMRAM_SIZE - KERNEL_CCMRAM_SIZE - KERNEL_FRAMEBUFFER_SIZE - KERNEL_STACK_SIZE;
-_applet_clean_ram_1_start = MCU_SRAM;
-_applet_clean_ram_1_size = MCU_SRAM_SIZE - KERNEL_SRAM_SIZE;
+_applet_clear_ram_0_start = MCU_CCMRAM + KERNEL_STACK_SIZE;
+_applet_clear_ram_0_size = MCU_CCMRAM_SIZE - KERNEL_CCMRAM_SIZE - KERNEL_FRAMEBUFFER_SIZE - KERNEL_STACK_SIZE;
+_applet_clear_ram_1_start = MCU_SRAM;
+_applet_clear_ram_1_size = MCU_SRAM_SIZE - KERNEL_SRAM_SIZE;
 
 
 _codelen = SIZEOF(.vendorheader) + SIZEOF(.header) + SIZEOF(.flash) + SIZEOF(.data) ;

@@ -20,22 +20,22 @@ bss_start = ADDR(.bss);
 bss_end = ADDR(.bss) + SIZEOF(.bss);
 
 /* used by the startup code to wipe memory */
-_startup_clean_ram_0_start = MCU_CCMRAM;
-_startup_clean_ram_0_end = MCU_CCMRAM + MCU_CCMRAM_SIZE;
-_startup_clean_ram_1_start = MCU_SRAM;
-_startup_clean_ram_1_end = MCU_SRAM + MCU_SRAM_SIZE;
+_startup_clear_ram_0_start = MCU_CCMRAM;
+_startup_clear_ram_0_end = MCU_CCMRAM + MCU_CCMRAM_SIZE;
+_startup_clear_ram_1_start = MCU_SRAM;
+_startup_clear_ram_1_end = MCU_SRAM + MCU_SRAM_SIZE;
 
 /* used by the startup/jump code to wipe memory */
-_jump_clean_ram_0_start = MCU_CCMRAM;
-_jump_clean_ram_0_end = MCU_CCMRAM + MCU_CCMRAM_SIZE;
-_jump_clean_ram_1_start = MCU_SRAM;
-_jump_clean_ram_1_end = MCU_SRAM + MCU_SRAM_SIZE;
+_handoff_clear_ram_0_start = MCU_CCMRAM;
+_handoff_clear_ram_0_end = MCU_CCMRAM + MCU_CCMRAM_SIZE;
+_handoff_clear_ram_1_start = MCU_SRAM;
+_handoff_clear_ram_1_end = MCU_SRAM + MCU_SRAM_SIZE;
 
 /* used by the shutdown code to wipe memory */
-_sh_clean_ram_0_start = MCU_CCMRAM;
-_sh_clean_ram_0_end = MCU_CCMRAM + MCU_CCMRAM_SIZE;
-_sh_clean_ram_1_start = MCU_SRAM;
-_sh_clean_ram_1_end = MCU_SRAM + MCU_SRAM_SIZE;
+_shutdown_clear_ram_0_start = MCU_CCMRAM;
+_shutdown_clear_ram_0_end = MCU_CCMRAM + MCU_CCMRAM_SIZE;
+_shutdown_clear_ram_1_start = MCU_SRAM;
+_shutdown_clear_ram_1_end = MCU_SRAM + MCU_SRAM_SIZE;
 
 SECTIONS {
   .vector_table : ALIGN(CODE_ALIGNMENT) {
