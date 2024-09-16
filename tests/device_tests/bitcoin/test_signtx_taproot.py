@@ -433,6 +433,7 @@ def test_send_invalid_address(client: Client, address: str):
 
 
 @pytest.mark.multisig
+@pytest.mark.models(skip=["legacy"])
 def test_send_multisig_1(client: Client):
     # input tx: e56e8bdb23625856c54f5f52e3edc10ebabd72c839eed41a49f8ec2ea3691363
 
@@ -498,6 +499,7 @@ def test_send_multisig_1(client: Client):
 
 
 @pytest.mark.multisig
+@pytest.mark.models(skip=["legacy"])
 def test_send_multisig_2(client: Client):
     # input tx: b84fd297347318ff6693513637b11005600f93f4af60a44ffebaea1b5637d06c
 
@@ -563,6 +565,7 @@ def test_send_multisig_2(client: Client):
 
 
 @pytest.mark.multisig
+@pytest.mark.models(skip=["legacy"])
 def test_send_multisig_3_change(client: Client):
     # input tx: bedf7b99c7e8e92f64d233c3789ba265671b89b1ab048296243a27da872f6494
 
@@ -640,6 +643,7 @@ def test_send_multisig_3_change(client: Client):
 
 
 @pytest.mark.multisig
+@pytest.mark.models(skip=["legacy"])
 def test_send_multisig_4_change(client: Client):
     # input tx: d20c2e9f00220048a20e9a7240a9f41d57ca29541009d3477316233416946145
 

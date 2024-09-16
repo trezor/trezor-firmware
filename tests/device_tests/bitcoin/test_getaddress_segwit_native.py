@@ -220,6 +220,7 @@ def test_show_multisig_3(client: Client):
 
 
 @pytest.mark.multisig
+@pytest.mark.models(skip=["legacy"])
 def test_show_multisig_taproot_3(client: Client):
     nodes = [
         btc.get_public_node(
