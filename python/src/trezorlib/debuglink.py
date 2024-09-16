@@ -521,6 +521,8 @@ class DebugLink:
         self, wait_type: DebugWaitType = DebugWaitType.CURRENT_LAYOUT
     ) -> messages.DebugLinkState:
         result = self._call(messages.DebugLinkGetState(wait_layout=wait_type))
+        while not isinstance(result, (messages.Failure, messages.DebugLinkState)):
+            result = self._read()
         if isinstance(result, messages.Failure):
             raise TrezorFailure(result)
         return result
