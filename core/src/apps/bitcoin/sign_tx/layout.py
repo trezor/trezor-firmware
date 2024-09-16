@@ -2,6 +2,7 @@ from micropython import const
 from typing import TYPE_CHECKING
 
 from trezor import TR
+from trezor.database import cache
 from trezor.enums import ButtonRequestType
 from trezor.strings import format_amount
 from trezor.ui import layouts
@@ -91,6 +92,11 @@ async def confirm_output(
     else:
         assert output.address is not None
         address_short = addresses.address_short(coin, output.address)
+
+        label = cache.get(output.address)
+        if label:
+            address_short = f"{label} ({address_short})"
+
         if output.payment_req_index is not None:
             title = TR.bitcoin__title_confirm_details
         else:

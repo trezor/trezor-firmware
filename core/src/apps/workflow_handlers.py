@@ -206,6 +206,16 @@ def _find_message_handler_module(msg_type: int) -> str:
         if msg_type == MessageType.SolanaSignTx:
             return "apps.solana.sign_tx"
 
+        # database
+        if msg_type == MessageType.DatabaseWipe:
+            return "apps.database.wipe"
+        if msg_type == MessageType.DatabaseModifyKey:
+            return "apps.database.modify_key"
+        if msg_type == MessageType.DatabaseProveMembership:
+            return "apps.database.prove_membership"
+        if msg_type == MessageType.DatabaseMerge:
+            return "apps.database.merge"
+
     raise ValueError
 
 

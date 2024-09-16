@@ -34,6 +34,7 @@ APP_COMMON_BUSY_DEADLINE_MS = const(3 | _SESSIONLESS_FLAG)
 APP_MISC_COSI_NONCE = const(4 | _SESSIONLESS_FLAG)
 APP_MISC_COSI_COMMITMENT = const(5 | _SESSIONLESS_FLAG)
 APP_RECOVERY_REPEATED_BACKUP_UNLOCKED = const(6 | _SESSIONLESS_FLAG)
+APP_COMMON_DATABASE = const(7 | _SESSIONLESS_FLAG)
 
 # === Homescreen storage ===
 # This does not logically belong to the "cache" functionality, but the cache module is
@@ -104,6 +105,7 @@ class SessionCache(DataCache):
                 2,  # APP_COMMON_AUTHORIZATION_TYPE
                 128,  # APP_COMMON_AUTHORIZATION_DATA
                 32,  # APP_COMMON_NONCE
+                # TODO: choose appripriate size
             )
         else:
             self.fields = (
@@ -144,6 +146,7 @@ class SessionlessCache(DataCache):
             32,  # APP_MISC_COSI_NONCE
             32,  # APP_MISC_COSI_COMMITMENT
             0,  # APP_RECOVERY_REPEATED_BACKUP_UNLOCKED
+            1024,  # APP_COMMON_DATABASE
         )
         super().__init__()
 
