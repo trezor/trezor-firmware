@@ -17,6 +17,7 @@ use crate::{
 
 use super::{theme, Button, ButtonMsg};
 
+#[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 pub enum NumberInputDialogMsg {
     Selected,
     InfoRequested,

@@ -17,6 +17,7 @@ use crate::{
 
 use super::theme;
 
+#[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 pub enum ButtonMsg {
     Pressed,
     Released,
@@ -552,6 +553,7 @@ impl Button {
     }
 }
 
+#[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 pub enum CancelConfirmMsg {
     Cancelled,
     Confirmed,
@@ -563,12 +565,14 @@ type CancelInfoConfirm<F0, F1, F2> =
 type CancelConfirm<F0, F1> = FixedHeightBar<Split<MsgMap<Button, F0>, MsgMap<Button, F1>>>;
 
 #[derive(Clone, Copy)]
+#[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 pub enum CancelInfoConfirmMsg {
     Cancelled,
     Info,
     Confirmed,
 }
 
+#[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 pub enum SelectWordMsg {
     Selected(usize),
 }

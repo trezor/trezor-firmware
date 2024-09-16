@@ -20,6 +20,7 @@ use crate::{
 
 use core::cell::Cell;
 
+#[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 pub enum PassphraseKeyboardMsg {
     Confirmed,
     Cancelled,
