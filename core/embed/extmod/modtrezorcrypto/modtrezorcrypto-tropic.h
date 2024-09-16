@@ -33,18 +33,6 @@
 MP_DEFINE_EXCEPTION(TropicError, Exception)
 
 
-void bytes_to_chars(uint8_t const *key, char *buffer, uint16_t len)
-{
-    uint16_t offset = 0;
-    memset(buffer, 0, len);
-
-    for (size_t i = 0; i < len; i++)
-    {
-        offset += sprintf(buffer + offset, "%02X", key[i]);
-    }
-    sprintf(buffer + offset, "%c", '\0');
-}
-
 #define PING_MSG "Hello!"
 #define PING_MSG_LEN 6
 /// mock:global
@@ -104,9 +92,9 @@ STATIC mp_obj_t mod_trezorcrypto_tropic_get_certificate() {
     }
 
     vstr_t vstr = {0};
-    vstr_init_len(&vstr, 1024);
+    vstr_init_len(&vstr, 512);
 
-    bytes_to_chars(X509_cert, vstr.buf, 512);
+    memcpy(vstr.buf, X509_cert, 512);
 
     return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
 }
