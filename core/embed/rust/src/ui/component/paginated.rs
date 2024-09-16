@@ -1,4 +1,5 @@
 /// Common message type for pagination components.
+#[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 pub enum PageMsg<T> {
     /// Pass-through from paged component.
     Content(T),
