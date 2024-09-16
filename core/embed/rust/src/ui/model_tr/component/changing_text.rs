@@ -162,6 +162,25 @@ impl ChangingTextLine {
         let baseline = Point::new(self.pad.area.x0 + x_offset, self.y_baseline());
         common::display_left(baseline, &text_to_display, self.font);
     }
+
+    fn render_long_content_with_ellipsis<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        let text_to_display = long_line_content_with_ellipsis(
+            self.text.as_ref(),
+            self.ellipsis,
+            self.font,
+            self.pad.area.width(),
+        );
+
+        // Creating the notion of motion by shifting the text left and right with
+        // each new text character.
+        // (So that it is apparent for the user that the text is changing.)
+        let x_offset = if self.text.len() % 2 == 0 { 0 } else { 2 };
+
+        let baseline = Point::new(self.pad.area.x0 + x_offset, self.y_baseline());
+        shape::Text::new(baseline, self.text.as_ref())
+            .with_font(self.font)
+            .render(target);
+    }
 }
 
 impl Component for ChangingTextLine {
@@ -201,7 +220,7 @@ impl Component for ChangingTextLine {
         if self.show_content {
             // In the case text cannot fit, show ellipsis and its right part
             if !self.text_fits_completely() {
-                self.paint_long_content_with_ellipsis();
+                self.render_long_content_with_ellipsis(target);
             } else {
                 match self.alignment {
                     Alignment::Start => self.render_left(target),
