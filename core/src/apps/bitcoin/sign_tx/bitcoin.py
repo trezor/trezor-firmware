@@ -640,7 +640,7 @@ class Bitcoin:
 
         return public_key, signature
 
-    def sign_taproot_input(self, i: int, txi: TxInput) -> bytes:
+    def sign_taproot_input(self, i: int, txi: TxInput) -> tuple[bytes, bytes]:
         from ..common import bip340_sign
 
         if txi.multisig:
