@@ -32,6 +32,7 @@ const CONTENT_AREA: Rect = Rect::new(
 );
 
 #[derive(Copy, Clone, ToPrimitive)]
+#[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 pub enum ConfirmMsg {
     Cancel = 1,
     Confirm = 2,
