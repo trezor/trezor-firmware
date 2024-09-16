@@ -21,6 +21,7 @@ pub struct Frame<T> {
     content: Child<T>,
 }
 
+#[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 pub enum FrameMsg<T> {
     Content(T),
     Button(CancelInfoConfirmMsg),
