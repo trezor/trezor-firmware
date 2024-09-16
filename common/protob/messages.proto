@@ -375,4 +375,13 @@ enum MessageType {
     MessageType_SolanaAddress = 903 [(wire_out) = true];
     MessageType_SolanaSignTx = 904 [(wire_in) = true];
     MessageType_SolanaTxSignature = 905 [(wire_out) = true];
+
+    // Database
+    MessageType_DatabaseWipe = 1000 [(wire_in) = true];
+    MessageType_DatabaseWipeResponse = 1001 [(wire_out) = true];
+    MessageType_DatabaseModifyKey = 1002 [(wire_in) = true];
+    MessageType_DatabaseModifyKeyResponse = 1003 [(wire_out) = true];
+    MessageType_DatabaseProveMembership = 1004 [(wire_in) = true];
+    MessageType_DatabaseMerge = 1005 [(wire_in) = true];
+    MessageType_DatabaseMergeResponse = 1006 [(wire_out) = true];
 }

@@ -1,0 +1,81 @@
+syntax = "proto2";
+package hw.trezor.messages.binance;
+
+// Sugar for easier handling in Java
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
+option java_outer_classname = "TrezorMessageBinance";
+
+/**
+ * Request: Remove all key-value pairs from the database, reset the time and the identifier.
+ * @start
+ * @next Failure
+ * @next DatabaseWipeResponse
+ */
+message DatabaseWipe {
+}
+
+/**
+ * Response: Result of a database wipe.
+ */
+message DatabaseWipeResponse {
+    optional bytes identifier = 1;
+    optional bytes signature = 2;
+}
+
+/**
+ * Request: Insert, change or delete a database key-value pair.
+ * @start
+ * @next DatabaseSetKeyResponse
+ * @next Failure
+ */
+message DatabaseModifyKey {
+    optional bytes database_time = 1;
+    optional bytes database_signature = 2;
+    optional string key = 3;
+    // TODO: Use different message for delete
+    optional string value = 4; // None is interpreted as delete
+    optional bytes proof = 5;
+}
+
+/**
+ * Response
+ */
+message DatabaseModifyKeyResponse {
+    optional bytes database_signature = 1;
+    optional bytes update_signature = 2;
+}
+
+/**
+  * Request: Prove membership or non-membership of a key-value pair.
+  * @start
+  * @next Success
+  * @next Failure
+*/
+
+message DatabaseProveMembership {
+    optional bytes database_time = 1;
+    optional bytes database_signature = 2;
+    optional string key = 3;
+    optional bytes proof = 4; // the value is included in the proof
+}
+
+/**
+ * Request: Merge a database update.
+ * @start
+ * @next DatabaseData
+ * @next Failure
+ */
+message DatabaseMerge {
+    optional bytes database_time = 1;
+    optional bytes database_signature = 2;
+    optional string key = 3;
+    optional string value = 4;
+    optional bytes proof = 5;
+    optional bytes update_identifier = 6;
+    optional bytes update_time = 7;
+    optional bytes update_signature = 8;
+}
+
+message DatabaseMergeResponse {
+    optional bytes database_signature = 1;
+}
