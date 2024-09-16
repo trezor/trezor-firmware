@@ -19,6 +19,8 @@
 
 #include "common.h"
 #include "py/mphal.h"
+
+#include "systick.h"
 #include "usb.h"
 
 static int vcp_iface_num = -1;
@@ -45,3 +47,11 @@ void mp_hal_set_vcp_iface(int iface_num) { vcp_iface_num = iface_num; }
 // Dummy implementation required by ports/stm32/gccollect.c.
 // The normal version requires MICROPY_ENABLE_SCHEDULER which we don't use.
 void soft_timer_gc_mark_all(void) {}
+
+void mp_hal_delay_ms(mp_uint_t Delay) { systick_delay_ms(Delay); }
+
+void mp_hal_delay_us(mp_uint_t usec) { systick_delay_us(usec); }
+
+mp_uint_t mp_hal_ticks_ms(void) { return systick_ms(); }
+
+mp_uint_t mp_hal_ticks_us(void) { return systick_ms() * 1000; }
