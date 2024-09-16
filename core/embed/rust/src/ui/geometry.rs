@@ -579,6 +579,7 @@ impl Alignment2D {
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 pub enum Axis {
     Horizontal,
     Vertical,
