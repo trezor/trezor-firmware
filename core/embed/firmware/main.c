@@ -36,203 +36,25 @@
 #include "ports/stm32/gccollect.h"
 #include "ports/stm32/pendsv.h"
 
-#include "bl_check.h"
-#include "board_capabilities.h"
-#include "common.h"
-#include "compiler_traits.h"
-#include "display.h"
-#include "entropy.h"
-#include "flash.h"
-#include "image.h"
-#include "memzero.h"
-#include "model.h"
-#include "mpu.h"
-#include "random_delays.h"
+#include "error_handling.h"
 #include "rsod.h"
-#include "rust_ui.h"
-#include "secure_aes.h"
+#include "rust_ui_common.h"
+#include "secbool.h"
+#include "systask.h"
 #include "system.h"
-#include "systimer.h"
 
-#include TREZOR_BOARD
-
-#ifdef USE_RGB_LED
-#include "rgb_led.h"
-#endif
-#ifdef USE_CONSUMPTION_MASK
-#include "consumption_mask.h"
-#endif
-#ifdef USE_DMA2D
-#ifdef NEW_RENDERING
-#include "dma2d_bitblt.h"
-#else
-#include "dma2d.h"
-#endif
-#endif
-
-#ifdef USE_BUTTON
-#include "button.h"
-#endif
-#ifdef USE_TOUCH
-#include "touch.h"
-#endif
-#ifdef USE_SD_CARD
-#include "sdcard.h"
-#endif
-#ifdef USE_HASH_PROCESSOR
-#include "hash_processor.h"
-#endif
-
-#ifdef USE_OPTIGA
-#include "optiga_commands.h"
-#include "optiga_transport.h"
-#endif
-#if defined USE_OPTIGA | defined STM32U5
-#include "secret.h"
-#endif
-
-#include "unit_variant.h"
-
-#ifdef SYSTEM_VIEW
-#include "systemview.h"
-#endif
-#include "platform.h"
-#include "rng.h"
 #ifdef USE_SECP256K1_ZKP
 #include "zkp_context.h"
 #endif
-#ifdef USE_HAPTIC
-#include "haptic.h"
-#endif
 
-#ifdef USE_OPTIGA
-#if !PYOPT
-#include <inttypes.h>
-#if 1  // color log
-#define OPTIGA_LOG_FORMAT \
-  "%" PRIu32 " \x1b[35moptiga\x1b[0m \x1b[32mDEBUG\x1b[0m %s: "
-#else
-#define OPTIGA_LOG_FORMAT "%" PRIu32 " optiga DEBUG %s: "
-#endif
-static void optiga_log_hex(const char *prefix, const uint8_t *data,
-                           size_t data_size) {
-  printf(OPTIGA_LOG_FORMAT, hal_ticks_ms() * 1000, prefix);
-  for (size_t i = 0; i < data_size; i++) {
-    printf("%02x", data[i]);
+int main(uint32_t cmd, void *arg) {
+  if (cmd == 1) {
+    systask_postmortem_t *info = (systask_postmortem_t *)arg;
+    rsod_gui(info);
+    system_exit(0);
   }
-  printf("\n");
-}
-#endif
-#endif
-
-int main(void) {
-  system_init(&rsod_gui);
-
-  rdi_init();
-
-#ifdef RDI
-  rdi_start();
-#endif
-
-  // reinitialize HAL for Trezor One
-#if defined TREZOR_MODEL_1
-  HAL_Init();
-#endif
-
-#ifdef SYSTEM_VIEW
-  enable_systemview();
-#endif
-
-#ifdef USE_HASH_PROCESSOR
-  hash_processor_init();
-#endif
-
-#ifdef USE_DMA2D
-  dma2d_init();
-#endif
-
-  display_init(DISPLAY_JUMP_BEHAVIOR);
-
-#ifdef STM32U5
-  check_oem_keys();
-#endif
 
   screen_boot_stage_2();
-
-#if !defined TREZOR_MODEL_1
-  parse_boardloader_capabilities();
-
-  unit_variant_init();
-
-#ifdef STM32U5
-  secure_aes_init();
-#endif
-
-#ifdef USE_OPTIGA
-  uint8_t secret[SECRET_OPTIGA_KEY_LEN] = {0};
-  secbool secret_ok = secret_optiga_get(secret);
-#endif
-
-  entropy_init();
-
-#if PRODUCTION || BOOTLOADER_QA
-  check_and_replace_bootloader();
-#endif
-
-#endif
-
-  // Init peripherals
-
-#if defined TREZOR_MODEL_T
-  set_core_clock(CLOCK_180_MHZ);
-#endif
-
-#ifdef USE_BUTTON
-  button_init();
-#endif
-
-#ifdef USE_RGB_LED
-  rgb_led_init();
-#endif
-
-#ifdef USE_CONSUMPTION_MASK
-  consumption_mask_init();
-#endif
-
-#ifdef USE_TOUCH
-  touch_init();
-#endif
-
-#ifdef USE_SD_CARD
-  sdcard_init();
-#endif
-
-#ifdef USE_HAPTIC
-  haptic_init();
-#endif
-
-#ifdef USE_OPTIGA
-
-#if !PYOPT
-  // command log is relatively quiet so we enable it in debug builds
-  optiga_command_set_log_hex(optiga_log_hex);
-  // transport log can be spammy, uncomment if you want it:
-  // optiga_transport_set_log_hex(optiga_log_hex);
-#endif
-
-  optiga_init();
-  if (sectrue == secret_ok) {
-    // If the shielded connection cannot be established, reset Optiga and
-    // continue without it. In this case, OID_KEY_FIDO and OID_KEY_DEV cannot be
-    // used, which means device and FIDO attestation will not work.
-    if (optiga_sec_chan_handshake(secret, sizeof(secret)) != OPTIGA_SUCCESS) {
-      optiga_soft_reset();
-    }
-  }
-  memzero(secret, sizeof(secret));
-  ensure(sectrue * (optiga_open_application() == OPTIGA_SUCCESS),
-         "Cannot initialize optiga.");
-#endif
 
 #ifdef USE_SECP256K1_ZKP
   ensure(sectrue * (zkp_context_init() == 0), NULL);
