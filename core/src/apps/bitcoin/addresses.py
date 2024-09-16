@@ -13,10 +13,7 @@ from .common import (
     p2tr_multisig_tweaked_pubkey,
 )
 from .multisig import multisig_get_dummy_pubkey
-from .scripts import (
-    output_script_native_segwit,
-    write_output_script_multisig,
-)
+from .scripts import output_script_native_segwit, write_output_script_multisig
 
 if TYPE_CHECKING:
     from trezor.crypto import bip32

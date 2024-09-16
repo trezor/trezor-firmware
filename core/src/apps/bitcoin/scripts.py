@@ -10,17 +10,17 @@ from apps.common.writers import write_compact_size
 
 from . import common
 from .common import (
-    SigHashType,
+    LEAF_VERSION,
     OP_CHECKSIG,
     OP_CHECKSIGADD,
     OP_NUMEQUAL,
-    LEAF_VERSION,
+    SigHashType,
     p2tr_multisig_tweaked_pubkey,
 )
 from .multisig import (
+    multisig_get_dummy_pubkey,
     multisig_get_pubkeys,
     multisig_pubkey_index,
-    multisig_get_dummy_pubkey,
 )
 from .readers import read_memoryview_prefixed, read_op_push
 from .writers import (
