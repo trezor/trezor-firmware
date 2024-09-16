@@ -1,12 +1,13 @@
 
-## 0.2.9 [7th September 2024]
+## 0.2.9 [18th September 2024]
 
 ### Added
-- Added commands to read bootloader and boardloader versions  [#3752]
-- Added TOUCH_CUSTOM and TOUCH_IDLE commands  [#4064]
+- Added commands to read bootloader and boardloader versions.  [#3752]
+- Added TOUCH_CUSTOM and TOUCH_IDLE commands.  [#4064]
 
 ### Changed
-- [T3B1] Changed welcome screen to show full white display  [#4140]
+- [T3B1] Changed welcome screen to show full white display.  [#4140]
+
 
 ## 0.2.8 [19th July 2024]
 

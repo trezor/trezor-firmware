@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.8.3] (18th September 2024)
+
+### Added
+- [T3T1] Added reassuring screen when entering empty passphrase.  [#4054]
+- Reduce the choices to select wordcount when unlocking repeated backup to 20 or 33.  [#4099]
+
+### Changed
+- Changed prefix of public key returned by `get_ecdh_session_key` for curve25519.  [#4093]
+- Renamed MATIC to POL, following a network upgrade.  [#4151]
+- [T3B1,T3T1] Included bootloader 2.1.8.
+
+### Removed
+- Removed `display_random` feature.  [#4119]
+
+### Fixed
+- [T3T1] Improved ETH staking flow.
+- [T3T1] Redesigned FIDO2 UI.  [#3797]
+- [T3T1] Improved ETH send flow.  [#3858]
+- Fix persistent word when going to previous word during recovery process.  [#3859]
+- [T2B1] Fix display orientation _south_.  [#3990]
+- Fixed SLIP-10 fingerprints for ed25519 and curve25519.  [#4093]
+- [T3T1] Added missing info about remaining shares in super-shamir recovery.  [#4142]
+
 ## [2.8.1] (21st August 2024)
 
 ### Added
@@ -950,7 +973,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#3636]: https://github.com/trezor/trezor-firmware/pull/3636
 [#3640]: https://github.com/trezor/trezor-firmware/pull/3640
 [#3728]: https://github.com/trezor/trezor-firmware/pull/3728
+[#3797]: https://github.com/trezor/trezor-firmware/pull/3797
 [#3855]: https://github.com/trezor/trezor-firmware/pull/3855
+[#3858]: https://github.com/trezor/trezor-firmware/pull/3858
+[#3859]: https://github.com/trezor/trezor-firmware/pull/3859
 [#3885]: https://github.com/trezor/trezor-firmware/pull/3885
 [#3895]: https://github.com/trezor/trezor-firmware/pull/3895
 [#3896]: https://github.com/trezor/trezor-firmware/pull/3896
@@ -967,10 +993,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#3972]: https://github.com/trezor/trezor-firmware/pull/3972
 [#3976]: https://github.com/trezor/trezor-firmware/pull/3976
 [#3987]: https://github.com/trezor/trezor-firmware/pull/3987
+[#3990]: https://github.com/trezor/trezor-firmware/pull/3990
 [#3992]: https://github.com/trezor/trezor-firmware/pull/3992
 [#4000]: https://github.com/trezor/trezor-firmware/pull/4000
 [#4006]: https://github.com/trezor/trezor-firmware/pull/4006
 [#4023]: https://github.com/trezor/trezor-firmware/pull/4023
 [#4030]: https://github.com/trezor/trezor-firmware/pull/4030
+[#4054]: https://github.com/trezor/trezor-firmware/pull/4054
 [#4060]: https://github.com/trezor/trezor-firmware/pull/4060
 [#4063]: https://github.com/trezor/trezor-firmware/pull/4063
+[#4093]: https://github.com/trezor/trezor-firmware/pull/4093
+[#4099]: https://github.com/trezor/trezor-firmware/pull/4099
+[#4119]: https://github.com/trezor/trezor-firmware/pull/4119
+[#4142]: https://github.com/trezor/trezor-firmware/pull/4142
+[#4151]: https://github.com/trezor/trezor-firmware/pull/4151

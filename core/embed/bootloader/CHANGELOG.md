@@ -7,15 +7,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## 2.1.8 [September 2024]
 
 ### Added
-- Added firmware downgrade protection  [#4133]
+- Added firmware downgrade protection.  [#4133]
 
 ### Changed
-- Require confirmation when installing non-full trust firmware image on empty device  [#3709]
+- Require confirmation when installing non-full trust firmware image on empty device.  [#3709]
 - Fix incorrect error message when installing firmware for different model.  [#4081]
-- [T3B1, T3T1] Added bootloader unlock mechanism to U5 models  [#4133]
+- [T3B1, T3T1] Added bootloader unlock mechanism to U5 models.  [#4133]
 
 ### Fixed
-- [T3B1] UI adjustments: fix icon on warning screen, replace empty logo with full during boot  [#4140]
+- [T3B1] UI adjustments: fix icon on warning screen, replace empty logo with full during boot.  [#4140]
 
 ## 2.1.7 [July 2024]
 
