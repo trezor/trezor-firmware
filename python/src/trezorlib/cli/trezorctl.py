@@ -36,6 +36,7 @@ from . import (
     btc,
     cardano,
     crypto,
+    database,
     debug,
     device,
     eos,
@@ -418,6 +419,8 @@ cli.add_command(tezos.cli)
 cli.add_command(firmware.cli)
 cli.add_command(debug.cli)
 cli.add_command(benchmark.cli)
+
+cli.add_command(database.cli)
 
 #
 # Main
