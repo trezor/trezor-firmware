@@ -322,6 +322,15 @@ enum MessageType {
     // THP
     reserved 1000 to 1099; // See messages-thp.proto
 
+    // Database
+    MessageType_DatabaseWipe = 1100 [(wire_in) = true];
+    MessageType_DatabaseWipeResponse = 1101 [(wire_out) = true];
+    MessageType_DatabaseModifyKey = 1102 [(wire_in) = true];
+    MessageType_DatabaseModifyKeyResponse = 1103 [(wire_out) = true];
+    MessageType_DatabaseProveMembership = 1104 [(wire_in) = true];
+    MessageType_DatabaseMerge = 1105 [(wire_in) = true];
+    MessageType_DatabaseMergeResponse = 1106 [(wire_out) = true];
+
     // Benchmark
     MessageType_BenchmarkListNames = 9100 [(bitcoin_only) = true];
     MessageType_BenchmarkNames = 9101 [(bitcoin_only) = true];
