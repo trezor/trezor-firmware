@@ -551,6 +551,7 @@ class Bitcoin:
                     i,
                     tx_info.tx,
                     self.get_sighash_type(txi),
+                    None,
                 )
             else:
                 return tx_info.sig_hasher.hash143(
