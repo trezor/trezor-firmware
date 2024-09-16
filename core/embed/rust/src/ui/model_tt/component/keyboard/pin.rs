@@ -23,6 +23,7 @@ use crate::{
     },
 };
 
+#[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 pub enum PinKeyboardMsg {
     Confirmed,
     Cancelled,

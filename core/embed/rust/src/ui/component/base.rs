@@ -26,6 +26,7 @@ use super::Paginate;
 /// Type used by components that do not return any messages.
 ///
 /// Alternative to the yet-unstable `!`-type.
+#[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 pub enum Never {}
 
 /// User interface is composed of components that can react to `Event`s through

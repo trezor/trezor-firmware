@@ -61,6 +61,7 @@ pub struct Homescreen {
     delay: Timer,
 }
 
+#[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 pub enum HomescreenMsg {
     Dismissed,
 }
