@@ -23,6 +23,7 @@ const SCROLLBAR_HEIGHT: i16 = 10;
 const APP_NAME_PADDING: i16 = 12;
 const APP_NAME_HEIGHT: i16 = 30;
 
+#[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 pub enum FidoMsg {
     Confirmed(usize),
     Cancelled,
