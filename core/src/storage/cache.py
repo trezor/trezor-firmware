@@ -1,7 +1,7 @@
 import builtins
 import gc
 
-from storage import cache_codec
+import storage.cache_codec as cache_codec
 from storage.cache_common import SESSIONLESS_FLAG, SessionlessCache
 
 # Cache initialization
