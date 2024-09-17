@@ -156,6 +156,13 @@ def get_features() -> Features:
 
         f.optiga_sec = optiga.get_sec()
 
+    if utils.USE_TROPIC:
+        from trezor.crypto import tropic
+
+        print("XXXXXXXXXXXXXXXXXXXX")
+        f.tropic_ping_result = tropic.ping()
+        print("YYYYYYYYYYYYYYYYYYYY", f.tropic_ping_result)
+
     f.initialized = storage_device.is_initialized()
 
     # private fields:

@@ -468,6 +468,8 @@ pub struct Features {
     pub recovery_type: ::std::option::Option<::protobuf::EnumOrUnknown<RecoveryType>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.management.Features.optiga_sec)
     pub optiga_sec: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.management.Features.tropic_ping_result)
+    pub tropic_ping_result: ::std::option::Option<bool>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.management.Features.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -1641,8 +1643,27 @@ impl Features {
         self.optiga_sec = ::std::option::Option::Some(v);
     }
 
+    // optional bool tropic_ping_result = 55;
+
+    pub fn tropic_ping_result(&self) -> bool {
+        self.tropic_ping_result.unwrap_or(false)
+    }
+
+    pub fn clear_tropic_ping_result(&mut self) {
+        self.tropic_ping_result = ::std::option::Option::None;
+    }
+
+    pub fn has_tropic_ping_result(&self) -> bool {
+        self.tropic_ping_result.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_tropic_ping_result(&mut self, v: bool) {
+        self.tropic_ping_result = ::std::option::Option::Some(v);
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(52);
+        let mut fields = ::std::vec::Vec::with_capacity(53);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "vendor",
@@ -1904,6 +1925,11 @@ impl Features {
             |m: &Features| { &m.optiga_sec },
             |m: &mut Features| { &mut m.optiga_sec },
         ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "tropic_ping_result",
+            |m: &Features| { &m.tropic_ping_result },
+            |m: &mut Features| { &mut m.tropic_ping_result },
+        ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<Features>(
             "Features",
             fields,
@@ -2090,6 +2116,9 @@ impl ::protobuf::Message for Features {
                 432 => {
                     self.optiga_sec = ::std::option::Option::Some(is.read_uint32()?);
                 },
+                440 => {
+                    self.tropic_ping_result = ::std::option::Option::Some(is.read_bool()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -2258,6 +2287,9 @@ impl ::protobuf::Message for Features {
         if let Some(v) = self.optiga_sec {
             my_size += ::protobuf::rt::uint32_size(54, v);
         }
+        if let Some(v) = self.tropic_ping_result {
+            my_size += 2 + 1;
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -2420,6 +2452,9 @@ impl ::protobuf::Message for Features {
         if let Some(v) = self.optiga_sec {
             os.write_uint32(54, v)?;
         }
+        if let Some(v) = self.tropic_ping_result {
+            os.write_bool(55, v)?;
+        }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
     }
@@ -2489,6 +2524,7 @@ impl ::protobuf::Message for Features {
         self.haptic_feedback = ::std::option::Option::None;
         self.recovery_type = ::std::option::Option::None;
         self.optiga_sec = ::std::option::Option::None;
+        self.tropic_ping_result = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -2546,6 +2582,7 @@ impl ::protobuf::Message for Features {
             haptic_feedback: ::std::option::Option::None,
             recovery_type: ::std::option::Option::None,
             optiga_sec: ::std::option::Option::None,
+            tropic_ping_result: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -11126,7 +11163,7 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x0emessages.proto\"\x80\x01\n\nInitialize\x12\x1d\n\nsession_id\x18\x01\
     \x20\x01(\x0cR\tsessionId\x12,\n\x10_skip_passphrase\x18\x02\x20\x01(\
     \x08R\x0eSkipPassphraseB\x02\x18\x01\x12%\n\x0ederive_cardano\x18\x03\
-    \x20\x01(\x08R\rderiveCardano\"\r\n\x0bGetFeatures\"\xd6\x17\n\x08Featur\
+    \x20\x01(\x08R\rderiveCardano\"\r\n\x0bGetFeatures\"\x84\x18\n\x08Featur\
     es\x12\x16\n\x06vendor\x18\x01\x20\x01(\tR\x06vendor\x12#\n\rmajor_versi\
     on\x18\x02\x20\x02(\rR\x0cmajorVersion\x12#\n\rminor_version\x18\x03\x20\
     \x02(\rR\x0cminorVersion\x12#\n\rpatch_version\x18\x04\x20\x02(\rR\x0cpa\
@@ -11176,7 +11213,8 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     ckaging\x183\x20\x01(\rR\runitPackaging\x12'\n\x0fhaptic_feedback\x184\
     \x20\x01(\x08R\x0ehapticFeedback\x12P\n\rrecovery_type\x185\x20\x01(\x0e\
     2+.hw.trezor.messages.management.RecoveryTypeR\x0crecoveryType\x12\x1d\n\
-    \noptiga_sec\x186\x20\x01(\rR\toptigaSec\"C\n\x12BackupAvailability\x12\
+    \noptiga_sec\x186\x20\x01(\rR\toptigaSec\x12,\n\x12tropic_ping_result\
+    \x187\x20\x01(\x08R\x10tropicPingResult\"C\n\x12BackupAvailability\x12\
     \x10\n\x0cNotAvailable\x10\0\x12\x0c\n\x08Required\x10\x01\x12\r\n\tAvai\
     lable\x10\x02\"7\n\x0eRecoveryStatus\x12\x0b\n\x07Nothing\x10\0\x12\x0c\
     \n\x08Recovery\x10\x01\x12\n\n\x06Backup\x10\x02\"\xc2\x04\n\nCapability\

@@ -3214,6 +3214,7 @@ class Features(protobuf.MessageType):
         52: protobuf.Field("haptic_feedback", "bool", repeated=False, required=False, default=None),
         53: protobuf.Field("recovery_type", "RecoveryType", repeated=False, required=False, default=None),
         54: protobuf.Field("optiga_sec", "uint32", repeated=False, required=False, default=None),
+        55: protobuf.Field("tropic_ping_result", "bool", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -3271,6 +3272,7 @@ class Features(protobuf.MessageType):
         haptic_feedback: Optional["bool"] = None,
         recovery_type: Optional["RecoveryType"] = None,
         optiga_sec: Optional["int"] = None,
+        tropic_ping_result: Optional["bool"] = None,
     ) -> None:
         self.capabilities: Sequence["Capability"] = capabilities if capabilities is not None else []
         self.major_version = major_version
@@ -3324,6 +3326,7 @@ class Features(protobuf.MessageType):
         self.haptic_feedback = haptic_feedback
         self.recovery_type = recovery_type
         self.optiga_sec = optiga_sec
+        self.tropic_ping_result = tropic_ping_result
 
 
 class LockDevice(protobuf.MessageType):

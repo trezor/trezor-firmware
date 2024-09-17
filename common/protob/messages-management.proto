@@ -117,6 +117,7 @@ message Features {
     optional bool haptic_feedback = 52;         // haptic feedback is enabled
     optional RecoveryType recovery_type = 53;   // what type of recovery we are in. NB: this works in conjunction with recovery_status
     optional uint32 optiga_sec = 54;            // Optiga's security event counter.
+    optional bool tropic_ping_result = 55;      // The result of pinging the Tropic Square chip.
 
     enum BackupAvailability {
         /// Device is already backed up, or a previous backup has failed.
