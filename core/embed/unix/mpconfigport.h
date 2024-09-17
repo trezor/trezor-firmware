@@ -139,7 +139,7 @@
 // extended modules
 #define MICROPY_PY_UCTYPES          (1)
 #define MICROPY_PY_UZLIB            (0)
-#define MICROPY_PY_UJSON            (0)
+#define MICROPY_PY_UJSON            (1)
 #define MICROPY_PY_UOS              (1)
 #define MICROPY_PY_UOS_INCLUDEFILE  "ports/unix/moduos.c"
 #define MICROPY_PY_UOS_ERRNO        (1)
