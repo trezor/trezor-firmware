@@ -142,6 +142,7 @@ SOURCE_BOOTLOADER = [
     'embed/bootloader_ci/main.c',
     'embed/bootloader_ci/messages.c',
     'embed/bootloader_ci/protob/messages.pb.c',
+    'embed/bootloader_ci/version_check.c',
 ]
 
 env.Replace(
