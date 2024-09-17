@@ -253,6 +253,7 @@ SOURCE_MOD += [
 
 SOURCE_MICROPYTHON = [
     'vendor/micropython/extmod/modubinascii.c',
+    'vendor/micropython/extmod/modujson.c',
     'vendor/micropython/extmod/moductypes.c',
     'vendor/micropython/extmod/moduheapq.c',
     'vendor/micropython/extmod/moduos.c',
