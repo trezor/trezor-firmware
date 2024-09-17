@@ -205,8 +205,11 @@ impl ComponentMsgObj for Progress {
 }
 
 impl ComponentMsgObj for Homescreen {
-    fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
-        Ok(CANCELLED.as_obj())
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        match msg {
+            Some(index) => Ok((CONFIRMED.as_obj(), index.try_into()?).try_into()?),
+            None => Ok(CANCELLED.as_obj()),
+        }
     }
 }
 

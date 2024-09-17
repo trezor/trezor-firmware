@@ -795,6 +795,7 @@ async def confirm_output(
     chunkify: bool = False,
     source_account: str | None = None,  # ignored on safe 3
     source_account_path: str | None = None,  # ignored on safe 3
+    cancel_text: str | None = None,  # ignored on safe 3
 ) -> None:
     title = title or TR.send__confirm_sending  # def_arg
     address_title = TR.words__recipient
@@ -1683,3 +1684,7 @@ def confirm_firmware_update(description: str, fingerprint: str) -> Awaitable[Non
             BR_CODE_OTHER,
         )
     )
+
+
+async def demo_start(_title: str) -> None:
+    return None

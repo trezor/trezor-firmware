@@ -28,12 +28,12 @@ use super::{
 
 const AREA: Rect = constant::screen();
 const TOP_CENTER: Point = AREA.top_center();
-const LABEL_Y: i16 = constant::HEIGHT - 18;
+const LABEL_Y: i16 = constant::HEIGHT - 24;
 const LABEL_AREA: Rect = AREA.split_top(LABEL_Y).1;
 const LOCKED_INSTRUCTION_Y: i16 = 27;
 const LOCKED_INSTRUCTION_AREA: Rect = AREA.split_top(LOCKED_INSTRUCTION_Y).1;
-const LOGO_ICON_TOP_MARGIN: i16 = 12;
-const LOCK_ICON_TOP_MARGIN: i16 = 12;
+const LOGO_ICON_TOP_MARGIN: i16 = 6;
+const LOCK_ICON_TOP_MARGIN: i16 = 6;
 const NOTIFICATION_HEIGHT: i16 = 12;
 const LABEL_OUTSET: i16 = 3;
 const NOTIFICATION_FONT: Font = Font::NORMAL_UPPER;
@@ -41,6 +41,14 @@ const NOTIFICATION_ICON: Icon = theme::ICON_WARNING;
 const COINJOIN_CORNER: Point = AREA.top_right().ofs(Offset::new(-2, 2));
 
 const HOLD_TO_LOCK_MS: u32 = 1000;
+
+const DEMO_OPTIONS: &[&str] = &[
+    "Tutorial",
+    "Set up a Wallet",
+    "Send BTC",
+    "Recovery",
+    "Safe 3 Demo",
+];
 
 fn paint_default_image() {
     theme::ICON_LOGO.draw(
@@ -67,6 +75,14 @@ enum CurrentScreen {
     Loader,
 }
 
+fn default_btn_layout() -> ButtonLayout {
+    ButtonLayout::text_none_arrow("Start".into())
+}
+
+fn label_btn_layout() -> ButtonLayout {
+    ButtonLayout::lock_none_arrow()
+}
+
 pub struct Homescreen {
     // TODO label should be a Child in theory, but the homescreen image is not, so it is
     // always painted, so we need to always paint the label too
@@ -74,13 +90,16 @@ pub struct Homescreen {
     notification: Option<(TString<'static>, u8)>,
     custom_image: Option<BinaryData<'static>>,
     /// Used for HTC functionality to lock device from homescreen
-    invisible_buttons: Child<ButtonController>,
+    /// and for demo selection
+    homescreen_buttons: Child<ButtonController>,
     /// Holds the loader component
     loader: Option<Child<ProgressLoader>>,
     /// Whether to show the loader or not
     show_loader: bool,
     /// Which screen is currently shown
     current_screen: CurrentScreen,
+    demo_options: &'static [&'static str],
+    current_demo_index: usize,
 }
 
 impl Homescreen {
@@ -89,20 +108,19 @@ impl Homescreen {
         notification: Option<(TString<'static>, u8)>,
         loader_description: Option<TString<'static>>,
     ) -> Self {
-        // Buttons will not be visible, we only need both left and right to be existing
-        // so we can get the events from them.
-        let invisible_btn_layout = ButtonLayout::text_none_text("".into(), "".into());
         let loader =
             loader_description.map(|desc| Child::new(ProgressLoader::new(desc, HOLD_TO_LOCK_MS)));
 
         Self {
-            label: Label::centered(label, theme::TEXT_BIG),
+            label: Label::centered(DEMO_OPTIONS[0].into(), theme::TEXT_NORMAL),
             notification,
             custom_image: get_homescreen_image(),
-            invisible_buttons: Child::new(ButtonController::new(invisible_btn_layout)),
+            homescreen_buttons: Child::new(ButtonController::new(default_btn_layout())),
             loader,
             show_loader: false,
             current_screen: CurrentScreen::EmptyAtStart,
+            demo_options: DEMO_OPTIONS,
+            current_demo_index: 0,
         }
     }
 
@@ -248,52 +266,121 @@ impl Homescreen {
             ctx.request_paint();
         }
     }
+
+    fn update_label(&mut self) {
+        self.label
+            .set_text(self.demo_options[self.current_demo_index].into());
+    }
+
+    fn update_button_layout(&mut self, ctx: &mut EventCtx) {
+        let is_last_option = self.current_demo_index == self.demo_options.len() - 1;
+        let btn_layout = if is_last_option {
+            label_btn_layout()
+        } else {
+            default_btn_layout()
+        };
+        self.homescreen_buttons.mutate(ctx, |_ctx, btn| {
+            btn.set(btn_layout);
+        });
+    }
 }
 
 impl Component for Homescreen {
-    type Msg = ();
+    type Msg = Option<usize>;
 
     fn place(&mut self, bounds: Rect) -> Rect {
         self.label.place(LABEL_AREA);
         self.loader.place(AREA);
+        self.homescreen_buttons
+            .place(bounds.split_bottom(theme::BUTTON_HEIGHT).1);
         bounds
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         Self::event_usb(self, ctx, event);
 
+        let button_event = self.homescreen_buttons.event(ctx, event);
         // Only care about button and loader events when there is a possibility of
         // locking the device
         if let Some(self_loader) = &mut self.loader {
-            // When loader has completely grown, we can lock the device
-            if let Some(LoaderMsg::GrownCompletely) = self_loader.event(ctx, event) {
-                return Some(());
-            }
+            if self.current_demo_index == self.demo_options.len() - 1 {
+                // When loader has completely grown, we can lock the device
+                if let Some(LoaderMsg::GrownCompletely) = self_loader.event(ctx, event) {
+                    return Some(None);
+                }
 
-            // Longer hold of any button will lock the device.
-            // Normal/quick presses and releases will show/hide the loader.
-            let button_event = self.invisible_buttons.event(ctx, event);
-            if let Some(ButtonControllerMsg::Pressed(..)) = button_event {
-                if !self.show_loader {
-                    self.show_loader = true;
+                // Longer hold of left button will lock the device, but only on the label screen
+                // (last option) Normal/quick presses and releases will
+                // show/hide the loader.
+                if let Some(ButtonControllerMsg::Pressed(ButtonPos::Left)) = button_event {
+                    if !self.show_loader {
+                        self.show_loader = true;
+                        self_loader.mutate(ctx, |ctx, loader| {
+                            loader.start(ctx);
+                            ctx.request_paint();
+                        });
+                    }
+                }
+                if let Some(ButtonControllerMsg::Triggered(ButtonPos::Left, _)) = button_event {
+                    self.show_loader = false;
                     self_loader.mutate(ctx, |ctx, loader| {
-                        loader.start(ctx);
+                        loader.stop(ctx);
                         ctx.request_paint();
                     });
                 }
             }
-            if let Some(ButtonControllerMsg::Triggered(..)) = button_event {
-                self.show_loader = false;
-                self_loader.mutate(ctx, |ctx, loader| {
-                    loader.stop(ctx);
-                    ctx.request_paint();
-                });
+        }
+        match button_event {
+            Some(ButtonControllerMsg::Pressed(ButtonPos::Left)) => {
+                if self.current_demo_index != self.demo_options.len() - 1 {
+                    return Some(Some(self.current_demo_index));
+                }
             }
+            Some(ButtonControllerMsg::Pressed(ButtonPos::Right)) => {
+                self.current_demo_index = (self.current_demo_index + 1) % self.demo_options.len();
+                self.update_button_layout(ctx);
+                self.update_label();
+                ctx.request_repaint_root();
+            }
+            _ => {}
         }
 
         None
     }
 
+    // ButtonControllerMsg::Triggered(ButtonPos::Middle, _) => {
+    //     if self.current_demo_index == self.demo_options.len() - 1 {
+    //         // Last option: stop loader if it was started
+    //         if let Some(self_loader) = &mut self.loader {
+    //             self.show_loader = false;
+    //             self_loader.mutate(ctx, |ctx, loader| {
+    //                 loader.stop(ctx);
+    //                 ctx.request_paint();
+    //             });
+    //         }
+    //     } else {
+    //         // Other options: start the demo
+    //         return Some(Some(self.current_demo_index));
+    //     }
+    // }
+    // ButtonControllerMsg::Pressed(ButtonPos::Left) => {
+    //     self.current_demo_index = if self.current_demo_index == 0 {
+    //         self.demo_options.len() - 1
+    //     } else {
+    //         self.current_demo_index - 1
+    //     };
+    //     self.update_button_layout(ctx);
+    //     self.update_label();
+    //     ctx.request_repaint_root();
+    // }
+    // ButtonControllerMsg::Pressed(ButtonPos::Right) => {
+    //     self.current_demo_index =
+    //         (self.current_demo_index + 1) % self.demo_options.len();
+    //     self.update_button_layout(ctx);
+    //     self.update_label();
+    //     ctx.request_repaint_root();
+    // }
+    // _ => {}
     fn paint(&mut self) {
         // Redraw the whole screen when the screen changes (loader vs homescreen)
         if self.show_loader {
@@ -312,6 +399,7 @@ impl Component for Homescreen {
             self.paint_homescreen_image();
             self.paint_notification();
             self.paint_label();
+            self.homescreen_buttons.paint();
         }
     }
 
@@ -325,6 +413,7 @@ impl Component for Homescreen {
             self.render_homescreen_image(target);
             self.render_notification(target);
             self.render_label(target);
+            self.homescreen_buttons.render(target);
         }
     }
 }

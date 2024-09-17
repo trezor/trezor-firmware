@@ -832,6 +832,14 @@ impl ButtonLayout {
     pub fn none_none_arrow_wide() -> Self {
         Self::new(None, None, Some(ButtonDetails::down_arrow_icon_wide()))
     }
+
+    pub fn lock_none_arrow() -> Self {
+        Self::new(
+            Some(ButtonDetails::icon(theme::ICON_LOCK)),
+            None,
+            Some(ButtonDetails::right_arrow_icon()),
+        )
+    }
 }
 
 /// What happens when a button is triggered.
