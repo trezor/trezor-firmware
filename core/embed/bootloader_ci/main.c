@@ -40,6 +40,7 @@
 #include "bootui.h"
 #include "messages.h"
 #include "model.h"
+#include "version_check.h"
 
 #ifdef USE_HASH_PROCESSOR
 #include "hash_processor.h"
@@ -174,34 +175,6 @@ static secbool check_vendor_header_lock(const vendor_header *const vhdr) {
   return sectrue * (0 == memcmp(lock, hash, 32));
 }
 
-// protection against bootloader downgrade
-
-#if PRODUCTION
-
-static void check_bootloader_version(void) {
-  uint8_t bits[FLASH_OTP_BLOCK_SIZE];
-  for (int i = 0; i < FLASH_OTP_BLOCK_SIZE * 8; i++) {
-    if (i < VERSION_MONOTONIC) {
-      bits[i / 8] &= ~(1 << (7 - (i % 8)));
-    } else {
-      bits[i / 8] |= (1 << (7 - (i % 8)));
-    }
-  }
-  ensure(flash_otp_write(FLASH_OTP_BLOCK_BOOTLOADER_VERSION, 0, bits,
-                         FLASH_OTP_BLOCK_SIZE),
-         NULL);
-
-  uint8_t bits2[FLASH_OTP_BLOCK_SIZE];
-  ensure(flash_otp_read(FLASH_OTP_BLOCK_BOOTLOADER_VERSION, 0, bits2,
-                        FLASH_OTP_BLOCK_SIZE),
-         NULL);
-
-  ensure(sectrue * (0 == memcmp(bits, bits2, FLASH_OTP_BLOCK_SIZE)),
-         "Bootloader downgraded");
-}
-
-#endif
-
 int main(void) {
   random_delays_init();
 #ifdef USE_TOUCH
@@ -214,8 +187,9 @@ int main(void) {
 
   mpu_config_bootloader();
 
-#if PRODUCTION
-  check_bootloader_version();
+#if PRODUCTION && !defined STM32U5
+  // for STM32U5, this check is moved to boardloader
+  ensure_bootloader_min_version();
 #endif
 
   display_clear();
