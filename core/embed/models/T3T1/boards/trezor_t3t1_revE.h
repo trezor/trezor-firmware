@@ -116,4 +116,6 @@
 #define SD_ENABLE_PORT GPIOC
 #define SD_ENABLE_PIN GPIO_PIN_3
 
+#define NPM1300_I2C_INSTANCE 2
+
 #endif  //_TREZOR_T_H
