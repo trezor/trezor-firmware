@@ -10,7 +10,8 @@ def add_font(
     if font is not None:
         font_filename = font.replace("_upper", "").lower()
         defines += [
-            (f"TREZOR_FONT_{font_name}_ENABLE", font),
+            f"TREZOR_FONT_{font_name}_ENABLE",
+            (f"TREZOR_FONT_{font_name}_NAME", font),
             (f"TREZOR_FONT_{font_name}_INCLUDE", f'"{font_filename}.h"'),
         ]
         sourcefile = "embed/gfx/fonts/" + font_filename + ".c"
