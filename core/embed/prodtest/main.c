@@ -37,6 +37,7 @@
 #include "image.h"
 #include "model.h"
 #include "mpu.h"
+#include "powerctl/npm1300.h"
 #include "prodtest_common.h"
 #include "random_delays.h"
 #include "rsod.h"
@@ -781,6 +782,94 @@ void cpuid_read(void) {
   vcp_println_hex((uint8_t *)cpuid, sizeof(cpuid));
 }
 
+void test_pmic(const char *args) {
+  if (strcmp(args, "INIT") == 0) {
+    npm1300_deinit();
+    bool ok = npm1300_init();
+    if (ok) {
+      vcp_println("OK");
+    } else {
+      vcp_println("ERROR # I/O error");
+    }
+  } else if (strcmp(args, "CHGSTART") == 0) {
+    bool ok = npm1300_set_charging(true);
+    if (ok) {
+      vcp_println("OK # Charging started with %dmA current limit",
+                  npm1300_get_charging_limit());
+    } else {
+      vcp_println("ERROR");
+    }
+  } else if (strcmp(args, "CHGSTOP") == 0) {
+    bool ok = npm1300_set_charging(false);
+    if (ok) {
+      vcp_println("OK # Charging stopped");
+    } else {
+      vcp_println("ERROR # I/O error");
+    }
+  } else if (strncmp(args, "CHGLIMIT", 8) == 0) {
+    int i_charge = atoi(&args[8]);
+    if (i_charge < NPM1300_CHARGING_LIMIT_MIN ||
+        i_charge > NPM1300_CHARGING_LIMIT_MAX) {
+      vcp_println("ERROR # Out of range");
+      return;
+    } else {
+      bool ok = npm1300_set_charging_limit(i_charge);
+      if (ok) {
+        vcp_println("OK # %dmA current limit", npm1300_get_charging_limit());
+      } else {
+        vcp_println("ERROR # I/O error");
+      }
+    }
+  } else if (strncmp(args, "MEASURE", 7) == 0) {
+    int seconds = atoi(&args[7]);
+    uint32_t ticks = hal_ticks_ms();
+    vcp_println(
+        "time; vbat; ibat; ntc_temp; vsys; die_temp; iba_meas_status; mode");
+    do {
+      npm1300_report_t report;
+      bool ok = npm1300_measure_sync(&report);
+      if (!ok) {
+        vcp_println("ERROR # I/O error");
+        break;
+      }
+
+      vcp_print("%09d; ", ticks);
+      vcp_print("%d.%03d; ", (int)report.vbat,
+                (int)(report.vbat * 1000) % 1000);
+      vcp_print("%d.%03d; ", (int)report.ibat,
+                (int)abs(report.ibat * 1000) % 1000);
+      vcp_print("%d.%03d; ", (int)report.ntc_temp,
+                (int)abs(report.ntc_temp * 1000) % 1000);
+      vcp_print("%d.%03d; ", (int)report.vsys,
+                (int)(report.vsys * 1000) % 1000);
+      vcp_print("%d.%03d; ", (int)report.die_temp,
+                (int)abs(report.die_temp * 1000) % 1000);
+      vcp_print("%02X; ", report.ibat_meas_status);
+
+      bool ibat_discharging = ((report.ibat_meas_status >> 2) & 0x03) == 1;
+      bool ibat_charging = ((report.ibat_meas_status >> 2) & 0x03) == 3;
+
+      if (ibat_discharging) {
+        vcp_print("DISCHARGING");
+      } else if (ibat_charging) {
+        vcp_print("CHARGING");
+      } else {
+        vcp_print("IDLE");
+      }
+
+      vcp_println("");
+
+      while (!ticks_expired(ticks + 1000)) {
+      };
+
+      ticks += 1000;
+
+    } while (seconds-- > 0);
+
+    vcp_println("OK # Measurement finished");
+  }
+}
+
 #define BACKLIGHT_NORMAL 150
 
 int main(void) {
@@ -800,6 +889,7 @@ int main(void) {
 #ifdef USE_BUTTON
   button_init();
 #endif
+  npm1300_init();
 #ifdef USE_TOUCH
   touch_init();
 #endif
@@ -935,6 +1025,10 @@ int main(void) {
       test_wipe();
     } else if (startswith(line, "REBOOT")) {
       test_reboot();
+    } else if (startswith(line, "PMIC ")) {
+      test_pmic(line + 5);
+    } else if (startswith(line, "PMIC")) {
+      test_pmic(line + 4);
     } else {
       vcp_println("UNKNOWN");
     }
