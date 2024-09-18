@@ -21,7 +21,7 @@
 #define _FONTS_H
 
 #include <stdbool.h>
-
+#include <stdint.h>
 #include "font_bitmap.h"
 
 #ifdef USE_RGB_COLORS
@@ -30,156 +30,43 @@
 #define TREZOR_FONT_BPP 1
 #endif
 
-#define COMPOSE(font_name, suffix) font_name##suffix
-#define FONT_DEFINE(s, suffix) COMPOSE(s, suffix)
-
-#ifdef TREZOR_FONT_NORMAL_ENABLE
-#define FONT_NORMAL (-1)
-#include TREZOR_FONT_NORMAL_INCLUDE
-#define FONT_NORMAL_DATA TREZOR_FONT_NORMAL_NAME
-#define FONT_NORMAL_HEIGHT FONT_DEFINE(TREZOR_FONT_NORMAL_NAME, _HEIGHT)
-#define FONT_NORMAL_MAX_HEIGHT FONT_DEFINE(TREZOR_FONT_NORMAL_NAME, _MAX_HEIGHT)
-#define FONT_NORMAL_BASELINE FONT_DEFINE(TREZOR_FONT_NORMAL_NAME, _BASELINE)
-#endif
-
-#ifdef TREZOR_FONT_BIG_ENABLE
-#include TREZOR_FONT_BIG_INCLUDE
-#define FONT_BIG (-4)
-#define FONT_BIG_DATA TREZOR_FONT_BIG_NAME
-#define FONT_BIG_HEIGHT FONT_DEFINE(TREZOR_FONT_BIG_NAME, _HEIGHT)
-#define FONT_BIG_MAX_HEIGHT FONT_DEFINE(TREZOR_FONT_BIG_NAME, _MAX_HEIGHT)
-#define FONT_BIG_BASELINE FONT_DEFINE(TREZOR_FONT_BIG_NAME, _BASELINE)
-#endif
-
-#ifdef TREZOR_FONT_DEMIBOLD_ENABLE
-#include TREZOR_FONT_DEMIBOLD_INCLUDE
-#define FONT_DEMIBOLD (-5)
-#define FONT_DEMIBOLD_DATA TREZOR_FONT_DEMIBOLD_NAME
-#define FONT_DEMIBOLD_HEIGHT FONT_DEFINE(TREZOR_FONT_DEMIBOLD_NAME, _HEIGHT)
-#define FONT_DEMIBOLD_MAX_HEIGHT \
-  FONT_DEFINE(TREZOR_FONT_DEMIBOLD_NAME, _MAX_HEIGHT)
-#define FONT_DEMIBOLD_BASELINE FONT_DEFINE(TREZOR_FONT_DEMIBOLD_NAME, _BASELINE)
-#endif
-
-#ifdef TREZOR_FONT_SUB_ENABLE
-#include TREZOR_FONT_SUB_INCLUDE
-#define FONT_SUB (-8)
-#define FONT_SUB_DATA TREZOR_FONT_SUB_NAME
-#define FONT_SUB_HEIGHT FONT_DEFINE(TREZOR_FONT_SUB_NAME, _HEIGHT)
-#define FONT_SUB_MAX_HEIGHT FONT_DEFINE(TREZOR_FONT_SUB_NAME, _MAX_HEIGHT)
-#define FONT_SUB_BASELINE FONT_DEFINE(TREZOR_FONT_SUB_NAME, _BASELINE)
-#endif
-
-#ifdef TREZOR_FONT_MONO_ENABLE
-#include TREZOR_FONT_MONO_INCLUDE
-#define FONT_MONO (-3)
-#define FONT_MONO_DATA TREZOR_FONT_MONO_NAME
-#define FONT_MONO_HEIGHT FONT_DEFINE(TREZOR_FONT_MONO_NAME, _HEIGHT)
-#define FONT_MONO_MAX_HEIGHT FONT_DEFINE(TREZOR_FONT_MONO_NAME, _MAX_HEIGHT)
-#define FONT_MONO_BASELINE FONT_DEFINE(TREZOR_FONT_MONO_NAME, _BASELINE)
-#endif
-
-#ifdef TREZOR_FONT_BOLD_ENABLE
-#include TREZOR_FONT_BOLD_INCLUDE
-#define FONT_BOLD (-2)
-#define FONT_BOLD_DATA TREZOR_FONT_BOLD_NAME
-#define FONT_BOLD_HEIGHT FONT_DEFINE(TREZOR_FONT_BOLD_NAME, _HEIGHT)
-#define FONT_BOLD_MAX_HEIGHT FONT_DEFINE(TREZOR_FONT_BOLD_NAME, _MAX_HEIGHT)
-#define FONT_BOLD_BASELINE FONT_DEFINE(TREZOR_FONT_BOLD_NAME, _BASELINE)
-#endif
-
-#ifdef TREZOR_FONT_NORMAL_UPPER_ENABLE
-#include TREZOR_FONT_NORMAL_UPPER_INCLUDE
-#define FONT_NORMAL_UPPER (-6)
-#define FONT_NORMAL_UPPER_DATA TREZOR_FONT_NORMAL_UPPER_NAME
-#define FONT_NORMAL_UPPER_HEIGHT \
-  FONT_DEFINE(TREZOR_FONT_NORMAL_UPPER_NAME, _HEIGHT)
-#define FONT_NORMAL_UPPER_MAX_HEIGHT \
-  FONT_DEFINE(TREZOR_FONT_NORMAL_UPPER_NAME, _MAX_HEIGHT)
-#define FONT_NORMAL_UPPER_BASELINE \
-  FONT_DEFINE(TREZOR_FONT_NORMAL_UPPER_NAME, _BASELINE)
-#endif
-
-#ifdef TREZOR_FONT_BOLD_UPPER_ENABLE
-#include TREZOR_FONT_BOLD_UPPER_INCLUDE
-#define FONT_BOLD_UPPER (-7)
-#define FONT_BOLD_UPPER_DATA TREZOR_FONT_BOLD_UPPER_NAME
-#define FONT_BOLD_UPPER_HEIGHT FONT_DEFINE(TREZOR_FONT_BOLD_UPPER_NAME, _HEIGHT)
-#define FONT_BOLD_UPPER_MAX_HEIGHT \
-  FONT_DEFINE(TREZOR_FONT_BOLD_UPPER_NAME, _MAX_HEIGHT)
-#define FONT_BOLD_UPPER_BASELINE \
-  FONT_DEFINE(TREZOR_FONT_BOLD_UPPER_NAME, _BASELINE)
-#endif
-
-#define MAX_FONT_H(A, B) ((A) > (B) ? (A) : (B))
-
-#define FONT_MAX_HEIGHT_1 0
-#ifdef TREZOR_FONT_NORMAL_ENABLE
-#define FONT_MAX_HEIGHT_2 MAX_FONT_H(FONT_NORMAL_MAX_HEIGHT, FONT_MAX_HEIGHT_1)
-#else
-#define FONT_MAX_HEIGHT_2 FONT_MAX_HEIGHT_1
-#endif
-
-#ifdef TREZOR_FONT_BOLD_ENABLE
-#define FONT_MAX_HEIGHT_3 MAX_FONT_H(FONT_BOLD_MAX_HEIGHT, FONT_MAX_HEIGHT_2)
-#else
-#define FONT_MAX_HEIGHT_3 FONT_MAX_HEIGHT_2
-#endif
-
-#ifdef TREZOR_FONT_BIG_ENABLE
-#define FONT_MAX_HEIGHT_4 MAX_FONT_H(FONT_BIG_MAX_HEIGHT, FONT_MAX_HEIGHT_3)
-#else
-#define FONT_MAX_HEIGHT_4 FONT_MAX_HEIGHT_3
-#endif
-
-#ifdef TREZOR_FONT_DEMIBOLD_ENABLE
-#define FONT_MAX_HEIGHT_5 \
-  MAX_FONT_H(FONT_DEMIBOLD_MAX_HEIGHT, FONT_MAX_HEIGHT_4)
-#else
-#define FONT_MAX_HEIGHT_5 FONT_MAX_HEIGHT_4
-#endif
-
-#ifdef TREZOR_FONT_NORMAL_UPPER_ENABLE
-#define FONT_MAX_HEIGHT_6 \
-  MAX_FONT_H(FONT_NORMAL_UPPER_MAX_HEIGHT, FONT_MAX_HEIGHT_5)
-#else
-#define FONT_MAX_HEIGHT_6 FONT_MAX_HEIGHT_5
-#endif
-
-#ifdef TREZOR_FONT_BOLD_UPPER_ENABLE
-#define FONT_MAX_HEIGHT_7 \
-  MAX_FONT_H(FONT_BOLD_UPPER_MAX_HEIGHT, FONT_MAX_HEIGHT_6)
-#else
-#define FONT_MAX_HEIGHT_7 FONT_MAX_HEIGHT_6
-#endif
-
-#ifdef TREZOR_FONT_SUB_ENABLE
-#define FONT_MAX_HEIGHT_8 MAX_FONT_H(FONT_SUB_MAX_HEIGHT, FONT_MAX_HEIGHT_7)
-#else
-#define FONT_MAX_HEIGHT_8 FONT_MAX_HEIGHT_7
-#endif
-
-#ifdef TREZOR_FONT_MONO_ENABLE
-#define FONT_MAX_HEIGHT MAX_FONT_H(FONT_MONO_MAX_HEIGHT, FONT_MAX_HEIGHT_8)
-#else
-#define FONT_MAX_HEIGHT FONT_MAX_HEIGHT_8
-#endif
-
-int font_height(int font);
-int font_max_height(int font);
-int font_baseline(int font);
-const uint8_t *font_get_glyph(int font, uint16_t c);
-const uint8_t *font_nonprintable_glyph(int font);
-
+/// Font information structure containing metadata and pointers to font data
 typedef struct {
-  const int font;
+  int height;
+  int max_height;
+  int baseline;
+  const uint8_t *const *glyph_data;
+  const uint8_t *glyph_nonprintable;
+} font_info_t;
+
+/// Font identifiers
+typedef enum {
+  FONT_NORMAL = -1,
+  FONT_BOLD = -2,
+  FONT_MONO = -3,
+  FONT_BIG = -4,
+  FONT_DEMIBOLD = -5,
+  FONT_NORMAL_UPPER = -6,
+  FONT_BOLD_UPPER = -7,
+  FONT_SUB = -8,
+} font_id_t;
+
+/// Font glyph iterator structure
+typedef struct {
+  const font_id_t font;
   const uint8_t *text;
   int remaining;
 } font_glyph_iter_t;
 
-font_glyph_iter_t font_glyph_iter_init(const int font, const uint8_t *text,
+int font_height(font_id_t font);
+int font_max_height(font_id_t font);
+int font_baseline(font_id_t font);
+const uint8_t *font_get_glyph(font_id_t font, const uint16_t c);
+const uint8_t *font_nonprintable_glyph(font_id_t font);
+
+font_glyph_iter_t font_glyph_iter_init(font_id_t font, const uint8_t *text,
                                        const int len);
 bool font_next_glyph(font_glyph_iter_t *iter, const uint8_t **out);
-int font_text_width(int font, const char *text, int textlen);
+int font_text_width(font_id_t font, const char *text, int textlen);
 
 #endif  //_FONTS_H
