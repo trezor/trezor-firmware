@@ -61,6 +61,7 @@ def stm32u5_common_files(env, defines, sources, paths):
         "embed/trezorhal/stm32u5/monoctr.c",
         "embed/trezorhal/stm32u5/mpu.c",
         "embed/trezorhal/stm32u5/option_bytes.c",
+        "embed/trezorhal/stm32u5/powerctl/npm1300.c",
         "embed/trezorhal/stm32u5/pvd.c",
         "embed/trezorhal/stm32u5/random_delays.c",
         "embed/trezorhal/stm32u5/reset_flags.c",
