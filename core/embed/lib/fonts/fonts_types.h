@@ -26,7 +26,7 @@ typedef enum {
 
 /// Font glyph iterator structure
 typedef struct {
-  const int font;
+  const font_id_t font;
   const uint8_t* text;
   int remaining;
 } font_glyph_iter_t;

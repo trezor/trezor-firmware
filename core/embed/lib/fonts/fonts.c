@@ -96,22 +96,22 @@ static const font_info_t *get_font_info(font_id_t font_id) {
   }
 }
 
-int font_height(int font_id) {
+int font_height(font_id_t font_id) {
   const font_info_t *font_info = get_font_info(font_id);
   return font_info ? font_info->height : 0;
 }
 
-int font_max_height(int font) {
+int font_max_height(font_id_t font) {
   const font_info_t *font_info = get_font_info(font);
   return font_info ? font_info->max_height : 0;
 }
 
-int font_baseline(int font) {
+int font_baseline(font_id_t font) {
   const font_info_t *font_info = get_font_info(font);
   return font_info ? font_info->baseline : 0;
 }
 
-const uint8_t *font_get_glyph(int font, uint16_t c) {
+const uint8_t *font_get_glyph(font_id_t font, uint16_t c) {
 #ifdef TRANSLATIONS
   // found UTF8 character
   // it is not hardcoded in firmware fonts, it must be extracted from the
@@ -136,12 +136,12 @@ const uint8_t *font_get_glyph(int font, uint16_t c) {
   return font_nonprintable_glyph(font);
 }
 
-const uint8_t *font_nonprintable_glyph(int font) {
+const uint8_t *font_nonprintable_glyph(font_id_t font) {
   const font_info_t *font_info = get_font_info(font);
   return font_info ? font_info->glyph_nonprintable : NULL;
 }
 
-font_glyph_iter_t font_glyph_iter_init(const int font, const uint8_t *text,
+font_glyph_iter_t font_glyph_iter_init(font_id_t font, const uint8_t *text,
                                        const int len) {
   return (font_glyph_iter_t){
       .font = font,
@@ -212,7 +212,7 @@ bool font_next_glyph(font_glyph_iter_t *iter, const uint8_t **out) {
 }
 
 // compute the width of the text (in pixels)
-int font_text_width(int font, const char *text, int textlen) {
+int font_text_width(font_id_t font, const char *text, int textlen) {
   int width = 0;
   // determine text length if not provided
   if (textlen < 0) {

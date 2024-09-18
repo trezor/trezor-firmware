@@ -89,7 +89,7 @@ void display_bar(int x, int y, int w, int h, uint16_t c) {
   display_pixeldata_dirty();
 }
 
-void display_text_render_buffer(const char *text, int textlen, int font,
+void display_text_render_buffer(const char *text, int textlen, font_id_t font,
                                 buffer_text_t *buffer, int text_offset) {
   // determine text length if not provided
   if (textlen < 0) {
@@ -159,7 +159,8 @@ void display_text_render_buffer(const char *text, int textlen, int font,
 
 #ifdef FRAMEBUFFER
 static void display_text_render(int x, int y, const char *text, int textlen,
-                                int font, uint16_t fgcolor, uint16_t bgcolor) {
+                                font_id_t font, uint16_t fgcolor,
+                                uint16_t bgcolor) {
   // determine text length if not provided
   if (textlen < 0) {
     textlen = strlen(text);
@@ -226,7 +227,8 @@ static void display_text_render(int x, int y, const char *text, int textlen,
 
 #else
 static void display_text_render(int x, int y, const char *text, int textlen,
-                                int font, uint16_t fgcolor, uint16_t bgcolor) {
+                                font_id_t font, uint16_t fgcolor,
+                                uint16_t bgcolor) {
   // determine text length if not provided
   if (textlen < 0) {
     textlen = strlen(text);
@@ -282,23 +284,23 @@ static void display_text_render(int x, int y, const char *text, int textlen,
 }
 #endif
 
-void display_text(int x, int y, const char *text, int textlen, int font,
+void display_text(int x, int y, const char *text, int textlen, font_id_t font,
                   uint16_t fgcolor, uint16_t bgcolor) {
   x += DISPLAY_OFFSET.x;
   y += DISPLAY_OFFSET.y;
   display_text_render(x, y, text, textlen, font, fgcolor, bgcolor);
 }
 
-void display_text_center(int x, int y, const char *text, int textlen, int font,
-                         uint16_t fgcolor, uint16_t bgcolor) {
+void display_text_center(int x, int y, const char *text, int textlen,
+                         font_id_t font, uint16_t fgcolor, uint16_t bgcolor) {
   x += DISPLAY_OFFSET.x;
   y += DISPLAY_OFFSET.y;
   int w = font_text_width(font, text, textlen);
   display_text_render(x - w / 2, y, text, textlen, font, fgcolor, bgcolor);
 }
 
-void display_text_right(int x, int y, const char *text, int textlen, int font,
-                        uint16_t fgcolor, uint16_t bgcolor) {
+void display_text_right(int x, int y, const char *text, int textlen,
+                        font_id_t font, uint16_t fgcolor, uint16_t bgcolor) {
   x += DISPLAY_OFFSET.x;
   y += DISPLAY_OFFSET.y;
   int w = font_text_width(font, text, textlen);
