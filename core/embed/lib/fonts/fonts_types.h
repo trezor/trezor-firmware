@@ -5,7 +5,6 @@
 
 /// Font information structure containing metadata and pointers to font data
 typedef struct {
-  const char* name;
   int height;
   int max_height;
   int baseline;
