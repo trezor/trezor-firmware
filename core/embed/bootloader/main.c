@@ -25,7 +25,6 @@
 #include "common.h"
 #include "display.h"
 #include "display_utils.h"
-#include "fault_handlers.h"
 #include "flash.h"
 #include "flash_otp.h"
 #include "flash_utils.h"
@@ -33,8 +32,10 @@
 #include "lowlevel.h"
 #include "messages.pb.h"
 #include "random_delays.h"
+#include "rsod.h"
 #include "secbool.h"
 #include "secret.h"
+#include "system.h"
 #include "systimer.h"
 
 #ifdef USE_DMA2D
@@ -356,8 +357,7 @@ int bootloader_main(void) {
 #endif
   secbool stay_in_bootloader = secfalse;
 
-  systick_init();
-  systimer_init();
+  system_init(&rsod_panic_handler);
 
   rdi_init();
 
@@ -395,8 +395,6 @@ int bootloader_main(void) {
 #endif
 
   ui_screen_boot_stage_1(false);
-
-  fault_handlers_init();
 
 #ifdef TREZOR_EMULATOR
   // wait a bit so that the empty lock icon is visible
