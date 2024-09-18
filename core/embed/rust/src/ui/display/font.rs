@@ -142,8 +142,8 @@ impl Glyph {
     }
 }
 
-/// Font constants. Keep in sync with FONT_ definitions in
-/// `core/embed/lib/fonts/fonts.h`.
+/// Font constants. Keep in sync with `font_id_t` definition in
+/// `core/embed/lib/fonts/fonts_types.h`.
 #[derive(Copy, Clone, PartialEq, Eq, FromPrimitive)]
 #[repr(u8)]
 #[allow(non_camel_case_types)]
