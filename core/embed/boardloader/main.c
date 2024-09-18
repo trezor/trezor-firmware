@@ -21,19 +21,20 @@
 
 #include TREZOR_BOARD
 #include "board_capabilities.h"
+#include "bootutils.h"
 #include "buffers.h"
 #include "common.h"
 #include "compiler_traits.h"
 #include "display.h"
 #include "display_draw.h"
-#include "fault_handlers.h"
 #include "flash.h"
 #include "flash_utils.h"
 #include "image.h"
 #include "model.h"
 #include "mpu.h"
 #include "rng.h"
-#include "systimer.h"
+#include "rsod.h"
+#include "system.h"
 #include "terminal.h"
 
 #ifdef USE_SD_CARD
@@ -234,8 +235,7 @@ static secbool copy_sdcard(void) {
 #endif
 
 int main(void) {
-  systick_init();
-  systimer_init();
+  system_init(&rsod_panic_handler);
 
   reset_flags_reset();
 
@@ -260,8 +260,6 @@ int main(void) {
 #ifdef STM32F4
   clear_otg_hs_memory();
 #endif
-
-  fault_handlers_init();
 
 #ifdef USE_SDRAM
   sdram_init();

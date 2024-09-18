@@ -10,19 +10,33 @@ use crate::ui::{
     geometry::{Alignment2D, Point},
 };
 
-use crate::{trezorhal::fatal_error, ui::util::from_c_str};
+#[cfg(feature = "new_rendering")]
+use crate::ui::shape;
+
+use crate::ui::util::from_c_str;
 
 #[no_mangle]
-extern "C" fn error_shutdown_rust(
+extern "C" fn display_rsod_rust(
     title: *const cty::c_char,
     msg: *const cty::c_char,
     footer: *const cty::c_char,
-) -> ! {
+) {
     let title = unsafe { from_c_str(title) }.unwrap_or("");
     let msg = unsafe { from_c_str(msg) }.unwrap_or("");
     let footer = unsafe { from_c_str(footer) }.unwrap_or("");
 
-    fatal_error::error_shutdown(title, msg, footer)
+    // SAFETY:
+    // This is the only situation we are allowed use this function
+    // to allow nested calls to `run_with_bumps`/`render_on_display`,
+    // because after the error message is displayed, the application will
+    // shut down.
+    #[cfg(feature = "new_rendering")]
+    unsafe {
+        shape::unlock_bumps_on_failure()
+    };
+
+    ModelUI::screen_fatal_error(title, msg, footer);
+    ModelUI::backlight_on();
 }
 
 #[no_mangle]

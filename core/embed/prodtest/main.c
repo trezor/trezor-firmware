@@ -31,7 +31,6 @@
 #include "display.h"
 #include "display_draw.h"
 #include "display_utils.h"
-#include "fault_handlers.h"
 #include "flash.h"
 #include "flash_otp.h"
 #include "fwutils.h"
@@ -40,9 +39,11 @@
 #include "mpu.h"
 #include "prodtest_common.h"
 #include "random_delays.h"
+#include "rsod.h"
 #include "sbu.h"
 #include "sdcard.h"
 #include "secbool.h"
+#include "system.h"
 #include "systimer.h"
 #include "touch.h"
 #include "usb.h"
@@ -783,9 +784,8 @@ void cpuid_read(void) {
 #define BACKLIGHT_NORMAL 150
 
 int main(void) {
-  systick_init();
-  systimer_init();
-  rdi_init();
+  system_init(&rsod_panic_handler);
+
   display_init(DISPLAY_RETAIN_CONTENT);
 
 #ifdef STM32U5
@@ -819,8 +819,6 @@ int main(void) {
   optiga_open_application();
   pair_optiga();
 #endif
-
-  fault_handlers_init();
 
   display_clear();
   draw_welcome_screen();

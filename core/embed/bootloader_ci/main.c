@@ -20,6 +20,7 @@
 #include <string.h>
 #include <sys/types.h>
 
+#include "bootutils.h"
 #include "common.h"
 #include "display.h"
 #include "display_draw.h"
@@ -30,7 +31,9 @@
 #include "mpu.h"
 #include "random_delays.h"
 #include "rng.h"
+#include "rsod.h"
 #include "secbool.h"
+#include "system.h"
 #ifdef USE_TOUCH
 #include "touch.h"
 #endif
@@ -176,8 +179,7 @@ static secbool check_vendor_header_lock(const vendor_header *const vhdr) {
 }
 
 int main(void) {
-  systick_init();
-  systimer_init();
+  system_init(&rsod_panic_handler);
 
   rdi_init();
 #ifdef USE_TOUCH

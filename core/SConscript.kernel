@@ -222,6 +222,7 @@ SOURCE_MOD += [
     'embed/lib/gfx_bitblt_mono8.c',
     'embed/lib/image.c',
     'embed/lib/mini_printf.c',
+    'embed/lib/rsod.c',
     'embed/lib/terminal.c',
     'embed/lib/translations.c',
     'embed/lib/unit_variant.c',
@@ -246,7 +247,7 @@ CPPDEFINES_MOD += [
 
 if TREZOR_MODEL not in ('1', ):
     CPPDEFINES_MOD += [
-        # 'FANCY_FATAL_ERROR',
+        'FANCY_FATAL_ERROR',
     ]
 
 CPPDEFINES_MOD += ['USE_SVC_SHUTDOWN']
@@ -367,7 +368,7 @@ env.Replace(
     LINKFLAGS='-T embed/kernel/memory_${TREZOR_MODEL}%s.ld -Wl,--gc-sections  -Wl,--print-memory-usage -Wl,-Map=build/kernel/kernel.map -Wl,--warn-common' % LD_VARIANT,
     CPPPATH=ALLPATHS,
     CPPDEFINES=[
-        'FIRMWARE',
+        'KERNEL',
         'TREZOR_MODEL_'+TREZOR_MODEL,
         'USE_HAL_DRIVER',
         'ARM_USER_MODE',
