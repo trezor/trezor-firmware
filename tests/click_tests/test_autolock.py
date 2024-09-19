@@ -182,12 +182,17 @@ def test_autolock_does_not_interrupt_signing(device_handler: "BackgroundDeviceHa
     with device_handler.client:
         device_handler.client.set_filter(messages.TxAck, sleepy_filter)
         # confirm transaction
+        # In all cases we set wait=False to avoid waiting for the screen and triggering
+        # the layout deadlock detection. In reality there is no deadlock but the
+        # `sleepy_filter` delays the response by 10 secs while the layout deadlock
+        # timeout is 3. In this test we don't need the result of the input event so
+        # waiting for it is not necessary.
         if debug.layout_type is LayoutType.TT:
-            debug.click(buttons.OK)
+            debug.click(buttons.OK, wait=False)
         elif debug.layout_type is LayoutType.Mercury:
-            debug.click(buttons.TAP_TO_CONFIRM)
+            debug.click(buttons.TAP_TO_CONFIRM, wait=False)
         elif debug.layout_type is LayoutType.TR:
-            debug.press_middle()
+            debug.press_middle(wait=False)
 
         signatures, tx = device_handler.result()
         assert len(signatures) == 1
