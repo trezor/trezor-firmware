@@ -9,7 +9,7 @@
 // Powers on and initializes touch driver controller.
 // The function has no effect if the driver was already initialized.
 //
-// Returns `sectrue` if the hardware was successfuly initialized.
+// Returns `sectrue` if the hardware was successfully initialized.
 secbool touch_init(void);
 
 // Deinitializes the touch driver
@@ -27,7 +27,7 @@ secbool touch_ready(void);
 // Gets the touch controller firmware version
 //
 // Can be called only if the touch controller was initialized,
-// othervise returns 0.
+// otherwise returns 0.
 //
 // We do not interpret the value of the version, we just print it
 // during the production test.
@@ -35,7 +35,7 @@ uint8_t touch_get_version(void);
 
 // Sets touch controller sensitivity
 //
-// (Internally threadhsold for ????)
+// (Internally threshold for ????)
 secbool touch_set_sensitivity(uint8_t value);
 
 // Checks if the touch is currently reporting any events
