@@ -377,17 +377,20 @@ int bootloader_main(void) {
   unit_variant_init();
 
 #ifdef USE_TOUCH
+  secbool touch_initialized = secfalse;
+  secbool allow_touchless_mode = secfalse;
 #ifdef TREZOR_MODEL_T3T1
   // on T3T1, tester needs to run without touch, so making an exception
   // until unit variant is written in OTP
-  if (unit_variant_present()) {
-    ensure(touch_init(), "Touch screen panel was not loaded properly.");
-  } else {
-    touch_init();
-  }
-#else
-  ensure(touch_init(), "Touch screen panel was not loaded properly.");
+  const secbool manufacturing_mode =
+      unit_variant_present() ? secfalse : sectrue;
+  allow_touchless_mode = manufacturing_mode;
+
 #endif
+  touch_initialized = touch_init();
+  if (allow_touchless_mode != sectrue) {
+    ensure(touch_initialized, "Touch screen panel was not loaded properly.");
+  }
 #endif
 
   ui_screen_boot_stage_1(false);
@@ -506,8 +509,10 @@ int bootloader_main(void) {
   if (firmware_present == sectrue && stay_in_bootloader != sectrue) {
     // Wait until the touch controller is ready
     // (on hardware this may take a while)
-    while (touch_ready() != sectrue) {
-      hal_delay(1);
+    if (touch_initialized != secfalse) {
+      while (touch_ready() != sectrue) {
+        hal_delay(1);
+      }
     }
 #ifdef TREZOR_EMULATOR
     hal_delay(500);
