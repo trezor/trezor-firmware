@@ -38,8 +38,6 @@
 ///     """Error returned by the Tropic Square chip."""
 MP_DEFINE_EXCEPTION(TropicError, Exception)
 
-#define PING_MSG "Hello!"
-#define PING_MSG_LEN 6
 /// mock:global
 /// def ping() -> bool:
 ///     """
@@ -49,31 +47,98 @@ STATIC mp_obj_t mod_trezorcrypto_tropic_ping() {
   lt_handle_t handle = {0};
   lt_ret_t ret = LT_FAIL;
 
+  // Every time code calls init, !! it must also do deinit before initializing handle again !!
   ret = lt_init(&handle);
 
+  // Get X509 certificate from chip
   uint8_t X509_cert[LT_L2_GET_INFO_REQ_CERT_SIZE] = {0};
-
   ret = lt_get_info_cert(&handle, X509_cert, LT_L2_GET_INFO_REQ_CERT_SIZE);
+  if(ret != LT_OK) {
+    return mp_obj_new_bool(false);
+  }
 
+  // Parse STPUB out of certificate
   uint8_t stpub[32] = {0};
   ret = lt_cert_verify_and_parse(X509_cert, 512, stpub);
+  if(ret != LT_OK) {
+    return mp_obj_new_bool(false);
+  }
 
+  // Establish secure session with TROPIC01
   uint8_t pkey_index = PKEY_INDEX_BYTE;
   uint8_t shipriv[] = SHiPRIV_BYTES;
   uint8_t shipub[] = SHiPUB_BYTES;
-
   ret = lt_handshake(&handle, stpub, pkey_index, shipriv, shipub);
+  if(ret != LT_OK) {
+    return mp_obj_new_bool(false);
+  }
 
-  uint8_t msg_out[PING_MSG_LEN] = {0};
-  uint8_t msg_in[PING_MSG_LEN] = {0};
-  uint16_t len_ping = PING_MSG_LEN;
+  // Send test ping message, it will go through secure session and TROPIC01 will ping the content back
+  uint8_t msg_out[PING_LEN_MAX] = {0};
+  uint8_t msg_in[PING_LEN_MAX]  = {0};
+  uint16_t len_ping = 258;// Note: Using PING_LEN_MAX here takes some time
+  // Set some message
+  for(int i=0; i<len_ping; i++) {
+    msg_out[i] = 'T';
+  }
 
-  memcpy(msg_out, PING_MSG, PING_MSG_LEN);
+  ret = lt_ping(&handle, msg_out, msg_in, len_ping);
+  if(ret != LT_OK || memcmp(msg_out, msg_in, len_ping)) {
+    return mp_obj_new_bool(false);
+  }
 
-  ret = lt_ping(&handle, (uint8_t *)msg_out, (uint8_t *)msg_in, len_ping);
+  // Get some random from TROPIC01
+  uint8_t buff[RANDOM_VALUE_GET_LEN_MAX] = {0};
+  uint16_t len_rand = 70;//L3_RANDOM_VALUE_GET_LEN_MAX;//rand() % L3_RANDOM_VALUE_GET_LEN_MAX;
+  ret = lt_random_get(&handle, buff, len_rand);
+  if(ret != LT_OK) {
+    return mp_obj_new_bool(false);
+  }
 
-  return mp_obj_new_bool(ret == LT_OK &&
-                         !memcmp(msg_out, msg_in, PING_MSG_LEN));
+  // Generate ED25519 private key in SLOT 1
+  ret = lt_ecc_key_generate(&handle, ECC_SLOT_1, CURVE_ED25519);
+  if(ret != LT_OK) {
+    return mp_obj_new_bool(false);
+  }
+
+  // Read public key corresponding to key in SLOT 1
+  uint8_t key[64] = {0};
+  ecc_curve_type_t curve;
+  ecc_key_origin_t origin;
+  ret = lt_ecc_key_read(&handle, ECC_SLOT_1, key, 64, &curve, &origin);
+  if(ret != LT_OK) {
+    return mp_obj_new_bool(false);
+  }
+
+  // Setup some message and let TROPIC01 sign it with privkey from SLOT 1
+  uint8_t msg[17] = {0};
+  uint8_t rs[64] = {0};
+  memcpy(msg, (uint8_t*)"message_message_X", 17);
+  ret = lt_ecc_eddsa_sign(&handle, ECC_SLOT_1, msg, 17, rs, 64);
+  if(ret != LT_OK) {
+    return mp_obj_new_bool(false);
+  }
+
+  // Verify signature here on host side
+  ret = lt_ecc_eddsa_sig_verify(msg, 17, key, rs);
+  if(ret != LT_OK) {
+    return mp_obj_new_bool(false);
+  }
+
+  // Erase key from SLOT 1
+  ret = lt_ecc_key_erase(&handle, ECC_SLOT_1);
+  if(ret != LT_OK) {
+    return mp_obj_new_bool(false);
+  }
+
+  // Deinit TROPIC01's handle
+  ret = lt_deinit(&handle);
+  if(ret != LT_OK) {
+    return mp_obj_new_bool(false);
+  }
+
+  // If we got here, all is good so let's return true:
+  return mp_obj_new_bool(true);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorcrypto_tropic_ping_obj,
                                  mod_trezorcrypto_tropic_ping);
