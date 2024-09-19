@@ -105,7 +105,7 @@ void firmware_invalidate_header(void) {
 
   // erase start of the firmware (metadata) -> invalidate FW
   ensure(flash_unlock_write(), NULL);
-  for (int i = 0; i < (1024 / FLASH_BLOCK_SIZE); i += FLASH_BLOCK_SIZE) {
+  for (int i = 0; i < (1024 / FLASH_BLOCK_SIZE); i++) {
     flash_block_t data = {0};
     ensure(flash_area_write_block(&FIRMWARE_AREA, i * FLASH_BLOCK_SIZE, data),
            NULL);
