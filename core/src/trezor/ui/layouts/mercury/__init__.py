@@ -997,22 +997,23 @@ async def confirm_signverify(
     )
 
     while True:
-        result = await with_info(
-            address_layout, info_layout, br_name, br_code=BR_CODE_OTHER
-        )
-        if result is not CONFIRMED:
+        try:
+            await with_info(address_layout, info_layout, br_name, br_code=BR_CODE_OTHER)
+        except ActionCancelled:
             result = await interact(
-                trezorui2.show_mismatch(title=TR.addr_mismatch__mismatch), None
+                trezorui2.show_mismatch(title=TR.addr_mismatch__mismatch),
+                None,
+                raise_on_cancel=None,
             )
             assert result in (CONFIRMED, CANCELLED)
             # Right button aborts action, left goes back to showing address.
             if result is CONFIRMED:
-                raise ActionCancelled
+                raise
             continue
-
-        result = await interact(message_layout, br_name, BR_CODE_OTHER)
-        if result is CONFIRMED:
+        else:
             break
+
+    await interact(message_layout, br_name, BR_CODE_OTHER)
 
 
 def error_popup(
