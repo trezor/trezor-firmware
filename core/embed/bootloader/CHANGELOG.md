@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2.1.9 [September 2024]
+
+### Changed
+
+- [T3T1] Ignore touch errors while in manufacturing.  [#4195]
+
 ## 2.1.8 [September 2024]
 
 ### Added
@@ -163,3 +169,4 @@ Internal only release for Model R prototypes.
 [#4081]: https://github.com/trezor/trezor-firmware/pull/4081
 [#4133]: https://github.com/trezor/trezor-firmware/pull/4133
 [#4140]: https://github.com/trezor/trezor-firmware/pull/4140
+[#4195]: https://github.com/trezor/trezor-firmware/pull/4195
