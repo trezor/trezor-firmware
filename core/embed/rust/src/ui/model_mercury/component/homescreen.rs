@@ -427,8 +427,9 @@ impl Homescreen {
             Button::with_text(TR::homescreen__title_no_usb_connection.into())
                 .styled(theme::button_notification(0))
                 .initially_enabled(false);
+
         let menu_btn = Button::with_icon(theme::ICON_MENU)
-            .with_expanded_touch_area(Insets::uniform(10))
+            .with_expanded_touch_area(Insets::uniform(32))
             .initially_enabled(true)
             .styled(theme::button_default());
 
@@ -516,7 +517,7 @@ impl Component for Homescreen {
             .place(bounds.split_top(32).0.with_width(self.label_width + 12));
         // FIXME: proper placement
         self.menu_btn
-            .place(bounds.split_top(42).0.split_right(32).1);
+            .place(bounds.split_top(theme::TITLE_HEIGHT).0.split_right(theme::TITLE_HEIGHT).1);
         if let Some(notification_btn) = &mut self.notification_btn {
             place_homescreen_button(notification_btn, AREA, NOTIFICATION_TOP);
         }
@@ -593,8 +594,10 @@ impl Component for Homescreen {
             });
 
             if !usb_configured() {
-                self.notification_usb_not_connected.render(target);
-            } else if let Some(notification_btn) = &self.notification_btn {
+                // DEMO: do not show "No USB connection" notification
+                // self.notification_usb_not_connected.render(target);
+            }
+            if let Some(notification_btn) = &self.notification_btn {
                 let notification_btn_style = notification_btn.style();
                 notification_btn.render_background(
                     target,
