@@ -148,12 +148,14 @@ impl Homescreen {
 
     fn paint_notification(&self) {
         let baseline = TOP_CENTER + Offset::y(NOTIFICATION_FONT.line_height());
-        if !usb_configured() {
-            self.fill_notification_background();
-            // TODO: fill warning icons here as well?
-            TR::homescreen__title_no_usb_connection
-                .map_translated(|t| display_center(baseline, t, NOTIFICATION_FONT));
-        } else if let Some((notification, _level)) = &self.notification {
+        // DEMO: do not show "No USB connection" notification
+        // if !usb_configured() {
+        //     self.fill_notification_background();
+        //     // TODO: fill warning icons here as well?
+        //     TR::homescreen__title_no_usb_connection
+        //         .map_translated(|t| display_center(baseline, t, NOTIFICATION_FONT));
+        // } else
+        if let Some((notification, _level)) = &self.notification {
             self.fill_notification_background();
             notification.map(|c| display_center(baseline, c, NOTIFICATION_FONT));
             // Painting warning icons in top corners when the text is short enough not to
