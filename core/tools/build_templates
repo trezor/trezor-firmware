@@ -2,7 +2,7 @@
 set -e
 
 CWD=`dirname "$0"`
-RENDER="$CWD/../vendor/trezor-common/tools/cointool.py render"
+RENDER="$CWD/../vendor/trezor-common/tools/cointool.py render -M T1B1"
 
 # Search both in `core/src` and `core/embed` - Solana templates are excluded since those are handled separately
 FIND_TEMPLATES="find $CWD/.. -name *.mako -not -name _proto* -not -path *solana*"

@@ -94,8 +94,7 @@ def get_features() -> Features:
     )
 
     if (
-        utils.INTERNAL_MODEL == "T1B1"  # pylint: disable=consider-using-in
-        or utils.INTERNAL_MODEL == "T2B1"
+        utils.INTERNAL_MODEL == "T2B1"  # pylint: disable=consider-using-in
         or utils.INTERNAL_MODEL == "T3B1"
     ):
         f.homescreen_format = HomescreenFormat.ToiG

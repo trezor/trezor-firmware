@@ -27,7 +27,7 @@ from .layout_parser import find_all_values
 def main(model: str, bin: list[tuple[str, Path]], outfile: Path | None) -> None:
     """Create a combined.bin file from components.
 
-    MODEL is the internal model name (e.g. T1B1, T2T1, T2B1).
+    MODEL is the internal model name (e.g. T2T1, T2B1).
 
     BIN is a list of tuples with the type and path to the binary file. The usual types
     are:

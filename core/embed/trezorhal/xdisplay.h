@@ -32,7 +32,7 @@
 // Currently, following displays displays are supported
 //
 // VG-2864KSWEG01  - OLED Mono / 128x64 pixels  / SPI
-//                 - Model T1B1 / Model T2B1
+//                 - Model T2B1
 //
 // UG-2828SWIG01   - OLED Mono / 128x128 pixels / Parallel
 //                 - Early revisions of T2B1

@@ -24,9 +24,7 @@ def configure_board(
 
 
 def get_model_identifier(model: str) -> str:
-    if model == "1":
-        return "T1B1"
-    elif model == "T":
+    if model == "T":
         return "T2T1"
     elif model == "R":
         return "T2B1"

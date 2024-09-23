@@ -46,10 +46,7 @@ OPENOCD_INTERFACE ?= stlink
 # OpenOCD transport default. Alternative: jtag
 OPENOCD_TRANSPORT ?= hla_swd
 
-ifeq ($(TREZOR_MODEL), 1)
-MCU = STM32F2
-OPENOCD_TARGET = target/stm32f2x.cfg
-else ifeq ($(TREZOR_MODEL),$(filter $(TREZOR_MODEL),T))
+ifeq ($(TREZOR_MODEL),$(filter $(TREZOR_MODEL),T))
 MCU = STM32F4
 OPENOCD_TARGET = target/stm32f4x.cfg
 MODEL_FEATURE = model_tt
@@ -402,9 +399,6 @@ flash_firmware_jlink: $(FIRMWARE_BUILD_DIR)/firmware.bin ## flash firmware using
 	## read&compare in flashing will avoid erasing unmodified sectors
 	truncate -s $(FIRMWARE_P2_MAXSIZE) $<.p2.bin
 	JLinkExe -nogui 1 -commanderscript embed/firmware/firmware_flash.jlink
-
-flash_firmware_t1_jlink: $(FIRMWARE_BUILD_DIR)/firmware.bin ## flash T1 core port via JLink
-	JLinkExe -nogui 1 -commanderscript embed/firmware/firmware_flash_t1.jlink
 
 ## openocd debug commands:
 

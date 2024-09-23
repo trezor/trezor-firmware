@@ -37,8 +37,6 @@
 
 #if defined TREZOR_MODEL_T || defined TREZOR_MODEL_R
 #define FLASH_SECTOR_COUNT 24
-#elif defined TREZOR_MODEL_1
-#define FLASH_SECTOR_COUNT 12
 #elif defined TREZOR_MODEL_T3T1 || defined TREZOR_MODEL_T3B1
 #define FLASH_SECTOR_COUNT 256
 #else
@@ -72,20 +70,6 @@ static uint32_t FLASH_SECTOR_TABLE[FLASH_SECTOR_COUNT + 1] = {
     [22] = 0x081C0000,  // - 0x081DFFFF | 128 KiB
     [23] = 0x081E0000,  // - 0x081FFFFF | 128 KiB
     [24] = 0x08200000,  // last element - not a valid sector
-#elif defined TREZOR_MODEL_1
-    [0] = 0x08000000,   // - 0x08003FFF |  16 KiB
-    [1] = 0x08004000,   // - 0x08007FFF |  16 KiB
-    [2] = 0x08008000,   // - 0x0800BFFF |  16 KiB
-    [3] = 0x0800C000,   // - 0x0800FFFF |  16 KiB
-    [4] = 0x08010000,   // - 0x0801FFFF |  64 KiB
-    [5] = 0x08020000,   // - 0x0803FFFF | 128 KiB
-    [6] = 0x08040000,   // - 0x0805FFFF | 128 KiB
-    [7] = 0x08060000,   // - 0x0807FFFF | 128 KiB
-    [8] = 0x08080000,   // - 0x0809FFFF | 128 KiB
-    [9] = 0x080A0000,   // - 0x080BFFFF | 128 KiB
-    [10] = 0x080C0000,  // - 0x080DFFFF | 128 KiB
-    [11] = 0x080E0000,  // - 0x080FFFFF | 128 KiB
-    [12] = 0x08100000,  // last element - not a valid sector
 #elif defined TREZOR_MODEL_T3T1 || defined TREZOR_MODEL_T3B1
     [0] = 0x08000000,  // - 0x08001FFF |   8 KiB
                        // rest is initialized in flash_init

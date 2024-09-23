@@ -1,9 +1,7 @@
 #ifndef MODELS_MODEL_H_
 #define MODELS_MODEL_H_
 
-#if defined TREZOR_MODEL_1
-#include "T1B1/versions.h"
-#elif defined TREZOR_MODEL_T
+#if defined TREZOR_MODEL_T
 #include "T2T1/versions.h"
 #elif defined TREZOR_MODEL_R
 #include "T2B1/versions.h"
