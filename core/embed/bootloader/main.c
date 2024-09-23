@@ -281,7 +281,7 @@ void real_jump_to_firmware(void) {
 
   hdr =
       read_image_header((const uint8_t *)(size_t)(FIRMWARE_START + vhdr.hdrlen),
-                        FIRMWARE_IMAGE_MAGIC, FIRMWARE_IMAGE_MAXSIZE);
+                        FIRMWARE_IMAGE_MAGIC, FIRMWARE_MAXSIZE);
 
   ensure(hdr == (const image_header *)(size_t)(FIRMWARE_START + vhdr.hdrlen)
              ? sectrue
@@ -431,7 +431,7 @@ int bootloader_main(void) {
   if (sectrue == vhdr_lock_ok) {
     hdr = read_image_header(
         (const uint8_t *)(size_t)(FIRMWARE_START + vhdr.hdrlen),
-        FIRMWARE_IMAGE_MAGIC, FIRMWARE_IMAGE_MAXSIZE);
+        FIRMWARE_IMAGE_MAGIC, FIRMWARE_MAXSIZE);
     if (hdr == (const image_header *)(size_t)(FIRMWARE_START + vhdr.hdrlen)) {
       img_hdr_ok = sectrue;
     }

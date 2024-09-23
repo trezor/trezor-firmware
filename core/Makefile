@@ -73,32 +73,38 @@ $(error Unknown TREZOR_MODEL: $(TREZOR_MODEL))
 endif
 
 
-FLASH_START              = $(shell layout_parser ${TREZOR_MODEL} FLASH_START)
+FLASH_START		         = $(shell layout_parser ${TREZOR_MODEL} FLASH_START)
 BOARDLOADER_START        = $(shell layout_parser ${TREZOR_MODEL} BOARDLOADER_START)
 BOOTLOADER_START         = $(shell layout_parser ${TREZOR_MODEL} BOOTLOADER_START)
 KERNEL_START             = $(shell layout_parser ${TREZOR_MODEL} KERNEL_START)
 FIRMWARE_START           = $(shell layout_parser ${TREZOR_MODEL} FIRMWARE_START)
 FIRMWARE_P2_START        = $(shell layout_parser ${TREZOR_MODEL} FIRMWARE_P2_START)
-STORAGE_1_OFFSET         = $(shell layout_parser ${TREZOR_MODEL} STORAGE_1_OFFSET)
-STORAGE_2_OFFSET         = $(shell layout_parser ${TREZOR_MODEL} STORAGE_2_OFFSET)
+STORAGE_1_START          = $(shell layout_parser ${TREZOR_MODEL} STORAGE_1_START)
+STORAGE_2_START	         = $(shell layout_parser ${TREZOR_MODEL} STORAGE_2_START)
 STORAGE_SIZE             = $(shell layout_parser ${TREZOR_MODEL} NORCOW_SECTOR_SIZE)
-BOARDLOADER_MAXSIZE      = $(shell layout_parser ${TREZOR_MODEL} BOARDLOADER_IMAGE_MAXSIZE)
-BOOTLOADER_MAXSIZE       = $(shell layout_parser ${TREZOR_MODEL} BOOTLOADER_IMAGE_MAXSIZE)
-FIRMWARE_MAXSIZE         = $(shell layout_parser ${TREZOR_MODEL} FIRMWARE_IMAGE_MAXSIZE)
-FIRMWARE_P1_MAXSIZE      = $(shell layout_parser ${TREZOR_MODEL} FIRMWARE_P1_IMAGE_MAXSIZE)
-FIRMWARE_P2_MAXSIZE      = $(shell layout_parser ${TREZOR_MODEL} FIRMWARE_P2_IMAGE_MAXSIZE)
+BOARDLOADER_MAXSIZE      = $(shell layout_parser ${TREZOR_MODEL} BOARDLOADER_MAXSIZE)
+BOOTLOADER_MAXSIZE       = $(shell layout_parser ${TREZOR_MODEL} BOOTLOADER_MAXSIZE)
+FIRMWARE_MAXSIZE         = $(shell layout_parser ${TREZOR_MODEL} FIRMWARE_MAXSIZE)
+FIRMWARE_P1_MAXSIZE      = $(shell layout_parser ${TREZOR_MODEL} FIRMWARE_P1_MAXSIZE)
+FIRMWARE_P2_MAXSIZE      = $(shell layout_parser ${TREZOR_MODEL} FIRMWARE_P2_MAXSIZE)
 BOARDLOADER_SECTOR_START = $(shell layout_parser ${TREZOR_MODEL} BOARDLOADER_SECTOR_START)
 BOARDLOADER_SECTOR_END   = $(shell layout_parser ${TREZOR_MODEL} BOARDLOADER_SECTOR_END)
 BOOTLOADER_SECTOR_START  = $(shell layout_parser ${TREZOR_MODEL} BOOTLOADER_SECTOR_START)
 BOOTLOADER_SECTOR_END    = $(shell layout_parser ${TREZOR_MODEL} BOOTLOADER_SECTOR_END)
 FIRMWARE_SECTOR_START    = $(shell layout_parser ${TREZOR_MODEL} FIRMWARE_SECTOR_START)
 FIRMWARE_SECTOR_END      = $(shell layout_parser ${TREZOR_MODEL} FIRMWARE_SECTOR_END)
+FIRMWARE_P1_SECTOR_START = $(shell layout_parser ${TREZOR_MODEL} FIRMWARE_P1_SECTOR_START)
+FIRMWARE_P1_SECTOR_END   = $(shell layout_parser ${TREZOR_MODEL} FIRMWARE_P1_SECTOR_END)
 FIRMWARE_P2_SECTOR_START = $(shell layout_parser ${TREZOR_MODEL} FIRMWARE_P2_SECTOR_START)
 FIRMWARE_P2_SECTOR_END   = $(shell layout_parser ${TREZOR_MODEL} FIRMWARE_P2_SECTOR_END)
 STORAGE_1_SECTOR_START   = $(shell layout_parser ${TREZOR_MODEL} STORAGE_1_SECTOR_START)
 STORAGE_1_SECTOR_END     = $(shell layout_parser ${TREZOR_MODEL} STORAGE_1_SECTOR_END)
 STORAGE_2_SECTOR_START   = $(shell layout_parser ${TREZOR_MODEL} STORAGE_2_SECTOR_START)
 STORAGE_2_SECTOR_END     = $(shell layout_parser ${TREZOR_MODEL} STORAGE_2_SECTOR_END)
+
+
+STORAGE_1_OFFSET := $(shell expr $(STORAGE_1_START) - $(FLASH_START))
+STORAGE_2_OFFSET := $(shell expr $(STORAGE_2_START) - $(FLASH_START))
 
 OPENOCD = openocd -f interface/$(OPENOCD_INTERFACE).cfg -c "transport select $(OPENOCD_TRANSPORT)" -f $(OPENOCD_TARGET)
 
@@ -374,7 +380,7 @@ flash_erase_bootloader: ## erase bootloader
 
 flash_erase_firmware: ## erase bootloader
 ifeq ($(MCU),$(filter $(MCU),STM32F4))
-	$(OPENOCD) -c "init; reset halt; flash info 0; flash erase_sector 0 $(FIRMWARE_SECTOR_START) $(FIRMWARE_SECTOR_END);  flash erase_sector 0 $(FIRMWARE_P2_SECTOR_START) $(FIRMWARE_P2_SECTOR_END); exit"
+	$(OPENOCD) -c "init; reset halt; flash info 0; flash erase_sector 0 $(FIRMWARE_P1_SECTOR_START) $(FIRMWARE_P1_SECTOR_END);  flash erase_sector 0 $(FIRMWARE_P2_SECTOR_START) $(FIRMWARE_P2_SECTOR_END); exit"
 
 else
 	$(OPENOCD) -c "init; reset halt; flash info 0; flash erase_sector 0 $(FIRMWARE_SECTOR_START) $(FIRMWARE_SECTOR_END); exit"

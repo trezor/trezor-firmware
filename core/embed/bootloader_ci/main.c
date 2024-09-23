@@ -216,7 +216,7 @@ int main(void) {
 
   if (sectrue == firmware_present) {
     hdr = read_image_header((const uint8_t *)(FIRMWARE_START + vhdr.hdrlen),
-                            FIRMWARE_IMAGE_MAGIC, FIRMWARE_IMAGE_MAXSIZE);
+                            FIRMWARE_IMAGE_MAGIC, FIRMWARE_MAXSIZE);
     if (hdr != (const image_header *)(FIRMWARE_START + vhdr.hdrlen)) {
       firmware_present = secfalse;
     }
@@ -253,7 +253,7 @@ int main(void) {
   ensure(check_vendor_header_lock(&vhdr), "unauthorized vendor keys");
 
   hdr = read_image_header((const uint8_t *)(FIRMWARE_START + vhdr.hdrlen),
-                          FIRMWARE_IMAGE_MAGIC, FIRMWARE_IMAGE_MAXSIZE);
+                          FIRMWARE_IMAGE_MAGIC, FIRMWARE_MAXSIZE);
 
   ensure(hdr == (const image_header *)(FIRMWARE_START + vhdr.hdrlen) ? sectrue
                                                                      : secfalse,

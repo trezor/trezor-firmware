@@ -76,7 +76,7 @@ bool load_firmware(const char *filename, uint8_t *hash) {
     return false;
   }
   const image_header *hdr = read_image_header(
-      buffer + vhdr.hdrlen, FIRMWARE_IMAGE_MAGIC, FIRMWARE_IMAGE_MAXSIZE);
+      buffer + vhdr.hdrlen, FIRMWARE_IMAGE_MAGIC, FIRMWARE_MAXSIZE);
   if (hdr != (const image_header *)(buffer + vhdr.hdrlen)) {
     printf("File '%s' does not contain a valid firmware image.\n", filename);
     return false;

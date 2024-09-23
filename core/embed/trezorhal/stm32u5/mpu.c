@@ -113,13 +113,6 @@ static void mpu_set_attributes(void) {
   MPU->MAIR0 |= 0x44 << 24;
 }
 
-#define SECRET_START FLASH_BASE
-#define SECRET_SIZE SIZE_16K
-#define BOARDLOADER_SIZE BOARDLOADER_IMAGE_MAXSIZE
-#define BOOTLOADER_SIZE BOOTLOADER_IMAGE_MAXSIZE
-#define FIRMWARE_SIZE FIRMWARE_IMAGE_MAXSIZE
-#define STORAGE_START \
-  (FLASH_BASE + SECRET_SIZE + BOARDLOADER_SIZE + BOOTLOADER_SIZE)
 #define STORAGE_SIZE NORCOW_SECTOR_SIZE* STORAGE_AREAS_COUNT
 
 #if defined STM32U5A9xx
@@ -131,11 +124,6 @@ static void mpu_set_attributes(void) {
 #else
 #error "Unknown MCU"
 #endif
-
-#define ASSETS_START (FIRMWARE_START + FIRMWARE_SIZE)
-#define ASSETS_SIZE                                                   \
-  (FLASH_SIZE - (FIRMWARE_SIZE + BOOTLOADER_SIZE + BOARDLOADER_SIZE + \
-                 SECRET_SIZE + STORAGE_SIZE))
 
 #ifdef STM32U585xx
 #define GRAPHICS_START FMC_BANK1
@@ -180,7 +168,7 @@ extern uint32_t _codelen;
 #define KERNEL_FLASH_SIZE (KERNEL_SIZE - KERNEL_U_FLASH_SIZE)
 
 #define COREAPP_FLASH_START (KERNEL_FLASH_START + KERNEL_SIZE)
-#define COREAPP_FLASH_SIZE (FIRMWARE_IMAGE_MAXSIZE - KERNEL_SIZE)
+#define COREAPP_FLASH_SIZE (FIRMWARE_MAXSIZE - KERNEL_SIZE)
 
 #ifdef STM32U585xx
 #define COREAPP_RAM1_START SRAM1_BASE
@@ -211,18 +199,18 @@ static void mpu_init_fixed_regions(void) {
 
   // clang-format off
 #if defined(BOARDLOADER)
-  //   REGION    ADDRESS                   SIZE                TYPE       WRITE   UNPRIV
-  SET_REGION( 0, BOARDLOADER_START,        BOARDLOADER_SIZE,   FLASH_CODE,   NO,    NO );
-  SET_REGION( 1, SRAM1_BASE,               SRAM_SIZE,          SRAM,        YES,    NO );
-  SET_REGION( 2, BOOTLOADER_START,         BOOTLOADER_SIZE,    FLASH_DATA,  YES,    NO );
-  SET_REGION( 3, FIRMWARE_START,           FIRMWARE_SIZE,      FLASH_DATA,  YES,    NO );
+  //   REGION    ADDRESS                   SIZE                 TYPE       WRITE   UNPRIV
+  SET_REGION( 0, BOARDLOADER_START,        BOARDLOADER_MAXSIZE, FLASH_CODE,   NO,    NO );
+  SET_REGION( 1, SRAM1_BASE,               SRAM_SIZE,           SRAM,        YES,    NO );
+  SET_REGION( 2, BOOTLOADER_START,         BOOTLOADER_MAXSIZE,  FLASH_DATA,  YES,    NO );
+  SET_REGION( 3, FIRMWARE_START,           FIRMWARE_MAXSIZE,    FLASH_DATA,  YES,    NO );
   DIS_REGION( 4 );
 #endif
 #if defined(BOOTLOADER)
   //   REGION    ADDRESS                   SIZE                TYPE       WRITE   UNPRIV
-  SET_REGION( 0, BOOTLOADER_START,         BOOTLOADER_SIZE,    FLASH_CODE,  NO,     NO );
+  SET_REGION( 0, BOOTLOADER_START,         BOOTLOADER_MAXSIZE, FLASH_CODE,  NO,     NO );
   SET_REGION( 1, SRAM1_BASE,               SRAM_SIZE,          SRAM,        YES,    NO );
-  SET_REGION( 2, FIRMWARE_START,           FIRMWARE_SIZE,      FLASH_DATA,  YES,    NO );
+  SET_REGION( 2, FIRMWARE_START,           FIRMWARE_MAXSIZE,   FLASH_DATA,  YES,    NO );
   DIS_REGION( 3 );
   DIS_REGION( 4 );
 #endif
@@ -240,15 +228,15 @@ static void mpu_init_fixed_regions(void) {
 #endif
 #if defined(FIRMWARE)
   //   REGION    ADDRESS                   SIZE                TYPE       WRITE   UNPRIV
-  SET_REGION( 0, FIRMWARE_START,           FIRMWARE_SIZE,      FLASH_CODE,   NO,    NO );
+  SET_REGION( 0, FIRMWARE_START,           FIRMWARE_MAXSIZE,   FLASH_CODE,   NO,    NO );
   SET_REGION( 1, SRAM1_BASE,               SRAM_SIZE,          SRAM,        YES,    NO );
   DIS_REGION( 2 );
   DIS_REGION( 3 );
   DIS_REGION( 4 );
 #endif
 #if defined(TREZOR_PRODTEST)
-  SET_REGION( 0, FIRMWARE_START,         1024,                 FLASH_DATA,  YES,    NO );
-  SET_REGION( 1, FIRMWARE_START + 1024,  FIRMWARE_SIZE - 1024, FLASH_CODE,   NO,    NO );
+  SET_REGION( 0, FIRMWARE_START,           1024,               FLASH_DATA,  YES,    NO );
+  SET_REGION( 1, FIRMWARE_START + 1024,    FIRMWARE_MAXSIZE - 1024, FLASH_CODE,   NO,    NO );
   SET_REGION( 2, SRAM1_BASE,               SRAM_SIZE,          SRAM,        YES,    NO );
   DIS_REGION( 3 );
   DIS_REGION( 4 );
@@ -328,31 +316,31 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
 #if !defined(BOARDLOADER)
     case MPU_MODE_BOARDCAPS:
       //      REGION   ADDRESS                 SIZE                TYPE       WRITE   UNPRIV
-      SET_REGION( 6, BOARDLOADER_START,        BOARDLOADER_SIZE,   FLASH_DATA,   NO,    NO );
+      SET_REGION( 6, BOARDLOADER_START,        BOARDLOADER_MAXSIZE,FLASH_DATA,   NO,    NO );
       break;
 #endif
 #if !defined(BOOTLOADER) && !defined(BOARDLOADER)
     case MPU_MODE_BOOTUPDATE:
-      SET_REGION( 6, BOOTLOADER_START,         BOOTLOADER_SIZE,    FLASH_DATA,  YES,    NO );
+      SET_REGION( 6, BOOTLOADER_START,         BOOTLOADER_MAXSIZE, FLASH_DATA,  YES,    NO );
       break;
 #endif
     case MPU_MODE_OTP:
       SET_REGION( 6, FLASH_OTP_BASE,           OTP_AND_ID_SIZE,    FLASH_DATA,   NO,    NO );
       break;
     case MPU_MODE_SECRET:
-      SET_REGION( 6, SECRET_START,             SECRET_SIZE,        FLASH_DATA,  YES,    NO );
+      SET_REGION( 6, SECRET_START,             SECRET_MAXSIZE,     FLASH_DATA,  YES,    NO );
       break;
     case MPU_MODE_STORAGE:
-      SET_REGION( 6, STORAGE_START,            STORAGE_SIZE,       FLASH_DATA,  YES,    NO );
+      SET_REGION( 6, STORAGE_1_START,          STORAGE_SIZE,       FLASH_DATA,  YES,    NO );
       break;
     case MPU_MODE_ASSETS:
-      SET_REGION( 6, ASSETS_START,             ASSETS_SIZE,        FLASH_DATA,  YES,    NO );
+      SET_REGION( 6, ASSETS_START,             ASSETS_MAXSIZE,     FLASH_DATA,  YES,    NO );
       break;
     case MPU_MODE_SAES:
-      SET_REGION( 6, KERNEL_FLASH_U_START,     KERNEL_FLASH_U_SIZE,FLASH_CODE,   NO,   YES ); // Unprivileged kernal flash
+      SET_REGION( 6, KERNEL_FLASH_U_START,     KERNEL_FLASH_U_SIZE,FLASH_CODE,   NO,   YES ); // Unprivileged kernel flash
       break;
     case MPU_MODE_APP:
-      SET_REGION( 6, ASSETS_START,             ASSETS_SIZE,        FLASH_DATA,   NO,   YES );
+      SET_REGION( 6, ASSETS_START,             ASSETS_MAXSIZE,     FLASH_DATA,   NO,   YES );
       break;
     default:
       DIS_REGION( 6 );

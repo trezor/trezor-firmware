@@ -39,9 +39,8 @@ const boardloader_version_t *get_boardloader_version() {
 void parse_boardloader_capabilities() {
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_BOARDCAPS);
 
-  const uint8_t *pos = (const uint8_t *)BOARD_CAPABILITIES_ADDR;
-  const uint8_t *end =
-      (const uint8_t *)(BOARD_CAPABILITIES_ADDR + BOARD_CAPABILITIES_SIZE);
+  const uint8_t *pos = (const uint8_t *)BOARDCAPS_START;
+  const uint8_t *end = (const uint8_t *)(BOARDCAPS_START + BOARDCAPS_MAXSIZE);
 
   if (memcmp(pos, CAPABILITIES_HEADER, 4) != 0) {
     mpu_restore(mpu_mode);
