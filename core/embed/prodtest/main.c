@@ -601,7 +601,7 @@ static uint32_t read_bootloader_version(void) {
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_BOOTUPDATE);
 
   const image_header *header = read_image_header(
-      (const uint8_t *)BOOTLOADER_START, BOOTLOADER_IMAGE_MAGIC, 0xffffffff);
+      (const uint8_t *)BOOTLOADER_START, BOOTLOADER_MAXSIZE, 0xffffffff);
 
   if (header != NULL) {
     version = header->version;

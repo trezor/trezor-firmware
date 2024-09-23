@@ -108,7 +108,7 @@ struct BoardCapabilities capabilities
         .terminator_length = 0};
 
 // we use SRAM as SD card read buffer (because DMA can't access the CCMRAM)
-BUFFER_SECTION uint32_t sdcard_buf[BOOTLOADER_IMAGE_MAXSIZE / sizeof(uint32_t)];
+BUFFER_SECTION uint32_t sdcard_buf[BOOTLOADER_MAXSIZE / sizeof(uint32_t)];
 
 #if defined USE_SD_CARD
 static uint32_t check_sdcard(void) {
@@ -124,15 +124,15 @@ static uint32_t check_sdcard(void) {
 
   memzero(sdcard_buf, IMAGE_HEADER_SIZE);
 
-  const secbool read_status = sdcard_read_blocks(
-      sdcard_buf, 0, BOOTLOADER_IMAGE_MAXSIZE / SDCARD_BLOCK_SIZE);
+  const secbool read_status =
+      sdcard_read_blocks(sdcard_buf, 0, BOOTLOADER_MAXSIZE / SDCARD_BLOCK_SIZE);
 
   sdcard_power_off();
 
   if (sectrue == read_status) {
     const image_header *hdr =
         read_image_header((const uint8_t *)sdcard_buf, BOOTLOADER_IMAGE_MAGIC,
-                          BOOTLOADER_IMAGE_MAXSIZE);
+                          BOOTLOADER_MAXSIZE);
 
     if (hdr != (const image_header *)sdcard_buf) {
       return 0;
@@ -148,7 +148,7 @@ static uint32_t check_sdcard(void) {
       return 0;
     }
 
-    _Static_assert(IMAGE_CHUNK_SIZE >= BOOTLOADER_IMAGE_MAXSIZE,
+    _Static_assert(IMAGE_CHUNK_SIZE >= BOOTLOADER_MAXSIZE,
                    "BOOTLOADER IMAGE MAXSIZE too large for IMAGE_CHUNK_SIZE");
 
     const uint32_t headers_end_offset = hdr->hdrlen;

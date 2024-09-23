@@ -3,7 +3,8 @@ INCLUDE "./embed/trezorhal/stm32u5/linker/u58/memory.ld";
 ENTRY(reset_handler)
 
 MEMORY {
-  FLASH  (rx)  : ORIGIN = BOARDLOADER_START, LENGTH = BOARDLOADER_IMAGE_MAXSIZE
+  FLASH  (rx)  : ORIGIN = BOARDLOADER_START, LENGTH = BOARDLOADER_MAXSIZE
+  BOARDCAPS (rx)  : ORIGIN = BOARDCAPS_START, LENGTH = BOARDCAPS_MAXSIZE
   SRAM1  (wal) : ORIGIN = MCU_SRAM1, LENGTH = MCU_SRAM1_SIZE - BOOTARGS_SIZE
   BOOT_ARGS  (wal) : ORIGIN = MCU_SRAM2 - BOOTARGS_SIZE, LENGTH =  BOOTARGS_SIZE
   SRAM2  (wal) : ORIGIN = MCU_SRAM2, LENGTH =  MCU_SRAM2_SIZE
@@ -118,7 +119,8 @@ SECTIONS {
     . = ALIGN(8);
   } >BOOT_ARGS
 
-
-  /* Hard-coded address for capabilities structure */
-  .capabilities BOARD_CAPABILITIES_ADDR : {KEEP(*(.capabilities_section))}
+  .capabilities : ALIGN(4) {
+    KEEP(*(.capabilities_section*));
+    . = ALIGN(4);
+  } >BOARDCAPS
 }

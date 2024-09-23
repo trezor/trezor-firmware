@@ -3,7 +3,7 @@ INCLUDE "./embed/trezorhal/stm32u5/linker/u5a/memory.ld";
 ENTRY(reset_handler)
 
 MEMORY {
-  FLASH  (rx)  : ORIGIN = KERNEL_START, LENGTH = FIRMWARE_IMAGE_MAXSIZE
+  FLASH  (rx)  : ORIGIN = KERNEL_START, LENGTH = FIRMWARE_MAXSIZE
   SRAM1  (wal) : ORIGIN = MCU_SRAM1, LENGTH =  0K  /* not allocated to coreapp */
   SRAM2  (wal) : ORIGIN = MCU_SRAM2, LENGTH =  0K  /* not allocated to coreapp */
   SRAM3  (wal) : ORIGIN = MCU_SRAM3, LENGTH =   0K  /* not allocated to coreapp */

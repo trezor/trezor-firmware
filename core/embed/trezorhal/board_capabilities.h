@@ -37,7 +37,6 @@ Last tag must be terminator or all space used.
 
 #ifdef KERNEL_MODE
 
-#define BOARD_CAPABILITIES_SIZE 256
 #define CAPABILITIES_HEADER "TRZC"
 
 enum CapabilityTag {

@@ -3,7 +3,8 @@ INCLUDE "./embed/trezorhal/stm32f4/linker/memory.ld";
 ENTRY(reset_handler)
 
 MEMORY {
-  FLASH  (rx)     : ORIGIN = BOARDLOADER_START, LENGTH = BOARDLOADER_IMAGE_MAXSIZE
+  FLASH  (rx)     : ORIGIN = BOARDLOADER_START, LENGTH = BOARDLOADER_MAXSIZE - BOARDCAPS_MAXSIZE
+  BOARDCAPS (rx)  : ORIGIN = BOARDCAPS_START, LENGTH = BOARDCAPS_MAXSIZE
   CCMRAM (wal)    : ORIGIN = MCU_CCMRAM, LENGTH = MCU_CCMRAM_SIZE
   SRAM   (wal)    : ORIGIN = MCU_SRAM, LENGTH = MCU_SRAM_SIZE
 }
@@ -67,8 +68,10 @@ SECTIONS {
     . = ALIGN(4);
   } >SRAM
 
-  /* Hard-coded address for capabilities structure */
-  .capabilities BOARD_CAPABILITIES_ADDR : {KEEP(*(.capabilities_section))}
+  .capabilities : ALIGN(4) {
+    KEEP(*(.capabilities_section*));
+    . = ALIGN(4);
+  } >BOARDCAPS
 
   .stack : ALIGN(8) {
     . = 4K; /* this acts as a build time assertion that at least this much memory is available for stack use */

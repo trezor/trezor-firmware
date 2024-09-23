@@ -363,7 +363,7 @@ secbool check_firmware_header(const uint8_t *header, size_t header_size,
   // parse and check image header
   const image_header *ihdr;
   if ((ihdr = read_image_header(header + vhdr.hdrlen, FIRMWARE_IMAGE_MAGIC,
-                                FIRMWARE_IMAGE_MAXSIZE)) == NULL) {
+                                FIRMWARE_MAXSIZE)) == NULL) {
     return secfalse;
   }
   if (sectrue !=

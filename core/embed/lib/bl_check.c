@@ -117,15 +117,15 @@ void check_and_replace_bootloader(void) {
          "Bootloader header decompression failed");
 
   const image_header *new_bld_hdr = read_image_header(
-      (uint8_t *)decomp_out, BOOTLOADER_IMAGE_MAGIC, BOOTLOADER_IMAGE_MAXSIZE);
+      (uint8_t *)decomp_out, BOOTLOADER_IMAGE_MAGIC, BOOTLOADER_MAXSIZE);
 
   ensure(new_bld_hdr == (const image_header *)decomp_out ? sectrue : secfalse,
          "Invalid embedded bootloader");
 
   ensure(check_image_model(new_bld_hdr), "Incompatible embedded bootloader");
 
-  const image_header *current_bld_hdr = read_image_header(
-      bl_data, BOOTLOADER_IMAGE_MAGIC, BOOTLOADER_IMAGE_MAXSIZE);
+  const image_header *current_bld_hdr =
+      read_image_header(bl_data, BOOTLOADER_IMAGE_MAGIC, BOOTLOADER_MAXSIZE);
 
   // cannot find valid header for current bootloader, something is wrong
   ensure(current_bld_hdr == (const image_header *)bl_data ? sectrue : secfalse,
