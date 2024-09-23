@@ -3,9 +3,7 @@
 
 #include "layout_common.h"
 
-#if defined TREZOR_MODEL_1
-#include "T1B1/model_T1B1.h"
-#elif defined TREZOR_MODEL_T
+#if defined TREZOR_MODEL_T
 #include "T2T1/model_T2T1.h"
 #elif defined TREZOR_MODEL_R
 #include "T2B1/model_T2B1.h"

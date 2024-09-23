@@ -141,7 +141,7 @@ MAKO_FILTERS = {
 
 
 def render_file(
-    src: Path, dst: Path, coins: CoinsInfo, support_info: SupportInfo
+    src: Path, dst: Path, coins: CoinsInfo, support_info: SupportInfo, models: list[str]
 ) -> None:
     """Renders `src` template into `dst`.
 
@@ -160,7 +160,7 @@ def render_file(
         ROOT=ROOT,
         **coins,
         **MAKO_FILTERS,
-        ALL_MODELS=coin_info.get_models(),
+        ALL_MODELS=models,
     )
     dst.write_text(str(result))
     src_stat = src.stat()
@@ -846,9 +846,14 @@ def dump(
 @click.option("-o", "--outfile", type=click.Path(dir_okay=False, writable=True, path_type=Path), help="Alternate output file")
 @click.option("-v", "--verbose", is_flag=True, help="Print rendered file names")
 @click.option("-b", "--bitcoin-only", is_flag=True, help="Accept only Bitcoin coins")
+@click.option("-M", "--model-exclude", metavar="NAME", multiple=True, type=device_choice, help="Skip generation for this models (-M T1B1)")
 # fmt: on
 def render(
-    paths: tuple[Path, ...], outfile: Path, verbose: bool, bitcoin_only: bool
+    paths: tuple[Path, ...],
+    outfile: Path,
+    verbose: bool,
+    bitcoin_only: bool,
+    model_exclude: tuple[str, ...],
 ) -> None:
     """Generate source code from Mako templates.
 
@@ -885,9 +890,12 @@ def render(
         support_info[key] = Munch(value)
 
     def do_render(src: Path, dst: Path) -> None:
+        models = coin_info.get_models()
+        models = [m for m in models if m not in model_exclude]
+
         if verbose:
             click.echo(f"Rendering {src} => {dst.name}")
-        render_file(src, dst, defs, support_info)
+        render_file(src, dst, defs, support_info, models)
 
     # single in-out case
     if outfile:

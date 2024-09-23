@@ -32,23 +32,8 @@ g_header:
     .byte FIRMWARE_MONOTONIC_VERSION // monotonic version of the binary
     . = . + 2                        // reserved
     . = . + 512                      // hash1 ... hash16
-
-#if !defined TREZOR_MODEL_1
-// trezor-core header style
     . = . + 415                      // reserved
     .byte 0                          // sigmask
     . = . + 64                       // sig
-#else
-// model 1 compatibility header
-    . = . + 64                       // sig1
-    . = . + 64                       // sig2
-    . = . + 64                       // sig3
-    .byte 0                          // sigindex1
-    .byte 0                          // sigindex2
-    .byte 0                          // sigindex3
-    . = . + 220                      // reserved
-    . = . + 65                       // reserved
-#endif
-
 g_header_end:
 

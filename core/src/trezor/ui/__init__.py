@@ -53,12 +53,7 @@ else:
 
 
 # in both debug and production, emulator needs to draw the screen explicitly
-if (
-    utils.EMULATOR
-    or utils.INTERNAL_MODEL == "T1B1"
-    or utils.INTERNAL_MODEL == "T2B1"
-    or utils.INTERNAL_MODEL == "T3B1"
-):
+if utils.EMULATOR or utils.INTERNAL_MODEL == "T2B1" or utils.INTERNAL_MODEL == "T3B1":
     loop.after_step_hook = refresh
 
 
