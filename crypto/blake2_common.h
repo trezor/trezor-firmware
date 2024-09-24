@@ -1,4 +1,5 @@
 
+#include <stdint.h>
 #include "byte_order.h"
 
 static inline uint32_t load32(const void *src) {

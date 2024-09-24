@@ -37,6 +37,7 @@
 #define GROESTL_H__
 
 #include <stddef.h>
+#include <stdint.h>
 
 /**
  * This structure is a context for Groestl-512 computation:
