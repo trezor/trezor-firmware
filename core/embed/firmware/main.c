@@ -50,11 +50,24 @@
 int main(uint32_t cmd, void *arg) {
   if (cmd == 1) {
     systask_postmortem_t *info = (systask_postmortem_t *)arg;
+
+    // (6) Exception in core app before rsod
+    // volatile uint8_t* __p = 0; *__p =0;
+
     rsod_gui(info);
     system_exit(0);
   }
 
   screen_boot_stage_2();
+
+  // (7) Exception in core app
+  // volatile uint8_t* __p = 0; *__p =0;
+
+  // (8) Error in core app
+  // system_exit_fatal(NULL, __FILE_NAME__, __LINE__);
+
+  // (9) Stack overflow in core app
+  // __asm__ volatile("sub sp, sp, 0x8000");
 
 #ifdef USE_SECP256K1_ZKP
   ensure(sectrue * (zkp_context_init() == 0), NULL);

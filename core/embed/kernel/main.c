@@ -240,11 +240,27 @@ static void kernel_panic(const systask_postmortem_t *pminfo) {
 }
 
 int main(void) {
+  // (1) Exception before system init
+  // volatile uint8_t* __p = 0; *__p =0;
+
+  // (2) Error before system init
+  // system_exit_fatal(NULL, __FILE_NAME__, __LINE__);
+
   // Initialize system's core services
   system_init(&kernel_panic);
 
   // Initialize hardware drivers
   drivers_init();
+
+  // (3) Exception after system init
+  // volatile uint8_t* __p = 0; *__p =0;
+
+  // (4) Error after system init
+  // system_exit_fatal(NULL, __FILE_NAME__, __LINE__);
+
+  // (5) Stack overflow in kernel
+  // __asm__ volatile("sub sp, sp, 0x8000");
+
 
   // Initialize coreapp task
   applet_t coreapp;

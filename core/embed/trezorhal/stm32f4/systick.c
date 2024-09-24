@@ -24,6 +24,7 @@
 #include "mpu.h"
 #include "platform.h"
 #include "systemview.h"
+#include "system.h"
 
 #include "systick.h"
 #include "systick_internal.h"
@@ -180,6 +181,18 @@ void SysTick_Handler(void) {
 
     // Invoke callbacks of expired timers
     systimer_dispatch_expired_timers(drv->cycles);
+
+    if (drv->ticks > 5000) {
+      // (10) Exception in interrupt
+      // volatile uint8_t* __p = 0; *__p =0;
+
+      // (11) Error in interrupt
+      // system_exit_fatal(NULL, __FILE_NAME__, __LINE__);
+
+      // (12) Stack overflow in interrupt
+      // __asm__ volatile("sub sp, sp, 0x8000");
+    }
+
   }
 
   mpu_restore(mpu_mode);
