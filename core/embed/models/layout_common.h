@@ -11,15 +11,4 @@
 #define FLASH_OTP_BLOCK_DEVICE_VARIANT 4
 #define FLASH_OTP_BLOCK_FIRMWARE_VERSION 5
 
-#define STORAGE_AREAS_COUNT (2)
-
-extern const flash_area_t STORAGE_AREAS[STORAGE_AREAS_COUNT];
-extern const flash_area_t BOARDLOADER_AREA;
-extern const flash_area_t SECRET_AREA;
-extern const flash_area_t BHK_AREA;
-extern const flash_area_t TRANSLATIONS_AREA;
-extern const flash_area_t BOOTLOADER_AREA;
-extern const flash_area_t FIRMWARE_AREA;
-extern const flash_area_t UNUSED_AREA;
-
 #endif

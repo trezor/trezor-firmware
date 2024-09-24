@@ -39,9 +39,6 @@ def configure(
     defines += [f'TREZOR_BOARD=\\"{board}\\"']
     defines += [f"HW_MODEL={hw_model}"]
     defines += [f"HW_REVISION={ord(hw_revision)}"]
-    sources += [
-        "embed/models/T3B1/model_T3B1_layout.c",
-    ]
 
     if "new_rendering" in features_wanted:
         sources += ["embed/trezorhal/xdisplay_legacy.c"]

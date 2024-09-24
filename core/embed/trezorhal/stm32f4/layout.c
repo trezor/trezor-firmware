@@ -42,14 +42,22 @@ const flash_area_t BOOTLOADER_AREA = {
 };
 
 const flash_area_t FIRMWARE_AREA = {
-    .num_subareas = 1,
+    .num_subareas = 2,
     .subarea[0] =
         {
-            .first_sector = FIRMWARE_SECTOR_START,
-            .num_sectors = FIRMWARE_SECTOR_END - FIRMWARE_SECTOR_START + 1,
+            .first_sector = FIRMWARE_P1_SECTOR_START,
+            .num_sectors =
+                FIRMWARE_P1_SECTOR_END - FIRMWARE_P1_SECTOR_START + 1,
+        },
+    .subarea[1] =
+        {
+            .first_sector = FIRMWARE_P2_SECTOR_START,
+            .num_sectors =
+                FIRMWARE_P2_SECTOR_END - FIRMWARE_P2_SECTOR_START + 1,
         },
 };
 
+#ifdef SECRET_SECTOR_START
 const flash_area_t SECRET_AREA = {
     .num_subareas = 1,
     .subarea[0] =
@@ -58,15 +66,17 @@ const flash_area_t SECRET_AREA = {
             .num_sectors = SECRET_SECTOR_END - SECRET_SECTOR_START + 1,
         },
 };
-
-const flash_area_t BHK_AREA = {
+#else
+const flash_area_t SECRET_AREA = {
     .num_subareas = 1,
     .subarea[0] =
         {
-            .first_sector = BHK_SECTOR_START,
-            .num_sectors = BHK_SECTOR_END - BHK_SECTOR_START + 1,
+            .first_sector = 0,
+            .num_sectors = 0,
+
         },
 };
+#endif
 
 const flash_area_t TRANSLATIONS_AREA = {
     .num_subareas = 1,
@@ -78,5 +88,15 @@ const flash_area_t TRANSLATIONS_AREA = {
 };
 
 const flash_area_t UNUSED_AREA = {
-    .num_subareas = 0,
+    .num_subareas = 2,
+    .subarea[0] =
+        {
+            .first_sector = UNUSED_1_SECTOR_START,
+            .num_sectors = UNUSED_1_SECTOR_END - UNUSED_1_SECTOR_START + 1,
+        },
+    .subarea[1] =
+        {
+            .first_sector = UNUSED_2_SECTOR_START,
+            .num_sectors = UNUSED_2_SECTOR_END - UNUSED_2_SECTOR_START + 1,
+        },
 };

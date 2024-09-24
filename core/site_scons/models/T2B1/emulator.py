@@ -44,6 +44,6 @@ def configure(
         sources += ["embed/trezorhal/unix/button.c"]
         features_available.append("button")
 
-    sources += ["embed/models/T2B1/model_T2B1_layout.c"]
+    sources += ["embed/trezorhal/stm32f4/layout.c"]
 
     return features_available

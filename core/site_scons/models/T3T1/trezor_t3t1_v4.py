@@ -44,9 +44,6 @@ def configure(
     defines += [f"HW_MODEL={hw_model}"]
     defines += [f"HW_REVISION={hw_revision}"]
     sources += [
-        "embed/models/T3T1/model_T3T1_layout.c",
-    ]
-    sources += [
         f"embed/trezorhal/stm32u5/displays/{display}",
     ]
 
