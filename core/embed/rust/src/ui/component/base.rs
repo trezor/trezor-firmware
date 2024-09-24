@@ -616,8 +616,8 @@ impl TryFrom<FlowMsg> for crate::micropython::obj::Obj {
             FlowMsg::Confirmed => Ok(result::CONFIRMED.as_obj()),
             FlowMsg::Cancelled => Ok(result::CANCELLED.as_obj()),
             FlowMsg::Info => Ok(result::INFO.as_obj()),
-            FlowMsg::Choice(i) => (result::CONFIRMED.as_obj(), i.try_into()?).try_into(),
-            FlowMsg::Text(s) => (result::CONFIRMED.as_obj(), s.as_str().try_into()?).try_into(),
+            FlowMsg::Choice(i) => i.try_into(),
+            FlowMsg::Text(s) => s.as_str().try_into(),
         }
     }
 }

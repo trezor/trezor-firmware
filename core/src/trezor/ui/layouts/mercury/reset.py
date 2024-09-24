@@ -176,15 +176,14 @@ async def _prompt_number(
         )
     )
 
-    if __debug__:
-        if not isinstance(result, tuple):
-            # DebugLink currently can't send number of shares and it doesn't
-            # change the counter either so just use the initial value.
-            result = (result, count)
-    status, value = result
-    if status == CONFIRMED:
-        assert isinstance(value, int)
-        return value
+    if __debug__ and result is CONFIRMED:
+        # sent by debuglink. debuglink does not change the number of shares anyway
+        # so use the initial one
+        return count
+
+    if result is not trezorui2.CANCELLED:
+        assert isinstance(result, int)
+        return result
     else:
         raise ActionCancelled  # user cancelled request number prompt
 
