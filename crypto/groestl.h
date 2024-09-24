@@ -50,13 +50,13 @@
  * <code>memcpy()</code>).
  */
 typedef struct {
-	unsigned char buf[128];    /* first field, for alignment */
-	size_t ptr;
-	union {
-		uint64_t wide[16];
-		uint32_t narrow[32];
-	} state;
-	uint64_t count;
+  unsigned char buf[128]; /* first field, for alignment */
+  size_t ptr;
+  union {
+    uint64_t wide[16];
+    uint32_t narrow[32];
+  } state;
+  uint64_t count;
 } sph_groestl_big_context;
 
 typedef sph_groestl_big_context GROESTL512_CTX;
