@@ -117,6 +117,7 @@ def test_abort(client: Client):
             device.recover(client, pin_protection=False, label="label")
         client.init_device()
         assert client.features.initialized is False
+        assert client.features.recovery_status is messages.RecoveryStatus.Nothing
 
 
 @pytest.mark.setup_client(uninitialized=True)
@@ -130,6 +131,7 @@ def test_abort_between_shares(client: Client):
             device.recover(client, pin_protection=False, label="label")
         client.init_device()
         assert client.features.initialized is False
+        assert client.features.recovery_status is messages.RecoveryStatus.Nothing
 
 
 @pytest.mark.setup_client(uninitialized=True)
