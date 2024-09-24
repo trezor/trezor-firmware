@@ -177,7 +177,7 @@ impl ChangingTextLine {
         let x_offset = if self.text.len() % 2 == 0 { 0 } else { 2 };
 
         let baseline = Point::new(self.pad.area.x0 + x_offset, self.y_baseline());
-        shape::Text::new(baseline, self.text.as_ref())
+        shape::Text::new(baseline, &text_to_display)
             .with_font(self.font)
             .render(target);
     }
