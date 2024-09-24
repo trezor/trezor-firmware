@@ -1432,18 +1432,8 @@ async def request_passphrase_on_device(max_len: int) -> str:
     if result is CANCELLED:
         raise ActionCancelled("Passphrase entry cancelled")
 
-    if __debug__:
-        if not isinstance(result, tuple):
-            # TODO: DebugLink problem, better comment or solution?
-            result = (CONFIRMED, str(result))
-
-    status, value = result
-    if status == CONFIRMED:
-        assert isinstance(value, str)
-        return value
-    else:
-        # flow_request_pin returns either CANCELLED or (CONFIRMED, str) so this branch shouldn't be taken
-        raise ActionCancelled("Passphrase entry cancelled")
+    assert isinstance(result, str)
+    return result
 
 
 async def request_pin_on_device(
