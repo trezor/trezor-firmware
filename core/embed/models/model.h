@@ -1,6 +1,7 @@
 #ifndef MODELS_MODEL_H_
 #define MODELS_MODEL_H_
 
+#include "layout.h"
 #include "layout_common.h"
 
 #if defined TREZOR_MODEL_T

@@ -33,9 +33,6 @@ def configure(
     defines += [f'TREZOR_BOARD=\\"{board}\\"']
     defines += [f"HW_MODEL={hw_model}"]
     defines += [f"HW_REVISION={hw_revision}"]
-    sources += [
-        "embed/models/D001/model_D001_layout.c",
-    ]
 
     if "new_rendering" in features_wanted:
         sources += [

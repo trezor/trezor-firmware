@@ -65,6 +65,6 @@ def configure(
 
     features_available.append("backlight")
 
-    sources += ["embed/models/T3T1/model_T3T1_layout.c"]
+    sources += ["embed/trezorhal/stm32u5/layout.c"]
 
     return features_available

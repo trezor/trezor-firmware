@@ -48,6 +48,7 @@ def stm32f4_common_files(env, defines, sources, paths):
         "embed/trezorhal/stm32f4/flash.c",
         "embed/trezorhal/stm32f4/flash_otp.c",
         "embed/trezorhal/stm32f4/fwutils.c",
+        "embed/trezorhal/stm32f4/layout.c",
         "embed/trezorhal/stm32f4/lowlevel.c",
         "embed/trezorhal/stm32f4/monoctr.c",
         "embed/trezorhal/stm32f4/mpu.c",

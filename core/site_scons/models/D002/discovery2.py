@@ -40,9 +40,6 @@ def configure(
     defines += [
         f"HW_REVISION={hw_revision}",
     ]
-    sources += [
-        "embed/models/D002/model_D002_layout.c",
-    ]
 
     if "new_rendering" in features_wanted:
         sources += [
