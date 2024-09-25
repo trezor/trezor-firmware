@@ -3,6 +3,7 @@ use std::ffi::OsStr;
 use std::{env, path::PathBuf, process::Command};
 
 fn main() {
+    println!("cargo:rustc-env=BUILD_DIR={}", build_dir());
     #[cfg(feature = "micropython")]
     generate_qstr_bindings();
     #[cfg(feature = "micropython")]
@@ -15,7 +16,13 @@ fn main() {
 }
 
 fn build_dir() -> String {
-    env::var("BUILD_DIR").expect("BUILD_DIR not defined")
+    let build_dir_str = env::var("BUILD_DIR").unwrap_or(String::from("../../build/unix"));
+    PathBuf::from(build_dir_str)
+        .canonicalize()
+        .unwrap()
+        .to_str()
+        .unwrap()
+        .to_string()
 }
 
 const DEFAULT_BINDGEN_MACROS_COMMON: &[&str] = &[
