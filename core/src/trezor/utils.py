@@ -16,10 +16,10 @@ from trezorutils import (  # noqa: F401
     USE_BUTTON,
     USE_HAPTIC,
     USE_OPTIGA,
-    USE_TROPIC,
     USE_SD_CARD,
     USE_THP,
     USE_TOUCH,
+    USE_TROPIC,
     VERSION,
     bootloader_locked,
     check_firmware_header,
@@ -47,14 +47,19 @@ if __debug__:
 
         DISABLE_ANIMATION = uos.getenv("TREZOR_DISABLE_ANIMATION") == "1"
         LOG_MEMORY = uos.getenv("TREZOR_LOG_MEMORY") == "1"
+
+        SKIP_TROPIC_TEST = uos.getenv("SKIP_TROPIC_TEST") == "1"
     else:
         from trezorutils import DISABLE_ANIMATION
 
         LOG_MEMORY = 0
 
+        SKIP_TROPIC_TEST = False
 else:
     DISABLE_ANIMATION = False
     LOG_STACK_USAGE = False
+
+    SKIP_TROPIC_TEST = False
 
 if TYPE_CHECKING:
     from typing import Any, Iterator, Protocol, Sequence, TypeVar
