@@ -56,21 +56,6 @@ def poll(ifaces: Iterable[int], list_ref: list, timeout_ms: int) -> bool:
     """
 
 
-# extmod/modtrezorio/modtrezorio-sbu.h
-class SBU:
-    """
-    """
-
-    def __init__(self) -> None:
-        """
-        """
-
-    def set(self, sbu1: bool, sbu2: bool) -> None:
-        """
-        Sets SBU wires to sbu1 and sbu2 values respectively
-        """
-
-
 # extmod/modtrezorio/modtrezorio-usb.h
 class USB:
     """
