@@ -14,11 +14,10 @@ use crate::{
             text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, VecExt},
             Component,
         },
-        flow::{FlowMsg, Swipable, SwipePage, SwipeFlow},
+        flow::{FlowMsg, Swipable, SwipeFlow, SwipePage},
         geometry::Direction,
         layout::util::{ConfirmBlob, StrOrBytes},
-        model_mercury::component::SwipeContent,
-        model_mercury::flow,
+        model_mercury::{component::SwipeContent, flow},
     },
 };
 use heapless::Vec;
@@ -269,6 +268,10 @@ impl ShowInfoParams {
         } else {
             None
         }
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.items.is_empty()
     }
 
     #[inline(never)]
