@@ -166,6 +166,10 @@ impl<'a> PartialEq for BinaryData<'a> {
             #[cfg(feature = "micropython")]
             (Self::Object(a), Self::Object(b)) => a == b,
             #[cfg(feature = "micropython")]
+            (Self::AllocatedSlice(a), Self::AllocatedSlice(b)) => {
+                a.as_ptr() == b.as_ptr() && a.len() == b.len()
+            }
+            #[cfg(feature = "micropython")]
             _ => false,
         }
     }
