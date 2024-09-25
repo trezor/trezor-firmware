@@ -9,18 +9,6 @@ HW_REVISION = ARGUMENTS.get('HW_REVISION', None)
 NEW_RENDERING = ARGUMENTS.get('NEW_RENDERING', '1') == '1'
 MODEL_IDENTIFIER = models.get_model_identifier(TREZOR_MODEL)
 
-if TREZOR_MODEL in ('1', ):
-    # skip boardloader build
-    env = Environment()
-    def build_boardloader(target,source,env):
-        print(f'Boardloader: nothing to build for Model {TREZOR_MODEL}')
-    program_bin = env.Command(
-                 target='boardloader.bin',
-                 source=None,
-                 action=build_boardloader
-             )
-    Return()
-
 FEATURES_WANTED = ["sd_card"]
 
 if NEW_RENDERING:

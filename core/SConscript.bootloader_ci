@@ -9,18 +9,6 @@ HW_REVISION = ARGUMENTS.get('HW_REVISION', None)
 NEW_RENDERING = ARGUMENTS.get('NEW_RENDERING', '1') == '1' or TREZOR_MODEL in ('T3T1',)
 MODEL_IDENTIFIER = models.get_model_identifier(TREZOR_MODEL)
 
-if TREZOR_MODEL in ('1', 'DISC1', 'DISC2'):
-    # skip bootloader_ci build
-    env = Environment()
-    def build_bootloader_ci(target,source,env):
-        print(f'Bootloader_ci: nothing to build for Model {TREZOR_MODEL}')
-    program_bin = env.Command(
-                 target='bootloader.bin',
-                 source=None,
-                 action=build_bootloader_ci
-             )
-    Return()
-
 FEATURES_WANTED = ["input", "rgb_led", "consumption_mask", "usb", "optiga"]
 
 if NEW_RENDERING:
@@ -35,7 +23,7 @@ CPPDEFINES_HAL = []
 SOURCE_HAL = []
 PATH_HAL = []
 
-if TREZOR_MODEL in ('1', 'R', 'T3B1'):
+if TREZOR_MODEL in ('R', 'T3B1'):
     FONT_NORMAL='Font_PixelOperator_Regular_8'
     FONT_DEMIBOLD=None
     FONT_BOLD=None
@@ -44,7 +32,7 @@ if TREZOR_MODEL in ('1', 'R', 'T3B1'):
     FONT_NORMAL_UPPER='Font_PixelOperator_Regular_8_upper'
     FONT_BOLD_UPPER=None
     FONT_SUB=None
-elif TREZOR_MODEL in ('T',):
+elif TREZOR_MODEL in ('T', 'DISC1', 'DISC2'):
     FONT_NORMAL='Font_Roboto_Regular_20'
     FONT_DEMIBOLD=None
     FONT_BOLD=None
