@@ -246,14 +246,13 @@ else:
     VENDORHEADER = f'embed/models/{MODEL_IDENTIFIER}/vendorheader/vendorheader_unsafe_signed_prod.bin'
 
 
-
-obj_program.extend(
-    env.Command(
-        target='embed/prodtest/vendorheader.o',
-        source=VENDORHEADER,
-        action='$OBJCOPY -I binary -O elf32-littlearm -B arm'
-        ' --rename-section .data=.vendorheader,alloc,load,readonly,contents'
-        ' $SOURCE $TARGET', ))
+tools.embed_raw_binary(
+        obj_program,
+        env,
+        'vendorheader',
+        'embed/firmware/vendorheader.o',
+        VENDORHEADER,
+        )
 
 linkerscript_gen = env.Command(
     target='memory.ld',
