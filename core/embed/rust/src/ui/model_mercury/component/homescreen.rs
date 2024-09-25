@@ -365,7 +365,7 @@ impl HideLabelAnimation {
                     }
                 }
             }
-            Event::Timer(token) if self.timer.expire(event) && !animation_disabled() => {
+            Event::Timer(_) if self.timer.expire(event) && !animation_disabled() => {
                 self.stopwatch.start();
                 ctx.request_anim_frame();
                 self.animating = true;
@@ -524,7 +524,7 @@ impl Homescreen {
                     self.loader.start_shrinking(ctx, now);
                 }
             }
-            Event::Timer(token) if self.delay.expire(event) => {
+            Event::Timer(_) if self.delay.expire(event) => {
                 self.loader.start_growing(ctx, Instant::now());
             }
             _ => {}

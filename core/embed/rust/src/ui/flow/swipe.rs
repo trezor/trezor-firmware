@@ -11,7 +11,7 @@ use crate::{
             Component, Event, EventCtx, FlowMsg, SwipeDetect,
         },
         display::Color,
-        event::{SwipeEvent, TouchEvent},
+        event::SwipeEvent,
         flow::{base::Decision, FlowController},
         geometry::{Direction, Rect},
         layout::base::{Layout, LayoutState},
