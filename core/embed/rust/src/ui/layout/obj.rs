@@ -10,7 +10,7 @@ use num_traits::{FromPrimitive, ToPrimitive};
 #[cfg(feature = "button")]
 use crate::ui::event::ButtonEvent;
 #[cfg(feature = "new_rendering")]
-use crate::ui::{display::Color, shape::render_on_display, shape::Renderer};
+use crate::ui::{display::Color, shape::render_on_display};
 #[cfg(feature = "touch")]
 use crate::ui::{event::TouchEvent, geometry::Direction};
 use crate::{
@@ -31,9 +31,8 @@ use crate::{
     ui::{
         button_request::ButtonRequest,
         component::{base::{AttachType, TimerToken}, Component, Event, EventCtx, Never},
-        constant, display,
+        display,
         event::USBEvent,
-        geometry::Rect,
         ui_features::ModelUI,
         UIFeaturesCommon,
     },
@@ -88,52 +87,7 @@ pub trait ComponentMsgObj: Component {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error>;
 }
 
-/// Object-safe interface between trait `Component` and MicroPython world. It
-/// converts the result of `Component::event` into `Obj` via the
-/// `ComponentMsgObj` trait, in order to easily return the value to Python. It
-/// also optionally implies `Trace` for UI debugging.
-/// Note: we need to use an object-safe trait in order to store it in a `Gc<dyn
-/// T>` field. `Component` itself is not object-safe because of `Component::Msg`
-/// associated type.
-// pub trait ObjComponent: MaybeTrace {
-//     fn obj_place(&mut self, bounds: Rect) -> Rect;
-//     fn obj_event(&mut self, ctx: &mut EventCtx, event: Event) -> Result<Obj,
-// Error>;     fn obj_paint(&mut self);
-//     fn obj_bounds(&self, _sink: &mut dyn FnMut(Rect)) {}
-// }
-
-// impl<T> ObjComponent for T
-// where
-//     T: Component + ComponentMsgObj + MaybeTrace,
-// {
-//     fn obj_place(&mut self, bounds: Rect) -> Rect {
-//         self.place(bounds)
-//     }
-
-//     fn obj_event(&mut self, ctx: &mut EventCtx, event: Event) -> Result<Obj,
-// Error> {         if let Some(msg) = self.event(ctx, event) {
-//             self.msg_try_into_obj(msg)
-//         } else {
-//             Ok(Obj::const_none())
-//         }
-//     }
-
-//     fn obj_paint(&mut self) {
-//         #[cfg(not(feature = "new_rendering"))]
-//         {
-//             self.paint();
-//         }
-
-//         #[cfg(feature = "new_rendering")]
-//         {
-//             render_on_display(None, Some(Color::black()), |target| {
-//                 self.render(target);
-//             });
-//         }
-//     }
-// }
-
-trait ComponentMaybeTrace: Component + ComponentMsgObj + MaybeTrace {}
+pub trait ComponentMaybeTrace: Component + ComponentMsgObj + MaybeTrace {}
 impl<T> ComponentMaybeTrace for T where T: Component + ComponentMsgObj + MaybeTrace {}
 
 struct RootComponent<T, M>
@@ -205,7 +159,7 @@ where
     }
 }
 
-trait LayoutMaybeTrace: Layout<Result<Obj, Error>> + MaybeTrace {}
+pub trait LayoutMaybeTrace: Layout<Result<Obj, Error>> + MaybeTrace {}
 impl<T> LayoutMaybeTrace for T where T: Layout<Result<Obj, Error>> + MaybeTrace {}
 
 #[derive(Copy, Clone, PartialEq, Eq)]
