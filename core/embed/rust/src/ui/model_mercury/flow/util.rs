@@ -1,6 +1,9 @@
-use super::super::{
-    component::{Frame, FrameMsg},
-    theme,
+use super::{
+    super::{
+        component::{Frame, FrameMsg},
+        theme,
+    },
+    ConfirmActionMenu, ConfirmActionStrings,
 };
 use crate::{
     error::Error,
@@ -11,13 +14,16 @@ use crate::{
         component::{
             base::ComponentExt,
             swipe_detect::SwipeSettings,
-            text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, VecExt},
+            text::{
+                paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, VecExt},
+                TextStyle,
+            },
             Component,
         },
-        flow::{FlowMsg, Swipable, SwipePage},
+        flow::{FlowMsg, Swipable, SwipeFlow, SwipePage},
         geometry::Direction,
         layout::util::{ConfirmBlob, StrOrBytes},
-        model_mercury::component::SwipeContent,
+        model_mercury::{component::SwipeContent, flow},
     },
 };
 use heapless::Vec;
@@ -29,11 +35,19 @@ pub struct ConfirmBlobParams {
     footer_description: Option<TString<'static>>,
     data: Obj,
     description: Option<TString<'static>>,
+    description_font: &'static TextStyle,
     extra: Option<TString<'static>>,
-    menu_button: bool,
+    verb: Option<TString<'static>>,
+    verb_cancel: Option<TString<'static>>,
+    verb_info: Option<TString<'static>>,
+    info_button: bool,
     cancel_button: bool,
+    menu_button: bool,
+    prompt: bool,
+    hold: bool,
     chunkify: bool,
     text_mono: bool,
+    page_limit: Option<usize>,
     swipe_up: bool,
     swipe_down: bool,
     swipe_right: bool,
@@ -52,11 +66,19 @@ impl ConfirmBlobParams {
             footer_description: None,
             data,
             description,
+            description_font: &theme::TEXT_NORMAL,
             extra: None,
-            menu_button: false,
+            verb: None,
+            verb_cancel: None,
+            verb_info: None,
+            info_button: false,
             cancel_button: false,
+            menu_button: false,
+            prompt: false,
+            hold: false,
             chunkify: false,
             text_mono: true,
+            page_limit: None,
             swipe_up: false,
             swipe_down: false,
             swipe_right: false,
@@ -80,6 +102,36 @@ impl ConfirmBlobParams {
 
     pub const fn with_cancel_button(mut self) -> Self {
         self.cancel_button = true;
+        self
+    }
+
+    pub const fn with_info_button(mut self, info_button: bool) -> Self {
+        self.info_button = info_button;
+        self
+    }
+
+    pub const fn with_verb(mut self, verb: Option<TString<'static>>) -> Self {
+        self.verb = verb;
+        self
+    }
+
+    pub const fn with_verb_cancel(mut self, verb_cancel: Option<TString<'static>>) -> Self {
+        self.verb_cancel = verb_cancel;
+        self
+    }
+
+    pub const fn with_verb_info(mut self, verb_info: Option<TString<'static>>) -> Self {
+        self.verb_info = verb_info;
+        self
+    }
+
+    pub const fn with_prompt(mut self, prompt: bool) -> Self {
+        self.prompt = prompt;
+        self
+    }
+
+    pub const fn with_hold(mut self, hold: bool) -> Self {
+        self.hold = hold;
         self
     }
 
@@ -115,6 +167,16 @@ impl ConfirmBlobParams {
 
     pub const fn with_text_mono(mut self, text_mono: bool) -> Self {
         self.text_mono = text_mono;
+        self
+    }
+
+    pub const fn with_page_limit(mut self, page_limit: Option<usize>) -> Self {
+        self.page_limit = page_limit;
+        self
+    }
+
+    pub const fn with_description_font(mut self, description_font: &'static TextStyle) -> Self {
+        self.description_font = description_font;
         self
     }
 
@@ -173,6 +235,38 @@ impl ConfirmBlobParams {
         frame = frame.with_vertical_pages();
 
         Ok(frame.map(|msg| matches!(msg, FrameMsg::Button(_)).then_some(FlowMsg::Info)))
+    }
+
+    pub fn into_flow(self) -> Result<SwipeFlow, Error> {
+        let paragraphs = ConfirmBlob {
+            description: self.description.unwrap_or("".into()),
+            extra: self.extra.unwrap_or("".into()),
+            data: self.data.try_into()?,
+            description_font: self.description_font,
+            extra_font: &theme::TEXT_DEMIBOLD,
+            data_font: if self.chunkify {
+                let data: TString = self.data.try_into()?;
+                theme::get_chunkified_text_style(data.len())
+            } else if self.text_mono {
+                &theme::TEXT_MONO
+            } else {
+                &theme::TEXT_NORMAL
+            },
+        }
+        .into_paragraphs();
+
+        flow::new_confirm_action_simple(
+            paragraphs,
+            ConfirmActionMenu::new(self.verb_cancel, self.info_button, self.verb_info),
+            ConfirmActionStrings::new(
+                self.title,
+                self.subtitle,
+                self.verb,
+                self.prompt.then_some(self.title),
+            ),
+            self.hold,
+            self.page_limit,
+        )
     }
 }
 
@@ -239,11 +333,6 @@ impl ShowInfoParams {
     ) -> Self {
         self.footer_instruction = Some(instruction);
         self.footer_description = description;
-        self
-    }
-
-    pub const fn with_chunkify(mut self, chunkify: bool) -> Self {
-        self.chunkify = chunkify;
         self
     }
 
