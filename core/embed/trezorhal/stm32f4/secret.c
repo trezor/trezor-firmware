@@ -133,4 +133,6 @@ void secret_prepare_fw(secbool allow_run_with_secret, secbool _trust_all) {
 #endif
 }
 
+void secret_init(void) {}
+
 #endif  // KERNEL_MODE
