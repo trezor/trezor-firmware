@@ -35,7 +35,7 @@ secbool secret_verify_header(void) {
   return bootloader_locked;
 }
 
-secbool secret_ensure_initialized(void) {
+static secbool secret_ensure_initialized(void) {
   if (sectrue != secret_verify_header()) {
     ensure(erase_storage(NULL), "erase storage failed");
     secret_erase();
@@ -351,6 +351,14 @@ void secret_prepare_fw(secbool allow_run_with_secret, secbool trust_all) {
   if (sectrue != trust_all) {
     secret_disable_access();
   }
+}
+
+void secret_init(void) {
+  if (secret_bhk_locked() == sectrue) {
+    reboot();
+  }
+
+  secret_ensure_initialized();
 }
 
 #endif  // KERNEL_MODE

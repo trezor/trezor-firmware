@@ -34,6 +34,7 @@
 #include "mpu.h"
 #include "rng.h"
 #include "rsod.h"
+#include "secret.h"
 #include "system.h"
 #include "terminal.h"
 
@@ -63,7 +64,6 @@
 #include "memzero.h"
 
 #ifdef STM32U5
-#include "secret.h"
 #include "tamper.h"
 #include "trustzone.h"
 #endif
@@ -253,9 +253,9 @@ int main(void) {
   tamper_init();
 
   trustzone_init_boardloader();
-
-  secret_ensure_initialized();
 #endif
+
+  secret_init();
 
 #ifdef STM32F4
   clear_otg_hs_memory();

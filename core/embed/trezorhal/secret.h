@@ -30,9 +30,6 @@ secbool secret_wiped(void);
 // Verifies that the secret storage has correct header
 secbool secret_verify_header(void);
 
-// Checks that the secret storage is initialized and initializes it if not
-secbool secret_ensure_initialized(void);
-
 // Erases the entire secret storage
 void secret_erase(void);
 
@@ -69,6 +66,11 @@ void secret_bhk_regenerate(void);
 // Disables access to the secret storage until next reset, if possible
 // This function is called by the bootloader before starting the firmware
 void secret_prepare_fw(secbool allow_run_with_secret, secbool trust_all);
+
+// Prepares the secret storage for running the boardloader and next stages
+// Ensures that secret storage access is enabled
+// This function is called by the boardloader
+void secret_init(void);
 
 #endif  // KERNEL_MODE
 
