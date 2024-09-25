@@ -2,7 +2,6 @@ use heapless::Vec;
 
 use crate::{
     error,
-    micropython::{iter::IterBuf, obj::Obj, util},
     strutil::TString,
     translations::TR,
     ui::{
@@ -76,24 +75,15 @@ impl FlowController for ConfirmSummary {
 }
 
 pub fn new_confirm_summary(
-    title: TString<'static>,
-    items: Obj,
-    account_items: Obj,
-    fee_items: Obj,
+    summary_params: ShowInfoParams,
+    account_params: ShowInfoParams,
+    fee_params: ShowInfoParams,
     br_name: TString<'static>,
     br_code: u16,
     cancel_text: Option<TString<'static>>,
 ) -> Result<SwipeFlow, error::Error> {
     // Summary
-    let mut summary = ShowInfoParams::new(title)
-        .with_menu_button()
-        .with_footer(TR::instructions__swipe_up.into(), None)
-        .with_swipe_up();
-    for pair in IterBuf::new().try_iterate(items)? {
-        let [label, value]: [TString; 2] = util::iter_into_array(pair)?;
-        summary = unwrap!(summary.add(label, value));
-    }
-    let content_summary = summary
+    let content_summary = summary_params
         .into_layout()?
         .one_button_request(ButtonRequest::from_num(br_code, br_name))
         // Summary(1) + Hold(1)
@@ -115,24 +105,12 @@ pub fn new_confirm_summary(
     });
 
     // FeeInfo
-    let mut has_fee_info = false;
-    let mut fee = ShowInfoParams::new(TR::confirm_total__title_fee.into()).with_cancel_button();
-    for pair in IterBuf::new().try_iterate(fee_items)? {
-        let [label, value]: [TString; 2] = util::iter_into_array(pair)?;
-        fee = unwrap!(fee.add(label, value));
-        has_fee_info = true;
-    }
-    let content_fee = fee.into_layout()?;
+    let has_fee_info = !fee_params.is_empty();
+    let content_fee = fee_params.into_layout()?;
 
     // AccountInfo
-    let mut has_account_info = false;
-    let mut account = ShowInfoParams::new(TR::send__send_from.into()).with_cancel_button();
-    for pair in IterBuf::new().try_iterate(account_items)? {
-        let [label, value]: [TString; 2] = util::iter_into_array(pair)?;
-        account = unwrap!(account.add(label, value));
-        has_account_info = true;
-    }
-    let content_account = account.into_layout()?;
+    let has_account_info = !account_params.is_empty();
+    let content_account = account_params.into_layout()?;
 
     // Menu
     let mut menu = VerticalMenu::empty();

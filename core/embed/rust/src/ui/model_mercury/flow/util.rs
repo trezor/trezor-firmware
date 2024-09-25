@@ -307,6 +307,10 @@ impl ShowInfoParams {
         }
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.items.is_empty()
+    }
+
     #[inline(never)]
     pub const fn with_subtitle(mut self, subtitle: Option<TString<'static>>) -> Self {
         self.subtitle = subtitle;

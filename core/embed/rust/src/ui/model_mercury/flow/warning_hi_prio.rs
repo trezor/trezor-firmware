@@ -63,7 +63,7 @@ pub fn new_warning_hi_prio(
     value: TString<'static>,
     verb_cancel: Option<TString<'static>>,
 ) -> Result<SwipeFlow, error::Error> {
-    let confirm: TString = TR::words__continue_anyway_question.into();
+    let confirm: TString = TR::words__continue_anyway.into();
     let done_title: TString = TR::words__operation_cancelled.into();
 
     let verb_cancel = verb_cancel.unwrap_or(TR::words__cancel_and_exit.into());
