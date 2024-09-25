@@ -41,7 +41,7 @@ PATH_HAL = []
 
 FROZEN = True
 
-if TREZOR_MODEL in ('1', 'R', 'T3B1'):
+if TREZOR_MODEL in ('R', 'T3B1'):
     FONT_NORMAL='Font_PixelOperator_Regular_8'
     FONT_DEMIBOLD='Font_Unifont_Bold_16'
     FONT_BOLD='Font_PixelOperator_Bold_8'
@@ -254,11 +254,7 @@ else:
 CPPDEFINES_MOD += [
     'TREZOR_UI2',
     'TRANSLATIONS',
-]
-
-if TREZOR_MODEL not in ('1', ):
-    CPPDEFINES_MOD += [
-        'FANCY_FATAL_ERROR',
+    'FANCY_FATAL_ERROR',
     ]
 
 # modtrezorutils
@@ -442,7 +438,7 @@ SOURCE_FIRMWARE = [
 if TREZOR_MODEL in ('T', 'DISC1', 'DISC2'):
     UI_LAYOUT = 'UI_LAYOUT_TT'
     ui_layout_feature = 'model_tt'
-elif TREZOR_MODEL in ('1', 'R', 'T3B1'):
+elif TREZOR_MODEL in ('R', 'T3B1'):
     UI_LAYOUT = 'UI_LAYOUT_TR'
     ui_layout_feature = 'model_tr'
 elif TREZOR_MODEL in ('T3T1',):

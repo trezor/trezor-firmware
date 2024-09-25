@@ -38,3 +38,8 @@ def get_model_identifier(model: str) -> str:
         return "D002"
     else:
         return model
+
+
+def has_emulator(model: str) -> bool:
+    imported_module = importlib.import_module("models." + get_model_identifier(model))
+    return hasattr(imported_module, "emulator")

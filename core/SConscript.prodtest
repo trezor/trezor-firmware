@@ -10,17 +10,6 @@ BOOTLOADER_DEVEL = ARGUMENTS.get('BOOTLOADER_DEVEL', '0') == '1'
 HW_REVISION = ARGUMENTS.get('HW_REVISION', None)
 NEW_RENDERING = ARGUMENTS.get('NEW_RENDERING', '1') == '1'
 
-if TREZOR_MODEL in ('DISC1', 'DISC2'):
-    # skip prodtest build
-    env = Environment()
-    def build_prodtest(target,source,env):
-        print(f'Prodtest: nothing to build for Model {TREZOR_MODEL}')
-    program_bin = env.Command(
-                 target='prodtest.bin',
-                 source=None,
-                 action=build_prodtest)
-    Return()
-
 FEATURES_WANTED = ["input", "sbu", "sd_card", "rdb_led", "usb", "consumption_mask", "optiga", "haptic"]
 
 if NEW_RENDERING:
@@ -39,7 +28,7 @@ CPPDEFINES_HAL = []
 SOURCE_HAL = []
 PATH_HAL = []
 
-if TREZOR_MODEL in ('1', 'R', 'T3B1'):
+if TREZOR_MODEL in ('R', 'T3B1'):
     FONT_NORMAL=None
     FONT_DEMIBOLD=None
     FONT_BOLD='Font_PixelOperator_Bold_8'
@@ -48,7 +37,7 @@ if TREZOR_MODEL in ('1', 'R', 'T3B1'):
     FONT_NORMAL_UPPER=None
     FONT_BOLD_UPPER=None
     FONT_SUB=None
-elif TREZOR_MODEL in ('T',):
+elif TREZOR_MODEL in ('T', 'DISC1', 'DISC2'):
     FONT_NORMAL=None
     FONT_DEMIBOLD=None
     FONT_BOLD='Font_Roboto_Bold_20'
