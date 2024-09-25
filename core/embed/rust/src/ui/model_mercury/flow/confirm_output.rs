@@ -2,7 +2,6 @@ use heapless::Vec;
 
 use crate::{
     error,
-    micropython::{iter::IterBuf, obj::Obj, util},
     strutil::TString,
     translations::TR,
     ui::{
@@ -213,44 +212,30 @@ fn get_cancel_page(
 
 #[allow(clippy::too_many_arguments)]
 pub fn new_confirm_output(
-    title: Option<TString<'static>>,
-    subtitle: Option<TString<'static>>,
+    main_params: ConfirmBlobParams,
     account: Option<TString<'static>>,
     account_path: Option<TString<'static>>,
     br_name: TString<'static>,
     br_code: u16,
-    message: Obj,
-    amount: Option<Obj>,
-    chunkify: bool,
-    text_mono: bool,
-    address: Option<Obj>,
-    address_title: Option<TString<'static>>,
-    summary_items: Obj,
-    fee_items: Obj,
-    summary_title: Option<TString<'static>>,
+    content_amount_params: Option<ConfirmBlobParams>,
+    address_params: Option<ConfirmBlobParams>,
+    address_title: TString<'static>,
+    summary_items_params: Option<ShowInfoParams>,
+    fee_items_params: ShowInfoParams,
     summary_br_name: Option<TString<'static>>,
     summary_br_code: Option<u16>,
     cancel_text: Option<TString<'static>>,
 ) -> Result<SwipeFlow, error::Error> {
     // Main
-    let main_content = ConfirmBlobParams::new(title.unwrap_or(TString::empty()), message, None)
-        .with_subtitle(subtitle)
-        .with_menu_button()
-        .with_footer(TR::instructions__swipe_up.into(), None)
-        .with_chunkify(chunkify)
-        .with_text_mono(text_mono)
-        .with_swipe_up()
+    let main_content = main_params
         .into_layout()?
         .one_button_request(ButtonRequest::from_num(br_code, br_name));
 
     // MainMenu
     let mut main_menu = VerticalMenu::empty();
     let mut main_menu_items = Vec::<usize, 3>::new();
-    if address.is_some() {
-        main_menu = main_menu.item(
-            theme::ICON_CHEVRON_RIGHT,
-            address_title.unwrap_or(TR::words__address.into()),
-        );
+    if address_params.is_some() {
+        main_menu = main_menu.item(theme::ICON_CHEVRON_RIGHT, address_title);
         unwrap!(main_menu_items.push(MENU_ITEM_ADDRESS_INFO));
     }
     if account.is_some() && account_path.is_some() {
@@ -280,17 +265,10 @@ pub fn new_confirm_output(
     let ac = AddressDetails::new(TR::send__send_from.into(), account, account_path)?;
     let account_content = ac.map(|_| Some(FlowMsg::Cancelled));
 
-    let res = if amount.is_some() {
-        let content_amount =
-            ConfirmBlobParams::new(TR::words__amount.into(), amount.unwrap(), None)
-                .with_subtitle(subtitle)
-                .with_menu_button()
-                .with_footer(TR::instructions__swipe_up.into(), None)
-                .with_text_mono(text_mono)
-                .with_swipe_up()
-                .with_swipe_down()
-                .into_layout()?
-                .one_button_request(ButtonRequest::from_num(br_code, br_name));
+    let res = if let Some(content_amount_params) = content_amount_params {
+        let content_amount = content_amount_params
+            .into_layout()?
+            .one_button_request(ButtonRequest::from_num(br_code, br_name));
 
         SwipeFlow::new(&ConfirmOutputWithAmount::Address)?
             .with_page(&ConfirmOutputWithAmount::Address, main_content)?
@@ -298,19 +276,9 @@ pub fn new_confirm_output(
             .with_page(&ConfirmOutputWithAmount::Menu, content_main_menu)?
             .with_page(&ConfirmOutputWithAmount::AccountInfo, account_content)?
             .with_page(&ConfirmOutputWithAmount::CancelTap, get_cancel_page())?
-    } else if summary_items != Obj::const_none() {
+    } else if let Some(summary_items_params) = summary_items_params {
         // Summary
-        let mut summary =
-            ShowInfoParams::new(summary_title.unwrap_or(TR::words__title_summary.into()))
-                .with_menu_button()
-                .with_footer(TR::instructions__swipe_up.into(), None)
-                .with_swipe_up()
-                .with_swipe_down();
-        for pair in IterBuf::new().try_iterate(summary_items)? {
-            let [label, value]: [TString; 2] = util::iter_into_array(pair)?;
-            summary = unwrap!(summary.add(label, value));
-        }
-        let content_summary = summary
+        let content_summary = summary_items_params
             .into_layout()?
             .one_button_request(ButtonRequest::from_num(
                 summary_br_code.unwrap(),
@@ -334,16 +302,8 @@ pub fn new_confirm_output(
         });
 
         // FeeInfo
-        let mut has_fee_info = false;
-        let mut fee = ShowInfoParams::new(TR::confirm_total__title_fee.into()).with_cancel_button();
-        if fee_items != Obj::const_none() {
-            for pair in IterBuf::new().try_iterate(fee_items)? {
-                let [label, value]: [TString; 2] = util::iter_into_array(pair)?;
-                fee = unwrap!(fee.add(label, value));
-                has_fee_info = true;
-            }
-        }
-        let content_fee = fee.into_layout()?;
+        let has_fee_info = !fee_items_params.is_empty();
+        let content_fee = fee_items_params.into_layout()?;
 
         // SummaryMenu
         let mut summary_menu = VerticalMenu::empty();
@@ -390,17 +350,8 @@ pub fn new_confirm_output(
             .with_page(&ConfirmOutputWithSummary::Main, main_content)?
             .with_page(&ConfirmOutputWithSummary::MainMenu, content_main_menu)?
             .with_page(&ConfirmOutputWithSummary::MainMenuCancel, get_cancel_page())?;
-        if address.is_some() {
-            let address_content = ConfirmBlobParams::new(
-                address_title.unwrap_or(TR::words__address.into()),
-                address.unwrap(),
-                None,
-            )
-            .with_cancel_button()
-            .with_chunkify(true)
-            .with_text_mono(true)
-            .with_swipe_right()
-            .into_layout()?;
+        if let Some(address_params) = address_params {
+            let address_content = address_params.into_layout()?;
             flow = flow.with_page(&ConfirmOutputWithSummary::AddressInfo, address_content)?;
         } else {
             // dummy page - this will never be shown since there is no menu item pointing to
