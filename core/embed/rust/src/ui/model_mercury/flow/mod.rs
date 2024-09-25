@@ -15,9 +15,8 @@ pub mod request_passphrase;
 pub mod set_brightness;
 pub mod show_share_words;
 pub mod show_tutorial;
+pub mod util;
 pub mod warning_hi_prio;
-
-mod util;
 
 pub use confirm_action::{
     new_confirm_action, new_confirm_action_simple, ConfirmActionMenu, ConfirmActionStrings,
@@ -38,4 +37,5 @@ pub use request_passphrase::RequestPassphrase;
 pub use set_brightness::SetBrightness;
 pub use show_share_words::ShowShareWords;
 pub use show_tutorial::ShowTutorial;
+pub use util::{ConfirmBlobParams, ShowInfoParams};
 pub use warning_hi_prio::WarningHiPrio;
