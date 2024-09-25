@@ -50,6 +50,7 @@ use crate::{
         model_mercury::{
             component::{check_homescreen_format, SwipeContent},
             flow::new_confirm_action_simple,
+            flow::util::ConfirmBlobParams,
             theme::ICON_BULLET_CHECKMARK,
         },
     },
@@ -250,102 +251,6 @@ extern "C" fn new_confirm_emphasized(n_args: usize, args: *const Obj, kwargs: *m
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
-struct ConfirmBlobParams {
-    title: TString<'static>,
-    subtitle: Option<TString<'static>>,
-    data: Obj,
-    description: Option<TString<'static>>,
-    extra: Option<TString<'static>>,
-    verb: Option<TString<'static>>,
-    verb_cancel: Option<TString<'static>>,
-    info_button: bool,
-    prompt: bool,
-    hold: bool,
-    chunkify: bool,
-    text_mono: bool,
-}
-
-impl ConfirmBlobParams {
-    fn new(
-        title: TString<'static>,
-        data: Obj,
-        description: Option<TString<'static>>,
-        verb: Option<TString<'static>>,
-        verb_cancel: Option<TString<'static>>,
-        prompt: bool,
-        hold: bool,
-    ) -> Self {
-        Self {
-            title,
-            subtitle: None,
-            data,
-            description,
-            extra: None,
-            verb,
-            verb_cancel,
-            info_button: false,
-            prompt,
-            hold,
-            chunkify: false,
-            text_mono: true,
-        }
-    }
-
-    fn with_extra(mut self, extra: Option<TString<'static>>) -> Self {
-        self.extra = extra;
-        self
-    }
-
-    fn with_subtitle(mut self, subtitle: Option<TString<'static>>) -> Self {
-        self.subtitle = subtitle;
-        self
-    }
-
-    fn with_info_button(mut self, info_button: bool) -> Self {
-        self.info_button = info_button;
-        self
-    }
-
-    fn with_chunkify(mut self, chunkify: bool) -> Self {
-        self.chunkify = chunkify;
-        self
-    }
-
-    fn with_text_mono(mut self, text_mono: bool) -> Self {
-        self.text_mono = text_mono;
-        self
-    }
-
-    fn into_flow(self) -> Result<Obj, Error> {
-        let paragraphs = ConfirmBlob {
-            description: self.description.unwrap_or("".into()),
-            extra: self.extra.unwrap_or("".into()),
-            data: self.data.try_into()?,
-            description_font: &theme::TEXT_NORMAL,
-            extra_font: &theme::TEXT_DEMIBOLD,
-            data_font: if self.chunkify {
-                let data: TString = self.data.try_into()?;
-                theme::get_chunkified_text_style(data.len())
-            } else if self.text_mono {
-                &theme::TEXT_MONO
-            } else {
-                &theme::TEXT_NORMAL
-            },
-        }
-        .into_paragraphs();
-
-        flow::new_confirm_action_simple(
-            paragraphs,
-            self.title,
-            self.subtitle,
-            self.verb_cancel,
-            self.prompt.then_some(self.title),
-            self.hold,
-            self.info_button,
-        )
-    }
-}
-
 extern "C" fn new_confirm_blob(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
@@ -353,7 +258,7 @@ extern "C" fn new_confirm_blob(n_args: usize, args: *const Obj, kwargs: *mut Map
         let description: Option<TString> =
             kwargs.get(Qstr::MP_QSTR_description)?.try_into_option()?;
         let extra: Option<TString> = kwargs.get(Qstr::MP_QSTR_extra)?.try_into_option()?;
-        let verb: Option<TString> = kwargs
+        let _verb: Option<TString> = kwargs
             .get(Qstr::MP_QSTR_verb)
             .unwrap_or_else(|_| Obj::const_none())
             .try_into_option()?;
@@ -369,14 +274,15 @@ extern "C" fn new_confirm_blob(n_args: usize, args: *const Obj, kwargs: *mut Map
             title,
             data,
             description,
-            verb,
-            verb_cancel,
-            prompt_screen,
-            hold,
         )
         .with_extra(extra)
         .with_chunkify(chunkify)
+        .with_verb_cancel(verb_cancel)
+        .with_hold(hold)
+        .with_prompt(prompt_screen)
         .into_flow()
+        .and_then(LayoutObj::new)
+        .map(Into::into)
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
@@ -527,7 +433,7 @@ extern "C" fn new_confirm_value(n_args: usize, args: *const Obj, kwargs: *mut Ma
         let value: Obj = kwargs.get(Qstr::MP_QSTR_value)?;
         let info_button: bool = kwargs.get_or(Qstr::MP_QSTR_info_button, false)?;
 
-        let verb: Option<TString> = kwargs
+        let _verb: Option<TString> = kwargs
             .get(Qstr::MP_QSTR_verb)
             .unwrap_or_else(|_| Obj::const_none())
             .try_into_option()?;
@@ -539,12 +445,17 @@ extern "C" fn new_confirm_value(n_args: usize, args: *const Obj, kwargs: *mut Ma
         let chunkify: bool = kwargs.get_or(Qstr::MP_QSTR_chunkify, false)?;
         let text_mono: bool = kwargs.get_or(Qstr::MP_QSTR_text_mono, true)?;
 
-        ConfirmBlobParams::new(title, value, description, verb, verb_cancel, hold, hold)
+        ConfirmBlobParams::new(title, value, description)
             .with_subtitle(subtitle)
             .with_info_button(info_button)
             .with_chunkify(chunkify)
             .with_text_mono(text_mono)
+            .with_verb_cancel(verb_cancel)
+            .with_prompt(hold)
+            .with_hold(hold)
             .into_flow()
+        .and_then(LayoutObj::new)
+        .map(Into::into)
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }

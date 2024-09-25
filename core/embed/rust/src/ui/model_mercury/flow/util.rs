@@ -14,10 +14,11 @@ use crate::{
             text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, VecExt},
             Component,
         },
-        flow::{FlowMsg, Swipable, SwipePage},
+        flow::{FlowMsg, Swipable, SwipePage, SwipeFlow},
         geometry::Direction,
         layout::util::{ConfirmBlob, StrOrBytes},
         model_mercury::component::SwipeContent,
+        model_mercury::flow,
     },
 };
 use heapless::Vec;
@@ -30,8 +31,12 @@ pub struct ConfirmBlobParams {
     data: Obj,
     description: Option<TString<'static>>,
     extra: Option<TString<'static>>,
+    verb_cancel: Option<TString<'static>>,
     menu_button: bool,
     cancel_button: bool,
+    info_button: bool,
+    prompt: bool,
+    hold: bool,
     chunkify: bool,
     text_mono: bool,
     swipe_up: bool,
@@ -52,9 +57,13 @@ impl ConfirmBlobParams {
             footer_description: None,
             data,
             description,
+            verb_cancel: None,
             extra: None,
             menu_button: false,
             cancel_button: false,
+            info_button: false,
+            prompt: false,
+            hold: false,
             chunkify: false,
             text_mono: true,
             swipe_up: false,
@@ -80,6 +89,26 @@ impl ConfirmBlobParams {
 
     pub const fn with_cancel_button(mut self) -> Self {
         self.cancel_button = true;
+        self
+    }
+
+    pub const fn with_info_button(mut self, info_button: bool) -> Self {
+        self.info_button = info_button;
+        self
+    }
+
+    pub const fn with_verb_cancel(mut self, verb_cancel: Option<TString<'static>>) -> Self {
+        self.verb_cancel = verb_cancel;
+        self
+    }
+
+    pub const fn with_hold(mut self, hold: bool) -> Self {
+        self.hold = hold;
+        self
+    }
+
+    pub const fn with_prompt(mut self, prompt: bool) -> Self {
+        self.prompt = prompt;
         self
     }
 
@@ -173,6 +202,35 @@ impl ConfirmBlobParams {
         frame = frame.with_vertical_pages();
 
         Ok(frame.map(|msg| matches!(msg, FrameMsg::Button(_)).then_some(FlowMsg::Info)))
+    }
+
+    pub fn into_flow(self) -> Result<SwipeFlow, Error> {
+        let paragraphs = ConfirmBlob {
+            description: self.description.unwrap_or("".into()),
+            extra: self.extra.unwrap_or("".into()),
+            data: self.data.try_into()?,
+            description_font: &theme::TEXT_NORMAL,
+            extra_font: &theme::TEXT_DEMIBOLD,
+            data_font: if self.chunkify {
+                let data: TString = self.data.try_into()?;
+                theme::get_chunkified_text_style(data.len())
+            } else if self.text_mono {
+                &theme::TEXT_MONO
+            } else {
+                &theme::TEXT_NORMAL
+            },
+        }
+        .into_paragraphs();
+
+        flow::new_confirm_action_simple(
+            paragraphs,
+            self.title,
+            self.subtitle,
+            self.verb_cancel,
+            self.prompt.then_some(self.title),
+            self.hold,
+            self.info_button,
+        )
     }
 }
 
