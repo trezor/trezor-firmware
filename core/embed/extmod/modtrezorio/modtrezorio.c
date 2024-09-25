@@ -49,9 +49,6 @@ uint32_t last_touch_sample_time = 0;
 #include "modtrezorio-webusb.h"
 #include "modtrezorio-usb.h"
 // clang-format on
-#ifdef USE_SBU
-#include "modtrezorio-sbu.h"
-#endif
 #ifdef USE_SD_CARD
 #include "modtrezorio-fatfs.h"
 #include "modtrezorio-sdcard.h"
@@ -83,10 +80,6 @@ uint32_t last_touch_sample_time = 0;
 
 STATIC const mp_rom_map_elem_t mp_module_trezorio_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_trezorio)},
-
-#ifdef USE_SBU
-    {MP_ROM_QSTR(MP_QSTR_SBU), MP_ROM_PTR(&mod_trezorio_SBU_type)},
-#endif
 
 #ifdef USE_SD_CARD
     {MP_ROM_QSTR(MP_QSTR_fatfs), MP_ROM_PTR(&mod_trezorio_fatfs_module)},

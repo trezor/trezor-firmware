@@ -21,6 +21,8 @@
 
 #include "sbu.h"
 
+#if KERNEL_MODE
+
 void sbu_init(void) {
   GPIO_InitTypeDef GPIO_InitStructure = {0};
 
@@ -41,3 +43,5 @@ void sbu_set(secbool sbu1, secbool sbu2) {
   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3,
                     sbu2 == sectrue ? GPIO_PIN_SET : GPIO_PIN_RESET);
 }
+
+#endif
