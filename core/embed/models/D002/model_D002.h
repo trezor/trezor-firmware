@@ -1,13 +1,14 @@
 #ifndef MODELS_MODEL_DISC2_H_
 #define MODELS_MODEL_DISC2_H_
 
+#include "bootloaders/bootloader_hashes.h"
 #include "sizedefs.h"
 
-#define MODEL_NAME "T"
-#define MODEL_FULL_NAME "Trezor Model T"
+#define MODEL_NAME "D002"
+#define MODEL_FULL_NAME "Trezor DIY 2"
 #define MODEL_INTERNAL_NAME "D002"
 #define MODEL_INTERNAL_NAME_TOKEN D002
-#define MODEL_NAME_QSTR MP_QSTR_T
+#define MODEL_NAME_QSTR MP_QSTR_D002
 #define MODEL_INTERNAL_NAME_QSTR MP_QSTR_D001
 #define MODEL_USB_MANUFACTURER "Trezor DIY"
 #define MODEL_USB_PRODUCT MODEL_FULL_NAME

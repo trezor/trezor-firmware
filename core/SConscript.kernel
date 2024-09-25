@@ -386,15 +386,14 @@ obj_program.extend(
         ' --rename-section .data=.vendorheader,alloc,load,readonly,contents'
         ' $SOURCE $TARGET', ))
 
-if TREZOR_MODEL not in ('DISC1', 'DISC2'):
-    tools.embed_compressed_binary(
-            obj_program,
-            env,
-            'bootloader',
-            'embed/bootloaders/bootloader.o',
-            f'embed/models/{MODEL_IDENTIFIER}/bootloaders/bootloader_{BOOTLOADER_SUFFIX}.bin',
-            'kernel'
-            )
+tools.embed_compressed_binary(
+        obj_program,
+        env,
+        'bootloader',
+        'embed/bootloaders/bootloader.o',
+        f'embed/models/{MODEL_IDENTIFIER}/bootloaders/bootloader_{BOOTLOADER_SUFFIX}.bin',
+        'kernel'
+        )
 
 linkerscript_gen = env.Command(
     target='memory.ld',
