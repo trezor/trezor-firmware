@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 import trezorui2
-from trezor import TR, ui
+from trezor import TR
 from trezor.enums import ButtonRequestType, RecoveryType
 
 from ..common import interact

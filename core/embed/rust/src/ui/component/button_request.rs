@@ -53,7 +53,7 @@ impl<T: Component> Component for SendButtonRequest<T> {
                     }
                 }
                 SendButtonRequestPolicy::OnAttachAlways => {
-                    if let Some(br) = self.button_request.clone() {
+                    if let Some(br) = self.button_request {
                         ctx.send_button_request(br.code, br.name);
                     }
                 }
