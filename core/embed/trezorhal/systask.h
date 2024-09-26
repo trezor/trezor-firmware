@@ -117,6 +117,8 @@ typedef struct {
   mpu_mode_t mpu_mode;
   // Task post-mortem information
   systask_postmortem_t pminfo;
+  // Applet bound to the task
+  void* applet;
 
 } systask_t;
 
@@ -134,7 +136,8 @@ void systask_yield_to(systask_t* task);
 // Initializes a task with the given stack pointer, stack size
 //
 // The task must be not be running when the function is called
-void systask_init(systask_t* task, uint32_t stack_ptr, uint32_t stack_size);
+void systask_init(systask_t* task, uint32_t stack_ptr, uint32_t stack_size,
+                  void* context);
 
 // Pushes data onto the stack of the task
 //
