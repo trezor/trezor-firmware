@@ -2,7 +2,7 @@
 # fmt: off
 
 import os
-import tools, models
+import tools, models, ui
 
 BITCOIN_ONLY = ARGUMENTS.get('BITCOIN_ONLY', '0')
 EVERYTHING = BITCOIN_ONLY != '1'
@@ -42,38 +42,11 @@ SOURCE_MOD = [
     'vendor/micropython/extmod/vfs_posix_file.c',
 ]
 SOURCE_MOD_CRYPTO = []
+RUST_UI_FEATURES = []
 
 PYOPT = ARGUMENTS.get('PYOPT', '1')
 FROZEN = ARGUMENTS.get('TREZOR_EMULATOR_FROZEN', 0)
 RASPI = os.getenv('TREZOR_EMULATOR_RASPI') == '1'
-
-if TREZOR_MODEL in ('R', 'T3B1'):
-    FONT_NORMAL='Font_PixelOperator_Regular_8'
-    FONT_DEMIBOLD='Font_Unifont_Bold_16'
-    FONT_BOLD='Font_PixelOperator_Bold_8'
-    FONT_MONO='Font_PixelOperatorMono_Regular_8'
-    FONT_BIG='Font_Unifont_Regular_16'
-    FONT_NORMAL_UPPER='Font_PixelOperator_Regular_8_upper'
-    FONT_BOLD_UPPER='Font_PixelOperator_Bold_8_upper'
-    FONT_SUB=None
-elif TREZOR_MODEL in ('T',):
-    FONT_NORMAL='Font_TTHoves_Regular_21'
-    FONT_DEMIBOLD='Font_TTHoves_DemiBold_21'
-    FONT_BOLD=None
-    FONT_MONO='Font_RobotoMono_Medium_20'
-    FONT_BIG=None
-    FONT_NORMAL_UPPER=None
-    FONT_BOLD_UPPER='Font_TTHoves_Bold_17_upper'
-    FONT_SUB=None
-elif TREZOR_MODEL in ('T3T1',):
-    FONT_NORMAL='Font_TTSatoshi_DemiBold_21'
-    FONT_DEMIBOLD='Font_TTSatoshi_DemiBold_21'
-    FONT_BOLD='Font_TTSatoshi_DemiBold_21'
-    FONT_MONO='Font_RobotoMono_Medium_21'
-    FONT_BIG='Font_TTSatoshi_DemiBold_42'
-    FONT_NORMAL_UPPER=None
-    FONT_BOLD_UPPER=None
-    FONT_SUB='Font_TTSatoshi_DemiBold_18'
 
 # modtrezorconfig
 CPPPATH_MOD += [
@@ -262,7 +235,6 @@ else:
     ]
 
 CPPDEFINES_MOD += [
-    'TREZOR_UI2',
     'TRANSLATIONS',
     'FANCY_FATAL_ERROR',
     ]
@@ -456,17 +428,7 @@ TRANSLATION_DATA = [
     "translations/order.json",
 ]
 
-
-# fonts
-tools.add_font('NORMAL', FONT_NORMAL, CPPDEFINES_MOD, SOURCE_MOD)
-tools.add_font('BOLD', FONT_BOLD, CPPDEFINES_MOD, SOURCE_MOD)
-tools.add_font('DEMIBOLD', FONT_DEMIBOLD, CPPDEFINES_MOD, SOURCE_MOD)
-tools.add_font('MONO', FONT_MONO, CPPDEFINES_MOD, SOURCE_MOD)
-tools.add_font('BIG', FONT_BIG, CPPDEFINES_MOD, SOURCE_MOD)
-tools.add_font('NORMAL_UPPER', FONT_NORMAL_UPPER, CPPDEFINES_MOD, SOURCE_MOD)
-tools.add_font('BOLD_UPPER', FONT_BOLD_UPPER, CPPDEFINES_MOD, SOURCE_MOD)
-tools.add_font('SUB', FONT_SUB, CPPDEFINES_MOD, SOURCE_MOD)
-
+ui.init_ui(TREZOR_MODEL, "firmware", CPPDEFINES_MOD, SOURCE_MOD, RUST_UI_FEATURES)
 
 SOURCE_QSTR = SOURCE_MOD + SOURCE_MICROPYTHON + SOURCE_UNIX
 
@@ -478,18 +440,6 @@ else:
 env = Environment(ENV=os.environ, CFLAGS='%s -DCONFIDENTIAL= -DPYOPT=%s -DBITCOIN_ONLY=%s %s' % (ARGUMENTS.get('CFLAGS', ''), PYOPT, BITCOIN_ONLY, STATIC))
 
 FEATURES_AVAILABLE = models.configure_board(TREZOR_MODEL, HW_REVISION, FEATURES_WANTED, env, CPPDEFINES_HAL, SOURCE_UNIX, PATH_HAL)
-
-if TREZOR_MODEL in ('T',):
-    UI_LAYOUT = 'UI_LAYOUT_TT'
-    ui_layout_feature = 'model_tt'
-elif TREZOR_MODEL in ('R', 'T3B1'):
-    UI_LAYOUT = 'UI_LAYOUT_TR'
-    ui_layout_feature = 'model_tr'
-elif TREZOR_MODEL in ('T3T1',):
-    UI_LAYOUT = 'UI_LAYOUT_MERCURY'
-    ui_layout_feature = 'model_mercury'
-else:
-    raise ValueError('Unknown Trezor model')
 
 
 if 'sd_card' in FEATURES_AVAILABLE:
@@ -576,7 +526,7 @@ env.Replace(
         'TREZOR_EMULATOR',
         'TREZOR_MODEL_'+TREZOR_MODEL,
         ('MP_CONFIGFILE', '\\"embed/unix/mpconfigport.h\\"'),
-        UI_LAYOUT,
+        ui.get_ui_layout(TREZOR_MODEL),
     ] + CPPDEFINES_MOD + CPPDEFINES_HAL,
     ASPPFLAGS='$CFLAGS $CCFLAGS', )
 
@@ -681,26 +631,14 @@ if FROZEN:
             SOURCE_PY_DIR + 'trezor/ui/layouts/fido.py',
         ] if not EVERYTHING else []
     ))
-    if UI_LAYOUT == 'UI_LAYOUT_TT':
-        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tt/*.py',
-            exclude=[
-                SOURCE_PY_DIR + 'trezor/ui/layouts/tt/fido.py',
-            ] if not EVERYTHING else []
-        ))
-    elif UI_LAYOUT == 'UI_LAYOUT_TR':
-        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tr/*.py',
-            exclude=[
-                SOURCE_PY_DIR + 'trezor/ui/layouts/tr/fido.py',
-            ] if not EVERYTHING else []
-        ))
-    elif UI_LAYOUT == 'UI_LAYOUT_MERCURY':
-        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/mercury/*.py',
-            exclude=[
-                SOURCE_PY_DIR + 'trezor/ui/layouts/mercury/fido.py',
-            ] if not EVERYTHING else []
-        ))
-    else:
-        raise ValueError('Unknown layout')
+
+    layout_path = ui.get_ui_layout_path(TREZOR_MODEL)
+
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + layout_path + '*.py',
+        exclude=[
+            SOURCE_PY_DIR + layout_path + 'fido.py',
+        ] if not EVERYTHING else []
+    ))
 
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/wire/*.py'))
 
@@ -811,7 +749,7 @@ if FROZEN:
         bitcoin_only=BITCOIN_ONLY,
         backlight='backlight' in FEATURES_AVAILABLE,
         optiga=OPTIGA,
-        ui_layout=UI_LAYOUT,
+        ui_layout=ui.get_ui_layout(TREZOR_MODEL),
         thp=THP,
         )
 
@@ -877,9 +815,10 @@ RUST_LIB = 'trezor_lib'
 RUST_LIBPATH = f'{RUST_LIBDIR}/lib{RUST_LIB}.a'
 
 def cargo_build():
-    features = ['micropython', 'protobuf', ui_layout_feature]
+    features = ['micropython', 'protobuf']
     if EVERYTHING:
         features.append('universal_fw')
+    features.extend(RUST_UI_FEATURES)
     features.append('ui')
     features.append('translations')
 
@@ -887,14 +826,6 @@ def cargo_build():
         features.append('debug')
 
     features.extend(FEATURES_AVAILABLE)
-
-    if TREZOR_MODEL in ('T', 'T3T1'):
-        features.append('ui_blurring')
-        features.append('ui_jpeg_decoder')
-
-    if NEW_RENDERING and TREZOR_MODEL in ('T3T1', ):
-        features.append('ui_image_buffer')
-        features.append('ui_overlay')
 
     if NEW_RENDERING:
         features.append('new_rendering')

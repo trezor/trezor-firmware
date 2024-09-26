@@ -43,3 +43,13 @@ def get_model_identifier(model: str) -> str:
 def has_emulator(model: str) -> bool:
     imported_module = importlib.import_module("models." + get_model_identifier(model))
     return hasattr(imported_module, "emulator")
+
+
+def get_model_ui(model: str) -> str:
+    imported_module = importlib.import_module("models." + get_model_identifier(model))
+    return imported_module.get_model_ui()
+
+
+def get_model_ui_conf(model: str) -> str:
+    imported_module = importlib.import_module("models." + get_model_identifier(model))
+    return imported_module.get_model_ui_conf()

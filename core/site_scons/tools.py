@@ -10,20 +10,6 @@ HERE = Path(__file__).parent.resolve()
 PROJECT_ROOT = HERE.parent.resolve()
 
 
-def add_font(
-    font_name: str, font: str | None, defines: list[str], sources: list[str]
-) -> None:
-    if font is not None:
-        font_filename = font.replace("_upper", "").lower()
-        defines += [
-            "TREZOR_FONT_" + font_name + "_ENABLE=" + font,
-            "TREZOR_FONT_" + font_name + '_INCLUDE=\\"' + font_filename + '.h\\"',
-        ]
-        sourcefile = "embed/lib/fonts/" + font_filename + ".c"
-        if sourcefile not in sources:
-            sources.append(sourcefile)
-
-
 def get_version(file: str) -> str:
     major = 0
     minor = 0

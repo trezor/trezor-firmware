@@ -659,11 +659,9 @@ void dump_value_opt(FILE *out, mp_const_obj_t value, bool eval_short) {
     dump_protodef(out, value);
   }
 
-#ifdef TREZOR_UI2
   else if (mp_obj_is_type(value, ui_debug_layout_type())) {
     dump_uilayout(out, value);
   }
-#endif
 
   else {
     print_type(out, "unknown", NULL, value, true);

@@ -29,3 +29,11 @@ def configure_board(
         return module.configure(env, features_wanted, defines, sources, paths)
 
     raise Exception("Unknown model_r_version")
+
+
+def get_model_ui() -> str:
+    return "mercury"
+
+
+def get_model_ui_conf() -> list[str]:
+    return []
