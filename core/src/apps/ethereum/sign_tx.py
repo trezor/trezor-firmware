@@ -1,6 +1,5 @@
 from typing import TYPE_CHECKING
 
-from trezor import utils
 from trezor.crypto import rlp
 from trezor.messages import EthereumTxRequest
 from trezor.utils import BufferReader
