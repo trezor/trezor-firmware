@@ -29,7 +29,7 @@ FEATURE_FLAGS = {
     "AES_GCM": BENCHMARK or THP,
 }
 
-FEATURES_WANTED = ["input", "sd_card", "rgb_led", "dma2d", "consumption_mask", "usb" ,"optiga", "haptic"]
+FEATURES_WANTED = ["input", "sd_card", "rgb_led", "dma2d", "consumption_mask", "usb" ,"optiga", "haptic", "ble"]
 if DISABLE_OPTIGA and PYOPT == '0':
     FEATURES_WANTED.remove("optiga")
 

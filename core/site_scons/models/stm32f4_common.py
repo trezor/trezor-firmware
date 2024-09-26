@@ -29,6 +29,7 @@ def stm32f4_common_files(env, defines, sources, paths):
         "embed/util/flash/inc",
         "embed/util/fwutils/inc",
         "embed/util/option_bytes/inc",
+        "embed/util/tsqueue/inc",
         "embed/util/unit_properties/inc",
         "vendor/micropython/lib/cmsis/inc",
         "vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Inc",
@@ -87,6 +88,7 @@ def stm32f4_common_files(env, defines, sources, paths):
         "embed/util/flash/stm32f4/flash_otp.c",
         "embed/util/fwutils/fwutils.c",
         "embed/util/option_bytes/stm32f4/option_bytes.c",
+        "embed/util/tsqueue/tsqueue.c",
         "embed/util/unit_properties/stm32/unit_properties.c",
     ]
 

@@ -42,6 +42,10 @@
 #include <io/button.h>
 #endif
 
+#ifdef USE_BLE
+#include <io/ble.h>
+#endif
+
 #ifdef USE_CONSUMPTION_MASK
 #include <sec/consumption_mask.h>
 #endif
@@ -175,6 +179,10 @@ void drivers_init() {
 
 #ifdef USE_HAPTIC
   haptic_init();
+#endif
+
+#ifdef USE_BLE
+  ble_init();
 #endif
 
 #ifdef USE_OPTIGA
