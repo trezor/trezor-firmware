@@ -20,6 +20,7 @@
 #include STM32_HAL_H
 
 #include <string.h>
+#include "ble.h"
 
 #include "applet.h"
 #include "bl_check.h"
@@ -145,6 +146,11 @@ void drivers_init() {
 
 #ifdef USE_HAPTIC
   haptic_init();
+#endif
+
+#ifdef USE_BLE
+
+  ble_init();
 #endif
 
 #ifdef USE_OPTIGA
