@@ -695,4 +695,55 @@ access_violation:
   return secfalse;
 }
 
+// ---------------------------------------------------------------------
+
+void ble_get_state__verified(ble_state_t *state) {
+  if (!probe_write_access(state, sizeof(*state))) {
+    goto access_violation;
+  }
+
+  ble_get_state(state);
+  return;
+
+access_violation:
+  apptask_access_violation();
+}
+
+bool ble_read_event__verified(ble_event_t *event) {
+  if (!probe_write_access(event, sizeof(*event))) {
+    goto access_violation;
+  }
+
+  return ble_read_event(event);
+
+access_violation:
+  apptask_access_violation();
+  return false;
+}
+
+void ble_write__verified(const uint8_t *data, size_t len) {
+  if (!probe_read_access(data, len)) {
+    goto access_violation;
+  }
+
+  ble_write(data, len);
+
+  return;
+
+access_violation:
+  apptask_access_violation();
+}
+
+uint32_t ble_read__verified(uint8_t *data, size_t len) {
+  if (!probe_write_access(data, len)) {
+    goto access_violation;
+  }
+
+  return ble_read(data, len);
+
+access_violation:
+  apptask_access_violation();
+  return 0;
+}
+
 #endif  // SYSCALL_DISPATCH

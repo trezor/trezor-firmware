@@ -67,6 +67,7 @@ def stm32f4_common_files(env, defines, sources, paths):
         "embed/trezorhal/stm32f4/systick.c",
         "embed/trezorhal/stm32f4/systimer.c",
         "embed/trezorhal/stm32f4/time_estimate.c",
+        "embed/trezorhal/stm32f4/tsqueue/tsqueue.c",
         "embed/trezorhal/stm32f4/unit_properties.c",
         "embed/trezorhal/stm32f4/vectortable.S",
     ]
