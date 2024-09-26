@@ -21,6 +21,7 @@
 
 #include "applet.h"
 #include "bl_check.h"
+#include "ble.h"
 #include "board_capabilities.h"
 #include "bootutils.h"
 #include "button.h"
@@ -144,6 +145,10 @@ void drivers_init() {
 
 #ifdef USE_HAPTIC
   haptic_init();
+#endif
+
+#ifdef USE_BLE
+  ble_init();
 #endif
 
 #ifdef USE_OPTIGA
