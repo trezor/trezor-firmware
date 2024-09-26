@@ -91,7 +91,7 @@ secbool erase_device(flash_progress_callback_t progress_cb) {
   static const flash_area_ref_t areas[] = {
     {.area = &STORAGE_AREAS[0], .mpu_mode = MPU_MODE_STORAGE},
     {.area = &STORAGE_AREAS[1], .mpu_mode = MPU_MODE_STORAGE},
-    {.area = &TRANSLATIONS_AREA, .mpu_mode = MPU_MODE_ASSETS},
+    {.area = &ASSETS_AREA, .mpu_mode = MPU_MODE_ASSETS},
 #if defined(BOARDLOADER) || defined(BOOTLOADER)
     {.area = &FIRMWARE_AREA, .mpu_mode = MPU_MODE_DEFAULT},
 #endif
