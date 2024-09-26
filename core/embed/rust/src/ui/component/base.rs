@@ -582,8 +582,7 @@ impl EventCtx {
     }
 
     pub fn send_button_request(&mut self, code: ButtonRequestCode, name: TString<'static>) {
-        #[cfg(feature = "ui_debug")]
-        assert!(self.button_request.is_none());
+        debug_assert!(self.button_request.is_none());
         self.button_request = Some(ButtonRequest::new(code, name));
     }
 
@@ -612,8 +611,7 @@ impl EventCtx {
     }
 
     pub fn clear(&mut self) {
-        #[cfg(feature = "ui_debug")]
-        assert!(self.button_request.is_none());
+        debug_assert!(self.button_request.is_none());
         // replace self with a new instance, keeping only the fields we care about
         *self = Self::new();
     }

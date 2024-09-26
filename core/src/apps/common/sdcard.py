@@ -1,4 +1,4 @@
-from trezor import TR, io, utils, wire
+from trezor import TR, io, wire
 from trezor.ui.layouts import confirm_action, show_error_and_raise
 from trezor.utils import sd_hotswap_enabled
 

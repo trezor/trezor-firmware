@@ -48,7 +48,7 @@ from .client import TrezorClient
 from .exceptions import TrezorFailure
 from .log import DUMP_BYTES
 from .messages import DebugWaitType
-from .tools import expect, session
+from .tools import expect
 
 if TYPE_CHECKING:
     from typing_extensions import Protocol
