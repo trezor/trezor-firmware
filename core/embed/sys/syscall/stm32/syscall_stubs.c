@@ -645,6 +645,42 @@ secbool firmware_calc_hash(const uint8_t *challenge, size_t challenge_len,
                          SYSCALL_FIRMWARE_CALC_HASH);
 }
 
+#ifdef USE_BLE
+
+// =============================================================================
+// ble.h
+// =============================================================================
+
+#include <io/ble.h>
+
+void ble_start(void) { syscall_invoke0(SYSCALL_BLE_START); }
+
+bool ble_issue_command(ble_command_t command) {
+  return (bool)syscall_invoke1((uint32_t)command, SYSCALL_BLE_ISSUE_COMMAND);
+}
+
+bool ble_get_event(ble_event_t *event) {
+  return (bool)syscall_invoke1((uint32_t)event, SYSCALL_BLE_GET_EVENT);
+}
+
+void ble_get_state(ble_state_t *state) {
+  syscall_invoke1((uint32_t)state, SYSCALL_BLE_GET_STATE);
+}
+
+bool ble_can_write(void) { return syscall_invoke0(SYSCALL_BLE_CAN_WRITE); }
+
+bool ble_write(const uint8_t *data, uint16_t len) {
+  return syscall_invoke2((uint32_t)data, len, SYSCALL_BLE_WRITE);
+}
+
+bool ble_can_read(void) { return syscall_invoke0(SYSCALL_BLE_CAN_READ); }
+
+uint32_t ble_read(uint8_t *data, uint16_t len) {
+  return (uint32_t)syscall_invoke2((uint32_t)data, len, SYSCALL_BLE_READ);
+}
+
+#endif
+
 // =============================================================================
 // powerctl.h
 // =============================================================================
