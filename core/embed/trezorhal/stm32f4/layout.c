@@ -78,7 +78,7 @@ const flash_area_t SECRET_AREA = {
 };
 #endif
 
-const flash_area_t TRANSLATIONS_AREA = {
+const flash_area_t ASSETS_AREA = {
     .num_subareas = 1,
     .subarea[0] =
         {
