@@ -39,6 +39,10 @@
 #include <util/translations.h>
 #include <util/unit_properties.h>
 
+#ifdef USE_BLE
+#include <io/ble.h>
+#endif
+
 #ifdef USE_BUTTON
 #include <io/button.h>
 #endif
@@ -676,6 +680,47 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
           challenge, challenge_len, hash, hash_len,
           firmware_hash_callback_wrapper, callback_context);
     } break;
+
+#ifdef USE_BLE
+    case SYSCALL_BLE_START: {
+      ble_start();
+    } break;
+
+    case SYSCALL_BLE_ISSUE_COMMAND: {
+      ble_command_t command = args[0];
+      ble_issue_command(command);
+    } break;
+
+    case SYSCALL_BLE_GET_STATE: {
+      ble_state_t *state = (ble_state_t *)args[0];
+      ble_get_state__verified(state);
+    } break;
+
+    case SYSCALL_BLE_GET_EVENT: {
+      ble_event_t *event = (ble_event_t *)args[0];
+      args[0] = ble_get_event__verified(event);
+    } break;
+
+    case SYSCALL_BLE_CAN_WRITE: {
+      args[0] = ble_can_write();
+    } break;
+
+    case SYSCALL_BLE_WRITE: {
+      uint8_t *data = (uint8_t *)args[0];
+      size_t len = args[1];
+      args[0] = ble_write__verified(data, len);
+    } break;
+
+    case SYSCALL_BLE_CAN_READ: {
+      args[0] = ble_can_read();
+    } break;
+
+    case SYSCALL_BLE_READ: {
+      uint8_t *data = (uint8_t *)args[0];
+      size_t len = args[1];
+      args[0] = ble_read__verified(data, len);
+    } break;
+#endif
 
 #ifdef USE_POWERCTL
     case SYSCALL_POWERCTL_SUSPEND: {
