@@ -1,7 +1,7 @@
 # pylint: disable=E0602
 
 import os
-import tools, models
+import tools, models, ui
 
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
@@ -22,34 +22,7 @@ SOURCE_MOD_CRYPTO = []
 CPPDEFINES_HAL = []
 SOURCE_HAL = []
 PATH_HAL = []
-
-if TREZOR_MODEL in ('R', 'T3B1'):
-    FONT_NORMAL='Font_PixelOperator_Regular_8'
-    FONT_DEMIBOLD=None
-    FONT_BOLD=None
-    FONT_MONO='Font_PixelOperatorMono_Regular_8'
-    FONT_BIG='Font_PixelOperator_Regular_8'
-    FONT_NORMAL_UPPER='Font_PixelOperator_Regular_8_upper'
-    FONT_BOLD_UPPER=None
-    FONT_SUB=None
-elif TREZOR_MODEL in ('T', 'DISC1', 'DISC2'):
-    FONT_NORMAL='Font_Roboto_Regular_20'
-    FONT_DEMIBOLD=None
-    FONT_BOLD=None
-    FONT_MONO='Font_RobotoMono_Medium_20'
-    FONT_BIG=None
-    FONT_NORMAL_UPPER=None
-    FONT_BOLD_UPPER=None
-    FONT_SUB=None
-elif TREZOR_MODEL in ('T3T1',):
-    FONT_NORMAL='Font_TTSatoshi_DemiBold_21'
-    FONT_DEMIBOLD=None
-    FONT_BOLD=None
-    FONT_MONO='Font_RobotoMono_Medium_21'
-    FONT_BIG=None
-    FONT_NORMAL_UPPER=None
-    FONT_BOLD_UPPER=None
-    FONT_SUB=None
+RUST_UI_FEATURES = []
 
 # modtrezorcrypto
 CCFLAGS_MOD += '-Wno-sequence-point '
@@ -125,15 +98,7 @@ SOURCE_NANOPB = [
     'vendor/nanopb/pb_encode.c',
 ]
 
-# fonts
-tools.add_font('NORMAL', FONT_NORMAL, CPPDEFINES_MOD, SOURCE_MOD)
-tools.add_font('BOLD', FONT_BOLD, CPPDEFINES_MOD, SOURCE_MOD)
-tools.add_font('DEMIBOLD', FONT_DEMIBOLD, CPPDEFINES_MOD, SOURCE_MOD)
-tools.add_font('MONO', FONT_MONO, CPPDEFINES_MOD, SOURCE_MOD)
-tools.add_font('BIG', FONT_BIG, CPPDEFINES_MOD, SOURCE_MOD)
-tools.add_font('NORMAL_UPPER', FONT_NORMAL_UPPER, CPPDEFINES_MOD, SOURCE_MOD)
-tools.add_font('BOLD_UPPER', FONT_BOLD_UPPER, CPPDEFINES_MOD, SOURCE_MOD)
-tools.add_font('SUB', FONT_SUB, CPPDEFINES_MOD, SOURCE_MOD)
+ui.init_ui(TREZOR_MODEL, "bootloader", CPPDEFINES_MOD, SOURCE_MOD, RUST_UI_FEATURES)
 
 env = Environment(
     ENV=os.environ, CFLAGS='%s -DPRODUCTION=%s' % (ARGUMENTS.get('CFLAGS', ''), ARGUMENTS.get('PRODUCTION', '0')),

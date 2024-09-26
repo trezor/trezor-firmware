@@ -1,7 +1,7 @@
 # pylint: disable=E0602
 
 import os
-import tools, models
+import tools, models, ui
 
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
@@ -27,34 +27,7 @@ SOURCE_MOD_CRYPTO = []
 CPPDEFINES_HAL = []
 SOURCE_HAL = []
 PATH_HAL = []
-
-if TREZOR_MODEL in ('R', 'T3B1'):
-    FONT_NORMAL=None
-    FONT_DEMIBOLD=None
-    FONT_BOLD='Font_PixelOperator_Bold_8'
-    FONT_MONO=None
-    FONT_BIG=None
-    FONT_NORMAL_UPPER=None
-    FONT_BOLD_UPPER=None
-    FONT_SUB=None
-elif TREZOR_MODEL in ('T', 'DISC1', 'DISC2'):
-    FONT_NORMAL=None
-    FONT_DEMIBOLD=None
-    FONT_BOLD='Font_Roboto_Bold_20'
-    FONT_MONO=None
-    FONT_BIG=None
-    FONT_NORMAL_UPPER=None
-    FONT_BOLD_UPPER=None
-    FONT_SUB=None
-elif TREZOR_MODEL in ('T3T1',):
-    FONT_NORMAL='Font_TTSatoshi_DemiBold_21'
-    FONT_DEMIBOLD=None
-    FONT_BOLD='Font_TTSatoshi_DemiBold_21'
-    FONT_MONO='Font_RobotoMono_Medium_21'
-    FONT_BIG=None
-    FONT_NORMAL_UPPER=None
-    FONT_BOLD_UPPER=None
-    FONT_SUB=None
+RUST_UI_FEATURES = []
 
 # modtrezorcrypto
 CPPPATH_MOD += [
@@ -123,16 +96,7 @@ else:
         'embed/lib/display_draw.c',
     ]
 
-
-# fonts
-tools.add_font('NORMAL', FONT_NORMAL, CPPDEFINES_MOD, SOURCE_MOD)
-tools.add_font('BOLD', FONT_BOLD, CPPDEFINES_MOD, SOURCE_MOD)
-tools.add_font('DEMIBOLD', FONT_DEMIBOLD, CPPDEFINES_MOD, SOURCE_MOD)
-tools.add_font('MONO', FONT_MONO, CPPDEFINES_MOD, SOURCE_MOD)
-tools.add_font('BIG', FONT_BIG, CPPDEFINES_MOD, SOURCE_MOD)
-tools.add_font('NORMAL_UPPER', FONT_NORMAL_UPPER, CPPDEFINES_MOD, SOURCE_MOD)
-tools.add_font('BOLD_UPPER', FONT_BOLD_UPPER, CPPDEFINES_MOD, SOURCE_MOD)
-tools.add_font('SUB', FONT_SUB, CPPDEFINES_MOD, SOURCE_MOD)
+ui.init_ui(TREZOR_MODEL, "prodtest", CPPDEFINES_MOD, SOURCE_MOD, RUST_UI_FEATURES)
 
 env = Environment(
     ENV=os.environ,

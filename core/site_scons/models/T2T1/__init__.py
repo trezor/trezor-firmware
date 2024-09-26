@@ -18,3 +18,11 @@ def configure_board(
         return emul(env, features_wanted, defines, sources, paths)
     else:
         return configure(env, features_wanted, defines, sources, paths)
+
+
+def get_model_ui() -> str:
+    return "tt"
+
+
+def get_model_ui_conf() -> list[str]:
+    return []

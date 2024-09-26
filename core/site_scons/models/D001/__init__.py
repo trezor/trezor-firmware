@@ -14,3 +14,11 @@ def configure_board(
     paths: list[str],
 ):
     return configure(env, features_wanted, defines, sources, paths)
+
+
+def get_model_ui() -> str:
+    return "tt"
+
+
+def get_model_ui_conf() -> list[str]:
+    return []
