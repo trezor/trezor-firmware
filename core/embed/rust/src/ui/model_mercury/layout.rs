@@ -43,7 +43,10 @@ use crate::{
         flow::Swipable,
         geometry::{self, Direction},
         layout::{
-            base::LAYOUT_STATE, obj::{ComponentMsgObj, LayoutObj, ATTACH_TYPE_OBJ}, result::{CANCELLED, CONFIRMED, INFO}, util::{upy_disable_animation, ConfirmBlob, PropsList, RecoveryType}
+            base::LAYOUT_STATE,
+            obj::{ComponentMsgObj, LayoutObj, ATTACH_TYPE_OBJ},
+            result::{CANCELLED, CONFIRMED, INFO},
+            util::{upy_disable_animation, ConfirmBlob, PropsList, RecoveryType},
         },
         model_mercury::{
             component::{check_homescreen_format, SwipeContent},

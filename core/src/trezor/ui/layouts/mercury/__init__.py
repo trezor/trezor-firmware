@@ -1,15 +1,14 @@
 from typing import TYPE_CHECKING
 
 import trezorui2
-from trezor import TR, io, loop, ui, utils
+from trezor import TR, ui, utils
 from trezor.enums import ButtonRequestType
-from trezor.messages import ButtonAck, ButtonRequest
-from trezor.wire import ActionCancelled, context
+from trezor.wire import ActionCancelled
 
 from ..common import draw_simple, interact, raise_if_not_confirmed, with_info
 
 if TYPE_CHECKING:
-    from typing import Any, Awaitable, Iterable, NoReturn, Sequence, TypeVar
+    from typing import Awaitable, Iterable, NoReturn, Sequence, TypeVar
 
     from ..common import ExceptionType, PropertyType
 

@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING
 
 from trezor import TR
-from trezor.enums import ButtonRequestType
 from trezor.ui.layouts.recovery import (  # noqa: F401
     request_word_count,
     show_group_share_success,
@@ -11,7 +10,7 @@ from trezor.ui.layouts.recovery import (  # noqa: F401
 from apps.common import backup_types
 
 if TYPE_CHECKING:
-    from typing import Awaitable, Callable
+    from typing import Awaitable
 
     from trezor.enums import BackupType
 
