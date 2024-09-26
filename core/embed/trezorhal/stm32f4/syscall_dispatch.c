@@ -46,6 +46,8 @@
 #include "usb_vcp.h"
 #include "usb_webusb.h"
 
+#include "syscall_verifiers.h"
+
 #ifdef SYSCALL_DISPATCH
 
 static PIN_UI_WAIT_CALLBACK storage_init_callback = NULL;
@@ -68,31 +70,28 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
                                                        uint32_t syscall) {
   switch (syscall) {
     case SYSCALL_SYSTEM_EXIT: {
-      systask_t *task = systask_active();
       int exit_code = (int)args[0];
-      systask_exit(task, exit_code);
+      system_exit__verified(exit_code);
     } break;
 
     case SYSCALL_SYSTEM_EXIT_ERROR: {
-      systask_t *task = systask_active();
       const char *title = (const char *)args[0];
       size_t title_len = (size_t)args[1];
       const char *message = (const char *)args[2];
       size_t message_len = (size_t)args[3];
       const char *footer = (const char *)args[4];
       size_t footer_len = (size_t)args[5];
-      systask_exit_error(task, title, title_len, message, message_len, footer,
-                         footer_len);
+      system_exit_error__verified(title, title_len, message, message_len,
+                                  footer, footer_len);
     } break;
 
     case SYSCALL_SYSTEM_EXIT_FATAL: {
-      systask_t *task = systask_active();
       const char *message = (const char *)args[0];
       size_t message_len = (size_t)args[1];
       const char *file = (const char *)args[2];
       size_t file_len = (size_t)args[3];
       int line = (int)args[4];
-      systask_exit_fatal(task, message, message_len, file, file_len, line);
+      system_exit_fatal__verified(message, message_len, file, file_len, line);
     } break;
 
     case SYSCALL_SYSTICK_CYCLES: {
@@ -123,7 +122,7 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     } break;
 
     case SYSCALL_REBOOT_DEVICE: {
-      reboot();
+      reboot_device();
     } break;
 
     case SYSCALL_REBOOT_TO_BOOTLOADER: {
@@ -132,7 +131,7 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
 
     case SYSCALL_REBOOT_AND_UPGRADE: {
       const uint8_t *hash = (const uint8_t *)args[0];
-      reboot_and_upgrade(hash);
+      reboot_and_upgrade__verified(hash);
     } break;
 
     case SYSCALL_DISPLAY_SET_BACKLIGHT: {
@@ -156,7 +155,7 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
 #if XFRAMEBUFFER
     case SYSCALL_DISPLAY_GET_FB_INFO: {
       display_fb_info_t *fb = (display_fb_info_t *)args[0];
-      args[0] = (uint32_t)display_get_frame_buffer(fb);
+      args[0] = (uint32_t)display_get_frame_buffer__verified(fb);
     } break;
 #else
     case SYSCALL_DISPLAY_WAIT_FOR_SYNC: {
@@ -166,13 +165,13 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
 
     case SYSCALL_DISPLAY_FILL: {
       const gfx_bitblt_t *bb = (const gfx_bitblt_t *)args[0];
-      display_fill(bb);
+      display_fill__verified(bb);
     } break;
 
 #ifdef USE_RGB_COLORS
     case SYSCALL_DISPLAY_COPY_RGB565: {
       const gfx_bitblt_t *bb = (const gfx_bitblt_t *)args[0];
-      display_copy_rgb565(bb);
+      display_copy_rgb565__verified(bb);
     } break;
 #endif
 
@@ -220,14 +219,14 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       uint8_t iface_num = (uint8_t)args[0];
       uint8_t *buf = (uint8_t *)args[1];
       uint32_t len = args[2];
-      args[0] = usb_hid_read(iface_num, buf, len);
+      args[0] = usb_hid_read__verified(iface_num, buf, len);
     } break;
 
     case SYSCALL_USB_HID_WRITE: {
       uint8_t iface_num = (uint8_t)args[0];
       const uint8_t *buf = (const uint8_t *)args[1];
       uint32_t len = args[2];
-      args[0] = usb_hid_write(iface_num, buf, len);
+      args[0] = usb_hid_write__verified(iface_num, buf, len);
     } break;
 
     case SYSCALL_USB_HID_READ_SELECT: {
@@ -240,7 +239,7 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       uint8_t *buf = (uint8_t *)args[1];
       uint32_t len = args[2];
       int timeout = (int)args[3];
-      args[0] = usb_hid_read_blocking(iface_num, buf, len, timeout);
+      args[0] = usb_hid_read_blocking__verified(iface_num, buf, len, timeout);
     } break;
 
     case SYSCALL_USB_HID_WRITE_BLOCKING: {
@@ -248,7 +247,7 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       const uint8_t *buf = (const uint8_t *)args[1];
       uint32_t len = args[2];
       int timeout = (int)args[3];
-      args[0] = usb_hid_write_blocking(iface_num, buf, len, timeout);
+      args[0] = usb_hid_write_blocking__verified(iface_num, buf, len, timeout);
     } break;
 
     case SYSCALL_USB_VCP_ADD: {
@@ -270,14 +269,14 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       uint8_t iface_num = (uint8_t)args[0];
       uint8_t *buf = (uint8_t *)args[1];
       uint32_t len = args[2];
-      args[0] = usb_vcp_read(iface_num, buf, len);
+      args[0] = usb_vcp_read__verified(iface_num, buf, len);
     } break;
 
     case SYSCALL_USB_VCP_WRITE: {
       uint8_t iface_num = (uint8_t)args[0];
       const uint8_t *buf = (const uint8_t *)args[1];
       uint32_t len = args[2];
-      args[0] = usb_vcp_write(iface_num, buf, len);
+      args[0] = usb_vcp_write__verified(iface_num, buf, len);
     } break;
 
     case SYSCALL_USB_VCP_READ_BLOCKING: {
@@ -285,7 +284,7 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       uint8_t *buf = (uint8_t *)args[1];
       uint32_t len = args[2];
       int timeout = (int)args[3];
-      args[0] = usb_vcp_read_blocking(iface_num, buf, len, timeout);
+      args[0] = usb_vcp_read_blocking__verified(iface_num, buf, len, timeout);
     } break;
 
     case SYSCALL_USB_VCP_WRITE_BLOCKING: {
@@ -293,7 +292,7 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       const uint8_t *buf = (const uint8_t *)args[1];
       uint32_t len = args[2];
       int timeout = (int)args[3];
-      args[0] = usb_vcp_write_blocking(iface_num, buf, len, timeout);
+      args[0] = usb_vcp_write_blocking__verified(iface_num, buf, len, timeout);
     } break;
 
     case SYSCALL_USB_WEBUSB_ADD: {
@@ -315,14 +314,14 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       uint8_t iface_num = (uint8_t)args[0];
       uint8_t *buf = (uint8_t *)args[1];
       uint32_t len = args[2];
-      args[0] = usb_webusb_read(iface_num, buf, len);
+      args[0] = usb_webusb_read__verified(iface_num, buf, len);
     } break;
 
     case SYSCALL_USB_WEBUSB_WRITE: {
       uint8_t iface_num = (uint8_t)args[0];
       const uint8_t *buf = (const uint8_t *)args[1];
       uint32_t len = args[2];
-      args[0] = usb_webusb_write(iface_num, buf, len);
+      args[0] = usb_webusb_write__verified(iface_num, buf, len);
     } break;
 
     case SYSCALL_USB_WEBUSB_READ_SELECT: {
@@ -335,7 +334,8 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       uint8_t *buf = (uint8_t *)args[1];
       uint32_t len = args[2];
       int timeout = (int)args[3];
-      args[0] = usb_webusb_read_blocking(iface_num, buf, len, timeout);
+      args[0] =
+          usb_webusb_read_blocking__verified(iface_num, buf, len, timeout);
     } break;
 
     case SYSCALL_USB_WEBUSB_WRITE_BLOCKING: {
@@ -343,7 +343,8 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       const uint8_t *buf = (const uint8_t *)args[1];
       uint32_t len = args[2];
       int timeout = (int)args[3];
-      args[0] = usb_webusb_write_blocking(iface_num, buf, len, timeout);
+      args[0] =
+          usb_webusb_write_blocking__verified(iface_num, buf, len, timeout);
     } break;
 
 #ifdef USE_SD_CARD
@@ -367,14 +368,14 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       uint32_t *dest = (uint32_t *)args[0];
       uint32_t block_num = args[1];
       uint32_t num_blocks = args[2];
-      args[0] = sdcard_read_blocks(dest, block_num, num_blocks);
+      args[0] = sdcard_read_blocks__verified(dest, block_num, num_blocks);
     } break;
 
     case SYSCALL_SDCARD_WRITE_BLOCKS: {
       const uint32_t *src = (const uint32_t *)args[0];
       uint32_t block_num = args[1];
       uint32_t num_blocks = args[2];
-      args[0] = sdcard_write_blocks(src, block_num, num_blocks);
+      args[0] = sdcard_write_blocks__verified(src, block_num, num_blocks);
     } break;
 #endif
 
@@ -445,7 +446,7 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     case SYSCALL_OPTIGA_CERT_SIZE: {
       uint8_t index = args[0];
       size_t *cert_size = (size_t *)args[1];
-      args[0] = optiga_cert_size(index, cert_size);
+      args[0] = optiga_cert_size__verified(index, cert_size);
     } break;
 
     case SYSCALL_OPTIGA_READ_CERT: {
@@ -453,18 +454,19 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       uint8_t *cert = (uint8_t *)args[1];
       size_t max_cert_size = args[2];
       size_t *cert_size = (size_t *)args[3];
-      args[0] = optiga_read_cert(index, cert, max_cert_size, cert_size);
+      args[0] =
+          optiga_read_cert__verified(index, cert, max_cert_size, cert_size);
     } break;
 
     case SYSCALL_OPTIGA_READ_SEC: {
       uint8_t *sec = (uint8_t *)args[0];
-      args[0] = optiga_read_sec(sec);
+      args[0] = optiga_read_sec__verified(sec);
     } break;
 
     case SYSCALL_OPTIGA_RANDOM_BUFFER: {
       uint8_t *dest = (uint8_t *)args[0];
       size_t size = args[1];
-      args[0] = optiga_random_buffer(dest, size);
+      args[0] = optiga_random_buffer__verified(dest, size);
     } break;
 
 #if PYOPT == 0
@@ -479,7 +481,7 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       const uint8_t *salt = (const uint8_t *)args[1];
       uint16_t salt_len = args[2];
       mpu_reconfig(MPU_MODE_STORAGE);
-      storage_init(storage_init_callback_wrapper, salt, salt_len);
+      storage_init__verified(storage_init_callback_wrapper, salt, salt_len);
     } break;
 
     case SYSCALL_STORAGE_WIPE: {
@@ -502,7 +504,7 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       size_t pin_len = args[1];
       const uint8_t *ext_salt = (const uint8_t *)args[2];
       mpu_reconfig(MPU_MODE_STORAGE);
-      args[0] = storage_unlock(pin, pin_len, ext_salt);
+      args[0] = storage_unlock__verified(pin, pin_len, ext_salt);
     } break;
 
     case SYSCALL_STORAGE_HAS_PIN: {
@@ -528,15 +530,15 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       const uint8_t *old_ext_salt = (const uint8_t *)args[4];
       const uint8_t *new_ext_salt = (const uint8_t *)args[5];
       mpu_reconfig(MPU_MODE_STORAGE);
-      args[0] = storage_change_pin(oldpin, oldpin_len, newpin, newpin_len,
-                                   old_ext_salt, new_ext_salt);
+      args[0] = storage_change_pin__verified(
+          oldpin, oldpin_len, newpin, newpin_len, old_ext_salt, new_ext_salt);
     } break;
 
     case SYSCALL_STORAGE_ENSURE_NOT_WIPE_CODE: {
       const uint8_t *pin = (const uint8_t *)args[0];
       size_t pin_len = args[1];
       mpu_reconfig(MPU_MODE_STORAGE);
-      storage_ensure_not_wipe_code(pin, pin_len);
+      storage_ensure_not_wipe_code__verified(pin, pin_len);
     } break;
 
     case SYSCALL_STORAGE_HAS_WIPE_CODE: {
@@ -551,8 +553,8 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       const uint8_t *wipe_code = (const uint8_t *)args[3];
       size_t wipe_code_len = args[4];
       mpu_reconfig(MPU_MODE_STORAGE);
-      args[0] = storage_change_wipe_code(pin, pin_len, ext_salt, wipe_code,
-                                         wipe_code_len);
+      args[0] = storage_change_wipe_code__verified(pin, pin_len, ext_salt,
+                                                   wipe_code, wipe_code_len);
     } break;
 
     case SYSCALL_STORAGE_HAS: {
@@ -567,7 +569,7 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       uint16_t max_len = (uint16_t)args[2];
       uint16_t *len = (uint16_t *)args[3];
       mpu_reconfig(MPU_MODE_STORAGE);
-      args[0] = storage_get(key, val, max_len, len);
+      args[0] = storage_get__verified(key, val, max_len, len);
     } break;
 
     case SYSCALL_STORAGE_SET: {
@@ -575,7 +577,7 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       const void *val = (const void *)args[1];
       uint16_t len = (uint16_t)args[2];
       mpu_reconfig(MPU_MODE_STORAGE);
-      args[0] = storage_set(key, val, len);
+      args[0] = storage_set__verified(key, val, len);
     } break;
 
     case SYSCALL_STORAGE_DELETE: {
@@ -595,12 +597,12 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       uint16_t key = (uint16_t)args[0];
       uint32_t *count = (uint32_t *)args[1];
       mpu_reconfig(MPU_MODE_STORAGE);
-      args[0] = storage_next_counter(key, count);
+      args[0] = storage_next_counter__verified(key, count);
     } break;
 
     case SYSCALL_ENTROPY_GET: {
       uint8_t *buf = (uint8_t *)args[0];
-      entropy_get(buf);
+      entropy_get__verified(buf);
     } break;
 
     case SYSCALL_TRANSLATIONS_WRITE: {
@@ -631,7 +633,7 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     case SYSCALL_FIRMWARE_GET_VENDOR: {
       char *buff = (char *)args[0];
       size_t buff_size = args[1];
-      args[0] = firmware_get_vendor(buff, buff_size);
+      args[0] = firmware_get_vendor__verified(buff, buff_size);
     } break;
 
     case SYSCALL_FIRMWARE_CALC_HASH: {
@@ -642,9 +644,9 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       firmware_hash_callback = (firmware_hash_callback_t)args[4];
       void *callback_context = (void *)args[5];
 
-      args[0] =
-          firmware_calc_hash(challenge, challenge_len, hash, hash_len,
-                             firmware_hash_callback_wrapper, callback_context);
+      args[0] = firmware_calc_hash__verified(
+          challenge, challenge_len, hash, hash_len,
+          firmware_hash_callback_wrapper, callback_context);
     } break;
 
     default:
