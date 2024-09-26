@@ -58,7 +58,9 @@ impl MultiTapKeyboard {
     /// Returns `true` if `event` is an `Event::Timer` for the currently pending
     /// timer.
     pub fn timeout_event(&mut self, event: Event) -> bool {
-        self.pending.as_mut().map_or(false, |t| t.timer.expire(event))
+        self.pending
+            .as_mut()
+            .map_or(false, |t| t.timer.expire(event))
     }
 
     /// Reset to the empty state. Takes `EventCtx` to request a paint pass (to

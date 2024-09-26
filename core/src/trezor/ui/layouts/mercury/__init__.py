@@ -8,7 +8,7 @@ from trezor.wire import ActionCancelled
 from ..common import draw_simple, interact, raise_if_not_confirmed, with_info
 
 if TYPE_CHECKING:
-    from typing import Any, Awaitable, Iterable, NoReturn, Sequence, TypeVar
+    from typing import Awaitable, Iterable, NoReturn, Sequence, TypeVar
 
     from ..common import ExceptionType, PropertyType
 
