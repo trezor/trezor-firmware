@@ -50,6 +50,7 @@
 
 #include "irq.h"
 #include "mpu.h"
+#include "platform.h"
 #include "sdcard-set_clr_card_detect.h"
 #include "sdcard.h"
 
@@ -150,10 +151,11 @@ void HAL_SD_MspDeInit(SD_HandleTypeDef *hsd) {
   }
 }
 
-secbool sdcard_power_on_unchecked(bool low_speed) {
-  if (sd_handle.Instance) {
-    return sectrue;
-  }
+ts_t sdcard_power_on_unchecked(bool low_speed) {
+  TS_INIT;
+
+  TS_CHECK(sd_handle.Instance == NULL, TS_ERROR_BUSY);
+
   // turn on SD card circuitry
   sdcard_active_pin_state();
   HAL_Delay(50);
@@ -169,42 +171,45 @@ secbool sdcard_power_on_unchecked(bool low_speed) {
 
   // init the SD interface, with retry if it's not ready yet
   for (int retry = 10; HAL_SD_Init(&sd_handle) != HAL_OK; retry--) {
-    if (retry == 0) {
-      goto error;
-    }
+    TS_CHECK(retry > 0, TS_ERROR_IO);
     HAL_Delay(50);
   }
+
+  uint32_t sdmmc_status;
 
   // disable the card's internal CD/DAT3 card detect pull-up resistor
   // to send ACMD42, we have to send CMD55 (APP_CMD) with with the card's RCA as
   // the argument followed by CMD42 (SET_CLR_CARD_DETECT)
-  if (SDMMC_CmdAppCommand(sd_handle.Instance, sd_handle.SdCard.RelCardAdd
-                                                  << 16U) != SDMMC_ERROR_NONE) {
-    goto error;
-  }
-  if (SDMMC_CmdSetClrCardDetect(sd_handle.Instance, 0) != SDMMC_ERROR_NONE) {
-    goto error;
-  }
+  sdmmc_status = SDMMC_CmdAppCommand(sd_handle.Instance,
+                                     sd_handle.SdCard.RelCardAdd << 16U);
+  TS_CHECK(sdmmc_status != SDMMC_ERROR_NONE, TS_ERROR_IO);
+
+  sdmmc_status = SDMMC_CmdSetClrCardDetect(sd_handle.Instance, 0);
+  TS_CHECK(sdmmc_status != SDMMC_ERROR_NONE, TS_ERROR_IO);
+
+  HAL_StatusTypeDef hal_status;
 
   // configure the SD bus width for wide operation
-  if (HAL_SD_ConfigWideBusOperation(&sd_handle, SDIO_BUS_WIDE_4B) != HAL_OK) {
-    HAL_SD_DeInit(&sd_handle);
-    goto error;
-  }
+  hal_status = HAL_SD_ConfigWideBusOperation(&sd_handle, SDIO_BUS_WIDE_4B);
+  TS_CHECK_HAL_OK(hal_status);
 
-  return sectrue;
+  TS_RETURN;
 
-error:
+cleanup:
   sdcard_power_off();
-  return secfalse;
+  TS_RETURN;
 }
 
-secbool sdcard_power_on(void) {
-  if (sectrue != sdcard_is_present()) {
-    return secfalse;
-  }
+ts_t sdcard_power_on(void) {
+  TS_INIT;
 
-  return sdcard_power_on_unchecked(false);
+  TS_CHECK_SEC(sdcard_is_present(), TS_ERROR_IO);
+
+  ts_t status = sdcard_power_on_unchecked(false);
+  TS_CHECK_OK(status);
+
+cleanup:
+  TS_RETURN;
 }
 
 void sdcard_power_off(void) {
@@ -252,8 +257,7 @@ static void sdcard_reset_periph(void) {
   SDIO->ICR = SDMMC_STATIC_FLAGS;
 }
 
-static HAL_StatusTypeDef sdcard_wait_finished(SD_HandleTypeDef *sd,
-                                              uint32_t timeout) {
+static ts_t sdcard_wait_finished(SD_HandleTypeDef *sd, uint32_t timeout) {
   // Wait for HAL driver to be ready (eg for DMA to finish)
   uint32_t start = HAL_GetTick();
   for (;;) {
@@ -266,7 +270,7 @@ static HAL_StatusTypeDef sdcard_wait_finished(SD_HandleTypeDef *sd,
     __WFI();
     irq_unlock(irq_key);
     if (HAL_GetTick() - start >= timeout) {
-      return HAL_TIMEOUT;
+      return TS_ERROR_TIMEOUT;
     }
   }
 
@@ -274,33 +278,29 @@ static HAL_StatusTypeDef sdcard_wait_finished(SD_HandleTypeDef *sd,
   for (;;) {
     HAL_SD_CardStateTypeDef state = HAL_SD_GetCardState(sd);
     if (state == HAL_SD_CARD_TRANSFER) {
-      return HAL_OK;
+      return TS_OK;
     }
     if (!(state == HAL_SD_CARD_SENDING || state == HAL_SD_CARD_RECEIVING ||
           state == HAL_SD_CARD_PROGRAMMING)) {
-      return HAL_ERROR;
+      return TS_ERROR_IO;
     }
     if (HAL_GetTick() - start >= timeout) {
-      return HAL_TIMEOUT;
+      return TS_ERROR_TIMEOUT;
     }
     __WFI();
   }
-  return HAL_OK;
+  return TS_OK;
 }
 
-secbool sdcard_read_blocks(uint32_t *dest, uint32_t block_num,
-                           uint32_t num_blocks) {
+ts_t sdcard_read_blocks(uint32_t *dest, uint32_t block_num,
+                        uint32_t num_blocks) {
+  TS_INIT;
+
   // check that SD card is initialised
-  if (sd_handle.Instance == NULL) {
-    return secfalse;
-  }
+  TS_CHECK(sd_handle.Instance == NULL, TS_ERROR_BUSY);
 
   // check that dest pointer is aligned on a 4-byte boundary
-  if (((uint32_t)dest & 3) != 0) {
-    return secfalse;
-  }
-
-  HAL_StatusTypeDef err = HAL_OK;
+  TS_CHECK_ARG(((uint32_t)dest & 3) == 0);
 
   sd_dma.Instance = DMA2_Stream3;
   sd_dma.State = HAL_DMA_STATE_RESET;
@@ -331,32 +331,30 @@ secbool sdcard_read_blocks(uint32_t *dest, uint32_t block_num,
   NVIC_EnableIRQ(DMA2_Stream3_IRQn);
 
   sdcard_reset_periph();
-  err =
+  HAL_StatusTypeDef hal_status =
       HAL_SD_ReadBlocks_DMA(&sd_handle, (uint8_t *)dest, block_num, num_blocks);
-  if (err == HAL_OK) {
-    err = sdcard_wait_finished(&sd_handle, 5000);
-  }
+  TS_CHECK_HAL_OK(hal_status);
 
+  ts_t status = sdcard_wait_finished(&sd_handle, 5000);
+  TS_CHECK_OK(status);
+
+cleanup:
   NVIC_DisableIRQ(DMA2_Stream3_IRQn);
   HAL_DMA_DeInit(&sd_dma);
   sd_handle.hdmarx = NULL;
 
-  return sectrue * (err == HAL_OK);
+  TS_RETURN;
 }
 
-secbool sdcard_write_blocks(const uint32_t *src, uint32_t block_num,
-                            uint32_t num_blocks) {
+ts_t sdcard_write_blocks(const uint32_t *src, uint32_t block_num,
+                         uint32_t num_blocks) {
+  TS_INIT;
+
   // check that SD card is initialised
-  if (sd_handle.Instance == NULL) {
-    return secfalse;
-  }
+  TS_CHECK(sd_handle.Instance == NULL, TS_ERROR_BUSY);
 
   // check that src pointer is aligned on a 4-byte boundary
-  if (((uint32_t)src & 3) != 0) {
-    return secfalse;
-  }
-
-  HAL_StatusTypeDef err = HAL_OK;
+  TS_CHECK_ARG(((uint32_t)src & 3) == 0);
 
   sd_dma.Instance = DMA2_Stream3;
   sd_dma.State = HAL_DMA_STATE_RESET;
@@ -387,17 +385,19 @@ secbool sdcard_write_blocks(const uint32_t *src, uint32_t block_num,
   NVIC_EnableIRQ(DMA2_Stream3_IRQn);
 
   sdcard_reset_periph();
-  err =
+  HAL_StatusTypeDef hal_status =
       HAL_SD_WriteBlocks_DMA(&sd_handle, (uint8_t *)src, block_num, num_blocks);
-  if (err == HAL_OK) {
-    err = sdcard_wait_finished(&sd_handle, 5000);
-  }
+  TS_CHECK_HAL_OK(hal_status);
 
+  ts_t status = sdcard_wait_finished(&sd_handle, 5000);
+  TS_CHECK_OK(status);
+
+cleanup:
   NVIC_DisableIRQ(DMA2_Stream3_IRQn);
   HAL_DMA_DeInit(&sd_dma);
   sd_handle.hdmatx = NULL;
 
-  return sectrue * (err == HAL_OK);
+  TS_RETURN;
 }
 
 #endif  // KERNEL_MODE

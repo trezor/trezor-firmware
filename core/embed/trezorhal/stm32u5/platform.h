@@ -17,11 +17,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TREZORHAL_STM32_H
-#define TREZORHAL_STM32_H
+#ifndef TREZORHAL_PLATFORM_H
+#define TREZORHAL_PLATFORM_H
+
+#include <stdint.h>
 
 #include STM32_HAL_H
-#include <stdint.h>
+#include "error_handling.h"
 
 #define FLASH_QUADWORD_WORDS (4)
 #define FLASH_QUADWORD_SIZE (FLASH_QUADWORD_WORDS * sizeof(uint32_t))
@@ -44,4 +46,20 @@ extern uint32_t __stack_chk_guard;
 
 void check_oem_keys(void);
 
-#endif  // TREZORHAL_STM32_H
+// HAL status code helpers
+static inline ts_t hal_status_to_ts(HAL_StatusTypeDef hal_status) {
+  switch (hal_status) {
+    case HAL_OK:
+      return TS_OK;
+    case HAL_BUSY:
+      return TS_ERROR_BUSY;
+    case HAL_TIMEOUT:
+      return TS_ERROR_TIMEOUT;
+    default:
+      return TS_ERROR;
+  }
+}
+
+#define TS_CHECK_HAL_OK(status) TS_CHECK_OK(hal_status_to_ts(status))
+
+#endif  // TREZORHAL_PLATFORM_H

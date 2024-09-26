@@ -23,6 +23,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "error_handling.h"
+
 typedef enum {
   // Effect at the start of a button press
   HAPTIC_BUTTON_PRESS = 0,
@@ -37,8 +39,8 @@ typedef enum {
 // The function initializes the GPIO pins and the hardware
 // peripherals used by the haptic driver.
 //
-// Returns `true` if the initialization was successful.
-bool haptic_init(void);
+// Returns `TS_OK` if the initialization was successful.
+ts_t haptic_init(void);
 
 // Deinitializes the haptic driver
 //
@@ -54,7 +56,7 @@ void haptic_deinit(void);
 // and potentially can put the controller into a low-power mode.
 //
 // The driver is enabled by default (after initialization).
-void haptic_set_enabled(bool enabled);
+ts_t haptic_set_enabled(bool enabled);
 
 // Returns `true` if haptic driver is enabled
 bool haptic_get_enabled(void);
@@ -64,16 +66,16 @@ bool haptic_get_enabled(void);
 // This function is used during production testing to verify that the haptic
 // motor is working correctly.
 //
-// Returns `true` if the test effect was successfully started.
-bool haptic_test(uint16_t duration_ms);
+// Returns `TS_OK` if the test effect was successfully started.
+ts_t haptic_test(uint16_t duration_ms);
 
 // Plays one of haptic effects
 //
 // The function stops playing any currently running effect and
 // starts playing the specified effect.
 //
-// Returns `true` if the effect was successfully started.
-bool haptic_play(haptic_effect_t effect);
+// Returns `TS_OK` if the effect was successfully started.
+ts_t haptic_play(haptic_effect_t effect);
 
 // Starts the haptic motor with a specified amplitude (in percent) for a
 // specified duration (in milliseconds).
@@ -85,7 +87,7 @@ bool haptic_play(haptic_effect_t effect);
 // (`duration_ms`) to modify the amplitude dynamically, allowing
 // the creation of customized haptic effects.
 //
-// Returns `true` if the effect was successfully started.
-bool haptic_play_custom(int8_t amplitude_pct, uint16_t duration_ms);
+// Returns `TS_OK` if the effect was successfully started.
+ts_t haptic_play_custom(int8_t amplitude_pct, uint16_t duration_ms);
 
 #endif  // TREZORHAL_HAPTIC_H

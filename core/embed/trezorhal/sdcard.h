@@ -43,11 +43,13 @@
  * THE SOFTWARE.
  */
 
-#ifndef __TREZORHAL_SDCARD_H__
-#define __TREZORHAL_SDCARD_H__
+#ifndef TREZORHAL_SDCARD_H
+#define TREZORHAL_SDCARD_H
 
 #include <stdbool.h>
 #include "secbool.h"
+
+#include "error_handling.h"
 
 // this is a fixed size and should not be changed
 #define SDCARD_BLOCK_SIZE (512)
@@ -55,17 +57,17 @@
 #ifdef KERNEL_MODE
 
 void sdcard_init(void);
-secbool __wur sdcard_power_on_unchecked(bool low_speed);
 
-#endif
+#endif  // KERNEL_MODE
 
-secbool __wur sdcard_power_on(void);
+ts_t __wur sdcard_power_on_unchecked(bool low_speed);
+ts_t __wur sdcard_power_on(void);
 void sdcard_power_off(void);
 secbool __wur sdcard_is_present(void);
 uint64_t sdcard_get_capacity_in_bytes(void);
-secbool __wur sdcard_read_blocks(uint32_t *dest, uint32_t block_num,
-                                 uint32_t num_blocks);
-secbool __wur sdcard_write_blocks(const uint32_t *src, uint32_t block_num,
-                                  uint32_t num_blocks);
+ts_t __wur sdcard_read_blocks(uint32_t *dest, uint32_t block_num,
+                              uint32_t num_blocks);
+ts_t __wur sdcard_write_blocks(const uint32_t *src, uint32_t block_num,
+                               uint32_t num_blocks);
 
-#endif
+#endif  // TREZORHAL_SDCARD_H

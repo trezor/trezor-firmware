@@ -112,7 +112,7 @@ BUFFER_SECTION uint32_t sdcard_buf[BOOTLOADER_IMAGE_MAXSIZE / sizeof(uint32_t)];
 
 #if defined USE_SD_CARD
 static uint32_t check_sdcard(void) {
-  if (sectrue != sdcard_power_on()) {
+  if (ts_error(sdcard_power_on())) {
     return 0;
   }
 
@@ -124,12 +124,12 @@ static uint32_t check_sdcard(void) {
 
   memzero(sdcard_buf, IMAGE_HEADER_SIZE);
 
-  const secbool read_status = sdcard_read_blocks(
+  const ts_t read_status = sdcard_read_blocks(
       sdcard_buf, 0, BOOTLOADER_IMAGE_MAXSIZE / SDCARD_BLOCK_SIZE);
 
   sdcard_power_off();
 
-  if (sectrue == read_status) {
+  if (ts_ok(read_status)) {
     const image_header *hdr =
         read_image_header((const uint8_t *)sdcard_buf, BOOTLOADER_IMAGE_MAGIC,
                           BOOTLOADER_IMAGE_MAXSIZE);
