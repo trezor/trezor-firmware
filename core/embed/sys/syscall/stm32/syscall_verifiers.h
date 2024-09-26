@@ -182,6 +182,21 @@ secbool firmware_calc_hash__verified(const uint8_t *challenge,
 
 secbool firmware_get_vendor__verified(char *buff, size_t buff_size);
 
+// ---------------------------------------------------------------------
+#ifdef USE_BLE
+
+#include <io/ble.h>
+
+void ble_get_state__verified(ble_state_t *state);
+
+bool ble_read_event__verified(ble_event_t *event);
+
+bool ble_write__verified(const uint8_t *data, size_t len);
+
+secbool ble_read__verified(uint8_t *data, size_t len);
+
+#endif
+
 #endif  // SYSCALL_DISPATCH
 
 #endif  // TREZORHAL_SYSCALL_VERIFIERS_H
