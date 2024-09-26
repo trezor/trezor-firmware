@@ -50,7 +50,10 @@ use crate::{
         },
         geometry,
         layout::{
-            base::LAYOUT_STATE, obj::{ComponentMsgObj, LayoutObj, ATTACH_TYPE_OBJ}, result::{CANCELLED, CONFIRMED, INFO}, util::{upy_disable_animation, ConfirmBlob, PropsList, RecoveryType}
+            base::LAYOUT_STATE,
+            obj::{ComponentMsgObj, LayoutObj, ATTACH_TYPE_OBJ},
+            result::{CANCELLED, CONFIRMED, INFO},
+            util::{upy_disable_animation, ConfirmBlob, PropsList, RecoveryType},
         },
         model_tt::component::check_homescreen_format,
     },
@@ -1692,7 +1695,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///
     ///     def get_transition_out(self) -> AttachType:
     ///         """Return the transition type."""
-    /// 
+    ///
     ///     def return_value(self) -> T:
     ///         """Retrieve the return value of the layout object."""
     ///

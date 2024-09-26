@@ -47,7 +47,10 @@ use crate::{
         },
         geometry,
         layout::{
-            base::LAYOUT_STATE, obj::{ComponentMsgObj, LayoutObj, ATTACH_TYPE_OBJ}, result::{CANCELLED, CONFIRMED, INFO}, util::{upy_disable_animation, ConfirmBlob, RecoveryType}
+            base::LAYOUT_STATE,
+            obj::{ComponentMsgObj, LayoutObj, ATTACH_TYPE_OBJ},
+            result::{CANCELLED, CONFIRMED, INFO},
+            util::{upy_disable_animation, ConfirmBlob, RecoveryType},
         },
         model_tr::component::check_homescreen_format,
     },
