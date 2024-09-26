@@ -30,23 +30,29 @@
 // Applet entry point
 typedef void (*applet_startup_t)(const char* args, uint32_t random);
 
+typedef struct {
+  uint32_t start;
+  uint32_t size;
+} memory_area_t;
+
 // Applet header found at the beginning of the applet binary
 typedef struct {
   // Stack area
-  uint32_t stack_start;
-  uint32_t stack_size;
+  memory_area_t stack;
   // Applet entry point
   applet_startup_t startup;
 } applet_header_t;
 
 // Applet memory layout
 typedef struct {
-  // Data area 1
-  uint32_t data1_start;
-  uint32_t data1_size;
-  // Data area 2
-  uint32_t data2_start;
-  uint32_t data2_size;
+  // Read/write data area #1
+  memory_area_t data1;
+  // Read/write data area #2
+  memory_area_t data2;
+  // Read-only code area #1
+  memory_area_t code1;
+  // Read-only code area #2
+  memory_area_t code2;
 
 } applet_layout_t;
 
@@ -75,6 +81,11 @@ void applet_init(applet_t* applet, applet_header_t* header,
 // Returns `true` if the applet was successfully reset.
 bool applet_reset(applet_t* applet, uint32_t cmd, const void* arg,
                   size_t arg_size);
+
+// Returns the currently active applet.
+//
+// Returns `NULL` if no applet is currently active.
+applet_t* applet_active(void);
 
 #endif  // SYSCALL_DISPATCH
 

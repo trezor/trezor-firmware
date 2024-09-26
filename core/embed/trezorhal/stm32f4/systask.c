@@ -123,12 +123,14 @@ void systask_yield_to(systask_t* task) {
   systask_yield();
 }
 
-void systask_init(systask_t* task, uint32_t stack_ptr, uint32_t stack_size) {
+void systask_init(systask_t* task, uint32_t stack_ptr, uint32_t stack_size,
+                  void* applet) {
   memset(task, 0, sizeof(systask_t));
   task->sp = stack_ptr + stack_size;
   task->sp_lim = stack_ptr + 256;
   task->exc_return = 0xFFFFFFED;  // Thread mode, use PSP, pop FP context
   task->mpu_mode = MPU_MODE_APP;
+  task->applet = applet;
 }
 
 uint32_t* systask_push_data(systask_t* task, const void* data, size_t size) {

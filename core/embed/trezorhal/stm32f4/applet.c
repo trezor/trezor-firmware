@@ -35,11 +35,11 @@ void applet_init(applet_t* applet, applet_header_t* header,
 }
 
 static void applet_clear_memory(applet_t* applet) {
-  if (applet->layout.data1_size > 0) {
-    memset((void*)applet->layout.data1_start, 0, applet->layout.data1_size);
+  if (applet->layout.data1.size > 0) {
+    memset((void*)applet->layout.data1.start, 0, applet->layout.data1.size);
   }
-  if (applet->layout.data2_size > 0) {
-    memset((void*)applet->layout.data2_start, 0, applet->layout.data2_size);
+  if (applet->layout.data2.size > 0) {
+    memset((void*)applet->layout.data2.start, 0, applet->layout.data2.size);
   }
 }
 
@@ -49,8 +49,8 @@ bool applet_reset(applet_t* applet, uint32_t cmd, const void* arg,
   applet_clear_memory(applet);
 
   // Reset the applet task (stack pointer, etc.)
-  systask_init(&applet->task, applet->header->stack_start,
-               applet->header->stack_size);
+  systask_init(&applet->task, applet->header->stack.start,
+               applet->header->stack.size, applet);
 
   // Copy the arguments onto the applet stack
   void* arg_copy = NULL;
@@ -68,6 +68,16 @@ bool applet_reset(applet_t* applet, uint32_t cmd, const void* arg,
 
   return systask_push_call(&applet->task, applet->header->startup, arg1, arg2,
                            arg3);
+}
+
+applet_t* applet_active(void) {
+  systask_t* task = systask_active();
+
+  if (task == NULL) {
+    return NULL;
+  }
+
+  return (applet_t*)task->applet;
 }
 
 #endif  // SYSCALL_DISPATCH
