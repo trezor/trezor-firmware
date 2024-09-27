@@ -20,8 +20,9 @@
 #ifndef TREZORHAL_DISPLAY_LEGACY_H
 #define TREZORHAL_DISPLAY_LEGACY_H
 
-#include <buffers.h>
 #include <stdint.h>
+#include "buffers.h"
+#include "fonts/fonts_types.h"
 
 // These declarations will be removed after the final cleanup
 // of display drivers. They are here just to simplify integration
@@ -48,7 +49,7 @@ void display_pixeldata(uint16_t c);
 uint32_t* display_get_fb_addr(void);
 
 void display_clear(void);
-void display_text_render_buffer(const char* text, int textlen, int font,
+void display_text_render_buffer(const char* text, int textlen, font_id_t font,
                                 buffer_text_t* buffer, int text_offset);
 
 #define PIXELDATA(c) display_pixeldata(c)

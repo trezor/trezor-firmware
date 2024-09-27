@@ -22,9 +22,6 @@
 #include "fonts/fonts.h"
 #include "memzero.h"
 
-const int32_t text_buffer_height = FONT_MAX_HEIGHT;
-const int32_t buffer_width = DISPLAY_RESX;
-
 #define CONCAT_(a, b) a##b
 #define CONCAT(a, b) CONCAT_(a, b)
 

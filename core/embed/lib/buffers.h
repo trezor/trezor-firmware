@@ -85,9 +85,6 @@ typedef __attribute__((aligned(4))) struct {
   uint16_t buffer[3][BUFFER_PIXELS];
 } buffer_blurring_totals_t;
 
-extern const int32_t text_buffer_height;
-extern const int32_t buffer_width;
-
 buffer_line_16bpp_t* buffers_get_line_16bpp(bool clear);
 void buffers_free_line_16bpp(buffer_line_16bpp_t* buffer);
 
