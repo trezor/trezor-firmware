@@ -60,7 +60,7 @@ def cli() -> None:
     default=messages.CardanoDerivationType.ICARUS,
 )
 @click.option("-i", "--include-network-id", is_flag=True)
-@click.option("-C", "chunkify", is_flag=True)
+@click.option("-C", "--chunkify", is_flag=True)
 @click.option("-T", "--tag-cbor-sets", is_flag=True)
 @with_client
 def sign_tx(
