@@ -34,6 +34,8 @@
 
 #ifdef TOUCH_PANEL_LX154A2422CPT23
 #include "panels/lx154a2422cpt23.h"
+#elif defined TOUCH_PANEL_LHS200KB_IF21
+#include "panels/lhs200kb-if21.h"
 #endif
 
 // #define TOUCH_TRACE_REGS
@@ -54,7 +56,7 @@ typedef struct {
   // Time (in ticks) when the touch registers were read last time
   uint32_t read_ticks;
   // Set if the touch controller is currently touched
-  // (respectively, the we detected a touch event)
+  // (respectively, that we detected a touch event)
   bool pressed;
   // Previously reported x-coordinate
   uint16_t last_x;
@@ -213,7 +215,7 @@ static bool ft6x36_test_and_clear_interrupt(void) {
   return event != 0;
 }
 
-// Configures the touch controller to the funtional state.
+// Configures the touch controller to the functional state.
 static secbool ft6x36_configure(i2c_bus_t* i2c_bus) {
   const static uint8_t config[] = {
       // Set touch controller to the interrupt trigger mode.
@@ -242,6 +244,8 @@ static void ft6x36_panel_correction(uint16_t x, uint16_t y, uint16_t* x_new,
                                     uint16_t* y_new) {
 #ifdef TOUCH_PANEL_LX154A2422CPT23
   lx154a2422cpt23_touch_correction(x, y, x_new, y_new);
+#elif defined TOUCH_PANEL_LHS200KB_IF21
+  lhs200kb_if21_touch_correction(x, y, x_new, y_new);
 #else
   *x_new = x;
   *y_new = y;
@@ -527,7 +531,7 @@ uint32_t touch_get_event(void) {
         // We have missed the PRESS_DOWN event.
         // Report the start event only if the coordinates
         // have changed and driver is not starving.
-        // This suggest that the previous touch was very short,
+        // This suggests that the previous touch was very short,
         // or/and the driver is not called very frequently.
         event = TOUCH_START | xy;
       } else {
