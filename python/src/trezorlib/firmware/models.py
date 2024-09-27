@@ -29,10 +29,11 @@ if t.TYPE_CHECKING:
 
 class Model(Enum):
     T1B1 = b"T1B1"
-    T2T1 = b"T2T1"
-    T3T1 = b"T3T1"
-    T3B1 = b"T3B1"
     T2B1 = b"T2B1"
+    T2T1 = b"T2T1"
+    T3B1 = b"T3B1"
+    T3T1 = b"T3T1"
+    T3W1 = b"T3W1"
     D001 = b"D001"
     D002 = b"D002"
 
@@ -298,6 +299,12 @@ T3B1_HASH_PARAMS = FirmwareHashParameters(
     padding_byte=None,
 )
 
+T3W1_HASH_PARAMS = FirmwareHashParameters(
+    hash_function=hashlib.blake2s,
+    chunk_size=1024 * 128,
+    padding_byte=None,
+)
+
 D002_HASH_PARAMS = FirmwareHashParameters(
     hash_function=hashlib.sha256,
     chunk_size=1024 * 256,
@@ -310,6 +317,7 @@ MODEL_MAP = {
     Model.T2B1: T2B1,
     Model.T3T1: T3T1,
     Model.T3B1: T3B1,
+    Model.T3W1: TREZOR_CORE_DEV,
     Model.D001: TREZOR_CORE_DEV,
     Model.D002: TREZOR_CORE_DEV,
 }
@@ -320,6 +328,7 @@ MODEL_MAP_DEV = {
     Model.T2B1: TREZOR_CORE_DEV,
     Model.T3T1: TREZOR_CORE_DEV,
     Model.T3B1: TREZOR_CORE_DEV,
+    Model.T3W1: TREZOR_CORE_DEV,
     Model.D001: TREZOR_CORE_DEV,
     Model.D002: TREZOR_CORE_DEV,
 }
@@ -330,6 +339,7 @@ MODEL_HASH_PARAMS_MAP = {
     Model.T2B1: T2T1_HASH_PARAMS,
     Model.T3T1: T3T1_HASH_PARAMS,
     Model.T3B1: T3B1_HASH_PARAMS,
+    Model.T3W1: T3W1_HASH_PARAMS,
     Model.D001: T2T1_HASH_PARAMS,
     Model.D002: D002_HASH_PARAMS,
 }
@@ -341,6 +351,7 @@ MODEL_CODE_ALIGNMENT_MAP = {
     Model.T2B1: 0x200,
     Model.T3T1: 0x200,
     Model.T3B1: 0x200,
+    Model.T3W1: 0x200,
     Model.D001: 0x200,
     Model.D002: 0x400,
 }
