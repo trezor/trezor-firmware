@@ -236,8 +236,41 @@ class Signer:
             raise ProcessError("Total collateral is out of range!")
         validate_network_info(msg.network_id, msg.protocol_magic)
 
+    def _is_simple_transaction(self) -> bool:
+        msg = self.msg  # local_cache_attribute
+
+        has_advanced_features = (
+            msg.minting_asset_groups_count > 0
+            or msg.script_data_hash is not None
+            or msg.collateral_inputs_count > 0
+            or msg.has_collateral_return
+            or msg.total_collateral is not None
+            or msg.reference_inputs_count > 0
+            or msg.has_auxiliary_data
+        )
+
+        if has_advanced_features:
+            return False
+
+        # Suite only allows ordinary transactions and staking transactions
+        is_ordinary = (
+            msg.inputs_count > 0
+            and msg.outputs_count > 0
+            and msg.fee > 0
+            and msg.certificates_count == 0
+            and msg.withdrawals_count == 0
+        )
+
+        # Staking transaction (including stake pool registration)
+        is_staking = msg.fee > 0 and msg.certificates_count > 0
+
+        return is_ordinary or is_staking
+
     async def _show_tx_init(self) -> None:
-        self.should_show_details = await layout.show_tx_init(self.SIGNING_MODE_TITLE)
+        if not self._is_simple_transaction():
+            self.should_show_details = await layout.show_tx_init(
+                self.SIGNING_MODE_TITLE
+            )
 
         if not self._is_network_id_verifiable():
             await layout.warn_tx_network_unverifiable()
