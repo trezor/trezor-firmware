@@ -148,10 +148,8 @@ int display_get_orientation(void) {
 
 #ifdef XFRAMEBUFFER
 
-display_fb_info_t display_get_frame_buffer(void) {
-  display_fb_info_t info;
-  syscall_invoke1((uint32_t)&info, SYSCALL_DISPLAY_GET_FB_INFO);
-  return info;
+bool display_get_frame_buffer(display_fb_info_t *fb) {
+  return (bool)syscall_invoke1((uint32_t)fb, SYSCALL_DISPLAY_GET_FB_INFO);
 }
 
 #else  // XFRAMEBUFFER

@@ -177,8 +177,8 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
 
 #if XFRAMEBUFFER
     case SYSCALL_DISPLAY_GET_FB_INFO: {
-      display_fb_info_t *info = (display_fb_info_t *)args[0];
-      *info = display_get_frame_buffer();
+      display_fb_info_t *fb = (display_fb_info_t *)args[0];
+      args[0] = (uint32_t)display_get_frame_buffer(fb);
     } break;
 #else
     case SYSCALL_DISPLAY_WAIT_FOR_SYNC: {

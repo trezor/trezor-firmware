@@ -40,15 +40,13 @@ ALIGN_32BYTES(uint32_t physical_frame_buffer_1[PHYSICAL_FRAME_BUFFER_SIZE]);
 __attribute__((section(".framebuffer_select"))) uint32_t current_frame_buffer =
     0;
 
-display_fb_info_t display_get_frame_buffer(void) {
+bool display_get_frame_buffer(display_fb_info_t *fb) {
   display_driver_t *drv = &g_display_driver;
 
   if (!drv->initialized) {
-    display_fb_info_t fb = {
-        .ptr = NULL,
-        .stride = 0,
-    };
-    return fb;
+    fb->ptr = NULL;
+    fb->stride = 0;
+    return false;
   }
 
   uintptr_t addr;
@@ -66,12 +64,10 @@ display_fb_info_t display_get_frame_buffer(void) {
   addr += (480 - DISPLAY_RESY) / 2 * sizeof(uint32_t);
   addr += (480 - DISPLAY_RESX) / 2 * fb_stride;
 
-  display_fb_info_t fb = {
-      .ptr = (void *)addr,
-      .stride = fb_stride,
-  };
+  fb->ptr = (void *)addr;
+  fb->stride = fb_stride;
 
-  return fb;
+  return true;
 }
 
 void display_refresh(void) {

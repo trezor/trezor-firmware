@@ -123,21 +123,17 @@ int display_get_orientation(void) {
   return drv->orientation_angle;
 }
 
-display_fb_info_t display_get_frame_buffer(void) {
+bool display_get_frame_buffer(display_fb_info_t *fb) {
   display_driver_t *drv = &g_display_driver;
 
   if (!drv->initialized) {
-    display_fb_info_t fb = {
-        .ptr = NULL,
-        .stride = 0,
-    };
-    return fb;
+    fb->ptr = NULL;
+    fb->stride = 0;
+    return false;
   } else {
-    display_fb_info_t fb = {
-        .ptr = (void *)drv->framebuf,
-        .stride = DISPLAY_RESX * sizeof(uint16_t),
-    };
-    return fb;
+    fb->ptr = (void *)drv->framebuf;
+    fb->stride = DISPLAY_RESX * sizeof(uint16_t);
+    return true;
   }
 }
 
