@@ -85,7 +85,9 @@ pub fn text_baseline(font: i32) -> i16 {
     feature = "disp_i8080_16bit_dw",
     not(feature = "disp_i8080_8bit_dw")
 ))]
+#[allow(unused_variables)]
 pub fn pixeldata(c: u16) {
+    #[cfg(not(feature = "new_rendering"))]
     unsafe {
         ffi::DISPLAY_DATA_ADDRESS.write_volatile(c);
     }
