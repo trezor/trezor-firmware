@@ -236,6 +236,7 @@ class Signer:
             raise ProcessError("Total collateral is out of range!")
         validate_network_info(msg.network_id, msg.protocol_magic)
 
+
     async def _show_tx_init(self) -> None:
         self.should_show_details = await layout.show_tx_init(self.SIGNING_MODE_TITLE)
 
