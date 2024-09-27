@@ -114,7 +114,9 @@ typedef struct {
 //
 // If framebuffer is not available yet due to display refreshing etc.,
 // the function may block until the buffer is ready to write.
-display_fb_info_t display_get_frame_buffer(void);
+//
+// Return `false` if the framebuffer is not available.
+bool display_get_frame_buffer(display_fb_info_t *fb);
 
 #else  // XFRAMEBUFFER
 
