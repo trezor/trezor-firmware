@@ -10,6 +10,7 @@ use crate::{
         geometry::{Alignment, Alignment2D, Insets, Offset, Point, Rect},
         shape,
         shape::Renderer,
+        util::split_two_lines,
     },
 };
 
@@ -517,6 +518,7 @@ impl IconText {
             );
         }
     }
+
     pub fn render<'s>(
         &self,
         target: &mut impl Renderer<'s>,
@@ -525,46 +527,39 @@ impl IconText {
         baseline_offset: Offset,
         alpha: u8,
     ) {
-        let width = self.text.map(|t| style.font.text_width(t));
+        let mut show_text = |text: &str, rect: Rect| {
+            let text_pos = rect.left_center() + baseline_offset;
+            let text_pos = Point::new(rect.top_left().x + Self::ICON_SPACE, text_pos.y);
+            shape::Text::new(text_pos, text)
+                .with_font(style.font)
+                .with_fg(style.text_color)
+                .with_alpha(alpha)
+                .render(target)
+        };
 
-        let mut use_icon = false;
-        let mut use_text = false;
+        self.text.map(|t| {
+            let (t1, t2) = split_two_lines(
+                t,
+                style.font,
+                area.width() - Self::ICON_SPACE - Self::TEXT_MARGIN,
+            );
 
-        let mut icon_pos = Point::new(
+            if t1.is_empty() || t2.is_empty() {
+                show_text(t, area);
+            } else {
+                show_text(t1, Rect::new(area.top_left(), area.right_center()));
+                show_text(t2, Rect::new(area.left_center(), area.bottom_right()));
+            }
+        });
+
+        let icon_pos = Point::new(
             area.top_left().x + ((Self::ICON_SPACE + Self::ICON_MARGIN) / 2),
             area.center().y,
         );
-        let mut text_pos = area.left_center() + baseline_offset;
-
-        if area.width() > (Self::ICON_SPACE + Self::TEXT_MARGIN + width) {
-            //display both icon and text
-            text_pos = Point::new(area.top_left().x + Self::ICON_SPACE, text_pos.y);
-            use_text = true;
-            use_icon = true;
-        } else if area.width() > (width + Self::TEXT_MARGIN) {
-            use_text = true;
-        } else {
-            //if we can't fit the text, retreat to centering the icon
-            icon_pos = area.center();
-            use_icon = true;
-        }
-
-        if use_text {
-            self.text.map(|t| {
-                shape::Text::new(text_pos, t)
-                    .with_font(style.font)
-                    .with_fg(style.text_color)
-                    .with_alpha(alpha)
-                    .render(target)
-            });
-        }
-
-        if use_icon {
-            shape::ToifImage::new(icon_pos, self.icon.toif)
-                .with_align(Alignment2D::CENTER)
-                .with_fg(style.icon_color)
-                .with_alpha(alpha)
-                .render(target);
-        }
+        shape::ToifImage::new(icon_pos, self.icon.toif)
+            .with_align(Alignment2D::CENTER)
+            .with_fg(style.icon_color)
+            .with_alpha(alpha)
+            .render(target);
     }
 }

@@ -308,6 +308,26 @@ impl Font {
         }
     }
 
+    /// Get the longest prefix of a given `text` (breaking at word boundaries)
+    /// that will fit into the area `width` pixels wide.
+    pub fn longest_prefix(self, width: i16, text: &str) -> &str {
+        let mut prev_word_boundary = 0;
+        let mut text_width = 0;
+        for (i, c) in text.char_indices() {
+            let c_width = self.char_width(c);
+            if text_width + c_width > width {
+                // Another character would not fit => split at the previous word boundary
+                return &text[0..prev_word_boundary];
+            }
+            if c == ' ' {
+                prev_word_boundary = i;
+            }
+            text_width += c_width;
+        }
+
+        text // the whole text fits
+    }
+
     /// Get the length of the longest suffix from a given `text`
     /// that will fit into the area `width` pixels wide.
     pub fn longest_suffix(self, width: i16, text: &str) -> usize {
