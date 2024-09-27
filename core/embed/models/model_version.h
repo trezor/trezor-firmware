@@ -9,6 +9,8 @@
 #include "T3T1/versions.h"
 #elif defined TREZOR_MODEL_T3B1
 #include "T3B1/versions.h"
+#elif defined TREZOR_MODEL_T3W1
+#include "T3W1/versions.h"
 #elif defined TREZOR_MODEL_DISC1
 #include "D001/versions.h"
 #elif defined TREZOR_MODEL_DISC2
