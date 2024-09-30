@@ -29,7 +29,6 @@
 #include "entropy.h"
 #include "fwutils.h"
 #include "haptic.h"
-#include "hash_processor.h"
 #include "irq.h"
 #include "mpu.h"
 #include "optiga.h"
@@ -129,33 +128,6 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       const uint8_t *hash = (const uint8_t *)args[0];
       reboot_and_upgrade(hash);
     } break;
-
-#ifdef STM32U5
-    case SYSCALL_SHA256_INIT: {
-      hash_sha256_context_t *ctx = (hash_sha256_context_t *)args[0];
-      hash_processor_sha256_init(ctx);
-    } break;
-
-    case SYSCALL_SHA256_UPDATE: {
-      hash_sha256_context_t *ctx = (hash_sha256_context_t *)args[0];
-      const uint8_t *data = (const uint8_t *)args[1];
-      uint32_t len = args[2];
-      hash_processor_sha256_update(ctx, data, len);
-    } break;
-
-    case SYSCALL_SHA256_FINAL: {
-      hash_sha256_context_t *ctx = (hash_sha256_context_t *)args[0];
-      uint8_t *output = (uint8_t *)args[1];
-      hash_processor_sha256_final(ctx, output);
-    } break;
-
-    case SYSCALL_SHA256_CALC: {
-      const uint8_t *data = (const uint8_t *)args[0];
-      uint32_t len = args[1];
-      uint8_t *hash = (uint8_t *)args[2];
-      hash_processor_sha256_calc(data, len, hash);
-    } break;
-#endif  // STM32U5
 
     case SYSCALL_DISPLAY_SET_BACKLIGHT: {
       int level = (int)args[0];

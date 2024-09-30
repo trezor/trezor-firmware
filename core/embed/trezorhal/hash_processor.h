@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#ifdef KERNEL_MODE
+
 #define HASH_SHA256_BUFFER_SIZE 4
 
 typedef struct {
@@ -33,5 +35,7 @@ void hash_processor_sha256_update(hash_sha256_context_t *ctx,
 
 // Finalize the hash calculation, retrieve the digest
 void hash_processor_sha256_final(hash_sha256_context_t *ctx, uint8_t *output);
+
+#endif  // KERNEL_MODE
 
 #endif
