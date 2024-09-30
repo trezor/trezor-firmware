@@ -166,10 +166,12 @@ display_fb_info_t display_get_frame_buffer(void) {
   if (state == FB_STATE_EMPTY) {
     // First use of this buffer, copy the previous buffer into it
 #if (FRAME_BUFFER_COUNT > 1)
+#ifndef NEW_RENDERING
     uint8_t *src = get_fb_ptr((FRAME_BUFFER_COUNT + drv->queue.wix - 1) %
                               FRAME_BUFFER_COUNT);
     uint8_t *dst = get_fb_ptr(drv->queue.wix);
     memcpy(dst, src, PHYSICAL_FRAME_BUFFER_SIZE);
+#endif
 #endif
   };
 
