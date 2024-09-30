@@ -76,17 +76,23 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     case SYSCALL_SYSTEM_EXIT_ERROR: {
       systask_t *task = systask_active();
       const char *title = (const char *)args[0];
-      const char *message = (const char *)args[1];
-      const char *footer = (const char *)args[2];
-      systask_exit_error(task, title, message, footer);
+      size_t title_len = (size_t)args[1];
+      const char *message = (const char *)args[2];
+      size_t message_len = (size_t)args[3];
+      const char *footer = (const char *)args[4];
+      size_t footer_len = (size_t)args[5];
+      systask_exit_error(task, title, title_len, message, message_len, footer,
+                         footer_len);
     } break;
 
     case SYSCALL_SYSTEM_EXIT_FATAL: {
       systask_t *task = systask_active();
       const char *message = (const char *)args[0];
-      const char *file = (const char *)args[1];
-      int line = (int)args[2];
-      systask_exit_fatal(task, message, file, line);
+      size_t message_len = (size_t)args[1];
+      const char *file = (const char *)args[2];
+      size_t file_len = (size_t)args[3];
+      int line = (int)args[4];
+      systask_exit_fatal(task, message, message_len, file, file_len, line);
     } break;
 
     case SYSCALL_SYSTICK_CYCLES: {

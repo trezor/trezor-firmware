@@ -168,13 +168,15 @@ void systask_exit(systask_t* task, int exit_code);
 // Terminates the task with an error message
 //
 // (see `systask_exit()` for more details)
-void systask_exit_error(systask_t* task, const char* title, const char* message,
-                        const char* footer);
+void systask_exit_error(systask_t* task, const char* title, size_t title_len,
+                        const char* message, size_t message_len,
+                        const char* footer, size_t footer_len);
 
 // Terminates the task with a fatal error message
 //
 // (see `systask_exit()` for more details)
-void systask_exit_fatal(systask_t* task, const char* message, const char* file,
+void systask_exit_fatal(systask_t* task, const char* message,
+                        size_t message_len, const char* file, size_t file_len,
                         int line);
 
 #endif  // KERNEL_MODE
