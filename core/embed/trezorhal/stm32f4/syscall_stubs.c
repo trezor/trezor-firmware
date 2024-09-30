@@ -33,17 +33,19 @@ void system_exit(int exit_code) {
     ;
 }
 
-void system_exit_error(const char *title, const char *message,
-                       const char *footer) {
-  syscall_invoke3((uint32_t)title, (uint32_t)message, (uint32_t)footer,
-                  SYSCALL_SYSTEM_EXIT_ERROR);
+void system_exit_error_ex(const char *title, size_t title_len,
+                          const char *message, size_t message_len,
+                          const char *footer, size_t footer_len) {
+  syscall_invoke6((uint32_t)title, title_len, (uint32_t)message, message_len,
+                  (uint32_t)footer, footer_len, SYSCALL_SYSTEM_EXIT_ERROR);
   while (1)
     ;
 }
 
-void system_exit_fatal(const char *message, const char *file, int line) {
-  syscall_invoke3((uint32_t)message, (uint32_t)file, line,
-                  SYSCALL_SYSTEM_EXIT_FATAL);
+void system_exit_fatal_ex(const char *message, size_t message_len,
+                          const char *file, size_t file_len, int line) {
+  syscall_invoke5((uint32_t)message, message_len, (uint32_t)file, file_len,
+                  line, SYSCALL_SYSTEM_EXIT_FATAL);
   while (1)
     ;
 }
