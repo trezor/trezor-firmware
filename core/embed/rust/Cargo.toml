@@ -45,6 +45,7 @@ rgb_led = []
 backlight = []
 usb = []
 optiga = []
+ble = []
 translations = ["crypto"]
 test = [
     "backlight",
