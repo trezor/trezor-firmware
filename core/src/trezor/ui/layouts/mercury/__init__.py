@@ -222,16 +222,21 @@ class RustLayout(ui.Layout):
     def handle_input_and_rendering(self) -> loop.Task:
         from trezor import workflow
 
-        touch = loop.wait(io.TOUCH)
+        input = loop.wait(io.INPUT)
         self._first_paint()
         while True:
             # Using `yield` instead of `await` to avoid allocations.
-            event, x, y = yield touch
+            event, p0, p1 = yield input
             workflow.idle_timer.touch()
             msg = None
-            if event in (io.TOUCH_START, io.TOUCH_MOVE, io.TOUCH_END):
-                msg = self.layout.touch_event(event, x, y)
-                self._send_button_request()
+            if utils.USE_TOUCH and event in (
+                io.TOUCH_START,
+                io.TOUCH_MOVE,
+                io.TOUCH_END,
+            ):
+                msg = self.layout.touch_event(event, p0, p1)
+            if utils.USE_BUTTON and event in (io.BUTTON_PRESSED, io.BUTTON_RELEASED):
+                msg = self.layout.button_event(event, p0)
             if msg is not None:
                 raise ui.Result(msg)
             self._paint()
