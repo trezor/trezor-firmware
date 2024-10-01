@@ -46,7 +46,7 @@
 #include "systick.h"
 #include "tamper.h"
 #include "touch.h"
-#include "unit_variant.h"
+#include "unit_properties.h"
 
 #ifdef USE_OPTIGA
 #if !PYOPT
@@ -103,7 +103,7 @@ void drivers_init() {
 
   parse_boardloader_capabilities();
 
-  unit_variant_init();
+  unit_properties_init();
 
 #ifdef STM32U5
   secure_aes_init();

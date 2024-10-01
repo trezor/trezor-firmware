@@ -49,6 +49,7 @@
 #include "system.h"
 #include "systimer.h"
 #include "touch.h"
+#include "unit_properties.h"
 
 #include "py/builtin.h"
 #include "py/compile.h"
@@ -500,6 +501,8 @@ MP_NOINLINE int main_(int argc, char **argv) {
   // Map trezor.flash to memory.
   flash_init();
   flash_otp_init();
+
+  unit_properties_init();
 
 #if MICROPY_ENABLE_GC
   char *heap = malloc(heap_size);
