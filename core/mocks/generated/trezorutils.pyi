@@ -122,6 +122,8 @@ SCM_REVISION: bytes
 """Git commit hash of the firmware."""
 VERSION: VersionTuple
 """Firmware version as a tuple (major, minor, patch, build)."""
+USE_BUTTON: bool
+"""Whether the hardware supports button."""
 USE_SD_CARD: bool
 """Whether the hardware supports SD card."""
 USE_BACKLIGHT: bool
@@ -130,6 +132,8 @@ USE_HAPTIC: bool
 """Whether the hardware supports haptic feedback."""
 USE_OPTIGA: bool
 """Whether the hardware supports Optiga secure element."""
+USE_TOUCH: bool
+"""Whether the hardware supports touch screen."""
 MODEL: str
 """Model name."""
 MODEL_FULL_NAME: str

@@ -381,6 +381,8 @@ STATIC mp_obj_tuple_t mod_trezorutils_version_obj = {
 /// """Git commit hash of the firmware."""
 /// VERSION: VersionTuple
 /// """Firmware version as a tuple (major, minor, patch, build)."""
+/// USE_BUTTON: bool
+/// """Whether the hardware supports button."""
 /// USE_SD_CARD: bool
 /// """Whether the hardware supports SD card."""
 /// USE_BACKLIGHT: bool
@@ -389,6 +391,8 @@ STATIC mp_obj_tuple_t mod_trezorutils_version_obj = {
 /// """Whether the hardware supports haptic feedback."""
 /// USE_OPTIGA: bool
 /// """Whether the hardware supports Optiga secure element."""
+/// USE_TOUCH: bool
+/// """Whether the hardware supports touch screen."""
 /// MODEL: str
 /// """Model name."""
 /// MODEL_FULL_NAME: str
@@ -439,6 +443,16 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_USE_SD_CARD), mp_const_true},
 #else
     {MP_ROM_QSTR(MP_QSTR_USE_SD_CARD), mp_const_false},
+#endif
+#ifdef USE_TOUCH
+    {MP_ROM_QSTR(MP_QSTR_USE_TOUCH), mp_const_true},
+#else
+    {MP_ROM_QSTR(MP_QSTR_USE_TOUCH), mp_const_false},
+#endif
+#ifdef USE_BUTTON
+    {MP_ROM_QSTR(MP_QSTR_USE_BUTTON), mp_const_true},
+#else
+    {MP_ROM_QSTR(MP_QSTR_USE_BUTTON), mp_const_false},
 #endif
 #ifdef USE_BACKLIGHT
     {MP_ROM_QSTR(MP_QSTR_USE_BACKLIGHT), mp_const_true},
