@@ -100,6 +100,11 @@ secbool __wur sdcard_write_blocks__verified(const uint32_t *src,
                                             uint32_t num_blocks);
 
 // ---------------------------------------------------------------------
+#include "unit_properties.h"
+
+void unit_properties_get__verified(unit_properties_t *props);
+
+// ---------------------------------------------------------------------
 #include "optiga.h"
 
 optiga_sign_result __wur optiga_sign__verified(

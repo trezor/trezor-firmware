@@ -334,31 +334,20 @@ secbool __wur sdcard_write_blocks(const uint32_t *src, uint32_t block_num,
 }
 
 // =============================================================================
-// unit_variant.h
+// unit_properties.h
 // =============================================================================
 
-bool unit_variant_present(void) {
-  return (bool)syscall_invoke0(SYSCALL_UNIT_VARIANT_PRESENT);
-}
-uint8_t unit_variant_get_color(void) {
-  return (uint8_t)syscall_invoke0(SYSCALL_UNIT_VARIANT_GET_COLOR);
-}
+#include "unit_properties.h"
 
-uint8_t unit_variant_get_packaging(void) {
-  return (uint8_t)syscall_invoke0(SYSCALL_UNIT_VARIANT_GET_PACKAGING);
-}
-
-bool unit_variant_get_btconly(void) {
-  return (bool)syscall_invoke0(SYSCALL_UNIT_VARIANT_GET_BTCONLY);
-}
-
-bool unit_variant_is_sd_hotswap_enabled(void) {
-  return (bool)syscall_invoke0(SYSCALL_UNIT_VARIANT_IS_SD_HOTSWAP_ENABLED);
+void unit_properties_get(unit_properties_t *props) {
+  syscall_invoke1((uint32_t)props, SYSCALL_UNIT_PROPERTIES_GET);
 }
 
 // =============================================================================
 // secret.h
 // =============================================================================
+
+#include "secret.h"
 
 secbool secret_bootloader_locked(void) {
   return (secbool)syscall_invoke0(SYSCALL_SECRET_BOOTLOADER_LOCKED);

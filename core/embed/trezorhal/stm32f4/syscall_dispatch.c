@@ -40,7 +40,7 @@
 #include "systick.h"
 #include "touch.h"
 #include "translations.h"
-#include "unit_variant.h"
+#include "unit_properties.h"
 #include "usb.h"
 #include "usb_hid.h"
 #include "usb_vcp.h"
@@ -379,24 +379,9 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     } break;
 #endif
 
-    case SYSCALL_UNIT_VARIANT_PRESENT: {
-      args[0] = unit_variant_present();
-    } break;
-
-    case SYSCALL_UNIT_VARIANT_GET_COLOR: {
-      args[0] = unit_variant_get_color();
-    } break;
-
-    case SYSCALL_UNIT_VARIANT_GET_PACKAGING: {
-      args[0] = unit_variant_get_packaging();
-    } break;
-
-    case SYSCALL_UNIT_VARIANT_GET_BTCONLY: {
-      args[0] = unit_variant_get_btconly();
-    } break;
-
-    case SYSCALL_UNIT_VARIANT_IS_SD_HOTSWAP_ENABLED: {
-      args[0] = unit_variant_is_sd_hotswap_enabled();
+    case SYSCALL_UNIT_PROPERTIES_GET: {
+      unit_properties_t *props = (unit_properties_t *)args[0];
+      unit_properties_get__verified(props);
     } break;
 
     case SYSCALL_SECRET_BOOTLOADER_LOCKED: {

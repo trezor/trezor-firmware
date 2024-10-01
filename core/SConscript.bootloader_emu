@@ -86,7 +86,6 @@ SOURCE_MOD += [
     'embed/lib/mini_printf.c',
     'embed/lib/rsod.c',
     'embed/lib/terminal.c',
-    'embed/lib/unit_variant.c',
     'vendor/micropython/lib/uzlib/adler32.c',
     'vendor/micropython/lib/uzlib/crc32.c',
     'vendor/micropython/lib/uzlib/tinflate.c',
@@ -131,6 +130,7 @@ SOURCE_TREZORHAL = [
     'embed/trezorhal/unix/system.c',
     'embed/trezorhal/unix/systick.c',
     'embed/trezorhal/unix/systimer.c',
+    'embed/trezorhal/unix/unit_properties.c',
     'embed/trezorhal/unix/usb.c',
 ]
 
