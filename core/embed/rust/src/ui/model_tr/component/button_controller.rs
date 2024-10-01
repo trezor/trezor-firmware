@@ -439,6 +439,7 @@ impl Component for ButtonController {
                                         self.right_btn.hold_started(ctx);
                                         Some(ButtonControllerMsg::Pressed(ButtonPos::Right))
                                     }
+                                    _ => None,
                                 },
                             )
                         }
@@ -465,6 +466,7 @@ impl Component for ButtonController {
                                 // _ _
                                 (ButtonState::Nothing, self.right_btn.maybe_trigger(ctx))
                             }
+                            _ => (ButtonState::Nothing, None),
                         },
                         // * ▼ | ▼ *
                         ButtonEvent::ButtonPressed(b) if b != which_down => {
@@ -562,6 +564,7 @@ impl Component for ButtonController {
                         PhysicalButton::Right => {
                             self.set_pressed(ctx, false, false, true);
                         }
+                        _ => {}
                     },
                     ButtonState::BothDown | ButtonState::OneReleased(_) => {
                         self.set_pressed(ctx, false, true, false);
