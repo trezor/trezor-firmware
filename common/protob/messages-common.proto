@@ -39,6 +39,7 @@ message Failure {
         Failure_PinMismatch = 12;
         Failure_WipeCodeMismatch = 13;
         Failure_InvalidSession = 14;
+        Failure_DeviceIsBusy = 15;
         Failure_FirmwareError = 99;
     }
 }
