@@ -1,5 +1,6 @@
 #include TREZOR_BOARD
 
+#include "ble.h"
 #include "buffers.h"
 #include "button.h"
 #include "common.h"
