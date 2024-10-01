@@ -87,7 +87,7 @@ void reboot_to_bootloader(void) {
 }
 
 void reboot_and_upgrade(const uint8_t hash[32]) {
-  syscall_invoke1(SYSCALL_REBOOT_AND_UPGRADE, (uint32_t)hash);
+  syscall_invoke1((uint32_t)hash, SYSCALL_REBOOT_AND_UPGRADE);
   while (1)
     ;
 }
