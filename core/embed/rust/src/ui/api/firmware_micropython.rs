@@ -1062,6 +1062,10 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///         def button_event(self, event: int, button: int) -> LayoutState | None:
     ///             """Receive a button event `event` for button `button`."""
     ///
+    ///     if utils.USE_BLE:
+    ///         def ble_event(self, event: int, data: bytes) -> LayoutState | None:
+    ///             """Receive a BLE events."""
+    ///
     ///     def progress_event(self, value: int, description: str) -> LayoutState | None:
     ///         """Receive a progress event."""
     ///

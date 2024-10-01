@@ -23,7 +23,7 @@ def erase_bonds() -> bool:
 
 
 # upymod/modtrezorio/modtrezorio-ble.h
-def unpair() -> None:
+def unpair() -> bool:
     """
     Erases bond for current connection, if any
     """
