@@ -63,21 +63,13 @@ def _compress(data: bytes) -> bytes:
     return z.compress(data) + z.flush()
 
 
-def get_bindgen_defines(
-    defines: list[str | tuple[str, str]], paths: list[str]
-) -> tuple(str, str):
+def get_bindgen_defines(defines: list[str | tuple[str, str]], paths: list[str]) -> str:
     rest_defs = []
     for d in defines:
         if type(d) is tuple:
             d = f"-D{d[0]}={d[1]}"
         else:
             d = f"-D{d}"
-        d = (
-            d.replace('\\"', '"')
-            .replace("'", "'\"'\"'")
-            .replace('"<', "<")
-            .replace('>"', ">")
-        )
         rest_defs.append(d)
     for d in paths:
         rest_defs.append(f"-I../../{d}")

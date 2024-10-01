@@ -3,9 +3,9 @@ from __future__ import annotations
 
 def stm32u5_common_files(env, defines, sources, paths):
     defines += [
-        ("STM32_HAL_H", '"<stm32u5xx.h>"'),
+        ("STM32_HAL_H", "<stm32u5xx.h>"),
         ("FLASH_BLOCK_WORDS", "4"),
-        ("CONFIDENTIAL", "'__attribute__((section(\".confidential\")))'"),
+        ("CONFIDENTIAL", '__attribute__((section(".confidential")))'),
     ]
 
     paths += [
