@@ -28,6 +28,7 @@ impl From<PhysicalButton> for ButtonPos {
         match btn {
             PhysicalButton::Left => ButtonPos::Left,
             PhysicalButton::Right => ButtonPos::Right,
+            _ => fatal_error!("unsupported button"),
         }
     }
 }

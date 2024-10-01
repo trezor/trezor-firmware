@@ -5,6 +5,7 @@ use crate::error::Error;
 pub enum PhysicalButton {
     Left,
     Right,
+    Power,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -25,9 +26,10 @@ impl ButtonEvent {
         let button = match button {
             0 => PhysicalButton::Left,
             1 => PhysicalButton::Right,
+            2 => PhysicalButton::Power,
             _ => return Err(Error::OutOfRange),
         };
-        let result = match event {
+        let result = match event & 0xFF {
             1 => Self::ButtonPressed(button),
             2 => Self::ButtonReleased(button),
             _ => return Err(Error::OutOfRange),
