@@ -76,6 +76,12 @@ def _find_message_handler_module(msg_type: int) -> str:
     if utils.USE_OPTIGA and msg_type == MessageType.AuthenticateDevice:
         return "apps.management.authenticate_device"
 
+    if utils.USE_BLE:
+        if msg_type == MessageType.EraseBonds:
+            return "apps.management.ble.erase_bonds"
+        if msg_type == MessageType.Disconnect:
+            return "apps.management.ble.disconnect"
+
     # bitcoin
     if msg_type == MessageType.AuthorizeCoinJoin:
         return "apps.bitcoin.authorize_coinjoin"

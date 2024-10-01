@@ -414,6 +414,8 @@ pub mod failure {
         Failure_WipeCodeMismatch = 13,
         // @@protoc_insertion_point(enum_value:hw.trezor.messages.common.Failure.FailureType.Failure_InvalidSession)
         Failure_InvalidSession = 14,
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.common.Failure.FailureType.Failure_DeviceIsBusy)
+        Failure_DeviceIsBusy = 15,
         // @@protoc_insertion_point(enum_value:hw.trezor.messages.common.Failure.FailureType.Failure_FirmwareError)
         Failure_FirmwareError = 99,
     }
@@ -441,6 +443,7 @@ pub mod failure {
                 12 => ::std::option::Option::Some(FailureType::Failure_PinMismatch),
                 13 => ::std::option::Option::Some(FailureType::Failure_WipeCodeMismatch),
                 14 => ::std::option::Option::Some(FailureType::Failure_InvalidSession),
+                15 => ::std::option::Option::Some(FailureType::Failure_DeviceIsBusy),
                 99 => ::std::option::Option::Some(FailureType::Failure_FirmwareError),
                 _ => ::std::option::Option::None
             }
@@ -462,6 +465,7 @@ pub mod failure {
                 "Failure_PinMismatch" => ::std::option::Option::Some(FailureType::Failure_PinMismatch),
                 "Failure_WipeCodeMismatch" => ::std::option::Option::Some(FailureType::Failure_WipeCodeMismatch),
                 "Failure_InvalidSession" => ::std::option::Option::Some(FailureType::Failure_InvalidSession),
+                "Failure_DeviceIsBusy" => ::std::option::Option::Some(FailureType::Failure_DeviceIsBusy),
                 "Failure_FirmwareError" => ::std::option::Option::Some(FailureType::Failure_FirmwareError),
                 _ => ::std::option::Option::None
             }
@@ -482,6 +486,7 @@ pub mod failure {
             FailureType::Failure_PinMismatch,
             FailureType::Failure_WipeCodeMismatch,
             FailureType::Failure_InvalidSession,
+            FailureType::Failure_DeviceIsBusy,
             FailureType::Failure_FirmwareError,
         ];
     }
@@ -508,7 +513,8 @@ pub mod failure {
                 FailureType::Failure_PinMismatch => 11,
                 FailureType::Failure_WipeCodeMismatch => 12,
                 FailureType::Failure_InvalidSession => 13,
-                FailureType::Failure_FirmwareError => 14,
+                FailureType::Failure_DeviceIsBusy => 14,
+                FailureType::Failure_FirmwareError => 15,
             };
             Self::enum_descriptor().value_by_index(index)
         }
@@ -2481,9 +2487,9 @@ impl ::protobuf::reflect::ProtobufValue for HDNodeType {
 static file_descriptor_proto_data: &'static [u8] = b"\
     \n\x15messages-common.proto\x12\x19hw.trezor.messages.common\x1a\roption\
     s.proto\"%\n\x07Success\x12\x1a\n\x07message\x18\x01\x20\x01(\t:\0R\x07m\
-    essage\"\x8f\x04\n\x07Failure\x12B\n\x04code\x18\x01\x20\x01(\x0e2..hw.t\
+    essage\"\xa9\x04\n\x07Failure\x12B\n\x04code\x18\x01\x20\x01(\x0e2..hw.t\
     rezor.messages.common.Failure.FailureTypeR\x04code\x12\x18\n\x07message\
-    \x18\x02\x20\x01(\tR\x07message\"\xa5\x03\n\x0bFailureType\x12\x1d\n\x19\
+    \x18\x02\x20\x01(\tR\x07message\"\xbf\x03\n\x0bFailureType\x12\x1d\n\x19\
     Failure_UnexpectedMessage\x10\x01\x12\x1a\n\x16Failure_ButtonExpected\
     \x10\x02\x12\x15\n\x11Failure_DataError\x10\x03\x12\x1b\n\x17Failure_Act\
     ionCancelled\x10\x04\x12\x17\n\x13Failure_PinExpected\x10\x05\x12\x18\n\
@@ -2492,44 +2498,45 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     essError\x10\t\x12\x1a\n\x16Failure_NotEnoughFunds\x10\n\x12\x1a\n\x16Fa\
     ilure_NotInitialized\x10\x0b\x12\x17\n\x13Failure_PinMismatch\x10\x0c\
     \x12\x1c\n\x18Failure_WipeCodeMismatch\x10\r\x12\x1a\n\x16Failure_Invali\
-    dSession\x10\x0e\x12\x19\n\x15Failure_FirmwareError\x10c\"\xab\x06\n\rBu\
-    ttonRequest\x12N\n\x04code\x18\x01\x20\x01(\x0e2:.hw.trezor.messages.com\
-    mon.ButtonRequest.ButtonRequestTypeR\x04code\x12\x14\n\x05pages\x18\x02\
-    \x20\x01(\rR\x05pages\x12\x12\n\x04name\x18\x04\x20\x01(\tR\x04name\"\
-    \x99\x05\n\x11ButtonRequestType\x12\x17\n\x13ButtonRequest_Other\x10\x01\
-    \x12\"\n\x1eButtonRequest_FeeOverThreshold\x10\x02\x12\x1f\n\x1bButtonRe\
-    quest_ConfirmOutput\x10\x03\x12\x1d\n\x19ButtonRequest_ResetDevice\x10\
-    \x04\x12\x1d\n\x19ButtonRequest_ConfirmWord\x10\x05\x12\x1c\n\x18ButtonR\
-    equest_WipeDevice\x10\x06\x12\x1d\n\x19ButtonRequest_ProtectCall\x10\x07\
-    \x12\x18\n\x14ButtonRequest_SignTx\x10\x08\x12\x1f\n\x1bButtonRequest_Fi\
-    rmwareCheck\x10\t\x12\x19\n\x15ButtonRequest_Address\x10\n\x12\x1b\n\x17\
-    ButtonRequest_PublicKey\x10\x0b\x12#\n\x1fButtonRequest_MnemonicWordCoun\
-    t\x10\x0c\x12\x1f\n\x1bButtonRequest_MnemonicInput\x10\r\x120\n(_Depreca\
-    ted_ButtonRequest_PassphraseType\x10\x0e\x1a\x02\x08\x01\x12'\n#ButtonRe\
-    quest_UnknownDerivationPath\x10\x0f\x12\"\n\x1eButtonRequest_RecoveryHom\
-    epage\x10\x10\x12\x19\n\x15ButtonRequest_Success\x10\x11\x12\x19\n\x15Bu\
-    ttonRequest_Warning\x10\x12\x12!\n\x1dButtonRequest_PassphraseEntry\x10\
-    \x13\x12\x1a\n\x16ButtonRequest_PinEntry\x10\x14J\x04\x08\x03\x10\x04\"\
-    \x0b\n\tButtonAck\"\xbb\x02\n\x10PinMatrixRequest\x12T\n\x04type\x18\x01\
-    \x20\x01(\x0e2@.hw.trezor.messages.common.PinMatrixRequest.PinMatrixRequ\
-    estTypeR\x04type\"\xd0\x01\n\x14PinMatrixRequestType\x12\x20\n\x1cPinMat\
-    rixRequestType_Current\x10\x01\x12!\n\x1dPinMatrixRequestType_NewFirst\
-    \x10\x02\x12\"\n\x1ePinMatrixRequestType_NewSecond\x10\x03\x12&\n\"PinMa\
-    trixRequestType_WipeCodeFirst\x10\x04\x12'\n#PinMatrixRequestType_WipeCo\
-    deSecond\x10\x05\"\x20\n\x0cPinMatrixAck\x12\x10\n\x03pin\x18\x01\x20\
-    \x02(\tR\x03pin\"5\n\x11PassphraseRequest\x12\x20\n\n_on_device\x18\x01\
-    \x20\x01(\x08R\x08OnDeviceB\x02\x18\x01\"g\n\rPassphraseAck\x12\x1e\n\np\
-    assphrase\x18\x01\x20\x01(\tR\npassphrase\x12\x19\n\x06_state\x18\x02\
-    \x20\x01(\x0cR\x05StateB\x02\x18\x01\x12\x1b\n\ton_device\x18\x03\x20\
-    \x01(\x08R\x08onDevice\"=\n!Deprecated_PassphraseStateRequest\x12\x14\n\
-    \x05state\x18\x01\x20\x01(\x0cR\x05state:\x02\x18\x01\"#\n\x1dDeprecated\
-    _PassphraseStateAck:\x02\x18\x01\"\xc0\x01\n\nHDNodeType\x12\x14\n\x05de\
-    pth\x18\x01\x20\x02(\rR\x05depth\x12\x20\n\x0bfingerprint\x18\x02\x20\
-    \x02(\rR\x0bfingerprint\x12\x1b\n\tchild_num\x18\x03\x20\x02(\rR\x08chil\
-    dNum\x12\x1d\n\nchain_code\x18\x04\x20\x02(\x0cR\tchainCode\x12\x1f\n\
-    \x0bprivate_key\x18\x05\x20\x01(\x0cR\nprivateKey\x12\x1d\n\npublic_key\
-    \x18\x06\x20\x02(\x0cR\tpublicKeyB>\n#com.satoshilabs.trezor.lib.protobu\
-    fB\x13TrezorMessageCommon\x80\xa6\x1d\x01\
+    dSession\x10\x0e\x12\x18\n\x14Failure_DeviceIsBusy\x10\x0f\x12\x19\n\x15\
+    Failure_FirmwareError\x10c\"\xab\x06\n\rButtonRequest\x12N\n\x04code\x18\
+    \x01\x20\x01(\x0e2:.hw.trezor.messages.common.ButtonRequest.ButtonReques\
+    tTypeR\x04code\x12\x14\n\x05pages\x18\x02\x20\x01(\rR\x05pages\x12\x12\n\
+    \x04name\x18\x04\x20\x01(\tR\x04name\"\x99\x05\n\x11ButtonRequestType\
+    \x12\x17\n\x13ButtonRequest_Other\x10\x01\x12\"\n\x1eButtonRequest_FeeOv\
+    erThreshold\x10\x02\x12\x1f\n\x1bButtonRequest_ConfirmOutput\x10\x03\x12\
+    \x1d\n\x19ButtonRequest_ResetDevice\x10\x04\x12\x1d\n\x19ButtonRequest_C\
+    onfirmWord\x10\x05\x12\x1c\n\x18ButtonRequest_WipeDevice\x10\x06\x12\x1d\
+    \n\x19ButtonRequest_ProtectCall\x10\x07\x12\x18\n\x14ButtonRequest_SignT\
+    x\x10\x08\x12\x1f\n\x1bButtonRequest_FirmwareCheck\x10\t\x12\x19\n\x15Bu\
+    ttonRequest_Address\x10\n\x12\x1b\n\x17ButtonRequest_PublicKey\x10\x0b\
+    \x12#\n\x1fButtonRequest_MnemonicWordCount\x10\x0c\x12\x1f\n\x1bButtonRe\
+    quest_MnemonicInput\x10\r\x120\n(_Deprecated_ButtonRequest_PassphraseTyp\
+    e\x10\x0e\x1a\x02\x08\x01\x12'\n#ButtonRequest_UnknownDerivationPath\x10\
+    \x0f\x12\"\n\x1eButtonRequest_RecoveryHomepage\x10\x10\x12\x19\n\x15Butt\
+    onRequest_Success\x10\x11\x12\x19\n\x15ButtonRequest_Warning\x10\x12\x12\
+    !\n\x1dButtonRequest_PassphraseEntry\x10\x13\x12\x1a\n\x16ButtonRequest_\
+    PinEntry\x10\x14J\x04\x08\x03\x10\x04\"\x0b\n\tButtonAck\"\xbb\x02\n\x10\
+    PinMatrixRequest\x12T\n\x04type\x18\x01\x20\x01(\x0e2@.hw.trezor.message\
+    s.common.PinMatrixRequest.PinMatrixRequestTypeR\x04type\"\xd0\x01\n\x14P\
+    inMatrixRequestType\x12\x20\n\x1cPinMatrixRequestType_Current\x10\x01\
+    \x12!\n\x1dPinMatrixRequestType_NewFirst\x10\x02\x12\"\n\x1ePinMatrixReq\
+    uestType_NewSecond\x10\x03\x12&\n\"PinMatrixRequestType_WipeCodeFirst\
+    \x10\x04\x12'\n#PinMatrixRequestType_WipeCodeSecond\x10\x05\"\x20\n\x0cP\
+    inMatrixAck\x12\x10\n\x03pin\x18\x01\x20\x02(\tR\x03pin\"5\n\x11Passphra\
+    seRequest\x12\x20\n\n_on_device\x18\x01\x20\x01(\x08R\x08OnDeviceB\x02\
+    \x18\x01\"g\n\rPassphraseAck\x12\x1e\n\npassphrase\x18\x01\x20\x01(\tR\n\
+    passphrase\x12\x19\n\x06_state\x18\x02\x20\x01(\x0cR\x05StateB\x02\x18\
+    \x01\x12\x1b\n\ton_device\x18\x03\x20\x01(\x08R\x08onDevice\"=\n!Depreca\
+    ted_PassphraseStateRequest\x12\x14\n\x05state\x18\x01\x20\x01(\x0cR\x05s\
+    tate:\x02\x18\x01\"#\n\x1dDeprecated_PassphraseStateAck:\x02\x18\x01\"\
+    \xc0\x01\n\nHDNodeType\x12\x14\n\x05depth\x18\x01\x20\x02(\rR\x05depth\
+    \x12\x20\n\x0bfingerprint\x18\x02\x20\x02(\rR\x0bfingerprint\x12\x1b\n\t\
+    child_num\x18\x03\x20\x02(\rR\x08childNum\x12\x1d\n\nchain_code\x18\x04\
+    \x20\x02(\x0cR\tchainCode\x12\x1f\n\x0bprivate_key\x18\x05\x20\x01(\x0cR\
+    \nprivateKey\x12\x1d\n\npublic_key\x18\x06\x20\x02(\x0cR\tpublicKeyB>\n#\
+    com.satoshilabs.trezor.lib.protobufB\x13TrezorMessageCommon\x80\xa6\x1d\
+    \x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

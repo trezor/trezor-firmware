@@ -23,7 +23,6 @@ reads the message's header. When the message type is known the first handler is 
 
 """
 
-from micropython import const
 from typing import TYPE_CHECKING
 
 from trezor import log, loop, protobuf, utils
@@ -37,10 +36,6 @@ from .message_handler import failure
 # other packages.
 from .errors import *  # isort:skip # noqa: F401,F403
 
-_PROTOBUF_BUFFER_SIZE = const(8192)
-
-WIRE_BUFFER = bytearray(_PROTOBUF_BUFFER_SIZE)
-
 if TYPE_CHECKING:
     from trezorio import WireInterface
     from typing import Any, Callable, Coroutine, TypeVar
@@ -52,13 +47,13 @@ if TYPE_CHECKING:
     LoadedMessageType = TypeVar("LoadedMessageType", bound=protobuf.MessageType)
 
 
-def setup(iface: WireInterface) -> None:
+def setup(iface: WireInterface, buffer: bytearray) -> None:
     """Initialize the wire stack on the provided WireInterface."""
-    loop.schedule(handle_session(iface))
+    loop.schedule(handle_session(iface, buffer))
 
 
-async def handle_session(iface: WireInterface) -> None:
-    ctx = CodecContext(iface, WIRE_BUFFER)
+async def handle_session(iface: WireInterface, buffer: bytearray) -> None:
+    ctx = CodecContext(iface, buffer)
     next_msg: protocol_common.Message | None = None
 
     # Take a mark of modules that are imported at this point, so we can
