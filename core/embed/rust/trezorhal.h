@@ -13,6 +13,10 @@
 #include <util/translations.h>
 #include "storage.h"
 
+#ifdef USE_BLE
+#include <io/ble.h>
+#endif
+
 #ifdef USE_BUTTON
 #include <io/button.h>
 #endif
