@@ -524,7 +524,7 @@ int bootloader_main(void) {
   }
 #elif defined USE_BUTTON
   button_read();
-  if (button_state_left() == 1) {
+  if (button_state(BTN_LEFT) == 1) {
     touched = 1;
   }
 #endif
