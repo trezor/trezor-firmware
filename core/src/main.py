@@ -49,6 +49,13 @@ import storage.device
 
 usb.bus.open(storage.device.get_device_id())
 
+if utils.USE_BLE:
+    from trezorio import ble
+    ble.start_comm()
+    if ble.peer_count() > 0:
+        ble.start_advertising(True, storage.device.get_label())
+
+
 # run the endless loop
 while True:
     with unimport_manager:

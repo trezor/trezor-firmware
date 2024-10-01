@@ -1,0 +1,30 @@
+syntax = "proto2";
+package hw.trezor.messages.ble;
+
+// Sugar for easier handling in Java
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
+option java_outer_classname = "TrezorMessageBLE";
+
+import "options.proto";
+
+option (include_in_bitcoin_only) = true;
+
+
+/**
+ * Request: erases all BLE bonds
+ * @start
+ * @next Success
+ * @next Failure
+ */
+message EraseBonds {
+}
+
+
+/**
+ * Request: disconnect
+ * @start
+ * @next Success
+ * @next Failure
+ */
+message Disconnect {
+}

@@ -43,6 +43,7 @@ class FailureType(IntEnum):
     PinMismatch = 12
     WipeCodeMismatch = 13
     InvalidSession = 14
+    DeviceIsBusy = 15
     FirmwareError = 99
 
 
@@ -462,6 +463,8 @@ class MessageType(IntEnum):
     FirmwareUpload = 7
     FirmwareRequest = 8
     ProdTestT1 = 32
+    EraseBonds = 8006
+    Disconnect = 8007
     GetPublicKey = 11
     PublicKey = 12
     SignTx = 15
@@ -2205,6 +2208,14 @@ class TxAckPrevExtraDataWrapper(protobuf.MessageType):
         extra_data_chunk: "bytes",
     ) -> None:
         self.extra_data_chunk = extra_data_chunk
+
+
+class EraseBonds(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 8006
+
+
+class Disconnect(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 8007
 
 
 class FirmwareErase(protobuf.MessageType):

@@ -381,6 +381,8 @@ class Layout(Generic[T]):
             yield self._handle_input_iface(io.BUTTON, self.layout.button_event)
         if utils.USE_TOUCH:
             yield self._handle_input_iface(io.TOUCH, self.layout.touch_event)
+        if utils.USE_BLE:
+            yield self._handle_input_iface(io.BLE_EVENT, self.layout.ble_event)
 
     def _handle_input_iface(
         self, iface: int, event_call: Callable[..., LayoutState | None]

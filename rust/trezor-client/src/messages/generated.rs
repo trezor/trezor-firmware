@@ -60,6 +60,8 @@ trezor_message_impl! {
     FirmwareUpload => MessageType_FirmwareUpload,
     FirmwareRequest => MessageType_FirmwareRequest,
     ProdTestT1 => MessageType_ProdTestT1,
+    EraseBonds => MessageType_EraseBonds,
+    Disconnect => MessageType_Disconnect,
     CipherKeyValue => MessageType_CipherKeyValue,
     CipheredKeyValue => MessageType_CipheredKeyValue,
     SignIdentity => MessageType_SignIdentity,

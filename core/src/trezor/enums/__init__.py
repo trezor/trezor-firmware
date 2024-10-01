@@ -39,6 +39,7 @@ if TYPE_CHECKING:
         PinMismatch = 12
         WipeCodeMismatch = 13
         InvalidSession = 14
+        DeviceIsBusy = 15
         FirmwareError = 99
 
     class ButtonRequestType(IntEnum):
@@ -409,6 +410,8 @@ if TYPE_CHECKING:
         FirmwareUpload = 7
         FirmwareRequest = 8
         ProdTestT1 = 32
+        EraseBonds = 8006
+        Disconnect = 8007
         GetPublicKey = 11
         PublicKey = 12
         SignTx = 15

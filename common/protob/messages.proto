@@ -88,6 +88,10 @@ enum MessageType {
     MessageType_FirmwareRequest = 8 [(bitcoin_only) = true, (wire_out) = true, (wire_bootloader) = true];
     MessageType_ProdTestT1 = 32 [(bitcoin_only) = true, (wire_in) = true, (wire_bootloader) = true];
 
+    // BLE
+    MessageType_EraseBonds = 8006 [(bitcoin_only) = true, (wire_in) = true];
+    MessageType_Disconnect = 8007 [(bitcoin_only) = true, (wire_in) = true];
+
     // Bitcoin
     MessageType_GetPublicKey = 11 [(bitcoin_only) = true, (wire_in) = true];
     MessageType_PublicKey = 12 [(bitcoin_only) = true, (wire_out) = true];

@@ -1256,6 +1256,18 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["TxAckPrevExtraDataWrapper"]:
             return isinstance(msg, cls)
 
+    class EraseBonds(protobuf.MessageType):
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["EraseBonds"]:
+            return isinstance(msg, cls)
+
+    class Disconnect(protobuf.MessageType):
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["Disconnect"]:
+            return isinstance(msg, cls)
+
     class CardanoBlockchainPointerType(protobuf.MessageType):
         block_index: "int"
         tx_index: "int"
