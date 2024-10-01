@@ -23,6 +23,10 @@
 #include <io/display.h>
 #include <sys/systick.h>
 
+#ifdef USE_BLE
+#include <io/ble.h>
+#endif
+
 #ifdef USE_BUTTON
 #include <io/button.h>
 #endif
@@ -33,9 +37,12 @@
 #include "SDL.h"
 #endif
 
+#define BLE_EVENT_IFACE (252)
 #define USB_EVENT_IFACE (253)
 #define BUTTON_IFACE (254)
 #define TOUCH_IFACE (255)
+#define USB_RW_IFACE_MAX (15)  // 0-15 reserved for USB
+#define BLE_IFACE (16)
 #define POLL_READ (0x0000)
 #define POLL_WRITE (0x0100)
 
@@ -164,23 +171,53 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
         }
       }
 #endif
-      else if (mode == POLL_READ) {
-        if ((sectrue == usb_hid_can_read(iface)) ||
-            (sectrue == usb_webusb_can_read(iface))) {
-          ret->items[0] = MP_OBJ_NEW_SMALL_INT(i);
-          ret->items[1] = MP_OBJ_NEW_SMALL_INT(USB_PACKET_LEN);
-          return mp_const_true;
+      else if (iface <= USB_RW_IFACE_MAX) {
+        if (mode == POLL_READ) {
+          if ((sectrue == usb_hid_can_read(iface)) ||
+              (sectrue == usb_webusb_can_read(iface))) {
+            ret->items[0] = MP_OBJ_NEW_SMALL_INT(i);
+            ret->items[1] = MP_OBJ_NEW_SMALL_INT(USB_PACKET_LEN);
+            return mp_const_true;
+          }
+        } else if (mode == POLL_WRITE) {
+          if ((sectrue == usb_hid_can_write(iface)) ||
+              (sectrue == usb_webusb_can_write(iface))) {
+            ret->items[0] = MP_OBJ_NEW_SMALL_INT(i);
+            ret->items[1] = mp_const_none;
+            return mp_const_true;
+          }
         }
-      } else if (mode == POLL_WRITE) {
-        if ((sectrue == usb_hid_can_write(iface)) ||
-            (sectrue == usb_webusb_can_write(iface))) {
+      }
+#ifdef USE_BLE
+      else if (iface == BLE_IFACE) {
+        if (mode == POLL_READ) {
+          int len = ble_can_read();
+          if (len > 0) {
+            ret->items[0] = MP_OBJ_NEW_SMALL_INT(i);
+            ret->items[1] = MP_OBJ_NEW_SMALL_INT(BLE_RX_PACKET_SIZE);
+            return mp_const_true;
+          }
+        } else if (mode == POLL_WRITE) {
+          if (ble_can_write()) {
+            ret->items[0] = MP_OBJ_NEW_SMALL_INT(i);
+            ret->items[1] = mp_const_none;
+            return mp_const_true;
+          }
+        }
+      } else if (iface == BLE_EVENT_IFACE) {
+        ble_event_t event = {0};
+        bool read = ble_get_event(&event);
+        if (read) {
+          mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(2, NULL));
+          tuple->items[0] = MP_OBJ_NEW_SMALL_INT(event.type);
+          tuple->items[1] = mp_obj_new_bytes(event.data, event.data_len);
           ret->items[0] = MP_OBJ_NEW_SMALL_INT(i);
-          ret->items[1] = mp_const_none;
+          ret->items[1] = MP_OBJ_FROM_PTR(tuple);
           return mp_const_true;
         }
       }
+#endif
     }
-
     if (mp_hal_ticks_ms() >= deadline) {
       break;
     } else {
