@@ -169,13 +169,13 @@ void ui_click(void) {
 void ui_click(void) {
   for (;;) {
     button_read();
-    if (button_state_left() != 0 && button_state_right() != 0) {
+    if (button_state(BTN_LEFT) != 0 && button_state(BTN_RIGHT) != 0) {
       break;
     }
   }
   for (;;) {
     button_read();
-    if (button_state_left() != 1 && button_state_right() != 1) {
+    if (button_state(BTN_LEFT) != 1 && button_state(BTN_RIGHT) != 1) {
       break;
     }
   }

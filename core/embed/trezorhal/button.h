@@ -25,17 +25,15 @@
 #define BTN_EVT_DOWN (1U << 24)
 #define BTN_EVT_UP (1U << 25)
 
-#define BTN_LEFT 0
-#define BTN_RIGHT 1
-
-#ifdef KERNEL_MODE
+typedef enum {
+  BTN_LEFT = 0,
+  BTN_RIGHT = 1,
+  BTN_POWER = 2,
+} button_t;
 
 void button_init(void);
-
-#endif
-
 uint32_t button_read(void);
-char button_state_left(void);
-char button_state_right(void);
+
+bool button_state(button_t button);
 
 #endif
