@@ -35,6 +35,7 @@ const DEFAULT_BINDGEN_MACROS_COMMON: &[&str] = &[
     "-I../../vendor/micropython/lib/uzlib",
     "-I../rtl/inc",
     "-I../gfx/inc",
+    "-I../io/ble/inc",
     "-I../io/button/inc",
     "-I../io/display/inc",
     "-I../io/haptic/inc",
@@ -51,6 +52,7 @@ const DEFAULT_BINDGEN_MACROS_COMMON: &[&str] = &[
     "-DUSE_TOUCH",
     "-DUSE_HAPTIC",
     "-DUSE_RGB_LED",
+    "-DUSE_BLE",
 ];
 
 #[cfg(feature = "layout_bolt")]
@@ -412,6 +414,11 @@ fn generate_trezorhal_bindings() {
         //usb
         .allowlist_type("usb_event_t")
         .allowlist_function("usb_get_state")
+        // ble
+        .allowlist_function("ble_get_state")
+        .allowlist_function("ble_issue_command")
+        .allowlist_type("ble_command_t")
+        .allowlist_type("ble_state_t")
         // touch
         .allowlist_function("touch_get_event")
         // button

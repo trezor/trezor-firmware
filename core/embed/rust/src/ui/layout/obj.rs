@@ -4,16 +4,20 @@ use core::{
     marker::PhantomData,
     ops::{Deref, DerefMut},
 };
+
+#[cfg(feature = "touch")]
+use crate::ui::{event::TouchEvent, geometry::Direction};
 #[cfg(feature = "touch")]
 use num_traits::{FromPrimitive, ToPrimitive};
+
+#[cfg(feature = "ble")]
+use crate::micropython::buffer::get_buffer;
+#[cfg(feature = "ble")]
+use crate::ui::event::BLEEvent;
 
 #[cfg(feature = "button")]
 use crate::ui::event::ButtonEvent;
 
-use crate::ui::{display::Color, shape::render_on_display};
-
-#[cfg(feature = "touch")]
-use crate::ui::{event::TouchEvent, geometry::Direction};
 use crate::{
     error::Error,
     maybe_trace::MaybeTrace,
@@ -35,8 +39,9 @@ use crate::{
             base::{AttachType, TimerToken},
             Component, Event, EventCtx, Never,
         },
-        display,
+        display::{self, Color},
         event::USBEvent,
+        shape::render_on_display,
         CommonUI, ModelUI,
     },
 };
@@ -388,6 +393,7 @@ impl LayoutObj {
                 Qstr::MP_QSTR_button_event => obj_fn_var!(3, 3, ui_layout_button_event).as_obj(),
                 Qstr::MP_QSTR_progress_event => obj_fn_var!(3, 3, ui_layout_progress_event).as_obj(),
                 Qstr::MP_QSTR_usb_event => obj_fn_var!(2, 2, ui_layout_usb_event).as_obj(),
+                Qstr::MP_QSTR_ble_event=> obj_fn_var!(3, 3, ui_layout_ble_event).as_obj(),
                 Qstr::MP_QSTR_timer => obj_fn_2!(ui_layout_timer).as_obj(),
                 Qstr::MP_QSTR_paint => obj_fn_1!(ui_layout_paint).as_obj(),
                 Qstr::MP_QSTR_request_complete_repaint => obj_fn_1!(ui_layout_request_complete_repaint).as_obj(),
@@ -519,6 +525,30 @@ extern "C" fn ui_layout_button_event(n_args: usize, args: *const Obj) -> Obj {
 
 #[cfg(not(feature = "button"))]
 extern "C" fn ui_layout_button_event(_n_args: usize, _args: *const Obj) -> Obj {
+    Obj::const_none()
+}
+
+#[cfg(feature = "ble")]
+extern "C" fn ui_layout_ble_event(n_args: usize, args: *const Obj) -> Obj {
+    let block = |args: &[Obj], _kwargs: &Map| {
+        if args.len() != 3 {
+            return Err(Error::TypeError);
+        }
+        let this: Gc<LayoutObj> = args[0].try_into()?;
+
+        let data = unsafe { get_buffer(args[2]) };
+
+        let data = unwrap!(data);
+
+        let event = BLEEvent::new(args[1].try_into()?, data)?;
+        let msg = this.inner_mut().obj_event(Event::BLE(event))?;
+        Ok(msg)
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, &Map::EMPTY, block) }
+}
+
+#[cfg(not(feature = "ble"))]
+extern "C" fn ui_layout_ble_event(_n_args: usize, _args: *const Obj) -> Obj {
     Obj::const_none()
 }
 
