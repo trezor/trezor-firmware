@@ -122,6 +122,8 @@ SCM_REVISION: bytes
 """Git commit hash of the firmware."""
 VERSION: VersionTuple
 """Firmware version as a tuple (major, minor, patch, build)."""
+USE_BLE: bool
+"""Whether the hardware supports BLE."""
 USE_BUTTON: bool
 """Whether the hardware supports button."""
 USE_SD_CARD: bool
