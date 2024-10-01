@@ -29,14 +29,18 @@ _TXSIZE_INPUT = const(40)
 _TXSIZE_OUTPUT = const(8)
 # size of a pubkey
 _TXSIZE_PUBKEY = const(33)
+# size of a pubkey in a taproot script
+_TXSIZE_PUBKEY_TAPROOT = const(32)
 # maximum size of a DER signature (3 type bytes, 3 len bytes, 33 R, 32 S, 1 sighash)
 _TXSIZE_DER_SIGNATURE = const(72)
 # size of a Schnorr signature (32 R, 32 S, no sighash)
 _TXSIZE_SCHNORR_SIGNATURE = const(64)
 # size of a multiscript without pubkey (1 M, 1 N, 1 checksig)
 _TXSIZE_MULTISIGSCRIPT = const(3)
-# size of a taproot multiscript without pubkey (1 M, 1 numequal, 1 + 33 control block)
-_TXSIZE_MULTISIGSCRIPT_TAPROOT = const(36)
+# size of a taproot multiscript without pubkey (1 M, 1 numequal)
+_TXSIZE_MULTISIGSCRIPT_TAPROOT = const(2)
+# size of a taproot multiscript control block (1 push + 1 version + 32 pubkey)
+_TXSIZE_MULTISIGSCRIPT_TAPROOT_CONTROL_BLOCK = const(34)
 # size of a p2wpkh script (1 version, 1 push, 20 hash)
 _TXSIZE_WITNESSPKHASH = const(22)
 # size of a p2wsh script (1 version, 1 push, 32 hash)
@@ -77,11 +81,12 @@ class TxWeightCalculator:
             n = len(multisig.nodes) if multisig.nodes else len(multisig.pubkeys)
             if script_type == IST.SPENDTAPROOT:
                 multisig_script_size = _TXSIZE_MULTISIGSCRIPT_TAPROOT + n * (
-                    1 + 1 + _TXSIZE_PUBKEY
+                    1 + 1 + _TXSIZE_PUBKEY_TAPROOT
                 )
                 multisig_script_size += cls.compact_size_len(multisig_script_size)
                 return (
                     multisig_script_size
+                    + _TXSIZE_MULTISIGSCRIPT_TAPROOT_CONTROL_BLOCK
                     + multisig.m * (1 + _TXSIZE_SCHNORR_SIGNATURE)
                     + (n - multisig.m)
                 )
