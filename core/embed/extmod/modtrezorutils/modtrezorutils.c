@@ -33,7 +33,7 @@
 #include "bootutils.h"
 #include "error_handling.h"
 #include "fwutils.h"
-#include "unit_variant.h"
+#include "unit_properties.h"
 #include "usb.h"
 #include TREZOR_BOARD
 #include "model.h"
@@ -195,10 +195,10 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_firmware_vendor_obj,
 ///     Returns the color of the unit.
 ///     """
 STATIC mp_obj_t mod_trezorutils_unit_color(void) {
-  if (!unit_variant_present()) {
+  if (!unit_properties()->color_is_valid) {
     return mp_const_none;
   }
-  return mp_obj_new_int(unit_variant_get_color());
+  return mp_obj_new_int(unit_properties()->color);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_unit_color_obj,
                                  mod_trezorutils_unit_color);
@@ -208,10 +208,10 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_unit_color_obj,
 ///     Returns True if the unit is BTConly.
 ///     """
 STATIC mp_obj_t mod_trezorutils_unit_btconly(void) {
-  if (!unit_variant_present()) {
+  if (!unit_properties()->btconly_is_valid) {
     return mp_const_none;
   }
-  return unit_variant_get_btconly() ? mp_const_true : mp_const_false;
+  return unit_properties()->btconly ? mp_const_true : mp_const_false;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_unit_btconly_obj,
                                  mod_trezorutils_unit_btconly);
@@ -221,10 +221,10 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_unit_btconly_obj,
 ///     Returns the packaging version of the unit.
 ///     """
 STATIC mp_obj_t mod_trezorutils_unit_packaging(void) {
-  if (!unit_variant_present()) {
+  if (!unit_properties()->packaging_is_valid) {
     return mp_const_none;
   }
-  return mp_obj_new_int(unit_variant_get_packaging());
+  return mp_obj_new_int(unit_properties()->packaging);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_unit_packaging_obj,
                                  mod_trezorutils_unit_packaging);
@@ -234,7 +234,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_unit_packaging_obj,
 ///     Returns True if SD card hot swapping is enabled
 ///     """
 STATIC mp_obj_t mod_trezorutils_sd_hotswap_enabled(void) {
-  return unit_variant_is_sd_hotswap_enabled() ? mp_const_true : mp_const_false;
+  return unit_properties()->sd_hotswap_enabled ? mp_const_true : mp_const_false;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_sd_hotswap_enabled_obj,
                                  mod_trezorutils_sd_hotswap_enabled);
