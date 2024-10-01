@@ -54,9 +54,13 @@ if TYPE_CHECKING:
 EXPERIMENTAL_ENABLED = False
 
 
-def setup(iface: WireInterface) -> None:
+def setup(
+    iface: WireInterface, buffer: bytearray, mutex=None
+) -> None:
     """Initialize the wire stack on passed USB interface."""
-    loop.schedule(handle_session(iface, codec_v1.SESSION_ID))
+    loop.schedule(
+        handle_session(iface, codec_v1.SESSION_ID, buffer, mutex)
+    )
 
 
 def wrap_protobuf_load(
@@ -190,8 +194,13 @@ async def _handle_single_message(ctx: context.Context, msg: codec_v1.Message) ->
     return msg.type in AVOID_RESTARTING_FOR
 
 
-async def handle_session(iface: WireInterface, session_id: int) -> None:
-    ctx = context.Context(iface, session_id, WIRE_BUFFER)
+async def handle_session(
+    iface: WireInterface,
+    session_id: int,
+    ctx_buffer: bytearray,
+    mutex=None,
+) -> None:
+    ctx = context.Context(iface, session_id, ctx_buffer)
     next_msg: codec_v1.Message | None = None
 
     # Take a mark of modules that are imported at this point, so we can
@@ -204,6 +213,18 @@ async def handle_session(iface: WireInterface, session_id: int) -> None:
                 # wait for a new one coming from the wire.
                 try:
                     msg = await ctx.read_from_wire()
+                    if mutex is not None:
+                        if mutex.get_busy(iface.iface_num()):
+                            await ctx.write(
+                                Failure(
+                                    code=FailureType.DeviceIsBusy,
+                                    message="Device is busy",
+                                )
+                            )
+                            continue
+                        else:
+                            mutex.set_busy(iface.iface_num())
+
                 except codec_v1.CodecError as exc:
                     if __debug__:
                         log.exception(__name__, exc)

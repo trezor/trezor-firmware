@@ -543,7 +543,7 @@ def send_cmd_sync(cmd: Cmd, iface: HID) -> None:
         seq += 1
 
 
-async def handle_reports(iface: HID) -> None:
+async def handle_reports(iface: HID, mutex) -> None:
     dialog_mgr = DialogManager(iface)
 
     while True:
@@ -551,10 +551,14 @@ async def handle_reports(iface: HID) -> None:
             req = await _read_cmd(iface)
             if req is None:
                 continue
-            if not dialog_mgr.allow_cid(req.cid):
+            if mutex is not None and mutex.get_busy(iface.iface_num()):
                 resp: Cmd | None = cmd_error(req.cid, _ERR_CHANNEL_BUSY)
             else:
-                resp = _dispatch_cmd(req, dialog_mgr)
+                mutex.set_busy(iface.iface_num())
+                if not dialog_mgr.allow_cid(req.cid):
+                    resp: Cmd | None = cmd_error(req.cid, _ERR_CHANNEL_BUSY)
+                else:
+                    resp = _dispatch_cmd(req, dialog_mgr)
             if resp is not None:
                 await send_cmd(resp, iface)
         except Exception as e:
