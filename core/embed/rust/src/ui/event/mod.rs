@@ -3,6 +3,11 @@ pub mod button;
 #[cfg(feature = "touch")]
 pub mod touch;
 
+#[cfg(feature = "ble")]
+mod ble;
+
+#[cfg(feature = "ble")]
+pub use ble::BLEEvent;
 #[cfg(feature = "button")]
 pub use button::{ButtonEvent, PhysicalButton};
 #[cfg(feature = "touch")]
