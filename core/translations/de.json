@@ -277,7 +277,7 @@
     "confirm_total__fee_rate": "Gebührensatz",
     "confirm_total__fee_rate_colon": "Gebührensatz:",
     "confirm_total__sending_from_account": "Gesendet von Konto:",
-    "confirm_total__title_fee": "Gebühreninformation",
+    "confirm_total__title_fee": "Gebühr-Info",
     "confirm_total__title_sending_from": "Gesendet von",
     "debug__loading_seed": "Seed wird geladen",
     "debug__loading_seed_not_recommended": "Laden privater Seeds wird nicht empfohlen.",
