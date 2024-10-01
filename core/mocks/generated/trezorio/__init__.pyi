@@ -162,9 +162,12 @@ class WebUSB:
         """
     PACKET_LEN: ClassVar[int]
     """Length of one USB packet."""
-from . import fatfs, haptic, sdcard
+from . import fatfs, haptic, sdcard, ble
 POLL_READ: int  # wait until interface is readable and return read data
 POLL_WRITE: int  # wait until interface is writable
+
+BLE: int  # interface id of the BLE events
+BLE_EVENT: int # interface id for BLE events
 
 TOUCH: int  # interface id of the touch events
 TOUCH_START: int  # event id of touch start event
@@ -176,4 +179,4 @@ BUTTON_RELEASED: int  # button up event
 BUTTON_LEFT: int  # button number of left button
 BUTTON_RIGHT: int  # button number of right button
 USB_EVENT: int # interface id for USB events
-WireInterface = Union[HID, WebUSB]
+WireInterface = Union[HID, WebUSB, BleInterface]
