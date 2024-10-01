@@ -1,5 +1,6 @@
 #include <trezor_model.h>
 
+#include "ble.h"
 #include "button.h"
 #include "display.h"
 #include "dma2d_bitblt.h"
