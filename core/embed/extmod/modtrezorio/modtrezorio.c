@@ -33,6 +33,8 @@
 
 // Whether USB data pins were connected on last check (USB configured)
 bool usb_connected_previously = true;
+uint8_t ble_connected_previously = false;
+bool ble_last_internal = false;
 
 uint32_t last_touch_sample_time = 0;
 
@@ -48,6 +50,9 @@ uint32_t last_touch_sample_time = 0;
 #include "modtrezorio-webusb.h"
 #include "modtrezorio-usb.h"
 // clang-format on
+#ifdef USE_BLE
+#include "modtrezorio-ble.h"
+#endif
 #ifdef USE_SD_CARD
 #include "modtrezorio-fatfs.h"
 #include "modtrezorio-sdcard.h"
@@ -57,7 +62,7 @@ uint32_t last_touch_sample_time = 0;
 #endif
 
 /// package: trezorio.__init__
-/// from . import fatfs, haptic, sdcard
+/// from . import fatfs, haptic, sdcard, ble
 
 /// POLL_READ: int  # wait until interface is readable and return read data
 /// POLL_WRITE: int  # wait until interface is writable
@@ -74,8 +79,9 @@ uint32_t last_touch_sample_time = 0;
 /// BUTTON_RIGHT: int  # button number of right button
 
 /// USB_CHECK: int # interface id for check of USB data connection
+/// BLE_CHECK: int # interface id for check of BLE data connection
 
-/// WireInterface = Union[HID, WebUSB]
+/// WireInterface = Union[HID, WebUSB, BleInterface]
 
 STATIC const mp_rom_map_elem_t mp_module_trezorio_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_trezorio)},
@@ -89,6 +95,10 @@ STATIC const mp_rom_map_elem_t mp_module_trezorio_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_haptic), MP_ROM_PTR(&mod_trezorio_haptic_module)},
 #endif
 
+#ifdef USE_BLE
+    {MP_ROM_QSTR(MP_QSTR_ble), MP_ROM_PTR(&mod_trezorio_BLE_module)},
+#endif
+    {MP_ROM_QSTR(MP_QSTR_INPUT), MP_ROM_INT(INPUT_IFACE)},
 #ifdef USE_TOUCH
     {MP_ROM_QSTR(MP_QSTR_TOUCH_START),
      MP_ROM_INT(((TOUCH_START >> 24) & 0xFFU) | TOUCH_INPUT_FLAG)},
@@ -116,6 +126,7 @@ STATIC const mp_rom_map_elem_t mp_module_trezorio_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_POLL_WRITE), MP_ROM_INT(POLL_WRITE)},
 
     {MP_ROM_QSTR(MP_QSTR_USB_CHECK), MP_ROM_INT(USB_DATA_IFACE)},
+    {MP_ROM_QSTR(MP_QSTR_BLE_CHECK), MP_ROM_INT(BLE_EVENTS_IFACE)},
 };
 
 STATIC MP_DEFINE_CONST_DICT(mp_module_trezorio_globals,
