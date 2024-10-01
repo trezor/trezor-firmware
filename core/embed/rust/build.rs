@@ -405,7 +405,12 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("systick_ms")
         // toif
         .allowlist_type("toif_format_t")
-        //usb
+        // ble
+        .allowlist_function("ble_get_state")
+        .allowlist_function("ble_issue_command")
+        .allowlist_type("ble_command_t")
+        .allowlist_type("ble_state_t")
+        // usb
         .allowlist_function("usb_configured")
         // touch
         .allowlist_function("touch_get_event")
