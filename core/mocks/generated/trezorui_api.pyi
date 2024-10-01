@@ -22,6 +22,9 @@ class LayoutObj(Generic[T]):
     if utils.USE_BUTTON:
         def button_event(self, event: int, button: int) -> LayoutState | None:
             """Receive a button event `event` for button `button`."""
+    if utils.USE_BLE:
+        def ble_event(self, event: int, data: bytes) -> LayoutState | None:
+            """Receive a BLE events."""
     def progress_event(self, value: int, description: str) -> LayoutState | None:
         """Receive a progress event."""
     def usb_event(self, connected: bool) -> LayoutState | None:
