@@ -532,7 +532,7 @@
     "passphrase__wallet": "Portef. phrase secr.",
     "pin__cancel_description": "Continuer sans PIN",
     "pin__cancel_info": "Sans PIN, tout le monde peut accéder à ce dispositif.",
-    "pin__cancel_setup": "Annuler la configuration du PIN",
+    "pin__cancel_setup": "Annuler la config. du PIN",
     "pin__change": "Modifier le PIN ?",
     "pin__changed": "PIN modifié.",
     "pin__cursor_will_change": "La position du curseur change entre les entrées pour plus de sécurité.",

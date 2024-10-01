@@ -532,7 +532,7 @@
     "passphrase__wallet": "Monedero frase contr.",
     "pin__cancel_description": "Continuar sin PIN",
     "pin__cancel_info": "Sin un PIN, cualquiera puede acceder al dispositivo.",
-    "pin__cancel_setup": "Cancelar configuración de PIN",
+    "pin__cancel_setup": "Cancelar config. de PIN",
     "pin__change": "¿Cambiar PIN?",
     "pin__changed": "PIN cambiado.",
     "pin__cursor_will_change": "La posición del cursor irá cambiando para mejorar la seguridad.",
