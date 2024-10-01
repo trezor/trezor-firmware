@@ -316,12 +316,6 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     case SYSCALL_BUTTON_READ: {
       args[0] = button_read();
     } break;
-    case SYSCALL_BUTTON_STATE_LEFT: {
-      args[0] = button_state_left();
-    } break;
-    case SYSCALL_BUTTON_STATE_RIGHT: {
-      args[0] = button_state_right();
-    } break;
 #endif
 #ifdef USE_TOUCH
     case SYSCALL_TOUCH_GET_EVENT: {
