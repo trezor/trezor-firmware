@@ -359,7 +359,7 @@ int bootloader_main(void) {
 
   system_init(&rsod_panic_handler);
 
-  rdi_init();
+  random_delays_init();
 
 #if defined TREZOR_MODEL_T
   set_core_clock(CLOCK_180_MHZ);

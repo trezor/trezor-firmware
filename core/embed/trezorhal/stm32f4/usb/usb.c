@@ -644,7 +644,7 @@ static uint8_t usb_class_data_in(USBD_HandleTypeDef *dev, uint8_t ep_num) {
   usb_driver_t *drv = &g_usb_driver;
 
 #ifdef RDI
-  rdi_refresh_session_delay();
+  random_delays_refresh_rdi();
 #endif
 
   for (int i = 0; i < USBD_MAX_NUM_INTERFACES; i++) {
@@ -664,7 +664,7 @@ static uint8_t usb_class_data_out(USBD_HandleTypeDef *dev, uint8_t ep_num) {
   usb_driver_t *drv = &g_usb_driver;
 
 #ifdef RDI
-  rdi_refresh_session_delay();
+  random_delays_refresh_rdi();
 #endif
 
   for (int i = 0; i < USBD_MAX_NUM_INTERFACES; i++) {

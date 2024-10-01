@@ -17,24 +17,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*
-Random delay interrupts (RDI) is a contermeasure against side channel attacks.
-It consists of an interrupt handler that is supposed to be called every
-millisecond or so. The handler waits for a random number of cpu ticks that is a
-sample of so called floating mean distribution. That means that the number is
-the sum of two numbers generated uniformly at random in the interval [0, 255].
-The first number is generated freshly for each call of the handler, the other
-number is supposed to be refreshed when the device performs an operation that
-leaks the current state of the execution flow, such as sending or receiving an
-usb packet.
-
-See Differential Power Analysis in the Presence of Hardware Countermeasures by
-Christophe Clavier, Jean-Sebastien Coron, Nora Dabbous and Efficient Use of
-Random Delays in Embedded Software by Michael Tunstall, Olivier Benoit:
-https://link.springer.com/content/pdf/10.1007%2F3-540-44499-8_20.pdf
-https://link.springer.com/content/pdf/10.1007%2F978-3-540-72354-7_3.pdf
-*/
-
 #include "random_delays.h"
 
 #include <stdatomic.h>
@@ -157,15 +139,15 @@ static void wait(uint32_t delay) {
 // forward declaration
 static void rdi_handler(void *context);
 
-void rdi_init() {
+void random_delays_init() {
   drbg_init();
 
   systimer_t *timer = systimer_create(rdi_handler, NULL);
-  ensure(sectrue * (timer != NULL), "rdi_init failed");
+  ensure(sectrue * (timer != NULL), "random_delays_init failed");
   systimer_set_periodic(timer, 1);
 }
 
-void rdi_start(void) {
+void random_delays_start_rdi(void) {
   ensure(drbg_initialized, NULL);
 
   if (rdi_disabled == sectrue) {  // if rdi disabled
@@ -174,14 +156,14 @@ void rdi_start(void) {
   }
 }
 
-void rdi_stop(void) {
+void random_delays_stop_rdi(void) {
   if (rdi_disabled == secfalse) {  // if rdi enabled
     rdi_disabled = sectrue;
     session_delay = 0;
   }
 }
 
-void rdi_refresh_session_delay(void) {
+void random_delays_refresh_rdi(void) {
   if (rdi_disabled == secfalse)  // if rdi enabled
     refresh_session_delay = true;
 }

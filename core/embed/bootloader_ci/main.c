@@ -181,7 +181,7 @@ static secbool check_vendor_header_lock(const vendor_header *const vhdr) {
 int main(void) {
   system_init(&rsod_panic_handler);
 
-  rdi_init();
+  random_delays_init();
 #ifdef USE_TOUCH
   touch_init();
 #endif

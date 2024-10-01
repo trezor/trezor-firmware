@@ -77,10 +77,10 @@ void drivers_init() {
   tamper_init();
 #endif
 
-  rdi_init();
+  random_delays_init();
 
 #ifdef RDI
-  rdi_start();
+  random_delays_start_rdi();
 #endif
 
 #ifdef SYSTEM_VIEW
