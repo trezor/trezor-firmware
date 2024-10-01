@@ -331,7 +331,7 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
     case MPU_MODE_APP:
       // Kernel data in DMA accessible SRAM (Privileged, Read-Write, Non-Executable)
       // (overlaps with unprivileged SRAM region)
-      SET_REGION( 5, SRAM_BASE,             SIZE_1KB,  0x00, SRAM, PRIV_RW );
+      SET_REGION( 5, SRAM_BASE,             SIZE_8KB,  0x00, SRAM, PRIV_RW );
       // Assets (Unprivileged, Read-Only, Non-Executable)
       // Subregion: 48KB = 64KB except 2/8 at end
       SET_REGION( 6, FLASH_BASE + 0x100000, SIZE_64KB, 0xC0, FLASH_DATA, PRIV_RO_URO );
