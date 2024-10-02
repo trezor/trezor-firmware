@@ -108,8 +108,8 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     case SYSCALL_SECURE_SHUTDOWN:
       secure_shutdown();
       break;
-    case SYSCALL_REBOOT:
-      reboot();
+    case SYSCALL_REBOOT_DEVICE:
+      reboot_device();
       break;
     case SYSCALL_REBOOT_TO_BOOTLOADER:
       reboot_to_bootloader();

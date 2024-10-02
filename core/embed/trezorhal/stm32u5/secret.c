@@ -141,7 +141,7 @@ static secbool secret_present(uint32_t offset, uint32_t len) {
 // read access to it.
 static void secret_bhk_load(void) {
   if (sectrue == secret_bhk_locked()) {
-    reboot();
+    reboot_device();
   }
 
   uint32_t secret[SECRET_BHK_LEN / sizeof(uint32_t)] = {0};
@@ -355,7 +355,7 @@ void secret_prepare_fw(secbool allow_run_with_secret, secbool trust_all) {
 
 void secret_init(void) {
   if (secret_bhk_locked() == sectrue) {
-    reboot();
+    reboot_device();
   }
 
   secret_ensure_initialized();

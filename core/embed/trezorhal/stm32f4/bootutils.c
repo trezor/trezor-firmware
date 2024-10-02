@@ -173,7 +173,7 @@ void reboot_and_upgrade(const uint8_t hash[32]) {
   reboot_with_args(BOOT_COMMAND_INSTALL_UPGRADE, hash, 32);
 }
 
-void reboot(void) {
+void reboot_device(void) {
   bootargs_set(BOOT_COMMAND_NONE, NULL, 0);
 
 #ifdef STM32U5

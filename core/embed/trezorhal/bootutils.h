@@ -24,7 +24,7 @@
 #include <stdint.h>
 
 // Immediately resets the device and initiates the normal boot sequence.
-void __attribute__((noreturn)) reboot(void);
+void __attribute__((noreturn)) reboot_device(void);
 
 // Resets the device and enters the bootloader,
 // halting there and waiting for further user instructions.

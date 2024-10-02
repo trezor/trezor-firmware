@@ -346,7 +346,7 @@ void real_jump_to_firmware(void) {
 __attribute__((noreturn)) void jump_to_fw_through_reset(void) {
   display_fade(display_backlight(-1), 0, 200);
 
-  reboot();
+  reboot_device();
 }
 #endif
 
