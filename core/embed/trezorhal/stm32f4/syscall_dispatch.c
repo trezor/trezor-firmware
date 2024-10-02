@@ -443,6 +443,17 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
 #endif
 
 #ifdef USE_OPTIGA
+    case SYSCALL_OPTIGA_SIGN: {
+      uint8_t index = args[0];
+      const uint8_t *digest = (const uint8_t *)args[1];
+      size_t digest_size = args[2];
+      uint8_t *signature = (uint8_t *)args[3];
+      size_t max_sig_size = args[4];
+      size_t *sig_size = (size_t *)args[5];
+      args[0] = optiga_sign__verified(index, digest, digest_size, signature,
+                                      max_sig_size, sig_size);
+    } break;
+
     case SYSCALL_OPTIGA_CERT_SIZE: {
       uint8_t index = args[0];
       size_t *cert_size = (size_t *)args[1];

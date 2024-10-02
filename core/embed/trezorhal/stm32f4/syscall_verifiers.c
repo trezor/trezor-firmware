@@ -389,6 +389,29 @@ access_violation:
 
 // ---------------------------------------------------------------------
 
+optiga_sign_result __wur optiga_sign__verified(
+    uint8_t index, const uint8_t *digest, size_t digest_size,
+    uint8_t *signature, size_t max_sig_size, size_t *sig_size) {
+  if (!probe_read_access(digest, digest_size)) {
+    goto access_violation;
+  }
+
+  if (!probe_write_access(signature, max_sig_size)) {
+    goto access_violation;
+  }
+
+  if (!probe_write_access(sig_size, sizeof(*sig_size))) {
+    goto access_violation;
+  }
+
+  return optiga_sign(index, digest, digest_size, signature, max_sig_size,
+                     sig_size);
+
+access_violation:
+  apptask_access_violation();
+  return (optiga_sign_result){0};
+}
+
 bool __wur optiga_cert_size__verified(uint8_t index, size_t *cert_size) {
   if (!probe_write_access(cert_size, sizeof(*cert_size))) {
     goto access_violation;
