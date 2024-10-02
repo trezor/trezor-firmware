@@ -17,6 +17,10 @@ FROZEN = ARGUMENTS.get('TREZOR_EMULATOR_FROZEN', 0)
 RASPI = os.getenv('TREZOR_EMULATOR_RASPI') == '1'
 
 
+if BENCHMARK and PYOPT != '0':
+  print("BENCHMARK=1 works only with PYOPT=0.")
+  exit(1)
+
 FEATURES_WANTED = ["input", "sd_card", "dma2d", "optiga", "sbu"]
 if NEW_RENDERING:
     FEATURES_WANTED.append("new_rendering")
