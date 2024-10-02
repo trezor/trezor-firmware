@@ -207,9 +207,9 @@ def _find_message_handler_module(msg_type: int) -> str:
             return "apps.solana.sign_tx"
 
         # benchmark
-        if msg_type == MessageType.BenchmarkListNames:
+        if __debug__ and msg_type == MessageType.BenchmarkListNames:
             return "apps.benchmark.list_names"
-        if msg_type == MessageType.BenchmarkRun:
+        if __debug__ and msg_type == MessageType.BenchmarkRun:
             return "apps.benchmark.run"
 
     raise ValueError

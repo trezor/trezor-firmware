@@ -19,6 +19,10 @@ NEW_RENDERING = ARGUMENTS.get('NEW_RENDERING', '1') == '1'
 MODEL_IDENTIFIER = models.get_model_identifier(TREZOR_MODEL)
 BENCHMARK = ARGUMENTS.get('BENCHMARK', '0') == '1'
 
+if BENCHMARK and PYOPT != '0':
+  print("BENCHMARK=1 works only with PYOPT=0.")
+  exit(1)
+
 FEATURE_FLAGS = {
     "RDI": True,
     "SECP256K1_ZKP": True,  # required for trezor.crypto.curve.bip340 (BIP340/Taproot)
