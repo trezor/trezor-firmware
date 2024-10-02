@@ -126,11 +126,16 @@ static void mpu_set_attributes(void) {
 #endif
 
 #ifdef STM32U585xx
-#define GRAPHICS_START FMC_BANK1
-#define GRAPHICS_SIZE SIZE_16M
+// Two frame buffers at the end of SRAM3
+#define GRAPHICS_START (SRAM3_BASE + SRAM3_SIZE - KERNEL_SRAM3_SIZE)
+#define GRAPHICS_SIZE KERNEL_SRAM3_SIZE
+// Extended peripheral block to cover FMC1 that's used for display
+// 512M of periherals + 16M for FMC1 area that follows
+#define PERIPH_SIZE (SIZE_512M + SIZE_16M)
 #else
 #define GRAPHICS_START GFXMMU_VIRTUAL_BUFFERS_BASE
 #define GRAPHICS_SIZE SIZE_16M
+#define PERIPH_SIZE SIZE_512M
 #endif
 
 #define OTP_AND_ID_SIZE 0x800
@@ -175,7 +180,8 @@ extern uint32_t _codelen;
 #define COREAPP_RAM1_SIZE (SRAM1_SIZE - KERNEL_SRAM1_SIZE)
 
 #define COREAPP_RAM2_START (SRAM2_BASE + KERNEL_SRAM2_SIZE)
-#define COREAPP_RAM2_SIZE (SRAM_SIZE - (SRAM1_SIZE + KERNEL_SRAM2_SIZE))
+#define COREAPP_RAM2_SIZE \
+  (SRAM2_SIZE - KERNEL_SRAM2_SIZE + SRAM3_SIZE - KERNEL_SRAM3_SIZE)
 #else
 #define COREAPP_RAM1_START SRAM5_BASE
 #define COREAPP_RAM1_SIZE SRAM5_SIZE
@@ -299,7 +305,7 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
   // clang-format off
   switch (mode) {
     case MPU_MODE_SAES:
-      SET_REGION( 5, PERIPH_BASE_NS,           SIZE_512M,          PERIPHERAL,  YES,   YES ); // Peripherals - SAES, TAMP
+      SET_REGION( 5, PERIPH_BASE_NS,           PERIPH_SIZE,  PERIPHERAL,  YES,    YES ); // Peripherals - SAES, TAMP
       break;
     default:
       SET_REGION( 5, GRAPHICS_START,           GRAPHICS_SIZE,      SRAM,  YES,    YES ); // Frame buffer or display interface
@@ -362,7 +368,7 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
       break;
     default:
       // All peripherals (Privileged, Read-Write, Non-Executable)
-      SET_REGION( 7, PERIPH_BASE_NS,           SIZE_512M,          PERIPHERAL,  YES,    NO );
+      SET_REGION( 7, PERIPH_BASE_NS,           PERIPH_SIZE,        PERIPHERAL,  YES,    NO );
       break;
   }
   // clang-format on
