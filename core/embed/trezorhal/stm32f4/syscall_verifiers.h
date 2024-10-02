@@ -102,6 +102,10 @@ secbool __wur sdcard_write_blocks__verified(const uint32_t *src,
 // ---------------------------------------------------------------------
 #include "optiga.h"
 
+optiga_sign_result __wur optiga_sign__verified(
+    uint8_t index, const uint8_t *digest, size_t digest_size,
+    uint8_t *signature, size_t max_sig_size, size_t *sig_size);
+
 bool __wur optiga_cert_size__verified(uint8_t index, size_t *cert_size);
 
 bool __wur optiga_read_cert__verified(uint8_t index, uint8_t *cert,
