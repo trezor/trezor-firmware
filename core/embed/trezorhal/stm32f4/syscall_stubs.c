@@ -92,8 +92,8 @@ void reboot_and_upgrade(const uint8_t hash[32]) {
     ;
 }
 
-void reboot(void) {
-  syscall_invoke0(SYSCALL_REBOOT);
+void reboot_device(void) {
+  syscall_invoke0(SYSCALL_REBOOT_DEVICE);
   while (1)
     ;
 }

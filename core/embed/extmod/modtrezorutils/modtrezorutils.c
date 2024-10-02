@@ -277,7 +277,7 @@ STATIC mp_obj_t mod_trezorutils_reboot_to_bootloader(size_t n_args,
     }
   } else {
     // Just reboot and go through the normal boot sequence
-    reboot();
+    reboot_device();
   }
 
 #endif

@@ -769,7 +769,7 @@ static void test_otp_write_device_variant(const char *args) {
   vcp_println("OK");
 }
 
-static void test_reboot(void) { reboot(); }
+static void test_reboot(void) { reboot_device(); }
 
 void cpuid_read(void) {
   uint32_t cpuid[3];
