@@ -358,7 +358,7 @@
     "ethereum__staking_claim_address": "Adresse de retrait",
     "ethereum__staking_claim_intro": "Retirer l'ETH d'Everstake ?",
     "ethereum__staking_stake": "Stake",
-    "ethereum__staking_stake_address": "Adr. de staking",
+    "ethereum__staking_stake_address": "Adresse de staking",
     "ethereum__staking_stake_intro": "Staker de l'ETH sur Everstake ?",
     "ethereum__staking_unstake": "Unstake",
     "ethereum__staking_unstake_intro": "Terminer le Staking de l'ETH sur Everstake ?",
