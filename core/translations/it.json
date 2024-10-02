@@ -43,6 +43,7 @@
     "addr_mismatch__wrong_derivation_path": "Percorso deriv. errato per conto selezion.",
     "addr_mismatch__xpub_mismatch": "XPUB non corrisp.?",
     "address__public_key": "Chiave pubblica",
+    "address__public_key_confirmed": "Chiave pubblica confermata",
     "address__title_cosigner": "Cofirmatario",
     "address__title_receive_address": "Indirizzo ricez.",
     "address__title_yours": "I tuoi",

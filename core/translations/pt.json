@@ -44,6 +44,7 @@
     "addr_mismatch__xpub_mismatch": "XPUB não coincide?",
     "address__cancel_receive": "Canc. receb.",
     "address__public_key": "Chave pública",
+    "address__public_key_confirmed": "Chave pública confirmada",
     "address__title_cosigner": "Cosigner",
     "address__title_receive_address": "End. de recebimento",
     "address__title_yours": "Seu",

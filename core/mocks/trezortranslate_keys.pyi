@@ -12,6 +12,7 @@ class TR:
     address__cancel_receive: str = "Cancel receive"
     address__confirmed: str = "Receive address confirmed"
     address__public_key: str = "Public key"
+    address__public_key_confirmed: str = "Public key confirmed"
     address__qr_code: str = "QR code"
     address__title_cosigner: str = "Cosigner"
     address__title_receive_address: str = "Receive address"
