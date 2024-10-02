@@ -53,7 +53,7 @@
     "addr_mismatch__wrong_derivation_path": "Ableitungspfad für gewähltes Konto falsch.",
     "addr_mismatch__xpub_mismatch": "XPUB passt nicht?",
     "address__cancel_contact_support": "Wenn die Empfängeradresse nicht übereinstimmt, dann wende dich bitte unter trezor.io/support an den Trezor Support.",
-    "address__cancel_receive": "Empfang abbr.",
+    "address__cancel_receive": "Empfang abbrechen",
     "address__confirmed": "Empfängeradresse bestätigt",
     "address__public_key": "Public Key",
     "address__public_key_confirmed": "Public Key bestätigt",
