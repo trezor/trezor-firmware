@@ -111,9 +111,7 @@ fn new_confirm_reset_obj(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Erro
         (
             TR::reset__title_create_wallet.into(),
             ButtonRequestCode::ResetDevice.with_name("setup_device"),
-            // FIXME: TR::reset__cancel_create_wallet should be used but Button text on
-            // multiple lines not supported yet
-            TR::buttons__cancel.into(),
+            TR::reset__cancel_create_wallet.into(),
         )
     };
 
