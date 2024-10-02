@@ -1369,6 +1369,7 @@ pub enum TranslatedString {
     instructions__swipe_down = 964,  // "Swipe down"
     #[cfg(feature = "universal_fw")]
     fido__title_credential_details = 965,  // "Credential details"
+    address__public_key_confirmed = 966,  // "Public key confirmed"
 }
 
 impl TranslatedString {
@@ -2732,6 +2733,7 @@ impl TranslatedString {
             Self::instructions__swipe_down => "Swipe down",
             #[cfg(feature = "universal_fw")]
             Self::fido__title_credential_details => "Credential details",
+            Self::address__public_key_confirmed => "Public key confirmed",
         }
     }
 
@@ -4096,6 +4098,7 @@ impl TranslatedString {
             Qstr::MP_QSTR_instructions__swipe_down => Some(Self::instructions__swipe_down),
             #[cfg(feature = "universal_fw")]
             Qstr::MP_QSTR_fido__title_credential_details => Some(Self::fido__title_credential_details),
+            Qstr::MP_QSTR_address__public_key_confirmed => Some(Self::address__public_key_confirmed),
             _ => None,
         }
     }

@@ -46,6 +46,7 @@
     "address__cancel_receive": "Empfang abbr.",
     "address__confirmed": "Empfängeradresse bestätigt",
     "address__public_key": "Public Key",
+    "address__public_key_confirmed": "Public Key bestätigt",
     "address__qr_code": "QR-Code",
     "address__title_cosigner": "Mitunterzeich.",
     "address__title_receive_address": "Empfäng-adresse",

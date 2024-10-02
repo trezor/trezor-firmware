@@ -46,6 +46,7 @@
     "address__cancel_receive": "Zrušit příjem",
     "address__confirmed": "Adresa příjemce potvrzena",
     "address__public_key": "Veřejný klíč",
+    "address__public_key_confirmed": "Veřejný klíč potvrzen",
     "address__qr_code": "QR kód",
     "address__title_cosigner": "Další podepisující",
     "address__title_receive_address": "Přijímací adresa",

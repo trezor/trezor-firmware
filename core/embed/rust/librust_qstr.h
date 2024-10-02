@@ -50,6 +50,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_address__cancel_receive;
   MP_QSTR_address__confirmed;
   MP_QSTR_address__public_key;
+  MP_QSTR_address__public_key_confirmed;
   MP_QSTR_address__qr_code;
   MP_QSTR_address__title_cosigner;
   MP_QSTR_address__title_receive_address;
@@ -679,6 +680,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_time_ms;
   MP_QSTR_timer;
   MP_QSTR_title;
+  MP_QSTR_title_success;
   MP_QSTR_total_amount;
   MP_QSTR_total_fee_new;
   MP_QSTR_total_label;

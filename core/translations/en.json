@@ -14,6 +14,7 @@
     "address__cancel_receive": "Cancel receive",
     "address__confirmed": "Receive address confirmed",
     "address__public_key": "Public key",
+    "address__public_key_confirmed": "Public key confirmed",
     "address__qr_code": "QR code",
     "address__title_cosigner": "Cosigner",
     "address__title_receive_address": "Receive address",

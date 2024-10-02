@@ -105,6 +105,8 @@ impl GetAddress {
         let path: Option<TString> = kwargs.get(Qstr::MP_QSTR_path)?.try_into_option()?;
         let xpubs: Obj = kwargs.get(Qstr::MP_QSTR_xpubs)?;
 
+        let title_success: TString = kwargs.get(Qstr::MP_QSTR_title_success)?.try_into()?;
+
         let br_name: TString = kwargs.get(Qstr::MP_QSTR_br_name)?.try_into()?;
         let br_code: u16 = kwargs.get(Qstr::MP_QSTR_br_code)?.try_into()?;
 
@@ -150,7 +152,7 @@ impl GetAddress {
 
         let content_confirmed = Frame::left_aligned(
             TR::words__title_success.into(),
-            StatusScreen::new_success_timeout(TR::address__confirmed.into()),
+            StatusScreen::new_success_timeout(title_success),
         )
         .with_footer(TR::instructions__continue_in_app.into(), None)
         .with_result_icon(theme::ICON_BULLET_CHECKMARK, theme::GREEN_LIGHT)

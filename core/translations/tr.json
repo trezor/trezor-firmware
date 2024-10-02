@@ -43,6 +43,7 @@
     "addr_mismatch__wrong_derivation_path": "Seçilen hesap için türetme yolu yanlış.",
     "addr_mismatch__xpub_mismatch": "XPUB uyumsuz mu?",
     "address__public_key": "Genel anahtar",
+    "address__public_key_confirmed": "Genel anahtar onaylandı",
     "address__title_cosigner": "Müşterek i̇mzalayan",
     "address__title_receive_address": "Alma adresi̇",
     "address__title_yours": "Si̇zi̇nki̇",
