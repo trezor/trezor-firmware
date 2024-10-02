@@ -39,8 +39,19 @@ extern "C" {
 
 #include <stdarg.h>
 
+#ifdef TREZOR_EMULATOR
+
+#include <stdio.h>
+
+#define mini_vsnprintf vsnprintf
+#define mini_snprintf snprintf
+
+#else
+
 int mini_vsnprintf(char* buffer, unsigned int buffer_len, const char *fmt, va_list va) __attribute__ ((__format__ (__printf__, 3, 0)));
 int mini_snprintf(char* buffer, unsigned int buffer_len, const char *fmt, ...) __attribute__ ((__format__ (__printf__, 3, 4)));
+
+#endif
 
 #ifdef __cplusplus
 }

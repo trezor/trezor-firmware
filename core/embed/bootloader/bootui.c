@@ -27,11 +27,7 @@
 #include "display_draw.h"
 #include "display_utils.h"
 #include "fonts/fonts.h"
-#ifdef TREZOR_EMULATOR
-#include "emulator.h"
-#else
 #include "mini_printf.h"
-#endif
 #include "rust_ui.h"
 #include "version.h"
 

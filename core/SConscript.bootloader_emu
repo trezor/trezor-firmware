@@ -84,7 +84,6 @@ SOURCE_MOD += [
     'embed/lib/gfx_bitblt_rgb565.c',
     'embed/lib/gfx_bitblt_rgba8888.c',
     'embed/lib/image.c',
-    'embed/lib/mini_printf.c',
     'embed/lib/rsod.c',
     'embed/lib/terminal.c',
     'embed/lib/unit_variant.c',
