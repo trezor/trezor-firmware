@@ -83,15 +83,17 @@ secbool firmware_get_vendor(char* buff, size_t buff_size) {
 
   vendor_header vhdr = {0};
 
+  memset(buff, 0, buff_size);
+
   if (data == NULL || sectrue != read_vendor_header(data, &vhdr)) {
     return secfalse;
   }
 
-  if (buff == NULL || buff_size < vhdr.vstr_len + 1) {
+  if (buff_size < vhdr.vstr_len + 1) {
     return secfalse;
   }
 
-  strncpy(buff, vhdr.vstr, buff_size);
+  memcpy(buff, vhdr.vstr, vhdr.vstr_len);
 
   return sectrue;
 }
