@@ -71,8 +71,8 @@ impl WarningHiPrio {
         let description: TString = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
         let value: TString = kwargs.get_or(Qstr::MP_QSTR_value, "".into())?;
         let cancel: TString = TR::words__cancel_and_exit.into();
-        let confirm: TString = "Continue anyway".into(); // FIXME: en.json has punctuation
-        let done_title: TString = "Operation cancelled".into();
+        let confirm: TString = TR::buttons__continue.into();
+        let done_title: TString = TR::words__operation_cancelled.into();
 
         // Message
         let paragraphs = [
@@ -94,7 +94,7 @@ impl WarningHiPrio {
         let content_menu = Frame::left_aligned(
             "".into(),
             VerticalMenu::empty()
-                .item(theme::ICON_CANCEL, "Cancel".into()) // TODO: button__cancel after it's lowercase
+                .item(theme::ICON_CANCEL, TR::buttons__cancel.into())
                 .danger(theme::ICON_CHEVRON_RIGHT, confirm),
         )
         .with_cancel_button()
