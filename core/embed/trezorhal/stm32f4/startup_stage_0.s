@@ -43,10 +43,15 @@ reset_handler:
   ldr r2, =data_size    // size in bytes
   bl memcpy
 
-  // setup the stack protector (see build script "-fstack-protector-all") with an unpredictable value
+  // setup the stack protector (see build script "-fstack-protector-all")
+  // with an unpredictable value
   bl rng_get
   ldr r1, = __stack_chk_guard
   str r0, [r1]
+
+  // Clear the USB FIFO memory to prevent data leakage of sensitive information.
+  // This peripheral memory is not cleared by a device reset.
+  bl clear_otg_hs_memory
 
   // enter the application code
   bl main
