@@ -12,6 +12,9 @@ HW_REVISION ='emulator'
 THP = ARGUMENTS.get('THP', '0') == '1' # Trezor-Host Protocol
 NEW_RENDERING = ARGUMENTS.get('NEW_RENDERING', '1') == '1'
 BENCHMARK = ARGUMENTS.get('BENCHMARK', '0') == '1'
+PYOPT = ARGUMENTS.get('PYOPT', '1')
+FROZEN = ARGUMENTS.get('TREZOR_EMULATOR_FROZEN', 0)
+RASPI = os.getenv('TREZOR_EMULATOR_RASPI') == '1'
 
 
 FEATURES_WANTED = ["input", "sd_card", "dma2d", "optiga", "sbu"]
@@ -44,10 +47,6 @@ SOURCE_MOD = [
 ]
 SOURCE_MOD_CRYPTO = []
 RUST_UI_FEATURES = []
-
-PYOPT = ARGUMENTS.get('PYOPT', '1')
-FROZEN = ARGUMENTS.get('TREZOR_EMULATOR_FROZEN', 0)
-RASPI = os.getenv('TREZOR_EMULATOR_RASPI') == '1'
 
 # modtrezorconfig
 CPPPATH_MOD += [
