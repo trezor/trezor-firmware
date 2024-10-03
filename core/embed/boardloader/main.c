@@ -258,10 +258,6 @@ int main(void) {
 
   secret_init();
 
-#ifdef STM32F4
-  clear_otg_hs_memory();
-#endif
-
 #ifdef USE_SDRAM
   sdram_init();
 #endif
