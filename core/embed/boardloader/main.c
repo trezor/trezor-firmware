@@ -32,6 +32,7 @@
 #include "image.h"
 #include "model.h"
 #include "mpu.h"
+#include "platform.h"
 #include "rng.h"
 #include "rsod.h"
 #include "secret.h"

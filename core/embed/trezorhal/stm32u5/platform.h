@@ -20,14 +20,7 @@
 #ifndef TREZORHAL_STM32_H
 #define TREZORHAL_STM32_H
 
-#include STM32_HAL_H
 #include <stdint.h>
-
-#define FLASH_QUADWORD_WORDS (4)
-#define FLASH_QUADWORD_SIZE (FLASH_QUADWORD_WORDS * sizeof(uint32_t))
-
-#define FLASH_BURST_WORDS (8 * FLASH_QUADWORD_WORDS)
-#define FLASH_BURST_SIZE (FLASH_BURST_WORDS * sizeof(uint32_t))
 
 // the following functions are defined in util.s
 void memset_reg(volatile void *start, volatile void *stop, uint32_t val);

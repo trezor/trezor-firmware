@@ -1,3 +1,5 @@
+#include STM32_HAL_H
+
 #include "secret.h"
 #include <stdbool.h>
 #include <string.h>
