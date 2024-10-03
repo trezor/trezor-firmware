@@ -36,6 +36,7 @@ class HomescreenBase(RustLayout):
                 self.handle_input_and_rendering(),
                 self.handle_timers(),
                 self.handle_click_signal(),  # so we can receive debug events
+                self.handle_ble_events(),
             )
 
 

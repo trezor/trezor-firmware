@@ -1654,6 +1654,9 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     def usb_event(self, connected: bool) -> T | None:
     ///         """Receive a USB connect/disconnect event."""
     ///
+    ///     def ble_event(self, event: int, data: bytes) -> T | None:
+    ///         """Receive a BLE events."""
+    ///
     ///     def timer(self, token: int) -> T | None:
     ///         """Callback for the timer set by `attach_timer_fn`.
     ///
