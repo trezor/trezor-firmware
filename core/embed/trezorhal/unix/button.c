@@ -32,7 +32,6 @@ char button_state_right(void) { return last_right; }
 
 uint32_t button_read(void) {
   SDL_Event event;
-  SDL_PumpEvents();
   if (SDL_PollEvent(&event) > 0) {
     switch (event.type) {
       case SDL_KEYDOWN:

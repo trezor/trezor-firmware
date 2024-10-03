@@ -8,7 +8,6 @@
 
 extern uint8_t *FIRMWARE_START;
 
-void emulator_poll_events(void);
 __attribute__((noreturn)) void jump_to(uint32_t address);
 
 #endif

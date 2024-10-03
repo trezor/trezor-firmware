@@ -251,9 +251,7 @@ uint32_t touch_get_event(void) {
     return TOUCH_END | touch_pack_xy(driver->last_x, driver->last_y);
   }
 
-  emulator_poll_events();
   SDL_Event event;
-  SDL_PumpEvents();
 
   int ev_x = 0;
   int ev_y = 0;
