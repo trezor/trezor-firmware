@@ -99,43 +99,38 @@ mini_itoa(int value, unsigned int radix, unsigned int uppercase, unsigned int un
 	return len;
 }
 
+inline static void _putc(char **cursor, char *const buffer_end, char ch)
+{
+	if (*cursor < buffer_end)
+		*((*cursor)++) = ch;
+}
+
+inline static void _puts(char **cursor, char *const buffer_end, char *s, unsigned int len)
+{
+	unsigned int i;
+
+	if (buffer_end - *cursor < len)
+		len = buffer_end - *cursor;
+
+	/* Copy to buffer at cursor */
+	for (i = 0; i < len; i++)
+		*((*cursor)++) = s[i];
+}
+
 int
 mini_vsnprintf(char *buffer, unsigned int buffer_len, const char *fmt, va_list va)
 {
 	char *pbuffer = buffer;
+	char *const buffer_end = buffer + buffer_len;
 	char bf[24];
 	char ch;
 
-	int _putc(char ch)
-	{
-		if ((unsigned int)((pbuffer - buffer) + 1) >= buffer_len)
-			return 0;
-		*(pbuffer++) = ch;
-		*(pbuffer) = '\0';
-		return 1;
-	}
-
-	int _puts(char *s, unsigned int len)
-	{
-		unsigned int i;
-
-		if (buffer_len - (pbuffer - buffer) - 1 < len)
-			len = buffer_len - (pbuffer - buffer) - 1;
-
-		/* Copy to buffer */
-		for (i = 0; i < len; i++)
-			*(pbuffer++) = s[i];
-		*(pbuffer) = '\0';
-
-		return len;
-	}
-
 	while ((ch=*(fmt++))) {
-		if ((unsigned int)((pbuffer - buffer) + 1) >= buffer_len)
+		if (pbuffer + 1 >= buffer_end)
 			break;
-		if (ch!='%')
-			_putc(ch);
-		else {
+		if (ch!='%') {
+			_putc(&pbuffer, buffer_end, ch);
+		} else {
 			char zero_pad = 0;
 			char *ptr;
 			unsigned int len;
@@ -159,31 +154,35 @@ mini_vsnprintf(char *buffer, unsigned int buffer_len, const char *fmt, va_list v
 				case 'u':
 				case 'd':
 					len = mini_itoa(va_arg(va, unsigned int), 10, 0, (ch=='u'), bf, zero_pad);
-					_puts(bf, len);
+					_puts(&pbuffer, buffer_end, bf, len);
 					break;
 
 				case 'x':
 				case 'X':
 					len = mini_itoa(va_arg(va, unsigned int), 16, (ch=='X'), 1, bf, zero_pad);
-					_puts(bf, len);
+					_puts(&pbuffer, buffer_end, bf, len);
 					break;
 
 				case 'c' :
-					_putc((char)(va_arg(va, int)));
+					_putc(&pbuffer, buffer_end, (char)(va_arg(va, int)));
 					break;
 
 				case 's' :
 					ptr = va_arg(va, char*);
-					_puts(ptr, mini_strlen(ptr));
+					_puts(&pbuffer, buffer_end, ptr, mini_strlen(ptr));
 					break;
 
 				default:
-					_putc(ch);
+					_putc(&pbuffer, buffer_end, ch);
 					break;
 			}
 		}
 	}
 end:
+	if (pbuffer < buffer_end)
+		*pbuffer = '\0';
+	else if (buffer_len > 0)
+		buffer[buffer_len - 1] = '\0';
 	return pbuffer - buffer;
 }
 
