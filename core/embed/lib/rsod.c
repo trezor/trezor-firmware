@@ -98,7 +98,7 @@ void rsod_terminal(const systask_postmortem_t* pminfo) {
 
 #endif  // KERNEL_MODE
 
-#if (defined(FIRMWARE) || defined(BOOTLOADER)) && defined(FANCY_FATAL_ERROR)
+#ifdef FANCY_FATAL_ERROR
 
 #include "rust_ui.h"
 
@@ -139,7 +139,7 @@ void rsod_gui(const systask_postmortem_t* pminfo) {
   display_rsod_rust(title, message, footer);
 }
 
-#endif
+#endif  // FANCY_FATAL_ERROR
 
 #ifdef KERNEL_MODE
 
@@ -153,7 +153,7 @@ static void init_and_show_rsod(const systask_postmortem_t* pminfo) {
   // Initialize necessary drivers
   display_init(DISPLAY_RESET_CONTENT);
 
-#if (defined(FIRMWARE) || defined(BOOTLOADER)) && defined(FANCY_FATAL_ERROR)
+#ifdef FANCY_FATAL_ERROR
   // Show the RSOD using Rust GUI
   rsod_gui(pminfo);
 #else

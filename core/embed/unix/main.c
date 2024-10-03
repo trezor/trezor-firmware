@@ -37,6 +37,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "common.h"
 #include "display.h"
 #include "extmod/misc.h"
 #include "extmod/vfs_posix.h"
@@ -44,6 +45,11 @@
 #include "flash_otp.h"
 #include "genhdr/mpversion.h"
 #include "input.h"
+#include "rsod.h"
+#include "system.h"
+#include "systimer.h"
+#include "touch.h"
+
 #include "py/builtin.h"
 #include "py/compile.h"
 #include "py/gc.h"
@@ -53,10 +59,6 @@
 #include "py/repl.h"
 #include "py/runtime.h"
 #include "py/stackctrl.h"
-#include "systimer.h"
-#include "touch.h"
-
-#include "common.h"
 
 // Command line options, with their defaults
 STATIC bool compile_only = false;
@@ -487,8 +489,7 @@ MP_NOINLINE int main_(int argc, char **argv) {
 
   pre_process_options(argc, argv);
 
-  systick_init();
-  systimer_init();
+  system_init(&rsod_panic_handler);
 
   display_init(DISPLAY_RESET_CONTENT);
 

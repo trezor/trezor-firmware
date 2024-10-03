@@ -194,7 +194,7 @@ static void coreapp_init(applet_t *applet) {
 
 // Shows RSOD (Red Screen of Death)
 static void show_rsod(const systask_postmortem_t *pminfo) {
-#ifdef FANCY_FATAL_ERROR
+#ifdef RSOD_IN_COREAPP
   applet_t coreapp;
   coreapp_init(&coreapp);
 

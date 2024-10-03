@@ -219,14 +219,8 @@ else:
 
 CPPDEFINES_MOD += [
     'TRANSLATIONS',
+    'RSOD_IN_COREAPP',
 ]
-
-if TREZOR_MODEL not in ('1', ):
-    CPPDEFINES_MOD += [
-        'FANCY_FATAL_ERROR',
-    ]
-
-CPPDEFINES_MOD += ['USE_SVC_SHUTDOWN']
 
 if FEATURE_FLAGS["RDI"]:
     CPPDEFINES_MOD += ['RDI']

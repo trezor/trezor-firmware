@@ -17,15 +17,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "terminal.h"
+#include TREZOR_BOARD
+
 #include <stdarg.h>
 #include <stdint.h>
 #include <string.h>
-#include "display.h"
-#include TREZOR_BOARD
 
+#include "display.h"
 #include "fonts/fonts.h"
 #include "gfx_draw.h"
+#include "mini_printf.h"
+#include "terminal.h"
 
 #define TERMINAL_COLS (DISPLAY_RESX / 6)
 #define TERMINAL_ROWS (DISPLAY_RESY / 8)
@@ -169,29 +171,16 @@ void term_print(const char *text, int textlen) {
 #endif
 }
 
-#ifdef TREZOR_EMULATOR
-#define mini_vsnprintf vsnprintf
-#include <stdio.h>
-#else
-#include "mini_printf.h"
-#endif
-
 // variadic term_print
 void term_printf(const char *fmt, ...) {
   if (!strchr(fmt, '%')) {
     term_print(fmt, strlen(fmt));
-#ifdef TREZOR_EMULATOR
-    printf("%s", fmt);
-#endif
   } else {
     va_list va;
     va_start(va, fmt);
     char buf[256] = {0};
     int len = mini_vsnprintf(buf, sizeof(buf), fmt, va);
     term_print(buf, len);
-#ifdef TREZOR_EMULATOR
-    vprintf(fmt, va);
-#endif
     va_end(va);
   }
 }
