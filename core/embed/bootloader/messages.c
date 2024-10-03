@@ -31,7 +31,7 @@
 #include "image.h"
 #include "secbool.h"
 #include "secret.h"
-#include "unit_variant.h"
+#include "unit_properties.h"
 #include "usb.h"
 #include "version.h"
 
@@ -315,10 +315,14 @@ static void send_msg_features(uint8_t iface_num,
   } else {
     MSG_SEND_ASSIGN_VALUE(firmware_present, false);
   }
-  if (unit_variant_present()) {
-    MSG_SEND_ASSIGN_VALUE(unit_color, unit_variant_get_color());
-    MSG_SEND_ASSIGN_VALUE(unit_packaging, unit_variant_get_packaging());
-    MSG_SEND_ASSIGN_VALUE(unit_btconly, unit_variant_get_btconly());
+  if (unit_properties()->color_is_valid) {
+    MSG_SEND_ASSIGN_VALUE(unit_color, unit_properties()->color);
+  }
+  if (unit_properties()->packaging_is_valid) {
+    MSG_SEND_ASSIGN_VALUE(unit_packaging, unit_properties()->packaging);
+  }
+  if (unit_properties()->btconly_is_valid) {
+    MSG_SEND_ASSIGN_VALUE(unit_btconly, unit_properties()->btconly);
   }
 
 #if USE_OPTIGA

@@ -75,7 +75,7 @@
 #include "messages.h"
 #include "monoctr.h"
 #include "rust_ui.h"
-#include "unit_variant.h"
+#include "unit_properties.h"
 #include "version_check.h"
 
 #ifdef TREZOR_EMULATOR
@@ -375,7 +375,7 @@ int bootloader_main(void) {
   dma2d_init();
 #endif
 
-  unit_variant_init();
+  unit_properties_init();
 
 #ifdef USE_TOUCH
   secbool touch_initialized = secfalse;
@@ -384,7 +384,7 @@ int bootloader_main(void) {
   // on T3T1, tester needs to run without touch, so making an exception
   // until unit variant is written in OTP
   const secbool manufacturing_mode =
-      unit_variant_present() ? secfalse : sectrue;
+      unit_properties()->locked ? secfalse : sectrue;
   allow_touchless_mode = manufacturing_mode;
 
 #endif
