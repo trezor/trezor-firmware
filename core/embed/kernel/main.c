@@ -69,10 +69,6 @@ static void optiga_log_hex(const char *prefix, const uint8_t *data,
 #endif
 
 void drivers_init() {
-#if defined TREZOR_MODEL_T
-  set_core_clock(CLOCK_180_MHZ);
-#endif
-
 #ifdef STM32U5
   tamper_init();
 #endif
