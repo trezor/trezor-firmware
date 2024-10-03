@@ -27,6 +27,7 @@
 #include "irq.h"
 #include "model.h"
 #include "mpu.h"
+#include "platform.h"
 
 #ifdef KERNEL_MODE
 

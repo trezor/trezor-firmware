@@ -25,7 +25,6 @@
 #include "secbool.h"
 
 #include "error_handling.h"
-#include "platform.h"
 #include "systick.h"
 
 #ifndef MIN_8bits

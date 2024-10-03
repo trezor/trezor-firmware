@@ -24,8 +24,17 @@
 #include <stdlib.h>
 
 #include "flash_ll.h"
-#include "platform.h"
 #include "secbool.h"
+
+#ifdef STM32U5
+
+#define FLASH_QUADWORD_WORDS (4)
+#define FLASH_QUADWORD_SIZE (FLASH_QUADWORD_WORDS * sizeof(uint32_t))
+
+#define FLASH_BURST_WORDS (8 * FLASH_QUADWORD_WORDS)
+#define FLASH_BURST_SIZE (FLASH_BURST_WORDS * sizeof(uint32_t))
+
+#endif
 
 void flash_init(void);
 
