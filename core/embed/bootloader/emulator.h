@@ -2,7 +2,6 @@
 #define __EMULATOR_H__
 
 #define CLOCK_180_MHZ 0
-#define mini_snprintf snprintf
 
 #undef FIRMWARE_START
 
