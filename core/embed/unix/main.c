@@ -24,6 +24,8 @@
  * THE SOFTWARE.
  */
 
+#include <SDL.h>
+
 #include <ctype.h>
 #include <errno.h>
 #include <signal.h>
@@ -412,7 +414,7 @@ STATIC void set_sys_argv(char *argv[], int argc, int start_arg) {
 
 // Inject SystemExit exception. This is primarily needed by prof.py to run the
 // atexit() handler.
-void __attribute__((noreturn)) main_clean_exit() {
+static void __attribute__((noreturn)) main_clean_exit() {
   const int status = 3;
   fflush(stdout);
   fflush(stderr);
@@ -469,6 +471,28 @@ reimport:
   return 0;
 }
 
+static int sdl_event_filter(void *userdata, SDL_Event *event) {
+  switch (event->type) {
+    case SDL_QUIT:
+      main_clean_exit();
+      return 0;
+    case SDL_KEYUP:
+      if (event->key.repeat) {
+        return 0;
+      }
+      switch (event->key.keysym.sym) {
+        case SDLK_ESCAPE:
+          main_clean_exit();
+          return 0;
+        case SDLK_p:
+          display_save("emu");
+          return 0;
+      }
+      break;
+  }
+  return 1;
+}
+
 MP_NOINLINE int main_(int argc, char **argv) {
 #ifdef SIGPIPE
   // Do not raise SIGPIPE, instead return EPIPE. Otherwise, e.g. writing
@@ -490,6 +514,8 @@ MP_NOINLINE int main_(int argc, char **argv) {
 
   systick_init();
   systimer_init();
+
+  SDL_SetEventFilter(sdl_event_filter, NULL);
 
   display_init(DISPLAY_RESET_CONTENT);
 
