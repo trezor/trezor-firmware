@@ -29,18 +29,10 @@
 #define FLASH_BURST_WORDS (8 * FLASH_QUADWORD_WORDS)
 #define FLASH_BURST_SIZE (FLASH_BURST_WORDS * sizeof(uint32_t))
 
-typedef enum {
-  CLOCK_160_MHZ = 0,
-} clock_settings_t;
-
-void set_core_clock(clock_settings_t settings);
-
 // the following functions are defined in util.s
 void memset_reg(volatile void *start, volatile void *stop, uint32_t val);
 void jump_to(uint32_t address);
 void jump_to_with_flag(uint32_t address, uint32_t register_flag);
-
-extern uint32_t __stack_chk_guard;
 
 void check_oem_keys(void);
 

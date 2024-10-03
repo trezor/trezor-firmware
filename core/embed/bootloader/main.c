@@ -361,10 +361,6 @@ int bootloader_main(void) {
 
   random_delays_init();
 
-#if defined TREZOR_MODEL_T
-  set_core_clock(CLOCK_180_MHZ);
-#endif
-
 #ifdef USE_HASH_PROCESSOR
   hash_processor_init();
 #endif
