@@ -392,7 +392,6 @@ SOURCE_MICROPYTHON = [
 
 SOURCE_UNIX = [
     'embed/trezorhal/unix/bootutils.c',
-    'embed/trezorhal/unix/common.c',
     'embed/trezorhal/unix/entropy.c',
     'embed/trezorhal/unix/flash_otp.c',
     'embed/trezorhal/unix/flash.c',

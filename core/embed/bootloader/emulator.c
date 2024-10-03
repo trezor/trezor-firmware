@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <unistd.h>
 
+#include <SDL.h>
+
 #include TREZOR_BOARD
 #include "bootargs.h"
 #include "bootui.h"
@@ -19,9 +21,6 @@
 #undef FIRMWARE_START
 
 uint8_t *FIRMWARE_START = 0;
-
-// used in fw emulator to raise python exception on exit
-void __attribute__((noreturn)) main_clean_exit() { exit(3); }
 
 int bootloader_main(void);
 
@@ -89,7 +88,31 @@ bool load_firmware(const char *filename, uint8_t *hash) {
   return true;
 }
 
+static int sdl_event_filter(void *userdata, SDL_Event *event) {
+  switch (event->type) {
+    case SDL_QUIT:
+      exit(3);
+      return 0;
+    case SDL_KEYUP:
+      if (event->key.repeat) {
+        return 0;
+      }
+      switch (event->key.keysym.sym) {
+        case SDLK_ESCAPE:
+          exit(3);
+          return 0;
+        case SDLK_p:
+          display_save("emu");
+          return 0;
+      }
+      break;
+  }
+  return 1;
+}
+
 __attribute__((noreturn)) int main(int argc, char **argv) {
+  SDL_SetEventFilter(sdl_event_filter, NULL);
+
   display_init(DISPLAY_RESET_CONTENT);
   flash_init();
   flash_otp_init();
