@@ -26,7 +26,6 @@
 #include "error_handling.h"
 #include "flash_otp.h"
 #include "model.h"
-#include "platform.h"
 #include "rand.h"
 #include "secret.h"
 

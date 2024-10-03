@@ -24,7 +24,6 @@
 #include <stdint.h>
 
 #include "common.h"
-#include "platform.h"
 #include "touch.h"
 
 extern int sdl_display_res_x, sdl_display_res_y;

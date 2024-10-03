@@ -23,7 +23,6 @@
 
 #include "button.h"
 #include "common.h"
-#include "platform.h"
 
 static char last_left = 0, last_right = 0;
 
