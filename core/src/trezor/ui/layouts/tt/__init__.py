@@ -77,6 +77,7 @@ class RustLayout(LayoutParentType[T]):
                     self.handle_click_signal(),
                     self.handle_result_signal(),
                     self.handle_usb(context.get_context()),
+                    self.handle_ble_events(),
                 )
             else:
                 return (
@@ -85,6 +86,7 @@ class RustLayout(LayoutParentType[T]):
                     self.handle_swipe(),
                     self.handle_click_signal(),
                     self.handle_result_signal(),
+                    self.handle_ble_events(),
                 )
 
         async def handle_result_signal(self) -> None:
@@ -189,11 +191,13 @@ class RustLayout(LayoutParentType[T]):
                     self.handle_input_and_rendering(),
                     self.handle_timers(),
                     self.handle_usb(context.get_context()),
+                    self.handle_ble_events(),
                 )
             else:
                 return (
                     self.handle_input_and_rendering(),
                     self.handle_timers(),
+                    self.handle_ble_events(),
                 )
 
     def _first_paint(self) -> None:
@@ -240,6 +244,16 @@ class RustLayout(LayoutParentType[T]):
                 msg = self.layout.touch_event(event, p0, p1)
             if utils.USE_BUTTON and event in (io.BUTTON_PRESSED, io.BUTTON_RELEASED):
                 msg = self.layout.button_event(event, p0)
+            if msg is not None:
+                raise ui.Result(msg)
+            self._paint()
+
+    def handle_ble_events(self) -> loop.Task:
+        input = loop.wait(io.BLE_CHECK)
+        while True:
+            # Using `yield` instead of `await` to avoid allocations.
+            (event, data) = yield input
+            msg = self.layout.ble_event(event, data)
             if msg is not None:
                 raise ui.Result(msg)
             self._paint()
