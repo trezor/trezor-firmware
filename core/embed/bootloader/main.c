@@ -79,6 +79,7 @@
 #include "version_check.h"
 
 #ifdef TREZOR_EMULATOR
+#include "SDL.h"
 #include "emulator.h"
 #else
 #include "compiler_traits.h"
@@ -149,7 +150,9 @@ static usb_result_t bootloader_usb_loop(const vendor_header *const vhdr,
 
   for (;;) {
 #ifdef TREZOR_EMULATOR
-    emulator_poll_events();
+    // Ensures that SDL events are processed. This prevents the emulator from
+    // freezing when the user interacts with the window.
+    SDL_PumpEvents();
 #endif
     int r = usb_webusb_read_blocking(USB_IFACE_NUM, buf, USB_PACKET_SIZE,
                                      USB_TIMEOUT);

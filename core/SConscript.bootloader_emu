@@ -119,7 +119,6 @@ SOURCE_BOOTLOADER = [
 
 SOURCE_TREZORHAL = [
     'embed/trezorhal/unix/bootutils.c',
-    'embed/trezorhal/unix/common.c',
     'embed/trezorhal/unix/flash.c',
     'embed/trezorhal/unix/flash_otp.c',
     'embed/trezorhal/unix/mpu.c',
