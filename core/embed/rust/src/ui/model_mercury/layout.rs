@@ -7,7 +7,8 @@ use super::{
         PinKeyboardMsg, Progress, PromptScreen, SelectWordCount, SelectWordCountMsg, Slip39Input,
         StatusScreen, SwipeUpScreen, SwipeUpScreenMsg, VerticalMenu, VerticalMenuChoiceMsg,
     },
-    flow, theme,
+    flow::{self, confirm_with_info},
+    theme,
 };
 use crate::{
     error::{value_error, Error},
@@ -788,6 +789,7 @@ extern "C" fn new_confirm_with_info(n_args: usize, args: *const Obj, kwargs: *mu
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let button: TString = kwargs.get(Qstr::MP_QSTR_button)?.try_into()?;
+        let info_button: TString = kwargs.get(Qstr::MP_QSTR_info_button)?.try_into()?;
         let items: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
 
         let mut paragraphs = ParagraphVecShort::new();
@@ -802,13 +804,9 @@ extern "C" fn new_confirm_with_info(n_args: usize, args: *const Obj, kwargs: *mu
             }
         }
 
-        let obj = LayoutObj::new(SwipeUpScreen::new(
-            Frame::left_aligned(title, SwipeContent::new(paragraphs.into_paragraphs()))
-                .with_menu_button()
-                .with_footer(TR::instructions__swipe_up.into(), Some(button))
-                .with_swipe(Direction::Up, SwipeSettings::default()),
-        ))?;
-        Ok(obj.into())
+        let flow =
+            confirm_with_info::new_confirm_with_info(title, button, info_button, paragraphs)?;
+        Ok(LayoutObj::new(flow)?.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
@@ -1444,8 +1442,8 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     info_button: str,
     ///     items: Iterable[tuple[int, str]],
     /// ) -> LayoutObj[UiResult]:
-    ///     """Confirm given items but with third button. Always single page
-    ///     without scrolling."""
+    ///     """Confirm given items but with third button. In mercury, the button is placed in
+    ///     context menu."""
     Qstr::MP_QSTR_confirm_with_info => obj_fn_kw!(0, new_confirm_with_info).as_obj(),
 
     /// def confirm_more(

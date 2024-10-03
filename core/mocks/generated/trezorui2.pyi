@@ -314,8 +314,8 @@ def confirm_with_info(
     info_button: str,
     items: Iterable[tuple[int, str]],
 ) -> LayoutObj[UiResult]:
-    """Confirm given items but with third button. Always single page
-    without scrolling."""
+    """Confirm given items but with third button. In mercury, the button is placed in
+    context menu."""
 
 
 # rust/src/ui/model_mercury/layout.rs
