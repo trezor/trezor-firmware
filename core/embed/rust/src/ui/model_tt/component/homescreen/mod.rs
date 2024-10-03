@@ -24,11 +24,16 @@ use crate::{
 
 use super::{theme, Loader, LoaderMsg};
 use crate::{
-    trezorhal::{ble::start_advertising, buffers::BufferJpegWork, uzlib::UZLIB_WINDOW_SIZE},
+    trezorhal::{
+        ble,
+        ble::{connected, pairing_mode},
+        buffers::BufferJpegWork,
+        uzlib::UZLIB_WINDOW_SIZE,
+    },
     ui::{
         constant::HEIGHT,
         display::tjpgd::BufferInput,
-        event::{ButtonEvent, PhysicalButton},
+        event::{BLEEvent, ButtonEvent, PhysicalButton},
         model_tt::component::homescreen::render::{
             HomescreenJpeg, HomescreenToif, HOMESCREEN_TOIF_SIZE,
         },
@@ -85,6 +90,7 @@ impl Homescreen {
 
     fn level_to_style(level: u8) -> (Color, Icon) {
         match level {
+            4 => (theme::BLUE, theme::ICON_MAGIC),
             3 => (theme::YELLOW, theme::ICON_COINJOIN),
             2 => (theme::VIOLET, theme::ICON_MAGIC),
             1 => (theme::YELLOW, theme::ICON_WARN),
@@ -93,6 +99,15 @@ impl Homescreen {
     }
 
     fn get_notification(&self) -> Option<HomescreenNotification> {
+        if connected() {
+            let (color, icon) = Self::level_to_style(4);
+            return Some(HomescreenNotification {
+                text: "BLE connected".into(),
+                icon,
+                color,
+            });
+        }
+
         if !usb_configured() {
             let (color, icon) = Self::level_to_style(0);
             Some(HomescreenNotification {
@@ -143,6 +158,20 @@ impl Homescreen {
         if let Event::USB(USBEvent::Connected(_)) = event {
             self.paint_notification_only = true;
             ctx.request_paint();
+        }
+    }
+
+    fn event_ble(&mut self, ctx: &mut EventCtx, event: Event) {
+        match event {
+            Event::BLE(BLEEvent::Connected) | Event::BLE(BLEEvent::Disconnected) => {
+                self.paint_notification_only = true;
+                ctx.request_paint();
+            }
+            Event::BLE(BLEEvent::PairingRequest(data)) => {
+                ble::allow_pairing();
+            }
+
+            _ => {}
         }
     }
 
@@ -202,6 +231,7 @@ impl Component for Homescreen {
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         Self::event_usb(self, ctx, event);
+        Self::event_ble(self, ctx, event);
         if self.hold_to_lock {
             if Self::event_hold(self, ctx, event) {
                 return Some(HomescreenMsg::Dismissed);
@@ -209,7 +239,7 @@ impl Component for Homescreen {
         }
 
         if let Event::Button(ButtonEvent::ButtonPressed(PhysicalButton::Power)) = event {
-            start_advertising(false);
+            pairing_mode();
             None
             //Some(HomescreenMsg::Dismissed)
         } else {
