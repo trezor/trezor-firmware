@@ -101,7 +101,7 @@ async def bootscreen() -> None:
             # other exceptions here are unexpected and should halt the device
             if __debug__:
                 log.exception(__name__, e)
-            utils.halt(e.__class__.__name__)
+            utils.halt(e.__class__.__name__ + " " + str(e))
 
 
 # Ignore all automated PIN messages in the boot-phase (turned off in `bootscreen()`), unless Optiga throttling delays are active.
