@@ -382,12 +382,17 @@ extern "C" fn new_confirm_properties(n_args: usize, args: *const Obj, kwargs: *m
                 paragraphs.add(Paragraph::new(style, value));
             }
         }
+        let button_text = if hold {
+            TR::buttons__hold_to_confirm.into()
+        } else {
+            TR::buttons__confirm.into()
+        };
 
         content_in_button_page(
             title,
             paragraphs.into_paragraphs(),
-            TR::buttons__confirm.into(),
-            None,
+            button_text,
+            Some("".into()),
             hold,
         )
     };
