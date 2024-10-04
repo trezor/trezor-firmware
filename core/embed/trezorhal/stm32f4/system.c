@@ -23,7 +23,6 @@
 
 #include "bootutils.h"
 #include "mpu.h"
-#include "platform.h"
 #include "systask.h"
 #include "system.h"
 #include "systick.h"

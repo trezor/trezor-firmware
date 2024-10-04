@@ -30,6 +30,7 @@
 #include "flash_utils.h"
 #include "image.h"
 #include "messages.pb.h"
+#include "mpu.h"
 #include "option_bytes.h"
 #include "pvd.h"
 #include "random_delays.h"
@@ -84,8 +85,7 @@
 #include "emulator.h"
 #else
 #include "compiler_traits.h"
-#include "mpu.h"
-#include "platform.h"
+#include STM32_HAL_H
 #endif
 
 #define USB_IFACE_NUM 0

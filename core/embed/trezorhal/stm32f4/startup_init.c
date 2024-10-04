@@ -18,12 +18,12 @@
  */
 
 #include STM32_HAL_H
+#include TREZOR_BOARD
 
 #include "startup_init.h"
-#include "platform.h"
+#include "bootutils.h"
 #include "rng.h"
 #include "systick.h"
-#include TREZOR_BOARD
 
 #ifdef KERNEL_MODE
 

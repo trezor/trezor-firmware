@@ -19,6 +19,7 @@
 
 #include <string.h>
 
+#include STM32_HAL_H
 #include TREZOR_BOARD
 #include "board_capabilities.h"
 #include "bootutils.h"
@@ -32,7 +33,6 @@
 #include "image.h"
 #include "model.h"
 #include "mpu.h"
-#include "platform.h"
 #include "pvd.h"
 #include "reset_flags.h"
 #include "rng.h"
