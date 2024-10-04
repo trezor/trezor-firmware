@@ -218,11 +218,17 @@ async def confirm_sending(
     ada_amount: int,
     to: str,
     output_type: Literal["address", "change", "collateral-return"],
+    output_index: int | None,
     network_id: int,
     chunkify: bool,
 ) -> None:
+    output_index_shown = None
     if output_type == "address":
-        title = TR.cardano__sending
+        if output_index is None:
+            title = TR.cardano__sending
+        else:
+            title = None
+            output_index_shown = output_index
     elif output_type == "change":
         title = TR.cardano__change_output
     elif output_type == "collateral-return":
@@ -236,6 +242,7 @@ async def confirm_sending(
         title,
         br_code=ButtonRequestType.Other,
         chunkify=chunkify,
+        output_index=output_index_shown,
     )
 
 
@@ -506,19 +513,48 @@ async def confirm_witness_request(
 
 
 async def confirm_tx(
+    spending: int,
     fee: int,
     network_id: int,
     protocol_magic: int,
     ttl: int | None,
     validity_interval_start: int | None,
+) -> None:
+    total_amount = format_coin_amount(spending, network_id)
+    fee_amount = format_coin_amount(fee, network_id)
+    items = (
+        (TR.cardano__network, f"{protocol_magics.to_ui_string(protocol_magic)}"),
+        (TR.cardano__valid_since, f"{format_optional_int(validity_interval_start)}"),
+        (TR.cardano__ttl, f"{format_optional_int(ttl)}"),
+    )
+
+    await layouts.confirm_cardano_tx(
+        total_amount,
+        fee_amount,
+        items=items,
+    )
+
+
+async def confirm_tx_details(
+    network_id: int,
+    protocol_magic: int,
+    ttl: int | None,
+    fee: int | None,
+    validity_interval_start: int | None,
     total_collateral: int | None,
     is_network_id_verifiable: bool,
     tx_hash: bytes | None,
 ) -> None:
-    props: list[PropertyType] = [
-        (TR.cardano__transaction_fee, format_coin_amount(fee, network_id)),
-    ]
+    props: list[PropertyType] = []
     append = props.append  # local_cache_attribute
+
+    if fee is not None:
+        append(
+            (
+                TR.cardano__transaction_fee,
+                format_coin_amount(fee, network_id),
+            )
+        )
 
     if total_collateral is not None:
         append(
@@ -547,13 +583,14 @@ async def confirm_tx(
     if tx_hash:
         append((TR.cardano__transaction_id, tx_hash))
 
-    await confirm_properties(
-        "confirm_total",
-        TR.cardano__confirm_transaction,
-        props,
-        hold=True,
-        br_code=BRT_Other,
-    )
+    if props:
+        await confirm_properties(
+            "confirm_total",
+            TR.cardano__confirm_transaction,
+            props,
+            hold=True,
+            br_code=BRT_Other,
+        )
 
 
 async def confirm_certificate(
@@ -590,6 +627,7 @@ async def confirm_certificate(
         "confirm_certificate",
         TR.cardano__confirm_transaction,
         props,
+        hold=False,
         br_code=BRT_Other,
     )
 

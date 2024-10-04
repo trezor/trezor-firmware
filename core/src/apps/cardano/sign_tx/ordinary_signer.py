@@ -92,8 +92,9 @@ class OrdinarySigner(Signer):
         # super() omitted intentionally
         msg = self.msg  # local_cache_attribute
         if self.suite_tx_type is SuiteTxType.SIMPLE_SEND:
+            spending = self.total_out + msg.fee - self.change_out
             await layout.confirm_tx(
-                self.total_amount,
+                spending,
                 msg.fee,
                 msg.network_id,
                 msg.protocol_magic,

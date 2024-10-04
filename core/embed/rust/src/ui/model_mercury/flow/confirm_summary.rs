@@ -86,6 +86,10 @@ impl ConfirmSummary {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let items: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
         let account_items: Obj = kwargs.get(Qstr::MP_QSTR_account_items)?;
+        let account_items_title: Option<TString> = kwargs
+            .get(Qstr::MP_QSTR_account_items_title)
+            .unwrap_or(Obj::const_none())
+            .try_into_option()?;
         let fee_items: Obj = kwargs.get(Qstr::MP_QSTR_fee_items)?;
         let br_name: TString = kwargs.get(Qstr::MP_QSTR_br_name)?.try_into()?;
         let br_code: u16 = kwargs.get(Qstr::MP_QSTR_br_code)?.try_into()?;
@@ -134,7 +138,9 @@ impl ConfirmSummary {
 
         // AccountInfo
         let mut has_account_info = false;
-        let mut account = ShowInfoParams::new(TR::send__send_from.into()).with_cancel_button();
+        let mut account =
+            ShowInfoParams::new(account_items_title.unwrap_or(TR::send__send_from.into()))
+                .with_cancel_button();
         for pair in IterBuf::new().try_iterate(account_items)? {
             let [label, value]: [TString; 2] = util::iter_into_array(pair)?;
             account = unwrap!(account.add(label, value));
@@ -155,7 +161,7 @@ impl ConfirmSummary {
         if has_account_info {
             menu = menu.item(
                 theme::ICON_CHEVRON_RIGHT,
-                TR::address_details__account_info.into(),
+                account_items_title.unwrap_or(TR::address_details__account_info.into()),
             );
             unwrap!(menu_items.push(MENU_ITEM_ACCOUNT_INFO));
         }

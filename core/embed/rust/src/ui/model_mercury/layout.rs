@@ -1702,6 +1702,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     title: str,
     ///     items: Iterable[tuple[str, str]],
     ///     account_items: Iterable[tuple[str, str]],
+    ///     account_items_title: str | None,
     ///     fee_items: Iterable[tuple[str, str]],
     ///     br_code: ButtonRequestType,
     ///     br_name: str,

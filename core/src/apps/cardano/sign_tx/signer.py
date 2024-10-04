@@ -109,6 +109,8 @@ class Signer:
 
         self.msg = msg
         self.keychain = keychain
+        self.total_out = 0  # sum of output amounts
+        self.change_out = 0  # sum of change amounts
 
         self.account_path_checker = AccountPathChecker()
 
@@ -257,7 +259,6 @@ class Signer:
             raise ProcessError("Total collateral is out of range!")
         validate_network_info(msg.network_id, msg.protocol_magic)
 
-
     async def _show_tx_init(self) -> None:
         self.should_show_details = await layout.show_tx_init(self.SIGNING_MODE_TITLE)
 
@@ -292,25 +293,25 @@ class Signer:
     # outputs
 
     async def _process_outputs(self, outputs_list: HashBuilderList) -> None:
-        total_amount = 0
-        for _ in range(self.msg.outputs_count):
+        for output_index in range(self.msg.outputs_count):
             output: CardanoTxOutput = await ctx_call(
                 CardanoTxItemAck(), CardanoTxOutput
             )
-            await self._process_output(outputs_list, output)
+            await self._process_output(outputs_list, output, output_index)
+            self.total_out += output.amount
+            if self._is_change_output(output):
+                self.change_out += output.amount
 
-            total_amount += output.amount
-
-        if total_amount > LOVELACE_MAX_SUPPLY:
+        if self.total_out > LOVELACE_MAX_SUPPLY:
             raise ProcessError("Total transaction amount is out of range!")
 
     async def _process_output(
-        self, outputs_list: HashBuilderList, output: CardanoTxOutput
+        self, outputs_list: HashBuilderList, output: CardanoTxOutput, output_index: int
     ) -> None:
         self._validate_output(output)
         should_show = self._should_show_output(output)
         if should_show:
-            await self._show_output_init(output)
+            await self._show_output_init(output, output_index)
 
         output_items_count = 2 + sum(
             (
@@ -371,7 +372,9 @@ class Signer:
 
         self.account_path_checker.add_output(output)
 
-    async def _show_output_init(self, output: CardanoTxOutput) -> None:
+    async def _show_output_init(
+        self, output: CardanoTxOutput, output_index: int
+    ) -> None:
         address_type = self._get_output_address_type(output)
         if (
             output.datum_hash is None
@@ -395,14 +398,11 @@ class Signer:
             assert output.address is not None  # _validate_output
             address = output.address
 
-        if self.suite_tx_type == SuiteTxType.SIMPLE_SEND:
-            output_type = n
-        else:
-            output_type = "change" if self._is_change_output(output) else "address"
         await layout.confirm_sending(
             output.amount,
             address,
             "change" if self._is_change_output(output) else "address",
+            output_index if self.suite_tx_type is SuiteTxType.SIMPLE_SEND else None,
             self.msg.network_id,
             chunkify=bool(self.msg.chunkify),
         )
@@ -1078,6 +1078,7 @@ class Signer:
             output.amount,
             address,
             "collateral-return",
+            None,
             self.msg.network_id,
             chunkify=bool(self.msg.chunkify),
         )
