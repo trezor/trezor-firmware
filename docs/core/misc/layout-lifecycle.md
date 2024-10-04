@@ -16,7 +16,7 @@ events and cannot return a result. Calling code will start the progress layout i
 background, call to it to update progress via `ProgressLayout.report()`, and then stop
 it when done.
 
-## Individual layout lifecycle
+## Python layout object lifecycle
 
 A newly created layout object is in **READY** state. It does not accept events, has no
 background tasks, does not draw on screen.
@@ -29,22 +29,22 @@ to the running layout object.
 
 Layout in **RUNNING** state may stop and return a result, either in response to a user
 interaction event (touch, button click, USB) or an internal timer firing. This moves it
-into a **STOPPED** state. It is no longer shown on screen (backlight is off unless
+into a **FINISHED** state. It is no longer shown on screen (backlight is off unless
 another layout turns it on again), does not accept events, and does not run background
 tasks.
 
-A layout in a **STOPPED** state has a **result** value, available for pickup by awaiting
-`get_result()`.
+A layout in a **FINISHED** state has a **result** value, available for pickup by
+awaiting `get_result()`.
 
-Stopping a layout before returning a result, or retrieving a result of a **STOPPED**
+Stopping a layout before returning a result, or retrieving a result of a **FINISHED**
 layout, will move it back to **READY** state.
 
 ### State transitions
 
 ```
-+-------+    start()   +-----------+    <event>    +-----------+
-| READY | -----------> |  RUNNING  | ------------> |  STOPPED  |
-+-------+              +-----------+               +-----------+
++-------+    start()   +-----------+    <event>    +------------+
+| READY | -----------> |  RUNNING  | ------------> |  FINISHED  |
++-------+              +-----------+               +------------+
   ^   ^                      |                           |
   |   |                      |                           |
   |   +------- stop() -------+                           |
@@ -55,16 +55,16 @@ layout, will move it back to **READY** state.
 Calling `start()` checks if other layout is running, and if it is, stops it first. Then
 it performs the setup and moves layout into **RUNNING** state.
 
-(At most one layout can be in **RUNNING** state at one time. That means that before
-a layout moves to **RUNNING**, the previously running layout must move out.)
+(At most one layout can be in **RUNNING** state at one time. That means that before a
+layout moves to **RUNNING**, the previously running layout must move out.)
 
 When layout is in **RUNNING** state, calling `start()` is a no-op. When layout is in
-**STOPPED** state, calling `start()` fails an assertion.
+**FINISHED** state, calling `start()` fails an assertion.
 
 After `start()` returns, the layout is in **RUNNING** state. It will stay in this state
 until it returns a result, or is stopped.
 
-Calling `stop()` on a **READY** or **STOPPED** layout is a no-op. Calling `stop()` on a
+Calling `stop()` on a **READY** or **FINISHED** layout is a no-op. Calling `stop()` on a
 **RUNNING** layout will shut down any tasks waiting on the layout's result, and move to
 **READY** state.
 
@@ -75,7 +75,7 @@ Awaiting `get_result()` will resume the lifecycle from its current stage, that i
 
 * in **READY** state, starts the layout and waits for its result
 * in **RUNNING** state, waits for the result
-* in **STOPPED** state, returns the result
+* in **FINISHED** state, returns the result
 
 After `get_result()` returns, the layout is in **READY** state.
 
@@ -98,6 +98,72 @@ the value of `ui.CURRENT_LAYOUT` is `None`. This state may not be visible from t
 outside; it is possible to synchronously go from `A -> None -> B`. However, there MUST
 be a `None` inbetween in all cases.
 
+## Rust layout object lifecycle
+
+A layout on the Rust side is represented by the trait `Layout`, whose `event()` method
+returns a value of type `Option<LayoutState>`. If this event caused a state transition,
+the new state is returned.
+
+Layout can be in one of four states:
+
+* `Initial`: the layout is freshly constructed. This is never returned as a result of
+  `event()`.
+* `Attached`: the layout is running. Its timers have been started and it is accepting
+  events. The state transition carries an `Option<ButtonRequest>`. If set, this is the
+  ButtonRequest that should be sent to the host, as an indication that the layout is
+  ready.
+* `Transitioning`: the layout is running, but not ready to receive events; either a
+  transition-in or a transition-out animation is running.<br>
+  The enum value carries an `AttachType`, indicating which direction the transition is
+  going. If this is an outgoing transition, the runtime is supposed to pass the
+  attach type to the next layout, so that it can properly transition-in.
+* `Done`: the layout has finished running. All its timers should be stopped, and there
+  is a return value available via the `value()` method.
+
+We currently _do not keep precise track_ of transitioning animations; it would be a lot
+of effort to factor the code properly, while the only use case is debuglink state
+tracking, which works well enough as-is.
+
+### Simple layouts
+
+Layouts that are not flows (i.e., have only one screen) are implemented as `Components`
+with a `ComponentMsgObj` implementation. They are wrapped in a `RootComponent` struct
+which essentially _simulates_ the layout lifecycle, in the following manner:
+
+1. At start, the layout is `Initial`.
+2. After processing the `Attach` event, the layout is `Attached`. The ButtonRequest
+   value is picked up from `ctx.button_request()`.
+3. When `Component::event()` returns non-`None` value, the layout is `Done`. The return
+   value is converted to `Obj` via `ComponentMsgObj::msg_try_into_obj()` and cached as
+   `value` on the `RootComponent`.
+
+### Flows
+
+Flow layouts in `mercury` are implemented as a `SwipeFlow` struct, which implements
+`Layout` directly.
+
+A flow lifecycle works like this:
+
+1. At start, the layout is `Initial`.
+2. After processing the `Attach` event, the layout is `Attached`. The ButtonRequest
+   value is picked up from `ctx.button_request()`.
+3. When the flow controller returns a transition from a _swipe_ event, the layout goes
+   directly to `Attached` state. This is because at that point the transition animation
+   is already finished.
+4. When the flow controller returns a transition from a _non-swipe_ event (e.g., a
+   button click), the flow controller starts an automatic transition-out animation, and
+   the layout goes to `Transitioning` state, with the transition direction set to the
+   swipe animation direction.
+5. When the flow controller returns a `Return` decision, the layout goes to `Done`.
+
+Transition-in animations are currently not tracked properly. This is fine for tests
+because animations are disabled there, but it may break at some point. Correctly
+tracking transitions would require a more significant refactor of the flow controllers.
+
+Transition-out animations are partially tracked, when the animation is directed by the
+`FlowState` object. In some cases (such as when a swipe is triggered), the animation is
+instead controlled by the destination screen, in which case they are not tracked.
+
 ## Button requests
 
 A `ButtonRequest` MUST be sent while the corresponding layout is already in **RUNNING**
@@ -106,6 +172,13 @@ layout.
 
 The best choice is to always use the `interact()` function to take care of
 `ButtonRequest`s. Explicitly sending `ButtonRequest`s is not supported.
+
+`ButtonRequest`s sent from Rust get sent as part of the `Attached` state transition,
+which can only happen when the layout is already running.
+
+TODO: instead of relying on `interact()`, it may be better to pass the `ButtonRequest`
+inside the layout object and enqueue it so that when the respective Rust layout is
+`Attached`, the outside-provided `ButtonRequest` is used.
 
 ## Debuglink
 
@@ -117,16 +190,21 @@ There are two layout-relevant debuglink commands.
 
 ### `DebugLinkDecision`
 
-Caller can send a decision to the **RUNNING** layout. This injects an event into the
-layout. In response, the layout can move to a **STOPPED** state.
+Caller can send a decision to the **RUNNING** and `Attached` layout. This injects an
+event into the layout. In response, the layout can move to a **FINISHED** state.
+
+If a `DebugLinkDecision` is received while a layout is not **RUNNING** or not
+`Attached`, debuglink pauses until some layout becomes ready to receive decisions.
 
 A next debug command is read only after a `DebugLinkDecision` is fully processed. This
 means that:
 
 * if the decision caused the layout to stop, subsequent debug commands will be received
-  by the next layout up, and
-* if the decision did not cause the layout to stop, subsequent debug commands will be
-  received by the same layout.
+  by the next layout up,
+* if the decision caused the layout to transition, subsequent debug commands will be
+  received by the respective layout when the transition is done, and
+* if the decision did not cause the layout to change state, subsequent debug commands
+  will be received by the same layout.
 
 ### `DebugLinkGetState`
 
@@ -135,13 +213,18 @@ Caller can read the contents of the **RUNNING** layout.
 There are three available waiting behaviors:
 
 * `IMMEDIATE` (default) returns the contents of the layout that is currently
-  **RUNNING**, or empty response if no layout is running.
-* `NEXT_LAYOUT` waits for the layout to change before returning. If no layout is
-  running, waits until one is started and returns its contents. If a layout is running,
-  waits until it shuts down and a new one appears.
-* `CURRENT_LAYOUT` waits until a layout is running and returns its contents. If no
-  layout is running, the behavior is the same as `NEXT_LAYOUT`. If a layout is running,
-  the behavior is the same as `IMMEDIATE`.
+  **RUNNING**, or empty response if no layout is running. Rust layout lifecycle state is
+  not taken into account.
+* `NEXT_LAYOUT` waits for the layout to change before returning -- that is, waits until
+  the next time a **RUNNING** layout transitions into an `Attached` state:
+  - If no layout is running, waits until one is started.
+  - If a layout is running but not attached, waits until it is attached.
+  - If a layout is running and attached, waits until the layout stops or becomes
+    attached again.
+* `CURRENT_LAYOUT` waits until a layout is running and attached, and returns its
+  contents. If no layout is running or it is not attached, the behavior is the same as
+  `NEXT_LAYOUT`. If a layout is running and attached, the behavior is the same as
+  `IMMEDIATE`.
 
 When received after a `ButtonRequest` has been sent, the modes guarantee the following:
 
@@ -171,7 +254,7 @@ layout comes up. If the calling code is waiting for a `DebugLinkGetState` to ret
 will deadlock.
 
 (Firmware tries to detect the above condition and sends an error over debuglink if the
-wait state is `CURRENT_LAYOUT` and there is no current layout for more than 2 seconds.)
+wait state is `CURRENT_LAYOUT` and there is no current layout for more than 3 seconds.)
 
 ## Synchronizing
 
