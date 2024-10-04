@@ -993,6 +993,7 @@ def confirm_total(
                 items=items,
                 fee_items=fee_items,
                 account_items=account_items,
+                account_items_title=None,
                 br_name=br_name,
                 br_code=br_code,
                 cancel_text=TR.send__cancel_sign,
@@ -1011,7 +1012,6 @@ def _confirm_summary(
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
     cancel_text: str | None = None,
 ) -> Awaitable[None]:
-    # TODO: info_title
     title = title or TR.words__title_summary  # def_arg
 
     return raise_if_not_confirmed(
@@ -1021,6 +1021,7 @@ def _confirm_summary(
                 items=items or (),
                 fee_items=fee_items or (),
                 account_items=info_items or (),
+                account_items_title=info_title,
                 br_name=br_name,
                 br_code=br_code,
                 cancel_text=cancel_text,
@@ -1135,6 +1136,24 @@ if not utils.BITCOIN_ONLY:
             info_items=items,
             br_name=br_name,
             br_code=br_code,
+        )
+
+    def confirm_cardano_tx(
+        amount: str,
+        fee: str,
+        items: Iterable[tuple[str, str]],
+    ) -> Awaitable[None]:
+        amount_title = TR.send__total_amount
+        fee_title = TR.send__incl_transaction_fee
+        more_info_title = TR.buttons__more_info
+
+        return _confirm_summary(
+            items=((amount_title, amount), (fee_title, fee)),
+            info_items=items,
+            info_title=more_info_title,
+            fee_items=None,
+            br_name="confirm_cardano_tx",
+            br_code=ButtonRequestType.SignTx,
         )
 
 

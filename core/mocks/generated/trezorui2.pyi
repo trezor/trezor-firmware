@@ -600,6 +600,7 @@ def flow_confirm_summary(
     title: str,
     items: Iterable[tuple[str, str]],
     account_items: Iterable[tuple[str, str]],
+    account_items_title: str | None,
     fee_items: Iterable[tuple[str, str]],
     br_code: ButtonRequestType,
     br_name: str,
