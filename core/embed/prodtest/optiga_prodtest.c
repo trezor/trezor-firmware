@@ -33,6 +33,7 @@
 #include "secret.h"
 #include "sha2.h"
 
+#include STM32_HAL_H
 #include TREZOR_BOARD
 
 #ifdef STM32U5
