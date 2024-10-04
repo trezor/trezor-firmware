@@ -33,6 +33,8 @@
 #include "model.h"
 #include "mpu.h"
 #include "platform.h"
+#include "pvd.h"
+#include "reset_flags.h"
 #include "rng.h"
 #include "rsod.h"
 #include "secret.h"
@@ -57,9 +59,9 @@
 #endif
 #endif
 
-#include "lowlevel.h"
 #include "model.h"
 #include "monoctr.h"
+#include "option_bytes.h"
 #include "version.h"
 
 #include "memzero.h"
@@ -240,9 +242,9 @@ int main(void) {
 
   reset_flags_reset();
 
-  // need the systick timer running before many HAL operations.
-  // want the PVD enabled before flash operations too.
-  periph_init();
+#ifdef USE_PVD
+  pvd_init();
+#endif
 
   if (sectrue != flash_configure_option_bytes()) {
     // display is not initialized so don't call ensure
