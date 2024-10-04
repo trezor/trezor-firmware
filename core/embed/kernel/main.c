@@ -38,6 +38,7 @@
 #include "optiga_commands.h"
 #include "optiga_transport.h"
 #include "platform.h"
+#include "pvd.h"
 #include "random_delays.h"
 #include "rsod.h"
 #include "sdcard.h"
@@ -72,6 +73,10 @@ static void optiga_log_hex(const char *prefix, const uint8_t *data,
 void drivers_init() {
 #ifdef STM32U5
   tamper_init();
+#endif
+
+#ifdef USE_PVD
+  pvd_init();
 #endif
 
   rdi_init();

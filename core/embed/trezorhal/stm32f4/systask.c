@@ -634,16 +634,4 @@ void NMI_Handler(void) {
   mpu_restore(mpu_mode);
 }
 
-// from util.s
-extern void shutdown_privileged(void);
-
-void PVD_PVM_IRQHandler(void) {
-  mpu_reconfig(MPU_MODE_DEFAULT);
-#ifdef BACKLIGHT_PWM_TIM
-  // Turn off display backlight
-  BACKLIGHT_PWM_TIM->BACKLIGHT_PWM_TIM_CCR = 0;
-#endif
-  shutdown_privileged();
-}
-
 #endif  // KERNEL_MODE

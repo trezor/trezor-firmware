@@ -12,6 +12,7 @@
 #define USE_HAPTIC 1
 #define USE_BACKLIGHT 1
 #define USE_HASH_PROCESSOR 1
+#define USE_PVD 1
 
 #define DISPLAY_RESX 240
 #define DISPLAY_RESY 240

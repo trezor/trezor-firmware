@@ -17,8 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __TREZORHAL_LOWLEVEL_H__
-#define __TREZORHAL_LOWLEVEL_H__
+#ifndef TREZORHAL_OPTION_BYTES_H
+#define TREZORHAL_OPTION_BYTES_H
 
 #include "secbool.h"
 
@@ -29,10 +29,7 @@ void flash_lock_option_bytes(void);
 void flash_unlock_option_bytes(void);
 uint32_t flash_set_option_bytes(void);
 secbool flash_configure_option_bytes(void);
-void periph_init(void);
-secbool reset_flags_check(void);
-void reset_flags_reset(void);
 
 #endif  // KERNEL_MODE
 
-#endif  // __TREZORHAL_LOWLEVEL_H__
+#endif  // TREZORHAL_OPTION_BYTES_H
