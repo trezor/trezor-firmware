@@ -32,7 +32,6 @@
 #include "image.h"
 #include "model.h"
 #include "mpu.h"
-#include "platform.h"
 #include "pvd.h"
 #include "reset_flags.h"
 #include "rng.h"

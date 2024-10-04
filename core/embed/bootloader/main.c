@@ -85,7 +85,6 @@
 #else
 #include "compiler_traits.h"
 #include "mpu.h"
-#include "platform.h"
 #endif
 
 #define USB_IFACE_NUM 0

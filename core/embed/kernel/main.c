@@ -37,7 +37,7 @@
 #include "mpu.h"
 #include "optiga_commands.h"
 #include "optiga_transport.h"
-#include "platform.h"
+#include "option_bytes.h"
 #include "pvd.h"
 #include "random_delays.h"
 #include "rsod.h"

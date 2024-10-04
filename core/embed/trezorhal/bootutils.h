@@ -46,4 +46,18 @@ void __attribute__((noreturn)) reboot_and_upgrade(const uint8_t hash[32]);
 // unrecoverable error state.
 void __attribute__((noreturn)) secure_shutdown(void);
 
+// Alternative memset with slightly different arguments
+//
+// This function writes a 32-bit value to a range of memory addresses.
+// The range is defined by the start and stop pointers and must
+// be aligned to 4 bytes.
+void memset_reg(volatile void *start, volatile void *stop, uint32_t val);
+
+// Jumps to the next booting stage (e.g. bootloader to firmware).
+// `address` points to the flash at the vector table of the next stage.
+//
+// Before jumping, the function disables all interrupts and clears the
+// memory and registers that could contain sensitive information.
+void jump_to(uint32_t address);
+
 #endif  // TREZORHAL_BOOTUTILS_H
