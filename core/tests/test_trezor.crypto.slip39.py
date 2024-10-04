@@ -37,6 +37,16 @@ class TestCryptoSlip39(unittest.TestCase):
                 slip39.recover_ems(mnemonics[:3]), slip39.recover_ems(mnemonics[2:])
             )
 
+    def test_basic_sharing_extend(self):
+        identifier = slip39.generate_random_identifier()
+        for extendable in (False, True):
+            mnemonics = slip39.split_ems(1, [(2, 3)], identifier, extendable, 1, self.EMS)
+            mnemonics = mnemonics[0]
+            extended_mnemonics = slip39.extend_mnemonics(4, mnemonics[1:])
+            self.assertEqual(mnemonics, extended_mnemonics[:3])
+            for i in range(3):
+                self.assertEqual(slip39.recover_ems([extended_mnemonics[3], mnemonics[i]])[3], self.EMS)
+
     def test_basic_sharing_fixed(self):
         for extendable in (False, True):
             generated_identifier = slip39.generate_random_identifier()
