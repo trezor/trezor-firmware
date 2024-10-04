@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include STM32_HAL_H
+
 #include <string.h>
 
 #include "bootargs.h"
@@ -27,7 +29,6 @@
 #include "irq.h"
 #include "model.h"
 #include "mpu.h"
-#include "platform.h"
 
 #ifdef KERNEL_MODE
 
@@ -160,6 +161,8 @@ reboot_with_args(boot_command_t command, const void* args, size_t args_size) {
 
   ensure_thread_mode();
 
+  // from util.s
+  extern void jump_to_with_flag(uint32_t address, uint32_t reset_flag);
   jump_to_with_flag(BOOTLOADER_START + IMAGE_HEADER_SIZE, g_boot_command);
   for (;;)
     ;

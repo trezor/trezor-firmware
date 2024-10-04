@@ -30,6 +30,8 @@ void flash_unlock_option_bytes(void);
 uint32_t flash_set_option_bytes(void);
 secbool flash_configure_option_bytes(void);
 
+void check_oem_keys(void);
+
 #endif  // KERNEL_MODE
 
 #endif  // TREZORHAL_OPTION_BYTES_H

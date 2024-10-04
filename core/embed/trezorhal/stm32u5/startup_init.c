@@ -17,11 +17,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include TREZOR_BOARD
 #include STM32_HAL_H
 
-#include "platform.h"
 #include "rng.h"
-#include TREZOR_BOARD
 
 #ifdef KERNEL_MODE
 
