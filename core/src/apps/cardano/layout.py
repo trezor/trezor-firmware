@@ -505,20 +505,26 @@ async def confirm_witness_request(
     )
 
 
-async def confirm_tx(
-    fee: int,
+async def confirm_tx_details(
     network_id: int,
     protocol_magic: int,
     ttl: int | None,
+    fee: int | None,
     validity_interval_start: int | None,
     total_collateral: int | None,
     is_network_id_verifiable: bool,
     tx_hash: bytes | None,
 ) -> None:
-    props: list[PropertyType] = [
-        (TR.cardano__transaction_fee, format_coin_amount(fee, network_id)),
-    ]
+    props: list[PropertyType] = []
     append = props.append  # local_cache_attribute
+
+    if fee is not None:
+        append(
+            (
+                TR.cardano__transaction_fee,
+                format_coin_amount(fee, network_id),
+            )
+        )
 
     if total_collateral is not None:
         append(
@@ -547,12 +553,26 @@ async def confirm_tx(
     if tx_hash:
         append((TR.cardano__transaction_id, tx_hash))
 
-    await confirm_properties(
-        "confirm_total",
-        TR.cardano__confirm_transaction,
-        props,
-        hold=True,
-        br_code=BRT_Other,
+    if props:
+        await confirm_properties(
+            "confirm_total",
+            TR.cardano__confirm_transaction,
+            props,
+            hold=False,
+            br_code=BRT_Other,
+        )
+
+
+async def confirm_total(
+    amount: int,
+    fee: int,
+    network_id: int,
+) -> None:
+    total_amount = format_coin_amount(amount, network_id)
+    fee_amount = format_coin_amount(fee, network_id)
+    await layouts.confirm_total(
+        total_amount,
+        fee_amount,
     )
 
 
