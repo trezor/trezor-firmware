@@ -159,6 +159,24 @@ void SystemInit(void) {
   // set CP10 and CP11 to enable full access to the fpu coprocessor; ARMv7-M
   // Architecture Reference Manual section B3.2.20
   SCB->CPACR |= ((3U << 22) | (3U << 20));
+
+  // Configure Flash prefetch, Instruction cache, Data cache
+#if (INSTRUCTION_CACHE_ENABLE != 0U)
+  __HAL_FLASH_INSTRUCTION_CACHE_ENABLE();
+#endif
+
+#if (PREFETCH_ENABLE != 0U)
+  __HAL_FLASH_PREFETCH_BUFFER_ENABLE();
+#endif
+
+  // Set Interrupt Group Priority
+  HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);
+
+  // Enable GPIO clocks
+  __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
+  __HAL_RCC_GPIOC_CLK_ENABLE();
+  __HAL_RCC_GPIOD_CLK_ENABLE();
 }
 
 #ifdef TREZOR_MODEL_T

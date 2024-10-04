@@ -7,6 +7,7 @@
 #define USE_SBU 1
 #define USE_I2C 1
 #define USE_CONSUMPTION_MASK 1
+#define USE_PVD 1
 
 #define DISPLAY_RESX 128
 #define DISPLAY_RESY 64
