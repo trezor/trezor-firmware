@@ -19,6 +19,7 @@
 
 #include STM32_HAL_H
 
+#include "startup_init.h"
 #include "platform.h"
 #include "rng.h"
 #include "systick.h"

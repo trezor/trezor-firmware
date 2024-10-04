@@ -17,14 +17,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TREZORHAL_STM32_H
-#define TREZORHAL_STM32_H
+#ifndef TREZORHAL_STM32F4_STARTUP_INIT_H
+#define TREZORHAL_STM32F4_STARTUP_INIT_H
 
-#include STM32_HAL_H
-#include <stdint.h>
+#ifdef TREZOR_MODEL_T
 
-void memset_reg(volatile void *start, volatile void *stop, uint32_t val);
-void jump_to(uint32_t address);
-void jump_to_with_flag(uint32_t address, uint32_t register_flag);
+typedef enum {
+  CLOCK_180_MHZ = 0,
+  CLOCK_168_MHZ = 1,
+  CLOCK_120_MHZ = 2,
+} clock_settings_t;
 
-#endif  // TREZORHAL_STM32_H
+// Alters core clock frequency
+void set_core_clock(clock_settings_t settings);
+
+#endif
+
+#endif  // TREZORHAL_STM32F4_STARTUP_INIT_H
