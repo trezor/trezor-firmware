@@ -10,6 +10,7 @@
 #define USE_RGB_COLORS 1
 #define USE_BACKLIGHT 1
 #define USE_DISP_I8080_8BIT_DW 1
+#define USE_PVD 1
 
 #define DISPLAY_RESX 240
 #define DISPLAY_RESY 240

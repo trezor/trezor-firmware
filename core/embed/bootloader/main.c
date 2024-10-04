@@ -29,8 +29,9 @@
 #include "flash_otp.h"
 #include "flash_utils.h"
 #include "image.h"
-#include "lowlevel.h"
 #include "messages.pb.h"
+#include "option_bytes.h"
+#include "pvd.h"
 #include "random_delays.h"
 #include "rsod.h"
 #include "secbool.h"
@@ -363,6 +364,10 @@ int bootloader_main(void) {
   system_init(&rsod_panic_handler);
 
   random_delays_init();
+
+#ifdef USE_PVD
+  pvd_init();
+#endif
 
 #ifdef USE_HASH_PROCESSOR
   hash_processor_init();

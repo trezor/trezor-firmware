@@ -38,6 +38,7 @@
 #include "optiga_commands.h"
 #include "optiga_transport.h"
 #include "platform.h"
+#include "pvd.h"
 #include "random_delays.h"
 #include "rsod.h"
 #include "sdcard.h"
@@ -75,6 +76,10 @@ void drivers_init() {
 #endif
 
   random_delays_init();
+
+#ifdef USE_PVD
+  pvd_init();
+#endif
 
 #ifdef RDI
   random_delays_start_rdi();

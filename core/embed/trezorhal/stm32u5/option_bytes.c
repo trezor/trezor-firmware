@@ -21,7 +21,7 @@
 
 #ifdef KERNEL_MODE
 
-#include "lowlevel.h"
+#include "option_bytes.h"
 #include "common.h"
 #include "flash.h"
 #include "model.h"
@@ -41,7 +41,6 @@
 #ifdef VDD_3V3
 // BOR LEVEL 0: Reset level threshold is around 2.8 V
 #define WANT_BOR_LEVEL (OB_BOR_LEVEL_4)
-#define USE_PVD 1
 #elif VDD_1V8
 // BOR LEVEL 0: Reset level threshold is around 1.7 V
 #define WANT_BOR_LEVEL (OB_BOR_LEVEL_0)
@@ -264,53 +263,6 @@ secbool flash_configure_option_bytes(void) {
   check_oem_keys();
 
   return secfalse;  // notify that we DID have to change the option bytes
-}
-
-void periph_init(void) {
-  // STM32U5xx HAL library initialization:
-  //  - configure the Flash prefetch, instruction and data caches
-  //  - configure the Systick to generate an interrupt each 1 msec
-  //  - set NVIC Group Priority to 4
-  //  - global MSP (MCU Support Package) initialization
-  HAL_Init();
-
-  // Enable GPIO clocks
-  __HAL_RCC_GPIOA_CLK_ENABLE();
-  __HAL_RCC_GPIOB_CLK_ENABLE();
-  __HAL_RCC_GPIOC_CLK_ENABLE();
-  __HAL_RCC_GPIOD_CLK_ENABLE();
-
-#ifdef USE_PVD
-  // enable the PVD (programmable voltage detector).
-  // select the "2.8V" threshold (level 5).
-  // this detector will be active regardless of the
-  // flash option byte BOR setting.
-  __HAL_RCC_PWR_CLK_ENABLE();
-  PWR_PVDTypeDef pvd_config = {0};
-  pvd_config.PVDLevel = PWR_PVDLEVEL_5;
-  pvd_config.Mode = PWR_PVD_MODE_IT_RISING_FALLING;
-  HAL_PWR_ConfigPVD(&pvd_config);
-  HAL_PWR_EnablePVD();
-  NVIC_EnableIRQ(PVD_PVM_IRQn);
-#endif
-}
-
-secbool reset_flags_check(void) {
-#if PRODUCTION
-  // this is effective enough that it makes development painful, so only use it
-  // for production. check the reset flags to assure that we arrive here due to
-  // a regular full power-on event, and not as a result of a lesser reset.
-  if ((RCC->CSR & (RCC_CSR_LPWRRSTF | RCC_CSR_WWDGRSTF | RCC_CSR_IWDGRSTF |
-                   RCC_CSR_SFTRSTF | RCC_CSR_PINRSTF | RCC_CSR_BORRSTF |
-                   RCC_CSR_OBLRSTF)) != (RCC_CSR_PINRSTF | RCC_CSR_BORRSTF)) {
-    return secfalse;
-  }
-#endif
-  return sectrue;
-}
-
-void reset_flags_reset(void) {
-  RCC->CSR |= RCC_CSR_RMVF;  // clear the reset flags
 }
 
 #endif  // #ifdef KERNEL_MODE
