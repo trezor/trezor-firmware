@@ -29,6 +29,10 @@
 #include "systick.h"
 #include "systimer.h"
 
+#if defined(TREZOR_MODEL_T) && (!defined(BOARDLOADER))
+#include "startup_init.h"
+#endif
+
 #ifndef HardFault_IRQn
 #define HardFault_IRQn (-13)  // not defined in stm32lib/cmsis/stm32429xx.h
 #endif
