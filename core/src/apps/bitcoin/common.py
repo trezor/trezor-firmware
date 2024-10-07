@@ -19,7 +19,7 @@ else:
 
 
 BITCOIN_NAMES = ("Bitcoin", "Regtest", "Testnet")
-
+NOSTR_NAMES = ("Nostr",)
 
 class SigHashType(IntEnum):
     """Enumeration type listing the supported signature hash types.

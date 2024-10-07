@@ -92,6 +92,8 @@ SLIP44_BITCOIN = const(0)
 # SLIP-44 coin type for all Testnet coins
 SLIP44_TESTNET = const(1)
 
+# SLIP-44 "coin type" for Nostr
+SLIP44_NOSTR = const(1237)
 
 def validate_path_against_script_type(
     coin: coininfo.CoinInfo,
