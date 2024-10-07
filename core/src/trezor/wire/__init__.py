@@ -95,6 +95,7 @@ async def handle_session(iface: WireInterface) -> None:
             except Exception as exc:
                 # Log and ignore. The session handler can only exit explicitly in the
                 # following finally block.
+                do_not_restart = True
                 if __debug__:
                     log.exception(__name__, exc)
             finally:
