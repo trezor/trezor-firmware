@@ -1,0 +1,64 @@
+syntax = "proto2";
+package hw.trezor.messages.nostr;
+
+// Sugar for easier handling in Java
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
+option java_outer_classname = "TrezorMessageNostr";
+
+/**
+ * Request: Ask the device for the Nostr public key
+ * @start
+ * @next NostrPubkey
+ */
+message NostrGetPubkey {
+    repeated uint32 address_n = 1; // used to derive the key
+}
+
+/**
+ * Response: Nostr pubkey
+ * @end
+ */
+message NostrPubkey {
+    required bytes pubkey = 1;      // pubkey derived from the seed
+}
+
+/**
+ * @embed
+ */
+message NostrTag {
+    // Nostr tags consist of at least one string (the key)
+    // followed by an arbitrary number of strings,
+    // the first of which (if present) is called "value".
+    // See NIP-01: https://github.com/nostr-protocol/nips/blob/master/01.md#tags
+    required string key = 1;
+    optional string value = 2;
+    repeated string extra = 3;
+}
+
+/**
+ * Request: Ask device to sign an event
+ * @start
+ * @next NostrEventSignature
+ * @next Failure
+ */
+message NostrSignEvent {
+    repeated uint32 address_n = 1;   // used to derive the key
+
+    // Nostr event fields, except the ones that are calculated by the signer
+    // See NIP-01: https://github.com/nostr-protocol/nips/blob/master/01.md
+
+    required uint32 created_at = 2;  // Event created_at: unix timestamp in seconds
+    required uint32 kind = 3;        // Event kind: integer between 0 and 65535
+    repeated NostrTag tags = 4;      // Event tags
+    required string content = 5;     // Event content: arbitrary string
+}
+
+/**
+ * Response: Computed event ID and signature
+ * @end
+ */
+message NostrEventSignature {
+    required bytes pubkey = 1;      // pubkey used to sign the event
+    required bytes id = 2;          // ID of the event
+    required bytes signature = 3;   // signature of the event
+}

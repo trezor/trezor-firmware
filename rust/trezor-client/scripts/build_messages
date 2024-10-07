@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Generates the `trezor_message_impl!` macro calls for the `src/messages/mod.rs` file.
+# Generates the `trezor_message_impl!` macro calls for the `src/messages/generated.rs` file.
 
 from os import path
 
@@ -24,6 +24,7 @@ FEATURES = {
     "EOS": "eos",
     "Monero": "monero",
     "NEM": "nem",
+    "Nostr": "nostr",
     "Ripple": "ripple",
     "Solana": "solana",
     "Stellar": "stellar",
