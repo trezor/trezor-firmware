@@ -72,7 +72,6 @@ CPPPATH_MOD += [
 
 SOURCE_MOD += [
     'embed/extmod/modtrezorcrypto/rand.c',
-    'embed/lib/buffers.c',
     'embed/lib/colors.c',
     'embed/lib/display_utils.c',
     'embed/lib/error_handling.c',

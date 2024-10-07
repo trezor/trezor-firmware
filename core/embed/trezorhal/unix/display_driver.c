@@ -122,12 +122,14 @@ void display_init(display_content_mode_t mode) {
   SDL_PumpEvents();
   SDL_SetWindowSize(drv->window, WINDOW_WIDTH, WINDOW_HEIGHT);
 #endif
+#ifdef BACKGROUND_FILE
 #include BACKGROUND_FILE
 #define CONCAT_LEN_HELPER(name) name##_len
 #define CONCAT_LEN(name) CONCAT_LEN_HELPER(name)
   drv->background = IMG_LoadTexture_RW(
       drv->renderer,
       SDL_RWFromMem(BACKGROUND_NAME, CONCAT_LEN(BACKGROUND_NAME)), 0);
+#endif
   if (drv->background) {
     SDL_SetTextureBlendMode(drv->background, SDL_BLENDMODE_NONE);
     sdl_touch_offset_x = TOUCH_OFFSET_X;
