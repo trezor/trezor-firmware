@@ -54,12 +54,16 @@ async def sign_message(
     digest = message_digest(coin, message)
     signature = secp256k1.sign(seckey, digest)
 
+    print("XXXXXXXXX", script_type)
+
     if script_type == InputScriptType.SPENDADDRESS:
         script_type_info = 0
     elif script_type == InputScriptType.SPENDP2SHWITNESS:
         script_type_info = 4
     elif script_type == InputScriptType.SPENDWITNESS:
         script_type_info = 8
+    elif script_type == InputScriptType.SPENDTAPROOT:
+        script_type_info = 12 # ??
     else:
         raise wire.ProcessError("Unsupported script type")
 
