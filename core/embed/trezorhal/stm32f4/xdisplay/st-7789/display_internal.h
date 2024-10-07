@@ -1,6 +1,8 @@
 #ifndef TREZORHAL_DISPLAY_INTERNAL_H
 #define TREZORHAL_DISPLAY_INTERNAL_H
 
+#include STM32_HAL_H
+
 #include <stdint.h>
 
 #ifdef XFRAMEBUFFER

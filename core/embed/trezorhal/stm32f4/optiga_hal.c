@@ -1,6 +1,7 @@
 #include "optiga_hal.h"
 #include "common.h"
 #include TREZOR_BOARD
+#include STM32_HAL_H
 
 #ifdef KERNEL_MODE
 

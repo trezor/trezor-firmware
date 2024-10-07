@@ -24,6 +24,10 @@
 #include "display.h"
 #include "embed/extmod/trezorobj.h"
 
+#ifdef TREZOR_EMULATOR
+#include "SDL.h"
+#endif
+
 #define USB_DATA_IFACE (253)
 #define BUTTON_IFACE (254)
 #define TOUCH_IFACE (255)
@@ -78,7 +82,10 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
       const mp_uint_t mode = i & 0xFF00;
 
 #if defined TREZOR_EMULATOR
-      emulator_poll_events();
+      // Ensures that SDL events are processed even if the ifaces list
+      // contains only USB interfaces. This prevents the emulator from
+      // freezing when the user interacts with the window.
+      SDL_PumpEvents();
 #endif
 
       if (false) {

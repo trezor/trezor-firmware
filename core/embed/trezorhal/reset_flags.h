@@ -17,17 +17,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include STM32_HAL_H
+#ifndef TREZORHAL_RESET_FLAGS_H
+#define TREZORHAL_RESET_FLAGS_H
 
-#include <string.h>
+#include "secbool.h"
 
-#include "common.h"
-#include "display.h"
-#include "error_handling.h"
-#include "flash_otp.h"
-#include "model.h"
-#include "platform.h"
-#include "rand.h"
-#include "secret.h"
+#ifdef KERNEL_MODE
 
-#include "stm32u5xx_ll_utils.h"
+// Checks if the CPU reset flags indicate an expected type of reset.
+secbool reset_flags_check(void);
+
+// Clear the CPU register that holds the reset flags.
+void reset_flags_reset(void);
+
+#endif  // KERNEL_MODE
+
+#endif  // TREZORHAL_RESET_FLAGS_H

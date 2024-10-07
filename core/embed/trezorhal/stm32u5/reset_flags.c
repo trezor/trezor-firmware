@@ -17,10 +17,29 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "startup_init.h"
+#include STM32_HAL_H
 
-void ensure_compatible_settings(void) {
-  // Early version of bootloader on T2T1 expects 168 MHz core clock.
-  // So we need to set it here before handover to the bootloader.
-  set_core_clock(CLOCK_168_MHZ);
+#include "reset_flags.h"
+
+#ifdef KERNEL_MODE
+
+secbool reset_flags_check(void) {
+#if PRODUCTION
+  // this is effective enough that it makes development painful, so only use it
+  // for production. check the reset flags to assure that we arrive here due to
+  // a regular full power-on event, and not as a result of a lesser reset.
+  if ((RCC->CSR & (RCC_CSR_LPWRRSTF | RCC_CSR_WWDGRSTF | RCC_CSR_IWDGRSTF |
+                   RCC_CSR_SFTRSTF | RCC_CSR_PORRSTF | RCC_CSR_PINRSTF |
+                   RCC_CSR_BORRSTF)) !=
+      (RCC_CSR_PORRSTF | RCC_CSR_PINRSTF | RCC_CSR_BORRSTF)) {
+    return secfalse;
+  }
+#endif
+  return sectrue;
 }
+
+void reset_flags_reset(void) {
+  RCC->CSR |= RCC_CSR_RMVF;  // clear the reset flags
+}
+
+#endif

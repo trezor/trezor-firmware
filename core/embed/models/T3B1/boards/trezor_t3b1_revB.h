@@ -11,6 +11,7 @@
 #define USE_SBU 1
 #define USE_HASH_PROCESSOR 1
 #define USE_CONSUMPTION_MASK 1
+#define USE_PVD 1
 
 #define DISPLAY_LEGACY_HEADER "displays/vg-2864ksweg01.h"
 

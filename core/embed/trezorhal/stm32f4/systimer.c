@@ -21,7 +21,6 @@
 #include <string.h>
 
 #include "irq.h"
-#include "platform.h"
 #include "systick_internal.h"
 #include "systimer.h"
 

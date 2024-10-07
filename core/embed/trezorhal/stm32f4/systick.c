@@ -22,7 +22,6 @@
 
 #include "irq.h"
 #include "mpu.h"
-#include "platform.h"
 #include "systemview.h"
 
 #include "systick.h"

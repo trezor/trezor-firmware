@@ -17,10 +17,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "startup_init.h"
+#ifndef TREZORHAL_STM32F4_STARTUP_INIT_H
+#define TREZORHAL_STM32F4_STARTUP_INIT_H
 
-void ensure_compatible_settings(void) {
-  // Early version of bootloader on T2T1 expects 168 MHz core clock.
-  // So we need to set it here before handover to the bootloader.
-  set_core_clock(CLOCK_168_MHZ);
-}
+#ifdef TREZOR_MODEL_T
+
+typedef enum {
+  CLOCK_180_MHZ = 0,
+  CLOCK_168_MHZ = 1,
+  CLOCK_120_MHZ = 2,
+} clock_settings_t;
+
+// Alters core clock frequency
+void set_core_clock(clock_settings_t settings);
+
+#endif
+
+#endif  // TREZORHAL_STM32F4_STARTUP_INIT_H

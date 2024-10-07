@@ -12,6 +12,7 @@
 #define USE_TOUCH 1
 #define USE_SDRAM 1
 #define USE_RGB_COLORS 1
+#define USE_PVD 1
 
 #define I2C_COUNT 1
 #define I2C_INSTANCE_0 I2C3

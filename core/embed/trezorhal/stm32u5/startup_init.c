@@ -17,11 +17,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include TREZOR_BOARD
 #include STM32_HAL_H
 
-#include "platform.h"
 #include "rng.h"
-#include TREZOR_BOARD
 
 #ifdef KERNEL_MODE
 
@@ -214,6 +213,24 @@ void SystemInit(void) {
 
   // enable instruction cache in default 2-way mode
   ICACHE->CR = ICACHE_CR_EN;
+
+  /* Configure Flash prefetch */
+#if (PREFETCH_ENABLE != 0U)
+  __HAL_FLASH_PREFETCH_BUFFER_ENABLE();
+#endif /* PREFETCH_ENABLE */
+
+  /* Set Interrupt Group Priority */
+  HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);
+
+  /* Update the SystemCoreClock global variable */
+  /// SystemCoreClock = HAL_RCC_GetSysClockFreq() >> AHBPrescTable[(RCC->CFGR2 &
+  /// RCC_CFGR2_HPRE) >> RCC_CFGR2_HPRE_Pos];
+
+  // Enable GPIO clocks
+  __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
+  __HAL_RCC_GPIOC_CLK_ENABLE();
+  __HAL_RCC_GPIOD_CLK_ENABLE();
 }
 
 #endif  // #ifdef KERNEL_MODE

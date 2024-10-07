@@ -17,26 +17,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TREZORHAL_STM32_H
-#define TREZORHAL_STM32_H
+#ifndef TREZORHAL_PVD_H
+#define TREZORHAL_PVD_H
 
-#include STM32_HAL_H
-#include <stdint.h>
+#ifdef KERNEL_MODE
 
-typedef enum {
-  CLOCK_180_MHZ = 0,
-  CLOCK_168_MHZ = 1,
-  CLOCK_120_MHZ = 2,
-} clock_settings_t;
+// Initialize the Programmable Voltage Detector (PVD) peripheral.
+//
+// The PVD is used to detect a voltage drop below a certain threshold
+// and trigger an interrupt. This is used to safely shutdown the device.
+void pvd_init(void);
 
-void set_core_clock(clock_settings_t settings);
-// the following functions are defined in util.s
+#endif  // KERNEL_MODE
 
-void memset_reg(volatile void *start, volatile void *stop, uint32_t val);
-void jump_to(uint32_t address);
-void jump_to_with_flag(uint32_t address, uint32_t register_flag);
-void clear_otg_hs_memory(void);
-
-extern uint32_t __stack_chk_guard;
-
-#endif  // TREZORHAL_STM32_H
+#endif  // TREZORHAL_PVD_H

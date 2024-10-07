@@ -18,11 +18,12 @@
  */
 
 #include STM32_HAL_H
+#include TREZOR_BOARD
 
-#include "platform.h"
+#include "startup_init.h"
+#include "bootutils.h"
 #include "rng.h"
 #include "systick.h"
-#include TREZOR_BOARD
 
 #ifdef KERNEL_MODE
 
@@ -158,6 +159,24 @@ void SystemInit(void) {
   // set CP10 and CP11 to enable full access to the fpu coprocessor; ARMv7-M
   // Architecture Reference Manual section B3.2.20
   SCB->CPACR |= ((3U << 22) | (3U << 20));
+
+  // Configure Flash prefetch, Instruction cache, Data cache
+#if (INSTRUCTION_CACHE_ENABLE != 0U)
+  __HAL_FLASH_INSTRUCTION_CACHE_ENABLE();
+#endif
+
+#if (PREFETCH_ENABLE != 0U)
+  __HAL_FLASH_PREFETCH_BUFFER_ENABLE();
+#endif
+
+  // Set Interrupt Group Priority
+  HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);
+
+  // Enable GPIO clocks
+  __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
+  __HAL_RCC_GPIOC_CLK_ENABLE();
+  __HAL_RCC_GPIOD_CLK_ENABLE();
 }
 
 #ifdef TREZOR_MODEL_T
@@ -206,5 +225,24 @@ void set_core_clock(clock_settings_t settings) {
     ;
 }
 #endif
+
+// reference RM0090 section 35.12.1 Figure 413
+#define USB_OTG_HS_DATA_FIFO_RAM (USB_OTG_HS_PERIPH_BASE + 0x20000U)
+#define USB_OTG_HS_DATA_FIFO_SIZE (4096U)
+
+// Clears USB FIFO memory to prevent data leakage of sensitive information
+__attribute((used)) void clear_otg_hs_memory(void) {
+  // use the HAL version due to section 2.1.6 of STM32F42xx Errata sheet
+  __HAL_RCC_USB_OTG_HS_CLK_ENABLE();  // enable USB_OTG_HS peripheral clock so
+                                      // that the peripheral memory is
+                                      // accessible
+  memset_reg(
+      (volatile void *)USB_OTG_HS_DATA_FIFO_RAM,
+      (volatile void *)(USB_OTG_HS_DATA_FIFO_RAM + USB_OTG_HS_DATA_FIFO_SIZE),
+      0);
+
+  __HAL_RCC_USB_OTG_HS_CLK_DISABLE();  // disable USB OTG_HS peripheral clock as
+                                       // the peripheral is not needed right now
+}
 
 #endif  // KERNEL_MODE
