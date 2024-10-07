@@ -33,6 +33,7 @@ mod generated {
         "eos" => messages_eos
         "monero" => messages_monero
         "nem" => messages_nem
+        "nostr" => messages_nostr
         "ripple" => messages_ripple
         "solana" => messages_solana
         "stellar" => messages_stellar

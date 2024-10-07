@@ -106,6 +106,12 @@ def _find_message_handler_module(msg_type: int) -> str:
     if msg_type == MessageType.GetFirmwareHash:
         return "apps.misc.get_firmware_hash"
 
+    # nostr
+    if msg_type == MessageType.NostrGetPubkey:
+        return "apps.nostr.get_pubkey"
+    if msg_type == MessageType.NostrSignEvent:
+        return "apps.nostr.sign_event"
+
     if not utils.BITCOIN_ONLY:
         if msg_type == MessageType.SetU2FCounter:
             return "apps.management.set_u2f_counter"

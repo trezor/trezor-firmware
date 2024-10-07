@@ -237,6 +237,14 @@ trezor_message_impl! {
     NEMDecryptedMessage => MessageType_NEMDecryptedMessage,
 }
 
+#[cfg(feature = "nostr")]
+trezor_message_impl! {
+    NostrGetPubkey => MessageType_NostrGetPubkey,
+    NostrPubkey => MessageType_NostrPubkey,
+    NostrSignEvent => MessageType_NostrSignEvent,
+    NostrEventSignature => MessageType_NostrEventSignature,
+}
+
 #[cfg(feature = "ripple")]
 trezor_message_impl! {
     RippleGetAddress => MessageType_RippleGetAddress,

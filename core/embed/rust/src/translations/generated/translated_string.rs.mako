@@ -15,6 +15,7 @@ ALTCOIN_PREFIXES = (
     "fido",
     "monero",
     "nem",
+    "nostr",
     "ripple",
     "solana",
     "stellar",

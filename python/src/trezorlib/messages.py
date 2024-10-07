@@ -644,6 +644,10 @@ class MessageType(IntEnum):
     SolanaAddress = 903
     SolanaSignTx = 904
     SolanaTxSignature = 905
+    NostrGetPubkey = 2001
+    NostrPubkey = 2002
+    NostrSignEvent = 2003
+    NostrEventSignature = 2004
     BenchmarkListNames = 9100
     BenchmarkNames = 9101
     BenchmarkRun = 9102
@@ -6773,6 +6777,100 @@ class NEMCosignatoryModification(protobuf.MessageType):
     ) -> None:
         self.type = type
         self.public_key = public_key
+
+
+class NostrGetPubkey(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2001
+    FIELDS = {
+        1: protobuf.Field("address_n", "uint32", repeated=True, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        address_n: Optional[Sequence["int"]] = None,
+    ) -> None:
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+
+
+class NostrPubkey(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2002
+    FIELDS = {
+        1: protobuf.Field("pubkey", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        pubkey: "bytes",
+    ) -> None:
+        self.pubkey = pubkey
+
+
+class NostrTag(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("key", "string", repeated=False, required=True),
+        2: protobuf.Field("value", "string", repeated=False, required=False, default=None),
+        3: protobuf.Field("extra", "string", repeated=True, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        key: "str",
+        extra: Optional[Sequence["str"]] = None,
+        value: Optional["str"] = None,
+    ) -> None:
+        self.extra: Sequence["str"] = extra if extra is not None else []
+        self.key = key
+        self.value = value
+
+
+class NostrSignEvent(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2003
+    FIELDS = {
+        1: protobuf.Field("address_n", "uint32", repeated=True, required=False, default=None),
+        2: protobuf.Field("created_at", "uint32", repeated=False, required=True),
+        3: protobuf.Field("kind", "uint32", repeated=False, required=True),
+        4: protobuf.Field("tags", "NostrTag", repeated=True, required=False, default=None),
+        5: protobuf.Field("content", "string", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        created_at: "int",
+        kind: "int",
+        content: "str",
+        address_n: Optional[Sequence["int"]] = None,
+        tags: Optional[Sequence["NostrTag"]] = None,
+    ) -> None:
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.tags: Sequence["NostrTag"] = tags if tags is not None else []
+        self.created_at = created_at
+        self.kind = kind
+        self.content = content
+
+
+class NostrEventSignature(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2004
+    FIELDS = {
+        1: protobuf.Field("pubkey", "bytes", repeated=False, required=True),
+        2: protobuf.Field("id", "bytes", repeated=False, required=True),
+        3: protobuf.Field("signature", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        pubkey: "bytes",
+        id: "bytes",
+        signature: "bytes",
+    ) -> None:
+        self.pubkey = pubkey
+        self.id = id
+        self.signature = signature
 
 
 class RippleGetAddress(protobuf.MessageType):
