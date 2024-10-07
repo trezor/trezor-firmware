@@ -802,7 +802,7 @@
   "800": "words__confirm",
   "801": "words__confirm_fee",
   "802": "words__contains",
-  "803": "words__continue_anyway",
+  "803": "words__continue_anyway_question",
   "804": "words__continue_with",
   "805": "words__error",
   "806": "words__fee",
@@ -965,5 +965,6 @@
   "963": "fido__title_select_credential",
   "964": "instructions__swipe_down",
   "965": "fido__title_credential_details",
-  "966": "address__public_key_confirmed"
+  "966": "address__public_key_confirmed",
+  "967": "words__continue_anyway"
 }
