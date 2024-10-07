@@ -71,7 +71,7 @@ impl WarningHiPrio {
         let description: TString = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
         let value: TString = kwargs.get_or(Qstr::MP_QSTR_value, "".into())?;
         let cancel: TString = TR::words__cancel_and_exit.into();
-        let confirm: TString = TR::buttons__continue.into();
+        let confirm: TString = TR::words__continue_anyway.into();
         let done_title: TString = TR::words__operation_cancelled.into();
 
         // Message

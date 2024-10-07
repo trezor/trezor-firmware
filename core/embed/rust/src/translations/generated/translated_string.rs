@@ -1187,7 +1187,7 @@ pub enum TranslatedString {
     words__confirm = 800,  // "Confirm"
     words__confirm_fee = 801,  // "Confirm fee"
     words__contains = 802,  // "Contains"
-    words__continue_anyway = 803,  // "Continue anyway?"
+    words__continue_anyway_question = 803,  // "Continue anyway?"
     words__continue_with = 804,  // "Continue with"
     words__error = 805,  // "Error"
     words__fee = 806,  // "Fee"
@@ -1370,6 +1370,7 @@ pub enum TranslatedString {
     #[cfg(feature = "universal_fw")]
     fido__title_credential_details = 965,  // "Credential details"
     address__public_key_confirmed = 966,  // "Public key confirmed"
+    words__continue_anyway = 967,  // "Continue anyway"
 }
 
 impl TranslatedString {
@@ -2551,7 +2552,7 @@ impl TranslatedString {
             Self::words__confirm => "Confirm",
             Self::words__confirm_fee => "Confirm fee",
             Self::words__contains => "Contains",
-            Self::words__continue_anyway => "Continue anyway?",
+            Self::words__continue_anyway_question => "Continue anyway?",
             Self::words__continue_with => "Continue with",
             Self::words__error => "Error",
             Self::words__fee => "Fee",
@@ -2734,6 +2735,7 @@ impl TranslatedString {
             #[cfg(feature = "universal_fw")]
             Self::fido__title_credential_details => "Credential details",
             Self::address__public_key_confirmed => "Public key confirmed",
+            Self::words__continue_anyway => "Continue anyway",
         }
     }
 
@@ -3916,7 +3918,7 @@ impl TranslatedString {
             Qstr::MP_QSTR_words__confirm => Some(Self::words__confirm),
             Qstr::MP_QSTR_words__confirm_fee => Some(Self::words__confirm_fee),
             Qstr::MP_QSTR_words__contains => Some(Self::words__contains),
-            Qstr::MP_QSTR_words__continue_anyway => Some(Self::words__continue_anyway),
+            Qstr::MP_QSTR_words__continue_anyway_question => Some(Self::words__continue_anyway_question),
             Qstr::MP_QSTR_words__continue_with => Some(Self::words__continue_with),
             Qstr::MP_QSTR_words__error => Some(Self::words__error),
             Qstr::MP_QSTR_words__fee => Some(Self::words__fee),
@@ -4099,6 +4101,7 @@ impl TranslatedString {
             #[cfg(feature = "universal_fw")]
             Qstr::MP_QSTR_fido__title_credential_details => Some(Self::fido__title_credential_details),
             Qstr::MP_QSTR_address__public_key_confirmed => Some(Self::address__public_key_confirmed),
+            Qstr::MP_QSTR_words__continue_anyway => Some(Self::words__continue_anyway),
             _ => None,
         }
     }

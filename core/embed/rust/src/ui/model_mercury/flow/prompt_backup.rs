@@ -113,7 +113,7 @@ impl PromptBackup {
         .with_cancel_button()
         .with_footer(
             TR::instructions__swipe_up.into(),
-            Some(TR::words__continue_anyway.into()),
+            Some(TR::words__continue_anyway_question.into()),
         )
         .with_swipe(Direction::Up, SwipeSettings::default())
         .with_swipe(Direction::Right, SwipeSettings::immediate())

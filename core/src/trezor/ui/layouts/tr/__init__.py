@@ -517,7 +517,7 @@ def confirm_multisig_warning() -> Awaitable[None]:
     return show_warning(
         "warning_multisig",
         TR.send__receiving_to_multisig,
-        TR.words__continue_anyway,
+        TR.words__continue_anyway_question,
     )
 
 

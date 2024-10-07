@@ -803,6 +803,7 @@
   "words__confirm_fee": "text,1",
   "words__contains": "text,1",
   "words__continue_anyway": "text,1",
+  "words__continue_anyway_question": "text,1",
   "words__continue_with": "text,1",
   "words__error": "text,1",
   "words__fee": "text,1",

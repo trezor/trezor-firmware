@@ -601,7 +601,7 @@ def show_warning(
                 trezorui2.show_warning(
                     title=TR.words__important,
                     value=content,
-                    button=subheader or TR.words__continue_anyway,
+                    button=subheader or TR.words__continue_anyway_question,
                     danger=True,
                 )
             ),

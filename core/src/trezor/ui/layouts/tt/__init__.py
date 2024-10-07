@@ -436,7 +436,7 @@ def confirm_path_warning(path: str, path_type: str | None = None) -> Awaitable[N
                 trezorui2.show_warning(
                     title=title,
                     value=path,
-                    description=TR.words__continue_anyway,
+                    description=TR.words__continue_anyway_question,
                     button=TR.buttons__continue,
                 )
             ),
@@ -450,7 +450,7 @@ def confirm_multisig_warning() -> Awaitable[None]:
     return show_warning(
         "warning_multisig",
         TR.send__receiving_to_multisig,
-        TR.words__continue_anyway,
+        TR.words__continue_anyway_question,
     )
 
 

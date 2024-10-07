@@ -766,6 +766,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__confirm_fee;
   MP_QSTR_words__contains;
   MP_QSTR_words__continue_anyway;
+  MP_QSTR_words__continue_anyway_question;
   MP_QSTR_words__continue_with;
   MP_QSTR_words__error;
   MP_QSTR_words__fee;
