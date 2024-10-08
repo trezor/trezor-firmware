@@ -473,9 +473,15 @@ env.Replace(
 #
 
 PROTO_SOURCES_DIR = '../../../common/protob/'
+
+exclude_list = [PROTO_SOURCES_DIR + 'messages-bootloader.proto']
+if not THP:
+    exclude_list.append(PROTO_SOURCES_DIR + 'messages-thp.proto')
+
 PROTO_SOURCES = Glob(PROTO_SOURCES_DIR + '*.proto',
-    exclude=[PROTO_SOURCES_DIR + 'messages-bootloader.proto']
+    exclude=exclude_list
 )
+
 qstr_protobuf = env.Command(
     target=[
         'genhdr/qstrdefs.protobuf.h',
@@ -651,6 +657,9 @@ if FROZEN:
 
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/tezos/*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/Tezos*.py'))
+
+        if THP:
+            SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/thp/*.py'))
 
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/zcash/*.py'))
 
