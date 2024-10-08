@@ -64,6 +64,7 @@ def stm32u5_common_files(env, defines, sources, paths):
         "embed/trezorhal/stm32u5/mpu.c",
         "embed/trezorhal/stm32u5/platform.c",
         "embed/trezorhal/stm32u5/powerctl/npm1300.c",
+        "embed/trezorhal/stm32u5/powerctl/stwlc38.c",
         "embed/trezorhal/stm32u5/powerctl/powerctl.c",
         "embed/trezorhal/stm32u5/secret.c",
         "embed/trezorhal/stm32u5/secure_aes.c",
