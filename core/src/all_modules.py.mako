@@ -43,8 +43,9 @@ def make_import_name(pyfile):
 
 imports = [make_import_name(f) for f in pyfiles]
 
-imports_common = [import_name for import_name in imports if not any(a in import_name.lower() for a in ALTCOINS)]
-imports_altcoin = [import_name for import_name in imports if import_name not in imports_common]
+imports_thp = [import_name for import_name in imports if ".thp" in import_name.lower()]
+imports_common = [import_name for import_name in imports if (not any(a in import_name.lower() for a in ALTCOINS) and import_name not in imports_thp)]
+imports_altcoin = [import_name for import_name in imports if import_name not in imports_common and import_name not in imports_thp]
 
 %>\
 from trezor.utils import halt
@@ -79,12 +80,17 @@ ${import_name}
 import ${import_name}
 % endfor
 
+if utils.USE_THP:
+% for import_name in imports_thp:
+    ${import_name}
+    import ${import_name}
+% endfor
+
 if not utils.BITCOIN_ONLY:
 % for import_name in imports_altcoin:
     ${import_name}
     import ${import_name}
 % endfor
-
 # generate full alphabet
 <%
 ALPHABET = "abcdefghijklmnopqrstuvwxyz"
