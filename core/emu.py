@@ -67,10 +67,16 @@ def watch_emulator(emulator: CoreEmulator) -> int:
     return 0
 
 
-def run_debugger(emulator: CoreEmulator, gdb_script_file: str | Path | None) -> None:
+def run_debugger(emulator: CoreEmulator, gdb_script_file: str | Path | None, valgrind: bool = False) -> None:
     os.chdir(emulator.workdir)
     env = emulator.make_env()
-    if platform.system() == "Darwin":
+    if valgrind:
+        os.execvpe(
+            "valgrind",
+            ["valgrind", "-v", "--tool=cachegrind", "--read-inline-info=yes", str(emulator.executable)] + emulator.make_args(),
+            env
+        )
+    elif platform.system() == "Darwin":
         env["PATH"] = "/usr/bin"
         os.execvpe(
             "lldb",
@@ -118,6 +124,7 @@ def _from_env(name: str) -> bool:
 @click.option("-r", "--record-dir", help="Directory where to record screen changes")
 @click.option("-s", "--slip0014", is_flag=True, help="Initialize device with SLIP-14 seed (all all all...)")
 @click.option("-S", "--script-gdb-file", type=click.Path(exists=True, dir_okay=False), help="Run gdb with an init file")
+@click.option("-V", "--valgrind", is_flag=True, help="Use valgrind instead of debugger (-D)")
 @click.option("-t", "--temporary-profile", is_flag=True, help="Create an empty temporary profile")
 @click.option("-w", "--watch", is_flag=True, help="Restart emulator if sources change")
 @click.option("-X", "--extra-arg", "extra_args", multiple=True, help="Extra argument to pass to micropython")
@@ -144,6 +151,7 @@ def cli(
     record_dir: Optional[str],
     slip0014: bool,
     script_gdb_file: str | Path | None,
+    valgrind: bool,
     temporary_profile: bool,
     watch: bool,
     extra_args: list[str],
@@ -261,8 +269,8 @@ def cli(
     if alloc_profiling:
         os.environ["TREZOR_MEMPERF"] = "1"
 
-    if debugger:
-        run_debugger(emulator, script_gdb_file)
+    if debugger or valgrind:
+        run_debugger(emulator, script_gdb_file, valgrind)
         raise RuntimeError("run_debugger should not return")
 
     emulator.start()

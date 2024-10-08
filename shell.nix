@@ -134,6 +134,7 @@ stdenvNoCC.mkDerivation ({
     gcc12
     procps
     valgrind
+    kcachegrind
   ] ++ lib.optionals (stdenv.isDarwin) [
     darwin.apple_sdk.frameworks.CoreAudio
     darwin.apple_sdk.frameworks.AudioToolbox
