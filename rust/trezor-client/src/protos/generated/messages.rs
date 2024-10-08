@@ -1549,6 +1549,8 @@ pub mod exts {
 
     pub const wire_type: ::protobuf::ext::ExtFieldOptional<::protobuf::descriptor::MessageOptions, u32> = ::protobuf::ext::ExtFieldOptional::new(52002, ::protobuf::descriptor::field_descriptor_proto::Type::TYPE_UINT32);
 
+    pub const internal_only: ::protobuf::ext::ExtFieldOptional<::protobuf::descriptor::MessageOptions, bool> = ::protobuf::ext::ExtFieldOptional::new(52003, ::protobuf::descriptor::field_descriptor_proto::Type::TYPE_BOOL);
+
     pub const experimental_field: ::protobuf::ext::ExtFieldOptional<::protobuf::descriptor::FieldOptions, bool> = ::protobuf::ext::ExtFieldOptional::new(53001, ::protobuf::descriptor::field_descriptor_proto::Type::TYPE_BOOL);
 
     pub const include_in_bitcoin_only: ::protobuf::ext::ExtFieldOptional<::protobuf::descriptor::FileOptions, bool> = ::protobuf::ext::ExtFieldOptional::new(60000, ::protobuf::descriptor::field_descriptor_proto::Type::TYPE_BOOL);
@@ -1848,11 +1850,12 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     Values:T\n\x14experimental_message\x18\xa1\x96\x03\x20\x01(\x08\x12\x1f.\
     google.protobuf.MessageOptionsR\x13experimentalMessage:>\n\twire_type\
     \x18\xa2\x96\x03\x20\x01(\r\x12\x1f.google.protobuf.MessageOptionsR\x08w\
-    ireType:N\n\x12experimental_field\x18\x89\x9e\x03\x20\x01(\x08\x12\x1d.g\
-    oogle.protobuf.FieldOptionsR\x11experimentalField:U\n\x17include_in_bitc\
-    oin_only\x18\xe0\xd4\x03\x20\x01(\x08\x12\x1c.google.protobuf.FileOption\
-    sR\x14includeInBitcoinOnlyB8\n#com.satoshilabs.trezor.lib.protobufB\rTre\
-    zorMessage\x80\xa6\x1d\x01\
+    ireType:F\n\rinternal_only\x18\xa3\x96\x03\x20\x01(\x08\x12\x1f.google.p\
+    rotobuf.MessageOptionsR\x0cinternalOnly:N\n\x12experimental_field\x18\
+    \x89\x9e\x03\x20\x01(\x08\x12\x1d.google.protobuf.FieldOptionsR\x11exper\
+    imentalField:U\n\x17include_in_bitcoin_only\x18\xe0\xd4\x03\x20\x01(\x08\
+    \x12\x1c.google.protobuf.FileOptionsR\x14includeInBitcoinOnlyB8\n#com.sa\
+    toshilabs.trezor.lib.protobufB\rTrezorMessage\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
