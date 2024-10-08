@@ -5167,6 +5167,44 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["NEMCosignatoryModification"]:
             return isinstance(msg, cls)
 
+    class NostrSignEvent(protobuf.MessageType):
+        address_n: "list[int]"
+        created_at: "int | None"
+        kind: "int | None"
+        tags: "list[str]"
+        content: "str | None"
+
+        def __init__(
+            self,
+            *,
+            address_n: "list[int] | None" = None,
+            tags: "list[str] | None" = None,
+            created_at: "int | None" = None,
+            kind: "int | None" = None,
+            content: "str | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["NostrSignEvent"]:
+            return isinstance(msg, cls)
+
+    class NostrMessageSignature(protobuf.MessageType):
+        address: "str"
+        signature: "bytes"
+
+        def __init__(
+            self,
+            *,
+            address: "str",
+            signature: "bytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["NostrMessageSignature"]:
+            return isinstance(msg, cls)
+
     class RippleGetAddress(protobuf.MessageType):
         address_n: "list[int]"
         show_display: "bool | None"
