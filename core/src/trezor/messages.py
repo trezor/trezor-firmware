@@ -6115,6 +6115,52 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["TezosManagerTransfer"]:
             return isinstance(msg, cls)
 
+    class ThpCredentialMetadata(protobuf.MessageType):
+        host_name: "str | None"
+
+        def __init__(
+            self,
+            *,
+            host_name: "str | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["ThpCredentialMetadata"]:
+            return isinstance(msg, cls)
+
+    class ThpPairingCredential(protobuf.MessageType):
+        cred_metadata: "ThpCredentialMetadata | None"
+        mac: "bytes | None"
+
+        def __init__(
+            self,
+            *,
+            cred_metadata: "ThpCredentialMetadata | None" = None,
+            mac: "bytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["ThpPairingCredential"]:
+            return isinstance(msg, cls)
+
+    class ThpAuthenticatedCredentialData(protobuf.MessageType):
+        host_static_pubkey: "bytes | None"
+        cred_metadata: "ThpCredentialMetadata | None"
+
+        def __init__(
+            self,
+            *,
+            host_static_pubkey: "bytes | None" = None,
+            cred_metadata: "ThpCredentialMetadata | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["ThpAuthenticatedCredentialData"]:
+            return isinstance(msg, cls)
+
     class WebAuthnListResidentCredentials(protobuf.MessageType):
 
         @classmethod

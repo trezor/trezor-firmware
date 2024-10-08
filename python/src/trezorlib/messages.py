@@ -7750,6 +7750,54 @@ class TezosManagerTransfer(protobuf.MessageType):
         self.amount = amount
 
 
+class ThpCredentialMetadata(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("host_name", "string", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        host_name: Optional["str"] = None,
+    ) -> None:
+        self.host_name = host_name
+
+
+class ThpPairingCredential(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("cred_metadata", "ThpCredentialMetadata", repeated=False, required=False, default=None),
+        2: protobuf.Field("mac", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        cred_metadata: Optional["ThpCredentialMetadata"] = None,
+        mac: Optional["bytes"] = None,
+    ) -> None:
+        self.cred_metadata = cred_metadata
+        self.mac = mac
+
+
+class ThpAuthenticatedCredentialData(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("host_static_pubkey", "bytes", repeated=False, required=False, default=None),
+        2: protobuf.Field("cred_metadata", "ThpCredentialMetadata", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        host_static_pubkey: Optional["bytes"] = None,
+        cred_metadata: Optional["ThpCredentialMetadata"] = None,
+    ) -> None:
+        self.host_static_pubkey = host_static_pubkey
+        self.cred_metadata = cred_metadata
+
+
 class WebAuthnListResidentCredentials(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 800
 
