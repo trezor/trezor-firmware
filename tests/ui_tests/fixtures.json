@@ -633,7 +633,7 @@
 "T1B1_en_test_bip32_speed.py::test_cache": "55f043b3e286b778a02baea8f7c3547208849e2e18f90837bd9374a4a14c5c0b",
 "T1B1_en_test_bip32_speed.py::test_private_ckd": "55f043b3e286b778a02baea8f7c3547208849e2e18f90837bd9374a4a14c5c0b",
 "T1B1_en_test_bip32_speed.py::test_public_ckd": "55f043b3e286b778a02baea8f7c3547208849e2e18f90837bd9374a4a14c5c0b",
-"T1B1_en_test_busy_state.py::test_busy_expiry": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+"T1B1_en_test_busy_state.py::test_busy_expiry_legacy": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
 "T1B1_en_test_busy_state.py::test_busy_state": "fe7e762884268cf79e211eeb7c7ed7f85b8364e8bac27bd6790fc300f9a1429c",
 "T1B1_en_test_cancel.py::test_cancel_message_via_cancel[message0]": "de7fc40b2f35e82fa486f1b97ee3e34a96d0a67412537e8a0fddacc0b0b1649d",
 "T1B1_en_test_cancel.py::test_cancel_message_via_cancel[message1]": "af93b5d0a8ae6b297391a43ff3f6382d0bea1109f4f411f5b306e2e7ced6e814",
