@@ -117,6 +117,8 @@ typedef struct {
   mpu_mode_t mpu_mode;
   // Task post-mortem information
   systask_postmortem_t pminfo;
+  // Applet bound to the task
+  void* applet;
 
 } systask_t;
 
@@ -134,7 +136,8 @@ void systask_yield_to(systask_t* task);
 // Initializes a task with the given stack pointer, stack size
 //
 // The task must be not be running when the function is called
-void systask_init(systask_t* task, uint32_t stack_ptr, uint32_t stack_size);
+void systask_init(systask_t* task, uint32_t stack_ptr, uint32_t stack_size,
+                  void* context);
 
 // Pushes data onto the stack of the task
 //
@@ -168,13 +171,15 @@ void systask_exit(systask_t* task, int exit_code);
 // Terminates the task with an error message
 //
 // (see `systask_exit()` for more details)
-void systask_exit_error(systask_t* task, const char* title, const char* message,
-                        const char* footer);
+void systask_exit_error(systask_t* task, const char* title, size_t title_len,
+                        const char* message, size_t message_len,
+                        const char* footer, size_t footer_len);
 
 // Terminates the task with a fatal error message
 //
 // (see `systask_exit()` for more details)
-void systask_exit_fatal(systask_t* task, const char* message, const char* file,
+void systask_exit_fatal(systask_t* task, const char* message,
+                        size_t message_len, const char* file, size_t file_len,
                         int line);
 
 #endif  // KERNEL_MODE

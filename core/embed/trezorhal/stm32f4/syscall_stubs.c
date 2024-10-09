@@ -33,17 +33,19 @@ void system_exit(int exit_code) {
     ;
 }
 
-void system_exit_error(const char *title, const char *message,
-                       const char *footer) {
-  syscall_invoke3((uint32_t)title, (uint32_t)message, (uint32_t)footer,
-                  SYSCALL_SYSTEM_EXIT_ERROR);
+void system_exit_error_ex(const char *title, size_t title_len,
+                          const char *message, size_t message_len,
+                          const char *footer, size_t footer_len) {
+  syscall_invoke6((uint32_t)title, title_len, (uint32_t)message, message_len,
+                  (uint32_t)footer, footer_len, SYSCALL_SYSTEM_EXIT_ERROR);
   while (1)
     ;
 }
 
-void system_exit_fatal(const char *message, const char *file, int line) {
-  syscall_invoke3((uint32_t)message, (uint32_t)file, line,
-                  SYSCALL_SYSTEM_EXIT_FATAL);
+void system_exit_fatal_ex(const char *message, size_t message_len,
+                          const char *file, size_t file_len, int line) {
+  syscall_invoke5((uint32_t)message, message_len, (uint32_t)file, file_len,
+                  line, SYSCALL_SYSTEM_EXIT_FATAL);
   while (1)
     ;
 }
@@ -99,32 +101,6 @@ void reboot(void) {
 }
 
 // =============================================================================
-// hash_processor.h
-// =============================================================================
-
-#include "hash_processor.h"
-
-void hash_processor_sha256_init(hash_sha265_context_t *ctx) {
-  syscall_invoke1((uint32_t)ctx, SYSCALL_SHA256_INIT);
-}
-
-// Feed the hash next chunk of data
-void hash_processor_sha256_update(hash_sha265_context_t *ctx,
-                                  const uint8_t *data, uint32_t len) {
-  syscall_invoke3((uint32_t)ctx, (uint32_t)data, len, SYSCALL_SHA256_UPDATE);
-}
-
-// Finalize the hash calculation, retrieve the digest
-void hash_processor_sha256_final(hash_sha265_context_t *ctx, uint8_t *output) {
-  syscall_invoke2((uint32_t)ctx, (uint32_t)output, SYSCALL_SHA256_FINAL);
-}
-
-void hash_processor_sha256_calc(const uint8_t *data, uint32_t len,
-                                uint8_t *hash) {
-  syscall_invoke3((uint32_t)data, len, (uint32_t)hash, SYSCALL_SHA256_CALC);
-}
-
-// =============================================================================
 // xdisplay.h
 // =============================================================================
 
@@ -148,10 +124,8 @@ int display_get_orientation(void) {
 
 #ifdef XFRAMEBUFFER
 
-display_fb_info_t display_get_frame_buffer(void) {
-  display_fb_info_t info;
-  syscall_invoke1((uint32_t)&info, SYSCALL_DISPLAY_GET_FB_INFO);
-  return info;
+bool display_get_frame_buffer(display_fb_info_t *fb) {
+  return (bool)syscall_invoke1((uint32_t)fb, SYSCALL_DISPLAY_GET_FB_INFO);
 }
 
 #else  // XFRAMEBUFFER
