@@ -19,6 +19,7 @@ use crate::ui::{
 };
 
 pub struct ModelTTFeatures;
+pub mod ui_features_fw;
 
 impl UIFeaturesCommon for ModelTTFeatures {
     #[cfg(feature = "backlight")]

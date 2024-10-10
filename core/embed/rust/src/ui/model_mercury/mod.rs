@@ -1,4 +1,4 @@
-use super::{geometry::Rect, UIFeaturesCommon};
+use super::{geometry::Rect, ui_features_fw::UIFeaturesFirmware, UIFeaturesCommon};
 use crate::ui::model_mercury::theme::backlight;
 
 #[cfg(feature = "bootloader")]
@@ -13,6 +13,7 @@ pub mod flow;
 #[cfg(feature = "micropython")]
 pub mod layout;
 pub mod screens;
+pub mod ui_features_fw;
 
 pub struct ModelMercuryFeatures;
 
@@ -67,3 +68,4 @@ impl UIFeaturesCommon for ModelMercuryFeatures {
         screens::screen_boot_stage_2();
     }
 }
+

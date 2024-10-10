@@ -1631,16 +1631,10 @@ extern "C" fn new_show_wait_text(message: Obj) -> Obj {
 
 #[no_mangle]
 pub static mp_module_trezorui2: Module = obj_module! {
+    /// from trezor import utils
+    /// from trezorui_api import *
+    ///
     Qstr::MP_QSTR___name__ => Qstr::MP_QSTR_trezorui2.to_obj(),
-
-    /// CONFIRMED: UiResult
-    Qstr::MP_QSTR_CONFIRMED => CONFIRMED.as_obj(),
-
-    /// CANCELLED: UiResult
-    Qstr::MP_QSTR_CANCELLED => CANCELLED.as_obj(),
-
-    /// INFO: UiResult
-    Qstr::MP_QSTR_INFO => INFO.as_obj(),
 
     /// def disable_animation(disable: bool) -> None:
     ///     """Disable animations, debug builds only."""

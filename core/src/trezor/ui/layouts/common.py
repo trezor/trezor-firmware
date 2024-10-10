@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING
 
 import trezorui2
+import trezorui_api
 from trezor import ui, utils, workflow
 from trezor.enums import ButtonRequestType
 from trezor.messages import ButtonAck, ButtonRequest
@@ -45,7 +46,7 @@ async def interact(
     # wait for the layout result
     result = await layout.get_result()
     # raise an exception if the user cancelled the action
-    if raise_on_cancel is not None and result is trezorui2.CANCELLED:
+    if raise_on_cancel is not None and result is trezorui_api.CANCELLED:
         raise raise_on_cancel
     return result
 
@@ -75,16 +76,16 @@ async def with_info(
         # raises on cancel
         send_button_request = False
 
-        if result is trezorui2.CONFIRMED:
+        if result is trezorui_api.CONFIRMED:
             return
-        elif result is trezorui2.INFO:
+        elif result is trezorui_api.INFO:
             await interact(info_layout, None, raise_on_cancel=None)
             continue
         else:
             raise RuntimeError  # unexpected result
 
 
-def draw_simple(layout: trezorui2.LayoutObj[Any]) -> None:
+def draw_simple(layout: trezorui_api.LayoutObj[Any]) -> None:
     # Simple drawing not supported for layouts that set timers.
     def dummy_set_timer(token: int, duration: int) -> None:
         raise RuntimeError
