@@ -38,6 +38,7 @@
 #include "model.h"
 #include "mpu.h"
 #include "powerctl/npm1300.h"
+#include "powerctl/stwlc38.h"
 #include "prodtest_common.h"
 #include "random_delays.h"
 #include "rsod.h"
@@ -870,6 +871,52 @@ void test_pmic(const char *args) {
   }
 }
 
+void test_wpc(const char *args) {
+  stwlc38_init();
+
+  stwlc38_status_t status;
+
+  if (strcmp(args, "EN") == 0) {
+    if (!stwlc38_enable(true)) {
+      vcp_println("ERROR # STWLC38 not initialized");
+      return;
+    }
+    vcp_println("OK");
+  } else if (strcmp(args, "DIS") == 0) {
+    if (!stwlc38_enable(false)) {
+      vcp_println("ERROR # STWLC38 not initialized");
+      return;
+    }
+    vcp_println("OK");
+  } else if (strcmp(args, "VEN") == 0) {
+    if (!stwlc38_enable_vout(true)) {
+      vcp_println("ERROR # STWLC38 not initialized");
+      return;
+    }
+    vcp_println("OK");
+  } else if (strcmp(args, "VDIS") == 0) {
+    if (!stwlc38_enable_vout(false)) {
+      vcp_println("ERROR # STWLC38 not initialized");
+      return;
+    }
+    vcp_println("OK");
+  } else {
+    if (!stwlc38_get_status(&status)) {
+      vcp_println("ERROR # STWLC38 not initialized");
+      return;
+    } else {
+      vcp_println("# ready = %d", status.ready);
+      vcp_println("# vout_ready = %d", status.vout_ready);
+      vcp_println("# vrect = %d", status.vrect);
+      vcp_println("# vout = %d", status.vout);
+      vcp_println("# icur = %d", status.icur);
+      vcp_println("# tmeas = %d", status.tmeas);
+      vcp_println("# opfreq = %d", status.opfreq);
+      vcp_println("# ntc = %d", status.ntc);
+    }
+  }
+}
+
 #define BACKLIGHT_NORMAL 150
 
 int main(void) {
@@ -1029,6 +1076,10 @@ int main(void) {
       test_pmic(line + 5);
     } else if (startswith(line, "PMIC")) {
       test_pmic(line + 4);
+    } else if (startswith(line, "WPC ")) {
+      test_wpc(line + 4);
+    } else if (startswith(line, "WPC")) {
+      test_wpc(line + 3);
     } else {
       vcp_println("UNKNOWN");
     }
