@@ -16,12 +16,11 @@
 
 import pytest
 
-from trezorlib import device, models
-from trezorlib.debuglink import DebugLink
+from trezorlib import device
+from trezorlib.debuglink import DebugLink, LayoutType
 from trezorlib.messages import RecoveryStatus
 
-from .. import buttons
-from ..click_tests import recovery
+from ..click_tests import common, recovery
 from ..common import MNEMONIC_SLIP39_ADVANCED_20, MNEMONIC_SLIP39_BASIC_20_3of6
 from ..device_handler import BackgroundDeviceHandler
 from ..emulators import Emulator
@@ -41,16 +40,15 @@ def test_abort(core_emulator: Emulator):
     debug = device_handler.debuglink()
     features = device_handler.features()
 
-    if debug.model is models.T3T1:
+    if debug.layout_type is LayoutType.Mercury:
         pytest.skip("abort not supported on T3T1")
 
     assert features.recovery_status == RecoveryStatus.Nothing
 
     device_handler.run(device.recover, pin_protection=False)
 
-    assert debug.read_layout().title().lower() == "recover wallet"
-
-    layout = debug.click(buttons.OK)
+    recovery.confirm_recovery(debug)
+    layout = debug.read_layout()
     assert "number of words" in layout.text_content()
 
     debug = _restart(device_handler, core_emulator)
@@ -58,19 +56,19 @@ def test_abort(core_emulator: Emulator):
 
     assert features.recovery_status == RecoveryStatus.Recovery
 
-    # no waiting for layout because layout doesn't change
     assert "number of words" in debug.read_layout().text_content()
-    # clicking at 24 in word choice (the same coords as CANCEL)
-    layout = debug.click(buttons.CANCEL)
+    # clicking at 24 in word choice
+    recovery.select_number_of_words(debug, 24)
 
     # Cancelling the backup
     assert "Enter your backup" in debug.read_layout().text_content()
-    layout = debug.click(buttons.CANCEL)
+    layout = common.go_back(debug)
 
     assert layout.title().lower() in ("abort recovery", "cancel recovery")
-    layout = debug.click(buttons.OK)
+    for _ in range(layout.page_count()):
+        common.go_next(debug)
 
-    assert layout.main_component() == "Homescreen"
+    assert debug.read_layout().main_component() == "Homescreen"
     features = device_handler.features()
     assert features.recovery_status == RecoveryStatus.Nothing
 
@@ -138,7 +136,10 @@ def test_recovery_on_old_wallet(core_emulator: Emulator):
     words = first_share.split(" ")
 
     # start entering first share
-    assert "Enter each word of your wallet backup" in debug.read_layout().text_content()
+    assert (
+        "Enter any share" in debug.read_layout().text_content()
+        or "Enter each word" in debug.read_layout().text_content()
+    )
     debug.press_yes()
     assert debug.read_layout().main_component() == "MnemonicKeyboard"
 
@@ -176,7 +177,9 @@ def test_recovery_multiple_resets(core_emulator: Emulator):
     def enter_shares_with_restarts(debug: DebugLink) -> None:
         shares = MNEMONIC_SLIP39_ADVANCED_20
         layout = debug.read_layout()
-        expected_text = "Enter each word of your wallet backup"
+        expected_text = "Enter any share"
+        if debug.layout_type == LayoutType.Mercury:
+            expected_text = "Enter each word"
         remaining = len(shares)
         for share in shares:
             assert expected_text in layout.text_content()

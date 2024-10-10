@@ -4,7 +4,6 @@ from trezorlib.debuglink import message_filters
 
 from ..common import MNEMONIC12
 from ..emulators import Emulator, EmulatorWrapper
-from ..input_flows import InputFlowSetupDevicePINWIpeCode
 from ..upgrade_tests import core_only, legacy_only
 
 PIN = "1234"
@@ -29,8 +28,7 @@ def setup_device_core(client: Client, pin: str, wipe_code: str) -> None:
     )
 
     with client:
-        IF = InputFlowSetupDevicePINWIpeCode(client, pin, wipe_code)
-        client.set_input_flow(IF.get())
+        client.use_pin_sequence([pin, wipe_code, wipe_code])
         device.change_wipe_code(client)
 
 
@@ -45,6 +43,7 @@ def test_wipe_code_activate_core(core_emulator: Emulator):
     # Initiate Change pin process
     ret = core_emulator.client.call_raw(messages.ChangePin(remove=False))
     assert isinstance(ret, messages.ButtonRequest)
+    assert ret.name == "change_pin"
     core_emulator.client.debug.press_yes()
     ret = core_emulator.client.call_raw(messages.ButtonAck())
 
