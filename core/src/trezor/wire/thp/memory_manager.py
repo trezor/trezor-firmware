@@ -1,5 +1,6 @@
 from storage.cache_thp import SESSION_ID_LENGTH, TAG_LENGTH
 from trezor import log, protobuf, utils
+from trezor.enums import ThpMessageType
 
 from . import ChannelState, ThpError
 from .checksum import CHECKSUM_LENGTH
@@ -52,21 +53,30 @@ def get_write_buffer(
     return buffer
 
 
+def get_msg_type(msg_name: str) -> int | None:
+    value = getattr(ThpMessageType, msg_name)
+    if isinstance(value, int):
+        return value
+    return None
+
+
 def encode_into_buffer(
     buffer: utils.BufferType, msg: protobuf.MessageType, session_id: int
 ) -> int:
     print(type(msg))
     print("---------------->>>> MSG WIRE TYPE", msg.MESSAGE_WIRE_TYPE)
     # cannot write message without wire type
-    assert msg.MESSAGE_WIRE_TYPE is not None
+    msg_type = msg.MESSAGE_WIRE_TYPE
+    if msg_type is None:
+        msg_type = get_msg_type(msg.MESSAGE_NAME)
+    print(msg_type)
+    assert msg_type is not None
 
     msg_size = protobuf.encoded_length(msg)
     payload_size = SESSION_ID_LENGTH + MESSAGE_TYPE_LENGTH + msg_size
 
     _encode_session_into_buffer(memoryview(buffer), session_id)
-    _encode_message_type_into_buffer(
-        memoryview(buffer), msg.MESSAGE_WIRE_TYPE, SESSION_ID_LENGTH
-    )
+    _encode_message_type_into_buffer(memoryview(buffer), msg_type, SESSION_ID_LENGTH)
     _encode_message_into_buffer(
         memoryview(buffer), msg, SESSION_ID_LENGTH + MESSAGE_TYPE_LENGTH
     )
