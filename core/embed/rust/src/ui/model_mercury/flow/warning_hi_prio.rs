@@ -117,6 +117,6 @@ impl WarningHiPrio {
             .with_page(&WarningHiPrio::Message, content_message)?
             .with_page(&WarningHiPrio::Menu, content_menu)?
             .with_page(&WarningHiPrio::Cancelled, content_cancelled)?;
-        Ok(LayoutObj::new(res)?.into())
+        Ok(LayoutObj::new_root(res)?.into())
     }
 }

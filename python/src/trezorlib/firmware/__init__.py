@@ -20,7 +20,7 @@ from hashlib import blake2s
 from typing_extensions import Protocol, TypeGuard
 
 from .. import messages
-from ..tools import expect, session
+from ..tools import expect
 from .core import VendorFirmware
 from .legacy import LegacyFirmware, LegacyV2Firmware
 
@@ -38,7 +38,7 @@ if True:
     from .vendor import *  # noqa: F401, F403
 
 if t.TYPE_CHECKING:
-    from ..client import TrezorClient
+    from ..transport.session import Session
 
     T = t.TypeVar("T", bound="FirmwareType")
 
@@ -72,20 +72,19 @@ def is_onev2(fw: "FirmwareType") -> TypeGuard[LegacyFirmware]:
 # ====== Client functions ====== #
 
 
-@session
 def update(
-    client: "TrezorClient",
+    session: "Session",
     data: bytes,
     progress_update: t.Callable[[int], t.Any] = lambda _: None,
 ):
-    if client.features.bootloader_mode is False:
+    if session.features.bootloader_mode is False:
         raise RuntimeError("Device must be in bootloader mode")
 
-    resp = client.call(messages.FirmwareErase(length=len(data)))
+    resp = session.call(messages.FirmwareErase(length=len(data)))
 
     # TREZORv1 method
     if isinstance(resp, messages.Success):
-        resp = client.call(messages.FirmwareUpload(payload=data))
+        resp = session.call(messages.FirmwareUpload(payload=data))
         progress_update(len(data))
         if isinstance(resp, messages.Success):
             return
@@ -97,7 +96,7 @@ def update(
         length = resp.length
         payload = data[resp.offset : resp.offset + length]
         digest = blake2s(payload).digest()
-        resp = client.call(messages.FirmwareUpload(payload=payload, hash=digest))
+        resp = session.call(messages.FirmwareUpload(payload=payload, hash=digest))
         progress_update(length)
 
     if isinstance(resp, messages.Success):
@@ -107,5 +106,5 @@ def update(
 
 
 @expect(messages.FirmwareHash, field="hash", ret_type=bytes)
-def get_hash(client: "TrezorClient", challenge: t.Optional[bytes]):
-    return client.call(messages.GetFirmwareHash(challenge=challenge))
+def get_hash(session: "Session", challenge: t.Optional[bytes]):
+    return session.call(messages.GetFirmwareHash(challenge=challenge))

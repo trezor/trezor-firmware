@@ -130,6 +130,10 @@ USE_HAPTIC: bool
 """Whether the hardware supports haptic feedback."""
 USE_OPTIGA: bool
 """Whether the hardware supports Optiga secure element."""
+USE_TOUCH: bool
+"""Whether the hardware supports touch screen."""
+USE_BUTTON: bool
+"""Whether the hardware supports two-button input."""
 MODEL: str
 """Model name."""
 MODEL_FULL_NAME: str
@@ -147,4 +151,4 @@ BITCOIN_ONLY: bool
 UI_LAYOUT: str
 """UI layout identifier ("tt" for model T, "tr" for models One and R)."""
 USE_THP: bool
-"""Whether the firmware supports Trezor-Host Protocol (version 3)."""
+"""Whether the firmware supports the Trezor-Host Protocol."""

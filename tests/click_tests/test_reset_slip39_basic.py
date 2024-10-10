@@ -21,6 +21,7 @@ import pytest
 from trezorlib import device, messages
 
 from .. import buttons
+from .. import translations as TR
 from ..common import EXTERNAL_ENTROPY, WITH_MOCK_URANDOM, generate_entropy
 from . import reset
 
@@ -59,12 +60,20 @@ def test_reset_slip39_basic(
     reset.confirm_new_wallet(debug)
 
     # confirm back up
+    TR.assert_in_multiple(
+        debug.read_layout().text_content(),
+        ["backup__it_should_be_backed_up", "backup__it_should_be_backed_up_now"],
+    )
     reset.confirm_read(debug)
 
     # confirm backup intro
+    TR.assert_in(debug.read_layout().text_content(), "backup__info_multi_share_backup")
     reset.confirm_read(debug)
 
     # confirm checklist
+    TR.assert_in(
+        debug.read_layout().text_content(), "reset__slip39_checklist_num_shares"
+    )
     reset.confirm_read(debug)
 
     # set num of shares - default is 5
@@ -76,6 +85,9 @@ def test_reset_slip39_basic(
         reset.set_selection(debug, buttons.reset_plus(model_name), num_of_shares - 5)
 
     # confirm checklist
+    TR.assert_in(
+        debug.read_layout().text_content(), "reset__slip39_checklist_set_threshold"
+    )
     reset.confirm_read(debug)
 
     # set threshold
@@ -88,9 +100,17 @@ def test_reset_slip39_basic(
         raise RuntimeError("not a supported combination")
 
     # confirm checklist
+    TR.assert_in_multiple(
+        debug.read_layout().text_content(),
+        [
+            "reset__slip39_checklist_write_down",
+            "reset__slip39_checklist_write_down_recovery",
+        ],
+    )
     reset.confirm_read(debug)
 
     # confirm backup warning
+    TR.assert_in(debug.read_layout().text_content(), "reset__never_make_digital_copy")
     reset.confirm_read(debug, middle_r=True)
 
     all_words: list[str] = []

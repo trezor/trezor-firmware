@@ -3,6 +3,7 @@ from micropython import const
 from typing import TYPE_CHECKING
 
 from trezor import io, loop, utils
+from trezor.wire.protocol_common import Message, WireError
 
 if TYPE_CHECKING:
     from trezorio import WireInterface
@@ -18,14 +19,8 @@ _REP_CONT_DATA = const(1)  # offset of data in the continuation report
 SESSION_ID = const(0)
 
 
-class CodecError(Exception):
+class CodecError(WireError):
     pass
-
-
-class Message:
-    def __init__(self, mtype: int, mdata: bytes) -> None:
-        self.type = mtype
-        self.data = mdata
 
 
 async def read_message(iface: WireInterface, buffer: utils.BufferType) -> Message:

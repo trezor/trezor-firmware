@@ -1,6 +1,11 @@
 from typing import TYPE_CHECKING
 
-from storage import cache, device
+import storage.device as device
+from storage.cache_common import (
+    APP_CARDANO_ICARUS_SECRET,
+    APP_CARDANO_ICARUS_TREZOR_SECRET,
+    APP_COMMON_DERIVE_CARDANO,
+)
 from trezor import wire
 from trezor.crypto import cardano
 
@@ -15,6 +20,7 @@ if TYPE_CHECKING:
     from trezor import messages
     from trezor.crypto import bip32
     from trezor.enums import CardanoDerivationType
+    from trezor.wire.protocol_common import Context
 
     from apps.common.keychain import Handler, MsgOut
     from apps.common.paths import Bip32Path
@@ -110,9 +116,9 @@ def is_minting_path(path: Bip32Path) -> bool:
     return path[: len(MINTING_ROOT)] == MINTING_ROOT
 
 
-def derive_and_store_secrets(passphrase: str) -> None:
+def derive_and_store_secrets(ctx: Context, passphrase: str) -> None:
     assert device.is_initialized()
-    assert cache.get_bool(cache.APP_COMMON_DERIVE_CARDANO)
+    assert ctx.cache.get_bool(APP_COMMON_DERIVE_CARDANO)
 
     if not mnemonic.is_bip39():
         # nothing to do for SLIP-39, where we can derive the root from the main seed
@@ -132,14 +138,15 @@ def derive_and_store_secrets(passphrase: str) -> None:
     else:
         icarus_trezor_secret = icarus_secret
 
-    cache.set(cache.APP_CARDANO_ICARUS_SECRET, icarus_secret)
-    cache.set(cache.APP_CARDANO_ICARUS_TREZOR_SECRET, icarus_trezor_secret)
+    ctx.cache.set(APP_CARDANO_ICARUS_SECRET, icarus_secret)
+    ctx.cache.set(APP_CARDANO_ICARUS_TREZOR_SECRET, icarus_trezor_secret)
 
 
 async def _get_keychain_bip39(derivation_type: CardanoDerivationType) -> Keychain:
     from trezor.enums import CardanoDerivationType
+    from trezor.wire import context
 
-    from apps.common.seed import derive_and_store_roots
+    from apps.common.seed import derive_and_store_roots_legacy
 
     if not device.is_initialized():
         raise wire.NotInitialized("Device is not initialized")
@@ -148,19 +155,19 @@ async def _get_keychain_bip39(derivation_type: CardanoDerivationType) -> Keychai
         seed = await get_seed()
         return Keychain(cardano.from_seed_ledger(seed))
 
-    if not cache.get_bool(cache.APP_COMMON_DERIVE_CARDANO):
+    if not context.cache_get_bool(APP_COMMON_DERIVE_CARDANO):
         raise wire.ProcessError("Cardano derivation is not enabled for this session")
 
     if derivation_type == CardanoDerivationType.ICARUS:
-        cache_entry = cache.APP_CARDANO_ICARUS_SECRET
+        cache_entry = APP_CARDANO_ICARUS_SECRET
     else:
-        cache_entry = cache.APP_CARDANO_ICARUS_TREZOR_SECRET
+        cache_entry = APP_CARDANO_ICARUS_TREZOR_SECRET
 
     # _get_secret
-    secret = cache.get(cache_entry)
+    secret = context.cache_get(cache_entry)
     if secret is None:
-        await derive_and_store_roots()
-        secret = cache.get(cache_entry)
+        await derive_and_store_roots_legacy()
+        secret = context.cache_get(cache_entry)
         assert secret is not None
 
     root = cardano.from_secret(secret)

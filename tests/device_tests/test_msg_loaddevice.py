@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import debuglink, device, models
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.messages import BackupType
 
 from ..common import (
@@ -27,72 +27,78 @@ from ..common import (
     get_test_address,
 )
 
-pytestmark = pytest.mark.setup_client(uninitialized=True)
+pytestmark = [
+    pytest.mark.setup_client(uninitialized=True),
+]
 
 
-def test_load_device_1(client: Client):
+def test_load_device_1(uninitialized_session: Session):
     debuglink.load_device(
-        client,
+        uninitialized_session,
         mnemonic=MNEMONIC12,
         pin="",
         passphrase_protection=False,
         label="test",
     )
-    state = client.debug.state()
+    session: Session = uninitialized_session.client.get_session()
+    state = session.client.debug.state()
     assert state.mnemonic_secret == MNEMONIC12.encode()
     assert state.pin is None
     assert state.passphrase_protection is False
 
-    address = get_test_address(client)
+    address = get_test_address(session)
     assert address == "mkqRFzxmkCGX9jxgpqqFHcxRUmLJcLDBer"
 
 
-def test_load_device_2(client: Client):
+def test_load_device_2(uninitialized_session: Session):
     debuglink.load_device(
-        client,
+        uninitialized_session,
         mnemonic=MNEMONIC12,
         pin="1234",
         passphrase_protection=True,
         label="test",
     )
-    client.use_passphrase("passphrase")
-    state = client.debug.state()
+    session: Session = uninitialized_session.client.get_session(passphrase="passphrase")
+
+    state = session.client.debug.state()
     assert state.mnemonic_secret == MNEMONIC12.encode()
 
-    if client.model is models.T1B1:
+    if session.model is models.T1B1:
         # we do not send PIN in DebugLinkState in Core
         assert state.pin == "1234"
     assert state.passphrase_protection is True
 
-    address = get_test_address(client)
+    address = get_test_address(session)
     assert address == "mx77VZjTVixVsU7nCtAKHnGFdsyNCnsWWw"
 
 
 @pytest.mark.models("core")
-def test_load_device_slip39_basic(client: Client):
+def test_load_device_slip39_basic(uninitialized_session: Session):
+    session = uninitialized_session
     debuglink.load_device(
-        client,
+        session,
         mnemonic=MNEMONIC_SLIP39_BASIC_20_3of6,
         pin="",
         passphrase_protection=False,
         label="test",
     )
-    assert client.features.backup_type == BackupType.Slip39_Basic
+    assert session.features.backup_type == BackupType.Slip39_Basic
 
 
 @pytest.mark.models("core")
-def test_load_device_slip39_advanced(client: Client):
+def test_load_device_slip39_advanced(uninitialized_session: Session):
+    session = uninitialized_session
     debuglink.load_device(
-        client,
+        session,
         mnemonic=MNEMONIC_SLIP39_ADVANCED_20,
         pin="",
         passphrase_protection=False,
         label="test",
     )
-    assert client.features.backup_type == BackupType.Slip39_Advanced
+    assert session.features.backup_type == BackupType.Slip39_Advanced
 
 
-def test_load_device_utf(client: Client):
+def test_load_device_utf(uninitialized_session: Session):
     words_nfkd = "Pr\u030ci\u0301s\u030cerne\u030c z\u030clut\u030couc\u030cky\u0301 ku\u030an\u030c u\u0301pe\u030cl d\u030ca\u0301belske\u0301 o\u0301dy za\u0301ker\u030cny\u0301 uc\u030cen\u030c be\u030cz\u030ci\u0301 pode\u0301l zo\u0301ny u\u0301lu\u030a"
     words_nfc = "P\u0159\xed\u0161ern\u011b \u017elu\u0165ou\u010dk\xfd k\u016f\u0148 \xfap\u011bl \u010f\xe1belsk\xe9 \xf3dy z\xe1ke\u0159n\xfd u\u010de\u0148 b\u011b\u017e\xed pod\xe9l z\xf3ny \xfal\u016f"
     words_nfkc = "P\u0159\xed\u0161ern\u011b \u017elu\u0165ou\u010dk\xfd k\u016f\u0148 \xfap\u011bl \u010f\xe1belsk\xe9 \xf3dy z\xe1ke\u0159n\xfd u\u010de\u0148 b\u011b\u017e\xed pod\xe9l z\xf3ny \xfal\u016f"
@@ -108,51 +114,54 @@ def test_load_device_utf(client: Client):
     )
 
     debuglink.load_device(
-        client,
+        uninitialized_session,
         mnemonic=words_nfkd,
         pin="",
         passphrase_protection=True,
         label="test",
         skip_checksum=True,
     )
-    client.use_passphrase(passphrase_nfkd)
-    address_nfkd = get_test_address(client)
+    session: Session = uninitialized_session.client.get_session()
+    session.client.use_passphrase(passphrase_nfkd)
+    address_nfkd = get_test_address(session)
 
-    device.wipe(client)
+    raise Exception("TEST WILL FAIL AFTER WIPE")
+    device.wipe(session)
+
     debuglink.load_device(
-        client,
+        session,
         mnemonic=words_nfc,
         pin="",
         passphrase_protection=True,
         label="test",
         skip_checksum=True,
     )
-    client.use_passphrase(passphrase_nfc)
-    address_nfc = get_test_address(client)
+    session.client.use_passphrase(passphrase_nfc)
+    address_nfc = get_test_address(session)
 
-    device.wipe(client)
+    device.wipe(session)
     debuglink.load_device(
-        client,
+        session,
         mnemonic=words_nfkc,
         pin="",
         passphrase_protection=True,
         label="test",
         skip_checksum=True,
     )
-    client.use_passphrase(passphrase_nfkc)
-    address_nfkc = get_test_address(client)
+    session.client.use_passphrase(passphrase_nfkc)
+    address_nfkc = get_test_address(session)
 
-    device.wipe(client)
+    device.wipe(session)
     debuglink.load_device(
-        client,
+        session,
         mnemonic=words_nfd,
         pin="",
         passphrase_protection=True,
         label="test",
         skip_checksum=True,
     )
-    client.use_passphrase(passphrase_nfd)
-    address_nfd = get_test_address(client)
+    session.client.use_passphrase(passphrase_nfd)
+    address_nfd = get_test_address(session)
 
     assert address_nfkd == address_nfc
     assert address_nfkd == address_nfkc

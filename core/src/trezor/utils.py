@@ -11,10 +11,12 @@ from trezorutils import (  # noqa: F401
     SCM_REVISION,
     UI_LAYOUT,
     USE_BACKLIGHT,
+    USE_BUTTON,
     USE_HAPTIC,
     USE_OPTIGA,
     USE_SD_CARD,
     USE_THP,
+    USE_TOUCH,
     VERSION,
     bootloader_locked,
     check_firmware_header,
@@ -33,6 +35,8 @@ from typing import TYPE_CHECKING
 
 DISABLE_ANIMATION = 0
 
+DISABLE_ENCRYPTION: bool = False
+
 if __debug__:
     if EMULATOR:
         import uos
@@ -43,7 +47,13 @@ if __debug__:
         LOG_MEMORY = 0
 
 if TYPE_CHECKING:
-    from typing import Any, Iterator, Protocol, Sequence, TypeVar
+    from typing import (  # pyright: ignore[reportShadowedImports]
+        Any,
+        Iterator,
+        Protocol,
+        Sequence,
+        TypeVar,
+    )
 
     from trezor.protobuf import MessageType
 
@@ -109,6 +119,7 @@ def presize_module(modname: str, size: int) -> None:
 
 
 if __debug__:
+    from ubinascii import hexlify
 
     def mem_dump(filename: str) -> None:
         from micropython import mem_info
@@ -124,6 +135,9 @@ if __debug__:
             mem_info()
         else:
             mem_info(True)
+
+    def get_bytes_as_str(a):
+        return hexlify(a).decode("utf-8")
 
 
 def ensure(cond: bool, msg: str | None = None) -> None:

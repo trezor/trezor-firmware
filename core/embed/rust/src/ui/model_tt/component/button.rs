@@ -5,18 +5,18 @@ use crate::{
     time::Duration,
     ui::{
         component::{
-            Component, ComponentExt, Event, EventCtx, FixedHeightBar, MsgMap, Split, TimerToken,
+            Component, ComponentExt, Event, EventCtx, FixedHeightBar, MsgMap, Split, Timer,
         },
         display::{self, toif::Icon, Color, Font},
         event::TouchEvent,
         geometry::{Alignment2D, Insets, Offset, Point, Rect},
-        shape,
-        shape::Renderer,
+        shape::{self, Renderer},
     },
 };
 
 use super::theme;
 
+#[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 pub enum ButtonMsg {
     Pressed,
     Released,
@@ -31,7 +31,7 @@ pub struct Button {
     styles: ButtonStyleSheet,
     state: State,
     long_press: Option<Duration>,
-    long_timer: Option<TimerToken>,
+    long_timer: Timer,
     haptics: bool,
 }
 
@@ -48,7 +48,7 @@ impl Button {
             styles: theme::button_default(),
             state: State::Initial,
             long_press: None,
-            long_timer: None,
+            long_timer: Timer::new(),
             haptics: true,
         }
     }
@@ -317,7 +317,7 @@ impl Component for Button {
                             }
                             self.set(ctx, State::Pressed);
                             if let Some(duration) = self.long_press {
-                                self.long_timer = Some(ctx.request_timer(duration));
+                                self.long_timer.start(ctx, duration)
                             }
                             return Some(ButtonMsg::Pressed);
                         }
@@ -349,21 +349,18 @@ impl Component for Button {
                     _ => {
                         // Touch finished outside our area.
                         self.set(ctx, State::Initial);
-                        self.long_timer = None;
+                        self.long_timer.stop();
                     }
                 }
             }
-            Event::Timer(token) => {
-                if self.long_timer == Some(token) {
-                    self.long_timer = None;
-                    if matches!(self.state, State::Pressed) {
-                        #[cfg(feature = "haptic")]
-                        if self.haptics {
-                            haptic::play(HapticEffect::ButtonPress);
-                        }
-                        self.set(ctx, State::Initial);
-                        return Some(ButtonMsg::LongPressed);
+            Event::Timer(_) if self.long_timer.expire(event) => {
+                if matches!(self.state, State::Pressed) {
+                    #[cfg(feature = "haptic")]
+                    if self.haptics {
+                        haptic::play(HapticEffect::ButtonPress);
                     }
+                    self.set(ctx, State::Initial);
+                    return Some(ButtonMsg::LongPressed);
                 }
             }
             _ => {}
@@ -555,6 +552,7 @@ impl Button {
     }
 }
 
+#[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 pub enum CancelConfirmMsg {
     Cancelled,
     Confirmed,
@@ -566,12 +564,14 @@ type CancelInfoConfirm<F0, F1, F2> =
 type CancelConfirm<F0, F1> = FixedHeightBar<Split<MsgMap<Button, F0>, MsgMap<Button, F1>>>;
 
 #[derive(Clone, Copy)]
+#[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 pub enum CancelInfoConfirmMsg {
     Cancelled,
     Info,
     Confirmed,
 }
 
+#[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 pub enum SelectWordMsg {
     Selected(usize),
 }

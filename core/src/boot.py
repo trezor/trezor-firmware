@@ -68,7 +68,7 @@ async def bootscreen() -> None:
                 lockscreen = Lockscreen(
                     label=storage.device.get_label(), bootscreen=True
                 )
-                await lockscreen
+                await lockscreen.get_result()
                 lockscreen.__del__()
                 await verify_user_pin()
                 storage.init_unlocked()
@@ -111,8 +111,9 @@ if not utils.USE_OPTIGA or (optiga.get_sec() or 0) < 150:
 config.init(show_pin_timeout)
 translations.init()
 
-if __debug__ and not utils.EMULATOR:
-    config.wipe()
+# TODO return after testing
+# if __debug__ and not utils.EMULATOR:
+#    config.wipe()
 
 loop.schedule(bootscreen())
 loop.run()

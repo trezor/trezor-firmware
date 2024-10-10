@@ -3,7 +3,7 @@ use num_traits::FromPrimitive;
 
 // ButtonRequestType from messages-common.proto
 // Eventually this should be generated
-#[derive(Clone, Copy, FromPrimitive)]
+#[derive(Clone, Copy, FromPrimitive, PartialEq, Eq)]
 #[repr(u16)]
 pub enum ButtonRequestCode {
     Other = 1,
@@ -41,7 +41,7 @@ impl ButtonRequestCode {
     }
 }
 
-#[derive(Clone)]
+#[derive(Copy, Clone, PartialEq, Eq)]
 pub struct ButtonRequest {
     pub code: ButtonRequestCode,
     pub name: TString<'static>,

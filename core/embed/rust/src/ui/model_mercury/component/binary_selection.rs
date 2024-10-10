@@ -13,7 +13,6 @@ pub enum BinarySelectionMsg {
 
 /// Component presenting a binary choice represented as two buttons, left and
 /// right. Both buttons are parameterized with content and style.
-#[derive(Clone)]
 pub struct BinarySelection {
     buttons_area: Rect,
     button_left: Button,

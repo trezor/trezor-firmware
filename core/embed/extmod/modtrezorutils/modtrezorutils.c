@@ -389,6 +389,10 @@ STATIC mp_obj_tuple_t mod_trezorutils_version_obj = {
 /// """Whether the hardware supports haptic feedback."""
 /// USE_OPTIGA: bool
 /// """Whether the hardware supports Optiga secure element."""
+/// USE_TOUCH: bool
+/// """Whether the hardware supports touch screen."""
+/// USE_BUTTON: bool
+/// """Whether the hardware supports two-button input."""
 /// MODEL: str
 /// """Model name."""
 /// MODEL_FULL_NAME: str
@@ -406,7 +410,7 @@ STATIC mp_obj_tuple_t mod_trezorutils_version_obj = {
 /// UI_LAYOUT: str
 /// """UI layout identifier ("tt" for model T, "tr" for models One and R)."""
 /// USE_THP: bool
-/// """Whether the firmware supports Trezor-Host Protocol (version 3)."""
+/// """Whether the firmware supports the Trezor-Host Protocol."""
 
 STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_trezorutils)},
@@ -454,6 +458,16 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_USE_OPTIGA), mp_const_true},
 #else
     {MP_ROM_QSTR(MP_QSTR_USE_OPTIGA), mp_const_false},
+#endif
+#ifdef USE_TOUCH
+    {MP_ROM_QSTR(MP_QSTR_USE_TOUCH), mp_const_true},
+#else
+    {MP_ROM_QSTR(MP_QSTR_USE_TOUCH), mp_const_false},
+#endif
+#ifdef USE_BUTTON
+    {MP_ROM_QSTR(MP_QSTR_USE_BUTTON), mp_const_true},
+#else
+    {MP_ROM_QSTR(MP_QSTR_USE_BUTTON), mp_const_false},
 #endif
     {MP_ROM_QSTR(MP_QSTR_MODEL), MP_ROM_PTR(&mod_trezorutils_model_name_obj)},
     {MP_ROM_QSTR(MP_QSTR_MODEL_FULL_NAME),

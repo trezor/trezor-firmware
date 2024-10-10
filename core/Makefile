@@ -127,6 +127,7 @@ TREZOR_FIDO2_UDP_PORT = 21326
 RUST_TARGET=$(shell rustc -vV | sed -n 's/host: //p')
 
 MULTICORE ?= "auto"
+RANDOM=$(shell python -c 'import random; print(random.randint(0, 1000000))')
 
 ## help commands:
 
@@ -162,7 +163,7 @@ test_emu: ## run selected device tests from python-trezor
 
 test_emu_multicore: ## run device tests using multiple cores
 	$(PYTEST) -n $(MULTICORE) $(TESTPATH)/device_tests $(TESTOPTS) --timeout $(PYTEST_TIMEOUT) \
-		--control-emulators --model=core --random-order-seed=$(shell echo $$RANDOM) \
+		--control-emulators --model=core --random-order-seed=$(RANDOM) \
 		--lang=$(TEST_LANG)
 
 test_emu_monero: ## run selected monero device tests from monero-agent
@@ -198,7 +199,7 @@ test_emu_ui: ## run ui integration tests
 test_emu_ui_multicore: ## run ui integration tests using multiple cores
 	$(PYTEST) -n $(MULTICORE) $(TESTPATH)/device_tests $(TESTOPTS) --timeout $(PYTEST_TIMEOUT) \
 		--ui=test --ui-check-missing --record-text-layout --do-master-diff \
-		--control-emulators --model=core --random-order-seed=$(shell echo $$RANDOM) \
+		--control-emulators --model=core --random-order-seed=$(RANDOM) \
 		--lang=$(TEST_LANG)
 
 test_emu_ui_record: ## record and hash screens for ui integration tests
@@ -297,13 +298,19 @@ build_unix: templates ## build unix port
 	$(SCONS) CFLAGS="$(CFLAGS)" $(UNIX_BUILD_DIR)/trezor-emu-core $(UNIX_PORT_OPTS) \
 		TREZOR_MODEL="$(TREZOR_MODEL)" CMAKELISTS="$(CMAKELISTS)" THP="$(THP)" \
 		PYOPT="0" BITCOIN_ONLY="$(BITCOIN_ONLY)" TREZOR_EMULATOR_ASAN="$(ADDRESS_SANITIZER)" \
-		NEW_RENDERING="$(NEW_RENDERING)"
+		NEW_RENDERING="$(NEW_RENDERING)" TREZOR_MEMPERF="$(TREZOR_MEMPERF)"
 
 build_unix_frozen: templates build_cross ## build unix port with frozen modules
 	$(SCONS) CFLAGS="$(CFLAGS)" $(UNIX_BUILD_DIR)/trezor-emu-core $(UNIX_PORT_OPTS) \
-		TREZOR_MODEL="$(TREZOR_MODEL)" CMAKELISTS="$(CMAKELISTS)" \
+		TREZOR_MODEL="$(TREZOR_MODEL)" CMAKELISTS="$(CMAKELISTS)" THP="$(THP)"\
 		PYOPT="$(PYOPT)" BITCOIN_ONLY="$(BITCOIN_ONLY)" TREZOR_EMULATOR_ASAN="$(ADDRESS_SANITIZER)" \
 		TREZOR_MEMPERF="$(TREZOR_MEMPERF)" TREZOR_EMULATOR_FROZEN=1 NEW_RENDERING="$(NEW_RENDERING)"
+
+build_unix_frozen_debug: templates build_cross ## build unix port with frozen modules and DEBUG (PYOPT="0")
+	$(SCONS) CFLAGS="$(CFLAGS)" $(UNIX_BUILD_DIR)/trezor-emu-core $(UNIX_PORT_OPTS) \
+		TREZOR_MODEL="$(TREZOR_MODEL)" CMAKELISTS="$(CMAKELISTS)" THP="$(THP)"\
+		PYOPT="0" BITCOIN_ONLY="$(BITCOIN_ONLY)" TREZOR_EMULATOR_ASAN="$(ADDRESS_SANITIZER)" \
+		TREZOR_MEMPERF="$(TREZOR_MEMPERF)" TREZOR_EMULATOR_FROZEN=1
 
 build_unix_debug: templates ## build unix port
 	$(SCONS) --max-drift=1 CFLAGS="$(CFLAGS)" $(UNIX_BUILD_DIR)/trezor-emu-core $(UNIX_PORT_OPTS) \

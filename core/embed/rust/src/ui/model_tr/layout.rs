@@ -43,10 +43,11 @@ use crate::{
                 },
                 TextStyle,
             },
-            ComponentExt, FormattedText, Label, LineBreaking, Timeout,
+            ComponentExt, FormattedText, Label, LineBreaking, Never, Timeout,
         },
         geometry,
         layout::{
+            base::LAYOUT_STATE,
             obj::{ComponentMsgObj, LayoutObj, ATTACH_TYPE_OBJ},
             result::{CANCELLED, CONFIRMED, INFO},
             util::{upy_disable_animation, ConfirmBlob, RecoveryType},
@@ -66,7 +67,7 @@ impl From<CancelConfirmMsg> for Obj {
 
 impl<T> ComponentMsgObj for ShowMore<T>
 where
-    T: Component,
+    T: Component<Msg = Never>,
 {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
@@ -1402,11 +1403,11 @@ extern "C" fn new_confirm_recovery(n_args: usize, args: *const Obj, kwargs: *mut
         let description: TString = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
         let button: TString<'static> = kwargs.get(Qstr::MP_QSTR_button)?.try_into()?;
         let recovery_type: RecoveryType = kwargs.get(Qstr::MP_QSTR_recovery_type)?.try_into()?;
-        let show_info: bool = kwargs.get(Qstr::MP_QSTR_show_info)?.try_into()?;
+        let show_instructions: bool = kwargs.get(Qstr::MP_QSTR_show_instructions)?.try_into()?;
 
         let mut paragraphs = ParagraphVecShort::new();
         paragraphs.add(Paragraph::new(&theme::TEXT_NORMAL, description));
-        if show_info {
+        if show_instructions {
             paragraphs
                 .add(Paragraph::new(
                     &theme::TEXT_NORMAL,
@@ -1981,7 +1982,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     button: str,
     ///     recovery_type: RecoveryType,
     ///     info_button: bool,  # unused on TR
-    ///     show_info: bool,
+    ///     show_instructions: bool,
     /// ) -> LayoutObj[UiResult]:
     ///    """Device recovery homescreen."""
     Qstr::MP_QSTR_confirm_recovery => obj_fn_kw!(0, new_confirm_recovery).as_obj(),
@@ -2075,4 +2076,12 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     SWIPE_LEFT: ClassVar[int]
     ///     SWIPE_RIGHT: ClassVar[int]
     Qstr::MP_QSTR_AttachType => ATTACH_TYPE_OBJ.as_obj(),
+
+    /// class LayoutState:
+    ///     """Layout state."""
+    ///     INITIAL: "ClassVar[LayoutState]"
+    ///     ATTACHED: "ClassVar[LayoutState]"
+    ///     TRANSITIONING: "ClassVar[LayoutState]"
+    ///     DONE: "ClassVar[LayoutState]"
+    Qstr::MP_QSTR_LayoutState => LAYOUT_STATE.as_obj(),
 };

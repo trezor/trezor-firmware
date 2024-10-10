@@ -21,9 +21,9 @@ from . import exceptions, messages
 from .tools import expect
 
 if TYPE_CHECKING:
-    from .client import TrezorClient
     from .protobuf import MessageType
     from .tools import Address
+    from .transport.session import Session
 
     StellarMessageType = Union[
         messages.StellarAccountMergeOp,
@@ -325,12 +325,12 @@ def _read_asset(asset: "Asset") -> messages.StellarAsset:
 
 @expect(messages.StellarAddress, field="address", ret_type=str)
 def get_address(
-    client: "TrezorClient",
+    session: "Session",
     address_n: "Address",
     show_display: bool = False,
     chunkify: bool = False,
 ) -> "MessageType":
-    return client.call(
+    return session.call(
         messages.StellarGetAddress(
             address_n=address_n, show_display=show_display, chunkify=chunkify
         )
@@ -338,7 +338,7 @@ def get_address(
 
 
 def sign_tx(
-    client: "TrezorClient",
+    session: "Session",
     tx: messages.StellarSignTx,
     operations: List["StellarMessageType"],
     address_n: "Address",
@@ -354,10 +354,10 @@ def sign_tx(
     # 3. Receive a StellarTxOpRequest message
     # 4. Send operations one by one until all operations have been sent. If there are more operations to sign, the device will send a StellarTxOpRequest message
     # 5. The final message received will be StellarSignedTx which is returned from this method
-    resp = client.call(tx)
+    resp = session.call(tx)
     try:
         while isinstance(resp, messages.StellarTxOpRequest):
-            resp = client.call(operations.pop(0))
+            resp = session.call(operations.pop(0))
     except IndexError:
         # pop from empty list
         raise exceptions.TrezorException(

@@ -225,7 +225,7 @@ fn create_menu_and_confirm(
 
     let flow = create_confirm(flow, subtitle, hold, prompt_screen)?;
 
-    Ok(LayoutObj::new(flow)?.into())
+    Ok(LayoutObj::new_root(flow)?.into())
 }
 
 fn create_menu(

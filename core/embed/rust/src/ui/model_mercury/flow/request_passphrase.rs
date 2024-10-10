@@ -81,6 +81,6 @@ impl RequestPassphrase {
         let res = SwipeFlow::new(&RequestPassphrase::Keypad)?
             .with_page(&RequestPassphrase::Keypad, content_keypad)?
             .with_page(&RequestPassphrase::ConfirmEmpty, content_confirm_empty)?;
-        Ok(LayoutObj::new(res)?.into())
+        Ok(LayoutObj::new_root(res)?.into())
     }
 }

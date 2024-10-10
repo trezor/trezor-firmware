@@ -13,6 +13,7 @@ use crate::{
 
 pub const MNEMONIC_KEY_COUNT: usize = 9;
 
+#[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 pub enum MnemonicKeyboardMsg {
     Confirmed,
     Previous,

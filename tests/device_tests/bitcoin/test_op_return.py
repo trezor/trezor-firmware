@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import btc, messages
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
@@ -43,7 +43,7 @@ TXHASH_4075a1 = bytes.fromhex(
 )
 
 
-def test_opreturn(client: Client):
+def test_opreturn(session: Session):
     inp1 = messages.TxInputType(
         address_n=parse_path("m/44h/1h/1h/0/21"),  # myGMXcCxmuDooMdzZFPMmvHviijzqYKhza
         amount=89_581,
@@ -63,13 +63,13 @@ def test_opreturn(client: Client):
         script_type=messages.OutputScriptType.PAYTOOPRETURN,
     )
 
-    with client:
-        client.set_expected_responses(
+    with session:
+        session.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(session), messages.ButtonRequest(code=B.ConfirmOutput)),
                 request_output(1),
                 messages.ButtonRequest(code=B.ConfirmOutput),
                 messages.ButtonRequest(code=B.SignTx),
@@ -86,7 +86,7 @@ def test_opreturn(client: Client):
             ]
         )
         _, serialized_tx = btc.sign_tx(
-            client, "Testnet", [inp1], [out1, out2], prev_txes=TX_API_TESTNET
+            session, "Testnet", [inp1], [out1, out2], prev_txes=TX_API_TESTNET
         )
 
     assert_tx_matches(
@@ -96,7 +96,7 @@ def test_opreturn(client: Client):
     )
 
 
-def test_nonzero_opreturn(client: Client):
+def test_nonzero_opreturn(session: Session):
     inp1 = messages.TxInputType(
         address_n=parse_path("m/44h/0h/10h/0/5"),
         amount=390_000,
@@ -110,18 +110,18 @@ def test_nonzero_opreturn(client: Client):
         script_type=messages.OutputScriptType.PAYTOOPRETURN,
     )
 
-    with client:
-        client.set_expected_responses(
+    with session:
+        session.set_expected_responses(
             [request_input(0), request_output(0), messages.Failure()]
         )
 
         with pytest.raises(
             TrezorFailure, match="OP_RETURN output with non-zero amount"
         ):
-            btc.sign_tx(client, "Bitcoin", [inp1], [out1], prev_txes=TX_API)
+            btc.sign_tx(session, "Bitcoin", [inp1], [out1], prev_txes=TX_API)
 
 
-def test_opreturn_address(client: Client):
+def test_opreturn_address(session: Session):
     inp1 = messages.TxInputType(
         address_n=parse_path("m/44h/0h/0h/0/2"),
         amount=390_000,
@@ -136,11 +136,11 @@ def test_opreturn_address(client: Client):
         script_type=messages.OutputScriptType.PAYTOOPRETURN,
     )
 
-    with client:
-        client.set_expected_responses(
+    with session:
+        session.set_expected_responses(
             [request_input(0), request_output(0), messages.Failure()]
         )
         with pytest.raises(
             TrezorFailure, match="Output's address_n provided but not expected."
         ):
-            btc.sign_tx(client, "Bitcoin", [inp1], [out1], prev_txes=TX_API)
+            btc.sign_tx(session, "Bitcoin", [inp1], [out1], prev_txes=TX_API)

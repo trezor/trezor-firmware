@@ -9,6 +9,7 @@ use crate::ui::{
 };
 use heapless::Vec;
 
+#[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 pub enum SelectWordCountMsg {
     Selected(u32),
 }

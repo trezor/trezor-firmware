@@ -63,7 +63,7 @@ MODULES = (
 CALLS_DONE = []
 DEBUGLINK = None
 
-get_client_orig = cli.TrezorConnection.get_client
+get_client_orig = cli.NewTrezorConnection.get_client
 
 
 def get_client(conn):
@@ -75,7 +75,7 @@ def get_client(conn):
     return client
 
 
-cli.TrezorConnection.get_client = get_client
+cli.NewTrezorConnection.get_client = get_client
 
 
 def scan_layouts(dest):

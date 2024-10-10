@@ -18,7 +18,7 @@ import pytest
 from shamir_mnemonic import shamir
 
 from trezorlib import device
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.messages import BackupAvailability, BackupType
 
@@ -30,17 +30,17 @@ pytestmark = pytest.mark.models("core")
 
 # TODO: test with different options
 @pytest.mark.setup_client(uninitialized=True)
-def test_reset_device_slip39_advanced(client: Client):
+def test_reset_device_slip39_advanced(session: Session):
     strength = 128
     member_threshold = 3
 
-    with WITH_MOCK_URANDOM, client:
+    with WITH_MOCK_URANDOM, session.client as client:
         IF = InputFlowSlip39AdvancedResetRecovery(client, False)
         client.set_input_flow(IF.get())
 
         # No PIN, no passphrase, don't display random
         device.reset(
-            client,
+            session,
             strength=strength,
             passphrase_protection=False,
             pin_protection=False,
@@ -49,22 +49,22 @@ def test_reset_device_slip39_advanced(client: Client):
         )
 
     # generate secret locally
-    internal_entropy = client.debug.state().reset_entropy
+    internal_entropy = session.client.debug.state().reset_entropy
     secret = generate_entropy(strength, internal_entropy, EXTERNAL_ENTROPY)
 
     # validate that all combinations will result in the correct master secret
     validate_mnemonics(IF.mnemonics, member_threshold, secret)
 
     # Check if device is properly initialized
-    assert client.features.initialized is True
-    assert client.features.backup_availability == BackupAvailability.NotAvailable
-    assert client.features.pin_protection is False
-    assert client.features.passphrase_protection is False
-    assert client.features.backup_type is BackupType.Slip39_Advanced_Extendable
+    assert session.features.initialized is True
+    assert session.features.backup_availability == BackupAvailability.NotAvailable
+    assert session.features.pin_protection is False
+    assert session.features.passphrase_protection is False
+    assert session.features.backup_type is BackupType.Slip39_Advanced_Extendable
 
     # backup attempt fails because backup was done in reset
     with pytest.raises(TrezorFailure, match="ProcessError: Seed already backed up"):
-        device.backup(client)
+        device.backup(session)
 
 
 def validate_mnemonics(

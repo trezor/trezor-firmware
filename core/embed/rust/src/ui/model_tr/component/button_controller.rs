@@ -4,7 +4,7 @@ use super::{
 use crate::{
     time::{Duration, Instant},
     ui::{
-        component::{base::Event, Component, EventCtx, Pad, TimerToken},
+        component::{base::Event, Component, EventCtx, Pad, Timer},
         event::{ButtonEvent, PhysicalButton},
         geometry::Rect,
         shape::Renderer,
@@ -122,7 +122,7 @@ pub struct ButtonContainer {
     /// `ButtonControllerMsg::Triggered`
     long_press_ms: u32,
     /// Timer for sending `ButtonControllerMsg::LongPressed`
-    long_pressed_timer: Option<TimerToken>,
+    long_pressed_timer: Timer,
     /// Whether it should even send `ButtonControllerMsg::LongPressed` events
     /// (optional)
     send_long_press: bool,
@@ -141,7 +141,7 @@ impl ButtonContainer {
             button_type: ButtonType::from_button_details(pos, btn_details),
             pressed_since: None,
             long_press_ms: DEFAULT_LONG_PRESS_MS,
-            long_pressed_timer: None,
+            long_pressed_timer: Timer::new(),
             send_long_press,
         }
     }
@@ -190,7 +190,7 @@ impl ButtonContainer {
                     Instant::now().saturating_duration_since(since).to_millis() > self.long_press_ms
                 });
                 self.pressed_since = None;
-                self.long_pressed_timer = None;
+                self.long_pressed_timer.stop();
                 Some(ButtonControllerMsg::Triggered(self.pos, long_press))
             }
             ButtonType::HoldToConfirm(_) => {
@@ -216,20 +216,20 @@ impl ButtonContainer {
     pub fn got_pressed(&mut self, ctx: &mut EventCtx) {
         self.pressed_since = Some(Instant::now());
         if self.send_long_press {
-            self.long_pressed_timer =
-                Some(ctx.request_timer(Duration::from_millis(self.long_press_ms)));
+            self.long_pressed_timer
+                .start(ctx, Duration::from_millis(self.long_press_ms));
         }
     }
 
     /// Reset the pressed information.
     pub fn reset(&mut self) {
         self.pressed_since = None;
-        self.long_pressed_timer = None;
+        self.long_pressed_timer.stop();
     }
 
     /// Whether token matches what we have
-    pub fn is_timer_token(&self, token: TimerToken) -> bool {
-        self.long_pressed_timer == Some(token)
+    pub fn timer_event(&mut self, event: Event) -> bool {
+        self.long_pressed_timer.expire(event)
     }
 
     /// Registering hold event.
@@ -380,14 +380,14 @@ impl ButtonController {
         }
     }
 
-    fn handle_long_press_timer_token(&mut self, token: TimerToken) -> Option<ButtonPos> {
-        if self.left_btn.is_timer_token(token) {
+    fn handle_long_press_timers(&mut self, event: Event) -> Option<ButtonPos> {
+        if self.left_btn.timer_event(event) {
             return Some(ButtonPos::Left);
         }
-        if self.middle_btn.is_timer_token(token) {
+        if self.middle_btn.timer_event(event) {
             return Some(ButtonPos::Middle);
         }
-        if self.right_btn.is_timer_token(token) {
+        if self.right_btn.timer_event(event) {
             return Some(ButtonPos::Right);
         }
         None
@@ -572,11 +572,11 @@ impl Component for ButtonController {
                 event
             }
             // Timer - handle clickable properties and HoldToConfirm expiration
-            Event::Timer(token) => {
+            Event::Timer(_) => {
                 if let Some(ignore_btn_delay) = &mut self.ignore_btn_delay {
-                    ignore_btn_delay.handle_timer_token(token);
+                    ignore_btn_delay.handle_timers(event);
                 }
-                if let Some(pos) = self.handle_long_press_timer_token(token) {
+                if let Some(pos) = self.handle_long_press_timers(event) {
                     return Some(ButtonControllerMsg::LongPressed(pos));
                 }
                 self.handle_htc_expiration(ctx, event)
@@ -624,9 +624,9 @@ struct IgnoreButtonDelay {
     /// Whether right button is currently clickable
     right_clickable: bool,
     /// Timer for setting the left_clickable
-    left_clickable_timer: Option<TimerToken>,
+    left_clickable_timer: Timer,
     /// Timer for setting the right_clickable
-    right_clickable_timer: Option<TimerToken>,
+    right_clickable_timer: Timer,
 }
 
 impl IgnoreButtonDelay {
@@ -635,8 +635,8 @@ impl IgnoreButtonDelay {
             delay: Duration::from_millis(delay_ms),
             left_clickable: true,
             right_clickable: true,
-            left_clickable_timer: None,
-            right_clickable_timer: None,
+            left_clickable_timer: Timer::new(),
+            right_clickable_timer: Timer::new(),
         }
     }
 
@@ -644,11 +644,11 @@ impl IgnoreButtonDelay {
         match pos {
             ButtonPos::Left => {
                 self.left_clickable = true;
-                self.left_clickable_timer = None;
+                self.left_clickable_timer.stop();
             }
             ButtonPos::Right => {
                 self.right_clickable = true;
-                self.right_clickable_timer = None;
+                self.right_clickable_timer.stop();
             }
             ButtonPos::Middle => {}
         }
@@ -656,10 +656,10 @@ impl IgnoreButtonDelay {
 
     pub fn handle_button_press(&mut self, ctx: &mut EventCtx, button: PhysicalButton) {
         if matches!(button, PhysicalButton::Left) {
-            self.right_clickable_timer = Some(ctx.request_timer(self.delay));
+            self.right_clickable_timer.start(ctx, self.delay);
         }
         if matches!(button, PhysicalButton::Right) {
-            self.left_clickable_timer = Some(ctx.request_timer(self.delay));
+            self.left_clickable_timer.start(ctx, self.delay);
         }
     }
 
@@ -673,22 +673,20 @@ impl IgnoreButtonDelay {
         false
     }
 
-    pub fn handle_timer_token(&mut self, token: TimerToken) {
-        if self.left_clickable_timer == Some(token) {
+    pub fn handle_timers(&mut self, event: Event) {
+        if self.left_clickable_timer.expire(event) {
             self.left_clickable = false;
-            self.left_clickable_timer = None;
         }
-        if self.right_clickable_timer == Some(token) {
+        if self.right_clickable_timer.expire(event) {
             self.right_clickable = false;
-            self.right_clickable_timer = None;
         }
     }
 
     pub fn reset(&mut self) {
         self.left_clickable = true;
         self.right_clickable = true;
-        self.left_clickable_timer = None;
-        self.right_clickable_timer = None;
+        self.left_clickable_timer.stop();
+        self.right_clickable_timer.stop();
     }
 }
 
@@ -700,7 +698,7 @@ impl IgnoreButtonDelay {
 /// Can be started e.g. by holding left/right button.
 pub struct AutomaticMover {
     /// For requesting timer events repeatedly
-    timer_token: Option<TimerToken>,
+    timer: Timer,
     /// Which direction should we go (which button is down)
     moving_direction: Option<ButtonPos>,
     /// How many screens were moved automatically
@@ -721,7 +719,7 @@ impl AutomaticMover {
         }
 
         Self {
-            timer_token: None,
+            timer: Timer::new(),
             moving_direction: None,
             auto_moved_screens: 0,
             duration_func: default_duration_func,
@@ -760,12 +758,12 @@ impl AutomaticMover {
     pub fn start_moving(&mut self, ctx: &mut EventCtx, button: ButtonPos) {
         self.auto_moved_screens = 0;
         self.moving_direction = Some(button);
-        self.timer_token = Some(ctx.request_timer(self.get_auto_move_duration()));
+        self.timer.start(ctx, self.get_auto_move_duration());
     }
 
     pub fn stop_moving(&mut self) {
         self.moving_direction = None;
-        self.timer_token = None;
+        self.timer.stop();
     }
 }
 
@@ -781,15 +779,11 @@ impl Component for AutomaticMover {
     fn render<'s>(&'s self, _target: &mut impl Renderer<'s>) {}
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        // Moving automatically only when we receive a TimerToken that we have
-        // requested before
-        if let Event::Timer(token) = event {
-            if self.timer_token == Some(token) && self.moving_direction.is_some() {
-                // Request new token and send the appropriate button trigger event
-                self.timer_token = Some(ctx.request_timer(self.get_auto_move_duration()));
-                self.auto_moved_screens += 1;
-                return self.moving_direction;
-            }
+        if self.timer.expire(event) && self.moving_direction.is_some() {
+            // Restart timer and send the appropriate button trigger event
+            self.timer.start(ctx, self.get_auto_move_duration());
+            self.auto_moved_screens += 1;
+            return self.moving_direction;
         }
         None
     }
