@@ -3875,8 +3875,8 @@ impl ThpPairingMethod {
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\x12messages-thp.proto\x12\x16hw.trezor.messages.thp\x1a\x0emessages.p\
-    roto\"\x88\x02\n\x13ThpDeviceProperties\x12%\n\x0einternal_model\x18\x01\
+    \n\x12messages-thp.proto\x12\x16hw.trezor.messages.thp\x1a\roptions.prot\
+    o\"\x88\x02\n\x13ThpDeviceProperties\x12%\n\x0einternal_model\x18\x01\
     \x20\x01(\tR\rinternalModel\x12#\n\rmodel_variant\x18\x02\x20\x01(\rR\
     \x0cmodelVariant\x12'\n\x0fbootloader_mode\x18\x03\x20\x01(\x08R\x0eboot\
     loaderMode\x12)\n\x10protocol_version\x18\x04\x20\x01(\rR\x0fprotocolVer\
@@ -3935,7 +3935,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
     file_descriptor.get(|| {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
             let mut deps = ::std::vec::Vec::with_capacity(1);
-            deps.push(super::messages::file_descriptor().clone());
+            deps.push(super::options::file_descriptor().clone());
             let mut messages = ::std::vec::Vec::with_capacity(23);
             messages.push(ThpDeviceProperties::generated_message_descriptor_data());
             messages.push(ThpHandshakeCompletionReqNoisePayload::generated_message_descriptor_data());
