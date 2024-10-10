@@ -1120,7 +1120,6 @@ class LayoutObj(Generic[T]):
         """Return (code, type) of button request made during the last event or timer pass."""
     def get_transition_out(self) -> AttachType:
         """Return the transition type."""
-
     def return_value(self) -> T:
         """Retrieve the return value of the layout object."""
     def __del__(self) -> None:
