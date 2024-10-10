@@ -601,24 +601,6 @@ class MessageType(IntEnum):
     SolanaAddress = 903
     SolanaSignTx = 904
     SolanaTxSignature = 905
-    ThpCreateNewSession = 1000
-    ThpNewSession = 1001
-    ThpStartPairingRequest = 1008
-    ThpPairingPreparationsFinished = 1009
-    ThpCredentialRequest = 1010
-    ThpCredentialResponse = 1011
-    ThpEndRequest = 1012
-    ThpEndResponse = 1013
-    ThpCodeEntryCommitment = 1016
-    ThpCodeEntryChallenge = 1017
-    ThpCodeEntryCpaceHost = 1018
-    ThpCodeEntryCpaceTrezor = 1019
-    ThpCodeEntryTag = 1020
-    ThpCodeEntrySecret = 1021
-    ThpQrCodeTag = 1024
-    ThpQrCodeSecret = 1025
-    ThpNfcUnidirectionalTag = 1032
-    ThpNfcUnidirectionalSecret = 1033
 
 
 class StellarAssetType(IntEnum):
@@ -650,6 +632,27 @@ class TezosBallotType(IntEnum):
     Yay = 0
     Nay = 1
     Pass = 2
+
+
+class ThpMessageType(IntEnum):
+    ThpCreateNewSession = 1000
+    ThpNewSession = 1001
+    ThpStartPairingRequest = 1008
+    ThpPairingPreparationsFinished = 1009
+    ThpCredentialRequest = 1010
+    ThpCredentialResponse = 1011
+    ThpEndRequest = 1012
+    ThpEndResponse = 1013
+    ThpCodeEntryCommitment = 1016
+    ThpCodeEntryChallenge = 1017
+    ThpCodeEntryCpaceHost = 1018
+    ThpCodeEntryCpaceTrezor = 1019
+    ThpCodeEntryTag = 1020
+    ThpCodeEntrySecret = 1021
+    ThpQrCodeTag = 1024
+    ThpQrCodeSecret = 1025
+    ThpNfcUnidirectionalTag = 1032
+    ThpNfcUnidirectionalSecret = 1033
 
 
 class ThpPairingMethod(IntEnum):

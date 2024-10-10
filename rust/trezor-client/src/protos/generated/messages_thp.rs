@@ -3797,6 +3797,168 @@ impl ::protobuf::reflect::ProtobufValue for ThpAuthenticatedCredentialData {
 }
 
 #[derive(Clone,Copy,PartialEq,Eq,Debug,Hash)]
+// @@protoc_insertion_point(enum:hw.trezor.messages.thp.ThpMessageType)
+pub enum ThpMessageType {
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.thp.ThpMessageType.ThpMessageType_ThpCreateNewSession)
+    ThpMessageType_ThpCreateNewSession = 1000,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.thp.ThpMessageType.ThpMessageType_ThpNewSession)
+    ThpMessageType_ThpNewSession = 1001,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.thp.ThpMessageType.ThpMessageType_ThpStartPairingRequest)
+    ThpMessageType_ThpStartPairingRequest = 1008,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.thp.ThpMessageType.ThpMessageType_ThpPairingPreparationsFinished)
+    ThpMessageType_ThpPairingPreparationsFinished = 1009,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.thp.ThpMessageType.ThpMessageType_ThpCredentialRequest)
+    ThpMessageType_ThpCredentialRequest = 1010,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.thp.ThpMessageType.ThpMessageType_ThpCredentialResponse)
+    ThpMessageType_ThpCredentialResponse = 1011,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.thp.ThpMessageType.ThpMessageType_ThpEndRequest)
+    ThpMessageType_ThpEndRequest = 1012,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.thp.ThpMessageType.ThpMessageType_ThpEndResponse)
+    ThpMessageType_ThpEndResponse = 1013,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.thp.ThpMessageType.ThpMessageType_ThpCodeEntryCommitment)
+    ThpMessageType_ThpCodeEntryCommitment = 1016,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.thp.ThpMessageType.ThpMessageType_ThpCodeEntryChallenge)
+    ThpMessageType_ThpCodeEntryChallenge = 1017,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.thp.ThpMessageType.ThpMessageType_ThpCodeEntryCpaceHost)
+    ThpMessageType_ThpCodeEntryCpaceHost = 1018,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.thp.ThpMessageType.ThpMessageType_ThpCodeEntryCpaceTrezor)
+    ThpMessageType_ThpCodeEntryCpaceTrezor = 1019,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.thp.ThpMessageType.ThpMessageType_ThpCodeEntryTag)
+    ThpMessageType_ThpCodeEntryTag = 1020,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.thp.ThpMessageType.ThpMessageType_ThpCodeEntrySecret)
+    ThpMessageType_ThpCodeEntrySecret = 1021,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.thp.ThpMessageType.ThpMessageType_ThpQrCodeTag)
+    ThpMessageType_ThpQrCodeTag = 1024,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.thp.ThpMessageType.ThpMessageType_ThpQrCodeSecret)
+    ThpMessageType_ThpQrCodeSecret = 1025,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.thp.ThpMessageType.ThpMessageType_ThpNfcUnidirectionalTag)
+    ThpMessageType_ThpNfcUnidirectionalTag = 1032,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.thp.ThpMessageType.ThpMessageType_ThpNfcUnidirectionalSecret)
+    ThpMessageType_ThpNfcUnidirectionalSecret = 1033,
+}
+
+impl ::protobuf::Enum for ThpMessageType {
+    const NAME: &'static str = "ThpMessageType";
+
+    fn value(&self) -> i32 {
+        *self as i32
+    }
+
+    fn from_i32(value: i32) -> ::std::option::Option<ThpMessageType> {
+        match value {
+            1000 => ::std::option::Option::Some(ThpMessageType::ThpMessageType_ThpCreateNewSession),
+            1001 => ::std::option::Option::Some(ThpMessageType::ThpMessageType_ThpNewSession),
+            1008 => ::std::option::Option::Some(ThpMessageType::ThpMessageType_ThpStartPairingRequest),
+            1009 => ::std::option::Option::Some(ThpMessageType::ThpMessageType_ThpPairingPreparationsFinished),
+            1010 => ::std::option::Option::Some(ThpMessageType::ThpMessageType_ThpCredentialRequest),
+            1011 => ::std::option::Option::Some(ThpMessageType::ThpMessageType_ThpCredentialResponse),
+            1012 => ::std::option::Option::Some(ThpMessageType::ThpMessageType_ThpEndRequest),
+            1013 => ::std::option::Option::Some(ThpMessageType::ThpMessageType_ThpEndResponse),
+            1016 => ::std::option::Option::Some(ThpMessageType::ThpMessageType_ThpCodeEntryCommitment),
+            1017 => ::std::option::Option::Some(ThpMessageType::ThpMessageType_ThpCodeEntryChallenge),
+            1018 => ::std::option::Option::Some(ThpMessageType::ThpMessageType_ThpCodeEntryCpaceHost),
+            1019 => ::std::option::Option::Some(ThpMessageType::ThpMessageType_ThpCodeEntryCpaceTrezor),
+            1020 => ::std::option::Option::Some(ThpMessageType::ThpMessageType_ThpCodeEntryTag),
+            1021 => ::std::option::Option::Some(ThpMessageType::ThpMessageType_ThpCodeEntrySecret),
+            1024 => ::std::option::Option::Some(ThpMessageType::ThpMessageType_ThpQrCodeTag),
+            1025 => ::std::option::Option::Some(ThpMessageType::ThpMessageType_ThpQrCodeSecret),
+            1032 => ::std::option::Option::Some(ThpMessageType::ThpMessageType_ThpNfcUnidirectionalTag),
+            1033 => ::std::option::Option::Some(ThpMessageType::ThpMessageType_ThpNfcUnidirectionalSecret),
+            _ => ::std::option::Option::None
+        }
+    }
+
+    fn from_str(str: &str) -> ::std::option::Option<ThpMessageType> {
+        match str {
+            "ThpMessageType_ThpCreateNewSession" => ::std::option::Option::Some(ThpMessageType::ThpMessageType_ThpCreateNewSession),
+            "ThpMessageType_ThpNewSession" => ::std::option::Option::Some(ThpMessageType::ThpMessageType_ThpNewSession),
+            "ThpMessageType_ThpStartPairingRequest" => ::std::option::Option::Some(ThpMessageType::ThpMessageType_ThpStartPairingRequest),
+            "ThpMessageType_ThpPairingPreparationsFinished" => ::std::option::Option::Some(ThpMessageType::ThpMessageType_ThpPairingPreparationsFinished),
+            "ThpMessageType_ThpCredentialRequest" => ::std::option::Option::Some(ThpMessageType::ThpMessageType_ThpCredentialRequest),
+            "ThpMessageType_ThpCredentialResponse" => ::std::option::Option::Some(ThpMessageType::ThpMessageType_ThpCredentialResponse),
+            "ThpMessageType_ThpEndRequest" => ::std::option::Option::Some(ThpMessageType::ThpMessageType_ThpEndRequest),
+            "ThpMessageType_ThpEndResponse" => ::std::option::Option::Some(ThpMessageType::ThpMessageType_ThpEndResponse),
+            "ThpMessageType_ThpCodeEntryCommitment" => ::std::option::Option::Some(ThpMessageType::ThpMessageType_ThpCodeEntryCommitment),
+            "ThpMessageType_ThpCodeEntryChallenge" => ::std::option::Option::Some(ThpMessageType::ThpMessageType_ThpCodeEntryChallenge),
+            "ThpMessageType_ThpCodeEntryCpaceHost" => ::std::option::Option::Some(ThpMessageType::ThpMessageType_ThpCodeEntryCpaceHost),
+            "ThpMessageType_ThpCodeEntryCpaceTrezor" => ::std::option::Option::Some(ThpMessageType::ThpMessageType_ThpCodeEntryCpaceTrezor),
+            "ThpMessageType_ThpCodeEntryTag" => ::std::option::Option::Some(ThpMessageType::ThpMessageType_ThpCodeEntryTag),
+            "ThpMessageType_ThpCodeEntrySecret" => ::std::option::Option::Some(ThpMessageType::ThpMessageType_ThpCodeEntrySecret),
+            "ThpMessageType_ThpQrCodeTag" => ::std::option::Option::Some(ThpMessageType::ThpMessageType_ThpQrCodeTag),
+            "ThpMessageType_ThpQrCodeSecret" => ::std::option::Option::Some(ThpMessageType::ThpMessageType_ThpQrCodeSecret),
+            "ThpMessageType_ThpNfcUnidirectionalTag" => ::std::option::Option::Some(ThpMessageType::ThpMessageType_ThpNfcUnidirectionalTag),
+            "ThpMessageType_ThpNfcUnidirectionalSecret" => ::std::option::Option::Some(ThpMessageType::ThpMessageType_ThpNfcUnidirectionalSecret),
+            _ => ::std::option::Option::None
+        }
+    }
+
+    const VALUES: &'static [ThpMessageType] = &[
+        ThpMessageType::ThpMessageType_ThpCreateNewSession,
+        ThpMessageType::ThpMessageType_ThpNewSession,
+        ThpMessageType::ThpMessageType_ThpStartPairingRequest,
+        ThpMessageType::ThpMessageType_ThpPairingPreparationsFinished,
+        ThpMessageType::ThpMessageType_ThpCredentialRequest,
+        ThpMessageType::ThpMessageType_ThpCredentialResponse,
+        ThpMessageType::ThpMessageType_ThpEndRequest,
+        ThpMessageType::ThpMessageType_ThpEndResponse,
+        ThpMessageType::ThpMessageType_ThpCodeEntryCommitment,
+        ThpMessageType::ThpMessageType_ThpCodeEntryChallenge,
+        ThpMessageType::ThpMessageType_ThpCodeEntryCpaceHost,
+        ThpMessageType::ThpMessageType_ThpCodeEntryCpaceTrezor,
+        ThpMessageType::ThpMessageType_ThpCodeEntryTag,
+        ThpMessageType::ThpMessageType_ThpCodeEntrySecret,
+        ThpMessageType::ThpMessageType_ThpQrCodeTag,
+        ThpMessageType::ThpMessageType_ThpQrCodeSecret,
+        ThpMessageType::ThpMessageType_ThpNfcUnidirectionalTag,
+        ThpMessageType::ThpMessageType_ThpNfcUnidirectionalSecret,
+    ];
+}
+
+impl ::protobuf::EnumFull for ThpMessageType {
+    fn enum_descriptor() -> ::protobuf::reflect::EnumDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::EnumDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().enum_by_package_relative_name("ThpMessageType").unwrap()).clone()
+    }
+
+    fn descriptor(&self) -> ::protobuf::reflect::EnumValueDescriptor {
+        let index = match self {
+            ThpMessageType::ThpMessageType_ThpCreateNewSession => 0,
+            ThpMessageType::ThpMessageType_ThpNewSession => 1,
+            ThpMessageType::ThpMessageType_ThpStartPairingRequest => 2,
+            ThpMessageType::ThpMessageType_ThpPairingPreparationsFinished => 3,
+            ThpMessageType::ThpMessageType_ThpCredentialRequest => 4,
+            ThpMessageType::ThpMessageType_ThpCredentialResponse => 5,
+            ThpMessageType::ThpMessageType_ThpEndRequest => 6,
+            ThpMessageType::ThpMessageType_ThpEndResponse => 7,
+            ThpMessageType::ThpMessageType_ThpCodeEntryCommitment => 8,
+            ThpMessageType::ThpMessageType_ThpCodeEntryChallenge => 9,
+            ThpMessageType::ThpMessageType_ThpCodeEntryCpaceHost => 10,
+            ThpMessageType::ThpMessageType_ThpCodeEntryCpaceTrezor => 11,
+            ThpMessageType::ThpMessageType_ThpCodeEntryTag => 12,
+            ThpMessageType::ThpMessageType_ThpCodeEntrySecret => 13,
+            ThpMessageType::ThpMessageType_ThpQrCodeTag => 14,
+            ThpMessageType::ThpMessageType_ThpQrCodeSecret => 15,
+            ThpMessageType::ThpMessageType_ThpNfcUnidirectionalTag => 16,
+            ThpMessageType::ThpMessageType_ThpNfcUnidirectionalSecret => 17,
+        };
+        Self::enum_descriptor().value_by_index(index)
+    }
+}
+
+// Note, `Default` is implemented although default value is not 0
+impl ::std::default::Default for ThpMessageType {
+    fn default() -> Self {
+        ThpMessageType::ThpMessageType_ThpCreateNewSession
+    }
+}
+
+impl ThpMessageType {
+    fn generated_enum_descriptor_data() -> ::protobuf::reflect::GeneratedEnumDescriptorData {
+        ::protobuf::reflect::GeneratedEnumDescriptorData::new::<ThpMessageType>("ThpMessageType")
+    }
+}
+
+#[derive(Clone,Copy,PartialEq,Eq,Debug,Hash)]
 // @@protoc_insertion_point(enum:hw.trezor.messages.thp.ThpPairingMethod)
 pub enum ThpPairingMethod {
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.thp.ThpPairingMethod.NoMethod)
@@ -3914,10 +4076,36 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x98\xb2\x19\x01\"\xa8\x01\n\x1eThpAuthenticatedCredentialData\x12,\n\
     \x12host_static_pubkey\x18\x01\x20\x01(\x0cR\x10hostStaticPubkey\x12R\n\
     \rcred_metadata\x18\x02\x20\x01(\x0b2-.hw.trezor.messages.thp.ThpCredent\
-    ialMetadataR\x0ccredMetadata:\x04\x98\xb2\x19\x01*S\n\x10ThpPairingMetho\
-    d\x12\x0c\n\x08NoMethod\x10\x01\x12\r\n\tCodeEntry\x10\x02\x12\n\n\x06Qr\
-    Code\x10\x03\x12\x16\n\x12NFC_Unidirectional\x10\x04B;\n#com.satoshilabs\
-    .trezor.lib.protobufB\x10TrezorMessageThp\x80\xa6\x1d\x01\
+    ialMetadataR\x0ccredMetadata:\x04\x98\xb2\x19\x01*\xbe\x07\n\x0eThpMessa\
+    geType\x121\n\"ThpMessageType_ThpCreateNewSession\x10\xe8\x07\x1a\x08\
+    \x80\xa6\x1d\x01\xc8\xb5\x18\x01\x12+\n\x1cThpMessageType_ThpNewSession\
+    \x10\xe9\x07\x1a\x08\x80\xa6\x1d\x01\xd0\xb5\x18\x01\x124\n%ThpMessageTy\
+    pe_ThpStartPairingRequest\x10\xf0\x07\x1a\x08\x80\xa6\x1d\x01\xd8\xb5\
+    \x18\x01\x12<\n-ThpMessageType_ThpPairingPreparationsFinished\x10\xf1\
+    \x07\x1a\x08\x80\xa6\x1d\x01\xe0\xb5\x18\x01\x122\n#ThpMessageType_ThpCr\
+    edentialRequest\x10\xf2\x07\x1a\x08\x80\xa6\x1d\x01\xd8\xb5\x18\x01\x123\
+    \n$ThpMessageType_ThpCredentialResponse\x10\xf3\x07\x1a\x08\x80\xa6\x1d\
+    \x01\xe0\xb5\x18\x01\x12+\n\x1cThpMessageType_ThpEndRequest\x10\xf4\x07\
+    \x1a\x08\x80\xa6\x1d\x01\xd8\xb5\x18\x01\x12,\n\x1dThpMessageType_ThpEnd\
+    Response\x10\xf5\x07\x1a\x08\x80\xa6\x1d\x01\xe0\xb5\x18\x01\x124\n%ThpM\
+    essageType_ThpCodeEntryCommitment\x10\xf8\x07\x1a\x08\x80\xa6\x1d\x01\
+    \xe0\xb5\x18\x01\x123\n$ThpMessageType_ThpCodeEntryChallenge\x10\xf9\x07\
+    \x1a\x08\x80\xa6\x1d\x01\xd8\xb5\x18\x01\x123\n$ThpMessageType_ThpCodeEn\
+    tryCpaceHost\x10\xfa\x07\x1a\x08\x80\xa6\x1d\x01\xd8\xb5\x18\x01\x125\n&\
+    ThpMessageType_ThpCodeEntryCpaceTrezor\x10\xfb\x07\x1a\x08\x80\xa6\x1d\
+    \x01\xe0\xb5\x18\x01\x12-\n\x1eThpMessageType_ThpCodeEntryTag\x10\xfc\
+    \x07\x1a\x08\x80\xa6\x1d\x01\xd8\xb5\x18\x01\x120\n!ThpMessageType_ThpCo\
+    deEntrySecret\x10\xfd\x07\x1a\x08\x80\xa6\x1d\x01\xe0\xb5\x18\x01\x12*\n\
+    \x1bThpMessageType_ThpQrCodeTag\x10\x80\x08\x1a\x08\x80\xa6\x1d\x01\xd8\
+    \xb5\x18\x01\x12-\n\x1eThpMessageType_ThpQrCodeSecret\x10\x81\x08\x1a\
+    \x08\x80\xa6\x1d\x01\xe0\xb5\x18\x01\x125\n&ThpMessageType_ThpNfcUnidire\
+    ctionalTag\x10\x88\x08\x1a\x08\x80\xa6\x1d\x01\xd8\xb5\x18\x01\x128\n)Th\
+    pMessageType_ThpNfcUnidirectionalSecret\x10\x89\x08\x1a\x08\x80\xa6\x1d\
+    \x01\xd8\xb5\x18\x01\"\x05\x08\0\x10\xe7\x07\"\t\x08\xcc\x08\x10\xff\xff\
+    \xff\xff\x07*S\n\x10ThpPairingMethod\x12\x0c\n\x08NoMethod\x10\x01\x12\r\
+    \n\tCodeEntry\x10\x02\x12\n\n\x06QrCode\x10\x03\x12\x16\n\x12NFC_Unidire\
+    ctional\x10\x04B;\n#com.satoshilabs.trezor.lib.protobufB\x10TrezorMessag\
+    eThp\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -3960,7 +4148,8 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             messages.push(ThpCredentialMetadata::generated_message_descriptor_data());
             messages.push(ThpPairingCredential::generated_message_descriptor_data());
             messages.push(ThpAuthenticatedCredentialData::generated_message_descriptor_data());
-            let mut enums = ::std::vec::Vec::with_capacity(1);
+            let mut enums = ::std::vec::Vec::with_capacity(2);
+            enums.push(ThpMessageType::generated_enum_descriptor_data());
             enums.push(ThpPairingMethod::generated_enum_descriptor_data());
             ::protobuf::reflect::GeneratedFileDescriptor::new_generated(
                 file_descriptor_proto(),

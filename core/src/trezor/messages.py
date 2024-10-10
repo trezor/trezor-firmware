@@ -66,6 +66,7 @@ if TYPE_CHECKING:
     from trezor.enums import StellarSignerType  # noqa: F401
     from trezor.enums import TezosBallotType  # noqa: F401
     from trezor.enums import TezosContractType  # noqa: F401
+    from trezor.enums import ThpMessageType  # noqa: F401
     from trezor.enums import ThpPairingMethod  # noqa: F401
     from trezor.enums import WordRequestType  # noqa: F401
 

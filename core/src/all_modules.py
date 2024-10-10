@@ -393,6 +393,8 @@ apps.workflow_handlers
 import apps.workflow_handlers
 
 if utils.USE_THP:
+    trezor.enums.ThpMessageType
+    import trezor.enums.ThpMessageType
     trezor.enums.ThpPairingMethod
     import trezor.enums.ThpPairingMethod
     trezor.wire.thp

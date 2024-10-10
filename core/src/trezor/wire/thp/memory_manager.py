@@ -55,7 +55,8 @@ def get_write_buffer(
 def encode_into_buffer(
     buffer: utils.BufferType, msg: protobuf.MessageType, session_id: int
 ) -> int:
-
+    print(type(msg))
+    print("---------------->>>> MSG WIRE TYPE", msg.MESSAGE_WIRE_TYPE)
     # cannot write message without wire type
     assert msg.MESSAGE_WIRE_TYPE is not None
 

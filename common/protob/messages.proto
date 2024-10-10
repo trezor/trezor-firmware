@@ -343,24 +343,7 @@ enum MessageType {
     MessageType_SolanaTxSignature = 905 [(wire_out) = true];
 
     // THP
-    MessageType_ThpCreateNewSession = 1000[(bitcoin_only)=true, (channel_in) = true];
-    MessageType_ThpNewSession = 1001[(bitcoin_only)=true, (channel_out) = true];
-    MessageType_ThpStartPairingRequest = 1008 [(bitcoin_only) = true, (pairing_in) = true];
-    MessageType_ThpPairingPreparationsFinished = 1009 [(bitcoin_only) = true, (pairing_out) = true];
-    MessageType_ThpCredentialRequest = 1010 [(bitcoin_only) = true, (pairing_in) = true];
-    MessageType_ThpCredentialResponse = 1011 [(bitcoin_only) = true, (pairing_out) = true];
-    MessageType_ThpEndRequest = 1012 [(bitcoin_only) = true, (pairing_in) = true];
-    MessageType_ThpEndResponse = 1013[(bitcoin_only) = true, (pairing_out) = true];
-    MessageType_ThpCodeEntryCommitment = 1016[(bitcoin_only)=true, (pairing_out) = true];
-    MessageType_ThpCodeEntryChallenge = 1017[(bitcoin_only)=true, (pairing_in) = true];
-    MessageType_ThpCodeEntryCpaceHost = 1018[(bitcoin_only)=true, (pairing_in) = true];
-    MessageType_ThpCodeEntryCpaceTrezor = 1019[(bitcoin_only)=true, (pairing_out) = true];
-    MessageType_ThpCodeEntryTag = 1020[(bitcoin_only)=true, (pairing_in) = true];
-    MessageType_ThpCodeEntrySecret = 1021[(bitcoin_only)=true, (pairing_out) = true];
-    MessageType_ThpQrCodeTag = 1024[(bitcoin_only)=true, (pairing_in) = true];
-    MessageType_ThpQrCodeSecret = 1025[(bitcoin_only)=true, (pairing_out) = true];
-    MessageType_ThpNfcUnidirectionalTag = 1032[(bitcoin_only)=true, (pairing_in) = true];
-    MessageType_ThpNfcUnidirectionalSecret = 1033[(bitcoin_only)=true, (pairing_in) = true];
+    reserved 1000 to 1099; // See messages-thp.proto
 }
 
 

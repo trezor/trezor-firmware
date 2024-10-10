@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 from ubinascii import hexlify
-
+from trezor.enums import ThpMessageType
 import trezorui2
 from trezor import loop, protobuf, workflow
 from trezor.crypto import random
@@ -183,6 +183,16 @@ class PairingContext(Context):
         return await self.read(expected_types)
 
 
+def get_msg_name(msg_type: int) -> str | None:
+    for name in dir(ThpMessageType):
+        if not name.startswith("__"):  # Skip built-in attributes
+            value = getattr(ThpMessageType, name)
+            if isinstance(value, int):
+                if value == msg_type:
+                    return name
+    return None
+
+
 async def handle_pairing_request_message(
     pairing_ctx: PairingContext,
     msg: protocol_common.Message,
@@ -200,7 +210,11 @@ async def handle_pairing_request_message(
     try:
         # Find a protobuf.MessageType subclass that describes this
         # message.  Raises if the type is not found.
-        req_type = protobuf.type_for_wire(msg.type)
+        name = get_msg_name(msg.type)
+        if name is None:
+            req_type = protobuf.type_for_wire(msg.type)
+        else:
+            req_type = protobuf.type_for_name(name)
 
         # Try to decode the message according to schema from
         # `req_type`. Raises if the message is malformed.
