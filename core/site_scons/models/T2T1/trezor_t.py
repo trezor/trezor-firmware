@@ -34,10 +34,12 @@ def configure(
     ] = "-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mtune=cortex-m4 "
     env.get("ENV")["RUST_TARGET"] = "thumbv7em-none-eabihf"
 
-    defines += [mcu]
-    defines += [f'TREZOR_BOARD=\\"{board}\\"']
-    defines += [f"HW_MODEL={hw_model}"]
-    defines += [f"HW_REVISION={hw_revision}"]
+    defines += [
+        mcu,
+        ("TREZOR_BOARD", f'"{board}"'),
+        ("HW_MODEL", str(hw_model)),
+        ("HW_REVISION", str(hw_revision)),
+    ]
     sources += [
         "embed/models/T2T1/compat_settings.c",
     ]
@@ -48,33 +50,17 @@ def configure(
         sources += ["embed/trezorhal/stm32f4/xdisplay/st-7789/display_driver.c"]
         sources += ["embed/trezorhal/stm32f4/xdisplay/st-7789/display_io.c"]
         sources += ["embed/trezorhal/stm32f4/xdisplay/st-7789/display_panel.c"]
-        sources += [
-            "embed/trezorhal/stm32f4/xdisplay/st-7789/panels/tf15411a.c",
-        ]
-        sources += [
-            "embed/trezorhal/stm32f4/xdisplay/st-7789/panels/154a.c",
-        ]
-        sources += [
-            "embed/trezorhal/stm32f4/xdisplay/st-7789/panels/lx154a2411.c",
-        ]
-        sources += [
-            "embed/trezorhal/stm32f4/xdisplay/st-7789/panels/lx154a2422.c",
-        ]
+        sources += ["embed/trezorhal/stm32f4/xdisplay/st-7789/panels/tf15411a.c"]
+        sources += ["embed/trezorhal/stm32f4/xdisplay/st-7789/panels/154a.c"]
+        sources += ["embed/trezorhal/stm32f4/xdisplay/st-7789/panels/lx154a2411.c"]
+        sources += ["embed/trezorhal/stm32f4/xdisplay/st-7789/panels/lx154a2422.c"]
 
     else:
         sources += [f"embed/trezorhal/stm32f4/displays/{display}"]
-        sources += [
-            "embed/trezorhal/stm32f4/displays/panels/tf15411a.c",
-        ]
-        sources += [
-            "embed/trezorhal/stm32f4/displays/panels/154a.c",
-        ]
-        sources += [
-            "embed/trezorhal/stm32f4/displays/panels/lx154a2411.c",
-        ]
-        sources += [
-            "embed/trezorhal/stm32f4/displays/panels/lx154a2422.c",
-        ]
+        sources += ["embed/trezorhal/stm32f4/displays/panels/tf15411a.c"]
+        sources += ["embed/trezorhal/stm32f4/displays/panels/154a.c"]
+        sources += ["embed/trezorhal/stm32f4/displays/panels/lx154a2411.c"]
+        sources += ["embed/trezorhal/stm32f4/displays/panels/lx154a2422.c"]
 
     sources += ["embed/trezorhal/stm32f4/backlight_pwm.c"]
 

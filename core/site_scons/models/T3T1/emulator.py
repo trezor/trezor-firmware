@@ -22,21 +22,21 @@ def configure(
         features_available.append("xframebuffer")
         features_available.append("display_rgb565")
 
-    defines += [mcu]
-    defines += [f'TREZOR_BOARD=\\"{board}\\"']
-    defines += [f"HW_MODEL={hw_model}"]
-    defines += [f"HW_REVISION={hw_revision}"]
-    defines += [f"MCU_TYPE={mcu}"]
-    # todo change to blockwise flash when implemented in unix
-    defines += ["FLASH_BIT_ACCESS=1"]
-    defines += ["FLASH_BLOCK_WORDS=1"]
+    defines += [
+        mcu,
+        ("TREZOR_BOARD", f'"{board}"'),
+        ("HW_MODEL", str(hw_model)),
+        ("HW_REVISION", str(hw_revision)),
+        ("MCU_TYPE", mcu),
+        # todo change to blockwise flash when implemented in unix
+        ("FLASH_BIT_ACCESS", "1"),
+        ("FLASH_BLOCK_WORDS", "1"),
+    ]
 
     if "dma2d" in features_wanted:
         features_available.append("dma2d")
         if "new_rendering" in features_wanted:
-            sources += [
-                "embed/trezorhal/unix/dma2d_bitblt.c",
-            ]
+            sources += ["embed/trezorhal/unix/dma2d_bitblt.c"]
         else:
             sources += ["embed/lib/dma2d_emul.c"]
         defines += ["USE_DMA2D"]

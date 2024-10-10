@@ -15,7 +15,7 @@ def configure(
     board = "T3B1/boards/trezor_t3b1_revB.h"
     display = "vg-2864ksweg01.c"
     hw_model = get_hw_model_as_number("T3B1")
-    hw_revision = "B"
+    hw_revision = ord("B")
 
     if "new_rendering" in features_wanted:
         defines += ["XFRAMEBUFFER"]
@@ -35,10 +35,12 @@ def configure(
     ] = "-mthumb -mcpu=cortex-m33 -mfloat-abi=hard -mfpu=fpv5-sp-d16 -mtune=cortex-m33 -mcmse "
     env.get("ENV")["RUST_TARGET"] = "thumbv8m.main-none-eabihf"
 
-    defines += [mcu]
-    defines += [f'TREZOR_BOARD=\\"{board}\\"']
-    defines += [f"HW_MODEL={hw_model}"]
-    defines += [f"HW_REVISION={ord(hw_revision)}"]
+    defines += [
+        mcu,
+        ("TREZOR_BOARD", f'"{board}"'),
+        ("HW_MODEL", str(hw_model)),
+        ("HW_REVISION", str(hw_revision)),
+    ]
 
     if "new_rendering" in features_wanted:
         sources += ["embed/trezorhal/xdisplay_legacy.c"]
@@ -69,7 +71,7 @@ def configure(
         features_available.append("usb")
 
     if "optiga" in features_wanted:
-        defines += ["USE_OPTIGA=1"]
+        defines += [("USE_OPTIGA", "1")]
         sources += ["embed/trezorhal/stm32u5/i2c_bus.c"]
         sources += ["embed/trezorhal/stm32u5/optiga_hal.c"]
         sources += ["embed/trezorhal/optiga/optiga.c"]
