@@ -25,13 +25,41 @@
 #include "common.h"
 #include "platform.h"
 
-static char last_left = 0, last_right = 0;
+// Button driver state
+typedef struct {
+  bool initialized;
 
-char button_state_left(void) { return last_left; }
+  bool left_down;
+  bool right_down;
 
-char button_state_right(void) { return last_right; }
+} button_driver_t;
 
-uint32_t button_read(void) {
+// Button driver instance
+button_driver_t g_button_driver = {
+    .initialized = false,
+};
+
+bool button_init(void) {
+  button_driver_t *drv = &g_button_driver;
+
+  if (drv->initialized) {
+    return true;
+  }
+
+  memset(drv, 0, sizeof(button_driver_t));
+
+  drv->initialized = true;
+
+  return true;
+}
+
+uint32_t button_get_event(void) {
+  button_driver_t *drv = &g_button_driver;
+
+  if (!drv->initialized) {
+    return 0;
+  }
+
   SDL_Event event;
   SDL_PumpEvents();
   if (SDL_PollEvent(&event) > 0) {
@@ -42,10 +70,10 @@ uint32_t button_read(void) {
         }
         switch (event.key.keysym.sym) {
           case SDLK_LEFT:
-            last_left = 1;
+            drv->left_down = true;
             return BTN_EVT_DOWN | BTN_LEFT;
           case SDLK_RIGHT:
-            last_right = 1;
+            drv->right_down = true;
             return BTN_EVT_DOWN | BTN_RIGHT;
         }
         break;
@@ -55,10 +83,10 @@ uint32_t button_read(void) {
         }
         switch (event.key.keysym.sym) {
           case SDLK_LEFT:
-            last_left = 0;
+            drv->left_down = false;
             return BTN_EVT_UP | BTN_LEFT;
           case SDLK_RIGHT:
-            last_right = 0;
+            drv->right_down = false;
             return BTN_EVT_UP | BTN_RIGHT;
         }
         break;
@@ -67,4 +95,22 @@ uint32_t button_read(void) {
   return 0;
 }
 
-void button_init(void) {}
+bool button_state_left(void) {
+  button_driver_t *drv = &g_button_driver;
+
+  if (!drv->initialized) {
+    return false;
+  }
+
+  return drv->left_down;
+}
+
+bool button_state_right(void) {
+  button_driver_t *drv = &g_button_driver;
+
+  if (!drv->initialized) {
+    return false;
+  }
+
+  return drv->right_down;
+}
