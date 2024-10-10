@@ -215,6 +215,24 @@ apps
 import apps
 apps.base
 import apps.base
+apps.benchmark
+import apps.benchmark
+apps.benchmark.benchmark
+import apps.benchmark.benchmark
+apps.benchmark.benchmarks
+import apps.benchmark.benchmarks
+apps.benchmark.cipher_benchmark
+import apps.benchmark.cipher_benchmark
+apps.benchmark.common
+import apps.benchmark.common
+apps.benchmark.curve_benchmark
+import apps.benchmark.curve_benchmark
+apps.benchmark.hash_benchmark
+import apps.benchmark.hash_benchmark
+apps.benchmark.list_names
+import apps.benchmark.list_names
+apps.benchmark.run
+import apps.benchmark.run
 apps.bitcoin
 import apps.bitcoin
 apps.bitcoin.addresses

@@ -95,6 +95,10 @@ DebugLinkEraseSdCard = 9005
 DebugLinkWatchLayout = 9006
 DebugLinkResetDebugEvents = 9007
 DebugLinkOptigaSetSecMax = 9008
+BenchmarkListNames = 9100
+BenchmarkNames = 9101
+BenchmarkRun = 9102
+BenchmarkResult = 9103
 if not utils.BITCOIN_ONLY:
     SetU2FCounter = 63
     GetNextU2FCounter = 80

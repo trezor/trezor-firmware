@@ -67,6 +67,56 @@ if TYPE_CHECKING:
     from trezor.enums import TezosContractType  # noqa: F401
     from trezor.enums import WordRequestType  # noqa: F401
 
+    class BenchmarkListNames(protobuf.MessageType):
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["BenchmarkListNames"]:
+            return isinstance(msg, cls)
+
+    class BenchmarkNames(protobuf.MessageType):
+        names: "list[str]"
+
+        def __init__(
+            self,
+            *,
+            names: "list[str] | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["BenchmarkNames"]:
+            return isinstance(msg, cls)
+
+    class BenchmarkRun(protobuf.MessageType):
+        name: "str | None"
+
+        def __init__(
+            self,
+            *,
+            name: "str | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["BenchmarkRun"]:
+            return isinstance(msg, cls)
+
+    class BenchmarkResult(protobuf.MessageType):
+        value: "str | None"
+        unit: "str | None"
+
+        def __init__(
+            self,
+            *,
+            value: "str | None" = None,
+            unit: "str | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["BenchmarkResult"]:
+            return isinstance(msg, cls)
+
     class BinanceGetAddress(protobuf.MessageType):
         address_n: "list[int]"
         show_display: "bool | None"

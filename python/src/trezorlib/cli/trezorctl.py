@@ -31,6 +31,7 @@ from ..transport.udp import UdpTransport
 from . import (
     AliasedGroup,
     TrezorConnection,
+    benchmark,
     binance,
     btc,
     cardano,
@@ -416,6 +417,7 @@ cli.add_command(tezos.cli)
 
 cli.add_command(firmware.cli)
 cli.add_command(debug.cli)
+cli.add_command(benchmark.cli)
 
 #
 # Main

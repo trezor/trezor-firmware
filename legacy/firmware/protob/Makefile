@@ -12,6 +12,7 @@ SKIPPED_MESSAGES := Binance Cardano DebugMonero Eos Monero Ontology Ripple SdPro
 	Solana StellarClaimClaimableBalanceOp \
 	ChangeLanguage TranslationDataRequest TranslationDataAck \
 	SetBrightness DebugLinkOptigaSetSecMax \
+	BenchmarkListNames BenchmarkRun BenchmarkNames BenchmarkResult
 
 ifeq ($(BITCOIN_ONLY), 1)
 SKIPPED_MESSAGES += Ethereum NEM Stellar

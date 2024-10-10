@@ -17,11 +17,17 @@ HW_REVISION = ARGUMENTS.get('HW_REVISION', None)
 THP = ARGUMENTS.get('THP', '0') == '1' # Trezor-Host Protocol
 NEW_RENDERING = ARGUMENTS.get('NEW_RENDERING', '1') == '1'
 MODEL_IDENTIFIER = models.get_model_identifier(TREZOR_MODEL)
+BENCHMARK = ARGUMENTS.get('BENCHMARK', '0') == '1'
+
+if BENCHMARK and PYOPT != '0':
+  print("BENCHMARK=1 works only with PYOPT=0.")
+  exit(1)
 
 FEATURE_FLAGS = {
     "RDI": True,
     "SECP256K1_ZKP": True,  # required for trezor.crypto.curve.bip340 (BIP340/Taproot)
     "AES_GCM": False,
+    "AES_GCM": BENCHMARK,
 }
 
 FEATURES_WANTED = ["input", "sbu", "sd_card", "rgb_led", "dma2d", "consumption_mask", "usb" ,"optiga", "haptic"]
@@ -670,6 +676,9 @@ if FROZEN:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/bitcoin/sign_tx/bitcoinlike.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/bitcoin/sign_tx/zcash_v4.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/Zcash*.py'))
+
+    if BENCHMARK:
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/benchmark/*.py'))
 
     source_mpy = env.FrozenModule(
         source=SOURCE_PY,

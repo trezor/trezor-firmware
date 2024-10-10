@@ -270,6 +270,10 @@ class MessageType(IntEnum):
     SolanaAddress = 903
     SolanaSignTx = 904
     SolanaTxSignature = 905
+    BenchmarkListNames = 9100
+    BenchmarkNames = 9101
+    BenchmarkRun = 9102
+    BenchmarkResult = 9103
 
 
 class FailureType(IntEnum):
@@ -624,6 +628,55 @@ class TezosBallotType(IntEnum):
     Yay = 0
     Nay = 1
     Pass = 2
+
+
+class BenchmarkListNames(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9100
+
+
+class BenchmarkNames(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9101
+    FIELDS = {
+        1: protobuf.Field("names", "string", repeated=True, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        names: Optional[Sequence["str"]] = None,
+    ) -> None:
+        self.names: Sequence["str"] = names if names is not None else []
+
+
+class BenchmarkRun(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9102
+    FIELDS = {
+        1: protobuf.Field("name", "string", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        name: Optional["str"] = None,
+    ) -> None:
+        self.name = name
+
+
+class BenchmarkResult(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9103
+    FIELDS = {
+        1: protobuf.Field("value", "string", repeated=False, required=False, default=None),
+        3: protobuf.Field("unit", "string", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        value: Optional["str"] = None,
+        unit: Optional["str"] = None,
+    ) -> None:
+        self.value = value
+        self.unit = unit
 
 
 class BinanceGetAddress(protobuf.MessageType):
