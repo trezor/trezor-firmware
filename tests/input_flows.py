@@ -85,32 +85,6 @@ class InputFlowBase:
         return self.debug.read_layout().title()
 
 
-class InputFlowSetupDevicePINWIpeCode(InputFlowBase):
-    def __init__(self, client: Client, pin: str, wipe_code: str):
-        super().__init__(client)
-        self.pin = pin
-        self.wipe_code = wipe_code
-
-    def input_flow_common(self) -> BRGeneratorType:
-        yield  # do you want to set/change the wipe code?
-        self.debug.press_yes()
-
-        if self.client.layout_type is LayoutType.TR:
-            layout = self.debug.read_layout()
-            if "PinKeyboard" not in layout.all_components():
-                yield from swipe_if_necessary(self.debug)  # wipe code info
-                self.debug.press_yes()
-
-        yield  # enter current pin
-        self.debug.input(self.pin)
-        yield  # enter new wipe code
-        self.debug.input(self.wipe_code)
-        yield  # enter new wipe code again
-        self.debug.input(self.wipe_code)
-        yield  # success
-        self.debug.press_yes()
-
-
 class InputFlowNewCodeMismatch(InputFlowBase):
     def __init__(
         self,
