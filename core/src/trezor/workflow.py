@@ -27,6 +27,7 @@ ALLOW_WHILE_LOCKED = (
     MessageType.DoPreauthorized,
     MessageType.WipeDevice,
     MessageType.SetBusy,
+    MessageType.Ping,
 )
 
 

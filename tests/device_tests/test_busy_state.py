@@ -62,8 +62,35 @@ def test_busy_state(client: Client):
     assert client.features.unlocked is True
 
 
+@pytest.mark.models("core")
+def test_busy_expiry_core(client: Client):
+    WAIT_TIME_MS = 1500
+    TOLERANCE = 1000
+
+    _assert_busy(client, False)
+    # Start a timer
+    start = time.monotonic()
+    # Show the busy dialog.
+    device.set_busy(client, expiry_ms=WAIT_TIME_MS)
+    _assert_busy(client, True)
+
+    # Wait until the layout changes
+    client.debug.wait_layout()
+    end = time.monotonic()
+
+    # Check that the busy dialog was shown for at least WAIT_TIME_MS.
+    duration = (end - start) * 1000
+    assert WAIT_TIME_MS <= duration <= WAIT_TIME_MS + TOLERANCE
+
+    # Check that the device is no longer busy.
+    # Also needs to come back to Homescreen (for UI tests).
+    client.refresh_features()
+    _assert_busy(client, False)
+
+
 @pytest.mark.flaky(max_runs=5)
-def test_busy_expiry(client: Client):
+@pytest.mark.models("legacy")
+def test_busy_expiry_legacy(client: Client):
     _assert_busy(client, False)
     # Show the busy dialog.
     device.set_busy(client, expiry_ms=1500)

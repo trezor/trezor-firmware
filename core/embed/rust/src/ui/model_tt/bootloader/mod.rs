@@ -36,7 +36,6 @@ use super::theme::BLACK;
 
 #[cfg(feature = "new_rendering")]
 use crate::ui::{
-    constant,
     display::toif::Toif,
     geometry::{Alignment, Alignment2D, Offset},
     shape,

@@ -5,7 +5,7 @@ from trezor import TR
 from trezor.enums import ButtonRequestType, RecoveryType
 
 from ..common import interact
-from . import RustLayout, raise_if_not_confirmed
+from . import raise_if_not_confirmed
 
 CONFIRMED = trezorui2.CONFIRMED  # global_import_cache
 CANCELLED = trezorui2.CANCELLED  # global_import_cache
@@ -16,30 +16,36 @@ if TYPE_CHECKING:
 
 
 async def request_word_count(recovery_type: RecoveryType) -> int:
-    selector = RustLayout(trezorui2.select_word_count(recovery_type=recovery_type))
-    count = await interact(selector, "word_count", ButtonRequestType.MnemonicWordCount)
+    selector = trezorui2.select_word_count(recovery_type=recovery_type)
+    count = await interact(
+        selector, "recovery_word_count", ButtonRequestType.MnemonicWordCount
+    )
     return int(count)
 
 
 async def request_word(
-    word_index: int, word_count: int, is_slip39: bool, prefill_word: str = ""
+    word_index: int,
+    word_count: int,
+    is_slip39: bool,
+    send_button_request: bool,
+    prefill_word: str = "",
 ) -> str:
     prompt = TR.recovery__word_x_of_y_template.format(word_index + 1, word_count)
     can_go_back = word_index > 0
     if is_slip39:
-        keyboard = RustLayout(
-            trezorui2.request_slip39(
-                prompt=prompt, prefill_word=prefill_word, can_go_back=can_go_back
-            )
+        keyboard = trezorui2.request_slip39(
+            prompt=prompt, prefill_word=prefill_word, can_go_back=can_go_back
         )
     else:
-        keyboard = RustLayout(
-            trezorui2.request_bip39(
-                prompt=prompt, prefill_word=prefill_word, can_go_back=can_go_back
-            )
+        keyboard = trezorui2.request_bip39(
+            prompt=prompt, prefill_word=prefill_word, can_go_back=can_go_back
         )
 
-    word: str = await keyboard
+    word: str = await interact(
+        keyboard,
+        "mnemonic" if send_button_request else None,
+        ButtonRequestType.MnemonicInput,
+    )
     return word
 
 
@@ -78,20 +84,16 @@ def format_remaining_shares_info(
 
 async def show_group_share_success(share_index: int, group_index: int) -> None:
     await raise_if_not_confirmed(
-        interact(
-            RustLayout(
-                trezorui2.show_group_share_success(
-                    lines=[
-                        TR.recovery__you_have_entered,
-                        TR.recovery__share_num_template.format(share_index + 1),
-                        TR.words__from,
-                        TR.recovery__group_num_template.format(group_index + 1),
-                    ],
-                )
-            ),
-            "share_success",
-            ButtonRequestType.Other,
-        )
+        trezorui2.show_group_share_success(
+            lines=[
+                TR.recovery__you_have_entered,
+                TR.recovery__share_num_template.format(share_index + 1),
+                TR.words__from,
+                TR.recovery__group_num_template.format(group_index + 1),
+            ],
+        ),
+        "share_success",
+        ButtonRequestType.Other,
     )
 
 
@@ -100,14 +102,12 @@ async def continue_recovery(
     text: str,
     subtext: str | None,
     recovery_type: RecoveryType,
-    show_info: bool = False,
+    show_instructions: bool = False,
     remaining_shares_info: "RemainingSharesInfo | None" = None,
 ) -> bool:
-    # NOTE: show_info can be understood as first screen before any shares
-    # NOTE: button request sent from the flow
-    result = await RustLayout(
+    result = await interact(
         trezorui2.flow_continue_recovery(
-            first_screen=show_info,
+            first_screen=show_instructions,
             recovery_type=recovery_type,
             text=text,
             subtext=subtext,
@@ -116,7 +116,10 @@ async def continue_recovery(
                 if remaining_shares_info
                 else None
             ),
-        )
+        ),
+        None,
+        ButtonRequestType.Other,
+        raise_on_cancel=None,
     )
     return result is CONFIRMED
 
@@ -130,17 +133,13 @@ async def show_recovery_warning(
 ) -> None:
     button = button or TR.buttons__try_again  # def_arg
     await raise_if_not_confirmed(
-        interact(
-            RustLayout(
-                trezorui2.show_warning(
-                    title=content or TR.words__warning,
-                    value=subheader or "",
-                    button=button,
-                    description="",
-                    danger=True,
-                )
-            ),
-            br_name,
-            br_code,
-        )
+        trezorui2.show_warning(
+            title=content or TR.words__warning,
+            value=subheader or "",
+            button=button,
+            description="",
+            danger=True,
+        ),
+        br_name,
+        br_code,
     )

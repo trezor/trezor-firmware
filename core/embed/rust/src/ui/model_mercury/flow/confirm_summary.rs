@@ -197,6 +197,6 @@ impl ConfirmSummary {
             .with_page(&ConfirmSummary::AccountInfo, content_account)?
             .with_page(&ConfirmSummary::CancelTap, content_cancel_tap)?;
 
-        Ok(LayoutObj::new(res)?.into())
+        Ok(LayoutObj::new_root(res)?.into())
     }
 }

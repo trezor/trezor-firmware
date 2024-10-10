@@ -20,7 +20,6 @@ from typing import TYPE_CHECKING, Generator
 import pytest
 
 from trezorlib import device, messages
-from trezorlib.debuglink import LayoutType
 
 from ..common import MNEMONIC12, MNEMONIC_SLIP39_BASIC_20_3of6
 from . import recovery
@@ -55,9 +54,6 @@ def prepare_recovery_and_evaluate(
 def test_recovery_slip39_basic(device_handler: "BackgroundDeviceHandler"):
     with prepare_recovery_and_evaluate(device_handler) as debug:
         recovery.confirm_recovery(debug)
-        if debug.layout_type is LayoutType.TR:
-            recovery.confirm_recovery(debug)
-
         recovery.select_number_of_words(debug)
         recovery.enter_shares(debug, MNEMONIC_SLIP39_BASIC_20_3of6)
         recovery.finalize(debug)
@@ -67,9 +63,6 @@ def test_recovery_slip39_basic(device_handler: "BackgroundDeviceHandler"):
 def test_recovery_bip39(device_handler: "BackgroundDeviceHandler"):
     with prepare_recovery_and_evaluate(device_handler) as debug:
         recovery.confirm_recovery(debug)
-        if debug.layout_type is LayoutType.TR:
-            recovery.confirm_recovery(debug)
-
         recovery.select_number_of_words(debug, num_of_words=12)
         recovery.enter_seed(debug, MNEMONIC12.split())
         recovery.finalize(debug)
@@ -79,9 +72,6 @@ def test_recovery_bip39(device_handler: "BackgroundDeviceHandler"):
 def test_recovery_bip39_previous_word(device_handler: "BackgroundDeviceHandler"):
     with prepare_recovery_and_evaluate(device_handler) as debug:
         recovery.confirm_recovery(debug)
-        if debug.layout_type is LayoutType.TR:
-            recovery.confirm_recovery(debug)
-
         recovery.select_number_of_words(debug, num_of_words=12)
         seed_words: list[str] = MNEMONIC12.split()
         bad_indexes = {1: seed_words[-1], 7: seed_words[0]}
