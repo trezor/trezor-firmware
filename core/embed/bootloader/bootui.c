@@ -170,14 +170,14 @@ void ui_click(void) {
 
 void ui_click(void) {
   for (;;) {
-    button_read();
-    if (button_state_left() != 0 && button_state_right() != 0) {
+    button_get_event();
+    if (button_left_down() && button_right_down()) {
       break;
     }
   }
   for (;;) {
-    button_read();
-    if (button_state_left() != 1 && button_state_right() != 1) {
+    button_get_event();
+    if (!button_left_down() && !button_right_down()) {
       break;
     }
   }

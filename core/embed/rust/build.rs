@@ -450,7 +450,7 @@ fn generate_trezorhal_bindings() {
         // touch
         .allowlist_function("touch_get_event")
         // button
-        .allowlist_function("button_read")
+        .allowlist_function("button_get_event")
         // haptic
         .allowlist_type("haptic_effect_t")
         .allowlist_function("haptic_play")
