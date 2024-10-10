@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING
 
 import trezorui2
+import trezorui_api
 from trezor import TR, ui
 from trezor.enums import ButtonRequestType
 
@@ -161,9 +162,9 @@ async def continue_recovery(
             raise_on_cancel=None,
         )
 
-        if result is trezorui2.CONFIRMED:
+        if result is trezorui_api.CONFIRMED:
             return True
-        elif result is trezorui2.INFO and remaining_shares_info is not None:
+        elif result is trezorui_api.INFO and remaining_shares_info is not None:
             await show_remaining_shares(*remaining_shares_info)
         else:
             try:
