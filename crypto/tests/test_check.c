@@ -10501,61 +10501,62 @@ START_TEST(test_zkp_bip340_tweak) {
     const char *output_priv;
     const char *internal_pub;
     const char *output_pub;
+    const int parity;
   } tests[] = {
-      // https://github.com/bitcoin/bips/blob/master/bip-0086/
+      // https://github.com/bitcoin/bips/blob/master/bip-0086.mediawiki
       {NULL, "41f41d69260df4cf277826a9b65a3717e4eeddbeedf637f212ca096576479361",
        "eaac016f36e8c18347fbacf05ab7966708fbfce7ce3bf1dc32a09dd0645db038",
        "cc8a4bc64d897bddc5fbc2f670f7a8ba0b386779106cf1223c6fc5d7cd6fc115",
-       "a60869f0dbcf1dc659c9cecbaf8050135ea9e8cdc487053f1dc6880949dc684c"},
+       "a60869f0dbcf1dc659c9cecbaf8050135ea9e8cdc487053f1dc6880949dc684c", 1},
       {NULL, "86c68ac0ed7df88cbdd08a847c6d639f87d1234d40503abf3ac178ef7ddc05dd",
        "0b6f18573f75c454efb43d2bfc7c91f7f88cb802c45a7821e820402fcf2836d3",
        "83dfe85a3151d2517290da461fe2815591ef69f2b18a2ce63f01697a8b313145",
-       "a82f29944d65b86ae6b5e5cc75e294ead6c59391a1edc5e016e3498c67fc7bbb"},
+       "a82f29944d65b86ae6b5e5cc75e294ead6c59391a1edc5e016e3498c67fc7bbb", 0},
       {NULL, "6ccbca4a02ac648702dde463d9c1b0d328a4df1e068ef9dc2bc788b33a4f0412",
        "c3074682f4c54d9801da58a52aaf0e28c089d5f8c6847dc8829734bbe3f60647",
        "399f1b2f4393f29a18c937859c5dd8a77350103157eb880f02e8c08214277cef",
-       "882d74e5d0572d5a816cef0041a96b6c1de832f6f9676d9605c44d5e9a97d3dc"},
+       "882d74e5d0572d5a816cef0041a96b6c1de832f6f9676d9605c44d5e9a97d3dc", 1},
       // https://github.com/bitcoin-core/btcdeb/blob/master/doc/tapscript-example-with-tap.md
       {"41646f8c1fe2a96ddad7f5471bc4fee7da98794ef8c45a4f4fc6a559d60c9f6b",
        "1229101a0fcf2104e8808dab35661134aa5903867d44deb73ce1c7e4eb925be8",
        "4fe6b3e5fbd61870577980ad5e4e13080776069f0fb3c1e353572e0c4993abc1",
        "f30544d6009c8d8d94f5d030b2e844b1a3ca036255161c479db1cca5b374dd1c",
-       "a5ba0871796eb49fb4caa6bf78e675b9455e2d66e751676420f8381d5dda8951"},
+       "a5ba0871796eb49fb4caa6bf78e675b9455e2d66e751676420f8381d5dda8951", 1},
       // https://github.com/bitcoin/bips/pull/1225/commits/f7af1f73b287c14cf2f63afcb8d199feaf6ab5e1
       {NULL, "6b973d88838f27366ed61c9ad6367663045cb456e28335c109e30717ae0c6baa",
        "2405b971772ad26915c8dcdf10f238753a9b837e5f8e6a86fd7c0cce5b7296d9",
        "d6889cb081036e0faefa3a35157ad71086b123b2b144b649798b494c300a961d",
-       "53a1f6e454df1aa2776a2814a721372d6258050de330b3c6d10ee8f4e0dda343"},
+       "53a1f6e454df1aa2776a2814a721372d6258050de330b3c6d10ee8f4e0dda343", 1},
       {"5b75adecf53548f3ec6ad7d78383bf84cc57b55a3127c72b9a2481752dd88b21",
        "1e4da49f6aaf4e5cd175fe08a32bb5cb4863d963921255f33d3bc31e1343907f",
        "ea260c3b10e60f6de018455cd0278f2f5b7e454be1999572789e6a9565d26080",
        "187791b6f712a8ea41c8ecdd0ee77fab3e85263b37e1ec18a3651926b3a6cf27",
-       "147c9c57132f6e7ecddba9800bb0c4449251c92a1e60371ee77557b6620f3ea3"},
+       "147c9c57132f6e7ecddba9800bb0c4449251c92a1e60371ee77557b6620f3ea3", 1},
       {"c525714a7f49c28aedbbba78c005931a81c234b2f6c99a73e4d06082adc8bf2b",
        "d3c7af07da2d54f7a7735d3d0fc4f0a73164db638b2f2f7c43f711f6d4aa7e64",
        "97323385e57015b75b0339a549c56a948eb961555973f0951f555ae6039ef00d",
        "93478e9488f956df2396be2ce6c5cced75f900dfa18e7dabd2428aae78451820",
-       "e4d810fd50586274face62b8a807eb9719cef49c04177cc6b76a9a4251d5450e"},
+       "e4d810fd50586274face62b8a807eb9719cef49c04177cc6b76a9a4251d5450e", 0},
       {"ccbd66c6f7e8fdab47b3a486f59d28262be857f30d4773f2d5ea47f7761ce0e2",
        "f36bb07a11e469ce941d16b63b11b9b9120a84d9d87cff2c84a8d4affb438f4e",
        "a8e7aa924f0d58854185a490e6c41f6efb7b675c0f3331b7f14b549400b4d501",
        "e0dfe2300b0dd746a3f8674dfd4525623639042569d829c7f0eed9602d263e6f",
-       "91b64d5324723a985170e4dc5a0f84c041804f2cd12660fa5dec09fc21783605"},
+       "91b64d5324723a985170e4dc5a0f84c041804f2cd12660fa5dec09fc21783605", 0},
       {"2f6b2c5397b6d68ca18e09a3f05161668ffe93a988582d55c6f07bd5b3329def",
        "415cfe9c15d9cea27d8104d5517c06e9de48e2f986b695e4f5ffebf230e725d8",
        "241c14f2639d0d7139282aa6abde28dd8a067baa9d633e4e7230287ec2d02901",
        "55adf4e8967fbd2e29f20ac896e60c3b0f1d5b0efa9d34941b5958c7b0a0312d",
-       "75169f4001aa68f15bbed28b218df1d0a62cbbcf1188c6665110c293c907b831"},
+       "75169f4001aa68f15bbed28b218df1d0a62cbbcf1188c6665110c293c907b831", 1},
       {"f3004d6c183e038105d436db1424f321613366cbb7b05939bf05d763a9ebb962",
        "c7b0e81f0a9a0b0499e112279d718cca98e79a12e2f137c72ae5b213aad0d103",
        "9822270935e156a1b9b28940e7b94a06934a51ddabdd49dd43e8010adc98dfa3",
        "ee4fe085983462a184015d1f782d6a5f8b9c2b60130aff050ce221ecf3786592",
-       "0f63ca2c7639b9bb4be0465cc0aa3ee78a0761ba5f5f7d6ff8eab340f09da561"},
+       "0f63ca2c7639b9bb4be0465cc0aa3ee78a0761ba5f5f7d6ff8eab340f09da561", 0},
       {"d9c2c32808b41c0301d876d49c0af72e1d98e84b99ca9b4bb67fea1a7424b755",
        "77863416be0d0665e517e1c375fd6f75839544eca553675ef7fdf4949518ebaa",
        "8e575b74b70d573b05558883743a72d1ccc326b4c299ea3412a29d3b83e801e4",
        "f9f400803e683727b14f463836e1e78e1c64417638aa066919291a225f0e8dd8",
-       "053690babeabbb7850c32eead0acf8df990ced79f7a31e358fabf2658b4bc587"},
+       "053690babeabbb7850c32eead0acf8df990ced79f7a31e358fabf2658b4bc587", 1},
   };
 
   int res = 0;
@@ -10587,8 +10588,10 @@ START_TEST(test_zkp_bip340_tweak) {
     ck_assert_int_eq(res, 0);
     ck_assert_mem_eq(output_priv, result, 32);
 
-    res = zkp_bip340_tweak_public_key(internal_pub, root_hash, result);
+    int parity;
+    res = zkp_bip340_tweak_public_key(internal_pub, root_hash, result, &parity);
     ck_assert_int_eq(res, 0);
+    ck_assert_int_eq(parity, tests[i].parity);
     ck_assert_mem_eq(output_pub, result, 32);
   }
 }

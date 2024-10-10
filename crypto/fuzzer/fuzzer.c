@@ -1167,7 +1167,7 @@ int fuzz_zkp_bip340_tweak_keys(void) {
 
   // IDEA act on return values
   zkp_bip340_tweak_private_key(internal_priv, root_hash, result);
-  zkp_bip340_tweak_public_key(internal_pub, root_hash, result);
+  zkp_bip340_tweak_public_key(internal_pub, root_hash, result, NULL);
 
   return 0;
 }
