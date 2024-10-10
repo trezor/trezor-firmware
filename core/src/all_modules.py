@@ -109,6 +109,8 @@ trezor.enums.DebugSwipeDirection
 import trezor.enums.DebugSwipeDirection
 trezor.enums.DecredStakingSpendType
 import trezor.enums.DecredStakingSpendType
+trezor.enums.DisplayRotation
+import trezor.enums.DisplayRotation
 trezor.enums.FailureType
 import trezor.enums.FailureType
 trezor.enums.HomescreenFormat
