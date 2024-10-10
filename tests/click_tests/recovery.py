@@ -56,7 +56,8 @@ def confirm_recovery(debug: "DebugLink", title: str = "recovery__title") -> None
     elif debug.layout_type is LayoutType.Mercury:
         debug.swipe_up()
     elif debug.layout_type is LayoutType.TR:
-        debug.press_right()
+        for _ in range(layout.page_count()):
+            debug.press_right()
 
 
 def select_number_of_words(
