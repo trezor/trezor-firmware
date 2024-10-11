@@ -21,13 +21,15 @@ def configure(
         defines += ["DISPLAY_RGB565"]
         features_available.append("display_rgb565")
 
-    defines += [mcu]
-    defines += [f'TREZOR_BOARD=\\"{board}\\"']
-    defines += [f"HW_MODEL={hw_model}"]
-    defines += [f"HW_REVISION={hw_revision}"]
-    defines += [f"MCU_TYPE={mcu}"]
-    defines += ["FLASH_BIT_ACCESS=1"]
-    defines += ["FLASH_BLOCK_WORDS=1"]
+    defines += [
+        mcu,
+        ("TREZOR_BOARD", f'"{board}"'),
+        ("HW_MODEL", str(hw_model)),
+        ("HW_REVISION", str(hw_revision)),
+        ("MCU_TYPE", mcu),
+        ("FLASH_BIT_ACCESS", "1"),
+        ("FLASH_BLOCK_WORDS", "1"),
+    ]
 
     if "dma2d" in features_wanted:
         features_available.append("dma2d")

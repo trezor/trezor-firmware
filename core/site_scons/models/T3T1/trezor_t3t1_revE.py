@@ -39,10 +39,12 @@ def configure(
     ] = "-mthumb -mcpu=cortex-m33 -mfloat-abi=hard -mfpu=fpv5-sp-d16 -mtune=cortex-m33 -mcmse "
     env.get("ENV")["RUST_TARGET"] = "thumbv8m.main-none-eabihf"
 
-    defines += [mcu]
-    defines += [f'TREZOR_BOARD=\\"{board}\\"']
-    defines += [f"HW_MODEL={hw_model}"]
-    defines += [f"HW_REVISION={hw_revision}"]
+    defines += [
+        mcu,
+        ("TREZOR_BOARD", f'"{board}"'),
+        ("HW_MODEL", str(hw_model)),
+        ("HW_REVISION", str(hw_revision)),
+    ]
 
     if "new_rendering" in features_wanted:
         sources += ["embed/trezorhal/xdisplay_legacy.c"]
@@ -50,14 +52,10 @@ def configure(
         sources += ["embed/trezorhal/stm32u5/xdisplay/st-7789/display_driver.c"]
         sources += ["embed/trezorhal/stm32u5/xdisplay/st-7789/display_io.c"]
         sources += ["embed/trezorhal/stm32u5/xdisplay/st-7789/display_panel.c"]
-        sources += [
-            "embed/trezorhal/stm32u5/xdisplay/st-7789/panels/lx154a2482.c",
-        ]
+        sources += ["embed/trezorhal/stm32u5/xdisplay/st-7789/panels/lx154a2482.c"]
     else:
         sources += [f"embed/trezorhal/stm32u5/displays/{display}"]
-        sources += [
-            "embed/trezorhal/stm32u5/displays/panels/lx154a2482.c",
-        ]
+        sources += ["embed/trezorhal/stm32u5/displays/panels/lx154a2482.c"]
 
     sources += ["embed/trezorhal/stm32u5/backlight_pwm.c"]
 
@@ -74,9 +72,7 @@ def configure(
         features_available.append("touch")
 
     if "haptic" in features_wanted:
-        sources += [
-            "embed/trezorhal/stm32u5/haptic/drv2625/drv2625.c",
-        ]
+        sources += ["embed/trezorhal/stm32u5/haptic/drv2625/drv2625.c"]
         sources += [
             "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_tim.c",
             "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_tim_ex.c",
@@ -118,7 +114,7 @@ def configure(
         features_available.append("dma2d")
 
     if "optiga" in features_wanted:
-        defines += ["USE_OPTIGA=1"]
+        defines += [("USE_OPTIGA", "1")]
         sources += ["embed/trezorhal/stm32u5/optiga_hal.c"]
         sources += ["embed/trezorhal/optiga/optiga.c"]
         sources += ["embed/trezorhal/optiga/optiga_commands.c"]

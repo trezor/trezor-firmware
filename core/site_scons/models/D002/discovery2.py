@@ -30,15 +30,11 @@ def configure(
     ] = "-mthumb -mcpu=cortex-m33 -mfloat-abi=hard -mfpu=fpv5-sp-d16 -mtune=cortex-m33 -mcmse "
     env.get("ENV")["RUST_TARGET"] = "thumbv8m.main-none-eabihf"
 
-    defines += [mcu]
     defines += [
-        f'TREZOR_BOARD=\\"{board}\\"',
-    ]
-    defines += [
-        f"HW_MODEL={hw_model}",
-    ]
-    defines += [
-        f"HW_REVISION={hw_revision}",
+        mcu,
+        ("TREZOR_BOARD", f'"{board}"'),
+        ("HW_MODEL", str(hw_model)),
+        ("HW_REVISION", str(hw_revision)),
     ]
 
     if "new_rendering" in features_wanted:

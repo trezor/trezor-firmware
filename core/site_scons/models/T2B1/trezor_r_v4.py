@@ -34,10 +34,12 @@ def configure(
     ] = "-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mtune=cortex-m4 "
     env.get("ENV")["RUST_TARGET"] = "thumbv7em-none-eabihf"
 
-    defines += [mcu]
-    defines += [f'TREZOR_BOARD=\\"{board}\\"']
-    defines += [f"HW_MODEL={hw_model}"]
-    defines += [f"HW_REVISION={hw_revision}"]
+    defines += [
+        mcu,
+        ("TREZOR_BOARD", f'"{board}"'),
+        ("HW_MODEL", str(hw_model)),
+        ("HW_REVISION", str(hw_revision)),
+    ]
 
     if "new_rendering" in features_wanted:
         sources += ["embed/trezorhal/xdisplay_legacy.c"]
