@@ -440,6 +440,12 @@ if TYPE_CHECKING:
         PromptAlways = 1
         PromptTemporarily = 2
 
+    class DisplayRotation(IntEnum):
+        North = 0
+        East = 90
+        South = 180
+        West = 270
+
     class HomescreenFormat(IntEnum):
         Toif = 1
         Jpeg = 2

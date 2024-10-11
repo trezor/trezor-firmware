@@ -467,6 +467,13 @@ class SafetyCheckLevel(IntEnum):
     PromptTemporarily = 2
 
 
+class DisplayRotation(IntEnum):
+    North = 0
+    East = 90
+    South = 180
+    West = 270
+
+
 class HomescreenFormat(IntEnum):
     Toif = 1
     Jpeg = 2
@@ -3251,7 +3258,7 @@ class Features(protobuf.MessageType):
         36: protobuf.Field("passphrase_always_on_device", "bool", repeated=False, required=False, default=None),
         37: protobuf.Field("safety_checks", "SafetyCheckLevel", repeated=False, required=False, default=None),
         38: protobuf.Field("auto_lock_delay_ms", "uint32", repeated=False, required=False, default=None),
-        39: protobuf.Field("display_rotation", "uint32", repeated=False, required=False, default=None),
+        39: protobuf.Field("display_rotation", "DisplayRotation", repeated=False, required=False, default=None),
         40: protobuf.Field("experimental_features", "bool", repeated=False, required=False, default=None),
         41: protobuf.Field("busy", "bool", repeated=False, required=False, default=None),
         42: protobuf.Field("homescreen_format", "HomescreenFormat", repeated=False, required=False, default=None),
@@ -3308,7 +3315,7 @@ class Features(protobuf.MessageType):
         passphrase_always_on_device: Optional["bool"] = None,
         safety_checks: Optional["SafetyCheckLevel"] = None,
         auto_lock_delay_ms: Optional["int"] = None,
-        display_rotation: Optional["int"] = None,
+        display_rotation: Optional["DisplayRotation"] = None,
         experimental_features: Optional["bool"] = None,
         busy: Optional["bool"] = None,
         homescreen_format: Optional["HomescreenFormat"] = None,
@@ -3410,7 +3417,7 @@ class ApplySettings(protobuf.MessageType):
         4: protobuf.Field("homescreen", "bytes", repeated=False, required=False, default=None),
         5: protobuf.Field("_passphrase_source", "uint32", repeated=False, required=False, default=None),
         6: protobuf.Field("auto_lock_delay_ms", "uint32", repeated=False, required=False, default=None),
-        7: protobuf.Field("display_rotation", "uint32", repeated=False, required=False, default=None),
+        7: protobuf.Field("display_rotation", "DisplayRotation", repeated=False, required=False, default=None),
         8: protobuf.Field("passphrase_always_on_device", "bool", repeated=False, required=False, default=None),
         9: protobuf.Field("safety_checks", "SafetyCheckLevel", repeated=False, required=False, default=None),
         10: protobuf.Field("experimental_features", "bool", repeated=False, required=False, default=None),
@@ -3427,7 +3434,7 @@ class ApplySettings(protobuf.MessageType):
         homescreen: Optional["bytes"] = None,
         _passphrase_source: Optional["int"] = None,
         auto_lock_delay_ms: Optional["int"] = None,
-        display_rotation: Optional["int"] = None,
+        display_rotation: Optional["DisplayRotation"] = None,
         passphrase_always_on_device: Optional["bool"] = None,
         safety_checks: Optional["SafetyCheckLevel"] = None,
         experimental_features: Optional["bool"] = None,
