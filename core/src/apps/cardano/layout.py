@@ -610,6 +610,7 @@ async def confirm_certificate(
         "confirm_certificate",
         TR.cardano__confirm_transaction,
         props,
+        hold=True,
         br_code=BRT_Other,
     )
 
