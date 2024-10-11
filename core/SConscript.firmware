@@ -678,6 +678,7 @@ if FROZEN:
         backlight='backlight' in FEATURES_AVAILABLE,
         optiga='optiga' in FEATURES_AVAILABLE,
         ui_layout=ui.get_ui_layout(TREZOR_MODEL),
+        tropic='tropic' in FEATURES_AVAILABLE,
         thp=THP,
         )
 
