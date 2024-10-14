@@ -88,8 +88,13 @@ def test_reset_slip39_advanced(
         reset.set_selection(debug, buttons.reset_plus(model_name), group_count - 5)
 
     # confirm checklist
-    TR.assert_in(
-        debug.read_layout().text_content(), "reset__slip39_checklist_set_threshold"
+    TR.assert_in_multiple(
+        debug.read_layout().text_content(),
+        [
+            "reset__slip39_checklist_set_threshold",  # basic
+            "reset__slip39_checklist_set_num_shares",  # advanced (model_tt, mercury)
+            "reset__slip39_checklist_num_shares",  # advanced (model_tr)
+        ],
     )
     reset.confirm_read(debug)
 
