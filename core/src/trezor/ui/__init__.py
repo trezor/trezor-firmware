@@ -499,7 +499,7 @@ class ProgressLayout:
 
         self.layout.request_complete_repaint()
         painted = self.layout.paint()
-        backlight_fade(BacklightLevels.NONE)
+        backlight_fade(BacklightLevels.NORMAL)
         if painted:
             refresh()
 
