@@ -784,6 +784,70 @@ int tc_ecdsa_sign_digest(const ecdsa_curve *curve, const uint8_t *priv_key,
   return -1;
 }
 
+// masking_key is a 32 byte scalar in big endian byte order
+// digest = mask_key^-1 * digest (mod n)
+int ecdsa_mask_digest(const ecdsa_curve *curve, const uint8_t masking_key[32],
+                      const uint8_t *digest[32], uint8_t masked_digest[32]) {
+  bignum256 z = {0};
+  bn_read_be(digest, &z);
+  if (bn_is_zero(&z)) {
+    // The probability of the digest being all-zero by chance is infinitesimal,
+    // so this is most likely an indication of a bug. Furthermore, the signature
+    // has no value, because in this case it can be easily forged for any public
+    // key, see ecdsa_verify_digest().
+    return 1;
+  }
+
+  bignum256 k = {0};
+  bn_read_be(masking_key, &k);
+  if (bn_is_zero(&k) || !bn_is_less(&k, &curve->order)) {
+    // Invalid masking key.
+    return 2;
+  }
+
+  // randomize operations to counter side-channel attacks
+  bignum256 rand = {0};
+  generate_k_random(&rand, &curve->order);
+  bn_multiply(&rand, &k, &curve->order);  // s * rand
+  bn_inverse(&k, &curve->order);          // (s * rand)^-1
+  bn_multiply(&k, &z, &curve->order);     // (s * rand)^-1 * z
+  bn_multiply(&rand, &z, &curve->order);  // s^-1 * z
+  bn_mod(&z, &curve->order);
+  bn_write_be(&z, masked_digest);
+
+  memzero(&z, sizeof(z));
+  memzero(&k, sizeof(k));
+  memzero(&rand, sizeof(rand));
+  return 0;
+}
+
+// masking_key is a 32 byte scalar in big endian byte order
+// sig[32:64] = masking_key * sig[32:64] (mod n)
+int ecdsa_unmask_signature(const ecdsa_curve *curve, const uint8_t masking_key[32],
+                           uint8_t sig[64]) {
+  bignum256 k = {0};
+  bn_read_be(masking_key, &k);
+  if (bn_is_zero(&k) || !bn_is_less(&k, &curve->order)) {
+    // Invalid masking key.
+    return 1;
+  }
+
+  bignum256 s = {0};
+  bn_read_be(&sig[32], &s);
+  if (bn_is_zero(&s) || !bn_is_less(&s, &curve->order)) {
+    // Invalid signature.
+    return 2;
+  }
+
+  bn_multiply(&k, &s, &curve->order);
+  bn_mod(&s, &curve->order);
+  bn_write_be(&s, &sig[32]);
+
+  memzero(&k, sizeof(k));
+  memzero(&s, sizeof(s));
+  return 0;
+}
+
 // returns 0 on success
 int tc_ecdsa_get_public_key33(const ecdsa_curve *curve, const uint8_t *priv_key,
                               uint8_t *pub_key) {

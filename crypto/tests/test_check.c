@@ -4171,6 +4171,52 @@ START_TEST(test_zkp_ecdsa_sign_digest_deterministic) {
 }
 END_TEST
 
+START_TEST(test_ecdsa_sign_digest_masked) {
+  static struct {
+    const char *priv_key;
+    const char *masking_key;
+    const char *digest;
+  } tests[] = {
+      {"312155017c70a204106e034520e0cdf17b3e54516e2ece38e38e38e38e38e38e",
+       "5cfbdc7d1e0ec18cc9b57bbb18f0a57dc929ec3c4dfac9073c581705015f6a8a",
+       "e3d70248ea2fc771fc8d5e62d76b9cfd5402c96990333549eaadce1ae9f737eb"},
+      {"312155017c70a204106e034520e0cdf17b3e54516e2ece38e38e38e38e38e38e",
+       "40666188895430715552a7e4c6b53851f37a93030fb94e043850921242db78e8",
+       "75aa2ac9fd7e5a19402973e60e64382cdc29a09ebf6cb37e92f23be5b9251aee"},
+  };
+
+  const ecdsa_curve *curve = &nist256p1;
+  uint8_t priv_key[32] = {0};
+  uint8_t masking_key[32] = {0};
+  uint8_t pub_key[65] = {0};
+  uint8_t digest[32] = {0};
+  uint8_t sig[64] = {0};
+  int res = 0;
+  for (size_t i = 0; i < sizeof(tests) / sizeof(*tests); i++) {
+    // Generate masked public key.
+    memcpy(priv_key, fromhex(tests[i].priv_key), 32);
+    memcpy(masking_key, fromhex(tests[i].masking_key), 32);
+    tc_ecdsa_get_public_key65(curve, priv_key, pub_key);
+    tc_ecdh_multiply(curve, masking_key, pub_key, pub_key);
+
+    // Generate masked signature.
+    memcpy(digest, fromhex(tests[i].digest), 32);
+    res = ecdsa_mask_digest(curve, masking_key, digest, digest);
+    ck_assert_int_eq(res, 0);
+    res = tc_ecdsa_sign_digest(curve, priv_key, digest, sig, NULL, NULL);
+    ck_assert_int_eq(res, 0);
+    res = ecdsa_unmask_signature(curve, masking_key, sig);
+    ck_assert_int_eq(res, 0);
+
+    // Verify signature.
+    memcpy(digest, fromhex(tests[i].digest), 32);
+    res = tc_ecdsa_verify_digest(curve, pub_key, sig, digest);
+    ck_assert_int_eq(res, 0);
+  }
+
+}
+END_TEST
+
 // test vectors from
 // http://www.inconteam.com/software-development/41-encryption/55-aes-test-vectors
 START_TEST(test_aes) {
@@ -11523,6 +11569,7 @@ Suite *test_suite(void) {
   tcase_add_test(tc, test_tc_ecdsa_sign_digest_deterministic);
   tcase_add_test(tc, test_zkp_ecdsa_sign_digest_deterministic);
 #endif
+  tcase_add_test(tc, test_ecdsa_sign_digest_masked);
   suite_add_tcase(s, tc);
 
   tc = tcase_create("rfc6979");
