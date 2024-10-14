@@ -16,7 +16,7 @@ from trezorlib._internal.translations import VersionTuple
 HERE = Path(__file__).parent.resolve()
 LOG = logging.getLogger(__name__)
 
-ALL_MODELS = {models.T2B1, models.T2T1, models.T3T1, models.T3B1}
+ALL_MODELS = {models.T2B1, models.T2T1, models.T3T1, models.T3B1, models.T3W1}
 
 PRIVATE_KEYS_DEV = [byte * 32 for byte in (b"\xdd", b"\xde", b"\xdf")]
 
