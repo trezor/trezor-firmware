@@ -207,3 +207,40 @@ def _networks_iterator() -> Iterator[NetworkInfoTuple]:
             "tSEP",  # symbol
             "Sepolia",  # name
         )
+    if utils.INTERNAL_MODEL == "T3W1":
+        yield (
+            1,  # chain_id
+            60,  # slip44
+            "ETH",  # symbol
+            "Ethereum",  # name
+        )
+        yield (
+            56,  # chain_id
+            714,  # slip44
+            "BNB",  # symbol
+            "BNB Smart Chain",  # name
+        )
+        yield (
+            61,  # chain_id
+            61,  # slip44
+            "ETC",  # symbol
+            "Ethereum Classic",  # name
+        )
+        yield (
+            137,  # chain_id
+            966,  # slip44
+            "POL",  # symbol
+            "Polygon",  # name
+        )
+        yield (
+            17000,  # chain_id
+            1,  # slip44
+            "tHOL",  # symbol
+            "Holesky",  # name
+        )
+        yield (
+            11155111,  # chain_id
+            1,  # slip44
+            "tSEP",  # symbol
+            "Sepolia",  # name
+        )

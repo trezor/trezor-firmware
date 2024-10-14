@@ -29,6 +29,16 @@
       "6_FONT_NORMAL_UPPER": null,
       "7_FONT_BOLD_UPPER": null,
       "8_FONT_SUB": "font_ttsatoshi_demibold_18_tr.json"
+    },
+    "T3W1": {
+      "1_FONT_NORMAL": "font_ttsatoshi_demibold_21_tr.json",
+      "2_FONT_BOLD": "font_ttsatoshi_demibold_21_tr.json",
+      "3_FONT_MONO": "font_robotomono_medium_21_tr.json",
+      "4_FONT_BIG": null,
+      "5_FONT_DEMIBOLD": "font_ttsatoshi_demibold_21_tr.json",
+      "6_FONT_NORMAL_UPPER": null,
+      "7_FONT_BOLD_UPPER": null,
+      "8_FONT_SUB": "font_ttsatoshi_demibold_18_tr.json"
     }
   },
   "header": {
