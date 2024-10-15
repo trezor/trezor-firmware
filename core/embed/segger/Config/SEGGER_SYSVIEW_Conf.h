@@ -3,7 +3,7 @@
 *                        The Embedded Experts                        *
 **********************************************************************
 *                                                                    *
-*            (c) 1995 - 2019 SEGGER Microcontroller GmbH             *
+*            (c) 1995 - 2024 SEGGER Microcontroller GmbH             *
 *                                                                    *
 *       www.segger.com     Support: support@segger.com               *
 *                                                                    *
@@ -42,7 +42,7 @@
 *                                                                    *
 **********************************************************************
 *                                                                    *
-*       SystemView version: 3.20                                    *
+*       SystemView version: 3.58                                    *
 *                                                                    *
 **********************************************************************
 -------------------------- END-OF-HEADER -----------------------------
@@ -74,10 +74,10 @@ Additional information:
 **********************************************************************
 */
 
-/*********************************************************************
-* TODO: Add your defines here.                                       *
-**********************************************************************
-*/
+
+#define SEGGER_SYSVIEW_RTT_BUFFER_SIZE          4096
+
+#define SEGGER_SYSVIEW_MAX_STRING_LEN           1024
 
 #define SEGGER_SYSVIEW_BUFFER_SECTION "CCMRAM"
 

@@ -3,7 +3,7 @@
 *                        The Embedded Experts                        *
 **********************************************************************
 *                                                                    *
-*            (c) 1995 - 2019 SEGGER Microcontroller GmbH             *
+*            (c) 1995 - 2024 SEGGER Microcontroller GmbH             *
 *                                                                    *
 *       www.segger.com     Support: support@segger.com               *
 *                                                                    *
@@ -42,7 +42,7 @@
 *                                                                    *
 **********************************************************************
 *                                                                    *
-*       SystemView version: 3.20                                    *
+*       SystemView version: 3.58                                    *
 *                                                                    *
 **********************************************************************
 ---------------------------END-OF-HEADER------------------------------
@@ -50,7 +50,7 @@ File    : SEGGER_RTT_Conf.h
 Purpose : Implementation of SEGGER real-time transfer (RTT) which
           allows real-time communication on targets which support
           debugger memory accesses while the CPU is running.
-Revision: $Rev: 21386 $
+Revision: $Rev: 24316 $
 
 */
 
@@ -169,7 +169,7 @@ Revision: $Rev: 21386 $
                                                   :                                                 \
                                                   );                                                \
                                 }
-  #elif (defined(__ARM_ARCH_7M__) || defined(__ARM_ARCH_7EM__) || defined(__ARM_ARCH_8M_MAIN__))
+  #elif (defined(__ARM_ARCH_7M__) || defined(__ARM_ARCH_7EM__) || defined(__ARM_ARCH_8M_MAIN__) || defined(__ARM_ARCH_8_1M_MAIN__))
     #ifndef   SEGGER_RTT_MAX_INTERRUPT_PRIORITY
       #define SEGGER_RTT_MAX_INTERRUPT_PRIORITY   (0x20)
     #endif
@@ -190,7 +190,7 @@ Revision: $Rev: 21386 $
                                                   );                                                \
                                 }
 
-  #elif defined(__ARM_ARCH_7A__)
+  #elif (defined(__ARM_ARCH_7A__) || defined(__ARM_ARCH_7R__))
     #define SEGGER_RTT_LOCK() {                                                \
                                  unsigned int _SEGGER_RTT__LockState;                       \
                                  __asm volatile ("mrs r1, CPSR \n\t"           \
