@@ -104,18 +104,18 @@ void reboot_device(void) {
 
 #include "hash_processor.h"
 
-void hash_processor_sha256_init(hash_sha265_context_t *ctx) {
+void hash_processor_sha256_init(hash_sha256_context_t *ctx) {
   syscall_invoke1((uint32_t)ctx, SYSCALL_SHA256_INIT);
 }
 
 // Feed the hash next chunk of data
-void hash_processor_sha256_update(hash_sha265_context_t *ctx,
+void hash_processor_sha256_update(hash_sha256_context_t *ctx,
                                   const uint8_t *data, uint32_t len) {
   syscall_invoke3((uint32_t)ctx, (uint32_t)data, len, SYSCALL_SHA256_UPDATE);
 }
 
 // Finalize the hash calculation, retrieve the digest
-void hash_processor_sha256_final(hash_sha265_context_t *ctx, uint8_t *output) {
+void hash_processor_sha256_final(hash_sha256_context_t *ctx, uint8_t *output) {
   syscall_invoke2((uint32_t)ctx, (uint32_t)output, SYSCALL_SHA256_FINAL);
 }
 
