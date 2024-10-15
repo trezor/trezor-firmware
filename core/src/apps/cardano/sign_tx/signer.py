@@ -89,6 +89,7 @@ class Signer:
 
         self.msg = msg
         self.keychain = keychain
+        self.total_amount = 0  # sum of output amounts
 
         self.account_path_checker = AccountPathChecker()
 
@@ -236,6 +237,7 @@ class Signer:
             raise ProcessError("Total collateral is out of range!")
         validate_network_info(msg.network_id, msg.protocol_magic)
 
+
     async def _show_tx_init(self) -> None:
         self.should_show_details = await layout.show_tx_init(self.SIGNING_MODE_TITLE)
 
@@ -270,16 +272,15 @@ class Signer:
     # outputs
 
     async def _process_outputs(self, outputs_list: HashBuilderList) -> None:
-        total_amount = 0
         for _ in range(self.msg.outputs_count):
             output: CardanoTxOutput = await ctx_call(
                 CardanoTxItemAck(), CardanoTxOutput
             )
             await self._process_output(outputs_list, output)
 
-            total_amount += output.amount
+            self.total_amount += output.amount
 
-        if total_amount > LOVELACE_MAX_SUPPLY:
+        if self.total_amount > LOVELACE_MAX_SUPPLY:
             raise ProcessError("Total transaction amount is out of range!")
 
     async def _process_output(
