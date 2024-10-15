@@ -45,6 +45,7 @@
 #include "secret.h"
 #include "secure_aes.h"
 #include "system.h"
+#include "systemview.h"
 #include "systick.h"
 #include "tamper.h"
 #include "touch.h"

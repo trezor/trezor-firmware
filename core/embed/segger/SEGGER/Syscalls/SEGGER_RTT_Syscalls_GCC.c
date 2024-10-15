@@ -3,7 +3,7 @@
 *                        The Embedded Experts                        *
 **********************************************************************
 *                                                                    *
-*            (c) 1995 - 2019 SEGGER Microcontroller GmbH             *
+*            (c) 1995 - 2024 SEGGER Microcontroller GmbH             *
 *                                                                    *
 *       www.segger.com     Support: support@segger.com               *
 *                                                                    *
@@ -42,7 +42,7 @@
 *                                                                    *
 **********************************************************************
 *                                                                    *
-*       SystemView version: 3.20                                    *
+*       SystemView version: 3.58                                    *
 *                                                                    *
 **********************************************************************
 ---------------------------END-OF-HEADER------------------------------
@@ -50,7 +50,7 @@ File    : SEGGER_RTT_Syscalls_GCC.c
 Purpose : Low-level functions for using printf() via RTT in GCC.
           To use RTT for printf output, include this file in your
           application.
-Revision: $Rev: 20755 $
+Revision: $Rev: 24316 $
 ----------------------------------------------------------------------
 */
 #if (defined __GNUC__) && !(defined __SES_ARM) && !(defined __CROSSWORKS_ARM) && !(defined __ARMCC_VERSION) && !(defined __CC_ARM)

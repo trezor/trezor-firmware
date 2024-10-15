@@ -3,7 +3,7 @@
 *                        The Embedded Experts                        *
 **********************************************************************
 *                                                                    *
-*            (c) 1995 - 2019 SEGGER Microcontroller GmbH             *
+*            (c) 1995 - 2024 SEGGER Microcontroller GmbH             *
 *                                                                    *
 *       www.segger.com     Support: support@segger.com               *
 *                                                                    *
@@ -42,14 +42,14 @@
 *                                                                    *
 **********************************************************************
 *                                                                    *
-*       SystemView version: 3.20                                    *
+*       SystemView version: 3.58                                    *
 *                                                                    *
 **********************************************************************
 -------------------------- END-OF-HEADER -----------------------------
 File    : SEGGER_SYSVIEW_ConfDefaults.h
 Purpose : Defines defaults for configurable defines used in
           SEGGER SystemView.
-Revision: $Rev: 21319 $
+Revision: $Rev: 26230 $
 */
 
 #ifndef SEGGER_SYSVIEW_CONFDEFAULTS_H
@@ -68,10 +68,6 @@ Revision: $Rev: 21319 $
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include <stdint.h>
-extern uint32_t svc_get_dwt_cyccnt();
-
 
 /*********************************************************************
 *
@@ -216,7 +212,7 @@ extern uint32_t svc_get_dwt_cyccnt();
 */
 #ifndef SEGGER_SYSVIEW_GET_TIMESTAMP
   #if defined (SEGGER_SYSVIEW_CORE) && (SEGGER_SYSVIEW_CORE == SEGGER_SYSVIEW_CORE_CM3)
-    #define SEGGER_SYSVIEW_GET_TIMESTAMP()        svc_get_dwt_cyccnt()                  // Retrieve a system timestamp. Cortex-M cycle counter.
+    #define SEGGER_SYSVIEW_GET_TIMESTAMP()        (*(U32 *)(0xE0001004))                  // Retrieve a system timestamp. Cortex-M cycle counter.
   #else
     #define SEGGER_SYSVIEW_GET_TIMESTAMP()        SEGGER_SYSVIEW_X_GetTimestamp()         // Retrieve a system timestamp via user-defined function
   #endif
@@ -269,7 +265,7 @@ extern uint32_t svc_get_dwt_cyccnt();
 *    1024
 */
 #ifndef   SEGGER_SYSVIEW_RTT_BUFFER_SIZE
-  #define SEGGER_SYSVIEW_RTT_BUFFER_SIZE          4096
+  #define SEGGER_SYSVIEW_RTT_BUFFER_SIZE          1024
 #endif
 
 /*********************************************************************
@@ -364,7 +360,33 @@ extern uint32_t svc_get_dwt_cyccnt();
 *    128
 */
 #ifndef   SEGGER_SYSVIEW_MAX_STRING_LEN
-  #define SEGGER_SYSVIEW_MAX_STRING_LEN           1024
+  #define SEGGER_SYSVIEW_MAX_STRING_LEN           128
+#endif
+
+/*********************************************************************
+*
+*       Define: SEGGER_SYSVIEW_SUPPORT_LONG_ID
+*
+*  Description
+*    It set, support enconding Evend Ids longer than 14 bit.
+*  Default
+*    1
+*/
+#ifndef   SEGGER_SYSVIEW_SUPPORT_LONG_ID
+  #define SEGGER_SYSVIEW_SUPPORT_LONG_ID          1
+#endif
+
+/*********************************************************************
+*
+*       Define: SEGGER_SYSVIEW_SUPPORT_LONG_DATA
+*
+*  Description
+*    It set, support enconding event data longer than 14 bit.
+*  Default
+*    0
+*/
+#ifndef   SEGGER_SYSVIEW_SUPPORT_LONG_DATA
+  #define SEGGER_SYSVIEW_SUPPORT_LONG_DATA        0
 #endif
 
 /*********************************************************************
