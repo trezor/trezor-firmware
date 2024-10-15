@@ -20,7 +20,7 @@ endif
 
 PROTO_NAMES = messages messages-bitcoin messages-common messages-crypto messages-debug \
 	messages-ethereum messages-ethereum-definitions messages-management messages-nem \
-	messages-stellar
+	messages-stellar options
 
 PROTO_OPTIONS = $(PROTO_NAMES:=.options)
 PROTO_COMPILED = $(PROTO_NAMES:=.pb)
@@ -47,7 +47,7 @@ messages.pb.h: $(PROTO_COMPILED) $(PROTO_OPTIONS)
 	@printf "  PROTOC  $@\n"
 	$(Q)protoc -I/usr/include -I. $< --python_out=.
 
-messages_map.h messages_map_limits.h: messages_map.py messages_pb2.py
+messages_map.h messages_map_limits.h: messages_map.py messages_pb2.py options_pb2.py
 	$(Q)$(PYTHON) $< ${SKIPPED_MESSAGES}
 
 clean:

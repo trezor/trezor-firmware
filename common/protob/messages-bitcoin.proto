@@ -5,10 +5,10 @@ package hw.trezor.messages.bitcoin;
 option java_package = "com.satoshilabs.trezor.lib.protobuf";
 option java_outer_classname = "TrezorMessageBitcoin";
 
-option (include_in_bitcoin_only) = true;
-
-import "messages.proto";
 import "messages-common.proto";
+import "options.proto";
+
+option (include_in_bitcoin_only) = true;
 
 /**
  * Type of script which will be used for transaction input

@@ -5,9 +5,9 @@ package hw.trezor.messages.crypto;
 option java_package = "com.satoshilabs.trezor.lib.protobuf";
 option java_outer_classname = "TrezorMessageCrypto";
 
-option (include_in_bitcoin_only) = true;
+import "options.proto";
 
-import "messages.proto";
+option (include_in_bitcoin_only) = true;
 
 /**
  * Request: Ask device to encrypt or decrypt value of given key
