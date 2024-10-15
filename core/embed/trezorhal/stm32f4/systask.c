@@ -29,6 +29,7 @@
 #include "syscall.h"
 #include "systask.h"
 #include "system.h"
+#include "systemview.h"
 
 #ifdef KERNEL_MODE
 
@@ -347,6 +348,8 @@ __attribute((no_stack_protector, used)) static uint32_t scheduler_pendsv(
     uint32_t sp, uint32_t sp_lim, uint32_t exc_return) {
   systask_scheduler_t* scheduler = &g_systask_scheduler;
 
+  SEGGER_SYSVIEW_RecordEnterISR();
+
   // Save the current task context
   systask_t* prev_task = scheduler->active_task;
   prev_task->sp = sp;
@@ -374,6 +377,8 @@ __attribute((no_stack_protector, used)) static uint32_t scheduler_pendsv(
 
   // Setup the MPU for the new task
   mpu_reconfig(next_task->mpu_mode);
+
+  SEGGER_SYSVIEW_RecordExitISR();
 
   return (uint32_t)next_task;
 }
@@ -470,6 +475,8 @@ __attribute__((naked, no_stack_protector)) void PendSV_Handler(void) {
 __attribute__((no_stack_protector, used)) static uint32_t svc_handler(
     uint32_t* stack, uint32_t* msp, uint32_t exc_return, uint32_t r4,
     uint32_t r5, uint32_t r6) {
+  SEGGER_SYSVIEW_RecordEnterISR();
+
   uint8_t svc_number = ((uint8_t*)stack[6])[-2];
 
 #ifdef SYSCALL_DISPATCH
@@ -501,6 +508,7 @@ __attribute__((no_stack_protector, used)) static uint32_t svc_handler(
   }
 
   mpu_restore(mpu_mode);
+  SEGGER_SYSVIEW_RecordExitISR();
   return exc_return;
 }
 
