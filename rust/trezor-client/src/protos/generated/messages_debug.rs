@@ -3558,8 +3558,8 @@ impl ::protobuf::reflect::ProtobufValue for DebugLinkOptigaSetSecMax {
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\x14messages-debug.proto\x12\x18hw.trezor.messages.debug\x1a\x0emessag\
-    es.proto\x1a\x15messages-common.proto\x1a\x19messages-management.proto\"\
+    \n\x14messages-debug.proto\x12\x18hw.trezor.messages.debug\x1a\x15messag\
+    es-common.proto\x1a\x19messages-management.proto\x1a\roptions.proto\"\
     \xb0\x04\n\x11DebugLinkDecision\x12O\n\x06button\x18\x01\x20\x01(\x0e27.\
     hw.trezor.messages.debug.DebugLinkDecision.DebugButtonR\x06button\x12U\n\
     \x05swipe\x18\x02\x20\x01(\x0e2?.hw.trezor.messages.debug.DebugLinkDecis\
@@ -3624,9 +3624,9 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
     file_descriptor.get(|| {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
             let mut deps = ::std::vec::Vec::with_capacity(3);
-            deps.push(super::messages::file_descriptor().clone());
             deps.push(super::messages_common::file_descriptor().clone());
             deps.push(super::messages_management::file_descriptor().clone());
+            deps.push(super::options::file_descriptor().clone());
             let mut messages = ::std::vec::Vec::with_capacity(16);
             messages.push(DebugLinkDecision::generated_message_descriptor_data());
             messages.push(DebugLinkLayout::generated_message_descriptor_data());

@@ -714,7 +714,11 @@ def main(
     if verbose:
         logging.basicConfig(level=logging.DEBUG)
 
-    descriptor_proto = protoc(proto)
+    # The proto tuple is sorted to give consistent results in different environments
+    list_proto = list(proto)
+    list_proto.sort()
+
+    descriptor_proto = protoc(list_proto)
     descriptor = Descriptor(
         descriptor_proto,
         include_deprecated=include_deprecated,

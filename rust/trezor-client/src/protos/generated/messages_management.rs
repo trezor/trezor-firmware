@@ -11086,7 +11086,7 @@ impl RecoveryType {
 
 static file_descriptor_proto_data: &'static [u8] = b"\
     \n\x19messages-management.proto\x12\x1dhw.trezor.messages.management\x1a\
-    \x0emessages.proto\"\x80\x01\n\nInitialize\x12\x1d\n\nsession_id\x18\x01\
+    \roptions.proto\"\x80\x01\n\nInitialize\x12\x1d\n\nsession_id\x18\x01\
     \x20\x01(\x0cR\tsessionId\x12,\n\x10_skip_passphrase\x18\x02\x20\x01(\
     \x08R\x0eSkipPassphraseB\x02\x18\x01\x12%\n\x0ederive_cardano\x18\x03\
     \x20\x01(\x08R\rderiveCardano\"\r\n\x0bGetFeatures\"\xd6\x17\n\x08Featur\
@@ -11276,7 +11276,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
     file_descriptor.get(|| {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
             let mut deps = ::std::vec::Vec::with_capacity(1);
-            deps.push(super::messages::file_descriptor().clone());
+            deps.push(super::options::file_descriptor().clone());
             let mut messages = ::std::vec::Vec::with_capacity(46);
             messages.push(Initialize::generated_message_descriptor_data());
             messages.push(GetFeatures::generated_message_descriptor_data());

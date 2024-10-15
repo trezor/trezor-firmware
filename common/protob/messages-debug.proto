@@ -5,11 +5,11 @@ package hw.trezor.messages.debug;
 option java_package = "com.satoshilabs.trezor.lib.protobuf";
 option java_outer_classname = "TrezorMessageDebug";
 
-option (include_in_bitcoin_only) = true;
-
-import "messages.proto";
 import "messages-common.proto";
 import "messages-management.proto";
+import "options.proto";
+
+option (include_in_bitcoin_only) = true;
 
 /**
  * Request: "Press" the button on the device
