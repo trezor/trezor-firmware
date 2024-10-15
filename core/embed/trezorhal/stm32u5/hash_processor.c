@@ -83,11 +83,11 @@ void hash_processor_sha256_calc(const uint8_t *data, uint32_t len,
   }
 }
 
-void hash_processor_sha256_init(hash_sha265_context_t *ctx) {
-  memzero(ctx, sizeof(hash_sha265_context_t));
+void hash_processor_sha256_init(hash_sha256_context_t *ctx) {
+  memzero(ctx, sizeof(hash_sha256_context_t));
 }
 
-void hash_processor_sha256_update(hash_sha265_context_t *ctx,
+void hash_processor_sha256_update(hash_sha256_context_t *ctx,
                                   const uint8_t *data, uint32_t len) {
   if (ctx->length > 0) {
     uint32_t chunk = HASH_SHA256_BUFFER_SIZE - ctx->length;
@@ -122,7 +122,7 @@ void hash_processor_sha256_update(hash_sha265_context_t *ctx,
   }
 }
 
-void hash_processor_sha256_final(hash_sha265_context_t *ctx, uint8_t *output) {
+void hash_processor_sha256_final(hash_sha256_context_t *ctx, uint8_t *output) {
   uint32_t tmp_out[SHA256_DIGEST_LENGTH / sizeof(uint32_t)] = {0};
   memzero(ctx->buffer + ctx->length, HASH_SHA256_BUFFER_SIZE - ctx->length);
   HAL_HASHEx_SHA256_Accmlt_End(&hhash, (uint8_t *)ctx->buffer, ctx->length,
