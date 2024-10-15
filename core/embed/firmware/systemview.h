@@ -1,19 +1,31 @@
 
+/*
+ * This file is part of the Trezor project, https://trezor.io/
+ *
+ * Copyright (c) SatoshiLabs
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #ifndef CORE_SYSTEMVIEW_H
 #define CORE_SYSTEMVIEW_H
 
 #ifdef SYSTEM_VIEW
 
-#include <stdint.h>
 #include "SEGGER_SYSVIEW.h"
 
-#define DWT_CYCCNT_ADDR ((uint32_t*)(0xE0001004));
-#define SVC_GET_DWT_CYCCNT 3
-
-extern volatile uint32_t cyccnt_cycles;
-
-void enable_systemview();
-uint32_t svc_get_dwt_cyccnt();
+void enable_systemview(void);
 
 #else
 #define SEGGER_SYSVIEW_RecordEnterISR()

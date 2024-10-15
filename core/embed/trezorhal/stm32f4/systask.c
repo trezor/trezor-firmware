@@ -479,11 +479,6 @@ __attribute__((no_stack_protector, used)) static uint32_t svc_handler(
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DEFAULT);
 
   switch (svc_number) {
-#ifdef SYSTEM_VIEW
-    case SVC_GET_DWT_CYCCNT:
-      cyccnt_cycles = *DWT_CYCCNT_ADDR;
-      break;
-#endif
     case SVC_SYSTASK_YIELD:
       // Yield to the waiting task
       systask_yield();

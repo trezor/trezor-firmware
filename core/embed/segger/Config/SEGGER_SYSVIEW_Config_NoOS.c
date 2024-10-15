@@ -3,7 +3,7 @@
 *                        The Embedded Experts                        *
 **********************************************************************
 *                                                                    *
-*            (c) 1995 - 2019 SEGGER Microcontroller GmbH             *
+*            (c) 1995 - 2024 SEGGER Microcontroller GmbH             *
 *                                                                    *
 *       www.segger.com     Support: support@segger.com               *
 *                                                                    *
@@ -42,7 +42,7 @@
 *                                                                    *
 **********************************************************************
 *                                                                    *
-*       SystemView version: 3.20                                    *
+*       SystemView version: 3.58                                    *
 *                                                                    *
 **********************************************************************
 -------------------------- END-OF-HEADER -----------------------------
@@ -68,7 +68,7 @@ extern unsigned int SystemCoreClock;
 #define SYSVIEW_APP_NAME        "Trezor Core"
 
 // The target device name
-#define SYSVIEW_DEVICE_NAME     "STM32F427VI"
+#define SYSVIEW_DEVICE_NAME     "Cortex-M"
 
 // Frequency of the timestamp. Must match SEGGER_SYSVIEW_Conf.h
 #define SYSVIEW_TIMESTAMP_FREQ  (SystemCoreClock)
@@ -110,8 +110,9 @@ extern unsigned int SystemCoreClock;
 */
 static void _cbSendSystemDesc(void) {
   SEGGER_SYSVIEW_SendSysDesc("N="SYSVIEW_APP_NAME",D="SYSVIEW_DEVICE_NAME);
+  SEGGER_SYSVIEW_SendSysDesc("I#11=SVCall");
+  SEGGER_SYSVIEW_SendSysDesc("I#14=PendSV");
   SEGGER_SYSVIEW_SendSysDesc("I#15=SysTick");
-  SEGGER_SYSVIEW_SendSysDesc("I#93=USB_HS");
 }
 
 /*********************************************************************

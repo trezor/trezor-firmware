@@ -225,8 +225,8 @@ if FEATURE_FLAGS["RDI"]:
     CPPDEFINES_MOD += ['RDI']
 
 if FEATURE_FLAGS["SYSTEM_VIEW"]:
-    SOURCE_FIRMWARE += [
-        'embed/segger/SEGGER/SEGGER_SYSVIEW_Config_NoOS.c',
+    SOURCE_MOD += [
+        'embed/segger/Config/SEGGER_SYSVIEW_Config_NoOS.c',
         'embed/segger/SEGGER/SEGGER_SYSVIEW.c',
         'embed/segger/SEGGER/SEGGER_RTT.c',
         'embed/segger/SEGGER/SEGGER_RTT_ASM_ARMv7M.S',
