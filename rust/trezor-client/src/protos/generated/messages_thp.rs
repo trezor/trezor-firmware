@@ -538,9 +538,9 @@ impl ::protobuf::reflect::ProtobufValue for ThpAuthenticatedCredentialData {
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\x12messages-thp.proto\x12\x16hw.trezor.messages.thp\x1a\x0emessages.p\
-    roto\":\n\x15ThpCredentialMetadata\x12\x1b\n\thost_name\x18\x01\x20\x01(\
-    \tR\x08hostName:\x04\x98\xb2\x19\x01\"\x82\x01\n\x14ThpPairingCredential\
+    \n\x12messages-thp.proto\x12\x16hw.trezor.messages.thp\x1a\roptions.prot\
+    o\":\n\x15ThpCredentialMetadata\x12\x1b\n\thost_name\x18\x01\x20\x01(\tR\
+    \x08hostName:\x04\x98\xb2\x19\x01\"\x82\x01\n\x14ThpPairingCredential\
     \x12R\n\rcred_metadata\x18\x01\x20\x01(\x0b2-.hw.trezor.messages.thp.Thp\
     CredentialMetadataR\x0ccredMetadata\x12\x10\n\x03mac\x18\x02\x20\x01(\
     \x0cR\x03mac:\x04\x98\xb2\x19\x01\"\xa8\x01\n\x1eThpAuthenticatedCredent\
@@ -565,7 +565,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
     file_descriptor.get(|| {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
             let mut deps = ::std::vec::Vec::with_capacity(1);
-            deps.push(super::messages::file_descriptor().clone());
+            deps.push(super::options::file_descriptor().clone());
             let mut messages = ::std::vec::Vec::with_capacity(3);
             messages.push(ThpCredentialMetadata::generated_message_descriptor_data());
             messages.push(ThpPairingCredential::generated_message_descriptor_data());

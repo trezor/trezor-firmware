@@ -2,8 +2,8 @@
 import sys
 from collections import defaultdict
 
-from messages_pb2 import (
-    MessageType,
+from messages_pb2 import MessageType
+from options_pb2 import (
     wire_bootloader,
     wire_debug_in,
     wire_debug_out,
