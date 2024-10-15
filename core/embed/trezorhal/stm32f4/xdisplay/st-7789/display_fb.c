@@ -33,6 +33,7 @@
 #include "gfx_bitblt.h"
 #include "irq.h"
 #include "mpu.h"
+#include "systemview.h"
 
 #ifndef BOARDLOADER
 #include "bg_copy.h"
@@ -138,9 +139,11 @@ static void display_te_interrupt_handler(void) {
 }
 
 void DISPLAY_TE_INTERRUPT_HANDLER(void) {
+  SEGGER_SYSVIEW_RecordEnterISR();
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DEFAULT);
   display_te_interrupt_handler();
   mpu_restore(mpu_mode);
+  SEGGER_SYSVIEW_RecordExitISR();
 }
 #endif
 
