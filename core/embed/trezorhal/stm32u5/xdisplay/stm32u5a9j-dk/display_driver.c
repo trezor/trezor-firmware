@@ -24,6 +24,7 @@
 #include STM32_HAL_H
 
 #include "display_internal.h"
+#include "mpu.h"
 #include "xdisplay.h"
 
 #if (DISPLAY_RESX != 240) || (DISPLAY_RESY != 240)
@@ -109,6 +110,8 @@ void display_deinit(display_content_mode_t mode) {
     BSP_LCD_SetBrightness(0, 0);
     BSP_LCD_DeInit(0);
   }
+
+  mpu_set_unpriv_fb(NULL, 0);
 
   drv->initialized = false;
 }

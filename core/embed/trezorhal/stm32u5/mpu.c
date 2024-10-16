@@ -192,6 +192,11 @@ typedef struct {
   bool initialized;
   // Current mode
   mpu_mode_t mode;
+  // Address of the framebuffer visible to unprivileged code
+  // (if set to 0, the framebuffer is not accessible)
+  uint32_t unpriv_fb_addr;
+  // Size of the framebuffer in bytes
+  size_t unpriv_fb_size;
 
 } mpu_driver_t;
 
@@ -287,6 +292,17 @@ mpu_mode_t mpu_get_mode(void) {
   return drv->mode;
 }
 
+void mpu_set_unpriv_fb(void* addr, size_t size) {
+  mpu_driver_t* drv = &g_mpu_driver;
+
+  if (!drv->initialized) {
+    return;
+  }
+
+  drv->unpriv_fb_addr = (uint32_t)addr;
+  drv->unpriv_fb_size = size;
+}
+
 mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
   mpu_driver_t* drv = &g_mpu_driver;
 
@@ -306,6 +322,13 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
   switch (mode) {
     case MPU_MODE_SAES:
       SET_REGION( 5, PERIPH_BASE_NS,           PERIPH_SIZE,  PERIPHERAL,  YES,    YES ); // Peripherals - SAES, TAMP
+      break;
+    case MPU_MODE_APP:
+      if (drv->unpriv_fb_addr != 0) {
+        SET_REGION( 5, drv->unpriv_fb_addr, drv->unpriv_fb_size,   SRAM,  YES,    YES ); // Frame buffer
+      } else {
+        DIS_REGION( 5 );
+      }
       break;
     default:
       SET_REGION( 5, GRAPHICS_START,           GRAPHICS_SIZE,      SRAM,  YES,    YES ); // Frame buffer or display interface

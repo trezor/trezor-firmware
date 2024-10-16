@@ -23,6 +23,7 @@
 #include TREZOR_BOARD
 #include STM32_HAL_H
 
+#include "mpu.h"
 #include "xdisplay.h"
 
 #if (DISPLAY_RESX != 128) || (DISPLAY_RESY != 128)
@@ -35,12 +36,16 @@
 // This type of displayed was used on some preliminary dev kits for T3T1 (Trezor
 // TS3)
 
+#define FRAME_BUFFER_SIZE (DISPLAY_RESX * DISPLAY_RESY)
+
+__attribute__((section(".fb1"))) uint8_t g_framebuf[FRAME_BUFFER_SIZE];
+
 // Display driver context.
 typedef struct {
   // Set if the driver is initialized
   bool initialized;
   // Frame buffer (8-bit Mono)
-  uint8_t framebuf[DISPLAY_RESX * DISPLAY_RESY];
+  uint8_t *framebuf;
   // Current display orientation (0 or 180)
   int orientation_angle;
   // Current backlight level ranging from 0 to 255
@@ -307,6 +312,7 @@ void display_init(display_content_mode_t mode) {
   }
 
   memset(drv, 0, sizeof(display_driver_t));
+  drv->framebuf = g_framebuf;
 
   if (mode == DISPLAY_RESET_CONTENT) {
     // Initialize GPIO & FSMC controller
@@ -320,6 +326,8 @@ void display_init(display_content_mode_t mode) {
 
 void display_deinit(display_content_mode_t mode) {
   display_driver_t *drv = &g_display_driver;
+
+  mpu_set_unpriv_fb(NULL, 0);
 
   drv->initialized = false;
 }
@@ -400,6 +408,8 @@ bool display_get_frame_buffer(display_fb_info_t *fb) {
   } else {
     fb->ptr = &drv->framebuf[0];
     fb->stride = DISPLAY_RESX;
+    // Enable access to the frame buffer from the unprivileged code
+    mpu_set_unpriv_fb(fb->ptr, FRAME_BUFFER_SIZE);
     return true;
   }
 }
@@ -411,6 +421,10 @@ void display_refresh(void) {
     return NULL;
   }
 
+  // Disable access to the frame buffer from the unprivileged code
+  mpu_set_unpriv_fb(NULL, 0);
+
+  // Copy the frame buffer to the display
   display_sync_with_fb();
 }
 
