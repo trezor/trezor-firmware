@@ -26,7 +26,6 @@ if BENCHMARK and PYOPT != '0':
 FEATURE_FLAGS = {
     "RDI": True,
     "SECP256K1_ZKP": True,  # required for trezor.crypto.curve.bip340 (BIP340/Taproot)
-    "AES_GCM": False,
     "AES_GCM": BENCHMARK,
 }
 
