@@ -1,6 +1,7 @@
 #include "bg_copy.h"
 #include "irq.h"
 #include "mpu.h"
+#include "systemview.h"
 
 #include STM32_HAL_H
 
@@ -36,6 +37,7 @@ void HAL_DMA_XferCpltCallback(DMA_HandleTypeDef *hdma) {
 }
 
 void GPDMA1_Channel0_IRQHandler(void) {
+  SEGGER_SYSVIEW_RecordEnterISR();
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DEFAULT);
 
   if ((DMA_Handle.Instance->CSR & DMA_CSR_TCF) == 0) {
@@ -60,6 +62,7 @@ void GPDMA1_Channel0_IRQHandler(void) {
   }
 
   mpu_restore(mpu_mode);
+  SEGGER_SYSVIEW_RecordExitISR();
 }
 
 bool bg_copy_pending(void) { return dma_transfer_remaining > 0; }
