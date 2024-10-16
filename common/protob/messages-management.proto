@@ -5,9 +5,9 @@ package hw.trezor.messages.management;
 option java_package = "com.satoshilabs.trezor.lib.protobuf";
 option java_outer_classname = "TrezorMessageManagement";
 
-option (include_in_bitcoin_only) = true;
+import "options.proto";
 
-import "messages.proto";
+option (include_in_bitcoin_only) = true;
 
 /**
  * Type of the mnemonic backup given/received by the device during reset/recovery.

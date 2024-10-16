@@ -13345,17 +13345,17 @@ impl AmountUnit {
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\x16messages-bitcoin.proto\x12\x1ahw.trezor.messages.bitcoin\x1a\x0eme\
-    ssages.proto\x1a\x15messages-common.proto\"\xeb\x02\n\x18MultisigRedeemS\
-    criptType\x12]\n\x07pubkeys\x18\x01\x20\x03(\x0b2C.hw.trezor.messages.bi\
-    tcoin.MultisigRedeemScriptType.HDNodePathTypeR\x07pubkeys\x12\x1e\n\nsig\
-    natures\x18\x02\x20\x03(\x0cR\nsignatures\x12\x0c\n\x01m\x18\x03\x20\x02\
-    (\rR\x01m\x12;\n\x05nodes\x18\x04\x20\x03(\x0b2%.hw.trezor.messages.comm\
-    on.HDNodeTypeR\x05nodes\x12\x1b\n\taddress_n\x18\x05\x20\x03(\rR\x08addr\
-    essN\x1ah\n\x0eHDNodePathType\x129\n\x04node\x18\x01\x20\x02(\x0b2%.hw.t\
-    rezor.messages.common.HDNodeTypeR\x04node\x12\x1b\n\taddress_n\x18\x02\
-    \x20\x03(\rR\x08addressN\"\xa6\x02\n\x0cGetPublicKey\x12\x1b\n\taddress_\
-    n\x18\x01\x20\x03(\rR\x08addressN\x12(\n\x10ecdsa_curve_name\x18\x02\x20\
+    \n\x16messages-bitcoin.proto\x12\x1ahw.trezor.messages.bitcoin\x1a\x15me\
+    ssages-common.proto\x1a\roptions.proto\"\xeb\x02\n\x18MultisigRedeemScri\
+    ptType\x12]\n\x07pubkeys\x18\x01\x20\x03(\x0b2C.hw.trezor.messages.bitco\
+    in.MultisigRedeemScriptType.HDNodePathTypeR\x07pubkeys\x12\x1e\n\nsignat\
+    ures\x18\x02\x20\x03(\x0cR\nsignatures\x12\x0c\n\x01m\x18\x03\x20\x02(\r\
+    R\x01m\x12;\n\x05nodes\x18\x04\x20\x03(\x0b2%.hw.trezor.messages.common.\
+    HDNodeTypeR\x05nodes\x12\x1b\n\taddress_n\x18\x05\x20\x03(\rR\x08address\
+    N\x1ah\n\x0eHDNodePathType\x129\n\x04node\x18\x01\x20\x02(\x0b2%.hw.trez\
+    or.messages.common.HDNodeTypeR\x04node\x12\x1b\n\taddress_n\x18\x02\x20\
+    \x03(\rR\x08addressN\"\xa6\x02\n\x0cGetPublicKey\x12\x1b\n\taddress_n\
+    \x18\x01\x20\x03(\rR\x08addressN\x12(\n\x10ecdsa_curve_name\x18\x02\x20\
     \x01(\tR\x0eecdsaCurveName\x12!\n\x0cshow_display\x18\x03\x20\x01(\x08R\
     \x0bshowDisplay\x12$\n\tcoin_name\x18\x04\x20\x01(\t:\x07BitcoinR\x08coi\
     nName\x12Z\n\x0bscript_type\x18\x05\x20\x01(\x0e2+.hw.trezor.messages.bi\
@@ -13605,8 +13605,8 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
     file_descriptor.get(|| {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
             let mut deps = ::std::vec::Vec::with_capacity(2);
-            deps.push(super::messages::file_descriptor().clone());
             deps.push(super::messages_common::file_descriptor().clone());
+            deps.push(super::options::file_descriptor().clone());
             let mut messages = ::std::vec::Vec::with_capacity(45);
             messages.push(MultisigRedeemScriptType::generated_message_descriptor_data());
             messages.push(GetPublicKey::generated_message_descriptor_data());
