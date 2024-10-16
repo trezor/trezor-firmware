@@ -25,6 +25,7 @@
 #include TREZOR_BOARD
 #include STM32_HAL_H
 
+#include "mpu.h"
 #include "xdisplay.h"
 
 #ifdef USE_CONSUMPTION_MASK
@@ -41,7 +42,9 @@
 //
 // This type of display is used with T3B1 model (Trezor TS3)
 
-__attribute__((section(".fb1"))) uint8_t framebuf[DISPLAY_RESX * DISPLAY_RESY];
+#define FRAME_BUFFER_SIZE (DISPLAY_RESX * DISPLAY_RESY)
+
+__attribute__((section(".fb1"))) uint8_t g_framebuf[FRAME_BUFFER_SIZE];
 
 // Display driver context.
 typedef struct {
@@ -236,7 +239,7 @@ void display_init(display_content_mode_t mode) {
 
   memset(drv, 0, sizeof(display_driver_t));
   drv->backlight_level = 255;
-  drv->framebuf = framebuf;
+  drv->framebuf = g_framebuf;
 
   if (mode == DISPLAY_RESET_CONTENT) {
     OLED_DC_CLK_ENA();
@@ -308,6 +311,8 @@ void display_init(display_content_mode_t mode) {
 void display_deinit(display_content_mode_t mode) {
   display_driver_t *drv = &g_display_driver;
 
+  mpu_set_unpriv_fb(NULL, 0);
+
   drv->initialized = false;
 }
 
@@ -369,6 +374,8 @@ bool display_get_frame_buffer(display_fb_info_t *fb) {
   } else {
     fb->ptr = &drv->framebuf[0];
     fb->stride = DISPLAY_RESX;
+    // Enable access to the frame buffer from the unprivileged code
+    mpu_set_unpriv_fb(fb->ptr, FRAME_BUFFER_SIZE);
     return true;
   }
 }
@@ -386,7 +393,10 @@ void display_refresh(void) {
   consumption_mask_randomize();
 #endif
 
-  // Sends the current frame buffer to the display
+  // Disable access to the frame buffer from the unprivileged code
+  mpu_set_unpriv_fb(NULL, 0);
+
+  // Copy the frame buffer to the display
   display_sync_with_fb(drv);
 }
 

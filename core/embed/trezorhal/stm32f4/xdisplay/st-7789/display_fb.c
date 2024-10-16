@@ -177,6 +177,8 @@ bool display_get_frame_buffer(display_fb_info_t *fb) {
 
   fb->ptr = get_fb_ptr(drv->queue.wix);
   fb->stride = DISPLAY_RESX * sizeof(uint16_t);
+  // Enable access to the frame buffer from the unprivileged code
+  mpu_set_unpriv_fb(fb->ptr, PHYSICAL_FRAME_BUFFER_SIZE);
 
   return true;
 }
@@ -214,6 +216,9 @@ void display_refresh(void) {
     // the state to be copied to the display
     return;
   }
+
+  // Disable access to the frame buffer from the unprivileged code
+  mpu_set_unpriv_fb(NULL, 0);
 
 #ifndef BOARDLOADER
   if (is_mode_exception()) {
