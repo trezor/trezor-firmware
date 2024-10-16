@@ -460,18 +460,18 @@ static U8* _EncodeData(U8* pPayload, const char* pSrc, unsigned int NumBytes) {
 *    content.
 */
 static U8* _EncodeFloat(U8* pPayload, float Value) {
-  float  Val;                                
-  U8*    pSysviewPointer;                             
+  float  Val;
+  U8*    pSysviewPointer;
   U32*   SysViewData;
 
-  Val = Value;                                 
-  pSysviewPointer = pPayload;                        
-  SysViewData = (U32*)&Val;                             
-  while((*SysViewData) > 0x7F) {          
-    *pSysviewPointer++ = (U8)((*SysViewData) | 0x80); 
-    (*SysViewData) >>= 7;                            
-  }                                               
-  *pSysviewPointer++ = (U8)(*SysViewData);            
+  Val = Value;
+  pSysviewPointer = pPayload;
+  SysViewData = (U32*)&Val;
+  while((*SysViewData) > 0x7F) {
+    *pSysviewPointer++ = (U8)((*SysViewData) | 0x80);
+    (*SysViewData) >>= 7;
+  }
+  *pSysviewPointer++ = (U8)(*SysViewData);
   pPayload = pSysviewPointer;
 
   return pPayload;
@@ -2002,8 +2002,8 @@ void SEGGER_SYSVIEW_SendTaskInfo(const SEGGER_SYSVIEW_TASKINFO *pInfo) {
 *
 *  Function description
 *    Send a Stack Info Packet, containing TaskId for identification,
-*    stack base, stack size and stack usage. 
-*    
+*    stack base, stack size and stack usage.
+*
 *
 *  Parameters
 *    pInfo - Pointer to stack information to send.
@@ -2027,8 +2027,8 @@ void SEGGER_SYSVIEW_SendStackInfo(const SEGGER_SYSVIEW_STACKINFO *pInfo) {
 *        SEGGER_SYSVIEW_SampleData()
 *
 *  Function description
-*    Send a Data Sample Packet, containing the data Id and the value. 
-*    
+*    Send a Data Sample Packet, containing the data Id and the value.
+*
 *
 *  Parameters
 *    pInfo - Pointer to data sample struct to send.
@@ -2042,7 +2042,7 @@ void SEGGER_SYSVIEW_SampleData(const SEGGER_SYSVIEW_DATA_SAMPLE *pInfo) {
   ENCODE_U32(pPayload, pInfo->ID);
   pPayload = _EncodeFloat(pPayload, *(pInfo->pValue.pFloat));
   _SendPacket(pPayloadStart, pPayload, SYSVIEW_EVTID_DATA_SAMPLE);
-  
+
   RECORD_END();
 }
 
@@ -2553,7 +2553,7 @@ void SEGGER_SYSVIEW_RegisterData(SEGGER_SYSVIEW_DATA_REGISTER* pInfo) {
   ENCODE_U32(pPayload, SYSVIEW_EVTID_EX_REGISTER_DATA);
   ENCODE_U32(pPayload, pInfo->ID);
   pPayload = _EncodeStr(pPayload, pInfo->sName, SEGGER_SYSVIEW_MAX_STRING_LEN);
-  
+
   if (pInfo->sUnit != 0) {
     ENCODE_U32(pPayload, pInfo->DataType);
     ENCODE_U32(pPayload, pInfo->Offset);
