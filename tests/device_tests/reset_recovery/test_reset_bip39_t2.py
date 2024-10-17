@@ -153,11 +153,10 @@ def test_failed_pin(client: Client):
 
     # Confirm Reset
     assert isinstance(ret, messages.ButtonRequest)
+    client._raw_write(messages.ButtonAck())
     client.debug.press_yes()
-    ret = client.call_raw(messages.ButtonAck())
 
     # Enter PIN for first time
-    assert isinstance(ret, messages.ButtonRequest)
     client.debug.input("654")
     ret = client.call_raw(messages.ButtonAck())
 
