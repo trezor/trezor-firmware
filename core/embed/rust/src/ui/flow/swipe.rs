@@ -104,8 +104,8 @@ pub struct SwipeFlow {
     swipe: SwipeDetect,
     /// Swipe allowed
     allow_swipe: bool,
-    /// Current internal state
-    internal_state: u16,
+    /// Current page index
+    internal_page_idx: u16,
     /// Internal pages count
     internal_pages: u16,
     /// If triggering swipe by event, make this decision instead of default
@@ -124,7 +124,7 @@ impl SwipeFlow {
             swipe: SwipeDetect::new(),
             store: Vec::new(),
             allow_swipe: true,
-            internal_state: 0,
+            internal_page_idx: 0,
             internal_pages: 1,
             pending_decision: None,
             lifecycle_state: LayoutState::Initial,
@@ -159,7 +159,7 @@ impl SwipeFlow {
         // update page count
         self.internal_pages = self.current_page_mut().get_internal_page_count() as u16;
         // reset internal state:
-        self.internal_state = if let Swipe(Direction::Down) = attach_type {
+        self.internal_page_idx = if let Swipe(Direction::Down) = attach_type {
             // if coming from below, set to the last page
             self.internal_pages.saturating_sub(1)
         } else {
@@ -220,17 +220,17 @@ impl SwipeFlow {
             let page = self.current_page();
             let config = page
                 .get_swipe_config()
-                .with_pagination(self.internal_state, self.internal_pages);
+                .with_pagination(self.internal_page_idx, self.internal_pages);
 
             match self.swipe.event(ctx, event, config) {
                 Some(SwipeEvent::End(dir)) => {
                     return_transition = AttachType::Swipe(dir);
 
-                    let new_internal_state =
-                        config.paging_event(dir, self.internal_state, self.internal_pages);
-                    if new_internal_state != self.internal_state {
+                    let new_internal_page_idx =
+                        config.paging_event(dir, self.internal_page_idx, self.internal_pages);
+                    if new_internal_page_idx != self.internal_page_idx {
                         // internal paging event
-                        self.internal_state = new_internal_state;
+                        self.internal_page_idx = new_internal_page_idx;
                         decision = Decision::Nothing;
                         attach = true;
                     } else if let Some(override_decision) = self.pending_decision.take() {
