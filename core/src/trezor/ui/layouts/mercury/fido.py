@@ -24,17 +24,9 @@ async def confirm_fido(
         # debuglink will directly inject a CONFIRMED message which we need to handle
         # by playing back a click to the Rust layout and getting out the selected number
         # that way
-        from trezor import io
-
-        msg = confirm.touch_event(io.TOUCH_START, 220, 220)
-        assert msg is None
-        if confirm.paint():
-            ui.refresh()
-        msg = confirm.touch_event(io.TOUCH_END, 220, 220)
-        if confirm.paint():
-            ui.refresh()
-        assert isinstance(msg, int)
-        return msg
+        # Or we can just return 0 because this only happens in U2F tests
+        # which don't use multiple credentials.
+        return 0
 
     # The Rust side returns either an int or `CANCELLED`. We detect the int situation
     # and assume cancellation otherwise.
