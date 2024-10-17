@@ -622,15 +622,16 @@ class DebugLink:
         If hold_ms is set, an additional 200ms is added to account for processing
         delays. (This is needed for hold-to-confirm to trigger reliably.)
 
-        If `wait` is unset, the current wait mode is used:
+        If `wait` is unset, the following wait mode is used:
 
-        - when in normal tests, IMMEDIATE, which never deadlocks the device, but may
+        - `IMMEDIATE`, when in normal tests, which never deadlocks the device, but may
           return an empty layout in case the next one didn't come up immediately. (E.g.,
           in SignTx flow, the device is waiting for more TxRequest/TxAck exchanges
           before showing the next UI layout.)
-        - when in tests running through a `DeviceHandler`, CURRENT_LAYOUT, which waits
-          for the next layout to come up. The assumption is that wirelink is
-          communicating on another thread and won't be blocked by waiting on debuglink.
+        - `CURRENT_LAYOUT`, when in tests running through a `DeviceHandler`. This mode
+          returns the current layout or waits for some layout to come up if there is
+          none at the moment. The assumption is that wirelink is communicating on
+          another thread and won't be blocked by waiting on debuglink.
 
         Force waiting for the layout by setting `wait=True`. Force not waiting by
         setting `wait=False` -- useful when, e.g., you are causing the next layout to be
