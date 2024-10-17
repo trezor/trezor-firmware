@@ -18186,6 +18186,16 @@
 "T3B1_pt_zcash-test_sign_tx.py::test_spend_v5_input": "e9f2492fa7ae96ffd8b2be377268c7502969c31639ee0c716f3c73d889cdfe31",
 "T3B1_pt_zcash-test_sign_tx.py::test_unified_address": "d04e7c86711df06839b7b9ecd64194731b512a0ed365f61db591a749a49adaac",
 "T3B1_pt_zcash-test_sign_tx.py::test_version_group_id_missing": "666a44b8f08b659b477eeef76082e0777fa42defa7b7ef584b4ca8bce4337424"
+},
+"persistence_tests": {
+"T3B1_en_test_safety_checks.py::test_safety_checks_level_after_reboot[SafetyCheckLevel.PromptAlways--081810a6": "b13a3b6ab6fd088f72cdd0c0875892152773780e0ae36b194ff89f4cb418f103",
+"T3B1_en_test_safety_checks.py::test_safety_checks_level_after_reboot[SafetyCheckLevel.PromptTempora-b3d21f4a": "b2db0657b53a40b5ca32ba0bd5873bde18bb2d385c909518580d93398ee2bfe2",
+"T3B1_en_test_safety_checks.py::test_safety_checks_level_after_reboot[SafetyCheckLevel.Strict-Safety-f1ff9c26": "4a4ac39daacae7e3e15d3e818f5e3bced74eb96bf627cde1b67172abf81cdfcf",
+"T3B1_en_test_shamir_persistence.py::test_abort": "229c6b2ff4b5fd3a3ca76b71bed897d8a86612a407c687c8f9a6a02c485f8bbe",
+"T3B1_en_test_shamir_persistence.py::test_recovery_multiple_resets": "12316220c45ea93bdaed2ca43fb1c63d533c5a58425ef6338ebcc87c45519a83",
+"T3B1_en_test_shamir_persistence.py::test_recovery_on_old_wallet": "e0c5b66688f9624fcdc0e9ae473b63bbd9dd11b07dc4e97043b0247a81bbe985",
+"T3B1_en_test_shamir_persistence.py::test_recovery_single_reset": "6c4ef8b4d455afd581eb66a7538b798fa5b5068821032342212308ff49a762d9",
+"T3B1_en_test_wipe_code.py::test_wipe_code_activate_core": "cc3b6cabf915701dafcd7768501fa19c06b8cbc57df4e3f8dcfc7786fc32ea0b"
 }
 },
 "T3T1": {

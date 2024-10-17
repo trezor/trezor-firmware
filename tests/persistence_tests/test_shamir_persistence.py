@@ -112,6 +112,15 @@ def test_recovery_on_old_wallet(core_emulator: Emulator):
     Initialize+GetFeatures). At minimum, these two messages must not interrupt the
     running recovery.
     """
+
+    def assert_mnemonic_keyboard(debug: DebugLink) -> None:
+        layout = debug.read_layout()
+        if debug.layout_type == LayoutType.TR:
+            # model R has the keyboard wrapped in a Frame
+            assert "MnemonicKeyboard" in layout.all_components()
+        else:
+            assert layout.main_component() == "MnemonicKeyboard"
+
     device_handler = BackgroundDeviceHandler(core_emulator.client)
     debug = device_handler.debuglink()
     features = device_handler.features()
@@ -141,7 +150,7 @@ def test_recovery_on_old_wallet(core_emulator: Emulator):
         or "Enter each word" in debug.read_layout().text_content()
     )
     debug.press_yes()
-    assert debug.read_layout().main_component() == "MnemonicKeyboard"
+    assert_mnemonic_keyboard(debug)
 
     # enter first word
     debug.input(words[0])
@@ -153,7 +162,7 @@ def test_recovery_on_old_wallet(core_emulator: Emulator):
 
     # try entering remaining 19 words
     for word in words[1:]:
-        assert layout.main_component() == "MnemonicKeyboard"
+        assert_mnemonic_keyboard(debug)
         debug.input(word)
         layout = debug.read_layout()
 
