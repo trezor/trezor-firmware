@@ -33,7 +33,7 @@ if __debug__:
 
         Handler = Callable[[Any], Awaitable[Any]]
 
-    layout_change_chan = loop.mailbox()
+    layout_change_box = loop.mailbox()
 
     DEBUG_CONTEXT: context.Context | None = None
 
@@ -53,7 +53,7 @@ if __debug__:
         return False
 
     def notify_layout_change(layout: Layout | None) -> None:
-        layout_change_chan.put(layout, replace=True)
+        layout_change_box.put(layout, replace=True)
 
     def layout_is_ready() -> bool:
         layout = ui.CURRENT_LAYOUT
@@ -61,9 +61,9 @@ if __debug__:
 
     def wait_until_layout_is_running(timeout: int | None = _DEADLOCK_SLEEP_MS) -> Awaitable[None]:  # type: ignore [awaitable-return-type]
         start = utime.ticks_ms()
-        layout_change_chan.clear()
+        layout_change_box.clear()
         while not layout_is_ready():
-            yield layout_change_chan  # type: ignore [awaitable-return-type]
+            yield layout_change_box  # type: ignore [awaitable-return-type]
             now = utime.ticks_ms()
             if timeout and utime.ticks_diff(now, start) > timeout:
                 raise wire.FirmwareError(
@@ -78,13 +78,11 @@ if __debug__:
 
         # wait for layout change
         while True:
-            if not detect_deadlock or not layout_change_chan.is_empty():
+            if not detect_deadlock or not layout_change_box.is_empty():
                 # short-circuit if there is a result already waiting
-                next_layout = await layout_change_chan
+                next_layout = await layout_change_box
             else:
-                next_layout = await loop.race(
-                    layout_change_chan, _DEADLOCK_DETECT_SLEEP
-                )
+                next_layout = await loop.race(layout_change_box, _DEADLOCK_DETECT_SLEEP)
 
             if isinstance(next_layout, int):
                 # sleep result from the deadlock detector
@@ -217,7 +215,7 @@ if __debug__:
 
         await wait_until_layout_is_running()
         assert isinstance(ui.CURRENT_LAYOUT, ui.Layout)
-        layout_change_chan.clear()
+        layout_change_box.clear()
 
         try:
             # click on specific coordinates, with possible hold
@@ -240,7 +238,7 @@ if __debug__:
             # processing the event. In that case, we need to yield to give the layout
             # callers time to finish their jobs. We want to make sure that the handling
             # does not continue until the event is truly processed.
-            result = await layout_change_chan
+            result = await layout_change_box
             assert result is None
 
         # If no exception was raised, the layout did not shut down. That means that it
@@ -275,7 +273,7 @@ if __debug__:
 
         assert DEBUG_CONTEXT is not None
         if msg.wait_layout == DebugWaitType.NEXT_LAYOUT:
-            layout_change_chan.clear()
+            layout_change_box.clear()
             return await return_layout_change(DEBUG_CONTEXT, detect_deadlock=False)
 
         # default behavior: msg.wait_layout == DebugWaitType.CURRENT_LAYOUT
