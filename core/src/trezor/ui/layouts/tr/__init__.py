@@ -991,6 +991,7 @@ async def _confirm_ask_pagination(
 def confirm_address(
     title: str,
     address: str,
+    subtitle: str | None = None,
     description: str | None = None,
     br_name: str = "confirm_address",
     br_code: ButtonRequestType = BR_CODE_OTHER,
@@ -1274,6 +1275,7 @@ if not utils.BITCOIN_ONLY:
         _account_path: str | None,
         maximum_fee: str,
         fee_info_items: Iterable[tuple[str, str]],
+        _is_contract_interaction: bool,
         br_name: str = "confirm_ethereum_tx",
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
         chunkify: bool = False,

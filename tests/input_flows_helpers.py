@@ -343,9 +343,7 @@ class EthereumFlow:
 
     def confirm_data(self, info: bool = False, cancel: bool = False) -> BRGeneratorType:
         yield
-        TR.assert_equals(
-            self.debug.wait_layout().title(), "ethereum__title_confirm_data"
-        )
+        TR.assert_equals(self.debug.wait_layout().title(), "ethereum__title_input_data")
         if info:
             self.debug.press_info()
         elif cancel:
@@ -355,9 +353,7 @@ class EthereumFlow:
 
     def paginate_data(self) -> BRGeneratorType:
         br = yield
-        TR.assert_equals(
-            self.debug.wait_layout().title(), "ethereum__title_confirm_data"
-        )
+        TR.assert_equals(self.debug.wait_layout().title(), "ethereum__title_input_data")
         assert br.pages is not None
         for i in range(br.pages):
             self.debug.wait_layout()
@@ -367,9 +363,7 @@ class EthereumFlow:
 
     def paginate_data_go_back(self) -> BRGeneratorType:
         br = yield
-        TR.assert_equals(
-            self.debug.wait_layout().title(), "ethereum__title_confirm_data"
-        )
+        TR.assert_equals(self.debug.wait_layout().title(), "ethereum__title_input_data")
         assert br.pages is not None
         assert br.pages > 2
         if self.client.layout_type is LayoutType.TR:
