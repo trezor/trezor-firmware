@@ -30,7 +30,6 @@ use crate::{
     translations::TR,
     trezorhal::model,
     ui::{
-        backlight::BACKLIGHT_LEVELS_OBJ,
         component::{
             base::Component,
             connect::Connect,
@@ -48,8 +47,7 @@ use crate::{
         display::Font,
         geometry,
         layout::{
-            base::LAYOUT_STATE,
-            obj::{ComponentMsgObj, LayoutObj, ATTACH_TYPE_OBJ},
+            obj::{ComponentMsgObj, LayoutObj},
             result::{CANCELLED, CONFIRMED, INFO},
             util::{upy_disable_animation, ConfirmBlob, RecoveryType},
         },
@@ -1629,16 +1627,10 @@ extern "C" fn new_show_wait_text(message: Obj) -> Obj {
 
 #[no_mangle]
 pub static mp_module_trezorui2: Module = obj_module! {
+    /// from trezor import utils
+    /// from trezorui_api import *
+    ///
     Qstr::MP_QSTR___name__ => Qstr::MP_QSTR_trezorui2.to_obj(),
-
-    /// CONFIRMED: UiResult
-    Qstr::MP_QSTR_CONFIRMED => CONFIRMED.as_obj(),
-
-    /// CANCELLED: UiResult
-    Qstr::MP_QSTR_CANCELLED => CANCELLED.as_obj(),
-
-    /// INFO: UiResult
-    Qstr::MP_QSTR_INFO => INFO.as_obj(),
 
     /// def disable_animation(disable: bool) -> None:
     ///     """Disable animations, debug builds only."""
@@ -2052,32 +2044,4 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// def show_wait_text(message: str, /) -> None:
     ///     """Show single-line text in the middle of the screen."""
     Qstr::MP_QSTR_show_wait_text => obj_fn_1!(new_show_wait_text).as_obj(),
-
-    /// class BacklightLevels:
-    ///     """Backlight levels. Values dynamically update based on user settings."""
-    ///     MAX: ClassVar[int]
-    ///     NORMAL: ClassVar[int]
-    ///     LOW: ClassVar[int]
-    ///     DIM: ClassVar[int]
-    ///     NONE: ClassVar[int]
-    ///
-    /// mock:global
-    Qstr::MP_QSTR_BacklightLevels => BACKLIGHT_LEVELS_OBJ.as_obj(),
-
-    /// class AttachType:
-    ///     INITIAL: ClassVar[int]
-    ///     RESUME: ClassVar[int]
-    ///     SWIPE_UP: ClassVar[int]
-    ///     SWIPE_DOWN: ClassVar[int]
-    ///     SWIPE_LEFT: ClassVar[int]
-    ///     SWIPE_RIGHT: ClassVar[int]
-    Qstr::MP_QSTR_AttachType => ATTACH_TYPE_OBJ.as_obj(),
-
-    /// class LayoutState:
-    ///     """Layout state."""
-    ///     INITIAL: "ClassVar[LayoutState]"
-    ///     ATTACHED: "ClassVar[LayoutState]"
-    ///     TRANSITIONING: "ClassVar[LayoutState]"
-    ///     DONE: "ClassVar[LayoutState]"
-    Qstr::MP_QSTR_LayoutState => LAYOUT_STATE.as_obj(),
 };

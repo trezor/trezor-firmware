@@ -1,15 +1,16 @@
 from typing import TYPE_CHECKING
 
 import trezorui2
+import trezorui_api
 from trezor import TR
 from trezor.enums import ButtonRequestType, RecoveryType
 
 from ..common import interact
 from . import raise_if_not_confirmed
 
-CONFIRMED = trezorui2.CONFIRMED  # global_import_cache
-CANCELLED = trezorui2.CANCELLED  # global_import_cache
-INFO = trezorui2.INFO  # global_import_cache
+CONFIRMED = trezorui_api.CONFIRMED  # global_import_cache
+CANCELLED = trezorui_api.CANCELLED  # global_import_cache
+INFO = trezorui_api.INFO  # global_import_cache
 
 if TYPE_CHECKING:
     from apps.management.recovery_device.layout import RemainingSharesInfo

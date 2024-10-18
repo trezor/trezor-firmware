@@ -1500,16 +1500,10 @@ extern "C" fn new_show_danger(n_args: usize, args: *const Obj, kwargs: *mut Map)
 #[no_mangle]
 pub static mp_module_trezorui2: Module = obj_module! {
     /// from trezor import utils
+    /// from trezorui_api import *
+    ///
     Qstr::MP_QSTR___name__ => Qstr::MP_QSTR_trezorui2.to_obj(),
 
-    /// CONFIRMED: UiResult
-    Qstr::MP_QSTR_CONFIRMED => CONFIRMED.as_obj(),
-
-    /// CANCELLED: UiResult
-    Qstr::MP_QSTR_CANCELLED => CANCELLED.as_obj(),
-
-    /// INFO: UiResult
-    Qstr::MP_QSTR_INFO => INFO.as_obj(),
 
     /// def disable_animation(disable: bool) -> None:
     ///     """Disable animations, debug builds only."""
@@ -1998,32 +1992,4 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// ) -> LayoutObj[UiResult]:
     ///     """Confirm summary of a transaction."""
     Qstr::MP_QSTR_confirm_summary => obj_fn_kw!(0, new_confirm_summary).as_obj(),
-
-    /// class BacklightLevels:
-    ///     """Backlight levels. Values dynamically update based on user settings."""
-    ///     MAX: ClassVar[int]
-    ///     NORMAL: ClassVar[int]
-    ///     LOW: ClassVar[int]
-    ///     DIM: ClassVar[int]
-    ///     NONE: ClassVar[int]
-    ///
-    /// mock:global
-    Qstr::MP_QSTR_BacklightLevels => BACKLIGHT_LEVELS_OBJ.as_obj(),
-
-    /// class AttachType:
-    ///     INITIAL: ClassVar[int]
-    ///     RESUME: ClassVar[int]
-    ///     SWIPE_UP: ClassVar[int]
-    ///     SWIPE_DOWN: ClassVar[int]
-    ///     SWIPE_LEFT: ClassVar[int]
-    ///     SWIPE_RIGHT: ClassVar[int]
-    Qstr::MP_QSTR_AttachType => ATTACH_TYPE_OBJ.as_obj(),
-
-    /// class LayoutState:
-    ///     """Layout state."""
-    ///     INITIAL: "ClassVar[LayoutState]"
-    ///     ATTACHED: "ClassVar[LayoutState]"
-    ///     TRANSITIONING: "ClassVar[LayoutState]"
-    ///     DONE: "ClassVar[LayoutState]"
-    Qstr::MP_QSTR_LayoutState => LAYOUT_STATE.as_obj(),
 };
