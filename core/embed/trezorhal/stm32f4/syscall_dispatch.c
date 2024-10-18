@@ -120,17 +120,17 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
 
 #ifdef STM32U5
     case SYSCALL_SHA256_INIT: {
-      hash_sha265_context_t *ctx = (hash_sha265_context_t *)args[0];
+      hash_sha256_context_t *ctx = (hash_sha256_context_t *)args[0];
       hash_processor_sha256_init(ctx);
     } break;
     case SYSCALL_SHA256_UPDATE: {
-      hash_sha265_context_t *ctx = (hash_sha265_context_t *)args[0];
+      hash_sha256_context_t *ctx = (hash_sha256_context_t *)args[0];
       const uint8_t *data = (const uint8_t *)args[1];
       uint32_t len = args[2];
       hash_processor_sha256_update(ctx, data, len);
     } break;
     case SYSCALL_SHA256_FINAL: {
-      hash_sha265_context_t *ctx = (hash_sha265_context_t *)args[0];
+      hash_sha256_context_t *ctx = (hash_sha256_context_t *)args[0];
       uint8_t *output = (uint8_t *)args[1];
       hash_processor_sha256_final(ctx, output);
     } break;
