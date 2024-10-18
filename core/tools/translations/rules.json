@@ -284,7 +284,7 @@
   "ethereum__show_full_message": "text,1",
   "ethereum__show_full_struct": "text,1",
   "ethereum__sign_eip712": "text,2",
-  "ethereum__title_confirm_data": "title,1",
+  "ethereum__title_input_data": "title,1",
   "ethereum__title_confirm_domain": "title,1",
   "ethereum__title_confirm_message": "title,1",
   "ethereum__title_confirm_struct": "title,1",

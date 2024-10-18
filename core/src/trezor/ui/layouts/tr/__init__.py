@@ -725,6 +725,8 @@ def show_warning(
     content: str,
     subheader: str | None = None,
     button: str | None = None,
+    default_cancel: bool = False,  # NB: model R does not implement "default_cancel"-style warnings
+    verb_cancel: str | None = None,
     br_code: ButtonRequestType = ButtonRequestType.Warning,
 ) -> Awaitable[None]:
     from trezor import translations
@@ -901,18 +903,86 @@ async def should_show_more(
         raise ActionCancelled
 
 
+async def confirm_blob_with_optional_pagination(
+    br_name: str,
+    title: str,
+    data: bytes | str,
+    subtitle: str | None = None,
+    verb: str | None = None,
+    verb_cancel: str | None = None,
+    br_code: ButtonRequestType = BR_CODE_OTHER,
+    chunkify: bool = False,
+):
+    while True:
+        # show first page first
+        layout = RustLayout(
+            trezorui2.confirm_blob(
+                title=title,
+                data=data,
+                description=None,
+                subtitle=subtitle,
+                verb=verb,
+                verb_cancel="",
+                verb_info=TR.buttons__view_all_data,
+                info=True,
+                hold=False,
+                chunkify=chunkify,
+                prompt_screen=False,
+                page_limit=1,
+            )
+        )
+        result = await interact(
+            layout,
+            br_name,
+            br_code,
+        )
+        if result is CONFIRMED:
+            break
+        elif result is INFO:
+            # user requested to view the whole blob
+            layout_whole = RustLayout(
+                trezorui2.confirm_blob(
+                    title=title,
+                    description=None,
+                    data=data,
+                    verb=verb,
+                    verb_cancel="<",
+                    hold=False,
+                    chunkify=chunkify,
+                )
+            )
+            result_whole = await interact(
+                layout_whole,
+                br_name,
+                br_code,
+            )
+            if result_whole is CONFIRMED:
+                break
+            elif result_whole is CANCELLED:
+                # CANCELED seeing all pages => back to showing only the first page
+                continue
+            else:
+                raise ActionCancelled
+        else:
+            raise ActionCancelled
+
+
 def confirm_blob(
     br_name: str,
     title: str,
     data: bytes | str,
     description: str | None = None,
+    text_mono: bool = True,
+    subtitle: str | None = None,
     verb: str | None = None,
     verb_cancel: str | None = "",  # icon
+    info: bool = True,
     hold: bool = False,
     br_code: ButtonRequestType = BR_CODE_OTHER,
-    ask_pagination: bool = False,
     chunkify: bool = False,
+    default_cancel: bool = False,
     prompt_screen: bool = True,
+    ask_pagination: bool = False,
 ) -> Awaitable[None]:
     verb = verb or TR.buttons__confirm  # def_arg
     layout = RustLayout(
@@ -920,7 +990,6 @@ def confirm_blob(
             title=title,
             description=description,
             data=data,
-            extra=None,
             verb=verb,
             verb_cancel=verb_cancel,
             hold=hold,
@@ -991,13 +1060,16 @@ async def _confirm_ask_pagination(
 def confirm_address(
     title: str,
     address: str,
+    subtitle: str | None = None,
     description: str | None = None,
+    verb: str | None = None,
+    chunkify: bool = True,
     br_name: str = "confirm_address",
     br_code: ButtonRequestType = BR_CODE_OTHER,
 ) -> Awaitable[None]:
     return confirm_blob(
         br_name,
-        title,
+        subtitle or title,
         address,
         description,
         br_code=br_code,
@@ -1139,7 +1211,6 @@ async def confirm_value(
                         title=info_title,
                         data=info_value,
                         description=description,
-                        extra=None,
                         verb="",
                         verb_cancel="<",
                         hold=False,
@@ -1298,12 +1369,13 @@ if not utils.BITCOIN_ONLY:
         )
 
     async def confirm_ethereum_tx(
-        recipient: str,
+        recipient: str | None,
         total_amount: str,
         _account: str | None,
         _account_path: str | None,
         maximum_fee: str,
         fee_info_items: Iterable[tuple[str, str]],
+        is_contract_interaction: bool,
         br_name: str = "confirm_ethereum_tx",
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
         chunkify: bool = False,
@@ -1319,14 +1391,19 @@ if not utils.BITCOIN_ONLY:
             )
         )
 
+        if not is_contract_interaction:
+            title = TR.words__recipient
+        else:
+            title = TR.ethereum__interaction_contract if recipient else ""
+
         while True:
             # Allowing going back and forth between recipient and summary/details
             await confirm_blob(
                 br_name,
-                TR.words__recipient,
-                recipient,
+                title,
+                recipient or TR.ethereum__new_contract,
                 verb=TR.buttons__continue,
-                chunkify=chunkify,
+                chunkify=(chunkify if recipient else False),
             )
 
             try:
@@ -1397,9 +1474,7 @@ async def confirm_modify_output(
             title=TR.modify_amount__title,
             data=address,
             verb=TR.buttons__continue,
-            verb_cancel=None,
             description=f"{TR.words__address}:",
-            extra=None,
         )
     )
     modify_layout = RustLayout(
@@ -1510,7 +1585,6 @@ async def confirm_signverify(
             verb=TR.buttons__continue,
             br_code=BR_CODE_OTHER,
         )
-
         try:
             await confirm_blob(
                 br_name,
@@ -1658,7 +1732,7 @@ def pin_mismatch_popup(is_wipe_code: bool = False) -> Awaitable[None]:
         description,
         TR.pin__please_check_again,
         TR.buttons__check_again,
-        BR_CODE_OTHER,
+        br_code=BR_CODE_OTHER,
     )
 
 

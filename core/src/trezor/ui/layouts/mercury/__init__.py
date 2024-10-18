@@ -592,23 +592,40 @@ def show_warning(
     content: str,
     subheader: str | None = None,
     button: str | None = None,
+    default_cancel: bool = False,
+    verb_cancel: str | None = None,
     br_code: ButtonRequestType = ButtonRequestType.Warning,
 ) -> Awaitable[None]:
     button = button or TR.buttons__continue  # def_arg
-    return raise_if_not_confirmed(
-        interact(
-            RustLayout(
-                trezorui2.show_warning(
-                    title=TR.words__important,
-                    value=content,
-                    button=subheader or TR.words__continue_anyway_question,
-                    danger=True,
-                )
-            ),
+    if default_cancel:
+        # a kind of warning which makes it easy (swipe up) to cancel
+        # and makes it harder to continue
+        return confirm_blob(
             br_name,
-            br_code,
+            TR.words__warning,
+            content,
+            text_mono=False,
+            verb_cancel=verb_cancel,
+            default_cancel=True,
+            prompt_screen=False,
+            br_code=br_code,
         )
-    )
+    else:
+        # traditional warning
+        return raise_if_not_confirmed(
+            interact(
+                RustLayout(
+                    trezorui2.show_warning(
+                        title=TR.words__important,
+                        value=content,
+                        button=subheader or TR.words__continue_anyway_question,
+                        danger=True,
+                    )
+                ),
+                br_name,
+                br_code,
+            )
+        )
 
 
 def show_success(
@@ -750,43 +767,56 @@ async def should_show_more(
         raise ActionCancelled
 
 
-async def _confirm_ask_pagination(
+async def confirm_blob_with_optional_pagination(
     br_name: str,
     title: str,
     data: bytes | str,
-    description: str,
-    br_code: ButtonRequestType,
-) -> None:
-    paginated: ui.Layout | None = None
-    # TODO: make should_show_more/confirm_more accept bytes directly
-    if isinstance(data, bytes):
-        from ubinascii import hexlify
-
-        data = hexlify(data).decode()
-    while True:
-        if not await should_show_more(
-            title,
-            para=[(ui.NORMAL, description), (ui.MONO, data)],
+    subtitle: str | None = None,
+    verb: str | None = None,
+    verb_cancel: str | None = None,
+    br_code: ButtonRequestType = BR_CODE_OTHER,
+    chunkify: bool = False,
+):
+    # show first page first
+    layout = RustLayout(
+        trezorui2.confirm_blob(
+            title=title,
+            data=data,
+            description=TR.instructions__view_all_data,
+            description_font_green=True,
+            subtitle=subtitle,
+            verb=verb,
+            verb_cancel=verb_cancel,
+            verb_info=TR.buttons__view_all_data,
+            info=True,
+            hold=False,
+            chunkify=chunkify,
+            prompt_screen=False,
+            page_limit=1,
+        )
+    )
+    result = await interact(
+        layout,
+        br_name,
+        br_code,
+    )
+    if result is INFO:
+        # user requested to view the whole blob
+        await confirm_blob(
             br_name=br_name,
+            title=title,
+            data=data,
+            description=None,
+            verb=None,
+            verb_cancel=verb_cancel,
+            info=False,
+            hold=False,
             br_code=br_code,
-        ):
-            return
-
-        if paginated is None:
-            paginated = RustLayout(
-                trezorui2.confirm_more(
-                    title=title,
-                    button=TR.buttons__close,
-                    items=[(ui.MONO, data)],
-                )
-            )
-        else:
-            paginated.request_complete_repaint()
-
-        result = await interact(paginated, br_name, br_code)
-        assert result in (CONFIRMED, CANCELLED)
-
-    assert False
+            chunkify=chunkify,
+            prompt_screen=False,
+        )
+    elif result is not CONFIRMED:
+        raise ActionCancelled
 
 
 def confirm_blob(
@@ -794,46 +824,49 @@ def confirm_blob(
     title: str,
     data: bytes | str,
     description: str | None = None,
+    text_mono: bool = True,
+    subtitle: str | None = None,
     verb: str | None = None,
     verb_cancel: str | None = None,
+    info: bool = True,
     hold: bool = False,
     br_code: ButtonRequestType = BR_CODE_OTHER,
-    ask_pagination: bool = False,
     chunkify: bool = False,
+    default_cancel: bool = False,
     prompt_screen: bool = True,
 ) -> Awaitable[None]:
     layout = RustLayout(
         trezorui2.confirm_blob(
             title=title,
-            description=description,
             data=data,
-            extra=None,
-            hold=hold,
+            description=description,
+            text_mono=text_mono,
+            subtitle=subtitle,
             verb=verb,
             verb_cancel=verb_cancel,
+            info=info,
+            hold=hold,
             chunkify=chunkify,
             prompt_screen=prompt_screen,
+            default_cancel=default_cancel,
         )
     )
-
-    if ask_pagination and layout.page_count() > 1:
-        assert not hold
-        return _confirm_ask_pagination(br_name, title, data, description or "", br_code)
-
-    else:
-        return raise_if_not_confirmed(
-            interact(
-                layout,
-                br_name,
-                br_code,
-            )
+    return raise_if_not_confirmed(
+        interact(
+            layout,
+            br_name,
+            br_code,
         )
+    )
 
 
 def confirm_address(
     title: str,
     address: str,
+    subtitle: str | None = None,
     description: str | None = None,
+    verb: str | None = None,
+    chunkify: bool = True,
     br_name: str = "confirm_address",
     br_code: ButtonRequestType = BR_CODE_OTHER,
 ) -> Awaitable[None]:
@@ -843,7 +876,9 @@ def confirm_address(
         description or "",
         br_name,
         br_code,
-        verb=TR.buttons__confirm,
+        subtitle=subtitle,
+        verb=(verb or TR.buttons__confirm),
+        chunkify=chunkify,
     )
 
 
@@ -893,6 +928,7 @@ def confirm_value(
     subtitle: str | None = None,
     hold: bool = False,
     value_text_mono: bool = True,
+    chunkify: bool = False,
     info_items: Iterable[tuple[str, str]] | None = None,
     info_title: str | None = None,
     chunkify_info: bool = False,
@@ -922,6 +958,7 @@ def confirm_value(
                     verb=verb,
                     hold=hold,
                     info_button=bool(info_items),
+                    chunkify=chunkify,
                     text_mono=value_text_mono,
                 )
             ),
@@ -1033,12 +1070,13 @@ def _confirm_summary(
 if not utils.BITCOIN_ONLY:
 
     async def confirm_ethereum_tx(
-        recipient: str,
+        recipient: str | None,
         total_amount: str,
         account: str | None,
         account_path: str | None,
         maximum_fee: str,
         fee_info_items: Iterable[tuple[str, str]],
+        is_contract_interaction: bool,
         br_name: str = "confirm_ethereum_tx",
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
         chunkify: bool = False,
@@ -1047,10 +1085,14 @@ if not utils.BITCOIN_ONLY:
             RustLayout(
                 trezorui2.flow_confirm_output(
                     title=TR.words__address,
-                    subtitle=TR.words__recipient,
-                    message=recipient,
+                    subtitle=(
+                        TR.words__recipient
+                        if not is_contract_interaction
+                        else TR.ethereum__interaction_contract
+                    ),
+                    message=(recipient or TR.ethereum__new_contract),
                     amount=None,
-                    chunkify=chunkify,
+                    chunkify=(chunkify if recipient else False),
                     text_mono=True,
                     account=account,
                     account_path=account_path,
@@ -1197,7 +1239,7 @@ def confirm_replacement(title: str, txid: str) -> Awaitable[None]:
         title,
         txid,
         TR.send__transaction_id,
-        TR.buttons__continue,
+        verb=TR.buttons__continue,
         br_code=ButtonRequestType.SignTx,
     )
 
@@ -1215,7 +1257,6 @@ async def confirm_modify_output(
             verb=TR.buttons__continue,
             verb_cancel=None,
             description=f"{TR.words__address}:",
-            extra=None,
         )
     )
     modify_layout = RustLayout(
@@ -1381,7 +1422,6 @@ async def confirm_signverify(
             title=TR.sign_message__confirm_message,
             description=None,
             data=message,
-            extra=None,
             hold=not verify,
             verb=TR.buttons__confirm if verify else None,
         )

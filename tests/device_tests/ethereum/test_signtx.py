@@ -24,6 +24,7 @@ from trezorlib.tools import parse_path, unharden
 
 from ...common import parametrize_using_common_fixtures
 from ...input_flows import (
+    InputFlowConfirmAllWarnings,
     InputFlowEthereumSignTxDataGoBack,
     InputFlowEthereumSignTxDataScrollDown,
     InputFlowEthereumSignTxDataSkip,
@@ -56,7 +57,12 @@ def make_defs(parameters: dict) -> messages.EthereumDefinitions:
 )
 @pytest.mark.parametrize("chunkify", (True, False))
 def test_signtx(client: Client, chunkify: bool, parameters: dict, result: dict):
-    _do_test_signtx(client, parameters, result, chunkify=chunkify)
+    input_flow = (
+        InputFlowConfirmAllWarnings(client).get()
+        if not client.debug.legacy_debug
+        else None
+    )
+    _do_test_signtx(client, parameters, result, input_flow, chunkify=chunkify)
 
 
 def _do_test_signtx(
@@ -143,6 +149,8 @@ def test_signtx_go_back_from_summary(client: Client):
 @pytest.mark.parametrize("chunkify", (True, False))
 def test_signtx_eip1559(client: Client, chunkify: bool, parameters: dict, result: dict):
     with client:
+        if not client.debug.legacy_debug:
+            client.set_input_flow(InputFlowConfirmAllWarnings(client).get())
         sig_v, sig_r, sig_s = ethereum.sign_tx_eip1559(
             client,
             n=parse_path(parameters["path"]),
@@ -455,10 +463,11 @@ def test_signtx_data_pagination(client: Client, flow):
         client.set_input_flow(flow(client))
         _sign_tx_call()
 
-    with client, pytest.raises(exceptions.Cancelled):
-        client.watch_layout()
-        client.set_input_flow(flow(client, cancel=True))
-        _sign_tx_call()
+    if flow is not input_flow_data_scroll_down:
+        with client, pytest.raises(exceptions.Cancelled):
+            client.watch_layout()
+            client.set_input_flow(flow(client, cancel=True))
+            _sign_tx_call()
 
 
 @pytest.mark.models("core")

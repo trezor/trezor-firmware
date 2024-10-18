@@ -1216,13 +1216,22 @@ class InputFlowEthereumSignTxDataScrollDown(InputFlowBase):
         self.cancel = cancel
 
     def input_flow_common(self) -> BRGeneratorType:
+        # this flow will not test for the cancel case,
+        # because once we enter the "view all data",
+        # the only way to cancel is by going back to the 1st page view
+        # but that case would be covered by InputFlowEthereumSignTxDataGoBack
+        assert not self.cancel
+
         yield from self.ETH.confirm_data(info=True)
         yield from self.ETH.paginate_data()
-        if self.cancel:
-            yield from self.ETH.confirm_data(cancel=True)
+
+        self.debug.wait_layout()
+        if self.debug.layout_type is LayoutType.TR:
+            self.debug.press_right()
         else:
-            yield from self.ETH.confirm_data()
-            yield from self.ETH.confirm_tx()
+            self.debug.click(buttons.OK)
+
+        yield from self.ETH.confirm_tx()
 
 
 class InputFlowEthereumSignTxDataGoBack(InputFlowBase):
@@ -2288,7 +2297,8 @@ class InputFlowConfirmAllWarnings(InputFlowBase):
             text = layout.text_content().lower()
             # hi priority warning
             hi_prio = (
-                TR.translate("addr_mismatch__wrong_derivation_path")
+                TR.translate("ethereum__unknown_contract_address")
+                + TR.translate("addr_mismatch__wrong_derivation_path")
                 + TR.translate("send__receiving_to_multisig")
                 + [
                     "witness path",

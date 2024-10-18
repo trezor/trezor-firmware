@@ -118,12 +118,19 @@ def confirm_blob(
     title: str,
     data: str | bytes,
     description: str | None,
-    extra: str | None,
+    description_font_green: bool = False,
+    text_mono: bool = True,
+    extra: str | None = None,
+    subtitle: str | None = None,
     verb: str | None = None,
     verb_cancel: str | None = None,
+    verb_info: str | None = None,
+    info: bool = True,
     hold: bool = False,
     chunkify: bool = False,
     prompt_screen: bool = False,
+    default_cancel: bool = False,
+    page_limit: int | None = None,
 ) -> LayoutObj[UiResult]:
     """Confirm byte sequence data."""
 
@@ -675,12 +682,19 @@ def confirm_blob(
     title: str,
     data: str | bytes,
     description: str | None,
-    extra: str | None,
+    description_font_green: bool = False,
+    text_mono: bool = True,
+    extra: str | None = None,
+    subtitle: str | None = None,
     verb: str = "CONFIRM",
     verb_cancel: str | None = None,
+    verb_info: str | None = None,
+    info: bool = True,
     hold: bool = False,
     chunkify: bool = False,
     prompt_screen: bool = False,
+    default_cancel: bool = False,
+    page_limit: int | None = None,
 ) -> LayoutObj[UiResult]:
     """Confirm byte sequence data."""
 
@@ -1230,12 +1244,19 @@ def confirm_blob(
     title: str,
     data: str | bytes,
     description: str | None,
-    extra: str | None,
+    description_font_green: bool = False,
+    text_mono: bool = True,
+    extra: str | None = None,
+    subtitle: str | None = None,
     verb: str | None = None,
     verb_cancel: str | None = None,
+    verb_info: str | None = None,
+    info: bool = True,
     hold: bool = False,
     chunkify: bool = False,
     prompt_screen: bool = False,
+    default_cancel: bool = False,
+    page_limit: int | None = None,
 ) -> LayoutObj[UiResult]:
     """Confirm byte sequence data."""
 
@@ -1444,6 +1465,7 @@ def confirm_more(
     *,
     title: str,
     button: str,
+    button_style_confirm: bool = False,
     items: Iterable[tuple[int, str | bytes]],
 ) -> LayoutObj[UiResult]:
     """Confirm long content with the possibility to go back from any page.
