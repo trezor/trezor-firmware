@@ -30,6 +30,7 @@ pub struct ButtonPage<T> {
     /// Swipe controller.
     swipe: Swipe,
     scrollbar: ScrollBar,
+    page_limit: Option<usize>,
     /// Hold-to-confirm mode whenever this is `Some(loader)`.
     loader: Option<Loader>,
     button_cancel: Option<Button>,
@@ -71,6 +72,7 @@ where
             pad: Pad::with_background(background),
             swipe: Swipe::new(),
             scrollbar: ScrollBar::vertical(),
+            page_limit: None,
             loader: None,
             button_cancel: Some(Button::with_icon(theme::ICON_CANCEL)),
             button_confirm: Button::with_icon(theme::ICON_CONFIRM).styled(theme::button_confirm()),
@@ -107,6 +109,11 @@ where
         };
         self.button_cancel = Some(cancel);
         self.button_confirm = confirm;
+        self
+    }
+
+    pub fn with_page_limit(mut self, page_limit: Option<usize>) -> Self {
+        self.page_limit = page_limit;
         self
     }
 
@@ -327,6 +334,11 @@ where
             } else {
                 count // Content fits on a single page.
             }
+        };
+        let page_count = if let Some(limit) = self.page_limit {
+            page_count.min(limit)
+        } else {
+            page_count
         };
 
         if page_count == 1 && self.button_cancel.is_none() {

@@ -153,4 +153,4 @@ async def show_recovery_warning(
     br_code: ButtonRequestType = ButtonRequestType.Warning,
 ) -> None:
     button = button or TR.buttons__try_again  # def_arg
-    await show_warning(br_name, content, subheader, button, br_code)
+    await show_warning(br_name, content, subheader, button, br_code=br_code)

@@ -150,6 +150,11 @@ where
         self.with_button(theme::ICON_MENU, FlowMsg::Info, true)
     }
 
+    pub fn with_danger_menu_button(self) -> Self {
+        self.with_button(theme::ICON_MENU, FlowMsg::Info, true)
+            .button_styled(theme::button_warning_high())
+    }
+
     pub fn with_warning_low_icon(self) -> Self {
         self.with_button(theme::ICON_WARNING, FlowMsg::Info, false)
             .button_styled(theme::button_warning_low())
