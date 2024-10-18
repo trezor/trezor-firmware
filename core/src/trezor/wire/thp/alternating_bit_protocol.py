@@ -1,5 +1,5 @@
 from storage.cache_thp import ChannelCache
-from trezor import log
+from trezor import log, utils
 from trezor.wire.thp import ThpError
 
 
@@ -20,14 +20,14 @@ def is_ack_valid(cache: ChannelCache, ack_bit: int) -> bool:
 
 def _is_ack_expected(cache: ChannelCache) -> bool:
     is_expected: bool = not is_sending_allowed(cache)
-    if __debug__ and not is_expected:
+    if __debug__ and utils.ALLOW_DEBUG_MESSAGES and not is_expected:
         log.debug(__name__, "Received unexpected ACK message")
     return is_expected
 
 
 def _has_ack_correct_sync_bit(cache: ChannelCache, sync_bit: int) -> bool:
     is_correct: bool = get_send_seq_bit(cache) == sync_bit
-    if __debug__ and not is_correct:
+    if __debug__ and utils.ALLOW_DEBUG_MESSAGES and not is_correct:
         log.debug(__name__, "Received ACK message with wrong ack bit")
     return is_correct
 

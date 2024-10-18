@@ -69,7 +69,7 @@ async def write_payloads_to_wire(
         packet_offset = CONT_HEADER_LENGTH
 
         # write packet to wire (in-lined)
-        if __debug__:
+        if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
             log.debug(
                 __name__, "write_packet_to_wire: %s", utils.get_bytes_as_str(packet)
             )
@@ -82,7 +82,7 @@ async def write_payloads_to_wire(
 async def write_packet_to_wire(iface: WireInterface, packet: bytes) -> None:
     while True:
         await loop.wait(iface.iface_num() | io.POLL_WRITE)
-        if __debug__:
+        if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
             log.debug(
                 __name__, "write_packet_to_wire: %s", utils.get_bytes_as_str(packet)
             )

@@ -66,18 +66,19 @@ async def handle_received_message(
 ) -> None:
     """Handle a message received from the channel."""
 
-    if __debug__:
+    if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
         log.debug(__name__, "handle_received_message")
-        try:
-            import micropython
+        if utils.ALLOW_DEBUG_MESSAGES:  # TODO remove after performance tests are done
+            try:
+                import micropython
 
-            print("micropython.mem_info() from received_message_handler.py")
-            micropython.mem_info()
-            print(
-                "Allocation count:", micropython.alloc_count()  # type: ignore ["alloc_count" is not a known attribute of module "micropython"]
-            )
-        except AttributeError:
-            print("To show allocation count, create the build with TREZOR_MEMPERF=1")
+                print("micropython.mem_info() from received_message_handler.py")
+                micropython.mem_info()
+                print("Allocation count:", micropython.alloc_count())
+            except AttributeError:
+                print(
+                    "To show allocation count, create the build with TREZOR_MEMPERF=1"
+                )
     ctrl_byte, _, payload_length = ustruct.unpack(">BHH", message_buffer)
     message_length = payload_length + INIT_HEADER_LENGTH
 
@@ -86,7 +87,7 @@ async def handle_received_message(
     # Synchronization process
     seq_bit = (ctrl_byte & 0x10) >> 4
     ack_bit = (ctrl_byte & 0x08) >> 3
-    if __debug__:
+    if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
         log.debug(
             __name__,
             "handle_completed_message - seq bit of message: %d, ack bit of message: %d",
@@ -108,7 +109,7 @@ async def handle_received_message(
 
     # 2: Handle message with unexpected sequential bit
     if seq_bit != ABP.get_expected_receive_seq_bit(ctx.channel_cache):
-        if __debug__:
+        if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
             log.debug(__name__, "Received message with an unexpected sequential bit")
         await _send_ack(ctx, ack_bit=seq_bit)
         raise ThpError("Received message with an unexpected sequential bit")
@@ -131,14 +132,14 @@ async def handle_received_message(
     except ThpInvalidDataError:
         await ctx.write_error(ThpErrorType.INVALID_DATA)
         ctx.clear()
-    if __debug__:
+    if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
         log.debug(__name__, "handle_received_message - end")
 
 
 def _send_ack(ctx: Channel, ack_bit: int) -> Awaitable[None]:
     ctrl_byte = control_byte.add_ack_bit_to_ctrl_byte(ACK_MESSAGE, ack_bit)
     header = PacketHeader(ctrl_byte, ctx.get_channel_id_int(), CHECKSUM_LENGTH)
-    if __debug__:
+    if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
         log.debug(
             __name__,
             "Writing ACK message to a channel with id: %d, ack_bit: %d",
@@ -149,13 +150,13 @@ def _send_ack(ctx: Channel, ack_bit: int) -> Awaitable[None]:
 
 
 def _check_checksum(message_length: int, message_buffer: utils.BufferType):
-    if __debug__:
+    if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
         log.debug(__name__, "check_checksum")
     if not checksum.is_valid(
         checksum=message_buffer[message_length - CHECKSUM_LENGTH : message_length],
         data=memoryview(message_buffer)[: message_length - CHECKSUM_LENGTH],
     ):
-        if __debug__:
+        if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
             log.debug(__name__, "Invalid checksum, ignoring message.")
         raise ThpError("Invalid checksum, ignoring message.")
 
@@ -164,17 +165,17 @@ async def _handle_ack(ctx: Channel, ack_bit: int):
     if not ABP.is_ack_valid(ctx.channel_cache, ack_bit):
         return
     # ACK is expected and it has correct sync bit
-    if __debug__:
+    if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
         log.debug(__name__, "Received ACK message with correct ack bit")
     if ctx.transmission_loop is not None:
         ctx.transmission_loop.stop_immediately()
-        if __debug__:
+        if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
             log.debug(__name__, "Stopped transmission loop")
 
     ABP.set_sending_allowed(ctx.channel_cache, True)
 
     if ctx.write_task_spawn is not None:
-        if __debug__:
+        if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
             log.debug(__name__, 'Control to "write_encrypted_payload_loop" task')
         await ctx.write_task_spawn
         # Note that no the write_task_spawn could result in loop.clear(),
@@ -189,7 +190,7 @@ def _handle_message_to_app_or_channel(
     ctrl_byte: int,
 ) -> Awaitable[None]:
     state = ctx.get_channel_state()
-    if __debug__:
+    if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
         log.debug(__name__, "state: %s", state_to_str(state))
 
     if state is ChannelState.ENCRYPTED_TRANSPORT:
@@ -213,7 +214,7 @@ async def _handle_state_TH1(
     message_length: int,
     ctrl_byte: int,
 ) -> None:
-    if __debug__:
+    if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
         log.debug(__name__, "handle_state_TH1")
     if not control_byte.is_handshake_init_req(ctrl_byte):
         raise ThpError("Message received is not a handshake init request!")
@@ -231,7 +232,7 @@ async def _handle_state_TH1(
         )
     )
 
-    if __debug__:
+    if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
         log.debug(
             __name__,
             "trezor ephemeral pubkey: %s",
@@ -255,7 +256,7 @@ async def _handle_state_TH1(
 async def _handle_state_TH2(ctx: Channel, message_length: int, ctrl_byte: int) -> None:
     from apps.thp.credential_manager import validate_credential
 
-    if __debug__:
+    if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
         log.debug(__name__, "handle_state_TH2")
     if not control_byte.is_handshake_comp_req(ctrl_byte):
         raise ThpError("Message received is not a handshake completion request!")
@@ -298,7 +299,7 @@ async def _handle_state_TH2(ctx: Channel, message_length: int, ctrl_byte: int) -
             raise ThpInvalidDataError()
         if method not in ctx.selected_pairing_methods:
             ctx.selected_pairing_methods.append(method)
-    if __debug__:
+    if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
         log.debug(
             __name__,
             "host static pubkey: %s, noise payload: %s",
@@ -318,7 +319,7 @@ async def _handle_state_TH2(ctx: Channel, message_length: int, ctrl_byte: int) -
                 host_static_pubkey,
             )
         except DataError as e:
-            if __debug__:
+            if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
                 log.exception(__name__, e)
             pass
 
@@ -340,7 +341,7 @@ async def _handle_state_TH2(ctx: Channel, message_length: int, ctrl_byte: int) -
 
 
 async def _handle_state_ENCRYPTED_TRANSPORT(ctx: Channel, message_length: int) -> None:
-    if __debug__:
+    if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
         log.debug(__name__, "handle_state_ENCRYPTED_TRANSPORT")
 
     ctx.decrypt_buffer(message_length)

@@ -36,7 +36,7 @@ def select_buffer(
         buffer: utils.BufferType = _get_buffer_for_read(payload_length, channel_buffer)
         return buffer
     except Exception as e:
-        if __debug__:
+        if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
             log.exception(__name__, e)
     raise Exception("Failed to create a buffer for channel")  # TODO handle better
 
@@ -98,7 +98,7 @@ def _get_buffer_for_read(
     payload_length: int, existing_buffer: utils.BufferType, max_length=MAX_PAYLOAD_LEN
 ) -> utils.BufferType:
     length = payload_length + INIT_HEADER_LENGTH
-    if __debug__:
+    if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
         log.debug(
             __name__,
             "get_buffer_for_read - length: %d, %s %s",
@@ -110,13 +110,13 @@ def _get_buffer_for_read(
         raise ThpError("Message too large")
 
     if length > len(existing_buffer):
-        if __debug__:
+        if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
             log.debug(__name__, "Allocating a new buffer")
 
         from ..thp_main import get_raw_read_buffer
 
         if length > len(get_raw_read_buffer()):
-            if __debug__:
+            if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
                 log.debug(
                     __name__,
                     "Required length is %d, where raw buffer has capacity only %d",
@@ -133,7 +133,7 @@ def _get_buffer_for_read(
         return payload
 
     # reuse a part of the supplied buffer
-    if __debug__:
+    if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
         log.debug(__name__, "Reusing already allocated buffer")
     return memoryview(existing_buffer)[:length]
 
@@ -142,7 +142,7 @@ def _get_buffer_for_write(
     payload_length: int, existing_buffer: utils.BufferType, max_length=MAX_PAYLOAD_LEN
 ) -> utils.BufferType:
     length = payload_length + INIT_HEADER_LENGTH
-    if __debug__:
+    if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
         log.debug(
             __name__,
             "get_buffer_for_write - length: %d, %s %s",
@@ -154,7 +154,7 @@ def _get_buffer_for_write(
         raise ThpError("Message too large")
 
     if length > len(existing_buffer):
-        if __debug__:
+        if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
             log.debug(__name__, "Creating a new write buffer from raw write buffer")
 
         from ..thp_main import get_raw_write_buffer
@@ -170,6 +170,6 @@ def _get_buffer_for_write(
         return payload
 
     # reuse a part of the supplied buffer
-    if __debug__:
+    if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
         log.debug(__name__, "Reusing already allocated buffer")
     return memoryview(existing_buffer)[:length]

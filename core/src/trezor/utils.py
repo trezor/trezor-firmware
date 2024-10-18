@@ -37,6 +37,8 @@ DISABLE_ANIMATION = 0
 
 DISABLE_ENCRYPTION: bool = False
 
+ALLOW_DEBUG_MESSAGES: bool = False
+
 if __debug__:
     if EMULATOR:
         import uos

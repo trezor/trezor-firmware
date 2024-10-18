@@ -70,7 +70,7 @@ class Channel:
 
     def get_channel_state(self) -> int:
         state = int.from_bytes(self.channel_cache.state, "big")
-        if __debug__:
+        if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
             log.debug(
                 __name__,
                 "(cid: %s) get_channel_state: %s",
@@ -86,7 +86,7 @@ class Channel:
 
     def set_channel_state(self, state: ChannelState) -> None:
         self.channel_cache.state = bytearray(state.to_bytes(1, "big"))
-        if __debug__:
+        if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
             log.debug(
                 __name__,
                 "(cid: %s) set_channel_state: %s",
@@ -96,7 +96,7 @@ class Channel:
 
     def set_buffer(self, buffer: utils.BufferType) -> None:
         self.buffer = buffer
-        if __debug__:
+        if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
             log.debug(
                 __name__,
                 "(cid: %s) set_buffer: %s",
@@ -107,7 +107,7 @@ class Channel:
     # CALLED BY THP_MAIN_LOOP
 
     def receive_packet(self, packet: utils.BufferType) -> Awaitable[None] | None:
-        if __debug__:
+        if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
             log.debug(
                 __name__,
                 "(cid: %s) receive_packet",
@@ -116,7 +116,7 @@ class Channel:
 
         self._handle_received_packet(packet)
 
-        if __debug__:
+        if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
             log.debug(
                 __name__,
                 "(cid: %s) self.buffer: %s",
@@ -142,7 +142,7 @@ class Channel:
         return self._handle_init_packet(packet)
 
     def _handle_init_packet(self, packet: utils.BufferType) -> None:
-        if __debug__:
+        if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
             log.debug(
                 __name__,
                 "(cid: %s) handle_init_packet",
@@ -169,7 +169,7 @@ class Channel:
             payload_length,
         )
 
-        if __debug__:
+        if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
             log.debug(
                 __name__,
                 "(cid: %s) handle_init_packet - payload len: %d",
@@ -185,7 +185,7 @@ class Channel:
         return self._buffer_packet_data(self.buffer, packet, 0)
 
     def _handle_cont_packet(self, packet: utils.BufferType) -> None:
-        if __debug__:
+        if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
             log.debug(
                 __name__,
                 "(cid: %s) handle_cont_packet",
@@ -221,7 +221,7 @@ class Channel:
 
             assert key_receive is not None
             assert nonce_receive is not None
-            if __debug__:
+            if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
                 log.debug(
                     __name__,
                     "(cid: %s) Buffer before decryption: %s",
@@ -231,7 +231,7 @@ class Channel:
             is_tag_valid = crypto.dec(
                 noise_buffer, tag, key_receive, nonce_receive, b""
             )
-            if __debug__:
+            if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
                 log.debug(
                     __name__,
                     "(cid: %s) Buffer after decryption: %s",
@@ -241,7 +241,7 @@ class Channel:
 
             self.channel_cache.set_int(CHANNEL_NONCE_RECEIVE, nonce_receive + 1)
 
-        if __debug__:
+        if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
             log.debug(
                 __name__,
                 "(cid: %s) Is decrypted tag valid? %s",
@@ -265,7 +265,7 @@ class Channel:
             raise ThpDecryptionError()
 
     def _encrypt(self, buffer: utils.BufferType, noise_payload_len: int) -> None:
-        if __debug__:
+        if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
             log.debug(
                 __name__, "(cid: %s) encrypt", utils.get_bytes_as_str(self.channel_id)
             )
@@ -285,7 +285,7 @@ class Channel:
             tag = crypto.enc(noise_buffer, key_send, nonce_send, b"")
 
             self.channel_cache.set_int(CHANNEL_NONCE_SEND, nonce_send + 1)
-            if __debug__:
+            if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
                 log.debug(__name__, "New nonce_send: %i", nonce_send + 1)
 
         buffer[noise_payload_len : noise_payload_len + TAG_LENGTH] = tag
@@ -343,7 +343,7 @@ class Channel:
             print("\nCLOSED\n")
         self._prepare_write()
         if force:
-            if __debug__:
+            if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
                 log.debug(
                     __name__, "Writing FORCE message (without async or retransmission)."
                 )
@@ -370,7 +370,7 @@ class Channel:
     async def _write_encrypted_payload_loop(
         self, ctrl_byte: int, payload: bytes
     ) -> None:
-        if __debug__:
+        if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
             log.debug(
                 __name__,
                 "(cid %s) write_encrypted_payload_loop",
@@ -388,7 +388,7 @@ class Channel:
         # Let the main loop be restarted and clear loop, if there is no other
         # workflow and the state is ENCRYPTED_TRANSPORT
         if self._can_clear_loop():
-            if __debug__:
+            if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
                 log.debug(
                     __name__,
                     "(cid: %s) clearing loop from channel",

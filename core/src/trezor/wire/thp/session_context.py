@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 from storage.cache_thp import MANAGEMENT_SESSION_ID, SessionThpCache
-from trezor import log, loop, protobuf
+from trezor import log, loop, protobuf, utils
 from trezor.wire import message_handler, protocol_common
 from trezor.wire.context import UnexpectedMessageException
 from trezor.wire.message_handler import AVOID_RESTARTING_FOR, failure, find_handler
@@ -76,7 +76,7 @@ class GenericSessionContext(Context):
         try:
             message = await self._get_message(self.incoming_message, next_message)
         except protocol_common.WireError as e:
-            if __debug__:
+            if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
                 log.exception(__name__, e)
             await self.write(failure(e))
             return _REPEAT_LOOP
