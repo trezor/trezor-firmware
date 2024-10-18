@@ -3,11 +3,12 @@ from typing import Awaitable, Sequence
 import trezorui2
 from trezor import TR
 from trezor.enums import ButtonRequestType
+import trezorui_api
 
 from ..common import interact, raise_if_not_confirmed
 from . import confirm_action, show_success, show_warning
 
-CONFIRMED = trezorui2.CONFIRMED  # global_import_cache
+CONFIRMED = trezorui_api.CONFIRMED  # global_import_cache
 
 
 async def show_share_words(
@@ -263,7 +264,7 @@ def show_intro_backup(single_share: bool, num_of_words: int | None) -> Awaitable
     )
 
 
-def show_warning_backup() -> Awaitable[trezorui2.UiResult]:
+def show_warning_backup() -> Awaitable[trezorui_api.UiResult]:
     return show_warning(
         "backup_warning",
         TR.words__title_remember,
@@ -290,7 +291,7 @@ def show_reset_warning(
     subheader: str | None = None,
     button: str | None = None,
     br_code: ButtonRequestType = ButtonRequestType.Warning,
-) -> Awaitable[trezorui2.UiResult]:
+) -> Awaitable[trezorui_api.UiResult]:
     button = button or TR.buttons__try_again  # def_arg
 
     return show_warning(

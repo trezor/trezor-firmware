@@ -1,6 +1,7 @@
 from typing import Awaitable, Callable, Sequence
 
 import trezorui2
+import trezorui_api
 from trezor import TR, ui
 from trezor.enums import ButtonRequestType
 from trezor.wire import ActionCancelled
@@ -8,7 +9,7 @@ from trezor.wire import ActionCancelled
 from ..common import interact
 from . import raise_if_not_confirmed, show_success
 
-CONFIRMED = trezorui2.CONFIRMED  # global_import_cache
+CONFIRMED = trezorui_api.CONFIRMED  # global_import_cache
 
 
 def show_share_words(
@@ -172,7 +173,7 @@ async def _prompt_number(
         # so use the initial one
         return count
 
-    if result is not trezorui2.CANCELLED:
+    if result is not trezorui_api.CANCELLED:
         assert isinstance(result, int)
         return result
     else:

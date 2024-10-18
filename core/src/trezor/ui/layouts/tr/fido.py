@@ -1,4 +1,5 @@
 import trezorui2
+import trezorui_api
 from trezor import ui
 from trezor.enums import ButtonRequestType
 
@@ -24,7 +25,7 @@ async def confirm_fido(
 
     # For the usage in device tests, assuming CONFIRMED (sent by debuglink)
     # is choosing the first credential.
-    if __debug__ and result is trezorui2.CONFIRMED:
+    if __debug__ and result is trezorui_api.CONFIRMED:
         return 0
 
     raise RuntimeError  # should not get here, cancellation is handled by `interact`
@@ -40,4 +41,4 @@ async def confirm_fido_reset() -> bool:
         verb_cancel="",
         verb=TR.buttons__confirm,
     )
-    return (await ui.Layout(confirm).get_result()) is trezorui2.CONFIRMED
+    return (await ui.Layout(confirm).get_result()) is trezorui_api.CONFIRMED

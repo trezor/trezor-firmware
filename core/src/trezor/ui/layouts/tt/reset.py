@@ -1,12 +1,13 @@
 from typing import Awaitable, Callable, Sequence
 
 import trezorui2
+import trezorui_api
 from trezor import TR
 from trezor.enums import ButtonRequestType
 
 from ..common import interact, raise_if_not_confirmed
 
-CONFIRMED = trezorui2.CONFIRMED  # global_import_cache
+CONFIRMED = trezorui_api.CONFIRMED  # global_import_cache
 
 
 def _split_share_into_pages(share_words: Sequence[str], per_page: int = 4) -> list[str]:
@@ -323,7 +324,7 @@ def show_intro_backup(single_share: bool, num_of_words: int | None) -> Awaitable
     )
 
 
-def show_warning_backup() -> Awaitable[trezorui2.UiResult]:
+def show_warning_backup() -> Awaitable[trezorui_api.UiResult]:
     return interact(
         trezorui2.show_info(
             title=TR.reset__never_make_digital_copy,
@@ -351,7 +352,7 @@ def show_reset_warning(
     subheader: str | None = None,
     button: str | None = None,
     br_code: ButtonRequestType = ButtonRequestType.Warning,
-) -> Awaitable[trezorui2.UiResult]:
+) -> Awaitable[trezorui_api.UiResult]:
     button = button or TR.buttons__try_again  # def_arg
     return interact(
         trezorui2.show_warning(

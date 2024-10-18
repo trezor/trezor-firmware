@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING
 
 import trezorui2
+import trezorui_api
 from trezor import TR, ui
 from trezor.enums import ButtonRequestType, RecoveryType
 
@@ -137,7 +138,7 @@ async def continue_recovery(
             ButtonRequestType.RecoveryHomepage,
             raise_on_cancel=None,
         )
-        if result is trezorui2.CONFIRMED:
+        if result is trezorui_api.CONFIRMED:
             return True
 
         try:
