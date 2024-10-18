@@ -12,6 +12,7 @@ mod screens;
 pub mod theme;
 
 pub struct ModelTRFeatures {}
+pub mod ui_features_fw;
 
 impl UIFeaturesCommon for ModelTRFeatures {
     const SCREEN: Rect = constant::SCREEN;

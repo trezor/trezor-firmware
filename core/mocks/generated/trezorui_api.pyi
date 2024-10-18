@@ -69,6 +69,17 @@ INFO: UiResult
 
 
 # rust/src/ui/api/firmware_upy.rs
+def show_info(
+    *,
+    title: str,
+    description: str = "",
+    button: str = "",
+    time_ms: int = 0,
+) -> LayoutObj[UiResult]:
+    """Info screen."""
+
+
+# rust/src/ui/api/firmware_upy.rs
 class BacklightLevels:
     """Backlight levels. Values dynamically update based on user settings."""
     MAX: ClassVar[int]
