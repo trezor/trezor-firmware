@@ -45,9 +45,10 @@ def verify(public_key: bytes, signature: bytes, digest: bytes) -> bool:
 def tweak_public_key(
     public_key: bytes,
     root_hash: bytes | None = None,
-) -> bytes:
+) -> tuple[int, bytes]:
     """
     Tweaks the public key with the specified root_hash.
+    First element of tuple is the parity, second is the tweaked public key.
     """
 
 

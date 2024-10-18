@@ -124,6 +124,7 @@ class DecredSigHasher:
         i: int,
         tx: SignTx | PrevTx,
         sighash_type: SigHashType,
+        leaf_hash: bytes | None,
     ) -> bytes:
         raise NotImplementedError
 

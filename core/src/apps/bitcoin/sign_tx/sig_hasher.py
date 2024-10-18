@@ -37,6 +37,7 @@ if TYPE_CHECKING:
             i: int,
             tx: SignTx | PrevTx,
             sighash_type: SigHashType,
+            leaf_hash: bytes | None,
         ) -> bytes: ...
 
         def hash_zip244(
@@ -132,9 +133,10 @@ class BitcoinSigHasher:
         i: int,
         tx: SignTx | PrevTx,
         sighash_type: SigHashType,
+        leaf_hash: bytes | None,
     ) -> bytes:
         from ..common import tagged_hashwriter
-        from ..writers import write_uint8
+        from ..writers import write_uint8, write_uint32
 
         h_sigmsg = tagged_hashwriter(b"TapSighash")
 
@@ -165,11 +167,17 @@ class BitcoinSigHasher:
         # sha_outputs
         write_bytes_fixed(h_sigmsg, self.h_outputs.get_digest(), TX_HASH_SIZE)
 
-        # spend_type 0 (no tapscript message extension, no annex)
-        write_uint8(h_sigmsg, 0)
+        # spend_type, no annex support for now
+        spend_type = 0 if leaf_hash is None else 2
+        write_uint8(h_sigmsg, spend_type)
 
         # input_index
         write_uint32(h_sigmsg, i)
+
+        if leaf_hash is not None:
+            write_bytes_fixed(h_sigmsg, leaf_hash, TX_HASH_SIZE)
+            write_uint8(h_sigmsg, 0)
+            write_uint32(h_sigmsg, 0xFFFFFFFF)
 
         return h_sigmsg.get_digest()
 
