@@ -30,9 +30,9 @@ async def require_confirm_origination(address: str) -> None:
     await confirm_address(
         TR.tezos__confirm_origination,
         address,
-        f"{TR.words__address}:",
-        "confirm_origination",
-        BR_SIGN_TX,
+        description=f"{TR.words__address}:",
+        br_name="confirm_origination",
+        br_code=BR_SIGN_TX,
     )
 
 
@@ -52,9 +52,9 @@ async def require_confirm_delegation_baker(baker: str) -> None:
     await confirm_address(
         TR.tezos__confirm_delegation,
         baker,
-        TR.tezos__baker_address,
-        "confirm_delegation",
-        BR_SIGN_TX,
+        description=TR.tezos__baker_address,
+        br_name="confirm_delegation",
+        br_code=BR_SIGN_TX,
     )
 
 
@@ -121,9 +121,9 @@ async def require_confirm_delegation_manager_withdraw(address: str) -> None:
     await confirm_address(
         TR.tezos__remove_delegation,
         address,
-        TR.tezos__delegator,
-        "confirm_undelegation",
-        BR_SIGN_TX,
+        description=TR.tezos__delegator,
+        br_name="confirm_undelegation",
+        br_code=BR_SIGN_TX,
     )
 
 

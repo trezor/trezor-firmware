@@ -61,7 +61,7 @@ async def _require_confirm_address(action: str, address: str) -> None:
     await confirm_address(
         TR.nem__confirm_address,
         address,
-        action,
-        "confirm_multisig",
-        ButtonRequestType.ConfirmOutput,
+        description=action,
+        br_name="confirm_multisig",
+        br_code=ButtonRequestType.ConfirmOutput,
     )

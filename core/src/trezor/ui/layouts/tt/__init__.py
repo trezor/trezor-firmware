@@ -904,6 +904,7 @@ def confirm_blob(
 def confirm_address(
     title: str,
     address: str,
+    subtitle: str | None = None,
     description: str | None = None,
     br_name: str = "confirm_address",
     br_code: ButtonRequestType = BR_CODE_OTHER,
@@ -914,6 +915,7 @@ def confirm_address(
         description or "",
         br_name,
         br_code,
+        subtitle=subtitle,
         verb=TR.buttons__confirm,
     )
 
@@ -1101,6 +1103,7 @@ if not utils.BITCOIN_ONLY:
         _account_path: str | None,
         maximum_fee: str,
         fee_info_items: Iterable[tuple[str, str]],
+        _is_contract_interaction: bool,
         br_name: str = "confirm_ethereum_tx",
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
         chunkify: bool = False,
@@ -1255,7 +1258,7 @@ def confirm_replacement(title: str, txid: str) -> Awaitable[None]:
         title,
         txid,
         TR.send__transaction_id,
-        TR.buttons__continue,
+        verb=TR.buttons__continue,
         br_code=ButtonRequestType.SignTx,
     )
 

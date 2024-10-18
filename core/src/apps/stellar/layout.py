@@ -24,8 +24,8 @@ async def require_confirm_init(
     await layouts.confirm_address(
         TR.stellar__confirm_stellar,
         address,
-        description,
-        "confirm_init",
+        description=description,
+        br_name="confirm_init",
     )
 
     # get_network_warning
