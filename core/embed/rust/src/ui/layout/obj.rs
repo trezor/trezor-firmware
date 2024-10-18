@@ -94,7 +94,7 @@ pub trait ComponentMsgObj: Component {
 pub trait ComponentMaybeTrace: Component + ComponentMsgObj + MaybeTrace {}
 impl<T> ComponentMaybeTrace for T where T: Component + ComponentMsgObj + MaybeTrace {}
 
-struct RootComponent<T, M>
+pub struct RootComponent<T, M>
 where
     T: Component,
     M: UIFeaturesCommon,

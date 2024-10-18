@@ -1076,31 +1076,6 @@ extern "C" fn new_show_warning(n_args: usize, args: *const Obj, kwargs: *mut Map
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
-extern "C" fn new_show_info(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
-    let block = move |_args: &[Obj], kwargs: &Map| {
-        let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
-        let description: TString = kwargs.get_or(Qstr::MP_QSTR_description, "".into())?;
-        let time_ms: u32 = kwargs.get_or(Qstr::MP_QSTR_time_ms, 0)?;
-
-        let content = Frame::new(
-            title,
-            Paragraphs::new([Paragraph::new(&theme::TEXT_NORMAL, description)]),
-        );
-        let obj = if time_ms == 0 {
-            // No timer, used when we only want to draw the dialog once and
-            // then throw away the layout object.
-            LayoutObj::new(content)?
-        } else {
-            // Timeout.
-            let timeout = Timeout::new(time_ms);
-            LayoutObj::new((timeout, content.map(|_| None)))?
-        };
-
-        Ok(obj.into())
-    };
-    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
-}
-
 extern "C" fn new_show_passphrase() -> Obj {
     let block = move || {
         let text: TString = TR::passphrase__please_enter.into();
@@ -1840,15 +1815,6 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// ) -> LayoutObj[UiResult]:
     ///     """Warning modal with middle button and centered text."""
     Qstr::MP_QSTR_show_warning => obj_fn_kw!(0, new_show_warning).as_obj(),
-
-    /// def show_info(
-    ///     *,
-    ///     title: str,
-    ///     description: str = "",
-    ///     time_ms: int = 0,
-    /// ) -> LayoutObj[UiResult]:
-    ///     """Info modal."""
-    Qstr::MP_QSTR_show_info => obj_fn_kw!(0, new_show_info).as_obj(),
 
     /// def show_passphrase() -> LayoutObj[UiResult]:
     ///     """Show passphrase on host dialog."""

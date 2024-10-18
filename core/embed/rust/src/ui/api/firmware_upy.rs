@@ -1,11 +1,42 @@
-use crate::micropython::map::Map;
-use crate::ui::layout::obj::ATTACH_TYPE_OBJ;
-use crate::ui::layout::base::LAYOUT_STATE;
-use crate::ui::backlight::BACKLIGHT_LEVELS_OBJ;
 use crate::{
-    micropython::{macros::obj_module, module::Module, qstr::Qstr},
-    ui::layout::result::{CANCELLED, CONFIRMED, INFO},
+    micropython::{
+        macros::{obj_fn_kw, obj_module},
+        map::Map,
+        module::Module,
+        obj::Obj,
+        qstr::Qstr,
+        util,
+    },
+    strutil::TString,
+    ui::{
+        backlight::BACKLIGHT_LEVELS_OBJ,
+        layout::{
+            base::LAYOUT_STATE,
+            obj::{LayoutObj, ATTACH_TYPE_OBJ},
+            result::{CANCELLED, CONFIRMED, INFO},
+        },
+        ui_features::ModelUI,
+        ui_features_fw::UIFeaturesFirmware,
+    },
 };
+
+// free-standing functions exported to MicroPython mirror `trait
+// UIFeaturesFirmware`
+
+extern "C" fn show_info(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let description: TString = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
+        let button: TString = kwargs
+            .get_or(Qstr::MP_QSTR_button, TString::empty())?
+            .try_into()?;
+        let time_ms: u32 = kwargs.get_or(Qstr::MP_QSTR_time_ms, 0)?.try_into()?;
+
+        let obj = ModelUI::show_info(title, description, button, time_ms)?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
 
 #[no_mangle]
 pub static mp_module_trezorui_api: Module = obj_module! {
@@ -103,6 +134,16 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// INFO: UiResult
     Qstr::MP_QSTR_INFO => INFO.as_obj(),
 
+    /// def show_info(
+    ///     *,
+    ///     title: str,
+    ///     description: str = "",
+    ///     button: str = "",
+    ///     time_ms: int = 0,
+    /// ) -> LayoutObj[UiResult]:
+    ///     """Info screen."""
+    Qstr::MP_QSTR_show_info => obj_fn_kw!(0, show_info).as_obj(),
+
     /// class BacklightLevels:
     ///     """Backlight levels. Values dynamically update based on user settings."""
     ///     MAX: ClassVar[int]
@@ -130,4 +171,5 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     TRANSITIONING: "ClassVar[LayoutState]"
     ///     DONE: "ClassVar[LayoutState]"
     Qstr::MP_QSTR_LayoutState => LAYOUT_STATE.as_obj(),
+
 };
