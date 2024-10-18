@@ -276,7 +276,7 @@ async def show_warning_backup() -> None:
         TR.words__title_remember,
         TR.reset__never_make_digital_copy,
         TR.buttons__ok_i_understand,
-        ButtonRequestType.ResetDevice,
+        br_code=ButtonRequestType.ResetDevice,
     )
 
 

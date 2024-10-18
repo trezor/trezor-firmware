@@ -343,9 +343,7 @@ class EthereumFlow:
 
     def confirm_data(self, info: bool = False, cancel: bool = False) -> BRGeneratorType:
         yield
-        TR.assert_equals(
-            self.debug.wait_layout().title(), "ethereum__title_confirm_data"
-        )
+        TR.assert_equals(self.debug.wait_layout().title(), "ethereum__title_input_data")
         if info:
             self.debug.press_info()
         elif cancel:
@@ -355,21 +353,21 @@ class EthereumFlow:
 
     def paginate_data(self) -> BRGeneratorType:
         br = yield
-        TR.assert_equals(
-            self.debug.wait_layout().title(), "ethereum__title_confirm_data"
-        )
+        TR.assert_equals(self.debug.wait_layout().title(), "ethereum__title_input_data")
         assert br.pages is not None
-        for i in range(br.pages):
-            self.debug.wait_layout()
-            if i < br.pages - 1:
-                self.debug.swipe_up()
-        self.debug.press_yes()
+        if self.client.layout_type is LayoutType.TR:
+            for i in range(br.pages):
+                if i < br.pages - 1:
+                    self.debug.press_right()
+        else:
+            for i in range(br.pages):
+                self.debug.wait_layout()
+                if i < br.pages - 1:
+                    self.debug.click(buttons.OK)
 
     def paginate_data_go_back(self) -> BRGeneratorType:
         br = yield
-        TR.assert_equals(
-            self.debug.wait_layout().title(), "ethereum__title_confirm_data"
-        )
+        TR.assert_equals(self.debug.wait_layout().title(), "ethereum__title_input_data")
         assert br.pages is not None
         assert br.pages > 2
         if self.client.layout_type is LayoutType.TR:
@@ -395,7 +393,7 @@ class EthereumFlow:
         yield
 
         if self.client.layout_type is LayoutType.TT:
-            TR.assert_equals(self.debug.wait_layout().title(), "words__recipient")
+            TR.assert_equals(self.debug.wait_layout().title(), "words__address")
             if cancel:
                 self.debug.press_no()
             else:
@@ -425,7 +423,10 @@ class EthereumFlow:
 
                 yield
         elif self.client.layout_type is LayoutType.TR:
-            TR.assert_equals(self.debug.wait_layout().title(), "words__recipient")
+            TR.assert_in_multiple(
+                self.debug.wait_layout().title(),
+                ["ethereum__interaction_contract", "words__recipient"],
+            )
             if cancel:
                 self.debug.press_left()
             else:

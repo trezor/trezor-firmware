@@ -198,6 +198,7 @@ where
             PageMsg::Content(_) => Err(Error::TypeError),
             PageMsg::Confirmed => Ok(CONFIRMED.as_obj()),
             PageMsg::Cancelled => Ok(CANCELLED.as_obj()),
+            PageMsg::Info => Ok(INFO.as_obj()),
             PageMsg::SwipeLeft => Ok(INFO.as_obj()),
             PageMsg::SwipeRight => Ok(CANCELLED.as_obj()),
         }
@@ -412,6 +413,7 @@ struct ConfirmBlobParams {
     hold: bool,
     chunkify: bool,
     text_mono: bool,
+    page_limit: Option<usize>,
 }
 
 impl ConfirmBlobParams {
@@ -435,6 +437,7 @@ impl ConfirmBlobParams {
             hold,
             chunkify: false,
             text_mono: true,
+            page_limit: None,
         }
     }
 
@@ -463,6 +466,11 @@ impl ConfirmBlobParams {
         self
     }
 
+    fn with_page_limit(mut self, page_limit: Option<usize>) -> Self {
+        self.page_limit = page_limit;
+        self
+    }
+
     fn into_layout(self) -> Result<Obj, Error> {
         let paragraphs = ConfirmBlob {
             description: self.description.unwrap_or("".into()),
@@ -488,10 +496,12 @@ impl ConfirmBlobParams {
         if self.hold {
             page = page.with_hold()?
         }
+        page = page.with_page_limit(self.page_limit);
         let mut frame = Frame::left_aligned(theme::label_title(), self.title, page);
         if let Some(subtitle) = self.subtitle {
             frame = frame.with_subtitle(theme::label_subtitle(), subtitle);
         }
+
         if self.info_button {
             frame = frame.with_info_button();
         }
@@ -506,7 +516,11 @@ extern "C" fn new_confirm_blob(n_args: usize, args: *const Obj, kwargs: *mut Map
         let data: Obj = kwargs.get(Qstr::MP_QSTR_data)?;
         let description: Option<TString> =
             kwargs.get(Qstr::MP_QSTR_description)?.try_into_option()?;
-        let extra: Option<TString> = kwargs.get(Qstr::MP_QSTR_extra)?.try_into_option()?;
+        let text_mono: bool = kwargs.get_or(Qstr::MP_QSTR_text_mono, true)?;
+        let extra: Option<TString> = kwargs
+            .get(Qstr::MP_QSTR_extra)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
         let verb: Option<TString> = kwargs
             .get(Qstr::MP_QSTR_verb)
             .unwrap_or_else(|_| Obj::const_none())
@@ -515,12 +529,20 @@ extern "C" fn new_confirm_blob(n_args: usize, args: *const Obj, kwargs: *mut Map
             .get(Qstr::MP_QSTR_verb_cancel)
             .unwrap_or_else(|_| Obj::const_none())
             .try_into_option()?;
+        let info: bool = kwargs.get_or(Qstr::MP_QSTR_info, false)?;
         let hold: bool = kwargs.get_or(Qstr::MP_QSTR_hold, false)?;
         let chunkify: bool = kwargs.get_or(Qstr::MP_QSTR_chunkify, false)?;
+        let page_limit: Option<usize> = kwargs
+            .get(Qstr::MP_QSTR_page_limit)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
 
         ConfirmBlobParams::new(title, data, description, verb, verb_cancel, hold)
+            .with_text_mono(text_mono)
             .with_extra(extra)
             .with_chunkify(chunkify)
+            .with_info_button(info)
+            .with_page_limit(page_limit)
             .into_layout()
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -1139,6 +1161,8 @@ extern "C" fn new_confirm_more(n_args: usize, args: *const Obj, kwargs: *mut Map
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let button: TString = kwargs.get(Qstr::MP_QSTR_button)?.try_into()?;
+        let button_style_confirm: bool =
+            kwargs.get_or(Qstr::MP_QSTR_button_style_confirm, false)?;
         let items: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
 
         let mut paragraphs = ParagraphVecLong::new();
@@ -1155,7 +1179,11 @@ extern "C" fn new_confirm_more(n_args: usize, args: *const Obj, kwargs: *mut Map
             title,
             ButtonPage::new(paragraphs.into_paragraphs(), theme::BG)
                 .with_cancel_confirm(None, Some(button))
-                .with_confirm_style(theme::button_default())
+                .with_confirm_style(if button_style_confirm {
+                    theme::button_confirm()
+                } else {
+                    theme::button_default()
+                })
                 .with_back_button(),
         ))?;
         Ok(obj.into())
@@ -1762,12 +1790,19 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     title: str,
     ///     data: str | bytes,
     ///     description: str | None,
-    ///     extra: str | None,
+    ///     description_font_green: bool = False,
+    ///     text_mono: bool = True,
+    ///     extra: str | None = None,
+    ///     subtitle: str | None = None,
     ///     verb: str | None = None,
     ///     verb_cancel: str | None = None,
+    ///     verb_info: str | None = None,
+    ///     info: bool = True,
     ///     hold: bool = False,
     ///     chunkify: bool = False,
     ///     prompt_screen: bool = False,
+    ///     default_cancel: bool = False,
+    ///     page_limit: int | None = None,
     /// ) -> LayoutObj[UiResult]:
     ///     """Confirm byte sequence data."""
     Qstr::MP_QSTR_confirm_blob => obj_fn_kw!(0, new_confirm_blob).as_obj(),
@@ -1959,6 +1994,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     *,
     ///     title: str,
     ///     button: str,
+    ///     button_style_confirm: bool = False,
     ///     items: Iterable[tuple[int, str | bytes]],
     /// ) -> LayoutObj[UiResult]:
     ///     """Confirm long content with the possibility to go back from any page.

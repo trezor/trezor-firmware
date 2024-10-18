@@ -129,6 +129,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_button;
   MP_QSTR_button_event;
   MP_QSTR_button_request;
+  MP_QSTR_button_style_confirm;
   MP_QSTR_buttons__abort;
   MP_QSTR_buttons__access;
   MP_QSTR_buttons__again;
@@ -167,6 +168,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_buttons__try_again;
   MP_QSTR_buttons__turn_off;
   MP_QSTR_buttons__turn_on;
+  MP_QSTR_buttons__view_all_data;
   MP_QSTR_can_go_back;
   MP_QSTR_cancel_arrow;
   MP_QSTR_cancel_cross;
@@ -218,8 +220,10 @@ static void _librust_qstrs(void) {
   MP_QSTR_debug__loading_seed;
   MP_QSTR_debug__loading_seed_not_recommended;
   MP_QSTR_decode;
+  MP_QSTR_default_cancel;
   MP_QSTR_deinit;
   MP_QSTR_description;
+  MP_QSTR_description_font_green;
   MP_QSTR_details_title;
   MP_QSTR_device_name__change_template;
   MP_QSTR_device_name__title;
@@ -307,6 +311,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_instructions__swipe_up;
   MP_QSTR_instructions__tap_to_confirm;
   MP_QSTR_instructions__tap_to_start;
+  MP_QSTR_instructions__view_all_data;
   MP_QSTR_is_type_of;
   MP_QSTR_items;
   MP_QSTR_items_title;
@@ -349,6 +354,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_notification;
   MP_QSTR_notification_level;
   MP_QSTR_page_count;
+  MP_QSTR_page_limit;
   MP_QSTR_pages;
   MP_QSTR_paint;
   MP_QSTR_passphrase__access_wallet;
@@ -730,6 +736,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_value;
   MP_QSTR_verb;
   MP_QSTR_verb_cancel;
+  MP_QSTR_verb_info;
   MP_QSTR_verify;
   MP_QSTR_version;
   MP_QSTR_warning;
@@ -980,6 +987,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_ethereum__data_size_template;
   MP_QSTR_ethereum__gas_limit;
   MP_QSTR_ethereum__gas_price;
+  MP_QSTR_ethereum__interaction_contract;
   MP_QSTR_ethereum__max_gas_price;
   MP_QSTR_ethereum__name_and_version;
   MP_QSTR_ethereum__new_contract;
@@ -998,13 +1006,15 @@ static void _librust_qstrs(void) {
   MP_QSTR_ethereum__staking_stake_intro;
   MP_QSTR_ethereum__staking_unstake;
   MP_QSTR_ethereum__staking_unstake_intro;
-  MP_QSTR_ethereum__title_confirm_data;
   MP_QSTR_ethereum__title_confirm_domain;
   MP_QSTR_ethereum__title_confirm_message;
   MP_QSTR_ethereum__title_confirm_struct;
   MP_QSTR_ethereum__title_confirm_typed_data;
+  MP_QSTR_ethereum__title_input_data;
   MP_QSTR_ethereum__title_signing_address;
+  MP_QSTR_ethereum__token_contract;
   MP_QSTR_ethereum__units_template;
+  MP_QSTR_ethereum__unknown_contract_address;
   MP_QSTR_ethereum__unknown_token;
   MP_QSTR_ethereum__valid_signature;
   MP_QSTR_fido__already_registered;

@@ -644,6 +644,8 @@ def show_warning(
     content: str,
     subheader: str | None = None,
     button: str | None = None,
+    default_cancel: bool = False,  # NB: model T does not implement "default_cancel"-style warnings
+    verb_cancel: str | None = None,
     br_code: ButtonRequestType = ButtonRequestType.Warning,
 ) -> Awaitable[None]:
     button = button or TR.buttons__continue  # def_arg
@@ -821,6 +823,42 @@ async def should_show_more(
         raise ActionCancelled
 
 
+async def confirm_blob_with_optional_pagination(
+    br_name: str,
+    title: str,
+    data: bytes | str,
+    subtitle: str | None = None,
+    verb: str | None = None,
+    verb_cancel: str | None = None,
+    br_code: ButtonRequestType = BR_CODE_OTHER,
+    chunkify: bool = False,
+):
+    verb = verb or TR.buttons__confirm  # def_arg
+    layout = RustLayout(
+        trezorui2.confirm_blob(
+            title=title,
+            description=None,
+            data=data,
+            verb=verb,
+            verb_cancel=verb_cancel,
+            chunkify=chunkify,
+        )
+    )
+
+    if layout.page_count() > 1:
+        return await _confirm_ask_pagination(
+            br_name, title, data, subtitle or "", br_code
+        )
+    else:
+        return raise_if_not_confirmed(
+            interact(
+                layout,
+                br_name,
+                br_code,
+            )
+        )
+
+
 async def _confirm_ask_pagination(
     br_name: str,
     title: str,
@@ -847,7 +885,8 @@ async def _confirm_ask_pagination(
             paginated = RustLayout(
                 trezorui2.confirm_more(
                     title=title,
-                    button=TR.buttons__close,
+                    button=TR.buttons__confirm,
+                    button_style_confirm=True,
                     items=[(ui.MONO, data)],
                 )
             )
@@ -856,6 +895,8 @@ async def _confirm_ask_pagination(
 
         result = await interact(paginated, br_name, br_code)
         assert result in (CONFIRMED, CANCELLED)
+        if result is CONFIRMED:
+            return
 
     assert False
 
@@ -865,12 +906,15 @@ def confirm_blob(
     title: str,
     data: bytes | str,
     description: str | None = None,
+    text_mono: bool = True,
+    subtitle: str | None = None,
     verb: str | None = None,
     verb_cancel: str | None = None,
+    info: bool = True,
     hold: bool = False,
     br_code: ButtonRequestType = BR_CODE_OTHER,
-    ask_pagination: bool = False,
     chunkify: bool = False,
+    default_cancel: bool = False,
     prompt_screen: bool = True,
 ) -> Awaitable[None]:
     verb = verb or TR.buttons__confirm  # def_arg
@@ -878,8 +922,8 @@ def confirm_blob(
         trezorui2.confirm_blob(
             title=title,
             description=description,
+            text_mono=text_mono,
             data=data,
-            extra=None,
             hold=hold,
             verb=verb,
             verb_cancel=verb_cancel,
@@ -887,34 +931,33 @@ def confirm_blob(
         )
     )
 
-    if ask_pagination and layout.page_count() > 1:
-        assert not hold
-        return _confirm_ask_pagination(br_name, title, data, description or "", br_code)
-
-    else:
-        return raise_if_not_confirmed(
-            interact(
-                layout,
-                br_name,
-                br_code,
-            )
+    return raise_if_not_confirmed(
+        interact(
+            layout,
+            br_name,
+            br_code,
         )
+    )
 
 
 def confirm_address(
     title: str,
     address: str,
+    subtitle: str | None = None,
     description: str | None = None,
+    verb: str | None = None,
+    chunkify: bool = True,
     br_name: str = "confirm_address",
     br_code: ButtonRequestType = BR_CODE_OTHER,
 ) -> Awaitable[None]:
     return confirm_value(
         title,
         address,
-        description or "",
+        description or subtitle or "",
         br_name,
         br_code,
-        verb=TR.buttons__confirm,
+        subtitle=None,
+        verb=(verb or TR.buttons__confirm),
     )
 
 
@@ -1095,12 +1138,13 @@ def _confirm_summary(
 if not utils.BITCOIN_ONLY:
 
     async def confirm_ethereum_tx(
-        recipient: str,
+        recipient: str | None,
         total_amount: str,
         _account: str | None,
         _account_path: str | None,
         maximum_fee: str,
         fee_info_items: Iterable[tuple[str, str]],
+        is_contract_interaction: bool,
         br_name: str = "confirm_ethereum_tx",
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
         chunkify: bool = False,
@@ -1123,14 +1167,20 @@ if not utils.BITCOIN_ONLY:
             )
         )
 
+        if not is_contract_interaction:
+            description = TR.words__recipient
+        else:
+            description = TR.ethereum__interaction_contract if recipient else None
+
         while True:
             # Allowing going back and forth between recipient and summary/details
             await confirm_blob(
                 br_name,
-                TR.words__recipient,
-                recipient,
+                TR.words__address,
+                recipient or TR.ethereum__new_contract,
+                description=description,
                 verb=TR.buttons__continue,
-                chunkify=chunkify,
+                chunkify=(chunkify if recipient else False),
             )
 
             try:
@@ -1269,7 +1319,7 @@ def confirm_replacement(title: str, txid: str) -> Awaitable[None]:
         title,
         txid,
         TR.send__transaction_id,
-        TR.buttons__continue,
+        verb=TR.buttons__continue,
         br_code=ButtonRequestType.SignTx,
     )
 
@@ -1287,7 +1337,6 @@ async def confirm_modify_output(
             verb=TR.buttons__continue,
             verb_cancel=None,
             description=f"{TR.words__address}:",
-            extra=None,
         )
     )
     modify_layout = RustLayout(
@@ -1453,7 +1502,6 @@ async def confirm_signverify(
             title=TR.sign_message__confirm_message,
             description=None,
             data=message,
-            extra=None,
             hold=not verify,
             verb=TR.buttons__confirm if verify else None,
         )

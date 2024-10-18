@@ -285,7 +285,7 @@
   "283": "ethereum__show_full_message",
   "284": "ethereum__show_full_struct",
   "285": "ethereum__sign_eip712",
-  "286": "ethereum__title_confirm_data",
+  "286": "ethereum__title_input_data",
   "287": "ethereum__title_confirm_domain",
   "288": "ethereum__title_confirm_message",
   "289": "ethereum__title_confirm_struct",
@@ -966,5 +966,10 @@
   "964": "instructions__swipe_down",
   "965": "fido__title_credential_details",
   "966": "address__public_key_confirmed",
-  "967": "words__continue_anyway"
+  "967": "words__continue_anyway",
+  "968": "ethereum__unknown_contract_address",
+  "970": "ethereum__token_contract",
+  "971": "buttons__view_all_data",
+  "972": "instructions__view_all_data",
+  "973": "ethereum__interaction_contract"
 }

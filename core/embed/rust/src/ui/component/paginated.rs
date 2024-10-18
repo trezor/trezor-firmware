@@ -9,6 +9,9 @@ pub enum PageMsg<T> {
     /// Cancelled using page controls.
     Cancelled,
 
+    /// Info button pressed
+    Info,
+
     /// Page component was configured to react to swipes and user swiped left.
     SwipeLeft,
 

@@ -50,7 +50,10 @@ use crate::{
         },
         model_mercury::{
             component::{check_homescreen_format, SwipeContent},
-            flow::new_confirm_action_simple,
+            flow::{
+                new_confirm_action_simple, new_confirm_action_simple_default_cancel,
+                ConfirmActionMenu, ConfirmActionStrings,
+            },
             theme::ICON_BULLET_CHECKMARK,
         },
     },
@@ -238,14 +241,12 @@ extern "C" fn new_confirm_emphasized(n_args: usize, args: *const Obj, kwargs: *m
             }
         }
 
-        flow::new_confirm_action_simple(
+        new_confirm_action_simple(
             FormattedText::new(ops).vertically_centered(),
-            title,
-            None,
-            None,
-            Some(title),
+            ConfirmActionMenu::new(None, false, None),
+            ConfirmActionStrings::new(title, None, None, Some(title)),
             false,
-            false,
+            None,
         )
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -256,14 +257,18 @@ struct ConfirmBlobParams {
     subtitle: Option<TString<'static>>,
     data: Obj,
     description: Option<TString<'static>>,
+    description_font: &'static TextStyle,
     extra: Option<TString<'static>>,
     verb: Option<TString<'static>>,
     verb_cancel: Option<TString<'static>>,
+    verb_info: Option<TString<'static>>,
     info_button: bool,
     prompt: bool,
     hold: bool,
     chunkify: bool,
     text_mono: bool,
+    page_limit: Option<usize>,
+    default_cancel: bool,
 }
 
 impl ConfirmBlobParams {
@@ -272,7 +277,7 @@ impl ConfirmBlobParams {
         data: Obj,
         description: Option<TString<'static>>,
         verb: Option<TString<'static>>,
-        verb_cancel: Option<TString<'static>>,
+        verb_info: Option<TString<'static>>,
         prompt: bool,
         hold: bool,
     ) -> Self {
@@ -281,14 +286,18 @@ impl ConfirmBlobParams {
             subtitle: None,
             data,
             description,
+            description_font: &theme::TEXT_NORMAL,
             extra: None,
             verb,
-            verb_cancel,
+            verb_cancel: None,
+            verb_info,
             info_button: false,
             prompt,
             hold,
             chunkify: false,
             text_mono: true,
+            page_limit: None,
+            default_cancel: false,
         }
     }
 
@@ -299,6 +308,11 @@ impl ConfirmBlobParams {
 
     fn with_subtitle(mut self, subtitle: Option<TString<'static>>) -> Self {
         self.subtitle = subtitle;
+        self
+    }
+
+    fn with_verb_cancel(mut self, verb_cancel: Option<TString<'static>>) -> Self {
+        self.verb_cancel = verb_cancel;
         self
     }
 
@@ -317,12 +331,27 @@ impl ConfirmBlobParams {
         self
     }
 
+    fn with_page_limit(mut self, page_limit: Option<usize>) -> Self {
+        self.page_limit = page_limit;
+        self
+    }
+
+    fn with_default_cancel(mut self, default_cancel: bool) -> Self {
+        self.default_cancel = default_cancel;
+        self
+    }
+
+    fn with_description_font(mut self, description_font: &'static TextStyle) -> Self {
+        self.description_font = description_font;
+        self
+    }
+
     fn into_flow(self) -> Result<Obj, Error> {
         let paragraphs = ConfirmBlob {
             description: self.description.unwrap_or("".into()),
             extra: self.extra.unwrap_or("".into()),
             data: self.data.try_into()?,
-            description_font: &theme::TEXT_NORMAL,
+            description_font: self.description_font,
             extra_font: &theme::TEXT_DEMIBOLD,
             data_font: if self.chunkify {
                 let data: TString = self.data.try_into()?;
@@ -335,14 +364,23 @@ impl ConfirmBlobParams {
         }
         .into_paragraphs();
 
-        flow::new_confirm_action_simple(
+        let build_flow = if self.default_cancel {
+            new_confirm_action_simple_default_cancel
+        } else {
+            new_confirm_action_simple
+        };
+
+        build_flow(
             paragraphs,
-            self.title,
-            self.subtitle,
-            self.verb_cancel,
-            self.prompt.then_some(self.title),
+            ConfirmActionMenu::new(self.verb_cancel, self.info_button, self.verb_info),
+            ConfirmActionStrings::new(
+                self.title,
+                self.subtitle,
+                self.verb,
+                self.prompt.then_some(self.title),
+            ),
             self.hold,
-            self.info_button,
+            self.page_limit,
         )
     }
 }
@@ -353,7 +391,17 @@ extern "C" fn new_confirm_blob(n_args: usize, args: *const Obj, kwargs: *mut Map
         let data: Obj = kwargs.get(Qstr::MP_QSTR_data)?;
         let description: Option<TString> =
             kwargs.get(Qstr::MP_QSTR_description)?.try_into_option()?;
-        let extra: Option<TString> = kwargs.get(Qstr::MP_QSTR_extra)?.try_into_option()?;
+        let description_font_green: bool =
+            kwargs.get_or(Qstr::MP_QSTR_description_font_green, false)?;
+        let text_mono: bool = kwargs.get_or(Qstr::MP_QSTR_text_mono, true)?;
+        let extra: Option<TString> = kwargs
+            .get(Qstr::MP_QSTR_extra)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
+        let subtitle: Option<TString> = kwargs
+            .get(Qstr::MP_QSTR_subtitle)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
         let verb: Option<TString> = kwargs
             .get(Qstr::MP_QSTR_verb)
             .unwrap_or_else(|_| Obj::const_none())
@@ -362,21 +410,44 @@ extern "C" fn new_confirm_blob(n_args: usize, args: *const Obj, kwargs: *mut Map
             .get(Qstr::MP_QSTR_verb_cancel)
             .unwrap_or_else(|_| Obj::const_none())
             .try_into_option()?;
+        let verb_info: Option<TString> = kwargs
+            .get(Qstr::MP_QSTR_verb_info)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
+        let info: bool = kwargs.get_or(Qstr::MP_QSTR_info, true)?;
         let hold: bool = kwargs.get_or(Qstr::MP_QSTR_hold, false)?;
         let chunkify: bool = kwargs.get_or(Qstr::MP_QSTR_chunkify, false)?;
         let prompt_screen: bool = kwargs.get_or(Qstr::MP_QSTR_prompt_screen, true)?;
+        let default_cancel: bool = kwargs.get_or(Qstr::MP_QSTR_default_cancel, false)?;
+        let page_limit: Option<usize> = kwargs
+            .get(Qstr::MP_QSTR_page_limit)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
+
+        let description_font = if description_font_green {
+            &theme::TEXT_SUB_GREEN_LIME
+        } else {
+            &theme::TEXT_NORMAL
+        };
 
         ConfirmBlobParams::new(
             title,
             data,
             description,
             verb,
-            verb_cancel,
+            verb_info,
             prompt_screen,
             hold,
         )
+        .with_description_font(description_font)
+        .with_text_mono(text_mono)
+        .with_subtitle(subtitle)
+        .with_verb_cancel(verb_cancel)
         .with_extra(extra)
+        .with_info_button(info)
         .with_chunkify(chunkify)
+        .with_default_cancel(default_cancel)
+        .with_page_limit(page_limit)
         .into_flow()
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -408,7 +479,13 @@ extern "C" fn new_confirm_address(n_args: usize, args: *const Obj, kwargs: *mut 
         }
         .into_paragraphs();
 
-        flow::new_confirm_action_simple(paragraphs, title, None, None, None, false, false)
+        new_confirm_action_simple(
+            paragraphs,
+            ConfirmActionMenu::new(None, false, None),
+            ConfirmActionStrings::new(title, None, None, None),
+            false,
+            None,
+        )
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
@@ -426,14 +503,12 @@ extern "C" fn new_confirm_properties(n_args: usize, args: *const Obj, kwargs: *m
             &theme::TEXT_MONO,
         )?;
 
-        flow::new_confirm_action_simple(
+        new_confirm_action_simple(
             paragraphs.into_paragraphs(),
-            title,
-            None,
-            None,
-            hold.then_some(title),
+            ConfirmActionMenu::new(None, false, None),
+            ConfirmActionStrings::new(title, None, None, hold.then_some(title)),
             hold,
-            false,
+            None,
         )
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -457,12 +532,15 @@ extern "C" fn new_confirm_homescreen(n_args: usize, args: *const Obj, kwargs: *m
 
             new_confirm_action_simple(
                 paragraphs,
-                TR::homescreen__settings_title.into(),
-                Some(TR::homescreen__settings_subtitle.into()),
+                ConfirmActionMenu::new(None, false, None),
+                ConfirmActionStrings::new(
+                    TR::homescreen__settings_title.into(),
+                    Some(TR::homescreen__settings_subtitle.into()),
+                    None,
+                    Some(TR::homescreen__settings_title.into()),
+                ),
+                false,
                 None,
-                Some(TR::homescreen__settings_title.into()),
-                false,
-                false,
             )
         } else {
             if !check_homescreen_format(jpeg) {
@@ -540,8 +618,9 @@ extern "C" fn new_confirm_value(n_args: usize, args: *const Obj, kwargs: *mut Ma
         let chunkify: bool = kwargs.get_or(Qstr::MP_QSTR_chunkify, false)?;
         let text_mono: bool = kwargs.get_or(Qstr::MP_QSTR_text_mono, true)?;
 
-        ConfirmBlobParams::new(title, value, description, verb, verb_cancel, hold, hold)
+        ConfirmBlobParams::new(title, value, description, verb, None, hold, hold)
             .with_subtitle(subtitle)
+            .with_verb_cancel(verb_cancel)
             .with_info_button(info_button)
             .with_chunkify(chunkify)
             .with_text_mono(text_mono)
@@ -563,14 +642,12 @@ extern "C" fn new_confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Ma
             paragraphs.add(Paragraph::new(&theme::TEXT_MONO, value));
         }
 
-        flow::new_confirm_action_simple(
+        new_confirm_action_simple(
             paragraphs.into_paragraphs(),
-            title,
-            None,
-            None,
-            Some(title),
+            ConfirmActionMenu::new(None, true, None),
+            ConfirmActionStrings::new(title, None, None, Some(title)),
             true,
-            true,
+            None,
         )
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -849,14 +926,17 @@ extern "C" fn new_confirm_coinjoin(n_args: usize, args: *const Obj, kwargs: *mut
         ])
         .into_paragraphs();
 
-        flow::new_confirm_action_simple(
+        new_confirm_action_simple(
             paragraphs,
-            TR::coinjoin__title.into(),
-            None,
-            None,
-            Some(TR::coinjoin__title.into()),
+            ConfirmActionMenu::new(None, false, None),
+            ConfirmActionStrings::new(
+                TR::coinjoin__title.into(),
+                None,
+                None,
+                Some(TR::coinjoin__title.into()),
+            ),
             true,
-            false,
+            None,
         )
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -1261,12 +1341,19 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     title: str,
     ///     data: str | bytes,
     ///     description: str | None,
-    ///     extra: str | None,
+    ///     description_font_green: bool = False,
+    ///     text_mono: bool = True,
+    ///     extra: str | None = None,
+    ///     subtitle: str | None = None,
     ///     verb: str | None = None,
     ///     verb_cancel: str | None = None,
+    ///     verb_info: str | None = None,
+    ///     info: bool = True,
     ///     hold: bool = False,
     ///     chunkify: bool = False,
     ///     prompt_screen: bool = False,
+    ///     default_cancel: bool = False,
+    ///     page_limit: int | None = None,
     /// ) -> LayoutObj[UiResult]:
     ///     """Confirm byte sequence data."""
     Qstr::MP_QSTR_confirm_blob => obj_fn_kw!(0, new_confirm_blob).as_obj(),
