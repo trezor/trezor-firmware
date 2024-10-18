@@ -695,6 +695,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_trace;
   MP_QSTR_trezorproto;
   MP_QSTR_trezorui2;
+  MP_QSTR_trezorui_api;
   MP_QSTR_tutorial;
   MP_QSTR_tutorial__continue;
   MP_QSTR_tutorial__did_you_know;

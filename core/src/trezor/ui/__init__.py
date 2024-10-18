@@ -9,12 +9,12 @@ from trezor import io, log, loop, utils, wire, workflow
 from trezor.messages import ButtonAck, ButtonRequest
 from trezor.wire import context
 from trezor.wire.protocol_common import Context
-from trezorui2 import AttachType, BacklightLevels, LayoutState
+from trezorui_api import AttachType, BacklightLevels, LayoutState
 
 if TYPE_CHECKING:
     from typing import Any, Callable, Generator, Generic, Iterator, TypeVar
 
-    from trezorui2 import LayoutObj, UiResult  # noqa: F401
+    from trezorui_api import LayoutObj, UiResult  # noqa: F401
 
     T = TypeVar("T", covariant=True)
 

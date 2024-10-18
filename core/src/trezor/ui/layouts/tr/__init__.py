@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING
 
 import trezorui2
+import trezorui_api
 from trezor import TR, ui, utils
 from trezor.enums import ButtonRequestType
 from trezor.wire import ActionCancelled
@@ -13,9 +14,9 @@ if TYPE_CHECKING:
     from ..common import ExceptionType, PropertyType
 
 
-CONFIRMED = trezorui2.CONFIRMED
-CANCELLED = trezorui2.CANCELLED
-INFO = trezorui2.INFO
+CONFIRMED = trezorui_api.CONFIRMED
+CANCELLED = trezorui_api.CANCELLED
+INFO = trezorui_api.INFO
 
 BR_CODE_OTHER = ButtonRequestType.Other  # global_import_cache
 
@@ -640,7 +641,7 @@ async def _confirm_ask_pagination(
             return
 
         result = await interact(confirm_more_layout, br_name, br_code, None)
-        if result is trezorui2.CANCELLED:
+        if result is trezorui_api.CANCELLED:
             continue
         else:
             break
@@ -1158,7 +1159,7 @@ def error_popup(
     *,
     button: str = "",
     timeout_ms: int = 0,
-) -> trezorui2.LayoutObj[trezorui2.UiResult]:
+) -> trezorui_api.LayoutObj[trezorui_api.UiResult]:
     if button:
         raise NotImplementedError("Button not implemented")
 
