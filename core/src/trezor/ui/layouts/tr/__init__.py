@@ -1166,7 +1166,7 @@ def error_popup(
     description = description.format(description_param)
     if subtitle:
         description = f"{subtitle}\n{description}"
-    return trezorui2.show_info(
+    return trezorui_api.show_info(
         title=title,
         description=description,
         time_ms=timeout_ms,

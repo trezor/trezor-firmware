@@ -313,11 +313,10 @@ def show_intro_backup(single_share: bool, num_of_words: int | None) -> Awaitable
         description = TR.backup__info_multi_share_backup
 
     return raise_if_not_confirmed(
-        trezorui2.show_info(
+        trezorui_api.show_info(
             title="",
-            button=TR.buttons__continue,
             description=description,
-            allow_cancel=False,
+            button=TR.buttons__continue,
         ),
         "backup_intro",
         ButtonRequestType.ResetDevice,
@@ -326,10 +325,10 @@ def show_intro_backup(single_share: bool, num_of_words: int | None) -> Awaitable
 
 def show_warning_backup() -> Awaitable[trezorui_api.UiResult]:
     return interact(
-        trezorui2.show_info(
+        trezorui_api.show_info(
             title=TR.reset__never_make_digital_copy,
+            description="",
             button=TR.buttons__ok_i_understand,
-            allow_cancel=False,
         ),
         "backup_warning",
         ButtonRequestType.ResetDevice,

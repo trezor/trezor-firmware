@@ -290,8 +290,9 @@ async def show_intro_backup(single_share: bool, num_of_words: int | None) -> Non
         description = TR.backup__info_multi_share_backup
 
     await interact(
-        trezorui2.show_info(
-            title=TR.backup__title_create_wallet_backup, description=description
+        trezorui_api.show_info(
+            title=TR.backup__title_create_wallet_backup,
+            description=description,
         ),
         "backup_intro",
         ButtonRequestType.ResetDevice,

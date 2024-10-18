@@ -227,18 +227,6 @@ def show_success(
 
 
 # rust/src/ui/model_mercury/layout.rs
-def show_info(
-    *,
-    title: str,
-    button: str = "CONTINUE",
-    description: str = "",
-    allow_cancel: bool = False,
-    time_ms: int = 0,
-) -> LayoutObj[UiResult]:
-    """Info modal. No buttons shown when `button` is empty string."""
-
-
-# rust/src/ui/model_mercury/layout.rs
 def show_mismatch(*, title: str) -> LayoutObj[UiResult]:
     """Warning modal, receiving address mismatch."""
 
@@ -767,16 +755,6 @@ def show_warning(
 
 
 # rust/src/ui/model_tr/layout.rs
-def show_info(
-    *,
-    title: str,
-    description: str = "",
-    time_ms: int = 0,
-) -> LayoutObj[UiResult]:
-    """Info modal."""
-
-
-# rust/src/ui/model_tr/layout.rs
 def show_passphrase() -> LayoutObj[UiResult]:
     """Show passphrase on host dialog."""
 
@@ -1229,18 +1207,6 @@ def show_success(
     time_ms: int = 0,
 ) -> LayoutObj[UiResult]:
     """Success modal. No buttons shown when `button` is empty string."""
-
-
-# rust/src/ui/model_tt/layout.rs
-def show_info(
-    *,
-    title: str,
-    button: str = "CONTINUE",
-    description: str = "",
-    allow_cancel: bool = False,
-    time_ms: int = 0,
-) -> LayoutObj[UiResult]:
-    """Info modal. No buttons shown when `button` is empty string."""
 
 
 # rust/src/ui/model_tt/layout.rs
