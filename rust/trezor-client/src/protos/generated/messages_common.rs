@@ -2479,14 +2479,14 @@ impl ::protobuf::reflect::ProtobufValue for HDNodeType {
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\x15messages-common.proto\x12\x19hw.trezor.messages.common\x1a\x0emess\
-    ages.proto\"%\n\x07Success\x12\x1a\n\x07message\x18\x01\x20\x01(\t:\0R\
-    \x07message\"\x8f\x04\n\x07Failure\x12B\n\x04code\x18\x01\x20\x01(\x0e2.\
-    .hw.trezor.messages.common.Failure.FailureTypeR\x04code\x12\x18\n\x07mes\
-    sage\x18\x02\x20\x01(\tR\x07message\"\xa5\x03\n\x0bFailureType\x12\x1d\n\
-    \x19Failure_UnexpectedMessage\x10\x01\x12\x1a\n\x16Failure_ButtonExpecte\
-    d\x10\x02\x12\x15\n\x11Failure_DataError\x10\x03\x12\x1b\n\x17Failure_Ac\
-    tionCancelled\x10\x04\x12\x17\n\x13Failure_PinExpected\x10\x05\x12\x18\n\
+    \n\x15messages-common.proto\x12\x19hw.trezor.messages.common\x1a\roption\
+    s.proto\"%\n\x07Success\x12\x1a\n\x07message\x18\x01\x20\x01(\t:\0R\x07m\
+    essage\"\x8f\x04\n\x07Failure\x12B\n\x04code\x18\x01\x20\x01(\x0e2..hw.t\
+    rezor.messages.common.Failure.FailureTypeR\x04code\x12\x18\n\x07message\
+    \x18\x02\x20\x01(\tR\x07message\"\xa5\x03\n\x0bFailureType\x12\x1d\n\x19\
+    Failure_UnexpectedMessage\x10\x01\x12\x1a\n\x16Failure_ButtonExpected\
+    \x10\x02\x12\x15\n\x11Failure_DataError\x10\x03\x12\x1b\n\x17Failure_Act\
+    ionCancelled\x10\x04\x12\x17\n\x13Failure_PinExpected\x10\x05\x12\x18\n\
     \x14Failure_PinCancelled\x10\x06\x12\x16\n\x12Failure_PinInvalid\x10\x07\
     \x12\x1c\n\x18Failure_InvalidSignature\x10\x08\x12\x18\n\x14Failure_Proc\
     essError\x10\t\x12\x1a\n\x16Failure_NotEnoughFunds\x10\n\x12\x1a\n\x16Fa\
@@ -2547,7 +2547,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
     file_descriptor.get(|| {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
             let mut deps = ::std::vec::Vec::with_capacity(1);
-            deps.push(super::messages::file_descriptor().clone());
+            deps.push(super::options::file_descriptor().clone());
             let mut messages = ::std::vec::Vec::with_capacity(11);
             messages.push(Success::generated_message_descriptor_data());
             messages.push(Failure::generated_message_descriptor_data());

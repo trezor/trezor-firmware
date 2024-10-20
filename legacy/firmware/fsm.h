@@ -28,6 +28,7 @@
 #include "messages-management.pb.h"
 #include "messages-nem.pb.h"
 #include "messages-stellar.pb.h"
+#include "messages.pb.h"
 
 // CoinJoin fee rate multiplier.
 #define FEE_RATE_DECIMALS (1000000)

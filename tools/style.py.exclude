@@ -1,3 +1,4 @@
 ^legacy/firmware/protob/messages_pb2\.py
+^legacy/firmware/protob/options_pb2\.py
 ^legacy/firmware/protob/messages_nem_pb2\.py
 ^legacy/vendor
