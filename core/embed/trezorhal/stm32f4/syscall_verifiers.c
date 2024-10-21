@@ -389,6 +389,21 @@ access_violation:
 
 // ---------------------------------------------------------------------
 
+void unit_properties_get__verified(unit_properties_t *props) {
+  if (!probe_write_access(props, sizeof(*props))) {
+    goto access_violation;
+  }
+
+  unit_properties_get(props);
+
+  return;
+
+access_violation:
+  apptask_access_violation();
+}
+
+// ---------------------------------------------------------------------
+
 optiga_sign_result __wur optiga_sign__verified(
     uint8_t index, const uint8_t *digest, size_t digest_size,
     uint8_t *signature, size_t max_sig_size, size_t *sig_size) {

@@ -8,7 +8,7 @@ MEMORY {
   BOOT_ARGS  (wal) : ORIGIN = MCU_SRAM2 - BOOTARGS_SIZE, LENGTH =  BOOTARGS_SIZE
   SRAM2  (wal) : ORIGIN = MCU_SRAM2, LENGTH =  KERNEL_SRAM2_SIZE - KERNEL_U_RAM_SIZE
   SRAM2_U  (wal) : ORIGIN = MCU_SRAM2 + KERNEL_SRAM2_SIZE - KERNEL_U_RAM_SIZE, LENGTH =  KERNEL_U_RAM_SIZE
-  SRAM3  (wal) : ORIGIN = MCU_SRAM3, LENGTH =  KERNEL_SRAM3_SIZE
+  SRAM3  (wal) : ORIGIN = MCU_SRAM3 + MCU_SRAM3_SIZE - KERNEL_SRAM3_SIZE, LENGTH = KERNEL_SRAM3_SIZE
   SRAM5  (wal) : ORIGIN = MCU_SRAM5, LENGTH =  0K  /* SRAM5 is not available */
   SRAM6  (wal) : ORIGIN = MCU_SRAM6, LENGTH =  0K  /* SRAM6 is not available */
   SRAM4  (wal) : ORIGIN = MCU_SRAM4, LENGTH =  MCU_SRAM4_SIZE
@@ -61,10 +61,10 @@ _shutdown_clear_ram_3_start = 0;
 _shutdown_clear_ram_3_end = 0;
 
 /* used by applet cleaning code */
-_coreapp_clear_ram_0_start = MCU_SRAM2 + KERNEL_SRAM2_SIZE;
-_coreapp_clear_ram_0_size = MCU_SRAM2_SIZE - KERNEL_SRAM2_SIZE;
-_coreapp_clear_ram_1_start = MCU_SRAM3 + KERNEL_SRAM3_SIZE;
-_coreapp_clear_ram_1_size = MCU_SRAM3_SIZE - KERNEL_SRAM3_SIZE;
+_coreapp_clear_ram_0_start = MCU_SRAM1;
+_coreapp_clear_ram_0_size = MCU_SRAM1_SIZE - KERNEL_SRAM1_SIZE;
+_coreapp_clear_ram_1_start = MCU_SRAM2 + KERNEL_SRAM2_SIZE;
+_coreapp_clear_ram_1_size = MCU_SRAM2_SIZE - KERNEL_SRAM2_SIZE + MCU_SRAM3_SIZE - KERNEL_SRAM3_SIZE;
 
 sram_u_start = ORIGIN(SRAM2_U);
 sram_u_end = ORIGIN(SRAM2_U) + LENGTH(SRAM2_U);
@@ -113,6 +113,7 @@ SECTIONS {
 
   .bss : ALIGN(4) {
     *(.no_dma_buffers*);
+    *(.buf*);
     *(.bss*);
     . = ALIGN(4);
   } >SRAM1
@@ -144,11 +145,6 @@ SECTIONS {
     *(.fb2*);
     *(.framebuffer_select*);
    __fb_end = .;
-    . = ALIGN(4);
-  } >SRAM3
-
-  .buf : ALIGN(4) {
-    *(.buf*);
     . = ALIGN(4);
   } >SRAM3
 
