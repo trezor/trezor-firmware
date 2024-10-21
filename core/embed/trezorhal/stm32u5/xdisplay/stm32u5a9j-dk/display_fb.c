@@ -25,6 +25,7 @@
 
 #include <xdisplay.h>
 #include "display_internal.h"
+#include "mpu.h"
 
 #ifdef KERNEL_MODE
 
@@ -67,6 +68,9 @@ bool display_get_frame_buffer(display_fb_info_t *fb) {
   fb->ptr = (void *)addr;
   fb->stride = fb_stride;
 
+  // Enable access to the frame buffer from the unprivileged code
+  mpu_set_unpriv_fb(fb->ptr, VIRTUAL_FRAME_BUFFER_SIZE);
+
   return true;
 }
 
@@ -76,6 +80,9 @@ void display_refresh(void) {
   if (!drv->initialized) {
     return;
   }
+
+  // Disable access to the frame buffer from the unprivileged code
+  mpu_set_unpriv_fb(NULL, 0);
 
   if (current_frame_buffer == 0) {
     current_frame_buffer = 1;

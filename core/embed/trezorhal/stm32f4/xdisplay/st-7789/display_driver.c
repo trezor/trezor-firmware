@@ -21,12 +21,12 @@
 
 #include <xdisplay.h>
 
+#include "backlight_pwm.h"
 #include "display_fb.h"
 #include "display_internal.h"
 #include "display_io.h"
 #include "display_panel.h"
-
-#include "backlight_pwm.h"
+#include "mpu.h"
 
 #ifndef BOARDLOADER
 #include "bg_copy.h"
@@ -97,6 +97,8 @@ void display_deinit(display_content_mode_t mode) {
   NVIC_DisableIRQ(DISPLAY_TE_INTERRUPT_NUM);
 #endif
 #endif
+
+  mpu_set_unpriv_fb(NULL, 0);
 
   backlight_pwm_deinit(mode == DISPLAY_RESET_CONTENT ? BACKLIGHT_RESET
                                                      : BACKLIGHT_RETAIN);

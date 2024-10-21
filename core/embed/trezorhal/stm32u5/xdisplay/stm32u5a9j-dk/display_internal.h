@@ -45,6 +45,10 @@ extern display_driver_t g_display_driver;
 // Pitch (in pixels) of the virtual frame buffer
 #define FRAME_BUFFER_PIXELS_PER_LINE 768
 
+// Size of the virtual frame buffer in bytes
+#define VIRTUAL_FRAME_BUFFER_SIZE \
+  (FRAME_BUFFER_PIXELS_PER_LINE * DISPLAY_RESY * 4)
+
 // Physical frame buffers in internal SRAM memory
 //
 // Both frame buffers layes in the fixed addresses that
