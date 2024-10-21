@@ -26,6 +26,10 @@
 #include "flash_ll.h"
 #include "secbool.h"
 
+#ifndef TREZOR_EMULATOR
+#include STM32_HAL_H
+#endif
+
 #ifdef STM32U5
 
 #define FLASH_QUADWORD_WORDS (4)
