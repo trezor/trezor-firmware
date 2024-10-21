@@ -17,29 +17,29 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TREZORHAL_FLASH_H
-#define TREZORHAL_FLASH_H
-
-#include <stdint.h>
-#include <stdlib.h>
-
-#include "flash_ll.h"
-#include "secbool.h"
-
-#ifndef TREZOR_EMULATOR
 #include STM32_HAL_H
+
+#include "reset_flags.h"
+
+#ifdef KERNEL_MODE
+
+secbool reset_flags_check(void) {
+#if PRODUCTION
+  // this is effective enough that it makes development painful, so only use it
+  // for production. check the reset flags to assure that we arrive here due to
+  // a regular full power-on event, and not as a result of a lesser reset.
+  if ((RCC->CSR & (RCC_CSR_LPWRRSTF | RCC_CSR_WWDGRSTF | RCC_CSR_IWDGRSTF |
+                   RCC_CSR_SFTRSTF | RCC_CSR_PORRSTF | RCC_CSR_PINRSTF |
+                   RCC_CSR_BORRSTF)) !=
+      (RCC_CSR_PORRSTF | RCC_CSR_PINRSTF | RCC_CSR_BORRSTF)) {
+    return secfalse;
+  }
 #endif
+  return sectrue;
+}
 
-#ifdef STM32U5
-
-#define FLASH_QUADWORD_WORDS (4)
-#define FLASH_QUADWORD_SIZE (FLASH_QUADWORD_WORDS * sizeof(uint32_t))
-
-#define FLASH_BURST_WORDS (8 * FLASH_QUADWORD_WORDS)
-#define FLASH_BURST_SIZE (FLASH_BURST_WORDS * sizeof(uint32_t))
+void reset_flags_reset(void) {
+  RCC->CSR |= RCC_CSR_RMVF;  // clear the reset flags
+}
 
 #endif
-
-void flash_init(void);
-
-#endif  // TREZORHAL_FLASH_H

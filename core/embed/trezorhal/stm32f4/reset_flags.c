@@ -17,22 +17,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __TREZORHAL_LOWLEVEL_H__
-#define __TREZORHAL_LOWLEVEL_H__
+#include STM32_HAL_H
 
-#include "secbool.h"
+#include "reset_flags.h"
 
 #ifdef KERNEL_MODE
 
-secbool flash_check_option_bytes(void);
-void flash_lock_option_bytes(void);
-void flash_unlock_option_bytes(void);
-uint32_t flash_set_option_bytes(void);
-secbool flash_configure_option_bytes(void);
-void periph_init(void);
-secbool reset_flags_check(void);
-void reset_flags_reset(void);
+secbool reset_flags_check(void) {
+#if PRODUCTION
+  // this is effective enough that it makes development painful, so only use it
+  // for production. check the reset flags to assure that we arrive here due to
+  // a regular full power-on event, and not as a result of a lesser reset.
+  if ((RCC->CSR & (RCC_CSR_LPWRRSTF | RCC_CSR_WWDGRSTF | RCC_CSR_IWDGRSTF |
+                   RCC_CSR_SFTRSTF | RCC_CSR_PINRSTF | RCC_CSR_BORRSTF |
+                   RCC_CSR_OBLRSTF)) != (RCC_CSR_PINRSTF | RCC_CSR_BORRSTF)) {
+    return secfalse;
+  }
+#endif
+  return sectrue;
+}
 
-#endif  // KERNEL_MODE
+void reset_flags_reset(void) {
+  RCC->CSR |= RCC_CSR_RMVF;  // clear the reset flags
+}
 
-#endif  // __TREZORHAL_LOWLEVEL_H__
+#endif

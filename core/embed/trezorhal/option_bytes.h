@@ -17,31 +17,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TREZORHAL_STM32_H
-#define TREZORHAL_STM32_H
+#ifndef TREZORHAL_OPTION_BYTES_H
+#define TREZORHAL_OPTION_BYTES_H
 
-#include STM32_HAL_H
-#include <stdint.h>
+#include "secbool.h"
 
-#define FLASH_QUADWORD_WORDS (4)
-#define FLASH_QUADWORD_SIZE (FLASH_QUADWORD_WORDS * sizeof(uint32_t))
+#ifdef KERNEL_MODE
 
-#define FLASH_BURST_WORDS (8 * FLASH_QUADWORD_WORDS)
-#define FLASH_BURST_SIZE (FLASH_BURST_WORDS * sizeof(uint32_t))
-
-typedef enum {
-  CLOCK_160_MHZ = 0,
-} clock_settings_t;
-
-void set_core_clock(clock_settings_t settings);
-
-// the following functions are defined in util.s
-void memset_reg(volatile void *start, volatile void *stop, uint32_t val);
-void jump_to(uint32_t address);
-void jump_to_with_flag(uint32_t address, uint32_t register_flag);
-
-extern uint32_t __stack_chk_guard;
+secbool flash_check_option_bytes(void);
+void flash_lock_option_bytes(void);
+void flash_unlock_option_bytes(void);
+uint32_t flash_set_option_bytes(void);
+secbool flash_configure_option_bytes(void);
 
 void check_oem_keys(void);
 
-#endif  // TREZORHAL_STM32_H
+#endif  // KERNEL_MODE
+
+#endif  // TREZORHAL_OPTION_BYTES_H

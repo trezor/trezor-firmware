@@ -23,7 +23,6 @@
 
 #include "button.h"
 #include "common.h"
-#include "platform.h"
 
 static char last_left = 0, last_right = 0;
 
@@ -33,7 +32,6 @@ char button_state_right(void) { return last_right; }
 
 uint32_t button_read(void) {
   SDL_Event event;
-  SDL_PumpEvents();
   if (SDL_PollEvent(&event) > 0) {
     switch (event.type) {
       case SDL_KEYDOWN:

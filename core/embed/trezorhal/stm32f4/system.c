@@ -28,6 +28,10 @@
 #include "systick.h"
 #include "systimer.h"
 
+#if defined(TREZOR_MODEL_T) && (!defined(BOARDLOADER))
+#include "startup_init.h"
+#endif
+
 #ifndef HardFault_IRQn
 #define HardFault_IRQn (-13)  // not defined in stm32lib/cmsis/stm32429xx.h
 #endif
@@ -35,6 +39,11 @@
 #ifdef KERNEL_MODE
 
 void system_init(systask_error_handler_t error_handler) {
+#if defined(TREZOR_MODEL_T) && (!defined(BOARDLOADER))
+  // Early boardloader versions on Model T initialized the CPU clock to 168MHz.
+  // We need to set it to the STM32F429's maximum - 180MHz.
+  set_core_clock(CLOCK_180_MHZ);
+#endif
   mpu_init();
   mpu_reconfig(MPU_MODE_DEFAULT);
   systask_scheduler_init(error_handler);

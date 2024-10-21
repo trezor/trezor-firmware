@@ -29,8 +29,10 @@
 #include "flash_otp.h"
 #include "flash_utils.h"
 #include "image.h"
-#include "lowlevel.h"
 #include "messages.pb.h"
+#include "mpu.h"
+#include "option_bytes.h"
+#include "pvd.h"
 #include "random_delays.h"
 #include "rsod.h"
 #include "secbool.h"
@@ -79,11 +81,11 @@
 #include "version_check.h"
 
 #ifdef TREZOR_EMULATOR
+#include "SDL.h"
 #include "emulator.h"
 #else
 #include "compiler_traits.h"
-#include "mpu.h"
-#include "platform.h"
+#include STM32_HAL_H
 #endif
 
 #define USB_IFACE_NUM 0
@@ -149,7 +151,9 @@ static usb_result_t bootloader_usb_loop(const vendor_header *const vhdr,
 
   for (;;) {
 #ifdef TREZOR_EMULATOR
-    emulator_poll_events();
+    // Ensures that SDL events are processed. This prevents the emulator from
+    // freezing when the user interacts with the window.
+    SDL_PumpEvents();
 #endif
     int r = usb_webusb_read_blocking(USB_IFACE_NUM, buf, USB_PACKET_SIZE,
                                      USB_TIMEOUT);
@@ -361,8 +365,8 @@ int bootloader_main(void) {
 
   random_delays_init();
 
-#if defined TREZOR_MODEL_T
-  set_core_clock(CLOCK_180_MHZ);
+#ifdef USE_PVD
+  pvd_init();
 #endif
 
 #ifdef USE_HASH_PROCESSOR
