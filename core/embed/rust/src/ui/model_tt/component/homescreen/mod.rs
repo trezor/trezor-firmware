@@ -22,7 +22,7 @@ use crate::{
     },
 };
 
-use super::{theme, Loader, LoaderMsg};
+use super::{theme, Button, Loader, LoaderMsg};
 use crate::{
     trezorhal::{
         ble,
@@ -31,11 +31,13 @@ use crate::{
         uzlib::UZLIB_WINDOW_SIZE,
     },
     ui::{
+        component::Label,
         constant::HEIGHT,
         display::tjpgd::BufferInput,
         event::{BLEEvent, ButtonEvent, PhysicalButton},
-        model_tt::component::homescreen::render::{
-            HomescreenJpeg, HomescreenToif, HOMESCREEN_TOIF_SIZE,
+        model_tt::component::{
+            bl_confirm::{Confirm, ConfirmMsg, ConfirmTitle},
+            homescreen::render::{HomescreenJpeg, HomescreenToif, HOMESCREEN_TOIF_SIZE},
         },
     },
 };
@@ -64,6 +66,8 @@ pub struct Homescreen {
     pad: Pad,
     paint_notification_only: bool,
     delay: Option<TimerToken>,
+    pairing: bool,
+    pairing_dialog: Option<Confirm<'static>>,
 }
 
 pub enum HomescreenMsg {
@@ -85,6 +89,8 @@ impl Homescreen {
             pad: Pad::with_background(theme::BG),
             paint_notification_only: false,
             delay: None,
+            pairing: false,
+            pairing_dialog: None,
         }
     }
 
@@ -168,11 +174,42 @@ impl Homescreen {
                 ctx.request_paint();
             }
             Event::BLE(BLEEvent::PairingRequest(data)) => {
-                ble::allow_pairing();
-            }
+                self.pairing = true;
 
+                let code = core::str::from_utf8(data).unwrap();
+
+                let mut pd = Confirm::new(
+                    theme::BG,
+                    Button::with_text("Cancel".into()),
+                    Button::with_text("Confirm".into()),
+                    ConfirmTitle::Text(Label::new(
+                        "Pairing Request".into(),
+                        Alignment::Start,
+                        theme::TEXT_BOLD,
+                    )),
+                    Label::new(
+                        "Pairing request received from another device. Confirm to pair.".into(),
+                        Alignment::Center,
+                        theme::TEXT_NORMAL,
+                    ),
+                )
+                .with_alert(Label::new(
+                    code.into(),
+                    Alignment::Center,
+                    theme::TEXT_NORMAL,
+                ));
+
+                pd.place(AREA);
+
+                self.pairing_dialog = Some(pd);
+                ctx.request_paint();
+            }
             _ => {}
         }
+    }
+
+    fn pairing(&self) -> bool {
+        self.pairing
     }
 
     fn event_hold(&mut self, ctx: &mut EventCtx, event: Event) -> bool {
@@ -226,6 +263,7 @@ impl Component for Homescreen {
     fn place(&mut self, bounds: Rect) -> Rect {
         self.pad.place(AREA);
         self.loader.place(AREA.translate(LOADER_OFFSET));
+        self.pairing_dialog.place(AREA);
         bounds
     }
 
@@ -235,6 +273,23 @@ impl Component for Homescreen {
         if self.hold_to_lock {
             if Self::event_hold(self, ctx, event) {
                 return Some(HomescreenMsg::Dismissed);
+            }
+        }
+
+        if self.pairing() {
+            if let Some(msg) = self.pairing_dialog.event(ctx, event) {
+                match msg {
+                    ConfirmMsg::Cancel => {
+                        ble::reject_pairing();
+                        self.pairing = false;
+                        ctx.request_paint();
+                    }
+                    ConfirmMsg::Confirm => {
+                        ble::allow_pairing();
+                        self.pairing = false;
+                        ctx.request_paint();
+                    }
+                }
             }
         }
 
@@ -301,6 +356,8 @@ impl Component for Homescreen {
         self.pad.render(target);
         if self.loader.is_animating() || self.loader.is_completely_grown(Instant::now()) {
             self.render_loader(target);
+        } else if self.pairing() {
+            self.pairing_dialog.render(target);
         } else {
             match ImageInfo::parse(self.image) {
                 ImageInfo::Jpeg(_) => {
