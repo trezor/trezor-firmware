@@ -150,8 +150,6 @@ def validate_path_against_script_type(
             append(PATTERN_GREENADDRESS_B)
         if coin.coin_name in BITCOIN_NAMES:
             append(PATTERN_CASA_UNHARDENED)
-            append(PATTERN_UNCHAINED_HARDENED)
-            append(PATTERN_UNCHAINED_UNHARDENED)
 
     elif coin.segwit and script_type == InputScriptType.SPENDWITNESS:
         append(PATTERN_BIP84)
@@ -160,6 +158,9 @@ def validate_path_against_script_type(
         if slip44 == SLIP44_BITCOIN:
             append(PATTERN_GREENADDRESS_A)
             append(PATTERN_GREENADDRESS_B)
+        if coin.coin_name in BITCOIN_NAMES and multisig:
+            append(PATTERN_UNCHAINED_HARDENED)
+            append(PATTERN_UNCHAINED_UNHARDENED)
 
     elif coin.taproot and script_type == InputScriptType.SPENDTAPROOT:
         append(PATTERN_BIP86)
