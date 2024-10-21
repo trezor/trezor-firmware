@@ -26,6 +26,7 @@
 #include "i2c_bus.h"
 #include "irq.h"
 #include "mpu.h"
+#include "systemview.h"
 #include "systimer.h"
 
 #ifdef KERNEL_MODE
@@ -910,43 +911,55 @@ static void i2c_bus_er_handler(i2c_bus_t* bus) {
 
 #ifdef I2C_INSTANCE_0
 void I2C_INSTANCE_0_EV_IRQHandler(void) {
+  SEGGER_SYSVIEW_RecordEnterISR();
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DEFAULT);
   i2c_bus_ev_handler(&g_i2c_bus_driver[0]);
   mpu_restore(mpu_mode);
+  SEGGER_SYSVIEW_RecordExitISR();
 }
 
 void I2C_INSTANCE_0_ER_IRQHandler(void) {
+  SEGGER_SYSVIEW_RecordEnterISR();
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DEFAULT);
   i2c_bus_er_handler(&g_i2c_bus_driver[0]);
   mpu_restore(mpu_mode);
+  SEGGER_SYSVIEW_RecordExitISR();
 }
 #endif
 
 #ifdef I2C_INSTANCE_1
 void I2C_INSTANCE_1_EV_IRQHandler(void) {
+  SEGGER_SYSVIEW_RecordEnterISR();
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DEFAULT);
   i2c_bus_ev_handler(&g_i2c_bus_driver[1]);
   mpu_restore(mpu_mode);
+  SEGGER_SYSVIEW_RecordExitISR();
 }
 
 void I2C_INSTANCE_1_ER_IRQHandler(void) {
+  SEGGER_SYSVIEW_RecordEnterISR();
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DEFAULT);
   i2c_bus_er_handler(&g_i2c_bus_driver[1]);
   mpu_restore(mpu_mode);
+  SEGGER_SYSVIEW_RecordExitISR();
 }
 #endif
 
 #ifdef I2C_INSTANCE_2
 void I2C_INSTANCE_2_EV_IRQHandler(void) {
+  SEGGER_SYSVIEW_RecordEnterISR();
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DEFAULT);
   i2c_bus_ev_handler(&g_i2c_bus_driver[2]);
   mpu_restore(mpu_mode);
+  SEGGER_SYSVIEW_RecordExitISR();
 }
 
 void I2C_INSTANCE_2_ER_IRQHandler(void) {
+  SEGGER_SYSVIEW_RecordEnterISR();
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DEFAULT);
   i2c_bus_er_handler(&g_i2c_bus_driver[2]);
   mpu_restore(mpu_mode);
+  SEGGER_SYSVIEW_RecordExitISR();
 }
 #endif
 
