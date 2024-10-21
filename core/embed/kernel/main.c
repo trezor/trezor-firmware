@@ -183,10 +183,21 @@ static void coreapp_init(applet_t *applet) {
       (applet_header_t *)COREAPP_CODE_ALIGN(KERNEL_START + KERNEL_SIZE);
 
   applet_layout_t coreapp_layout = {
-      .data1_start = (uint32_t)&_coreapp_clear_ram_0_start,
-      .data1_size = (uint32_t)&_coreapp_clear_ram_0_size,
-      .data2_start = (uint32_t)&_coreapp_clear_ram_1_start,
-      .data2_size = (uint32_t)&_coreapp_clear_ram_1_size,
+      .data1.start = (uint32_t)&_coreapp_clear_ram_0_start,
+      .data1.size = (uint32_t)&_coreapp_clear_ram_0_size,
+      .data2.start = (uint32_t)&_coreapp_clear_ram_1_start,
+      .data2.size = (uint32_t)&_coreapp_clear_ram_1_size,
+#ifdef FIRMWARE_P1_START
+      .code1.start = FIRMWARE_P1_START + KERNEL_SIZE,
+      .code1.size = FIRMWARE_P1_MAXSIZE - KERNEL_SIZE,
+      .code2.start = FIRMWARE_P2_START,
+      .code2.size = FIRMWARE_P2_MAXSIZE,
+#else
+      .code1.start = FIRMWARE_START + KERNEL_SIZE,
+      .code1.size = FIRMWARE_MAXSIZE - KERNEL_SIZE,
+      .code2.start = 0,
+      .code2.size = 0,
+#endif
   };
 
   applet_init(applet, coreapp_header, &coreapp_layout);

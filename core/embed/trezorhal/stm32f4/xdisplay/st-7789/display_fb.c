@@ -144,15 +144,13 @@ void DISPLAY_TE_INTERRUPT_HANDLER(void) {
 }
 #endif
 
-display_fb_info_t display_get_frame_buffer(void) {
+bool display_get_frame_buffer(display_fb_info_t *fb) {
   display_driver_t *drv = &g_display_driver;
 
   if (!drv->initialized) {
-    display_fb_info_t fb = {
-        .ptr = NULL,
-        .stride = 0,
-    };
-    return fb;
+    fb->ptr = NULL;
+    fb->stride = 0;
+    return false;
   }
 
   frame_buffer_state_t state;
@@ -177,12 +175,10 @@ display_fb_info_t display_get_frame_buffer(void) {
 
   drv->queue.entry[drv->queue.wix] = FB_STATE_PREPARING;
 
-  display_fb_info_t fb = {
-      .ptr = get_fb_ptr(drv->queue.wix),
-      .stride = DISPLAY_RESX * sizeof(uint16_t),
-  };
+  fb->ptr = get_fb_ptr(drv->queue.wix);
+  fb->stride = DISPLAY_RESX * sizeof(uint16_t);
 
-  return fb;
+  return true;
 }
 
 // Copies the frame buffer with the given index to the display
@@ -289,9 +285,9 @@ void display_ensure_refreshed(void) {
 }
 
 void display_fill(const gfx_bitblt_t *bb) {
-  display_fb_info_t fb = display_get_frame_buffer();
+  display_fb_info_t fb;
 
-  if (fb.ptr == NULL) {
+  if (!display_get_frame_buffer(&fb)) {
     return;
   }
 
@@ -303,9 +299,9 @@ void display_fill(const gfx_bitblt_t *bb) {
 }
 
 void display_copy_rgb565(const gfx_bitblt_t *bb) {
-  display_fb_info_t fb = display_get_frame_buffer();
+  display_fb_info_t fb;
 
-  if (fb.ptr == NULL) {
+  if (!display_get_frame_buffer(&fb)) {
     return;
   }
 
@@ -317,9 +313,9 @@ void display_copy_rgb565(const gfx_bitblt_t *bb) {
 }
 
 void display_copy_mono1p(const gfx_bitblt_t *bb) {
-  display_fb_info_t fb = display_get_frame_buffer();
+  display_fb_info_t fb;
 
-  if (fb.ptr == NULL) {
+  if (!display_get_frame_buffer(&fb)) {
     return;
   }
 
@@ -331,9 +327,9 @@ void display_copy_mono1p(const gfx_bitblt_t *bb) {
 }
 
 void display_copy_mono4(const gfx_bitblt_t *bb) {
-  display_fb_info_t fb = display_get_frame_buffer();
+  display_fb_info_t fb;
 
-  if (fb.ptr == NULL) {
+  if (!display_get_frame_buffer(&fb)) {
     return;
   }
 

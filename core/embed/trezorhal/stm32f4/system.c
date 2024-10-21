@@ -19,12 +19,18 @@
 
 #include STM32_HAL_H
 
-#include "system.h"
+#include <string.h>
+
 #include "bootutils.h"
 #include "mpu.h"
 #include "systask.h"
+#include "system.h"
 #include "systick.h"
 #include "systimer.h"
+
+#ifndef HardFault_IRQn
+#define HardFault_IRQn (-13)  // not defined in stm32lib/cmsis/stm32429xx.h
+#endif
 
 #ifdef KERNEL_MODE
 
@@ -38,60 +44,17 @@ void system_init(systask_error_handler_t error_handler) {
 
 void system_exit(int exitcode) { systask_exit(NULL, exitcode); }
 
-void system_exit_error(const char* title, const char* message,
-                       const char* footer) {
-  systask_exit_error(NULL, title, message, footer);
+void system_exit_error_ex(const char* title, size_t title_len,
+                          const char* message, size_t message_len,
+                          const char* footer, size_t footer_len) {
+  systask_exit_error(NULL, title, title_len, message, message_len, footer,
+                     footer_len);
 }
 
-void system_exit_fatal(const char* message, const char* file, int line) {
-  systask_exit_fatal(NULL, message, file, line);
+void system_exit_fatal_ex(const char* message, size_t message_len,
+                          const char* file, size_t file_len, int line) {
+  systask_exit_fatal(NULL, message, message_len, file, file_len, line);
 }
-
-#endif  // KERNEL_MODE
-
-#ifndef HardFault_IRQn
-#define HardFault_IRQn (-13)  // not defined in stm32lib/cmsis/stm32429xx.h
-#endif
-
-#ifdef STM32U5
-const char* system_fault_message(const system_fault_t* fault) {
-  switch (fault->irqn) {
-    case HardFault_IRQn:
-      return "(HF)";
-    case MemoryManagement_IRQn:
-      return "(MM)";
-    case BusFault_IRQn:
-      return "(BF)";
-    case UsageFault_IRQn:
-      return (fault->cfsr & SCB_CFSR_STKOF_Msk) ? "(SO)" : "(UF)";
-    case SecureFault_IRQn:
-      return "(SF)";
-    case GTZC_IRQn:
-      return "(IA)";
-    case NonMaskableInt_IRQn:
-      return "(CS)";
-    default:
-      return "(FAULT)";
-  }
-}
-#else   // STM32U5
-const char* system_fault_message(const system_fault_t* fault) {
-  switch (fault->irqn) {
-    case HardFault_IRQn:
-      return "(HF)";
-    case MemoryManagement_IRQn:
-      return (fault->sp < fault->sp_lim) ? "(SO)" : "(MM)";
-    case BusFault_IRQn:
-      return "(BF)";
-    case UsageFault_IRQn:
-      return "(UF)";
-    case NonMaskableInt_IRQn:
-      return "(CS)";
-    default:
-      return "(FAULT)";
-  }
-}
-#endif  // STM32U5
 
 __attribute__((used)) static void emergency_reset(void) {
   // TODO: reset peripherals (at least DMA, DMA2D)
@@ -307,4 +270,61 @@ __attribute((naked, no_stack_protector)) void system_emergency_rescue(
         [STK_GUARD] "i"(&__stack_chk_guard)
       :  // no clobber
   );
+}
+
+#endif  // KERNEL_MODE
+
+#ifdef STM32U5
+const char* system_fault_message(const system_fault_t* fault) {
+  switch (fault->irqn) {
+    case HardFault_IRQn:
+      return "(HF)";
+    case MemoryManagement_IRQn:
+      return "(MM)";
+    case BusFault_IRQn:
+      return "(BF)";
+    case UsageFault_IRQn:
+      return (fault->cfsr & SCB_CFSR_STKOF_Msk) ? "(SO)" : "(UF)";
+    case SecureFault_IRQn:
+      return "(SF)";
+    case GTZC_IRQn:
+      return "(IA)";
+    case NonMaskableInt_IRQn:
+      return "(CS)";
+    default:
+      return "(FAULT)";
+  }
+}
+#else   // STM32U5
+const char* system_fault_message(const system_fault_t* fault) {
+  switch (fault->irqn) {
+    case HardFault_IRQn:
+      return "(HF)";
+    case MemoryManagement_IRQn:
+      return (fault->sp < fault->sp_lim) ? "(SO)" : "(MM)";
+    case BusFault_IRQn:
+      return "(BF)";
+    case UsageFault_IRQn:
+      return "(UF)";
+    case NonMaskableInt_IRQn:
+      return "(CS)";
+    default:
+      return "(FAULT)";
+  }
+}
+#endif  // STM32U5
+
+void system_exit_error(const char* title, const char* message,
+                       const char* footer) {
+  size_t title_len = title != NULL ? strlen(title) : 0;
+  size_t message_len = message != NULL ? strlen(message) : 0;
+  size_t footer_len = footer != NULL ? strlen(footer) : 0;
+  system_exit_error_ex(title, title_len, message, message_len, footer,
+                       footer_len);
+}
+
+void system_exit_fatal(const char* message, const char* file, int line) {
+  size_t message_len = message != NULL ? strlen(message) : 0;
+  size_t file_len = file != NULL ? strlen(file) : 0;
+  system_exit_fatal_ex(message, message_len, file, file_len, line);
 }

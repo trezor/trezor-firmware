@@ -23,6 +23,7 @@
 #include <string.h>
 
 #include "bootutils.h"
+#include "common.h"
 #include "irq.h"
 #include "mpu.h"
 #include "syscall.h"
@@ -122,12 +123,14 @@ void systask_yield_to(systask_t* task) {
   systask_yield();
 }
 
-void systask_init(systask_t* task, uint32_t stack_ptr, uint32_t stack_size) {
+void systask_init(systask_t* task, uint32_t stack_ptr, uint32_t stack_size,
+                  void* applet) {
   memset(task, 0, sizeof(systask_t));
   task->sp = stack_ptr + stack_size;
   task->sp_lim = stack_ptr + 256;
   task->exc_return = 0xFFFFFFED;  // Thread mode, use PSP, pop FP context
   task->mpu_mode = MPU_MODE_APP;
+  task->applet = applet;
 }
 
 uint32_t* systask_push_data(systask_t* task, const void* data, size_t size) {
@@ -234,8 +237,9 @@ void systask_exit(systask_t* task, int exit_code) {
   systask_kill(task);
 }
 
-void systask_exit_error(systask_t* task, const char* title, const char* message,
-                        const char* footer) {
+void systask_exit_error(systask_t* task, const char* title, size_t title_len,
+                        const char* message, size_t message_len,
+                        const char* footer, size_t footer_len) {
   systask_scheduler_t* scheduler = &g_systask_scheduler;
 
   if (task == NULL) {
@@ -250,21 +254,25 @@ void systask_exit_error(systask_t* task, const char* title, const char* message,
   pminfo->privileged = (task == &scheduler->kernel_task);
 
   if (title != NULL) {
-    strncpy(pminfo->error.title, title, sizeof(pminfo->error.title) - 1);
+    size_t len = MIN(title_len, sizeof(pminfo->error.title) - 1);
+    strncpy(pminfo->error.title, title, len);
   }
 
   if (message != NULL) {
-    strncpy(pminfo->error.message, message, sizeof(pminfo->error.message) - 1);
+    size_t len = MIN(message_len, sizeof(pminfo->error.message) - 1);
+    strncpy(pminfo->error.message, message, len);
   }
 
   if (footer != NULL) {
-    strncpy(pminfo->error.footer, footer, sizeof(pminfo->error.footer) - 1);
+    size_t len = MIN(footer_len, sizeof(pminfo->error.footer) - 1);
+    strncpy(pminfo->error.footer, footer, len);
   }
 
   systask_kill(task);
 }
 
-void systask_exit_fatal(systask_t* task, const char* message, const char* file,
+void systask_exit_fatal(systask_t* task, const char* message,
+                        size_t message_len, const char* file, size_t file_len,
                         int line) {
   systask_scheduler_t* scheduler = &g_systask_scheduler;
 
@@ -280,11 +288,13 @@ void systask_exit_fatal(systask_t* task, const char* message, const char* file,
   pminfo->privileged = (task == &scheduler->kernel_task);
 
   if (message != NULL) {
-    strncpy(pminfo->fatal.expr, message, sizeof(pminfo->fatal.expr) - 1);
+    size_t len = MIN(message_len, sizeof(pminfo->fatal.expr) - 1);
+    strncpy(pminfo->fatal.expr, message, len);
   }
 
   if (file != NULL) {
-    strncpy(pminfo->fatal.file, file, sizeof(pminfo->fatal.file) - 1);
+    size_t len = MIN(file_len, sizeof(pminfo->fatal.file) - 1);
+    strncpy(pminfo->fatal.file, file, len);
   }
 
   pminfo->fatal.line = line;

@@ -161,9 +161,9 @@ int display_get_orientation(void) {
 }
 
 void display_fill(const gfx_bitblt_t *bb) {
-  display_fb_info_t fb = display_get_frame_buffer();
+  display_fb_info_t fb;
 
-  if (fb.ptr == NULL) {
+  if (!display_get_frame_buffer(&fb)) {
     return;
   }
 
@@ -175,9 +175,9 @@ void display_fill(const gfx_bitblt_t *bb) {
 }
 
 void display_copy_rgb565(const gfx_bitblt_t *bb) {
-  display_fb_info_t fb = display_get_frame_buffer();
+  display_fb_info_t fb;
 
-  if (fb.ptr == NULL) {
+  if (!display_get_frame_buffer(&fb)) {
     return;
   }
 
@@ -189,9 +189,9 @@ void display_copy_rgb565(const gfx_bitblt_t *bb) {
 }
 
 void display_copy_mono1p(const gfx_bitblt_t *bb) {
-  display_fb_info_t fb = display_get_frame_buffer();
+  display_fb_info_t fb;
 
-  if (fb.ptr == NULL) {
+  if (!display_get_frame_buffer(&fb)) {
     return;
   }
 
@@ -203,9 +203,9 @@ void display_copy_mono1p(const gfx_bitblt_t *bb) {
 }
 
 void display_copy_mono4(const gfx_bitblt_t *bb) {
-  display_fb_info_t fb = display_get_frame_buffer();
+  display_fb_info_t fb;
 
-  if (fb.ptr == NULL) {
+  if (!display_get_frame_buffer(&fb)) {
     return;
   }
 
