@@ -901,18 +901,44 @@ async def should_show_more(
         raise ActionCancelled
 
 
+async def confirm_blob_with_optional_pagination(
+    br_name: str,
+    title: str,
+    data: bytes | str,
+    subtitle: str | None = None,
+    verb: str | None = None,
+    verb_cancel: str | None = None,
+    br_code: ButtonRequestType = BR_CODE_OTHER,
+    chunkify: bool = False,
+):
+    return confirm_blob(
+        br_name=br_name,
+        title=title,
+        data=data,
+        subtitle=subtitle,
+        verb=verb,
+        verb_cancel=verb_cancel,
+        br_code=br_code,
+        chunkify=chunkify,
+    )
+
+
 def confirm_blob(
     br_name: str,
     title: str,
     data: bytes | str,
     description: str | None = None,
+    text_mono: bool = True,
+    subtitle: str | None = None,
     verb: str | None = None,
     verb_cancel: str | None = "",  # icon
+    info: bool = True,
     hold: bool = False,
     br_code: ButtonRequestType = BR_CODE_OTHER,
-    ask_pagination: bool = False,
     chunkify: bool = False,
+    default_cancel: bool = False,
     prompt_screen: bool = True,
+    ask_pagination: bool = False,
 ) -> Awaitable[None]:
     verb = verb or TR.buttons__confirm  # def_arg
     layout = RustLayout(
@@ -991,6 +1017,7 @@ async def _confirm_ask_pagination(
 def confirm_address(
     title: str,
     address: str,
+    subtitle: str | None = None,
     description: str | None = None,
     br_name: str = "confirm_address",
     br_code: ButtonRequestType = BR_CODE_OTHER,
@@ -1274,6 +1301,7 @@ if not utils.BITCOIN_ONLY:
         _account_path: str | None,
         maximum_fee: str,
         fee_info_items: Iterable[tuple[str, str]],
+        _is_contract_interaction: bool,
         br_name: str = "confirm_ethereum_tx",
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
         chunkify: bool = False,
