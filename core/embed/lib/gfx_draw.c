@@ -294,15 +294,15 @@ void gfx_draw_qrcode(int x, int y, uint8_t scale, const char* data) {
 void display_clear(void) { gfx_clear(); }
 
 void display_bar(int x, int y, int w, int h, uint16_t c) {
-  gfx_draw_bar(gfx_rect_wh(x, y, w, h), c);
+  gfx_draw_bar(gfx_rect_wh(x, y, w, h), gfx_color16_to_color(c));
 }
 
 void display_text(int x, int y, const char* text, int textlen, int font,
                   uint16_t fg_color, uint16_t bg_color) {
   gfx_text_attr_t attr = {
       .font = font,
-      .fg_color = fg_color,
-      .bg_color = bg_color,
+      .fg_color = gfx_color16_to_color(fg_color),
+      .bg_color = gfx_color16_to_color(bg_color),
   };
 
   size_t maxlen = textlen < 0 ? UINT32_MAX : textlen;
@@ -313,8 +313,8 @@ void display_text_center(int x, int y, const char* text, int textlen, int font,
                          uint16_t fg_color, uint16_t bg_color) {
   gfx_text_attr_t attr = {
       .font = font,
-      .fg_color = fg_color,
-      .bg_color = bg_color,
+      .fg_color = gfx_color16_to_color(fg_color),
+      .bg_color = gfx_color16_to_color(bg_color),
   };
 
   size_t maxlen = textlen < 0 ? UINT32_MAX : textlen;

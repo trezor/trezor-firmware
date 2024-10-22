@@ -31,6 +31,28 @@
 
 #define EMULATOR_BORDER 16
 
+#ifdef UI_COLOR_32BIT
+
+#define PIXEL_FORMAT SDL_PIXELFORMAT_ARGB8888
+#define COLOR_DEPTH 32
+#define COLOR_MASK_A 0xFF000000
+#define COLOR_MASK_R 0x00FF0000
+#define COLOR_MASK_G 0x0000FF00
+#define COLOR_MASK_B 0x000000FF
+#define PIXEL_SIZE 4
+
+#else
+
+#define PIXEL_FORMAT SDL_PIXELFORMAT_RGB565
+#define COLOR_DEPTH 16
+#define COLOR_MASK_R 0xF800
+#define COLOR_MASK_G 0x07E0
+#define COLOR_MASK_B 0x001F
+#define COLOR_MASK_A 0x0000
+#define PIXEL_SIZE 2
+
+#endif
+
 typedef struct {
   // Set if the driver is initialized
   bool initialized;
@@ -111,9 +133,10 @@ void display_init(display_content_mode_t mode) {
   SDL_SetRenderDrawColor(drv->renderer, 0, 0, 0, 255);
   SDL_RenderClear(drv->renderer);
 
-  drv->buffer = SDL_CreateRGBSurface(0, DISPLAY_RESX, DISPLAY_RESY, 16, 0xF800,
-                                     0x07E0, 0x001F, 0x0000);
-  drv->texture = SDL_CreateTexture(drv->renderer, SDL_PIXELFORMAT_RGB565,
+  drv->buffer = SDL_CreateRGBSurface(0, DISPLAY_RESX, DISPLAY_RESY, COLOR_DEPTH,
+                                     COLOR_MASK_R, COLOR_MASK_G, COLOR_MASK_B,
+                                     COLOR_MASK_A);
+  drv->texture = SDL_CreateTexture(drv->renderer, PIXEL_FORMAT,
                                    SDL_TEXTUREACCESS_STREAMING, DISPLAY_RESX,
                                    DISPLAY_RESY);
   SDL_SetTextureBlendMode(drv->texture, SDL_BLENDMODE_BLEND);
@@ -252,16 +275,16 @@ bool display_get_frame_buffer(display_fb_info_t *fb) {
     fb->ptr = NULL;
     fb->stride = 0;
     return false;
-  } else {
-#ifdef DISPLAY_MONO
-    fb->ptr = drv->mono_framebuf;
-    fb->stride = DISPLAY_RESX;
-#else
-    fb->ptr = drv->buffer->pixels;
-    fb->stride = DISPLAY_RESX * sizeof(uint16_t);
-#endif
-    return true;
   }
+
+#ifdef DISPLAY_MONO
+  fb->ptr = drv->mono_framebuf;
+  fb->stride = DISPLAY_RESX;
+#else
+  fb->ptr = drv->buffer->pixels;
+  fb->stride = DISPLAY_RESX * PIXEL_SIZE;
+#endif
+  return true;
 }
 
 #else  // XFRAMEBUFFER
@@ -338,7 +361,11 @@ void display_fill(const gfx_bitblt_t *bb) {
       (uint8_t *)drv->buffer->pixels + (drv->buffer->pitch * bb_new.dst_y);
   bb_new.dst_stride = drv->buffer->pitch;
 
+#ifdef UI_COLOR_32BIT
+  gfx_rgba8888_fill(&bb_new);
+#else
   gfx_rgb565_fill(&bb_new);
+#endif
 }
 
 void display_copy_rgb565(const gfx_bitblt_t *bb) {
@@ -353,7 +380,11 @@ void display_copy_rgb565(const gfx_bitblt_t *bb) {
       (uint8_t *)drv->buffer->pixels + (drv->buffer->pitch * bb_new.dst_y);
   bb_new.dst_stride = drv->buffer->pitch;
 
+#ifdef UI_COLOR_32BIT
+  gfx_rgba8888_copy_rgb565(&bb_new);
+#else
   gfx_rgb565_copy_rgb565(&bb_new);
+#endif
 }
 
 void display_copy_mono1p(const gfx_bitblt_t *bb) {
@@ -368,7 +399,11 @@ void display_copy_mono1p(const gfx_bitblt_t *bb) {
       (uint8_t *)drv->buffer->pixels + (drv->buffer->pitch * bb_new.dst_y);
   bb_new.dst_stride = drv->buffer->pitch;
 
+#ifdef UI_COLOR_32BIT
+  gfx_rgba8888_copy_mono1p(&bb_new);
+#else
   gfx_rgb565_copy_mono1p(&bb_new);
+#endif
 }
 
 void display_copy_mono4(const gfx_bitblt_t *bb) {
@@ -383,7 +418,11 @@ void display_copy_mono4(const gfx_bitblt_t *bb) {
       (uint8_t *)drv->buffer->pixels + (drv->buffer->pitch * bb_new.dst_y);
   bb_new.dst_stride = drv->buffer->pitch;
 
+#ifdef UI_COLOR_32BIT
+  gfx_rgba8888_copy_mono4(&bb_new);
+#else
   gfx_rgb565_copy_mono4(&bb_new);
+#endif
 }
 
 #else  // DISPLAY_MONO
