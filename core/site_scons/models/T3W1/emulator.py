@@ -17,9 +17,10 @@ def configure(
     hw_revision = 0
     mcu = "STM32F427xx"
 
-    defines += ["XFRAMEBUFFER", "DISPLAY_RGB585"]
+    defines += ["XFRAMEBUFFER", "DISPLAY_RGBA8888", "UI_COLOR_32BIT"]
     features_available.append("xframebuffer")
-    features_available.append("display_rgb565")
+    features_available.append("display_rgba8888")
+    features_available.append("ui_color_32bit")
 
     defines += [mcu]
     defines += [f'TREZOR_BOARD=\\"{board}\\"']
