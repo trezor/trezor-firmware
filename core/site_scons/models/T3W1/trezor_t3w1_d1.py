@@ -55,8 +55,8 @@ def configure(
         sources += ["embed/trezorhal/stm32f4/touch/ft6x36.c"]
         sources += ["embed/trezorhal/stm32f4/touch/panels/lhs200kb-if21.c"]
         features_available.append("touch")
-        # sources += ["embed/trezorhal/stm32f4/button.c"]
-        # features_available.append("button")
+        sources += ["embed/trezorhal/stm32f4/button.c"]
+        features_available.append("button")
 
     if "sd_card" in features_wanted:
         sources += ["embed/trezorhal/stm32f4/sdcard.c"]
@@ -64,16 +64,17 @@ def configure(
         sources += ["embed/extmod/modtrezorio/ffunicode.c"]
         features_available.append("sd_card")
 
-    # if "ble" in features_wanted:
-    #     sources += ["embed/trezorhal/stm32f4/ble/ble_hal.c"]
-    #     sources += ["embed/trezorhal/stm32f4/ble/dfu.c"]
-    #     sources += ["embed/trezorhal/stm32f4/ble/fwu.c"]
-    #     sources += ["embed/trezorhal/stm32f4/ble/ble.c"]
-    #     sources += ["embed/trezorhal/stm32f4/ble/messages.c"]
-    #     sources += [
-    #         "vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.c"
-    #     ]
-    #     features_available.append("ble")
+    if "ble" in features_wanted:
+        sources += ["embed/trezorhal/stm32f4/ble/ble.c"]
+
+        sources += ["embed/trezorhal/stm32f4/nrf/nrf.c"]
+        sources += ["embed/trezorhal/stm32f4/nrf/dfu.c"]
+        sources += ["embed/trezorhal/stm32f4/nrf/fwu.c"]
+        sources += ["embed/trezorhal/stm32f4/nrf/crc8.c"]
+        sources += [
+            "vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.c"
+        ]
+        features_available.append("ble")
 
     if "ble" in features_wanted or "sd_card" in features_wanted:
         sources += [
