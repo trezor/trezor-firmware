@@ -1,6 +1,7 @@
 #ifndef TREZOR_HAL_TOUCH_H
 #define TREZOR_HAL_TOUCH_H
 
+#include <stdbool.h>
 #include <stdint.h>
 #include "secbool.h"
 
@@ -18,6 +19,12 @@ secbool touch_init(void);
 //
 // The function deinitializes touch controller and powers it off.
 void touch_deinit();
+
+// Powers on/off the touch controller
+//
+// The function is used to test touch power supply during production.
+// After forcing power off, the touch controller needs to be re-initialized
+void touch_power_set(bool on);
 
 // Checks if the touch driver is ready to report touches
 //

@@ -303,6 +303,15 @@ void touch_deinit(void) {
   }
 }
 
+void touch_power_set(bool on) {
+  if (on) {
+    ft6x36_power_up();
+  } else {
+    touch_deinit();
+    ft6x36_power_down();
+  }
+}
+
 secbool touch_ready(void) {
   touch_driver_t* driver = &g_touch_driver;
 

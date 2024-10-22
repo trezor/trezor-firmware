@@ -148,6 +148,20 @@ TOUCH_IDLE 10
 OK
 ```
 
+### TOUCH_POWER
+The `TOUCH_POWER` command tests the functionality of touch layer power supply
+
+The command requires one input parameter:
+* The timeout in seconds
+
+The powers up the touch layer and waits for a specific time period so that measurement can be done by test equipment.
+
+Example - wait ten seconds for touch power measurement:
+```
+TOUCH_POWER 10
+OK
+```
+
 ### SENS
 The `SENS` command is used to evaluating the touch screen sensitivity.
 It draws a filled box around the touch coordinates.
