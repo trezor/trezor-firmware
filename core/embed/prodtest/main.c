@@ -498,6 +498,38 @@ static void test_touch_idle(const char *args) {
   touch_deinit();
 }
 
+static void test_touch_power(const char *args) {
+  static const int expected_params = 1;
+  int num_params = 0;
+
+  int params[expected_params];
+
+  extract_params(args, params, &num_params, expected_params);
+
+  if (num_params != expected_params) {
+    vcp_println("ERROR PARAM");
+    return;
+  }
+
+  int timeout = params[0];
+
+  display_clear();
+  display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY / 2, "MEASURING", -1,
+                      FONT_BOLD, COLOR_WHITE, COLOR_BLACK);
+  display_refresh();
+
+  touch_power_set(true);
+
+  systick_delay_ms(timeout * 1000);
+
+  vcp_println("OK");
+
+  touch_power_set(false);
+
+  display_clear();
+  display_refresh();
+}
+
 static void test_sensitivity(const char *args) {
   int v = atoi(args);
 
@@ -868,6 +900,9 @@ int main(void) {
 
     } else if (startswith(line, "TOUCH_IDLE ")) {
       test_touch_idle(line + 11);
+
+    } else if (startswith(line, "TOUCH_POWER ")) {
+      test_touch_power(line + 12);
 
     } else if (startswith(line, "SENS ")) {
       test_sensitivity(line + 5);

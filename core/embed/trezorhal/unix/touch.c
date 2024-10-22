@@ -216,6 +216,10 @@ void touch_deinit(void) {
   }
 }
 
+void touch_power_set(bool on) {
+  // Not implemented on the emulator
+}
+
 secbool touch_ready(void) {
   touch_driver_t* driver = &g_touch_driver;
   return driver->initialized;
