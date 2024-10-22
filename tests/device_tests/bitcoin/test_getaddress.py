@@ -435,3 +435,51 @@ def test_crw(client: Client):
         btc.get_address(client, "Crown", parse_path("m/44h/72h/0h/0/0"))
         == "CRWYdvZM1yXMKQxeN3hRsAbwa7drfvTwys48"
     )
+
+
+@pytest.mark.multisig
+@pytest.mark.models(skip="legacy", reason="Not fixed")
+def test_multisig_different_paths(client: Client):
+    nodes = [
+        btc.get_public_node(client, parse_path(f"m/45h/{i}"), coin_name="Bitcoin").node
+        for i in range(2)
+    ]
+
+    multisig = messages.MultisigRedeemScriptType(
+        pubkeys=[
+            messages.HDNodePathType(node=node, address_n=[0, i])
+            for i, node in enumerate(nodes)
+        ],
+        signatures=[b"", b"", b""],
+        m=2,
+    )
+
+    with pytest.raises(
+        Exception, match="Using different paths for different xpubs is not allowed"
+    ):
+        with client:
+            if is_core(client):
+                IF = InputFlowConfirmAllWarnings(client)
+                client.set_input_flow(IF.get())
+            btc.get_address(
+                client,
+                "Bitcoin",
+                parse_path("m/45h/0/0/0"),
+                show_display=True,
+                multisig=multisig,
+                script_type=messages.InputScriptType.SPENDMULTISIG,
+            )
+
+    device.apply_settings(client, safety_checks=SafetyCheckLevel.PromptTemporarily)
+    with client:
+        if is_core(client):
+            IF = InputFlowConfirmAllWarnings(client)
+            client.set_input_flow(IF.get())
+        btc.get_address(
+            client,
+            "Bitcoin",
+            parse_path("m/45h/0/0/0"),
+            show_display=True,
+            multisig=multisig,
+            script_type=messages.InputScriptType.SPENDMULTISIG,
+        )

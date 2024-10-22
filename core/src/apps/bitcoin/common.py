@@ -5,6 +5,7 @@ from trezor import wire
 from trezor.crypto import bech32
 from trezor.crypto.curve import bip340
 from trezor.enums import InputScriptType, OutputScriptType
+from trezor.messages import MultisigRedeemScriptType
 
 if TYPE_CHECKING:
     from enum import IntEnum
@@ -263,3 +264,14 @@ def descriptor_checksum(desc: str) -> str:
     for j in range(0, 8):
         ret[j] = CHECKSUM_CHARSET[(c >> (5 * (7 - j))) & 31]
     return "".join(ret)
+
+
+def multisig_uses_single_path(multisig: MultisigRedeemScriptType) -> bool:
+    if not multisig.pubkeys:
+        # Pubkeys are specified by multisig.nodes and multisig.address_n, in this case all the pubkeys use the same path
+        return True
+    else:
+        # Pubkeys are specified by multisig.pubkeys, in this case we check that all the pubkeys use the same path
+        return all(
+            [hd.address_n == multisig.pubkeys[0].address_n for hd in multisig.pubkeys]
+        )

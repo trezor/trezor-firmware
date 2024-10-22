@@ -2264,6 +2264,7 @@ class InputFlowConfirmAllWarnings(InputFlowBase):
                 "witness path",
                 "certificate path",
                 "pool owner staking path",
+                "using different paths for different xpubs",
             )
             if any(needle.lower() in text for needle in hi_prio):
                 self.debug.click(buttons.CORNER_BUTTON)
