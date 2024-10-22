@@ -658,23 +658,24 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
 
     case SYSCALL_BLE_GET_STATE: {
       ble_state_t *state = (ble_state_t *)args[0];
-      ble_get_state(state);
+      ble_get_state__verified(state);
     } break;
 
     case SYSCALL_BLE_READ_EVENT: {
-      args[0] = ble_read_event((ble_event_t *)args[0]);
+      ble_event_t *event = (ble_event_t *)args[0];
+      args[0] = ble_read_event__verified(event);
     } break;
 
     case SYSCALL_BLE_WRITE: {
       uint8_t *data = (uint8_t *)args[0];
       size_t len = args[1];
-      ble_write(data, len);
+      ble_write__verified(data, len);
     } break;
 
     case SYSCALL_BLE_READ: {
       uint8_t *data = (uint8_t *)args[0];
       size_t len = args[1];
-      args[0] = ble_read(data, len);
+      args[0] = ble_read__verified(data, len);
     } break;
 #endif
 
