@@ -1085,6 +1085,7 @@ def _confirm_summary(
         trezorui2.show_info_with_cancel(
             title=info_title if info_title else TR.words__title_information,
             items=info_items,
+            horizontal=True,
         )
     )
     return raise_if_not_confirmed(
