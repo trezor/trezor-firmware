@@ -40,7 +40,7 @@ extern display_driver_t g_display_driver;
 //
 // It's smaller than size of the virtual frame buffer
 // due to used GFXMMU settings
-#define PHYSICAL_FRAME_BUFFER_SIZE 184320
+#define PHYSICAL_FRAME_BUFFER_SIZE (184320 * 4)
 
 // Pitch (in pixels) of the virtual frame buffer
 #define FRAME_BUFFER_PIXELS_PER_LINE 768
@@ -53,8 +53,8 @@ extern display_driver_t g_display_driver;
 //
 // Both frame buffers layes in the fixed addresses that
 // are shared between bootloaders and the firmware.
-extern uint32_t physical_frame_buffer_0[PHYSICAL_FRAME_BUFFER_SIZE];
-extern uint32_t physical_frame_buffer_1[PHYSICAL_FRAME_BUFFER_SIZE];
+extern uint8_t physical_frame_buffer_0[PHYSICAL_FRAME_BUFFER_SIZE];
+extern uint8_t physical_frame_buffer_1[PHYSICAL_FRAME_BUFFER_SIZE];
 
 // The current frame buffer selector at fixed memory address
 //
