@@ -23,6 +23,8 @@ mod progress;
 mod result;
 mod scroll;
 mod set_brightness;
+#[cfg(feature = "translations")]
+mod share_words;
 mod simple_page;
 mod swipe;
 mod welcome_screen;
@@ -59,6 +61,8 @@ pub use progress::Progress;
 pub use result::{ResultFooter, ResultScreen, ResultStyle};
 pub use scroll::ScrollBar;
 pub use set_brightness::SetBrightnessDialog;
+#[cfg(feature = "translations")]
+pub use share_words::ShareWords;
 pub use simple_page::SimplePage;
 pub use swipe::{Swipe, SwipeDirection};
 pub use welcome_screen::WelcomeScreen;

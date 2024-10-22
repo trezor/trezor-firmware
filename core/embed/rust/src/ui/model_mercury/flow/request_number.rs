@@ -67,8 +67,6 @@ pub fn new_request_number(
     max_count: u32,
     description: TString<'static>,
     info_closure: impl Fn(u32) -> TString<'static> + 'static,
-    br_code: u16,
-    br_name: TString<'static>,
 ) -> Result<SwipeFlow, error::Error> {
     NUM_DISPLAYED.store(count as u16, Ordering::Relaxed);
 
@@ -94,8 +92,7 @@ pub fn new_request_number(
                 NUM_DISPLAYED.store(n as u16, Ordering::Relaxed);
                 Some(FlowMsg::Choice(n as usize))
             }
-        })
-        .one_button_request(ButtonRequest::from_num(br_code, br_name));
+        });
 
     let content_menu = Frame::left_aligned(
         TString::empty(),

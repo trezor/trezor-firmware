@@ -78,15 +78,15 @@ fn footer_updating_func(
 }
 
 pub fn new_show_share_words(
-    title: TString<'static>,
-    subtitle: TString<'static>,
     share_words_vec: Vec<TString<'static>, 33>,
-    description: Option<TString<'static>>,
+    subtitle: TString<'static>,
     instructions_paragraphs: ParagraphVecShort<'static>,
+    text_footer: Option<TString<'static>>,
     text_confirm: TString<'static>,
 ) -> Result<SwipeFlow, error::Error> {
     let nwords = share_words_vec.len();
     let paragraphs_spacing = 8;
+    let title = TR::reset__recovery_wallet_backup_title.into();
 
     let content_instruction = Frame::left_aligned(
         title,
@@ -97,7 +97,7 @@ pub fn new_show_share_words(
         ),
     )
     .with_subtitle(TR::words__instructions.into())
-    .with_footer(TR::instructions__swipe_up.into(), description)
+    .with_footer(TR::instructions__swipe_up.into(), text_footer)
     .with_swipe(Direction::Up, SwipeSettings::default())
     .map(|msg| matches!(msg, FrameMsg::Content(_)).then_some(FlowMsg::Confirmed))
     .one_button_request(ButtonRequestCode::ResetDevice.with_name("share_words"))

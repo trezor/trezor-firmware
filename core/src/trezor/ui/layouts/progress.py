@@ -1,4 +1,4 @@
-import trezorui2
+import trezorui_api
 from trezor import TR, config, ui, utils
 
 
@@ -30,7 +30,7 @@ def progress(
         description = TR.progress__please_wait  # def_arg
 
     return ui.ProgressLayout(
-        layout=trezorui2.show_progress(
+        layout=trezorui_api.show_progress(
             description=description,
             title=title,
             indeterminate=indeterminate,
@@ -44,7 +44,7 @@ def bitcoin_progress(message: str) -> ui.ProgressLayout:
 
 def coinjoin_progress(message: str) -> ui.ProgressLayout:
     return ui.ProgressLayout(
-        layout=trezorui2.show_progress_coinjoin(title=message, indeterminate=False)
+        layout=trezorui_api.show_progress_coinjoin(title=message, indeterminate=False)
     )
 
 

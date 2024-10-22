@@ -63,7 +63,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_address_details__derivation_path_colon;
   MP_QSTR_address_details__title_receive_address;
   MP_QSTR_address_details__title_receiving_to;
-  MP_QSTR_address_label;
   MP_QSTR_address_qr;
   MP_QSTR_address_title;
   MP_QSTR_allow_cancel;
@@ -71,7 +70,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_amount_change;
   MP_QSTR_amount_label;
   MP_QSTR_amount_new;
-  MP_QSTR_amount_title;
   MP_QSTR_app_name;
   MP_QSTR_area_bytesize;
   MP_QSTR_attach_timer_fn;
@@ -187,7 +185,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_coinjoin_authorized;
   MP_QSTR_confirm_action;
   MP_QSTR_confirm_address;
-  MP_QSTR_confirm_backup;
   MP_QSTR_confirm_blob;
   MP_QSTR_confirm_blob_intro;
   MP_QSTR_confirm_coinjoin;
@@ -195,14 +192,10 @@ static void _librust_qstrs(void) {
   MP_QSTR_confirm_fido;
   MP_QSTR_confirm_firmware_update;
   MP_QSTR_confirm_homescreen;
-  MP_QSTR_confirm_joint_total;
   MP_QSTR_confirm_modify_fee;
   MP_QSTR_confirm_modify_output;
   MP_QSTR_confirm_more;
-  MP_QSTR_confirm_output_address;
-  MP_QSTR_confirm_output_amount;
   MP_QSTR_confirm_properties;
-  MP_QSTR_confirm_recovery;
   MP_QSTR_confirm_reset_device;
   MP_QSTR_confirm_summary;
   MP_QSTR_confirm_total__fee_rate;
@@ -212,6 +205,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_confirm_total__title_sending_from;
   MP_QSTR_confirm_value;
   MP_QSTR_confirm_with_info;
+  MP_QSTR_continue_recovery_homepage;
   MP_QSTR_count;
   MP_QSTR_current;
   MP_QSTR_danger;
@@ -246,16 +240,9 @@ static void _librust_qstrs(void) {
   MP_QSTR_fingerprint;
   MP_QSTR_firmware_update__title;
   MP_QSTR_firmware_update__title_fingerprint;
-  MP_QSTR_first_screen;
   MP_QSTR_flow_confirm_output;
-  MP_QSTR_flow_confirm_reset;
   MP_QSTR_flow_confirm_set_new_pin;
-  MP_QSTR_flow_continue_recovery;
   MP_QSTR_flow_get_address;
-  MP_QSTR_flow_prompt_backup;
-  MP_QSTR_flow_request_number;
-  MP_QSTR_flow_request_passphrase;
-  MP_QSTR_flow_show_share_words;
   MP_QSTR_get_language;
   MP_QSTR_get_transition_out;
   MP_QSTR_haptic_feedback__disable;
@@ -292,6 +279,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_inputs__return;
   MP_QSTR_inputs__show;
   MP_QSTR_inputs__space;
+  MP_QSTR_instructions;
   MP_QSTR_instructions__continue_holding;
   MP_QSTR_instructions__continue_in_app;
   MP_QSTR_instructions__enter_next_share;
@@ -347,6 +335,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_modify_fee__no_change;
   MP_QSTR_modify_fee__title;
   MP_QSTR_modify_fee__transaction_fee;
+  MP_QSTR_more_info_callback;
   MP_QSTR_multiple_pages_texts;
   MP_QSTR_notification;
   MP_QSTR_notification_level;
@@ -422,6 +411,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_progress__x_seconds_left_template;
   MP_QSTR_progress_event;
   MP_QSTR_prompt;
+  MP_QSTR_prompt_backup;
   MP_QSTR_prompt_screen;
   MP_QSTR_prompt_title;
   MP_QSTR_qr_title;
@@ -481,6 +471,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_recovery__x_of_y_entered_template;
   MP_QSTR_recovery__you_have_entered;
   MP_QSTR_recovery_type;
+  MP_QSTR_remaining_shares;
   MP_QSTR_request_bip39;
   MP_QSTR_request_complete_repaint;
   MP_QSTR_request_number;
@@ -639,7 +630,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_set_brightness;
   MP_QSTR_setting__adjust;
   MP_QSTR_setting__apply;
-  MP_QSTR_share_words;
   MP_QSTR_share_words__words_in_order;
   MP_QSTR_share_words__wrote_down_all;
   MP_QSTR_show_address_details;
@@ -653,11 +643,11 @@ static void _librust_qstrs(void) {
   MP_QSTR_show_instructions;
   MP_QSTR_show_lockscreen;
   MP_QSTR_show_mismatch;
-  MP_QSTR_show_passphrase;
   MP_QSTR_show_progress;
   MP_QSTR_show_progress_coinjoin;
   MP_QSTR_show_remaining_shares;
   MP_QSTR_show_share_words;
+  MP_QSTR_show_share_words_mercury;
   MP_QSTR_show_simple;
   MP_QSTR_show_success;
   MP_QSTR_show_wait_text;
@@ -669,7 +659,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_sign_message__message_size;
   MP_QSTR_sign_message__verify_address;
   MP_QSTR_skip_first_paint;
-  MP_QSTR_spending_amount;
   MP_QSTR_storage_msg__processing;
   MP_QSTR_storage_msg__starting;
   MP_QSTR_storage_msg__verifying_pin;
@@ -683,12 +672,12 @@ static void _librust_qstrs(void) {
   MP_QSTR_summary_title;
   MP_QSTR_text;
   MP_QSTR_text_confirm;
-  MP_QSTR_text_info;
+  MP_QSTR_text_footer;
   MP_QSTR_text_mono;
   MP_QSTR_time_ms;
   MP_QSTR_timer;
   MP_QSTR_title;
-  MP_QSTR_total_amount;
+  MP_QSTR_title_success;
   MP_QSTR_total_fee_new;
   MP_QSTR_total_len;
   MP_QSTR_touch_event;
@@ -738,7 +727,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_verb_info;
   MP_QSTR_verify;
   MP_QSTR_version;
-  MP_QSTR_warning;
   MP_QSTR_wipe__info;
   MP_QSTR_wipe__title;
   MP_QSTR_wipe__want_to_wipe;
