@@ -26,6 +26,7 @@
 #include <string.h>
 #include "model.h"
 #include "syscall.h"
+#include "trustzone.h"
 
 #include "memzero.h"
 
@@ -143,6 +144,8 @@ saes_invoke(void) {
 
 extern uint8_t sram_u_start;
 extern uint8_t sram_u_end;
+extern uint8_t _uflash_start;
+extern uint8_t _uflash_end;
 
 secbool unpriv_encrypt(const uint8_t* input, size_t size, uint8_t* output,
                        secure_aes_keysel_t key) {
@@ -158,6 +161,13 @@ secbool unpriv_encrypt(const uint8_t* input, size_t size, uint8_t* output,
   NVIC_SetPriority(SVCall_IRQn, IRQ_PRI_HIGHEST);
   uint32_t basepri = __get_BASEPRI();
   __set_BASEPRI(IRQ_PRI_HIGHEST + 1);
+
+  tz_set_sram_unpriv((uint32_t)&sram_u_start, &sram_u_end - &sram_u_start,
+                     true);
+  tz_set_flash_unpriv((uint32_t)&_uflash_start, &_uflash_end - &_uflash_start,
+                      true);
+  tz_set_saes_unpriv(true);
+  tz_set_tamper_unpriv(true);
 
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_SAES);
 
@@ -182,6 +192,13 @@ secbool unpriv_encrypt(const uint8_t* input, size_t size, uint8_t* output,
   memset(&sram_u_start, 0, &sram_u_end - &sram_u_start);
 
   mpu_reconfig(mpu_mode);
+
+  tz_set_sram_unpriv((uint32_t)&sram_u_start, &sram_u_end - &sram_u_start,
+                     false);
+  tz_set_flash_unpriv((uint32_t)&_uflash_start, &_uflash_end - &_uflash_start,
+                      false);
+  tz_set_saes_unpriv(false);
+  tz_set_tamper_unpriv(false);
 
   __set_BASEPRI(basepri);
   NVIC_SetPriority(SVCall_IRQn, prev_svc_prio);

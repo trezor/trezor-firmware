@@ -34,6 +34,7 @@
 #include "irq.h"
 #include "mpu.h"
 #include "systemview.h"
+#include "trustzone.h"
 
 #ifndef BOARDLOADER
 #include "bg_copy.h"
@@ -61,6 +62,22 @@ ALIGN_32BYTES(uint8_t physical_frame_buffer_0[PHYSICAL_FRAME_BUFFER_SIZE]);
 static __attribute__((section(".fb2")))
 ALIGN_32BYTES(uint8_t physical_frame_buffer_1[PHYSICAL_FRAME_BUFFER_SIZE]);
 #endif
+
+#ifdef STM32U5
+void display_set_unpriv_access(bool unpriv) {
+  tz_set_sram_unpriv((uint32_t)physical_frame_buffer_0,
+                     PHYSICAL_FRAME_BUFFER_SIZE, unpriv);
+
+#if (FRAME_BUFFER_COUNT > 1)
+  tz_set_sram_unpriv((uint32_t)physical_frame_buffer_1,
+                     PHYSICAL_FRAME_BUFFER_SIZE, unpriv);
+#endif
+
+#ifdef USE_DMA2D
+  tz_set_dma2d_unpriv(unpriv);
+#endif
+}
+#endif  // STM32U5
 
 // Returns the pointer to the physical frame buffer (0.. FRAME_BUFFER_COUNT-1)
 // Returns NULL if the framebuffer index is out of range.
