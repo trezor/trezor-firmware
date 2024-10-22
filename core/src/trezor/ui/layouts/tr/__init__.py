@@ -181,6 +181,14 @@ def confirm_multisig_warning() -> Awaitable[ui.UiResult]:
     )
 
 
+def confirm_multisig_different_paths_warning() -> Awaitable[ui.UiResult]:
+    return show_warning(
+        "warning_multisig_different_paths",
+        "Using different paths for different XPUBs.",
+        TR.words__continue_anyway_question,
+    )
+
+
 def confirm_homescreen(image: bytes) -> Awaitable[None]:
     return raise_if_not_confirmed(
         trezorui2.confirm_homescreen(

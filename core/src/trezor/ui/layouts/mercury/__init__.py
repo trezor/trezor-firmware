@@ -139,6 +139,17 @@ def confirm_multisig_warning() -> Awaitable[None]:
     )
 
 
+def confirm_multisig_different_paths_warning() -> Awaitable[None]:
+    return raise_if_not_confirmed(
+        trezorui2.flow_warning_hi_prio(
+            title=f"{TR.words__important}!",
+            description="Using different paths for different XPUBs.",
+        ),
+        "warning_multisig_different_paths",
+        br_code=ButtonRequestType.Warning,
+    )
+
+
 def confirm_homescreen(
     image: bytes,
 ) -> Awaitable[None]:

@@ -2,6 +2,9 @@ from typing import TYPE_CHECKING
 
 from trezor.enums import MultisigPubkeysOrder
 
+from apps.common import safety_checks
+
+from .common import multisig_uses_single_path
 from .keychain import with_keychain
 
 if TYPE_CHECKING:
@@ -35,7 +38,11 @@ def _get_xpubs(
 async def get_address(msg: GetAddress, keychain: Keychain, coin: CoinInfo) -> Address:
     from trezor.enums import InputScriptType
     from trezor.messages import Address
-    from trezor.ui.layouts import confirm_multisig_warning, show_address
+    from trezor.ui.layouts import (
+        confirm_multisig_different_paths_warning,
+        confirm_multisig_warning,
+        show_address,
+    )
 
     from apps.common.address_mac import get_address_mac
     from apps.common.paths import address_n_to_str, validate_path
@@ -106,6 +113,23 @@ async def get_address(msg: GetAddress, keychain: Keychain, coin: CoinInfo) -> Ad
             multisig_index = multisig_pubkey_index(multisig, node.public_key())
 
             await confirm_multisig_warning()
+
+            if not multisig_uses_single_path(multisig):
+                # An address that uses different derivation paths for different xpubs
+                # could be difficult to discover if the user did not note all the paths.
+                # The reason is that each path ends with an address index, which can have
+                # 1,000,000 possible values. If the address is a t-out-of-n multisig, the
+                # total number of possible paths is 1,000,000^n. This can be exploited by
+                # an attacker who has compromised the user's computer. The attacker could
+                # randomize the address indices and then demand a ransom from the user to
+                # reveal the paths. To prevent this, we require that all xpubs use the
+                # same derivation path.
+                if safety_checks.is_strict():
+                    raise ValueError(
+                        "Using different paths for different xpubs is not allowed"
+                    )
+                else:
+                    await confirm_multisig_different_paths_warning()
 
             if multisig.pubkeys_order == MultisigPubkeysOrder.LEXICOGRAPHIC:
                 account = f"Multisig {multisig.m} of {len(pubnodes)}\n(sorted)"
