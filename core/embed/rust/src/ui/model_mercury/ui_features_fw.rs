@@ -15,11 +15,63 @@ use crate::{
 };
 
 use super::{
-    component::{Frame, SwipeContent, SwipeUpScreen},
-    theme, ModelMercuryFeatures,
+    component::{
+        Bip39Input, Frame, MnemonicKeyboard, PinKeyboard, Slip39Input, SwipeContent, SwipeUpScreen,
+    }, flow, theme, ModelMercuryFeatures
 };
 
 impl UIFeaturesFirmware for ModelMercuryFeatures {
+    fn request_bip39(
+        prompt: TString<'static>,
+        prefill_word: TString<'static>,
+        can_go_back: bool,
+    ) -> Result<impl LayoutMaybeTrace, Error> {
+        let layout = RootComponent::new(MnemonicKeyboard::new(
+            prefill_word.map(Bip39Input::prefilled_word),
+            prompt,
+            can_go_back,
+        ));
+        Ok(layout)
+    }
+
+    fn request_slip39(
+        prompt: TString<'static>,
+        prefill_word: TString<'static>,
+        can_go_back: bool,
+    ) -> Result<impl LayoutMaybeTrace, Error> {
+        let layout = RootComponent::new(MnemonicKeyboard::new(
+            prefill_word.map(Slip39Input::prefilled_word),
+            prompt,
+            can_go_back,
+        ));
+
+        Ok(layout)
+    }
+
+    fn request_pin(
+        prompt: TString<'static>,
+        subprompt: TString<'static>,
+        allow_cancel: bool,
+        warning: bool,
+    ) -> Result<impl LayoutMaybeTrace, Error> {
+        let warning = if warning {
+            Some(TR::pin__wrong_pin.into())
+        } else {
+            None
+        };
+
+        let layout = RootComponent::new(PinKeyboard::new(prompt, subprompt, warning, allow_cancel));
+        Ok(layout)
+    }
+
+    fn request_passphrase(
+        prompt: TString<'static>,
+        max_len: u32,
+    ) -> Result<impl LayoutMaybeTrace, Error> {
+        let flow = flow::request_passphrase::new_request_passphrase()?;
+        Ok(flow)
+    }
+
     fn show_info(
         title: TString<'static>,
         description: TString<'static>,

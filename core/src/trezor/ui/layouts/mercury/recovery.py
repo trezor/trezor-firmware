@@ -34,11 +34,11 @@ async def request_word(
     prompt = TR.recovery__word_x_of_y_template.format(word_index + 1, word_count)
     can_go_back = word_index > 0
     if is_slip39:
-        keyboard = trezorui2.request_slip39(
+        keyboard = trezorui_api.request_slip39(
             prompt=prompt, prefill_word=prefill_word, can_go_back=can_go_back
         )
     else:
-        keyboard = trezorui2.request_bip39(
+        keyboard = trezorui_api.request_bip39(
             prompt=prompt, prefill_word=prefill_word, can_go_back=can_go_back
         )
 

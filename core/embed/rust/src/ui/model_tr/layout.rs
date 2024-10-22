@@ -1214,66 +1214,6 @@ extern "C" fn new_confirm_coinjoin(n_args: usize, args: *const Obj, kwargs: *mut
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
-extern "C" fn new_request_pin(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
-    let block = |_args: &[Obj], kwargs: &Map| {
-        let prompt: TString = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
-        let subprompt: TString = kwargs.get(Qstr::MP_QSTR_subprompt)?.try_into()?;
-
-        let obj = LayoutObj::new(PinEntry::new(prompt, subprompt))?;
-
-        Ok(obj.into())
-    };
-    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
-}
-
-extern "C" fn new_request_passphrase(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
-    let block = |_args: &[Obj], kwargs: &Map| {
-        let prompt: TString = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
-
-        let obj = LayoutObj::new(Frame::new(prompt, PassphraseEntry::new()).with_title_centered())?;
-        Ok(obj.into())
-    };
-    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
-}
-
-extern "C" fn new_request_bip39(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
-    let block = |_args: &[Obj], kwargs: &Map| {
-        let prompt: TString = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
-        let prefill_word: TString = kwargs.get(Qstr::MP_QSTR_prefill_word)?.try_into()?;
-        let can_go_back: bool = kwargs.get(Qstr::MP_QSTR_can_go_back)?.try_into()?;
-
-        let obj = LayoutObj::new(
-            Frame::new(
-                prompt,
-                prefill_word
-                    .map(|s| WordlistEntry::prefilled_word(s, WordlistType::Bip39, can_go_back)),
-            )
-            .with_title_centered(),
-        )?;
-        Ok(obj.into())
-    };
-    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
-}
-
-extern "C" fn new_request_slip39(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
-    let block = |_args: &[Obj], kwargs: &Map| {
-        let prompt: TString = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
-        let prefill_word: TString = kwargs.get(Qstr::MP_QSTR_prefill_word)?.try_into()?;
-        let can_go_back: bool = kwargs.get(Qstr::MP_QSTR_can_go_back)?.try_into()?;
-
-        let obj = LayoutObj::new(
-            Frame::new(
-                prompt,
-                prefill_word
-                    .map(|s| WordlistEntry::prefilled_word(s, WordlistType::Slip39, can_go_back)),
-            )
-            .with_title_centered(),
-        )?;
-        Ok(obj.into())
-    };
-    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
-}
-
 extern "C" fn new_select_word(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
         // we ignore passed in `title` and use `description` in its place
@@ -1857,42 +1797,6 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// ) -> LayoutObj[UiResult]:
     ///     """Confirm coinjoin authorization."""
     Qstr::MP_QSTR_confirm_coinjoin => obj_fn_kw!(0, new_confirm_coinjoin).as_obj(),
-
-    /// def request_pin(
-    ///     *,
-    ///     prompt: str,
-    ///     subprompt: str,
-    ///     allow_cancel: bool = True,  # unused on TR
-    ///     wrong_pin: bool = False,  # unused on TR
-    /// ) -> LayoutObj[str | UiResult]:
-    ///     """Request pin on device."""
-    Qstr::MP_QSTR_request_pin => obj_fn_kw!(0, new_request_pin).as_obj(),
-
-    /// def request_passphrase(
-    ///     *,
-    ///     prompt: str,
-    ///     max_len: int,  # unused on TR
-    /// ) -> LayoutObj[str | UiResult]:
-    ///     """Get passphrase."""
-    Qstr::MP_QSTR_request_passphrase => obj_fn_kw!(0, new_request_passphrase).as_obj(),
-
-    /// def request_bip39(
-    ///     *,
-    ///     prompt: str,
-    ///     prefill_word: str,
-    ///     can_go_back: bool,
-    /// ) -> LayoutObj[str]:
-    ///     """Get recovery word for BIP39."""
-    Qstr::MP_QSTR_request_bip39 => obj_fn_kw!(0, new_request_bip39).as_obj(),
-
-    /// def request_slip39(
-    ///     *,
-    ///     prompt: str,
-    ///     prefill_word: str,
-    ///     can_go_back: bool,
-    /// ) -> LayoutObj[str]:
-    ///    """SLIP39 word input keyboard."""
-    Qstr::MP_QSTR_request_slip39 => obj_fn_kw!(0, new_request_slip39).as_obj(),
 
     /// def select_word(
     ///     *,

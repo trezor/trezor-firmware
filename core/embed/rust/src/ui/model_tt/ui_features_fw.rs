@@ -2,6 +2,7 @@ use crate::{
     error::Error,
     micropython::gc::Gc,
     strutil::TString,
+    translations::TR,
     ui::{
         component::{image::BlendedImage, ComponentExt, Empty, Timeout},
         layout::obj::{LayoutMaybeTrace, LayoutObj, RootComponent},
@@ -10,11 +11,64 @@ use crate::{
 };
 
 use super::{
-    component::{Button, ButtonMsg, ButtonStyleSheet, CancelConfirmMsg, IconDialog},
+    component::{
+        Bip39Input, Button, ButtonMsg, ButtonStyleSheet, CancelConfirmMsg, IconDialog,
+        MnemonicKeyboard, PassphraseKeyboard, PinKeyboard, Slip39Input,
+    },
     theme, ModelTTFeatures,
 };
 
 impl UIFeaturesFirmware for ModelTTFeatures {
+    fn request_bip39(
+        prompt: TString<'static>,
+        prefill_word: TString<'static>,
+        can_go_back: bool,
+    ) -> Result<impl LayoutMaybeTrace, Error> {
+        let layout = RootComponent::new(MnemonicKeyboard::new(
+            prefill_word.map(Bip39Input::prefilled_word),
+            prompt,
+            can_go_back,
+        ));
+        Ok(layout)
+    }
+
+    fn request_slip39(
+        prompt: TString<'static>,
+        prefill_word: TString<'static>,
+        can_go_back: bool,
+    ) -> Result<impl LayoutMaybeTrace, Error> {
+        let layout = RootComponent::new(MnemonicKeyboard::new(
+            prefill_word.map(Slip39Input::prefilled_word),
+            prompt,
+            can_go_back,
+        ));
+
+        Ok(layout)
+    }
+
+    fn request_pin(
+        prompt: TString<'static>,
+        subprompt: TString<'static>,
+        allow_cancel: bool,
+        warning: bool,
+    ) -> Result<impl LayoutMaybeTrace, Error> {
+        let warning = if warning {
+            Some(TR::pin__wrong_pin.into())
+        } else {
+            None
+        };
+        let layout = RootComponent::new(PinKeyboard::new(prompt, subprompt, warning, allow_cancel));
+        Ok(layout)
+    }
+
+    fn request_passphrase(
+        prompt: TString<'static>,
+        max_len: u32,
+    ) -> Result<impl LayoutMaybeTrace, Error> {
+        let layout = RootComponent::new(PassphraseKeyboard::new());
+        Ok(layout)
+    }
+
     fn show_info(
         title: TString<'static>,
         description: TString<'static>,
@@ -28,17 +82,17 @@ impl UIFeaturesFirmware for ModelTTFeatures {
             theme::FG,
             theme::BG,
         );
-        let res = new_show_modal(
+        let obj = new_show_modal(
             title,
             TString::empty(),
             description,
-            TString::empty(),
+            button,
             false,
             time_ms,
             icon,
             theme::button_info(),
         )?;
-        Ok(res)
+        Ok(obj)
     }
 }
 

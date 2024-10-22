@@ -23,6 +23,54 @@ use crate::{
 // free-standing functions exported to MicroPython mirror `trait
 // UIFeaturesFirmware`
 
+extern "C" fn new_request_bip39(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let prompt: TString = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
+        let prefill_word: TString = kwargs.get(Qstr::MP_QSTR_prefill_word)?.try_into()?;
+        let can_go_back: bool = kwargs.get(Qstr::MP_QSTR_can_go_back)?.try_into()?;
+
+        let layout = ModelUI::request_bip39(prompt, prefill_word, can_go_back)?;
+        Ok(LayoutObj::new_root(layout)?.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_request_slip39(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = |_args: &[Obj], kwargs: &Map| {
+        let prompt: TString = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
+        let prefill_word: TString = kwargs.get(Qstr::MP_QSTR_prefill_word)?.try_into()?;
+        let can_go_back: bool = kwargs.get(Qstr::MP_QSTR_can_go_back)?.try_into()?;
+
+        let layout = ModelUI::request_slip39(prompt, prefill_word, can_go_back)?;
+        Ok(LayoutObj::new_root(layout)?.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_request_pin(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let prompt: TString = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
+        let subprompt: TString = kwargs.get(Qstr::MP_QSTR_subprompt)?.try_into()?;
+        let allow_cancel: bool = kwargs.get_or(Qstr::MP_QSTR_allow_cancel, true)?;
+        let warning: bool = kwargs.get_or(Qstr::MP_QSTR_wrong_pin, false)?;
+
+        let layout = ModelUI::request_pin(prompt, subprompt, allow_cancel, warning)?;
+        Ok(LayoutObj::new_root(layout)?.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_request_passphrase(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let prompt: TString = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
+        let max_len: u32 = kwargs.get(Qstr::MP_QSTR_max_len)?.try_into()?;
+
+        let layout = ModelUI::request_passphrase(prompt, max_len)?;
+        Ok(LayoutObj::new_root(layout)?.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
 extern "C" fn show_info(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
@@ -138,6 +186,42 @@ pub static mp_module_trezorui_api: Module = obj_module! {
 
     /// INFO: UiResult
     Qstr::MP_QSTR_INFO => INFO.as_obj(),
+
+    /// def request_bip39(
+    ///     *,
+    ///     prompt: str,
+    ///     prefill_word: str,
+    ///     can_go_back: bool,
+    /// ) -> LayoutObj[str]:
+    ///     """BIP39 word input keyboard."""
+    Qstr::MP_QSTR_request_bip39 => obj_fn_kw!(0, new_request_bip39).as_obj(),
+
+    /// def request_slip39(
+    ///     *,
+    ///     prompt: str,
+    ///     prefill_word: str,
+    ///     can_go_back: bool,
+    /// ) -> LayoutObj[str]:
+    ///    """SLIP39 word input keyboard."""
+    Qstr::MP_QSTR_request_slip39 => obj_fn_kw!(0, new_request_slip39).as_obj(),
+
+    /// def request_pin(
+    ///     *,
+    ///     prompt: str,
+    ///     subprompt: str,
+    ///     allow_cancel: bool = True,
+    ///     wrong_pin: bool = False,
+    /// ) -> LayoutObj[str | UiResult]:
+    ///     """Request pin on device."""
+    Qstr::MP_QSTR_request_pin => obj_fn_kw!(0, new_request_pin).as_obj(),
+
+    /// def request_passphrase(
+    ///     *,
+    ///     prompt: str,
+    ///     max_len: int,
+    /// ) -> LayoutObj[str | UiResult]:
+    ///     """Passphrase input keyboard."""
+    Qstr::MP_QSTR_request_passphrase => obj_fn_kw!(0, new_request_passphrase).as_obj(),
 
     /// def show_info(
     ///     *,

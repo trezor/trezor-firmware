@@ -850,53 +850,6 @@ extern "C" fn new_confirm_coinjoin(n_args: usize, args: *const Obj, kwargs: *mut
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
-extern "C" fn new_request_pin(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
-    let block = move |_args: &[Obj], kwargs: &Map| {
-        let prompt: TString = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
-        let subprompt: TString = kwargs.get(Qstr::MP_QSTR_subprompt)?.try_into()?;
-        let allow_cancel: bool = kwargs.get_or(Qstr::MP_QSTR_allow_cancel, true)?;
-        let warning: bool = kwargs.get_or(Qstr::MP_QSTR_wrong_pin, false)?;
-        let warning = if warning {
-            Some(TR::pin__wrong_pin.into())
-        } else {
-            None
-        };
-        let obj = LayoutObj::new(PinKeyboard::new(prompt, subprompt, warning, allow_cancel))?;
-        Ok(obj.into())
-    };
-    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
-}
-
-extern "C" fn new_request_bip39(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
-    let block = move |_args: &[Obj], kwargs: &Map| {
-        let prompt: TString = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
-        let prefill_word: TString = kwargs.get(Qstr::MP_QSTR_prefill_word)?.try_into()?;
-        let can_go_back: bool = kwargs.get(Qstr::MP_QSTR_can_go_back)?.try_into()?;
-        let obj = LayoutObj::new(MnemonicKeyboard::new(
-            prefill_word.map(Bip39Input::prefilled_word),
-            prompt,
-            can_go_back,
-        ))?;
-        Ok(obj.into())
-    };
-    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
-}
-
-extern "C" fn new_request_slip39(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
-    let block = move |_args: &[Obj], kwargs: &Map| {
-        let prompt: TString = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
-        let prefill_word: TString = kwargs.get(Qstr::MP_QSTR_prefill_word)?.try_into()?;
-        let can_go_back: bool = kwargs.get(Qstr::MP_QSTR_can_go_back)?.try_into()?;
-        let obj = LayoutObj::new(MnemonicKeyboard::new(
-            prefill_word.map(Slip39Input::prefilled_word),
-            prompt,
-            can_go_back,
-        ))?;
-        Ok(obj.into())
-    };
-    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
-}
-
 extern "C" fn new_select_word(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
@@ -1357,42 +1310,6 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// ) -> LayoutObj[UiResult]:
     ///     """Confirm coinjoin authorization."""
     Qstr::MP_QSTR_confirm_coinjoin => obj_fn_kw!(0, new_confirm_coinjoin).as_obj(),
-
-    /// def request_pin(
-    ///     *,
-    ///     prompt: str,
-    ///     subprompt: str,
-    ///     allow_cancel: bool = True,
-    ///     wrong_pin: bool = False,
-    /// ) -> LayoutObj[str | UiResult]:
-    ///     """Request pin on device."""
-    Qstr::MP_QSTR_request_pin => obj_fn_kw!(0, new_request_pin).as_obj(),
-
-    /// def flow_request_passphrase(
-    ///     *,
-    ///     prompt: str,
-    ///     max_len: int,
-    /// ) -> LayoutObj[str | UiResult]:
-    ///     """Passphrase input keyboard."""
-    Qstr::MP_QSTR_flow_request_passphrase => obj_fn_kw!(0, flow::request_passphrase::new_request_passphrase).as_obj(),
-
-    /// def request_bip39(
-    ///     *,
-    ///     prompt: str,
-    ///     prefill_word: str,
-    ///     can_go_back: bool,
-    /// ) -> LayoutObj[str]:
-    ///     """BIP39 word input keyboard."""
-    Qstr::MP_QSTR_request_bip39 => obj_fn_kw!(0, new_request_bip39).as_obj(),
-
-    /// def request_slip39(
-    ///     *,
-    ///     prompt: str,
-    ///     prefill_word: str,
-    ///     can_go_back: bool,
-    /// ) -> LayoutObj[str]:
-    ///     """SLIP39 word input keyboard."""
-    Qstr::MP_QSTR_request_slip39 => obj_fn_kw!(0, new_request_slip39).as_obj(),
 
     /// def select_word(
     ///     *,

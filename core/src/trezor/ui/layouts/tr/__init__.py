@@ -1111,7 +1111,7 @@ def show_wait_text(message: str) -> None:
 
 async def request_passphrase_on_device(max_len: int) -> str:
     result = await interact(
-        trezorui2.request_passphrase(
+        trezorui_api.request_passphrase(
             prompt=TR.passphrase__title_enter,
             max_len=max_len,
         ),
@@ -1141,7 +1141,7 @@ async def request_pin_on_device(
         subprompt = f"{attempts_remaining} {TR.pin__tries_left}"
 
     result = await interact(
-        trezorui2.request_pin(
+        trezorui_api.request_pin(
             prompt=prompt,
             subprompt=subprompt,
             allow_cancel=allow_cancel,

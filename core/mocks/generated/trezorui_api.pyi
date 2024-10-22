@@ -69,6 +69,46 @@ INFO: UiResult
 
 
 # rust/src/ui/api/firmware_upy.rs
+def request_bip39(
+    *,
+    prompt: str,
+    prefill_word: str,
+    can_go_back: bool,
+) -> LayoutObj[str]:
+    """BIP39 word input keyboard."""
+
+
+# rust/src/ui/api/firmware_upy.rs
+def request_slip39(
+    *,
+    prompt: str,
+    prefill_word: str,
+    can_go_back: bool,
+) -> LayoutObj[str]:
+   """SLIP39 word input keyboard."""
+
+
+# rust/src/ui/api/firmware_upy.rs
+def request_pin(
+    *,
+    prompt: str,
+    subprompt: str,
+    allow_cancel: bool = True,
+    wrong_pin: bool = False,
+) -> LayoutObj[str | UiResult]:
+    """Request pin on device."""
+
+
+# rust/src/ui/api/firmware_upy.rs
+def request_passphrase(
+    *,
+    prompt: str,
+    max_len: int,
+) -> LayoutObj[str | UiResult]:
+    """Passphrase input keyboard."""
+
+
+# rust/src/ui/api/firmware_upy.rs
 def show_info(
     *,
     title: str,

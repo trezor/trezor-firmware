@@ -266,46 +266,6 @@ def confirm_coinjoin(
 
 
 # rust/src/ui/model_mercury/layout.rs
-def request_pin(
-    *,
-    prompt: str,
-    subprompt: str,
-    allow_cancel: bool = True,
-    wrong_pin: bool = False,
-) -> LayoutObj[str | UiResult]:
-    """Request pin on device."""
-
-
-# rust/src/ui/model_mercury/layout.rs
-def flow_request_passphrase(
-    *,
-    prompt: str,
-    max_len: int,
-) -> LayoutObj[str | UiResult]:
-    """Passphrase input keyboard."""
-
-
-# rust/src/ui/model_mercury/layout.rs
-def request_bip39(
-    *,
-    prompt: str,
-    prefill_word: str,
-    can_go_back: bool,
-) -> LayoutObj[str]:
-    """BIP39 word input keyboard."""
-
-
-# rust/src/ui/model_mercury/layout.rs
-def request_slip39(
-    *,
-    prompt: str,
-    prefill_word: str,
-    can_go_back: bool,
-) -> LayoutObj[str]:
-    """SLIP39 word input keyboard."""
-
-
-# rust/src/ui/model_mercury/layout.rs
 def select_word(
     *,
     title: str,
@@ -840,46 +800,6 @@ def confirm_coinjoin(
 
 
 # rust/src/ui/model_tr/layout.rs
-def request_pin(
-    *,
-    prompt: str,
-    subprompt: str,
-    allow_cancel: bool = True,  # unused on TR
-    wrong_pin: bool = False,  # unused on TR
-) -> LayoutObj[str | UiResult]:
-    """Request pin on device."""
-
-
-# rust/src/ui/model_tr/layout.rs
-def request_passphrase(
-    *,
-    prompt: str,
-    max_len: int,  # unused on TR
-) -> LayoutObj[str | UiResult]:
-    """Get passphrase."""
-
-
-# rust/src/ui/model_tr/layout.rs
-def request_bip39(
-    *,
-    prompt: str,
-    prefill_word: str,
-    can_go_back: bool,
-) -> LayoutObj[str]:
-    """Get recovery word for BIP39."""
-
-
-# rust/src/ui/model_tr/layout.rs
-def request_slip39(
-    *,
-    prompt: str,
-    prefill_word: str,
-    can_go_back: bool,
-) -> LayoutObj[str]:
-   """SLIP39 word input keyboard."""
-
-
-# rust/src/ui/model_tr/layout.rs
 def select_word(
     *,
     title: str,  # unused on TR
@@ -1284,46 +1204,6 @@ def confirm_coinjoin(
     max_feerate: str,
 ) -> LayoutObj[UiResult]:
     """Confirm coinjoin authorization."""
-
-
-# rust/src/ui/model_tt/layout.rs
-def request_pin(
-    *,
-    prompt: str,
-    subprompt: str,
-    allow_cancel: bool = True,
-    wrong_pin: bool = False,
-) -> LayoutObj[str | UiResult]:
-    """Request pin on device."""
-
-
-# rust/src/ui/model_tt/layout.rs
-def request_passphrase(
-    *,
-    prompt: str,
-    max_len: int,
-) -> LayoutObj[str | UiResult]:
-    """Passphrase input keyboard."""
-
-
-# rust/src/ui/model_tt/layout.rs
-def request_bip39(
-    *,
-    prompt: str,
-    prefill_word: str,
-    can_go_back: bool,
-) -> LayoutObj[str]:
-    """BIP39 word input keyboard."""
-
-
-# rust/src/ui/model_tt/layout.rs
-def request_slip39(
-    *,
-    prompt: str,
-    prefill_word: str,
-    can_go_back: bool,
-) -> LayoutObj[str]:
-    """SLIP39 word input keyboard."""
 
 
 # rust/src/ui/model_tt/layout.rs

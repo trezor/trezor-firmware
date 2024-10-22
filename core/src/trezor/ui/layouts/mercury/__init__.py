@@ -1047,7 +1047,7 @@ def show_wait_text(message: str) -> None:
 
 def request_passphrase_on_device(max_len: int) -> Awaitable[str]:
     result = interact(
-        trezorui2.flow_request_passphrase(
+        trezorui_api.request_passphrase(
             prompt=TR.passphrase__title_enter, max_len=max_len
         ),
         "passphrase_device",
@@ -1073,7 +1073,7 @@ def request_pin_on_device(
         subprompt = f"{attempts_remaining} {TR.pin__tries_left}"
 
     result = interact(
-        trezorui2.request_pin(
+        trezorui_api.request_pin(
             prompt=prompt,
             subprompt=subprompt,
             allow_cancel=allow_cancel,

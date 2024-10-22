@@ -19,6 +19,8 @@ use crate::ui::{
 };
 
 pub struct ModelTTFeatures;
+
+#[cfg(feature = "micropython")]
 pub mod ui_features_fw;
 
 impl UIFeaturesCommon for ModelTTFeatures {
