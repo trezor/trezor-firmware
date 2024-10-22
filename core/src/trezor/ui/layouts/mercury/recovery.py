@@ -17,9 +17,10 @@ if TYPE_CHECKING:
 
 
 async def request_word_count(recovery_type: RecoveryType) -> int:
-    selector = trezorui2.select_word_count(recovery_type=recovery_type)
     count = await interact(
-        selector, "recovery_word_count", ButtonRequestType.MnemonicWordCount
+        trezorui_api.select_word_count(recovery_type=recovery_type),
+        "recovery_word_count",
+        ButtonRequestType.MnemonicWordCount,
     )
     return int(count)
 
@@ -34,11 +35,11 @@ async def request_word(
     prompt = TR.recovery__word_x_of_y_template.format(word_index + 1, word_count)
     can_go_back = word_index > 0
     if is_slip39:
-        keyboard = trezorui2.request_slip39(
+        keyboard = trezorui_api.request_slip39(
             prompt=prompt, prefill_word=prefill_word, can_go_back=can_go_back
         )
     else:
-        keyboard = trezorui2.request_bip39(
+        keyboard = trezorui_api.request_bip39(
             prompt=prompt, prefill_word=prefill_word, can_go_back=can_go_back
         )
 
@@ -85,7 +86,7 @@ def format_remaining_shares_info(
 
 async def show_group_share_success(share_index: int, group_index: int) -> None:
     await raise_if_not_confirmed(
-        trezorui2.show_group_share_success(
+        trezorui_api.show_group_share_success(
             lines=[
                 TR.recovery__you_have_entered,
                 TR.recovery__share_num_template.format(share_index + 1),
@@ -99,7 +100,7 @@ async def show_group_share_success(share_index: int, group_index: int) -> None:
 
 
 async def continue_recovery(
-    button_label: str,  # unused on mercury
+    _button_label: str,  # unused on mercury
     text: str,
     subtext: str | None,
     recovery_type: RecoveryType,
@@ -107,12 +108,13 @@ async def continue_recovery(
     remaining_shares_info: "RemainingSharesInfo | None" = None,
 ) -> bool:
     result = await interact(
-        trezorui2.flow_continue_recovery(
-            first_screen=show_instructions,
-            recovery_type=recovery_type,
+        trezorui_api.continue_recovery_homepage(
             text=text,
             subtext=subtext,
-            pages=(
+            button=None,
+            recovery_type=recovery_type,
+            show_instructions=show_instructions,
+            remaining_shares=(
                 format_remaining_shares_info(remaining_shares_info)
                 if remaining_shares_info
                 else None
@@ -134,7 +136,7 @@ async def show_recovery_warning(
 ) -> None:
     button = button or TR.buttons__try_again  # def_arg
     await raise_if_not_confirmed(
-        trezorui2.show_warning(
+        trezorui_api.show_warning(
             title=content or TR.words__warning,
             value=subheader or "",
             button=button,

@@ -1,6 +1,5 @@
 from typing import TYPE_CHECKING
 
-import trezorui2
 from trezor import TR
 from trezor.enums import ButtonRequestType
 import trezorui_api
@@ -50,8 +49,9 @@ async def show_share_words(
         )
 
         result = await interact(
-            trezorui2.show_share_words(  # type: ignore [Arguments missing for parameters]
-                share_words=share_words,  # type: ignore [No parameter named "share_words"]
+            trezorui_api.show_share_words(
+                words=share_words,
+                title=None,
             ),
             br_name,
             br_code,
@@ -88,7 +88,7 @@ async def select_word(
 
     word_ordinal = format_ordinal(checked_index + 1)
     result = await interact(
-        trezorui2.select_word(
+        trezorui_api.select_word(
             title="",
             description=TR.reset__select_word_template.format(word_ordinal),
             words=(words[0].lower(), words[1].lower(), words[2].lower()),
@@ -122,7 +122,7 @@ def slip39_show_checklist(
     )
 
     return raise_if_not_confirmed(
-        trezorui2.show_checklist(
+        trezorui_api.show_checklist(
             title=TR.reset__slip39_checklist_title,
             button=TR.buttons__continue,
             active=step,
@@ -140,7 +140,7 @@ async def _prompt_number(
     max_count: int,
     br_name: str,
 ) -> int:
-    num_input = trezorui2.request_number(
+    num_input = trezorui_api.request_number(
         title=title,
         count=count,
         min_count=min_count,

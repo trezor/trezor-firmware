@@ -55,7 +55,7 @@ async def reset_device(msg: ResetDevice) -> Success:
     _validate_reset_device(msg)
 
     # make sure user knows they're setting up a new wallet
-    await confirm_reset_device(TR.reset__title_create_wallet)
+    await confirm_reset_device()
 
     # Rendering empty loader so users do not feel a freezing screen
     render_empty_loader(config.StorageMessage.PROCESSING_MSG)

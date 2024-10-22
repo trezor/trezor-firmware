@@ -17,8 +17,7 @@ use super::{
 pub struct SetBrightnessDialog(NumberInputSliderDialog);
 
 impl SetBrightnessDialog {
-    pub fn new(current: Option<u8>) -> Self {
-        let current = current.unwrap_or(theme::backlight::get_backlight_normal());
+    pub fn new(current: u8) -> Self {
         Self(NumberInputSliderDialog::new(
             theme::backlight::get_backlight_min() as u16,
             theme::backlight::get_backlight_max() as u16,

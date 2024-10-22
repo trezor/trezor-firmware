@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING
 
 import storage.cache as storage_cache
-import trezorui2
 import trezorui_api
 from storage.cache_common import APP_COMMON_BUSY_DEADLINE_MS
 from trezor import TR, ui
@@ -57,7 +56,7 @@ class Homescreen(HomescreenBase):
                 level = 0
 
         super().__init__(
-            layout=trezorui2.show_homescreen(
+            layout=trezorui_api.show_homescreen(
                 label=label,
                 notification=notification,
                 notification_level=level,
@@ -97,7 +96,7 @@ class Lockscreen(HomescreenBase):
             not bootscreen and storage_cache.homescreen_shown is self.RENDER_INDICATOR
         )
         super().__init__(
-            layout=trezorui2.show_lockscreen(
+            layout=trezorui_api.show_lockscreen(
                 label=label,
                 bootscreen=bootscreen,
                 skip_first_paint=skip,
@@ -118,7 +117,7 @@ class Busyscreen(HomescreenBase):
 
     def __init__(self, delay_ms: int) -> None:
         super().__init__(
-            layout=trezorui2.show_progress_coinjoin(
+            layout=trezorui_api.show_progress_coinjoin(
                 title=TR.coinjoin__waiting_for_others,
                 indeterminate=True,
                 time_ms=delay_ms,
