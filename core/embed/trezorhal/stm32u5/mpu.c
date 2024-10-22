@@ -154,8 +154,8 @@ static void mpu_set_attributes(void) {
 #endif
 
 #ifdef SYSCALL_DISPATCH
-extern uint32_t _uflash_start;
-extern uint32_t _uflash_end;
+extern uint8_t _uflash_start;
+extern uint8_t _uflash_end;
 #define KERNEL_RAM_U_START (KERNEL_RAM_START + KERNEL_RAM_SIZE)
 #define KERNEL_RAM_U_SIZE KERNEL_U_RAM_SIZE
 #define KERNEL_FLASH_U_START (uint32_t) & _uflash_start

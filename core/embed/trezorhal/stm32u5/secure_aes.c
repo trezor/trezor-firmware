@@ -141,8 +141,8 @@ saes_invoke(void) {
   return 0;
 }
 
-extern uint32_t sram_u_start;
-extern uint32_t sram_u_end;
+extern uint8_t sram_u_start;
+extern uint8_t sram_u_end;
 
 secbool unpriv_encrypt(const uint8_t* input, size_t size, uint8_t* output,
                        secure_aes_keysel_t key) {
