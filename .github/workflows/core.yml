@@ -53,6 +53,9 @@ jobs:
           - model: D001
             coins: universal
             type: normal
+        exclude:
+          - model: T3W1
+            type: production
     env:
       TREZOR_MODEL: ${{ matrix.model == 'T2T1' && 'T' || matrix.model == 'D001' && 'DISC1' || matrix.model }}
       BITCOIN_ONLY: ${{ matrix.coins == 'universal' && '0' || '1' }}
