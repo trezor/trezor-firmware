@@ -29,8 +29,9 @@ secbool reset_flags_check(void) {
   // for production. check the reset flags to assure that we arrive here due to
   // a regular full power-on event, and not as a result of a lesser reset.
   if ((RCC->CSR & (RCC_CSR_LPWRRSTF | RCC_CSR_WWDGRSTF | RCC_CSR_IWDGRSTF |
-                   RCC_CSR_SFTRSTF | RCC_CSR_PINRSTF | RCC_CSR_BORRSTF |
-                   RCC_CSR_OBLRSTF)) != (RCC_CSR_PINRSTF | RCC_CSR_BORRSTF)) {
+                   RCC_CSR_SFTRSTF | RCC_CSR_PORRSTF | RCC_CSR_PINRSTF |
+                   RCC_CSR_BORRSTF)) !=
+      (RCC_CSR_PORRSTF | RCC_CSR_PINRSTF | RCC_CSR_BORRSTF)) {
     return secfalse;
   }
 #endif
