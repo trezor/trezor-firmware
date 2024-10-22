@@ -38,7 +38,7 @@ void systimer_init(void) {
     return;
   }
 
-  memset(&drv, 0, sizeof(systimer_driver_t));
+  memset(drv, 0, sizeof(systimer_driver_t));
   drv->initialized = true;
 }
 
