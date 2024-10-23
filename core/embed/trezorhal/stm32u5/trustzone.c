@@ -91,7 +91,7 @@ static void tz_configure_fsmc(void) {
 
   mpcwm.AreaId = GTZC_TZSC_MPCWM_ID1;
   mpcwm.AreaStatus = ENABLE;
-  mpcwm.Attribute = GTZC_TZSC_MPCWM_REGION_SEC;
+  mpcwm.Attribute = GTZC_TZSC_MPCWM_REGION_SEC | GTZC_TZSC_MPCWM_REGION_PRIV;
   mpcwm.Length = 128 * 1024;
   mpcwm.Offset = 0;
   mpcwm.Lock = GTZC_TZSC_MPCWM_LOCK_OFF;
