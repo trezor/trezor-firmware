@@ -67,27 +67,31 @@ def watch_emulator(emulator: CoreEmulator) -> int:
     return 0
 
 
-def run_debugger(emulator: CoreEmulator, gdb_script_file: str | Path | None) -> None:
+def run_debugger(emulator: CoreEmulator, gdb_script_file: str | Path | None, valgrind: bool = False, run_command: list[str] = []) -> None:
     os.chdir(emulator.workdir)
     env = emulator.make_env()
-    if platform.system() == "Darwin":
+    if valgrind:
+        dbg_command = ["valgrind", "-v", "--tool=callgrind", "--read-inline-info=yes", str(emulator.executable)] + emulator.make_args()
+    elif platform.system() == "Darwin":
         env["PATH"] = "/usr/bin"
-        os.execvpe(
-            "lldb",
-            ["lldb", "-f", str(emulator.executable), "--"] + emulator.make_args(),
-            env,
-        )
+        dbg_command = ["lldb", "-f", str(emulator.executable), "--"] + emulator.make_args()
     else:
         # Optionally run a gdb script from a file
         if gdb_script_file is None:
-            gdb = ["gdb"]
+            dbg_command = ["gdb"]
         else:
-            gdb = ["gdb", "-x", str(HERE / gdb_script_file)]
-        os.execvpe(
-            "gdb",
-            gdb + ["--args", str(emulator.executable)] + emulator.make_args(),
-            env,
-        )
+            dbg_command = ["gdb", "-x", str(HERE / gdb_script_file)]
+        dbg_command += ["--args", str(emulator.executable)]
+        dbg_command += emulator.make_args()
+
+    if not run_command:
+        os.execvpe(dbg_command[0], dbg_command, env)
+    else:
+        dbg_process = subprocess.Popen(dbg_command, env=env)
+        run_process = subprocess.Popen(run_command, env=env, shell=True)
+        rc = run_process.wait()
+        dbg_process.send_signal(signal.SIGINT)
+        sys.exit(rc)
 
 
 def _from_env(name: str) -> bool:
@@ -118,6 +122,7 @@ def _from_env(name: str) -> bool:
 @click.option("-r", "--record-dir", help="Directory where to record screen changes")
 @click.option("-s", "--slip0014", is_flag=True, help="Initialize device with SLIP-14 seed (all all all...)")
 @click.option("-S", "--script-gdb-file", type=click.Path(exists=True, dir_okay=False), help="Run gdb with an init file")
+@click.option("-V", "--valgrind", is_flag=True, help="Use valgrind instead of debugger (-D)")
 @click.option("-t", "--temporary-profile", is_flag=True, help="Create an empty temporary profile")
 @click.option("-w", "--watch", is_flag=True, help="Restart emulator if sources change")
 @click.option("-X", "--extra-arg", "extra_args", multiple=True, help="Extra argument to pass to micropython")
@@ -144,6 +149,7 @@ def cli(
     record_dir: Optional[str],
     slip0014: bool,
     script_gdb_file: str | Path | None,
+    valgrind: bool,
     temporary_profile: bool,
     watch: bool,
     extra_args: list[str],
@@ -261,8 +267,8 @@ def cli(
     if alloc_profiling:
         os.environ["TREZOR_MEMPERF"] = "1"
 
-    if debugger:
-        run_debugger(emulator, script_gdb_file)
+    if debugger or valgrind:
+        run_debugger(emulator, script_gdb_file, valgrind, command)
         raise RuntimeError("run_debugger should not return")
 
     emulator.start()
