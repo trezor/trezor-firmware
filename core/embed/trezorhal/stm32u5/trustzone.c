@@ -337,20 +337,6 @@ void tz_set_flash_unpriv(uint32_t start, uint32_t size, bool unpriv) {
   __ISB();
 }
 
-/* // Reconfigure SRAM to allow unprivileged access
-
-  extern uint8_t __fb_start;
-   extern uint8_t __fb_end;
-
- #define FRAMEBUFFER_START ((uint32_t) & __fb_start)
- #define FRAMEBUFFER_SIZE ((uint32_t) & __fb_end - FRAMEBUFFER_START)
-
-   trustzone_set_priv_sram(FRAMEBUFFER_START, FRAMEBUFFER_SIZE, false);
-
-    trustzone_set_priv_sram(SRAM1_BASE, SRAM1_SIZE, false);
-    trustzone_set_priv_sram(SRAM3_BASE, SRAM3_SIZE, false);
-*/
-
 void tz_set_saes_unpriv(bool unpriv) {
   HAL_GTZC_TZSC_ConfigPeriphAttributes(
       GTZC_PERIPH_SAES,
