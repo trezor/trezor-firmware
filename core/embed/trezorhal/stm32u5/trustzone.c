@@ -176,7 +176,7 @@ static void set_bit_array(volatile uint32_t* regs, uint32_t bit_offset,
     bit_count -= bc;
   }
 
-  while (bit_count > 32) {
+  while (bit_count >= 32) {
     *regs = value ? 0xFFFFFFFF : 0;
     regs++;
     bit_count -= 32;
