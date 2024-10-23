@@ -155,6 +155,31 @@ void tz_init_boardloader(void) {
   NVIC_EnableIRQ(GTZC_IRQn);
 }
 
+void tz_init_kernel(void) {
+  // Configure SRAM security attributes
+  tz_configure_sram();
+
+  // Configure FLASH security attributes
+  tz_configure_flash();
+
+  // Configure FSMC security attributes
+  tz_configure_fsmc();
+
+  // Make all peripherals secure & privileged
+  HAL_GTZC_TZSC_ConfigPeriphAttributes(
+      GTZC_PERIPH_ALL, GTZC_TZSC_PERIPH_SEC | GTZC_TZSC_PERIPH_PRIV);
+
+  // Clear all illegal access flags in GTZC TZIC
+  HAL_GTZC_TZIC_ClearFlag(GTZC_PERIPH_ALL);
+
+  // Enable all illegal access interrupts in GTZC TZIC
+  HAL_GTZC_TZIC_EnableIT(GTZC_PERIPH_ALL);
+
+  // Enable GTZC secure interrupt
+  NVIC_SetPriority(GTZC_IRQn, IRQ_PRI_HIGHEST);
+  NVIC_EnableIRQ(GTZC_IRQn);
+}
+
 static void set_bit_array(volatile uint32_t* regs, uint32_t bit_offset,
                           uint32_t bit_count, bool value) {
   regs += bit_offset / 32;
@@ -310,31 +335,6 @@ void tz_set_flash_unpriv(uint32_t start, uint32_t size, bool unpriv) {
   }
 
   __ISB();
-}
-
-void tz_init_kernel(void) {
-  // Configure SRAM security attributes
-  tz_configure_sram();
-
-  // Configure FLASH security attributes
-  tz_configure_flash();
-
-  // Configure FSMC security attributes
-  tz_configure_fsmc();
-
-  // Make all peripherals secure & privileged
-  HAL_GTZC_TZSC_ConfigPeriphAttributes(
-      GTZC_PERIPH_ALL, GTZC_TZSC_PERIPH_SEC | GTZC_TZSC_PERIPH_PRIV);
-
-  // Clear all illegal access flags in GTZC TZIC
-  HAL_GTZC_TZIC_ClearFlag(GTZC_PERIPH_ALL);
-
-  // Enable all illegal access interrupts in GTZC TZIC
-  HAL_GTZC_TZIC_EnableIT(GTZC_PERIPH_ALL);
-
-  // Enable GTZC secure interrupt
-  NVIC_SetPriority(GTZC_IRQn, IRQ_PRI_HIGHEST);
-  NVIC_EnableIRQ(GTZC_IRQn);
 }
 
 /* // Reconfigure SRAM to allow unprivileged access
