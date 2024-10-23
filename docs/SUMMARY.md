@@ -6,6 +6,7 @@
     - [Embedded](core/build/embedded.md)
     - [Emulator](core/build/emulator.md)
   - [Emulator](core/emulator/index.md)
+    - [Valgrind profiling](core/emulator/valgrind.md)
   - [Event Loop](core/src/event-loop.md)
   - [Apps](core/src/apps.md)
   - [Tests](core/tests/index.md)
