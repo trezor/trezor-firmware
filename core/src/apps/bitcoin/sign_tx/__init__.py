@@ -96,6 +96,16 @@ async def sign_tx(
             assert TxRequest.is_type_of(req)
             if req.request_type == RequestType.TXFINISHED:
                 show_continue_in_app(TR.send__transaction_signed)
+                try:
+                    import micropython
+
+                    print("micropython.mem_info() from received_message_handler.py")
+                    micropython.mem_info()
+                    print("Allocation count:", micropython.alloc_count())  # type: ignore ["alloc_count" is not a known attribute of module]
+                except AttributeError:
+                    print(
+                        "To show allocation count, create the build with TREZOR_MEMPERF=1"
+                    )
                 return req
             res = await call(req, request_class)
         elif isinstance(req, helpers.UiConfirm):

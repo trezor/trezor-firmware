@@ -16,6 +16,7 @@
 
 from __future__ import annotations
 
+import time
 import warnings
 from copy import copy
 from decimal import Decimal
@@ -348,7 +349,12 @@ def sign_tx(
     )
 
     R = messages.RequestType
+    start2 = time.time()
+    end2 = time.time()
+
     while True:
+        print(end2 - start2)
+        start2 = time.time()
         # If there's some part of signed transaction, let's add it
         if res.serialized:
             if res.serialized.serialized_tx:
@@ -410,6 +416,7 @@ def sign_tx(
                 )
 
             res = session.call(messages.TxAck(tx=msg), expect=messages.TxRequest)
+            end2 = time.time()
 
     for i, sig in zip(inputs, signatures):
         if i.script_type != messages.InputScriptType.EXTERNAL and sig is None:
