@@ -46,6 +46,18 @@ class ChangeDetector:
         if txo.script_type not in common.CHANGE_OUTPUT_SCRIPT_TYPES:
             return False
 
+        if txo.multisig and not common.multisig_uses_single_path(txo.multisig):
+            # An address that uses different derivation paths for different xpubs
+            # could be difficult to discover if the user did not note all the paths.
+            # The reason is that each path ends with an address index, which can
+            # have 1,000,000 possible values. If the address is a t-out-of-n
+            # multisig, the total number of possible paths is 1,000,000^n. This can
+            # be exploited by an attacker who has compromised the user's computer.
+            # The attacker could randomize the address indices and then demand a
+            # ransom from the user to reveal the paths. To prevent this, we require
+            # that all xpubs use the same derivation path.
+            return False
+
         return (
             self.multisig_fingerprint.output_matches(txo)
             and self.wallet_path.output_matches(txo)
