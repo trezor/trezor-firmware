@@ -24,6 +24,8 @@ trezor_message_impl! {
     BackupDevice => MessageType_BackupDevice,
     EntropyRequest => MessageType_EntropyRequest,
     EntropyAck => MessageType_EntropyAck,
+    ResetDeviceContinue => MessageType_ResetDeviceContinue,
+    ResetDeviceFinish => MessageType_ResetDeviceFinish,
     PassphraseRequest => MessageType_PassphraseRequest,
     PassphraseAck => MessageType_PassphraseAck,
     RecoveryDevice => MessageType_RecoveryDevice,

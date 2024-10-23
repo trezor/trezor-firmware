@@ -158,7 +158,7 @@ def with_client(func: "Callable[Concatenate[TrezorClient, P], R]") -> "Callable[
 
     # the return type of @click.pass_obj is improperly specified and pyright doesn't
     # understand that it converts f(obj, *args, **kwargs) to f(*args, **kwargs)
-    return trezorctl_command_with_client  # type: ignore [is incompatible with return type]
+    return trezorctl_command_with_client
 
 
 class AliasedGroup(click.Group):
