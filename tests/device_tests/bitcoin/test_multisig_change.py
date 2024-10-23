@@ -406,6 +406,43 @@ def test_multisig_mismatch_multisig_change(client: Client):
         )
 
 
+# inputs match, change mismatches (second tries to be change but isn't)
+@pytest.mark.models(skip="legacy", reason="Not fixed")
+def test_multisig_mismatch_multisig_change_different_paths(client: Client):
+    multisig_out2 = messages.MultisigRedeemScriptType(
+        pubkeys=[
+            messages.HDNodePathType(node=NODE_EXT1, address_n=[1, 0]),
+            messages.HDNodePathType(node=NODE_EXT2, address_n=[1, 1]),
+            messages.HDNodePathType(node=NODE_INT, address_n=[1, 2]),
+        ],
+        signatures=[b"", b"", b""],
+        m=2,
+    )
+
+    out1 = messages.TxOutputType(
+        address="3B23k4kFBRtu49zvpG3Z9xuFzfpHvxBcwt",
+        amount=40_000_000,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
+    )
+
+    out2 = messages.TxOutputType(
+        address_n=[H_(45), 0, 1, 2],
+        multisig=multisig_out2,
+        amount=44_000_000,
+        script_type=messages.OutputScriptType.PAYTOMULTISIG,
+    )
+
+    with client:
+        client.set_expected_responses(_responses(client, INP1, INP2))
+        btc.sign_tx(
+            client,
+            "Bitcoin",
+            [INP1, INP2],
+            [out1, out2],
+            prev_txes=TX_API,
+        )
+
+
 # inputs mismatch, change matches with first input
 def test_multisig_mismatch_inputs(client: Client):
     multisig_out1 = messages.MultisigRedeemScriptType(
