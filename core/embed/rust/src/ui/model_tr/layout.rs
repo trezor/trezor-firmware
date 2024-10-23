@@ -388,7 +388,7 @@ extern "C" fn new_confirm_properties(n_args: usize, args: *const Obj, kwargs: *m
             title,
             paragraphs.into_paragraphs(),
             TR::buttons__confirm.into(),
-            None,
+            Some("".into()),
             hold,
         )
     };

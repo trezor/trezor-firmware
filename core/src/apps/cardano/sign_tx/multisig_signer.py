@@ -33,16 +33,18 @@ class MultisigSigner(Signer):
 
         # super() omitted intentionally
         is_network_id_verifiable = self._is_network_id_verifiable()
-        await layout.confirm_tx(
-            msg.fee,
-            msg.network_id,
-            msg.protocol_magic,
-            msg.ttl,
-            msg.validity_interval_start,
-            msg.total_collateral,
-            is_network_id_verifiable,
-            tx_hash=None,
-        )
+        if self.should_show_details:
+            await layout.confirm_tx_details(
+                msg.network_id,
+                msg.protocol_magic,
+                msg.ttl,
+                None,  # do not show fee as it is in `confirm_total`
+                msg.validity_interval_start,
+                msg.total_collateral,
+                is_network_id_verifiable,
+                tx_hash=None,
+            )
+        await layout.confirm_total(self.total_amount, msg.fee, msg.network_id)
 
     def _validate_output(self, output: messages.CardanoTxOutput) -> None:
         super()._validate_output(output)
