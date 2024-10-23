@@ -76,24 +76,24 @@ impl Component for NumberInputSliderDialog {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        if let Some(value) = self.input.event(ctx, event) {
-            self.val = value;
+        let msg_opt = self.input.event(ctx, event);
 
-            if self.val == self.init_val || self.input.touching {
-                self.footer
-                    .update_instruction(ctx, TR::instructions__swipe_horizontally);
-                self.footer.update_description(ctx, TR::setting__adjust);
-                ctx.request_paint();
-            } else {
-                self.footer
-                    .update_instruction(ctx, TR::instructions__swipe_up);
-                self.footer.update_description(ctx, TR::setting__apply);
-                ctx.request_paint();
-            }
-
-            return Some(Self::Msg::Changed(value));
+        if self.val == self.init_val || self.input.touching {
+            self.footer
+                .update_instruction(ctx, TR::instructions__swipe_horizontally);
+            self.footer.update_description(ctx, TR::setting__adjust);
+            ctx.request_paint();
+        } else {
+            self.footer
+                .update_instruction(ctx, TR::instructions__swipe_up);
+            self.footer.update_description(ctx, TR::setting__apply);
+            ctx.request_paint();
         }
-        None
+
+        msg_opt.map(|value| {
+            self.val = value;
+            Self::Msg::Changed(value)
+        })
     }
 
     fn paint(&mut self) {
