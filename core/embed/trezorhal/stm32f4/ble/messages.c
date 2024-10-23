@@ -5,41 +5,8 @@
 #include <stdint.h>
 
 #include "ble_hal.h"
-#include "common.h"
 #include "int_comm_defs.h"
 #include "messages.h"
-
-bool wait_for_answer(void) {
-  uint8_t buf[64] = {0};
-
-  uint32_t ticks_start = hal_ticks_ms();
-  uint32_t len = 0;
-
-  while (len == 0) {
-    if (hal_ticks_ms() - ticks_start > 1000) {
-      // timeout
-      return false;
-    }
-
-    len = ble_hal_int_receive(buf, sizeof(buf));
-
-    if (len > 0) {
-      process_poll(buf, len);
-    }
-  }
-
-  return true;
-}
-
-bool ble_initialize(void) {
-  if (!ble_hal_firmware_running()) {
-    return false;
-  }
-  send_state_request();
-
-  return true;
-  // return wait_for_answer();
-}
 
 void send_state_request(void) {
   uint8_t cmd = INTERNAL_CMD_PING;

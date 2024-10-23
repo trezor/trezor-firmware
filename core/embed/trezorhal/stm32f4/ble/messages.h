@@ -3,10 +3,6 @@
 
 #include <stdbool.h>
 
-bool wait_for_answer(void);
-
-void process_poll(uint8_t *data, uint32_t len);
-
 void send_state_request(void);
 
 void send_advertising_on(bool whitelist);
@@ -20,9 +16,5 @@ bool send_disconnect(void);
 void send_pairing_reject(void);
 
 void send_pairing_accept(void);
-
-bool wait_for_answer(void);
-
-bool ble_initialize(void);
 
 #endif
