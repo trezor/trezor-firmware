@@ -10,7 +10,7 @@ from trezor.wire import DataError, ProcessError
 from apps.common.writers import write_compact_size
 
 from .. import addresses, common, multisig, scripts, writers
-from ..common import SigHashType, ecdsa_sign, input_is_external
+from ..common import SigHashType, ecdsa_sign, input_is_external, p2tr_multisig_leaf_hash
 from ..ownership import verify_nonownership
 from ..verification import SignatureVerifier
 from . import helpers
@@ -551,6 +551,7 @@ class Bitcoin:
                     i,
                     tx_info.tx,
                     self.get_sighash_type(txi),
+                    None,
                 )
             else:
                 return tx_info.sig_hasher.hash143(
@@ -639,17 +640,25 @@ class Bitcoin:
 
         return public_key, signature
 
-    def sign_taproot_input(self, i: int, txi: TxInput) -> bytes:
+    def sign_taproot_input(self, i: int, txi: TxInput) -> tuple[bytes, bytes]:
         from ..common import bip340_sign
 
+        if txi.multisig:
+            public_keys = multisig.multisig_get_pubkeys(txi.multisig)
+            threshold = txi.multisig.m
+            leaf_hash = p2tr_multisig_leaf_hash(public_keys, threshold)
+        else:
+            leaf_hash = None
+
         sigmsg_digest = self.tx_info.sig_hasher.hash341(
-            i,
-            self.tx_info.tx,
-            self.get_sighash_type(txi),
+            i, self.tx_info.tx, self.get_sighash_type(txi), leaf_hash
         )
 
         node = self.keychain.derive(txi.address_n)
-        return bip340_sign(node, sigmsg_digest)
+        public_key = node.public_key()
+        signature = bip340_sign(node, sigmsg_digest, not txi.multisig)
+
+        return public_key, signature
 
     async def sign_segwit_input(self, i: int) -> None:
         # STAGE_REQUEST_SEGWIT_WITNESS in legacy
@@ -660,11 +669,24 @@ class Bitcoin:
             raise ProcessError("Transaction has changed during signing")
 
         if txi.script_type == InputScriptType.SPENDTAPROOT:
-            signature = self.sign_taproot_input(i, txi)
+            public_key, signature = self.sign_taproot_input(i, txi)
             if self.serialize:
-                scripts.write_witness_p2tr(
-                    self.serialized_tx, signature, self.get_sighash_type(txi)
-                )
+                if txi.multisig:
+                    # find out place of our signature based on the pubkey
+                    signature_index = multisig.multisig_pubkey_index(
+                        txi.multisig, public_key
+                    )
+                    scripts.write_witness_multisig_taproot(
+                        self.serialized_tx,
+                        txi.multisig,
+                        signature,
+                        signature_index,
+                        self.get_sighash_type(txi),
+                    )
+                else:
+                    scripts.write_witness_p2tr(
+                        self.serialized_tx, signature, self.get_sighash_type(txi)
+                    )
         else:
             public_key, signature = self.sign_bip143_input(i, txi)
             if self.serialize:
