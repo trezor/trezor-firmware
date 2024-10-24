@@ -1,102 +1,47 @@
+/*
+ * This file is part of the Trezor project, https://trezor.io/
+ *
+ * Copyright (c) SatoshiLabs
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "flash.h"
+#include "layout_helpers.h"
 #include "model.h"
 
-const flash_area_t STORAGE_AREAS[STORAGE_AREAS_COUNT] = {
-    {
-        .num_subareas = 1,
-        .subarea[0] =
-            {
-                .first_sector = STORAGE_1_SECTOR_START,
-                .num_sectors =
-                    STORAGE_1_SECTOR_END - STORAGE_1_SECTOR_START + 1,
-            },
-    },
-    {
-        .num_subareas = 1,
-        .subarea[0] =
-            {
-                .first_sector = STORAGE_2_SECTOR_START,
-                .num_sectors =
-                    STORAGE_2_SECTOR_END - STORAGE_2_SECTOR_START + 1,
-            },
-    },
-};
+// Convert sector number to address
+//
+// This conversion is used in static assert in definitions below
+#define FLASH_SECTOR_TO_ADDR(sector)         \
+  (FLASH_BASE + ((sector) / 12) * 0x100000 + \
+   (((sector) % 12) < 4                      \
+        ? ((sector) % 12) * 0x4000           \
+        : (((sector) % 12) < 5 ? 0x10000 : ((sector) % 12 - 4) * 0x20000)))
 
-const flash_area_t BOARDLOADER_AREA = {
-    .num_subareas = 1,
-    .subarea[0] =
-        {
-            .first_sector = BOARDLOADER_SECTOR_START,
-            .num_sectors =
-                BOARDLOADER_SECTOR_END - BOARDLOADER_SECTOR_START + 1,
-        },
-};
+// Define all flash areas as `const flash_area_t ID = { .. };`
 
-const flash_area_t BOOTLOADER_AREA = {
-    .num_subareas = 1,
-    .subarea[0] =
-        {
-            .first_sector = BOOTLOADER_SECTOR_START,
-            .num_sectors = BOOTLOADER_SECTOR_END - BOOTLOADER_SECTOR_START + 1,
-        },
-};
-
-const flash_area_t FIRMWARE_AREA = {
-    .num_subareas = 2,
-    .subarea[0] =
-        {
-            .first_sector = FIRMWARE_P1_SECTOR_START,
-            .num_sectors =
-                FIRMWARE_P1_SECTOR_END - FIRMWARE_P1_SECTOR_START + 1,
-        },
-    .subarea[1] =
-        {
-            .first_sector = FIRMWARE_P2_SECTOR_START,
-            .num_sectors =
-                FIRMWARE_P2_SECTOR_END - FIRMWARE_P2_SECTOR_START + 1,
-        },
-};
+DEFINE_ARRAY2_AREA(STORAGE_AREAS, STORAGE_1, STORAGE_2);
+DEFINE_SINGLE_AREA(BOARDLOADER_AREA, BOARDLOADER);
+DEFINE_SINGLE_AREA(BOOTLOADER_AREA, BOOTLOADER);
+DEFINE_SPLIT2_AREA(FIRMWARE_AREA, FIRMWARE_P1, FIRMWARE_P2);
 
 #ifdef SECRET_SECTOR_START
-const flash_area_t SECRET_AREA = {
-    .num_subareas = 1,
-    .subarea[0] =
-        {
-            .first_sector = SECRET_SECTOR_START,
-            .num_sectors = SECRET_SECTOR_END - SECRET_SECTOR_START + 1,
-        },
-};
+DEFINE_SINGLE_AREA(SECRET_AREA, SECRET);
 #else
-const flash_area_t SECRET_AREA = {
-    .num_subareas = 1,
-    .subarea[0] =
-        {
-            .first_sector = 0,
-            .num_sectors = 0,
-
-        },
-};
+DEFINE_EMPTY_AREA(SECRET_AREA);
 #endif
 
-const flash_area_t ASSETS_AREA = {
-    .num_subareas = 1,
-    .subarea[0] =
-        {
-            .first_sector = ASSETS_SECTOR_START,
-            .num_sectors = ASSETS_SECTOR_END - ASSETS_SECTOR_START + 1,
-        },
-};
-
-const flash_area_t UNUSED_AREA = {
-    .num_subareas = 2,
-    .subarea[0] =
-        {
-            .first_sector = UNUSED_1_SECTOR_START,
-            .num_sectors = UNUSED_1_SECTOR_END - UNUSED_1_SECTOR_START + 1,
-        },
-    .subarea[1] =
-        {
-            .first_sector = UNUSED_2_SECTOR_START,
-            .num_sectors = UNUSED_2_SECTOR_END - UNUSED_2_SECTOR_START + 1,
-        },
-};
+DEFINE_SINGLE_AREA(ASSETS_AREA, ASSETS);
+DEFINE_SPLIT2_AREA(UNUSED_AREA, UNUSED_1, UNUSED_2);
