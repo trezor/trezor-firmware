@@ -209,7 +209,7 @@ pub unsafe fn get_msg(msg_offset: u16) -> MsgDef {
 unsafe fn get_enum(enum_offset: u16) -> EnumDef {
     // #[repr(C, packed)]
     // struct EnumDef {
-    //     count: u8,
+    //     count: u16,
     //     vals: [u16],
     // }
 
@@ -217,8 +217,10 @@ unsafe fn get_enum(enum_offset: u16) -> EnumDef {
     // definition inside `ENUM_DEFS`.
     unsafe {
         let ptr = ENUM_DEFS.as_ptr().add(enum_offset as usize);
-        let count = ptr.offset(0).read() as usize;
-        let vals = ptr.offset(1);
+        let count_lo = ptr.offset(0).read();
+        let count_hi = ptr.offset(1).read();
+        let count = u16::from_le_bytes([count_lo, count_hi]) as usize;
+        let vals = ptr.offset(2);
 
         EnumDef {
             values: slice::from_raw_parts(vals.cast(), count),
