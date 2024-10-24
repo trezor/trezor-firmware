@@ -75,12 +75,15 @@ void applet_init(applet_t* applet, applet_header_t* header,
 
 // Resets the applet and prepares it for execution from its entry point.
 //
-// Applet does not start immediately, it needs to be scheduled by
-// `systask_yield_to(&applet->task)` after calling this function.
+// Applet does not start immediately, it needs to be run by
+// `applet_run()` after calling this function.
 //
 // Returns `true` if the applet was successfully reset.
 bool applet_reset(applet_t* applet, uint32_t cmd, const void* arg,
                   size_t arg_size);
+
+// Runs the applet and waits until it finishes.
+void applet_run(applet_t* applet);
 
 // Returns the currently active applet.
 //

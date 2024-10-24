@@ -49,6 +49,7 @@
 #include "systick.h"
 #include "tamper.h"
 #include "touch.h"
+#include "trustzone.h"
 #include "unit_properties.h"
 
 #ifdef USE_OPTIGA
@@ -214,7 +215,8 @@ static void show_rsod(const systask_postmortem_t *pminfo) {
 
   // Reset and run the coreapp in RSOD mode
   if (applet_reset(&coreapp, 1, pminfo, sizeof(systask_postmortem_t))) {
-    systask_yield_to(&coreapp.task);
+    // Run the applet & wait for it to finish
+    applet_run(&coreapp);
 
     if (coreapp.task.pminfo.reason == TASK_TERM_REASON_EXIT) {
       // If the RSOD was shown successfully, proceed to shutdown
@@ -257,6 +259,11 @@ int main(void) {
   // Initialize system's core services
   system_init(&kernel_panic);
 
+#ifdef USE_TRUSTZONE
+  // Configure unprivileged access for the coreapp
+  tz_init_kernel();
+#endif
+
   // Initialize hardware drivers
   drivers_init();
 
@@ -269,7 +276,8 @@ int main(void) {
     error_shutdown("Cannot start coreapp");
   }
 
-  systask_yield_to(&coreapp.task);
+  // Run the applet & wait for it to finish
+  applet_run(&coreapp);
 
   // Coreapp crashed, show RSOD
   show_rsod(&coreapp.task.pminfo);
