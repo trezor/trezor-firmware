@@ -715,8 +715,9 @@ extern "C" fn new_altcoin_tx_summary(n_args: usize, args: *const Obj, kwargs: *m
         let amount_value: TString = kwargs.get(Qstr::MP_QSTR_amount_value)?.try_into()?;
         let fee_title: TString = kwargs.get(Qstr::MP_QSTR_fee_title)?.try_into()?;
         let fee_value: TString = kwargs.get(Qstr::MP_QSTR_fee_value)?.try_into()?;
-        let cancel_cross: bool = kwargs.get_or(Qstr::MP_QSTR_cancel_cross, false)?;
+        let items_title: TString = kwargs.get(Qstr::MP_QSTR_items_title)?.try_into()?;
         let items: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
+        let cancel_cross: bool = kwargs.get_or(Qstr::MP_QSTR_cancel_cross, false)?;
 
         let get_page = move |page_index| {
             match page_index {
@@ -763,7 +764,7 @@ extern "C" fn new_altcoin_tx_summary(n_args: usize, args: *const Obj, kwargs: *m
 
                     let formatted = FormattedText::new(ops).vertically_centered();
                     Page::new(btn_layout, btn_actions, formatted)
-                        .with_title(TR::confirm_total__title_fee.into())
+                        .with_title(items_title)
                         .with_slim_arrows()
                 }
                 _ => unreachable!(),
@@ -1805,6 +1806,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     amount_value: str,
     ///     fee_title: str,
     ///     fee_value: str,
+    ///     items_title: str,
     ///     items: Iterable[Tuple[str, str]],
     ///     cancel_cross: bool = False,
     /// ) -> LayoutObj[UiResult]:
