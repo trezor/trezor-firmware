@@ -20,12 +20,16 @@
 #ifndef TREZORHAL_LAYOUT_HELPERS_H
 #define TREZORHAL_LAYOUT_HELPERS_H
 
+#ifdef TREZOR_EMULATOR
+#define ENSURE_SECTOR_AT(addr, sector)
+#else
 // Static assertions ensuring that the flash address coresponds
 // to the expected sector start. This macro is used in the
 // definitions below.
 #define ENSURE_SECTOR_AT(addr, sector)                             \
   _Static_assert(FLASH_SECTOR_TO_ADDR(EVAL(sector)) == EVAL(addr), \
                  "Sector address mismatch")
+#endif
 
 // Helper that expands to its argument
 #define EVAL(x) x
