@@ -2,7 +2,7 @@ use crate::{
     translations::TR,
     ui::{
         component::{Child, Component, ComponentExt, Event, EventCtx, Pad, PageMsg, Paginate},
-        display::Color,
+        display::{Color, Font},
         geometry::{Insets, Rect},
         shape::Renderer,
     },
@@ -13,21 +13,26 @@ use super::{
     ButtonDetails, ButtonLayout, ButtonPos,
 };
 
+#[derive(PartialEq)]
+enum LastPageLayout {
+    Confirm,
+    ArmedConfirmPlusInfo,
+}
+
 pub struct ButtonPage<T>
 where
     T: Component + Paginate,
 {
     page_count: usize,
     active_page: usize,
+    page_limit: Option<usize>,
+    last_page_layout: LastPageLayout,
     content: Child<T>,
     pad: Pad,
-    /// Left button of the first screen
     cancel_btn_details: Option<ButtonDetails>,
-    /// Right button of the last screen
     confirm_btn_details: Option<ButtonDetails>,
-    /// Left button of every screen
+    info_btn_details: Option<ButtonDetails>,
     back_btn_details: Option<ButtonDetails>,
-    /// Right button of every screen apart the last one
     next_btn_details: Option<ButtonDetails>,
     buttons: Child<ButtonController>,
 }
@@ -40,10 +45,17 @@ where
         Self {
             page_count: 0, // will be set in place()
             active_page: 0,
+            page_limit: None,
+            last_page_layout: LastPageLayout::Confirm,
             content: Child::new(content),
             pad: Pad::with_background(background).with_clear(),
             cancel_btn_details: Some(ButtonDetails::cancel_icon()),
             confirm_btn_details: Some(ButtonDetails::text(TR::buttons__confirm.into())),
+            info_btn_details: Some(
+                ButtonDetails::text("i".into())
+                    .with_fixed_width(theme::BUTTON_ICON_WIDTH)
+                    .with_font(Font::NORMAL),
+            ),
             back_btn_details: Some(ButtonDetails::up_arrow_icon()),
             next_btn_details: Some(ButtonDetails::down_arrow_icon_wide()),
             // Setting empty layout for now, we do not yet know the page count.
@@ -51,6 +63,12 @@ where
             // `content.page_count()`.
             buttons: Child::new(ButtonController::new(ButtonLayout::empty())),
         }
+    }
+
+    pub fn with_armed_confirm_plus_info(mut self) -> Self {
+        self.last_page_layout = LastPageLayout::ArmedConfirmPlusInfo;
+        self.confirm_btn_details = Some(ButtonDetails::armed_text(TR::words__confirm.into()));
+        self
     }
 
     pub fn with_cancel_btn(mut self, btn_details: Option<ButtonDetails>) -> Self {
@@ -70,6 +88,11 @@ where
 
     pub fn with_next_btn(mut self, btn_details: Option<ButtonDetails>) -> Self {
         self.next_btn_details = btn_details;
+        self
+    }
+
+    pub fn with_page_limit(mut self, page_limit: Option<usize>) -> Self {
+        self.page_limit = page_limit;
         self
     }
 
@@ -119,11 +142,11 @@ where
 
     fn get_button_layout(&self, has_prev: bool, has_next: bool) -> ButtonLayout {
         let btn_left = self.get_left_button_details(!has_prev);
+        let btn_middle = self.get_middle_button_details(has_next);
         let btn_right = self.get_right_button_details(has_next);
-        ButtonLayout::new(btn_left, None, btn_right)
+        ButtonLayout::new(btn_left, btn_middle, btn_right)
     }
 
-    /// Get the left button details, depending whether the page is first or not.
     fn get_left_button_details(&self, is_first: bool) -> Option<ButtonDetails> {
         if is_first {
             self.cancel_btn_details.clone()
@@ -132,13 +155,21 @@ where
         }
     }
 
-    /// Get the right button details, depending on whether there is a next
-    /// page.
+    fn get_middle_button_details(&self, has_next_page: bool) -> Option<ButtonDetails> {
+        if has_next_page || self.last_page_layout == LastPageLayout::Confirm {
+            None
+        } else {
+            self.confirm_btn_details.clone()
+        }
+    }
+
     fn get_right_button_details(&self, has_next_page: bool) -> Option<ButtonDetails> {
         if has_next_page {
             self.next_btn_details.clone()
-        } else {
+        } else if self.last_page_layout == LastPageLayout::Confirm {
             self.confirm_btn_details.clone()
+        } else {
+            self.info_btn_details.clone()
         }
     }
 }
@@ -172,6 +203,10 @@ where
         // Need to be called here, only after content is placed
         // and we can calculate the page count.
         self.page_count = self.content.page_count();
+        if let Some(limit) = self.page_limit {
+            self.page_count = self.page_count.min(limit);
+        }
+
         self.set_buttons_for_initial_page(self.page_count);
         self.buttons.place(button_area);
         bounds
@@ -191,17 +226,25 @@ where
                         return Some(PageMsg::Cancelled);
                     }
                 }
+                ButtonPos::Middle => {
+                    return Some(PageMsg::Confirmed);
+                }
                 ButtonPos::Right => {
                     if self.has_next_page() {
                         // Clicked NEXT. Scroll down.
                         self.go_to_next_page();
                         self.change_page(ctx);
                     } else {
-                        // Clicked CONFIRM. Send result.
-                        return Some(PageMsg::Confirmed);
+                        match self.last_page_layout {
+                            LastPageLayout::Confirm => {
+                                return Some(PageMsg::Confirmed);
+                            }
+                            LastPageLayout::ArmedConfirmPlusInfo => {
+                                return Some(PageMsg::Info);
+                            }
+                        }
                     }
                 }
-                _ => {}
             }
         }
 

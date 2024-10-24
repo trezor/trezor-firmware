@@ -56,7 +56,7 @@ async def sign_tx(
         raise DataError("Fee overflow")
     check_common_fields(msg)
 
-    # have a user confirm signing
+    # have the user confirm signing
     await paths.validate_path(keychain, msg.address_n)
     address_bytes = bytes_from_address(msg.to)
     gas_price = int.from_bytes(msg.gas_price, "big")
@@ -130,9 +130,9 @@ async def confirm_tx_data(
         return
 
     # Handle ERC-20, currently only 'transfer' function
-    token, recipient, value = await handle_erc20_transfer(msg, defs, address_bytes)
+    token, recipient, value = await _handle_erc20_transfer(msg, defs, address_bytes)
 
-    if token is None and data_total_len > 0:
+    if data_total_len > 0:
         await require_confirm_other_data(msg.data_initial_chunk, data_total_len)
 
     await require_confirm_tx(
@@ -143,7 +143,8 @@ async def confirm_tx_data(
         fee_items,
         defs.network,
         token,
-        bool(msg.chunkify),
+        is_contract_interaction=(data_total_len > 0),
+        chunkify=bool(msg.chunkify),
     )
 
 
@@ -189,7 +190,7 @@ async def handle_staking(
     return False
 
 
-async def handle_erc20_transfer(
+async def _handle_erc20_transfer(
     msg: MsgInSignTx,
     definitions: Definitions,
     address_bytes: bytes,
