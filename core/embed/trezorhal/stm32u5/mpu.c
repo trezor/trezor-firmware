@@ -25,6 +25,7 @@
 #include "irq.h"
 #include "model.h"
 #include "mpu.h"
+#include "sizedefs.h"
 
 #include "stm32u5xx_ll_cortex.h"
 
@@ -80,6 +81,15 @@ static inline uint32_t mpu_permission_lookup(bool write, bool unpriv) {
 #define MPUX_FLAG_YES 1
 
 #define SET_REGION(region, start, size, type, write, unpriv) \
+  do {                                                       \
+    ENSURE_ALIGNMENT(start, 32);                             \
+    ENSURE_ALIGNMENT(size, 32);                              \
+    SET_REGRUN(region, start, size, type, write, unpriv);    \
+  } while (0)
+
+// `SET_REGION` variant without static assert that can be used when
+// start or size are not compile-time constants
+#define SET_REGRUN(region, start, size, type, write, unpriv) \
   do {                                                       \
     uint32_t _type = MPUX_TYPE_##type;                       \
     uint32_t _write = MPUX_FLAG_##write;                     \
@@ -229,9 +239,9 @@ static void mpu_init_fixed_regions(void) {
 #endif
 #if defined(KERNEL)
   //   REGION    ADDRESS                   SIZE                TYPE       WRITE   UNPRIV
-  SET_REGION( 0, KERNEL_FLASH_START,       KERNEL_FLASH_SIZE,  FLASH_CODE,   NO,    NO ); // Kernel Code
+  SET_REGRUN( 0, KERNEL_FLASH_START,       KERNEL_FLASH_SIZE,  FLASH_CODE,   NO,    NO ); // Kernel Code
   SET_REGION( 1, KERNEL_RAM_START,         KERNEL_RAM_SIZE,    SRAM,        YES,    NO ); // Kernel RAM
-  SET_REGION( 2, COREAPP_FLASH_START,      COREAPP_FLASH_SIZE, FLASH_CODE,   NO,   YES ); // CoreApp Code
+  SET_REGRUN( 2, COREAPP_FLASH_START,      COREAPP_FLASH_SIZE, FLASH_CODE,   NO,   YES ); // CoreApp Code
   SET_REGION( 3, COREAPP_RAM1_START,       COREAPP_RAM1_SIZE,  SRAM,        YES,   YES ); // CoraApp RAM
 #ifdef STM32U585xx
   SET_REGION( 4, COREAPP_RAM2_START,       COREAPP_RAM2_SIZE,  SRAM,        YES,   YES ); // CoraAPP RAM2
@@ -327,7 +337,7 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
       break;
     case MPU_MODE_APP:
       if (drv->unpriv_fb_addr != 0) {
-        SET_REGION( 5, drv->unpriv_fb_addr, drv->unpriv_fb_size,   SRAM,  YES,    YES ); // Frame buffer
+        SET_REGRUN( 5, drv->unpriv_fb_addr, drv->unpriv_fb_size,   SRAM,  YES,    YES ); // Frame buffer
       } else {
         DIS_REGION( 5 );
       }
@@ -368,7 +378,7 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
       SET_REGION( 6, ASSETS_START,             ASSETS_MAXSIZE,     FLASH_DATA,  YES,    NO );
       break;
     case MPU_MODE_SAES:
-      SET_REGION( 6, KERNEL_FLASH_U_START,     KERNEL_FLASH_U_SIZE,FLASH_CODE,   NO,   YES ); // Unprivileged kernel flash
+      SET_REGRUN( 6, KERNEL_FLASH_U_START,     KERNEL_FLASH_U_SIZE,FLASH_CODE,   NO,   YES ); // Unprivileged kernel flash
       break;
     case MPU_MODE_APP:
       SET_REGION( 6, ASSETS_START,             ASSETS_MAXSIZE,     FLASH_DATA,   NO,   YES );

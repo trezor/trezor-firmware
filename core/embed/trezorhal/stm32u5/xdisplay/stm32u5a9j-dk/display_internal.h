@@ -23,6 +23,9 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "sizedefs.h"
+#include "trustzone.h"
+
 // Display driver context.
 typedef struct {
   // Set if the driver is initialized
@@ -36,11 +39,19 @@ typedef struct {
 // Display driver instance
 extern display_driver_t g_display_driver;
 
+// Hardware requires physical frame buffer alignment
+#ifdef USE_TRUSTZONE
+#define PHYSICAL_FRAME_BUFFER_ALIGNMENT TZ_SRAM_ALIGNMENT
+#else
+#define PHYSICAL_FRAME_BUFFER_ALIGNMENT 32
+#endif
+
 // Size of the physical frame buffer in bytes
 //
 // It's smaller than size of the virtual frame buffer
 // due to used GFXMMU settings
-#define PHYSICAL_FRAME_BUFFER_SIZE (184320 * 4)
+#define PHYSICAL_FRAME_BUFFER_SIZE \
+  ALIGN_UP_CONST(184320 * 4, PHYSICAL_FRAME_BUFFER_ALIGNMENT)
 
 // Pitch (in pixels) of the virtual frame buffer
 #define FRAME_BUFFER_PIXELS_PER_LINE 768

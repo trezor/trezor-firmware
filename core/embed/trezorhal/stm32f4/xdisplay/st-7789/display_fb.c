@@ -33,6 +33,7 @@
 #include "gfx_bitblt.h"
 #include "irq.h"
 #include "mpu.h"
+#include "sizedefs.h"
 #include "systemview.h"
 #include "trustzone.h"
 
@@ -49,18 +50,29 @@
 // The following code supports only 1 or 2 frame buffers
 _Static_assert(FRAME_BUFFER_COUNT == 1 || FRAME_BUFFER_COUNT == 2);
 
+// Hardware requires physical frame buffer alignment
+#ifdef USE_TRUSTZONE
+#define PHYSICAL_FRAME_BUFFER_ALIGNMENT TZ_SRAM_ALIGNMENT
+#else
+#define PHYSICAL_FRAME_BUFFER_ALIGNMENT 32
+#endif
+
 // Size of the physical frame buffer in bytes
-#define PHYSICAL_FRAME_BUFFER_SIZE (DISPLAY_RESX * DISPLAY_RESY * 2)
+#define PHYSICAL_FRAME_BUFFER_SIZE               \
+  ALIGN_UP_CONST(DISPLAY_RESX *DISPLAY_RESY * 2, \
+                 PHYSICAL_FRAME_BUFFER_ALIGNMENT)
 
 // Physical frame buffers in internal SRAM memory.
 // Both frame buffers layes in the fixed addresses that
 // are shared between bootloaders and the firmware.
-static __attribute__((section(".fb1")))
-ALIGN_32BYTES(uint8_t physical_frame_buffer_0[PHYSICAL_FRAME_BUFFER_SIZE]);
+static
+    __attribute__((section(".fb1"), aligned(PHYSICAL_FRAME_BUFFER_ALIGNMENT)))
+    uint8_t physical_frame_buffer_0[PHYSICAL_FRAME_BUFFER_SIZE];
 
 #if (FRAME_BUFFER_COUNT > 1)
-static __attribute__((section(".fb2")))
-ALIGN_32BYTES(uint8_t physical_frame_buffer_1[PHYSICAL_FRAME_BUFFER_SIZE]);
+static
+    __attribute__((section(".fb2"), aligned(PHYSICAL_FRAME_BUFFER_ALIGNMENT)))
+    uint8_t physical_frame_buffer_1[PHYSICAL_FRAME_BUFFER_SIZE];
 #endif
 
 #ifdef USE_TRUSTZONE

@@ -34,10 +34,16 @@ void tz_init_boardloader(void);
 // Alters configuration of GTZC in the kernel
 void tz_init_kernel(void);
 
+// Alignment required by MCPBB/GTZC for SRAM regions
+#define TZ_SRAM_ALIGNMENT 512
+
 // Set unprivileged access to an SRAM address range at the
 // MCPBB/GTZC level. The region's start and end are automatically aligned to
 // 512B to cover the entire specified range.
 void tz_set_sram_unpriv(uint32_t start, uint32_t size, bool unpriv);
+
+// Alignment required by GTZC for FLASH regions
+#define TZ_FLASH_ALIGNMENT 8192
 
 // Sets unprivileged access to a FLASH address range at the
 // MCPBB/GTZC level. The region's start and end are automatically aligned to

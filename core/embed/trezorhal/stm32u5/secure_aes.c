@@ -163,10 +163,21 @@ secbool unpriv_encrypt(const uint8_t* input, size_t size, uint8_t* output,
   __set_BASEPRI(IRQ_PRI_HIGHEST + 1);
 
 #ifdef USE_TRUSTZONE
-  tz_set_sram_unpriv((uint32_t)&sram_u_start, &sram_u_end - &sram_u_start,
-                     true);
-  tz_set_flash_unpriv((uint32_t)&_uflash_start, &_uflash_end - &_uflash_start,
-                      true);
+  uint32_t unpriv_ram_start = (uint32_t)&sram_u_start;
+  uint32_t unpriv_ram_size = &sram_u_end - &sram_u_start;
+
+  // `saes_invoke()` function is too small to justigy placing it in a region
+  // that is aligned to TZ_FLASH_ALIGNMENT (8KB), as doing so would result
+  // in significant wasted space. Therefore, we need to align the flash
+  // addresses to the nearest lower and the nearest higher multiple of
+  // TZ_FLASH_ALIGNMENT.
+  uint32_t unpriv_flash_start =
+      ALIGN_DOWN((uint32_t)&_uflash_start, TZ_FLASH_ALIGNMENT);
+  uint32_t unpriv_flash_size =
+      ALIGN_UP((uint32_t)&_uflash_end, TZ_FLASH_ALIGNMENT) - unpriv_flash_start;
+
+  tz_set_sram_unpriv(unpriv_ram_start, unpriv_ram_size, true);
+  tz_set_flash_unpriv(unpriv_flash_start, unpriv_flash_size, true);
   tz_set_saes_unpriv(true);
   tz_set_tamper_unpriv(true);
 #endif  // USE_TRUSTZONE
@@ -196,10 +207,8 @@ secbool unpriv_encrypt(const uint8_t* input, size_t size, uint8_t* output,
   mpu_reconfig(mpu_mode);
 
 #ifdef USE_TRUSTZONE
-  tz_set_sram_unpriv((uint32_t)&sram_u_start, &sram_u_end - &sram_u_start,
-                     false);
-  tz_set_flash_unpriv((uint32_t)&_uflash_start, &_uflash_end - &_uflash_start,
-                      false);
+  tz_set_sram_unpriv(unpriv_ram_start, unpriv_ram_size, false);
+  tz_set_flash_unpriv(unpriv_flash_start, unpriv_flash_size, false);
   tz_set_saes_unpriv(false);
   tz_set_tamper_unpriv(false);
 #endif  // USE_TRUSTZONE

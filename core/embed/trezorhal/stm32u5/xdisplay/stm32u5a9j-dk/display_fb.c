@@ -31,11 +31,11 @@
 #ifdef KERNEL_MODE
 
 // Physical frame buffers in internal SRAM memory
-__attribute__((section(".fb1")))
-ALIGN_32BYTES(uint8_t physical_frame_buffer_0[PHYSICAL_FRAME_BUFFER_SIZE]);
+__attribute__((section(".fb1"), aligned(PHYSICAL_FRAME_BUFFER_ALIGNMENT)))
+uint8_t physical_frame_buffer_0[PHYSICAL_FRAME_BUFFER_SIZE];
 
-__attribute__((section(".fb2")))
-ALIGN_32BYTES(uint8_t physical_frame_buffer_1[PHYSICAL_FRAME_BUFFER_SIZE]);
+__attribute__((section(".fb2"), aligned(PHYSICAL_FRAME_BUFFER_ALIGNMENT)))
+uint8_t physical_frame_buffer_1[PHYSICAL_FRAME_BUFFER_SIZE];
 
 // The current frame buffer selector at fixed memory address
 // It's shared between bootloaders and the firmware

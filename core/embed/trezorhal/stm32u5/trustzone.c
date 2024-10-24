@@ -25,6 +25,7 @@
 #include "image.h"
 #include "irq.h"
 #include "model.h"
+#include "sizedefs.h"
 #include "trustzone.h"
 
 #define SAU_INIT_CTRL_ENABLE 1
@@ -242,11 +243,12 @@ sram_region_t g_sram_regions[] = {
 };
 
 void tz_set_sram_unpriv(uint32_t start, uint32_t size, bool unpriv) {
-  const size_t block_size = GTZC_MPCBB_BLOCK_SIZE;
+  const size_t block_size = TZ_SRAM_ALIGNMENT;
 
-  // Calculate aligned start & end
-  uint32_t end = ((start + size + (block_size - 1)) & ~(block_size - 1));
-  start &= ~(block_size - 1);
+  ensure(sectrue * IS_ALIGNED(start, block_size), "TZ alignment");
+  ensure(sectrue * IS_ALIGNED(size, block_size), "TZ alignment");
+
+  uint32_t end = start + size;
 
   for (int idx = 0; idx < ARRAY_LENGTH(g_sram_regions); idx++) {
     const sram_region_t* r = &g_sram_regions[idx];
@@ -303,13 +305,13 @@ flash_region_t g_flash_regions[] = {
     {FLASH_BANK2_BASE, FLASH_BANK2_BASE + XFLASH_BANK_SIZE, &FLASH->PRIVBB2R1},
 };
 
-// Configures FLASH Controller for priviled/uprivileged access
 void tz_set_flash_unpriv(uint32_t start, uint32_t size, bool unpriv) {
-  const size_t block_size = FLASH_PAGE_SIZE;
+  const size_t block_size = TZ_FLASH_ALIGNMENT;
 
-  // Calculate aligned start & end
-  uint32_t end = ((start + size + (block_size - 1)) & ~(block_size - 1));
-  start &= ~(block_size - 1);
+  ensure(sectrue * IS_ALIGNED(start, block_size), "TZ alignment");
+  ensure(sectrue * IS_ALIGNED(size, block_size), "TZ alignment");
+
+  uint32_t end = start + size;
 
   for (int idx = 0; idx < ARRAY_LENGTH(g_flash_regions); idx++) {
     const flash_region_t* r = &g_flash_regions[idx];
