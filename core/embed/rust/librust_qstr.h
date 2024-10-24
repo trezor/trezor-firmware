@@ -309,6 +309,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_instructions__tap_to_start;
   MP_QSTR_is_type_of;
   MP_QSTR_items;
+  MP_QSTR_items_title;
   MP_QSTR_joint__title;
   MP_QSTR_joint__to_the_total_amount;
   MP_QSTR_joint__you_are_contributing;

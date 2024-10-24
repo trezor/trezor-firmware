@@ -807,6 +807,7 @@ def altcoin_tx_summary(
     amount_value: str,
     fee_title: str,
     fee_value: str,
+    items_title: str,
     items: Iterable[Tuple[str, str]],
     cancel_cross: bool = False,
 ) -> LayoutObj[UiResult]:
