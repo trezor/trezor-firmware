@@ -155,6 +155,7 @@ stdenvNoCC.mkDerivation ({
     shellcheck
     gdb
     openocd-stm
+    kcachegrind
   ] ++ lib.optionals (devTools && acceptJlink) [
     nrfutil
     nrfconnect
