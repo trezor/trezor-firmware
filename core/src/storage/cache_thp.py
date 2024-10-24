@@ -119,7 +119,7 @@ def initialize() -> None:
     for session in _SESSIONS:
         session.clear()
 
-    from trezor.crypto import random
+    from trezorcrypto import random
 
     cid_counter = random.uniform(0xFFFE)
 
