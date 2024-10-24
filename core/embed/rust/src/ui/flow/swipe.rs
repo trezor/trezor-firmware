@@ -311,17 +311,11 @@ impl SwipeFlow {
     }
 }
 
-/// ObjComponent implementation for SwipeFlow.
+/// Layout implementation for SwipeFlow.
 ///
-/// Instead of using the generic `impl ObjComponent for ComponentMsgObj`, we
-/// provide our own short-circuit implementation for `SwipeFlow`. This way we
-/// can completely avoid implementing `Component`. That also allows us to pass
-/// around concrete Renderers instead of having to conform to `Component`'s
-/// not-object-safe interface.
-///
-/// This implementation relies on the fact that swipe components always return
-/// `FlowMsg` as their `Component::Msg` (provided by `impl FlowComponentTrait`
-/// earlier in this file).
+/// This way we can completely avoid implementing `Component`. That also allows
+/// us to pass around concrete Renderers instead of having to conform to
+/// `Component`'s not-object-safe interface.
 impl Layout<Result<Obj, Error>> for SwipeFlow {
     fn place(&mut self) {
         for elem in self.store.iter_mut() {

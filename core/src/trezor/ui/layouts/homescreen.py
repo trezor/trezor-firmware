@@ -15,7 +15,6 @@ class HomescreenBase(ui.Layout):
 
     def __init__(self, layout: Any) -> None:
         super().__init__(layout=layout)
-        self.context = None
 
     def _paint(self) -> None:
         if self.layout.paint():
