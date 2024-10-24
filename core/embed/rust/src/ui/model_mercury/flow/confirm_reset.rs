@@ -166,5 +166,5 @@ fn new_confirm_reset_obj(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Erro
             .with_page(&ConfirmResetCreate::Menu, content_menu)?
             .with_page(&ConfirmResetCreate::Confirm, content_confirm)?
     };
-    Ok(LayoutObj::new(res)?.into())
+    Ok(LayoutObj::new_root(res)?.into())
 }

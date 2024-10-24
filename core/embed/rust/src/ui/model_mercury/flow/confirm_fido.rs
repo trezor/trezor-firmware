@@ -214,6 +214,6 @@ impl ConfirmFido {
             .with_page(&ConfirmFido::Details, content_details)?
             .with_page(&ConfirmFido::Tap, content_tap)?
             .with_page(&ConfirmFido::Menu, content_menu)?;
-        Ok(LayoutObj::new(res)?.into())
+        Ok(LayoutObj::new_root(res)?.into())
     }
 }

@@ -202,6 +202,6 @@ impl ShowTutorial {
             .with_page(&ShowTutorial::Menu, content_menu)?
             .with_page(&ShowTutorial::DidYouKnow, content_did_you_know)?
             .with_page(&ShowTutorial::HoldToExit, content_hold_to_exit)?;
-        Ok(LayoutObj::new(res)?.into())
+        Ok(LayoutObj::new_root(res)?.into())
     }
 }

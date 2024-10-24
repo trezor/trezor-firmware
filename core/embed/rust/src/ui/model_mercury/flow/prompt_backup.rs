@@ -141,6 +141,6 @@ impl PromptBackup {
             .with_page(&PromptBackup::Menu, content_menu)?
             .with_page(&PromptBackup::SkipBackupIntro, content_skip_intro)?
             .with_page(&PromptBackup::SkipBackupConfirm, content_skip_confirm)?;
-        Ok(LayoutObj::new(res)?.into())
+        Ok(LayoutObj::new_root(res)?.into())
     }
 }

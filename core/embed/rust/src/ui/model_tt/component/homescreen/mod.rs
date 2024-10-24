@@ -7,7 +7,7 @@ use crate::{
     translations::TR,
     trezorhal::usb::usb_configured,
     ui::{
-        component::{Component, Event, EventCtx, Pad, TimerToken},
+        component::{Component, Event, EventCtx, Pad, Timer},
         display::{
             self,
             image::{ImageInfo, ToifFormat},
@@ -58,9 +58,10 @@ pub struct Homescreen {
     loader: Loader,
     pad: Pad,
     paint_notification_only: bool,
-    delay: Option<TimerToken>,
+    delay: Timer,
 }
 
+#[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 pub enum HomescreenMsg {
     Dismissed,
 }
@@ -79,7 +80,7 @@ impl Homescreen {
             loader: Loader::with_lock_icon().with_durations(LOADER_DURATION, LOADER_DURATION / 3),
             pad: Pad::with_background(theme::BG),
             paint_notification_only: false,
-            delay: None,
+            delay: Timer::new(),
         }
     }
 
@@ -152,11 +153,11 @@ impl Homescreen {
                 if self.loader.is_animating() {
                     self.loader.start_growing(ctx, Instant::now());
                 } else {
-                    self.delay = Some(ctx.request_timer(LOADER_DELAY));
+                    self.delay.start(ctx, LOADER_DELAY);
                 }
             }
             Event::Touch(TouchEvent::TouchEnd(_)) => {
-                self.delay = None;
+                self.delay.stop();
                 let now = Instant::now();
                 if self.loader.is_completely_grown(now) {
                     return true;
@@ -165,8 +166,7 @@ impl Homescreen {
                     self.loader.start_shrinking(ctx, now);
                 }
             }
-            Event::Timer(token) if Some(token) == self.delay => {
-                self.delay = None;
+            Event::Timer(_) if self.delay.expire(event) => {
                 self.pad.clear();
                 self.paint_notification_only = false;
                 self.loader.start_growing(ctx, Instant::now());

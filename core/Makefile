@@ -128,6 +128,7 @@ TREZOR_FIDO2_UDP_PORT = 21326
 RUST_TARGET=$(shell rustc -vV | sed -n 's/host: //p')
 
 MULTICORE ?= "auto"
+RANDOM=$(shell python -c 'import random; print(random.randint(0, 1000000))')
 
 ## help commands:
 
@@ -163,7 +164,7 @@ test_emu: ## run selected device tests from python-trezor
 
 test_emu_multicore: ## run device tests using multiple cores
 	$(PYTEST) -n $(MULTICORE) $(TESTPATH)/device_tests $(TESTOPTS) --timeout $(PYTEST_TIMEOUT) \
-		--control-emulators --model=core --random-order-seed=$(shell echo $$RANDOM) \
+		--control-emulators --model=core --random-order-seed=$(RANDOM) \
 		--lang=$(TEST_LANG)
 
 test_emu_monero: ## run selected monero device tests from monero-agent
@@ -199,7 +200,7 @@ test_emu_ui: ## run ui integration tests
 test_emu_ui_multicore: ## run ui integration tests using multiple cores
 	$(PYTEST) -n $(MULTICORE) $(TESTPATH)/device_tests $(TESTOPTS) --timeout $(PYTEST_TIMEOUT) \
 		--ui=test --ui-check-missing --record-text-layout --do-master-diff \
-		--control-emulators --model=core --random-order-seed=$(shell echo $$RANDOM) \
+		--control-emulators --model=core --random-order-seed=$(RANDOM) \
 		--lang=$(TEST_LANG)
 
 test_emu_ui_record: ## record and hash screens for ui integration tests

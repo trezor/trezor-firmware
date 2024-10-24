@@ -15,17 +15,16 @@ FIXTURES_CURRENT = Path(__file__).resolve().parent.parent / "fixtures.json"
 
 def fetch_recorded(hash: str, path: Path) -> None:
     zip_src = RECORDS_WEBSITE + hash + ".zip"
-    zip_dest = path / "recorded.zip"
 
     try:
-        urllib.request.urlretrieve(zip_src, zip_dest)
+        dest, _ = urllib.request.urlretrieve(zip_src)
     except urllib.error.HTTPError:
         raise RuntimeError(f"No such recorded collection was found on '{zip_src}'.")
 
-    with zipfile.ZipFile(zip_dest, "r") as z:
+    with zipfile.ZipFile(dest, "r") as z:
         z.extractall(path)
 
-    zip_dest.unlink()
+    Path(dest).unlink()
 
 
 def fetch_fixtures_master() -> dict[str, Any]:

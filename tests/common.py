@@ -14,11 +14,13 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from __future__ import annotations
+
 import json
 import re
 import time
 from pathlib import Path
-from typing import TYPE_CHECKING, Generator, Optional
+from typing import TYPE_CHECKING, Any, Generator, Optional
 from unittest import mock
 
 import pytest
@@ -226,10 +228,8 @@ def read_mnemonic_from_screen_tt(
     br = yield
     assert br.pages is not None
 
-    debug.wait_layout()
-
     for i in range(br.pages):
-        words = debug.wait_layout().seed_words()
+        words = debug.read_layout().seed_words()
         mnemonic.extend(words)
         # Not swiping on the last page
         if i < br.pages - 1:
@@ -248,7 +248,7 @@ def read_mnemonic_from_screen_tr(
     br = yield
     assert br.pages is not None
     for _ in range(br.pages - 1):
-        layout = debug.wait_layout()
+        layout = debug.read_layout()
         words = layout.seed_words()
         mnemonic.extend(words)
         debug.press_right()
@@ -266,15 +266,15 @@ def read_mnemonic_from_screen_mercury(
     br = yield
     assert br.pages is not None
 
-    debug.wait_layout()
+    debug.read_layout()
     debug.swipe_up()
 
     for _ in range(br.pages - 2):
-        words = debug.wait_layout().seed_words()
+        words = debug.read_layout().seed_words()
         mnemonic.extend(words)
         debug.swipe_up()
 
-    debug.wait_layout()
+    debug.read_layout()
     debug.press_yes()
 
     return mnemonic
@@ -292,13 +292,13 @@ def check_share(
         if debug.layout_type is LayoutType.TT:
             # T2T1 has position as the first number in the text
             word_pos_match = re.search(
-                re_num_of_word, debug.wait_layout().text_content()
+                re_num_of_word, debug.read_layout().text_content()
             )
         elif debug.layout_type is LayoutType.TR:
             # other models have the instruction in the title/subtitle
-            word_pos_match = re.search(re_num_of_word, debug.wait_layout().title())
+            word_pos_match = re.search(re_num_of_word, debug.read_layout().title())
         elif debug.layout_type is LayoutType.Mercury:
-            word_pos_match = re.search(re_num_of_word, debug.wait_layout().subtitle())
+            word_pos_match = re.search(re_num_of_word, debug.read_layout().subtitle())
         else:
             word_pos_match = None
 
@@ -315,19 +315,19 @@ def check_share(
     return True
 
 
-def click_info_button_tt(debug: "DebugLink"):
+def click_info_button_tt(debug: "DebugLink") -> Generator[Any, Any, ButtonRequest]:
     """Click Shamir backup info button and return back."""
     debug.press_info()
-    yield  # Info screen with text
     debug.press_yes()
+    return (yield)
 
 
 def click_info_button_mercury(debug: "DebugLink"):
     """Click Shamir backup info button and return back."""
-    debug.click(buttons.CORNER_BUTTON, wait=True)
-    debug.synchronize_at("VerticalMenu")
-    debug.click(buttons.VERTICAL_MENU[0], wait=True)
-    debug.click(buttons.CORNER_BUTTON, wait=True)
+    layout = debug.click(buttons.CORNER_BUTTON)
+    assert "VerticalMenu" in layout.all_components()
+    debug.click(buttons.VERTICAL_MENU[0])
+    debug.click(buttons.CORNER_BUTTON)
     debug.click(buttons.CORNER_BUTTON)
 
 
@@ -356,12 +356,12 @@ def compact_size(n: int) -> bytes:
 
 
 def get_text_possible_pagination(debug: "DebugLink", br: messages.ButtonRequest) -> str:
-    text = debug.wait_layout().text_content()
+    text = debug.read_layout().text_content()
     if br.pages is not None:
         for _ in range(br.pages - 1):
             debug.swipe_up()
             text += " "
-            text += debug.wait_layout().text_content()
+            text += debug.read_layout().text_content()
     return text
 
 

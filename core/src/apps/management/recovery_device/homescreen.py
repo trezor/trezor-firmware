@@ -275,20 +275,18 @@ async def _request_share_first_screen(
                 button_label,
                 text,
                 TR.recovery__word_count_template.format(word_count),
-                show_info=True,
+                show_instructions=True,
             )
     else:  # BIP-39
         await layout.homescreen_dialog(
             TR.buttons__continue,
             TR.recovery__enter_backup,
             TR.recovery__word_count_template.format(word_count),
-            show_info=True,
+            show_instructions=True,
         )
 
 
 async def _request_share_next_screen() -> None:
-    from trezor import strings
-
     remaining = storage_recovery.fetch_slip39_remaining_shares()
     group_count = storage_recovery.get_slip39_group_count()
     if not remaining:
@@ -296,25 +294,12 @@ async def _request_share_next_screen() -> None:
         raise RuntimeError
 
     if group_count > 1:
-        await layout.homescreen_dialog(
-            TR.buttons__enter,
-            TR.recovery__more_shares_needed,
-            remaining_shares_info=_get_remaining_groups_and_shares(),
+        await layout.enter_share(
+            remaining_shares_info=_get_remaining_groups_and_shares()
         )
     else:
-        still_needed_shares = remaining[0]
-        already_entered_shares = len(storage_recovery_shares.fetch_group(0))
-        overall_needed = still_needed_shares + already_entered_shares
-        # TODO: consider kwargs in format here
-        entered = TR.recovery__x_of_y_entered_template.format(
-            already_entered_shares, overall_needed
-        )
-        needed = strings.format_plural(
-            TR.recovery__x_more_shares_needed_template_plural,
-            still_needed_shares,
-            TR.plurals__x_shares_needed,
-        )
-        await layout.homescreen_dialog(TR.buttons__enter_share, entered, needed)
+        entered = len(storage_recovery_shares.fetch_group(0))
+        await layout.enter_share(entered_remaining=(entered, remaining[0]))
 
 
 def _get_remaining_groups_and_shares() -> "RemainingSharesInfo":

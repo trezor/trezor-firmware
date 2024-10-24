@@ -102,7 +102,7 @@ def prepare_passphrase_dialogue(
 ) -> Generator["DebugLink", None, None]:
     debug = device_handler.debuglink()
     device_handler.run(get_test_address)  # type: ignore
-    layout = debug.wait_layout()
+    layout = debug.read_layout()
     assert "PassphraseKeyboard" in layout.all_components()
     assert layout.passphrase() == ""
     assert _current_category(debug) == PassphraseCategory.MENU

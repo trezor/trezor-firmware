@@ -113,7 +113,6 @@ impl TapToConfirmAnim {
 
 /// Component requesting a Tap to confirm action from a user. Most typically
 /// embedded as a content of a Frame.
-#[derive(Clone)]
 pub struct TapToConfirm {
     area: Rect,
     button: Button,

@@ -16,6 +16,7 @@ use crate::{
 
 use super::theme;
 
+#[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 pub enum DialogMsg<T, U> {
     Content(T),
     Controls(U),
