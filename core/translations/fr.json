@@ -445,6 +445,7 @@
     "misc__decrypt_value": "Déchiffrer la valeur",
     "misc__encrypt_value": "Chiffrer la valeur",
     "misc__title_suite_labeling": "Étiquetage de suite",
+    "misc__enable_labeling": "Activer l'étiquetage ?",
     "modify_amount__decrease_amount": "Diminuer de:",
     "modify_amount__increase_amount": "Augmenter de:",
     "modify_amount__new_amount": "Nouveau montant:",

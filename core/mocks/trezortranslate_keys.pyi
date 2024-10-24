@@ -408,6 +408,7 @@ class TR:
     lockscreen__title_locked: str = "Locked"
     lockscreen__title_not_connected: str = "Not connected"
     misc__decrypt_value: str = "Decrypt value"
+    misc__enable_labeling: str = "Enable labeling?"
     misc__encrypt_value: str = "Encrypt value"
     misc__title_suite_labeling: str = "Suite labeling"
     modify_amount__decrease_amount: str = "Decrease amount by:"

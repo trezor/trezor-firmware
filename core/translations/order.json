@@ -966,5 +966,6 @@
   "964": "instructions__swipe_down",
   "965": "fido__title_credential_details",
   "966": "address__public_key_confirmed",
-  "967": "words__continue_anyway"
+  "967": "words__continue_anyway",
+  "968": "misc__enable_labeling"
 }

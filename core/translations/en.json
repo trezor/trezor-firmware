@@ -412,6 +412,7 @@
     "misc__decrypt_value": "Decrypt value",
     "misc__encrypt_value": "Encrypt value",
     "misc__title_suite_labeling": "Suite labeling",
+    "misc__enable_labeling": "Enable labeling?",
     "modify_amount__decrease_amount": "Decrease amount by:",
     "modify_amount__increase_amount": "Increase amount by:",
     "modify_amount__new_amount": "New amount:",

@@ -445,6 +445,7 @@
     "misc__decrypt_value": "Dešifrovat hodnotu",
     "misc__encrypt_value": "Zašifrovat hodnotu",
     "misc__title_suite_labeling": "Popisky ze suite",
+    "misc__enable_labeling": "Povolit popisky?",
     "modify_amount__decrease_amount": "Snížit částku o:",
     "modify_amount__increase_amount": "Zvýšit částku o:",
     "modify_amount__new_amount": "Nová částka:",

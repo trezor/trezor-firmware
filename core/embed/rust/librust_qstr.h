@@ -330,6 +330,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_message;
   MP_QSTR_min_count;
   MP_QSTR_misc__decrypt_value;
+  MP_QSTR_misc__enable_labeling;
   MP_QSTR_misc__encrypt_value;
   MP_QSTR_misc__title_suite_labeling;
   MP_QSTR_modify_amount__decrease_amount;

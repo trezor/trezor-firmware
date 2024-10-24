@@ -1371,6 +1371,7 @@ pub enum TranslatedString {
     fido__title_credential_details = 965,  // "Credential details"
     address__public_key_confirmed = 966,  // "Public key confirmed"
     words__continue_anyway = 967,  // "Continue anyway"
+    misc__enable_labeling = 968,  // "Enable labeling?"
 }
 
 impl TranslatedString {
@@ -2736,6 +2737,7 @@ impl TranslatedString {
             Self::fido__title_credential_details => "Credential details",
             Self::address__public_key_confirmed => "Public key confirmed",
             Self::words__continue_anyway => "Continue anyway",
+            Self::misc__enable_labeling => "Enable labeling?",
         }
     }
 
@@ -4102,6 +4104,7 @@ impl TranslatedString {
             Qstr::MP_QSTR_fido__title_credential_details => Some(Self::fido__title_credential_details),
             Qstr::MP_QSTR_address__public_key_confirmed => Some(Self::address__public_key_confirmed),
             Qstr::MP_QSTR_words__continue_anyway => Some(Self::words__continue_anyway),
+            Qstr::MP_QSTR_misc__enable_labeling => Some(Self::misc__enable_labeling),
             _ => None,
         }
     }

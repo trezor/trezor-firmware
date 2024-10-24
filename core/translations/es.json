@@ -445,6 +445,7 @@
     "misc__decrypt_value": "Descifrar valor",
     "misc__encrypt_value": "Cifrar valor",
     "misc__title_suite_labeling": "Etiquetado suite",
+    "misc__enable_labeling": "¿Habilitar el etiquetado?",
     "modify_amount__decrease_amount": "Reducir importe en:",
     "modify_amount__increase_amount": "Aumentar importe en:",
     "modify_amount__new_amount": "Nuevo importe:",
