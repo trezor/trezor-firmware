@@ -5,6 +5,10 @@ package hw.trezor.messages.bitcoin;
 option java_package = "com.satoshilabs.trezor.lib.protobuf";
 option java_outer_classname = "TrezorMessageBenchmark";
 
+import "options.proto";
+
+option (include_in_bitcoin_only) = true;
+
 /**
  * Request: Ask device for a list of names of all supported benchmarks
  * @start
