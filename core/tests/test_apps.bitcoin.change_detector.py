@@ -120,17 +120,17 @@ class TestChangeDetector(unittest.TestCase):
         # External output
         assert self.d.output_is_change(get_external_singlesig_output()) == False
 
-    def test_multisig_different_xpubs_order(self):
-        # Different order of xpubs
-        self.d.add_input(get_multisig_input([H_(45), 0, 0, 0], [xpub1, xpub2]))
-        self.d.add_input(get_multisig_input([H_(45), 0, 0, 0], [xpub2, xpub1]))
+    def test_singlesig_different_account_indices(self):
+        # Different account indices
+        self.d.add_input(get_singlesig_input([H_(45), 0, 0, 0]))
+        self.d.add_input(get_singlesig_input([H_(45), 1, 0, 0]))
 
-        # Same ouputs as inputs
-        assert self.d.output_is_change(get_internal_multisig_output([H_(45), 0, 0, 0], [xpub1, xpub2])) == True
-        assert self.d.output_is_change(get_internal_multisig_output([H_(45), 0, 0, 0], [xpub2, xpub1])) == True
+        # Same outputs as inputs
+        assert self.d.output_is_change(get_internal_singlesig_output([H_(45), 0, 0, 0])) == False
+        assert self.d.output_is_change(get_internal_singlesig_output([H_(45), 1, 0, 0])) == False
 
-        # Singlesig instead of multisig
-        assert self.d.output_is_change(get_internal_singlesig_output([H_(45), 0, 0, 0])) == True
+        # Multisig instead of singlesig
+        assert self.d.output_is_change(get_internal_multisig_output([H_(45), 0, 0, 0], [xpub1])) == False
 
         # External output
         assert self.d.output_is_change(get_external_singlesig_output()) == False
@@ -149,7 +149,7 @@ class TestChangeDetector(unittest.TestCase):
         assert self.d.output_is_change(get_internal_multisig_output([H_(45), 0, 1, 1], [xpub1, xpub2])) == True
 
         # Singlesig instead of multisig
-        assert self.d.output_is_change(get_internal_singlesig_output([H_(45), 0, 0, 0])) == True
+        assert self.d.output_is_change(get_internal_singlesig_output([H_(45), 0, 0, 0])) == False
 
         # Different account index
         assert self.d.output_is_change(get_internal_singlesig_output([H_(45), 1, 0, 0])) == False
@@ -163,17 +163,17 @@ class TestChangeDetector(unittest.TestCase):
         # External output
         assert self.d.output_is_change(get_external_singlesig_output()) == False
 
-    def test_singlesig_different_account_indices(self):
-        # Different account indices
-        self.d.add_input(get_singlesig_input([H_(45), 0, 0, 0]))
-        self.d.add_input(get_singlesig_input([H_(45), 1, 0, 0]))
+    def test_multisig_different_xpubs_order(self):
+        # Different order of xpubs
+        self.d.add_input(get_multisig_input([H_(45), 0, 0, 0], [xpub1, xpub2]))
+        self.d.add_input(get_multisig_input([H_(45), 0, 0, 0], [xpub2, xpub1]))
 
-        # Same outputs as inputs
+        # Same ouputs as inputs
+        assert self.d.output_is_change(get_internal_multisig_output([H_(45), 0, 0, 0], [xpub1, xpub2])) == True
+        assert self.d.output_is_change(get_internal_multisig_output([H_(45), 0, 0, 0], [xpub2, xpub1])) == True
+
+        # Singlesig instead of multisig
         assert self.d.output_is_change(get_internal_singlesig_output([H_(45), 0, 0, 0])) == False
-        assert self.d.output_is_change(get_internal_singlesig_output([H_(45), 1, 0, 0])) == False
-
-        # Multisig instead of singlesig
-        assert self.d.output_is_change(get_internal_multisig_output([H_(45), 0, 0, 0], [xpub1])) == False
 
         # External output
         assert self.d.output_is_change(get_external_singlesig_output()) == False
@@ -188,7 +188,7 @@ class TestChangeDetector(unittest.TestCase):
         assert self.d.output_is_change(get_internal_multisig_output([H_(45), 0, 0, 0], [xpub1, xpub3])) == False
 
         # Singlesig instead of multisig
-        assert self.d.output_is_change(get_internal_singlesig_output([H_(45), 0, 0, 0])) == True
+        assert self.d.output_is_change(get_internal_singlesig_output([H_(45), 0, 0, 0])) == False
 
         # External output
         assert self.d.output_is_change(get_external_singlesig_output()) == False

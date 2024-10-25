@@ -103,7 +103,11 @@ class MultisigFingerprintChecker(MatchChecker):
         from .. import multisig
 
         if not txio.multisig:
-            return None
+            # The fingerprint of a singlesig input or output is defined as an empty byte string.
+            # This has two consequences: First, a singlesig output matches if and only if all
+            # the added inputs are singlesig. Second, a multisig output does not match if any of
+            # the added inputs is singlesig.
+            return bytes()
         return multisig.multisig_fingerprint(txio.multisig)
 
 
