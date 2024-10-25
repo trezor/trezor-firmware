@@ -107,6 +107,11 @@ class MultisigFingerprintChecker(MatchChecker):
         return multisig.multisig_fingerprint(txio.multisig)
 
 
+class MultisigChecker(MatchChecker):
+    def attribute_from_tx(self, txio: TxInput | TxOutput) -> Any:
+        return txio.multisig is not None
+
+
 class ScriptTypeChecker(MatchChecker):
     def attribute_from_tx(self, txio: TxInput | TxOutput) -> Any:
         from trezor.enums import InputScriptType

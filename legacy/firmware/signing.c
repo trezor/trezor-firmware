@@ -121,6 +121,9 @@ typedef struct {
   uint32_t segwit_count;
   uint32_t next_legacy_input;
   uint32_t min_sequence;
+  bool multisig;
+  bool multisig_set;
+  bool multisig_mismatch;
   bool multisig_fp_set;
   bool multisig_fp_mismatch;
   uint8_t multisig_fp[32];
@@ -953,6 +956,22 @@ void phase2_request_orig_input(void) {
   }
 }
 
+static void extract_multisig(TxInfo *tx_info, const TxInputType *txinput) {
+  if (tx_info->multisig_mismatch) {
+    return;
+  }
+
+  if (!tx_info->multisig_set) {
+    tx_info->multisig = txinput->has_multisig;
+    tx_info->multisig_set = true;
+    return;
+  }
+
+  if (txinput->has_multisig != tx_info->multisig) {
+    tx_info->multisig_mismatch = true;
+  }
+}
+
 static bool extract_input_multisig_fp(TxInfo *tx_info,
                                       const TxInputType *txinput) {
   if (txinput->has_multisig && !tx_info->multisig_fp_mismatch) {
@@ -976,6 +995,12 @@ static bool extract_input_multisig_fp(TxInfo *tx_info,
   }
 
   return true;
+}
+
+bool check_change_multisig(const TxInfo *tx_info,
+                           const TxOutputType *txoutput) {
+  return tx_info->multisig_set && !tx_info->multisig_mismatch &&
+         txoutput->has_multisig == tx_info->multisig;
 }
 
 bool check_change_multisig_fp(const TxInfo *tx_info,
@@ -1243,6 +1268,9 @@ static bool tx_info_init(TxInfo *tx_info, uint32_t inputs_count,
   tx_info->segwit_count = 0;
   tx_info->next_legacy_input = 0xffffffff;
   tx_info->min_sequence = SEQUENCE_FINAL;
+  tx_info->multisig_set = false;
+  tx_info->multisig = false;
+  tx_info->multisig_mismatch = false;
   tx_info->multisig_fp_set = false;
   tx_info->multisig_fp_mismatch = false;
   tx_info->in_address_n_count = 0;
@@ -1704,6 +1732,10 @@ static bool signing_validate_bin_output(TxOutputBinType *tx_bin_output) {
 
 static bool tx_info_add_input(TxInfo *tx_info, const TxInputType *txinput) {
   if (txinput->script_type != InputScriptType_EXTERNAL) {
+    // Remember whether the input is singlesig or multisig. Change-outputs must
+    // use the same type as all inputs.
+    extract_multisig(tx_info, txinput);
+
     // Compute multisig fingerprint for change-output detection. In order for an
     // output to be considered a change-output, it must have the same
     // fingerprint as all inputs.
@@ -2069,14 +2101,10 @@ static bool is_change_output(const TxInfo *tx_info,
     return false;
   }
 
-  /*
-   * Check the multisig fingerprint only for multisig outputs. This means that
-   * a transfer from a multisig account to a singlesig account is treated as a
-   * change-output as long as all other change-output conditions are satisfied.
-   * This goes a bit against the concept of a multisig account, but the other
-   * cosigners will notice that they are relinquishing control of the funds, so
-   * there is no security risk.
-   */
+  if (!check_change_multisig(tx_info, txoutput)) {
+    return false;
+  }
+
   if (txoutput->has_multisig && !check_change_multisig_fp(tx_info, txoutput)) {
     return false;
   }

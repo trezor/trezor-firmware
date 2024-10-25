@@ -144,7 +144,7 @@ def _responses(
     INP1: messages.TxInputType,
     INP2: messages.TxInputType,
     change: int = 0,
-    foreign: bool = False,
+    foreign: int = 0,
 ):
     resp = [
         request_input(0),
@@ -152,21 +152,21 @@ def _responses(
         request_output(0),
     ]
 
+    if foreign == 1:
+        resp.append(messages.ButtonRequest(code=B.UnknownDerivationPath))
     if change != 1:
         resp.append(messages.ButtonRequest(code=B.ConfirmOutput))
         if is_core(client):
             resp.append(messages.ButtonRequest(code=B.ConfirmOutput))
-    elif foreign:
-        resp.append(messages.ButtonRequest(code=B.UnknownDerivationPath))
 
     resp.append(request_output(1))
 
+    if foreign == 2:
+        resp.append(messages.ButtonRequest(code=B.UnknownDerivationPath))
     if change != 2:
         resp.append(messages.ButtonRequest(code=B.ConfirmOutput))
         if is_core(client):
             resp.append(messages.ButtonRequest(code=B.ConfirmOutput))
-    elif foreign:
-        resp.append(messages.ButtonRequest(code=B.UnknownDerivationPath))
 
     resp += [
         messages.ButtonRequest(code=B.SignTx),
@@ -241,9 +241,7 @@ def test_external_internal(client: Client):
     )
 
     with client:
-        client.set_expected_responses(
-            _responses(client, INP1, INP2, change=2, foreign=True)
-        )
+        client.set_expected_responses(_responses(client, INP1, INP2, foreign=2))
         if is_core(client):
             IF = InputFlowConfirmAllWarnings(client)
             client.set_input_flow(IF.get())
@@ -277,9 +275,7 @@ def test_internal_external(client: Client):
     )
 
     with client:
-        client.set_expected_responses(
-            _responses(client, INP1, INP2, change=1, foreign=True)
-        )
+        client.set_expected_responses(_responses(client, INP1, INP2, foreign=1))
         if is_core(client):
             IF = InputFlowConfirmAllWarnings(client)
             client.set_input_flow(IF.get())
@@ -408,7 +404,7 @@ def test_multisig_change_match_second(client: Client):
 
 
 # inputs match, change mismatches (second tries to be change but isn't)
-def test_multisig_mismatch_change(client: Client):
+def test_multisig_mismatch_multisig_change(client: Client):
     multisig_out2 = messages.MultisigRedeemScriptType(
         nodes=[NODE_EXT1, NODE_INT, NODE_EXT3],
         address_n=[1, 0],
@@ -443,6 +439,39 @@ def test_multisig_mismatch_change(client: Client):
     assert (
         serialized_tx.hex()
         == "0100000002e53cf4e3fcd37f8c439286ce636476e1faeebf86bbb2f228a6b78d1b47c8c61601000000b40047304402207f9992cc0230527faf54ec6bd233307db82bc8fac039dcee418bc6feb4e96a3a02206bb4cb157ad27c123277328a877572563a45d70b844d9ab07cc42238112f8c2a014c69522103dc07026aacb5918dac4e09f9da8290d0ae22161699636c22cace78082116a7792103e70db185fad69c2971f0107a42930e5d82a9ed3a11b922a96fdfc4124b63e54c2103f3fe007a1e34ac76c1a2528e9149f90f9f93739929797afab6a8e18d682fa71053aeffffffff185315ae8050e18efa70d6ca96378a1194f57e2b102511f68b3a1414ee340cd800000000b400473044022078a41bfa87d72d6ba810d84bf568b5a29acf8b851ba6c3a8dbff079b34a7feb0022037b770c776db0b6c883c38a684a121b90a59ed1958774cbf64de70e53e29639f014c6952210297ad8a5df42f9e362ef37d9a4ddced89d8f7a143690649aa0d0ff049c7daca842103ed1fd93989595d7ad4b488efd05a22c0239482c9a20923f2f214a38e54f6c41a2103f91460d79e4e463d7d90cb75254bcd62b515a99a950574c721efdc5f711dff3553aeffffffff02005a62020000000017a91466528dd543f94d162c8111d2ec248d25ba9b90948700639f020000000017a914e6a3e2fbadb7f559f8d20c46aceae78c96fcf1d18700000000"
+    )
+
+
+# inputs match, change mismatches (second tries to be change but isn't)
+def test_multisig_mismatch_singlesig_change(client: Client):
+    out1 = messages.TxOutputType(
+        address="3B23k4kFBRtu49zvpG3Z9xuFzfpHvxBcwt",
+        amount=40_000_000,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
+    )
+
+    out2 = messages.TxOutputType(
+        address_n=[H_(45), 0, 1, 0],
+        amount=44_000_000,
+    )
+
+    with client:
+        client.set_expected_responses(_responses(client, INP1, INP2, foreign=2))
+        if is_core(client):
+            IF = InputFlowConfirmAllWarnings(client)
+            client.set_input_flow(IF.get())
+        _, serialized_tx = btc.sign_tx(
+            client,
+            "Bitcoin",
+            [INP1, INP2],
+            [out1, out2],
+            prev_txes=TX_API,
+        )
+
+    # Transaction does not exist on the blockchain, not using assert_tx_matches()
+    assert (
+        serialized_tx.hex()
+        == "0100000002e53cf4e3fcd37f8c439286ce636476e1faeebf86bbb2f228a6b78d1b47c8c61601000000b500483045022100e736206001f5b5083ebc82dbcab6aa328a1f4d085cfbba177c0e9a03f704841702200986f7ca17facdc375a49598303cf743d54dc818ce011549968db232fb42c61d014c69522103dc07026aacb5918dac4e09f9da8290d0ae22161699636c22cace78082116a7792103e70db185fad69c2971f0107a42930e5d82a9ed3a11b922a96fdfc4124b63e54c2103f3fe007a1e34ac76c1a2528e9149f90f9f93739929797afab6a8e18d682fa71053aeffffffff185315ae8050e18efa70d6ca96378a1194f57e2b102511f68b3a1414ee340cd800000000b500483045022100db44361db468ce45195db9e54484384f04575bf674605ef350482ed185c260bd02202737d7eda8ee4b166f36c8ea1bffa3fabee944e3645209fe1b796b778969173f014c6952210297ad8a5df42f9e362ef37d9a4ddced89d8f7a143690649aa0d0ff049c7daca842103ed1fd93989595d7ad4b488efd05a22c0239482c9a20923f2f214a38e54f6c41a2103f91460d79e4e463d7d90cb75254bcd62b515a99a950574c721efdc5f711dff3553aeffffffff02005a62020000000017a91466528dd543f94d162c8111d2ec248d25ba9b90948700639f02000000001976a9149b139230e4fe91c05a37ec334dc8378f3dbe377088ac00000000"
     )
 
 
