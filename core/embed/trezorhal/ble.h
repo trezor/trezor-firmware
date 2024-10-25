@@ -72,13 +72,13 @@ void ble_deinit(void);
 
 // Starts BLE operations
 //
-// Enables the BLE module to begin advertising, scanning, or connecting,
-// depending on its configuration.
+// Enables reception of messages over BLE
 void ble_start(void);
 
 // Stops BLE operations
 //
-// Halts any ongoing BLE activities and brings the module into an idle state.
+// Disables reception of messages over BLE
+// Flushes any queued messages
 void ble_stop(void);
 
 // Issues a command to the BLE module
