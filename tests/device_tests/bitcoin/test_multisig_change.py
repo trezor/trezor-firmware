@@ -222,7 +222,13 @@ def test_external_internal(client: Client):
 
     with client:
         client.set_expected_responses(
-            _responses(client, INP1, INP2, change_indices=[2], foreign_indices=[2])
+            _responses(
+                client,
+                INP1,
+                INP2,
+                change_indices=[] if is_core(client) else [2],
+                foreign_indices=[2],
+            )
         )
         if is_core(client):
             IF = InputFlowConfirmAllWarnings(client)
@@ -252,7 +258,13 @@ def test_internal_external(client: Client):
 
     with client:
         client.set_expected_responses(
-            _responses(client, INP1, INP2, change_indices=[1], foreign_indices=[1])
+            _responses(
+                client,
+                INP1,
+                INP2,
+                change_indices=[] if is_core(client) else [1],
+                foreign_indices=[1],
+            )
         )
         if is_core(client):
             IF = InputFlowConfirmAllWarnings(client)
