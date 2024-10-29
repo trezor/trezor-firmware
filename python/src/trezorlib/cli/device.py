@@ -100,6 +100,7 @@ def wipe(client: "TrezorClient", bootloader: bool) -> str:
 @click.option("-l", "--label", default="")
 @click.option("-i", "--ignore-checksum", is_flag=True)
 @click.option("-s", "--slip0014", is_flag=True)
+@click.option("-a", "--academic", is_flag=True)
 @click.option("-b", "--needs-backup", is_flag=True)
 @click.option("-n", "--no-backup", is_flag=True)
 @with_client
@@ -111,6 +112,7 @@ def load(
     label: str,
     ignore_checksum: bool,
     slip0014: bool,
+    academic: bool,
     needs_backup: bool,
     no_backup: bool,
 ) -> str:
@@ -118,13 +120,19 @@ def load(
 
     This functionality is only available in debug mode.
     """
-    if slip0014 and mnemonic:
-        raise click.ClickException("Cannot use -s and -m together.")
+    if sum((slip0014, academic, bool(mnemonic))) > 1:
+        raise click.ClickException("Cannot use the options -a, -m, and -s together.")
 
     if slip0014:
         mnemonic = [" ".join(["all"] * 12)]
         if not label:
             label = "SLIP-0014"
+    elif academic:
+        mnemonic = [
+            "academic again academic academic academic academic academic academic academic academic academic academic academic academic academic academic academic pecan provide remember"
+        ]
+        if not label:
+            label = "ACADEMIC"
 
     try:
         return debuglink.load_device(
