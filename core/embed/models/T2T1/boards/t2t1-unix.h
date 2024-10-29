@@ -1,12 +1,6 @@
 #ifndef BOARDS_T2T1_UNIX_H
 #define BOARDS_T2T1_UNIX_H
 
-#define USE_TOUCH 1
-#define USE_SD_CARD 1
-#define USE_SBU 1
-#define USE_RGB_COLORS 1
-#define USE_BACKLIGHT 1
-
 // ILI9341V, GC9307 and ST7789V drivers support 240px x 320px display resolution
 #define MAX_DISPLAY_RESX 240
 #define MAX_DISPLAY_RESY 320

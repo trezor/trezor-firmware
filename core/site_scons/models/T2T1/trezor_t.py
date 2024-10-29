@@ -21,6 +21,7 @@ def configure(
     if "new_rendering" in features_wanted:
         defines += ["DISPLAY_RGB565"]
         features_available.append("display_rgb565")
+    defines += ["USE_RGB_COLORS=1"]
 
     mcu = "STM32F427xx"
 
@@ -79,11 +80,14 @@ def configure(
     sources += ["embed/trezorhal/stm32f4/backlight_pwm.c"]
 
     features_available.append("backlight")
+    defines += ["USE_BACKLIGHT=1"]
 
     if "input" in features_wanted:
         sources += ["embed/trezorhal/stm32f4/i2c_bus.c"]
         sources += ["embed/trezorhal/stm32f4/touch/ft6x36.c"]
         features_available.append("touch")
+    defines += ["USE_TOUCH=1"]
+    defines += ["USE_I2C=1"]
 
     if "sd_card" in features_wanted:
         sources += ["embed/trezorhal/stm32f4/sdcard.c"]
@@ -93,10 +97,12 @@ def configure(
             "vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.c"
         ]
         features_available.append("sd_card")
+    defines += ["USE_SD_CARD=1"]
 
     if "sbu" in features_wanted:
         sources += ["embed/trezorhal/stm32f4/sbu.c"]
         features_available.append("sbu")
+    defines += ["USE_SBU=1"]
 
     if "usb" in features_wanted:
         sources += [
@@ -122,5 +128,7 @@ def configure(
             "vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma2d.c"
         ]
         features_available.append("dma2d")
+
+    defines += ["USE_PVD=1"]
 
     return features_available

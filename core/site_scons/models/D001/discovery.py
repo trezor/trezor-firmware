@@ -53,11 +53,11 @@ def configure(
     sources += [
         "vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma2d.c"
     ]
-    sources += ["embed/trezorhal/stm32f4/sdram.c"]
     sources += [
         "vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.c"
     ]
     defines += ["USE_DMA2D"]
+    defines += ["USE_RGB_COLORS=1"]
     defines += ["FRAMEBUFFER"]
     features_available.append("dma2d")
     features_available.append("framebuffer")
@@ -68,10 +68,15 @@ def configure(
         features_available.append("xframebuffer")
         features_available.append("display_rgb565")
 
+    sources += ["embed/trezorhal/stm32f4/sdram.c"]
+    defines += ["USE_SDRAM=1"]
+
     if "input" in features_wanted:
         sources += ["embed/trezorhal/stm32f4/i2c_bus.c"]
         sources += ["embed/trezorhal/stm32f4/touch/stmpe811.c"]
         features_available.append("touch")
+    defines += ["USE_TOUCH=1"]
+    defines += ["USE_I2C=1"]
 
     if "usb" in features_wanted:
         sources += [
@@ -86,5 +91,7 @@ def configure(
             "vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_usb.c",
         ]
         features_available.append("usb")
+
+    defines += ["USE_PVD=1"]
 
     return features_available

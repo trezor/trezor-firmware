@@ -25,6 +25,7 @@ def configure(
         features_available.append("display_rgb565")
         defines += ["DISPLAY_RGB565"]
         defines += ["XFRAMEBUFFER"]
+    defines += ["USE_RGB_COLORS=1"]
 
     mcu = "STM32U585xx"
     linker_script = """embed/trezorhal/stm32u5/linker/u58/{target}.ld"""
@@ -60,18 +61,20 @@ def configure(
         ]
 
     sources += ["embed/trezorhal/stm32u5/backlight_pwm.c"]
+    features_available.append("backlight")
+    defines += ["USE_BACKLIGHT=1"]
 
     env_constraints = env.get("CONSTRAINTS")
     if not (env_constraints and "limited_util_s" in env_constraints):
         sources += ["embed/trezorhal/stm32u5/bg_copy.c"]
-
-    features_available.append("backlight")
 
     if "input" in features_wanted:
         sources += ["embed/trezorhal/stm32u5/i2c_bus.c"]
         sources += ["embed/trezorhal/stm32u5/touch/ft6x36.c"]
         sources += ["embed/trezorhal/stm32u5/touch/panels/lx154a2422cpt23.c"]
         features_available.append("touch")
+    defines += ["USE_TOUCH=1"]
+    defines += ["USE_I2C=1"]
 
     if "haptic" in features_wanted:
         sources += [
@@ -82,18 +85,21 @@ def configure(
             "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_tim_ex.c",
         ]
         features_available.append("haptic")
+    defines += ["USE_HAPTIC=1"]
 
     if "sd_card" in features_wanted:
         sources += ["embed/trezorhal/stm32u5/sdcard.c"]
         sources += ["embed/extmod/modtrezorio/ff.c"]
         sources += ["embed/extmod/modtrezorio/ffunicode.c"]
-        features_available.append("sd_card")
         sources += ["vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_sd.c"]
         sources += ["vendor/stm32u5xx_hal_driver/Src/stm32u5xx_ll_sdmmc.c"]
+        features_available.append("sd_card")
+    defines += ["USE_SD_CARD=1"]
 
     if "sbu" in features_wanted:
         sources += ["embed/trezorhal/stm32u5/sbu.c"]
         features_available.append("sbu")
+    defines += ["USE_SBU=1"]
 
     if "usb" in features_wanted:
         sources += [
@@ -118,13 +124,16 @@ def configure(
         features_available.append("dma2d")
 
     if "optiga" in features_wanted:
-        defines += ["USE_OPTIGA=1"]
         sources += ["embed/trezorhal/stm32u5/optiga_hal.c"]
         sources += ["embed/trezorhal/optiga/optiga.c"]
         sources += ["embed/trezorhal/optiga/optiga_commands.c"]
         sources += ["embed/trezorhal/optiga/optiga_transport.c"]
         sources += ["vendor/trezor-crypto/hash_to_curve.c"]
         features_available.append("optiga")
+    defines += ["USE_OPTIGA=1"]
+
+    defines += ["USE_HASH_PROCESSOR=1"]
+    defines += ["USE_PVD=1"]
 
     env.get("ENV")["TREZOR_BOARD"] = board
     env.get("ENV")["MCU_TYPE"] = mcu

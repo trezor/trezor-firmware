@@ -1,10 +1,6 @@
 #ifndef BOARDS_T2B1_UNIX_H
 #define BOARDS_T2B1_UNIX_H
 
-#define USE_BUTTON 1
-#define USE_SBU 1
-#define USE_OPTIGA 1
-
 #define MAX_DISPLAY_RESX 128
 #define MAX_DISPLAY_RESY 64
 #define DISPLAY_RESX 128

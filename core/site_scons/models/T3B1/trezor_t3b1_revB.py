@@ -49,10 +49,12 @@ def configure(
     if "input" in features_wanted:
         sources += ["embed/trezorhal/stm32u5/button.c"]
         features_available.append("button")
+    defines += ["USE_BUTTON=1"]
 
     if "sbu" in features_wanted:
         sources += ["embed/trezorhal/stm32u5/sbu.c"]
         features_available.append("sbu")
+    defines += ["USE_SBU=1"]
 
     if "usb" in features_wanted:
         sources += [
@@ -69,7 +71,6 @@ def configure(
         features_available.append("usb")
 
     if "optiga" in features_wanted:
-        defines += ["USE_OPTIGA=1"]
         sources += ["embed/trezorhal/stm32u5/i2c_bus.c"]
         sources += ["embed/trezorhal/stm32u5/optiga_hal.c"]
         sources += ["embed/trezorhal/optiga/optiga.c"]
@@ -77,10 +78,16 @@ def configure(
         sources += ["embed/trezorhal/optiga/optiga_transport.c"]
         sources += ["vendor/trezor-crypto/hash_to_curve.c"]
         features_available.append("optiga")
+    defines += ["USE_OPTIGA=1"]
+    defines += ["USE_I2C=1"]
 
     if "consumption_mask" in features_wanted:
         sources += ["embed/trezorhal/stm32u5/consumption_mask.c"]
         sources += ["vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_tim.c"]
+    defines += ["USE_CONSUMPTION_MASK=1"]
+
+    defines += ["USE_HASH_PROCESSOR=1"]
+    defines += ["USE_PVD=1"]
 
     env.get("ENV")["TREZOR_BOARD"] = board
     env.get("ENV")["MCU_TYPE"] = mcu
