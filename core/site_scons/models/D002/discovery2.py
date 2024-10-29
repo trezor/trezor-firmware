@@ -57,18 +57,8 @@ def configure(
         sources += ["embed/trezorhal/stm32u5/i2c_bus.c"]
         sources += ["embed/trezorhal/stm32u5/touch/sitronix.c"]
         features_available.append("touch")
-
-    # if "sd_card" in features_wanted:
-    #     sources += ['embed/trezorhal/sdcard.c', ]
-    #     sources += ['embed/extmod/modtrezorio/ff.c', ]
-    #     sources += ['embed/extmod/modtrezorio/ffunicode.c', ]
-    #     features_available.append("sd_card")
-
-    if "sbu" in features_wanted:
-        sources += [
-            "embed/trezorhal/stm32u5/sbu.c",
-        ]
-        features_available.append("sbu")
+    defines += ["USE_TOUCH=1"]
+    defines += ["USE_I2C=1"]
 
     if "usb" in features_wanted:
         sources += [
@@ -84,7 +74,13 @@ def configure(
         ]
         features_available.append("usb")
 
-    defines += ["USE_DMA2D", "FRAMEBUFFER", "FRAMEBUFFER32BIT", "UI_COLOR_32BIT"]
+    defines += [
+        "USE_DMA2D",
+        "FRAMEBUFFER",
+        "FRAMEBUFFER32BIT",
+        "UI_COLOR_32BIT",
+        "USE_RGB_COLORS",
+    ]
     if "new_rendering" in features_wanted:
         sources += ["embed/trezorhal/stm32u5/dma2d_bitblt.c"]
     else:
@@ -99,6 +95,8 @@ def configure(
         defines += ["DISPLAY_RGBA8888"]
         features_available.append("xframebuffer")
         features_available.append("display_rgba8888")
+
+    defines += ["USE_HASH_PROCESSOR=1"]
 
     env.get("ENV")["LINKER_SCRIPT"] = linker_script
 

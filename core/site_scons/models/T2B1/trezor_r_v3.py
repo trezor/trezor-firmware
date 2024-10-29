@@ -48,6 +48,7 @@ def configure(
     if "input" in features_wanted:
         sources += ["embed/trezorhal/stm32f4/button.c"]
         features_available.append("button")
+    defines += ["USE_BUTTON=1"]
 
     if "rgb_led" in features_wanted:
         sources += ["embed/trezorhal/stm32f4/rgb_led.c"]
@@ -56,6 +57,7 @@ def configure(
     if "sbu" in features_wanted:
         sources += ["embed/trezorhal/stm32f4/sbu.c"]
         features_available.append("sbu")
+    defines += ["USE_SBU=1"]
 
     if "usb" in features_wanted:
         sources += [
@@ -70,5 +72,7 @@ def configure(
             "vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_usb.c",
         ]
         features_available.append("usb")
+
+    defines += ["USE_PVD=1"]
 
     return features_available

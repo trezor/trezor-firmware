@@ -74,7 +74,7 @@ void display_io_init_gpio(void) {
   //                       LCD_D4/PE7   LCD_D5/PE8   LCD_D6/PE9   LCD_D7/PE10
   GPIO_InitStructure.Pin = GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10;
   HAL_GPIO_Init(GPIOE, &GPIO_InitStructure);
-#ifdef USE_DISP_I8080_16BIT_DW
+#ifdef DISPLAY_I8080_16BIT_DW
   //                       LCD_D8/PE11   LCD_D9/PE12   LCD_D10/PE13 LCD_D11/PE14
   GPIO_InitStructure.Pin =
       GPIO_PIN_11 | GPIO_PIN_12 | GPIO_PIN_13 | GPIO_PIN_14;
@@ -99,10 +99,10 @@ void display_io_init_fmc(void) {
   external_display_data_sram.Init.NSBank = FMC_NORSRAM_BANK1;
   external_display_data_sram.Init.DataAddressMux = FMC_DATA_ADDRESS_MUX_DISABLE;
   external_display_data_sram.Init.MemoryType = FMC_MEMORY_TYPE_SRAM;
-#ifdef USE_DISP_I8080_16BIT_DW
+#ifdef DISPLAY_I8080_16BIT_DW
   external_display_data_sram.Init.MemoryDataWidth =
       FMC_NORSRAM_MEM_BUS_WIDTH_16;
-#elif USE_DISP_I8080_8BIT_DW
+#elif DISPLAY_I8080_8BIT_DW
   external_display_data_sram.Init.MemoryDataWidth = FMC_NORSRAM_MEM_BUS_WIDTH_8;
 #endif
   external_display_data_sram.Init.BurstAccessMode =

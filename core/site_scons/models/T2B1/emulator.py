@@ -32,17 +32,18 @@ def configure(
 
     if "sbu" in features_wanted:
         sources += ["embed/trezorhal/unix/sbu.c"]
-
-    if "optiga_hal" in features_wanted:
-        sources += ["embed/trezorhal/unix/optiga_hal.c"]
+    defines += ["USE_SBU=1"]
 
     if "optiga" in features_wanted:
+        sources += ["embed/trezorhal/unix/optiga_hal.c"]
         sources += ["embed/trezorhal/unix/optiga.c"]
         features_available.append("optiga")
+    defines += ["USE_OPTIGA=1"]
 
     if "input" in features_wanted:
         sources += ["embed/trezorhal/unix/button.c"]
         features_available.append("button")
+    defines += ["USE_BUTTON=1"]
 
     sources += ["embed/trezorhal/stm32f4/layout.c"]
 

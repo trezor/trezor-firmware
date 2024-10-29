@@ -20,7 +20,7 @@ if not models.has_emulator(TREZOR_MODEL):
              )
     Return()
 
-FEATURES_WANTED = ["input", "rgb_led", "dma2d", "optiga_hal"]
+FEATURES_WANTED = ["input", "rgb_led", "dma2d", "optiga"]
 
 if NEW_RENDERING:
     FEATURES_WANTED.append("new_rendering")
@@ -269,6 +269,7 @@ rust = env.Command(
 env.Append(LINKFLAGS=f'-L{RUST_LIBDIR}')
 env.Append(LINKFLAGS=f'-l{RUST_LIB}')
 env.Append(LINKFLAGS='-lm')
+env.Append(LINKFLAGS='-Wl,--gc-sections')
 
 #
 # Program objects

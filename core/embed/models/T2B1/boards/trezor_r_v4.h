@@ -3,10 +3,6 @@
 
 #define HSE_8MHZ
 
-#define USE_BUTTON 1
-#define USE_SBU 1
-#define USE_PVD 1
-
 #define DISPLAY_RESX 128
 #define DISPLAY_RESY 64
 #define DISPLAY_LEGACY_HEADER "displays/vg-2864ksweg01.h"

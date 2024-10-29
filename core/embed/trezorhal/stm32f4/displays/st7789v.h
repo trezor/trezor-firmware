@@ -16,9 +16,9 @@ typedef struct {
 #define DISPLAY_COLOR_MODE DMA2D_OUTPUT_RGB565
 #define TREZOR_FONT_BPP 4
 
-#ifdef USE_DISP_I8080_16BIT_DW
+#ifdef DISPLAY_I8080_16BIT_DW
 #define DISP_MEM_TYPE uint16_t
-#elif USE_DISP_I8080_8BIT_DW
+#elif DISPLAY_I8080_8BIT_DW
 #define DISP_MEM_TYPE uint8_t
 #else
 #error "Unsupported display interface"
@@ -51,9 +51,9 @@ void display_efficient_clear(void);
 
 #else
 
-#ifdef USE_DISP_I8080_16BIT_DW
+#ifdef DISPLAY_I8080_16BIT_DW
 #define PIXELDATA(X) DATA(X)
-#elif USE_DISP_I8080_8BIT_DW
+#elif DISPLAY_I8080_8BIT_DW
 #define PIXELDATA(X) \
   DATA((X) & 0xFF);  \
   DATA((X) >> 8)

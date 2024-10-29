@@ -8,12 +8,6 @@
 #define DISPLAY_COLOR_MODE DMA2D_OUTPUT_RGB565
 #define DISPLAY_LEGACY_HEADER "displays/ltdc.h"
 
-#define USE_I2C 1
-#define USE_TOUCH 1
-#define USE_SDRAM 1
-#define USE_RGB_COLORS 1
-#define USE_PVD 1
-
 #define I2C_COUNT 1
 #define I2C_INSTANCE_0 I2C3
 #define I2C_INSTANCE_0_CLK_EN __HAL_RCC_I2C3_CLK_ENABLE

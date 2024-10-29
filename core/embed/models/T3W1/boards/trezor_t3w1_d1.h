@@ -3,21 +3,12 @@
 
 #define HSE_8MHZ
 
-#define USE_SD_CARD 1
-#define USE_I2C 1
-#define USE_TOUCH 1
-// #define USE_BUTTON 1
-#define USE_SBU 1
-#define USE_RGB_COLORS 1
-#define USE_BACKLIGHT 1
-#define USE_DISP_I8080_16BIT_DW 1
-// #define USE_BLE 1
-
 #define DISPLAY_RESX 240
 #define DISPLAY_RESY 320
 #define DISPLAY_COLOR_MODE DMA2D_OUTPUT_RGB565
 #define DISPLAY_LEGACY_HEADER "displays/st7789v.h"
 #define DISPLAY_PANEL_LHS200KB_IF21 1
+#define DISPLAY_I8080_16BIT_DW 1
 
 // #define DISPLAY_PANEL_INIT_SEQ lhs200kb_if21_init_seq
 // #define DISPLAY_PANEL_ROTATE lhs200kb_if21_rotate

@@ -1,12 +1,6 @@
 #ifndef BOARDS_T3W1_UNIX_H
 #define BOARDS_T3W1_UNIX_H
 
-#define USE_TOUCH 1
-#define USE_SBU 1
-#define USE_RGB_COLORS 1
-#define USE_BACKLIGHT 1
-#define USE_OPTIGA 1
-
 #define MAX_DISPLAY_RESX 380
 #define MAX_DISPLAY_RESY 520
 #define DISPLAY_RESX 380

@@ -21,6 +21,7 @@ def configure(
     features_available.append("xframebuffer")
     features_available.append("display_rgba8888")
     features_available.append("ui_color_32bit")
+    defines += ["USE_RGB_COLORS=1"]
 
     defines += [mcu]
     defines += [f'TREZOR_BOARD=\\"{board}\\"']
@@ -43,19 +44,21 @@ def configure(
 
     if "sbu" in features_wanted:
         sources += ["embed/trezorhal/unix/sbu.c"]
-
-    if "optiga_hal" in features_wanted:
-        sources += ["embed/trezorhal/unix/optiga_hal.c"]
+    defines += ["USE_SBU=1"]
 
     if "optiga" in features_wanted:
+        sources += ["embed/trezorhal/unix/optiga_hal.c"]
         sources += ["embed/trezorhal/unix/optiga.c"]
         features_available.append("optiga")
+    defines += ["USE_OPTIGA=1"]
 
     if "input" in features_wanted:
         sources += ["embed/trezorhal/unix/touch.c"]
         features_available.append("touch")
+    defines += ["USE_TOUCH=1"]
 
     features_available.append("backlight")
+    defines += ["USE_BACKLIGHT=1"]
 
     sources += ["embed/trezorhal/stm32f4/layout.c"]
 

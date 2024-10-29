@@ -4,13 +4,6 @@
 #define HSE_16MHZ
 #define VDD_1V8 1
 
-#define USE_I2C 1
-#define USE_RGB_COLORS 1
-#define USE_TOUCH 1
-// #define USE_SBU 1
-// #define USE_DISP_I8080_8BIT_DW 1
-#define USE_HASH_PROCESSOR 1
-
 #define DISPLAY_RESX 240
 #define DISPLAY_RESY 240
 
