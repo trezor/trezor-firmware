@@ -58,9 +58,9 @@ void __attribute__((noreturn)) show_wipe_code_screen(void) {
 }
 
 void __attribute__((noreturn)) show_pin_too_many_screen(void) {
-  error_shutdown_ex("TOO MANY PIN ATTEMPTS",
-                    "All data has been erased from the device",
-                    "PLEASE RECONNECT\nTHE DEVICE");
+  error_shutdown_ex("PIN ATTEMPTS\nEXCEEDED",
+                    "All data has been\nerased from the device",
+                    "Please reconnect the\ndevice");
 }
 
 void __attribute__((noreturn)) show_install_restricted_screen(void) {
