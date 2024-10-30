@@ -80,8 +80,12 @@
 STATIC mp_obj_t mod_trezorio_BLE_write(mp_obj_t self, mp_obj_t msg) {
   mp_buffer_info_t buf = {0};
   mp_get_buffer_raise(msg, &buf, MP_BUFFER_READ);
-  ble_write(buf.buf, buf.len);
-  return MP_OBJ_NEW_SMALL_INT(buf.len);
+  bool success = ble_write(buf.buf, buf.len);
+  if (success) {
+    return MP_OBJ_NEW_SMALL_INT(buf.len);
+  } else {
+    return MP_OBJ_NEW_SMALL_INT(-1);
+  }
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_BLE_write_obj,
                                  mod_trezorio_BLE_write);

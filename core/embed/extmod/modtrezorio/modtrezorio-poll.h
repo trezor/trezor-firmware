@@ -197,7 +197,7 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
 #ifdef USE_BLE
       else if (iface == BLE_IFACE) {
         if (mode == POLL_READ) {
-          uint8_t buf[BLE_PACKET_SIZE] = {0};
+          uint8_t buf[BLE_RX_PACKET_SIZE] = {0};
           int len = ble_read(buf, sizeof(buf));
           if (len > 0) {
             ret->items[0] = MP_OBJ_NEW_SMALL_INT(i);
@@ -205,9 +205,11 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
             return mp_const_true;
           }
         } else if (mode == POLL_WRITE) {
-          ret->items[0] = MP_OBJ_NEW_SMALL_INT(i);
-          ret->items[1] = mp_const_none;
-          return mp_const_true;
+          if (ble_can_write()) {
+            ret->items[0] = MP_OBJ_NEW_SMALL_INT(i);
+            ret->items[1] = mp_const_none;
+            return mp_const_true;
+          }
         }
       } else if (iface == BLE_EVENTS_IFACE) {
         ble_event_t event = {0};
