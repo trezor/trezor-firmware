@@ -1,0 +1,72 @@
+app:
+  address: 0x8000
+  end_address: 0x7e000
+  region: flash_primary
+  size: 0x76000
+app_image:
+  address: 0x8000
+  end_address: 0x7e000
+  orig_span: &id001
+  - app
+  region: flash_primary
+  size: 0x76000
+  span: *id001
+b0:
+  address: 0x0
+  end_address: 0x7000
+  placement:
+    after:
+    - start
+  region: flash_primary
+  size: 0x7000
+b0_container:
+  address: 0x0
+  end_address: 0x8000
+  orig_span: &id002
+  - b0
+  - provision
+  region: flash_primary
+  size: 0x8000
+  span: *id002
+provision:
+  address: 0x7000
+  end_address: 0x8000
+  placement:
+    after:
+    - b0
+    align:
+      start: 0x1000
+  region: flash_primary
+  size: 0x1000
+s0:
+  address: 0x8000
+  end_address: 0x7e000
+  orig_span: &id003
+  - app
+  region: flash_primary
+  size: 0x76000
+  span: *id003
+s0_image:
+  address: 0x8000
+  end_address: 0x7e000
+  orig_span: &id004
+  - app
+  region: flash_primary
+  sharers: 0x1
+  size: 0x76000
+  span: *id004
+settings_storage:
+  address: 0x7e000
+  end_address: 0x80000
+  placement:
+    align:
+      start: 0x1000
+    before:
+    - end
+  region: flash_primary
+  size: 0x2000
+sram_primary:
+  address: 0x20000000
+  end_address: 0x20020000
+  region: sram_primary
+  size: 0x20000
