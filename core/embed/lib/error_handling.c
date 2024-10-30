@@ -23,7 +23,11 @@
 #include "error_handling.h"
 #include "system.h"
 
+#ifndef TREZOR_EMULATOR
+// Stack check guard value set in startup code.
+// This is used if stack protection is enabled.
 uint32_t __stack_chk_guard = 0;
+#endif
 
 // Calls to this function are inserted by the compiler
 // when stack protection is enabled.
