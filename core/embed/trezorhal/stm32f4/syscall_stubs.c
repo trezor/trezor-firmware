@@ -629,8 +629,10 @@ void ble_get_state(ble_state_t *state) {
   syscall_invoke1((uint32_t)state, SYSCALL_BLE_GET_STATE);
 }
 
-void ble_write(const uint8_t *data, uint16_t len) {
-  syscall_invoke2((uint32_t)data, len, SYSCALL_BLE_WRITE);
+bool ble_can_write(void) { return syscall_invoke0(SYSCALL_BLE_CAN_WRITE); }
+
+bool ble_write(const uint8_t *data, uint16_t len) {
+  return syscall_invoke2((uint32_t)data, len, SYSCALL_BLE_WRITE);
 }
 
 uint32_t ble_read(uint8_t *data, uint16_t len) {

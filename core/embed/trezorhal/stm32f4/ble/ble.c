@@ -38,6 +38,7 @@ typedef enum {
 
 #define EVENT_QUEUE_LEN 4
 #define DATA_QUEUE_LEN 16
+#define SEND_QUEUE_LEN 1
 #define LOOP_PERIOD_MS 20
 #define PING_PERIOD 100
 
@@ -53,9 +54,13 @@ typedef struct {
   tsqueue_entry_t event_queue_entries[EVENT_QUEUE_LEN];
   tsqueue_t event_queue;
 
-  uint8_t data_buffers[DATA_QUEUE_LEN][BLE_PACKET_SIZE];
+  uint8_t data_buffers[DATA_QUEUE_LEN][BLE_RX_PACKET_SIZE];
   tsqueue_entry_t data_queue_entries[DATA_QUEUE_LEN];
   tsqueue_t data_queue;
+
+  uint8_t send_buffer[NRF_MAX_TX_DATA_SIZE];
+  tsqueue_entry_t send_queue_entries[DATA_QUEUE_LEN];
+  tsqueue_t send_queue;
 
   uint16_t ping_cntr;
 } ble_driver_t;
@@ -64,19 +69,19 @@ static ble_driver_t g_ble_driver = {0};
 
 static void ble_send_state_request(void) {
   uint8_t cmd = INTERNAL_CMD_PING;
-  nrf_send_msg(NRF_SERVICE_BLE_MANAGER, &cmd, sizeof(cmd));
+  nrf_send_msg(NRF_SERVICE_BLE_MANAGER, &cmd, sizeof(cmd), NULL, NULL);
 }
 
 static void ble_send_advertising_on(bool whitelist) {
   uint8_t data[2];
   data[0] = INTERNAL_CMD_ADVERTISING_ON;
   data[1] = whitelist ? 1 : 0;
-  nrf_send_msg(NRF_SERVICE_BLE_MANAGER, data, sizeof(data));
+  nrf_send_msg(NRF_SERVICE_BLE_MANAGER, data, sizeof(data), NULL, NULL);
 }
 
 static void ble_send_advertising_off(void) {
   uint8_t cmd = INTERNAL_CMD_ADVERTISING_OFF;
-  nrf_send_msg(NRF_SERVICE_BLE_MANAGER, &cmd, sizeof(cmd));
+  nrf_send_msg(NRF_SERVICE_BLE_MANAGER, &cmd, sizeof(cmd), NULL, NULL);
 }
 
 static bool ble_send_erase_bonds(void) {
@@ -84,7 +89,7 @@ static bool ble_send_erase_bonds(void) {
     return false;
   }
   uint8_t cmd = INTERNAL_CMD_ERASE_BONDS;
-  nrf_send_msg(NRF_SERVICE_BLE_MANAGER, &cmd, sizeof(cmd));
+  nrf_send_msg(NRF_SERVICE_BLE_MANAGER, &cmd, sizeof(cmd), NULL, NULL);
 
   return true;
 }
@@ -94,19 +99,19 @@ static bool ble_send_disconnect(void) {
     return false;
   }
   uint8_t cmd = INTERNAL_CMD_DISCONNECT;
-  nrf_send_msg(NRF_SERVICE_BLE_MANAGER, &cmd, sizeof(cmd));
+  nrf_send_msg(NRF_SERVICE_BLE_MANAGER, &cmd, sizeof(cmd), NULL, NULL);
 
   return true;
 }
 
 static void ble_send_pairing_reject(void) {
   uint8_t cmd = INTERNAL_CMD_REJECT_PAIRING;
-  nrf_send_msg(NRF_SERVICE_BLE_MANAGER, &cmd, sizeof(cmd));
+  nrf_send_msg(NRF_SERVICE_BLE_MANAGER, &cmd, sizeof(cmd), NULL, NULL);
 }
 
 static void ble_send_pairing_accept(void) {
   uint8_t cmd = INTERNAL_CMD_ALLOW_PAIRING;
-  nrf_send_msg(NRF_SERVICE_BLE_MANAGER, &cmd, sizeof(cmd));
+  nrf_send_msg(NRF_SERVICE_BLE_MANAGER, &cmd, sizeof(cmd), NULL, NULL);
 }
 
 static void ble_process_rx_msg_status(const uint8_t *data, uint32_t len) {
@@ -136,12 +141,12 @@ static void ble_process_rx_msg_status(const uint8_t *data, uint32_t len) {
       // new connection
 
       ble_event_t event = {.type = BLE_CONNECTED};
-      tsqueue_insert(&drv->event_queue, (uint8_t *)&event, sizeof(event));
+      tsqueue_insert(&drv->event_queue, (uint8_t *)&event, sizeof(event), NULL);
 
     } else {
       // connection lost
       ble_event_t event = {.type = BLE_DISCONNECTED};
-      tsqueue_insert(&drv->event_queue, (uint8_t *)&event, sizeof(event));
+      tsqueue_insert(&drv->event_queue, (uint8_t *)&event, sizeof(event), NULL);
 
       if (drv->mode_current == BLE_MODE_PAIRING) {
         drv->mode_requested = BLE_MODE_CONNECTABLE;
@@ -184,7 +189,7 @@ static void ble_process_rx_msg_pairing_request(const uint8_t *data,
 
   ble_event_t event = {.type = BLE_PAIRING_REQUEST, .data_len = 6};
   memcpy(event.data, &data[1], 6);
-  tsqueue_insert(&drv->event_queue, (uint8_t *)&event, sizeof(event));
+  tsqueue_insert(&drv->event_queue, (uint8_t *)&event, sizeof(event), NULL);
 }
 
 static void ble_process_rx_msg(const uint8_t *data, uint32_t len) {
@@ -207,11 +212,11 @@ static void ble_process_data(const uint8_t *data, uint32_t len) {
     return;
   }
 
-  if (len != BLE_PACKET_SIZE) {
+  if (len != BLE_RX_PACKET_SIZE) {
     return;
   }
 
-  uint8_t *buffer = tsqueue_allocate(&drv->data_queue);
+  uint8_t *buffer = tsqueue_allocate(&drv->data_queue, NULL);
 
   if (buffer == NULL) {
     return;
@@ -239,6 +244,14 @@ static void ble_loop(void *context) {
     if (drv->ping_cntr++ > (PING_PERIOD / LOOP_PERIOD_MS)) {
       ble_send_state_request();
       drv->ping_cntr = 0;
+    }
+
+    uint8_t data[NRF_MAX_TX_DATA_SIZE] = {0};
+    if (tsqueue_read(&drv->send_queue, data, NRF_MAX_TX_DATA_SIZE, NULL)) {
+      if (!nrf_send_msg(NRF_SERVICE_BLE, data, NRF_MAX_TX_DATA_SIZE, NULL,
+                        NULL)) {
+        tsqueue_insert(&drv->send_queue, data, NRF_MAX_TX_DATA_SIZE, NULL);
+      }
     }
 
     if (drv->mode_current != drv->mode_requested) {
@@ -272,7 +285,12 @@ void ble_init(void) {
                EVENT_QUEUE_LEN);
 
   tsqueue_init(&drv->data_queue, drv->data_queue_entries,
-               (uint8_t *)drv->data_buffers, BLE_PACKET_SIZE, DATA_QUEUE_LEN);
+               (uint8_t *)drv->data_buffers, BLE_RX_PACKET_SIZE,
+               DATA_QUEUE_LEN);
+
+  tsqueue_init(&drv->send_queue, drv->send_queue_entries,
+               (uint8_t *)drv->send_buffer, NRF_MAX_TX_DATA_SIZE,
+               SEND_QUEUE_LEN);
 
   systimer_t *timer = systimer_create(ble_loop, NULL);
 
@@ -293,6 +311,10 @@ void ble_deinit(void) {
 
   tsqueue_reset(&drv->event_queue);
   tsqueue_reset(&drv->data_queue);
+  tsqueue_reset(&drv->send_queue);
+
+  nrf_unregister_listener(NRF_SERVICE_BLE);
+  nrf_unregister_listener(NRF_SERVICE_BLE_MANAGER);
 
   drv->initialized = false;
 }
@@ -328,17 +350,42 @@ void ble_stop(void) {
   tsqueue_reset(&drv->data_queue);
 }
 
-void ble_write(const uint8_t *data, uint16_t len) {
+bool ble_can_write(void) {
   ble_driver_t *drv = &g_ble_driver;
 
   if (!drv->initialized) {
-    return;
+    return false;
   }
 
-  nrf_send_msg(NRF_SERVICE_BLE, data, len);
+  if (!drv->connected || !drv->accept_msgs) {
+    return false;
+  }
+
+  return !tsqueue_full(&drv->send_queue);
 }
 
-uint32_t ble_read(uint8_t *data, uint16_t len) {
+bool ble_write(const uint8_t *data, uint16_t len) {
+  ble_driver_t *drv = &g_ble_driver;
+
+  if (!drv->initialized) {
+    return false;
+  }
+
+  if (!drv->connected || !drv->accept_msgs) {
+    return false;
+  }
+
+  bool sent = nrf_send_msg(NRF_SERVICE_BLE, data, len, NULL, NULL);
+
+  if (!sent) {
+    bool queued = tsqueue_insert(&drv->send_queue, data, len, NULL);
+    return queued;
+  }
+
+  return true;
+}
+
+uint32_t ble_read(uint8_t *data, uint16_t max_len) {
   ble_driver_t *drv = &g_ble_driver;
 
   if (!drv->initialized) {
@@ -349,21 +396,13 @@ uint32_t ble_read(uint8_t *data, uint16_t len) {
 
   uint16_t read_len = 0;
 
-  bool received = tsqueue_read(queue, data, len, &read_len);
+  bool received = tsqueue_read(queue, data, max_len, &read_len);
 
   if (!received) {
     return 0;
   }
 
-  if (data[0] != '?') {
-    return 0;
-  }
-
-  if (len != BLE_PACKET_SIZE) {
-    return 0;
-  }
-
-  return len;
+  return max_len;
 }
 
 bool ble_issue_command(ble_command_t command) {

@@ -666,10 +666,14 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       args[0] = ble_read_event__verified(event);
     } break;
 
+    case SYSCALL_BLE_CAN_WRITE: {
+      args[0] = ble_can_write();
+    } break;
+
     case SYSCALL_BLE_WRITE: {
       uint8_t *data = (uint8_t *)args[0];
       size_t len = args[1];
-      ble_write__verified(data, len);
+      args[0] = ble_write__verified(data, len);
     } break;
 
     case SYSCALL_BLE_READ: {

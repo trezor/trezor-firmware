@@ -33,6 +33,19 @@ typedef enum {
   NRF_SERVICE_CNT  // Number of services
 } nrf_service_id_t;
 
+typedef enum {
+  NRF_STATUS_OK = 0,       // Packet completed successfully
+  NRF_STATUS_TIMEOUT = 1,  // Timeout occurred
+  NRF_STATUS_ERROR = 2,    // General error
+  NRF_STATUS_ABORTED = 3,  // Packet was aborted
+} nrf_status_t;
+
+typedef struct {
+  const uint8_t *data;
+  uint32_t len;
+
+} nrf_packet_t;
+
 // Initialize the NRF driver
 void nrf_init(void);
 
@@ -48,9 +61,22 @@ bool nrf_is_running(void);
 void nrf_register_listener(nrf_service_id_t service,
                            void (*listener)(const uint8_t *data, uint32_t len));
 
+// Unregister listener for a service
+void nrf_unregister_listener(nrf_service_id_t service);
+
 // Send a message to a service
 // The message will be queued and sent as soon as possible
 // If the queue is full, the message will be dropped
-bool nrf_send_msg(nrf_service_id_t service, const uint8_t *data, uint32_t len);
+// returns ID of the message if it was successfully queued, otherwise 0
+uint32_t nrf_send_msg(nrf_service_id_t service, const uint8_t *data,
+                      uint32_t len,
+                      void (*callback)(nrf_status_t status, void *context),
+                      void *context);
+
+// Abort a message by ID
+// If the message is already sent or the id is not found, it does nothing and
+// returns false If the message is queued, it will be removed from the queue If
+// the message is being sent, it will be sent. The callback will not be called.
+bool nrf_abort_msg(uint32_t id);
 
 #endif

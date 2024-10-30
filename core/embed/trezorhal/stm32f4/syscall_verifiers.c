@@ -721,17 +721,16 @@ access_violation:
   return false;
 }
 
-void ble_write__verified(const uint8_t *data, size_t len) {
+bool ble_write__verified(const uint8_t *data, size_t len) {
   if (!probe_read_access(data, len)) {
     goto access_violation;
   }
 
-  ble_write(data, len);
-
-  return;
+  return ble_write(data, len);
 
 access_violation:
   apptask_access_violation();
+  return false;
 }
 
 uint32_t ble_read__verified(uint8_t *data, size_t len) {

@@ -27,7 +27,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#define BLE_PACKET_SIZE 244
+#define BLE_RX_PACKET_SIZE 244
+#define BLE_TX_PACKET_SIZE 64
 
 typedef enum {
   BLE_SWITCH_OFF = 0,      // Turn off BLE advertising, disconnect
@@ -48,6 +49,7 @@ typedef enum {
 
 typedef struct {
   ble_event_type_t type;
+  int connection_id;
   uint8_t data_len;
   uint8_t data[6];
 } ble_event_t;
@@ -101,16 +103,20 @@ bool ble_read_event(ble_event_t *event);
 // Obtains the current operational state of the BLE module.
 void ble_get_state(ble_state_t *state);
 
+// Check if write is possible
+bool ble_can_write(void);
+
 // Writes data to a connected BLE device
 //
 // Sends data over an established BLE connection.
-void ble_write(const uint8_t *data, uint16_t len);
+bool ble_write(const uint8_t *data, uint16_t len);
 
 // Reads data from a connected BLE device
 //
-// Reads incoming data over an established BLE connection.
+// max_len indicates the maximum number of bytes to read. Rest of the data
+// will be discarded.
 //
 // Returns the number of bytes actually read.
-uint32_t ble_read(uint8_t *data, uint16_t len);
+uint32_t ble_read(uint8_t *data, uint16_t max_len);
 
 #endif

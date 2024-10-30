@@ -34,6 +34,8 @@ typedef struct {
   uint8_t *buffer;              // Pointer to the data buffer
   tsqueue_entry_state_t state;  // State of the queue entry
   uint16_t len;                 // Length of data in the buffer
+  uint32_t id;                  // ID of the entry
+  bool aborted;                 // Aborted flag
 } tsqueue_entry_t;
 
 typedef struct {
@@ -46,6 +48,7 @@ typedef struct {
   bool overrun;              // Overrun flag
   uint16_t overrun_count;    // Overrun counter
   uint16_t size;             // Size of each buffer
+  uint32_t next_id;          // ID of the next item
 } tsqueue_t;
 
 // Initialize the queue
@@ -55,13 +58,14 @@ void tsqueue_init(tsqueue_t *queue, tsqueue_entry_t *entries,
 void tsqueue_reset(tsqueue_t *queue);
 
 // Insert data into the queue
-bool tsqueue_insert(tsqueue_t *queue, const uint8_t *data, uint16_t len);
+bool tsqueue_insert(tsqueue_t *queue, const uint8_t *data, uint16_t len,
+                    uint32_t *id);
 
 // Allocate an entry in the queue
 // Returns a pointer to the allocated buffer
 // Fails if some item is already allocated, NULL
 // To be used instead of insert function, in conjunction with tsqueue_finalize
-uint8_t *tsqueue_allocate(tsqueue_t *queue);
+uint8_t *tsqueue_allocate(tsqueue_t *queue, uint32_t *id);
 
 // Finalize an allocated entry
 bool tsqueue_finalize(tsqueue_t *queue, const uint8_t *buffer, uint16_t len);
@@ -77,12 +81,15 @@ bool tsqueue_read(tsqueue_t *queue, uint8_t *data, uint16_t max_len,
 uint8_t *tsqueue_process(tsqueue_t *queue, uint16_t *len);
 
 // Mark processing as done
-void tsqueue_process_done(tsqueue_t *queue);
+bool tsqueue_process_done(tsqueue_t *queue, uint8_t *data, uint16_t max_len,
+                          uint16_t *len, bool *aborted);
 
-// Check if the queue is full
-bool tsqueue_full(const tsqueue_t *queue);
+// Checks if the queue is full
+bool tsqueue_full(tsqueue_t *queue);
 
-// Check if the queue is empty
-bool tsqueue_empty(const tsqueue_t *queue);
+// Aborts item in the queue
+// The space in the queue is not freed until the item is attempted to be read
+bool tsqueue_abort(tsqueue_t *queue, uint32_t id, uint8_t *data,
+                   uint16_t max_len, uint16_t *len);
 
 #endif

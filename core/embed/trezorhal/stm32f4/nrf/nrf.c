@@ -64,10 +64,17 @@ typedef struct {
 #define START_BYTE (0xA0)
 
 typedef struct {
+  uint8_t data[UART_PACKET_SIZE];
+  uint8_t len;
+  void (*callback)(nrf_status_t status, void *context);
+  void *context;
+} nrf_uart_tx_data_t;
+
+typedef struct {
   UART_HandleTypeDef urt;
   DMA_HandleTypeDef urt_tx_dma;
 
-  uint8_t urt_tx_buffers[UART_QUEUE_SIZE][UART_PACKET_SIZE];
+  uint8_t urt_tx_buffers[UART_QUEUE_SIZE][sizeof(nrf_uart_tx_data_t)];
   tsqueue_entry_t urt_tx_queue_entries[UART_QUEUE_SIZE];
   tsqueue_t urt_tx_queue;
 
@@ -80,6 +87,7 @@ typedef struct {
   DMA_HandleTypeDef spi_dma;
   uint8_t spi_buffer[SPI_PACKET_SIZE];
 
+  bool urt_tx_running;
   bool spi_rx_running;
   bool comm_running;
 
@@ -139,7 +147,7 @@ void nrf_init(void) {
 
   memset(drv, 0, sizeof(*drv));
   tsqueue_init(&drv->urt_tx_queue, drv->urt_tx_queue_entries,
-               (uint8_t *)drv->urt_tx_buffers, UART_PACKET_SIZE,
+               (uint8_t *)drv->urt_tx_buffers, sizeof(nrf_uart_tx_data_t),
                UART_QUEUE_SIZE);
 
   GPIO_InitTypeDef GPIO_InitStructure;
@@ -287,6 +295,17 @@ void nrf_register_listener(nrf_service_id_t service,
   }
 }
 
+void nrf_unregister_listener(nrf_service_id_t service) {
+  nrf_driver_t *drv = &g_nrf_driver;
+  if (!drv->initialized) {
+    return;
+  }
+
+  if (service < NRF_SERVICE_CNT) {
+    drv->service_listeners[service] = NULL;
+  }
+}
+
 static void nrf_process_msg(nrf_driver_t *drv, const uint8_t *data,
                             uint32_t len, nrf_service_id_t service,
                             uint8_t header_size, uint8_t overhead_size) {
@@ -335,49 +354,76 @@ uint32_t nrf_dfu_comm_receive(uint8_t *data, uint32_t len) {
 /// UART communication
 /// ---------------------------------------------------------
 
-bool nrf_send_msg(nrf_service_id_t service, const uint8_t *data, uint32_t len) {
+uint32_t nrf_send_msg(nrf_service_id_t service, const uint8_t *data,
+                      uint32_t len,
+                      void (*callback)(nrf_status_t status, void *context),
+                      void *context) {
   nrf_driver_t *drv = &g_nrf_driver;
   if (!drv->initialized) {
-    return false;
+    return 0;
   }
 
   if (len > NRF_MAX_TX_DATA_SIZE) {
-    return false;
+    return 0;
   }
 
   if (service > NRF_SERVICE_CNT) {
-    return false;
+    return 0;
   }
 
-  bool empty_queue = tsqueue_empty(&drv->urt_tx_queue);
+  uint32_t id = 0;
 
-  uint8_t *buffer = tsqueue_allocate(&drv->urt_tx_queue);
+  nrf_uart_tx_data_t *buffer =
+      (nrf_uart_tx_data_t *)tsqueue_allocate(&drv->urt_tx_queue, &id);
 
   if (buffer == NULL) {
-    return false;
+    return 0;
   }
+
+  buffer->callback = callback;
+  buffer->context = context;
+  buffer->len = len + UART_OVERHEAD_SIZE;
 
   uart_header_t header = {
       .service_id = 0xA0 | (uint8_t)service,
       .msg_len = len + UART_OVERHEAD_SIZE,
   };
-  memcpy(buffer, &header, UART_HEADER_SIZE);
+  memcpy(buffer->data, &header, UART_HEADER_SIZE);
 
-  memcpy(&buffer[UART_HEADER_SIZE], data, len);
+  memcpy(&buffer->data[UART_HEADER_SIZE], data, len);
 
   uart_footer_t footer = {
-      .crc = crc8(buffer, len + UART_HEADER_SIZE, 0x07, 0x00, false),
+      .crc = crc8(buffer->data, len + UART_HEADER_SIZE, 0x07, 0x00, false),
   };
-  memcpy(&buffer[UART_HEADER_SIZE + len], &footer, UART_FOOTER_SIZE);
+  memcpy(&buffer->data[UART_HEADER_SIZE + len], &footer, UART_FOOTER_SIZE);
 
-  tsqueue_finalize(&drv->urt_tx_queue, buffer, header.msg_len);
+  tsqueue_finalize(&drv->urt_tx_queue, (uint8_t *)buffer,
+                   sizeof(nrf_uart_tx_data_t));
 
-  if (empty_queue) {
-    uint16_t send_len = 0;
-    uint8_t *send_buffer = tsqueue_process(&drv->urt_tx_queue, &send_len);
+  irq_key_t key = irq_lock();
+  if (!drv->urt_tx_running) {
+    nrf_uart_tx_data_t *send_buffer =
+        (nrf_uart_tx_data_t *)tsqueue_process(&drv->urt_tx_queue, NULL);
     if (send_buffer != NULL) {
-      HAL_UART_Transmit_DMA(&drv->urt, send_buffer, send_len);
+      HAL_UART_Transmit_DMA(&drv->urt, send_buffer->data, send_buffer->len);
     }
+    drv->urt_tx_running = true;
+  }
+  irq_unlock(key);
+
+  return id;
+}
+
+bool nrf_abort_msg(uint32_t id) {
+  nrf_driver_t *drv = &g_nrf_driver;
+  if (!drv->initialized) {
+    return false;
+  }
+
+  bool aborted = tsqueue_abort(&drv->urt_tx_queue, id, NULL, 0, NULL);
+
+  if (!aborted) {
+    return false;
   }
 
   return true;
@@ -476,12 +522,22 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *urt) {
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *urt) {
   nrf_driver_t *drv = &g_nrf_driver;
   if (drv->initialized && urt == &drv->urt) {
-    tsqueue_process_done(&drv->urt_tx_queue);
+    nrf_uart_tx_data_t sent;
+    bool aborted = false;
+    if (tsqueue_process_done(&drv->urt_tx_queue, (uint8_t *)&sent, sizeof(sent),
+                             NULL, &aborted)) {
+      if (!aborted && sent.callback != NULL) {
+        sent.callback(NRF_STATUS_OK, sent.context);
+      }
+    }
 
-    uint16_t send_len = 0;
-    uint8_t *send_buffer = tsqueue_process(&drv->urt_tx_queue, &send_len);
+    nrf_uart_tx_data_t *send_buffer =
+        (nrf_uart_tx_data_t *)tsqueue_process(&drv->urt_tx_queue, NULL);
     if (send_buffer != NULL) {
-      HAL_UART_Transmit_DMA(&drv->urt, send_buffer, send_len);
+      HAL_UART_Transmit_DMA(&drv->urt, send_buffer->data, send_buffer->len);
+      drv->urt_tx_running = true;
+    } else {
+      drv->urt_tx_running = false;
     }
   }
 }

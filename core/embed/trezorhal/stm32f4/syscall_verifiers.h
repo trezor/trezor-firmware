@@ -179,7 +179,7 @@ void ble_get_state__verified(ble_state_t *state);
 
 bool ble_read_event__verified(ble_event_t *event);
 
-void ble_write__verified(const uint8_t *data, size_t len);
+bool ble_write__verified(const uint8_t *data, size_t len);
 
 secbool ble_read__verified(uint8_t *data, size_t len);
 
