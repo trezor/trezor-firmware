@@ -146,13 +146,13 @@ __attribute__((noreturn)) int main(int argc, char **argv) {
         set_variant = 1;
         bitcoin_only = atoi(optarg);
         break;
-      case 'f':
+      case 'f': {
         uint8_t hash[BLAKE2S_DIGEST_LENGTH];
         if (!load_firmware(optarg, hash)) {
           exit(1);
         }
         bootargs_set(BOOT_COMMAND_INSTALL_UPGRADE, hash, sizeof(hash));
-        break;
+      } break;
 #ifdef USE_OPTIGA
       case 'l':
         // write bootloader-lock secret
