@@ -48,19 +48,19 @@ impl Component for ErrorScreen<'_> {
     fn place(&mut self, _bounds: Rect) -> Rect {
         self.bg.place(screen());
 
-        let title_area = Rect::new(screen().top_left(), screen().top_right() + Offset::y(11));
-        self.title.place(title_area);
-
         let text_width = self.title.inner().max_size().x;
-
-        if text_width > title_area.width() - 2 * TITLE_AREA_HEIGHT {
+        if text_width > screen().width() - 2 * TITLE_AREA_HEIGHT {
+            // if the title is too long, don't show the icons
             self.show_icons = false;
         }
 
+        let title_area = self.title.place(screen());
         let top_offset = if self.show_icons {
-            Offset::y(11)
+            // show warning icons when the title fits a single line
+            Offset::y(TITLE_AREA_HEIGHT)
         } else {
-            Offset::y(8)
+            // longer titles will be split and rendered without icons
+            Offset::y(title_area.height())
         };
 
         let message_area = Rect::new(
