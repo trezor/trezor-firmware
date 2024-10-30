@@ -1,4 +1,9 @@
 
+## 0.2.10 [20th November 2024]
+
+### Added
+- Added TOUCH_POWER command to allow testing touch power supply without connected touch screen.  [#4252]
+
 ## 0.2.9 [18th September 2024]
 
 ### Added
@@ -78,3 +83,4 @@
 [#3932]: https://github.com/trezor/trezor-firmware/pull/3932
 [#4064]: https://github.com/trezor/trezor-firmware/pull/4064
 [#4140]: https://github.com/trezor/trezor-firmware/pull/4140
+[#4252]: https://github.com/trezor/trezor-firmware/pull/4252
