@@ -395,7 +395,10 @@ void process_msg_FirmwareErase(uint8_t iface_num, uint32_t msg_size,
 
 static uint32_t chunk_size = 0;
 
-__attribute__((section(".buf"))) uint32_t chunk_buffer[IMAGE_CHUNK_SIZE / 4];
+#ifndef TREZOR_EMULATOR
+__attribute__((section(".buf")))
+#endif
+uint32_t chunk_buffer[IMAGE_CHUNK_SIZE / 4];
 
 #define CHUNK_BUFFER_PTR ((const uint8_t *const)&chunk_buffer)
 

@@ -187,7 +187,7 @@ env.Replace(
     '-g3 '
     '-nostdlib '
     '-std=gnu11 -Wall -Werror -Wpointer-arith -Wno-missing-braces -fno-common '
-    '-fsingle-precision-constant -fdata-sections -ffunction-sections '
+    '-fdata-sections -ffunction-sections '
     '-ffreestanding '
     '-fstack-protector-all '
     + CCFLAGS_MOD,
