@@ -822,11 +822,13 @@ class Signer:
             )
             self._validate_withdrawal(withdrawal)
             address_bytes = self._derive_withdrawal_address_bytes(withdrawal)
-            await self._show_if_showing_details(
-                layout.confirm_withdrawal(
+            if (
+                self.should_show_details
+                or self.suite_tx_type is SuiteTxType.SIMPLE_STAKE_WITHDRAW
+            ):
+                await layout.confirm_withdrawal(
                     withdrawal, address_bytes, self.msg.network_id
                 )
-            )
             withdrawals_dict.add(address_bytes, withdrawal.amount)
 
     def _validate_withdrawal(self, withdrawal: messages.CardanoTxWithdrawal) -> None:
