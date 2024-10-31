@@ -65,8 +65,11 @@
 
 #include "memzero.h"
 
-#ifdef STM32U5
+#ifdef USE_STORAGE_HWKEY
 #include "secure_aes.h"
+#endif
+
+#ifdef STM32U5
 #include "stm32u5xx_ll_utils.h"
 #else
 #include "stm32f4xx_ll_utils.h"
@@ -820,7 +823,7 @@ int main(void) {
 
   display_init(DISPLAY_JUMP_BEHAVIOR);
 
-#ifdef STM32U5
+#ifdef USE_STORAGE_HWKEY
   secure_aes_init();
 #endif
 #ifdef USE_HASH_PROCESSOR

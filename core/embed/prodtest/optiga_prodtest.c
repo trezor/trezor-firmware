@@ -33,10 +33,9 @@
 #include "secret.h"
 #include "sha2.h"
 
-#include STM32_HAL_H
 #include TREZOR_BOARD
 
-#ifdef STM32U5
+#ifdef USE_STORAGE_HWKEY
 #include "secure_aes.h"
 #endif
 

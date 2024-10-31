@@ -96,7 +96,14 @@ def configure(
         features_available.append("xframebuffer")
         features_available.append("display_rgba8888")
 
-    defines += ["USE_HASH_PROCESSOR=1"]
+    defines += [
+        "USE_HASH_PROCESSOR=1",
+        "USE_STORAGE_HWKEY=1",
+        "USE_TAMPER=1",
+        "USE_FLASH_BURST=1",
+        "USE_OEM_KEYS_CHECK=1",
+        "USE_RESET_TO_BOOT=1",
+    ]
 
     env.get("ENV")["LINKER_SCRIPT"] = linker_script
 

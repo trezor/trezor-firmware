@@ -37,7 +37,7 @@
 #include "optiga.h"
 #endif
 
-#ifdef STM32U5
+#ifdef USE_STORAGE_HWKEY
 #include "secure_aes.h"
 #endif
 
@@ -553,7 +553,7 @@ static void derive_kek_v4(const uint8_t *pin, size_t pin_len,
     ui_progress();
   }
 
-#ifdef STM32U5
+#ifdef USE_STORAGE_HWKEY
   uint8_t pre_kek[SHA256_DIGEST_LENGTH] = {0};
   pbkdf2_hmac_sha256_Final(&ctx, pre_kek);
   ensure(secure_aes_ecb_encrypt_hw(pre_kek, SHA256_DIGEST_LENGTH, kek,
@@ -611,7 +611,7 @@ static void stretch_pin(const uint8_t *pin, size_t pin_len,
     pbkdf2_hmac_sha256_Update(&ctx, PIN_ITER_COUNT / 10);
     ui_progress();
   }
-#ifdef STM32U5
+#ifdef USE_STORAGE_HWKEY
   uint8_t stretched_pin_tmp[SHA256_DIGEST_LENGTH] = {0};
   pbkdf2_hmac_sha256_Final(&ctx, stretched_pin_tmp);
   ensure(secure_aes_ecb_encrypt_hw(stretched_pin_tmp, SHA256_DIGEST_LENGTH,

@@ -65,9 +65,6 @@
 #ifdef USE_HASH_PROCESSOR
 #include "hash_processor.h"
 #endif
-#ifdef STM32U5
-#include "irq.h"
-#endif
 
 #include "model.h"
 #include "usb.h"
@@ -85,7 +82,6 @@
 #include "emulator.h"
 #else
 #include "compiler_traits.h"
-#include STM32_HAL_H
 #endif
 
 #define USB_IFACE_NUM 0
@@ -346,7 +342,7 @@ void real_jump_to_firmware(void) {
   jump_to(IMAGE_CODE_ALIGN(FIRMWARE_START + vhdr.hdrlen + IMAGE_HEADER_SIZE));
 }
 
-#ifdef STM32U5
+#ifdef USE_RESET_TO_BOOT
 __attribute__((noreturn)) void jump_to_fw_through_reset(void) {
   display_fade(display_backlight(-1), 0, 200);
 
@@ -558,7 +554,7 @@ int bootloader_main(void) {
     } else {
       screen = SCREEN_WELCOME;
 
-#ifdef STM32U5
+#ifdef USE_STORAGE_HWKEY
       secret_bhk_regenerate();
 #endif
       ensure(erase_storage(NULL), NULL);
@@ -613,7 +609,7 @@ int bootloader_main(void) {
             screen = SCREEN_INTRO;
           }
           if (ui_result == 0x11223344) {  // reboot
-#ifndef STM32U5
+#ifndef USE_HASH_PROCESSOR
             ui_screen_boot_stage_1(true);
 #endif
             continue_to_firmware = firmware_present;
@@ -666,7 +662,7 @@ int bootloader_main(void) {
         // erase storage if we saw flips randomly flip, most likely due to
         // glitch
 
-#ifdef STM32U5
+#ifdef USE_STORAGE_HWKEY
         secret_bhk_regenerate();
 #endif
         ensure(erase_storage(NULL), NULL);
@@ -675,7 +671,7 @@ int bootloader_main(void) {
                  (continue_to_firmware == continue_to_firmware_backup),
              NULL);
       if (sectrue == continue_to_firmware) {
-#ifdef STM32U5
+#ifdef USE_RESET_TO_BOOT
         firmware_jump_fn = jump_to_fw_through_reset;
 #else
         ui_screen_boot_stage_1(true);
@@ -689,7 +685,7 @@ int bootloader_main(void) {
   ensure(dont_optimize_out_true * (firmware_present == firmware_present_backup),
          NULL);
 
-#ifdef STM32U5
+#ifdef USE_RESET_TO_BOOT
   if (sectrue == firmware_present &&
       firmware_jump_fn != jump_to_fw_through_reset) {
     firmware_jump_fn = real_jump_to_firmware;
