@@ -1597,8 +1597,8 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///    iterable must be of exact size. Returns index in range `0..3`."""
     Qstr::MP_QSTR_select_word => obj_fn_kw!(0, new_select_word).as_obj(),
 
-    /// def flow_prompt_backup() -> LayoutObj[UiResult]
-    /// """Prompt a user to create backup with an option to skip."""
+    /// def flow_prompt_backup() -> LayoutObj[UiResult]:
+    ///     """Prompt a user to create backup with an option to skip."""
     Qstr::MP_QSTR_flow_prompt_backup => obj_fn_kw!(0, flow::prompt_backup::new_prompt_backup).as_obj(),
 
     /// def flow_show_share_words(

@@ -397,8 +397,8 @@ def select_word(
 
 
 # rust/src/ui/model_mercury/layout.rs
-def flow_prompt_backup() -> LayoutObj[UiResult]
-"""Prompt a user to create backup with an option to skip."""
+def flow_prompt_backup() -> LayoutObj[UiResult]:
+    """Prompt a user to create backup with an option to skip."""
 
 
 # rust/src/ui/model_mercury/layout.rs
