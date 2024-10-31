@@ -21,6 +21,7 @@
 
 #include "lx154a2422cpt23.h"
 
+#include "model.h"
 #include "touch.h"
 
 void lx154a2422cpt23_touch_correction(uint16_t x, uint16_t y, uint16_t *x_new,

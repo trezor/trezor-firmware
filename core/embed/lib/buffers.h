@@ -23,6 +23,7 @@
 #include <stdbool.h>
 
 #include "common.h"
+#include "model.h"
 #include TREZOR_BOARD
 
 #define BUFFER_PIXELS DISPLAY_RESX

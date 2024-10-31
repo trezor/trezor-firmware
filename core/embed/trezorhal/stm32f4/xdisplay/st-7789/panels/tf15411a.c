@@ -19,6 +19,7 @@
 
 #include "tf15411a.h"
 #include "../display_io.h"
+#include "model.h"
 
 void tf15411a_init_seq(void) {
   // Inter Register Enable1
