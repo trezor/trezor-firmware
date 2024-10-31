@@ -55,11 +55,4 @@
 #define SD_ENABLE_PORT GPIOC
 #define SD_ENABLE_PIN GPIO_PIN_0
 
-// Ensure compatible hardware settings before jumping to
-// the different booting stage. This function is used to
-// ensure backward compatibility with older versions of
-// released bootloaders and firmware.
-#define ENSURE_COMPATIBLE_SETTINGS
-extern void ensure_compatible_settings(void);
-
 #endif  //_TREZOR_T_H

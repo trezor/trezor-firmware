@@ -60,4 +60,12 @@ void memset_reg(volatile void *start, volatile void *stop, uint32_t val);
 // memory and registers that could contain sensitive information.
 void jump_to(uint32_t address);
 
+// Ensure compatible hardware settings before jumping to
+// the different booting stage. This function is used to
+// ensure backward compatibility with older versions of
+// released bootloaders and firmware.
+//
+// Does nothing on almost all platforms.
+void ensure_compatible_settings(void);
+
 #endif  // TREZORHAL_BOOTUTILS_H
