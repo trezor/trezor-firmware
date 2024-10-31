@@ -41,7 +41,7 @@
 
 // overlaps with secret
 #define BHK_START 0x0C002000
-#define BHK_MAXSIZE (2 * 8 * 1024)  // 8 kB
+#define BHK_MAXSIZE (1 * 8 * 1024)  // 8 kB
 #define BHK_SECTOR_START 0x1
 #define BHK_SECTOR_END 0x1
 
