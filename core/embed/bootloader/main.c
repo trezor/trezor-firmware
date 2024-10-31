@@ -333,9 +333,7 @@ void real_jump_to_firmware(void) {
 
   display_deinit(DISPLAY_JUMP_BEHAVIOR);
 
-#ifdef ENSURE_COMPATIBLE_SETTINGS
   ensure_compatible_settings();
-#endif
 
   mpu_reconfig(MPU_MODE_DISABLED);
 

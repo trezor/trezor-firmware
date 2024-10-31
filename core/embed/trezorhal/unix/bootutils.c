@@ -62,3 +62,7 @@ void __attribute__((noreturn)) secure_shutdown(void) {
 
   exit(3);
 }
+
+void ensure_compatible_settings(void) {
+  // Left empty
+}

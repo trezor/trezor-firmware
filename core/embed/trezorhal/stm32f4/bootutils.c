@@ -30,6 +30,10 @@
 #include "model.h"
 #include "mpu.h"
 
+#ifdef TREZOR_MODEL_T
+#include "stm32f4/startup_init.h"
+#endif
+
 #ifdef KERNEL_MODE
 
 #ifdef STM32U5
@@ -153,9 +157,7 @@ reboot_with_args(boot_command_t command, const void* args, size_t args_size) {
   NVIC_SystemReset();
 #else
   display_deinit(DISPLAY_RESET_CONTENT);
-#ifdef ENSURE_COMPATIBLE_SETTINGS
   ensure_compatible_settings();
-#endif
 
   mpu_reconfig(MPU_MODE_DISABLED);
 
@@ -199,6 +201,14 @@ void __attribute__((noreturn)) secure_shutdown(void) {
 
   for (;;)
     ;
+}
+
+void ensure_compatible_settings(void) {
+#ifdef TREZOR_MODEL_T
+  // Early version of bootloader on T2T1 expects 168 MHz core clock.
+  // So we need to set it here before handover to the bootloader.
+  set_core_clock(CLOCK_168_MHZ);
+#endif
 }
 
 #endif  // KERNEL_MODE
