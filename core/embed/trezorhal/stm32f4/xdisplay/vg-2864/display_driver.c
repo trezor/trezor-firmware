@@ -26,6 +26,8 @@
 #include STM32_HAL_H
 
 #include "mpu.h"
+#include "sizedefs.h"
+#include "trustzone.h"
 #include "xdisplay.h"
 
 #ifdef USE_CONSUMPTION_MASK
@@ -37,14 +39,23 @@
 #error "Incompatible display resolution"
 #endif
 
+// Hardware requires physical frame buffer alignment
+#ifdef USE_TRUSTZONE
+#define PHYSICAL_FRAME_BUFFER_ALIGNMENT TZ_SRAM_ALIGNMENT
+#else
+#define PHYSICAL_FRAME_BUFFER_ALIGNMENT 4
+#endif
+
 // This file implements display driver for monochromatic display V-2864KSWEG01
 // with 128x64 resolution connected to CPU via SPI interface.
 //
 // This type of display is used with T3B1 model (Trezor TS3)
+#define FRAME_BUFFER_SIZE \
+  ALIGN_UP_CONST(DISPLAY_RESX *DISPLAY_RESY, PHYSICAL_FRAME_BUFFER_ALIGNMENT)
 
-#define FRAME_BUFFER_SIZE (DISPLAY_RESX * DISPLAY_RESY)
-
-__attribute__((section(".fb1"))) uint8_t g_framebuf[FRAME_BUFFER_SIZE];
+static
+    __attribute__((section(".fb1"), aligned(PHYSICAL_FRAME_BUFFER_ALIGNMENT)))
+    uint8_t g_framebuf[FRAME_BUFFER_SIZE];
 
 // Display driver context.
 typedef struct {
@@ -315,6 +326,12 @@ void display_deinit(display_content_mode_t mode) {
 
   drv->initialized = false;
 }
+
+#ifdef STM32U5
+void display_set_unpriv_access(bool unpriv) {
+  tz_set_sram_unpriv((uint32_t)g_framebuf, FRAME_BUFFER_SIZE, unpriv);
+}
+#endif  // STM32U5
 
 int display_set_backlight(int level) {
   display_driver_t *drv = &g_display_driver;

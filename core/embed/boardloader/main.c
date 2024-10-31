@@ -255,7 +255,7 @@ int main(void) {
 #ifdef STM32U5
   tamper_init();
 
-  trustzone_init_boardloader();
+  tz_init_boardloader();
 #endif
 
   secret_init();

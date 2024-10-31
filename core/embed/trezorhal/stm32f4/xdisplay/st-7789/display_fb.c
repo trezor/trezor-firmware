@@ -33,7 +33,9 @@
 #include "gfx_bitblt.h"
 #include "irq.h"
 #include "mpu.h"
+#include "sizedefs.h"
 #include "systemview.h"
+#include "trustzone.h"
 
 #ifndef BOARDLOADER
 #include "bg_copy.h"
@@ -48,19 +50,46 @@
 // The following code supports only 1 or 2 frame buffers
 _Static_assert(FRAME_BUFFER_COUNT == 1 || FRAME_BUFFER_COUNT == 2);
 
+// Hardware requires physical frame buffer alignment
+#ifdef USE_TRUSTZONE
+#define PHYSICAL_FRAME_BUFFER_ALIGNMENT TZ_SRAM_ALIGNMENT
+#else
+#define PHYSICAL_FRAME_BUFFER_ALIGNMENT 32
+#endif
+
 // Size of the physical frame buffer in bytes
-#define PHYSICAL_FRAME_BUFFER_SIZE (DISPLAY_RESX * DISPLAY_RESY * 2)
+#define PHYSICAL_FRAME_BUFFER_SIZE               \
+  ALIGN_UP_CONST(DISPLAY_RESX *DISPLAY_RESY * 2, \
+                 PHYSICAL_FRAME_BUFFER_ALIGNMENT)
 
 // Physical frame buffers in internal SRAM memory.
 // Both frame buffers layes in the fixed addresses that
 // are shared between bootloaders and the firmware.
-static __attribute__((section(".fb1")))
-ALIGN_32BYTES(uint8_t physical_frame_buffer_0[PHYSICAL_FRAME_BUFFER_SIZE]);
+static
+    __attribute__((section(".fb1"), aligned(PHYSICAL_FRAME_BUFFER_ALIGNMENT)))
+    uint8_t physical_frame_buffer_0[PHYSICAL_FRAME_BUFFER_SIZE];
 
 #if (FRAME_BUFFER_COUNT > 1)
-static __attribute__((section(".fb2")))
-ALIGN_32BYTES(uint8_t physical_frame_buffer_1[PHYSICAL_FRAME_BUFFER_SIZE]);
+static
+    __attribute__((section(".fb2"), aligned(PHYSICAL_FRAME_BUFFER_ALIGNMENT)))
+    uint8_t physical_frame_buffer_1[PHYSICAL_FRAME_BUFFER_SIZE];
 #endif
+
+#ifdef STM32U5
+void display_set_unpriv_access(bool unpriv) {
+  tz_set_sram_unpriv((uint32_t)physical_frame_buffer_0,
+                     PHYSICAL_FRAME_BUFFER_SIZE, unpriv);
+
+#if (FRAME_BUFFER_COUNT > 1)
+  tz_set_sram_unpriv((uint32_t)physical_frame_buffer_1,
+                     PHYSICAL_FRAME_BUFFER_SIZE, unpriv);
+#endif
+
+#ifdef USE_DMA2D
+  tz_set_dma2d_unpriv(unpriv);
+#endif
+}
+#endif  // STM32U5
 
 // Returns the pointer to the physical frame buffer (0.. FRAME_BUFFER_COUNT-1)
 // Returns NULL if the framebuffer index is out of range.

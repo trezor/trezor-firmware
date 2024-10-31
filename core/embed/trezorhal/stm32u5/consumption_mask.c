@@ -81,9 +81,9 @@ void consumption_mask_init(void) {
   dma_handle.InitLinkedList.LinkedListMode = DMA_LINKEDLIST_CIRCULAR;
   HAL_DMAEx_List_Init(&dma_handle);
 
-  HAL_DMA_ConfigChannelAttributes(&dma_handle, DMA_CHANNEL_SEC |
-                                                   DMA_CHANNEL_SRC_SEC |
-                                                   DMA_CHANNEL_DEST_SEC);
+  HAL_DMA_ConfigChannelAttributes(
+      &dma_handle, DMA_CHANNEL_PRIV | DMA_CHANNEL_SEC | DMA_CHANNEL_SRC_SEC |
+                       DMA_CHANNEL_DEST_SEC);
 
   /* DMA node configuration declaration */
   DMA_NodeConfTypeDef pNodeConfig = {0};
