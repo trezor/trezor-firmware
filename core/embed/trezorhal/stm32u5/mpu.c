@@ -21,6 +21,7 @@
 #include <stdbool.h>
 
 #include "common.h"
+#include "image.h"
 #include "irq.h"
 #include "model.h"
 #include "mpu.h"
@@ -172,8 +173,9 @@ extern uint32_t _codelen;
 #define KERNEL_FLASH_START KERNEL_START
 #define KERNEL_FLASH_SIZE (KERNEL_SIZE - KERNEL_U_FLASH_SIZE)
 
-#define COREAPP_FLASH_START (KERNEL_FLASH_START + KERNEL_SIZE)
-#define COREAPP_FLASH_SIZE (FIRMWARE_MAXSIZE - KERNEL_SIZE)
+#define COREAPP_FLASH_START COREAPP_CODE_ALIGN(KERNEL_FLASH_START + KERNEL_SIZE)
+#define COREAPP_FLASH_SIZE \
+  (FIRMWARE_MAXSIZE - (COREAPP_FLASH_START - KERNEL_FLASH_START))
 
 #ifdef STM32U585xx
 #define COREAPP_RAM1_START SRAM1_BASE
