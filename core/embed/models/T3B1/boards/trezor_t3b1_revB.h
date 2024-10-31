@@ -1,9 +1,6 @@
 #ifndef _TREZOR_T3B1_H
 #define _TREZOR_T3B1_H
 
-#define DISPLAY_RESX 128
-#define DISPLAY_RESY 64
-
 #define VDD_3V3 1
 
 #define DISPLAY_LEGACY_HEADER "displays/vg-2864ksweg01.h"

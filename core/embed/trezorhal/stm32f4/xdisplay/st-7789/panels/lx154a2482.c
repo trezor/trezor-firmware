@@ -20,6 +20,7 @@
 #include "lx154a2482.h"
 
 #include "../display_io.h"
+#include "model.h"
 
 void lx154a2482_gamma(void) {
   // positive voltage correction

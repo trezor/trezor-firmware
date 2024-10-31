@@ -4,9 +4,6 @@
 #define HSE_16MHZ
 #define VDD_1V8 1
 
-#define DISPLAY_RESX 240
-#define DISPLAY_RESY 240
-
 #define DISPLAY_COLOR_MODE DMA2D_OUTPUT_ARGB8888
 #define DISPLAY_LEGACY_HEADER "displays/dsi.h"
 
