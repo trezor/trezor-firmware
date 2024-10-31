@@ -77,11 +77,6 @@ class OrdinarySigner(Signer):
             self.should_show_details = await layout.show_tx_init(
                 self.SIGNING_MODE_TITLE
             )
-        elif self.suite_tx_type in (
-            SuiteTxType.SIMPLE_STAKE_WITHDRAW,
-            SuiteTxType.SIMPLE_STAKE_DELEGATE,
-        ):
-            self.should_show_details = True
         else:
             self.should_show_details = False
 
