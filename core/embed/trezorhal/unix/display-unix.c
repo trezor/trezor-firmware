@@ -153,7 +153,7 @@ void display_init_all(void) {
   }
   SDL_SetRenderDrawColor(RENDERER, 0, 0, 0, 255);
   SDL_RenderClear(RENDERER);
-  BUFFER = SDL_CreateRGBSurface(0, MAX_DISPLAY_RESX, MAX_DISPLAY_RESY, 16,
+  BUFFER = SDL_CreateRGBSurface(0, DISPLAY_RESX, DISPLAY_RESY, 16,
                                 0xF800, 0x07E0, 0x001F, 0x0000);
   TEXTURE = SDL_CreateTexture(RENDERER, SDL_PIXELFORMAT_RGB565,
                               SDL_TEXTUREACCESS_STREAMING, DISPLAY_RESX,
