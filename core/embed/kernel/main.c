@@ -17,8 +17,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include STM32_HAL_H
-
 #include <string.h>
 
 #include "applet.h"
@@ -73,7 +71,7 @@ static void optiga_log_hex(const char *prefix, const uint8_t *data,
 #endif
 
 void drivers_init() {
-#ifdef STM32U5
+#ifdef USE_TAMPER
   tamper_init();
 #endif
 
@@ -101,7 +99,7 @@ void drivers_init() {
 
   display_init(DISPLAY_JUMP_BEHAVIOR);
 
-#ifdef STM32U5
+#ifdef USE_OEM_KEYS_CHECK
   check_oem_keys();
 #endif
 
@@ -109,7 +107,7 @@ void drivers_init() {
 
   unit_properties_init();
 
-#ifdef STM32U5
+#ifdef USE_STORAGE_HWKEY
   secure_aes_init();
 #endif
 

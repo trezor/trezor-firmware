@@ -30,6 +30,12 @@
 //    1. Non-uniform sector number on STM32F4
 //    2. Uniform page number on STM32U5
 
+#define FLASH_QUADWORD_WORDS (4)
+#define FLASH_QUADWORD_SIZE (FLASH_QUADWORD_WORDS * sizeof(uint32_t))
+
+#define FLASH_BURST_WORDS (8 * FLASH_QUADWORD_WORDS)
+#define FLASH_BURST_SIZE (FLASH_BURST_WORDS * sizeof(uint32_t))
+
 #define FLASH_BLOCK_SIZE (sizeof(uint32_t) * FLASH_BLOCK_WORDS)
 
 typedef uint32_t flash_block_t[FLASH_BLOCK_WORDS];

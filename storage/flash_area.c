@@ -122,7 +122,7 @@ secbool flash_area_write_quadword(const flash_area_t *area, uint32_t offset,
 
 #endif  // not defined FLASH_BIT_ACCESS
 
-#ifdef FLASH_BURST_SIZE
+#ifdef USE_FLASH_BURST
 secbool flash_area_write_burst(const flash_area_t *area, uint32_t offset,
                                const uint32_t *data) {
   uint16_t sector;
@@ -174,7 +174,7 @@ secbool __wur flash_area_write_data_padded(const flash_area_t *area,
   const uint32_t *data32 = (const uint32_t *)data;
 
   while (total_size > 0) {
-#ifdef FLASH_BURST_SIZE
+#ifdef USE_FLASH_BURST
     if ((offset % FLASH_BURST_SIZE) == 0 &&
         (offset + FLASH_BURST_SIZE) <= total_size) {
       if (data_size >= FLASH_BURST_SIZE) {

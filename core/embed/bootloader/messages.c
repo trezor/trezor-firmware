@@ -720,7 +720,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
 
       // if firmware is not upgrade, erase storage
       if (sectrue != should_keep_seed) {
-#ifdef STM32U5
+#ifdef USE_STORAGE_HWKEY
         secret_bhk_regenerate();
 #endif
         ensure(erase_storage(NULL), NULL);

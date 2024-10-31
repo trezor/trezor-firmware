@@ -132,8 +132,15 @@ def configure(
         features_available.append("optiga")
     defines += ["USE_OPTIGA=1"]
 
-    defines += ["USE_HASH_PROCESSOR=1"]
-    defines += ["USE_PVD=1"]
+    defines += [
+        "USE_HASH_PROCESSOR=1",
+        "USE_STORAGE_HWKEY=1",
+        "USE_TAMPER=1",
+        "USE_FLASH_BURST=1",
+        "USE_RESET_TO_BOOT=1",
+        "USE_OEM_KEYS_CHECK=1",
+        "USE_PVD=1",
+    ]
 
     env.get("ENV")["TREZOR_BOARD"] = board
     env.get("ENV")["MCU_TYPE"] = mcu

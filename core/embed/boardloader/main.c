@@ -19,7 +19,6 @@
 
 #include <string.h>
 
-#include STM32_HAL_H
 #include TREZOR_BOARD
 #include "board_capabilities.h"
 #include "bootutils.h"
@@ -63,12 +62,9 @@
 #include "model.h"
 #include "monoctr.h"
 #include "option_bytes.h"
+#include "tamper.h"
 #include "trustzone.h"
 #include "version.h"
-
-#ifdef STM32U5
-#include "tamper.h"
-#endif
 
 const uint8_t BOARDLOADER_KEY_M = 2;
 const uint8_t BOARDLOADER_KEY_N = 3;
@@ -251,7 +247,7 @@ int main(void) {
     return 2;
   }
 
-#ifdef STM32U5
+#ifdef USE_TAMPER
   tamper_init();
 #endif
 
