@@ -269,7 +269,7 @@ rust = env.Command(
 env.Append(LINKFLAGS=f'-L{RUST_LIBDIR}')
 env.Append(LINKFLAGS=f'-l{RUST_LIB}')
 env.Append(LINKFLAGS='-lm')
-env.Append(LINKFLAGS='-Wl,--gc-sections')
+env.Append(LINKFLAGS='-Wl,' + ('-dead_strip' if env['PLATFORM'] == 'darwin' else '--gc-sections'))
 
 #
 # Program objects
