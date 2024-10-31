@@ -42,6 +42,7 @@ uint8_t physical_frame_buffer_1[PHYSICAL_FRAME_BUFFER_SIZE];
 __attribute__((section(".framebuffer_select"))) uint32_t current_frame_buffer =
     0;
 
+#ifdef USE_TRUSTZONE
 void display_set_unpriv_access(bool unpriv) {
   // To allow unprivileged access both GFXMMU virtual buffers area and
   // underlying SRAM region must be configured as unprivileged.
@@ -69,6 +70,7 @@ void display_set_unpriv_access(bool unpriv) {
   tz_set_dma2d_unpriv(unpriv);
 #endif
 }
+#endif  //  USE_TRUSTZONE
 
 bool display_get_frame_buffer(display_fb_info_t *fb) {
   display_driver_t *drv = &g_display_driver;

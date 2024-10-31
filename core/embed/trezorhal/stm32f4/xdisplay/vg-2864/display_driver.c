@@ -327,11 +327,11 @@ void display_deinit(display_content_mode_t mode) {
   drv->initialized = false;
 }
 
-#ifdef STM32U5
+#ifdef USE_TRUSTZONE
 void display_set_unpriv_access(bool unpriv) {
   tz_set_sram_unpriv((uint32_t)g_framebuf, FRAME_BUFFER_SIZE, unpriv);
 }
-#endif  // STM32U5
+#endif  // USE_TRUSTZONE
 
 int display_set_backlight(int level) {
   display_driver_t *drv = &g_display_driver;

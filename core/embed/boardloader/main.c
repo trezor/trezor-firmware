@@ -59,16 +59,15 @@
 #endif
 #endif
 
+#include "memzero.h"
 #include "model.h"
 #include "monoctr.h"
 #include "option_bytes.h"
+#include "trustzone.h"
 #include "version.h"
-
-#include "memzero.h"
 
 #ifdef STM32U5
 #include "tamper.h"
-#include "trustzone.h"
 #endif
 
 const uint8_t BOARDLOADER_KEY_M = 2;
@@ -254,7 +253,9 @@ int main(void) {
 
 #ifdef STM32U5
   tamper_init();
+#endif
 
+#ifdef USE_TRUSTZONE
   tz_init_boardloader();
 #endif
 

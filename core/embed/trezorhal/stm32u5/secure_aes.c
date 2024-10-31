@@ -162,6 +162,7 @@ secbool unpriv_encrypt(const uint8_t* input, size_t size, uint8_t* output,
   uint32_t basepri = __get_BASEPRI();
   __set_BASEPRI(IRQ_PRI_HIGHEST + 1);
 
+#ifdef USE_TRUSTZONE
   uint32_t unpriv_ram_start = (uint32_t)&sram_u_start;
   uint32_t unpriv_ram_size = &sram_u_end - &sram_u_start;
 
@@ -179,6 +180,7 @@ secbool unpriv_encrypt(const uint8_t* input, size_t size, uint8_t* output,
   tz_set_flash_unpriv(unpriv_flash_start, unpriv_flash_size, true);
   tz_set_saes_unpriv(true);
   tz_set_tamper_unpriv(true);
+#endif  // USE_TRUSTZONE
 
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_SAES);
 
@@ -204,10 +206,12 @@ secbool unpriv_encrypt(const uint8_t* input, size_t size, uint8_t* output,
 
   mpu_reconfig(mpu_mode);
 
+#ifdef USE_TRUSTZONE
   tz_set_sram_unpriv(unpriv_ram_start, unpriv_ram_size, false);
   tz_set_flash_unpriv(unpriv_flash_start, unpriv_flash_size, false);
   tz_set_saes_unpriv(false);
   tz_set_tamper_unpriv(false);
+#endif  // USE_TRUSTZONE
 
   __set_BASEPRI(basepri);
   NVIC_SetPriority(SVCall_IRQn, prev_svc_prio);

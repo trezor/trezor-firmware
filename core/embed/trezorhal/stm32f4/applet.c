@@ -17,8 +17,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include STM32_HAL_H
-
 #include <string.h>
 
 #include "applet.h"
@@ -74,7 +72,7 @@ bool applet_reset(applet_t* applet, uint32_t cmd, const void* arg,
                            arg3);
 }
 
-#ifdef STM32U5
+#ifdef USE_TRUSTZONE
 // Sets unprivileged access to the applet memory regions
 // and allows applet to use some specific peripherals.
 static void applet_set_unpriv(applet_t* applet, bool unpriv) {
@@ -87,16 +85,16 @@ static void applet_set_unpriv(applet_t* applet, bool unpriv) {
 
   display_set_unpriv_access(unpriv);
 }
-#endif  // STM32U5
+#endif  // USE_TRUSTZONE
 
 void applet_run(applet_t* applet) {
-#ifdef STM32U5
+#ifdef USE_TRUSTZONE
   applet_set_unpriv(applet, true);
 #endif
 
   systask_yield_to(&applet->task);
 
-#ifdef STM32U5
+#ifdef USE_TRUSTZONE
   applet_set_unpriv(applet, false);
 #endif
 }
