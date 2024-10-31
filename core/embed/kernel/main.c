@@ -261,7 +261,7 @@ int main(void) {
   // Initialize system's core services
   system_init(&kernel_panic);
 
-#ifdef STM32U5
+#ifdef USE_TRUSTZONE
   // Configure unprivileged access for the coreapp
   tz_init_kernel();
 #endif

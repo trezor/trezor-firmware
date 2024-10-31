@@ -75,7 +75,7 @@ static
     uint8_t physical_frame_buffer_1[PHYSICAL_FRAME_BUFFER_SIZE];
 #endif
 
-#ifdef STM32U5
+#ifdef USE_TRUSTZONE
 void display_set_unpriv_access(bool unpriv) {
   tz_set_sram_unpriv((uint32_t)physical_frame_buffer_0,
                      PHYSICAL_FRAME_BUFFER_SIZE, unpriv);
@@ -89,7 +89,7 @@ void display_set_unpriv_access(bool unpriv) {
   tz_set_dma2d_unpriv(unpriv);
 #endif
 }
-#endif  // STM32U5
+#endif  // USE_TRUSTZONE
 
 // Returns the pointer to the physical frame buffer (0.. FRAME_BUFFER_COUNT-1)
 // Returns NULL if the framebuffer index is out of range.
