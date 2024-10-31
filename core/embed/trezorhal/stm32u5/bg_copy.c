@@ -104,9 +104,9 @@ void bg_copy_start_const_out_8(const uint8_t *src, uint8_t *dst, size_t size,
   DMA_Handle.Init.TransferEventMode = DMA_TCEM_BLOCK_TRANSFER;
   DMA_Handle.Init.Mode = DMA_NORMAL;
   HAL_DMA_Init(&DMA_Handle);
-  HAL_DMA_ConfigChannelAttributes(&DMA_Handle, DMA_CHANNEL_SEC |
-                                                   DMA_CHANNEL_SRC_SEC |
-                                                   DMA_CHANNEL_DEST_SEC);
+  HAL_DMA_ConfigChannelAttributes(
+      &DMA_Handle, DMA_CHANNEL_PRIV | DMA_CHANNEL_SEC | DMA_CHANNEL_SRC_SEC |
+                       DMA_CHANNEL_DEST_SEC);
 
   NVIC_SetPriority(GPDMA1_Channel0_IRQn, IRQ_PRI_NORMAL);
   NVIC_EnableIRQ(GPDMA1_Channel0_IRQn);

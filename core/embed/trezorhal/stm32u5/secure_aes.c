@@ -26,6 +26,7 @@
 #include <string.h>
 #include "model.h"
 #include "syscall.h"
+#include "trustzone.h"
 
 #include "memzero.h"
 
@@ -143,6 +144,8 @@ saes_invoke(void) {
 
 extern uint8_t sram_u_start;
 extern uint8_t sram_u_end;
+extern uint8_t _uflash_start;
+extern uint8_t _uflash_end;
 
 secbool unpriv_encrypt(const uint8_t* input, size_t size, uint8_t* output,
                        secure_aes_keysel_t key) {
@@ -158,6 +161,24 @@ secbool unpriv_encrypt(const uint8_t* input, size_t size, uint8_t* output,
   NVIC_SetPriority(SVCall_IRQn, IRQ_PRI_HIGHEST);
   uint32_t basepri = __get_BASEPRI();
   __set_BASEPRI(IRQ_PRI_HIGHEST + 1);
+
+  uint32_t unpriv_ram_start = (uint32_t)&sram_u_start;
+  uint32_t unpriv_ram_size = &sram_u_end - &sram_u_start;
+
+  // `saes_invoke()` function is too small to justigy placing it in a region
+  // that is aligned to TZ_FLASH_ALIGNMENT (8KB), as doing so would result
+  // in significant wasted space. Therefore, we need to align the flash
+  // addresses to the nearest lower and the nearest higher multiple of
+  // TZ_FLASH_ALIGNMENT.
+  uint32_t unpriv_flash_start =
+      ALIGN_DOWN((uint32_t)&_uflash_start, TZ_FLASH_ALIGNMENT);
+  uint32_t unpriv_flash_size =
+      ALIGN_UP((uint32_t)&_uflash_end, TZ_FLASH_ALIGNMENT) - unpriv_flash_start;
+
+  tz_set_sram_unpriv(unpriv_ram_start, unpriv_ram_size, true);
+  tz_set_flash_unpriv(unpriv_flash_start, unpriv_flash_size, true);
+  tz_set_saes_unpriv(true);
+  tz_set_tamper_unpriv(true);
 
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_SAES);
 
@@ -182,6 +203,11 @@ secbool unpriv_encrypt(const uint8_t* input, size_t size, uint8_t* output,
   memset(&sram_u_start, 0, &sram_u_end - &sram_u_start);
 
   mpu_reconfig(mpu_mode);
+
+  tz_set_sram_unpriv(unpriv_ram_start, unpriv_ram_size, false);
+  tz_set_flash_unpriv(unpriv_flash_start, unpriv_flash_size, false);
+  tz_set_saes_unpriv(false);
+  tz_set_tamper_unpriv(false);
 
   __set_BASEPRI(basepri);
   NVIC_SetPriority(SVCall_IRQn, prev_svc_prio);

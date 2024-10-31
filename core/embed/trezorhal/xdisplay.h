@@ -71,6 +71,10 @@ void display_init(display_content_mode_t mode);
 // `display_init(DISPLAY_RETAIN_CONTENT)`.
 void display_deinit(display_content_mode_t mode);
 
+// Allows unprivileged access to the display framebuffer from
+// perspective of the GTZC (Global TrustZone Controller).
+void display_set_unpriv_access(bool unpriv);
+
 #endif  // KERNEL_MODE
 
 // Sets display backlight level ranging from 0 (off)..255 (maximum).

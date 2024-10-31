@@ -17,12 +17,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include STM32_HAL_H
+
 #include <string.h>
 
 #include "applet.h"
+#include "display.h"
 #include "mpu.h"
 #include "rng.h"
 #include "systask.h"
+#include "trustzone.h"
 
 #ifdef SYSCALL_DISPATCH
 
@@ -68,6 +72,33 @@ bool applet_reset(applet_t* applet, uint32_t cmd, const void* arg,
 
   return systask_push_call(&applet->task, applet->header->startup, arg1, arg2,
                            arg3);
+}
+
+#ifdef STM32U5
+// Sets unprivileged access to the applet memory regions
+// and allows applet to use some specific peripherals.
+static void applet_set_unpriv(applet_t* applet, bool unpriv) {
+  applet_layout_t* layout = &applet->layout;
+
+  tz_set_sram_unpriv(layout->data1.start, layout->data1.size, unpriv);
+  tz_set_sram_unpriv(layout->data2.start, layout->data2.size, unpriv);
+  tz_set_flash_unpriv(layout->code1.start, layout->code1.size, unpriv);
+  tz_set_flash_unpriv(layout->code2.start, layout->code2.size, unpriv);
+
+  display_set_unpriv_access(unpriv);
+}
+#endif  // STM32U5
+
+void applet_run(applet_t* applet) {
+#ifdef STM32U5
+  applet_set_unpriv(applet, true);
+#endif
+
+  systask_yield_to(&applet->task);
+
+#ifdef STM32U5
+  applet_set_unpriv(applet, false);
+#endif
 }
 
 applet_t* applet_active(void) {

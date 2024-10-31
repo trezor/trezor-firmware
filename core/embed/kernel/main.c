@@ -49,6 +49,7 @@
 #include "systick.h"
 #include "tamper.h"
 #include "touch.h"
+#include "trustzone.h"
 #include "unit_properties.h"
 
 #ifdef USE_OPTIGA
@@ -182,24 +183,26 @@ extern uint32_t _coreapp_clear_ram_1_size;
 
 // Initializes coreapp applet
 static void coreapp_init(applet_t *applet) {
-  applet_header_t *coreapp_header =
-      (applet_header_t *)COREAPP_CODE_ALIGN(KERNEL_START + KERNEL_SIZE);
+  const uint32_t CODE1_START = COREAPP_CODE_ALIGN(KERNEL_START + KERNEL_SIZE);
+
+#ifdef FIRMWARE_P1_START
+  const uint32_t CODE1_END = FIRMWARE_P1_START + FIRMWARE_P1_MAXSIZE;
+#else
+  const uint32_t CODE1_END = FIRMWARE_START + FIRMWARE_MAXSIZE;
+#endif
+
+  applet_header_t *coreapp_header = (applet_header_t *)CODE1_START;
 
   applet_layout_t coreapp_layout = {
       .data1.start = (uint32_t)&_coreapp_clear_ram_0_start,
       .data1.size = (uint32_t)&_coreapp_clear_ram_0_size,
       .data2.start = (uint32_t)&_coreapp_clear_ram_1_start,
       .data2.size = (uint32_t)&_coreapp_clear_ram_1_size,
-#ifdef FIRMWARE_P1_START
-      .code1.start = FIRMWARE_P1_START + KERNEL_SIZE,
-      .code1.size = FIRMWARE_P1_MAXSIZE - KERNEL_SIZE,
+      .code1.start = CODE1_START,
+      .code1.size = CODE1_END - CODE1_START,
+#ifdef FIRMWARE_P2_START
       .code2.start = FIRMWARE_P2_START,
       .code2.size = FIRMWARE_P2_MAXSIZE,
-#else
-      .code1.start = FIRMWARE_START + KERNEL_SIZE,
-      .code1.size = FIRMWARE_MAXSIZE - KERNEL_SIZE,
-      .code2.start = 0,
-      .code2.size = 0,
 #endif
   };
 
@@ -214,7 +217,8 @@ static void show_rsod(const systask_postmortem_t *pminfo) {
 
   // Reset and run the coreapp in RSOD mode
   if (applet_reset(&coreapp, 1, pminfo, sizeof(systask_postmortem_t))) {
-    systask_yield_to(&coreapp.task);
+    // Run the applet & wait for it to finish
+    applet_run(&coreapp);
 
     if (coreapp.task.pminfo.reason == TASK_TERM_REASON_EXIT) {
       // If the RSOD was shown successfully, proceed to shutdown
@@ -257,6 +261,11 @@ int main(void) {
   // Initialize system's core services
   system_init(&kernel_panic);
 
+#ifdef STM32U5
+  // Configure unprivileged access for the coreapp
+  tz_init_kernel();
+#endif
+
   // Initialize hardware drivers
   drivers_init();
 
@@ -269,7 +278,8 @@ int main(void) {
     error_shutdown("Cannot start coreapp");
   }
 
-  systask_yield_to(&coreapp.task);
+  // Run the applet & wait for it to finish
+  applet_run(&coreapp);
 
   // Coreapp crashed, show RSOD
   show_rsod(&coreapp.task.pminfo);

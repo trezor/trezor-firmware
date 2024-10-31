@@ -26,20 +26,49 @@
 #include <xdisplay.h>
 #include "display_internal.h"
 #include "mpu.h"
+#include "trustzone.h"
 
 #ifdef KERNEL_MODE
 
 // Physical frame buffers in internal SRAM memory
-__attribute__((section(".fb1")))
-ALIGN_32BYTES(uint8_t physical_frame_buffer_0[PHYSICAL_FRAME_BUFFER_SIZE]);
+__attribute__((section(".fb1"), aligned(PHYSICAL_FRAME_BUFFER_ALIGNMENT)))
+uint8_t physical_frame_buffer_0[PHYSICAL_FRAME_BUFFER_SIZE];
 
-__attribute__((section(".fb2")))
-ALIGN_32BYTES(uint8_t physical_frame_buffer_1[PHYSICAL_FRAME_BUFFER_SIZE]);
+__attribute__((section(".fb2"), aligned(PHYSICAL_FRAME_BUFFER_ALIGNMENT)))
+uint8_t physical_frame_buffer_1[PHYSICAL_FRAME_BUFFER_SIZE];
 
 // The current frame buffer selector at fixed memory address
 // It's shared between bootloaders and the firmware
 __attribute__((section(".framebuffer_select"))) uint32_t current_frame_buffer =
     0;
+
+void display_set_unpriv_access(bool unpriv) {
+  // To allow unprivileged access both GFXMMU virtual buffers area and
+  // underlying SRAM region must be configured as unprivileged.
+
+  // Order of GFXMMU and SRAM unprivileged access configuration is important
+  // to avoid the situation the virtual frame buffer has lower privileges
+  // than underlying frame buffer in physical memory so LTDC could not
+  // refresh the display properly.
+
+  if (!unpriv) {
+    tz_set_gfxmmu_unpriv(unpriv);
+  }
+
+  tz_set_sram_unpriv((uint32_t)physical_frame_buffer_0,
+                     PHYSICAL_FRAME_BUFFER_SIZE, unpriv);
+
+  tz_set_sram_unpriv((uint32_t)physical_frame_buffer_1,
+                     PHYSICAL_FRAME_BUFFER_SIZE, unpriv);
+
+  if (unpriv) {
+    tz_set_gfxmmu_unpriv(unpriv);
+  }
+
+#ifdef USE_DMA2D
+  tz_set_dma2d_unpriv(unpriv);
+#endif
+}
 
 bool display_get_frame_buffer(display_fb_info_t *fb) {
   display_driver_t *drv = &g_display_driver;
@@ -87,13 +116,9 @@ void display_refresh(void) {
   if (current_frame_buffer == 0) {
     current_frame_buffer = 1;
     BSP_LCD_SetFrameBuffer(0, GFXMMU_VIRTUAL_BUFFER1_BASE_S);
-    memcpy(physical_frame_buffer_0, physical_frame_buffer_1,
-           sizeof(physical_frame_buffer_0));
   } else {
     current_frame_buffer = 0;
     BSP_LCD_SetFrameBuffer(0, GFXMMU_VIRTUAL_BUFFER0_BASE_S);
-    memcpy(physical_frame_buffer_1, physical_frame_buffer_0,
-           sizeof(physical_frame_buffer_1));
   }
 }
 
