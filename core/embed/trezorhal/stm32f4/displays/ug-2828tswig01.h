@@ -5,6 +5,5 @@
 #define MAX_DISPLAY_RESY 128
 #define DISPLAY_RESX 128
 #define DISPLAY_RESY 128
-#define TREZOR_FONT_BPP 1
 
 #endif  //_UG_2828TSWIG01_H
