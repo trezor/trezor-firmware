@@ -1,10 +1,8 @@
 #ifndef BOARDS_T2T1_UNIX_H
 #define BOARDS_T2T1_UNIX_H
 
-// ILI9341V, GC9307 and ST7789V drivers support 240px x 320px display resolution
 #define DISPLAY_RESX 240
 #define DISPLAY_RESY 240
-#define TREZOR_FONT_BPP 4
 
 #define ORIENTATION_NSEW 1
 
