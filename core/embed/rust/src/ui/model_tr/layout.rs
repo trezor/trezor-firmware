@@ -1114,7 +1114,10 @@ extern "C" fn new_show_warning(n_args: usize, args: *const Obj, kwargs: *mut Map
             let mut ops = OpTextLayout::new(theme::TEXT_NORMAL);
             ops = ops.alignment(geometry::Alignment::Center);
             if !warning.is_empty() {
-                ops = ops.text_bold_upper(warning).newline();
+                ops = ops.text_bold_upper(warning);
+                if !description.is_empty() {
+                    ops = ops.newline();
+                }
             }
             if !description.is_empty() {
                 ops = ops.text_normal(description);
