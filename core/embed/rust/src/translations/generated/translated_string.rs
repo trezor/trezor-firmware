@@ -1374,11 +1374,11 @@ pub enum TranslatedString {
     #[cfg(feature = "universal_fw")]
     ethereum__unknown_contract_address = 968,  // "Unknown contract address. Continue only if you know what you are doing."
     #[cfg(feature = "universal_fw")]
-    ethereum__token_contract = 970,  // "Token contract"
-    buttons__view_all_data = 971,  // "View all data"
-    instructions__view_all_data = 972,  // "View all data in the menu."
+    ethereum__token_contract = 969,  // "Token contract"
+    buttons__view_all_data = 970,  // "View all data"
+    instructions__view_all_data = 971,  // "View all data in the menu."
     #[cfg(feature = "universal_fw")]
-    ethereum__interaction_contract = 973,  // "Interaction contract"
+    ethereum__interaction_contract = 972,  // "Interaction contract"
 }
 
 impl TranslatedString {
