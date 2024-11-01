@@ -1,9 +1,8 @@
-#include STM32_HAL_H
-#include TREZOR_BOARD
+#include <trezor_bsp.h>
+#include <trezor_rtl.h>
 
 #ifdef KERNEL_MODE
 
-#include "common.h"
 #include "i2c_bus.h"
 #include "irq.h"
 
@@ -1207,7 +1206,8 @@ static int32_t SITRONIX_Probe(uint32_t Instance) {
  * @}
  */
 
-#include <string.h>
+#include <trezor_rtl.h>
+
 #include "touch.h"
 
 // Touch driver

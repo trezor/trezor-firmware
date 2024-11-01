@@ -1,6 +1,8 @@
-#include STM32_HAL_H
+
+#include <trezor_bsp.h>
+#include <trezor_rtl.h>
+
 #include "button.h"
-#include TREZOR_BOARD
 
 #ifdef KERNEL_MODE
 

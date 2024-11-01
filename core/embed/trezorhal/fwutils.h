@@ -20,9 +20,7 @@
 #ifndef TREZORHAL_FWUTILS_H
 #define TREZORHAL_FWUTILS_H
 
-#include <stdint.h>
-
-#include "secbool.h"
+#include <trezor_types.h>
 
 // Callback function for firmware hash calculation.
 typedef void (*firmware_hash_callback_t)(void* context, uint32_t progress,

@@ -17,11 +17,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdbool.h>
-#include <stdint.h>
-#include TREZOR_BOARD
+#include <trezor_bsp.h>
+#include <trezor_rtl.h>
+
 #include "display.h"
-#include STM32_HAL_H
 
 #ifdef USE_CONSUMPTION_MASK
 #include "consumption_mask.h"

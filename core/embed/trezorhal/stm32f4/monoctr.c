@@ -17,11 +17,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "monoctr.h"
+#include <trezor_model.h>
+#include <trezor_rtl.h>
+
 #include "flash_otp.h"
-#include "model.h"
+#include "monoctr.h"
 #include "mpu.h"
-#include "string.h"
 
 #ifdef KERNEL_MODE
 

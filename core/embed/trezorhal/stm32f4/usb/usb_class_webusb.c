@@ -19,9 +19,9 @@
 
 #ifdef KERNEL_MODE
 
-#include "common.h"
-#include "random_delays.h"
+#include <trezor_rtl.h>
 
+#include "random_delays.h"
 #include "usb_internal.h"
 #include "usb_webusb.h"
 

@@ -19,12 +19,12 @@
 
 #ifdef KERNEL_MODE
 
-#include STM32_HAL_H
+#include <trezor_bsp.h>
+#include <trezor_rtl.h>
 
-#include "usb.h"
-#include "common.h"
 #include "random_delays.h"
-#include "secbool.h"
+#include "systick.h"
+#include "usb.h"
 #include "usb_internal.h"
 
 #define USB_MAX_CONFIG_DESC_SIZE 256

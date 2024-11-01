@@ -17,10 +17,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "monoctr.h"
+#include <trezor_model.h>
+#include <trezor_rtl.h>
+
 #include "flash_otp.h"
-#include "model.h"
-#include "string.h"
+#include "monoctr.h"
 
 static int get_otp_block(monoctr_type_t type) {
   switch (type) {

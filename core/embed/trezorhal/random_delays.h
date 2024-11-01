@@ -20,7 +20,7 @@
 #ifndef TREZORHAL_RANDOM_DELAYS_H
 #define TREZORHAL_RANDOM_DELAYS_H
 
-#include <stdint.h>
+#include <trezor_types.h>
 
 /*
 Random delay interrupts (RDI) is a contermeasure against side channel attacks.

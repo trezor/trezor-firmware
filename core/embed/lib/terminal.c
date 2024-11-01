@@ -17,11 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include TREZOR_BOARD
-
-#include <stdarg.h>
-#include <stdint.h>
-#include <string.h>
+#include <trezor_model.h>
+#include <trezor_rtl.h>
 
 #include "display.h"
 #include "fonts/fonts.h"

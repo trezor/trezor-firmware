@@ -20,11 +20,9 @@
 #ifndef TREZORHAL_XDISPLAY_H
 #define TREZORHAL_XDISPLAY_H
 
-#include <stddef.h>
-#include <stdint.h>
-#include "gfx_bitblt.h"
+#include <trezor_types.h>
 
-#include TREZOR_BOARD
+#include "gfx_bitblt.h"
 
 // This is a universal API for controlling different types of display
 // controllers.

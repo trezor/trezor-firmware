@@ -23,7 +23,6 @@
 #include <stdbool.h>
 
 #include "fonts/font_bitmap.h"
-#include TREZOR_BOARD
 
 #ifdef USE_RGB_COLORS
 #define TREZOR_FONT_BPP 4

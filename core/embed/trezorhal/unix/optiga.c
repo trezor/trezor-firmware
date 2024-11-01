@@ -17,10 +17,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "optiga.h"
-#include <string.h>
+#include <trezor_rtl.h>
+
 #include "ecdsa.h"
 #include "nist256p1.h"
+#include "optiga.h"
 #include "optiga_common.h"
 #include "rand.h"
 #include "storage.h"

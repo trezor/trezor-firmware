@@ -20,8 +20,7 @@
 #ifndef GFX_BITBLT_H
 #define GFX_BITBLT_H
 
-#include <stdbool.h>
-#include <stdint.h>
+#include <trezor_types.h>
 
 #include "gfx_color.h"
 

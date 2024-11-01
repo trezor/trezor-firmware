@@ -17,14 +17,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include TREZOR_BOARD
+#include <trezor_model.h>
+#include <trezor_rtl.h>
 
-#include "flash_utils.h"
-#include "common.h"
 #include "flash_area.h"
-#include "model.h"
+#include "flash_utils.h"
 #include "mpu.h"
-#include "secbool.h"
 
 typedef struct {
   const flash_area_t* area;

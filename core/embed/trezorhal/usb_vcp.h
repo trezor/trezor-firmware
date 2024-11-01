@@ -20,8 +20,7 @@
 #ifndef TREZORHAL_USB_CLASS_VCP_H
 #define TREZORHAL_USB_CLASS_VCP_H
 
-#include <stddef.h>
-#include "secbool.h"
+#include <trezor_types.h>
 
 /* usb_vcp_info_t contains all information for setting up a VCP interface.  All
  * passed pointers need to live at least until the interface is disabled

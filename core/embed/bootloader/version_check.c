@@ -17,13 +17,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <string.h>
+#include <trezor_rtl.h>
 
-#include "version_check.h"
-
-#include "error_handling.h"
 #include "model_version.h"
 #include "monoctr.h"
+#include "version_check.h"
 
 void ensure_bootloader_min_version(void) {
   monoctr_write(MONOCTR_BOOTLOADER_VERSION, BOOTLOADER_MONOTONIC_VERSION);

@@ -20,8 +20,7 @@
 #ifndef TREZORHAL_TRUSTZONE
 #define TREZORHAL_TRUSTZONE
 
-#include <stdbool.h>
-#include <stdint.h>
+#include <trezor_types.h>
 
 #ifdef BOARDLOADER
 

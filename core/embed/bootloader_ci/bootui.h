@@ -20,7 +20,7 @@
 #ifndef __BOOTUI_H__
 #define __BOOTUI_H__
 
-#include "secbool.h"
+#include <trezor_types.h>
 
 void ui_screen_welcome_third(void);
 

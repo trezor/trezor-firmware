@@ -20,8 +20,9 @@
 #ifndef TREZORHAL_DISPLAY_LEGACY_H
 #define TREZORHAL_DISPLAY_LEGACY_H
 
-#include <buffers.h>
-#include <stdint.h>
+#include <trezor_types.h>
+
+#include "buffers.h"
 
 // These declarations will be removed after the final cleanup
 // of display drivers. They are here just to simplify integration

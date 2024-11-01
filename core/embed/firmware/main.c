@@ -17,11 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include STM32_HAL_H
-
-#include <stdint.h>
-#include <stdio.h>
-#include <string.h>
+#include <trezor_rtl.h>
 
 #include "py/builtin.h"
 #include "py/compile.h"
@@ -36,10 +32,8 @@
 #include "ports/stm32/gccollect.h"
 #include "ports/stm32/pendsv.h"
 
-#include "error_handling.h"
 #include "rsod.h"
 #include "rust_ui_common.h"
-#include "secbool.h"
 #include "systask.h"
 #include "system.h"
 

@@ -17,11 +17,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <string.h>
-#include <sys/types.h>
+#include <trezor_model.h>
+#include <trezor_rtl.h>
 
+#include <sys/types.h>
 #include "bootutils.h"
-#include "common.h"
 #include "display.h"
 #include "display_draw.h"
 #include "flash.h"
@@ -32,8 +32,8 @@
 #include "random_delays.h"
 #include "rng.h"
 #include "rsod.h"
-#include "secbool.h"
 #include "system.h"
+#include "systick.h"
 #ifdef USE_TOUCH
 #include "touch.h"
 #endif
@@ -42,7 +42,6 @@
 
 #include "bootui.h"
 #include "messages.h"
-#include "model.h"
 #include "version_check.h"
 
 #ifdef USE_HASH_PROCESSOR

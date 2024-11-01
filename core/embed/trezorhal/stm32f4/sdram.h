@@ -25,7 +25,7 @@
 extern "C" {
 #endif
 
-#include STM32_HAL_H
+#include <trezor_bsp.h>
 
 /** @addtogroup BSP
  * @{

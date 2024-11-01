@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <string.h>
+#include <trezor_rtl.h>
 
 #include "py/mphal.h"
 #include "py/objstr.h"
@@ -27,7 +27,6 @@
 
 #include "embed/extmod/trezorobj.h"
 
-#include "common.h"
 #include "entropy.h"
 #include "memzero.h"
 #include "storage.h"

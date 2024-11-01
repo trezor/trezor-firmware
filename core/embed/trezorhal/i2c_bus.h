@@ -20,9 +20,7 @@
 #ifndef TREZORHAL_I2C_BUS_H
 #define TREZORHAL_I2C_BUS_H
 
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
+#include <trezor_types.h>
 
 #ifdef KERNEL_MODE
 

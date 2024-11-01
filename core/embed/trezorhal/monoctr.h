@@ -22,12 +22,11 @@
 
 #ifdef KERNEL_MODE
 
+#include <trezor_types.h>
+
 // Monoctr module provides monotonic counter functionality
 
 #define MONOCTR_MAX_VALUE 63
-
-#include <stdint.h>
-#include "secbool.h"
 
 typedef enum {
   MONOCTR_BOOTLOADER_VERSION = 0,

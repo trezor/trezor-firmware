@@ -20,7 +20,7 @@
 #ifndef TREZORHAL_RNG_H
 #define TREZORHAL_RNG_H
 
-#include <stdint.h>
+#include <trezor_types.h>
 
 #ifdef KERNEL_MODE
 

@@ -20,12 +20,12 @@
 #ifndef __TREZORHAL_IMAGE_H__
 #define __TREZORHAL_IMAGE_H__
 
-#include <stdint.h>
+#include <trezor_model.h>
+#include <trezor_types.h>
+
 #include "blake2s.h"
 #include "flash.h"
 #include "image_hash_conf.h"
-#include "model.h"
-#include "secbool.h"
 
 #define VENDOR_HEADER_MAX_SIZE (64 * 1024)
 #define IMAGE_HEADER_SIZE 0x400  // size of the bootloader or firmware header

@@ -1,4 +1,4 @@
-#include "common.h"
+#include <trezor_types.h>
 
 uint32_t screen_install_confirm(const char* vendor_str, uint8_t vendor_str_len,
                                 const char* version_str,

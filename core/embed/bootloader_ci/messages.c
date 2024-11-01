@@ -17,19 +17,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <string.h>
+#include <trezor_model.h>
+#include <trezor_rtl.h>
 
 #include <pb.h>
 #include <pb_decode.h>
 #include <pb_encode.h>
 #include "messages.pb.h"
 
-#include "common.h"
 #include "flash.h"
 #include "flash_utils.h"
 #include "image.h"
-#include "model.h"
-#include "secbool.h"
 #include "usb.h"
 #include "version.h"
 

@@ -24,22 +24,18 @@
  * THE SOFTWARE.
  */
 
+#include <trezor_rtl.h>
+
 #include <SDL.h>
 
 #include <ctype.h>
 #include <errno.h>
 #include <signal.h>
 #include <stdarg.h>
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "common.h"
 #include "display.h"
 #include "extmod/misc.h"
 #include "extmod/vfs_posix.h"

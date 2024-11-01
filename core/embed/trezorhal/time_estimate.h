@@ -20,7 +20,7 @@
 #ifndef TREZORHAL_TIME_ESTIMATE_H
 #define TREZORHAL_TIME_ESTIMATE_H
 
-#include <stdint.h>
+#include <trezor_types.h>
 
 uint32_t time_estimate_pbkdf2_ms(uint32_t iterations);
 

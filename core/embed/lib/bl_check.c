@@ -17,15 +17,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdint.h>
-#include <string.h>
+#include <trezor_model.h>
+#include <trezor_rtl.h>
+
 #include "blake2s.h"
 #include "board_capabilities.h"
-#include "common.h"
 #include "flash.h"
 #include "image.h"
 #include "memzero.h"
-#include "model.h"
 #include "mpu.h"
 #include "uzlib.h"
 

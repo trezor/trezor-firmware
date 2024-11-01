@@ -1,16 +1,14 @@
-#include STM32_HAL_H
+#include <trezor_bsp.h>
+#include <trezor_model.h>
+#include <trezor_rtl.h>
 
-#include "secret.h"
-#include <stdbool.h>
-#include <string.h>
 #include "bootutils.h"
-#include "common.h"
 #include "flash.h"
 #include "flash_utils.h"
 #include "memzero.h"
-#include "model.h"
 #include "mpu.h"
 #include "rng.h"
+#include "secret.h"
 #include "secure_aes.h"
 
 #ifdef KERNEL_MODE

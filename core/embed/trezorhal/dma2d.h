@@ -20,7 +20,7 @@
 #ifndef TREZORHAL_DMA2D_H
 #define TREZORHAL_DMA2D_H
 
-#include "common.h"
+#include <trezor_types.h>
 
 void dma2d_init(void);
 

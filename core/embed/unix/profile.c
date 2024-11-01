@@ -18,7 +18,9 @@
  */
 
 #define _GNU_SOURCE
-#include <stdio.h>
+
+#include <trezor_rtl.h>
+
 #include <stdlib.h>
 
 #include "profile.h"

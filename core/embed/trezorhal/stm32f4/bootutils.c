@@ -17,17 +17,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include STM32_HAL_H
-
-#include <string.h>
+#include <trezor_bsp.h>
+#include <trezor_model.h>
+#include <trezor_rtl.h>
 
 #include "bootargs.h"
 #include "bootutils.h"
-#include "common.h"
 #include "display.h"
 #include "image.h"
 #include "irq.h"
-#include "model.h"
 #include "mpu.h"
 
 #ifdef TREZOR_MODEL_T

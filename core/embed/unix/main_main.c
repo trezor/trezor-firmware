@@ -1,3 +1,5 @@
+#include <trezor_rtl.h>
+
 #include "py/mpthread.h"
 #include "py/runtime.h"
 #include "py/stackctrl.h"
@@ -5,7 +7,6 @@
 #include "zkp_context.h"
 #endif
 
-#include "common.h"
 #include "entropy.h"
 
 MP_NOINLINE int main_(int argc, char **argv);

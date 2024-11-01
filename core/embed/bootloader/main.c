@@ -17,12 +17,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <string.h>
+#include <trezor_model.h>
+#include <trezor_rtl.h>
+
 #include <sys/types.h>
 
 #include "bootargs.h"
 #include "bootutils.h"
-#include "common.h"
 #include "display.h"
 #include "display_utils.h"
 #include "flash.h"
@@ -35,9 +36,9 @@
 #include "pvd.h"
 #include "random_delays.h"
 #include "rsod.h"
-#include "secbool.h"
 #include "secret.h"
 #include "system.h"
+#include "systick.h"
 #include "systimer.h"
 
 #ifdef USE_DMA2D
@@ -66,7 +67,6 @@
 #include "hash_processor.h"
 #endif
 
-#include "model.h"
 #include "usb.h"
 #include "version.h"
 

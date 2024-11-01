@@ -1,7 +1,7 @@
 #ifndef TREZORHAL_HASH_PROCESSOR_H_
 #define TREZORHAL_HASH_PROCESSOR_H_
 
-#include <stdint.h>
+#include <trezor_types.h>
 
 #ifdef KERNEL_MODE
 

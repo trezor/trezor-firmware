@@ -2,8 +2,7 @@
 #ifndef CORE_OPTIGA_HAL_H
 #define CORE_OPTIGA_HAL_H
 
-#include <stdint.h>
-#include "secbool.h"
+#include <trezor_types.h>
 
 void optiga_hal_init(void);
 

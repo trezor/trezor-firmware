@@ -20,8 +20,7 @@
 #ifndef TREZORHAL_USB_CLASS_HID_H
 #define TREZORHAL_USB_CLASS_HID_H
 
-#include <stdint.h>
-#include "secbool.h"
+#include <trezor_types.h>
 
 /* usb_hid_info_t contains all information for setting up a HID interface.  All
  * passed pointers need to live at least until the interface is disabled

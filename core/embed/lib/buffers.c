@@ -17,8 +17,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <trezor_rtl.h>
+
 #include "buffers.h"
-#include "common.h"
 #include "fonts/fonts.h"
 #include "memzero.h"
 

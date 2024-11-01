@@ -17,9 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include STM32_HAL_H
-
-#include <stddef.h>
+#include <trezor_bsp.h>
+#include <trezor_rtl.h>
 
 #include "dma2d_bitblt.h"
 #include "gfx_color.h"

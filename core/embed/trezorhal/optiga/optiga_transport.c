@@ -22,18 +22,18 @@
  * https://github.com/Infineon/optiga-trust-m/blob/develop/documents/Infineon_I2C_Protocol_v2.03.pdf
  */
 
-#include "optiga_transport.h"
-#include <string.h>
+#include <trezor_bsp.h>
+#include <trezor_rtl.h>
+
 #include "aes/aesccm.h"
-#include "common.h"
 #include "i2c_bus.h"
 #include "memzero.h"
 #include "optiga_hal.h"
+#include "optiga_transport.h"
+#include "systick.h"
 #include "tls_prf.h"
 
 #ifdef KERNEL_MODE
-
-#include TREZOR_BOARD
 
 // Maximum possible packet size that can be transmitted.
 #define OPTIGA_MAX_PACKET_SIZE (OPTIGA_DATA_REG_LEN - 5)

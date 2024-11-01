@@ -1,10 +1,9 @@
 #ifndef __EMULATOR_H__
 #define __EMULATOR_H__
 
-#undef FIRMWARE_START
+#include <trezor_types.h>
 
-#include <stdint.h>
-#include <stdio.h>
+#undef FIRMWARE_START
 
 extern uint8_t *FIRMWARE_START;
 

@@ -17,9 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include STM32_HAL_H
-
-#include <string.h>
+#include <trezor_bsp.h>
+#include <trezor_rtl.h>
 
 #include "bootutils.h"
 #include "mpu.h"

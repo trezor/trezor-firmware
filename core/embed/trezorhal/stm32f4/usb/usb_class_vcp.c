@@ -19,7 +19,7 @@
 
 #ifdef KERNEL_MODE
 
-#include "common.h"
+#include <trezor_rtl.h>
 
 #include "usb_internal.h"
 #include "usb_vcp.h"

@@ -17,12 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdbool.h>
-#include <stdint.h>
-#include <string.h>
-
-#include TREZOR_BOARD
-#include STM32_HAL_H
+#include <trezor_bsp.h>
+#include <trezor_rtl.h>
 
 #include "display_fb.h"
 #include "display_internal.h"

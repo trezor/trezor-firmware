@@ -20,8 +20,7 @@
 #ifndef TREZOR_HAL_DISPLAY_INTERNAL_H
 #define TREZOR_HAL_DISPLAY_INTERNAL_H
 
-#include <stdbool.h>
-#include <stdint.h>
+#include <trezor_types.h>
 
 #include "sizedefs.h"
 #include "trustzone.h"

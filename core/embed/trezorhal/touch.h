@@ -1,9 +1,7 @@
 #ifndef TREZOR_HAL_TOUCH_H
 #define TREZOR_HAL_TOUCH_H
 
-#include <stdbool.h>
-#include <stdint.h>
-#include "secbool.h"
+#include <trezor_types.h>
 
 #ifdef KERNEL_MODE
 

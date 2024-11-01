@@ -17,41 +17,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __TREZORHAL_COMMON_H__
-#define __TREZORHAL_COMMON_H__
+#ifndef TREZOR_TYPES_H
+#define TREZOR_TYPES_H
 
+// `trezor_types.h` consolidates commonly needed includes for interface
+// header files and provides essential types required in most files.
+//
+// Avoid adding additional includes here unless absolutely necessary,
+// as it may pollute the global namespace across the project.
+
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+
 #include "secbool.h"
 
-#include "error_handling.h"
-#include "systick.h"
-
-#ifndef MIN_8bits
-#define MIN_8bits(a, b)                  \
-  ({                                     \
-    typeof(a) _a = (a);                  \
-    typeof(b) _b = (b);                  \
-    _a < _b ? (_a & 0xFF) : (_b & 0xFF); \
-  })
-#endif
-#ifndef MIN
-#define MIN(a, b)       \
-  ({                    \
-    typeof(a) _a = (a); \
-    typeof(b) _b = (b); \
-    _a < _b ? _a : _b;  \
-  })
-#endif
-#ifndef MAX
-#define MAX(a, b)       \
-  ({                    \
-    typeof(a) _a = (a); \
-    typeof(b) _b = (b); \
-    _a > _b ? _a : _b;  \
-  })
-#endif
-
-#define ARRAY_LENGTH(x) (sizeof(x) / sizeof((x)[0]))
-
-#endif
+#endif  // TREZOR_TYPES_H

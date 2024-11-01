@@ -20,9 +20,7 @@
 #ifndef TREZOR_HAL_SECURE_AES_H
 #define TREZOR_HAL_SECURE_AES_H
 
-#include <secbool.h>
-#include <stddef.h>
-#include <stdint.h>
+#include <trezor_types.h>
 
 // only some of the keys are supported depending on execution environment
 typedef enum {

@@ -20,9 +20,7 @@
 #ifndef PRODTEST_OPTIGA_PRODTEST_H
 #define PRODTEST_OPTIGA_PRODTEST_H
 
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
+#include <trezor_types.h>
 
 #define OID_CERT_INF (OPTIGA_OID_CERT + 0)
 #define OID_CERT_DEV (OPTIGA_OID_CERT + 1)

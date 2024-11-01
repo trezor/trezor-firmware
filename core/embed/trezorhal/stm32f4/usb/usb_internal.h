@@ -20,7 +20,8 @@
 #ifndef TREZORHAL_USBD_INTERNAL_H
 #define TREZORHAL_USBD_INTERNAL_H
 
-#include <stdint.h>
+#include <trezor_types.h>
+
 #include "usbd_core.h"
 
 #define USB_EP_DIR_MASK 0x80

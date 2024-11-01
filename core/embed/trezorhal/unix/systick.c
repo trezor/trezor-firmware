@@ -17,10 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdbool.h>
-#include <stddef.h>
+#include <trezor_rtl.h>
 
-#include <string.h>
 #include <time.h>
 #include <unistd.h>
 

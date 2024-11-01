@@ -17,10 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <trezor_rtl.h>
 
-#include "common.h"
 #include "rng.h"
 
 uint32_t rng_get(void) {

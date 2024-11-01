@@ -17,16 +17,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include STM32_HAL_H
-#include TREZOR_BOARD
+#include <trezor_bsp.h>
+#include <trezor_rtl.h>
 
-#include <string.h>
-
-#include "common.h"
 #include "i2c_bus.h"
 #include "irq.h"
 #include "mpu.h"
 #include "systemview.h"
+#include "systick.h"
 #include "systimer.h"
 
 #ifdef KERNEL_MODE

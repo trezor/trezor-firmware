@@ -20,7 +20,7 @@
 #ifndef TREZORHAL_RESET_FLAGS_H
 #define TREZORHAL_RESET_FLAGS_H
 
-#include "secbool.h"
+#include <trezor_types.h>
 
 #ifdef KERNEL_MODE
 

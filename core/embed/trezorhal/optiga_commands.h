@@ -20,9 +20,8 @@
 #ifndef TREZORHAL_OPTIGA_COMMANDS_H
 #define TREZORHAL_OPTIGA_COMMANDS_H
 
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
+#include <trezor_types.h>
+
 #include "optiga_common.h"
 
 // Data object identifiers.

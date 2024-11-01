@@ -19,14 +19,14 @@
 
 #define _GNU_SOURCE
 
-#include TREZOR_BOARD
+#include <trezor_bsp.h>
+#include <trezor_rtl.h>
 
 #include <xdisplay.h>
 
 #include <SDL.h>
 #include <SDL_image.h>
 
-#include "common.h"
 #include "profile.h"
 
 #define EMULATOR_BORDER 16

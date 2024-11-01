@@ -20,7 +20,7 @@
 #ifndef TREZORHAL_TOUCH_LX154A2422CPT23_H
 #define TREZORHAL_TOUCH_LX154A2422CPT23_H
 
-#include <stdint.h>
+#include <trezor_types.h>
 
 // Performs touch coordinates correction needed for a specific panel
 // Input parameteres x, y represent original touch coordinates.

@@ -58,11 +58,11 @@
   */
 
 /* Includes ------------------------------------------------------------------*/
+#include <trezor_bsp.h>
+#include <trezor_rtl.h>
+
 #include "colors.h"
 #include "irq.h"
-#include "stdint.h"
-#include "string.h"
-#include STM32_HAL_H
 
 /* Common Error codes */
 #define BSP_ERROR_NONE 0

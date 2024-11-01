@@ -54,7 +54,9 @@
 #ifdef KERNEL_MODE
 
 /* Includes ------------------------------------------------------------------*/
-#include STM32_HAL_H
+#include <trezor_rtl.h>
+#include <trezor_bsp.h>
+
 #include "usbd_core.h"
 #include "usb.h"
 #include "irq.h"

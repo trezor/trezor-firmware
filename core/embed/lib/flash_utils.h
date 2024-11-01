@@ -20,7 +20,7 @@
 #ifndef LIB_FLASH_UTILS_H
 #define LIB_FLASH_UTILS_H
 
-#include "secbool.h"
+#include <trezor_types.h>
 
 #ifdef KERNEL_MODE
 

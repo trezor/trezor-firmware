@@ -1,9 +1,9 @@
 
 
-#include <stdint.h>
-#include TREZOR_BOARD
+#include <trezor_bsp.h>
+#include <trezor_rtl.h>
+
 #include "ili9341_spi.h"
-#include STM32_HAL_H
 
 /**
  * @brief ILI9341 chip IDs

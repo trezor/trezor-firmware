@@ -17,13 +17,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TREZORHAL_FLASH_H
-#define TREZORHAL_FLASH_H
+#ifndef TREZOR_BSP_H
+#define TREZOR_BSP_H
 
-#include <trezor_types.h>
+// Trezor 'board support package' (BSP) header file that includes
+// all necessary headers for the specific board including STM32 HAL and
+// pin definitions.
+//
+// This file should be only included by driver implementations and
+// should not be included by application code.
 
-#include "flash_ll.h"
+#include TREZOR_BOARD
 
-void flash_init(void);
+#ifndef TREZOR_EMULATOR
+#include STM32_HAL_H
+#endif
 
-#endif  // TREZORHAL_FLASH_H
+#endif  // TREZOR_BOARD_H

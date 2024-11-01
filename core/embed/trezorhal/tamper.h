@@ -20,7 +20,7 @@
 #ifndef TREZOR_HAL_TAMPER_H
 #define TREZOR_HAL_TAMPER_H
 
-#include <stdint.h>
+#include <trezor_types.h>
 
 #ifdef KERNEL_MODE
 

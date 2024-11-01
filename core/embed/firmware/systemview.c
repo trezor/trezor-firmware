@@ -19,9 +19,10 @@
 
 #ifdef SYSTEM_VIEW
 
-#include "systemview.h"
-#include <string.h>
+#include <trezor_rtl.h>
+
 #include "mpconfigport.h"
+#include "systemview.h"
 
 #include "SEGGER_SYSVIEW.h"
 #include "SEGGER_SYSVIEW_Conf.h"

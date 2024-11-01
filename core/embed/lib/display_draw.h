@@ -20,13 +20,10 @@
 #ifndef __DISPLAY_DRAW_H__
 #define __DISPLAY_DRAW_H__
 
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
+#include <trezor_types.h>
 
 #include "buffers.h"
 #include "colors.h"
-#include TREZOR_BOARD
 #include "fonts/fonts.h"
 
 // provided by common

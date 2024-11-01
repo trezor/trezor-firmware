@@ -17,13 +17,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdint.h>
-#include TREZOR_BOARD
-#include "display.h"
-#include "memzero.h"
-#include STM32_HAL_H
+#include <trezor_bsp.h>
+#include <trezor_rtl.h>
 
+#include "display.h"
 #include "ili9341_spi.h"
+#include "memzero.h"
 #include "sdram.h"
 
 #define MAX_LAYER_NUMBER 2

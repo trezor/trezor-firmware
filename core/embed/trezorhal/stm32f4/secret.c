@@ -1,10 +1,10 @@
-#include "secret.h"
-#include <string.h>
-#include "common.h"
+#include <trezor_model.h>
+#include <trezor_rtl.h>
+
 #include "display_draw.h"
 #include "flash.h"
-#include "model.h"
 #include "mpu.h"
+#include "secret.h"
 
 #ifdef KERNEL_MODE
 

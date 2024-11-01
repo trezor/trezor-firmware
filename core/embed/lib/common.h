@@ -17,13 +17,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TREZORHAL_FLASH_H
-#define TREZORHAL_FLASH_H
+#ifndef LIB_COMMON_H
 
-#include <trezor_types.h>
+// This header is included in storage modules that expect to find common
+// functions like `ensure()`, `error_shutdown()`, or `hal_delay()`.
+//
+// Do not include this header or add dependencies to it unless required by
+// storage.
 
-#include "flash_ll.h"
+#include "error_handling.h"
+#include "systick.h"
 
-void flash_init(void);
-
-#endif  // TREZORHAL_FLASH_H
+#endif  // LIB_COMMON_H

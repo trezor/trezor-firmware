@@ -37,11 +37,10 @@
  * bit is sent.
  */
 
-#include "common.h"
+#include <trezor_bsp.h>
+#include <trezor_rtl.h>
 
 #ifdef KERNEL_MODE
-
-#include STM32_HAL_H
 
 #define RESET_DATA_LEN 18  // >80us no pulse before sending data
 #define DATA_LEN 25        // 24 RGB bits and a final zero

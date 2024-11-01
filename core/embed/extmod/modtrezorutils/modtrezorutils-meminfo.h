@@ -22,6 +22,8 @@
 
 #else
 
+#include <trezor_types.h>
+
 #include "py/bc.h"
 #include "py/gc.h"
 #include "py/nlr.h"
@@ -35,9 +37,6 @@
 #include "embed/extmod/trezorobj.h"
 #include "embed/rust/librust.h"
 #include "embed/trezorhal/usb.h"
-
-#include <stdio.h>
-#include <string.h>
 
 #define WORDS_PER_BLOCK ((MICROPY_BYTES_PER_GC_BLOCK) / MP_BYTES_PER_OBJ_WORD)
 #define BYTES_PER_BLOCK (MICROPY_BYTES_PER_GC_BLOCK)
