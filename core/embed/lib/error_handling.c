@@ -17,10 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stddef.h>
-#include <stdint.h>
+#include <trezor_rtl.h>
 
-#include "error_handling.h"
 #include "system.h"
 
 #ifndef TREZOR_EMULATOR

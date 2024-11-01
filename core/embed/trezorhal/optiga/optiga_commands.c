@@ -23,13 +23,14 @@
  * https://github.com/Infineon/optiga-trust-m/blob/develop/documents/Infineon_I2C_Protocol_v2.03.pdf
  */
 
-#include "optiga_commands.h"
-#include <string.h>
+#include <trezor_rtl.h>
+
 #include "der.h"
 #include "ecdsa.h"
 #include "hmac.h"
 #include "memzero.h"
 #include "nist256p1.h"
+#include "optiga_commands.h"
 #include "optiga_transport.h"
 #include "sha2.h"
 

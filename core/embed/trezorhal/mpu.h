@@ -20,7 +20,7 @@
 #ifndef TREZORHAL_MPU_H
 #define TREZORHAL_MPU_H
 
-#include <stddef.h>
+#include <trezor_types.h>
 
 #ifdef KERNEL_MODE
 

@@ -17,15 +17,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "random_delays.h"
+#include <trezor_rtl.h>
 
 #include <stdatomic.h>
-#include <stdbool.h>
 
 #include "chacha_drbg.h"
-#include "common.h"
 #include "memzero.h"
 #include "rand.h"
+#include "random_delays.h"
 #include "systimer.h"
 
 #ifdef KERNEL_MODE

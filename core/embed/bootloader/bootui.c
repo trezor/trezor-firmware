@@ -17,9 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <string.h>
-
-#include TREZOR_BOARD
+#include <trezor_rtl.h>
 
 #include "bootui.h"
 #include "colors.h"

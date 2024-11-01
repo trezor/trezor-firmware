@@ -24,10 +24,8 @@
 #include <xdisplay.h>
 #else
 
-#include <stdint.h>
-#include "common.h"
-
-#include TREZOR_BOARD
+#include <trezor_bsp.h>
+#include <trezor_types.h>
 
 #ifdef DISPLAY_LEGACY_HEADER
 #include DISPLAY_LEGACY_HEADER

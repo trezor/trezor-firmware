@@ -1,7 +1,7 @@
+#include <trezor_model.h>
 
-#include "lhs200kb-if21.h"
 #include "../display_io.h"
-#include "model.h"
+#include "lhs200kb-if21.h"
 
 void lhs200kb_if21_gamma(void) {
   ISSUE_CMD_BYTE(0xE0);

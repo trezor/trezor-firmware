@@ -20,8 +20,8 @@
 #ifndef TREZORHAL_DISPLAY_INTERNAL_H
 #define TREZORHAL_DISPLAY_INTERNAL_H
 
-#include TREZOR_BOARD
-#include STM32_HAL_H
+#include <trezor_bsp.h>
+#include <trezor_types.h>
 
 #include "sdram.h"
 

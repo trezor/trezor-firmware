@@ -20,8 +20,7 @@
 #ifndef TREZORHAL_SYSTIMER_H
 #define TREZORHAL_SYSTIMER_H
 
-#include <stdbool.h>
-#include <stdint.h>
+#include <trezor_types.h>
 
 #ifdef KERNEL_MODE
 

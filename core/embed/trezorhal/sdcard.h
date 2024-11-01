@@ -46,8 +46,7 @@
 #ifndef __TREZORHAL_SDCARD_H__
 #define __TREZORHAL_SDCARD_H__
 
-#include <stdbool.h>
-#include "secbool.h"
+#include <trezor_types.h>
 
 // this is a fixed size and should not be changed
 #define SDCARD_BLOCK_SIZE (512)

@@ -17,7 +17,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <string.h>
+#include <trezor_rtl.h>
+
+#include <unistd.h>
 
 #include "py/mphal.h"
 #include "py/objstr.h"
@@ -25,9 +27,6 @@
 
 #if MICROPY_PY_TREZORIO
 
-#include <unistd.h>
-
-#include TREZOR_BOARD
 #include "button.h"
 #include "touch.h"
 #include "usb.h"

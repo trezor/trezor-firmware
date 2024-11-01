@@ -17,12 +17,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include TREZOR_BOARD
-
-#include <string.h>
+#include <trezor_bsp.h>
+#include <trezor_model.h>
+#include <trezor_rtl.h>
 
 #include "flash_otp.h"
-#include "model.h"
 #include "unit_properties.h"
 
 #ifdef KERNEL_MODE

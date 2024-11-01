@@ -20,7 +20,7 @@
 #ifndef GFX_COLOR_H
 #define GFX_COLOR_H
 
-#include <stdint.h>
+#include <trezor_types.h>
 
 #ifdef UI_COLOR_32BIT
 #define GFX_COLOR_32BIT

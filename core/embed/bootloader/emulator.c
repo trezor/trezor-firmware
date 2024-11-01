@@ -1,20 +1,20 @@
-#include <stdio.h>
+#include <trezor_model.h>
+#include <trezor_rtl.h>
+
 #include <unistd.h>
 
 #include <SDL.h>
 
-#include TREZOR_BOARD
 #include "bootargs.h"
 #include "bootui.h"
-#include "common.h"
 #include "display.h"
 #include "flash.h"
 #include "flash_otp.h"
-#include "model.h"
 #include "rust_ui.h"
 #ifdef USE_OPTIGA
 #include "secret.h"
 #endif
+#include "systick.h"
 
 #include "emulator.h"
 

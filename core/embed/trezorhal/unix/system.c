@@ -17,12 +17,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
+#include <trezor_rtl.h>
+
 #include <stdlib.h>
-#include <string.h>
 
 #include "bootutils.h"
-#include "common.h"
 #include "system.h"
 #include "systick.h"
 #include "systimer.h"

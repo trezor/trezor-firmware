@@ -20,8 +20,7 @@
 #ifndef TREZORHAL_HAPTIC_H
 #define TREZORHAL_HAPTIC_H
 
-#include <stdbool.h>
-#include <stdint.h>
+#include <trezor_types.h>
 
 typedef enum {
   // Effect at the start of a button press

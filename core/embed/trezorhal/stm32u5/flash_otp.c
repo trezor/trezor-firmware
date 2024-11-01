@@ -17,11 +17,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include STM32_HAL_H
+#include <trezor_bsp.h>
+#include <trezor_rtl.h>
 
-#include "flash_otp.h"
-#include "common.h"
 #include "flash.h"
+#include "flash_otp.h"
 #include "mpu.h"
 
 #ifdef KERNEL_MODE

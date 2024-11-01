@@ -20,7 +20,7 @@
 #ifndef TREZORHAL_OPTIGA_COMMON_H
 #define TREZORHAL_OPTIGA_COMMON_H
 
-#include "secbool.h"
+#include <trezor_types.h>
 
 typedef enum _optiga_result {
   OPTIGA_SUCCESS = 0,     // Operation completed successfully.

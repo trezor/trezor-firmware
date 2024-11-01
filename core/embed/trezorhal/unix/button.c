@@ -17,12 +17,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include TREZOR_BOARD
+#include <trezor_bsp.h>
+#include <trezor_rtl.h>
 
 #include <SDL.h>
 
 #include "button.h"
-#include "common.h"
 
 static char last_left = 0, last_right = 0;
 

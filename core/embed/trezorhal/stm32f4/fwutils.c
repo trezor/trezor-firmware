@@ -17,19 +17,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TREZOR_EMULATOR
-#include STM32_HAL_H
-#endif
-
-#include <string.h>
+#include <trezor_bsp.h>
+#include <trezor_model.h>
+#include <trezor_rtl.h>
 
 #include "blake2s.h"
-#include "error_handling.h"
 #include "flash.h"
 #include "flash_area.h"
 #include "fwutils.h"
 #include "image.h"
-#include "model.h"
 
 #ifdef KERNEL_MODE
 

@@ -33,7 +33,7 @@ Simple key-tag-length-value structure at fixed boardloader address.
 Last tag must be terminator or all space used.
 */
 
-#include <stdint.h>
+#include <trezor_types.h>
 
 #ifdef KERNEL_MODE
 

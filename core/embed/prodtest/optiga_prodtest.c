@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <string.h>
+#include <trezor_rtl.h>
 
 #include "aes/aes.h"
 #include "buffer.h"
@@ -32,8 +32,6 @@
 #include "rand.h"
 #include "secret.h"
 #include "sha2.h"
-
-#include TREZOR_BOARD
 
 #ifdef USE_STORAGE_HWKEY
 #include "secure_aes.h"

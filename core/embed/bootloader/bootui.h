@@ -20,10 +20,9 @@
 #ifndef __BOOTUI_H__
 #define __BOOTUI_H__
 
+#include <trezor_types.h>
+
 #include "image.h"
-#include "secbool.h"
-#include "stdbool.h"
-#include TREZOR_BOARD
 
 typedef enum {
   SCREEN_INTRO = 0,

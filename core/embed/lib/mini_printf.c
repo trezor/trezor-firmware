@@ -43,8 +43,8 @@
  *
  */
 
-#include <string.h>
-#include <stdarg.h>
+#include <trezor_rtl.h>
+
 #include "mini_printf.h"
 
 static unsigned int

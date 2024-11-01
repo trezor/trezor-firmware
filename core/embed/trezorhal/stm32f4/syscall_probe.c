@@ -17,9 +17,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "syscall_probe.h"
+#include <trezor_model.h>
+
 #include "applet.h"
-#include "model.h"
+#include "syscall_probe.h"
 
 #ifdef SYSCALL_DISPATCH
 

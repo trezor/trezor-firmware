@@ -20,10 +20,9 @@
 #ifndef __MESSAGES_H__
 #define __MESSAGES_H__
 
-#include <stdint.h>
+#include <trezor_types.h>
+
 #include "image.h"
-#include "secbool.h"
-#include TREZOR_BOARD
 
 #define USB_TIMEOUT 500
 #define USB_PACKET_SIZE 64

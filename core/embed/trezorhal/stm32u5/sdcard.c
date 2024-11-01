@@ -43,10 +43,8 @@
  * THE SOFTWARE.
  */
 
-#include STM32_HAL_H
-#include TREZOR_BOARD
-
-#include <string.h>
+#include <trezor_bsp.h>
+#include <trezor_rtl.h>
 
 #include "irq.h"
 #include "mpu.h"

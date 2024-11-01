@@ -20,8 +20,8 @@
 #ifndef TREZORHAL_IRQ_H
 #define TREZORHAL_IRQ_H
 
-#include STM32_HAL_H
-#include <stdint.h>
+#include <trezor_bsp.h>
+#include <trezor_types.h>
 
 // Enables simple IRQ statistics for debugging
 #define IRQ_ENABLE_STATS (0)

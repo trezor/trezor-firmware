@@ -17,11 +17,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <trezor_rtl.h>
+
 #include "fonts.h"
-#include <assert.h>
-#include <stdbool.h>
-#include <stddef.h>
-#include <string.h>
 #ifdef TRANSLATIONS
 #include "librust_fonts.h"
 #endif

@@ -1,7 +1,7 @@
 #ifndef TREZORHAL_FLASH_OTP_H
 #define TREZORHAL_FLASH_OTP_H
 
-#include <common.h>
+#include <trezor_types.h>
 
 #ifdef KERNEL_MODE
 

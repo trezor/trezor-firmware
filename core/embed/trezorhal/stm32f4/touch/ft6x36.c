@@ -17,19 +17,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include STM32_HAL_H
-#include TREZOR_BOARD
+#include <trezor_bsp.h>
+#include <trezor_rtl.h>
 
 #ifdef KERNEL_MODE
 
-#include <stdbool.h>
-#include <stdio.h>
-#include <string.h>
-
-#include "common.h"
-
 #include "ft6x36.h"
 #include "i2c_bus.h"
+#include "systick.h"
 #include "touch.h"
 
 #ifdef TOUCH_PANEL_LX154A2422CPT23

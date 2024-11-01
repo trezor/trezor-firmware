@@ -20,7 +20,7 @@
 #ifndef TREZORHAL_DISPLAY_FB_H
 #define TREZORHAL_DISPLAY_FB_H
 
-#include <stdint.h>
+#include <trezor_types.h>
 
 #ifdef XFRAMEBUFFER
 

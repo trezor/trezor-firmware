@@ -1,7 +1,7 @@
 #ifndef TREZORHAL_SYSTICK_INTERNAL_H
 #define TREZORHAL_SYSTICK_INTERNAL_H
 
-#include <stdint.h>
+#include <trezor_types.h>
 
 #include "systick.h"
 

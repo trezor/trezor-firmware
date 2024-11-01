@@ -20,7 +20,7 @@
 #ifndef TREZORHAL_RGB_LED_H
 #define TREZORHAL_RGB_LED_H
 
-#include <stdint.h>
+#include <trezor_types.h>
 
 #ifdef KERNEL_MODE
 

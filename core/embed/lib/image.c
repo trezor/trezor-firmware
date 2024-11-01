@@ -17,14 +17,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <string.h>
+#include <trezor_model.h>
+#include <trezor_rtl.h>
 
 #include "ed25519-donna/ed25519.h"
 
-#include "common.h"
 #include "flash.h"
 #include "image.h"
-#include "model.h"
 
 _Static_assert(VENDOR_HEADER_MAX_SIZE + IMAGE_HEADER_SIZE <= IMAGE_CHUNK_SIZE,
                "The size of the firmware headers must be less than or equal to "

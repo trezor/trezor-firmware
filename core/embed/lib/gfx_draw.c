@@ -17,8 +17,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <display.h>
+#include <trezor_rtl.h>
 
+#include "display.h"
 #include "display_draw.h"
 #include "fonts/fonts.h"
 #include "gfx_draw.h"

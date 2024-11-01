@@ -20,8 +20,7 @@
 #ifndef TREZORHAL_APPLET_H
 #define TREZORHAL_APPLET_H
 
-#include <stddef.h>
-#include <stdint.h>
+#include <trezor_types.h>
 
 #ifdef SYSCALL_DISPATCH
 

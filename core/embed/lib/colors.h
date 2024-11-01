@@ -20,8 +20,7 @@
 #ifndef _COLORS_H
 #define _COLORS_H
 
-#include "common.h"
-#include TREZOR_BOARD
+#include <trezor_types.h>
 
 #ifdef USE_RGB_COLORS
 #define RGB16(R, G, B) ((R & 0xF8) << 8) | ((G & 0xFC) << 3) | ((B & 0xF8) >> 3)

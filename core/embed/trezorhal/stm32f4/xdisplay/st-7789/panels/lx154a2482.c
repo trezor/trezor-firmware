@@ -17,10 +17,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "lx154a2482.h"
+#include <trezor_model.h>
 
 #include "../display_io.h"
-#include "model.h"
+#include "lx154a2482.h"
 
 void lx154a2482_gamma(void) {
   // positive voltage correction

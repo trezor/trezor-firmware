@@ -1,8 +1,8 @@
 #ifndef LIB_IMAGE_HASH_H_
 #define LIB_IMAGE_HASH_H_
 
-#include "model.h"
-#include TREZOR_BOARD
+#include <trezor_model.h>
+#include <trezor_types.h>
 
 #ifdef IMAGE_HASH_SHA256
 #include "sha2.h"

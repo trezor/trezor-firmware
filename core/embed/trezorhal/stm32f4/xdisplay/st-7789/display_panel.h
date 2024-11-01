@@ -20,8 +20,7 @@
 #ifndef TREZORHAL_ST7789_PANEL_H
 #define TREZORHAL_ST7789_PANEL_H
 
-#include <stdbool.h>
-#include <stdint.h>
+#include <trezor_types.h>
 
 // section "9.1.3 RDDID (04h): Read Display ID"
 // of ST7789V datasheet

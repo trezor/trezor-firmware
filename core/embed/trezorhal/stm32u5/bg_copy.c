@@ -1,9 +1,9 @@
+#include <trezor_bsp.h>
+
 #include "bg_copy.h"
 #include "irq.h"
 #include "mpu.h"
 #include "systemview.h"
-
-#include STM32_HAL_H
 
 #ifdef KERNEL_MODE
 

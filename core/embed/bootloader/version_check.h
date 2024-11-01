@@ -19,8 +19,7 @@
 
 #pragma once
 
-#include <stdint.h>
-#include "secbool.h"
+#include <trezor_types.h>
 
 // Protection against bootloader downgrade
 

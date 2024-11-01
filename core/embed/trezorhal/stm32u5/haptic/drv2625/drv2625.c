@@ -17,17 +17,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include TREZOR_BOARD
+#include <trezor_bsp.h>
+#include <trezor_rtl.h>
 
-#include <stdbool.h>
-#include <string.h>
-
-#include "common.h"
 #include "drv2625.h"
 #include "haptic.h"
 #include "i2c_bus.h"
-
-#include STM32_HAL_H
 
 #ifdef KERNEL_MODE
 

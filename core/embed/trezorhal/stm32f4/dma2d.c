@@ -17,10 +17,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "dma2d.h"
+#include <trezor_bsp.h>
+
 #include "colors.h"
-#include STM32_HAL_H
 #include "display.h"
+#include "dma2d.h"
 
 typedef enum {
   DMA2D_LAYER_FG = 1,

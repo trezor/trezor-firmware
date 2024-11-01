@@ -17,14 +17,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <mpu.h>
-#include <secure_aes.h>
-#include STM32_HAL_H
+#include <trezor_bsp.h>
+#include <trezor_model.h>
+#include <trezor_rtl.h>
 
-#include <stdio.h>
 #include <stm32u5xx_hal_cryp.h>
-#include <string.h>
-#include "model.h"
+
+#include "mpu.h"
+#include "secure_aes.h"
 #include "syscall.h"
 #include "trustzone.h"
 

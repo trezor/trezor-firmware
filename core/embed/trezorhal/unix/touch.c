@@ -17,13 +17,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include TREZOR_BOARD
+#include <trezor_bsp.h>
+#include <trezor_rtl.h>
 
 #include <SDL.h>
-#include <stdbool.h>
-#include <stdint.h>
 
-#include "common.h"
 #include "touch.h"
 
 extern int sdl_display_res_x, sdl_display_res_y;

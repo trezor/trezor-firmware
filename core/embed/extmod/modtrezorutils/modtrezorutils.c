@@ -17,6 +17,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <trezor_model.h>
+#include <trezor_rtl.h>
+
 #include "py/objstr.h"
 #include "py/runtime.h"
 
@@ -28,15 +31,11 @@
 #include "embed/extmod/modtrezorutils/modtrezorutils-meminfo.h"
 #include "embed/extmod/trezorobj.h"
 
-#include <string.h>
 #include "blake2s.h"
 #include "bootutils.h"
-#include "error_handling.h"
 #include "fwutils.h"
 #include "unit_properties.h"
 #include "usb.h"
-#include TREZOR_BOARD
-#include "model.h"
 
 #if USE_OPTIGA && !defined(TREZOR_EMULATOR)
 #include "secret.h"

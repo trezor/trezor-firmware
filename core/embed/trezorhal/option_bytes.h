@@ -20,7 +20,7 @@
 #ifndef TREZORHAL_OPTION_BYTES_H
 #define TREZORHAL_OPTION_BYTES_H
 
-#include "secbool.h"
+#include <trezor_types.h>
 
 #ifdef KERNEL_MODE
 

@@ -1,7 +1,7 @@
+#include <trezor_bsp.h>
+#include <trezor_rtl.h>
+
 #include "hash_processor.h"
-#include <stdbool.h>
-#include <string.h>
-#include STM32_HAL_H
 #include "irq.h"
 #include "memzero.h"
 #include "mpu.h"

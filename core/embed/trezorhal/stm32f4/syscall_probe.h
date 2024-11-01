@@ -20,8 +20,7 @@
 #ifndef TREZORHAL_SYSCALL_PROBE_H
 #define TREZORHAL_SYSCALL_PROBE_H
 
-#include <stdbool.h>
-#include <stddef.h>
+#include <trezor_types.h>
 
 #include "system.h"
 

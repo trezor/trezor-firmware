@@ -17,11 +17,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "optiga.h"
-#include <string.h>
+#include <trezor_rtl.h>
+
 #include "hash_to_curve.h"
 #include "hmac.h"
 #include "memzero.h"
+#include "optiga.h"
 #include "optiga_commands.h"
 #include "optiga_transport.h"
 #include "rand.h"

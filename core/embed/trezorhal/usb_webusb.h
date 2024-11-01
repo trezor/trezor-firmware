@@ -20,7 +20,7 @@
 #ifndef TREZORHAL_USB_CLASS_WEBUSB_H
 #define TREZORHAL_USB_CLASS_WEBUSB_H
 
-#include "secbool.h"
+#include <trezor_types.h>
 
 /* usb_webusb_info_t contains all information for setting up a WebUSB interface.
  * All passed pointers need to live at least until the interface is disabled

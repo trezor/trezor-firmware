@@ -20,8 +20,7 @@
 #ifndef TREZORHAL_BOOTARGS_H
 #define TREZORHAL_BOOTARGS_H
 
-#include <stddef.h>
-#include <stdint.h>
+#include <trezor_types.h>
 
 // Defines boot command processed in bootloader on next reboot
 typedef enum {

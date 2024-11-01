@@ -2,7 +2,7 @@
 #ifndef _LTDC_H
 #define _LTDC_H
 
-#include STM32_HAL_H
+#include <trezor_model.h>
 
 #define DISPLAY_FRAMEBUFFER_WIDTH DISPLAY_RESX
 #define DISPLAY_FRAMEBUFFER_HEIGHT DISPLAY_RESY

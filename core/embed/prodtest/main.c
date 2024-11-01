@@ -17,17 +17,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <trezor_bsp.h>  // required by #ifdef STM32U5 below (see #4306 issue)
+#include <trezor_model.h>
+#include <trezor_rtl.h>
+
 #include <ctype.h>
 #include <stdlib.h>
-#include <string.h>
 #include <sys/types.h>
-
-#include STM32_HAL_H
 
 #include "board_capabilities.h"
 #include "bootutils.h"
 #include "button.h"
-#include "common.h"
 #include "display.h"
 #include "display_draw.h"
 #include "display_utils.h"
@@ -35,15 +35,14 @@
 #include "flash_otp.h"
 #include "fwutils.h"
 #include "image.h"
-#include "model.h"
 #include "mpu.h"
 #include "prodtest_common.h"
 #include "random_delays.h"
 #include "rsod.h"
 #include "sbu.h"
 #include "sdcard.h"
-#include "secbool.h"
 #include "system.h"
+#include "systick.h"
 #include "systimer.h"
 #include "touch.h"
 #include "usb.h"
@@ -246,13 +245,13 @@ static void test_display(const char *colors) {
 
 static secbool test_btn_press(uint32_t deadline, uint32_t btn) {
   while (button_read() != (btn | BTN_EVT_DOWN)) {
-    if (HAL_GetTick() > deadline) {
+    if (systick_ms() > deadline) {
       vcp_println("ERROR TIMEOUT");
       return secfalse;
     }
   }
   while (button_read() != (btn | BTN_EVT_UP)) {
-    if (HAL_GetTick() > deadline) {
+    if (systick_ms() > deadline) {
       vcp_println("ERROR TIMEOUT");
       return secfalse;
     }
@@ -281,7 +280,7 @@ static secbool test_btn_all(uint32_t deadline) {
     if (left_pressed && right_pressed) {
       break;
     }
-    if (HAL_GetTick() > deadline) {
+    if (systick_ms() > deadline) {
       vcp_println("ERROR TIMEOUT");
       return secfalse;
     }
@@ -304,7 +303,7 @@ static secbool test_btn_all(uint32_t deadline) {
     if (!left_pressed && !right_pressed) {
       break;
     }
-    if (HAL_GetTick() > deadline) {
+    if (systick_ms() > deadline) {
       vcp_println("ERROR TIMEOUT");
       return secfalse;
     }
@@ -317,21 +316,21 @@ static void test_button(const char *args) {
 
   if (startswith(args, "LEFT ")) {
     timeout = args[5] - '0';
-    uint32_t deadline = HAL_GetTick() + timeout * 1000;
+    uint32_t deadline = systick_ms() + timeout * 1000;
     secbool r = test_btn_press(deadline, BTN_LEFT);
     if (r == sectrue) vcp_println("OK");
   }
 
   if (startswith(args, "RIGHT ")) {
     timeout = args[6] - '0';
-    uint32_t deadline = HAL_GetTick() + timeout * 1000;
+    uint32_t deadline = systick_ms() + timeout * 1000;
     secbool r = test_btn_press(deadline, BTN_RIGHT);
     if (r == sectrue) vcp_println("OK");
   }
 
   if (startswith(args, "BOTH ")) {
     timeout = args[5] - '0';
-    uint32_t deadline = HAL_GetTick() + timeout * 1000;
+    uint32_t deadline = systick_ms() + timeout * 1000;
     secbool r = test_btn_all(deadline);
     if (r == sectrue) vcp_println("OK");
   }
@@ -341,16 +340,16 @@ static void test_button(const char *args) {
 
 #ifdef USE_TOUCH
 static secbool touch_click_timeout(uint32_t *touch, uint32_t timeout_ms) {
-  uint32_t deadline = HAL_GetTick() + timeout_ms;
+  uint32_t deadline = systick_ms() + timeout_ms;
   uint32_t r = 0;
 
   while (touch_get_event())
     ;
   while ((touch_get_event() & TOUCH_START) == 0) {
-    if (HAL_GetTick() > deadline) return secfalse;
+    if (systick_ms() > deadline) return secfalse;
   }
   while (((r = touch_get_event()) & TOUCH_END) == 0) {
-    if (HAL_GetTick() > deadline) return secfalse;
+    if (systick_ms() > deadline) return secfalse;
   }
   while (touch_get_event())
     ;
@@ -608,7 +607,7 @@ static void test_sd(void) {
       vcp_println("ERROR sdcard_write_blocks (%d)", j);
       goto power_off;
     }
-    HAL_Delay(1000);
+    systick_delay_ms(1000);
     if (sectrue !=
         sdcard_read_blocks(buf2, 0, BLOCK_SIZE / SDCARD_BLOCK_SIZE)) {
       vcp_println("ERROR sdcard_read_blocks (%d)", j);
@@ -807,10 +806,14 @@ static void test_otp_write_device_variant(const char *args) {
 static void test_reboot(void) { reboot_device(); }
 
 void cpuid_read(void) {
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_OTP);
+
   uint32_t cpuid[3];
   cpuid[0] = LL_GetUID_Word0();
   cpuid[1] = LL_GetUID_Word1();
   cpuid[2] = LL_GetUID_Word2();
+
+  mpu_restore(mpu_mode);
 
   vcp_print("OK ");
   vcp_println_hex((uint8_t *)cpuid, sizeof(cpuid));

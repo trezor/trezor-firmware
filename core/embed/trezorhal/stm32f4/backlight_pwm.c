@@ -17,14 +17,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdbool.h>
-#include <string.h>
+#include <trezor_bsp.h>
+#include <trezor_rtl.h>
 
 #include "backlight_pwm.h"
-#include "common.h"
-
-#include STM32_HAL_H
-#include TREZOR_BOARD
+#include "systick.h"
 
 // Requested PWM Timer clock frequency [Hz]
 #define TIM_FREQ 10000000

@@ -1,8 +1,7 @@
-#include TREZOR_BOARD
+#include <trezor_model.h>
 
 #include "buffers.h"
 #include "button.h"
-#include "common.h"
 #include "display.h"
 #include "display_draw.h"
 #include "dma2d.h"
@@ -12,10 +11,10 @@
 #include "fonts/fonts.h"
 #include "gfx_bitblt.h"
 #include "haptic.h"
-#include "model.h"
 #include "rgb_led.h"
 #include "secbool.h"
 #include "storage.h"
+#include "systick.h"
 #include "touch.h"
 #include "translations.h"
 #include "usb.h"

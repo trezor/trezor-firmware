@@ -17,24 +17,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
-
-#include STM32_HAL_H
+#include <trezor_model.h>
+#include <trezor_rtl.h>
 
 #include "bootutils.h"
-#include "common.h"
 #include "display.h"
 #include "display_draw.h"
 #include "flash.h"
 #include "image.h"
-#include "model.h"
 #include "rng.h"
 #include "rsod.h"
 #include "sbu.h"
 #include "sdcard.h"
-#include "secbool.h"
 #include "system.h"
 #include "systimer.h"
 #include "terminal.h"

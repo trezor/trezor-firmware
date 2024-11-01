@@ -17,13 +17,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TREZOR_EMULATOR
-#include STM32_HAL_H
-#endif
+#include <trezor_bsp.h>
+#include <trezor_model.h>
 
 #include "flash.h"
 #include "layout_helpers.h"
-#include "model.h"
 
 // Convert sector number to address
 //

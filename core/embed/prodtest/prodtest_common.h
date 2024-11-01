@@ -20,8 +20,7 @@
 #ifndef PRODTEST_COMMON_H
 #define PRODTEST_COMMON_H
 
-#include <stdint.h>
-#include <stdlib.h>
+#include <trezor_types.h>
 
 enum { VCP_IFACE = 0x00 };
 

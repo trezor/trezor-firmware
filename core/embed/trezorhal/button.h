@@ -20,7 +20,7 @@
 #ifndef TREZORHAL_BUTTON_H
 #define TREZORHAL_BUTTON_H
 
-#include <stdint.h>
+#include <trezor_types.h>
 
 #define BTN_EVT_DOWN (1U << 24)
 #define BTN_EVT_UP (1U << 25)

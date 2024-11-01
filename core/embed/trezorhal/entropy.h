@@ -20,7 +20,7 @@
 #ifndef TREZORHAL_ENTROPY_H
 #define TREZORHAL_ENTROPY_H
 
-#include <stdint.h>
+#include <trezor_types.h>
 
 #ifdef KERNEL_MODE
 

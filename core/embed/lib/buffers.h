@@ -20,11 +20,8 @@
 #ifndef _BUFFERS_H
 #define _BUFFERS_H
 
-#include <stdbool.h>
-
-#include "common.h"
-#include "model.h"
-#include TREZOR_BOARD
+#include <trezor_model.h>
+#include <trezor_types.h>
 
 #define BUFFER_PIXELS DISPLAY_RESX
 

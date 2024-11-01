@@ -1,11 +1,9 @@
-#include "translations.h"
-#include <assert.h>
-#include <stdbool.h>
-#include <string.h>
-#include "common.h"
+#include <trezor_model.h>
+#include <trezor_rtl.h>
+
 #include "flash.h"
-#include "model.h"
 #include "mpu.h"
+#include "translations.h"
 
 #ifdef KERNEL_MODE
 

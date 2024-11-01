@@ -20,7 +20,7 @@
 #ifndef __TREZORHAL_SBU_H__
 #define __TREZORHAL_SBU_H__
 
-#include "secbool.h"
+#include <trezor_types.h>
 
 #if KERNEL_MODE
 

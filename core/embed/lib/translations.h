@@ -20,8 +20,7 @@
 #ifndef LIB_TRANSLATIONS_H
 #define LIB_TRANSLATIONS_H
 
-#include <stdbool.h>
-#include <stdint.h>
+#include <trezor_types.h>
 
 bool translations_write(const uint8_t* data, uint32_t offset, uint32_t len);
 

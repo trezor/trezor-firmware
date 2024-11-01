@@ -1,8 +1,7 @@
 #ifndef TREZORHAL_SECRET_H
 #define TREZORHAL_SECRET_H
 
-#include <stdint.h>
-#include "secbool.h"
+#include <trezor_types.h>
 
 #ifdef KERNEL_MODE
 

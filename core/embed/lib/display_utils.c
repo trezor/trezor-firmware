@@ -17,8 +17,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "common.h"
+#include <trezor_rtl.h>
+
 #include "display.h"
+#include "systick.h"
 
 void display_fade(int start, int end, int delay) {
 #ifdef USE_BACKLIGHT

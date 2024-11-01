@@ -17,7 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <string.h>
+#include <trezor_model.h>
+#include <trezor_rtl.h>
 
 #include <pb.h>
 #include <pb_decode.h>
@@ -25,11 +26,9 @@
 #include "messages.pb.h"
 
 #include "bootargs.h"
-#include "common.h"
 #include "flash.h"
 #include "flash_utils.h"
 #include "image.h"
-#include "secbool.h"
 #include "secret.h"
 #include "unit_properties.h"
 #include "usb.h"
@@ -41,7 +40,6 @@
 #include "version_check.h"
 
 #include "memzero.h"
-#include "model.h"
 
 #ifdef TREZOR_EMULATOR
 #include "emulator.h"

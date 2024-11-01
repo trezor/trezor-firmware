@@ -58,13 +58,10 @@
   */
 
 /* Includes ------------------------------------------------------------------*/
+#include <trezor_bsp.h>
+#include <trezor_rtl.h>
+
 #include "colors.h"
-#include "stdint.h"
-#include "string.h"
-
-#include TREZOR_BOARD
-#include STM32_HAL_H
-
 #include "display_internal.h"
 #include "irq.h"
 

@@ -19,22 +19,19 @@
 
 #define _GNU_SOURCE
 
-#include "display_draw.h"
+#include <trezor_rtl.h>
+
+#include <stdarg.h>
+
 #include "buffers.h"
-#include "common.h"
+#include "display.h"
+#include "display_draw.h"
+#include "fonts/fonts.h"
+#include "memzero.h"
 
 #ifdef USE_DMA2D
 #include "dma2d.h"
 #endif
-
-#include "fonts/fonts.h"
-
-#include <stdarg.h>
-#include <string.h>
-
-#include "memzero.h"
-
-#include "display.h"
 
 static struct {
   int x, y;

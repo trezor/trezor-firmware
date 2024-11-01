@@ -20,9 +20,7 @@
 #ifndef TREZORHAL_SYSTASK_H
 #define TREZORHAL_SYSTASK_H
 
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
+#include <trezor_types.h>
 
 #include "mpu.h"
 

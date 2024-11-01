@@ -17,11 +17,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdint.h>
-#include TREZOR_BOARD
+#include <trezor_bsp.h>
+#include <trezor_rtl.h>
+
 #include "display.h"
 #include "memzero.h"
-#include STM32_HAL_H
 
 // FSMC/FMC Bank 1 - NOR/PSRAM 1
 #define DISPLAY_MEMORY_BASE 0x60000000

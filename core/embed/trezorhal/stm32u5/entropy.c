@@ -17,11 +17,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <string.h>
+#include <trezor_model.h>
+#include <trezor_rtl.h>
 
 #include "entropy.h"
 #include "flash_otp.h"
-#include "model.h"
 #include "mpu.h"
 #include "rand.h"
 

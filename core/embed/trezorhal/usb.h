@@ -20,8 +20,7 @@
 #ifndef __TREZORHAL_USB_H__
 #define __TREZORHAL_USB_H__
 
-#include <stdint.h>
-#include "secbool.h"
+#include <trezor_types.h>
 
 #include "usb_hid.h"
 #include "usb_vcp.h"

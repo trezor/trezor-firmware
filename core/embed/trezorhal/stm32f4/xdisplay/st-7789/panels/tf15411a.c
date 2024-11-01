@@ -17,9 +17,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "tf15411a.h"
+#include <trezor_model.h>
+
 #include "../display_io.h"
-#include "model.h"
+#include "tf15411a.h"
 
 void tf15411a_init_seq(void) {
   // Inter Register Enable1

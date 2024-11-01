@@ -17,20 +17,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <string.h>
+#include <trezor_model.h>
+#include <trezor_rtl.h>
 
-#include TREZOR_BOARD
 #include "board_capabilities.h"
 #include "bootutils.h"
 #include "buffers.h"
-#include "common.h"
 #include "compiler_traits.h"
 #include "display.h"
 #include "display_draw.h"
 #include "flash.h"
 #include "flash_utils.h"
 #include "image.h"
-#include "model.h"
 #include "mpu.h"
 #include "pvd.h"
 #include "reset_flags.h"
@@ -38,6 +36,7 @@
 #include "rsod.h"
 #include "secret.h"
 #include "system.h"
+#include "systick.h"
 #include "terminal.h"
 
 #ifdef USE_SD_CARD
@@ -59,7 +58,6 @@
 #endif
 
 #include "memzero.h"
-#include "model.h"
 #include "monoctr.h"
 #include "option_bytes.h"
 #include "tamper.h"

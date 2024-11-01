@@ -17,17 +17,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <trezor_rtl.h>
+
 #include <arpa/inet.h>
-#include <assert.h>
 #include <fcntl.h>
 #include <stdlib.h>
-#include <string.h>
 #include <sys/poll.h>
 #include <sys/socket.h>
 #include <time.h>
 #include <unistd.h>
 
-#include "error_handling.h"
 #include "profile.h"
 #include "usb.h"
 

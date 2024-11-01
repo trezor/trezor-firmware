@@ -17,13 +17,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <trezor_rtl.h>
 
-#include <common.h>
+#include <stdlib.h>
+
 #include "bootargs.h"
 #include "bootutils.h"
+#include "systick.h"
 
 // Holds the 'command' for the next reboot.
 static boot_command_t g_boot_command;

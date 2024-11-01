@@ -20,8 +20,7 @@
 #ifndef TREZORHAL_BOOTUTILS_H
 #define TREZORHAL_BOOTUTILS_H
 
-#include <stddef.h>
-#include <stdint.h>
+#include <trezor_types.h>
 
 // Immediately resets the device and initiates the normal boot sequence.
 void __attribute__((noreturn)) reboot_device(void);

@@ -18,22 +18,17 @@
  */
 #define _GNU_SOURCE
 
-#include <SDL.h>
-#include <SDL_image.h>
+#include <trezor_bsp.h>
+#include <trezor_rtl.h>
+
 #include <math.h>
 #include <stdarg.h>
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
-#include "common.h"
+#include <SDL.h>
+#include <SDL_image.h>
+
 #include "display.h"
 #include "profile.h"
-
-#include TREZOR_BOARD
 
 #define EMULATOR_BORDER 16
 

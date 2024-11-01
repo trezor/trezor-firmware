@@ -17,15 +17,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include STM32_HAL_H
+#include <trezor_bsp.h>
+#include <trezor_model.h>
+#include <trezor_rtl.h>
 
 #ifdef KERNEL_MODE
 
-#include "option_bytes.h"
-#include "common.h"
 #include "flash.h"
-#include "model.h"
-#include TREZOR_BOARD
+#include "option_bytes.h"
 
 #pragma GCC optimize( \
     "no-stack-protector")  // applies to all functions in this file

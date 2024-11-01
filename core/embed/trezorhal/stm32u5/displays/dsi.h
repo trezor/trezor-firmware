@@ -1,7 +1,8 @@
 #ifndef DSI_H_
 #define DSI_H_
 
-#include STM32_HAL_H
+#include <trezor_bsp.h>
+#include <trezor_types.h>
 
 #define DISPLAY_COLOR_MODE DMA2D_OUTPUT_ARGB8888
 #define DISPLAY_FRAMEBUFFER_WIDTH 768

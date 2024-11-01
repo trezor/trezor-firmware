@@ -20,8 +20,8 @@
 #ifndef TREZORHAL_DISPLAY_IO_H
 #define TREZORHAL_DISPLAY_IO_H
 
-#include STM32_HAL_H
-#include TREZOR_BOARD
+#include <trezor_bsp.h>
+#include <trezor_types.h>
 
 void display_io_init_gpio(void);
 void display_io_init_fmc(void);
