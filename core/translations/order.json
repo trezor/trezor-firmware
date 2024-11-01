@@ -968,8 +968,8 @@
   "966": "address__public_key_confirmed",
   "967": "words__continue_anyway",
   "968": "ethereum__unknown_contract_address",
-  "970": "ethereum__token_contract",
-  "971": "buttons__view_all_data",
-  "972": "instructions__view_all_data",
-  "973": "ethereum__interaction_contract"
+  "969": "ethereum__token_contract",
+  "970": "buttons__view_all_data",
+  "971": "instructions__view_all_data",
+  "972": "ethereum__interaction_contract"
 }
