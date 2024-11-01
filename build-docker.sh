@@ -185,6 +185,11 @@ if [ $INIT -eq 1 ]; then
   echo ">>> DOCKER BUILD ALPINE_VERSION=$ALPINE_VERSION ALPINE_ARCH=$ALPINE_ARCH NIX_VERSION=$NIX_VERSION -t $CONTAINER_NAME"
   echo
 
+  # some Nix installations have problem with shell.nix -> ci/shell.nix symlink
+  # docker can't handle ci/shell.nix -> shell.nix
+  # let's copy the file and try to fix paths ...
+  sed "s|./ci/|./|" < shell.nix > ci/shell.nix
+
   $DOCKER build \
     --network=host \
     --build-arg ALPINE_VERSION="$ALPINE_VERSION" \
