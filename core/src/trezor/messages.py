@@ -482,6 +482,7 @@ if TYPE_CHECKING:
         coin_name: "str"
         script_type: "InputScriptType"
         ignore_xpub_magic: "bool | None"
+        multisig_xpub_magic: "bool | None"
 
         def __init__(
             self,
@@ -492,6 +493,7 @@ if TYPE_CHECKING:
             coin_name: "str | None" = None,
             script_type: "InputScriptType | None" = None,
             ignore_xpub_magic: "bool | None" = None,
+            multisig_xpub_magic: "bool | None" = None,
         ) -> None:
             pass
 

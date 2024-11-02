@@ -427,6 +427,8 @@ pub struct GetPublicKey {
     pub script_type: ::std::option::Option<::protobuf::EnumOrUnknown<InputScriptType>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.GetPublicKey.ignore_xpub_magic)
     pub ignore_xpub_magic: ::std::option::Option<bool>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.GetPublicKey.multisig_xpub_magic)
+    pub multisig_xpub_magic: ::std::option::Option<bool>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.bitcoin.GetPublicKey.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -575,8 +577,27 @@ impl GetPublicKey {
         self.ignore_xpub_magic = ::std::option::Option::Some(v);
     }
 
+    // optional bool multisig_xpub_magic = 7;
+
+    pub fn multisig_xpub_magic(&self) -> bool {
+        self.multisig_xpub_magic.unwrap_or(false)
+    }
+
+    pub fn clear_multisig_xpub_magic(&mut self) {
+        self.multisig_xpub_magic = ::std::option::Option::None;
+    }
+
+    pub fn has_multisig_xpub_magic(&self) -> bool {
+        self.multisig_xpub_magic.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_multisig_xpub_magic(&mut self, v: bool) {
+        self.multisig_xpub_magic = ::std::option::Option::Some(v);
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(6);
+        let mut fields = ::std::vec::Vec::with_capacity(7);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
             "address_n",
@@ -607,6 +628,11 @@ impl GetPublicKey {
             "ignore_xpub_magic",
             |m: &GetPublicKey| { &m.ignore_xpub_magic },
             |m: &mut GetPublicKey| { &mut m.ignore_xpub_magic },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "multisig_xpub_magic",
+            |m: &GetPublicKey| { &m.multisig_xpub_magic },
+            |m: &mut GetPublicKey| { &mut m.multisig_xpub_magic },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<GetPublicKey>(
             "GetPublicKey",
@@ -647,6 +673,9 @@ impl ::protobuf::Message for GetPublicKey {
                 48 => {
                     self.ignore_xpub_magic = ::std::option::Option::Some(is.read_bool()?);
                 },
+                56 => {
+                    self.multisig_xpub_magic = ::std::option::Option::Some(is.read_bool()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -677,6 +706,9 @@ impl ::protobuf::Message for GetPublicKey {
         if let Some(v) = self.ignore_xpub_magic {
             my_size += 1 + 1;
         }
+        if let Some(v) = self.multisig_xpub_magic {
+            my_size += 1 + 1;
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -701,6 +733,9 @@ impl ::protobuf::Message for GetPublicKey {
         if let Some(v) = self.ignore_xpub_magic {
             os.write_bool(6, v)?;
         }
+        if let Some(v) = self.multisig_xpub_magic {
+            os.write_bool(7, v)?;
+        }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
     }
@@ -724,6 +759,7 @@ impl ::protobuf::Message for GetPublicKey {
         self.coin_name = ::std::option::Option::None;
         self.script_type = ::std::option::Option::None;
         self.ignore_xpub_magic = ::std::option::Option::None;
+        self.multisig_xpub_magic = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -735,6 +771,7 @@ impl ::protobuf::Message for GetPublicKey {
             coin_name: ::std::option::Option::None,
             script_type: ::std::option::Option::None,
             ignore_xpub_magic: ::std::option::Option::None,
+            multisig_xpub_magic: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -13354,13 +13391,14 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     HDNodeTypeR\x05nodes\x12\x1b\n\taddress_n\x18\x05\x20\x03(\rR\x08address\
     N\x1ah\n\x0eHDNodePathType\x129\n\x04node\x18\x01\x20\x02(\x0b2%.hw.trez\
     or.messages.common.HDNodeTypeR\x04node\x12\x1b\n\taddress_n\x18\x02\x20\
-    \x03(\rR\x08addressN\"\xa6\x02\n\x0cGetPublicKey\x12\x1b\n\taddress_n\
+    \x03(\rR\x08addressN\"\xd6\x02\n\x0cGetPublicKey\x12\x1b\n\taddress_n\
     \x18\x01\x20\x03(\rR\x08addressN\x12(\n\x10ecdsa_curve_name\x18\x02\x20\
     \x01(\tR\x0eecdsaCurveName\x12!\n\x0cshow_display\x18\x03\x20\x01(\x08R\
     \x0bshowDisplay\x12$\n\tcoin_name\x18\x04\x20\x01(\t:\x07BitcoinR\x08coi\
     nName\x12Z\n\x0bscript_type\x18\x05\x20\x01(\x0e2+.hw.trezor.messages.bi\
     tcoin.InputScriptType:\x0cSPENDADDRESSR\nscriptType\x12*\n\x11ignore_xpu\
-    b_magic\x18\x06\x20\x01(\x08R\x0fignoreXpubMagic\"\xa5\x01\n\tPublicKey\
+    b_magic\x18\x06\x20\x01(\x08R\x0fignoreXpubMagic\x12.\n\x13multisig_xpub\
+    _magic\x18\x07\x20\x01(\x08R\x11multisigXpubMagic\"\xa5\x01\n\tPublicKey\
     \x129\n\x04node\x18\x01\x20\x02(\x0b2%.hw.trezor.messages.common.HDNodeT\
     ypeR\x04node\x12\x12\n\x04xpub\x18\x02\x20\x02(\tR\x04xpub\x12)\n\x10roo\
     t_fingerprint\x18\x03\x20\x01(\rR\x0frootFingerprint\x12\x1e\n\ndescript\

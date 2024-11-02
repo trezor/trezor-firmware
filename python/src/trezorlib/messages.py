@@ -1108,6 +1108,7 @@ class GetPublicKey(protobuf.MessageType):
         4: protobuf.Field("coin_name", "string", repeated=False, required=False, default='Bitcoin'),
         5: protobuf.Field("script_type", "InputScriptType", repeated=False, required=False, default=InputScriptType.SPENDADDRESS),
         6: protobuf.Field("ignore_xpub_magic", "bool", repeated=False, required=False, default=None),
+        7: protobuf.Field("multisig_xpub_magic", "bool", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -1119,6 +1120,7 @@ class GetPublicKey(protobuf.MessageType):
         coin_name: Optional["str"] = 'Bitcoin',
         script_type: Optional["InputScriptType"] = InputScriptType.SPENDADDRESS,
         ignore_xpub_magic: Optional["bool"] = None,
+        multisig_xpub_magic: Optional["bool"] = None,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.ecdsa_curve_name = ecdsa_curve_name
@@ -1126,6 +1128,7 @@ class GetPublicKey(protobuf.MessageType):
         self.coin_name = coin_name
         self.script_type = script_type
         self.ignore_xpub_magic = ignore_xpub_magic
+        self.multisig_xpub_magic = multisig_xpub_magic
 
 
 class PublicKey(protobuf.MessageType):

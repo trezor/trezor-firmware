@@ -85,6 +85,7 @@ message GetPublicKey {
     optional string coin_name = 4 [default='Bitcoin'];                  // coin to use for verifying
     optional InputScriptType script_type = 5 [default=SPENDADDRESS];    // used to distinguish between various address formats (non-segwit, segwit, etc.)
     optional bool ignore_xpub_magic = 6;                                // ignore SLIP-0132 XPUB magic, use xpub/tpub prefix for all account types
+    optional bool multisig_xpub_magic = 7;                              // use Ypub/Zpub prefix for SegWit script types
 }
 
 /**
