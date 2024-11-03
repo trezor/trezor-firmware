@@ -271,3 +271,30 @@ def descriptor_checksum(desc: str) -> str:
     for j in range(0, 8):
         ret[j] = CHECKSUM_CHARSET[(c >> (5 * (7 - j))) & 31]
     return "".join(ret)
+
+
+def get_xpub_magic(
+    coin: CoinInfo,
+    script_type: InputScriptType,
+    ignore_xpub_magic: bool | None,
+    is_multisig: bool | None,
+) -> int:
+    from trezor.enums import InputScriptType
+
+    xpub_magic = None
+    if not ignore_xpub_magic:
+        # Handle SegWit v0 script types.
+        # When coin.segwit is true, cointool.py guarantees that the corresponding xpub_magic_* attributes not None.
+        if not is_multisig:
+            if script_type == InputScriptType.SPENDP2SHWITNESS:
+                xpub_magic = coin.xpub_magic_segwit_p2sh
+            elif script_type == InputScriptType.SPENDWITNESS:
+                xpub_magic = coin.xpub_magic_segwit_native
+        else:
+            if script_type == InputScriptType.SPENDWITNESS:
+                xpub_magic = coin.xpub_magic_multisig_segwit_native
+            elif script_type == InputScriptType.SPENDP2SHWITNESS:
+                xpub_magic = coin.xpub_magic_multisig_segwit_p2sh
+
+    # SPENDADDRESS, SPENDMULTISIG, SPENDTAPROOT, ignore_xpub_magic or fallback.
+    return xpub_magic or coin.xpub_magic
