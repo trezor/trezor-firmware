@@ -28,6 +28,7 @@ if TYPE_CHECKING:
     from ..client import TrezorClient
 
 PURPOSE_BIP44 = 44
+PURPOSE_BIP45 = 45
 PURPOSE_BIP48 = 48
 PURPOSE_BIP49 = 49
 PURPOSE_BIP84 = 84
@@ -137,6 +138,14 @@ def guess_script_type_from_path(address_n: List[int]) -> messages.InputScriptTyp
     return messages.InputScriptType.SPENDADDRESS
 
 
+def guess_multisig_from_path(address_n: List[int]) -> bool:
+    if len(address_n) < 1 or not tools.is_hardened(address_n[0]):
+        return False
+
+    purpose = tools.unharden(address_n[0])
+    return purpose in (PURPOSE_BIP45, PURPOSE_BIP48)
+
+
 def get_unlock_path(address_n: List[int]) -> Optional[List[int]]:
     if address_n and address_n[0] == tools.H_(10025):
         return address_n[:1]
@@ -237,6 +246,7 @@ def get_address(
 @click.option("-e", "--curve")
 @click.option("-t", "--script-type", type=ChoiceType(INPUT_SCRIPTS))
 @click.option("-d", "--show-display", is_flag=True)
+@click.option("-m", "--multisig", is_flag=True)
 @with_client
 def get_public_node(
     client: "TrezorClient",
@@ -245,11 +255,13 @@ def get_public_node(
     curve: Optional[str],
     script_type: Optional[messages.InputScriptType],
     show_display: bool,
+    multisig: bool,
 ) -> dict:
     """Get public node of given path."""
     address_n = tools.parse_path(address)
     if script_type is None:
         script_type = guess_script_type_from_path(address_n)
+    multisig = multisig or guess_multisig_from_path(address_n)
     result = btc.get_public_node(
         client,
         address_n,
@@ -257,6 +269,7 @@ def get_public_node(
         show_display=show_display,
         coin_name=coin,
         script_type=script_type,
+        multisig_xpub_magic=multisig,
         unlock_path=get_unlock_path(address_n),
     )
     return {
