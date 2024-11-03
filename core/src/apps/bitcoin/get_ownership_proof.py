@@ -19,7 +19,6 @@ async def get_ownership_proof(
     authorization: CoinJoinAuthorization | None = None,
 ) -> OwnershipProof:
     from trezor import TR
-    from trezor.enums import InputScriptType
     from trezor.messages import OwnershipProof
     from trezor.ui.layouts import confirm_action, confirm_blob
     from trezor.wire import DataError, ProcessError
@@ -46,11 +45,7 @@ async def get_ownership_proof(
     if script_type not in common.INTERNAL_INPUT_SCRIPT_TYPES:
         raise DataError("Invalid script type")
 
-    if script_type in common.SEGWIT_INPUT_SCRIPT_TYPES and not coin.segwit:
-        raise DataError("Segwit not enabled on this coin")
-
-    if script_type == InputScriptType.SPENDTAPROOT and not coin.taproot:
-        raise DataError("Taproot not enabled on this coin")
+    common.sanitize_input_script_type(coin, script_type)
 
     node = keychain.derive(msg.address_n)
     address = addresses.get_address(script_type, coin, node, msg.multisig)

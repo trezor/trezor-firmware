@@ -190,6 +190,14 @@ def input_is_external_unverified(txi: TxInput) -> bool:
     )
 
 
+def sanitize_input_script_type(coin: CoinInfo, script_type: InputScriptType) -> None:
+    if script_type in SEGWIT_INPUT_SCRIPT_TYPES and not coin.segwit:
+        raise wire.DataError("Segwit not enabled on this coin.")
+
+    if script_type == InputScriptType.SPENDTAPROOT and not coin.taproot:
+        raise wire.DataError("Taproot not enabled on this coin")
+
+
 def tagged_hashwriter(tag: bytes) -> HashWriter:
     from trezor.crypto.hashlib import sha256
     from trezor.utils import HashWriter
