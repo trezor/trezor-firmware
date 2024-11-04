@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 - Simplified UI of Cardano transactions initiated by Trezor Suite.  [#4284]
+- [T3T1] Included bootloader 2.1.9.
 
 ### Fixed
 - [T3T1] Show account info in ETH send/stake flow.  [#3536]
