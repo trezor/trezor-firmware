@@ -804,10 +804,14 @@ static void test_otp_write_device_variant(const char *args) {
 static void test_reboot(void) { reboot_device(); }
 
 void cpuid_read(void) {
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_OTP);
+
   uint32_t cpuid[3];
   cpuid[0] = LL_GetUID_Word0();
   cpuid[1] = LL_GetUID_Word1();
   cpuid[2] = LL_GetUID_Word2();
+
+  mpu_restore(mpu_mode);
 
   vcp_print("OK ");
   vcp_println_hex((uint8_t *)cpuid, sizeof(cpuid));
