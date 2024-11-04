@@ -14,8 +14,10 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from __future__ import annotations
+
 from dataclasses import dataclass
-from typing import Collection, Optional, Tuple
+from typing import Collection, Tuple
 
 from . import mapping
 
@@ -28,7 +30,7 @@ VENDORS = ("bitcointrezor.com", "trezor.io")
 class TrezorModel:
     name: str
     internal_name: str
-    minimum_version: Tuple[int, int, int]
+    minimum_version: tuple[int, int, int]
     vendors: Collection[str]
     usb_ids: Collection[UsbId]
     default_mapping: mapping.ProtobufMapping
@@ -36,12 +38,17 @@ class TrezorModel:
 
 # ==== internal names ====
 
+USBID_TREZOR_ONE = (0x534C, 0x0001)
+USBID_TREZOR_CORE = (0x1209, 0x53C1)
+USBID_TREZOR_CORE_BOOTLOADER = (0x1209, 0x53C0)
+
+
 T1B1 = TrezorModel(
     name="1",
     internal_name="T1B1",
     minimum_version=(1, 8, 0),
     vendors=VENDORS,
-    usb_ids=((0x534C, 0x0001),),
+    usb_ids=(USBID_TREZOR_ONE,),
     default_mapping=mapping.DEFAULT_MAPPING,
 )
 
@@ -50,7 +57,7 @@ T2T1 = TrezorModel(
     internal_name="T2T1",
     minimum_version=(2, 1, 0),
     vendors=VENDORS,
-    usb_ids=((0x1209, 0x53C1), (0x1209, 0x53C0)),
+    usb_ids=(USBID_TREZOR_CORE, USBID_TREZOR_CORE_BOOTLOADER),
     default_mapping=mapping.DEFAULT_MAPPING,
 )
 
@@ -59,7 +66,7 @@ T2B1 = TrezorModel(
     internal_name="T2B1",
     minimum_version=(2, 1, 0),
     vendors=VENDORS,
-    usb_ids=((0x1209, 0x53C1), (0x1209, 0x53C0)),
+    usb_ids=(USBID_TREZOR_CORE, USBID_TREZOR_CORE_BOOTLOADER),
     default_mapping=mapping.DEFAULT_MAPPING,
 )
 
@@ -68,7 +75,7 @@ T3T1 = TrezorModel(
     internal_name="T3T1",
     minimum_version=(2, 1, 0),
     vendors=VENDORS,
-    usb_ids=((0x1209, 0x53C1), (0x1209, 0x53C0)),
+    usb_ids=(USBID_TREZOR_CORE, USBID_TREZOR_CORE_BOOTLOADER),
     default_mapping=mapping.DEFAULT_MAPPING,
 )
 
@@ -77,7 +84,7 @@ T3B1 = TrezorModel(
     internal_name="T3B1",
     minimum_version=(2, 1, 0),
     vendors=VENDORS,
-    usb_ids=((0x1209, 0x53C1), (0x1209, 0x53C0)),
+    usb_ids=(USBID_TREZOR_CORE, USBID_TREZOR_CORE_BOOTLOADER),
     default_mapping=mapping.DEFAULT_MAPPING,
 )
 
@@ -86,7 +93,7 @@ T3W1 = TrezorModel(
     internal_name="T3W1",
     minimum_version=(2, 1, 0),
     vendors=VENDORS,
-    usb_ids=((0x1209, 0x53C1), (0x1209, 0x53C0)),
+    usb_ids=(USBID_TREZOR_CORE, USBID_TREZOR_CORE_BOOTLOADER),
     default_mapping=mapping.DEFAULT_MAPPING,
 )
 
@@ -95,7 +102,7 @@ DISC1 = TrezorModel(
     internal_name="D001",
     minimum_version=(2, 1, 0),
     vendors=VENDORS,
-    usb_ids=((0x1209, 0x53C1), (0x1209, 0x53C0)),
+    usb_ids=(USBID_TREZOR_CORE, USBID_TREZOR_CORE_BOOTLOADER),
     default_mapping=mapping.DEFAULT_MAPPING,
 )
 
@@ -104,7 +111,7 @@ DISC2 = TrezorModel(
     internal_name="D002",
     minimum_version=(2, 1, 0),
     vendors=VENDORS,
-    usb_ids=((0x1209, 0x53C1), (0x1209, 0x53C0)),
+    usb_ids=(USBID_TREZOR_CORE, USBID_TREZOR_CORE_BOOTLOADER),
     default_mapping=mapping.DEFAULT_MAPPING,
 )
 
@@ -121,7 +128,7 @@ TREZOR_DISC2 = DISC2
 TREZORS = frozenset({T1B1, T2T1, T2B1, T3T1, T3B1, T3W1, DISC1, DISC2})
 
 
-def by_name(name: Optional[str]) -> Optional[TrezorModel]:
+def by_name(name: str | None) -> TrezorModel | None:
     if name is None:
         return T1B1
     for model in TREZORS:
@@ -130,7 +137,7 @@ def by_name(name: Optional[str]) -> Optional[TrezorModel]:
     return None
 
 
-def by_internal_name(name: Optional[str]) -> Optional[TrezorModel]:
+def by_internal_name(name: str | None) -> TrezorModel | None:
     if name is None:
         return None
     for model in TREZORS:
