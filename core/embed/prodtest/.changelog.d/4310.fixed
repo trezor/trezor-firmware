@@ -1,0 +1,1 @@
+Fixed a device crash in the CPUID READ command.
