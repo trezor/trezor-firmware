@@ -354,7 +354,7 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
       break;
 #endif
     case MPU_MODE_OTP:
-      SET_REGION( 6, FLASH_OTP_BASE,           OTP_AND_ID_SIZE,    FLASH_DATA,   NO,    NO );
+      SET_REGION( 6, FLASH_OTP_BASE,           OTP_AND_ID_SIZE,    FLASH_DATA,  YES,    NO );
       break;
     case MPU_MODE_SECRET:
       SET_REGION( 6, SECRET_START,             SECRET_MAXSIZE,     FLASH_DATA,  YES,    NO );
