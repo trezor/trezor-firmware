@@ -144,9 +144,10 @@ def test_slip25_path(client: Client):
         )
 
 
-VECTORS_SCRIPT_TYPES = (  # script_type, xpub, xpub_ignored_magic
+VECTORS_SCRIPT_TYPES = (  # script_type, xpub, xpub_ignored_magic, xpub_multisig
     (
         None,
+        "xpub6BiVtCp7ozsRo7kaoYNrCNAVJwPYTQHjoXFD3YS797S55Y42sm2raxPrXQWAJodn7aXnHJdhz433ZJDhyUztHW55WatHeoYUVqui8cYNX8y",
         "xpub6BiVtCp7ozsRo7kaoYNrCNAVJwPYTQHjoXFD3YS797S55Y42sm2raxPrXQWAJodn7aXnHJdhz433ZJDhyUztHW55WatHeoYUVqui8cYNX8y",
         "xpub6BiVtCp7ozsRo7kaoYNrCNAVJwPYTQHjoXFD3YS797S55Y42sm2raxPrXQWAJodn7aXnHJdhz433ZJDhyUztHW55WatHeoYUVqui8cYNX8y",
     ),
@@ -154,27 +155,35 @@ VECTORS_SCRIPT_TYPES = (  # script_type, xpub, xpub_ignored_magic
         messages.InputScriptType.SPENDADDRESS,
         "xpub6BiVtCp7ozsRo7kaoYNrCNAVJwPYTQHjoXFD3YS797S55Y42sm2raxPrXQWAJodn7aXnHJdhz433ZJDhyUztHW55WatHeoYUVqui8cYNX8y",
         "xpub6BiVtCp7ozsRo7kaoYNrCNAVJwPYTQHjoXFD3YS797S55Y42sm2raxPrXQWAJodn7aXnHJdhz433ZJDhyUztHW55WatHeoYUVqui8cYNX8y",
+        "xpub6BiVtCp7ozsRo7kaoYNrCNAVJwPYTQHjoXFD3YS797S55Y42sm2raxPrXQWAJodn7aXnHJdhz433ZJDhyUztHW55WatHeoYUVqui8cYNX8y",
     ),
     (
         messages.InputScriptType.SPENDP2SHWITNESS,
         "ypub6WYmBsV2xgQueQwhduAUQTFzUuXzQ2HEidmRpwKzX7ox8dsG8RCRD23zYcTkJiHhXDeb2nEGSiPbSaqGhBQu5jkgNvaiEiMxmZyMXEvfNco",
         "xpub6BiVtCp7ozsRo7kaoYNrCNAVJwPYTQHjoXFD3YS797S55Y42sm2raxPrXQWAJodn7aXnHJdhz433ZJDhyUztHW55WatHeoYUVqui8cYNX8y",
+        "Ypub6hSrK7DUXdyH4z75aZdTEXboChaFcNxq2uR6kCbXtteMkpSAtpahJ8uvMKRDs9WbkgiZuNEPKvn6ZkT2zQZrEDsMDPh7e7pxfJFE77WWd1r",
     ),
     (
         messages.InputScriptType.SPENDWITNESS,
         "zpub6qP2VY9x7MxPVi8pUFx6cYMVesgSLeGjdkHecLDsu8BqBjgVP5Myq5i8ZpRLJcwcvrmPnFppuNk9KsSqQspusySHFGH8pdBT3J2zujqcVuz",
         "xpub6BiVtCp7ozsRo7kaoYNrCNAVJwPYTQHjoXFD3YS797S55Y42sm2raxPrXQWAJodn7aXnHJdhz433ZJDhyUztHW55WatHeoYUVqui8cYNX8y",
+        "Zpub72H7cmtPgKWkvHJCQvR5SchJNfihYzxKx1wKXbVRGu2EovFQ9UkFvCa4NXNos4AXAKqNeqpwnb8eT34bi6ys2TYx5jPYE2eSw2JsVjF4phE",
     ),
 )
 
 
-@pytest.mark.parametrize("script_type, xpub, xpub_ignored_magic", VECTORS_SCRIPT_TYPES)
-def test_script_type(client: Client, script_type, xpub, xpub_ignored_magic):
+@pytest.mark.parametrize(
+    "script_type, xpub, xpub_ignored_magic, xpub_multisig", VECTORS_SCRIPT_TYPES
+)
+def test_script_type(
+    client: Client, script_type, xpub, xpub_ignored_magic, xpub_multisig
+):
     path = parse_path("m/44h/0h/0")
     res = btc.get_public_node(
         client, path, coin_name="Bitcoin", script_type=script_type
     )
     assert res.xpub == xpub
+
     res = btc.get_public_node(
         client,
         path,
@@ -183,3 +192,12 @@ def test_script_type(client: Client, script_type, xpub, xpub_ignored_magic):
         ignore_xpub_magic=True,
     )
     assert res.xpub == xpub_ignored_magic
+
+    res = btc.get_public_node(
+        client,
+        path,
+        coin_name="Bitcoin",
+        script_type=script_type,
+        multisig_xpub_magic=True,
+    )
+    assert res.xpub == xpub_multisig
