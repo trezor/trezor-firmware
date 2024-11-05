@@ -15,7 +15,7 @@ def configure(
     board = "T3W1/boards/t3w1-unix.h"
     hw_model = get_hw_model_as_number("T3W1")
     hw_revision = 0
-    mcu = "STM32F427xx"
+    mcu = "STM32U5G9xx"
 
     defines += ["FRAMEBUFFER", "DISPLAY_RGBA8888", "UI_COLOR_32BIT"]
     features_available.append("framebuffer")
@@ -57,6 +57,6 @@ def configure(
     features_available.append("backlight")
     defines += ["USE_BACKLIGHT=1"]
 
-    sources += ["embed/trezorhal/stm32f4/layout.c"]
+    sources += ["embed/trezorhal/stm32u5/layout.c"]
 
     return features_available

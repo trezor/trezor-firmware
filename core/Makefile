@@ -63,8 +63,8 @@ MCU = STM32U5
 OPENOCD_TARGET = target/stm32u5x.cfg
 MODEL_FEATURE = model_tr
 else ifeq ($(TREZOR_MODEL),$(filter $(TREZOR_MODEL),T3W1))
-MCU = STM32F4
-OPENOCD_TARGET = target/stm32f4x.cfg
+MCU = STM32U5
+OPENOCD_TARGET = target/stm32u5x.cfg
 MODEL_FEATURE = model_tt
 else ifeq ($(TREZOR_MODEL),$(filter $(TREZOR_MODEL),DISC1))
 MCU = STM32F4
