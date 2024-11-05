@@ -39,29 +39,35 @@ typedef struct {
   uint32_t plln;
 } clock_conf_t;
 
+// PLLCLK = ((HSE / PLLM) * PLLN) / PLLR
+#ifdef HSE_32MHZ
+#define PLLM_COEF 2U
+#define PLLN_COEF 1U
+#elif defined HSE_16MHZ
+#define PLLM_COEF 1U
+#define PLLN_COEF 2U
+#elif defined HSE_8MHZ
+#define PLLM_COEF 1U
+#define PLLN_COEF 4U
+#else
+// no HSE available, use 16MHz HSI
+#define HSI_ONLY
+#define PLLM_COEF 1U
+#define PLLN_COEF 2U
+#endif
+
 #if defined STM32U5
 #define DEFAULT_FREQ 160U
-#define DEFAULT_PLLM 1
-#define DEFAULT_PLLN (10 * PLLN_COEF)  // mult by 10
-#define DEFAULT_PLLR 1U                // division by 1
-#define DEFAULT_PLLQ 1U                // division by 1
-#define DEFAULT_PLLP 5U                // division by 5
+#define DEFAULT_PLLM PLLM_COEF
+#define DEFAULT_PLLN (5 * PLLN_COEF)  // mult by x
+#define DEFAULT_PLLR 1U               // division by 1
+#define DEFAULT_PLLQ 1U               // division by 1
+#define DEFAULT_PLLP 5U               // division by 5
 #else
 #error Unsupported MCU
 #endif
 
 uint32_t SystemCoreClock = DEFAULT_FREQ * 1000000U;
-
-// PLLCLK = ((HSE / PLLM) * PLLN) / PLLR
-#ifdef HSE_16MHZ
-#define PLLN_COEF 1U
-#elif defined HSE_8MHZ
-#define PLLN_COEF 2U
-#else
-// no HSE available, use 16MHz HSI
-#define HSI_ONLY
-#define PLLN_COEF 1U
-#endif
 
 // assuming HSE 16 MHz
 clock_conf_t clock_conf[1] = {
@@ -69,9 +75,9 @@ clock_conf_t clock_conf[1] = {
         // clk = ((16MHz / 1) * 10) / 1 = 160 MHz
         .freq = 160,
         .pllp = 1,
-        .pllq = 1,
+        .pllq = PLLM_COEF,
         .pllm = 1,
-        .plln = 10 * PLLN_COEF,
+        .plln = 5 * PLLN_COEF,
     },
 };
 
