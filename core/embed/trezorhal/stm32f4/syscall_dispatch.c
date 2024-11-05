@@ -419,8 +419,8 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     } break;
 
     case SYSCALL_HAPTIC_PLAY_CUSTOM: {
-      int8_t amplitude_pct = (int8_t)args[1];
-      uint16_t duration_ms = (uint16_t)args[2];
+      int8_t amplitude_pct = (int8_t)args[0];
+      uint16_t duration_ms = (uint16_t)args[1];
       args[0] = haptic_play_custom(amplitude_pct, duration_ms);
     } break;
 #endif
