@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [2.8.4] (20th November 2024)
+## [2.8.5] (20th November 2024)
 
 ### Added
 - Initial support for Italian and Portugese translations.  [#4047]
@@ -24,6 +24,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - [T3T1] Fix swipe in ETH stake flow menu and address confirmation.  [#4167]
 - New EVM call contract flow UI.  [#4251]
 - [T3T1] Add instruction to Swipe up after changing brightness.  [#4261]
+
+## [2.8.4] (internal release)
 
 ## [2.8.3] (18th September 2024)
 
