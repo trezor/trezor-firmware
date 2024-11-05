@@ -124,6 +124,8 @@ static void mpu_set_attributes(void) {
 }
 
 #define STORAGE_SIZE NORCOW_SECTOR_SIZE* STORAGE_AREAS_COUNT
+_Static_assert(NORCOW_SECTOR_SIZE == STORAGE_1_MAXSIZE, "norcow misconfigured");
+_Static_assert(NORCOW_SECTOR_SIZE == STORAGE_2_MAXSIZE, "norcow misconfigured");
 
 #if defined STM32U5A9xx
 #define SRAM_SIZE (SRAM1_SIZE + SRAM2_SIZE + SRAM3_SIZE + SRAM5_SIZE)
