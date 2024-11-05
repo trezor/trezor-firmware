@@ -1,4 +1,4 @@
-INCLUDE "./embed/trezorhal/stm32u5/linker/u5a/memory.ld";
+INCLUDE "./embed/trezorhal/stm32u5/linker/u5g/memory.ld";
 
 ENTRY(reset_handler)
 

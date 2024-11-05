@@ -12,12 +12,12 @@ def configure(
     paths: list[str],
 ) -> list[str]:
     features_available: list[str] = []
-    board = "D002/boards/stm32u5a9j-dk.h"
+    board = "D002/boards/stm32u5g9j-dk.h"
     hw_model = get_hw_model_as_number("D002")
     hw_revision = 0
 
-    mcu = "STM32U5A9xx"
-    linker_script = """embed/trezorhal/stm32u5/linker/u5a/{target}.ld"""
+    mcu = "STM32U5G9xx"
+    linker_script = """embed/trezorhal/stm32u5/linker/u5g/{target}.ld"""
 
     stm32u5_common_files(env, defines, sources, paths)
 
