@@ -62,6 +62,8 @@
 #include "memzero.h"
 #include "version.h"
 
+#include <sys/npm1300.h>
+
 const uint8_t BOARDLOADER_KEY_M = 2;
 const uint8_t BOARDLOADER_KEY_N = 3;
 static const uint8_t * const BOARDLOADER_KEYS[] = {
@@ -259,6 +261,9 @@ int main(void) {
 #endif
 
   gfx_bitblt_init();
+
+  npm1300_init();
+  npm1300_deinit();
 
   display_init(DISPLAY_RESET_CONTENT);
 
