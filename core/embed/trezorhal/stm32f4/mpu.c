@@ -23,6 +23,7 @@
 
 #include "irq.h"
 #include "mpu.h"
+#include "sizedefs.h"
 
 #include "stm32f4xx_ll_cortex.h"
 
@@ -73,6 +74,10 @@ mpu_driver_t g_mpu_driver = {
 #define KERNEL_SRAM_START (SRAM1_BASE + SRAM_SIZE - KERNEL_SRAM_SIZE)
 
 #define KERNEL_CCMRAM_FB_START (KERNEL_CCMRAM_START - KERNEL_FRAMEBUFFER_SIZE)
+
+_Static_assert(NORCOW_SECTOR_SIZE == STORAGE_1_MAXSIZE, "norcow misconfigured");
+_Static_assert(NORCOW_SECTOR_SIZE == STORAGE_2_MAXSIZE, "norcow misconfigured");
+_Static_assert(NORCOW_SECTOR_SIZE == SIZE_64K, "norcow misconfigured");
 
 static void mpu_init_fixed_regions(void) {
   // Regions #0 to #4 are fixed for all targets
