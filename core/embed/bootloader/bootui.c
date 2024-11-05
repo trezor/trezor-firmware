@@ -168,14 +168,14 @@ void ui_click(void) {
 
 void ui_click(void) {
   for (;;) {
-    button_read();
-    if (button_state(BTN_LEFT) != 0 && button_state(BTN_RIGHT) != 0) {
+    button_get_event();
+    if (button_is_down(BTN_LEFT) && button_is_down(BTN_RIGHT)) {
       break;
     }
   }
   for (;;) {
-    button_read();
-    if (button_state(BTN_LEFT) != 1 && button_state(BTN_RIGHT) != 1) {
+    button_get_event();
+    if (!button_is_down(BTN_LEFT) && !button_is_down(BTN_RIGHT)) {
       break;
     }
   }

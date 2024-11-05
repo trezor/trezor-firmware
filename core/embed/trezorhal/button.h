@@ -22,6 +22,16 @@
 
 #include <trezor_types.h>
 
+// Button event is packed 32-bit value
+//
+//  31    24 23                       0
+// |--------|-------------------------|
+// |  event |       button identifier |
+// |--------|-------------------------|
+//
+//
+
+// Button events
 #define BTN_EVT_DOWN (1U << 24)
 #define BTN_EVT_UP (1U << 25)
 
@@ -31,9 +41,28 @@ typedef enum {
   BTN_POWER = 2,
 } button_t;
 
-void button_init(void);
-uint32_t button_read(void);
+// Button identifiers
+#define BTN_LEFT 0
+#define BTN_RIGHT 1
 
-bool button_state(button_t button);
+#ifdef KERNEL_MODE
 
-#endif
+// Initializes button driver
+//
+// Returns true in case of success, false otherwise
+bool button_init(void);
+
+#endif  // KERNEL_MODE
+
+// Get the last button event
+//
+// It's expected there's just one consumer of the button events,
+// e.g. the main loop
+//
+// Returns 0 if no event is available
+uint32_t button_get_event(void);
+
+// Checks if the left button is currently pressed
+bool button_is_down(button_t button);
+
+#endif  // TREZORHAL_BUTTON_H

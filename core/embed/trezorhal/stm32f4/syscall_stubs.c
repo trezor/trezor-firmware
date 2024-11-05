@@ -359,7 +359,9 @@ secbool secret_bootloader_locked(void) {
 
 #include "button.h"
 
-uint32_t button_read(void) { return syscall_invoke0(SYSCALL_BUTTON_READ); }
+uint32_t button_get_event(void) {
+  return syscall_invoke0(SYSCALL_BUTTON_GET_EVENT);
+}
 
 // =============================================================================
 // touch.h
