@@ -6,6 +6,8 @@
 #define TOUCH_OFFSET_X 80
 #define TOUCH_OFFSET_Y 102
 
+#define BTN_POWER_KEY SDLK_LEFT
+
 #define ORIENTATION_NS 1
 
 // #define BACKGROUND_FILE "T3W1/background_T3W1.h"
