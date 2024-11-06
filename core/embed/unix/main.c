@@ -482,7 +482,7 @@ static int sdl_event_filter(void *userdata, SDL_Event *event) {
         case SDLK_ESCAPE:
           main_clean_exit();
           return 0;
-        case SDLK_p:
+        case SDLK_s:
           display_save("emu");
           return 0;
       }
