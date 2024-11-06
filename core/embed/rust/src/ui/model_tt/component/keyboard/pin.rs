@@ -44,6 +44,8 @@ const HEADER_PADDING: Insets = Insets::new(
     HEADER_PADDING_SIDE,
 );
 
+const LAST_DIGIT_TIMEOUT_S: u32 = 1;
+
 pub struct PinKeyboard<'a> {
     allow_cancel: bool,
     major_prompt: Child<Label<'a>>,
@@ -56,6 +58,7 @@ pub struct PinKeyboard<'a> {
     confirm_btn: Child<Button>,
     digit_btns: [Child<Button>; DIGIT_COUNT],
     warning_timer: Timer,
+    timeout_timer: Timer,
 }
 
 impl<'a> PinKeyboard<'a> {
@@ -101,6 +104,7 @@ impl<'a> PinKeyboard<'a> {
                 .into_child(),
             digit_btns: Self::generate_digit_buttons(),
             warning_timer: Timer::new(),
+            timeout_timer: Timer::new(),
         }
     }
 
@@ -211,6 +215,13 @@ impl Component for PinKeyboard<'_> {
                 self.minor_prompt.request_complete_repaint(ctx);
                 ctx.request_paint();
             }
+            // Timeout for showing the last digit.
+            Event::Timer(_) if self.timeout_timer.expire(event) => {
+                self.textbox
+                    .mutate(ctx, |_ctx, t| t.set_display_style(DisplayStyle::Dots));
+                self.textbox.request_complete_repaint(ctx);
+                ctx.request_paint();
+            }
             _ => {}
         }
 
@@ -241,6 +252,12 @@ impl Component for PinKeyboard<'_> {
                         self.textbox.mutate(ctx, |ctx, t| t.push(ctx, text));
                     });
                     self.pin_modified(ctx);
+                    self.timeout_timer
+                        .start(ctx, Duration::from_secs(LAST_DIGIT_TIMEOUT_S));
+                    self.textbox
+                        .mutate(ctx, |_ctx, t| t.set_display_style(DisplayStyle::LastDigit));
+                    self.textbox.request_complete_repaint(ctx);
+                    ctx.request_paint();
                     return None;
                 }
             }
@@ -274,7 +291,15 @@ struct PinDots {
     pad: Pad,
     style: TextStyle,
     digits: ShortString,
-    display_digits: bool,
+    display_style: DisplayStyle,
+}
+
+#[derive(PartialEq, Debug, Copy, Clone)]
+#[cfg_attr(feature = "ui_debug", derive(ufmt::derive::uDebug))]
+enum DisplayStyle {
+    Dots,
+    Digits,
+    LastDigit,
 }
 
 impl PinDots {
@@ -290,8 +315,12 @@ impl PinDots {
             pad: Pad::with_background(style.background_color),
             style,
             digits,
-            display_digits: false,
+            display_style: DisplayStyle::Dots,
         }
+    }
+
+    fn set_display_style(&mut self, display_style: DisplayStyle) {
+        self.display_style = display_style;
     }
 
     fn size(&self) -> Offset {
@@ -353,7 +382,7 @@ impl PinDots {
         }
     }
 
-    fn render_dots<'s>(&self, area: Rect, target: &mut impl Renderer<'s>) {
+    fn render_dots<'s>(&self, last_digit: bool, area: Rect, target: &mut impl Renderer<'s>) {
         let mut cursor = self.size().snap(area.center(), Alignment2D::CENTER);
 
         let digits = self.digits.len();
@@ -382,7 +411,23 @@ impl PinDots {
         }
 
         // Draw a dot for each PIN digit.
-        for _ in 0..dots_visible {
+        for _ in 0..dots_visible - 1 {
+            shape::ToifImage::new(cursor, theme::DOT_ACTIVE.toif)
+                .with_align(Alignment2D::TOP_LEFT)
+                .with_fg(self.style.text_color)
+                .render(target);
+            cursor.x += step;
+        }
+        if last_digit && digits > 0 {
+            let last = &self.digits[(digits - 1)..digits];
+            cursor.y = area.center().y + (Font::MONO.text_height() / 2);
+            let offset = Offset::x(Self::DOT / 2);
+            shape::Text::new(cursor + offset, last)
+                .with_align(Alignment::Center)
+                .with_font(Font::MONO)
+                .with_fg(self.style.text_color)
+                .render(target);
+        } else {
             shape::ToifImage::new(cursor, theme::DOT_ACTIVE.toif)
                 .with_align(Alignment2D::TOP_LEFT)
                 .with_fg(self.style.text_color)
@@ -405,14 +450,15 @@ impl Component for PinDots {
         match event {
             Event::Touch(TouchEvent::TouchStart(pos)) => {
                 if self.area.contains(pos) {
-                    self.display_digits = true;
+                    self.display_style = DisplayStyle::Digits;
                     self.pad.clear();
                     ctx.request_paint();
                 };
                 None
             }
             Event::Touch(TouchEvent::TouchEnd(_)) => {
-                if mem::replace(&mut self.display_digits, false) {
+                if mem::replace(&mut self.display_style, DisplayStyle::Dots) == DisplayStyle::Digits
+                {
                     self.pad.clear();
                     ctx.request_paint();
                 };
@@ -425,10 +471,11 @@ impl Component for PinDots {
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let dot_area = self.area.inset(HEADER_PADDING);
         self.pad.render(target);
-        if self.display_digits {
-            self.render_digits(dot_area, target)
-        } else {
-            self.render_dots(dot_area, target)
+
+        match self.display_style {
+            DisplayStyle::Digits => self.render_digits(dot_area, target),
+            DisplayStyle::Dots => self.render_dots(false, dot_area, target),
+            DisplayStyle::LastDigit => self.render_dots(true, dot_area, target),
         }
     }
 }
@@ -448,8 +495,9 @@ impl crate::trace::Trace for PinKeyboard<'_> {
                 });
             }
         }
+        let display_style = uformat!("{:?}", self.textbox.inner().display_style);
         t.string("digits_order", digits_order.as_str().into());
         t.string("pin", self.textbox.inner().pin().into());
-        t.bool("display_digits", self.textbox.inner().display_digits);
+        t.string("display_style", display_style.as_str().into());
     }
 }
