@@ -14,6 +14,7 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+import time
 from contextlib import contextmanager
 from enum import Enum
 from typing import TYPE_CHECKING, Generator
@@ -42,6 +43,9 @@ pytestmark = pytest.mark.models("core")
 
 PIN_CANCELLED = pytest.raises(exceptions.TrezorFailure, match="PIN entry cancelled")
 PIN_INVALID = pytest.raises(exceptions.TrezorFailure, match="PIN invalid")
+
+# Last PIN digit is shown for 1 second, so the delay must be grater
+DELAY_S = 1.1
 
 PIN4 = "1234"
 PIN24 = "875163065288639289952973"
@@ -370,3 +374,16 @@ def test_pin_same_as_wipe_code(device_handler: "BackgroundDeviceHandler"):
     with PIN_INVALID, prepare(device_handler, Situation.PIN_SETUP) as debug:
         _enter_two_times(debug, "1", "1")
         go_back(debug, r_middle=True)
+
+
+@pytest.mark.setup_client(pin=PIN4)
+def test_last_digit_timeout(device_handler: "BackgroundDeviceHandler"):
+    with prepare(device_handler) as debug:
+        for digit in PIN4:
+            # insert a digit
+            _input_pin(debug, digit)
+            # wait until the last digit is hidden
+            time.sleep(DELAY_S)
+            # show the entire PIN
+            _see_pin(debug)
+        _confirm_pin(debug)
