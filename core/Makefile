@@ -239,6 +239,7 @@ translations: ## update translations
 	python ./translations/cli.py gen
 
 translations_check: ## check that translations are up to date
+	python ./translations/cli.py gen --check
 	# spits out error if the stored merkle root is not up to date
 	python ./translations/cli.py merkle-root > /dev/null
 
