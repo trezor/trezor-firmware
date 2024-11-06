@@ -147,7 +147,7 @@ class TranslationsDir:
     def all_languages(self) -> t.Iterable[str]:
         return (lang_file.stem for lang_file in self.path.glob("??.json"))
 
-    def update_version_from_h(self) -> VersionTuple:
+    def update_version_from_h(self, check: bool = False) -> VersionTuple:
         version = _version_from_version_h()
         for lang in self.all_languages():
             blob_json = self.load_lang(lang)
@@ -155,6 +155,10 @@ class TranslationsDir:
                 blob_json["header"]["version"]
             )
             if blob_version != version:
+                if check:
+                    raise ValueError(
+                        f"Language {lang} has version {blob_version} not matching firmware version {version}"
+                    )
                 blob_json["header"]["version"] = _version_str(version[:3])
                 self.save_lang(lang, blob_json)
         return version
@@ -242,7 +246,8 @@ def cli() -> None:
 @click.option(
     "--version", "version_str", help="Set the blob version independent of JSON data."
 )
-def gen(signed: bool | None, version_str: str | None) -> None:
+@click.option("--check", is_flag=True, help="Only check if JSON version matches firmware.")
+def gen(signed: bool | None, version_str: str | None, check: bool | None) -> None:
     """Generate all language blobs for all models.
 
     The generated blobs will be signed with the development keys.
@@ -250,8 +255,10 @@ def gen(signed: bool | None, version_str: str | None) -> None:
     tdir = TranslationsDir()
 
     if version_str is None:
-        version = tdir.update_version_from_h()
+        version = tdir.update_version_from_h(check=check)
     else:
+        if check:
+            raise click.ClickException("Options --version and --check are mutually exclusive.")
         version = translations.version_from_json(version_str)
 
     all_blobs = tdir.generate_all_blobs(version)
@@ -259,6 +266,10 @@ def gen(signed: bool | None, version_str: str | None) -> None:
     root = tree.get_root_hash()
 
     signature_file: SignatureFile = json.loads(SIGNATURES_JSON.read_text())
+
+    if check:
+        click.echo("Translation versions match firmware.")
+        return
 
     if signed:
         for entry in signature_file["history"]:
