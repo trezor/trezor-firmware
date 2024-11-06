@@ -10,8 +10,6 @@ pub fn io_button_read() -> u32 {
     unsafe { ffi::button_read() }
 }
 
-//#[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
-
 #[cfg(feature = "button")]
 #[derive(Copy, Clone, PartialEq, Eq, FromPrimitive)]
 #[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
