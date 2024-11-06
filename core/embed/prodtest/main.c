@@ -244,13 +244,13 @@ static void test_display(const char *colors) {
 #ifdef USE_BUTTON
 
 static secbool test_btn_press(uint32_t deadline, uint32_t btn) {
-  while (button_read() != (btn | BTN_EVT_DOWN)) {
+  while (button_get_event() != (btn | BTN_EVT_DOWN)) {
     if (systick_ms() > deadline) {
       vcp_println("ERROR TIMEOUT");
       return secfalse;
     }
   }
-  while (button_read() != (btn | BTN_EVT_UP)) {
+  while (button_get_event() != (btn | BTN_EVT_UP)) {
     if (systick_ms() > deadline) {
       vcp_println("ERROR TIMEOUT");
       return secfalse;
@@ -264,7 +264,7 @@ static secbool test_btn_all(uint32_t deadline) {
   bool left_pressed = 0;
   bool right_pressed = 0;
   while (true) {
-    uint32_t buttons = button_read();
+    uint32_t buttons = button_get_event();
     if (buttons == (BTN_LEFT | BTN_EVT_DOWN)) {
       left_pressed = 1;
     }
@@ -287,7 +287,7 @@ static secbool test_btn_all(uint32_t deadline) {
   }
 
   while (true) {
-    uint32_t buttons = button_read();
+    uint32_t buttons = button_get_event();
     if (buttons == (BTN_LEFT | BTN_EVT_DOWN)) {
       left_pressed = 1;
     }

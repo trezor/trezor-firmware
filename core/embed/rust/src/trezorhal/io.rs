@@ -6,8 +6,8 @@ pub fn io_touch_get_event() -> u32 {
 }
 
 #[cfg(feature = "button")]
-pub fn io_button_read() -> u32 {
-    unsafe { ffi::button_read() }
+pub fn io_button_get_event() -> u32 {
+    unsafe { ffi::button_get_event() }
 }
 
 #[cfg(feature = "button")]

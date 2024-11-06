@@ -36,6 +36,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "button.h"
 #include "display.h"
 #include "extmod/misc.h"
 #include "extmod/vfs_posix.h"
@@ -518,6 +519,10 @@ MP_NOINLINE int main_(int argc, char **argv) {
 
 #if USE_TOUCH
   touch_init();
+#endif
+
+#ifdef USE_BUTTON
+  button_init();
 #endif
 
   // Map trezor.flash to memory.
