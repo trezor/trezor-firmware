@@ -11,9 +11,9 @@ def _enter_word(
 ) -> "LayoutContent":
     typed_word = word[:4]
     for coords in buttons.type_word(typed_word, is_slip39=is_slip39):
-        debug.click(coords)
+        debug.click(coords, wait=False)
 
-    return debug.click(buttons.CONFIRM_WORD)
+    return debug.click(buttons.CONFIRM_WORD, wait=True)
 
 
 def confirm_recovery(debug: "DebugLink") -> None:

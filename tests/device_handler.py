@@ -37,9 +37,10 @@ class NullUI:
 class BackgroundDeviceHandler:
     _pool = ThreadPoolExecutor()
 
-    def __init__(self, client: "Client") -> None:
+    def __init__(self, client: "Client", nowait: bool = False) -> None:
         self._configure_client(client)
         self.task = None
+        self.nowait = nowait
 
     def _configure_client(self, client: "Client") -> None:
         self.client = client
@@ -55,11 +56,7 @@ class BackgroundDeviceHandler:
         if self.task is not None:
             raise RuntimeError("Wait for previous task first")
 
-        # make sure we start the wait while a layout is up
-        # TODO should this be part of "wait_for_layout_change"?
-        self.debuglink().read_layout()
-        # from the displayed layout, wait for the first UI change triggered by the
-        # task running in the background
+        # wait for the first UI change triggered by the task running in the background
         with self.debuglink().wait_for_layout_change():
             self.task = self._pool.submit(function, self.client, *args, **kwargs)
 

@@ -461,6 +461,11 @@ class DebugLink:
         return self.version < (2, 6, 1)
 
     @property
+    def has_global_layout(self) -> bool:
+        """Differences in waiting for Global Layout objects."""
+        return self.version >= (2, 8, 6)
+
+    @property
     def layout_type(self) -> LayoutType:
         assert self.model is not None
         return LayoutType.from_model(self.model)
@@ -517,9 +522,13 @@ class DebugLink:
         self._write(msg)
         return self._read()
 
-    def state(
-        self, wait_type: DebugWaitType = DebugWaitType.CURRENT_LAYOUT
-    ) -> messages.DebugLinkState:
+    def state(self, wait_type: DebugWaitType | None = None) -> messages.DebugLinkState:
+        if wait_type is None:
+            wait_type = (
+                DebugWaitType.CURRENT_LAYOUT
+                if self.has_global_layout
+                else DebugWaitType.IMMEDIATE
+            )
         result = self._call(messages.DebugLinkGetState(wait_layout=wait_type))
         while not isinstance(result, (messages.Failure, messages.DebugLinkState)):
             result = self._read()
@@ -554,6 +563,9 @@ class DebugLink:
             ["DUMMY CONTENT, WAIT UNTIL THE END OF THE BLOCK :("]
         )
 
+        # make sure some current layout is up by issuing a dummy GetState
+        self.state()
+
         # send GetState without waiting for reply
         self._write(messages.DebugLinkGetState(wait_layout=DebugWaitType.NEXT_LAYOUT))
 
@@ -563,6 +575,7 @@ class DebugLink:
             yield layout_content
         finally:
             self.waiting_for_layout_change = False
+            self.layout_dirty = True
 
         # wait for the reply
         resp = self._read()

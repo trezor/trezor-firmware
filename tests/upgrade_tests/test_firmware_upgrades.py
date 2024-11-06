@@ -301,7 +301,7 @@ def test_upgrade_shamir_recovery(gen: str, tag: Optional[str]):
         device_handler.run(device.recover, pin_protection=False)
 
         recovery_old.confirm_recovery(debug)
-        recovery_old.select_number_of_words(debug, wait=not debug.legacy_debug)
+        recovery_old.select_number_of_words(debug)
         layout = recovery_old.enter_share(debug, MNEMONIC_SLIP39_BASIC_20_3of6[0])
         if not debug.legacy_ui and not debug.legacy_debug:
             assert (
