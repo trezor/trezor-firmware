@@ -144,7 +144,7 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
 #endif
 #if USE_BUTTON
       else if (iface == BUTTON_IFACE) {
-        const uint32_t evt = button_read();
+        const uint32_t evt = button_get_event();
         if (evt & (BTN_EVT_DOWN | BTN_EVT_UP)) {
           mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(2, NULL));
           uint32_t etype = (evt >> 24) & 0x3U;  // button down/up

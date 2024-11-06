@@ -387,8 +387,8 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     } break;
 
 #ifdef USE_BUTTON
-    case SYSCALL_BUTTON_READ: {
-      args[0] = button_read();
+    case SYSCALL_BUTTON_GET_EVENT: {
+      args[0] = button_get_event();
     } break;
 #endif
 
