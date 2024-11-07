@@ -6,6 +6,13 @@
   },
   "history": [
     {
+      "signature": "038e53755061a45698db059c7447fb11785a39fa744dcba557b1f15e51bbb6295602d06e4365dea99bfbd72fd259e982b431f842a06b59bc9cd69f4473e1fad708",
+      "version": "2.8.5.0",
+      "merkle_root": "0b23f6277b51bf2a80fd6d10b8d3c5dc5cb9808db808cd18669315e7ce733c6b",
+      "datetime": "2024-11-07T14:16:59.546174",
+      "commit": "a61e783448043760a7c925e017bd08a4673a61c8"
+    },
+    {
       "signature": "03c39ff74ecada5161d651cd725a34739d57c298bb2f8df636fa718490ca1a1b5ac1243e8e73fd707ec23b0dd450a843af03100964cc27263cbb5cb1b0bdedaa04",
       "version": "2.8.3.0",
       "merkle_root": "8ac94bd79c4337f45ec638c5c59832086b11dabce51dd3451b30f497e0a0a9af",
