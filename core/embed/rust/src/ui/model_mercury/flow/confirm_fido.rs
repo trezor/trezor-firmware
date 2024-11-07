@@ -49,6 +49,13 @@ impl FlowController for ConfirmFido {
     fn handle_swipe(&'static self, direction: Direction) -> Decision {
         match (self, direction) {
             (Self::Intro, Direction::Left) => Self::Menu.swipe(direction),
+            (Self::Menu, Direction::Right) => {
+                if Self::single_cred() {
+                    Self::Details.swipe_right()
+                } else {
+                    Self::Intro.swipe_right()
+                }
+            }
             (Self::Intro, Direction::Up) => Self::ChooseCredential.swipe(direction),
             (Self::ChooseCredential, Direction::Down) => Self::Intro.swipe(direction),
             (Self::Details, Direction::Up) => Self::Tap.swipe(direction),
