@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 
+from trezor.enums import MultisigPubkeysOrder
 from trezor.wire import DataError
 
 if TYPE_CHECKING:
@@ -28,11 +29,14 @@ def multisig_fingerprint(multisig: MultisigRedeemScriptType) -> bytes:
         if len(d.public_key) != 33 or len(d.chain_code) != 32:
             raise DataError("Invalid multisig parameters")
 
-    pubnodes = sorted(pubnodes, key=lambda n: n.public_key + n.chain_code)
+    if multisig.pubkeys_order == MultisigPubkeysOrder.LEXICOGRAPHIC:
+        # If the order of pubkeys is lexicographic, we don't want the fingerprint to depend on the order of the pubnodes, so we sort the pubnodes before hashing.
+        pubnodes.sort(key=lambda n: n.public_key + n.chain_code)
 
     h = HashWriter(sha256())
     write_uint32(h, m)
     write_uint32(h, n)
+    write_uint32(h, multisig.pubkeys_order)
     for d in pubnodes:
         write_uint32(h, d.depth)
         write_uint32(h, d.fingerprint)
@@ -84,9 +88,14 @@ def multisig_get_pubkey(n: HDNodeType, p: paths.Bip32Path) -> bytes:
 def multisig_get_pubkeys(multisig: MultisigRedeemScriptType) -> list[bytes]:
     validate_multisig(multisig)
     if multisig.nodes:
-        return [multisig_get_pubkey(hd, multisig.address_n) for hd in multisig.nodes]
+        pubkeys = [multisig_get_pubkey(hd, multisig.address_n) for hd in multisig.nodes]
     else:
-        return [multisig_get_pubkey(hd.node, hd.address_n) for hd in multisig.pubkeys]
+        pubkeys = [
+            multisig_get_pubkey(hd.node, hd.address_n) for hd in multisig.pubkeys
+        ]
+    if multisig.pubkeys_order == MultisigPubkeysOrder.LEXICOGRAPHIC:
+        pubkeys.sort()
+    return pubkeys
 
 
 def multisig_get_pubkey_count(multisig: MultisigRedeemScriptType) -> int:

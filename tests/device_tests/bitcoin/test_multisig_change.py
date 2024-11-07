@@ -63,7 +63,7 @@ NODE_INT = bip32.deserialize(
 # m/2 => 038caebd6f753bbbd2bb1f3346a43cd32140648583673a31d62f2dfb56ad0ab9e3
 
 multisig_in1 = messages.MultisigRedeemScriptType(
-    nodes=[NODE_EXT2, NODE_EXT1, NODE_INT],
+    nodes=[NODE_EXT1, NODE_EXT2, NODE_INT],
     address_n=[0, 0],
     signatures=[b"", b"", b""],
     m=2,
@@ -84,7 +84,7 @@ multisig_in3 = messages.MultisigRedeemScriptType(
 )
 
 prev_hash_1, prev_tx_1 = forge_prevtx(
-    [("3HwrvQEfYw4wUvGHpGmixWB15HPgqrvTh1", 50_000_000)]
+    [("3Ltgk5WPUMLcT2QvwRXKj9CWsYuAKqeHJ8", 50_000_000)]
 )
 INP1 = messages.TxInputType(
     address_n=[H_(45), 0, 0, 0],

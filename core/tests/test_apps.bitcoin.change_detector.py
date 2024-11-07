@@ -1,7 +1,8 @@
 from common import H_, await_result, unittest  # isort:skip
 from ubinascii import hexlify, unhexlify
 
-from trezor.enums import InputScriptType, OutputScriptType
+from trezor.enums import InputScriptType, OutputScriptType, MultisigPubkeysOrder
+from trezor.enums.MultisigPubkeysOrder import LEXICOGRAPHIC, PRESERVED
 from trezor.messages import (
     TxInput,
     TxOutput,
@@ -39,12 +40,13 @@ xpub3 = HDNodeType(
 )
 
 
-def get_multisig(path: list[int], xpubs: list[HDNodeType]) -> MultisigRedeemScriptType:
+def get_multisig(path: list[int], xpubs: list[HDNodeType], pubkeys_order: MultisigPubkeysOrder) -> MultisigRedeemScriptType:
     return MultisigRedeemScriptType(
         nodes=xpubs,
         signatures=b"" * len(xpubs),
         address_n=path[-2:],
         m=2,
+        pubkeys_order=pubkeys_order,
     )
 
 
@@ -58,23 +60,23 @@ def get_singlesig_input(path: list[int]) -> TxInput:
     )
 
 
-def get_multisig_input(path: list[int], xpubs: list[HDNodeType]) -> TxInput:
+def get_multisig_input(path: list[int], xpubs: list[HDNodeType], pubkeys_order: MultisigPubkeysOrder) -> TxInput:
     return TxInput(
         address_n=path,
         amount=1_000_000,
         prev_hash=bytes(32),
         prev_index=0,
         script_type=InputScriptType.SPENDMULTISIG,
-        multisig=get_multisig(path, xpubs),
+        multisig=get_multisig(path, xpubs, pubkeys_order),
     )
 
 
-def get_internal_multisig_output(path: list[int], xpubs: list[HDNodeType]) -> TxOutput:
+def get_internal_multisig_output(path: list[int], xpubs: list[HDNodeType], pubkeys_order: MultisigPubkeysOrder) -> TxOutput:
     return TxOutput(
         address_n=path,
         amount=1_000_000,
         script_type=OutputScriptType.PAYTOMULTISIG,
-        multisig=get_multisig(path, xpubs),
+        multisig=get_multisig(path, xpubs, pubkeys_order),
     )
 
 
@@ -115,7 +117,8 @@ class TestChangeDetector(unittest.TestCase):
         assert self.d.output_is_change(get_internal_singlesig_output([H_(45), 1, 0, 0])) == False
 
         # Multisig instead of singlesig
-        assert self.d.output_is_change(get_internal_multisig_output([H_(45), 0, 0, 0], [xpub1])) == False
+        assert self.d.output_is_change(get_internal_multisig_output([H_(45), 0, 0, 0], [xpub1], PRESERVED)) == False
+        assert self.d.output_is_change(get_internal_multisig_output([H_(45), 0, 0, 0], [xpub1], LEXICOGRAPHIC)) == False
 
         # External output
         assert self.d.output_is_change(get_external_singlesig_output()) == False
@@ -130,23 +133,24 @@ class TestChangeDetector(unittest.TestCase):
         assert self.d.output_is_change(get_internal_singlesig_output([H_(45), 1, 0, 0])) == False
 
         # Multisig instead of singlesig
-        assert self.d.output_is_change(get_internal_multisig_output([H_(45), 0, 0, 0], [xpub1])) == False
+        assert self.d.output_is_change(get_internal_multisig_output([H_(45), 1, 0, 0], [xpub1], PRESERVED)) == False
+        assert self.d.output_is_change(get_internal_multisig_output([H_(45), 1, 0, 0], [xpub1], LEXICOGRAPHIC)) == False
 
         # External output
         assert self.d.output_is_change(get_external_singlesig_output()) == False
 
-    def test_multisig(self):
+    def test_unsorted_multisig(self):
         # Different change and account index
-        self.d.add_input(get_multisig_input([H_(45), 0, 0, 0], [xpub1, xpub2]))
-        self.d.add_input(get_multisig_input([H_(45), 0, 0, 1], [xpub1, xpub2]))
-        self.d.add_input(get_multisig_input([H_(45), 0, 1, 0], [xpub1, xpub2]))
-        self.d.add_input(get_multisig_input([H_(45), 0, 1, 1], [xpub1, xpub2]))
+        self.d.add_input(get_multisig_input([H_(45), 0, 0, 0], [xpub1, xpub2], PRESERVED))
+        self.d.add_input(get_multisig_input([H_(45), 0, 0, 1], [xpub1, xpub2], PRESERVED))
+        self.d.add_input(get_multisig_input([H_(45), 0, 1, 0], [xpub1, xpub2], PRESERVED))
+        self.d.add_input(get_multisig_input([H_(45), 0, 1, 1], [xpub1, xpub2], PRESERVED))
 
         # Same outputs as inputs
-        assert self.d.output_is_change(get_internal_multisig_output([H_(45), 0, 0, 0], [xpub1, xpub2])) == True
-        assert self.d.output_is_change(get_internal_multisig_output([H_(45), 0, 0, 1], [xpub1, xpub2])) == True
-        assert self.d.output_is_change(get_internal_multisig_output([H_(45), 0, 1, 0], [xpub1, xpub2])) == True
-        assert self.d.output_is_change(get_internal_multisig_output([H_(45), 0, 1, 1], [xpub1, xpub2])) == True
+        assert self.d.output_is_change(get_internal_multisig_output([H_(45), 0, 0, 0], [xpub1, xpub2], PRESERVED)) == True
+        assert self.d.output_is_change(get_internal_multisig_output([H_(45), 0, 0, 1], [xpub1, xpub2], PRESERVED)) == True
+        assert self.d.output_is_change(get_internal_multisig_output([H_(45), 0, 1, 0], [xpub1, xpub2], PRESERVED)) == True
+        assert self.d.output_is_change(get_internal_multisig_output([H_(45), 0, 1, 1], [xpub1, xpub2], PRESERVED)) == True
 
         # Singlesig instead of multisig
         assert self.d.output_is_change(get_internal_singlesig_output([H_(45), 0, 0, 0])) == False
@@ -155,22 +159,60 @@ class TestChangeDetector(unittest.TestCase):
         assert self.d.output_is_change(get_internal_singlesig_output([H_(45), 1, 0, 0])) == False
 
         # Different order of xpubs
-        assert self.d.output_is_change(get_internal_multisig_output([H_(45), 0, 0, 0], [xpub2, xpub1])) == True
+        assert self.d.output_is_change(get_internal_multisig_output([H_(45), 0, 0, 0], [xpub2, xpub1], PRESERVED)) == False
+
+        # Sorted instead of unsorted
+        assert self.d.output_is_change(get_internal_multisig_output([H_(45), 0, 0, 0], [xpub1, xpub2], LEXICOGRAPHIC)) == False
 
         # Different xpubs
-        assert self.d.output_is_change(get_internal_multisig_output([H_(45), 0, 0, 0], [xpub1, xpub3])) == False
+        assert self.d.output_is_change(get_internal_multisig_output([H_(45), 0, 0, 0], [xpub1, xpub3], PRESERVED)) == False
 
         # External output
         assert self.d.output_is_change(get_external_singlesig_output()) == False
 
-    def test_multisig_different_xpubs_order(self):
+    def test_sorted_multisig(self):
+        # Different change and account index
+        self.d.add_input(get_multisig_input([H_(45), 0, 0, 0], [xpub1, xpub2], LEXICOGRAPHIC))
+        self.d.add_input(get_multisig_input([H_(45), 0, 0, 1], [xpub1, xpub2], LEXICOGRAPHIC))
+        self.d.add_input(get_multisig_input([H_(45), 0, 1, 0], [xpub1, xpub2], LEXICOGRAPHIC))
+        self.d.add_input(get_multisig_input([H_(45), 0, 1, 1], [xpub1, xpub2], LEXICOGRAPHIC))
+
+        # Same outputs as inputs
+        assert self.d.output_is_change(get_internal_multisig_output([H_(45), 0, 0, 0], [xpub1, xpub2], LEXICOGRAPHIC)) == True
+        assert self.d.output_is_change(get_internal_multisig_output([H_(45), 0, 0, 1], [xpub1, xpub2], LEXICOGRAPHIC)) == True
+        assert self.d.output_is_change(get_internal_multisig_output([H_(45), 0, 1, 0], [xpub1, xpub2], LEXICOGRAPHIC)) == True
+        assert self.d.output_is_change(get_internal_multisig_output([H_(45), 0, 1, 1], [xpub1, xpub2], LEXICOGRAPHIC)) == True
+
+        # Singlesig instead of multisig
+        assert self.d.output_is_change(get_internal_singlesig_output([H_(45), 0, 0, 0])) == False
+
+        # Different account index
+        assert self.d.output_is_change(get_internal_singlesig_output([H_(45), 1, 0, 0])) == False
+
         # Different order of xpubs
-        self.d.add_input(get_multisig_input([H_(45), 0, 0, 0], [xpub1, xpub2]))
-        self.d.add_input(get_multisig_input([H_(45), 0, 0, 0], [xpub2, xpub1]))
+        assert self.d.output_is_change(get_internal_multisig_output([H_(45), 0, 0, 0], [xpub2, xpub1], LEXICOGRAPHIC)) == True
+
+        # Unsorted instead of sorted
+        assert self.d.output_is_change(get_internal_multisig_output([H_(45), 0, 0, 0], [xpub1, xpub2], PRESERVED)) == False
+
+        # Different xpubs
+        assert self.d.output_is_change(get_internal_multisig_output([H_(45), 0, 0, 0], [xpub1, xpub3], LEXICOGRAPHIC)) == False
+
+        # External output
+        assert self.d.output_is_change(get_external_singlesig_output()) == False
+
+    def test_unsorted_multisig_different_xpubs_order(self):
+        # Different order of xpubs
+        self.d.add_input(get_multisig_input([H_(45), 0, 0, 0], [xpub1, xpub2], PRESERVED))
+        self.d.add_input(get_multisig_input([H_(45), 0, 0, 0], [xpub2, xpub1], PRESERVED))
 
         # Same ouputs as inputs
-        assert self.d.output_is_change(get_internal_multisig_output([H_(45), 0, 0, 0], [xpub1, xpub2])) == True
-        assert self.d.output_is_change(get_internal_multisig_output([H_(45), 0, 0, 0], [xpub2, xpub1])) == True
+        assert self.d.output_is_change(get_internal_multisig_output([H_(45), 0, 0, 0], [xpub1, xpub2], PRESERVED)) == False
+        assert self.d.output_is_change(get_internal_multisig_output([H_(45), 0, 0, 0], [xpub2, xpub1], PRESERVED)) == False
+
+        # Sorted instead of unsorted
+        assert self.d.output_is_change(get_internal_multisig_output([H_(45), 0, 0, 0], [xpub1, xpub2], LEXICOGRAPHIC)) == False
+        assert self.d.output_is_change(get_internal_multisig_output([H_(45), 0, 0, 0], [xpub2, xpub1], LEXICOGRAPHIC)) == False
 
         # Singlesig instead of multisig
         assert self.d.output_is_change(get_internal_singlesig_output([H_(45), 0, 0, 0])) == False
@@ -178,14 +220,70 @@ class TestChangeDetector(unittest.TestCase):
         # External output
         assert self.d.output_is_change(get_external_singlesig_output()) == False
 
-    def test_multisig_different_xpubs(self):
-        # Different xpubs
-        self.d.add_input(get_multisig_input([H_(45), 0, 0, 0], [xpub1, xpub2]))
-        self.d.add_input(get_multisig_input([H_(45), 0, 0, 0], [xpub1, xpub3]))
+    def test_sorted_multisig_different_xpubs_order(self):
+        # Different order of xpubs
+        self.d.add_input(get_multisig_input([H_(45), 0, 0, 0], [xpub1, xpub2], LEXICOGRAPHIC))
+        self.d.add_input(get_multisig_input([H_(45), 0, 0, 0], [xpub2, xpub1], LEXICOGRAPHIC))
 
         # Same ouputs as inputs
-        assert self.d.output_is_change(get_internal_multisig_output([H_(45), 0, 0, 0], [xpub1, xpub2])) == False
-        assert self.d.output_is_change(get_internal_multisig_output([H_(45), 0, 0, 0], [xpub1, xpub3])) == False
+        assert self.d.output_is_change(get_internal_multisig_output([H_(45), 0, 0, 0], [xpub1, xpub2], LEXICOGRAPHIC)) == True
+        assert self.d.output_is_change(get_internal_multisig_output([H_(45), 0, 0, 0], [xpub2, xpub1], LEXICOGRAPHIC)) == True
+
+        # Sorted instead of unsorted
+        assert self.d.output_is_change(get_internal_multisig_output([H_(45), 0, 0, 0], [xpub1, xpub2], PRESERVED)) == False
+        assert self.d.output_is_change(get_internal_multisig_output([H_(45), 0, 0, 0], [xpub2, xpub1], PRESERVED)) == False
+
+        # Singlesig instead of multisig
+        assert self.d.output_is_change(get_internal_singlesig_output([H_(45), 0, 0, 0])) == False
+
+        # External output
+        assert self.d.output_is_change(get_external_singlesig_output()) == False
+
+    def test_unsorted_multisig_different_xpubs(self):
+        # Different xpubs
+        self.d.add_input(get_multisig_input([H_(45), 0, 0, 0], [xpub1, xpub2], PRESERVED))
+        self.d.add_input(get_multisig_input([H_(45), 0, 0, 0], [xpub1, xpub3], PRESERVED))
+
+        # Same ouputs as inputs
+        assert self.d.output_is_change(get_internal_multisig_output([H_(45), 0, 0, 0], [xpub1, xpub2], PRESERVED)) == False
+        assert self.d.output_is_change(get_internal_multisig_output([H_(45), 0, 0, 0], [xpub1, xpub3], PRESERVED)) == False
+
+        # Sorted instead of unsorted
+        assert self.d.output_is_change(get_internal_multisig_output([H_(45), 0, 0, 0], [xpub1, xpub2], LEXICOGRAPHIC)) == False
+        assert self.d.output_is_change(get_internal_multisig_output([H_(45), 0, 0, 0], [xpub1, xpub3], LEXICOGRAPHIC)) == False
+
+        # Singlesig instead of multisig
+        assert self.d.output_is_change(get_internal_singlesig_output([H_(45), 0, 0, 0])) == False
+
+        # External output
+        assert self.d.output_is_change(get_external_singlesig_output()) == False
+
+    def test_sorted_multisig_different_xpubs(self):
+        # Different xpubs
+        self.d.add_input(get_multisig_input([H_(45), 0, 0, 0], [xpub1, xpub2], LEXICOGRAPHIC))
+        self.d.add_input(get_multisig_input([H_(45), 0, 0, 0], [xpub1, xpub3], LEXICOGRAPHIC))
+
+        # Same ouputs as inputs
+        assert self.d.output_is_change(get_internal_multisig_output([H_(45), 0, 0, 0], [xpub1, xpub2], LEXICOGRAPHIC)) == False
+        assert self.d.output_is_change(get_internal_multisig_output([H_(45), 0, 0, 0], [xpub1, xpub3], LEXICOGRAPHIC)) == False
+
+        # Sorted instead of unsorted
+        assert self.d.output_is_change(get_internal_multisig_output([H_(45), 0, 0, 0], [xpub1, xpub2], PRESERVED)) == False
+        assert self.d.output_is_change(get_internal_multisig_output([H_(45), 0, 0, 0], [xpub1, xpub3], PRESERVED)) == False
+
+        # Singlesig instead of multisig
+        assert self.d.output_is_change(get_internal_singlesig_output([H_(45), 0, 0, 0])) == False
+
+        # External output
+        assert self.d.output_is_change(get_external_singlesig_output()) == False
+
+    def test_mixed_sorted_and_unsorted_multisig_1(self):
+        self.d.add_input(get_multisig_input([H_(45), 0, 0, 0], [xpub1], PRESERVED))
+        self.d.add_input(get_multisig_input([H_(45), 0, 0, 0], [xpub1], LEXICOGRAPHIC))
+
+        # Same ouputs as inputs
+        assert self.d.output_is_change(get_internal_multisig_output([H_(45), 0, 0, 0], [xpub1], PRESERVED)) == False
+        assert self.d.output_is_change(get_internal_multisig_output([H_(45), 0, 0, 0], [xpub1], LEXICOGRAPHIC)) == False
 
         # Singlesig instead of multisig
         assert self.d.output_is_change(get_internal_singlesig_output([H_(45), 0, 0, 0])) == False
