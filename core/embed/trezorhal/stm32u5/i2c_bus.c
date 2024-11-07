@@ -118,6 +118,21 @@ static const i2c_bus_def_t g_i2c_bus_def[I2C_COUNT] = {
         .guard_time = I2C_INSTANCE_2_GUARD_TIME,
     },
 #endif
+#ifdef I2C_INSTANCE_3
+    {
+        .regs = I2C_INSTANCE_3,
+        .scl_port = I2C_INSTANCE_3_SCL_PORT,
+        .sda_port = I2C_INSTANCE_3_SDA_PORT,
+        .scl_pin = I2C_INSTANCE_3_SCL_PIN,
+        .sda_pin = I2C_INSTANCE_3_SDA_PIN,
+        .pin_af = I2C_INSTANCE_3_PIN_AF,
+        .reset_reg = I2C_INSTANCE_3_RESET_REG,
+        .reset_bit = I2C_INSTANCE_3_RESET_BIT,
+        .ev_irq = I2C_INSTANCE_3_EV_IRQn,
+        .er_irq = I2C_INSTANCE_3_ER_IRQn,
+        .guard_time = I2C_INSTANCE_3_GUARD_TIME,
+    },
+#endif
 };
 
 struct i2c_bus {
@@ -272,6 +287,14 @@ static bool i2c_bus_init(i2c_bus_t* bus, int bus_index) {
       I2C_INSTANCE_2_CLK_EN();
       I2C_INSTANCE_2_SCL_CLK_EN();
       I2C_INSTANCE_2_SDA_CLK_EN();
+      break;
+#endif
+
+#ifdef I2C_INSTANCE_3
+    case 3:
+      I2C_INSTANCE_3_CLK_EN();
+      I2C_INSTANCE_3_SCL_CLK_EN();
+      I2C_INSTANCE_3_SDA_CLK_EN();
       break;
 #endif
     default:
@@ -914,6 +937,24 @@ void I2C_INSTANCE_2_ER_IRQHandler(void) {
   SEGGER_SYSVIEW_RecordEnterISR();
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DEFAULT);
   i2c_bus_er_handler(&g_i2c_bus_driver[2]);
+  mpu_restore(mpu_mode);
+  SEGGER_SYSVIEW_RecordExitISR();
+}
+#endif
+
+#ifdef I2C_INSTANCE_3
+void I2C_INSTANCE_3_EV_IRQHandler(void) {
+  SEGGER_SYSVIEW_RecordEnterISR();
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DEFAULT);
+  i2c_bus_ev_handler(&g_i2c_bus_driver[3]);
+  mpu_restore(mpu_mode);
+  SEGGER_SYSVIEW_RecordExitISR();
+}
+
+void I2C_INSTANCE_3_ER_IRQHandler(void) {
+  SEGGER_SYSVIEW_RecordEnterISR();
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DEFAULT);
+  i2c_bus_er_handler(&g_i2c_bus_driver[3]);
   mpu_restore(mpu_mode);
   SEGGER_SYSVIEW_RecordExitISR();
 }
