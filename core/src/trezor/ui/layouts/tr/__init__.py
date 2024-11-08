@@ -585,7 +585,9 @@ def confirm_blob_with_optional_pagination(
         hold=False,
         chunkify=chunkify,
     )
-    return with_info(main_layout, info_layout, br_name, br_code)
+    return with_info(
+        main_layout, info_layout, br_name, br_code, repeat_button_request=True
+    )
 
 
 def confirm_blob(
