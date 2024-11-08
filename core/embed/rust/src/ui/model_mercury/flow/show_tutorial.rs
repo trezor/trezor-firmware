@@ -52,7 +52,7 @@ impl FlowController for ShowTutorial {
             (Self::StepMenu, Direction::Down) => Self::StepNavigation.swipe(direction),
             (Self::StepMenu, Direction::Left) => Self::Menu.swipe(direction),
             (Self::Menu, Direction::Left) => Self::DidYouKnow.swipe(direction),
-            (Self::Menu, Direction::Right) => Self::StepBegin.swipe(direction),
+            (Self::Menu, Direction::Right) => Self::StepMenu.swipe(direction),
             (Self::DidYouKnow, Direction::Right) => Self::Menu.swipe(direction),
             (Self::StepDone, Direction::Up) => self.return_msg(FlowMsg::Confirmed),
             _ => self.do_nothing(),
