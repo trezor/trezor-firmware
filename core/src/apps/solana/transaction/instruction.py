@@ -41,7 +41,7 @@ class Instruction:
     @staticmethod
     def parse_instruction_data(
         instruction_data: InstructionData, property_templates: list[PropertyTemplate]
-    ):
+    ) -> dict[str, Any]:
         from trezor.utils import BufferReader
         from trezor.wire import DataError
 
@@ -65,7 +65,7 @@ class Instruction:
     @staticmethod
     def parse_instruction_accounts(
         accounts: list[Account], accounts_template: list[AccountTemplate]
-    ):
+    ) -> dict[str, Account]:
         parsed_account = {}
         for i, account_template in enumerate(accounts_template):
             if i >= len(accounts):

@@ -42,7 +42,7 @@ class Credential:
         key_hash: bytes | None,
         script_hash: bytes | None,
         pointer: messages.CardanoBlockchainPointerType | None,
-    ):
+    ) -> None:
         self.type_name = type_name
         self.address_type = address_type
         self.path = path

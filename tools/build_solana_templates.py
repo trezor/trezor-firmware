@@ -28,7 +28,7 @@ def _silent_call(*args):
 def format(file: Path):
     _silent_call("isort", file)
     _silent_call("black", file)
-    _silent_call("flake8", file)
+    _silent_call("flake8", file, "--config", ROOT / "setup.cfg")
 
 
 def render_single(template_path: Path, programs: Munch) -> str:

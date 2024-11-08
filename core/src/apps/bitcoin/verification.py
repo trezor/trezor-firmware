@@ -17,7 +17,7 @@ class SignatureVerifier:
         script_sig: bytes | None,
         witness: bytes | None,
         coin: CoinInfo,
-    ):
+    ) -> None:
         from trezor import utils
         from trezor.crypto.hashlib import sha256
         from trezor.wire import DataError  # local_cache_global

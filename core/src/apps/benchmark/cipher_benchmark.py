@@ -16,17 +16,17 @@ if TYPE_CHECKING:
 class EncryptBenchmark:
     def __init__(
         self, cipher_ctx_constructor: Callable[[], CipherCtx], block_size: int
-    ):
+    ) -> None:
         self.cipher_ctx_constructor = cipher_ctx_constructor
         self.block_size = block_size
 
-    def prepare(self):
+    def prepare(self) -> None:
         self.cipher_ctx = self.cipher_ctx_constructor()
         self.blocks_count = maximum_used_memory_in_bytes // self.block_size
         self.iterations_count = 100
         self.data = random_bytes(self.blocks_count * self.block_size)
 
-    def run(self):
+    def run(self) -> None:
         for _ in range(self.iterations_count):
             self.cipher_ctx.encrypt(self.data)
 
@@ -44,17 +44,17 @@ class EncryptBenchmark:
 class DecryptBenchmark:
     def __init__(
         self, cipher_ctx_constructor: Callable[[], CipherCtx], block_size: int
-    ):
+    ) -> None:
         self.cipher_ctx_constructor = cipher_ctx_constructor
         self.block_size = block_size
 
-    def prepare(self):
+    def prepare(self) -> None:
         self.cipher_ctx = self.cipher_ctx_constructor()
         self.blocks_count = maximum_used_memory_in_bytes // self.block_size
         self.iterations_count = 100
         self.data = random_bytes(self.blocks_count * self.block_size)
 
-    def run(self):
+    def run(self) -> None:
         for _ in range(self.iterations_count):
             self.cipher_ctx.decrypt(self.data)
 

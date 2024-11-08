@@ -219,7 +219,7 @@ _last_auth_valid = False
 
 
 class CborError(Exception):
-    def __init__(self, code: int):
+    def __init__(self, code: int) -> None:
         super().__init__()
         self.code = code
 

@@ -45,6 +45,7 @@ if TYPE_CHECKING:
     Msg = TypeVar("Msg", bound=protobuf.MessageType)
     HandlerTask = Coroutine[Any, Any, protobuf.MessageType]
     Handler = Callable[[Msg], HandlerTask]
+    Filter = Callable[[int, Handler], Handler]
 
     LoadedMessageType = TypeVar("LoadedMessageType", bound=protobuf.MessageType)
 
@@ -264,7 +265,7 @@ def find_handler(iface: WireInterface, msg_type: int) -> Handler:
     return handler
 
 
-filters: list[Callable[[int, Handler], Handler]] = []
+filters: list[Filter] = []
 """Filters for the wire handler.
 
 Filters are applied in order. Each filter gets a message id and a preceding handler. It
@@ -292,7 +293,7 @@ and `filters` becomes private!
 """
 
 
-def remove_filter(filter):
+def remove_filter(filter: Filter) -> None:
     try:
         filters.remove(filter)
     except ValueError:

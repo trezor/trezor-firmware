@@ -32,15 +32,15 @@ if TYPE_CHECKING:
 
 
 class SignBenchmark:
-    def __init__(self, curve: SignCurve):
+    def __init__(self, curve: SignCurve) -> None:
         self.curve = curve
 
-    def prepare(self):
+    def prepare(self) -> None:
         self.iterations_count = 10
         self.secret_key = self.curve.generate_secret()
         self.digest = random_bytes(32)
 
-    def run(self):
+    def run(self) -> None:
         for _ in range(self.iterations_count):
             self.curve.sign(self.secret_key, self.digest)
 
@@ -51,17 +51,17 @@ class SignBenchmark:
 
 
 class VerifyBenchmark:
-    def __init__(self, curve: SignCurve):
+    def __init__(self, curve: SignCurve) -> None:
         self.curve = curve
 
-    def prepare(self):
+    def prepare(self) -> None:
         self.iterations_count = 10
         self.secret_key = self.curve.generate_secret()
         self.public_key = self.curve.publickey(self.secret_key)
         self.digest = random_bytes(32)
         self.signature = self.curve.sign(self.secret_key, self.digest)
 
-    def run(self):
+    def run(self) -> None:
         for _ in range(self.iterations_count):
             self.curve.verify(self.public_key, self.signature, self.digest)
 
@@ -72,15 +72,15 @@ class VerifyBenchmark:
 
 
 class MultiplyBenchmark:
-    def __init__(self, curve: MultiplyCurve):
+    def __init__(self, curve: MultiplyCurve) -> None:
         self.curve = curve
 
-    def prepare(self):
+    def prepare(self) -> None:
         self.secret_key = self.curve.generate_secret()
         self.public_key = self.curve.publickey(self.curve.generate_secret())
         self.iterations_count = 10
 
-    def run(self):
+    def run(self) -> None:
         for _ in range(self.iterations_count):
             self.curve.multiply(self.secret_key, self.public_key)
 
@@ -91,14 +91,14 @@ class MultiplyBenchmark:
 
 
 class PublickeyBenchmark:
-    def __init__(self, curve: Curve):
+    def __init__(self, curve: Curve) -> None:
         self.curve = curve
 
-    def prepare(self):
+    def prepare(self) -> None:
         self.iterations_count = 10
         self.secret_key = self.curve.generate_secret()
 
-    def run(self):
+    def run(self) -> None:
         for _ in range(self.iterations_count):
             self.curve.publickey(self.secret_key)
 

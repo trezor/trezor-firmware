@@ -229,7 +229,7 @@ class Tagged:
 
 # TODO: this seems to be unused - is checked against, but is never created???
 class Raw:
-    def __init__(self, value: Value):
+    def __init__(self, value: Value) -> None:
         self.value = value
 
 

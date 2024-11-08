@@ -12,12 +12,12 @@ def repeated_backup_enabled() -> bool:
     return storage_cache.get_bool(storage_cache.APP_RECOVERY_REPEATED_BACKUP_UNLOCKED)
 
 
-def activate_repeated_backup():
+def activate_repeated_backup() -> None:
     storage_cache.set_bool(storage_cache.APP_RECOVERY_REPEATED_BACKUP_UNLOCKED, True)
     wire.filters.append(_repeated_backup_filter)
 
 
-def deactivate_repeated_backup():
+def deactivate_repeated_backup() -> None:
     storage_cache.delete(storage_cache.APP_RECOVERY_REPEATED_BACKUP_UNLOCKED)
     wire.remove_filter(_repeated_backup_filter)
 

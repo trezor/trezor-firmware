@@ -115,7 +115,7 @@ def _slip_39_checklist_items(
     advanced: bool,
     count: int | None = None,
     threshold: int | None = None,
-):
+) -> tuple[str, str, str]:
     if not advanced:
         entry_1 = (
             TR.reset__slip39_checklist_num_shares_x_template.format(count)
