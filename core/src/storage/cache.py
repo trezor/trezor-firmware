@@ -327,7 +327,7 @@ if TYPE_CHECKING:
 
 def stored(key: int) -> Callable[[ByteFunc[P]], ByteFunc[P]]:
     def decorator(func: ByteFunc[P]) -> ByteFunc[P]:
-        def wrapper(*args: P.args, **kwargs: P.kwargs):
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> bytes:
             value = get(key)
             if value is None:
                 value = func(*args, **kwargs)
@@ -341,7 +341,7 @@ def stored(key: int) -> Callable[[ByteFunc[P]], ByteFunc[P]]:
 
 def stored_async(key: int) -> Callable[[AsyncByteFunc[P]], AsyncByteFunc[P]]:
     def decorator(func: AsyncByteFunc[P]) -> AsyncByteFunc[P]:
-        async def wrapper(*args: P.args, **kwargs: P.kwargs):
+        async def wrapper(*args: P.args, **kwargs: P.kwargs) -> bytes:
             value = get(key)
             if value is None:
                 value = await func(*args, **kwargs)

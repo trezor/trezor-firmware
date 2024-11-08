@@ -23,7 +23,7 @@ class OrdinarySigner(Signer):
         self,
         msg: messages.CardanoSignTxInit,
         keychain: seed.Keychain,
-    ):
+    ) -> None:
         super().__init__(msg, keychain)
         self.suite_tx_type: SuiteTxType = self._suite_tx_type()
 

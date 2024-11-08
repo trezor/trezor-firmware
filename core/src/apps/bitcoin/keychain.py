@@ -345,7 +345,7 @@ class AccountType:
         require_bech32: bool,
         require_taproot: bool,
         account_level: bool = False,
-    ):
+    ) -> None:
         self.account_name = account_name
         self.pattern = pattern
         self.script_type = script_type

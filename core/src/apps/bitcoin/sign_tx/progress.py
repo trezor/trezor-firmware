@@ -14,7 +14,7 @@ _PREV_TX_MULTIPLIER = 5
 
 
 class Progress:
-    def __init__(self):
+    def __init__(self) -> None:
         self.progress = 0
         self.steps = 0
         self.signing = False

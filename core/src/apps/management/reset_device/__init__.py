@@ -233,7 +233,7 @@ def _get_slip39_mnemonics(
     group_threshold: int,
     groups: Sequence[tuple[int, int]],
     extendable: bool,
-):
+) -> list[list[str]]:
     if extendable:
         identifier = slip39.generate_random_identifier()
     else:

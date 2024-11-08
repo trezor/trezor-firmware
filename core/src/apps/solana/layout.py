@@ -16,6 +16,8 @@ from apps.common.paths import address_n_to_str
 from .types import AddressType
 
 if TYPE_CHECKING:
+    from typing import Sequence
+
     from .transaction.instructions import Instruction, SystemProgramTransferInstruction
     from .types import AddressReference
 
@@ -33,7 +35,9 @@ def _format_path(path: list[int]) -> str:
     return f"Solana #{unharden(account_index) + 1}"
 
 
-def _get_address_reference_props(address: AddressReference, display_name: str):
+def _get_address_reference_props(
+    address: AddressReference, display_name: str
+) -> Sequence[tuple[str, str]]:
     return (
         (TR.solana__is_provided_via_lookup_table_template.format(display_name), ""),
         (f"{TR.solana__lookup_table_address}:", base58.encode(address[0])),
@@ -293,7 +297,7 @@ async def confirm_token_transfer(
     fee: int,
     signer_path: list[int],
     blockhash: bytes,
-):
+) -> None:
     await confirm_value(
         title=TR.words__recipient,
         value=base58.encode(destination_account),

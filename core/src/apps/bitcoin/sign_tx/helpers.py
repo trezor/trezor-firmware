@@ -46,7 +46,7 @@ class UiConfirmOutput(UiConfirm):
         output_index: int,
         chunkify: bool,
         address_n: Bip32Path | None,
-    ):
+    ) -> None:
         self.output = output
         self.coin = coin
         self.amount_unit = amount_unit
@@ -66,7 +66,9 @@ class UiConfirmOutput(UiConfirm):
 
 
 class UiConfirmDecredSSTXSubmission(UiConfirm):
-    def __init__(self, output: TxOutput, coin: CoinInfo, amount_unit: AmountUnit):
+    def __init__(
+        self, output: TxOutput, coin: CoinInfo, amount_unit: AmountUnit
+    ) -> None:
         self.output = output
         self.coin = coin
         self.amount_unit = amount_unit
@@ -83,7 +85,7 @@ class UiConfirmPaymentRequest(UiConfirm):
         payment_req: TxAckPaymentRequest,
         coin: CoinInfo,
         amount_unit: AmountUnit,
-    ):
+    ) -> None:
         self.payment_req = payment_req
         self.amount_unit = amount_unit
         self.coin = coin
@@ -97,7 +99,7 @@ class UiConfirmPaymentRequest(UiConfirm):
 
 
 class UiConfirmReplacement(UiConfirm):
-    def __init__(self, title: str, txid: bytes):
+    def __init__(self, title: str, txid: bytes) -> None:
         self.title = title
         self.txid = txid
 
@@ -112,7 +114,7 @@ class UiConfirmModifyOutput(UiConfirm):
         orig_txo: TxOutput,
         coin: CoinInfo,
         amount_unit: AmountUnit,
-    ):
+    ) -> None:
         self.txo = txo
         self.orig_txo = orig_txo
         self.coin = coin
@@ -133,7 +135,7 @@ class UiConfirmModifyFee(UiConfirm):
         fee_rate: float,
         coin: CoinInfo,
         amount_unit: AmountUnit,
-    ):
+    ) -> None:
         self.title = title
         self.user_fee_change = user_fee_change
         self.total_fee_new = total_fee_new
@@ -161,7 +163,7 @@ class UiConfirmTotal(UiConfirm):
         coin: CoinInfo,
         amount_unit: AmountUnit,
         address_n: Bip32Path | None,
-    ):
+    ) -> None:
         self.spending = spending
         self.fee = fee
         self.fee_rate = fee_rate
@@ -183,7 +185,7 @@ class UiConfirmTotal(UiConfirm):
 class UiConfirmJointTotal(UiConfirm):
     def __init__(
         self, spending: int, total: int, coin: CoinInfo, amount_unit: AmountUnit
-    ):
+    ) -> None:
         self.spending = spending
         self.total = total
         self.coin = coin
@@ -196,7 +198,7 @@ class UiConfirmJointTotal(UiConfirm):
 
 
 class UiConfirmFeeOverThreshold(UiConfirm):
-    def __init__(self, fee: int, coin: CoinInfo, amount_unit: AmountUnit):
+    def __init__(self, fee: int, coin: CoinInfo, amount_unit: AmountUnit) -> None:
         self.fee = fee
         self.coin = coin
         self.amount_unit = amount_unit
@@ -206,7 +208,7 @@ class UiConfirmFeeOverThreshold(UiConfirm):
 
 
 class UiConfirmChangeCountOverThreshold(UiConfirm):
-    def __init__(self, change_count: int):
+    def __init__(self, change_count: int) -> None:
         self.change_count = change_count
 
     def confirm_dialog(self) -> Awaitable[Any]:
@@ -219,7 +221,7 @@ class UiConfirmUnverifiedExternalInput(UiConfirm):
 
 
 class UiConfirmForeignAddress(UiConfirm):
-    def __init__(self, address_n: list):
+    def __init__(self, address_n: list) -> None:
         self.address_n = address_n
 
     def confirm_dialog(self) -> Awaitable[Any]:
@@ -229,7 +231,7 @@ class UiConfirmForeignAddress(UiConfirm):
 
 
 class UiConfirmNonDefaultLocktime(UiConfirm):
-    def __init__(self, lock_time: int, lock_time_disabled: bool):
+    def __init__(self, lock_time: int, lock_time_disabled: bool) -> None:
         self.lock_time = lock_time
         self.lock_time_disabled = lock_time_disabled
 

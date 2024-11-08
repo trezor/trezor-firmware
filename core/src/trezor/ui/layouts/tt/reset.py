@@ -239,7 +239,7 @@ def slip39_prompt_number_of_shares(
     min_count = 1
     max_count = 16
 
-    def description(i: int):
+    def description(i: int) -> str:
         if group_id is None:
             if i == 1:
                 return TR.reset__only_one_share_will_be_created

@@ -42,7 +42,7 @@ def get_create_associated_token_account_instructions(
 
 def is_predefined_token_transfer(
     instructions: list[Instruction],
-):
+) -> bool:
     """
     Checks that the transaction consists of one or zero create token account instructions
     and one or more transfer token instructions. Also checks that the token program, token mint

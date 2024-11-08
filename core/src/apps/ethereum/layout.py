@@ -142,7 +142,7 @@ async def require_confirm_claim(
     )
 
 
-async def require_confirm_unknown_token(address_bytes: bytes):
+async def require_confirm_unknown_token(address_bytes: bytes) -> None:
     from ubinascii import hexlify
 
     from trezor.ui.layouts import confirm_address, show_warning

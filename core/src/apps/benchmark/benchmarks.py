@@ -26,7 +26,7 @@ from .hash_benchmark import HashBenchmark
 
 # This is a wrapper above the trezor.crypto.curve.ed25519 module that satisfies SignCurve protocol, the modules uses `message` instead of `digest` in `sign()` and `verify()`
 class Ed25519:
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
     def generate_secret(self) -> bytes:

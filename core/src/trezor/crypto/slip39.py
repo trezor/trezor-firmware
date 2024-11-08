@@ -140,7 +140,7 @@ class Share:
         index: int,
         threshold: int,
         share_value: bytes,
-    ):
+    ) -> None:
         self.identifier = identifier
         self.extendable = extendable
         self.iteration_exponent = iteration_exponent
