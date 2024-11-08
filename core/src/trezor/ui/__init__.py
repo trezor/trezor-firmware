@@ -257,6 +257,8 @@ class Layout(Generic[T]):
 
             set_current_layout(None)
             if __debug__:
+                if self.button_request_ack_pending:
+                    raise wire.FirmwareError("button request ack pending")
                 self.notify_debuglink(None)
 
     async def get_result(self) -> T:
@@ -416,12 +418,16 @@ class Layout(Generic[T]):
                     self.button_request_box,
                 )
 
+                if __debug__:
+                    log.info(__name__, "ButtonRequest sent: %s", br_name)
                 await self.context.call(
                     ButtonRequest(
                         code=br_code, pages=self.layout.page_count(), name=br_name
                     ),
                     ButtonAck,
                 )
+                if __debug__:
+                    log.info(__name__, "ButtonRequest acked: %s", br_name)
 
                 if (
                     self.button_request_ack_pending
