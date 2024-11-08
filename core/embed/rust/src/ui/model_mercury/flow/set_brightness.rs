@@ -131,6 +131,7 @@ impl SetBrightness {
         )
         .with_footer(TR::instructions__swipe_up.into(), None)
         .with_swipe(Direction::Up, SwipeSettings::default())
+        .with_result_icon(theme::ICON_BULLET_CHECKMARK, theme::GREEN_LIGHT)
         .map(move |_msg| Some(FlowMsg::Confirmed));
 
         let res = SwipeFlow::new(&SetBrightness::Slider)?
