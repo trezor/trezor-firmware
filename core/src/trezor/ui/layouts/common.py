@@ -6,6 +6,9 @@ from trezor.enums import ButtonRequestType
 from trezor.messages import ButtonAck, ButtonRequest
 from trezor.wire import ActionCancelled, context
 
+if __debug__:
+    from trezor import log
+
 if TYPE_CHECKING:
     from typing import Any, Awaitable, Callable, TypeVar
 
@@ -23,9 +26,13 @@ async def _button_request(
     pages: int = 0,
 ) -> None:
     workflow.close_others()
+    if __debug__:
+        log.info(__name__, "ButtonRequest sent: %s", br_name)
     await context.maybe_call(
         ButtonRequest(code=code, pages=pages or None, name=br_name), ButtonAck
     )
+    if __debug__:
+        log.info(__name__, "ButtonRequest acked: %s", br_name)
 
 
 async def interact(
