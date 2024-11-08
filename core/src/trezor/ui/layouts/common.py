@@ -65,20 +65,30 @@ async def with_info(
     info_layout: ui.LayoutObj[Any],
     br_name: str,
     br_code: ButtonRequestType,
+    repeat_button_request: bool = False,  # TODO this should eventually always be true
 ) -> None:
-    send_button_request = True
+    first_br = br_name
+    next_br = br_name if repeat_button_request else None
 
+    # if repeat_button_request is True:
+    #  * `first_br` (br_name) is sent on first interaction
+    #  * `next_br` (br_name) is sent on the info screen
+    #  * `first_br` is updated to `next_br` (still br_name) and that is sent for every
+    #    subsequent interaction
+    # if repeat_button_request is False:
+    #  * `first_br` (br_name) is sent on first interaction
+    #  * `next_br` (None) is sent on the info screen
+    #  * `first_br` is cleared to None for every subsequent interaction
     while True:
-        result = await interact(
-            main_layout, br_name if send_button_request else None, br_code
-        )
+        result = await interact(main_layout, first_br, br_code)
         # raises on cancel
-        send_button_request = False
+
+        first_br = next_br
 
         if result is trezorui2.CONFIRMED:
             return
         elif result is trezorui2.INFO:
-            await interact(info_layout, None, raise_on_cancel=None)
+            await interact(info_layout, next_br, br_code, raise_on_cancel=None)
             continue
         else:
             raise RuntimeError  # unexpected result
