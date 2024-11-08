@@ -173,6 +173,11 @@ impl Homescreen {
                 self.paint_notification_only = true;
                 ctx.request_paint();
             }
+            Event::BLE(BLEEvent::PairingCanceled) => {
+                self.pairing = false;
+                self.pairing_dialog = None;
+                ctx.request_paint();
+            }
             Event::BLE(BLEEvent::PairingRequest(data)) => {
                 self.pairing = true;
 
