@@ -191,6 +191,17 @@ static void ble_process_rx_msg_pairing_request(const uint8_t *data,
   tsqueue_insert(&drv->event_queue, (uint8_t *)&event, sizeof(event), NULL);
 }
 
+static void ble_process_rx_msg_pairing_cancelled(const uint8_t *data,
+                                                 uint32_t len) {
+  ble_driver_t *drv = &g_ble_driver;
+  if (!drv->initialized) {
+    return;
+  }
+
+  ble_event_t event = {.type = BLE_PAIRING_CANCELLED, .data_len = 0};
+  tsqueue_insert(&drv->event_queue, (uint8_t *)&event, sizeof(event), NULL);
+}
+
 static void ble_process_rx_msg(const uint8_t *data, uint32_t len) {
   switch (data[0]) {
     case INTERNAL_EVENT_STATUS:
@@ -198,6 +209,9 @@ static void ble_process_rx_msg(const uint8_t *data, uint32_t len) {
       break;
     case INTERNAL_EVENT_PAIRING_REQUEST:
       ble_process_rx_msg_pairing_request(data, len);
+      break;
+    case INTERNAL_EVENT_PAIRING_CANCELLED:
+      ble_process_rx_msg_pairing_cancelled(data, len);
       break;
     default:
       break;

@@ -40,10 +40,11 @@ typedef enum {
 } ble_command_t;
 
 typedef enum {
-  BLE_NONE = 0,             // No event
-  BLE_CONNECTED = 1,        // Connected to a device
-  BLE_DISCONNECTED = 2,     // Disconnected from a device
-  BLE_PAIRING_REQUEST = 3,  // Pairing request received
+  BLE_NONE = 0,               // No event
+  BLE_CONNECTED = 1,          // Connected to a device
+  BLE_DISCONNECTED = 2,       // Disconnected from a device
+  BLE_PAIRING_REQUEST = 3,    // Pairing request received
+  BLE_PAIRING_CANCELLED = 4,  // Pairing was cancelled by host
 } ble_event_type_t;
 
 typedef struct {

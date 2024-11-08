@@ -43,6 +43,7 @@ typedef struct {
 typedef enum {
   INTERNAL_EVENT_STATUS = 0x01,
   INTERNAL_EVENT_PAIRING_REQUEST = 0x04,
+  INTERNAL_EVENT_PAIRING_CANCELLED = 0x05,
 } InternalEvent_t;
 
 typedef enum {
