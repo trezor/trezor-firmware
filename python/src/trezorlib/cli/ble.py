@@ -135,5 +135,5 @@ def erase_bonds(
     except exceptions.Cancelled:
         click.echo("Erase aborted on device.")
     except exceptions.TrezorException as e:
-        click.echo(f"Update failed: {e}")
+        click.echo(f"Erase bonds failed: {e}")
         sys.exit(3)
