@@ -126,11 +126,12 @@ static void mpu_set_attributes(void) {
 #define STORAGE_SIZE NORCOW_SECTOR_SIZE* STORAGE_AREAS_COUNT
 
 #if defined STM32U5A9xx
-#define SRAM_SIZE SRAM1_SIZE + SRAM2_SIZE + SRAM3_SIZE + SRAM5_SIZE
+#define SRAM_SIZE (SRAM1_SIZE + SRAM2_SIZE + SRAM3_SIZE + SRAM5_SIZE)
 #elif defined STM32U5G9xx
-#define SRAM_SIZE SRAM1_SIZE + SRAM2_SIZE + SRAM3_SIZE + SRAM5_SIZE + SRAM6_SIZE
+#define SRAM_SIZE \
+  (SRAM1_SIZE + SRAM2_SIZE + SRAM3_SIZE + SRAM5_SIZE + SRAM6_SIZE)
 #elif defined STM32U585xx
-#define SRAM_SIZE SRAM1_SIZE + SRAM2_SIZE + SRAM3_SIZE
+#define SRAM_SIZE (SRAM1_SIZE + SRAM2_SIZE + SRAM3_SIZE)
 #else
 #error "Unknown MCU"
 #endif
@@ -152,6 +153,7 @@ static void mpu_set_attributes(void) {
 
 // clang-format on
 
+#ifdef KERNEL
 #ifdef STM32U585xx
 #define KERNEL_RAM_START (SRAM2_BASE - KERNEL_SRAM1_SIZE)
 #define KERNEL_RAM_SIZE \
@@ -180,9 +182,10 @@ extern uint32_t _codelen;
 #define KERNEL_SIZE (uint32_t) & _codelen
 
 #define KERNEL_FLASH_START KERNEL_START
-#define KERNEL_FLASH_SIZE (KERNEL_SIZE - KERNEL_U_FLASH_SIZE)
+#define KERNEL_FLASH_SIZE (KERNEL_SIZE - KERNEL_FLASH_U_SIZE)
 
-#define COREAPP_FLASH_START COREAPP_CODE_ALIGN(KERNEL_FLASH_START + KERNEL_SIZE)
+#define COREAPP_FLASH_START \
+  (COREAPP_CODE_ALIGN(KERNEL_FLASH_START + KERNEL_SIZE) - KERNEL_FLASH_U_SIZE)
 #define COREAPP_FLASH_SIZE \
   (FIRMWARE_MAXSIZE - (COREAPP_FLASH_START - KERNEL_FLASH_START))
 
@@ -196,6 +199,8 @@ extern uint32_t _codelen;
 #else
 #define COREAPP_RAM1_START SRAM5_BASE
 #define COREAPP_RAM1_SIZE SRAM5_SIZE
+#endif
+
 #endif
 
 typedef struct {
@@ -376,9 +381,6 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
     case MPU_MODE_ASSETS:
       SET_REGION( 6, ASSETS_START,             ASSETS_MAXSIZE,     FLASH_DATA,  YES,    NO );
       break;
-    case MPU_MODE_SAES:
-      SET_REGRUN( 6, KERNEL_FLASH_U_START,     KERNEL_FLASH_U_SIZE,FLASH_CODE,   NO,   YES ); // Unprivileged kernel flash
-      break;
     case MPU_MODE_APP:
       SET_REGION( 6, ASSETS_START,             ASSETS_MAXSIZE,     FLASH_DATA,   NO,   YES );
       break;
@@ -393,9 +395,11 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
   // clang-format off
   switch (mode) {
       //      REGION   ADDRESS                 SIZE                TYPE       WRITE   UNPRIV
+#ifdef KERNEL
     case MPU_MODE_SAES:
       SET_REGION( 7, KERNEL_RAM_U_START,       KERNEL_RAM_U_SIZE,  SRAM,        YES,   YES ); // Unprivileged kernel SRAM
       break;
+#endif
     case MPU_MODE_APP:
       // DMA2D peripherals (Unprivileged, Read-Write, Non-Executable)
       SET_REGION( 7, 0x5002B000,               SIZE_3K,            PERIPHERAL,  YES,   YES );

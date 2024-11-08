@@ -136,7 +136,7 @@ SECTIONS {
 
   .uflash : ALIGN(512) {
     *(.uflash*);
-    . = ALIGN(512);
+    . = ALIGN(COREAPP_ALIGNMENT);
   } >FLASH AT>FLASH
 
   .fb : ALIGN(4) {
