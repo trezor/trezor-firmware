@@ -21,6 +21,7 @@
 
 #include "syscall.h"
 
+#include "aes.h"
 #include "bootutils.h"
 #include "button.h"
 #include "display.h"
@@ -641,6 +642,39 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       args[0] = firmware_calc_hash__verified(
           challenge, challenge_len, hash, hash_len,
           firmware_hash_callback_wrapper, callback_context);
+    } break;
+    case SYSCALL_AES_INIT: {
+      const uint8_t *key = (const uint8_t *)args[0];
+      size_t key_len = args[1];
+      args[0] = hwgcm_init_and_key(key, key_len);
+    } break;
+    case SYSCALL_AES_END: {
+      hwgcm_end();
+    } break;
+    case SYSCALL_AES_INIT_MESSAGE: {
+      const uint8_t *iv = (const uint8_t *)args[0];
+      size_t iv_len = args[1];
+      args[0] = hwgcm_init_message(iv, iv_len);
+    } break;
+    case SYSCALL_AES_DECRYPT: {
+      uint8_t *data = (uint8_t *)args[0];
+      size_t data_len = args[1];
+      args[0] = hwgcm_decrypt(data, data_len);
+    } break;
+    case SYSCALL_AES_ENCRYPT: {
+      uint8_t *data = (uint8_t *)args[0];
+      size_t data_len = args[1];
+      args[0] = hwgcm_encrypt(data, data_len);
+    } break;
+    case SYSCALL_AES_AUTH_HEADER: {
+      const uint8_t *hdr = (const uint8_t *)args[0];
+      size_t hdr_len = args[1];
+      args[0] = hwgcm_auth_header(hdr, hdr_len);
+    } break;
+    case SYSCALL_AES_COMPUTE_TAG: {
+      uint8_t *tag = (uint8_t *)args[0];
+      size_t tag_len = args[1];
+      args[0] = hwgcm_compute_tag(tag, tag_len);
     } break;
 
     default:

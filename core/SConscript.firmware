@@ -26,7 +26,7 @@ if BENCHMARK and PYOPT != '0':
 FEATURE_FLAGS = {
     "RDI": True,
     "SECP256K1_ZKP": True,  # required for trezor.crypto.curve.bip340 (BIP340/Taproot)
-    "AES_GCM": BENCHMARK,
+    "AES_GCM": True,
 }
 
 FEATURES_WANTED = ["input", "sbu", "sd_card", "rgb_led", "dma2d", "consumption_mask", "usb" ,"optiga", "haptic"]

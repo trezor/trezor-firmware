@@ -607,4 +607,43 @@ secbool firmware_calc_hash(const uint8_t *challenge, size_t challenge_len,
                          (uint32_t)callback_context,
                          SYSCALL_FIRMWARE_CALC_HASH);
 }
+
+#include "aes.h"
+
+int hwgcm_init_and_key(/* initialise mode and set key  */
+                       const unsigned char key[], /* the key value */
+                       unsigned long key_len) {
+  return syscall_invoke2((uint32_t)key, key_len, SYSCALL_AES_INIT);
+}
+int hwgcm_end(void) { return syscall_invoke0(SYSCALL_AES_END); }
+int hwgcm_init_message(/* initialise a new message     */
+                       const unsigned char iv[], /* the initialisation vector */
+                       unsigned long iv_len) {
+  return syscall_invoke2((uint32_t)iv, iv_len, SYSCALL_AES_INIT_MESSAGE);
+}
+
+int hwgcm_auth_header(/* authenticate the header      */
+                      const unsigned char hdr[], /* the header buffer */
+                      unsigned long hdr_len) {
+  return syscall_invoke2((uint32_t)hdr, hdr_len, SYSCALL_AES_AUTH_HEADER);
+}
+
+int hwgcm_encrypt(                      /* encrypt & authenticate data  */
+                  unsigned char data[], /* the data buffer              */
+                  unsigned long data_len) {
+  return syscall_invoke2((uint32_t)data, data_len, SYSCALL_AES_ENCRYPT);
+}
+
+int hwgcm_decrypt(                      /* authenticate & decrypt data  */
+                  unsigned char data[], /* the data buffer              */
+                  unsigned long data_len) {
+  return syscall_invoke2((uint32_t)data, data_len, SYSCALL_AES_DECRYPT);
+}
+
+int hwgcm_compute_tag(                     /* compute authentication tag   */
+                      unsigned char tag[], /* the buffer for the tag       */
+                      unsigned long tag_len) {
+  return syscall_invoke2((uint32_t)tag, tag_len, SYSCALL_AES_COMPUTE_TAG);
+}
+
 #endif

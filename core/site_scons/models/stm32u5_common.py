@@ -20,6 +20,7 @@ def stm32u5_common_files(env, defines, sources, paths):
         "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal.c",
         "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_cortex.c",
         "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_cryp.c",
+        "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_cryp_ex.c",
         "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_dma2d.c",
         "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_dma.c",
         "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_dma_ex.c",
@@ -51,6 +52,7 @@ def stm32u5_common_files(env, defines, sources, paths):
 
     sources += [
         "embed/trezorhal/stm32u5/applet.c",
+        "embed/trezorhal/stm32u5/aes.c",
         "embed/trezorhal/stm32u5/board_capabilities.c",
         "embed/trezorhal/stm32u5/bootutils.c",
         "embed/trezorhal/stm32u5/entropy.c",
