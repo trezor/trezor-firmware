@@ -5,7 +5,7 @@ from trezor import TR, ui, utils
 from trezor.enums import ButtonRequestType
 from trezor.wire import ActionCancelled
 
-from ..common import draw_simple, interact, raise_if_not_confirmed, with_info
+from ..common import draw_simple, interact, raise_if_not_confirmed
 
 if TYPE_CHECKING:
     from typing import Awaitable, Iterable, NoReturn, Sequence
@@ -562,31 +562,16 @@ def confirm_blob_with_optional_pagination(
     br_code: ButtonRequestType = BR_CODE_OTHER,
     chunkify: bool = False,
 ) -> Awaitable[None]:
-    main_layout = trezorui2.confirm_blob(
-        title=title,
-        data=data,
-        description=None,
+    return confirm_blob(
+        br_name,
+        title,
+        data,
         subtitle=subtitle,
         verb=verb,
         verb_cancel="",
-        verb_info=TR.buttons__view_all_data,
-        info=True,
-        hold=False,
+        br_code=br_code,
         chunkify=chunkify,
-        prompt_screen=False,
-        page_limit=1,
-    )
-    info_layout = trezorui2.confirm_blob(
-        title=title,
-        description=None,
-        data=data,
-        verb=verb,
-        verb_cancel="<",
-        hold=False,
-        chunkify=chunkify,
-    )
-    return with_info(
-        main_layout, info_layout, br_name, br_code, repeat_button_request=True
+        ask_pagination=True,
     )
 
 
@@ -723,7 +708,7 @@ def confirm_properties(
 ) -> Awaitable[None]:
     from ubinascii import hexlify
 
-    def handle_bytes(prop: PropertyType):
+    def handle_bytes(prop: PropertyType) -> tuple[str | None, str | None, bool]:
         key, value = prop
         if isinstance(value, (bytes, bytearray, memoryview)):
             return (key, hexlify(value).decode(), True)
@@ -731,7 +716,7 @@ def confirm_properties(
             # When there is not space in the text, taking it as data
             # to not include hyphens
             is_data = value and " " not in value
-            return (key, value, is_data)
+            return (key, value, bool(is_data))
 
     return raise_if_not_confirmed(
         trezorui2.confirm_properties(

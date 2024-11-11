@@ -1196,12 +1196,6 @@ class InputFlowEthereumSignTxDataScrollDown(InputFlowBase):
 
         yield from self.ETH.confirm_data(info=True)
         yield from self.ETH.paginate_data()
-
-        if self.debug.layout_type is LayoutType.TR:
-            self.debug.press_right()
-        else:
-            self.debug.click(buttons.OK)
-
         yield from self.ETH.confirm_tx()
 
 
