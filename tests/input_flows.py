@@ -424,6 +424,14 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
         self.xpubs = xpubs
         self.index = index
 
+    def _assert_xpub_title(self, title: str, xpub_num: int) -> None:
+        expected_title = f"MULTISIG XPUB #{xpub_num + 1}"
+        assert expected_title in title
+        if self.index == xpub_num:
+            TR.assert_in(title, "address__title_yours")
+        else:
+            TR.assert_in(title, "address__title_cosigner")
+
     def input_flow_tt(self) -> BRGeneratorType:
         yield  # multisig address warning
         self.debug.press_yes()
@@ -444,11 +452,8 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
 
         # Three xpub pages with the same testing logic
         for xpub_num in range(3):
-            expected_title = f"MULTISIG XPUB #{xpub_num + 1}\n" + (
-                "(Yours)" if self.index == xpub_num else "(Cosigner)"
-            )
             layout = self.debug.swipe_left()
-            assert expected_title == layout.title()
+            self._assert_xpub_title(layout.title(), xpub_num)
             content = layout.text_content().replace(" ", "")
             assert self.xpubs[xpub_num] in content
 
@@ -480,11 +485,8 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
 
         # Three xpub pages with the same testing logic
         for xpub_num in range(3):
-            expected_title = f"MULTISIG XPUB #{xpub_num + 1} " + (
-                "(Yours)" if self.index == xpub_num else "(Cosigner)"
-            )
             layout = self.debug.press_right()
-            assert expected_title in layout.title()
+            self._assert_xpub_title(layout.title(), xpub_num)
             xpub_part_1 = layout.text_content().replace(" ", "")
             # Press "SHOW MORE"
             layout = self.debug.press_middle()
