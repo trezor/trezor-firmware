@@ -145,15 +145,9 @@ async def require_confirm_claim(
 async def require_confirm_unknown_token(address_bytes: bytes) -> None:
     from ubinascii import hexlify
 
-    from trezor.ui.layouts import confirm_address, show_warning
+    from trezor.ui.layouts import confirm_address, confirm_unknown_contract_warning
 
-    await show_warning(
-        "unknown_contract_warning",
-        TR.ethereum__unknown_contract_address,
-        default_cancel=True,
-        verb_cancel=TR.send__cancel_sign,
-        br_code=ButtonRequestType.Other,
-    )
+    await confirm_unknown_contract_warning()
 
     contract_address_hex = "0x" + hexlify(address_bytes).decode()
     await confirm_address(

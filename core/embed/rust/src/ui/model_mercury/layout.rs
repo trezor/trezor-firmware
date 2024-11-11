@@ -51,10 +51,7 @@ use crate::{
         },
         model_mercury::{
             component::{check_homescreen_format, SwipeContent},
-            flow::{
-                new_confirm_action_simple, new_confirm_action_simple_default_cancel,
-                ConfirmActionMenu, ConfirmActionStrings,
-            },
+            flow::{new_confirm_action_simple, ConfirmActionMenu, ConfirmActionStrings},
             theme::ICON_BULLET_CHECKMARK,
         },
     },
@@ -269,7 +266,6 @@ struct ConfirmBlobParams {
     chunkify: bool,
     text_mono: bool,
     page_limit: Option<usize>,
-    default_cancel: bool,
 }
 
 impl ConfirmBlobParams {
@@ -298,7 +294,6 @@ impl ConfirmBlobParams {
             chunkify: false,
             text_mono: true,
             page_limit: None,
-            default_cancel: false,
         }
     }
 
@@ -337,11 +332,6 @@ impl ConfirmBlobParams {
         self
     }
 
-    fn with_default_cancel(mut self, default_cancel: bool) -> Self {
-        self.default_cancel = default_cancel;
-        self
-    }
-
     fn with_description_font(mut self, description_font: &'static TextStyle) -> Self {
         self.description_font = description_font;
         self
@@ -365,13 +355,7 @@ impl ConfirmBlobParams {
         }
         .into_paragraphs();
 
-        let build_flow = if self.default_cancel {
-            new_confirm_action_simple_default_cancel
-        } else {
-            new_confirm_action_simple
-        };
-
-        build_flow(
+        new_confirm_action_simple(
             paragraphs,
             ConfirmActionMenu::new(self.verb_cancel, self.info_button, self.verb_info),
             ConfirmActionStrings::new(
@@ -419,7 +403,6 @@ extern "C" fn new_confirm_blob(n_args: usize, args: *const Obj, kwargs: *mut Map
         let hold: bool = kwargs.get_or(Qstr::MP_QSTR_hold, false)?;
         let chunkify: bool = kwargs.get_or(Qstr::MP_QSTR_chunkify, false)?;
         let prompt_screen: bool = kwargs.get_or(Qstr::MP_QSTR_prompt_screen, true)?;
-        let default_cancel: bool = kwargs.get_or(Qstr::MP_QSTR_default_cancel, false)?;
         let page_limit: Option<usize> = kwargs
             .get(Qstr::MP_QSTR_page_limit)
             .unwrap_or_else(|_| Obj::const_none())
@@ -447,7 +430,6 @@ extern "C" fn new_confirm_blob(n_args: usize, args: *const Obj, kwargs: *mut Map
         .with_extra(extra)
         .with_info_button(info)
         .with_chunkify(chunkify)
-        .with_default_cancel(default_cancel)
         .with_page_limit(page_limit)
         .into_flow()
     };
@@ -1277,7 +1259,6 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     hold: bool = False,
     ///     chunkify: bool = False,
     ///     prompt_screen: bool = False,
-    ///     default_cancel: bool = False,
     ///     page_limit: int | None = None,
     /// ) -> LayoutObj[UiResult]:
     ///     """Confirm byte sequence data."""
@@ -1681,6 +1662,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     title: str,
     ///     description: str,
     ///     value: str = "",
+    ///     verb_cancel: str | None = None,
     /// ) -> LayoutObj[UiResult]:
     ///     """Warning modal with multiple steps to confirm."""
     Qstr::MP_QSTR_flow_warning_hi_prio => obj_fn_kw!(0, flow::warning_hi_prio::new_warning_hi_prio).as_obj(),

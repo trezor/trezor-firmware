@@ -181,6 +181,15 @@ def confirm_multisig_warning() -> Awaitable[ui.UiResult]:
     )
 
 
+if not utils.BITCOIN_ONLY:
+
+    def confirm_unknown_contract_warning() -> Awaitable[ui.UiResult]:
+        return show_warning(
+            "unknown_contract_warning",
+            TR.ethereum__unknown_contract_address,
+        )
+
+
 def confirm_homescreen(image: bytes) -> Awaitable[None]:
     return raise_if_not_confirmed(
         trezorui2.confirm_homescreen(
@@ -385,7 +394,6 @@ def show_warning(
     content: str,
     subheader: str | None = None,
     button: str | None = None,
-    default_cancel: bool = False,  # NB: model R does not implement "default_cancel"-style warnings
     verb_cancel: str | None = None,
     br_code: ButtonRequestType = ButtonRequestType.Warning,
     exc: ExceptionType | None = ActionCancelled,
@@ -588,7 +596,6 @@ def confirm_blob(
     hold: bool = False,
     br_code: ButtonRequestType = BR_CODE_OTHER,
     chunkify: bool = False,
-    default_cancel: bool = False,
     prompt_screen: bool = True,
     ask_pagination: bool = False,
 ) -> Awaitable[None]:

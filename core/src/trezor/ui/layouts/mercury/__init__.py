@@ -139,6 +139,20 @@ def confirm_multisig_warning() -> Awaitable[None]:
     )
 
 
+if not utils.BITCOIN_ONLY:
+
+    def confirm_unknown_contract_warning() -> Awaitable[None]:
+        return raise_if_not_confirmed(
+            trezorui2.flow_warning_hi_prio(
+                title=TR.words__warning,
+                description=TR.ethereum__unknown_contract_address,
+                verb_cancel=TR.send__cancel_sign,
+            ),
+            "unknown_contract_warning",
+            ButtonRequestType.Warning,
+        )
+
+
 def confirm_homescreen(
     image: bytes,
 ) -> Awaitable[None]:
@@ -301,36 +315,19 @@ def show_warning(
     content: str,
     subheader: str | None = None,
     button: str | None = None,
-    default_cancel: bool = False,
-    verb_cancel: str | None = None,
     br_code: ButtonRequestType = ButtonRequestType.Warning,
 ) -> Awaitable[None]:
     button = button or TR.buttons__continue  # def_arg
-    if default_cancel:
-        # a kind of warning which makes it easy (swipe up) to cancel
-        # and makes it harder to continue
-        return confirm_blob(
-            br_name,
-            TR.words__warning,
-            content,
-            text_mono=False,
-            verb_cancel=verb_cancel,
-            default_cancel=True,
-            prompt_screen=False,
-            br_code=br_code,
-        )
-    else:
-        # traditional warning
-        return raise_if_not_confirmed(
-            trezorui2.show_warning(
-                title=TR.words__important,
-                value=content,
-                button=subheader or TR.words__continue_anyway_question,
-                danger=True,
-            ),
-            br_name,
-            br_code,
-        )
+    return raise_if_not_confirmed(
+        trezorui2.show_warning(
+            title=TR.words__important,
+            value=content,
+            button=subheader or TR.words__continue_anyway_question,
+            danger=True,
+        ),
+        br_name,
+        br_code,
+    )
 
 
 def show_success(
@@ -518,7 +515,6 @@ def confirm_blob(
     hold: bool = False,
     br_code: ButtonRequestType = BR_CODE_OTHER,
     chunkify: bool = False,
-    default_cancel: bool = False,
     prompt_screen: bool = True,
 ) -> Awaitable[None]:
     layout = trezorui2.confirm_blob(
@@ -533,7 +529,6 @@ def confirm_blob(
         hold=hold,
         chunkify=chunkify,
         prompt_screen=prompt_screen,
-        default_cancel=default_cancel,
     )
     return raise_if_not_confirmed(
         layout,

@@ -1752,7 +1752,6 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     hold: bool = False,
     ///     chunkify: bool = False,
     ///     prompt_screen: bool = False,
-    ///     default_cancel: bool = False,
     ///     page_limit: int | None = None,
     /// ) -> LayoutObj[UiResult]:
     ///     """Confirm byte sequence data."""
