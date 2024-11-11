@@ -385,7 +385,6 @@ def show_warning(
     content: str,
     subheader: str | None = None,
     button: str | None = None,
-    default_cancel: bool = False,  # NB: model R does not implement "default_cancel"-style warnings
     verb_cancel: str | None = None,
     br_code: ButtonRequestType = ButtonRequestType.Warning,
     exc: ExceptionType | None = ActionCancelled,
@@ -588,7 +587,6 @@ def confirm_blob(
     hold: bool = False,
     br_code: ButtonRequestType = BR_CODE_OTHER,
     chunkify: bool = False,
-    default_cancel: bool = False,
     prompt_screen: bool = True,
     ask_pagination: bool = False,
 ) -> Awaitable[None]:
@@ -830,6 +828,12 @@ def confirm_total(
 
 
 if not utils.BITCOIN_ONLY:
+
+    def confirm_ethereum_unknown_contract_warning() -> Awaitable[ui.UiResult]:
+        return show_warning(
+            "unknown_contract_warning",
+            TR.ethereum__unknown_contract_address,
+        )
 
     async def confirm_ethereum_staking_tx(
         title: str,

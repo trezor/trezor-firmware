@@ -224,7 +224,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_debug__loading_seed;
   MP_QSTR_debug__loading_seed_not_recommended;
   MP_QSTR_decode;
-  MP_QSTR_default_cancel;
   MP_QSTR_deinit;
   MP_QSTR_description;
   MP_QSTR_description_font_green;

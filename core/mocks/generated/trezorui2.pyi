@@ -70,7 +70,6 @@ def confirm_blob(
     hold: bool = False,
     chunkify: bool = False,
     prompt_screen: bool = False,
-    default_cancel: bool = False,
     page_limit: int | None = None,
 ) -> LayoutObj[UiResult]:
     """Confirm byte sequence data."""
@@ -513,6 +512,7 @@ def flow_warning_hi_prio(
     title: str,
     description: str,
     value: str = "",
+    verb_cancel: str | None = None,
 ) -> LayoutObj[UiResult]:
     """Warning modal with multiple steps to confirm."""
 
@@ -643,7 +643,6 @@ def confirm_blob(
     hold: bool = False,
     chunkify: bool = False,
     prompt_screen: bool = False,
-    default_cancel: bool = False,
     page_limit: int | None = None,
 ) -> LayoutObj[UiResult]:
     """Confirm byte sequence data."""
@@ -1216,7 +1215,6 @@ def confirm_blob(
     hold: bool = False,
     chunkify: bool = False,
     prompt_screen: bool = False,
-    default_cancel: bool = False,
     page_limit: int | None = None,
 ) -> LayoutObj[UiResult]:
     """Confirm byte sequence data."""

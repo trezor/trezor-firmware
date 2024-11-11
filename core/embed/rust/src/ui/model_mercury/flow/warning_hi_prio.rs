@@ -70,9 +70,14 @@ impl WarningHiPrio {
         let title: TString = kwargs.get_or(Qstr::MP_QSTR_title, TR::words__warning.into())?;
         let description: TString = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
         let value: TString = kwargs.get_or(Qstr::MP_QSTR_value, "".into())?;
-        let cancel: TString = TR::words__cancel_and_exit.into();
+        let verb_cancel: Option<TString> = kwargs
+            .get(Qstr::MP_QSTR_verb_cancel)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
         let confirm: TString = TR::words__continue_anyway.into();
         let done_title: TString = TR::words__operation_cancelled.into();
+
+        let verb_cancel = verb_cancel.unwrap_or(TR::words__cancel_and_exit.into());
 
         // Message
         let paragraphs = [
@@ -83,7 +88,7 @@ impl WarningHiPrio {
         .into_paragraphs();
         let content_message = Frame::left_aligned(title, SwipeContent::new(paragraphs))
             .with_menu_button()
-            .with_footer(TR::instructions__swipe_up.into(), Some(cancel))
+            .with_footer(TR::instructions__swipe_up.into(), Some(verb_cancel))
             .with_danger()
             .with_swipe(Direction::Up, SwipeSettings::default())
             .with_swipe(Direction::Left, SwipeSettings::default())
@@ -94,7 +99,7 @@ impl WarningHiPrio {
         let content_menu = Frame::left_aligned(
             "".into(),
             VerticalMenu::empty()
-                .item(theme::ICON_CANCEL, TR::buttons__cancel.into())
+                .item(theme::ICON_CANCEL, verb_cancel)
                 .danger(theme::ICON_CHEVRON_RIGHT, confirm),
         )
         .with_cancel_button()

@@ -349,7 +349,6 @@ def show_warning(
     content: str,
     subheader: str | None = None,
     button: str | None = None,
-    default_cancel: bool = False,  # NB: model T does not implement "default_cancel"-style warnings
     verb_cancel: str | None = None,
     br_code: ButtonRequestType = ButtonRequestType.Warning,
 ) -> Awaitable[None]:
@@ -590,7 +589,6 @@ def confirm_blob(
     hold: bool = False,
     br_code: ButtonRequestType = BR_CODE_OTHER,
     chunkify: bool = False,
-    default_cancel: bool = False,
     prompt_screen: bool = True,
 ) -> Awaitable[None]:
     verb = verb or TR.buttons__confirm  # def_arg
@@ -792,6 +790,25 @@ def _confirm_summary(
 
 
 if not utils.BITCOIN_ONLY:
+
+    def confirm_other_data(data: bytes, data_total: int) -> Awaitable[None]:
+        return confirm_blob(
+            "confirm_data",
+            TR.ethereum__title_input_data,
+            data,
+            TR.ethereum__data_size_template.format(data_total),
+            verb=TR.buttons__confirm,
+            verb_cancel=None,
+            br_code=ButtonRequestType.SignTx,
+            ask_pagination=True,
+        )
+
+    def confirm_ethereum_unknown_contract_warning() -> Awaitable[None]:
+        return show_warning(
+            "unknown_contract_warning",
+            TR.ethereum__unknown_contract_address,
+            TR.words__warning,
+        )
 
     async def confirm_ethereum_tx(
         recipient: str | None,
