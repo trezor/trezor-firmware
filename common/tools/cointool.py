@@ -21,9 +21,7 @@ from coin_info import Coin, CoinBuckets, Coins, CoinsInfo, FidoApps, SupportInfo
 DEFINITIONS_TIMESTAMP_PATH = (
     coin_info.DEFS_DIR / "ethereum" / "released-definitions-timestamp.txt"
 )
-DEFINITIONS_LATEST_URL = (
-    "https://raw.githubusercontent.com/trezor/definitions/signed/definitions-latest.json"
-)
+DEFINITIONS_LATEST_URL = "https://raw.githubusercontent.com/trezor/definitions/signed/definitions-latest.json"
 
 HERE = Path(__file__).parent.resolve()
 ROOT = HERE.parent.parent
