@@ -365,11 +365,15 @@ class EthereumFlow:
         assert br.name == "confirm_data"
         assert br.pages is not None
         TR.assert_equals(self.debug.read_layout().title(), "ethereum__title_input_data")
-        for i in range(br.pages):
+        for _ in range(br.pages):
             self.debug.read_layout()
-            if i < br.pages - 1:
-                go_next(self.debug)
-        self.debug.press_yes()
+            go_next(self.debug)
+        self.debug.read_layout()
+
+        if self.debug.layout_type is LayoutType.TR:
+            # TR is going back to the "show more" screen here
+            assert (yield).name == "confirm_data"
+            self.debug.press_yes()
 
     def paginate_data_go_back(self) -> BRGeneratorType:
         br = yield
@@ -390,116 +394,109 @@ class EthereumFlow:
         else:
             raise ValueError(f"Unknown layout: {self.client.layout_type}")
 
+    def _confirm_tx_tt(
+        self, cancel: bool, info: bool, go_back_from_summary: bool
+    ) -> BRGeneratorType:
+        assert (yield).name == "confirm_ethereum_tx"
+        TR.assert_equals(self.debug.read_layout().title(), "words__address")
+        if cancel:
+            self.debug.press_no()
+            return
+
+        self.debug.press_yes()
+        assert (yield).name == "confirm_ethereum_tx"
+        TR.assert_equals(self.debug.read_layout().title(), "words__title_summary")
+        TR.assert_in(self.debug.read_layout().text_content(), "send__maximum_fee")
+        if go_back_from_summary:
+            self.debug.press_no()
+            assert (yield).name == "confirm_ethereum_tx"
+            self.debug.press_yes()
+            assert (yield).name == "confirm_ethereum_tx"
+        if info:
+            self.debug.press_info()
+            TR.assert_in(self.debug.read_layout().text_content(), "ethereum__gas_limit")
+            TR.assert_in(self.debug.read_layout().text_content(), "ethereum__gas_price")
+            self.debug.press_no()
+        self.debug.press_yes()
+        assert (yield).name == "confirm_ethereum_tx"
+
+    def _confirm_tx_tr(
+        self, cancel: bool, info: bool, go_back_from_summary: bool
+    ) -> BRGeneratorType:
+        assert (yield).name == "confirm_ethereum_tx"
+        TR.assert_in_multiple(
+            self.debug.read_layout().title(),
+            ["ethereum__interaction_contract", "words__recipient"],
+        )
+        if cancel:
+            self.debug.press_left()
+            return
+        self.debug.press_right()
+        assert (yield).name == "confirm_ethereum_tx"
+        TR.assert_in(self.debug.read_layout().text_content(), "send__maximum_fee")
+        if go_back_from_summary:
+            self.debug.press_left()
+            assert (yield).name == "confirm_ethereum_tx"
+            self.debug.press_right()
+            assert (yield).name == "confirm_ethereum_tx"
+        if info:
+            self.debug.press_right()
+            TR.assert_in(self.debug.read_layout().text_content(), "ethereum__gas_limit")
+            self.debug.press_right()
+            TR.assert_in(self.debug.read_layout().text_content(), "ethereum__gas_price")
+            self.debug.press_left()
+            self.debug.press_left()
+        self.debug.press_middle()
+        assert (yield).name == "confirm_ethereum_tx"
+
+    def _confirm_tx_mercury(
+        self, cancel: bool, info: bool, go_back_from_summary: bool
+    ) -> BRGeneratorType:
+        assert (yield).name == "confirm_output"
+        title = self.debug.read_layout().title()
+        TR.assert_in(title, "words__address")
+        TR.assert_in(title, "words__recipient")
+
+        if cancel:
+            self.debug.press_no()
+            return
+
+        self.debug.swipe_up()
+        assert (yield).name == "confirm_total"
+        layout = self.debug.read_layout()
+        TR.assert_equals(layout.title(), "words__title_summary")
+        TR.assert_in(layout.text_content(), "send__maximum_fee")
+        if go_back_from_summary:
+            self.debug.press_no()
+            assert (yield).name == "confirm_ethereum_tx"
+            self.debug.press_yes()
+            assert (yield).name == "confirm_ethereum_tx"
+        if info:
+            self.debug.click(buttons.CORNER_BUTTON)
+            self.debug.synchronize_at("VerticalMenu")
+            self.debug.click(buttons.VERTICAL_MENU[0])
+            text = self.debug.read_layout().text_content()
+            TR.assert_in(text, "ethereum__gas_limit")
+            TR.assert_in(text, "ethereum__gas_price")
+            self.debug.click(buttons.CORNER_BUTTON)
+            self.debug.click(buttons.CORNER_BUTTON)
+        self.debug.swipe_up()
+        self.debug.read_layout()
+        self.debug.click(buttons.TAP_TO_CONFIRM)
+        assert (yield).name == "confirm_ethereum_tx"
+
     def confirm_tx(
         self,
         cancel: bool = False,
         info: bool = False,
         go_back_from_summary: bool = False,
     ) -> BRGeneratorType:
-
-        yield
-
         if self.client.layout_type is LayoutType.TT:
-            TR.assert_equals(self.debug.read_layout().title(), "words__address")
-            if cancel:
-                self.debug.press_no()
-            else:
-                self.debug.press_yes()
-                yield
-                TR.assert_equals(
-                    self.debug.read_layout().title(), "words__title_summary"
-                )
-                TR.assert_in(
-                    self.debug.read_layout().text_content(), "send__maximum_fee"
-                )
-                if go_back_from_summary:
-                    self.debug.press_no()
-                    yield
-                    self.debug.press_yes()
-                    yield
-                if info:
-                    self.debug.press_info()
-                    TR.assert_in(
-                        self.debug.read_layout().text_content(), "ethereum__gas_limit"
-                    )
-                    TR.assert_in(
-                        self.debug.read_layout().text_content(), "ethereum__gas_price"
-                    )
-                    self.debug.press_no()
-                self.debug.press_yes()
-
-                yield
+            yield from self._confirm_tx_tt(cancel, info, go_back_from_summary)
         elif self.client.layout_type is LayoutType.TR:
-            TR.assert_in_multiple(
-                self.debug.read_layout().title(),
-                ["ethereum__interaction_contract", "words__recipient"],
-            )
-            if cancel:
-                self.debug.press_left()
-            else:
-                self.debug.press_right()
-                yield
-                TR.assert_in(
-                    self.debug.read_layout().text_content(), "send__maximum_fee"
-                )
-                if go_back_from_summary:
-                    self.debug.press_left()
-                    yield
-                    self.debug.press_right()
-                    yield
-                if info:
-                    self.debug.press_right()
-                    TR.assert_in(
-                        self.debug.read_layout().text_content(), "ethereum__gas_limit"
-                    )
-                    self.debug.press_right()
-                    TR.assert_in(
-                        self.debug.read_layout().text_content(), "ethereum__gas_price"
-                    )
-                    self.debug.press_left()
-                    self.debug.press_left()
-                self.debug.press_middle()
-
-                yield
+            yield from self._confirm_tx_tr(cancel, info, go_back_from_summary)
         elif self.client.layout_type is LayoutType.Mercury:
-            TR.assert_equals(
-                self.debug.read_layout().title().split("\n")[0], "words__address"
-            )
-            TR.assert_equals(
-                self.debug.read_layout().title().split("\n")[1], "words__recipient"
-            )
-            if cancel:
-                self.debug.press_no()
-            else:
-                self.debug.swipe_up()
-                yield
-                TR.assert_equals(
-                    self.debug.read_layout().title(), "words__title_summary"
-                )
-                TR.assert_in(
-                    self.debug.read_layout().text_content(), "send__maximum_fee"
-                )
-                if go_back_from_summary:
-                    self.debug.press_no()
-                    yield
-                    self.debug.press_yes()
-                    yield
-                if info:
-                    self.debug.click(buttons.CORNER_BUTTON)
-                    self.debug.synchronize_at("VerticalMenu")
-                    self.debug.click(buttons.VERTICAL_MENU[0])
-                    TR.assert_in(
-                        self.debug.read_layout().text_content(), "ethereum__gas_limit"
-                    )
-                    TR.assert_in(
-                        self.debug.read_layout().text_content(), "ethereum__gas_price"
-                    )
-                    self.debug.click(buttons.CORNER_BUTTON)
-                    self.debug.click(buttons.CORNER_BUTTON)
-                self.debug.swipe_up()
-                self.debug.read_layout()
-                self.debug.click(buttons.TAP_TO_CONFIRM)
-                yield
+            yield from self._confirm_tx_mercury(cancel, info, go_back_from_summary)
         else:
             raise ValueError("Unknown model!")
 
