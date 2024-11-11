@@ -8,9 +8,15 @@ if TYPE_CHECKING:
 async def erase_bonds(_msg: EraseBonds) -> Success:
     from trezor.messages import Success
     from trezor.ui.layouts import confirm_action
+    from trezor.wire.context import get_context
 
     await confirm_action("erase bonds", "ERASE BONDS")
 
+    ctx = get_context()
+
+    await ctx.write(Success(message="Erasing"))
+
     ble.erase_bonds()
 
-    return Success()
+    raise RuntimeError
+
