@@ -26,6 +26,7 @@ from ...input_flows import InputFlowConfirmAllWarnings
 from ...tx_cache import TxCache
 from .signtx import (
     assert_tx_matches,
+    forge_prevtx,
     request_finished,
     request_input,
     request_meta,
@@ -158,6 +159,164 @@ def test_2_of_3(client: Client, chunkify: bool):
         hash_link="https://tbtc1.trezor.io/api/tx/4123415574c16899b4bb5b691f9b65643dbe566a9b68e4e2e7a8b29c79c83f2b",
         tx_hex="0100000001fc935b8e20518d2585154edf8c70411b43eb135e69f94357c8d9521b32c1076b00000000fdfd000047304402206c99b48a12f340599076b93efdc2578b0cdeaedf9092aed628788f4ffc579a50022031b16212dd1f0f62f01bb5862b6d128276c7a5430746aa27a04ae0c8acbcb3b10148304502210089153ad97c0d69656cd9bd9eb2056552acaec91365dd7ab31250f3f707123baa02200f884de63041d73bd20fbe8804c6036968d8149b7f46963a82b561cd8211ab08014c69522103725d6c5253f2040a9a73af24bcc196bf302d6cc94374dd7197b138e10912670121038924e94fff15302a3fb45ad4fc0ed17178800f0f1c2bdacb1017f4db951aa9f12102aae8affd0eb8e1181d665daef4de1828f23053c548ec9bafc3a787f558aa014153aeffffffff01c6ad1600000000001976a9144cfc772f24b600762f905a1ee799ce0e9c26831f88ac00000000",
     )
+
+
+@pytest.mark.multisig
+@pytest.mark.models(skip="legacy", reason="Sortedmulti is not supported")
+def test_pubkeys_order(client: Client):
+    node_internal = btc.get_public_node(
+        client, parse_path("m/45h/0"), coin_name="Bitcoin"
+    ).node
+    node_external = btc.get_public_node(
+        client, parse_path("m/45h/1"), coin_name="Bitcoin"
+    ).node
+
+    multisig_unsorted_1 = messages.MultisigRedeemScriptType(
+        nodes=[node_internal, node_external],
+        address_n=[0, 0],
+        signatures=[b"", b"", b""],
+        m=1,
+        pubkeys_order=messages.MultisigPubkeysOrder.PRESERVED,
+    )
+
+    multisig_unsorted_2 = messages.MultisigRedeemScriptType(
+        nodes=[node_external, node_internal],
+        address_n=[0, 0],
+        signatures=[b"", b"", b""],
+        m=1,
+        pubkeys_order=messages.MultisigPubkeysOrder.PRESERVED,
+    )
+
+    multisig_sorted_1 = messages.MultisigRedeemScriptType(
+        nodes=[node_internal, node_external],
+        address_n=[0, 0],
+        signatures=[b"", b"", b""],
+        m=1,
+        pubkeys_order=messages.MultisigPubkeysOrder.LEXICOGRAPHIC,
+    )
+
+    multisig_sorted_2 = messages.MultisigRedeemScriptType(
+        nodes=[node_external, node_internal],
+        address_n=[0, 0],
+        signatures=[b"", b"", b""],
+        m=1,
+        pubkeys_order=messages.MultisigPubkeysOrder.LEXICOGRAPHIC,
+    )
+
+    address_unsorted_1 = btc.get_address(
+        client, "Bitcoin", parse_path("m/45h/0/0/0"), multisig=multisig_unsorted_1
+    )
+    address_unsorted_2 = btc.get_address(
+        client, "Bitcoin", parse_path("m/45h/0/0/0"), multisig=multisig_unsorted_2
+    )
+
+    prev_hash, prev_tx = forge_prevtx(
+        [(address_unsorted_1, 1_000_000), (address_unsorted_2, 1_000_000)]
+    )
+
+    input_unsorted_1 = messages.TxInputType(
+        address_n=parse_path("m/45h/0/0/0"),
+        amount=1_000_000,
+        prev_hash=prev_hash,
+        prev_index=0,  # multisig_unsorted_1
+        script_type=messages.InputScriptType.SPENDMULTISIG,
+        multisig=multisig_unsorted_1,
+    )
+
+    input_unsorted_2 = messages.TxInputType(
+        address_n=parse_path("m/45h/0/0/0"),
+        amount=1_000_000,
+        prev_hash=prev_hash,
+        prev_index=1,  # multisig_unsorted_2
+        script_type=messages.InputScriptType.SPENDMULTISIG,
+        multisig=multisig_unsorted_2,
+    )
+
+    input_sorted_1 = messages.TxInputType(
+        address_n=parse_path("m/45h/0/0/0"),
+        amount=1_000_000,
+        prev_hash=prev_hash,
+        prev_index=0,  # multisig_unsorted_1
+        script_type=messages.InputScriptType.SPENDMULTISIG,
+        multisig=multisig_sorted_1,
+    )
+
+    input_sorted_2 = messages.TxInputType(
+        address_n=parse_path("m/45h/0/0/0"),
+        amount=1_000_000,
+        prev_hash=prev_hash,
+        prev_index=0,  # multisig_unsorted_1
+        script_type=messages.InputScriptType.SPENDMULTISIG,
+        multisig=multisig_sorted_2,
+    )
+
+    output_unsorted_1 = messages.TxOutputType(
+        address_n=parse_path("m/45h/0/0/0"),
+        amount=1_000_000 - 10_000,
+        script_type=messages.OutputScriptType.PAYTOMULTISIG,
+        multisig=multisig_unsorted_1,
+    )
+
+    output_unsorted_2 = messages.TxOutputType(
+        address_n=parse_path("m/45h/0/0/0"),
+        amount=1_000_000 - 10_000,
+        script_type=messages.OutputScriptType.PAYTOMULTISIG,
+        multisig=multisig_unsorted_2,
+    )
+
+    output_sorted_1 = messages.TxOutputType(
+        address_n=parse_path("m/45h/0/0/0"),
+        amount=1_000_000 - 10_000,
+        script_type=messages.OutputScriptType.PAYTOMULTISIG,
+        multisig=multisig_sorted_1,
+    )
+
+    output_sorted_2 = messages.TxOutputType(
+        address_n=parse_path("m/45h/0/0/0"),
+        amount=1_000_000 - 10_000,
+        script_type=messages.OutputScriptType.PAYTOMULTISIG,
+        multisig=multisig_sorted_2,
+    )
+
+    tx_unsorted_1 = "0100000001637ffac0d4fbd8a6c02b114e36b079615ec3e4bdf09b769c7bf8b5fd6f8e7817000000009200483045022100f062d71445509d84a5769f219f4f0158dc7ff4351d671e6fa6bfdb171435064802206e1104f1d14f010bcc166cca6a9bd24b4a497475f8e23167858b4a3e92ac6a67014751210262e9ac5bea4c84c7dea650424ed768cf123af9e447eef3c63d37c41d1f825e49210369b79f2094a6eb89e7aff0e012a5699f7272968a341e48e99e64a54312f2932b52aeffffffff01301b0f000000000017a91440bfd8ae9d806d5bd7cf475ce6a80535836285148700000000"
+
+    tx_unsorted_2 = "0100000001637ffac0d4fbd8a6c02b114e36b079615ec3e4bdf09b769c7bf8b5fd6f8e781701000000910047304402204914036468434698e2d87985007a66691f170195e4a16507bbb86b4c00da5fde02200a788312d447b3796ee5288ce9e9c0247896debfa473339302bc928da6dd78cb014751210369b79f2094a6eb89e7aff0e012a5699f7272968a341e48e99e64a54312f2932b210262e9ac5bea4c84c7dea650424ed768cf123af9e447eef3c63d37c41d1f825e4952aeffffffff01301b0f000000000017a914320ad0ff0f1b605ab1fa8e29b70d22827cf45a9f8700000000"
+
+    _, tx = btc.sign_tx(
+        client,
+        "Bitcoin",
+        [input_unsorted_1],
+        [output_unsorted_1],
+        prev_txes={prev_hash: prev_tx},
+    )
+    assert tx.hex() == tx_unsorted_1
+
+    _, tx = btc.sign_tx(
+        client,
+        "Bitcoin",
+        [input_unsorted_2],
+        [output_unsorted_2],
+        prev_txes={prev_hash: prev_tx},
+    )
+    assert tx.hex() == tx_unsorted_2
+
+    _, tx = btc.sign_tx(
+        client,
+        "Bitcoin",
+        [input_sorted_1],
+        [output_sorted_1],
+        prev_txes={prev_hash: prev_tx},
+    )
+    assert tx.hex() == tx_unsorted_1
+
+    _, tx = btc.sign_tx(
+        client,
+        "Bitcoin",
+        [input_sorted_2],
+        [output_sorted_2],
+        prev_txes={prev_hash: prev_tx},
+    )
+    assert tx.hex() == tx_unsorted_1
 
 
 @pytest.mark.multisig
