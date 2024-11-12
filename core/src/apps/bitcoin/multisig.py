@@ -28,8 +28,7 @@ def multisig_fingerprint(multisig: MultisigRedeemScriptType) -> bytes:
         if len(d.public_key) != 33 or len(d.chain_code) != 32:
             raise DataError("Invalid multisig parameters")
 
-    # casting to bytes(), sorting on bytearray() is not supported in MicroPython
-    pubnodes = sorted(pubnodes, key=lambda n: bytes(n.public_key))
+    pubnodes = sorted(pubnodes, key=lambda n: n.public_key + n.chain_code)
 
     h = HashWriter(sha256())
     write_uint32(h, m)
