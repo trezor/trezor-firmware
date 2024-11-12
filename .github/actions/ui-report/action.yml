@@ -38,12 +38,12 @@ runs:
       shell: sh
     - name: Upload report
       run: |
-        aws s3 sync --no-progress ${{ github.run_id }} s3://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}
+        aws s3 sync --only-show-errors ${{ github.run_id }} s3://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}
         echo "[UI test report](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/${{ inputs.model }}-${{ inputs.lang }}-${{ github.job }}/index.html)" >> $GITHUB_STEP_SUMMARY
       shell: sh
     - name: Upload test screen recording
       run: |
-        aws s3 sync --no-progress ci/ui_test_records s3://data.trezor.io/dev/firmware/ui_tests
+        aws s3 sync --only-show-errors ci/ui_test_records s3://data.trezor.io/dev/firmware/ui_tests
         # TODO: generate directory listing / autoindex
       shell: sh
     - uses: actions/upload-artifact@v4

@@ -214,7 +214,7 @@ jobs:
           fi
       - name: Upload main branch diff
         run: |
-          aws s3 sync --no-progress master_diff s3://data.trezor.io/dev/firmware/master_diff/${{ github.run_id }}
+          aws s3 sync --only-show-errors master_diff s3://data.trezor.io/dev/firmware/master_diff/${{ github.run_id }}
         continue-on-error: true
 
   legacy_ui_comment:
@@ -246,4 +246,4 @@ jobs:
       - run: |
           mkdir emulators
           cp trezor-emu-* emulators
-          aws s3 sync --no-progress emulators s3://data.trezor.io/dev/firmware/emu-nightly
+          aws s3 sync --only-show-errors emulators s3://data.trezor.io/dev/firmware/emu-nightly
