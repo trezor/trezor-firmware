@@ -466,9 +466,8 @@ def confirm_blob(
         main_layout = trezorui2.confirm_blob(
             title=title,
             data=data,
-            description=TR.instructions__view_all_data,
-            description_font_green=True,
-            subtitle=subtitle,
+            description=None,
+            subtitle=description,
             verb=verb,
             verb_cancel=verb_cancel,
             verb_info=TR.buttons__view_all_data,
