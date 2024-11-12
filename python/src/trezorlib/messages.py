@@ -108,6 +108,11 @@ class AmountUnit(IntEnum):
     SATOSHI = 3
 
 
+class MultisigPubkeysOrder(IntEnum):
+    PRESERVED = 0
+    LEXICOGRAPHIC = 1
+
+
 class RequestType(IntEnum):
     TXINPUT = 0
     TXOUTPUT = 1
@@ -1094,6 +1099,7 @@ class MultisigRedeemScriptType(protobuf.MessageType):
         3: protobuf.Field("m", "uint32", repeated=False, required=True),
         4: protobuf.Field("nodes", "HDNodeType", repeated=True, required=False, default=None),
         5: protobuf.Field("address_n", "uint32", repeated=True, required=False, default=None),
+        6: protobuf.Field("pubkeys_order", "MultisigPubkeysOrder", repeated=False, required=False, default=MultisigPubkeysOrder.PRESERVED),
     }
 
     def __init__(
@@ -1104,12 +1110,14 @@ class MultisigRedeemScriptType(protobuf.MessageType):
         signatures: Optional[Sequence["bytes"]] = None,
         nodes: Optional[Sequence["HDNodeType"]] = None,
         address_n: Optional[Sequence["int"]] = None,
+        pubkeys_order: Optional["MultisigPubkeysOrder"] = MultisigPubkeysOrder.PRESERVED,
     ) -> None:
         self.pubkeys: Sequence["HDNodePathType"] = pubkeys if pubkeys is not None else []
         self.signatures: Sequence["bytes"] = signatures if signatures is not None else []
         self.nodes: Sequence["HDNodeType"] = nodes if nodes is not None else []
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.m = m
+        self.pubkeys_order = pubkeys_order
 
 
 class GetPublicKey(protobuf.MessageType):
