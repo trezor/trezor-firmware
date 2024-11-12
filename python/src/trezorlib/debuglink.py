@@ -463,6 +463,12 @@ class DebugLink:
         return self.version >= (2, 8, 6)
 
     @property
+    def responds_to_debuglink_in_usb_tiny(self) -> bool:
+        """Whether a Trezor One can respond to DebugLinkGetState while waiting
+        for a Button/Pin/Passphrase Ack."""
+        return self.version >= (1, 11, 0)
+
+    @property
     def layout_type(self) -> LayoutType:
         assert self.model is not None
         return LayoutType.from_model(self.model)
@@ -788,6 +794,9 @@ class DebugLink:
     def snapshot_legacy(self) -> None:
         """Snapshot the current state of the device."""
         if self.model is not models.T1B1:
+            return
+
+        if not self.responds_to_debuglink_in_usb_tiny:
             return
 
         state = self.state()
