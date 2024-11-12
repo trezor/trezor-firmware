@@ -271,6 +271,8 @@ apps.bitcoin.sign_tx.bitcoin
 import apps.bitcoin.sign_tx.bitcoin
 apps.bitcoin.sign_tx.bitcoinlike
 import apps.bitcoin.sign_tx.bitcoinlike
+apps.bitcoin.sign_tx.change_detector
+import apps.bitcoin.sign_tx.change_detector
 apps.bitcoin.sign_tx.decred
 import apps.bitcoin.sign_tx.decred
 apps.bitcoin.sign_tx.helpers
