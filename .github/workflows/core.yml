@@ -703,7 +703,7 @@ jobs:
           fi
       - name: Upload diff from main branch
         run: |
-          aws s3 sync --no-progress master_diff s3://data.trezor.io/dev/firmware/master_diff/${{ github.run_id }}
+          aws s3 sync --only-show-errors master_diff s3://data.trezor.io/dev/firmware/master_diff/${{ github.run_id }}
         continue-on-error: true
 
   core_ui_comment:
@@ -734,7 +734,7 @@ jobs:
         continue-on-error: true
       - run: |
           rm unix/trezor-emu-core
-          aws s3 sync --no-progress unix s3://data.trezor.io/dev/firmware/emu-nightly
+          aws s3 sync --only-show-errors unix s3://data.trezor.io/dev/firmware/emu-nightly
 
   core_upload_emu_branch:
     name: Upload emulator binaries for the current branch
@@ -766,7 +766,7 @@ jobs:
       - name: Upload artifacts to branch directory
         run: |
           rm unix/trezor-emu-core
-          aws s3 sync --no-progress unix s3://data.trezor.io/dev/firmware/emu-branches/$branch_name
+          aws s3 sync --only-show-errors unix s3://data.trezor.io/dev/firmware/emu-branches/$branch_name
 
   # Connect
   # TODO: core_connect_test
