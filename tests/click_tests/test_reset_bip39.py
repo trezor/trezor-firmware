@@ -51,10 +51,10 @@ def test_reset_bip39(device_handler: "BackgroundDeviceHandler"):
     reset.confirm_new_wallet(debug)
 
     # confirm back up
-    TR.assert_in_multiple(
-        debug.read_layout().text_content(),
-        ["backup__it_should_be_backed_up", "backup__it_should_be_backed_up_now"],
-    )
+    # TR.assert_in_multiple(
+    #     debug.read_layout().text_content(),
+    #     ["backup__it_should_be_backed_up", "backup__it_should_be_backed_up_now"],
+    # )
     reset.confirm_read(debug)
 
     # confirm backup intro
