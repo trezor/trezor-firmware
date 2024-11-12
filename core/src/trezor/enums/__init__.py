@@ -97,6 +97,10 @@ if TYPE_CHECKING:
         MICROBITCOIN = 2
         SATOSHI = 3
 
+    class MultisigPubkeysOrder(IntEnum):
+        PRESERVED = 0
+        LEXICOGRAPHIC = 1
+
     class RequestType(IntEnum):
         TXINPUT = 0
         TXOUTPUT = 1

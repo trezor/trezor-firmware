@@ -50,6 +50,7 @@ if TYPE_CHECKING:
     from trezor.enums import InputScriptType  # noqa: F401
     from trezor.enums import MessageType  # noqa: F401
     from trezor.enums import MoneroNetworkType  # noqa: F401
+    from trezor.enums import MultisigPubkeysOrder  # noqa: F401
     from trezor.enums import NEMImportanceTransferMode  # noqa: F401
     from trezor.enums import NEMModificationType  # noqa: F401
     from trezor.enums import NEMMosaicLevy  # noqa: F401
@@ -461,6 +462,7 @@ if TYPE_CHECKING:
         m: "int"
         nodes: "list[HDNodeType]"
         address_n: "list[int]"
+        pubkeys_order: "MultisigPubkeysOrder"
 
         def __init__(
             self,
@@ -470,6 +472,7 @@ if TYPE_CHECKING:
             signatures: "list[bytes] | None" = None,
             nodes: "list[HDNodeType] | None" = None,
             address_n: "list[int] | None" = None,
+            pubkeys_order: "MultisigPubkeysOrder | None" = None,
         ) -> None:
             pass
 
