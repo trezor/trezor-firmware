@@ -17,6 +17,35 @@
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+static bool fsm_checkScriptType(const CoinInfo *coin,
+                                InputScriptType script_type);
+
+static int fsm_getXpubMagic(const CoinInfo *coin, InputScriptType script_type,
+                            bool ignore_xpub_magic, bool is_multisig) {
+  uint32_t xpub_magic = 0;
+  if (!ignore_xpub_magic) {
+    // Handle SegWit v0 script types.
+    // When coin.segwit is true, cointool.py guarantees that the corresponding
+    // xpub_magic_* attributes are defined.
+    if (!is_multisig) {
+      if (script_type == InputScriptType_SPENDP2SHWITNESS) {
+        xpub_magic = coin->xpub_magic_segwit_p2sh;
+      } else if (script_type == InputScriptType_SPENDWITNESS) {
+        xpub_magic = coin->xpub_magic_segwit_native;
+      }
+    } else {
+      if (script_type == InputScriptType_SPENDWITNESS) {
+        xpub_magic = coin->xpub_magic_multisig_segwit_native;
+      } else if (script_type == InputScriptType_SPENDP2SHWITNESS) {
+        xpub_magic = coin->xpub_magic_multisig_segwit_p2sh;
+      }
+    }
+  }
+
+  // SPENDADDRESS, SPENDMULTISIG, SPENDTAPROOT, ignore_xpub_magic or fallback.
+  return (xpub_magic != 0) ? xpub_magic : coin->xpub_magic;
+}
+
 void fsm_msgGetPublicKey(const GetPublicKey *msg) {
   RESP_INIT(PublicKey);
 
@@ -80,38 +109,16 @@ void fsm_msgGetPublicKey(const GetPublicKey *msg) {
   // removed in the future.
   memcpy(resp->node.public_key.bytes, node->public_key, 33);
 
-  if (coin->xpub_magic && (script_type == InputScriptType_SPENDADDRESS ||
-                           script_type == InputScriptType_SPENDMULTISIG)) {
-    hdnode_serialize_public(node, fingerprint, coin->xpub_magic, resp->xpub,
-                            sizeof(resp->xpub));
-  } else if (coin->has_segwit &&
-             script_type == InputScriptType_SPENDP2SHWITNESS &&
-             !msg->ignore_xpub_magic && coin->xpub_magic_segwit_p2sh) {
-    hdnode_serialize_public(node, fingerprint, coin->xpub_magic_segwit_p2sh,
-                            resp->xpub, sizeof(resp->xpub));
-  } else if (coin->has_segwit &&
-             script_type == InputScriptType_SPENDP2SHWITNESS &&
-             msg->ignore_xpub_magic && coin->xpub_magic) {
-    hdnode_serialize_public(node, fingerprint, coin->xpub_magic, resp->xpub,
-                            sizeof(resp->xpub));
-  } else if (coin->has_segwit && script_type == InputScriptType_SPENDWITNESS &&
-             !msg->ignore_xpub_magic && coin->xpub_magic_segwit_native) {
-    hdnode_serialize_public(node, fingerprint, coin->xpub_magic_segwit_native,
-                            resp->xpub, sizeof(resp->xpub));
-  } else if (coin->has_segwit && script_type == InputScriptType_SPENDWITNESS &&
-             msg->ignore_xpub_magic && coin->xpub_magic) {
-    hdnode_serialize_public(node, fingerprint, coin->xpub_magic, resp->xpub,
-                            sizeof(resp->xpub));
-  } else if (coin->has_taproot && script_type == InputScriptType_SPENDTAPROOT &&
-             coin->xpub_magic) {
-    hdnode_serialize_public(node, fingerprint, coin->xpub_magic, resp->xpub,
-                            sizeof(resp->xpub));
-  } else {
-    fsm_sendFailure(FailureType_Failure_DataError,
-                    _("Invalid combination of coin and script_type"));
+  if (!fsm_checkScriptType(coin, msg->script_type)) {
     layoutHome();
     return;
   }
+
+  uint32_t xpub_magic = fsm_getXpubMagic(
+      coin, script_type, msg->ignore_xpub_magic, msg->multisig_xpub_magic);
+
+  hdnode_serialize_public(node, fingerprint, xpub_magic, resp->xpub,
+                          sizeof(resp->xpub));
 
   if (msg->has_show_display && msg->show_display) {
     for (int page = 0; page < 2; page++) {
@@ -234,7 +241,8 @@ bool fsm_checkCoinPath(const CoinInfo *coin, InputScriptType script_type,
   return true;
 }
 
-bool fsm_checkScriptType(const CoinInfo *coin, InputScriptType script_type) {
+static bool fsm_checkScriptType(const CoinInfo *coin,
+                                InputScriptType script_type) {
   if (!is_internal_input_script_type(script_type)) {
     fsm_sendFailure(FailureType_Failure_DataError, _("Invalid script type"));
     return false;
@@ -312,18 +320,8 @@ void fsm_msgGetAddress(const GetAddress *msg) {
       strlcpy(desc, _("Address:"), sizeof(desc));
     }
 
-    uint32_t multisig_xpub_magic = coin->xpub_magic;
-    if (msg->has_multisig && coin->has_segwit) {
-      if (!msg->has_ignore_xpub_magic || !msg->ignore_xpub_magic) {
-        if (msg->script_type == InputScriptType_SPENDWITNESS &&
-            coin->xpub_magic_segwit_native) {
-          multisig_xpub_magic = coin->xpub_magic_segwit_native;
-        } else if (msg->script_type == InputScriptType_SPENDP2SHWITNESS &&
-                   coin->xpub_magic_segwit_p2sh) {
-          multisig_xpub_magic = coin->xpub_magic_segwit_p2sh;
-        }
-      }
-    }
+    uint32_t multisig_xpub_magic = fsm_getXpubMagic(
+        coin, msg->script_type, msg->ignore_xpub_magic, msg->has_multisig);
 
     bool is_cashaddr = coin->cashaddr_prefix != NULL;
     if (!fsm_layoutAddress(address, desc, is_cashaddr,

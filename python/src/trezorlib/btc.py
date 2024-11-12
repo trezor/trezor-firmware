@@ -112,6 +112,7 @@ def get_public_node(
     coin_name: Optional[str] = None,
     script_type: messages.InputScriptType = messages.InputScriptType.SPENDADDRESS,
     ignore_xpub_magic: bool = False,
+    multisig_xpub_magic: bool = False,
     unlock_path: Optional[List[int]] = None,
     unlock_path_mac: Optional[bytes] = None,
 ) -> "MessageType":
@@ -130,6 +131,7 @@ def get_public_node(
             coin_name=coin_name,
             script_type=script_type,
             ignore_xpub_magic=ignore_xpub_magic,
+            multisig_xpub_magic=multisig_xpub_magic,
         )
     )
 

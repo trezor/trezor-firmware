@@ -13,7 +13,6 @@ if TYPE_CHECKING:
 async def get_ownership_id(
     msg: GetOwnershipId, keychain: Keychain, coin: CoinInfo
 ) -> OwnershipId:
-    from trezor.enums import InputScriptType
     from trezor.messages import OwnershipId
     from trezor.wire import DataError
 
@@ -34,11 +33,7 @@ async def get_ownership_id(
     if script_type not in common.INTERNAL_INPUT_SCRIPT_TYPES:
         raise DataError("Invalid script type")
 
-    if script_type in common.SEGWIT_INPUT_SCRIPT_TYPES and not coin.segwit:
-        raise DataError("Segwit not enabled on this coin")
-
-    if script_type == InputScriptType.SPENDTAPROOT and not coin.taproot:
-        raise DataError("Taproot not enabled on this coin")
+    common.sanitize_input_script_type(coin, script_type)
 
     node = keychain.derive(msg.address_n)
     address = addresses.get_address(script_type, coin, node, msg.multisig)

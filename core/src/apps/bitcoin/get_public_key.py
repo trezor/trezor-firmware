@@ -10,20 +10,20 @@ if TYPE_CHECKING:
 async def get_public_key(
     msg: GetPublicKey, auth_msg: MessageType | None = None
 ) -> PublicKey:
-    from trezor import TR, wire
+    from trezor import TR
     from trezor.enums import InputScriptType
     from trezor.messages import HDNodeType, PublicKey, UnlockPath
 
     from apps.common import coininfo, paths
     from apps.common.keychain import FORBIDDEN_KEY_PATH, get_keychain
 
+    from .common import get_xpub_magic, sanitize_input_script_type
+
     coin_name = msg.coin_name or "Bitcoin"
     script_type = msg.script_type or InputScriptType.SPENDADDRESS
     coin = coininfo.by_name(coin_name)
     curve_name = msg.ecdsa_curve_name or coin.curve_name
     address_n = msg.address_n  # local_cache_attribute
-    ignore_xpub_magic = msg.ignore_xpub_magic  # local_cache_attribute
-    xpub_magic = coin.xpub_magic  # local_cache_attribute
 
     if address_n and address_n[0] == paths.SLIP25_PURPOSE:
         # UnlockPath is required to access SLIP25 paths.
@@ -38,36 +38,13 @@ async def get_public_key(
 
     node = keychain.derive(address_n)
 
-    if (
-        script_type
-        in (
-            InputScriptType.SPENDADDRESS,
-            InputScriptType.SPENDMULTISIG,
-            InputScriptType.SPENDTAPROOT,
+    sanitize_input_script_type(coin, script_type)
+
+    node_xpub = node.serialize_public(
+        get_xpub_magic(
+            coin, script_type, msg.ignore_xpub_magic, msg.multisig_xpub_magic
         )
-        and xpub_magic is not None
-    ):
-        node_xpub = node.serialize_public(xpub_magic)
-    elif (
-        coin.segwit
-        and script_type == InputScriptType.SPENDP2SHWITNESS
-        and (ignore_xpub_magic or coin.xpub_magic_segwit_p2sh is not None)
-    ):
-        assert coin.xpub_magic_segwit_p2sh is not None
-        node_xpub = node.serialize_public(
-            xpub_magic if ignore_xpub_magic else coin.xpub_magic_segwit_p2sh
-        )
-    elif (
-        coin.segwit
-        and script_type == InputScriptType.SPENDWITNESS
-        and (ignore_xpub_magic or coin.xpub_magic_segwit_native is not None)
-    ):
-        assert coin.xpub_magic_segwit_native is not None
-        node_xpub = node.serialize_public(
-            xpub_magic if ignore_xpub_magic else coin.xpub_magic_segwit_native
-        )
-    else:
-        raise wire.DataError("Invalid combination of coin and script_type")
+    )
 
     pubkey = node.public_key()
     # For curve25519 and ed25519, the public key has the prefix 0x00, as specified by SLIP-10. However, since this prefix is non-standard, it may be removed in the future.
@@ -79,7 +56,7 @@ async def get_public_key(
         public_key=pubkey,
     )
     descriptor = _xpub_descriptor(
-        node, xpub_magic, address_n, script_type, keychain.root_fingerprint()
+        node, coin.xpub_magic, address_n, script_type, keychain.root_fingerprint()
     )
 
     if msg.show_display:

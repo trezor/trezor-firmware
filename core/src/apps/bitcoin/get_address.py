@@ -39,6 +39,7 @@ async def get_address(msg: GetAddress, keychain: Keychain, coin: CoinInfo) -> Ad
     from apps.common.paths import address_n_to_str, validate_path
 
     from . import addresses
+    from .common import get_xpub_magic
     from .keychain import (
         address_n_to_name_or_unknown,
         validate_path_against_script_type,
@@ -72,20 +73,7 @@ async def get_address(msg: GetAddress, keychain: Keychain, coin: CoinInfo) -> Ad
         address_case_sensitive = False  # cashaddr address
 
     mac: bytes | None = None
-    multisig_xpub_magic = coin.xpub_magic
-    if multisig:
-        if coin.segwit and not msg.ignore_xpub_magic:
-            if (
-                script_type == InputScriptType.SPENDWITNESS
-                and coin.xpub_magic_multisig_segwit_native is not None
-            ):
-                multisig_xpub_magic = coin.xpub_magic_multisig_segwit_native
-            elif (
-                script_type == InputScriptType.SPENDP2SHWITNESS
-                and coin.xpub_magic_multisig_segwit_p2sh is not None
-            ):
-                multisig_xpub_magic = coin.xpub_magic_multisig_segwit_p2sh
-    else:
+    if not multisig:
         # Attach a MAC for single-sig addresses, but only if the path is standard
         # or if the user explicitly confirms a non-standard path.
         if msg.show_display or (
@@ -97,6 +85,10 @@ async def get_address(msg: GetAddress, keychain: Keychain, coin: CoinInfo) -> Ad
     if msg.show_display:
         path = address_n_to_str(address_n)
         if multisig:
+            multisig_xpub_magic = get_xpub_magic(
+                coin, script_type, msg.ignore_xpub_magic, is_multisig=True
+            )
+
             if multisig.nodes:
                 pubnodes = multisig.nodes
             else:
