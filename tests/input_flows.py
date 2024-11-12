@@ -216,10 +216,6 @@ class InputFlowSignMessagePagination(InputFlowBase):
         yield
         self.debug.press_yes()
 
-        # press info
-        yield
-        self.debug.press_right()
-
         # paginate through the whole message
         br = yield
         # TODO: try load the message_read the same way as in model T

@@ -551,29 +551,6 @@ async def should_show_more(
         raise ActionCancelled
 
 
-def confirm_blob_with_optional_pagination(
-    br_name: str,
-    title: str,
-    data: bytes | str,
-    subtitle: str | None = None,
-    verb: str | None = None,
-    verb_cancel: str | None = None,
-    br_code: ButtonRequestType = BR_CODE_OTHER,
-    chunkify: bool = False,
-) -> Awaitable[None]:
-    return confirm_blob(
-        br_name,
-        title,
-        data,
-        subtitle=subtitle,
-        verb=verb,
-        verb_cancel="",
-        br_code=br_code,
-        chunkify=chunkify,
-        ask_pagination=True,
-    )
-
-
 def confirm_blob(
     br_name: str,
     title: str,
@@ -582,13 +559,13 @@ def confirm_blob(
     text_mono: bool = True,
     subtitle: str | None = None,
     verb: str | None = None,
-    verb_cancel: str | None = "",  # icon
+    verb_cancel: str | None = None,  # icon
     info: bool = True,
     hold: bool = False,
     br_code: ButtonRequestType = BR_CODE_OTHER,
+    ask_pagination: bool = False,
     chunkify: bool = False,
     prompt_screen: bool = True,
-    ask_pagination: bool = False,
 ) -> Awaitable[None]:
     verb = verb or TR.buttons__confirm  # def_arg
     layout = trezorui2.confirm_blob(
@@ -596,16 +573,14 @@ def confirm_blob(
         description=description,
         data=data,
         verb=verb,
-        verb_cancel=verb_cancel,
+        verb_cancel="",
         hold=hold,
         chunkify=chunkify,
     )
 
     if ask_pagination and layout.page_count() > 1:
         assert not hold
-        return _confirm_ask_pagination(
-            br_name, title, data, description or "", verb_cancel, br_code
-        )
+        return _confirm_ask_pagination(br_name, title, data, description or "", br_code)
     else:
         return raise_if_not_confirmed(layout, br_name, br_code)
 
@@ -615,7 +590,6 @@ async def _confirm_ask_pagination(
     title: str,
     data: bytes | str,
     description: str,
-    verb_cancel: str | None,
     br_code: ButtonRequestType,
 ) -> None:
     # TODO: make should_show_more/confirm_more accept bytes directly
@@ -634,7 +608,7 @@ async def _confirm_ask_pagination(
         if not await should_show_more(
             title,
             para=[(ui.NORMAL, description), (ui.MONO, data)],
-            verb_cancel=verb_cancel,
+            verb_cancel=None,
             br_name=br_name,
             br_code=br_code,
         ):
@@ -1127,13 +1101,18 @@ async def confirm_signverify(
             br_code=BR_CODE_OTHER,
         )
         try:
-            await confirm_blob(
+            await raise_if_not_confirmed(
+                trezorui2.confirm_blob(
+                    title=TR.sign_message__confirm_message,
+                    description=None,
+                    data=message,
+                    verb=None,
+                    verb_cancel="^",
+                    hold=False,
+                    chunkify=chunkify,
+                ),
                 br_name,
-                TR.sign_message__confirm_message,
-                message,
-                verb_cancel="^",
-                br_code=BR_CODE_OTHER,
-                ask_pagination=True,
+                BR_CODE_OTHER,
             )
         except ActionCancelled:
             continue
