@@ -560,29 +560,6 @@ async def should_show_more(
         raise ActionCancelled
 
 
-def confirm_blob_with_optional_pagination(
-    br_name: str,
-    title: str,
-    data: bytes | str,
-    subtitle: str | None = None,
-    verb: str | None = None,
-    verb_cancel: str | None = None,
-    br_code: ButtonRequestType = BR_CODE_OTHER,
-    chunkify: bool = False,
-) -> Awaitable[None]:
-    return confirm_blob(
-        br_name,
-        title,
-        data,
-        subtitle=subtitle,
-        verb=verb,
-        verb_cancel="",
-        br_code=br_code,
-        chunkify=chunkify,
-        ask_pagination=True,
-    )
-
-
 def confirm_blob(
     br_name: str,
     title: str,
@@ -595,9 +572,9 @@ def confirm_blob(
     info: bool = True,
     hold: bool = False,
     br_code: ButtonRequestType = BR_CODE_OTHER,
+    ask_pagination: bool = False,
     chunkify: bool = False,
     prompt_screen: bool = True,
-    ask_pagination: bool = False,
 ) -> Awaitable[None]:
     verb = verb or TR.buttons__confirm  # def_arg
     layout = trezorui2.confirm_blob(
@@ -652,6 +629,21 @@ async def _confirm_ask_pagination(
         await interact(confirm_more_layout, br_name, br_code, raise_on_cancel=None)
 
     assert False
+
+
+if not utils.BITCOIN_ONLY:
+
+    def confirm_other_data(data: bytes, data_total: int) -> Awaitable[None]:
+        return confirm_blob(
+            "confirm_data",
+            TR.ethereum__title_input_data,
+            data,
+            subtitle=TR.ethereum__data_size_template.format(data_total),
+            verb=TR.buttons__confirm,
+            verb_cancel=None,
+            br_code=ButtonRequestType.SignTx,
+            ask_pagination=True,
+        )
 
 
 def confirm_address(

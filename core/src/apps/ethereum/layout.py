@@ -4,7 +4,6 @@ from trezor import TR, ui
 from trezor.enums import ButtonRequestType
 from trezor.ui.layouts import (
     confirm_blob,
-    confirm_blob_with_optional_pagination,
     confirm_ethereum_staking_tx,
     confirm_text,
     should_show_more,
@@ -174,15 +173,9 @@ def require_confirm_address(address_bytes: bytes) -> Awaitable[None]:
 
 
 def require_confirm_other_data(data: bytes, data_total: int) -> Awaitable[None]:
-    return confirm_blob_with_optional_pagination(
-        "confirm_data",
-        TR.ethereum__title_input_data,
-        data,
-        subtitle=TR.ethereum__data_size_template.format(data_total),
-        verb=TR.buttons__confirm,
-        verb_cancel=TR.send__cancel_sign,
-        br_code=ButtonRequestType.SignTx,
-    )
+    from trezor.ui.layouts import confirm_other_data
+
+    return confirm_other_data(data, data_total)
 
 
 async def confirm_typed_data_final() -> None:

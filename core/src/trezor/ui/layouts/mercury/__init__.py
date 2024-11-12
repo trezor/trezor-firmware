@@ -460,48 +460,6 @@ async def should_show_more(
         raise ActionCancelled
 
 
-def confirm_blob_with_optional_pagination(
-    br_name: str,
-    title: str,
-    data: bytes | str,
-    subtitle: str | None = None,
-    verb: str | None = None,
-    verb_cancel: str | None = None,
-    br_code: ButtonRequestType = BR_CODE_OTHER,
-    chunkify: bool = False,
-) -> Awaitable[None]:
-    main_layout = trezorui2.confirm_blob(
-        title=title,
-        data=data,
-        description=TR.instructions__view_all_data,
-        description_font_green=True,
-        subtitle=subtitle,
-        verb=verb,
-        verb_cancel=verb_cancel,
-        verb_info=TR.buttons__view_all_data,
-        info=True,
-        hold=False,
-        chunkify=chunkify,
-        prompt_screen=False,
-        page_limit=1,
-    )
-    info_layout = trezorui2.confirm_blob(
-        title=title,
-        data=data,
-        description=None,
-        verb=None,
-        verb_cancel=verb_cancel,
-        info=False,
-        hold=False,
-        chunkify=chunkify,
-        prompt_screen=False,
-    )
-
-    return with_info(
-        main_layout, info_layout, br_name, br_code, repeat_button_request=True
-    )
-
-
 def confirm_blob(
     br_name: str,
     title: str,
@@ -514,27 +472,80 @@ def confirm_blob(
     info: bool = True,
     hold: bool = False,
     br_code: ButtonRequestType = BR_CODE_OTHER,
+    ask_pagination: bool = False,
     chunkify: bool = False,
     prompt_screen: bool = True,
 ) -> Awaitable[None]:
-    layout = trezorui2.confirm_blob(
-        title=title,
-        data=data,
-        description=description,
-        text_mono=text_mono,
-        subtitle=subtitle,
-        verb=verb,
-        verb_cancel=verb_cancel,
-        info=info,
-        hold=hold,
-        chunkify=chunkify,
-        prompt_screen=prompt_screen,
-    )
-    return raise_if_not_confirmed(
-        layout,
-        br_name,
-        br_code,
-    )
+    if ask_pagination:
+        main_layout = trezorui2.confirm_blob(
+            title=title,
+            data=data,
+            description=TR.instructions__view_all_data,
+            description_font_green=True,
+            subtitle=subtitle,
+            verb=verb,
+            verb_cancel=verb_cancel,
+            verb_info=TR.buttons__view_all_data,
+            info=True,
+            hold=False,
+            chunkify=chunkify,
+            prompt_screen=False,
+            page_limit=1,
+        )
+        info_layout = trezorui2.confirm_blob(
+            title=title,
+            data=data,
+            description=None,
+            verb=None,
+            verb_cancel=verb_cancel,
+            info=False,
+            hold=False,
+            chunkify=chunkify,
+            prompt_screen=False,
+        )
+
+        return with_info(
+            main_layout,
+            info_layout,
+            br_name,
+            br_code,
+            repeat_button_request=True,
+            info_layout_can_confirm=True,
+        )
+    else:
+        layout = trezorui2.confirm_blob(
+            title=title,
+            data=data,
+            description=description,
+            text_mono=text_mono,
+            subtitle=subtitle,
+            verb=verb,
+            verb_cancel=verb_cancel,
+            info=info,
+            hold=hold,
+            chunkify=chunkify,
+            prompt_screen=prompt_screen,
+        )
+        return raise_if_not_confirmed(
+            layout,
+            br_name,
+            br_code,
+        )
+
+
+if not utils.BITCOIN_ONLY:
+
+    def confirm_other_data(data: bytes, data_total: int) -> Awaitable[None]:
+        return confirm_blob(
+            "confirm_data",
+            TR.ethereum__title_input_data,
+            data,
+            subtitle=TR.ethereum__data_size_template.format(data_total),
+            verb=TR.buttons__confirm,
+            verb_cancel=TR.send__cancel_sign,
+            br_code=ButtonRequestType.SignTx,
+            ask_pagination=True,
+        )
 
 
 def confirm_address(
