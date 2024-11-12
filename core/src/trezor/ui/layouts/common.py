@@ -73,6 +73,7 @@ async def with_info(
     br_name: str,
     br_code: ButtonRequestType,
     repeat_button_request: bool = False,  # TODO this should eventually always be true
+    info_layout_can_confirm: bool = False,  # whether the info layout is allowed to confirm the whole flow
 ) -> None:
     first_br = br_name
     next_br = br_name if repeat_button_request else None
@@ -95,8 +96,14 @@ async def with_info(
         if result is trezorui2.CONFIRMED:
             return
         elif result is trezorui2.INFO:
-            await interact(info_layout, next_br, br_code, raise_on_cancel=None)
-            continue
+            info_result = await interact(
+                info_layout, next_br, br_code, raise_on_cancel=None
+            )
+            if info_layout_can_confirm and info_result is trezorui2.CONFIRMED:
+                return
+            else:
+                # no matter what the info layout returns, we always go back to the main layout
+                continue
         else:
             raise RuntimeError  # unexpected result
 

@@ -95,7 +95,6 @@ where
         match msg {
             PageMsg::Confirmed => Ok(CONFIRMED.as_obj()),
             PageMsg::Cancelled => Ok(CANCELLED.as_obj()),
-            PageMsg::Info => Ok(INFO.as_obj()),
             _ => Err(Error::TypeError),
         }
     }
@@ -245,9 +244,7 @@ fn content_in_button_page<T: Component + Paginate + MaybeTrace + 'static>(
     content: T,
     verb: TString<'static>,
     verb_cancel: Option<TString<'static>>,
-    info: bool,
     hold: bool,
-    page_limit: Option<usize>,
 ) -> Result<Obj, Error> {
     // Left button - icon, text or nothing.
     let cancel_btn = verb_cancel.map(ButtonDetails::from_text_possible_icon);
@@ -263,14 +260,9 @@ fn content_in_button_page<T: Component + Paginate + MaybeTrace + 'static>(
         confirm_btn = confirm_btn.map(|btn| btn.with_default_duration());
     }
 
-    let mut content = ButtonPage::new(content, theme::BG)
+    let content = ButtonPage::new(content, theme::BG)
         .with_cancel_btn(cancel_btn)
-        .with_page_limit(page_limit)
         .with_confirm_btn(confirm_btn);
-
-    if info {
-        content = content.with_armed_confirm_plus_info();
-    }
 
     let mut frame = ScrollableFrame::new(content);
     if !title.is_empty() {
@@ -312,7 +304,7 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
             paragraphs.into_paragraphs()
         };
 
-        content_in_button_page(title, paragraphs, verb, verb_cancel, false, hold, None)
+        content_in_button_page(title, paragraphs, verb, verb_cancel, hold)
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
@@ -335,13 +327,8 @@ extern "C" fn new_confirm_blob(n_args: usize, args: *const Obj, kwargs: *mut Map
             .get(Qstr::MP_QSTR_verb_cancel)
             .unwrap_or_else(|_| Obj::const_none())
             .try_into_option()?;
-        let info: bool = kwargs.get_or(Qstr::MP_QSTR_info, false)?;
         let hold: bool = kwargs.get_or(Qstr::MP_QSTR_hold, false)?;
         let chunkify: bool = kwargs.get_or(Qstr::MP_QSTR_chunkify, false)?;
-        let page_limit: Option<usize> = kwargs
-            .get(Qstr::MP_QSTR_page_limit)
-            .unwrap_or_else(|_| Obj::const_none())
-            .try_into_option()?;
 
         let style = if chunkify {
             // Chunkifying the address into smaller pieces when requested
@@ -365,9 +352,7 @@ extern "C" fn new_confirm_blob(n_args: usize, args: *const Obj, kwargs: *mut Map
             paragraphs,
             verb.unwrap_or(TR::buttons__confirm.into()),
             verb_cancel,
-            info,
             hold,
-            page_limit,
         )
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -420,9 +405,7 @@ extern "C" fn new_confirm_properties(n_args: usize, args: *const Obj, kwargs: *m
             paragraphs.into_paragraphs(),
             button_text,
             Some("".into()),
-            false,
             hold,
-            None,
         )
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -452,15 +435,7 @@ extern "C" fn new_confirm_reset_device(n_args: usize, args: *const Obj, kwargs: 
             .text_bold(TR::reset__tos_link);
         let formatted = FormattedText::new(ops).vertically_centered();
 
-        content_in_button_page(
-            title,
-            formatted,
-            button,
-            Some("".into()),
-            false,
-            false,
-            None,
-        )
+        content_in_button_page(title, formatted, button, Some("".into()), false)
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
@@ -542,9 +517,7 @@ extern "C" fn new_confirm_value(n_args: usize, args: *const Obj, kwargs: *mut Ma
             paragraphs,
             verb.unwrap_or(TR::buttons__confirm.into()),
             Some("".into()),
-            false,
             hold,
-            None,
         )
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -567,9 +540,7 @@ extern "C" fn new_confirm_joint_total(n_args: usize, args: *const Obj, kwargs: *
             paragraphs,
             TR::buttons__hold_to_confirm.into(),
             Some("".into()),
-            false,
             true,
-            None,
         )
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -600,8 +571,6 @@ extern "C" fn new_confirm_modify_output(n_args: usize, args: *const Obj, kwargs:
             TR::buttons__confirm.into(),
             Some("".into()),
             false,
-            false,
-            None,
         )
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -975,8 +944,6 @@ extern "C" fn new_confirm_modify_fee(n_args: usize, args: *const Obj, kwargs: *m
             TR::buttons__confirm.into(),
             Some("".into()),
             false,
-            false,
-            None,
         )
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -1263,8 +1230,6 @@ extern "C" fn new_confirm_more(n_args: usize, args: *const Obj, kwargs: *mut Map
             button,
             Some("<".into()),
             false,
-            false,
-            None,
         )
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -1290,9 +1255,7 @@ extern "C" fn new_confirm_coinjoin(n_args: usize, args: *const Obj, kwargs: *mut
             paragraphs,
             TR::buttons__hold_to_confirm.into(),
             None,
-            false,
             true,
-            None,
         )
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -1488,8 +1451,6 @@ extern "C" fn new_confirm_recovery(n_args: usize, args: *const Obj, kwargs: *mut
             button,
             Some("".into()),
             false,
-            false,
-            None,
         )
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -1542,8 +1503,6 @@ extern "C" fn new_show_group_share_success(
             TR::buttons__continue.into(),
             None,
             false,
-            false,
-            None,
         )
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }

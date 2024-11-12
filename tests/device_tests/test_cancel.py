@@ -17,7 +17,6 @@
 import pytest
 
 import trezorlib.messages as m
-from trezorlib.debuglink import LayoutType
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import Cancelled
 
@@ -91,14 +90,6 @@ def test_cancel_on_paginated(client: Client):
 
     resp = client._raw_read()
     assert isinstance(resp, m.ButtonRequest)
-
-    # In T2B1, confirm message is no longer paginated by default,
-    # user needs to click info button
-    if client.layout_type is LayoutType.TR:
-        client._raw_write(m.ButtonAck())
-        client.debug.press_right()
-        resp = client._raw_read()
-        assert isinstance(resp, m.ButtonRequest)
 
     assert resp.pages is not None
     client._raw_write(m.ButtonAck())
