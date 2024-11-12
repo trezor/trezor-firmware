@@ -19,7 +19,7 @@ import pytest
 from trezorlib import btc, device, messages
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
-from trezorlib.messages import SafetyCheckLevel
+from trezorlib.messages import MultisigPubkeysOrder, SafetyCheckLevel
 from trezorlib.tools import parse_path
 
 from ... import bip32
@@ -193,6 +193,73 @@ def test_altcoin_address_mac(client: Client):
     assert (
         resp.mac.hex()
         == "08d67c5f1ee20fd03f3e5aa26f798574716c122238ac280e33a6f3787d531552"
+    )
+
+
+@pytest.mark.multisig
+@pytest.mark.models(skip="legacy", reason="Sortedmulti is not supported")
+def test_multisig_pubkeys_order(client: Client):
+    xpub_internal = btc.get_public_node(client, parse_path("m/45h/0")).xpub
+    xpub_external = btc.get_public_node(client, parse_path("m/44h/1")).xpub
+
+    multisig_unsorted_1 = messages.MultisigRedeemScriptType(
+        nodes=[bip32.deserialize(xpub) for xpub in [xpub_internal, xpub_internal]],
+        address_n=[0, 0],
+        signatures=[b"", b"", b""],
+        m=2,
+        pubkeys_order=MultisigPubkeysOrder.PRESERVED,
+    )
+
+    multisig_unsorted_2 = messages.MultisigRedeemScriptType(
+        nodes=[bip32.deserialize(xpub) for xpub in [xpub_internal, xpub_external]],
+        address_n=[0, 0],
+        signatures=[b"", b"", b""],
+        m=2,
+        pubkeys_order=MultisigPubkeysOrder.PRESERVED,
+    )
+
+    multisig_sorted_1 = messages.MultisigRedeemScriptType(
+        nodes=[bip32.deserialize(xpub) for xpub in [xpub_internal, xpub_external]],
+        address_n=[0, 0],
+        signatures=[b"", b"", b""],
+        m=2,
+        pubkeys_order=MultisigPubkeysOrder.LEXICOGRAPHIC,
+    )
+
+    multisig_sorted_2 = messages.MultisigRedeemScriptType(
+        nodes=[bip32.deserialize(xpub) for xpub in [xpub_external, xpub_internal]],
+        address_n=[0, 0],
+        signatures=[b"", b"", b""],
+        m=2,
+        pubkeys_order=MultisigPubkeysOrder.LEXICOGRAPHIC,
+    )
+
+    address_unsorted_1 = "3JpFrKHq9F2R3Kr65pXMe8M8vy4dwJj7Ci"
+    address_unsorted_2 = "3HnEADzLm88XUugzXmfkfC5Ed6PXK9AXQh"
+
+    assert (
+        btc.get_address(
+            client, "Bitcoin", parse_path("m/45h/0/0/0"), multisig=multisig_unsorted_1
+        )
+        == address_unsorted_1
+    )
+    assert (
+        btc.get_address(
+            client, "Bitcoin", parse_path("m/45h/0/0/0"), multisig=multisig_unsorted_2
+        )
+        == address_unsorted_2
+    )
+    assert (
+        btc.get_address(
+            client, "Bitcoin", parse_path("m/45h/0/0/0"), multisig=multisig_sorted_1
+        )
+        == address_unsorted_2
+    )
+    assert (
+        btc.get_address(
+            client, "Bitcoin", parse_path("m/45h/0/0/0"), multisig=multisig_sorted_2
+        )
+        == address_unsorted_2
     )
 
 
