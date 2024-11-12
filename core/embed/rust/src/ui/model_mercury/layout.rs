@@ -374,10 +374,10 @@ extern "C" fn new_confirm_blob(n_args: usize, args: *const Obj, kwargs: *mut Map
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let data: Obj = kwargs.get(Qstr::MP_QSTR_data)?;
-        let description: Option<TString> =
-            kwargs.get(Qstr::MP_QSTR_description)?.try_into_option()?;
-        let description_font_green: bool =
-            kwargs.get_or(Qstr::MP_QSTR_description_font_green, false)?;
+        let description: Option<TString> = kwargs
+            .get(Qstr::MP_QSTR_description)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
         let text_mono: bool = kwargs.get_or(Qstr::MP_QSTR_text_mono, true)?;
         let extra: Option<TString> = kwargs
             .get(Qstr::MP_QSTR_extra)
@@ -408,10 +408,13 @@ extern "C" fn new_confirm_blob(n_args: usize, args: *const Obj, kwargs: *mut Map
             .unwrap_or_else(|_| Obj::const_none())
             .try_into_option()?;
 
-        let description_font = if description_font_green {
-            &theme::TEXT_SUB_GREEN_LIME
+        let (description, description_font) = if page_limit == Some(1) {
+            (
+                Some(TR::instructions__view_all_data.into()),
+                &theme::TEXT_SUB_GREEN_LIME,
+            )
         } else {
-            &theme::TEXT_NORMAL
+            (description, &theme::TEXT_NORMAL)
         };
 
         ConfirmBlobParams::new(
@@ -1248,7 +1251,6 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     title: str,
     ///     data: str | bytes,
     ///     description: str | None,
-    ///     description_font_green: bool = False,
     ///     text_mono: bool = True,
     ///     extra: str | None = None,
     ///     subtitle: str | None = None,

@@ -1700,7 +1700,6 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     title: str,
     ///     data: str | bytes,
     ///     description: str | None,
-    ///     description_font_green: bool = False,
     ///     text_mono: bool = True,
     ///     extra: str | None = None,
     ///     subtitle: str | None = None,
