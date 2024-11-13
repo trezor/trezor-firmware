@@ -36,8 +36,10 @@
 
 #if defined STM32F427xx || defined STM32F429xx
 #define FLASH_SECTOR_COUNT 24
-#elif defined STM32U585xx || defined STM32U5A9xx
+#elif defined STM32U585xx
 #define FLASH_SECTOR_COUNT 256
+#elif defined STM32U5G9xx
+#define FLASH_SECTOR_COUNT 512
 #else
 #error Unknown MCU
 #endif
@@ -69,11 +71,11 @@ static uint32_t FLASH_SECTOR_TABLE[FLASH_SECTOR_COUNT + 1] = {
     [22] = 0x081C0000,  // - 0x081DFFFF | 128 KiB
     [23] = 0x081E0000,  // - 0x081FFFFF | 128 KiB
     [24] = 0x08200000,  // last element - not a valid sector
-#elif defined STM32U585xx || defined STM32U5A9xx
+#elif defined STM32U585xx || defined STM32U5G9xx
     [0] = 0x08000000,  // - 0x08001FFF |   8 KiB
                        // rest is initialized in flash_init
 #else
-#error Unknown Trezor model
+#error Unknown MCU
 #endif
 };
 
@@ -88,7 +90,7 @@ static void flash_exit(void) {
 void flash_init(void) {
   if (FLASH_BUFFER) return;
 
-#if defined TREZOR_MODEL_T3T1 || defined TREZOR_MODEL_T3B1
+#if defined STM32U585xx || defined STM32U5G9xx
   for (size_t i = 0; i < FLASH_SECTOR_COUNT; i++) {
     FLASH_SECTOR_TABLE[i + 1] =
         FLASH_SECTOR_TABLE[i] + 0x2000;  // 8KiB size sectors
