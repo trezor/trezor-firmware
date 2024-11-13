@@ -199,7 +199,7 @@ impl Page {
 
 // Pagination
 impl Paginate for Page {
-    fn page_count(&mut self) -> usize {
+    fn page_count(&self) -> usize {
         self.formatted.page_count()
     }
 

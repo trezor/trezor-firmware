@@ -100,7 +100,7 @@ fn footer_update_fn(
 ) {
     let current_page = content.inner().inner().current_page();
     let total_pages = content.inner().inner().num_pages();
-    footer.update_page_counter(ctx, current_page, Some(total_pages));
+    footer.update_page_counter(ctx, current_page, total_pages);
 }
 
 impl ConfirmFido {

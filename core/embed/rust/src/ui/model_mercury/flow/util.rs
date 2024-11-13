@@ -47,6 +47,7 @@ pub struct ConfirmBlobParams {
     hold: bool,
     chunkify: bool,
     text_mono: bool,
+    page_counter: bool,
     page_limit: Option<usize>,
     swipe_up: bool,
     swipe_down: bool,
@@ -78,6 +79,7 @@ impl ConfirmBlobParams {
             hold: false,
             chunkify: false,
             text_mono: true,
+            page_counter: false,
             page_limit: None,
             swipe_up: false,
             swipe_down: false,
@@ -167,6 +169,11 @@ impl ConfirmBlobParams {
 
     pub const fn with_text_mono(mut self, text_mono: bool) -> Self {
         self.text_mono = text_mono;
+        self
+    }
+
+    pub fn with_page_counter(mut self, page_counter: bool) -> Self {
+        self.page_counter = page_counter;
         self
     }
 
@@ -266,6 +273,7 @@ impl ConfirmBlobParams {
             ),
             self.hold,
             self.page_limit,
+            self.page_counter,
         )
     }
 }
