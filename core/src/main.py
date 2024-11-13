@@ -29,7 +29,7 @@ if __debug__:
 
 # trezor.pin imports trezor.utils
 # We need it as an always-active module because trezor.pin.show_pin_timeout is used
-# as a UI callback for storage, which can be invoked at any time
+# as an UI callback for storage, which can be invoked at any time
 import trezor.pin  # noqa: F401
 
 # === Prepare the USB interfaces first. Do not connect to the host yet.

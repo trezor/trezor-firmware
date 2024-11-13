@@ -2002,7 +2002,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     prefill_word: str,
     ///     can_go_back: bool,
     /// ) -> LayoutObj[str]:
-    ///    """SLIP39 word input keyboard."""
+    ///     """SLIP39 word input keyboard."""
     Qstr::MP_QSTR_request_slip39 => obj_fn_kw!(0, new_request_slip39).as_obj(),
 
     /// def select_word(
@@ -2011,8 +2011,8 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     description: str,
     ///     words: Iterable[str],
     /// ) -> LayoutObj[int]:
-    ///    """Select mnemonic word from three possibilities - seed check after backup. The
-    ///    iterable must be of exact size. Returns index in range `0..3`."""
+    ///     """Select mnemonic word from three possibilities - seed check after backup. The
+    ///     iterable must be of exact size. Returns index in range `0..3`."""
     Qstr::MP_QSTR_select_word => obj_fn_kw!(0, new_select_word).as_obj(),
 
     /// def show_share_words(
@@ -2030,7 +2030,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     max_count: int,
     ///     description: Callable[[int], str] | None = None,  # unused on TR
     /// ) -> LayoutObj[tuple[UiResult, int]]:
-    ///    """Number input with + and - buttons, description, and info button."""
+    ///     """Number input with + and - buttons, description, and info button."""
     Qstr::MP_QSTR_request_number => obj_fn_kw!(0, new_request_number).as_obj(),
 
     /// def show_checklist(
@@ -2040,8 +2040,8 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     active: int,
     ///     button: str,
     /// ) -> LayoutObj[UiResult]:
-    ///    """Checklist of backup steps. Active index is highlighted, previous items have check
-    ///    mark next to them."""
+    ///     """Checklist of backup steps. Active index is highlighted, previous items have check
+    ///     mark next to them."""
     Qstr::MP_QSTR_show_checklist => obj_fn_kw!(0, new_show_checklist).as_obj(),
 
     /// def confirm_recovery(
@@ -2053,7 +2053,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     info_button: bool,  # unused on TR
     ///     show_instructions: bool,
     /// ) -> LayoutObj[UiResult]:
-    ///    """Device recovery homescreen."""
+    ///     """Device recovery homescreen."""
     Qstr::MP_QSTR_confirm_recovery => obj_fn_kw!(0, new_confirm_recovery).as_obj(),
 
     /// def select_word_count(
@@ -2068,7 +2068,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     *,
     ///     lines: Iterable[str],
     /// ) -> LayoutObj[int]:
-    ///    """Shown after successfully finishing a group."""
+    ///     """Shown after successfully finishing a group."""
     Qstr::MP_QSTR_show_group_share_success => obj_fn_kw!(0, new_show_group_share_success).as_obj(),
 
     /// def show_progress(
@@ -2077,9 +2077,9 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     indeterminate: bool = False,
     ///     title: str | None = None,
     /// ) -> LayoutObj[UiResult]:
-    ///    """Show progress loader. Please note that the number of lines reserved on screen for
-    ///    description is determined at construction time. If you want multiline descriptions
-    ///    make sure the initial description has at least that amount of lines."""
+    ///     """Show progress loader. Please note that the number of lines reserved on screen for
+    ///     description is determined at construction time. If you want multiline descriptions
+    ///     make sure the initial description has at least that amount of lines."""
     Qstr::MP_QSTR_show_progress => obj_fn_kw!(0, new_show_progress).as_obj(),
 
     /// def show_progress_coinjoin(
@@ -2089,8 +2089,8 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     time_ms: int = 0,
     ///     skip_first_paint: bool = False,
     /// ) -> LayoutObj[UiResult]:
-    ///    """Show progress loader for coinjoin. Returns CANCELLED after a specified time when
-    ///    time_ms timeout is passed."""
+    ///     """Show progress loader for coinjoin. Returns CANCELLED after a specified time when
+    ///     time_ms timeout is passed."""
     Qstr::MP_QSTR_show_progress_coinjoin => obj_fn_kw!(0, new_show_progress_coinjoin).as_obj(),
 
     /// def show_homescreen(
