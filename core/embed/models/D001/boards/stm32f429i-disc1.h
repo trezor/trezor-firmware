@@ -4,7 +4,6 @@
 #define HSE_8MHZ
 
 #define DISPLAY_COLOR_MODE DMA2D_OUTPUT_RGB565
-#define DISPLAY_LEGACY_HEADER "displays/ltdc.h"
 
 #define I2C_COUNT 1
 #define I2C_INSTANCE_0 I2C3
