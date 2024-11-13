@@ -102,15 +102,6 @@ impl<'a> Component for Intro<'a> {
         None
     }
 
-    fn paint(&mut self) {
-        self.bg.paint();
-        self.title.paint();
-        self.text.paint();
-        self.warn.paint();
-        self.host.paint();
-        self.menu.paint();
-    }
-
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.bg.render(target);
         self.title.render(target);

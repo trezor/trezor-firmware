@@ -1,7 +1,7 @@
 use crate::ui::{
     component::{Component, Event, EventCtx, Never, Pad},
     constant::screen,
-    display::{self, Font},
+    display::Font,
     geometry::{Offset, Point, Rect},
     shape,
     shape::Renderer,
@@ -34,34 +34,6 @@ impl Component for Welcome {
 
     fn event(&mut self, _ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {
         None
-    }
-
-    fn paint(&mut self) {
-        let at_width = Font::NORMAL.text_width("at ");
-
-        self.bg.paint();
-        display::text_left(TEXT_ORIGIN, "Get started", Font::NORMAL, GREY, BLACK);
-        display::text_left(
-            TEXT_ORIGIN + Offset::y(STRIDE),
-            "with your Trezor",
-            Font::NORMAL,
-            GREY,
-            BLACK,
-        );
-        display::text_left(
-            TEXT_ORIGIN + Offset::y(2 * STRIDE),
-            "at",
-            Font::NORMAL,
-            GREY,
-            BLACK,
-        );
-        display::text_left(
-            TEXT_ORIGIN + Offset::new(at_width, 2 * STRIDE),
-            "trezor.io/start",
-            Font::NORMAL,
-            WHITE,
-            BLACK,
-        );
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

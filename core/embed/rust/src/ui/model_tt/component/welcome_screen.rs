@@ -6,10 +6,7 @@ use crate::ui::{
     shape::Renderer,
 };
 #[cfg(feature = "bootloader")]
-use crate::ui::{
-    display::{toif::Toif, Icon},
-    model_tt::theme::bootloader::DEVICE_NAME,
-};
+use crate::ui::{display::toif::Toif, model_tt::theme::bootloader::DEVICE_NAME};
 
 const TEXT_BOTTOM_MARGIN: i16 = 24; // matching the homescreen label margin
 const ICON_TOP_MARGIN: i16 = 48;
@@ -45,35 +42,6 @@ impl Component for WelcomeScreen {
 
     fn event(&mut self, _ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {
         None
-    }
-
-    fn paint(&mut self) {
-        let logo = if self.empty_lock {
-            theme::ICON_LOGO_EMPTY
-        } else {
-            theme::ICON_LOGO
-        };
-        logo.draw(
-            self.area.top_center() + Offset::y(ICON_TOP_MARGIN),
-            Alignment2D::TOP_CENTER,
-            theme::FG,
-            theme::BG,
-        );
-        #[cfg(not(feature = "bootloader"))]
-        display::text_center(
-            self.area.bottom_center() - Offset::y(TEXT_BOTTOM_MARGIN),
-            model::FULL_NAME,
-            MODEL_NAME_FONT,
-            theme::FG,
-            theme::BG,
-        );
-        #[cfg(feature = "bootloader")]
-        Icon::new(DEVICE_NAME).draw(
-            self.area.bottom_center() - Offset::y(TEXT_BOTTOM_MARGIN),
-            Alignment2D::BOTTOM_CENTER,
-            theme::FG,
-            theme::BG,
-        );
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

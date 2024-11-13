@@ -83,18 +83,6 @@ impl ButtonType {
         }
     }
 
-    pub fn paint(&mut self) {
-        match self {
-            Self::Button(button) => {
-                button.paint();
-            }
-            Self::HoldToConfirm(htc) => {
-                htc.paint();
-            }
-            Self::Nothing => {}
-        }
-    }
-
     pub fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         match self {
             Self::Button(button) => {
@@ -160,11 +148,6 @@ impl ButtonContainer {
     /// Placing the possible component.
     pub fn place(&mut self, bounds: Rect) {
         self.button_type.place(bounds);
-    }
-
-    /// Painting the component that should be currently visible, if any.
-    pub fn paint(&mut self) {
-        self.button_type.paint();
     }
 
     pub fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
@@ -588,13 +571,6 @@ impl Component for ButtonController {
         }
     }
 
-    fn paint(&mut self) {
-        self.pad.paint();
-        self.left_btn.paint();
-        self.middle_btn.paint();
-        self.right_btn.paint();
-    }
-
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.pad.render(target);
         self.left_btn.render(target);
@@ -776,8 +752,6 @@ impl Component for AutomaticMover {
     fn place(&mut self, bounds: Rect) -> Rect {
         bounds
     }
-
-    fn paint(&mut self) {}
 
     fn render<'s>(&'s self, _target: &mut impl Renderer<'s>) {}
 

@@ -5,8 +5,7 @@ use crate::{
     time::Duration,
     ui::{
         button_request::{ButtonRequest, ButtonRequestCode},
-        component::{maybe::PaintOverlapping, MsgMap, PageMap},
-        display::Color,
+        component::{MsgMap, PageMap},
         geometry::{Offset, Rect},
         shape::Renderer,
     },
@@ -60,11 +59,6 @@ pub trait Component {
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg>;
 
     /// Render to screen, based on current internal state.
-    ///
-    /// To prevent unnecessary over-draw, dirty state checking is performed in
-    /// the `Child` wrapper.
-    fn paint(&mut self);
-
     fn render<'s>(&'s self, _target: &mut impl Renderer<'s>);
 }
 
@@ -150,13 +144,6 @@ where
         })
     }
 
-    fn paint(&mut self) {
-        if self.marked_for_paint {
-            self.marked_for_paint = false;
-            self.component.paint();
-        }
-    }
-
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.component.render(target);
     }
@@ -169,22 +156,6 @@ impl<T: Paginate> Paginate for Child<T> {
 
     fn change_page(&mut self, active_page: usize) {
         self.component.change_page(active_page);
-    }
-}
-
-impl<T> PaintOverlapping for Child<T>
-where
-    T: PaintOverlapping,
-{
-    fn cleared_area(&self) -> Option<(Rect, Color)> {
-        self.component.cleared_area()
-    }
-
-    fn paint_overlapping(&mut self) {
-        if self.marked_for_paint {
-            self.marked_for_paint = false;
-            self.component.paint_overlapping()
-        }
     }
 }
 
@@ -213,11 +184,6 @@ where
         self.0
             .event(ctx, event)
             .or_else(|| self.1.event(ctx, event))
-    }
-
-    fn paint(&mut self) {
-        self.0.paint();
-        self.1.paint();
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
@@ -262,12 +228,6 @@ where
             .or_else(|| self.2.event(ctx, event))
     }
 
-    fn paint(&mut self) {
-        self.0.paint();
-        self.1.paint();
-        self.2.paint();
-    }
-
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.0.render(target);
         self.1.render(target);
@@ -285,12 +245,6 @@ where
         match self {
             Some(ref mut c) => c.event(ctx, event),
             _ => None,
-        }
-    }
-
-    fn paint(&mut self) {
-        if let Some(ref mut c) = self {
-            c.paint()
         }
     }
 

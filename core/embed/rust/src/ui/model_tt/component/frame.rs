@@ -170,13 +170,6 @@ where
         self.content.event(ctx, event).map(FrameMsg::Content)
     }
 
-    fn paint(&mut self) {
-        self.title.paint();
-        self.subtitle.paint();
-        self.button.paint();
-        self.content.paint();
-    }
-
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.title.render(target);
         self.subtitle.render(target);

@@ -118,10 +118,6 @@ impl Page {
         self
     }
 
-    pub fn paint(&mut self) {
-        self.formatted.paint();
-    }
-
     pub fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.formatted.render(target);
     }

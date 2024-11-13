@@ -2,7 +2,7 @@ use crate::{
     time::Duration,
     ui::{
         component::{text::common::TextEdit, Event, EventCtx, Timer},
-        display::{self, Color, Font},
+        display::{Color, Font},
         geometry::{Offset, Point, Rect},
         shape,
         shape::Renderer,
@@ -114,21 +114,6 @@ impl MultiTapKeyboard {
         } else {
             TextEdit::Append(ch)
         }
-    }
-}
-
-/// Create a visible "underscoring" of the last letter of a text.
-pub fn paint_pending_marker(text_baseline: Point, text: &str, font: Font, color: Color) {
-    // Measure the width of the last character of input.
-    if let Some(last) = text.chars().last() {
-        let width = font.text_width(text);
-        let last_width = font.char_width(last);
-        // Draw the marker 2px under the start of the baseline of the last character.
-        let marker_origin = text_baseline + Offset::new(width - last_width, 2);
-        // Draw the marker 1px longer than the last character, and 3px thick.
-        let marker_rect =
-            Rect::from_top_left_and_size(marker_origin, Offset::new(last_width + 1, 3));
-        display::rect_fill(marker_rect, color);
     }
 }
 

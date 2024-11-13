@@ -3,7 +3,7 @@ use crate::{
     ui::{
         component::{text::TextStyle, Component, Event, EventCtx, Label, Never, Pad},
         constant::screen,
-        display::{self, Color, Font, Icon},
+        display::{Color, Font, Icon},
         geometry::{Alignment2D, Insets, Offset, Point, Rect},
         shape,
         shape::Renderer,
@@ -85,18 +85,6 @@ impl Component for ResultFooter<'_> {
         None
     }
 
-    fn paint(&mut self) {
-        // divider line
-        let bar = Rect::from_center_and_size(
-            Point::new(self.area.center().x, self.area.y0),
-            Offset::new(self.area.width(), 1),
-        );
-        display::rect_fill(bar, self.style.divider_color);
-
-        // footer text
-        self.text.paint();
-    }
-
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         // divider line
         let bar = Rect::from_center_and_size(
@@ -166,20 +154,6 @@ impl<'a> Component for ResultScreen<'a> {
 
     fn event(&mut self, _ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {
         None
-    }
-
-    fn paint(&mut self) {
-        self.bg.paint();
-        self.footer_pad.paint();
-
-        self.icon.draw(
-            Point::new(screen().center().x, ICON_CENTER_Y),
-            Alignment2D::CENTER,
-            self.style.fg_color,
-            self.style.bg_color,
-        );
-        self.message.paint();
-        self.footer.paint();
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

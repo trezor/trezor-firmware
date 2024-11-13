@@ -7,7 +7,6 @@ use crate::{
     translations::TR,
     ui::{
         component::{base::Never, Bar, Component, Empty, Event, EventCtx, Label, Split},
-        display::loader::{loader_circular_uncompress, LoaderDimensions},
         geometry::{Insets, Offset, Rect},
         model_mercury::constant,
         shape,
@@ -105,20 +104,6 @@ where
             _ => {}
         }
         None
-    }
-
-    fn paint(&mut self) {
-        self.content.paint();
-        loader_circular_uncompress(
-            LoaderDimensions::new(LOADER_OUTER, LOADER_INNER),
-            LOADER_OFFSET,
-            theme::FG,
-            theme::BG,
-            self.value,
-            self.indeterminate,
-            None,
-        );
-        self.label.paint();
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

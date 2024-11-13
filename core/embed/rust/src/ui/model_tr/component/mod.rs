@@ -1,7 +1,6 @@
 pub mod bl_confirm;
 mod button;
 mod button_controller;
-mod common;
 mod error;
 mod hold_to_confirm;
 mod input_methods;

@@ -448,11 +448,6 @@ impl Component for PassphraseEntry {
         None
     }
 
-    fn paint(&mut self) {
-        self.passphrase_dots.paint();
-        self.choice_page.paint();
-    }
-
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.passphrase_dots.render(target);
         self.choice_page.render(target);

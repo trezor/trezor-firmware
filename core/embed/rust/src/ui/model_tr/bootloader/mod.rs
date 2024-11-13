@@ -24,15 +24,10 @@ use super::{
     ModelTRFeatures,
 };
 
-#[cfg(not(feature = "new_rendering"))]
-use crate::ui::geometry::Rect;
-
-#[cfg(feature = "new_rendering")]
 use crate::ui::{
     display::toif::Toif, geometry::Alignment, model_tr::cshape, shape, shape::render_on_display,
 };
 
-#[cfg(feature = "new_rendering")]
 use ufmt::uwrite;
 
 mod intro;
@@ -53,51 +48,6 @@ impl ReturnToC for ConfirmMsg {
 }
 
 impl ModelTRFeatures {
-    #[cfg(not(feature = "new_rendering"))]
-    fn screen_progress(
-        text: &str,
-        text2: &str,
-        progress: u16,
-        initialize: bool,
-        fg_color: Color,
-        bg_color: Color,
-        icon: Option<(Icon, Color)>,
-    ) {
-        if initialize {
-            display::rect_fill(SCREEN, bg_color);
-        }
-
-        let progress = if progress < 20 { 20 } else { progress };
-
-        display::rect_rounded2_partial(
-            Rect::new(
-                SCREEN.top_center() + Offset::new(-9, 3),
-                SCREEN.top_center() + Offset::new(9, 18 + 3),
-            ),
-            fg_color,
-            bg_color,
-            ((100_u32 * progress as u32) / 1000) as _,
-            icon,
-        );
-        display::text_center(
-            SCREEN.center() + Offset::y(8),
-            text,
-            Font::BOLD,
-            fg_color,
-            bg_color,
-        );
-        display::text_center(
-            SCREEN.center() + Offset::y(20),
-            text2,
-            Font::BOLD,
-            fg_color,
-            bg_color,
-        );
-
-        display::refresh();
-    }
-
-    #[cfg(feature = "new_rendering")]
     fn screen_progress(
         text: &str,
         text2: &str,
@@ -146,29 +96,6 @@ impl UIFeaturesBootloader for ModelTRFeatures {
     fn screen_welcome() {
         let mut frame = Welcome::new();
         show(&mut frame, true);
-    }
-
-    #[cfg(not(feature = "new_rendering"))]
-    fn bld_continue_label(bg_color: Color) {
-        display::text_center(
-            Point::new(constant::WIDTH / 2, HEIGHT - 2),
-            "CONTINUE",
-            Font::NORMAL,
-            BLD_FG,
-            bg_color,
-        );
-        ICON_ARM_LEFT.draw(
-            Point::new(constant::WIDTH / 2 - 36, HEIGHT - 6),
-            Alignment2D::TOP_LEFT,
-            BLD_FG,
-            bg_color,
-        );
-        ICON_ARM_RIGHT.draw(
-            Point::new(constant::WIDTH / 2 + 25, HEIGHT - 6),
-            Alignment2D::TOP_LEFT,
-            BLD_FG,
-            bg_color,
-        );
     }
 
     fn screen_install_success(restart_seconds: u8, _initial_setup: bool, complete_draw: bool) {
@@ -321,9 +248,6 @@ impl UIFeaturesBootloader for ModelTRFeatures {
     }
 
     fn screen_boot_stage_1(_fading: bool) {
-        #[cfg(not(feature = "new_rendering"))]
-        display::rect_fill(SCREEN, BLD_BG);
-
         let mut frame = WelcomeScreen::new(cfg!(ui_empty_lock));
         show(&mut frame, false);
     }
@@ -377,7 +301,6 @@ impl UIFeaturesBootloader for ModelTRFeatures {
         show(&mut frame, false);
     }
 
-    #[cfg(feature = "new_rendering")]
     fn screen_boot(
         _warning: bool,
         vendor_str: Option<&str>,

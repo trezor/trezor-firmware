@@ -95,17 +95,6 @@ impl<'a> Component for Intro<'a> {
         None
     }
 
-    fn paint(&mut self) {
-        self.bg.paint();
-        self.title.paint();
-        let area = self.bg.area;
-        ICON_WARN_TITLE.draw(area.top_left(), Alignment2D::TOP_LEFT, BLD_FG, BLD_BG);
-        ICON_WARN_TITLE.draw(area.top_right(), Alignment2D::TOP_RIGHT, BLD_FG, BLD_BG);
-        self.warn.paint();
-        self.text.paint();
-        self.buttons.paint();
-    }
-
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.bg.render(target);
         self.title.render(target);

@@ -95,21 +95,6 @@ impl Component for ResultScreen<'_> {
         None
     }
 
-    fn paint(&mut self) {
-        self.bg.paint();
-        self.small_pad.paint();
-
-        self.icon.draw(
-            screen().top_center() + Offset::y(ICON_TOP),
-            Alignment2D::CENTER,
-            self.fg_color,
-            self.bg_color,
-        );
-
-        self.message_top.paint();
-        self.message_bottom.paint();
-    }
-
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.bg.render(target);
         self.small_pad.render(target);

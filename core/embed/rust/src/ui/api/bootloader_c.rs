@@ -13,12 +13,6 @@ extern "C" fn screen_welcome() {
 }
 
 #[no_mangle]
-#[cfg(not(feature = "new_rendering"))]
-extern "C" fn bld_continue_label(bg_color: cty::uint16_t) {
-    ModelUI::bld_continue_label(bg_color.into());
-}
-
-#[no_mangle]
 extern "C" fn screen_install_success(
     restart_seconds: u8,
     initial_setup: bool,
@@ -105,7 +99,6 @@ extern "C" fn screen_boot_stage_1(fading: bool) {
 }
 
 #[no_mangle]
-#[cfg(feature = "new_rendering")]
 extern "C" fn screen_boot(
     warning: bool,
     vendor_str: *const cty::c_char,

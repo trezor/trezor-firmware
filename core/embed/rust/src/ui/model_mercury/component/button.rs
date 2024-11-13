@@ -5,7 +5,7 @@ use crate::{
     time::Duration,
     ui::{
         component::{Component, Event, EventCtx, Timer},
-        display::{self, toif::Icon, Color, Font},
+        display::{toif::Icon, Color, Font},
         event::TouchEvent,
         geometry::{Alignment, Alignment2D, Insets, Offset, Point, Rect},
         shape::{self, Renderer},
@@ -172,10 +172,6 @@ impl Button {
         }
     }
 
-    pub fn paint_background(&self, style: &ButtonStyle) {
-        display::rect_fill(self.area, style.button_color);
-    }
-
     pub fn render_background<'s>(
         &self,
         target: &mut impl Renderer<'s>,
@@ -196,35 +192,6 @@ impl Button {
                 .with_fg(style.button_color)
                 .with_alpha(alpha)
                 .render(target);
-        }
-    }
-
-    pub fn paint_content(&self, style: &ButtonStyle) {
-        match &self.content {
-            ButtonContent::Empty => {}
-            ButtonContent::Text(text) => {
-                let start_of_baseline = self.area.center() + Self::BASELINE_OFFSET;
-                text.map(|text| {
-                    display::text_left(
-                        start_of_baseline,
-                        text,
-                        style.font,
-                        style.text_color,
-                        style.button_color,
-                    );
-                });
-            }
-            ButtonContent::Icon(icon) => {
-                icon.draw(
-                    self.area.center(),
-                    Alignment2D::CENTER,
-                    style.icon_color,
-                    style.button_color,
-                );
-            }
-            ButtonContent::IconAndText(child) => {
-                child.paint(self.area, self.style(), Self::BASELINE_OFFSET);
-            }
         }
     }
 
@@ -387,12 +354,6 @@ impl Component for Button {
         None
     }
 
-    fn paint(&mut self) {
-        let style = self.style();
-        self.paint_background(style);
-        self.paint_content(style);
-    }
-
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let style = self.style();
         self.render_background(target, style, 0xFF);
@@ -463,54 +424,6 @@ impl IconText {
         Self {
             text: text.into(),
             icon,
-        }
-    }
-
-    pub fn paint(&self, area: Rect, style: &ButtonStyle, baseline_offset: Offset) {
-        let width = self.text.map(|t| style.font.text_width(t));
-        let height = style.font.text_height();
-
-        let mut use_icon = false;
-        let mut use_text = false;
-
-        let mut icon_pos = Point::new(
-            area.top_left().x + ((Self::ICON_SPACE + Self::ICON_MARGIN) / 2),
-            area.center().y,
-        );
-        let mut text_pos = area.center() + Offset::new(-width / 2, height / 2) + baseline_offset;
-
-        if area.width() > (Self::ICON_SPACE + Self::TEXT_MARGIN + width) {
-            //display both icon and text
-            text_pos = Point::new(area.top_left().x + Self::ICON_SPACE, text_pos.y);
-            use_text = true;
-            use_icon = true;
-        } else if area.width() > (width + Self::TEXT_MARGIN) {
-            use_text = true;
-        } else {
-            //if we can't fit the text, retreat to centering the icon
-            icon_pos = area.center();
-            use_icon = true;
-        }
-
-        if use_text {
-            self.text.map(|t| {
-                display::text_left(
-                    text_pos,
-                    t,
-                    style.font,
-                    style.text_color,
-                    style.button_color,
-                )
-            });
-        }
-
-        if use_icon {
-            self.icon.draw(
-                icon_pos,
-                Alignment2D::CENTER,
-                style.icon_color,
-                style.button_color,
-            );
         }
     }
 

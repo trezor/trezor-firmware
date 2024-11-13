@@ -120,10 +120,6 @@ impl Component for HoldToConfirm {
         None
     }
 
-    fn paint(&mut self) {
-        self.loader.paint();
-    }
-
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.loader.render(target);
     }

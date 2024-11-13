@@ -9,7 +9,7 @@ use crate::{
             Child, Component, Event, EventCtx, Label, Never, Pad,
         },
         constant,
-        display::{self, Font, Icon, LOADER_MAX},
+        display::{Font, Icon, LOADER_MAX},
         geometry::{Alignment2D, Offset, Rect},
         model_tr::cshape,
         shape,
@@ -132,29 +132,6 @@ impl Component for Progress {
             self.description.event(ctx, event);
         }
         None
-    }
-
-    fn paint(&mut self) {
-        self.title.paint();
-        if self.indeterminate {
-            display::loader_indeterminate(
-                self.value,
-                self.loader_y_offset,
-                theme::FG,
-                theme::BG,
-                None,
-            );
-        } else {
-            display::loader(
-                self.value,
-                self.loader_y_offset,
-                theme::FG,
-                theme::BG,
-                Some((self.icon, theme::FG)),
-            );
-        }
-        self.description_pad.paint();
-        self.description.paint();
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

@@ -477,10 +477,6 @@ impl Component for PinKeyboard<'_> {
         None
     }
 
-    fn paint(&mut self) {
-        todo!("remove when ui-t3t1 done");
-    }
-
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let t_attach = self.attach_animation.eval();
         let t_close = self.close_animation.eval();
@@ -676,10 +672,6 @@ impl Component for PinDots {
             }
             _ => None,
         }
-    }
-
-    fn paint(&mut self) {
-        // TODO: remove when ui-t3t1 done
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

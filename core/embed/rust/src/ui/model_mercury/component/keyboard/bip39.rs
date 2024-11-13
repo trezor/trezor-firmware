@@ -102,10 +102,6 @@ impl Component for Bip39Input {
         }
     }
 
-    fn paint(&mut self) {
-        todo!("remove when ui-t3t1 done");
-    }
-
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let area = self.button.area();
         let style = self.button.style();

@@ -268,10 +268,6 @@ impl<T: Component> Component for SwipeContent<T> {
         self.process_event(ctx, event, true)
     }
 
-    fn paint(&mut self) {
-        self.inner.paint()
-    }
-
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let (offset, clip, mask) = self.swipe_context.get_params(self.bounds);
 
@@ -392,10 +388,6 @@ where
         self.animate = animate;
 
         self.content.process_event(ctx, event, animate)
-    }
-
-    fn paint(&mut self) {
-        self.content.paint()
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

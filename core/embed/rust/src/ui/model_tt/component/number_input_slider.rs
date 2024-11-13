@@ -1,7 +1,6 @@
 use crate::ui::{
     component::{base::ComponentExt, Child, Component, Event, EventCtx},
     constant::screen,
-    display,
     event::TouchEvent,
     geometry::{Grid, Insets, Point, Rect},
     shape::{self, Renderer},
@@ -70,12 +69,6 @@ impl Component for NumberInputSliderDialog {
             return Some(Self::Msg::Confirmed);
         };
         None
-    }
-
-    fn paint(&mut self) {
-        self.input.paint();
-        self.cancel_button.paint();
-        self.confirm_button.paint();
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
@@ -150,13 +143,6 @@ impl Component for NumberInputSlider {
             };
         }
         None
-    }
-
-    fn paint(&mut self) {
-        let val_pct = (100 * (self.value - self.min)) / (self.max - self.min);
-        let fill_to = (val_pct as i16 * self.area.width()) / 100;
-
-        display::bar_with_text_and_fill(self.area, None, theme::FG, theme::BG, 0, fill_to as _);
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

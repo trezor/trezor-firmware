@@ -3,7 +3,6 @@ use crate::{
     ui::{
         component::{Child, Component, Event, EventCtx, Label, Never, Pad},
         constant::{screen, WIDTH},
-        display,
         geometry::{Alignment2D, Offset, Point, Rect},
         model_tr::cshape,
         shape,
@@ -84,22 +83,6 @@ impl Component for ErrorScreen<'_> {
 
     fn event(&mut self, _ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {
         None
-    }
-
-    fn paint(&mut self) {
-        self.bg.paint();
-
-        if self.show_icons {
-            theme::ICON_WARN_TITLE.draw(screen().top_left(), Alignment2D::TOP_LEFT, FG, BG);
-            theme::ICON_WARN_TITLE.draw(screen().top_right(), Alignment2D::TOP_RIGHT, FG, BG);
-        }
-        self.title.paint();
-        self.message.paint();
-
-        // // divider line
-        display::dotted_line(Point::new(0, DIVIDER_POSITION), WIDTH, FG, 3);
-
-        self.footer.paint();
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

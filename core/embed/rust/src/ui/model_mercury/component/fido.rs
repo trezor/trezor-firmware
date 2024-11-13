@@ -70,10 +70,6 @@ impl<F: Fn() -> TString<'static>> Component for FidoCredential<F> {
         None
     }
 
-    fn paint(&mut self) {
-        unimplemented!()
-    }
-
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.app_icon.render(target);
         self.text.render(target);

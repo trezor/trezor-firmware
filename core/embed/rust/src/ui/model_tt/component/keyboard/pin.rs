@@ -9,7 +9,7 @@ use crate::{
             base::ComponentExt, text::TextStyle, Child, Component, Event, EventCtx, Label, Maybe,
             Never, Pad, Timer,
         },
-        display::{self, Font},
+        display::Font,
         event::TouchEvent,
         geometry::{Alignment, Alignment2D, Grid, Insets, Offset, Rect},
         model_tt::component::{
@@ -248,26 +248,6 @@ impl Component for PinKeyboard<'_> {
         None
     }
 
-    fn paint(&mut self) {
-        self.erase_btn.paint();
-        self.textbox_pad.paint();
-        if self.textbox.inner().is_empty() {
-            if let Some(ref mut w) = self.major_warning {
-                w.paint();
-            } else {
-                self.major_prompt.paint();
-            }
-            self.minor_prompt.paint();
-            self.cancel_btn.paint();
-        } else {
-            self.textbox.paint();
-        }
-        self.confirm_btn.paint();
-        for btn in &mut self.digit_btns {
-            btn.paint();
-        }
-    }
-
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.erase_btn.render(target);
         self.textbox_pad.render(target);
@@ -352,31 +332,6 @@ impl PinDots {
         &self.digits
     }
 
-    fn paint_digits(&self, area: Rect) {
-        let center = area.center() + Offset::y(Font::MONO.text_height() / 2);
-        let right = center + Offset::x(Font::MONO.text_width("0") * (MAX_VISIBLE_DOTS as i16) / 2);
-        let digits = self.digits.len();
-
-        if digits <= MAX_VISIBLE_DOTS {
-            display::text_center(
-                center,
-                &self.digits,
-                Font::MONO,
-                self.style.text_color,
-                self.style.background_color,
-            );
-        } else {
-            let offset: usize = digits.saturating_sub(MAX_VISIBLE_DIGITS);
-            display::text_right(
-                right,
-                &self.digits[offset..],
-                Font::MONO,
-                self.style.text_color,
-                self.style.background_color,
-            );
-        }
-    }
-
     fn render_digits<'s>(&self, area: Rect, target: &mut impl Renderer<'s>) {
         let center = area.center() + Offset::y(Font::MONO.text_height() / 2);
         let right = center + Offset::x(Font::MONO.text_width("0") * (MAX_VISIBLE_DOTS as i16) / 2);
@@ -395,50 +350,6 @@ impl PinDots {
                 .with_font(Font::MONO)
                 .with_fg(self.style.text_color)
                 .render(target);
-        }
-    }
-
-    fn paint_dots(&self, area: Rect) {
-        let mut cursor = self.size().snap(area.center(), Alignment2D::CENTER);
-
-        let digits = self.digits.len();
-        let dots_visible = digits.min(MAX_VISIBLE_DOTS);
-        let step = Self::DOT + Self::PADDING;
-
-        // Jiggle when overflowed.
-        if digits > dots_visible && digits % 2 == 0 {
-            cursor.x += Self::TWITCH
-        }
-
-        // Small leftmost dot.
-        if digits > dots_visible + 1 {
-            theme::DOT_SMALL.draw(
-                cursor - Offset::x(2 * step),
-                Alignment2D::TOP_LEFT,
-                self.style.text_color,
-                self.style.background_color,
-            );
-        }
-
-        // Greyed out dot.
-        if digits > dots_visible {
-            theme::DOT_ACTIVE.draw(
-                cursor - Offset::x(step),
-                Alignment2D::TOP_LEFT,
-                theme::GREY_LIGHT,
-                self.style.background_color,
-            );
-        }
-
-        // Draw a dot for each PIN digit.
-        for _ in 0..dots_visible {
-            theme::DOT_ACTIVE.draw(
-                cursor,
-                Alignment2D::TOP_LEFT,
-                self.style.text_color,
-                self.style.background_color,
-            );
-            cursor.x += step;
         }
     }
 
@@ -508,16 +419,6 @@ impl Component for PinDots {
                 None
             }
             _ => None,
-        }
-    }
-
-    fn paint(&mut self) {
-        let dot_area = self.area.inset(HEADER_PADDING);
-        self.pad.paint();
-        if self.display_digits {
-            self.paint_digits(dot_area)
-        } else {
-            self.paint_dots(dot_area)
         }
     }
 

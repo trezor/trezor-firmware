@@ -1,11 +1,11 @@
 use crate::ui::{
     component::{Component, Event, EventCtx, Never, Pad},
     constant::screen,
-    display::{self, toif::Toif, Font, Icon},
+    display::{toif::Toif, Font},
     geometry::{Alignment, Alignment2D, Offset, Rect},
     model_tt::theme::{
         bootloader::{START_URL, WELCOME_COLOR},
-        BLACK, GREY_MEDIUM, WHITE,
+        GREY_MEDIUM, WHITE,
     },
     shape,
     shape::Renderer,
@@ -33,30 +33,6 @@ impl Component for Welcome {
 
     fn event(&mut self, _ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {
         None
-    }
-
-    fn paint(&mut self) {
-        self.bg.paint();
-        display::text_center(
-            screen().top_center() + Offset::y(102),
-            "Get started with",
-            Font::NORMAL,
-            GREY_MEDIUM,
-            BLACK,
-        );
-        display::text_center(
-            screen().top_center() + Offset::y(126),
-            "your Trezor at",
-            Font::NORMAL,
-            GREY_MEDIUM,
-            BLACK,
-        );
-        Icon::new(START_URL).draw(
-            screen().top_center() + Offset::y(135),
-            Alignment2D::TOP_CENTER,
-            WHITE,
-            BLACK,
-        );
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

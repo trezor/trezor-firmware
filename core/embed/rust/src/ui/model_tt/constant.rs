@@ -7,9 +7,6 @@ pub const HEIGHT: i16 = DISPLAY_RESY as _;
 pub const LINE_SPACE: i16 = 4;
 pub const FONT_BPP: i16 = 4;
 
-#[cfg(not(feature = "new_rendering"))]
-pub const LOADER_OUTER: i16 = 60;
-#[cfg(feature = "new_rendering")]
 pub const LOADER_OUTER: i16 = 59;
 
 pub const LOADER_INNER: i16 = 42;

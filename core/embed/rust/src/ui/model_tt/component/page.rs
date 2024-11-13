@@ -404,33 +404,6 @@ where
         button_result
     }
 
-    fn paint(&mut self) {
-        self.pad.paint();
-        match &self.loader {
-            Some(l) if l.is_animating() => self.loader.paint(),
-            _ => {
-                self.content.paint();
-                if self.scrollbar.has_pages() {
-                    self.scrollbar.paint();
-                }
-            }
-        }
-        if self.button_cancel.is_some() && self.is_cancel_visible() {
-            self.button_cancel.paint();
-        } else {
-            self.button_prev.paint();
-        }
-        if self.scrollbar.has_next_page() {
-            self.button_next.paint();
-        } else {
-            self.button_confirm.paint();
-        }
-        if let Some(val) = self.fade.take() {
-            // Note that this is blocking and takes some time.
-            display::fade_backlight(val);
-        }
-    }
-
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.pad.render(target);
         match &self.loader {

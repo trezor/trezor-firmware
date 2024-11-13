@@ -6,12 +6,10 @@ use crate::{
     ui::{
         component::{
             base::Never,
-            text::util::{
-                text_multiline, text_multiline2, text_multiline_bottom, text_multiline_bottom2,
-            },
+            text::util::{text_multiline, text_multiline_bottom},
             Component, Event, EventCtx,
         },
-        display::{self, Font},
+        display::Font,
         geometry::{Alignment, Alignment2D, Insets, Offset, Rect},
         model_tr::cshape,
         shape,
@@ -82,60 +80,12 @@ impl Component for CoinJoinProgress {
         None
     }
 
-    fn paint(&mut self) {
-        // TOP
-        if self.indeterminate {
-            text_multiline(
-                self.area,
-                TR::coinjoin__title_progress.into(),
-                Font::BOLD_UPPER,
-                theme::FG,
-                theme::BG,
-                Alignment::Center,
-            );
-            display::loader::loader_small_indeterminate(
-                self.value,
-                self.loader_y_offset,
-                theme::FG,
-                theme::BG,
-            );
-        } else {
-            display::loader(
-                self.value,
-                self.loader_y_offset,
-                theme::FG,
-                theme::BG,
-                Some((theme::ICON_TICK_FAT, theme::FG)),
-            );
-        }
-
-        // BOTTOM
-        let top_rest = text_multiline_bottom(
-            self.area,
-            TR::coinjoin__do_not_disconnect.into(),
-            Font::BOLD,
-            theme::FG,
-            theme::BG,
-            Alignment::Center,
-        );
-        if let Some(rest) = top_rest {
-            text_multiline_bottom(
-                rest.inset(Insets::bottom(FOOTER_TEXT_MARGIN)),
-                self.text,
-                Font::NORMAL,
-                theme::FG,
-                theme::BG,
-                Alignment::Center,
-            );
-        }
-    }
-
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         // TOP
         let center = self.area.center() + Offset::y(self.loader_y_offset);
 
         if self.indeterminate {
-            text_multiline2(
+            text_multiline(
                 target,
                 self.area,
                 TR::coinjoin__title_progress.into(),
@@ -158,7 +108,7 @@ impl Component for CoinJoinProgress {
         }
 
         // BOTTOM
-        let top_rest = text_multiline_bottom2(
+        let top_rest = text_multiline_bottom(
             target,
             self.area,
             TR::coinjoin__do_not_disconnect.into(),
@@ -168,7 +118,7 @@ impl Component for CoinJoinProgress {
             Alignment::Center,
         );
         if let Some(rest) = top_rest {
-            text_multiline_bottom2(
+            text_multiline_bottom(
                 target,
                 rest.inset(Insets::bottom(FOOTER_TEXT_MARGIN)),
                 self.text,

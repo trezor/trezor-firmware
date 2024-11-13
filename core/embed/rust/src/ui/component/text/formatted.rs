@@ -5,7 +5,7 @@ use crate::ui::{
 };
 
 use super::{
-    layout::{LayoutFit, LayoutSink, TextNoOp, TextRenderer, TextRenderer2},
+    layout::{LayoutFit, LayoutSink, TextNoOp, TextRenderer},
     op::OpTextLayout,
 };
 
@@ -130,12 +130,8 @@ impl Component for FormattedText {
         None
     }
 
-    fn paint(&mut self) {
-        self.layout_content(&mut TextRenderer);
-    }
-
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        self.layout_content(&mut TextRenderer2::new(target));
+        self.layout_content(&mut TextRenderer::new(target));
     }
 }
 

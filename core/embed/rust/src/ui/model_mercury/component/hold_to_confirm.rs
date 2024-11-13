@@ -271,10 +271,6 @@ impl Component for HoldToConfirm {
         None
     }
 
-    fn paint(&mut self) {
-        unimplemented!()
-    }
-
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let elapsed = self.anim.eval();
 

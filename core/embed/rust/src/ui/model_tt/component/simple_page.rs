@@ -155,18 +155,6 @@ where
         self.content.event(ctx, event).map(PageMsg::Content)
     }
 
-    fn paint(&mut self) {
-        self.pad.paint();
-        self.content.paint();
-        if self.scrollbar.has_pages() {
-            self.scrollbar.paint();
-        }
-        if let Some(val) = self.fade.take() {
-            // Note that this is blocking and takes some time.
-            display::fade_backlight(val);
-        }
-    }
-
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.pad.render(target);
         self.content.render(target);

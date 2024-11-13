@@ -1,6 +1,5 @@
 use crate::ui::{
     component::{Component, Event, EventCtx, Never},
-    display,
     display::font::Font,
     geometry::{Alignment, Alignment2D, Offset, Rect},
     shape,
@@ -12,7 +11,7 @@ use super::theme;
 const TEXT_BOTTOM_MARGIN: i16 = 54;
 const ICON_TOP_MARGIN: i16 = 48;
 #[cfg(not(feature = "bootloader"))]
-const MODEL_NAME_FONT: display::Font = display::Font::DEMIBOLD;
+const MODEL_NAME_FONT: Font = Font::DEMIBOLD;
 
 use crate::trezorhal::model;
 
@@ -36,22 +35,6 @@ impl Component for WelcomeScreen {
 
     fn event(&mut self, _ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {
         None
-    }
-
-    fn paint(&mut self) {
-        theme::ICON_LOGO.draw(
-            self.area.top_center() + Offset::y(ICON_TOP_MARGIN),
-            Alignment2D::TOP_CENTER,
-            theme::FG,
-            theme::BG,
-        );
-        display::text_center(
-            self.area.bottom_center() - Offset::y(TEXT_BOTTOM_MARGIN),
-            model::FULL_NAME,
-            display::Font::NORMAL,
-            theme::FG,
-            theme::BG,
-        );
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

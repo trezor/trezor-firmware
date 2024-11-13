@@ -13,12 +13,6 @@ pub mod fb_rgba8888;
 #[cfg(all(not(feature = "xframebuffer"), feature = "display_rgb565"))]
 pub mod nofb_rgb565;
 
-#[cfg(not(feature = "new_rendering"))]
-mod _new_rendering {
-    pub use super::fake_display::{render_on_display, ConcreteRenderer};
-}
-
-#[cfg(feature = "new_rendering")]
 mod _new_rendering {
     #[cfg(not(feature = "xframebuffer"))]
     mod _xframebuffer {

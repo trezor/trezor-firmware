@@ -61,10 +61,6 @@ where
         None
     }
 
-    fn paint(&mut self) {
-        todo!("remove when ui-t3t1 done");
-    }
-
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.paragraphs.render(target);
     }

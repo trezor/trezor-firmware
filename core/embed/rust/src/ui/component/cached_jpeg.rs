@@ -58,8 +58,6 @@ impl Component for CachedJpeg {
         None
     }
 
-    fn paint(&mut self) {}
-
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let off = Offset::new(
             self.image_size.x / (2 << self.scale),
