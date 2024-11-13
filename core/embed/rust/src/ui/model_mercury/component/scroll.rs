@@ -84,46 +84,6 @@ impl Component for ScrollBar {
         None
     }
 
-    fn paint(&mut self) {
-        fn dotsize(distance: usize, nhidden: usize) -> Icon {
-            match (nhidden.saturating_sub(distance)).min(2 - distance) {
-                0 => theme::DOT_INACTIVE,
-                1 => theme::DOT_INACTIVE_HALF,
-                _ => theme::DOT_INACTIVE_QUARTER,
-            }
-        }
-
-        // Number of visible dots.
-        let num_shown = self.page_count.min(Self::MAX_DOTS);
-        // Page indices corresponding to the first (and last) dot.
-        let first_shown = self
-            .active_page
-            .saturating_sub(Self::MAX_DOTS / 2)
-            .min(self.page_count.saturating_sub(Self::MAX_DOTS));
-        let last_shown = first_shown + num_shown - 1;
-
-        let mut cursor = self.area.center()
-            - Offset::on_axis(
-                self.layout.axis,
-                Self::DOT_INTERVAL * (num_shown.saturating_sub(1) as i16) / 2,
-            );
-        for i in first_shown..(last_shown + 1) {
-            let icon = if i == self.active_page {
-                theme::DOT_ACTIVE
-            } else if i <= first_shown + 1 {
-                let before_first_shown = first_shown;
-                dotsize(i - first_shown, before_first_shown)
-            } else if i >= last_shown - 1 {
-                let after_last_shown = self.page_count - 1 - last_shown;
-                dotsize(last_shown - i, after_last_shown)
-            } else {
-                theme::DOT_INACTIVE
-            };
-            icon.draw(cursor, Alignment2D::CENTER, theme::FG, theme::BG);
-            cursor = cursor + Offset::on_axis(self.layout.axis, Self::DOT_INTERVAL);
-        }
-    }
-
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         fn dotsize(distance: usize, nhidden: usize) -> Icon {
             match (nhidden.saturating_sub(distance)).min(2 - distance) {

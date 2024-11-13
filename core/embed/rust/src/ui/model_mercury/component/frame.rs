@@ -319,11 +319,6 @@ where
         None
     }
 
-    fn paint(&mut self) {
-        self.header.paint();
-        self.footer.paint();
-        self.content.paint();
-    }
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.header.render(target);
         self.footer.render(target);

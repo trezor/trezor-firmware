@@ -3,7 +3,6 @@ use crate::{
     time::Instant,
     ui::{
         component::{Component, Event, EventCtx, Marquee, Never},
-        display,
         geometry::{Alignment, Offset, Rect},
         shape,
         shape::Renderer,
@@ -53,15 +52,6 @@ impl Title {
     }
 
     /// Display title/header at the top left of the given area.
-    pub fn paint_header_left(title: &TString<'static>, area: Rect) {
-        let text_height = theme::FONT_HEADER.text_height();
-        let title_baseline = area.top_left() + Offset::y(text_height - 1);
-        title.map(|s| {
-            display::text_left(title_baseline, s, theme::FONT_HEADER, theme::FG, theme::BG)
-        });
-    }
-
-    /// Display title/header at the top left of the given area.
     pub fn render_header_left<'s>(
         target: &mut impl Renderer<'s>,
         title: &TString<'static>,
@@ -74,15 +64,6 @@ impl Title {
                 .with_font(theme::FONT_HEADER)
                 .with_fg(theme::FG)
                 .render(target);
-        });
-    }
-
-    /// Display title/header centered at the top of the given area.
-    pub fn paint_header_centered(title: &TString<'static>, area: Rect) {
-        let text_height = theme::FONT_HEADER.text_height();
-        let title_baseline = area.top_center() + Offset::y(text_height - 1);
-        title.map(|s| {
-            display::text_center(title_baseline, s, theme::FONT_HEADER, theme::FG, theme::BG)
         });
     }
 
@@ -123,16 +104,6 @@ impl Component for Title {
             return self.marquee.event(ctx, event);
         }
         None
-    }
-
-    fn paint(&mut self) {
-        if self.needs_marquee {
-            self.marquee.paint();
-        } else if self.centered {
-            Self::paint_header_centered(&self.title, self.area);
-        } else {
-            Self::paint_header_left(&self.title, self.area);
-        }
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

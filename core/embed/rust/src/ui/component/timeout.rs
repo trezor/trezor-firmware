@@ -35,8 +35,6 @@ impl Component for Timeout {
         self.timer.expire(event).then_some(())
     }
 
-    fn paint(&mut self) {}
-
     fn render<'s>(&'s self, _target: &mut impl Renderer<'s>) {}
 }
 

@@ -174,13 +174,6 @@ impl Component for AddressDetails {
         }
     }
 
-    fn paint(&mut self) {
-        match self.current_page {
-            0 => self.details.paint(),
-            _ => self.xpub_view.paint(),
-        }
-    }
-
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         match self.current_page {
             0 => self.details.render(target),

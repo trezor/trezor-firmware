@@ -5,9 +5,8 @@ use crate::{
     error::Error,
     ui::{
         component::{Component, Event, EventCtx, Never},
-        constant,
-        display::{pixeldata, pixeldata_dirty, rect_fill_rounded, set_window, Color},
-        geometry::{Insets, Offset, Rect},
+        display::Color,
+        geometry::{Offset, Rect},
         shape,
         shape::Renderer,
     },
@@ -76,33 +75,6 @@ impl Qr {
         }
         false
     }
-
-    fn draw(qr: &QrCode, area: Rect, border: i16, scale: i16) {
-        if border > 0 {
-            rect_fill_rounded(
-                area.inset(Insets::uniform(-border)),
-                LIGHT,
-                DARK,
-                CORNER_RADIUS,
-            );
-        }
-
-        let window = area.clamp(constant::screen());
-        set_window(window);
-
-        for y in window.y0..window.y1 {
-            for x in window.x0..window.x1 {
-                let rx = (x - window.x0) / scale;
-                let ry = (y - window.y0) / scale;
-                if qr.get_module(rx.into(), ry.into()) {
-                    pixeldata(DARK);
-                } else {
-                    pixeldata(LIGHT);
-                };
-            }
-        }
-        pixeldata_dirty();
-    }
 }
 
 impl Component for Qr {
@@ -115,32 +87,6 @@ impl Component for Qr {
 
     fn event(&mut self, _ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {
         None
-    }
-
-    fn paint(&mut self) {
-        let mut outbuffer = [0u8; QR_MAX_VERSION.buffer_len()];
-        let mut tempbuffer = [0u8; QR_MAX_VERSION.buffer_len()];
-
-        let qr = QrCode::encode_text(
-            self.text.as_ref(),
-            &mut tempbuffer,
-            &mut outbuffer,
-            QrCodeEcc::Medium,
-            Version::MIN,
-            QR_MAX_VERSION,
-            None,
-            true,
-        );
-        let qr = unwrap!(qr);
-        let size = qr.size() as i16;
-
-        let avail_space = self.area.width().min(self.area.height());
-        let avail_space = avail_space - 2 * self.border;
-        let scale = avail_space / size;
-        assert!((1..=10).contains(&scale));
-
-        let area = Rect::from_center_and_size(self.area.center(), Offset::uniform(size * scale));
-        Self::draw(&qr, area, self.border, scale);
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

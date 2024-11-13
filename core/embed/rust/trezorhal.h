@@ -1,10 +1,7 @@
 #include <trezor_model.h>
 
-#include "buffers.h"
 #include "button.h"
 #include "display.h"
-#include "display_draw.h"
-#include "dma2d.h"
 #include "dma2d_bitblt.h"
 #include "entropy.h"
 #include "flash.h"

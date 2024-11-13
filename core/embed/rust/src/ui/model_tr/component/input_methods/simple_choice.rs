@@ -113,10 +113,6 @@ impl Component for SimpleChoice {
         self.choice_page.event(ctx, event).map(|evt| evt.0)
     }
 
-    fn paint(&mut self) {
-        self.choice_page.paint();
-    }
-
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.choice_page.render(target);
     }

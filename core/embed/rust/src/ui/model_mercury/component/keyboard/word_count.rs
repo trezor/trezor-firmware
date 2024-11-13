@@ -63,10 +63,6 @@ impl Component for SelectWordCount {
         }
     }
 
-    fn paint(&mut self) {
-        unimplemented!()
-    }
-
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         match self {
             SelectWordCount::All(full_selector) => full_selector.render(target),
@@ -125,12 +121,6 @@ impl Component for ValueKeypad {
             }
         }
         None
-    }
-
-    fn paint(&mut self) {
-        for btn in self.button.iter_mut() {
-            btn.paint()
-        }
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

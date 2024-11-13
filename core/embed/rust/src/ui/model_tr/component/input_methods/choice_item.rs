@@ -1,7 +1,7 @@
 use crate::{
     strutil::ShortString,
     ui::{
-        display::{self, rect_fill, rect_fill_corners, rect_outline_rounded, Font, Icon},
+        display::{Font, Icon},
         geometry::{Alignment2D, Offset, Rect},
         shape,
         shape::Renderer,
@@ -92,25 +92,6 @@ impl ChoiceItem {
 impl Choice for ChoiceItem {
     /// Painting the item as the main choice in the middle.
     /// Showing both the icon and text, if the icon is available.
-    fn paint_center(&self, area: Rect, inverse: bool) {
-        let width = text_icon_width(Some(self.text.as_ref()), self.icon, self.font);
-        paint_rounded_highlight(
-            area,
-            Offset::new(width, self.font.allcase_text_height()),
-            inverse,
-        );
-        paint_text_icon(
-            area,
-            width,
-            Some(self.text.as_ref()),
-            self.icon,
-            self.font,
-            inverse,
-        );
-    }
-
-    /// Painting the item as the main choice in the middle.
-    /// Showing both the icon and text, if the icon is available.
     fn render_center<'s>(&self, target: &mut impl Renderer<'s>, area: Rect, inverse: bool) {
         let width = text_icon_width(Some(self.text.as_ref()), self.icon, self.font);
         render_rounded_highlight(
@@ -143,12 +124,6 @@ impl Choice for ChoiceItem {
     }
 
     /// Painting smaller version of the item on the side.
-    fn paint_side(&self, area: Rect) {
-        let width = text_icon_width(self.side_text(), self.icon, self.font);
-        paint_text_icon(area, width, self.side_text(), self.icon, self.font, false);
-    }
-
-    /// Painting smaller version of the item on the side.
     fn render_side<'s>(&self, target: &mut impl Renderer<'s>, area: Rect) {
         let width = text_icon_width(self.side_text(), self.icon, self.font);
         render_text_icon(
@@ -170,21 +145,6 @@ impl Choice for ChoiceItem {
     /// Whether to do middle action without release
     fn trigger_middle_without_release(&self) -> bool {
         self.middle_action_without_release
-    }
-}
-
-fn paint_rounded_highlight(area: Rect, size: Offset, inverse: bool) {
-    let bound = theme::BUTTON_OUTLINE;
-    let left_bottom = area.bottom_center() + Offset::new(-size.x / 2 - bound, bound + 1);
-    let x_size = size.x + 2 * bound;
-    let y_size = size.y + 2 * bound;
-    let outline_size = Offset::new(x_size, y_size);
-    let outline = Rect::from_bottom_left_and_size(left_bottom, outline_size);
-    if inverse {
-        rect_fill(outline, theme::FG);
-        rect_fill_corners(outline, theme::BG);
-    } else {
-        rect_outline_rounded(outline, theme::FG, theme::BG, 1);
     }
 }
 
@@ -227,38 +187,6 @@ fn text_icon_width(text: Option<&str>, icon: Option<Icon>, font: Font) -> i16 {
         (Some(text), None) => font.visible_text_width(text),
         (None, Some(icon)) => icon.toif.width(),
         (None, None) => 0,
-    }
-}
-
-fn paint_text_icon(
-    area: Rect,
-    width: i16,
-    text: Option<&str>,
-    icon: Option<Icon>,
-    font: Font,
-    inverse: bool,
-) {
-    let fg_color = if inverse { theme::BG } else { theme::FG };
-    let bg_color = if inverse { theme::FG } else { theme::BG };
-
-    let mut baseline = area.bottom_center() - Offset::x(width / 2);
-    if let Some(icon) = icon {
-        let height_diff = font.allcase_text_height() - icon.toif.height();
-        let vertical_offset = Offset::y(-height_diff / 2);
-        icon.draw(
-            baseline + vertical_offset,
-            Alignment2D::BOTTOM_LEFT,
-            fg_color,
-            bg_color,
-        );
-        baseline = baseline + Offset::x(icon.toif.width() + ICON_RIGHT_PADDING);
-    }
-
-    if let Some(text) = text {
-        // Possibly shifting the baseline left, when there is a text bearing.
-        // This is to center the text properly.
-        baseline = baseline - Offset::x(font.start_x_bearing(text));
-        display::text_left(baseline, text, font, fg_color, bg_color);
     }
 }
 

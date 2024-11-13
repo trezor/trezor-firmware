@@ -4,7 +4,7 @@ use crate::{
     ui::{
         animation::Animation,
         component::{Component, Event, EventCtx, Never, Timer},
-        display::{self, Color, Font},
+        display::{Color, Font},
         geometry::{Offset, Rect},
         shape::{self, Renderer},
         util::animation_disabled,
@@ -119,11 +119,6 @@ impl Marquee {
         self.animation().is_some()
     }
 
-    pub fn paint_anim(&mut self, offset: i16) {
-        self.text
-            .map(|t| display::marquee(self.area, t, offset, self.font, self.fg, self.bg));
-    }
-
     pub fn render_anim<'s>(&'s self, target: &mut impl Renderer<'s>, offset: i16) {
         target.in_window(self.area, &|target| {
             let text_height = self.font.text_height();
@@ -199,30 +194,6 @@ impl Component for Marquee {
         }
 
         None
-    }
-
-    fn paint(&mut self) {
-        let now = Instant::now();
-
-        match self.state {
-            State::Initial => {
-                self.paint_anim(0);
-            }
-            State::PauseRight => {
-                self.paint_anim(self.min_offset);
-            }
-            State::PauseLeft => {
-                self.paint_anim(self.max_offset);
-            }
-            _ => {
-                let progress = self.progress(now);
-                if let Some(done) = progress {
-                    self.paint_anim(done);
-                } else {
-                    self.paint_anim(0);
-                }
-            }
-        }
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

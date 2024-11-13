@@ -153,20 +153,6 @@ impl Loader {
         matches!(self.progress(now), Some(display::LOADER_MIN))
     }
 
-    pub fn paint_loader(&mut self, style: &LoaderStyle, done: i32) {
-        // NOTE: need to calculate this in `i32`, it would overflow using `i16`
-        let invert_from = ((self.area.width() as i32 + 1) * done) / (display::LOADER_MAX as i32);
-
-        display::bar_with_text_and_fill(
-            self.area,
-            Some(&self.text_overlay),
-            style.fg_color,
-            style.bg_color,
-            -1,
-            invert_from as i16,
-        );
-    }
-
     pub fn render_loader<'s>(
         &'s self,
         target: &mut impl Renderer<'s>,
@@ -247,28 +233,6 @@ impl Component for Loader {
             }
         }
         None
-    }
-
-    fn paint(&mut self) {
-        // TODO: Consider passing the current instant along with the event -- that way,
-        // we could synchronize painting across the component tree. Also could be useful
-        // in automated tests.
-        // In practice, taking the current instant here is more precise in case some
-        // other component in the tree takes a long time to draw.
-        let now = Instant::now();
-
-        if let State::Initial = self.state {
-            self.paint_loader(self.styles.normal, 0);
-        } else if let State::Grown = self.state {
-            self.paint_loader(self.styles.normal, display::LOADER_MAX as i32);
-        } else {
-            let progress = self.progress(now);
-            if let Some(done) = progress {
-                self.paint_loader(self.styles.normal, done as i32);
-            } else {
-                self.paint_loader(self.styles.normal, 0);
-            }
-        }
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
@@ -387,10 +351,6 @@ impl Component for ProgressLoader {
             }
         }
         None
-    }
-
-    fn paint(&mut self) {
-        self.loader.paint();
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

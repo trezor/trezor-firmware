@@ -573,10 +573,6 @@ impl Component for Homescreen {
         }
     }
 
-    fn paint(&mut self) {
-        todo!()
-    }
-
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         if self.loader.is_animating() || self.loader.is_completely_grown(Instant::now()) {
             self.render_loader(target);
@@ -796,10 +792,6 @@ impl Component for Lockscreen {
         }
 
         None
-    }
-
-    fn paint(&mut self) {
-        todo!()
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

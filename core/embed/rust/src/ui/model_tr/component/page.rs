@@ -254,12 +254,6 @@ where
         None
     }
 
-    fn paint(&mut self) {
-        self.pad.paint();
-        self.content.paint();
-        self.buttons.paint();
-    }
-
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.pad.render(target);
         self.content.render(target);

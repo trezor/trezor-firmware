@@ -250,10 +250,6 @@ impl Component for VerticalMenu {
         None
     }
 
-    fn paint(&mut self) {
-        // TODO remove when ui-t3t1 done
-    }
-
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let t = self.attach_animation.eval();
 
@@ -375,10 +371,6 @@ impl<F: Fn(usize) -> TString<'static>> Component for PagedVerticalMenu<F> {
             ));
         }
         msg
-    }
-
-    fn paint(&mut self) {
-        // TODO remove when ui-t3t1 done
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

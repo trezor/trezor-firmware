@@ -106,10 +106,6 @@ impl Component for PromptScreen {
         None
     }
 
-    fn paint(&mut self) {
-        todo!()
-    }
-
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         match self {
             PromptScreen::Tap(t) => t.render(target),

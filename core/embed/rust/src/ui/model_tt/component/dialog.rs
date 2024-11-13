@@ -68,11 +68,6 @@ where
             .or_else(|| self.controls.event(ctx, event).map(Self::Msg::Controls))
     }
 
-    fn paint(&mut self) {
-        self.content.paint();
-        self.controls.paint();
-    }
-
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.content.render(target);
         self.controls.render(target);
@@ -189,12 +184,6 @@ where
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         self.paragraphs.event(ctx, event);
         self.controls.event(ctx, event).map(Self::Msg::Controls)
-    }
-
-    fn paint(&mut self) {
-        self.image.paint();
-        self.paragraphs.paint();
-        self.controls.paint();
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

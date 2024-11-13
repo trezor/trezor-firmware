@@ -186,10 +186,6 @@ impl Component for TapToConfirm {
         None
     }
 
-    fn paint(&mut self) {
-        unimplemented!()
-    }
-
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         const PAD_RADIUS: i16 = 70;
         const PAD_THICKNESS: i16 = 20;

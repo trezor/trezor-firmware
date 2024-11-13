@@ -60,10 +60,6 @@ impl<T: Swipable + Component> Component for SwipeUpScreen<T> {
         self.content.event(ctx, e).map(SwipeUpScreenMsg::Content)
     }
 
-    fn paint(&mut self) {
-        todo!()
-    }
-
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.content.render(target);
     }

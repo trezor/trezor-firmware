@@ -212,10 +212,6 @@ impl Component for Header {
         None
     }
 
-    fn paint(&mut self) {
-        todo!()
-    }
-
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let offset = if let Some(anim) = &self.anim {
             Offset::x(anim.get_title_offset(anim.eval()))

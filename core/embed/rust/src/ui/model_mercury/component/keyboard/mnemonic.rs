@@ -1,7 +1,7 @@
 use crate::{
     strutil::TString,
     ui::{
-        component::{maybe::paint_overlapping, Component, Event, EventCtx, Label, Maybe},
+        component::{Component, Event, EventCtx, Label, Maybe},
         geometry::{Alignment, Grid, Insets, Rect},
         model_mercury::{
             component::{Button, ButtonMsg},
@@ -183,13 +183,6 @@ where
             }
         }
         None
-    }
-
-    fn paint(&mut self) {
-        paint_overlapping(&mut [&mut self.prompt, &mut self.input, &mut self.erase]);
-        for btn in &mut self.keys {
-            btn.paint();
-        }
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

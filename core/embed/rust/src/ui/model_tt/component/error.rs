@@ -77,21 +77,6 @@ impl<'a> Component for ErrorScreen<'a> {
         None
     }
 
-    fn paint(&mut self) {
-        self.bg.paint();
-
-        let icon = ICON_WARNING40;
-        icon.draw(
-            Point::new(screen().center().x, ICON_TOP),
-            Alignment2D::TOP_CENTER,
-            WHITE,
-            FATAL_ERROR_COLOR,
-        );
-        self.title.paint();
-        self.message.paint();
-        self.footer.paint();
-    }
-
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.bg.render(target);
 

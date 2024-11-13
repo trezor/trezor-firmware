@@ -235,10 +235,6 @@ impl Component for StatusScreen {
         None
     }
 
-    fn paint(&mut self) {
-        todo!()
-    }
-
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let t = self.anim.eval();
 

@@ -72,10 +72,6 @@ impl Component for BinarySelection {
         None
     }
 
-    fn paint(&mut self) {
-        unimplemented!()
-    }
-
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.button_left.render(target);
         self.button_right.render(target);

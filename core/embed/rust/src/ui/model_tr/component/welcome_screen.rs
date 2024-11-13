@@ -35,26 +35,6 @@ impl Component for WelcomeScreen {
         None
     }
 
-    fn paint(&mut self) {
-        theme::ICON_DEVICE_NAME.draw(
-            self.area.bottom_center() - Offset::y(5),
-            Alignment2D::BOTTOM_CENTER,
-            theme::FG,
-            theme::BG,
-        );
-        let icon = if self.empty_lock {
-            theme::ICON_LOGO_EMPTY
-        } else {
-            theme::ICON_LOGO
-        };
-        icon.draw(
-            self.area.top_center() + Offset::y(ICON_TOP_MARGIN),
-            Alignment2D::TOP_CENTER,
-            theme::FG,
-            theme::BG,
-        );
-    }
-
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         shape::ToifImage::new(
             self.area.bottom_center() - Offset::y(5),

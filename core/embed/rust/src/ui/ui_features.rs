@@ -3,9 +3,6 @@ use crate::ui::geometry::Rect;
 #[cfg(feature = "bootloader")]
 use crate::trezorhal::secbool::secbool;
 
-#[cfg(not(feature = "new_rendering"))]
-use crate::ui::display::Color;
-
 pub trait UIFeaturesCommon {
     fn fadein() {}
     fn fadeout() {}
@@ -37,9 +34,6 @@ pub trait UIFeaturesCommon {
 #[cfg(feature = "bootloader")]
 pub trait UIFeaturesBootloader {
     fn screen_welcome();
-
-    #[cfg(not(feature = "new_rendering"))]
-    fn bld_continue_label(bg_color: Color);
 
     fn screen_install_success(restart_seconds: u8, initial_setup: bool, complete_draw: bool);
 
@@ -77,7 +71,6 @@ pub trait UIFeaturesBootloader {
 
     fn screen_wipe_fail();
 
-    #[cfg(feature = "new_rendering")]
     fn screen_boot(
         warning: bool,
         vendor_str: Option<&str>,

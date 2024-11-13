@@ -101,14 +101,6 @@ impl Component for Menu {
         None
     }
 
-    fn paint(&mut self) {
-        self.bg.paint();
-        self.title.paint();
-        self.close.paint();
-        self.reboot.paint();
-        self.reset.paint();
-    }
-
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.bg.render(target);
         self.title.render(target);

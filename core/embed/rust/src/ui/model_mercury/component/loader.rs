@@ -190,28 +190,6 @@ impl Component for Loader {
         None
     }
 
-    fn paint(&mut self) {
-        // TODO: Consider passing the current instant along with the event -- that way,
-        // we could synchronize painting across the component tree. Also could be useful
-        // in automated tests.
-        // In practice, taking the current instant here is more precise in case some
-        // other component in the tree takes a long time to draw.
-        let now = Instant::now();
-
-        if let Some(progress) = self.progress(now) {
-            let style = self.styles.active;
-
-            self.pad.paint();
-            display::loader(
-                progress,
-                self.offset_y,
-                style.active,
-                style.background_color,
-                style.icon,
-            );
-        }
-    }
-
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         // TODO: Consider passing the current instant along with the event -- that way,
         // we could synchronize painting across the component tree. Also could be useful

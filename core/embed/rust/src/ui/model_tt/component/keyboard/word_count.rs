@@ -55,10 +55,6 @@ impl Component for SelectWordCount {
         self.keypad.event(ctx, event)
     }
 
-    fn paint(&mut self) {
-        self.keypad.paint()
-    }
-
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.keypad.render(target)
     }
@@ -108,12 +104,6 @@ impl Component for ValueKeypad {
             }
         }
         None
-    }
-
-    fn paint(&mut self) {
-        for btn in self.buttons.iter_mut() {
-            btn.0.paint()
-        }
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

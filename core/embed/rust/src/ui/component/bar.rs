@@ -1,6 +1,5 @@
 use crate::ui::{
     component::{Component, Event, EventCtx, Never},
-    display,
     display::Color,
     geometry::Rect,
     shape,
@@ -35,10 +34,6 @@ impl Component for Bar {
 
     fn event(&mut self, _ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {
         None
-    }
-
-    fn paint(&mut self) {
-        display::rect_fill_rounded(self.area, self.color, self.bg_color, self.radius as u8);
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

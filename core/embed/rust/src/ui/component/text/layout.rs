@@ -1,5 +1,4 @@
 use crate::ui::{
-    display,
     display::{toif::Icon, Color, Font, GlyphMetrics},
     geometry::{Alignment, Alignment2D, Dimensions, Offset, Point, Rect},
     shape,
@@ -233,12 +232,7 @@ impl TextLayout {
     }
 
     /// Draw as much text as possible on the current screen.
-    pub fn render_text(&self, text: &str) -> LayoutFit {
-        self.layout_text(text, &mut self.initial_cursor(), &mut TextRenderer)
-    }
-
-    /// Draw as much text as possible on the current screen.
-    pub fn render_text2<'s>(&self, text: &str, target: &mut impl Renderer<'s>) -> LayoutFit {
+    pub fn render_text<'s>(&self, text: &str, target: &mut impl Renderer<'s>) -> LayoutFit {
         self.render_text_with_alpha(text, target, 255)
     }
     /// Draw as much text as possible on the current screen.
@@ -251,7 +245,7 @@ impl TextLayout {
         self.layout_text(
             text,
             &mut self.initial_cursor(),
-            &mut TextRenderer2::new(target).with_alpha(alpha),
+            &mut TextRenderer::new(target).with_alpha(alpha),
         )
     }
 
@@ -486,71 +480,7 @@ pub struct TextNoOp;
 
 impl LayoutSink for TextNoOp {}
 
-/// `LayoutSink` for rendering the content.
-pub struct TextRenderer;
-
-impl LayoutSink for TextRenderer {
-    fn text(&mut self, cursor: Point, layout: &TextLayout, text: &str) {
-        display::text_left(
-            cursor,
-            text,
-            layout.style.text_font,
-            layout.style.text_color,
-            layout.style.background_color,
-        );
-    }
-
-    fn hyphen(&mut self, cursor: Point, layout: &TextLayout) {
-        display::text_left(
-            cursor,
-            "-",
-            layout.style.text_font,
-            layout.style.hyphen_color,
-            layout.style.background_color,
-        );
-    }
-
-    fn ellipsis(&mut self, cursor: Point, layout: &TextLayout) {
-        if let Some((icon, margin)) = layout.style.ellipsis_icon {
-            let bottom_left = cursor + Offset::x(margin);
-            icon.draw(
-                bottom_left,
-                Alignment2D::BOTTOM_LEFT,
-                layout.style.ellipsis_color,
-                layout.style.background_color,
-            );
-        } else {
-            display::text_left(
-                cursor,
-                ELLIPSIS,
-                layout.style.text_font,
-                layout.style.ellipsis_color,
-                layout.style.background_color,
-            );
-        }
-    }
-
-    fn prev_page_ellipsis(&mut self, cursor: Point, layout: &TextLayout) {
-        if let Some((icon, _margin)) = layout.style.prev_page_ellipsis_icon {
-            icon.draw(
-                cursor,
-                Alignment2D::BOTTOM_LEFT,
-                layout.style.ellipsis_color,
-                layout.style.background_color,
-            );
-        } else {
-            display::text_left(
-                cursor,
-                ELLIPSIS,
-                layout.style.text_font,
-                layout.style.ellipsis_color,
-                layout.style.background_color,
-            );
-        }
-    }
-}
-
-pub struct TextRenderer2<'a, 's, R>
+pub struct TextRenderer<'a, 's, R>
 where
     R: Renderer<'s>,
 {
@@ -559,7 +489,7 @@ where
     alpha: u8,
 }
 
-impl<'a, 's, R> TextRenderer2<'a, 's, R>
+impl<'a, 's, R> TextRenderer<'a, 's, R>
 where
     R: Renderer<'s>,
 {
@@ -576,7 +506,7 @@ where
     }
 }
 
-impl<'a, 's, R> LayoutSink for TextRenderer2<'a, 's, R>
+impl<'a, 's, R> LayoutSink for TextRenderer<'a, 's, R>
 where
     R: Renderer<'s>,
 {

@@ -9,8 +9,9 @@ use num_traits::{FromPrimitive, ToPrimitive};
 
 #[cfg(feature = "button")]
 use crate::ui::event::ButtonEvent;
-#[cfg(feature = "new_rendering")]
+
 use crate::ui::{display::Color, shape::render_on_display};
+
 #[cfg(feature = "touch")]
 use crate::ui::{event::TouchEvent, geometry::Direction};
 use crate::{
@@ -141,14 +142,9 @@ where
     }
 
     fn paint(&mut self) {
-        #[cfg(not(feature = "new_rendering"))]
-        self.inner.paint();
-        #[cfg(feature = "new_rendering")]
-        {
-            render_on_display(None, Some(Color::black()), |target| {
-                self.inner.render(target);
-            });
-        }
+        render_on_display(None, Some(Color::black()), |target| {
+            self.inner.render(target);
+        });
     }
 }
 
@@ -305,10 +301,6 @@ impl LayoutObjInner {
     /// Run a paint pass over the component tree. Returns true if any component
     /// actually requested painting since last invocation of the function.
     fn obj_paint_if_requested(&mut self) -> bool {
-        if self.repaint == Repaint::Full {
-            display::clear();
-        }
-
         display::sync();
 
         if self.repaint != Repaint::None {
