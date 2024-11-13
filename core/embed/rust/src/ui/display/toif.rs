@@ -13,16 +13,11 @@ pub enum ToifFormat {
     GrayScaleEH = 3, // even hi
 }
 
-/// Holding toif data and allowing it to draw itself.
+/// Holding toif data
 /// See https://docs.trezor.io/trezor-firmware/misc/toif.html for data format.
 #[derive(PartialEq, Eq, Clone, Copy)]
 pub struct Toif<'i> {
     data: &'i [u8],
-    /// Due to toif limitations, image width must be divisible by 2.
-    /// In cases the actual image is odd-width, it will have empty
-    /// rightmost column and this flag will make account for it
-    /// when determining the width and when drawing it.
-    pub empty_right_column: bool,
 }
 
 impl<'i> Toif<'i> {
@@ -35,15 +30,7 @@ impl<'i> Toif<'i> {
         if zdatalen + TOIF_HEADER_LENGTH != data.len() {
             return Err(value_error!(c"Invalid TOIF length."));
         }
-        Ok(Self {
-            data,
-            empty_right_column: false,
-        })
-    }
-
-    pub const fn with_empty_right_column(mut self) -> Self {
-        self.empty_right_column = true;
-        self
+        Ok(Self { data })
     }
 
     pub const fn format(&self) -> ToifFormat {
@@ -64,12 +51,7 @@ impl<'i> Toif<'i> {
     }
 
     pub const fn width(&self) -> i16 {
-        let data_width = u16::from_le_bytes([self.data[4], self.data[5]]) as i16;
-        if self.empty_right_column {
-            data_width - 1
-        } else {
-            data_width
-        }
+        u16::from_le_bytes([self.data[4], self.data[5]]) as i16
     }
 
     pub const fn height(&self) -> i16 {
@@ -108,11 +90,6 @@ impl Icon {
             #[cfg(feature = "ui_debug")]
             name: "<unnamed>",
         }
-    }
-
-    pub const fn with_empty_right_column(mut self) -> Self {
-        self.toif.empty_right_column = true;
-        self
     }
 
     /// Create a named icon.
