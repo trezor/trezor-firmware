@@ -131,7 +131,7 @@ access_violation:
 
 // ---------------------------------------------------------------------
 
-#ifdef XFRAMEBUFFER
+#ifdef FRAMEBUFFER
 
 bool display_get_frame_buffer__verified(display_fb_info_t *fb) {
   if (!probe_write_access(fb, sizeof(*fb))) {
@@ -151,7 +151,7 @@ access_violation:
   return false;
 }
 
-#endif  // XFRAMEBUFFER
+#endif  // FRAMEBUFFER
 
 void display_fill__verified(const gfx_bitblt_t *bb) {
   if (!probe_read_access(bb, sizeof(*bb))) {

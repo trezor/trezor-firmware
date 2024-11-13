@@ -78,9 +78,9 @@ def configure(
     features_available.append("dma2d")
     features_available.append("ui_color_32bit")
 
-    defines += ["XFRAMEBUFFER"]
+    defines += ["FRAMEBUFFER"]
     defines += ["DISPLAY_RGBA8888"]
-    features_available.append("xframebuffer")
+    features_available.append("framebuffer")
     features_available.append("display_rgba8888")
 
     defines += [

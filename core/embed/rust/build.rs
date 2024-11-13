@@ -138,9 +138,9 @@ fn prepare_bindings() -> bindgen::Builder {
     let bindgen_macros_env = env::var("BINDGEN_MACROS").ok();
     add_bindgen_macros(&mut clang_args, bindgen_macros_env.as_deref());
 
-    #[cfg(feature = "xframebuffer")]
+    #[cfg(feature = "framebuffer")]
     {
-        bindings = bindings.clang_args(&["-DXFRAMEBUFFER"]);
+        bindings = bindings.clang_args(&["-DFRAMEBUFFER"]);
     }
 
     clang_args.push(&build_dir_include);

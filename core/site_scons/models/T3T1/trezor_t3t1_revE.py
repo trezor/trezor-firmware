@@ -16,10 +16,10 @@ def configure(
     hw_model = get_hw_model_as_number("T3T1")
     hw_revision = 0
 
-    features_available.append("xframebuffer")
+    features_available.append("framebuffer")
     features_available.append("display_rgb565")
     defines += ["DISPLAY_RGB565"]
-    defines += ["XFRAMEBUFFER"]
+    defines += ["FRAMEBUFFER"]
     defines += ["USE_RGB_COLORS=1"]
 
     mcu = "STM32U585xx"

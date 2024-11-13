@@ -1,6 +1,6 @@
 use super::ffi;
 
-#[cfg(feature = "xframebuffer")]
+#[cfg(feature = "framebuffer")]
 use core::ptr;
 
 pub use ffi::{DISPLAY_RESX, DISPLAY_RESY};
@@ -52,7 +52,7 @@ pub fn refresh() {
     }
 }
 
-#[cfg(feature = "xframebuffer")]
+#[cfg(feature = "framebuffer")]
 pub fn get_frame_buffer() -> (&'static mut [u8], usize) {
     let mut fb_info = ffi::display_fb_info_t {
         ptr: ptr::null_mut(),

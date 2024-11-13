@@ -102,7 +102,7 @@ int display_set_orientation(int angle);
 // Returned value is one of 0, 90, 180, 270.
 int display_get_orientation(void);
 
-#ifdef XFRAMEBUFFER
+#ifdef FRAMEBUFFER
 
 typedef struct {
   // Pointer to the top-left pixel
@@ -120,7 +120,7 @@ typedef struct {
 // Return `false` if the framebuffer is not available.
 bool display_get_frame_buffer(display_fb_info_t *fb);
 
-#else  // XFRAMEBUFFER
+#else  // FRAMEBUFFER
 
 // Waits for the vertical synchronization pulse.
 //

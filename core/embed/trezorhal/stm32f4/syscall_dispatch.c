@@ -150,7 +150,7 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       args[0] = display_get_orientation();
     } break;
 
-#if XFRAMEBUFFER
+#if FRAMEBUFFER
     case SYSCALL_DISPLAY_GET_FB_INFO: {
       display_fb_info_t *fb = (display_fb_info_t *)args[0];
       args[0] = (uint32_t)display_get_frame_buffer__verified(fb);

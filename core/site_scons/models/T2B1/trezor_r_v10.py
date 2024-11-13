@@ -16,8 +16,8 @@ def configure(
     hw_revision = 10
     board = "T2B1/boards/trezor_r_v10.h"
 
-    defines += ["XFRAMEBUFFER"]
-    features_available.append("xframebuffer")
+    defines += ["FRAMEBUFFER"]
+    features_available.append("framebuffer")
     features_available.append("display_mono")
 
     mcu = "STM32F427xx"
