@@ -16,8 +16,8 @@ def configure(
     hw_model = get_hw_model_as_number("T3B1")
     hw_revision = "B"
 
-    defines += ["XFRAMEBUFFER"]
-    features_available.append("xframebuffer")
+    defines += ["FRAMEBUFFER"]
+    features_available.append("framebuffer")
     features_available.append("display_mono")
 
     mcu = "STM32U585xx"

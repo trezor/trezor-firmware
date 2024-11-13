@@ -268,7 +268,7 @@ int display_get_orientation(void) {
   return drv->orientation_angle;
 }
 
-#ifdef XFRAMEBUFFER
+#ifdef FRAMEBUFFER
 bool display_get_frame_buffer(display_fb_info_t *fb) {
   display_driver_t *drv = &g_display_driver;
 
@@ -288,7 +288,7 @@ bool display_get_frame_buffer(display_fb_info_t *fb) {
   return true;
 }
 
-#else  // XFRAMEBUFFER
+#else  // FRAMEBUFFER
 
 void display_wait_for_sync(void) {
   // not implemented in the emulator

@@ -17,8 +17,8 @@ def configure(
     hw_revision = 0
     mcu = "STM32U585xx"
 
-    defines += ["XFRAMEBUFFER", "DISPLAY_MONO"]
-    features_available.append("xframebuffer")
+    defines += ["FRAMEBUFFER", "DISPLAY_MONO"]
+    features_available.append("framebuffer")
     features_available.append("display_mono")
 
     defines += [mcu]

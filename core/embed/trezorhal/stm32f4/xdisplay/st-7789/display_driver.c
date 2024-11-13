@@ -72,7 +72,7 @@ void display_init(display_content_mode_t mode) {
     backlight_pwm_init(BACKLIGHT_RETAIN);
   }
 
-#ifdef XFRAMEBUFFER
+#ifdef FRAMEBUFFER
 #ifndef BOARDLOADER
   display_io_init_te_interrupt();
 #endif
@@ -88,7 +88,7 @@ void display_deinit(display_content_mode_t mode) {
     return;
   }
 
-#ifdef XFRAMEBUFFER
+#ifdef FRAMEBUFFER
 #ifndef BOARDLOADER
   // Ensure that the ready frame buffer is transfered to
   // the display controller
@@ -122,7 +122,7 @@ int display_set_backlight(int level) {
     return 0;
   }
 
-#ifdef XFRAMEBUFFER
+#ifdef FRAMEBUFFER
 #ifndef BOARDLOADER
   // if turning on the backlight, wait until the panel is refreshed
   if (backlight_pwm_get() < level && !is_mode_exception()) {
@@ -147,7 +147,7 @@ int display_set_orientation(int angle) {
     if (angle == 0 || angle == 90 || angle == 180 || angle == 270) {
       drv->orientation_angle = angle;
 
-#ifdef XFRAMEBUFFER
+#ifdef FRAMEBUFFER
       display_physical_fb_clear();
 #endif
 

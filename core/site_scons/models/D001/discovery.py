@@ -51,9 +51,9 @@ def configure(
     defines += ["USE_RGB_COLORS=1"]
     features_available.append("dma2d")
 
-    defines += ["XFRAMEBUFFER"]
+    defines += ["FRAMEBUFFER"]
     defines += ["DISPLAY_RGB565"]
-    features_available.append("xframebuffer")
+    features_available.append("framebuffer")
     features_available.append("display_rgb565")
 
     sources += ["embed/trezorhal/stm32f4/sdram.c"]

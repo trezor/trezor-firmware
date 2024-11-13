@@ -4,7 +4,7 @@
 #include <trezor_bsp.h>
 #include <trezor_types.h>
 
-#ifdef XFRAMEBUFFER
+#ifdef FRAMEBUFFER
 
 // Number of frame buffers used (1 or 2)
 // If 1 buffer is selected, some animations may not
@@ -38,14 +38,14 @@ typedef struct {
 
 } frame_buffer_queue_t;
 
-#endif  // XFRAMEBUFFER
+#endif  // FRAMEBUFFER
 
 // Display driver state
 typedef struct {
   // Set if the driver is initialized
   bool initialized;
 
-#ifdef XFRAMEBUFFER
+#ifdef FRAMEBUFFER
   // Framebuffer queue
   // (accessed & updated in the context of the main thread
   // and the interrupt context)

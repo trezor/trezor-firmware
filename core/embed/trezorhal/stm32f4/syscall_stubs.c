@@ -122,13 +122,13 @@ int display_get_orientation(void) {
   return (int)syscall_invoke0(SYSCALL_DISPLAY_GET_ORIENTATION);
 }
 
-#ifdef XFRAMEBUFFER
+#ifdef FRAMEBUFFER
 
 bool display_get_frame_buffer(display_fb_info_t *fb) {
   return (bool)syscall_invoke1((uint32_t)fb, SYSCALL_DISPLAY_GET_FB_INFO);
 }
 
-#else  // XFRAMEBUFFER
+#else  // FRAMEBUFFER
 
 void display_wait_for_sync(void) {
   syscall_invoke0(SYSCALL_DISPLAY_WAIT_FOR_SYNC);

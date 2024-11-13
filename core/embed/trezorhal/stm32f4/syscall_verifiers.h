@@ -42,7 +42,7 @@ void reboot_and_upgrade__verified(const uint8_t hash[32]);
 // ---------------------------------------------------------------------
 #include "display.h"
 
-#ifdef XFRAMEBUFFER
+#ifdef FRAMEBUFFER
 bool display_get_frame_buffer__verified(display_fb_info_t *fb);
 #endif
 

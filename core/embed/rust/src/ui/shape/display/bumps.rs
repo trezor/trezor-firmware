@@ -4,17 +4,17 @@ use static_alloc::Bump;
 
 /// Memory reserved for `ProgressiveRenderer`s shape storage.
 /// ProgressiveRenderer is used if framebuffer is not available.
-#[cfg(not(feature = "xframebuffer"))]
+#[cfg(not(feature = "framebuffer"))]
 pub const SHAPE_MEM_SIZE: usize = 5 * 1024;
-#[cfg(feature = "xframebuffer")]
+#[cfg(feature = "framebuffer")]
 pub const SHAPE_MEM_SIZE: usize = 0;
 
 /// Maximum number of shapes on a single screen
 /// (if you change it, you will probably need to change
 /// the memory size above)
-#[cfg(not(feature = "xframebuffer"))]
+#[cfg(not(feature = "framebuffer"))]
 pub const SHAPE_MAX_COUNT: usize = 45;
-#[cfg(feature = "xframebuffer")]
+#[cfg(feature = "framebuffer")]
 pub const SHAPE_MAX_COUNT: usize = 0;
 
 /// Size of `bump_a` memory that might not be accessible by DMA

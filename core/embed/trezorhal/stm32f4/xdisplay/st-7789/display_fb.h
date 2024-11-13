@@ -22,13 +22,13 @@
 
 #include <trezor_types.h>
 
-#ifdef XFRAMEBUFFER
+#ifdef FRAMEBUFFER
 
 // Clears both physical frame buffers
 void display_physical_fb_clear(void);
 
 void display_ensure_refreshed(void);
 
-#endif  // XFRAMEBUFFER
+#endif  // FRAMEBUFFER
 
 #endif  // TREZORHAL_DISPLAY_FB_H
