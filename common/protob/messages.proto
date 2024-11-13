@@ -324,4 +324,7 @@ enum MessageType {
     MessageType_BenchmarkNames = 9101 [(bitcoin_only) = true];
     MessageType_BenchmarkRun = 9102 [(bitcoin_only) = true];
     MessageType_BenchmarkResult = 9103 [(bitcoin_only) = true];
+
+    // THP
+    reserved 1000 to 1099; // See messages-thp.proto
 }
