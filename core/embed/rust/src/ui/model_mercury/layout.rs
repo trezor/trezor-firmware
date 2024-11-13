@@ -250,6 +250,7 @@ extern "C" fn new_confirm_emphasized(n_args: usize, args: *const Obj, kwargs: *m
             ConfirmActionStrings::new(title, None, None, Some(title)),
             false,
             None,
+            false,
         )
         .and_then(LayoutObj::new_root)
         .map(Into::into)
@@ -289,6 +290,7 @@ extern "C" fn new_confirm_blob(n_args: usize, args: *const Obj, kwargs: *mut Map
         let info: bool = kwargs.get_or(Qstr::MP_QSTR_info, true)?;
         let hold: bool = kwargs.get_or(Qstr::MP_QSTR_hold, false)?;
         let chunkify: bool = kwargs.get_or(Qstr::MP_QSTR_chunkify, false)?;
+        let page_counter: bool = kwargs.get_or(Qstr::MP_QSTR_page_counter, false)?;
         let prompt_screen: bool = kwargs.get_or(Qstr::MP_QSTR_prompt_screen, true)?;
         let page_limit: Option<usize> = kwargs
             .get(Qstr::MP_QSTR_page_limit)
@@ -314,6 +316,7 @@ extern "C" fn new_confirm_blob(n_args: usize, args: *const Obj, kwargs: *mut Map
             .with_extra(extra)
             .with_info_button(info)
             .with_chunkify(chunkify)
+            .with_page_counter(page_counter)
             .with_page_limit(page_limit)
             .with_prompt(prompt_screen)
             .with_hold(hold)
@@ -390,6 +393,7 @@ extern "C" fn new_confirm_address(n_args: usize, args: *const Obj, kwargs: *mut 
             ConfirmActionStrings::new(title, None, None, None),
             false,
             None,
+            false,
         )
         .and_then(LayoutObj::new_root)
         .map(Into::into)
@@ -432,6 +436,7 @@ extern "C" fn new_confirm_properties(n_args: usize, args: *const Obj, kwargs: *m
             ConfirmActionStrings::new(title, None, None, hold.then_some(title)),
             hold,
             None,
+            false,
         )
         .and_then(LayoutObj::new_root)
         .map(Into::into)
@@ -466,6 +471,7 @@ extern "C" fn new_confirm_homescreen(n_args: usize, args: *const Obj, kwargs: *m
                 ),
                 false,
                 None,
+                false,
             )
             .and_then(LayoutObj::new_root)
             .map(Into::into)
@@ -772,6 +778,7 @@ extern "C" fn new_confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Ma
             ConfirmActionStrings::new(title, None, None, Some(title)),
             true,
             None,
+            false,
         )
         .and_then(LayoutObj::new_root)
         .map(Into::into)
@@ -1093,6 +1100,7 @@ extern "C" fn new_confirm_coinjoin(n_args: usize, args: *const Obj, kwargs: *mut
             ),
             true,
             None,
+            false,
         )
         .and_then(LayoutObj::new_root)
         .map(Into::into)
@@ -1576,6 +1584,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     info: bool = True,
     ///     hold: bool = False,
     ///     chunkify: bool = False,
+    ///     page_counter: bool = False,
     ///     prompt_screen: bool = False,
     ///     page_limit: int | None = None,
     /// ) -> LayoutObj[UiResult]:

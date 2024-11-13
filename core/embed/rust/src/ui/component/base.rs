@@ -150,7 +150,7 @@ where
 }
 
 impl<T: Paginate> Paginate for Child<T> {
-    fn page_count(&mut self) -> usize {
+    fn page_count(&self) -> usize {
         self.component.page_count()
     }
 

@@ -47,6 +47,14 @@ impl<T: Component + Paginate> SwipePage<T> {
         self.limit = limit;
         self
     }
+
+    pub fn page_count(&self) -> usize {
+        self.pages
+    }
+
+    pub fn current_page(&self) -> usize {
+        self.current
+    }
 }
 
 impl<T: Component + Paginate> Component for SwipePage<T> {

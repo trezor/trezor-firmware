@@ -335,7 +335,7 @@ impl<F: Fn(usize) -> TString<'static>> PagedVerticalMenu<F> {
 }
 
 impl<F: Fn(usize) -> TString<'static>> Paginate for PagedVerticalMenu<F> {
-    fn page_count(&mut self) -> usize {
+    fn page_count(&self) -> usize {
         self.num_pages()
     }
 

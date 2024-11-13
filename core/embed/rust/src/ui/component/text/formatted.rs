@@ -37,6 +37,16 @@ impl FormattedText {
             .layout_ops(self.char_offset, Offset::y(self.y_offset), sink)
     }
 
+    pub(crate) fn layout_content_with_offset(
+        &self,
+        sink: &mut dyn LayoutSink,
+        char_offset: usize,
+        y_offset: i16,
+    ) -> LayoutFit {
+        self.op_layout
+            .layout_ops(char_offset, Offset::y(y_offset), sink)
+    }
+
     fn align_vertically(&mut self, content_height: i16) {
         let bounds_height = self.op_layout.layout.bounds.height();
         if content_height >= bounds_height {
@@ -53,20 +63,15 @@ impl FormattedText {
 
 // Pagination
 impl Paginate for FormattedText {
-    fn page_count(&mut self) -> usize {
+    fn page_count(&self) -> usize {
         let mut page_count = 1; // There's always at least one page.
 
-        // Make sure we're starting page counting from the very beginning
-        // (but remembering the offsets not to change them).
-        let initial_y_offset = self.y_offset;
-        let initial_char_offset = self.char_offset;
-        self.char_offset = 0;
-        self.y_offset = 0;
+        let mut char_offset = 0;
 
         // Looping through the content and counting pages
         // until we finally fit.
         loop {
-            let fit = self.layout_content(&mut TextNoOp);
+            let fit = self.layout_content_with_offset(&mut TextNoOp, char_offset, 0);
             match fit {
                 LayoutFit::Fitting { .. } => {
                     break;
@@ -75,14 +80,10 @@ impl Paginate for FormattedText {
                     processed_chars, ..
                 } => {
                     page_count += 1;
-                    self.char_offset += processed_chars;
+                    char_offset += processed_chars;
                 }
             }
         }
-
-        // Setting the offsets back to the initial values.
-        self.char_offset = initial_char_offset;
-        self.y_offset = initial_y_offset;
 
         page_count
     }

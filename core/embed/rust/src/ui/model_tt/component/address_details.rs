@@ -125,7 +125,7 @@ impl AddressDetails {
 }
 
 impl Paginate for AddressDetails {
-    fn page_count(&mut self) -> usize {
+    fn page_count(&self) -> usize {
         let total_xpub_pages: u8 = self.xpub_page_count.iter().copied().sum();
         2usize.saturating_add(total_xpub_pages.into())
     }

@@ -210,7 +210,7 @@ impl<'a, T> Paginate for Paragraphs<T>
 where
     T: ParagraphSource<'a>,
 {
-    fn page_count(&mut self) -> usize {
+    fn page_count(&self) -> usize {
         // There's always at least one page.
         self.break_pages().count().max(1)
     }
@@ -374,7 +374,7 @@ struct PageOffset {
 }
 
 impl PageOffset {
-    /// Given an `PageOffset` and a `Rect` area, returns:
+    /// Given a `PageOffset` and a `Rect` area, returns:
     ///
     /// - The next offset.
     /// - Part of `area` that remains free after the current offset is rendered
@@ -690,7 +690,7 @@ impl<'a, T> Paginate for Checklist<T>
 where
     T: ParagraphSource<'a>,
 {
-    fn page_count(&mut self) -> usize {
+    fn page_count(&self) -> usize {
         1
     }
 

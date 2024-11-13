@@ -486,6 +486,7 @@ def confirm_blob(
             info=False,
             hold=False,
             chunkify=chunkify,
+            page_counter=True,
             prompt_screen=False,
         )
 
