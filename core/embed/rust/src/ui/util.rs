@@ -141,28 +141,16 @@ pub fn long_line_content_with_ellipsis(
 }
 
 /// Create the `Icon` constant with given name and path.
-/// Possibly users can supply `true` as a third argument and this
-/// will signify that the icon has empty right column.
 macro_rules! include_icon {
-    ($name:ident, $path:expr, empty_right_col = $empty:expr) => {
-        pub const $name: $crate::ui::display::toif::Icon = if $empty {
-            $crate::ui::display::toif::Icon::debug_named(
-                $crate::ui::util::include_res!($path),
-                stringify!($name),
-            )
-            .with_empty_right_column()
-        } else {
-            $crate::ui::display::toif::Icon::debug_named(
-                $crate::ui::util::include_res!($path),
-                stringify!($name),
-            )
-        };
-    };
-    // No empty right column by default.
     ($name:ident, $path:expr) => {
-        include_icon!($name, $path, empty_right_col = false);
+        pub const $name: $crate::ui::display::toif::Icon =
+            $crate::ui::display::toif::Icon::debug_named(
+                $crate::ui::util::include_res!($path),
+                stringify!($name),
+            );
     };
 }
+
 pub(crate) use include_icon;
 
 macro_rules! include_res {
