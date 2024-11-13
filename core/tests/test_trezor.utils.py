@@ -53,14 +53,25 @@ class TestUtils(unittest.TestCase):
         )  # b'\xe1\x88\xb4\xe5\x99\xb8
 
     def test_firmware_hash(self):
-        self.assertEqual(
-            utils.firmware_hash(),
-            b"\xd2\xdb\x90\xa7jV6\xa7\x00N\xc3\xb4\x8eq\xa9U\xe0\xcb\xb2\xcbZo\xd7\xae\x9f\xbe\xf8F\xbc\x16l\x8c",
-        )
-        self.assertEqual(
-            utils.firmware_hash(b"0123456789abcdef"),
-            b"\xa0\x93@\x98\xa6\x80\xdb\x07m\xdf~\xe2'E\xf1\x19\xd8\xfd\xa4`\x10H\xf0_\xdbf\xa6N\xdd\xc0\xcf\xed",
-        )
+        if utils.INTERNAL_MODEL in ('DISC2', 'T3W1'):
+            self.assertEqual(
+                utils.firmware_hash(),
+                b"\xde\xce\xc5\xf6\xa4vgl5\x13l2\xa5\xf8F\xd8\xba\n$\x0b!x\x1fVM\x1e\xf3}@\xd9\xa8\xe9",
+            )
+            self.assertEqual(
+                utils.firmware_hash(b"0123456789abcdef"),
+                b"\xb9w\xa0\x02\xbb\xa5\xa3\x90%.\x13\x97\xf8\xf0\xa9\n\xd1\xe8\xdc\xc5\x120\x81\xd0\x13\x13P\x1d\x11\xf70Y",
+            )
+        else:
+            self.assertEqual(
+                utils.firmware_hash(),
+                b"\xd2\xdb\x90\xa7jV6\xa7\x00N\xc3\xb4\x8eq\xa9U\xe0\xcb\xb2\xcbZo\xd7\xae\x9f\xbe\xf8F\xbc\x16l\x8c",
+            )
+            self.assertEqual(
+                utils.firmware_hash(b"0123456789abcdef"),
+                b"\xa0\x93@\x98\xa6\x80\xdb\x07m\xdf~\xe2'E\xf1\x19\xd8\xfd\xa4`\x10H\xf0_\xdbf\xa6N\xdd\xc0\xcf\xed",
+            )
+
 
 
 if __name__ == "__main__":
