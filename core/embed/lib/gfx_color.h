@@ -54,6 +54,9 @@ typedef uint32_t gfx_color32_t;
 #define gfx_color_to_color32(c) (gfx_color16_to_color32(c))
 #define gfx_color32_to_color(c) (gfx_color32_to_color16(c))
 #define gfx_color_lum(c) (gfx_color16_lum(c))
+#define gfx_color_rgb(r, g, b) gfx_color16_rgb(r, g, b)
+#define COLOR_WHITE 0xFFFF
+#define COLOR_BLACK 0x0000
 #elif defined GFX_COLOR_32BIT
 #define gfx_color_t gfx_color32_t
 #define gfx_color_to_color16(c) (gfx_color32_to_color16(c))
@@ -61,6 +64,9 @@ typedef uint32_t gfx_color32_t;
 #define gfx_color_to_color32(c) (c)
 #define gfx_color32_to_color(c) (c)
 #define gfx_color_lum(c) (gfx_color32_lum(c))
+#define gfx_color_rgb(r, g, b) gfx_color32_rgb(r, g, b)
+#define COLOR_WHITE 0xFFFFFFFF
+#define COLOR_BLACK 0xFF000000
 #else
 #error "GFX_COLOR_16BIT/32BIT not specified"
 #endif

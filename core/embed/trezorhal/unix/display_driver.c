@@ -20,9 +20,10 @@
 #define _GNU_SOURCE
 
 #include <trezor_bsp.h>
+#include <trezor_model.h>
 #include <trezor_rtl.h>
 
-#include <xdisplay.h>
+#include "display.h"
 
 #include <SDL.h>
 #include <SDL_image.h>

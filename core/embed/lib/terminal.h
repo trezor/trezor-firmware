@@ -20,9 +20,9 @@
 #ifndef LIB_TERMINAL_H
 #define LIB_TERMINAL_H
 
-#include "colors.h"
+#include "gfx_color.h"
 
-void term_set_color(uint16_t fgcolor, uint16_t bgcolor);
+void term_set_color(gfx_color_t fgcolor, gfx_color_t bgcolor);
 void term_print(const char *text, int textlen);
 void term_printf(const char *fmt, ...)
     __attribute__((__format__(__printf__, 1, 2)));

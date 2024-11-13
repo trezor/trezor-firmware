@@ -30,16 +30,14 @@
 #define TERMINAL_ROWS (DISPLAY_RESY / 8)
 
 static char terminal_fb[TERMINAL_ROWS][TERMINAL_COLS];
-static uint16_t terminal_fgcolor = COLOR_WHITE;
-static uint16_t terminal_bgcolor = COLOR_BLACK;
+static gfx_color_t terminal_fgcolor = COLOR_WHITE;
+static gfx_color_t terminal_bgcolor = COLOR_BLACK;
 
 // set colors for display_print function
-void term_set_color(uint16_t fgcolor, uint16_t bgcolor) {
+void term_set_color(gfx_color_t fgcolor, gfx_color_t bgcolor) {
   terminal_fgcolor = fgcolor;
   terminal_bgcolor = bgcolor;
 }
-
-#ifdef NEW_RENDERING
 
 // Font_Bitmap contains 96 (0x20 - 0x7F) 5x7 glyphs
 // Each glyph consists of 5 bytes (each byte represents one column)
@@ -80,8 +78,8 @@ static void term_redraw_rows(int start_row, int row_count) {
       .src_x = 0,
       .src_y = 0,
       .src_stride = 8,
-      .src_fg = gfx_color16_to_color(terminal_fgcolor),
-      .src_bg = gfx_color16_to_color(terminal_bgcolor),
+      .src_fg = terminal_fgcolor,
+      .src_bg = terminal_bgcolor,
   };
 
   for (int y = start_row; y < start_row + row_count; y++) {
@@ -93,7 +91,6 @@ static void term_redraw_rows(int start_row, int row_count) {
     }
   }
 }
-#endif  // NEW_RENDERING
 
 // display text using bitmap font
 void term_print(const char *text, int textlen) {
@@ -133,39 +130,8 @@ void term_print(const char *text, int textlen) {
     }
   }
 
-#ifdef NEW_RENDERING
   term_redraw_rows(0, TERMINAL_ROWS);
   display_refresh();
-#else  // NEW RENDERING
-  // render buffer to display
-  display_set_window(0, 0, DISPLAY_RESX - 1, DISPLAY_RESY - 1);
-  for (int i = 0; i < DISPLAY_RESX * DISPLAY_RESY; i++) {
-    int x = (i % DISPLAY_RESX);
-    int y = (i / DISPLAY_RESX);
-    const int j = y % 8;
-    y /= 8;
-    const int k = x % 6;
-    x /= 6;
-    char c = 0;
-    if (x < TERMINAL_COLS && y < TERMINAL_ROWS) {
-      c = terminal_fb[y][x] & 0x7F;
-      // char invert = terminal_fb[y][x] & 0x80;
-    } else {
-      c = ' ';
-    }
-    if (c < ' ') {
-      c = ' ';
-    }
-    const uint8_t *g = Font_Bitmap + (5 * (c - ' '));
-    if (k < 5 && (g[k] & (1 << j))) {
-      PIXELDATA(gfx_color16_to_color(terminal_fgcolor));
-    } else {
-      PIXELDATA(gfx_color16_to_color(terminal_bgcolor));
-    }
-  }
-  display_pixeldata_dirty();
-  display_refresh();
-#endif
 }
 
 // variadic term_print

@@ -22,12 +22,11 @@
 
 #include "board_capabilities.h"
 #include "bootutils.h"
-#include "buffers.h"
 #include "compiler_traits.h"
 #include "display.h"
-#include "display_draw.h"
 #include "flash.h"
 #include "flash_utils.h"
+#include "gfx_draw.h"
 #include "image.h"
 #include "mpu.h"
 #include "pvd.h"
@@ -50,11 +49,7 @@
 #endif
 
 #ifdef USE_DMA2D
-#ifdef NEW_RENDERING
 #include "dma2d_bitblt.h"
-#else
-#include "dma2d.h"
-#endif
 #endif
 
 #include "memzero.h"
@@ -104,7 +99,8 @@ struct BoardCapabilities capabilities
         .terminator_length = 0};
 
 // we use SRAM as SD card read buffer (because DMA can't access the CCMRAM)
-BUFFER_SECTION uint32_t sdcard_buf[BOOTLOADER_MAXSIZE / sizeof(uint32_t)];
+__attribute__((section(".buf")))
+uint32_t sdcard_buf[BOOTLOADER_MAXSIZE / sizeof(uint32_t)];
 
 #if defined USE_SD_CARD
 static uint32_t check_sdcard(void) {
@@ -182,7 +178,7 @@ static uint32_t check_sdcard(void) {
 static void progress_callback(int pos, int len) { term_printf("."); }
 
 static secbool copy_sdcard(void) {
-  display_backlight(255);
+  display_set_backlight(255);
 
   term_printf("Trezor Boardloader\n");
   term_printf("==================\n\n");
@@ -269,7 +265,7 @@ int main(void) {
 
   display_init(DISPLAY_RESET_CONTENT);
 
-  display_clear();
+  gfx_clear();
   display_refresh();
 
 #if defined USE_SD_CARD

@@ -34,12 +34,9 @@ def configure(
 
     if "dma2d" in features_wanted:
         features_available.append("dma2d")
-        if "new_rendering" in features_wanted:
-            sources += [
-                "embed/trezorhal/unix/dma2d_bitblt.c",
-            ]
-        else:
-            sources += ["embed/lib/dma2d_emul.c"]
+        sources += [
+            "embed/trezorhal/unix/dma2d_bitblt.c",
+        ]
         defines += ["USE_DMA2D"]
 
     if "sbu" in features_wanted:

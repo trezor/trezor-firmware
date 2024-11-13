@@ -13,7 +13,6 @@ def configure(
 ) -> list[str]:
     features_available: list[str] = []
     board = "D002/boards/stm32u5a9j-dk.h"
-    display = "dsi.c"
     hw_model = get_hw_model_as_number("D002")
     hw_revision = 0
 
@@ -41,17 +40,11 @@ def configure(
         f"HW_REVISION={hw_revision}",
     ]
 
-    if "new_rendering" in features_wanted:
-        sources += [
-            "embed/trezorhal/xdisplay_legacy.c",
-            "embed/trezorhal/stm32u5/xdisplay/stm32u5a9j-dk/display_driver.c",
-            "embed/trezorhal/stm32u5/xdisplay/stm32u5a9j-dk/display_fb.c",
-            "embed/trezorhal/stm32u5/xdisplay/stm32u5a9j-dk/display_ltdc_dsi.c",
-        ]
-    else:
-        sources += [
-            f"embed/trezorhal/stm32u5/displays/{display}",
-        ]
+    sources += [
+        "embed/trezorhal/stm32u5/xdisplay/stm32u5a9j-dk/display_driver.c",
+        "embed/trezorhal/stm32u5/xdisplay/stm32u5a9j-dk/display_fb.c",
+        "embed/trezorhal/stm32u5/xdisplay/stm32u5a9j-dk/display_ltdc_dsi.c",
+    ]
 
     if "input" in features_wanted:
         sources += ["embed/trezorhal/stm32u5/i2c_bus.c"]
@@ -76,25 +69,19 @@ def configure(
 
     defines += [
         "USE_DMA2D",
-        "FRAMEBUFFER",
-        "FRAMEBUFFER32BIT",
         "UI_COLOR_32BIT",
         "USE_RGB_COLORS",
     ]
-    if "new_rendering" in features_wanted:
-        sources += ["embed/trezorhal/stm32u5/dma2d_bitblt.c"]
-    else:
-        sources += ["embed/trezorhal/stm32u5/dma2d.c"]
+
+    sources += ["embed/trezorhal/stm32u5/dma2d_bitblt.c"]
+
     features_available.append("dma2d")
-    features_available.append("framebuffer")
-    features_available.append("framebuffer32bit")
     features_available.append("ui_color_32bit")
 
-    if "new_rendering" in features_wanted:
-        defines += ["XFRAMEBUFFER"]
-        defines += ["DISPLAY_RGBA8888"]
-        features_available.append("xframebuffer")
-        features_available.append("display_rgba8888")
+    defines += ["XFRAMEBUFFER"]
+    defines += ["DISPLAY_RGBA8888"]
+    features_available.append("xframebuffer")
+    features_available.append("display_rgba8888")
 
     defines += [
         "USE_HASH_PROCESSOR=1",

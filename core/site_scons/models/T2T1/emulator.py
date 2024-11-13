@@ -17,9 +17,8 @@ def configure(
     hw_revision = 0
     mcu = "STM32F427xx"
 
-    if "new_rendering" in features_wanted:
-        defines += ["DISPLAY_RGB565"]
-        features_available.append("display_rgb565")
+    defines += ["DISPLAY_RGB565"]
+    features_available.append("display_rgb565")
     defines += ["USE_RGB_COLORS"]
 
     defines += [mcu]
@@ -32,12 +31,9 @@ def configure(
 
     if "dma2d" in features_wanted:
         features_available.append("dma2d")
-        if "new_rendering" in features_wanted:
-            sources += [
-                "embed/trezorhal/unix/dma2d_bitblt.c",
-            ]
-        else:
-            sources += ["embed/lib/dma2d_emul.c"]
+        sources += [
+            "embed/trezorhal/unix/dma2d_bitblt.c",
+        ]
         defines += ["USE_DMA2D"]
 
     if "sd_card" in features_wanted:

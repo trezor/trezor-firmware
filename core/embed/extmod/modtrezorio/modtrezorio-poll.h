@@ -17,6 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <trezor_model.h>
 #include <trezor_types.h>
 
 #include "button.h"
@@ -106,7 +107,7 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
             const uint32_t ey = evt & 0xFFFU;            // y position
             uint32_t exr;                                // rotated x position
             uint32_t eyr;                                // rotated y position
-            switch (display_orientation(-1)) {
+            switch (display_get_orientation()) {
               case 90:
                 exr = ey;
                 eyr = DISPLAY_RESX - ex;
@@ -149,7 +150,7 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
           mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(2, NULL));
           uint32_t etype = (evt >> 24) & 0x3U;  // button down/up
           uint32_t en = evt & 0xFFFF;           // button number
-          if (display_orientation(-1) == 180) {
+          if (display_get_orientation() == 180) {
             en = (en == BTN_LEFT) ? BTN_RIGHT : BTN_LEFT;
           }
           tuple->items[0] = MP_OBJ_NEW_SMALL_INT(etype);

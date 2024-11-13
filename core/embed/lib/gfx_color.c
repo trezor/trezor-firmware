@@ -18,7 +18,6 @@
  */
 
 #include "gfx_color.h"
-#include "colors.h"
 
 const gfx_color16_t* gfx_color16_gradient_a4(gfx_color_t fg_color,
                                              gfx_color_t bg_color) {

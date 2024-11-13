@@ -42,11 +42,7 @@
 #include "systimer.h"
 
 #ifdef USE_DMA2D
-#ifdef NEW_RENDERING
 #include "dma2d_bitblt.h"
-#else
-#include "dma2d.h"
-#endif
 #endif
 #ifdef USE_OPTIGA
 #include "optiga_hal.h"
@@ -342,7 +338,7 @@ void real_jump_to_firmware(void) {
 
 #ifdef USE_RESET_TO_BOOT
 __attribute__((noreturn)) void jump_to_fw_through_reset(void) {
-  display_fade(display_backlight(-1), 0, 200);
+  display_fade(display_get_backlight(), 0, 200);
 
   reboot_device();
 }

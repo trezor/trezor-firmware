@@ -13,14 +13,11 @@ def configure(
 ) -> list[str]:
     features_available: list[str] = []
     board = "T2T1/boards/trezor_t.h"
-    display = "st7789v.c"
     hw_model = get_hw_model_as_number("T2T1")
     hw_revision = 0
-    features_available.append("disp_i8080_8bit_dw")
 
-    if "new_rendering" in features_wanted:
-        defines += ["DISPLAY_RGB565"]
-        features_available.append("display_rgb565")
+    defines += ["DISPLAY_RGB565"]
+    features_available.append("display_rgb565")
     defines += ["USE_RGB_COLORS=1"]
 
     mcu = "STM32F427xx"
@@ -40,39 +37,14 @@ def configure(
     defines += [f"HW_MODEL={hw_model}"]
     defines += [f"HW_REVISION={hw_revision}"]
 
-    if "new_rendering" in features_wanted:
-        sources += ["embed/trezorhal/xdisplay_legacy.c"]
-        sources += ["embed/trezorhal/stm32f4/xdisplay/st-7789/display_nofb.c"]
-        sources += ["embed/trezorhal/stm32f4/xdisplay/st-7789/display_driver.c"]
-        sources += ["embed/trezorhal/stm32f4/xdisplay/st-7789/display_io.c"]
-        sources += ["embed/trezorhal/stm32f4/xdisplay/st-7789/display_panel.c"]
-        sources += [
-            "embed/trezorhal/stm32f4/xdisplay/st-7789/panels/tf15411a.c",
-        ]
-        sources += [
-            "embed/trezorhal/stm32f4/xdisplay/st-7789/panels/154a.c",
-        ]
-        sources += [
-            "embed/trezorhal/stm32f4/xdisplay/st-7789/panels/lx154a2411.c",
-        ]
-        sources += [
-            "embed/trezorhal/stm32f4/xdisplay/st-7789/panels/lx154a2422.c",
-        ]
-
-    else:
-        sources += [f"embed/trezorhal/stm32f4/displays/{display}"]
-        sources += [
-            "embed/trezorhal/stm32f4/displays/panels/tf15411a.c",
-        ]
-        sources += [
-            "embed/trezorhal/stm32f4/displays/panels/154a.c",
-        ]
-        sources += [
-            "embed/trezorhal/stm32f4/displays/panels/lx154a2411.c",
-        ]
-        sources += [
-            "embed/trezorhal/stm32f4/displays/panels/lx154a2422.c",
-        ]
+    sources += ["embed/trezorhal/stm32f4/xdisplay/st-7789/display_nofb.c"]
+    sources += ["embed/trezorhal/stm32f4/xdisplay/st-7789/display_driver.c"]
+    sources += ["embed/trezorhal/stm32f4/xdisplay/st-7789/display_io.c"]
+    sources += ["embed/trezorhal/stm32f4/xdisplay/st-7789/display_panel.c"]
+    sources += ["embed/trezorhal/stm32f4/xdisplay/st-7789/panels/tf15411a.c"]
+    sources += ["embed/trezorhal/stm32f4/xdisplay/st-7789/panels/154a.c"]
+    sources += ["embed/trezorhal/stm32f4/xdisplay/st-7789/panels/lx154a2411.c"]
+    sources += ["embed/trezorhal/stm32f4/xdisplay/st-7789/panels/lx154a2422.c"]
 
     sources += ["embed/trezorhal/stm32f4/backlight_pwm.c"]
 
@@ -117,10 +89,7 @@ def configure(
 
     if "dma2d" in features_wanted:
         defines += ["USE_DMA2D"]
-        if "new_rendering" in features_wanted:
-            sources += ["embed/trezorhal/stm32u5/dma2d_bitblt.c"]
-        else:
-            sources += ["embed/trezorhal/stm32u5/dma2d.c"]
+        sources += ["embed/trezorhal/stm32u5/dma2d_bitblt.c"]
         sources += [
             "vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma2d.c"
         ]

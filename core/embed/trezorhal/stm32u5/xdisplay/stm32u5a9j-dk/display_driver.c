@@ -18,11 +18,12 @@
  */
 
 #include <trezor_bsp.h>
+#include <trezor_model.h>
 #include <trezor_rtl.h>
 
+#include "display.h"
 #include "display_internal.h"
 #include "mpu.h"
-#include "xdisplay.h"
 
 #if (DISPLAY_RESX != 240) || (DISPLAY_RESY != 240)
 #error "Incompatible display resolution"

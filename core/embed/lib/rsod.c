@@ -34,13 +34,13 @@
 #define RSOD_FG_COLOR COLOR_WHITE
 
 #ifdef USE_RGB_COLORS
-#define RSOD_BG_COLOR RGB16(0x7F, 0x00, 0x00)
+#define RSOD_BG_COLOR gfx_color_rgb(0x7F, 0x00, 0x00)
 #else
 #define RSOD_BG_COLOR COLOR_BLACK
 #endif
 
 void rsod_terminal(const systask_postmortem_t* pminfo) {
-  display_orientation(0);
+  display_set_orientation(0);
   term_set_color(RSOD_FG_COLOR, RSOD_BG_COLOR);
 
   const char* title = RSOD_DEFAULT_TITLE;
@@ -93,7 +93,7 @@ void rsod_terminal(const systask_postmortem_t* pminfo) {
     term_printf("\n%s\n", footer);
   }
 
-  display_backlight(255);
+  display_set_backlight(255);
 }
 
 #endif  // KERNEL_MODE

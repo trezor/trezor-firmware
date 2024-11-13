@@ -20,9 +20,7 @@
 #include <trezor_rtl.h>
 
 #include "bootui.h"
-#include "colors.h"
 #include "display.h"
-#include "display_draw.h"
 #include "display_utils.h"
 #include "fonts/fonts.h"
 #include "mini_printf.h"
@@ -68,82 +66,9 @@ static void format_ver(const char *format, uint32_t version, char *buffer,
 
 // boot UI
 
-#ifndef NEW_RENDERING
-static uint16_t boot_background;
-#endif
-
 static bool initial_setup = true;
 
 void ui_set_initial_setup(bool initial) { initial_setup = initial; }
-
-#ifndef NEW_RENDERING
-static void ui_screen_boot_old(const vendor_header *const vhdr,
-                               const image_header *const hdr) {
-  const int show_string = ((vhdr->vtrust & VTRUST_NO_STRING) == 0);
-  if ((vhdr->vtrust & VTRUST_NO_RED) != 0) {
-    boot_background = COLOR_BLACK;
-  } else {
-    boot_background = COLOR_BL_FAIL;
-  }
-
-  const uint8_t *vimg = vhdr->vimg;
-  const uint32_t fw_version = hdr->version;
-
-  display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, boot_background);
-
-#if !defined TREZOR_MODEL_R && !defined TREZOR_MODEL_T3B1
-  int image_top = show_string ? 30 : (DISPLAY_RESY - 120) / 2;
-  // check whether vendor image is 120x120
-  if (memcmp(vimg, "TOIF\x78\x00\x78\x00", 8) == 0) {
-    uint32_t datalen = TOIF_LENGTH(vimg);
-    display_image((DISPLAY_RESX - 120) / 2, image_top, vimg, datalen);
-  }
-
-  if (show_string) {
-    char ver_str[64];
-    display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 5 - 50, vhdr->vstr,
-                        vhdr->vstr_len, FONT_NORMAL, COLOR_BL_BG,
-                        boot_background);
-    format_ver("%d.%d.%d", fw_version, ver_str, sizeof(ver_str));
-    display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 5 - 25, ver_str, -1,
-                        FONT_NORMAL, COLOR_BL_BG, boot_background);
-  }
-#else
-  // check whether vendor image is 24x24
-  if (memcmp(vimg, "TOIG\x18\x00\x18\x00", 8) == 0) {
-    uint32_t datalen = TOIF_LENGTH(vimg);
-    display_icon((DISPLAY_RESX - 22) / 2, 0, vimg, datalen, COLOR_BL_BG,
-                 boot_background);
-  }
-
-  if (show_string) {
-    char ver_str[64];
-    display_text_center(DISPLAY_RESX / 2, 36, vhdr->vstr, vhdr->vstr_len,
-                        FONT_NORMAL, COLOR_BL_BG, boot_background);
-    format_ver("%d.%d.%d", fw_version, ver_str, sizeof(ver_str));
-    display_text_center(DISPLAY_RESX / 2, 46, ver_str, -1, FONT_NORMAL,
-                        COLOR_BL_BG, boot_background);
-  }
-
-#endif
-
-  display_pixeldata_dirty();
-  display_refresh();
-}
-#endif
-
-#ifndef NEW_RENDERING
-static void ui_screen_boot_wait(int wait_seconds) {
-  char wait_str[32];
-  mini_snprintf(wait_str, sizeof(wait_str), "starting in %d s", wait_seconds);
-  display_bar(0, BOOT_WAIT_Y_TOP, DISPLAY_RESX, BOOT_WAIT_HEIGHT,
-              boot_background);
-  display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 5, wait_str, -1,
-                      FONT_NORMAL, COLOR_BL_BG, boot_background);
-  display_pixeldata_dirty();
-  display_refresh();
-}
-#endif
 
 #if defined USE_TOUCH
 #include "touch.h"
@@ -185,18 +110,6 @@ void ui_click(void) {
 #error "No input method defined"
 #endif
 
-#ifndef NEW_RENDERING
-static void ui_screen_boot_click(void) {
-  display_bar(0, BOOT_WAIT_Y_TOP, DISPLAY_RESX, BOOT_WAIT_HEIGHT,
-              boot_background);
-  bld_continue_label(boot_background);
-  display_pixeldata_dirty();
-  display_refresh();
-  ui_click();
-}
-#endif
-
-#ifdef NEW_RENDERING
 void ui_screen_boot(const vendor_header *const vhdr,
                     const image_header *const hdr, int wait) {
   bool show_string = ((vhdr->vtrust & VTRUST_NO_STRING) == 0);
@@ -208,19 +121,6 @@ void ui_screen_boot(const vendor_header *const vhdr,
   screen_boot(red_screen, vendor_str, vendor_str_len, hdr->version, vhdr->vimg,
               vimg_len, wait);
 }
-#else  // NEW_RENDERING
-
-void ui_screen_boot(const vendor_header *const vhdr,
-                    const image_header *const hdr, int wait) {
-  if (wait == 0) {
-    ui_screen_boot_old(vhdr, hdr);
-  } else if (wait > 0) {
-    ui_screen_boot_wait(wait);
-  } else {
-    ui_screen_boot_click();
-  }
-}
-#endif
 
 // welcome UI
 
@@ -302,7 +202,4 @@ void ui_screen_install_restricted(void) { screen_install_fail(); }
 
 void ui_fadein(void) { display_fade(0, BACKLIGHT_NORMAL, 1000); }
 
-void ui_fadeout(void) {
-  display_fade(BACKLIGHT_NORMAL, 0, 500);
-  display_clear();
-}
+void ui_fadeout(void) { display_fade(BACKLIGHT_NORMAL, 0, 500); }

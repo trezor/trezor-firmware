@@ -18,14 +18,15 @@
  */
 
 #include <trezor_bsp.h>
+#include <trezor_model.h>
 #include <trezor_rtl.h>
 
 #ifdef KERNEL_MODE
 
+#include "display.h"
 #include "display_internal.h"
 #include "ili9341_spi.h"
 #include "mpu.h"
-#include "xdisplay.h"
 
 #if (DISPLAY_RESX != 240) || (DISPLAY_RESY != 320)
 #error "Incompatible display resolution"

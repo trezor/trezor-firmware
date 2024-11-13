@@ -17,9 +17,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <trezor_model.h>
+
 #include "display.h"
-#include "display_draw.h"
 #include "fonts/fonts.h"
+#include "gfx_draw.h"
 
 /// class Display:
 ///     """
@@ -70,7 +72,7 @@ STATIC mp_obj_t mod_trezorui_Display_bar(size_t n_args, const mp_obj_t *args) {
   mp_int_t w = mp_obj_get_int(args[3]);
   mp_int_t h = mp_obj_get_int(args[4]);
   uint16_t c = mp_obj_get_int(args[5]);
-  display_bar(x, y, w, h, c);
+  gfx_draw_bar(gfx_rect(x, y, w, h), gfx_color16_to_color(c));
   return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_bar_obj, 6, 6,
@@ -91,9 +93,9 @@ STATIC mp_obj_t mod_trezorui_Display_orientation(size_t n_args,
     if (deg != 0 && deg != 90 && deg != 180 && deg != 270) {
       mp_raise_ValueError("Value must be 0, 90, 180 or 270");
     }
-    deg = display_orientation(deg);
+    deg = display_set_orientation(deg);
   } else {
-    deg = display_orientation(-1);
+    deg = display_get_orientation();
   }
   return MP_OBJ_NEW_SMALL_INT(deg);
 }
@@ -114,9 +116,9 @@ STATIC mp_obj_t mod_trezorui_Display_backlight(size_t n_args,
     if (val < 0 || val > 255) {
       mp_raise_ValueError("Value must be between 0 and 255");
     }
-    val = display_backlight(val);
+    val = display_set_backlight(val);
   } else {
-    val = display_backlight(-1);
+    val = display_get_backlight();
   }
   return MP_OBJ_NEW_SMALL_INT(val);
 }

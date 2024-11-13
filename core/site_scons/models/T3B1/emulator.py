@@ -17,10 +17,9 @@ def configure(
     hw_revision = 0
     mcu = "STM32U585xx"
 
-    if "new_rendering" in features_wanted:
-        defines += ["XFRAMEBUFFER", "DISPLAY_MONO"]
-        features_available.append("xframebuffer")
-        features_available.append("display_mono")
+    defines += ["XFRAMEBUFFER", "DISPLAY_MONO"]
+    features_available.append("xframebuffer")
+    features_available.append("display_mono")
 
     defines += [mcu]
     defines += [f'TREZOR_BOARD=\\"{board}\\"']
