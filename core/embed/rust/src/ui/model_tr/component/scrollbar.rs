@@ -225,7 +225,7 @@ impl Component for ScrollBar {
 }
 
 impl Paginate for ScrollBar {
-    fn page_count(&mut self) -> usize {
+    fn page_count(&self) -> usize {
         self.page_count
     }
 

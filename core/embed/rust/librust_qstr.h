@@ -357,6 +357,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_notification;
   MP_QSTR_notification_level;
   MP_QSTR_page_count;
+  MP_QSTR_page_counter;
   MP_QSTR_page_limit;
   MP_QSTR_pages;
   MP_QSTR_paint;

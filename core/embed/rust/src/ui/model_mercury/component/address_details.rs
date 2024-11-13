@@ -117,7 +117,7 @@ impl AddressDetails {
 }
 
 impl Paginate for AddressDetails {
-    fn page_count(&mut self) -> usize {
+    fn page_count(&self) -> usize {
         self.get_internal_page_count()
     }
 

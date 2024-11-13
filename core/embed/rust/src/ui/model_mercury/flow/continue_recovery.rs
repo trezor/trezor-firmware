@@ -151,7 +151,7 @@ fn footer_update_fn(
     // to get total pages instead of using Paginate because it borrows mutably
     let current_page = content.inner().inner().current_page();
     let total_pages = content.inner().inner().inner().len() / 2; // 2 paragraphs per page
-    footer.update_page_counter(ctx, current_page, Some(total_pages));
+    footer.update_page_counter(ctx, current_page, total_pages);
 }
 
 pub fn new_continue_recovery(

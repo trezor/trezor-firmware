@@ -74,7 +74,7 @@ fn footer_updating_func(
 ) {
     let current_page = content.inner().current_page();
     let total_pages = content.inner().num_pages();
-    footer.update_page_counter(ctx, current_page, Some(total_pages));
+    footer.update_page_counter(ctx, current_page, total_pages);
 }
 
 pub fn new_show_share_words(
@@ -103,7 +103,6 @@ pub fn new_show_share_words(
     .one_button_request(ButtonRequestCode::ResetDevice.with_name("share_words"))
     .with_pages(move |_| nwords + 2);
 
-    let n_words = share_words_vec.len();
     let content_words = Frame::left_aligned(
         title,
         InternallySwipableContent::new(ShareWords::new(share_words_vec, subtitle)),
@@ -113,7 +112,7 @@ pub fn new_show_share_words(
     .with_vertical_pages()
     .with_subtitle(subtitle)
     .register_header_update_fn(header_updating_func)
-    .with_footer_counter(TR::instructions__swipe_up.into(), n_words as u8)
+    .with_footer_counter(TR::instructions__swipe_up.into())
     .register_footer_update_fn(footer_updating_func)
     .map(|_| None);
 
