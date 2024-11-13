@@ -150,7 +150,7 @@ impl<'a> Component for ShareWords<'a> {
 }
 
 impl<'a> Paginate for ShareWords<'a> {
-    fn page_count(&mut self) -> usize {
+    fn page_count(&self) -> usize {
         // Not defining the logic here, as we do not want it to be `&mut`.
         self.total_page_count()
     }

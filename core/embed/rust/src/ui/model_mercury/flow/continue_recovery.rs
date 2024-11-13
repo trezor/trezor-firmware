@@ -147,6 +147,7 @@ impl FlowController for ContinueRecoveryBetweenSharesAdvanced {
 pub extern "C" fn new_continue_recovery(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, new_obj) }
 }
+
 fn footer_update_fn(
     content: &SwipeContent<SwipePage<Paragraphs<ParagraphVecLong>>>,
     ctx: &mut EventCtx,
@@ -156,7 +157,7 @@ fn footer_update_fn(
     // to get total pages instead of using Paginate because it borrows mutably
     let current_page = content.inner().inner().current_page();
     let total_pages = content.inner().inner().inner().len() / 2; // 2 paragraphs per page
-    footer.update_page_counter(ctx, current_page, Some(total_pages));
+    footer.update_page_counter(ctx, current_page, total_pages);
 }
 
 fn new_obj(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Error> {

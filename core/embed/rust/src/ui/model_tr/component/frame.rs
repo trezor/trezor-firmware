@@ -87,7 +87,7 @@ impl<T> Paginate for Frame<T>
 where
     T: Component + Paginate,
 {
-    fn page_count(&mut self) -> usize {
+    fn page_count(&self) -> usize {
         self.content.page_count()
     }
 

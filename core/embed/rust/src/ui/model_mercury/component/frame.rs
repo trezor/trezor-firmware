@@ -195,8 +195,8 @@ where
     }
 
     #[inline(never)]
-    pub fn with_footer_counter(mut self, instruction: TString<'static>, max_value: u8) -> Self {
-        self.footer = Some(Footer::with_page_counter(max_value, instruction));
+    pub fn with_footer_counter(mut self, instruction: TString<'static>) -> Self {
+        self.footer = Some(Footer::with_page_counter(instruction));
         self
     }
 

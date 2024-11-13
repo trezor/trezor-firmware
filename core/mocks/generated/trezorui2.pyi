@@ -68,6 +68,7 @@ def confirm_blob(
     info: bool = True,
     hold: bool = False,
     chunkify: bool = False,
+    page_counter: bool = False,
     prompt_screen: bool = False,
     page_limit: int | None = None,
 ) -> LayoutObj[UiResult]:
@@ -640,6 +641,7 @@ def confirm_blob(
     info: bool = True,
     hold: bool = False,
     chunkify: bool = False,
+    page_counter: bool = False,
     prompt_screen: bool = False,
     page_limit: int | None = None,
 ) -> LayoutObj[UiResult]:
@@ -1211,6 +1213,7 @@ def confirm_blob(
     info: bool = True,
     hold: bool = False,
     chunkify: bool = False,
+    page_counter: bool = False,
     prompt_screen: bool = False,
     page_limit: int | None = None,
 ) -> LayoutObj[UiResult]:

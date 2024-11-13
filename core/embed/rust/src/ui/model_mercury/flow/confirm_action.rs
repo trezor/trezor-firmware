@@ -8,7 +8,7 @@ use crate::{
         component::{
             swipe_detect::SwipeSettings,
             text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, VecExt},
-            Component, ComponentExt, Paginate,
+            Component, ComponentExt, EventCtx, Paginate,
         },
         flow::{
             base::{Decision, DecisionBuilder as _},
@@ -21,7 +21,8 @@ use crate::{
 
 use super::super::{
     component::{
-        Frame, FrameMsg, PromptMsg, PromptScreen, SwipeContent, VerticalMenu, VerticalMenuChoiceMsg,
+        Footer, Frame, FrameMsg, PromptMsg, PromptScreen, SwipeContent, VerticalMenu,
+        VerticalMenuChoiceMsg,
     },
     theme,
 };
@@ -188,15 +189,17 @@ fn new_confirm_action_obj(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Err
         ConfirmActionStrings::new(title, subtitle, None, prompt_screen.then_some(prompt_title)),
         hold,
         None,
+        false,
     )
 }
 
 #[inline(never)]
-fn new_confirm_action_uni<T: Component + MaybeTrace + 'static>(
-    content: T,
+fn new_confirm_action_uni<T: Component + Paginate + MaybeTrace + 'static>(
+    content: SwipeContent<SwipePage<T>>,
     menu: ConfirmActionMenu,
     strings: ConfirmActionStrings,
     hold: bool,
+    show_page_counter: bool,
 ) -> Result<Obj, error::Error> {
     let (prompt_screen, prompt_pages, flow, page) =
         create_flow(strings.title, strings.prompt_screen, hold);
@@ -207,6 +210,22 @@ fn new_confirm_action_uni<T: Component + MaybeTrace + 'static>(
         .with_vertical_pages()
         .with_menu_button()
         .with_footer(TR::instructions__swipe_up.into(), None);
+
+    if show_page_counter {
+        fn footer_update_fn<T: Component + Paginate>(
+            content: &SwipeContent<SwipePage<T>>,
+            ctx: &mut EventCtx,
+            footer: &mut Footer,
+        ) {
+            let current_page = content.inner().current_page();
+            let page_count = content.inner().page_count();
+            footer.update_page_counter(ctx, current_page, page_count);
+        }
+
+        content_intro = content_intro
+            .with_footer_counter(TR::instructions__swipe_up.into())
+            .register_footer_update_fn(footer_update_fn::<T>);
+    }
 
     if let Some(subtitle) = strings.subtitle {
         content_intro = content_intro.with_subtitle(subtitle);
@@ -335,11 +354,13 @@ pub fn new_confirm_action_simple<T: Component + Paginate + MaybeTrace + 'static>
     strings: ConfirmActionStrings,
     hold: bool,
     page_limit: Option<usize>,
+    show_page_counter: bool,
 ) -> Result<Obj, error::Error> {
     new_confirm_action_uni(
         SwipeContent::new(SwipePage::vertical(content).with_limit(page_limit)),
         menu,
         strings,
         hold,
+        show_page_counter,
     )
 }

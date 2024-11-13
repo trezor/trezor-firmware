@@ -22,7 +22,7 @@ pub enum PageMsg<T> {
 
 pub trait Paginate {
     /// How many pages of content are there in total?
-    fn page_count(&mut self) -> usize;
+    fn page_count(&self) -> usize;
     /// Navigate to the given page.
     fn change_page(&mut self, active_page: usize);
 }
