@@ -19,7 +19,7 @@
 
 #include <trezor_rtl.h>
 
-#include <xdisplay.h>
+#include <display.h>
 
 #include "backlight_pwm.h"
 #include "display_fb.h"

@@ -15,7 +15,6 @@ def configure(
     board = "T3W1/boards/trezor_t3w1_d1.h"
     hw_model = get_hw_model_as_number("T3W1")
     hw_revision = 0
-    features_available.append("disp_i8080_16bit_dw")
 
     defines += ["DISPLAY_RGB565"]
     features_available.append("display_rgb565")
@@ -38,7 +37,6 @@ def configure(
     defines += [f"HW_MODEL={hw_model}"]
     defines += [f"HW_REVISION={hw_revision}"]
 
-    sources += ["embed/trezorhal/xdisplay_legacy.c"]
     sources += ["embed/trezorhal/stm32f4/xdisplay/st-7789/display_nofb.c"]
     sources += ["embed/trezorhal/stm32f4/xdisplay/st-7789/display_driver.c"]
     sources += ["embed/trezorhal/stm32f4/xdisplay/st-7789/display_io.c"]

@@ -17,10 +17,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <trezor_model.h>
 #include <trezor_rtl.h>
 
 #include "display.h"
-#include "display_draw.h"
 #include "fonts/fonts.h"
 #include "gfx_draw.h"
 
@@ -200,9 +200,14 @@ void gfx_draw_bitmap(gfx_rect_t rect, const gfx_bitmap_t* bitmap) {
 #define GLYPH_DATA(g) ((void*)&(g)[5])
 
 void gfx_draw_text(gfx_offset_t pos, const char* text, size_t maxlen,
-                   const gfx_text_attr_t* attr) {
+                   const gfx_text_attr_t* attr, gfx_text_align_t align) {
   if (text == NULL) {
     return;
+  }
+
+  if (align == GFX_ALIGN_CENTER) {
+    int w = font_text_width(attr->font, text, maxlen);
+    pos = gfx_offset(pos.x - w / 2, pos.y);
   }
 
   gfx_bitmap_t bitmap = {
@@ -247,8 +252,11 @@ void gfx_draw_text(gfx_offset_t pos, const char* text, size_t maxlen,
 #include "qr-code-generator/qrcodegen.h"
 #define QR_MAX_VERSION 9
 
-void gfx_draw_qrcode(int x, int y, uint8_t scale, const char* data) {
+void gfx_draw_qrcode(gfx_offset_t offset, uint8_t scale, const char* data) {
   if (scale < 1 || scale > 10) return;
+
+  int x = offset.x;
+  int y = offset.y;
 
   uint8_t codedata[qrcodegen_BUFFER_LEN_FOR_VERSION(QR_MAX_VERSION)] = {0};
   uint8_t tempdata[qrcodegen_BUFFER_LEN_FOR_VERSION(QR_MAX_VERSION)] = {0};
@@ -287,44 +295,4 @@ void gfx_draw_qrcode(int x, int y, uint8_t scale, const char* data) {
   }
 }
 
-#endif  // TREZOR_PRODTEST
-
-// ===============================================================
-// emulation of legacy functions
-
-void display_clear(void) { gfx_clear(); }
-
-void display_bar(int x, int y, int w, int h, uint16_t c) {
-  gfx_draw_bar(gfx_rect_wh(x, y, w, h), gfx_color16_to_color(c));
-}
-
-void display_text(int x, int y, const char* text, int textlen, int font,
-                  uint16_t fg_color, uint16_t bg_color) {
-  gfx_text_attr_t attr = {
-      .font = font,
-      .fg_color = gfx_color16_to_color(fg_color),
-      .bg_color = gfx_color16_to_color(bg_color),
-  };
-
-  size_t maxlen = textlen < 0 ? UINT32_MAX : textlen;
-  gfx_draw_text(gfx_offset(x, y), text, maxlen, &attr);
-}
-
-void display_text_center(int x, int y, const char* text, int textlen, int font,
-                         uint16_t fg_color, uint16_t bg_color) {
-  gfx_text_attr_t attr = {
-      .font = font,
-      .fg_color = gfx_color16_to_color(fg_color),
-      .bg_color = gfx_color16_to_color(bg_color),
-  };
-
-  size_t maxlen = textlen < 0 ? UINT32_MAX : textlen;
-  int w = font_text_width(font, text, textlen);
-  gfx_draw_text(gfx_offset(x - w / 2, y), text, maxlen, &attr);
-}
-
-#ifdef TREZOR_PRODTEST
-void display_qrcode(int x, int y, const char* data, uint8_t scale) {
-  gfx_draw_qrcode(x, y, scale, data);
-}
 #endif  // TREZOR_PRODTEST

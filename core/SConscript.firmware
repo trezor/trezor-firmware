@@ -15,7 +15,6 @@ PYOPT = ARGUMENTS.get('PYOPT', '1')
 DISABLE_OPTIGA = ARGUMENTS.get('DISABLE_OPTIGA', '0') == '1'
 HW_REVISION = ARGUMENTS.get('HW_REVISION', None)
 THP = ARGUMENTS.get('THP', '0') == '1' # Trezor-Host Protocol
-NEW_RENDERING = ARGUMENTS.get('NEW_RENDERING', '1') == '1'
 MODEL_IDENTIFIER = models.get_model_identifier(TREZOR_MODEL)
 BENCHMARK = ARGUMENTS.get('BENCHMARK', '0') == '1'
 
@@ -32,8 +31,6 @@ FEATURE_FLAGS = {
 FEATURES_WANTED = ["input", "sbu", "sd_card", "rgb_led", "dma2d", "consumption_mask", "usb" ,"optiga", "haptic"]
 if DISABLE_OPTIGA and PYOPT == '0':
     FEATURES_WANTED.remove("optiga")
-if NEW_RENDERING:
-    FEATURES_WANTED.append("new_rendering")
 
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
@@ -197,8 +194,6 @@ CPPPATH_MOD += [
 ]
 SOURCE_MOD += [
     'embed/extmod/modtrezorui/modtrezorui.c',
-    'embed/lib/buffers.c',
-    'embed/lib/colors.c',
     'embed/lib/display_utils.c',
     'embed/lib/error_handling.c',
     'embed/lib/fonts/font_bitmap.c',
@@ -212,21 +207,11 @@ SOURCE_MOD += [
     'embed/lib/rsod.c',
     'embed/lib/terminal.c',
     'embed/lib/translations.c',
+    'embed/lib/gfx_draw.c',
     'vendor/micropython/lib/uzlib/adler32.c',
     'vendor/micropython/lib/uzlib/crc32.c',
     'vendor/micropython/lib/uzlib/tinflate.c',
 ]
-
-if NEW_RENDERING:
-    CPPDEFINES_MOD += ['NEW_RENDERING']
-    SOURCE_MOD += [
-        'embed/lib/gfx_draw.c',
-    ]
-else:
-    SOURCE_MOD += [
-        'embed/lib/display_draw.c',
-    ]
-
 
 CPPDEFINES_MOD += [
     'TRANSLATIONS',
@@ -759,10 +744,6 @@ def cargo_build():
     features.extend(RUST_UI_FEATURES)
     features.append('ui')
     features.append('translations')
-
-
-    if NEW_RENDERING:
-        features.append('new_rendering')
 
     if PYOPT == '0':
         features.append('debug')

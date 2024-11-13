@@ -143,11 +143,6 @@ fn prepare_bindings() -> bindgen::Builder {
         bindings = bindings.clang_args(&["-DXFRAMEBUFFER"]);
     }
 
-    #[cfg(feature = "new_rendering")]
-    {
-        bindings = bindings.clang_args(["-DNEW_RENDERING"]);
-    }
-
     clang_args.push(&build_dir_include);
 
     // Pass in correct include paths and defines.
@@ -398,40 +393,6 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("systick_ms")
         // toif
         .allowlist_type("toif_format_t")
-        // dma2d
-        .allowlist_function("dma2d_setup_const")
-        .allowlist_function("dma2d_setup_4bpp")
-        .allowlist_function("dma2d_setup_16bpp")
-        .allowlist_function("dma2d_setup_4bpp_over_4bpp")
-        .allowlist_function("dma2d_setup_4bpp_over_16bpp")
-        .allowlist_function("dma2d_start")
-        .allowlist_function("dma2d_start_blend")
-        .allowlist_function("dma2d_start_const")
-        .allowlist_function("dma2d_start_const_multiline")
-        .allowlist_function("dma2d_wait_for_transfer")
-        //buffers
-        .allowlist_function("buffers_get_line_16bpp")
-        .allowlist_function("buffers_free_line_16bpp")
-        .allowlist_function("buffers_get_line_4bpp")
-        .allowlist_function("buffers_free_line_4bpp")
-        .allowlist_function("buffers_get_text")
-        .allowlist_function("buffers_free_text")
-        .allowlist_function("buffers_get_jpeg")
-        .allowlist_function("buffers_free_jpeg")
-        .allowlist_function("buffers_get_jpeg_work")
-        .allowlist_function("buffers_free_jpeg_work")
-        .allowlist_function("buffers_get_blurring")
-        .allowlist_function("buffers_free_blurring")
-        .allowlist_function("buffers_get_blurring_totals")
-        .allowlist_function("buffers_free_blurring_totals")
-        .allowlist_var("TEXT_BUFFER_HEIGHT")
-        .no_copy("buffer_line_16bpp_t")
-        .no_copy("buffer_line_4bpp_t")
-        .no_copy("buffer_text_t")
-        .no_copy("buffer_jpeg_t")
-        .no_copy("buffer_jpeg_work_t")
-        .no_copy("buffer_blurring_t")
-        .no_copy("buffer_blurring_totals_t")
         //usb
         .allowlist_function("usb_configured")
         // touch

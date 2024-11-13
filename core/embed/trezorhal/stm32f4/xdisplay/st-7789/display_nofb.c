@@ -20,7 +20,7 @@
 #include <trezor_bsp.h>
 #include <trezor_rtl.h>
 
-#include <xdisplay.h>
+#include <display.h>
 
 #include "display_io.h"
 #include "display_panel.h"

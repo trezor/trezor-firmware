@@ -23,9 +23,9 @@
 #include <sys/types.h>
 #include "bootutils.h"
 #include "display.h"
-#include "display_draw.h"
 #include "flash.h"
 #include "flash_otp.h"
+#include "gfx_draw.h"
 #include "image.h"
 #include "mini_printf.h"
 #include "mpu.h"
@@ -194,7 +194,7 @@ int main(void) {
   ensure_bootloader_min_version();
 #endif
 
-  display_clear();
+  gfx_clear();
 
   const image_header *hdr = NULL;
   vendor_header vhdr;

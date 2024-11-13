@@ -18,12 +18,13 @@
  */
 
 #include <trezor_bsp.h>
+#include <trezor_model.h>
 #include <trezor_rtl.h>
 
+#include "display.h"
 #include "mpu.h"
 #include "sizedefs.h"
 #include "trustzone.h"
-#include "xdisplay.h"
 
 #ifdef USE_CONSUMPTION_MASK
 #include "consumption_mask.h"

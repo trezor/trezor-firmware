@@ -13,18 +13,13 @@ def configure(
 ) -> list[str]:
     features_available: list[str] = []
     board = "T3T1/boards/trezor_t3t1_revE.h"
-    display = "st7789v.c"
     hw_model = get_hw_model_as_number("T3T1")
     hw_revision = 0
-    features_available.append("disp_i8080_8bit_dw")
-    features_available.append("framebuffer")
-    defines += ["FRAMEBUFFER"]
 
-    if "new_rendering" in features_wanted:
-        features_available.append("xframebuffer")
-        features_available.append("display_rgb565")
-        defines += ["DISPLAY_RGB565"]
-        defines += ["XFRAMEBUFFER"]
+    features_available.append("xframebuffer")
+    features_available.append("display_rgb565")
+    defines += ["DISPLAY_RGB565"]
+    defines += ["XFRAMEBUFFER"]
     defines += ["USE_RGB_COLORS=1"]
 
     mcu = "STM32U585xx"
@@ -45,20 +40,13 @@ def configure(
     defines += [f"HW_MODEL={hw_model}"]
     defines += [f"HW_REVISION={hw_revision}"]
 
-    if "new_rendering" in features_wanted:
-        sources += ["embed/trezorhal/xdisplay_legacy.c"]
-        sources += ["embed/trezorhal/stm32u5/xdisplay/st-7789/display_fb.c"]
-        sources += ["embed/trezorhal/stm32u5/xdisplay/st-7789/display_driver.c"]
-        sources += ["embed/trezorhal/stm32u5/xdisplay/st-7789/display_io.c"]
-        sources += ["embed/trezorhal/stm32u5/xdisplay/st-7789/display_panel.c"]
-        sources += [
-            "embed/trezorhal/stm32u5/xdisplay/st-7789/panels/lx154a2482.c",
-        ]
-    else:
-        sources += [f"embed/trezorhal/stm32u5/displays/{display}"]
-        sources += [
-            "embed/trezorhal/stm32u5/displays/panels/lx154a2482.c",
-        ]
+    sources += ["embed/trezorhal/stm32u5/xdisplay/st-7789/display_fb.c"]
+    sources += ["embed/trezorhal/stm32u5/xdisplay/st-7789/display_driver.c"]
+    sources += ["embed/trezorhal/stm32u5/xdisplay/st-7789/display_io.c"]
+    sources += ["embed/trezorhal/stm32u5/xdisplay/st-7789/display_panel.c"]
+    sources += [
+        "embed/trezorhal/stm32u5/xdisplay/st-7789/panels/lx154a2482.c",
+    ]
 
     sources += ["embed/trezorhal/stm32u5/backlight_pwm.c"]
     features_available.append("backlight")
@@ -117,10 +105,7 @@ def configure(
 
     if "dma2d" in features_wanted:
         defines += ["USE_DMA2D"]
-        if "new_rendering" in features_wanted:
-            sources += ["embed/trezorhal/stm32u5/dma2d_bitblt.c"]
-        else:
-            sources += ["embed/trezorhal/stm32u5/dma2d.c"]
+        sources += ["embed/trezorhal/stm32u5/dma2d_bitblt.c"]
         features_available.append("dma2d")
 
     if "optiga" in features_wanted:

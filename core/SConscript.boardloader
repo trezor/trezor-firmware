@@ -6,13 +6,9 @@ import tools, models
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 HW_REVISION = ARGUMENTS.get('HW_REVISION', None)
-NEW_RENDERING = ARGUMENTS.get('NEW_RENDERING', '1') == '1'
 MODEL_IDENTIFIER = models.get_model_identifier(TREZOR_MODEL)
 
 FEATURES_WANTED = ["sd_card"]
-
-if NEW_RENDERING:
-    FEATURES_WANTED.append("new_rendering")
 
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
@@ -56,7 +52,6 @@ CPPPATH_MOD += [
         'vendor/micropython/lib/uzlib',
 ]
 SOURCE_MOD += [
-    'embed/lib/colors.c',
     'embed/lib/display_utils.c',
     'embed/lib/error_handling.c',
     'embed/lib/flash_utils.c',
@@ -70,18 +65,8 @@ SOURCE_MOD += [
     'embed/lib/mini_printf.c',
     'embed/lib/rsod.c',
     'embed/lib/terminal.c',
+    'embed/lib/gfx_draw.c'
 ]
-if NEW_RENDERING:
-    CPPDEFINES_MOD += ['NEW_RENDERING']
-    SOURCE_MOD += [
-        'embed/lib/gfx_draw.c',
-    ]
-else:
-    SOURCE_MOD += [
-        'embed/lib/display_draw.c',
-    ]
-
-
 
 env = Environment(ENV=os.environ,
      CFLAGS='%s -DPRODUCTION=%s' % (ARGUMENTS.get('CFLAGS', ''), ARGUMENTS.get('PRODUCTION', '0')),

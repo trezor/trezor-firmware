@@ -128,6 +128,9 @@ typedef struct {
   gfx_color_t bg_color;
 } gfx_text_attr_t;
 
+// Clears the display with a black color.
+void gfx_clear(void);
+
 // Fills a rectangle with a specified color.
 void gfx_draw_bar(gfx_rect_t rect, gfx_color_t color);
 
@@ -141,14 +144,22 @@ void gfx_draw_bar(gfx_rect_t rect, gfx_color_t color);
 // Not all bitmap formats are supported now. Please see the implementation.
 void gfx_draw_bitmap(gfx_rect_t rect, const gfx_bitmap_t* bitmap);
 
+// Horizontal alignment of a text
+typedef enum {
+  GFX_ALIGN_LEFT,
+  GFX_ALIGN_CENTER,
+} gfx_text_align_t;
+
 // Draws a text to the specified position.
 //
 // `offset` - the most left point on the font baseline
 // `text` - utf-8 text
 // `maxlen` - maximum number of characters displayed (use SIZE_MAX when not
-// specified) `attr` - font & text color
+// specified)
+// `attr` - font & text color
+// `align` - horizontal alignment
 void gfx_draw_text(gfx_offset_t offset, const char* text, size_t maxlen,
-                   const gfx_text_attr_t* attr);
+                   const gfx_text_attr_t* attr, gfx_text_align_t align);
 
 #ifdef TREZOR_PRODTEST
 // Draws a QR code to the specified position.
@@ -156,7 +167,7 @@ void gfx_draw_text(gfx_offset_t offset, const char* text, size_t maxlen,
 // `x`, `y` - center of the QR code
 // `scale` - size of a single QR code module
 // `data` - utf-8 text
-void gfx_draw_qrcode(int x, int y, uint8_t scale, const char* data);
+void gfx_draw_qrcode(gfx_offset_t offset, uint8_t scale, const char* data);
 #endif
 
 #endif  // GFX_DRAW_H

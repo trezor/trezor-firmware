@@ -25,9 +25,9 @@
 void display_fade(int start, int end, int delay) {
 #ifdef USE_BACKLIGHT
   for (int i = 0; i < 100; i++) {
-    display_backlight(start + i * (end - start) / 100);
+    display_set_backlight(start + i * (end - start) / 100);
     hal_delay(delay / 100);
   }
-  display_backlight(end);
+  display_set_backlight(end);
 #endif
 }

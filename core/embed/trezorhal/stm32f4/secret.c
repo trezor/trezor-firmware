@@ -1,7 +1,6 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
-#include "display_draw.h"
 #include "flash.h"
 #include "mpu.h"
 #include "secret.h"

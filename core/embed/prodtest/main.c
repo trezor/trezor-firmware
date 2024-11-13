@@ -29,11 +29,12 @@
 #include "bootutils.h"
 #include "button.h"
 #include "display.h"
-#include "display_draw.h"
 #include "display_utils.h"
 #include "flash.h"
 #include "flash_otp.h"
+#include "fonts/fonts.h"
 #include "fwutils.h"
+#include "gfx_draw.h"
 #include "image.h"
 #include "mpu.h"
 #include "prodtest_common.h"
@@ -80,12 +81,18 @@
 #define MODEL_IDENTIFIER MODEL_INTERNAL_NAME "-"
 #endif
 
+static gfx_text_attr_t bold = {
+    .font = FONT_BOLD,
+    .fg_color = COLOR_WHITE,
+    .bg_color = COLOR_BLACK,
+};
+
 static secbool startswith(const char *s, const char *prefix) {
   return sectrue * (0 == strncmp(s, prefix, strlen(prefix)));
 }
 
 static void vcp_intr(void) {
-  display_clear();
+  gfx_clear();
   error_shutdown("vcp_intr");
 }
 
@@ -193,15 +200,22 @@ void extract_params(const char *str, int *numbers, int *count, int max_count) {
 
 static void draw_border(int width, int padding) {
   const int W = width, P = padding, RX = DISPLAY_RESX, RY = DISPLAY_RESY;
-  display_clear();
-  display_bar(P, P, RX - 2 * P, RY - 2 * P, 0xFFFF);
-  display_bar(P + W, P + W, RX - 2 * (P + W), RY - 2 * (P + W), 0x0000);
+
+  gfx_clear();
+
+  gfx_rect_t r_out = gfx_rect_wh(P, P, RX - 2 * P, RY - 2 * P);
+  gfx_rect_t r_in =
+      gfx_rect_wh(P + W, P + W, RX - 2 * (P + W), RY - 2 * (P + W));
+
+  gfx_draw_bar(r_out, COLOR_WHITE);
+  gfx_draw_bar(r_in, COLOR_BLACK);
+
   display_refresh();
 }
 
 static void draw_welcome_screen(void) {
 #if defined TREZOR_MODEL_R || defined TREZOR_MODEL_T3B1
-  display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, 0xFFFF);
+  gfx_draw_bar(gfx_rect_wh(0, 0, DISPLAY_RESX, DISPLAY_RESY), COLOR_WHITE);
   display_refresh();
 #else
   draw_border(1, 3);
@@ -214,28 +228,30 @@ static void test_border(void) {
 }
 
 static void test_display(const char *colors) {
-  display_clear();
+  gfx_clear();
 
   size_t l = strlen(colors);
   size_t w = DISPLAY_RESX / l;
 
   for (size_t i = 0; i < l; i++) {
-    uint16_t c = 0x0000;  // black
+    uint16_t c = COLOR_BLACK;  // black
     switch (colors[i]) {
       case 'R':
-        c = 0xF800;
+        c = gfx_color_rgb(255, 0, 0);
         break;
       case 'G':
-        c = 0x07E0;
+        c = gfx_color_rgb(0, 255, 0);
         break;
       case 'B':
-        c = 0x001F;
+        c = gfx_color_rgb(0, 0, 255);
         break;
       case 'W':
-        c = 0xFFFF;
+        c = COLOR_WHITE;
         break;
     }
-    display_bar(i * w, 0, i * w + w, DISPLAY_RESY, c);
+
+    gfx_rect_t r = gfx_rect_wh(i * w, 0, i * w + w, DISPLAY_RESY);
+    gfx_draw_bar(r, c);
   }
   display_refresh();
   vcp_println("OK");
@@ -365,19 +381,19 @@ static void test_touch(const char *args) {
   const int width = DISPLAY_RESX / 2;
   const int height = DISPLAY_RESY / 2;
 
-  display_clear();
+  gfx_clear();
   switch (column) {
     case 1:
-      display_bar(0, 0, width, height, 0xFFFF);
+      gfx_draw_bar(gfx_rect_wh(0, 0, width, height), COLOR_WHITE);
       break;
     case 2:
-      display_bar(width, 0, width, height, 0xFFFF);
+      gfx_draw_bar(gfx_rect_wh(width, 0, width, height), COLOR_WHITE);
       break;
     case 3:
-      display_bar(width, height, width, height, 0xFFFF);
+      gfx_draw_bar(gfx_rect_wh(width, height, width, height), COLOR_WHITE);
       break;
     default:
-      display_bar(0, height, width, height, 0xFFFF);
+      gfx_draw_bar(gfx_rect_wh(0, height, width, height), COLOR_WHITE);
       break;
   }
   display_refresh();
@@ -392,7 +408,7 @@ static void test_touch(const char *args) {
   } else {
     vcp_println("ERROR TIMEOUT");
   }
-  display_clear();
+  gfx_clear();
   display_refresh();
 
   touch_deinit();
@@ -421,8 +437,8 @@ static void test_touch_custom(const char *args) {
 
   uint32_t ticks_start = hal_ticks_ms();
 
-  display_clear();
-  display_bar(x, y, width, height, 0xFFFF);
+  gfx_clear();
+  gfx_draw_bar(gfx_rect_wh(x, y, width, height), COLOR_WHITE);
   display_refresh();
 
   touch_init();
@@ -452,7 +468,7 @@ static void test_touch_custom(const char *args) {
     }
   }
 
-  display_clear();
+  gfx_clear();
   display_refresh();
 
   touch_deinit();
@@ -475,9 +491,9 @@ static void test_touch_idle(const char *args) {
 
   uint32_t ticks_start = hal_ticks_ms();
 
-  display_clear();
-  display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY / 2, "DON'T TOUCH", -1,
-                      FONT_BOLD, COLOR_WHITE, COLOR_BLACK);
+  gfx_clear();
+  gfx_offset_t pos = gfx_offset(DISPLAY_RESX / 2, DISPLAY_RESY / 2);
+  gfx_draw_text(pos, "DON'T TOUCH", -1, &bold, GFX_ALIGN_CENTER);
   display_refresh();
 
   touch_init();
@@ -494,7 +510,7 @@ static void test_touch_idle(const char *args) {
     }
   }
 
-  display_clear();
+  gfx_clear();
   display_refresh();
 
   touch_deinit();
@@ -515,9 +531,9 @@ static void test_touch_power(const char *args) {
 
   int timeout = params[0];
 
-  display_clear();
-  display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY / 2, "MEASURING", -1,
-                      FONT_BOLD, COLOR_WHITE, COLOR_BLACK);
+  gfx_clear();
+  gfx_offset_t pos = gfx_offset(DISPLAY_RESX / 2, DISPLAY_RESY / 2);
+  gfx_draw_text(pos, "MEASURING", -1, &bold, GFX_ALIGN_CENTER);
   display_refresh();
 
   touch_power_set(true);
@@ -528,7 +544,7 @@ static void test_touch_power(const char *args) {
 
   touch_power_set(false);
 
-  display_clear();
+  gfx_clear();
   display_refresh();
 }
 
@@ -538,7 +554,7 @@ static void test_sensitivity(const char *args) {
   touch_init();
   touch_set_sensitivity(v & 0xFF);
 
-  display_clear();
+  gfx_clear();
   display_refresh();
 
   for (;;) {
@@ -546,11 +562,11 @@ static void test_sensitivity(const char *args) {
     if (evt & TOUCH_START || evt & TOUCH_MOVE) {
       int x = touch_unpack_x(evt);
       int y = touch_unpack_y(evt);
-      display_clear();
-      display_bar(x - 48, y - 48, 96, 96, 0xFFFF);
+      gfx_clear();
+      gfx_draw_bar(gfx_rect_wh(x - 48, y - 48, 96, 96), COLOR_WHITE);
       display_refresh();
     } else if (evt & TOUCH_END) {
-      display_clear();
+      gfx_clear();
       display_refresh();
     }
   }
@@ -569,7 +585,7 @@ static void touch_version(void) {
 static void test_pwm(const char *args) {
   int v = atoi(args);
 
-  display_backlight(v);
+  display_set_backlight(v);
   display_refresh();
   vcp_println("OK");
 }
@@ -662,9 +678,9 @@ static void test_boardloader_version(const boardloader_version_t *version) {
 
 static void test_wipe(void) {
   firmware_invalidate_header();
-  display_clear();
-  display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY / 2 + 10, "WIPED", -1,
-                      FONT_BOLD, COLOR_WHITE, COLOR_BLACK);
+  gfx_clear();
+  gfx_offset_t pos = gfx_offset(DISPLAY_RESX / 2, DISPLAY_RESY / 2 + 10);
+  gfx_draw_text(pos, "WIPED", -1, &bold, GFX_ALIGN_CENTER);
   display_refresh();
   vcp_println("OK");
 }
@@ -858,16 +874,21 @@ int main(void) {
   pair_optiga();
 #endif
 
-  display_clear();
+  gfx_clear();
   draw_welcome_screen();
 
   char dom[32];
   // format: {MODEL_IDENTIFIER}-YYMMDD
   if (sectrue == flash_otp_read(FLASH_OTP_BLOCK_BATCH, 0, (uint8_t *)dom, 32) &&
       sectrue == startswith(dom, MODEL_IDENTIFIER) && dom[31] == 0) {
-    display_qrcode(DISPLAY_RESX / 2, DISPLAY_RESY / 2, dom, 4);
-    display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 30, dom + 8, -1,
-                        FONT_BOLD, COLOR_WHITE, COLOR_BLACK);
+    gfx_offset_t pos;
+
+    pos = gfx_offset(DISPLAY_RESX / 2, DISPLAY_RESY / 2);
+    gfx_draw_qrcode(pos, 4, dom);
+
+    pos = gfx_offset(DISPLAY_RESX / 2, DISPLAY_RESY - 30);
+    gfx_draw_text(pos, dom + 8, -1, &bold, GFX_ALIGN_CENTER);
+
     display_refresh();
   }
 

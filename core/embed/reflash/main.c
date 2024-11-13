@@ -22,8 +22,8 @@
 
 #include "bootutils.h"
 #include "display.h"
-#include "display_draw.h"
 #include "flash.h"
+#include "gfx_draw.h"
 #include "image.h"
 #include "rng.h"
 #include "rsod.h"
@@ -76,7 +76,7 @@ int main(void) {
 #endif
 
   display_orientation(0);
-  display_clear();
+  gfx_clear();
   display_backlight(255);
 
   ensure(sdcard_is_present(), "sdcard_is_present");

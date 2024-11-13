@@ -10,7 +10,6 @@ TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 HW_REVISION ='emulator'
 THP = ARGUMENTS.get('THP', '0') == '1' # Trezor-Host Protocol
-NEW_RENDERING = ARGUMENTS.get('NEW_RENDERING', '1') == '1'
 BENCHMARK = ARGUMENTS.get('BENCHMARK', '0') == '1'
 PYOPT = ARGUMENTS.get('PYOPT', '1')
 FROZEN = ARGUMENTS.get('TREZOR_EMULATOR_FROZEN', 0)
@@ -22,8 +21,6 @@ if BENCHMARK and PYOPT != '0':
   exit(1)
 
 FEATURES_WANTED = ["input", "sd_card", "dma2d", "optiga", "sbu"]
-if NEW_RENDERING:
-    FEATURES_WANTED.append("new_rendering")
 
 if not models.has_emulator(TREZOR_MODEL):
     # skip unix build
@@ -208,7 +205,6 @@ CPPPATH_MOD += [
 ]
 SOURCE_MOD += [
     'embed/extmod/modtrezorui/modtrezorui.c',
-    'embed/lib/colors.c',
     'embed/lib/display_utils.c',
     'embed/lib/error_handling.c',
     'embed/lib/fonts/font_bitmap.c',
@@ -222,19 +218,11 @@ SOURCE_MOD += [
     'embed/lib/rsod.c',
     'embed/lib/terminal.c',
     'embed/lib/translations.c',
+    'embed/lib/gfx_draw.c',
     'vendor/micropython/lib/uzlib/adler32.c',
     'vendor/micropython/lib/uzlib/crc32.c',
     'vendor/micropython/lib/uzlib/tinflate.c',
 ]
-
-if NEW_RENDERING:
-    SOURCE_MOD += [
-        'embed/lib/gfx_draw.c',
-    ]
-else:
-    SOURCE_MOD += [
-        'embed/lib/display_draw.c',
-    ]
 
 CPPDEFINES_MOD += [
     'TRANSLATIONS',
@@ -245,9 +233,6 @@ if FROZEN:
     CPPDEFINES_MOD += ['TREZOR_EMULATOR_FROZEN']
 if RASPI:
     CPPDEFINES_MOD += ['TREZOR_EMULATOR_RASPI']
-
-if NEW_RENDERING:
-    CPPDEFINES_MOD += ['NEW_RENDERING']
 
 # modtrezorutils
 SOURCE_MOD += [
@@ -405,6 +390,7 @@ SOURCE_UNIX = [
     'embed/trezorhal/unix/time_estimate.c',
     'embed/trezorhal/unix/unit_properties.c',
     'embed/trezorhal/unix/usb.c',
+    'embed/trezorhal/unix/display_driver.c',
     'embed/unix/main_main.c',
     'embed/unix/main.c',
     'embed/unix/profile.c',
@@ -414,16 +400,6 @@ SOURCE_UNIX = [
     'vendor/micropython/ports/unix/unix_mphal.c',
     'vendor/micropython/shared/runtime/gchelper_generic.c',
 ]
-
-if NEW_RENDERING:
-    SOURCE_MOD += [
-        'embed/trezorhal/unix/display_driver.c',
-        'embed/trezorhal/xdisplay_legacy.c',
-    ]
-else:
-    SOURCE_MOD += [
-        'embed/trezorhal/unix/display-unix.c',
-    ]
 
 TRANSLATION_DATA = [
     "translations/en.json",
@@ -830,9 +806,6 @@ def cargo_build():
         features.append('debug')
 
     features.extend(FEATURES_AVAILABLE)
-
-    if NEW_RENDERING:
-        features.append('new_rendering')
 
     env.get('ENV')['TREZOR_MODEL'] = TREZOR_MODEL
 

@@ -17,12 +17,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <trezor_model.h>
 #include <trezor_rtl.h>
 
 #include "bootui.h"
 #include "display.h"
-#include "display_draw.h"
 #include "display_utils.h"
+#include "fonts/fonts.h"
+#include "gfx_draw.h"
 #include "icon_done.h"
 #include "icon_fail.h"
 #include "icon_install.h"
@@ -50,19 +52,30 @@
 
 // welcome UI
 
+gfx_text_attr_t welcome_text_attr = {
+    .font = FONT_NORMAL,
+    .fg_color = COLOR_WELCOME_FG,
+    .bg_color = COLOR_WELCOME_BG,
+};
+
+gfx_text_attr_t normal_text_attr = {
+    .font = FONT_NORMAL,
+    .fg_color = COLOR_BL_FG,
+    .bg_color = COLOR_BL_BG,
+};
+
 void ui_screen_welcome_third(void) {
-  display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, COLOR_WELCOME_BG);
-  display_text_center(120, 220, "Go to trezor.io/start", -1, FONT_NORMAL,
-                      COLOR_WELCOME_FG, COLOR_WELCOME_BG);
+  gfx_draw_bar(gfx_rect_wh(0, 0, DISPLAY_RESX, DISPLAY_RESY), COLOR_WELCOME_BG);
+  gfx_draw_text(gfx_offset(120, 220), "Go to trezor.io/start", -1,
+                &welcome_text_attr, GFX_ALIGN_CENTER);
 }
 
 // install UI
 
 void ui_screen_install_start(void) {
-  display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, COLOR_BL_BG);
-  display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 24,
-                      "Installing firmware", -1, FONT_NORMAL, COLOR_BL_FG,
-                      COLOR_BL_BG);
+  gfx_draw_bar(gfx_rect_wh(0, 0, DISPLAY_RESX, DISPLAY_RESY), COLOR_BL_BG);
+  gfx_draw_text(gfx_offset(DISPLAY_RESX / 2, DISPLAY_RESY - 24),
+                "Installing firmware", -1, &normal_text_attr, GFX_ALIGN_CENTER);
 }
 
 void ui_screen_install_progress_erase(int pos, int len) {}
@@ -72,9 +85,9 @@ void ui_screen_install_progress_upload(int pos) {}
 // wipe UI
 
 void ui_screen_wipe(void) {
-  display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, COLOR_BL_BG);
-  display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 24, "Wiping device", -1,
-                      FONT_NORMAL, COLOR_BL_FG, COLOR_BL_BG);
+  gfx_draw_bar(gfx_rect_wh(0, 0, DISPLAY_RESX, DISPLAY_RESY), COLOR_BL_BG);
+  gfx_draw_text(gfx_offset(DISPLAY_RESX / 2, DISPLAY_RESY - 24),
+                "Wiping device", -1, &normal_text_attr, GFX_ALIGN_CENTER);
 }
 
 void ui_screen_wipe_progress(int pos, int len) {}
@@ -92,29 +105,27 @@ void ui_screen_done(int restart_seconds, secbool full_redraw) {
     str = "Done! Unplug the device.";
   }
   if (sectrue == full_redraw) {
-    display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, COLOR_BL_BG);
+    gfx_draw_bar(gfx_rect_wh(0, 0, DISPLAY_RESX, DISPLAY_RESY), COLOR_BL_BG);
   }
   if (secfalse == full_redraw) {
-    display_bar(0, DISPLAY_RESY - 24 - 18, 240, 23, COLOR_BL_BG);
+    gfx_draw_bar(gfx_rect_wh(0, DISPLAY_RESY - 24 - 18, 240, 23), COLOR_BL_BG);
   }
-  display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 24, str, -1, FONT_NORMAL,
-                      COLOR_BL_FG, COLOR_BL_BG);
+
+  gfx_draw_text(gfx_offset(DISPLAY_RESX / 2, DISPLAY_RESY - 24), str, -1,
+                &normal_text_attr, GFX_ALIGN_CENTER);
 }
 
 // error UI
 
 void ui_screen_fail(void) {
-  display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, COLOR_BL_BG);
-  display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 24,
-                      "Failed! Please, reconnect.", -1, FONT_NORMAL,
-                      COLOR_BL_FG, COLOR_BL_BG);
+  gfx_draw_bar(gfx_rect_wh(0, 0, DISPLAY_RESX, DISPLAY_RESY), COLOR_BL_BG);
+  gfx_draw_text(gfx_offset(DISPLAY_RESX / 2, DISPLAY_RESY - 24),
+                "Failed! Please, reconnect.", -1, &normal_text_attr,
+                GFX_ALIGN_CENTER);
 }
 
 // general functions
 
 void ui_fadein(void) { display_fade(0, BACKLIGHT_NORMAL, 1000); }
 
-void ui_fadeout(void) {
-  display_fade(BACKLIGHT_NORMAL, 0, 500);
-  display_clear();
-}
+void ui_fadeout(void) { display_fade(BACKLIGHT_NORMAL, 0, 500); }

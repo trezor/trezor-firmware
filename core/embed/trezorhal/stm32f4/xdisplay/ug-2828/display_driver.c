@@ -20,8 +20,8 @@
 #include <trezor_bsp.h>
 #include <trezor_rtl.h>
 
+#include "display.h"
 #include "mpu.h"
-#include "xdisplay.h"
 
 #if (DISPLAY_RESX != 128) || (DISPLAY_RESY != 128)
 #error "Incompatible display resolution"

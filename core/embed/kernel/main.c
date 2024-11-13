@@ -26,7 +26,7 @@
 #include "button.h"
 #include "consumption_mask.h"
 #include "display.h"
-#include "dma2d.h"
+#include "dma2d_bitblt.h"
 #include "entropy.h"
 #include "haptic.h"
 #include "image.h"

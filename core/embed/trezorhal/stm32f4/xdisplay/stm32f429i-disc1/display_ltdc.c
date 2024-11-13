@@ -18,11 +18,12 @@
  */
 
 #include <trezor_bsp.h>
+#include <trezor_model.h>
 #include <trezor_rtl.h>
 
+#include "display.h"
 #include "display_internal.h"
 #include "ili9341_spi.h"
-#include "xdisplay.h"
 
 #define MAX_LAYER_NUMBER 2
 

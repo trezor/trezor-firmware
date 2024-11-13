@@ -18,9 +18,10 @@
  */
 
 #include <trezor_bsp.h>
+#include <trezor_model.h>
 #include <trezor_rtl.h>
 
-#include <xdisplay.h>
+#include "display.h"
 #include "display_internal.h"
 #include "mpu.h"
 #include "trustzone.h"

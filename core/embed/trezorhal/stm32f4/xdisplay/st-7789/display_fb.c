@@ -18,13 +18,14 @@
  */
 
 #include <trezor_bsp.h>
+#include <trezor_model.h>
 #include <trezor_rtl.h>
 
+#include "display.h"
 #include "display_fb.h"
 #include "display_internal.h"
 #include "display_io.h"
 #include "display_panel.h"
-#include "xdisplay.h"
 
 #include "gfx_bitblt.h"
 #include "irq.h"
@@ -188,18 +189,6 @@ bool display_get_frame_buffer(display_fb_info_t *fb) {
   do {
     state = drv->queue.entry[drv->queue.wix];
   } while (state == FB_STATE_READY || state == FB_STATE_COPYING);
-
-  if (state == FB_STATE_EMPTY) {
-    // First use of this buffer, copy the previous buffer into it
-#if (FRAME_BUFFER_COUNT > 1)
-#ifndef NEW_RENDERING
-    uint8_t *src = get_fb_ptr((FRAME_BUFFER_COUNT + drv->queue.wix - 1) %
-                              FRAME_BUFFER_COUNT);
-    uint8_t *dst = get_fb_ptr(drv->queue.wix);
-    memcpy(dst, src, PHYSICAL_FRAME_BUFFER_SIZE);
-#endif
-#endif
-  };
 
   drv->queue.entry[drv->queue.wix] = FB_STATE_PREPARING;
 
