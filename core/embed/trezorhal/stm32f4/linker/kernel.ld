@@ -8,7 +8,7 @@ MEMORY {
   CCMRAM_FB (wal) : ORIGIN = MCU_CCMRAM + MCU_CCMRAM_SIZE - KERNEL_CCMRAM_SIZE - KERNEL_FRAMEBUFFER_SIZE, LENGTH = KERNEL_FRAMEBUFFER_SIZE
   CCMRAM (wal)    : ORIGIN = MCU_CCMRAM + MCU_CCMRAM_SIZE - KERNEL_CCMRAM_SIZE, LENGTH = KERNEL_CCMRAM_SIZE - BOOTARGS_SIZE
   BOOT_ARGS (wal) : ORIGIN = MCU_CCMRAM + MCU_CCMRAM_SIZE - BOOTARGS_SIZE, LENGTH = BOOTARGS_SIZE
-  SRAM   (wal)    : ORIGIN = MCU_SRAM + MCU_SRAM_SIZE - KERNEL_SRAM_SIZE, LENGTH = KERNEL_SRAM_SIZE
+  SRAM   (wal)    : ORIGIN = MCU_SRAM, LENGTH = KERNEL_SRAM_SIZE
 }
 
 main_stack_base = ORIGIN(CCMRAM_STACK) + SIZEOF(.stack); /* 8-byte aligned full descending stack */
@@ -47,7 +47,7 @@ _shutdown_clear_ram_1_end = MCU_SRAM + MCU_SRAM_SIZE;
 /* used by applet cleaning code */
 _coreapp_clear_ram_0_start = MCU_CCMRAM + KERNEL_STACK_SIZE;
 _coreapp_clear_ram_0_size = MCU_CCMRAM_SIZE - KERNEL_CCMRAM_SIZE - KERNEL_FRAMEBUFFER_SIZE - KERNEL_STACK_SIZE;
-_coreapp_clear_ram_1_start = MCU_SRAM;
+_coreapp_clear_ram_1_start = MCU_SRAM + KERNEL_SRAM_SIZE;
 _coreapp_clear_ram_1_size = MCU_SRAM_SIZE - KERNEL_SRAM_SIZE;
 
 
