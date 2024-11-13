@@ -319,6 +319,9 @@ enum MessageType {
     MessageType_SolanaSignTx = 904 [(wire_in) = true];
     MessageType_SolanaTxSignature = 905 [(wire_out) = true];
 
+    // THP
+    reserved 1000 to 1099; // See messages-thp.proto
+
     // Benchmark
     MessageType_BenchmarkListNames = 9100 [(bitcoin_only) = true];
     MessageType_BenchmarkNames = 9101 [(bitcoin_only) = true];
