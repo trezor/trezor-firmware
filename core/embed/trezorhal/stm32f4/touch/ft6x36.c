@@ -132,18 +132,24 @@ static secbool ft6x36_write_reg(i2c_bus_t* bus, uint8_t reg, uint8_t value) {
 // Powers down the touch controller and puts all
 // the pins in the proper state to save power.
 static void ft6x36_power_down(void) {
+#ifdef TOUCH_ON_PIN
   GPIO_PinState state = HAL_GPIO_ReadPin(TOUCH_ON_PORT, TOUCH_ON_PIN);
 
   // set power off and other pins as per section 3.5 of FT6236 datasheet
   HAL_GPIO_WritePin(TOUCH_ON_PORT, TOUCH_ON_PIN,
                     GPIO_PIN_SET);  // CTP_ON (active low) i.e.- CTPM power
                                     // off when set/high/log 1
+
+#endif
   HAL_GPIO_WritePin(TOUCH_INT_PORT, TOUCH_INT_PIN,
                     GPIO_PIN_RESET);  // CTP_INT normally an input, but drive
                                       // low as an output while powered off
+
+#ifdef TOUCH_RST_PIN
   HAL_GPIO_WritePin(TOUCH_RST_PORT, TOUCH_RST_PIN,
                     GPIO_PIN_RESET);  // CTP_REST (active low) i.e.- CTPM
                                       // held in reset until released
+#endif
 
   // set above pins to OUTPUT / NOPULL
   GPIO_InitTypeDef GPIO_InitStructure = {0};
@@ -153,8 +159,13 @@ static void ft6x36_power_down(void) {
   GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
   GPIO_InitStructure.Pin = TOUCH_INT_PIN;
   HAL_GPIO_Init(TOUCH_INT_PORT, &GPIO_InitStructure);
+
+#ifdef TOUCH_RST_PIN
   GPIO_InitStructure.Pin = TOUCH_RST_PIN;
   HAL_GPIO_Init(TOUCH_RST_PORT, &GPIO_InitStructure);
+#endif
+
+#ifdef TOUCH_ON_PIN
   GPIO_InitStructure.Pin = TOUCH_ON_PIN;
   HAL_GPIO_Init(TOUCH_ON_PORT, &GPIO_InitStructure);
 
@@ -162,6 +173,7 @@ static void ft6x36_power_down(void) {
     // 90 ms for circuitry to stabilize (being conservative)
     hal_delay(90);
   }
+#endif
 }
 
 // Powers up the touch controller and do proper reset sequence
@@ -169,10 +181,15 @@ static void ft6x36_power_down(void) {
 // `ft6x36_power_down()` must be called before calling this first time function
 // to properly initialize the GPIO pins.
 static void ft6x36_power_up(void) {
+#ifdef TOUCH_RST_PIN
   // Ensure the touch controller is in reset state
   HAL_GPIO_WritePin(TOUCH_RST_PORT, TOUCH_RST_PIN, GPIO_PIN_RESET);
+#endif
+
+#ifdef TOUCH_ON_PIN
   // Power up the touch controller
   HAL_GPIO_WritePin(TOUCH_ON_PORT, TOUCH_ON_PIN, GPIO_PIN_RESET);
+#endif
 
   // Wait until the circuit fully kicks-in
   // (5ms is the minimum time required for the reset signal to be effective)
@@ -186,8 +203,10 @@ static void ft6x36_power_up(void) {
   GPIO_InitStructure.Pin = TOUCH_INT_PIN;
   HAL_GPIO_Init(TOUCH_INT_PORT, &GPIO_InitStructure);
 
+#ifdef TOUCH_RST_PIN
   // Release touch controller from reset
   HAL_GPIO_WritePin(TOUCH_RST_PORT, TOUCH_RST_PIN, GPIO_PIN_SET);
+#endif
 
   // Wait for the touch controller to boot up
   hal_delay(5);
