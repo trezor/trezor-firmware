@@ -375,7 +375,7 @@ async def _read_cmd(iface: HID) -> Cmd | None:
     desc_cont = frame_cont()
     read = loop.wait(iface.iface_num() | io.POLL_READ)
 
-    # wait for incoming comand indefinitely
+    # wait for incoming command indefinitely
     buf = await read
     while True:
         ifrm = overlay_struct(bytearray(buf), desc_init)
