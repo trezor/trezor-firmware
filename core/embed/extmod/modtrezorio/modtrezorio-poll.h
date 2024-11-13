@@ -133,7 +133,9 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
             return mp_const_true;
           }
         }
-      } else if (iface == USB_DATA_IFACE) {
+      }
+#endif
+      else if (iface == USB_DATA_IFACE) {
         bool usb_connected = usb_configured() == sectrue ? true : false;
         if (usb_connected != usb_connected_previously) {
           usb_connected_previously = usb_connected;
@@ -142,7 +144,6 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
           return mp_const_true;
         }
       }
-#endif
 #if USE_BUTTON
       else if (iface == BUTTON_IFACE) {
         const uint32_t evt = button_get_event();
