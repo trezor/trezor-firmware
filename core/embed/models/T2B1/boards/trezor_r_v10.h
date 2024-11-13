@@ -3,8 +3,6 @@
 
 #define HSE_8MHZ
 
-#define DISPLAY_LEGACY_HEADER "displays/vg-2864ksweg01.h"
-
 #define BTN_LEFT_PIN GPIO_PIN_10
 #define BTN_LEFT_PORT GPIOC
 #define BTN_LEFT_CLK_ENA __HAL_RCC_GPIOC_CLK_ENABLE

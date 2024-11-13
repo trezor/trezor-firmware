@@ -5,7 +5,6 @@
 #define VDD_1V8 1
 
 #define DISPLAY_COLOR_MODE DMA2D_OUTPUT_ARGB8888
-#define DISPLAY_LEGACY_HEADER "displays/dsi.h"
 
 #define I2C_COUNT 1
 #define I2C_INSTANCE_0 I2C5
