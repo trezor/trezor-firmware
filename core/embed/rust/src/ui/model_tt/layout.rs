@@ -1731,8 +1731,8 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///         """Calls drop on contents of the root component."""
     ///
     /// class UiResult:
-    ///    """Result of a UI operation."""
-    ///    pass
+    ///     """Result of an UI operation."""
+    ///     pass
     ///
     /// mock:global
     Qstr::MP_QSTR___name__ => Qstr::MP_QSTR_trezorui2.to_obj(),

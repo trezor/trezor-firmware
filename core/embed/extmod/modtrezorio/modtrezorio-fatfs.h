@@ -519,9 +519,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_fatfs_unmount_obj,
                                  mod_trezorio_fatfs_unmount);
 
 /// def is_mounted() -> bool:
-///    """
-///    Check if the filesystem is mounted.
-///    """
+///     """
+///     Check if the filesystem is mounted.
+///     """
 STATIC mp_obj_t mod_trezorio_fatfs_is_mounted() {
   return mp_obj_new_bool(_fatfs_instance_is_mounted());
 }

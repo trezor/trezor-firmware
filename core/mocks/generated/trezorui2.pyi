@@ -918,7 +918,7 @@ def request_slip39(
     prefill_word: str,
     can_go_back: bool,
 ) -> LayoutObj[str]:
-   """SLIP39 word input keyboard."""
+    """SLIP39 word input keyboard."""
 
 
 # rust/src/ui/model_tr/layout.rs
@@ -928,8 +928,8 @@ def select_word(
     description: str,
     words: Iterable[str],
 ) -> LayoutObj[int]:
-   """Select mnemonic word from three possibilities - seed check after backup. The
-   iterable must be of exact size. Returns index in range `0..3`."""
+    """Select mnemonic word from three possibilities - seed check after backup. The
+    iterable must be of exact size. Returns index in range `0..3`."""
 
 
 # rust/src/ui/model_tr/layout.rs
@@ -949,7 +949,7 @@ def request_number(
     max_count: int,
     description: Callable[[int], str] | None = None,  # unused on TR
 ) -> LayoutObj[tuple[UiResult, int]]:
-   """Number input with + and - buttons, description, and info button."""
+    """Number input with + and - buttons, description, and info button."""
 
 
 # rust/src/ui/model_tr/layout.rs
@@ -960,8 +960,8 @@ def show_checklist(
     active: int,
     button: str,
 ) -> LayoutObj[UiResult]:
-   """Checklist of backup steps. Active index is highlighted, previous items have check
-   mark next to them."""
+    """Checklist of backup steps. Active index is highlighted, previous items have check
+    mark next to them."""
 
 
 # rust/src/ui/model_tr/layout.rs
@@ -974,7 +974,7 @@ def confirm_recovery(
     info_button: bool,  # unused on TR
     show_instructions: bool,
 ) -> LayoutObj[UiResult]:
-   """Device recovery homescreen."""
+    """Device recovery homescreen."""
 
 
 # rust/src/ui/model_tr/layout.rs
@@ -991,7 +991,7 @@ def show_group_share_success(
     *,
     lines: Iterable[str],
 ) -> LayoutObj[int]:
-   """Shown after successfully finishing a group."""
+    """Shown after successfully finishing a group."""
 
 
 # rust/src/ui/model_tr/layout.rs
@@ -1001,9 +1001,9 @@ def show_progress(
     indeterminate: bool = False,
     title: str | None = None,
 ) -> LayoutObj[UiResult]:
-   """Show progress loader. Please note that the number of lines reserved on screen for
-   description is determined at construction time. If you want multiline descriptions
-   make sure the initial description has at least that amount of lines."""
+    """Show progress loader. Please note that the number of lines reserved on screen for
+    description is determined at construction time. If you want multiline descriptions
+    make sure the initial description has at least that amount of lines."""
 
 
 # rust/src/ui/model_tr/layout.rs
@@ -1014,8 +1014,8 @@ def show_progress_coinjoin(
     time_ms: int = 0,
     skip_first_paint: bool = False,
 ) -> LayoutObj[UiResult]:
-   """Show progress loader for coinjoin. Returns CANCELLED after a specified time when
-   time_ms timeout is passed."""
+    """Show progress loader for coinjoin. Returns CANCELLED after a specified time when
+    time_ms timeout is passed."""
 
 
 # rust/src/ui/model_tr/layout.rs
@@ -1144,8 +1144,8 @@ class LayoutObj(Generic[T]):
 
 # rust/src/ui/model_tt/layout.rs
 class UiResult:
-   """Result of a UI operation."""
-   pass
+    """Result of an UI operation."""
+    pass
 CONFIRMED: UiResult
 CANCELLED: UiResult
 INFO: UiResult

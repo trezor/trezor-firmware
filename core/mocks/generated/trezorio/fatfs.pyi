@@ -160,9 +160,9 @@ def unmount() -> None:
 
 # extmod/modtrezorio/modtrezorio-fatfs.h
 def is_mounted() -> bool:
-   """
-   Check if the filesystem is mounted.
-   """
+    """
+    Check if the filesystem is mounted.
+    """
 
 
 # extmod/modtrezorio/modtrezorio-fatfs.h
