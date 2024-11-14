@@ -194,6 +194,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_confirm_address;
   MP_QSTR_confirm_backup;
   MP_QSTR_confirm_blob;
+  MP_QSTR_confirm_blob_intro;
   MP_QSTR_confirm_coinjoin;
   MP_QSTR_confirm_emphasized;
   MP_QSTR_confirm_fido;
@@ -359,7 +360,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_notification_level;
   MP_QSTR_page_count;
   MP_QSTR_page_counter;
-  MP_QSTR_page_limit;
   MP_QSTR_pages;
   MP_QSTR_paint;
   MP_QSTR_passphrase__access_wallet;
