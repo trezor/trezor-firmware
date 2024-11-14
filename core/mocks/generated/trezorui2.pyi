@@ -70,10 +70,24 @@ def confirm_blob(
     chunkify: bool = False,
     page_counter: bool = False,
     prompt_screen: bool = False,
-    page_limit: int | None = None,
     cancel: bool = False,
 ) -> LayoutObj[UiResult]:
     """Confirm byte sequence data."""
+
+
+# rust/src/ui/model_mercury/layout.rs
+def confirm_blob_intro(
+    *,
+    title: str,
+    data: str | bytes,
+    subtitle: str | None = None,
+    verb: str | None = None,
+    verb_cancel: str | None = None,
+    chunkify: bool = False,
+) -> LayoutObj[UiResult]:
+    """Confirm byte sequence data by showing only the first page of the data
+    and instructing the user to access the menu in order to view all the data,
+    which can then be confirmed using confirm_blob."""
 
 
 # rust/src/ui/model_mercury/layout.rs
@@ -644,7 +658,6 @@ def confirm_blob(
     chunkify: bool = False,
     page_counter: bool = False,
     prompt_screen: bool = False,
-    page_limit: int | None = None,
     cancel: bool = False,
 ) -> LayoutObj[UiResult]:
     """Confirm byte sequence data."""
@@ -1217,7 +1230,6 @@ def confirm_blob(
     chunkify: bool = False,
     page_counter: bool = False,
     prompt_screen: bool = False,
-    page_limit: int | None = None,
     cancel: bool = False,
 ) -> LayoutObj[UiResult]:
     """Confirm byte sequence data."""

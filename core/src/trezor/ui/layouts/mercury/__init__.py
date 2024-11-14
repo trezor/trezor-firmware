@@ -477,19 +477,13 @@ def confirm_blob(
     prompt_screen: bool = True,
 ) -> Awaitable[None]:
     if ask_pagination:
-        main_layout = trezorui2.confirm_blob(
+        main_layout = trezorui2.confirm_blob_intro(
             title=title,
             data=data,
-            description=None,
             subtitle=description,
             verb=verb,
             verb_cancel=verb_cancel,
-            verb_info=TR.buttons__view_all_data,
-            info=True,
-            hold=False,
             chunkify=chunkify,
-            prompt_screen=False,
-            page_limit=1,
         )
         info_layout = trezorui2.confirm_blob(
             title=title,
