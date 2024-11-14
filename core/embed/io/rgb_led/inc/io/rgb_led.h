@@ -24,10 +24,16 @@
 
 #ifdef KERNEL_MODE
 
+// Initialize RGB LED driver
 void rgb_led_init(void);
+
+// Deinitialize RGB LED driver
+void rgb_led_deinit(void);
 
 #endif
 
+// Set RGB LED color
+// color: 24-bit RGB color, 0x00RRGGBB
 void rgb_led_set_color(uint32_t color);
 
 #endif  // TREZORHAL_RGB_LED_H

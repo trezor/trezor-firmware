@@ -69,10 +69,6 @@ def configure(
         sources += [
             "embed/io/haptic/drv2625/drv2625.c",
         ]
-        sources += [
-            "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_tim.c",
-            "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_tim_ex.c",
-        ]
         paths += ["embed/io/haptic/inc"]
         features_available.append("haptic")
         defines += ["USE_HAPTIC=1"]
