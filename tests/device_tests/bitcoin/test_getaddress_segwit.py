@@ -169,26 +169,22 @@ def test_show_multisig_3(client: Client):
 @pytest.mark.multisig
 @pytest.mark.parametrize("show_display", (True, False))
 def test_multisig_missing(client: Client, show_display):
-    # Multisig with global suffix specification.
     # Use account numbers 1, 2 and 3 to create a valid multisig,
     # but not containing the keys from account 0 used below.
     nodes = [
         btc.get_public_node(client, parse_path(f"m/49h/0h/{i}h")).node
         for i in range(1, 4)
     ]
+
+    # Multisig with global suffix specification.
     multisig1 = messages.MultisigRedeemScriptType(
         nodes=nodes, address_n=[0, 0], signatures=[b"", b"", b""], m=2
     )
 
     # Multisig with per-node suffix specification.
-    node = btc.get_public_node(
-        client, parse_path("m/49h/0h/0h/0"), coin_name="Bitcoin"
-    ).node
     multisig2 = messages.MultisigRedeemScriptType(
         pubkeys=[
-            messages.HDNodePathType(node=node, address_n=[1]),
-            messages.HDNodePathType(node=node, address_n=[2]),
-            messages.HDNodePathType(node=node, address_n=[3]),
+            messages.HDNodePathType(node=node, address_n=[0, 0]) for node in nodes
         ],
         signatures=[b"", b"", b""],
         m=2,
