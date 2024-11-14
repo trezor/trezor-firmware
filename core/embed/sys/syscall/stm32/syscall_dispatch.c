@@ -51,6 +51,10 @@
 #include <sec/optiga.h>
 #endif
 
+#ifdef USE_RGB_LED
+#include <io/rgb_led.h>
+#endif
+
 #ifdef USE_SD_CARD
 #include <io/sdcard.h>
 #endif
@@ -409,6 +413,13 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
 #ifdef USE_TOUCH
     case SYSCALL_TOUCH_GET_EVENT: {
       args[0] = touch_get_event();
+    } break;
+#endif
+
+#ifdef USE_RGB_LED
+    case SYSCALL_RGB_LED_SET_COLOR: {
+      uint32_t color = args[0];
+      rgb_led_set_color(color);
     } break;
 #endif
 
