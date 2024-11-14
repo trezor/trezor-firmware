@@ -42,6 +42,6 @@ def encoded_length(msg: MessageType) -> int:
 
 
 # rust/src/protobuf/obj.rs
-def encode(buffer: bytearray, msg: MessageType) -> int:
+def encode(buffer: bytearray | memoryview, msg: MessageType) -> int:
     """Encode the message into the specified buffer. Return length of
     encoding."""
