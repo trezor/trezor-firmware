@@ -71,6 +71,7 @@ def confirm_blob(
     page_counter: bool = False,
     prompt_screen: bool = False,
     page_limit: int | None = None,
+    cancel: bool = False,
 ) -> LayoutObj[UiResult]:
     """Confirm byte sequence data."""
 
@@ -644,6 +645,7 @@ def confirm_blob(
     page_counter: bool = False,
     prompt_screen: bool = False,
     page_limit: int | None = None,
+    cancel: bool = False,
 ) -> LayoutObj[UiResult]:
     """Confirm byte sequence data."""
 
@@ -1216,6 +1218,7 @@ def confirm_blob(
     page_counter: bool = False,
     prompt_screen: bool = False,
     page_limit: int | None = None,
+    cancel: bool = False,
 ) -> LayoutObj[UiResult]:
     """Confirm byte sequence data."""
 

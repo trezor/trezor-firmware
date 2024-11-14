@@ -3,7 +3,7 @@ use super::{
         component::{Frame, FrameMsg},
         theme,
     },
-    ConfirmActionMenu, ConfirmActionStrings,
+    ConfirmActionExtra, ConfirmActionStrings,
 };
 use crate::{
     error::Error,
@@ -52,6 +52,7 @@ pub struct ConfirmBlobParams {
     swipe_up: bool,
     swipe_down: bool,
     swipe_right: bool,
+    cancel: bool,
 }
 
 impl ConfirmBlobParams {
@@ -84,6 +85,7 @@ impl ConfirmBlobParams {
             swipe_up: false,
             swipe_down: false,
             swipe_right: false,
+            cancel: false,
         }
     }
 
@@ -149,6 +151,11 @@ impl ConfirmBlobParams {
 
     pub const fn with_swipe_right(mut self) -> Self {
         self.swipe_right = true;
+        self
+    }
+
+    pub const fn with_cancel(mut self, cancel: bool) -> Self {
+        self.cancel = cancel;
         self
     }
 
@@ -262,9 +269,19 @@ impl ConfirmBlobParams {
         }
         .into_paragraphs();
 
+        let confirm_extra = if self.cancel {
+            ConfirmActionExtra::Cancel
+        } else {
+            ConfirmActionExtra::Menu {
+                verb_cancel: self.verb_cancel,
+                has_info: self.info_button,
+                verb_info: self.verb_info,
+            }
+        };
+
         flow::new_confirm_action_simple(
             paragraphs,
-            ConfirmActionMenu::new(self.verb_cancel, self.info_button, self.verb_info),
+            confirm_extra,
             ConfirmActionStrings::new(
                 self.title,
                 self.subtitle,
