@@ -55,7 +55,7 @@ use crate::{
             flow::{
                 new_confirm_action_simple,
                 util::{ConfirmBlobParams, ShowInfoParams},
-                ConfirmActionMenu, ConfirmActionStrings,
+                ConfirmActionExtra, ConfirmActionMenuStrings, ConfirmActionStrings,
             },
             theme::ICON_BULLET_CHECKMARK,
         },
@@ -246,7 +246,7 @@ extern "C" fn new_confirm_emphasized(n_args: usize, args: *const Obj, kwargs: *m
 
         new_confirm_action_simple(
             FormattedText::new(ops).vertically_centered(),
-            ConfirmActionMenu::new(None, false, None),
+            ConfirmActionExtra::Menu(ConfirmActionMenuStrings::new()),
             ConfirmActionStrings::new(title, None, None, Some(title)),
             false,
             None,
@@ -296,6 +296,7 @@ extern "C" fn new_confirm_blob(n_args: usize, args: *const Obj, kwargs: *mut Map
             .get(Qstr::MP_QSTR_page_limit)
             .unwrap_or_else(|_| Obj::const_none())
             .try_into_option()?;
+        let cancel: bool = kwargs.get_or(Qstr::MP_QSTR_cancel, false)?;
 
         let (description, description_font) = if page_limit == Some(1) {
             (
@@ -312,12 +313,16 @@ extern "C" fn new_confirm_blob(n_args: usize, args: *const Obj, kwargs: *mut Map
             .with_subtitle(subtitle)
             .with_verb(verb)
             .with_verb_cancel(verb_cancel)
-            .with_verb_info(verb_info)
+            .with_verb_info(if info {
+                Some(verb_info.unwrap_or(TR::words__title_information.into()))
+            } else {
+                None
+            })
             .with_extra(extra)
-            .with_info_button(info)
             .with_chunkify(chunkify)
             .with_page_counter(page_counter)
             .with_page_limit(page_limit)
+            .with_cancel(cancel)
             .with_prompt(prompt_screen)
             .with_hold(hold)
             .into_flow()
@@ -426,7 +431,7 @@ extern "C" fn new_confirm_properties(n_args: usize, args: *const Obj, kwargs: *m
 
         new_confirm_action_simple(
             paragraphs.into_paragraphs(),
-            ConfirmActionMenu::new(None, false, None),
+            ConfirmActionExtra::Menu(ConfirmActionMenuStrings::new()),
             ConfirmActionStrings::new(title, None, None, hold.then_some(title)),
             hold,
             None,
@@ -456,7 +461,7 @@ extern "C" fn new_confirm_homescreen(n_args: usize, args: *const Obj, kwargs: *m
 
             new_confirm_action_simple(
                 paragraphs,
-                ConfirmActionMenu::new(None, false, None),
+                ConfirmActionExtra::Menu(ConfirmActionMenuStrings::new()),
                 ConfirmActionStrings::new(
                     TR::homescreen__settings_title.into(),
                     Some(TR::homescreen__settings_subtitle.into()),
@@ -741,7 +746,11 @@ extern "C" fn new_confirm_value(n_args: usize, args: *const Obj, kwargs: *mut Ma
             .with_subtitle(subtitle)
             .with_verb(verb)
             .with_verb_cancel(verb_cancel)
-            .with_info_button(info_button)
+            .with_verb_info(if info_button {
+                Some(TR::words__title_information.into())
+            } else {
+                None
+            })
             .with_chunkify(chunkify)
             .with_text_mono(text_mono)
             .with_prompt(hold)
@@ -768,7 +777,7 @@ extern "C" fn new_confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Ma
 
         new_confirm_action_simple(
             paragraphs.into_paragraphs(),
-            ConfirmActionMenu::new(None, true, None),
+            ConfirmActionExtra::Menu(ConfirmActionMenuStrings::new()),
             ConfirmActionStrings::new(title, None, None, Some(title)),
             true,
             None,
@@ -1084,7 +1093,7 @@ extern "C" fn new_confirm_coinjoin(n_args: usize, args: *const Obj, kwargs: *mut
 
         new_confirm_action_simple(
             paragraphs,
-            ConfirmActionMenu::new(None, false, None),
+            ConfirmActionExtra::Menu(ConfirmActionMenuStrings::new()),
             ConfirmActionStrings::new(
                 TR::coinjoin__title.into(),
                 None,
@@ -1580,6 +1589,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     page_counter: bool = False,
     ///     prompt_screen: bool = False,
     ///     page_limit: int | None = None,
+    ///     cancel: bool = False,
     /// ) -> LayoutObj[UiResult]:
     ///     """Confirm byte sequence data."""
     Qstr::MP_QSTR_confirm_blob => obj_fn_kw!(0, new_confirm_blob).as_obj(),
