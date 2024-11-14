@@ -8,7 +8,7 @@ use super::{
         PinKeyboardMsg, Progress, PromptScreen, SelectWordCount, SelectWordCountMsg, Slip39Input,
         StatusScreen, SwipeUpScreen, SwipeUpScreenMsg, VerticalMenu, VerticalMenuChoiceMsg,
     },
-    flow::{self, confirm_with_info},
+    flow::{self},
     theme,
 };
 use crate::{
@@ -48,7 +48,7 @@ use crate::{
             base::LAYOUT_STATE,
             obj::{ComponentMsgObj, LayoutObj, ATTACH_TYPE_OBJ},
             result::{CANCELLED, CONFIRMED, INFO},
-            util::{upy_disable_animation, ConfirmBlob, PropsList, RecoveryType},
+            util::{upy_disable_animation, PropsList, RecoveryType, StrOrBytes},
         },
         model_mercury::{
             component::{check_homescreen_format, SwipeContent},
@@ -301,7 +301,7 @@ extern "C" fn new_confirm_blob(n_args: usize, args: *const Obj, kwargs: *mut Map
                 &theme::TEXT_SUB_GREEN_LIME,
             )
         } else {
-            (description, &theme::TEXT_NORMAL)
+            (description, &theme::TEXT_SUB_GREY)
         };
 
         ConfirmBlobParams::new(title, data, description)
@@ -363,7 +363,7 @@ extern "C" fn new_confirm_address(n_args: usize, args: *const Obj, kwargs: *mut 
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let description: Option<TString> =
             kwargs.get(Qstr::MP_QSTR_description)?.try_into_option()?;
-        let extra: Option<TString> = kwargs.get(Qstr::MP_QSTR_extra)?.try_into_option()?;
+        let _extra: Option<TString> = kwargs.get(Qstr::MP_QSTR_extra)?.try_into_option()?;
         let data: Obj = kwargs.get(Qstr::MP_QSTR_data)?;
         let chunkify: bool = kwargs.get_or(Qstr::MP_QSTR_chunkify, false)?;
 
@@ -374,25 +374,20 @@ extern "C" fn new_confirm_address(n_args: usize, args: *const Obj, kwargs: *mut 
             &theme::TEXT_MONO
         };
 
-        let paragraphs = ConfirmBlob {
-            description: description.unwrap_or("".into()),
-            extra: extra.unwrap_or("".into()),
-            data: data.try_into()?,
-            description_font: &theme::TEXT_NORMAL,
-            extra_font: &theme::TEXT_DEMIBOLD,
-            data_font: data_style,
-        }
-        .into_paragraphs();
+        let data: StrOrBytes = data.try_into()?;
+        let paragraphs = ParagraphVecShort::from_iter([
+            Paragraph::new(&theme::TEXT_NORMAL, description.unwrap_or("".into())),
+            Paragraph::new(data_style, data.as_str_offset(0)),
+        ]);
 
-        flow::new_confirm_action_simple(
-            paragraphs,
-            ConfirmActionMenu::new(None, false, None),
-            ConfirmActionStrings::new(title, None, None, None),
-            false,
+        let flow = flow::new_confirm_with_info(
+            title,
             None,
-        )
-        .and_then(LayoutObj::new_root)
-        .map(Into::into)
+            TR::buttons__more_info.into(),
+            paragraphs,
+            None,
+        )?;
+        Ok(LayoutObj::new_root(flow)?.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
@@ -696,7 +691,7 @@ extern "C" fn new_show_info_with_cancel(n_args: usize, args: *const Obj, kwargs:
             let [key, value]: [Obj; 2] = util::iter_into_array(para)?;
             let key: TString = key.try_into()?;
             let value: TString = value.try_into()?;
-            paragraphs.add(Paragraph::new(&theme::TEXT_NORMAL, key).no_break());
+            paragraphs.add(Paragraph::new(&theme::TEXT_SUB_GREY, key).no_break());
             if chunkify {
                 paragraphs.add(Paragraph::new(
                     theme::get_chunkified_text_style(value.len()),
@@ -847,6 +842,7 @@ extern "C" fn new_confirm_modify_fee(n_args: usize, args: *const Obj, kwargs: *m
             None,
             TR::words__title_information.into(),
             paragraphs,
+            Some(title),
         )?;
         Ok(LayoutObj::new_root(flow)?.into())
     };
@@ -1036,8 +1032,7 @@ extern "C" fn new_confirm_with_info(n_args: usize, args: *const Obj, kwargs: *mu
             }
         }
 
-        let flow =
-            confirm_with_info::new_confirm_with_info(title, Some(button), info_button, paragraphs)?;
+        let flow = flow::new_confirm_with_info(title, Some(button), info_button, paragraphs, None)?;
         Ok(LayoutObj::new_root(flow)?.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }

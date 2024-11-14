@@ -948,7 +948,7 @@ pub enum TranslatedString {
     sign_message__bytes_template = 658,  // "{0} Bytes"
     sign_message__confirm_address = 659,  // "Signing address"
     sign_message__confirm_message = 660,  // "Confirm message"
-    sign_message__message_size = 661,  // "Message size:"
+    sign_message__message_size = 661,  // "Message size"
     sign_message__verify_address = 662,  // "Verify address"
     #[cfg(feature = "universal_fw")]
     solana__account_index = 663,  // "Account index"
@@ -2322,7 +2322,7 @@ impl TranslatedString {
             Self::sign_message__bytes_template => "{0} Bytes",
             Self::sign_message__confirm_address => "Signing address",
             Self::sign_message__confirm_message => "Confirm message",
-            Self::sign_message__message_size => "Message size:",
+            Self::sign_message__message_size => "Message size",
             Self::sign_message__verify_address => "Verify address",
             #[cfg(feature = "universal_fw")]
             Self::solana__account_index => "Account index",

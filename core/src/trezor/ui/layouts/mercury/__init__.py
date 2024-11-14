@@ -895,7 +895,9 @@ def confirm_replacement(title: str, txid: str) -> Awaitable[None]:
         txid,
         TR.send__transaction_id,
         verb=TR.buttons__continue,
+        info=False,
         br_code=ButtonRequestType.SignTx,
+        prompt_screen=False,
     )
 
 
@@ -1033,6 +1035,7 @@ async def confirm_signverify(
         data=message,
         extra=None,
         hold=not verify,
+        info=False,
         verb=TR.buttons__confirm if verify else None,
     )
 
