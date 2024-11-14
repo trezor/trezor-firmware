@@ -62,6 +62,8 @@ use crate::{
     },
 };
 
+const CONFIRM_BLOB_INTRO_MARGIN: usize = 24;
+
 impl TryFrom<SelectWordCountMsg> for Obj {
     type Error = Error;
 
@@ -250,6 +252,7 @@ extern "C" fn new_confirm_emphasized(n_args: usize, args: *const Obj, kwargs: *m
             ConfirmActionStrings::new(title, None, None, Some(title)),
             false,
             None,
+            0,
             false,
         )
         .and_then(LayoutObj::new_root)
@@ -292,23 +295,10 @@ extern "C" fn new_confirm_blob(n_args: usize, args: *const Obj, kwargs: *mut Map
         let chunkify: bool = kwargs.get_or(Qstr::MP_QSTR_chunkify, false)?;
         let page_counter: bool = kwargs.get_or(Qstr::MP_QSTR_page_counter, false)?;
         let prompt_screen: bool = kwargs.get_or(Qstr::MP_QSTR_prompt_screen, true)?;
-        let page_limit: Option<usize> = kwargs
-            .get(Qstr::MP_QSTR_page_limit)
-            .unwrap_or_else(|_| Obj::const_none())
-            .try_into_option()?;
         let cancel: bool = kwargs.get_or(Qstr::MP_QSTR_cancel, false)?;
 
-        let (description, description_font) = if page_limit == Some(1) {
-            (
-                Some(TR::instructions__view_all_data.into()),
-                &theme::TEXT_SUB_GREEN_LIME,
-            )
-        } else {
-            (description, &theme::TEXT_SUB_GREY)
-        };
-
         ConfirmBlobParams::new(title, data, description)
-            .with_description_font(description_font)
+            .with_description_font(&theme::TEXT_SUB_GREY)
             .with_text_mono(text_mono)
             .with_subtitle(subtitle)
             .with_verb(verb)
@@ -321,10 +311,46 @@ extern "C" fn new_confirm_blob(n_args: usize, args: *const Obj, kwargs: *mut Map
             .with_extra(extra)
             .with_chunkify(chunkify)
             .with_page_counter(page_counter)
-            .with_page_limit(page_limit)
             .with_cancel(cancel)
             .with_prompt(prompt_screen)
             .with_hold(hold)
+            .into_flow()
+            .and_then(LayoutObj::new_root)
+            .map(Into::into)
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_confirm_blob_intro(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let data: Obj = kwargs.get(Qstr::MP_QSTR_data)?;
+        let subtitle: Option<TString> = kwargs
+            .get(Qstr::MP_QSTR_subtitle)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
+        let verb: Option<TString> = kwargs
+            .get(Qstr::MP_QSTR_verb)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
+        let verb_cancel: Option<TString> = kwargs
+            .get(Qstr::MP_QSTR_verb_cancel)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
+        let chunkify: bool = kwargs.get_or(Qstr::MP_QSTR_chunkify, false)?;
+
+        ConfirmBlobParams::new(title, data, Some(TR::instructions__view_all_data.into()))
+            .with_verb(verb)
+            .with_verb_info(Some(TR::buttons__view_all_data.into()))
+            .with_description_font(&theme::TEXT_SUB_GREEN_LIME)
+            .with_subtitle(subtitle)
+            .with_verb_cancel(verb_cancel)
+            .with_footer_description(Some(
+                TR::buttons__confirm.into(), /* or words__confirm?? */
+            ))
+            .with_chunkify(chunkify)
+            .with_page_limit(Some(1))
+            .with_frame_margin(CONFIRM_BLOB_INTRO_MARGIN)
             .into_flow()
             .and_then(LayoutObj::new_root)
             .map(Into::into)
@@ -435,6 +461,7 @@ extern "C" fn new_confirm_properties(n_args: usize, args: *const Obj, kwargs: *m
             ConfirmActionStrings::new(title, None, None, hold.then_some(title)),
             hold,
             None,
+            0,
             false,
         )
         .and_then(LayoutObj::new_root)
@@ -470,6 +497,7 @@ extern "C" fn new_confirm_homescreen(n_args: usize, args: *const Obj, kwargs: *m
                 ),
                 false,
                 None,
+                0,
                 false,
             )
             .and_then(LayoutObj::new_root)
@@ -781,6 +809,7 @@ extern "C" fn new_confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Ma
             ConfirmActionStrings::new(title, None, None, Some(title)),
             true,
             None,
+            0,
             false,
         )
         .and_then(LayoutObj::new_root)
@@ -1102,6 +1131,7 @@ extern "C" fn new_confirm_coinjoin(n_args: usize, args: *const Obj, kwargs: *mut
             ),
             true,
             None,
+            0,
             false,
         )
         .and_then(LayoutObj::new_root)
@@ -1588,11 +1618,24 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     chunkify: bool = False,
     ///     page_counter: bool = False,
     ///     prompt_screen: bool = False,
-    ///     page_limit: int | None = None,
     ///     cancel: bool = False,
     /// ) -> LayoutObj[UiResult]:
     ///     """Confirm byte sequence data."""
     Qstr::MP_QSTR_confirm_blob => obj_fn_kw!(0, new_confirm_blob).as_obj(),
+
+    /// def confirm_blob_intro(
+    ///     *,
+    ///     title: str,
+    ///     data: str | bytes,
+    ///     subtitle: str | None = None,
+    ///     verb: str | None = None,
+    ///     verb_cancel: str | None = None,
+    ///     chunkify: bool = False,
+    /// ) -> LayoutObj[UiResult]:
+    ///     """Confirm byte sequence data by showing only the first page of the data
+    ///     and instructing the user to access the menu in order to view all the data,
+    ///     which can then be confirmed using confirm_blob."""
+    Qstr::MP_QSTR_confirm_blob_intro => obj_fn_kw!(0, new_confirm_blob_intro).as_obj(),
 
     /// def confirm_address(
     ///     *,

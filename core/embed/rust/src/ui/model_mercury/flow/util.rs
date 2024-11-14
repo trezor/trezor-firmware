@@ -52,6 +52,7 @@ pub struct ConfirmBlobParams {
     swipe_up: bool,
     swipe_down: bool,
     swipe_right: bool,
+    frame_margin: usize,
     cancel: bool,
 }
 
@@ -80,6 +81,7 @@ impl ConfirmBlobParams {
             swipe_up: false,
             swipe_down: false,
             swipe_right: false,
+            frame_margin: 0,
             cancel: false,
         }
     }
@@ -141,6 +143,19 @@ impl ConfirmBlobParams {
 
     pub const fn with_swipe_right(mut self) -> Self {
         self.swipe_right = true;
+        self
+    }
+
+    pub const fn with_frame_margin(mut self, frame_margin: usize) -> Self {
+        self.frame_margin = frame_margin;
+        self
+    }
+
+    pub const fn with_footer_description(
+        mut self,
+        footer_description: Option<TString<'static>>,
+    ) -> Self {
+        self.footer_description = footer_description;
         self
     }
 
@@ -277,9 +292,11 @@ impl ConfirmBlobParams {
                 self.subtitle,
                 self.verb,
                 self.prompt.then_some(self.title),
-            ),
+            )
+            .with_footer_description(self.footer_description),
             self.hold,
             self.page_limit,
+            self.frame_margin,
             self.page_counter,
         )
     }

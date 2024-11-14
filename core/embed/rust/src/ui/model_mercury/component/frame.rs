@@ -89,6 +89,7 @@ pub struct Frame<T> {
     swipe: SwipeConfig,
     internal_page_cnt: usize,
     horizontal_swipe: HorizontalSwipe,
+    margin: usize,
 }
 
 pub enum FrameMsg<T> {
@@ -111,6 +112,7 @@ where
             swipe: SwipeConfig::new(),
             internal_page_cnt: 1,
             horizontal_swipe: HorizontalSwipe::new(),
+            margin: 0,
         }
     }
 
@@ -262,11 +264,17 @@ where
             ..self
         }
     }
+
     pub fn with_vertical_pages(self) -> Self {
         Self {
             swipe: self.swipe.with_vertical_pages(),
             ..self
         }
+    }
+
+    pub fn with_margin(mut self, margin: usize) -> Self {
+        self.margin = margin;
+        self
     }
 }
 
@@ -278,7 +286,7 @@ where
 
     fn place(&mut self, bounds: Rect) -> Rect {
         self.bounds = bounds;
-        let content_area = frame_place(&mut self.header, &mut self.footer, bounds);
+        let content_area = frame_place(&mut self.header, &mut self.footer, bounds, self.margin);
 
         self.content.place(content_area);
 
@@ -347,9 +355,16 @@ fn frame_event(
     header.event(ctx, event)
 }
 
-fn frame_place(header: &mut Header, footer: &mut Option<Footer>, bounds: Rect) -> Rect {
+fn frame_place(
+    header: &mut Header,
+    footer: &mut Option<Footer>,
+    bounds: Rect,
+    margin: usize,
+) -> Rect {
     let (mut header_area, mut content_area) = bounds.split_top(TITLE_HEIGHT);
-    content_area = content_area.inset(Insets::top(theme::SPACING));
+    content_area = content_area
+        .inset(Insets::top(theme::SPACING))
+        .inset(Insets::top(margin as i16));
     header_area = header_area.inset(Insets::sides(theme::SPACING));
 
     header.place(header_area);
@@ -360,7 +375,7 @@ fn frame_place(header: &mut Header, footer: &mut Option<Footer>, bounds: Rect) -
         content_area = content_area.inset(Insets::bottom(theme::SPACING));
         let (remaining, footer_area) = content_area.split_bottom(footer.height());
         footer.place(footer_area);
-        content_area = remaining;
+        content_area = remaining.inset(Insets::bottom(margin as i16));
     }
     content_area
 }
