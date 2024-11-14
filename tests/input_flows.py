@@ -258,7 +258,7 @@ class InputFlowSignMessageInfo(InputFlowBase):
 
     def input_flow_tt(self) -> BRGeneratorType:
         yield
-        # show address/message info
+        # signing address/message info
         self.debug.click(buttons.CORNER_BUTTON)
         self.debug.click(buttons.CORNER_BUTTON)
         self.debug.press_no()
@@ -268,27 +268,23 @@ class InputFlowSignMessageInfo(InputFlowBase):
         yield
         self.debug.press_yes()
         yield
+        # going back to the signing address
         self.debug.press_no()
         yield
         self.debug.press_no()
+        # address mismatch?
         self.debug.press_yes()
 
     def input_flow_t3t1(self) -> BRGeneratorType:
         yield
         # show address/message info
         self.debug.click(buttons.CORNER_BUTTON)
+        self.debug.click(buttons.VERTICAL_MENU[0])
         self.debug.click(buttons.CORNER_BUTTON)
-        self.debug.press_no()
-        self.debug.synchronize_at("IconDialog")
+        self.debug.click(buttons.VERTICAL_MENU[1])
         # address mismatch?
-        self.debug.press_no()
+        self.debug.swipe_up()
         yield
-        self.debug.press_yes()
-        yield
-        self.debug.press_no()
-        yield
-        self.debug.press_no()
-        self.debug.press_yes()
 
 
 class InputFlowShowAddressQRCode(InputFlowBase):

@@ -1072,7 +1072,7 @@ async def confirm_signverify(
         items.append((f"{TR.address_details__derivation_path}:", path))
     items.append(
         (
-            TR.sign_message__message_size,
+            f"{TR.sign_message__message_size}:",
             TR.sign_message__bytes_template.format(len(message)),
         )
     )
