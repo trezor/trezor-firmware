@@ -65,9 +65,8 @@ def set_autolock_delay(device_handler: "BackgroundDeviceHandler", delay_ms: int)
 
     debug.input("1234")
 
-    TR.assert_template(
-        debug.read_layout().text_content(),
-        "auto_lock__change_template",
+    assert TR.regexp("auto_lock__change_template").match(
+        debug.read_layout().text_content()
     )
 
     layout = go_next(debug)
@@ -108,17 +107,17 @@ def test_autolock_interrupts_signing(device_handler: "BackgroundDeviceHandler"):
     if debug.layout_type is LayoutType.TT:
         debug.click(buttons.OK)
         layout = debug.click(buttons.OK)
-        TR.assert_in(layout.text_content(), "send__total_amount")
+        assert TR.send__total_amount in layout.text_content()
         assert "0.0039 BTC" in layout.text_content()
     elif debug.layout_type is LayoutType.Mercury:
         debug.swipe_up()
         layout = debug.swipe_up()
-        TR.assert_in(layout.text_content(), "send__total_amount")
+        assert TR.send__total_amount in layout.text_content()
         assert "0.0039 BTC" in layout.text_content()
     elif debug.layout_type is LayoutType.TR:
         debug.press_right()
         layout = debug.press_right()
-        TR.assert_in(layout.text_content(), "send__total_amount")
+        assert TR.send__total_amount in layout.text_content()
         assert "0.0039 BTC" in layout.text_content()
 
     # wait for autolock to kick in
@@ -160,18 +159,18 @@ def test_autolock_does_not_interrupt_signing(device_handler: "BackgroundDeviceHa
     if debug.layout_type is LayoutType.TT:
         debug.click(buttons.OK)
         layout = debug.click(buttons.OK)
-        TR.assert_in(layout.text_content(), "send__total_amount")
+        assert TR.send__total_amount in layout.text_content()
         assert "0.0039 BTC" in layout.text_content()
     elif debug.layout_type is LayoutType.Mercury:
         debug.swipe_up()
         layout = debug.swipe_up()
-        TR.assert_in(layout.text_content(), "send__total_amount")
+        assert TR.send__total_amount in layout.text_content()
         assert "0.0039 BTC" in layout.text_content()
         debug.swipe_up()
     elif debug.layout_type is LayoutType.TR:
         debug.press_right()
         layout = debug.press_right()
-        TR.assert_in(layout.text_content(), "send__total_amount")
+        assert TR.send__total_amount in layout.text_content()
         assert "0.0039 BTC" in layout.text_content()
 
     def sleepy_filter(msg: MessageType) -> MessageType:
@@ -274,7 +273,7 @@ def test_autolock_interrupts_passphrase(device_handler: "BackgroundDeviceHandler
 
 
 def unlock_dry_run(debug: "DebugLink") -> "LayoutContent":
-    TR.assert_in(debug.read_layout().text_content(), "recovery__check_dry_run")
+    assert TR.recovery__check_dry_run in debug.read_layout().text_content()
     layout = go_next(debug)
     assert "PinKeyboard" in layout.all_components()
 
@@ -291,7 +290,7 @@ def test_dryrun_locks_at_number_of_words(device_handler: "BackgroundDeviceHandle
     device_handler.run(device.recover, dry_run=True)  # type: ignore
 
     layout = unlock_dry_run(debug)
-    TR.assert_in(debug.read_layout().text_content(), "recovery__num_of_words")
+    assert TR.recovery__num_of_words in debug.read_layout().text_content()
 
     if debug.layout_type is LayoutType.TR:
         debug.press_right()
@@ -312,7 +311,7 @@ def test_dryrun_locks_at_number_of_words(device_handler: "BackgroundDeviceHandle
     assert layout is not None
 
     # we are back at homescreen
-    TR.assert_in(debug.read_layout().text_content(), "recovery__num_of_words")
+    assert TR.recovery__num_of_words in debug.read_layout().text_content()
 
 
 @pytest.mark.setup_client(pin=PIN4)

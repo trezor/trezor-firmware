@@ -23,6 +23,7 @@ from trezorlib.tools import parse_path
 
 from ...common import WITH_MOCK_URANDOM
 from ...input_flows import InputFlowBip39Recovery, InputFlowBip39ResetBackup
+from ...translations import set_language
 
 
 @pytest.mark.models("core")
@@ -31,7 +32,9 @@ def test_reset_recovery(client: Client):
     mnemonic = reset(client)
     address_before = btc.get_address(client, "Bitcoin", parse_path("m/44h/0h/0h/0/0"))
 
+    lang = client.features.language or "en"
     device.wipe(client)
+    set_language(client, lang[:2])
     recover(client, mnemonic)
     address_after = btc.get_address(client, "Bitcoin", parse_path("m/44h/0h/0h/0/0"))
     assert address_before == address_after

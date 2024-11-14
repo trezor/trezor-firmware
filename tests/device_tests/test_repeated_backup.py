@@ -162,7 +162,7 @@ def test_repeated_backup_cancel(client: Client):
         assert client.features.recovery_status == messages.RecoveryStatus.Backup
 
     layout = client.debug.read_layout()
-    TR.assert_in(layout.text_content(), "recovery__unlock_repeated_backup")
+    assert TR.recovery__unlock_repeated_backup in layout.text_content()
 
     # send a Cancel message
 
@@ -218,7 +218,7 @@ def test_repeated_backup_send_disallowed_message(client: Client):
         assert client.features.recovery_status == messages.RecoveryStatus.Backup
 
     layout = client.debug.read_layout()
-    TR.assert_in(layout.text_content(), "recovery__unlock_repeated_backup")
+    assert TR.recovery__unlock_repeated_backup in layout.text_content()
 
     # send a GetAddress message
 
@@ -237,6 +237,6 @@ def test_repeated_backup_send_disallowed_message(client: Client):
     assert client.features.recovery_status == messages.RecoveryStatus.Backup
 
     # we are still on the confirmation screen!
-    TR.assert_in(
-        client.debug.read_layout().text_content(), "recovery__unlock_repeated_backup"
+    assert (
+        TR.recovery__unlock_repeated_backup in client.debug.read_layout().text_content()
     )

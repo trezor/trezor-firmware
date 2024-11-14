@@ -59,13 +59,13 @@ def test_reset_bip39(device_handler: "BackgroundDeviceHandler"):
 
     # confirm backup intro
     # parametrized string
-    TR.assert_template(
-        debug.read_layout().text_content(), "backup__info_single_share_backup"
+    assert TR.regexp("backup__info_single_share_backup").match(
+        debug.read_layout().text_content()
     )
     reset.confirm_read(debug)
 
     # confirm backup warning
-    TR.assert_in(debug.read_layout().text_content(), "reset__never_make_digital_copy")
+    assert TR.reset__never_make_digital_copy in debug.read_layout().text_content()
     reset.confirm_read(debug, middle_r=True)
 
     # read words

@@ -76,18 +76,17 @@ def test_backup_slip39_custom(
 
     # confirm backup configuration
     if share_count > 1:
-        TR.assert_template(
-            debug.read_layout().text_content(),
-            "reset__create_x_of_y_multi_share_backup_template",
+        assert TR.regexp("reset__create_x_of_y_multi_share_backup_template").match(
+            debug.read_layout().text_content()
         )
     else:
-        TR.assert_template(
-            debug.read_layout().text_content(), "backup__info_single_share_backup"
+        assert TR.regexp("backup__info_single_share_backup").match(
+            debug.read_layout().text_content()
         )
     reset.confirm_read(debug)
 
     # confirm backup intro
-    TR.assert_in(debug.read_layout().text_content(), "reset__never_make_digital_copy")
+    assert TR.reset__never_make_digital_copy in debug.read_layout().text_content()
     reset.confirm_read(debug, middle_r=True)
 
     all_words: list[str] = []

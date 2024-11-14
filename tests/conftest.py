@@ -309,8 +309,7 @@ def client(
     if _raw_client.model is not models.T1B1:
         lang = request.session.config.getoption("lang") or "en"
         assert isinstance(lang, str)
-        if lang != "en":
-            translations.set_language(_raw_client, lang)
+        translations.set_language(_raw_client, lang)
 
     setup_params = dict(
         uninitialized=False,

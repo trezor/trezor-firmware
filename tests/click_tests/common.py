@@ -1,15 +1,17 @@
 from __future__ import annotations
 
+import typing as t
 from enum import Enum
-from typing import TYPE_CHECKING
 
 from trezorlib.debuglink import LayoutType
 
 from .. import buttons
 from .. import translations as TR
 
-if TYPE_CHECKING:
+if t.TYPE_CHECKING:
     from trezorlib.debuglink import DebugLink, LayoutContent
+
+    AllActionsType = t.List[t.Union[str, t.Tuple[str, ...]]]
 
 
 # Passphrases and addresses for both models
@@ -82,7 +84,7 @@ def go_back(debug: "DebugLink", r_middle: bool = False) -> LayoutContent:
 def navigate_to_action_and_press(
     debug: "DebugLink",
     wanted_action: str,
-    all_actions: list[str],
+    all_actions: AllActionsType,
     is_carousel: bool = True,
     hold_ms: int = 0,
 ) -> None:
@@ -129,16 +131,19 @@ def unlock_gesture(debug: "DebugLink") -> LayoutContent:
         raise RuntimeError("Unknown model")
 
 
-def _get_action_index(wanted_action: str, all_actions: list[str]) -> int:
+def _get_action_index(wanted_action: str, all_actions: AllActionsType) -> int:
     """Get index of the action in the list of all actions"""
     if wanted_action in all_actions:
         return all_actions.index(wanted_action)
-    else:
-        # It may happen that one action item can mean multiple actions
-        # (e.g. "CANCEL|DELETE" in the passphrase layout - both actions are on the same button)
-        for index, action in enumerate(all_actions):
-            subactions = action.split("|")
-            if wanted_action in subactions:
+    for index, action in enumerate(all_actions):
+        if not isinstance(action, tuple):
+            action = (action,)
+        for subaction in action:
+            try:
+                tr = TR.translate(subaction)
+            except KeyError:
+                continue
+            if tr == wanted_action:
                 return index
 
     raise ValueError(f"Action {wanted_action} is not supported in {all_actions}")
@@ -148,7 +153,7 @@ def _move_one_closer(
     debug: "DebugLink",
     wanted_action: str,
     current_action: str,
-    all_actions: list[str],
+    all_actions: AllActionsType,
     is_carousel: bool,
 ) -> LayoutContent:
     """Pressing either left or right regarding to the current situation"""
@@ -169,7 +174,3 @@ def _move_one_closer(
             return debug.press_left()
         else:
             return debug.press_right()
-
-
-def get_possible_btn_texts(path: str) -> str:
-    return "|".join(TR.translate(path))
