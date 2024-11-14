@@ -50,12 +50,12 @@ def configure(
         paths += ["embed/io/i2c_bus/inc"]
         paths += ["embed/io/touch/inc"]
         features_available.append("touch")
-        # sources += ["embed/io/button/stm32/button.c"]
-        # paths += ["embed/io/button/inc"]
-        # features_available.append("button")
+        sources += ["embed/io/button/stm32/button.c"]
+        paths += ["embed/io/button/inc"]
+        features_available.append("button")
         defines += ["USE_TOUCH=1"]
         defines += ["USE_I2C=1"]
-        # defines += ["USE_BUTTON=1"]
+        defines += ["USE_BUTTON=1"]
 
     # if "ble" in features_wanted:
     #     sources += ["embed/trezorhal/stm32f4/ble/ble_hal.c"]
