@@ -60,9 +60,8 @@ class Context:
     (i.e., wire, debug, single BT connection, etc.)
     """
 
-    def __init__(self, iface: WireInterface, sid: int, buffer: bytearray) -> None:
+    def __init__(self, iface: WireInterface, buffer: bytearray) -> None:
         self.iface = iface
-        self.sid = sid
         self.buffer = buffer
 
     def read_from_wire(self) -> Awaitable[codec_v1.Message]:
@@ -95,9 +94,8 @@ class Context:
         if __debug__:
             log.debug(
                 __name__,
-                "%s:%x expect: %s",
+                "%d expect: %s",
                 self.iface.iface_num(),
-                self.sid,
                 expected_type.MESSAGE_NAME if expected_type else expected_types,
             )
 
@@ -115,9 +113,8 @@ class Context:
         if __debug__:
             log.debug(
                 __name__,
-                "%s:%x read: %s",
+                "%d read: %s",
                 self.iface.iface_num(),
-                self.sid,
                 expected_type.MESSAGE_NAME,
             )
 
@@ -131,9 +128,8 @@ class Context:
         if __debug__:
             log.debug(
                 __name__,
-                "%s:%x write: %s",
+                "%d write: %s",
                 self.iface.iface_num(),
-                self.sid,
                 msg.MESSAGE_NAME,
             )
 

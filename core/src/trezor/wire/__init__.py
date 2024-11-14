@@ -56,7 +56,7 @@ EXPERIMENTAL_ENABLED = False
 
 def setup(iface: WireInterface) -> None:
     """Initialize the wire stack on passed USB interface."""
-    loop.schedule(handle_session(iface, codec_v1.SESSION_ID))
+    loop.schedule(handle_session(iface))
 
 
 def wrap_protobuf_load(
@@ -109,9 +109,8 @@ async def _handle_single_message(ctx: context.Context, msg: codec_v1.Message) ->
             msg_type = f"{msg.type} - unknown message type"
         log.debug(
             __name__,
-            "%s:%x receive: <%s>",
+            "%d receive: <%s>",
             ctx.iface.iface_num(),
-            ctx.sid,
             msg_type,
         )
 
@@ -190,8 +189,8 @@ async def _handle_single_message(ctx: context.Context, msg: codec_v1.Message) ->
     return msg.type in AVOID_RESTARTING_FOR
 
 
-async def handle_session(iface: WireInterface, session_id: int) -> None:
-    ctx = context.Context(iface, session_id, WIRE_BUFFER)
+async def handle_session(iface: WireInterface) -> None:
+    ctx = context.Context(iface, WIRE_BUFFER)
     next_msg: codec_v1.Message | None = None
 
     # Take a mark of modules that are imported at this point, so we can

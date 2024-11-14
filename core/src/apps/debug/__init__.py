@@ -360,7 +360,7 @@ if __debug__:
 
         global DEBUG_CONTEXT
 
-        DEBUG_CONTEXT = ctx = context.Context(iface, 0, WIRE_BUFFER_DEBUG)
+        DEBUG_CONTEXT = ctx = context.Context(iface, WIRE_BUFFER_DEBUG)
 
         if storage.layout_watcher:
             try:
@@ -385,9 +385,8 @@ if __debug__:
                     msg_type = f"{msg.type} - unknown message type"
                 log.debug(
                     __name__,
-                    "%s:%x receive: <%s>",
+                    "%d receive: <%s>",
                     ctx.iface.iface_num(),
-                    ctx.sid,
                     msg_type,
                 )
 
