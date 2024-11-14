@@ -281,13 +281,6 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
       SET_REGION( 6, FLASH_BASE + 0x110000, SIZE_64KB, 0x00, FLASH_DATA, PRIV_RW );
       break;
 
-    case MPU_MODE_KERNEL_SRAM:
-      DIS_REGION( 5 );
-      // Kernel data in DMA accessible SRAM (Privileged, Read-Write, Non-Executable)
-      // (overlaps with unprivileged SRAM region)
-      SET_REGION( 6, SRAM_BASE,             SIZE_1KB,  0x00, SRAM, PRIV_RW );
-      break;
-
     case MPU_MODE_UNUSED_FLASH:
       // Unused Flash Area #1 (Privileged, Read-Write, Non-Executable)
       SET_REGION( 5, FLASH_BASE + 0x00C000, SIZE_16KB, 0x00, FLASH_DATA, PRIV_RW );
