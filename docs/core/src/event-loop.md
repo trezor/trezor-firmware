@@ -187,6 +187,12 @@ is scheduled to run on the next tick.
 
 _Upcoming changes may solve this in relevant cases, by inlining syscall operations._
 
+**`loop.mailbox()`** is an unidirectional communication channel, simplification of Go
+channels.
+
+It allows to put a `value` in the channel using `put(value)` on the mailbox instance.
+To retrieve the value, use `await` on the same `mailbox` instance.
+
 **`loop.spawn(task)`**: Start the task asynchronously. Return an object that allows
 the caller to await its result, or shut the task down.
 
@@ -206,13 +212,3 @@ If the task is cancelled (usually by calling `task.close()`), the awaiter receiv
 
 It is also possible to register a synchronous finalizer callback via
 `task.set_finalizer`. This is used internally to implement workflow management.
-
-**`loop.chan()`** is a unidirectional communication channel that actually implements two
-syscalls:
-
- * **`chan.put()`** sends a value to the channel, and waits until it is picked up
-   by a taker task.
- * **`chan.take()`** waits until a value is sent to the channel and then returns it.
-
-It is possible to put in a value without waiting for a taker, by calling
-`chan.publish()`. It is not possible to take a value without waiting.
