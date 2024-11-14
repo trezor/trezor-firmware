@@ -31,18 +31,11 @@ const uint32_t MSIRangeTable[16] = {48000000U, 24000000U, 16000000U, 12000000U,
                                     4000000U,  2000000U,  1330000U,  1000000U,
                                     3072000U,  1536000U,  1024000U,  768000U,
                                     400000U,   200000U,   133000U,   100000U};
-typedef struct {
-  uint32_t freq;
-  uint32_t pllq;
-  uint32_t pllp;
-  uint32_t pllm;
-  uint32_t plln;
-} clock_conf_t;
 
 // PLLCLK = ((HSE / PLLM) * PLLN) / PLLR
 #ifdef HSE_32MHZ
 #define PLLM_COEF 2U
-#define PLLN_COEF 1U
+#define PLLN_COEF 2U
 #elif defined HSE_16MHZ
 #define PLLM_COEF 1U
 #define PLLN_COEF 2U
@@ -56,30 +49,14 @@ typedef struct {
 #define PLLN_COEF 2U
 #endif
 
-#if defined STM32U5
 #define DEFAULT_FREQ 160U
 #define DEFAULT_PLLM PLLM_COEF
 #define DEFAULT_PLLN (5 * PLLN_COEF)  // mult by x
 #define DEFAULT_PLLR 1U               // division by 1
 #define DEFAULT_PLLQ 1U               // division by 1
 #define DEFAULT_PLLP 5U               // division by 5
-#else
-#error Unsupported MCU
-#endif
 
 uint32_t SystemCoreClock = DEFAULT_FREQ * 1000000U;
-
-// assuming HSE 16 MHz
-clock_conf_t clock_conf[1] = {
-    {
-        // clk = ((16MHz / 1) * 10) / 1 = 160 MHz
-        .freq = 160,
-        .pllp = 1,
-        .pllq = PLLM_COEF,
-        .pllm = 1,
-        .plln = 5 * PLLN_COEF,
-    },
-};
 
 #pragma GCC optimize( \
     "no-stack-protector")  // applies to all functions in this file
