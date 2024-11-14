@@ -1,5 +1,7 @@
 from typing import TYPE_CHECKING
 
+from trezor.enums import MultisigPubkeysOrder
+
 from .keychain import with_keychain
 
 if TYPE_CHECKING:
@@ -105,13 +107,18 @@ async def get_address(msg: GetAddress, keychain: Keychain, coin: CoinInfo) -> Ad
 
             await confirm_multisig_warning()
 
+            if multisig.pubkeys_order == MultisigPubkeysOrder.LEXICOGRAPHIC:
+                account = f"Multisig {multisig.m} of {len(pubnodes)}\n(sorted)"
+            else:
+                account = f"Multisig {multisig.m} of {len(pubnodes)}"
+
             await show_address(
                 address_short,
                 case_sensitive=address_case_sensitive,
                 path=path,
                 multisig_index=multisig_index,
                 xpubs=_get_xpubs(coin, multisig_xpub_magic, pubnodes),
-                account=f"Multisig {multisig.m} of {len(pubnodes)}",
+                account=account,
                 chunkify=bool(msg.chunkify),
             )
         else:
