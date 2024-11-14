@@ -52,13 +52,13 @@ impl FlowController for ConfirmWithInfo {
 
 pub fn new_confirm_with_info(
     title: TString<'static>,
-    button: TString<'static>,
+    footer_description: Option<TString<'static>>,
     info_button: TString<'static>,
     paragraphs: ParagraphVecShort<'static>,
 ) -> Result<SwipeFlow, error::Error> {
     let content_main = Frame::left_aligned(title, SwipeContent::new(paragraphs.into_paragraphs()))
         .with_menu_button()
-        .with_footer(TR::instructions__swipe_up.into(), Some(button))
+        .with_footer(TR::instructions__swipe_up.into(), footer_description)
         .with_swipe(Direction::Up, SwipeSettings::default())
         .map(|msg| matches!(msg, FrameMsg::Button(FlowMsg::Info)).then_some(FlowMsg::Info));
 
