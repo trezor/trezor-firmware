@@ -42,6 +42,7 @@ pub struct ConfirmActionStrings {
     subtitle: Option<TString<'static>>,
     verb: Option<TString<'static>>,
     prompt_screen: Option<TString<'static>>,
+    footer_description: Option<TString<'static>>,
 }
 
 impl ConfirmActionStrings {
@@ -56,7 +57,13 @@ impl ConfirmActionStrings {
             subtitle,
             verb,
             prompt_screen,
+            footer_description: None,
         }
+    }
+
+    pub fn with_footer_description(mut self, footer_description: Option<TString<'static>>) -> Self {
+        self.footer_description = footer_description;
+        self
     }
 }
 
@@ -222,6 +229,7 @@ pub fn new_confirm_action(
         ConfirmActionStrings::new(title, subtitle, None, prompt_screen.then_some(prompt_title)),
         hold,
         None,
+        0,
         false,
     )
 }
@@ -232,16 +240,21 @@ fn new_confirm_action_uni<T: Component + Paginate + MaybeTrace + 'static>(
     extra: ConfirmActionExtra,
     strings: ConfirmActionStrings,
     hold: bool,
+    frame_margin: usize,
     show_page_counter: bool,
 ) -> Result<SwipeFlow, error::Error> {
     let (prompt_screen, prompt_pages, flow, page) =
         create_flow(strings.title, strings.prompt_screen, hold, &extra);
 
     let mut content = Frame::left_aligned(strings.title, content)
+        .with_margin(frame_margin)
         .with_swipe(Direction::Up, SwipeSettings::default())
         .with_swipe(Direction::Left, SwipeSettings::default())
         .with_vertical_pages()
-        .with_footer(TR::instructions__swipe_up.into(), None);
+        .with_footer(
+            TR::instructions__swipe_up.into(),
+            strings.footer_description,
+        );
 
     match extra {
         ConfirmActionExtra::Menu { .. } => {
@@ -413,6 +426,7 @@ pub fn new_confirm_action_simple<T: Component + Paginate + MaybeTrace + 'static>
     strings: ConfirmActionStrings,
     hold: bool,
     page_limit: Option<usize>,
+    frame_margin: usize,
     show_page_counter: bool,
 ) -> Result<SwipeFlow, error::Error> {
     new_confirm_action_uni(
@@ -420,6 +434,7 @@ pub fn new_confirm_action_simple<T: Component + Paginate + MaybeTrace + 'static>
         extra,
         strings,
         hold,
+        frame_margin,
         show_page_counter,
     )
 }
