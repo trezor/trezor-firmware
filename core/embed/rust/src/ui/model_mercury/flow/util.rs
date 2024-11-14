@@ -3,13 +3,14 @@ use super::{
         component::{Frame, FrameMsg},
         theme,
     },
-    ConfirmActionMenu, ConfirmActionStrings,
+    ConfirmActionExtra, ConfirmActionMenuStrings, ConfirmActionStrings,
 };
 use crate::{
     error::Error,
     maybe_trace::MaybeTrace,
     micropython::obj::Obj,
     strutil::TString,
+    translations::TR,
     ui::{
         component::{
             base::ComponentExt,
@@ -38,9 +39,8 @@ pub struct ConfirmBlobParams {
     description_font: &'static TextStyle,
     extra: Option<TString<'static>>,
     verb: Option<TString<'static>>,
-    verb_cancel: Option<TString<'static>>,
+    verb_cancel: TString<'static>,
     verb_info: Option<TString<'static>>,
-    info_button: bool,
     cancel_button: bool,
     menu_button: bool,
     prompt: bool,
@@ -52,14 +52,11 @@ pub struct ConfirmBlobParams {
     swipe_up: bool,
     swipe_down: bool,
     swipe_right: bool,
+    cancel: bool,
 }
 
 impl ConfirmBlobParams {
-    pub const fn new(
-        title: TString<'static>,
-        data: Obj,
-        description: Option<TString<'static>>,
-    ) -> Self {
+    pub fn new(title: TString<'static>, data: Obj, description: Option<TString<'static>>) -> Self {
         Self {
             title,
             subtitle: None,
@@ -70,9 +67,8 @@ impl ConfirmBlobParams {
             description_font: &theme::TEXT_NORMAL,
             extra: None,
             verb: None,
-            verb_cancel: None,
+            verb_cancel: TR::buttons__cancel.into(),
             verb_info: None,
-            info_button: false,
             cancel_button: false,
             menu_button: false,
             prompt: false,
@@ -84,6 +80,7 @@ impl ConfirmBlobParams {
             swipe_up: false,
             swipe_down: false,
             swipe_right: false,
+            cancel: false,
         }
     }
 
@@ -107,18 +104,13 @@ impl ConfirmBlobParams {
         self
     }
 
-    pub const fn with_info_button(mut self, info_button: bool) -> Self {
-        self.info_button = info_button;
-        self
-    }
-
     pub const fn with_verb(mut self, verb: Option<TString<'static>>) -> Self {
         self.verb = verb;
         self
     }
 
-    pub const fn with_verb_cancel(mut self, verb_cancel: Option<TString<'static>>) -> Self {
-        self.verb_cancel = verb_cancel;
+    pub fn with_verb_cancel(mut self, verb_cancel: Option<TString<'static>>) -> Self {
+        self.verb_cancel = verb_cancel.unwrap_or(TR::buttons__cancel.into());
         self
     }
 
@@ -149,6 +141,11 @@ impl ConfirmBlobParams {
 
     pub const fn with_swipe_right(mut self) -> Self {
         self.swipe_right = true;
+        self
+    }
+
+    pub const fn with_cancel(mut self, cancel: bool) -> Self {
+        self.cancel = cancel;
         self
     }
 
@@ -262,9 +259,19 @@ impl ConfirmBlobParams {
         }
         .into_paragraphs();
 
+        let confirm_extra = if self.cancel {
+            ConfirmActionExtra::Cancel
+        } else {
+            ConfirmActionExtra::Menu(
+                ConfirmActionMenuStrings::new()
+                    .with_verb_cancel(Some(self.verb_cancel))
+                    .with_verb_info(self.verb_info),
+            )
+        };
+
         flow::new_confirm_action_simple(
             paragraphs,
-            ConfirmActionMenu::new(self.verb_cancel, self.info_button, self.verb_info),
+            confirm_extra,
             ConfirmActionStrings::new(
                 self.title,
                 self.subtitle,
