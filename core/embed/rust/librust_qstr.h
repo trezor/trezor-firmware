@@ -174,6 +174,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_buttons__turn_on;
   MP_QSTR_buttons__view_all_data;
   MP_QSTR_can_go_back;
+  MP_QSTR_cancel;
   MP_QSTR_cancel_arrow;
   MP_QSTR_cancel_cross;
   MP_QSTR_cancel_text;

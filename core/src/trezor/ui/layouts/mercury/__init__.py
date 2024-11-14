@@ -494,6 +494,7 @@ def confirm_blob(
         info_layout = trezorui2.confirm_blob(
             title=title,
             data=data,
+            subtitle=description,
             description=None,
             verb=None,
             verb_cancel=verb_cancel,
@@ -502,6 +503,7 @@ def confirm_blob(
             chunkify=chunkify,
             page_counter=True,
             prompt_screen=False,
+            cancel=True,
         )
 
         return with_info(

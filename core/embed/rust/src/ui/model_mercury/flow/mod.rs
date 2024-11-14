@@ -20,7 +20,7 @@ pub mod warning_hi_prio;
 mod util;
 
 pub use confirm_action::{
-    new_confirm_action, new_confirm_action_simple, ConfirmActionMenu, ConfirmActionStrings,
+    new_confirm_action, new_confirm_action_simple, ConfirmActionExtra, ConfirmActionStrings,
 };
 #[cfg(feature = "universal_fw")]
 pub use confirm_fido::new_confirm_fido;
