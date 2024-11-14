@@ -836,20 +836,19 @@ extern "C" fn new_confirm_modify_fee(n_args: usize, args: *const Obj, kwargs: *m
         };
 
         let paragraphs = ParagraphVecShort::from_iter([
-            Paragraph::new(&theme::TEXT_NORMAL, description),
+            Paragraph::new(&theme::TEXT_SUB_GREY, description),
             Paragraph::new(&theme::TEXT_MONO, change),
-            Paragraph::new(&theme::TEXT_NORMAL, total_label),
+            Paragraph::new(&theme::TEXT_SUB_GREY, total_label),
             Paragraph::new(&theme::TEXT_MONO, total_fee_new),
-        ])
-        .into_paragraphs();
+        ]);
 
-        let obj = LayoutObj::new(SwipeUpScreen::new(
-            Frame::left_aligned(title, paragraphs)
-                .with_menu_button()
-                .with_footer(TR::instructions__swipe_up.into(), None)
-                .with_swipe(Direction::Up, SwipeSettings::default()),
-        ))?;
-        Ok(obj.into())
+        let flow = flow::new_confirm_with_info(
+            title,
+            None,
+            TR::words__title_information.into(),
+            paragraphs,
+        )?;
+        Ok(LayoutObj::new_root(flow)?.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
@@ -1038,7 +1037,7 @@ extern "C" fn new_confirm_with_info(n_args: usize, args: *const Obj, kwargs: *mu
         }
 
         let flow =
-            confirm_with_info::new_confirm_with_info(title, button, info_button, paragraphs)?;
+            confirm_with_info::new_confirm_with_info(title, Some(button), info_button, paragraphs)?;
         Ok(LayoutObj::new_root(flow)?.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
