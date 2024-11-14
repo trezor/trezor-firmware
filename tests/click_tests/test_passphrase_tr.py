@@ -21,7 +21,6 @@ import pytest
 
 from trezorlib import exceptions
 
-from .. import translations as TR
 from ..common import get_test_address
 from .common import (
     CommonPass,
@@ -56,20 +55,11 @@ assert len(AAA_51) == 51
 assert AAA_51_ADDRESS == AAA_50_ADDRESS
 
 
-def _get_possible_btns(path: str) -> str:
-    return "|".join(TR.translate(path))
-
-
-def _get_cancel_or_delete() -> str:
-    paths = ["inputs__cancel", "inputs__delete"]
-    return "|".join(_get_possible_btns(path) for path in paths)
-
-
-BACK = _get_possible_btns("inputs__back")
-SHOW = _get_possible_btns("inputs__show")
-ENTER = _get_possible_btns("inputs__enter")
-SPACE = _get_possible_btns("inputs__space")
-CANCEL_OR_DELETE = _get_cancel_or_delete()
+BACK = "inputs__back"
+SHOW = "inputs__show"
+ENTER = "inputs__enter"
+SPACE = "inputs__space"
+CANCEL_OR_DELETE = ("inputs__cancel", "inputs__delete")
 # fmt: off
 MENU_ACTIONS = [SHOW, CANCEL_OR_DELETE, ENTER, "abc", "ABC", "123", "#$!", SPACE]
 DIGITS_ACTIONS = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", BACK]

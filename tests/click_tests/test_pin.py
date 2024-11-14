@@ -26,12 +26,7 @@ from trezorlib.debuglink import LayoutType
 
 from .. import buttons
 from .. import translations as TR
-from .common import (
-    get_possible_btn_texts,
-    go_back,
-    go_next,
-    navigate_to_action_and_press,
-)
+from .common import go_back, go_next, navigate_to_action_and_press
 
 if TYPE_CHECKING:
     from trezorlib.debuglink import DebugLink
@@ -52,9 +47,9 @@ PIN24 = "875163065288639289952973"
 PIN50 = "31415926535897932384626433832795028841971693993751"
 PIN60 = PIN50 + "9" * 10
 
-DELETE = get_possible_btn_texts("inputs__delete")
-SHOW = get_possible_btn_texts("inputs__show")
-ENTER = get_possible_btn_texts("inputs__enter")
+DELETE = "inputs__delete"
+SHOW = "inputs__show"
+ENTER = "inputs__enter"
 
 
 TR_PIN_ACTIONS = [
@@ -107,8 +102,9 @@ def prepare(
     elif situation == Situation.PIN_SETUP:
         # Set new PIN
         device_handler.run(device.change_pin)  # type: ignore
-        TR.assert_in_multiple(
-            debug.read_layout().text_content(), ["pin__turn_on", "pin__info"]
+        assert (
+            TR.pin__turn_on in debug.read_layout().text_content()
+            or TR.pin__info in debug.read_layout().text_content()
         )
         if debug.layout_type in (LayoutType.TT, LayoutType.Mercury):
             go_next(debug)
@@ -121,7 +117,7 @@ def prepare(
         # Change PIN
         device_handler.run(device.change_pin)  # type: ignore
         _input_see_confirm(debug, old_pin)
-        TR.assert_in(debug.read_layout().text_content(), "pin__change")
+        assert TR.pin__change in debug.read_layout().text_content()
         go_next(debug)
         _input_see_confirm(debug, old_pin)
     elif situation == Situation.WIPE_CODE_SETUP:
@@ -129,7 +125,7 @@ def prepare(
         device_handler.run(device.change_wipe_code)  # type: ignore
         if old_pin:
             _input_see_confirm(debug, old_pin)
-        TR.assert_in(debug.read_layout().text_content(), "wipe_code__turn_on")
+        assert TR.wipe_code__turn_on in debug.read_layout().text_content()
         go_next(debug)
         if debug.layout_type is LayoutType.TR:
             go_next(debug)

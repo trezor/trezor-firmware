@@ -57,7 +57,7 @@ def go_through_tutorial_tr(debug: "DebugLink") -> None:
     debug.press_right()
     debug.press_right()
     layout = debug.press_middle()
-    TR.assert_equals(layout.title(), "tutorial__title_tutorial_complete")
+    assert layout.title() == TR.tutorial__title_tutorial_complete
 
 
 def test_tutorial_finish(device_handler: "BackgroundDeviceHandler"):

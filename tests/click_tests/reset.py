@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 
 def confirm_new_wallet(debug: "DebugLink") -> None:
-    TR.assert_equals(debug.read_layout().title(), "reset__title_create_wallet")
+    assert debug.read_layout().title() == TR.reset__title_create_wallet
     if debug.layout_type is LayoutType.TT:
         debug.click(buttons.OK)
     elif debug.layout_type is LayoutType.Mercury:
@@ -22,9 +22,9 @@ def confirm_new_wallet(debug: "DebugLink") -> None:
     elif debug.layout_type is LayoutType.TR:
         debug.press_right()
         debug.press_right()
-    TR.assert_in_multiple(
-        debug.read_layout().text_content(),
-        ["backup__new_wallet_successfully_created", "backup__new_wallet_created"],
+    assert (
+        TR.backup__new_wallet_successfully_created in debug.read_layout().text_content()
+        or TR.backup__new_wallet_created in debug.read_layout().text_content()
     )
     if debug.layout_type is LayoutType.Mercury:
         debug.swipe_up()
@@ -74,9 +74,10 @@ def set_selection(debug: "DebugLink", button: tuple[int, int], diff: int) -> Non
             debug.swipe_up()
     elif debug.layout_type is LayoutType.TR:
         layout = debug.read_layout()
-        if layout.title() in TR.translate(
-            "reset__title_number_of_shares"
-        ) + TR.translate("words__title_threshold"):
+        if (
+            layout.title()
+            in TR.reset__title_number_of_shares + TR.words__title_threshold
+        ):
             # Special info screens
             layout = debug.press_right()
         assert "NumberInput" in layout.all_components()
@@ -131,7 +132,9 @@ def confirm_words(debug: "DebugLink", words: list[str]) -> None:
 
     layout = debug.read_layout()
     if debug.layout_type is LayoutType.TT:
-        TR.assert_template(layout.text_content(), "reset__select_word_x_of_y_template")
+        assert TR.regexp("reset__select_word_x_of_y_template").match(
+            layout.text_content()
+        )
         for _ in range(3):
             # "Select word 3 of 20"
             #              ^
@@ -146,7 +149,7 @@ def confirm_words(debug: "DebugLink", words: list[str]) -> None:
             button_pos = btn_texts.index(wanted_word)
             layout = debug.click(buttons.RESET_WORD_CHECK[button_pos])
     elif debug.layout_type is LayoutType.Mercury:
-        TR.assert_template(layout.subtitle(), "reset__select_word_x_of_y_template")
+        assert TR.regexp("reset__select_word_x_of_y_template").match(layout.subtitle())
         for _ in range(3):
             # "Select word 3 of 20"
             #              ^
@@ -161,7 +164,7 @@ def confirm_words(debug: "DebugLink", words: list[str]) -> None:
             button_pos = btn_texts.index(wanted_word)
             layout = debug.click(buttons.VERTICAL_MENU[button_pos])
     elif debug.layout_type is LayoutType.TR:
-        TR.assert_in(layout.text_content(), "reset__select_correct_word")
+        assert TR.reset__select_correct_word in layout.text_content()
         layout = debug.press_right()
         for _ in range(3):
             # "SELECT 2ND WORD"

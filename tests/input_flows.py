@@ -424,9 +424,9 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
         expected_title = f"MULTISIG XPUB #{xpub_num + 1}"
         assert expected_title in title
         if self.index == xpub_num:
-            TR.assert_in(title, "address__title_yours")
+            assert TR.address__title_yours in title
         else:
-            TR.assert_in(title, "address__title_cosigner")
+            assert TR.address__title_cosigner in title
 
     def input_flow_tt(self) -> BRGeneratorType:
         yield  # multisig address warning
@@ -434,7 +434,7 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
 
         yield  # show address
         layout = self.debug.read_layout()
-        TR.assert_in(layout.title(), "address__title_receive_address")
+        assert TR.address__title_receive_address in layout.title()
         assert "(MULTISIG)" in layout.title()
         assert layout.text_content().replace(" ", "") == self.address
 
@@ -444,7 +444,7 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
         layout = self.debug.swipe_left()
         # address details
         assert "Multisig 2 of 3" in layout.screen_content()
-        TR.assert_in(layout.screen_content(), "address_details__derivation_path")
+        assert TR.address_details__derivation_path in layout.screen_content()
 
         # Three xpub pages with the same testing logic
         for xpub_num in range(3):
@@ -467,7 +467,7 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
 
         yield  # show address
         layout = self.debug.read_layout()
-        TR.assert_in(layout.title(), "address__title_receive_address")
+        assert TR.address__title_receive_address in layout.title()
         assert "(MULTISIG)" in layout.title()
         assert layout.text_content().replace(" ", "") == self.address
 
@@ -508,7 +508,7 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
 
         yield  # show address
         layout = self.debug.read_layout()
-        TR.assert_in(layout.title(), "address__title_receive_address")
+        assert TR.address__title_receive_address in layout.title()
         assert layout.text_content().replace(" ", "") == self.address
 
         self.debug.click(buttons.CORNER_BUTTON)
@@ -525,7 +525,7 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
         layout = self.debug.synchronize_at("AddressDetails")
         # address details
         assert "Multisig 2 of 3" in layout.screen_content()
-        TR.assert_in(layout.screen_content(), "address_details__derivation_path")
+        assert TR.address_details__derivation_path in layout.screen_content()
 
         # three xpub pages with the same testing logic
         for _xpub_num in range(3):
@@ -625,7 +625,7 @@ class InputFlowShowXpubQRCode(InputFlowBase):
             br = yield
             layout = self.debug.read_layout()
 
-        assert layout.title() in TR.translate("address__public_key") + ["XPUB"]
+        assert layout.title() in (TR.address__public_key, "XPUB")
 
         self.debug.click(buttons.CORNER_BUTTON)
         assert "VerticalMenu" in self.all_components()
@@ -640,7 +640,7 @@ class InputFlowShowXpubQRCode(InputFlowBase):
         self.debug.click(buttons.VERTICAL_MENU[1])
         layout = self.debug.synchronize_at("AddressDetails")
         # address details
-        TR.assert_in(layout.screen_content(), "address_details__derivation_path")
+        assert TR.address_details__derivation_path in layout.screen_content()
 
         self.debug.click(buttons.CORNER_BUTTON)
         layout = self.debug.synchronize_at("VerticalMenu")
@@ -855,9 +855,9 @@ class InputFlowSignTxInformation(InputFlowBase):
         super().__init__(client)
 
     def assert_content(self, content: str, title_path: str) -> None:
-        TR.assert_in(content, title_path)
+        assert TR.translate(title_path) in content
         assert "Legacy #6" in content
-        TR.assert_in(content, "confirm_total__fee_rate")
+        assert TR.confirm_total__fee_rate in content
         assert "71.56 sat" in content
 
     def input_flow_tt(self) -> BRGeneratorType:
@@ -883,9 +883,9 @@ class InputFlowSignTxInformationMixed(InputFlowBase):
         super().__init__(client)
 
     def assert_content(self, content: str, title_path: str) -> None:
-        TR.assert_in(content, title_path)
-        TR.assert_in(content, "bitcoin__multiple_accounts")
-        TR.assert_in(content, "confirm_total__fee_rate")
+        assert TR.translate(title_path) in content
+        assert TR.bitcoin__multiple_accounts in content
+        assert TR.confirm_total__fee_rate in content
         assert "18.33 sat" in content
 
     def input_flow_tt(self) -> BRGeneratorType:
@@ -1045,7 +1045,7 @@ class InputFlowLockTimeBlockHeight(InputFlowBase):
 
     def assert_func(self, debug: DebugLink, br: messages.ButtonRequest) -> None:
         layout_text = get_text_possible_pagination(debug, br)
-        TR.assert_in(layout_text, "bitcoin__locktime_set_to_blockheight")
+        assert TR.bitcoin__locktime_set_to_blockheight in layout_text
         assert self.block_height in layout_text
 
     def input_flow_tt(self) -> BRGeneratorType:
@@ -1069,7 +1069,7 @@ class InputFlowLockTimeDatetime(InputFlowBase):
 
     def assert_func(self, debug: DebugLink, br: messages.ButtonRequest) -> None:
         layout_text = get_text_possible_pagination(debug, br)
-        TR.assert_in(layout_text, "bitcoin__locktime_set_to")
+        assert TR.bitcoin__locktime_set_to in layout_text
         assert self.lock_time_str.replace(" ", "") in layout_text.replace(" ", "")
 
     def input_flow_tt(self) -> BRGeneratorType:
@@ -2203,26 +2203,26 @@ class InputFlowResetSkipBackup(InputFlowBase):
     def input_flow_tt(self) -> BRGeneratorType:
         yield from self.BAK.confirm_new_wallet()
         yield  # Skip Backup
-        TR.assert_in(self.text_content(), "backup__new_wallet_successfully_created")
+        assert TR.backup__new_wallet_successfully_created in self.text_content()
         self.debug.press_no()
         yield  # Confirm skip backup
-        TR.assert_in(self.text_content(), "backup__want_to_skip")
+        assert TR.backup__want_to_skip in self.text_content()
         self.debug.press_no()
 
     def input_flow_tr(self) -> BRGeneratorType:
         yield from self.BAK.confirm_new_wallet()
         yield  # Skip Backup
-        TR.assert_in(self.text_content(), "backup__new_wallet_created")
+        assert TR.backup__new_wallet_created in self.text_content()
         self.debug.press_right()
         self.debug.press_no()
         yield  # Confirm skip backup
-        TR.assert_in(self.text_content(), "backup__want_to_skip")
+        assert TR.backup__want_to_skip in self.text_content()
         self.debug.press_no()
 
     def input_flow_t3t1(self) -> BRGeneratorType:
         yield from self.BAK.confirm_new_wallet()
         yield  # Skip Backup
-        TR.assert_in(self.text_content(), "backup__new_wallet_created")
+        assert TR.backup__new_wallet_created in self.text_content()
         self.debug.swipe_up()
         yield
         self.debug.click(buttons.CORNER_BUTTON)
@@ -2262,14 +2262,12 @@ class InputFlowConfirmAllWarnings(InputFlowBase):
             text = layout.text_content().lower()
             # hi priority warning
             hi_prio = (
-                TR.translate("ethereum__unknown_contract_address")
-                + TR.translate("addr_mismatch__wrong_derivation_path")
-                + TR.translate("send__receiving_to_multisig")
-                + [
-                    "witness path",
-                    "certificate path",
-                    "pool owner staking path",
-                ]
+                TR.ethereum__unknown_contract_address,
+                TR.addr_mismatch__wrong_derivation_path,
+                TR.send__receiving_to_multisig,
+                "witness path",
+                "certificate path",
+                "pool owner staking path",
             )
             if any(needle.lower() in text for needle in hi_prio):
                 self.debug.click(buttons.CORNER_BUTTON)
