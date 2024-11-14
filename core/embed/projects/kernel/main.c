@@ -63,6 +63,10 @@
 #include <io/sdcard.h>
 #endif
 
+#ifdef USE_RGB_LED
+#include <io/rgb_led.h>
+#endif
+
 #ifdef SYSTEM_VIEW
 #include <sys/systemview.h>
 #endif
