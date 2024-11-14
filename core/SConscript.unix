@@ -461,7 +461,7 @@ if ARGUMENTS.get('TREZOR_EMULATOR_DEBUGGABLE', '0') == '1':
 
 if ARGUMENTS.get('TREZOR_MEMPERF', '0') == '1':
     CPPDEFINES_MOD += [
-        ('MICROPY_TREZOR_MEMPERF', '\(1\)')
+        ('MICROPY_TREZOR_MEMPERF', '1')
     ]
 
 env.Replace(
