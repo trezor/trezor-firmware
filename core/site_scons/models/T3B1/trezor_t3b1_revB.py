@@ -83,7 +83,6 @@ def configure(
 
     if "consumption_mask" in features_wanted:
         sources += ["embed/sec/consumption_mask/stm32u5/consumption_mask.c"]
-        sources += ["vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_tim.c"]
         paths += ["embed/sec/consumption_mask/inc"]
         defines += ["USE_CONSUMPTION_MASK=1"]
 

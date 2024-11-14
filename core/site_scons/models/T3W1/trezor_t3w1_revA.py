@@ -80,6 +80,12 @@ def configure(
         features_available.append("sbu")
         defines += ["USE_SBU=1"]
 
+    if "rgb_led" in features_wanted:
+        sources += ["embed/io/rgb_led/stm32/rgb_led.c"]
+        paths += ["embed/io/rgb_led/inc"]
+        features_available.append("rgb_led")
+        defines += ["USE_RGB_LED=1"]
+
     if "usb" in features_wanted:
         sources += [
             "embed/io/usb/stm32/usb_class_hid.c",
