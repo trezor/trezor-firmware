@@ -124,7 +124,9 @@ class TestSignSegwitTxP2WPKHInP2SH_GRS(unittest.TestCase):
                 serialized=EMPTY_SERIALIZED,
             ),
             TxAckOutput(tx=TxAckOutputWrapper(output=out1)),
-            helpers.UiConfirmOutput(out1, coin, AmountUnit.BITCOIN, 0, False, [H_(49), H_(1), H_(0)]),
+            helpers.UiConfirmOutput(
+                out1, coin, AmountUnit.BITCOIN, 0, False, [H_(49), H_(1), H_(0)]
+            ),
             True,
             TxRequest(
                 request_type=TXOUTPUT,
@@ -132,7 +134,9 @@ class TestSignSegwitTxP2WPKHInP2SH_GRS(unittest.TestCase):
                 serialized=EMPTY_SERIALIZED,
             ),
             TxAckOutput(tx=TxAckOutputWrapper(output=out2)),
-            helpers.UiConfirmOutput(out2, coin, AmountUnit.BITCOIN, 1, False, [H_(49), H_(1), H_(0)]),
+            helpers.UiConfirmOutput(
+                out2, coin, AmountUnit.BITCOIN, 1, False, [H_(49), H_(1), H_(0)]
+            ),
             True,
             helpers.UiConfirmNonDefaultLocktime(tx.lock_time, lock_time_disabled=False),
             True,
@@ -337,7 +341,9 @@ class TestSignSegwitTxP2WPKHInP2SH_GRS(unittest.TestCase):
                 serialized=EMPTY_SERIALIZED,
             ),
             TxAckOutput(tx=TxAckOutputWrapper(output=out1)),
-            helpers.UiConfirmOutput(out1, coin, AmountUnit.BITCOIN, 0, False, [H_(49), H_(1), H_(0)]),
+            helpers.UiConfirmOutput(
+                out1, coin, AmountUnit.BITCOIN, 0, False, [H_(49), H_(1), H_(0)]
+            ),
             True,
             TxRequest(
                 request_type=TXOUTPUT,

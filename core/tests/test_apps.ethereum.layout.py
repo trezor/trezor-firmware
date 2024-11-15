@@ -10,6 +10,7 @@ if not utils.BITCOIN_ONLY:
 
     ETH = networks.by_chain_id(1)
 
+
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestFormatEthereumAmount(unittest.TestCase):
     def test_denominations(self):

@@ -202,7 +202,7 @@ class TestCryptoBech32(unittest.TestCase):
 
     def test_valid_address(self):
         """Test whether valid addresses decode to the correct output."""
-        for (address, hexscript) in VALID_ADDRESS:
+        for address, hexscript in VALID_ADDRESS:
             hrp = "tb" if address.startswith("tb1") else "bc"
             witver, witprog = bech32.decode(hrp, address)
             self.assertIsNotNone(witver)

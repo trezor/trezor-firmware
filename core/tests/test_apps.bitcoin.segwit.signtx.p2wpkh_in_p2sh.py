@@ -115,7 +115,9 @@ class TestSignSegwitTxP2WPKHInP2SH(unittest.TestCase):
                 serialized=EMPTY_SERIALIZED,
             ),
             TxAckOutput(tx=TxAckOutputWrapper(output=out1)),
-            helpers.UiConfirmOutput(out1, coin, AmountUnit.BITCOIN, 0, False, [H_(49), H_(1), H_(0)]),
+            helpers.UiConfirmOutput(
+                out1, coin, AmountUnit.BITCOIN, 0, False, [H_(49), H_(1), H_(0)]
+            ),
             True,
             TxRequest(
                 request_type=TXOUTPUT,
@@ -123,7 +125,9 @@ class TestSignSegwitTxP2WPKHInP2SH(unittest.TestCase):
                 serialized=EMPTY_SERIALIZED,
             ),
             TxAckOutput(tx=TxAckOutputWrapper(output=out2)),
-            helpers.UiConfirmOutput(out2, coin, AmountUnit.BITCOIN, 1, False, [H_(49), H_(1), H_(0)]),
+            helpers.UiConfirmOutput(
+                out2, coin, AmountUnit.BITCOIN, 1, False, [H_(49), H_(1), H_(0)]
+            ),
             True,
             helpers.UiConfirmTotal(
                 123445789 + 11000,
@@ -318,7 +322,9 @@ class TestSignSegwitTxP2WPKHInP2SH(unittest.TestCase):
                 serialized=EMPTY_SERIALIZED,
             ),
             TxAckOutput(tx=TxAckOutputWrapper(output=out1)),
-            helpers.UiConfirmOutput(out1, coin, AmountUnit.BITCOIN, 0, False, [H_(49), H_(1), H_(0)]),
+            helpers.UiConfirmOutput(
+                out1, coin, AmountUnit.BITCOIN, 0, False, [H_(49), H_(1), H_(0)]
+            ),
             True,
             TxRequest(
                 request_type=TXOUTPUT,
@@ -532,7 +538,9 @@ class TestSignSegwitTxP2WPKHInP2SH(unittest.TestCase):
                 serialized=EMPTY_SERIALIZED,
             ),
             TxAckOutput(tx=TxAckOutputWrapper(output=out1)),
-            helpers.UiConfirmOutput(out1, coin, AmountUnit.BITCOIN, 0, False, [H_(49), H_(1), H_(0)]),
+            helpers.UiConfirmOutput(
+                out1, coin, AmountUnit.BITCOIN, 0, False, [H_(49), H_(1), H_(0)]
+            ),
             True,
             TxRequest(
                 request_type=TXOUTPUT,

@@ -48,9 +48,7 @@ class TestApprover(unittest.TestCase):
         self.msg_auth = AuthorizeCoinJoin(
             coordinator=self.coordinator_name,
             max_rounds=10,
-            max_coordinator_fee_rate=int(
-                self.fee_rate_percent * 10**FEE_RATE_DECIMALS
-            ),
+            max_coordinator_fee_rate=int(self.fee_rate_percent * 10**FEE_RATE_DECIMALS),
             max_fee_per_kvbyte=7000,
             address_n=[H_(10025), H_(0), H_(0), H_(1)],
             coin_name=self.coin.coin_name,
@@ -155,7 +153,11 @@ class TestApprover(unittest.TestCase):
             if txo.address_n:
                 await_result(approver.add_change_output(txo, script_pubkey=bytes(22)))
             else:
-                await_result(approver.add_external_output(txo, script_pubkey=bytes(22), tx_info=tx_info))
+                await_result(
+                    approver.add_external_output(
+                        txo, script_pubkey=bytes(22), tx_info=tx_info
+                    )
+                )
 
         await_result(approver.approve_tx(tx_info, [], None))
 

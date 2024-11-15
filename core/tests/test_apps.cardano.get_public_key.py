@@ -146,7 +146,9 @@ class TestCardanoGetPublicKey(unittest.TestCase):
         ]
         passphrase = b"TREZOR"
         identifier, extendable, exponent, ems = slip39.recover_ems(mnemonics)
-        master_secret = slip39.decrypt(ems, passphrase, exponent, identifier, extendable)
+        master_secret = slip39.decrypt(
+            ems, passphrase, exponent, identifier, extendable
+        )
 
         node = cardano.from_seed_slip23(master_secret)
 
@@ -195,7 +197,9 @@ class TestCardanoGetPublicKey(unittest.TestCase):
         ]
         passphrase = b"TREZOR"
         identifier, extendable, exponent, ems = slip39.recover_ems(mnemonics)
-        master_secret = slip39.decrypt(ems, passphrase, exponent, identifier, extendable)
+        master_secret = slip39.decrypt(
+            ems, passphrase, exponent, identifier, extendable
+        )
 
         node = cardano.from_seed_slip23(master_secret)
 

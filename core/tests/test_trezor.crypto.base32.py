@@ -1,5 +1,5 @@
 # flake8: noqa: F403,F405
-from common import * # isort:skip
+from common import *  # isort:skip
 
 from trezor.crypto import base32
 
@@ -31,8 +31,10 @@ class TestCryptoBase32(unittest.TestCase):
         ("中文12".encode(), "4S4K3ZUWQ4YTE==="),
         ("aécio".encode(), "MHB2SY3JN4======"),
         ("𠜎".encode(), "6CQJZDQ="),
-        ("Base64是一種基於64個可列印字元來表示二進制資料的表示方法".encode(),
-         "IJQXGZJWGTTJRL7EXCAOPKFO4WP3VZUWXQ3DJZMARPSY7L7FRCL6LDNQ4WWZPZMFQPSL5BXIUGUOPJF24S5IZ2MAWLSYRNXIWOD6NFUZ46NIJ2FBVDT2JOXGS246NM4V"),
+        (
+            "Base64是一種基於64個可列印字元來表示二進制資料的表示方法".encode(),
+            "IJQXGZJWGTTJRL7EXCAOPKFO4WP3VZUWXQ3DJZMARPSY7L7FRCL6LDNQ4WWZPZMFQPSL5BXIUGUOPJF24S5IZ2MAWLSYRNXIWOD6NFUZ46NIJ2FBVDT2JOXGS246NM4V",
+        ),
     ]
 
     def test_encode(self):
