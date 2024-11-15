@@ -42,19 +42,19 @@ def configure(
     if "input" in features_wanted:
         sources += ["embed/trezorhal/stm32f4/button.c"]
         features_available.append("button")
-    defines += ["USE_BUTTON=1"]
+        defines += ["USE_BUTTON=1"]
 
     if "sbu" in features_wanted:
         sources += ["embed/trezorhal/stm32f4/sbu.c"]
         features_available.append("sbu")
-    defines += ["USE_SBU=1"]
+        defines += ["USE_SBU=1"]
 
     if "consumption_mask" in features_wanted:
         sources += ["embed/trezorhal/stm32f4/consumption_mask.c"]
         sources += [
             "vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.c"
         ]
-    defines += ["USE_CONSUMPTION_MASK=1"]
+        defines += ["USE_CONSUMPTION_MASK=1"]
 
     if "usb" in features_wanted:
         sources += [
@@ -78,8 +78,8 @@ def configure(
         sources += ["embed/trezorhal/optiga/optiga_transport.c"]
         sources += ["vendor/trezor-crypto/hash_to_curve.c"]
         features_available.append("optiga")
-    defines += ["USE_OPTIGA=1"]
-    defines += ["USE_I2C=1"]
+        defines += ["USE_OPTIGA=1"]
+        defines += ["USE_I2C=1"]
 
     defines += ["USE_PVD=1"]
 

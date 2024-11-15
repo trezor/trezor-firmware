@@ -63,8 +63,8 @@ def configure(
         sources += ["embed/trezorhal/stm32f4/i2c_bus.c"]
         sources += ["embed/trezorhal/stm32f4/touch/stmpe811.c"]
         features_available.append("touch")
-    defines += ["USE_TOUCH=1"]
-    defines += ["USE_I2C=1"]
+        defines += ["USE_TOUCH=1"]
+        defines += ["USE_I2C=1"]
 
     if "usb" in features_wanted:
         sources += [
