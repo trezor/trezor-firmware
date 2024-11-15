@@ -1,3 +1,4 @@
+# flake8: noqa: F403,F405
 from common import *
 
 if utils.USE_THP:

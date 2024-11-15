@@ -1,3 +1,4 @@
+# flake8: noqa: F403,F405
 from common import *
 from trezor import config, utils
 from trezor import log

@@ -1,3 +1,4 @@
+# flake8: noqa: F403,F405
 from common import *  # isort:skip
 
 # Copyright (c) 2017, 2020 Pieter Wuille
