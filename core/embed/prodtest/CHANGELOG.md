@@ -1,4 +1,15 @@
 
+## 0.2.11 [20th November 2024]
+
+### Fixed
+- Fixed a device crash in the CPUID READ command.  [#4310]
+- Fixed writing data (variant, batch) to OTP.  [#4313]
+
+## 0.2.10 [20th November 2024]
+
+### Added
+- Added TOUCH_POWER command to allow testing touch power supply without connected touch screen.  [#4252]
+
 ## 0.2.9 [18th September 2024]
 
 ### Added
@@ -78,3 +89,6 @@
 [#3932]: https://github.com/trezor/trezor-firmware/pull/3932
 [#4064]: https://github.com/trezor/trezor-firmware/pull/4064
 [#4140]: https://github.com/trezor/trezor-firmware/pull/4140
+[#4252]: https://github.com/trezor/trezor-firmware/pull/4252
+[#4310]: https://github.com/trezor/trezor-firmware/pull/4310
+[#4313]: https://github.com/trezor/trezor-firmware/pull/4313
