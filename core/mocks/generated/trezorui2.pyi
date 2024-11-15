@@ -1147,7 +1147,7 @@ class LayoutObj(Generic[T]):
 
 # rust/src/ui/model_tt/layout.rs
 class UiResult:
-    """Result of an UI operation."""
+    """Result of a UI operation."""
     pass
 CONFIRMED: UiResult
 CANCELLED: UiResult

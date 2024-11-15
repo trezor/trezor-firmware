@@ -100,7 +100,7 @@ class TrezorClient(Generic[UI]):
         You have to provide a `transport`, i.e., a raw connection to the device. You can
         use `trezorlib.transport.get_transport` to find one.
 
-        You have to provide an UI implementation for the three kinds of interaction:
+        You have to provide a UI implementation for the three kinds of interaction:
         - button request (notify the user that their interaction is needed)
         - PIN request (on T1, ask the user to input numbers for a PIN matrix)
         - passphrase request (ask the user to enter a passphrase) See `trezorlib.ui` for
