@@ -636,6 +636,7 @@ def confirm_address(
         subtitle or title,
         address,
         description,
+        verb=verb,
         br_code=br_code,
     )
 
