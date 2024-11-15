@@ -107,8 +107,10 @@ static uint8_t *get_fb_ptr(uint32_t index) {
 
 void display_physical_fb_clear(void) {
   for (int i = 0; i < FRAME_BUFFER_COUNT; i++) {
+    mpu_set_active_fb(get_fb_ptr(i), PHYSICAL_FRAME_BUFFER_SIZE);
     memset(get_fb_ptr(i), 0, PHYSICAL_FRAME_BUFFER_SIZE);
   }
+  mpu_set_active_fb(NULL, 0);
 }
 
 #ifndef BOARDLOADER
@@ -198,7 +200,7 @@ bool display_get_frame_buffer(display_fb_info_t *fb) {
   fb->ptr = get_fb_ptr(drv->queue.wix);
   fb->stride = DISPLAY_RESX * sizeof(uint16_t);
   // Enable access to the frame buffer from the unprivileged code
-  mpu_set_unpriv_fb(fb->ptr, PHYSICAL_FRAME_BUFFER_SIZE);
+  mpu_set_active_fb(fb->ptr, PHYSICAL_FRAME_BUFFER_SIZE);
 
   return true;
 }
@@ -208,12 +210,15 @@ static void copy_fb_to_display(uint8_t index) {
   uint16_t *fb = (uint16_t *)get_fb_ptr(index);
 
   if (fb != NULL) {
+    mpu_set_active_fb(fb, PHYSICAL_FRAME_BUFFER_SIZE);
     display_panel_set_window(0, 0, DISPLAY_RESX - 1, DISPLAY_RESY - 1);
     for (int i = 0; i < DISPLAY_RESX * DISPLAY_RESY; i++) {
       // 2 bytes per pixel because we're using RGB 5-6-5 format
       ISSUE_PIXEL_DATA(fb[i]);
     }
   }
+
+  mpu_set_active_fb(NULL, 0);
 }
 
 static void wait_for_te_signal(void) {
@@ -238,7 +243,7 @@ void display_refresh(void) {
   }
 
   // Disable access to the frame buffer from the unprivileged code
-  mpu_set_unpriv_fb(NULL, 0);
+  mpu_set_active_fb(NULL, 0);
 
 #ifndef BOARDLOADER
   if (is_mode_exception()) {

@@ -6,9 +6,9 @@ MEMORY {
   FLASH  (rx)  : ORIGIN = KERNEL_START, LENGTH = KERNEL_MAXSIZE
   SRAM1  (wal) : ORIGIN = MCU_SRAM1, LENGTH = MCU_SRAM1_SIZE - BOOTARGS_SIZE
   BOOT_ARGS  (wal) : ORIGIN = MCU_SRAM2 - BOOTARGS_SIZE, LENGTH = BOOTARGS_SIZE
-  SRAM2  (wal) : ORIGIN = MCU_SRAM2, LENGTH =  MCU_SRAM2_SIZE
-  SRAM3  (wal) : ORIGIN = MCU_SRAM3, LENGTH =  MCU_SRAM3_SIZE - KERNEL_U_RAM_SIZE
-  SRAM3_U  (wal) : ORIGIN = MCU_SRAM3 + MCU_SRAM3_SIZE - KERNEL_U_RAM_SIZE, LENGTH =  KERNEL_U_RAM_SIZE
+  SRAM2  (wal) : ORIGIN = MCU_SRAM2, LENGTH =  KERNEL_SRAM2_SIZE
+  SRAM2_U  (wal) : ORIGIN = MCU_SRAM2 + KERNEL_SRAM2_SIZE, LENGTH =  KERNEL_U_RAM_SIZE
+  SRAM3  (wal) : ORIGIN = MCU_SRAM3, LENGTH =  MCU_SRAM3_SIZE
   SRAM5  (wal) : ORIGIN = MCU_SRAM5, LENGTH =  MCU_SRAM5_SIZE
   SRAM6  (wal) : ORIGIN = MCU_SRAM6, LENGTH =  MCU_SRAM6_SIZE
   SRAM4  (wal) : ORIGIN = MCU_SRAM4, LENGTH =  MCU_SRAM4_SIZE
@@ -18,8 +18,8 @@ main_stack_base = ORIGIN(SRAM2) + SIZEOF(.stack); /* 8-byte aligned full descend
 _sstack = ORIGIN(SRAM2);
 _estack = main_stack_base;
 
-ustack_base = ORIGIN(SRAM3_U) + 512;
-_sustack = ORIGIN(SRAM3_U) + 256;
+ustack_base = ORIGIN(SRAM2_U) + 512;
+_sustack = ORIGIN(SRAM2_U) + 256;
 _eustack = ustack_base;
 
 /* used by the startup code to populate variables used by the C code */
@@ -67,8 +67,8 @@ _coreapp_clear_ram_1_start = 0;
 _coreapp_clear_ram_1_size = 0;
 
 
-sram_u_start = ORIGIN(SRAM3_U);
-sram_u_end = ORIGIN(SRAM3_U) + LENGTH(SRAM3_U);
+sram_u_start = ORIGIN(SRAM2_U);
+sram_u_end = ORIGIN(SRAM2_U) + LENGTH(SRAM2_U);
 
 /* reserve 256 bytes for bootloader arguments */
 boot_args_start = ORIGIN(BOOT_ARGS);
@@ -127,7 +127,7 @@ SECTIONS {
     *(.udata*);
     . = ALIGN(256);
     . = 256; /* Overflow causes UsageFault */
-  } >SRAM3_U
+  } >SRAM2_U
 
   .confidential : ALIGN(512) {
     *(.confidential*);
@@ -146,8 +146,6 @@ SECTIONS {
 
   .fb2 : ALIGN(4) {
     *(.fb2*);
-    *(.gfxmmu_table*);
-    *(.framebuffer_select*);
     . = ALIGN(4);
   } >SRAM3
 

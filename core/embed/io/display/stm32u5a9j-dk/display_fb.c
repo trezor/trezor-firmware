@@ -39,11 +39,6 @@ uint8_t physical_frame_buffer_0[PHYSICAL_FRAME_BUFFER_SIZE];
 __attribute__((section(".fb2"), aligned(PHYSICAL_FRAME_BUFFER_ALIGNMENT)))
 uint8_t physical_frame_buffer_1[PHYSICAL_FRAME_BUFFER_SIZE];
 
-// The current frame buffer selector at fixed memory address
-// It's shared between bootloaders and the firmware
-__attribute__((section(".framebuffer_select"))) uint32_t current_frame_buffer =
-    0;
-
 #ifdef USE_TRUSTZONE
 void display_set_unpriv_access(bool unpriv) {
   // To allow unprivileged access both GFXMMU virtual buffers area and
@@ -85,7 +80,7 @@ bool display_get_frame_buffer(display_fb_info_t *fb) {
 
   uintptr_t addr;
 
-  if (current_frame_buffer == 0) {
+  if (drv->current_frame_buffer == 0) {
     addr = GFXMMU_VIRTUAL_BUFFER1_BASE_S;
   } else {
     addr = GFXMMU_VIRTUAL_BUFFER0_BASE_S;
@@ -102,7 +97,7 @@ bool display_get_frame_buffer(display_fb_info_t *fb) {
   fb->stride = fb_stride;
 
   // Enable access to the frame buffer from the unprivileged code
-  mpu_set_unpriv_fb(fb->ptr, VIRTUAL_FRAME_BUFFER_SIZE);
+  mpu_set_active_fb(fb->ptr, VIRTUAL_FRAME_BUFFER_SIZE);
 
   return true;
 }
@@ -115,13 +110,13 @@ void display_refresh(void) {
   }
 
   // Disable access to the frame buffer from the unprivileged code
-  mpu_set_unpriv_fb(NULL, 0);
+  mpu_set_active_fb(NULL, 0);
 
-  if (current_frame_buffer == 0) {
-    current_frame_buffer = 1;
+  if (drv->current_frame_buffer == 0) {
+    drv->current_frame_buffer = 1;
     BSP_LCD_SetFrameBuffer(0, GFXMMU_VIRTUAL_BUFFER1_BASE_S);
   } else {
-    current_frame_buffer = 0;
+    drv->current_frame_buffer = 0;
     BSP_LCD_SetFrameBuffer(0, GFXMMU_VIRTUAL_BUFFER0_BASE_S);
   }
 }
