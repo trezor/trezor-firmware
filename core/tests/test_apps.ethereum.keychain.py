@@ -2,12 +2,15 @@ from common import *  # isort:skip
 
 import unittest
 
-from storage import cache
-from trezor import utils, wire
+from storage import cache_common
+from trezor import wire
 from trezor.crypto import bip39
+from trezor.wire import context
 
 from apps.common.keychain import get_keychain
 from apps.common.paths import HARDENED
+from trezor.wire.codec.codec_context import CodecContext
+from storage import cache_codec
 
 if not utils.BITCOIN_ONLY:
     from ethereum_common import encode_network, make_network
@@ -71,10 +74,14 @@ class TestEthereumKeychain(unittest.TestCase):
                 addr,
             )
 
+    def __init__(self):
+        context.CURRENT_CONTEXT = CodecContext(None, bytearray(64))
+        super().__init__()
+
     def setUp(self):
-        cache.start_session()
+        cache_codec.start_session()
         seed = bip39.seed(" ".join(["all"] * 12), "")
-        cache.set(cache.APP_COMMON_SEED, seed)
+        cache_codec.get_active_session().set(cache_common.APP_COMMON_SEED, seed)
 
     def from_address_n(self, address_n):
         slip44 = _slip44_from_address_n(address_n)

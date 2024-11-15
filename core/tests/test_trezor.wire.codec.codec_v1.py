@@ -5,7 +5,7 @@ import ustruct
 from trezor import io
 from trezor.loop import wait
 from trezor.utils import chunks
-from trezor.wire import codec_v1
+from trezor.wire.codec import codec_v1
 
 
 class MockHID:

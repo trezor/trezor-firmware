@@ -1,17 +1,25 @@
 from common import *  # isort:skip
 
-from storage import cache
+from storage import cache_common
 from trezor import wire
 from trezor.crypto import bip39
+from trezor.wire import context
 
 from apps.bitcoin.keychain import _get_coin_by_name, _get_keychain_for_coin
+from trezor.wire.codec.codec_context import CodecContext
+from storage import cache_codec
 
 
 class TestBitcoinKeychain(unittest.TestCase):
+
+    def __init__(self):
+        context.CURRENT_CONTEXT = CodecContext(None, bytearray(64))
+        super().__init__()
+
     def setUp(self):
-        cache.start_session()
+        cache_codec.start_session()
         seed = bip39.seed(" ".join(["all"] * 12), "")
-        cache.set(cache.APP_COMMON_SEED, seed)
+        cache_codec.get_active_session().set(cache_common.APP_COMMON_SEED, seed)
 
     def test_bitcoin(self):
         coin = _get_coin_by_name("Bitcoin")
@@ -88,10 +96,19 @@ class TestBitcoinKeychain(unittest.TestCase):
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestAltcoinKeychains(unittest.TestCase):
+
+    def __init__(self):
+        # Context is needed to test decorators and handleInitialize
+        # It allows access to codec cache from different parts of the code
+        from trezor.wire import context
+
+        context.CURRENT_CONTEXT = CodecContext(None, bytearray(64))
+        super().__init__()
+
     def setUp(self):
-        cache.start_session()
+        cache_codec.start_session()
         seed = bip39.seed(" ".join(["all"] * 12), "")
-        cache.set(cache.APP_COMMON_SEED, seed)
+        cache_codec.get_active_session().set(cache_common.APP_COMMON_SEED, seed)
 
     def test_bcash(self):
         coin = _get_coin_by_name("Bcash")
