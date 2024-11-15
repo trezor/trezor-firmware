@@ -3,15 +3,14 @@ from common import *  # isort:skip
 
 import unittest
 
-from storage import cache_common
+from storage import cache_codec, cache_common
 from trezor import wire
 from trezor.crypto import bip39
 from trezor.wire import context
+from trezor.wire.codec.codec_context import CodecContext
 
 from apps.common.keychain import get_keychain
 from apps.common.paths import HARDENED
-from trezor.wire.codec.codec_context import CodecContext
-from storage import cache_codec
 
 if not utils.BITCOIN_ONLY:
     from ethereum_common import encode_network, make_network

@@ -1,14 +1,13 @@
 # flake8: noqa: F403,F405
 from common import *  # isort:skip
 
-from storage import cache_common
+from storage import cache_codec, cache_common
 from trezor import wire
 from trezor.crypto import bip39
 from trezor.wire import context
+from trezor.wire.codec.codec_context import CodecContext
 
 from apps.bitcoin.keychain import _get_coin_by_name, _get_keychain_for_coin
-from trezor.wire.codec.codec_context import CodecContext
-from storage import cache_codec
 
 
 class TestBitcoinKeychain(unittest.TestCase):

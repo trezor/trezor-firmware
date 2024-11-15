@@ -43,9 +43,9 @@ def make_payload(
     prefix: bytes = b"trzd1",
     data_type: EthereumDefinitionType = EthereumDefinitionType.NETWORK,
     timestamp: int = 0xFFFF_FFFF,
-    message: messages.EthereumNetworkInfo
-    | messages.EthereumTokenInfo
-    | bytes = make_network(),
+    message: (
+        messages.EthereumNetworkInfo | messages.EthereumTokenInfo | bytes
+    ) = make_network(),
 ) -> bytes:
     payload = prefix
     payload += data_type.to_bytes(1, "little")

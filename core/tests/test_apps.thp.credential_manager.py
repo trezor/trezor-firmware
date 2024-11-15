@@ -1,11 +1,11 @@
 # flake8: noqa: F403,F405
 from common import *  # isort: skip
-from trezor import config, utils
-from trezor import log
+from trezor import config, log, utils
 
 if utils.USE_THP:
-    from apps.thp import credential_manager
     from trezor.messages import ThpCredentialMetadata
+
+    from apps.thp import credential_manager
 
     def _issue_credential(host_name: str, host_static_pubkey: bytes) -> bytes:
         metadata = ThpCredentialMetadata(host_name=host_name)
