@@ -1,25 +1,27 @@
 from typing import TYPE_CHECKING
 
-import storage.cache as storage_cache
+from storage.cache_common import APP_RECOVERY_REPEATED_BACKUP_UNLOCKED
 from trezor import wire
 from trezor.enums import MessageType
+from trezor.wire import context
+from trezor.wire.message_handler import filters, remove_filter
 
 if TYPE_CHECKING:
     from trezor.wire import Handler, Msg
 
 
 def repeated_backup_enabled() -> bool:
-    return storage_cache.get_bool(storage_cache.APP_RECOVERY_REPEATED_BACKUP_UNLOCKED)
+    return context.cache_get_bool(APP_RECOVERY_REPEATED_BACKUP_UNLOCKED)
 
 
 def activate_repeated_backup() -> None:
-    storage_cache.set_bool(storage_cache.APP_RECOVERY_REPEATED_BACKUP_UNLOCKED, True)
-    wire.filters.append(_repeated_backup_filter)
+    context.cache_set_bool(APP_RECOVERY_REPEATED_BACKUP_UNLOCKED, True)
+    filters.append(_repeated_backup_filter)
 
 
 def deactivate_repeated_backup() -> None:
-    storage_cache.delete(storage_cache.APP_RECOVERY_REPEATED_BACKUP_UNLOCKED)
-    wire.remove_filter(_repeated_backup_filter)
+    context.cache_delete(APP_RECOVERY_REPEATED_BACKUP_UNLOCKED)
+    remove_filter(_repeated_backup_filter)
 
 
 _ALLOW_WHILE_REPEATED_BACKUP_UNLOCKED = (

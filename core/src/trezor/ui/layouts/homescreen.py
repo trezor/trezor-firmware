@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING
 
 import storage.cache as storage_cache
 import trezorui2
+from storage.cache_common import APP_COMMON_BUSY_DEADLINE_MS
 from trezor import TR, ui
 
 if TYPE_CHECKING:
@@ -125,11 +126,13 @@ class Busyscreen(HomescreenBase):
         )
 
     async def get_result(self) -> Any:
+        from trezor.wire import context
+
         from apps.base import set_homescreen
 
         # Handle timeout.
         result = await super().get_result()
         assert result == trezorui2.CANCELLED
-        storage_cache.delete(storage_cache.APP_COMMON_BUSY_DEADLINE_MS)
+        context.cache_delete(APP_COMMON_BUSY_DEADLINE_MS)
         set_homescreen()
         return result

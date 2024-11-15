@@ -8,6 +8,7 @@ import trezorui2
 from trezor import io, log, loop, utils, wire, workflow
 from trezor.messages import ButtonAck, ButtonRequest
 from trezor.wire import context
+from trezor.wire.protocol_common import Context
 from trezorui2 import AttachType, BacklightLevels, LayoutState
 
 if TYPE_CHECKING:
@@ -166,7 +167,7 @@ class Layout(Generic[T]):
         self.button_request_ack_pending: bool = False
         self.transition_out: AttachType | None = None
         self.backlight_level = BacklightLevels.NORMAL
-        self.context: context.Context | None = None
+        self.context: Context | None = None
         self.state: LayoutState = LayoutState.INITIAL
 
         # Indicates whether we should use Resume attach style when launching.
