@@ -65,7 +65,7 @@ class TestCryptoPbkdf2(unittest.TestCase):
             ),
         )
         p = pbkdf2(pbkdf2.HMAC_SHA256, P, S)
-        for i in range(32):
+        for _ in range(32):
             p.update(128)
         dk = p.key()
         self.assertEqual(
@@ -77,7 +77,7 @@ class TestCryptoPbkdf2(unittest.TestCase):
         P = b"passwordPASSWORDpassword"
         S = b"saltSALTsaltSALTsaltSALTsaltSALTsalt"
         p = pbkdf2(pbkdf2.HMAC_SHA256, P, S)
-        for i in range(64):
+        for _ in range(64):
             p.update(64)
         dk = p.key()
         self.assertEqual(
@@ -146,7 +146,7 @@ class TestCryptoPbkdf2(unittest.TestCase):
             ),
         )
         p = pbkdf2(pbkdf2.HMAC_SHA512, P, S)
-        for i in range(32):
+        for _ in range(32):
             p.update(128)
         dk = p.key()
         self.assertEqual(
@@ -158,7 +158,7 @@ class TestCryptoPbkdf2(unittest.TestCase):
         P = b"passwordPASSWORDpassword"
         S = b"saltSALTsaltSALTsaltSALTsaltSALTsalt"
         p = pbkdf2(pbkdf2.HMAC_SHA512, P, S)
-        for i in range(64):
+        for _ in range(64):
             p.update(64)
         dk = p.key()
         self.assertEqual(

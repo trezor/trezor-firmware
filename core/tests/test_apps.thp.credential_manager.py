@@ -1,5 +1,5 @@
 # flake8: noqa: F403,F405
-from common import *
+from common import *  # isort: skip
 from trezor import config, utils
 from trezor import log
 

@@ -14,7 +14,7 @@ class TestMoneroBulletproof(unittest.TestCase):
             ss = crypto.random_scalar()
             s1 = crypto.sc_copy(None, ss)
             s2 = crypto.sc_copy(None, ss)
-            for i in range(1, x):
+            for _ in range(1, x):
                 crypto.sc_mul_into(s1, s1, ss)
 
             bp._sc_square_mult(s2, ss, x)
