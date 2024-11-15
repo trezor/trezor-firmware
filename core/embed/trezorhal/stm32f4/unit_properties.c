@@ -119,7 +119,6 @@ static bool detect_properties(unit_properties_t* props) {
       break;
   }
 
-#ifdef USE_SD_CARD
   props->sd_hotswap_enabled = true;
 #ifdef TREZOR_MODEL_T
   // Early produced TTs have a HW bug that prevents hotswapping of the SD card,
@@ -129,7 +128,6 @@ static bool detect_properties(unit_properties_t* props) {
   if (production_year <= 18) {
     props->sd_hotswap_enabled = false;
   }
-#endif
 #endif
 
   return true;

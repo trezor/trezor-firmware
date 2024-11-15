@@ -43,16 +43,16 @@ def configure(
             "embed/extmod/modtrezorio/ff.c",
             "embed/extmod/modtrezorio/ffunicode.c",
         ]
-    defines += ["USE_SD_CARD=1"]
+        defines += ["USE_SD_CARD=1"]
 
     if "sbu" in features_wanted:
         sources += ["embed/trezorhal/unix/sbu.c"]
-    defines += ["USE_SBU=1"]
+        defines += ["USE_SBU=1"]
 
     if "input" in features_wanted:
         sources += ["embed/trezorhal/unix/touch.c"]
         features_available.append("touch")
-    defines += ["USE_TOUCH=1"]
+        defines += ["USE_TOUCH=1"]
 
     features_available.append("backlight")
     defines += ["USE_BACKLIGHT=1"]

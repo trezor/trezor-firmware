@@ -46,11 +46,9 @@ bool unit_properties_init(void) {
 
   memset(drv, 0, sizeof(unit_properties_driver_t));
 
-#ifdef USE_SD_CARD
   drv->cache.sd_hotswap_enabled = true;
 #ifdef TREZOR_MODEL_T
   drv->cache.sd_hotswap_enabled = false;
-#endif
 #endif
 
   // Properties detection is not fully implemented for emulator.

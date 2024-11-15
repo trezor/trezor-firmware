@@ -61,8 +61,8 @@ def configure(
         sources += ["embed/trezorhal/stm32u5/touch/ft6x36.c"]
         sources += ["embed/trezorhal/stm32u5/touch/panels/lx154a2422cpt23.c"]
         features_available.append("touch")
-    defines += ["USE_TOUCH=1"]
-    defines += ["USE_I2C=1"]
+        defines += ["USE_TOUCH=1"]
+        defines += ["USE_I2C=1"]
 
     if "haptic" in features_wanted:
         sources += [
@@ -73,7 +73,7 @@ def configure(
             "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_tim_ex.c",
         ]
         features_available.append("haptic")
-    defines += ["USE_HAPTIC=1"]
+        defines += ["USE_HAPTIC=1"]
 
     if "sd_card" in features_wanted:
         sources += ["embed/trezorhal/stm32u5/sdcard.c"]
@@ -82,12 +82,12 @@ def configure(
         sources += ["vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_sd.c"]
         sources += ["vendor/stm32u5xx_hal_driver/Src/stm32u5xx_ll_sdmmc.c"]
         features_available.append("sd_card")
-    defines += ["USE_SD_CARD=1"]
+        defines += ["USE_SD_CARD=1"]
 
     if "sbu" in features_wanted:
         sources += ["embed/trezorhal/stm32u5/sbu.c"]
         features_available.append("sbu")
-    defines += ["USE_SBU=1"]
+        defines += ["USE_SBU=1"]
 
     if "usb" in features_wanted:
         sources += [
@@ -115,7 +115,7 @@ def configure(
         sources += ["embed/trezorhal/optiga/optiga_transport.c"]
         sources += ["vendor/trezor-crypto/hash_to_curve.c"]
         features_available.append("optiga")
-    defines += ["USE_OPTIGA=1"]
+        defines += ["USE_OPTIGA=1"]
 
     defines += [
         "USE_HASH_PROCESSOR=1",
