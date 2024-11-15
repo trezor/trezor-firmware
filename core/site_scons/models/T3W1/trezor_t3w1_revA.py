@@ -33,6 +33,7 @@ def configure(
     defines += [f'TREZOR_BOARD=\\"{board}\\"']
     defines += [f"HW_MODEL={hw_model}"]
     defines += [f"HW_REVISION={hw_revision}"]
+    defines += ["HSE_VALUE=32000000", "USE_HSE=1"]
 
     sources += [
         "embed/io/display/st7785ma/display_driver.c",

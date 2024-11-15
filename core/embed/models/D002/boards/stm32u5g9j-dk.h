@@ -1,7 +1,6 @@
 #ifndef STM32U5A9J_DK_H_
 #define STM32U5A9J_DK_H_
 
-#define HSE_16MHZ
 #define VDD_1V8 1
 
 #define DISPLAY_COLOR_MODE DMA2D_OUTPUT_ARGB8888

@@ -32,6 +32,7 @@ def configure(
     defines += [f'TREZOR_BOARD=\\"{board}\\"']
     defines += [f"HW_MODEL={hw_model}"]
     defines += [f"HW_REVISION={hw_revision}"]
+    defines += ["HSE_VALUE=8000000", "USE_HSE=1"]
 
     sources += [
         "embed/io/display/stm32f429i-disc1/display_driver.c",

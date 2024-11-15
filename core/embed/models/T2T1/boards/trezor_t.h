@@ -1,8 +1,6 @@
 #ifndef _TREZOR_T_H
 #define _TREZOR_T_H
 
-#define HSE_8MHZ
-
 #define DISPLAY_COLOR_MODE DMA2D_OUTPUT_RGB565
 
 #define DISPLAY_IDENTIFY 1

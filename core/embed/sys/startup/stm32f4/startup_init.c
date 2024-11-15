@@ -39,12 +39,16 @@ typedef struct {
   uint32_t plln;
 } clock_conf_t;
 
-#ifdef HSE_16MHZ
+#ifdef USE_HSE
+#if HSE_VALUE == 16000000
 #define PLLM_COEF 2U
-#elif defined HSE_8MHZ
+#elif HSE_VALUE == 8000000
 #define PLLM_COEF 1U
 #else
 #error Unsupported HSE frequency
+#endif
+#else
+#error HSE is required
 #endif
 
 #if defined STM32F427xx || defined STM32F429xx

@@ -33,15 +33,19 @@ const uint32_t MSIRangeTable[16] = {48000000U, 24000000U, 16000000U, 12000000U,
                                     400000U,   200000U,   133000U,   100000U};
 
 // PLLCLK = ((HSE / PLLM) * PLLN) / PLLR
-#ifdef HSE_32MHZ
+#ifdef USE_HSE
+#if HSE_VALUE == 32000000
 #define PLLM_COEF 2U
 #define PLLN_COEF 2U
-#elif defined HSE_16MHZ
+#elif HSE_VALUE == 16000000
 #define PLLM_COEF 1U
 #define PLLN_COEF 2U
-#elif defined HSE_8MHZ
+#elif HSE_VALUE == 8000000
 #define PLLM_COEF 1U
 #define PLLN_COEF 4U
+#elif defined HSE_VALUE
+#error Unsupported HSE frequency
+#endif
 #else
 // no HSE available, use 16MHz HSI
 #define HSI_ONLY
