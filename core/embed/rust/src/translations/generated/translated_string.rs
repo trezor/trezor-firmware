@@ -1380,6 +1380,8 @@ pub enum TranslatedString {
     #[cfg(feature = "universal_fw")]
     ethereum__interaction_contract = 972,  // "Interaction contract"
     misc__enable_labeling = 973,  // "Enable labeling?"
+    #[cfg(feature = "universal_fw")]
+    ethereum__unknown_contract_address_short = 974,  // "Unknown contract address."
 }
 
 impl TranslatedString {
@@ -2754,6 +2756,8 @@ impl TranslatedString {
             #[cfg(feature = "universal_fw")]
             Self::ethereum__interaction_contract => "Interaction contract",
             Self::misc__enable_labeling => "Enable labeling?",
+            #[cfg(feature = "universal_fw")]
+            Self::ethereum__unknown_contract_address_short => "Unknown contract address.",
         }
     }
 
@@ -4129,6 +4133,8 @@ impl TranslatedString {
             #[cfg(feature = "universal_fw")]
             Qstr::MP_QSTR_ethereum__interaction_contract => Some(Self::ethereum__interaction_contract),
             Qstr::MP_QSTR_misc__enable_labeling => Some(Self::misc__enable_labeling),
+            #[cfg(feature = "universal_fw")]
+            Qstr::MP_QSTR_ethereum__unknown_contract_address_short => Some(Self::ethereum__unknown_contract_address_short),
             _ => None,
         }
     }
