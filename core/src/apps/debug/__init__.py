@@ -71,7 +71,7 @@ if __debug__:
                 )
 
     async def return_layout_change(
-        ctx: wire.context.Context, detect_deadlock: bool = False
+        ctx: wire.protocol_common.Context, detect_deadlock: bool = False
     ) -> None:
         # set up the wait
         storage.layout_watcher = True
@@ -356,11 +356,12 @@ if __debug__:
 
     async def handle_session(iface: WireInterface) -> None:
         from trezor import protobuf, wire
-        from trezor.wire import codec_v1, context
+        from trezor.wire.codec import codec_v1
+        from trezor.wire.codec.codec_context import CodecContext
 
         global DEBUG_CONTEXT
 
-        DEBUG_CONTEXT = ctx = context.Context(iface, WIRE_BUFFER_DEBUG)
+        DEBUG_CONTEXT = ctx = CodecContext(iface, WIRE_BUFFER_DEBUG)
 
         if storage.layout_watcher:
             try:
@@ -391,7 +392,7 @@ if __debug__:
                 )
 
                 if msg.type not in WORKFLOW_HANDLERS:
-                    await ctx.write(wire.unexpected_message())
+                    await ctx.write(wire.message_handler.unexpected_message())
                     continue
 
                 elif req_type is None:
@@ -402,7 +403,7 @@ if __debug__:
                     await ctx.write(Success())
                     continue
 
-                req_msg = wire.wrap_protobuf_load(msg.data, req_type)
+                req_msg = wire.message_handler.wrap_protobuf_load(msg.data, req_type)
                 try:
                     res_msg = await WORKFLOW_HANDLERS[msg.type](req_msg)
                 except Exception as exc:

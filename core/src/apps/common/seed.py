@@ -1,9 +1,12 @@
 from typing import TYPE_CHECKING
 
-import storage.cache as storage_cache
 import storage.device as storage_device
+from storage.cache_common import APP_COMMON_SEED, APP_COMMON_SEED_WITHOUT_PASSPHRASE
 from trezor import utils
 from trezor.crypto import hmac
+from trezor.wire import context
+
+from apps.common import cache
 
 from . import mnemonic
 from .passphrase import get as get_passphrase
@@ -12,6 +15,12 @@ if TYPE_CHECKING:
     from trezor.crypto import bip32
 
     from .paths import Bip32Path, Slip21Path
+
+if not utils.BITCOIN_ONLY:
+    from storage.cache_common import (
+        APP_CARDANO_ICARUS_SECRET,
+        APP_COMMON_DERIVE_CARDANO,
+    )
 
 
 class Slip21Node:
@@ -56,10 +65,10 @@ if not utils.BITCOIN_ONLY:
         if not storage_device.is_initialized():
             raise wire.NotInitialized("Device is not initialized")
 
-        need_seed = not storage_cache.is_set(storage_cache.APP_COMMON_SEED)
-        need_cardano_secret = storage_cache.get_bool(
-            storage_cache.APP_COMMON_DERIVE_CARDANO
-        ) and not storage_cache.is_set(storage_cache.APP_CARDANO_ICARUS_SECRET)
+        need_seed = not context.cache_is_set(APP_COMMON_SEED)
+        need_cardano_secret = context.cache_get_bool(
+            APP_COMMON_DERIVE_CARDANO
+        ) and not context.cache_is_set(APP_CARDANO_ICARUS_SECRET)
 
         if not need_seed and not need_cardano_secret:
             return
@@ -68,17 +77,17 @@ if not utils.BITCOIN_ONLY:
 
         if need_seed:
             common_seed = mnemonic.get_seed(passphrase)
-            storage_cache.set(storage_cache.APP_COMMON_SEED, common_seed)
+            context.cache_set(APP_COMMON_SEED, common_seed)
 
         if need_cardano_secret:
             from apps.cardano.seed import derive_and_store_secrets
 
             derive_and_store_secrets(passphrase)
 
-    @storage_cache.stored_async(storage_cache.APP_COMMON_SEED)
+    @cache.stored_async(APP_COMMON_SEED)
     async def get_seed() -> bytes:
         await derive_and_store_roots()
-        common_seed = storage_cache.get(storage_cache.APP_COMMON_SEED)
+        common_seed = context.cache_get(APP_COMMON_SEED)
         assert common_seed is not None
         return common_seed
 
@@ -86,13 +95,13 @@ else:
     # === Bitcoin-only variant ===
     # We use the simple version of `get_seed` that never needs to derive anything else.
 
-    @storage_cache.stored_async(storage_cache.APP_COMMON_SEED)
+    @cache.stored_async(APP_COMMON_SEED)
     async def get_seed() -> bytes:
         passphrase = await get_passphrase()
         return mnemonic.get_seed(passphrase)
 
 
-@storage_cache.stored(storage_cache.APP_COMMON_SEED_WITHOUT_PASSPHRASE)
+@cache.stored(APP_COMMON_SEED_WITHOUT_PASSPHRASE)
 def _get_seed_without_passphrase() -> bytes:
     if not storage_device.is_initialized():
         raise Exception("Device is not initialized")

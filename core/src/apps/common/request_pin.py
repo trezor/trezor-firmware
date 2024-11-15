@@ -1,9 +1,10 @@
 import utime
 from typing import Any, NoReturn
 
-import storage.cache as storage_cache
+from storage.cache_common import APP_COMMON_REQUEST_PIN_LAST_UNLOCK
 from trezor import TR, config, utils, wire
 from trezor.ui.layouts import show_error_and_raise
+from trezor.wire import context
 
 
 async def _request_sd_salt(
@@ -77,7 +78,7 @@ async def request_pin_and_sd_salt(
 
 def _set_last_unlock_time() -> None:
     now = utime.ticks_ms()
-    storage_cache.set_int(storage_cache.APP_COMMON_REQUEST_PIN_LAST_UNLOCK, now)
+    context.cache_set_int(APP_COMMON_REQUEST_PIN_LAST_UNLOCK, now)
 
 
 _DEF_ARG_PIN_ENTER: str = TR.pin__enter
@@ -91,7 +92,7 @@ async def verify_user_pin(
 ) -> None:
     # _get_last_unlock_time
     last_unlock = int.from_bytes(
-        storage_cache.get(storage_cache.APP_COMMON_REQUEST_PIN_LAST_UNLOCK, b""), "big"
+        context.cache_get(APP_COMMON_REQUEST_PIN_LAST_UNLOCK, b""), "big"
     )
 
     if (

@@ -7,7 +7,7 @@ from trezor.messages import (
     ThpCredentialMetadata,
     ThpPairingCredential,
 )
-from trezor.wire import wrap_protobuf_load
+from trezor.wire.message_handler import wrap_protobuf_load
 
 if TYPE_CHECKING:
     from apps.common.paths import Slip21Path
