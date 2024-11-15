@@ -600,7 +600,7 @@ async def _confirm_ask_pagination(
 
     confirm_more_layout = trezorui2.confirm_more(
         title=title,
-        button="GO BACK",
+        button=TR.buttons__confirm,
         items=[(ui.BOLD_UPPER, f"Size: {len(data)} bytes"), (ui.MONO, data)],
     )
 
@@ -614,9 +614,11 @@ async def _confirm_ask_pagination(
         ):
             return
 
-        await interact(confirm_more_layout, br_name, br_code, raise_on_cancel=None)
-
-    assert False
+        try:
+            await raise_if_not_confirmed(confirm_more_layout, br_name, br_code)
+            break
+        except ActionCancelled:
+            continue
 
 
 def confirm_address(
