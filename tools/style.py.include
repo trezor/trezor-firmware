@@ -1,6 +1,7 @@
 ^common/
 ^core/src/
 ^core/site_scons/
+^core/tests/
 ^crypto/
 ^legacy/
 ^storage/
