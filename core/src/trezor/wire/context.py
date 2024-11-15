@@ -15,22 +15,16 @@ for ButtonRequests. Of course, `context.wait()` transparently works in such situ
 
 from typing import TYPE_CHECKING
 
-from trezor import log, loop, protobuf
+from storage import cache
+from storage.cache_common import SESSIONLESS_FLAG
+from trezor import loop, protobuf
 
-from . import codec_v1
+from .protocol_common import Context, Message
 
 if TYPE_CHECKING:
-    from trezorio import WireInterface
-    from typing import (
-        Any,
-        Awaitable,
-        Callable,
-        Container,
-        Coroutine,
-        Generator,
-        TypeVar,
-        overload,
-    )
+    from typing import Any, Callable, Coroutine, Generator, TypeVar, overload
+
+    from storage.cache_common import DataCache
 
     Msg = TypeVar("Msg", bound=protobuf.MessageType)
     HandlerTask = Coroutine[Any, Any, protobuf.MessageType]
@@ -41,128 +35,16 @@ if TYPE_CHECKING:
     T = TypeVar("T")
 
 
-class UnexpectedMessage(Exception):
+class UnexpectedMessageException(Exception):
     """A message was received that is not part of the current workflow.
 
     Utility exception to inform the session handler that the current workflow
     should be aborted and a new one started as if `msg` was the first message.
     """
 
-    def __init__(self, msg: codec_v1.Message) -> None:
+    def __init__(self, msg: Message) -> None:
         super().__init__()
         self.msg = msg
-
-
-class Context:
-    """Wire context.
-
-    Represents USB communication inside a particular session on a particular interface
-    (i.e., wire, debug, single BT connection, etc.)
-    """
-
-    def __init__(self, iface: WireInterface, buffer: bytearray) -> None:
-        self.iface = iface
-        self.buffer = buffer
-
-    def read_from_wire(self) -> Awaitable[codec_v1.Message]:
-        """Read a whole message from the wire without parsing it."""
-        return codec_v1.read_message(self.iface, self.buffer)
-
-    if TYPE_CHECKING:
-
-        @overload
-        async def read(
-            self, expected_types: Container[int]
-        ) -> protobuf.MessageType: ...
-
-        @overload
-        async def read(
-            self, expected_types: Container[int], expected_type: type[LoadedMessageType]
-        ) -> LoadedMessageType: ...
-
-    async def read(
-        self,
-        expected_types: Container[int],
-        expected_type: type[protobuf.MessageType] | None = None,
-    ) -> protobuf.MessageType:
-        """Read a message from the wire.
-
-        The read message must be of one of the types specified in `expected_types`.
-        If only a single type is expected, it can be passed as `expected_type`,
-        to save on having to decode the type code into a protobuf class.
-        """
-        if __debug__:
-            log.debug(
-                __name__,
-                "%d expect: %s",
-                self.iface.iface_num(),
-                expected_type.MESSAGE_NAME if expected_type else expected_types,
-            )
-
-        # Load the full message into a buffer, parse out type and data payload
-        msg = await self.read_from_wire()
-
-        # If we got a message with unexpected type, raise the message via
-        # `UnexpectedMessageError` and let the session handler deal with it.
-        if msg.type not in expected_types:
-            raise UnexpectedMessage(msg)
-
-        if expected_type is None:
-            expected_type = protobuf.type_for_wire(msg.type)
-
-        if __debug__:
-            log.debug(
-                __name__,
-                "%d read: %s",
-                self.iface.iface_num(),
-                expected_type.MESSAGE_NAME,
-            )
-
-        # look up the protobuf class and parse the message
-        from . import wrap_protobuf_load
-
-        return wrap_protobuf_load(msg.data, expected_type)
-
-    async def write(self, msg: protobuf.MessageType) -> None:
-        """Write a message to the wire."""
-        if __debug__:
-            log.debug(
-                __name__,
-                "%d write: %s",
-                self.iface.iface_num(),
-                msg.MESSAGE_NAME,
-            )
-
-        # cannot write message without wire type
-        assert msg.MESSAGE_WIRE_TYPE is not None
-
-        msg_size = protobuf.encoded_length(msg)
-
-        if msg_size <= len(self.buffer):
-            # reuse preallocated
-            buffer = self.buffer
-        else:
-            # message is too big, we need to allocate a new buffer
-            buffer = bytearray(msg_size)
-
-        msg_size = protobuf.encode(buffer, msg)
-
-        await codec_v1.write_message(
-            self.iface,
-            msg.MESSAGE_WIRE_TYPE,
-            memoryview(buffer)[:msg_size],
-        )
-
-    async def call(
-        self,
-        msg: protobuf.MessageType,
-        expected_type: type[LoadedMessageType],
-    ) -> LoadedMessageType:
-        assert expected_type.MESSAGE_WIRE_TYPE is not None
-
-        await self.write(msg)
-        del msg
-        return await self.read((expected_type.MESSAGE_WIRE_TYPE,), expected_type)
 
 
 CURRENT_CONTEXT: Context | None = None
@@ -254,3 +136,69 @@ def with_context(ctx: Context, workflow: loop.Task) -> Generator:
             send_exc = e
         else:
             send_exc = None
+
+
+# ACCESS TO CACHE
+
+if TYPE_CHECKING:
+    T = TypeVar("T")
+
+    @overload
+    def cache_get(key: int) -> bytes | None:  # noqa: F811
+        ...
+
+    @overload
+    def cache_get(key: int, default: T) -> bytes | T:  # noqa: F811
+        ...
+
+
+def cache_get(key: int, default: T | None = None) -> bytes | T | None:  # noqa: F811
+    cache = _get_cache_for_key(key)
+    return cache.get(key, default)
+
+
+def cache_get_bool(key: int) -> bool:  # noqa: F811
+    cache = _get_cache_for_key(key)
+    return cache.get_bool(key)
+
+
+def cache_get_int(key: int, default: T | None = None) -> int | T | None:  # noqa: F811
+    cache = _get_cache_for_key(key)
+    return cache.get_int(key, default)
+
+
+def cache_get_int_all_sessions(key: int) -> set[int]:
+    return cache.get_int_all_sessions(key)
+
+
+def cache_is_set(key: int) -> bool:
+    cache = _get_cache_for_key(key)
+    return cache.is_set(key)
+
+
+def cache_set(key: int, value: bytes) -> None:
+    cache = _get_cache_for_key(key)
+    cache.set(key, value)
+
+
+def cache_set_bool(key: int, value: bool) -> None:
+    cache = _get_cache_for_key(key)
+    cache.set_bool(key, value)
+
+
+def cache_set_int(key: int, value: int) -> None:
+    cache = _get_cache_for_key(key)
+    cache.set_int(key, value)
+
+
+def cache_delete(key: int) -> None:
+    cache = _get_cache_for_key(key)
+    cache.delete(key)
+
+
+def _get_cache_for_key(key: int) -> DataCache:
+    if key & SESSIONLESS_FLAG:
+        return cache.get_sessionless_cache()
+    if CURRENT_CONTEXT:
+        return CURRENT_CONTEXT.cache
+    raise Exception("No wire context")
