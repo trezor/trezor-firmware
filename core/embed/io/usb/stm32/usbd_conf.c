@@ -226,7 +226,13 @@ void HAL_PCD_MspInit(PCD_HandleTypeDef *hpcd)
 
     /** Set the OTG PHY reference clock selection
     */
+#if HSE_VALUE == 16000000
     HAL_SYSCFG_SetOTGPHYReferenceClockSelection(SYSCFG_OTG_HS_PHY_CLK_SELECT_1);
+#elif HSE_VALUE == 32000000
+    HAL_SYSCFG_SetOTGPHYReferenceClockSelection(SYSCFG_OTG_HS_PHY_CLK_SELECT_6);
+#else
+#error Unsupported HSE frequency
+#endif
 
     /* Peripheral clock enable */
     __HAL_RCC_USB_OTG_HS_CLK_ENABLE();
