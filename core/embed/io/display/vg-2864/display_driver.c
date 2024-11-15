@@ -199,6 +199,8 @@ static void display_sync_with_fb(display_driver_t *drv) {
 
   // Send whole framebuffer to the display
 
+  mpu_set_active_fb(drv->framebuf, FRAME_BUFFER_SIZE);
+
   if (drv->orientation_angle == 0) {
     for (int y = DISPLAY_RESY / 8 - 1; y >= 0; y--) {
       uint8_t buff[DISPLAY_RESX];
@@ -233,6 +235,7 @@ static void display_sync_with_fb(display_driver_t *drv) {
 
   while (HAL_SPI_STATE_READY != HAL_SPI_GetState(&drv->spi)) {
   }
+  mpu_set_active_fb(NULL, 0);
 
   // SPI deselect
   HAL_GPIO_WritePin(OLED_CS_PORT, OLED_CS_PIN, GPIO_PIN_SET);
@@ -321,7 +324,7 @@ void display_init(display_content_mode_t mode) {
 void display_deinit(display_content_mode_t mode) {
   display_driver_t *drv = &g_display_driver;
 
-  mpu_set_unpriv_fb(NULL, 0);
+  mpu_set_active_fb(NULL, 0);
 
   drv->initialized = false;
 }
@@ -391,7 +394,7 @@ bool display_get_frame_buffer(display_fb_info_t *fb) {
     fb->ptr = &drv->framebuf[0];
     fb->stride = DISPLAY_RESX;
     // Enable access to the frame buffer from the unprivileged code
-    mpu_set_unpriv_fb(fb->ptr, FRAME_BUFFER_SIZE);
+    mpu_set_active_fb(fb->ptr, FRAME_BUFFER_SIZE);
     return true;
   }
 }
@@ -410,7 +413,7 @@ void display_refresh(void) {
 #endif
 
   // Disable access to the frame buffer from the unprivileged code
-  mpu_set_unpriv_fb(NULL, 0);
+  mpu_set_active_fb(NULL, 0);
 
   // Copy the frame buffer to the display
   display_sync_with_fb(drv);

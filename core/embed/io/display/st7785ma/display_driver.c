@@ -79,7 +79,7 @@ bool display_get_frame_buffer(display_fb_info_t *fb) {
   fb->ptr = get_fb_ptr(0);
   fb->stride = DISPLAY_RESX * sizeof(uint16_t);
   // Enable access to the frame buffer from the unprivileged code
-  mpu_set_unpriv_fb(fb->ptr, PHYSICAL_FRAME_BUFFER_SIZE);
+  mpu_set_active_fb(fb->ptr, PHYSICAL_FRAME_BUFFER_SIZE);
 
   return true;
 }

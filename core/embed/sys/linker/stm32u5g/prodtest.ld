@@ -87,12 +87,12 @@ SECTIONS {
 
   .stack : ALIGN(8) {
     . = 12K; /* Overflow causes UsageFault */
-  } >SRAM2
+  } >SRAM5
 
   .data : ALIGN(4) {
     *(.data*);
     . = ALIGN(512);
-  } >SRAM2 AT>FLASH
+  } >SRAM5 AT>FLASH
 
   /DISCARD/ : {
     *(.ARM.exidx*);
@@ -102,7 +102,7 @@ SECTIONS {
     *(.no_dma_buffers*);
     *(.bss*);
     . = ALIGN(4);
-  } >SRAM2
+  } >SRAM5
 
   .confidential : ALIGN(512) {
     *(.confidential*);
@@ -116,15 +116,13 @@ SECTIONS {
 
   .fb2 : ALIGN(4) {
     *(.fb2*);
-    *(.gfxmmu_table*);
-    *(.framebuffer_select*);
     . = ALIGN(4);
   } >SRAM3
 
   .buf : ALIGN(4) {
     *(.buf*);
     . = ALIGN(4);
-  } >SRAM2
+  } >SRAM5
 
 
   .boot_args : ALIGN(8) {

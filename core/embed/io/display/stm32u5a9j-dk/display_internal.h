@@ -36,6 +36,8 @@ typedef struct {
   int orientation_angle;
   // Current backlight level ranging from 0 to 255
   int backlight_level;
+  // The current frame buffer selector
+  uint32_t current_frame_buffer;
 } display_driver_t;
 
 // Display driver instance
@@ -64,15 +66,10 @@ extern display_driver_t g_display_driver;
 
 // Physical frame buffers in internal SRAM memory
 //
-// Both frame buffers layes in the fixed addresses that
+// Both frame buffers layers in the fixed addresses that
 // are shared between bootloaders and the firmware.
 extern uint8_t physical_frame_buffer_0[PHYSICAL_FRAME_BUFFER_SIZE];
 extern uint8_t physical_frame_buffer_1[PHYSICAL_FRAME_BUFFER_SIZE];
-
-// The current frame buffer selector at fixed memory address
-//
-// The variable address is shared between bootloaders and the firmware
-extern uint32_t current_frame_buffer;
 
 // LCD orientations
 #define LCD_ORIENTATION_PORTRAIT 0U

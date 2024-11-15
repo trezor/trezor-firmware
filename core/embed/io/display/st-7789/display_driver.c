@@ -99,7 +99,7 @@ void display_deinit(display_content_mode_t mode) {
 #endif
 #endif
 
-  mpu_set_unpriv_fb(NULL, 0);
+  mpu_set_active_fb(NULL, 0);
 
   backlight_pwm_deinit(mode == DISPLAY_RESET_CONTENT ? BACKLIGHT_RESET
                                                      : BACKLIGHT_RETAIN);

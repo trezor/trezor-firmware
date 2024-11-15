@@ -67,15 +67,15 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode);
 // Same as `mpu_reconfig()`, but with a more descriptive name.
 void mpu_restore(mpu_mode_t mode);
 
-// Sets the MPU to allow unprivileged access to the
+// Sets the MPU to allow access to the
 // framebuffer at the given address and size.
 //
 // The changes are made effective after the next MPU reconfiguration
-// to the `MPU_MODE_APP` mode.
+// to the `MPU_MODE_APP` or `MPU_MODE_DEFAULT` mode.
 //
 // Addr and size must be aligned to the 32-byte boundary.
-// If addr == 0, the framebuffer is not accessible in the unprivileged mode.
-void mpu_set_unpriv_fb(void* addr, size_t size);
+// If addr == 0, the framebuffer is not accessible.
+void mpu_set_active_fb(void* addr, size_t size);
 
 #endif  // KERNEL_MODE
 

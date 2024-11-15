@@ -70,8 +70,13 @@ void display_init(display_content_mode_t mode) {
     HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit);
 
     // Clear framebuffers
+    mpu_set_active_fb(physical_frame_buffer_0, PHYSICAL_FRAME_BUFFER_SIZE);
     memset(physical_frame_buffer_0, 0x00, PHYSICAL_FRAME_BUFFER_SIZE);
+
+    mpu_set_active_fb(physical_frame_buffer_1, PHYSICAL_FRAME_BUFFER_SIZE);
     memset(physical_frame_buffer_1, 0x00, PHYSICAL_FRAME_BUFFER_SIZE);
+
+    mpu_set_active_fb(NULL, 0);
 
     BSP_LCD_Init(0, LCD_ORIENTATION_PORTRAIT);
     BSP_LCD_SetBrightness(0, 100);
@@ -79,7 +84,7 @@ void display_init(display_content_mode_t mode) {
   } else {
     // Retain display content
     BSP_LCD_Reinit(0);
-    if (current_frame_buffer == 0) {
+    if (drv->current_frame_buffer == 0) {
       BSP_LCD_SetFrameBuffer(0, GFXMMU_VIRTUAL_BUFFER1_BASE_S);
     } else {
       BSP_LCD_SetFrameBuffer(0, GFXMMU_VIRTUAL_BUFFER0_BASE_S);
@@ -110,7 +115,7 @@ void display_deinit(display_content_mode_t mode) {
     BSP_LCD_DeInit(0);
   }
 
-  mpu_set_unpriv_fb(NULL, 0);
+  mpu_set_active_fb(NULL, 0);
 
   drv->initialized = false;
 }

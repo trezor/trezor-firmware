@@ -127,17 +127,6 @@ static void mpu_set_attributes(void) {
 _Static_assert(NORCOW_SECTOR_SIZE == STORAGE_1_MAXSIZE, "norcow misconfigured");
 _Static_assert(NORCOW_SECTOR_SIZE == STORAGE_2_MAXSIZE, "norcow misconfigured");
 
-#if defined STM32U5A9xx
-#define SRAM_SIZE (SRAM1_SIZE + SRAM2_SIZE + SRAM3_SIZE + SRAM5_SIZE)
-#elif defined STM32U5G9xx
-#define SRAM_SIZE \
-  (SRAM1_SIZE + SRAM2_SIZE + SRAM3_SIZE + SRAM5_SIZE + SRAM6_SIZE)
-#elif defined STM32U585xx
-#define SRAM_SIZE (SRAM1_SIZE + SRAM2_SIZE + SRAM3_SIZE)
-#else
-#error "Unknown MCU"
-#endif
-
 #ifdef STM32U585xx
 // Two frame buffers at the end of SRAM3
 #define GRAPHICS_START (SRAM3_BASE + SRAM3_SIZE - KERNEL_SRAM3_SIZE)
@@ -161,9 +150,10 @@ _Static_assert(NORCOW_SECTOR_SIZE == STORAGE_2_MAXSIZE, "norcow misconfigured");
 #define KERNEL_RAM_SIZE \
   ((KERNEL_SRAM1_SIZE + KERNEL_SRAM2_SIZE) - KERNEL_U_RAM_SIZE)
 #else
-#define KERNEL_RAM_START (SRAM1_BASE)
-#define KERNEL_RAM_SIZE \
-  (SRAM1_SIZE + SRAM2_SIZE + SRAM3_SIZE - KERNEL_U_RAM_SIZE)
+_Static_assert(KERNEL_SRAM1_SIZE == 0, "SRAM1 not supported in kernel");
+_Static_assert(KERNEL_SRAM3_SIZE == 0, "SRAM3 not supported in kernel");
+#define KERNEL_RAM_START (SRAM2_BASE - BOOTARGS_SIZE)
+#define KERNEL_RAM_SIZE (BOOTARGS_SIZE + KERNEL_SRAM2_SIZE)
 #endif
 
 #ifdef SYSCALL_DISPATCH
@@ -203,6 +193,20 @@ extern uint32_t _codelen;
 #define COREAPP_RAM1_SIZE SRAM5_SIZE
 #endif
 
+#else
+
+#ifdef STM32U585xx
+#define MAIN_SRAM_START SRAM2_BASE
+#define MAIN_SRAM_SIZE SRAM2_SIZE
+#define AUX_SRAM_START SRAM1_BASE
+#define AUX_SRAM_SIZE SRAM1_SIZE
+#else
+#define MAIN_SRAM_START SRAM2_BASE
+#define MAIN_SRAM_SIZE SRAM2_SIZE
+#define AUX_SRAM_START SRAM5_BASE
+#define AUX_SRAM_SIZE SRAM5_SIZE
+#endif
+
 #endif
 
 typedef struct {
@@ -210,11 +214,11 @@ typedef struct {
   bool initialized;
   // Current mode
   mpu_mode_t mode;
-  // Address of the framebuffer visible to unprivileged code
+  // Address of the active framebuffer
   // (if set to 0, the framebuffer is not accessible)
-  uint32_t unpriv_fb_addr;
+  uint32_t active_fb_addr;
   // Size of the framebuffer in bytes
-  size_t unpriv_fb_size;
+  size_t active_fb_size;
 
 } mpu_driver_t;
 
@@ -230,18 +234,18 @@ static void mpu_init_fixed_regions(void) {
 #if defined(BOARDLOADER)
   //   REGION    ADDRESS                   SIZE                 TYPE       WRITE   UNPRIV
   SET_REGION( 0, BOARDLOADER_START,        BOARDLOADER_MAXSIZE, FLASH_CODE,   NO,    NO );
-  SET_REGION( 1, SRAM1_BASE,               SRAM_SIZE,           SRAM,        YES,    NO );
+  SET_REGION( 1, MAIN_SRAM_START,          MAIN_SRAM_SIZE,      SRAM,        YES,    NO );
   SET_REGION( 2, BOOTLOADER_START,         BOOTLOADER_MAXSIZE,  FLASH_DATA,  YES,    NO );
   SET_REGION( 3, FIRMWARE_START,           FIRMWARE_MAXSIZE,    FLASH_DATA,  YES,    NO );
-  DIS_REGION( 4 );
+  SET_REGION( 4, AUX_SRAM_START,           AUX_SRAM_SIZE,       SRAM,        YES,    NO );
 #endif
 #if defined(BOOTLOADER)
   //   REGION    ADDRESS                   SIZE                TYPE       WRITE   UNPRIV
-  SET_REGION( 0, BOOTLOADER_START,         BOOTLOADER_MAXSIZE, FLASH_CODE,  NO,     NO );
-  SET_REGION( 1, SRAM1_BASE,               SRAM_SIZE,          SRAM,        YES,    NO );
+  SET_REGION( 0, BOOTLOADER_START,         BOOTLOADER_MAXSIZE, FLASH_CODE,   NO,    NO );
+  SET_REGION( 1, MAIN_SRAM_START,          MAIN_SRAM_SIZE,     SRAM,        YES,    NO );
   SET_REGION( 2, FIRMWARE_START,           FIRMWARE_MAXSIZE,   FLASH_DATA,  YES,    NO );
   DIS_REGION( 3 );
-  DIS_REGION( 4 );
+  SET_REGION( 4, AUX_SRAM_START,           AUX_SRAM_SIZE,      SRAM,        YES,    NO );
 #endif
 #if defined(KERNEL)
   //   REGION    ADDRESS                   SIZE                TYPE       WRITE   UNPRIV
@@ -258,17 +262,17 @@ static void mpu_init_fixed_regions(void) {
 #if defined(FIRMWARE)
   //   REGION    ADDRESS                   SIZE                TYPE       WRITE   UNPRIV
   SET_REGION( 0, FIRMWARE_START,           FIRMWARE_MAXSIZE,   FLASH_CODE,   NO,    NO );
-  SET_REGION( 1, SRAM1_BASE,               SRAM_SIZE,          SRAM,        YES,    NO );
+  SET_REGION( 1, MAIN_SRAM_START,          MAIN_SRAM_SIZE,     SRAM,        YES,    NO );
   DIS_REGION( 2 );
   DIS_REGION( 3 );
-  DIS_REGION( 4 );
+  SET_REGION( 4, AUX_SRAM_START,           AUX_SRAM_SIZE,      SRAM,        YES,    NO );
 #endif
 #if defined(TREZOR_PRODTEST)
   SET_REGION( 0, FIRMWARE_START,           1024,               FLASH_DATA,  YES,    NO );
   SET_REGION( 1, FIRMWARE_START + 1024,    FIRMWARE_MAXSIZE - 1024, FLASH_CODE,   NO,    NO );
-  SET_REGION( 2, SRAM1_BASE,               SRAM_SIZE,          SRAM,        YES,    NO );
+  SET_REGION( 2, MAIN_SRAM_START,          MAIN_SRAM_SIZE,     SRAM,        YES,    NO );
   DIS_REGION( 3 );
-  DIS_REGION( 4 );
+  SET_REGION( 4, AUX_SRAM_START,           AUX_SRAM_SIZE,      SRAM,        YES,    NO );
 #endif
 
   // Regions #6 and #7 are banked
@@ -310,15 +314,21 @@ mpu_mode_t mpu_get_mode(void) {
   return drv->mode;
 }
 
-void mpu_set_unpriv_fb(void* addr, size_t size) {
+void mpu_set_active_fb(void* addr, size_t size) {
   mpu_driver_t* drv = &g_mpu_driver;
 
   if (!drv->initialized) {
     return;
   }
 
-  drv->unpriv_fb_addr = (uint32_t)addr;
-  drv->unpriv_fb_size = size;
+  irq_key_t lock = irq_lock();
+
+  drv->active_fb_addr = (uint32_t)addr;
+  drv->active_fb_size = size;
+
+  irq_unlock(lock);
+
+  mpu_reconfig(drv->mode);
 }
 
 mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
@@ -339,17 +349,22 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
   // clang-format off
   switch (mode) {
     case MPU_MODE_SAES:
-      SET_REGION( 5, PERIPH_BASE_NS,           PERIPH_SIZE,  PERIPHERAL,  YES,    YES ); // Peripherals - SAES, TAMP
+      //      REGION   ADDRESS                 SIZE                   TYPE       WRITE   UNPRIV
+      SET_REGION( 5, PERIPH_BASE_NS,           PERIPH_SIZE,           PERIPHERAL,  YES,    YES ); // Peripherals - SAES, TAMP
       break;
     case MPU_MODE_APP:
-      if (drv->unpriv_fb_addr != 0) {
-        SET_REGRUN( 5, drv->unpriv_fb_addr, drv->unpriv_fb_size,   SRAM,  YES,    YES ); // Frame buffer
+      if (drv->active_fb_addr != 0) {
+        SET_REGRUN( 5, drv->active_fb_addr,    drv->active_fb_size,   SRAM,        YES,    YES ); // Frame buffer
       } else {
         DIS_REGION( 5 );
       }
       break;
     default:
-      SET_REGION( 5, GRAPHICS_START,           GRAPHICS_SIZE,      SRAM,  YES,    YES ); // Frame buffer or display interface
+      if (drv->active_fb_addr != 0) {
+        SET_REGRUN( 5, drv->active_fb_addr,    drv->active_fb_size,   SRAM,        YES,    NO ); // Frame buffer
+      } else {
+        DIS_REGION( 5 );
+      }
       break;
   }
   // clang-format on

@@ -206,7 +206,7 @@ mpu_mode_t mpu_get_mode(void) {
   return drv->mode;
 }
 
-void mpu_set_unpriv_fb(void* addr, size_t size) {
+void mpu_set_active_fb(void* addr, size_t size) {
   // Not implemented on STM32F4
 }
 

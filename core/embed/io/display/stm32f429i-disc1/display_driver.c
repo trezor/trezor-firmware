@@ -73,7 +73,7 @@ void display_init(display_content_mode_t mode) {
 void display_deinit(display_content_mode_t mode) {
   display_driver_t *drv = &g_display_driver;
 
-  mpu_set_unpriv_fb(NULL, 0);
+  mpu_set_active_fb(NULL, 0);
 
   drv->initialized = false;
 }
@@ -136,7 +136,7 @@ bool display_get_frame_buffer(display_fb_info_t *fb) {
     fb->ptr = (void *)drv->framebuf;
     fb->stride = DISPLAY_RESX * sizeof(uint16_t);
     // Enable access to the frame buffer from the unprivileged code
-    mpu_set_unpriv_fb(fb->ptr, FRAME_BUFFER_SIZE);
+    mpu_set_active_fb(fb->ptr, FRAME_BUFFER_SIZE);
     return true;
   }
 }
@@ -145,7 +145,7 @@ void display_refresh(void) {
   // Do nothing as using just a single frame buffer
 
   // Disable access to the frame buffer from the unprivileged code
-  mpu_set_unpriv_fb(NULL, 0);
+  mpu_set_active_fb(NULL, 0);
 }
 
 void display_fill(const gfx_bitblt_t *bb) {

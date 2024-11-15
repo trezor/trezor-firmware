@@ -110,8 +110,6 @@ SECTIONS {
 
   .fb2 : ALIGN(4) {
     *(.fb2*);
-    *(.gfxmmu_table*);
-    *(.framebuffer_select*);
     . = ALIGN(4);
   } >SRAM3
 
