@@ -75,9 +75,9 @@ int main(void) {
   hash_processor_init();
 #endif
 
-  display_orientation(0);
+  display_set_orientation(0);
   gfx_clear();
-  display_backlight(255);
+  display_set_backlight(255);
 
   ensure(sdcard_is_present(), "sdcard_is_present");
 
