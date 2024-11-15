@@ -63,7 +63,7 @@ class TestCryptoEd25519(unittest.TestCase):
             self.assertEqual(sig2, unhexlify(sig))
 
     def test_verify(self):
-        for sk, pk, sig in self.vectors:
+        for _, pk, sig in self.vectors:
             # msg = pk
             self.assertTrue(
                 ed25519.verify(unhexlify(pk), unhexlify(sig), unhexlify(pk))

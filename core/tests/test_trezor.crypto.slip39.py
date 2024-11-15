@@ -65,13 +65,13 @@ class TestCryptoSlip39(unittest.TestCase):
             identifier = slip39.generate_random_identifier()
             mnemonics = slip39.split_ems(1, [(3, 5)], identifier, extendable, 1, self.EMS)
             mnemonics = mnemonics[0]
-            identifier, extendable, exponent, ems = slip39.recover_ems(mnemonics[1:4])
+            identifier, extendable, _, ems = slip39.recover_ems(mnemonics[1:4])
             self.assertEqual(ems, self.EMS)
 
             identifier = slip39.generate_random_identifier()
             mnemonics = slip39.split_ems(1, [(3, 5)], identifier, extendable, 2, self.EMS)
             mnemonics = mnemonics[0]
-            identifier, extendable, exponent, ems = slip39.recover_ems(mnemonics[1:4])
+            identifier, extendable, _, ems = slip39.recover_ems(mnemonics[1:4])
             self.assertEqual(ems, self.EMS)
 
     def test_group_sharing(self):

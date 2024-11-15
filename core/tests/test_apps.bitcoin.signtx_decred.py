@@ -1,7 +1,7 @@
 # flake8: noqa: F403,F405
 from common import *  # isort:skip
 
-if utils.INTERNAL_MODEL in ("T2T1", ):
+if utils.INTERNAL_MODEL in ("T2T1", ):  # pylint: disable=internal-model-tuple-comparison
     from trezor.crypto import bip39
     from trezor.enums import AmountUnit, OutputScriptType
     from trezor.enums.RequestType import TXFINISHED, TXINPUT, TXMETA, TXOUTPUT
@@ -406,5 +406,8 @@ class TestSignTxDecred(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    if utils.INTERNAL_MODEL in ("T2T1",):
+    if utils.INTERNAL_MODEL in (  # pylint: disable=internal-model-tuple-comparison
+        "T2T1",
+    ):
+
         unittest.main()

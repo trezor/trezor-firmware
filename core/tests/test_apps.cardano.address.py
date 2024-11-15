@@ -628,7 +628,7 @@ class TestCardanoAddress(unittest.TestCase):
 
         for (
             network_id,
-            address_type,
+            _,
             address_parameters,
             expected_address,
         ) in test_vectors:

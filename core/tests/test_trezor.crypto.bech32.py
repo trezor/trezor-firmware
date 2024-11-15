@@ -1,6 +1,3 @@
-# flake8: noqa: F403,F405
-from common import *  # isort:skip
-
 # Copyright (c) 2017, 2020 Pieter Wuille
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -21,8 +18,10 @@ from common import *  # isort:skip
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-
 """Reference tests for segwit adresses"""
+
+# flake8: noqa: F403,F405
+from common import *  # isort:skip
 
 from trezor.crypto import bech32
 

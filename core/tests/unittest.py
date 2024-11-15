@@ -140,10 +140,11 @@ class TestCase:
             func(*args, **kwargs)
         except Exception as e:
             if isinstance(e, exc):
-                return
+                return None
             raise
         else:
             ensure(False, f"{repr(exc)} not raised")
+        return None
 
     def assertListEqual(self, x, y, msg=""):
         if len(x) != len(y):

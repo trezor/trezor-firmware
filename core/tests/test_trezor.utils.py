@@ -54,7 +54,10 @@ class TestUtils(unittest.TestCase):
         )  # b'\xe1\x88\xb4\xe5\x99\xb8
 
     def test_firmware_hash(self):
-        if utils.INTERNAL_MODEL in ('DISC2', 'T3W1'):
+        if utils.INTERNAL_MODEL in (  # pylint: disable=internal-model-tuple-comparison
+            "DISC2",
+            "T3W1",
+        ):
             self.assertEqual(
                 utils.firmware_hash(),
                 b"\xde\xce\xc5\xf6\xa4vgl5\x13l2\xa5\xf8F\xd8\xba\n$\x0b!x\x1fVM\x1e\xf3}@\xd9\xa8\xe9",
