@@ -24,23 +24,27 @@
 #if KERNEL_MODE
 
 void sbu_init(void) {
-  GPIO_InitTypeDef GPIO_InitStructure = {0};
+  SBU_1_CLK_ENA();
+  SBU_2_CLK_ENA();
 
-  // SBU1/PA2 SBU2/PA3
-  GPIO_InitStructure.Pin = GPIO_PIN_2 | GPIO_PIN_3;
+  HAL_GPIO_WritePin(SBU_1_PORT, SBU_1_PIN, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(SBU_2_PORT, SBU_2_PIN, GPIO_PIN_RESET);
+
+  GPIO_InitTypeDef GPIO_InitStructure = {0};
   GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStructure.Pull = GPIO_NOPULL;
-  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStructure);
+  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
 
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_2, GPIO_PIN_RESET);
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_RESET);
+  GPIO_InitStructure.Pin = SBU_1_PIN;
+  HAL_GPIO_Init(SBU_1_PORT, &GPIO_InitStructure);
+  GPIO_InitStructure.Pin = SBU_2_PIN;
+  HAL_GPIO_Init(SBU_2_PORT, &GPIO_InitStructure);
 }
 
 void sbu_set(secbool sbu1, secbool sbu2) {
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_2,
+  HAL_GPIO_WritePin(SBU_1_PORT, SBU_1_PIN,
                     sbu1 == sectrue ? GPIO_PIN_SET : GPIO_PIN_RESET);
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3,
+  HAL_GPIO_WritePin(SBU_2_PORT, SBU_2_PIN,
                     sbu2 == sectrue ? GPIO_PIN_SET : GPIO_PIN_RESET);
 }
 
