@@ -1,8 +1,6 @@
 #ifndef _TREZOR_R_V10_H
 #define _TREZOR_R_V10_H
 
-#define HSE_8MHZ
-
 #define BTN_LEFT_PIN GPIO_PIN_10
 #define BTN_LEFT_PORT GPIOC
 #define BTN_LEFT_CLK_ENA __HAL_RCC_GPIOC_CLK_ENABLE

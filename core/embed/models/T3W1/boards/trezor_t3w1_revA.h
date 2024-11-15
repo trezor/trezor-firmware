@@ -1,7 +1,6 @@
 #ifndef TREZOR_T3W1_REVA_H_
 #define TREZOR_T3W1_REVA_H_
 
-#define HSE_32MHZ
 #define VDD_1V8 1
 
 #define BTN_POWER_PIN GPIO_PIN_5

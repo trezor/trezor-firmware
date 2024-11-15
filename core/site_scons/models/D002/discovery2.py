@@ -30,15 +30,10 @@ def configure(
     env.get("ENV")["RUST_TARGET"] = "thumbv8m.main-none-eabihf"
 
     defines += [mcu]
-    defines += [
-        f'TREZOR_BOARD=\\"{board}\\"',
-    ]
-    defines += [
-        f"HW_MODEL={hw_model}",
-    ]
-    defines += [
-        f"HW_REVISION={hw_revision}",
-    ]
+    defines += [f'TREZOR_BOARD=\\"{board}\\"']
+    defines += [f"HW_MODEL={hw_model}"]
+    defines += [f"HW_REVISION={hw_revision}"]
+    defines += ["HSE_VALUE=16000000", "USE_HSE=1"]
 
     sources += [
         "embed/io/display/stm32u5a9j-dk/display_driver.c",
