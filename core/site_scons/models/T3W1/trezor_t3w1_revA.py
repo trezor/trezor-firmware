@@ -75,6 +75,16 @@ def configure(
             "vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.c"
         ]
 
+    if "optiga" in features_wanted:
+        sources += ["embed/sec/optiga/stm32u5/optiga_hal.c"]
+        sources += ["embed/sec/optiga/optiga.c"]
+        sources += ["embed/sec/optiga/optiga_commands.c"]
+        sources += ["embed/sec/optiga/optiga_transport.c"]
+        sources += ["vendor/trezor-crypto/hash_to_curve.c"]
+        paths += ["embed/sec/optiga/inc"]
+        features_available.append("optiga")
+        defines += ["USE_OPTIGA=1"]
+
     if "sbu" in features_wanted:
         sources += ["embed/io/sbu/stm32/sbu.c"]
         paths += ["embed/io/sbu/inc"]
