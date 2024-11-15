@@ -1,7 +1,7 @@
 from typing import *
 
 
-# extmod/modtrezorui/modtrezorui-display.h
+# upymod/modtrezorui/modtrezorui-display.h
 class Display:
     """
     Provide access to device display.

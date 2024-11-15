@@ -1,7 +1,7 @@
 from typing import *
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-bech32.h
+# upymod/modtrezorcrypto/modtrezorcrypto-bech32.h
 def decode(
     bech: str,
     max_bech_len: int = 90,

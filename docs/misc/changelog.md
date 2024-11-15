@@ -7,9 +7,9 @@ at the time a new version is released. There are currently 8 such changelogs
 for different components of the repository:
 
 * **[`core/CHANGELOG.md`](https://github.com/trezor/trezor-firmware/blob/master/core/CHANGELOG.md)** for Trezor T firmware
-* **[`core/embed/boardloader/CHANGELOG.md`](https://github.com/trezor/trezor-firmware/blob/master/core/embed/boardloader/CHANGELOG.md)** for Trezor T boardloader
-* **[`core/embed/bootloader/CHANGELOG.md`](https://github.com/trezor/trezor-firmware/blob/master/core/embed/bootloader/CHANGELOG.md)** for Trezor T bootloader
-* **[`core/embed/bootloader_ci/CHANGELOG.md`](https://github.com/trezor/trezor-firmware/blob/master/core/embed/bootloader_ci/CHANGELOG.md)** for Trezor T CI bootloader
+* **[`core/embed/projects/boardloader/CHANGELOG.md`](https://github.com/trezor/trezor-firmware/blob/master/core/embed/projects/boardloader/CHANGELOG.md)** for Trezor T boardloader
+* **[`core/embed/projects/bootloader/CHANGELOG.md`](https://github.com/trezor/trezor-firmware/blob/master/core/embed/projects/bootloader/CHANGELOG.md)** for Trezor T bootloader
+* **[`core/embed/projects/bootloader_ci/CHANGELOG.md`](https://github.com/trezor/trezor-firmware/blob/master/core/embed/projects/bootloader_ci/CHANGELOG.md)** for Trezor T CI bootloader
 * **[`legacy/firmware/CHANGELOG.md`](https://github.com/trezor/trezor-firmware/blob/master/legacy/firmware/CHANGELOG.md)** for Trezor 1 firmware
 * **[`legacy/bootloader/CHANGELOG.md`](https://github.com/trezor/trezor-firmware/blob/master/legacy/bootloader/CHANGELOG.md)** for Trezor 1 bootloader
 * **[`legacy/intermediate_fw/CHANGELOG.md`](https://github.com/trezor/trezor-firmware/blob/master/legacy/intermediate_fw/CHANGELOG.md)** for Trezor 1 intermediate firmware

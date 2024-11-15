@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# script used to generate /embed/extmod/modtrezorui/loader_X.h
+# script used to generate /embed/upymod/modtrezorui/loader_X.h
 
 import math
 

@@ -265,7 +265,7 @@ level operations are implemented, such as MLSAG.
 
 #### Crypto API
 
-API bridging [trezor-crypto] and [trezor-core]: `embed/extmod/modtrezorcrypto/modtrezorcrypto-monero.h`
+API bridging [trezor-crypto] and [trezor-core]: `embed/upymod/modtrezorcrypto/modtrezorcrypto-monero.h`
 
 It encapsulates Ed25519 points and scalars in corresponding Python classes which have memory-wiping destructor.
 API provides basic functions for work with scalars and points and Monero specific functions.

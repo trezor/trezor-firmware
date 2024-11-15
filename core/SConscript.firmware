@@ -46,11 +46,11 @@ FROZEN = True
 
 # modtrezorconfig
 CPPPATH_MOD += [
-    'embed/extmod/modtrezorconfig',
+    'embed/upymod/modtrezorconfig',
     'vendor/trezor-storage',
 ]
 SOURCE_MOD += [
-    'embed/extmod/modtrezorconfig/modtrezorconfig.c',
+    'embed/upymod/modtrezorconfig/modtrezorconfig.c',
 ]
 
 # modtrezorcrypto
@@ -70,10 +70,10 @@ CPPDEFINES_MOD += [
     ('USE_EOS', '1' if (EVERYTHING and TREZOR_MODEL == "T") else '0'),
 ]
 SOURCE_MOD += [
-    'embed/extmod/trezorobj.c',
-    'embed/extmod/modtrezorcrypto/crc.c',
-    'embed/extmod/modtrezorcrypto/modtrezorcrypto.c',
-    'embed/extmod/modtrezorcrypto/rand.c',
+    'embed/upymod/trezorobj.c',
+    'embed/upymod/modtrezorcrypto/crc.c',
+    'embed/upymod/modtrezorcrypto/modtrezorcrypto.c',
+    'embed/upymod/modtrezorcrypto/rand.c',
 ]
 SOURCE_MOD_CRYPTO += [
     'vendor/trezor-crypto/address.c',
@@ -185,7 +185,7 @@ if FEATURE_FLAGS["AES_GCM"]:
 
 # modtrezorio
 SOURCE_MOD += [
-    'embed/extmod/modtrezorio/modtrezorio.c',
+    'embed/upymod/modtrezorio/modtrezorio.c',
 ]
 
 # modtrezorui
@@ -193,21 +193,22 @@ CPPPATH_MOD += [
         'vendor/micropython/lib/uzlib',
 ]
 SOURCE_MOD += [
-    'embed/extmod/modtrezorui/modtrezorui.c',
-    'embed/lib/display_utils.c',
-    'embed/lib/error_handling.c',
-    'embed/lib/fonts/font_bitmap.c',
-    'embed/lib/fonts/fonts.c',
-    'embed/lib/gfx_color.c',
-    'embed/lib/gfx_bitblt_rgb565.c',
-    'embed/lib/gfx_bitblt_rgba8888.c',
-    'embed/lib/gfx_bitblt_mono8.c',
-    'embed/lib/image.c',
-    'embed/lib/mini_printf.c',
-    'embed/lib/rsod.c',
-    'embed/lib/terminal.c',
-    'embed/lib/translations.c',
-    'embed/lib/gfx_draw.c',
+    'embed/upymod/modtrezorui/modtrezorui.c',
+    'embed/gfx/bitblt/gfx_bitblt.c',
+    'embed/gfx/bitblt/gfx_bitblt_rgb565.c',
+    'embed/gfx/bitblt/gfx_bitblt_rgba8888.c',
+    'embed/gfx/bitblt/gfx_bitblt_mono8.c',
+    'embed/gfx/fonts/font_bitmap.c',
+    'embed/gfx/fonts/fonts.c',
+    'embed/gfx/gfx_color.c',
+    'embed/gfx/gfx_draw.c',
+    'embed/gfx/terminal.c',
+    'embed/io/display/display_utils.c',
+    'embed/util/image/image.c',
+    'embed/util/translations/translations.c',
+    'embed/util/rsod/rsod.c',
+    'embed/rtl/error_handling.c',
+    'embed/rtl/mini_printf.c',
     'vendor/micropython/lib/uzlib/adler32.c',
     'vendor/micropython/lib/uzlib/crc32.c',
     'vendor/micropython/lib/uzlib/tinflate.c',
@@ -220,17 +221,17 @@ CPPDEFINES_MOD += [
 
 # modtrezorutils
 SOURCE_MOD += [
-    'embed/extmod/modtrezorutils/modtrezorutils.c',
+    'embed/upymod/modtrezorutils/modtrezorutils.c',
 ]
 
 # rust mods
 SOURCE_MOD += [
-    'embed/extmod/rustmods.c',
+    'embed/upymod/rustmods.c',
 ]
 
 # modutime
 SOURCE_MOD += [
-    'embed/extmod/modutime.c',
+    'embed/upymod/modutime.c',
 ]
 
 SOURCE_MICROPYTHON = [
@@ -380,11 +381,11 @@ FEATURES_AVAILABLE = models.configure_board(TREZOR_MODEL, HW_REVISION, FEATURES_
 FILE_SUFFIX= env.get('ENV')['SUFFIX']
 
 SOURCE_FIRMWARE = [
-    'embed/firmware/header.S',
-    'embed/firmware/main.c',
-    'embed/firmware/mphalport.c',
-    'embed/firmware/nlrthumb.c',
-    f'embed/trezorhal/{FILE_SUFFIX}/startup_stage_4.s',
+    'embed/projects/firmware/header.S',
+    'embed/projects/firmware/main.c',
+    'embed/projects/firmware/mphalport.c',
+    'embed/projects/firmware/nlrthumb.c',
+    f'embed/sys/startup/{FILE_SUFFIX}/startup_stage_4.s',
 ]
 
 if 'sd_card' in FEATURES_AVAILABLE:
@@ -413,11 +414,15 @@ env.Replace(
 ALLPATHS = [
         '.',
         'embed/rust',
-        'embed/firmware',
-        'embed/lib',
+        'embed/projects/firmware',
+        'embed/rtl/inc',
         'embed/models',
-        'embed/trezorhal',
-        'embed/extmod/modtrezorui',
+        'embed/gfx/inc',
+        'embed/sys/bsp/inc',
+        'embed/util/image/inc',
+        'embed/util/rsod/inc',
+        'embed/util/translations/inc',
+        'embed/upymod/modtrezorui',
         'vendor/micropython',
     ] + CPPPATH_MOD + PATH_HAL
 
@@ -802,7 +807,7 @@ tools.embed_raw_binary(
         obj_program,
         env,
         'vendorheader',
-        'embed/firmware/vendorheader.o',
+        'embed/projects/firmware/vendorheader.o',
         VENDORHEADER,
         )
 
@@ -840,7 +845,7 @@ env.Depends(program_elf, rust)
 BINARY_NAME = f"build/firmware/firmware-{MODEL_IDENTIFIER}"
 if not EVERYTHING:
     BINARY_NAME += "-btconly"
-BINARY_NAME += "-" + tools.get_version('embed/firmware/version.h')
+BINARY_NAME += "-" + tools.get_version('embed/projects/firmware/version.h')
 BINARY_NAME += "-" + tools.get_git_revision_short_hash()
 BINARY_NAME += "-dirty" if tools.get_git_modified() else ""
 BINARY_NAME += ".bin"

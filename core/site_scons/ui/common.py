@@ -10,6 +10,6 @@ def add_font(
             "TREZOR_FONT_" + font_name + "_ENABLE=" + font,
             "TREZOR_FONT_" + font_name + '_INCLUDE=\\"' + font_filename + '.h\\"',
         ]
-        sourcefile = "embed/lib/fonts/" + font_filename + ".c"
+        sourcefile = "embed/gfx/fonts/" + font_filename + ".c"
         if sourcefile not in sources:
             sources.append(sourcefile)

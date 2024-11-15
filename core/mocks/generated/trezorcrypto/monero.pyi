@@ -1,7 +1,7 @@
 from typing import *
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-monero.h
+# upymod/modtrezorcrypto/modtrezorcrypto-monero.h
 class Point:
     """
     EC point on ED25519
@@ -12,7 +12,7 @@ class Point:
         """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-monero.h
+# upymod/modtrezorcrypto/modtrezorcrypto-monero.h
 class Scalar:
     """
     EC scalar on SC25519
@@ -23,7 +23,7 @@ class Scalar:
         """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-monero.h
+# upymod/modtrezorcrypto/modtrezorcrypto-monero.h
 class Hasher:
     """
     XMR hasher
@@ -46,7 +46,7 @@ class Hasher:
         """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-monero.h
+# upymod/modtrezorcrypto/modtrezorcrypto-monero.h
 def sc_copy(
     dst: Scalar | None, val: int | bytes | Scalar
 ) -> Scalar:
@@ -55,49 +55,49 @@ def sc_copy(
     """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-monero.h
+# upymod/modtrezorcrypto/modtrezorcrypto-monero.h
 def sc_check(val: Scalar) -> None:
     """
     Throws exception if scalar is invalid
     """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-monero.h
+# upymod/modtrezorcrypto/modtrezorcrypto-monero.h
 def sc_iszero(val: Scalar) -> bool:
     """
     Returns False if the scalar is zero
     """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-monero.h
+# upymod/modtrezorcrypto/modtrezorcrypto-monero.h
 def sc_eq(a: Scalar, b: Scalar) -> int:
     """
     Compares scalars, returns 1 on the same value
     """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-monero.h
+# upymod/modtrezorcrypto/modtrezorcrypto-monero.h
 def sc_add_into(r: Scalar | None, a: Scalar, b: Scalar) -> Scalar:
     """
     Scalar addition
     """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-monero.h
+# upymod/modtrezorcrypto/modtrezorcrypto-monero.h
 def sc_sub_into(r: Scalar | None, a: Scalar, b: Scalar) -> Scalar:
     """
     Scalar subtraction
     """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-monero.h
+# upymod/modtrezorcrypto/modtrezorcrypto-monero.h
 def sc_mul_into(r: Scalar | None, a: Scalar, b: Scalar) -> Scalar:
     """
     Scalar multiplication
     """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-monero.h
+# upymod/modtrezorcrypto/modtrezorcrypto-monero.h
 def sc_mulsub_into(
     r: Scalar | None, a: Scalar, b: Scalar, c: Scalar
 ) -> Scalar:
@@ -106,7 +106,7 @@ def sc_mulsub_into(
     """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-monero.h
+# upymod/modtrezorcrypto/modtrezorcrypto-monero.h
 def sc_muladd_into(
     r: Scalar | None, a: Scalar, b: Scalar, c: Scalar
 ) -> Scalar:
@@ -115,14 +115,14 @@ def sc_muladd_into(
     """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-monero.h
+# upymod/modtrezorcrypto/modtrezorcrypto-monero.h
 def sc_inv_into(r: Scalar | None, a: Scalar) -> Scalar:
     """
     Scalar modular inversion
     """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-monero.h
+# upymod/modtrezorcrypto/modtrezorcrypto-monero.h
 def encodeint_into(
     r: bytes | None, a: Scalar, offset: int | None = 0
 ) -> bytes:
@@ -131,7 +131,7 @@ def encodeint_into(
     """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-monero.h
+# upymod/modtrezorcrypto/modtrezorcrypto-monero.h
 def decodeint_into(
     r: Scalar | None, a: bytes, offset: int = 0
 ) -> Scalar:
@@ -140,7 +140,7 @@ def decodeint_into(
     """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-monero.h
+# upymod/modtrezorcrypto/modtrezorcrypto-monero.h
 def decodeint_into_noreduce(
     r: Scalar | None, a: bytes, offset: int = 0
 ) -> Scalar:
@@ -149,56 +149,56 @@ def decodeint_into_noreduce(
     """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-monero.h
+# upymod/modtrezorcrypto/modtrezorcrypto-monero.h
 def identity_into(r: Point | None = None) -> Point:
     """
     Sets neutral point
     """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-monero.h
+# upymod/modtrezorcrypto/modtrezorcrypto-monero.h
 def xmr_H(r: Point | None = None) -> Point:
     """
     Sets H point
     """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-monero.h
+# upymod/modtrezorcrypto/modtrezorcrypto-monero.h
 def ge25519_check(r: Point) -> None:
     """
     Checks point, throws if not on curve
     """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-monero.h
+# upymod/modtrezorcrypto/modtrezorcrypto-monero.h
 def point_eq(a: Point, b: Point) -> bool:
     """
     Compares EC points
     """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-monero.h
+# upymod/modtrezorcrypto/modtrezorcrypto-monero.h
 def point_add_into(r: Point | None, a: Point, b: Point) -> Point:
     """
     Adds EC points
     """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-monero.h
+# upymod/modtrezorcrypto/modtrezorcrypto-monero.h
 def point_sub_into(r: Point | None, a: Point, b: Point) -> Point:
     """
     Subtracts EC points
     """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-monero.h
+# upymod/modtrezorcrypto/modtrezorcrypto-monero.h
 def ge25519_mul8(r: Point | None, p: Point) -> Point:
     """
     EC point * 8
     """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-monero.h
+# upymod/modtrezorcrypto/modtrezorcrypto-monero.h
 def ge25519_double_scalarmult_vartime_into(
     r: Point | None, p1: Point, s1: Scalar, s2: Scalar
 ) -> Point:
@@ -207,7 +207,7 @@ def ge25519_double_scalarmult_vartime_into(
     """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-monero.h
+# upymod/modtrezorcrypto/modtrezorcrypto-monero.h
 def scalarmult_base_into(
     r: Point | None, s: Scalar | int
 ) -> Point:
@@ -216,7 +216,7 @@ def scalarmult_base_into(
     """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-monero.h
+# upymod/modtrezorcrypto/modtrezorcrypto-monero.h
 def scalarmult_into(
     r: Point | None, p: Point, s: Scalar | int
 ) -> Point:
@@ -225,14 +225,14 @@ def scalarmult_into(
     """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-monero.h
+# upymod/modtrezorcrypto/modtrezorcrypto-monero.h
 def encodepoint_into(r: bytes | None, p: Point, offset: int = 0) -> bytes:
     """
     Point compression
     """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-monero.h
+# upymod/modtrezorcrypto/modtrezorcrypto-monero.h
 def decodepoint_into(
     r: Point | None, buff: bytes, offset: int = 0
 ) -> Point:
@@ -241,14 +241,14 @@ def decodepoint_into(
     """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-monero.h
+# upymod/modtrezorcrypto/modtrezorcrypto-monero.h
 def xmr_base58_addr_encode_check(tag: int, buff: bytes) -> str:
     """
     Monero block base 58 encoding
     """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-monero.h
+# upymod/modtrezorcrypto/modtrezorcrypto-monero.h
 def xmr_base58_addr_decode_check(buff: bytes) -> tuple[bytes, int]:
     """
     Monero block base 58 decoding, returning (decoded, tag) or raising on
@@ -256,14 +256,14 @@ def xmr_base58_addr_decode_check(buff: bytes) -> tuple[bytes, int]:
     """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-monero.h
+# upymod/modtrezorcrypto/modtrezorcrypto-monero.h
 def random_scalar(r: Scalar | None = None) -> Scalar:
     """
     Generates a random scalar
     """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-monero.h
+# upymod/modtrezorcrypto/modtrezorcrypto-monero.h
 def fast_hash_into(
    r: bytes | None,
    buff: bytes,
@@ -275,7 +275,7 @@ def fast_hash_into(
     """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-monero.h
+# upymod/modtrezorcrypto/modtrezorcrypto-monero.h
 def hash_to_point_into(
     r: Point | None,
     buff: bytes,
@@ -287,7 +287,7 @@ def hash_to_point_into(
     """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-monero.h
+# upymod/modtrezorcrypto/modtrezorcrypto-monero.h
 def hash_to_scalar_into(
    r: Scalar | None,
    buff: bytes,
@@ -299,7 +299,7 @@ def hash_to_scalar_into(
     """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-monero.h
+# upymod/modtrezorcrypto/modtrezorcrypto-monero.h
 def xmr_derivation_to_scalar(
     r: Scalar | None, p: Point, output_index: int
 ) -> Scalar:
@@ -308,7 +308,7 @@ def xmr_derivation_to_scalar(
     """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-monero.h
+# upymod/modtrezorcrypto/modtrezorcrypto-monero.h
 def xmr_generate_key_derivation(
     r: Point | None, A: Point, b: Scalar
 ) -> Point:
@@ -317,7 +317,7 @@ def xmr_generate_key_derivation(
     """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-monero.h
+# upymod/modtrezorcrypto/modtrezorcrypto-monero.h
 def xmr_derive_private_key(
     r: Scalar | None, deriv: Point, idx: int, base: Scalar
 ) -> Scalar:
@@ -326,7 +326,7 @@ def xmr_derive_private_key(
     """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-monero.h
+# upymod/modtrezorcrypto/modtrezorcrypto-monero.h
 def xmr_derive_public_key(
     r: Point | None, deriv: Point, idx: int, base: Point
 ) -> Point:
@@ -335,7 +335,7 @@ def xmr_derive_public_key(
     """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-monero.h
+# upymod/modtrezorcrypto/modtrezorcrypto-monero.h
 def add_keys2_into(
     r: Point | None, a: Scalar, b: Scalar, B: Point
 ) -> Point:
@@ -344,7 +344,7 @@ def add_keys2_into(
     """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-monero.h
+# upymod/modtrezorcrypto/modtrezorcrypto-monero.h
 def add_keys3_into(
     r: Point | None, a: Scalar, A: Point, b: Scalar, B: Point
 ) -> Point:
@@ -353,7 +353,7 @@ def add_keys3_into(
     """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-monero.h
+# upymod/modtrezorcrypto/modtrezorcrypto-monero.h
 def xmr_get_subaddress_secret_key(
     r: Scalar | None, major: int, minor: int, m: Scalar
 ) -> Scalar:
@@ -362,14 +362,14 @@ def xmr_get_subaddress_secret_key(
     """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-monero.h
+# upymod/modtrezorcrypto/modtrezorcrypto-monero.h
 def gen_commitment_into(r: Point | None, a: Scalar, amount: int) -> Point:
     """
     aG + amount * H
     """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-monero.h
+# upymod/modtrezorcrypto/modtrezorcrypto-monero.h
 def ct_equals(a: bytes, b: bytes) -> bool:
     """
     Constant time buffer comparison

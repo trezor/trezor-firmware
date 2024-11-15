@@ -1,8 +1,8 @@
 #ifndef MODELS_MODEL_DISC2_H_
 #define MODELS_MODEL_DISC2_H_
 
+#include <rtl/sizedefs.h>
 #include "bootloaders/bootloader_hashes.h"
-#include "sizedefs.h"
 
 #define MODEL_NAME "D002"
 #define MODEL_FULL_NAME "Trezor DIY 2"

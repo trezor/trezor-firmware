@@ -17,7 +17,7 @@ def configure(
     hw_revision = 0
 
     mcu = "STM32U5G9xx"
-    linker_script = """embed/trezorhal/stm32u5/linker/u5g/{target}.ld"""
+    linker_script = """embed/sys/linker/stm32u5g/{target}.ld"""
 
     stm32u5_common_files(env, defines, sources, paths)
 
@@ -35,18 +35,23 @@ def configure(
     defines += [f"HW_REVISION={hw_revision}"]
 
     sources += [
-        "embed/trezorhal/stm32u5/xdisplay/st7785ma/display_driver.c",
-        "embed/trezorhal/stm32u5/backlight_pwm.c",
+        "embed/io/display/st7785ma/display_driver.c",
+        "embed/io/display/backlight/stm32/backlight_pwm.c",
     ]
 
+    paths += ["embed/io/display/inc"]
+    features_available.append("backlight")
     defines += ["USE_BACKLIGHT=1"]
 
     if "input" in features_wanted:
-        sources += ["embed/trezorhal/stm32u5/i2c_bus.c"]
-        sources += ["embed/trezorhal/stm32u5/touch/ft6x36.c"]
-        sources += ["embed/trezorhal/stm32u5/touch/panels/lhs200kb-if21.c"]
+        sources += ["embed/io/i2c_bus/stm32u5/i2c_bus.c"]
+        sources += ["embed/io/touch/ft6x36/ft6x36.c"]
+        sources += ["embed/io/touch/ft6x36/panels/lhs200kb-if21.c"]
+        paths += ["embed/io/i2c_bus/inc"]
+        paths += ["embed/io/touch/inc"]
         features_available.append("touch")
-        # sources += ["embed/trezorhal/stm32u5/button.c"]
+        # sources += ["embed/io/button/stm32/button.c"]
+        # paths += ["embed/io/button/inc"]
         # features_available.append("button")
         defines += ["USE_TOUCH=1"]
         defines += ["USE_I2C=1"]
@@ -70,29 +75,31 @@ def configure(
         ]
 
     if "sbu" in features_wanted:
-        sources += ["embed/trezorhal/stm32u5/sbu.c"]
+        sources += ["embed/io/sbu/stm32/sbu.c"]
+        paths += ["embed/io/sbu/inc"]
         features_available.append("sbu")
         defines += ["USE_SBU=1"]
 
     if "usb" in features_wanted:
         sources += [
-            "embed/trezorhal/stm32u5/usb/usb_class_hid.c",
-            "embed/trezorhal/stm32u5/usb/usb_class_vcp.c",
-            "embed/trezorhal/stm32u5/usb/usb_class_webusb.c",
-            "embed/trezorhal/stm32u5/usb/usb.c",
-            "embed/trezorhal/stm32u5/usb/usbd_conf.c",
-            "embed/trezorhal/stm32u5/usb/usbd_core.c",
-            "embed/trezorhal/stm32u5/usb/usbd_ctlreq.c",
-            "embed/trezorhal/stm32u5/usb/usbd_ioreq.c",
+            "embed/io/usb/stm32/usb_class_hid.c",
+            "embed/io/usb/stm32/usb_class_vcp.c",
+            "embed/io/usb/stm32/usb_class_webusb.c",
+            "embed/io/usb/stm32/usb.c",
+            "embed/io/usb/stm32/usbd_conf.c",
+            "embed/io/usb/stm32/usbd_core.c",
+            "embed/io/usb/stm32/usbd_ctlreq.c",
+            "embed/io/usb/stm32/usbd_ioreq.c",
             "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_ll_usb.c",
         ]
         features_available.append("usb")
+        paths += ["embed/io/usb/inc"]
 
     defines += [
         "USE_DMA2D",
         "USE_RGB_COLORS",
     ]
-    sources += ["embed/trezorhal/stm32u5/dma2d_bitblt.c"]
+    sources += ["embed/gfx/bitblt/stm32/dma2d_bitblt.c"]
 
     features_available.append("dma2d")
 

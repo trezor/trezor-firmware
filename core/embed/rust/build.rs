@@ -26,19 +26,31 @@ fn build_dir() -> String {
 }
 
 const DEFAULT_BINDGEN_MACROS_COMMON: &[&str] = &[
-    "-I../unix",
-    "-I../trezorhal/unix",
+    "-I../projects/unix",
     "-I../../build/unix",
     "-I../../vendor/micropython/ports/unix",
     "-I../../../crypto",
     "-I../../../storage",
     "-I../../vendor/micropython",
     "-I../../vendor/micropython/lib/uzlib",
-    "-I../lib",
-    "-I../trezorhal",
-    "-I../trezorhal/unix",
+    "-I../rtl/inc",
+    "-I../gfx/inc",
+    "-I../io/button/inc",
+    "-I../io/display/inc",
+    "-I../io/haptic/inc",
+    "-I../io/touch/inc",
+    "-I../io/rgb_led/inc",
+    "-I../io/usb/inc",
+    "-I../sec/entropy/inc",
+    "-I../sys/time/inc",
+    "-I../util/flash/inc",
+    "-I../util/translations/inc",
     "-I../models",
     "-DTREZOR_EMULATOR",
+    "-DUSE_BUTTON",
+    "-DUSE_TOUCH",
+    "-DUSE_HAPTIC",
+    "-DUSE_RGB_LED",
 ];
 
 #[cfg(feature = "model_tt")]
@@ -365,7 +377,7 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("gfx_mono8_copy_mono4")
         .allowlist_function("gfx_mono8_blend_mono1p")
         .allowlist_function("gfx_mono8_blend_mono4")
-        .allowlist_function("dma2d_wait")
+        .allowlist_function("gfx_bitblt_wait")
         // fonts
         .allowlist_function("font_height")
         .allowlist_function("font_max_height")

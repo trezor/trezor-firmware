@@ -1,8 +1,8 @@
 #ifndef MODELS_MODEL_H_
 #define MODELS_MODEL_H_
 
-#include "layout.h"
-#include "layout_common.h"
+#include <util/flash_layout.h>
+#include "otp_layout.h"
 
 #if defined TREZOR_MODEL_T
 #include "T2T1/model_T2T1.h"
