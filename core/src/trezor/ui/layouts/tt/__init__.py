@@ -773,8 +773,8 @@ if not utils.BITCOIN_ONLY:
     def confirm_ethereum_unknown_contract_warning() -> Awaitable[None]:
         return show_warning(
             "unknown_contract_warning",
-            TR.ethereum__unknown_contract_address,
-            TR.words__warning,
+            TR.ethereum__unknown_contract_address_short,
+            TR.words__continue_anyway_question,
         )
 
     async def confirm_ethereum_tx(
