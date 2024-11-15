@@ -371,11 +371,6 @@ class EthereumFlow:
             go_next(self.debug)
         self.debug.read_layout()
 
-        if self.debug.layout_type is LayoutType.TR:
-            # TR is going back to the "show more" screen here
-            assert (yield).name == "confirm_data"
-            self.debug.press_yes()
-
     def paginate_data_go_back(self) -> BRGeneratorType:
         br = yield
         assert br.name == "confirm_data"
