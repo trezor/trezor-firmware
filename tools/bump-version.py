@@ -73,7 +73,7 @@ def cli(project, version):
         )
     elif parts[-1] == "core":
         bump_header(
-            project / "embed" / "firmware" / "version.h",
+            project / "embed" / "projects" / "firmware" / "version.h",
             VERSION_MAJOR=major,
             VERSION_MINOR=minor,
             VERSION_PATCH=patch,

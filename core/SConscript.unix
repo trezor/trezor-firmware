@@ -51,11 +51,11 @@ RUST_UI_FEATURES = []
 
 # modtrezorconfig
 CPPPATH_MOD += [
-    'embed/extmod/modtrezorconfig',
+    'embed/upymod/modtrezorconfig',
     'vendor/trezor-storage',
 ]
 SOURCE_MOD += [
-    'embed/extmod/modtrezorconfig/modtrezorconfig.c',
+    'embed/upymod/modtrezorconfig/modtrezorconfig.c',
     'vendor/trezor-storage/norcow.c',
     'vendor/trezor-storage/storage.c',
     'vendor/trezor-storage/storage_utils.c',
@@ -81,9 +81,9 @@ CPPDEFINES_MOD += [
     ('USE_EOS', '1' if (EVERYTHING and TREZOR_MODEL == "T") else '0'),
 ]
 SOURCE_MOD += [
-    'embed/extmod/trezorobj.c',
-    'embed/extmod/modtrezorcrypto/crc.c',
-    'embed/extmod/modtrezorcrypto/modtrezorcrypto.c',
+    'embed/upymod/trezorobj.c',
+    'embed/upymod/modtrezorcrypto/crc.c',
+    'embed/upymod/modtrezorcrypto/modtrezorcrypto.c',
 ]
 SOURCE_MOD_CRYPTO += [
     'vendor/trezor-crypto/address.c',
@@ -196,7 +196,7 @@ if THP:
 
 # modtrezorio
 SOURCE_MOD += [
-    'embed/extmod/modtrezorio/modtrezorio.c',
+    'embed/upymod/modtrezorio/modtrezorio.c',
 ]
 
 # modtrezorui
@@ -204,21 +204,22 @@ CPPPATH_MOD += [
         'vendor/micropython/lib/uzlib',
 ]
 SOURCE_MOD += [
-    'embed/extmod/modtrezorui/modtrezorui.c',
-    'embed/lib/display_utils.c',
-    'embed/lib/error_handling.c',
-    'embed/lib/fonts/font_bitmap.c',
-    'embed/lib/fonts/fonts.c',
-    'embed/lib/gfx_color.c',
-    'embed/lib/gfx_bitblt_rgb565.c',
-    'embed/lib/gfx_bitblt_rgba8888.c',
-    'embed/lib/gfx_bitblt_mono8.c',
-    'embed/lib/image.c',
-    'embed/lib/mini_printf.c',
-    'embed/lib/rsod.c',
-    'embed/lib/terminal.c',
-    'embed/lib/translations.c',
-    'embed/lib/gfx_draw.c',
+    'embed/upymod/modtrezorui/modtrezorui.c',
+    'embed/gfx/bitblt/gfx_bitblt.c',
+    'embed/gfx/bitblt/gfx_bitblt_rgb565.c',
+    'embed/gfx/bitblt/gfx_bitblt_rgba8888.c',
+    'embed/gfx/bitblt/gfx_bitblt_mono8.c',
+    'embed/gfx/fonts/font_bitmap.c',
+    'embed/gfx/fonts/fonts.c',
+    'embed/gfx/gfx_color.c',
+    'embed/gfx/gfx_draw.c',
+    'embed/gfx/terminal.c',
+    'embed/io/display/display_utils.c',
+    'embed/util/image/image.c',
+    'embed/util/translations/translations.c',
+    'embed/util/rsod/rsod.c',
+    'embed/rtl/error_handling.c',
+    'embed/rtl/mini_printf.c',
     'vendor/micropython/lib/uzlib/adler32.c',
     'vendor/micropython/lib/uzlib/crc32.c',
     'vendor/micropython/lib/uzlib/tinflate.c',
@@ -236,17 +237,17 @@ if RASPI:
 
 # modtrezorutils
 SOURCE_MOD += [
-    'embed/extmod/modtrezorutils/modtrezorutils.c',
+    'embed/upymod/modtrezorutils/modtrezorutils.c',
 ]
 
 # rust mods
 SOURCE_MOD += [
-    'embed/extmod/rustmods.c',
+    'embed/upymod/rustmods.c',
 ]
 
 # modutime
 SOURCE_MOD += [
-    'embed/extmod/modutime.c',
+    'embed/upymod/modutime.c',
 ]
 
 SOURCE_MICROPYTHON = [
@@ -376,24 +377,24 @@ SOURCE_MICROPYTHON = [
 ]
 
 SOURCE_UNIX = [
-    'embed/trezorhal/unix/bootutils.c',
-    'embed/trezorhal/unix/entropy.c',
-    'embed/trezorhal/unix/flash_otp.c',
-    'embed/trezorhal/unix/flash.c',
-    'embed/trezorhal/unix/fwutils.c',
-    'embed/trezorhal/unix/mpu.c',
-    'embed/trezorhal/unix/random_delays.c',
-    'embed/trezorhal/unix/rng.c',
-    'embed/trezorhal/unix/system.c',
-    'embed/trezorhal/unix/systick.c',
-    'embed/trezorhal/unix/systimer.c',
-    'embed/trezorhal/unix/time_estimate.c',
-    'embed/trezorhal/unix/unit_properties.c',
-    'embed/trezorhal/unix/usb.c',
-    'embed/trezorhal/unix/display_driver.c',
-    'embed/unix/main_main.c',
-    'embed/unix/main.c',
-    'embed/unix/profile.c',
+    'embed/io/display/unix/display_driver.c',
+    'embed/io/usb/unix/usb.c',
+    'embed/sec/entropy/unix/entropy.c',
+    'embed/sec/random_delays/unix/random_delays.c',
+    'embed/sec/rng/unix/rng.c',
+    'embed/sec/time_estimate/unix/time_estimate.c',
+    'embed/sys/mpu/unix/mpu.c',
+    'embed/sys/startup/unix/bootutils.c',
+    'embed/sys/task/unix/system.c',
+    'embed/sys/time/unix/systick.c',
+    'embed/sys/time/unix/systimer.c',
+    'embed/util/flash/unix/flash.c',
+    'embed/util/flash/unix/flash_otp.c',
+    'embed/util/fwutils/fwutils.c',
+    'embed/util/unit_properties/unix/unit_properties.c',
+    'embed/projects/unix/main_main.c',
+    'embed/projects/unix/main.c',
+    'embed/projects/unix/profile.c',
     'vendor/micropython/ports/unix/alloc.c',
     'vendor/micropython/ports/unix/gccollect.c',
     'vendor/micropython/ports/unix/input.c',
@@ -469,12 +470,28 @@ env.Replace(
 
 ALLPATHS=['.',
          'embed/rust',
-         'embed/lib',
+         'embed/rtl/inc',
          'embed/models',
-         'embed/unix',
-         'embed/trezorhal',
-         'embed/trezorhal/unix',
-         'embed/extmod/modtrezorui',
+         'embed/projects/unix',
+         'embed/upymod/modtrezorui',
+         'embed/gfx/inc',
+         'embed/io/display/inc',
+         'embed/io/usb/inc',
+         'embed/sec/entropy/inc',
+         'embed/sec/random_delays/inc',
+         'embed/sec/time_estimate/inc',
+         'embed/sys/bsp/inc',
+         'embed/sec/rng/inc',
+         'embed/sys/mpu/inc',
+         'embed/sys/startup/inc',
+         'embed/sys/task/inc',
+         'embed/sys/time/inc',
+         'embed/util/flash/inc',
+         'embed/util/fwutils/inc',
+         'embed/util/image/inc',
+         'embed/util/rsod/inc',
+         'embed/util/translations/inc',
+         'embed/util/unit_properties/inc',
          'vendor/micropython',
          'vendor/micropython/ports/unix',
          'vendor/micropython/lib/mp-readline',
@@ -491,7 +508,7 @@ env.Replace(
     CPPDEFINES=[
         'TREZOR_EMULATOR',
         'TREZOR_MODEL_'+TREZOR_MODEL,
-        ('MP_CONFIGFILE', '\\"embed/unix/mpconfigport.h\\"'),
+        ('MP_CONFIGFILE', '\\"embed/projects/unix/mpconfigport.h\\"'),
         ui.get_ui_layout(TREZOR_MODEL),
     ] + CPPDEFINES_MOD + CPPDEFINES_HAL,
     ASPPFLAGS='$CFLAGS $CCFLAGS', )

@@ -12,7 +12,7 @@ release core fw regular deploy:
   needs:
     - core fw regular build
   script:
-    - export VERSION=$(./tools/version.sh core/embed/firmware/version.h)
+    - export VERSION=$(./tools/version.sh core/embed/projects/firmware/version.h)
     - export NAME="firmware-T2T1-$VERSION-$CI_COMMIT_SHORT_SHA.bin"
     - echo "Deploying to ${DEPLOY_DIRECTORY}/$NAME"
     - mkdir -p "${DEPLOY_BASE_DIR}/${DEPLOY_DIRECTORY}"
@@ -34,7 +34,7 @@ release core fw btconly deploy:
   needs:
     - core fw btconly build
   script:
-    - export VERSION=$(./tools/version.sh core/embed/firmware/version.h)
+    - export VERSION=$(./tools/version.sh core/embed/projects/firmware/version.h)
     - export NAME="firmware-T2T1-btconly-$VERSION-$CI_COMMIT_SHORT_SHA.bin"
     - echo "Deploying to ${DEPLOY_DIRECTORY}/$NAME"
     - mkdir -p "${DEPLOY_BASE_DIR}/${DEPLOY_DIRECTORY}"
@@ -56,7 +56,7 @@ release core fw regular debug deploy:
   needs:
     - core fw regular debug build
   script:
-    - export VERSION=$(./tools/version.sh core/embed/firmware/version.h)
+    - export VERSION=$(./tools/version.sh core/embed/projects/firmware/version.h)
     - export NAME="firmware-T2T1-debug-$VERSION-$CI_COMMIT_SHORT_SHA.bin"
     - echo "Deploying to ${DEPLOY_DIRECTORY}/$NAME"
     - mkdir -p "${DEPLOY_BASE_DIR}/${DEPLOY_DIRECTORY}"
@@ -78,7 +78,7 @@ release core fw btconly debug deploy:
   needs:
     - core fw btconly debug build
   script:
-    - export VERSION=$(./tools/version.sh core/embed/firmware/version.h)
+    - export VERSION=$(./tools/version.sh core/embed/projects/firmware/version.h)
     - export NAME="firmware-T2T1-btconly-debug-$VERSION-$CI_COMMIT_SHORT_SHA.bin"
     - echo "Deploying to ${DEPLOY_DIRECTORY}/$NAME"
     - mkdir -p "${DEPLOY_BASE_DIR}/${DEPLOY_DIRECTORY}"
@@ -193,7 +193,7 @@ release core unix debug deploy:
     - core unix frozen debug build
     - core unix frozen debug build arm
   script:
-    - export VERSION=$(./tools/version.sh core/embed/firmware/version.h)
+    - export VERSION=$(./tools/version.sh core/embed/projects/firmware/version.h)
     - DEST="$DEPLOY_PATH/trezor-emu-core-v$VERSION"
     - DEST_ARM="$DEPLOY_PATH/arm/trezor-emu-core-v$VERSION-arm"
     - echo "Deploying to $DEST and $DEST_ARM"

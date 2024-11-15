@@ -401,10 +401,10 @@ flash_erase_storage: ## erase storage sectors from flash
 	$(OPENOCD) -c "init; reset halt; flash erase_sector 0 $(STORAGE_1_SECTOR_START) $(STORAGE_1_SECTOR_END); flash erase_sector 0 $(STORAGE_2_SECTOR_START) $(STORAGE_2_SECTOR_END); exit"
 
 flash_bootloader_jlink: $(BOOTLOADER_BUILD_DIR)/bootloader.bin ## flash bootloader using JLink
-	JLinkExe -nogui 1 -commanderscript embed/bootloader/bootloader_flash.jlink
+	JLinkExe -nogui 1 -commanderscript embed/projects/bootloader/bootloader_flash.jlink
 
 flash_bootloader_ci_jlink: $(BOOTLOADER_CI_BUILD_DIR)/bootloader.bin ## flash CI bootloader using JLink
-	JLinkExe -nogui 1 -commanderscript embed/bootloader_ci/bootloader_flash.jlink
+	JLinkExe -nogui 1 -commanderscript embed/projects/bootloader_ci/bootloader_flash.jlink
 
 flash_firmware_jlink: $(FIRMWARE_BUILD_DIR)/firmware.bin ## flash firmware using JLink. file names must end in .bin for JLink
 	cp -f $<.p1 $<.p1.bin
@@ -412,7 +412,7 @@ flash_firmware_jlink: $(FIRMWARE_BUILD_DIR)/firmware.bin ## flash firmware using
 	## pad 2nd part so that FW integrity works after flash
 	## read&compare in flashing will avoid erasing unmodified sectors
 	truncate -s $(FIRMWARE_P2_MAXSIZE) $<.p2.bin
-	JLinkExe -nogui 1 -commanderscript embed/firmware/firmware_flash.jlink
+	JLinkExe -nogui 1 -commanderscript embed/projects/firmware/firmware_flash.jlink
 
 ## openocd debug commands:
 

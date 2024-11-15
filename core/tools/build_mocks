@@ -7,7 +7,7 @@ import tempfile
 from pathlib import Path
 
 CORE_DIR = Path(__file__).resolve().parent.parent
-EXTMOD_PATH = CORE_DIR / "embed" / "extmod"
+EXTMOD_PATH = CORE_DIR / "embed" / "upymod"
 RUSTMOD_PATH = CORE_DIR / "embed" / "rust" / "src"
 MOCKS_PATH = CORE_DIR / "mocks" / "generated"
 

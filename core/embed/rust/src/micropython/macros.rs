@@ -174,7 +174,7 @@ macro_rules! obj_type {
     }};
 }
 
-/// Construct an extmod definition.
+/// Construct an upymod definition.
 macro_rules! obj_module {
     ($($key:expr => $val:expr),*) => ({
         #[allow(unused_unsafe)]

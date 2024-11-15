@@ -1,7 +1,7 @@
 from typing import *
 
 
-# extmod/modtrezorutils/modtrezorutils-meminfo.h
+# upymod/modtrezorutils/modtrezorutils-meminfo.h
 def meminfo(filename: str) -> None:
     """Dumps map of micropython GC arena to a file.
     The JSON file can be decoded by analyze.py
@@ -9,7 +9,7 @@ def meminfo(filename: str) -> None:
      """
 
 
-# extmod/modtrezorutils/modtrezorutils.c
+# upymod/modtrezorutils/modtrezorutils.c
 def consteq(sec: bytes, pub: bytes) -> bool:
     """
     Compares the private information in `sec` with public, user-provided
@@ -19,7 +19,7 @@ def consteq(sec: bytes, pub: bytes) -> bool:
     """
 
 
-# extmod/modtrezorutils/modtrezorutils.c
+# upymod/modtrezorutils/modtrezorutils.c
 def memcpy(
     dst: bytearray | memoryview,
     dst_ofs: int,
@@ -35,14 +35,14 @@ def memcpy(
     """
 
 
-# extmod/modtrezorutils/modtrezorutils.c
+# upymod/modtrezorutils/modtrezorutils.c
 def halt(msg: str | None = None) -> None:
     """
     Halts execution.
     """
 
 
-# extmod/modtrezorutils/modtrezorutils.c
+# upymod/modtrezorutils/modtrezorutils.c
 def firmware_hash(
     challenge: bytes | None = None,
     callback: Callable[[int, int], None] | None = None,
@@ -53,42 +53,42 @@ def firmware_hash(
     """
 
 
-# extmod/modtrezorutils/modtrezorutils.c
+# upymod/modtrezorutils/modtrezorutils.c
 def firmware_vendor() -> str:
     """
     Returns the firmware vendor string from the vendor header.
     """
 
 
-# extmod/modtrezorutils/modtrezorutils.c
+# upymod/modtrezorutils/modtrezorutils.c
 def unit_color() -> int | None:
     """
     Returns the color of the unit.
     """
 
 
-# extmod/modtrezorutils/modtrezorutils.c
+# upymod/modtrezorutils/modtrezorutils.c
 def unit_btconly() -> bool | None:
     """
     Returns True if the unit is BTConly.
     """
 
 
-# extmod/modtrezorutils/modtrezorutils.c
+# upymod/modtrezorutils/modtrezorutils.c
 def unit_packaging() -> int | None:
     """
     Returns the packaging version of the unit.
     """
 
 
-# extmod/modtrezorutils/modtrezorutils.c
+# upymod/modtrezorutils/modtrezorutils.c
 def sd_hotswap_enabled() -> bool:
     """
     Returns True if SD card hot swapping is enabled
     """
 
 
-# extmod/modtrezorutils/modtrezorutils.c
+# upymod/modtrezorutils/modtrezorutils.c
 def reboot_to_bootloader(
     boot_command : int = 0,
     boot_args : bytes | None = None,
@@ -99,7 +99,7 @@ def reboot_to_bootloader(
 VersionTuple = Tuple[int, int, int, int]
 
 
-# extmod/modtrezorutils/modtrezorutils.c
+# upymod/modtrezorutils/modtrezorutils.c
 class FirmwareHeaderInfo(NamedTuple):
     version: VersionTuple
     vendor: str
@@ -107,12 +107,12 @@ class FirmwareHeaderInfo(NamedTuple):
     hash: bytes
 
 
-# extmod/modtrezorutils/modtrezorutils.c
+# upymod/modtrezorutils/modtrezorutils.c
 def check_firmware_header(header : bytes) -> FirmwareHeaderInfo:
     """Parses incoming firmware header and returns information about it."""
 
 
-# extmod/modtrezorutils/modtrezorutils.c
+# upymod/modtrezorutils/modtrezorutils.c
 def bootloader_locked() -> bool | None:
     """
     Returns True/False if the the bootloader is locked/unlocked and None if

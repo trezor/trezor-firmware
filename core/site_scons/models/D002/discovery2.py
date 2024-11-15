@@ -17,7 +17,7 @@ def configure(
     hw_revision = 0
 
     mcu = "STM32U5G9xx"
-    linker_script = """embed/trezorhal/stm32u5/linker/u5g/{target}.ld"""
+    linker_script = """embed/sys/linker/stm32u5g/{target}.ld"""
 
     stm32u5_common_files(env, defines, sources, paths)
 
@@ -41,31 +41,35 @@ def configure(
     ]
 
     sources += [
-        "embed/trezorhal/stm32u5/xdisplay/stm32u5a9j-dk/display_driver.c",
-        "embed/trezorhal/stm32u5/xdisplay/stm32u5a9j-dk/display_fb.c",
-        "embed/trezorhal/stm32u5/xdisplay/stm32u5a9j-dk/display_ltdc_dsi.c",
+        "embed/io/display/stm32u5a9j-dk/display_driver.c",
+        "embed/io/display/stm32u5a9j-dk/display_fb.c",
+        "embed/io/display/stm32u5a9j-dk/display_ltdc_dsi.c",
     ]
+    paths += ["embed/io/display/inc"]
 
     if "input" in features_wanted:
-        sources += ["embed/trezorhal/stm32u5/i2c_bus.c"]
-        sources += ["embed/trezorhal/stm32u5/touch/sitronix.c"]
+        sources += ["embed/io/i2c_bus/stm32u5/i2c_bus.c"]
+        sources += ["embed/io/touch/sitronix/sitronix.c"]
+        paths += ["embed/io/i2c_bus/inc"]
+        paths += ["embed/io/touch/inc"]
         features_available.append("touch")
         defines += ["USE_TOUCH=1"]
         defines += ["USE_I2C=1"]
 
     if "usb" in features_wanted:
         sources += [
-            "embed/trezorhal/stm32u5/usb/usb_class_hid.c",
-            "embed/trezorhal/stm32u5/usb/usb_class_vcp.c",
-            "embed/trezorhal/stm32u5/usb/usb_class_webusb.c",
-            "embed/trezorhal/stm32u5/usb/usb.c",
-            "embed/trezorhal/stm32u5/usb/usbd_conf.c",
-            "embed/trezorhal/stm32u5/usb/usbd_core.c",
-            "embed/trezorhal/stm32u5/usb/usbd_ctlreq.c",
-            "embed/trezorhal/stm32u5/usb/usbd_ioreq.c",
+            "embed/io/usb/stm32/usb_class_hid.c",
+            "embed/io/usb/stm32/usb_class_vcp.c",
+            "embed/io/usb/stm32/usb_class_webusb.c",
+            "embed/io/usb/stm32/usb.c",
+            "embed/io/usb/stm32/usbd_conf.c",
+            "embed/io/usb/stm32/usbd_core.c",
+            "embed/io/usb/stm32/usbd_ctlreq.c",
+            "embed/io/usb/stm32/usbd_ioreq.c",
             "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_ll_usb.c",
         ]
         features_available.append("usb")
+        paths += ["embed/io/usb/inc"]
 
     defines += [
         "USE_DMA2D",
@@ -73,7 +77,7 @@ def configure(
         "USE_RGB_COLORS",
     ]
 
-    sources += ["embed/trezorhal/stm32u5/dma2d_bitblt.c"]
+    sources += ["embed/gfx/bitblt/stm32/dma2d_bitblt.c"]
 
     features_available.append("dma2d")
     features_available.append("ui_color_32bit")

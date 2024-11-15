@@ -3,7 +3,7 @@
 
 // #include "bootloaders/bootloader_hashes.h"
 
-#include "sizedefs.h"
+#include <rtl/sizedefs.h>
 
 #define MODEL_NAME "T3W1"
 #define MODEL_FULL_NAME "Trezor T3W1"

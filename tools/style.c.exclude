@@ -1,4 +1,4 @@
-^\./core/embed/bootloader/protob/
+^\./core/embed/projects/bootloader/protob/
 ^\./crypto/aes/
 ^\./crypto/chacha20poly1305/
 ^\./crypto/ed25519-donna/
@@ -9,4 +9,4 @@
 ^\./crypto/sha2
 ^\./crypto/sha3
 ^\./legacy/vendor
-^\./core/embed/segger
+^\./core/embed/sys/systemview/stm32

@@ -28,7 +28,7 @@ PUBLIC_KEYS_PROD = [
     )
 ]
 
-VERSION_H = HERE.parent / "embed" / "firmware" / "version.h"
+VERSION_H = HERE.parent / "embed" / "projects" / "firmware" / "version.h"
 SIGNATURES_JSON = HERE / "signatures.json"
 
 

@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 # [Device tests](../tests/device-tests.md) that run against an actual physical Trezors.
-# The device needs to have special bootloader, found in `core/embed/bootloader_ci`, that
+# The device needs to have special bootloader, found in `core/embed/projects/bootloader_ci`, that
 # makes it possible to flash firmware without confirmation on the touchscreen.
 #
 # All hardware tests are run nightly on the `main` branch,

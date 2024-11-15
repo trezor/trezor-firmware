@@ -30,20 +30,23 @@ def configure(
     defines += ["FLASH_BLOCK_WORDS=1"]
 
     if "sbu" in features_wanted:
-        sources += ["embed/trezorhal/unix/sbu.c"]
+        sources += ["embed/io/sbu/unix/sbu.c"]
+        paths += ["embed/io/sbu/inc"]
         defines += ["USE_SBU=1"]
 
     if "optiga" in features_wanted:
-        sources += ["embed/trezorhal/unix/optiga_hal.c"]
-        sources += ["embed/trezorhal/unix/optiga.c"]
+        sources += ["embed/sec/optiga/unix/optiga_hal.c"]
+        sources += ["embed/sec/optiga/unix/optiga.c"]
+        paths += ["embed/sec/optiga/inc"]
         features_available.append("optiga")
         defines += ["USE_OPTIGA=1"]
 
     if "input" in features_wanted:
-        sources += ["embed/trezorhal/unix/button.c"]
+        sources += ["embed/io/button/unix/button.c"]
+        paths += ["embed/io/button/inc"]
         features_available.append("button")
         defines += ["USE_BUTTON=1"]
 
-    sources += ["embed/trezorhal/stm32u5/layout.c"]
+    sources += ["embed/util/flash/stm32u5/flash_layout.c"]
 
     return features_available

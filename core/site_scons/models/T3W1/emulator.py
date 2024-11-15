@@ -32,31 +32,27 @@ def configure(
     defines += ["FLASH_BIT_ACCESS=1"]
     defines += ["FLASH_BLOCK_WORDS=1"]
 
-    if "dma2d" in features_wanted:
-        features_available.append("dma2d")
-        sources += [
-            "embed/trezorhal/unix/dma2d_bitblt.c",
-        ]
-        defines += ["USE_DMA2D"]
-
     if "sbu" in features_wanted:
-        sources += ["embed/trezorhal/unix/sbu.c"]
+        sources += ["embed/io/sbu/unix/sbu.c"]
+        paths += ["embed/io/sbu/inc"]
         defines += ["USE_SBU=1"]
 
     if "optiga" in features_wanted:
-        sources += ["embed/trezorhal/unix/optiga_hal.c"]
-        sources += ["embed/trezorhal/unix/optiga.c"]
+        sources += ["embed/sec/optiga/unix/optiga_hal.c"]
+        sources += ["embed/sec/optiga/unix/optiga.c"]
+        paths += ["embed/sec/optiga/inc"]
         features_available.append("optiga")
         defines += ["USE_OPTIGA=1"]
 
     if "input" in features_wanted:
-        sources += ["embed/trezorhal/unix/touch.c"]
+        sources += ["embed/io/touch/unix/touch.c"]
+        paths += ["embed/io/touch/inc"]
         features_available.append("touch")
         defines += ["USE_TOUCH=1"]
 
     features_available.append("backlight")
     defines += ["USE_BACKLIGHT=1"]
 
-    sources += ["embed/trezorhal/stm32u5/layout.c"]
+    sources += ["embed/util/flash/stm32u5/flash_layout.c"]
 
     return features_available

@@ -20,7 +20,7 @@ if len(sys.argv) > 1:
 else:
     BIN_TO_ANALYZE = CORE_DIR / "build/firmware/firmware.elf"  # type: ignore
 
-# Comes from `core/embed/firmware/memory_T.ld`
+# Comes from `core/embed/projects/firmware/memory_T.ld`
 FLASH_SIZE_KB = 768
 FLASH_2_SIZE_KB = 896
 

@@ -34,12 +34,13 @@ def configure(
     defines += [f"HW_REVISION={hw_revision}"]
 
     sources += [
-        "embed/trezorhal/stm32f4/xdisplay/stm32f429i-disc1/display_driver.c",
-        "embed/trezorhal/stm32f4/xdisplay/stm32f429i-disc1/display_ltdc.c",
-        "embed/trezorhal/stm32f4/xdisplay/stm32f429i-disc1/ili9341_spi.c",
+        "embed/io/display/stm32f429i-disc1/display_driver.c",
+        "embed/io/display/stm32f429i-disc1/display_ltdc.c",
+        "embed/io/display/stm32f429i-disc1/ili9341_spi.c",
     ]
+    paths += ["embed/io/display/inc"]
 
-    sources += ["embed/trezorhal/stm32u5/dma2d_bitblt.c"]
+    sources += ["embed/gfx/bitblt/stm32/dma2d_bitblt.c"]
 
     sources += [
         "vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma2d.c"
@@ -56,29 +57,33 @@ def configure(
     features_available.append("framebuffer")
     features_available.append("display_rgb565")
 
-    sources += ["embed/trezorhal/stm32f4/sdram.c"]
+    sources += ["embed/sys/sdram/stm32f429i-disc1/sdram_bsp.c"]
+    paths += ["embed/sys/sdram/inc"]
     defines += ["USE_SDRAM=1"]
 
     if "input" in features_wanted:
-        sources += ["embed/trezorhal/stm32f4/i2c_bus.c"]
-        sources += ["embed/trezorhal/stm32f4/touch/stmpe811.c"]
+        sources += ["embed/io/i2c_bus/stm32f4/i2c_bus.c"]
+        sources += ["embed/io/touch/stmpe811/stmpe811.c"]
+        paths += ["embed/io/i2c_bus/inc"]
+        paths += ["embed/io/touch/inc"]
         features_available.append("touch")
         defines += ["USE_TOUCH=1"]
         defines += ["USE_I2C=1"]
 
     if "usb" in features_wanted:
         sources += [
-            "embed/trezorhal/stm32f4/usb/usb_class_hid.c",
-            "embed/trezorhal/stm32f4/usb/usb_class_vcp.c",
-            "embed/trezorhal/stm32f4/usb/usb_class_webusb.c",
-            "embed/trezorhal/stm32f4/usb/usb.c",
-            "embed/trezorhal/stm32f4/usb/usbd_conf.c",
-            "embed/trezorhal/stm32f4/usb/usbd_core.c",
-            "embed/trezorhal/stm32f4/usb/usbd_ctlreq.c",
-            "embed/trezorhal/stm32f4/usb/usbd_ioreq.c",
+            "embed/io/usb/stm32/usb_class_hid.c",
+            "embed/io/usb/stm32/usb_class_vcp.c",
+            "embed/io/usb/stm32/usb_class_webusb.c",
+            "embed/io/usb/stm32/usb.c",
+            "embed/io/usb/stm32/usbd_conf.c",
+            "embed/io/usb/stm32/usbd_core.c",
+            "embed/io/usb/stm32/usbd_ctlreq.c",
+            "embed/io/usb/stm32/usbd_ioreq.c",
             "vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_usb.c",
         ]
         features_available.append("usb")
+        paths += ["embed/io/usb/inc"]
 
     defines += ["USE_PVD=1"]
 
