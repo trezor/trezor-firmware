@@ -369,8 +369,8 @@ int bootloader_main(void) {
 #ifdef USE_TOUCH
   secbool touch_initialized = secfalse;
   secbool allow_touchless_mode = secfalse;
-#ifdef TREZOR_MODEL_T3T1
-  // on T3T1, tester needs to run without touch, so making an exception
+#if defined TREZOR_MODEL_T3T1 || defined TREZOR_MODEL_T3W1
+  // on T3T1 and T3W1, tester needs to run without touch, so making an exception
   // until unit variant is written in OTP
   const secbool manufacturing_mode =
       unit_properties()->locked ? secfalse : sectrue;
