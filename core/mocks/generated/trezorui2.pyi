@@ -281,17 +281,6 @@ def confirm_with_info(
 
 
 # rust/src/ui/model_mercury/layout.rs
-def confirm_more(
-    *,
-    title: str,
-    button: str,
-    items: Iterable[tuple[int, str]],
-) -> LayoutObj[UiResult]:
-    """Confirm long content with the possibility to go back from any page.
-    Meant to be used with confirm_with_info."""
-
-
-# rust/src/ui/model_mercury/layout.rs
 def confirm_coinjoin(
     *,
     max_rounds: str,
