@@ -1,10 +1,13 @@
 use crate::{
-    strutil::TString,
+    strutil::{ShortString, TString},
+    time::Duration,
     ui::{
         component::{
             base::ComponentExt, text::common::TextBox, Child, Component, Event, EventCtx, Never,
+            Timer,
         },
         display,
+        event::TouchEvent,
         geometry::{Grid, Offset, Rect},
         model_tt::component::{
             button::{Button, ButtonContent, ButtonMsg},
@@ -12,18 +15,24 @@ use crate::{
             swipe::{Swipe, SwipeDirection},
             theme, ScrollBar,
         },
-        shape,
-        shape::Renderer,
+        shape::{self, Renderer},
         util::long_line_content_with_ellipsis,
     },
 };
-
-use core::cell::Cell;
+use core::{cell::Cell, mem};
 
 #[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 pub enum PassphraseKeyboardMsg {
     Confirmed,
     Cancelled,
+}
+
+#[derive(PartialEq, Debug, Copy, Clone)]
+#[cfg_attr(feature = "ui_debug", derive(ufmt::derive::uDebug))]
+enum DisplayStyle {
+    Dots,
+    Chars,
+    LastChar,
 }
 
 pub struct PassphraseKeyboard {
@@ -49,6 +58,8 @@ const KEYBOARD: [[&str; KEY_COUNT]; PAGE_COUNT] = [
 
 const MAX_LENGTH: usize = 50;
 const INPUT_AREA_HEIGHT: i16 = ScrollBar::DOT_SIZE + 9;
+
+const LAST_DIGIT_TIMEOUT_S: u32 = 1;
 
 impl PassphraseKeyboard {
     pub fn new() -> Self {
@@ -189,7 +200,7 @@ impl Component for PassphraseKeyboard {
         let (input_area, key_grid_area) =
             bounds.split_bottom(4 * theme::PIN_BUTTON_HEIGHT + 3 * theme::BUTTON_SPACING);
 
-        let (input_area, scroll_area) = input_area.split_bottom(INPUT_AREA_HEIGHT);
+        let (_, scroll_area) = input_area.split_bottom(INPUT_AREA_HEIGHT);
         let (scroll_area, _) = scroll_area.split_top(ScrollBar::DOT_SIZE);
 
         let key_grid = Grid::new(key_grid_area, 4, 3).with_spacing(theme::BUTTON_SPACING);
@@ -231,8 +242,14 @@ impl Component for PassphraseKeyboard {
             }
         });
         if multitap_timeout {
+            // the character has been added, show it for a bit and then hide it
+            self.input
+                .mutate(ctx, |ctx, t| t.start_timer(ctx, LAST_DIGIT_TIMEOUT_S));
             return None;
         }
+
+        self.input.event(ctx, event);
+
         if let Some(swipe) = self.page_swipe.event(ctx, event) {
             // We have detected a horizontal swipe. Change the keyboard page.
             self.on_page_swipe(ctx, swipe);
@@ -288,6 +305,17 @@ impl Component for PassphraseKeyboard {
                     i.textbox.apply(ctx, edit);
                 });
                 self.after_edit(ctx);
+                if text.len() == 1 {
+                    // If the key has just one character, it is immediately applied and the last
+                    // digit timer should be started
+                    self.input
+                        .mutate(ctx, |ctx, t| t.start_timer(ctx, LAST_DIGIT_TIMEOUT_S));
+                } else {
+                    // multi tap timer is runnig, the last digit timer should be stopped
+                    self.input.mutate(ctx, |_ctx, t| t.stop_timer());
+                }
+                self.input
+                    .mutate(ctx, |_ctx, t| t.set_display_style(DisplayStyle::LastChar));
                 return None;
             }
         }
@@ -313,14 +341,59 @@ struct Input {
     area: Rect,
     textbox: TextBox,
     multi_tap: MultiTapKeyboard,
+    display_style: DisplayStyle,
+    last_char_timer: Timer,
 }
 
 impl Input {
+    const TWITCH: i16 = 4;
+
     fn new() -> Self {
         Self {
             area: Rect::zero(),
             textbox: TextBox::empty(MAX_LENGTH),
             multi_tap: MultiTapKeyboard::new(),
+            display_style: DisplayStyle::LastChar,
+            last_char_timer: Timer::new(),
+        }
+    }
+
+    fn set_display_style(&mut self, display_style: DisplayStyle) {
+        self.display_style = display_style;
+    }
+
+    fn start_timer(&mut self, ctx: &mut EventCtx, timeout_ms: u32) {
+        self.last_char_timer
+            .start(ctx, Duration::from_secs(timeout_ms));
+    }
+
+    fn stop_timer(&mut self) {
+        self.last_char_timer.stop();
+    }
+
+    fn apply_display_style(&self, passphrase: &ShortString) -> ShortString {
+        if passphrase.len() == 0 {
+            ShortString::new()
+        } else {
+            match self.display_style {
+                DisplayStyle::Dots => {
+                    let mut dots = ShortString::new();
+                    for _ in 0..(passphrase.len()) {
+                        dots.push('*').unwrap();
+                    }
+                    dots
+                }
+                DisplayStyle::Chars => passphrase.clone(),
+                DisplayStyle::LastChar => {
+                    let mut dots = ShortString::new();
+                    for _ in 0..(passphrase.len() - 1) {
+                        dots.push('*').unwrap();
+                    }
+                    // This should not fail because the passphrase is not empty.
+                    dots.push(passphrase.chars().last().unwrap()).unwrap();
+                    dots
+                }
+            }
         }
     }
 }
@@ -333,14 +406,31 @@ impl Component for Input {
         self.area
     }
 
-    fn event(&mut self, _ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {
+    fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        match event {
+            Event::Timer(_) if self.last_char_timer.expire(event) => {
+                self.display_style = DisplayStyle::Dots;
+                ctx.request_paint();
+            }
+            Event::Touch(TouchEvent::TouchStart(pos)) if self.area.contains(pos) => {
+                self.display_style = DisplayStyle::Chars;
+                ctx.request_paint();
+            }
+            Event::Touch(TouchEvent::TouchEnd(_)) => {
+                if mem::replace(&mut self.display_style, DisplayStyle::Dots) == DisplayStyle::Chars
+                {
+                    ctx.request_paint();
+                };
+            }
+            _ => {}
+        }
         None
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        let style = theme::label_keyboard();
+        let style = theme::label_keyboard_mono();
 
-        let text_baseline = self.area.top_left() + Offset::y(style.text_font.text_height())
+        let mut text_baseline = self.area.top_left() + Offset::y(style.text_font.text_height())
             - Offset::y(style.text_font.text_baseline());
 
         let text = self.textbox.content();
@@ -351,8 +441,19 @@ impl Component for Input {
         // Accounting for the pending marker, which draws itself one pixel longer than
         // the last character
         let available_area_width = self.area.width() - 1;
-        let text_to_display =
-            long_line_content_with_ellipsis(text, "...", style.text_font, available_area_width);
+        let truncated =
+            long_line_content_with_ellipsis(text, "", style.text_font, available_area_width);
+
+        // Jiggle hidden passphrase when overflowed.
+        if text.len() > truncated.len()
+            && text.len() % 2 == 0
+            && (self.display_style == DisplayStyle::Dots
+                || self.display_style == DisplayStyle::LastChar)
+        {
+            text_baseline.x += Self::TWITCH;
+        }
+
+        let text_to_display = self.apply_display_style(&truncated);
 
         shape::Text::new(text_baseline, &text_to_display)
             .with_font(style.text_font)
