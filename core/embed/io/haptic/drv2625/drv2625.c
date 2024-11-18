@@ -147,17 +147,29 @@ bool haptic_init(void) {
   }
 
   GPIO_InitTypeDef GPIO_InitStructure = {0};
+
+#ifdef DRV2625_RESET_PIN
+  DRV2625_RESET_CLK_ENA();
+  GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStructure.Pull = GPIO_PULLDOWN;
+  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStructure.Pin = DRV2625_RESET_PIN;
+  HAL_GPIO_Init(DRV2625_RESET_PORT, &GPIO_InitStructure);
+  HAL_GPIO_WritePin(DRV2625_RESET_PORT, DRV2625_RESET_PIN, GPIO_PIN_SET);
+#endif
+
+  DRV2625_TRIG_CLK_ENA();
   GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;
   GPIO_InitStructure.Pull = GPIO_PULLDOWN;
   GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStructure.Pin = GPIO_PIN_8;
-  GPIO_InitStructure.Alternate = GPIO_AF14_TIM16;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStructure);
+  GPIO_InitStructure.Pin = DRV2625_TRIG_PIN;
+  GPIO_InitStructure.Alternate = DRV2625_TRIG_AF;
+  HAL_GPIO_Init(DRV2625_TRIG_PORT, &GPIO_InitStructure);
 
+  DRV2625_TRIG_TIM_CLK_ENA();
   TIM_HandleTypeDef TIM_Handle = {0};
-  __HAL_RCC_TIM16_CLK_ENABLE();
   TIM_Handle.State = HAL_TIM_STATE_RESET;
-  TIM_Handle.Instance = TIM16;
+  TIM_Handle.Instance = DRV2625_TRIG_TIM;
   TIM_Handle.Init.Period = 0;
   TIM_Handle.Init.Prescaler = SystemCoreClock / 10000;
   TIM_Handle.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -175,7 +187,7 @@ bool haptic_init(void) {
 
   HAL_TIM_OC_Start(&TIM_Handle, TIM_CHANNEL_1);
 
-  TIM16->BDTR |= TIM_BDTR_MOE;
+  DRV2625_TRIG_TIM->BDTR |= TIM_BDTR_MOE;
 
   driver->initialized = true;
   driver->enabled = true;
@@ -246,10 +258,10 @@ static bool haptic_play_rtp(int8_t amplitude, uint16_t duration_ms) {
     return true;
   }
 
-  TIM16->CNT = 1;
-  TIM16->CCR1 = 1;
-  TIM16->ARR = duration_ms * 10;
-  TIM16->CR1 |= TIM_CR1_CEN;
+  DRV2625_TRIG_TIM->CNT = 1;
+  DRV2625_TRIG_TIM->CCR1 = 1;
+  DRV2625_TRIG_TIM->ARR = duration_ms * 10;
+  DRV2625_TRIG_TIM->CR1 |= TIM_CR1_CEN;
 
   return true;
 }
