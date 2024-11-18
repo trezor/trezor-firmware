@@ -246,7 +246,7 @@ static void test_display(const char *colors) {
   size_t w = DISPLAY_RESX / l;
 
   for (size_t i = 0; i < l; i++) {
-    uint16_t c = COLOR_BLACK;  // black
+    gfx_color_t c = COLOR_BLACK;  // black
     switch (colors[i]) {
       case 'R':
         c = gfx_color_rgb(255, 0, 0);
