@@ -58,6 +58,14 @@ def configure(
         defines += ["USE_I2C=1"]
         defines += ["USE_BUTTON=1"]
 
+    if "haptic" in features_wanted:
+        sources += [
+            "embed/io/haptic/drv2625/drv2625.c",
+        ]
+        paths += ["embed/io/haptic/inc"]
+        features_available.append("haptic")
+        defines += ["USE_HAPTIC=1"]
+
     # if "ble" in features_wanted:
     #     sources += ["embed/trezorhal/stm32f4/ble/ble_hal.c"]
     #     sources += ["embed/trezorhal/stm32f4/ble/dfu.c"]
