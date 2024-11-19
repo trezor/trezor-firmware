@@ -23,9 +23,11 @@ from apps.common import coins
 
 class TestApprover(unittest.TestCase):
 
-    def __init__(self):
+    def setUpClass(self):
         context.CURRENT_CONTEXT = CodecContext(None, bytearray(64))
-        super().__init__()
+
+    def tearDownClass(self):
+        context.CURRENT_CONTEXT = None
 
     def setUp(self):
         self.coin = coins.by_name("Bitcoin")

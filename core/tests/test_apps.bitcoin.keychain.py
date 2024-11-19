@@ -12,9 +12,11 @@ from storage import cache_codec
 
 class TestBitcoinKeychain(unittest.TestCase):
 
-    def __init__(self):
+    def setUpClass(self):
         context.CURRENT_CONTEXT = CodecContext(None, bytearray(64))
-        super().__init__()
+
+    def tearDownClass(self):
+        context.CURRENT_CONTEXT = None
 
     def setUp(self):
         cache_codec.start_session()
@@ -97,13 +99,11 @@ class TestBitcoinKeychain(unittest.TestCase):
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestAltcoinKeychains(unittest.TestCase):
 
-    def __init__(self):
-        # Context is needed to test decorators and handleInitialize
-        # It allows access to codec cache from different parts of the code
-        from trezor.wire import context
-
+    def setUpClass(self):
         context.CURRENT_CONTEXT = CodecContext(None, bytearray(64))
-        super().__init__()
+
+    def tearDownClass(self):
+        context.CURRENT_CONTEXT = None
 
     def setUp(self):
         cache_codec.start_session()

@@ -14,11 +14,13 @@ _ROUND_ID_LEN = 32
 
 class TestAuthorization(unittest.TestCase):
 
-    def __init__(self):
-        context.CURRENT_CONTEXT = CodecContext(None, bytearray(64))
-        super().__init__()
-
     coin = coins.by_name("Bitcoin")
+
+    def setUpClass(self):
+        context.CURRENT_CONTEXT = CodecContext(None, bytearray(64))
+
+    def tearDownClass(self):
+        context.CURRENT_CONTEXT = None
 
     def setUp(self):
         self.msg_auth = AuthorizeCoinJoin(
