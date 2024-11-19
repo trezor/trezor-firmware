@@ -86,9 +86,7 @@
 
 // RAM layout
 #define KERNEL_U_RAM_SIZE 512
-#define KERNEL_SRAM1_SIZE (0 * 1024)
 #define KERNEL_SRAM2_SIZE (64 * 1024 - 512)
-#define KERNEL_SRAM3_SIZE (0 * 1024)
 
 #define BOOTARGS_SIZE 0x100
 #define CODE_ALIGNMENT 0x400

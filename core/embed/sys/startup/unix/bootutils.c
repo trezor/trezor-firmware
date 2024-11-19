@@ -51,7 +51,9 @@ void bootargs_set(boot_command_t command, const void* args, size_t args_size) {
 
 boot_command_t bootargs_get_command() { return g_boot_command; }
 
-const boot_args_t* bootargs_get_args() { return &g_boot_args; }
+void bootargs_get_args(boot_args_t* dest) {
+  memcpy(dest, &g_boot_args, sizeof(boot_args_t));
+}
 
 void __attribute__((noreturn)) secure_shutdown(void) {
   printf("SHUTDOWN\n");

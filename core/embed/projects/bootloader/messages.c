@@ -651,7 +651,10 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
         IMAGE_HASH_FINAL(&ctx, hash);
 
         // the firmware must be the same as confirmed by the user
-        if (memcmp(bootargs_get_args()->hash, hash, sizeof(hash)) != 0) {
+        boot_args_t args = {0};
+        bootargs_get_args(&args);
+
+        if (memcmp(args.hash, hash, sizeof(hash)) != 0) {
           MSG_SEND_INIT(Failure);
           MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
           MSG_SEND_ASSIGN_STRING(message, "Firmware mismatch");
