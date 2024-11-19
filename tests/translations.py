@@ -2,6 +2,7 @@ import json
 import re
 import threading
 import typing as t
+import warnings
 from hashlib import sha256
 from pathlib import Path
 
@@ -93,20 +94,24 @@ class Translation:
     def translations(self) -> dict[str, str]:
         return self.lang_json["translations"]
 
-    def _translate_raw(self, key: str) -> str:
+    def _translate_raw(self, key: str, _stacklevel: int = 0) -> str:
         tr = self.translations.get(key)
         if tr is not None:
             return tr
         if self.lang != "en":
+            warnings.warn(
+                f"Translation key '{key}' not found in '{self.lang}' translation file",
+                stacklevel=_stacklevel + 2,
+            )
             return TRANSLATIONS["en"]._translate_raw(key)
         raise KeyError(key)
 
-    def translate(self, key: str) -> str:
-        tr = self._translate_raw(key)
+    def translate(self, key: str, _stacklevel: int = 0) -> str:
+        tr = self._translate_raw(key, _stacklevel=_stacklevel + 1)
         return tr.replace("\xa0", " ").strip()
 
-    def as_regexp(self, key: str) -> re.Pattern:
-        tr = self.translate(key)
+    def as_regexp(self, key: str, _stacklevel: int = 0) -> re.Pattern:
+        tr = self.translate(key, _stacklevel=_stacklevel + 1)
         re_safe = re.escape(tr)
         return re.compile(self.FORMAT_STR_RE.sub(r".*?", re_safe))
 
@@ -115,16 +120,16 @@ TRANSLATIONS = {lang: Translation(lang) for lang in LANGUAGES}
 _CURRENT_TRANSLATION.TR = TRANSLATIONS["en"]
 
 
-def translate(key: str) -> str:
-    return _CURRENT_TRANSLATION.TR.translate(key)
+def translate(key: str, _stacklevel: int = 0) -> str:
+    return _CURRENT_TRANSLATION.TR.translate(key, _stacklevel=_stacklevel + 1)
 
 
 def regexp(key: str) -> re.Pattern:
-    return _CURRENT_TRANSLATION.TR.as_regexp(key)
+    return _CURRENT_TRANSLATION.TR.as_regexp(key, _stacklevel=1)
 
 
 def __getattr__(key: str) -> str:
     try:
-        return translate(key)
+        return translate(key, _stacklevel=1)
     except KeyError as e:
         raise AttributeError(f"Translation key '{key}' not found") from e
