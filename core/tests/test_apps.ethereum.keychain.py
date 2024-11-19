@@ -74,9 +74,11 @@ class TestEthereumKeychain(unittest.TestCase):
                 addr,
             )
 
-    def __init__(self):
+    def setUpClass(self):
         context.CURRENT_CONTEXT = CodecContext(None, bytearray(64))
-        super().__init__()
+
+    def tearDownClass(self):
+        context.CURRENT_CONTEXT = None
 
     def setUp(self):
         cache_codec.start_session()
