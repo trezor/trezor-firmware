@@ -50,7 +50,7 @@ void bootargs_set(boot_command_t command, const void* args, size_t args_size);
 // Returns the last boot command saved during bootloader startup
 boot_command_t bootargs_get_command();
 
-// Returns the pointer to boot arguments
-const boot_args_t* bootargs_get_args();
+// Copies the boot arguments to the destination buffer
+void bootargs_get_args(boot_args_t* dest);
 
 #endif  // TREZORHAL_BOOTARGS_H

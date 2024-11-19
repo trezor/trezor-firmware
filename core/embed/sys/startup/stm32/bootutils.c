@@ -47,6 +47,8 @@ static boot_command_t g_boot_command = BOOT_COMMAND_NONE;
 static boot_args_t __attribute__((section(".boot_args"))) g_boot_args;
 
 void bootargs_set(boot_command_t command, const void* args, size_t args_size) {
+  mpu_mode_t mode = mpu_reconfig(MPU_MODE_BOOTARGS);
+
   // save boot command
   g_boot_command = command;
 
@@ -62,6 +64,8 @@ void bootargs_set(boot_command_t command, const void* args, size_t args_size) {
   if (clear_size > 0) {
     memset(&g_boot_args.raw[copy_size], 0, clear_size);
   }
+
+  mpu_restore(mode);
 }
 
 #ifdef BOOTLOADER
@@ -70,7 +74,13 @@ boot_command_t g_boot_command_saved;
 
 boot_command_t bootargs_get_command() { return g_boot_command_saved; }
 
-const boot_args_t* bootargs_get_args() { return &g_boot_args; }
+void bootargs_get_args(boot_args_t* dest) {
+  mpu_mode_t mode = mpu_reconfig(MPU_MODE_BOOTARGS);
+
+  memcpy(dest, g_boot_args.raw, BOOT_ARGS_MAX_SIZE);
+
+  mpu_restore(mode);
+}
 #endif
 
 // Deletes all secrets and SRAM2 where stack is located

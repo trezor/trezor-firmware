@@ -4,11 +4,11 @@ ENTRY(reset_handler)
 
 MEMORY {
   FLASH  (rx)  : ORIGIN = KERNEL_START, LENGTH = KERNEL_MAXSIZE
-  SRAM1  (wal) : ORIGIN = MCU_SRAM2 - KERNEL_SRAM1_SIZE, LENGTH =  KERNEL_SRAM1_SIZE - BOOTARGS_SIZE
-  BOOT_ARGS  (wal) : ORIGIN = MCU_SRAM2 - BOOTARGS_SIZE, LENGTH =  BOOTARGS_SIZE
-  SRAM2  (wal) : ORIGIN = MCU_SRAM2, LENGTH =  KERNEL_SRAM2_SIZE - KERNEL_U_RAM_SIZE
-  SRAM2_U  (wal) : ORIGIN = MCU_SRAM2 + KERNEL_SRAM2_SIZE - KERNEL_U_RAM_SIZE, LENGTH =  KERNEL_U_RAM_SIZE
-  SRAM3  (wal) : ORIGIN = MCU_SRAM3 + MCU_SRAM3_SIZE - KERNEL_SRAM3_SIZE, LENGTH = KERNEL_SRAM3_SIZE
+  SRAM1  (wal) : ORIGIN = MCU_SRAM2, LENGTH = 0K
+  BOOT_ARGS  (wal) : ORIGIN = MCU_SRAM2 - BOOTARGS_SIZE, LENGTH = BOOTARGS_SIZE
+  SRAM2  (wal) : ORIGIN = MCU_SRAM2, LENGTH =  KERNEL_SRAM2_SIZE
+  SRAM2_U  (wal) : ORIGIN = MCU_SRAM2 + KERNEL_SRAM2_SIZE, LENGTH = KERNEL_U_RAM_SIZE
+  SRAM3  (wal) : ORIGIN = MCU_SRAM3 + MCU_SRAM3_SIZE - FRAMEBUFFER_SRAM_SIZE, LENGTH = FRAMEBUFFER_SRAM_SIZE
   SRAM5  (wal) : ORIGIN = MCU_SRAM5, LENGTH =  0K  /* SRAM5 is not available */
   SRAM6  (wal) : ORIGIN = MCU_SRAM6, LENGTH =  0K  /* SRAM6 is not available */
   SRAM4  (wal) : ORIGIN = MCU_SRAM4, LENGTH =  MCU_SRAM4_SIZE
@@ -44,7 +44,7 @@ _startup_clear_ram_2_end = MCU_SRAM4 + MCU_SRAM4_SIZE;
 
 /* used by the jump code to wipe memory */
 _handoff_clear_ram_0_start = MCU_SRAM1;
-_handoff_clear_ram_0_end = MCU_SRAM1 + MCU_SRAM1_SIZE - BOOTARGS_SIZE;
+_handoff_clear_ram_0_end = MCU_SRAM1 + MCU_SRAM1_SIZE - 512;
 _handoff_clear_ram_1_start = MCU_SRAM2;
 _handoff_clear_ram_1_end = MCU_SRAM6 + MCU_SRAM6_SIZE;
 _handoff_clear_ram_2_start = MCU_SRAM4;
@@ -62,9 +62,9 @@ _shutdown_clear_ram_3_end = 0;
 
 /* used by applet cleaning code */
 _coreapp_clear_ram_0_start = MCU_SRAM1;
-_coreapp_clear_ram_0_size = MCU_SRAM1_SIZE - KERNEL_SRAM1_SIZE;
-_coreapp_clear_ram_1_start = MCU_SRAM2 + KERNEL_SRAM2_SIZE;
-_coreapp_clear_ram_1_size = MCU_SRAM2_SIZE - KERNEL_SRAM2_SIZE + MCU_SRAM3_SIZE - KERNEL_SRAM3_SIZE;
+_coreapp_clear_ram_0_size = MCU_SRAM1_SIZE - 512;
+_coreapp_clear_ram_1_start = MCU_SRAM2 + KERNEL_SRAM2_SIZE + KERNEL_U_RAM_SIZE;
+_coreapp_clear_ram_1_size = MCU_SRAM2_SIZE - KERNEL_SRAM2_SIZE - KERNEL_U_RAM_SIZE + MCU_SRAM3_SIZE - FRAMEBUFFER_SRAM_SIZE;
 
 sram_u_start = ORIGIN(SRAM2_U);
 sram_u_end = ORIGIN(SRAM2_U) + LENGTH(SRAM2_U);
@@ -102,10 +102,14 @@ SECTIONS {
     . = ALIGN(512);
   } >FLASH AT>FLASH
 
+  .stack : ALIGN(8) {
+    . = 6K; /* Overflow causes UsageFault */
+  } >SRAM2
+
   .data : ALIGN(4) {
     *(.data*);
     . = ALIGN(512);
-  } >SRAM1 AT>FLASH
+  } >SRAM2 AT>FLASH
 
   /DISCARD/ : {
     *(.ARM.exidx*);
@@ -116,10 +120,6 @@ SECTIONS {
     *(.buf*);
     *(.bss*);
     . = ALIGN(4);
-  } >SRAM1
-
-  .stack : ALIGN(8) {
-    . = 6K; /* Overflow causes UsageFault */
   } >SRAM2
 
   /* unprivileged data and stack for SAES */
