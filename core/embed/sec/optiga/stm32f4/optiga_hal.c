@@ -19,7 +19,8 @@ void optiga_hal_init(void) {
   HAL_GPIO_Init(OPTIGA_RST_PORT, &GPIO_InitStructure);
 
 #ifdef OPTIGA_PWR_PIN
-  GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
+  OPTIGA_PWR_CLK_EN();
+  GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_OD;
   GPIO_InitStructure.Pull = GPIO_NOPULL;
   GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
   GPIO_InitStructure.Alternate = 0;
