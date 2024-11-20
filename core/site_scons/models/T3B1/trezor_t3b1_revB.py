@@ -70,7 +70,7 @@ def configure(
 
     if "optiga" in features_wanted:
         sources += ["embed/io/i2c_bus/stm32u5/i2c_bus.c"]
-        sources += ["embed/sec/optiga/stm32u5/optiga_hal.c"]
+        sources += ["embed/sec/optiga/stm32/optiga_hal.c"]
         sources += ["embed/sec/optiga/optiga.c"]
         sources += ["embed/sec/optiga/optiga_commands.c"]
         sources += ["embed/sec/optiga/optiga_transport.c"]
