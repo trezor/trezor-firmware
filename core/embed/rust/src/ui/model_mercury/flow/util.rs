@@ -3,7 +3,7 @@ use super::{
         component::{Frame, FrameMsg},
         theme,
     },
-    ConfirmActionExtra, ConfirmActionStrings,
+    ConfirmActionExtra, ConfirmActionMenuStrings, ConfirmActionStrings,
 };
 use crate::{
     error::Error,
@@ -272,11 +272,11 @@ impl ConfirmBlobParams {
         let confirm_extra = if self.cancel {
             ConfirmActionExtra::Cancel
         } else {
-            ConfirmActionExtra::Menu {
-                verb_cancel: self.verb_cancel,
-                has_info: self.info_button,
-                verb_info: self.verb_info,
-            }
+            ConfirmActionExtra::Menu(
+                ConfirmActionMenuStrings::new()
+                    .with_verb_cancel(self.verb_cancel)
+                    .with_info(self.info_button, self.verb_info),
+            )
         };
 
         flow::new_confirm_action_simple(

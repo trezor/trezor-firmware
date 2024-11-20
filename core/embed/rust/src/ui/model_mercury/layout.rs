@@ -55,7 +55,7 @@ use crate::{
             flow::{
                 new_confirm_action_simple,
                 util::{ConfirmBlobParams, ShowInfoParams},
-                ConfirmActionExtra, ConfirmActionStrings,
+                ConfirmActionExtra, ConfirmActionMenuStrings, ConfirmActionStrings,
             },
             theme::ICON_BULLET_CHECKMARK,
         },
@@ -246,11 +246,7 @@ extern "C" fn new_confirm_emphasized(n_args: usize, args: *const Obj, kwargs: *m
 
         new_confirm_action_simple(
             FormattedText::new(ops).vertically_centered(),
-            ConfirmActionExtra::Menu {
-                verb_cancel: None,
-                has_info: false,
-                verb_info: None,
-            },
+            ConfirmActionExtra::Menu(ConfirmActionMenuStrings::new()),
             ConfirmActionStrings::new(title, None, None, Some(title)),
             false,
             None,
@@ -395,11 +391,7 @@ extern "C" fn new_confirm_address(n_args: usize, args: *const Obj, kwargs: *mut 
 
         flow::new_confirm_action_simple(
             paragraphs,
-            ConfirmActionExtra::Menu {
-                verb_cancel: None,
-                has_info: false,
-                verb_info: None,
-            },
+            ConfirmActionExtra::Menu(ConfirmActionMenuStrings::new()),
             ConfirmActionStrings::new(title, None, None, None),
             false,
             None,
@@ -442,11 +434,7 @@ extern "C" fn new_confirm_properties(n_args: usize, args: *const Obj, kwargs: *m
 
         new_confirm_action_simple(
             paragraphs.into_paragraphs(),
-            ConfirmActionExtra::Menu {
-                verb_cancel: None,
-                has_info: false,
-                verb_info: None,
-            },
+            ConfirmActionExtra::Menu(ConfirmActionMenuStrings::new()),
             ConfirmActionStrings::new(title, None, None, hold.then_some(title)),
             hold,
             None,
@@ -476,11 +464,7 @@ extern "C" fn new_confirm_homescreen(n_args: usize, args: *const Obj, kwargs: *m
 
             new_confirm_action_simple(
                 paragraphs,
-                ConfirmActionExtra::Menu {
-                    verb_cancel: None,
-                    has_info: false,
-                    verb_info: None,
-                },
+                ConfirmActionExtra::Menu(ConfirmActionMenuStrings::new()),
                 ConfirmActionStrings::new(
                     TR::homescreen__settings_title.into(),
                     Some(TR::homescreen__settings_subtitle.into()),
@@ -792,11 +776,7 @@ extern "C" fn new_confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Ma
 
         new_confirm_action_simple(
             paragraphs.into_paragraphs(),
-            ConfirmActionExtra::Menu {
-                verb_cancel: None,
-                has_info: true,
-                verb_info: None,
-            },
+            ConfirmActionExtra::Menu(ConfirmActionMenuStrings::new()),
             ConfirmActionStrings::new(title, None, None, Some(title)),
             true,
             None,
@@ -1113,11 +1093,7 @@ extern "C" fn new_confirm_coinjoin(n_args: usize, args: *const Obj, kwargs: *mut
 
         new_confirm_action_simple(
             paragraphs,
-            ConfirmActionExtra::Menu {
-                verb_cancel: None,
-                has_info: false,
-                verb_info: None,
-            },
+            ConfirmActionExtra::Menu(ConfirmActionMenuStrings::new()),
             ConfirmActionStrings::new(
                 TR::coinjoin__title.into(),
                 None,

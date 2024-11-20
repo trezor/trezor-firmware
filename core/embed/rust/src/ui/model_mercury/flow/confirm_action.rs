@@ -32,11 +32,7 @@ const MENU_ITEM_INFO: usize = 1;
 #[derive(PartialEq)]
 pub enum ConfirmActionExtra {
     // Opens a menu which can (optionally) lead to an extra Info screen, or cancel the action
-    Menu {
-        verb_cancel: Option<TString<'static>>,
-        has_info: bool,
-        verb_info: Option<TString<'static>>,
-    },
+    Menu(ConfirmActionMenuStrings),
     // Shows a cancel button directly
     Cancel,
 }
@@ -61,6 +57,34 @@ impl ConfirmActionStrings {
             verb,
             prompt_screen,
         }
+    }
+}
+
+#[derive(PartialEq)]
+pub struct ConfirmActionMenuStrings {
+    verb_cancel: Option<TString<'static>>,
+    has_info: bool,
+    verb_info: Option<TString<'static>>,
+}
+
+impl ConfirmActionMenuStrings {
+    pub fn new() -> Self {
+        Self {
+            verb_cancel: None,
+            has_info: false,
+            verb_info: None,
+        }
+    }
+
+    pub const fn with_verb_cancel(mut self, verb_cancel: Option<TString<'static>>) -> Self {
+        self.verb_cancel = verb_cancel;
+        self
+    }
+
+    pub const fn with_info(mut self, has_info: bool, verb_info: Option<TString<'static>>) -> Self {
+        self.has_info = has_info;
+        self.verb_info = verb_info;
+        self
     }
 }
 
@@ -194,11 +218,7 @@ pub fn new_confirm_action(
 
     new_confirm_action_simple(
         paragraphs,
-        ConfirmActionExtra::Menu {
-            verb_cancel,
-            has_info: false,
-            verb_info: None,
-        },
+        ConfirmActionExtra::Menu(ConfirmActionMenuStrings::new().with_verb_cancel(verb_cancel)),
         ConfirmActionStrings::new(title, subtitle, None, prompt_screen.then_some(prompt_title)),
         hold,
         None,
@@ -299,27 +319,26 @@ fn create_menu(
     extra: ConfirmActionExtra,
     prompt_screen: Option<TString<'static>>,
 ) -> Result<SwipeFlow, Error> {
-    if let ConfirmActionExtra::Menu {
-        verb_cancel,
-        has_info,
-        verb_info,
-    } = extra
-    {
+    if let ConfirmActionExtra::Menu(menu_strings) = extra {
         // NB: The Cancel menu item is always the first,
         // because of the MENU_ITEM_CANCEL = 0.
         // If we want the cancel item to be somewhere else,
         // we would need to account for that and we could not use a constant.
         let mut menu_choices = VerticalMenu::empty().danger(
             theme::ICON_CANCEL,
-            verb_cancel.unwrap_or(TR::buttons__cancel.into()),
+            menu_strings
+                .verb_cancel
+                .unwrap_or(TR::buttons__cancel.into()),
         );
 
-        if has_info {
+        if menu_strings.has_info {
             // The Info menu item (if present) has to be the 2nd,
             // because of MENU_ITEM_INFO = 1!
             menu_choices = menu_choices.item(
                 theme::ICON_CHEVRON_RIGHT,
-                verb_info.unwrap_or(TR::words__title_information.into()),
+                menu_strings
+                    .verb_info
+                    .unwrap_or(TR::words__title_information.into()),
             );
         }
 
