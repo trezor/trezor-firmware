@@ -33,11 +33,10 @@ impl FormattedText {
     }
 
     pub(crate) fn layout_content(&self, sink: &mut dyn LayoutSink) -> LayoutFit {
-        self.op_layout
-            .layout_ops(self.char_offset, Offset::y(self.y_offset), sink)
+        self.layout_content_with_offset(sink, self.char_offset, self.y_offset)
     }
 
-    pub(crate) fn layout_content_with_offset(
+    fn layout_content_with_offset(
         &self,
         sink: &mut dyn LayoutSink,
         char_offset: usize,
