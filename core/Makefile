@@ -446,12 +446,19 @@ bloaty: ## run bloaty size profiler
 	bloaty -d symbols -n 0 -s file $(FIRMWARE_BUILD_DIR)/firmware.elf | less
 	bloaty -d compileunits -n 0 -s file $(FIRMWARE_BUILD_DIR)/firmware.elf | less
 
+ifeq  ($(MCU),$(filter $(MCU),STM32F4))
 sizecheck: ## check sizes of binary files
-	test $(BOARDLOADER_MAXSIZE) -ge $(shell wc -c < $(BOARDLOADER_BUILD_DIR)/boardloader.bin)
-	test $(BOOTLOADER_MAXSIZE) -ge $(shell wc -c < $(BOOTLOADER_BUILD_DIR)/bootloader.bin)
-	test $(FIRMWARE_P1_MAXSIZE) -ge $(shell wc -c < $(FIRMWARE_BUILD_DIR)/firmware.bin.p1)
-	test $(FIRMWARE_P2_MAXSIZE) -ge $(shell wc -c < $(FIRMWARE_BUILD_DIR)/firmware.bin.p2)
-	test $(FIRMWARE_MAXSIZE) -ge $(shell wc -c < $(FIRMWARE_BUILD_DIR)/firmware.bin)
+	test "$(BOARDLOADER_MAXSIZE)" -ge "$(shell wc -c < $(BOARDLOADER_BUILD_DIR)/boardloader.bin)"
+	test "$(BOOTLOADER_MAXSIZE)" -ge "$(shell wc -c < $(BOOTLOADER_BUILD_DIR)/bootloader.bin)"
+	test "$(FIRMWARE_P1_MAXSIZE)" -ge "$(shell wc -c < $(FIRMWARE_BUILD_DIR)/firmware.bin.p1)"
+	test "$(FIRMWARE_P2_MAXSIZE)" -ge "$(shell wc -c < $(FIRMWARE_BUILD_DIR)/firmware.bin.p2)"
+	test "$(FIRMWARE_MAXSIZE)" -ge "$(shell wc -c < $(FIRMWARE_BUILD_DIR)/firmware.bin)"
+else ifeq ($(MCU),$(filter $(MCU),STM32U5))
+sizecheck: ## check sizes of binary files
+	test "$(BOARDLOADER_MAXSIZE)" -ge "$(shell wc -c < $(BOARDLOADER_BUILD_DIR)/boardloader.bin)"
+	test "$(BOOTLOADER_MAXSIZE)" -ge "$(shell wc -c < $(BOOTLOADER_BUILD_DIR)/bootloader.bin)"
+	test "$(FIRMWARE_MAXSIZE)" -ge "$(shell wc -c < $(FIRMWARE_BUILD_DIR)/firmware.bin)"
+endif
 
 combine: ## combine boardloader + bootloader + prodtest into one combined image
 	combine_firmware \
