@@ -574,7 +574,8 @@ bool coin_path_check(const CoinInfo *coin, InputScriptType script_type,
     valid = valid && has_multisig;
 
     if (full_check) {
-      valid = valid && (script_type == InputScriptType_SPENDMULTISIG ||
+      valid = valid && (script_type == InputScriptType_SPENDADDRESS ||
+                        script_type == InputScriptType_SPENDMULTISIG ||
                         script_type == InputScriptType_SPENDWITNESS);
       valid = valid && has_multisig;
     }
