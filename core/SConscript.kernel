@@ -374,7 +374,8 @@ tools.embed_compressed_binary(
         'bootloader',
         'embed/projects/bootloaders/bootloader.o',
         f'embed/models/{MODEL_IDENTIFIER}/bootloaders/bootloader_{BOOTLOADER_SUFFIX}.bin',
-        'kernel'
+        'kernel',
+        'bootloader',
         )
 
 linkerscript_gen = env.Command(
