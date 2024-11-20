@@ -40,7 +40,9 @@ pub fn text_baseline(font: i32) -> i16 {
 }
 
 pub fn sync() {
-    #[cfg(not(feature = "framebuffer"))]
+    // NOTE: The sync operation is not called for tests because the linker
+    // would otherwise report missing symbols if the tests are built with ASAN.
+    #[cfg(not(any(feature = "framebuffer", feature = "test")))]
     unsafe {
         ffi::display_wait_for_sync();
     }
