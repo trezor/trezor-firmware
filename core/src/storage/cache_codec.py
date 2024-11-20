@@ -16,6 +16,11 @@ SESSION_ID_LENGTH = const(32)
 
 
 class SessionCache(DataCache):
+    """
+    A cache for storing values that depend on seed derivation
+    or are specific to a `protocol_v1` session.
+    """
+
     def __init__(self) -> None:
         self.session_id = bytearray(SESSION_ID_LENGTH)
         if utils.BITCOIN_ONLY:

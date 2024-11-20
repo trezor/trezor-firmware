@@ -4,7 +4,6 @@ import gc
 from storage import cache_codec
 from storage.cache_common import SESSIONLESS_FLAG, SessionlessCache
 
-
 # Cache initialization
 _SESSIONLESS_CACHE = SessionlessCache()
 _PROTOCOL_CACHE = cache_codec
@@ -15,6 +14,9 @@ gc.collect()
 
 
 def clear_all() -> None:
+    """
+    Clears all data from both the protocol cache and the sessionless cache.
+    """
     global autolock_last_touch
     autolock_last_touch = None
     _SESSIONLESS_CACHE.clear()
@@ -22,6 +24,13 @@ def clear_all() -> None:
 
 
 def get_int_all_sessions(key: int) -> builtins.set[int]:
+    """
+    Returns set of int values associated with a given key from all relevant sessions.
+
+    If the key has the `SESSIONLESS_FLAG` set, the values are retrieved
+    from the sessionless cache. Otherwise, the values are fetched
+    from the protocol cache.
+    """
     if key & SESSIONLESS_FLAG:
         values = builtins.set()
         encoded = _SESSIONLESS_CACHE.get(key)
