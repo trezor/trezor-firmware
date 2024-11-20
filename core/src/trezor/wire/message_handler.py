@@ -47,7 +47,7 @@ def wrap_protobuf_load(
 
 
 async def handle_single_message(ctx: Context, msg: Message) -> bool:
-    """Handle a message that was loaded from USB by the caller.
+    """Handle a message that was loaded from a WireInterface by the caller.
 
     Find the appropriate handler, run it and write its result on the wire. In case
     a problem is encountered at any point, write the appropriate error on the wire.

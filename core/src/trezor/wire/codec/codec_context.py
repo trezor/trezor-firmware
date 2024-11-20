@@ -16,11 +16,7 @@ if TYPE_CHECKING:
 
 
 class CodecContext(Context):
-    """Wire context.
-
-    Represents USB communication inside a particular session on a particular interface
-    (i.e., wire, debug, single BT connection, etc.)
-    """
+    """ "Wire context" for `protocol_v1`."""
 
     def __init__(
         self,
@@ -39,12 +35,6 @@ class CodecContext(Context):
         expected_types: Container[int],
         expected_type: type[protobuf.MessageType] | None = None,
     ) -> protobuf.MessageType:
-        """Read a message from the wire.
-
-        The read message must be of one of the types specified in `expected_types`.
-        If only a single type is expected, it can be passed as `expected_type`,
-        to save on having to decode the type code into a protobuf class.
-        """
         if __debug__:
             log.debug(
                 __name__,
@@ -78,7 +68,6 @@ class CodecContext(Context):
         return wrap_protobuf_load(msg.data, expected_type)
 
     async def write(self, msg: protobuf.MessageType) -> None:
-        """Write a message to the wire."""
         if __debug__:
             log.debug(
                 __name__,

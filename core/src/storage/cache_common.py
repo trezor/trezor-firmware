@@ -36,6 +36,11 @@ class InvalidSessionError(Exception):
 
 
 class DataCache:
+    """
+    A single unit of cache storage, designed to store common-type
+    values efficiently in bytearrays in a sequential manner.
+    """
+
     fields: Sequence[int]  # field sizes
 
     def __init__(self) -> None:
@@ -111,6 +116,11 @@ class DataCache:
 
 
 class SessionlessCache(DataCache):
+    """
+    A cache for values that are independent of both
+    passphrase seed derivation and the active session.
+    """
+
     def __init__(self) -> None:
         self.fields = (
             64,  # APP_COMMON_SEED_WITHOUT_PASSPHRASE
