@@ -24,8 +24,8 @@ def _normalize(s: str) -> str:
 HERE = Path(__file__).parent
 CORE_ROOT = HERE.parent.parent
 FONTS_DIR = HERE / "fonts"
-OUT_DIR = HERE / ".." / ".." / "embed" / "drv" / "gfx" / "fonts"
-C_FONTS_DEST = CORE_ROOT / "embed" / "drv" / "gfx" / "fonts"
+OUT_DIR = HERE / ".." / ".." / "embed" / "gfx" / "fonts"
+C_FONTS_DEST = CORE_ROOT / "embed" / "gfx" / "fonts"
 JSON_FONTS_DEST = CORE_ROOT / "translations" / "fonts"
 
 MIN_GLYPH = ord(" ")
