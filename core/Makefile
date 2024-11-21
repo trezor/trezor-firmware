@@ -150,6 +150,9 @@ endif
 
 SCONS = scons $(SCONS_OPTS) $(SCONS_VARS)
 
+# LD_LIBRARY_PATH workaround: https://discourse.nixos.org/t/nixpkgs-nixos-unstable-many-package-fail-with-glibc-2-38-not-found/35078 https://github.com/NixOS/nixpkgs/issues/287764
+unexport LD_LIBRARY_PATH
+
 ## help commands:
 
 help: ## show this help
