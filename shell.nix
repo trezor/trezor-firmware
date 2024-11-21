@@ -80,6 +80,20 @@ let
     version = "stm-cubeide-v1.13.0";
     nativeBuildInputs = oldAttrs.nativeBuildInputs ++ [ newNixpkgs.autoreconfHook ];
   }));
+  # backport https://github.com/NixOS/nixpkgs/pull/229537
+  # remove after nixpkgs bump
+  gcc-arm-embedded-gdbfix = (nixpkgs.gcc-arm-embedded.overrideAttrs (oldAttrs: {
+    postFixup = ''
+      mv $out/bin/arm-none-eabi-gdb $out/bin/arm-none-eabi-gdb-unwrapped
+      cat <<EOF > $out/bin/arm-none-eabi-gdb
+      #!${nixpkgs.runtimeShell}
+      export PYTHONPATH=${nixpkgs.python38}/lib/python3.8
+      export PYTHONHOME=${nixpkgs.python38}/bin/python3.8
+      exec $out/bin/arm-none-eabi-gdb-unwrapped "\$@"
+      EOF
+      chmod +x $out/bin/arm-none-eabi-gdb
+    '';
+  }));
   llvmPackages = nixpkgs.llvmPackages_14;
   # see pyright/README.md for update procedure
   pyright = nixpkgs.callPackage ./ci/pyright {};
@@ -107,7 +121,7 @@ stdenvNoCC.mkDerivation ({
     crowdin-cli  # for translations
     curl  # for connect tests
     editorconfig-checker
-    gcc-arm-embedded
+    (if devTools then gcc-arm-embedded-gdbfix else gcc-arm-embedded)
     git
     gitAndTools.git-subrepo
     gnumake
