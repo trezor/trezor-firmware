@@ -12,10 +12,10 @@ pub mod prompt_backup;
 pub mod request_number;
 pub mod request_passphrase;
 pub mod set_brightness;
+pub mod show_danger;
 pub mod show_share_words;
 pub mod show_tutorial;
 pub mod util;
-pub mod warning_hi_prio;
 
 pub use confirm_action::{
     new_confirm_action, new_confirm_action_simple, ConfirmActionExtra, ConfirmActionMenuStrings,
@@ -34,7 +34,7 @@ pub use prompt_backup::PromptBackup;
 pub use request_number::RequestNumber;
 pub use request_passphrase::RequestPassphrase;
 pub use set_brightness::SetBrightness;
+pub use show_danger::ShowDanger;
 pub use show_share_words::ShowShareWords;
 pub use show_tutorial::ShowTutorial;
 pub use util::{ConfirmBlobParams, ShowInfoParams};
-pub use warning_hi_prio::WarningHiPrio;
