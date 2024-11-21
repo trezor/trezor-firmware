@@ -23,7 +23,7 @@ else:
 
 
 if __debug__:
-    trezorui2.disable_animation(bool(utils.DISABLE_ANIMATION))
+    trezorui2.disable_animation(utils.DISABLE_ANIMATION)
 
 
 # all rendering is done through a singleton of `Display`

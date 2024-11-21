@@ -18,6 +18,7 @@ HW_REVISION = ARGUMENTS.get('HW_REVISION', None)
 THP = ARGUMENTS.get('THP', '0') == '1' # Trezor-Host Protocol
 MODEL_IDENTIFIER = models.get_model_identifier(TREZOR_MODEL)
 BENCHMARK = ARGUMENTS.get('BENCHMARK', '0') == '1'
+DISABLE_ANIMATION = ARGUMENTS.get('TREZOR_DISABLE_ANIMATION', '0') == '1'
 
 if BENCHMARK and PYOPT != '0':
   print("BENCHMARK=1 works only with PYOPT=0.")
@@ -69,6 +70,7 @@ CPPDEFINES_MOD += [
     ('USE_CARDANO', '1' if EVERYTHING else '0'),
     ('USE_NEM', '1' if (EVERYTHING and TREZOR_MODEL == "T") else '0'),
     ('USE_EOS', '1' if (EVERYTHING and TREZOR_MODEL == "T") else '0'),
+    ('DISABLE_ANIMATION', '1' if DISABLE_ANIMATION else '0'),
 ]
 SOURCE_MOD += [
     'embed/upymod/trezorobj.c',

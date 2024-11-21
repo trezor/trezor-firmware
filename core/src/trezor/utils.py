@@ -33,16 +33,19 @@ from trezorutils import (  # noqa: F401
 )
 from typing import TYPE_CHECKING
 
-DISABLE_ANIMATION = 0
-
 if __debug__:
     if EMULATOR:
         import uos
 
-        DISABLE_ANIMATION = int(uos.getenv("TREZOR_DISABLE_ANIMATION") or "0")
-        LOG_MEMORY = int(uos.getenv("TREZOR_LOG_MEMORY") or "0")
+        DISABLE_ANIMATION = uos.getenv("TREZOR_DISABLE_ANIMATION") == "1"
+        LOG_MEMORY = uos.getenv("TREZOR_LOG_MEMORY") == "1"
     else:
+        from trezorutils import DISABLE_ANIMATION  # noqa: F401
+
         LOG_MEMORY = 0
+
+else:
+    DISABLE_ANIMATION = False
 
 if TYPE_CHECKING:
     from typing import Any, Iterator, Protocol, Sequence, TypeVar
