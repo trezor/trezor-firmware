@@ -29,11 +29,14 @@ def configure(
     ] = "-mthumb -mcpu=cortex-m33 -mfloat-abi=hard -mfpu=fpv5-sp-d16 -mtune=cortex-m33 -mcmse "
     env.get("ENV")["RUST_TARGET"] = "thumbv8m.main-none-eabihf"
 
-    defines += [mcu]
-    defines += [f'TREZOR_BOARD=\\"{board}\\"']
-    defines += [f"HW_MODEL={hw_model}"]
-    defines += [f"HW_REVISION={hw_revision}"]
-    defines += ["HSE_VALUE=16000000", "USE_HSE=1"]
+    defines += [
+        mcu,
+        ("TREZOR_BOARD", f'"{board}"'),
+        ("HW_MODEL", str(hw_model)),
+        ("HW_REVISION", str(hw_revision)),
+        ("HSE_VALUE", "16000000"),
+        ("USE_HSE", "1"),
+    ]
 
     sources += [
         "embed/io/display/stm32u5a9j-dk/display_driver.c",
@@ -48,8 +51,10 @@ def configure(
         paths += ["embed/io/i2c_bus/inc"]
         paths += ["embed/io/touch/inc"]
         features_available.append("touch")
-        defines += ["USE_TOUCH=1"]
-        defines += ["USE_I2C=1"]
+        defines += [
+            ("USE_TOUCH", "1"),
+            ("USE_I2C", "1"),
+        ]
 
     if "usb" in features_wanted:
         sources += [
@@ -68,8 +73,8 @@ def configure(
 
     defines += [
         "USE_DMA2D",
-        "UI_COLOR_32BIT",
-        "USE_RGB_COLORS",
+        ("UI_COLOR_32BIT", "1"),
+        ("USE_RGB_COLORS", "1"),
     ]
 
     sources += ["embed/gfx/bitblt/stm32/dma2d_bitblt.c"]

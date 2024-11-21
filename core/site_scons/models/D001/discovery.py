@@ -28,11 +28,14 @@ def configure(
     ] = "-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mtune=cortex-m4 "
     env.get("ENV")["RUST_TARGET"] = "thumbv7em-none-eabihf"
 
-    defines += [mcu]
-    defines += [f'TREZOR_BOARD=\\"{board}\\"']
-    defines += [f"HW_MODEL={hw_model}"]
-    defines += [f"HW_REVISION={hw_revision}"]
-    defines += ["HSE_VALUE=8000000", "USE_HSE=1"]
+    defines += [
+        mcu,
+        ("TREZOR_BOARD", f'"{board}"'),
+        ("HW_MODEL", str(hw_model)),
+        ("HW_REVISION", str(hw_revision)),
+        ("HSE_VALUE", "8000000"),
+        ("USE_HSE", "1"),
+    ]
 
     sources += [
         "embed/io/display/stm32f429i-disc1/display_driver.c",
@@ -50,7 +53,7 @@ def configure(
         "vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.c"
     ]
     defines += ["USE_DMA2D"]
-    defines += ["USE_RGB_COLORS=1"]
+    defines += [("USE_RGB_COLORS", "1")]
     features_available.append("dma2d")
 
     defines += ["FRAMEBUFFER"]
@@ -60,7 +63,7 @@ def configure(
 
     sources += ["embed/sys/sdram/stm32f429i-disc1/sdram_bsp.c"]
     paths += ["embed/sys/sdram/inc"]
-    defines += ["USE_SDRAM=1"]
+    defines += [("USE_SDRAM", "1")]
 
     if "input" in features_wanted:
         sources += ["embed/io/i2c_bus/stm32f4/i2c_bus.c"]
@@ -68,8 +71,10 @@ def configure(
         paths += ["embed/io/i2c_bus/inc"]
         paths += ["embed/io/touch/inc"]
         features_available.append("touch")
-        defines += ["USE_TOUCH=1"]
-        defines += ["USE_I2C=1"]
+        defines += [
+            ("USE_TOUCH", "1"),
+            ("USE_I2C", "1"),
+        ]
 
     if "usb" in features_wanted:
         sources += [
@@ -86,6 +91,6 @@ def configure(
         features_available.append("usb")
         paths += ["embed/io/usb/inc"]
 
-    defines += ["USE_PVD=1"]
+    defines += [("USE_PVD", "1")]
 
     return features_available

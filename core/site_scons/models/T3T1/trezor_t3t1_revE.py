@@ -18,9 +18,9 @@ def configure(
 
     features_available.append("framebuffer")
     features_available.append("display_rgb565")
-    defines += ["DISPLAY_RGB565"]
-    defines += ["FRAMEBUFFER"]
-    defines += ["USE_RGB_COLORS=1"]
+    defines += [("DISPLAY_RGB565", "1")]
+    defines += [("FRAMEBUFFER", "1")]
+    defines += [("USE_RGB_COLORS", "1")]
 
     mcu = "STM32U585xx"
     linker_script = """embed/sys/linker/stm32u58/{target}.ld"""
@@ -35,10 +35,12 @@ def configure(
     ] = "-mthumb -mcpu=cortex-m33 -mfloat-abi=hard -mfpu=fpv5-sp-d16 -mtune=cortex-m33 -mcmse "
     env.get("ENV")["RUST_TARGET"] = "thumbv8m.main-none-eabihf"
 
-    defines += [mcu]
-    defines += [f'TREZOR_BOARD=\\"{board}\\"']
-    defines += [f"HW_MODEL={hw_model}"]
-    defines += [f"HW_REVISION={hw_revision}"]
+    defines += [
+        mcu,
+        ("TREZOR_BOARD", f'"{board}"'),
+        ("HW_MODEL", str(hw_model)),
+        ("HW_REVISION", str(hw_revision)),
+    ]
 
     sources += ["embed/io/display/st-7789/display_fb.c"]
     sources += ["embed/io/display/st-7789/display_driver.c"]
@@ -49,7 +51,7 @@ def configure(
 
     sources += ["embed/io/display/backlight/stm32/backlight_pwm.c"]
     features_available.append("backlight")
-    defines += ["USE_BACKLIGHT=1"]
+    defines += [("USE_BACKLIGHT", "1")]
 
     env_constraints = env.get("CONSTRAINTS")
     if not (env_constraints and "limited_util_s" in env_constraints):
@@ -62,8 +64,8 @@ def configure(
         paths += ["embed/io/i2c_bus/inc"]
         paths += ["embed/io/touch/inc"]
         features_available.append("touch")
-        defines += ["USE_TOUCH=1"]
-        defines += ["USE_I2C=1"]
+        defines += [("USE_TOUCH", "1")]
+        defines += [("USE_I2C", "1")]
 
     if "haptic" in features_wanted:
         sources += [
@@ -71,7 +73,7 @@ def configure(
         ]
         paths += ["embed/io/haptic/inc"]
         features_available.append("haptic")
-        defines += ["USE_HAPTIC=1"]
+        defines += [("USE_HAPTIC", "1")]
 
     if "sd_card" in features_wanted:
         sources += ["embed/io/sdcard/stm32u5/sdcard.c"]
@@ -81,13 +83,13 @@ def configure(
         sources += ["vendor/stm32u5xx_hal_driver/Src/stm32u5xx_ll_sdmmc.c"]
         paths += ["embed/io/sdcard/inc"]
         features_available.append("sd_card")
-        defines += ["USE_SD_CARD=1"]
+        defines += [("USE_SD_CARD", "1")]
 
     if "sbu" in features_wanted:
         sources += ["embed/io/sbu/stm32/sbu.c"]
         paths += ["embed/io/sbu/inc"]
         features_available.append("sbu")
-        defines += ["USE_SBU=1"]
+        defines += [("USE_SBU", "1")]
 
     if "usb" in features_wanted:
         sources += [
@@ -105,7 +107,7 @@ def configure(
         paths += ["embed/io/usb/inc"]
 
     if "dma2d" in features_wanted:
-        defines += ["USE_DMA2D"]
+        defines += [("USE_DMA2D", "1")]
         sources += ["embed/gfx/bitblt/stm32/dma2d_bitblt.c"]
         features_available.append("dma2d")
 
@@ -117,16 +119,16 @@ def configure(
         sources += ["vendor/trezor-crypto/hash_to_curve.c"]
         paths += ["embed/sec/optiga/inc"]
         features_available.append("optiga")
-        defines += ["USE_OPTIGA=1"]
+        defines += [("USE_OPTIGA", "1")]
 
     defines += [
-        "USE_HASH_PROCESSOR=1",
-        "USE_STORAGE_HWKEY=1",
-        "USE_TAMPER=1",
-        "USE_FLASH_BURST=1",
-        "USE_RESET_TO_BOOT=1",
-        "USE_OEM_KEYS_CHECK=1",
-        "USE_PVD=1",
+        ("USE_HASH_PROCESSOR", "1"),
+        ("USE_STORAGE_HWKEY", "1"),
+        ("USE_TAMPER", "1"),
+        ("USE_FLASH_BURST", "1"),
+        ("USE_RESET_TO_BOOT", "1"),
+        ("USE_OEM_KEYS_CHECK", "1"),
+        ("USE_PVD", "1"),
     ]
 
     env.get("ENV")["TREZOR_BOARD"] = board

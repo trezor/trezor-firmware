@@ -21,31 +21,33 @@ def configure(
     features_available.append("framebuffer")
     features_available.append("display_mono")
 
-    defines += [mcu]
-    defines += [f'TREZOR_BOARD=\\"{board}\\"']
-    defines += [f"HW_MODEL={hw_model}"]
-    defines += [f"HW_REVISION={hw_revision}"]
-    defines += [f"MCU_TYPE={mcu}"]
-    defines += ["FLASH_BIT_ACCESS=1"]
-    defines += ["FLASH_BLOCK_WORDS=1"]
+    defines += [
+        mcu,
+        ("TREZOR_BOARD", f'"{board}"'),
+        ("HW_MODEL", str(hw_model)),
+        ("HW_REVISION", str(hw_revision)),
+        ("MCU_TYPE", mcu),
+        ("FLASH_BIT_ACCESS", "1"),
+        ("FLASH_BLOCK_WORDS", "1"),
+    ]
 
     if "sbu" in features_wanted:
         sources += ["embed/io/sbu/unix/sbu.c"]
         paths += ["embed/io/sbu/inc"]
-        defines += ["USE_SBU=1"]
+        defines += [("USE_SBU", "1")]
 
     if "optiga" in features_wanted:
         sources += ["embed/sec/optiga/unix/optiga_hal.c"]
         sources += ["embed/sec/optiga/unix/optiga.c"]
         paths += ["embed/sec/optiga/inc"]
         features_available.append("optiga")
-        defines += ["USE_OPTIGA=1"]
+        defines += [("USE_OPTIGA", "1")]
 
     if "input" in features_wanted:
         sources += ["embed/io/button/unix/button.c"]
         paths += ["embed/io/button/inc"]
         features_available.append("button")
-        defines += ["USE_BUTTON=1"]
+        defines += [("USE_BUTTON", "1")]
 
     sources += ["embed/util/flash/stm32f4/flash_layout.c"]
 

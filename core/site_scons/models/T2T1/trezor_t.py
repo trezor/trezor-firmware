@@ -18,7 +18,7 @@ def configure(
 
     defines += ["DISPLAY_RGB565"]
     features_available.append("display_rgb565")
-    defines += ["USE_RGB_COLORS=1"]
+    defines += [("USE_RGB_COLORS", "1")]
 
     mcu = "STM32F427xx"
 
@@ -32,11 +32,14 @@ def configure(
     ] = "-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mtune=cortex-m4 "
     env.get("ENV")["RUST_TARGET"] = "thumbv7em-none-eabihf"
 
-    defines += [mcu]
-    defines += [f'TREZOR_BOARD=\\"{board}\\"']
-    defines += [f"HW_MODEL={hw_model}"]
-    defines += [f"HW_REVISION={hw_revision}"]
-    defines += ["HSE_VALUE=8000000", "USE_HSE=1"]
+    defines += [
+        mcu,
+        ("TREZOR_BOARD", f'"{board}"'),
+        ("HW_MODEL", str(hw_model)),
+        ("HW_REVISION", str(hw_revision)),
+        ("HSE_VALUE", "8000000"),
+        ("USE_HSE", "1"),
+    ]
 
     sources += ["embed/io/display/st-7789/display_nofb.c"]
     sources += ["embed/io/display/st-7789/display_driver.c"]
@@ -51,7 +54,7 @@ def configure(
     sources += ["embed/io/display/backlight/stm32/backlight_pwm.c"]
 
     features_available.append("backlight")
-    defines += ["USE_BACKLIGHT=1"]
+    defines += [("USE_BACKLIGHT", "1")]
 
     if "input" in features_wanted:
         sources += ["embed/io/i2c_bus/stm32f4/i2c_bus.c"]
@@ -59,8 +62,8 @@ def configure(
         paths += ["embed/io/i2c_bus/inc"]
         paths += ["embed/io/touch/inc"]
         features_available.append("touch")
-        defines += ["USE_TOUCH=1"]
-        defines += ["USE_I2C=1"]
+        defines += [("USE_TOUCH", "1")]
+        defines += [("USE_I2C", "1")]
 
     if "sd_card" in features_wanted:
         sources += ["embed/io/sdcard/stm32f4/sdcard.c"]
@@ -71,13 +74,13 @@ def configure(
         ]
         paths += ["embed/io/sdcard/inc"]
         features_available.append("sd_card")
-        defines += ["USE_SD_CARD=1"]
+        defines += [("USE_SD_CARD", "1")]
 
     if "sbu" in features_wanted:
         sources += ["embed/io/sbu/stm32/sbu.c"]
         paths += ["embed/io/sbu/inc"]
         features_available.append("sbu")
-        defines += ["USE_SBU=1"]
+        defines += [("USE_SBU", "1")]
 
     if "usb" in features_wanted:
         sources += [
@@ -102,6 +105,6 @@ def configure(
         ]
         features_available.append("dma2d")
 
-    defines += ["USE_PVD=1"]
+    defines += [("USE_PVD", "1")]
 
     return features_available
