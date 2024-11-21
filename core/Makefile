@@ -300,7 +300,7 @@ build_reflash: ## build reflash firmware + reflash image
 	dd if=build/bootloader/bootloader.bin of=$(REFLASH_BUILD_DIR)/sdimage.bin bs=1 seek=49152
 
 build_kernel: ## build kernel image
-	$(SCONS) $(KERNEL_BUILD_DIR)/kernel.bin
+	$(SCONS) PYOPT=1 $(KERNEL_BUILD_DIR)/kernel.bin
 
 build_firmware: templates build_cross build_kernel ## build firmware with frozen modules
 	$(SCONS) $(FIRMWARE_BUILD_DIR)/firmware.bin
