@@ -85,7 +85,8 @@ jobs:
         with:
           nix_path: nixpkgs=channel:nixos-unstable
       - run: nix-shell --run "poetry install"
-      - run: nix-shell --arg fullDeps true --run "cd python && poetry run tox"
+      # LD_LIBRARY_PATH workaround: https://discourse.nixos.org/t/nixpkgs-nixos-unstable-many-package-fail-with-glibc-2-38-not-found/35078 https://github.com/NixOS/nixpkgs/issues/287764
+      - run: nix-shell --arg fullDeps true --run "unset LD_LIBRARY_PATH && cd python && poetry run tox"
 
   python_support_test:
     name: Python support test

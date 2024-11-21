@@ -26,6 +26,8 @@ do_rebuild() {
         local param="--python-outdir"
     fi
 
+    # LD_LIBRARY_PATH workaround: https://discourse.nixos.org/t/nixpkgs-nixos-unstable-many-package-fail-with-glibc-2-38-not-found/35078 https://github.com/NixOS/nixpkgs/issues/287764
+    unset LD_LIBRARY_PATH
     # note $SOURCES is unquoted - we want wildcard expansion and multiple args
     $PROTOB/pb2py "$@" $param="$OUTPUT" $SOURCES
 }
