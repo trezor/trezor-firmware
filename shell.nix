@@ -70,19 +70,15 @@ let
     # to use official binary, remove rustfmt from buildInputs and add it to extensions:
     extensions = [ "rust-src" "clippy" "rustfmt" ];
   };
-  openocd-stm = (nixpkgs.openocd.overrideAttrs (oldAttrs: {
-    src = nixpkgs.fetchFromGitHub {
+  openocd-stm = (newNixpkgs.openocd.overrideAttrs (oldAttrs: {
+    src = newNixpkgs.fetchFromGitHub {
       owner = "STMicroelectronics";
       repo = "OpenOCD";
-      rev = "openocd-cubeide-v1.12.0";
-      sha256 = "7REQi9pcT6pn8yiAMpQpRQ+0ouMQelcciMAHyUonkVA=";
+      rev = "openocd-cubeide-v1.13.0";
+      sha256 = "a811402e19f0bfe496f6eecdc05ecea57f79a323879a810efaaff101cb0f420f";
     };
-    version = "stm-cubeide-v1.12.0";
-    nativeBuildInputs = oldAttrs.nativeBuildInputs ++ [ nixpkgs.autoreconfHook ];
-
-    # following two lines can be removed after bumping nixpkgs to newer than c58e6fbf258df1572b535ac1868ec42faf7675dd
-    buildInputs = oldAttrs.buildInputs ++ [ nixpkgs.jimtcl nixpkgs.libjaylink ];
-    configureFlags = oldAttrs.configureFlags ++ [ "--disable-internal-jimtcl" "--disable-internal-libjaylink" ];
+    version = "stm-cubeide-v1.13.0";
+    nativeBuildInputs = oldAttrs.nativeBuildInputs ++ [ newNixpkgs.autoreconfHook ];
   }));
   llvmPackages = nixpkgs.llvmPackages_14;
   # see pyright/README.md for update procedure
@@ -153,8 +149,9 @@ stdenvNoCC.mkDerivation ({
     dejavu_fonts
   ] ++ lib.optionals devTools [
     shellcheck
-    gdb
     openocd-stm
+  ] ++ lib.optionals (devTools && !stdenv.isDarwin) [
+    gdb
   ] ++ lib.optionals (devTools && acceptJlink) [
     nrfutil
     nrfconnect
