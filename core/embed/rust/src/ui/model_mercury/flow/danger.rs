@@ -22,13 +22,13 @@ use super::super::{
 };
 
 #[derive(Copy, Clone, PartialEq, Eq)]
-pub enum WarningHiPrio {
+pub enum Danger {
     Message,
     Menu,
     Cancelled,
 }
 
-impl FlowController for WarningHiPrio {
+impl FlowController for Danger {
     #[inline]
     fn index(&'static self) -> usize {
         *self as usize
@@ -57,7 +57,7 @@ impl FlowController for WarningHiPrio {
 
 const EXTRA_PADDING: i16 = 6;
 
-pub fn new_warning_hi_prio(
+pub fn new_show_danger(
     title: TString<'static>,
     description: TString<'static>,
     value: TString<'static>,
@@ -106,9 +106,9 @@ pub fn new_warning_hi_prio(
     .with_result_icon(theme::ICON_BULLET_CHECKMARK, theme::GREY_DARK)
     .map(|_| Some(FlowMsg::Cancelled));
 
-    let res = SwipeFlow::new(&WarningHiPrio::Message)?
-        .with_page(&WarningHiPrio::Message, content_message)?
-        .with_page(&WarningHiPrio::Menu, content_menu)?
-        .with_page(&WarningHiPrio::Cancelled, content_cancelled)?;
+    let res = SwipeFlow::new(&Danger::Message)?
+        .with_page(&Danger::Message, content_message)?
+        .with_page(&Danger::Menu, content_menu)?
+        .with_page(&Danger::Cancelled, content_cancelled)?;
     Ok(res)
 }

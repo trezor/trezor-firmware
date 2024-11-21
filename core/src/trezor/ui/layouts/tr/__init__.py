@@ -412,6 +412,27 @@ def show_warning(
     )
 
 
+def show_danger(
+    br_name: str,
+    content: str,
+    content_short: str | None = None,
+    value: str | None = None,
+    title: str | None = None,
+    verb_cancel: str | None = None,
+    br_code: ButtonRequestType = ButtonRequestType.Warning,
+) -> Awaitable[ui.UiResult]:
+    title = title or TR.words__warning
+    if content_short is None:
+        content_short = content
+    return show_warning(
+        br_name,
+        title,
+        content_short,
+        TR.words__continue_anyway,
+        br_code=br_code,
+    )
+
+
 def show_success(
     br_name: str,
     content: str,
@@ -556,12 +577,9 @@ def confirm_blob(
     title: str,
     data: bytes | str,
     description: str | None = None,
-    text_mono: bool = True,
     subtitle: str | None = None,
     verb: str | None = None,
     verb_cancel: str | None = None,  # icon
-    info: bool = True,
-    hold: bool = False,
     br_code: ButtonRequestType = BR_CODE_OTHER,
     ask_pagination: bool = False,
     chunkify: bool = False,
@@ -574,12 +592,10 @@ def confirm_blob(
         data=data,
         verb=verb,
         verb_cancel="",
-        hold=hold,
         chunkify=chunkify,
     )
 
     if ask_pagination and layout.page_count() > 1:
-        assert not hold
         return _confirm_ask_pagination(br_name, title, data, description or "", br_code)
     else:
         return raise_if_not_confirmed(layout, br_name, br_code)
@@ -805,14 +821,6 @@ def confirm_total(
 
 
 if not utils.BITCOIN_ONLY:
-
-    def confirm_ethereum_unknown_contract_warning() -> Awaitable[ui.UiResult]:
-        return show_warning(
-            "unknown_contract_warning",
-            TR.words__warning,
-            TR.ethereum__unknown_contract_address_short,
-            TR.words__continue_anyway,
-        )
 
     async def confirm_ethereum_staking_tx(
         title: str,

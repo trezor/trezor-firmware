@@ -509,7 +509,6 @@ extern "C" fn new_confirm_blob(n_args: usize, args: *const Obj, kwargs: *mut Map
         let data: Obj = kwargs.get(Qstr::MP_QSTR_data)?;
         let description: Option<TString> =
             kwargs.get(Qstr::MP_QSTR_description)?.try_into_option()?;
-        let text_mono: bool = kwargs.get_or(Qstr::MP_QSTR_text_mono, true)?;
         let extra: Option<TString> = kwargs
             .get(Qstr::MP_QSTR_extra)
             .unwrap_or_else(|_| Obj::const_none())
@@ -527,7 +526,6 @@ extern "C" fn new_confirm_blob(n_args: usize, args: *const Obj, kwargs: *mut Map
         let chunkify: bool = kwargs.get_or(Qstr::MP_QSTR_chunkify, false)?;
 
         ConfirmBlobParams::new(title, data, description, verb, verb_cancel, hold)
-            .with_text_mono(text_mono)
             .with_extra(extra)
             .with_chunkify(chunkify)
             .with_info_button(info)
@@ -1781,12 +1779,10 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     title: str,
     ///     data: str | bytes,
     ///     description: str | None,
-    ///     text_mono: bool = True,
     ///     extra: str | None = None,
     ///     subtitle: str | None = None,
     ///     verb: str | None = None,
     ///     verb_cancel: str | None = None,
-    ///     verb_info: str | None = None,
     ///     info: bool = True,
     ///     hold: bool = False,
     ///     chunkify: bool = False,

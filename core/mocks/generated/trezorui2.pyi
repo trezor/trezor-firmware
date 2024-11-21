@@ -59,12 +59,10 @@ def confirm_blob(
     title: str,
     data: str | bytes,
     description: str | None,
-    text_mono: bool = True,
     extra: str | None = None,
     subtitle: str | None = None,
     verb: str | None = None,
     verb_cancel: str | None = None,
-    verb_info: str | None = None,
     info: bool = True,
     hold: bool = False,
     chunkify: bool = False,
@@ -227,6 +225,17 @@ def show_warning(
     danger: bool = False,
 ) -> LayoutObj[UiResult]:
     """Warning modal. No buttons shown when `button` is empty string."""
+
+
+# rust/src/ui/model_mercury/layout.rs
+def show_danger(
+    *,
+    title: str,
+    description: str,
+    value: str = "",
+    verb_cancel: str | None = None,
+) -> LayoutObj[UiResult]:
+    """Warning modal that makes it easier to cancel than to continue."""
 
 
 # rust/src/ui/model_mercury/layout.rs
@@ -511,17 +520,6 @@ def flow_get_address(
 
 
 # rust/src/ui/model_mercury/layout.rs
-def flow_warning_hi_prio(
-    *,
-    title: str,
-    description: str,
-    value: str = "",
-    verb_cancel: str | None = None,
-) -> LayoutObj[UiResult]:
-    """Warning modal with multiple steps to confirm."""
-
-
-# rust/src/ui/model_mercury/layout.rs
 def flow_confirm_output(
     *,
     title: str | None,
@@ -636,12 +634,10 @@ def confirm_blob(
     title: str,
     data: str | bytes,
     description: str | None,
-    text_mono: bool = True,
     extra: str | None = None,
     subtitle: str | None = None,
     verb: str = "CONFIRM",
     verb_cancel: str | None = None,
-    verb_info: str | None = None,
     info: bool = True,
     hold: bool = False,
     chunkify: bool = False,
@@ -1208,12 +1204,10 @@ def confirm_blob(
     title: str,
     data: str | bytes,
     description: str | None,
-    text_mono: bool = True,
     extra: str | None = None,
     subtitle: str | None = None,
     verb: str | None = None,
     verb_cancel: str | None = None,
-    verb_info: str | None = None,
     info: bool = True,
     hold: bool = False,
     chunkify: bool = False,

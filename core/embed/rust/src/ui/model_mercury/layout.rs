@@ -269,7 +269,6 @@ extern "C" fn new_confirm_blob(n_args: usize, args: *const Obj, kwargs: *mut Map
             .get(Qstr::MP_QSTR_description)
             .unwrap_or_else(|_| Obj::const_none())
             .try_into_option()?;
-        let text_mono: bool = kwargs.get_or(Qstr::MP_QSTR_text_mono, true)?;
         let extra: Option<TString> = kwargs
             .get(Qstr::MP_QSTR_extra)
             .unwrap_or_else(|_| Obj::const_none())
@@ -286,10 +285,6 @@ extern "C" fn new_confirm_blob(n_args: usize, args: *const Obj, kwargs: *mut Map
             .get(Qstr::MP_QSTR_verb_cancel)
             .unwrap_or_else(|_| Obj::const_none())
             .try_into_option()?;
-        let verb_info: Option<TString> = kwargs
-            .get(Qstr::MP_QSTR_verb_info)
-            .unwrap_or_else(|_| Obj::const_none())
-            .try_into_option()?;
         let info: bool = kwargs.get_or(Qstr::MP_QSTR_info, true)?;
         let hold: bool = kwargs.get_or(Qstr::MP_QSTR_hold, false)?;
         let chunkify: bool = kwargs.get_or(Qstr::MP_QSTR_chunkify, false)?;
@@ -298,15 +293,10 @@ extern "C" fn new_confirm_blob(n_args: usize, args: *const Obj, kwargs: *mut Map
         let cancel: bool = kwargs.get_or(Qstr::MP_QSTR_cancel, false)?;
 
         ConfirmBlobParams::new(title, data, description)
-            .with_text_mono(text_mono)
             .with_subtitle(subtitle)
             .with_verb(verb)
             .with_verb_cancel(verb_cancel.unwrap_or(TR::buttons__cancel.into()))
-            .with_verb_info(if info {
-                Some(verb_info.unwrap_or(TR::words__title_information.into()))
-            } else {
-                None
-            })
+            .with_verb_info(if info { Some(TR::words__title_information.into()) } else { None })
             .with_extra(extra)
             .with_chunkify(chunkify)
             .with_page_counter(page_counter)
@@ -1510,7 +1500,7 @@ extern "C" fn new_confirm_fido(n_args: usize, args: *const Obj, kwargs: *mut Map
     panic!();
 }
 
-extern "C" fn new_warning_hi_prio(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+extern "C" fn new_show_danger(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let description: TString = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
@@ -1521,7 +1511,7 @@ extern "C" fn new_warning_hi_prio(n_args: usize, args: *const Obj, kwargs: *mut 
             .try_into_option()?;
 
         let flow =
-            flow::warning_hi_prio::new_warning_hi_prio(title, description, value, verb_cancel)?;
+            flow::danger::new_show_danger(title, description, value, verb_cancel)?;
         Ok(LayoutObj::new_root(flow)?.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -1589,12 +1579,10 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     title: str,
     ///     data: str | bytes,
     ///     description: str | None,
-    ///     text_mono: bool = True,
     ///     extra: str | None = None,
     ///     subtitle: str | None = None,
     ///     verb: str | None = None,
     ///     verb_cancel: str | None = None,
-    ///     verb_info: str | None = None,
     ///     info: bool = True,
     ///     hold: bool = False,
     ///     chunkify: bool = False,
@@ -1747,6 +1735,16 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// ) -> LayoutObj[UiResult]:
     ///     """Warning modal. No buttons shown when `button` is empty string."""
     Qstr::MP_QSTR_show_warning => obj_fn_kw!(0, new_show_warning).as_obj(),
+
+    /// def show_danger(
+    ///     *,
+    ///     title: str,
+    ///     description: str,
+    ///     value: str = "",
+    ///     verb_cancel: str | None = None,
+    /// ) -> LayoutObj[UiResult]:
+    ///     """Warning modal that makes it easier to cancel than to continue."""
+    Qstr::MP_QSTR_show_danger => obj_fn_kw!(0, new_show_danger).as_obj(),
 
     /// def show_success(
     ///     *,
@@ -2001,16 +1999,6 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// ) -> LayoutObj[UiResult]:
     ///     """Get address / receive funds."""
     Qstr::MP_QSTR_flow_get_address => obj_fn_kw!(0, new_get_address).as_obj(),
-
-    /// def flow_warning_hi_prio(
-    ///     *,
-    ///     title: str,
-    ///     description: str,
-    ///     value: str = "",
-    ///     verb_cancel: str | None = None,
-    /// ) -> LayoutObj[UiResult]:
-    ///     """Warning modal with multiple steps to confirm."""
-    Qstr::MP_QSTR_flow_warning_hi_prio => obj_fn_kw!(0, new_warning_hi_prio).as_obj(),
 
     /// def flow_confirm_output(
     ///     *,

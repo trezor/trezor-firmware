@@ -8,6 +8,7 @@ pub mod confirm_set_new_pin;
 pub mod confirm_summary;
 pub mod confirm_with_info;
 pub mod continue_recovery;
+pub mod danger;
 pub mod get_address;
 pub mod prompt_backup;
 pub mod request_number;
@@ -16,7 +17,6 @@ pub mod set_brightness;
 pub mod show_share_words;
 pub mod show_tutorial;
 pub mod util;
-pub mod warning_hi_prio;
 
 pub use confirm_action::{
     new_confirm_action, new_confirm_action_simple, ConfirmActionExtra, ConfirmActionMenuStrings,
@@ -31,6 +31,7 @@ pub use confirm_set_new_pin::SetNewPin;
 pub use confirm_summary::new_confirm_summary;
 pub use confirm_with_info::new_confirm_with_info;
 pub use continue_recovery::new_continue_recovery;
+pub use danger::Danger;
 pub use get_address::GetAddress;
 pub use prompt_backup::PromptBackup;
 pub use request_number::RequestNumber;
@@ -39,4 +40,3 @@ pub use set_brightness::SetBrightness;
 pub use show_share_words::ShowShareWords;
 pub use show_tutorial::ShowTutorial;
 pub use util::{ConfirmBlobParams, ShowInfoParams};
-pub use warning_hi_prio::WarningHiPrio;

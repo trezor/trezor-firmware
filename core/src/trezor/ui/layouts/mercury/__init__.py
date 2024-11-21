@@ -119,23 +119,19 @@ def confirm_path_warning(
         if not path_type
         else f"{TR.words__unknown} {path_type.lower()}."
     )
-    return raise_if_not_confirmed(
-        trezorui2.flow_warning_hi_prio(
-            title=f"{TR.words__warning}!", description=description, value=path
-        ),
+    return show_danger(
         "path_warning",
+        description,
+        value=path,
         br_code=ButtonRequestType.UnknownDerivationPath,
     )
 
 
 def confirm_multisig_warning() -> Awaitable[None]:
-    return raise_if_not_confirmed(
-        trezorui2.flow_warning_hi_prio(
-            title=f"{TR.words__important}!",
-            description=TR.send__receiving_to_multisig,
-        ),
+    return show_danger(
         "warning_multisig",
-        br_code=ButtonRequestType.Warning,
+        TR.send__receiving_to_multisig,
+        title=f"{TR.words__important}!",
     )
 
 
@@ -316,6 +312,29 @@ def show_warning(
     )
 
 
+def show_danger(
+    br_name: str,
+    content: str,
+    content_short: str | None = None,
+    value: str | None = None,
+    title: str | None = None,
+    verb_cancel: str | None = None,
+    br_code: ButtonRequestType = ButtonRequestType.Warning,
+) -> Awaitable[None]:
+    title = title or TR.words__warning
+    verb_cancel = verb_cancel or TR.buttons__cancel
+    return raise_if_not_confirmed(
+        trezorui2.show_danger(
+            title=title,
+            description=content,
+            value=(value or ""),
+            verb_cancel=verb_cancel,
+        ),
+        br_name,
+        br_code,
+    )
+
+
 def show_success(
     br_name: str,
     content: str,
@@ -451,12 +470,9 @@ def confirm_blob(
     title: str,
     data: bytes | str,
     description: str | None = None,
-    text_mono: bool = True,
     subtitle: str | None = None,
     verb: str | None = None,
     verb_cancel: str | None = None,
-    info: bool = True,
-    hold: bool = False,
     br_code: ButtonRequestType = BR_CODE_OTHER,
     ask_pagination: bool = False,
     chunkify: bool = False,
@@ -479,7 +495,6 @@ def confirm_blob(
             verb=None,
             verb_cancel=verb_cancel,
             info=False,
-            hold=False,
             chunkify=chunkify,
             page_counter=True,
             prompt_screen=False,
@@ -499,12 +514,9 @@ def confirm_blob(
             title=title,
             data=data,
             description=description,
-            text_mono=text_mono,
             subtitle=subtitle,
             verb=verb,
             verb_cancel=verb_cancel,
-            info=info,
-            hold=hold,
             chunkify=chunkify,
             prompt_screen=prompt_screen,
         )
@@ -711,17 +723,6 @@ def _confirm_summary(
 
 
 if not utils.BITCOIN_ONLY:
-
-    def confirm_ethereum_unknown_contract_warning() -> Awaitable[None]:
-        return raise_if_not_confirmed(
-            trezorui2.flow_warning_hi_prio(
-                title=TR.words__warning,
-                description=TR.ethereum__unknown_contract_address,
-                verb_cancel=TR.send__cancel_sign,
-            ),
-            "unknown_contract_warning",
-            ButtonRequestType.Warning,
-        )
 
     async def confirm_ethereum_tx(
         recipient: str | None,
