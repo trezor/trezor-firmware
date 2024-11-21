@@ -24,7 +24,10 @@ FEATURE_FLAGS = {
 }
 
 FEATURES_WANTED = ["input", "sd_card", "rgb_led", "dma2d", "consumption_mask", "usb" ,"optiga", "haptic"]
-if DISABLE_OPTIGA and PYOPT == '0':
+if DISABLE_OPTIGA:
+    # TODO use PYOPT instead of PRODUCTION, same as in firmware, blocked on #4253
+    if PRODUCTION:
+        raise RuntimeError("DISABLE_OPTIGA requires non-production build")
     FEATURES_WANTED.remove("optiga")
 
 CCFLAGS_MOD = ''
