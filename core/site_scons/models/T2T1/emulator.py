@@ -19,15 +19,17 @@ def configure(
 
     defines += ["DISPLAY_RGB565"]
     features_available.append("display_rgb565")
-    defines += ["USE_RGB_COLORS"]
+    defines += [("USE_RGB_COLORS", "1")]
 
-    defines += [mcu]
-    defines += [f'TREZOR_BOARD=\\"{board}\\"']
-    defines += [f"HW_MODEL={hw_model}"]
-    defines += [f"HW_REVISION={hw_revision}"]
-    defines += [f"MCU_TYPE={mcu}"]
-    defines += ["FLASH_BIT_ACCESS=1"]
-    defines += ["FLASH_BLOCK_WORDS=1"]
+    defines += [
+        mcu,
+        ("TREZOR_BOARD", f'"{board}"'),
+        ("HW_MODEL", str(hw_model)),
+        ("HW_REVISION", str(hw_revision)),
+        ("MCU_TYPE", mcu),
+        ("FLASH_BIT_ACCESS", "1"),
+        ("FLASH_BLOCK_WORDS", "1"),
+    ]
 
     if "sd_card" in features_wanted:
         features_available.append("sd_card")
@@ -37,21 +39,21 @@ def configure(
             "embed/upymod/modtrezorio/ffunicode.c",
         ]
         paths += ["embed/io/sdcard/inc"]
-        defines += ["USE_SD_CARD=1"]
+        defines += [("USE_SD_CARD", "1")]
 
     if "sbu" in features_wanted:
         sources += ["embed/io/sbu/unix/sbu.c"]
         paths += ["embed/io/sbu/inc"]
-        defines += ["USE_SBU=1"]
+        defines += [("USE_SBU", "1")]
 
     if "input" in features_wanted:
         sources += ["embed/io/touch/unix/touch.c"]
         paths += ["embed/io/touch/inc"]
         features_available.append("touch")
-        defines += ["USE_TOUCH=1"]
+        defines += [("USE_TOUCH", "1")]
 
     features_available.append("backlight")
-    defines += ["USE_BACKLIGHT=1"]
+    defines += [("USE_BACKLIGHT", "1")]
 
     sources += ["embed/util/flash/stm32f4/flash_layout.c"]
 

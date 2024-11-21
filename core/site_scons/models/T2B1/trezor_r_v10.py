@@ -32,11 +32,14 @@ def configure(
     ] = "-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mtune=cortex-m4 "
     env.get("ENV")["RUST_TARGET"] = "thumbv7em-none-eabihf"
 
-    defines += [mcu]
-    defines += [f'TREZOR_BOARD=\\"{board}\\"']
-    defines += [f"HW_MODEL={hw_model}"]
-    defines += [f"HW_REVISION={hw_revision}"]
-    defines += ["HSE_VALUE=8000000", "USE_HSE=1"]
+    defines += [
+        mcu,
+        ("TREZOR_BOARD", f'"{board}"'),
+        ("HW_MODEL", str(hw_model)),
+        ("HW_REVISION", str(hw_revision)),
+        ("HSE_VALUE", "8000000"),
+        ("USE_HSE", "1"),
+    ]
 
     sources += ["embed/io/display/vg-2864/display_driver.c"]
     paths += ["embed/io/display/inc"]
@@ -45,13 +48,13 @@ def configure(
         sources += ["embed/io/button/stm32/button.c"]
         paths += ["embed/io/button/inc"]
         features_available.append("button")
-        defines += ["USE_BUTTON=1"]
+        defines += [("USE_BUTTON", "1")]
 
     if "sbu" in features_wanted:
         sources += ["embed/io/sbu/stm32/sbu.c"]
         paths += ["embed/io/sbu/inc"]
         features_available.append("sbu")
-        defines += ["USE_SBU=1"]
+        defines += [("USE_SBU", "1")]
 
     if "consumption_mask" in features_wanted:
         sources += ["embed/sec/consumption_mask/stm32f4/consumption_mask.c"]
@@ -59,7 +62,7 @@ def configure(
             "vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.c"
         ]
         paths += ["embed/sec/consumption_mask/inc"]
-        defines += ["USE_CONSUMPTION_MASK=1"]
+        defines += [("USE_CONSUMPTION_MASK", "1")]
 
     if "usb" in features_wanted:
         sources += [
@@ -86,9 +89,9 @@ def configure(
         paths += ["embed/io/i2c_bus/inc"]
         paths += ["embed/sec/optiga/inc"]
         features_available.append("optiga")
-        defines += ["USE_OPTIGA=1"]
-        defines += ["USE_I2C=1"]
+        defines += [("USE_OPTIGA", "1")]
+        defines += [("USE_I2C", "1")]
 
-    defines += ["USE_PVD=1"]
+    defines += [("USE_PVD", "1")]
 
     return features_available

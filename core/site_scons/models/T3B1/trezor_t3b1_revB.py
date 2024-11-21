@@ -14,7 +14,7 @@ def configure(
     features_available: list[str] = []
     board = "T3B1/boards/trezor_t3b1_revB.h"
     hw_model = get_hw_model_as_number("T3B1")
-    hw_revision = "B"
+    hw_revision = ord("B")
 
     defines += ["FRAMEBUFFER"]
     features_available.append("framebuffer")
@@ -33,10 +33,12 @@ def configure(
     ] = "-mthumb -mcpu=cortex-m33 -mfloat-abi=hard -mfpu=fpv5-sp-d16 -mtune=cortex-m33 -mcmse "
     env.get("ENV")["RUST_TARGET"] = "thumbv8m.main-none-eabihf"
 
-    defines += [mcu]
-    defines += [f'TREZOR_BOARD=\\"{board}\\"']
-    defines += [f"HW_MODEL={hw_model}"]
-    defines += [f"HW_REVISION={ord(hw_revision)}"]
+    defines += [
+        mcu,
+        ("TREZOR_BOARD", f'"{board}"'),
+        ("HW_MODEL", str(hw_model)),
+        ("HW_REVISION", str(hw_revision)),
+    ]
 
     sources += ["embed/io/display/vg-2864/display_driver.c"]
     paths += ["embed/io/display/inc"]
@@ -45,13 +47,13 @@ def configure(
         sources += ["embed/io/button/stm32/button.c"]
         paths += ["embed/io/button/inc"]
         features_available.append("button")
-        defines += ["USE_BUTTON=1"]
+        defines += [("USE_BUTTON", "1")]
 
     if "sbu" in features_wanted:
         sources += ["embed/io/sbu/stm32/sbu.c"]
         paths += ["embed/io/sbu/inc"]
         features_available.append("sbu")
-        defines += ["USE_SBU=1"]
+        defines += [("USE_SBU", "1")]
 
     if "usb" in features_wanted:
         sources += [
@@ -78,22 +80,24 @@ def configure(
         paths += ["embed/io/i2c_bus/inc"]
         paths += ["embed/sec/optiga/inc"]
         features_available.append("optiga")
-        defines += ["USE_OPTIGA=1"]
-        defines += ["USE_I2C=1"]
+        defines += [
+            ("USE_OPTIGA", "1"),
+            ("USE_I2C", "1"),
+        ]
 
     if "consumption_mask" in features_wanted:
         sources += ["embed/sec/consumption_mask/stm32u5/consumption_mask.c"]
         paths += ["embed/sec/consumption_mask/inc"]
-        defines += ["USE_CONSUMPTION_MASK=1"]
+        defines += [("USE_CONSUMPTION_MASK", "1")]
 
     defines += [
-        "USE_HASH_PROCESSOR=1",
-        "USE_STORAGE_HWKEY=1",
-        "USE_TAMPER=1",
-        "USE_FLASH_BURST=1",
-        "USE_RESET_TO_BOOT=1",
-        "USE_OEM_KEYS_CHECK=1",
-        "USE_PVD=1",
+        ("USE_HASH_PROCESSOR", "1"),
+        ("USE_STORAGE_HWKEY", "1"),
+        ("USE_TAMPER", "1"),
+        ("USE_FLASH_BURST", "1"),
+        ("USE_RESET_TO_BOOT", "1"),
+        ("USE_OEM_KEYS_CHECK", "1"),
+        ("USE_PVD", "1"),
     ]
 
     env.get("ENV")["TREZOR_BOARD"] = board

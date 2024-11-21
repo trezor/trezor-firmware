@@ -29,11 +29,14 @@ def configure(
     ] = "-mthumb -mcpu=cortex-m33 -mfloat-abi=hard -mfpu=fpv5-sp-d16 -mtune=cortex-m33 -mcmse "
     env.get("ENV")["RUST_TARGET"] = "thumbv8m.main-none-eabihf"
 
-    defines += [mcu]
-    defines += [f'TREZOR_BOARD=\\"{board}\\"']
-    defines += [f"HW_MODEL={hw_model}"]
-    defines += [f"HW_REVISION={hw_revision}"]
-    defines += ["HSE_VALUE=32000000", "USE_HSE=1"]
+    defines += [
+        mcu,
+        ("TREZOR_BOARD", f'"{board}"'),
+        ("HW_MODEL", str(hw_model)),
+        ("HW_REVISION", str(hw_revision)),
+        ("HSE_VALUE", "32000000"),
+        ("USE_HSE", "1"),
+    ]
 
     sources += [
         "embed/io/display/st7785ma/display_driver.c",
@@ -42,7 +45,7 @@ def configure(
 
     paths += ["embed/io/display/inc"]
     features_available.append("backlight")
-    defines += ["USE_BACKLIGHT=1"]
+    defines += [("USE_BACKLIGHT", "1")]
 
     if "input" in features_wanted:
         sources += ["embed/io/i2c_bus/stm32u5/i2c_bus.c"]
@@ -54,9 +57,11 @@ def configure(
         sources += ["embed/io/button/stm32/button.c"]
         paths += ["embed/io/button/inc"]
         features_available.append("button")
-        defines += ["USE_TOUCH=1"]
-        defines += ["USE_I2C=1"]
-        defines += ["USE_BUTTON=1"]
+        defines += [
+            ("USE_TOUCH", "1"),
+            ("USE_I2C", "1"),
+            ("USE_BUTTON", "1"),
+        ]
 
     if "haptic" in features_wanted:
         sources += [
@@ -76,7 +81,7 @@ def configure(
     #         "vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.c"
     #     ]
     #     features_available.append("ble")
-    #     defines += ["USE_BLE=1"]
+    #     defines += [("USE_BLE", "1")]
 
     if "ble" in features_wanted:
         sources += [
@@ -91,19 +96,19 @@ def configure(
         sources += ["vendor/trezor-crypto/hash_to_curve.c"]
         paths += ["embed/sec/optiga/inc"]
         features_available.append("optiga")
-        defines += ["USE_OPTIGA=1"]
+        defines += [("USE_OPTIGA", "1")]
 
     if "sbu" in features_wanted:
         sources += ["embed/io/sbu/stm32/sbu.c"]
         paths += ["embed/io/sbu/inc"]
         features_available.append("sbu")
-        defines += ["USE_SBU=1"]
+        defines += [("USE_SBU", "1")]
 
     if "rgb_led" in features_wanted:
         sources += ["embed/io/rgb_led/stm32/rgb_led.c"]
         paths += ["embed/io/rgb_led/inc"]
         features_available.append("rgb_led")
-        defines += ["USE_RGB_LED=1"]
+        defines += [("USE_RGB_LED", "1")]
 
     if "usb" in features_wanted:
         sources += [
@@ -122,7 +127,7 @@ def configure(
 
     defines += [
         "USE_DMA2D",
-        "USE_RGB_COLORS",
+        ("USE_RGB_COLORS", "1"),
     ]
     sources += ["embed/gfx/bitblt/stm32/dma2d_bitblt.c"]
 
@@ -134,12 +139,12 @@ def configure(
     features_available.append("display_rgb565")
 
     defines += [
-        "USE_HASH_PROCESSOR=1",
-        "USE_STORAGE_HWKEY=1",
-        "USE_TAMPER=1",
-        "USE_FLASH_BURST=1",
-        "USE_OEM_KEYS_CHECK=1",
-        "USE_RESET_TO_BOOT=1",
+        ("USE_HASH_PROCESSOR", "1"),
+        ("USE_STORAGE_HWKEY", "1"),
+        ("USE_TAMPER", "1"),
+        ("USE_FLASH_BURST", "1"),
+        ("USE_OEM_KEYS_CHECK", "1"),
+        ("USE_RESET_TO_BOOT", "1"),
     ]
 
     env.get("ENV")["LINKER_SCRIPT"] = linker_script
