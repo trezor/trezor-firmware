@@ -410,6 +410,9 @@ STATIC mp_obj_tuple_t mod_trezorutils_version_obj = {
 /// """UI layout identifier ("tt" for model T, "tr" for models One and R)."""
 /// USE_THP: bool
 /// """Whether the firmware supports Trezor-Host Protocol (version 2)."""
+/// if __debug__:
+///     DISABLE_ANIMATION: bool
+///     """Whether the firmware should disable animations."""
 
 STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_trezorutils)},
@@ -502,6 +505,13 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
 #else
 #error Unknown layout
 #endif
+#if !PYOPT
+#if DISABLE_ANIMATION
+    {MP_ROM_QSTR(MP_QSTR_DISABLE_ANIMATION), mp_const_true},
+#else
+    {MP_ROM_QSTR(MP_QSTR_DISABLE_ANIMATION), mp_const_false},
+#endif  // TREZOR_DISABLE_ANIMATION
+#endif  // PYOPT
 };
 
 STATIC MP_DEFINE_CONST_DICT(mp_module_trezorutils_globals,
