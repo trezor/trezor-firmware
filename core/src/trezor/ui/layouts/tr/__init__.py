@@ -420,6 +420,24 @@ def show_warning(
     )
 
 
+def show_danger(
+    br_name: str,
+    content: str,
+    value: str | None = None,
+    title: str | None = None,
+    verb_cancel: str | None = None,
+    br_code: ButtonRequestType = ButtonRequestType.Warning,
+) -> Awaitable[ui.UiResult]:
+    title = title or TR.words__warning
+    return show_warning(
+        br_name,
+        title,
+        content,
+        TR.words__continue_anyway,
+        br_code=br_code,
+    )
+
+
 def show_success(
     br_name: str,
     content: str,
@@ -564,7 +582,6 @@ def confirm_blob(
     title: str,
     data: bytes | str,
     description: str | None = None,
-    text_mono: bool = True,
     subtitle: str | None = None,
     verb: str | None = None,
     verb_cancel: str | None = None,  # icon
@@ -815,11 +832,8 @@ def confirm_total(
 if not utils.BITCOIN_ONLY:
 
     def confirm_ethereum_unknown_contract_warning() -> Awaitable[ui.UiResult]:
-        return show_warning(
-            "unknown_contract_warning",
-            TR.words__warning,
-            TR.ethereum__unknown_contract_address_short,
-            TR.words__continue_anyway,
+        return show_danger(
+            "unknown_contract_warning", TR.ethereum__unknown_contract_address_short
         )
 
     async def confirm_ethereum_staking_tx(

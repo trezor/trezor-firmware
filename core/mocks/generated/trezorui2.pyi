@@ -217,6 +217,17 @@ def show_warning(
 
 
 # rust/src/ui/model_mercury/layout.rs
+def show_danger(
+    *,
+    title: str,
+    description: str,
+    value: str = "",
+    verb_cancel: str | None = None,
+) -> LayoutObj[UiResult]:
+    """Warning modal that makes it easier to cancel than to continue."""
+
+
+# rust/src/ui/model_mercury/layout.rs
 def show_success(
     *,
     title: str,
@@ -495,17 +506,6 @@ def flow_get_address(
     br_name: str,
 ) -> LayoutObj[UiResult]:
     """Get address / receive funds."""
-
-
-# rust/src/ui/model_mercury/layout.rs
-def flow_warning_hi_prio(
-    *,
-    title: str,
-    description: str,
-    value: str = "",
-    verb_cancel: str | None = None,
-) -> LayoutObj[UiResult]:
-    """Warning modal with multiple steps to confirm."""
 
 
 # rust/src/ui/model_mercury/layout.rs

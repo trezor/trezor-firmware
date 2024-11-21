@@ -262,7 +262,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_flow_request_number;
   MP_QSTR_flow_request_passphrase;
   MP_QSTR_flow_show_share_words;
-  MP_QSTR_flow_warning_hi_prio;
   MP_QSTR_get_language;
   MP_QSTR_get_transition_out;
   MP_QSTR_haptic_feedback__disable;
@@ -652,6 +651,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_share_words__wrote_down_all;
   MP_QSTR_show_address_details;
   MP_QSTR_show_checklist;
+  MP_QSTR_show_danger;
   MP_QSTR_show_error;
   MP_QSTR_show_group_share_success;
   MP_QSTR_show_homescreen;
