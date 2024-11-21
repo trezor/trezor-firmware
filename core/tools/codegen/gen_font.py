@@ -276,6 +276,8 @@ class FaceProcessor:
         self.fontname = f"{name.lower()}_{style.lower()}_{size}"
         self.font_ymin = 0
         self.font_ymax = 0
+        self.mem_footprint = 0 # size of all font characters in uC in Bytes
+        self.glyph_count = 0 # number of characters in the font
 
     @property
     def _name_style_size(self) -> str:
@@ -304,6 +306,8 @@ class FaceProcessor:
 
     def write_foreign_json(self, upper_cased=False) -> None:
         for lang, language_chars in all_languages.items():
+            mem_footprint = 0 # size of all font characters in uC in Bytes
+            glyph_count = 0 # number of characters in the font
             fontdata = {}
             for item in language_chars:
                 c = _normalize(item)
@@ -317,12 +321,15 @@ class FaceProcessor:
                 glyph = Glyph.from_face(self.face, c, self.shaveX)
                 glyph.print_metrics()
                 fontdata[map_from] = glyph.to_bytes(self.bpp).hex()
+                mem_footprint += len(glyph.to_bytes(self.bpp))
+                glyph_count += 1
             file = (
                 JSON_FONTS_DEST
                 / f"font_{self.fontname}{'_upper' if upper_cased else ''}_{lang}.json"
             )
             json_content = json.dumps(fontdata, indent=2, ensure_ascii=False)
             file.write_text(json_content + "\n")
+            print(f"Memory footprint of {self.name} {self.style} {self.size} {lang} extension set is {glyph_count} characters {mem_footprint} Bytes")
 
     def write_char_widths_files(self) -> None:
         chars: set[str] = set()
@@ -397,10 +404,15 @@ class FaceProcessor:
                 f.write(f"    Font_{self._name_style_size}_glyph_{i},{comment}\n")
             f.write("};\n")
 
+        print(f"Memory footprint of {self.name} {self.style} {self.size} basic character set is {self.glyph_count} characters {self.mem_footprint} Bytes")
+
     def _write_char_definition(self, f: TextIO, c: str, i: int) -> None:
         self._load_char(c)
         glyph = Glyph.from_face(self.face, c, self.shaveX)
         glyph.print_metrics()
+        self.mem_footprint += len(glyph.to_bytes(self.bpp))
+        self.glyph_count += 1
+
         definition_line = glyph.get_definition_line(self._name_style_size, self.bpp, i)
         f.write(definition_line)
 
@@ -424,6 +436,8 @@ class FaceProcessor:
         c = "?"
         self._load_char(c)
         glyph = Glyph.from_face(self.face, c, self.shaveX, inverse_colors=True)
+        self.mem_footprint += len(glyph.to_bytes(self.bpp))
+        self.glyph_count += 1
         if upper:
             return glyph.get_definition_line(
                 f"{self._name_style_size}_upper", self.bpp, "nonprintable", static=False
