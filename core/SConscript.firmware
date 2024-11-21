@@ -31,7 +31,9 @@ FEATURE_FLAGS = {
 }
 
 FEATURES_WANTED = ["input", "sd_card", "rgb_led", "dma2d", "consumption_mask", "usb" ,"optiga", "haptic"]
-if DISABLE_OPTIGA and PYOPT == '0':
+if DISABLE_OPTIGA:
+    if PYOPT != '0':
+        raise RuntimeError("DISABLE_OPTIGA requires PYOPT=0")
     FEATURES_WANTED.remove("optiga")
 
 CCFLAGS_MOD = ''
