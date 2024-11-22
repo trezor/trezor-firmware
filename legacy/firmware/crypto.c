@@ -964,3 +964,27 @@ bool cryptoCosiVerify(const ed25519_signature signature, const uint8_t *message,
   res = ed25519_sign_open(message, message_len, pk_combined, signature);
   return res == 0;
 }
+
+bool multisig_uses_single_path(const MultisigRedeemScriptType *multisig) {
+  if (multisig->pubkeys_count == 0) {
+    // Pubkeys are specified by multisig.nodes and multisig.address_n, in this
+    // case all the pubkeys use the same path
+    return true;
+  } else {
+    // Pubkeys are specified by multisig.pubkeys, in this case we check that all
+    // the pubkeys use the same path
+    for (int i = 0; i < multisig->pubkeys_count; i++) {
+      if (multisig->pubkeys[i].address_n_count !=
+          multisig->pubkeys[0].address_n_count) {
+        return false;
+      }
+      for (int j = 0; j < multisig->pubkeys[i].address_n_count; j++) {
+        if (multisig->pubkeys[i].address_n[j] !=
+            multisig->pubkeys[0].address_n[j]) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+}

@@ -543,8 +543,7 @@ def test_sorted_multisig_mismatch_multisig_change(client: Client):
         )
 
 
-# inputs match, change mismatches (second tries to be change but isn't)
-@pytest.mark.models(skip="legacy", reason="Not fixed")
+# inputs match, change mismatches (second tries to be change but isn't because is uses per-node paths)
 def test_multisig_mismatch_multisig_change_different_paths(client: Client):
     multisig_out2 = messages.MultisigRedeemScriptType(
         pubkeys=[

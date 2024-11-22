@@ -2098,8 +2098,22 @@ static bool is_change_output(const TxInfo *tx_info,
     return false;
   }
 
-  if (txoutput->has_multisig && !check_change_multisig_fp(tx_info, txoutput)) {
-    return false;
+  if (txoutput->has_multisig) {
+    if (!check_change_multisig_fp(tx_info, txoutput)) {
+      return false;
+    }
+    if (!multisig_uses_single_path(&(txoutput->multisig))) {
+      // An address that uses different derivation paths for different xpubs
+      // could be difficult to discover if the user did not note all the paths.
+      // The reason is that each path ends with an address index, which can have
+      // 1,000,000 possible values. If the address is a t-out-of-n multisig, the
+      // total number of possible paths is 1,000,000^n. This can be exploited by
+      // an attacker who has compromised the user's computer. The attacker could
+      // randomize the address indices and then demand a ransom from the user to
+      // reveal the paths. To prevent this, we require that all xpubs use the
+      // same derivation path.
+      return false;
+    }
   }
 
   if (!check_change_is_multisig(tx_info, txoutput)) {
