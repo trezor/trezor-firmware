@@ -284,11 +284,15 @@ void norcow_wipe(void) {
   // Erase the active sector first, because it contains sensitive data.
   erase_sector(norcow_active_sector, sectrue);
 
+#if STORAGE_INSECURE_TESTING_MODE && !PRODUCTION
+  // skip erasing inactive sectors
+#else
   for (uint8_t i = 0; i < NORCOW_SECTOR_COUNT; i++) {
     if (i != norcow_active_sector) {
       erase_sector(i, secfalse);
     }
   }
+#endif
   norcow_active_version = NORCOW_VERSION;
   norcow_write_sector = norcow_active_sector;
   norcow_free_offset = NORCOW_STORAGE_START;
