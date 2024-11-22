@@ -582,17 +582,7 @@ bool coin_path_check(const CoinInfo *coin, InputScriptType script_type,
       valid = valid && (address_n[2] <= PATH_MAX_CHANGE);
       valid = valid && (address_n[3] <= PATH_MAX_ADDRESS_INDEX);
     } else if (address_n_count == 5) {
-      if (address_n[1] & PATH_HARDENED) {
-        // Unchained Capital compatibility pattern. Will be removed in the
-        // future.
-        // m / 45' / coin_type' / account' / [0-1000000] / address_index
-        valid = valid && check_cointype(coin, address_n[1], full_check);
-        valid = valid && (address_n[2] & PATH_HARDENED);
-        valid =
-            valid && ((address_n[2] & PATH_UNHARDEN_MASK) <= PATH_MAX_ACCOUNT);
-        valid = valid && (address_n[3] <= 1000000);
-        valid = valid && (address_n[4] <= PATH_MAX_ADDRESS_INDEX);
-      } else {
+      if ((address_n[1] & PATH_HARDENED) == 0) {
         // Casa proposed "universal multisig" pattern with unhardened parts.
         // m/45'/coin_type/account/change/address_index
         valid = valid &&
