@@ -217,6 +217,10 @@ void haptic_deinit(void) {
 void haptic_set_enabled(bool enabled) {
   haptic_driver_t *driver = &g_haptic_driver;
 
+  if (!driver->initialized) {
+    return;
+  }
+
   driver->enabled = enabled;
 }
 
